@@ -1,0 +1,7 @@
+/** @defgroup conv Dballe conversion functions
+@ingroup dballe
+
+Conversion functions used by various Dballe modules.  It includes unit
+conversions, mapping between fields in different encodings, mapping between
+different but equivalent code tables.
+*/

@@ -1,0 +1,36 @@
+#!/usr/bin/perl -w
+
+# Convert a file offset into a line number
+
+use strict;
+use warnings;
+
+if (!@ARGV)
+{
+	print qq{Usage: $0 file offset
+Prints the line number of the given offset in the file.
+};
+	exit 0;
+}
+
+my $file = $ARGV[0];
+my $num = $ARGV[1];
+
+open(IN, $file) or die "Cannot open $file: $!";
+
+my $ofs = 0;
+while (<>)
+{
+	my $len = length($_);
+	if ($ofs + $len > $num)
+	{
+		printf "%d:%d\n", $., $num - $ofs;
+		exit 0;
+	}
+	$ofs += $len;
+}
+
+close(IN);
+
+print STDERR "Offset is past the end of the file\n";
+exit 1;

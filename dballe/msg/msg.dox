@@ -1,0 +1,14 @@
+/** @defgroup msg DB-ALLe encoding-independent message abstraction
+@ingroup dballe
+
+These functions provide an abstraction for a weather report message which is
+independent from the encoding.  It serves for carrying data between the various
+import and export modules of DB-ALLe.
+
+The internal representation is as connected as possible to physics rather than
+to observations.  dba_varcode is used to refer to a local B table which lists
+physical measurements unambiguously, and is stored together with level and time
+range metadata.
+
+The msg module depends on the core module.
+*/

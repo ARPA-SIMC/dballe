@@ -1,0 +1,489 @@
+#include <tests/test-utils.h>
+#include <dballe/dba_init.h>
+#include <dballe/db/dballe.h>
+
+
+namespace tut {
+using namespace tut_dballe;
+
+struct dba_db_dballe_shar
+{
+	// Records with test data
+	TestRecord sampleAna;
+	TestRecord sampleBase;
+	TestRecord sample0;
+	TestRecord sample00;
+	TestRecord sample01;
+	TestRecord sample1;
+	TestRecord sample10;
+	TestRecord sample11;
+
+	// Work records
+	dba_record insert;
+	dba_record query;
+	dba_record result;
+	dba_record qc;
+
+	// DB handle
+	dba db;
+
+	dba_db_dballe_shar()
+		: insert(NULL), query(NULL), result(NULL), qc(NULL), db(NULL)
+	{
+		CHECKED(dba_init());
+		CHECKED(dba_open("test", "enrico", "", &db));
+
+		CHECKED(dba_record_create(&insert));
+		CHECKED(dba_record_create(&query));
+		CHECKED(dba_record_create(&result));
+		CHECKED(dba_record_create(&qc));
+
+		// Common data (ana)
+		sampleAna.set(DBA_KEY_LAT, 12.34560);
+		sampleAna.set(DBA_KEY_LON, 76.54320);
+		sampleAna.set(DBA_KEY_MOBILE, 0);
+		/*
+		sampleAna.set(DBA_KEY_YEAR_IDENT, 2003);
+		sampleAna.set(DBA_KEY_MONTH_IDENT, 3);
+		sampleAna.set(DBA_KEY_DAY_IDENT, 23);
+		sampleAna.set(DBA_KEY_HOUR_IDENT, 12);
+		sampleAna.set(DBA_KEY_MIN_IDENT, 30);
+		*/
+		sampleAna.set(DBA_KEY_HEIGHT, 42);
+		sampleAna.set(DBA_KEY_HEIGHTBARO, 234);
+		sampleAna.set(DBA_KEY_BLOCK, 1);
+		sampleAna.set(DBA_KEY_STATION, 52);
+		sampleAna.set(DBA_KEY_NAME, "Cippo Lippo");
+
+		// Common data
+		sampleBase.set(DBA_KEY_YEAR, 1945);
+		sampleBase.set(DBA_KEY_MONTH, 4);
+		sampleBase.set(DBA_KEY_DAY, 25);
+		sampleBase.set(DBA_KEY_HOUR, 8);
+		sampleBase.set(DBA_KEY_LEVELTYPE, 10);
+		sampleBase.set(DBA_KEY_L1, 11);
+		sampleBase.set(DBA_KEY_L2, 22);
+		sampleBase.set(DBA_KEY_PINDICATOR, 20);
+		sampleBase.set(DBA_KEY_P1, 111);
+
+		// Specific data
+		sample0.set(DBA_KEY_MIN, 0);
+		sample0.set(DBA_KEY_P2, 122);
+		sample0.set(DBA_KEY_REP_COD, 1);
+		sample0.set(DBA_KEY_PRIORITY, 100);
+
+		sample00.set(DBA_VAR(0, 1, 11), "Hey Hey Ye");
+		sample01.set(DBA_VAR(0, 1, 12), 500);
+
+		sample1.set(DBA_KEY_MIN, 30);
+		sample1.set(DBA_KEY_P2, 123);
+		sample1.set(DBA_KEY_REP_COD, 2);
+		sample1.set(DBA_KEY_PRIORITY, 80);
+
+		sample10.set(DBA_VAR(0, 1, 11), "Ho Ho Ho !");
+		sample11.set(DBA_VAR(0, 1, 12), 600);
+
+		/*
+static struct test_data tdata3_patch[] = {
+	{ "mobile", "1" },
+	{ "ident", "Cippo" },
+};
+		*/
+
+	}
+
+	~dba_db_dballe_shar()
+	{
+		if (insert != NULL) dba_record_delete(insert);
+		if (query != NULL) dba_record_delete(query);
+		if (result != NULL) dba_record_delete(result);
+		if (qc != NULL) dba_record_delete(qc);
+		if (db != NULL) dba_close(db);
+		dba_shutdown();
+	}
+};
+TESTGRP(dba_db_dballe);
+
+template<> template<>
+void to::test<1>()
+{
+	/*dba_error_set_callback(DBA_ERR_NONE, crash, 0);*/
+
+	/* Test a dballe session */
+
+	/* Start with an empty database */
+	CHECKED(dba_reset(db, 0));
+
+	/* Fill in some data */
+	dba_record_clear(insert);
+	sampleAna.copyTestDataToRecord(insert);
+	sampleBase.copyTestDataToRecord(insert);
+	sample0.copyTestDataToRecord(insert);
+	sample00.copyTestDataToRecord(insert);
+	sample01.copyTestDataToRecord(insert);
+
+	/* Insert the record */
+	CHECKED(dba_insert_new(db, insert));
+	/* Check if duplicate updates are allowed by insert */
+	CHECKED(dba_insert(db, insert));
+	/* Check if duplicate updates are trapped by insert_new */
+	gen_ensure(dba_insert_new(db, insert) == DBA_ERROR);
+
+	/* Insert another record (similar but not the same) */
+	dba_record_clear(insert);
+	sampleAna.copyTestDataToRecord(insert);
+	sampleBase.copyTestDataToRecord(insert);
+	sample1.copyTestDataToRecord(insert);
+	sample10.copyTestDataToRecord(insert);
+	sample11.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+	/* Check again if duplicate updates are trapped */
+	gen_ensure(dba_insert_new(db, insert) == DBA_ERROR);
+
+	/* Check dba_ana_* functions */
+	{
+		int is_last;
+		int count = 0;
+		dba_cursor cursor;
+
+		/*
+		CHECKED(dba_ana_count(db, &count));
+		fail_unless(count == 1);
+		*/
+
+		/* Iterate the anagraphic database */
+		CHECKED(dba_ana_query(db, &cursor, &count));
+		gen_ensure(cursor != 0);
+		gen_ensure_equals(count, 1);
+
+		/* There should be an item */
+		CHECKED(dba_ana_cursor_next(cursor, result, &is_last));
+
+		/* Check that the result matches */
+		ensureTestRecEquals(sampleAna, result);
+
+		/* There should be only one item */
+		gen_ensure(is_last);
+
+		gen_ensure(dba_ana_cursor_next(cursor, result, &is_last) == DBA_ERROR);
+
+		dba_cursor_delete(cursor);
+	}
+
+	/* Try many possible queries */
+
+#define TRY_QUERY(type, param, value) do {\
+		int count; \
+		dba_cursor cursor; \
+		dba_record_clear(query); \
+		CHECKED(dba_record_key_set##type(query, param, value)); \
+		CHECKED(dba_query(db, query, &cursor, &count)); \
+		gen_ensure(cursor != 0); \
+		dba_cursor_delete(cursor); \
+	} while (0)
+
+	TRY_QUERY(c, DBA_KEY_ANA_ID, "1");
+	TRY_QUERY(i, DBA_KEY_YEARMIN, 1999);
+	TRY_QUERY(i, DBA_KEY_YEARMAX, 2030);
+	TRY_QUERY(i, DBA_KEY_YEAR, 2005);
+	/*
+	TRY_QUERY(i, DBA_KEY_MONTHMIN, 1);
+	TRY_QUERY(i, DBA_KEY_MONTHMAX, 12);
+	*/
+	TRY_QUERY(i, DBA_KEY_MONTH, 5);
+	/*
+	TRY_QUERY(i, DBA_KEY_DAYMIN, 1);
+	TRY_QUERY(i, DBA_KEY_DAYMAX, 12);
+	*/
+	TRY_QUERY(i, DBA_KEY_DAY, 5);
+	/*
+	TRY_QUERY(i, DBA_KEY_HOURMIN, 1);
+	TRY_QUERY(i, DBA_KEY_HOURMAX, 12);
+	*/
+	TRY_QUERY(i, DBA_KEY_HOUR, 5);
+	/*
+	TRY_QUERY(i, DBA_KEY_MINUMIN, 1);
+	TRY_QUERY(i, DBA_KEY_MINUMAX, 12);
+	*/
+	TRY_QUERY(i, DBA_KEY_MIN, 5);
+	/*
+	TRY_QUERY(i, DBA_KEY_SECMIN, 1);
+	TRY_QUERY(i, DBA_KEY_SECMAX, 12);
+	*/
+	TRY_QUERY(i, DBA_KEY_SEC, 5);
+	TRY_QUERY(i, DBA_KEY_LATMIN, 1);
+	TRY_QUERY(i, DBA_KEY_LATMAX, 60);
+	TRY_QUERY(i, DBA_KEY_LONMIN, 1);
+	TRY_QUERY(i, DBA_KEY_LONMAX, 60);
+	TRY_QUERY(i, DBA_KEY_MOBILE, 1);
+	TRY_QUERY(i, DBA_KEY_FIXED, 1);
+	//TRY_QUERY(c, DBA_KEY_IDENT_SELECT, "pippo");
+	TRY_QUERY(i, DBA_KEY_PINDICATOR, 1);
+	TRY_QUERY(i, DBA_KEY_P1, 1);
+	TRY_QUERY(i, DBA_KEY_P2, 1);
+	TRY_QUERY(i, DBA_KEY_LEVELTYPE, 1);
+	TRY_QUERY(i, DBA_KEY_L1, 1);
+	TRY_QUERY(i, DBA_KEY_L2, 1);
+	TRY_QUERY(c, DBA_KEY_VAR, "B10020");
+	TRY_QUERY(i, DBA_KEY_REP_COD, 1);
+	TRY_QUERY(i, DBA_KEY_PRIORITY, 1);
+	TRY_QUERY(i, DBA_KEY_PRIOMIN, 1);
+	TRY_QUERY(i, DBA_KEY_PRIOMAX, 1);
+	TRY_QUERY(i, DBA_KEY_STATION, 1);
+
+	/* Try a query */
+	{
+		int count;
+		int is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+
+		dba_record_clear(query);
+
+		/* Prepare a query */
+		CHECKED(dba_record_key_setd(query, DBA_KEY_LATMIN, 10.0));
+
+		/* Make the query */
+		CHECKED(dba_query(db, query, &cursor, &count));
+
+		/* See that a cursor has in fact been allocated */
+		gen_ensure(cursor != 0);
+		gen_ensure(count != 0);
+
+		/* There should be at least one item */
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(!is_last);
+
+		/* Check that the results match */
+		ensureTestRecEquals(sampleAna, result);
+		ensureTestRecEquals(sampleBase, result);
+		ensureTestRecEquals(sample0, result);
+
+		/*
+		printrecord(result, "RES: ");
+		exit(0);
+		*/
+
+		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
+		if (var == DBA_VAR(0, 1, 11))
+			ensureTestRecEquals(sample00, result);
+		if (var == DBA_VAR(0, 1, 12))
+			ensureTestRecEquals(sample01, result);
+
+		/* The item should have two data in it */
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+
+		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
+		if (var == DBA_VAR(0, 1, 11))
+			ensureTestRecEquals(sample00, result);
+		if (var == DBA_VAR(0, 1, 12))
+			ensureTestRecEquals(sample01, result);
+
+		/* There should be also another item */
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+
+		/* Check that the results matches */
+		ensureTestRecEquals(sampleAna, result);
+		ensureTestRecEquals(sampleBase, result);
+		ensureTestRecEquals(sample1, result);
+
+		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
+		if (var == DBA_VAR(0, 1, 11))
+			ensureTestRecEquals(sample10, result);
+		if (var == DBA_VAR(0, 1, 12))
+			ensureTestRecEquals(sample11, result);
+
+		/* The item should have two data in it */
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+
+		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
+		if (var == DBA_VAR(0, 1, 11))
+			ensureTestRecEquals(sample10, result);
+		if (var == DBA_VAR(0, 1, 12))
+			ensureTestRecEquals(sample11, result);
+
+		/* Now there should not be anything anymore */
+		gen_ensure(is_last);
+		gen_ensure(dba_cursor_next(cursor, result, &var, &is_last) == DBA_ERROR);
+
+		/* Deallocate the cursor */
+		dba_cursor_delete(cursor);
+	}
+
+	/* Try a query for best value */
+	{
+		int count;
+		int is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+
+		dba_record_clear(query);
+
+		/* Prepare a query */
+		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
+		CHECKED(dba_record_key_setc(query, DBA_KEY_QUERYBEST, "1"));
+
+		/* Make the query */
+		CHECKED(dba_query(db, query, &cursor, &count));
+
+		/* See that a cursor has in fact been allocated */
+		gen_ensure(cursor != 0);
+
+		/* There should be four items */
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(!is_last);
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(!is_last);
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(!is_last);
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+
+		/* Now there should not be anything anymore */
+		gen_ensure(is_last);
+		gen_ensure(dba_cursor_next(cursor, result, &var, &is_last) == DBA_ERROR);
+
+		/* Deallocate the cursor */
+		dba_cursor_delete(cursor);
+	}
+
+
+	/* Delete one of the items */
+	dba_record_clear(query);
+	CHECKED(dba_record_key_seti(query, DBA_KEY_YEARMIN, 1945));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_MONTHMIN, 4));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_DAYMIN, 25));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_HOURMIN, 8));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_MINUMIN, 10));
+	CHECKED(dba_delete(db, query));
+
+#if 0
+	/* Querying for both exact time and a time range should fail */
+	{
+		int count;
+		dba_cursor cursor;
+		CHECKED(dba_seti(query, "min", 10));
+		fail_unless(dba_query(db, query, &cursor, &count) == DBA_ERROR);
+		/*
+		 * No need to delete, as dba_query failed 
+		dba_cursor_delete(cursor);
+		 */
+	}
+#endif
+
+	/* See if the results change after deleting the tdata2 item */
+	{
+		int count;
+		int is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure(count > 0);
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		ensureTestRecEquals(sampleAna, result);
+		ensureTestRecEquals(sampleBase, result);
+
+		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
+		if (var == DBA_VAR(0, 1, 11))
+			ensureTestRecEquals(sample00, result);
+		if (var == DBA_VAR(0, 1, 12))
+			ensureTestRecEquals(sample01, result);
+
+		/* The item should have two data in it */
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+
+		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
+		if (var == DBA_VAR(0, 1, 11))
+			ensureTestRecEquals(sample00, result);
+		if (var == DBA_VAR(0, 1, 12))
+			ensureTestRecEquals(sample01, result);
+
+		gen_ensure(is_last);
+		gen_ensure(dba_cursor_next(cursor, result, &var, &is_last) == DBA_ERROR);
+		dba_cursor_delete(cursor);
+	}
+
+	/* Insert some QC data */
+	{
+		int count;
+		int is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		int val;
+		int qc_count;
+		int id_data;
+
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		do {
+			CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+			/* fprintf(stderr, "%d B%02d%03d\n", count, DBA_VAR_X(var), DBA_VAR_Y(var)); */
+		} while (!is_last && var != DBA_VAR(0, 1, 11));
+		gen_ensure(var == DBA_VAR(0, 1, 11));
+		dba_cursor_delete(cursor);
+
+		/* Insert new QC data about this report */
+		dba_record_clear(qc);
+		dba_record_var_seti(qc, DBA_VAR(0, 33, 2), 11);
+		dba_record_var_seti(qc, DBA_VAR(0, 33, 3), 22);
+		dba_record_var_seti(qc, DBA_VAR(0, 33, 5), 33);
+		dba_record_var_enqid(result, DBA_VAR(0, 1, 11), &id_data);
+		CHECKED(dba_qc_insert(db, id_data, /*result, DBA_VAR(0, 1, 11),*/ qc));
+
+		/* Query back the data */
+		dba_record_clear(qc);
+		CHECKED(dba_qc_query(db, id_data, NULL, 0, qc, &qc_count));
+
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val));
+		gen_ensure(val == 11);
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val));
+		gen_ensure(val == 22);
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val));
+		gen_ensure(val == 33);
+
+		/* Delete a couple of items */
+		{
+			dba_varcode todel[] = {DBA_VAR(0, 33, 2), DBA_VAR(0, 33, 5)};
+			CHECKED(dba_qc_delete(db, id_data, todel, 2));
+		}
+		/* Deleting non-existing items should not fail.  Also try creating a
+		 * query with just on item */
+		{
+			dba_varcode todel[] = {DBA_VAR(0, 33, 2)};
+			CHECKED(dba_qc_delete(db, id_data, todel, 1));
+		}
+
+		/* Query back the data */
+		dba_record_clear(qc);
+		{
+			dba_varcode toget[] = { DBA_VAR(0, 33, 2), DBA_VAR(0, 33, 3), DBA_VAR(0, 33, 5) };
+			CHECKED(dba_qc_query(db, id_data, toget, 3, qc, &qc_count));
+		}
+
+		gen_ensure(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val) == DBA_ERROR);
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val));
+		gen_ensure(val == 22);
+		gen_ensure(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val) == DBA_ERROR);
+	}
+
+#if 0
+	{
+		/* Insert some many things */
+		int i;
+		for (i = 20; i < 10000; i++)
+		{
+			CHECKED(dba_seti(rec, "B01050", i));
+			CHECKED(dba_seti(rec, "l1", i));
+			CHECKED(dba_insert(db, rec));
+		}
+	}
+#endif
+
+	/*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
+}
+
+}
+
+/* vim:set ts=4 sw=4: */

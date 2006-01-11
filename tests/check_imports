@@ -1,0 +1,583 @@
+#!/usr/bin/perl -w
+
+# Run dbamsg dump --interpreted on various input messages and perform checks on the output.
+
+use strict;
+use warnings;
+
+my $CONNECT_OPTS = '--user=enrico';
+
+my $verbose = 0;
+#my $verbose = 3;
+
+sub test_all($;$);
+sub test_line($$;$);
+sub test_reconvert($;$);
+sub test_import(;$);
+sub test_dbinout($$;$);
+sub test_compare($;$@);
+sub run_test($);
+sub get_output($);
+sub print_output($);
+
+my $tested = 0;
+my $failed = 0;
+
+my @tests = (
+	{
+		type => 'bufr', data => 'obs0-1.22.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(1, "0.1") ]
+	},
+	{
+		type => 'bufr', data => 'obs0-3.504.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(1, "0.3") ]
+	},
+	{
+		type => 'bufr', data => 'obs1-9.2.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(10, "1.9") ]
+	},
+	{
+		type => 'bufr', data => 'obs1-11.16.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(10, "1.11") ]
+	},
+	{
+		type => 'bufr', data => 'obs1-13.36.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(10, "1.13") ]
+	},
+	{
+		type => 'bufr', data => 'obs1-19.3.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(10, "1.19") ]
+	},
+	{
+		type => 'bufr', data => 'obs1-21.1.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(9, "1.21") ]
+	},
+	{
+		type => 'bufr', data => 'obs2-101.16.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(3, "2.101") ]
+	},
+	{
+		type => 'bufr', data => 'obs2-102.1.bufr',
+		tests => [ test_reconvert('bufr'), 
+			   #test_reconvert('crex'),
+			   test_import(), test_dbinout(11, "2.102") ]
+	},
+	{
+		type => 'bufr', data => 'obs2-91.2.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(3, "2.91") ]
+	},
+	{
+		type => 'bufr', data => 'obs4-142.1.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(12, "4.142") ]
+	},
+	{
+		type => 'bufr', data => 'obs4-144.4.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(13, "4.144") ]
+	},
+	{
+		type => 'bufr', data => 'obs4-145.4.bufr',
+		tests => [ test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(14, "4.145") ]
+	},
+	{
+		type => 'aof', data => 'obs1-14.63.aof',
+		tests => [ test_compare('bufr', '', qr/^\[020012 /), ]
+	},
+	{
+		type => 'aof', data => 'obs1-21.1.aof',
+		tests => [ test_compare('bufr', ''), ]
+		#tests => [ test_compare('bufr', '', 29, 30, 31), ]
+	},
+	{
+		type => 'aof', data => 'obs1-24.34.aof',
+		tests => [ test_compare('bufr', ''), ]
+		#tests => [ test_compare('bufr', '', 3, 4, 16, 23, 29, 30, 31, 34), ]
+	},
+	{
+		type => 'aof', data => 'obs1-24.2104.aof',
+		tests => [ test_compare('bufr', ''), ]
+		#tests => [ test_compare('bufr', '', 3, 4, 16, 29, 30, 31, 34), ]
+	},
+	{
+		type => 'aof', data => 'obs2-144.2198.aof',
+		tests => [ test_compare('bufr', ''), ]
+		#tests => [ test_compare('bufr', '', 3, 9, 10, 15), ]
+	},
+	{
+		type => 'aof', data => 'obs4-165.2027.aof',
+		tests => [ test_compare('bufr', ''), ]
+		#tests => [ test_compare('bufr', '', 3, 4), ]
+	},
+	{
+		type => 'aof', data => 'obs5-35.61.aof',
+		tests => [ test_compare('bufr', ''), ]
+		#tests => [ test_compare('bufr', '', 6, 7, 17 .. 21, map { (22+$_*8 + 2) } 0 .. 62), ]
+	},
+	{
+		type => 'aof', data => 'obs5-36.30.aof',
+		tests => [ test_compare('bufr', ''), ]
+		#tests => [ test_compare('bufr', '', 15, 17 .. 21, map { (22+$_*8 + 2) } 0 .. 30), ]
+	},
+	{
+		type => 'aof', data => 'obs6-32.1573.aof',
+		tests => [ test_compare('bufr', '', ), ]
+		#tests => [ test_compare('bufr', '', 15, 17 .. 21, map { (22+$_*8 + 2) } 0 .. 30), ]
+	},
+	{
+		type => 'crex', data => 'test-synop0.crex',
+		tests => [
+			test_line(28, qr/^020011.+?: 8$/),
+			test_line(33, qr/^020011.+?: 8$/),
+			test_line(36, qr/^020011.+?: \(undef\)$/),
+			test_reconvert('crex'),
+			test_reconvert('bufr'),
+		],
+	},
+##	[ 'crex', 'test-temp0.crex', [ 
+##		test_all(qr//)
+##	] ],
+	{
+		type => 'bufr', data => 'test-temp1.bufr',
+		tests => [
+			test_all(qr/^Sounding #75 /m),
+			test_all(qr/^Sounding #76 /m, 'reverse'),
+			test_line(24, qr/^\t007004.+?: 101300.000000$/),
+			test_line(616, qr/^\t007004.+: 680.000000$/),
+			test_reconvert('bufr'),
+			test_reconvert('crex'),
+		],
+	},
+	{
+		type => 'bufr', data => 'test-airep1.bufr',
+		tests => [
+			test_line(3, qr/^001006 .+?: EU4824$/),
+			test_line(17, qr/^005001 .+?: 54.205000$/),
+			test_line(37, qr/^020041 .+?: \(undef\)$/),
+			test_reconvert('bufr'),
+			test_reconvert('crex'),
+		]
+	},
+	{
+		type => 'bufr', data => 'obs4-142.13803.bufr',
+		tests => [
+			test_reconvert('bufr'), test_reconvert('crex'), test_import(), test_dbinout(12, "4.142"),
+			test_line(2, qr/^Flight type: AIREP$/),
+			test_line(17, qr/^005001 .+?: 38\.580000$/),
+			test_line(19, qr/^006001 .+?: -100\.230000$/),
+			test_line(25, qr/^012001 .+?: -51\.000000$/),
+		]
+	},
+);
+
+if (@ARGV && $ARGV[0] eq 'list')
+{
+	my $idx = 0;
+	for my $test (@tests)
+	{
+		printf "%2d ../tools/dbamsg dump --interpreted -t %s %s/%s\n",
+			$idx, $test->{type}, $test->{type}, $test->{data};
+		$idx++;
+	}
+	exit 0;
+}
+
+if (@ARGV && $ARGV[0] =~ /^-v(\d+)$/)
+{
+	$verbose = $1;
+	shift @ARGV;
+}
+
+if (@ARGV && $ARGV[0] eq 'out')
+{
+	shift @ARGV;
+	for my $idx (@ARGV)
+	{
+		print "Output of command for test $idx:\n";
+		print_output(get_output($tests[$idx]));
+	}
+	exit 0;
+}
+
+my @totest;
+if (@ARGV && $ARGV[0] =~ /^\d+$/)
+{
+	@totest = map { $tests[$_] } @ARGV;
+} else {
+	@totest = @tests;
+}
+
+printf "Running %d tests", scalar(@totest) if $verbose == 0;
+for my $test (@totest)
+{
+	printf "Running test for %s/%s...\n",
+		$test->{type}, $test->{data}
+			if ($verbose > 1);
+	print "." if ($verbose == 0);
+	if (run_test($test))
+	{
+		printf "Test for %s/%s succeeded.\n", $test->{type}, $test->{data}
+			if ($verbose > 0);
+	} else {
+		printf "Test for %s/%s failed.\n", $test->{type}, $test->{data}
+			if ($verbose > 0);
+	}
+}
+print "\n" if $verbose == 0;
+
+if ($failed == 0)
+{
+	printf "$0: %d/%d tests succeeded.\n", $tested, $tested;
+} else {
+	printf "$0: %d/%d tests failed\n", $failed, $tested;
+}
+
+exit $failed;
+
+
+#
+# Program functions
+#
+sub TRUE () { return 1; }
+sub FALSE () { return undef; }
+
+sub test_log ($$;@)
+{
+	my ($res, $test, @msg) = @_;
+	$tested++;
+	if (! $res)
+	{
+		printf STDERR "%s/%s: ", $test->{type}, $test->{data};
+		printf STDERR @msg;
+		$failed++;
+	}
+	return $res;
+}
+
+sub run_test ($)
+{
+	my ($test) = @_;
+	#my ($type, $file, $matches) = @$test;
+	my $out = get_output($test) or return;
+	my $res = 1;
+	if (not exists $test->{tests})
+	{
+		printf STDOUT "Tests need to be written for %s/%s.  Output is:\n",
+			$test->{type}, $test->{data};
+		print_output($out);
+		return;
+	}
+
+	for my $m (@{$test->{tests}})
+	{
+		$res = undef if not &{$m}($test);
+	}
+
+	return $res;
+}
+
+sub get_output ($)
+{
+	my ($test) = @_;
+	my $ext = $test->{data};
+	$ext =~ s/.+\.([^.]+)$/$1/;
+	my $cmd = sprintf("../tools/dbamsg dump --interpreted -t %s %s/%s",
+		$ext, $test->{type}, $test->{data});
+	print "Running command $cmd\n" if ($verbose > 2);
+	my $out = `$cmd`;
+	if ($? != 0)
+	{
+		return test_log FALSE, $test, "dbamsg failed to intepret the message\n";
+	}
+	test_log TRUE, $test;
+	return $out;
+}
+
+sub reconvert ($$$)
+{
+	my ($test, $middle, $last) = @_;
+	my $tmpfile = "check_imports.tmp";
+
+	my $cmd1 = sprintf("../tools/dbamsg convert -t %s -d %s %s/%s > $tmpfile",
+		$test->{type}, $middle, $test->{type}, $test->{data});
+	print "Running command $cmd1\n" if ($verbose > 2);
+	if (system($cmd1) != 0)
+	{
+		test_log FALSE, $test, "converting to %s.\n\tMessage sequence:\n\t\t%s\n",
+			$middle, $cmd1;
+		unlink($tmpfile);
+		return undef;
+	}
+
+	my $cmd2 = sprintf("../tools/dbamsg convert -t %s -d %s $tmpfile > $last",
+		$middle, $test->{type});
+	print "Running command $cmd2\n" if ($verbose > 2);
+	if (system($cmd2) != 0)
+	{
+		test_log FALSE, $test, "converting back from %s.\n\tMessage sequence:\n\t\t%s\n\t\t%s\n",
+			$middle, $cmd1, $cmd2;
+		unlink($tmpfile);
+		unlink($last);
+		return undef;
+	}
+
+	unlink($tmpfile);
+	return 1;
+}
+
+sub print_output ($)
+{
+	my ($out) = @_;
+	
+	my $line_no = 1;
+	for my $l (split "\n", $out)
+	{
+		printf "%3i %s\n", $line_no, $l;
+		$line_no++;
+	}
+}
+
+sub compare_msgs ($$$$$)
+{
+	my ($test, $exceptions, $prefix, $file1, $file2) = @_;
+	my ($type1, $type2);
+	if ($file1 =~ /\.(bufr|crex|aof)/)
+	{
+		$type1 = substr($1, 0, 1);
+	} else {
+		test_log FALSE, $test, "$prefix the first file (%s) has an unrecognized extension\n". $file1;
+		return undef;
+	}
+	if ($file2 =~ /\.(bufr|crex|aof)/)
+	{
+		$type2 = substr($1, 0, 1);
+	} else {
+		test_log FALSE, $test, "$prefix the second file (%s) has an unrecognized extension\n", $file2;
+		return undef;
+	}
+	my $cmd = sprintf("../tools/dbamsg compare -t%s -d%s %s/%s %s/%s 2>&1",
+			$type1, $type2, $test->{type}, $file1, $test->{type}, $file2);
+	print "Running command $cmd\n" if ($verbose > 2);
+	my $out = `$cmd`;
+	if ($? != 0 && length($out) == 0)
+	{
+		return test_log FALSE, $test, "$prefix dbamsg failed to intepret the message\n";
+	}
+
+	my @filtered_out;
+	for my $line (split("\n", $out))
+	{
+		if ($line =~ /^Error 8/)
+		{
+			push (@filtered_out, "\t$line") if scalar(@filtered_out);
+		}
+		else
+		{
+			my $do = 1;
+			for my $exc (@$exceptions)
+			{
+				if ($line =~ $exc)
+				{
+					$do = 0;
+					last;
+				}
+			}
+			push (@filtered_out, "\t$line") if $do;
+		}
+	}
+	if (@filtered_out)
+	{
+		return test_log FALSE, $test, "$prefix messages differ:\n".join("\n", @filtered_out)."\n";
+	}
+
+	return 1;
+}
+
+
+sub test_all($;$)
+{
+	my ($re, $flags) = @_;
+	$flags = '' if not defined $flags;
+	my $reversed = $flags =~ /\breverse\b/;
+	return sub {
+		print "Running test test_all.\n" if ($verbose > 2);
+
+		my ($test) = @_;
+		my $out = get_output($test);
+		
+		if ($reversed ? $out =~ $re : $out !~ $re)
+		{
+			return test_log FALSE, $test, "failed test %s%s\n",
+				$re, ($flags ne '') ? " ($flags)" : "";
+		}
+		return test_log TRUE, $test;
+	};
+}
+
+sub test_line($$;$)
+{
+	my ($line, $re, $flags) = @_;
+	$flags = '' if not defined $flags;
+	return sub {
+		print "Running test test_line.\n" if ($verbose > 2);
+
+		my ($test) = @_;
+		my $out = get_output($test);
+
+		my @out = split("\n", $out);
+		my $l = $out[$line - 1];
+		if (not defined $re)
+		{
+			printf STDERR "%s/%s: missing test for line $line\n\tLine is: $line\n",
+				$test->{type}, $test->{file};
+			next;
+		}
+		my $reversed = $flags =~ /\breverse\b/;
+		if ($reversed ? $l =~ $re : $l !~ $re)
+		{
+			return test_log FALSE, $test, "line %d: failed test %s (line is '%s')\n",
+				$line, $re, $l;
+		}
+		return test_log TRUE, $test;
+	};
+}
+
+sub test_reconvert($;$)
+{
+	my ($middle, $flags) = @_;
+	return sub {
+		print "Running test test_reconvert.\n" if ($verbose > 2);
+
+		my ($test) = @_;
+		my $second = $test->{data};
+		$second =~ s/^.+\./check_imports./;
+		my $second_fullpath = $test->{type}.'/'.$second;
+
+		if (!reconvert($test, $middle, $second_fullpath))
+		{
+			return test_log FALSE, $test, "passage from %s to %s and back failed\n", $test->{type}, $middle;
+		}
+
+		# TODO: remove when attribute encoding will be implemented
+		my @exc;
+		@exc = (qr/first has attributes, second does not/) if $middle ne 'bufr';
+		if (compare_msgs($test, \@exc, sprintf("passage from %s to %s and back", $test->{type}, $middle), $test->{data}, $second))
+		{
+			unlink($second_fullpath);
+			return test_log TRUE, $test;
+		} else {
+			unlink($second_fullpath);
+			return undef;
+		}
+
+
+#		my @out = split("\n", $out);
+#		my @out1 = split("\n", $out1);
+#		if (scalar(@out) != scalar(@out1))
+#		{
+#			return test_log FALSE, $test, "passage from %s to %s and back gave %d lines of dump instead of %d\n",
+#				$test->{type}, $middle, scalar(@out1), scalar(@out);
+#		}
+#		for (my $i = 0; $i < @out; $i++)
+#		{
+#			if ($out[$i] ne $out1[$i])
+#			{
+#				return test_log FALSE, $test, "passage from %s to %s and back gave a difference in line %d:\n\tbefore is:\t%s\n\tafter is:\t%s\n",
+#					$test->{type}, $middle,
+#					$i + 1, $out[$i], $out1[$i];
+#			}
+#		}
+		return test_log TRUE, $test;
+	};
+}
+
+sub test_import(;$)
+{
+	my ($flags) = @_;
+	return sub {
+		print "Running test test_import.\n" if ($verbose > 2);
+
+		my ($test) = @_;
+
+		my $cmd = sprintf("../tools/dbadb import %s -t %s %s/%s",
+				$CONNECT_OPTS, $test->{type}, $test->{type}, $test->{data});
+		print "Running command $cmd\n" if ($verbose > 2);
+		if (system($cmd) != 0)
+		{
+			return test_log FALSE, $test, "importing into database\n";
+		} else {
+			return test_log TRUE, $test;
+		}
+	};
+}
+
+sub test_dbinout($$;$)
+{
+	my ($export_type, $export_tpl, $flags) = @_;
+	return sub {
+		print "Running test test_dbinout.\n" if ($verbose > 2);
+
+		my ($test) = @_;
+
+		my $out = get_output($test);
+		my $second = $test->{data};
+		$second =~ s/^.+\./check_dbinout./;
+		my $tmpfile = $test->{type}.'/'.$second;
+
+		my $cmd1 = sprintf("../tools/dbadb wipe %s ../tables/repinfo.csv", $CONNECT_OPTS);
+		print "Running command $cmd1\n" if ($verbose > 2);
+		return test_log FALSE, $test, "emptying the database.\n\tCommand: %s\n", $cmd1
+			if system($cmd1) != 0;
+
+		my $cmd2 = sprintf("../tools/dbadb import %s -t %s %s/%s",
+				$CONNECT_OPTS, $test->{type}, $test->{type}, $test->{data});
+		print "Running command $cmd2\n" if ($verbose > 2);
+		return test_log FALSE, $test, "importing %s/%s into the database.\n".
+			"\tCommands:\n\t\t%s\n\t\t%s\n", $test->{type}, $test->{data}, $cmd1, $cmd2
+				if system($cmd2) != 0;
+
+		my $cmd3 = sprintf("../tools/dbadb export -t %s %s %d > %s",
+			$export_tpl, $CONNECT_OPTS, $export_type, $tmpfile);
+		print "Running command $cmd3\n" if ($verbose > 2);
+		if (system($cmd3) != 0)
+		{
+			unlink($tmpfile);
+			return test_log FALSE, $test, "exporting %s/%s from the database.\n".
+				"\tCommands:\n\t\t%s\n\t\t%s\n\t\t%s\n", $test->{type}, $test->{data},
+				$cmd1, $cmd2, $cmd3;
+		}
+
+		# TODO: remove when attribute encoding will be implemented
+		my @exc = (qr/first has attributes, second does not/);
+		if (compare_msgs($test, \@exc, "import and export from db", $test->{data}, $second))
+		{
+			unlink($tmpfile);
+			return test_log TRUE, $test;
+		} else {
+			unlink($tmpfile);
+			return undef;
+		}
+
+		unlink($tmpfile);
+		return test_log TRUE, $test;
+	};
+}
+
+sub test_compare($;$@)
+{
+	my ($other, $flags, @exc) = @_;
+	return sub {
+		print "Running test test_compare.\n" if ($verbose > 2);
+
+		my ($test) = @_;
+		my $odata = $test->{data};
+		$odata =~ s/\.[^.]+$/.$other/;
+
+		if (compare_msgs($test, \@exc, sprintf("compare with %s version (%s)", $other, $odata), $test->{data}, $odata))
+		{
+			return test_log TRUE, $test;
+		} else {
+			return undef;
+		}
+
+		return test_log TRUE, $test;
+	};
+}

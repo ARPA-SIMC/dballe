@@ -1,0 +1,7 @@
+#!/bin/sh
+rm tests/vg-dballe.log.pid*
+cd tests
+./check_dballe
+CK_FORK=no valgrind --log-file=vg-dballe.log ./check_dballe
+#CK_FORK=no valgrind --log-file=vg-dballe.log .libs/lt-check_dballe
+#CK_FORK=no gdb check_dballe

@@ -1,0 +1,7 @@
+/** @defgroup core Dballe core functions
+@ingroup dballe
+
+Core functions used by all Dballe modules.  It allows storage of in-memory
+observational data (dba_var.h and dba_record.h), plus utility CSV parsing code
+(dba_csv.h) and an interface to hashed on-disk databases (dba_db.h).
+*/

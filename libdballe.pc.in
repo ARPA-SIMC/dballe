@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libdballe
+Description: Volatile database for computations on metereological data
+Version: @VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -ldballe -lpopt

@@ -1,0 +1,10 @@
+#!/bin/sh
+OUTPUT=-window
+#OUTPUT=-output=planet.jpg
+
+echo "Generating markers..."
+#./dump_ana "UA17" > markers
+./dump_ana > markers
+echo "Running xplanet..."
+xplanet $OUTPUT --config=xplanet.conf -latitude=45 -longitude=11 -radius=120 $*
+#xplanet $OUTPUT --config=xplanet.conf $*

@@ -1,0 +1,266 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+# The values are:
+#   required/optional/ignored on insert
+#   required/optional/ignored on query
+#   present/absent            on results
+#   comment about the field  [optional value]
+our %comments = (
+	priority =>	[ "ignored", "optional", "present",
+	                  "Every type of report has an associated priority that controls ".
+	            	  "which data are first returned when there is more than one in the ".
+		    	  "same physical space.  It can be changed by editing ".
+			  "/etc/dballe/repinfo.csv"],
+	priomax =>	[ "ignored", "optional", "absent" ],
+	priomin =>	[ "ignored", "optional", "absent" ],
+	rep_cod =>	[ "required this or rep_memo", "optional", "present" ],
+	rep_memo =>	[ "required this or rep_cod", "optional", "present" ],
+	ana_id =>	[ "optional", "optional", "present",
+			  "Internal DB-ALLe ID referring to a pseudoana entry, used as ".
+	                  "a shortcut reference instead of specifying the full data" ],
+	block =>	[ "optional", "optional", "present" ],
+	station =>	[ "optional", "optional", "present" ],
+	mobile =>	[ "required", "optional", "present",
+			  "Set to 1 if the station is mobile, such as a ship or a flight; else 0"],
+	fixed =>	[ "ignored", "optional", "absent",
+	                  "Set to 1 to query for non-mobile stations only.  It is equivalent to ".
+			  "querying with mobile=0"],
+	ident =>	[ "required if mobile=1", "optional", "present if mobile=1" ],
+	name =>		[ "optional", "optional", "present" ],
+	lat =>		[ "required", "optional", "present" ],
+	lon =>		[ "required", "optional", "present" ],
+	latmax =>	[ "ignored", "optional", "absent" ],
+	latmin =>	[ "ignored", "optional", "absent" ],
+	lonmax =>	[ "ignored", "optional", "absent" ],
+	lonmin =>	[ "ignored", "optional", "absent" ],
+	height =>	[ "optional", "optional", "present" ],
+	heightbaro =>	[ "optional", "optional", "present" ],
+	year_ident =>	[ "required if mobile=1", "optional", "present if mobile=1",
+			  "Only needed when the station is mobile"],
+	month_ident =>	[ "required if mobile=1", "optional", "present if mobile=1",
+			  "Only needed when the station is mobile"],
+	day_ident =>	[ "required if mobile=1", "optional", "present if mobile=1",
+			  "Only needed when the station is mobile"],
+	hour_ident =>	[ "required if mobile=1", "optional", "present if mobile=1",
+			  "Only needed when the station is mobile"],
+	min_ident =>	[ "required if mobile=1", "optional", "present if mobile=1",
+			  "Only needed when the station is mobile"],
+	datetime =>	[ "ignored", "ignored", "present",
+	                  "Convenience parameter: after a query it contains the datetime informations ",
+			  " all in a single string"],
+	year => 	[ "required", "optional", "present" ],
+	month => 	[ "required", "optional", "present" ],
+	day =>	 	[ "required", "optional", "present" ],
+	hour => 	[ "required", "optional", "present" ],
+	min => 		[ "required", "optional", "present" ],
+	sec =>	 	[ "required", "optional", "present" ],
+	yearmax =>	[ "ignored", "optional", "absent" ],
+	yearmin =>	[ "ignored", "optional", "absent" ],
+	monthmax =>	[ "ignored", "optional", "absent" ],
+	monthmin =>	[ "ignored", "optional", "absent" ],
+	daymax =>	[ "ignored", "optional", "absent" ],
+	daymin =>	[ "ignored", "optional", "absent" ],
+	hourmax =>	[ "ignored", "optional", "absent" ],
+	hourmin =>	[ "ignored", "optional", "absent" ],
+	minumax =>	[ "ignored", "optional", "absent" ],
+	minumin =>	[ "ignored", "optional", "absent" ],
+	secmax =>	[ "ignored", "optional", "absent" ],
+	secmin =>	[ "ignored", "optional", "absent" ],
+	leveltype =>	[ "required", "optional", "present" ],
+	l1 =>		[ "required", "optional", "present" ],
+	l2 =>		[ "required", "optional", "present" ],
+	pindicator =>	[ "required", "optional", "present" ],
+	p1 =>		[ "required", "optional", "present" ],
+	p2 =>		[ "required", "optional", "present" ],
+	var =>		[ "ignored", "optional", "present, indicates the name of the last variable returned" ],
+	varlist =>	[ "ignored", "optional", "absent",
+			  "Comma-separated list of variable codes wanted on output" ],
+	data_id =>	[ "ignored", "optional", "present",
+			  "Internal DB-ALLe ID referring to a value in the database, ".
+	                  "used as a shortcut reference" ],
+	querybest =>	[ "ignored", "optional", "absent",
+			  "If set to 1, in case multiple values exist in the ".
+			  "same phisical space the results will only have the ".
+			  "one with the highest report priority" ],
+);
+
+my $op = $ARGV[0];
+
+# Skip the declaration section
+while (<STDIN>)
+{
+	last if $_ eq "%%\n";
+}
+
+#   /** The variable code.  @see DBA_VAR, DBA_VAR_X, DBA_VAR_Y. */
+# 0 dba_var var;
+#   /** The variable description. */
+# 1 char desc[64];
+#   /** The measurement unit of the variable. */
+# 2 char unit[24];
+#   /** The scale of the variable.  When the variable is represented as an
+#    * integer, it is multiplied by 10**scale */
+# 3 int scale;
+#   /** The reference value for the variable.  When the variable is represented
+#    * as an integer, and after scaling, it is added this value */
+# 4 int ref;
+#   /** The length in digits of the integer representation of this variable
+#    * (after scaling and changing reference value) */
+# 5 int len;
+#   /** True if the variable is a string; false if it is a numeric value */
+# 6 int is_string;
+
+# Read the data
+my @names;
+my @data;
+my $pos = 0;
+while (<STDIN>)
+{
+	chop();
+	last if $_ eq '/* End of table definitions */';
+
+	if (/^([0-9a-z_]+),\s*DBA_KEY_[0-9A-Z_]+\s*$/)
+	{
+		push @names, $1;
+	} elsif (/^\s*{\s*(.+)\s*},\s*$/) {
+		my $name = $names[$pos++];
+		push(@data, [$name, map { $_ =~ s/(^"|"$)//g; $_ } split(/,\s*/, $1)]);
+		#print "ZZ: ", join(", ", @{$data{$data[0]}}), "\n";
+	}
+}
+
+our ($tag, $unit, $format, $desc, $ins, $que, $res, $com);
+
+our $DoxIntro = q{/**@defgroup dba_record_keywords Keywords used by dba_record
+@ingroup core
+
+This table lists the keywords used by ::dba_record.  You can use them to query
+and set data using function such as dba_enqi() and dba_seti().
+
+Every keyword is listed together with its measure unit, length in characters or
+digits and description.
+
+\verbatim
+};
+format DoxTop =
+Name          Unit      Format        Description
+.
+format Dox =
+@<<<<<<<<<<<< @<<<<<<<< @<<<<<<<<<<<< @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+$tag,         $unit,    $format,      $desc
+.
+our $DoxBottom = q{\endverbatim
+*/
+};
+
+our $RstIntro = q{.. table:: Standard parameter names
+
+  =============  =========  ==========  ===========================  =========  ========  ==========  ===============================
+  Name           Unit       Format      Description                  On Insert  On query  On results  Comment
+  =============  =========  ==========  ===========================  =========  ========  ==========  ===============================
+};
+format Rst =
+  @<<<<<<<<<<<<  @<<<<<<<<  ^<<<<<<<<<  ^<<<<<<<<<<<<<<<<<<<<<<<<<<  ^<<<<<<<<  ^<<<<<<<  ^<<<<<<<<<  ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  $tag,          $unit,     $format,    $desc,                       $ins,      $que,     $res,       $com
+~~                          ^<<<<<<<<<  ^<<<<<<<<<<<<<<<<<<<<<<<<<<  ^<<<<<<<<  ^<<<<<<<  ^<<<<<<<<<  ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                            $format,    $desc,                       $ins,      $que,     $res,       $com
+.
+our $RstBottom = '
+  =============  =========  ==========  ===========================  =========  ========  ==========  ===============================';
+
+sub mkformat($$$)
+{
+	my ($unit, $len, $dec) = @_;
+	if ($unit =~ /^CHARACTER|^CODE TABLE/)
+	{
+		return "$len chars";
+	} elsif ($dec == 0) {
+		return "$len digits";
+	} else {
+		return '#' x ($len - $dec) . '.' . '#' x $dec;
+	}
+}
+
+if ($op eq 'dox')
+{
+	print $DoxIntro;
+	$^ = "DoxTop";
+	$~ = "Dox";
+	for my $d (@data)
+	{
+		my ($len, $dec);
+		($tag, $unit, $len, $dec, $desc) = ($d->[0], $d->[3], $d->[6], $d->[4], $d->[2]);
+		$com = ($comments{$tag} or '');
+		$format = mkformat($unit, $len, $dec);
+		write STDOUT;	
+	}
+	print $DoxBottom;
+}
+elsif ($op eq 'rst')
+{
+	print $RstIntro;
+	#$^ = "RstTop";
+	$~ = "Rst";
+	for my $d (@data)
+	{
+		my ($len, $dec);
+		($tag, $unit, $len, $dec, $desc) = ($d->[0], $d->[3], $d->[6], $d->[4], $d->[2]);
+		$ins = ($comments{$tag}[0] or '');
+		$que = ($comments{$tag}[1] or '');
+		$res = ($comments{$tag}[2] or '');
+		$com = ($comments{$tag}[3] or '');
+		$format = mkformat($unit, $len, $dec);
+		write STDOUT;	
+	}
+	print $RstBottom, "\n";
+
+}
+elsif ($op eq 'tex')
+{
+	my $nc = '@{\hspace{0.5mm}}l@{\hspace{0.5mm}}';
+	my $dsc = '@{\hspace{0.5mm}}p{2.0cm}@{\hspace{0.5mm}}';
+	my $onc = '@{\hspace{0.5mm}}p{1.4cm}@{\hspace{0.5mm}}';
+	my $cmc = '@{\hspace{0.5mm}}p{3.5cm}@{\hspace{0.5mm}}';
+	print qq#{\\begin{scriptsize}
+\\begin{longtable}{|$nc|$nc|$nc|$dsc|$onc|$onc|$onc|$cmc|}
+\\hline
+{\\em Name} & {\\em Unit} & {\\em Format} & {\\em Description} & {\\em On insert input} & {\\em On query input} & {\\em On output} & {\\em Comment} \\\\
+\\hline
+\\endhead
+\\hline
+\\endfoot
+#;
+
+
+	for my $d (@data)
+	{
+		my ($len, $dec);
+		($tag, $unit, $len, $dec, $desc) = ($d->[0], $d->[3], $d->[6], $d->[4], $d->[2]);
+		$ins = ($comments{$tag}[0] or '');
+		$que = ($comments{$tag}[1] or '');
+		$res = ($comments{$tag}[2] or '');
+		$com = ($comments{$tag}[3] or '');
+		$format = mkformat($unit, $len, $dec);
+		$format =~ s/(\#+\.\#+)/{\\tiny $1}/;
+		$unit =~ s/CHARACTER/Character/;
+		$unit =~ s/(NUMERIC|NUMBER)/Numeric/;
+		my $out = join(' & ', ($tag, $unit, $format, $desc, $ins, $que, $res, $com))." \\\\\n";
+		$out =~ s/(_|#)/\\$1/g;
+		print $out;
+	}
+	
+	print q#\hline
+\end{longtable}
+\end{scriptsize}
+}
+#;
+}
+else
+{
+	die "unknown output format ".$ARGV[0];
+}
+
+

@@ -1,0 +1,41 @@
+Source: libdballe
+Priority: optional
+Maintainer: Enrico Zini <enrico@debian.org>
+Build-Depends: cdbs, debhelper (>> 4.1), dh-buildinfo, doxygen, libtut-dev, check, unixodbc-dev, gperf, g77, libpopt-dev, python-docutils, latex2html
+Standards-Version: 3.6.1
+
+Package: libdballe-dev
+Section: libdevel
+Architecture: any
+Depends: libdballe0 (= ${Source-Version})
+Recommends: pkg-config
+Description: volatile database for computations on metereological data
+ .
+ This is the development version of the library.
+
+Package: libdballe0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends} ${misc:Depends}
+Description: volatile database for computations on metereological data
+ .
+
+Package: python-dballe
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends} ${misc:Depends}
+Description: volatile database for computations on metereological data
+ .
+ Python bindings.
+
+Package: libdballe-bin
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends} ${misc:Depends}
+Description: swiss-army knife for CREX-encoded metereological data
+ dballetool provides various miscellaneous utility functions for working with
+ metereological data encoded in WMO FM 95 CREX format.
+ .
+ Currently implemented are:
+  * dump the contents of a CREX message
+  * expand CREX B and D table entries

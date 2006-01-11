@@ -1,0 +1,9 @@
+This directory contains test data, at least one file per supported report type.
+
+Samples have been selected as the ones with less unset values in the available
+dataset.  Some extra cases are there to test regressions; they are listed here:
+
+obs4-142.13803.bufr
+  Contains a longitude of -100.230000, which in the past was converted to
+  -10.023 because the internal storage space was not long enough to store the
+  initial '-'.  The dry bulb temperature had a similar bug.

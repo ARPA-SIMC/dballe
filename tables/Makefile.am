@@ -1,0 +1,15 @@
+## Process this file with automake to produce Makefile.in
+
+conf_DATA = repinfo.csv
+
+crexbtables = B000101.txt B000103.txt B000203.txt B990203.txt
+crexdtables = D000101.txt D000103.txt D000203.txt D990203.txt
+bufrbtables = B000000000980000.txt B000000000980201.txt B000000000980600.txt B000000000980601.txt B000000000981101.txt B000000000981200.txt B000000000981201.txt B000000002551200.txt
+bufrdtables = D000000000980000.txt D000000000980201.txt D000000000980600.txt D000000000980601.txt D000000000981101.txt D000000000981200.txt D000000000981201.txt D000000002551200.txt
+
+table_DATA = dballe.txt $(crexbtables) $(crexdtables) $(bufrbtables) $(bufrdtables)
+
+EXTRA_DIST = $(table_DATA) $(conf_DATA)
+
+clean-local:
+	rm -f *.idx

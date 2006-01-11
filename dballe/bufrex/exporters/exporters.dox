@@ -1,0 +1,13 @@
+/** @defgroup bufrexexporters Dballe CREX and BUFR export functions
+@ingroup bufrex
+
+CREX and BUFR template-specific export functions.
+
+It depends on the core and message modules.
+
+Procedure to add a new converter:
+
+\l Copy an existing one and adapt it
+\l Add an external declaration for its descriptor structure to the top of exporters.c
+\l Add a reference to its description structure to the exporters[] array in exporters.c
+*/

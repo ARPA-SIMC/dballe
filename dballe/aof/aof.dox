@@ -1,0 +1,7 @@
+/** @defgroup aof Dballe AOF functions
+@ingroup message
+
+AOF import and export functions.
+
+It depends on the core and message modules.
+*/

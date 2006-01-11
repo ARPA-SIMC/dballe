@@ -1,0 +1,7 @@
+/** @defgroup bufrex Dballe CREX and BUFR functions
+@ingroup message
+
+CREX and BUFR import and export functions.
+
+It depends on the core and message modules.
+*/

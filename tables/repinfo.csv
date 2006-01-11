@@ -1,0 +1,15 @@
+01,synop,report synottico,100,oss,0
+02,metar,metar,80,oss,0
+03,temp,radiosondaggio,100,oss,2
+09,boe,dati omdametrici,100,oss,31
+10,ship,synop da nave,100,oss,1
+11,tempship,temp da nave,100,oss,2
+12,airep,airep,80,oss,4
+13,amdar,amdar,100,oss,4
+14,acars,acars,100,oss,4
+104,ana_lm,valori analizzati LM,-1,ana,255
+105,ana,analisi,-10,pre,255
+106,pre_cleps_box1.5maxel001,previsti cosmo leps box 1.5 gradi valore max elemento 1,-1,pre,255
+107,pre_lmn_box1.5med,previzione Lokal Model nudging box 1.5 gradi valore medio,-1,pre,255
+108,pre_lmp_spnp0,previsione Lkal Model prognostica interpolato punto piu' vicino,-1,pre,255
+255,generic,export generici da DB Meteo,1,oss,42

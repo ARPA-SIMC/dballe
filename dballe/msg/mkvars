@@ -1,0 +1,73 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+my @vars;
+while (<>)
+{
+	chop;
+	next if /^\s*(?:#.+)?$/;
+	s/^\s*//;
+	s/\s*$//;
+	my @vals = split(/\s*,\s*/);
+	die "Invalid B local at line $." if ($vals[2] !~ /B(\d\d)(\d\d\d)/);
+	push @vars, [@vals[0, 1], $1, $2, @vals[3..8]];
+}
+
+@vars = sort { 
+	for my $i (4..9, 2, 3)
+	{
+		my $t = $a->[$i] <=> $b->[$i];
+		return $t if ($t != 0);
+	}
+	return 0;
+} @vars;
+
+open OUT, ">vars_h.inc" or die "Cannot write to vars_h.inc: $!";
+my $i = 0;
+for my $v (@vars)
+{
+	printf OUT "#define DBA_MSG_%s %d\n", $v->[0], $i++;
+}
+my %types = ( 'int' => 'int', 'num' => 'double', 'str' => 'const char*' );
+my %ftypes = ( 'int' => 'i', 'num' => 'd', 'str' => 'c' );
+for my $v (@vars)
+{
+	printf OUT "inline static dba_err dba_msg_set_%s(dba_msg msg, %s val, int conf) ", lc $v->[0], $types{$v->[1]};
+	printf OUT "{ return dba_msg_set%s(msg, DBA_VAR(0, %d, %d), val, conf, %d, %d, %d, %d, %d, %d); }\n",
+		$ftypes{$v->[1]}, (@$v)[2..9];
+
+	printf OUT "inline static dba_err dba_msg_set_%s_var(dba_msg msg, dba_var val) ", lc $v->[0];
+	printf OUT "{ return dba_msg_set(msg, val, DBA_VAR(0, %d, %d), %d, %d, %d, %d, %d, %d); }\n", (@$v)[2..9];
+
+	printf OUT "inline static dba_var dba_msg_get_%s_var(dba_msg msg) ", lc $v->[0];
+	printf OUT "{ dba_msg_datum d = dba_msg_find_by_id(msg, DBA_MSG_%s); return d == NULL ? NULL : d->var; }\n",
+		$v->[0];
+}
+printf OUT "\n#define DBA_MSG_VARTABLE_SIZE %d\n", $i;
+close OUT;
+
+open OUT, ">vars_c.inc" or die "Cannot write to vars_c.inc: $!";
+print OUT q|struct _dba_msg_var {
+	dba_varcode code;
+	int ltype, l1, l2;
+	int pind, p1, p2;
+};
+typedef struct _dba_msg_var* dba_msg_var;
+
+static struct _dba_msg_var dba_msg_vartable[] = {
+|;
+
+for my $v (@vars)
+{
+	printf OUT " { DBA_VAR(0, %d, %d), %d, %d, %d, %d, %d, %d },\n", (@$v)[2..9];
+}
+	
+printf OUT q|};
+|;
+close OUT;
+
+exit 0
+
+# vim:set ts=4 sw=4:

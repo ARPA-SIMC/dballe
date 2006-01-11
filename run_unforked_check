@@ -1,0 +1,6 @@
+#!/bin/sh
+cd tests
+./check_dballe
+CK_FORK=no gdbtui check_dballe
+#CK_FORK=no gdbtui .libs/lt-check_dballe
+#CK_FORK=no gdb check_dballe

@@ -1,0 +1,7 @@
+/** @defgroup io DB-ALLe message encoding and decoding functions
+@ingroup dballe
+
+Dballe message encoding and decoding functions.
+
+It depends on the core module.
+*/

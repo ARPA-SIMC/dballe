@@ -1,0 +1,430 @@
+README for Data Base All Enhanced version 0.7, still unreleased
+===============================================================
+
+Functionality
+-------------
+
+DB-ALLe is fully functional for building applications.
+
+Import and export functions are implemented for synop reports only.
+
+
+Resources
+---------
+
+* `dballe-0.7.tar.gz`_
+* `Documentazione API Fortran`_
+* `Documentazione Doxygen`_
+* `Guida per l'utente avanzato e l'amministratore`_
+
+.. _dballe-0.7.tar.gz: dballe-0.7.tar.gz
+.. _Documentazione API Fortran: doc-fapi/index.html
+.. _Guida per l'utente avanzato e l'amministratore: doc-guide/index.html
+.. _Documentazione Doxygen: doc-code/index.html
+
+
+What is in the release
+----------------------
+
+Release 0.7 of Dballe contains:
+
+* the full database functionality implemented and working;
+* the complete Fortran wrappers for the entire C API;
+* the simplified library interface to be used from Fortran;
+* guide for the simplified Fortran interface;
+* full BUFR and CREX support;
+* read-only AOF support;
+* import, export and conversion between DB-ALLe, ARPA Oracle database, CREX,
+  BUFR and AOF reports
+
+The C API has automated test suites that check its basic functionalities.
+Tests pass for all the database, bufr and crex functionality, and no faulty
+memory accesses are reported in Dballe's code while running the tests under
+valgrind's memory checker.
+
+What is not in release 0.7:
+
+* Support for CREX C data descriptors;
+* Support for some BUFR C data descriptors;
+* Write to AOF;
+* Export in VM format;
+
+
+Import/export capabilities
+--------------------------
+
+=============== ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======
+Description	Cat&Sub	AOFType	Testobs	Int.rep	   BUFREX	      AOF	    DBalle	     VM
+--------------- ------- ------- ------- ------- --------------- --------------- --------------- --------------
+.		.	.	.	.	Import	Export	Import	Export	Import	Export	Import	Export
+=============== ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======
+Synop land    	0   1	synop	yes	synop	tested	tested	tested	TODO	tested	tested	tocheck	TODO
+Synop land auto	0   3	synop	yes	synop	tested	tested	-	TODO	tested	tested	tocheck	TODO
+Synop ship abbr	1   9	ship	yes	sea	tested	tested	-	TODO	tested	tested	-	-
+Synop ship   	1  11	ship	yes	sea	tested	tested	tested	TODO	tested	tested	-	-
+Synop ship auto	1  13	ship	yes	sea	tested	tested	tested	TODO	tested	tested	-	-
+Synop ship redu	1  19	ship	yes	sea	tested	tested	-	TODO	tested	tested	-	-
+Surface buoy 	1  21	buoy	yes	sea	tested	tested	tested	TODO	tested	tested	tocheck	TODO
+Pilot land	2  91	pilot	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
+Pilot ship	2  92	pilot	no	?	-	-	-	-	-	-	-	-
+Temp land	2 101	temp	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
+Temp ship	2 102	temp	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
+Temp mobile	2 106	temp	no	?	-	-	-	-	-	-	-	-
+Sing.lev.airep 	4 142	airep	yes	flight	tested	tested	-	TODO	tested	tested	-	-
+Sing.lev.amdar 	4 144 	airep	yes	flight	tested	tested	tested	TODO	tested	tested	-	-
+Sing.lev.acars 	4 145	acar	yes	acars	tested	tested	-	TODO	tested	tested	-	-
+Generic         (any)   (none)  no      gneric  tocheck tocheck	-	-	tocheck	tocheck	TODO	TODO
+=============== ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======
+
+
+TODO-list items completed so far
+--------------------------------
+
+These are the TODO-list items completed so far::
+
+ * dballe.txt
+    + Decidere una variabile unica per le temperature (quale?  celsius o
+      kelvin?)
+    + Togliere levellayer e timerange, e metterli in una tabella extra usata
+      per l'export di BUFR e CREX solo se generici
+
+ * dba_msg
+    + Mostra l'ID della tabella in uso
+
+ * BUFR
+    + Spalmare i bit della data present bitmap e i valori di QC come variabili
+      nel bufrex_raw, e delegare la loro gestione a bufrex_conv
+
+ * Refactoring
+    + Refactor dba_msg to contain physical values with levellayer and timerange
+      metadata, grouped by level and then sorted by timerange so that it is
+      easier to work with database I/O and soundings
+    + Fare un oggetto encoding_options e uno decoding_options che contengano
+      parametri che controllano le procedure di encoding e decoding (template
+      bufr e crex, uso del check digit...)
+      Alla creazione, l'encoding_options venga inizializzato con valori di
+      default sensati, e sia opzionale specificarlo
+      (implementato tutto in bufrex_raw)
+    + Portare la dba_init fuori da dballe in un file generico.  Farle poi
+      chiamare un dba_dballe_init.
+    + Salvare il tipo di encoding in dba_rawmsg
+    + Mettere la scelta di MySQL nel configure, e riportarla nell'header del
+      verbose
+
+ * Interfaccia fortran
+    + dare errore se ana=read ma qc o data != read
+    + dare errore se qc=read ma data = rewrite
+
+
+TODO-list items being worked on
+-------------------------------
+
+These are the TODO-list items currently being worked on::
+
+ * Milestone release
+    - Import-export attributi
+    - Import-export di report generici
+    - Bug free
+    - Documentazione API Fortran
+    - Guida utente (manutenzione e tool commandline)
+    - Documentazione implementazione C
+ * Milestone release-extra
+    - Export AOF
+
+ * Refactoring
+    - Import and export of attributes
+       - Import/export DB-ALLe
+    - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
+      dba_insert_or_replace
+    - dba_varconv serve ancora?
+
+ * Import da VM o database Oracle di ARPA
+    - Dati generici
+    * Selezione dati da esportare
+       - variabili di interesse
+       - latmin/latmax/lonmin/lonmax
+    * Query di export di dati
+       - Per rete
+	  - Per box lat, lon e intervallo temporale
+          - Per stazione
+	     - Per intervallo
+	     - Per variabile
+    - Lat, Long
+      - Buttare via le stazioni con NULL su lat o long
+      - Non deve esserci perdita di precisione sull'import e export
+        delle coordinate
+
+ * Tools
+    - In fase di conversione, aggiungere uno switch per fare unset di tutti i
+      valori che hanno intervallo di confidenza al di sotto di una soglia data
+    - dbatbl: eventualmente fare anche il grep
+    - Fare un import delle anagrafiche che scandisca una serie di CREX:
+       - mettendo assieme i dati anagrafici delle varie stazioni.
+       - controlli che le stazioni non si spostino e alla fine inserisca tutto
+	 nella tabella di anagrafica
+    - Fare un dbamsg filter che prende query alla dbadb e stampa solo i
+      messaggi che fanno (o non fanno) match
+
+ * BUFR
+    - In fase di export sounding BUFR e CREX, non esportare i livelli extra
+    - Scrivere il campo data nella section 1 come data rappresentativa del
+      contenuto, non come data attuale
+
+ * Documentazione dell'interfaccia in fortran
+    - aggiungere due parole su come funziona la query "le query si effettuano
+      specificando gli estremi di un box nello spazio e nel tempo, con la
+      possibilità di specificare un livello o una scadenza"
+    - documentare le tabelle B
+    - documentare la girati
+    - documentare come si usa ana_id
+    - documentare come cambiano le update a seconda del rewrite
+    - documentare le idba_error_* nella documentazione delle API fortran
+
+ * Guida utente
+    - Gestione tabelle
+       - La B locale
+       - Formato delle tabelle BUFR/CREX
+       - Aggiungere elementi alla B locale
+       - Indicizzazione tabelle in caso di modifica
+         dbatbl index share/dballe/dballe.txt dballe
+    - Introduzione veloce a dbatbl, dbamsg e dbadb (la reference è nella
+      manpage)
+    - Troubleshooting
+       - Raccogliere casi mano a mano che si presentano
+    - Aggiungere il layout delle tabelle nel database e alcune query di esempio
+
+ * Documentazione codice
+    - Spiegare l'architettura del sistema di I/O encoding e decoding
+    - Spiegare come aggiungere:
+       - nuovi template di export bufrex
+       - nuove conversioni tra unità di misura
+       - nuove funzioni ai tool a linea di comando
+       - import da nuovi template bufrex
+       - nuove conversioni da B BUFREX a B locale
+      (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
+    - Invarianti
+    - Se una funzione non restituisce un dba_err, allora non può fallire in nessun
+      modo, e non interagisce con le routine di gestione errori (nemmeno per
+      resettare lo stato di errore a DBA_OK)
+    - I distruttori non possono mai fallire
+
+ * Procedura per supportare un nuovo tipo report in un formato specifico
+    - Cercare un file con un'osservazione nel formato voluto
+    - Cercare un file con la stessa osservazione in un formato per cui è già
+      supportata, o in alternativa, cercare un dump dei dati presenti nel
+      campione
+    - Aggiungere il campione all'archivio dei test case
+    - Aggiungere a check_import i test per il nuovo file, usando l'altro file o
+      i dati del dump come riferimento
+    - Implementare
+
+ * Conversione osservazioni in variabili fisiche
+    . Come codifico in DB-ALLe i 4 cloud type del synop?
+       - Livello 256:
+         Informazioni a livello 0
+	 256.0.0 General cloud group
+         256.0.1 CL
+         256.0.2 CM
+         256.0.3 CH
+         256.1.0 Vertical significance 1
+	 256.2.0 Vertical significance 2
+	 256.3.0 Vertical significance 3
+         256.4.0 Vertical significance 4
+       - Livello 257:
+         Informazioni extra sulla stazione
+
+ - Appunti per un nuovo report:
+    - La nuova API (con un programma di esempio è forse meglio)
+    - Cosa è stato fatto finora
+    - Cosa verrà fatto in futuro
+    - MySQL 4? (transazioni (forse non servono), DELETE USING, performance, faremo
+      delle prove)
+    - Completamento API dalle specifiche
+       - semantica elencamele
+       - semantica QC
+       - semantica cancellazione
+
+ * Note dalla presentazione
+    - Non è molto felice la definizione "reti"
+    - quadballitem: serve la idba_seti(handle, "rep_cod", 1) dopo la
+      seti("ana_id")?
+    - [no, perché nessuno poi la saprebbe/potrebbe mantenere] Fare
+      un'interfaccia python con solo quello che serve per fare toolettini
+      grafici per import, export, correzione dati anagrafici, correzione
+      singoli dati
+
+ - Controllare se è piú veloce con mysql 3 o mysql 4
+    - Costruire un benchmark
+       - Inserimento di dati casuali
+       - Query su intervalli casuali
+       - Inserimento QC casuali
+       - Query di valori QC casuali
+   time DBA_TABLES=tables tools/dbadb import --user=enrico ../materiale/all/obs4-145.bufr
+
+ - Articolo per ARPA rivista
+ - Unit test
+ - Mettere assert nel codice
+ - Verificare memory leak
+ - Controllare il keynote di Triggell alla LCA sui tool da avere per
+   controllare il software
+ - AOF cambia endianness tra l'header (FDR e DDR) e le osservazioni
+ - Rinominato "ident" in parameter selezione come "ident_select"
+
+ - Domande
+    - Dove trovo un file con le code table associate ai valori nella tabella B?
+    - Scrivere il test per guidare la stesura del codice: dato un AOF (o uno
+      per tipo) fare l'elenco delle variabili fisiche che ci si aspetta in
+      output (coi loro codici WMO o B locale), e usarle per testare il codice.
+      -> Meglio: convertire 4/5 bufr di tipo diverso in AOF, poi darmi gli AOF e
+         il dump dei BUFR
+
+
+Future TODO-list items
+----------------------
+
+These are the TODO-list items that are to be addressed in the future::
+
+ - Export in VM o database oracle di ARPA
+ 
+ * Tools
+    - Export di variabili in un foglio elettronico
+   
+ * CREX
+    - Raggruppare i dati che abbiamo per tipo report e vedere quali
+      informazioni di contesto ci sono per ogni tipo report
+    - Documentazione
+    - Test
+
+    - Parse Entry C
+    - Testare il decoding di CREX con piú di una subsection
+    - Encoding CREX con piú di una subsection
+    - Encoding CREX con entry C
+    - Inserimento informazioni sul report
+
+ * BUFR
+    - Gestire in input le entry C 22 e C24
+    - Export
+       - Fare un file di configurazione dove specificare il numero
+	 dell'originating centre da usare nell'Identification Section dei BUFR
+	 generati
+   
+ * AOF
+    - Encoding
+      (Si può esportare in BUFR e poi usare il convertitore BUFR->AOF già
+       pronto)
+    - In scrittura, controllare le date di tutte le osservazioni scritte e alla
+      fine aggiornare l'header con la minima e la massima
+    - Export of attributes
+    - Il dump dell'AOF in dbamsg diventa quindi il dump del dba_msg
+      risultante.  Il dumpraw può essere una nuova funzione in aof_message
+      che stampa il dump piú grezzo dei contenuti dell'AOF
+
+ * Interfaccia fortran
+    - Implementare la voglioancora
+    - Vedere se fornire una funzione di wrapping semplificata per le
+      dba_error_callback_*, che offra la possibilità di agganciare gli errori a
+      callback scelte tra un set predefinito implementato in C
+    - (dopo) Aggiungiamo un input di restrizioni alla quantesono? (Tipo solo fisse,
+      solo un tipo report, solo in un certo box di coordinate)
+
+ * Refactoring
+    - Replace unit names with codes
+    - Fare degli "ANALISE" per incrementare le prestazioni (magari metterlo in
+      dbadb)
+       - Ancora meglio: fare una funzione "pack database" che rimuove anche
+	 anagrafiche e contesti non piú utilizzati, e poi fa un'ANALISE
+    - Future optimizations for dba_vartable can make use of string tables to
+      store varinfo descriptions and units instead of long fixed-length
+      records.
+       - The string table cannot grow dynamically or it will invalidate the
+         string pointers
+    - Distinguere nei messaggi:
+       - Metainformazioni (nome del file, offset del messaggio, numero
+         d'ordine, ...)
+       - Informazioni codificate (il messaggio codificato)
+       - Informazioni decodificate (il contenuto del messaggio)
+   
+ * Dballe
+    - Come gestire i cambiamenti alla B locale:
+       - Salvataggio nel database della tabella B usata per rappresentare i dati
+         al suo interno, e uso della tabella nel DB per l'import e l'export dei
+         dati
+       - Oppure tenere l'indice in /usr/local, che è condivisa
+    - Espansione code table quando si fa enqc di un parametro di tipo "CODE TABLE"
+      (sembra un compito impossibile, a meno ché qualcuno non trovi una lista
+      parsabile di tutte le variabili e i loro valori.  C'e' anche da vedere
+      come gestire eventuali aggiornamenti futuri)
+
+ - Wrappare con Swig per poter scrivere test e viewer piú facilmente
+    = Iniziato, ma non funziona (non si riesce a far andare i parametri in
+      output in maniera decente)
+    + Per uscirne, wrappare in C++ e swiggare il wrapper C++
+      (cosí funziona)
+    - Fare un'interfaccina a DB-ALLe in pygtk
+
+ - Legalese
+    - Add copyright informations
+    - Solve distribution problems for crex tables
+
+
+Further stages of the development
+---------------------------------
+
+Development will now proceed on implementing the few missing things and
+consolidating the code towards production quality.
+
+
+Useful resources
+----------------
+
+ODBC links:
+
+* http://www.unixodbc.org/doc/ProgrammerManual/Tutorial/
+* http://msdn.microsoft.com/library/default.asp?url=/library/en-us/odbc/htm/odbcabout_this_manual.asp
+
+Announces go to: Paolo Patruno <ppatruno@smr.arpa.emr.it>, Daniele Branchini <DBranchini@smr.arpa.emr.it>, Massimo Bider <MBider@smr.arpa.emr.it>, Tiziana Paccagnella <t.paccagnella@smr.arpa.emr.it>, Davide Cesari <dcesari@smr.arpa.emr.it>, Chiara Marsigli <cmarsigli@smr.arpa.emr.it>
+
+Technical questions go to: Paolo Patruno <ppatruno@smr.arpa.emr.it>, Daniele Branchini <DBranchini@smr.arpa.emr.it>, Massimo Bider <MBider@smr.arpa.emr.it>
+
+Interni:
+	2603 Daniele Branchini <DBranchini@smr.arpa.emr.it>
+	2521 Rita Cipolla <rcipolla@arpa.emr.it>
+	2606 Sala Operativa
+
+BUFR decoding:
+* http://www.knmi.nl/~meulenvd/code/bufr/dmtn1.html
+
+Data dump queries:
+
+For one variable (X, Y)::
+
+   SELECT pa.id, pa.lat, pa.lon, pa.mobile, pa.ident, pa.identdt, pa.height, pa.heightbaro,
+          pa.block, pa.station, pa.name,
+          l.type, l.l1, l.l2,
+          p.type, p.p1, p.p2,
+          d.datetime, d.id_report, ri.memo, ri.prio, d.value
+     FROM pseudoana AS pa, levellayer AS l, timerange AS p, repinfo AS ri
+     JOIN data AS d             ON d.id_pseudoana = pa.id AND d.id_levellayer = l.id AND d.id_timerange = p.id
+			        AND d.id_report = ri.id
+    WHERE d.id_var = X * 256 + Y
+
+AOF decoding:
+
+ - Lettura di Fortran "unformatted sequential" da C/C++:
+   http://astronomy.swin.edu.au/~pbourke/dataformats/fortran/
+
+ECWMF BUFR template codes:
+
+ - http://www.ecmwf.int/research/ifsdocs/OBSERVATIONS/Chap2_Obs_types3.html
+
+Author
+------
+
+The author of Dballe is::
+
+  Ditta Enrico Zini
+  via Schiassi 2
+  40016 San Giorgio di Piano (BO)
+  Tel. +39.347.4707604
+  http://www.enricozini.com
+  E-Mail: enrico@enricozini.com

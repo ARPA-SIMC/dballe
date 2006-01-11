@@ -1,0 +1,1056 @@
+%\documentclass[draft,a4paper]{book}
+%\documentclass[final,a4wide]{book}
+%\documentclass[final,12pt,a4paper,twoside]{book}
+\documentclass[draft,12pt,a4paper,twoside]{book}
+%\usepackage[italian]{babel}
+\usepackage[ascii]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{ifthen}
+% Include alcuni simboli non piú standard ma usati da gnuplot
+\usepackage{subfigure}
+\usepackage{epsfig}
+\usepackage{longtable}
+
+\title{DB-ALLe Guide of the Fortran API}
+\author{Enrico Zini \hfil {\tt enrico@enricozini.com}}
+
+% Copyright: GNU GPL v2 or later.
+
+\newcommand{\dballe}{{\tt DB-ALLe}}
+
+\newcommand{\srcinsert}[1]{%
+{\scriptsize
+\verbatimtabinput[4]{#1}
+}}
+
+%\newlength{\savedmarginparwidth}
+\newcommand{\figures}[2][!]{%
+\smallskip
+%\setlength{\savedmarginparwidth}{\marginparwidth}
+%\setlength{\marginparwidth}{0pt}
+\begin{minipage}[c]{\textwidth}
+\ifthenelse{\equal{#1}{!}}{}{#1:\\}
+#2
+\end{minipage}
+\medskip
+%\setlength{\marginparwidth}{\savedmarginparwidth}
+}
+
+\makeindex
+
+\begin{document}
+\bibliographystyle{plain}
+
+\maketitle
+
+%\begin{abstract}
+%This document is a quick introduction to the Fortran API of DB-ALLe.  It
+%proceeds step by step to introducing different parts of the library using
+%commented example code.
+%\end{abstract}
+
+\tableofcontents
+%\listoffigures
+%\listoftables
+
+\chapter {Introduction}
+\label{ch-intro}
+
+Other documentation: \cite{LibDoc}.
+
+\chapter {Basic concepts}
+\label{ch-concepts}
+
+\section {Input, output, actions}
+\label{basics-inout}
+
+Work with \dballe{} happens using \emph{action routines}.  An action routine
+typically reads some input, performs an action and produces some output.
+Example of action routines are {\tt idba\_voglioquesto} to query data from a
+database and {\tt idba\_prendilo} to write data into the database.
+
+The input and the output of action routines are collections of zero or more
+parameters which have a name and a value.  A list of parameters can be found in
+\ref{parmtable}.
+
+You can set the input parameters using the {\tt idba\_set*} functions:
+\label{fun-idba_set}
+
+\begin{description}
+\item[{\tt idba\_seti(handle, "param", intvalue)}]
+  Set the input parameter to the integer value {\tt intvalue}
+
+\item[{\tt idba\_setc(handle, "param", charvalue)}]
+  Set the input parameter to the character value {\tt charvalue}
+
+\item[{\tt idba\_setr(handle, "param", realvalue)}]
+  Set the input parameter to the real value {\tt realvalue}
+
+\item[{\tt idba\_setd(handle, "param", doublevalue)}]
+  Set the input parameter to the real*8 value {\tt doublevalue}
+\end{description}
+
+You can read the output parameters using the {\tt idba\_enq*} functions:
+\label{fun-idba_enq}
+
+\begin{description}
+\item[{\tt idba\_enqi(handle, "param", intvalue)}]
+  Read the output parameter into the integer value {\tt intvalue}
+
+\item[{\tt idba\_enqc(handle, "param", charvalue)}]
+  Read the output parameter into the character value {\tt charvalue}
+
+\item[{\tt idba\_enqr(handle, "param", realvalue)}]
+  Read the output parameter into the real value {\tt realvalue}
+
+\item[{\tt idba\_enqd(handle, "param", doublevalue)}]
+  Read the output parameter into the real*8 value {\tt doublevalue}
+\end{description}
+
+Note that all set functions set input parameters, while all enq functions read
+output parameters.  You cannot read input parameters or set output parameters:
+that is the job of action routines.
+
+In other words, input and output parameters are different things.  In this
+code:
+
+\begin{verbatim}
+c     A possible misunderstanding
+      call idba_seti(handle, "height", 1)
+      call idba_enqi(handle, "height", val)
+\end{verbatim}
+
+the result of the {\tt idba\_enqi} will not be 1, and it could be either an error
+(in case no {\tt height} parameter is set in the output parameters) or a
+{\tt height} value previously retrieved by an action routine.
+
+To reset one input parameter you can use {\tt idba\_unset}:
+\label{fun-idba_unset}
+
+\begin{verbatim}
+c     ...
+c     We don't want to limit results by latitude this time
+      call idba_unset(handle, "latmin")
+      call idba_unset(handle, "latmax")
+      call idba_voglioquesto(handle, count)
+\end{verbatim}
+
+To reset all input parameters you can use {\tt idba\_unsetall}:
+\label{fun-idba_unsetall}
+
+\begin{verbatim}
+c     Restart the query from scratch
+      call idba_unsetall(handle)
+      call idba_setd(handle, "latmin", 10.D0)
+c     ...
+\end{verbatim}
+
+There is no way to reset output parameters: it is not needed since all action
+routines will get rid of old output values before producing new ones.
+
+
+\section {API invariants}
+
+\begin{itemize}
+\item All errors are reported as function return values
+\item All results are reported as output parameters
+\item All functions {\tt idba\_set*} set the input of action routines
+\item All functions {\tt idba\_enq*} get the output of action routines
+\end{itemize}
+
+\section {Error management}
+
+Errors can be handled by checking the return value of every function:
+
+\begin{verbatim}
+c     Example error handling
+      ierr = idba_presentati(dbhandle, "dsn", "user", "password")
+      if (ierr.ne.0) then
+c       handle the error...
+      end if
+\end{verbatim}
+
+Or they can be handled by installing a callback function that is automatically
+called in case of error:
+
+\begin{verbatim}
+c     How to set a callback
+c       * the first parameter is the error code that triggers the callback (0
+c         means 'trigger on all errors')
+c       * the second parameter is the routine to call when the error happens        
+c         (remember to declare the function as 'external'
+c       * the third parameter is a convenience arbitrary integer that will be
+c         passed to the function
+c       * the fourth parameter is used to return a handle that can be used to
+c         remove the callback
+      call idba_error_set_callback(0, error_handler, 42, cb_handle)
+\end{verbatim}
+
+The previous code will setup DB-ALLe to call {\tt error\_handler} after any error,
+passing it the integer value 42.  The callback can be removed at any time by
+calling {\tt idba\_error\_remove\_callback}:
+ 
+\begin{verbatim}
+c     How to remove a callback
+      call idba_error_remove_callback(cb_handle)
+\end{verbatim}
+
+This is a useful error handling function:
+
+\begin{verbatim}
+c     The error handler needs to be declared 'external'
+      external error_handler
+
+c     Compute the length of a string
+c     (this is an utility function that is used by the error handler
+c      to print nicer error messages)
+      integer function istrlen(string)
+      character string*(*)
+        istrlen = len(string)
+        do while ((string(istrlen:istrlen).eq." " .or.
+     $       string(istrlen:istrlen).eq."").and.
+     $       istrlen.gt.0)
+           istrlen = istrlen - 1
+        enddo
+        return
+      end
+
+c     Generic error handler: print all available information
+c     about the error, then exit
+      subroutine error_handler(val)
+      integer val
+      character buf*1000
+        print *,ier," testcb in ",val
+        call idba_error_message(buf)
+        print *,buf(:istrlen(buf))
+        call idba_error_context(buf)
+        print *,buf(:istrlen(buf))
+        call idba_error_details(buf)
+        print *,buf(:istrlen(buf))
+        call exit (1)
+        return
+      end
+\end{verbatim}
+
+% TODO: insert here documentation about idba_error_message, idba_error_context,
+% idba_error_details
+
+\chapter {A working session}
+\label{ch-work}
+
+\section{Starting the work}
+
+Before any action routine, you need to connect to the database:
+
+\label{fun-idba_presentati}
+\label{fun-idba_preparati}
+
+\begin{verbatim}
+c     Connect to the database and get a handle to work with it
+      call idba_presentati(dbhandle, "dsn", "username", "password")
+      call idba_preparati(dbhandle, handle, "read", "read", "read")
+\end{verbatim}
+
+You can call {\tt idba\_preparati} many times and get more handles.  This allows
+to perform many operations on the database at the same time.
+
+{\tt idba\_preparati} has three character parameters that can be used to limit
+write operations on the database, as a limited protection against programming
+errors.
+
+The first character parameter controls access to pseudoana records and can have
+these values:
+
+\begin{description}
+\item[{\tt "read"}] pseudoana records cannot be modified.
+\item[{\tt "reuse"}] when inserting data, if an existing pseudoana record for
+                     the data is found, it will be reused.
+\item[{\tt "rewrite"}] when inserting data, if an existing pseudoana record for
+		     the data is found, it will be completely overwritten with
+		     the parameters in input.
+\end{description}
+
+The second character parameter control access to observed data and can have
+these values:
+
+\begin{description}
+\item[{\tt "read"}] data cannot be modified in any way.
+\item[{\tt "add"}] data can be added to the database, but existing data cannot
+		   be modified.  Deletions are disabled.  This is used to
+		   insert new data in the database while preserving the data
+		   that was already present in it.
+\item[{\tt "rewrite"}] data can freely be added, overwritten and deleted.
+\end{description}
+
+The third character parameter controls access to data attributes and can have
+these values:
+
+\begin{description}
+\item[{\tt "read"}] attributes cannot be modified in any way.
+\item[{\tt "add"}] attributes can can be added to the database, but existing
+		   attributes cannot be modified.  Deletion of attributes is
+		   disabled.  This is used to insert new attribute in the
+		   database while preserving the attributes that were already
+		   present in it.
+\item[{\tt "rewrite"}] attributes can freely be added, overwritten and deleted.
+\end{description}
+
+Note that some combinations are illegal, such as pseudoana=read and data=add
+(when adding a new data, it's sometimes necessary to insert new pseudoana
+records), or data=rewrite and attr=read (when deleting data, their attributes
+are deleted as well).
+
+
+\section{Setting input and reading output}
+
+Input to action routines is done using the functions {\tt idba\_set*}, and output
+is read with the functions {\tt idba\_enq*} (see \ref{basics-inout}):
+
+\begin{verbatim}
+c     Set the extremes of an area and retrieve all the stations in it
+      call idba_setd(handle, "latmin", 30.D0)
+      call idba_setd(handle, "latmax", 50.D0)
+      call idba_setd(handle, "lonmin", 10.D0)
+      call idba_setd(handle, "lonmax", 20.D0)
+      call idba_quantesono(handle, count)
+   
+c     Get the informations about a station
+      do while (count.gt.0)
+        call idba_elencamele(handle)
+        call idba_enqc(handle, "name", cname)
+        call idba_enqi(handle, "ana_id", id)
+        call idba_enqd(handle, "lat", lat)
+        call idba_enqd(handle, "lon", lon)
+c       ....
+        count = count - 1
+      enddo
+\end{verbatim}
+
+Note that, when one uses {\tt idba\_setc}, {\tt idba\_seti}, {\tt idba\_enqc},
+{\tt idba\_enqi} with parameters that have some decimal digits, \dballe{} will
+work with values as if they did not have a decimal point.  That is, if latitude
+$10.124323$ is read with {\tt idba\_enqi}, then the result will be $10124323$.
+
+The following example shows exactly what happens:
+
+\begin{verbatim}
+c     Set the latitude to 30.0 degrees
+      call idba_setr(handle, "lat", 30.0)
+c     Set the latitude to 30.0 degrees
+      call idba_setd(handle, "lat", 30.0D0)
+
+c     Set the latitude to 0.00030 degrees
+      call idba_seti(handle, "lat", 30)
+c     Set the latitude to 30.0 degrees
+      call idba_seti(handle, "lat", 3000000)
+
+c     Set the latitude to 0.00030 degrees
+      call idba_setc(handle, "lat", "30")
+c     Set the latitude to 30.0 degrees
+      call idba_setc(handle, "lat", "3000000")
+\end{verbatim}
+
+\subsection {Available parameters}
+
+There are two different kinds of parameter names one can use: the \dballe{}
+parameters and the WMO B variables.
+
+The \dballe{} parameters, fully described in \ref{parmtable}, are parameters
+that have a special meaning to \dballe{}: for example they can be part of the
+coordinate system, or space/time extremes to use to query the database.  They
+are indicated simply with their name (for example, {\tt "lat"} or {\tt
+"yearmin"}).
+
+The WMO B variables, fully described in the WMO B table, represent all possible
+sorts of observed data, and are indicated in the form ``B{\itshape xxyyy}'',
+where {\itshape xxyyy} are the X and Y values from the WMO table B.  For more
+details on working with observed data, see \ref{obsdata}.
+
+
+\subsection{Working with observed data}
+\label{obsdata}
+
+The {\tt idba\_set*} and {\tt idba\_enq*} functions can also be used to get and set
+observation data.  To do so, use as parameter the string {\tt "Bxxyyy"}, where
+{\tt xx} and {\tt yyy} are the X and Y values of the BUFR/CREX table B describing
+the observed data.
+
+For example:
+
+\begin{verbatim}
+c     Set the speed of the wind (very useful in summer)
+      call idba_setr(handle, "B11002", 1.8)
+c     Also set the temperature
+      call idba_setr(handle, "B12001", 21.8)
+      call idba_prendilo(handle)
+\end{verbatim}
+
+
+\subsection{Working with quality informations}
+
+Lastly, {\tt idba\_set*} and {\tt idba\_enq*} functions can be used to get and set
+quality control data.  To do so, use as parameter the string {\tt "*Bxxyyy"},
+where {\tt xx} and {\tt yyy} are the X and Y values of the BUFR/CREX table B
+describing the quality control data.
+
+For example:
+
+\begin{verbatim}
+c     Set the confidence of the wind speed value
+      call idba_setr(handle, "*B33007", 75)
+      call idba_setc(handle, "*var", "B11002")
+      call idba_critica(handle)
+\end{verbatim}
+
+
+\section {Querying the database}
+
+\subsection {Querying the anagraphical data}
+
+Example code to query all the stations in a given area:
+\label{fun-idba_quantesono}
+\label{fun-idba_elencamele}
+
+\begin{verbatim}
+      call idba_setd(handle, "latmin", 30.D0)
+      call idba_setd(handle, "latmax", 50.D0)
+      call idba_setd(handle, "lonmin", 10.D0)
+      call idba_setd(handle, "lonmax", 20.D0)
+      call idba_quantesono(handle, count)
+      do while (count.gt.0)
+        call idba_elencamele(handle)
+        call idba_enqc(handle, "name", cname)
+        call idba_enqi(handle, "ana_id", id)
+c       query more data and work with it
+        count = count - 1
+      enddo
+\end{verbatim}
+
+This code introduces two new functions:
+
+{\tt idba\_quantesono}
+  performs the query and returns the number of stations it finds.
+
+{\tt idba\_elencamele}
+  gets a station out of the results of {\tt idba\_quantesono}.  If there are no
+  more stations, the function fails.
+
+
+\subsection {Querying the values}
+
+Example code to query all the values in a given area and time:
+\label{fun-idba_voglioquesto}
+\label{fun-idba_dammelo}
+
+\begin{verbatim}
+      call idba_seti(handle, "latmin", 30)
+      call idba_seti(handle, "latmax", 50)
+      call idba_seti(handle, "lonmin", 10)
+      call idba_seti(handle, "lonmax", 20)
+      call idba_seti(handle, "yearmin", 2004)
+      call idba_seti(handle, "yearmax", 2004)
+      call idba_voglioquesto(handle, count)
+      do while (count.gt.0)
+        call idba_dammelo(handle, param)
+c       get the value of this variable
+        call idba_enqc(handle, param, cvalue)
+        call idba_enqd(handle, "lat", dlat)
+        call idba_enqd(handle, "lon", dlon)
+c       query more data and work with it
+        count = count - 1
+      enddo
+\end{verbatim}
+   
+This code introduces two new functions:
+
+{\tt idba\_voglioquesto}
+  performs the query and returns the number of values it finds.
+
+{\tt idba\_dammelo}
+  gets a value out of the result of {\tt idba\_voglioquesto}.  If there are no
+  more stations, the function fails.
+
+
+\subsection {Clearing the database}
+
+You can initialise or reinitialise the database using {\tt idba\_scopa}:
+\label{fun-idba_scopa}
+
+\begin{verbatim}
+c     Start the work with a clean database
+      call idba_scopa(handle, "repinfo.csv")
+\end{verbatim}
+
+{\tt idba\_scopa} clears the database if it exists, then recreates all the
+needed tables.  Finally, it populates the informations about the reports (such
+as the available report types, their mnemonics and their priority) using the
+data in the file given as argument.
+
+The file is in CSV format, with 6 columns:
+\begin{enumerate}
+\item Report code (corresponding to parameter {\tt rep\_cod})
+\item Mnemonic name (corresponding to parameter {\tt rep\_memo})
+\item Report description
+\item Report priority (corresponding to parameter {\tt priority})
+\item Ignored
+\item Ignored
+\end{enumerate}
+
+If {\tt ""} is given instead of the file name, {\tt idba\_scopa} will read the
+data from {\tt /etc/repinfo.csv}.
+
+This is an example of the contents of the file:
+
+\begin{verbatim}
+01,synop,report synottico,100,oss,0
+02,metar,metar,80,oss,0
+03,temp,radiosondaggio,100,oss,2
+04,ana_lm,valori analizzati LM,-1,ana,255
+05,ana,analisi,-10,pre,255
+06,pre_cleps_box1.5maxel001,previsti cosmo leps box 1.5 gradi valore max elemento 1,-1,pre,255
+07,pre_lmn_box1.5med,previzione Lokal Model nudging box 1.5 gradi valore medio,-1,pre,255
+08,pre_lmp_spnp0,previsione Lkal Model prognostica interpolato punto piu' vicino,-1,pre,255
+09,boe,dati omdametrici,100,oss,31
+\end{verbatim}
+
+
+\subsection {Inserting data}
+
+Data is inserted using {\tt idba\_prendilo}:
+\label{fun-idba_prendilo}
+         
+\begin{verbatim}
+c     Insert a new data in the database
+      call idba_setr(handle, "ana_id", 4)
+      call idba_setr(handle, "rep_memo", "synop")
+      call idba_setd(handle, "lat", 44.500D0)
+      call idba_setd(handle, "lon", 11.328D0)
+      call idba_setr(handle, "year", 2005)
+      call idba_setr(handle, "month", 7)
+      call idba_setr(handle, "day", 26)
+      ...
+      call idba_setr(handle, "B11002", 1.8)
+      call idba_prendilo(handle)
+\end{verbatim}
+
+This code introduces a new function:
+
+{\tt idba\_prendilo}
+  inserts a new value in the database.  All the information about the parameter
+  to insert is taken from the input previously set by {\tt idba\_set*} functions.
+
+  When data of the same kind and with the same characteristics already exists,
+  the behaviour of {\tt idba\_prendilo} is defined by the parameter passed to
+  {\tt idba\_preparati} when creating the handle.  See `Starting the work`\_ for
+  more informations.
+
+
+\section{Deleting data}
+
+Data is deleted using {\tt idba\_dimenticami}:
+\label{fun-idba_dimenticami}
+
+\begin{verbatim}
+c     Delete all data from the station with id 4 in year 2002
+      call idba_seti(handle, "ana_id", 4)
+      call idba_seti(handle, "year", 2002)
+      call idba_dimenticami(handle)
+\end{verbatim}
+
+This code introduces a new function:
+
+{\tt idba\_dimenticami}
+  deletes all the data found in the extremes specified in input.
+
+
+\section {Quality control information}
+
+\subsection{Reading QC information}
+
+QC information is read using {\tt idba\_ancora}:
+\label{fun-idba_voglioancora}
+\label{fun-idba_ancora}
+
+\begin{verbatim}
+c     ...setup a query...
+      idba_voglioquesto(handle, count)
+      do while (count.gt.0)
+        call idba_dammelo(handle, param)
+
+c       Read QC informations about the last value read
+        call idba_voglioancora(handle, qc_count)
+        do while (qc_count.gt.0)
+            call idba_ancora(handle, param) 
+            call idba_enqc(handle, param, value)
+c           ...process the value...
+            qc_count = qc_count - 1
+        enddo
+
+        count = count - 1
+      enddo
+\end{verbatim}
+
+This code introduces two new functions:
+
+{\tt idba\_voglioancora}
+  Performs a query to retrieve QC data for the last variable read by
+  {\tt idba\_dammelo}.  It returns the number of QC items available.
+
+{\tt idba\_ancora}
+  Retrieves one by one the values queried by {\tt idba\_voglioancora}.
+  there are no more items available, the function will fail.
+
+  The parameter {\tt param} will be set to the name (in the form {\tt *Bxxyyy}) of
+  the QC parameter just read.
+
+\subsection{Writing QC information}
+
+\label{fun-idba_critica}
+
+QC information is written using {\tt idba\_critica}, which can be used after an
+{\tt idba\_dammelo}, after an {\tt idba\_prendilo} or at any time using a stored data
+id.  These three case differ on how to communicate to {\tt idba\_critica} what is
+the data about which to write QC informations.
+
+When used after {\tt idba\_dammelo}, {\tt idba\_critica} can refer directly to the
+last data retrieved:
+
+\begin{verbatim}
+c     ...setup a query...
+      call idba_voglioquesto(handle, count)
+      do while (count.gt.0)
+        call idba_dammelo(handle, param)
+c       ...process data...
+
+c       Set the QC information
+        call idba_seti(handle, "*B33007", 75)
+        call idba_seti(handle, "*B33006", 42)
+        call idba_critica(handle)
+
+        count = count - 1
+      enddo
+\end{verbatim}
+
+After an {\tt idba\_prendilo} instead, since {\tt idba\_prendilo} can write more than
+one data at a time, we need to tell {\tt idba\_critica} which of them we are
+referring to:
+
+\begin{verbatim}
+c     Insert wind speed and temperature
+      call idba_setr(handle, "B11002", 1.8)
+      call idba_setr(handle, "B12001", 22)
+      call idba_prendilo(handle)
+
+c     Set the QC information
+      call idba_seti(handle, "*B33007", 75)
+
+c     Use "*var" to indicate which of the two variables we are annotating
+      call idba_setc(handle, "*var", "B11002")
+
+      call idba_critica(handle)
+\end{verbatim}
+
+
+{\tt idba\_critica} can also be called at any time using a previously stored data it:
+
+\begin{verbatim}
+c     ...perform a query with idba\_voglioquesto...
+      do while (count.gt.0)
+        call idba_dammelo(handle, param)
+c       ...process data...
+
+c       This variable is interesting: save its id
+        call idba_enqi(handle, "data_id", saved_id)
+        
+        count = count - 1
+      enddo
+
+c     ...some time later...
+
+c     Insert QC information about that interesting variable
+      call idba_seti(handle, "*B33007", 75)
+      call idba_seti(handle, "*B33006", 42)
+      
+c     Select the variable using its database id
+      call idba_seti(handle, "data_id", saved_id)
+      call idba_critica(handle)
+\end{verbatim}
+
+This code introduces a new function:
+
+{\tt idba\_critica}
+  Set one or more QC values about a variable.
+  
+  The variable can be identified by ID using {\tt idba\_seti(handle, "*data\_id",
+  id)}, by name using {\tt idba\_setc(handle, "*var", "Bxxyyy")}.  If neither
+  {\tt *data\_id} nor {\tt *var} are set, {\tt idba\_critica} will refer to the last
+  variable returned by {\tt idba\_dammelo}.
+
+  The QC variables and values are set as input to {\tt idba\_critica} using the
+  {\tt idba\_set*} functions with an asterisk in front of the variable name.
+
+
+\subsection{Deleting QC information}
+
+QC information is deleted using {\tt idba\_scusa}:
+
+\label{fun-idba_scusa}
+
+\begin{verbatim}
+c     Delete the confidence range QC information about the wind speed and the
+c     temperature
+
+c     The referring variable is identified in the same way as with
+c     idba_critica:
+      call idba_seti(handle, "data_id", saved_id)
+
+c     The QC informations to delete are selected by setting "*varlist":
+      call idba_setc(handle, "*varlist", "*B11002,*B12001")
+      call idba_scusa(handle)
+\end{verbatim}
+
+This code introduces a new function:
+
+{\tt idba\_scusa}
+  Delete QC information from a variable identified in the same way as with
+  {\tt idba\_critica}.  By default it deletes all QC information; specific QC
+  values to delete can be selected by setting their names, separated by commas,
+  in the "*varlist" variable.
+
+
+\section{Ending the work}
+
+When you are finished working with a handle, you can release it with {\tt idba\_fatto}
+
+\label{fun-idba_fatto}
+
+\begin{verbatim}
+c     We are finished with this handle
+      call idba_fatto(handle)
+\end{verbatim}
+
+When you are finished working with DB-ALLe, you can ask it to close all
+connections and release all resources:
+
+\label{fun-idba_arrivederci}
+
+\begin{verbatim}
+c     We do not need to work with dballe anymore
+      call idba_arrivederci(dbh)
+\end{verbatim}
+
+\chapter{Advanced topics}
+
+\section{Shortcuts to stations and data}
+% documentare come si usa ana_id
+% documentare come si usa data_id
+
+
+\chapter{FAQ and Troubleshooting}
+\label{ch-trouble}
+
+\appendix
+
+\chapter{Input and output parameters}
+
+\label{parmtable}
+\input{../dballe/core/dba_record_keyword.tex}
+
+
+\chapter{Values for level layer and time range}
+
+This table lists all the various value combinations to use as a level layer:
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+{\em Code figure ({\tt leveltype})} & {\em Meaning} & {\em Contents ({\tt l1})} & {\em Contents ({\tt l2})} \\
+\hline
+  0     & Reserved & & \\
+  1     & Ground or water surface & 0 & \\
+  2     & Cloud base level & 0 & \\
+  3     & Level of cloud tops & 0 & \\
+  4     & Level of 0$^o$C isotherm & 0 & \\
+  5     & Level of adiabatic condensation lifted from the surface & 0 & \\
+  6     & Maximum wind level & 0 & \\
+  7     & Tropopause & 0 & \\
+  8     & Nominal top of atmosphere & 0 & \\
+  9     & Sea bottom & 0 & \\
+10-19   & Reserved & & \\
+20      & Isothermal level & Temperature in 1/100 K & \\
+21-99   & Reserved & & \\
+100     & Isobaric surface & Pressure in hPa (2 octets) & \\
+101     & Layer between two isobaric surfaces & Pressure of top in kPa & Pressure of bottom in kPa \\
+102     & Mean sea level & 0 & \\
+103     & Specified altitude above mean sea level  & Altitude in meters (2 octets) & \\
+104     & Layer between two specified altitudes above mean sea level & Altitude of top in hm & Altitude of bottom in hm \\
+105     & Specified height above ground & Height in meters (2 octets) & \\
+106     & Layer between two specified height levels above ground & Height of top in hm & Height of bottom in hm \\
+107     & Sigma level & Sigma value in 1/10000 (2 octets) & \\
+108     & Layer between two sigma levels & Sigma value of top in 1/100 & Sigma value of bottom in 1/100 \\
+109     & Hybrid level & Level number (2 octets) & \\
+110     & Layer between two hybrid levels & Level number of top & Level number of bottom \\
+111     & Depth below land surface & Depth in centimeters (2 octets) & \\
+112     & Layer between two depths below land surface & Depth of upper surface in cm & Depth of lower surface in cm \\
+113     & Isentropic (theta) level & Potential temperature in K (2 octets) & \\
+114     & Layer between two isentropic levels & 475 K minus theta of top in K & 475 K minus theta of bottom in K \\
+115     & Level at specified pressure difference from ground to level & Pressure difference in hPa (2 octets) & \\
+116     & Layer between two levels at specified pressure differences from ground to level & Pressure difference from ground to top level in hPa & Pressure difference from ground to bottom level in hPa \\
+117     & Potential vorticity surface & 10-9 K m2 kg-1 s-1 & \\
+118     & Reserved & & \\
+119     & ETA* level & ETA value in 1/10000 (2 octets) & \\
+120     & Layer between two ETA* levels & ETA value at top of layer in 1/100 & ETA value at bottom of layer in 1/100 \\
+121     & Layer between two isobaric surfaces (high precision) & 1100 hPa minus pressure of top in hPa & 1100 hPa minus pressure of bottom in hPa \\
+122-124 & & & \\
+125     & Specified height level above ground (high precision) & Height in centimeters (2 octets)  & \\
+126-127 & Reserved & \\
+128     & Layer between two sigma levels (high precision) & 1.1 minus sigma of top in 1/1000 of sigma & 1.1 minus sigma of bottom in 1/1000 of sigma \\
+129-140 & & & \\
+141     & Layer between two isobaric surfaces (mixed precision) & Pressure of top in kPa & 1100 hPa minus pressure of bottom in hPa \\
+142-159 & Reserved & & \\
+160     & Depth below sea level & Depth in meters (2 octets) & \\
+161-199 & Reserved & & \\
+200     & Entire atmosphere (considered as a single layer) & 0 & \\
+201     & Entire ocean (considered as a single layer) & 0 & \\
+202-254 & Reserved & & \\
+\hline
+\end{tabular}
+
+This table lists all the various value combinations to use as a time range:
+
+\begin{description}
+\item [0]
+  Forecast product valid for reference time + P1 (P1 > 0), or Uninitialized
+  analysis product for reference time (P1 = 0), or Image product for reference
+  time (P1 = 0).
+\item [1]
+  Initialized analysis product for reference time (P1 = 0).
+\item [2]
+  Product with a valid time ranging between reference time + P1 and reference time + P2.
+\item [3]
+  Average (reference time + P1  to reference time + P2).
+\item [4]
+  Accumulation (reference time + P1 to reference time + P2) product
+  considered valid at reference time + P2.
+\item [5]
+  Difference (reference time + P2 minus reference time + P1) product
+  considered valid at reference time + P2.
+\item [6-9] Reserved.
+\item [10]
+  P2 = 0; product valid at reference time + P1.
+\item [11-50] Reserved.
+\item [51]
+  Climatological Mean Value: multiple year averages of quantities which are
+  themselves means over some period of time (P2) less than a year. The
+  reference time (R) indicates the date and time of the start of a period of
+  time, given by R to R + P2 , over which a mean is formed; N indicates the
+  number of such period-means that are averaged together to form the
+  climatological value, assuming that the N period-mean fields are separated by
+  one year. The reference time indicates the start of the N-year climatology. N
+  is given in octets 22 and 23 of the PDS.
+
+  If P1 = 0, then the data averaged in the basic interval P2 are assumed to be
+  continuous (i.e., all available data are simply averaged together).
+
+  If P1 = 1 (the units of time - octet 18,Code table 4 - are not relevant
+  here), then the data averaged together in the basic interval P2 are valid
+  only at the time (hour, minute) given in the reference time, for all the days
+  included in the P2 period. The units of P2  are given by the contents of
+  octet 18 and Code table 4.
+\item [52-112] Reserved.
+\item [113]
+  Average of N forecasts (or initialized analyses); each product has forecast
+  period of P1 (P1 = 0 for initialized analyses); products have reference
+  times at intervals of P2, beginning at the given reference time.
+\item [114]
+  Accumulation of N forecasts (or initialized analyses); each product has
+  forecast period of P1 (P1 = 0 for initialized analyses); products have
+  reference times at intervals of P2, beginning at the given reference time.
+\item [115]
+  Average of N forecasts, all with the same reference time; the first has a
+  forecast period of P1, the remaining forecasts follow at intervals of P2.
+\item [116]
+  Accumulation of N forecasts, all with the same reference time; the first has
+  a forecast period of P1, the remaining forecasts follow at intervals of P2.
+\item [117]
+  Average of N forecasts; the first has a forecast period of P1, the
+  subsequent ones have forecast periods reduced from the previous one by an
+  interval of P2; the reference time for the first is given in octets 13 to 17,
+  the subsequent ones have reference times increased from the previous one by
+  an interval of P2. Thus all the forecasts have the same valid time, given by
+  the reference time + P1.
+\item [118]
+  Temporal variance, or covariance, of N initialized analyses; each product has
+  forecast period of P1  = 0; products have reference times at intervals of P2,
+  beginning at the given reference time.
+\item [119]
+  Standard deviation of N forecasts, all with the same reference time with
+  respect to the time average of forecasts; the first forecast has a forecast
+  period of P1, the remaining forecasts follow at intervals of P2.
+\item [120-122] Reserved.
+\item [123]
+  Average of N uninitialized analyses, starting at the reference time, at
+  intervals of P2.
+\item [124]
+  Accumulation of N uninitialized analyses, starting at the reference time, at
+  intervals of P2.
+\item [125-254] Reserved.
+\item [256]
+  When P1=0 and P2=0: General cloud group \\
+  When P1=0 and P2=1: CL \\
+  When P1=0 and P2=2: CM \\
+  When P1=0 and P2=3: CH \\
+  When P1=1 and P2=0: Vertical significance 1 \\
+  When P1=2 and P2=0: Vertical significance 2 \\
+  When P1=3 and P2=0: Vertical significance 3 \\
+  When P1=4 and P2=0: Vertical significance 4 \\
+  When P1=0 and P2=0: Extra station information
+\end{description}
+
+Notes about the time range values:
+
+\begin{itemize}
+\item For analysis products, or the first of a series of analysis products, the reference time (octets 13 to 17) indicates the valid time.
+\item For forecast products, or the first of a series of forecast products, the reference time indicates the valid time of the analysis upon which the (first) forecast is based.
+\item Initialized analysis products are allocated code figures distinct from those allocated to unitialized analysis products.
+\item Code figure 10 allows the period of a forecast to be extended over two octets; this is to assist with extended range forecasts.
+\item Where products or a series of products are averaged or accumulated, the number involved is to be represented in octets 22 and 23 of Section 1, while any number missing is to be represented in octet 24.
+\item Forecasts of the accumulation or difference of some quantity (e.g. quantitative precipitation forecasts), indicated by values of 4 or 5 in octet 21, have a product valid time given by the reference time + P2; the period of accumulation, or difference, can be calculated as $P2 - P1$.
+\item A few examples may help to clarify the use of Code table 5:
+  \begin{itemize}
+  \item For analysis products, P1 will be zero and the time range indicator
+	(octet 21) will also be zero; for initialized products (sometimes
+	called "zero hour forecasts"), P1 will be zero, but octet 21 will be
+	set to 1.
+  \item For forecasts, typically, P1  will contain the number of hours of the
+	forecast (the unit indicator given in octet 18 would be 1) and octet 21
+	would contain a zero.
+  \end{itemize}
+\item Code value 115 would be used, typically, for multiple day mean forecasts,
+      all derived from the same initial conditions.
+\item Code value 117 would be used, typically, for Monte Carlo type
+      calculations; many forecasts valid at the same time from different
+      initial (reference) times.
+\item Averages, accumulations, and differences get a somewhat specialized
+      treatment. If octet 21 has a value between 2 and 5 (inclusive), then the
+      reference time + P1  is the initial date/time and the reference time + P2
+      is the final date/time of the period over which averaging or accumulation
+      takes place. If, however, octet 21 has a value of 113, 114, 115, 116,
+      117, 123, or 124, the P2 specifies the time interval between each of the
+      fields (or the forecast initial times) that have been averaged or
+      accumulated. These latter values of octet 21 require the quantites
+      averaged to be equally separated in time; the former values, 3 and 4 in
+      particular, allow for irregular or unspecified intervals of time between
+      the fields that are averaged or accumulated.
+\end{itemize}
+
+
+
+
+\chapter{Summary of routines}
+
+This appendix contains some reference tables for the functions in the Fortran
+API.
+
+\section{Input/Output routines}
+
+These routines are used to set the input and read the output of action routines.
+
+\begin{tabular}{|l|l|l|}
+\hline
+{\em Name}                      & {\em Description}                & {\em Documented in} \\
+\hline
+{\tt idba\_seti(h, param, val)} & Set an integer in input          & \ref{fun-idba_set} \\
+{\tt idba\_setr(h, param, val)} & Set a real in input              & \ref{fun-idba_set} \\
+{\tt idba\_setd(h, param, val)} & Set a double in input            & \ref{fun-idba_set} \\
+{\tt idba\_setc(h, param, val)} & Set a character in input         & \ref{fun-idba_set} \\
+{\tt idba\_unset(h, param)}     & Unset a value from the input     & \ref{fun-idba_unset} \\
+{\tt idba\_unsetall(h)}         & Unset all values from the input  & \ref{fun-idba_unsetall} \\
+{\tt idba\_enqi(h, param, val)} & Read an integer from the output  & \ref{fun-idba_enq} \\
+{\tt idba\_enqr(h, param, val)} & Read a real from the output      & \ref{fun-idba_enq} \\
+{\tt idba\_enqd(h, param, val)} & Read a double from the output    & \ref{fun-idba_enq} \\
+{\tt idba\_enqc(h, param, val)} & Read a character from the output & \ref{fun-idba_enq} \\
+\hline
+\end{tabular}
+
+
+\section{Session routines}
+
+These routines are used to begin and end working sessions with \dballe{}.
+
+\begin{tabular}{|l|l|l|}
+\hline
+{\em Name} & {\em Description} & {\em Documented in} \\
+\hline
+{\tt idba\_presentati(dbh, dsn, user, password)} & Connect to the database & \ref{fun-idba_presentati} \\
+{\tt idba\_preparati(dbh, h, anamode, datamode, attrmode)} & Open a new session & \ref{fun-idba_preparati} \\
+{\tt idba\_fatto(h)}                        & Close a session              & \ref{fun-idba_fatto} \\
+{\tt idba\_arrivederci(dbh)}                & Disconnect from the database & \ref{fun-idba_arrivederci} \\
+\hline
+\end{tabular}
+
+
+\section{Action routines}
+
+\begin{tabular}{|l|l|l|}
+\hline
+{\em Name} & {\em Description} & {\em Documented in} \\
+\hline
+{\tt idba\_scopa(h, filename)}     & Reinitialise the database       & \ref{fun-idba_scopa} \\
+{\tt idba\_quantesono(h, count)}   & Query the stations archive      & \ref{fun-idba_quantesono} \\
+{\tt idba\_elencamele(h)}          & Fetch data about a station      & \ref{fun-idba_elencamele} \\
+{\tt idba\_voglioquesto(h, count)} & Query the data archive          & \ref{fun-idba_voglioquesto} \\
+{\tt idba\_dammelo(h, param)}      & Fetch one observed data         & \ref{fun-idba_dammelo} \\
+{\tt idba\_prendilo(h)}            & Insert values in the database   & \ref{fun-idba_prendilo} \\
+{\tt idba\_dimenticami(h)}         & Remove values from the database & \ref{fun-idba_dimenticami} \\
+{\tt idba\_voglioancora(h, count)} & Query QC data about a value     & \ref{fun-idba_voglioancora} \\
+{\tt idba\_ancora(h, param)}       & Fetch QC data                   & \ref{fun-idba_ancora} \\
+{\tt idba\_critica(h)}             & Insert QC data about a value    & \ref{fun-idba_critica} \\
+{\tt idba\_scusa(h)}               & Remove QC data                  & \ref{fun-idba_scusa} \\
+\hline
+\end{tabular}
+
+\section{Error management routines}
+
+\begin{tabular}{|l|l|l|}
+\hline
+{\em Name} & {\em Description} & {\em Documented in} \\
+\hline
+{\tt idba\_error\_code()}              &
+	Return the error code of the last function &
+	\ref{fun-idba_error_code} \\
+{\tt idba\_error\_message(msg)}        &
+	Get the error message of the last function &
+	\ref{fun-idba_error_message} \\
+{\tt idba\_error\_context(msg)}        &
+	Get the context description for the error of the last function &
+	\ref{fun-idba_error_context} \\
+{\tt idba\_error\_details(msg)}        & 
+	Get details about the error of the last function &
+	\ref{fun-idba_error_details} \\
+{\tt idba\_error\_set\_callback(code, fun, data, h)} &
+	Set a callback for handling errors &
+	\ref{fun-idba_error_set_callback} \\
+{\tt idba\_error\_remove\_callback(h)} &
+	Remove a previously set callback &
+	\ref{fun-idba_error_remove_callback} \\
+
+{\tt idba\_scopa(h, filename)}     & Reinitialise the database       & \ref{fun-idba_scopa} \\
+{\tt idba\_quantesono(h, count)}   & Query the stations archive      & \ref{fun-idba_quantesono} \\
+{\tt idba\_elencamele(h)}          & Fetch data about a station      & \ref{fun-idba_elencamele} \\
+{\tt idba\_voglioquesto(h, count)} & Query the data archive          & \ref{fun-idba_voglioquesto} \\
+{\tt idba\_dammelo(h, param)}      & Fetch one observed data         & \ref{fun-idba_dammelo} \\
+{\tt idba\_prendilo(h)}            & Insert values in the database   & \ref{fun-idba_prendilo} \\
+{\tt idba\_dimenticami(h)}         & Remove values from the database & \ref{fun-idba_dimenticami} \\
+{\tt idba\_voglioancora(h, count)} & Query QC data about a value     & \ref{fun-idba_voglioancora} \\
+{\tt idba\_ancora(h, param)}       & Fetch QC data                   & \ref{fun-idba_ancora} \\
+{\tt idba\_critica(h)}             & Insert QC data about a value    & \ref{fun-idba_critica} \\
+{\tt idba\_scusa(h)}               & Remove QC data                  & \ref{fun-idba_scusa} \\
+\hline
+\end{tabular}
+
+
+\bibliography{local}
+
+\end{document}

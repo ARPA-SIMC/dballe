@@ -1,0 +1,163 @@
+%define slot-name tag
+%struct-type
+%global-table
+/* Using %switch may be faster (remember to check when doing optimizations) */
+
+%{
+#include <string.h>
+#include "dba_var.h"
+#include "dba_record.h"
+%}
+
+struct tagdef { const char* tag; dba_keyword index; };
+%%
+priority,    DBA_KEY_PRIORITY
+priomax,     DBA_KEY_PRIOMAX
+priomin,     DBA_KEY_PRIOMIN
+rep_cod,     DBA_KEY_REP_COD
+rep_memo,    DBA_KEY_REP_MEMO
+ana_id,      DBA_KEY_ANA_ID
+block,       DBA_KEY_BLOCK
+station,     DBA_KEY_STATION
+fixed,       DBA_KEY_FIXED
+mobile,      DBA_KEY_MOBILE
+ident,       DBA_KEY_IDENT
+name,        DBA_KEY_NAME
+lat,         DBA_KEY_LAT
+lon,         DBA_KEY_LON
+latmax,      DBA_KEY_LATMAX
+latmin,      DBA_KEY_LATMIN
+lonmax,      DBA_KEY_LONMAX
+lonmin,      DBA_KEY_LONMIN
+height,      DBA_KEY_HEIGHT
+heightbaro,  DBA_KEY_HEIGHTBARO
+datetime,    DBA_KEY_DATETIME
+year,        DBA_KEY_YEAR
+month,       DBA_KEY_MONTH
+day,         DBA_KEY_DAY
+hour,        DBA_KEY_HOUR
+min,         DBA_KEY_MIN
+sec,         DBA_KEY_SEC
+yearmax,     DBA_KEY_YEARMAX
+yearmin,     DBA_KEY_YEARMIN
+monthmax,    DBA_KEY_MONTHMAX
+monthmin,    DBA_KEY_MONTHMIN
+daymax,      DBA_KEY_DAYMAX
+daymin,      DBA_KEY_DAYMIN
+hourmax,     DBA_KEY_HOURMAX
+hourmin,     DBA_KEY_HOURMIN
+minumax,     DBA_KEY_MINUMAX
+minumin,     DBA_KEY_MINUMIN
+secmax,      DBA_KEY_SECMAX
+secmin,      DBA_KEY_SECMIN
+leveltype,   DBA_KEY_LEVELTYPE
+l1,          DBA_KEY_L1
+l2,          DBA_KEY_L2
+pindicator,  DBA_KEY_PINDICATOR
+p1,          DBA_KEY_P1
+p2,          DBA_KEY_P2
+var,         DBA_KEY_VAR
+varlist,     DBA_KEY_VARLIST
+data_id,     DBA_KEY_DATA_ID
+querybest,   DBA_KEY_QUERYBEST
+%%
+
+static struct _dba_varinfo infos[] = {
+	{ 0, "Priority of this type of report",          "NUMBER", 0, 0,  10, 0, 0, 0 },
+	{ 0, "Maximum priority of reports queried",      "NUMBER", 0, 0,  10, 0, 0, 0 },
+	{ 0, "Minimum priority of reports queried",      "NUMBER", 0, 0,  10, 0, 0, 0 },
+	{ 0, "Type of report",                           "NUMBER", 0, 0,  10, 0, 0, 0 },
+	{ 0, "Mnemonic alias for type of report",     "CHARACTER", 0, 0,  20, 0, 0, 1 },
+	{ 0, "Pseudoana database ID",                   "NUMERIC", 0, 0,  10, 0, 0, 0 },
+	{ 0, "WMO block number",                        "NUMERIC", 0, 0,   2, 0, 0, 0 },
+	{ 0, "WMO station number",                      "NUMERIC", 0, 0,   3, 0, 0, 0 },
+	{ 0, "Query fixed stations",                    "NUMERIC", 0, 0,   1, 0, 0, 0 },
+	{ 0, "Station is mobile",                       "NUMERIC", 0, 0,   1, 0, 0, 0 },
+	{ 0, "Identifier of flight or ship",          "CHARACTER", 0, 0,  64, 0, 0, 1 },
+	{ 0, "Station or site name",                  "CHARACTER", 0, 0,  20, 0, 0, 1 },
+	{ 0, "Latitude",                                 "DEGREE", 5, 0,   8, 0, 0, 0 },
+	{ 0, "Longitude",                                "DEGREE", 5, 0,   8, 0, 0, 0 },
+	{ 0, "Maximum latitude queried",                 "DEGREE", 5, 0,   8, 0, 0, 0 },
+	{ 0, "Minimum latitude queried",                 "DEGREE", 5, 0,   8, 0, 0, 0 },
+	{ 0, "Maximum longitude queried",                "DEGREE", 5, 0,   8, 0, 0, 0 },
+	{ 0, "Minimum longitude queried",                "DEGREE", 5, 0,   8, 0, 0, 0 },
+	{ 0, "Height",                                        "M", 0, 0,   7, 0, 0, 0 },
+	{ 0, "Height of barometer above msl",                 "M", 1, 0,   6, 0, 0, 0 },
+	{ 0, "Date and time informations",            "CHARACTER", 0, 0,  20, 0, 0, 1 },
+	{ 0, "Year",                                       "YEAR", 0, 0,   4, 0, 0, 0 },
+	{ 0, "Month",                                     "MONTH", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Day",                                         "DAY", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Hour",                                       "HOUR", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Minutes",                                  "MINUTE", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Seconds",                                  "SECOND", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Maximum year queried",                       "YEAR", 0, 0,   4, 0, 0, 0 },
+	{ 0, "Year or minimum year queried",               "YEAR", 0, 0,   4, 0, 0, 0 },
+	{ 0, "Maximum month queried",                     "MONTH", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Minimum month queried",                     "MONTH", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Maximum day queried",                         "DAY", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Minimum day queried",                         "DAY", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Maximum hour queried",                       "HOUR", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Minumum hour queried",                       "HOUR", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Maxminum minutes queried",                 "MINUTE", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Minimum minutes queried",                  "MINUTE", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Maxminum seconds queried",                 "SECOND", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Minimum seconds queried",                  "SECOND", 0, 0,   2, 0, 0, 0 },
+	{ 0, "Level type",                               "NUMBER", 0, 0,   5, 0, 0, 0 },
+	{ 0, "Level layer L1",                           "NUMBER", 0, 0,   5, 0, 0, 0 },
+	{ 0, "Level layer L2",                           "NUMBER", 0, 0,   5, 0, 0, 0 },
+	{ 0, "P indicator for time range",               "NUMBER", 0, 0,   5, 0, 0, 0 },
+	{ 0, "Time range P1",                            "SECOND", 0, 0,  11, 0, 0, 0 },
+	{ 0, "Time range P2",                            "SECOND", 0, 0,  11, 0, 0, 0 },
+	{ 0, "Variable queried",                      "CHARACTER", 0, 0,   6, 0, 0, 1 },
+	{ 0, "List of variables to query",            "CHARACTER", 0, 0, 255, 0, 0, 1 },
+	{ 0, "ID of the variable in the database",      "NUMERIC", 0, 0,  10, 0, 0, 0 },
+	{ 0, "Only return values with best priority",    "NUMBER", 0, 0,   1, 0, 0, 0 },
+};
+
+/* End of table definitions */
+
+dba_varinfo dba_record_keyword_byindex(int index)
+{
+	return &(infos[index]);
+}
+
+dba_keyword dba_record_keyword_byname(const char* tag)
+{
+	struct tagdef* res = in_word_set(tag, strlen(tag));
+	if (res == NULL)
+		return DBA_KEY_ERROR;
+	else
+		return res->index;
+}
+
+dba_varinfo dba_record_keyword(const char* tag, int* index)
+{
+	struct tagdef* res = in_word_set(tag, strlen(tag));
+	if (res == NULL)
+		return NULL;
+	else
+	{
+		*index = res->index;
+		return dba_record_keyword_byindex(*index);
+	}
+}
+
+/*
+dba_err dba_record_keyword_selftest()
+{
+	dba_keyword i, j;
+	for (i = 0; i < DBA_KEY_COUNT; i++)
+	{
+		if (wordlist[i + 1].index != i)
+			return dba_error_consistency("wordlist entry %d has index %d that does not match the position",
+				i, wordlist[i + 1].index);
+		j = dba_record_keyword_byname(wordlist[i + 1].tag);
+		if (j != i)
+			return dba_error_consistency("hashing of entry '%s' did not give expected index %d",
+				wordlist[i + 1].tag, i);
+	}
+	return dba_error_ok();
+}
+*/
+
+/* vim:set ts=4 sw=4: */

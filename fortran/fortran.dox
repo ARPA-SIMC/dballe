@@ -1,0 +1,9 @@
+/** @defgroup fortran Dballe fortran bindings
+
+Fortran bindings of Dballe.  The bindings offer two different interfaces: a
+simplified interface and a full interface.  The simplified interface allows for
+writing code quickly, while the full interface exports every part of Dballe,
+making it possible to write more complex programs, such as programs that run
+run more queries at the same time, or that perform queries while getting the
+results of other queries.
+*/
