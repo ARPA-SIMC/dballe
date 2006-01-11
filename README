@@ -94,6 +94,8 @@ These are the TODO-list items completed so far::
  * BUFR
     + Spalmare i bit della data present bitmap e i valori di QC come variabili
       nel bufrex_raw, e delegare la loro gestione a bufrex_conv
+    + Scrivere il campo data nella section 1 come data rappresentativa del
+      contenuto, non come data attuale
 
  * Refactoring
     + Refactor dba_msg to contain physical values with levellayer and timerange
@@ -124,6 +126,10 @@ These are the TODO-list items completed so far::
        + Per stazione
        + Per intervallo
 
+ * Tools
+    + Fare un dbamsg filter che prende query alla dbadb e stampa solo i
+      messaggi che fanno (o non fanno) match
+
 TODO-list items being worked on
 -------------------------------
 
@@ -153,9 +159,10 @@ These are the TODO-list items currently being worked on::
       - Non deve esserci perdita di precisione sull'import e export
         delle coordinate
 
+ * AOF
+    - Scrivere l'header del file nell'output di dbamsg filter
+
  * Tools
-    - Fare un dbamsg filter che prende query alla dbadb e stampa solo i
-      messaggi che fanno (o non fanno) match
     - In fase di conversione, aggiungere uno switch per fare unset di tutti i
       valori che hanno intervallo di confidenza al di sotto di una soglia data
     - dbatbl: eventualmente fare anche il grep
@@ -166,8 +173,6 @@ These are the TODO-list items currently being worked on::
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
-    - Scrivere il campo data nella section 1 come data rappresentativa del
-      contenuto, non come data attuale
 
  * Documentazione dell'interfaccia in fortran
     - aggiungere due parole su come funziona la query "le query si effettuano

@@ -278,7 +278,7 @@ dba_err do_compare(poptContext optCon)
 
 	while (found1 && found2)
 	{
-		int diffs;
+		int diffs = 0;
 		idx++;
 		DBA_RUN_OR_RETURN(dba_file_read(file1, &msg1, &found1));
 		DBA_RUN_OR_RETURN(dba_file_read(file2, &msg2, &found2));
