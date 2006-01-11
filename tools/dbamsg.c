@@ -1,6 +1,7 @@
 #include <dballe/msg/dba_msg.h>
 
 #include <dballe/aof/aof_decoder.h>
+#include <dballe/core/dba_record.h>
 #include <dballe/dba_cmdline.h>
 
 #include "processor.h"
@@ -69,7 +70,7 @@ static dba_err print_crex_header(dba_rawmsg rmsg, bufrex_raw braw)
 	return dba_error_ok();
 }
 
-static dba_err print_aof_header(dba_rawmsg rmsg, dba_msg msg)
+static dba_err print_aof_header(dba_rawmsg rmsg)
 {
 	int size, category, subcategory;
 	const unsigned char *buf;
@@ -86,19 +87,21 @@ static dba_err print_aof_header(dba_rawmsg rmsg, dba_msg msg)
 
 static dba_err summarise_bufr_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
+	if (braw == NULL) return dba_error_ok();
 	DBA_RUN_OR_RETURN(print_bufr_header(rmsg, braw)); puts(".");
 	return dba_error_ok();
 }
 
 static dba_err summarise_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
+	if (braw == NULL) return dba_error_ok();
 	DBA_RUN_OR_RETURN(print_crex_header(rmsg, braw)); puts(".");
 	return dba_error_ok();
 }
 
 static dba_err summarise_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
-	DBA_RUN_OR_RETURN(print_aof_header(rmsg, msg)); puts(".");
+	DBA_RUN_OR_RETURN(print_aof_header(rmsg)); puts(".");
 	return dba_error_ok();
 }
 
@@ -131,6 +134,7 @@ static dba_err dump_dba_vars(bufrex_raw msg)
 
 static dba_err dump_bufr_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
+	if (braw == NULL) return dba_error_ok();
 	DBA_RUN_OR_RETURN(print_bufr_header(rmsg, braw)); puts(":");
 	DBA_RUN_OR_RETURN(dump_dba_vars(braw));
 	return dba_error_ok();
@@ -138,6 +142,7 @@ static dba_err dump_bufr_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, 
 
 static dba_err dump_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
+	if (braw == NULL) return dba_error_ok();
 	DBA_RUN_OR_RETURN(print_crex_header(rmsg, braw)); puts(":");
 	DBA_RUN_OR_RETURN(dump_dba_vars(braw));
 	return dba_error_ok();
@@ -145,7 +150,8 @@ static dba_err dump_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, 
 
 static dba_err dump_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
-	DBA_RUN_OR_RETURN(print_aof_header(rmsg, msg)); puts(":");
+	if (msg == NULL) return dba_error_ok();
+	DBA_RUN_OR_RETURN(print_aof_header(rmsg)); puts(":");
 	dba_msg_print(msg, stdout);
 	/* DBA_RUN_OR_RETURN(dump_dba_vars((dba_message)msg)); */
 	return dba_error_ok();
@@ -153,6 +159,7 @@ static dba_err dump_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, v
 
 static dba_err dump_cooked_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
+	if (msg == NULL) return dba_error_ok();
 	dba_msg_print(msg, stdout);
 	return dba_error_ok();
 }
@@ -188,22 +195,12 @@ dba_err do_scan(poptContext optCon)
 
 dba_err do_dump(poptContext optCon)
 {
-	action crexaction;
-	action bufraction;
-	action aofaction;
+	action crexaction = op_dump_interpreted ? dump_cooked_message : dump_bufr_message;
+	action bufraction = op_dump_interpreted ? dump_cooked_message : dump_crex_message;
+	action aofaction  = op_dump_interpreted ? dump_cooked_message : dump_aof_message;;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
-	if (op_dump_interpreted)
-	{
-		bufraction = dump_cooked_message;
-		crexaction = dump_cooked_message;
-		aofaction = dump_cooked_message;
-	} else {
-		bufraction = dump_bufr_message;
-		crexaction = dump_crex_message;
-		aofaction = dump_aof_message;
-	}
 
 	switch (dba_cmdline_stringToMsgType(op_input_type, optCon))
 	{
@@ -306,20 +303,85 @@ dba_err do_compare(poptContext optCon)
 	return dba_error_ok();
 }
 
+struct filter_data
+{
+	dba_file output;
+	int mindate[6];
+	int maxdate[6];
+};
+
+inline static int get_date_value(dba_msg msg, int value)
+{
+	dba_msg_datum d = dba_msg_find_by_id(msg, value);
+	dba_var var = d == NULL ? NULL : d->var;
+	const char* val = var == NULL ? NULL : dba_var_value(var);
+	if (val == NULL)
+		return -1;
+	else
+		return strtoul(val, 0, 10);
+}
+
+dba_err filter_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+{
+	struct filter_data* fdata = (struct filter_data*)data;
+	
+	if (msg == NULL) return dba_error_ok();
+
+	if (fdata->mindate[0] != -1 || fdata->maxdate[0] != -1)
+	{
+		int i, date[6];
+		date[0] = get_date_value(msg, DBA_MSG_YEAR);
+		date[1] = get_date_value(msg, DBA_MSG_MONTH);
+		date[2] = get_date_value(msg, DBA_MSG_DAY);
+		date[3] = get_date_value(msg, DBA_MSG_HOUR);
+		date[4] = get_date_value(msg, DBA_MSG_MINUTE);
+		date[5] = 0;
+
+		/* Check that the message contains proper datetime indications */
+		for (i = 0; i < 6; i++)
+			if (date[i] == -1)
+				return dba_error_ok();
+
+		/* Compare with the two extremes */
+
+		if (fdata->mindate[0] != -1)
+			for (i = 0; i < 6; i++)
+				if (fdata->mindate[i] > date[i])
+					return dba_error_ok();
+
+		if (fdata->maxdate[0] != -1)
+			for (i = 0; i < 6; i++)
+				if (fdata->maxdate[i] < date[i])
+					return dba_error_ok();
+	}
+
+	DBA_RUN_OR_RETURN(dba_file_write_raw(fdata->output, rmsg));
+
+	return dba_error_ok();
+}
+
 dba_err do_filter(poptContext optCon)
 {
 	dba_encoding type;
+	struct filter_data fdata;
+	dba_record query;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
+	/* Create the query */
+	DBA_RUN_OR_RETURN(dba_record_create(&query));
+	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
+
+	/* Digest the query in good values for filter_data */
+	DBA_RUN_OR_RETURN(dba_record_parse_date_extremes(query, fdata.mindate, fdata.maxdate));
+
 	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 
-	dba_file file;
-	DBA_RUN_OR_RETURN(dba_file_create(&file, type, "(stdout)", "w"));
-	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, write_raw_message, file));
+	DBA_RUN_OR_RETURN(dba_file_create(&fdata.output, type, "(stdout)", "w"));
+	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, filter_message, &fdata));
 	/*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
-	dba_file_delete(file);
+	dba_file_delete(fdata.output);
 
 	return dba_error_ok();
 }

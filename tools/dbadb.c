@@ -1,6 +1,3 @@
-#define _GNU_SOURCE
-/* _GNU_SOURCE is defined only to have strndup */
-
 #include <dballe/msg/dba_msg.h>
 
 #include <dballe/dba_init.h>
@@ -81,37 +78,6 @@ static dba_err import_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg,
 	return dba_error_ok();
 }
 
-static dba_err get_query_from_commandline(poptContext optCon, dba_record query)
-{
-	const char* queryparm;
-	while ((queryparm = poptGetArg(optCon)) != NULL)
-	{
-		/* Split the input as name=val */
-		const char* s = strchr(queryparm, '=');
-		char* name = strndup(queryparm, s - queryparm);
-		const char* val = s + 1;
-		dba_keyword param = dba_record_keyword_byname(name);
-		dba_varinfo info;
-
-		if (name == NULL || val == NULL)
-			return dba_error_alloc("parsing query parameters");
-
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled keyword \"%s\"", name);
-
-		/* Query informations about the parameter */
-		DBA_RUN_OR_RETURN(dba_record_keyword_info(param, &info));
-
-		if (info->is_string)
-			DBA_RUN_OR_RETURN(dba_record_key_setc(query, param, val));
-		else
-			DBA_RUN_OR_RETURN(dba_record_key_setd(query, param, strtod(val, 0)));
-
-		free(name);
-	}
-	return dba_error_ok();
-}
-
 dba_err do_dump(poptContext optCon)
 {
 	const char* action;
@@ -125,7 +91,7 @@ dba_err do_dump(poptContext optCon)
 
 	/* Create the query */
 	DBA_RUN_OR_RETURN(dba_record_create(&query));
-	DBA_RUN_OR_RETURN(get_query_from_commandline(optCon, query));
+	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
 	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(dba_open(op_dsn, op_user, op_pass, &db));
@@ -237,7 +203,7 @@ dba_err do_export(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod));
 
 	/* Add the rest of the query */
-	DBA_RUN_OR_RETURN(get_query_from_commandline(optCon, query));
+	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
 	switch (rep_cod)
 	{

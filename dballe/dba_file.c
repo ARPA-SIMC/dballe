@@ -1,4 +1,5 @@
 #include <dballe/dba_file.h>
+#include <dballe/dba_marshal.h>
 #include <dballe/io/dba_rawfile.h>
 #include <dballe/io/dba_file_readers.h>
 #include <dballe/io/dba_file_writers.h>
@@ -81,15 +82,10 @@ dba_err dba_file_read(dba_file file, dba_msg* msg, int* found)
 	DBA_RUN_OR_RETURN(dba_rawmsg_create(&rm));
 	DBA_RUN_OR_GOTO(cleanup, dba_file_read_raw(file, rm, found));
 	if (*found)
-	{
 		/* Parse the message */
-		switch (file->type)
-		{
-			case BUFR: DBA_RUN_OR_GOTO(cleanup, bufrex_decode_bufr(rm, msg)); break;
-			case CREX: DBA_RUN_OR_GOTO(cleanup, bufrex_decode_crex(rm, msg)); break;
-			case AOF: DBA_RUN_OR_GOTO(cleanup, aof_decoder_decode(rm, msg)); break;
-		}
-	}
+		DBA_RUN_OR_GOTO(cleanup, dba_marshal_decode(rm, msg));
+	else
+		*msg = NULL;
 
 cleanup:
 	if (rm != NULL)

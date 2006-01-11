@@ -11,6 +11,7 @@ extern "C" {
 
 #include <stdio.h>
 #include <dballe/err/dba_error.h>
+#include <dballe/core/dba_record.h>
 #include <dballe/dba_file.h>
 #include <popt.h>
 
@@ -38,6 +39,8 @@ void dba_cmdline_print_dba_error();
 void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__ ((noreturn));
 dba_encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon);
 int dba_cmdline_dispatch_main(const struct tool_desc* desc, int argc, const char* argv[]);
+
+dba_err dba_cmdline_get_query(poptContext optCon, dba_record query);
 
 #ifdef  __cplusplus
 }

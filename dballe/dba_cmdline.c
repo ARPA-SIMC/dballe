@@ -1,3 +1,6 @@
+#define _GNU_SOURCE
+/* _GNU_SOURCE is defined only to have strndup */
+
 #include <dballe/dba_cmdline.h>
 
 #include <popt.h>
@@ -473,6 +476,47 @@ int dba_cmdline_dispatch_main (const struct tool_desc* desc, int argc, const cha
 	/* Nothing found on the dispatch table */
 	usage(desc, argv[0], stderr);
 	return 1;
+}
+
+dba_err dba_cmdline_get_query(poptContext optCon, dba_record query)
+{
+	const char* queryparm;
+	while ((queryparm = poptPeekArg(optCon)) != NULL)
+	{
+		/* Split the input as name=val */
+		const char* s;
+		char* name;
+		const char* val;
+		dba_keyword param;
+		dba_varinfo info;
+		
+		if ((s = strchr(queryparm, '=')) == NULL)
+			return dba_error_ok();
+
+		/* Mark as processed */
+		poptGetArg(optCon);
+
+		name = strndup(queryparm, s - queryparm);
+		val = s + 1;
+		param = dba_record_keyword_byname(name);
+
+		if (name == NULL || val == NULL)
+			return dba_error_alloc("parsing query parameters");
+
+		if (param == DBA_KEY_ERROR)
+			return dba_error_notfound("looking for misspelled keyword \"%s\"", name);
+
+		/* Query informations about the parameter */
+		DBA_RUN_OR_RETURN(dba_record_keyword_info(param, &info));
+
+		if (info->is_string)
+			DBA_RUN_OR_RETURN(dba_record_key_setc(query, param, val));
+		else
+			DBA_RUN_OR_RETURN(dba_record_key_setd(query, param, strtod(val, 0)));
+
+		free(name);
+	}
+	return dba_error_ok();
 }
 
 /* vim:set ts=4 sw=4: */
