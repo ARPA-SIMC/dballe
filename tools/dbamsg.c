@@ -308,6 +308,7 @@ struct filter_data
 	dba_file output;
 	int mindate[6];
 	int maxdate[6];
+	double latmin, latmax, lonmin, lonmax;
 };
 
 inline static int get_date_value(dba_msg msg, int value)
@@ -321,9 +322,22 @@ inline static int get_date_value(dba_msg msg, int value)
 		return strtoul(val, 0, 10);
 }
 
+inline static double get_lat_value(dba_msg msg, int value)
+{
+	double res;
+	dba_msg_datum d = dba_msg_find_by_id(msg, value);
+	dba_var var = d == NULL ? NULL : d->var;
+	if (var == NULL || dba_var_value(var) == NULL)
+		return -1000000;
+	dba_var_enqd(var, &res);
+	return res;
+}
+
+
 dba_err filter_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
 	struct filter_data* fdata = (struct filter_data*)data;
+	double dval;
 	
 	if (msg == NULL) return dba_error_ok();
 
@@ -355,9 +369,36 @@ dba_err filter_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data
 					return dba_error_ok();
 	}
 
+	/* Latitude and longitude must exist */
+	if ((dval = get_lat_value(msg, DBA_MSG_LATITUDE)) == -1000000)
+		return dba_error_ok();
+	if (fdata->latmin != -1000000 && fdata->latmin > dval)
+		return dba_error_ok();
+	if (fdata->latmax != -1000000 && fdata->latmax < dval)
+		return dba_error_ok();
+
+	if ((dval = get_lat_value(msg, DBA_MSG_LONGITUDE)) == -1000000)
+		return dba_error_ok();
+	if (fdata->lonmin != -1000000 && fdata->lonmin > dval)
+		return dba_error_ok();
+	if (fdata->lonmax != -1000000 && fdata->lonmax < dval)
+		return dba_error_ok();
+
 	DBA_RUN_OR_RETURN(dba_file_write_raw(fdata->output, rmsg));
 
 	return dba_error_ok();
+}
+
+inline static double get_input_lat_value(dba_record rec, dba_keyword key)
+{
+	dba_var var = dba_record_key_peek(rec, key); 
+	double res;
+	if (var == NULL)
+		return -1000000;
+	if (dba_var_value(var) == NULL)
+		return -1000000;
+	dba_var_enqd(var, &res);
+	return res;
 }
 
 dba_err do_filter(poptContext optCon)
@@ -375,6 +416,10 @@ dba_err do_filter(poptContext optCon)
 
 	/* Digest the query in good values for filter_data */
 	DBA_RUN_OR_RETURN(dba_record_parse_date_extremes(query, fdata.mindate, fdata.maxdate));
+	fdata.latmin = get_input_lat_value(query, DBA_KEY_LATMIN);
+	fdata.latmax = get_input_lat_value(query, DBA_KEY_LATMAX);
+	fdata.lonmin = get_input_lat_value(query, DBA_KEY_LONMIN);
+	fdata.lonmax = get_input_lat_value(query, DBA_KEY_LONMAX);
 
 	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 
