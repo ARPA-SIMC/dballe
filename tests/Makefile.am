@@ -41,7 +41,7 @@ check_mem_FFLAGS = -g -fno-second-underscore
 
 stress_SOURCES=\
 	stress.c
-stress_LDADD = ../dballe/libdballe.la
+stress_LDADD = ../dballe/libdballe.la -lpopt
 
 benchmark_SOURCES= \
 	benchmark.cc \
@@ -49,7 +49,7 @@ benchmark_SOURCES= \
 	bench/dba_var.cc \
 	bench/dba_record.cc \
 	bench/bufrex.cc
-benchmark_LDADD = ../dballe/libdballe.la
+benchmark_LDADD = ../dballe/libdballe.la -lpopt
 
 INCLUDES = -I..
 
