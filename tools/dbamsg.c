@@ -96,7 +96,7 @@ static dba_err summarise_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg 
 	return dba_error_ok();
 }
 
-static dba_err summarise_aof_message(dba_rawmsg rmsg, dba_msg msg, void* data)
+static dba_err summarise_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
 	DBA_RUN_OR_RETURN(print_aof_header(rmsg, msg)); puts(".");
 	return dba_error_ok();
@@ -143,7 +143,7 @@ static dba_err dump_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, 
 	return dba_error_ok();
 }
 
-static dba_err dump_aof_message(dba_rawmsg rmsg, dba_msg msg, void* data)
+static dba_err dump_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
 	DBA_RUN_OR_RETURN(print_aof_header(rmsg, msg)); puts(":");
 	dba_msg_print(msg, stdout);
@@ -151,39 +151,13 @@ static dba_err dump_aof_message(dba_rawmsg rmsg, dba_msg msg, void* data)
 	return dba_error_ok();
 }
 
-static dba_err dump_cooked_bufr_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+static dba_err dump_cooked_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
 	dba_msg_print(msg, stdout);
 	return dba_error_ok();
 }
 
-static dba_err dump_cooked_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
-{
-	dba_msg_print(msg, stdout);
-	return dba_error_ok();
-}
-
-static dba_err dump_cooked_aof_message(dba_rawmsg rmsg, dba_msg msg, void* data)
-{
-	dba_msg_print(msg, stdout);
-	return dba_error_ok();
-}
-
-dba_err write_raw_bufr_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
-{
-	dba_file file = (dba_file)data;
-	DBA_RUN_OR_RETURN(dba_file_write_raw(file, rmsg));
-	return dba_error_ok();
-}
-
-dba_err write_raw_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
-{
-	dba_file file = (dba_file)data;
-	DBA_RUN_OR_RETURN(dba_file_write_raw(file, rmsg));
-	return dba_error_ok();
-}
-
-dba_err write_raw_aof_message(dba_rawmsg rmsg, dba_msg msg, void* data)
+dba_err write_raw_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
 	dba_file file = (dba_file)data;
 	DBA_RUN_OR_RETURN(dba_file_write_raw(file, rmsg));
@@ -192,9 +166,9 @@ dba_err write_raw_aof_message(dba_rawmsg rmsg, dba_msg msg, void* data)
 
 dba_err do_scan(poptContext optCon)
 {
-	bufrex_action bufraction;
-	bufrex_action crexaction;
-	aof_action aofaction;
+	action bufraction;
+	action crexaction;
+	action aofaction;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
@@ -214,17 +188,17 @@ dba_err do_scan(poptContext optCon)
 
 dba_err do_dump(poptContext optCon)
 {
-	bufrex_action crexaction;
-	bufrex_action bufraction;
-	aof_action aofaction;
+	action crexaction;
+	action bufraction;
+	action aofaction;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
 	if (op_dump_interpreted)
 	{
-		bufraction = dump_cooked_bufr_message;
-		crexaction = dump_cooked_crex_message;
-		aofaction = dump_cooked_aof_message;
+		bufraction = dump_cooked_message;
+		crexaction = dump_cooked_message;
+		aofaction = dump_cooked_message;
 	} else {
 		bufraction = dump_bufr_message;
 		crexaction = dump_crex_message;
@@ -243,45 +217,18 @@ dba_err do_dump(poptContext optCon)
 
 dba_err do_cat(poptContext optCon)
 {
-	bufrex_action crexaction;
-	bufrex_action bufraction;
-	aof_action aofaction;
-
 	/* Throw away the command name */
+	dba_encoding type;
+	dba_file file;
+
 	poptGetArg(optCon);
 
-	bufraction = write_raw_bufr_message;
-	crexaction = write_raw_crex_message;
-	aofaction = write_raw_aof_message;
+	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 
-	switch (dba_cmdline_stringToMsgType(op_input_type, optCon))
-	{
-		case BUFR:
-		{
-			dba_file file;
-			DBA_RUN_OR_RETURN(dba_file_create(&file, BUFR, "(stdout)", "w"));
-			DBA_RUN_OR_RETURN(process_all(optCon, BUFR, &grepdata, bufraction, file));
-			dba_file_delete(file);
-			break;
-		}
-		case CREX:
-		{
-			dba_file file;
-			DBA_RUN_OR_RETURN(dba_file_create(&file, CREX, "(stdout)", "w"));
-			DBA_RUN_OR_RETURN(process_all(optCon, CREX, &grepdata, crexaction, file));
-			dba_file_delete(file);
-			break;
-		}
-		case AOF: 
-		{
-			dba_file file;
-			DBA_RUN_OR_RETURN(dba_file_create(&file, AOF, "(stdout)", "w"));
-			/*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
-			DBA_RUN_OR_RETURN(process_all(optCon, AOF, &grepdata, aofaction, file));
-			dba_file_delete(file);
-			break;
-		}
-	}
+	DBA_RUN_OR_RETURN(dba_file_create(&file, type, "(stdout)", "w"));
+	/*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
+	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, write_raw_message, file));
+	dba_file_delete(file);
 
 	return dba_error_ok();
 }
@@ -289,42 +236,17 @@ dba_err do_cat(poptContext optCon)
 dba_err do_convert(poptContext optCon)
 {
 	dba_file file;
-	bufrex_action crexaction;
-	bufrex_action bufraction;
-	aof_action aofaction;
+	dba_encoding type;
 
-	bufraction = convert_bufr_message;
-	crexaction = convert_crex_message;
-	aofaction = convert_aof_message;
-
-	switch (dba_cmdline_stringToMsgType(op_output_type, optCon))
-	{
-		case BUFR:
-		{
-			DBA_RUN_OR_RETURN(dba_file_create(&file, BUFR, "(stdout)", "w"));
-			break;
-		}
-		case CREX:
-		{
-			DBA_RUN_OR_RETURN(dba_file_create(&file, CREX, "(stdout)", "w"));
-			break;
-		}
-		case AOF: 
-		{
-			DBA_RUN_OR_RETURN(dba_file_create(&file, AOF, "(stdout)", "w"));
-			/* DBA_RUN_OR_RETURN(dba_file_write_header(file, 0, 0)); */
-			break;
-		}
-	}
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
-	switch (dba_cmdline_stringToMsgType(op_input_type, optCon))
-	{
-		case BUFR: DBA_RUN_OR_RETURN(process_all(optCon, BUFR, &grepdata, bufraction, (void*)file)); break;
-		case CREX: DBA_RUN_OR_RETURN(process_all(optCon, CREX, &grepdata, crexaction, (void*)file)); break;
-		case AOF:  DBA_RUN_OR_RETURN(process_all(optCon, AOF, &grepdata, aofaction, (void*)file)); break;
-	}
+	type = dba_cmdline_stringToMsgType(op_output_type, optCon);
+
+	DBA_RUN_OR_RETURN(dba_file_create(&file, type, "(stdout)", "w"));
+	/* DBA_RUN_OR_RETURN(dba_file_write_header(file, 0, 0)); */
+
+	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, convert_message, (void*)file));
 
 	dba_file_delete(file);
 
@@ -384,6 +306,23 @@ dba_err do_compare(poptContext optCon)
 	return dba_error_ok();
 }
 
+dba_err do_filter(poptContext optCon)
+{
+	dba_encoding type;
+
+	/* Throw away the command name */
+	poptGetArg(optCon);
+
+	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
+
+	dba_file file;
+	DBA_RUN_OR_RETURN(dba_file_create(&file, type, "(stdout)", "w"));
+	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, write_raw_message, file));
+	/*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
+	dba_file_delete(file);
+
+	return dba_error_ok();
+}
 
 static struct tool_desc dbamsg;
 
@@ -435,10 +374,19 @@ struct poptOption dbamsg_convert_options[] = {
 
 struct poptOption dbamsg_compare_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
-	{ "type2", 't', POPT_ARG_STRING, &op_input_type, 0,
+	{ "type1", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the first file to compare ('bufr', 'crex', 'aof')", "type" },
 	{ "type2", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the second file to compare ('bufr', 'crex', 'aof')", "type" },
+	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
+		"Options used to filter messages" },
+	POPT_TABLEEND
+};
+
+struct poptOption dbamsg_filter_options[] = {
+	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
+		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages" },
 	POPT_TABLEEND
@@ -450,7 +398,7 @@ static void init()
 	dbamsg.longdesc =
 		"Examine, dump and convert files containing metereological data. "
 		"It supports observations encoded in BUFR, CREX and AOF formats";
-	dbamsg.ops = (struct op_dispatch_table*)calloc(6, sizeof(struct op_dispatch_table));
+	dbamsg.ops = (struct op_dispatch_table*)calloc(7, sizeof(struct op_dispatch_table));
 
 	dbamsg.ops[0].func = do_scan;
 	dbamsg.ops[0].aliases[0] = "scan";
@@ -489,11 +437,18 @@ static void init()
 	dbamsg.ops[4].longdesc = NULL;
 	dbamsg.ops[4].optable = dbamsg_compare_options;
 
-	dbamsg.ops[5].func = NULL;
-	dbamsg.ops[5].usage = NULL;
-	dbamsg.ops[5].desc = NULL;
+	dbamsg.ops[5].func = do_filter;
+	dbamsg.ops[5].aliases[0] = "filter";
+	dbamsg.ops[5].usage = "filter [options] filename [queryparm1=val1 [queryparm2=val2 [...]]]";
+	dbamsg.ops[5].desc = "Copy only those messages whose contents match the given query parameters";
 	dbamsg.ops[5].longdesc = NULL;
-	dbamsg.ops[5].optable = NULL;
+	dbamsg.ops[5].optable = dbamsg_filter_options;
+
+	dbamsg.ops[6].func = NULL;
+	dbamsg.ops[6].usage = NULL;
+	dbamsg.ops[6].desc = NULL;
+	dbamsg.ops[6].longdesc = NULL;
+	dbamsg.ops[6].optable = NULL;
 };
 
 int main (int argc, const char* argv[])

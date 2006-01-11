@@ -14,9 +14,6 @@ struct conversion_info
 	void* outActionData;
 };
 
-dba_err convert_bufr_message(dba_rawmsg msg, bufrex_raw braw, dba_msg decoded, void* data);
-dba_err convert_crex_message(dba_rawmsg msg, bufrex_raw braw, dba_msg decoded, void* data);
-dba_err convert_aof_message(dba_rawmsg msg, dba_msg decoded, void* data);
-
+dba_err convert_message(dba_rawmsg msg, bufrex_raw braw, dba_msg decoded, void* data);
 
 #endif

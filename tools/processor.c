@@ -137,7 +137,7 @@ dba_err process_bufr_input(
 		dba_file file,
 		dba_rawmsg rmsg,
 		struct grep_t* grepdata,
-		bufrex_action action, void* data)
+		action action, void* data)
 {
 	dba_err err = DBA_OK;
 	dba_msg parsed = NULL;
@@ -179,7 +179,7 @@ dba_err process_crex_input(
 		dba_file file,
 		dba_rawmsg rmsg,
 		struct grep_t* grepdata,
-		bufrex_action action,
+		action action,
 		void* data)
 {
 	dba_err err = DBA_OK;
@@ -222,7 +222,7 @@ dba_err process_aof_input(
 		dba_file file,
 		dba_rawmsg rmsg,
 		struct grep_t* grepdata,
-		aof_action action,
+		action action,
 		void* data)
 {
 	dba_err err = DBA_OK;
@@ -242,7 +242,7 @@ dba_err process_aof_input(
 			match = 1;
 
 		if (match)
-			DBA_RUN_OR_GOTO(cleanup, action(rmsg, parsed, data));
+			DBA_RUN_OR_GOTO(cleanup, action(rmsg, NULL, parsed, data));
 	} else
 		err = parse_result;
 
@@ -256,7 +256,7 @@ dba_err process_all(
 		poptContext optCon,
 		dba_encoding type,
 		struct grep_t* grepdata,
-		void* action, void* data)
+		action action, void* data)
 {
 	const char* name = poptGetArg(optCon);
 	dba_rawmsg rmsg;
@@ -285,13 +285,13 @@ dba_err process_all(
 				switch (type)
 				{
 					case CREX:
-						DBA_RUN_OR_RETURN(process_crex_input(file, rmsg, grepdata, (bufrex_action)action, data));
+						DBA_RUN_OR_RETURN(process_crex_input(file, rmsg, grepdata, action, data));
 						break;
 					case BUFR:
-						DBA_RUN_OR_RETURN(process_bufr_input(file, rmsg, grepdata, (bufrex_action)action, data));
+						DBA_RUN_OR_RETURN(process_bufr_input(file, rmsg, grepdata, action, data));
 						break;
 					case AOF:
-						DBA_RUN_OR_RETURN(process_aof_input(file, rmsg, grepdata, (aof_action)action, data));
+						DBA_RUN_OR_RETURN(process_aof_input(file, rmsg, grepdata, action, data));
 						break;
 				}
 			}

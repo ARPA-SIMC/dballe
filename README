@@ -115,6 +115,14 @@ These are the TODO-list items completed so far::
     + dare errore se ana=read ma qc o data != read
     + dare errore se qc=read ma data = rewrite
 
+ * Import da VM o database Oracle di ARPA
+    * Selezione dati da esportare
+       + latmin/latmax/lonmin/lonmax
+    * Query di export di dati
+       + Per rete
+       + Per box lat, lon e intervallo temporale
+       + Per stazione
+       + Per intervallo
 
 TODO-list items being worked on
 -------------------------------
@@ -140,21 +148,14 @@ These are the TODO-list items currently being worked on::
 
  * Import da VM o database Oracle di ARPA
     - Dati generici
-    * Selezione dati da esportare
-       - variabili di interesse
-       - latmin/latmax/lonmin/lonmax
-    * Query di export di dati
-       - Per rete
-	  - Per box lat, lon e intervallo temporale
-          - Per stazione
-	     - Per intervallo
-	     - Per variabile
     - Lat, Long
       - Buttare via le stazioni con NULL su lat o long
       - Non deve esserci perdita di precisione sull'import e export
         delle coordinate
 
  * Tools
+    - Fare un dbamsg filter che prende query alla dbadb e stampa solo i
+      messaggi che fanno (o non fanno) match
     - In fase di conversione, aggiungere uno switch per fare unset di tutti i
       valori che hanno intervallo di confidenza al di sotto di una soglia data
     - dbatbl: eventualmente fare anche il grep
@@ -162,8 +163,6 @@ These are the TODO-list items currently being worked on::
        - mettendo assieme i dati anagrafici delle varie stazioni.
        - controlli che le stazioni non si spostino e alla fine inserisca tutto
 	 nella tabella di anagrafica
-    - Fare un dbamsg filter che prende query alla dbadb e stampa solo i
-      messaggi che fanno (o non fanno) match
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra

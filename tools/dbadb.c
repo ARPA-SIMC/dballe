@@ -74,7 +74,7 @@ static dba_err import_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg
 	return dba_error_ok();
 }
 
-static dba_err import_aof_message(dba_rawmsg rmsg, dba_msg msg, void* data)
+static dba_err import_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
 	dba db = (dba)data;
 	DBA_RUN_OR_RETURN(dba_import_msg(db, msg));
@@ -173,14 +173,13 @@ dba_err do_wipe(poptContext optCon)
 
 dba_err do_import(poptContext optCon)
 {
-	const char* action;
-	bufrex_action crexaction;
-	bufrex_action bufraction;
-	aof_action aofaction;
+	action crexaction;
+	action bufraction;
+	action aofaction;
 	dba db;
 
 	/* Throw away the command name */
-	action = poptGetArg(optCon);
+	poptGetArg(optCon);
 
 	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(dba_open(op_dsn, op_user, op_pass, &db));

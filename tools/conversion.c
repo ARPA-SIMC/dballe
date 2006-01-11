@@ -43,29 +43,14 @@ static dba_err process_dba_msg(dba_msg msg, dba_file file, int type, int subtype
 	return dba_error_ok();
 }
 
-dba_err convert_bufr_message(dba_rawmsg msg, bufrex_raw braw, dba_msg decoded, void* data)
+dba_err convert_message(dba_rawmsg msg, bufrex_raw braw, dba_msg decoded, void* data)
 {
 	dba_file file = (dba_file)data;
 
-	DBA_RUN_OR_RETURN(process_dba_msg(decoded, file, braw->subtype == 0 ? 0 : braw->type, braw->subtype));
-
-	return dba_error_ok();
-}
-
-dba_err convert_crex_message(dba_rawmsg msg, bufrex_raw braw, dba_msg decoded, void* data)
-{
-	dba_file file = (dba_file)data;
-
-	DBA_RUN_OR_RETURN(process_dba_msg(decoded, file, braw->subtype == 0 ? 0 : braw->type, braw->subtype));
-
-	return dba_error_ok();
-}
-
-dba_err convert_aof_message(dba_rawmsg msg, dba_msg decoded, void* data)
-{
-	dba_file file = (dba_file)data;
-
-	DBA_RUN_OR_RETURN(process_dba_msg(decoded, file, 0, 0));
+	if (braw != NULL)
+		DBA_RUN_OR_RETURN(process_dba_msg(decoded, file, braw->subtype == 0 ? 0 : braw->type, braw->subtype));
+	else
+		DBA_RUN_OR_RETURN(process_dba_msg(decoded, file, 0, 0));
 
 	return dba_error_ok();
 }
