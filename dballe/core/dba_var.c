@@ -16,7 +16,6 @@
 #include "dba_var.h"
 
 #include <dballe/conv/dba_conv.h>
-#include <dballe/core/dba_varconv.h>
 
 struct _dba_var_attr
 {
@@ -422,20 +421,6 @@ fail:
 	dba_var_delete(*conv);
 	*conv = NULL;
 	return err;
-}
-
-dba_err dba_var_to_local(dba_var bufrex, dba_var* local)
-{
-	dba_err err;
-	dba_varinfo info = NULL;
-	dba_varcode newcode;
-
-	DBA_RUN_OR_GOTO(cleanup, dba_convert_vars(dba_var_code(bufrex), &newcode));
-	DBA_RUN_OR_GOTO(cleanup, dba_varinfo_query_local(newcode, &info));
-	DBA_RUN_OR_GOTO(cleanup, dba_var_convert(bufrex, info, local));
-
-cleanup:
-	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 void dba_var_print(dba_var var, FILE* out)

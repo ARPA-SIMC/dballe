@@ -165,19 +165,6 @@ dba_err dba_var_copy_attrs(dba_var dest, dba_var src);
 dba_err dba_var_convert(dba_var orig, dba_varinfo info, dba_var* conv);
 
 /**
- * Convert a BUFR or CREX ::dba_var into the DBALLE equivalent
- *
- * @param bufrex
- *   The variable to convert
- * @retval local
- *   The converted variable.  It needs to be deallocated using
- *   dba_var_delete().
- * @returns
- *   The error indicator for the function (@see dba_err)
- */
-dba_err dba_var_to_local(dba_var bufrex, dba_var* local);
-
-/**
  * Encode a double value into an integer value using varinfo encoding
  * informations
  *

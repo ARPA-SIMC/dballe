@@ -7,7 +7,6 @@ coreinclude_HEADERS = \
 	dba_csv.h \
 	dba_array.h \
 	dba_record.h \
-	dba_varconv.h \
 	dba_vartable.h \
 	dba_var.h
 
@@ -18,7 +17,6 @@ libcore_la_SOURCES = \
 	dba_array.c \
 	dba_record_keyword.c \
 	dba_record.c \
-	dba_varconv.c \
 	dba_vartable.c \
 	dba_var.c
 
@@ -38,10 +36,7 @@ dba_record_keyword.dox: dba_record_keyword.gperf mkkeydoc
 dba_record_keyword.tex: dba_record_keyword.gperf mkkeydoc
 	./mkkeydoc tex < $< > $@
 
-dba_varconv.c: dba_varconv.gperf compile_varconv
-	./compile_varconv < $< | gperf > $@
-
 distclean-local:
 	rm -f dba_record_keyword.c dba_record_keyword.dox dba_varconv.c
 
-EXTRA_DIST = core.dox dba_record_keyword.gperf mkkeydoc dba_varconv.gperf compile_varconv
+EXTRA_DIST = core.dox dba_record_keyword.gperf mkkeydoc

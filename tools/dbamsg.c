@@ -9,7 +9,6 @@
 
 #include <stdlib.h>
 
-static int op_use_local_vars = 0;
 static int op_dump_interpreted = 0;
 static char* op_input_type = "bufr";
 static char* op_output_type = "bufr";
@@ -111,22 +110,15 @@ static dba_err dump_dba_vars(bufrex_raw msg)
 
 	for (i = 0; i < msg->vars_count; i++)
 	{
-		dba_var var;
+		dba_var var = msg->vars[i];
 		dba_varcode code;
 		dba_varinfo info;
 
-		if (op_use_local_vars)
-			DBA_RUN_OR_RETURN(dba_var_to_local(msg->vars[i], &var));
-		else
-			var = msg->vars[i];
 		code = dba_var_code(var);
 		
 		info = dba_var_info(var);
 
 		dba_var_print(var, stdout);
-
-		if (op_use_local_vars)
-			dba_var_delete(var);
 	}
 
 	return dba_error_ok();
@@ -437,8 +429,6 @@ struct poptOption dbamsg_scan_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
-	{ "local", 0, 0, &op_use_local_vars, 0,
-		"convert variables to the DBALLE standard value before dumping their values" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages" },
 	POPT_TABLEEND
@@ -448,8 +438,6 @@ struct poptOption dbamsg_dump_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the unput data ('bufr', 'crex', 'aof')", "type" },
-	{ "local", 0, 0, &op_use_local_vars, 0,
-		"convert variables to the DBALLE standard value before dumping their values" },
 	{ "interpreted", 0, 0, &op_dump_interpreted, 0,
 		"dump the message as understood by the importer" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -472,8 +460,6 @@ struct poptOption dbamsg_convert_options[] = {
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
-	{ "local", 0, 0, &op_use_local_vars, 0,
-		"convert variables to the DBALLE standard value before dumping their values" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages" },
 	POPT_TABLEEND

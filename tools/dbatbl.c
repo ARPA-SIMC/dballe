@@ -1,7 +1,6 @@
 #include <dballe/dba_cmdline.h>
 #include <dballe/bufrex/bufrex_dtable.h>
 #include <dballe/conv/dba_conv.h>
-#include <dballe/core/dba_varconv.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -12,36 +11,29 @@ static int op_csv;
 
 void unit_check(dba_varinfo info, void* data)
 {
-	dba_varcode var = info->var;
-	dba_varcode loccode;
+	dba_varcode varcode = info->var;
 	dba_varinfo local;
 	int* is_ok = (int*)data;
-
-	if (dba_convert_vars(var, &loccode) != DBA_OK)
-	{
-		dba_cmdline_print_dba_error();
-		*is_ok = 0;
-	}
 
 	/*
 	if (var % 1000 == 0)
 		fprintf(stderr, "Testing %s %d\n", ids[i], var);
 	*/
 
-	if (loccode != 0 && !info->is_string)
+	if (varcode != 0 && !info->is_string)
 	{
 		double dval;
-		if (dba_varinfo_query_local(loccode, &local) != DBA_OK)
+		if (dba_varinfo_query_local(varcode, &local) != DBA_OK)
 		{
 			fprintf(stderr, "Checking conversion for var B%02d%03d: ",
-					DBA_VAR_X(var), DBA_VAR_Y(var));
+					DBA_VAR_X(varcode), DBA_VAR_Y(varcode));
 			dba_cmdline_print_dba_error();
 			*is_ok = 0;
 		}
 		else if (dba_convert_units(info->unit, local->unit, 1.0, &dval) != DBA_OK)
 		{
 			fprintf(stderr, "Checking conversion for var B%02d%03d: ",
-					DBA_VAR_X(var), DBA_VAR_Y(var));
+					DBA_VAR_X(varcode), DBA_VAR_Y(varcode));
 			dba_cmdline_print_dba_error();
 			*is_ok = 0;
 		}

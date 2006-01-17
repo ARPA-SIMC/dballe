@@ -112,6 +112,8 @@ These are the TODO-list items completed so far::
     + Salvare il tipo di encoding in dba_rawmsg
     + Mettere la scelta di MySQL nel configure, e riportarla nell'header del
       verbose
+    + Rimuovere dba_varconv: non viene usato, e le sue funzioni sono fatte
+      (meglio) dagli importer e exporter
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -149,7 +151,6 @@ These are the TODO-list items currently being worked on::
     - Scrivere l'header del file nell'output di dbamsg filter
 
  * Refactoring
-    - dba_varconv serve ancora?
     - Import and export of attributes
        - Import/export DB-ALLe
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
