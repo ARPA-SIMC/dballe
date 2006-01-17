@@ -1712,18 +1712,18 @@ dba_err dba_qc_query(dba db, int id_data, dba_varcode* qcs, int qcs_size, dba_re
 	if (qcs == NULL)
 		/* If qcs is null, query all QC data */
 		strcpy(query,
-				"SELECT a.type, a.value"
-				"  FROM attr AS a, data AS d"
-				" WHERE d.id = ? AND a.id_data = d.id");
+				"SELECT type, value"
+				"  FROM attr"
+				" WHERE id_data = ?");
 	else {
 		int i, qs;
 		char* q;
 		if (qcs_size > 100)
 			return dba_error_consistency("checking bound of 100 QC values to retrieve per query");
 		strcpy(query,
-				"SELECT a.type, a.value"
-				"  FROM attr AS a, data AS d"
-				" WHERE d.id = ? AND a.id_data = d.id AND a.type IN (");
+				"SELECT type, value"
+				"  FROM attr"
+				" WHERE id_data = ? AND type IN (");
 		qs = strlen(query);
 		q = query + qs;
 		for (i = 0; i < qcs_size; i++)
