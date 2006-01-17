@@ -131,6 +131,7 @@ These are the TODO-list items completed so far::
  * Tools
     + Fare un dbamsg filter che prende query alla dbadb e stampa solo i
       messaggi che fanno (o non fanno) match
+    + dbatbl: fare anche il grep
 
 TODO-list items being worked on
 -------------------------------
@@ -163,7 +164,6 @@ These are the TODO-list items currently being worked on::
  * Tools
     - In fase di conversione, aggiungere uno switch per fare unset di tutti i
       valori che hanno intervallo di confidenza al di sotto di una soglia data
-    - dbatbl: eventualmente fare anche il grep
     - Fare un import delle anagrafiche che scandisca una serie di CREX:
        - mettendo assieme i dati anagrafici delle varie stazioni.
        - controlli che le stazioni non si spostino e alla fine inserisca tutto

@@ -1,3 +1,5 @@
+#define _GNU_SOURCE  /* Needed for strcasestr */
+
 #include <dballe/dba_cmdline.h>
 #include <dballe/bufrex/bufrex_dtable.h>
 #include <dballe/conv/dba_conv.h>
@@ -166,6 +168,19 @@ static void print_varinfo_adapter(dba_varinfo info, void* data)
 		print_varinfo(info);
 }
 
+static void print_varinfo_grepping_adapter(dba_varinfo info, void* data)
+{
+	const char* pattern = (const char*)data;
+
+	if (strcasestr(info->desc, pattern) != NULL)
+	{
+		if (op_csv)
+			print_varinfo_csv(info);
+		else
+			print_varinfo(info);
+	}
+}
+
 dba_err do_cat(poptContext optCon)
 {
 	const char* item;
@@ -186,6 +201,24 @@ dba_err do_cat(poptContext optCon)
 
 		item = poptGetArg(optCon);
 	}
+	
+	return dba_error_ok();
+}
+
+dba_err do_grep(poptContext optCon)
+{
+	dba_vartable table;
+	const char* pattern;
+
+	/* Throw away the command name */
+	poptGetArg(optCon);
+
+	if (poptPeekArg(optCon) == NULL)
+		dba_cmdline_error(optCon, "there should be at least one B or D item to expand.  Examples are: B01002 or D03001");
+	pattern = poptGetArg(optCon);
+
+	DBA_RUN_OR_RETURN(dba_vartable_create("dballe", &table));
+	DBA_RUN_OR_RETURN(dba_vartable_iterate(table, print_varinfo_grepping_adapter, pattern));
 	
 	return dba_error_ok();
 }
@@ -303,7 +336,7 @@ static void init()
 	dbatbl.longdesc =
 		"This tool allows to index and query the tables that are "
 		"needed for normal functioning of DB-ALLe";
-	dbatbl.ops = (struct op_dispatch_table*)calloc(5, sizeof(struct op_dispatch_table));
+	dbatbl.ops = (struct op_dispatch_table*)calloc(6, sizeof(struct op_dispatch_table));
 
 	dbatbl.ops[0].func = do_cat;
 	dbatbl.ops[0].aliases[0] = "cat";
@@ -312,32 +345,39 @@ static void init()
 	dbatbl.ops[0].longdesc = NULL;
 	dbatbl.ops[0].optable = dbatbl_cat_options;
 
-	dbatbl.ops[1].func = do_expand;
-	dbatbl.ops[1].aliases[0] = "expand";
-	dbatbl.ops[1].usage = "expand table-entry [table-entry [...]]";
-	dbatbl.ops[1].desc = "Describe a WMO B table entry or expand a WMO D table entry in its components.";
+	dbatbl.ops[1].func = do_grep;
+	dbatbl.ops[1].aliases[0] = "grep";
+	dbatbl.ops[1].usage = "grep string";
+	dbatbl.ops[1].desc = "Output all the contents of the local B table whose description contains the given string.";
 	dbatbl.ops[1].longdesc = NULL;
-	dbatbl.ops[1].optable = dbatbl_expand_options;
+	dbatbl.ops[1].optable = dbatbl_cat_options;
 
-	dbatbl.ops[2].func = do_expandcode;
-	dbatbl.ops[2].aliases[0] = "expandcode";
-	dbatbl.ops[2].usage = "expandcode varcode [varcode [...]]";
-	dbatbl.ops[2].desc = "Expand the value of a packed variable code";
+	dbatbl.ops[2].func = do_expand;
+	dbatbl.ops[2].aliases[0] = "expand";
+	dbatbl.ops[2].usage = "expand table-entry [table-entry [...]]";
+	dbatbl.ops[2].desc = "Describe a WMO B table entry or expand a WMO D table entry in its components.";
 	dbatbl.ops[2].longdesc = NULL;
-	dbatbl.ops[2].optable = dbatbl_expandcode_options;
+	dbatbl.ops[2].optable = dbatbl_expand_options;
 
-	dbatbl.ops[3].func = do_index;
-	dbatbl.ops[3].aliases[0] = "index";
-	dbatbl.ops[3].usage = "index [options] filename index-id";
-	dbatbl.ops[3].desc = "Index the contents of a table file";
+	dbatbl.ops[3].func = do_expandcode;
+	dbatbl.ops[3].aliases[0] = "expandcode";
+	dbatbl.ops[3].usage = "expandcode varcode [varcode [...]]";
+	dbatbl.ops[3].desc = "Expand the value of a packed variable code";
 	dbatbl.ops[3].longdesc = NULL;
-	dbatbl.ops[3].optable = dbatbl_index_options;
+	dbatbl.ops[3].optable = dbatbl_expandcode_options;
 
-	dbatbl.ops[4].func = NULL;
-	dbatbl.ops[4].usage = NULL;
-	dbatbl.ops[4].desc = NULL;
+	dbatbl.ops[4].func = do_index;
+	dbatbl.ops[4].aliases[0] = "index";
+	dbatbl.ops[4].usage = "index [options] filename index-id";
+	dbatbl.ops[4].desc = "Index the contents of a table file";
 	dbatbl.ops[4].longdesc = NULL;
-	dbatbl.ops[4].optable = NULL;
+	dbatbl.ops[4].optable = dbatbl_index_options;
+
+	dbatbl.ops[5].func = NULL;
+	dbatbl.ops[5].usage = NULL;
+	dbatbl.ops[5].desc = NULL;
+	dbatbl.ops[5].longdesc = NULL;
+	dbatbl.ops[5].optable = NULL;
 };
 
 int main (int argc, const char* argv[])
