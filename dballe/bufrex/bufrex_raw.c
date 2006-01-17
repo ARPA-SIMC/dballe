@@ -267,10 +267,14 @@ dba_err bufrex_raw_append_dpb(bufrex_raw msg, int size, dba_varcode attr)
 	for (i = 0; i < msg->vars_count && size > 0; i++)
 	{
 		dba_var test_var;
+		dba_varcode code = dba_var_code(msg->vars[i]);
 
+#if 0
 		/* Skip over special data like delayed repetition counts */
-		if (DBA_VAR_F(dba_var_code(msg->vars[i])) != 0)
+		if (DBA_VAR_F(code) != 0 ||
+		    (DBA_VAR_F(code) == 0 && DBA_VAR_X(code) == 31))
 			continue;
+#endif
 
 		/* Check if the variable has the attribute we want */
 		DBA_RUN_OR_RETURN(dba_var_enqa(msg->vars[i], attr, &test_var));
@@ -308,9 +312,11 @@ dba_err bufrex_raw_append_attrs(bufrex_raw msg, int size, dba_varcode attr)
 	{
 		dba_var var_attr;
 
+#if 0
 		/* Skip over special data like delayed repetition counts */
 		if (DBA_VAR_F(dba_var_code(msg->vars[i])) != 0)
 			continue;
+#endif
 
 		/* Check if the variable has the attribute we want */
 		DBA_RUN_OR_RETURN(dba_var_enqa(msg->vars[i], attr, &var_attr));

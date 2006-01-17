@@ -136,10 +136,29 @@ void to::test<2>()
 		dba_msg msg2;
 		CHECKED(bufrex_decode_bufr(raw2, &msg2));
 
-		if (string(files[i]).find("2-91") != string::npos)
+		if (string(files[i]).find("2-101.16") != string::npos)
 		{
-			dba_msg_print(msg1, stderr);
-			dba_msg_print(msg2, stderr);
+			FILE* outraw = fopen("/tmp/1to2.txt", "w");
+			bufrex_raw braw;
+			CHECKED(bufrex_raw_create(&braw, BUFREX_BUFR));
+			braw->type = type;
+			braw->subtype = subtype;
+			braw->opt.bufr.origin = 98;
+			braw->opt.bufr.master_table = 6;
+			braw->opt.bufr.local_table = 1;
+			CHECKED(bufrex_raw_load_tables(braw));
+			CHECKED(bufrex_raw_from_msg(braw, msg1));
+			bufrex_raw_print(braw, outraw);
+			fclose(outraw);
+			bufrex_raw_delete(braw);
+
+			FILE* out1 = fopen("/tmp/msg1.txt", "w");
+			FILE* out2 = fopen("/tmp/msg2.txt", "w");
+				
+			dba_msg_print(msg1, out1);
+			dba_msg_print(msg2, out2);
+			fclose(out1);
+			fclose(out2);
 		}
 
 		// Compare the two dba_msg

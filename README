@@ -145,12 +145,15 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
+ * AOF
+    - Scrivere l'header del file nell'output di dbamsg filter
+
  * Refactoring
+    - dba_varconv serve ancora?
     - Import and export of attributes
        - Import/export DB-ALLe
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
       dba_insert_or_replace
-    - dba_varconv serve ancora?
 
  * Import da VM o database Oracle di ARPA
     - Dati generici
@@ -158,9 +161,6 @@ These are the TODO-list items currently being worked on::
       - Buttare via le stazioni con NULL su lat o long
       - Non deve esserci perdita di precisione sull'import e export
         delle coordinate
-
- * AOF
-    - Scrivere l'header del file nell'output di dbamsg filter
 
  * Tools
     - In fase di conversione, aggiungere uno switch per fare unset di tutti i
