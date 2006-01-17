@@ -171,9 +171,6 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
- * Bug
-    - La pressione è sbagliata nell'export da vm
-
  * Refactoring
     - Import and export of attributes
        - Import/export DB-ALLe

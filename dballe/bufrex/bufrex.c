@@ -1,5 +1,6 @@
 #include "bufrex_raw.h"
 #include "exporters/exporters.h"
+#include <dballe/core/verbose.h>
 
 
 #include <stdio.h>
@@ -12,6 +13,11 @@ dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msg* msg)
 
 	DBA_RUN_OR_RETURN(bufrex_raw_create(&rmsg, BUFREX_BUFR));
 	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_decode(rmsg, raw));
+	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_RAW))
+	{
+		dba_verbose(DBA_VERB_BUFREX_RAW, "Decoded BUFR data:\n");
+		bufrex_raw_print(rmsg, DBA_VERBOSE_STREAM);
+	}
 	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_to_msg(rmsg, msg));
 
 cleanup:
@@ -27,6 +33,11 @@ dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msg* msg)
 
 	DBA_RUN_OR_RETURN(bufrex_raw_create(&rmsg, BUFREX_CREX));
 	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_decode(rmsg, raw));
+	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_RAW))
+	{
+		dba_verbose(DBA_VERB_BUFREX_RAW, "Decoded CREX data:\n");
+		bufrex_raw_print(rmsg, DBA_VERBOSE_STREAM);
+	}
 	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_to_msg(rmsg, msg));
 
 cleanup:
@@ -70,6 +81,12 @@ dba_err bufrex_encode_bufr(dba_msg msg, int type, int subtype, dba_rawmsg* raw)
 
 	/* Fill in with the vales from msg */
 	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_from_msg(braw, msg));
+
+	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_RAW))
+	{
+		dba_verbose(DBA_VERB_BUFREX_RAW, "BUFR data before encoding:\n");
+		bufrex_raw_print(braw, DBA_VERBOSE_STREAM);
+	}
 
 	/* Encode */
 	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_encode(braw, raw));
@@ -121,6 +138,12 @@ dba_err bufrex_encode_crex(dba_msg msg, int type, int subtype, dba_rawmsg* raw)
 	/* Fill in with the vales from msg */
 	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_from_msg(braw, msg));
 	
+	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_RAW))
+	{
+		dba_verbose(DBA_VERB_BUFREX_RAW, "CREX data before encoding:\n");
+		bufrex_raw_print(braw, DBA_VERBOSE_STREAM);
+	}
+
 	/* Encode */
 	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_encode(braw, raw));
 

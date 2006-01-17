@@ -63,7 +63,9 @@ struct uniconv { const char* tag; double mul; double add; };
 "M/S->nodi",			1.9438,		0
 "gc->C",				1,		0
 "C->gc",				1,		0
-"PA->Bar",				0.00001,	0		
+"PA->mBar",				0.01,	0
+"mBar->PA",	 	      100,		0
+"PA->Bar",				0.00001,	0
 "Bar->PA",	 	   100000,		0
 "m->M",					1,		0
 "M->m",					1,		0

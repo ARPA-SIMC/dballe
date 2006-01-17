@@ -23,6 +23,7 @@ enum {
 	DBA_VERB_NONE = 0,
 	DBA_VERB_DB_INPUT = 1,
 	DBA_VERB_DB_SQL = 2,
+	DBA_VERB_BUFREX_RAW = 3,
 };
 
 /**
