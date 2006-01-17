@@ -152,13 +152,16 @@ dba_err dba_insert(dba db, dba_record rec);
  * @param can_replace
  *   If true, then existing data can be rewritten, else data can only be added.
  * @param update_pseudoana
- *  If true, then the pseudoana informations are overwritten using information
- *  from rec; else data from rec is written into pseudoana only if there is no
- *  suitable existing anagraphical data for it.
+ *   If true, then the pseudoana informations are overwritten using information
+ *   from rec; else data from rec is written into pseudoana only if there is no
+ *   suitable existing anagraphical data for it.
+ * @retval ana_id
+ *   ID of the pseudoana record for the entry just inserted.  NULL can be used
+ *   if the caller is not interested in this value.
  * @return
  *   The error indicator for the function.
  */
-dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int update_pseudoana);
+dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id);
 
 /**
  * Insert a record into the database

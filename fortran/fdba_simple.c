@@ -503,13 +503,22 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
 
-	if (parm[0] == '*')
+	switch (parm[0])
 	{
-		rec = STATE.qcoutput;
-		p = parm + 1;
-	} else {
-		rec = STATE.output;
-		p = parm;
+		case '*':
+			rec = STATE.qcoutput;
+			p = parm + 1;
+			break;
+		case '!':
+			if (strcmp(parm + 1, "ana_id") == 0)
+				*value = STATE.sys_ana_id;
+			else
+				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
+			return dba_error_ok();
+		default:
+			rec = STATE.output;
+			p = parm;
+			break;
 	}
 
 	if (p[0] != 'B')
@@ -1192,6 +1201,7 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 		INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
+	int ana_id;
 
 	if (STATE.perms & PERM_DATA_RO)
 		return dba_error_consistency(
@@ -1210,7 +1220,10 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 	DBA_RUN_OR_RETURN(dba_insert_or_replace(
 				SESSION, STATE.input,
 				STATE.perms & PERM_DATA_REWRITE ? 1 : 0,
-				STATE.perms & PERM_ANA_REWRITE ? 1 : 0));
+				STATE.perms & PERM_ANA_REWRITE ? 1 : 0,
+				&ana_id));
+
+	STATE.sys_ana_id = ana_id;
 
 	/* Copy the input on the output, so that QC functions can find the data
 	 * they need */

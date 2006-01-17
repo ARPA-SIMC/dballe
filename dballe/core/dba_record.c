@@ -337,7 +337,7 @@ static dba_err get_key(dba_record rec, dba_keyword parameter, dba_var* var)
 
 	/* Lookup the variable in the keyword table */
 	if (rec->keydata[parameter] == NULL)
-		return dba_error_notfound("looking for parameter #\"%d\"", parameter);
+		return dba_error_notfound("looking for parameter #%d", parameter);
 
 	*var = rec->keydata[parameter];
 

@@ -79,12 +79,16 @@ c     Perform the insert
       call idba_prendilo(handle)
       call ensure_no_error("first prendilo")
 
+c     Try to read the id of the pseudoana data just inserted
+      call idba_enqi(handle, "!ana_id", i)
+      call ensure_no_error("enqi !ana_id")
+
 c     Insert some QC flags
       call idba_setc(handle, "*B33002", "1")
       call ensure_no_error("critica setc 0")
       call idba_setc(handle, "*B33003", "test")
       call ensure_no_error("critica setc 1")
-      call idba_setc(handle, "*var", "B01011");
+      call idba_setc(handle, "*var", "B01011")
       call idba_critica(handle)
 c      call idba_critica(handle, "B01011")
       call ensure_no_error("prima critica")

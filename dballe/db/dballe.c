@@ -605,7 +605,6 @@ static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite
 
 			*id = old_id;
 			has_data = 1;
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_ANA_ID, *id));
 
 			/* If we don't have to update the data, we're finished */
 			if (! rewrite)
@@ -693,8 +692,6 @@ static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite
 
 		/* Get the ID of the last inserted pseudoana */
 		DBA_RUN_OR_GOTO(cleanup, dba_last_insert_id(db->od_conn, id));
-		
-		DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_ANA_ID, *id));
 	}
 	
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
@@ -703,7 +700,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-static dba_err dba_insert_context(dba db, dba_record rec, int* id)
+static dba_err dba_insert_context(dba db, dba_record rec, int id_ana, int* id)
 {
 	const char* query_sel =
 		"SELECT id FROM context WHERE id_ana=? AND id_report=? AND datetime=?"
@@ -711,7 +708,6 @@ static dba_err dba_insert_context(dba db, dba_record rec, int* id)
 		" AND ptype=? AND p1=? AND p2=?";
 	const char* query =
 		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	int id_ana;
 	int id_report;
 	char datebuf[25];
 	SQLINTEGER datebuf_ind;
@@ -730,7 +726,6 @@ static dba_err dba_insert_context(dba db, dba_record rec, int* id)
 	assert(db);
 
 	/* Retrieve data */
-	DBA_RUN_OR_GOTO(fail, dba_record_key_enqi(rec, DBA_KEY_ANA_ID, &id_ana));
 	DBA_RUN_OR_GOTO(fail, dba_get_rep_cod(db, rec, &id_report));
 	{
 		const char *year, *month, *day, *hour, *min, *sec;
@@ -889,7 +884,7 @@ static void dba_rollback(SQLHDBC od_conn) {}
  * information from `rec'; else data from `rec' is written into pseudoana only
  * if there is no suitable anagraphical data for it.
  */
-dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int update_pseudoana)
+dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id)
 {
 	/*
 	 * FIXME: REPLACE will change the ID of the replaced rows, breaking the
@@ -927,7 +922,7 @@ dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int updat
 	DBA_RUN_OR_GOTO(failed1, dba_insert_pseudoana(db, rec, &id_pseudoana, update_pseudoana));
 
 	/* Insert the context data, and get the ID */
-	DBA_RUN_OR_GOTO(failed1, dba_insert_context(db, rec, &id_context));
+	DBA_RUN_OR_GOTO(failed1, dba_insert_context(db, rec, id_pseudoana, &id_context));
 
 	/* Allocate statement handle */
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
@@ -988,6 +983,9 @@ dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int updat
 			dba_record_cursor_set_id(item, id);
 		}
 	}
+
+	if (ana_id != NULL)
+		*ana_id = id_pseudoana;
 			
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 
@@ -1005,12 +1003,12 @@ failed1:
 
 dba_err dba_insert(dba db, dba_record rec)
 {
-	return dba_insert_or_replace(db, rec, 1, 1);
+	return dba_insert_or_replace(db, rec, 1, 1, NULL);
 }
 
 dba_err dba_insert_new(dba db, dba_record rec)
 {
-	return dba_insert_or_replace(db, rec, 0, 0);
+	return dba_insert_or_replace(db, rec, 0, 0, NULL);
 }
 
 #if 0

@@ -116,6 +116,8 @@ These are the TODO-list items completed so far::
       (meglio) dagli importer e exporter
     + Togliere mobile dalla tabella pseudoana (usare ident is null)
     + Togliere DBA_KEY_FIXED, che non è usato
+    + Far si' che la prendilo non setti l'ana_id nell'input, e lo restituisca
+      invece con enqi '!ana_id'
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -173,8 +175,6 @@ These are the TODO-list items currently being worked on::
     - La pressione è sbagliata nell'export da vm
 
  * Refactoring
-    - Far si' che la prendilo non setti l'ana_id nell'input, e lo restituisca
-      invece con enqi '!ana_id'
     - Import and export of attributes
        - Import/export DB-ALLe
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
@@ -192,6 +192,7 @@ These are the TODO-list items currently being worked on::
  * Documentazione dell'interfaccia in fortran
     - documentare come si usa ana_id
        - aggiungere gli esempi per l'uso di ana_id e data_id
+       - parlare di !ana_id
 
  * Guida utente
     - Gestione tabelle

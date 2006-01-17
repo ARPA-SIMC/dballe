@@ -61,6 +61,7 @@ FDBA_HANDLE_END_DECL(session)
 FDBA_HANDLE_START_DECL(simple)
 	int session;
 	int perms;
+	int sys_ana_id;
 	dba_record input;
 	dba_record output;
 	dba_record qcinput;
