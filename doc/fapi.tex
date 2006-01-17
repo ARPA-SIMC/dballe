@@ -271,8 +271,18 @@ c     about the error, then exit
       end
 \end{verbatim}
 
-% TODO: insert here documentation about idba_error_message, idba_error_context,
-% idba_error_details
+This code introduces three new functions:
+
+\begin{description}
+\item[{\tt idba\_error\_message}]
+  returns a string describing what type of error has happened.
+\item[{\tt idba\_error\_context}]
+  returns a string describing what \dballe{} was trying to do when the error
+  happened.
+\item[{\tt idba\_error\_details}]
+  returns a detailed description of the error, when available.  If no detailed
+  description is available, it returns an empty string.
+\end{description}
 
 \chapter {A working session}
 \label{ch-work}
