@@ -179,9 +179,13 @@ These are the TODO-list items currently being worked on::
 
  * Import da VM o database Oracle di ARPA
     - Dati generici
+       - Creare test
+          - Importa un generico in DB-ALLe
+	  - Esportalo come synop
+	  - Vedere che abbia gli stessi dati del synop corrispondente
     - Buttare via le stazioni con NULL su lat o long
-    - Non deve esserci perdita di precisione sull'import e export
-      delle coordinate
+
+ * Export per VM
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra

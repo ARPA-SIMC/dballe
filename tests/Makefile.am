@@ -21,6 +21,7 @@ check_dballe_tut_SOURCES = \
 	tests/dba_bufrex_opcode.cc \
 	tests/dba_bufrex_dtable.cc \
 	tests/dba_bufrex_conv.cc \
+	tests/dba_bufrex_generic.cc \
 	tests/dba_bufrex_bufr_decoder.cc \
 	tests/dba_bufrex_crex_decoder.cc \
 	tests/dba_aof_decoder.cc \
