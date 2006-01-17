@@ -139,6 +139,7 @@ These are the TODO-list items completed so far::
       specificando gli estremi di un box nello spazio e nel tempo, con la
       possibilità di specificare un livello o una scadenza"
     + aggiunta introduzione
+    + documentare come cambiano le update a seconda del rewrite
 
 TODO-list items being worked on
 -------------------------------
@@ -173,7 +174,6 @@ These are the TODO-list items currently being worked on::
  * Documentazione dell'interfaccia in fortran
     - documentare le tabelle B
     - documentare come si usa ana_id
-    - documentare come cambiano le update a seconda del rewrite
     - documentare le idba_error_* nella documentazione delle API fortran
 
  * Guida utente

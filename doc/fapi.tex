@@ -292,11 +292,11 @@ c     Connect to the database and get a handle to work with it
 You can call {\tt idba\_preparati} many times and get more handles.  This allows
 to perform many operations on the database at the same time.
 
-{\tt idba\_preparati} has three character parameters that can be used to limit
+{\tt idba\_preparati} has three extra parameters that can be used to limit
 write operations on the database, as a limited protection against programming
 errors.
 
-The first character parameter controls access to pseudoana records and can have
+The first extra parameter controls access to pseudoana records and can have
 these values:
 
 \begin{description}
@@ -308,7 +308,7 @@ these values:
 		     the parameters in input.
 \end{description}
 
-The second character parameter control access to observed data and can have
+The second extra parameter control access to observed data and can have
 these values:
 
 \begin{description}
@@ -320,7 +320,7 @@ these values:
 \item[{\tt "rewrite"}] data can freely be added, overwritten and deleted.
 \end{description}
 
-The third character parameter controls access to data attributes and can have
+The third extra parameter controls access to data attributes and can have
 these values:
 
 \begin{description}
@@ -470,13 +470,14 @@ c       query more data and work with it
 
 This code introduces two new functions:
 
-{\tt idba\_quantesono}
+\begin{description}
+\item[{\tt idba\_quantesono}]
   performs the query and returns the number of stations it finds.
 
-{\tt idba\_elencamele}
+\item[{\tt idba\_elencamele}]
   gets a station out of the results of {\tt idba\_quantesono}.  If there are no
   more stations, the function fails.
-
+\end{description}
 
 \subsection {Querying the values}
 
@@ -505,13 +506,13 @@ c       query more data and work with it
    
 This code introduces two new functions:
 
-{\tt idba\_voglioquesto}
+\begin{description}
+\item[{\tt idba\_voglioquesto}]
   performs the query and returns the number of values it finds.
-
-{\tt idba\_dammelo}
+\item[{\tt idba\_dammelo}]
   gets a value out of the result of {\tt idba\_voglioquesto}.  If there are no
   more stations, the function fails.
-
+\end{description}
 
 \subsection {Clearing the database}
 
@@ -555,6 +556,9 @@ This is an example of the contents of the file:
 09,boe,dati omdametrici,100,oss,31
 \end{verbatim}
 
+{\tt idba\_scopa} will not work unless {\tt rewrite} has been enabled for the
+data when opening the database.
+
 
 \subsection {Inserting data}
 
@@ -577,7 +581,8 @@ c     Insert a new data in the database
 
 This code introduces a new function:
 
-{\tt idba\_prendilo}
+\begin{description}
+\item[{\tt idba\_prendilo}]
   inserts a new value in the database.  All the information about the parameter
   to insert is taken from the input previously set by {\tt idba\_set*} functions.
 
@@ -585,8 +590,34 @@ This code introduces a new function:
   the behaviour of {\tt idba\_prendilo} is defined by the parameter passed to
   {\tt idba\_preparati} when creating the handle.  See `Starting the work`\_ for
   more informations.
+\end{description}
 
+{\tt idba\_prendilo} will work in different ways according to the data opening
+mode of the database:
 
+\begin{description}
+\item[{\tt read}]
+  causes an error, because the data cannot be read.
+\item[{\tt add}]
+  new data can be inserted, but causes an error when trying to insert a value
+  that already exists.
+\item[{\tt rewrite}]
+  new data can be inserted, and existing data is overwritten.
+\end{description}
+
+Also, behaviour changes according to the pseudoana opening mode:
+
+\begin{description}
+\item[{\tt "reuse"}] when inserting data, if an existing pseudoana record for
+	       the data is found, it will be reused.
+\item[{\tt "rewrite"}] when inserting data, if an existing pseudoana record for
+	     the data is found, it will be completely overwritten with
+	     the parameters in input.
+\end{description}
+
+Note that the database cannot be opened in pseudoana {\tt read} mode when data
+is {\tt add} or {\tt rewrite}.
+  
 \section{Deleting data}
 
 Data is deleted using {\tt idba\_dimenticami}:
@@ -601,9 +632,13 @@ c     Delete all data from the station with id 4 in year 2002
 
 This code introduces a new function:
 
-{\tt idba\_dimenticami}
+\begin{description}
+\item[{\tt idba\_dimenticami}]
   deletes all the data found in the extremes specified in input.
+\end{description}
 
+{\tt idba\_dimenticami} will not work unless {\tt rewrite} has been enabled for
+the data when opening the database.
 
 \section {Quality control information}
 
@@ -634,16 +669,17 @@ c           ...process the value...
 
 This code introduces two new functions:
 
-{\tt idba\_voglioancora}
+\begin{description}
+\item[{\tt idba\_voglioancora}]
   Performs a query to retrieve QC data for the last variable read by
   {\tt idba\_dammelo}.  It returns the number of QC items available.
-
-{\tt idba\_ancora}
+\item[{\tt idba\_ancora}]
   Retrieves one by one the values queried by {\tt idba\_voglioancora}.
   there are no more items available, the function will fail.
 
   The parameter {\tt param} will be set to the name (in the form {\tt *Bxxyyy}) of
   the QC parameter just read.
+\end{description}
 
 \subsection{Writing QC information}
 
@@ -720,7 +756,8 @@ c     Select the variable using its database id
 
 This code introduces a new function:
 
-{\tt idba\_critica}
+\begin{description}
+\item[{\tt idba\_critica}]
   Set one or more QC values about a variable.
   
   The variable can be identified by ID using {\tt idba\_seti(handle, "*data\_id",
@@ -730,6 +767,19 @@ This code introduces a new function:
 
   The QC variables and values are set as input to {\tt idba\_critica} using the
   {\tt idba\_set*} functions with an asterisk in front of the variable name.
+\end{description}
+
+
+{\tt idba\_critica} will work in different ways according to the attributes
+opening mode of the database:
+
+\begin{description}
+\item[{\tt "read"}] attributes cannot be modified in any way.
+\item[{\tt "add"}] attributes can can be added to the database, but existing
+		   attributes cannot be modified.
+\item[{\tt "rewrite"}] attributes can be added, and existing attributes can be
+                   overwritten.
+\end{description}
 
 
 \subsection{Deleting QC information}
@@ -753,11 +803,16 @@ c     The QC informations to delete are selected by setting "*varlist":
 
 This code introduces a new function:
 
-{\tt idba\_scusa}
+\begin{description}
+\item[{\tt idba\_scusa}]
   Delete QC information from a variable identified in the same way as with
   {\tt idba\_critica}.  By default it deletes all QC information; specific QC
   values to delete can be selected by setting their names, separated by commas,
   in the "*varlist" variable.
+\end{description}
+
+{\tt idba\_scusa} will not work unless the database has been opened in
+attribute {\tt rewrite} mode.
 
 
 \section{Ending the work}
