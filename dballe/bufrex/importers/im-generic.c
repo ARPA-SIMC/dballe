@@ -9,6 +9,8 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_raw raw)
 	int i;
 	int ltype = -1, l1 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
 
+	msg->type = MSG_GENERIC;
+
 	for (i = 0; i < raw->vars_count; i++)
 	{
 		dba_var var = raw->vars[i];

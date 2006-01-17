@@ -6,7 +6,7 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type);
 
 bufrex_exporter bufrex_exporter_generic = {
 	/* Category */
-	0,
+	255,
 	/* Subcategory */
 	0,
 	/* dba_msg type it can convert from */
