@@ -9,7 +9,12 @@ bufrdtables = D000000000980000.txt D000000000980201.txt D000000000980600.txt D00
 
 table_DATA = dballe.txt $(crexbtables) $(crexdtables) $(bufrbtables) $(bufrdtables)
 
-EXTRA_DIST = $(table_DATA) $(conf_DATA)
+noinst_DATA = dballe.tex
+
+dballe.tex: dballe.txt mkbdoc
+	./mkbdoc < $< > $@ 
+
+EXTRA_DIST = $(table_DATA) $(conf_DATA) mkbdoc
 
 clean-local:
 	rm -f *.idx

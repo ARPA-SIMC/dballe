@@ -140,6 +140,7 @@ These are the TODO-list items completed so far::
       possibilità di specificare un livello o una scadenza"
     + aggiunta introduzione
     + documentare come cambiano le update a seconda del rewrite
+    + documentare le tabelle B
 
 TODO-list items being worked on
 -------------------------------
@@ -172,9 +173,9 @@ These are the TODO-list items currently being worked on::
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
 
  * Documentazione dell'interfaccia in fortran
-    - documentare le tabelle B
-    - documentare come si usa ana_id
     - documentare le idba_error_* nella documentazione delle API fortran
+    - documentare come si usa ana_id
+       - aggiungere gli esempi per l'uso di ana_id e data_id
 
  * Guida utente
     - Gestione tabelle

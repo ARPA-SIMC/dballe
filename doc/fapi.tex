@@ -98,6 +98,7 @@ The main concept in \dballe{} is the measured value, which is described by:
 Every measured value in \dballe{} can be assigned any number of extra
 attibutes, which can be used, for example, for quality control.
 
+You can find a list of all current B table descriptors in \ref{btable}.
 
 \section {Input, output, actions}
 \label{basics-inout}
@@ -402,7 +403,8 @@ are indicated simply with their name (for example, {\tt "lat"} or {\tt
 The WMO B variables, fully described in the WMO B table, represent all possible
 sorts of observed data, and are indicated in the form ``B{\itshape xxyyy}'',
 where {\itshape xxyyy} are the X and Y values from the WMO table B.  For more
-details on working with observed data, see \ref{obsdata}.
+details on working with observed data, see \ref{obsdata}.  For a list of all
+the currently available B table descriptors, see \ref{btable}.
 
 
 \subsection{Working with observed data}
@@ -839,8 +841,20 @@ c     We do not need to work with dballe anymore
 \chapter{Advanced topics}
 
 \section{Shortcuts to stations and data}
-% documentare come si usa ana_id
-% documentare come si usa data_id
+
+\dballe{} offers two shortcuts to represent pseudoana entries and data in the
+database: the {\tt ana\_id} and the {\tt data\_id} keys, that are set in the
+output of every {\tt idba\_dammelo}.
+
+{\tt ana\_id} represents a pseudoana entry.  Everytime one needs to specify a
+set of latitude, longitude, fixed/mobile, one could use the corresponding {\tt
+ana\_id} value, if known, and get a faster search.
+
+{\tt data\_id} represents a data entry.  Everytime one needes to identify some
+data setting latitude, longitude, level layer, time range and so on, one can
+just provide the value of {\tt data\_id}, and also get a faster search.
+
+% TODO: put some example code snippets from real-world
 
 
 \chapter{FAQ and Troubleshooting}
@@ -1041,6 +1055,9 @@ Notes about the time range values:
 \end{itemize}
 
 
+\chapter{Contents of the local B table}
+\label{btable}
+\input{../tables/dballe.tex}
 
 
 \chapter{Summary of routines}

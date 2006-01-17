@@ -1,0 +1,89 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+# Skip the declaration section
+my @vals;
+while (<STDIN>)
+{
+	push @vals, [unpack('xA6xA64xA24xA3xA12xA3xA24xA3xA10', $_)];
+}
+
+# Now @vals contains an array of:
+#
+# [
+#   0: B code
+#   1: Description
+#   2: BUFR units
+#   3: BUFR scale
+#   4: BUFR bit reference
+#   5: BUFR bit lenhth
+#   6: CREX units
+#   7: CREX scale
+#   8: CREX length
+# ]
+#
+# Only CREX data is used in the local B table
+
+
+sub mkformat($$$)
+{
+	my ($unit, $len, $dec) = @_;
+	if ($unit =~ /^CHARACTER|^CODE TABLE/)
+	{
+		return "$len chars";
+	} elsif ($dec == 0) {
+		return "$len digits";
+	} else {
+		return '#' x ($len - $dec) . '.' . '#' x $dec;
+	}
+}
+
+#my $nc = '@{\hspace{0.5mm}}l@{\hspace{0.5mm}}';
+#my $dsc = '@{\hspace{0.5mm}}p{2.0cm}@{\hspace{0.5mm}}';
+#my $onc = '@{\hspace{0.5mm}}p{1.4cm}@{\hspace{0.5mm}}';
+#my $cmc = '@{\hspace{0.5mm}}p{3.5cm}@{\hspace{0.5mm}}';
+#print qq#{\\begin{scriptsize}
+#\\begin{longtable}{|$nc|$nc|$nc|$dsc|$onc|$onc|$onc|$cmc|}
+#\\hline
+#{\\em Name} & {\\em Unit} & {\\em Format} & {\\em Description} & {\\em On insert input} & {\\em On query input} & {\\em On output} & {\\em Comment} \\\\
+#\\hline
+#\\endhead
+#\\hline
+#\\endfoot
+##;
+
+my $nc = '@{\hspace{0.5mm}}l@{\hspace{0.5mm}}';
+my $dsc = '@{\hspace{0.5mm}}p{8.0cm}@{\hspace{0.5mm}}';
+print qq#{\\begin{scriptsize}
+\\begin{longtable}{|$nc|$dsc|$nc|$nc|}
+\\hline
+{\\em Code} & {\\em Description} & {\\em Units} & {\\em Format} \\\\
+\\hline
+\\endhead
+\\hline
+\\endfoot
+#;
+
+for my $d (@vals)
+{
+	my ($code, $desc, $unit, $dec, $len) = @{$d}[0, 1, 6, 7, 8];
+	my $format = mkformat($unit, $len, $dec);
+	$format =~ s/(\#+\.\#+)/{\\tiny $1}/;
+	$unit =~ s/CHARACTER/Character/;
+	$unit =~ s/(NUMERIC|NUMBER)/Numeric/;
+	$desc =~ s/%/\\%/;
+	$unit =~ s/%/\\%/;
+	my $out = join(' & ', ($code, $desc, $unit, $format))." \\\\\n";
+	$out =~ s/(_|#)/\\$1/g;
+	print $out;
+}
+
+print q#\hline
+\end{longtable}
+\end{scriptsize}
+}
+#;
+
+exit 0;
