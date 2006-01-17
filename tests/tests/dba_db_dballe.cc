@@ -160,7 +160,7 @@ void to::test<1>()
 		CHECKED(dba_ana_cursor_next(cursor, result, &is_last));
 
 		/* Check that the result matches */
-		ensureTestRecEquals(sampleAna, result);
+		ensureTestRecEquals(result, sampleAna);
 
 		/* There should be only one item */
 		gen_ensure(is_last);
@@ -255,9 +255,9 @@ void to::test<1>()
 		gen_ensure(!is_last);
 
 		/* Check that the results match */
-		ensureTestRecEquals(sampleAna, result);
-		ensureTestRecEquals(sampleBase, result);
-		ensureTestRecEquals(sample0, result);
+		ensureTestRecEquals(result, sampleAna);
+		ensureTestRecEquals(result, sampleBase);
+		ensureTestRecEquals(result, sample0);
 
 		/*
 		printrecord(result, "RES: ");
@@ -266,41 +266,41 @@ void to::test<1>()
 
 		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
 		if (var == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(sample00, result);
+			ensureTestRecEquals(result, sample00);
 		if (var == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(sample01, result);
+			ensureTestRecEquals(result, sample01);
 
 		/* The item should have two data in it */
 		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
 
 		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
 		if (var == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(sample00, result);
+			ensureTestRecEquals(result, sample00);
 		if (var == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(sample01, result);
+			ensureTestRecEquals(result, sample01);
 
 		/* There should be also another item */
 		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
 
 		/* Check that the results matches */
-		ensureTestRecEquals(sampleAna, result);
-		ensureTestRecEquals(sampleBase, result);
-		ensureTestRecEquals(sample1, result);
+		ensureTestRecEquals(result, sampleAna);
+		ensureTestRecEquals(result, sampleBase);
+		ensureTestRecEquals(result, sample1);
 
 		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
 		if (var == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(sample10, result);
+			ensureTestRecEquals(result, sample10);
 		if (var == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(sample11, result);
+			ensureTestRecEquals(result, sample11);
 
 		/* The item should have two data in it */
 		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
 
 		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
 		if (var == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(sample10, result);
+			ensureTestRecEquals(result, sample10);
 		if (var == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(sample11, result);
+			ensureTestRecEquals(result, sample11);
 
 		/* Now there should not be anything anymore */
 		gen_ensure(is_last);
@@ -381,23 +381,23 @@ void to::test<1>()
 		CHECKED(dba_query(db, query, &cursor, &count));
 		gen_ensure(count > 0);
 		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
-		ensureTestRecEquals(sampleAna, result);
-		ensureTestRecEquals(sampleBase, result);
+		ensureTestRecEquals(result, sampleAna);
+		ensureTestRecEquals(result, sampleBase);
 
 		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
 		if (var == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(sample00, result);
+			ensureTestRecEquals(result, sample00);
 		if (var == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(sample01, result);
+			ensureTestRecEquals(result, sample01);
 
 		/* The item should have two data in it */
 		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
 
 		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
 		if (var == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(sample00, result);
+			ensureTestRecEquals(result, sample00);
 		if (var == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(sample01, result);
+			ensureTestRecEquals(result, sample01);
 
 		gen_ensure(is_last);
 		gen_ensure(dba_cursor_next(cursor, result, &var, &is_last) == DBA_ERROR);
@@ -482,6 +482,423 @@ void to::test<1>()
 #endif
 
 	/*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
+}
+
+/* Test datetime queries */
+template<> template<>
+void to::test<2>()
+{
+	/* Prepare test data */
+	TestRecord base, a, b;
+
+	base.set(DBA_KEY_LAT, 12.0);
+	base.set(DBA_KEY_LON, 48.0);
+	base.set(DBA_KEY_MOBILE, 0);
+
+	base.set(DBA_KEY_HEIGHT, 42);
+	base.set(DBA_KEY_HEIGHTBARO, 234);
+	base.set(DBA_KEY_BLOCK, 1);
+	base.set(DBA_KEY_STATION, 52);
+	base.set(DBA_KEY_NAME, "Cippo Lippo");
+
+	base.set(DBA_KEY_LEVELTYPE, 1);
+	base.set(DBA_KEY_L1, 0);
+	base.set(DBA_KEY_L2, 0);
+	base.set(DBA_KEY_PINDICATOR, 1);
+	base.set(DBA_KEY_P1, 0);
+	base.set(DBA_KEY_P2, 0);
+
+	base.set(DBA_KEY_REP_COD, 1);
+	base.set(DBA_KEY_PRIORITY, 100);
+
+	base.set(DBA_VAR(0, 1, 12), 500);
+
+	base.set(DBA_KEY_YEAR, 2006);
+	base.set(DBA_KEY_MONTH, 5);
+	base.set(DBA_KEY_DAY, 15);
+	base.set(DBA_KEY_HOUR, 12);
+	base.set(DBA_KEY_MIN, 30);
+	base.set(DBA_KEY_SEC, 0);
+
+	/* Year */
+
+	CHECKED(dba_reset(db, 0));
+
+	dba_record_clear(insert);
+	a = base;
+	a.set(DBA_KEY_YEAR, 2005);
+	a.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	dba_record_clear(insert);
+	b = base;
+	b.set(DBA_KEY_YEAR, 2006);
+	b.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEARMIN, 2006));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEARMAX, 2005));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, a);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
+
+
+	/* Month */
+
+	CHECKED(dba_reset(db, 0));
+
+	dba_record_clear(insert);
+	a = base;
+	a.set(DBA_KEY_YEAR, 2006);
+	a.set(DBA_KEY_MONTH, 4);
+	a.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	dba_record_clear(insert);
+	b = base;
+	b.set(DBA_KEY_YEAR, 2006);
+	b.set(DBA_KEY_MONTH, 5);
+	b.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTHMIN, 5));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTHMAX, 4));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, a);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
+
+
+	/* Day */
+
+	CHECKED(dba_reset(db, 0));
+
+	dba_record_clear(insert);
+	a = base;
+	a.set(DBA_KEY_YEAR, 2006);
+	a.set(DBA_KEY_MONTH, 5);
+	a.set(DBA_KEY_DAY, 2);
+	a.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	dba_record_clear(insert);
+	b = base;
+	b.set(DBA_KEY_YEAR, 2006);
+	b.set(DBA_KEY_MONTH, 5);
+	b.set(DBA_KEY_DAY, 3);
+	b.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_DAYMIN, 3));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+/*
+		dba_record_print(result, stderr); cerr << "---" << endl;
+		dba_record_clear(query);
+		b.copyTestDataToRecord(query);
+		dba_record_print(query, stderr); cerr << "---" << endl;
+*/
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_DAYMAX, 2));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, a);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
+
+
+	/* Hour */
+
+	CHECKED(dba_reset(db, 0));
+
+	dba_record_clear(insert);
+	a = base;
+	a.set(DBA_KEY_YEAR, 2006);
+	a.set(DBA_KEY_MONTH, 5);
+	a.set(DBA_KEY_DAY, 3);
+	a.set(DBA_KEY_HOUR, 12);
+	a.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	dba_record_clear(insert);
+	b = base;
+	b.set(DBA_KEY_YEAR, 2006);
+	b.set(DBA_KEY_MONTH, 5);
+	b.set(DBA_KEY_DAY, 3);
+	b.set(DBA_KEY_HOUR, 13);
+	b.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_HOURMIN, 13));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_HOURMAX, 12));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, a);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 13));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
+
+
+	/* Minute */
+
+	CHECKED(dba_reset(db, 0));
+
+	dba_record_clear(insert);
+	a = base;
+	a.set(DBA_KEY_YEAR, 2006);
+	a.set(DBA_KEY_MONTH, 5);
+	a.set(DBA_KEY_DAY, 3);
+	a.set(DBA_KEY_HOUR, 12);
+	a.set(DBA_KEY_MIN, 29);
+	a.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	dba_record_clear(insert);
+	b = base;
+	b.set(DBA_KEY_YEAR, 2006);
+	b.set(DBA_KEY_MONTH, 5);
+	b.set(DBA_KEY_DAY, 3);
+	b.set(DBA_KEY_HOUR, 12);
+	b.set(DBA_KEY_MIN, 30);
+	b.copyTestDataToRecord(insert);
+	CHECKED(dba_insert_new(db, insert));
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 12));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MINUMIN, 30));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 12));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MINUMAX, 29));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, a);
+		dba_cursor_delete(cursor);
+	}
+
+	{
+		int count, is_last;
+		dba_varcode var;
+		dba_cursor cursor;
+		dba_record_clear(query);
+		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 12));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_MIN, 30));
+		CHECKED(dba_query(db, query, &cursor, &count));
+		gen_ensure_equals(count, 1);
+
+		CHECKED(dba_cursor_next(cursor, result, &var, &is_last));
+		gen_ensure(is_last);
+		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
+		ensureTestRecEquals(result, b);
+		dba_cursor_delete(cursor);
+	}
 }
 
 }

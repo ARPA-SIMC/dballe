@@ -28,7 +28,7 @@
 #define DBA_USE_TRANSACTIONS
 #endif
 
-//#define TRACE_DB 
+/* #define TRACE_DB */
 
 #ifdef TRACE_DB
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)

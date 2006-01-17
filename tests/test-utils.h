@@ -96,6 +96,7 @@ protected:
 		virtual void setIn(const char* file, int line, dba_record rec) const = 0;
 		virtual void checkIn(const char* file, int line, dba_record rec) const = 0;
 		virtual Test* clone() const = 0;
+		virtual bool sameTest(const Test* test) const = 0;
 	};
 	template <typename VAL>
 	class TestKey : public Test
@@ -119,6 +120,13 @@ protected:
 			inner_ensure_var_equals(var, m_val);
 		}
 		virtual Test* clone() const { return new TestKey<VAL>(m_key, m_val); }
+		virtual bool sameTest(const Test* test) const
+		{
+			const TestKey* t = dynamic_cast<const TestKey*>(test);
+			if (t == NULL)
+				return false;
+			return t->m_key == m_key;
+		}
 	};
 	template <typename VAL>
 	class TestVar : public Test
@@ -142,9 +150,28 @@ protected:
 			inner_ensure_var_equals(var, m_val);
 		}
 		virtual Test* clone() const { return new TestVar<VAL>(m_key, m_val); }
+		virtual bool sameTest(const Test* test) const
+		{
+			const TestVar* t = dynamic_cast<const TestVar*>(test);
+			if (t == NULL)
+				return false;
+			return t->m_key == m_key;
+		}
 	};
 	
 	std::vector<Test*> tests;
+	void addTest(Test* test)
+	{
+		for (std::vector<Test*>::iterator i = tests.begin();
+				i != tests.end(); i++)
+			if ((*i)->sameTest(test))
+			{
+				delete *i;
+				*i = test;
+				return;
+			}
+		tests.push_back(test);
+	}
 public:
 	TestRecord() {}
 	TestRecord(const TestRecord& r)
@@ -162,7 +189,7 @@ public:
 	TestRecord& operator=(const TestRecord& r)
 	{
 		for (std::vector<Test*>::iterator i = tests.begin();
-				i != r.tests.end(); i++)
+				i != tests.end(); i++)
 			delete *i;
 		tests.clear();
 		for (std::vector<Test*>::const_iterator i = r.tests.begin();
@@ -170,12 +197,12 @@ public:
 			tests.push_back((*i)->clone());
 		return *this;
 	}
-	void set(dba_keyword key, int val) { tests.push_back(new TestKey<int>(key, val)); }
-	void set(dba_keyword key, double val) { tests.push_back(new TestKey<double>(key, val)); }
-	void set(dba_keyword key, const char* val) { tests.push_back(new TestKey<std::string>(key, val)); }
-	void set(dba_varcode key, int val) { tests.push_back(new TestVar<int>(key, val)); }
-	void set(dba_varcode key, double val) { tests.push_back(new TestVar<double>(key, val)); }
-	void set(dba_varcode key, const char* val) { tests.push_back(new TestVar<std::string>(key, val)); }
+	void set(dba_keyword key, int val) { addTest(new TestKey<int>(key, val)); }
+	void set(dba_keyword key, double val) { addTest(new TestKey<double>(key, val)); }
+	void set(dba_keyword key, const char* val) { addTest(new TestKey<std::string>(key, val)); }
+	void set(dba_varcode key, int val) { addTest(new TestVar<int>(key, val)); }
+	void set(dba_varcode key, double val) { addTest(new TestVar<double>(key, val)); }
+	void set(dba_varcode key, const char* val) { addTest(new TestVar<std::string>(key, val)); }
 
 	void _copyTestDataToRecord(const char* file, int line, dba_record rec)
 	{
@@ -192,7 +219,7 @@ public:
 			(*i)->checkIn(file, line, rec);
 	}
 };
-#define ensureTestRecEquals(tr, rec) tr.ensureEquals(__FILE__, __LINE__, rec)
+#define ensureTestRecEquals(rec, tr) tr.ensureEquals(__FILE__, __LINE__, rec)
 
 class TestBufrexRaw
 {
