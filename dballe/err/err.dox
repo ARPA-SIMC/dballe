@@ -63,4 +63,30 @@ These are examples of setting callbacks:
 Convenience macros are provided to implement trivial error-handling strategies:
 see DBA_RUN_OR_RETURN, DBA_RUN_OR_GOTO, DBA_FAIL_RETURN, DBA_FAIL_GOTO.
 
+When writing library code, these are the rules to keep in mind about error
+handling:
+
+\invariant 
+  if a function can fail, it must return a value of type ::dba_err.  It is not
+  allowed to return errors in any other way.
+
+\invariant
+  if a function does not return a ::dba_err, then it cannot fail.
+
+\invariant
+  if a function that can fail needs to return values, it must do it using its
+  arguments.  When a function fails, it is required to still leave its
+  arguments in a consistent state.  For example, if an allocation function
+  fails because of lack of memory, it should still set its return argument to
+  NULL.
+ 
+\invariant
+  a function that does not fail cannot call a function that can fail, even if
+  it properly handles all of its failure cases.  This is for two reasons: one
+  is that more failure cases could be added in the future, and it would be hard
+  to track back all the failure-handling code.  The other is that the error
+  callbacks are triggered when an error happens, so even if the caller handles
+  all the error codes correctly, other blocks of code can still get notified of
+  the error condition and change their behaviour.
+
 */

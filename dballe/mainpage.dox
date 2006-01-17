@@ -1,0 +1,68 @@
+/** \mainpage DB-ALLe Programmer's Documentation
+
+\section intro Introduction to DB-ALLe
+
+\subsection intro-modules Modules and dependencies
+
+The code in the library is divided in many modules.  Every module has its own
+subdirectory, except the \ref dballe module which is located in the top source
+directory.
+
+Every module can make use of functions provided in another module, but there
+must be no circular dependencies among the various modules.  For example, the
+\ref msg module can use functions from the \ref core module, and the \ref core
+module can use functions from the \ref err module, but the \ref err module
+cannot use functions from the \ref core module.
+
+\subsubsection intro-err The "err" module
+
+The \ref err module provides functions for reporting and handling errors,
+supporting the rigid error-reporting conventions used in the code of the
+DB-ALLe library.  Because of this, it is used by almost all the other functions
+in the library, and it is very difficult to understand other library functions
+without understanding at least the interface and philosophy of the \ref err
+module.
+
+\subsubsection intro-conv The "conv" module
+
+The \ref conv module provides conversion functions between different units of
+measurement.  All the unit conversion code has been collected in a single
+module so that it can be shared and reused by all the library.
+
+\subsubsection intro-core The "core" module
+
+The \ref core module provides common functions for all other modules.  Some of
+this code, for example the functions in dba_var.h that handle observed values,
+is used almost everywhere else in DB-ALLe.
+
+\subsubsection intro-io The "io" module
+
+The \ref io module implements basic input output and in-memory storage of
+encoded weather data.
+
+\subsubsection intro-msg The "msg" module
+
+The \ref msg module implements an encoding-independent working representation
+of any kind of weather report.
+
+\subsubsection intro-aof The "aof" module
+
+The \ref aof module implements decoding of weather data in AOF format.
+
+\subsubsection intro-bufrex The "bufrex" module
+
+The \ref bufrex module implements encoding and decoding of weather data in BUFR
+and CREX formats.
+
+\subsubsection intro-db The "db" module
+
+The \ref db module implements the DB-ALLe ODBC database I/O.
+
+\subsubsection intro-dballe The "dballe" main module
+
+The \ref dballe module, located at the top of the directory hierarchy, provides
+high-level application code such as easy, unified interfaces to low-level code,
+or useful application framework code like a framework for building commandline
+tools.
+
+ */

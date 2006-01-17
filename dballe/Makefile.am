@@ -31,4 +31,4 @@ libdballe_la_LIBADD = \
 		db/exporters/libdbexporters.la
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
-EXTRA_DIST = dballe.dox
+EXTRA_DIST = mainpage.dox dballe.dox

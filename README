@@ -143,6 +143,12 @@ These are the TODO-list items completed so far::
     + documentare le tabelle B
     + documentare le idba_error_* nella documentazione delle API fortran
 
+ * Documentazione codice
+    + Se una funzione non restituisce un dba_err, allora non può fallire in nessun
+      modo, e non interagisce con le routine di gestione errori (nemmeno per
+      resettare lo stato di errore a DBA_OK)
+
+
 TODO-list items being worked on
 -------------------------------
 
@@ -200,9 +206,6 @@ These are the TODO-list items currently being worked on::
        - nuove conversioni da B BUFREX a B locale
       (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
     - Invarianti
-    - Se una funzione non restituisce un dba_err, allora non può fallire in nessun
-      modo, e non interagisce con le routine di gestione errori (nemmeno per
-      resettare lo stato di errore a DBA_OK)
     - I distruttori non possono mai fallire
 
  * Procedura per supportare un nuovo tipo report in un formato specifico
