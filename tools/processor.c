@@ -161,7 +161,7 @@ dba_err process_input(
 				print_parse_error("CREX", rmsg);
 			break;
 		case AOF:
-			if (!aof_decoder_decode(rmsg, &parsed) && print_errors)
+			if (aof_decoder_decode(rmsg, &parsed) != DBA_OK && print_errors)
 				print_parse_error("AOF", rmsg);
 			break;
 	}
