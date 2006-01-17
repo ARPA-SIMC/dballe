@@ -1,10 +1,6 @@
 %
-% Editorial notes
-%
-%  - This guide must contain examples for all routines, plus examples for all
-%    known common usage patterns of dballe
-%  - It is preferred to explain concepts using commented code rather than
-%    text, every time this is as understandable as normal text
+% Editorial notes are found in the 'Introduction' chapter, marked with a
+% comment to find them more easily
 %
 
 %\documentclass[draft,a4paper]{book}
@@ -67,10 +63,41 @@
 \chapter {Introduction}
 \label{ch-intro}
 
-Other documentation: \cite{LibDoc}.
+\dballe{} is a fast, temporary, on-disk database where metereological data can
+be stored, searched, retrieved and updated.  To make computation easier, data
+is stored as physical data, that is, as measures of a variable in a specific
+point of space and time, rather than as a sequence of reports.
+
+This is a quick introduction to \dballe{}.  It is intended as a quick read to
+get up to speed, and as a quick reference for everyday use.
+
+% Editorial notes
+
+This guide contains examples for all routines, plus examples for all known
+common usage patterns of dballe.  Also, commented Fortran code is preferred
+to long explanations whenever it makes sense.
+
+Other documentation can be found in \cite{UserGuide} and \cite{LibDoc}.
 
 \chapter {Basic concepts}
 \label{ch-concepts}
+
+\section {Values}
+
+The main concept in \dballe{} is the measured value, which is described by:
+
+\begin{enumerate}
+\item The \emph{local B table descriptor}, which describes the nature of the
+      variable, such as what it measures and the units used for measuring.
+\item The measured \emph{value}.
+\item The horizontal coordinates in space, as \emph{latitude and longitude}.
+\item The vertical coordinates in space, as a description of the \emph{level layer}.
+\item The \emph{time range} of the measurement.
+\end{enumerate}
+
+Every measured value in \dballe{} can be assigned any number of extra
+attibutes, which can be used, for example, for quality control.
+
 
 \section {Input, output, actions}
 \label{basics-inout}

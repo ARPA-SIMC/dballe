@@ -118,6 +118,7 @@ These are the TODO-list items completed so far::
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
     + dare errore se qc=read ma data = rewrite
+    = documentare la girati
 
  * Import da VM o database Oracle di ARPA
     * Selezione dati da esportare
@@ -137,6 +138,7 @@ These are the TODO-list items completed so far::
     + aggiungere due parole su come funziona la query "le query si effettuano
       specificando gli estremi di un box nello spazio e nel tempo, con la
       possibilità di specificare un livello o una scadenza"
+    + aggiunta introduzione
 
 TODO-list items being worked on
 -------------------------------
@@ -170,7 +172,6 @@ These are the TODO-list items currently being worked on::
 
  * Documentazione dell'interfaccia in fortran
     - documentare le tabelle B
-    - documentare la girati
     - documentare come si usa ana_id
     - documentare come cambiano le update a seconda del rewrite
     - documentare le idba_error_* nella documentazione delle API fortran
