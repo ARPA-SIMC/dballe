@@ -1551,7 +1551,7 @@ dba_err dba_delete(dba db, dba_record rec)
 {
 	const char* query =
 		"DELETE FROM d, a"
-		" USING pseudoana AS pa, context AS c, data AS d, repinfo AS ri"
+		" USING pseudoana AS pa, context AS c, repinfo AS ri, data AS d"
 		"  LEFT JOIN attr AS a ON a.id_data = d.id"
 		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err;
