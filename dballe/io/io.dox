@@ -1,7 +1,10 @@
-/** @defgroup io DB-ALLe message encoding and decoding functions
+/** @defgroup io File I/O
 @ingroup dballe
 
-Dballe message encoding and decoding functions.
+This module provides low-level file I/O, and in-memory storage of encoded
+reports.
 
-It depends on the core module.
+<b>Module dependencies:</b>
+\li \ref err
+\li \ref core
 */

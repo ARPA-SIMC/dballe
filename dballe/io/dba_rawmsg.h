@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup io
+ * In-memory storage of an encoded weather report.
+ */
+
 #include <dballe/err/dba_error.h>
 #include <dballe/io/encoding.h>
 

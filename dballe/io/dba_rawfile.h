@@ -5,6 +5,16 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup io
+ * Encapsulates low-level file access.
+ *
+ * File access is still mainly performed using normal stdio functions, however
+ * dba_rawfile adds useful metadata to the normal FILE* stream, such as
+ * tracking the file name and counting the number of messages that have been
+ * read or written.
+ */
+
 #include <dballe/io/dba_rawmsg.h>
 #include <stdio.h>
 

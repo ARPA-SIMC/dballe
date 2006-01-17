@@ -5,6 +5,12 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup io
+ * Encapsulates the algorithms used to extract raw encoded
+ * messages from files containing weather reports.
+ */
+
 #include <dballe/io/dba_rawfile.h>
 
 struct _dba_file_reader;

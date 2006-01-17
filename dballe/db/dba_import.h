@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup db
+ * Import functions from a ::dba_msg to the DB-ALLe database
+ */
+
 #include <dballe/db/dballe.h>
 #include <dballe/msg/dba_msg.h>
 

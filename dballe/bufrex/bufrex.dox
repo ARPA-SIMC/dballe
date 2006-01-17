@@ -1,7 +1,24 @@
-/** @defgroup bufrex Dballe CREX and BUFR functions
-@ingroup message
+/** @defgroup bufrex CREX and BUFR I/O
+@ingroup dballe
 
 CREX and BUFR import and export functions.
 
-It depends on the core and message modules.
+This module works by using the functions in bufrex_raw.h as an intermediate
+representation between ::dba_msg and the low-level encoders and decoders.
+
+This is needed because before the real encoding, data needs to be laid out in
+the exact order required by the message template used for the encoded report.
+
+bufrex_raw.h thus implement a flat, sorted representation for a list of
+variables, and allows to decouple the two complex tasks of de/serialization and
+mapping to physical values.
+
+
+<b>Module dependencies:</b>
+\li \ref err
+\li \ref conv
+\li \ref core
+\li \ref io
+\li \ref msg
+
 */

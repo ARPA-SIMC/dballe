@@ -1,6 +1,16 @@
 #ifndef VERBOSE_H
 #define VERBOSE_H
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+/** @file
+ * @ingroup core
+ * Debugging aid framework that allows to print, at user request, runtime
+ * verbose messages about internal status and operation.
+ */
+
 /**
  * The output stream where verbose messages will be sent
  */
@@ -32,5 +42,10 @@ int dba_verbose_is_allowed(int lev);
  * been requested
  */
 void dba_verbose(int lev, const char* fmt, ...);
+
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif

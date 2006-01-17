@@ -5,6 +5,12 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup bufrex
+ * Implementation of opcode chains, that are used to drive the encoding and
+ * decoding process.
+ */
+
 #include <dballe/core/dba_var.h>
 
 struct _bufrex_opcode

@@ -5,9 +5,8 @@
 extern "C" {
 #endif
 
-/**
- * @file
- * @ingroup dbamessage
+/** @file
+ * @ingroup aof
  *
  * AOF message decoder
  */

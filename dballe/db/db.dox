@@ -1,10 +1,14 @@
-/** @defgroup db DB-ALLe main database operations
+/** @defgroup db DB-ALLe database
 @ingroup dballe
 
 This module contains all the functions to work with the main DB-ALLe database.
 It includes both insert and query functions and import/export functions to and
 from dba_msg.
 
-It depends on the err, conv, core, msg, bufrex and aof modules.
+<b>Module dependencies:</b>
+\li \ref err
+\li \ref conv
+\li \ref core
+\li \ref msg
 
 */

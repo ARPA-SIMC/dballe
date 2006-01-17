@@ -5,6 +5,12 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup io
+ * Encapsulates the algorithms used to write raw encoded
+ * messages to files containing weather reports.
+ */
+
 #include <dballe/io/dba_rawfile.h>
 #include <dballe/msg/dba_msg.h>
 

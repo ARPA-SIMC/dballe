@@ -147,6 +147,9 @@ These are the TODO-list items completed so far::
     + Se una funzione non restituisce un dba_err, allora non può fallire in nessun
       modo, e non interagisce con le routine di gestione errori (nemmeno per
       resettare lo stato di errore a DBA_OK)
+    + Ripulito la documentazione dei moduli
+    + Documentato il sistema di scorciatoie di msg/vars.csv
+    + I distruttori non possono mai fallire
 
 
 TODO-list items being worked on
@@ -203,10 +206,8 @@ These are the TODO-list items currently being worked on::
        - nuove conversioni tra unità di misura
        - nuove funzioni ai tool a linea di comando
        - import da nuovi template bufrex
-       - nuove conversioni da B BUFREX a B locale
       (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
     - Invarianti
-    - I distruttori non possono mai fallire
 
  * Procedura per supportare un nuovo tipo report in un formato specifico
     - Cercare un file con un'osservazione nel formato voluto

@@ -1,8 +1,9 @@
 /** @defgroup dballe Main dballe module
 
-The dballe module defines the main high-level functions of dballe.
+Collection of high-level functions for using the DB-ALLe library.
 
-The functionality it uses is divided into submodules to keep the code clean.
-Every submodule is self-contained and can depend on other submodules or on
-external resources.  Circular dependencies among submodules are not allowed.
+<b>Module dependencies:</b>
+
+\li all other modules
+
 */

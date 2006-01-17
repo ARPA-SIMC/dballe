@@ -8,14 +8,8 @@ extern "C" {
 #include <dballe/core/dba_record.h>
 #include <dballe/core/dba_var.h>
 
-/** @defgroup dballemain Dballe main functions
- * @ingroup dballe
- *
- * Functions used to connect to Dballe and insert, query and delete data.
- */
-
 /** @file
- * @ingroup dballemain
+ * @ingroup db
  *
  * Functions used to connect to Dballe and insert, query and delete data.
  */

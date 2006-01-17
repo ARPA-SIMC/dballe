@@ -1,7 +1,10 @@
-/** @defgroup core Dballe core functions
+/** @defgroup core Core functions
 @ingroup dballe
 
-Core functions used by all Dballe modules.  It allows storage of in-memory
-observational data (dba_var.h and dba_record.h), plus utility CSV parsing code
-(dba_csv.h) and an interface to hashed on-disk databases (dba_db.h).
+Core functions used by most DB-ALLe modules.
+
+<b>Module dependencies:</b>
+\li \ref err
+\li \ref conv
+
 */

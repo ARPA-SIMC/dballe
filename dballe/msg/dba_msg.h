@@ -5,6 +5,12 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup msg
+ * Encoding-independent in-memory representation for any kind of weather
+ * report.
+ */
+
 #include <dballe/msg/level.h>
 #include <stdio.h>
 

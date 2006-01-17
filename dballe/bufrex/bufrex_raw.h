@@ -5,6 +5,12 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup bufrex
+ * Intermediate representation of parsed values, ordered according to a BUFR or
+ * CREX message template.
+ */
+
 #include <dballe/err/dba_error.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/msg/dba_msg.h>

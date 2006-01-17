@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup bufrex
+ * High level encoding and decoding functions
+ */
+
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/msg/dba_msg.h>
 

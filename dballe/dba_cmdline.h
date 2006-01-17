@@ -1,13 +1,14 @@
 #ifndef DBA_CMDLINE_H
 #define DBA_CMDLINE_H
 
-/** \file
- * Common functions for commandline tools
- */
-
 #ifdef  __cplusplus
 extern "C" {
 #endif
+
+/** @file
+ * @ingroup dballe
+ * Common functions for commandline tools
+ */
 
 #include <stdio.h>
 #include <dballe/err/dba_error.h>

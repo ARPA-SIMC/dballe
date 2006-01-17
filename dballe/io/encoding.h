@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup io
+ * The dba_encoding enum.
+ */
+
 /**
  * Supported encodings for report data
  */

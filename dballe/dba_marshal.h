@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup dballe
+ * Message marshalling and unmarshalling
+ */
+
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/msg/dba_msg.h>
 

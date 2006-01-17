@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup dballe
+ * High-level access to files with encoded weather data.
+ */
+
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/io/encoding.h>
 #include <dballe/msg/dba_msg.h>

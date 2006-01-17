@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup dballe
+ * Library initialisation and shutdown
+ */
+
 #include <dballe/err/dba_error.h>
 	
 /**

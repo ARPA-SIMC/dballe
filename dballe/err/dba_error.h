@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /** @file
- * @ingroup core
+ * @ingroup err
  * Error management module for DBALLE.
  */
 

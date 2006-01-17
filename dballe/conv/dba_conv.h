@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+/** @file
+ * @ingroup conv
+ * Unit conversion functions.
+ */
+
 #include <dballe/err/dba_error.h>
 
 /**

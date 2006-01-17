@@ -1,7 +1,13 @@
-/** @defgroup aof Dballe AOF functions
-@ingroup message
+/** @defgroup aof AOF Decoder
+@ingroup dballe
 
-AOF import and export functions.
+AOF import functions.
 
-It depends on the core and message modules.
+<b>Module dependencies:</b>
+\li \ref err
+\li \ref conv
+\li \ref core
+\li \ref io
+\li \ref msg
+
 */

@@ -1,11 +1,11 @@
-/** @defgroup err DB-ALLe error handling functions
+/** @defgroup err Error handling
 @ingroup dballe
 
 Common dballe error handling functions.
 
-These functions implement the error-handling framework used throrough all
-DB-ALLe.  It allows to have a uniform way and uniform expectations on the way
-functions report, detect and handle errors.
+These functions, fully implemented in dba_error.h, implement the error-handling
+framework used throrough all DB-ALLe.  It allows to have a uniform way and
+uniform expectations on the way functions report, detect and handle errors.
 
 All functions in DB-ALLe that can fail return a value of type 'dba_err'.  This
 value can be used to check if the function succeeded or not.  If a function
@@ -61,7 +61,7 @@ These are examples of setting callbacks:
 \endcode
 
 Convenience macros are provided to implement trivial error-handling strategies:
-see DBA_RUN_OR_RETURN, DBA_RUN_OR_GOTO, DBA_FAIL_RETURN, DBA_FAIL_GOTO.
+see ::DBA_RUN_OR_RETURN, ::DBA_RUN_OR_GOTO, ::DBA_FAIL_RETURN, ::DBA_FAIL_GOTO.
 
 When writing library code, these are the rules to keep in mind about error
 handling:
@@ -72,6 +72,10 @@ handling:
 
 \invariant
   if a function does not return a ::dba_err, then it cannot fail.
+
+\invariant
+  a "destructor" function whose purpose is to deallocate some data structure
+  must never fail.
 
 \invariant
   if a function that can fail needs to return values, it must do it using its
