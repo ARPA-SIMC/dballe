@@ -905,6 +905,10 @@ dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int updat
 	
 	assert(db);
 
+	/* Check for the existance of non-context data, otherwise it's all useless */
+	if (dba_record_iterate_first(rec) == NULL)
+		return dba_error_consistency("looking for data to insert");
+
 	/* Begin the transaction */
 	DBA_RUN_OR_RETURN(dba_begin(db->od_conn));
 
