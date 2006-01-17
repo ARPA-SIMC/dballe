@@ -56,7 +56,6 @@ struct _dba
 	int sel_lonmin;
 	int sel_latmax;
 	int sel_lonmax;
-	int sel_mobile;
 	const char* sel_ident;
 	int sel_pindicator;
 	int sel_p1;
@@ -88,7 +87,6 @@ struct _dba_cursor {
 #define DB_CUR_CHARVAR(name, len) char out_##name[len]; SQLINTEGER out_##name##_ind
 	DB_CUR_VAR(int, lat);
 	DB_CUR_VAR(int, lon);
-	DB_CUR_VAR(int, mobile);
 	DB_CUR_CHARVAR(ident, 64);
 	DB_CUR_VAR(int, height);
 	DB_CUR_VAR(int, heightbaro);
@@ -138,14 +136,13 @@ static const char* init_queries[] = {
 	"   id         INTEGER auto_increment PRIMARY KEY,"
 	"   lat        INTEGER NOT NULL,"
 	"   lon        INTEGER NOT NULL,"
-	"   mobile     CHAR NOT NULL,"
-	"   ident      CHAR(64) NOT NULL,"
+	"   ident      CHAR(64),"
 	"   height     INTEGER,"
 	"   heightbaro INTEGER,"
 	"   block      INTEGER,"
 	"   station    INTEGER,"
 	"   name       VARCHAR(255),"
-	"   UNIQUE INDEX(lat, lon, mobile, ident(8))"
+	"   UNIQUE INDEX(lat, lon, ident(8))"
 	") " TABLETYPE,
 	"CREATE TABLE data ("
 	"   id			INTEGER auto_increment PRIMARY KEY,"
@@ -460,7 +457,7 @@ dba_err dba_rep_cod_from_memo(dba db, const char* memo, int* rep_cod)
 	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "looking for existing pseudoana");
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "looking for report informations");
 		goto cleanup;
 	}
 
@@ -502,18 +499,22 @@ static dba_err dba_get_rep_cod(dba db, dba_record rec, int* id)
 static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite)
 {
 	dba_err err = DBA_OK;
-	const char* query_sel =
-		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND mobile=? AND ident=?";
+	const char* query_sel = NULL;
+	const char* query_sel_fixed =
+		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident IS NULL";
+	const char* query_sel_mobile =
+		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident=?";
 	const char* query_repl =
-		"UPDATE pseudoana SET lat=?, lon=?, mobile=?, ident=?, height=?, heightbaro=?,"
+		"UPDATE pseudoana SET lat=?, lon=?, ident=?, height=?, heightbaro=?,"
 		"                     block=?, station=?, name=? WHERE id=?";
 	const char* query =
-		"INSERT INTO pseudoana (lat, lon, mobile, ident, height, heightbaro, block, station, name)"
-		" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
+		"INSERT INTO pseudoana (lat, lon, ident, height, heightbaro, block, station, name)"
+		" VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 	int lat;
 	int lon;
 	int mobile;
 	const char* ident;
+	SQLINTEGER ident_ind;
 	const char* val;
 	int height;
 	SQLINTEGER height_ind;
@@ -559,15 +560,25 @@ static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite
 	{
 		DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqc(rec, DBA_KEY_IDENT, &ident));
 	} else {
-		ident = "";
+		ident = NULL;
 	}
 
 	/* Bind key parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &lat, 0, 0);
 	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &lon, 0, 0);
-	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_SMALLINT, 0, 0, &mobile, 0, 0);
 	/* Casting to char* because ODBC is unaware of const */
-	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)ident, 0, 0);
+	if (mobile)
+	{
+		ident_ind = SQL_NTS;
+		SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)ident, 0, &ident_ind);
+		query_sel = query_sel_mobile;
+	}
+	else
+	{
+		ident_ind = SQL_NULL_DATA;
+		SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)"", 0, &ident_ind);
+		query_sel = query_sel_fixed;
+	}
 
 	/* Check for an existing pseudoana with these data */
 	if (*id == -1)
@@ -623,7 +634,7 @@ static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite
 		height = strtol(val, 0, 10);
 	} else
 		height_ind = SQL_NULL_DATA;
-	SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &height, 0, &height_ind);
+	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &height, 0, &height_ind);
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_HEIGHTBARO)) != NULL)
 	{
@@ -631,7 +642,7 @@ static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite
 		heightbaro = strtol(val, 0, 10);
 	} else
 		heightbaro_ind = SQL_NULL_DATA;
-	SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &heightbaro, 0, &heightbaro_ind);
+	SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &heightbaro, 0, &heightbaro_ind);
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
 	{
@@ -639,7 +650,7 @@ static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite
 		block = strtol(val, 0, 10);
 	} else
 		block_ind = SQL_NULL_DATA;
-	SQLBindParameter(stm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &block, 0, &block_ind);
+	SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &block, 0, &block_ind);
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
 	{
@@ -647,7 +658,7 @@ static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite
 		station = strtol(val, 0, 10);
 	} else
 		station_ind = SQL_NULL_DATA;
-	SQLBindParameter(stm, 8, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &station, 0, &station_ind);
+	SQLBindParameter(stm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &station, 0, &station_ind);
 	
 	if ((name = dba_record_key_peek_value(rec, DBA_KEY_NAME)) != NULL)
 		name_ind = SQL_NTS;
@@ -657,11 +668,11 @@ static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite
 		name_ind = SQL_NULL_DATA;
 	}
 	/* Casting to char* because ODBC is unaware of const */
-	SQLBindParameter(stm, 9, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)name, 0, &name_ind);
+	SQLBindParameter(stm, 8, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)name, 0, &name_ind);
 
 	if (*id != -1)
 	{
-		SQLBindParameter(stm, 10, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, id, 0, 0);
+		SQLBindParameter(stm, 9, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, id, 0, 0);
 		/* Casting to char* because ODBC is unaware of const */
 		res = SQLExecDirect(stm, (unsigned char*)query_repl, SQL_NTS);
 
@@ -1061,7 +1072,7 @@ static dba_err dba_cursor_new(dba db, dba_cursor* cur)
 dba_err dba_ana_query(dba db, dba_cursor* cur, int* count)
 {
 	const char* query =
-		"SELECT pa.id, pa.lat, pa.lon, pa.mobile, pa.ident, pa.height, pa.heightbaro,"
+		"SELECT pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"
 		"       pa.block, pa.station, pa.name"
 		"  FROM pseudoana AS pa"
 		" ORDER BY pa.id";
@@ -1094,13 +1105,12 @@ dba_err dba_ana_query(dba db, dba_cursor* cur, int* count)
 	DBA_QUERY_BIND(1, SQL_C_SLONG, ana_id);
 	DBA_QUERY_BIND(2, SQL_C_SLONG, lat);
 	DBA_QUERY_BIND(3, SQL_C_SLONG, lon);
-	DBA_QUERY_BIND(4, SQL_C_SLONG, mobile);
-	DBA_QUERY_BIND(5, SQL_C_CHAR, ident);
-	DBA_QUERY_BIND(6, SQL_C_SLONG, height);
-	DBA_QUERY_BIND(7, SQL_C_SLONG, heightbaro);
-	DBA_QUERY_BIND(8, SQL_C_SLONG, block);
-	DBA_QUERY_BIND(9, SQL_C_SLONG, station);
-	DBA_QUERY_BIND(10, SQL_C_CHAR, name);
+	DBA_QUERY_BIND(4, SQL_C_CHAR, ident);
+	DBA_QUERY_BIND(5, SQL_C_SLONG, height);
+	DBA_QUERY_BIND(6, SQL_C_SLONG, heightbaro);
+	DBA_QUERY_BIND(7, SQL_C_SLONG, block);
+	DBA_QUERY_BIND(8, SQL_C_SLONG, station);
+	DBA_QUERY_BIND(9, SQL_C_CHAR, name);
 #undef DBA_QUERY_BIND
 
 	/* Perform the query */
@@ -1155,11 +1165,16 @@ static dba_err dba_ana_cursor_to_rec(dba_cursor cur, dba_record rec)
 	CHECKED_STORE(seti, ana_id, DBA_KEY_ANA_ID);
 	CHECKED_STORE(seti, lat, DBA_KEY_LAT);
 	CHECKED_STORE(seti, lon, DBA_KEY_LON);
-	CHECKED_STORE(seti, mobile, DBA_KEY_MOBILE);
 	if (cur->out_ident_ind != SQL_NULL_DATA && cur->out_ident[0] == 0)
-		dba_record_key_unset(rec, DBA_KEY_IDENT);
-	else
+	{
 		CHECKED_STORE(setc, ident, DBA_KEY_IDENT);
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
+	}
+	else
+	{
+		dba_record_key_unset(rec, DBA_KEY_IDENT);
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));
+	}
 	CHECKED_STORE(seti, height, DBA_KEY_HEIGHT);
 	CHECKED_STORE(seti, heightbaro, DBA_KEY_HEIGHTBARO);
 	CHECKED_STORE(seti, block, DBA_KEY_BLOCK);
@@ -1244,31 +1259,25 @@ static dba_err dba_prepare_select(dba db, dba_record rec, SQLHSTMT stm)
 
 	{
 		const char* mobile_sel = dba_record_key_peek_value(rec, DBA_KEY_MOBILE);
-		const char* fixed_sel = dba_record_key_peek_value(rec, DBA_KEY_FIXED);
 
 		if (mobile_sel != NULL)
-			if (fixed_sel != NULL)
-				if (mobile_sel[0] == '1')
-					db->sel_mobile = fixed_sel[0] == '1' ? -1 : 1;
-				else
-					if (fixed_sel[0] != '1')
-						return dba_error_consistency("asked for stations which are neither mobile nor fixed (and quantum stations are not supported yet ;)");
-					else
-						db->sel_mobile = 0;
-			else
-				db->sel_mobile = mobile_sel[0] == '1' ? -1 : 0;
-		else
-			if (fixed_sel != NULL)
-				db->sel_mobile = fixed_sel[0] == '1' ? -1 : 1;
-			else
-				db->sel_mobile = -1;
-		
-		if (db->sel_mobile != -1)
 		{
-			strcat(db->querybuf, " AND pa.mobile = ?");
-			TRACE("found fixed/mobile: adding AND pa.mobile = ?. val is %d\n", db->sel_mobile);
-			SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_mobile, 0, 0);
+			if (mobile_sel[0] == '0')
+			{
+				strcat(db->querybuf, " AND pa.ident IS NULL");
+				TRACE("found fixed/mobile: adding AND pa.ident IS NULL.\n");
+			} else {
+				strcat(db->querybuf, " AND NOT pa.ident IS NULL");
+				TRACE("found fixed/mobile: adding AND NOT pa.ident IS NULL\n");
+			}
 		}
+	}
+
+	if ((db->sel_ident = dba_record_key_peek_value(rec, DBA_KEY_IDENT)) != NULL)
+	{
+		strcat(db->querybuf, " AND pa.ident = ?");
+		TRACE("found ident: adding AND pa.ident = ?.  val is %s\n", db->sel_ident);
+		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_ident, 0, 0);
 	}
 
 	PARM_INT(pindicator, DBA_KEY_PINDICATOR, " AND c.ptype = ?");
@@ -1308,13 +1317,6 @@ static dba_err dba_prepare_select(dba db, dba_record rec, SQLHSTMT stm)
 
 	PARM_INT(rep_cod, DBA_KEY_REP_COD, " AND ri.id = ?");
 
-	if ((db->sel_ident = dba_record_key_peek_value(rec, DBA_KEY_IDENT)) != NULL)
-	{
-		strcat(db->querybuf, " AND pa.ident = ?");
-		TRACE("found ident: adding AND pa.ident = ?.  val is %s\n", db->sel_ident);
-		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_ident, 0, 0);
-	}
-
 	if ((db->sel_rep_memo = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
 	{
 		strcat(db->querybuf, " AND ri.memo = ?");
@@ -1337,7 +1339,7 @@ static dba_err dba_prepare_select(dba db, dba_record rec, SQLHSTMT stm)
 dba_err dba_query(dba db, dba_record rec, dba_cursor* cur, int* count)
 {
 	const char* query =
-		"SELECT pa.id, pa.lat, pa.lon, pa.mobile, pa.ident, pa.height, pa.heightbaro,"
+		"SELECT pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"
 		"       pa.block, pa.station, pa.name,"
 		"       c.ltype, c.l1, c.l2,"
 		"       c.ptype, c.p1, c.p2,"
@@ -1377,27 +1379,26 @@ dba_err dba_query(dba db, dba_record rec, dba_cursor* cur, int* count)
 	DBA_QUERY_BIND( 1, SQL_C_SLONG, ana_id);
 	DBA_QUERY_BIND( 2, SQL_C_SLONG, lat);
 	DBA_QUERY_BIND( 3, SQL_C_SLONG, lon);
-	DBA_QUERY_BIND( 4, SQL_C_SLONG, mobile);
-	DBA_QUERY_BIND( 5, SQL_C_CHAR, ident);
-	DBA_QUERY_BIND( 6, SQL_C_SLONG, height);
-	DBA_QUERY_BIND( 7, SQL_C_SLONG, heightbaro);
-	DBA_QUERY_BIND( 8, SQL_C_SLONG, block);
-	DBA_QUERY_BIND( 9, SQL_C_SLONG, station);
-	DBA_QUERY_BIND(10, SQL_C_CHAR, name);
-	DBA_QUERY_BIND(11, SQL_C_SLONG, leveltype);
-	DBA_QUERY_BIND(12, SQL_C_SLONG, l1);
-	DBA_QUERY_BIND(13, SQL_C_SLONG, l2);
-	DBA_QUERY_BIND(14, SQL_C_SLONG, pindicator);
-	DBA_QUERY_BIND(15, SQL_C_SLONG, p1);
-	DBA_QUERY_BIND(16, SQL_C_SLONG, p2);
-	DBA_QUERY_BIND(17, SQL_C_SLONG, idvar);
-	DBA_QUERY_BIND(18, SQL_C_CHAR, datetime);
-	DBA_QUERY_BIND(19, SQL_C_CHAR, value);
+	DBA_QUERY_BIND( 4, SQL_C_CHAR, ident);
+	DBA_QUERY_BIND( 5, SQL_C_SLONG, height);
+	DBA_QUERY_BIND( 6, SQL_C_SLONG, heightbaro);
+	DBA_QUERY_BIND( 7, SQL_C_SLONG, block);
+	DBA_QUERY_BIND( 8, SQL_C_SLONG, station);
+	DBA_QUERY_BIND( 9, SQL_C_CHAR, name);
+	DBA_QUERY_BIND(10, SQL_C_SLONG, leveltype);
+	DBA_QUERY_BIND(11, SQL_C_SLONG, l1);
+	DBA_QUERY_BIND(12, SQL_C_SLONG, l2);
+	DBA_QUERY_BIND(13, SQL_C_SLONG, pindicator);
+	DBA_QUERY_BIND(14, SQL_C_SLONG, p1);
+	DBA_QUERY_BIND(15, SQL_C_SLONG, p2);
+	DBA_QUERY_BIND(16, SQL_C_SLONG, idvar);
+	DBA_QUERY_BIND(17, SQL_C_CHAR, datetime);
+	DBA_QUERY_BIND(18, SQL_C_CHAR, value);
 	/* DBA_QUERY_BIND(21, SQL_C_SLONG, rep_id); */
-	DBA_QUERY_BIND(20, SQL_C_SLONG, rep_cod);
-	DBA_QUERY_BIND(21, SQL_C_CHAR, rep_memo);
-	DBA_QUERY_BIND(22, SQL_C_SLONG, priority);
-	DBA_QUERY_BIND(23, SQL_C_SLONG, data_id);
+	DBA_QUERY_BIND(19, SQL_C_SLONG, rep_cod);
+	DBA_QUERY_BIND(20, SQL_C_CHAR, rep_memo);
+	DBA_QUERY_BIND(21, SQL_C_SLONG, priority);
+	DBA_QUERY_BIND(22, SQL_C_SLONG, data_id);
 #undef DBA_QUERY_BIND
 	
 	/* Add the select part */

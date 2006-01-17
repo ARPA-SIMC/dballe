@@ -25,9 +25,6 @@ our %comments = (
 	station =>	[ "optional", "optional", "present" ],
 	mobile =>	[ "required", "optional", "present",
 			  "Set to 1 if the station is mobile, such as a ship or a flight; else 0"],
-	fixed =>	[ "ignored", "optional", "absent",
-	                  "Set to 1 to query for non-mobile stations only.  It is equivalent to ".
-			  "querying with mobile=0"],
 	ident =>	[ "required if mobile=1", "optional", "present if mobile=1" ],
 	name =>		[ "optional", "optional", "present" ],
 	lat =>		[ "required", "optional", "present" ],

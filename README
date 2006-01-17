@@ -114,6 +114,8 @@ These are the TODO-list items completed so far::
       verbose
     + Rimuovere dba_varconv: non viene usato, e le sue funzioni sono fatte
       (meglio) dagli importer e exporter
+    + Togliere mobile dalla tabella pseudoana (usare ident is null)
+    + Togliere DBA_KEY_FIXED, che non è usato
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -167,7 +169,12 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
+ * Bug
+    - La pressione è sbagliata nell'export da vm
+
  * Refactoring
+    - Far si' che la prendilo non setti l'ana_id nell'input, e lo restituisca
+      invece con enqi '!ana_id'
     - Import and export of attributes
        - Import/export DB-ALLe
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di

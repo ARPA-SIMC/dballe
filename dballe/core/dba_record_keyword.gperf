@@ -19,7 +19,6 @@ rep_memo,    DBA_KEY_REP_MEMO
 ana_id,      DBA_KEY_ANA_ID
 block,       DBA_KEY_BLOCK
 station,     DBA_KEY_STATION
-fixed,       DBA_KEY_FIXED
 mobile,      DBA_KEY_MOBILE
 ident,       DBA_KEY_IDENT
 name,        DBA_KEY_NAME
@@ -71,7 +70,6 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "Pseudoana database ID",                   "NUMERIC", 0, 0,  10, 0, 0, 0 },
 	{ 0, "WMO block number",                        "NUMERIC", 0, 0,   2, 0, 0, 0 },
 	{ 0, "WMO station number",                      "NUMERIC", 0, 0,   3, 0, 0, 0 },
-	{ 0, "Query fixed stations",                    "NUMERIC", 0, 0,   1, 0, 0, 0 },
 	{ 0, "Station is mobile",                       "NUMERIC", 0, 0,   1, 0, 0, 0 },
 	{ 0, "Identifier of flight or ship",          "CHARACTER", 0, 0,  64, 0, 0, 1 },
 	{ 0, "Station or site name",                  "CHARACTER", 0, 0,  20, 0, 0, 1 },
