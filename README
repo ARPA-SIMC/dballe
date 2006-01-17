@@ -133,6 +133,11 @@ These are the TODO-list items completed so far::
       messaggi che fanno (o non fanno) match
     + dbatbl: fare anche il grep
 
+ * Documentazione dell'interfaccia in fortran
+    + aggiungere due parole su come funziona la query "le query si effettuano
+      specificando gli estremi di un box nello spazio e nel tempo, con la
+      possibilità di specificare un livello o una scadenza"
+
 TODO-list items being worked on
 -------------------------------
 
@@ -156,28 +161,14 @@ These are the TODO-list items currently being worked on::
 
  * Import da VM o database Oracle di ARPA
     - Dati generici
-    - Lat, Long
-      - Buttare via le stazioni con NULL su lat o long
-      - Non deve esserci perdita di precisione sull'import e export
-        delle coordinate
-
- * Tools
-    - In fase di conversione, aggiungere uno switch per fare unset di tutti i
-      valori che hanno intervallo di confidenza al di sotto di una soglia data
-    - Fare un import delle anagrafiche che scandisca una serie di CREX:
-       - mettendo assieme i dati anagrafici delle varie stazioni.
-       - controlli che le stazioni non si spostino e alla fine inserisca tutto
-	 nella tabella di anagrafica
-    - Fare un tool per correggere l'intervallo temporale nell'header di un AOF,
-      dopo averne scandito i contenuti
+    - Buttare via le stazioni con NULL su lat o long
+    - Non deve esserci perdita di precisione sull'import e export
+      delle coordinate
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
 
  * Documentazione dell'interfaccia in fortran
-    - aggiungere due parole su come funziona la query "le query si effettuano
-      specificando gli estremi di un box nello spazio e nel tempo, con la
-      possibilità di specificare un livello o una scadenza"
     - documentare le tabelle B
     - documentare la girati
     - documentare come si usa ana_id
@@ -236,6 +227,16 @@ These are the TODO-list items currently being worked on::
          256.4.0 Vertical significance 4
        - Livello 257:
          Informazioni extra sulla stazione
+
+ * Tools
+    - In fase di conversione, aggiungere uno switch per fare unset di tutti i
+      valori che hanno intervallo di confidenza al di sotto di una soglia data
+    - Fare un import delle anagrafiche che scandisca una serie di CREX:
+       - mettendo assieme i dati anagrafici delle varie stazioni.
+       - controlli che le stazioni non si spostino e alla fine inserisca tutto
+	 nella tabella di anagrafica
+    - Fare un tool per correggere l'intervallo temporale nell'header di un AOF,
+      dopo averne scandito i contenuti
 
  - Appunti per un nuovo report:
     - La nuova API (con un programma di esempio è forse meglio)
