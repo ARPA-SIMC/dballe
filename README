@@ -132,6 +132,11 @@ These are the TODO-list items completed so far::
        + Per box lat, lon e intervallo temporale
        + Per stazione
        + Per intervallo
+    + Dati generici
+       + Creare test
+          + Importa un generico in DB-ALLe
+	  + Esportalo come synop
+	  + Vedere che abbia gli stessi dati del synop corrispondente
 
  * Tools
     + Fare un dbamsg filter che prende query alla dbadb e stampa solo i
@@ -154,6 +159,21 @@ These are the TODO-list items completed so far::
     + Ripulito la documentazione dei moduli
     + Documentato il sistema di scorciatoie di msg/vars.csv
     + I distruttori non possono mai fallire
+
+ * Conversione osservazioni in variabili fisiche
+    + Come codifico in DB-ALLe i 4 cloud type del synop?
+       - Livello 256:
+         Informazioni a livello 0
+	 256.0.0 General cloud group
+         256.0.1 CL
+         256.0.2 CM
+         256.0.3 CH
+         256.1.0 Vertical significance 1
+	 256.2.0 Vertical significance 2
+	 256.3.0 Vertical significance 3
+         256.4.0 Vertical significance 4
+       - Livello 257:
+         Informazioni extra sulla stazione
 
 
 TODO-list items being worked on
@@ -178,11 +198,7 @@ These are the TODO-list items currently being worked on::
       dba_insert_or_replace
 
  * Import da VM o database Oracle di ARPA
-    - Dati generici
-       - Creare test
-          - Importa un generico in DB-ALLe
-	  - Esportalo come synop
-	  - Vedere che abbia gli stessi dati del synop corrispondente
+    - Attributi
     - Buttare via le stazioni con NULL su lat o long
 
  * Export per VM
@@ -227,21 +243,6 @@ These are the TODO-list items currently being worked on::
     - Aggiungere a check_import i test per il nuovo file, usando l'altro file o
       i dati del dump come riferimento
     - Implementare
-
- * Conversione osservazioni in variabili fisiche
-    . Come codifico in DB-ALLe i 4 cloud type del synop?
-       - Livello 256:
-         Informazioni a livello 0
-	 256.0.0 General cloud group
-         256.0.1 CL
-         256.0.2 CM
-         256.0.3 CH
-         256.1.0 Vertical significance 1
-	 256.2.0 Vertical significance 2
-	 256.3.0 Vertical significance 3
-         256.4.0 Vertical significance 4
-       - Livello 257:
-         Informazioni extra sulla stazione
 
  * Tools
     - In fase di conversione, aggiungere uno switch per fare unset di tutti i

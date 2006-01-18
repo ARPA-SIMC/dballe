@@ -882,10 +882,14 @@ just provide the value of {\tt data\_id}, and also get a faster search.
 
 This table lists all the various value combinations to use as a level layer:
 
-\begin{tabular}{|l|l|l|l|}
+\begin{scriptsize}
+\begin{longtable}{|@{\hspace{0.5mm}}l@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|}
 \hline
-{\em Code figure ({\tt leveltype})} & {\em Meaning} & {\em Contents ({\tt l1})} & {\em Contents ({\tt l2})} \\
+{\em Level type} & {\em Meaning} & {\em Contents ({\tt l1})} & {\em Contents ({\tt l2})} \\
 \hline
+\endhead
+\hline
+\endfoot
   0     & Reserved & & \\
   1     & Ground or water surface & 0 & \\
   2     & Cloud base level & 0 & \\
@@ -933,8 +937,24 @@ This table lists all the various value combinations to use as a level layer:
 200     & Entire atmosphere (considered as a single layer) & 0 & \\
 201     & Entire ocean (considered as a single layer) & 0 & \\
 202-254 & Reserved & & \\
+256	& Cloud levels       & 0 & 0=General Cloud Group, 1=CL, 2=CM, 3=CH \\
+256	& Synop cloud group 1 & 1 & 0 \\
+256	& Synop cloud group 2 & 2 & 0 \\
+256	& Synop cloud group 3 & 3 & 0 \\
+256	& Synop cloud group 4 & 4 & 0 \\
+257	& Extra anagraphical informations & & \\
 \hline
-\end{tabular}
+\end{longtable}
+\end{scriptsize}
+
+
+
+
+
+
+
+
+
 
 This table lists all the various value combinations to use as a time range:
 
@@ -1176,3 +1196,5 @@ These routines are used to begin and end working sessions with \dballe{}.
 \bibliography{local}
 
 \end{document}
+
+
