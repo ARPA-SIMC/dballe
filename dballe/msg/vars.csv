@@ -28,8 +28,8 @@ HEIGHT_BARO,		int,	B07031,		257,  0, 0,		0,      0, 0
 PRESS,			num,	B10004,		  1,  0, 0,		0,      0, 0
 PRESS_3H,		num,	B10061,		  1,  0, 0,		5, -10800, 0
 PRESS_MSL,		num,	B10051,		102,  0, 0,		0,      0, 0
-WIND_DIR,		num,	B11011,		105, 10, 0,		0,      0, 0
-WIND_SPEED,		num,	B11012,		105, 10, 0,		0,      0, 0
+WIND_DIR,		num,	B11001,		105, 10, 0,		0,      0, 0
+WIND_SPEED,		num,	B11002,		105, 10, 0,		0,      0, 0
 TEMP_2M,		num,	B12001,		105,  2, 0,		0,      0, 0
 WET_TEMP_2M,		num,	B12002,		105,  2, 0,		0,	0, 0
 DEWPOINT_2M,		num,	B12003,		105,  2, 0,		0,      0, 0
