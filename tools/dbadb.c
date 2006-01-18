@@ -216,12 +216,7 @@ dba_err do_export(poptContext optCon)
 		case 12:	DBA_RUN_OR_RETURN(dba_db_export_flight(db, &msgs, query)); break;
 		case 13:	DBA_RUN_OR_RETURN(dba_db_export_flight(db, &msgs, query)); break;
 		case 14:	DBA_RUN_OR_RETURN(dba_db_export_flight(db, &msgs, query)); break;
-		case 104:	DBA_RUN_OR_RETURN(dba_db_export_generic(db, &msgs, query)); break;
-		case 105:	DBA_RUN_OR_RETURN(dba_db_export_generic(db, &msgs, query)); break;
-		case 106:	DBA_RUN_OR_RETURN(dba_db_export_generic(db, &msgs, query)); break;
-		case 107:	DBA_RUN_OR_RETURN(dba_db_export_generic(db, &msgs, query)); break;
-		case 108:	DBA_RUN_OR_RETURN(dba_db_export_generic(db, &msgs, query)); break;
-		default:	return dba_error_consistency("report type %s is not supported", datatype);
+		default:	DBA_RUN_OR_RETURN(dba_db_export_generic(db, &msgs, query)); break;
 	}
 
 	if (msgs == NULL)

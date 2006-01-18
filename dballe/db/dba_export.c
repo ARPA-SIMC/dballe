@@ -4,11 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-dba_err dba_db_export_generic(dba db, dba_msg** msgs, dba_record query)
-{
-	return dba_error_unimplemented("database export of generic data");
-}
-
 dba_err dba_db_export(dba db, dba_msg_type type, dba_msg** msgs, dba_record query)
 {
 	switch (type)

@@ -2,6 +2,7 @@
 
 noinst_LTLIBRARIES = libdbexporters.la
 libdbexporters_la_SOURCES = \
+		generic.c \
 		synop.c \
 		sea.c \
 		flight.c \

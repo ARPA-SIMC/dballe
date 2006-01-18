@@ -196,6 +196,8 @@ These are the TODO-list items currently being worked on::
        - Import/export DB-ALLe
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
       dba_insert_or_replace
+    - Gli exporter dal DB non sono quasi tutti accumunabili?  export_synop e
+      export_generic in fondo sono uguali.
 
  * Import da VM o database Oracle di ARPA
     - Attributi

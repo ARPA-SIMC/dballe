@@ -225,17 +225,18 @@ dba_err do_cat(poptContext optCon)
 dba_err do_convert(poptContext optCon)
 {
 	dba_file file;
-	dba_encoding type;
+	dba_encoding intype, outtype;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
-	type = dba_cmdline_stringToMsgType(op_output_type, optCon);
+	intype = dba_cmdline_stringToMsgType(op_input_type, optCon);
+	outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
 
-	DBA_RUN_OR_RETURN(dba_file_create(&file, type, "(stdout)", "w"));
+	DBA_RUN_OR_RETURN(dba_file_create(&file, outtype, "(stdout)", "w"));
 	/* DBA_RUN_OR_RETURN(dba_file_write_header(file, 0, 0)); */
 
-	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, convert_message, (void*)file));
+	DBA_RUN_OR_RETURN(process_all(optCon, intype, &grepdata, convert_message, (void*)file));
 
 	dba_file_delete(file);
 
