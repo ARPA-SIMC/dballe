@@ -37,14 +37,15 @@
  011002 WIND SPEED                                                       M/S                        1            0  12 M/S                       1          4
  011003 U-COMPONENT                                                      M/S                        1        -4096  13 M/S                       1          4
  011004 V-COMPONENT                                                      M/S                        1        -4096  13 M/S                       1          4
- 011011 WIND DIRECTION AT 10 M                                           DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
- 011012 WIND SPEED AT 10 M                                               M/S                        1            0  12 M/S                       1          4
  012001 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          1            0  12 K                         1          3
  012002 WET-BULB TEMPERATURE                                             K                          1            0  12 K                         1          3
  012003 DEW-POINT TEMPERATURE                                            K                          1            0  12 K                         1          3
+ 012011 MAXIMUM TEMPERATURE                                              K                          1            0  12 C                         1          3
+ 012012 MINIMUM TEMPERATURE                                              K                          1            0  12 C                         1          3
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
  013013 TOTAL SNOW DEPTH                                                 M                          2           -2  16 M                         2          5
+ 014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
  020001 HORIZONTAL VISIBILITY                                            M                         -1            0  13 M                        -1          4
  020003 PRESENT WEATHER (SEE NOTE 1)                                     CODE TABLE 20003           0            0   9 CODE TABLE 20003          0          3
  020004 PAST WEATHER (1) (SEE NOTE 2)                                    CODE TABLE 20004           0            0   5 CODE TABLE 20004          0          2
@@ -53,7 +54,12 @@
  020011 CLOUD AMOUNT                                                     CODE TABLE 20011           0            0   4 CODE TABLE 20011          0          2
  020012 CLOUD TYPE                                                       CODE TABLE 20012           0            0   6 CODE TABLE 20012          0          2
  020013 HEIGHT OF BASE OF CLOUD                                          M                         -1          -40  11 M                        -1          4
+ 020062 STATE OF THE GROUND (WITH OR WITHOUT SNOW)                       CODE TABLE 20062           0            0   5 CODE TABLE 20062          0          2
  022001 DIRECTION OF WAVES                                               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
+ 022011 PERIOD OF WAVES                                                  S                          0            0   6 S                         0          2
+ 022012 PERIOD OF WIND WAVES                                             S                          0            0   6 S                         0          2
+ 022021 HEIGHT OF WAVES                                                  M                          1            0  10 M                         1          4
+ 022022 HEIGHT OF WIND WAVES                                             M                          1            0  10 M                         1          4
  022042 SEA/WATER TEMPERATURE                                            K                          1            0  12 K                         1          4
  022070 SIGNIFICANT WAVE HEIGHT                                          M                          2            0  13 M                         2          4
  022071 SPECTRAL PEAK WAVE PERIOD                                        S                          1            0   9 S                         1          3

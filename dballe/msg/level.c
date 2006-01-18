@@ -177,8 +177,10 @@ void dba_msg_level_print(dba_msg_level l, FILE* out)
 static void datum_summary(dba_msg_datum d, FILE* out)
 {
 	dba_varcode v = dba_var_code(d->var);
-	fprintf(out, "%d%02d%03d,p(%d,%d,%d)",
+	dba_varinfo info = dba_var_info(d->var);
+	fprintf(out, "%d%02d%03d[%s],p(%d,%d,%d)",
 			DBA_VAR_F(v), DBA_VAR_X(v), DBA_VAR_Y(v),
+			info->desc,
 			d->pind, d->p1, d->p2);
 }
 
