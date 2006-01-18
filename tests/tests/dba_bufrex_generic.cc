@@ -47,9 +47,14 @@ void to::test<1>()
 		dba_msg synop1;
 		CHECKED(bufrex_decode_bufr(raw, &synop1));
 
-		/*
-		if (string(files[i]).find("2-101.16") != string::npos)
+		/* Check that the data are the same */
+		int diffs = 0;
+		dba_msg_diff(synop, synop1, &diffs, stderr);
+
+#if 0
+		if (diffs != 0)
 		{
+			/*
 			FILE* outraw = fopen("/tmp/1to2.txt", "w");
 			bufrex_raw braw;
 			CHECKED(bufrex_raw_create(&braw, BUFREX_BUFR));
@@ -63,20 +68,18 @@ void to::test<1>()
 			bufrex_raw_print(braw, outraw);
 			fclose(outraw);
 			bufrex_raw_delete(braw);
+			*/
 
-			FILE* out1 = fopen("/tmp/msg1.txt", "w");
-			FILE* out2 = fopen("/tmp/msg2.txt", "w");
+			FILE* out1 = fopen("/tmp/synop.txt", "w");
+			FILE* out2 = fopen("/tmp/synop1.txt", "w");
 				
-			dba_msg_print(msg1, out1);
-			dba_msg_print(msg2, out2);
+			dba_msg_print(synop, out1);
+			dba_msg_print(synop1, out2);
 			fclose(out1);
 			fclose(out2);
 		}
-		*/
-
-		/* Check that the data are the same */
-		int diffs = 0;
-		dba_msg_diff(synop, synop1, &diffs, stderr);
+#endif
+		
 		gen_ensure_equals(diffs, 0);
 
 		dba_msg_delete(gen);
