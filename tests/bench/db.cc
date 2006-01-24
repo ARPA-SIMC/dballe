@@ -1,8 +1,10 @@
 #include "Benchmark.h"
+#include "bench-utils.h"
 
 #include <dballe/dba_file.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/db/dballe.h>
+#include <dballe/db/dba_import.h>
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/bufrex/bufrex.h>
 #include <dballe/bufrex/bufrex_raw.h>
@@ -16,150 +18,14 @@ const char* dsn = "test";
 const char* user = "enrico";
 const char* password = "";
 
-/* Some utility random generator functions */
-
-int rnd(int min, int max)
-{
-	return min + (int) (max * (rand() / (RAND_MAX + 1.0)));
-}
-
-double rnd(double min, double max)
-{
-	return min + (int) (max * (rand() / (RAND_MAX + 1.0)));
-}
-
-string rnd(int len)
-{
-	string res;
-	int max = rnd(1, len);
-	for (int i = 0; i < max; i++)
-		res += (char)rnd('a', 'z');
-	return res;
-}
-
-bool rnd(double prob)
-{
-	return (rnd(0, 100) < prob*100) ? true : false;
-}
-
-const static dba_varcode varcodes[] = {
-	DBA_VAR(0,  1,   1),
-	DBA_VAR(0,  1,   2),
-	DBA_VAR(0,  1,   8),
-	DBA_VAR(0,  1,  11),
-	DBA_VAR(0,  1,  12),
-	DBA_VAR(0,  1,  13),
-	DBA_VAR(0,  2,   1),
-	DBA_VAR(0,  2,   2),
-	DBA_VAR(0,  2,   5),
-	DBA_VAR(0,  2,  11),
-	DBA_VAR(0,  2,  12),
-	DBA_VAR(0,  2,  61),
-	DBA_VAR(0,  2,  62),
-	DBA_VAR(0,  2,  63),
-	DBA_VAR(0,  2,  70),
-	DBA_VAR(0,  4,   1),
-	DBA_VAR(0,  4,   2),
-	DBA_VAR(0,  4,   3),
-	DBA_VAR(0,  4,   4),
-	DBA_VAR(0,  4,   5),
-	DBA_VAR(0,  5,   1),
-	DBA_VAR(0,  6,   1),
-	DBA_VAR(0,  7,   1),
-	DBA_VAR(0,  7,   2),
-	DBA_VAR(0,  7,   4),
-	DBA_VAR(0,  7,  31),
-	DBA_VAR(0,  8,   1),
-	DBA_VAR(0,  8,   4),
-	DBA_VAR(0,  8,  21),
-	DBA_VAR(0, 10,   3),
-	DBA_VAR(0, 10,   4),
-	DBA_VAR(0, 10,  51),
-	DBA_VAR(0, 10,  61),
-	DBA_VAR(0, 10,  63),
-	DBA_VAR(0, 10, 197),
-	DBA_VAR(0, 11,   1),
-	DBA_VAR(0, 11,   2),
-	DBA_VAR(0, 11,   3),
-	DBA_VAR(0, 11,   4),
-};
-
 class db_work : public Benchmark
 {
-	vector<dba_record> reused_pseudoana;
-	vector<dba_record> reused_context;
-
-	dba_err fill_pseudoana(dba_record rec)
-	{
-		dba_record ana;
-		if (reused_pseudoana.empty() || rnd(0.3))
-		{
-			DBA_RUN_OR_RETURN(dba_record_create(&ana));
-
-			/* Pseudoana */
-			DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_LAT, rnd(-180, 180)));
-			DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_LON, rnd(-180, 180)));
-			if (rnd(0.8))
-			{
-				DBA_RUN_OR_RETURN(dba_record_key_seti(ana, DBA_KEY_BLOCK, rnd(0, 99)));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(ana, DBA_KEY_STATION, rnd(0, 999)));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(ana, DBA_KEY_MOBILE, 0));
-			} else {
-				DBA_RUN_OR_RETURN(dba_record_key_setc(ana, DBA_KEY_IDENT, rnd(10).c_str()));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(ana, DBA_KEY_MOBILE, 1));
-			}
-			DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_HEIGHT, rnd(1, 3000)));
-			DBA_RUN_OR_RETURN(dba_record_key_setc(ana, DBA_KEY_NAME, rnd(20).c_str()));
-
-			reused_pseudoana.push_back(ana);
-		} else {
-			ana = reused_pseudoana[rnd(0, reused_pseudoana.size() - 1)];
-		}
-		DBA_RUN_OR_RETURN(dba_record_add(rec, ana));
-		return dba_error_ok();
-	}
-
-	dba_err fill_context(dba_record rec)
-	{
-		dba_record ctx;
-		if (reused_context.empty() || rnd(0.7))
-		{
-			DBA_RUN_OR_RETURN(dba_record_create(&ctx));
-
-			/* Context */
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_YEAR, rnd(2002, 2005)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_MONTH, rnd(1, 12)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_DAY, rnd(1, 28)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_HOUR, rnd(0, 23)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_MIN, rnd(0, 59)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_LEVELTYPE, rnd(0, 300)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_L1, rnd(0, 100000)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_L2, rnd(0, 100000)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_PINDICATOR, rnd(0, 300)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_P1, rnd(0, 100000)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_P2, rnd(0, 100000)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_REP_COD, rnd(0, 20)));
-
-			reused_context.push_back(ctx);
-		} else {
-			ctx = reused_context[rnd(0, reused_context.size() - 1)];
-		}
-		DBA_RUN_OR_RETURN(dba_record_add(rec, ctx));
-		return dba_error_ok();
-	}
-
-	dba_err fill_record(dba_record rec)
-	{
-		DBA_RUN_OR_RETURN(fill_pseudoana(rec));
-		DBA_RUN_OR_RETURN(fill_context(rec));
-		DBA_RUN_OR_RETURN(dba_record_var_setc(rec, varcodes[rnd(0, sizeof(varcodes) / sizeof(dba_varcode))], "11111"));
-		return dba_error_ok();
-	}
+	generator gen;
 
 protected:
 	virtual dba_err main()
 	{
-		static const int iterations = 2000;
+		static const int iterations = 3000;
 
 		dba_record rec;
 		DBA_RUN_OR_RETURN(dba_record_create(&rec));
@@ -175,12 +41,68 @@ protected:
 		for (int i = 0; i < iterations; i++)
 		{
 			dba_record_clear(rec);
-			DBA_RUN_OR_RETURN(fill_record(rec));
+			DBA_RUN_OR_RETURN(gen.fill_record(rec));
 			//dba_record_print(rec, stderr);
 			DBA_RUN_OR_RETURN(dba_insert(db, rec));
 		}
 
 		timing("inserted %d random records in the database", iterations);
+
+		msg_vector msgs;
+
+		static const char* bufr_files[] = {
+			"bufr/obs0-1.22.bufr",
+			"bufr/obs0-3.504.bufr",
+			"bufr/obs1-11.16.bufr",
+			"bufr/obs1-13.36.bufr",
+			"bufr/obs1-19.3.bufr",
+			"bufr/obs1-21.1.bufr",
+			"bufr/obs1-9.2.bufr",
+			"bufr/obs2-101.16.bufr",
+			"bufr/obs2-102.1.bufr",
+			"bufr/obs2-91.2.bufr",
+			"bufr/obs4-142.13803.bufr",
+			"bufr/obs4-142.1.bufr",
+			"bufr/obs4-144.4.bufr",
+			"bufr/obs4-145.4.bufr",
+		};
+		static const char* crex_files[] = {
+			"crex/test-mare0.crex",
+			"crex/test-mare1.crex",
+			"crex/test-mare2.crex",
+			"crex/test-synop0.crex",
+			"crex/test-synop1.crex",
+			"crex/test-synop2.crex",
+			"crex/test-synop3.crex",
+			"crex/test-temp0.crex",
+		};
+		static const char* aof_files[] = {
+			"aof/obs1-14.63.aof",
+			"aof/obs1-21.1.aof",
+			"aof/obs1-24.2104.aof",
+			"aof/obs1-24.34.aof",
+			"aof/obs2-144.2198.aof",
+			"aof/obs4-165.2027.aof",
+			"aof/obs5-35.61.aof",
+			"aof/obs5-36.30.aof",
+			"aof/obs6-32.1573.aof",
+		};
+
+		for (size_t i = 0; i < sizeof(bufr_files) / sizeof(const char*); i++)
+			DBA_RUN_OR_RETURN(read_file(BUFR, bufr_files[i], msgs));
+		for (size_t i = 0; i < sizeof(crex_files) / sizeof(const char*); i++)
+			DBA_RUN_OR_RETURN(read_file(CREX, crex_files[i], msgs));
+		for (size_t i = 0; i < sizeof(aof_files) / sizeof(const char*); i++)
+			DBA_RUN_OR_RETURN(read_file(AOF, aof_files[i], msgs));
+
+		DBA_RUN_OR_RETURN(dba_reset(db, NULL));
+		timing("reset the database");
+
+		for (msg_vector::const_iterator i = msgs.begin();
+				i != msgs.end(); i++)
+			DBA_RUN_OR_RETURN(dba_import_msg(db, *i, 1));
+
+		timing("inserted %d messages in the database", msgs.size());
 
 		dba_close(db);
 		dba_record_delete(rec);
@@ -190,15 +112,7 @@ protected:
 
 public:
 	db_work() : Benchmark("read") {}
-	~db_work()
-	{
-		for (vector<dba_record>::iterator i = reused_pseudoana.begin();
-				i != reused_pseudoana.end(); i++)
-			dba_record_delete(*i);
-		for (vector<dba_record>::iterator i = reused_context.begin();
-				i != reused_context.end(); i++)
-			dba_record_delete(*i);
-	}
+	~db_work() {}
 };
 
 #if 0

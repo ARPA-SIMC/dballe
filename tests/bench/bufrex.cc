@@ -1,4 +1,5 @@
 #include "Benchmark.h"
+#include "bench-utils.h"
 
 #include <dballe/dba_file.h>
 #include <dballe/io/dba_rawmsg.h>
@@ -11,75 +12,6 @@ using namespace std;
 
 class bufrex_read : public Benchmark
 {
-	class dba_raw_consumer
-	{
-	public:
-		virtual ~dba_raw_consumer() {}
-
-		virtual dba_err consume(dba_encoding type, dba_rawmsg raw) = 0;
-	};
-
-	class collect_bufrex : public dba_raw_consumer
-	{
-	public:
-		vector<bufrex_raw> msgs;
-
-		virtual ~collect_bufrex()
-		{
-			for (vector<bufrex_raw>::iterator i = msgs.begin(); i != msgs.end(); i++)
-				bufrex_raw_delete(*i);
-		}
-			
-		virtual dba_err consume(dba_encoding type, dba_rawmsg raw)
-		{
-			dba_err err = DBA_OK;
-			bufrex_raw msg;
-
-			switch (type)
-			{
-				case BUFR:
-					DBA_RUN_OR_RETURN(bufrex_raw_create(&msg, BUFREX_BUFR));
-					break;
-				case CREX:
-					DBA_RUN_OR_RETURN(bufrex_raw_create(&msg, BUFREX_CREX));
-					break;
-				default:
-					return dba_error_consistency("unhandled message type");
-			}
-			DBA_RUN_OR_GOTO(fail, bufrex_raw_decode(msg, raw));
-			msgs.push_back(msg);
-
-			return dba_error_ok();
-
-		fail:
-			bufrex_raw_delete(msg);
-			return err;
-		}
-	};
-	
-	dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons)
-	{
-		dba_err err = DBA_OK;
-		dba_file file = 0;
-		dba_rawmsg raw = 0;
-		int found;
-
-		DBA_RUN_OR_GOTO(cleanup, dba_file_create(&file, type, name.c_str(), "r"));
-		DBA_RUN_OR_GOTO(cleanup, dba_rawmsg_create(&raw));
-
-		DBA_RUN_OR_GOTO(cleanup, dba_file_read_raw(file, raw, &found));
-		while (found)
-		{
-			DBA_RUN_OR_GOTO(cleanup, cons.consume(type, raw));
-			DBA_RUN_OR_GOTO(cleanup, dba_file_read_raw(file, raw, &found));
-		}
-
-	cleanup:
-		if (file) dba_file_delete(file);
-		if (raw) dba_rawmsg_delete(raw);
-		return err == DBA_OK ? dba_error_ok() : err;
-	}
-
 protected:
 	virtual dba_err main()
 	{
@@ -111,7 +43,7 @@ protected:
 			"crex/test-temp0.crex", 
 		};
 
-		collect_bufrex msgbase;
+		bufrex_vector msgbase;
 
 		unsigned int count;
 
@@ -126,14 +58,14 @@ protected:
 				DBA_RUN_OR_RETURN(read_file(CREX, crex_files[count], msgbase));
 		timing("read and parse %d CREX messages of various kinds", count * iterations);
 		
-		for (vector<bufrex_raw>::iterator i = msgbase.msgs.begin();
-				i != msgbase.msgs.end(); i++)
+		for (vector<bufrex_raw>::iterator i = msgbase.begin();
+				i != msgbase.end(); i++)
 		{
 			dba_msg msg = 0;
 			DBA_RUN_OR_RETURN(bufrex_raw_to_msg(*i, &msg));
 			dba_msg_delete(msg);
 		}
-		timing("interpreting %d bufrex_raw messages", msgbase.msgs.size());
+		timing("interpreting %d bufrex_raw messages", msgbase.size());
 
 		return dba_error_ok();
 	}

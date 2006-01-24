@@ -188,6 +188,7 @@ These are the TODO-list items completed so far::
  * DB-ALLe
     + Import of attributes
     + Export of attributes
+    + Write a benchmark for DB operations (normal queries and message I/O)
 
 
 TODO-list items being worked on
@@ -216,8 +217,6 @@ These are the TODO-list items currently being worked on::
 	  - step 2a: farsi dare le variabili in quel context
 	  - step 2b: farsi dare variabili e attributi in quel context
 	  
-       - Write a benchmark for DB operations (normal queries and message I/O)
-
        - Rinominare dba_* in dba_db_*
 
        - Fare una classe per comporre le query, che permetta un append facile e
