@@ -4,9 +4,10 @@ README for Data Base All Enhanced version 0.7, still unreleased
 Functionality
 -------------
 
-DB-ALLe is fully functional for building applications.
+DB-ALLe is fully functional.
 
-Import and export functions are implemented for synop reports only.
+It is currently under testing, benchmarking and optimization before being
+finally deployed.
 
 
 Resources
@@ -222,9 +223,9 @@ These are the TODO-list items currently being worked on::
 	  - step 2a: farsi dare le variabili in quel context
 	  - step 2b: farsi dare variabili e attributi in quel context
 
+       - Mettere un id_rep in data (e rendere id_rep un tinyint)
        - Fare una cache delle informazioni per il tipo report, da leggere alla
 	 connessione al database e tenere in memoria
-       - Mettere un id_rep in data (e rendere id_rep un tinyint)
        - Dividere le query in query context e query variabili per un certo
 	 context.  I dati del context riempiono le keyword di un dba_record, e
 	 le variabili riempiono le var
