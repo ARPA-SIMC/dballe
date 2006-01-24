@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <dballe/db/dballe.h>
+#include <dballe/db/querybuf.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/core/dba_csv.h>
@@ -48,7 +49,7 @@ struct _dba_db
 	 * plus 400 characters for the various combinations of the two min and max datetimes,
 	 * plus 255 for the blist
 	 */
-	char querybuf[170 + 30*30 + 400 + 255];
+	dba_querybuf querybuf;
  	char sel_dtmin[25];
  	char sel_dtmax[25];
  	char sel_dtlike[25];
@@ -222,6 +223,7 @@ void dba_db_shutdown()
 
 dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba_db* db)
 {
+	dba_err err = DBA_OK;
 	int sqlres;
 
 	/* Allocate a new handle */
@@ -229,15 +231,15 @@ dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba
 	if (!*db)
 		return dba_error_alloc("trying to allocate a new dba_db object");
 
+	DBA_RUN_OR_GOTO(fail, dba_querybuf_create(170 + 30*30 + 400 + 255, &((*db)->querybuf)));
+
 	/* Allocate the ODBC connection handle */
 	sqlres = SQLAllocHandle(SQL_HANDLE_DBC, dba_od_env, &((*db)->od_conn));
 	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
 	{
-		dba_err err = dba_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
+		err = dba_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
 				"Allocating new connection handle");
-		free(*db);
-		*db = 0;
-		return err;
+		goto fail;
 	}
 
 	/* Set the connection timeout */
@@ -250,15 +252,21 @@ dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba
 						(SQLCHAR*)(password == NULL ? "" : password), SQL_NTS);
 	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
 	{
-		dba_err err = dba_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
+		err = dba_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
 				"Connecting to DSN %s as user %s", dsn, user);
-		SQLFreeHandle(SQL_HANDLE_DBC, (*db)->od_conn);
-		free(*db);
-		*db = 0;
-		return err;
+		goto fail;
 	}
 	
 	return dba_error_ok();
+	
+fail:
+	if ((*db)->querybuf != NULL)
+		dba_querybuf_delete((*db)->querybuf);
+	if ((*db)->od_conn != NULL)
+		SQLFreeHandle(SQL_HANDLE_DBC, (*db)->od_conn);
+	free(*db);
+	*db = 0;
+	return err;
 }
 
 dba_err dba_db_reset(dba_db db, const char* deffile)
@@ -387,6 +395,7 @@ void dba_db_close(dba_db db)
 {
 	assert(db);
 
+	dba_querybuf_delete(db->querybuf);
 	SQLDisconnect(db->od_conn);
 	SQLFreeHandle(SQL_HANDLE_DBC, db->od_conn);
 	free(db);
@@ -1221,7 +1230,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 	if ((val = dba_record_key_peek_value(rec, key)) != NULL) { \
 		db->sel_##field = strtol(val, 0, 10); \
 		TRACE("found " #field ": adding " sql ". val is %d\n", db->sel_##field); \
-		strcat(db->querybuf, sql); \
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, sql)); \
 		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_##field, 0, 0); \
 	} } while (0)
 
@@ -1236,7 +1245,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 			snprintf(db->sel_dtmin, 25, "%04d-%02d-%02d %02d:%02d:%02d",
 					minvalues[0], minvalues[1], minvalues[2],
 					minvalues[3], minvalues[4], minvalues[5]);
-			strcat(db->querybuf, " AND c.datetime >= ?");
+			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime >= ?"));
 			TRACE("found min time interval: adding AND c.datetime >= ?.  val is %s\n", db->sel_dtmin);
 			SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmin, 0, 0);
 		}
@@ -1246,7 +1255,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 			snprintf(db->sel_dtmax, 25, "%04d-%02d-%02d %02d:%02d:%02d",
 					maxvalues[0], maxvalues[1], maxvalues[2],
 					maxvalues[3], maxvalues[4], maxvalues[5]);
-			strcat(db->querybuf, " AND c.datetime <= ?");
+			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime <= ?"));
 			TRACE("found max time interval: adding AND c.datetime <= ?.  val is %s\n", db->sel_dtmax);
 			SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmax, 0, 0);
 		}
@@ -1266,10 +1275,10 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 		{
 			if (mobile_sel[0] == '0')
 			{
-				strcat(db->querybuf, " AND pa.ident IS NULL");
+				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident IS NULL"));
 				TRACE("found fixed/mobile: adding AND pa.ident IS NULL.\n");
 			} else {
-				strcat(db->querybuf, " AND NOT pa.ident IS NULL");
+				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND NOT pa.ident IS NULL"));
 				TRACE("found fixed/mobile: adding AND NOT pa.ident IS NULL\n");
 			}
 		}
@@ -1277,7 +1286,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 
 	if ((db->sel_ident = dba_record_key_peek_value(rec, DBA_KEY_IDENT)) != NULL)
 	{
-		strcat(db->querybuf, " AND pa.ident = ?");
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident = ?"));
 		TRACE("found ident: adding AND pa.ident = ?.  val is %s\n", db->sel_ident);
 		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_ident, 0, 0);
 	}
@@ -1293,7 +1302,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 	{
 		db->sel_b = dba_descriptor_code(val);
 		TRACE("found b: adding AND d.id_var = ?. val is %d %s\n", db->sel_b, val);
-		strcat(db->querybuf, " AND d.id_var = ?");
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND d.id_var = ?"));
 		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_b, 0, 0);
 	}
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_VARLIST)) != NULL)
@@ -1301,16 +1310,16 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 		size_t pos;
 		size_t len;
 		TRACE("found blist: adding AND d.id_var IN (%s)\n", val);
-		strcat(db->querybuf, " AND d.id_var IN (");
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND d.id_var IN ("));
 		for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
 		{
 			dba_varcode code = DBA_STRING_TO_VAR(val + pos + 1);
 			if (pos == 0)
-				snprintf(db->querybuf + strlen(db->querybuf), 5, "%d", code);
+				DBA_RUN_OR_RETURN(dba_querybuf_appendf(db->querybuf, "%d", code));
 			else
-				snprintf(db->querybuf + strlen(db->querybuf), 6, ",%d", code);
+				DBA_RUN_OR_RETURN(dba_querybuf_appendf(db->querybuf, ",%d", code));
 		}
-		strcat(db->querybuf, ")");
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, ")"));
 		/*
 		strcat(db->querybuf, " AND d.id_var IN (?)");
 		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_blist, 0, 0);
@@ -1321,7 +1330,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 
 	if ((db->sel_rep_memo = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
 	{
-		strcat(db->querybuf, " AND ri.memo = ?");
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND ri.memo = ?"));
 		TRACE("found rep_memo: adding AND ri.memo = ?.  val is %s\n", db->sel_rep_memo);
 		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_rep_memo, 0, 0);
 	}
@@ -1440,7 +1449,8 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	/* Write the SQL query */
 
 	/* Initial query */
-	strcpy(db->querybuf, query);
+	dba_querybuf_reset(db->querybuf);
+	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
 
 	/* Bind output fields */
 #define DBA_QUERY_BIND(num, type, name) \
@@ -1474,22 +1484,24 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	DBA_RUN_OR_GOTO(failed, dba_prepare_select(db, rec, stm));
 
 	if (dba_record_key_peek_value(rec, DBA_KEY_QUERYBEST) != NULL)
-		strcat(db->querybuf,
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf,
 			" GROUP BY d.id_var, c.id_ana, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, c.datetime"
-			" HAVING ri.prio=MAX(ri.prio) ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2");
+			" HAVING ri.prio=MAX(ri.prio)"
+			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
 	else
-		strcat(db->querybuf, " ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio");
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf,
+			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio"));
 
 /* 	strcat(db->querybuf, " ORDER BY ri.prio, d.id_report"); */
 /* fprintf(stderr, "QUERY: %s\n", db->querybuf); */
 
-	TRACE("Performing query: %s\n", db->querybuf);
+	TRACE("Performing query: %s\n", dba_querybuf_get(db->querybuf));
 
 	/* Perform the query */
-	res = SQLExecDirect(stm, (unsigned char*)db->querybuf, SQL_NTS);
+	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", db->querybuf);
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto failed;
 	}
 
@@ -1640,7 +1652,8 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	/* Write the SQL query */
 
 	/* Initial query */
-	strcpy(db->querybuf, query);
+	dba_querybuf_reset(db->querybuf);
+	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
 
 	/* Bind select fields */
 	if ((err = dba_prepare_select(db, rec, stm)) != DBA_OK)
@@ -1649,10 +1662,10 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	/*fprintf(stderr, "QUERY: %s\n", db->querybuf);*/
 
 	/* Perform the query */
-	res = SQLExecDirect(stm, (unsigned char*)db->querybuf, SQL_NTS);
+	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", db->querybuf);
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto dba_delete_failed;
 	}
 
@@ -1702,7 +1715,8 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	/* Write the SQL query */
 
 	/* Initial query */
-	strcpy(db->querybuf, query);
+	DBA_RUN_OR_RETURN(dba_querybuf_reset(db->querybuf));
+	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
 
 	/* Bind select fields */
 	DBA_RUN_OR_GOTO(cleanup, dba_prepare_select(db, rec, stm));
@@ -1713,11 +1727,11 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	/*fprintf(stderr, "QUERY: %s\n", db->querybuf);*/
 
 	/* Perform the query */
-	TRACE("Performing query %s\n", db->querybuf);
-	res = SQLExecDirect(stm, (unsigned char*)db->querybuf, SQL_NTS);
+	TRACE("Performing query %s\n", dba_querybuf_get(db->querybuf));
+	res = SQLExecDirect(stm, dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", db->querybuf);
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto cleanup;
 	}
 

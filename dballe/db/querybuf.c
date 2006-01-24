@@ -5,9 +5,9 @@
 
 struct _dba_querybuf
 {
-	char* buf;
 	int maxsize;
 	int size;
+	char buf[];
 };
 
 dba_err dba_querybuf_create(int maxsize, dba_querybuf* buf)
@@ -15,15 +15,8 @@ dba_err dba_querybuf_create(int maxsize, dba_querybuf* buf)
 	if (maxsize < 1)
 		return dba_error_consistency("checking that the querybuf max size is more than 0");
 	
-	if (((*buf) = (dba_querybuf)calloc(1, sizeof(struct _dba_querybuf))) == NULL)
+	if (((*buf) = (dba_querybuf)malloc(sizeof(struct _dba_querybuf) + maxsize)) == NULL)
 		return dba_error_alloc("Allocating a new dba_querybuf");
-
-	if (((*buf)->buf = (char*)malloc(maxsize)) == NULL)
-	{
-		free(*buf);
-		*buf = NULL;
-		return dba_error_alloc("Allocating the string buffer for a dba_querybuf");
-	}
 
 	(*buf)->maxsize = maxsize;
 	(*buf)->buf[0] = 0;
@@ -34,7 +27,6 @@ dba_err dba_querybuf_create(int maxsize, dba_querybuf* buf)
 
 void dba_querybuf_delete(dba_querybuf buf)
 {
-	free(buf->buf);
 	free(buf);
 }
 
