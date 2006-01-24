@@ -20,7 +20,10 @@ extern "C" {
 typedef struct _dba_db* dba_db;
 
 /**
- * Handle identifying a dballe context
+ * Handle identifying a dballe physical context.
+ *
+ * A physical context represent a point in space and time identified by
+ * pseudoana informations, level layer, time range, datetime.
  */
 typedef struct _dba_db_context* dba_db_context;
 
@@ -128,6 +131,54 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count);
  *   the query data.
  */
 dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last);
+
+/**
+ * Delete a dba_db_context, interrupting iteration
+ *
+ * @param co
+ *   The dba_db_context to delete
+ */
+void dba_db_context_delete(dba_db_context co);
+
+/**
+ * Query a list of physical contexts
+ *
+ * @param db
+ *   The database to query
+ * @param rec
+ *   The dba_record with the query
+ * @retval co
+ *   The dba_db_context to use to iterate the query results.  If the query was
+ *   correct but no contexts match, co is set to NULL.
+ * @retval count
+ *   The number of different contexts found by the query
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int* count);
+
+/**
+ * Move the iterator to the next available physical context.
+ *
+ * @retval co
+ *   The dba_db_context iterator to advance.  When the end is reached, it is
+ *   deallocated and set to NULL.
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err dba_db_context_next(dba_db_context* co);
+
+/**
+ * Copy informations from the current context into a dba_record
+ *
+ * @param co
+ *   The current context
+ * @param rec
+ *   The record where the data are to be copied
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err dba_db_context_to_record(dba_db_context co, dba_record rec);
 
 /**
  * Insert a record into the database.

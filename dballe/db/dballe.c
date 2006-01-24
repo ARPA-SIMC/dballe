@@ -77,6 +77,7 @@ struct _dba_db
 };
 
 struct _dba_db_context {
+	dba_db db;
 	SQLHSTMT stm;
 	int count;
 
@@ -1100,6 +1101,7 @@ static dba_err dba_db_context_create(dba_db db, dba_db_context* co)
 	assert(db);
 	if ((*co = (dba_db_context)malloc(sizeof(struct _dba_db_context))) == NULL)
 		return dba_error_alloc("trying to allocate a new dba_db_cursor object");
+	(*co)->db = db;
 	(*co)->stm = NULL;
 	return dba_error_ok();
 }
@@ -1703,6 +1705,81 @@ failed:
 	return err;
 }
 
+dba_err dba_db_context_next(dba_db_context* co)
+{
+	assert(co);
+	assert(*co);
+	assert((*co)->db);
+
+	/* Fetch a new row */
+	if (SQLFetch((*co)->stm) == SQL_NO_DATA)
+	{
+		/* If no more rows exist, set co to NULL */
+		dba_db_context_delete(*co);
+		*co = NULL;
+		return dba_error_ok();
+	}
+
+	return dba_error_ok();
+}
+
+#define CONTEXT_STORE(settype, var, key) \
+	do{ \
+		if (co->out_##var##_ind != SQL_NULL_DATA) {\
+			/*fprintf(stderr, "SETTING %s to %d\n", #var, co->out_##var);*/ \
+			DBA_RUN_OR_RETURN(dba_record_key_##settype(rec, key, co->out_##var)); \
+		} else { \
+			DBA_RUN_OR_RETURN(dba_record_key_unset(rec, key)); \
+		}\
+	} while (0)
+dba_err dba_db_context_to_record(dba_db_context co, dba_record rec)
+{
+	assert(co);
+	assert(co->db);
+
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_ANA_ID, co->out_ana_id));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LAT, co->out_lat));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LON, co->out_lon));
+	if (co->out_ident_ind != SQL_NULL_DATA && co->out_ident[0] == 0)
+	{
+		DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_IDENT, co->out_ident));
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
+	}
+	else
+	{
+		dba_record_key_unset(rec, DBA_KEY_IDENT);
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));
+	}
+	CONTEXT_STORE(seti, height, DBA_KEY_HEIGHT);
+	CONTEXT_STORE(seti, heightbaro, DBA_KEY_HEIGHTBARO);
+	CONTEXT_STORE(seti, block, DBA_KEY_BLOCK);
+	CONTEXT_STORE(seti, station, DBA_KEY_STATION);
+	CONTEXT_STORE(setc, name, DBA_KEY_NAME);
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, co->out_leveltype));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L1, co->out_l1));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L2, co->out_l2));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, co->out_pindicator));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P1, co->out_p1));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P2, co->out_p2));
+	{
+		/*fprintf(stderr, "SETTING %s to %d\n", #var,  _db_cursor[cur].out_##var); */
+		int year, mon, day, hour, min, sec;
+		if (sscanf(co->out_datetime,
+					"%04d-%02d-%02d %02d:%02d:%02d", &year, &mon, &day, &hour, &min, &sec) != 6)
+			return dba_error_consistency("parsing datetime string \"%s\"", co->out_datetime);
+
+		DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_DATETIME, co->out_datetime));
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEAR, year));
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTH, mon));
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAY, day));
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOUR, hour));
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MIN, min));
+		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SEC, sec));
+	} 
+
+	return dba_error_ok();
+}
+#undef CONTEXT_STORE
 
 static dba_err dba_db_cursor_var_to_rec(dba_db_cursor cur, dba_record rec)
 {
