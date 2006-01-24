@@ -180,6 +180,7 @@ These are the TODO-list items completed so far::
 
  * DB-ALLe
     + Import of attributes
+    + Export of attributes
 
 
 TODO-list items being worked on
@@ -197,10 +198,12 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
- * DB-ALLe
-    - Export of attributes
-
  * Core
+    - Refactoring dba_db per velocizzare l'import e export di report
+       - Query
+	  - step 1: farsi dare l'elenco di context id che stanno nel box scelto
+	  - step 2a: farsi dare le variabili in quel context
+	  - step 2b: farsi dare variabili e attributi in quel context
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
       dba_insert_or_replace
     - Gli exporter dal DB non sono quasi tutti accumunabili?  export_synop e

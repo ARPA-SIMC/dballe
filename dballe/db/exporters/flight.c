@@ -97,7 +97,7 @@ dba_err dba_db_export_flight(dba db, dba_msg** msgs, dba_record query)
 		}
 
 		/* Insert data about varcode in msg */
-		DBA_RUN_OR_GOTO(cleanup, copy_variable(msg, varcode, res));
+		DBA_RUN_OR_GOTO(cleanup, copy_variable(db, msg, varcode, res));
 	} while (!is_last);
 
 	if (msg != NULL)

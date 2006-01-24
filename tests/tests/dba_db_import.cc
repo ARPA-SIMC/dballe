@@ -119,11 +119,13 @@ void to::test<2>()
 		gen_ensure(msgs[0] != NULL);
 		gen_ensure_equals(msgs[1], (dba_msg)0);
 
+		/*
 		if (string(files[i]).find("1-21") != string::npos)
 		{
 			dba_msg_print(msg, stderr);
 			dba_msg_print(msgs[0], stderr);
 		}
+		*/
 
 		// Compare the two dba_msg
 		int diffs = 0;
@@ -151,9 +153,9 @@ void to::test<3>()
 		"aof/obs5-35.61.aof",
 		"aof/obs5-36.30.aof",
 		"aof/obs6-32.1573.aof",
-		"aof/test-01.aof",
 		NULL
 	};
+	/*	"aof/test-01.aof", */
 
 	dba_record query;
 	CHECKED(dba_record_create(&query));
