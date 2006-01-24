@@ -5,6 +5,7 @@
 #include <dballe/core/dba_record.h>
 #include <dballe/db/dballe.h>
 #include <dballe/db/dba_import.h>
+#include <dballe/db/dba_export.h>
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/bufrex/bufrex.h>
 #include <dballe/bufrex/bufrex_raw.h>
@@ -17,6 +18,23 @@ using namespace std;
 const char* dsn = "test";
 const char* user = "enrico";
 const char* password = "";
+
+static int rep_cod_from_msg(dba_msg msg)
+{
+	switch (msg->type)
+	{
+		case MSG_SYNOP: return 1;
+		case MSG_SHIP: return 10;
+		case MSG_BUOY: return 9;
+		case MSG_AIREP: return 12;
+		case MSG_AMDAR: return 13;
+		case MSG_ACARS: return 14;
+		case MSG_TEMP: return 3;
+		case MSG_TEMP_SHIP: return 11;
+		case MSG_GENERIC: return 255;
+	}
+	return 255;
+}
 
 class db_work : public Benchmark
 {
@@ -103,6 +121,24 @@ protected:
 			DBA_RUN_OR_RETURN(dba_import_msg(db, *i, 1));
 
 		timing("inserted %d messages in the database", msgs.size());
+
+		dba_record query;
+		int count = 0;
+		DBA_RUN_OR_RETURN(dba_record_create(&query));
+		for (msg_vector::const_iterator i = msgs.begin();
+				i != msgs.end(); i++)
+		{
+			int j;
+			dba_msg* msgs;
+	        DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(*i)));
+			DBA_RUN_OR_RETURN(dba_db_export(db, (*i)->type, &msgs, query));
+			for (j = 0; msgs[j] != NULL; j++)
+				dba_msg_delete(msgs[j]);
+			free(msgs);
+			count += j;
+		}
+
+		timing("exported %d messages from the database", count);
 
 		dba_db_close(db);
 		dba_record_delete(rec);
