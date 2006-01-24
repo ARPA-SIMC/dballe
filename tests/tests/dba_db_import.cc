@@ -26,6 +26,23 @@ struct dba_db_import_shar
 };
 TESTGRP(dba_db_import);
 
+static int rep_cod_from_msg(dba_msg msg)
+{
+	switch (msg->type)
+	{
+		case MSG_SYNOP: return 1;
+		case MSG_SHIP: return 10;
+		case MSG_BUOY: return 9;
+		case MSG_AIREP: return 12;
+		case MSG_AMDAR: return 13;
+		case MSG_ACARS: return 14;
+		case MSG_TEMP: return 3;
+		case MSG_TEMP_SHIP: return 11;
+		case MSG_GENERIC: return 255;
+	}
+	return 255;
+}
+
 template<> template<>
 void to::test<1>()
 {
@@ -54,6 +71,7 @@ void to::test<1>()
 		CHECKED(dba_import_msg(db, msg, 0));
 
 		dba_msg* msgs = NULL;
+		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
 		CHECKED(dba_db_export(db, msg->type, &msgs, query));
 		gen_ensure(msgs != NULL);
 		gen_ensure(msgs[0] != NULL);
@@ -114,6 +132,7 @@ void to::test<2>()
 		CHECKED(dba_import_msg(db, msg, 0));
 
 		dba_msg* msgs = NULL;
+		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
 		CHECKED(dba_db_export(db, msg->type, &msgs, query));
 		gen_ensure(msgs != NULL);
 		gen_ensure(msgs[0] != NULL);
@@ -169,6 +188,7 @@ void to::test<3>()
 		CHECKED(dba_import_msg(db, msg, 0));
 
 		dba_msg* msgs = NULL;
+		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
 		CHECKED(dba_db_export(db, msg->type, &msgs, query));
 		gen_ensure(msgs != NULL);
 		gen_ensure(msgs[0] != NULL);

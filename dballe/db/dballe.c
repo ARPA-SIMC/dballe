@@ -1546,6 +1546,9 @@ dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int*
 		{
 			dba_db_context_delete(*co);
 			*co = NULL;
+		} else {
+			/* Initialise co with the data from the first result row */
+			DBA_RUN_OR_GOTO(fail, dba_db_context_next(co));
 		}
 	}
 
@@ -1612,6 +1615,8 @@ dba_err dba_db_context_query_vars(dba_db_context co, dba_record rec, dba_db_vars
 	DBA_QUERY_BIND( 5, SQL_C_CHAR, rep_memo);
 	DBA_QUERY_BIND( 6, SQL_C_SLONG, priority);
 #undef DBA_QUERY_BIND
+
+	SQLBindParameter(stm, pseq++, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &(co->out_co_id), 0, 0);
 	
 	/* Add the select part */
 	DBA_RUN_OR_GOTO(fail, dba_prepare_select_vars(db, rec, stm, &pseq));
@@ -1645,10 +1650,11 @@ dba_err dba_db_context_query_vars(dba_db_context co, dba_record rec, dba_db_vars
 		{
 			dba_db_vars_delete(*va);
 			*va = NULL;
+		} else {
+			/* Initialise va with the data from the first result row */
+			(*va)->out_varcode = -2;
+			DBA_RUN_OR_GOTO(fail, dba_db_vars_next(va));
 		}
-
-		/* Initialise va with the data from the first result row */
-		SQLFetch((*va)->stm);
 	}
 
 	/* Retrieve results will happen during iteration of the dba_db_vars */
@@ -1717,6 +1723,8 @@ dba_err dba_db_context_query_vars_with_attrs(dba_db_context co, dba_record rec, 
 	DBA_QUERY_BIND( 8, SQL_C_CHAR, attr_value);
 #undef DBA_QUERY_BIND
 	
+	SQLBindParameter(stm, pseq++, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &(co->out_co_id), 0, 0);
+
 	/* Add the select part */
 	DBA_RUN_OR_GOTO(fail, dba_prepare_select_vars(db, rec, stm, &pseq));
 
@@ -1749,10 +1757,11 @@ dba_err dba_db_context_query_vars_with_attrs(dba_db_context co, dba_record rec, 
 		{
 			dba_db_vars_delete(*va);
 			*va = NULL;
+		} else {
+			/* Initialise va with the data from the first result row */
+			(*va)->out_varcode = -2;
+			DBA_RUN_OR_GOTO(fail, dba_db_vars_next(va));
 		}
-
-		/* Initialise va with the data from the first result row */
-		SQLFetch((*va)->stm);
 	}
 
 	/* Retrieve results will happen during iteration of the dba_db_vars */
@@ -1926,6 +1935,14 @@ dba_err dba_db_vars_next(dba_db_vars* va)
 		return dba_error_ok();
 	}
 
+	if ((*va)->out_varcode == -2)
+		if (SQLFetch((*va)->stm) == SQL_NO_DATA)
+		{
+			/* Signal end of iteration */
+			(*va)->out_varcode = -1;
+			goto cleanup;
+		}
+
 	old_varcode = (*va)->out_varcode;
 	old_rep_cod = (*va)->out_rep_cod;
 
@@ -2032,13 +2049,14 @@ dba_err dba_db_vars_to_record(dba_db_vars va, dba_record rec)
 
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DATA_ID, va->out_data_id));
 	{
+		dba_varcode varcode = dba_var_code(va->var);
 		char bname[7];
 		snprintf(bname, 7, "B%02d%03d",
-					DBA_VAR_X(va->out_varcode),
-					DBA_VAR_Y(va->out_varcode));
+					DBA_VAR_X(varcode),
+					DBA_VAR_Y(varcode));
 		DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_VAR, bname));
 		DBA_RUN_OR_RETURN(dba_record_var_set_direct(rec, va->var));
-		DBA_RUN_OR_RETURN(dba_record_var_setid(rec, va->out_varcode, va->out_data_id));
+		DBA_RUN_OR_RETURN(dba_record_var_setid(rec, varcode, va->out_data_id));
 	}
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, va->out_rep_cod));
 	DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_REP_MEMO, va->out_rep_memo));
