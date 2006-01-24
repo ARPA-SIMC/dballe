@@ -1,5 +1,6 @@
 #include <tests/test-utils.h>
 #include <dballe/dba_init.h>
+#include <dballe/db/querybuf.h>
 #include <dballe/db/dballe.h>
 
 
@@ -104,8 +105,44 @@ static struct test_data tdata3_patch[] = {
 };
 TESTGRP(dba_db_dballe);
 
+/* Test querybuf */
 template<> template<>
 void to::test<1>()
+{
+	dba_querybuf buf = NULL;
+
+	CHECKED(dba_querybuf_create(10, &buf));
+	gen_ensure(buf != NULL);
+	
+	/* A new querybuf contains the empty string */
+	gen_ensure_equals(string(dba_querybuf_get(buf)), string());
+	gen_ensure_equals(dba_querybuf_size(buf), 0);
+
+	dba_querybuf_reset(buf);
+	gen_ensure_equals(string(dba_querybuf_get(buf)), string());
+	gen_ensure_equals(dba_querybuf_size(buf), 0);
+
+	CHECKED(dba_querybuf_append(buf, "ciao"));
+	gen_ensure_equals(string(dba_querybuf_get(buf)), string("ciao"));
+	gen_ensure_equals(dba_querybuf_size(buf), 4);
+
+	CHECKED(dba_querybuf_appendf(buf, "%d %s", 42, "--"));
+	gen_ensure_equals(string(dba_querybuf_get(buf)), string("ciao42 --"));
+	gen_ensure_equals(dba_querybuf_size(buf), 9);
+	
+	dba_querybuf_reset(buf);
+	gen_ensure_equals(string(dba_querybuf_get(buf)), string());
+	gen_ensure_equals(dba_querybuf_size(buf), 0);
+
+	CHECKED(dba_querybuf_append(buf, "123456789"));
+	gen_ensure_equals(string(dba_querybuf_get(buf)), string("123456789"));
+	gen_ensure_equals(dba_querybuf_size(buf), 9);
+
+	dba_querybuf_delete(buf);
+}
+
+template<> template<>
+void to::test<2>()
 {
 	/*dba_error_set_callback(DBA_ERR_NONE, crash, 0);*/
 
@@ -485,7 +522,7 @@ void to::test<1>()
 
 /* Test datetime queries */
 template<> template<>
-void to::test<2>()
+void to::test<3>()
 {
 	/* Prepare test data */
 	TestRecord base, a, b;

@@ -6,12 +6,14 @@ dbincludedir = $(includedir)/dballe/db
 
 # Include the .cc files that contain template definitions
 dbinclude_HEADERS = \
+		querybuf.h \
 		dba_import.h \
 		dba_export.h \
 		dballe.h
 
 noinst_LTLIBRARIES = libdb.la
 libdb_la_SOURCES = \
+		querybuf.c \
 		dba_import.c \
 		dba_export.c \
 		dballe.c

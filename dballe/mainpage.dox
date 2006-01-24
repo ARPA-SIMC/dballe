@@ -2,6 +2,64 @@
 
 \section intro Introduction to DB-ALLe
 
+\subsection intro-conventions Coding conventions
+
+The DB-ALLe code has been written following various code conventions:
+
+\li
+  if a function can fail, it must return a value of type ::dba_err.  It is not
+  allowed to return errors in any other way.
+
+\li
+  if a function does not return a ::dba_err, then it cannot fail.
+
+\li
+  a "destructor" function whose purpose is to deallocate some data structure
+  must never fail.
+
+\li
+  if a function that can fail needs to return values, it must do it using its
+  arguments.  When a function fails, it is required to still leave its
+  arguments in a consistent state.  For example, if an allocation function
+  fails because of lack of memory, it should still set its return argument to
+  NULL.
+
+\li
+  function arguments used to return values are placed at the end of the
+  argument list.
+ 
+\li
+  a function that does not fail cannot call a function that can fail, even if
+  it properly handles all of its failure cases.  This is for two reasons: one
+  is that more failure cases could be added in the future, and it would be hard
+  to track back all the failure-handling code.  The other is that the error
+  callbacks are triggered when an error happens, so even if the caller handles
+  all the error codes correctly, other blocks of code can still get notified of
+  the error condition and change their behaviour.
+
+\li
+  object-like entities are implemented with a typedef to a pointer of the
+  struct that holds the data.
+
+\li
+  all functions that manipulate an "object" have a name that starts with the
+  name of the object: for example, all functions that manipulate a dba_db have
+  a name that starts with dba_db.  The name of the "constructor" function ends
+  with "_create", and the name of the "destructor" function ends with
+  "_delete".
+
+\li
+  if a "constructor" function fails, it must set its return argument to NULL.
+
+\li
+  "destructor" functions cannot fail, and as a consequence they always return
+  void.
+
+\li
+  all functions, except the "constructor", that manipulate an "object" have the
+  object to manipulate as the first argument.  The constructor is an exception
+  because it has the object as a return argument.
+
 \subsection intro-modules Modules and dependencies
 
 The code in the library is divided in many modules.  Every module has its own
