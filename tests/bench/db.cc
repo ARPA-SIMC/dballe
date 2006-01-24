@@ -129,7 +129,7 @@ class db_work : public Benchmark
 			/* Context */
 			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_YEAR, rnd(2002, 2005)));
 			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_MONTH, rnd(1, 12)));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_DAY, rnd(1, 31)));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_DAY, rnd(1, 28)));
 			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_HOUR, rnd(0, 23)));
 			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_MIN, rnd(0, 59)));
 			DBA_RUN_OR_RETURN(dba_record_key_seti(ctx, DBA_KEY_LEVELTYPE, rnd(0, 300)));
@@ -159,7 +159,7 @@ class db_work : public Benchmark
 protected:
 	virtual dba_err main()
 	{
-		static const int iterations = 500;
+		static const int iterations = 2000;
 
 		dba_record rec;
 		DBA_RUN_OR_RETURN(dba_record_create(&rec));

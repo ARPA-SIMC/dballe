@@ -737,6 +737,7 @@ static dba_err dba_insert_context(dba db, dba_record rec, int id_ana, int* id)
 			(day   = dba_record_key_peek_value(rec, DBA_KEY_DAY)) != NULL &&
 			(hour  = dba_record_key_peek_value(rec, DBA_KEY_HOUR)) != NULL &&
 			(min   = dba_record_key_peek_value(rec, DBA_KEY_MIN)) != NULL)
+		{
 			datebuf_ind = snprintf(datebuf, 30,
 					"%04ld-%02ld-%02ld %02ld:%02ld:%02ld",
 						strtol(year, 0, 10),
@@ -745,6 +746,7 @@ static dba_err dba_insert_context(dba db, dba_record rec, int id_ana, int* id)
 						strtol(hour, 0, 10),
 						strtol(min, 0, 10),
 						sec != NULL ? strtol(sec, 0, 10) : 0);
+		}
 		else
 		{
 			err = dba_error_notfound("looking for datetime informations");
@@ -897,8 +899,10 @@ dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int updat
 		"INSERT INTO data (id_context, id_var, value)"
 		" VALUES(?, ?, ?)";
 	const char* replace_query =
-		"REPLACE INTO data (id_context, id_var, value)"
-		" VALUES(?, ?, ?)";
+		"INSERT INTO data (id_context, id_var, value)"
+		" VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
+/*		"REPLACE INTO data (id_context, id_var, value)"
+		" VALUES(?, ?, ?)"; */
 	dba_err err;
 	dba_record_cursor item;
 	int id_pseudoana;
@@ -1849,8 +1853,10 @@ dba_err dba_qc_insert_or_replace(dba db, int id_data, /*dba_record rec, dba_varc
 		"INSERT INTO attr (id_data, type, value)"
 		" VALUES(?, ?, ?)";
 	const char* replace_query =
-		"REPLACE INTO attr (id_data, type, value)"
-		" VALUES(?, ?, ?)";
+		"INSERT INTO attr (id_data, type, value)"
+		" VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
+/*		"REPLACE INTO attr (id_data, type, value)"
+		" VALUES(?, ?, ?)"; */
 	dba_err err;
 	dba_record_cursor item;
 #if 0

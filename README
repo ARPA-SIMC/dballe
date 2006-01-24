@@ -205,6 +205,9 @@ These are the TODO-list items currently being worked on::
     - Export AOF
 
  * Core
+    - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
+      dba_insert_or_replace (anche dba_qc_insert_or_replace ha il problema)
+
     - Refactoring dba_db per velocizzare l'import e export di report
        - Query
 	  - step 1: farsi dare l'elenco di context id che stanno nel box scelto
@@ -241,10 +244,6 @@ These are the TODO-list items currently being worked on::
 	   for d in context.bestdata
 	      r += d
 	      output(r)
-
-	     
-    - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
-      dba_insert_or_replace
 
  * Import da VM o database Oracle di ARPA
     - Attributi
