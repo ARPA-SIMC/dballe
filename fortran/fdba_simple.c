@@ -207,7 +207,7 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	DBA_RUN_OR_RETURN(fdba_handle_alloc_session(dbahandle));
 
 	/* Open the DBALLE session */
-	DBA_RUN_OR_GOTO(fail, dba_open(s_dsn, s_user, s_password,
+	DBA_RUN_OR_GOTO(fail, dba_db_open(s_dsn, s_user, s_password,
 				&(FDBA_HANDLE(session, *dbahandle).session)));
 
 	/* Open the database session */
@@ -228,7 +228,7 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 {
 	GENPTR_INTEGER(dbahandle)
 
-	dba_close(FDBA_HANDLE(session, *dbahandle).session);
+	dba_db_close(FDBA_HANDLE(session, *dbahandle).session);
 	FDBA_HANDLE(session, *dbahandle).session = NULL;
 	fdba_handle_release_session(*dbahandle);
 
@@ -355,9 +355,9 @@ F77_INTEGER_FUNCTION(idba_fatto)(INTEGER(handle))
 	GENPTR_INTEGER(handle)
 
 	if (STATE.ana_cur != NULL)
-		dba_cursor_delete(STATE.ana_cur);
+		dba_db_cursor_delete(STATE.ana_cur);
 	if (STATE.query_cur != NULL)
-		dba_cursor_delete(STATE.query_cur);
+		dba_db_cursor_delete(STATE.query_cur);
 	if (STATE.qcoutput != NULL)
 		dba_record_delete(STATE.qcoutput);
 	if (STATE.qcinput != NULL)
@@ -403,7 +403,7 @@ F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(r
 
 	cnfImprt(repinfofile, repinfofile_length > PATH_MAX ? PATH_MAX : repinfofile_length, fname);
 
-	return dba_reset(SESSION, fname[0] == 0 ? NULL : fname);
+	return dba_db_reset(SESSION, fname[0] == 0 ? NULL : fname);
 }
 
 /**
@@ -1052,11 +1052,11 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 
 	if (STATE.ana_cur != NULL)
 	{
-		dba_cursor_delete(STATE.ana_cur);
+		dba_db_cursor_delete(STATE.ana_cur);
 		STATE.ana_cur = NULL;
 	}
 
-	DBA_RUN_OR_RETURN(dba_ana_query(
+	DBA_RUN_OR_RETURN(dba_db_ana_query(
 			SESSION,
 			&(STATE.ana_cur),
 			count));
@@ -1086,10 +1086,10 @@ F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 	if (STATE.ana_cur == NULL)
 		return dba_error_consistency("idba_elencamele called without a previous idba_quantesono");
 
-	err = dba_ana_cursor_next(STATE.ana_cur, STATE.output, &iis_last);
+	err = dba_db_ana_cursor_next(STATE.ana_cur, STATE.output, &iis_last);
 	if (err != DBA_OK)
 	{
-		dba_cursor_delete(STATE.ana_cur);
+		dba_db_cursor_delete(STATE.ana_cur);
 		STATE.ana_cur = NULL;
 	}
 	return err;
@@ -1116,7 +1116,7 @@ F77_INTEGER_FUNCTION(idba_voglioquesto)(
 
 	if (STATE.query_cur != NULL)
 	{
-		dba_cursor_delete(STATE.query_cur);
+		dba_db_cursor_delete(STATE.query_cur);
 		STATE.query_cur = NULL;
 	}
 
@@ -1128,7 +1128,7 @@ F77_INTEGER_FUNCTION(idba_voglioquesto)(
 		dba_record_print(STATE.input, DBA_VERBOSE_STREAM);
 	}
 
-	DBA_RUN_OR_RETURN(dba_query(SESSION, STATE.input, &(STATE.query_cur), count));
+	DBA_RUN_OR_RETURN(dba_db_query(SESSION, STATE.input, &(STATE.query_cur), count));
 
 	return dba_error_ok();
 }
@@ -1165,11 +1165,11 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 	 * leftover QC values from a previous query */
 	STATE.qc_iter = 0;
 
-	err = dba_cursor_next(STATE.query_cur, STATE.output, &var, &iis_last);
+	err = dba_db_cursor_next(STATE.query_cur, STATE.output, &var, &iis_last);
 	
 	if (err != DBA_OK)
 	{
-		dba_cursor_delete(STATE.query_cur);
+		dba_db_cursor_delete(STATE.query_cur);
 		STATE.query_cur = NULL;
 	} else {
 		snprintf(varstr, 10, "B%02d%03d", DBA_VAR_X(var), DBA_VAR_Y(var));
@@ -1217,7 +1217,7 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 		dba_record_print(STATE.input, DBA_VERBOSE_STREAM);
 	}
 
-	DBA_RUN_OR_RETURN(dba_insert_or_replace(
+	DBA_RUN_OR_RETURN(dba_db_insert_or_replace(
 				SESSION, STATE.input,
 				STATE.perms & PERM_DATA_REWRITE ? 1 : 0,
 				STATE.perms & PERM_ANA_REWRITE ? 1 : 0,
@@ -1249,7 +1249,7 @@ F77_INTEGER_FUNCTION(idba_dimenticami)(
 		return dba_error_consistency(
 			"idba_dimenticami must be called with the database open in data rewrite mode");
 
-	return dba_delete(SESSION, STATE.input);
+	return dba_db_remove(SESSION, STATE.input);
 }
 
 /*
@@ -1333,7 +1333,7 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 	}
 
 	/* Do QC query */
-	DBA_RUN_OR_GOTO(cleanup, dba_qc_query(SESSION, id, 
+	DBA_RUN_OR_GOTO(cleanup, dba_db_qc_query(SESSION, id, 
 				arr == NULL ? NULL : dba_arr_varcode_data(arr),
 				arr == NULL ? 0 : dba_arr_varcode_size(arr),
 				STATE.qcoutput, &(STATE.qc_count)));
@@ -1421,7 +1421,7 @@ F77_INTEGER_FUNCTION(idba_critica)(
 
 	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id));
 
-	DBA_RUN_OR_RETURN(dba_qc_insert_or_replace(
+	DBA_RUN_OR_RETURN(dba_db_qc_insert_or_replace(
 				SESSION, id, STATE.qcinput,
 				STATE.perms & PERM_QC_REWRITE ? 1 : 0));
 
@@ -1486,7 +1486,7 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 
 	// If arr is still 0, then dba_qc_delete deletes all QC values
 	DBA_RUN_OR_GOTO(cleanup,
-			dba_qc_delete(
+			dba_db_qc_remove(
 				SESSION, id,
 				arr == NULL ? NULL : dba_arr_varcode_data(arr),
 				arr == NULL ? 0 : dba_arr_varcode_size(arr)));

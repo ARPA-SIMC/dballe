@@ -72,7 +72,7 @@ static dba_err copy_ana(dba_msg_type export_type, dba_msg msg, dba_record rec)
 	return dba_error_ok();
 }
 
-static dba_err copy_variable(dba db, dba_msg msg, dba_varcode varcode, dba_record rec)
+static dba_err copy_variable(dba_db db, dba_msg msg, dba_varcode varcode, dba_record rec)
 {
 	dba_err err = DBA_OK;
 	dba_var var = NULL;
@@ -87,7 +87,7 @@ static dba_err copy_variable(dba db, dba_msg msg, dba_varcode varcode, dba_recor
 
 	/* Now read the attributes */
 	DBA_RUN_OR_GOTO(cleanup, dba_record_var_enqid(rec, varcode, &id));
-	DBA_RUN_OR_GOTO(cleanup, dba_qc_query(db, id, NULL, 0, qc, &count));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_qc_query(db, id, NULL, 0, qc, &count));
 	for (item = dba_record_iterate_first(qc); item != NULL;
 			item = dba_record_iterate_next(qc, item))
 	{
@@ -116,11 +116,11 @@ cleanup:
 
 /* vim:set ts=4 sw=4 syntax=c: */
 
-dba_err dba_db_export(dba db, dba_msg_type type, dba_msg** msgs, dba_record query)
+dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record query)
 {
 	/* Read the values from the database */
 	dba_err err = DBA_OK;
-	dba_cursor cur = NULL;
+	dba_db_cursor cur = NULL;
 	dba_record res = NULL;
 	int count;
 	int i;
@@ -134,7 +134,7 @@ dba_err dba_db_export(dba db, dba_msg_type type, dba_msg** msgs, dba_record quer
 	last_datetime[0] = 0;
 
 	/* Query the values */
-	DBA_RUN_OR_GOTO(cleanup, dba_query(db, query, &cur, &count));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_query(db, query, &cur, &count));
 	/*fprintf(stderr, "Count: %d\n", count);*/
 	if (count == 0)
 		goto cleanup;
@@ -155,7 +155,7 @@ dba_err dba_db_export(dba db, dba_msg_type type, dba_msg** msgs, dba_record quer
 		double lon;
 		const char* datetime;
 
-		DBA_RUN_OR_GOTO(cleanup, dba_cursor_next(cur, res, &varcode, &is_last));
+		DBA_RUN_OR_GOTO(cleanup, dba_db_cursor_next(cur, res, &varcode, &is_last));
 
 		DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqc(res, DBA_KEY_DATETIME, &datetime));
 		DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqd(res, DBA_KEY_LAT, &lat));
@@ -217,7 +217,7 @@ cleanup:
 		free(mlist);
 	}
 	if (cur != NULL)
-		dba_cursor_delete(cur);
+		dba_db_cursor_delete(cur);
 	if (res != NULL)
 		dba_record_delete(res);
 	if (msg != NULL)

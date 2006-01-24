@@ -46,7 +46,7 @@ static char* op_pass = "";
 static char* op_input_type = "bufr";
 static char* op_output_type = "bufr";
 static char* op_output_template = "";
-static char* op_overwrite = 0;
+static int op_overwrite = 0;
 
 struct poptOption dbTable[] = {
 	{ "dsn", 0, POPT_ARG_STRING, &op_dsn, 0,
@@ -60,7 +60,7 @@ struct poptOption dbTable[] = {
 
 struct import_data
 {
-	dba db;
+	dba_db db;
 	int overwrite;
 };
 
@@ -76,8 +76,8 @@ dba_err do_dump(poptContext optCon)
 	const char* action;
 	int count, i;
 	dba_record query, result;
-	dba_cursor cursor;
-	dba db;
+	dba_db_cursor cursor;
+	dba_db db;
 
 	/* Throw away the command name */
 	action = poptGetArg(optCon);
@@ -87,20 +87,20 @@ dba_err do_dump(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_open(op_dsn, op_user, op_pass, &db));
-	DBA_RUN_OR_RETURN(dba_query(db, query, &cursor, &count));
+	DBA_RUN_OR_RETURN(dba_db_open(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(dba_db_query(db, query, &cursor, &count));
 	DBA_RUN_OR_RETURN(dba_record_create(&result));
 
 	for (i = 0; i < count; i++)
 	{
 		dba_varcode var;
 		int is_last;
-		DBA_RUN_OR_RETURN(dba_cursor_next(cursor, result, &var, &is_last));
+		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, result, &var, &is_last));
 		printf("#%d: -----------------------\n", i);
 		dba_record_print(result, stdout);
 	}
 
-	dba_close(db);
+	dba_db_close(db);
 	dba_shutdown();
 
 	dba_record_delete(result);
@@ -113,7 +113,7 @@ dba_err do_wipe(poptContext optCon)
 {
 	const char* action;
 	const char* table;
-	dba db;
+	dba_db db;
 
 	/* Throw away the command name */
 	action = poptGetArg(optCon);
@@ -122,9 +122,9 @@ dba_err do_wipe(poptContext optCon)
 	table = poptGetArg(optCon);
 
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_open(op_dsn, op_user, op_pass, &db));
-	DBA_RUN_OR_RETURN(dba_reset(db, table));
-	dba_close(db);
+	DBA_RUN_OR_RETURN(dba_db_open(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(dba_db_reset(db, table));
+	dba_db_close(db);
 	dba_shutdown();
 
 	return dba_error_ok();
@@ -141,12 +141,12 @@ dba_err do_import(poptContext optCon)
 	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_open(op_dsn, op_user, op_pass, &data.db));
+	DBA_RUN_OR_RETURN(dba_db_open(op_dsn, op_user, op_pass, &data.db));
 	data.overwrite = op_overwrite;
 
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
 
-	dba_close(data.db);
+	dba_db_close(data.db);
 	dba_shutdown();
 
 	return dba_error_ok();
@@ -161,7 +161,7 @@ dba_err do_export(poptContext optCon)
 	dba_encoding type;
 	dba_msg* msgs = NULL;
 	dba_record query;
-	dba db;
+	dba_db db;
 
 	/* Throw away the command name */
 	action = poptGetArg(optCon);
@@ -173,7 +173,7 @@ dba_err do_export(poptContext optCon)
 
 	/* Connect to the database */
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_open(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(dba_db_open(op_dsn, op_user, op_pass, &db));
 
 	/* Create the query */
 	DBA_RUN_OR_RETURN(dba_record_create(&query));
@@ -182,7 +182,7 @@ dba_err do_export(poptContext optCon)
 	if (isdigit(datatype[0]))
 		rep_cod = atoi(datatype);
 	else
-		DBA_RUN_OR_RETURN(dba_rep_cod_from_memo(db, datatype, &rep_cod));
+		DBA_RUN_OR_RETURN(dba_db_rep_cod_from_memo(db, datatype, &rep_cod));
 
 	/* Query the wanted report code */
 	DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod));
@@ -237,7 +237,7 @@ dba_err do_export(poptContext optCon)
 	}
 	dba_file_delete(file);
 	free(msgs);
-	dba_close(db);
+	dba_db_close(db);
 	dba_shutdown();
 
 	dba_record_delete(query);

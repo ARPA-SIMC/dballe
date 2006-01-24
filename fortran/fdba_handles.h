@@ -55,7 +55,7 @@
 #define FDBA_HANDLE(name, hnd) (_##name[hnd])
 
 FDBA_HANDLE_START_DECL(session)
-	dba session;
+	dba_db session;
 FDBA_HANDLE_END_DECL(session)
 
 FDBA_HANDLE_START_DECL(simple)
@@ -66,8 +66,8 @@ FDBA_HANDLE_START_DECL(simple)
 	dba_record output;
 	dba_record qcinput;
 	dba_record qcoutput;
-	dba_cursor ana_cur;
-	dba_cursor query_cur;
+	dba_db_cursor ana_cur;
+	dba_db_cursor query_cur;
 	dba_record_cursor qc_iter;
 	int qc_count;
 FDBA_HANDLE_END_DECL(simple)

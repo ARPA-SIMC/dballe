@@ -17,12 +17,12 @@ extern "C" {
 /**
  * Handle identifying a dballe connection
  */
-typedef struct _dba* dba;
+typedef struct _dba_db* dba_db;
 
 /**
  * Handle identifying a dballe cursor
  */
-typedef struct _dba_cursor* dba_cursor;
+typedef struct _dba_db_cursor* dba_db_cursor;
 
 
 /**
@@ -50,11 +50,11 @@ void dba_db_shutdown();
  *   The password to use to connect to the DSN.  To specify an empty password,
  *   pass "" or NULL
  * @param db
- *   The dba handle returned by the function
+ *   The dba_db handle returned by the function
  * @return
  *   The error indicator for the function
  */
-dba_err dba_open(const char* dsn, const char* user, const char* password, dba* db);
+dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba_db* db);
 
 /**
  * Reset the database, removing all existing DBALLE tables and re-creating them
@@ -71,7 +71,7 @@ dba_err dba_open(const char* dsn, const char* user, const char* password, dba* d
  * @return
  *   The error indicator for the function
  */
-dba_err dba_reset(dba db, const char* repinfo_file);
+dba_err dba_db_reset(dba_db db, const char* repinfo_file);
 
 /**
  * End a session with DBALLE.
@@ -82,12 +82,12 @@ dba_err dba_reset(dba db, const char* repinfo_file);
  * @param db
  *   The dballe session id
  */
-void dba_close(dba db);
+void dba_db_close(dba_db db);
 
 /**
  * Get the report code from a report mnemonic
  */
-dba_err dba_rep_cod_from_memo(dba db, const char* memo, int* rep_cod);
+dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod);
 
 /**
  * Start a query on the anagraphic archive
@@ -95,14 +95,14 @@ dba_err dba_rep_cod_from_memo(dba db, const char* memo, int* rep_cod);
  * @param db
  *   The dballe session id
  * @param cur
- *   The dba_cursor variable that will hold the resulting dba_cursor that can
+ *   The dba_db_cursor variable that will hold the resulting dba_db_cursor that can
  *   be used to get the result values (@see dba_ana_cursor_next)
  * @param count
  *   The count of items in the anagraphic archive, returned by the function
  * @return
  *   The error indicator for the function
  */
-dba_err dba_ana_query(dba db, dba_cursor* cur, int* count);
+dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count);
 
 /**
  * Get a new item from the results of an anagraphic query
@@ -119,10 +119,10 @@ dba_err dba_ana_query(dba db, dba_cursor* cur, int* count);
  *   used when there are no more results to get.
  *
  * @note
- *   Do not forget to call dba_cursor_delete after you have finished retrieving
+ *   Do not forget to call dba_db_cursor_delete after you have finished retrieving
  *   the query data.
  */
-dba_err dba_ana_cursor_next(dba_cursor cur, dba_record rec, int* is_last);
+dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last);
 
 /**
  * Insert a record into the database.
@@ -137,7 +137,7 @@ dba_err dba_ana_cursor_next(dba_cursor cur, dba_record rec, int* is_last);
  * @return
  *   The error indicator for the function
  */
-dba_err dba_insert(dba db, dba_record rec);
+dba_err dba_db_insert(dba_db db, dba_record rec);
 
 /**
  * Insert a record into the database
@@ -161,7 +161,7 @@ dba_err dba_insert(dba db, dba_record rec);
  * @return
  *   The error indicator for the function.
  */
-dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id);
+dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id);
 
 /**
  * Insert a record into the database
@@ -176,7 +176,7 @@ dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int updat
  * @return
  *   The error indicator for the function
  */
-dba_err dba_insert_new(dba db, dba_record rec);
+dba_err dba_db_insert_new(dba_db db, dba_record rec);
 
 /**
  * Query the database.
@@ -190,14 +190,14 @@ dba_err dba_insert_new(dba db, dba_record rec);
  *   The record with the query data (see technical specifications, par. 1.6.4
  *   "parameter output/input"
  * @retval cur
- *   The dba_cursor variable that will hold the resulting dba_cursor that can
- *   be used to get the result values (@see dba_cursor_next)
+ *   The dba_db_cursor variable that will hold the resulting dba_db_cursor that can
+ *   be used to get the result values (@see dba_db_cursor_next)
  * @retval count
  *   The number of values returned by the query
  * @return
  *   The error indicator for the function
  */
-dba_err dba_query(dba db, dba_record rec, dba_cursor* cur, int* count);
+dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count);
 
 /**
  * Get a new item from the results of a query
@@ -216,18 +216,18 @@ dba_err dba_query(dba db, dba_record rec, dba_cursor* cur, int* count);
  *   used when there are no more results to get.
  *
  * @note
- *   Do not forget to call dba_cursor_delete after you have finished retrieving
+ *   Do not forget to call dba_db_cursor_delete after you have finished retrieving
  *   the query data.
  */
-dba_err dba_cursor_next(dba_cursor cur, dba_record rec, dba_varcode* var, int* is_last);
+dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, int* is_last);
 
 /**
- * Release a dba_cursor
+ * Release a dba_db_cursor
  *
  * @param cur
  *   The cursor to delete
  */
-void dba_cursor_delete(dba_cursor cur);
+void dba_db_cursor_delete(dba_db_cursor cur);
 
 /**
  * Remove data from the database
@@ -240,7 +240,7 @@ void dba_cursor_delete(dba_cursor cur);
  * @return
  *   The error indicator for the function
  */
-dba_err dba_delete(dba db, dba_record rec);
+dba_err dba_db_remove(dba_db db, dba_record rec);
 
 /**
  * Query QC data
@@ -261,7 +261,7 @@ dba_err dba_delete(dba db, dba_record rec);
  * @return
  *   The error indicator for the function
  */
-dba_err dba_qc_query(dba db, int id_data, dba_varcode* qcs, int qcs_size, dba_record qc, int* count);
+dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, dba_record qc, int* count);
 
 /**
  * Insert a new QC value into the database.
@@ -283,7 +283,7 @@ dba_err dba_qc_query(dba db, int id_data, dba_varcode* qcs, int qcs_size, dba_re
  * @return
  *   The error indicator for the function
  */
-dba_err dba_qc_insert_or_replace(dba db, int id_data, dba_record qc, int can_replace);
+dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, dba_record qc, int can_replace);
 
 /**
  * Insert a new QC value into the database.
@@ -306,7 +306,7 @@ dba_err dba_qc_insert_or_replace(dba db, int id_data, dba_record qc, int can_rep
  * @return
  *   The error indicator for the function
  */
-dba_err dba_qc_insert(dba db, int id_data, /* dba_record rec, dba_varcode var,*/ dba_record qc);
+dba_err dba_db_qc_insert(dba_db db, int id_data, dba_record qc);
 
 /**
  * Insert a new QC value into the database.
@@ -322,7 +322,7 @@ dba_err dba_qc_insert(dba db, int id_data, /* dba_record rec, dba_varcode var,*/
  * @return
  *   The error indicator for the function
  */
-dba_err dba_qc_insert_new(dba db, int id_data, /* dba_record rec, dba_varcode var,*/ dba_record qc);
+dba_err dba_db_qc_insert_new(dba_db db, int id_data, dba_record qc);
 
 /**
  * Delete QC data for the variable `var' in record `rec' (coming from a previous
@@ -340,7 +340,7 @@ dba_err dba_qc_insert_new(dba db, int id_data, /* dba_record rec, dba_varcode va
  * @return
  *   The error indicator for the function
  */
-dba_err dba_qc_delete(dba db, int id_data, dba_varcode* qcs, int qcs_size);
+dba_err dba_db_qc_remove(dba_db db, int id_data, dba_varcode* qcs, int qcs_size);
 
 #ifdef  __cplusplus
 }

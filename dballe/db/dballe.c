@@ -39,7 +39,7 @@
 #endif
 
 
-struct _dba
+struct _dba_db
 {
 	SQLHDBC	od_conn;
 	/*
@@ -75,8 +75,8 @@ struct _dba
 	int sel_station;
 };
 
-struct _dba_cursor {
-	dba db;
+struct _dba_db_cursor {
+	dba_db db;
 	enum { ANA, DATA, QC } type;
 	SQLHSTMT stm;
 
@@ -220,14 +220,14 @@ void dba_db_shutdown()
 	/* TODO: warn about all allocated resources and free them */
 }
 
-dba_err dba_open(const char* dsn, const char* user, const char* password, dba* db)
+dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba_db* db)
 {
 	int sqlres;
 
 	/* Allocate a new handle */
-	*db = (dba)calloc(1, sizeof(struct _dba));
+	*db = (dba_db)calloc(1, sizeof(struct _dba_db));
 	if (!*db)
-		return dba_error_alloc("trying to allocate a new dba object");
+		return dba_error_alloc("trying to allocate a new dba_db object");
 
 	/* Allocate the ODBC connection handle */
 	sqlres = SQLAllocHandle(SQL_HANDLE_DBC, dba_od_env, &((*db)->od_conn));
@@ -261,7 +261,7 @@ dba_err dba_open(const char* dsn, const char* user, const char* password, dba* d
 	return dba_error_ok();
 }
 
-dba_err dba_reset(dba db, const char* deffile)
+dba_err dba_db_reset(dba_db db, const char* deffile)
 {
 	int res;
 	int i;
@@ -383,7 +383,7 @@ fail0:
 	return err;
 }
 
-void dba_close(dba db)
+void dba_db_close(dba_db db)
 {
 	assert(db);
 
@@ -434,7 +434,7 @@ dba_last_insert_id_failed:
 	return err;
 }
 
-dba_err dba_rep_cod_from_memo(dba db, const char* memo, int* rep_cod)
+dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)
 {
 	const char* query = "SELECT id FROM repinfo WHERE memo = ?";
 	dba_err err = DBA_OK;
@@ -476,14 +476,14 @@ cleanup:
 /* Get the report id from this record.  If rep_memo is specified instead, the
  * corresponding report id is queried in the database and set as "rep_cod" in
  * the record. */
-static dba_err dba_get_rep_cod(dba db, dba_record rec, int* id)
+static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
 {
 	const char* rep;
 	if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_COD)) != NULL)
 		*id = strtol(rep, 0, 10);
 	else if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
 	{
-		DBA_RUN_OR_RETURN(dba_rep_cod_from_memo(db, rep, id));
+		DBA_RUN_OR_RETURN(dba_db_rep_cod_from_memo(db, rep, id));
 		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, *id));
 	}
 	else
@@ -496,7 +496,7 @@ static dba_err dba_get_rep_cod(dba db, dba_record rec, int* id)
  * Insert or replace data in pseudoana taking the values from rec.
  * If rec did not contain ana_id, it will be set by this function.
  */
-static dba_err dba_insert_pseudoana(dba db, dba_record rec, int* id, int rewrite)
+static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewrite)
 {
 	dba_err err = DBA_OK;
 	const char* query_sel = NULL;
@@ -700,7 +700,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-static dba_err dba_insert_context(dba db, dba_record rec, int id_ana, int* id)
+static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id)
 {
 	const char* query_sel =
 		"SELECT id FROM context WHERE id_ana=? AND id_report=? AND datetime=?"
@@ -726,7 +726,7 @@ static dba_err dba_insert_context(dba db, dba_record rec, int id_ana, int* id)
 	assert(db);
 
 	/* Retrieve data */
-	DBA_RUN_OR_GOTO(fail, dba_get_rep_cod(db, rec, &id_report));
+	DBA_RUN_OR_GOTO(fail, dba_db_get_rep_cod(db, rec, &id_report));
 	{
 		const char *year, *month, *day, *hour, *min, *sec;
 		/* Also input the seconds, defaulting to 0 if not found */
@@ -886,7 +886,7 @@ static void dba_rollback(SQLHDBC od_conn) {}
  * information from `rec'; else data from `rec' is written into pseudoana only
  * if there is no suitable anagraphical data for it.
  */
-dba_err dba_insert_or_replace(dba db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id)
+dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id)
 {
 	/*
 	 * FIXME: REPLACE will change the ID of the replaced rows, breaking the
@@ -1005,18 +1005,18 @@ failed1:
 	return err;
 }
 
-dba_err dba_insert(dba db, dba_record rec)
+dba_err dba_db_insert(dba_db db, dba_record rec)
 {
-	return dba_insert_or_replace(db, rec, 1, 1, NULL);
+	return dba_db_insert_or_replace(db, rec, 1, 1, NULL);
 }
 
-dba_err dba_insert_new(dba db, dba_record rec)
+dba_err dba_db_insert_new(dba_db db, dba_record rec)
 {
-	return dba_insert_or_replace(db, rec, 0, 0, NULL);
+	return dba_db_insert_or_replace(db, rec, 0, 0, NULL);
 }
 
 #if 0
-dba_err dba_ana_count(dba db, int* count)
+dba_err dba_ana_count(dba_db db, int* count)
 {
 	SQLHSTMT stm;
 	SQLINTEGER id_ind;
@@ -1061,17 +1061,17 @@ dba_ana_count_failed:
 }
 #endif
 
-static dba_err dba_cursor_new(dba db, dba_cursor* cur)
+static dba_err dba_db_cursor_new(dba_db db, dba_db_cursor* cur)
 {
 	assert(db);
-	*cur = (dba_cursor)calloc(1, sizeof(struct _dba_cursor));
+	*cur = (dba_db_cursor)calloc(1, sizeof(struct _dba_db_cursor));
 	if (!*cur)
-		return dba_error_alloc("trying to allocate a new dba_cursor object");
+		return dba_error_alloc("trying to allocate a new dba_db_cursor object");
 	(*cur)->db = db;
 	return dba_error_ok();
 }
 
-dba_err dba_ana_query(dba db, dba_cursor* cur, int* count)
+dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count)
 {
 	const char* query =
 		"SELECT pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"
@@ -1085,7 +1085,7 @@ dba_err dba_ana_query(dba db, dba_cursor* cur, int* count)
 	assert(db);
 
 	/* Allocate a new cursor */
-	DBA_RUN_OR_RETURN(dba_cursor_new(db, cur));
+	DBA_RUN_OR_RETURN(dba_db_cursor_new(db, cur));
 
 	/* Setup the new cursor */
 	(*cur)->type = ANA;
@@ -1137,15 +1137,15 @@ dba_err dba_ana_query(dba db, dba_cursor* cur, int* count)
 		/*fprintf(stderr, "COUNT: %d\n", count);*/
 	}
 
-	/* Retrieve results will happen in dba_cursor_next() */
+	/* Retrieve results will happen in dba_db_cursor_next() */
 
 	/* Done.  No need to deallocate the statement, it will be done by
-	 * dba_cursor_delete */
+	 * dba_db_cursor_delete */
 	return dba_error_ok();
 
 	/* Exit point with cleanup after error */
 dba_ana_query_failed:
-	dba_cursor_delete(*cur);
+	dba_db_cursor_delete(*cur);
 	*cur = 0;
 	return err;
 }
@@ -1158,7 +1158,7 @@ dba_ana_query_failed:
 		} \
 	} while (0)
 
-static dba_err dba_ana_cursor_to_rec(dba_cursor cur, dba_record rec)
+static dba_err dba_ana_cursor_to_rec(dba_db_cursor cur, dba_record rec)
 {
 	assert(cur);
 	assert(cur->db);
@@ -1185,7 +1185,7 @@ static dba_err dba_ana_cursor_to_rec(dba_cursor cur, dba_record rec)
 	return dba_error_ok();
 }
 
-dba_err dba_ana_cursor_next(dba_cursor cur, dba_record rec, int* is_last)
+dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 {
 	assert(cur);
 	assert(cur->db);
@@ -1210,7 +1210,7 @@ dba_err dba_ana_cursor_next(dba_cursor cur, dba_record rec, int* is_last)
 	return dba_error_ok();
 }
 
-static dba_err dba_prepare_select(dba db, dba_record rec, SQLHSTMT stm)
+static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 {
 	int parm_num = 1;
 	const char* val;
@@ -1338,7 +1338,7 @@ static dba_err dba_prepare_select(dba db, dba_record rec, SQLHSTMT stm)
 }
 
 #if 0
-dba_err dba_query_context(dba db, dba_record rec, dba_db_context* context)
+dba_err dba_query_context(dba_db db, dba_record rec, dba_db_context* context)
 {
 	const char* query =
 		"SELECT DISTINCT c.id"
@@ -1391,21 +1391,21 @@ dba_err dba_query_context(dba db, dba_record rec, dba_db_context* context)
 		(*cur)->count = *count = rowcount;
 	}
 
-	/* Retrieve results will happen in dba_cursor_next() */
+	/* Retrieve results will happen in dba_db_cursor_next() */
 
 	/* Done.  No need to deallocate the statement, it will be done by
-	 * dba_cursor_delete */
+	 * dba_db_cursor_delete */
 	return dba_error_ok();
 
 	/* Exit point with cleanup after error */
 failed:
-	dba_cursor_delete(*cur);
+	dba_db_cursor_delete(*cur);
 	*cur = 0;
 	return err;
 }
 #endif
 
-dba_err dba_query(dba db, dba_record rec, dba_cursor* cur, int* count)
+dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 {
 	const char* query =
 		"SELECT pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"
@@ -1422,7 +1422,7 @@ dba_err dba_query(dba db, dba_record rec, dba_cursor* cur, int* count)
 	assert(db);
 
 	/* Allocate a new cursor */
-	DBA_RUN_OR_RETURN(dba_cursor_new(db, cur));
+	DBA_RUN_OR_RETURN(dba_db_cursor_new(db, cur));
 
 	/* Setup the new cursor */
 	(*cur)->type = DATA;
@@ -1505,21 +1505,21 @@ dba_err dba_query(dba db, dba_record rec, dba_cursor* cur, int* count)
 		(*cur)->count = *count = rowcount;
 	}
 
-	/* Retrieve results will happen in dba_cursor_next() */
+	/* Retrieve results will happen in dba_db_cursor_next() */
 
 	/* Done.  No need to deallocate the statement, it will be done by
-	 * dba_cursor_delete */
+	 * dba_db_cursor_delete */
 	return dba_error_ok();
 
 	/* Exit point with cleanup after error */
 failed:
-	dba_cursor_delete(*cur);
+	dba_db_cursor_delete(*cur);
 	*cur = 0;
 	return err;
 }
 
 
-static dba_err dba_cursor_var_to_rec(dba_cursor cur, dba_record rec)
+static dba_err dba_db_cursor_var_to_rec(dba_db_cursor cur, dba_record rec)
 {
 	assert(cur);
 	assert(cur->db);
@@ -1535,7 +1535,7 @@ static dba_err dba_cursor_var_to_rec(dba_cursor cur, dba_record rec)
 	}
 	return dba_error_ok();
 }
-static dba_err dba_cursor_to_rec(dba_cursor cur, dba_record rec)
+static dba_err dba_db_cursor_to_rec(dba_db_cursor cur, dba_record rec)
 {
 	assert(cur);
 	assert(cur->db);
@@ -1571,11 +1571,11 @@ static dba_err dba_cursor_to_rec(dba_cursor cur, dba_record rec)
 	CHECKED_STORE(setc, rep_memo, DBA_KEY_REP_MEMO);
 	CHECKED_STORE(seti, priority, DBA_KEY_PRIORITY);
 	CHECKED_STORE(seti, data_id, DBA_KEY_DATA_ID);
-	DBA_RUN_OR_RETURN(dba_cursor_var_to_rec(cur, rec));
+	DBA_RUN_OR_RETURN(dba_db_cursor_var_to_rec(cur, rec));
 	return dba_error_ok();
 }
 
-dba_err dba_cursor_next(dba_cursor cur, dba_record rec, dba_varcode* var, int* is_last)
+dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, int* is_last)
 {
 	assert(cur);
 	assert(cur->db);
@@ -1593,7 +1593,7 @@ dba_err dba_cursor_next(dba_cursor cur, dba_record rec, dba_varcode* var, int* i
 	dba_record_clear(rec);
 
 	/* Store the data into the record */
-	DBA_RUN_OR_RETURN(dba_cursor_to_rec(cur, rec));
+	DBA_RUN_OR_RETURN(dba_db_cursor_to_rec(cur, rec));
 
 	/* Store the database ID together with the value */
 	DBA_RUN_OR_RETURN(dba_record_var_setid(rec, cur->out_idvar, cur->out_data_id));
@@ -1607,7 +1607,7 @@ dba_err dba_cursor_next(dba_cursor cur, dba_record rec, dba_varcode* var, int* i
 }
 #undef CHECKED_STORE
 
-void dba_cursor_delete(dba_cursor cur)
+void dba_db_cursor_delete(dba_db_cursor cur)
 {
 	assert(cur);
 	assert(cur->db);
@@ -1617,7 +1617,7 @@ void dba_cursor_delete(dba_cursor cur)
 }
 
 #ifdef DBA_USE_DELETE_USING
-dba_err dba_delete(dba db, dba_record rec)
+dba_err dba_db_remove(dba_db db, dba_record rec)
 {
 	const char* query =
 		"DELETE FROM d, a"
@@ -1665,7 +1665,7 @@ dba_delete_failed:
 	return err;
 }
 #else
-dba_err dba_delete(dba db, dba_record rec)
+dba_err dba_db_remove(dba_db db, dba_record rec)
 {
 	const char* query =
 		"SELECT d.id FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri"
@@ -1768,7 +1768,7 @@ cleanup:
 }
 #endif
 
-dba_err dba_qc_query(dba db, int id_data, dba_varcode* qcs, int qcs_size, dba_record qc, int* count)
+dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, dba_record qc, int* count)
 {
 	char query[100 + 100*6];
 	SQLHSTMT stm;
@@ -1847,7 +1847,7 @@ dba_qc_query_failed:
 	return err;
 }
 
-dba_err dba_qc_insert_or_replace(dba db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc, int can_replace)
+dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc, int can_replace)
 {
 	const char* insert_query =
 		"INSERT INTO attr (id_data, type, value)"
@@ -1934,17 +1934,17 @@ dba_qc_insert_failed:
 	return err;
 }
 
-dba_err dba_qc_insert(dba db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc)
+dba_err dba_db_qc_insert(dba_db db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc)
 {
-	return dba_qc_insert_or_replace(db, id_data, /*rec, var,*/ qc, 1);
+	return dba_db_qc_insert_or_replace(db, id_data, /*rec, var,*/ qc, 1);
 }
 
-dba_err dba_qc_insert_new(dba db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc)
+dba_err dba_db_qc_insert_new(dba_db db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc)
 {
-	return dba_qc_insert_or_replace(db, id_data, /*rec, var,*/ qc, 0);
+	return dba_db_qc_insert_or_replace(db, id_data, /*rec, var,*/ qc, 0);
 }
 
-dba_err dba_qc_delete(dba db, int id_data, dba_varcode* qcs, int qcs_size)
+dba_err dba_db_qc_remove(dba_db db, int id_data, dba_varcode* qcs, int qcs_size)
 {
 	char query[60 + 100*6];
 	SQLHSTMT stm;

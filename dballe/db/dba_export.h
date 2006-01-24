@@ -29,7 +29,7 @@ extern "C" {
  * @returns
  *   The error indicator for the function (@see dba_err)
  */
-dba_err dba_db_export(dba db, dba_msg_type type, dba_msg** msgs, dba_record query);
+dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record query);
 
 #ifdef  __cplusplus
 }

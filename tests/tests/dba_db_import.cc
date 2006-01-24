@@ -9,17 +9,17 @@ using namespace tut_dballe;
 struct dba_db_import_shar
 {
 	// DB handle
-	dba db;
+	dba_db db;
 
 	dba_db_import_shar() : db(NULL)
 	{
 		CHECKED(dba_init());
-		CHECKED(dba_open("test", "enrico", "", &db));
+		CHECKED(dba_db_open("test", "enrico", "", &db));
 	}
 
 	~dba_db_import_shar()
 	{
-		if (db != NULL) dba_close(db);
+		if (db != NULL) dba_db_close(db);
 		dba_shutdown();
 		test_untag();
 	}
@@ -50,7 +50,7 @@ void to::test<1>()
 		test_tag(files[i]);
 		dba_msg msg = read_test_msg(files[i], CREX);
 
-		CHECKED(dba_reset(db, NULL));
+		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, 0));
 
 		dba_msg* msgs = NULL;
@@ -110,7 +110,7 @@ void to::test<2>()
 		test_tag(files[i]);
 		dba_msg msg = read_test_msg(files[i], BUFR);
 
-		CHECKED(dba_reset(db, NULL));
+		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, 0));
 
 		dba_msg* msgs = NULL;
@@ -165,7 +165,7 @@ void to::test<3>()
 		test_tag(files[i]);
 		dba_msg msg = read_test_msg(files[i], AOF);
 
-		CHECKED(dba_reset(db, NULL));
+		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, 0));
 
 		dba_msg* msgs = NULL;

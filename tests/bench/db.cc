@@ -30,11 +30,11 @@ protected:
 		dba_record rec;
 		DBA_RUN_OR_RETURN(dba_record_create(&rec));
 
-		dba db;
-		DBA_RUN_OR_RETURN(dba_open(dsn, user, password, &db));
+		dba_db db;
+		DBA_RUN_OR_RETURN(dba_db_open(dsn, user, password, &db));
 
 		// Reset the database
-		DBA_RUN_OR_RETURN(dba_reset(db, NULL));
+		DBA_RUN_OR_RETURN(dba_db_reset(db, NULL));
 		timing("reset the database");
 
 		// Insert random data in the database
@@ -43,7 +43,7 @@ protected:
 			dba_record_clear(rec);
 			DBA_RUN_OR_RETURN(gen.fill_record(rec));
 			//dba_record_print(rec, stderr);
-			DBA_RUN_OR_RETURN(dba_insert(db, rec));
+			DBA_RUN_OR_RETURN(dba_db_insert(db, rec));
 		}
 
 		timing("inserted %d random records in the database", iterations);
@@ -95,7 +95,7 @@ protected:
 		for (size_t i = 0; i < sizeof(aof_files) / sizeof(const char*); i++)
 			DBA_RUN_OR_RETURN(read_file(AOF, aof_files[i], msgs));
 
-		DBA_RUN_OR_RETURN(dba_reset(db, NULL));
+		DBA_RUN_OR_RETURN(dba_db_reset(db, NULL));
 		timing("reset the database");
 
 		for (msg_vector::const_iterator i = msgs.begin();
@@ -104,7 +104,7 @@ protected:
 
 		timing("inserted %d messages in the database", msgs.size());
 
-		dba_close(db);
+		dba_db_close(db);
 		dba_record_delete(rec);
 
 		return dba_error_ok();
