@@ -207,6 +207,31 @@ These are the TODO-list items currently being worked on::
 	  - step 1: farsi dare l'elenco di context id che stanno nel box scelto
 	  - step 2a: farsi dare le variabili in quel context
 	  - step 2b: farsi dare variabili e attributi in quel context
+       - Mettere un id_rep in data
+       - Fare una cache delle informazioni per il tipo report, da leggere alla
+	 connessione al database e tenere in memoria
+       - Dividere le query in query context e query variabili per un certo
+	 context.  I dati del context riempiono le keyword di un dba_record, e
+	 le variabili riempiono le var
+       - Con l'ID report, è possibile fare il querybest lavorando solo sulla
+	 tabella data
+       - Un'interazione diventa quindi:
+
+         for c in db.context(query)
+	   record r = c.data
+	   for d in context.data
+	      r += d
+	      output(r)
+
+	 oppure
+
+         for c in db.context(query)
+	   record r = c.data
+	   for d in context.bestdata
+	      r += d
+	      output(r)
+
+	     
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
       dba_insert_or_replace
 
