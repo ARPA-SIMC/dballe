@@ -33,6 +33,12 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_raw raw)
 							ltype, l1, l2, pind, p1, p2, dba_var_code(var)));
 
 				DBA_RUN_OR_GOTO(cleanup, dba_var_copy(var, &copy));
+
+				/* Add attributes if there are some following */
+				for ( ; i + 1 < raw->vars_count &&
+						DBA_VAR_X(dba_var_code(raw->vars[i + 1])) == 33; i++)
+					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, raw->vars[i + 1]));
+				
 				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, copy, ltype, l1, l2, pind, p1, p2));
 				copy = NULL;
 				break;

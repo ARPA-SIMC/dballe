@@ -96,6 +96,65 @@ void to::test<1>()
 
 /* TODO: add entries for more of the sample messages, taking data from another decoder */
 
+/* Check that attributes are properly exported */
+template<> template<>
+void to::test<2>()
+{
+	dba_msg msg;
+
+	/* Create a new message */
+	CHECKED(dba_msg_create(&msg));
+	msg->type = MSG_GENERIC;
+
+	/* Set some metadata */
+	CHECKED(dba_msg_set_year(msg, 2006, -1));
+	CHECKED(dba_msg_set_month(msg, 1, -1));
+	CHECKED(dba_msg_set_day(msg, 19, -1));
+	CHECKED(dba_msg_set_hour(msg, 14, -1));
+	CHECKED(dba_msg_set_minute(msg, 50, -1));
+	CHECKED(dba_msg_set_latitude(msg, 50.0, -1));
+	CHECKED(dba_msg_set_longitude(msg, 12.0, -1));
+
+	/* Create a variable to add to the message */
+	dba_var var;
+	CHECKED(dba_var_create_local(DBA_VAR(0, 12, 1), &var));
+	CHECKED(dba_var_setd(var, 270.15));
+
+	/* Add some attributes to the variable */
+	dba_var attr;
+	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 2), &attr));
+	CHECKED(dba_var_seti(attr, 1));
+	CHECKED(dba_var_seta_nocopy(var, attr));
+
+	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 3), &attr));
+	CHECKED(dba_var_seti(attr, 2));
+	CHECKED(dba_var_seta_nocopy(var, attr));
+
+	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 5), &attr));
+	CHECKED(dba_var_seti(attr, 3));
+	CHECKED(dba_var_seta_nocopy(var, attr));
+
+	/* Add the variable to the message */
+	CHECKED(dba_msg_set_nocopy(msg, var, 1, 0, 0, 0, 0, 0));
+
+	/* Encode the message */
+	dba_rawmsg raw;
+	CHECKED(bufrex_encode_bufr(msg, 0, 0, &raw));
+
+	/* Decode the message */
+	dba_msg msg1;
+	CHECKED(bufrex_decode_bufr(raw, &msg1));
+	dba_rawmsg_delete(raw);
+
+	/* Check that everything is still there */
+	int diffs = 0;
+	dba_msg_diff(msg, msg1, &diffs, stderr);
+	gen_ensure_equals(diffs, 0);
+
+	dba_msg_delete(msg);
+	dba_msg_delete(msg1);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

@@ -96,8 +96,10 @@ These are the TODO-list items completed so far::
       nel bufrex_raw, e delegare la loro gestione a bufrex_conv
     + Scrivere il campo data nella section 1 come data rappresentativa del
       contenuto, non come data attuale
+    + Esportare tutti gli attributi trovati quando si esportano i generici
+    + Importare gli attributi dai generici
 
- * Refactoring
+ * Core
     + Refactor dba_msg to contain physical values with levellayer and timerange
       metadata, grouped by level and then sorted by timerange so that it is
       easier to work with database I/O and soundings
@@ -118,6 +120,7 @@ These are the TODO-list items completed so far::
     + Togliere DBA_KEY_FIXED, che non è usato
     + Far si' che la prendilo non setti l'ana_id nell'input, e lo restituisca
       invece con enqi '!ana_id'
+    + Implementare l'iterazione tra gli attributi di una dba_var
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -191,7 +194,7 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
- * Refactoring
+ * Core
     - Import and export of attributes
        - Import/export DB-ALLe
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
@@ -201,6 +204,14 @@ These are the TODO-list items currently being worked on::
 
  * Import da VM o database Oracle di ARPA
     - Attributi
+       - Esportare come vari attributi:
+         (valido, corretto a mano)
+         CC climatological and consistency confidence interval
+	 TT time series confidence interval
+	 SS body check confidence interval
+	 Confidenza percentuale synop (lo stesso di CC TT SS quello piú a destra)
+       - Mappare CC, TT e SS come [47-53]->[100-0]
+      (lavoro iniziato ma non finito)
     - Buttare via le stazioni con NULL su lat o long
 
  * Export per VM

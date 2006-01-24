@@ -201,6 +201,13 @@ dba_err bufrex_raw_store_variable_undef(bufrex_raw msg, dba_varcode code)
 	return bufrex_raw_store_variable(msg, var);
 }
 
+dba_err bufrex_raw_add_attr(bufrex_raw msg, dba_var attr)
+{
+	if (msg->vars_count == 0)
+		return dba_error_consistency("checking that some variable was previously appended");
+	return dba_var_seta(msg->vars[msg->vars_count - 1], attr);
+}
+
 dba_err bufrex_raw_add_attrs(bufrex_raw msg, dba_var var)
 {
 	if (msg->vars_count == 0)

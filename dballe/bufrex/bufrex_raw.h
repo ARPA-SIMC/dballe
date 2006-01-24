@@ -250,6 +250,21 @@ dba_err bufrex_raw_store_variable_c(bufrex_raw msg, dba_varcode code, const char
 dba_err bufrex_raw_store_variable_undef(bufrex_raw msg, dba_varcode code);
 
 /**
+ * Add the attribute 'addr' to the last variable that was previously stored.
+ *
+ * The attribute is copied into the variable, so memory management of it will
+ * still belong to the caller.
+ *
+ * @param msg
+ *   The message to operate on
+ * @param attr
+ *   The attribute to copy in the last variable
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_add_attr(bufrex_raw msg, dba_var attr); 
+
+/**
  * Copy all the attributes from 'var' into the last variable that was
  * previously stored.
  *

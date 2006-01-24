@@ -15,11 +15,18 @@ extern "C" {
 #include <dballe/core/dba_vartable.h>
 #include <stdio.h>
 
+struct _dba_var;
 /**
  * Holds a DBALLE variable
  */
-struct _dba_var;
 typedef struct _dba_var* dba_var;
+
+struct _dba_var_attr;
+/**
+ * Cursor for iterating through the attributes of a dba_var
+ */
+typedef struct _dba_var_attr* dba_var_attr_iterator;
+
 
 /**
  * Create a new dba_var
@@ -124,6 +131,13 @@ dba_varinfo dba_var_info(dba_var var);
  *   variable is not defined.
  */
 const char* dba_var_value(dba_var var);
+
+dba_var_attr_iterator dba_var_attr_iterate(dba_var var);
+
+dba_var_attr_iterator dba_var_attr_iterator_next(dba_var_attr_iterator iter);
+
+dba_var dba_var_attr_iterator_attr(dba_var_attr_iterator iter);
+
 
 /**
  * Copy a value from a variable to another, performing conversions if needed

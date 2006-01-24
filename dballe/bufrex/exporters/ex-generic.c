@@ -21,6 +21,7 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
 {
 	dba_err err = DBA_OK;
 	dba_var copy = NULL;
+	dba_var attr_copy = NULL;
 	int i, j;
 	int ltype = -1, l1 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
 
@@ -29,6 +30,7 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
 		dba_msg_level lev = src->data[i];
 		for (j = 0; j < lev->data_count; j++)
 		{
+			dba_var_attr_iterator iter;
 			dba_msg_datum d = lev->data[j];
 			if (dba_var_value(d->var) == NULL)
 				continue;
@@ -65,8 +67,21 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
 				p2 = d->p2;
 			}
 
+			/* Store the variable */
 			DBA_RUN_OR_GOTO(cleanup, dba_var_copy(d->var, &copy));
 			DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable(dst, copy));
+
+			/* Store the attributes */
+			for (iter = dba_var_attr_iterate(copy);
+					iter != NULL;
+					iter = dba_var_attr_iterator_next(iter))
+			{
+				dba_var attr = dba_var_attr_iterator_attr(iter);
+				DBA_RUN_OR_GOTO(cleanup, dba_var_copy(attr, &attr_copy));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable(dst, attr_copy));
+				attr_copy = NULL;
+			}
+			
 			copy = NULL;
 		}
 	}
@@ -74,6 +89,8 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
 cleanup:
 	if (copy != NULL)
 		dba_var_delete(copy);
+	if (attr_copy != NULL)
+		dba_var_delete(attr_copy);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 

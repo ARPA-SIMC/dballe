@@ -211,6 +211,26 @@ const char* dba_var_value(dba_var var)
 	return var->value;
 }
 
+dba_var_attr_iterator dba_var_attr_iterate(dba_var var)
+{
+	return var->attrs;
+}
+
+dba_var_attr_iterator dba_var_attr_iterator_next(dba_var_attr_iterator iter)
+{
+	if (iter == NULL)
+		return NULL;
+	return iter->next;
+}
+
+dba_var dba_var_attr_iterator_attr(dba_var_attr_iterator iter)
+{
+	if (iter == NULL)
+		return NULL;
+	else
+		return iter->var;
+}
+
 dba_err dba_var_enqa(dba_var var, dba_varcode code, dba_var* attr)
 {
 	dba_var_attr cur;
