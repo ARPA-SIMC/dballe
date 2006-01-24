@@ -124,6 +124,9 @@ These are the TODO-list items completed so far::
     + Gli exporter dal DB non sono quasi tutti accumunabili?  export_synop e
       export_generic in fondo sono uguali.
        + aggregati tutti gli exporter da db in un unico dba_db_export
+    + dba_record: when asking for an unset key, use the key description in
+      the error message, not the key number
+       
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -207,13 +210,13 @@ These are the TODO-list items currently being worked on::
 	  - step 1: farsi dare l'elenco di context id che stanno nel box scelto
 	  - step 2a: farsi dare le variabili in quel context
 	  - step 2b: farsi dare variabili e attributi in quel context
+	  
+       - Write a benchmark for DB operations (normal queries and message I/O)
 
        - Rinominare dba_* in dba_db_*
 
        - Fare una classe per comporre le query, che permetta un append facile e
 	 faccia bound checking
-
-       - Write a benchmark for DB operations (normal queries and message I/O)
 
        - Fare una cache delle informazioni per il tipo report, da leggere alla
 	 connessione al database e tenere in memoria
