@@ -51,7 +51,7 @@ void to::test<1>()
 		dba_msg msg = read_test_msg(files[i], CREX);
 
 		CHECKED(dba_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg));
+		CHECKED(dba_import_msg(db, msg, 0));
 
 		dba_msg* msgs = NULL;
 		CHECKED(dba_db_export(db, msg->type, &msgs, query));
@@ -111,7 +111,7 @@ void to::test<2>()
 		dba_msg msg = read_test_msg(files[i], BUFR);
 
 		CHECKED(dba_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg));
+		CHECKED(dba_import_msg(db, msg, 0));
 
 		dba_msg* msgs = NULL;
 		CHECKED(dba_db_export(db, msg->type, &msgs, query));
@@ -166,7 +166,7 @@ void to::test<3>()
 		dba_msg msg = read_test_msg(files[i], AOF);
 
 		CHECKED(dba_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg));
+		CHECKED(dba_import_msg(db, msg, 0));
 
 		dba_msg* msgs = NULL;
 		CHECKED(dba_db_export(db, msg->type, &msgs, query));

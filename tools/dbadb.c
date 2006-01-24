@@ -46,6 +46,7 @@ static char* op_pass = "";
 static char* op_input_type = "bufr";
 static char* op_output_type = "bufr";
 static char* op_output_template = "";
+static char* op_overwrite = 0;
 
 struct poptOption dbTable[] = {
 	{ "dsn", 0, POPT_ARG_STRING, &op_dsn, 0,
@@ -57,24 +58,16 @@ struct poptOption dbTable[] = {
 	POPT_TABLEEND
 };
 
-static dba_err import_bufr_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+struct import_data
 {
-	dba db = (dba)data;
-	DBA_RUN_OR_RETURN(dba_import_msg(db, msg));
-	return dba_error_ok();
-}
+	dba db;
+	int overwrite;
+};
 
-static dba_err import_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+static dba_err import_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
-	dba db = (dba)data;
-	DBA_RUN_OR_RETURN(dba_import_msg(db, msg));
-	return dba_error_ok();
-}
-
-static dba_err import_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
-{
-	dba db = (dba)data;
-	DBA_RUN_OR_RETURN(dba_import_msg(db, msg));
+	struct import_data* d = (struct import_data*)data;
+	DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->overwrite));
 	return dba_error_ok();
 }
 
@@ -139,29 +132,21 @@ dba_err do_wipe(poptContext optCon)
 
 dba_err do_import(poptContext optCon)
 {
-	action crexaction;
-	action bufraction;
-	action aofaction;
-	dba db;
+	dba_encoding type;
+	struct import_data data;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
+	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
+
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_open(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(dba_open(op_dsn, op_user, op_pass, &data.db));
+	data.overwrite = op_overwrite;
 
-	bufraction = import_bufr_message;
-	crexaction = import_crex_message;
-	aofaction = import_aof_message;
+	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
 
-	switch (dba_cmdline_stringToMsgType(op_input_type, optCon))
-	{
-		case BUFR: DBA_RUN_OR_RETURN(process_all(optCon, BUFR, &grepdata, bufraction, (void*)db)); break;
-		case CREX: DBA_RUN_OR_RETURN(process_all(optCon, CREX, &grepdata, crexaction, (void*)db)); break;
-		case AOF:  DBA_RUN_OR_RETURN(process_all(optCon, AOF, &grepdata, aofaction, (void*)db)); break;
-	}
-
-	dba_close(db);
+	dba_close(data.db);
 	dba_shutdown();
 
 	return dba_error_ok();
@@ -280,6 +265,8 @@ struct poptOption dbadb_import_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
+	{ "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
+		"overwrite existing data" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
 		"Options used to connect to the database" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,

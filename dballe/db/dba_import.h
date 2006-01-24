@@ -20,10 +20,13 @@ extern "C" {
  *   The DBALLE database to write the data into
  * @param msg
  *   The dba_msg containing the data to import
+ * @param overwrite
+ *   If true, message data will overwrite existing values; if false, trying to
+ *   insert existing data will cause an error.
  * @return
  *   The error indicator for the function
  */
-dba_err dba_import_msg(dba db, dba_msg msg);
+dba_err dba_import_msg(dba db, dba_msg msg, int overwrite);
 
 #ifdef  __cplusplus
 }

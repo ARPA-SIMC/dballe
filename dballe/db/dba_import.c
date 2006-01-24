@@ -6,7 +6,7 @@
 #include <dballe/conv/dba_conv.h>
 #include <dballe/msg/dba_msg.h>
 
-static dba_err dba_db_insert_rec(dba db, dba_record rec, int lt, int l1, int l2, int pi, int p1, int p2)
+static dba_err dba_db_insert_rec(dba db, dba_record rec, int lt, int l1, int l2, int pi, int p1, int p2, int overwrite)
 {
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, lt));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L1, l1));
@@ -14,11 +14,11 @@ static dba_err dba_db_insert_rec(dba db, dba_record rec, int lt, int l1, int l2,
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, pi));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P1, p1));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P2, p2));
-	DBA_RUN_OR_RETURN(dba_insert(db, rec));
+	DBA_RUN_OR_RETURN(dba_insert_or_replace(db, rec, overwrite, overwrite, NULL));
 	return dba_error_ok();
 }
 
-static dba_err dba_db_insert_attrs(dba db, dba_record rec)
+static dba_err dba_db_insert_attrs(dba db, dba_record rec, int overwrite)
 {
 	dba_err err = DBA_OK;
 	dba_record qc = NULL;
@@ -36,7 +36,7 @@ static dba_err dba_db_insert_attrs(dba db, dba_record rec)
 			dba_var attr = dba_var_attr_iterator_attr(ai);
 			DBA_RUN_OR_RETURN(dba_record_var_set_direct(qc, attr));
 		}
-		DBA_RUN_OR_GOTO(cleanup, dba_qc_insert_or_replace(db, id, qc, 0));
+		DBA_RUN_OR_GOTO(cleanup, dba_qc_insert_or_replace(db, id, qc, overwrite));
 		dba_record_clear_vars(qc);
 	}
 
@@ -55,7 +55,7 @@ static dba_err dba_db_import_get_key(dba_record dst, dba_keyword key, dba_msg sr
 		return dba_record_key_set(dst, key, d->var);
 }
 
-static dba_err dba_db_import_common(dba db, dba_record rec, dba_msg msg)
+static dba_err dba_db_import_common(dba db, dba_record rec, dba_msg msg, int overwrite)
 {
 	int i;
 	int oltype = -1, ol1 = -1, ol2 = -1, opind = -1, op1 = -1, op2 = -1;
@@ -84,8 +84,8 @@ static dba_err dba_db_import_common(dba db, dba_record rec, dba_msg msg)
 			{
 				if (oltype != -1)
 				{
-					DBA_RUN_OR_RETURN(dba_db_insert_rec(db, rec,  oltype, ol1, ol2,  opind, op1, op2));
-					DBA_RUN_OR_RETURN(dba_db_insert_attrs(db, rec));
+					DBA_RUN_OR_RETURN(dba_db_insert_rec(db, rec,  oltype, ol1, ol2,  opind, op1, op2, overwrite));
+					DBA_RUN_OR_RETURN(dba_db_insert_attrs(db, rec, overwrite));
 					dba_record_clear_vars(rec);
 				}
 				oltype = l->ltype;
@@ -100,14 +100,14 @@ static dba_err dba_db_import_common(dba db, dba_record rec, dba_msg msg)
 	}
 	if (oltype != -1)
 	{
-		DBA_RUN_OR_RETURN(dba_db_insert_rec(db, rec,  oltype, ol1, ol2,  opind, op1, op2));
-		DBA_RUN_OR_RETURN(dba_db_insert_attrs(db, rec));
+		DBA_RUN_OR_RETURN(dba_db_insert_rec(db, rec,  oltype, ol1, ol2,  opind, op1, op2, overwrite));
+		DBA_RUN_OR_RETURN(dba_db_insert_attrs(db, rec, overwrite));
 	}
 
 	return dba_error_ok();
 }
 
-dba_err dba_import_msg(dba db, dba_msg msg)
+dba_err dba_import_msg(dba db, dba_msg msg, int overwrite)
 {
 	dba_err err = DBA_OK;
 	dba_record rec = NULL;
@@ -166,7 +166,7 @@ dba_err dba_import_msg(dba db, dba_msg msg)
 			break;
 	}
 
-	DBA_RUN_OR_GOTO(cleanup, dba_db_import_common(db, rec, msg));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_import_common(db, rec, msg, overwrite));
 
 cleanup:
 	if (rec != NULL)
