@@ -81,6 +81,7 @@ struct _dba_db_context {
 	SQLHSTMT stm;
 	int count;
 
+	int out_co_id;
 	int out_ana_id;
 	int out_lat;
 	int out_lon;
@@ -97,6 +98,24 @@ struct _dba_db_context {
 	int out_p1;
 	int out_p2;
 	char out_datetime[25];
+};
+
+struct _dba_db_vars {
+	dba_db_context co;
+	SQLHSTMT stm;
+	dba_var var;
+	int count;
+
+	int out_data_id;
+	int out_varcode;
+	char out_value[255];
+	int out_rep_cod;
+	char out_rep_memo[20];
+	int out_priority;
+
+	int has_attributes;
+	int out_attr_varcode;
+	char out_attr_value[255];
 };
 
 struct _dba_db_cursor {
@@ -1100,7 +1119,7 @@ static dba_err dba_db_context_create(dba_db db, dba_db_context* co)
 {
 	assert(db);
 	if ((*co = (dba_db_context)malloc(sizeof(struct _dba_db_context))) == NULL)
-		return dba_error_alloc("trying to allocate a new dba_db_cursor object");
+		return dba_error_alloc("trying to allocate a new dba_db_context object");
 	(*co)->db = db;
 	(*co)->stm = NULL;
 	return dba_error_ok();
@@ -1113,6 +1132,29 @@ void dba_db_context_delete(dba_db_context co)
 	if (co->stm != NULL)
 		SQLFreeHandle(SQL_HANDLE_STMT, co->stm);
 	free(co);
+}
+
+static dba_err dba_db_vars_create(dba_db_context co, dba_db_vars* va)
+{
+	assert(co);
+	assert(co->db);
+	if ((*va = (dba_db_vars)malloc(sizeof(struct _dba_db_vars))) == NULL)
+		return dba_error_alloc("trying to allocate a new dba_db_vars object");
+	(*va)->co = co;
+	(*va)->var = NULL;
+	(*va)->stm = NULL;
+	return dba_error_ok();
+}
+
+void dba_db_vars_delete(dba_db_vars va)
+{
+	assert(va);
+
+	if (va->var != NULL)
+		dba_var_delete(va->var);
+	if (va->stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, va->stm);
+	free(va);
 }
 
 static dba_err dba_db_cursor_new(dba_db db, dba_db_cursor* cur)
@@ -1348,11 +1390,9 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 
 }
 
-static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
+static dba_err dba_prepare_select_vars(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
 {
 	const char* val;
-
-	DBA_RUN_OR_RETURN(dba_prepare_select_context(db, rec, stm, pseq));
 
 	/* Bind select fields */
 
@@ -1380,10 +1420,6 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm, int* 
 				DBA_RUN_OR_RETURN(dba_querybuf_appendf(db->querybuf, ",%d", code));
 		}
 		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, ")"));
-		/*
-		strcat(db->querybuf, " AND d.id_var IN (?)");
-		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_blist, 0, 0);
-		*/
 	}
 
 	PARM_INT(rep_cod, DBA_KEY_REP_COD, " AND ri.id = ?");
@@ -1402,80 +1438,20 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm, int* 
 	return dba_error_ok();
 
 }
-#undef PARM_INT
-
-#if 0
-dba_err dba_query_context(dba_db db, dba_record rec, dba_db_context* context)
+static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
 {
-	const char* query =
-		"SELECT DISTINCT c.id"
-		"  FROM pseudoana AS pa, context AS c, repinfo AS ri"
-		" WHERE c.id_ana = pa.id AND c.id_report = ri.id";
-	dba_err err;
-	SQLHSTMT stm;
-	int context_id;
+	DBA_RUN_OR_RETURN(dba_prepare_select_context(db, rec, stm, pseq));
+	DBA_RUN_OR_RETURN(dba_prepare_select_vars(db, rec, stm, pseq));
 
-	assert(db);
-
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		free(cur);
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-	}
-
-	/* Write the SQL query */
-
-	/* Initial query */
-	strcpy(db->querybuf, query);
-
-	/* Bind output fields */
-	SQLBindCol(stm, 1, SQL_C_SLONG, &context_id, sizeof(context_id), NULL);
-	
-	/* Add the select part */
-	DBA_RUN_OR_GOTO(failed, dba_prepare_select(db, rec, stm));
-
-	TRACE("Performing query: %s\n", db->querybuf);
-
-	/* Perform the query */
-	res = SQLExecDirect(stm, (unsigned char*)db->querybuf, SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", db->querybuf);
-		goto failed;
-	}
-
-	/* Get the number of affected rows */
-	{
-		SQLINTEGER rowcount;
-		res = SQLRowCount(stm, &rowcount);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
-			goto failed;
-		}
-		(*cur)->count = *count = rowcount;
-	}
-
-	/* Retrieve results will happen in dba_db_cursor_next() */
-
-	/* Done.  No need to deallocate the statement, it will be done by
-	 * dba_db_cursor_delete */
 	return dba_error_ok();
 
-	/* Exit point with cleanup after error */
-failed:
-	dba_db_cursor_delete(*cur);
-	*cur = 0;
-	return err;
 }
-#endif
+#undef PARM_INT
 
 dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int* count)
 {
 	const char* query =
-		"SELECT pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"
+		"SELECT c.id, pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"
 		"       pa.block, pa.station, pa.name,"
 		"       c.ltype, c.l1, c.l2,"
 		"       c.ptype, c.p1, c.p2,"
@@ -1514,22 +1490,23 @@ dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int*
 	SQLBindCol(stm, num, type, &(*co)->out_##name, sizeof((*co)->out_##name), NULL);
 #define DBA_QUERY_BIND(num, type, name) \
 	SQLBindCol(stm, num, type, &(*co)->out_##name, sizeof((*co)->out_##name), &(*co)->out_##name##_ind);
-	DBA_QUERY_BIND_NONNULL( 1, SQL_C_SLONG, ana_id);
-	DBA_QUERY_BIND_NONNULL( 2, SQL_C_SLONG, lat);
-	DBA_QUERY_BIND_NONNULL( 3, SQL_C_SLONG, lon);
-	DBA_QUERY_BIND( 4, SQL_C_CHAR, ident);
-	DBA_QUERY_BIND( 5, SQL_C_SLONG, height);
-	DBA_QUERY_BIND( 6, SQL_C_SLONG, heightbaro);
-	DBA_QUERY_BIND( 7, SQL_C_SLONG, block);
-	DBA_QUERY_BIND( 8, SQL_C_SLONG, station);
-	DBA_QUERY_BIND( 9, SQL_C_CHAR, name);
-	DBA_QUERY_BIND_NONNULL(10, SQL_C_SLONG, leveltype);
-	DBA_QUERY_BIND_NONNULL(11, SQL_C_SLONG, l1);
-	DBA_QUERY_BIND_NONNULL(12, SQL_C_SLONG, l2);
-	DBA_QUERY_BIND_NONNULL(13, SQL_C_SLONG, pindicator);
-	DBA_QUERY_BIND_NONNULL(14, SQL_C_SLONG, p1);
-	DBA_QUERY_BIND_NONNULL(15, SQL_C_SLONG, p2);
-	DBA_QUERY_BIND_NONNULL(16, SQL_C_CHAR, datetime);
+	DBA_QUERY_BIND_NONNULL( 1, SQL_C_SLONG, co_id);
+	DBA_QUERY_BIND_NONNULL( 2, SQL_C_SLONG, ana_id);
+	DBA_QUERY_BIND_NONNULL( 3, SQL_C_SLONG, lat);
+	DBA_QUERY_BIND_NONNULL( 4, SQL_C_SLONG, lon);
+	DBA_QUERY_BIND( 5, SQL_C_CHAR, ident);
+	DBA_QUERY_BIND( 6, SQL_C_SLONG, height);
+	DBA_QUERY_BIND( 7, SQL_C_SLONG, heightbaro);
+	DBA_QUERY_BIND( 8, SQL_C_SLONG, block);
+	DBA_QUERY_BIND( 9, SQL_C_SLONG, station);
+	DBA_QUERY_BIND(10, SQL_C_CHAR, name);
+	DBA_QUERY_BIND_NONNULL(11, SQL_C_SLONG, leveltype);
+	DBA_QUERY_BIND_NONNULL(12, SQL_C_SLONG, l1);
+	DBA_QUERY_BIND_NONNULL(13, SQL_C_SLONG, l2);
+	DBA_QUERY_BIND_NONNULL(14, SQL_C_SLONG, pindicator);
+	DBA_QUERY_BIND_NONNULL(15, SQL_C_SLONG, p1);
+	DBA_QUERY_BIND_NONNULL(16, SQL_C_SLONG, p2);
+	DBA_QUERY_BIND_NONNULL(17, SQL_C_CHAR, datetime);
 #undef DBA_QUERY_BIND
 #undef DBA_QUERY_BIND_NONNULL
 	
@@ -1575,7 +1552,7 @@ dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int*
 	/* Retrieve results will happen during iteration of the dba_db_context */
 
 	/* Done.  No need to deallocate the statement, it will be done by
-	 * dba_db_cursor_delete */
+	 * dba_db_context_delete */
 	return dba_error_ok();
 
 	/* Exit point with cleanup after error */
@@ -1584,6 +1561,212 @@ fail:
 	{
 		dba_db_context_delete(*co);
 		*co = NULL;
+	}
+	return err;
+}
+
+dba_err dba_db_context_query_vars(dba_db_context co, dba_record rec, dba_db_vars* va)
+{
+	const char* query =
+		"SELECT d.id, d.id_var, d.value, d.id_report, ri.memo, ri.prio"
+		"  FROM data AS d, repinfo AS ri"
+		" WHERE d.id_context = ? AND d.id_report = ri.id";
+	dba_err err = DBA_OK;
+	SQLHSTMT stm = NULL;
+	int res;
+	int pseq = 1;
+	dba_db db;
+
+	assert(co);
+	assert(co->db);
+	db = co->db;
+
+	*va = NULL;
+
+	/* Allocate a new context */
+	DBA_RUN_OR_RETURN(dba_db_vars_create(co, va));
+
+	/* Allocate statement handle */
+	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		goto fail;
+	}
+	(*va)->stm = stm;
+	(*va)->has_attributes = 0;
+
+	/* Write the SQL query */
+
+	/* Initial query */
+	dba_querybuf_reset(db->querybuf);
+	DBA_RUN_OR_GOTO(fail, dba_querybuf_append(db->querybuf, query));
+
+	/* Bind output fields */
+#define DBA_QUERY_BIND(num, type, name) \
+	SQLBindCol(stm, num, type, &(*va)->out_##name, sizeof((*va)->out_##name), NULL);
+	DBA_QUERY_BIND( 1, SQL_C_SLONG, data_id);
+	DBA_QUERY_BIND( 2, SQL_C_SLONG, varcode);
+	DBA_QUERY_BIND( 3, SQL_C_CHAR, value);
+	DBA_QUERY_BIND( 4, SQL_C_SLONG, rep_cod);
+	DBA_QUERY_BIND( 5, SQL_C_CHAR, rep_memo);
+	DBA_QUERY_BIND( 6, SQL_C_SLONG, priority);
+#undef DBA_QUERY_BIND
+	
+	/* Add the select part */
+	DBA_RUN_OR_GOTO(fail, dba_prepare_select_vars(db, rec, stm, &pseq));
+
+	DBA_RUN_OR_GOTO(fail, dba_querybuf_append(db->querybuf,
+		" ORDER BY ri.prio"));
+
+	TRACE("Performing query: %s\n", dba_querybuf_get(db->querybuf));
+
+	/* Perform the query */
+	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
+		goto fail;
+	}
+
+	/* Get the number of affected rows */
+	{
+		SQLINTEGER rowcount;
+		res = SQLRowCount(stm, &rowcount);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		{
+			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+			goto fail;
+		}
+
+		/* If there are not results, return a NULL iterator but still report
+		 * success */
+		if (rowcount == 0)
+		{
+			dba_db_vars_delete(*va);
+			*va = NULL;
+		}
+
+		/* Initialise va with the data from the first result row */
+		SQLFetch((*va)->stm);
+	}
+
+	/* Retrieve results will happen during iteration of the dba_db_vars */
+
+	/* Done.  No need to deallocate the statement, it will be done by
+	 * dba_db_vars_delete */
+	return dba_error_ok();
+
+	/* Exit point with cleanup after error */
+fail:
+	if (*va != NULL)
+	{
+		dba_db_vars_delete(*va);
+		*va = NULL;
+	}
+	return err;
+}
+
+dba_err dba_db_context_query_vars_with_attrs(dba_db_context co, dba_record rec, dba_db_vars* va)
+{
+	const char* query =
+		"SELECT d.id, d.id_var, d.value, d.id_report, ri.memo, ri.prio, a.type, a.value"
+		"  FROM data AS d, repinfo AS ri, attr AS a"
+		" WHERE d.id_context = ? AND d.id_report = ri.id AND d.id = a.id_data";
+	dba_err err = DBA_OK;
+	SQLHSTMT stm = NULL;
+	int res;
+	int pseq = 1;
+	dba_db db;
+
+	assert(co);
+	assert(co->db);
+	db = co->db;
+
+	*va = NULL;
+
+	/* Allocate a new context */
+	DBA_RUN_OR_RETURN(dba_db_vars_create(co, va));
+
+	/* Allocate statement handle */
+	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		goto fail;
+	}
+	(*va)->stm = stm;
+	(*va)->has_attributes = 1;
+
+	/* Write the SQL query */
+
+	/* Initial query */
+	dba_querybuf_reset(db->querybuf);
+	DBA_RUN_OR_GOTO(fail, dba_querybuf_append(db->querybuf, query));
+
+	/* Bind output fields */
+#define DBA_QUERY_BIND(num, type, name) \
+	SQLBindCol(stm, num, type, &(*va)->out_##name, sizeof((*va)->out_##name), NULL);
+	DBA_QUERY_BIND( 1, SQL_C_SLONG, data_id);
+	DBA_QUERY_BIND( 2, SQL_C_SLONG, varcode);
+	DBA_QUERY_BIND( 3, SQL_C_CHAR, value);
+	DBA_QUERY_BIND( 4, SQL_C_SLONG, rep_cod);
+	DBA_QUERY_BIND( 5, SQL_C_CHAR, rep_memo);
+	DBA_QUERY_BIND( 6, SQL_C_SLONG, priority);
+	DBA_QUERY_BIND( 7, SQL_C_SLONG, attr_varcode);
+	DBA_QUERY_BIND( 8, SQL_C_CHAR, attr_value);
+#undef DBA_QUERY_BIND
+	
+	/* Add the select part */
+	DBA_RUN_OR_GOTO(fail, dba_prepare_select_vars(db, rec, stm, &pseq));
+
+	DBA_RUN_OR_GOTO(fail, dba_querybuf_append(db->querybuf,
+		" ORDER BY ri.prio, d.id"));
+
+	TRACE("Performing query: %s\n", dba_querybuf_get(db->querybuf));
+
+	/* Perform the query */
+	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
+		goto fail;
+	}
+
+	/* Get the number of affected rows */
+	{
+		SQLINTEGER rowcount;
+		res = SQLRowCount(stm, &rowcount);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		{
+			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+			goto fail;
+		}
+
+		/* If there are not results, return a NULL iterator but still report
+		 * success */
+		if (rowcount == 0)
+		{
+			dba_db_vars_delete(*va);
+			*va = NULL;
+		}
+
+		/* Initialise va with the data from the first result row */
+		SQLFetch((*va)->stm);
+	}
+
+	/* Retrieve results will happen during iteration of the dba_db_vars */
+
+	/* Done.  No need to deallocate the statement, it will be done by
+	 * dba_db_vars_delete */
+	return dba_error_ok();
+
+	/* Exit point with cleanup after error */
+fail:
+	if (*va != NULL)
+	{
+		dba_db_vars_delete(*va);
+		*va = NULL;
 	}
 	return err;
 }
@@ -1723,6 +1906,63 @@ dba_err dba_db_context_next(dba_db_context* co)
 	return dba_error_ok();
 }
 
+dba_err dba_db_vars_next(dba_db_vars* va)
+{
+	dba_err err = DBA_OK;
+	int old_varcode, old_rep_cod;
+	dba_var attr = NULL;
+
+	assert(va);
+	assert(*va);
+	assert((*va)->co);
+	assert((*va)->co->db);
+
+	/* varcode == -1 means iteration has finished */
+	if ((*va)->out_varcode == -1)
+	{
+		/* If no more rows exist, set co to NULL */
+		dba_db_vars_delete(*va);
+		*va = NULL;
+		return dba_error_ok();
+	}
+
+	old_varcode = (*va)->out_varcode;
+	old_rep_cod = (*va)->out_rep_cod;
+
+	/* Create a variable using the values previously read */
+	if ((*va)->var != NULL)
+	{
+		dba_var_delete((*va)->var);
+		(*va)->var = NULL;
+	}
+	DBA_RUN_OR_GOTO(cleanup, dba_var_create_local((*va)->out_varcode, &((*va)->var)));
+	DBA_RUN_OR_GOTO(cleanup, dba_var_setc((*va)->var, (*va)->out_value));
+
+	/* Add attributes until varcode or rep_cod change */
+	do
+	{
+		if ((*va)->has_attributes)
+		{
+			DBA_RUN_OR_GOTO(cleanup, dba_var_create_local((*va)->out_attr_varcode, &attr));
+			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(attr, (*va)->out_attr_value));
+			DBA_RUN_OR_GOTO(cleanup, dba_var_seta_nocopy((*va)->var, attr));
+			attr = NULL;
+		}
+		if (SQLFetch((*va)->stm) == SQL_NO_DATA)
+		{
+			/* Signal end of iteration */
+			(*va)->out_varcode = -1;
+			break;
+		}
+	}
+	while (old_varcode == (*va)->out_varcode && old_rep_cod == (*va)->out_rep_cod);
+	
+cleanup:
+	if (attr != NULL)
+		dba_var_delete(attr);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
 #define CONTEXT_STORE(settype, var, key) \
 	do{ \
 		if (co->out_##var##_ind != SQL_NULL_DATA) {\
@@ -1780,6 +2020,33 @@ dba_err dba_db_context_to_record(dba_db_context co, dba_record rec)
 	return dba_error_ok();
 }
 #undef CONTEXT_STORE
+
+
+dba_err dba_db_vars_to_record(dba_db_vars va, dba_record rec)
+{
+	assert(va);
+	assert(va->co);
+	assert(va->co->db);
+
+	dba_record_clear_vars(rec);
+
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DATA_ID, va->out_data_id));
+	{
+		char bname[7];
+		snprintf(bname, 7, "B%02d%03d",
+					DBA_VAR_X(va->out_varcode),
+					DBA_VAR_Y(va->out_varcode));
+		DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_VAR, bname));
+		DBA_RUN_OR_RETURN(dba_record_var_set_direct(rec, va->var));
+		DBA_RUN_OR_RETURN(dba_record_var_setid(rec, va->out_varcode, va->out_data_id));
+	}
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, va->out_rep_cod));
+	DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_REP_MEMO, va->out_rep_memo));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PRIORITY, va->out_priority));
+
+	return dba_error_ok();
+}
+
 
 static dba_err dba_db_cursor_var_to_rec(dba_db_cursor cur, dba_record rec)
 {
