@@ -114,18 +114,16 @@ void to::test<2>()
 		CHECKED(dba_import_msg(db, msg));
 
 		dba_msg* msgs = NULL;
-		CHECKED(dba_db_export(db, msg->type, &msgs, query)); break;
+		CHECKED(dba_db_export(db, msg->type, &msgs, query));
 		gen_ensure(msgs != NULL);
 		gen_ensure(msgs[0] != NULL);
 		gen_ensure_equals(msgs[1], (dba_msg)0);
 
-		/*
 		if (string(files[i]).find("1-21") != string::npos)
 		{
 			dba_msg_print(msg, stderr);
 			dba_msg_print(msgs[0], stderr);
 		}
-		*/
 
 		// Compare the two dba_msg
 		int diffs = 0;
@@ -169,7 +167,7 @@ void to::test<3>()
 		CHECKED(dba_import_msg(db, msg));
 
 		dba_msg* msgs = NULL;
-		CHECKED(dba_db_export(db, msg->type, &msgs, query)); break;
+		CHECKED(dba_db_export(db, msg->type, &msgs, query));
 		gen_ensure(msgs != NULL);
 		gen_ensure(msgs[0] != NULL);
 		gen_ensure_equals(msgs[1], (dba_msg)0);

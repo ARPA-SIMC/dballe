@@ -18,6 +18,34 @@ static dba_err dba_db_insert_rec(dba db, dba_record rec, int lt, int l1, int l2,
 	return dba_error_ok();
 }
 
+static dba_err dba_db_insert_attrs(dba db, dba_record rec)
+{
+	dba_err err = DBA_OK;
+	dba_record qc = NULL;
+	dba_record_cursor item;
+	
+	DBA_RUN_OR_RETURN(dba_record_create(&qc));
+	for (item = dba_record_iterate_first(rec); item != NULL;
+			item = dba_record_iterate_next(rec, item))
+	{
+		int id = dba_record_cursor_id(item);
+		dba_var var = dba_record_cursor_variable(item);
+		dba_var_attr_iterator ai;
+		for (ai = dba_var_attr_iterate(var); ai != NULL; ai = dba_var_attr_iterator_next(ai))
+		{
+			dba_var attr = dba_var_attr_iterator_attr(ai);
+			DBA_RUN_OR_RETURN(dba_record_var_set_direct(qc, attr));
+		}
+		DBA_RUN_OR_GOTO(cleanup, dba_qc_insert_or_replace(db, id, qc, 0));
+		dba_record_clear_vars(qc);
+	}
+
+cleanup:
+	if (qc != NULL)
+		dba_record_delete(qc);
+	return err = DBA_OK ? dba_error_ok() : err;
+}
+
 static dba_err dba_db_import_get_key(dba_record dst, dba_keyword key, dba_msg src, int id)
 {
 	dba_msg_datum d = dba_msg_find_by_id(src, id);
@@ -57,6 +85,7 @@ static dba_err dba_db_import_common(dba db, dba_record rec, dba_msg msg)
 				if (oltype != -1)
 				{
 					DBA_RUN_OR_RETURN(dba_db_insert_rec(db, rec,  oltype, ol1, ol2,  opind, op1, op2));
+					DBA_RUN_OR_RETURN(dba_db_insert_attrs(db, rec));
 					dba_record_clear_vars(rec);
 				}
 				oltype = l->ltype;
@@ -70,7 +99,10 @@ static dba_err dba_db_import_common(dba db, dba_record rec, dba_msg msg)
 		}
 	}
 	if (oltype != -1)
+	{
 		DBA_RUN_OR_RETURN(dba_db_insert_rec(db, rec,  oltype, ol1, ol2,  opind, op1, op2));
+		DBA_RUN_OR_RETURN(dba_db_insert_attrs(db, rec));
+	}
 
 	return dba_error_ok();
 }

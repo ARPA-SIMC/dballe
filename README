@@ -178,6 +178,9 @@ These are the TODO-list items completed so far::
        - Livello 257:
          Informazioni extra sulla stazione
 
+ * DB-ALLe
+    + Import of attributes
+
 
 TODO-list items being worked on
 -------------------------------
@@ -194,9 +197,10 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
+ * DB-ALLe
+    - Export of attributes
+
  * Core
-    - Import and export of attributes
-       - Import/export DB-ALLe
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
       dba_insert_or_replace
     - Gli exporter dal DB non sono quasi tutti accumunabili?  export_synop e
