@@ -76,6 +76,7 @@ struct _dba_db
 	int sel_station;
 };
 
+#if 0
 struct _dba_db_context {
 	dba_db db;
 	SQLHSTMT stm;
@@ -117,6 +118,7 @@ struct _dba_db_vars {
 	int out_attr_varcode;
 	char out_attr_value[255];
 };
+#endif
 
 struct _dba_db_cursor {
 	dba_db db;
@@ -190,15 +192,15 @@ static const char* init_queries[] = {
 	"CREATE TABLE data ("
 	"   id			INTEGER auto_increment PRIMARY KEY,"
 	"   id_context	INTEGER NOT NULL,"
-	"	id_report	SMALLINT NOT NULL,"
 	"	id_var		SMALLINT NOT NULL,"
 	"	value		VARCHAR(255) NOT NULL,"
 	"	INDEX (id_context),"
-	"   UNIQUE INDEX(id_var, id_context, id_report)"
+	"   UNIQUE INDEX(id_var, id_context)"
 	") " TABLETYPE,
 	"CREATE TABLE context ("
 	"   id			INTEGER auto_increment PRIMARY KEY,"
 	"   id_ana		INTEGER NOT NULL,"
+	"	id_report	SMALLINT NOT NULL,"
 	"   datetime	DATETIME NOT NULL,"
 	"	ltype		SMALLINT NOT NULL,"
 	"	l1			INTEGER NOT NULL,"
@@ -206,7 +208,7 @@ static const char* init_queries[] = {
 	"	ptype		SMALLINT NOT NULL,"
 	"	p1			INTEGER NOT NULL,"
 	"	p2			INTEGER NOT NULL,"
-	"   UNIQUE INDEX (id_ana, datetime, ltype, l1, l2, ptype, p1, p2)"
+	"   UNIQUE INDEX (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report)"
 	") " TABLETYPE,
 	"CREATE TABLE attr ("
 	"   id_data INTEGER NOT NULL,"
@@ -755,13 +757,14 @@ cleanup:
 static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id)
 {
 	const char* query_sel =
-		"SELECT id FROM context WHERE id_ana=? AND datetime=?"
+		"SELECT id FROM context WHERE id_ana=? AND id_report=? AND datetime=?"
 		" AND ltype=? AND l1=? AND l2=?"
 		" AND ptype=? AND p1=? AND p2=?";
 	const char* query =
-		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?)";
+		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	char datebuf[25];
 	SQLINTEGER datebuf_ind;
+	int id_report;
 	int ltype;
 	int l1;
 	int l2;
@@ -777,6 +780,10 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	assert(db);
 
 	/* Retrieve data */
+
+	/* Get the ID of the report */
+	DBA_RUN_OR_GOTO(fail, dba_db_get_rep_cod(db, rec, &id_report));
+
 	{
 		const char *year, *month, *day, *hour, *min, *sec;
 		/* Also input the seconds, defaulting to 0 if not found */
@@ -817,13 +824,14 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 
 	/* Bind parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_ana, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &datebuf, 0, &datebuf_ind);
-	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ltype, 0, 0);
-	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l1, 0, 0);
-	SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l2, 0, 0);
-	SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ptype, 0, 0);
-	SQLBindParameter(stm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p1, 0, 0);
-	SQLBindParameter(stm, 8, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p2, 0, 0);
+	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_report, 0, 0);
+	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &datebuf, 0, &datebuf_ind);
+	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ltype, 0, 0);
+	SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l1, 0, 0);
+	SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l2, 0, 0);
+	SQLBindParameter(stm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ptype, 0, 0);
+	SQLBindParameter(stm, 8, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p1, 0, 0);
+	SQLBindParameter(stm, 9, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p2, 0, 0);
 
 	/* Check for an existing context with these data */
 
@@ -945,18 +953,17 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 	 * Else, we need to do a select first to get the ID.
 	 */
 	const char* insert_query =
-		"INSERT INTO data (id_context, id_report, id_var, value)"
-		" VALUES(?, ?, ?, ?)";
+		"INSERT INTO data (id_context, id_var, value)"
+		" VALUES(?, ?, ?)";
 	const char* replace_query =
-		"INSERT INTO data (id_context, id_report, id_var, value)"
-		" VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
+		"INSERT INTO data (id_context, id_var, value)"
+		" VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
 /*		"REPLACE INTO data (id_context, id_var, value)"
 		" VALUES(?, ?, ?)"; */
 	dba_err err;
 	dba_record_cursor item;
 	int id_pseudoana;
 	int id_context;
-	int id_report;
 	dba_varcode id_var;
 	char value[255];
 	SQLINTEGER value_ind;
@@ -971,9 +978,6 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 
 	/* Begin the transaction */
 	DBA_RUN_OR_RETURN(dba_begin(db->od_conn));
-
-	/* Get the ID of the report */
-	DBA_RUN_OR_GOTO(failed1, dba_db_get_rep_cod(db, rec, &id_report));
 
 	/* Insert the pseudoana data, and get the ID */
 	DBA_RUN_OR_GOTO(failed1, dba_insert_pseudoana(db, rec, &id_pseudoana, update_pseudoana));
@@ -1000,9 +1004,8 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 
 	/* Bind parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_report, 0, 0);
-	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
-	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, value, 0, &value_ind);
+	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
+	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, value, 0, &value_ind);
 
 	/* Insert all found variables */
 	for (item = dba_record_iterate_first(rec); item != NULL;
@@ -1115,6 +1118,7 @@ dba_ana_count_failed:
 }
 #endif
 
+#if 0
 static dba_err dba_db_context_create(dba_db db, dba_db_context* co)
 {
 	assert(db);
@@ -1156,6 +1160,7 @@ void dba_db_vars_delete(dba_db_vars va)
 		SQLFreeHandle(SQL_HANDLE_STMT, va->stm);
 	free(va);
 }
+#endif
 
 static dba_err dba_db_cursor_new(dba_db db, dba_db_cursor* cur)
 {
@@ -1448,6 +1453,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm, int* 
 }
 #undef PARM_INT
 
+#if 0
 dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int* count)
 {
 	const char* query =
@@ -1779,6 +1785,7 @@ fail:
 	}
 	return err;
 }
+#endif
 
 dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 {
@@ -1787,9 +1794,9 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 		"       pa.block, pa.station, pa.name,"
 		"       c.ltype, c.l1, c.l2,"
 		"       c.ptype, c.p1, c.p2,"
-		"       d.id_var, c.datetime, d.value, d.id_report, ri.memo, ri.prio, d.id"
+		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio, d.id"
 		"  FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri"
-		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND d.id_report = ri.id";
+		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err;
 	SQLHSTMT stm;
 	int res;
@@ -1897,6 +1904,7 @@ failed:
 	return err;
 }
 
+#if 0
 dba_err dba_db_context_next(dba_db_context* co)
 {
 	assert(co);
@@ -2064,7 +2072,7 @@ dba_err dba_db_vars_to_record(dba_db_vars va, dba_record rec)
 
 	return dba_error_ok();
 }
-
+#endif
 
 static dba_err dba_db_cursor_var_to_rec(dba_db_cursor cur, dba_record rec)
 {
@@ -2170,7 +2178,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 		"DELETE FROM d, a"
 		" USING pseudoana AS pa, context AS c, repinfo AS ri, data AS d"
 		"  LEFT JOIN attr AS a ON a.id_data = d.id"
-		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND d.id_report = ri.id";
+		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err;
 	SQLHSTMT stm;
 	int res;
@@ -2217,7 +2225,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 {
 	const char* query =
 		"SELECT d.id FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri"
-		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND d.id_report = ri.id";
+		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err = DBA_OK;
 	SQLHSTMT stm;
 	SQLHSTMT stm1;

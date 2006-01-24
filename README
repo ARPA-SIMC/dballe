@@ -196,7 +196,23 @@ These are the TODO-list items completed so far::
     + Usare dba_querybuf per le query
     + Usare tipi di interi piú piccoli nel database, dove ciò è possibile
     + Mettere un id_rep in data (e rendere id_rep un tinyint)
-
+    = Dividere le query in query context e query variabili per un certo
+      context.  I dati del context riempiono le keyword di un dba_record, e
+      le variabili riempiono le var
+    = Con l'ID report, è possibile fare il querybest lavorando solo sulla
+      tabella data
+    = Un'interazione diventa quindi:
+      for c in db.context(query)
+        record r = c.data
+        for d in context.data
+           r += d
+           output(r)
+      oppure
+      for c in db.context(query)
+        record r = c.data
+        for d in context.bestdata
+           r += d
+           output(r)
 
 
 TODO-list items being worked on
@@ -227,26 +243,6 @@ These are the TODO-list items currently being worked on::
 
        - Fare una cache delle informazioni per il tipo report, da leggere alla
 	 connessione al database e tenere in memoria
-       - Dividere le query in query context e query variabili per un certo
-	 context.  I dati del context riempiono le keyword di un dba_record, e
-	 le variabili riempiono le var
-       - Con l'ID report, è possibile fare il querybest lavorando solo sulla
-	 tabella data
-       - Un'interazione diventa quindi:
-
-         for c in db.context(query)
-	   record r = c.data
-	   for d in context.data
-	      r += d
-	      output(r)
-
-	 oppure
-
-         for c in db.context(query)
-	   record r = c.data
-	   for d in context.bestdata
-	      r += d
-	      output(r)
 
  * Import da VM o database Oracle di ARPA
     - Attributi
