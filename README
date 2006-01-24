@@ -129,6 +129,7 @@ These are the TODO-list items completed so far::
       the error message, not the key number
     + Permettere di scegliere, quando si importano messaggi, se riscrivere i
       dati esistenti o dare errore 
+    + Usare la B locale come B000000002551200.txt
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -257,11 +258,26 @@ These are the TODO-list items currently being worked on::
        - Fare cache di pseudoana id e context id
 
        - Fare query ad-hoc per l'import e l'export di dba_msg
+    - Rigenerare i test data del test dba_bufrex_generic.cc usando la nuova
+      B000000002551200.txt, perché è cambiata la dimensione di l1, l2, p1 e p2
 
  * Import da VM o database Oracle di ARPA
     - Buttare via le stazioni con NULL su lat o long
+    - Valore 2: se c'è, è il valore buono, e valore 1 importarlo come attributo
+    - Valore 3: dato character sostitutivo di valore1 o valore2
+    - N: se 0, ignorare
+      N: se 1, mettere un attributo "invalidato"
+      N: se 2, mettere valore1 come attributo
 
+ * Tools
+    - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
+    
  * Export per VM
+    - Gestire l'export del tempo passato, che è diviso nel dba_msg in due
+      componenti
+    - Cosa succede in fase di conversione msg2vm se conf era stato modificato?
+      Lo ignoro?
+    - Come lavoro con l'attributo 'replaced' dal flag di VM?
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
