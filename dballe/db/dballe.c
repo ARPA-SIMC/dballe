@@ -1333,6 +1333,73 @@ static dba_err dba_prepare_select(dba db, dba_record rec, SQLHSTMT stm)
 #undef PARM_INT
 }
 
+#if 0
+dba_err dba_query_context(dba db, dba_record rec, dba_db_context* context)
+{
+	const char* query =
+		"SELECT DISTINCT c.id"
+		"  FROM pseudoana AS pa, context AS c, repinfo AS ri"
+		" WHERE c.id_ana = pa.id AND c.id_report = ri.id";
+	dba_err err;
+	SQLHSTMT stm;
+	int context_id;
+
+	assert(db);
+
+	/* Allocate statement handle */
+	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		free(cur);
+		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+	}
+
+	/* Write the SQL query */
+
+	/* Initial query */
+	strcpy(db->querybuf, query);
+
+	/* Bind output fields */
+	SQLBindCol(stm, 1, SQL_C_SLONG, &context_id, sizeof(context_id), NULL);
+	
+	/* Add the select part */
+	DBA_RUN_OR_GOTO(failed, dba_prepare_select(db, rec, stm));
+
+	TRACE("Performing query: %s\n", db->querybuf);
+
+	/* Perform the query */
+	res = SQLExecDirect(stm, (unsigned char*)db->querybuf, SQL_NTS);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", db->querybuf);
+		goto failed;
+	}
+
+	/* Get the number of affected rows */
+	{
+		SQLINTEGER rowcount;
+		res = SQLRowCount(stm, &rowcount);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		{
+			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+			goto failed;
+		}
+		(*cur)->count = *count = rowcount;
+	}
+
+	/* Retrieve results will happen in dba_cursor_next() */
+
+	/* Done.  No need to deallocate the statement, it will be done by
+	 * dba_cursor_delete */
+	return dba_error_ok();
+
+	/* Exit point with cleanup after error */
+failed:
+	dba_cursor_delete(*cur);
+	*cur = 0;
+	return err;
+}
+#endif
 
 dba_err dba_query(dba db, dba_record rec, dba_cursor* cur, int* count)
 {

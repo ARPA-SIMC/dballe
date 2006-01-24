@@ -49,7 +49,8 @@ benchmark_SOURCES= \
 	bench/Benchmark.cc \
 	bench/dba_var.cc \
 	bench/dba_record.cc \
-	bench/bufrex.cc
+	bench/bufrex.cc \
+	bench/db.cc
 benchmark_LDADD = ../dballe/libdballe.la -lpopt
 
 INCLUDES = -I..

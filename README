@@ -207,9 +207,17 @@ These are the TODO-list items currently being worked on::
 	  - step 1: farsi dare l'elenco di context id che stanno nel box scelto
 	  - step 2a: farsi dare le variabili in quel context
 	  - step 2b: farsi dare variabili e attributi in quel context
-       - Mettere un id_rep in data
+
+       - Rinominare dba_* in dba_db_*
+
+       - Fare una classe per comporre le query, che permetta un append facile e
+	 faccia bound checking
+
+       - Write a benchmark for DB operations (normal queries and message I/O)
+
        - Fare una cache delle informazioni per il tipo report, da leggere alla
 	 connessione al database e tenere in memoria
+       - Mettere un id_rep in data (e rendere id_rep un tinyint)
        - Dividere le query in query context e query variabili per un certo
 	 context.  I dati del context riempiono le keyword di un dba_record, e
 	 le variabili riempiono le var

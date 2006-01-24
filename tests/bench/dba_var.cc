@@ -9,7 +9,7 @@ protected:
 	{
 		static const int iterations = 3000000;
 		dba_varinfo info;
-		DBA_RUN_OR_RETURN(dba_varinfo_query_local(DBA_VAR(0, 1, 41), &info));
+		DBA_RUN_OR_RETURN(dba_varinfo_query_local(DBA_VAR(0, 6, 1), &info));
 
 		for (int i = 0; i < iterations; i++)
 		{
@@ -59,7 +59,7 @@ protected:
 		dba_varinfo info;
 		dba_var var;
 
-		DBA_RUN_OR_RETURN(dba_varinfo_query_local(DBA_VAR(0, 1, 41), &info));
+		DBA_RUN_OR_RETURN(dba_varinfo_query_local(DBA_VAR(0, 6, 1), &info));
 		DBA_RUN_OR_RETURN(dba_var_createi(info, &var, 1234));
 
 		for (int i = 0; i < iterations; i++)

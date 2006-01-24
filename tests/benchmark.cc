@@ -1,4 +1,5 @@
 #include "bench/Benchmark.h"
+#include <dballe/dba_init.h>
 
 #include <sys/times.h>
 #include <unistd.h>
@@ -32,6 +33,11 @@ int main(int argc, const char* argv[])
 {
 	dba_err err = DBA_OK;
 
+	// We want predictable results
+	srand(1);
+
+	DBA_RUN_OR_GOTO(fail, dba_init());
+
 	if (argc == 1)
 		DBA_RUN_OR_GOTO(fail, Benchmark::root()->run());
 	else
@@ -42,6 +48,8 @@ int main(int argc, const char* argv[])
 			else
 				DBA_RUN_OR_GOTO(fail, Benchmark::root()->run(argv[i]));
 	}
+
+	dba_shutdown();
 
 	return 0;
 

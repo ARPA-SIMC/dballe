@@ -133,19 +133,19 @@ public:
 		char_keys.push_back(DBA_KEY_VARLIST);
 		int_vars.push_back(  DBA_VAR(0, 1,   1));
 		int_vars.push_back(  DBA_VAR(0, 1,   2));
-		int_vars.push_back(  DBA_VAR(0, 1,   4));
-		int_vars.push_back(  DBA_VAR(0, 1,   5));
-		int_vars.push_back(  DBA_VAR(0, 1,  20));
-		float_vars.push_back(DBA_VAR(0, 1,  41));
-		float_vars.push_back(DBA_VAR(0, 1,  42));
-		float_vars.push_back(DBA_VAR(0, 1,  43));
-		float_vars.push_back(DBA_VAR(0, 1, 208));
-		float_vars.push_back(DBA_VAR(0, 1, 209));
-		char_vars.push_back( DBA_VAR(0, 0,   1));
-		char_vars.push_back( DBA_VAR(0, 0,   5));
-		char_vars.push_back( DBA_VAR(0, 0,  10));
-		char_vars.push_back( DBA_VAR(0, 0,  11));
-		char_vars.push_back( DBA_VAR(0, 0,  12));
+		int_vars.push_back(  DBA_VAR(0, 4,   1));
+		int_vars.push_back(  DBA_VAR(0, 4,   2));
+		int_vars.push_back(  DBA_VAR(0, 4,   3));
+		float_vars.push_back(DBA_VAR(0, 2,   5));
+		float_vars.push_back(DBA_VAR(0, 2,  63));
+		float_vars.push_back(DBA_VAR(0, 5,   1));
+		float_vars.push_back(DBA_VAR(0, 7,   2));
+		float_vars.push_back(DBA_VAR(0, 14, 16));
+		char_vars.push_back( DBA_VAR(0, 1,   8));
+		char_vars.push_back( DBA_VAR(0, 1,  11));
+		char_vars.push_back( DBA_VAR(0, 1,   8));
+		char_vars.push_back( DBA_VAR(0, 1,  11));
+		char_vars.push_back( DBA_VAR(0, 1,   8));
 	}
 };
 
