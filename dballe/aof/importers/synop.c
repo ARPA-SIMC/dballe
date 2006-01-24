@@ -156,27 +156,27 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out)
 	}
 	if (OBS(32) & 0x0800) /* Ground group */
 	{
-		dba_aof_dump_word("Ground group: ", OBS(i)); fprintf(stderr, "\n");
+		/* dba_aof_dump_word("Ground group: ", OBS(i)); fprintf(stderr, "\n"); */
 		i++;
 	}
 	if (OBS(32) & 0x0400) /* Special group 1 */
 	{
-		dba_aof_dump_word("Special group 1: ", OBS(i)); fprintf(stderr, "\n");
+		/* dba_aof_dump_word("Special group 1: ", OBS(i)); fprintf(stderr, "\n"); */
 		i++;
 	}
 	if (OBS(32) & 0x0200) /* Special group 2 */
 	{
-		dba_aof_dump_word("Special group 2: ", OBS(i)); fprintf(stderr, "\n");
+		/* dba_aof_dump_word("Special group 2: ", OBS(i)); fprintf(stderr, "\n"); */
 		i++;
 	}
 	if (OBS(32) & 0x0100) /* Ice group */
 	{
-		dba_aof_dump_word("Ice group: ", OBS(i)); fprintf(stderr, "\n");
+		/* dba_aof_dump_word("Ice group: ", OBS(i)); fprintf(stderr, "\n"); */
 		i++;
 	}
 	if (OBS(32) & 0x0080) /* Rain group */
 	{
-		dba_aof_dump_word("Rain group: ", OBS(i)); fprintf(stderr, "\n");
+		/* dba_aof_dump_word("Rain group: ", OBS(i)); fprintf(stderr, "\n"); */
 		i++;
 	}
 	if (OBS(32) & 0x0040) /* Ship group */
@@ -193,17 +193,17 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out)
 	}
 	if (OBS(32) & 0x0020) /* Waves group */
 	{
-		dba_aof_dump_word("Waves group 1: ", OBS(i)); fprintf(stderr, "\n");
+		/* dba_aof_dump_word("Waves group 1: ", OBS(i)); fprintf(stderr, "\n"); */
 		i++;
 	}
 	if (OBS(32) & 0x0010) /* Waves group */
 	{
-		dba_aof_dump_word("Waves group 2: ", OBS(i)); fprintf(stderr, "\n");
+		/* dba_aof_dump_word("Waves group 2: ", OBS(i)); fprintf(stderr, "\n"); */
 		i++;
 	}
 	if (OBS(32) & 0x0008) /* Waves group */
 	{
-		dba_aof_dump_word("Waves group 3: ", OBS(i)); fprintf(stderr, "\n");
+		/* dba_aof_dump_word("Waves group 3: ", OBS(i)); fprintf(stderr, "\n"); */
 		i++;
 	}
 
