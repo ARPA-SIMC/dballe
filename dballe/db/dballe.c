@@ -76,6 +76,28 @@ struct _dba_db
 	int sel_station;
 };
 
+struct _dba_db_context {
+	SQLHSTMT stm;
+	int count;
+
+	int out_ana_id;
+	int out_lat;
+	int out_lon;
+	char out_ident[64];		SQLINTEGER out_ident_ind;
+	int out_height;			SQLINTEGER out_height_ind;
+	int out_heightbaro;		SQLINTEGER out_heightbaro_ind;
+	int out_block;			SQLINTEGER out_block_ind;
+	int out_station;		SQLINTEGER out_station_ind;
+	char out_name[255];		SQLINTEGER out_name_ind;
+	int out_leveltype;
+	int out_l1;
+	int out_l2;
+	int out_pindicator;
+	int out_p1;
+	int out_p2;
+	char out_datetime[25];
+};
+
 struct _dba_db_cursor {
 	dba_db db;
 	enum { ANA, DATA, QC } type;
@@ -148,14 +170,15 @@ static const char* init_queries[] = {
 	"CREATE TABLE data ("
 	"   id			INTEGER auto_increment PRIMARY KEY,"
 	"   id_context	INTEGER NOT NULL,"
+	"	id_report	SMALLINT NOT NULL,"
 	"	id_var		SMALLINT NOT NULL,"
 	"	value		VARCHAR(255) NOT NULL,"
-	"   UNIQUE INDEX(id_var, id_context)"
+	"	INDEX (id_context),"
+	"   UNIQUE INDEX(id_var, id_context, id_report)"
 	") " TABLETYPE,
 	"CREATE TABLE context ("
 	"   id			INTEGER auto_increment PRIMARY KEY,"
 	"   id_ana		INTEGER NOT NULL,"
-	"	id_report	SMALLINT NOT NULL,"
 	"   datetime	DATETIME NOT NULL,"
 	"	ltype		SMALLINT NOT NULL,"
 	"	l1			INTEGER NOT NULL,"
@@ -163,7 +186,7 @@ static const char* init_queries[] = {
 	"	ptype		SMALLINT NOT NULL,"
 	"	p1			INTEGER NOT NULL,"
 	"	p2			INTEGER NOT NULL,"
-	"   UNIQUE INDEX (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report)"
+	"   UNIQUE INDEX (id_ana, datetime, ltype, l1, l2, ptype, p1, p2)"
 	") " TABLETYPE,
 	"CREATE TABLE attr ("
 	"   id_data INTEGER NOT NULL,"
@@ -712,12 +735,11 @@ cleanup:
 static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id)
 {
 	const char* query_sel =
-		"SELECT id FROM context WHERE id_ana=? AND id_report=? AND datetime=?"
+		"SELECT id FROM context WHERE id_ana=? AND datetime=?"
 		" AND ltype=? AND l1=? AND l2=?"
 		" AND ptype=? AND p1=? AND p2=?";
 	const char* query =
-		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	int id_report;
+		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?)";
 	char datebuf[25];
 	SQLINTEGER datebuf_ind;
 	int ltype;
@@ -735,7 +757,6 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	assert(db);
 
 	/* Retrieve data */
-	DBA_RUN_OR_GOTO(fail, dba_db_get_rep_cod(db, rec, &id_report));
 	{
 		const char *year, *month, *day, *hour, *min, *sec;
 		/* Also input the seconds, defaulting to 0 if not found */
@@ -776,14 +797,13 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 
 	/* Bind parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_ana, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_report, 0, 0);
-	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &datebuf, 0, &datebuf_ind);
-	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ltype, 0, 0);
-	SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l1, 0, 0);
-	SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l2, 0, 0);
-	SQLBindParameter(stm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ptype, 0, 0);
-	SQLBindParameter(stm, 8, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p1, 0, 0);
-	SQLBindParameter(stm, 9, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p2, 0, 0);
+	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &datebuf, 0, &datebuf_ind);
+	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ltype, 0, 0);
+	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l1, 0, 0);
+	SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l2, 0, 0);
+	SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ptype, 0, 0);
+	SQLBindParameter(stm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p1, 0, 0);
+	SQLBindParameter(stm, 8, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p2, 0, 0);
 
 	/* Check for an existing context with these data */
 
@@ -905,17 +925,18 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 	 * Else, we need to do a select first to get the ID.
 	 */
 	const char* insert_query =
-		"INSERT INTO data (id_context, id_var, value)"
-		" VALUES(?, ?, ?)";
+		"INSERT INTO data (id_context, id_report, id_var, value)"
+		" VALUES(?, ?, ?, ?)";
 	const char* replace_query =
-		"INSERT INTO data (id_context, id_var, value)"
-		" VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
+		"INSERT INTO data (id_context, id_report, id_var, value)"
+		" VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
 /*		"REPLACE INTO data (id_context, id_var, value)"
 		" VALUES(?, ?, ?)"; */
 	dba_err err;
 	dba_record_cursor item;
 	int id_pseudoana;
 	int id_context;
+	int id_report;
 	dba_varcode id_var;
 	char value[255];
 	SQLINTEGER value_ind;
@@ -930,6 +951,9 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 
 	/* Begin the transaction */
 	DBA_RUN_OR_RETURN(dba_begin(db->od_conn));
+
+	/* Get the ID of the report */
+	DBA_RUN_OR_GOTO(failed1, dba_db_get_rep_cod(db, rec, &id_report));
 
 	/* Insert the pseudoana data, and get the ID */
 	DBA_RUN_OR_GOTO(failed1, dba_insert_pseudoana(db, rec, &id_pseudoana, update_pseudoana));
@@ -956,8 +980,9 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 
 	/* Bind parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
-	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, value, 0, &value_ind);
+	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_report, 0, 0);
+	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
+	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, value, 0, &value_ind);
 
 	/* Insert all found variables */
 	for (item = dba_record_iterate_first(rec); item != NULL;
@@ -1069,6 +1094,24 @@ dba_ana_count_failed:
 	return err;
 }
 #endif
+
+static dba_err dba_db_context_create(dba_db db, dba_db_context* co)
+{
+	assert(db);
+	if ((*co = (dba_db_context)malloc(sizeof(struct _dba_db_context))) == NULL)
+		return dba_error_alloc("trying to allocate a new dba_db_cursor object");
+	(*co)->stm = NULL;
+	return dba_error_ok();
+}
+
+void dba_db_context_delete(dba_db_context co)
+{
+	assert(co);
+
+	if (co->stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, co->stm);
+	free(co);
+}
 
 static dba_err dba_db_cursor_new(dba_db db, dba_db_cursor* cur)
 {
@@ -1219,20 +1262,19 @@ dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 	return dba_error_ok();
 }
 
-static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
-{
-	int parm_num = 1;
-	const char* val;
-
-	/* Bind select fields */
-
 #define PARM_INT(field, key, sql) do {\
 	if ((val = dba_record_key_peek_value(rec, key)) != NULL) { \
 		db->sel_##field = strtol(val, 0, 10); \
 		TRACE("found " #field ": adding " sql ". val is %d\n", db->sel_##field); \
 		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, sql)); \
-		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_##field, 0, 0); \
+		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_##field, 0, 0); \
 	} } while (0)
+
+static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
+{
+	const char* val;
+
+	/* Bind select fields */
 
 	/* Set the time extremes */
 	{
@@ -1247,7 +1289,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 					minvalues[3], minvalues[4], minvalues[5]);
 			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime >= ?"));
 			TRACE("found min time interval: adding AND c.datetime >= ?.  val is %s\n", db->sel_dtmin);
-			SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmin, 0, 0);
+			SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmin, 0, 0);
 		}
 		
 		if (maxvalues[0] != -1)
@@ -1257,11 +1299,10 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 					maxvalues[3], maxvalues[4], maxvalues[5]);
 			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime <= ?"));
 			TRACE("found max time interval: adding AND c.datetime <= ?.  val is %s\n", db->sel_dtmax);
-			SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmax, 0, 0);
+			SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmax, 0, 0);
 		}
 	}
 
-	PARM_INT(data_id, DBA_KEY_DATA_ID, " AND d.id = ?");
 	PARM_INT(ana_id, DBA_KEY_ANA_ID, " AND pa.id = ?");
 	PARM_INT(latmin, DBA_KEY_LATMIN, " AND pa.lat > ?");
 	PARM_INT(latmax, DBA_KEY_LATMAX, " AND pa.lat < ?");
@@ -1288,7 +1329,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 	{
 		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident = ?"));
 		TRACE("found ident: adding AND pa.ident = ?.  val is %s\n", db->sel_ident);
-		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_ident, 0, 0);
+		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_ident, 0, 0);
 	}
 
 	PARM_INT(pindicator, DBA_KEY_PINDICATOR, " AND c.ptype = ?");
@@ -1298,12 +1339,29 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 	PARM_INT(l1, DBA_KEY_L1, " AND c.l1 = ?");
 	PARM_INT(l2, DBA_KEY_L2, " AND c.l2 = ?");
 
+	PARM_INT(block, DBA_KEY_BLOCK, " AND pa.block = ?");
+	PARM_INT(station, DBA_KEY_STATION, " AND pa.station = ?");
+
+	return dba_error_ok();
+
+}
+
+static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
+{
+	const char* val;
+
+	DBA_RUN_OR_RETURN(dba_prepare_select_context(db, rec, stm, pseq));
+
+	/* Bind select fields */
+
+	PARM_INT(data_id, DBA_KEY_DATA_ID, " AND d.id = ?");
+
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_VAR)) != NULL)
 	{
 		db->sel_b = dba_descriptor_code(val);
 		TRACE("found b: adding AND d.id_var = ?. val is %d %s\n", db->sel_b, val);
 		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND d.id_var = ?"));
-		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_b, 0, 0);
+		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_b, 0, 0);
 	}
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_VARLIST)) != NULL)
 	{
@@ -1322,7 +1380,7 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, ")"));
 		/*
 		strcat(db->querybuf, " AND d.id_var IN (?)");
-		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_blist, 0, 0);
+		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_blist, 0, 0);
 		*/
 	}
 
@@ -1332,19 +1390,17 @@ static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm)
 	{
 		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND ri.memo = ?"));
 		TRACE("found rep_memo: adding AND ri.memo = ?.  val is %s\n", db->sel_rep_memo);
-		SQLBindParameter(stm, parm_num++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_rep_memo, 0, 0);
+		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_rep_memo, 0, 0);
 	}
 
 	PARM_INT(priority, DBA_KEY_PRIORITY, " AND ri.prio = ?");
 	PARM_INT(priomin, DBA_KEY_PRIOMIN, " AND ri.prio >= ?");
 	PARM_INT(priomax, DBA_KEY_PRIOMAX, " AND ri.prio <= ?");
-	PARM_INT(block, DBA_KEY_BLOCK, " AND pa.block = ?");
-	PARM_INT(station, DBA_KEY_STATION, " AND pa.station = ?");
 
 	return dba_error_ok();
 
-#undef PARM_INT
 }
+#undef PARM_INT
 
 #if 0
 dba_err dba_query_context(dba_db db, dba_record rec, dba_db_context* context)
@@ -1414,6 +1470,122 @@ failed:
 }
 #endif
 
+dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int* count)
+{
+	const char* query =
+		"SELECT pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"
+		"       pa.block, pa.station, pa.name,"
+		"       c.ltype, c.l1, c.l2,"
+		"       c.ptype, c.p1, c.p2,"
+		"       c.datetime"
+		"  FROM pseudoana AS pa, context AS c"
+		" WHERE c.id_ana = pa.id";
+	dba_err err = DBA_OK;
+	SQLHSTMT stm = NULL;
+	int res;
+	int pseq = 1;
+
+	assert(db);
+
+	*co = NULL;
+
+	/* Allocate a new context */
+	DBA_RUN_OR_RETURN(dba_db_context_create(db, co));
+
+	/* Allocate statement handle */
+	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		goto fail;
+	}
+	(*co)->stm = stm;
+
+	/* Write the SQL query */
+
+	/* Initial query */
+	dba_querybuf_reset(db->querybuf);
+	DBA_RUN_OR_GOTO(fail, dba_querybuf_append(db->querybuf, query));
+
+	/* Bind output fields */
+#define DBA_QUERY_BIND_NONNULL(num, type, name) \
+	SQLBindCol(stm, num, type, &(*co)->out_##name, sizeof((*co)->out_##name), NULL);
+#define DBA_QUERY_BIND(num, type, name) \
+	SQLBindCol(stm, num, type, &(*co)->out_##name, sizeof((*co)->out_##name), &(*co)->out_##name##_ind);
+	DBA_QUERY_BIND_NONNULL( 1, SQL_C_SLONG, ana_id);
+	DBA_QUERY_BIND_NONNULL( 2, SQL_C_SLONG, lat);
+	DBA_QUERY_BIND_NONNULL( 3, SQL_C_SLONG, lon);
+	DBA_QUERY_BIND( 4, SQL_C_CHAR, ident);
+	DBA_QUERY_BIND( 5, SQL_C_SLONG, height);
+	DBA_QUERY_BIND( 6, SQL_C_SLONG, heightbaro);
+	DBA_QUERY_BIND( 7, SQL_C_SLONG, block);
+	DBA_QUERY_BIND( 8, SQL_C_SLONG, station);
+	DBA_QUERY_BIND( 9, SQL_C_CHAR, name);
+	DBA_QUERY_BIND_NONNULL(10, SQL_C_SLONG, leveltype);
+	DBA_QUERY_BIND_NONNULL(11, SQL_C_SLONG, l1);
+	DBA_QUERY_BIND_NONNULL(12, SQL_C_SLONG, l2);
+	DBA_QUERY_BIND_NONNULL(13, SQL_C_SLONG, pindicator);
+	DBA_QUERY_BIND_NONNULL(14, SQL_C_SLONG, p1);
+	DBA_QUERY_BIND_NONNULL(15, SQL_C_SLONG, p2);
+	DBA_QUERY_BIND_NONNULL(16, SQL_C_CHAR, datetime);
+#undef DBA_QUERY_BIND
+#undef DBA_QUERY_BIND_NONNULL
+	
+	/* Add the select part */
+	DBA_RUN_OR_GOTO(fail, dba_prepare_select_context(db, rec, stm, &pseq));
+
+	DBA_RUN_OR_GOTO(fail, dba_querybuf_append(db->querybuf,
+		" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
+
+/* 	strcat(db->querybuf, " ORDER BY ri.prio, d.id_report"); */
+/* fprintf(stderr, "QUERY: %s\n", db->querybuf); */
+
+	TRACE("Performing query: %s\n", dba_querybuf_get(db->querybuf));
+
+	/* Perform the query */
+	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
+		goto fail;
+	}
+
+	/* Get the number of affected rows */
+	{
+		SQLINTEGER rowcount;
+		res = SQLRowCount(stm, &rowcount);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		{
+			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+			goto fail;
+		}
+		(*co)->count = *count = rowcount;
+
+		/* If there are not results, return a NULL iterator but still report
+		 * success */
+		if (rowcount == 0)
+		{
+			dba_db_context_delete(*co);
+			*co = NULL;
+		}
+	}
+
+	/* Retrieve results will happen during iteration of the dba_db_context */
+
+	/* Done.  No need to deallocate the statement, it will be done by
+	 * dba_db_cursor_delete */
+	return dba_error_ok();
+
+	/* Exit point with cleanup after error */
+fail:
+	if (*co != NULL)
+	{
+		dba_db_context_delete(*co);
+		*co = NULL;
+	}
+	return err;
+}
+
 dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 {
 	const char* query =
@@ -1421,12 +1593,13 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 		"       pa.block, pa.station, pa.name,"
 		"       c.ltype, c.l1, c.l2,"
 		"       c.ptype, c.p1, c.p2,"
-		"       d.id_var, c.datetime, d.value, c.id_report, ri.memo, ri.prio, d.id"
+		"       d.id_var, c.datetime, d.value, d.id_report, ri.memo, ri.prio, d.id"
 		"  FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri"
-		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
+		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND d.id_report = ri.id";
 	dba_err err;
 	SQLHSTMT stm;
 	int res;
+	int pseq = 1;
 
 	assert(db);
 
@@ -1481,15 +1654,15 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 #undef DBA_QUERY_BIND
 	
 	/* Add the select part */
-	DBA_RUN_OR_GOTO(failed, dba_prepare_select(db, rec, stm));
+	DBA_RUN_OR_GOTO(failed, dba_prepare_select(db, rec, stm, &pseq));
 
 	if (dba_record_key_peek_value(rec, DBA_KEY_QUERYBEST) != NULL)
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf,
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
 			" GROUP BY d.id_var, c.id_ana, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, c.datetime"
 			" HAVING ri.prio=MAX(ri.prio)"
 			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
 	else
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf,
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
 			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio"));
 
 /* 	strcat(db->querybuf, " ORDER BY ri.prio, d.id_report"); */
@@ -1635,10 +1808,11 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 		"DELETE FROM d, a"
 		" USING pseudoana AS pa, context AS c, repinfo AS ri, data AS d"
 		"  LEFT JOIN attr AS a ON a.id_data = d.id"
-		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
+		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND d.id_report = ri.id";
 	dba_err err;
 	SQLHSTMT stm;
 	int res;
+	int pseq = 1;
 
 	assert(db);
 
@@ -1653,11 +1827,10 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 
 	/* Initial query */
 	dba_querybuf_reset(db->querybuf);
-	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
+	DBA_RUN_OR_GOTO(dba_delete_failed, dba_querybuf_append(db->querybuf, query));
 
 	/* Bind select fields */
-	if ((err = dba_prepare_select(db, rec, stm)) != DBA_OK)
-		goto dba_delete_failed;
+	DBA_RUN_OR_GOTO(dba_delete_failed, dba_prepare_select(db, rec, stm, &pseq));
 
 	/*fprintf(stderr, "QUERY: %s\n", db->querybuf);*/
 
@@ -1682,7 +1855,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 {
 	const char* query =
 		"SELECT d.id FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri"
-		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
+		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND d.id_report = ri.id";
 	dba_err err = DBA_OK;
 	SQLHSTMT stm;
 	SQLHSTMT stm1;
@@ -1715,8 +1888,8 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	/* Write the SQL query */
 
 	/* Initial query */
-	DBA_RUN_OR_RETURN(dba_querybuf_reset(db->querybuf));
-	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
+	dba_querybuf_reset(db->querybuf);
+	DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(db->querybuf, query));
 
 	/* Bind select fields */
 	DBA_RUN_OR_GOTO(cleanup, dba_prepare_select(db, rec, stm));

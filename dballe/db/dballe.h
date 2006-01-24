@@ -20,6 +20,11 @@ extern "C" {
 typedef struct _dba_db* dba_db;
 
 /**
+ * Handle identifying a dballe context
+ */
+typedef struct _dba_db_context* dba_db_context;
+
+/**
  * Handle identifying a dballe cursor
  */
 typedef struct _dba_db_cursor* dba_db_cursor;
