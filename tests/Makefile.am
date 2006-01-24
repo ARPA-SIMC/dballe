@@ -55,4 +55,4 @@ benchmark_LDADD = ../dballe/libdballe.la -lpopt
 
 INCLUDES = -I..
 
-EXTRA_DIST = bench/Benchmark.h test-utils.h tut.h tut_reporter.h tut_restartable.h
+EXTRA_DIST = bench/Benchmark.h bench/bench-utils.h test-utils.h tut.h tut_reporter.h tut_restartable.h
