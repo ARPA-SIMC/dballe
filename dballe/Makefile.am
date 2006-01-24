@@ -27,8 +27,7 @@ libdballe_la_LIBADD = \
 		msg/libmsg.la \
 		bufrex/libbufrex.la \
 		aof/libaof.la \
-		db/libdb.la \
-		db/exporters/libdbexporters.la
+		db/libdb.la
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 EXTRA_DIST = mainpage.dox dballe.dox

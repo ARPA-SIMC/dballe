@@ -121,6 +121,9 @@ These are the TODO-list items completed so far::
     + Far si' che la prendilo non setti l'ana_id nell'input, e lo restituisca
       invece con enqi '!ana_id'
     + Implementare l'iterazione tra gli attributi di una dba_var
+    + Gli exporter dal DB non sono quasi tutti accumunabili?  export_synop e
+      export_generic in fondo sono uguali.
+       + aggregati tutti gli exporter da db in un unico dba_db_export
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -206,8 +209,6 @@ These are the TODO-list items currently being worked on::
 	  - step 2b: farsi dare variabili e attributi in quel context
     - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
       dba_insert_or_replace
-    - Gli exporter dal DB non sono quasi tutti accumunabili?  export_synop e
-      export_generic in fondo sono uguali.
 
  * Import da VM o database Oracle di ARPA
     - Attributi

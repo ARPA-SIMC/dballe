@@ -100,7 +100,6 @@ dballe/msg/Makefile
 dballe/bufrex/Makefile
 dballe/aof/Makefile
 dballe/db/Makefile
-dballe/db/exporters/Makefile
 fortran/Makefile
 tools/Makefile
 tables/Makefile

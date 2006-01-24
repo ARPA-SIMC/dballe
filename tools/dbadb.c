@@ -207,16 +207,16 @@ dba_err do_export(poptContext optCon)
 
 	switch (rep_cod)
 	{
-		case 1:		DBA_RUN_OR_RETURN(dba_db_export_synop(db, &msgs, query)); break;
-		case 2:		DBA_RUN_OR_RETURN(dba_db_export_generic(db, &msgs, query)); break;
-		case 3:		DBA_RUN_OR_RETURN(dba_db_export_sounding(db, &msgs, query)); break;
-		case 9:		DBA_RUN_OR_RETURN(dba_db_export_sea(db, &msgs, query)); break;
-		case 10:	DBA_RUN_OR_RETURN(dba_db_export_sea(db, &msgs, query)); break;
-		case 11:	DBA_RUN_OR_RETURN(dba_db_export_sounding(db, &msgs, query)); break;
-		case 12:	DBA_RUN_OR_RETURN(dba_db_export_flight(db, &msgs, query)); break;
-		case 13:	DBA_RUN_OR_RETURN(dba_db_export_flight(db, &msgs, query)); break;
-		case 14:	DBA_RUN_OR_RETURN(dba_db_export_flight(db, &msgs, query)); break;
-		default:	DBA_RUN_OR_RETURN(dba_db_export_generic(db, &msgs, query)); break;
+		case 1:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SYNOP, &msgs, query)); break;
+		case 2:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_GENERIC, &msgs, query)); break;
+		case 3:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP, &msgs, query)); break;
+		case 9:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_BUOY, &msgs, query)); break;
+		case 10:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SHIP, &msgs, query)); break;
+		case 11:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP_SHIP, &msgs, query)); break;
+		case 12:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_AIREP, &msgs, query)); break;
+		case 13:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_AMDAR, &msgs, query)); break;
+		case 14:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_ACARS, &msgs, query)); break;
+		default:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_GENERIC, &msgs, query)); break;
 	}
 
 	if (msgs == NULL)
