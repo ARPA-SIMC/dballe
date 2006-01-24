@@ -19,6 +19,8 @@ struct uniconv { const char* tag; double mul; double add; };
 "gc->K",				1,	  273.16
 "K->gc/10",			   10,	 -273.16
 "gc/10->K",				0.1,  273.16
+"C->gc/10",			   10,		0
+"gc/10->C",				0.1,	0
 "gc->C",				1,		0
 "C->gc",				1,		0
 "YEARS->YEAR",			1,   	0
