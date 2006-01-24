@@ -4,6 +4,7 @@
  001011 SHIP OR MOBILE LAND STATION IDENTIFIER                           CCITTIA5                   0            0  72 CHARACTER                 0          9
  001012 DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM**               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  001013 SPEED OF MOTION OF MOVING OBSERVING PLATFORM*                    M/S                        0            0  10 M/S                       0          3
+ 001192 [SIM] MeteoDB station ID                                         NUMERIC                    0            0  24 NUMERIC                   0          8
  002001 TYPE OF STATION                                                  CODE TABLE 2001            0            0   2 CODE TABLE 2001           0          1
  002002 TYPE OF INSTRUMENTATION FOR WIND MEASUREMENT                     FLAG TABLE 2002            0            0   4 FLAG TABLE 2002           0          2
  002005 PRECISION OF TEMPERATURE OBSERVATION                             K                          2            0   7 K                         2          3

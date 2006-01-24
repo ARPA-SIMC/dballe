@@ -64,19 +64,7 @@
  001092 TYPE OF ENSEMBLE FORECAST                                        CODE TABLE 001092          0            0   8
  001095 SOFTWARE IDENTIFICATION AND VERSION NUMBER                       CCITTIA5                   0            0 112
  001096 ACQUISITION STATION IDENTIFIER                                   CCITTIA5                   0            0 160
- 001192 MODEL VERSION NUMBER                                             CODE TABLE   1192          0            0   8  
- 001193 SIGMA_0 SIMULATION METHOD                                        CODE TABLE   1193          0            0   4  
- 001194 CARRIER BALLOON/AIRCRAFT IDENTIFIER                              CCITTIA5                   0            0  72  
- 001195 MOBIL LAND STATION IDENTIFIER                                    CCITTIA5                   0            0  72  
- 001196 CONSTANT LEVEL BALLOON IDENTIFIER                                CCITTIA5                   0            0  72  
- 001197 RTP - PLATFORM TYPE                                              CODE TABLE   1197          0            0  10  
- 001198 ITP - DECK ID                                                    CODE TABLE   1198          0            0  10  
- 001199 DUP - DUPLICATE STATUS                                           CODE TABLE   1199          0            0   4  
- 001201 GENERATING APPLICATION                                           CODE TABLE   1201          0            0   8  
- 001205 SATELLITE IDENTIFIER                                             CODE TABLE   1205          0            0  10  
- 001208 VELOCITY OF PLATFORM, X                                          M/S                        5  -1073741824  31  
- 001209 VELOCITY OF PLATFORM, Y                                          M/S                        5  -1073741824  31  
- 001210 VELOCITY OF PLATFORM, Z                                          M/S                        5  -1073741824  31  
+ 001192 [SIM] MeteoDB station ID                                         NUMERIC                    0            0  24
  002001 TYPE OF STATION                                                  CODE TABLE 002001          0            0   2
  002002 TYPE OF INSTRUMENTATION FOR WIND MEASUREMENT                     FLAG TABLE 002002          0            0   4
  002003 TYPE OF MEASURING EQUIPMENT USED                                 CODE TABLE 002003          0            0   4
@@ -1207,68 +1195,10 @@
  033052 S  BAND OCEAN RETRACKING QUALITY                                 FLAG TABLE 033052          0            0  21
  033053 KU BAND OCEAN RETRACKING QUALITY                                 FLAG TABLE 033053          0            0  21
  033054 DATA EXTRACTION INDICATOR                                        FLAG TABLE 033054          0            0   8
- 033192 TEM1 CONFIDENCE                                                  %                          0            0   7  
- 033193 DATA QUALITY 3 BIT CODE                                          CODE TABLE  33193          0            0   3  
- 033194 DATA QUALITY 2 BIT CODE                                          CODE TABLE  33194          0            0   2  
- 033195 ECMWF SAR QC INDICATOR                                           CODE TABLE  33195          0            0   5  
- 033196 ECMWF WAM QC INDICATOR                                           CODE TABLE  33196          0            0   2  
- 033197 ECMWF SAR INVERSION QC INDICATOR                                 CODE TABLE  33197          0            0   3  
- 033198 MINIMUM COST                                                     NUMERIC                    4            0  14
- 033199 1D VAR TOTAL PRECIPITABLE WATER RETRIEVED ERROR(S)               KG/M**2                    2            0  11
- 033200 ANALYSIS REPORT EVENTS                                           FLAG TABLE  33200          0            0  31  
- 033201 ANALYSIS REPORT STATUS EVENT                                     FLAG TABLE  33201          0            0  13  
- 033202 ANALYSIS DATUM EVENT FLAGS (1)                                   FLAG TABLE  33202          0            0  31  
- 033203 ANALYSIS DATUM EVENT FLAGS (2)                                   FLAG TABLE  33203          0            0  11  
- 033204 ANALYSIS DATUM STATUS FLAGS                                      FLAG TABLE  33204          0            0  21  
- 033205 VARIATIONAL ANALYSIS BLACK LIST FLAG                             CODE TABLE  33205          0            0   4  
- 033206 VARIATIONAL ANALYSIS QUALITY CONTROL FLAG                        CODE TABLE  33206          0            0   4  
- 033207 VARIATIONAL ANALYSIS DEPARTURE FLAG                              CODE TABLE  33207          0            0   4  
- 033208 VARIATIONAL ANALYSIS FIRST QUESS CHECK FLAG                      CODE TABLE 033208          0            0   4
- 033209 VARIATIONAL ANALYSIS FINAL FLAG                                  CODE TABLE  33209          0            0   4  
- 033210 INCREMENTAL VARIATIONAL ANALYSIS UPDATE NUMBER                   NUMERIC                    0            0   7
- 033211 MINIMISATION SIMULATION NUMBER                                   NUMERIC                    0            0  10
- 033212 1D VAR ITERATION NUMBER                                          NUMERIC                    0            0  10
- 033213 1D VAR RADIANCE COST                                             NUMERIC                    1        -1000  11
- 033214 1D VAR ERROR(S)                                                  FLAG TABLE  33214          0            0  11  
- 033215 DIRECTIONAL SKILL                                                NUMERIC                    1        -4096  13
- 033216 1D VAR SURFACE TYPE QUALITY CONTROL                              CODE TABLE  33216          0            0   3  
- 033217 1D VAR FAILURE INDICATOR                                         CODE TABLE  33217          0            0   2  
- 033218 1D VAR ESTIMATE OF SCATTERING                                    NUMERIC                    2            0  12
- 033219 SSMI INDIPENDENT SCATTERING INDEX                                NUMERIC                    2       -50000  16
- 033220 VARIATIONAL ANALYSIS REPORT EVENTS (1)                           FLAG TABLE  33220          0            0  31  
- 033221 VARIATIONAL ANALYSIS SYNOP EVENTS (2)                            FLAG TABLE  33221          0            0  31  
- 033222 VARIATIONAL ANALYSIS AIREP EVENTS (2)                            FLAG TABLE  33222          0            0  31  
- 033223 VARIATIONAL ANALYSIS SATOB EVENTS (2)                            FLAG TABLE  33223          0            0  31  
- 033224 VARIATIONAL ANALYSIS DRIBU EVENTS (2)                            FLAG TABLE  33224          0            0  31  
- 033225 VARIATIONAL ANALYSIS TEMP EVENTS (2)                             FLAG TABLE  33225          0            0  31  
- 033226 VARIATIONAL ANALYSIS PILOT EVENTS (2)                            FLAG TABLE  33226          0            0  31  
- 033227 VARIATIONAL ANALYSIS SATEM/TOVS EVENTS (2)                       FLAG TABLE  33227          0            0  31  
- 033228 VARIATIONAL ANALYSIS PAOB EVENTS (2)                             FLAG TABLE  33228          0            0  31  
- 033229 VARIATIONAL ANALYSIS SCATTEROMETER EVENTS (2)                    FLAG TABLE  33229          0            0  31  
- 033230 VARIATIONAL ANALYSIS RAW RADIANCES EVENTS (2)                    FLAG TABLE  33230          0            0  31  
- 033231 PRESAT SUMMARY FLAGS                                             FLAG TABLE  33231          0            0   6  
- 033232 REPORT BLACK LIST EVENTS                                         FLAG TABLE  33232          0            0  31  
- 033233 VARIATIONAL ANALYSIS REPORT STATUS                               FLAG TABLE  33233          0            0  31  
- 033234 VARIATIONAL ANALYSIS DATUM STATUS                                FLAG TABLE  33234          0            0  31  
- 033236 VARIATIONAL ANALYSIS DATUM EVENTS (1)                            FLAG TABLE  33236          0            0  31  
- 033237 VARIATIONAL ANALYSIS SYNOP DATUM EVENTS (2)                      FLAG TABLE 033237          0            0  31
- 033238 VARIATIONAL ANALYSIS AIREP DATUM EVENTS (2)                      FLAG TABLE 033238          0            0  31
- 033239 VARIATIONAL ANALYSIS SATOB DATUM EVENTS (2)                      FLAG TABLE 033239          0            0  31
- 033240 VARIATIONAL ANALYSIS DRIBU DATUM EVENTS (2)                      FLAG TABLE 033240          0            0  31
- 033241 GROSS ERROR PROBABILITY                                          NUMERIC                    3            0  10
- 033242 GROSS ERROR INDICATOR                                            CODE TABLE  33242          0            0   2  
- 033243 VARIATIONAL ANALYSIS TEMP DATUM EVENTS (2)                       FLAG TABLE  33243          0            0  31  
- 033244 VARIATIONAL ANALYSIS PILOT DATUM EVENTS (2)                      FLAG TABLE 033244          0            0  31
- 033245 VARIATIONAL ANALYSIS SATEM/TOVS DATUM EVENTS (2)                 FLAG TABLE  33245          0            0  31  
- 033246 VARIATIONAL ANALYSIS PAOB DATUM EVENTS (2)                       FLAG TABLE  33246          0            0  31  
- 033247 VARIATIONAL ANALYSIS SCATTEROMETER DATUM EVENTS (2)              FLAG TABLE  33247          0            0  31  
- 033248 VARIATIONAL ANALYSIS RAW RADIANCES DATUM EVENTS (2)              FLAG TABLE  33248          0            0  31  
- 033249 DATUM BLACK LIST EVENTS                                          FLAG TABLE  33249          0            0  31  
- 033250 PROBABILITY OF GROSS ERROR                                       NUMERIC                    6            0  20
- 033251 RANGE OF POSSIBLE VALUES                                         NUMERIC                    2            0  14
- 033252 MANUAL-AUTOMATIC QUALITY CONTROL                                 CODE TABLE  33252          0            0   4  
- 033253 NOMINAL CONFIDENCE THRESHOLD                                     %                          0            0   7
- 033254 WIND CORRELATION METHOD                                          FLAG TABLE  33254          0            0  20  
+ 033192 [SIM] Climatological and consistency check                       %                          0            0   7
+ 033193 [SIM] Time consistency                                           %                          0            0   7
+ 033194 [SIM] Space consistency                                          %                          0            0   7
+ 033195 [SIM] MeteoDB variable ID                                        NUMERIC                    0            0  24
  035000 FM AND REGIONAL CODE NUMBER                                      CODE TABLE 035000          0            0  10
  035001 TIME-FRAME FOR MONITORING                                        CODE TABLE 035001          0            0   3
  035011 NUMBER OF REPORTS ACTUALLY RECEIVED                              NUMERIC                    0            0  14
