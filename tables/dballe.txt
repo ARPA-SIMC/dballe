@@ -96,6 +96,7 @@
  033040 CONFIDENCE INTERVAL                                              %                          0            0   7 PERCENT                   0          3
  033041 ATTRIBUTE OF FOLLOWING VALUE                                     CODE TABLE 33041           0            0   2 CODE TABLE 33041          0          1
  033050 GLOBAL GTSPP QUALITY FLAG                                        CODE TABLE 33050           0            0   4 CODE TABLE 33050          0          2
- 033192 [SIM] Climatological and consistency check                       NUMERIC                    0            0   4 NUMERIC                   0          1
- 033193 [SIM] Time consistency                                           NUMERIC                    0            0   4 NUMERIC                   0          1
- 033194 [SIM] Space consistency                                          NUMERIC                    0            0   4 NUMERIC                   0          1
+ 033192 [SIM] Climatological and consistency check                       %                          0            0   7 PERCENT                   0          3
+ 033193 [SIM] Time consistency                                           %                          0            0   7 PERCENT                   0          3
+ 033194 [SIM] Space consistency                                          %                          0            0   7 PERCENT                   0          3
+ 033195 [SIM] MeteoDB variable ID                                        NUMERIC                    0            0  24 NUMERIC                   0          8

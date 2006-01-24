@@ -148,6 +148,14 @@ These are the TODO-list items completed so far::
           + Importa un generico in DB-ALLe
 	  + Esportalo come synop
 	  + Vedere che abbia gli stessi dati del synop corrispondente
+    + Attributi
+       + Esportare come vari attributi:
+         (valido, corretto a mano)
+         CC climatological and consistency confidence interval
+	 TT time series confidence interval
+	 SS body check confidence interval
+	 Confidenza percentuale synop (lo stesso di CC TT SS quello piú a destra)
+       + Mappare CC, TT e SS come [47-53]->[100-0]
 
  * Tools
     + Fare un dbamsg filter che prende query alla dbadb e stampa solo i
@@ -251,15 +259,6 @@ These are the TODO-list items currently being worked on::
        - Fare query ad-hoc per l'import e l'export di dba_msg
 
  * Import da VM o database Oracle di ARPA
-    - Attributi
-       - Esportare come vari attributi:
-         (valido, corretto a mano)
-         CC climatological and consistency confidence interval
-	 TT time series confidence interval
-	 SS body check confidence interval
-	 Confidenza percentuale synop (lo stesso di CC TT SS quello piú a destra)
-       - Mappare CC, TT e SS come [47-53]->[100-0]
-      (lavoro iniziato ma non finito)
     - Buttare via le stazioni con NULL su lat o long
 
  * Export per VM
