@@ -1,6 +1,5 @@
-#define _GNU_SOURCE
 #include <dballe/db/dballe.h>
-#include <dballe/db/querybuf.h>
+#include <dballe/db/internals.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/core/dba_csv.h>
@@ -39,42 +38,6 @@
 #define IFTRACE if (0)
 #endif
 
-
-struct _dba_db
-{
-	SQLHDBC	od_conn;
-	/*
-	 * This is very conservative:
-	 * The query size plus 30 possible select values, maximum of 30 characters each
-	 * plus 400 characters for the various combinations of the two min and max datetimes,
-	 * plus 255 for the blist
-	 */
-	dba_querybuf querybuf;
- 	char sel_dtmin[25];
- 	char sel_dtmax[25];
- 	char sel_dtlike[25];
-	int sel_latmin;
-	int sel_lonmin;
-	int sel_latmax;
-	int sel_lonmax;
-	const char* sel_ident;
-	int sel_pindicator;
-	int sel_p1;
-	int sel_p2;
-	int sel_leveltype;
-	int sel_l1;
-	int sel_l2;
-	int sel_b;
-	int sel_rep_cod;
-	const char* sel_rep_memo;
-	int sel_priority;
-	int sel_priomin;
-	int sel_priomax;
-	int sel_ana_id;
-	int sel_data_id;
-	int sel_block;
-	int sel_station;
-};
 
 #if 0
 struct _dba_db_context {
@@ -220,39 +183,17 @@ static const char* init_queries[] = {
 };
 
 
-/**
- * Copy informations from the ODBC diagnostic record to the dba error
- * report
- */
-static dba_err dba_error_odbc(SQLSMALLINT handleType, SQLHANDLE handle, const char* fmt, ...)
-{
-	va_list ap;
-	static const int strsize = 200;
-	char stat[10], msg[strsize];
-	char* context;
-	SQLINTEGER err;
-	SQLSMALLINT mlen;
-
-	SQLGetDiagRec(handleType, handle, 1, (unsigned char*)stat, &err, (unsigned char*)msg, strsize, &mlen);
-
-	va_start(ap, fmt);
-	vasprintf(&context, fmt, ap);
-	va_end(ap);
-
-	return dba_error_generic0(DBA_ERR_ODBC, context, strndup(msg, mlen));
-}
-
 dba_err dba_db_init()
 {
 	// Allocate ODBC environment handle and register version 
 	int res = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &dba_od_env);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Allocating main environment handle");
+		return dba_db_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Allocating main environment handle");
 
 	res = SQLSetEnvAttr(dba_od_env, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0); 
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		dba_err res = dba_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Asking for ODBC version 3");
+		dba_err res = dba_db_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Asking for ODBC version 3");
 		SQLFreeHandle(SQL_HANDLE_ENV, dba_od_env);
 		return res;
 	}
@@ -282,7 +223,7 @@ dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba
 	sqlres = SQLAllocHandle(SQL_HANDLE_DBC, dba_od_env, &((*db)->od_conn));
 	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
+		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
 				"Allocating new connection handle");
 		goto fail;
 	}
@@ -297,7 +238,7 @@ dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba
 						(SQLCHAR*)(password == NULL ? "" : password), SQL_NTS);
 	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
+		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
 				"Connecting to DSN %s as user %s", dsn, user);
 		goto fail;
 	}
@@ -339,7 +280,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 		goto fail0;
 	}
 
@@ -351,7 +292,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 		res = SQLExecDirect(stm, (unsigned char*)buf, len);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm,
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm,
 					"Removing old table %s", init_tables[i]);
 			goto fail1;
 		}
@@ -364,7 +305,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 		res = SQLExecDirect(stm, (unsigned char*)init_queries[i], SQL_NTS);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm,
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm,
 					"Executing database-initialization query %s", init_queries[i]);
 			goto fail1;
 		}
@@ -387,7 +328,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 				"     VALUES (?, ?, ?, ?, ?, ?)", SQL_NTS);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'repinfo'");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'repinfo'");
 			goto fail1;
 		}
 
@@ -416,7 +357,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 			res = SQLExecute(stm);
 			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 			{
-				err = dba_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'data'");
+				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'data'");
 				goto fail1;
 			}
 
@@ -445,106 +386,6 @@ void dba_db_close(dba_db db)
 	SQLFreeHandle(SQL_HANDLE_DBC, db->od_conn);
 	free(db);
 }
-
-static dba_err dba_last_insert_id(SQLHDBC od_conn, int* id)
-{
-	SQLHSTMT stm;
-	int res;
-	SQLINTEGER id_ind;
-	dba_err err;
-
-	/* Allocate statement handle for select */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement");
-
-	/* Bind variable and indicator */
-	SQLBindCol(stm, 1, SQL_C_SLONG, id, sizeof(*id), &id_ind);
-	
-	res = SQLExecDirect(stm, (unsigned char*)"SELECT LAST_INSERT_ID()", SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "querying last inserted ID");
-		goto dba_last_insert_id_failed;
-	}
-
-	if (SQLFetch(stm) == SQL_NO_DATA)
-	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "retrieving results of query for last inserted ID");
-		goto dba_last_insert_id_failed;
-	}
-
-	if (id_ind != sizeof(*id))
-	{
-		err = dba_error_consistency("checking that the size of the last insert ID coming from the database is correct");
-		goto dba_last_insert_id_failed;
-	}
-
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return dba_error_ok();
-
-dba_last_insert_id_failed:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err;
-}
-
-dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)
-{
-	const char* query = "SELECT id FROM repinfo WHERE memo = ?";
-	dba_err err = DBA_OK;
-	SQLHSTMT stm;
-	SQLINTEGER rep_cod_ind;
-	int res;
-
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-
-	/* Bind input parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)memo, 0, 0);
-
-	/* Bind variable and indicator for SELECT results */
-	SQLBindCol(stm, 1, SQL_C_SLONG, rep_cod, sizeof(int), &rep_cod_ind);
-
-	/* Casting to char* because ODBC is unaware of const */
-	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "looking for report informations");
-		goto cleanup;
-	}
-
-	/* Get one result */
-	if (SQLFetch(stm) == SQL_NO_DATA)
-	{
-		err = dba_error_notfound("looking for report informations for '%s'", memo);
-		goto cleanup;
-	}
-
-cleanup:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err;
-}
-
-/* Get the report id from this record.  If rep_memo is specified instead, the
- * corresponding report id is queried in the database and set as "rep_cod" in
- * the record. */
-static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
-{
-	const char* rep;
-	if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_COD)) != NULL)
-		*id = strtol(rep, 0, 10);
-	else if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
-	{
-		DBA_RUN_OR_RETURN(dba_db_rep_cod_from_memo(db, rep, id));
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, *id));
-	}
-	else
-		return dba_error_notfound("looking for report type in rep_cod or rep_memo");
-	return dba_error_ok();
-}		
-
 
 /*
  * Insert or replace data in pseudoana taking the values from rec.
@@ -604,7 +445,7 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 	/* Allocate statement handle */
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 
 	/* Look for the key data in the record */
 	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &lat));
@@ -644,7 +485,7 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 		res = SQLExecDirect(stm, (unsigned char*)query_sel, SQL_NTS);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "looking for existing pseudoana");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "looking for existing pseudoana");
 			goto cleanup;
 		}
 
@@ -672,9 +513,9 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
 			if (has_data)
-				err = dba_error_odbc(SQL_HANDLE_STMT, stm, "preparing for replacing into pseudoana");
+				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "preparing for replacing into pseudoana");
 			else
-				err = dba_error_odbc(SQL_HANDLE_STMT, stm, "preparing for inserting into pseudoana");
+				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "preparing for inserting into pseudoana");
 			goto cleanup;
 		}
 	}
@@ -731,7 +572,7 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "replacing old data in pseudoana");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "replacing old data in pseudoana");
 			goto cleanup;
 		}
 	} else {
@@ -740,12 +581,12 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into pseudoana");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into pseudoana");
 			goto cleanup;
 		}
 
 		/* Get the ID of the last inserted pseudoana */
-		DBA_RUN_OR_GOTO(cleanup, dba_last_insert_id(db->od_conn, id));
+		DBA_RUN_OR_GOTO(cleanup, dba_db_last_insert_id(db, id));
 	}
 	
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
@@ -820,7 +661,7 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	/* Allocate statement handle */
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 
 	/* Bind parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_ana, 0, 0);
@@ -842,7 +683,7 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	res = SQLExecDirect(stm, (unsigned char*)query_sel, SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "looking for existing context");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "looking for existing context");
 		goto fail;
 	}
 
@@ -864,7 +705,7 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	res = SQLCloseCursor(stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "preparing for inserting into context");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "preparing for inserting into context");
 		goto fail;
 	}
 
@@ -872,69 +713,20 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into context");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into context");
 		goto fail;
 	}
 
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 
 	/* Get the ID of the last inserted levellayer */
-	return dba_last_insert_id(db->od_conn, id);
+	return dba_db_last_insert_id(db, id);
 
 fail:
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 	return err;
 }
 
-#ifdef DBA_USE_TRANSACTIONS
-static dba_err dba_run_one_shot_query(SQLHDBC od_conn, const char* query)
-{
-	SQLHSTMT stm;
-	int res;
-
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-
-	/* Casting to char* because ODBC is unaware of const */
-	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		dba_err err = dba_error_odbc(SQL_HANDLE_STMT, stm, "Beginning a transaction");
-		SQLFreeHandle(SQL_HANDLE_STMT, stm);
-		return err;
-	}
-
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return dba_error_ok();
-}
-
-static dba_err dba_begin(SQLHDBC od_conn) { return dba_run_one_shot_query(od_conn, "BEGIN"); }
-static dba_err dba_commit(SQLHDBC od_conn) { return dba_run_one_shot_query(od_conn, "COMMIT"); }
-/* Run unchecked to avoid altering the error status */
-static void dba_rollback(SQLHDBC od_conn)
-{
-	SQLHSTMT stm;
-	int res;
-
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return;
-
-	res = SQLExecDirect(stm, (unsigned char*)"ROLLBACK", 8);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return;
-
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-}
-#else
-/* TODO: lock and unlock tables instead */
-static dba_err dba_begin(SQLHDBC od_conn) { return dba_error_ok(); }
-static dba_err dba_commit(SQLHDBC od_conn) { return dba_error_ok(); }
-static void dba_rollback(SQLHDBC od_conn) {}
-#endif
 
 /*
  * If can_replace, then existing data can be rewritten, else it can only add new data
@@ -977,7 +769,7 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 		return dba_error_consistency("looking for data to insert");
 
 	/* Begin the transaction */
-	DBA_RUN_OR_RETURN(dba_begin(db->od_conn));
+	DBA_RUN_OR_RETURN(dba_db_begin(db));
 
 	/* Insert the pseudoana data, and get the ID */
 	DBA_RUN_OR_GOTO(failed1, dba_insert_pseudoana(db, rec, &id_pseudoana, update_pseudoana));
@@ -989,7 +781,7 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 		goto failed1;
 	}
 
@@ -998,7 +790,7 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 	res = SQLPrepare(stm, (unsigned char*)(can_replace ? replace_query : insert_query), SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'data'");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'data'");
 		goto failed;
 	}
 
@@ -1034,13 +826,13 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 		res = SQLExecute(stm);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'data'");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'data'");
 			goto failed;
 		}
 
 		{
 			int id;
-			DBA_RUN_OR_GOTO(failed, dba_last_insert_id(db->od_conn, &id));
+			DBA_RUN_OR_GOTO(failed, dba_db_last_insert_id(db, &id));
 			dba_record_cursor_set_id(item, id);
 		}
 	}
@@ -1050,7 +842,7 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 			
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 
-	DBA_RUN_OR_GOTO(failed1, dba_commit(db->od_conn));
+	DBA_RUN_OR_GOTO(failed1, dba_db_commit(db));
 
 	return dba_error_ok();
 
@@ -1058,7 +850,7 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 failed:
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 failed1:
-	dba_rollback(db->od_conn);
+	dba_db_rollback(db);
 	return err;
 }
 
@@ -1085,7 +877,7 @@ dba_err dba_ana_count(dba_db db, int* count)
 	/* Allocate statement handle for select */
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement");
 
 	/* Bind variable and indicator */
 	SQLBindCol(stm, 1, SQL_C_SLONG, count, sizeof(*count), &id_ind);
@@ -1093,13 +885,13 @@ dba_err dba_ana_count(dba_db db, int* count)
 	res = SQLExecDirect(stm, "SELECT COUNT(*) FROM pseudoana", SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "querying number of entries in table 'pseudoana'");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "querying number of entries in table 'pseudoana'");
 		goto dba_ana_count_failed;
 	}
 
 	if (SQLFetch(stm) == SQL_NO_DATA)
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "retrieving number of entries in table 'pseudoana'");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "retrieving number of entries in table 'pseudoana'");
 		goto dba_ana_count_failed;
 	}
 
@@ -1196,7 +988,7 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count)
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
 		free(*cur);
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 	}
 
 	(*cur)->stm = stm;
@@ -1220,7 +1012,7 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count)
 	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE ANA query \"%s\"", query);
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE ANA query \"%s\"", query);
 		goto dba_ana_query_failed;
 	}
 
@@ -1230,7 +1022,7 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count)
 		res = SQLRowCount(stm, &ana_count);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
 			goto dba_ana_query_failed;
 		}
 		(*cur)->count = ana_count;
@@ -1311,148 +1103,6 @@ dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 	return dba_error_ok();
 }
 
-#define PARM_INT(field, key, sql) do {\
-	if ((val = dba_record_key_peek_value(rec, key)) != NULL) { \
-		db->sel_##field = strtol(val, 0, 10); \
-		TRACE("found " #field ": adding " sql ". val is %d\n", db->sel_##field); \
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, sql)); \
-		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_##field, 0, 0); \
-	} } while (0)
-
-static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
-{
-	const char* val;
-
-	/* Bind select fields */
-
-	/* Set the time extremes */
-	{
-		int minvalues[6], maxvalues[6];
-		DBA_RUN_OR_RETURN(dba_record_parse_date_extremes(rec, minvalues, maxvalues));
-		
-		if (minvalues[0] != -1)
-		{
-			/* Add constraint on the minimum date interval */
-			snprintf(db->sel_dtmin, 25, "%04d-%02d-%02d %02d:%02d:%02d",
-					minvalues[0], minvalues[1], minvalues[2],
-					minvalues[3], minvalues[4], minvalues[5]);
-			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime >= ?"));
-			TRACE("found min time interval: adding AND c.datetime >= ?.  val is %s\n", db->sel_dtmin);
-			SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmin, 0, 0);
-		}
-		
-		if (maxvalues[0] != -1)
-		{
-			snprintf(db->sel_dtmax, 25, "%04d-%02d-%02d %02d:%02d:%02d",
-					maxvalues[0], maxvalues[1], maxvalues[2],
-					maxvalues[3], maxvalues[4], maxvalues[5]);
-			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime <= ?"));
-			TRACE("found max time interval: adding AND c.datetime <= ?.  val is %s\n", db->sel_dtmax);
-			SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmax, 0, 0);
-		}
-	}
-
-	PARM_INT(ana_id, DBA_KEY_ANA_ID, " AND pa.id = ?");
-	PARM_INT(latmin, DBA_KEY_LATMIN, " AND pa.lat > ?");
-	PARM_INT(latmax, DBA_KEY_LATMAX, " AND pa.lat < ?");
-	PARM_INT(lonmin, DBA_KEY_LONMIN, " AND pa.lon > ?");
-	PARM_INT(lonmax, DBA_KEY_LONMAX, " AND pa.lon < ?");
-
-	{
-		const char* mobile_sel = dba_record_key_peek_value(rec, DBA_KEY_MOBILE);
-
-		if (mobile_sel != NULL)
-		{
-			if (mobile_sel[0] == '0')
-			{
-				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident IS NULL"));
-				TRACE("found fixed/mobile: adding AND pa.ident IS NULL.\n");
-			} else {
-				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND NOT pa.ident IS NULL"));
-				TRACE("found fixed/mobile: adding AND NOT pa.ident IS NULL\n");
-			}
-		}
-	}
-
-	if ((db->sel_ident = dba_record_key_peek_value(rec, DBA_KEY_IDENT)) != NULL)
-	{
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident = ?"));
-		TRACE("found ident: adding AND pa.ident = ?.  val is %s\n", db->sel_ident);
-		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_ident, 0, 0);
-	}
-
-	PARM_INT(pindicator, DBA_KEY_PINDICATOR, " AND c.ptype = ?");
-	PARM_INT(p1, DBA_KEY_P1, " AND c.p1 = ?");
-	PARM_INT(p2, DBA_KEY_P2, " AND c.p2 = ?");
-	PARM_INT(leveltype, DBA_KEY_LEVELTYPE, " AND c.ltype = ?");
-	PARM_INT(l1, DBA_KEY_L1, " AND c.l1 = ?");
-	PARM_INT(l2, DBA_KEY_L2, " AND c.l2 = ?");
-
-	PARM_INT(block, DBA_KEY_BLOCK, " AND pa.block = ?");
-	PARM_INT(station, DBA_KEY_STATION, " AND pa.station = ?");
-
-	return dba_error_ok();
-
-}
-
-static dba_err dba_prepare_select_vars(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
-{
-	const char* val;
-
-	/* Bind select fields */
-
-	PARM_INT(data_id, DBA_KEY_DATA_ID, " AND d.id = ?");
-
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_VAR)) != NULL)
-	{
-		db->sel_b = dba_descriptor_code(val);
-		TRACE("found b: adding AND d.id_var = ?. val is %d %s\n", db->sel_b, val);
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND d.id_var = ?"));
-		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_b, 0, 0);
-	}
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_VARLIST)) != NULL)
-	{
-		size_t pos;
-		size_t len;
-		TRACE("found blist: adding AND d.id_var IN (%s)\n", val);
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND d.id_var IN ("));
-		for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-		{
-			dba_varcode code = DBA_STRING_TO_VAR(val + pos + 1);
-			if (pos == 0)
-				DBA_RUN_OR_RETURN(dba_querybuf_appendf(db->querybuf, "%d", code));
-			else
-				DBA_RUN_OR_RETURN(dba_querybuf_appendf(db->querybuf, ",%d", code));
-		}
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, ")"));
-	}
-
-	PARM_INT(rep_cod, DBA_KEY_REP_COD, " AND ri.id = ?");
-
-	if ((db->sel_rep_memo = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
-	{
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND ri.memo = ?"));
-		TRACE("found rep_memo: adding AND ri.memo = ?.  val is %s\n", db->sel_rep_memo);
-		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_rep_memo, 0, 0);
-	}
-
-	PARM_INT(priority, DBA_KEY_PRIORITY, " AND ri.prio = ?");
-	PARM_INT(priomin, DBA_KEY_PRIOMIN, " AND ri.prio >= ?");
-	PARM_INT(priomax, DBA_KEY_PRIOMAX, " AND ri.prio <= ?");
-
-	return dba_error_ok();
-
-}
-static dba_err dba_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
-{
-	DBA_RUN_OR_RETURN(dba_prepare_select_context(db, rec, stm, pseq));
-	DBA_RUN_OR_RETURN(dba_prepare_select_vars(db, rec, stm, pseq));
-
-	return dba_error_ok();
-
-}
-#undef PARM_INT
-
 #if 0
 dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int* count)
 {
@@ -1480,7 +1130,7 @@ dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int*
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 		goto fail;
 	}
 	(*co)->stm = stm;
@@ -1531,7 +1181,7 @@ dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int*
 	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto fail;
 	}
 
@@ -1541,7 +1191,7 @@ dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int*
 		res = SQLRowCount(stm, &rowcount);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
 			goto fail;
 		}
 		(*co)->count = *count = rowcount;
@@ -1599,7 +1249,7 @@ dba_err dba_db_context_query_vars(dba_db_context co, dba_record rec, dba_db_vars
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 		goto fail;
 	}
 	(*va)->stm = stm;
@@ -1636,7 +1286,7 @@ dba_err dba_db_context_query_vars(dba_db_context co, dba_record rec, dba_db_vars
 	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto fail;
 	}
 
@@ -1646,7 +1296,7 @@ dba_err dba_db_context_query_vars(dba_db_context co, dba_record rec, dba_db_vars
 		res = SQLRowCount(stm, &rowcount);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
 			goto fail;
 		}
 
@@ -1704,7 +1354,7 @@ dba_err dba_db_context_query_vars_with_attrs(dba_db_context co, dba_record rec, 
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 		goto fail;
 	}
 	(*va)->stm = stm;
@@ -1743,7 +1393,7 @@ dba_err dba_db_context_query_vars_with_attrs(dba_db_context co, dba_record rec, 
 	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto fail;
 	}
 
@@ -1753,7 +1403,7 @@ dba_err dba_db_context_query_vars_with_attrs(dba_db_context co, dba_record rec, 
 		res = SQLRowCount(stm, &rowcount);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
 			goto fail;
 		}
 
@@ -1815,7 +1465,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
 		free(cur);
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 	}
 
 	(*cur)->stm = stm;
@@ -1855,7 +1505,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 #undef DBA_QUERY_BIND
 	
 	/* Add the select part */
-	DBA_RUN_OR_GOTO(failed, dba_prepare_select(db, rec, stm, &pseq));
+	DBA_RUN_OR_GOTO(failed, dba_db_prepare_select(db, rec, stm, &pseq));
 
 	if (dba_record_key_peek_value(rec, DBA_KEY_QUERYBEST) != NULL)
 		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
@@ -1875,7 +1525,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto failed;
 	}
 
@@ -1885,7 +1535,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 		res = SQLRowCount(stm, &rowcount);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
 			goto failed;
 		}
 		(*cur)->count = *count = rowcount;
@@ -2190,7 +1840,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 	}
 
 	/* Write the SQL query */
@@ -2200,7 +1850,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	DBA_RUN_OR_GOTO(dba_delete_failed, dba_querybuf_append(db->querybuf, query));
 
 	/* Bind select fields */
-	DBA_RUN_OR_GOTO(dba_delete_failed, dba_prepare_select(db, rec, stm, &pseq));
+	DBA_RUN_OR_GOTO(dba_delete_failed, dba_db_prepare_select(db, rec, stm, &pseq));
 
 	/*fprintf(stderr, "QUERY: %s\n", db->querybuf);*/
 
@@ -2208,7 +1858,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto dba_delete_failed;
 	}
 
@@ -2239,20 +1889,20 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 	}
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm1);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
 		SQLFreeHandle(SQL_HANDLE_STMT, stm);
-		return dba_error_odbc(SQL_HANDLE_STMT, stm1, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm1, "Allocating new statement handle");
 	}
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm2);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
 		SQLFreeHandle(SQL_HANDLE_STMT, stm);
 		SQLFreeHandle(SQL_HANDLE_STMT, stm1);
-		return dba_error_odbc(SQL_HANDLE_STMT, stm2, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm2, "Allocating new statement handle");
 	}
 
 	/* Write the SQL query */
@@ -2262,7 +1912,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(db->querybuf, query));
 
 	/* Bind select fields */
-	DBA_RUN_OR_GOTO(cleanup, dba_prepare_select(db, rec, stm));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_prepare_select(db, rec, stm));
 
 	/* Bind output field */
 	SQLBindCol(stm, 1, SQL_C_SLONG, &id, sizeof(id), NULL);
@@ -2274,7 +1924,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	res = SQLExecDirect(stm, dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto cleanup;
 	}
 
@@ -2282,7 +1932,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	res = SQLPrepare(stm1, (unsigned char*)"DELETE FROM data WHERE id=?", SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm1, "compiling query to delete data entries");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm1, "compiling query to delete data entries");
 		goto cleanup;
 	}
 	/* Bind parameters */
@@ -2292,7 +1942,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	res = SQLPrepare(stm2, (unsigned char*)"DELETE FROM attr WHERE id_data=?", SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm2, "compiling query to delete entries related to QC data");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm2, "compiling query to delete entries related to QC data");
 		goto cleanup;
 	}
 	/* Bind parameters */
@@ -2305,13 +1955,13 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 		res = SQLExecute(stm1);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm1, "deleting entry %d from the 'data' table", id);
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm1, "deleting entry %d from the 'data' table", id);
 			goto cleanup;
 		}
 		res = SQLExecute(stm2);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm2, "deleting QC data related to 'data' entry %d", id);
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm2, "deleting QC data related to 'data' entry %d", id);
 			goto cleanup;
 		}
 	}
@@ -2365,7 +2015,7 @@ dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, 
 	/* Allocate statement handle */
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 
 	/* Bind input parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_data, 0, 0);
@@ -2380,7 +2030,7 @@ dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, 
 	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", query);
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", query);
 		goto dba_qc_query_failed;
 	}
 
@@ -2428,14 +2078,14 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, /*dba_record rec, db
 	assert(db);
 
 	/* Begin the transaction */
-	DBA_RUN_OR_RETURN(dba_begin(db->od_conn));
+	DBA_RUN_OR_RETURN(dba_db_begin(db));
 
 	/* Allocate statement handle */
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		dba_rollback(db->od_conn);
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		dba_db_rollback(db);
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 	}
 
 	/* Compile the INSERT/UPDATE SQL query */
@@ -2443,7 +2093,7 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, /*dba_record rec, db
 	res = SQLPrepare(stm, (unsigned char*)(can_replace ? replace_query : insert_query), SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'attr'");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'attr'");
 		goto dba_qc_insert_failed;
 	}
 
@@ -2471,15 +2121,15 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, /*dba_record rec, db
 		res = SQLExecute(stm);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'attr'");
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'attr'");
 			goto dba_qc_insert_failed;
 		}
 	}
 			
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	if ((err = dba_commit(db->od_conn)))
+	if ((err = dba_db_commit(db)))
 	{
-		dba_rollback(db->od_conn);
+		dba_db_rollback(db);
 		return err;
 	}
 	return dba_error_ok();
@@ -2487,7 +2137,7 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, /*dba_record rec, db
 	/* Exits with cleanup after error */
 dba_qc_insert_failed:
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	dba_rollback(db->od_conn);
+	dba_db_rollback(db);
 	return err;
 }
 
@@ -2532,7 +2182,7 @@ dba_err dba_db_qc_remove(dba_db db, int id_data, dba_varcode* qcs, int qcs_size)
 	/* Allocate statement handle */
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 
 	/* Bind parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_data, 0, 0);
@@ -2544,7 +2194,7 @@ dba_err dba_db_qc_remove(dba_db db, int id_data, dba_varcode* qcs, int qcs_size)
 	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_error_odbc(SQL_HANDLE_STMT, stm, "deleting data from 'attr'");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "deleting data from 'attr'");
 		goto dba_qc_delete_failed;
 	}
 			

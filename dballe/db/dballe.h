@@ -1,5 +1,5 @@
-#ifndef DBALLE_H
-#define DBALLE_H
+#ifndef DBALLE_DB_H
+#define DBALLE_DB_H
 
 #ifdef  __cplusplus
 extern "C" {

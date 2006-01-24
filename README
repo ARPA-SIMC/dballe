@@ -195,7 +195,8 @@ These are the TODO-list items completed so far::
       faccia bound checking
     + Usare dba_querybuf per le query
     + Usare tipi di interi piú piccoli nel database, dove ciò è possibile
-    + Mettere un id_rep in data (e rendere id_rep un tinyint)
+    + Rendere id_rep uno smallint
+    = Mettere un id_rep in data
     = Dividere le query in query context e query variabili per un certo
       context.  I dati del context riempiono le keyword di un dba_record, e
       le variabili riempiono le var
@@ -213,6 +214,7 @@ These are the TODO-list items completed so far::
         for d in context.bestdata
            r += d
            output(r)
+    + Extract some common database functions into dballe/db/internals.{h,c}
 
 
 TODO-list items being worked on
@@ -243,6 +245,10 @@ These are the TODO-list items currently being worked on::
 
        - Fare una cache delle informazioni per il tipo report, da leggere alla
 	 connessione al database e tenere in memoria
+
+       - Fare cache di pseudoana id e context id
+
+       - Fare query ad-hoc per l'import e l'export di dba_msg
 
  * Import da VM o database Oracle di ARPA
     - Attributi
