@@ -231,8 +231,6 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-typedef dba_err (*dba_msg_consumer)(dba_msg msg, void* data);
-
 dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, dba_msg_consumer cons, void* data)
 {
 	const char* query =

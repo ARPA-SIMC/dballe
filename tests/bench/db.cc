@@ -36,6 +36,13 @@ static int rep_cod_from_msg(dba_msg msg)
 	return 255;
 }
 
+static dba_err msg_counter(dba_msg msg, void* data)
+{
+	dba_msg_delete(msg);
+	(*(int*)data)++;
+	return dba_error_ok();
+}
+
 class db_work : public Benchmark
 {
 	generator gen;
@@ -138,10 +145,21 @@ protected:
 			count += j;
 		}
 
-		timing("exported %d messages from the database", count);
+		timing("exported %d messages from the database, old style", count);
+
+		count = 0;
+		for (msg_vector::const_iterator i = msgs.begin();
+				i != msgs.end(); i++)
+		{
+	        DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(*i)));
+			DBA_RUN_OR_RETURN(dba_db_query_msgs(db, (*i)->type, query, msg_counter, &count));
+		}
+
+		timing("exported %d messages from the database, new style", count);
 
 		dba_db_close(db);
 		dba_record_delete(rec);
+		dba_record_delete(query);
 
 		return dba_error_ok();
 	}

@@ -31,6 +31,9 @@ extern "C" {
  */
 dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record query);
 
+typedef dba_err (*dba_msg_consumer)(dba_msg msg, void* data);
+dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record query, dba_msg_consumer cons, void* data);
+
 #ifdef  __cplusplus
 }
 #endif
