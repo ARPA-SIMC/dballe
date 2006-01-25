@@ -28,6 +28,7 @@ void to::test<1>()
 		"aof/obs1-24.2104.aof",
 		"aof/obs1-24.34.aof",
 		"aof/obs2-144.2198.aof",
+		"aof/obs2-244.0.aof",
 		"aof/obs4-165.2027.aof",
 		"aof/obs5-35.61.aof",
 		"aof/obs5-36.30.aof",

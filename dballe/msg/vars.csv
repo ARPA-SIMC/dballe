@@ -5,6 +5,7 @@ ST_SPEED,		int,	B01013,		257,  0, 0,		0,      0, 0
 FLIGHT_REG_NO,		str,	B01008,		257,  0, 0,		0,      0, 0
 FLIGHT_PHASE,		int,	B08004,		257,  0, 0,		0,      0, 0
 FLIGHT_ROLL,		num,	B02063,		257,  0, 0,		0,      0, 0
+FLIGHT_PRESS,		num,	B10004,		257,  0, 0,		0,      0, 0
 NAVSYS,			int,	B02061,		257,  0, 0,		0,      0, 0
 DATA_RELAY,		int,	B02062,		257,  0, 0,		0,      0, 0
 WIND_INST,		int,	B02002,		257,  0, 0,		0,      0, 0

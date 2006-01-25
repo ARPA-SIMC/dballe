@@ -187,7 +187,7 @@ static struct template tpl_acars[] = {
 /* 14 */ { DBA_VAR(0,  5,  2), DBA_MSG_LATITUDE,		0 },
 /* 15 */ { DBA_VAR(0,  6,  2), DBA_MSG_LONGITUDE,		0 },
 /* 16 */ { DBA_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE,	0 },
-/* 17 */ { DBA_VAR(0,  7,  4), DBA_MSG_PRESS,			0 },
+/* 17 */ { DBA_VAR(0,  7,  4), DBA_MSG_FLIGHT_PRESS,	0 },
 /* 18 */ { DBA_VAR(0,  8, 21), DBA_MSG_TIMESIG,			0 },
 /* 19 */ { DBA_VAR(0, 11,  1), -1,			DBA_VAR(0, 11,  1) },	/* WIND DIRECTION */
 /* 20 */ { DBA_VAR(0, 11,  2), -1,			DBA_VAR(0, 11,  2) },	/* WIND SPEED */
@@ -205,7 +205,7 @@ static dba_err exporter_acars(dba_msg src, bufrex_raw dst, int type)
 	int i;
 	double press;
 	/* Get the pressure to identify the level layer where the airplane is */
-	dba_msg_datum p = dba_msg_find_by_id(src, DBA_MSG_PRESS);
+	dba_msg_datum p = dba_msg_find_by_id(src, DBA_MSG_FLIGHT_PRESS);
 	if (p == NULL)
 		return dba_error_notfound("looking for airplane pressure in ACARS message");
 	DBA_RUN_OR_RETURN(dba_var_enqd(p->var, &press));

@@ -73,7 +73,7 @@ Temp ship	2 102	temp	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	
 Temp mobile	2 106	temp	no	?	-	-	-	-	-	-	-	-
 Sing.lev.airep 	4 142	airep	yes	flight	tested	tested	-	TODO	tested	tested	-	-
 Sing.lev.amdar 	4 144 	airep	yes	flight	tested	tested	tested	TODO	tested	tested	-	-
-Sing.lev.acars 	4 145	acar	yes	acars	tested	tested	-	TODO	tested	tested	-	-
+Sing.lev.acars 	4 145	acar	yes	acars	tested	tested	TODO	TODO	tested	tested	-	-
 Generic         (any)   (none)  no      gneric  tocheck tocheck	-	-	tocheck	tocheck	TODO	TODO
 =============== ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======
 

@@ -51,7 +51,7 @@ dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_raw raw)
 			}
 			case DBA_VAR(0,  7,  4): {
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
-				DBA_RUN_OR_RETURN(dba_msg_set_press_var(msg, var));
+				DBA_RUN_OR_RETURN(dba_msg_set_flight_press_var(msg, var));
 				break;
 			}
 			case DBA_VAR(0, 11,  1):
