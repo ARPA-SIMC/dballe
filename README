@@ -280,6 +280,8 @@ These are the TODO-list items currently being worked on::
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
+    - Quando si importano PILOT da BUFR, usare il geopotenziale come contesto
+      in alternativa alla pressione, convertendolo in metri con m = g/9.80665
 
  * Documentazione dell'interfaccia in fortran
     - documentare come si usa ana_id

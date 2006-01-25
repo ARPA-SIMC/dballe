@@ -101,6 +101,27 @@ dba_err aof_decoder_decode(dba_rawmsg msg, dba_msg* out)
 	return dba_error_ok();
 }
 
+void aof_decoder_dump(dba_rawmsg msg, FILE* out)
+{
+	/* char id[10]; */
+	const uint32_t* obs;
+	int obs_len;
+	int i;
+
+	assert(msg != NULL);
+
+	TRACE("aof_message_decode\n");
+
+	/* Access the raw data in a more comfortable form */
+	obs = (const uint32_t*)msg->buf;
+	obs_len = msg->len / sizeof(uint32_t);
+
+	for (i = 0; i < obs_len; i++)
+		if (obs[i] == 0x7fffffff)
+			fprintf(out, "%2d %10s\n", i+1, "missing");
+		else
+			fprintf(out, "%2d %10u %8x\n", i+1, obs[i], obs[i]);
+}
 
 dba_err aof_read_satob(const uint32_t* obs, int obs_len, dba_msg* out)
 {

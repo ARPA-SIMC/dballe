@@ -142,9 +142,9 @@ static dba_err dump_crex_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, 
 
 static dba_err dump_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
-	if (msg == NULL) return dba_error_ok();
 	DBA_RUN_OR_RETURN(print_aof_header(rmsg)); puts(":");
-	dba_msg_print(msg, stdout);
+	aof_decoder_dump(rmsg, stdout);
+	/* dba_msg_print(msg, stdout); */
 	/* DBA_RUN_OR_RETURN(dump_dba_vars((dba_message)msg)); */
 	return dba_error_ok();
 }

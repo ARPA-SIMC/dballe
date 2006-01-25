@@ -33,6 +33,7 @@ void to::test<1>()
 		"aof/obs5-35.61.aof",
 		"aof/obs5-36.30.aof",
 		"aof/obs6-32.1573.aof",
+		"aof/obs6-32.0.aof",
 		NULL,
 	};
 	dba_rawmsg raw;

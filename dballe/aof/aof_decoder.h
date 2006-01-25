@@ -45,6 +45,17 @@ dba_err aof_decoder_get_category(dba_rawmsg msg, int* category, int* subcategory
 dba_err aof_message_encode(aof_message msg, dba_msg in);
 */
 
+/**
+ * Print the contents of the AOF message
+ *
+ * @param msg
+ *   The encoded message to dump
+ * @param out
+ *   The stream to use to print the message
+ */
+void aof_decoder_dump(dba_rawmsg msg, FILE* out);
+
+
 #ifdef  __cplusplus
 }
 #endif
