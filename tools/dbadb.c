@@ -195,6 +195,7 @@ dba_err do_export(poptContext optCon)
 		case 1:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SYNOP, &msgs, query)); break;
 		case 2:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_GENERIC, &msgs, query)); break;
 		case 3:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP, &msgs, query)); break;
+		case 4:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_PILOT, &msgs, query)); break;
 		case 9:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_BUOY, &msgs, query)); break;
 		case 10:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SHIP, &msgs, query)); break;
 		case 11:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP_SHIP, &msgs, query)); break;

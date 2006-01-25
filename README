@@ -130,6 +130,7 @@ These are the TODO-list items completed so far::
     + Permettere di scegliere, quando si importano messaggi, se riscrivere i
       dati esistenti o dare errore 
     + Usare la B locale come B000000002551200.txt
+    + Separare la gestione di TEMP e PILOT
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read

@@ -1,6 +1,7 @@
 01,synop,report synottico,100,oss,0
 02,metar,metar,80,oss,0
 03,temp,radiosondaggio,100,oss,2
+04,pilot,pilot,90,oss,2
 09,boe,dati omdametrici,100,oss,31
 10,ship,synop da nave,100,oss,1
 11,tempship,temp da nave,100,oss,2

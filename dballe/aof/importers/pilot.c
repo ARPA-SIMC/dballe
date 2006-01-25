@@ -13,7 +13,7 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg* out)
 	switch (OBS(7))
 	{
 		case 32:
-			msg->type = MSG_TEMP;
+			msg->type = MSG_PILOT;
 			DBA_RUN_OR_RETURN(dba_aof_parse_st_block_station(msg, obs));
 			DBA_RUN_OR_RETURN(dba_aof_parse_altitude(msg, obs));
 			break;

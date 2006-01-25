@@ -32,6 +32,7 @@ static dba_err copy_ana(dba_msg_type export_type, dba_msg msg, dba_record rec)
 	switch (export_type)
 	{
 		case MSG_SYNOP: msg->type = MSG_SYNOP; break;
+		case MSG_PILOT: msg->type = MSG_PILOT; break;
 		case MSG_TEMP:
 		case MSG_TEMP_SHIP:
 			switch (rep_cod)
@@ -171,7 +172,7 @@ dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record q
 		{
 			if (last_datetime[0] != 0)
 			{
-				if (type == MSG_TEMP || type == MSG_TEMP_SHIP)
+				if (type == MSG_PILOT || type == MSG_TEMP || type == MSG_TEMP_SHIP)
 				{
 					dba_msg copy;
 					DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));
@@ -200,7 +201,7 @@ dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record q
 
 	if (msg != NULL)
 	{
-		if (type == MSG_TEMP || type == MSG_TEMP_SHIP)
+		if (type == MSG_PILOT || type == MSG_TEMP || type == MSG_TEMP_SHIP)
 		{
 			dba_msg copy;
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));
@@ -359,7 +360,7 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 		{
 			if (msg != NULL)
 			{
-				if (msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
+				if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 				{
 					dba_msg copy;
 					DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));
@@ -377,6 +378,7 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 			switch (export_type)
 			{
 				case MSG_SYNOP: msg->type = MSG_SYNOP; break;
+				case MSG_PILOT: msg->type = MSG_PILOT; break;
 				case MSG_TEMP:
 				case MSG_TEMP_SHIP:
 					switch (rep_cod)
@@ -453,7 +455,7 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 
 	if (msg != NULL)
 	{
-		if (msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
+		if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 		{
 			dba_msg copy;
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));

@@ -13,10 +13,12 @@ dba_err bufrex_copy_to_sounding(dba_msg msg, bufrex_raw raw)
 			/* Guess looking at the variables */
 			if (raw->vars_count > 1 && dba_var_code(raw->vars[0]) == DBA_VAR(0, 1, 11))
 				msg->type = MSG_TEMP_SHIP;
+			else if (raw->vars_count > 13 && dba_var_code(raw->vars[12]) == DBA_VAR(0, 31, 1))
+				msg->type = MSG_PILOT;
 			else
 				msg->type = MSG_TEMP;
 			break;
-		case 91:
+		case 91: msg->type = MSG_PILOT; break;
 		case 101: msg->type = MSG_TEMP; break;
 		case 92:
 		case 102: msg->type = MSG_TEMP_SHIP; break;

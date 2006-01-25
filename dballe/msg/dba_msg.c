@@ -274,6 +274,7 @@ const char* dba_msg_type_name(dba_msg_type type)
 	{
 		case MSG_GENERIC: return "generic";
 		case MSG_SYNOP: return "synop";
+		case MSG_PILOT: return "pilot";
 		case MSG_TEMP: return "temp";
 		case MSG_TEMP_SHIP: return "temp_ship";
 		case MSG_AIREP: return "airep";
@@ -425,6 +426,7 @@ void dba_msg_print(dba_msg msg, FILE* out)
 
 	switch (msg->type)
 	{
+		case MSG_PILOT:
 		case MSG_TEMP:
 		case MSG_TEMP_SHIP:
 			if (msg->data_count > 0)

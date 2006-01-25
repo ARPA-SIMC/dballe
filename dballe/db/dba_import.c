@@ -147,6 +147,12 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 14));
 			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_IDENT, msg, DBA_MSG_IDENT));
 			break;
+		case MSG_PILOT:
+			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 4));
+			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));
+			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_BLOCK, msg, DBA_MSG_BLOCK));
+			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_STATION, msg, DBA_MSG_STATION));
+			break;
 		case MSG_TEMP:
 			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 3));
 			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));

@@ -28,7 +28,8 @@ libbufrex_la_SOURCES = \
 		exporters/ex-synop.c \
 		exporters/ex-ship.c \
 		exporters/ex-buoy.c \
-		exporters/ex-sounding.c \
+		exporters/ex-pilot.c \
+		exporters/ex-temp.c \
 		exporters/ex-flight.c
 
 INCLUDES = -DTABLE_DIR=\"$(tabledir)\"

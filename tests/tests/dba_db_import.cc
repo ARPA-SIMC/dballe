@@ -36,6 +36,7 @@ static int rep_cod_from_msg(dba_msg msg)
 		case MSG_AIREP: return 12;
 		case MSG_AMDAR: return 13;
 		case MSG_ACARS: return 14;
+		case MSG_PILOT: return 4;
 		case MSG_TEMP: return 3;
 		case MSG_TEMP_SHIP: return 11;
 		case MSG_GENERIC: return 255;

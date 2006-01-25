@@ -15,9 +15,9 @@ extern bufrex_exporter bufrex_exporter_sea_1_11;
 extern bufrex_exporter bufrex_exporter_sea_1_13;
 extern bufrex_exporter bufrex_exporter_sea_1_19;
 extern bufrex_exporter bufrex_exporter_sea_1_21;
-extern bufrex_exporter bufrex_exporter_sounding_2_91;
-extern bufrex_exporter bufrex_exporter_sounding_2_101;
-extern bufrex_exporter bufrex_exporter_sounding_2_102;
+extern bufrex_exporter bufrex_exporter_pilot_2_91;
+extern bufrex_exporter bufrex_exporter_temp_2_101;
+extern bufrex_exporter bufrex_exporter_temp_2_102;
 extern bufrex_exporter bufrex_exporter_flight_4_142;
 extern bufrex_exporter bufrex_exporter_flight_4_144;
 extern bufrex_exporter bufrex_exporter_acars_4_145;
@@ -31,9 +31,9 @@ static bufrex_exporter* exporters[] = {
 	&bufrex_exporter_sea_1_13,
 	&bufrex_exporter_sea_1_19,
 	&bufrex_exporter_sea_1_21,
-	&bufrex_exporter_sounding_2_91,
-	&bufrex_exporter_sounding_2_101,
-	&bufrex_exporter_sounding_2_102,
+	&bufrex_exporter_pilot_2_91,
+	&bufrex_exporter_temp_2_101,
+	&bufrex_exporter_temp_2_102,
 	&bufrex_exporter_flight_4_142,
 	&bufrex_exporter_flight_4_144,
 	&bufrex_exporter_acars_4_145,
@@ -47,8 +47,9 @@ dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype)
 	{
 		case MSG_GENERIC:	exp = &bufrex_exporter_generic;			break;
 		case MSG_SYNOP:		exp = &bufrex_exporter_synop_0_1;		break;
-		case MSG_TEMP:		exp = &bufrex_exporter_sounding_2_101;	break;
-		case MSG_TEMP_SHIP:	exp = &bufrex_exporter_sounding_2_102;	break;
+		case MSG_PILOT:		exp = &bufrex_exporter_pilot_2_91;		break;
+		case MSG_TEMP:		exp = &bufrex_exporter_temp_2_101;		break;
+		case MSG_TEMP_SHIP:	exp = &bufrex_exporter_temp_2_102;		break;
 		case MSG_AIREP:		exp = &bufrex_exporter_flight_4_142;	break;
 		case MSG_AMDAR:		exp = &bufrex_exporter_flight_4_144;	break;
 		case MSG_ACARS:		exp = &bufrex_exporter_acars_4_145;		break;
