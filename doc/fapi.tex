@@ -1086,8 +1086,39 @@ Notes about the time range values:
 
 
 \chapter{Contents of the local B table}
+
+\section{B table contents}
+
 \label{btable}
 \input{../tables/dballe.tex}
+
+\section{Extra code tables}
+
+Code table 33196 \emph{Data has been invalidated}:
+
+\begin{tabular}{|l|l|}
+\hline
+{\em Value} & {\em Description}               \\
+\hline
+          0 & data has been invalidated       \\
+\hline
+\end{tabular}
+
+When the attribute B33196 is not present, then the data has not been
+invalidated.
+
+Code table 33197 \emph{Manual replacement in substitution}:
+
+\begin{tabular}{|l|l|}
+\hline
+{\em Value} & {\em Description}               \\
+\hline
+          0 & a substitution happened, and this is the original value    \\
+          1 & a substitution happened, and this is the substituted value \\
+\hline
+\end{tabular}
+
+When the attribute B33197 is not present, then no substitution happened.
 
 
 \chapter{Summary of routines}

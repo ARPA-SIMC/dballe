@@ -268,6 +268,12 @@ These are the TODO-list items currently being worked on::
     - N: se 0, ignorare
       N: se 1, mettere un attributo "invalidato"
       N: se 2, mettere valore1 come attributo
+    - Decidere in fase di estrazione se usare sempre valore1 o se sostituire
+      con valore2 se presente, e marcare con un attributo l'azione che è stata
+      fatta in modo che, in fase di export VM, sia possibile rimettere il
+      valore modificato in valore1 o valore2 a seconda di dove è stato preso
+    - Controllare se vengono importati il 3h pressure change e la
+      caratteristica della variazione di pressione
 
  * Tools
     - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
