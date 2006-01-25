@@ -43,6 +43,26 @@ static int rep_cod_from_msg(dba_msg msg)
 	return 255;
 }
 
+static dba_err msg_collector(dba_msg msg, void* data)
+{
+	vector<dba_msg>* vec = static_cast<vector<dba_msg>*>(data);
+	(*vec).push_back(msg);
+	return dba_error_ok();
+}
+
+static void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix)
+{
+	string fname1 = "/tmp/test-" + prefix + "1.bufr";
+	string fname2 = "/tmp/test-" + prefix + "2.bufr";
+	FILE* out1 = fopen(fname1.c_str(), "w");
+	FILE* out2 = fopen(fname2.c_str(), "w");
+	dba_msg_print(msg1, out1);
+	dba_msg_print(msg2, out2);
+	fclose(out1);
+	fclose(out2);
+	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
+}
+
 template<> template<>
 void to::test<1>()
 {
@@ -87,10 +107,24 @@ void to::test<1>()
 
 		int diffs = 0;
 		dba_msg_diff(msg, msgs[0], &diffs, stderr);
+		if (diffs != 0) track_different_msgs(msg, msgs[0], "crex-old");
+		gen_ensure_equals(diffs, 0);
+
+		/* Try the new export algorithm to see if it gives the same results */
+		vector<dba_msg> msgs1;
+		CHECKED(dba_db_query_msgs(db, msg->type, query, msg_collector, &msgs1));
+		gen_ensure_equals(msgs1.size(), 1u);
+		gen_ensure(msgs1[0] != NULL);
+		diffs = 0;
+		dba_msg_diff(msg, msgs1[0], &diffs, stderr);
+		if (diffs != 0) track_different_msgs(msg, msgs1[0], "crex-new");
 		gen_ensure_equals(diffs, 0);
 
 		dba_msg_delete(msg);
 		dba_msg_delete(msgs[0]);
+		free(msgs);
+		for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
+			dba_msg_delete(*i);
 	}
 
 	dba_record_delete(query);
@@ -149,10 +183,24 @@ void to::test<2>()
 		// Compare the two dba_msg
 		int diffs = 0;
 		dba_msg_diff(msg, msgs[0], &diffs, stderr);
+		if (diffs != 0) track_different_msgs(msg, msgs[0], "bufr-old");
+		gen_ensure_equals(diffs, 0);
+
+		/* Try the new export algorithm to see if it gives the same results */
+		vector<dba_msg> msgs1;
+		CHECKED(dba_db_query_msgs(db, msg->type, query, msg_collector, &msgs1));
+		gen_ensure_equals(msgs1.size(), 1u);
+		gen_ensure(msgs1[0] != NULL);
+		diffs = 0;
+		dba_msg_diff(msg, msgs1[0], &diffs, stderr);
+		if (diffs != 0) track_different_msgs(msg, msgs1[0], "bufr-new");
 		gen_ensure_equals(diffs, 0);
 
 		dba_msg_delete(msg);
 		dba_msg_delete(msgs[0]);
+		free(msgs);
+		for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
+			dba_msg_delete(*i);
 	}
 
 	dba_record_delete(query);
@@ -205,14 +253,92 @@ void to::test<3>()
 		// Compare the two dba_msg
 		int diffs = 0;
 		dba_msg_diff(msg, msgs[0], &diffs, stderr);
+		if (diffs != 0) track_different_msgs(msg, msgs[0], "aof-old");
+		gen_ensure_equals(diffs, 0);
+
+		/* Try the new export algorithm to see if it gives the same results */
+		vector<dba_msg> msgs1;
+		CHECKED(dba_db_query_msgs(db, msg->type, query, msg_collector, &msgs1));
+		gen_ensure_equals(msgs1.size(), 1u);
+		gen_ensure(msgs1[0] != NULL);
+		diffs = 0;
+		dba_msg_diff(msg, msgs1[0], &diffs, stderr);
+		if (diffs != 0) track_different_msgs(msg, msgs1[0], "aof-new");
 		gen_ensure_equals(diffs, 0);
 
 		dba_msg_delete(msg);
 		dba_msg_delete(msgs[0]);
+		free(msgs);
+		for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
+			dba_msg_delete(*i);
 	}
 
 	dba_record_delete(query);
 	test_untag();
+}
+
+// Check that multiple messages are correctly identified during export
+template<> template<>
+void to::test<4>()
+{
+	// msg1 has latitude 33.88
+	// msg2 has latitude 46.22
+	dba_msg msg1 = read_test_msg("bufr/obs0-1.22.bufr", BUFR);
+	dba_msg msg2 = read_test_msg("bufr/obs0-3.504.bufr", BUFR);
+
+	CHECKED(dba_db_reset(db, NULL));
+	CHECKED(dba_import_msg(db, msg1, 0));
+	CHECKED(dba_import_msg(db, msg2, 0));
+
+	dba_record query;
+	CHECKED(dba_record_create(&query));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg1)));
+
+	// Export with the old algorithm
+	dba_msg* msgs = NULL;
+	CHECKED(dba_db_export(db, msg1->type, &msgs, query));
+	gen_ensure(msgs != NULL);
+	gen_ensure(msgs[0] != NULL);
+	gen_ensure(msgs[1] != NULL);
+	gen_ensure_equals(msgs[2], (dba_msg)0);
+
+	// Compare the two dba_msg
+	int diffs = 0;
+	dba_msg_diff(msg1, msgs[0], &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msg1, msgs[0], "synop1-old");
+	gen_ensure_equals(diffs, 0);
+
+	diffs = 0;
+	dba_msg_diff(msg2, msgs[1], &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msg2, msgs[1], "synop2-old");
+	gen_ensure_equals(diffs, 0);
+
+	// Try the new export algorithm to see if it gives the same results
+	vector<dba_msg> msgs1;
+	CHECKED(dba_db_query_msgs(db, msg1->type, query, msg_collector, &msgs1));
+	gen_ensure_equals(msgs1.size(), 2u);
+	gen_ensure(msgs1[0] != NULL);
+	gen_ensure(msgs1[1] != NULL);
+
+	diffs = 0;
+	dba_msg_diff(msg1, msgs1[0], &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msg1, msgs1[0], "synop1-new");
+	gen_ensure_equals(diffs, 0);
+
+	diffs = 0;
+	dba_msg_diff(msg2, msgs1[1], &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msg2, msgs1[1], "synop2-new");
+	gen_ensure_equals(diffs, 0);
+
+	dba_msg_delete(msg1);
+	dba_msg_delete(msg2);
+	dba_msg_delete(msgs[0]);
+	dba_msg_delete(msgs[1]);
+	free(msgs);
+	for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
+		dba_msg_delete(*i);
+
+	dba_record_delete(query);
 }
 
 }

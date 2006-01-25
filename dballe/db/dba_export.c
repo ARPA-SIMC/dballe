@@ -331,7 +331,7 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 	DBA_QUERY_BIND_NONNULL(21, SQL_C_SLONG, priority);
 	DBA_QUERY_BIND_NONNULL(22, SQL_C_SLONG, data_id);
 	DBA_QUERY_BIND(23, SQL_C_SLONG, attr_varcode);
-	DBA_QUERY_BIND(24, SQL_C_SLONG, attr_value);
+	DBA_QUERY_BIND(24, SQL_C_CHAR, attr_value);
 #undef DBA_QUERY_BIND
 #undef DBA_QUERY_BIND_NONNULL
 	
@@ -428,10 +428,10 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 
 			last_data_id = out_data_id;
 			last_ltype = out_leveltype;
-			last_l1 = out_l2;
+			last_l1 = out_l1;
 			last_l2 = out_l2;
 			last_pind = out_pindicator;
-			last_p1 = out_p2;
+			last_p1 = out_p1;
 			last_p2 = out_p2;
 		}
 		if (out_attr_varcode_ind != -1)

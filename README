@@ -224,6 +224,9 @@ These are the TODO-list items completed so far::
            r += d
            output(r)
     + Extract some common database functions into dballe/db/internals.{h,c}
+    + Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
+      dba_insert_or_replace (anche dba_qc_insert_or_replace ha il problema)
+       + Risolto, ma solo per MySQL >= 4.1.1
 
 
 TODO-list items being worked on
@@ -242,10 +245,6 @@ These are the TODO-list items currently being worked on::
     - Export AOF
 
  * Core
-    - Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
-      dba_insert_or_replace (anche dba_qc_insert_or_replace ha il problema)
-       + Risolto, ma solo per MySQL >= 4.1.1
-
     - Refactoring dba_db per velocizzare l'import e export di report
        - Query
 	  - step 1: farsi dare l'elenco di context id che stanno nel box scelto
