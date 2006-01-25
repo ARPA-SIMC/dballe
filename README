@@ -131,6 +131,8 @@ These are the TODO-list items completed so far::
       dati esistenti o dare errore 
     + Usare la B locale come B000000002551200.txt
     + Separare la gestione di TEMP e PILOT
+    + Rigenerare i test data del test dba_bufrex_generic.cc usando la nuova
+      B000000002551200.txt, perché è cambiata la dimensione di l1, l2, p1 e p2
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -158,6 +160,15 @@ These are the TODO-list items completed so far::
 	 SS body check confidence interval
 	 Confidenza percentuale synop (lo stesso di CC TT SS quello piú a destra)
        + Mappare CC, TT e SS come [47-53]->[100-0]
+    + Valore 2: se c'è, è il valore buono, e valore 1 importarlo come attributo
+    + Valore 3: dato character sostitutivo di valore1 o valore2
+    + N: se 0, ignorare
+      N: se 1, mettere un attributo "invalidato"
+      N: se 2, mettere valore1 come attributo
+    + Decidere in fase di estrazione se usare sempre valore1 o se sostituire
+      con valore2 se presente, e marcare con un attributo l'azione che è stata
+      fatta in modo che, in fase di export VM, sia possibile rimettere il
+      valore modificato in valore1 o valore2 a seconda di dove è stato preso
 
  * Tools
     + Fare un dbamsg filter che prende query alla dbadb e stampa solo i
@@ -258,26 +269,12 @@ These are the TODO-list items currently being worked on::
        - Fare cache di pseudoana id e context id
 
        - Fare query ad-hoc per l'import e l'export di dba_msg
-    - Rigenerare i test data del test dba_bufrex_generic.cc usando la nuova
-      B000000002551200.txt, perché è cambiata la dimensione di l1, l2, p1 e p2
 
  * Import da VM o database Oracle di ARPA
     - Buttare via le stazioni con NULL su lat o long
-    - Valore 2: se c'è, è il valore buono, e valore 1 importarlo come attributo
-    - Valore 3: dato character sostitutivo di valore1 o valore2
-    - N: se 0, ignorare
-      N: se 1, mettere un attributo "invalidato"
-      N: se 2, mettere valore1 come attributo
-    - Decidere in fase di estrazione se usare sempre valore1 o se sostituire
-      con valore2 se presente, e marcare con un attributo l'azione che è stata
-      fatta in modo che, in fase di export VM, sia possibile rimettere il
-      valore modificato in valore1 o valore2 a seconda di dove è stato preso
     - Controllare se vengono importati il 3h pressure change e la
       caratteristica della variazione di pressione
 
- * Tools
-    - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
-    
  * Export per VM
     - Gestire l'export del tempo passato, che è diviso nel dba_msg in due
       componenti
@@ -285,6 +282,9 @@ These are the TODO-list items currently being worked on::
       Lo ignoro?
     - Come lavoro con l'attributo 'replaced' dal flag di VM?
 
+ * Tools
+    - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
+    
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
     - Quando si importano PILOT da BUFR, usare il geopotenziale come contesto
