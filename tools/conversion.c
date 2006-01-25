@@ -47,6 +47,9 @@ dba_err convert_message(dba_rawmsg msg, bufrex_raw braw, dba_msg decoded, void* 
 {
 	dba_file file = (dba_file)data;
 
+	if (decoded == NULL)
+		return dba_error_ok();
+
 	if (braw != NULL)
 		DBA_RUN_OR_RETURN(process_dba_msg(decoded, file, braw->subtype == 0 ? 0 : braw->type, braw->subtype));
 	else
