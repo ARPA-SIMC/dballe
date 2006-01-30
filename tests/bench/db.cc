@@ -1,5 +1,5 @@
 #include "Benchmark.h"
-#include "bench-utils.h"
+#include "test-utils.h"
 
 #include <dballe/dba_file.h>
 #include <dballe/core/dba_record.h>
@@ -14,6 +14,7 @@
 #include <vector>
 
 using namespace std;
+using namespace tut_dballe;
 
 const char* dsn = "test";
 const char* user = "enrico";

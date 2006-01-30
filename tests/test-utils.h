@@ -1,13 +1,16 @@
 #include <dballe/err/dba_error.h>
 #include <dballe/core/dba_record.h>
+#include <dballe/bufrex/bufrex.h>
 #include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/io/dba_rawmsg.h>
 #include <dballe/msg/dba_msg.h>
 #include <dballe/dba_file.h>
+#include <dballe/dba_marshal.h>
 
 #include <tut.h>
 
 #include <string>
-
+#include <vector>
 #include <iostream>
 
 #define TESTGRP(name) \
@@ -393,5 +396,118 @@ bufrex_raw _read_test_msg_raw(const char* file, int line, const char* filename, 
 
 bufrex_raw _reencode_test(const char* file, int line, bufrex_raw msg);
 #define reencode_test(filename) _reencode_test(__FILE__, __LINE__, msg)
+
+
+/* Some utility random generator functions */
+
+static inline int rnd(int min, int max)
+{
+	return min + (int) (max * (rand() / (RAND_MAX + 1.0)));
+}
+
+static inline double rnd(double min, double max)
+{
+	return min + (int) (max * (rand() / (RAND_MAX + 1.0)));
+}
+
+static inline std::string rnd(int len)
+{
+	std::string res;
+	int max = rnd(1, len);
+	for (int i = 0; i < max; i++)
+		res += (char)rnd('a', 'z');
+	return res;
+}
+
+static inline bool rnd(double prob)
+{
+	return (rnd(0, 100) < prob*100) ? true : false;
+}
+
+/* Random message generation functions */
+
+class generator
+{
+	std::vector<dba_record> reused_pseudoana_fixed;
+	std::vector<dba_record> reused_pseudoana_mobile;
+	std::vector<dba_record> reused_context;
+
+public:
+	~generator();
+
+	dba_err fill_pseudoana(dba_record rec, bool mobile);
+	dba_err fill_context(dba_record rec);
+	dba_err fill_record(dba_record rec);
+	dba_err fill_message(dba_msg msg, bool mobile);
+};
+
+
+/* Message reading functions */
+
+class dba_raw_consumer
+{
+public:
+	virtual ~dba_raw_consumer() {}
+
+	virtual dba_err consume(dba_rawmsg raw) = 0;
+};
+
+dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons);
+
+class msg_vector : public dba_raw_consumer, public std::vector<dba_msg>
+{
+public:
+	virtual ~msg_vector()
+	{
+		for (iterator i = begin(); i != end(); i++)
+			dba_msg_delete(*i);
+	}
+		
+	virtual dba_err consume(dba_rawmsg raw)
+	{
+		dba_msg msg;
+
+		DBA_RUN_OR_RETURN(dba_marshal_decode(raw, &msg));
+		push_back(msg);
+
+		return dba_error_ok();
+	}
+};
+	
+class bufrex_vector : public dba_raw_consumer, public std::vector<bufrex_raw>
+{
+public:
+	virtual ~bufrex_vector()
+	{
+		for (iterator i = begin(); i != end(); i++)
+			bufrex_raw_delete(*i);
+	}
+		
+	virtual dba_err consume(dba_rawmsg raw)
+	{
+		dba_err err = DBA_OK;
+		bufrex_raw msg;
+
+		switch (raw->encoding)
+		{
+			case BUFR:
+				DBA_RUN_OR_RETURN(bufrex_raw_create(&msg, BUFREX_BUFR));
+				break;
+			case CREX:
+				DBA_RUN_OR_RETURN(bufrex_raw_create(&msg, BUFREX_CREX));
+				break;
+			default:
+				return dba_error_consistency("unhandled message type");
+		}
+		DBA_RUN_OR_GOTO(fail, bufrex_raw_decode(msg, raw));
+		push_back(msg);
+
+		return dba_error_ok();
+
+	fail:
+		bufrex_raw_delete(msg);
+		return err;
+	}
+};
 
 }
