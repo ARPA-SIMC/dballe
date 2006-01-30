@@ -15,6 +15,7 @@
 
 #include "dba_var.h"
 
+#include <dballe/core/fast.h>
 #include <dballe/conv/dba_conv.h>
 
 struct _dba_var_attr
@@ -30,7 +31,6 @@ struct _dba_var
 	char* value;
 	dba_var_attr attrs;
 };
-
 
 /* Decode a double value from its integer representation and varinfo encoding
  * informations */
@@ -337,7 +337,9 @@ dba_err dba_var_seti(dba_var var, int val)
 	var->value = (char*)malloc(var->info->len + 2);
 	if (var->value == NULL)
 		return dba_error_alloc("allocating space for dba_var value");
-	snprintf(var->value, var->info->len + 2, "%d", val);
+	/* We add 1 to the length to cope with the '-' sign */
+	strcpy(var->value, itoa(val, var->info->len + 1));
+	/*snprintf(var->value, var->info->len + 2, "%d", val);*/
 	return dba_error_ok();
 }
 

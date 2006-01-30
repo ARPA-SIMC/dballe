@@ -473,11 +473,11 @@ void to::test<2>()
 		CHECKED(dba_db_qc_query(db, id_data, NULL, 0, qc, &qc_count));
 
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val));
-		gen_ensure(val == 11);
+		gen_ensure_equals(val, 11);
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val));
-		gen_ensure(val == 22);
+		gen_ensure_equals(val, 22);
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val));
-		gen_ensure(val == 33);
+		gen_ensure_equals(val, 33);
 
 		/* Delete a couple of items */
 		{

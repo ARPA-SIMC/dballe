@@ -86,7 +86,7 @@ void to::test<3>()
 	CHECKED(dba_var_seti(attr, 75));
 	CHECKED(dba_var_seta_nocopy(var, attr));
 
-	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 2), &attr));
+	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 15), &attr));
 	gen_ensure(var != NULL);
 	CHECKED(dba_var_seti(attr, 45));
 	CHECKED(dba_var_seta_nocopy(var, attr));
@@ -95,7 +95,7 @@ void to::test<3>()
 	gen_ensure(attr != NULL);
 	gen_ensure_var_equals(attr, 75);
 
-	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 2), &attr));
+	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 15), &attr));
 	gen_ensure(attr != NULL);
 	gen_ensure_var_equals(attr, 45);
 
@@ -108,7 +108,7 @@ void to::test<3>()
 	gen_ensure(attr != NULL);
 	gen_ensure_var_equals(attr, 75);
 
-	CHECKED(dba_var_enqa(var1, DBA_VAR(0, 33, 2), &attr));
+	CHECKED(dba_var_enqa(var1, DBA_VAR(0, 33, 15), &attr));
 	gen_ensure(attr != NULL);
 	gen_ensure_var_equals(attr, 45);
 

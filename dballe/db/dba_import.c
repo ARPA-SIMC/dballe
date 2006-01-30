@@ -238,14 +238,8 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 	if (mobile)
 	{
 		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_IDENT)) != NULL)
-		{
-			const char* val = dba_var_value(d->var);
-			int len = strlen(val);
-			if (len > 64) len = 64;
-			memcpy(da->ident, val, len);
-			da->ident[len] = 0;
-			da->ident_ind = len;
-		} else {
+			dba_db_pseudoana_set_ident(da, dba_var_value(d->var));
+		else {
 			err = dba_error_notfound("looking for ident in message to insert");
 			goto fail;
 		}
