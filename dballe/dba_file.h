@@ -86,6 +86,22 @@ dba_err dba_file_read(dba_file file, dba_msg* msg, int* found);
  */
 dba_err dba_file_write_raw(dba_file file, dba_rawmsg msg);
 
+/**
+ * Write a message to the file.
+ *
+ * @param file
+ *   ::dba_file to write to
+ * @param msg
+ *   The dba_msg with to encode and write.
+ * @param cat
+ *   The BUFR of CREX message category to use for encoding (0 for auto detect)
+ * @param subcat
+ *   The BUFR of CREX message subcategory to use for encoding (0 for auto detect)
+ * @return
+ *   The error indicator for the function. @see dba_err
+ */
+dba_err dba_file_write(dba_file file, dba_msg msg, int cat, int subcat);
+
 #ifdef  __cplusplus
 }
 #endif

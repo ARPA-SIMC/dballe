@@ -15,6 +15,11 @@ extern "C" {
 #include <dballe/core/dba_record.h>
 
 /**
+ * Callback function used to collect the messages produced by export functions
+ */
+typedef dba_err (*dba_msg_consumer)(dba_msg msg, void* data);
+
+/**
  * Perform the query in `query', and return the results as a NULL-terminated
  * array of dba_msg.
  *
@@ -29,9 +34,8 @@ extern "C" {
  * @returns
  *   The error indicator for the function (@see dba_err)
  */
-dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record query);
+dba_err dba_db_export(dba_db db, dba_msg_type type, dba_record query, dba_msg_consumer cons, void* data);
 
-typedef dba_err (*dba_msg_consumer)(dba_msg msg, void* data);
 dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record query, dba_msg_consumer cons, void* data);
 
 #ifdef  __cplusplus

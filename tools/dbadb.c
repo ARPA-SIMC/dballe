@@ -152,23 +152,37 @@ dba_err do_import(poptContext optCon)
 	return dba_error_ok();
 }
 
+struct export_data
+{
+	dba_file file;
+	int cat;
+	int subcat;
+};
+
+static dba_err msg_writer(dba_msg msg, void* data)
+{
+	struct export_data* d = (struct export_data*)data;
+	DBA_RUN_OR_RETURN(dba_file_write(d->file, msg, d->cat, d->subcat));
+	dba_msg_delete(msg);
+	return dba_error_ok();
+}
+
 dba_err do_export(poptContext optCon)
 {
-	const char* action;
+	struct export_data d = { NULL, 0, 0 };
 	const char* datatype;
-	int exp_type = 0, exp_subtype = 0, i, rep_cod;
-	dba_file file;
+	int rep_cod;
 	dba_encoding type;
-	dba_msg* msgs = NULL;
 	dba_record query;
 	dba_db db;
 
 	/* Throw away the command name */
-	action = poptGetArg(optCon);
-	datatype = poptGetArg(optCon);
+	poptGetArg(optCon);
+	if ((datatype = poptGetArg(optCon)) == NULL)
+		dba_cmdline_error(optCon, "you need to specify what messages to export, from the types listed in /etc/repinfo.csv");
 
 	if (op_output_template[0] != 0)
-		if (sscanf(op_output_template, "%d.%d", &exp_type, &exp_subtype) != 2)
+		if (sscanf(op_output_template, "%d.%d", &d.cat, &d.subcat) != 2)
 			dba_cmdline_error(optCon, "output template must be specified as 'type.subtype' (type number, then dot, then subtype number)");
 
 	/* Connect to the database */
@@ -190,54 +204,25 @@ dba_err do_export(poptContext optCon)
 	/* Add the rest of the query */
 	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
+	type = dba_cmdline_stringToMsgType(op_output_type, optCon);
+	DBA_RUN_OR_RETURN(dba_file_create(&d.file, type, "(stdout)", "w"));
+
 	switch (rep_cod)
 	{
-		case 1:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SYNOP, &msgs, query)); break;
-		case 2:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_GENERIC, &msgs, query)); break;
-		case 3:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP, &msgs, query)); break;
-		case 4:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_PILOT, &msgs, query)); break;
-		case 9:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_BUOY, &msgs, query)); break;
-		case 10:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SHIP, &msgs, query)); break;
-		case 11:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP_SHIP, &msgs, query)); break;
-		case 12:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_AIREP, &msgs, query)); break;
-		case 13:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_AMDAR, &msgs, query)); break;
-		case 14:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_ACARS, &msgs, query)); break;
-		default:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_GENERIC, &msgs, query)); break;
+		case 1:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SYNOP,		query, msg_writer, &d)); break;
+		case 2:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_GENERIC,	query, msg_writer, &d)); break;
+		case 3:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP,		query, msg_writer, &d)); break;
+		case 4:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_PILOT, 		query, msg_writer, &d)); break;
+		case 9:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_BUOY, 		query, msg_writer, &d)); break;
+		case 10:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SHIP, 		query, msg_writer, &d)); break;
+		case 11:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP_SHIP, 	query, msg_writer, &d)); break;
+		case 12:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_AIREP, 		query, msg_writer, &d)); break;
+		case 13:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_AMDAR, 		query, msg_writer, &d)); break;
+		case 14:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_ACARS, 		query, msg_writer, &d)); break;
+		default:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_GENERIC, 	query, msg_writer, &d)); break;
 	}
 
-	if (msgs == NULL)
-		return dba_error_ok();
-
-	type = dba_cmdline_stringToMsgType(op_output_type, optCon);
-	DBA_RUN_OR_RETURN(dba_file_create(&file, type, "(stdout)", "w"));
-	switch (type)
-	{
-		case BUFR:
-			for (i = 0; msgs[i] != NULL; i++)
-			{
-				dba_rawmsg raw;
-				DBA_RUN_OR_RETURN(bufrex_encode_bufr(msgs[i], exp_type, exp_subtype, &raw));
-				DBA_RUN_OR_RETURN(dba_file_write_raw(file, raw));
-				dba_rawmsg_delete(raw);
-				dba_msg_delete(msgs[i]);
-			}
-			break;
-		case CREX:
-			for (i = 0; msgs[i] != NULL; i++)
-			{
-				dba_rawmsg raw;
-				DBA_RUN_OR_RETURN(bufrex_encode_crex(msgs[i], exp_type, exp_subtype, &raw));
-				DBA_RUN_OR_RETURN(dba_file_write_raw(file, raw));
-				dba_rawmsg_delete(raw);
-				dba_msg_delete(msgs[i]);
-			}
-			
-			break;
-		case AOF: 
-			return dba_error_unimplemented("export to AOF format");
-	}
-	dba_file_delete(file);
-	free(msgs);
+	dba_file_delete(d.file);
 	dba_db_close(db);
 	dba_shutdown();
 

@@ -124,7 +124,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record query)
+dba_err dba_db_export(dba_db db, dba_msg_type type, dba_record query, dba_msg_consumer cons, void* data)
 {
 	/* Read the values from the database */
 	dba_err err = DBA_OK;
@@ -136,7 +136,6 @@ dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record q
 	double last_lat = 0;
 	double last_lon = 0;
 	char last_datetime[20];
-	dba_msg* mlist = NULL;
 	dba_msg msg = NULL;
 
 	last_datetime[0] = 0;
@@ -147,12 +146,6 @@ dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record q
 	if (count == 0)
 		goto cleanup;
 
-	mlist = (dba_msg*)calloc(1, (count + 1) * sizeof(dba_msg));
-	if (mlist == NULL)
-	{
-		err = dba_error_alloc("allocating space for an array of messages");
-		goto cleanup;
-	}
 	i = 0;
 
 	DBA_RUN_OR_GOTO(cleanup, dba_record_create(&res));
@@ -178,10 +171,10 @@ dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record q
 					dba_msg copy;
 					DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));
 					/* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-					mlist[i++] = copy;
+					DBA_RUN_OR_GOTO(cleanup, cons(copy, data));
 					dba_msg_delete(msg);
 				} else {
-					mlist[i++] = msg;
+					DBA_RUN_OR_GOTO(cleanup, cons(msg, data));
 				}
 				msg = NULL;
 			}
@@ -207,23 +200,15 @@ dba_err dba_db_export(dba_db db, dba_msg_type type, dba_msg** msgs, dba_record q
 			dba_msg copy;
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));
 			/* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-			mlist[i++] = copy;
+			DBA_RUN_OR_GOTO(cleanup, cons(copy, data));
 			dba_msg_delete(msg);
 		} else {
-			mlist[i++] = msg;
+			DBA_RUN_OR_GOTO(cleanup, cons(msg, data));
 		}
 		msg = NULL;
 	}
 
-	*msgs = mlist;
-
 cleanup:
-	if (err != DBA_OK && mlist != NULL)
-	{
-		for (i = 0; mlist[i] != NULL; i++)
-			dba_msg_delete(mlist[i]);
-		free(mlist);
-	}
 	if (cur != NULL)
 		dba_db_cursor_delete(cur);
 	if (res != NULL)

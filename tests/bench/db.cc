@@ -136,14 +136,8 @@ protected:
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
 		{
-			int j;
-			dba_msg* msgs;
 	        DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(*i)));
-			DBA_RUN_OR_RETURN(dba_db_export(db, (*i)->type, &msgs, query));
-			for (j = 0; msgs[j] != NULL; j++)
-				dba_msg_delete(msgs[j]);
-			free(msgs);
-			count += j;
+			DBA_RUN_OR_RETURN(dba_db_export(db, (*i)->type, query, msg_counter, &count));
 		}
 
 		timing("exported %d messages from the database, old style", count);

@@ -91,12 +91,11 @@ void to::test<1>()
 		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, 0));
 
-		dba_msg* msgs = NULL;
+		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
-		CHECKED(dba_db_export(db, msg->type, &msgs, query));
-		gen_ensure(msgs != NULL);
+		CHECKED(dba_db_export(db, msg->type, query, msg_collector, &msgs));
+		gen_ensure_equals(msgs.size(), 1u);
 		gen_ensure(msgs[0] != NULL);
-		gen_ensure_equals(msgs[1], (dba_msg)0);
 
 		/*
 		if (string(files[i]).find("temp0") != string::npos)
@@ -122,8 +121,8 @@ void to::test<1>()
 		gen_ensure_equals(diffs, 0);
 
 		dba_msg_delete(msg);
-		dba_msg_delete(msgs[0]);
-		free(msgs);
+		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
+			dba_msg_delete(*i);
 		for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
 			dba_msg_delete(*i);
 	}
@@ -166,12 +165,11 @@ void to::test<2>()
 		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, 0));
 
-		dba_msg* msgs = NULL;
+		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
-		CHECKED(dba_db_export(db, msg->type, &msgs, query));
-		gen_ensure(msgs != NULL);
+		CHECKED(dba_db_export(db, msg->type, query, msg_collector, &msgs));
+		gen_ensure_equals(msgs.size(), 1u);
 		gen_ensure(msgs[0] != NULL);
-		gen_ensure_equals(msgs[1], (dba_msg)0);
 
 		/*
 		if (string(files[i]).find("1-21") != string::npos)
@@ -198,8 +196,8 @@ void to::test<2>()
 		gen_ensure_equals(diffs, 0);
 
 		dba_msg_delete(msg);
-		dba_msg_delete(msgs[0]);
-		free(msgs);
+		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
+			dba_msg_delete(*i);
 		for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
 			dba_msg_delete(*i);
 	}
@@ -236,12 +234,11 @@ void to::test<3>()
 		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, 0));
 
-		dba_msg* msgs = NULL;
+		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
-		CHECKED(dba_db_export(db, msg->type, &msgs, query));
-		gen_ensure(msgs != NULL);
+		CHECKED(dba_db_export(db, msg->type, query, msg_collector, &msgs));
+		gen_ensure_equals(msgs.size(), 1u);
 		gen_ensure(msgs[0] != NULL);
-		gen_ensure_equals(msgs[1], (dba_msg)0);
 
 		/*
 		if (string(files[i]).find("1-21") != string::npos)
@@ -268,8 +265,8 @@ void to::test<3>()
 		gen_ensure_equals(diffs, 0);
 
 		dba_msg_delete(msg);
-		dba_msg_delete(msgs[0]);
-		free(msgs);
+		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
+			dba_msg_delete(*i);
 		for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
 			dba_msg_delete(*i);
 	}
@@ -296,12 +293,11 @@ void to::test<4>()
 	CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg1)));
 
 	// Export with the old algorithm
-	dba_msg* msgs = NULL;
-	CHECKED(dba_db_export(db, msg1->type, &msgs, query));
-	gen_ensure(msgs != NULL);
+	vector<dba_msg> msgs;
+	CHECKED(dba_db_export(db, msg1->type, query, msg_collector, &msgs));
+	gen_ensure_equals(msgs.size(), 2u);
 	gen_ensure(msgs[0] != NULL);
 	gen_ensure(msgs[1] != NULL);
-	gen_ensure_equals(msgs[2], (dba_msg)0);
 
 	// Compare the two dba_msg
 	int diffs = 0;
@@ -333,9 +329,8 @@ void to::test<4>()
 
 	dba_msg_delete(msg1);
 	dba_msg_delete(msg2);
-	dba_msg_delete(msgs[0]);
-	dba_msg_delete(msgs[1]);
-	free(msgs);
+	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
+		dba_msg_delete(*i);
 	for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
 		dba_msg_delete(*i);
 
