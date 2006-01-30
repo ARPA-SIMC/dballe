@@ -20,7 +20,7 @@ extern "C" {
 typedef struct _dba_db* dba_db;
 
 #if 0
-/**
+/* *
  * Cursor identifying a DB-ALLe physical context.
  *
  * A physical context represent a point in space and time identified by

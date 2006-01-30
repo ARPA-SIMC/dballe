@@ -7,7 +7,7 @@ extern "C" {
 
 /** @file
  * @ingroup core
- * Implement fast access to information about WMO variables.
+ * Implement ::dba_var, an encapsulation of a measured variable.
  */
 
 
@@ -18,6 +18,12 @@ extern "C" {
 struct _dba_var;
 /**
  * Holds a DBALLE variable
+ *
+ * A ::dba_var contains:
+ * \li a ::dba_varcode identifying what is measured
+ * \li a measured value, that can be an integer, double or string depending on
+ *     the ::dba_varcode
+ * \li zero or more attributes, in turn represented by ::dba_var structures
  */
 typedef struct _dba_var* dba_var;
 
@@ -112,16 +118,94 @@ dba_err dba_var_create_local(dba_varcode code, dba_var* var);
  */
 dba_err dba_var_copy(dba_var source, dba_var* dest);
 
+/**
+ * Delete a dba_var
+ *
+ * @param var
+ *   The variable to delete
+ */
 void dba_var_delete(dba_var var);
 
+/**
+ * Get the value of a dba_var, as an integer
+ *
+ * @param var
+ *   The variable to query
+ * @retval val
+ *   The resulting value
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_enqi(dba_var var, int* val);
+
+/**
+ * Get the value of a dba_var, as a double
+ *
+ * @param var
+ *   The variable to query
+ * @retval val
+ *   The resulting value
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_enqd(dba_var var, double* val);
+
+/**
+ * Get the value of a dba_var, as a string
+ *
+ * @param var
+ *   The variable to query
+ * @retval val
+ *   The resulting value
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_enqc(dba_var var, const char** val);
 
+/**
+ * Set the value of a dba_var, from an integer value
+ *
+ * @param var
+ *   The variable to set
+ * @param val
+ *   The value to set
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_seti(dba_var var, int val);
+
+/**
+ * Set the value of a dba_var, from a double value
+ *
+ * @param var
+ *   The variable to set
+ * @param val
+ *   The value to set
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_setd(dba_var var, double val);
+
+/**
+ * Set the value of a dba_var, from a string value
+ *
+ * @param var
+ *   The variable to set
+ * @param val
+ *   The value to set
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_setc(dba_var var, const char* val);
 
+/**
+ * Unset the value of a dba_var
+ *
+ * @param var
+ *   The variable to unset
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_unset(dba_var var);
 
 /**
@@ -138,9 +222,54 @@ dba_err dba_var_unset(dba_var var);
  *   The error indicator for the function (@see dba_err)
  */
 dba_err dba_var_enqa(dba_var var, dba_varcode code, dba_var* attr);
+
+/**
+ * Set an attribute of the variable.  An existing attribute with the same
+ * ::dba_varcode will be replaced.
+ *
+ * @param var
+ *   The variable to work on
+ * @param attr
+ *   The attribute to add.  It will be copied inside var, and memory management
+ *   will still be in charge of the caller.
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_seta(dba_var var, dba_var attr);
+
+/**
+ * Set an attribute of the variable.  An existing attribute with the same
+ * ::dba_varcode will be replaced.
+ *
+ * @param var
+ *   The variable to work on
+ * @param attr
+ *   The attribute to add.  It will be used directly, and var will take care of
+ *   its memory management.
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_seta_nocopy(dba_var var, dba_var attr);
+
+/**
+ * Remove the attribute with the given code
+ * 
+ * @param var
+ *   The variable to work on
+ * @param code
+ *   The dba_varcode of the attribute to remove
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_var_unseta(dba_var var, dba_varcode code);
+
+/**
+ * Remove all attributes from the variable
+ * @param var
+ *   The variable to work on
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
 void dba_var_clear_attrs(dba_var var);
 
 /**
@@ -175,10 +304,35 @@ dba_varinfo dba_var_info(dba_var var);
  */
 const char* dba_var_value(dba_var var);
 
+/**
+ * Start iterating through all the attributes of a variable
+ *
+ * @param var
+ *   The variable to work on
+ * @returns
+ *   The ::dba_var_attr_iterator to use to iterate the attributes
+ */
 dba_var_attr_iterator dba_var_attr_iterate(dba_var var);
 
+/**
+ * Advance a ::dba_var_attr_iterator to point to the next attribute
+ *
+ * @param iter
+ *   The iterator to work on
+ * @returns
+ *   The iterator to the next attribute, or NULL if there are no more
+ *   attributes
+ */
 dba_var_attr_iterator dba_var_attr_iterator_next(dba_var_attr_iterator iter);
 
+/**
+ * Get the attribute pointed by a ::dba_var_attr_iterator
+ *
+ * @param iter
+ *   The iterator to work on
+ * @returns
+ *   The attribute currently pointed by the iterator
+ */
 dba_var dba_var_attr_iterator_attr(dba_var_attr_iterator iter);
 
 

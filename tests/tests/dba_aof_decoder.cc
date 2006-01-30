@@ -85,8 +85,38 @@ void to::test<1>()
 
 void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 {
-	dba_var var;
+	// Recode BUFR attributes to match the AOF 2-bit values
+	for (int i = 0; i < bmsg->data_count; i++)
+	{
+		dba_msg_level lev = bmsg->data[i];
+		for (int j = 0; j < lev->data_count; j++)
+		{
+			dba_msg_datum dat = lev->data[j];
+			dba_var_attr_iterator iter = dba_var_attr_iterate(dat->var);
+			for (; iter != NULL; iter = dba_var_attr_iterator_next(iter))
+			{
+				dba_var attr = dba_var_attr_iterator_attr(iter);
+				if (dba_var_code(attr) == DBA_VAR(0, 33, 7))
+				{
+					int val;
+					CHECKED(dba_var_enqi(attr, &val));
+					// Recode val using one of the value in the 4 steps of AOF
+					if (val > 75)
+						val = 76;
+					else if (val > 50)
+						val = 51;
+					else if (val > 25)
+						val = 26;
+					else
+						val = 0;
+					CHECKED(dba_var_seti(attr, val));
+				}
+			}
+		}
+	}
 	
+	dba_var var;
+
 	if ((var = dba_msg_get_block_var(bmsg)) != NULL)
 		dba_var_clear_attrs(var);
 	if ((var = dba_msg_get_station_var(bmsg)) != NULL)
@@ -132,6 +162,7 @@ void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 				dba_var_clear_attrs(dat->var);
 		}
 	}
+
 }
 
 // Compare decoding results with BUFR sample data
