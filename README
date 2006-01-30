@@ -169,6 +169,9 @@ These are the TODO-list items completed so far::
       con valore2 se presente, e marcare con un attributo l'azione che è stata
       fatta in modo che, in fase di export VM, sia possibile rimettere il
       valore modificato in valore1 o valore2 a seconda di dove è stato preso
+    + Controllare se vengono importati il 3h pressure change e la
+      caratteristica della variazione di pressione (aggiunta override della
+      mappatura sbagliata nel database)
 
  * Tools
     + Fare un dbamsg filter che prende query alla dbadb e stampa solo i
@@ -239,6 +242,7 @@ These are the TODO-list items completed so far::
     + Occhio che REPLACE cambia l'ID: vedere la nota FIXME all'inizio di
       dba_insert_or_replace (anche dba_qc_insert_or_replace ha il problema)
        + Risolto, ma solo per MySQL >= 4.1.1
+    + Implementare la ricerca per latitudine o longitudine esatte
 
 
 TODO-list items being worked on
@@ -272,8 +276,6 @@ These are the TODO-list items currently being worked on::
 
  * Import da VM o database Oracle di ARPA
     - Buttare via le stazioni con NULL su lat o long
-    - Controllare se vengono importati il 3h pressure change e la
-      caratteristica della variazione di pressione
 
  * Export per VM
     - Gestire l'export del tempo passato, che è diviso nel dba_msg in due
@@ -284,6 +286,10 @@ These are the TODO-list items currently being worked on::
 
  * Tools
     - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
+
+ * AOF
+    - Riattivare i confronti comparativi coi BUFR (togliendo dal messaggio
+      importato BUFR gli attributi non supportati da AOF)
     
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra

@@ -258,8 +258,10 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 	}
 
 	PARM_INT(ana_id, DBA_KEY_ANA_ID, " AND pa.id = ?");
+	PARM_INT(latmin, DBA_KEY_LAT, " AND pa.lat = ?");
 	PARM_INT(latmin, DBA_KEY_LATMIN, " AND pa.lat > ?");
 	PARM_INT(latmax, DBA_KEY_LATMAX, " AND pa.lat < ?");
+	PARM_INT(lonmin, DBA_KEY_LON, " AND pa.lon = ?");
 	PARM_INT(lonmin, DBA_KEY_LONMIN, " AND pa.lon > ?");
 	PARM_INT(lonmax, DBA_KEY_LONMAX, " AND pa.lon < ?");
 
