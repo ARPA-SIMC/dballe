@@ -27,7 +27,7 @@ void to::test<1>()
 	gen_ensure_equals(string(itoa(1234567890, 10)), string("1234567890"));
 	gen_ensure_equals(string(itoa(45, 2)), string("45"));
 	gen_ensure_equals(string(itoa(-1, 2)), string("-1"));
-	gen_ensure_equals(string(itoa(-11000000, 7)), string("11000000"));
+	gen_ensure_equals(string(itoa(-11000000, 7)), string("1000000"));
 	gen_ensure_equals(string(itoa(-11000000, 8)), string("-11000000"));
 }
 	

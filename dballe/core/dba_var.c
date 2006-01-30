@@ -57,15 +57,9 @@ static const double scales[] = {
 double dba_var_decode_int(long val, dba_varinfo info)
 {
 	if (info->scale > 0)
-	{
-		/* One floating-point division */
 		return (val - info->ref) / scales[info->scale];
-	}
 	else if (info->scale < 0)
-	{
-		/* One floating-point multiplication */
 		return (val - info->ref) * scales[-info->scale];
-	}
 	else
 		return val - info->ref;
 }
@@ -75,15 +69,9 @@ double dba_var_decode_int(long val, dba_varinfo info)
 long dba_var_encode_int(double fval, dba_varinfo info)
 {
 	if (info->scale > 0)
-	{
-		/* One floating-point multiplication */
 		return (long)rint((fval + info->ref) * scales[info->scale]);
-	}
 	else if (info->scale < 0)
-	{
-		/* One floating-point division */
 		return (long)rint((fval + info->ref) / scales[-info->scale]);
-	}
 	else
 		return (long)rint(fval + info->ref);
 }
@@ -145,10 +133,7 @@ dba_err dba_var_copy(dba_var source, dba_var* dest)
 {
 	dba_err err;
 
-	/* Create the new variable */
-	if ((*dest = (dba_var)calloc(1, sizeof(struct _dba_var))) == NULL)
-		return dba_error_alloc("creating new DBA variable");
-	(*dest)->info = source->info;
+	DBA_RUN_OR_RETURN(dba_var_create(source->info, dest));
 
 	/* Copy the value */
 	if (source->value != NULL)
@@ -268,7 +253,7 @@ dba_err dba_var_seta_nocopy(dba_var var, dba_var attr)
 		}
 
 	/* Else, create it fresh and prepend it to the list */
-	if ((cur = (dba_var_attr)calloc(1, sizeof(struct _dba_var_attr))) == NULL)
+	if ((cur = (dba_var_attr)malloc(sizeof(struct _dba_var_attr))) == NULL)
 		return dba_error_alloc("creating new dba variable attribute");
 	cur->var = attr;
 	cur->next = var->attrs;
