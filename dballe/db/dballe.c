@@ -1,5 +1,6 @@
 #include <dballe/db/dballe.h>
 #include <dballe/db/internals.h>
+#include <dballe/db/pseudoana.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/core/dba_csv.h>
