@@ -19,13 +19,6 @@ extern "C" {
  * Functions used to parse and encode messages in various formats.
  */
 
-/**
- * @file
- * @ingroup dbamessage
- *
- * Store and access an encoded message
- */
-
 struct _dba_rawfile;
 
 struct _dba_rawmsg {

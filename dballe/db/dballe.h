@@ -397,12 +397,6 @@ dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, 
  *   The dballe session id
  * @param id_data
  *   The database id of the data item related to the QC values to insert
-#if 0
- * @param rec
- *   The record containing the data whose QC values are to be manipulated.
- * @param var
- *   The WMO code of the data whose QC values are to be manipulated.
-#endif
  * @param qc
  *   The QC data to be added
  * @param can_replace
@@ -422,12 +416,6 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, dba_record qc, int c
  *   The dballe session id
  * @param id_data
  *   The database id of the data item related to the QC values to insert
-#if 0
- * @param rec
- *   The record containing the data whose QC values are to be manipulated.
- * @param var
- *   The WMO code of the data whose QC values are to be manipulated.
-#endif
  * @param qc
  *   The QC data to be added
  * @return

@@ -35,12 +35,30 @@ struct tool_desc
 	struct op_dispatch_table* ops;	
 };
 
-
+/**
+ * Print informations about the last error to stderr
+ */
 void dba_cmdline_print_dba_error();
+
+/**
+ * Print an error that happened when parsing commandline arguments, then add
+ * usage informations and exit
+ */
 void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__ ((noreturn));
+
+/**
+ * Return the ::dba_encoding that corresponds to the name in the string
+ */
 dba_encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon);
+
+/**
+ * Process commandline arguments and perform the action requested
+ */
 int dba_cmdline_dispatch_main(const struct tool_desc* desc, int argc, const char* argv[]);
 
+/**
+ * Get a DB-ALLe query from commandline parameters in the form key=value
+ */
 dba_err dba_cmdline_get_query(poptContext optCon, dba_record query);
 
 #ifdef  __cplusplus

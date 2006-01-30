@@ -86,8 +86,8 @@ dba_err dba_querybuf_append(dba_querybuf buf, const char* str);
  *
  * @param buf
  *   The buffer to operate on
- * @param str
- *   The string to append
+ * @param fmt
+ *   The string to append, which will be formatted in printf style
  * @return
  *   The error indicator for the function (@see dba_err)
  */

@@ -46,7 +46,7 @@ dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msg* msg);
  *   The type of the encoded message.  Use 0 to let the encoder make a good choice.
  * @param subtype
  *   The subtype of the encoded message.  Use 0 to let the encoder make a good choice.
- * @retval braw
+ * @retval raw
  *   The raw encoded message
  * @return
  *   The error status (@see dba_err)
@@ -62,7 +62,7 @@ dba_err bufrex_encode_bufr(dba_msg msg, int type, int subtype, dba_rawmsg* raw);
  *   The type of the encoded message.  Use 0 to let the encoder make a good choice.
  * @param subtype
  *   The subtype of the encoded message.  Use 0 to let the encoder make a good choice.
- * @retval braw
+ * @retval raw
  *   The raw encoded message
  * @return
  *   The error status (@see dba_err)

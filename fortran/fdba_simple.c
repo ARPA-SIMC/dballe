@@ -253,10 +253,10 @@ static int check_flag(const char* val, const char* buf, int len)
  *   The session handle returned by the function
  * @param rewrite
  *   Control what to do when inserting existing data:
- *   \l \c 0, an insert of an existing data will fail.
- *   \l \c 1 an insert of an existing data will overwrite it, but existing
+ *   \li \c 0, an insert of an existing data will fail.
+ *   \li \c 1 an insert of an existing data will overwrite it, but existing
  *           anagraphical informations will not be overwritten
- *   \l \c 2 an insert of an existing data or anagraphical informations will
+ *   \li \c 2 an insert of an existing data or anagraphical informations will
  *           overwrite it
  * @return
  *   The error indication for the function.

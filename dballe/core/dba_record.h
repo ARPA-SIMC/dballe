@@ -105,7 +105,7 @@ dba_err dba_record_keyword_info(dba_keyword keyword, dba_varinfo* info);
  *
  * @param tag
  *   The name to query.
- * @param retval
+ * @returns
  *   The corresponding dba_keyword, or DBA_KEY_ERROR if tag does not match a
  *   valid keyword.
  */
@@ -286,7 +286,7 @@ dba_err dba_record_contains_var(dba_record rec, dba_varcode code, int* found);
  *   The record to get the value from.
  * @param parameter
  *   The parameter to get the value for.
- * @retval value
+ * @retval var
  *   A copy of the internal dba_var with the parameter.  You need to deallocate
  *   it with dba_var_delete().
  * @return
@@ -301,7 +301,7 @@ dba_err dba_record_key_enq(dba_record rec, dba_keyword parameter, dba_var* var);
  *   The record to get the value from.
  * @param code
  *   The variable to get the value for.
- * @retval value
+ * @retval var
  *   A copy of the internal dba_var with the parameter.  You need to deallocate
  *   it with dba_var_delete().
  * @return
@@ -417,7 +417,7 @@ dba_err dba_record_var_enqc(dba_record rec, dba_varcode code, const char** value
  *   The parameter to set the value for.  It can be the code of a WMO variable
  *   prefixed by "B" (such as \c "B01023") or a keyword among the ones defined
  *   in \ref dba_record_keywords
- * @param value
+ * @param var
  *   A the dba_var with the parameter which will be copied inside the record.
  *   The record will copy the variable and will not take ownership of it:
  *   memory management will remain in charge of the caller.
@@ -434,7 +434,7 @@ dba_err dba_record_key_set(dba_record rec, dba_keyword parameter, dba_var var);
  *   The record where the value is to be set.
  * @param code
  *   The variable to set the value for.
- * @param value
+ * @param var
  *   A the dba_var with the parameter which will be copied inside the record.
  *   The record will copy the variable and will not take ownership of it:
  *   memory management will remain in charge of the caller.
@@ -448,7 +448,7 @@ dba_err dba_record_var_set(dba_record rec, dba_varcode code, dba_var var);
  *
  * @param rec
  *   The record where the value is to be set.
- * @param value
+ * @param var
  *   A the dba_var with the parameter which will be copied inside the record.
  *   The record will copy the variable and will not take ownership of it:
  *   memory management will remain in charge of the caller.

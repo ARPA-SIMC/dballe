@@ -104,7 +104,7 @@ dba_err bufrex_raw_load_tables(bufrex_raw msg);
  *
  * @param msg
  *   ::bufrex_raw to query
- * @param var
+ * @param code
  *   code of the variable to query
  * @retval info
  *   the ::dba_varinfo structure with the results of the query.  The returned
@@ -119,7 +119,7 @@ dba_err bufrex_raw_query_btable(bufrex_raw msg, dba_varcode code, dba_varinfo* i
  * 
  * @param msg
  *   ::bufrex_raw to query
- * @param var
+ * @param code
  *   code of the entry to query
  * @param res
  *   the bufrex_opcode chain that contains the expansion elements
@@ -377,9 +377,6 @@ dba_err bufrex_raw_to_msg(bufrex_raw raw, dba_msg* msg);
  *   The ::bufrex_raw with the data to encode
  * @param out
  *   The ::dba_rawmsg that will hold the encoded data
- * @param opt
- *   The bufr_options that controls the encoding process.  If NULL is passed,
- *   defaults will be used.
  * @return
  *   The error indicator for the function.  @see ::dba_err
  */
@@ -408,9 +405,6 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out);
  *   The ::bufrex_raw with the data to encode
  * @param out
  *   The ::dba_rawmsg that will hold the encoded data
- * @param opt
- *   The bufr_options that controls the encoding process.  If NULL is passed,
- *   defaults will be used.
  * @return
  *   The error indicator for the function.  @see ::dba_err
  */

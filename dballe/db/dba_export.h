@@ -27,10 +27,12 @@ typedef dba_err (*dba_msg_consumer)(dba_msg msg, void* data);
  *   The database to use for the query
  * @param type
  *   The type of message to export
- * @retval msgs
- *   The returned array of results
  * @param query
  *   The query to perform
+ * @param cons
+ *   The ::dba_msg_consumer function that will handle the resulting messages
+ * @param data
+ *   Arbitrary extra value to be passed as-is to the ::dba_msg_consumer
  * @returns
  *   The error indicator for the function (@see dba_err)
  */
