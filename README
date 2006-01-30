@@ -146,6 +146,8 @@ These are the TODO-list items completed so far::
       commit, rollback, last_insert_id
     + Fare query ad-hoc per l'import e l'export di dba_msg
     + Try to reuse the allocated memory in dba_var_setc as well
+    + Speed up dba_var_encode_int using precomputed multipliers stored on an
+      array that gets indexed by the scale
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -268,6 +270,7 @@ These are the TODO-list items currently being worked on::
     + Import-export di report generici
     - Bug free
        - lanciare valgrind sui test
+       - controllare i warning di GCC
     - Fast
        - lanciare kcachegrind sul benchmark
     - Documentazione API Fortran
@@ -276,20 +279,17 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
+ * AOF
+    - Riattivare i confronti comparativi coi BUFR (togliendo dal messaggio
+      importato BUFR gli attributi non supportati da AOF)
+    
  * Core
-    - Refactoring dba_db per velocizzare l'import e export di report
-       - Fare una cache delle informazioni per il tipo report, da leggere alla
-	 connessione al database e tenere in memoria
-       - Fare cache di pseudoana id e context id
-       - Use foreign keys to automatically get rid of unused pseudoana and contexts
-
-       - See how to speed up dba_var_encode_int
-         (precomputed multipliers stored on an array that gets indexed by the scale?)
-
-       - Aggiungere una entry B locale per il nome della stazione
-          - Supportarlo in dba_msg e dba_import_msg_new
-	  - Oppure toglierlo se non lo usa nessuno (nessuna routine di
-	    import/export lo usa al momento, visto che dba_msg non lo supporta)
+    - Aggiungere una entry B locale per il nome della stazione
+       - Supportarlo in dba_msg e dba_import_msg_new
+       - Oppure toglierlo se non lo usa nessuno (nessuna routine di
+         import/export lo usa al momento, visto che dba_msg non lo supporta)
+    - dba_var_diff non sembra confrontare il valore degli attributi (almeno nel
+      test di aof non si accorge che gli attributi hanno valori tutti diversi)
 	    
  * Import da VM o database Oracle di ARPA
     - Buttare via le stazioni con NULL su lat o long
@@ -304,10 +304,6 @@ These are the TODO-list items currently being worked on::
  * Tools
     - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
 
- * AOF
-    - Riattivare i confronti comparativi coi BUFR (togliendo dal messaggio
-      importato BUFR gli attributi non supportati da AOF)
-    
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
     - Quando si importano PILOT da BUFR, usare il geopotenziale come contesto
@@ -471,6 +467,11 @@ These are the TODO-list items that are to be addressed in the future::
          d'ordine, ...)
        - Informazioni codificate (il messaggio codificato)
        - Informazioni decodificate (il contenuto del messaggio)
+    - Refactoring dba_db per velocizzare l'import e export di report
+       - Fare una cache delle informazioni per il tipo report, da leggere alla
+	 connessione al database e tenere in memoria
+       - Fare cache di pseudoana id e context id
+       - Use foreign keys to automatically get rid of unused pseudoana and contexts
    
  * Dballe
     - Come gestire i cambiamenti alla B locale:

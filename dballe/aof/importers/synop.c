@@ -82,9 +82,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out)
 		DBA_RUN_OR_RETURN(dba_msg_set_wind_speed(msg, OBS(22), get_conf6((OBS(30) >> 6) & 0x3f)));
 
 	if (OBS(23) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_set_temp_2m(msg, k2c(OBS(23)), get_conf6((OBS(30) >> 12) & 0x3f)));
+		DBA_RUN_OR_RETURN(dba_msg_set_temp_2m(msg, totemp(OBS(23)), get_conf6((OBS(30) >> 12) & 0x3f)));
 	if (OBS(24) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_set_dewpoint_2m(msg, k2c(OBS(24)), get_conf6((OBS(30) >> 18) & 0x3f)));
+		DBA_RUN_OR_RETURN(dba_msg_set_dewpoint_2m(msg, totemp(OBS(24)), get_conf6((OBS(30) >> 18) & 0x3f)));
 
 	/* FIXME: ship uses press_3h, while synop uses press_tend: is this ok? */
 	if (OBS(25) != AOF_UNDEF)

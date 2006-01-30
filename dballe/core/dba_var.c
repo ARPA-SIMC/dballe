@@ -157,7 +157,7 @@ fail:
 	return err;
 }
 
-static void dba_var_clear_attrs(dba_var var)
+void dba_var_clear_attrs(dba_var var)
 {
 	while (var->attrs != NULL)
 	{

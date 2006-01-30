@@ -99,6 +99,7 @@ dba_err dba_var_enqa(dba_var var, dba_varcode code, dba_var* attr);
 dba_err dba_var_seta(dba_var var, dba_var attr);
 dba_err dba_var_seta_nocopy(dba_var var, dba_var attr);
 dba_err dba_var_unseta(dba_var var, dba_varcode code);
+void dba_var_clear_attrs(dba_var var);
 
 /**
  * Retrieve the dba_varcode for a variable.  This function cannot fail, as

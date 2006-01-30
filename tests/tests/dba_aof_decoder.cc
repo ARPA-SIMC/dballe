@@ -17,6 +17,18 @@ struct dba_aof_decoder_shar
 };
 TESTGRP(dba_aof_decoder);
 
+static void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix)
+{
+	string fname1 = "/tmp/test-" + prefix + "1.bufr";
+	string fname2 = "/tmp/test-" + prefix + "2.bufr";
+	FILE* out1 = fopen(fname1.c_str(), "w");
+	FILE* out2 = fopen(fname2.c_str(), "w");
+	dba_msg_print(msg1, out1);
+	dba_msg_print(msg2, out2);
+	fclose(out1);
+	fclose(out2);
+	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
+}
 
 // Test simple decoding
 template<> template<>
@@ -59,18 +71,85 @@ void to::test<1>()
 		gen_ensure_equals(found, 1);
 
 		/* Parse it */
-		{
-			dba_msg dmsg = NULL;
-			CHECKED(aof_decoder_decode(raw, &dmsg));
-			gen_ensure(dmsg != NULL);
+		dba_msg msg = NULL;
+		CHECKED(aof_decoder_decode(raw, &msg));
+		gen_ensure(msg != NULL);
 
-			dba_msg_delete(dmsg);
-		}
+		dba_msg_delete(msg);
 		dba_file_delete(file);
 	}
 	test_untag();
 
 	dba_rawmsg_delete(raw);
+}
+
+void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
+{
+	dba_var var;
+	
+	if ((var = dba_msg_get_block_var(bmsg)) != NULL)
+		dba_var_clear_attrs(var);
+	if ((var = dba_msg_get_station_var(bmsg)) != NULL)
+		dba_var_clear_attrs(var);
+	if ((var = dba_msg_get_st_type_var(bmsg)) != NULL)
+		dba_var_clear_attrs(var);
+	if ((var = dba_msg_get_ident_var(bmsg)) != NULL)
+		dba_var_clear_attrs(var);
+
+	if ((var = dba_msg_get_cloud_cl_var(bmsg)) != NULL &&
+			strtoul(dba_var_value(var), NULL, 0) == 62 &&
+			dba_msg_get_cloud_cl_var(amsg) == NULL)
+		CHECKED(dba_msg_set_cloud_cl_var(amsg, var));
+
+	if ((var = dba_msg_get_cloud_cm_var(bmsg)) != NULL &&
+			strtoul(dba_var_value(var), NULL, 0) == 61 &&
+			dba_msg_get_cloud_cm_var(amsg) == NULL)
+		CHECKED(dba_msg_set_cloud_cm_var(amsg, var));
+
+	if ((var = dba_msg_get_cloud_ch_var(bmsg)) != NULL &&
+			strtoul(dba_var_value(var), NULL, 0) == 60 &&
+			dba_msg_get_cloud_ch_var(amsg) == NULL)
+		CHECKED(dba_msg_set_cloud_ch_var(amsg, var));
+}
+
+// Compare decoding results with BUFR sample data
+template<> template<>
+void to::test<2>()
+{
+	string files[] = {
+		"aof/obs1-14.63",
+		"aof/obs1-21.1",
+		"aof/obs1-24.2104",
+		"aof/obs1-24.34",
+		"aof/obs2-144.2198",
+		"aof/obs2-244.0",
+		"aof/obs4-165.2027",
+		"aof/obs5-35.61",
+		"aof/obs5-36.30",
+		"aof/obs6-32.1573",
+		"aof/obs6-32.0",
+		"",
+	};
+
+	for (size_t i = 0; !files[i].empty(); i++)
+	{
+		test_tag(files[i]);
+
+		dba_msg amsg = read_test_msg((files[i] + ".aof").c_str(), AOF);
+		dba_msg bmsg = read_test_msg((files[i] + ".bufr").c_str(), BUFR);
+		normalise_encoding_quirks(amsg, bmsg);
+
+		// Compare the two dba_msg
+		int diffs = 0;
+		dba_msg_diff(amsg, bmsg, &diffs, stderr);
+		if (diffs) track_different_msgs(amsg, bmsg, "aof");
+		gen_ensure_equals(diffs, 0);
+
+		dba_msg_delete(amsg);
+		dba_msg_delete(bmsg);
+	}
+	test_untag();
+}
 
 #if 0
 	CHECKED(dba_aof_decoder_start(decoder, "test-aof-01"));
@@ -121,7 +200,6 @@ void to::test<1>()
 
 	dba_record_delete(rec);
 #endif
-}
 
 }
 

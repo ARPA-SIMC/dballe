@@ -29,7 +29,7 @@ dba_err aof_read_dribu(const uint32_t* obs, int obs_len, dba_msg* out)
 		DBA_RUN_OR_RETURN(dba_msg_set_wind_speed(msg, OBS(22), get_conf6((OBS(26) >> 6) & 0x3f)));
 
 	if (OBS(23) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_set_temp_2m(msg, k2c(OBS(23)), get_conf6((OBS(26) >> 12) & 0x3f)));
+		DBA_RUN_OR_RETURN(dba_msg_set_temp_2m(msg, totemp(OBS(23)), get_conf6((OBS(26) >> 12) & 0x3f)));
 
 	if (OBS(24) != AOF_UNDEF)
 		DBA_RUN_OR_RETURN(dba_msg_set_water_temp(msg, (double)OBS(24) / 10.0, get_conf6((OBS(26) >> 18) & 0x3f)));

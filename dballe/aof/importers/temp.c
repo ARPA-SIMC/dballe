@@ -55,9 +55,9 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg* out)
 		if (OBS(os + 2) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 2), OBS(os + 2), -1, 100, press, 0, 0, 0, 0));
 		if (OBS(os + 3) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 1), k2c(OBS(os + 3)), -1, 100, press, 0, 0, 0, 0));
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 1), totemp(OBS(os + 3)), -1, 100, press, 0, 0, 0, 0));
 		if (OBS(os + 4) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 2), k2c(OBS(os + 4)), -1, 100, press, 0, 0, 0, 0));
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 2), totemp(OBS(os + 4)), -1, 100, press, 0, 0, 0, 0));
 		if (OBS(os + 5) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 3), ((double)OBS(os + 5) - 1000)*9.8, -1, 100, press, 0, 0, 0, 0));
 	}

@@ -66,7 +66,7 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg* out)
 		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11,  2), OBS(22), get_conf6((OBS(26) >> 6) & 0x3f), ltype, l1, 0, 0, 0, 0));
 	/* 23 Air temperature [1/10 K] */
 	if (OBS(23) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  1), k2c(OBS(23)), get_conf6((OBS(26) >> 12) & 0x3f), ltype, l1, 0, 0, 0, 0));
+		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  1), totemp(OBS(23)), get_conf6((OBS(26) >> 12) & 0x3f), ltype, l1, 0, 0, 0, 0));
 
 	*out = (dba_msg)msg;
 	return dba_error_ok();

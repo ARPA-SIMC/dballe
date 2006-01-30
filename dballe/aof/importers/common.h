@@ -47,7 +47,7 @@ static inline int get_conf6(int conf)
 }
 
 /* Convert Kelvin into Celsius */
-static inline double k2c(double k) { return k / 10.0 - 273.16; }
+static inline double totemp(double k) { return k / 10.0; }
 
 /* Dump a word */
 void dba_aof_dump_word(const char* prefix, uint32_t x);
