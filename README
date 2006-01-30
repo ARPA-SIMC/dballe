@@ -271,6 +271,7 @@ These are the TODO-list items currently being worked on::
     - Bug free
        - lanciare valgrind sui test
        - controllare i warning di GCC
+       - fare grep dei vari FIXME e TODO
     - Fast
        - lanciare kcachegrind sul benchmark
     - Documentazione API Fortran
@@ -282,6 +283,10 @@ These are the TODO-list items currently being worked on::
  * AOF
     - Riattivare i confronti comparativi coi BUFR (togliendo dal messaggio
       importato BUFR gli attributi non supportati da AOF)
+    - Guardare come gestire la press tendency e la caratteristica per synop e
+      ship
+    - TEMP AOF dà dew point temperature, TEMP BUFR dà wet bulb temperature
+    - TEMP AOF non hanno le nuvole, TEMP BUFR sí
     
  * Core
     - Aggiungere una entry B locale per il nome della stazione

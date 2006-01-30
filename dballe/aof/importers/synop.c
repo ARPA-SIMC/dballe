@@ -94,7 +94,7 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out)
 		DBA_RUN_OR_RETURN(dba_msg_set_press_3h(msg, ((double)(OBS(25) - 500) * 10), get_conf6(OBS(31) & 0x3f)));
 
 	if (OBS(26) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_set_water_temp(msg, (double)OBS(26) / 10.0, -1));
+		DBA_RUN_OR_RETURN(dba_msg_set_water_temp(msg, (double)OBS(26) / 10.0, get_conf6((OBS(31) >> 6) & 0x3f)));
 
 	/* 27 Weather group word */
 	DBA_RUN_OR_RETURN(dba_aof_parse_weather_group(msg, obs));

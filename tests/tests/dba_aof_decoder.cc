@@ -95,6 +95,8 @@ void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 		dba_var_clear_attrs(var);
 	if ((var = dba_msg_get_ident_var(bmsg)) != NULL)
 		dba_var_clear_attrs(var);
+	if ((var = dba_msg_get_flight_phase_var(bmsg)) != NULL)
+		dba_var_clear_attrs(var);
 
 	if ((var = dba_msg_get_cloud_cl_var(bmsg)) != NULL &&
 			strtoul(dba_var_value(var), NULL, 0) == 62 &&
@@ -110,6 +112,26 @@ void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 			strtoul(dba_var_value(var), NULL, 0) == 60 &&
 			dba_msg_get_cloud_ch_var(amsg) == NULL)
 		CHECKED(dba_msg_set_cloud_ch_var(amsg, var));
+
+	if ((var = dba_msg_get_height_anem_var(bmsg)) != NULL &&
+			dba_msg_get_height_anem_var(amsg) == NULL)
+		CHECKED(dba_msg_set_height_anem_var(amsg, var));
+
+	if ((var = dba_msg_get_navsys_var(bmsg)) != NULL &&
+			dba_msg_get_navsys_var(amsg) == NULL)
+		CHECKED(dba_msg_set_navsys_var(amsg, var));
+
+	// Remove attributes from all vertical sounding significances
+	for (int i = 0; i < bmsg->data_count; i++)
+	{
+		dba_msg_level lev = bmsg->data[i];
+		for (int j = 0; j < lev->data_count; j++)
+		{
+			dba_msg_datum dat = lev->data[j];
+			if (dba_var_code(dat->var) == DBA_VAR(0, 8, 1))
+				dba_var_clear_attrs(dat->var);
+		}
+	}
 }
 
 // Compare decoding results with BUFR sample data
@@ -117,17 +139,17 @@ template<> template<>
 void to::test<2>()
 {
 	string files[] = {
-		"aof/obs1-14.63",
-		"aof/obs1-21.1",
+		"aof/obs1-14.63",	// OK
+		"aof/obs1-21.1",	// OK
 		"aof/obs1-24.2104",
 		"aof/obs1-24.34",
 		"aof/obs2-144.2198",
-		"aof/obs2-244.0",
+//		"aof/obs2-244.0",	// BUFR counterpart missing for this message
 		"aof/obs4-165.2027",
 		"aof/obs5-35.61",
 		"aof/obs5-36.30",
-		"aof/obs6-32.1573",
-		"aof/obs6-32.0",
+		"aof/obs6-32.1573",	// OK
+//		"aof/obs6-32.0",	// BUFR conterpart missing for this message
 		"",
 	};
 
