@@ -3,7 +3,7 @@
 dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg* out)
 {
 	dba_msg msg;
-	int ltype, l1;
+	int ltype = -1, l1 = -1;
 
 	DBA_RUN_OR_RETURN(dba_msg_create(&msg));
 
@@ -38,22 +38,28 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg* out)
 			DBA_RUN_OR_RETURN(dba_msg_set_flight_phase(msg, angle, -1));
 	}
 
-	if (OBS(24) != AOF_UNDEF)
+	if (OBS(20) != AOF_UNDEF)
 	{
-		DBA_RUN_OR_RETURN(dba_msg_set_height(msg, (double)OBS(24), get_conf6((OBS(26) >> 18) & 0x3f)));
-		ltype = 103;
-		l1 = OBS(24);
-	}
-	else if (OBS(20) != AOF_UNDEF)
-	{
-		double press = OBS(20) * 10.0;
+		double press = OBS(20) / 10.0;
 
 		/* Save the pressure in the anagraphical layer only */
+		/* FIXME: vedere se va memorizzato o no nell'anagrafica */
 		DBA_RUN_OR_RETURN(dba_msg_set_flight_press(msg, (double)press, get_conf6(OBS(25) & 0x3f)));
 		ltype = 100;
 		l1 = press;
 	}
-	else
+	if (OBS(24) != AOF_UNDEF)
+	{
+		/* FIXME: vedere se va memorizzato o no nell'anagrafica (può non aver
+		 * senso se è calcolata dalla pressione) */
+		DBA_RUN_OR_RETURN(dba_msg_set_height(msg, (double)OBS(24), get_conf6((OBS(26) >> 18) & 0x3f)));
+		if (ltype == -1)
+		{
+			ltype = 103;
+			l1 = OBS(24);
+		}
+	}
+	if (ltype == -1)
 		return dba_error_notfound("looking for pressure or height in an AOF flight message");
 
 	/* File the measures at the right level */

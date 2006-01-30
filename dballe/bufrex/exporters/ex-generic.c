@@ -28,6 +28,7 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
 	for (i = 0; i < src->data_count; i++)
 	{
 		dba_msg_level lev = src->data[i];
+
 		for (j = 0; j < lev->data_count; j++)
 		{
 			dba_var_attr_iterator iter;

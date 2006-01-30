@@ -57,19 +57,6 @@ static dba_err msg_collector(dba_msg msg, void* data)
 	return dba_error_ok();
 }
 
-static void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix)
-{
-	string fname1 = "/tmp/test-" + prefix + "1.bufr";
-	string fname2 = "/tmp/test-" + prefix + "2.bufr";
-	FILE* out1 = fopen(fname1.c_str(), "w");
-	FILE* out2 = fopen(fname2.c_str(), "w");
-	dba_msg_print(msg1, out1);
-	dba_msg_print(msg2, out2);
-	fclose(out1);
-	fclose(out2);
-	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
-}
-
 template<> template<>
 void to::test<1>()
 {

@@ -120,7 +120,19 @@ void aof_decoder_dump(dba_rawmsg msg, FILE* out)
 		if (obs[i] == 0x7fffffff)
 			fprintf(out, "%2d %10s\n", i+1, "missing");
 		else
-			fprintf(out, "%2d %10u %8x\n", i+1, obs[i], obs[i]);
+		{
+			int j;
+			uint32_t x = obs[i];
+			fprintf(out, "%2d %10u %8x ", i+1, obs[i], obs[i]);
+			for (j = 0; j < 32; j++)
+			{
+				fputc((x & 0x80000000) != 0 ? '1' : '0', out);
+				x <<= 1;
+				if ((j+1) % 8 == 0)
+					fputc(' ', out);
+			}
+			fputc('\n', out);
+		}
 }
 
 dba_err aof_read_satob(const uint32_t* obs, int obs_len, dba_msg* out)

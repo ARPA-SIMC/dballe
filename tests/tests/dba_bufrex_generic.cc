@@ -25,7 +25,7 @@ void to::test<1>()
 {
 	dba_file file_gen;
 	dba_file file_synop;
-	int gfound, bfound;
+	int gfound, bfound, count = 0;
 	dba_msg gen, synop;
 
 	CHECKED(dba_file_create(&file_gen, BUFR, "bufr/gen-generic.bufr", "r"));
@@ -35,6 +35,7 @@ void to::test<1>()
 	CHECKED(dba_file_read(file_synop, &synop, &bfound));
 	gen_ensure_equals(gfound, bfound);
 	do {
+		count++;
 		gen_ensure_equals(gen->type, MSG_GENERIC);
 
 		/* Export gen as a synop message */
@@ -51,7 +52,6 @@ void to::test<1>()
 		int diffs = 0;
 		dba_msg_diff(synop, synop1, &diffs, stderr);
 
-#if 0
 		if (diffs != 0)
 		{
 			/*
@@ -69,17 +69,10 @@ void to::test<1>()
 			fclose(outraw);
 			bufrex_raw_delete(braw);
 			*/
-
-			FILE* out1 = fopen("/tmp/synop.txt", "w");
-			FILE* out2 = fopen("/tmp/synop1.txt", "w");
-				
-			dba_msg_print(synop, out1);
-			dba_msg_print(synop1, out2);
-			fclose(out1);
-			fclose(out2);
+			fprintf(stderr, "Mismatch on message #%d\n", count);
+			track_different_msgs(synop, synop1, "generic");
 		}
-#endif
-		
+
 		gen_ensure_equals(diffs, 0);
 
 		dba_msg_delete(gen);

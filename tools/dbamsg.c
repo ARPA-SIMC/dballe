@@ -109,17 +109,7 @@ static dba_err dump_dba_vars(bufrex_raw msg)
 	int i;
 
 	for (i = 0; i < msg->vars_count; i++)
-	{
-		dba_var var = msg->vars[i];
-		dba_varcode code;
-		dba_varinfo info;
-
-		code = dba_var_code(var);
-		
-		info = dba_var_info(var);
-
-		dba_var_print(var, stdout);
-	}
+		dba_var_print(msg->vars[i], stdout);
 
 	return dba_error_ok();
 }

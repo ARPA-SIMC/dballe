@@ -510,4 +510,6 @@ public:
 	}
 };
 
+void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix);
+
 }

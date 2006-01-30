@@ -20,8 +20,8 @@
  004004 HOUR                                                             HOUR                       0            0   5 HOUR                      0          2
  004005 MINUTE                                                           MINUTE                     0            0   6 MINUTE                    0          2
  004192 [SIM] Time range type                                            NUMERIC                    0            0  10 NUMERIC                   0          4
- 004193 [SIM] Time range P1                                              NUMERIC                    0            0  32 NUMERIC                   0         10
- 004194 [SIM] Time range P2                                              NUMERIC                    0            0  32 NUMERIC                   0         10
+ 004193 [SIM] Time range P1                                              NUMERIC                    0  -1073741824  32 NUMERIC                   0         10
+ 004194 [SIM] Time range P2                                              NUMERIC                    0  -1073741824  32 NUMERIC                   0         10
  005001 LATITUDE (HIGH ACCURACY)                                         DEGREE                     5     -9000000  25 DEGREE                    5          7
  006001 LONGITUDE (HIGH ACCURACY)                                        DEGREE                     5    -18000000  26 DEGREE                    5          8
  007001 HEIGHT OF STATION (SEE NOTE 1)                                   M                          0         -400  15 M                         0          5
@@ -29,8 +29,8 @@
  007004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
  007031 HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL (SEE NOTE 4)            M                          1       - 4000  17 M                         1          5
  007192 [SIM] Level type                                                 NUMERIC                    0            0  10 NUMERIC                   0          4
- 007193 [SIM] Level L1                                                   NUMERIC                    0            0  32 NUMERIC                   0         10
- 007194 [SIM] Level L2                                                   NUMERIC                    0            0  32 NUMERIC                   0         10
+ 007193 [SIM] Level L1                                                   NUMERIC                    0  -1073741824  32 NUMERIC                   0         10
+ 007194 [SIM] Level L2                                                   NUMERIC                    0  -1073741824  32 NUMERIC                   0         10
  008001 VERTICAL SOUNDING SIGNIFICANCE                                   FLAG TABLE 8001            0            0   7 FLAG TABLE 8001           0          3
  008004 PHASE OF AIRCRAFT FLIGHT                                         CODE TABLE 8004            0            0   3 CODE TABLE 8004           0          1
  008021 TIME SIGNIFICANCE                                                CODE TABLE 8021            0            0   5 CODE TABLE 8021           0          2

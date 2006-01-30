@@ -86,12 +86,13 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out)
 	if (OBS(24) != AOF_UNDEF)
 		DBA_RUN_OR_RETURN(dba_msg_set_dewpoint_2m(msg, totemp(OBS(24)), get_conf6((OBS(30) >> 18) & 0x3f)));
 
-	/* FIXME: ship uses press_3h, while synop uses press_tend: is this ok? */
+	/* Caracteristic of pressure tendency is not encoded in AOF 
 	if (OBS(25) != AOF_UNDEF)
 		DBA_RUN_OR_RETURN(dba_msg_set_press_tend(msg, (double)((OBS(25) - 500) * 10), get_conf6(OBS(31) & 0x3f)));
-	/* FIXME: ship uses press_3h, while synop uses press_tend: is this ok? */
+	*/
+
 	if (OBS(25) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_set_press_3h(msg, ((double)(OBS(25) - 500) * 10), get_conf6(OBS(31) & 0x3f)));
+		DBA_RUN_OR_RETURN(dba_msg_set_press_3h(msg, (((double)OBS(25) - 500.0) * 10.0), get_conf6(OBS(31) & 0x3f)));
 
 	if (OBS(26) != AOF_UNDEF)
 		DBA_RUN_OR_RETURN(dba_msg_set_water_temp(msg, (double)OBS(26) / 10.0, get_conf6((OBS(31) >> 6) & 0x3f)));

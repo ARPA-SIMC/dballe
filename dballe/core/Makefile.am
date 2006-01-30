@@ -4,6 +4,7 @@ coreincludedir = $(includedir)/dballe/core
 
 coreinclude_HEADERS = \
 	verbose.h \
+	fast.h \
 	dba_csv.h \
 	dba_array.h \
 	dba_record.h \

@@ -39,6 +39,8 @@ void to::test<1>()
 	gen_ensure_equals(dba_var_info(var), info);
 	gen_ensure(dba_var_value(var) != 0);
 	gen_ensure_var_equals(var, 123);
+	CHECKED(dba_var_seti(var, -123));
+	gen_ensure_var_equals(var, -123);
 	dba_var_delete(var);
 
 	CHECKED(dba_var_created(info, 123.456, &var));
@@ -47,6 +49,8 @@ void to::test<1>()
 	gen_ensure_equals(dba_var_info(var), info);
 	gen_ensure(dba_var_value(var) != 0);
 	gen_ensure_var_equals(var, 123.456);
+	CHECKED(dba_var_setd(var, -123.456));
+	gen_ensure_var_equals(var, -123.456);
 	dba_var_delete(var);
 
 	CHECKED(dba_var_createc(info, "123", &var));

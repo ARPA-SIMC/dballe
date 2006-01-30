@@ -100,6 +100,14 @@ These are the TODO-list items completed so far::
     + Esportare tutti gli attributi trovati quando si esportano i generici
     + Importare gli attributi dai generici
 
+ * AOF
+    + Riattivare i confronti comparativi coi BUFR (togliendo dal messaggio
+      importato BUFR gli attributi non supportati da AOF)
+    + Guardare come gestire la press tendency e la caratteristica per synop e
+      ship
+    + TEMP AOF dà dew point temperature, TEMP BUFR dà wet bulb temperature
+    + TEMP AOF non hanno le nuvole, TEMP BUFR sí
+
  * Core
     + Refactor dba_msg to contain physical values with levellayer and timerange
       metadata, grouped by level and then sorted by timerange so that it is
@@ -286,14 +294,6 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
- * AOF
-    - Riattivare i confronti comparativi coi BUFR (togliendo dal messaggio
-      importato BUFR gli attributi non supportati da AOF)
-    - Guardare come gestire la press tendency e la caratteristica per synop e
-      ship
-    - TEMP AOF dà dew point temperature, TEMP BUFR dà wet bulb temperature
-    - TEMP AOF non hanno le nuvole, TEMP BUFR sí
-    
  * Tools
     - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
       (lat, lon, ident, year, month, day, hour, min)
