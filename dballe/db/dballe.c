@@ -242,6 +242,41 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 	}
 	(*db)->connected = 1;
 
+#ifdef DBA_USE_TRANSACTIONS
+	DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_begin)));
+	sqlres = SQLPrepare((*db)->stm_begin, (unsigned char*)"BEGIN", SQL_NTS);
+	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_begin, "compiling query for beginning a transaction");
+		goto fail;
+	}
+
+	DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_commit)));
+	sqlres = SQLPrepare((*db)->stm_commit, (unsigned char*)"COMMIT", SQL_NTS);
+	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_commit, "compiling query for committing a transaction");
+		goto fail;
+	}
+
+	DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_rollback)));
+	sqlres = SQLPrepare((*db)->stm_rollback, (unsigned char*)"ROLLBACK", SQL_NTS);
+	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_rollback, "compiling query for rolling back a transaction");
+		goto fail;
+	}
+#endif
+
+	DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_last_insert_id)));
+	SQLBindCol((*db)->stm_last_insert_id, 1, SQL_C_SLONG, &((*db)->last_insert_id), sizeof(int), 0);
+	sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ID()", SQL_NTS);
+	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_last_insert_id, "compiling query for querying the last insert id");
+		goto fail;
+	}
+
 	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_create(*db, &((*db)->pseudoana)));
 	DBA_RUN_OR_GOTO(fail, dba_db_context_create(*db, &((*db)->context)));
 	DBA_RUN_OR_GOTO(fail, dba_db_data_create(*db, &((*db)->data)));

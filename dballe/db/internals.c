@@ -58,89 +58,49 @@ dba_err dba_db_statement_create(dba_db db, SQLHSTMT* stm)
 
 dba_err dba_db_last_insert_id(dba_db db, int* id)
 {
-	SQLHSTMT stm;
 	int res;
-	SQLINTEGER id_ind;
-	dba_err err;
+	*id = -1;
 
-	/* Allocate statement handle for select */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
+	res = SQLExecute(db->stm_last_insert_id);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement");
+		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_last_insert_id, "querying last inserted ID");
 
-	/* Bind variable and indicator */
-	SQLBindCol(stm, 1, SQL_C_SLONG, id, sizeof(*id), &id_ind);
-	
-	res = SQLExecDirect(stm, (unsigned char*)"SELECT LAST_INSERT_ID()", SQL_NTS);
+	if (SQLFetch(db->stm_last_insert_id) == SQL_NO_DATA)
+		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_last_insert_id, "retrieving results of query for last inserted ID");
+
+	res = SQLCloseCursor(db->stm_last_insert_id);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "querying last inserted ID");
-		goto dba_last_insert_id_failed;
-	}
+		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_last_insert_id, "closing dba_db_last_insert_id cursor");
 
-	if (SQLFetch(stm) == SQL_NO_DATA)
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "retrieving results of query for last inserted ID");
-		goto dba_last_insert_id_failed;
-	}
+	*id = db->last_insert_id;
 
-	if (id_ind != sizeof(*id))
-	{
-		err = dba_error_consistency("checking that the size of the last insert ID coming from the database is correct");
-		goto dba_last_insert_id_failed;
-	}
-
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 	return dba_error_ok();
-
-dba_last_insert_id_failed:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err;
 }
 
 
 #ifdef DBA_USE_TRANSACTIONS
-static dba_err dba_db_run_one_shot_query(dba_db db, const char* query)
+dba_err dba_db_begin(dba_db db)
 {
-	SQLHSTMT stm;
-	int res;
-
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
+	int res = SQLExecute(db->stm_begin);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-
-	/* Casting to char* because ODBC is unaware of const */
-	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		dba_err err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Beginning a transaction");
-		SQLFreeHandle(SQL_HANDLE_STMT, stm);
-		return err;
-	}
-
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
+		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_begin, "Beginning a transaction");
 	return dba_error_ok();
 }
 
-dba_err dba_db_begin(dba_db db) { return dba_db_run_one_shot_query(db, "BEGIN"); }
-dba_err dba_db_commit(dba_db db) { return dba_db_run_one_shot_query(db, "COMMIT"); }
+dba_err dba_db_commit(dba_db db)
+{
+	int res = SQLExecute(db->stm_commit);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_commit, "Committing a transaction");
+	return dba_error_ok();
+}
+
 /* Run unchecked to avoid altering the error status */
 void dba_db_rollback(dba_db db)
 {
-	SQLHSTMT stm;
-	int res;
-
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
+	int res = SQLExecute(db->stm_rollback);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return;
-
-	res = SQLExecDirect(stm, (unsigned char*)"ROLLBACK", 8);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return;
-
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 }
 #else
 /* TODO: lock and unlock tables instead */

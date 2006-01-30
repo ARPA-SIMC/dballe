@@ -357,7 +357,8 @@ dba_err dba_var_setd(dba_var var, double val)
 	if (var->value == NULL)
 		return dba_error_alloc("allocating space for dba_var value");
 
-	snprintf(var->value, var->info->len + 2, "%ld", (long)dba_var_encode_int(val, var->info));
+	strcpy(var->value, itoa(dba_var_encode_int(val, var->info), var->info->len + 1));
+	/*snprintf(var->value, var->info->len + 2, "%ld", (long)dba_var_encode_int(val, var->info));*/
 	return dba_error_ok();
 }
 

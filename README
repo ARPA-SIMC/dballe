@@ -142,6 +142,9 @@ These are the TODO-list items completed so far::
     + Serve una select nell'inserimento dei dati, perché la INSERT ON DUPLICATE
       KEY UPDATE non restituisce l'ID della riga nel LAST_INSERT_ID nel caso
       faccia l'update di una riga esistente
+    + Use precompiled queries in with the stm memorised in dba_db for begin,
+      commit, rollback, last_insert_id
+
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read

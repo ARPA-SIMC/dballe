@@ -48,6 +48,12 @@ struct _dba_db
 	struct _dba_db_context* context;
 	struct _dba_db_data* data;
 	struct _dba_db_attr* attr;
+
+	SQLHSTMT stm_begin;
+	SQLHSTMT stm_commit;
+	SQLHSTMT stm_rollback;
+	SQLHSTMT stm_last_insert_id;
+	int last_insert_id;
 	
 	/*
 	 * This is very conservative:
