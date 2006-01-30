@@ -395,203 +395,91 @@ fail0:
 static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewrite)
 {
 	dba_err err = DBA_OK;
-	const char* query_sel = NULL;
-	const char* query_sel_fixed =
-		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident IS NULL";
-	const char* query_sel_mobile =
-		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident=?";
-	const char* query_repl =
-		"UPDATE pseudoana SET lat=?, lon=?, ident=?, height=?, heightbaro=?,"
-		"                     block=?, station=?, name=? WHERE id=?";
-	const char* query =
-		"INSERT INTO pseudoana (lat, lon, ident, height, heightbaro, block, station, name)"
-		" VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
-	int lat;
-	int lon;
 	int mobile;
-	const char* ident;
-	SQLINTEGER ident_ind;
 	const char* val;
-	int height;
-	SQLINTEGER height_ind;
-	int heightbaro;
-	SQLINTEGER heightbaro_ind;
-	int block;
-	SQLINTEGER block_ind;
-	int station;
-	SQLINTEGER station_ind;
-	const char* name;
-	SQLINTEGER name_ind;
-	SQLHSTMT stm;
-	int res;
-	int old_id;
-	SQLINTEGER old_id_ind;
-	int has_data = 0;
 
 	assert(db);
 
 	/* Look for an existing ID if provided */
-	{
-		const char* val;
-		if ((val = dba_record_key_peek_value(rec, DBA_KEY_ANA_ID)) != NULL)
-			*id = strtol(val, 0, 10);
-		else
-			*id = -1;
-	}
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_ANA_ID)) != NULL)
+		*id = strtol(val, 0, 10);
+	else
+		*id = -1;
 
 	/* If we don't need to rewrite, we are done */
 	if (*id != -1 && !rewrite)
 		return dba_error_ok();
 
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-
 	/* Look for the key data in the record */
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &lat));
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LON, &lon));
+	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &(db->pseudoana->lat)));
+	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LON, &(db->pseudoana->lon)));
 	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_MOBILE, &mobile));
 	if (mobile)
 	{
-		DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqc(rec, DBA_KEY_IDENT, &ident));
+		DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqc(rec, DBA_KEY_IDENT, &val));
+		strncpy(db->pseudoana->ident, val, 64);
+		db->pseudoana->ident[63] = 0;
+		db->pseudoana->ident_ind = SQL_NTS;
 	} else {
-		ident = NULL;
-	}
-
-	/* Bind key parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &lat, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &lon, 0, 0);
-	/* Casting to char* because ODBC is unaware of const */
-	if (mobile)
-	{
-		ident_ind = SQL_NTS;
-		SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)ident, 0, &ident_ind);
-		query_sel = query_sel_mobile;
-	}
-	else
-	{
-		ident_ind = SQL_NULL_DATA;
-		SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)"", 0, &ident_ind);
-		query_sel = query_sel_fixed;
+		db->pseudoana->ident_ind = SQL_NULL_DATA;
 	}
 
 	/* Check for an existing pseudoana with these data */
 	if (*id == -1)
 	{
-		/* Bind variable and indicator for SELECT results */
-		SQLBindCol(stm, 1, SQL_C_SLONG, &old_id, sizeof(old_id), &old_id_ind);
-		
-		/* Casting to char* because ODBC is unaware of const */
-		res = SQLExecDirect(stm, (unsigned char*)query_sel, SQL_NTS);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "looking for existing pseudoana");
+		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_get_id(db->pseudoana, id));
+
+		/* If we don't have to update the data, we're done */
+		if (*id != -1 && !rewrite)
 			goto cleanup;
-		}
-
-		/* Get the result */
-		if (SQLFetch(stm) != SQL_NO_DATA)
-		{
-			if (old_id_ind != sizeof(old_id))
-			{
-				err = dba_error_consistency("checking that the size of the ID coming from the database is correct");
-				goto cleanup;
-			}
-
-			*id = old_id;
-			has_data = 1;
-
-			/* If we don't have to update the data, we're finished */
-			if (! rewrite)
-			{
-				SQLFreeHandle(SQL_HANDLE_STMT, stm);
-				return dba_error_ok();
-			}
-		}
-
-		res = SQLCloseCursor(stm);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			if (has_data)
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "preparing for replacing into pseudoana");
-			else
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "preparing for inserting into pseudoana");
-			goto cleanup;
-		}
 	}
 
 	/* Insert or update the values in the database */
 
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_HEIGHT)) != NULL)
 	{
-		height_ind = 0;
-		height = strtol(val, 0, 10);
+		db->pseudoana->height = strtol(val, 0, 10);
+		db->pseudoana->height_ind = 0;
 	} else
-		height_ind = SQL_NULL_DATA;
-	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &height, 0, &height_ind);
+		db->pseudoana->height_ind = SQL_NULL_DATA;
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_HEIGHTBARO)) != NULL)
 	{
-		heightbaro_ind = 0;
-		heightbaro = strtol(val, 0, 10);
+		db->pseudoana->heightbaro = strtol(val, 0, 10);
+		db->pseudoana->heightbaro_ind = 0;
 	} else
-		heightbaro_ind = SQL_NULL_DATA;
-	SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &heightbaro, 0, &heightbaro_ind);
+		db->pseudoana->heightbaro_ind = SQL_NULL_DATA;
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
 	{
-		block_ind = 0;
-		block = strtol(val, 0, 10);
+		db->pseudoana->block = strtol(val, 0, 10);
+		db->pseudoana->block_ind = 0;
 	} else
-		block_ind = SQL_NULL_DATA;
-	SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &block, 0, &block_ind);
+		db->pseudoana->block_ind = SQL_NULL_DATA;
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
 	{
-		station_ind = 0;
-		station = strtol(val, 0, 10);
+		db->pseudoana->station = strtol(val, 0, 10);
+		db->pseudoana->station_ind = 0;
 	} else
-		station_ind = SQL_NULL_DATA;
-	SQLBindParameter(stm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &station, 0, &station_ind);
+		db->pseudoana->station_ind = SQL_NULL_DATA;
 	
-	if ((name = dba_record_key_peek_value(rec, DBA_KEY_NAME)) != NULL)
-		name_ind = SQL_NTS;
-	else
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_NAME)) != NULL)
 	{
-		name = "";
-		name_ind = SQL_NULL_DATA;
+		strncpy(db->pseudoana->name, val, 255);
+		db->pseudoana->name[254] = 0;
+		db->pseudoana->name_ind = SQL_NTS;
 	}
-	/* Casting to char* because ODBC is unaware of const */
-	SQLBindParameter(stm, 8, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)name, 0, &name_ind);
+	else
+		db->pseudoana->name_ind = SQL_NULL_DATA;
 
 	if (*id != -1)
 	{
-		SQLBindParameter(stm, 9, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, id, 0, 0);
-		/* Casting to char* because ODBC is unaware of const */
-		res = SQLExecDirect(stm, (unsigned char*)query_repl, SQL_NTS);
-
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "replacing old data in pseudoana");
-			goto cleanup;
-		}
-	} else {
-		/* Casting to char* because ODBC is unaware of const */
-		res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
-
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into pseudoana");
-			goto cleanup;
-		}
-
-		/* Get the ID of the last inserted pseudoana */
-		DBA_RUN_OR_GOTO(cleanup, dba_db_last_insert_id(db, id));
-	}
+		db->pseudoana->id = *id;
+		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_update(db->pseudoana));
+	} else
+		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_insert(db->pseudoana, id));
 	
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-
 cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }

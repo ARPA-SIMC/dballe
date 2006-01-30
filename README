@@ -275,6 +275,8 @@ These are the TODO-list items currently being worked on::
 
        - Fare query ad-hoc per l'import e l'export di dba_msg
 
+       - Use foreign keys to automatically get rid of unused pseudoana and contexts
+
  * Import da VM o database Oracle di ARPA
     - Buttare via le stazioni con NULL su lat o long
 

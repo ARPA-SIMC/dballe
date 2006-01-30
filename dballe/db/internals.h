@@ -38,11 +38,15 @@ struct _dba_db;
 struct _dba_db_pseudoana
 {
 	struct _dba_db* db;
+	SQLHSTMT sfstm;
+	SQLHSTMT smstm;
 	SQLHSTMT istm;
+	SQLHSTMT ustm;
 
+	int id;
 	int lat;
 	int lon;
-	const char* ident;
+	char ident[64];
 	SQLINTEGER ident_ind;
 	int height;
 	SQLINTEGER height_ind;
@@ -52,7 +56,7 @@ struct _dba_db_pseudoana
 	SQLINTEGER block_ind;
 	int station;
 	SQLINTEGER station_ind;
-	const char* name;
+	char name[255];
 	SQLINTEGER name_ind;
 };
 typedef struct _dba_db_pseudoana* dba_db_pseudoana;
@@ -151,7 +155,9 @@ dba_err dba_db_prepare_select(dba_db db, dba_record query, SQLHSTMT stm, int* ps
 
 dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins);
 void dba_db_pseudoana_delete(dba_db_pseudoana ins);
+dba_err dba_db_pseudoana_get_id(dba_db_pseudoana ins, int *id);
 dba_err dba_db_pseudoana_insert(dba_db_pseudoana ins, int *id);
+dba_err dba_db_pseudoana_update(dba_db_pseudoana ins);
 
 
 #ifdef  __cplusplus
