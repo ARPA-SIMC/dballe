@@ -50,7 +50,7 @@ dba_msg_type dba_msg_get_type(dba_msg msg);
 dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst);
 dba_err dba_msg_sounding_unpack_levels(dba_msg msg, dba_msg* dst);
 
-#include <dballe/msg/vars_h.inc>
+#include <dballe/msg/vars.h>
 
 #ifdef  __cplusplus
 }

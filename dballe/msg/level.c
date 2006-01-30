@@ -1,4 +1,5 @@
-#include "level.h"
+#include <dballe/msg/level.h>
+#include <dballe/msg/vars.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -157,6 +158,12 @@ dba_msg_datum dba_msg_level_find(dba_msg_level l, dba_varcode code, int pind, in
 		return NULL;
 	else
 		return l->data[begin];
+}
+
+dba_msg_datum dba_msg_level_find_by_id(dba_msg_level l, int id)
+{
+	dba_msg_var v = &dba_msg_vartable[id];
+	return dba_msg_level_find(l, v->code, v->pind, v->p1, v->p2);
 }
 
 void dba_msg_level_print(dba_msg_level l, FILE* out)

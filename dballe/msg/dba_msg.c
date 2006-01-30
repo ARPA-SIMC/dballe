@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "vars_c.inc"
-
 dba_err dba_msg_create(dba_msg* msg)
 {
 	dba_msg res = (dba_msg)calloc(1, sizeof(struct _dba_msg));

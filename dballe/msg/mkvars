@@ -24,7 +24,27 @@ while (<>)
 	return 0;
 } @vars;
 
-open OUT, ">vars_h.inc" or die "Cannot write to vars_h.inc: $!";
+open OUT, ">vars.h" or die "Cannot write to vars.h: $!";
+print OUT q|#ifndef DBA_MSG_VARS_H
+#define DBA_MSG_VARS_H
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+#include <dballe/core/dba_var.h>
+#include <dballe/msg/dba_msg.h>
+
+struct _dba_msg_var {
+	dba_varcode code;
+	int ltype, l1, l2;
+	int pind, p1, p2;
+};
+typedef struct _dba_msg_var* dba_msg_var;
+
+extern struct _dba_msg_var dba_msg_vartable[];
+
+|;
 my $i = 0;
 for my $v (@vars)
 {
@@ -46,17 +66,20 @@ for my $v (@vars)
 		$v->[0];
 }
 printf OUT "\n#define DBA_MSG_VARTABLE_SIZE %d\n", $i;
+print OUT q|
+#ifdef  __cplusplus
+}
+#endif
+
+#endif
+|;
 close OUT;
 
-open OUT, ">vars_c.inc" or die "Cannot write to vars_c.inc: $!";
-print OUT q|struct _dba_msg_var {
-	dba_varcode code;
-	int ltype, l1, l2;
-	int pind, p1, p2;
-};
-typedef struct _dba_msg_var* dba_msg_var;
+open OUT, ">vars.c" or die "Cannot write to vars.c: $!";
+print OUT q|#include <dballe/msg/vars.h>
+#include <dballe/core/dba_var.h>
 
-static struct _dba_msg_var dba_msg_vartable[] = {
+struct _dba_msg_var dba_msg_vartable[] = {
 |;
 
 for my $v (@vars)

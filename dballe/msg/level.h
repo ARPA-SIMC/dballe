@@ -43,6 +43,7 @@ dba_err dba_msg_level_setc(dba_msg msg, dba_varcode code, const char* val, int c
 #endif
 
 dba_msg_datum dba_msg_level_find(dba_msg_level l, dba_varcode code, int pind, int p1, int p2);
+dba_msg_datum dba_msg_level_find_by_id(dba_msg_level l, int id);
 
 void dba_msg_level_print(dba_msg_level l, FILE* out);
 void dba_msg_level_diff(dba_msg_level l1, dba_msg_level l2, int* diffs, FILE* out);
