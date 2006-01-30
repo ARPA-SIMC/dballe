@@ -243,8 +243,10 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 			err = dba_error_notfound("looking for ident in message to insert");
 			goto fail;
 		}
-	} else
+	} else {
+		da->ident[0] = 0;
 		da->ident_ind = SQL_NULL_DATA;
+	}
 
 	// Check if we can reuse a pseudoana row
 	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_get_id(da, &(dc->id_ana)));
@@ -286,6 +288,7 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 			da->heightbaro_ind = SQL_NULL_DATA;
 
 		// TODO: char name[255]; SQLINTEGER name_ind;
+		da->name_ind = SQL_NULL_DATA;
 
 		if (dc->id_ana == -1)
 			DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_insert(da, &(dc->id_ana)));

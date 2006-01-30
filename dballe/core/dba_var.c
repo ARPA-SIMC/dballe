@@ -32,61 +32,48 @@ struct _dba_var
 	dba_var_attr attrs;
 };
 
+static const double scales[] = {
+	1.0,
+	10.0,
+	100.0,
+	1000.0,
+	10000.0,
+	100000.0,
+	1000000.0,
+	10000000.0,
+	100000000.0,
+	1000000000.0,
+	10000000000.0,
+	100000000000.0,
+	1000000000000.0,
+	10000000000000.0,
+	100000000000000.0,
+	1000000000000000.0,
+	10000000000000000.0,
+};
+
 /* Decode a double value from its integer representation and varinfo encoding
  * informations */
 double dba_var_decode_int(long val, dba_varinfo info)
 {
-	double fval = val;
-	fval -= info->ref;
 	if (info->scale > 0)
 	{
-		/* Many stable integer multiplications */ 
-		int mult = 1;
-		int count = info->scale;
-		while (count--)
-			mult *= 10;
-
 		/* One floating-point division */
-		fval /= (double)mult;
+		return (val - info->ref) / scales[info->scale];
 	}
 	else if (info->scale < 0)
 	{
-		/* Many stable integer multiplications */ 
-		int mult = 1;
-		int count = -info->scale;
-		while (count--)
-			mult *= 10;
-
 		/* One floating-point multiplication */
-		fval *= (double)mult;
+		return (val - info->ref) * scales[-info->scale];
 	}
-	return fval;
+	else
+		return val - info->ref;
 }
 
 /* Encode a double value from its integer representation and varinfo encoding
  * informations */
 long dba_var_encode_int(double fval, dba_varinfo info)
 {
-	static const double scales[] = {
-		1.0,
-		10.0,
-		100.0,
-		1000.0,
-		10000.0,
-		100000.0,
-		1000000.0,
-		10000000.0,
-		100000000.0,
-		1000000000.0,
-		10000000000.0,
-		100000000000.0,
-		1000000000000.0,
-		10000000000000.0,
-		100000000000000.0,
-		1000000000000000.0,
-		10000000000000000.0,
-	};
-
 	if (info->scale > 0)
 	{
 		/* One floating-point multiplication */
@@ -103,9 +90,11 @@ long dba_var_encode_int(double fval, dba_varinfo info)
 
 dba_err dba_var_create(dba_varinfo info, dba_var* var)
 {
-	if ((*var = (dba_var)calloc(1, sizeof(struct _dba_var))) == NULL)
+	if ((*var = (dba_var)malloc(sizeof(struct _dba_var))) == NULL)
 		return dba_error_alloc("creating new DBA variable");
 	(*var)->info = info;
+	(*var)->value = NULL;
+	(*var)->attrs = NULL;
 	return dba_error_ok();
 }
 
@@ -368,10 +357,8 @@ dba_err dba_var_setd(dba_var var, double val)
 dba_err dba_var_setc(dba_var var, const char* val)
 {
 	/* Set the value */
-	if (var->value != NULL)
-		free(var->value);
-	var->value = (char*)malloc(var->info->len + 2);
-	if (var->value == NULL)
+	if (var->value == NULL &&
+		(var->value = (char*)malloc(var->info->len + 2)) == NULL)
 		return dba_error_alloc("allocating space for dba_var value");
 
 	strncpy(var->value, val, var->info->len + 1);

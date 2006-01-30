@@ -144,6 +144,8 @@ These are the TODO-list items completed so far::
       faccia l'update di una riga esistente
     + Use precompiled queries in with the stm memorised in dba_db for begin,
       commit, rollback, last_insert_id
+    + Fare query ad-hoc per l'import e l'export di dba_msg
+    + Try to reuse the allocated memory in dba_var_setc as well
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -262,8 +264,8 @@ TODO-list items being worked on
 These are the TODO-list items currently being worked on::
 
  * Milestone release
-    - Import-export attributi
-    - Import-export di report generici
+    + Import-export attributi
+    + Import-export di report generici
     - Bug free
        - lanciare valgrind sui test
     - Fast
@@ -276,23 +278,10 @@ These are the TODO-list items currently being worked on::
 
  * Core
     - Refactoring dba_db per velocizzare l'import e export di report
-       - Query
-	  - step 1: farsi dare l'elenco di context id che stanno nel box scelto
-	  - step 2a: farsi dare le variabili in quel context
-	  - step 2b: farsi dare variabili e attributi in quel context
-
        - Fare una cache delle informazioni per il tipo report, da leggere alla
 	 connessione al database e tenere in memoria
-
        - Fare cache di pseudoana id e context id
-
-       - Fare query ad-hoc per l'import e l'export di dba_msg
-
        - Use foreign keys to automatically get rid of unused pseudoana and contexts
-
-       - Try to reuse the allocated memory in dba_var_setc as well (the fact
-	 that it confuses other functions when I try to reuse the memory might
-	 show some existing hidden bug)
 
        - See how to speed up dba_var_encode_int
          (precomputed multipliers stored on an array that gets indexed by the scale?)

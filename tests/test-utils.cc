@@ -233,7 +233,7 @@ dba_err generator::fill_pseudoana(dba_record rec, bool mobile)
 		DBA_RUN_OR_RETURN(dba_record_create(&ana));
 
 		/* Pseudoana */
-		DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_LAT, rnd(-180, 180)));
+		DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_LAT, rnd(-90, 90)));
 		DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_LON, rnd(-180, 180)));
 		DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_HEIGHT, rnd(1, 3000)));
 		DBA_RUN_OR_RETURN(dba_record_key_setc(ana, DBA_KEY_NAME, rnd(20).c_str()));
