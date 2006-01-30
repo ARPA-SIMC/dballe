@@ -26,9 +26,9 @@ struct dba_db_import_shar
 };
 TESTGRP(dba_db_import);
 
-static int rep_cod_from_msg(dba_msg msg)
+static int rep_cod_from_msg(dba_msg_type type)
 {
-	switch (msg->type)
+	switch (type)
 	{
 		case MSG_SYNOP: return 1;
 		case MSG_SHIP: return 10;
@@ -43,6 +43,12 @@ static int rep_cod_from_msg(dba_msg msg)
 	}
 	return 255;
 }
+
+static int rep_cod_from_msg(dba_msg msg)
+{
+	return rep_cod_from_msg(msg->type);
+}
+
 
 static dba_err msg_collector(dba_msg msg, void* data)
 {
@@ -380,6 +386,92 @@ void to::test<5>()
 	dba_record_delete(query);
 }
 
+static dba_err msg_counter(dba_msg msg, void* data)
+{
+	dba_msg_delete(msg);
+	(*(int*)data)++;
+	return dba_error_ok();
+}
+
+// Check that the right messages are exported
+template<> template<>
+void to::test<6>()
+{
+	msg_vector msgs;
+
+	// All the various input messages with unique data
+	static const char* bufr_files[] = {
+		"bufr/obs0-1.22.bufr",
+		"bufr/obs0-3.504.bufr",
+		"bufr/obs1-11.16.bufr",
+		"bufr/obs1-13.36.bufr",
+		"bufr/obs1-19.3.bufr",
+		"bufr/obs1-21.1.bufr",
+		"bufr/obs1-9.2.bufr",
+		"bufr/obs2-101.16.bufr",
+		"bufr/obs2-102.1.bufr",
+		"bufr/obs2-91.2.bufr",
+		"bufr/obs4-142.13803.bufr",
+		"bufr/obs4-142.1.bufr",
+		"bufr/obs4-144.4.bufr",
+		"bufr/obs4-145.4.bufr",
+	};
+	static const char* crex_files[] = {
+		"crex/test-mare1.crex",
+		"crex/test-mare2.crex",
+		"crex/test-synop0.crex",
+		"crex/test-synop1.crex",
+		"crex/test-synop2.crex",
+		"crex/test-synop3.crex",
+		"crex/test-temp0.crex",
+	};
+	static const char* aof_files[] = {
+		"aof/obs1-14.63.aof",
+		"aof/obs1-21.1.aof",
+		"aof/obs1-24.2104.aof",
+		"aof/obs1-24.34.aof",
+		"aof/obs2-144.2198.aof",
+		"aof/obs4-165.2027.aof",
+		"aof/obs5-35.61.aof",
+		"aof/obs6-32.1573.aof",
+	};
+
+	for (size_t i = 0; i < sizeof(bufr_files) / sizeof(const char*); i++)
+		CHECKED(read_file(BUFR, bufr_files[i], msgs));
+	for (size_t i = 0; i < sizeof(crex_files) / sizeof(const char*); i++)
+		CHECKED(read_file(CREX, crex_files[i], msgs));
+	for (size_t i = 0; i < sizeof(aof_files) / sizeof(const char*); i++)
+		CHECKED(read_file(AOF, aof_files[i], msgs));
+
+	CHECKED(dba_db_reset(db, NULL));
+
+	map<dba_msg_type, int> rep_cods;
+	for (msg_vector::const_iterator i = msgs.begin();
+			i != msgs.end(); i++)
+	{
+		CHECKED(dba_import_msg(db, *i, 1));
+		rep_cods[(*i)->type]++;
+	}
+
+	dba_record query;
+	CHECKED(dba_record_create(&query));
+	int count0;
+	int count1;
+	for (map<dba_msg_type, int>::const_iterator i = rep_cods.begin(); i != rep_cods.end(); i++)
+	{
+		test_tag(dba_msg_type_name(i->first));
+
+		count0 = 0;
+		count1 = 0;
+		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(i->first)));
+		CHECKED(dba_db_export(db, i->first, query, msg_counter, &count0));
+		CHECKED(dba_db_query_msgs(db, i->first, query, msg_counter, &count1));
+		gen_ensure_equals(count0, i->second);
+		gen_ensure_equals(count1, i->second);
+	}
+
+	test_untag();
+}
 
 }
 

@@ -231,7 +231,6 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err = DBA_OK;
 	SQLHSTMT stm = NULL;
-	dba_querybuf buf = NULL;
 	/* Bound variables */
 	int out_lat;
 	int out_lon;
@@ -279,16 +278,14 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 	/* Get the rep_cod from the query */
 	DBA_RUN_OR_RETURN(dba_db_get_rep_cod(db, rec, &rep_cod));
 
-	DBA_RUN_OR_GOTO(cleanup, dba_querybuf_create(1024, &buf));
-
 	/* Allocate statement handle */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
 
 	/* Write the SQL query */
 
 	/* Initial query */
-	dba_querybuf_reset(buf);
-	DBA_RUN_OR_RETURN(dba_querybuf_append(buf, query));
+	dba_querybuf_reset(db->querybuf);
+	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
 
 	/* Bind output fields */
 #define DBA_QUERY_BIND_NONNULL(num, type, name) \
@@ -325,16 +322,16 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 	/* Add the select part */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_prepare_select(db, rec, stm, &pseq));
 
-	DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(buf,
+	DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(db->querybuf,
 		" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
 
-	TRACE("Performing query: %s\n", dba_querybuf_get(buf));
+	TRACE("Performing query: %s\n", dba_querybuf_get(db->querybuf));
 
 	/* Perform the query */
-	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(buf), dba_querybuf_size(buf));
+	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(buf));
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
 		goto cleanup;
 	}
 
