@@ -87,7 +87,7 @@ dba_err do_dump(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_db_open(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(dba_db_create(op_dsn, op_user, op_pass, &db));
 	DBA_RUN_OR_RETURN(dba_db_query(db, query, &cursor, &count));
 	DBA_RUN_OR_RETURN(dba_record_create(&result));
 
@@ -100,7 +100,7 @@ dba_err do_dump(poptContext optCon)
 		dba_record_print(result, stdout);
 	}
 
-	dba_db_close(db);
+	dba_db_delete(db);
 	dba_shutdown();
 
 	dba_record_delete(result);
@@ -122,9 +122,9 @@ dba_err do_wipe(poptContext optCon)
 	table = poptGetArg(optCon);
 
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_db_open(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(dba_db_create(op_dsn, op_user, op_pass, &db));
 	DBA_RUN_OR_RETURN(dba_db_reset(db, table));
-	dba_db_close(db);
+	dba_db_delete(db);
 	dba_shutdown();
 
 	return dba_error_ok();
@@ -141,12 +141,12 @@ dba_err do_import(poptContext optCon)
 	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_db_open(op_dsn, op_user, op_pass, &data.db));
+	DBA_RUN_OR_RETURN(dba_db_create(op_dsn, op_user, op_pass, &data.db));
 	data.overwrite = op_overwrite;
 
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
 
-	dba_db_close(data.db);
+	dba_db_delete(data.db);
 	dba_shutdown();
 
 	return dba_error_ok();
@@ -187,7 +187,7 @@ dba_err do_export(poptContext optCon)
 
 	/* Connect to the database */
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_db_open(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(dba_db_create(op_dsn, op_user, op_pass, &db));
 
 	/* Create the query */
 	DBA_RUN_OR_RETURN(dba_record_create(&query));
@@ -223,7 +223,7 @@ dba_err do_export(poptContext optCon)
 	}
 
 	dba_file_delete(d.file);
-	dba_db_close(db);
+	dba_db_delete(db);
 	dba_shutdown();
 
 	dba_record_delete(query);

@@ -67,7 +67,18 @@ void dba_db_shutdown();
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba_db* db);
+dba_err dba_db_create(const char* dsn, const char* user, const char* password, dba_db* db);
+
+/**
+ * End a session with DBALLE.
+ *
+ * All the resources associated with db will be freed.  db should not be used
+ * anymore, unless it is recreated with dba_open
+ *
+ * @param db
+ *   The dballe session id
+ */
+void dba_db_delete(dba_db db);
 
 /**
  * Reset the database, removing all existing DBALLE tables and re-creating them
@@ -85,17 +96,6 @@ dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba
  *   The error indicator for the function
  */
 dba_err dba_db_reset(dba_db db, const char* repinfo_file);
-
-/**
- * End a session with DBALLE.
- *
- * All the resources associated with db will be freed.  db should not be used
- * anymore, unless it is recreated with dba_open
- *
- * @param db
- *   The dballe session id
- */
-void dba_db_close(dba_db db);
 
 /**
  * Get the report code from a report mnemonic

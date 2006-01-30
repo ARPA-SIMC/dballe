@@ -14,12 +14,12 @@ struct dba_db_import_shar
 	dba_db_import_shar() : db(NULL)
 	{
 		CHECKED(dba_init());
-		CHECKED(dba_db_open("test", "enrico", "", &db));
+		CHECKED(dba_db_create("test", "enrico", "", &db));
 	}
 
 	~dba_db_import_shar()
 	{
-		if (db != NULL) dba_db_close(db);
+		if (db != NULL) dba_db_delete(db);
 		dba_shutdown();
 		test_untag();
 	}

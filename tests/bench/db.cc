@@ -58,7 +58,7 @@ protected:
 		DBA_RUN_OR_RETURN(dba_record_create(&rec));
 
 		dba_db db;
-		DBA_RUN_OR_RETURN(dba_db_open(dsn, user, password, &db));
+		DBA_RUN_OR_RETURN(dba_db_create(dsn, user, password, &db));
 
 		// Reset the database
 		DBA_RUN_OR_RETURN(dba_db_reset(db, NULL));
@@ -153,7 +153,7 @@ protected:
 
 		timing("exported %d messages from the database, old style", count);
 
-		dba_db_close(db);
+		dba_db_delete(db);
 		dba_record_delete(rec);
 		dba_record_delete(query);
 

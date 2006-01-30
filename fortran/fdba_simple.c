@@ -207,7 +207,7 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	DBA_RUN_OR_RETURN(fdba_handle_alloc_session(dbahandle));
 
 	/* Open the DBALLE session */
-	DBA_RUN_OR_GOTO(fail, dba_db_open(s_dsn, s_user, s_password,
+	DBA_RUN_OR_GOTO(fail, dba_db_create(s_dsn, s_user, s_password,
 				&(FDBA_HANDLE(session, *dbahandle).session)));
 
 	/* Open the database session */
@@ -228,7 +228,7 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 {
 	GENPTR_INTEGER(dbahandle)
 
-	dba_db_close(FDBA_HANDLE(session, *dbahandle).session);
+	dba_db_delete(FDBA_HANDLE(session, *dbahandle).session);
 	FDBA_HANDLE(session, *dbahandle).session = NULL;
 	fdba_handle_release_session(*dbahandle);
 

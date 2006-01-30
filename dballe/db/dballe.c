@@ -196,7 +196,7 @@ void dba_db_shutdown()
 	/* TODO: warn about all allocated resources and free them */
 }
 
-dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba_db* db)
+dba_err dba_db_create(const char* dsn, const char* user, const char* password, dba_db* db)
 {
 	dba_err err = DBA_OK;
 	int sqlres;
@@ -254,7 +254,7 @@ fail:
 	return err;
 }
 
-void dba_db_close(dba_db db)
+void dba_db_delete(dba_db db)
 {
 	assert(db);
 

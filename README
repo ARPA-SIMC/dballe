@@ -133,6 +133,7 @@ These are the TODO-list items completed so far::
     + Separare la gestione di TEMP e PILOT
     + Rigenerare i test data del test dba_bufrex_generic.cc usando la nuova
       B000000002551200.txt, perché è cambiata la dimensione di l1, l2, p1 e p2
+    + Rinominare dba_db_open in dba_db_create, e dba_db_close in dba_db_delete
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -273,7 +274,6 @@ These are the TODO-list items currently being worked on::
        - Fare cache di pseudoana id e context id
 
        - Fare query ad-hoc per l'import e l'export di dba_msg
-       - Rinominare dba_db_open in dba_db_create, e dba_db_close in dba_db_delete
 
  * Import da VM o database Oracle di ARPA
     - Buttare via le stazioni con NULL su lat o long
