@@ -33,6 +33,7 @@ extern "C" {
 
 struct _dba_db_pseudoana;
 struct _dba_db_context;
+struct _dba_db_attr;
 
 /**
  * DB-ALLe session structure
@@ -44,6 +45,7 @@ struct _dba_db
 
 	struct _dba_db_pseudoana* pseudoana;
 	struct _dba_db_context* context;
+	struct _dba_db_attr* attr;
 	
 	/*
 	 * This is very conservative:

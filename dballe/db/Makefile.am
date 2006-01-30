@@ -10,6 +10,7 @@ dbinclude_HEADERS = \
 		internals.h \
 		pseudoana.h \
 		context.h \
+		attr.h \
 		dballe.h \
 		dba_import.h \
 		dba_export.h
@@ -20,6 +21,7 @@ libdb_la_SOURCES = \
 		internals.c \
 		pseudoana.c \
 		context.c \
+		attr.c \
 		dballe.c \
 		dba_import.c \
 		dba_export.c

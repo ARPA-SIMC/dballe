@@ -136,6 +136,7 @@ These are the TODO-list items completed so far::
     + Rinominare dba_db_open in dba_db_create, e dba_db_close in dba_db_delete
     + pseudoana insert is now using precompiled queries
     + context insert is now using precompiled queries
+    + attr insert is now using precompiled queries
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read

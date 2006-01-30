@@ -2,6 +2,7 @@
 #include <dballe/db/internals.h>
 #include <dballe/db/pseudoana.h>
 #include <dballe/db/context.h>
+#include <dballe/db/attr.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/core/dba_csv.h>
@@ -242,6 +243,7 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 
 	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_create(*db, &((*db)->pseudoana)));
 	DBA_RUN_OR_GOTO(fail, dba_db_context_create(*db, &((*db)->context)));
+	DBA_RUN_OR_GOTO(fail, dba_db_attr_create(*db, &((*db)->attr)));
 
 	return dba_error_ok();
 	
@@ -255,6 +257,8 @@ void dba_db_delete(dba_db db)
 {
 	assert(db);
 
+	if (db->attr != NULL)
+		dba_db_attr_delete(db->attr);
 	if (db->context != NULL)
 		dba_db_context_delete(db->context);
 	if (db->pseudoana != NULL)
@@ -677,52 +681,6 @@ dba_err dba_db_insert_new(dba_db db, dba_record rec)
 {
 	return dba_db_insert_or_replace(db, rec, 0, 0, NULL);
 }
-
-#if 0
-dba_err dba_ana_count(dba_db db, int* count)
-{
-	SQLHSTMT stm;
-	SQLINTEGER id_ind;
-	int res;
-	dba_err err;
-
-	assert(db);
-
-	/* Allocate statement handle for select */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement");
-
-	/* Bind variable and indicator */
-	SQLBindCol(stm, 1, SQL_C_SLONG, count, sizeof(*count), &id_ind);
-	
-	res = SQLExecDirect(stm, "SELECT COUNT(*) FROM pseudoana", SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "querying number of entries in table 'pseudoana'");
-		goto dba_ana_count_failed;
-	}
-
-	if (SQLFetch(stm) == SQL_NO_DATA)
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "retrieving number of entries in table 'pseudoana'");
-		goto dba_ana_count_failed;
-	}
-
-	if (id_ind != sizeof(*count))
-	{
-		err = dba_error_consistency("checking that the size of the count coming from the database is correct");
-		goto dba_ana_count_failed;
-	}
-
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return dba_error_ok();
-
-dba_ana_count_failed:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err;
-}
-#endif
 
 #if 0
 static dba_err dba_db_context_create(dba_db db, dba_db_context* co)
@@ -1870,99 +1828,54 @@ dba_qc_query_failed:
 
 dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc, int can_replace)
 {
-	const char* insert_query =
-		"INSERT INTO attr (id_data, type, value)"
-		" VALUES(?, ?, ?)";
-	const char* replace_query =
-		"INSERT INTO attr (id_data, type, value)"
-		" VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
-/*		"REPLACE INTO attr (id_data, type, value)"
-		" VALUES(?, ?, ?)"; */
 	dba_err err;
 	dba_record_cursor item;
-#if 0
-	int id_data;
-#endif
-	dba_varcode type;
-	char value[255];
-	SQLINTEGER value_ind;
-	SQLHSTMT stm;
-	int res;
+	dba_db_attr a = db->attr;
 	
 	assert(db);
 
+	a->id_data = id_data;
+
 	/* Begin the transaction */
-	DBA_RUN_OR_RETURN(dba_db_begin(db));
+	DBA_RUN_OR_GOTO(fail, dba_db_begin(db));
 
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		dba_db_rollback(db);
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-	}
-
-	/* Compile the INSERT/UPDATE SQL query */
-	/* Casting to char* because ODBC is unaware of const */
-	res = SQLPrepare(stm, (unsigned char*)(can_replace ? replace_query : insert_query), SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'attr'");
-		goto dba_qc_insert_failed;
-	}
-
-	/* Bind parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_data, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &type, 0, 0);
-	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, value, 0, &value_ind);
-	
 	/* Insert all found variables */
 	for (item = dba_record_iterate_first(qc); item != NULL;
 			item = dba_record_iterate_next(qc, item))
 	{
 		dba_var variable = dba_record_cursor_variable(item);
-		const char* cur_value = dba_var_value(variable);
-
-		/* Variable ID */
-		type = dba_var_code(variable);
+		const char* value = dba_var_value(variable);
+		int len = strlen(value);
 
 		/* Variable value */
-		if ((value_ind = strlen(cur_value)) > 256)
-			value_ind = 255;
-		strncpy(value, cur_value, value_ind);
-		value[value_ind] = 0;
+		if (len > 255) len = 255;
+		a->value_ind = len;
+		memcpy(a->value, value, len);
+		a->value[len] = 0;
 
-		res = SQLExecute(stm);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'attr'");
-			goto dba_qc_insert_failed;
-		}
+		/* Variable ID */
+		a->type = dba_var_code(variable);
+
+		DBA_RUN_OR_GOTO(fail, dba_db_attr_insert(a, can_replace));
 	}
 			
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	if ((err = dba_db_commit(db)))
-	{
-		dba_db_rollback(db);
-		return err;
-	}
+	DBA_RUN_OR_GOTO(fail, dba_db_commit(db));
 	return dba_error_ok();
 
 	/* Exits with cleanup after error */
-dba_qc_insert_failed:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
+fail:
 	dba_db_rollback(db);
 	return err;
 }
 
-dba_err dba_db_qc_insert(dba_db db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc)
+dba_err dba_db_qc_insert(dba_db db, int id_data, dba_record qc)
 {
-	return dba_db_qc_insert_or_replace(db, id_data, /*rec, var,*/ qc, 1);
+	return dba_db_qc_insert_or_replace(db, id_data, qc, 1);
 }
 
-dba_err dba_db_qc_insert_new(dba_db db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc)
+dba_err dba_db_qc_insert_new(dba_db db, int id_data, dba_record qc)
 {
-	return dba_db_qc_insert_or_replace(db, id_data, /*rec, var,*/ qc, 0);
+	return dba_db_qc_insert_or_replace(db, id_data, qc, 0);
 }
 
 dba_err dba_db_qc_remove(dba_db db, int id_data, dba_varcode* qcs, int qcs_size)
