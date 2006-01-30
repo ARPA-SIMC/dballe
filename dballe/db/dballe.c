@@ -409,8 +409,10 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 	dba_err err = DBA_OK;
 	int mobile;
 	const char* val;
+	dba_db_pseudoana a;
 
 	assert(db);
+	a = db->pseudoana;
 
 	/* Look for an existing ID if provided */
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_ANA_ID)) != NULL)
@@ -423,23 +425,21 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 		return dba_error_ok();
 
 	/* Look for the key data in the record */
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &(db->pseudoana->lat)));
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LON, &(db->pseudoana->lon)));
+	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &(a->lat)));
+	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LON, &(a->lon)));
 	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_MOBILE, &mobile));
 	if (mobile)
 	{
 		DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqc(rec, DBA_KEY_IDENT, &val));
-		strncpy(db->pseudoana->ident, val, 64);
-		db->pseudoana->ident[63] = 0;
-		db->pseudoana->ident_ind = SQL_NTS;
+		dba_db_pseudoana_set_ident(a, val);
 	} else {
-		db->pseudoana->ident_ind = SQL_NULL_DATA;
+		a->ident_ind = SQL_NULL_DATA;
 	}
 
 	/* Check for an existing pseudoana with these data */
 	if (*id == -1)
 	{
-		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_get_id(db->pseudoana, id));
+		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_get_id(a, id));
 
 		/* If we don't have to update the data, we're done */
 		if (*id != -1 && !rewrite)
@@ -450,47 +450,47 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_HEIGHT)) != NULL)
 	{
-		db->pseudoana->height = strtol(val, 0, 10);
-		db->pseudoana->height_ind = 0;
+		a->height = strtol(val, 0, 10);
+		a->height_ind = 0;
 	} else
-		db->pseudoana->height_ind = SQL_NULL_DATA;
+		a->height_ind = SQL_NULL_DATA;
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_HEIGHTBARO)) != NULL)
 	{
-		db->pseudoana->heightbaro = strtol(val, 0, 10);
-		db->pseudoana->heightbaro_ind = 0;
+		a->heightbaro = strtol(val, 0, 10);
+		a->heightbaro_ind = 0;
 	} else
-		db->pseudoana->heightbaro_ind = SQL_NULL_DATA;
+		a->heightbaro_ind = SQL_NULL_DATA;
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
 	{
-		db->pseudoana->block = strtol(val, 0, 10);
-		db->pseudoana->block_ind = 0;
+		a->block = strtol(val, 0, 10);
+		a->block_ind = 0;
 	} else
-		db->pseudoana->block_ind = SQL_NULL_DATA;
+		a->block_ind = SQL_NULL_DATA;
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
 	{
-		db->pseudoana->station = strtol(val, 0, 10);
-		db->pseudoana->station_ind = 0;
+		a->station = strtol(val, 0, 10);
+		a->station_ind = 0;
 	} else
-		db->pseudoana->station_ind = SQL_NULL_DATA;
+		a->station_ind = SQL_NULL_DATA;
 	
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_NAME)) != NULL)
 	{
-		strncpy(db->pseudoana->name, val, 255);
-		db->pseudoana->name[254] = 0;
-		db->pseudoana->name_ind = SQL_NTS;
+		strncpy(a->name, val, 255);
+		a->name[254] = 0;
+		a->name_ind = SQL_NTS;
 	}
 	else
-		db->pseudoana->name_ind = SQL_NULL_DATA;
+		a->name_ind = SQL_NULL_DATA;
 
 	if (*id != -1)
 	{
-		db->pseudoana->id = *id;
-		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_update(db->pseudoana));
+		a->id = *id;
+		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_update(a));
 	} else
-		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_insert(db->pseudoana, id));
+		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_insert(a, id));
 	
 cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;

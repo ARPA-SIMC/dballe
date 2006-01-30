@@ -48,6 +48,7 @@ typedef struct _dba_db_pseudoana* dba_db_pseudoana;
 
 dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins);
 void dba_db_pseudoana_delete(dba_db_pseudoana ins);
+void dba_db_pseudoana_set_ident(dba_db_pseudoana ins, const char* ident);
 dba_err dba_db_pseudoana_get_id(dba_db_pseudoana ins, int *id);
 dba_err dba_db_pseudoana_insert(dba_db_pseudoana ins, int *id);
 dba_err dba_db_pseudoana_update(dba_db_pseudoana ins);

@@ -129,6 +129,15 @@ void dba_db_pseudoana_delete(dba_db_pseudoana ins)
 	free(ins);
 }
 
+void dba_db_pseudoana_set_ident(dba_db_pseudoana ins, const char* ident)
+{
+	int len = strlen(ident);
+	if (len > 64) len = 64;
+	memcpy(ins->ident, ident, len);
+	ins->ident[len] = 0;
+	ins->ident_ind = len; 
+}
+
 dba_err dba_db_pseudoana_get_id(dba_db_pseudoana ins, int *id)
 {
 	SQLHSTMT stm = ins->ident_ind == SQL_NULL_DATA ? ins->sfstm : ins->smstm;
