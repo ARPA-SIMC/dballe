@@ -82,45 +82,54 @@ const static dba_varcode generator_varcodes[] = {
 
 class generator
 {
-	std::vector<dba_record> reused_pseudoana;
+	std::vector<dba_record> reused_pseudoana_fixed;
+	std::vector<dba_record> reused_pseudoana_mobile;
 	std::vector<dba_record> reused_context;
 
 public:
 	~generator()
 	{
-		for (std::vector<dba_record>::iterator i = reused_pseudoana.begin();
-				i != reused_pseudoana.end(); i++)
+		for (std::vector<dba_record>::iterator i = reused_pseudoana_fixed.begin();
+				i != reused_pseudoana_fixed.end(); i++)
+			dba_record_delete(*i);
+		for (std::vector<dba_record>::iterator i = reused_pseudoana_mobile.begin();
+				i != reused_pseudoana_mobile.end(); i++)
 			dba_record_delete(*i);
 		for (std::vector<dba_record>::iterator i = reused_context.begin();
 				i != reused_context.end(); i++)
 			dba_record_delete(*i);
 	}
 
-	dba_err fill_pseudoana(dba_record rec)
+	dba_err fill_pseudoana(dba_record rec, bool mobile)
 	{
 		dba_record ana;
-		if (reused_pseudoana.empty() || rnd(0.3))
+		if ((mobile && reused_pseudoana_mobile.empty()) ||
+			(!mobile && reused_pseudoana_fixed.empty()) ||
+			rnd(0.3))
 		{
 			DBA_RUN_OR_RETURN(dba_record_create(&ana));
 
 			/* Pseudoana */
 			DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_LAT, rnd(-180, 180)));
 			DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_LON, rnd(-180, 180)));
-			if (rnd(0.8))
+			DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_HEIGHT, rnd(1, 3000)));
+			DBA_RUN_OR_RETURN(dba_record_key_setc(ana, DBA_KEY_NAME, rnd(20).c_str()));
+			if (mobile)
 			{
+				DBA_RUN_OR_RETURN(dba_record_key_setc(ana, DBA_KEY_IDENT, rnd(10).c_str()));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(ana, DBA_KEY_MOBILE, 1));
+				reused_pseudoana_mobile.push_back(ana);
+			} else {
 				DBA_RUN_OR_RETURN(dba_record_key_seti(ana, DBA_KEY_BLOCK, rnd(0, 99)));
 				DBA_RUN_OR_RETURN(dba_record_key_seti(ana, DBA_KEY_STATION, rnd(0, 999)));
 				DBA_RUN_OR_RETURN(dba_record_key_seti(ana, DBA_KEY_MOBILE, 0));
-			} else {
-				DBA_RUN_OR_RETURN(dba_record_key_setc(ana, DBA_KEY_IDENT, rnd(10).c_str()));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(ana, DBA_KEY_MOBILE, 1));
+				reused_pseudoana_fixed.push_back(ana);
 			}
-			DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_HEIGHT, rnd(1, 3000)));
-			DBA_RUN_OR_RETURN(dba_record_key_setc(ana, DBA_KEY_NAME, rnd(20).c_str()));
-
-			reused_pseudoana.push_back(ana);
 		} else {
-			ana = reused_pseudoana[rnd(0, reused_pseudoana.size() - 1)];
+			if (mobile)
+				ana = reused_pseudoana_mobile[rnd(0, reused_pseudoana_mobile.size() - 1)];
+			else
+				ana = reused_pseudoana_fixed[rnd(0, reused_pseudoana_fixed.size() - 1)];
 		}
 		DBA_RUN_OR_RETURN(dba_record_add(rec, ana));
 		return dba_error_ok();
@@ -157,9 +166,54 @@ public:
 
 	dba_err fill_record(dba_record rec)
 	{
-		DBA_RUN_OR_RETURN(fill_pseudoana(rec));
+		DBA_RUN_OR_RETURN(fill_pseudoana(rec, rnd(0.8)));
 		DBA_RUN_OR_RETURN(fill_context(rec));
 		DBA_RUN_OR_RETURN(dba_record_var_setc(rec, generator_varcodes[rnd(0, sizeof(generator_varcodes) / sizeof(dba_varcode))], "11111"));
+		return dba_error_ok();
+	}
+
+	dba_err fill_message(dba_msg msg, bool mobile)
+	{
+		dba_record rec;
+		DBA_RUN_OR_RETURN(dba_record_create(&rec));
+
+		DBA_RUN_OR_RETURN(fill_pseudoana(rec, mobile));
+		DBA_RUN_OR_RETURN(dba_msg_set_latitude_var(msg,		dba_record_key_peek(rec, DBA_KEY_LAT)));
+		DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg,	dba_record_key_peek(rec, DBA_KEY_LON)));
+		DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg,		dba_record_key_peek(rec, DBA_KEY_HEIGHT)));
+		/* DBA_RUN_OR_RETURN(dba_msg_set_name_var(msg,			dba_record_key_peek(rec, DBA_KEY_NAME))); */
+		if (mobile)
+		{
+			DBA_RUN_OR_RETURN(dba_msg_set_ident_var(msg,	dba_record_key_peek(rec, DBA_KEY_IDENT)));
+		} else {
+			DBA_RUN_OR_RETURN(dba_msg_set_block_var(msg,	dba_record_key_peek(rec, DBA_KEY_BLOCK)));
+			DBA_RUN_OR_RETURN(dba_msg_set_station_var(msg,	dba_record_key_peek(rec, DBA_KEY_STATION)));
+		}
+
+		DBA_RUN_OR_RETURN(fill_context(rec));
+		DBA_RUN_OR_RETURN(dba_msg_set_year_var(msg,		dba_record_key_peek(rec, DBA_KEY_YEAR)));
+		DBA_RUN_OR_RETURN(dba_msg_set_month_var(msg,	dba_record_key_peek(rec, DBA_KEY_MONTH)));
+		DBA_RUN_OR_RETURN(dba_msg_set_day_var(msg,		dba_record_key_peek(rec, DBA_KEY_DAY)));
+		DBA_RUN_OR_RETURN(dba_msg_set_hour_var(msg,		dba_record_key_peek(rec, DBA_KEY_HOUR)));
+		DBA_RUN_OR_RETURN(dba_msg_set_minute_var(msg,	dba_record_key_peek(rec, DBA_KEY_MIN)));
+
+		for (int i = 0; i < rnd(4, 20); i++)
+		{
+			DBA_RUN_OR_RETURN(fill_context(rec));
+
+			int ltype, l1, l2, pind, p1, p2;
+			DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE, &ltype));
+			DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L1, &l1));
+			DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L2, &l2));
+			DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_PINDICATOR, &pind));
+			DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P1, &p1));
+			DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P2, &p2));
+
+			dba_var var;
+			DBA_RUN_OR_RETURN(dba_var_create_local(generator_varcodes[rnd(0, sizeof(generator_varcodes) / sizeof(dba_varcode))], &var));
+			DBA_RUN_OR_RETURN(dba_var_setc(var, "11111"));
+			DBA_RUN_OR_RETURN(dba_msg_set_nocopy(msg, var, ltype, l1, l2, pind, p1, p2));
+		}
 		return dba_error_ok();
 	}
 };
