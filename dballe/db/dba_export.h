@@ -36,7 +36,9 @@ typedef dba_err (*dba_msg_consumer)(dba_msg msg, void* data);
  */
 dba_err dba_db_export(dba_db db, dba_msg_type type, dba_record query, dba_msg_consumer cons, void* data);
 
+#if 0
 dba_err dba_db_export_old(dba_db db, dba_msg_type export_type, dba_record query, dba_msg_consumer cons, void* data);
+#endif
 
 #ifdef  __cplusplus
 }

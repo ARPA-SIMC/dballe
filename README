@@ -290,6 +290,13 @@ These are the TODO-list items currently being worked on::
     - TEMP AOF dà dew point temperature, TEMP BUFR dà wet bulb temperature
     - TEMP AOF non hanno le nuvole, TEMP BUFR sí
     
+ * Tools
+    - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
+      (lat, lon, ident, year, month, day, hour, min)
+       - Implementato e protetto da if(0)
+         è da vedere se non importare tutto il livello 257
+	 o se non importare solo gli 8 valori
+
  * Core
     - Aggiungere una entry B locale per il nome della stazione
        - Supportarlo in dba_msg e dba_import_msg_new
@@ -305,9 +312,6 @@ These are the TODO-list items currently being worked on::
     - Cosa succede in fase di conversione msg2vm se conf era stato modificato?
       Lo ignoro?
     - Come lavoro con l'attributo 'replaced' dal flag di VM?
-
- * Tools
-    - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra

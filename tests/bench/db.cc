@@ -143,6 +143,7 @@ protected:
 
 		timing("exported %d messages from the database, new style", count);
 
+#if 0
 		count = 0;
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
@@ -152,6 +153,7 @@ protected:
 		}
 
 		timing("exported %d messages from the database, old style", count);
+#endif
 
 		dba_db_delete(db);
 		dba_record_delete(rec);

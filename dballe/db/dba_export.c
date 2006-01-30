@@ -14,6 +14,7 @@
 #include <sqlext.h>
 #include <sqltypes.h>
 
+#if 0
 static dba_err set_key(dba_msg dst, int id, dba_record src, dba_keyword key)
 {
 	dba_var var = dba_record_key_peek(src, key);
@@ -217,6 +218,7 @@ cleanup:
 		dba_msg_delete(msg);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
+#endif
 
 dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_msg_consumer cons, void* data)
 {
@@ -432,6 +434,33 @@ dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_m
 					}
 					break;
 				case MSG_GENERIC: msg->type = MSG_GENERIC; break;
+			}
+
+			if (0)
+			{
+				int year, month, day, hour, min;
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_latitude(msg, (double)out_lat / 100000.0, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_longitude(msg, (double)out_lon / 100000.0, -1));
+				if (sscanf(out_datetime, "%04d-%02d-%02d %02d:%02d", &year, &month, &day, &hour, &min) != 5)
+				{
+					err = dba_error_consistency("trying to parse datetime string %s", out_datetime);
+					goto cleanup;
+				}
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_year(msg, year, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_month(msg, month, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_day(msg, day, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_hour(msg, hour, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_minute(msg, min, -1));
+				if (out_ident_ind != -1)
+					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_ident(msg, out_ident, -1));
+				if (out_block_ind != -1)
+					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_block(msg, out_block, -1));
+				if (out_station_ind != -1)
+					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_station(msg, out_station, -1));
+				if (out_height_ind != -1)
+					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_height(msg, out_height, -1));
+				if (out_heightbaro_ind != -1)
+					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_height_baro(msg, out_heightbaro, -1));
 			}
 
 			strncpy(last_datetime, out_datetime, 20);

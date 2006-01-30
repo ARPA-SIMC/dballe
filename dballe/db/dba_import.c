@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#if 0
 static dba_err dba_db_insert_rec(dba_db db, dba_record rec, int lt, int l1, int l2, int pi, int p1, int p2, int overwrite)
 {
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, lt));
@@ -187,7 +188,7 @@ cleanup:
 		dba_record_delete(rec);
 	return err = DBA_OK ? dba_error_ok() : err;
 }
-
+#endif
 
 
 dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
@@ -340,6 +341,19 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 		{
 			dba_msg_datum dat = lev->data[j];
 			dba_var_attr_iterator iter;
+
+			if (0)
+			{
+				dba_varcode code = dba_var_code(dat->var);
+				/* Don't insert anagraphical informations that are already
+				 * memorised in pseudoana and context */
+				if (lev->ltype == 257 && lev->l1 == 0 && lev->l1 == 0 &&
+					dat->pind == 0 && dat->p1 == 0 && dat->p2 == 0)
+					if ((code >= DBA_VAR(0, 4, 1) && code <= DBA_VAR(0, 4, 5)) ||
+						code == DBA_VAR(0, 5, 1) || code == DBA_VAR(0, 6, 1) ||
+						code == DBA_VAR(0, 1, 11))
+						continue;
+			}
 
 			if (dat->pind != old_pind || dat->p1 != old_p1 || dat->p2 != old_p2)
 			{
