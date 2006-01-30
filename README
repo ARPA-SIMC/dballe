@@ -306,7 +306,7 @@ These are the TODO-list items currently being worked on::
        - La B locale
        - Formato delle tabelle BUFR/CREX
        - Aggiungere elementi alla B locale
-       - Indicizzazione tabelle in caso di modifica
+       = Indicizzazione tabelle in caso di modifica
          dbatbl index share/dballe/dballe.txt dballe
     - Introduzione veloce a dbatbl, dbamsg e dbadb (la reference è nella
       manpage)

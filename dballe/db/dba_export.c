@@ -2,6 +2,7 @@
 #include <dballe/msg/dba_msg.h>
 #include <dballe/db/dballe.h>
 #include <dballe/db/querybuf.h>
+/* #define TRACE_DB */
 #include <dballe/db/internals.h>
 
 #include <stdlib.h>
@@ -342,7 +343,7 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 	DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(buf,
 		" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
 
-	/* TRACE("Performing query: %s\n", dba_querybuf_get(buf)); */
+	TRACE("Performing query: %s\n", dba_querybuf_get(buf));
 
 	/* Perform the query */
 	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(buf), dba_querybuf_size(buf));
@@ -356,19 +357,59 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 	last_datetime[0] = 0;
 	while (SQLFetch(stm) != SQL_NO_DATA)
 	{
+		TRACE("Got B%02d%03d %d,%d,%d %d,%d,%d %s\n",
+				DBA_VAR_X(out_varcode), DBA_VAR_Y(out_varcode),
+				out_leveltype, out_l1, out_l2, out_pindicator, out_p1, out_p2,
+				out_value);
+
+		/* First process the variable, possibly inserting the old one in the message */
+		if (last_data_id != out_data_id)
+		{
+			TRACE("New var\n");
+			if (var != NULL)
+			{
+				TRACE("Inserting old var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var,
+															last_ltype, last_l1, last_l2,
+															last_pind, last_p1, last_p2));
+				var = NULL;
+			}
+			DBA_RUN_OR_GOTO(cleanup, dba_var_create_local(out_varcode, &var));
+			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(var, out_value));
+
+			last_data_id = out_data_id;
+			last_ltype = out_leveltype;
+			last_l1 = out_l1;
+			last_l2 = out_l2;
+			last_pind = out_pindicator;
+			last_p1 = out_p1;
+			last_p2 = out_p2;
+		}
+
+		if (out_attr_varcode_ind != -1)
+		{
+			TRACE("New attribute\n");
+			DBA_RUN_OR_GOTO(cleanup, dba_var_create_local(out_attr_varcode, &attr));
+			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(attr, out_attr_value));
+			DBA_RUN_OR_GOTO(cleanup, dba_var_seta(var, attr));
+			attr = NULL;			
+		}
+
 		if (out_lat != last_lat || out_lon != last_lon || strcmp(out_datetime, last_datetime) != 0)
 		{
+			TRACE("New message\n");
 			if (msg != NULL)
 			{
+				TRACE("Sending old message to consumer\n");
 				if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 				{
 					dba_msg copy;
 					DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));
 					/* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-					cons(copy, data);
+					DBA_RUN_OR_GOTO(cleanup, cons(copy, data));
 					dba_msg_delete(msg);
 				} else {
-					cons(msg, data);
+					DBA_RUN_OR_GOTO(cleanup, cons(msg, data));
 				}
 				msg = NULL;
 			}
@@ -415,38 +456,11 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 			last_lat = out_lat;
 			last_lon = out_lon;
 		}
-
-		if (last_data_id != out_data_id)
-		{
-			if (var != NULL)
-			{
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var,
-															last_ltype, last_l1, last_l2,
-															last_pind, last_p1, last_p2));
-				var = NULL;
-			}
-			DBA_RUN_OR_GOTO(cleanup, dba_var_create_local(out_varcode, &var));
-			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(var, out_value));
-
-			last_data_id = out_data_id;
-			last_ltype = out_leveltype;
-			last_l1 = out_l1;
-			last_l2 = out_l2;
-			last_pind = out_pindicator;
-			last_p1 = out_p1;
-			last_p2 = out_p2;
-		}
-		if (out_attr_varcode_ind != -1)
-		{
-			DBA_RUN_OR_GOTO(cleanup, dba_var_create_local(out_attr_varcode, &attr));
-			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(attr, out_attr_value));
-			DBA_RUN_OR_GOTO(cleanup, dba_var_seta(var, attr));
-			attr = NULL;			
-		}
 	}
 
 	if (var != NULL)
 	{
+		TRACE("Inserting leftover old var B%02d%03d at l(%d,%d,%d) p(%d,%d,%d)\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)), last_ltype, last_l1, last_l2, last_pind, last_p1, last_p2);
 		DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var,
 													last_ltype, last_l1, last_l2,
 													last_pind, last_p1, last_p2));
@@ -455,15 +469,16 @@ dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, d
 
 	if (msg != NULL)
 	{
+		TRACE("Inserting leftover old message\n");
 		if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 		{
 			dba_msg copy;
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));
 			/* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-			cons(copy, data);
+			DBA_RUN_OR_GOTO(cleanup, cons(copy, data));
 			dba_msg_delete(msg);
 		} else {
-			cons(msg, data);
+			DBA_RUN_OR_GOTO(cleanup, cons(msg, data));
 		}
 		msg = NULL;
 	}

@@ -20,6 +20,17 @@ extern "C" {
 #include <sqltypes.h>
 
 
+/* #define TRACE_DB */
+
+#ifdef TRACE_DB
+#define TRACE(...) fprintf(stderr, __VA_ARGS__)
+#define IFTRACE if (1)
+#else
+#define TRACE(...) do { } while (0)
+#define IFTRACE if (0)
+#endif
+
+
 /**
  * DB-ALLe session structure
  */

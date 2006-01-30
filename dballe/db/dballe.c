@@ -28,17 +28,6 @@
 #define DBA_USE_TRANSACTIONS
 #endif
 
-/* #define TRACE_DB */
-
-#ifdef TRACE_DB
-#define TRACE(...) fprintf(stderr, __VA_ARGS__)
-#define IFTRACE if (1)
-#else
-#define TRACE(...) do { } while (0)
-#define IFTRACE if (0)
-#endif
-
-
 #if 0
 struct _dba_db_context {
 	dba_db db;

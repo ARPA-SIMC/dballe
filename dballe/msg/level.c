@@ -199,12 +199,12 @@ void dba_msg_level_diff(dba_msg_level l1, dba_msg_level l2, int* diffs, FILE* ou
 	{
 		if (i1 == l1->data_count)
 		{
-			fprintf(out, "Variable "); datum_summary(l2->data[i2], out);
+			fprintf(out, "Variable l(%d,%d,%d) ", l1->ltype, l1->l1, l1->l2); datum_summary(l2->data[i2], out);
 			fprintf(out, " exists only in the second message\n");
 			++i2;
 			++*diffs;
 		} else if (i2 == l2->data_count) {
-			fprintf(out, "Variable "); datum_summary(l1->data[i1], out);
+			fprintf(out, "Variable l(%d,%d,%d) ", l1->ltype, l1->l1, l1->l2); datum_summary(l1->data[i1], out);
 			fprintf(out, " exists only in the first message\n");
 			++i1;
 			++*diffs;
@@ -218,7 +218,7 @@ void dba_msg_level_diff(dba_msg_level l1, dba_msg_level l2, int* diffs, FILE* ou
 			} else if (cmp < 0) {
 				if (dba_var_value(l1->data[i1]->var) != NULL)
 				{
-					fprintf(out, "Variable "); datum_summary(l1->data[i1], out);
+					fprintf(out, "Variable l(%d,%d,%d) ", l1->ltype, l1->l1, l1->l2); datum_summary(l1->data[i1], out);
 					fprintf(out, " exists only in the first message\n");
 					++*diffs;
 				}
@@ -226,7 +226,7 @@ void dba_msg_level_diff(dba_msg_level l1, dba_msg_level l2, int* diffs, FILE* ou
 			} else {
 				if (dba_var_value(l2->data[i2]->var) != NULL)
 				{
-					fprintf(out, "Variable "); datum_summary(l2->data[i2], out);
+					fprintf(out, "Variable l(%d,%d,%d) ", l1->ltype, l1->l1, l1->l2); datum_summary(l2->data[i2], out);
 					fprintf(out, " exists only in the second message\n");
 					++*diffs;
 				}
