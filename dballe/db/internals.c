@@ -359,4 +359,63 @@ dba_err dba_db_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq
 
 }
 #undef PARM_INT
+
+dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
+{
+	const char* insert_query =
+		"INSERT INTO pseudoana (lat, lon, ident, height, heightbaro, block, station, name)"
+		" VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+	dba_err err = DBA_OK;
+	dba_db_pseudoana res = NULL;
+	int r;
+
+	if ((res = (dba_db_pseudoana)malloc(sizeof(struct _dba_db_pseudoana))) == NULL)
+		return dba_error_alloc("creating a new dba_db_pseudoana_inserter");
+	res->db = db;
+	res->istm = NULL;
+
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->istm)));
+
+	/* Bind key parameters */
+	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->lat), 0, 0);
+	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->lon), 0, 0);
+	SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)res->ident, 0, &(res->ident_ind));
+	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->height), 0, &(res->height_ind));
+	SQLBindParameter(res->istm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->heightbaro), 0, &(res->heightbaro_ind));
+	SQLBindParameter(res->istm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->block), 0, &(res->block_ind));
+	SQLBindParameter(res->istm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->station), 0, &(res->station_ind));
+	SQLBindParameter(res->istm, 8, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)res->name, 0, &(res->name_ind));
+
+	r = SQLPrepare(res->istm, (unsigned char*)insert_query, SQL_NTS);
+	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->istm, "compiling query to insert into 'pseudoana'");
+		goto cleanup;
+	}
+
+	*ins = res;
+	res = NULL;
+	
+cleanup:
+	if (res != NULL)
+		dba_db_pseudoana_delete(res);
+	return err == DBA_OK ? dba_error_ok() : err;
+};
+
+void dba_db_pseudoana_delete(dba_db_pseudoana ins)
+{
+	if (ins->istm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, ins->istm);
+	free(ins);
+}
+
+dba_err dba_db_pseudoana_insert(dba_db_pseudoana ins, int *id)
+{
+	int res = SQLExecute(ins->istm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->istm, "inserting new data into 'pseudoana'");
+
+	return dba_db_last_insert_id(ins->db, id);
+}
+
 /* vim:set ts=4 sw=4: */

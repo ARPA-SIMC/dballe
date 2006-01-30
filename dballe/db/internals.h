@@ -30,6 +30,33 @@ extern "C" {
 #define IFTRACE if (0)
 #endif
 
+struct _dba_db;
+	
+/**
+ * Precompiled query to insert a value in pseudoana
+ */
+struct _dba_db_pseudoana
+{
+	struct _dba_db* db;
+	SQLHSTMT istm;
+
+	int lat;
+	int lon;
+	const char* ident;
+	SQLINTEGER ident_ind;
+	int height;
+	SQLINTEGER height_ind;
+	int heightbaro;
+	SQLINTEGER heightbaro_ind;
+	int block;
+	SQLINTEGER block_ind;
+	int station;
+	SQLINTEGER station_ind;
+	const char* name;
+	SQLINTEGER name_ind;
+};
+typedef struct _dba_db_pseudoana* dba_db_pseudoana;
+
 
 /**
  * DB-ALLe session structure
@@ -37,6 +64,9 @@ extern "C" {
 struct _dba_db
 {
 	SQLHDBC	od_conn;
+
+	dba_db_pseudoana pseudoana;
+	
 	/*
 	 * This is very conservative:
 	 * The query size plus 30 possible select values, maximum of 30 characters each
@@ -72,6 +102,7 @@ struct _dba_db
 #ifndef DBALLE_DB_H
 typedef struct _dba_db* dba_db;
 #endif
+
 
 /**
  * Report an ODBC error, using informations from the ODBC diagnostic record
@@ -116,6 +147,12 @@ dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id);
  * Add select WHERE parameters from the data in query
  */
 dba_err dba_db_prepare_select(dba_db db, dba_record query, SQLHSTMT stm, int* pseq);
+
+
+dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins);
+void dba_db_pseudoana_delete(dba_db_pseudoana ins);
+dba_err dba_db_pseudoana_insert(dba_db_pseudoana ins, int *id);
+
 
 #ifdef  __cplusplus
 }

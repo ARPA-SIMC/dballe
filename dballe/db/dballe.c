@@ -206,6 +206,12 @@ dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba
 	if (!*db)
 		return dba_error_alloc("trying to allocate a new dba_db object");
 
+	/*
+	 * This is very conservative:
+	 * The query size plus 30 possible select values, maximum of 30 characters each
+	 * plus 400 characters for the various combinations of the two min and max datetimes,
+	 * plus 255 for the blist
+	 */
 	DBA_RUN_OR_GOTO(fail, dba_querybuf_create(170 + 30*30 + 400 + 255, &((*db)->querybuf)));
 
 	/* Allocate the ODBC connection handle */
@@ -231,10 +237,14 @@ dba_err dba_db_open(const char* dsn, const char* user, const char* password, dba
 				"Connecting to DSN %s as user %s", dsn, user);
 		goto fail;
 	}
-	
+
+	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_create(*db, &((*db)->pseudoana)));
+
 	return dba_error_ok();
 	
 fail:
+	if ((*db)->pseudoana)
+		dba_db_pseudoana_delete((*db)->pseudoana);
 	if ((*db)->querybuf != NULL)
 		dba_querybuf_delete((*db)->querybuf);
 	if ((*db)->od_conn != NULL)
@@ -242,6 +252,18 @@ fail:
 	free(*db);
 	*db = 0;
 	return err;
+}
+
+void dba_db_close(dba_db db)
+{
+	assert(db);
+
+	if (db->pseudoana != NULL)
+		dba_db_pseudoana_delete(db->pseudoana);
+	dba_querybuf_delete(db->querybuf);
+	SQLDisconnect(db->od_conn);
+	SQLFreeHandle(SQL_HANDLE_DBC, db->od_conn);
+	free(db);
 }
 
 dba_err dba_db_reset(dba_db db, const char* deffile)
@@ -364,16 +386,6 @@ fail1:
 fail0:
 	fclose(in);
 	return err;
-}
-
-void dba_db_close(dba_db db)
-{
-	assert(db);
-
-	dba_querybuf_delete(db->querybuf);
-	SQLDisconnect(db->od_conn);
-	SQLFreeHandle(SQL_HANDLE_DBC, db->od_conn);
-	free(db);
 }
 
 /*

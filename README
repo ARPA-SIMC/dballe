@@ -273,6 +273,7 @@ These are the TODO-list items currently being worked on::
        - Fare cache di pseudoana id e context id
 
        - Fare query ad-hoc per l'import e l'export di dba_msg
+       - Rinominare dba_db_open in dba_db_create, e dba_db_close in dba_db_delete
 
  * Import da VM o database Oracle di ARPA
     - Buttare via le stazioni con NULL su lat o long
