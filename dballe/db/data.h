@@ -37,6 +37,8 @@ typedef struct _dba_db_data* dba_db_data;
 
 dba_err dba_db_data_create(dba_db db, dba_db_data* ins);
 void dba_db_data_delete(dba_db_data ins);
+void dba_db_data_set(dba_db_data ins, dba_var var);
+void dba_db_data_set_value(dba_db_data ins, const char* value);
 dba_err dba_db_data_get_id(dba_db_data ins, int *id);
 dba_err dba_db_data_insert(dba_db_data ins, int rewrite, int* id);
 

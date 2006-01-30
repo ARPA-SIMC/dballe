@@ -35,6 +35,8 @@ typedef struct _dba_db_attr* dba_db_attr;
 
 dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins);
 void dba_db_attr_delete(dba_db_attr ins);
+void dba_db_attr_set(dba_db_attr ins, dba_var var);
+void dba_db_attr_set_value(dba_db_attr ins, const char* value);
 dba_err dba_db_attr_insert(dba_db_attr ins, int replace);
 
 

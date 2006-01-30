@@ -585,20 +585,9 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 			item = dba_record_iterate_next(rec, item))
 	{
 		/* Datum to be inserted, linked to id_pseudoana and all the other IDs */
-		dba_var var = dba_record_cursor_variable(item);
-		const char* value = dba_var_value(var);
-		int len = strlen(value);
 		int id;
 
-		/* Variable value */
-		if (len > 255) len = 255;
-		memcpy(d->value, value, len);
-		d->value[len] = 0;
-		d->value_ind = len;
-
-		/* Variable ID */
-		d->id_var = dba_var_code(var);
-
+		dba_db_data_set(d, dba_record_cursor_variable(item));
 		DBA_RUN_OR_GOTO(fail, dba_db_data_insert(d, can_replace, &id));
 
 		dba_record_cursor_set_id(item, id);
@@ -1771,7 +1760,7 @@ dba_qc_query_failed:
 	return err;
 }
 
-dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, /*dba_record rec, dba_varcode var,*/ dba_record qc, int can_replace)
+dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, dba_record qc, int can_replace)
 {
 	dba_err err;
 	dba_record_cursor item;
@@ -1788,19 +1777,7 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, /*dba_record rec, db
 	for (item = dba_record_iterate_first(qc); item != NULL;
 			item = dba_record_iterate_next(qc, item))
 	{
-		dba_var variable = dba_record_cursor_variable(item);
-		const char* value = dba_var_value(variable);
-		int len = strlen(value);
-
-		/* Variable value */
-		if (len > 255) len = 255;
-		a->value_ind = len;
-		memcpy(a->value, value, len);
-		a->value[len] = 0;
-
-		/* Variable ID */
-		a->type = dba_var_code(variable);
-
+		dba_db_attr_set(a, dba_record_cursor_variable(item));
 		DBA_RUN_OR_GOTO(fail, dba_db_attr_insert(a, can_replace));
 	}
 			

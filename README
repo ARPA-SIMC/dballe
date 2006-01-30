@@ -139,7 +139,9 @@ These are the TODO-list items completed so far::
     + attr insert is now using precompiled queries
     + data insert is now using precompiled queries
     + YEAR...SECOND vanno a livello 257,0,0 invece di 1,0,0
-
+    + Serve una select nell'inserimento dei dati, perché la INSERT ON DUPLICATE
+      KEY UPDATE non restituisce l'ID della riga nel LAST_INSERT_ID nel caso
+      faccia l'update di una riga esistente
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read

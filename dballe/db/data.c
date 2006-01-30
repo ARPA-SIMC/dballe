@@ -97,6 +97,21 @@ void dba_db_data_delete(dba_db_data ins)
 	free(ins);
 }
 
+void dba_db_data_set(dba_db_data ins, dba_var var)
+{
+	ins->id_var = dba_var_code(var);
+	dba_db_data_set_value(ins, dba_var_value(var));
+}
+
+void dba_db_data_set_value(dba_db_data ins, const char* value)
+{
+	int len = strlen(value);
+	if (len > 255) len = 255;
+	memcpy(ins->value, value, len);
+	ins->value[len] = 0;
+	ins->value_ind = len;
+}
+
 dba_err dba_db_data_get_id(dba_db_data ins, int *id)
 {
 	SQLHSTMT stm = ins->sstm;

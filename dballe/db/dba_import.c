@@ -5,6 +5,7 @@
 #include <dballe/db/pseudoana.h>
 #include <dballe/db/context.h>
 #include <dballe/db/data.h>
+#include <dballe/db/attr.h>
 #include <dballe/db/dballe.h>
 
 #include <dballe/conv/dba_conv.h>
@@ -114,7 +115,7 @@ static dba_err dba_db_import_common(dba_db db, dba_record rec, dba_msg msg, int 
 	return dba_error_ok();
 }
 
-dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
+dba_err dba_import_msg_old(dba_db db, dba_msg msg, int overwrite)
 {
 	dba_err err = DBA_OK;
 	dba_record rec = NULL;
@@ -189,7 +190,7 @@ cleanup:
 
 
 
-dba_err dba_import_msg_new(dba_db db, dba_msg msg, int overwrite)
+dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 {
 	dba_err err = DBA_OK;
 	dba_msg_level l_ana = dba_msg_find_level(msg, 257, 0, 0);
@@ -197,12 +198,14 @@ dba_err dba_import_msg_new(dba_db db, dba_msg msg, int overwrite)
 	dba_db_pseudoana da;
 	dba_db_context dc;
 	dba_db_data dd;
+	dba_db_attr dq;
 	int i, j;
 	int mobile;
 
 	da = db->pseudoana;
 	dc = db->context;
 	dd = db->data;
+	dq = db->attr;
 	
 	switch (msg->type)
 	{
@@ -327,8 +330,6 @@ dba_err dba_import_msg_new(dba_db db, dba_msg msg, int overwrite)
 	for (i = 0; i < msg->data_count; i++)
 	{
 		dba_msg_level lev = msg->data[i];
-		// TODO: this context_id will go in a 'data' precompiled query structure
-		int context_id = -1;
 		int old_pind = -1;
 		int old_p1 = -1;
 		int old_p2 = -1;
@@ -341,6 +342,7 @@ dba_err dba_import_msg_new(dba_db db, dba_msg msg, int overwrite)
 		for (j = 0; j < lev->data_count; j++)
 		{
 			dba_msg_datum dat = lev->data[j];
+			dba_var_attr_iterator iter;
 
 			if (dat->pind != old_pind || dat->p1 != old_p1 || dat->p2 != old_p2)
 			{
@@ -349,18 +351,26 @@ dba_err dba_import_msg_new(dba_db db, dba_msg msg, int overwrite)
 				dc->p1 = dat->p1;
 				dc->p2 = dat->p2;
 
-				DBA_RUN_OR_GOTO(fail, dba_db_context_get_id(dc, &context_id));
-				if (context_id == -1)
-					DBA_RUN_OR_GOTO(fail, dba_db_context_insert(dc, &context_id));
+				DBA_RUN_OR_GOTO(fail, dba_db_context_get_id(dc, &(dd->id_context)));
+				if (dd->id_context == -1)
+					DBA_RUN_OR_GOTO(fail, dba_db_context_insert(dc, &(dd->id_context)));
 
 				old_pind = dat->pind;
 				old_p1 = dat->p1;
 				old_p2 = dat->p2;
 			}
 
-			// TODO: insert the variable
+			// Insert the variable
+			dba_db_data_set(dd, dat->var);
+			DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, overwrite, &(dq->id_data)));
 
-			// TODO: insert the attributes
+			// Insert the attributes
+			for (iter = dba_var_attr_iterate(dat->var); iter != NULL; 
+					iter = dba_var_attr_iterator_next(iter))
+			{
+				dba_db_attr_set(dq, dba_var_attr_iterator_attr(iter));
+				DBA_RUN_OR_GOTO(fail, dba_db_attr_insert(dq, overwrite));
+			}
 		}
 	}
 

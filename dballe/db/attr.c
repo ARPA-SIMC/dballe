@@ -83,6 +83,21 @@ void dba_db_attr_delete(dba_db_attr ins)
 	free(ins);
 }
 
+void dba_db_attr_set(dba_db_attr ins, dba_var var)
+{
+	ins->type = dba_var_code(var);
+	dba_db_attr_set_value(ins, dba_var_value(var));
+}
+
+void dba_db_attr_set_value(dba_db_attr ins, const char* value)
+{
+	int len = strlen(value);
+	if (len > 255) len = 255;
+	memcpy(ins->value, value, len);
+	ins->value[len] = 0;
+	ins->value_ind = len;
+}
+
 dba_err dba_db_attr_insert(dba_db_attr ins, int replace)
 {
 	SQLHSTMT stm = replace ? ins->rstm : ins->istm;
