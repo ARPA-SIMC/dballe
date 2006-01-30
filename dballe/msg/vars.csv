@@ -17,11 +17,11 @@ SONDE_METHOD,		int,	B02012,		257,  0, 0,		0,      0, 0
 BLOCK,			int,	B01001,		257,  0, 0,		0,      0, 0
 STATION,		int,	B01002,		257,  0, 0,		0,      0, 0
 IDENT,			str,	B01011,		257,  0, 0,		0,      0, 0
-YEAR,			int,	B04001,		  1,  0, 0,		0,	0, 0
-MONTH,			int,	B04002,		  1,  0, 0,		0,	0, 0
-DAY,			int,	B04003,		  1,  0, 0,		0,	0, 0
-HOUR,			int,	B04004,		  1,  0, 0,		0,	0, 0
-MINUTE,			int,	B04005,		  1,  0, 0,		0,	0, 0
+YEAR,			int,	B04001,		257,  0, 0,		0,	0, 0
+MONTH,			int,	B04002,		257,  0, 0,		0,	0, 0
+DAY,			int,	B04003,		257,  0, 0,		0,	0, 0
+HOUR,			int,	B04004,		257,  0, 0,		0,	0, 0
+MINUTE,			int,	B04005,		257,  0, 0,		0,	0, 0
 LATITUDE,		num,	B05001,		257,  0, 0,		0,      0, 0
 LONGITUDE,		num,	B06001,		257,  0, 0,		0,      0, 0
 HEIGHT,			int,	B07001,		257,  0, 0,		0,      0, 0
