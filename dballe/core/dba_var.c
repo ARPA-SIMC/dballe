@@ -67,32 +67,38 @@ double dba_var_decode_int(long val, dba_varinfo info)
  * informations */
 long dba_var_encode_int(double fval, dba_varinfo info)
 {
-	fval += info->ref;
+	static const double scales[] = {
+		1.0,
+		10.0,
+		100.0,
+		1000.0,
+		10000.0,
+		100000.0,
+		1000000.0,
+		10000000.0,
+		100000000.0,
+		1000000000.0,
+		10000000000.0,
+		100000000000.0,
+		1000000000000.0,
+		10000000000000.0,
+		100000000000000.0,
+		1000000000000000.0,
+		10000000000000000.0,
+	};
 
 	if (info->scale > 0)
 	{
-		/* Many stable integer multiplications */ 
-		int mult = 1;
-		int count = info->scale;
-		while (count--)
-			mult *= 10;
-
 		/* One floating-point multiplication */
-		fval *= (double)mult;
+		return (long)rint((fval + info->ref) * scales[info->scale]);
 	}
 	else if (info->scale < 0)
 	{
-		/* Many stable integer multiplications */ 
-		int mult = 1;
-		int count = -info->scale;
-		while (count--)
-			mult *= 10;
-
 		/* One floating-point division */
-		fval /= (double)mult;
+		return (long)rint((fval + info->ref) / scales[-info->scale]);
 	}
-
-	return (long)rint(fval);
+	else
+		return (long)rint(fval + info->ref);
 }
 
 dba_err dba_var_create(dba_varinfo info, dba_var* var)
@@ -332,11 +338,10 @@ dba_err dba_var_seti(dba_var var, int val)
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var));
 	
 	/* Set the value */
-	if (var->value != NULL)
-		free(var->value);
-	var->value = (char*)malloc(var->info->len + 2);
-	if (var->value == NULL)
+	if (var->value == NULL &&
+		(var->value = (char*)malloc(var->info->len + 2)) == NULL)
 		return dba_error_alloc("allocating space for dba_var value");
+
 	/* We add 1 to the length to cope with the '-' sign */
 	strcpy(var->value, itoa(val, var->info->len + 1));
 	/*snprintf(var->value, var->info->len + 2, "%d", val);*/
@@ -351,10 +356,8 @@ dba_err dba_var_setd(dba_var var, double val)
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var));
 	
 	/* Set the value */
-	if (var->value != NULL)
-		free(var->value);
-	var->value = (char*)malloc(var->info->len + 2);
-	if (var->value == NULL)
+	if (var->value == NULL && 
+		(var->value = (char*)malloc(var->info->len + 2)) == NULL)
 		return dba_error_alloc("allocating space for dba_var value");
 
 	strcpy(var->value, itoa(dba_var_encode_int(val, var->info), var->info->len + 1));

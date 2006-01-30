@@ -145,7 +145,6 @@ These are the TODO-list items completed so far::
     + Use precompiled queries in with the stm memorised in dba_db for begin,
       commit, rollback, last_insert_id
 
-
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
     + dare errore se qc=read ma data = rewrite
@@ -266,6 +265,9 @@ These are the TODO-list items currently being worked on::
     - Import-export attributi
     - Import-export di report generici
     - Bug free
+       - lanciare valgrind sui test
+    - Fast
+       - lanciare kcachegrind sul benchmark
     - Documentazione API Fortran
     - Guida utente (manutenzione e tool commandline)
     - Documentazione implementazione C
@@ -287,6 +289,13 @@ These are the TODO-list items currently being worked on::
        - Fare query ad-hoc per l'import e l'export di dba_msg
 
        - Use foreign keys to automatically get rid of unused pseudoana and contexts
+
+       - Try to reuse the allocated memory in dba_var_setc as well (the fact
+	 that it confuses other functions when I try to reuse the memory might
+	 show some existing hidden bug)
+
+       - See how to speed up dba_var_encode_int
+         (precomputed multipliers stored on an array that gets indexed by the scale?)
 
        - Aggiungere una entry B locale per il nome della stazione
           - Supportarlo in dba_msg e dba_import_msg_new
