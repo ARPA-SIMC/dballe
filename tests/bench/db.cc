@@ -141,17 +141,17 @@ protected:
 			DBA_RUN_OR_RETURN(dba_db_export(db, (*i)->type, query, msg_counter, &count));
 		}
 
-		timing("exported %d messages from the database, old style", count);
+		timing("exported %d messages from the database, new style", count);
 
 		count = 0;
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
 		{
 	        DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(*i)));
-			DBA_RUN_OR_RETURN(dba_db_query_msgs(db, (*i)->type, query, msg_counter, &count));
+			DBA_RUN_OR_RETURN(dba_db_export_old(db, (*i)->type, query, msg_counter, &count));
 		}
 
-		timing("exported %d messages from the database, new style", count);
+		timing("exported %d messages from the database, old style", count);
 
 		dba_db_close(db);
 		dba_record_delete(rec);

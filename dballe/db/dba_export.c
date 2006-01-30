@@ -124,7 +124,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err dba_db_export(dba_db db, dba_msg_type type, dba_record query, dba_msg_consumer cons, void* data)
+dba_err dba_db_export_old(dba_db db, dba_msg_type type, dba_record query, dba_msg_consumer cons, void* data)
 {
 	/* Read the values from the database */
 	dba_err err = DBA_OK;
@@ -218,7 +218,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err dba_db_query_msgs(dba_db db, dba_msg_type export_type, dba_record rec, dba_msg_consumer cons, void* data)
+dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_msg_consumer cons, void* data)
 {
 	const char* query =
 		"SELECT pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"

@@ -116,20 +116,8 @@ void to::test<1>()
 		if (diffs != 0) track_different_msgs(msg, msgs[0], "crex-old");
 		gen_ensure_equals(diffs, 0);
 
-		/* Try the new export algorithm to see if it gives the same results */
-		vector<dba_msg> msgs1;
-		CHECKED(dba_db_query_msgs(db, msg->type, query, msg_collector, &msgs1));
-		gen_ensure_equals(msgs1.size(), 1u);
-		gen_ensure(msgs1[0] != NULL);
-		diffs = 0;
-		dba_msg_diff(msg, msgs1[0], &diffs, stderr);
-		if (diffs != 0) track_different_msgs(msg, msgs1[0], "crex-new");
-		gen_ensure_equals(diffs, 0);
-
 		dba_msg_delete(msg);
 		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
-			dba_msg_delete(*i);
-		for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
 			dba_msg_delete(*i);
 	}
 
@@ -191,20 +179,8 @@ void to::test<2>()
 		if (diffs != 0) track_different_msgs(msg, msgs[0], "bufr-old");
 		gen_ensure_equals(diffs, 0);
 
-		/* Try the new export algorithm to see if it gives the same results */
-		vector<dba_msg> msgs1;
-		CHECKED(dba_db_query_msgs(db, msg->type, query, msg_collector, &msgs1));
-		gen_ensure_equals(msgs1.size(), 1u);
-		gen_ensure(msgs1[0] != NULL);
-		diffs = 0;
-		dba_msg_diff(msg, msgs1[0], &diffs, stderr);
-		if (diffs != 0) track_different_msgs(msg, msgs1[0], "bufr-new");
-		gen_ensure_equals(diffs, 0);
-
 		dba_msg_delete(msg);
 		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
-			dba_msg_delete(*i);
-		for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
 			dba_msg_delete(*i);
 	}
 
@@ -260,20 +236,8 @@ void to::test<3>()
 		if (diffs != 0) track_different_msgs(msg, msgs[0], "aof-old");
 		gen_ensure_equals(diffs, 0);
 
-		/* Try the new export algorithm to see if it gives the same results */
-		vector<dba_msg> msgs1;
-		CHECKED(dba_db_query_msgs(db, msg->type, query, msg_collector, &msgs1));
-		gen_ensure_equals(msgs1.size(), 1u);
-		gen_ensure(msgs1[0] != NULL);
-		diffs = 0;
-		dba_msg_diff(msg, msgs1[0], &diffs, stderr);
-		if (diffs != 0) track_different_msgs(msg, msgs1[0], "aof-new");
-		gen_ensure_equals(diffs, 0);
-
 		dba_msg_delete(msg);
 		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
-			dba_msg_delete(*i);
-		for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
 			dba_msg_delete(*i);
 	}
 
@@ -316,28 +280,9 @@ void to::test<4>()
 	if (diffs != 0) track_different_msgs(msg2, msgs[1], "synop2-old");
 	gen_ensure_equals(diffs, 0);
 
-	// Try the new export algorithm to see if it gives the same results
-	vector<dba_msg> msgs1;
-	CHECKED(dba_db_query_msgs(db, msg1->type, query, msg_collector, &msgs1));
-	gen_ensure_equals(msgs1.size(), 2u);
-	gen_ensure(msgs1[0] != NULL);
-	gen_ensure(msgs1[1] != NULL);
-
-	diffs = 0;
-	dba_msg_diff(msg1, msgs1[0], &diffs, stderr);
-	if (diffs != 0) track_different_msgs(msg1, msgs1[0], "synop1-new");
-	gen_ensure_equals(diffs, 0);
-
-	diffs = 0;
-	dba_msg_diff(msg2, msgs1[1], &diffs, stderr);
-	if (diffs != 0) track_different_msgs(msg2, msgs1[1], "synop2-new");
-	gen_ensure_equals(diffs, 0);
-
 	dba_msg_delete(msg1);
 	dba_msg_delete(msg2);
 	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
-		dba_msg_delete(*i);
-	for (vector<dba_msg>::iterator i = msgs1.begin(); i != msgs1.end(); i++)
 		dba_msg_delete(*i);
 
 	dba_record_delete(query);
@@ -372,13 +317,6 @@ void to::test<5>()
 	// Export with the old algorithm
 	vector<dba_msg> msgs;
 	CHECKED(dba_db_export(db, MSG_GENERIC, query, msg_collector, &msgs));
-	gen_ensure_equals(msgs.size(), 100u);
-	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
-		dba_msg_delete(*i);
-
-	// Try the new export algorithm to see if it gives the same results
-	msgs.clear();
-	CHECKED(dba_db_query_msgs(db, MSG_GENERIC, query, msg_collector, &msgs));
 	gen_ensure_equals(msgs.size(), 100u);
 	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
 		dba_msg_delete(*i);
@@ -455,19 +393,14 @@ void to::test<6>()
 
 	dba_record query;
 	CHECKED(dba_record_create(&query));
-	int count0;
-	int count1;
 	for (map<dba_msg_type, int>::const_iterator i = rep_cods.begin(); i != rep_cods.end(); i++)
 	{
 		test_tag(dba_msg_type_name(i->first));
 
-		count0 = 0;
-		count1 = 0;
+		int count = 0;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(i->first)));
-		CHECKED(dba_db_export(db, i->first, query, msg_counter, &count0));
-		CHECKED(dba_db_query_msgs(db, i->first, query, msg_counter, &count1));
-		gen_ensure_equals(count0, i->second);
-		gen_ensure_equals(count1, i->second);
+		CHECKED(dba_db_export(db, i->first, query, msg_counter, &count));
+		gen_ensure_equals(count, i->second);
 	}
 
 	test_untag();
