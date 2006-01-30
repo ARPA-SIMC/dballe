@@ -203,6 +203,9 @@ These are the TODO-list items completed so far::
     + documentare come cambiano le update a seconda del rewrite
     + documentare le tabelle B
     + documentare le idba_error_* nella documentazione delle API fortran
+    + documentare come si usa ana_id
+       + aggiungere gli esempi per l'uso di ana_id
+       + parlare di !ana_id
 
  * Documentazione codice
     + Se una funzione non restituisce un dba_err, allora non può fallire in nessun
@@ -319,9 +322,7 @@ These are the TODO-list items currently being worked on::
       in alternativa alla pressione, convertendolo in metri con m = g/9.80665
 
  * Documentazione dell'interfaccia in fortran
-    - documentare come si usa ana_id
-       - aggiungere gli esempi per l'uso di ana_id e data_id
-       - parlare di !ana_id
+    - aggiungere gli esempi per l'uso di data_id
 
  * Guida utente
     - Gestione tabelle
