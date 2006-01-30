@@ -2,10 +2,16 @@
 
 #include <dballe/db/dba_import.h>
 #include <dballe/db/internals.h>
+#include <dballe/db/pseudoana.h>
+#include <dballe/db/context.h>
+#include <dballe/db/data.h>
 #include <dballe/db/dballe.h>
 
 #include <dballe/conv/dba_conv.h>
 #include <dballe/msg/dba_msg.h>
+
+#include <string.h>
+#include <stdlib.h>
 
 static dba_err dba_db_insert_rec(dba_db db, dba_record rec, int lt, int l1, int l2, int pi, int p1, int p2, int overwrite)
 {
@@ -183,11 +189,188 @@ cleanup:
 
 
 
-#if 0
 dba_err dba_import_msg_new(dba_db db, dba_msg msg, int overwrite)
 {
+	dba_err err = DBA_OK;
+	dba_msg_level l_ana = dba_msg_find_level(msg, 257, 0, 0);
+	dba_msg_datum d;
+	dba_db_pseudoana da;
+	dba_db_context dc;
+	dba_db_data dd;
+	int i, j;
+	int mobile;
+
+	da = db->pseudoana;
+	dc = db->context;
+	dd = db->data;
+	
+	switch (msg->type)
+	{
+		case MSG_SYNOP:		mobile = 0; dc->id_report = 1;	break;
+		case MSG_SHIP:		mobile = 1; dc->id_report = 10;	break;
+		case MSG_BUOY:		mobile = 1; dc->id_report = 9;	break;
+		case MSG_AIREP:		mobile = 1; dc->id_report = 12;	break;
+		case MSG_AMDAR:		mobile = 1; dc->id_report = 13;	break;
+		case MSG_ACARS:		mobile = 1; dc->id_report = 14;	break;
+		case MSG_PILOT:		mobile = 0; dc->id_report = 4;	break;
+		case MSG_TEMP:		mobile = 0; dc->id_report = 3;	break;
+		case MSG_TEMP_SHIP:	mobile = 1; dc->id_report = 11;	break;
+		case MSG_GENERIC:
+		default:			mobile = 0; dc->id_report = 255;	break;
+	}
+
+	DBA_RUN_OR_RETURN(dba_db_begin(db));
+
+	// Fill up the pseudoana informations needed to fetch an existing ID
+
+	/* Latitude */
+	if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_LATITUDE)) != NULL)
+		DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->lat)));
+
+	/* Longitude */
+	if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_LONGITUDE)) != NULL)
+		DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->lon)));
+
+	/* Station identifier */
+	if (mobile)
+	{
+		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_IDENT)) != NULL)
+		{
+			const char* val = dba_var_value(d->var);
+			int len = strlen(val);
+			if (len > 64) len = 64;
+			memcpy(da->ident, val, len);
+			da->ident[len] = 0;
+			da->ident_ind = len;
+		} else {
+			err = dba_error_notfound("looking for ident in message to insert");
+			goto fail;
+		}
+	} else
+		da->ident_ind = SQL_NULL_DATA;
+
+	// Check if we can reuse a pseudoana row
+	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_get_id(da, &(dc->id_ana)));
+
+	if (dc->id_ana == -1 || overwrite)
+	{
+		// Fill up the rest of pseudoana informations
+
+		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_BLOCK)) != NULL)
+		{
+			DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->block)));
+			da->block_ind = 0;
+		}
+		else
+			da->block_ind = SQL_NULL_DATA;
+
+		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_STATION)) != NULL)
+		{
+			DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->station)));
+			da->station_ind = 0;
+		}
+		else
+			da->station_ind = SQL_NULL_DATA;
+
+		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_HEIGHT)) != NULL)
+		{
+			DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->height)));
+			da->height_ind = 0;
+		}
+		else
+			da->height_ind = SQL_NULL_DATA;
+
+		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_HEIGHT_BARO)) != NULL)
+		{
+			DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->heightbaro)));
+			da->heightbaro_ind = 0;
+		}
+		else
+			da->heightbaro_ind = SQL_NULL_DATA;
+
+		// TODO: char name[255]; SQLINTEGER name_ind;
+
+		if (dc->id_ana == -1)
+			DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_insert(da, &(dc->id_ana)));
+		else
+			DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_update(da));
+	}
+
+	// Fill up the date in context
+	{
+		const char* year = 
+			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_YEAR)) == NULL ? NULL : dba_var_value(d->var);
+		const char* month = 
+			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_MONTH)) == NULL ? NULL : dba_var_value(d->var);
+		const char* day = 
+			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_DAY)) == NULL ? NULL : dba_var_value(d->var);
+		const char* hour = 
+			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_HOUR)) == NULL ? NULL : dba_var_value(d->var);
+		const char* min = 
+			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_MINUTE)) == NULL ? NULL : dba_var_value(d->var);
+
+		if (year == NULL || month == NULL || day == NULL || hour == NULL || min == NULL)
+		{
+			err = dba_error_notfound("looking for datetime informations in message to insert");
+			goto fail;
+		}
+
+		dc->date_ind = snprintf(dc->date, 25,
+				"%04ld-%02ld-%02ld %02ld:%02ld:00",
+					strtol(year, 0, 10),
+					strtol(month, 0, 10),
+					strtol(day, 0, 10),
+					strtol(hour, 0, 10),
+					strtol(min, 0, 10));
+	}
+
+	for (i = 0; i < msg->data_count; i++)
+	{
+		dba_msg_level lev = msg->data[i];
+		// TODO: this context_id will go in a 'data' precompiled query structure
+		int context_id = -1;
+		int old_pind = -1;
+		int old_p1 = -1;
+		int old_p2 = -1;
+
+		// Fill in the context
+		dc->ltype = lev->ltype;
+		dc->l1 = lev->l1;
+		dc->l2 = lev->l2;
+
+		for (j = 0; j < lev->data_count; j++)
+		{
+			dba_msg_datum dat = lev->data[j];
+
+			if (dat->pind != old_pind || dat->p1 != old_p1 || dat->p2 != old_p2)
+			{
+				// Insert the new context when the datum coordinates change
+				dc->pind = dat->pind;
+				dc->p1 = dat->p1;
+				dc->p2 = dat->p2;
+
+				DBA_RUN_OR_GOTO(fail, dba_db_context_get_id(dc, &context_id));
+				if (context_id == -1)
+					DBA_RUN_OR_GOTO(fail, dba_db_context_insert(dc, &context_id));
+
+				old_pind = dat->pind;
+				old_p1 = dat->p1;
+				old_p2 = dat->p2;
+			}
+
+			// TODO: insert the variable
+
+			// TODO: insert the attributes
+		}
+	}
+
+    DBA_RUN_OR_GOTO(fail, dba_db_commit(db));
+    return dba_error_ok();
+
+fail:
+	dba_db_rollback(db);
+	return err;
 }
-#endif
 
 #if 0
 /*

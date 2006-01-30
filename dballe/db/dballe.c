@@ -2,6 +2,7 @@
 #include <dballe/db/internals.h>
 #include <dballe/db/pseudoana.h>
 #include <dballe/db/context.h>
+#include <dballe/db/data.h>
 #include <dballe/db/attr.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/core/dba_var.h>
@@ -243,6 +244,7 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 
 	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_create(*db, &((*db)->pseudoana)));
 	DBA_RUN_OR_GOTO(fail, dba_db_context_create(*db, &((*db)->context)));
+	DBA_RUN_OR_GOTO(fail, dba_db_data_create(*db, &((*db)->data)));
 	DBA_RUN_OR_GOTO(fail, dba_db_attr_create(*db, &((*db)->attr)));
 
 	return dba_error_ok();
@@ -259,6 +261,8 @@ void dba_db_delete(dba_db db)
 
 	if (db->attr != NULL)
 		dba_db_attr_delete(db->attr);
+	if (db->data != NULL)
+		dba_db_data_delete(db->data);
 	if (db->context != NULL)
 		dba_db_context_delete(db->context);
 	if (db->pseudoana != NULL)
@@ -555,32 +559,13 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
  */
 dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id)
 {
-	/*
-	 * FIXME: REPLACE will change the ID of the replaced rows, breaking the
-	 * connection with the attributes.
-	 * If on MySQL 4.1, we can use INSERT ON DUPLICATE KEY UPDATE value=?
-	 * If on MySQL 4.1.1, we can use INSERT ON DUPLICATE KEY UPDATE value=VALUES(value)
-	 * Else, we need to do a select first to get the ID.
-	 */
-	const char* insert_query =
-		"INSERT INTO data (id_context, id_var, value)"
-		" VALUES(?, ?, ?)";
-	const char* replace_query =
-		"INSERT INTO data (id_context, id_var, value)"
-		" VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
-/*		"REPLACE INTO data (id_context, id_var, value)"
-		" VALUES(?, ?, ?)"; */
-	dba_err err;
+	dba_err err = DBA_OK;
+	dba_db_data d;
 	dba_record_cursor item;
 	int id_pseudoana;
-	int id_context;
-	dba_varcode id_var;
-	char value[255];
-	SQLINTEGER value_ind;
-	SQLHSTMT stm;
-	int res;
 	
 	assert(db);
+	d = db->data;
 
 	/* Check for the existance of non-context data, otherwise it's all useless */
 	if (dba_record_iterate_first(rec) == NULL)
@@ -590,32 +575,10 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 	DBA_RUN_OR_RETURN(dba_db_begin(db));
 
 	/* Insert the pseudoana data, and get the ID */
-	DBA_RUN_OR_GOTO(failed1, dba_insert_pseudoana(db, rec, &id_pseudoana, update_pseudoana));
+	DBA_RUN_OR_GOTO(fail, dba_insert_pseudoana(db, rec, &id_pseudoana, update_pseudoana));
 
 	/* Insert the context data, and get the ID */
-	DBA_RUN_OR_GOTO(failed1, dba_insert_context(db, rec, id_pseudoana, &id_context));
-
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-		goto failed1;
-	}
-
-	/* Compile the SQL query */
-	/* Casting to char* because ODBC is unaware of const */
-	res = SQLPrepare(stm, (unsigned char*)(can_replace ? replace_query : insert_query), SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'data'");
-		goto failed;
-	}
-
-	/* Bind parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
-	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, value, 0, &value_ind);
+	DBA_RUN_OR_GOTO(fail, dba_insert_context(db, rec, id_pseudoana, &(d->id_context)));
 
 	/* Insert all found variables */
 	for (item = dba_record_iterate_first(rec); item != NULL;
@@ -623,51 +586,33 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 	{
 		/* Datum to be inserted, linked to id_pseudoana and all the other IDs */
 		dba_var var = dba_record_cursor_variable(item);
-		const char* cur_value;
-
-		DBA_RUN_OR_GOTO(failed, dba_var_enqc(var, &cur_value));
-
-		/* Variable ID */
-		id_var = dba_var_code(var);
+		const char* value = dba_var_value(var);
+		int len = strlen(value);
+		int id;
 
 		/* Variable value */
-		if ((value_ind = strlen(cur_value)) > 256)
-			value_ind = 255;
-		strncpy(value, cur_value, value_ind);
-		value[value_ind] = 0;
+		if (len > 255) len = 255;
+		memcpy(d->value, value, len);
+		d->value[len] = 0;
+		d->value_ind = len;
 
-		/*
-		fprintf(stderr, "Inserting %d %s[%d] %s[%d] %d %d %d %d\n",
-				id_var, value, value_ind, datebuf, datebuf_ind, id_report, id_pseudoana, id_levellayer, id_timerange);
-		*/
+		/* Variable ID */
+		d->id_var = dba_var_code(var);
 
-		res = SQLExecute(stm);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'data'");
-			goto failed;
-		}
+		DBA_RUN_OR_GOTO(fail, dba_db_data_insert(d, can_replace, &id));
 
-		{
-			int id;
-			DBA_RUN_OR_GOTO(failed, dba_db_last_insert_id(db, &id));
-			dba_record_cursor_set_id(item, id);
-		}
+		dba_record_cursor_set_id(item, id);
 	}
 
 	if (ana_id != NULL)
 		*ana_id = id_pseudoana;
-			
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 
-	DBA_RUN_OR_GOTO(failed1, dba_db_commit(db));
+	DBA_RUN_OR_GOTO(fail, dba_db_commit(db));
 
 	return dba_error_ok();
 
 	/* Exits with cleanup after error */
-failed:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-failed1:
+fail:
 	dba_db_rollback(db);
 	return err;
 }
