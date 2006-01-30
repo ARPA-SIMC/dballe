@@ -86,7 +86,7 @@ dba_err dba_var_create(dba_varinfo info, dba_var* var)
 	return dba_error_ok();
 }
 
-dba_err dba_var_createi(dba_varinfo info, dba_var* var, int val)
+dba_err dba_var_createi(dba_varinfo info, int val, dba_var* var)
 {
 	dba_err err;
 	DBA_RUN_OR_RETURN(dba_var_create(info, var));
@@ -98,7 +98,7 @@ fail:
 	return err;
 }
 
-dba_err dba_var_created(dba_varinfo info, dba_var* var, double val)
+dba_err dba_var_created(dba_varinfo info, double val, dba_var* var)
 {
 	dba_err err;
 	DBA_RUN_OR_RETURN(dba_var_create(info, var));
@@ -110,7 +110,7 @@ fail:
 	return err;
 }
 
-dba_err dba_var_createc(dba_varinfo info, dba_var* var, const char* val)
+dba_err dba_var_createc(dba_varinfo info, const char* val, dba_var* var)
 {
 	dba_err err;
 	DBA_RUN_OR_RETURN(dba_var_create(info, var));

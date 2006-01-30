@@ -529,7 +529,7 @@ static dba_err bufr_decode_r_data(decoder d)
 		count = _count;
 
 		/* Insert the repetition count among the parsed variables */
-		DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, &rep_var, count));
+		DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, count, &rep_var));
 		DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable(d->out, rep_var));
 
 		bufrex_opcode_delete(&info_op);

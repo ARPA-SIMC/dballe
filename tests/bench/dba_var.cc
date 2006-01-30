@@ -22,7 +22,7 @@ protected:
 		for (int i = 0; i < iterations; i++)
 		{
 			dba_var var;
-			DBA_RUN_OR_RETURN(dba_var_createi(info, &var, 1234));
+			DBA_RUN_OR_RETURN(dba_var_createi(info, 1234, &var));
 			dba_var_delete(var);
 		}
 		timing("%d dba_var_createi", iterations);
@@ -30,7 +30,7 @@ protected:
 		for (int i = 0; i < iterations; i++)
 		{
 			dba_var var;
-			DBA_RUN_OR_RETURN(dba_var_created(info, &var, 12.34));
+			DBA_RUN_OR_RETURN(dba_var_created(info, 12.34, &var));
 			dba_var_delete(var);
 		}
 		timing("%d dba_var_created", iterations);
@@ -38,7 +38,7 @@ protected:
 		for (int i = 0; i < iterations; i++)
 		{
 			dba_var var;
-			DBA_RUN_OR_RETURN(dba_var_createc(info, &var, "1234"));
+			DBA_RUN_OR_RETURN(dba_var_createc(info, "1234", &var));
 			dba_var_delete(var);
 		}
 		timing("%d dba_var_createc", iterations);
@@ -60,7 +60,7 @@ protected:
 		dba_var var;
 
 		DBA_RUN_OR_RETURN(dba_varinfo_query_local(DBA_VAR(0, 6, 1), &info));
-		DBA_RUN_OR_RETURN(dba_var_createi(info, &var, 1234));
+		DBA_RUN_OR_RETURN(dba_var_createi(info, 1234, &var));
 
 		for (int i = 0; i < iterations; i++)
 		{

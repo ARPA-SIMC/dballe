@@ -565,7 +565,7 @@ dba_err dba_record_key_seti(dba_record rec, dba_keyword parameter, int value)
 	if (rec->keydata[parameter] != NULL)
 		return dba_var_seti(rec->keydata[parameter], value);
 	else
-		return dba_var_createi(dba_record_keyword_byindex(parameter), &(rec->keydata[parameter]), value);
+		return dba_var_createi(dba_record_keyword_byindex(parameter), value, &(rec->keydata[parameter]));
 }
 
 dba_err dba_record_var_seti(dba_record rec, dba_varcode code, int value)
@@ -583,7 +583,7 @@ dba_err dba_record_var_seti(dba_record rec, dba_varcode code, int value)
 	{
 		dba_varinfo info;
 		DBA_RUN_OR_GOTO(fail, dba_varinfo_query_local(code, &info));
-		DBA_RUN_OR_GOTO(fail, dba_var_createi(info, &(i->var), value));
+		DBA_RUN_OR_GOTO(fail, dba_var_createi(info, value, &(i->var)));
 	}
 	else
 		DBA_RUN_OR_GOTO(fail, dba_var_seti(i->var, value));
@@ -606,7 +606,7 @@ dba_err dba_record_key_setd(dba_record rec, dba_keyword parameter, double value)
 	if (rec->keydata[parameter] != NULL)
 		return dba_var_setd(rec->keydata[parameter], value);
 	else
-		return dba_var_created(dba_record_keyword_byindex(parameter), &(rec->keydata[parameter]), value);
+		return dba_var_created(dba_record_keyword_byindex(parameter), value, &(rec->keydata[parameter]));
 }
 
 dba_err dba_record_var_setd(dba_record rec, dba_varcode code, double value)
@@ -624,7 +624,7 @@ dba_err dba_record_var_setd(dba_record rec, dba_varcode code, double value)
 	{
 		dba_varinfo info;
 		DBA_RUN_OR_GOTO(fail, dba_varinfo_query_local(code, &info));
-		DBA_RUN_OR_GOTO(fail, dba_var_created(info, &(i->var), value));
+		DBA_RUN_OR_GOTO(fail, dba_var_created(info, value, &(i->var)));
 	}
 	else
 		DBA_RUN_OR_GOTO(fail, dba_var_setd(i->var, value));
@@ -647,7 +647,7 @@ dba_err dba_record_key_setc(dba_record rec, dba_keyword parameter, const char* v
 	if (rec->keydata[parameter] != NULL)
 		return dba_var_setc(rec->keydata[parameter], value);
 	else
-		return dba_var_createc(dba_record_keyword_byindex(parameter), &(rec->keydata[parameter]), value);
+		return dba_var_createc(dba_record_keyword_byindex(parameter), value, &(rec->keydata[parameter]));
 }
 
 dba_err dba_record_var_setc(dba_record rec, dba_varcode code, const char* value)
@@ -665,7 +665,7 @@ dba_err dba_record_var_setc(dba_record rec, dba_varcode code, const char* value)
 	{
 		dba_varinfo info;
 		DBA_RUN_OR_GOTO(fail, dba_varinfo_query_local(code, &info));
-		DBA_RUN_OR_GOTO(fail, dba_var_createc(info, &(i->var), value));
+		DBA_RUN_OR_GOTO(fail, dba_var_createc(info, value, &(i->var)));
 	}
 	else
 		DBA_RUN_OR_GOTO(fail, dba_var_setc(i->var, value));

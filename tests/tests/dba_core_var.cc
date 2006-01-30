@@ -33,7 +33,7 @@ void to::test<1>()
 	gen_ensure_equals(dba_var_value(var), (const char*)0);
 	dba_var_delete(var);
 
-	CHECKED(dba_var_createi(info, &var, 123));
+	CHECKED(dba_var_createi(info, 123, &var));
 	gen_ensure(var != NULL);
 	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 6, 1));
 	gen_ensure_equals(dba_var_info(var), info);
@@ -41,7 +41,7 @@ void to::test<1>()
 	gen_ensure_var_equals(var, 123);
 	dba_var_delete(var);
 
-	CHECKED(dba_var_created(info, &var, 123.456));
+	CHECKED(dba_var_created(info, 123.456, &var));
 	gen_ensure(var != NULL);
 	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 6, 1));
 	gen_ensure_equals(dba_var_info(var), info);
@@ -49,7 +49,7 @@ void to::test<1>()
 	gen_ensure_var_equals(var, 123.456);
 	dba_var_delete(var);
 
-	CHECKED(dba_var_createc(info, &var, "123"));
+	CHECKED(dba_var_createc(info, "123", &var));
 	gen_ensure(var != NULL);
 	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 6, 1));
 	gen_ensure_equals(dba_var_info(var), info);

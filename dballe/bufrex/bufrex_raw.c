@@ -165,7 +165,7 @@ dba_err bufrex_raw_store_variable_i(bufrex_raw msg, dba_varcode code, int val)
 	dba_var var;
 	dba_varinfo info;
 	DBA_RUN_OR_RETURN(dba_vartable_query(msg->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_createi(info, &var, val));
+	DBA_RUN_OR_RETURN(dba_var_createi(info, val, &var));
 	return bufrex_raw_store_variable(msg, var);
 }
 
@@ -174,7 +174,7 @@ dba_err bufrex_raw_store_variable_d(bufrex_raw msg, dba_varcode code, double val
 	dba_var var;
 	dba_varinfo info;
 	DBA_RUN_OR_RETURN(dba_vartable_query(msg->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_created(info, &var, val));
+	DBA_RUN_OR_RETURN(dba_var_created(info, val, &var));
 	return bufrex_raw_store_variable(msg, var);
 }
 
@@ -187,7 +187,7 @@ dba_err bufrex_raw_store_variable_c(bufrex_raw msg, dba_varcode code, const char
 		dba_var var;
 		dba_varinfo info;
 		DBA_RUN_OR_RETURN(dba_vartable_query(msg->btable, code, &info));
-		DBA_RUN_OR_RETURN(dba_var_createc(info, &var, val));
+		DBA_RUN_OR_RETURN(dba_var_createc(info, val, &var));
 		return bufrex_raw_store_variable(msg, var);
 	}
 }
@@ -274,9 +274,9 @@ dba_err bufrex_raw_append_dpb(bufrex_raw msg, int size, dba_varcode attr)
 	for (i = 0; i < msg->vars_count && size > 0; i++)
 	{
 		dba_var test_var;
-		dba_varcode code = dba_var_code(msg->vars[i]);
 
 #if 0
+		dba_varcode code = dba_var_code(msg->vars[i]);
 		/* Skip over special data like delayed repetition counts */
 		if (DBA_VAR_F(code) != 0 ||
 		    (DBA_VAR_F(code) == 0 && DBA_VAR_X(code) == 31))

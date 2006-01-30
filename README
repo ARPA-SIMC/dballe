@@ -282,6 +282,7 @@ These are the TODO-list items currently being worked on::
     - Documentazione API Fortran
     - Guida utente (manutenzione e tool commandline)
     - Documentazione implementazione C
+       - guardare i warning di doxygen
  * Milestone release-extra
     - Export AOF
 
@@ -322,7 +323,7 @@ These are the TODO-list items currently being worked on::
       in alternativa alla pressione, convertendolo in metri con m = g/9.80665
 
  * Documentazione dell'interfaccia in fortran
-    - aggiungere gli esempi per l'uso di data_id
+    - Aggiungere gli esempi per l'uso di data_id
 
  * Guida utente
     - Gestione tabelle
@@ -345,7 +346,7 @@ These are the TODO-list items currently being worked on::
        - nuove funzioni ai tool a linea di comando
        - import da nuovi template bufrex
       (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
-    - Invarianti
+    + Invarianti
 
  * Procedura per supportare un nuovo tipo report in un formato specifico
     - Cercare un file con un'osservazione nel formato voluto

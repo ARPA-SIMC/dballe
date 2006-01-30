@@ -223,8 +223,6 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
 	bufrex_opcode ops = NULL;
 	bufrex_opcode cur;
 	int dslen;
-	time_t tnow = time(NULL);
-	struct tm now;
 
 	DBA_RUN_OR_RETURN(encoder_create(&e));
 	e->in = in;

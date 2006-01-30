@@ -40,9 +40,51 @@ typedef struct _dba_var_attr* dba_var_attr_iterator;
  *   The error indicator for the function (@see dba_err)
  */
 dba_err dba_var_create(dba_varinfo info, dba_var* var);
-dba_err dba_var_createi(dba_varinfo info, dba_var* var, int val);
-dba_err dba_var_created(dba_varinfo info, dba_var* var, double val);
-dba_err dba_var_createc(dba_varinfo info, dba_var* var, const char* val);
+
+/**
+ * Create a new dba_var, setting it to an integer value
+ *
+ * @param info
+ *   The dba_varinfo that describes the variable
+ * @param val
+ *   The initial value for the variable
+ * @retval var
+ *   The variable created.  It will need to be deallocated using
+ *   dba_var_delete().
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
+dba_err dba_var_createi(dba_varinfo info, int val, dba_var* var);
+
+/**
+ * Create a new dba_var, setting it to a double value
+ *
+ * @param info
+ *   The dba_varinfo that describes the variable
+ * @param val
+ *   The initial value for the variable
+ * @retval var
+ *   The variable created.  It will need to be deallocated using
+ *   dba_var_delete().
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
+dba_err dba_var_created(dba_varinfo info, double val, dba_var* var);
+
+/**
+ * Create a new dba_var, setting it to a character value
+ *
+ * @param info
+ *   The dba_varinfo that describes the variable
+ * @param val
+ *   The initial value for the variable
+ * @retval var
+ *   The variable created.  It will need to be deallocated using
+ *   dba_var_delete().
+ * @returns
+ *   The error indicator for the function (@see dba_err)
+ */
+dba_err dba_var_createc(dba_varinfo info, const char* val, dba_var* var);
 
 /**
  * Create a variable with informations from the local table

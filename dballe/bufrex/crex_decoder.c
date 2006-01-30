@@ -546,7 +546,7 @@ static dba_err crex_decoder_parse_r_data(decoder d)
 
 		/* Insert the repetition count among the parsed variables */
 		DBA_RUN_OR_GOTO(fail, bufrex_raw_query_btable(d->out, DBA_VAR(0, 31, 1), &info));
-		DBA_RUN_OR_GOTO(fail, dba_var_createi(info, &var, count));
+		DBA_RUN_OR_GOTO(fail, dba_var_createi(info, count, &var));
 		DBA_RUN_OR_GOTO(fail, bufrex_raw_store_variable(d->out, var));
 
 		TRACE("read_c_data %d items %d times (delayed)\n", group, count);

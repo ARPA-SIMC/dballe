@@ -218,7 +218,7 @@ dba_err do_grep(poptContext optCon)
 	pattern = poptGetArg(optCon);
 
 	DBA_RUN_OR_RETURN(dba_vartable_create("dballe", &table));
-	DBA_RUN_OR_RETURN(dba_vartable_iterate(table, print_varinfo_grepping_adapter, pattern));
+	DBA_RUN_OR_RETURN(dba_vartable_iterate(table, print_varinfo_grepping_adapter, (void*)pattern));
 	
 	return dba_error_ok();
 }
