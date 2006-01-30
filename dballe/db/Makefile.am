@@ -9,6 +9,7 @@ dbinclude_HEADERS = \
 		querybuf.h \
 		internals.h \
 		pseudoana.h \
+		context.h \
 		dballe.h \
 		dba_import.h \
 		dba_export.h
@@ -18,6 +19,7 @@ libdb_la_SOURCES = \
 		querybuf.c \
 		internals.c \
 		pseudoana.c \
+		context.c \
 		dballe.c \
 		dba_import.c \
 		dba_export.c

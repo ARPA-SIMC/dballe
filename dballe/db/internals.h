@@ -32,6 +32,7 @@ extern "C" {
 
 
 struct _dba_db_pseudoana;
+struct _dba_db_context;
 
 /**
  * DB-ALLe session structure
@@ -39,8 +40,10 @@ struct _dba_db_pseudoana;
 struct _dba_db
 {
 	SQLHDBC	od_conn;
+	int connected;
 
 	struct _dba_db_pseudoana* pseudoana;
+	struct _dba_db_context* context;
 	
 	/*
 	 * This is very conservative:

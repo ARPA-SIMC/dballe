@@ -1,6 +1,7 @@
 #include <dballe/db/dballe.h>
 #include <dballe/db/internals.h>
 #include <dballe/db/pseudoana.h>
+#include <dballe/db/context.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/core/dba_csv.h>
@@ -203,8 +204,7 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 	int sqlres;
 
 	/* Allocate a new handle */
-	*db = (dba_db)calloc(1, sizeof(struct _dba_db));
-	if (!*db)
+	if ((*db = (dba_db)calloc(1, sizeof(struct _dba_db))) == NULL)
 		return dba_error_alloc("trying to allocate a new dba_db object");
 
 	/*
@@ -238,19 +238,15 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 				"Connecting to DSN %s as user %s", dsn, user);
 		goto fail;
 	}
+	(*db)->connected = 1;
 
 	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_create(*db, &((*db)->pseudoana)));
+	DBA_RUN_OR_GOTO(fail, dba_db_context_create(*db, &((*db)->context)));
 
 	return dba_error_ok();
 	
 fail:
-	if ((*db)->pseudoana)
-		dba_db_pseudoana_delete((*db)->pseudoana);
-	if ((*db)->querybuf != NULL)
-		dba_querybuf_delete((*db)->querybuf);
-	if ((*db)->od_conn != NULL)
-		SQLFreeHandle(SQL_HANDLE_DBC, (*db)->od_conn);
-	free(*db);
+	dba_db_delete(*db);
 	*db = 0;
 	return err;
 }
@@ -259,11 +255,18 @@ void dba_db_delete(dba_db db)
 {
 	assert(db);
 
+	if (db->context != NULL)
+		dba_db_context_delete(db->context);
 	if (db->pseudoana != NULL)
 		dba_db_pseudoana_delete(db->pseudoana);
-	dba_querybuf_delete(db->querybuf);
-	SQLDisconnect(db->od_conn);
-	SQLFreeHandle(SQL_HANDLE_DBC, db->od_conn);
+	if (db->querybuf != NULL)
+		dba_querybuf_delete(db->querybuf);
+	if (db->od_conn != NULL)
+	{
+		if (db->connected)
+			SQLDisconnect(db->od_conn);
+		SQLFreeHandle(SQL_HANDLE_DBC, db->od_conn);
+	}
 	free(db);
 }
 
@@ -487,134 +490,55 @@ cleanup:
 
 static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id)
 {
-	const char* query_sel =
-		"SELECT id FROM context WHERE id_ana=? AND id_report=? AND datetime=?"
-		" AND ltype=? AND l1=? AND l2=?"
-		" AND ptype=? AND p1=? AND p2=?";
-	const char* query =
-		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	char datebuf[25];
-	SQLINTEGER datebuf_ind;
-	int id_report;
-	int ltype;
-	int l1;
-	int l2;
-	int ptype;
-	int p1;
-	int p2;
-	int old_id;
-	SQLINTEGER old_id_ind;
-	SQLHSTMT stm;
-	int res;
-	dba_err err;
-
+	const char *year, *month, *day, *hour, *min, *sec;
+	dba_db_context c;
 	assert(db);
+	c = db->context;
 
 	/* Retrieve data */
 
+	c->id_ana = id_ana;
+
 	/* Get the ID of the report */
-	DBA_RUN_OR_GOTO(fail, dba_db_get_rep_cod(db, rec, &id_report));
+	DBA_RUN_OR_RETURN(dba_db_get_rep_cod(db, rec, &(c->id_report)));
 
+	/* Also input the seconds, defaulting to 0 if not found */
+	sec = dba_record_key_peek_value(rec, DBA_KEY_SEC);
+	/* Datetime needs to be computed */
+	if ((year  = dba_record_key_peek_value(rec, DBA_KEY_YEAR)) != NULL &&
+		(month = dba_record_key_peek_value(rec, DBA_KEY_MONTH)) != NULL &&
+		(day   = dba_record_key_peek_value(rec, DBA_KEY_DAY)) != NULL &&
+		(hour  = dba_record_key_peek_value(rec, DBA_KEY_HOUR)) != NULL &&
+		(min   = dba_record_key_peek_value(rec, DBA_KEY_MIN)) != NULL)
 	{
-		const char *year, *month, *day, *hour, *min, *sec;
-		/* Also input the seconds, defaulting to 0 if not found */
-		sec = dba_record_key_peek_value(rec, DBA_KEY_SEC);
-		/* Datetime needs to be computed */
-		if ((year  = dba_record_key_peek_value(rec, DBA_KEY_YEAR)) != NULL &&
-			(month = dba_record_key_peek_value(rec, DBA_KEY_MONTH)) != NULL &&
-			(day   = dba_record_key_peek_value(rec, DBA_KEY_DAY)) != NULL &&
-			(hour  = dba_record_key_peek_value(rec, DBA_KEY_HOUR)) != NULL &&
-			(min   = dba_record_key_peek_value(rec, DBA_KEY_MIN)) != NULL)
-		{
-			datebuf_ind = snprintf(datebuf, 30,
-					"%04ld-%02ld-%02ld %02ld:%02ld:%02ld",
-						strtol(year, 0, 10),
-						strtol(month, 0, 10),
-						strtol(day, 0, 10),
-						strtol(hour, 0, 10),
-						strtol(min, 0, 10),
-						sec != NULL ? strtol(sec, 0, 10) : 0);
-		}
-		else
-		{
-			err = dba_error_notfound("looking for datetime informations");
-			goto fail;
-		}
+		c->date_ind = snprintf(c->date, 25,
+				"%04ld-%02ld-%02ld %02ld:%02ld:%02ld",
+					strtol(year, 0, 10),
+					strtol(month, 0, 10),
+					strtol(day, 0, 10),
+					strtol(hour, 0, 10),
+					strtol(min, 0, 10),
+					sec != NULL ? strtol(sec, 0, 10) : 0);
 	}
-	DBA_RUN_OR_GOTO(fail, dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE, &ltype));
-	DBA_RUN_OR_GOTO(fail, dba_record_key_enqi(rec, DBA_KEY_L1, &l1));
-	DBA_RUN_OR_GOTO(fail, dba_record_key_enqi(rec, DBA_KEY_L2, &l2));
-	DBA_RUN_OR_GOTO(fail, dba_record_key_enqi(rec, DBA_KEY_PINDICATOR, &ptype));
-	DBA_RUN_OR_GOTO(fail, dba_record_key_enqi(rec, DBA_KEY_P1, &p1));
-	DBA_RUN_OR_GOTO(fail, dba_record_key_enqi(rec, DBA_KEY_P2, &p2));
+	else
+		return dba_error_notfound("looking for datetime informations");
 
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-
-	/* Bind parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_ana, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_report, 0, 0);
-	SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &datebuf, 0, &datebuf_ind);
-	SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ltype, 0, 0);
-	SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l1, 0, 0);
-	SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &l2, 0, 0);
-	SQLBindParameter(stm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &ptype, 0, 0);
-	SQLBindParameter(stm, 8, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p1, 0, 0);
-	SQLBindParameter(stm, 9, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &p2, 0, 0);
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE,	&(c->ltype)));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L1,			&(c->l1)));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L2,			&(c->l2)));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_PINDICATOR,	&(c->pind)));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P1,			&(c->p1)));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P2,			&(c->p2)));
 
 	/* Check for an existing context with these data */
-
-	/* Bind variable and indicator for SELECT results */
-	SQLBindCol(stm, 1, SQL_C_SLONG, &old_id, sizeof(old_id), &old_id_ind);
-	
-	/* Casting to char* because ODBC is unaware of const */
-	res = SQLExecDirect(stm, (unsigned char*)query_sel, SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "looking for existing context");
-		goto fail;
-	}
+	DBA_RUN_OR_RETURN(dba_db_context_get_id(c, id));
 
 	/* If there is an existing record, use its ID and don't do an INSERT */
-	if (SQLFetch(stm) != SQL_NO_DATA)
-	{
-		if (old_id_ind != sizeof(old_id))
-		{
-			err = dba_error_consistency("checking that the size of the ID coming from the database is correct");
-			goto fail;
-		}
-
-		*id = old_id;
-
-		SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	if (*id != -1)
 		return dba_error_ok();
-	}
 
-	res = SQLCloseCursor(stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "preparing for inserting into context");
-		goto fail;
-	}
-
-	/* Casting to char* because ODBC is unaware of const */
-	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into context");
-		goto fail;
-	}
-
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-
-	/* Get the ID of the last inserted levellayer */
-	return dba_db_last_insert_id(db, id);
-
-fail:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err;
+	/* Else, insert a new record */
+	return dba_db_context_insert(c, id);
 }
 
 

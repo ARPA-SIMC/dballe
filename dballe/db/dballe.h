@@ -19,6 +19,7 @@ extern "C" {
  */
 typedef struct _dba_db* dba_db;
 
+#if 0
 /**
  * Cursor identifying a DB-ALLe physical context.
  *
@@ -31,6 +32,7 @@ typedef struct _dba_db_context* dba_db_context;
  * Cursor identifying a dballe variable in the databaes.
  */
 typedef struct _dba_db_vars* dba_db_vars;
+#endif
 
 /**
  * Handle identifying a dballe cursor
@@ -137,6 +139,7 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count);
  */
 dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last);
 
+#if 0
 /**
  * Delete a dba_db_context, interrupting iteration
  *
@@ -246,6 +249,7 @@ dba_err dba_db_context_to_record(dba_db_context co, dba_record rec);
  *   The error indicator for the function.  @see dba_err
  */
 dba_err dba_db_vars_to_record(dba_db_vars va, dba_record rec);
+#endif
 
 /**
  * Insert a record into the database.

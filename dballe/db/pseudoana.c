@@ -40,7 +40,7 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	int r;
 
 	if ((res = (dba_db_pseudoana)malloc(sizeof(struct _dba_db_pseudoana))) == NULL)
-		return dba_error_alloc("creating a new dba_db_pseudoana_inserter");
+		return dba_error_alloc("creating a new dba_db_pseudoana");
 	res->db = db;
 	res->sfstm = NULL;
 	res->smstm = NULL;
