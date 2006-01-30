@@ -1,5 +1,5 @@
 #include "Benchmark.h"
-#include "bench-utils.h"
+#include "test-utils.h"
 
 #include <dballe/dba_file.h>
 #include <dballe/io/dba_rawmsg.h>
@@ -9,6 +9,7 @@
 #include <vector>
 
 using namespace std;
+using namespace tut_dballe;
 
 class bufrex_read : public Benchmark
 {

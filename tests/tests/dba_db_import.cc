@@ -337,6 +337,50 @@ void to::test<4>()
 	dba_record_delete(query);
 }
 
+// Check that all imported messages are found on export
+template<> template<>
+void to::test<5>()
+{
+	generator gen;
+
+	CHECKED(dba_db_reset(db, NULL));
+
+	/* Fix the seed so that we always get predictable results */
+	srand(1);
+	
+	/* Import 100 random messages */
+	for (int i = 0; i < 100; i++)
+	{
+		dba_msg msg;
+		CHECKED(dba_msg_create(&msg));
+		gen.fill_message(msg, rnd(0.8));
+		CHECKED(dba_import_msg(db, msg, 0));
+		dba_msg_delete(msg);
+	}
+
+	// Prepare the query
+	dba_record query;
+	CHECKED(dba_record_create(&query));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, 255));
+
+	// Export with the old algorithm
+	vector<dba_msg> msgs;
+	CHECKED(dba_db_export(db, MSG_GENERIC, query, msg_collector, &msgs));
+	gen_ensure_equals(msgs.size(), 100u);
+	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
+		dba_msg_delete(*i);
+
+	// Try the new export algorithm to see if it gives the same results
+	msgs.clear();
+	CHECKED(dba_db_query_msgs(db, MSG_GENERIC, query, msg_collector, &msgs));
+	gen_ensure_equals(msgs.size(), 100u);
+	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
+		dba_msg_delete(*i);
+
+	dba_record_delete(query);
+}
+
+
 }
 
 	/*
