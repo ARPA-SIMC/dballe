@@ -14,7 +14,7 @@ struct dba_db_import_shar
 	dba_db_import_shar() : db(NULL)
 	{
 		CHECKED(dba_init());
-		CHECKED(dba_db_create("test", "enrico", "", &db));
+		CHECKED(create_dba_db(&db));
 	}
 
 	~dba_db_import_shar()

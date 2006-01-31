@@ -6,6 +6,7 @@
 #include <dballe/msg/dba_msg.h>
 #include <dballe/dba_file.h>
 #include <dballe/dba_marshal.h>
+#include <dballe/db/dballe.h>
 
 #include <tut.h>
 
@@ -511,5 +512,7 @@ public:
 };
 
 void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix);
+
+dba_err create_dba_db(dba_db* db);
 
 }

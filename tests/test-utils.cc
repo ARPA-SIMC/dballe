@@ -4,6 +4,10 @@
 #include <dballe/bufrex/bufrex_raw.h>
 #include <dballe/aof/aof_decoder.h>
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
 namespace tut_dballe {
 
 static std::string tag;
@@ -374,6 +378,13 @@ void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix)
 	fclose(out1);
 	fclose(out2);
 	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
+}
+
+dba_err create_dba_db(dba_db* db)
+{
+	struct passwd *pwd = getpwuid(getuid());
+	const char* uname = pwd == NULL ? "test" : pwd->pw_name;
+	return dba_db_create("test", uname, "", db);
 }
 
 }

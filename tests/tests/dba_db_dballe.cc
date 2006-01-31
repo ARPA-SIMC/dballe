@@ -32,7 +32,7 @@ struct dba_db_dballe_shar
 		: insert(NULL), query(NULL), result(NULL), qc(NULL), db(NULL)
 	{
 		CHECKED(dba_init());
-		CHECKED(dba_db_create("test", "enrico", "", &db));
+		CHECKED(create_dba_db(&db));
 
 		CHECKED(dba_record_create(&insert));
 		CHECKED(dba_record_create(&query));

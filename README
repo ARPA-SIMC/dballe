@@ -198,6 +198,14 @@ These are the TODO-list items completed so far::
       caratteristica della variazione di pressione (aggiunta override della
       mappatura sbagliata nel database)
 
+ * Export per VM
+    + Conversione da dba_msg opportunamente esportati a output variabili VM
+       + Gestire l'export del tempo passato, che è diviso nel dba_msg in due
+         componenti
+       = Cosa succede in fase di conversione msg2vm se conf era stato modificato?
+         Lo ignoro?
+       = Come lavoro con l'attributo 'replaced' dal flag di VM?
+
  * Tools
     + Fare un dbamsg filter che prende query alla dbadb e stampa solo i
       messaggi che fanno (o non fanno) match
@@ -294,6 +302,11 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
+ * BUFR
+    - In fase di export sounding BUFR e CREX, non esportare i livelli extra
+    - Quando si importano PILOT da BUFR, usare il geopotenziale come contesto
+      in alternativa alla pressione, convertendolo in metri con m = g/9.80665
+
  * Tools
     - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
       (lat, lon, ident, year, month, day, hour, min)
@@ -303,7 +316,7 @@ These are the TODO-list items currently being worked on::
 
  * Core
     - Aggiungere una entry B locale per il nome della stazione
-       - Supportarlo in dba_msg e dba_import_msg_new
+       - Supportarlo in dba_msg e dba_import_msg
        - Oppure toglierlo se non lo usa nessuno (nessuna routine di
          import/export lo usa al momento, visto che dba_msg non lo supporta)
 	    
@@ -311,19 +324,7 @@ These are the TODO-list items currently being worked on::
     - Buttare via le stazioni con NULL su lat o long
 
  * Export per VM
-    - Gestire l'export del tempo passato, che è diviso nel dba_msg in due
-      componenti
-    - Cosa succede in fase di conversione msg2vm se conf era stato modificato?
-      Lo ignoro?
-    - Come lavoro con l'attributo 'replaced' dal flag di VM?
-
- * BUFR
-    - In fase di export sounding BUFR e CREX, non esportare i livelli extra
-    - Quando si importano PILOT da BUFR, usare il geopotenziale come contesto
-      in alternativa alla pressione, convertendolo in metri con m = g/9.80665
-
- * Documentazione dell'interfaccia in fortran
-    - Aggiungere gli esempi per l'uso di data_id
+    - Procurarsi un tracciato VM di una stazione nota e scrivere test
 
  * Guida utente
     - Gestione tabelle
@@ -347,6 +348,9 @@ These are the TODO-list items currently being worked on::
        - import da nuovi template bufrex
       (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
     + Invarianti
+
+ * Documentazione dell'interfaccia in fortran
+    - Aggiungere gli esempi per l'uso di data_id
 
  * Procedura per supportare un nuovo tipo report in un formato specifico
     - Cercare un file con un'osservazione nel formato voluto

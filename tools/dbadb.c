@@ -22,6 +22,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #include "processor.h"
 
@@ -41,7 +44,7 @@ struct poptOption grepTable[] = {
 };
 
 static char* op_dsn = "test";
-static char* op_user = "test";
+static char* op_user = "";
 static char* op_pass = "";
 static char* op_input_type = "bufr";
 static char* op_output_type = "bufr";
@@ -57,6 +60,16 @@ struct poptOption dbTable[] = {
 		"password to use for connecting to the DBALLE database" },
 	POPT_TABLEEND
 };
+
+static dba_err create_dba_db(dba_db* db)
+{
+	if (op_user[0] == 0)
+	{
+		struct passwd *pwd = getpwuid(getuid());
+		op_user = pwd == NULL ? "test" : pwd->pw_name;
+	}
+	return dba_db_create(op_dsn, op_user, op_pass, db);
+}
 
 struct import_data
 {
@@ -87,7 +100,7 @@ dba_err do_dump(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_db_create(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(create_dba_db(&db));
 	DBA_RUN_OR_RETURN(dba_db_query(db, query, &cursor, &count));
 	DBA_RUN_OR_RETURN(dba_record_create(&result));
 
@@ -122,7 +135,7 @@ dba_err do_wipe(poptContext optCon)
 	table = poptGetArg(optCon);
 
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_db_create(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(create_dba_db(&db));
 	DBA_RUN_OR_RETURN(dba_db_reset(db, table));
 	dba_db_delete(db);
 	dba_shutdown();
@@ -141,7 +154,7 @@ dba_err do_import(poptContext optCon)
 	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_db_create(op_dsn, op_user, op_pass, &data.db));
+	DBA_RUN_OR_RETURN(create_dba_db(&data.db));
 	data.overwrite = op_overwrite;
 
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
@@ -187,7 +200,7 @@ dba_err do_export(poptContext optCon)
 
 	/* Connect to the database */
 	DBA_RUN_OR_RETURN(dba_init());
-	DBA_RUN_OR_RETURN(dba_db_create(op_dsn, op_user, op_pass, &db));
+	DBA_RUN_OR_RETURN(create_dba_db(&db));
 
 	/* Create the query */
 	DBA_RUN_OR_RETURN(dba_record_create(&query));
