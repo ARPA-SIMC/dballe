@@ -306,6 +306,10 @@ These are the TODO-list items currently being worked on::
 
  * AOF
     - Test: aof -> bufr -> dballe -> bufr -[makeaof]-> aof
+    - dbamsg cat di un file .aof swappa l'endianness
+    - Il passaggio aof -> bufr -> dballe -> bufr -[makeaof]-> aof cambia il
+      valore dell'altezza (in alcuni casi sembra moltiplicato di 10, in altri
+      qualcosa di piú
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
@@ -313,6 +317,7 @@ These are the TODO-list items currently being worked on::
       in alternativa alla pressione, convertendolo in metri con m = g/9.80665
 
  * Tools
+    - fare l'autodetect del formato dei file in input, guardando ai primi byte
     - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
       (lat, lon, ident, year, month, day, hour, min)
        - Implementato e protetto da if(0)

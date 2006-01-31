@@ -44,7 +44,7 @@ PAST_WTR1,		int,	B20004,		  1,  0, 0,		2, -21600, 0
 PAST_WTR2,		int,	B20005,		  1,  0, 0,		2, -21600, 0
 CLOUD_N	,		int,	B20010,		256,  0, 0,		0,      0, 0
 CLOUD_NH,		int,	B20011,		256,  0, 0,		0,      0, 0
-CLOUD_HH,		int,	B20013,		256,  0, 0,		0,      0, 0
+CLOUD_HH,		num,	B20013,		256,  0, 0,		0,      0, 0
 CLOUD_CL,		int,	B20012,		256,  0, 1,		0,      0, 0
 CLOUD_CM,		int,	B20012,		256,  0, 2,		0,      0, 0
 CLOUD_CH,		int,	B20012,		256,  0, 3,		0,      0, 0
