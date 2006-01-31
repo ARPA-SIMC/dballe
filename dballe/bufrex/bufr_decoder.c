@@ -163,6 +163,7 @@ static dba_err bufr_decode_data_section(decoder d);
 #define CHECK_AVAILABLE_DATA(start, datalen, next) do { \
 		if (start + datalen > d->in->buf + d->in->len) \
 			PARSE_ERROR(start, "end of BUFR message while looking for " next); \
+		TRACE(next " starts at %d and contains at least %d bytes\n", start - d->in->buf, datalen); \
 	} while (0)
 
 dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
@@ -180,6 +181,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 
 	/* Read BUFR section 0 (Indicator section) */
 	CHECK_AVAILABLE_DATA(d->in->buf, 8, "section 0 of BUFR message (indicator section)");
+	d->sec1 = d->in->buf + 8;
 	if (memcmp(d->in->buf, "BUFR", 4) != 0)
 		PARSE_ERROR(d->in->buf, "data does not start with BUFR header (\"%.4s\" was read instead)", d->in->buf);
 	TRACE(" -> is BUFR\n");
@@ -191,7 +193,6 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 
 	/* Read bufr section 1 (Identification section) */
 	CHECK_AVAILABLE_DATA(d->sec1, 18, "section 1 of BUFR message (identification section)");
-	d->sec1 = d->in->buf + 8;
 	d->sec2 = d->sec1 + (ntohl(*(uint32_t*)(d->sec1)) >> 8);
 	if (d->sec2 > d->in->buf + d->in->len)
 		PARSE_ERROR(d->sec1, "Section 1 claims to end past the end of the BUFR message");
@@ -274,6 +275,8 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 	d->sec5 = d->sec4 + (ntohl(*(uint32_t*)(d->sec4)) >> 8);
 	if (d->sec5 > d->in->buf + d->in->len)
 		PARSE_ERROR(d->sec4, "Section 4 claims to end past the end of the BUFR message");
+	TRACE("section 4 is %d bytes long (%02x %02x %02x %02x)\n", (ntohl(*(uint32_t*)(d->sec4)) >> 8),
+			(unsigned int)*(d->sec4), (unsigned int)*(d->sec4+1), (unsigned int)*(d->sec4+2), (unsigned int)*(d->sec4+3));
 
 	/* Initialize bit-decoding structures */
 	d->cursor = d->sec4 + 4 - d->in->buf;

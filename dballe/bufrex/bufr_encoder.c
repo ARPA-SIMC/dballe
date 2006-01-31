@@ -43,16 +43,19 @@ struct _encoder
 	/* Output decoded variables */
 	dba_rawmsg out;
 
+	/* We have to memorise offsets rather than pointers, because e->out->buf
+	 * can get reallocated during the encoding */
+
 	/* Offset of the start of BUFR section 1 */
-	unsigned char* sec1;
+	int sec1_start;
 	/* Offset of the start of BUFR section 2 */
-	unsigned char* sec2;
+	int sec2_start;
 	/* Offset of the start of BUFR section 3 */
-	unsigned char* sec3;
+	int sec3_start;
 	/* Offset of the start of BUFR section 4 */
-	unsigned char* sec4;
+	int sec4_start;
 	/* Offset of the start of BUFR section 4 */
-	unsigned char* sec5;
+	int sec5_start;
 
 	/* Current value of scale change from C modifier */
 	int c_scale_change;
@@ -155,11 +158,15 @@ static dba_err encoder_add_bits(encoder e, uint32_t val, int n)
 		if (e->pbyte_len == 8) 
 			DBA_RUN_OR_RETURN(encoder_flush(e));
 	}
+#if 0
 	IFTRACE {
 		/* Prewrite it when tracing, to allow to dump the buffer as it's
 		 * written */
+		while (e->out->len + 1 > e->out->alloclen)
+			DBA_RUN_OR_RETURN(dba_rawmsg_expand_buffer(e->out));
 		e->out->buf[e->out->len] = e->pbyte << (8 - e->pbyte_len);
 	}
+#endif
 
 	return dba_error_ok();
 }
@@ -249,7 +256,7 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
 	/* TODO: set the message length here at the end of the encoding */
 
 	TRACE("sec0 ends at %d\n", e->out->len);
-	e->sec1 = e->out->buf + e->out->len;
+	e->sec1_start = e->out->len;
 
 	/* Encode bufr section 1 (Identification section) */
 	/* Length of section */
@@ -289,13 +296,13 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_year / 100));
 
 	TRACE("sec1 ends at %d\n", e->out->len);
-	e->sec2 = e->out->buf + e->out->len;
+	e->sec2_start = e->out->len;
 
 	/* Encode BUFR section 2 (Optional section) */
 	/* Nothing to do */
 
 	TRACE("sec2 ends at %d\n", e->out->len);
-	e->sec3 = e->out->buf + e->out->len;
+	e->sec3_start = e->out->len;
 
 	/* Encode BUFR section 3 (Data description section) */
 
@@ -317,50 +324,46 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 
 	TRACE("sec3 ends at %d\n", e->out->len);
-	e->sec4 = e->out->buf + e->out->len;
+	e->sec4_start = e->out->len;
 
 	/* Encode BUFR section 4 (Data section) */
+
+	/* Length of section (currently set to 0, will be filled in later) */
+	DBA_RUN_OR_RETURN(encoder_add_bits(e, 0, 24));
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+
+	/* Encode the data */
+	while (e->vars_left > 0)
 	{
-		/* Length of section (currently set to 0, will be filled in later) */
-		int len_start = e->out->len;
-		unsigned char* len_pos = e->out->buf + e->out->len;
+		DBA_RUN_OR_GOTO(fail, bufrex_opcode_prepend(&(e->ops), ops));
 
-		DBA_RUN_OR_RETURN(encoder_add_bits(e, 0, 24));
+		DBA_RUN_OR_GOTO(fail, encoder_encode_data_section(e));
+
+		if (e->ops != NULL)
+		{
+			err = dba_error_consistency("not all operators have been encoded");
+			goto fail;
+		}
+
+		/* TODO: increase the count of subsets when there are more than one */
+	}
+
+	/* Write all the bits and pad the data section to reach an even length */
+	DBA_RUN_OR_RETURN(encoder_flush(e));
+	if ((e->out->len % 2) == 1)
 		DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	DBA_RUN_OR_RETURN(encoder_flush(e));
 
-		/* Encode the data */
-		while (e->vars_left > 0)
-		{
-			DBA_RUN_OR_GOTO(fail, bufrex_opcode_prepend(&(e->ops), ops));
+	/* Write the length of the section in its header */
+	{
+		uint32_t val = htonl(e->out->len - e->sec4_start);
+		memcpy(e->out->buf + e->sec4_start, ((char*)&val) + 1, 3);
 
-			DBA_RUN_OR_GOTO(fail, encoder_encode_data_section(e));
-
-			if (e->ops != NULL)
-			{
-				err = dba_error_consistency("not all operators have been encoded");
-				goto fail;
-			}
-
-			/* TODO: increase the count of subsets when there are more than one */
-		}
-
-		/* Write all the bits and pad the data section to reach an even length */
-		DBA_RUN_OR_RETURN(encoder_flush(e));
-		if ((e->out->len % 2) == 1)
-			DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
-		DBA_RUN_OR_RETURN(encoder_flush(e));
-
-		/* Write the length of the section in its header */
-		{
-			uint32_t val = htonl(e->out->len - len_start);
-			memcpy(len_pos, ((char*)&val) + 1, 3);
-
-			TRACE("sec4 size %d\n", e->out->len - len_start);
-		}
+		TRACE("sec4 size %d\n", e->out->len - e->sec4_start);
 	}
 
 	TRACE("sec4 ends at %d\n", e->out->len);
-	e->sec5 = e->out->buf + e->out->len;
+	e->sec5_start = e->out->len;
 
 	/* Encode section 5 (End section) */
 	DBA_RUN_OR_RETURN(encoder_raw_append(e, "7777", 4));
