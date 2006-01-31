@@ -87,7 +87,7 @@ struct _dba_db
 	int sel_block;
 	int sel_station;
 };
-#ifndef DBALLE_DB_H
+#ifndef DBA_DB_H
 typedef struct _dba_db* dba_db;
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef DBALLE_DB_H
-#define DBALLE_DB_H
+#ifndef DBA_DB_H
+#define DBA_DB_H
 
 #ifdef  __cplusplus
 extern "C" {
@@ -18,21 +18,6 @@ extern "C" {
  * DB-ALLe connection
  */
 typedef struct _dba_db* dba_db;
-
-#if 0
-/* *
- * Cursor identifying a DB-ALLe physical context.
- *
- * A physical context represent a point in space and time identified by
- * pseudoana informations, level layer, time range, datetime.
- */
-typedef struct _dba_db_context* dba_db_context;
-
-/**
- * Cursor identifying a dballe variable in the databaes.
- */
-typedef struct _dba_db_vars* dba_db_vars;
-#endif
 
 /**
  * Handle identifying a dballe cursor
@@ -138,118 +123,6 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count);
  *   the query data.
  */
 dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last);
-
-#if 0
-/**
- * Delete a dba_db_context, interrupting iteration
- *
- * @param co
- *   The dba_db_context to delete
- */
-void dba_db_context_delete(dba_db_context co);
-
-/**
- * Delete a dba_db_vars, interrupting iteration
- *
- * @param va
- *   The dba_db_vars to delete
- */
-void dba_db_vars_delete(dba_db_vars va);
-
-/**
- * Query a list of physical contexts
- *
- * @param db
- *   The database to query
- * @param rec
- *   The dba_record with the query
- * @retval co
- *   The dba_db_context to use to iterate the query results.  If the query was
- *   correct but no contexts match, co is set to NULL.
- * @retval count
- *   The number of different contexts found by the query
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err dba_db_query_context(dba_db db, dba_record rec, dba_db_context* co, int* count);
-
-/**
- * Query the variables found in the given physical context
- *
- * @param co
- *   The dba_db_context to query
- * @param rec
- *   The dba_record with the query
- * @retval va
- *   The dba_db_vars to use to iterate the query results.  If the query was
- *   correct but no variables match, va is set to NULL.
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err dba_db_context_query_vars(dba_db_context co, dba_record rec, dba_db_vars* va);
-
-/**
- * Query the variables found in the given physical context, with attributes
- *
- * @param co
- *   The dba_db_context to query
- * @param rec
- *   The dba_record with the query
- * @retval va
- *   The dba_db_vars to use to iterate the query results.  If the query was
- *   correct but no variables match, va is set to NULL.
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err dba_db_context_query_vars_with_attrs(dba_db_context co, dba_record rec, dba_db_vars* va);
-	
-
-/**
- * Move the iterator to the next available physical context.
- *
- * @retval co
- *   The dba_db_context iterator to advance.  When the end is reached, it is
- *   deallocated and set to NULL.
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err dba_db_context_next(dba_db_context* co);
-
-/**
- * Move the iterator to the next available variable.
- *
- * @retval va
- *   The dba_db_vars iterator to advance.  When the end is reached, it is
- *   deallocated and set to NULL.
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err dba_db_vars_next(dba_db_vars* va);
-
-/**
- * Copy informations from the context iterator into a dba_record
- *
- * @param co
- *   The dba_db_context iterator
- * @param rec
- *   The record where the data are to be copied
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err dba_db_context_to_record(dba_db_context co, dba_record rec);
-
-/**
- * Copy informations from the vars iterator into a dba_record
- *
- * @param va
- *   The dba_db_vars iterator
- * @param rec
- *   The record where the data are to be copied
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err dba_db_vars_to_record(dba_db_vars va, dba_record rec);
-#endif
 
 /**
  * Insert a record into the database.
