@@ -25,7 +25,8 @@ struct _dba_db_attr
 	SQLHSTMT istm;
 	SQLHSTMT rstm;
 
-	int id_data;
+	int id_context;
+	dba_varcode id_var;
 	dba_varcode type;
 	char value[255];
 	SQLINTEGER value_ind;

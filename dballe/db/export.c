@@ -227,9 +227,9 @@ dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_m
 		"       pa.block, pa.station, pa.name,"
 		"       c.ltype, c.l1, c.l2,"
 		"       c.ptype, c.p1, c.p2,"
-		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio, d.id, a.type, a.value"
+		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio, c.id, a.type, a.value"
 		"  FROM pseudoana AS pa, context AS c, repinfo AS ri, data AS d"
-		"  LEFT JOIN attr AS a ON a.id_data = d.id"
+		"  LEFT JOIN attr AS a ON a.id_context = d.id_context AND a.id_var = d.id_var"
 		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err = DBA_OK;
 	SQLHSTMT stm = NULL;
@@ -255,12 +255,13 @@ dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_m
 	char out_rep_memo[20];
 	int out_priority;
 	int out_ana_id;
-	int out_data_id;
+	int out_context_id;
 	int out_attr_varcode;		SQLINTEGER out_attr_varcode_ind;
 	char out_attr_value[255];	SQLINTEGER out_attr_value_ind;
 	int last_lat = -1;
 	int last_lon = -1;
-	int last_data_id = -1;
+	int last_context_id = -1;
+	dba_varcode last_varcode = 0;
 	char last_datetime[25];
 	int last_ltype = -1;
 	int last_l1 = -1;
@@ -315,7 +316,7 @@ dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_m
 	DBA_QUERY_BIND_NONNULL(19, SQL_C_SLONG, rep_cod);
 	DBA_QUERY_BIND_NONNULL(20, SQL_C_CHAR, rep_memo);
 	DBA_QUERY_BIND_NONNULL(21, SQL_C_SLONG, priority);
-	DBA_QUERY_BIND_NONNULL(22, SQL_C_SLONG, data_id);
+	DBA_QUERY_BIND_NONNULL(22, SQL_C_SLONG, context_id);
 	DBA_QUERY_BIND(23, SQL_C_SLONG, attr_varcode);
 	DBA_QUERY_BIND(24, SQL_C_CHAR, attr_value);
 #undef DBA_QUERY_BIND
@@ -347,7 +348,7 @@ dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_m
 				out_value);
 
 		/* First process the variable, possibly inserting the old one in the message */
-		if (last_data_id != out_data_id)
+		if (last_context_id != out_context_id || last_varcode != out_varcode)
 		{
 			TRACE("New var\n");
 			if (var != NULL)
@@ -361,7 +362,8 @@ dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_m
 			DBA_RUN_OR_GOTO(cleanup, dba_var_create_local(out_varcode, &var));
 			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(var, out_value));
 
-			last_data_id = out_data_id;
+			last_context_id = out_context_id;
+			last_varcode = out_varcode;
 			last_ltype = out_leveltype;
 			last_l1 = out_l1;
 			last_l2 = out_l2;

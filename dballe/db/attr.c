@@ -26,11 +26,11 @@
 dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 {
 	const char* insert_query =
-		"INSERT INTO attr (id_data, type, value)"
-		" VALUES(?, ?, ?)";
+		"INSERT INTO attr (id_context, id_var, type, value)"
+		" VALUES(?, ?, ?, ?)";
 	const char* replace_query =
-		"INSERT INTO attr (id_data, type, value)"
-		" VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
+		"INSERT INTO attr (id_context, id_var, type, value)"
+		" VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
 	dba_err err = DBA_OK;
 	dba_db_attr res = NULL;
 	int r;
@@ -43,9 +43,10 @@ dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 
 	/* Create the statement for insert */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->istm)));
-	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_data), 0, 0);
-	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
-	SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
+	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
+	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
+	SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
+	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
 	r = SQLPrepare(res->istm, (unsigned char*)insert_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
@@ -55,9 +56,10 @@ dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 
 	/* Create the statement for replace */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->rstm)));
-	SQLBindParameter(res->rstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_data), 0, 0);
-	SQLBindParameter(res->rstm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
-	SQLBindParameter(res->rstm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
+	SQLBindParameter(res->rstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
+	SQLBindParameter(res->rstm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
+	SQLBindParameter(res->rstm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
+	SQLBindParameter(res->rstm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
 	r = SQLPrepare(res->rstm, (unsigned char*)replace_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{

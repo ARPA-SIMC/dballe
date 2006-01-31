@@ -102,7 +102,6 @@ static const char* init_queries[] = {
 	"   UNIQUE INDEX(lat, lon, ident(8))"
 	") " TABLETYPE,
 	"CREATE TABLE data ("
-	"   id			INTEGER auto_increment PRIMARY KEY,"
 	"   id_context	INTEGER NOT NULL,"
 	"	id_var		SMALLINT NOT NULL,"
 	"	value		VARCHAR(255) NOT NULL,"
@@ -123,11 +122,12 @@ static const char* init_queries[] = {
 	"   UNIQUE INDEX (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report)"
 	") " TABLETYPE,
 	"CREATE TABLE attr ("
-	"   id_data INTEGER NOT NULL,"
-	"   type    SMALLINT NOT NULL,"
-	"   value   VARCHAR(255) NOT NULL,"
-	"   INDEX (id_data),"
-	"   UNIQUE INDEX (id_data, type)"
+	"   id_context	INTEGER NOT NULL,"
+	"	id_var		SMALLINT NOT NULL,"
+	"   type		SMALLINT NOT NULL,"
+	"   value		VARCHAR(255) NOT NULL,"
+	"   INDEX (id_context, id_var),"
+	"   UNIQUE INDEX (id_context, id_var, type)"
 	") " TABLETYPE,
 };
 
@@ -576,12 +576,9 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 			item = dba_record_iterate_next(rec, item))
 	{
 		/* Datum to be inserted, linked to id_pseudoana and all the other IDs */
-		int id;
-
 		dba_db_data_set(d, dba_record_cursor_variable(item));
-		DBA_RUN_OR_GOTO(fail, dba_db_data_insert(d, can_replace, &id));
-
-		dba_record_cursor_set_id(item, id);
+		DBA_RUN_OR_GOTO(fail, dba_db_data_insert(d, can_replace));
+		dba_record_cursor_set_id(item, d->id_context);
 	}
 
 	if (ana_id != NULL)
@@ -763,7 +760,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 		"       pa.block, pa.station, pa.name,"
 		"       c.ltype, c.l1, c.l2,"
 		"       c.ptype, c.p1, c.p2,"
-		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio, d.id"
+		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio"
 		"  FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri"
 		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err;
@@ -820,7 +817,6 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	DBA_QUERY_BIND(19, SQL_C_SLONG, rep_cod);
 	DBA_QUERY_BIND(20, SQL_C_CHAR, rep_memo);
 	DBA_QUERY_BIND(21, SQL_C_SLONG, priority);
-	DBA_QUERY_BIND(22, SQL_C_SLONG, data_id);
 #undef DBA_QUERY_BIND
 	
 	/* Add the select part */
@@ -976,7 +972,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	const char* query =
 		"DELETE FROM d, a"
 		" USING pseudoana AS pa, context AS c, repinfo AS ri, data AS d"
-		"  LEFT JOIN attr AS a ON a.id_data = d.id"
+		"  LEFT JOIN attr AS a ON a.id_context = d.id_context AND a.id_var = d.id_var"
 		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err;
 	SQLHSTMT stm;
@@ -1124,7 +1120,7 @@ cleanup:
 }
 #endif
 
-dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, dba_record qc, int* count)
+dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size, dba_record qc, int* count)
 {
 	char query[100 + 100*6];
 	SQLHSTMT stm;
@@ -1141,7 +1137,7 @@ dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, 
 		strcpy(query,
 				"SELECT type, value"
 				"  FROM attr"
-				" WHERE id_data = ?");
+				" WHERE id_context = ? AND id_var = ?");
 	else {
 		int i, qs;
 		char* q;
@@ -1150,7 +1146,7 @@ dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, 
 		strcpy(query,
 				"SELECT type, value"
 				"  FROM attr"
-				" WHERE id_data = ? AND type IN (");
+				" WHERE id_context = ? AND id_var = ? AND type IN (");
 		qs = strlen(query);
 		q = query + qs;
 		for (i = 0; i < qcs_size; i++)
@@ -1167,7 +1163,8 @@ dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, 
 		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 
 	/* Bind input parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_data, 0, 0);
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);
+	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
 
 	/* Bind output fields */
 	SQLBindCol(stm, 1, SQL_C_SLONG, &out_type, sizeof(out_type), 0);
@@ -1203,7 +1200,7 @@ dba_qc_query_failed:
 	return err;
 }
 
-dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, dba_record qc, int can_replace)
+dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_var, dba_record qc, int can_replace)
 {
 	dba_err err;
 	dba_record_cursor item;
@@ -1211,7 +1208,8 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, dba_record qc, int c
 	
 	assert(db);
 
-	a->id_data = id_data;
+	a->id_context = id_context;
+	a->id_var = id_var;
 
 	/* Begin the transaction */
 	DBA_RUN_OR_GOTO(fail, dba_db_begin(db));
@@ -1233,17 +1231,17 @@ fail:
 	return err;
 }
 
-dba_err dba_db_qc_insert(dba_db db, int id_data, dba_record qc)
+dba_err dba_db_qc_insert(dba_db db, int id_context, dba_varcode id_var, dba_record qc)
 {
-	return dba_db_qc_insert_or_replace(db, id_data, qc, 1);
+	return dba_db_qc_insert_or_replace(db, id_context, id_var, qc, 1);
 }
 
-dba_err dba_db_qc_insert_new(dba_db db, int id_data, dba_record qc)
+dba_err dba_db_qc_insert_new(dba_db db, int id_context, dba_varcode id_var, dba_record qc)
 {
-	return dba_db_qc_insert_or_replace(db, id_data, qc, 0);
+	return dba_db_qc_insert_or_replace(db, id_context, id_var, qc, 0);
 }
 
-dba_err dba_db_qc_remove(dba_db db, int id_data, dba_varcode* qcs, int qcs_size)
+dba_err dba_db_qc_remove(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size)
 {
 	char query[60 + 100*6];
 	SQLHSTMT stm;
@@ -1254,13 +1252,13 @@ dba_err dba_db_qc_remove(dba_db db, int id_data, dba_varcode* qcs, int qcs_size)
 
 	// Create the query
 	if (qcs == NULL)
-		strcpy(query, "DELETE FROM attr WHERE id_data = ?");
+		strcpy(query, "DELETE FROM attr WHERE id_context = ? AND id_var = ?");
 	else {
 		int i, qs;
 		char* q;
 		if (qcs_size > 100)
 			return dba_error_consistency("checking bound of 100 QC values to delete per query");
-		strcpy(query, "DELETE FROM attr WHERE id_data = ? AND type IN (");
+		strcpy(query, "DELETE FROM attr WHERE id_context = ? AND id_var = ? AND type IN (");
 		qs = strlen(query);
 		q = query + qs;
 		for (i = 0; i < qcs_size; i++)
@@ -1277,7 +1275,8 @@ dba_err dba_db_qc_remove(dba_db db, int id_data, dba_varcode* qcs, int qcs_size)
 		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 
 	/* Bind parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_data, 0, 0);
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);
+	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
 
 	TRACE("Performing query %s for id %d\n", query, id_data);
 	

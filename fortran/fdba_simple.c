@@ -1256,12 +1256,14 @@ F77_INTEGER_FUNCTION(idba_dimenticami)(
  * Look for the ID of the data which a critica or scusa operation are
  * supposed to operate on.
  */
-static dba_err get_referred_data_id(int* handle, int* id)
+static dba_err get_referred_data_id(int* handle, int* id_context, dba_varcode* id_var)
 {
 	const char* val;
 
-	*id = 0;
+	*id_context = 0;
+	*id_var = 0;
 
+#if 0
 	/* First try with *data_id */
 	if (*id == 0 && (val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_DATA_ID)) != NULL)
 	{
@@ -1269,13 +1271,16 @@ static dba_err get_referred_data_id(int* handle, int* id)
 		if (*id == 0)
 			return dba_error_consistency("checking *data_id is set to non-zero");
 	}
+#endif
 	/* Then with *var */
-	if (*id == 0 && (val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
+	if (*id_context == 0 && (val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
 	{
-		DBA_RUN_OR_RETURN(dba_record_var_enqid(STATE.output, DBA_STRING_TO_VAR(val + 1), id));
-		if (*id == 0)
+		DBA_RUN_OR_RETURN(dba_record_var_enqid(STATE.output, DBA_STRING_TO_VAR(val + 1), id_context));
+		*id_var = DBA_STRING_TO_VAR(val + 1);
+		if (*id_context == 0)
 			return dba_error_consistency("checking the ID previously stored for %s is non-zero", val);
 	}
+#if 0
 	/* Lastly, with the data_id from last idba_dammelo */
 	if (*id == 0)
 	{
@@ -1283,6 +1288,7 @@ static dba_err get_referred_data_id(int* handle, int* id)
 		if (*id == 0)
 			return dba_error_consistency("checking that data_id left by previous idba_dammelo is set to non-zero");
 	}
+#endif
 	/*return dba_error_consistency("looking for data ID (no id specified, and no variable previously selected with idba_setc(handle, \"*b\", \"Bxxyyy\"))");*/
 
 	return dba_error_ok();
@@ -1305,10 +1311,11 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 	dba_err err = DBA_OK;
 	dba_arr_varcode arr = NULL;
 	const char* val;
-	int id;
+	int id_context;
+	dba_varcode id_var;
 
 	/* Retrieve the ID of the data to query */
-	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id));
+	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
 
 	/* Retrieve the varcodes of the wanted QC values */
 	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VARLIST)) != NULL)
@@ -1333,7 +1340,7 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 	}
 
 	/* Do QC query */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_qc_query(SESSION, id, 
+	DBA_RUN_OR_GOTO(cleanup, dba_db_qc_query(SESSION, id_context, id_var, 
 				arr == NULL ? NULL : dba_arr_varcode_data(arr),
 				arr == NULL ? 0 : dba_arr_varcode_size(arr),
 				STATE.qcoutput, &(STATE.qc_count)));
@@ -1413,16 +1420,17 @@ F77_INTEGER_FUNCTION(idba_critica)(
 		INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	int id;
+	int id_context;
+	dba_varcode id_var;
 
 	if (STATE.perms & PERM_QC_RO)
 		return dba_error_consistency(
 			"idba_critica cannot be called with the database open in attribute readonly mode");
 
-	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id));
+	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
 
 	DBA_RUN_OR_RETURN(dba_db_qc_insert_or_replace(
-				SESSION, id, STATE.qcinput,
+				SESSION, id_context, id_var, STATE.qcinput,
 				STATE.perms & PERM_QC_REWRITE ? 1 : 0));
 
 	dba_record_clear(STATE.qcinput);
@@ -1455,13 +1463,14 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 	dba_err err = DBA_OK;
 	dba_arr_varcode arr = NULL;
 	const char* val;
-	int id;
+	int id_context;
+	dba_varcode id_var;
 
 	if (! (STATE.perms & PERM_QC_REWRITE))
 		return dba_error_consistency(
 			"idba_scusa must be called with the database open in attribute rewrite mode");
 	
-	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id));
+	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
 
 	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VARLIST)) != NULL)
 	{
@@ -1487,7 +1496,7 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 	// If arr is still 0, then dba_qc_delete deletes all QC values
 	DBA_RUN_OR_GOTO(cleanup,
 			dba_db_qc_remove(
-				SESSION, id,
+				SESSION, id_context, id_var,
 				arr == NULL ? NULL : dba_arr_varcode_data(arr),
 				arr == NULL ? 0 : dba_arr_varcode_size(arr)));
 

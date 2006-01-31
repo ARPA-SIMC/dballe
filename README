@@ -318,6 +318,9 @@ These are the TODO-list items currently being worked on::
 	 o se non importare solo gli 8 valori
 
  * Core
+    - Linkare attr a data senza usare l'ID ma con (id_context, varcode),
+      rimuovendo il data_id.  Questo evita poi la select per avere il data_id
+      ogni volta che si scrive un dato col rewrite attivo
     - Aggiungere una entry B locale per il nome della stazione
        - Supportarlo in dba_msg e dba_import_msg
        - Oppure toglierlo se non lo usa nessuno (nessuna routine di

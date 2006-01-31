@@ -448,7 +448,7 @@ void to::test<2>()
 		dba_db_cursor cursor;
 		int val;
 		int qc_count;
-		int id_data;
+		int id_context;
 
 		dba_record_clear(query);
 		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
@@ -465,12 +465,12 @@ void to::test<2>()
 		dba_record_var_seti(qc, DBA_VAR(0, 33, 2), 11);
 		dba_record_var_seti(qc, DBA_VAR(0, 33, 3), 22);
 		dba_record_var_seti(qc, DBA_VAR(0, 33, 5), 33);
-		dba_record_var_enqid(result, DBA_VAR(0, 1, 11), &id_data);
-		CHECKED(dba_db_qc_insert(db, id_data, /*result, DBA_VAR(0, 1, 11),*/ qc));
+		dba_record_var_enqid(result, DBA_VAR(0, 1, 11), &id_context);
+		CHECKED(dba_db_qc_insert(db, id_context, DBA_VAR(0, 1, 11), qc));
 
 		/* Query back the data */
 		dba_record_clear(qc);
-		CHECKED(dba_db_qc_query(db, id_data, NULL, 0, qc, &qc_count));
+		CHECKED(dba_db_qc_query(db, id_context, DBA_VAR(0, 1, 11), NULL, 0, qc, &qc_count));
 
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val));
 		gen_ensure_equals(val, 11);
@@ -482,20 +482,20 @@ void to::test<2>()
 		/* Delete a couple of items */
 		{
 			dba_varcode todel[] = {DBA_VAR(0, 33, 2), DBA_VAR(0, 33, 5)};
-			CHECKED(dba_db_qc_remove(db, id_data, todel, 2));
+			CHECKED(dba_db_qc_remove(db, id_context, DBA_VAR(0, 1, 11), todel, 2));
 		}
 		/* Deleting non-existing items should not fail.  Also try creating a
 		 * query with just on item */
 		{
 			dba_varcode todel[] = {DBA_VAR(0, 33, 2)};
-			CHECKED(dba_db_qc_remove(db, id_data, todel, 1));
+			CHECKED(dba_db_qc_remove(db, id_context, DBA_VAR(0, 1, 11), todel, 1));
 		}
 
 		/* Query back the data */
 		dba_record_clear(qc);
 		{
 			dba_varcode toget[] = { DBA_VAR(0, 33, 2), DBA_VAR(0, 33, 3), DBA_VAR(0, 33, 5) };
-			CHECKED(dba_db_qc_query(db, id_data, toget, 3, qc, &qc_count));
+			CHECKED(dba_db_qc_query(db, id_context, DBA_VAR(0, 1, 11), toget, 3, qc, &qc_count));
 		}
 
 		gen_ensure(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val) == DBA_ERROR);

@@ -261,7 +261,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec);
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, dba_record qc, int* count);
+dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size, dba_record qc, int* count);
 
 /**
  * Insert a new QC value into the database.
@@ -277,7 +277,7 @@ dba_err dba_db_qc_query(dba_db db, int id_data, dba_varcode* qcs, int qcs_size, 
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, dba_record qc, int can_replace);
+dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_var, dba_record qc, int can_replace);
 
 /**
  * Insert a new QC value into the database.
@@ -294,7 +294,7 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_data, dba_record qc, int c
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_qc_insert(dba_db db, int id_data, dba_record qc);
+dba_err dba_db_qc_insert(dba_db db, int id_context, dba_varcode id_var, dba_record qc);
 
 /**
  * Insert a new QC value into the database.
@@ -310,7 +310,7 @@ dba_err dba_db_qc_insert(dba_db db, int id_data, dba_record qc);
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_qc_insert_new(dba_db db, int id_data, dba_record qc);
+dba_err dba_db_qc_insert_new(dba_db db, int id_context, dba_varcode id_var, dba_record qc);
 
 /**
  * Delete QC data for the variable `var' in record `rec' (coming from a previous
@@ -328,7 +328,7 @@ dba_err dba_db_qc_insert_new(dba_db db, int id_data, dba_record qc);
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_qc_remove(dba_db db, int id_data, dba_varcode* qcs, int qcs_size);
+dba_err dba_db_qc_remove(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size);
 
 #ifdef  __cplusplus
 }

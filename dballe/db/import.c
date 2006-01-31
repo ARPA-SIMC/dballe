@@ -373,7 +373,10 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 
 			// Insert the variable
 			dba_db_data_set(dd, dat->var);
-			DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, overwrite, &(dq->id_data)));
+			DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, overwrite));
+
+			dq->id_context = dd->id_context;
+			dq->id_var = dba_var_code(dat->var);
 
 			// Insert the attributes
 			for (iter = dba_var_attr_iterate(dat->var); iter != NULL; 
