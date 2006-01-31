@@ -13,7 +13,7 @@ static int op_dump_interpreted = 0;
 static char* op_input_type = "bufr";
 static char* op_output_type = "bufr";
 
-struct grep_t grepdata = { -1, -1, -1, 0, "" };
+struct grep_t grepdata = { -1, -1, -1, 0, 0, "" };
 struct poptOption grepTable[] = {
 	{ "category", 0, POPT_ARG_INT, &grepdata.category, 0,
 		"match messages with the given data category", "num" },
@@ -23,6 +23,8 @@ struct poptOption grepTable[] = {
 		"match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
 	{ "unparsable", 0, 0, &grepdata.unparsable, 0,
 		"match only messages that cannot be parsed" },
+	{ "parsable", 0, 0, &grepdata.parsable, 0,
+		"match only messages that can be parsed" },
 	{ "index", 0, POPT_ARG_STRING, &grepdata.index, 0,
 		"match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
 	POPT_TABLEEND

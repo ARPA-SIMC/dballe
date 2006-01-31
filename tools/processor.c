@@ -32,8 +32,30 @@ static int match_index(int idx, const char* expr)
 	return 0;
 }
 
+dba_err match_common(dba_rawmsg rmsg, dba_msg msg, struct grep_t* grepdata, int* match)
+{
+	if (msg == NULL && grepdata->parsable)
+	{
+		*match = 0;
+		return dba_error_ok();
+	}
+
+	if (msg != NULL && grepdata->unparsable)
+	{
+		*match = 0;
+		return dba_error_ok();
+	}
+
+	*match = 1;
+	return dba_error_ok();
+}
+
 dba_err match_bufrex(dba_rawmsg rmsg, bufrex_raw rm, dba_msg msg, struct grep_t* grepdata, int* match)
 {
+	DBA_RUN_OR_RETURN(match_common(rmsg, msg, grepdata, match));
+	if (*match == 0)
+		return dba_error_ok();
+
 	if (grepdata->category != -1)
 		if (grepdata->category != rm->type)
 		{
@@ -92,6 +114,10 @@ dba_err match_aof(dba_rawmsg rmsg, dba_msg msg, struct grep_t* grepdata, int* ma
 	int category, subcategory;
 	DBA_RUN_OR_RETURN(aof_decoder_get_category(rmsg, &category, &subcategory));
 
+	DBA_RUN_OR_RETURN(match_common(rmsg, msg, grepdata, match));
+	if (*match == 0)
+		return dba_error_ok();
+
 	if (grepdata->category != -1)
 	{
 		if (grepdata->category != category)
@@ -143,6 +169,7 @@ dba_err process_input(
 	int print_errors = (grepdata == NULL || !grepdata->unparsable);
 	dba_msg parsed = NULL;
 	bufrex_raw br = NULL;
+	int match = 1;
 
 	switch (rmsg->encoding)
 	{
@@ -152,6 +179,7 @@ dba_err process_input(
 			if ( !(bufrex_raw_decode(br, rmsg) == DBA_OK &&
 				   bufrex_raw_to_msg(br, &parsed) == DBA_OK) && print_errors)
 				print_parse_error("BUFR", rmsg);
+			if (grepdata != NULL) DBA_RUN_OR_RETURN(match_bufr(rmsg, br, parsed, grepdata, &match));
 			break;
 		case CREX:
 			DBA_RUN_OR_RETURN(bufrex_raw_create(&br, BUFREX_CREX));
@@ -159,43 +187,18 @@ dba_err process_input(
 			if ( !(bufrex_raw_decode(br, rmsg) == DBA_OK &&
 				   bufrex_raw_to_msg(br, &parsed) == DBA_OK) && print_errors)
 				print_parse_error("CREX", rmsg);
+			if (grepdata != NULL) DBA_RUN_OR_RETURN(match_crex(rmsg, br, parsed, grepdata, &match));
 			break;
 		case AOF:
 			if (aof_decoder_decode(rmsg, &parsed) != DBA_OK && print_errors)
 				print_parse_error("AOF", rmsg);
+			if (grepdata != NULL) DBA_RUN_OR_RETURN(match_aof(rmsg, parsed, grepdata, &match));
 			break;
 	}
 
-#if 0
-	if (parsed != NULL && (grepdata != NULL && grepdata->unparsable))
-		goto clean;
+	if (!match)
+		goto cleanup;
 
-	if (parsed != NULL || (grepdata != NULL && grepdata->unparsable))
-	{
-		if (grepdata)
-			DBA_RUN_OR_GOTO(cleanup, match_bufr(rmsg, br, parsed, grepdata, &match));
-		else
-			match = 1;
-
-		if (match)
-			DBA_RUN_OR_GOTO(cleanup, action(rmsg, br, parsed, data));
-	}
-
-	---
-	
-	if (parse_result == DBA_OK || (grepdata != NULL && grepdata->unparsable))
-	{
-		if (grepdata)
-			DBA_RUN_OR_GOTO(cleanup, match_bufr(rmsg, br, parsed, grepdata, &match));
-		else
-			match = 1;
-
-		if (match)
-			DBA_RUN_OR_GOTO(cleanup, action(rmsg, br, parsed, data));
-	} else
-		err = parse_result;
-#endif
-	
 	DBA_RUN_OR_GOTO(cleanup, action(rmsg, br, parsed, data));
 
 cleanup:

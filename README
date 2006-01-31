@@ -210,6 +210,8 @@ These are the TODO-list items completed so far::
     + Fare un dbamsg filter che prende query alla dbadb e stampa solo i
       messaggi che fanno (o non fanno) match
     + dbatbl: fare anche il grep
+    + il codice per la selezione per tipo e sottotipo è commentato
+      (riscritto)
 
  * Documentazione dell'interfaccia in fortran
     + aggiungere due parole su come funziona la query "le query si effettuano

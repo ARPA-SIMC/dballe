@@ -13,6 +13,7 @@ struct grep_t
 	int subcategory;
 	int checkdigit;
 	int unparsable;
+	int parsable;
 	const char* index;
 };
 
