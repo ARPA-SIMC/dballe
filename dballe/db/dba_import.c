@@ -379,8 +379,12 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 			for (iter = dba_var_attr_iterate(dat->var); iter != NULL; 
 					iter = dba_var_attr_iterator_next(iter))
 			{
-				dba_db_attr_set(dq, dba_var_attr_iterator_attr(iter));
-				DBA_RUN_OR_GOTO(fail, dba_db_attr_insert(dq, overwrite));
+				dba_var attr = dba_var_attr_iterator_attr(iter);
+				if (dba_var_value(attr) != NULL)
+				{
+					dba_db_attr_set(dq, attr);
+					DBA_RUN_OR_GOTO(fail, dba_db_attr_insert(dq, overwrite));
+				}
 			}
 		}
 	}
