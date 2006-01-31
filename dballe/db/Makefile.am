@@ -13,8 +13,8 @@ dbinclude_HEADERS = \
 		data.h \
 		attr.h \
 		dballe.h \
-		dba_import.h \
-		dba_export.h
+		import.h \
+		export.h
 
 noinst_LTLIBRARIES = libdb.la
 libdb_la_SOURCES = \
@@ -25,8 +25,8 @@ libdb_la_SOURCES = \
 		data.c \
 		attr.c \
 		dballe.c \
-		dba_import.c \
-		dba_export.c
+		import.c \
+		export.c
 
 INCLUDES = -DCONF_DIR=\"$(confdir)\"
 

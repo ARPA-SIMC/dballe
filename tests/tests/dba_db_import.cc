@@ -1,7 +1,7 @@
 #include <tests/test-utils.h>
 #include <dballe/dba_init.h>
-#include <dballe/db/dba_import.h>
-#include <dballe/db/dba_export.h>
+#include <dballe/db/import.h>
+#include <dballe/db/export.h>
 
 namespace tut {
 using namespace tut_dballe;

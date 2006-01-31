@@ -1,4 +1,4 @@
-#include <dballe/db/dba_export.h>
+#include <dballe/db/export.h>
 #include <dballe/msg/dba_msg.h>
 #include <dballe/db/dballe.h>
 #include <dballe/db/querybuf.h>

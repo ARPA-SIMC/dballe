@@ -12,8 +12,8 @@
 */
 
 #include <dballe/db/dballe.h>
-#include <dballe/db/dba_import.h>
-#include <dballe/db/dba_export.h>
+#include <dballe/db/import.h>
+#include <dballe/db/export.h>
 
 #include <dballe/bufrex/bufrex.h>
 

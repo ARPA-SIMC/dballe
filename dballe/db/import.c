@@ -1,6 +1,6 @@
 #include "config.h"
 
-#include <dballe/db/dba_import.h>
+#include <dballe/db/import.h>
 #include <dballe/db/internals.h>
 #include <dballe/db/pseudoana.h>
 #include <dballe/db/context.h>
