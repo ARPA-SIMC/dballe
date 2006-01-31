@@ -319,6 +319,9 @@ These are the TODO-list items currently being worked on::
        - Supportarlo in dba_msg e dba_import_msg
        - Oppure toglierlo se non lo usa nessuno (nessuna routine di
          import/export lo usa al momento, visto che dba_msg non lo supporta)
+
+ * Metar
+    - Implementare il supporto per dati 'metar'
 	    
  * Import da VM o database Oracle di ARPA
     - Buttare via le stazioni con NULL su lat o long

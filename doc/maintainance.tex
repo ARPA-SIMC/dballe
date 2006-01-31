@@ -14,8 +14,73 @@
 
 \section {Managing tables}
 
-% WMO B tables
-% WMO D tables
-% Local B table
+\dballe{} needs various kinds of data tables to work:
 
+\begin{description}
+\item[repinfo.csv]
+  Contains informations about all the supported origins of data, including a
+  text description, a short memo and the importance of the various kinds of
+  data compared to the others.
+\item[dballe.txt]
+  Contains the description of all the possible kinds of variables that can be
+  handled by \dballe{}, with information such as text description, measurement
+  units, number of digits used for encoding.  It is usually referred as ``the
+  local B table'', and is used for all internal representation and for
+  exporting ``generic'' messages.
+\item[WMO B tables]
+  Data description tables maintained by WMO that are used for encoding and
+  decoding BUFR and CREX messages.
+\item[WMO D tables]
+  Data grouping tables maintained by WMO that are used for encoding and
+  decoding BUFR and CREX messages.
+\end{description}
+
+\subsection{repinfo.csv}
+
+The file {\tt repinfo.csv} is usually installed in {\tt /etc/dballe/} and is
+only read when creating or recreating a database.
+
+It is a table encoded in CSV format, where every line is a table row and table
+columns are separated by commas.  No particular string escaping is supported,
+so no strings should contain a comma.
+
+This is an example {\tt repinfo.csv}:
+
+\begin{verbatim}
+01,synop,report synottico,100,oss,0
+02,metar,metar,80,oss,0
+03,temp,radiosondaggio,100,oss,2
+04,pilot,pilot,90,oss,2
+09,boe,dati omdametrici,100,oss,31
+10,ship,synop da nave,100,oss,1
+11,tempship,temp da nave,100,oss,2
+12,airep,airep,80,oss,4
+13,amdar,amdar,100,oss,4
+14,acars,acars,100,oss,4
+104,ana_lm,valori analizzati LM,-1,ana,255
+105,ana,analisi,-10,pre,255
+106,pre_cleps_box1.5maxel001,previsti cosmo leps box 1.5 gradi valore max elemento 1,-1,pre,255
+107,pre_lmn_box1.5med,previzione Lokal Model nudging box 1.5 gradi valore medio,-1,pre,255
+108,pre_lmp_spnp0,previsione Lkal Model prognostica interpolato punto piu' vicino,-1,pre,255
+255,generic,export generici da DB Meteo,1,oss,42
+\end{verbatim}
+
+The file has six columns:
+
+\begin{enumerate}
+\item The report code.  This is used to refer to this report type in all the
+      internal representations.
+\item The mnemonic short name.  It can be used to univocally refer to this report
+      type in a way that is easier to remember than the report code.
+\item The complete name.
+\item The report priority.  When more data are found in the same physical point
+      but with different report types, the report priority can be used to
+      select a best value among them.
+\item FIXME: Unknown: "descriptor"
+\item FIXME: Unknown: "table a"
+\end{enumerate}
+  
+\subsection{dballe.txt}
+\subsection{WMO B tables}
+\subsection{WMO D tables}
 
