@@ -1,6 +1,6 @@
 #include <dballe/marshal.h>
 
-#include <dballe/aof/aof_decoder.h>
+#include <dballe/aof/decoder.h>
 #include <dballe/bufrex/bufrex.h>
 
 dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msg *msg)

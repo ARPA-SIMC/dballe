@@ -1,4 +1,4 @@
-#include "dba_conv.h"
+#include <dballe/conv/conv.h>
 
 #include <math.h>
 

@@ -1,5 +1,5 @@
 #include <tests/test-utils.h>
-#include <dballe/aof/aof_decoder.h>
+#include <dballe/aof/decoder.h>
 #include <dballe/dba_file.h>
 
 namespace tut {

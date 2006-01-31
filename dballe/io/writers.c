@@ -1,6 +1,6 @@
 #include "config.h"
 
-#include "dba_file_writers.h"
+#include "writers.h"
 
 #include <netinet/in.h>
 #include <stdlib.h>

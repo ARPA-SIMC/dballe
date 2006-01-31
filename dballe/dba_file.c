@@ -1,9 +1,9 @@
 #include <dballe/dba_file.h>
 #include <dballe/marshal.h>
 #include <dballe/io/dba_rawfile.h>
-#include <dballe/io/dba_file_readers.h>
-#include <dballe/io/dba_file_writers.h>
-#include <dballe/aof/aof_decoder.h>
+#include <dballe/io/readers.h>
+#include <dballe/io/writers.h>
+#include <dballe/aof/decoder.h>
 #include <dballe/bufrex/bufrex.h>
 
 #include <stdlib.h>

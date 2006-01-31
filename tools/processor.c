@@ -1,7 +1,7 @@
 #include "processor.h"
 
 #include <dballe/bufrex/bufrex.h>
-#include <dballe/aof/aof_decoder.h>
+#include <dballe/aof/decoder.h>
 
 #include <string.h>
 #include <stdlib.h>

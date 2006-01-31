@@ -1,4 +1,4 @@
-#include <dballe/conv/dba_conv.h>
+#include <dballe/conv/conv.h>
 #include <dballe/msg/dba_msg.h>
 
 #include "exporters.h"

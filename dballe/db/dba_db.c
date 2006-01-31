@@ -6,7 +6,7 @@
 #include <dballe/db/attr.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/core/dba_var.h>
-#include <dballe/core/dba_csv.h>
+#include <dballe/core/csv.h>
 #include <dballe/core/verbose.h>
 
 #include <config.h>

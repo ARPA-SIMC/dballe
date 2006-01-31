@@ -1,6 +1,6 @@
 #include <dballe/msg/dba_msg.h>
 
-#include <dballe/aof/aof_decoder.h>
+#include <dballe/aof/decoder.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/cmdline.h>
 

@@ -7,14 +7,14 @@ ioinclude_HEADERS = \
 		encoding.h \
 		dba_rawmsg.h \
 		dba_rawfile.h \
-		dba_file_readers.h \
-		dba_file_writers.h
+		readers.h \
+		writers.h
 
 noinst_LTLIBRARIES = libio.la
 libio_la_SOURCES = \
 		dba_rawmsg.c \
 		dba_rawfile.c \
-		dba_file_readers.c \
-		dba_file_writers.c
+		readers.c \
+		writers.c
 
 EXTRA_DIST = io.dox

@@ -2,7 +2,7 @@
 
 #include <dballe/bufrex/bufrex.h>
 #include <dballe/bufrex/bufrex_raw.h>
-#include <dballe/aof/aof_decoder.h>
+#include <dballe/aof/decoder.h>
 
 #include <unistd.h>
 #include <sys/types.h>

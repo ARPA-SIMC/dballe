@@ -5,7 +5,7 @@
  * Common functions for all AOF decoders.
  */
 
-#include <dballe/conv/dba_conv.h>
+#include <dballe/conv/conv.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/msg/dba_msg.h>
 

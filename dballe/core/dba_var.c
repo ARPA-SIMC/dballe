@@ -16,7 +16,7 @@
 #include "dba_var.h"
 
 #include <dballe/core/fast.h>
-#include <dballe/conv/dba_conv.h>
+#include <dballe/conv/conv.h>
 
 struct _dba_var_attr
 {

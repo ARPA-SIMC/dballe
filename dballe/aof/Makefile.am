@@ -4,11 +4,11 @@ aofincludedir = $(includedir)/dballe/aof
 
 # Include the .cc files that contain template definitions
 aofinclude_HEADERS = \
-		aof_decoder.h
+		decoder.h
 
 noinst_LTLIBRARIES = libaof.la
 libaof_la_SOURCES = \
-		aof_decoder.c \
+		decoder.c \
 		importers/common.c \
 		importers/synop.c \
 		importers/dribu.c \

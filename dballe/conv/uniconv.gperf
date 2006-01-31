@@ -6,7 +6,7 @@
 %{
 #include <stdio.h>
 #include <string.h>
-#include "dba_conv.h"
+#include <dballe/conv/conv.h>
 %}
 
 /* Note: the _ref member of info is always set to 1 to avoid the structure

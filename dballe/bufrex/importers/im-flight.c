@@ -1,5 +1,5 @@
 #include <dballe/msg/dba_msg.h>
-#include <dballe/conv/dba_conv.h>
+#include <dballe/conv/conv.h>
 #include <dballe/bufrex/bufrex_raw.h>
 
 dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_raw raw)

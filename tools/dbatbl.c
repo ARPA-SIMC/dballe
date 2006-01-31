@@ -2,7 +2,7 @@
 
 #include <dballe/cmdline.h>
 #include <dballe/bufrex/bufrex_dtable.h>
-#include <dballe/conv/dba_conv.h>
+#include <dballe/conv/conv.h>
 
 #include <stdlib.h>
 #include <string.h>
