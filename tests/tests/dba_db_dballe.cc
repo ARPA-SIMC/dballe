@@ -1,7 +1,7 @@
 #include <tests/test-utils.h>
-#include <dballe/dba_init.h>
+#include <dballe/init.h>
 #include <dballe/db/querybuf.h>
-#include <dballe/db/dballe.h>
+#include <dballe/db/dba_db.h>
 
 
 namespace tut {

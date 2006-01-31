@@ -1,5 +1,5 @@
 #include "bench/Benchmark.h"
-#include <dballe/dba_init.h>
+#include <dballe/init.h>
 
 #include <sys/times.h>
 #include <unistd.h>

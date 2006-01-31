@@ -1,4 +1,4 @@
-#include <dballe/dba_marshal.h>
+#include <dballe/marshal.h>
 
 #include <dballe/aof/aof_decoder.h>
 #include <dballe/bufrex/bufrex.h>

@@ -1,5 +1,5 @@
 #include <tests/test-utils.h>
-#include <dballe/dba_init.h>
+#include <dballe/init.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
 

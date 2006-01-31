@@ -2,7 +2,7 @@
 #define FDBA_HANDLES_H
 
 #include <dballe/core/dba_record.h>
-#include <dballe/db/dballe.h>
+#include <dballe/db/dba_db.h>
 #include <assert.h>
 
 #define FDBA_HANDLE_START_DECL(name) \

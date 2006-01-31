@@ -5,8 +5,8 @@
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/msg/dba_msg.h>
 #include <dballe/dba_file.h>
-#include <dballe/dba_marshal.h>
-#include <dballe/db/dballe.h>
+#include <dballe/marshal.h>
+#include <dballe/db/dba_db.h>
 
 #include <tut.h>
 

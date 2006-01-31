@@ -1,4 +1,4 @@
-#include <dballe/db/dballe.h>
+#include <dballe/db/dba_db.h>
 #include <dballe/db/internals.h>
 #include <dballe/db/pseudoana.h>
 #include <dballe/db/context.h>

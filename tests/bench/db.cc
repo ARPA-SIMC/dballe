@@ -3,7 +3,7 @@
 
 #include <dballe/dba_file.h>
 #include <dballe/core/dba_record.h>
-#include <dballe/db/dballe.h>
+#include <dballe/db/dba_db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
 #include <dballe/io/dba_rawmsg.h>

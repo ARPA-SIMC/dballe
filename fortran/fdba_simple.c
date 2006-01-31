@@ -1,6 +1,6 @@
-#include <dballe/dba_init.h>
+#include <dballe/init.h>
 #include <dballe/core/verbose.h>
-#include <dballe/db/dballe.h>
+#include <dballe/db/dba_db.h>
 
 #include <f77.h>
 #include <limits.h>

@@ -2,7 +2,7 @@
 
 #include <dballe/aof/aof_decoder.h>
 #include <dballe/core/dba_record.h>
-#include <dballe/dba_cmdline.h>
+#include <dballe/cmdline.h>
 
 #include "processor.h"
 #include "conversion.h"

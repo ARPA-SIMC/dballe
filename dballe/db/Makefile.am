@@ -12,7 +12,7 @@ dbinclude_HEADERS = \
 		context.h \
 		data.h \
 		attr.h \
-		dballe.h \
+		dba_db.h \
 		import.h \
 		export.h
 
@@ -24,7 +24,7 @@ libdb_la_SOURCES = \
 		context.c \
 		data.c \
 		attr.c \
-		dballe.c \
+		dba_db.c \
 		import.c \
 		export.c
 

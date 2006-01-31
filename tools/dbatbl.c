@@ -1,6 +1,6 @@
 #define _GNU_SOURCE  /* Needed for strcasestr */
 
-#include <dballe/dba_cmdline.h>
+#include <dballe/cmdline.h>
 #include <dballe/bufrex/bufrex_dtable.h>
 #include <dballe/conv/dba_conv.h>
 

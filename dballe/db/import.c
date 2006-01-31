@@ -6,7 +6,7 @@
 #include <dballe/db/context.h>
 #include <dballe/db/data.h>
 #include <dballe/db/attr.h>
-#include <dballe/db/dballe.h>
+#include <dballe/db/dba_db.h>
 
 #include <dballe/conv/dba_conv.h>
 #include <dballe/msg/dba_msg.h>

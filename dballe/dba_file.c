@@ -1,5 +1,5 @@
 #include <dballe/dba_file.h>
-#include <dballe/dba_marshal.h>
+#include <dballe/marshal.h>
 #include <dballe/io/dba_rawfile.h>
 #include <dballe/io/dba_file_readers.h>
 #include <dballe/io/dba_file_writers.h>

@@ -1,6 +1,6 @@
 #include <dballe/msg/dba_msg.h>
 
-#include <dballe/dba_init.h>
+#include <dballe/init.h>
 #include <dballe/dba_file.h>
 /*
 #include <dballe/bufrex/bufr_file.h>
@@ -11,13 +11,13 @@
 #include <dballe/aof/aof_conv.h>
 */
 
-#include <dballe/db/dballe.h>
+#include <dballe/db/dba_db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
 
 #include <dballe/bufrex/bufrex.h>
 
-#include <dballe/dba_cmdline.h>
+#include <dballe/cmdline.h>
 
 #include <string.h>
 #include <stdlib.h>

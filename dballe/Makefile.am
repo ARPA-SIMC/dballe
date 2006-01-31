@@ -8,17 +8,17 @@ dballeincludedir = $(includedir)/dballe
 
 # Include the .cc files that contain template definitions
 dballeinclude_HEADERS = \
-		dba_init.h \
-		dba_marshal.h \
+		init.h \
+		marshal.h \
 		dba_file.h \
-		dba_cmdline.h
+		cmdline.h
 
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
-		dba_init.c \
-		dba_marshal.c \
+		init.c \
+		marshal.c \
 		dba_file.c \
-		dba_cmdline.c
+		cmdline.c
 libdballe_la_LIBADD = \
 		err/liberr.la \
 		conv/libconv.la \

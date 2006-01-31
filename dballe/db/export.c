@@ -1,6 +1,6 @@
 #include <dballe/db/export.h>
 #include <dballe/msg/dba_msg.h>
-#include <dballe/db/dballe.h>
+#include <dballe/db/dba_db.h>
 #include <dballe/db/querybuf.h>
 /* #define TRACE_DB */
 #include <dballe/db/internals.h>

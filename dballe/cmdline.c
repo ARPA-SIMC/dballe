@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 /* _GNU_SOURCE is defined only to have strndup */
 
-#include <dballe/dba_cmdline.h>
+#include <dballe/cmdline.h>
 
 #include <popt.h>
 #include <string.h>
