@@ -252,13 +252,18 @@ dba_err bufrex_raw_apply_attributes(bufrex_raw msg)
 			DBA_VAR_F(dba_var_code(msg->vars[cur_attr])) == 0 &&
 			DBA_VAR_X(dba_var_code(msg->vars[cur_attr])) == 33; i++)
 	{
+		dba_var attr;
 		/* Skip over special data like delayed repetition counts */
 		if (DBA_VAR_F(dba_var_code(msg->vars[i])) != 0)
 			continue;
 		/* Skip over variables that don't have a 0 in the data present bitmap */
 		if (dba_var_value(msg->vars[cur_dpb++]) == NULL)
 			continue;
-		DBA_RUN_OR_RETURN(dba_var_seta(msg->vars[i], msg->vars[cur_attr++]));
+		attr = msg->vars[cur_attr++];
+		/* Skip over attributes with NULL values */
+		if (dba_var_value(attr) == NULL)
+			continue;
+		DBA_RUN_OR_RETURN(dba_var_seta(msg->vars[i], attr));
 	}
 	return dba_error_ok();
 }
