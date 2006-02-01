@@ -22,6 +22,7 @@ template<> template<>
 void to::test<1>()
 {
 	const char* files[] = {
+		"aof/obs1-11.0.aof",
 		"aof/obs1-14.63.aof",
 		"aof/obs1-21.1.aof",
 		"aof/obs1-24.2104.aof",

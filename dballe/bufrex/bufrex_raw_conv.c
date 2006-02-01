@@ -49,7 +49,16 @@ dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype)
 	switch (msg->type)
 	{
 		case MSG_GENERIC:	exp = &bufrex_exporter_generic;			break;
-		case MSG_SYNOP:		exp = &bufrex_exporter_synop_0_1;		break;
+		case MSG_SYNOP: {
+			dba_var var = dba_msg_get_st_type_var(msg);
+			if (var == NULL)
+				exp = &bufrex_exporter_synop_0_1;
+			else if (dba_var_value(var)[0] == '1')
+				exp = &bufrex_exporter_synop_0_1;
+			else
+				exp = &bufrex_exporter_synop_0_3;
+			break;
+		}
 		case MSG_PILOT:		exp = &bufrex_exporter_pilot_2_91;		break;
 		case MSG_TEMP:		exp = &bufrex_exporter_temp_2_101;		break;
 		case MSG_TEMP_SHIP:	exp = &bufrex_exporter_temp_2_102;		break;

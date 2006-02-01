@@ -144,7 +144,7 @@ dba_err dba_aof_parse_weather_group(dba_msg msg, const uint32_t* obs)
 
 	/* B20001 HORIZONTAL VISIBILITY: 5000.000000 M */
 	if (_visib != 0x1ffff)
-		DBA_RUN_OR_RETURN(dba_msg_set_visibility(msg, (double)_visib, get_conf2(OBS(31) >> 12)));
+		DBA_RUN_OR_RETURN(dba_msg_set_visibility(msg, (double)_visib, get_conf2(OBS(31) >> 16)));
 
 	/* B20003 PRESENT WEATHER (SEE NOTE 1): 10.000000 CODE TABLE 20003 */
 	if (_presw != 0x7f)
@@ -159,7 +159,7 @@ dba_err dba_aof_parse_weather_group(dba_msg msg, const uint32_t* obs)
 	{
 		int val;
 		DBA_RUN_OR_RETURN(dba_convert_WMO4561_to_BUFR20004(_pastw, &val));
-		DBA_RUN_OR_RETURN(dba_msg_set_past_wtr1(msg, val, get_conf2(OBS(31) >> 16)));
+		DBA_RUN_OR_RETURN(dba_msg_set_past_wtr1(msg, val, get_conf2(OBS(31) >> 12)));
 	}
 	
 	return dba_error_ok();
@@ -241,45 +241,18 @@ dba_err dba_aof_parse_general_cloud_group(dba_msg msg, const uint32_t* obs)
 /* Decode a bit-packed cloud group */
 dba_err dba_aof_parse_cloud_group(uint32_t val, int* ns, int* c, int* h)
 {
+	*ns = (val >> 19) & 0xf;
+	DBA_RUN_OR_RETURN(dba_convert_WMO0500_to_BUFR20012((val >> 15) & 0xf, c));
 	*h = val & 0x7f;
-	val >>= 15;
-	DBA_RUN_OR_RETURN(dba_convert_WMO0500_to_BUFR20012(val & 0xf, c));
-	val >>= 4;
-	*ns = val & 0xf;
 	return dba_error_ok();
 }
 
-
-#if 0
-	*** Old stuff kept around until all needed report types are implemented ***
-
-static int count_bits(uint32_t v)
+uint32_t dba_aof_get_extra_conf(const uint32_t* obs, int idx)
 {
-	/* Algoritmo basato su Magic Binary Numbers
-	 * http://graphics.stanford.edu/~seander/bithacks.html
-	const int S[] = {1, 2, 4, 8, 16}; // Magic Binary Numbers
-	const int B[] = {0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF};
+	int count = count_bits(OBS(32));
+	uint32_t w = OBS(33+count+idx/4);
+	return (w >> ((idx % 4) * 6)) & 0x3f;
 
-	v = ((v >> S[0]) & B[0]) + (v & B[0]);
-	v = ((v >> S[1]) & B[1]) + (v & B[1]);
-	v = ((v >> S[2]) & B[2]) + (v & B[2]);
-	v = ((v >> S[3]) & B[3]) + (v & B[3]);
-	v = ((v >> S[4]) & B[4]) + (v & B[4]);
-
-	return c;
-	*/
-
-	/* Algoritmo di Kernigan (1 iterazione per bit settato a 1): ci va bene
-	 * perché solitamente sono pochi */
-
-	unsigned int c; // c accumulates the total bits set in v
-	for (c = 0; v; c++)
-	{
-		v &= v - 1; // clear the least significant bit set
-	}
-
-	return c;
 }
-#endif
 
 /* vim:set ts=4 sw=4: */

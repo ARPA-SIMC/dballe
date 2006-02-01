@@ -28,7 +28,6 @@
  006001 LONGITUDE (HIGH ACCURACY)                                        DEGREE                     5    -18000000  26 DEGREE                    5          8
  007001 HEIGHT OF STATION (SEE NOTE 1)                                   M                          0         -400  15 M                         0          5
  007002 HEIGHT OR ALTITUDE                                               M                         -1          -40  16 M                        -1          5
- 007004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
  007031 HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL (SEE NOTE 4)            M                          1       - 4000  17 M                         1          5
  007192 [SIM] Level type                                                 NUMERIC                    0            0  10 NUMERIC                   0          4
  007193 [SIM] Level L1                                                   NUMERIC                    0  -1073741824  32 NUMERIC                   0         10

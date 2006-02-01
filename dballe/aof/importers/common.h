@@ -73,5 +73,36 @@ dba_err dba_aof_parse_general_cloud_group(dba_msg msg, const uint32_t* obs);
 /* Parse a bit-packed cloud group in Synop observations */
 dba_err dba_aof_parse_cloud_group(uint32_t val, int* ns, int* c, int* h);
 
+uint32_t dba_aof_get_extra_conf(const uint32_t* obs, int idx);
+
+/* Count the number of bits present in a word */
+static inline int count_bits(uint32_t v)
+{
+	/* Algoritmo basato su Magic Binary Numbers
+	 * http://graphics.stanford.edu/~seander/bithacks.html
+	const int S[] = {1, 2, 4, 8, 16}; // Magic Binary Numbers
+	const int B[] = {0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF};
+
+	v = ((v >> S[0]) & B[0]) + (v & B[0]);
+	v = ((v >> S[1]) & B[1]) + (v & B[1]);
+	v = ((v >> S[2]) & B[2]) + (v & B[2]);
+	v = ((v >> S[3]) & B[3]) + (v & B[3]);
+	v = ((v >> S[4]) & B[4]) + (v & B[4]);
+
+	return c;
+	*/
+
+	/* Algoritmo di Kernigan (1 iterazione per bit settato a 1): ci va bene
+	 * perché solitamente sono pochi */
+
+	unsigned int c; // c accumulates the total bits set in v
+	for (c = 0; v; c++)
+	{
+		v &= v - 1; // clear the least significant bit set
+	}
+
+	return c;
+}
+
 /* vim:set ts=4 sw=4: */
 #endif
