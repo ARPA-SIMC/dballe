@@ -66,7 +66,7 @@ Synop ship   	1  11	ship	yes	sea	tested	tested	tested	TODO	tested	tested	-	-
 Synop ship auto	1  13	ship	yes	sea	tested	tested	tested	TODO	tested	tested	-	-
 Synop ship redu	1  19	ship	yes	sea	tested	tested	-	TODO	tested	tested	-	-
 Surface buoy 	1  21	buoy	yes	sea	tested	tested	tested	TODO	tested	tested	tocheck	TODO
-Surface buoy 	1 140	(none)	yes	metar	TODO	TODO	-	-	TODO	TODO	TODO	TODO
+Metar	 	1 140	(none)	yes	metar	tested	tested	-	-	tested	tested	TODO	TODO
 Pilot land	2  91	pilot	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
 Pilot ship	2  92	pilot	no	?	-	-	-	-	-	-	-	-
 Temp land	2 101	temp	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
@@ -209,6 +209,7 @@ These are the TODO-list items completed so far::
     + Controllare se vengono importati il 3h pressure change e la
       caratteristica della variazione di pressione (aggiunta override della
       mappatura sbagliata nel database)
+    + Implementare il supporto per dati 'metar'
 
  * Export per VM
     + Conversione da dba_msg opportunamente esportati a output variabili VM
@@ -217,6 +218,7 @@ These are the TODO-list items completed so far::
        = Cosa succede in fase di conversione msg2vm se conf era stato modificato?
          Lo ignoro?
        = Come lavoro con l'attributo 'replaced' dal flag di VM?
+    + Implementare il supporto per dati 'metar'
 
  * Tools
     + Fare un dbamsg filter che prende query alla dbadb e stampa solo i
@@ -337,9 +339,6 @@ These are the TODO-list items currently being worked on::
     - Altezza anemometro lo salvo solo o lo uso anche per mettere i dati di
       vento in un corrispondente livello di altezza?
 
- * Metar
-    - Implementare il supporto per dati 'metar'
-	    
  * Import da VM o database Oracle di ARPA
     - Buttare via le stazioni con NULL su lat o long
 
