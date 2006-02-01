@@ -280,9 +280,47 @@ const char* dba_msg_type_name(dba_msg_type type)
 		case MSG_ACARS: return "acars";
 		case MSG_SHIP: return "ship";
 		case MSG_BUOY: return "buoy";
+		case MSG_METAR: return "metar";
 	}
 	return "(unknown)";
 }
+
+dba_msg_type dba_msg_type_from_repcod(int repcod)
+{
+	switch (repcod)
+	{
+		case 1:  return MSG_SYNOP;
+		case 10: return MSG_SHIP;
+		case 9:  return MSG_BUOY;
+		case 12: return MSG_AIREP;
+		case 13: return MSG_AMDAR;
+		case 14: return MSG_ACARS;
+		case 4:  return MSG_PILOT;
+		case 3:  return MSG_TEMP;		
+		case 11: return MSG_TEMP_SHIP;
+		case 255:
+		default: return MSG_GENERIC;
+	}
+}
+
+int dba_msg_repcod_from_type(dba_msg_type type)
+{
+	switch (type)
+	{
+		case MSG_SYNOP:		return 1;
+		case MSG_SHIP:		return 10;
+		case MSG_BUOY:		return 9;
+		case MSG_AIREP:		return 12;
+		case MSG_AMDAR:		return 13;
+		case MSG_ACARS:		return 14;
+		case MSG_PILOT:		return 4;
+		case MSG_TEMP:		return 3;
+		case MSG_TEMP_SHIP:	return 11;
+		case MSG_GENERIC:
+		default:			return 255;
+	}
+}
+
 
 dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst)
 {
@@ -471,7 +509,6 @@ void dba_msg_print(dba_msg msg, FILE* out)
 				}
 			}
 			break;
-/*		case MSG_GENERIC: dba_msg_generic_print((dba_msg_generic)msg, out); break; */
 		default:
 			if (msg->data_count > 0)
 			{
@@ -499,22 +536,6 @@ void dba_msg_diff(dba_msg msg1, dba_msg msg2, int* diffs, FILE* out)
 		(*diffs)++;
 	}
 	
-	/*
-	switch (msg1->type)
-	{
-		case MSG_SYNOP:
-		case MSG_BUOY:
-		case MSG_SHIP: 
-		case MSG_AIREP:
-		case MSG_AMDAR:
-		case MSG_ACARS:
-		case MSG_TEMP:
-		case MSG_TEMP_SHIP: break;
-		case MSG_GENERIC: dba_msg_generic_diff((dba_msg_generic)msg1, (dba_msg_generic)msg2, diffs, out); break;
-		default: fprintf(out, "Cannot compare messages of unknown type\n"); break;
-	}
-	*/
-
 	while (i1 < msg1->data_count || i2 < msg2->data_count)
 	{
 		if (i1 == msg1->data_count)
@@ -565,22 +586,6 @@ void dba_msg_delete(dba_msg m)
 			dba_msg_level_delete(m->data[i]);
 		free(m->data);
 	}
-	/*
-	switch (m->type)
-	{
-		case MSG_SYNOP:
-		case MSG_SHIP:
-		case MSG_BUOY:
-		case MSG_AIREP:
-		case MSG_AMDAR:
-		case MSG_ACARS:
-		case MSG_TEMP:
-		case MSG_TEMP_SHIP: free(m); break;
-		case MSG_GENERIC: dba_msg_generic_delete((dba_msg_generic)m); break;
-		default:
-			fprintf(stderr, "No idea how to delete a message of type %s\n", dba_msg_type_name(m->type));
-			break;
-	}*/
 	free(m);
 }
 

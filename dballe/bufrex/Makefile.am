@@ -22,10 +22,12 @@ libbufrex_la_SOURCES = \
 		bufrex.c \
 		importers/im-generic.c \
 		importers/im-synop.c \
+		importers/im-metar.c \
 		importers/im-sounding.c \
 		importers/im-flight.c \
 		exporters/ex-generic.c \
 		exporters/ex-synop.c \
+		exporters/ex-metar.c \
 		exporters/ex-ship.c \
 		exporters/ex-buoy.c \
 		exporters/ex-pilot.c \

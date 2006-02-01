@@ -2,10 +2,11 @@
 #include <dballe/bufrex/bufrex_raw.h>
 #include "exporters/exporters.h"
 
-extern dba_err bufrex_copy_to_generic(dba_msg generic, bufrex_raw msg);
-extern dba_err bufrex_copy_to_synop(dba_msg synop, bufrex_raw msg);
-extern dba_err bufrex_copy_to_sounding(dba_msg so, bufrex_raw msg);
-extern dba_err bufrex_copy_to_flight(dba_msg flight, bufrex_raw msg);
+extern dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_raw raw);
+extern dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_raw raw);
+extern dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_raw raw);
+extern dba_err bufrex_copy_to_sounding(dba_msg msg, bufrex_raw raw);
+extern dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_raw raw);
 
 extern bufrex_exporter bufrex_exporter_generic;
 extern bufrex_exporter bufrex_exporter_synop_0_1;
@@ -21,6 +22,7 @@ extern bufrex_exporter bufrex_exporter_temp_2_102;
 extern bufrex_exporter bufrex_exporter_flight_4_142;
 extern bufrex_exporter bufrex_exporter_flight_4_144;
 extern bufrex_exporter bufrex_exporter_acars_4_145;
+extern bufrex_exporter bufrex_exporter_metar_0_140;
 
 static bufrex_exporter* exporters[] = {
 	&bufrex_exporter_generic,
@@ -37,6 +39,7 @@ static bufrex_exporter* exporters[] = {
 	&bufrex_exporter_flight_4_142,
 	&bufrex_exporter_flight_4_144,
 	&bufrex_exporter_acars_4_145,
+	&bufrex_exporter_metar_0_140,
 	0
 };
 
@@ -55,6 +58,7 @@ dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype)
 		case MSG_ACARS:		exp = &bufrex_exporter_acars_4_145;		break;
 		case MSG_SHIP:		exp = &bufrex_exporter_sea_1_11;		break;
 		case MSG_BUOY:		exp = &bufrex_exporter_sea_1_21;		break;
+		case MSG_METAR:		exp = &bufrex_exporter_metar_0_140;		break;
 	}
 	*type = exp->type;
 	*subtype = exp->subtype;
@@ -92,7 +96,12 @@ dba_err bufrex_raw_to_msg(bufrex_raw raw, dba_msg* msg)
 	switch (raw->type)
 	{
 		case 0:
-		case 1: DBA_RUN_OR_GOTO(failed, bufrex_copy_to_synop(res, raw)); break;
+		case 1:
+			if (raw->subtype == 140)
+				DBA_RUN_OR_GOTO(failed, bufrex_copy_to_metar(res, raw));
+			else
+				DBA_RUN_OR_GOTO(failed, bufrex_copy_to_synop(res, raw));
+			break;
 		case 2: DBA_RUN_OR_GOTO(failed, bufrex_copy_to_sounding(res, raw)); break;
 		case 4: DBA_RUN_OR_GOTO(failed, bufrex_copy_to_flight(res, raw)); break;
 		default: DBA_RUN_OR_GOTO(failed, bufrex_copy_to_generic(res, raw)); break;

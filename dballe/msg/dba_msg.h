@@ -14,7 +14,7 @@ extern "C" {
 #include <dballe/msg/level.h>
 #include <stdio.h>
 
-typedef enum { MSG_GENERIC, MSG_SYNOP, MSG_PILOT, MSG_TEMP, MSG_TEMP_SHIP, MSG_AIREP, MSG_AMDAR, MSG_ACARS, MSG_SHIP, MSG_BUOY } dba_msg_type;
+typedef enum { MSG_GENERIC, MSG_SYNOP, MSG_PILOT, MSG_TEMP, MSG_TEMP_SHIP, MSG_AIREP, MSG_AMDAR, MSG_ACARS, MSG_SHIP, MSG_BUOY, MSG_METAR } dba_msg_type;
 
 struct _dba_msg
 {
@@ -46,6 +46,9 @@ dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype, int l1, int
 dba_msg_datum dba_msg_find_by_id(dba_msg msg, int id);
 
 dba_msg_type dba_msg_get_type(dba_msg msg);
+
+dba_msg_type dba_msg_type_from_repcod(int repcod);
+int dba_msg_repcod_from_type(dba_msg_type type);
 
 dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst);
 dba_err dba_msg_sounding_unpack_levels(dba_msg msg, dba_msg* dst);

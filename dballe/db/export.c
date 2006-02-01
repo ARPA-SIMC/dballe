@@ -405,6 +405,7 @@ dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_m
 			switch (export_type)
 			{
 				case MSG_SYNOP: msg->type = MSG_SYNOP; break;
+				case MSG_METAR: msg->type = MSG_METAR; break;
 				case MSG_PILOT: msg->type = MSG_PILOT; break;
 				case MSG_TEMP:
 				case MSG_TEMP_SHIP:

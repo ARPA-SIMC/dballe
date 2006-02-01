@@ -20,24 +20,6 @@ const char* dsn = "test";
 const char* user = "enrico";
 const char* password = "";
 
-static int rep_cod_from_msg(dba_msg msg)
-{
-	switch (msg->type)
-	{
-		case MSG_SYNOP: return 1;
-		case MSG_SHIP: return 10;
-		case MSG_BUOY: return 9;
-		case MSG_AIREP: return 12;
-		case MSG_AMDAR: return 13;
-		case MSG_ACARS: return 14;
-		case MSG_PILOT: return 4;
-		case MSG_TEMP: return 3;
-		case MSG_TEMP_SHIP: return 11;
-		case MSG_GENERIC: return 255;
-	}
-	return 255;
-}
-
 static dba_err msg_counter(dba_msg msg, void* data)
 {
 	dba_msg_delete(msg);
@@ -127,7 +109,7 @@ protected:
 
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
-			DBA_RUN_OR_RETURN(dba_import_msg(db, *i, 1));
+			DBA_RUN_OR_RETURN(dba_import_msg(db, *i, -1, 1));
 
 		timing("inserted %d messages in the database", msgs.size());
 
@@ -137,7 +119,7 @@ protected:
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
 		{
-	        DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(*i)));
+	        DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type((*i)->type)));
 			DBA_RUN_OR_RETURN(dba_db_export(db, (*i)->type, query, msg_counter, &count));
 		}
 

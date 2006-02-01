@@ -66,6 +66,7 @@ Synop ship   	1  11	ship	yes	sea	tested	tested	tested	TODO	tested	tested	-	-
 Synop ship auto	1  13	ship	yes	sea	tested	tested	tested	TODO	tested	tested	-	-
 Synop ship redu	1  19	ship	yes	sea	tested	tested	-	TODO	tested	tested	-	-
 Surface buoy 	1  21	buoy	yes	sea	tested	tested	tested	TODO	tested	tested	tocheck	TODO
+Surface buoy 	1 140	(none)	yes	metar	TODO	TODO	-	-	TODO	TODO	TODO	TODO
 Pilot land	2  91	pilot	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
 Pilot ship	2  92	pilot	no	?	-	-	-	-	-	-	-	-
 Temp land	2 101	temp	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
@@ -107,6 +108,9 @@ These are the TODO-list items completed so far::
       ship
     + TEMP AOF dà dew point temperature, TEMP BUFR dà wet bulb temperature
     + TEMP AOF non hanno le nuvole, TEMP BUFR sí
+    + Il passaggio aof -> bufr -> dballe -> bufr -[makeaof]-> aof cambia il
+      valore dell'altezza (in alcuni casi sembra moltiplicato di 10, in altri
+      qualcosa di piú
 
  * Core
     + Refactor dba_msg to contain physical values with levellayer and timerange
@@ -158,6 +162,9 @@ These are the TODO-list items completed so far::
       array that gets indexed by the scale
     + dba_var_diff non sembra confrontare il valore degli attributi (almeno nel
       test di aof non si accorge che gli attributi hanno valori tutti diversi)
+    + Linkare attr a data senza usare l'ID ma con (id_context, varcode),
+      rimuovendo il data_id.  Questo evita poi la select per avere il data_id
+      ogni volta che si scrive un dato col rewrite attivo
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -307,9 +314,6 @@ These are the TODO-list items currently being worked on::
  * AOF
     - Test: aof -> bufr -> dballe -> bufr -[makeaof]-> aof
     - dbamsg cat di un file .aof swappa l'endianness
-    - Il passaggio aof -> bufr -> dballe -> bufr -[makeaof]-> aof cambia il
-      valore dell'altezza (in alcuni casi sembra moltiplicato di 10, in altri
-      qualcosa di piú
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
@@ -325,10 +329,8 @@ These are the TODO-list items currently being worked on::
 	 o se non importare solo gli 8 valori
 
  * Core
-    - Linkare attr a data senza usare l'ID ma con (id_context, varcode),
-      rimuovendo il data_id.  Questo evita poi la select per avere il data_id
-      ogni volta che si scrive un dato col rewrite attivo
     - Aggiungere una entry B locale per il nome della stazione
+       + 001019 LONG STATION OR SITE NAME
        - Supportarlo in dba_msg e dba_import_msg
        - Oppure toglierlo se non lo usa nessuno (nessuna routine di
          import/export lo usa al momento, visto che dba_msg non lo supporta)

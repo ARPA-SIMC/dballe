@@ -26,27 +26,9 @@ struct dba_db_import_shar
 };
 TESTGRP(dba_db_import);
 
-static int rep_cod_from_msg(dba_msg_type type)
-{
-	switch (type)
-	{
-		case MSG_SYNOP: return 1;
-		case MSG_SHIP: return 10;
-		case MSG_BUOY: return 9;
-		case MSG_AIREP: return 12;
-		case MSG_AMDAR: return 13;
-		case MSG_ACARS: return 14;
-		case MSG_PILOT: return 4;
-		case MSG_TEMP: return 3;
-		case MSG_TEMP_SHIP: return 11;
-		case MSG_GENERIC: return 255;
-	}
-	return 255;
-}
-
 static int rep_cod_from_msg(dba_msg msg)
 {
-	return rep_cod_from_msg(msg->type);
+	return dba_msg_repcod_from_type(msg->type);
 }
 
 
@@ -82,7 +64,7 @@ void to::test<1>()
 		dba_msg msg = read_test_msg(files[i], CREX);
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, 0));
+		CHECKED(dba_import_msg(db, msg, -1, 0));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
@@ -123,6 +105,7 @@ void to::test<2>()
 		"bufr/obs1-13.36.bufr", 
 		"bufr/obs1-19.3.bufr", 
 		"bufr/obs1-21.1.bufr", 
+		"bufr/obs1-140.454.bufr", 
 		"bufr/obs2-101.16.bufr", 
 		"bufr/obs2-102.1.bufr", 
 		"bufr/obs2-91.2.bufr", 
@@ -144,7 +127,7 @@ void to::test<2>()
 		dba_msg msg = read_test_msg(files[i], BUFR);
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, 0));
+		CHECKED(dba_import_msg(db, msg, -1, 0));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
@@ -201,7 +184,7 @@ void to::test<3>()
 		dba_msg msg = read_test_msg(files[i], AOF);
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, 0));
+		CHECKED(dba_import_msg(db, msg, -1, 0));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
@@ -242,8 +225,8 @@ void to::test<4>()
 	dba_msg msg2 = read_test_msg("bufr/obs0-3.504.bufr", BUFR);
 
 	CHECKED(dba_db_reset(db, NULL));
-	CHECKED(dba_import_msg(db, msg1, 0));
-	CHECKED(dba_import_msg(db, msg2, 0));
+	CHECKED(dba_import_msg(db, msg1, -1, 0));
+	CHECKED(dba_import_msg(db, msg2, -1, 0));
 
 	dba_record query;
 	CHECKED(dba_record_create(&query));
@@ -292,7 +275,7 @@ void to::test<5>()
 		dba_msg msg;
 		CHECKED(dba_msg_create(&msg));
 		gen.fill_message(msg, rnd(0.8));
-		CHECKED(dba_import_msg(db, msg, 0));
+		CHECKED(dba_import_msg(db, msg, -1, 0));
 		dba_msg_delete(msg);
 	}
 
@@ -333,6 +316,7 @@ void to::test<6>()
 		"bufr/obs1-19.3.bufr",
 		"bufr/obs1-21.1.bufr",
 		"bufr/obs1-9.2.bufr",
+		"bufr/obs1-140.454.bufr",
 		"bufr/obs2-101.16.bufr",
 		"bufr/obs2-102.1.bufr",
 		"bufr/obs2-91.2.bufr",
@@ -374,7 +358,7 @@ void to::test<6>()
 	for (msg_vector::const_iterator i = msgs.begin();
 			i != msgs.end(); i++)
 	{
-		CHECKED(dba_import_msg(db, *i, 1));
+		CHECKED(dba_import_msg(db, *i, -1, 1));
 		rep_cods[(*i)->type]++;
 	}
 
@@ -385,7 +369,7 @@ void to::test<6>()
 		test_tag(dba_msg_type_name(i->first));
 
 		int count = 0;
-		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(i->first)));
+		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type(i->first)));
 		CHECKED(dba_db_export(db, i->first, query, msg_counter, &count));
 		gen_ensure_equals(count, i->second);
 	}

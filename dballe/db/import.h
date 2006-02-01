@@ -26,7 +26,7 @@ extern "C" {
  * @return
  *   The error indicator for the function
  */
-dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite);
+dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite);
 
 #ifdef  __cplusplus
 }

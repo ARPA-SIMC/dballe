@@ -49,6 +49,7 @@ static char* op_dsn = "test";
 static char* op_user = "";
 static char* op_pass = "";
 static char* op_input_type = "bufr";
+static char* op_input_network = "";
 static char* op_output_type = "bufr";
 static char* op_output_template = "";
 static int op_overwrite = 0;
@@ -77,12 +78,13 @@ struct import_data
 {
 	dba_db db;
 	int overwrite;
+	int forced_repcod;
 };
 
 static dba_err import_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
 	struct import_data* d = (struct import_data*)data;
-	DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->overwrite));
+	DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, d->overwrite));
 	return dba_error_ok();
 }
 
@@ -158,6 +160,21 @@ dba_err do_import(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&data.db));
 	data.overwrite = op_overwrite;
+
+	if (op_input_network[0] != 0)
+	{
+		const char* s;
+		int is_cod = 1;
+		for (s = op_input_network; *s && is_cod; s++)
+			if (!isdigit(*s))
+				is_cod = 0;
+		
+		if (is_cod)
+			data.forced_repcod = strtoul(op_input_network, NULL, 0);
+		else
+			DBA_RUN_OR_RETURN(dba_db_rep_cod_from_memo(data.db, op_input_network, &(data.forced_repcod)));
+	} else
+		data.forced_repcod = -1;
 
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
 
@@ -268,6 +285,8 @@ struct poptOption dbadb_import_options[] = {
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
 		"overwrite existing data" },
+	{ "report", 'r', POPT_ARG_STRING, &op_input_network, 0,
+		"force data to be of this report type, specified with code or memo", "rep" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
 		"Options used to connect to the database" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,

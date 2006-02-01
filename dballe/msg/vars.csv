@@ -2,6 +2,8 @@
 ST_TYPE,		int,	B02001,		257,  0, 0,		0,      0, 0
 ST_DIR,			int,	B01012,		257,  0, 0,		0,      0, 0
 ST_SPEED,		int,	B01013,		257,  0, 0,		0,      0, 0
+ST_NAME,		str,	B01019,		257,  0, 0,		0,      0, 0
+ST_NAME_ICAO,		str,	B01063,		257,  0, 0,		0,      0, 0
 FLIGHT_REG_NO,		str,	B01008,		257,  0, 0,		0,      0, 0
 FLIGHT_PHASE,		int,	B08004,		257,  0, 0,		0,      0, 0
 FLIGHT_ROLL,		num,	B02063,		257,  0, 0,		0,      0, 0
@@ -29,8 +31,12 @@ HEIGHT_BARO,		int,	B07031,		257,  0, 0,		0,      0, 0
 PRESS,			num,	B10004,		  1,  0, 0,		0,      0, 0
 PRESS_3H,		num,	B10061,		  1,  0, 0,		5, -10800, 0
 PRESS_MSL,		num,	B10051,		102,  0, 0,		0,      0, 0
+QNH,			num,	B10052,		105,  2, 0,		0,      0, 0
 WIND_DIR,		num,	B11001,		105, 10, 0,		0,      0, 0
 WIND_SPEED,		num,	B11002,		105, 10, 0,		0,      0, 0
+WIND_MAX,		num,	B11041,		105, 10, 0,		0,      0, 0
+EX_CCW_WIND,		num,	B11016,		105, 10, 0,		0,      0, 0
+EX_CW_WIND,		num,	B11016,		105, 10, 0,		0,      0, 0
 TEMP_2M,		num,	B12001,		105,  2, 0,		0,      0, 0
 WET_TEMP_2M,		num,	B12002,		105,  2, 0,		0,	0, 0
 DEWPOINT_2M,		num,	B12003,		105,  2, 0,		0,      0, 0
@@ -42,6 +48,7 @@ VISIBILITY,		num,	B20001,		  1,  0, 0,		0,      0, 0
 PRES_WTR,		int,	B20003,		  1,  0, 0,		0,      0, 0
 PAST_WTR1,		int,	B20004,		  1,  0, 0,		2, -21600, 0
 PAST_WTR2,		int,	B20005,		  1,  0, 0,		2, -21600, 0
+METAR_WTR,		int,	B20009,		  1,  0, 0,		0,	0, 0
 CLOUD_N	,		int,	B20010,		256,  0, 0,		0,      0, 0
 CLOUD_NH,		int,	B20011,		256,  0, 0,		0,      0, 0
 CLOUD_HH,		num,	B20013,		256,  0, 0,		0,      0, 0

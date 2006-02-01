@@ -191,7 +191,7 @@ cleanup:
 #endif
 
 
-dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
+dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 {
 	dba_err err = DBA_OK;
 	dba_msg_level l_ana = dba_msg_find_level(msg, 257, 0, 0);
@@ -208,20 +208,8 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 	dd = db->data;
 	dq = db->attr;
 	
-	switch (msg->type)
-	{
-		case MSG_SYNOP:		mobile = 0; dc->id_report = 1;	break;
-		case MSG_SHIP:		mobile = 1; dc->id_report = 10;	break;
-		case MSG_BUOY:		mobile = 1; dc->id_report = 9;	break;
-		case MSG_AIREP:		mobile = 1; dc->id_report = 12;	break;
-		case MSG_AMDAR:		mobile = 1; dc->id_report = 13;	break;
-		case MSG_ACARS:		mobile = 1; dc->id_report = 14;	break;
-		case MSG_PILOT:		mobile = 0; dc->id_report = 4;	break;
-		case MSG_TEMP:		mobile = 0; dc->id_report = 3;	break;
-		case MSG_TEMP_SHIP:	mobile = 1; dc->id_report = 11;	break;
-		case MSG_GENERIC:
-		default:			mobile = 0; dc->id_report = 255;	break;
-	}
+	dc->id_report = repcod != -1 ? repcod : dba_msg_repcod_from_type(msg->type);
+	mobile = dba_msg_get_ident_var(msg) == NULL ? 0 : 1;
 
 	DBA_RUN_OR_RETURN(dba_db_begin(db));
 
@@ -288,8 +276,10 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int overwrite)
 		else
 			da->heightbaro_ind = SQL_NULL_DATA;
 
-		// TODO: char name[255]; SQLINTEGER name_ind;
-		da->name_ind = SQL_NULL_DATA;
+		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_ST_NAME)) != NULL)
+			dba_db_pseudoana_set_ident(da, dba_var_value(d->var));
+		else
+			da->name_ind = SQL_NULL_DATA;
 
 		if (dc->id_ana == -1)
 			DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_insert(da, &(dc->id_ana)));
