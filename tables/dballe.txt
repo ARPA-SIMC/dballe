@@ -67,6 +67,7 @@
  020011 CLOUD AMOUNT                                                     CODE TABLE 20011           0            0   4 CODE TABLE 20011          0          2
  020012 CLOUD TYPE                                                       CODE TABLE 20012           0            0   6 CODE TABLE 20012          0          2
  020013 HEIGHT OF BASE OF CLOUD                                          M                         -1          -40  11 M                        -1          4
+ 020019 SIGNIFICANT PRESENT OR FORECAST WEATHER                          CCITTIA5                   0            0  72 CHARACTER                 0          9
  020062 STATE OF THE GROUND (WITH OR WITHOUT SNOW)                       CODE TABLE 20062           0            0   5 CODE TABLE 20062          0          2
  022001 DIRECTION OF WAVES                                               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  022011 PERIOD OF WAVES                                                  S                          0            0   6 S                         0          2
