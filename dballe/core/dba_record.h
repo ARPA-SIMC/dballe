@@ -71,7 +71,7 @@ struct _dba_item;
 
 /** Opaque structure representing a DBALLE record.
  *
- * A DBALLE record is a container for one observation of metereological value,
+ * A DBALLE record is a container for one observation of meteorological value,
  * that includes anagraphical informations, physical location of the
  * observation in time and space, and all the observed variables.
  *

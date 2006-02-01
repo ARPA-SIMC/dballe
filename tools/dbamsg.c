@@ -480,30 +480,30 @@ struct poptOption dbamsg_filter_options[] = {
 
 static void init()
 {
-	dbamsg.desc = "Work with encoded metereological data";
+	dbamsg.desc = "Work with encoded meteorological data";
 	dbamsg.longdesc =
-		"Examine, dump and convert files containing metereological data. "
+		"Examine, dump and convert files containing meteorological data. "
 		"It supports observations encoded in BUFR, CREX and AOF formats";
 	dbamsg.ops = (struct op_dispatch_table*)calloc(7, sizeof(struct op_dispatch_table));
 
 	dbamsg.ops[0].func = do_scan;
 	dbamsg.ops[0].aliases[0] = "scan";
 	dbamsg.ops[0].usage = "scan [options] filename [filename [...]]";
-	dbamsg.ops[0].desc = "Summarise the contents of a file with metereological data";
+	dbamsg.ops[0].desc = "Summarise the contents of a file with meteorological data";
 	dbamsg.ops[0].longdesc = NULL;
 	dbamsg.ops[0].optable = dbamsg_scan_options;
 
 	dbamsg.ops[1].func = do_dump;
 	dbamsg.ops[1].aliases[0] = "dump";
 	dbamsg.ops[1].usage = "dump [options] filename [filename [...]]";
-	dbamsg.ops[1].desc = "Dump the contents of a file with metereological data";
+	dbamsg.ops[1].desc = "Dump the contents of a file with meteorological data";
 	dbamsg.ops[1].longdesc = NULL;
 	dbamsg.ops[1].optable = dbamsg_dump_options;
 
 	dbamsg.ops[2].func = do_cat;
 	dbamsg.ops[2].aliases[0] = "cat";
 	dbamsg.ops[2].usage = "cat [options] filename [filename [...]]";
-	dbamsg.ops[2].desc = "Dump the raw data of a file with metereological data";
+	dbamsg.ops[2].desc = "Dump the raw data of a file with meteorological data";
 	dbamsg.ops[2].longdesc = NULL;
 	dbamsg.ops[2].optable = dbamsg_cat_options;
 
@@ -511,7 +511,7 @@ static void init()
 	dbamsg.ops[3].aliases[0] = "convert";
 	dbamsg.ops[3].aliases[1] = "conv";
 	dbamsg.ops[3].usage = "convert [options] filename [filename [...]]";
-	dbamsg.ops[3].desc = "Convert metereological data between different formats";
+	dbamsg.ops[3].desc = "Convert meteorological data between different formats";
 	dbamsg.ops[3].longdesc = NULL;
 	dbamsg.ops[3].optable = dbamsg_convert_options;
 
@@ -519,7 +519,7 @@ static void init()
 	dbamsg.ops[4].aliases[0] = "compare";
 	dbamsg.ops[4].aliases[1] = "cmp";
 	dbamsg.ops[4].usage = "compare [options] filename1 [filename2]";
-	dbamsg.ops[4].desc = "Compare two files with metereological data";
+	dbamsg.ops[4].desc = "Compare two files with meteorological data";
 	dbamsg.ops[4].longdesc = NULL;
 	dbamsg.ops[4].optable = dbamsg_compare_options;
 

@@ -362,7 +362,7 @@ by applications for fast access.
 	fprintf(out,
 			".SH AUTHOR\n"
 			"\\fB%s\\fP has been written by Enrico Zini <enrico@enricozini.com> "
-			"for ARPA Emilia Romagna, Servizio Idrometereologico.\n", self);
+			"for ARPA Emilia Romagna, Servizio Idrometeorologico.\n", self);
 }
 
 int dba_cmdline_dispatch_main (const struct tool_desc* desc, int argc, const char* argv[])

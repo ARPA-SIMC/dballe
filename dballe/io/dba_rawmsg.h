@@ -97,7 +97,7 @@ dba_err dba_rawmsg_get_raw(dba_rawmsg msg, const unsigned char** buf, int* size)
 /**
  * Expand the size of the buffer holding message data.
  *
- * Allocation is optimised for the normal message size of metereological data:
+ * Allocation is optimised for the normal message size of meteorological data:
  * if the buffer size is below 16Kbytes, then the size is doubled; when above
  * 16Kb, then it is grown by 2Kb.
  *

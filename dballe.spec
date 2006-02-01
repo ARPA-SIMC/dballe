@@ -1,4 +1,4 @@
-Summary: DB-ALLe is a database for punctual metereological data
+Summary: DB-ALLe is a database for punctual meteorological data
 Name: dballe
 Version: 0.4
 Release: 2
@@ -12,7 +12,7 @@ Requires: MyODBC
 
  
 %description
-DB-ALLe is a database for punctual metereological data
+DB-ALLe is a database for punctual meteorological data
          intended to complement the existing tools to manage grid-based data.
 
  These are the main characteristics of DB-ALLe:

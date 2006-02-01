@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: libdballe
-Description: Volatile database for computations on metereological data
+Description: Volatile database for computations on meteorological data
 Version: @VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -ldballe -lpopt
