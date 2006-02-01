@@ -25,8 +25,6 @@ typedef dba_err (*dba_msg_consumer)(dba_msg msg, void* data);
  *
  * @param db
  *   The database to use for the query
- * @param type
- *   The type of message to export
  * @param query
  *   The query to perform
  * @param cons
@@ -36,7 +34,7 @@ typedef dba_err (*dba_msg_consumer)(dba_msg msg, void* data);
  * @returns
  *   The error indicator for the function (@see dba_err)
  */
-dba_err dba_db_export(dba_db db, dba_msg_type type, dba_record query, dba_msg_consumer cons, void* data);
+dba_err dba_db_export(dba_db db, dba_record query, dba_msg_consumer cons, void* data);
 
 #if 0
 dba_err dba_db_export_old(dba_db db, dba_msg_type export_type, dba_record query, dba_msg_consumer cons, void* data);

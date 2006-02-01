@@ -120,7 +120,7 @@ protected:
 				i != msgs.end(); i++)
 		{
 	        DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type((*i)->type)));
-			DBA_RUN_OR_RETURN(dba_db_export(db, (*i)->type, query, msg_counter, &count));
+			DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_counter, &count));
 		}
 
 		timing("exported %d messages from the database, new style", count);

@@ -49,7 +49,7 @@ static char* op_dsn = "test";
 static char* op_user = "";
 static char* op_pass = "";
 static char* op_input_type = "bufr";
-static char* op_input_network = "";
+static char* op_report = "";
 static char* op_output_type = "bufr";
 static char* op_output_template = "";
 static int op_overwrite = 0;
@@ -147,6 +147,28 @@ dba_err do_wipe(poptContext optCon)
 	return dba_error_ok();
 }
 
+int parse_op_report(dba_db db)
+{
+	if (op_report[0] != 0)
+	{
+		const char* s;
+		int is_cod = 1;
+		for (s = op_report; *s && is_cod; s++)
+			if (!isdigit(*s))
+				is_cod = 0;
+		
+		if (is_cod)
+			return strtoul(op_report, NULL, 0);
+		else
+		{
+			int val;
+			DBA_RUN_OR_RETURN(dba_db_rep_cod_from_memo(db, op_report, &val));
+			return val;
+		}
+	} else
+		return -1;
+}
+
 dba_err do_import(poptContext optCon)
 {
 	dba_encoding type;
@@ -160,21 +182,7 @@ dba_err do_import(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&data.db));
 	data.overwrite = op_overwrite;
-
-	if (op_input_network[0] != 0)
-	{
-		const char* s;
-		int is_cod = 1;
-		for (s = op_input_network; *s && is_cod; s++)
-			if (!isdigit(*s))
-				is_cod = 0;
-		
-		if (is_cod)
-			data.forced_repcod = strtoul(op_input_network, NULL, 0);
-		else
-			DBA_RUN_OR_RETURN(dba_db_rep_cod_from_memo(data.db, op_input_network, &(data.forced_repcod)));
-	} else
-		data.forced_repcod = -1;
+	data.forced_repcod = parse_op_report(data.db);
 
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
 
@@ -189,11 +197,15 @@ struct export_data
 	dba_file file;
 	int cat;
 	int subcat;
+	int forced_rep_cod;
 };
 
 static dba_err msg_writer(dba_msg msg, void* data)
 {
 	struct export_data* d = (struct export_data*)data;
+	/* Override the message type if the user asks for it */
+	if (d->forced_rep_cod != -1)
+		msg->type = dba_msg_type_from_repcod(d->forced_rep_cod);
 	DBA_RUN_OR_RETURN(dba_file_write(d->file, msg, d->cat, d->subcat));
 	dba_msg_delete(msg);
 	return dba_error_ok();
@@ -201,17 +213,14 @@ static dba_err msg_writer(dba_msg msg, void* data)
 
 dba_err do_export(poptContext optCon)
 {
-	struct export_data d = { NULL, 0, 0 };
-	const char* datatype;
-	int rep_cod;
+	struct export_data d = { NULL, 0, 0, -1 };
+	dba_var var;
 	dba_encoding type;
 	dba_record query;
 	dba_db db;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
-	if ((datatype = poptGetArg(optCon)) == NULL)
-		dba_cmdline_error(optCon, "you need to specify what messages to export, from the types listed in /etc/repinfo.csv");
 
 	if (op_output_template[0] != 0)
 		if (sscanf(op_output_template, "%d.%d", &d.cat, &d.subcat) != 2)
@@ -224,35 +233,15 @@ dba_err do_export(poptContext optCon)
 	/* Create the query */
 	DBA_RUN_OR_RETURN(dba_record_create(&query));
 
-	/* Obtain the report code to query */
-	if (isdigit(datatype[0]))
-		rep_cod = atoi(datatype);
-	else
-		DBA_RUN_OR_RETURN(dba_db_rep_cod_from_memo(db, datatype, &rep_cod));
-
-	/* Query the wanted report code */
-	DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod));
-
-	/* Add the rest of the query */
+	/* Add the query data from commandline */
 	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
+
+	d.forced_rep_cod = parse_op_report(db);
 
 	type = dba_cmdline_stringToMsgType(op_output_type, optCon);
 	DBA_RUN_OR_RETURN(dba_file_create(&d.file, type, "(stdout)", "w"));
 
-	switch (rep_cod)
-	{
-		case 1:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SYNOP,		query, msg_writer, &d)); break;
-		case 2:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_GENERIC,	query, msg_writer, &d)); break;
-		case 3:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP,		query, msg_writer, &d)); break;
-		case 4:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_PILOT, 		query, msg_writer, &d)); break;
-		case 9:		DBA_RUN_OR_RETURN(dba_db_export(db, MSG_BUOY, 		query, msg_writer, &d)); break;
-		case 10:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_SHIP, 		query, msg_writer, &d)); break;
-		case 11:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_TEMP_SHIP, 	query, msg_writer, &d)); break;
-		case 12:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_AIREP, 		query, msg_writer, &d)); break;
-		case 13:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_AMDAR, 		query, msg_writer, &d)); break;
-		case 14:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_ACARS, 		query, msg_writer, &d)); break;
-		default:	DBA_RUN_OR_RETURN(dba_db_export(db, MSG_GENERIC, 	query, msg_writer, &d)); break;
-	}
+	DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_writer, &d));
 
 	dba_file_delete(d.file);
 	dba_db_delete(db);
@@ -285,7 +274,7 @@ struct poptOption dbadb_import_options[] = {
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
 		"overwrite existing data" },
-	{ "report", 'r', POPT_ARG_STRING, &op_input_network, 0,
+	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
 		"force data to be of this report type, specified with code or memo", "rep" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
 		"Options used to connect to the database" },
@@ -296,6 +285,8 @@ struct poptOption dbadb_import_options[] = {
 
 struct poptOption dbadb_export_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
+		"force exported data to be of this report type, specified with code or memo", "rep" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
 	{ "template", 't', POPT_ARG_STRING, &op_output_template, 0,

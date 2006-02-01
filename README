@@ -165,6 +165,11 @@ These are the TODO-list items completed so far::
     + Linkare attr a data senza usare l'ID ma con (id_context, varcode),
       rimuovendo il data_id.  Questo evita poi la select per avere il data_id
       ogni volta che si scrive un dato col rewrite attivo
+    + Aggiungere una entry B locale per il nome della stazione
+       + 001019 LONG STATION OR SITE NAME
+       + Supportarlo in dba_msg e dba_import_msg
+       = Oppure toglierlo se non lo usa nessuno (nessuna routine di
+         import/export lo usa al momento, visto che dba_msg non lo supporta)
 
  * Interfaccia fortran
     + dare errore se ana=read ma qc o data != read
@@ -329,11 +334,6 @@ These are the TODO-list items currently being worked on::
 	 o se non importare solo gli 8 valori
 
  * Core
-    - Aggiungere una entry B locale per il nome della stazione
-       + 001019 LONG STATION OR SITE NAME
-       - Supportarlo in dba_msg e dba_import_msg
-       - Oppure toglierlo se non lo usa nessuno (nessuna routine di
-         import/export lo usa al momento, visto che dba_msg non lo supporta)
     - Altezza anemometro lo salvo solo o lo uso anche per mettere i dati di
       vento in un corrispondente livello di altezza?
 

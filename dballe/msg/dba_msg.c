@@ -290,6 +290,7 @@ dba_msg_type dba_msg_type_from_repcod(int repcod)
 	switch (repcod)
 	{
 		case 1:  return MSG_SYNOP;
+		case 2:  return MSG_METAR;
 		case 10: return MSG_SHIP;
 		case 9:  return MSG_BUOY;
 		case 12: return MSG_AIREP;
@@ -308,6 +309,7 @@ int dba_msg_repcod_from_type(dba_msg_type type)
 	switch (type)
 	{
 		case MSG_SYNOP:		return 1;
+		case MSG_METAR:		return 2;
 		case MSG_SHIP:		return 10;
 		case MSG_BUOY:		return 9;
 		case MSG_AIREP:		return 12;

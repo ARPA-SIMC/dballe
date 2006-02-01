@@ -68,7 +68,7 @@ void to::test<1>()
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
-		CHECKED(dba_db_export(db, msg->type, query, msg_collector, &msgs));
+		CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 		gen_ensure_equals(msgs.size(), 1u);
 		gen_ensure(msgs[0] != NULL);
 
@@ -131,7 +131,7 @@ void to::test<2>()
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
-		CHECKED(dba_db_export(db, msg->type, query, msg_collector, &msgs));
+		CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 		gen_ensure_equals(msgs.size(), 1u);
 		gen_ensure(msgs[0] != NULL);
 
@@ -188,7 +188,7 @@ void to::test<3>()
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
-		CHECKED(dba_db_export(db, msg->type, query, msg_collector, &msgs));
+		CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 		gen_ensure_equals(msgs.size(), 1u);
 		gen_ensure(msgs[0] != NULL);
 
@@ -234,7 +234,7 @@ void to::test<4>()
 
 	// Export with the old algorithm
 	vector<dba_msg> msgs;
-	CHECKED(dba_db_export(db, msg1->type, query, msg_collector, &msgs));
+	CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 	gen_ensure_equals(msgs.size(), 2u);
 	gen_ensure(msgs[0] != NULL);
 	gen_ensure(msgs[1] != NULL);
@@ -284,9 +284,9 @@ void to::test<5>()
 	CHECKED(dba_record_create(&query));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, 255));
 
-	// Export with the old algorithm
+	// Export
 	vector<dba_msg> msgs;
-	CHECKED(dba_db_export(db, MSG_GENERIC, query, msg_collector, &msgs));
+	CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 	gen_ensure_equals(msgs.size(), 100u);
 	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
 		dba_msg_delete(*i);
@@ -370,7 +370,7 @@ void to::test<6>()
 
 		int count = 0;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type(i->first)));
-		CHECKED(dba_db_export(db, i->first, query, msg_counter, &count));
+		CHECKED(dba_db_export(db, query, msg_counter, &count));
 		gen_ensure_equals(count, i->second);
 	}
 

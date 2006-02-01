@@ -220,7 +220,7 @@ cleanup:
 }
 #endif
 
-dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_msg_consumer cons, void* data)
+dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* data)
 {
 	const char* query =
 		"SELECT pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"
@@ -272,14 +272,10 @@ dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_m
 	dba_msg msg = NULL;
 	dba_var var = NULL;
 	dba_var attr = NULL;
-	int rep_cod;
 	int pseq = 1;
 	int res;
 
 	assert(db);
-
-	/* Get the rep_cod from the query */
-	DBA_RUN_OR_RETURN(dba_db_get_rep_cod(db, rec, &rep_cod));
 
 	/* Allocate statement handle */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
@@ -402,42 +398,7 @@ dba_err dba_db_export(dba_db db, dba_msg_type export_type, dba_record rec, dba_m
 
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_create(&msg));
 		
-			switch (export_type)
-			{
-				case MSG_SYNOP: msg->type = MSG_SYNOP; break;
-				case MSG_METAR: msg->type = MSG_METAR; break;
-				case MSG_PILOT: msg->type = MSG_PILOT; break;
-				case MSG_TEMP:
-				case MSG_TEMP_SHIP:
-					switch (rep_cod)
-					{
-						case 3: msg->type = MSG_TEMP; break;
-						case 11: msg->type = MSG_TEMP_SHIP; break;
-						default: msg->type = MSG_GENERIC; break;
-					}
-					break;
-				case MSG_AIREP:
-				case MSG_AMDAR:
-				case MSG_ACARS:
-					switch (rep_cod)
-					{
-						case 12: msg->type = MSG_AIREP; break;
-						case 13: msg->type = MSG_AMDAR; break;
-						case 14: msg->type = MSG_ACARS; break;
-						default: msg->type = MSG_GENERIC; break;
-					}
-					break;
-				case MSG_SHIP:
-				case MSG_BUOY:
-					switch (rep_cod)
-					{
-						case 9: msg->type = MSG_BUOY; break;
-						case 10: msg->type = MSG_SHIP; break;
-						default: msg->type = MSG_GENERIC; break;
-					}
-					break;
-				case MSG_GENERIC: msg->type = MSG_GENERIC; break;
-			}
+			msg->type = dba_msg_type_from_repcod(out_rep_cod);
 
 			if (0)
 			{
