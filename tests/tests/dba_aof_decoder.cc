@@ -72,6 +72,19 @@ void to::test<1>()
 	dba_rawmsg_delete(raw);
 }
 
+void strip_attributes(dba_msg msg)
+{
+	for (int i = 0; i < msg->data_count; i++)
+	{
+		dba_msg_level lev = msg->data[i];
+		for (int j = 0; j < lev->data_count; j++)
+		{
+			dba_msg_datum dat = lev->data[j];
+			dba_var_clear_attrs(dat->var);
+		}
+	}
+}
+
 void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 {
 	// Recode BUFR attributes to match the AOF 2-bit values
@@ -276,7 +289,56 @@ void to::test<2>()
 		// Compare the two dba_msg
 		int diffs = 0;
 		dba_msg_diff(amsg, bmsg, &diffs, stderr);
-		if (diffs) track_different_msgs(amsg, bmsg, "aof-recoded");
+		if (diffs) track_different_msgs(amsg, bmsg, "aof-bufr");
+		gen_ensure_equals(diffs, 0);
+
+		dba_msg_delete(amsg);
+		dba_msg_delete(bmsg);
+		dba_rawmsg_delete(raw);
+	}
+	test_untag();
+}
+
+// Reencode to CREX and compare
+template<> template<>
+void to::test<3>()
+{
+	const char* files[] = {
+		"aof/obs1-11.0.aof",
+		"aof/obs1-14.63.aof",
+		"aof/obs1-21.1.aof",
+		"aof/obs1-24.2104.aof",
+		"aof/obs1-24.34.aof",
+		"aof/obs2-144.2198.aof",
+		"aof/obs2-244.0.aof",
+		"aof/obs2-244.1.aof",
+		"aof/obs4-165.2027.aof",
+		"aof/obs5-35.61.aof",
+		"aof/obs5-36.30.aof",
+		"aof/obs6-32.1573.aof",
+		"aof/obs6-32.0.aof",
+		NULL,
+	};
+
+	for (size_t i = 0; files[i] != NULL; i++)
+	{
+		test_tag(files[i]);
+
+		dba_msg amsg = read_test_msg(files[i], AOF);
+		
+		dba_rawmsg raw;
+		CHECKED(dba_marshal_encode(amsg, CREX, &raw));
+
+		dba_msg bmsg;
+		CHECKED(dba_marshal_decode(raw, &bmsg));
+
+		strip_attributes(amsg);
+		normalise_encoding_quirks(amsg, bmsg);
+
+		// Compare the two dba_msg
+		int diffs = 0;
+		dba_msg_diff(amsg, bmsg, &diffs, stderr);
+		if (diffs) track_different_msgs(amsg, bmsg, "aof-crex");
 		gen_ensure_equals(diffs, 0);
 
 		dba_msg_delete(amsg);
@@ -289,7 +351,7 @@ void to::test<2>()
 
 // Compare decoding results with BUFR sample data
 template<> template<>
-void to::test<3>()
+void to::test<4>()
 {
 	string files[] = {
 		"aof/obs1-14.63",		// OK
