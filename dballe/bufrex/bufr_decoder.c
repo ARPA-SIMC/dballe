@@ -414,6 +414,7 @@ static dba_err bufr_decode_b_data(decoder d)
 		/* Read a string */
 		int toread = info->bit_len;
 		int len = 0;
+		int missing = 1;
 
 		str = (char*)malloc(info->bit_len / 8 + 2);
 
@@ -428,18 +429,26 @@ static dba_err bufr_decode_b_data(decoder d)
 			uint32_t bitval;
 			int count = toread > 8 ? 8 : toread;
 			DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, count, &bitval));
+			/* Check that the string is not all 0xff, meaning missing value */
+			if (bitval != 0xff && bitval != 0)
+				missing = 0;
 			str[len++] = bitval;
 			toread -= count;
 		}
-		str[len] = 0;
 
-		/* Trim trailing spaces */
-		for (--len; len > 0 && isspace(str[len]);
-				len--)
+		if (!missing)
+		{
 			str[len] = 0;
 
-		DBA_RUN_OR_GOTO(cleanup, dba_var_setc(var, str));
-		TRACE("bufr_message_decode_b_data len %d val %s info-len %d info-desc %s\n", len, str, info->bit_len, info->desc);
+			/* Trim trailing spaces */
+			for (--len; len > 0 && isspace(str[len]);
+					len--)
+				str[len] = 0;
+
+			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(var, str));
+		}
+
+		TRACE("bufr_message_decode_b_data len %d val %s missing %d info-len %d info-desc %s\n", len, str, missing, info->bit_len, info->desc);
 	} else {
 		/* Read a value */
 		uint32_t val;
