@@ -5,7 +5,8 @@
 extern dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_raw raw);
 extern dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_raw raw);
 extern dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_raw raw);
-extern dba_err bufrex_copy_to_sounding(dba_msg msg, bufrex_raw raw);
+extern dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_raw raw);
+extern dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_raw raw);
 extern dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_raw raw);
 
 extern bufrex_exporter bufrex_exporter_generic;
@@ -120,7 +121,12 @@ dba_err bufrex_raw_to_msg(bufrex_raw raw, dba_msg* msg)
 			else
 				DBA_RUN_OR_GOTO(failed, bufrex_copy_to_synop(res, raw));
 			break;
-		case 2: DBA_RUN_OR_GOTO(failed, bufrex_copy_to_sounding(res, raw)); break;
+		case 2:
+			if (raw->subtype == 91 || raw->subtype == 92)
+				DBA_RUN_OR_GOTO(failed, bufrex_copy_to_pilot(res, raw));
+			else
+				DBA_RUN_OR_GOTO(failed, bufrex_copy_to_temp(res, raw));
+			break;
 		case 4: DBA_RUN_OR_GOTO(failed, bufrex_copy_to_flight(res, raw)); break;
 		default: DBA_RUN_OR_GOTO(failed, bufrex_copy_to_generic(res, raw)); break;
 	}

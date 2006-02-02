@@ -100,6 +100,8 @@ These are the TODO-list items completed so far::
       contenuto, non come data attuale
     + Esportare tutti gli attributi trovati quando si esportano i generici
     + Importare gli attributi dai generici
+    + Quando si importano PILOT da BUFR, usare il geopotenziale come contesto
+      in alternativa alla pressione, convertendolo in metri con m = g/9.80665
 
  * AOF
     + Riattivare i confronti comparativi coi BUFR (togliendo dal messaggio
@@ -318,14 +320,16 @@ These are the TODO-list items currently being worked on::
  * Milestone release-extra
     - Export AOF
 
+ * Ottimizzazione
+    - Cercare di snellire dba_error_ok
+    - Evitare delle dba_record_copy (dove le fa?)
+
  * AOF
     - Test: aof -> bufr -> dballe -> bufr -[makeaof]-> aof
     - dbamsg cat di un file .aof swappa l'endianness
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
-    - Quando si importano PILOT da BUFR, usare il geopotenziale come contesto
-      in alternativa alla pressione, convertendolo in metri con m = g/9.80665
 
  * Tools
     - fare l'autodetect del formato dei file in input, guardando ai primi byte

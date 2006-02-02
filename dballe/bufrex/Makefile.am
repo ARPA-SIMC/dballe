@@ -23,7 +23,8 @@ libbufrex_la_SOURCES = \
 		importers/im-generic.c \
 		importers/im-synop.c \
 		importers/im-metar.c \
-		importers/im-sounding.c \
+		importers/im-pilot.c \
+		importers/im-temp.c \
 		importers/im-flight.c \
 		exporters/ex-generic.c \
 		exporters/ex-synop.c \
