@@ -202,7 +202,7 @@ dba_err dba_aof_parse_general_cloud_group(dba_msg msg, const uint32_t* obs)
 
 	/* B20013 HEIGHT OF BASE OF CLOUD in  M */
 	if (h != 0x7ff)
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_hh(msg, h * 10, get_conf2(OBS(31) >> 24)));
+		DBA_RUN_OR_RETURN(dba_msg_set_cloud_hh(msg, h * 10.0, get_conf2(OBS(31) >> 24)));
 
 	/* B20012 CLOUD TYPE: 35.000000 CODE TABLE 20012 */
 	if (cl != 0xf)

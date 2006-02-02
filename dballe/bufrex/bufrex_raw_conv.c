@@ -65,7 +65,16 @@ dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype)
 		case MSG_AIREP:		exp = &bufrex_exporter_flight_4_142;	break;
 		case MSG_AMDAR:		exp = &bufrex_exporter_flight_4_144;	break;
 		case MSG_ACARS:		exp = &bufrex_exporter_acars_4_145;		break;
-		case MSG_SHIP:		exp = &bufrex_exporter_sea_1_11;		break;
+		case MSG_SHIP: {
+			dba_var var = dba_msg_get_st_type_var(msg);
+			if (var == NULL)
+				exp = &bufrex_exporter_sea_1_11;
+			else if (dba_var_value(var)[0] == '1')
+				exp = &bufrex_exporter_sea_1_11;
+			else
+				exp = &bufrex_exporter_sea_1_13;
+			break;
+		}
 		case MSG_BUOY:		exp = &bufrex_exporter_sea_1_21;		break;
 		case MSG_METAR:		exp = &bufrex_exporter_metar_0_140;		break;
 	}
