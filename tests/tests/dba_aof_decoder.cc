@@ -29,6 +29,7 @@ void to::test<1>()
 		"aof/obs1-24.34.aof",
 		"aof/obs2-144.2198.aof",
 		"aof/obs2-244.0.aof",
+		"aof/obs2-244.1.aof",
 		"aof/obs4-165.2027.aof",
 		"aof/obs5-35.61.aof",
 		"aof/obs5-36.30.aof",
@@ -139,7 +140,8 @@ void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 			dba_msg_get_navsys_var(amsg) == NULL)
 		CHECKED(dba_msg_set_navsys_var(amsg, var));
 
-	if (amsg->type != MSG_SHIP)
+	// In AOF, only synops and ships can encode direction and speed
+	if (amsg->type != MSG_SHIP && amsg->type != MSG_SYNOP)
 	{
 		if ((var = dba_msg_get_st_dir_var(bmsg)) != NULL &&
 				dba_msg_get_st_dir_var(amsg) == NULL)
@@ -153,6 +155,30 @@ void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 	if ((var = dba_msg_get_press_tend_var(bmsg)) != NULL &&
 			dba_msg_get_press_tend_var(amsg) == NULL)
 		CHECKED(dba_msg_set_press_tend_var(amsg, var));
+
+	// AOF AMDAR has pressure indication, BUFR AMDAR has only height
+	if (amsg->type == MSG_AMDAR)
+	{
+		dba_var p = dba_msg_get_flight_press_var(amsg);
+#if 0
+		dba_var h = dba_msg_get_height_var(bmsg);
+		if (p && h)
+		{
+			double press, height;
+			CHECKED(dba_var_enqd(p, &press));
+			CHECKED(dba_var_enqd(h, &height));
+			dba_msg_level l = dba_msg_find_level(bmsg, 103, (int)height, 0);
+			if (l)
+			{
+				l->ltype = 100;
+				l->l1 = (int)(press/100);
+				CHECKED(dba_msg_set_flight_press_var(bmsg, p));
+			}
+		}
+#endif
+		if (p)
+			CHECKED(dba_msg_set_flight_press_var(bmsg, p));
+	}
 
 	if (amsg->type == MSG_TEMP)
 	{
@@ -210,12 +236,60 @@ void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 				dba_var_clear_attrs(dat->var);
 		}
 	}
-
 }
+
+// Reencode to BUFR and compare
+template<> template<>
+void to::test<2>()
+{
+	const char* files[] = {
+		"aof/obs1-11.0.aof",
+		"aof/obs1-14.63.aof",
+		"aof/obs1-21.1.aof",
+		"aof/obs1-24.2104.aof",
+		"aof/obs1-24.34.aof",
+		"aof/obs2-144.2198.aof",
+		"aof/obs2-244.0.aof",
+		"aof/obs2-244.1.aof",
+		"aof/obs4-165.2027.aof",
+		"aof/obs5-35.61.aof",
+		"aof/obs5-36.30.aof",
+		"aof/obs6-32.1573.aof",
+		"aof/obs6-32.0.aof",
+		NULL,
+	};
+
+	for (size_t i = 0; files[i] != NULL; i++)
+	{
+		test_tag(files[i]);
+
+		dba_msg amsg = read_test_msg(files[i], AOF);
+		
+		dba_rawmsg raw;
+		CHECKED(dba_marshal_encode(amsg, BUFR, &raw));
+
+		dba_msg bmsg;
+		CHECKED(dba_marshal_decode(raw, &bmsg));
+
+		normalise_encoding_quirks(amsg, bmsg);
+
+		// Compare the two dba_msg
+		int diffs = 0;
+		dba_msg_diff(amsg, bmsg, &diffs, stderr);
+		if (diffs) track_different_msgs(amsg, bmsg, "aof-recoded");
+		gen_ensure_equals(diffs, 0);
+
+		dba_msg_delete(amsg);
+		dba_msg_delete(bmsg);
+		dba_rawmsg_delete(raw);
+	}
+	test_untag();
+}
+
 
 // Compare decoding results with BUFR sample data
 template<> template<>
-void to::test<2>()
+void to::test<3>()
 {
 	string files[] = {
 		"aof/obs1-14.63",		// OK

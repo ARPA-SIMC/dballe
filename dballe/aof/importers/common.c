@@ -202,13 +202,13 @@ dba_err dba_aof_parse_general_cloud_group(dba_msg msg, const uint32_t* obs)
 
 	/* B20013 HEIGHT OF BASE OF CLOUD in  M */
 	if (h != 0x7ff)
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_hh(msg, h * 10.0, get_conf2(OBS(31) >> 24)));
+		DBA_RUN_OR_RETURN(dba_msg_set_cloud_hh(msg, h * 10.0, get_conf2(OBS(31) >> 22)));
 
 	/* B20012 CLOUD TYPE: 35.000000 CODE TABLE 20012 */
 	if (cl != 0xf)
 	{
 		/* DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(cl, &val)) */;
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_cl(msg, cl + 30, get_conf2(OBS(31) >> 22)));
+		DBA_RUN_OR_RETURN(dba_msg_set_cloud_cl(msg, cl + 30, get_conf2(OBS(31) >> 24)));
 	}
 
 	/* B20011 CLOUD AMOUNT in CODE TABLE 20011 */
@@ -227,7 +227,7 @@ dba_err dba_aof_parse_cloud_group(uint32_t val, int* ns, int* c, int* h)
 {
 	*ns = (val >> 19) & 0xf;
 	DBA_RUN_OR_RETURN(dba_convert_WMO0500_to_BUFR20012((val >> 15) & 0xf, c));
-	*h = val & 0x7f;
+	*h = val & 0x7fff;
 	return dba_error_ok();
 }
 

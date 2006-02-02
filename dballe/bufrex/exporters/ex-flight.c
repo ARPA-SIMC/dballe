@@ -110,7 +110,7 @@ struct template {
 	dba_varcode msgcode;
 };
 
-static struct template tpl[] = {
+static struct template tpl_gen[] = {
 /*  0 */ { DBA_VAR(0,  1,  6), DBA_MSG_IDENT,			0 },
 /*  1 */ { DBA_VAR(0,  2, 61), DBA_MSG_NAVSYS,			0 },
 /*  2 */ { DBA_VAR(0,  4,  1), DBA_MSG_YEAR,			0 },
@@ -131,32 +131,57 @@ static struct template tpl[] = {
 /* 17 */ { DBA_VAR(0, 20, 41), -1,			DBA_VAR(0, 20, 41) },	/* AIRFRAME ICING */
 };
 
-static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
+static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, bufrex_raw dst, int type)
 {
+	int ltype = -1, l1 = -1;
+	dba_msg_datum d;
 	int i;
-	double press;
+	
 	/* Get the pressure to identify the level layer where the airplane is */
-	dba_msg_datum p = dba_msg_find_by_id(src, DBA_MSG_HEIGHT);
-	if (p == NULL)
-		return dba_error_notfound("looking for airplane height in AIREP message");
-	DBA_RUN_OR_RETURN(dba_var_enqd(p->var, &press));
-	DBA_RUN_OR_RETURN(dba_convert_icao_to_press(press, &press));
+	if ((d = dba_msg_find_by_id(src, DBA_MSG_FLIGHT_PRESS)) != NULL)
+	{
+		double press;
+		DBA_RUN_OR_RETURN(dba_var_enqd(d->var, &press));
+		if (dba_msg_find_level(src, 100, press/100, 0) != NULL)
+		{
+			ltype = 100;
+			l1 = press / 100;
+			/* fprintf(stderr, "BUFR Press float: %f int: %d encoded: %s\n", press, l1, dba_var_value(d->var)); */
+		}
+	}
+	if ((d = dba_msg_find_by_id(src, DBA_MSG_HEIGHT)) != NULL && ltype == -1)
+	{
+		double height;
+		DBA_RUN_OR_RETURN(dba_var_enqd(d->var, &height));
+		ltype = 103;
+		l1 = height;
+	}
+
+	if (ltype == -1)
+		return dba_error_notfound("looking for airplane pressure or height in flight message");
 
 	/* Fill up the message */
-	for (i = 0; i < sizeof(tpl)/sizeof(struct template); i++)
+	for (i = 0; i < tpl_count; i++)
 	{
 		dba_msg_datum d;
 
 		if (tpl[i].var != -1)
 			d = dba_msg_find_by_id(src, tpl[i].var);
 		else
-			d = dba_msg_find(src, tpl[i].msgcode, 100, press, 0, 0, 0, 0);
+			d = dba_msg_find(src, tpl[i].msgcode, ltype, l1, 0, 0, 0, 0);
 
 		if (d != NULL)
 			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, tpl[i].code, d->var));
 		else
 			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, tpl[i].code));
 	}
+
+	return dba_error_ok();
+}
+
+static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
+{
+	DBA_RUN_OR_RETURN(export_common(src, tpl_gen, sizeof(tpl_gen)/sizeof(struct template), dst, type));
 
 	if (type == 0)
 	{
@@ -202,29 +227,7 @@ static struct template tpl_acars[] = {
 
 static dba_err exporter_acars(dba_msg src, bufrex_raw dst, int type)
 {
-	int i;
-	double press;
-	/* Get the pressure to identify the level layer where the airplane is */
-	dba_msg_datum p = dba_msg_find_by_id(src, DBA_MSG_FLIGHT_PRESS);
-	if (p == NULL)
-		return dba_error_notfound("looking for airplane pressure in ACARS message");
-	DBA_RUN_OR_RETURN(dba_var_enqd(p->var, &press));
-
-	/* Fill up the message */
-	for (i = 0; i < sizeof(tpl_acars)/sizeof(struct template); i++)
-	{
-		dba_msg_datum d;
-
-		if (tpl_acars[i].var != -1)
-			d = dba_msg_find_by_id(src, tpl_acars[i].var);
-		else
-			d = dba_msg_find(src, tpl_acars[i].msgcode, 100, press, 0, 0, 0, 0);
-
-		if (d != NULL)
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, tpl_acars[i].code, d->var));
-		else
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, tpl_acars[i].code));
-	}
+	DBA_RUN_OR_RETURN(export_common(src, tpl_acars, sizeof(tpl_acars)/sizeof(struct template), dst, type));
 
 	if (type == 0)
 	{

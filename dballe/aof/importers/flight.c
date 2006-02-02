@@ -40,13 +40,19 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg* out)
 
 	if (OBS(20) != AOF_UNDEF)
 	{
-		double press = OBS(20) / 10.0;
+		double press = OBS(20) * 10.0;
 
 		/* Save the pressure in the anagraphical layer only */
 		/* FIXME: vedere se va memorizzato o no nell'anagrafica */
-		DBA_RUN_OR_RETURN(dba_msg_set_flight_press(msg, (double)press, get_conf6(OBS(25) & 0x3f)));
-		ltype = 100;
-		l1 = press;
+		DBA_RUN_OR_RETURN(dba_msg_set_flight_press(msg, press, get_conf6(OBS(25) & 0x3f)));
+
+		/* Default to height for AMDAR */
+		if (msg->type != MSG_AMDAR || (OBS(24) == AOF_UNDEF))
+		{
+			ltype = 100;
+			l1 = press / 100;
+			/* fprintf(stderr, "Press float: %f int: %d encoded: %s\n", press, l1, dba_var_value(dba_msg_get_flight_press_var(msg))); */
+		}
 	}
 	if (OBS(24) != AOF_UNDEF)
 	{

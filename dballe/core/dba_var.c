@@ -442,7 +442,7 @@ void dba_var_print(dba_var var, FILE* out)
 
 	for (cur = var->attrs; cur != NULL; cur = cur->next)
 	{
-		putc('\t', out);
+		fputs("           ", out);
 		dba_var_print(cur->var, out);
 	}
 }

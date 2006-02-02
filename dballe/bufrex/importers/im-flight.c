@@ -5,7 +5,7 @@
 dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_raw raw)
 {
 	int i;
-	double press = -1;
+	int ltype = -1, l1 = -1;
 
 	switch (raw->subtype)
 	{
@@ -44,59 +44,64 @@ dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_raw raw)
 			case DBA_VAR(0,  8,  4): DBA_RUN_OR_RETURN(dba_msg_set_flight_phase_var(msg, var)); break;
 			case DBA_VAR(0,  8, 21): DBA_RUN_OR_RETURN(dba_msg_set_timesig_var(msg, var)); break;
 			case DBA_VAR(0,  7,  2): {
+				double height;
 				DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var));
-				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
-				DBA_RUN_OR_RETURN(dba_convert_icao_to_press(press, &press));
+				DBA_RUN_OR_RETURN(dba_var_enqd(var, &height));
+				ltype = 103;
+				l1 = height;
 				break;
 			}
 			case DBA_VAR(0,  7,  4): {
-				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
+				double press;
 				DBA_RUN_OR_RETURN(dba_msg_set_flight_press_var(msg, var));
+				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
+				ltype = 100;
+				l1 = press / 100;
 				break;
 			}
 			case DBA_VAR(0, 11,  1):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11,  1), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11,  1), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 11,  2):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11,  2), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11,  2), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 11, 31):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 31), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 31), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 11, 32):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 32), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 32), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 11, 33):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 33), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 33), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 11, 34):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 34), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 34), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 11, 35):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 35), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 35), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 12,  1):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12,  1), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12,  1), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 12,  3):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12,  3), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12,  3), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 13,  3):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13,  3), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13,  3), ltype, l1, 0, 0, 0, 0));
 				break;
 			case DBA_VAR(0, 20, 41):
-				if (press == -1) return dba_error_consistency("pressure not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 20, 41), 100, press, 0, 0, 0, 0));
+				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 20, 41), ltype, l1, 0, 0, 0, 0));
 				break;
 		}
 	}
