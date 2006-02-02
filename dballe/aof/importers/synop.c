@@ -188,12 +188,15 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out)
 	{
 		int speed = OBS(i) & 0xff;
 		int dir = (OBS(i) >> 8) & 0x3ff;
+		uint32_t conf = dba_aof_get_extra_conf(obs, i - 33);
 
 		/* dump_word("Ship group: ", OBS(i)); fprintf(stderr, "\n"); */
 
-		DBA_RUN_OR_RETURN(dba_msg_set_st_dir(msg, dir, -1));
-		DBA_RUN_OR_RETURN(dba_msg_set_st_speed(msg, speed, -1));
-		
+		if (dir != 0x3ff)
+			DBA_RUN_OR_RETURN(dba_msg_set_st_dir(msg, dir, get_conf2(conf & 0x3)));
+		if (speed != 0xff)
+			DBA_RUN_OR_RETURN(dba_msg_set_st_speed(msg, speed, get_conf2((conf >> 2) & 0x3)));
+
 		i++;
 	}
 	if (OBS(32) & 0x400) /* Waves group */

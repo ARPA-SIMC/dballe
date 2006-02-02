@@ -139,13 +139,16 @@ void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 			dba_msg_get_navsys_var(amsg) == NULL)
 		CHECKED(dba_msg_set_navsys_var(amsg, var));
 
-	if ((var = dba_msg_get_st_dir_var(bmsg)) != NULL &&
-			dba_msg_get_st_dir_var(amsg) == NULL)
-		CHECKED(dba_msg_set_st_dir_var(amsg, var));
+	if (amsg->type != MSG_SHIP)
+	{
+		if ((var = dba_msg_get_st_dir_var(bmsg)) != NULL &&
+				dba_msg_get_st_dir_var(amsg) == NULL)
+			CHECKED(dba_msg_set_st_dir_var(amsg, var));
 
-	if ((var = dba_msg_get_st_speed_var(bmsg)) != NULL &&
-			dba_msg_get_st_speed_var(amsg) == NULL)
-		CHECKED(dba_msg_set_st_speed_var(amsg, var));
+		if ((var = dba_msg_get_st_speed_var(bmsg)) != NULL &&
+				dba_msg_get_st_speed_var(amsg) == NULL)
+			CHECKED(dba_msg_set_st_speed_var(amsg, var));
+	}
 
 	if ((var = dba_msg_get_press_tend_var(bmsg)) != NULL &&
 			dba_msg_get_press_tend_var(amsg) == NULL)
