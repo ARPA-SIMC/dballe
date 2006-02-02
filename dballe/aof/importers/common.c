@@ -175,19 +175,6 @@ dba_err dba_aof_parse_general_cloud_group(dba_msg msg, const uint32_t* obs)
 	int cl = (OBS(28) >> 19) & 0xf;
 	int nh = (OBS(28) >> 23) & 0xf;
 	int n  = (OBS(28) >> 27) & 0xf;
-	/*
-		ch = v & 0xf;
-		v >>= 4;
-		cm = v & 0xf;
-		v >>= 4;
-		h = v & 0x7ff;
-		v >>= 11;
-		cl = v & 0xf;
-		v >>= 4;
-		nh = v & 0xf;
-		v >>= 4;
-		n = v & 0xf;
-	*/
 	/*{
 		int x = v, i;
 		fprintf(stderr, "Clouds %x: ", v);
@@ -199,41 +186,38 @@ dba_err dba_aof_parse_general_cloud_group(dba_msg msg, const uint32_t* obs)
 		fprintf(stderr, "\n");
 	}*/
 
-	/* B20010 CLOUD COVER (TOTAL) in % */
-	if (n != 0xf)
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_n(msg, n * 100 / 8, get_conf2(OBS(31) >> 18)));
-
-	/* B20011 CLOUD AMOUNT in CODE TABLE 20011 */
-	if (nh != 0xf)
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_nh(msg, nh, get_conf2(OBS(31) >> 20)));
-
-	/* B20013 HEIGHT OF BASE OF CLOUD in  M */
-	if (h != 0x7ff)
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_hh(msg, h * 10, get_conf2(OBS(31) >> 22)));
-
 	/* B20012 CLOUD TYPE: 35.000000 CODE TABLE 20012 */
-	if (cl != 0xf)
+	if (ch != 0xf)
 	{
-		int val;
-		DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(cl, &val));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_cl(msg, val, get_conf2(OBS(31) >> 24)));
+		/* DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(ch, &val)); */
+		DBA_RUN_OR_RETURN(dba_msg_set_cloud_ch(msg, ch + 10, get_conf2(OBS(31) >> 18)));
 	}
 
 	/* B20012 CLOUD TYPE: 35.000000 CODE TABLE 20012 */
 	if (cm != 0xf)
 	{
-		int val;
-		DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(cm, &val));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_cm(msg, val, get_conf2(OBS(31) >> 26)));
+		/* DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(cm, &val)) */;
+		DBA_RUN_OR_RETURN(dba_msg_set_cloud_cm(msg, cm + 20, get_conf2(OBS(31) >> 20)));
 	}
 
+	/* B20013 HEIGHT OF BASE OF CLOUD in  M */
+	if (h != 0x7ff)
+		DBA_RUN_OR_RETURN(dba_msg_set_cloud_hh(msg, h * 10, get_conf2(OBS(31) >> 24)));
+
 	/* B20012 CLOUD TYPE: 35.000000 CODE TABLE 20012 */
-	if (ch != 0xf)
+	if (cl != 0xf)
 	{
-		int val;
-		DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(ch, &val));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_ch(msg, val, get_conf2(OBS(31) >> 28)));
+		/* DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(cl, &val)) */;
+		DBA_RUN_OR_RETURN(dba_msg_set_cloud_cl(msg, cl + 30, get_conf2(OBS(31) >> 22)));
 	}
+
+	/* B20011 CLOUD AMOUNT in CODE TABLE 20011 */
+	if (nh != 0xf)
+		DBA_RUN_OR_RETURN(dba_msg_set_cloud_nh(msg, nh, get_conf2(OBS(31) >> 26)));
+
+	/* B20010 CLOUD COVER (TOTAL) in % */
+	if (n != 0xf)
+		DBA_RUN_OR_RETURN(dba_msg_set_cloud_n(msg, n * 100 / 8, get_conf2(OBS(31) >> 28)));
 
 	return dba_error_ok();
 }

@@ -53,7 +53,7 @@ dba_err dba_convert_BUFR20012_to_WMO0500(int from, int* to)
 		*to = -1; /* FIXME: check what is the value for '/' */
 	else
 		return dba_error_notfound(
-				"BUFR 20012 value %d cannot be represented with WMO code table 0513",
+				"BUFR 20012 value %d cannot be represented with WMO code table 0500",
 				from);
 	return dba_error_ok();
 }

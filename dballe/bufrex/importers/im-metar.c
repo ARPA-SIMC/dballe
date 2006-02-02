@@ -14,7 +14,13 @@ dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_raw raw)
 		dba_var var = raw->vars[i];
 
 		if (dba_var_value(var) == NULL)
+		{
+			switch (dba_var_code(var))
+			{
+				case DBA_VAR(0,  7,  6): height_above_count++; break;
+			}
 			continue;
+		}
 		switch (dba_var_code(var))
 		{
 			case DBA_VAR(0,  1, 63): DBA_RUN_OR_RETURN(dba_msg_set_st_name_icao_var(msg, var)); break;

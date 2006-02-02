@@ -39,7 +39,15 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_raw raw)
 		dba_var var = raw->vars[i];
 
 		if (dba_var_value(var) == NULL)
+		{
+			switch (dba_var_code(var))
+			{
+				case DBA_VAR(0, 20, 11): cloud_amt_count++; break;
+				case DBA_VAR(0, 20, 13): cloud_height_count++; break;
+				case DBA_VAR(0, 20, 12): cloud_type_count++; break;
+			}
 			continue;
+		}
 		switch (dba_var_code(var))
 		{
 			case DBA_VAR(0,  1,  1): DBA_RUN_OR_RETURN(dba_msg_set_block_var(msg, var)); break;
