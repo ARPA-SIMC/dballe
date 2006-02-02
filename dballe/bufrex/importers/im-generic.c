@@ -16,7 +16,13 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_raw raw)
 		dba_var var = raw->vars[i];
 
 		if (dba_var_value(var) == NULL)
+		{
+			/* Also skip attributes if there are some following */
+			for ( ; i + 1 < raw->vars_count &&
+					DBA_VAR_X(dba_var_code(raw->vars[i + 1])) == 33; i++)
+				;
 			continue;
+		}
 
 		switch (dba_var_code(var))
 		{

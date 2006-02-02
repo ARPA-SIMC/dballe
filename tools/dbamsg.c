@@ -144,6 +144,7 @@ static dba_err dump_aof_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, v
 static dba_err dump_cooked_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
 	if (msg == NULL) return dba_error_ok();
+	printf("#%d ", rmsg->index);
 	dba_msg_print(msg, stdout);
 	return dba_error_ok();
 }
