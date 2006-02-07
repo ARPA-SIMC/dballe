@@ -366,9 +366,9 @@ These are the TODO-list items currently being worked on::
     - Procurarsi un tracciato VM di una stazione nota e scrivere test
 
  * Guida utente
+    - Aggiungere il layout delle tabelle nel database e alcune query di esempio
     - Troubleshooting
        - Raccogliere casi mano a mano che si presentano
-    - Aggiungere il layout delle tabelle nel database e alcune query di esempio
 
  * Documentazione codice
     - Spiegare l'architettura del sistema di I/O encoding e decoding

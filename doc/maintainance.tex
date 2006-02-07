@@ -1,8 +1,31 @@
 \section {Configuration}
 
-%repinfo.csv
+A normal \dballe{} installation normally requires very little configuration,
+namely only the parameters used to connect to the database.  Those are either
+specified in the code with the functions {\tt dba\_db\_create} (from C) or {\tt
+idba\_presentati} (from Fortran), or in the commandline for {\tt dbadb}.
 
-%environment variables: DBA\_TABLES, DBA\_VERBOSE, DBA\_REPINFO
+If special needs arise, further parameters that usually have good and working
+default values can be altered via environment variables:
+
+\begin{description}
+\item[{\tt DBA\_TABLES}]
+  specifies the directory where the various table files are looked for (all the
+  table files excluding {\tt repinfo.csv}).  If the variable is not present,
+  the default is {\tt /usr/share/dballe}.
+\item[{\tt DBA\_REPINFO}]
+  specifies the full path of the file {\tt repinfo.csv} to use when resetting
+  the databse.  If the variable is not present, the default is
+  {\tt /etc/dballe/repinfo.csv}.
+\item[{\tt DBA\_VERBOSE}]
+  enable verbose reporting of \dballe{} internals.  The value is a bit mask
+  where every bit corresponds to a different internal part of \dballe{}, and
+  when a bit is 1 then verbose messages are printed when that part runs.  All
+  the currently defined bit meanings can be found in
+  {\tt /usr/include/dballe/core/verbose.h}.  The default is 0, which means no
+  verbose reporting at all.
+\end{description}
+
 
 \section {Commandline tools}
 
