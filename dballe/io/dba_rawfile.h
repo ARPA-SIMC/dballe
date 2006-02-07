@@ -30,6 +30,20 @@ typedef struct _dba_rawfile* dba_rawfile;
 dba_err dba_rawfile_create(dba_rawfile* file, const char* name, const char* mode);
 void dba_rawfile_delete(dba_rawfile file);
 
+/**
+ * Try to guess the file encoding by peeking at the first byte of the file.
+ *
+ * The byte read will be put back in the file stream using ungetc.
+ * 
+ * @param file
+ *   The file to scan
+ * @retval enc
+ *   The guessed encoding
+ * @return
+ *   The error indicator for the function. @see dba_err
+ */
+dba_err dba_rawfile_guess_encoding(dba_rawfile file, dba_encoding* enc);
+
 /*
  * Write the encoded message data to the file
  *

@@ -253,7 +253,6 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
 
 	/* Encode bufr section 0 (Indicator section) */
 	DBA_RUN_OR_RETURN(encoder_raw_append(e, "BUFR\0\0\0\x03", 8));
-	/* TODO: set the message length here at the end of the encoding */
 
 	TRACE("sec0 ends at %d\n", e->out->len);
 	e->sec1_start = e->out->len;
@@ -265,7 +264,7 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 	/* Originating/generating sub-centre (defined by Originating/generating centre) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
-	/* Originating/generating centre (Common Code tableC-1) TODO: get from a value in /etc */
+	/* Originating/generating centre (Common Code tableC-1) */
 	/*DBA_RUN_OR_RETURN(bufr_message_append_byte(e, 0xff));*/
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.origin));
 	/* Update sequence number (zero for original BUFR messages; incremented for updates) */

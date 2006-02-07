@@ -228,7 +228,6 @@ fail:
 
 dba_msg_level dba_msg_find_level(dba_msg msg, int ltype, int l1, int l2)
 {
-	// TODO: replace with a binary search
 	int begin, end;
 
 	/* Binary search */

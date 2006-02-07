@@ -26,6 +26,10 @@ dba_err dba_file_create(dba_file* file, dba_encoding type, const char* name, con
 
 	DBA_RUN_OR_GOTO(fail, dba_rawfile_create(&(res->rawfile), name, mode));
 
+	if (type == -1)
+		/* Peek at the first byte to guess the encoding */
+		DBA_RUN_OR_GOTO(fail, dba_rawfile_guess_encoding(res->rawfile, &type));
+
 	switch (type)
 	{
 		case BUFR:

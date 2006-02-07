@@ -60,6 +60,27 @@ void dba_rawfile_delete(dba_rawfile file)
 	free(file);
 }
 
+dba_err dba_rawfile_guess_encoding(dba_rawfile file, dba_encoding* enc)
+{
+	int c = getc(file->fd);
+	if (c == EOF)
+		return dba_error_system("reading the first byte of %s to detect its encoding", file->name);
+	if (ungetc(c, file->fd) == EOF)
+		return dba_error_system("putting the first byte of %s back into the input stream", file->name);
+	
+	switch (c)
+	{
+		case 'B': *enc = BUFR; break;
+		case 'C': *enc = CREX; break;
+		case 0: *enc = AOF; break;
+		case 38: *enc = AOF; break;
+		default: *enc = BUFR; break;
+	}
+
+	return dba_error_ok();
+}
+
+
 dba_err dba_rawfile_write(dba_rawfile file, dba_rawmsg msg)
 {
 	const unsigned char* buf;

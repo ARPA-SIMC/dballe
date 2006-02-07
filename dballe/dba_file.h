@@ -23,7 +23,9 @@ typedef struct _dba_file* dba_file;
  * @retval file
  *   The new file, to be deallocated with dba_file_delete()
  * @param type
- *   The type of data contained in the file
+ *   The type of data contained in the file.  If -1 is passed, then
+ *   dba_file_create will attempt to autodetect the file type from its first
+ *   byte.
  * @param name
  *   The name of the file to access
  * @param mode

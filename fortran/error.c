@@ -95,17 +95,6 @@ F77_SUBROUTINE(idba_error_details)(CHARACTER(message) TRAIL(message))
 		cnfExprt("", message, message_length);
 }
 
-/*
-FIXME
-Handling callbacks is not implemented at the moment, as I don't know how to
-portably store the function pointer for invoking it later.
-
-Possible things to do:
- - Write a range of useful C callbacks, and allow to set actions using some of
-   them
- - Write to CNF's authors asking how to implement this
-*/
-
 #define CBDATA (FDBA_HANDLE(errcb, *handle))
 
 void fdba_error_callback_invoker(void* data)

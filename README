@@ -231,6 +231,7 @@ These are the TODO-list items completed so far::
       (riscritto)
     + Fare un tool per correggere l'intervallo temporale nell'header di un AOF,
       dopo averne scandito i contenuti (dbamsg fixaof)
+    + fare l'autodetect del formato dei file in input, guardando ai primi byte
 
  * Documentazione dell'interfaccia in fortran
     + aggiungere due parole su come funziona la query "le query si effettuano
@@ -350,7 +351,6 @@ These are the TODO-list items currently being worked on::
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
 
  * Tools
-    - fare l'autodetect del formato dei file in input, guardando ai primi byte
     - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
       (lat, lon, ident, year, month, day, hour, min)
        - Implementato e protetto da if(0)

@@ -61,6 +61,10 @@ dba_encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon)
 	{
 		return AOF;
 	}
+	else if (strcmp(type, "auto") == 0)
+	{
+		return (dba_encoding)-1;
+	}
 	else
 		dba_cmdline_error(optCon, "'%s' is not a valid format type", type);
 }

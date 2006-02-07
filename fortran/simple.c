@@ -331,7 +331,6 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 
 	return dba_error_ok();
 
-	/* TODO: dba_record_delete resets the error indicator */
 fail:
 	if (STATE.qcoutput != NULL)
 		dba_record_delete(STATE.qcoutput);

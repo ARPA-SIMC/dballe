@@ -108,11 +108,7 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out)
 	/* fprintf(stderr, "FLAGS: %x", OBS(32));
 	dump_word(": ", OBS(32)); fprintf(stderr, "\n"); */
 
-	/* TODO: do it using a function that returns, given a group index, the
-	 * couple (group word, 6bit flags) */
-	
 	i = 33;
-
 
 	/* Iterate among the optional groups */
 	if (OBS(32) & 0x1)
