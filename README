@@ -258,6 +258,8 @@ These are the TODO-list items completed so far::
        + Aggiungere elementi alla B locale
        = Indicizzazione tabelle in caso di modifica
          dbatbl index share/dballe/dballe.txt dballe
+    + Introduzione veloce a dbatbl, dbamsg e dbadb (la reference è nella
+      manpage)
 
  * Conversione osservazioni in variabili fisiche
     + Come codifico in DB-ALLe i 4 cloud type del synop?
@@ -364,8 +366,6 @@ These are the TODO-list items currently being worked on::
     - Procurarsi un tracciato VM di una stazione nota e scrivere test
 
  * Guida utente
-    - Introduzione veloce a dbatbl, dbamsg e dbadb (la reference è nella
-      manpage)
     - Troubleshooting
        - Raccogliere casi mano a mano che si presentano
     - Aggiungere il layout delle tabelle nel database e alcune query di esempio

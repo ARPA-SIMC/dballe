@@ -2,15 +2,25 @@
 
 %repinfo.csv
 
-%environment variables: DBA\_TABLES
+%environment variables: DBA\_TABLES, DBA\_VERBOSE, DBA\_REPINFO
 
 \section {Commandline tools}
 
 \subsection{dbatbl}
 
+{\tt dbatbl} is the tool to manage table files.  It is useful for small
+table management tasks like searching table contents and expand entries.
+
 \subsection{dbamsg}
 
+{\tt dbamsg} is the tool to manage messages.  It can display their contents,
+select messages from a file containing many of them, convert messages among
+different format, find differences among messages.
+
 \subsection{dbadb}
+
+{\tt dbadb} is the tool to manage the \dballe{} database.  It can reset the
+database, import and export messages and dump the contents of the database.
 
 \section {Managing tables}
 
