@@ -50,6 +50,7 @@ different format, find differences among messages.
 {\tt dbadb} is the tool to manage the \dballe{} database.  It can reset the
 database, import and export messages and dump the contents of the database.
 
+
 \section {Managing tables}
 
 \dballe{} needs various kinds of data tables to work:
@@ -219,3 +220,32 @@ The name of CREX WMO B and D tables is instead in the form {\tt taabbcc}, where:
 \item[{\tt cc}] is the 2 digit code of the table used to create the CREX
                 message.
 \end{description}
+
+
+\section{Database structure}
+
+The \dballe{} database is implemented using 5 SQL tables:
+
+\begin{description}
+\item[{\tt repinfo}]
+  Stores informations about the record types.
+\item[{\tt pseudoana}]
+  Stores anagraphical informations about the origin of the data.
+\item[{\tt context}]
+  Stores non-anagraphical context informations about the data (date/time, level
+  layer, time range, report type).
+\item[{\tt data}]
+  Stores the measured data.
+\item[{\tt attr}]
+  Stores the attributes of measured data.
+\end{description}
+
+The relationships between the 5 tables are as follows:
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\textwidth]{db.eps}
+\end{center}
+\caption{Structure of \dballe{} database}
+\end{figure}
+

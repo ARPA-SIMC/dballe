@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib
+guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib db.dia db.eps
 fapisources = fapi.tex
 
 LATEX2HTML = latex2html -local_icons
