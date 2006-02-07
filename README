@@ -229,6 +229,8 @@ These are the TODO-list items completed so far::
     + dbatbl: fare anche il grep
     + il codice per la selezione per tipo e sottotipo è commentato
       (riscritto)
+    + Fare un tool per correggere l'intervallo temporale nell'header di un AOF,
+      dopo averne scandito i contenuti (dbamsg fixaof)
 
  * Documentazione dell'interfaccia in fortran
     + aggiungere due parole su come funziona la query "le query si effettuano
@@ -380,6 +382,14 @@ These are the TODO-list items currently being worked on::
       (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
     + Invarianti
 
+ * Tools
+    - In fase di conversione, aggiungere uno switch per fare unset di tutti i
+      valori che hanno intervallo di confidenza al di sotto di una soglia data
+    - Fare un import delle anagrafiche che scandisca una serie di CREX:
+       - mettendo assieme i dati anagrafici delle varie stazioni.
+       - controlli che le stazioni non si spostino e alla fine inserisca tutto
+	 nella tabella di anagrafica
+
  * Procedura per supportare un nuovo tipo report in un formato specifico
     - Cercare un file con un'osservazione nel formato voluto
     - Cercare un file con la stessa osservazione in un formato per cui è già
@@ -389,16 +399,6 @@ These are the TODO-list items currently being worked on::
     - Aggiungere a check_import i test per il nuovo file, usando l'altro file o
       i dati del dump come riferimento
     - Implementare
-
- * Tools
-    - In fase di conversione, aggiungere uno switch per fare unset di tutti i
-      valori che hanno intervallo di confidenza al di sotto di una soglia data
-    - Fare un import delle anagrafiche che scandisca una serie di CREX:
-       - mettendo assieme i dati anagrafici delle varie stazioni.
-       - controlli che le stazioni non si spostino e alla fine inserisca tutto
-	 nella tabella di anagrafica
-    - Fare un tool per correggere l'intervallo temporale nell'header di un AOF,
-      dopo averne scandito i contenuti
 
  - Appunti per un nuovo report:
     - La nuova API (con un programma di esempio è forse meglio)

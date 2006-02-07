@@ -11,6 +11,9 @@
 
 #include <assert.h>
 
+extern dba_err aof_reader_read_record(dba_rawfile file, uint32_t** rec, int* len);
+
+
 dba_err dba_file_writer_write_raw(dba_file_writer writer, dba_rawmsg msg)
 {
 	return writer->write_raw_fun(writer, msg);
@@ -356,6 +359,92 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
+dba_err aof_writer_fix_header(dba_rawfile file)
+{
+	dba_err err = DBA_OK;
+	uint32_t* rec = NULL;
+	int len;
+	uint32_t start = 0xffffffff;
+	uint32_t end = 0;
+	uint32_t this;
+	uint32_t endianness_test;
 
+	/* Read the FDR */
+	DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(file, &rec, &len));
+	free(rec); rec = NULL;
+
+	/* Read the DDR */
+	DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(file, &rec, &len));
+	free(rec); rec = NULL;
+
+	/* Iterate through all the records in the file */
+	DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(file, &rec, &len));
+	while (rec != NULL)
+	{
+		if (len < 11)
+		{
+			err = dba_error_consistency("checking for correctness of the length of the observation record");
+			goto cleanup;
+		}
+		/* Compute the extremes of start and end */
+		this = rec[10-1] * 100 + rec[11-1]/100;
+		if (this < start)
+			start = this;
+		if (this > end)
+			end = this;
+		free(rec); rec = NULL;
+		DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(file, &rec, &len));
+	}
+
+	/* Update the header with the new extremes */
+
+	/* Check if we need to swap bytes to match the header encoding */
+	if (fseek(file->fd, 0, SEEK_SET) == -1)
+	{
+		err = dba_error_system("trying to seek to start of file %s", file->name);
+		goto cleanup;
+	}
+
+	if (fread(&endianness_test, 4, 1, file->fd) == 0)
+	{
+		err = dba_error_system("reading the first word of file %s", file->name);
+		goto cleanup;
+	}
+
+	if ((endianness_test & 0xFF000000) != 0)
+	{
+		start = bswap_32(start);
+		end = bswap_32(end);
+	}
+
+	/* Write start of observation period */
+	if (fseek(file->fd, 14 + 10, SEEK_SET) == -1)
+	{
+		err = dba_error_system("trying to seek in file %s", file->name);
+		goto cleanup;
+	}
+	if (fwrite(&start, sizeof(uint32_t), 1, file->fd) != 1)
+	{
+		err = dba_error_system("rewriting 4 bytes on %s", file->name);
+		goto cleanup;
+	}
+
+	/* Write end of observation period */
+	if (fseek(file->fd, 14 + 12, SEEK_SET) == -1)
+	{
+		err = dba_error_system("trying to seek in file %s", file->name);
+		goto cleanup;
+	}
+	if (fwrite(&end, sizeof(uint32_t), 1, file->fd) != 1)
+	{
+		err = dba_error_system("rewriting 4 bytes on %s", file->name);
+		goto cleanup;
+	}
+
+cleanup:
+	if (rec != NULL)
+		free(rec);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
 
 /* vim:set ts=4 sw=4: */

@@ -140,6 +140,22 @@ dba_err dba_file_writer_write_raw(dba_file_writer writer, dba_rawmsg msg);
  */
 void dba_file_writer_delete(dba_file_writer writer);
 
+/**
+ * Fix the header of an AOF file.
+ *
+ * Currently it just recomputes the start and end of the observation period by
+ * looking at the observation headers for all the observations found in the
+ * file.
+ *
+ * @param file
+ *   The file to operate on.  It must be open in read-write mode and be a
+ *   seekable file.
+ * @return
+ *   The error indicator for the function. @see dba_err
+ */
+dba_err aof_writer_fix_header(dba_rawfile file);
+	
+
 #ifdef  __cplusplus
 }
 #endif

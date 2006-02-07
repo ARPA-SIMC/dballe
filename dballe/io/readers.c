@@ -297,10 +297,9 @@ static void aof_reader_delete(aof_reader reader)
 }
 
 /* Read a fortran "unformatted sequential" record with an array of 32-bit words */
-static dba_err aof_reader_read_record(aof_reader reader, uint32_t** rec, int* len)
+dba_err aof_reader_read_record(dba_rawfile file, uint32_t** rec, int* len)
 {
 	uint32_t len_word, len_word1;
-	dba_rawfile file = reader->parent.file;
 	FILE* in = file->fd;
 	int swapwords = 0;
 
@@ -377,7 +376,7 @@ static dba_err aof_reader_read_header(aof_reader reader)
 	int i;
 
 	/* Read the First Data Record */
-	DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(reader, &fdr, &fdr_len));
+	DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(file, &fdr, &fdr_len));
 
 	if (fdr_len != 14)
 	{
@@ -398,7 +397,7 @@ static dba_err aof_reader_read_header(aof_reader reader)
 		reader->fdr[i] = fdr[i];
 
 	/* Read Data Descriptor Record */
-	DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(reader, &ddr, &ddr_len));
+	DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(file, &ddr, &ddr_len));
 
 	if (ddr_len != 17)
 	{
@@ -451,7 +450,7 @@ static dba_err aof_reader_read(aof_reader reader, dba_rawmsg msg, int* found)
 	msg->offset = ftell(file->fd);
 
 	/* Read the Observation Header */
-	DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(reader, &rec, &rec_len));
+	DBA_RUN_OR_GOTO(cleanup, aof_reader_read_record(file, &rec, &rec_len));
 
 	if (rec_len == 0)
 	{

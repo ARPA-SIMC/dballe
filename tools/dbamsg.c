@@ -2,6 +2,8 @@
 
 #include <dballe/aof/decoder.h>
 #include <dballe/core/dba_record.h>
+#include <dballe/io/dba_rawfile.h>
+#include <dballe/io/writers.h>
 #include <dballe/cmdline.h>
 
 #include "processor.h"
@@ -417,6 +419,35 @@ dba_err do_filter(poptContext optCon)
 	return dba_error_ok();
 }
 
+dba_err do_fixaof(poptContext optCon)
+{
+	dba_err err = DBA_OK;
+	const char* filename;
+	dba_rawfile file = NULL;
+	int count = 0;
+
+	/* Throw away the command name */
+	poptGetArg(optCon);
+
+	while ((filename = poptGetArg(optCon)) != NULL)
+	{
+		DBA_RUN_OR_GOTO(cleanup, dba_rawfile_create(&file, filename, "rb+"));
+		DBA_RUN_OR_GOTO(cleanup, aof_writer_fix_header(file));
+		dba_rawfile_delete(file);
+		file = NULL;
+		count++;
+	}
+
+	if (count == 0)
+		dba_cmdline_error(optCon, "at least one input file needs to be specified");
+
+cleanup:
+	if (file != NULL)
+		dba_rawfile_delete(file);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
+
 static struct tool_desc dbamsg;
 
 struct poptOption dbamsg_scan_options[] = {
@@ -479,13 +510,18 @@ struct poptOption dbamsg_filter_options[] = {
 	POPT_TABLEEND
 };
 
+struct poptOption dbamsg_fixaof_options[] = {
+	{ "help", '?', 0, 0, 1, "print an help message" },
+	POPT_TABLEEND
+};
+
 static void init()
 {
 	dbamsg.desc = "Work with encoded meteorological data";
 	dbamsg.longdesc =
 		"Examine, dump and convert files containing meteorological data. "
 		"It supports observations encoded in BUFR, CREX and AOF formats";
-	dbamsg.ops = (struct op_dispatch_table*)calloc(7, sizeof(struct op_dispatch_table));
+	dbamsg.ops = (struct op_dispatch_table*)calloc(8, sizeof(struct op_dispatch_table));
 
 	dbamsg.ops[0].func = do_scan;
 	dbamsg.ops[0].aliases[0] = "scan";
@@ -531,11 +567,18 @@ static void init()
 	dbamsg.ops[5].longdesc = NULL;
 	dbamsg.ops[5].optable = dbamsg_filter_options;
 
-	dbamsg.ops[6].func = NULL;
-	dbamsg.ops[6].usage = NULL;
-	dbamsg.ops[6].desc = NULL;
+	dbamsg.ops[6].func = do_fixaof;
+	dbamsg.ops[6].aliases[0] = "fixaof";
+	dbamsg.ops[6].usage = "fixaof [options] filename [filename1 [...]]]";
+	dbamsg.ops[6].desc = "Recomputes the start and end of observation period in the headers of the given AOF files";
 	dbamsg.ops[6].longdesc = NULL;
-	dbamsg.ops[6].optable = NULL;
+	dbamsg.ops[6].optable = dbamsg_fixaof_options;
+
+	dbamsg.ops[7].func = NULL;
+	dbamsg.ops[7].usage = NULL;
+	dbamsg.ops[7].desc = NULL;
+	dbamsg.ops[7].longdesc = NULL;
+	dbamsg.ops[7].optable = NULL;
 };
 
 int main (int argc, const char* argv[])
