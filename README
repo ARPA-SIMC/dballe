@@ -266,6 +266,9 @@ These are the TODO-list items completed so far::
       manpage)
     + Aggiungere il layout delle tabelle nel database e alcune query di esempio
 
+ * Documentazione codice
+    + Invarianti
+
  * Conversione osservazioni in variabili fisiche
     + Come codifico in DB-ALLe i 4 cloud type del synop?
        - Livello 256:
@@ -340,6 +343,7 @@ These are the TODO-list items currently being worked on::
     - Documentazione API Fortran
        - far leggere
     - Guida utente (manutenzione e tool commandline)
+       - far leggere
     - Documentazione implementazione C
        - guardare i warning di doxygen
  * Milestone release-extra
@@ -368,10 +372,6 @@ These are the TODO-list items currently being worked on::
  * Export per VM
     - Procurarsi un tracciato VM di una stazione nota e scrivere test
 
- * Guida utente
-    - Troubleshooting
-       - Raccogliere casi mano a mano che si presentano
-
  * Documentazione codice
     - Spiegare l'architettura del sistema di I/O encoding e decoding
     - Spiegare come aggiungere:
@@ -380,7 +380,6 @@ These are the TODO-list items currently being worked on::
        - nuove funzioni ai tool a linea di comando
        - import da nuovi template bufrex
       (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
-    + Invarianti
 
  * Tools
     - In fase di conversione, aggiungere uno switch per fare unset di tutti i
@@ -526,6 +525,10 @@ These are the TODO-list items that are to be addressed in the future::
       (sembra un compito impossibile, a meno ché qualcuno non trovi una lista
       parsabile di tutte le variabili e i loro valori.  C'e' anche da vedere
       come gestire eventuali aggiornamenti futuri)
+
+ * Guida utente
+    - Troubleshooting
+       - Raccogliere casi mano a mano che si presentano
 
  - Wrappare con Swig per poter scrivere test e viewer piú facilmente
     = Iniziato, ma non funziona (non si riesce a far andare i parametri in
