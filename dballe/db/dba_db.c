@@ -578,7 +578,6 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 		/* Datum to be inserted, linked to id_pseudoana and all the other IDs */
 		dba_db_data_set(d, dba_record_cursor_variable(item));
 		DBA_RUN_OR_GOTO(fail, dba_db_data_insert(d, can_replace));
-		dba_record_cursor_set_id(item, d->id_context);
 	}
 
 	if (ana_id != NULL)
@@ -883,7 +882,6 @@ static dba_err dba_db_cursor_var_to_rec(dba_db_cursor cur, dba_record rec)
 					DBA_VAR_Y(cur->out_idvar));
 		DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_VAR, bname));
 		DBA_RUN_OR_RETURN(dba_record_var_setc(rec, cur->out_idvar, cur->out_value));
-		DBA_RUN_OR_RETURN(dba_record_var_setid(rec, cur->out_idvar, cur->out_data_id));
 	}
 	return dba_error_ok();
 }

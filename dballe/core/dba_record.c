@@ -29,7 +29,6 @@ dba_varinfo dba_record_keyword_byindex(int index);
 typedef struct _dba_item
 {
 	dba_var var;
-	int id;
 	struct _dba_item* next;
 }* dba_item;
 
@@ -232,8 +231,6 @@ dba_err dba_record_copy(dba_record dest, dba_record source)
 				return dba_error_alloc("creating new dba_item");
 
 			DBA_RUN_OR_RETURN(dba_var_copy(c->var, &((*t)->var)));
-			(*t)->id = c->id;
-
 			t = &((*t)->next);
 		}
 	}
@@ -677,34 +674,6 @@ fail:
 	return err;
 }
 
-dba_err dba_record_var_enqid(dba_record rec, dba_varcode code, int* val)
-{
-	dba_item i;
-
-	assert_is_dba_record(rec);
-	
-	/* Lookup the variable in the hash table */
-	DBA_RUN_OR_RETURN(dba_record_get_item(rec, code, &i));
-
-	*val = i->id;
-
-	return dba_error_ok();
-}
-
-dba_err dba_record_var_setid(dba_record rec, dba_varcode code, int value)
-{
-	dba_item i;
-
-	assert_is_dba_record(rec);
-	
-	/* Lookup the variable in the hash table */
-	DBA_RUN_OR_RETURN(dba_record_get_item(rec, code, &i));
-	
-	i->id = value;
-
-	return dba_error_ok();
-}
-
 dba_err dba_record_key_unset(dba_record rec, dba_keyword parameter)
 {
 	assert_is_dba_record(rec);
@@ -812,41 +781,6 @@ dba_var dba_record_cursor_variable(dba_record_cursor cur)
 {
 	return cur->var;
 }
-int dba_record_cursor_id(dba_record_cursor cur)
-{
-	return cur->id;
-}
-void dba_record_cursor_set_id(dba_record_cursor cur, int value)
-{
-	cur->id = value;
-}
-
-#if 0
-dba_err dba_parameter_info(const char* parameter, dba_varinfo* info)
-{
-	if (parameter[0] == 'B')
-	{
-		dba_item i;
-		dba_varcode varcode = DBA_STRING_TO_VAR(parameter + 1);
-
-		/* Lookup the variable in the hash table */
-		DBA_RUN_OR_RETURN(dba_record_obtain_item(rec, varcode, &i));
-
-		/* Get the informations directly from the variable */
-		DBA_RUN_OR_RETURN(dba_var_info(i->var, info));
-	}
-	else
-	{
-		/* Get informations about the parameter */
-		int index;
-		dba_varinfo vi = dba_record_keyword(parameter, &index);
-		if (vi == NULL)
-			return dba_error_notfound("looking for informations about parameter \"%s\"", parameter);
-		*info = *vi;
-	}
-	return dba_error_ok();
-}
-#endif
 
 
 static inline int peek_int(dba_record rec, dba_keyword key)

@@ -452,7 +452,6 @@ void to::test<2>()
 		dba_db_cursor cursor;
 		int val;
 		int qc_count;
-		int id_context;
 
 		dba_record_clear(query);
 		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
@@ -469,12 +468,11 @@ void to::test<2>()
 		dba_record_var_seti(qc, DBA_VAR(0, 33, 2), 11);
 		dba_record_var_seti(qc, DBA_VAR(0, 33, 3), 22);
 		dba_record_var_seti(qc, DBA_VAR(0, 33, 5), 33);
-		dba_record_var_enqid(result, DBA_VAR(0, 1, 11), &id_context);
-		CHECKED(dba_db_qc_insert(db, id_context, DBA_VAR(0, 1, 11), qc));
+		CHECKED(dba_db_qc_insert(db, context, DBA_VAR(0, 1, 11), qc));
 
 		/* Query back the data */
 		dba_record_clear(qc);
-		CHECKED(dba_db_qc_query(db, id_context, DBA_VAR(0, 1, 11), NULL, 0, qc, &qc_count));
+		CHECKED(dba_db_qc_query(db, context, DBA_VAR(0, 1, 11), NULL, 0, qc, &qc_count));
 
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val));
 		gen_ensure_equals(val, 11);
@@ -486,20 +484,20 @@ void to::test<2>()
 		/* Delete a couple of items */
 		{
 			dba_varcode todel[] = {DBA_VAR(0, 33, 2), DBA_VAR(0, 33, 5)};
-			CHECKED(dba_db_qc_remove(db, id_context, DBA_VAR(0, 1, 11), todel, 2));
+			CHECKED(dba_db_qc_remove(db, context, DBA_VAR(0, 1, 11), todel, 2));
 		}
 		/* Deleting non-existing items should not fail.  Also try creating a
 		 * query with just on item */
 		{
 			dba_varcode todel[] = {DBA_VAR(0, 33, 2)};
-			CHECKED(dba_db_qc_remove(db, id_context, DBA_VAR(0, 1, 11), todel, 1));
+			CHECKED(dba_db_qc_remove(db, context, DBA_VAR(0, 1, 11), todel, 1));
 		}
 
 		/* Query back the data */
 		dba_record_clear(qc);
 		{
 			dba_varcode toget[] = { DBA_VAR(0, 33, 2), DBA_VAR(0, 33, 3), DBA_VAR(0, 33, 5) };
-			CHECKED(dba_db_qc_query(db, id_context, DBA_VAR(0, 1, 11), toget, 3, qc, &qc_count));
+			CHECKED(dba_db_qc_query(db, context, DBA_VAR(0, 1, 11), toget, 3, qc, &qc_count));
 		}
 
 		gen_ensure(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val) == DBA_ERROR);
@@ -507,19 +505,6 @@ void to::test<2>()
 		gen_ensure(val == 22);
 		gen_ensure(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val) == DBA_ERROR);
 	}
-
-#if 0
-	{
-		/* Insert some many things */
-		int i;
-		for (i = 20; i < 10000; i++)
-		{
-			CHECKED(dba_seti(rec, "B01050", i));
-			CHECKED(dba_seti(rec, "l1", i));
-			CHECKED(dba_insert(db, rec));
-		}
-	}
-#endif
 
 	/*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
 }

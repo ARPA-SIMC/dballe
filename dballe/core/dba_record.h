@@ -552,34 +552,6 @@ dba_err dba_record_key_setc(dba_record rec, dba_keyword parameter, const char* v
 dba_err dba_record_var_setc(dba_record rec, dba_varcode code, const char* value);
 
 /**
- * Get the ID informations about one value
- *
- * @param rec
- *   The record to get the value from.
- * @param code
- *   The variable to get the ID for.
- * @retval value
- *   The variable where the value should be stored.
- * @return
- *   The error indicator for the function.
- */
-dba_err dba_record_var_enqid(dba_record rec, dba_varcode code, int* value);
-
-/**
- * Set the ID informations about one value
- *
- * @param rec
- *   The record where the value is to be set.
- * @param code
- *   The variable to set the ID for.
- * @param value
- *   The value to set.
- * @return
- *   The error indicator for the function.
- */
-dba_err dba_record_var_setid(dba_record rec, dba_varcode code, int value);
-	
-/**
  * Remove a parameter from the record.
  *
  * @param rec
@@ -665,42 +637,6 @@ dba_record_cursor dba_record_iterate_next(dba_record rec, dba_record_cursor cur)
  *   The variable pointed by the cursor
  */
 dba_var dba_record_cursor_variable(dba_record_cursor cur);
-
-/**
- * Get the id of the value pointed by a dba_record_cursor
- * 
- * @param cur
- *   The cursor returned by dba_record_iterate_first or dba_record_iterate_next
- *
- * @return
- *   The id of the value pointed by the cursor.
- */
-int dba_record_cursor_id(dba_record_cursor cur);
-
-/**
- * Set the id of the value pointed by a dba_record_cursor
- * 
- * @param cur
- *   The cursor returned by dba_record_iterate_first or dba_record_iterate_next
- *
- * @param value
- *   The value to set
- */
-void dba_record_cursor_set_id(dba_record_cursor cur, int value);
-
-/**
- * Get informations about a parameter
- *
- * @param parameter
- *   The parameter to get information about.
- *
- * @retval info
- *   The dba_varinfo structure where the information is to be stored.
- *
- * @return
- *   The error indicator for the function.
- */
-//dba_err dba_parameter_info(const char* parameter, dba_varinfo* info);
 
 /**
  * Parse the date extremes set in the dba_record.
