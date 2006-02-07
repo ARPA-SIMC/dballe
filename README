@@ -240,6 +240,7 @@ These are the TODO-list items completed so far::
     + documentare come si usa ana_id
        + aggiungere gli esempi per l'uso di ana_id
        + parlare di !ana_id
+    + Aggiungere gli esempi per l'uso di data_id
 
  * Documentazione codice
     + Se una funzione non restituisce un dba_err, allora non può fallire in nessun
@@ -248,6 +249,15 @@ These are the TODO-list items completed so far::
     + Ripulito la documentazione dei moduli
     + Documentato il sistema di scorciatoie di msg/vars.csv
     + I distruttori non possono mai fallire
+
+ * Guida utente
+    + Gestione tabelle
+       + repinfo.csv
+       + La B locale
+       + Formato delle tabelle BUFR/CREX
+       + Aggiungere elementi alla B locale
+       = Indicizzazione tabelle in caso di modifica
+         dbatbl index share/dballe/dballe.txt dballe
 
  * Conversione osservazioni in variabili fisiche
     + Come codifico in DB-ALLe i 4 cloud type del synop?
@@ -321,6 +331,7 @@ These are the TODO-list items currently being worked on::
     - Fast
        - lanciare kcachegrind sul benchmark
     - Documentazione API Fortran
+       - far leggere
     - Guida utente (manutenzione e tool commandline)
     - Documentazione implementazione C
        - guardare i warning di doxygen
@@ -353,13 +364,6 @@ These are the TODO-list items currently being worked on::
     - Procurarsi un tracciato VM di una stazione nota e scrivere test
 
  * Guida utente
-    - Gestione tabelle
-       + repinfo.csv
-       - La B locale
-       - Formato delle tabelle BUFR/CREX
-       - Aggiungere elementi alla B locale
-       = Indicizzazione tabelle in caso di modifica
-         dbatbl index share/dballe/dballe.txt dballe
     - Introduzione veloce a dbatbl, dbamsg e dbadb (la reference è nella
       manpage)
     - Troubleshooting
@@ -375,9 +379,6 @@ These are the TODO-list items currently being worked on::
        - import da nuovi template bufrex
       (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
     + Invarianti
-
- * Documentazione dell'interfaccia in fortran
-    - Aggiungere gli esempi per l'uso di data_id
 
  * Procedura per supportare un nuovo tipo report in un formato specifico
     - Cercare un file con un'osservazione nel formato voluto
