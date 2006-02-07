@@ -68,6 +68,12 @@ static void reset_error(dba_err_code code)
 	lasterr = code;
 }
 
+static void reset_error_if_needed()
+{
+	if (lasterr == DBA_ERR_NONE)
+		reset_error(DBA_ERR_NONE);
+}
+
 static void add_backtrace()
 {
 	const int trace_size = 50;
@@ -142,33 +148,39 @@ static void dba_error_check_callbacks(dba_err_callbacks chain)
 
 dba_err_code dba_error_get_code()
 {
+	reset_error_if_needed();
 	return lasterr;
 }
 
 const char* dba_error_get_message()
 {
+	reset_error_if_needed();
 	return dba_err_desc[lasterr];
 }
 
 const char* dba_error_get_context()
 {
+	reset_error_if_needed();
 	return context == NULL ? "(no error context available)" : context;
 }
 
 const char* dba_error_get_details()
 {
+	reset_error_if_needed();
 	return details;
 }
 
 const char* dba_error_get_backtrace()
 {
+	reset_error_if_needed();
 	return err_backtrace;
 }
 
 
 dba_err dba_error_ok()
 {
-	reset_error(DBA_ERR_NONE);
+	lasterr = DBA_ERR_NONE;
+	/* reset_error(DBA_ERR_NONE); */
 	return DBA_OK;
 }
 
@@ -235,6 +247,8 @@ dba_err dba_error_generic1(dba_err_code code, const char* fmt, ...)
 
 void dba_error_state_get(dba_error_info* info)
 {
+	reset_error_if_needed();
+
 	/* Allocate if needed */
 	if (*info == NULL)
 	{

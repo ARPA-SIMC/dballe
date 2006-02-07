@@ -197,7 +197,6 @@ const static dba_varcode generator_varcodes[] = {
 	DBA_VAR(0,  6,   1),
 	DBA_VAR(0,  7,   1),
 	DBA_VAR(0,  7,   2),
-	DBA_VAR(0,  7,   4),
 	DBA_VAR(0,  7,  31),
 	DBA_VAR(0,  8,   1),
 	DBA_VAR(0,  8,   4),

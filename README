@@ -321,8 +321,11 @@ These are the TODO-list items currently being worked on::
     - Export AOF
 
  * Ottimizzazione
-    - Cercare di snellire dba_error_ok
-    - Evitare delle dba_record_copy (dove le fa?)
+    + Cercare di snellire dba_error_ok
+    - Evitare delle dba_record_copy (viene fatto solo nella idba_prendilo e
+      solo per passare dati alle funzioni QC.  Con gli ultimi cambiamenti alla
+      gestione dei QC, può essere che non serva piú o che si possano trovare
+      modi piú efficienti per farlo.
 
  * AOF
     - Test: aof -> bufr -> dballe -> bufr -[makeaof]-> aof
