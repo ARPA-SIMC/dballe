@@ -62,6 +62,8 @@ FDBA_HANDLE_START_DECL(simple)
 	int session;
 	int perms;
 	int sys_ana_id;
+	int sys_context_id;
+	dba_varcode sys_last_varcode;
 	dba_record input;
 	dba_record output;
 	dba_record qcinput;

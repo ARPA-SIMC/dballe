@@ -111,8 +111,9 @@ dba_err do_dump(poptContext optCon)
 	for (i = 0; i < count; i++)
 	{
 		dba_varcode var;
+		int id_context;
 		int is_last;
-		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, result, &var, &is_last));
+		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, result, &var, &id_context, &is_last));
 		printf("#%d: -----------------------\n", i);
 		dba_record_print(result, stdout);
 	}
@@ -214,7 +215,6 @@ static dba_err msg_writer(dba_msg msg, void* data)
 dba_err do_export(poptContext optCon)
 {
 	struct export_data d = { NULL, 0, 0, -1 };
-	dba_var var;
 	dba_encoding type;
 	dba_record query;
 	dba_db db;

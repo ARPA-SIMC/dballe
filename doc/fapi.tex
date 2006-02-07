@@ -436,18 +436,19 @@ c     Also set the temperature
 \end{verbatim}
 
 
-\subsection{Quality informations}
+\subsection{Attributes}
 
 {\tt idba\_set*} and {\tt idba\_enq*} functions can be used to get and set
-quality control data.  To do so, use as parameter the string {\tt "*Bxxyyy"},
+attributes on data.  To do so, use as parameter the string {\tt "*Bxxyyy"},
 where {\tt xx} and {\tt yyy} are the X and Y values of the BUFR/CREX table B
-describing the quality control data.
+describing the attribute.
 
 For example:
 
 \begin{verbatim}
-c     Set the confidence of the wind speed value
-      call idba_setr(handle, "*B33007", 75)
+c     Set the confidence of the wind speed value we inserted
+c     in the last 'idba_prendilo'
+      call idba_setr(handle, "*B33007", 75.0)
       call idba_setc(handle, "*var", "B11002")
       call idba_critica(handle)
 \end{verbatim}
@@ -459,8 +460,10 @@ information that does not fit in the normal input and output record.  This is
 done by calling {\tt idba\_enqi} for parameters starting with an exclamation
 mark (``!'').
 
-This function is currently only used to get the database ID of the last
-inserted pseudoana informations ({\tt !ana\_id}).  This is useful to speed up
+\subsubsection{{\tt !ana\_id}}
+
+Calling {\tt idba\_enqi(handle, "!ana\_id", value)} gives the database ID of
+the last inserted pseudoana informations.  This is useful to speed up
 insertions of multiple data for the same station:
 
 \begin{verbatim}
@@ -473,11 +476,37 @@ c     Call idba_set* to fill in the data for the first value...
 c     Call idba_set* to fill in the data for other values
 c     related to the same station...
 
-c     This idba_prendilo does not need to manage pseudoana
-c     informations anymore.  The downside of this is that
-c     you now need to unset "ana_id" if you want to insert
-c     data for a different station
       call idba_prendilo(handle)
+\end{verbatim}
+
+\subsubsection{{\tt !context\_id}}
+
+Calling {\tt idba\_enqi(handle, "!ana\_id", value)} gives the database ID of
+the context informations for the last value retrieved with {\tt idba\_dammelo}
+or for the values inserted with the last {\tt idba\_prendilo}.  This is useful
+to be able to directly refer to a value in the same context later on in the
+program:
+
+% FIXME: put the dammelo in a loop and use a vector for 'context'
+
+\begin{verbatim}
+c     Make a query...
+
+      call idba_dammelo(handle, var)
+      if var.eq."B11002" then
+c       We are working on the attributes of wind speed, so
+c       save the context id to be able to refer to this
+c       variable later
+        call idba_enqi(handle, "!context_id", context)
+      endif
+
+c     ...finish reading all the varibales, compute things...
+
+c     Set the confidence interval for that value of wind speed
+      call idba_seti(handle, "!context_id", context)
+      call idba_setc(handle, "*var", "B11002")
+      call idba_setr(handle, "*B33007", confidence)
+      call idba_critica(handle)
 \end{verbatim}
 
 \section {Querying the database}

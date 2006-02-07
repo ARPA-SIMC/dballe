@@ -271,6 +271,7 @@ void to::test<2>()
 	{
 		int count;
 		int is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 
@@ -287,7 +288,7 @@ void to::test<2>()
 		gen_ensure(count != 0);
 
 		/* There should be at least one item */
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(!is_last);
 
 		/* Check that the results match */
@@ -307,7 +308,7 @@ void to::test<2>()
 			ensureTestRecEquals(result, sample01);
 
 		/* The item should have two data in it */
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 
 		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
 		if (var == DBA_VAR(0, 1, 11))
@@ -316,7 +317,7 @@ void to::test<2>()
 			ensureTestRecEquals(result, sample01);
 
 		/* There should be also another item */
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 
 		/* Check that the results matches */
 		ensureTestRecEquals(result, sampleAna);
@@ -330,7 +331,7 @@ void to::test<2>()
 			ensureTestRecEquals(result, sample11);
 
 		/* The item should have two data in it */
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 
 		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
 		if (var == DBA_VAR(0, 1, 11))
@@ -340,7 +341,7 @@ void to::test<2>()
 
 		/* Now there should not be anything anymore */
 		gen_ensure(is_last);
-		gen_ensure(dba_db_cursor_next(cursor, result, &var, &is_last) == DBA_ERROR);
+		gen_ensure(dba_db_cursor_next(cursor, result, &var, &context, &is_last) == DBA_ERROR);
 
 		/* Deallocate the cursor */
 		dba_db_cursor_delete(cursor);
@@ -350,6 +351,7 @@ void to::test<2>()
 	{
 		int count;
 		int is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 
@@ -366,17 +368,17 @@ void to::test<2>()
 		gen_ensure(cursor != 0);
 
 		/* There should be four items */
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(!is_last);
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(!is_last);
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(!is_last);
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 
 		/* Now there should not be anything anymore */
 		gen_ensure(is_last);
-		gen_ensure(dba_db_cursor_next(cursor, result, &var, &is_last) == DBA_ERROR);
+		gen_ensure(dba_db_cursor_next(cursor, result, &var, &context, &is_last) == DBA_ERROR);
 
 		/* Deallocate the cursor */
 		dba_db_cursor_delete(cursor);
@@ -410,13 +412,14 @@ void to::test<2>()
 	{
 		int count;
 		int is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
 		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure(count > 0);
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		ensureTestRecEquals(result, sampleAna);
 		ensureTestRecEquals(result, sampleBase);
 
@@ -427,7 +430,7 @@ void to::test<2>()
 			ensureTestRecEquals(result, sample01);
 
 		/* The item should have two data in it */
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 
 		gen_ensure(var == DBA_VAR(0, 1, 11) || var == DBA_VAR(0, 1, 12));
 		if (var == DBA_VAR(0, 1, 11))
@@ -436,7 +439,7 @@ void to::test<2>()
 			ensureTestRecEquals(result, sample01);
 
 		gen_ensure(is_last);
-		gen_ensure(dba_db_cursor_next(cursor, result, &var, &is_last) == DBA_ERROR);
+		gen_ensure(dba_db_cursor_next(cursor, result, &var, &context, &is_last) == DBA_ERROR);
 		dba_db_cursor_delete(cursor);
 	}
 
@@ -444,6 +447,7 @@ void to::test<2>()
 	{
 		int count;
 		int is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		int val;
@@ -454,7 +458,7 @@ void to::test<2>()
 		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		do {
-			CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+			CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 			/* fprintf(stderr, "%d B%02d%03d\n", count, DBA_VAR_X(var), DBA_VAR_Y(var)); */
 		} while (!is_last && var != DBA_VAR(0, 1, 11));
 		gen_ensure(var == DBA_VAR(0, 1, 11));
@@ -574,6 +578,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -581,7 +586,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, b);
@@ -590,6 +595,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -597,7 +603,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, a);
@@ -606,6 +612,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -613,7 +620,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, b);
@@ -641,6 +648,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -649,7 +657,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, b);
@@ -658,6 +666,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -666,7 +675,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, a);
@@ -675,6 +684,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -683,7 +693,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, b);
@@ -713,6 +723,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -722,7 +733,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 /*
@@ -737,6 +748,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -746,7 +758,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, a);
@@ -755,6 +767,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -764,7 +777,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, b);
@@ -796,6 +809,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -806,7 +820,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, b);
@@ -815,6 +829,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -825,7 +840,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, a);
@@ -834,6 +849,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -844,7 +860,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, b);
@@ -878,6 +894,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -889,7 +906,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, b);
@@ -898,6 +915,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -909,7 +927,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, a);
@@ -918,6 +936,7 @@ void to::test<3>()
 
 	{
 		int count, is_last;
+		int context;
 		dba_varcode var;
 		dba_db_cursor cursor;
 		dba_record_clear(query);
@@ -929,7 +948,7 @@ void to::test<3>()
 		CHECKED(dba_db_query(db, query, &cursor, &count));
 		gen_ensure_equals(count, 1);
 
-		CHECKED(dba_db_cursor_next(cursor, result, &var, &is_last));
+		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
 		gen_ensure(is_last);
 		gen_ensure_equals(var, DBA_VAR(0, 1, 12));
 		ensureTestRecEquals(result, b);

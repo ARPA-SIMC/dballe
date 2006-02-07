@@ -289,6 +289,9 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 
 	STATE.session = *dbahandle;
 	STATE.perms = 0;
+	STATE.sys_ana_id = 0;
+	STATE.sys_context_id = 0;
+	STATE.sys_last_varcode = 0;
 	STATE.input = NULL;
 	STATE.output = NULL;
 	STATE.qcinput = NULL;
@@ -512,6 +515,8 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 		case '!':
 			if (strcmp(parm + 1, "ana_id") == 0)
 				*value = STATE.sys_ana_id;
+			else if (strcmp(parm + 1, "context_id") == 0)
+				*value = STATE.sys_context_id;
 			else
 				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
 			return dba_error_ok();
@@ -762,13 +767,24 @@ F77_INTEGER_FUNCTION(idba_seti)(
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
 
-	if (parm[0] == '*')
+	switch (parm[0])
 	{
-		rec = STATE.qcinput;
-		p = parm + 1;
-	} else {
-		rec = STATE.input;
-		p = parm;
+		case '*':
+			rec = STATE.qcinput;
+			p = parm + 1;
+			break;
+		case '!':
+			if (strcmp(parm + 1, "ana_id") == 0)
+				STATE.sys_ana_id = *value;
+			else if (strcmp(parm + 1, "context_id") == 0)
+				STATE.sys_context_id = *value;
+			else
+				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
+			return dba_error_ok();
+		default:
+			rec = STATE.input;
+			p = parm;
+			break;
 	}
 
 	if (p[0] != 'B')
@@ -1154,6 +1170,7 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
 	dba_varcode var;
+	int context;
 	char varstr[10];
 	int iis_last;
 	dba_err err;
@@ -1165,7 +1182,7 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 	 * leftover QC values from a previous query */
 	STATE.qc_iter = 0;
 
-	err = dba_db_cursor_next(STATE.query_cur, STATE.output, &var, &iis_last);
+	err = dba_db_cursor_next(STATE.query_cur, STATE.output, &var, &context, &iis_last);
 	
 	if (err != DBA_OK)
 	{
@@ -1175,6 +1192,9 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 		snprintf(varstr, 10, "B%02d%03d", DBA_VAR_X(var), DBA_VAR_Y(var));
 		cnfExprt(varstr, parameter, parameter_length);
 	}
+
+	STATE.sys_context_id = context;
+	STATE.sys_last_varcode = var;
 
 	return err;
 }
@@ -1201,7 +1221,7 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 		INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	int ana_id;
+	int ana_id, context_id;
 
 	if (STATE.perms & PERM_DATA_RO)
 		return dba_error_consistency(
@@ -1221,13 +1241,15 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 				SESSION, STATE.input,
 				STATE.perms & PERM_DATA_REWRITE ? 1 : 0,
 				STATE.perms & PERM_ANA_REWRITE ? 1 : 0,
-				&ana_id));
+				&ana_id, &context_id));
 
 	STATE.sys_ana_id = ana_id;
+	STATE.sys_context_id = context_id;
+	STATE.sys_last_varcode = 0;
 
 	/* Copy the input on the output, so that QC functions can find the data
 	 * they need */
-	return dba_record_copy(STATE.output, STATE.input);
+	return dba_error_ok();
 }
 
 /**
@@ -1260,8 +1282,8 @@ static dba_err get_referred_data_id(int* handle, int* id_context, dba_varcode* i
 {
 	const char* val;
 
-	*id_context = 0;
-	*id_var = 0;
+	*id_context = STATE.sys_context_id;
+	*id_var = STATE.sys_last_varcode;
 
 #if 0
 	/* First try with *data_id */
@@ -1273,13 +1295,8 @@ static dba_err get_referred_data_id(int* handle, int* id_context, dba_varcode* i
 	}
 #endif
 	/* Then with *var */
-	if (*id_context == 0 && (val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
-	{
-		DBA_RUN_OR_RETURN(dba_record_var_enqid(STATE.output, DBA_STRING_TO_VAR(val + 1), id_context));
+	if (*id_var == 0 && (val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
 		*id_var = DBA_STRING_TO_VAR(val + 1);
-		if (*id_context == 0)
-			return dba_error_consistency("checking the ID previously stored for %s is non-zero", val);
-	}
 #if 0
 	/* Lastly, with the data_id from last idba_dammelo */
 	if (*id == 0)

@@ -548,7 +548,7 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
  * information from `rec'; else data from `rec' is written into pseudoana only
  * if there is no suitable anagraphical data for it.
  */
-dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id)
+dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id, int* context_id)
 {
 	dba_err err = DBA_OK;
 	dba_db_data d;
@@ -583,6 +583,8 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 
 	if (ana_id != NULL)
 		*ana_id = id_pseudoana;
+	if (context_id != NULL)
+		*context_id = d->id_context;
 
 	DBA_RUN_OR_GOTO(fail, dba_db_commit(db));
 
@@ -596,12 +598,12 @@ fail:
 
 dba_err dba_db_insert(dba_db db, dba_record rec)
 {
-	return dba_db_insert_or_replace(db, rec, 1, 1, NULL);
+	return dba_db_insert_or_replace(db, rec, 1, 1, NULL, NULL);
 }
 
 dba_err dba_db_insert_new(dba_db db, dba_record rec)
 {
-	return dba_db_insert_or_replace(db, rec, 0, 0, NULL);
+	return dba_db_insert_or_replace(db, rec, 0, 0, NULL, NULL);
 }
 
 static dba_err dba_db_cursor_new(dba_db db, dba_db_cursor* cur)
@@ -925,7 +927,7 @@ static dba_err dba_db_cursor_to_rec(dba_db_cursor cur, dba_record rec)
 	return dba_error_ok();
 }
 
-dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, int* is_last)
+dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, int* context_id, int* is_last)
 {
 	assert(cur);
 	assert(cur->db);
@@ -945,8 +947,8 @@ dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, 
 	/* Store the data into the record */
 	DBA_RUN_OR_RETURN(dba_db_cursor_to_rec(cur, rec));
 
-	/* Store the database ID together with the value */
-	DBA_RUN_OR_RETURN(dba_record_var_setid(rec, cur->out_idvar, cur->out_data_id));
+	/* Return the context ID to refer to the current context */
+	*context_id = cur->out_data_id;
 
 	*is_last = --cur->count == 0;
 

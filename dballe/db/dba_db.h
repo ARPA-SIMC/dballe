@@ -158,10 +158,13 @@ dba_err dba_db_insert(dba_db db, dba_record rec);
  * @retval ana_id
  *   ID of the pseudoana record for the entry just inserted.  NULL can be used
  *   if the caller is not interested in this value.
+ * @retval context_id
+ *   ID of the context record for the entry just inserted.  NULL can be used
+ *   if the caller is not interested in this value.
  * @return
  *   The error indicator for the function.
  */
-dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id);
+dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id, int* context_id);
 
 /**
  * Insert a record into the database
@@ -219,7 +222,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count);
  *   Do not forget to call dba_db_cursor_delete after you have finished retrieving
  *   the query data.
  */
-dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, int* is_last);
+dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, int* cursor_id, int* is_last);
 
 /**
  * Release a dba_db_cursor
