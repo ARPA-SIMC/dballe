@@ -14,6 +14,9 @@ noinst_DATA = dballe.tex
 dballe.tex: dballe.txt mkbdoc
 	./mkbdoc < $< > $@ 
 
+B000000002551200.txt: dballe.txt
+	cut -b 0-119 < $< > $@
+
 EXTRA_DIST = $(table_DATA) $(conf_DATA) mkbdoc
 
 clean-local:
