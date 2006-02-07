@@ -298,6 +298,13 @@ These are the TODO-list items completed so far::
        + Risolto, ma solo per MySQL >= 4.1.1
     + Implementare la ricerca per latitudine o longitudine esatte
 
+ * Ottimizzazione
+    + Cercare di snellire dba_error_ok
+    + Evitare delle dba_record_copy (viene fatto solo nella idba_prendilo e
+      solo per passare dati alle funzioni QC.  Con gli ultimi cambiamenti alla
+      gestione dei QC, può essere che non serva piú o che si possano trovare
+      modi piú efficienti per farlo.
+
 
 TODO-list items being worked on
 -------------------------------
@@ -319,13 +326,6 @@ These are the TODO-list items currently being worked on::
        - guardare i warning di doxygen
  * Milestone release-extra
     - Export AOF
-
- * Ottimizzazione
-    + Cercare di snellire dba_error_ok
-    - Evitare delle dba_record_copy (viene fatto solo nella idba_prendilo e
-      solo per passare dati alle funzioni QC.  Con gli ultimi cambiamenti alla
-      gestione dei QC, può essere che non serva piú o che si possano trovare
-      modi piú efficienti per farlo.
 
  * AOF
     - Test: aof -> bufr -> dballe -> bufr -[makeaof]-> aof

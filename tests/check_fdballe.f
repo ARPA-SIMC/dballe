@@ -126,9 +126,12 @@ c     TODO: make a for loop instead
          call idba_enqc(handle, "lon", cval)
          call ensure_no_error("dammelo enqc 4")
          
-         call idba_enqi(handle, "data_id", ival)
-         call ensure_no_error("dammelo enqi data_id")
-         call ensure("data id", ival.eq.1)
+         call idba_enqi(handle, "!ana_id", ival)
+         call ensure_no_error("dammelo enqi !ana_id")
+         call ensure("!ana_id", ival.eq.1)
+
+         call idba_enqi(handle, "!context_id", ival)
+         call ensure_no_error("dammelo enqi !context_id")
 
 c        Save the id for reusing it later
          saved_id = ival
@@ -157,8 +160,10 @@ c        Perform some useless scusa just to test the parser
       enddo
 
 c     Remove the QC data for saved_data
-      call idba_seti(handle, "data_id", saved_id);
+      call idba_seti(handle, "!context_id", saved_id);
       call ensure_no_error("scusa seti 3")
+      call idba_setc(handle, "*var", "B01011")
+      call ensure_no_error("scusa setc 3")
       call idba_scusa(handle);
       call ensure_no_error("scusa 3")
 
