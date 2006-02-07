@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(dballe, 0.7, [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_ENABLE(mysql4,
@@ -55,6 +55,9 @@ AC_PROG_CXX
 AC_PROG_F77
 AM_PROG_CC_STDC
 AC_HEADER_STDC
+
+dnl Needed by subdir-objects
+AM_PROG_CC_C_O
 
 dnl Use libtool
 dnl AM_ENABLE_STATIC

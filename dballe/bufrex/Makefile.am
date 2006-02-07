@@ -20,20 +20,20 @@ libbufrex_la_SOURCES = \
 		crex_encoder.c \
 		bufrex_raw_conv.c \
 		bufrex.c \
-		importers/im-generic.c \
-		importers/im-synop.c \
-		importers/im-metar.c \
-		importers/im-pilot.c \
-		importers/im-temp.c \
-		importers/im-flight.c \
-		exporters/ex-generic.c \
-		exporters/ex-synop.c \
-		exporters/ex-metar.c \
-		exporters/ex-ship.c \
-		exporters/ex-buoy.c \
-		exporters/ex-pilot.c \
-		exporters/ex-temp.c \
-		exporters/ex-flight.c
+		importers/generic.c \
+		importers/synop.c \
+		importers/metar.c \
+		importers/pilot.c \
+		importers/temp.c \
+		importers/flight.c \
+		exporters/generic.c \
+		exporters/synop.c \
+		exporters/metar.c \
+		exporters/ship.c \
+		exporters/buoy.c \
+		exporters/pilot.c \
+		exporters/temp.c \
+		exporters/flight.c
 
 INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
 
