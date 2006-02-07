@@ -24,6 +24,11 @@ default values can be altered via environment variables:
   the currently defined bit meanings can be found in
   {\tt /usr/include/dballe/core/verbose.h}.  The default is 0, which means no
   verbose reporting at all.
+\item[{\tt DBA\_AOF\_ENDIANNESS}]
+  select a specific endianness to use when encoding AOF messages.  The possible
+  values are {\tt ARCH} (use the endianness of the current host), {\tt LE}
+  (little endian) and {\tt BE} (big endian).  If the variable is not present,
+  then the default value is {\tt ARCH}.
 \end{description}
 
 

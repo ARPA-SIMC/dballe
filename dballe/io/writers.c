@@ -3,6 +3,7 @@
 #include "writers.h"
 
 #include <netinet/in.h>
+#include <byteswap.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -180,8 +181,9 @@ struct _aof_writer
 	/* End time of the observation */
 	struct tm end;
 
-	/* True if we need to swap words to preserve endianness */
-	int swapwords;
+	/* 0 if we should write with the host endianness; 1 if we should write
+	 * little endian; 2 if we should write big endian */
+	enum { END_ARCH, END_LE, END_BE } endianness;
 };
 typedef struct _aof_writer* aof_writer;
 
@@ -191,6 +193,7 @@ static dba_err aof_writer_write_raw(aof_writer writer, dba_rawmsg msg);
 
 dba_err dba_file_writer_create_aof(dba_file_writer* writer, dba_rawfile file)
 {
+	char* env_swap = getenv("DBA_AOF_ENDIANNESS");
 	aof_writer res = (aof_writer)calloc(1, sizeof(struct _aof_writer));
 	if (res == NULL)
 		return dba_error_alloc("Allocating a new BUFR writer");
@@ -198,6 +201,17 @@ dba_err dba_file_writer_create_aof(dba_file_writer* writer, dba_rawfile file)
 	res->parent.write_fun = (dba_file_writer_write_fun)aof_writer_write;
 	res->parent.write_raw_fun = (dba_file_writer_write_raw_fun)aof_writer_write_raw;
 	res->parent.file = file;
+
+	if (env_swap == NULL)
+		res->endianness = END_ARCH;
+	else if (strcmp(env_swap, "ARCH") == 0)
+		res->endianness = END_ARCH;
+	else if (strcmp(env_swap, "LE") == 0)
+		res->endianness = END_LE;
+	else if (strcmp(env_swap, "BE") == 0)
+		res->endianness = END_BE;
+	else
+		res->endianness = END_ARCH;
 
 	*writer = (dba_file_writer)res;
 	return dba_error_ok();
@@ -211,7 +225,23 @@ static void aof_writer_delete(aof_writer writer)
 
 static dba_err output_word(aof_writer writer, uint32_t word)
 {
-	uint32_t oword = htonl(word);
+	uint32_t oword;
+	switch (writer->endianness)
+	{
+		case END_ARCH: oword = word; break;
+#if __BYTE_ORDER == __BIG_ENDIAN
+		case END_LE: oword = bswap_32(word); break;
+		case END_BE: oword = word; break;
+#else
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+		case END_LE: oword = word; break;
+		case END_BE: oword = bswap_32(word); break;
+#else
+		case END_LE: oword = bswap_32(htonl(word)); break;
+		case END_BE: oword = htonl(word); break;
+#endif
+#endif
+	}
 	if (fwrite(&oword, sizeof(uint32_t), 1, writer->parent.file->fd) != 1)
 		return dba_error_system("writing 4 bytes on %s", writer->parent.file->name);
 	return dba_error_ok();

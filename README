@@ -113,6 +113,7 @@ These are the TODO-list items completed so far::
     + Il passaggio aof -> bufr -> dballe -> bufr -[makeaof]-> aof cambia il
       valore dell'altezza (in alcuni casi sembra moltiplicato di 10, in altri
       qualcosa di piú
+    + dbamsg cat di un file .aof swappa l'endianness
 
  * Core
     + Refactor dba_msg to contain physical values with levellayer and timerange
@@ -342,7 +343,6 @@ These are the TODO-list items currently being worked on::
 
  * AOF
     - Test: aof -> bufr -> dballe -> bufr -[makeaof]-> aof
-    - dbamsg cat di un file .aof swappa l'endianness
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
