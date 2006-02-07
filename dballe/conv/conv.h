@@ -13,7 +13,7 @@ extern "C" {
 #include <dballe/err/dba_error.h>
 
 /**
- * Convert between CREX or BUFR units
+ * Convert between different units
  *
  * @param from
  *   Unit of the value to convert (see ::dba_varinfo)
@@ -27,6 +27,32 @@ extern "C" {
  *   The error indicator for the function (@see ::dba_err)
  */
 dba_err dba_convert_units(const char* from, const char* to, double val, double* res);
+
+/**
+ * Get the multiplier used in the given conversion
+ *
+ * @param from
+ *   Unit of the value to convert (see ::dba_varinfo)
+ * @param to
+ *   Unit to convert to (see ::dba_varinfo)
+ * @retval mul
+ *   Multiplier factor used in the conversion
+ * @returns
+ *   The error indicator for the function (@see ::dba_err)
+ */
+dba_err dba_convert_units_get_mul(const char* from, const char* to, double* mul);
+
+/**
+ * Check if conversion is possible among the given units
+ *
+ * @param from
+ *   Unit of the value to convert (see ::dba_varinfo)
+ * @param to
+ *   Unit to convert to (see ::dba_varinfo)
+ * @returns
+ *   True if conversion is supported, else false.
+ */
+int dba_convert_units_allowed(const char* from, const char* to);
 
 /**
  * Convert ICAO height (in meters) to pressure (in hpa) and back

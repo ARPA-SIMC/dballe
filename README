@@ -114,6 +114,7 @@ These are the TODO-list items completed so far::
       valore dell'altezza (in alcuni casi sembra moltiplicato di 10, in altri
       qualcosa di piú
     + dbamsg cat di un file .aof swappa l'endianness
+    + Test: aof -> bufr -> dballe -> bufr -[makeaof]-> aof
 
  * Core
     + Refactor dba_msg to contain physical values with levellayer and timerange
@@ -348,9 +349,6 @@ These are the TODO-list items currently being worked on::
        - guardare i warning di doxygen
  * Milestone release-extra
     - Export AOF
-
- * AOF
-    - Test: aof -> bufr -> dballe -> bufr -[makeaof]-> aof
 
  * BUFR
     - In fase di export sounding BUFR e CREX, non esportare i livelli extra
