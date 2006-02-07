@@ -159,7 +159,7 @@ dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
 	else if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
 	{
 		DBA_RUN_OR_RETURN(dba_db_rep_cod_from_memo(db, rep, id));
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, *id));
+		/* DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, *id)); */
 	}
 	else
 		return dba_error_notfound("looking for report type in rep_cod or rep_memo");
