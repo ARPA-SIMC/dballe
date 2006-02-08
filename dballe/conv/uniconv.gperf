@@ -45,8 +45,8 @@ struct uniconv { const char* tag; double mul; double add; };
 "M**(2/3)/S->m**(2/3)/S", 1,	0
 "M->MM",			 1000,		0
 "MM->M",			 	0.001,	0
-"M->cm",			 1000,		0
-"cm->M",			 	0.001,	0
+"M->cm",			  100,		0
+"cm->M",			 	0.01,	0
 "%->PERCENT",			1,		0
 "PERCENT->%",			1,		0
 "M->FT",			    3.2808,	0
@@ -58,7 +58,7 @@ struct uniconv { const char* tag; double mul; double add; };
 "J/M**2->JM-2",			1,		0
 "JM-2->J/M**2",			1,		0
 "cal/cm**2->J/M**2",	41840,	0
-"J/M**2->cal/cm**2",	0.00023901, 0
+"J/M**2->cal/cm**2",	0.000023901, 0
 "Bq/L->BQ L-1",			1,		0
 "BQ L-1->Bq/L",			1,		0
 "DOBSON->DU",			1,		0
