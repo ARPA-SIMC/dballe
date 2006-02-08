@@ -69,6 +69,8 @@ struct uniconv { const char* tag; double mul; double add; };
 "LOG (M-2)->LOG(1/M**2)", 1,	0
 "DEGREE TRUE->gsess",	1,		0
 "gsess->DEGREE TRUE",	1,		0
+"m/s/10->M/S",			0.1,	0
+"M/S->m/s/10",		   10,		0
 "nodi->M/S",			0.51446,	0
 "M/S->nodi",			1.9438,		0
 "PA->mBar",				0.01,	0
