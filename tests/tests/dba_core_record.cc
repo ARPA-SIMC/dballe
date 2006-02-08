@@ -236,7 +236,7 @@ void to::test<1>()
 		CHECKED(dba_record_key_seti(rec, DBA_KEY_LAT, 1234567));
 		CHECKED(dba_record_key_setd(rec, DBA_KEY_LON, 76.54321));
 		CHECKED(dba_record_key_setc(rec, DBA_KEY_YEARMIN, "1976"));
-		CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 13), "456"));
+		CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 1), "456"));
 
 		fail_unless_int_is(key, DBA_KEY_ANA_ID, -10);
 		fail_unless_double_is(key, DBA_KEY_ANA_ID, -10.0);
@@ -252,10 +252,10 @@ void to::test<1>()
 		fail_unless_double_is(key, DBA_KEY_YEARMIN, 1976);
 		fail_unless_char_is(key, DBA_KEY_YEARMIN, "1976");
 
-		fail_unless_int_is(var, DBA_VAR(0, 20, 13), 456);
+		fail_unless_int_is(var, DBA_VAR(0, 20, 1), 456);
 		/*fail_unless_float_is(rec, "B02121", 45600000000.0)*/;
-		fail_unless_double_is(var, DBA_VAR(0, 20, 13), 4560);
-		fail_unless_char_is(var, DBA_VAR(0, 20, 13), "456");
+		fail_unless_double_is(var, DBA_VAR(0, 20, 1), 4560);
+		fail_unless_char_is(var, DBA_VAR(0, 20, 1), "456");
 
 		CHECKED(dba_record_key_unset(rec, DBA_KEY_LAT));
 

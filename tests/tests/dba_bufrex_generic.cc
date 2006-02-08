@@ -20,8 +20,139 @@ struct dba_bufrex_generic_shar
 };
 TESTGRP(dba_bufrex_generic);
 
+// Try encoding and decoding an empty generic message
 template<> template<>
 void to::test<1>()
+{
+	dba_msg msg;
+	CHECKED(dba_msg_create(&msg));
+
+	/* Export msg as a generic message */
+	dba_rawmsg raw;
+	CHECKED(bufrex_encode_bufr(msg, 0, 0, &raw));
+
+	/* Parse it back */
+	dba_msg msg1;
+	CHECKED(bufrex_decode_bufr(raw, &msg1));
+
+	/* Check that the data are the same */
+	int diffs = 0;
+	dba_msg_diff(msg, msg1, &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msg, msg1, "generic0");
+	gen_ensure_equals(diffs, 0);
+
+	dba_rawmsg_delete(raw);
+	dba_msg_delete(msg);
+	dba_msg_delete(msg1);
+}
+
+// Try encoding and decoding a generic message
+template<> template<>
+void to::test<2>()
+{
+	dba_msg msg;
+	CHECKED(dba_msg_create(&msg));
+
+	/* Fill up msg */
+	CHECKED(dba_msg_set_press(			msg, 15,	45));
+	CHECKED(dba_msg_set_height_anem(	msg, 15,	45));
+	CHECKED(dba_msg_set_tot_snow(		msg, 15,	45));
+	CHECKED(dba_msg_set_visibility(		msg, 15,	45));
+	CHECKED(dba_msg_set_pres_wtr(		msg,  5,	45));
+	CHECKED(dba_msg_set_metar_wtr(		msg,  5,	45));
+	CHECKED(dba_msg_set_water_temp(		msg, 15,	45));
+	CHECKED(dba_msg_set_past_wtr1(		msg,  2,	45));
+	CHECKED(dba_msg_set_past_wtr2(		msg,  2,	45));
+	CHECKED(dba_msg_set_press_tend(		msg,  5,	45));
+	CHECKED(dba_msg_set_tot_prec24(		msg, 15,	45));
+	CHECKED(dba_msg_set_press_3h(		msg, 15,	45));
+	CHECKED(dba_msg_set_press_msl(		msg, 15,	45));
+	CHECKED(dba_msg_set_qnh(			msg, 15,	45));
+	CHECKED(dba_msg_set_temp_2m(		msg, 15,	45));
+	CHECKED(dba_msg_set_wet_temp_2m(	msg, 15,	45));
+	CHECKED(dba_msg_set_dewpoint_2m(	msg, 15,	45));
+	CHECKED(dba_msg_set_humidity(		msg, 15,	45));
+	CHECKED(dba_msg_set_wind_dir(		msg, 15,	45));
+	CHECKED(dba_msg_set_wind_speed(		msg, 15,	45));
+	CHECKED(dba_msg_set_ex_ccw_wind(	msg, 15,	45));
+	CHECKED(dba_msg_set_ex_cw_wind(		msg, 15,	45));
+	CHECKED(dba_msg_set_wind_max(		msg, 15,	45));
+	CHECKED(dba_msg_set_cloud_n(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_nh(		msg, 10,	45));
+	CHECKED(dba_msg_set_cloud_hh(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_cl(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_cm(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_ch(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_n1(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_c1(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_h1(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_n2(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_c2(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_h2(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_n3(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_c3(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_h3(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_n4(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_c4(		msg, 3,		45));
+	CHECKED(dba_msg_set_cloud_h4(		msg, 3,		45));
+	CHECKED(dba_msg_set_block(			msg, 3,		45));
+	CHECKED(dba_msg_set_station(		msg, 3,		45));
+	CHECKED(dba_msg_set_flight_reg_no(	msg, "pippo", 45));
+	CHECKED(dba_msg_set_ident(			msg, "cippo", 45));
+	CHECKED(dba_msg_set_st_dir(			msg, 3,		45));
+	CHECKED(dba_msg_set_st_speed(		msg, 3,		45));
+	CHECKED(dba_msg_set_st_name(		msg, "ciop", 45));
+	CHECKED(dba_msg_set_st_name_icao(	msg, "cip", 45));
+	CHECKED(dba_msg_set_st_type(		msg, 1,		45));
+	CHECKED(dba_msg_set_wind_inst(		msg, 3,		45));
+	CHECKED(dba_msg_set_temp_precision(	msg, 12300,	45));
+	CHECKED(dba_msg_set_sonde_type(		msg, 3,		45));
+	CHECKED(dba_msg_set_sonde_method(	msg, 3,		45));
+	CHECKED(dba_msg_set_navsys(			msg, 3,		45));
+	CHECKED(dba_msg_set_data_relay(		msg, 3,		45));
+	CHECKED(dba_msg_set_flight_roll(	msg, 3,		45));
+	CHECKED(dba_msg_set_latlon_spec(	msg, 3,		45));
+	CHECKED(dba_msg_set_year(			msg, 3,		45));
+	CHECKED(dba_msg_set_month(			msg, 3,		45));
+	CHECKED(dba_msg_set_day(			msg, 3,		45));
+	CHECKED(dba_msg_set_hour(			msg, 3,		45));
+	CHECKED(dba_msg_set_minute(			msg, 3,		45));
+	CHECKED(dba_msg_set_latitude(		msg, 3,		45));
+	CHECKED(dba_msg_set_longitude(		msg, 3,		45));
+	CHECKED(dba_msg_set_height(			msg, 3,		45));
+	CHECKED(dba_msg_set_height_baro(	msg, 3,		45));
+	CHECKED(dba_msg_set_flight_phase(	msg, 3,		45));
+	CHECKED(dba_msg_set_timesig(		msg, 3,		45));
+	CHECKED(dba_msg_set_flight_press(	msg, 3,		45));
+
+	/* Export msg as a generic message */
+	dba_rawmsg raw;
+	CHECKED(bufrex_encode_bufr(msg, 0, 0, &raw));
+
+	/* Parse it back */
+	dba_msg msg1;
+	CHECKED(bufrex_decode_bufr(raw, &msg1));
+
+	/* Check that the data are the same */
+	int diffs = 0;
+	dba_msg_diff(msg, msg1, &diffs, stderr);
+	if (diffs != 0)
+	{
+		dba_file out;
+		CHECKED(dba_file_create(&out, BUFR, "/tmp/generic0.bufr", "w"));
+		CHECKED(dba_file_write_raw(out, raw));
+		dba_file_delete(out);
+		track_different_msgs(msg, msg1, "generic0");
+	}
+	gen_ensure_equals(diffs, 0);
+
+	dba_rawmsg_delete(raw);
+	dba_msg_delete(msg);
+	dba_msg_delete(msg1);
+}
+
+template<> template<>
+void to::test<3>()
 {
 	dba_file file_gen;
 	dba_file file_synop;
@@ -91,7 +222,7 @@ void to::test<1>()
 
 /* Check that attributes are properly exported */
 template<> template<>
-void to::test<2>()
+void to::test<4>()
 {
 	dba_msg msg;
 

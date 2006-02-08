@@ -22,16 +22,16 @@
  004004 HOUR                                                             HOUR                       0            0   5 HOUR                      0          2
  004005 MINUTE                                                           MINUTE                     0            0   6 MINUTE                    0          2
  004192 [SIM] Time range type                                            NUMERIC                    0            0  10 NUMERIC                   0          4
- 004193 [SIM] Time range P1                                              NUMERIC                    0  -1073741824  32 NUMERIC                   0         10
- 004194 [SIM] Time range P2                                              NUMERIC                    0  -1073741824  32 NUMERIC                   0         10
+ 004193 [SIM] Time range P1                                              NUMERIC                    0   -536870912  31 NUMERIC                   0         10
+ 004194 [SIM] Time range P2                                              NUMERIC                    0   -536870912  31 NUMERIC                   0         10
  005001 LATITUDE (HIGH ACCURACY)                                         DEGREE                     5     -9000000  25 DEGREE                    5          7
  006001 LONGITUDE (HIGH ACCURACY)                                        DEGREE                     5    -18000000  26 DEGREE                    5          8
  007001 HEIGHT OF STATION (SEE NOTE 1)                                   M                          0         -400  15 M                         0          5
  007002 HEIGHT OR ALTITUDE                                               M                         -1          -40  16 M                        -1          5
  007031 HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL (SEE NOTE 4)            M                          1       - 4000  17 M                         1          5
  007192 [SIM] Level type                                                 NUMERIC                    0            0  10 NUMERIC                   0          4
- 007193 [SIM] Level L1                                                   NUMERIC                    0  -1073741824  32 NUMERIC                   0         10
- 007194 [SIM] Level L2                                                   NUMERIC                    0  -1073741824  32 NUMERIC                   0         10
+ 007193 [SIM] Level L1                                                   NUMERIC                    0   -536870912  31 NUMERIC                   0         10
+ 007194 [SIM] Level L2                                                   NUMERIC                    0   -536870912  31 NUMERIC                   0         10
  008001 VERTICAL SOUNDING SIGNIFICANCE                                   FLAG TABLE 8001            0            0   7 FLAG TABLE 8001           0          3
  008004 PHASE OF AIRCRAFT FLIGHT                                         CODE TABLE 8004            0            0   3 CODE TABLE 8004           0          1
  008021 TIME SIGNIFICANCE                                                CODE TABLE 8021            0            0   5 CODE TABLE 8021           0          2
@@ -56,7 +56,7 @@
  012012 MINIMUM TEMPERATURE                                              K                          1            0  12 K                         1          4
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013013 TOTAL SNOW DEPTH                                                 M                          2           -2  16 M                         2          5
+ 013013 TOTAL SNOW DEPTH                                                 M                          3          -20  20 M                         3          6
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
  020001 HORIZONTAL VISIBILITY                                            M                         -1            0  13 M                        -1          4
  020003 PRESENT WEATHER (SEE NOTE 1)                                     CODE TABLE 20003           0            0   9 CODE TABLE 20003          0          3
@@ -66,7 +66,7 @@
  020010 CLOUD COVER (TOTAL)                                              %                          0            0   7 %                         0          3
  020011 CLOUD AMOUNT                                                     CODE TABLE 20011           0            0   4 CODE TABLE 20011          0          2
  020012 CLOUD TYPE                                                       CODE TABLE 20012           0            0   6 CODE TABLE 20012          0          2
- 020013 HEIGHT OF BASE OF CLOUD                                          M                         -1          -40  11 M                        -1          4
+ 020013 HEIGHT OF BASE OF CLOUD                                          M                          0         -400  17 M                         0          5
  020019 SIGNIFICANT PRESENT OR FORECAST WEATHER                          CCITTIA5                   0            0  72 CHARACTER                 0          9
  020062 STATE OF THE GROUND (WITH OR WITHOUT SNOW)                       CODE TABLE 20062           0            0   5 CODE TABLE 20062          0          2
  020193 [SIM] Cloud type (METAR)                                         CCITTIA5                   0            0  16 CHARACTER                 0          2
