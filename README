@@ -359,6 +359,7 @@ These are the TODO-list items currently being worked on::
        - Implementato e protetto da if(0)
          è da vedere se non importare tutto il livello 257
 	 o se non importare solo gli 8 valori
+       - Attivarlo con una variabile di ambiente
 
  * Core
     - Altezza anemometro lo salvo solo o lo uso anche per mettere i dati di
