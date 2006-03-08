@@ -8,7 +8,7 @@ libdballef_la_SOURCES = \
 
 libdballef_la_INCLUDES = @CHECK_CFLAGS@
 libdballef_la_LIBADD = @CHECK_LIBS@ ../dballe/libdballe.la
-libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
+libdballef_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 INCLUDES = -I..
 
