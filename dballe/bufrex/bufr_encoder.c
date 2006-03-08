@@ -492,6 +492,9 @@ static dba_err encoder_encode_b_data(encoder e)
 			TRACE("Width change: %d\n", e->c_width_change);
 		val -= info->bit_ref;
 		TRACE("After changing ref: %d.  Writing with size %d\n", val, len + e->c_width_change);
+		/* In case of overflow, store 'missing value' */
+		if (val >= (1<<(len + e->c_width_change)))
+			val = 0xffffffff;
 		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, val, len + e->c_width_change));
 	}
 	
