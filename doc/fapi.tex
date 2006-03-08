@@ -82,9 +82,35 @@ Other documentation can be found in \cite{UserGuide} and \cite{LibDoc}.
 \chapter {Basic concepts}
 \label{ch-concepts}
 
+\section{Connections, sessions and handles}
+
+\dballe{} stores meteorological values in a database.  This database can be
+optionally shared or accessed using the network.
+
+You contact \dballe{} by creating a \emph{connection}, and you work in
+\dballe{} using one or more \emph{sessions}.  A connection is an established
+link between your program and \dballe{}, and you usually open it at the
+beginning of your work and close it at the end.
+
+Within a connection you can create many working sessions.  This is very useful
+because it allows to do different things at the same time, like reading a set
+of values while writing computed results.
+
+You can also set some safety features on sessions: for example, when you create
+a session for reading values you can set it to disable all writes, which helps
+you catch some programming mistakes.
+
+You refer to the connection and the sessions using \emph{handles}.  A handle is
+just an integer value that you use when you need to refer to something that is
+not otherwise representable in any Fortran data type.
+
+When you create a connection or a session, \dballe{} will give you the integer
+handle that you will later use to refer to it.
+
 \section {Values}
 
-The main concept in \dballe{} is the measured value, which is described by:
+The main work of \dballe{} is to store and access \emph{measured values}.  A
+measured value is described by:
 
 \begin{enumerate}
 \item The \emph{local B table descriptor}, which describes the nature of the
@@ -100,6 +126,16 @@ attibutes, which can be used, for example, for quality control.
 
 You can find a list of all current B table descriptors in \ref{btable}.
 
+\section {Pseudoana}
+
+Values in \dballe{} are associated to informations about their source, such as
+what kind of station generated the data and some caracteristics of the station.
+
+These informations are called \emph{pseudoana} informations, to suggest that
+they are something similar to anagraphical informations about the sources of
+the values.
+
+
 \section {Input, output, actions}
 \label{basics-inout}
 
@@ -108,8 +144,8 @@ typically reads some input, performs an action and produces some output.
 Example of action routines are {\tt idba\_voglioquesto} to query data from a
 database and {\tt idba\_prendilo} to write data into the database.
 
-The input and the output of action routines are collections of zero or more
-parameters which have a name and a value.  A list of parameters can be found in
+The input and the output of action routines are collections of parameters which
+have a name and a value.  A list of parameters can be found in
 \ref{parmtable}.
 
 You can set the input parameters using the {\tt idba\_set*} functions:
@@ -146,9 +182,9 @@ You can read the output parameters using the {\tt idba\_enq*} functions:
   Read the output parameter into the real*8 value {\tt doublevalue}
 \end{description}
 
-Note that all set functions set input parameters, while all enq functions read
-output parameters.  You cannot read input parameters or set output parameters:
-that is the job of action routines.
+Note that all {\tt idba\_set} functions set input parameters, while all {\tt
+idb\_enq*} functions read output parameters.  You cannot read input parameters
+or set output parameters: that is the job of action routines.
 
 In other words, input and output parameters are different things.  In this
 code:
@@ -284,12 +320,17 @@ This code introduces three new functions:
   description is available, it returns an empty string.
 \end{description}
 
+
+
 \chapter {A working session}
 \label{ch-work}
 
 \section{Starting the work}
 
-Before any action routine, you need to connect to the database:
+Before any action routine, you need to connect to the database.  Connecting to
+the database will give you a \emph{handle} that you can use to open sessions.
+
+This code will open a connection with \dballe{}, then it will start a session:
 
 \label{fun-idba_presentati}
 \label{fun-idba_preparati}
@@ -420,7 +461,7 @@ the currently available B table descriptors, see \ref{btable}.
 \subsection{Queries and observed data}
 \label{obsdata}
 
-The {\tt idba\_set*} and {\tt idba\_enq*} functions can also be used to get and set
+The {\tt idba\_set*} and {\tt idba\_enq*} functions can also be used to set and get
 observation data.  To do so, use as parameter the string {\tt "Bxxyyy"}, where
 {\tt xx} and {\tt yyy} are the X and Y values of the BUFR/CREX table B describing
 the observed data.
@@ -438,10 +479,10 @@ c     Also set the temperature
 
 \subsection{Attributes}
 
-{\tt idba\_set*} and {\tt idba\_enq*} functions can be used to get and set
-attributes on data.  To do so, use as parameter the string {\tt "*Bxxyyy"},
-where {\tt xx} and {\tt yyy} are the X and Y values of the BUFR/CREX table B
-describing the attribute.
+The {\tt idba\_set} and {\tt idba\_enq} groups of functions can also be used to
+set and get attributes on data.  To do so, use as parameter the string {\tt
+"*Bxxyyy"}, where {\tt xx} and {\tt yyy} are the X and Y values of the
+BUFR/CREX table B describing the attribute.
 
 For example:
 
