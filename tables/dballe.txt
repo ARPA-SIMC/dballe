@@ -39,7 +39,7 @@
  010004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
  010051 PRESSURE REDUCED TO MEAN SEA LEVEL                               PA                        -1            0  14 PA                       -1          5
  010052 ALTIMETER SETTING (QNH)                                          PA                        -1            0  14 PA                       -1          5
- 010061 3-HOUR PRESSURE CHANGE                                           PA                        -1         -500  10 PA                       -1          4
+ 010061 3-HOUR PRESSURE CHANGE                                           PA                        -1         -500  11 PA                       -1          4
  010063 CHARACTERISTIC OF PRESSURE TENDENCY                              CODE TABLE 10063           0            0   4 CODE TABLE 10063          0          2
  010197 ANEMOMETER HEIGHT                                                M                          0            0   9 M                         0          3
  011001 WIND DIRECTION                                                   DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
