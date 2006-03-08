@@ -247,17 +247,45 @@ static int check_flag(const char* val, const char* buf, int len)
 }
 
 /**
- * Starts a session with dballe
+ * Starts a session with dballe.
+ *
+ * You can call idba_preparati() many times and get more handles.  This allows
+ * to perform many operations on the database at the same time.
+ *
+ * idba_preparati() has three extra parameters that can be used to limit
+ * write operations on the database, as a limited protection against
+ * programming errors.
+ *
+ * Note that some combinations of parameters are illegal, such as anaflag=read
+ * and dataflag=add (when adding a new data, it's sometimes necessary to insert
+ * new pseudoana records), or dataflag=rewrite and qcflag=read (when deleting
+ * data, their attributes are deleted as well).
  *
  * @param handle
  *   The session handle returned by the function
- * @param rewrite
- *   Control what to do when inserting existing data:
- *   \li \c 0, an insert of an existing data will fail.
- *   \li \c 1 an insert of an existing data will overwrite it, but existing
- *           anagraphical informations will not be overwritten
- *   \li \c 2 an insert of an existing data or anagraphical informations will
- *           overwrite it
+ * @param anaflag
+ *   Controls access to pseudoana records and can have these values:
+ *   \l \c "read" pseudoana records cannot be modified.
+ *   \l \c "reuse" when inserting data, if an existing pseudoana record for the
+ *   data is found, it will be reused.
+ *   \l \c "rewrite" when inserting data, if an existing pseudoana record for the
+ *   data is found, it will be completely overwritten with the parameters in
+ *   input.
+ * @param dataflag
+ *   Controls access to observed data and can have these values:
+ *    \l \c "read" data cannot be modified in any way.
+ *    \l \c "add" data can be added to the database, but existing data cannot be
+ *    modified.  Deletions are disabled.  This is used to insert new data in the
+ *    database while preserving the data that was already present in it.
+ *    \l \c "rewrite" data can freely be added, overwritten and deleted.
+ * @param qcflag
+ *    Controls access to data attributes and can have these values:
+ *    \l \c "read" attributes cannot be modified in any way.
+ *    \l \c "add" attributes can can be added to the database, but existing
+ *    attributes cannot be modified.  Deletion of attributes is disabled.  This is
+ *    used to insert new attribute in the database while preserving the attributes
+ *    that were already present in it.
+ *    \l \c "rewrite" attributes can freely be added, overwritten and deleted.
  * @return
  *   The error indication for the function.
  */

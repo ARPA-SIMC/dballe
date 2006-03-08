@@ -107,6 +107,23 @@ not otherwise representable in any Fortran data type.
 When you create a connection or a session, \dballe{} will give you the integer
 handle that you will later use to refer to it.
 
+\section {Pseudoana}
+
+Values in \dballe{} are associated to informations about their source, such as
+what kind of station generated the data and some caracteristics of the station.
+
+These informations are called \emph{pseudoana} informations, to suggest that
+they are something similar to anagraphical informations about the sources of
+the values.
+
+A pseudoana entry is univocally identified by:
+
+\begin{itemize}
+\item \emph{latitude}.
+\item \emph{longitude}.
+\item \emph{station identifier} (if the station is mobile).
+\end{itemize}
+
 \section {Values}
 
 The main work of \dballe{} is to store and access \emph{measured values}.  A
@@ -116,24 +133,41 @@ measured value is described by:
 \item The \emph{local B table descriptor}, which describes the nature of the
       variable, such as what it measures and the units used for measuring.
 \item The measured \emph{value}.
-\item The horizontal coordinates in space, as \emph{latitude and longitude}.
+\item \emph{pseudoana} information about what generated the value.
 \item The vertical coordinates in space, as a description of the \emph{level layer}.
 \item The \emph{time range} of the measurement.
+\item The type of report (for example: measured value, forecast...).
 \end{enumerate}
+
+You can find a list of all current B table descriptors in \ref{btable}.
+
+The type of report implicitly defines a priority of the measured value over
+other equivalent values.  This can be used to select a ``best value'' from a
+specific set of coordinates, where for example, values measured by synoptic
+stations are preferred over values measured by a satellite, which in turn is
+preferred over a value computed by a forecast model.
+
+Priorities associated to the report type can be customized when creating the
+database (see \ref{fun-idba_scopa}).
 
 Every measured value in \dballe{} can be assigned any number of extra
 attibutes, which can be used, for example, for quality control.
 
-You can find a list of all current B table descriptors in \ref{btable}.
 
-\section {Pseudoana}
+\section {Attributes}
 
-Values in \dballe{} are associated to informations about their source, such as
-what kind of station generated the data and some caracteristics of the station.
+Values in \dballe{} are also associated to zero or more \emph{attributes}.  An
+attribute is a value that describes an aspect of a variable, like for example a
+confidence interval.
 
-These informations are called \emph{pseudoana} informations, to suggest that
-they are something similar to anagraphical informations about the sources of
-the values.
+Attributes in \dballe{} consist on a value and a local B table descriptor,
+which describes the nature of the variable, such as what it represents and the
+units in which it is represented.
+
+Attributes are univocally identified by the variable they refer to and the B
+table descriptor of the attribute.  As a consequence, you can only have one
+attribute per value with a specific B table descriptor.  This means that, for
+example, a variable can have at most one confidence interval attribute.
 
 
 \section {Input, output, actions}

@@ -19,25 +19,41 @@ Outline of the procedure:
 \item Install the binaries
 \end{enumerate}
 
+Once installed, \dballe{} will provide a low-level C API, a high-level Fortran
+API and various commandline tools to import, export and manipulate
+meteorological messages.
+
 \subsection{Install the package dependencies}
 
-This table lists the dependencies of \dballe{}:
+This table lists the dependencies needed to build \dballe{}:
 
 \begin{tabular}{|l|l|l|l|}
 \hline
 {\em Package} & {\em Type of dependency} & {\em Fedora package} & {\rm Debian package} \\
 \hline
-unixodbc   & Required                        & {\tt } & {\tt unixodbc-dev} \\
-gperf      & Required                        & {\tt } & {\tt gperf} \\
+unixodbc   & Required                        & {\tt unixODBC-devel} & {\tt unixodbc-dev} \\
+gperf      & Required                        & {\tt gperf} & {\tt gperf} \\
 popt       & Required                        & {\tt } & {\tt libpopt-dev} \\
-CNF        & Only required for the Fortran API & {\tt } & {\tt starmet} (unofficial, contact \dballe{} team) \\
+CNF        & Only required for the Fortran API & {\tt starmet} & {\tt starmet} (unofficial, contact \dballe{} team) \\
 g77        & Only required for unit tests    & {\tt } & {\tt g77} \\
-doxygen	   & Only required for documentation & {\tt } & {\tt doxygen} \\
-tetex      & Only required for documentation & {\tt } & {\tt tetex-bin} \\
+doxygen	   & Only required for documentation & {\tt doxygen} & {\tt doxygen} \\
+tetex      & Only required for documentation & {\tt tetex, tetex-latex} & {\tt tetex-bin} \\
 latex2html & Only required for documentation & {\tt } & {\tt latex2html} \\
 rst2html   & Optionally required for pretty-printing of the README file & {\tt } & {\tt python-docutils} \\
 \end{tabular}
 
+In order to run, \dballe{} requires an Unix GNU operating system with the
+following packages installed:
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+{\em Package} & {\em Type of dependency} & {\em Fedora package} & {\rm Debian package} \\
+\hline
+popt       & Required                        & {\tt } & {\tt libpopt0} \\
+CNF        & Only required for the Fortran API & {\tt starmet} & {\tt starmet} (unofficial, contact \dballe{} team) \\
+MyODBC     & Required                        & {\tt MyODBC} & {\tt libmyodbc} \\
+MySQL      & Required if not accessed remotely & {\tt mysql >= 4.1.1 } & {\tt mysql-server-5.0} \\
+\end{tabular}
 
 \subsection{Unpack the source}
 
