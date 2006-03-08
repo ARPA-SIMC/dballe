@@ -7,7 +7,7 @@ TESTS = $(check_PROGRAMS)
 export DBA_REPINFO=../tables/repinfo.csv
 export DBA_TABLES=../tables
 
-noinst_PROGRAMS=stress benchmark
+noinst_PROGRAMS=benchmark
 
 check_dballe_tut_SOURCES = \
 	tests/dba_err_error.cc \
@@ -40,10 +40,6 @@ check_mem_SOURCES=\
 	check_mem.f
 check_mem_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf
 check_mem_FFLAGS = -g -fno-second-underscore
-
-stress_SOURCES=\
-	stress.c
-stress_LDADD = ../dballe/libdballe.la -lpopt
 
 benchmark_SOURCES= \
 	benchmark.cc \
