@@ -391,7 +391,7 @@ static dba_err encoder_encode_b_data(encoder e)
 {
 	dba_err err = DBA_OK;
 	dba_varinfo info = NULL;
-	int len;
+	unsigned int len;
 	dba_var var;
 	dba_var tmpvar = NULL;
 #ifdef TRACE_ENCODER
@@ -493,8 +493,15 @@ static dba_err encoder_encode_b_data(encoder e)
 		val -= info->bit_ref;
 		TRACE("After changing ref: %d.  Writing with size %d\n", val, len + e->c_width_change);
 		/* In case of overflow, store 'missing value' */
-		if (val >= (1<<(len + e->c_width_change)))
+		if ((unsigned)val >= (1u<<(len + e->c_width_change)))
+		{
+			TRACE("Overflow: %x %u %d >= (1<<(%u + %u)) = %x %u %d\n",
+				val, val, val,
+				len, e->c_width_change,
+				1<<(len + e->c_width_change), 1<<(len + e->c_width_change), 1<<(len + e->c_width_change));
 			val = 0xffffffff;
+		}
+		TRACE("About to encode: %x %u %d\n", val, val, val);
 		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, val, len + e->c_width_change));
 	}
 	
