@@ -88,6 +88,8 @@ struct uniconv { const char* tag; double mul; double add; };
 "mm->KG/M**2",			1,		0
 "mm/10->KG/M**2",			0.1,		0
 "KG/M**2->mm",			1,		0
+"degree true->DEGREE TRUE",			1,		0
+"DEGREE TRUE->degree true",			1,		0
 %%
 
 int dba_convert_units_allowed(const char* from, const char* to)
