@@ -84,7 +84,20 @@ struct import_data
 static dba_err import_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
 {
 	struct import_data* d = (struct import_data*)data;
-	DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, d->overwrite));
+	if (msg == NULL)
+	{
+		fprintf(stderr, "Message #%d cannot be parsed: ignored\n",
+				rmsg->index);
+	}
+	else if (d->forced_repcod == -1 && msg->type == MSG_GENERIC)
+	{
+		fprintf(stderr, "Message #%d has type generic but no report type has been forced with --report: ignored\n",
+				rmsg->index);
+	}
+	else
+	{
+		DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, d->overwrite));
+	}
 	return dba_error_ok();
 }
 
