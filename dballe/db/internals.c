@@ -145,7 +145,7 @@ dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)
 
 cleanup:
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err;
+	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 /* Get the report id from this record.  If rep_memo is specified instead, the

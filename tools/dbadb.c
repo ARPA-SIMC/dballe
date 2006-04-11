@@ -161,7 +161,7 @@ dba_err do_wipe(poptContext optCon)
 	return dba_error_ok();
 }
 
-int parse_op_report(dba_db db)
+dba_err parse_op_report(dba_db db, int* res)
 {
 	if (op_report[0] != 0)
 	{
@@ -172,15 +172,18 @@ int parse_op_report(dba_db db)
 				is_cod = 0;
 		
 		if (is_cod)
-			return strtoul(op_report, NULL, 0);
+		{
+			*res = strtoul(op_report, NULL, 0);
+			return dba_error_ok();
+		}
 		else
 		{
-			int val;
-			DBA_RUN_OR_RETURN(dba_db_rep_cod_from_memo(db, op_report, &val));
-			return val;
+			return dba_db_rep_cod_from_memo(db, op_report, res);
 		}
-	} else
-		return -1;
+	} else {
+		*res = -1;
+		return dba_error_ok();
+	}
 }
 
 dba_err do_import(poptContext optCon)
@@ -196,7 +199,7 @@ dba_err do_import(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&data.db));
 	data.overwrite = op_overwrite;
-	data.forced_repcod = parse_op_report(data.db);
+	DBA_RUN_OR_RETURN(parse_op_report(data.db, &(data.forced_repcod)));
 
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
 
@@ -249,7 +252,7 @@ dba_err do_export(poptContext optCon)
 	/* Add the query data from commandline */
 	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
-	d.forced_rep_cod = parse_op_report(db);
+	DBA_RUN_OR_RETURN(parse_op_report(db, &(d.forced_rep_cod)));
 
 	type = dba_cmdline_stringToMsgType(op_output_type, optCon);
 	DBA_RUN_OR_RETURN(dba_file_create(&d.file, type, "(stdout)", "w"));
