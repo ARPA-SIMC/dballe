@@ -119,7 +119,12 @@ static const char* init_queries[] = {
 	"	ptype		SMALLINT NOT NULL,"
 	"	p1			INTEGER NOT NULL,"
 	"	p2			INTEGER NOT NULL,"
-	"   UNIQUE INDEX (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report)"
+	"   UNIQUE INDEX (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report),"
+	"   INDEX (id_ana),"
+	"   INDEX (id_report),"
+	"   INDEX (datetime),"
+	"   INDEX (ltype, l1, l2),"
+	"   INDEX (ptype, p1, p2)"
 	") " TABLETYPE,
 	"CREATE TABLE attr ("
 	"   id_context	INTEGER NOT NULL,"
