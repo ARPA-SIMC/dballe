@@ -34,6 +34,14 @@ default values can be altered via environment variables:
 
 \section {Commandline tools}
 
+All the tools have a manpage as well as online help.
+
+To get a list of the various commands provided by a tool, run it with the {\tt
+--help} option.  To see mode details about a given command, use {\tt --help}
+after the name of the command, as in {\tt dbamsg dump --help}.  The syntax {\tt
+dbamsg help dump} works as well.
+
+
 \subsection{dbatbl}
 
 {\tt dbatbl} is the tool to manage table files.  It is useful for small
@@ -50,6 +58,10 @@ different format, find differences among messages.
 {\tt dbadb} is the tool to manage the \dballe{} database.  It can reset the
 database, import and export messages and dump the contents of the database.
 
+To import a BUFR file into the database, simply use: {\tt dbadb import
+file.bufr}.  If it does not work, you probably need to add some switches with
+the parameters to connect to the database, like {\tt --user={\it user} } and
+{\tt --pass={\it password} }.
 
 \section {Managing tables}
 
