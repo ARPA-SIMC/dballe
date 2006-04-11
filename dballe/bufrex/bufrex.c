@@ -67,7 +67,7 @@ dba_err bufrex_encode_bufr(dba_msg msg, int type, int subtype, dba_rawmsg* raw)
 	/* Setup encoding parameters */
 	if (msg->type == MSG_GENERIC)
 	{
-		braw->opt.bufr.origin = 255;
+		braw->opt.bufr.origin = 200;
 		braw->opt.bufr.master_table = 12;
 		braw->opt.bufr.local_table = 0;
 	} else {
