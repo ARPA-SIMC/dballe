@@ -90,6 +90,20 @@ dba_err dba_db_reset(dba_db db, const char* repinfo_file);
 dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod);
 
 /**
+ * Verify that a rep_cod is supported by the database
+ *
+ * @param db
+ *   The dballe database
+ * @param rep_cod
+ *   The report code to verify
+ * @retval valid
+ *   Set to 1 if the report code is supported, 0 if not
+ * @return
+ *   The error indicator for the function
+ */
+dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid);
+
+/**
  * Start a query on the anagraphic archive
  *
  * @param db

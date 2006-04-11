@@ -109,6 +109,41 @@ dba_err dba_db_commit(dba_db db) { return dba_error_ok(); }
 void dba_db_rollback(dba_db db) {}
 #endif
 
+dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid)
+{
+	const char* query = "SELECT id FROM repinfo WHERE id = ?";
+	dba_err err = DBA_OK;
+	SQLHSTMT stm;
+	SQLINTEGER res_ind;
+	int res;
+
+	/* Allocate statement handle */
+	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+
+	/* Bind input parameters */
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &rep_cod, 0, 0);
+
+	/* Bind variable and indicator for SELECT results */
+	SQLBindCol(stm, 1, SQL_C_SLONG, &res, sizeof(int), &res_ind);
+
+	/* Casting to char* because ODBC is unaware of const */
+	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "looking for report informations");
+		goto cleanup;
+	}
+
+	/* Get one result */
+	*valid = (SQLFetch(stm) == SQL_NO_DATA) ? 0 : 1;
+
+cleanup:
+	SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
 dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)
 {
 	const char* query = "SELECT id FROM repinfo WHERE memo = ?";

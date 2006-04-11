@@ -91,8 +91,8 @@ static dba_err import_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, voi
 	}
 	else if (d->forced_repcod == -1 && msg->type == MSG_GENERIC)
 	{
-		fprintf(stderr, "Message #%d has type generic but no report type has been forced with --report: ignored\n",
-				rmsg->index);
+		/* Put generic messages in the generic rep_cod by default */
+		DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, 255, d->overwrite));
 	}
 	else
 	{
@@ -173,8 +173,13 @@ dba_err parse_op_report(dba_db db, int* res)
 		
 		if (is_cod)
 		{
+			int valid;
 			*res = strtoul(op_report, NULL, 0);
-			return dba_error_ok();
+			DBA_RUN_OR_RETURN(dba_db_check_rep_cod(db, *res, &valid));
+			if (valid)
+				return dba_error_ok();
+			else
+				return dba_error_consistency("report code %d not found in the database", *res);
 		}
 		else
 		{
