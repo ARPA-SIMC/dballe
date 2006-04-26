@@ -1136,7 +1136,7 @@ dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varco
 	assert(db);
 
 	/* Create the query */
-	if (qcs == NULL)
+	if (qcs == NULL || qcs_size == 0)
 		/* If qcs is null, query all QC data */
 		strcpy(query,
 				"SELECT type, value"

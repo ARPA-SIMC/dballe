@@ -14,182 +14,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#if 0
-static dba_err dba_db_insert_rec(dba_db db, dba_record rec, int lt, int l1, int l2, int pi, int p1, int p2, int overwrite)
-{
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, lt));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L1, l1));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L2, l2));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, pi));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P1, p1));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P2, p2));
-	DBA_RUN_OR_RETURN(dba_db_insert_or_replace(db, rec, overwrite, overwrite, NULL));
-	return dba_error_ok();
-}
-
-static dba_err dba_db_insert_attrs(dba_db db, dba_record rec, int overwrite)
-{
-	dba_err err = DBA_OK;
-	dba_record qc = NULL;
-	dba_record_cursor item;
-	
-	DBA_RUN_OR_RETURN(dba_record_create(&qc));
-	for (item = dba_record_iterate_first(rec); item != NULL;
-			item = dba_record_iterate_next(rec, item))
-	{
-		int id = dba_record_cursor_id(item);
-		dba_var var = dba_record_cursor_variable(item);
-		dba_var_attr_iterator ai;
-		for (ai = dba_var_attr_iterate(var); ai != NULL; ai = dba_var_attr_iterator_next(ai))
-		{
-			dba_var attr = dba_var_attr_iterator_attr(ai);
-			DBA_RUN_OR_RETURN(dba_record_var_set_direct(qc, attr));
-		}
-		DBA_RUN_OR_GOTO(cleanup, dba_db_qc_insert_or_replace(db, id, qc, overwrite));
-		dba_record_clear_vars(qc);
-	}
-
-cleanup:
-	if (qc != NULL)
-		dba_record_delete(qc);
-	return err = DBA_OK ? dba_error_ok() : err;
-}
-
-static dba_err dba_db_import_get_key(dba_record dst, dba_keyword key, dba_msg src, int id)
-{
-	dba_msg_datum d = dba_msg_find_by_id(src, id);
-	if (d == NULL)
-		return dba_record_key_unset(dst, key);
-	else
-		return dba_record_key_set(dst, key, d->var);
-}
-
-static dba_err dba_db_import_common(dba_db db, dba_record rec, dba_msg msg, int overwrite)
-{
-	int i;
-	int oltype = -1, ol1 = -1, ol2 = -1, opind = -1, op1 = -1, op2 = -1;
-	 
-	/* Fill in common anagraphical context fields */
-	DBA_RUN_OR_RETURN(dba_db_import_get_key(rec, DBA_KEY_YEAR, msg, DBA_MSG_YEAR));
-	DBA_RUN_OR_RETURN(dba_db_import_get_key(rec, DBA_KEY_MONTH, msg, DBA_MSG_MONTH));
-	DBA_RUN_OR_RETURN(dba_db_import_get_key(rec, DBA_KEY_DAY, msg, DBA_MSG_DAY));
-	DBA_RUN_OR_RETURN(dba_db_import_get_key(rec, DBA_KEY_HOUR, msg, DBA_MSG_HOUR));
-	DBA_RUN_OR_RETURN(dba_db_import_get_key(rec, DBA_KEY_MIN, msg, DBA_MSG_MINUTE));
-	//DBA_RUN_OR_GOTO(cleanup, dba_setvar(rec, "sec", msg->var_second));
-	DBA_RUN_OR_RETURN(dba_db_import_get_key(rec, DBA_KEY_LAT, msg, DBA_MSG_LATITUDE));
-	DBA_RUN_OR_RETURN(dba_db_import_get_key(rec, DBA_KEY_LON, msg, DBA_MSG_LONGITUDE));
-	DBA_RUN_OR_RETURN(dba_db_import_get_key(rec, DBA_KEY_HEIGHT, msg, DBA_MSG_HEIGHT));
-	DBA_RUN_OR_RETURN(dba_db_import_get_key(rec, DBA_KEY_HEIGHTBARO, msg, DBA_MSG_HEIGHT_BARO));
-
-	for (i = 0; i < msg->data_count; i++)
-	{
-		dba_msg_level l = msg->data[i];
-		int j;
-		for (j = 0; j < l->data_count; j++)
-		{
-			dba_msg_datum d = l->data[j];
-			if (l->ltype != oltype || l->l1 != ol1 || l->l2 != ol2 ||
-				d->pind != opind || d->p1 != op1 || d->p2 != op2)
-			{
-				if (oltype != -1)
-				{
-					DBA_RUN_OR_RETURN(dba_db_insert_rec(db, rec,  oltype, ol1, ol2,  opind, op1, op2, overwrite));
-					DBA_RUN_OR_RETURN(dba_db_insert_attrs(db, rec, overwrite));
-					dba_record_clear_vars(rec);
-				}
-				oltype = l->ltype;
-				ol1 = l->l1;
-				ol2 = l->l2;
-				opind = d->pind;
-				op1 = d->p1;
-				op2 = d->p2;
-			}
-			DBA_RUN_OR_RETURN(dba_record_var_set_direct(rec, d->var));
-		}
-	}
-	if (oltype != -1)
-	{
-		DBA_RUN_OR_RETURN(dba_db_insert_rec(db, rec,  oltype, ol1, ol2,  opind, op1, op2, overwrite));
-		DBA_RUN_OR_RETURN(dba_db_insert_attrs(db, rec, overwrite));
-	}
-
-	return dba_error_ok();
-}
-
-dba_err dba_import_msg_old(dba_db db, dba_msg msg, int overwrite)
-{
-	dba_err err = DBA_OK;
-	dba_record rec = NULL;
-
-	DBA_RUN_OR_RETURN(dba_record_create(&rec));
-
-	switch (msg->type)
-	{
-		case MSG_SYNOP:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 1));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_BLOCK, msg, DBA_MSG_BLOCK));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_STATION, msg, DBA_MSG_STATION));
-			break;
-		case MSG_SHIP:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 10));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_IDENT, msg, DBA_MSG_IDENT));
-			break;
-		case MSG_BUOY:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 9));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_IDENT, msg, DBA_MSG_IDENT));
-			break;
-		case MSG_AIREP:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 12));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_IDENT, msg, DBA_MSG_IDENT));
-			break;
-		case MSG_AMDAR:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 13));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_IDENT, msg, DBA_MSG_IDENT));
-			break;
-		case MSG_ACARS:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 14));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_IDENT, msg, DBA_MSG_IDENT));
-			break;
-		case MSG_PILOT:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 4));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_BLOCK, msg, DBA_MSG_BLOCK));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_STATION, msg, DBA_MSG_STATION));
-			break;
-		case MSG_TEMP:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 3));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_BLOCK, msg, DBA_MSG_BLOCK));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_STATION, msg, DBA_MSG_STATION));
-			break;
-		case MSG_TEMP_SHIP:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 11));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_IDENT, msg, DBA_MSG_IDENT));
-			break;
-		case MSG_GENERIC:
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));
-			DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, 255));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_BLOCK, msg, DBA_MSG_BLOCK));
-			DBA_RUN_OR_GOTO(cleanup, dba_db_import_get_key(rec, DBA_KEY_STATION, msg, DBA_MSG_STATION));
-			break;
-	}
-
-	DBA_RUN_OR_GOTO(cleanup, dba_db_import_common(db, rec, msg, overwrite));
-
-cleanup:
-	if (rec != NULL)
-		dba_record_delete(rec);
-	return err = DBA_OK ? dba_error_ok() : err;
-}
-#endif
-
 
 dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 {
@@ -203,17 +27,19 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 	int i, j;
 	int mobile;
 
+	/* Quick access to the various database components */
 	da = db->pseudoana;
 	dc = db->context;
 	dd = db->data;
 	dq = db->attr;
 	
-	dc->id_report = repcod != -1 ? repcod : dba_msg_repcod_from_type(msg->type);
+	/* Check if the station is mobile */
 	mobile = dba_msg_get_ident_var(msg) == NULL ? 0 : 1;
 
+	/* Begin transaction */
 	DBA_RUN_OR_RETURN(dba_db_begin(db));
 
-	// Fill up the pseudoana informations needed to fetch an existing ID
+	/* Fill up the pseudoana informations needed to fetch an existing ID */
 
 	/* Latitude */
 	if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_LATITUDE)) != NULL)
@@ -237,57 +63,28 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 		da->ident_ind = SQL_NULL_DATA;
 	}
 
-	// Check if we can reuse a pseudoana row
+	/* Check if we can reuse a pseudoana row */
 	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_get_id(da, &(dc->id_ana)));
+	if (dc->id_ana == -1)
+		DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_insert(da, &(dc->id_ana)));
 
-	if (dc->id_ana == -1 || overwrite)
+	/* Get the ana context */
+	dc->id_report = -1;
+	DBA_RUN_OR_GOTO(fail, dba_db_context_obtain_ana(dc, &(dd->id_context)));
+
+	/* Insert the rest of the pseudoana information */
+	for (i = 0; i < l_ana->data_count; i++)
 	{
-		// Fill up the rest of pseudoana informations
-
-		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_BLOCK)) != NULL)
-		{
-			DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->block)));
-			da->block_ind = 0;
-		}
-		else
-			da->block_ind = SQL_NULL_DATA;
-
-		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_STATION)) != NULL)
-		{
-			DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->station)));
-			da->station_ind = 0;
-		}
-		else
-			da->station_ind = SQL_NULL_DATA;
-
-		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_HEIGHT)) != NULL)
-		{
-			DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->height)));
-			da->height_ind = 0;
-		}
-		else
-			da->height_ind = SQL_NULL_DATA;
-
-		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_HEIGHT_BARO)) != NULL)
-		{
-			DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->heightbaro)));
-			da->heightbaro_ind = 0;
-		}
-		else
-			da->heightbaro_ind = SQL_NULL_DATA;
-
-		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_ST_NAME)) != NULL)
-			dba_db_pseudoana_set_ident(da, dba_var_value(d->var));
-		else
-			da->name_ind = SQL_NULL_DATA;
-
-		if (dc->id_ana == -1)
-			DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_insert(da, &(dc->id_ana)));
-		else
-			DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_update(da));
+		dba_db_data_set(dd, l_ana->data[i]->var);
+		DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, overwrite));
 	}
 
-	// Fill up the date in context
+	/* Fill up the common contexts information for the rest of the data */
+
+	/* Report code */
+	dc->id_report = repcod != -1 ? repcod : dba_msg_repcod_from_type(msg->type);
+
+	/* Date and time */
 	{
 		const char* year = 
 			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_YEAR)) == NULL ? NULL : dba_var_value(d->var);
@@ -315,6 +112,7 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 					strtol(min, 0, 10));
 	}
 
+	/* Insert the rest of the data */
 	for (i = 0; i < msg->data_count; i++)
 	{
 		dba_msg_level lev = msg->data[i];
@@ -322,7 +120,11 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 		int old_p1 = -1;
 		int old_p2 = -1;
 
-		// Fill in the context
+		/* Skip the anagraphical level */
+		if (lev->ltype == 257)
+			continue;
+
+		/* Fill in the context */
 		dc->ltype = lev->ltype;
 		dc->l1 = lev->l1;
 		dc->l2 = lev->l2;
@@ -332,22 +134,9 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 			dba_msg_datum dat = lev->data[j];
 			dba_var_attr_iterator iter;
 
-			if (0)
-			{
-				dba_varcode code = dba_var_code(dat->var);
-				/* Don't insert anagraphical informations that are already
-				 * memorised in pseudoana and context */
-				if (lev->ltype == 257 && lev->l1 == 0 && lev->l1 == 0 &&
-					dat->pind == 0 && dat->p1 == 0 && dat->p2 == 0)
-					if ((code >= DBA_VAR(0, 4, 1) && code <= DBA_VAR(0, 4, 5)) ||
-						code == DBA_VAR(0, 5, 1) || code == DBA_VAR(0, 6, 1) ||
-						code == DBA_VAR(0, 1, 11))
-						continue;
-			}
-
 			if (dat->pind != old_pind || dat->p1 != old_p1 || dat->p2 != old_p2)
 			{
-				// Insert the new context when the datum coordinates change
+				/* Insert the new context when the datum coordinates change */
 				dc->pind = dat->pind;
 				dc->p1 = dat->p1;
 				dc->p2 = dat->p2;
@@ -361,14 +150,14 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 				old_p2 = dat->p2;
 			}
 
-			// Insert the variable
+			/* Insert the variable */
 			dba_db_data_set(dd, dat->var);
 			DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, overwrite));
 
 			dq->id_context = dd->id_context;
 			dq->id_var = dba_var_code(dat->var);
 
-			// Insert the attributes
+			/* Insert the attributes */
 			for (iter = dba_var_attr_iterate(dat->var); iter != NULL; 
 					iter = dba_var_attr_iterator_next(iter))
 			{

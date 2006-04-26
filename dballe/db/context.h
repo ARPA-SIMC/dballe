@@ -43,7 +43,33 @@ typedef struct _dba_db_context* dba_db_context;
 
 dba_err dba_db_context_create(dba_db db, dba_db_context* ins);
 void dba_db_context_delete(dba_db_context ins);
+
+/**
+ * Get the context id for the context data previously set in ins.
+ *
+ * @param ins
+ *   The dba_db_context structure, with parameters filled in for the query
+ * @retval id
+ *   The database ID, or -1 if no existing context entry matches the given values
+ * @return
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_db_context_get_id(dba_db_context ins, int *id);
+
+/**
+ * Get the context id for a pseudoana info context.
+ *
+ * @param ins
+ *   The dba_db_context structure, with id_ana and id_report filled in for the
+ *   query.  If id_report is filled with -1, it gets replaced with the report
+ *   code for pseudoana information.
+ * @retval id
+ *   The database ID
+ * @return
+ *   The error indicator for the function (@see dba_err)
+ */
+dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id);
+
 dba_err dba_db_context_insert(dba_db_context ins, int *id);
 
 

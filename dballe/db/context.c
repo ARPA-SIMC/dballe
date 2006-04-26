@@ -118,6 +118,29 @@ dba_err dba_db_context_get_id(dba_db_context ins, int *id)
 	return dba_error_ok();
 }
 
+dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id)
+{
+	SQLHSTMT stm = ins->sstm;
+
+	/* Fill up the query parameters with the data for the anagraphical context */
+	if (ins->id_report == -1)
+		ins->id_report = 254;
+	memcpy(ins->date, "1000-01-01 00:00:00", 20);
+	ins->date_ind = 20;
+	ins->ltype = 257;
+	ins->l1 = ins->l2 = 0;
+	ins->pind = ins->p1 = ins->p2 = 0;
+
+	/* See if the context entry already exists */
+	DBA_RUN_OR_RETURN(dba_db_context_get_id(ins, id));
+
+	/* If it doesn't exist yet, we create it */
+	if (*id == -1)
+		DBA_RUN_OR_RETURN(dba_db_context_insert(ins, id));
+
+	return dba_error_ok();
+}
+
 dba_err dba_db_context_insert(dba_db_context ins, int *id)
 {
 	int res = SQLExecute(ins->istm);
