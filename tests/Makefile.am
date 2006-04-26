@@ -12,6 +12,7 @@ noinst_PROGRAMS=benchmark
 check_dballe_tut_SOURCES = \
 	tests/dba_err_error.cc \
 	tests/dba_core.cc \
+	tests/dba_core_aliases.cc \
 	tests/dba_core_btable.cc \
 	tests/dba_core_var.cc \
 	tests/dba_core_record.cc \

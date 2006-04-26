@@ -6,6 +6,7 @@ coreinclude_HEADERS = \
 	verbose.h \
 	fast.h \
 	csv.h \
+	aliases.h \
 	dba_array.h \
 	dba_record.h \
 	dba_vartable.h \
@@ -15,6 +16,7 @@ noinst_LTLIBRARIES = libcore.la
 libcore_la_SOURCES = \
 	verbose.c \
 	csv.c \
+	aliases.c \
 	record_keyword.c \
 	dba_array.c \
 	dba_record.c \
@@ -37,7 +39,10 @@ record_keyword.dox: record_keyword.gperf mkkeydoc
 record_keyword.tex: record_keyword.gperf mkkeydoc
 	./mkkeydoc tex < $< > $@
 
+aliases.c: aliases.gperf
+	gperf < $< > $@
+
 distclean-local:
-	rm -f record_keyword.c record_keyword.dox dba_varconv.c
+	rm -f record_keyword.c record_keyword.dox dba_varconv.c aliases.c
 
 EXTRA_DIST = core.dox record_keyword.gperf mkkeydoc

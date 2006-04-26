@@ -1,0 +1,30 @@
+%define slot-name alias
+%define lookup-function-name dba_varcode_alias_in_word_set
+%struct-type
+%global-table
+/* Using %switch may be faster (remember to check when doing optimizations) */
+
+%{
+#include <string.h>
+#include "dba_var.h"
+%}
+
+struct aliasdef { const char* alias; dba_varcode var; };
+%%
+block,			DBA_VAR(0, 1,  1)
+station,		DBA_VAR(0, 1,  2)
+height,			DBA_VAR(0, 7,  1)
+heightbaro,		DBA_VAR(0, 7, 31)
+name,			DBA_VAR(0, 1, 19)
+%%
+
+dba_varcode dba_varcode_alias_resolve(const char* alias)
+{
+	struct aliasdef* res = dba_varcode_alias_in_word_set(alias, strlen(alias));
+	if (res == NULL)
+		return 0;
+	else
+		return res->var;
+}
+
+/* vim:set ts=4 sw=4: */
