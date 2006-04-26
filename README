@@ -332,6 +332,10 @@ TODO-list items being worked on
 
 These are the TODO-list items currently being worked on::
 
+ * dbadb
+    - Add a dbadb option to install a new repinfo, checking for consistency during
+      the operation
+
  * Optimizations
     - Remove the big unique index on context (it's already been enforced by the
       rest of the code, that looks up from and existing context index before
