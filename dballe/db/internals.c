@@ -240,6 +240,13 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 			TRACE("found max time interval: adding AND c.datetime <= ?.  val is %s\n", db->sel_dtmax);
 			SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmax, 0, 0);
 		}
+
+		/* Ignore anagraphical context unless explicitly requested */
+		if (minvalues[0] != 1001 && maxvalues[0] != 1001)
+		{
+			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime >= '1002-01-01 00:00:00'"));
+			TRACE("ignoring anagraphical context as it has not been explicitly requested: adding AND c.datetime >= '1002-01-01 00:00:00'\n");
+		}
 	}
 
 	PARM_INT(ana_id, DBA_KEY_ANA_ID, " AND pa.id = ?");

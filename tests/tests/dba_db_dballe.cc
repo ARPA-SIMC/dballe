@@ -11,6 +11,7 @@ struct dba_db_dballe_shar
 {
 	// Records with test data
 	TestRecord sampleAna;
+	TestRecord extraAna;
 	TestRecord sampleBase;
 	TestRecord sample0;
 	TestRecord sample00;
@@ -50,11 +51,11 @@ struct dba_db_dballe_shar
 		sampleAna.set(DBA_KEY_HOUR_IDENT, 12);
 		sampleAna.set(DBA_KEY_MIN_IDENT, 30);
 		*/
-		sampleAna.set(DBA_KEY_HEIGHT, 42);
-		sampleAna.set(DBA_KEY_HEIGHTBARO, 234);
-		sampleAna.set(DBA_KEY_BLOCK, 1);
-		sampleAna.set(DBA_KEY_STATION, 52);
-		sampleAna.set(DBA_KEY_NAME, "Cippo Lippo");
+		extraAna.set(DBA_KEY_HEIGHT, 42);
+		extraAna.set(DBA_KEY_HEIGHTBARO, 234);
+		extraAna.set(DBA_KEY_BLOCK, 1);
+		extraAna.set(DBA_KEY_STATION, 52);
+		extraAna.set(DBA_KEY_NAME, "Cippo Lippo");
 
 		// Common data
 		sampleBase.set(DBA_KEY_YEAR, 1945);
@@ -154,6 +155,7 @@ void to::test<2>()
 	/* Fill in some data */
 	dba_record_clear(insert);
 	sampleAna.copyTestDataToRecord(insert);
+	extraAna.copyTestDataToRecord(insert);
 	sampleBase.copyTestDataToRecord(insert);
 	sample0.copyTestDataToRecord(insert);
 	sample00.copyTestDataToRecord(insert);
@@ -169,6 +171,7 @@ void to::test<2>()
 	/* Insert another record (similar but not the same) */
 	dba_record_clear(insert);
 	sampleAna.copyTestDataToRecord(insert);
+	extraAna.copyTestDataToRecord(insert);
 	sampleBase.copyTestDataToRecord(insert);
 	sample1.copyTestDataToRecord(insert);
 	sample10.copyTestDataToRecord(insert);
@@ -198,6 +201,7 @@ void to::test<2>()
 
 		/* Check that the result matches */
 		ensureTestRecEquals(result, sampleAna);
+		ensureTestRecEquals(result, extraAna);
 
 		/* There should be only one item */
 		gen_ensure(is_last);
@@ -285,7 +289,8 @@ void to::test<2>()
 
 		/* See that a cursor has in fact been allocated */
 		gen_ensure(cursor != 0);
-		gen_ensure(count != 0);
+		/* 2 + 2 of actual data */
+		gen_ensure_equals(count, 4);
 
 		/* There should be at least one item */
 		CHECKED(dba_db_cursor_next(cursor, result, &var, &context, &is_last));
@@ -520,11 +525,13 @@ void to::test<3>()
 	base.set(DBA_KEY_LON, 48.0);
 	base.set(DBA_KEY_MOBILE, 0);
 
+	/*
 	base.set(DBA_KEY_HEIGHT, 42);
 	base.set(DBA_KEY_HEIGHTBARO, 234);
 	base.set(DBA_KEY_BLOCK, 1);
 	base.set(DBA_KEY_STATION, 52);
 	base.set(DBA_KEY_NAME, "Cippo Lippo");
+	*/
 
 	base.set(DBA_KEY_LEVELTYPE, 1);
 	base.set(DBA_KEY_L1, 0);

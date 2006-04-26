@@ -841,12 +841,12 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 		"       c.ltype, c.l1, c.l2,"
 		"       c.ptype, c.p1, c.p2,"
 		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio"
-		"  FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri"
-		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
+		"  FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri";
 	dba_err err;
 	SQLHSTMT stm;
 	int res;
 	int pseq = 1;
+	const char* val;
 
 	assert(db);
 
@@ -871,6 +871,28 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	/* Initial query */
 	dba_querybuf_reset(db->querybuf);
 	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
+
+	/* Extend FROM part to look for given block and station */
+	if (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL)
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", data AS dblo "));
+	if (dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", data AS dsta "));
+
+	/* Add WHERE part */
+	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
+		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id"));
+
+	/* Extend WHERE part to look for given block and station */
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
+	{
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND dblo.id_context = c.id AND dblo.id_var = 257 AND dblo.value = "));
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
+	}
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
+	{
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND dsta.id_context = c.id AND dsta.id_var = 258 AND dsta.value = "));
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
+	}
 
 	/* Bind output fields */
 #define DBA_QUERY_BIND(num, type, name) \
@@ -1018,6 +1040,9 @@ dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, 
 
 	/* Store the data into the record */
 	DBA_RUN_OR_RETURN(dba_db_cursor_to_rec(cur, rec));
+
+	/* Add the extra ana info */
+	/* DBA_RUN_OR_RETURN(dba_ana_add_extra(cur, rec)); */
 
 	/* Return the context ID to refer to the current context */
 	*context_id = cur->out_data_id;

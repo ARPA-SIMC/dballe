@@ -120,8 +120,18 @@ protected:
 		virtual void checkIn(const char* file, int line, dba_record rec) const
 		{
 			dba_var var = dba_record_key_peek(rec, m_key);
-			inner_ensure(var != NULL);
-			inner_ensure_var_equals(var, m_val);
+			try {
+				inner_ensure(var != NULL);
+				inner_ensure_var_equals(var, m_val);
+			} catch (tut::failure& f) {
+				//dba_record_print(rec, stderr);
+				string msg = f.what();
+				dba_varinfo info;
+				dba_record_keyword_info(m_key, &info);
+				msg += " comparing ";
+				msg += info->desc;
+				throw tut::failure(msg);
+			}
 		}
 		virtual Test* clone() const { return new TestKey<VAL>(m_key, m_val); }
 		virtual bool sameTest(const Test* test) const
@@ -150,8 +160,18 @@ protected:
 		virtual void checkIn(const char* file, int line, dba_record rec) const
 		{
 			dba_var var = dba_record_var_peek(rec, m_key);
-			inner_ensure(var != NULL);
-			inner_ensure_var_equals(var, m_val);
+			try {
+				inner_ensure(var != NULL);
+				inner_ensure_var_equals(var, m_val);
+			} catch (tut::failure& f) {
+				//dba_record_print(rec, stderr);
+				string msg = f.what();
+				dba_varinfo info;
+				dba_varinfo_query_local(m_key, &info);
+				msg += " comparing ";
+				msg += info->desc;
+				throw tut::failure(msg);
+			}
 		}
 		virtual Test* clone() const { return new TestVar<VAL>(m_key, m_val); }
 		virtual bool sameTest(const Test* test) const
