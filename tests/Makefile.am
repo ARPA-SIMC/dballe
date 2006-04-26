@@ -29,16 +29,16 @@ check_dballe_tut_SOURCES = \
 	tests/dba_db_import.cc \
 	test-utils.cc \
 	tut-main.cc
-check_dballe_tut_LDADD = ../dballe/libdballe.la
+check_dballe_tut_LDADD = ../dballe/libdballe.la -lpopt
 
 check_fdballe_SOURCES=\
 	check_fdballe.f
-check_fdballe_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf
+check_fdballe_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf -lpopt
 check_fdballe_FFLAGS = -g -fno-second-underscore
 
 check_mem_SOURCES=\
 	check_mem.f
-check_mem_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf
+check_mem_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf -lpopt
 check_mem_FFLAGS = -g -fno-second-underscore
 
 benchmark_SOURCES= \

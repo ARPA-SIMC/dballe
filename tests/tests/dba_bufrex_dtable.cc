@@ -20,8 +20,7 @@ TESTGRP(dba_bufrex_dtable);
 template<> template<>
 void to::test<1>()
 {
-	const char* oldenv = getenv("DBA_TABLES");
-	setenv("DBA_TABLES", ".", 1);
+	LocalEnv le("DBA_TABLES", ".");
 
 	bufrex_dtable table;
 	bufrex_opcode chain;
@@ -69,9 +68,6 @@ void to::test<1>()
 
 	bufrex_opcode_delete(&chain);
 	gen_ensure_equals(chain, (bufrex_opcode)0);
-
-	/* Cleanup after the tests */
-	setenv("DBA_TABLES", oldenv, 1);
 }
 
 }

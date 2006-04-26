@@ -515,4 +515,22 @@ void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix)
 
 dba_err create_dba_db(dba_db* db);
 
+class LocalEnv
+{
+	std::string key;
+	std::string oldVal;
+public:
+	LocalEnv(const std::string& key, const std::string& val)
+		: key(key)
+	{
+		const char* v = getenv(key.c_str());
+		oldVal = v == NULL ? "" : v;
+		setenv(key.c_str(), val.c_str(), 1);
+	}
+	~LocalEnv()
+	{
+		setenv(key.c_str(), oldVal.c_str(), 1);
+	}
+};
+
 }

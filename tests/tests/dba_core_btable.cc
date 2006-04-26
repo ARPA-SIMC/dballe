@@ -52,8 +52,7 @@ template<> template<>
 void to::test<2>()
 {
 	/* dba_err err; */
-	const char* old_env = getenv("DBA_TABLES");
-	setenv("DBA_TABLES", ".", 1);
+	LocalEnv le("DBA_TABLES", ".");
 
 	dba_vartable table;
 	dba_varinfo info;
@@ -88,8 +87,6 @@ void to::test<2>()
 	gen_ensure_equals(info->ref, 0);
 	gen_ensure_equals(info->len, 8);
 	gen_ensure(!info->is_string);
-
-	setenv("DBA_TABLES", old_env, 1);
 }
 
 /* Test querying BUFR tables */
@@ -97,8 +94,7 @@ template<> template<>
 void to::test<3>()
 {
 	/* dba_err err; */
-	const char* old_env = getenv("DBA_TABLES");
-	setenv("DBA_TABLES", ".", 1);
+	LocalEnv le("DBA_TABLES", ".");
 
 	dba_vartable table;
 	dba_varinfo info;
@@ -136,8 +132,6 @@ void to::test<3>()
 	gen_ensure_equals(info->bit_len, 14);
 	gen_ensure_equals(info->len, 5);
 	gen_ensure(!info->is_string);
-
-	setenv("DBA_TABLES", old_env, 1);
 }
 
 }
