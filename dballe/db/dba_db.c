@@ -675,6 +675,82 @@ static dba_err dba_ana_cursor_to_rec(dba_db_cursor cur, dba_record rec)
 	return dba_error_ok();
 }
 
+static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
+{
+	/* Extra variables to add:
+	 *
+	 * HEIGHT,      B07001  1793
+	 * HEIGHT_BARO, B07031  1823
+	 * ST_NAME,     B01019   275
+	 * BLOCK,       B01001   257
+	 * STATION,     B01002   258
+	*/
+	const char* query =
+		"SELECT d.id_var, d.value"
+		"  FROM context AS c, data AS d"
+		" WHERE c.id = d.id_context AND c.id_ana = ?"
+		"   AND c.datetime = '1000-01-01 00:00:00'"
+		"   AND c.id_report = 254"
+		"   AND c.ltype = 257 AND c.l1 = 0 AND c.l2 = 0"
+		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
+		"   AND d.id_var IN (257, 258, 275, 1793, 1823)";
+
+	dba_err err = DBA_OK;
+	SQLHSTMT stm;
+	int res;
+	dba_db db = cur->db;
+	dba_varcode out_code;
+	char out_val[256];
+	SQLINTEGER out_val_ind;
+
+	/* Allocate statement handle */
+	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+
+	/* Bind input fields */
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_ana_id), 0, 0);
+
+	/* Bind output fields */
+	SQLBindCol(stm, 1, SQL_C_USHORT, &out_code, sizeof(out_code), 0);
+	SQLBindCol(stm, 2, SQL_C_CHAR, &out_val, sizeof(out_val), &out_val_ind);
+
+	/* Perform the query */
+	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE ANA extra query \"%s\"", query);
+		goto cleanup;
+	}
+
+	/* Get the results and save them in the record */
+	while (SQLFetch(stm) != SQL_NO_DATA)
+	{
+		switch (out_code)
+		{
+			case DBA_VAR(0, 1,  1): // BLOCK
+				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_BLOCK, out_val));
+				break;
+			case DBA_VAR(0, 1,  2): // STATION
+				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_STATION, out_val));
+				break;
+			case DBA_VAR(0, 1, 19): // NAME
+				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_NAME, out_val));
+				break;
+			case DBA_VAR(0, 7,  1): // HEIGHT
+				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_HEIGHT, out_val));
+				break;
+			case DBA_VAR(0, 7, 31): // HEIGHTBARO
+				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_HEIGHTBARO, out_val));
+				break;
+		}
+	}
+
+cleanup:
+	SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
 dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 {
 	assert(cur);
@@ -696,6 +772,9 @@ dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 
 	/* Store the data into the record */
 	DBA_RUN_OR_RETURN(dba_ana_cursor_to_rec(cur, rec));
+
+	/* Add the extra ana info */
+	DBA_RUN_OR_RETURN(dba_ana_add_extra(cur, rec));
 
 	return dba_error_ok();
 }
