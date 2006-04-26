@@ -45,11 +45,8 @@ void to::test<1>()
 	const char* files[] = {
 		"crex/test-mare0.crex",
 		"crex/test-mare1.crex",
-		"crex/test-mare2.crex",
 		"crex/test-synop0.crex",
-		"crex/test-synop1.crex",
 		"crex/test-synop2.crex",
-		"crex/test-synop3.crex",
 		"crex/test-temp0.crex",
 		NULL
 	};
@@ -327,11 +324,8 @@ void to::test<6>()
 	};
 	static const char* crex_files[] = {
 		"crex/test-mare1.crex",
-		"crex/test-mare2.crex",
 		"crex/test-synop0.crex",
-		"crex/test-synop1.crex",
 		"crex/test-synop2.crex",
-		"crex/test-synop3.crex",
 		"crex/test-temp0.crex",
 	};
 	static const char* aof_files[] = {
