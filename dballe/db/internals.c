@@ -242,20 +242,20 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 		}
 
 		/* Ignore anagraphical context unless explicitly requested */
-		if (minvalues[0] != 1001 && maxvalues[0] != 1001)
+		if (minvalues[0] != 1000 && maxvalues[0] != 1000)
 		{
-			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime >= '1002-01-01 00:00:00'"));
+			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime >= '1001-01-01 00:00:00'"));
 			TRACE("ignoring anagraphical context as it has not been explicitly requested: adding AND c.datetime >= '1002-01-01 00:00:00'\n");
 		}
 	}
 
 	PARM_INT(ana_id, DBA_KEY_ANA_ID, " AND pa.id = ?");
 	PARM_INT(latmin, DBA_KEY_LAT, " AND pa.lat = ?");
-	PARM_INT(latmin, DBA_KEY_LATMIN, " AND pa.lat > ?");
-	PARM_INT(latmax, DBA_KEY_LATMAX, " AND pa.lat < ?");
+	PARM_INT(latmin, DBA_KEY_LATMIN, " AND pa.lat >= ?");
+	PARM_INT(latmax, DBA_KEY_LATMAX, " AND pa.lat <= ?");
 	PARM_INT(lonmin, DBA_KEY_LON, " AND pa.lon = ?");
-	PARM_INT(lonmin, DBA_KEY_LONMIN, " AND pa.lon > ?");
-	PARM_INT(lonmax, DBA_KEY_LONMAX, " AND pa.lon < ?");
+	PARM_INT(lonmin, DBA_KEY_LONMIN, " AND pa.lon >= ?");
+	PARM_INT(lonmax, DBA_KEY_LONMAX, " AND pa.lon <= ?");
 
 	{
 		const char* mobile_sel = dba_record_key_peek_value(rec, DBA_KEY_MOBILE);

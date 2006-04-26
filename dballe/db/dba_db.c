@@ -847,6 +847,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	int res;
 	int pseq = 1;
 	const char* val;
+	int has_bs = 0;
 
 	assert(db);
 
@@ -873,25 +874,36 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
 
 	/* Extend FROM part to look for given block and station */
-	if (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL)
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", data AS dblo "));
-	if (dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", data AS dsta "));
+	if ((has_bs = (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL)
+		  || (dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)))
+	{
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", context AS cbs "));
+		if (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL)
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", data AS dblo "));
+		if (dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", data AS dsta "));
+	}
 
 	/* Add WHERE part */
 	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
 		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id"));
 
 	/* Extend WHERE part to look for given block and station */
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
+	if (has_bs)
 	{
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND dblo.id_context = c.id AND dblo.id_var = 257 AND dblo.value = "));
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
-	}
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
-	{
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND dsta.id_context = c.id AND dsta.id_var = 258 AND dsta.value = "));
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
+		/* Add a selector for the pseudoana context */
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND cbs.id_ana = pa.id AND cbs.id_report = 254 AND cbs.datetime = '1000-01-01 00:00:00' AND cbs.ltype = 257 AND cbs.l1 = 0 AND cbs.l2 = 0 AND cbs.ptype = 0 AND cbs.p1 = 0 AND cbs.p2 = 0"));
+		/* Add the selectors for the query */
+		if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
+		{
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND dblo.id_context = cbs.id AND dblo.id_var = 257 AND dblo.value = "));
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
+		}
+		if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
+		{
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND dsta.id_context = cbs.id AND dsta.id_var = 258 AND dsta.value = "));
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
+		}
 	}
 
 	/* Bind output fields */
