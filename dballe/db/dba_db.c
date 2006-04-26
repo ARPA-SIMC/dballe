@@ -385,6 +385,58 @@ fail0:
 	return err;
 }
 
+static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana)
+{
+	dba_var var;
+	
+	/* Don't do anything if rec doesn't have any extra data */
+	if (	dba_record_key_peek_value(rec, DBA_KEY_HEIGHT) == NULL
+		&&	dba_record_key_peek_value(rec, DBA_KEY_HEIGHTBARO) == NULL
+		&&	dba_record_key_peek_value(rec, DBA_KEY_NAME) == NULL
+		&&	dba_record_key_peek_value(rec, DBA_KEY_BLOCK) == NULL
+		&&	dba_record_key_peek_value(rec, DBA_KEY_STATION) == NULL)
+		return dba_error_ok();
+
+	/* Get the id of the ana context */
+	db->context->id_ana = id_ana;
+	db->context->id_report = -1;
+	DBA_RUN_OR_RETURN(dba_db_context_obtain_ana(db->context, &(db->data->id_context)));
+
+	/* Insert or update the data that we find in record */
+	if ((var = dba_record_key_peek(rec, DBA_KEY_BLOCK)) != NULL)
+	{
+		db->data->id_var = DBA_VAR(0, 1, 1);
+		dba_db_data_set_value(db->data, dba_var_value(var));
+		DBA_RUN_OR_RETURN(dba_db_data_insert(db->data, 1));
+	}
+	if ((var = dba_record_key_peek(rec, DBA_KEY_STATION)) != NULL)
+	{
+		db->data->id_var = DBA_VAR(0, 1, 2);
+		dba_db_data_set_value(db->data, dba_var_value(var));
+		DBA_RUN_OR_RETURN(dba_db_data_insert(db->data, 1));
+	}
+	if ((var = dba_record_key_peek(rec, DBA_KEY_NAME)) != NULL)
+	{
+		db->data->id_var = DBA_VAR(0, 1, 19);
+		dba_db_data_set_value(db->data, dba_var_value(var));
+		DBA_RUN_OR_RETURN(dba_db_data_insert(db->data, 1));
+	}
+	if ((var = dba_record_key_peek(rec, DBA_KEY_HEIGHT)) != NULL)
+	{
+		db->data->id_var = DBA_VAR(0, 7, 1);
+		dba_db_data_set_value(db->data, dba_var_value(var));
+		DBA_RUN_OR_RETURN(dba_db_data_insert(db->data, 1));
+	}
+	if ((var = dba_record_key_peek(rec, DBA_KEY_HEIGHTBARO)) != NULL)
+	{
+		db->data->id_var = DBA_VAR(0, 7, 31);
+		dba_db_data_set_value(db->data, dba_var_value(var));
+		DBA_RUN_OR_RETURN(dba_db_data_insert(db->data, 1));
+	}
+
+	return dba_error_ok();
+}
+
 /*
  * Insert or replace data in pseudoana taking the values from rec.
  * If rec did not contain ana_id, it will be set by this function.
@@ -437,8 +489,11 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 	{
 		a->id = *id;
 		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_update(a));
-	} else
+	} else {
 		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_insert(a, id));
+	}
+
+	DBA_RUN_OR_GOTO(cleanup, update_pseudoana_extra_info(db, rec, *id));
 	
 cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;

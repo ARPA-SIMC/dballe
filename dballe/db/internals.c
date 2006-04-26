@@ -280,8 +280,10 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 	PARM_INT(l1, DBA_KEY_L1, " AND c.l1 = ?");
 	PARM_INT(l2, DBA_KEY_L2, " AND c.l2 = ?");
 
+	/*
 	PARM_INT(block, DBA_KEY_BLOCK, " AND pa.block = ?");
 	PARM_INT(station, DBA_KEY_STATION, " AND pa.station = ?");
+	*/
 
 	return dba_error_ok();
 
