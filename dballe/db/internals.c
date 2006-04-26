@@ -220,25 +220,40 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 		int minvalues[6], maxvalues[6];
 		DBA_RUN_OR_RETURN(dba_record_parse_date_extremes(rec, minvalues, maxvalues));
 		
-		if (minvalues[0] != -1)
+		if (minvalues[0] != -1 || maxvalues[0] != -1)
 		{
-			/* Add constraint on the minimum date interval */
-			snprintf(db->sel_dtmin, 25, "%04d-%02d-%02d %02d:%02d:%02d",
-					minvalues[0], minvalues[1], minvalues[2],
-					minvalues[3], minvalues[4], minvalues[5]);
-			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime >= ?"));
-			TRACE("found min time interval: adding AND c.datetime >= ?.  val is %s\n", db->sel_dtmin);
-			SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmin, 0, 0);
-		}
-		
-		if (maxvalues[0] != -1)
-		{
-			snprintf(db->sel_dtmax, 25, "%04d-%02d-%02d %02d:%02d:%02d",
-					maxvalues[0], maxvalues[1], maxvalues[2],
-					maxvalues[3], maxvalues[4], maxvalues[5]);
-			DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime <= ?"));
-			TRACE("found max time interval: adding AND c.datetime <= ?.  val is %s\n", db->sel_dtmax);
-			SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmax, 0, 0);
+			if (memcmp(minvalues, maxvalues, 6 * sizeof(int)) == 0)
+			{
+				/* Add constraint on the exact date interval */
+				snprintf(db->sel_dtmin, 25, "%04d-%02d-%02d %02d:%02d:%02d",
+						minvalues[0], minvalues[1], minvalues[2],
+						minvalues[3], minvalues[4], minvalues[5]);
+				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime = ?"));
+				TRACE("found exact time: adding AND c.datetime = ?.  val is %s\n", db->sel_dtmin);
+				SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmin, 0, 0);
+			}
+			else
+			{
+				if (minvalues[0] != -1)
+				{
+					/* Add constraint on the minimum date interval */
+					snprintf(db->sel_dtmin, 25, "%04d-%02d-%02d %02d:%02d:%02d",
+							minvalues[0], minvalues[1], minvalues[2],
+							minvalues[3], minvalues[4], minvalues[5]);
+					DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime >= ?"));
+					TRACE("found min time interval: adding AND c.datetime >= ?.  val is %s\n", db->sel_dtmin);
+					SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmin, 0, 0);
+				}
+				if (maxvalues[0] != -1)
+				{
+					snprintf(db->sel_dtmax, 25, "%04d-%02d-%02d %02d:%02d:%02d",
+							maxvalues[0], maxvalues[1], maxvalues[2],
+							maxvalues[3], maxvalues[4], maxvalues[5]);
+					DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND c.datetime <= ?"));
+					TRACE("found max time interval: adding AND c.datetime <= ?.  val is %s\n", db->sel_dtmax);
+					SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_dtmax, 0, 0);
+				}
+			}
 		}
 
 		/* Ignore anagraphical context unless explicitly requested */
