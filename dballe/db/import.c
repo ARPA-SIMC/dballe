@@ -26,6 +26,7 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 	dba_db_attr dq;
 	int i, j;
 	int mobile;
+	int inserted_pseudoana = 0;
 
 	/* Quick access to the various database components */
 	da = db->pseudoana;
@@ -66,18 +67,39 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 	/* Check if we can reuse a pseudoana row */
 	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_get_id(da, &(dc->id_ana)));
 	if (dc->id_ana == -1)
+	{
 		DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_insert(da, &(dc->id_ana)));
+		inserted_pseudoana = 1;
+	}
 
 	/* Get the ana context */
 	dc->id_report = -1;
 	DBA_RUN_OR_GOTO(fail, dba_db_context_obtain_ana(dc, &(dd->id_context)));
 
 	/* Insert the rest of the pseudoana information */
-	for (i = 0; i < l_ana->data_count; i++)
-	{
-		dba_db_data_set(dd, l_ana->data[i]->var);
-		DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, overwrite));
-	}
+	if (overwrite || inserted_pseudoana)
+		for (i = 0; i < l_ana->data_count; i++)
+		{
+			dba_var_attr_iterator iter;
+
+			dba_db_data_set(dd, l_ana->data[i]->var);
+			DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, overwrite));
+
+			dq->id_context = dd->id_context;
+			dq->id_var = dba_var_code(l_ana->data[i]->var);
+
+			/* Insert the attributes */
+			for (iter = dba_var_attr_iterate(l_ana->data[i]->var); iter != NULL; 
+					iter = dba_var_attr_iterator_next(iter))
+			{
+				dba_var attr = dba_var_attr_iterator_attr(iter);
+				if (dba_var_value(attr) != NULL)
+				{
+					dba_db_attr_set(dq, attr);
+					DBA_RUN_OR_GOTO(fail, dba_db_attr_insert(dq, overwrite));
+				}
+			}
+		}
 
 	/* Fill up the common contexts information for the rest of the data */
 

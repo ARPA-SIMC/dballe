@@ -2,7 +2,7 @@
 rm -f tests/vg-dballe.log.*
 cd tests
 ./check_dballe_tut dba_core
-valgrind --log-file=vg-dballe.log .libs/check_dballe_tut
+valgrind --log-file=vg-dballe.log .libs/lt-check_dballe_tut
 #CK_FORK=no valgrind --log-file=vg-dballe.log ./check_dballe
 #CK_FORK=no valgrind --log-file=vg-dballe.log .libs/lt-check_dballe
 #CK_FORK=no gdb check_dballe

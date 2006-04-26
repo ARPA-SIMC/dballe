@@ -126,7 +126,7 @@ dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id)
 	if (ins->id_report == -1)
 		ins->id_report = 254;
 	memcpy(ins->date, "1000-01-01 00:00:00", 20);
-	ins->date_ind = 20;
+	ins->date_ind = 19;
 	ins->ltype = 257;
 	ins->l1 = ins->l2 = 0;
 	ins->pind = ins->p1 = ins->p2 = 0;

@@ -30,11 +30,10 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	const char* select_mobile_query =
 		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident=?";
 	const char* insert_query =
-		"INSERT INTO pseudoana (lat, lon, ident, height, heightbaro, block, station, name)"
-		" VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+		"INSERT INTO pseudoana (lat, lon, ident)"
+		" VALUES (?, ?, ?);";
 	const char* update_query =
-		"UPDATE pseudoana SET lat=?, lon=?, ident=?, height=?, heightbaro=?,"
-		"                     block=?, station=?, name=? WHERE id=?";
+		"UPDATE pseudoana SET lat=?, lon=?, ident=? WHERE id=?";
 	dba_err err = DBA_OK;
 	dba_db_pseudoana res = NULL;
 	int r;
@@ -77,11 +76,6 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->lat), 0, 0);
 	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->lon), 0, 0);
 	SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, res->ident, 0, &(res->ident_ind));
-	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->height), 0, &(res->height_ind));
-	SQLBindParameter(res->istm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->heightbaro), 0, &(res->heightbaro_ind));
-	SQLBindParameter(res->istm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->block), 0, &(res->block_ind));
-	SQLBindParameter(res->istm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->station), 0, &(res->station_ind));
-	SQLBindParameter(res->istm, 8, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, res->name, 0, &(res->name_ind));
 	r = SQLPrepare(res->istm, (unsigned char*)insert_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
@@ -94,12 +88,7 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	SQLBindParameter(res->ustm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->lat), 0, 0);
 	SQLBindParameter(res->ustm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->lon), 0, 0);
 	SQLBindParameter(res->ustm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, res->ident, 0, &(res->ident_ind));
-	SQLBindParameter(res->ustm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->height), 0, &(res->height_ind));
-	SQLBindParameter(res->ustm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->heightbaro), 0, &(res->heightbaro_ind));
-	SQLBindParameter(res->ustm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->block), 0, &(res->block_ind));
-	SQLBindParameter(res->ustm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->station), 0, &(res->station_ind));
-	SQLBindParameter(res->ustm, 8, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, res->name, 0, &(res->name_ind));
-	SQLBindParameter(res->ustm, 9, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
+	SQLBindParameter(res->ustm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
 	r = SQLPrepare(res->ustm, (unsigned char*)update_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{

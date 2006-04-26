@@ -32,16 +32,6 @@ struct _dba_db_pseudoana
 	int lon;
 	char ident[64];
 	SQLINTEGER ident_ind;
-	int height;
-	SQLINTEGER height_ind;
-	int heightbaro;
-	SQLINTEGER heightbaro_ind;
-	int block;
-	SQLINTEGER block_ind;
-	int station;
-	SQLINTEGER station_ind;
-	char name[255];
-	SQLINTEGER name_ind;
 };
 typedef struct _dba_db_pseudoana* dba_db_pseudoana;
 

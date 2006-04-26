@@ -18,7 +18,7 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 {
 	static const char query[] =
 		"SELECT d.id_var, d.value, a.type, a.value"
-		"  FROM data AS d, context AS c, attr AS a"
+		"  FROM context AS c, data AS d"
 		"  LEFT JOIN attr AS a ON a.id_context = d.id_context AND a.id_var = d.id_var"
 		" WHERE d.id_context = c.id AND c.id_ana = ? AND c.id_report = ?"
 		"   AND c.datetime = '1000-01-01 00:00:00' AND c.ltype = 257 AND c.l1 = 0"
@@ -111,8 +111,7 @@ cleanup:
 dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* data)
 {
 	const char* query =
-		"SELECT pa.id, pa.lat, pa.lon, pa.ident, pa.height, pa.heightbaro,"
-		"       pa.block, pa.station, pa.name,"
+		"SELECT pa.id, pa.lat, pa.lon, pa.ident,"
 		"       c.ltype, c.l1, c.l2,"
 		"       c.ptype, c.p1, c.p2,"
 		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio, c.id, a.type, a.value"
@@ -125,11 +124,6 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 	int out_lat;
 	int out_lon;
 	char out_ident[64];			SQLINTEGER out_ident_ind;
-	int out_height;				SQLINTEGER out_height_ind;
-	int out_heightbaro;			SQLINTEGER out_heightbaro_ind;
-	int out_block;				SQLINTEGER out_block_ind;
-	int out_station;			SQLINTEGER out_station_ind;
-	char out_name[255];			SQLINTEGER out_name_ind;
 	int out_leveltype;
 	int out_l1;
 	int out_l2;
@@ -183,26 +177,21 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 	DBA_QUERY_BIND_NONNULL( 2, SQL_C_SLONG, lat);
 	DBA_QUERY_BIND_NONNULL( 3, SQL_C_SLONG, lon);
 	DBA_QUERY_BIND( 4, SQL_C_CHAR, ident);
-	DBA_QUERY_BIND( 5, SQL_C_SLONG, height);
-	DBA_QUERY_BIND( 6, SQL_C_SLONG, heightbaro);
-	DBA_QUERY_BIND( 7, SQL_C_SLONG, block);
-	DBA_QUERY_BIND( 8, SQL_C_SLONG, station);
-	DBA_QUERY_BIND( 9, SQL_C_CHAR, name);
-	DBA_QUERY_BIND_NONNULL(10, SQL_C_SLONG, leveltype);
-	DBA_QUERY_BIND_NONNULL(11, SQL_C_SLONG, l1);
-	DBA_QUERY_BIND_NONNULL(12, SQL_C_SLONG, l2);
-	DBA_QUERY_BIND_NONNULL(13, SQL_C_SLONG, pindicator);
-	DBA_QUERY_BIND_NONNULL(14, SQL_C_SLONG, p1);
-	DBA_QUERY_BIND_NONNULL(15, SQL_C_SLONG, p2);
-	DBA_QUERY_BIND_NONNULL(16, SQL_C_SLONG, varcode);
-	DBA_QUERY_BIND_NONNULL(17, SQL_C_CHAR, datetime);
-	DBA_QUERY_BIND_NONNULL(18, SQL_C_CHAR, value);
-	DBA_QUERY_BIND_NONNULL(19, SQL_C_SLONG, rep_cod);
-	DBA_QUERY_BIND_NONNULL(20, SQL_C_CHAR, rep_memo);
-	DBA_QUERY_BIND_NONNULL(21, SQL_C_SLONG, priority);
-	DBA_QUERY_BIND_NONNULL(22, SQL_C_SLONG, context_id);
-	DBA_QUERY_BIND(23, SQL_C_SLONG, attr_varcode);
-	DBA_QUERY_BIND(24, SQL_C_CHAR, attr_value);
+	DBA_QUERY_BIND_NONNULL( 5, SQL_C_SLONG, leveltype);
+	DBA_QUERY_BIND_NONNULL( 6, SQL_C_SLONG, l1);
+	DBA_QUERY_BIND_NONNULL( 7, SQL_C_SLONG, l2);
+	DBA_QUERY_BIND_NONNULL( 8, SQL_C_SLONG, pindicator);
+	DBA_QUERY_BIND_NONNULL( 9, SQL_C_SLONG, p1);
+	DBA_QUERY_BIND_NONNULL(10, SQL_C_SLONG, p2);
+	DBA_QUERY_BIND_NONNULL(11, SQL_C_SLONG, varcode);
+	DBA_QUERY_BIND_NONNULL(12, SQL_C_CHAR, datetime);
+	DBA_QUERY_BIND_NONNULL(13, SQL_C_CHAR, value);
+	DBA_QUERY_BIND_NONNULL(14, SQL_C_SLONG, rep_cod);
+	DBA_QUERY_BIND_NONNULL(15, SQL_C_CHAR, rep_memo);
+	DBA_QUERY_BIND_NONNULL(16, SQL_C_SLONG, priority);
+	DBA_QUERY_BIND_NONNULL(17, SQL_C_SLONG, context_id);
+	DBA_QUERY_BIND(18, SQL_C_SLONG, attr_varcode);
+	DBA_QUERY_BIND(19, SQL_C_CHAR, attr_value);
 #undef DBA_QUERY_BIND
 #undef DBA_QUERY_BIND_NONNULL
 	
@@ -288,34 +277,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 		
 			msg->type = dba_msg_type_from_repcod(out_rep_cod);
 
-			DBA_RUN_OR_GOTO(cleanup, fill_ana_layer(db, msg, out_ana_id, out_rep_cod));
-
-			if (0)
-			{
-				int year, month, day, hour, min;
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_latitude(msg, (double)out_lat / 100000.0, -1));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_longitude(msg, (double)out_lon / 100000.0, -1));
-				if (sscanf(out_datetime, "%04d-%02d-%02d %02d:%02d", &year, &month, &day, &hour, &min) != 5)
-				{
-					err = dba_error_consistency("trying to parse datetime string %s", out_datetime);
-					goto cleanup;
-				}
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_year(msg, year, -1));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_month(msg, month, -1));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_day(msg, day, -1));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_hour(msg, hour, -1));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_minute(msg, min, -1));
-				if (out_ident_ind != -1)
-					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_ident(msg, out_ident, -1));
-				if (out_block_ind != -1)
-					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_block(msg, out_block, -1));
-				if (out_station_ind != -1)
-					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_station(msg, out_station, -1));
-				if (out_height_ind != -1)
-					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_height(msg, out_height, -1));
-				if (out_heightbaro_ind != -1)
-					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_height_baro(msg, out_heightbaro, -1));
-			}
+			DBA_RUN_OR_GOTO(cleanup, fill_ana_layer(db, msg, out_ana_id, 254));
 
 			strncpy(last_datetime, out_datetime, 20);
 			last_lat = out_lat;
