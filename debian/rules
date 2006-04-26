@@ -3,7 +3,8 @@
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
-DEB_CONFIGURE_EXTRA_FLAGS += --disable-shared
+#DEB_MAKE_CHECK_TARGET := check
+#DEB_CONFIGURE_EXTRA_FLAGS += --disable-shared --with-pic
 
 # Store build information
 common-binary-post-install-arch common-binary-post-install-indep::

@@ -1,3 +1,9 @@
+libdballe (1.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 12 Apr 2006 16:31:12 +0200
+
 libdballe (0.5-1) unstable; urgency=low
 
   * New upstream release
