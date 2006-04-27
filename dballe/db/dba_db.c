@@ -841,7 +841,19 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 		"       c.ltype, c.l1, c.l2,"
 		"       c.ptype, c.p1, c.p2,"
 		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio"
-		"  FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri";
+		"  FROM context AS c"
+		"  JOIN pseudoana AS pa ON c.id_ana = pa.id"
+		"  JOIN data AS d ON d.id_context = c.id"
+		"  JOIN repinfo AS ri ON c.id_report = ri.id";
+		/*
+SELECT  count(*)
+ WHERE c.datetime = '2005-08-03 06:00:00'
+   AND c.ptype = 4 AND c.p1 = 64800 AND c.p2 = 151200
+   AND d.id_var = 3339
+   AND ri.memo = 'clepsspnpoel001'
+ ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio
+ 		*/
+	
 	dba_err err;
 	SQLHSTMT stm;
 	int res;
@@ -873,38 +885,34 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	dba_querybuf_reset(db->querybuf);
 	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
 
-	/* Extend FROM part to look for given block and station */
+	/* Extend the JOIN part to look for given block and station */
 	if ((has_bs = (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL)
 		  || (dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)))
 	{
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", context AS cbs "));
-		if (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL)
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", data AS dblo "));
-		if (dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, ", data AS dsta "));
-	}
-
-	/* Add WHERE part */
-	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
-		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id"));
-
-	/* Extend WHERE part to look for given block and station */
-	if (has_bs)
-	{
-		/* Add a selector for the pseudoana context */
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND cbs.id_ana = pa.id AND cbs.id_report = 254 AND cbs.datetime = '1000-01-01 00:00:00' AND cbs.ltype = 257 AND cbs.l1 = 0 AND cbs.l2 = 0 AND cbs.ptype = 0 AND cbs.p1 = 0 AND cbs.p2 = 0"));
-		/* Add the selectors for the query */
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, 
+					" JOIN context AS cbs ON "
+					"     c.id_ana = cbs.id_ana"
+					" AND cbs.id_report = 254"
+					" AND cbs.datetime = '1000-01-01 00:00:00'"
+					" AND cbs.ltype = 257 AND cbs.l1 = 0 AND cbs.l2 = 0"
+					" AND cbs.ptype = 0 AND cbs.p1 = 0 AND cbs.p2 = 0"));
 		if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
 		{
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND dblo.id_context = cbs.id AND dblo.id_var = 257 AND dblo.value = "));
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
+					" JOIN data AS dblo ON dblo.id_context = cbs.id AND dblo.id_var = 257 AND dblo.value = "));
 			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
 		}
 		if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
 		{
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " AND dsta.id_context = cbs.id AND dsta.id_var = 258 AND dsta.value = "));
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
+					" JOIN data AS dsta ON dsta.id_context = cbs.id AND dsta.id_var = 258 AND dsta.value = "));
 			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
 		}
 	}
+
+	/* Add WHERE part */
+	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
+		" WHERE true "));
 
 	/* Bind output fields */
 #define DBA_QUERY_BIND(num, type, name) \
