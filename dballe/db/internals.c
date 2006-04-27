@@ -215,6 +215,37 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 
 	/* Bind select fields */
 
+	PARM_INT(ana_id, DBA_KEY_ANA_ID, " AND pa.id = ?");
+	PARM_INT(latmin, DBA_KEY_LAT, " AND pa.lat = ?");
+	PARM_INT(latmin, DBA_KEY_LATMIN, " AND pa.lat >= ?");
+	PARM_INT(latmax, DBA_KEY_LATMAX, " AND pa.lat <= ?");
+	PARM_INT(lonmin, DBA_KEY_LON, " AND pa.lon = ?");
+	PARM_INT(lonmin, DBA_KEY_LONMIN, " AND pa.lon >= ?");
+	PARM_INT(lonmax, DBA_KEY_LONMAX, " AND pa.lon <= ?");
+
+	{
+		const char* mobile_sel = dba_record_key_peek_value(rec, DBA_KEY_MOBILE);
+
+		if (mobile_sel != NULL)
+		{
+			if (mobile_sel[0] == '0')
+			{
+				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident IS NULL"));
+				TRACE("found fixed/mobile: adding AND pa.ident IS NULL.\n");
+			} else {
+				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND NOT pa.ident IS NULL"));
+				TRACE("found fixed/mobile: adding AND NOT pa.ident IS NULL\n");
+			}
+		}
+	}
+
+	if ((db->sel_ident = dba_record_key_peek_value(rec, DBA_KEY_IDENT)) != NULL)
+	{
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident = ?"));
+		TRACE("found ident: adding AND pa.ident = ?.  val is %s\n", db->sel_ident);
+		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_ident, 0, 0);
+	}
+
 	/* Set the time extremes */
 	{
 		int minvalues[6], maxvalues[6];
@@ -264,48 +295,12 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 		}
 	}
 
-	PARM_INT(ana_id, DBA_KEY_ANA_ID, " AND pa.id = ?");
-	PARM_INT(latmin, DBA_KEY_LAT, " AND pa.lat = ?");
-	PARM_INT(latmin, DBA_KEY_LATMIN, " AND pa.lat >= ?");
-	PARM_INT(latmax, DBA_KEY_LATMAX, " AND pa.lat <= ?");
-	PARM_INT(lonmin, DBA_KEY_LON, " AND pa.lon = ?");
-	PARM_INT(lonmin, DBA_KEY_LONMIN, " AND pa.lon >= ?");
-	PARM_INT(lonmax, DBA_KEY_LONMAX, " AND pa.lon <= ?");
-
-	{
-		const char* mobile_sel = dba_record_key_peek_value(rec, DBA_KEY_MOBILE);
-
-		if (mobile_sel != NULL)
-		{
-			if (mobile_sel[0] == '0')
-			{
-				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident IS NULL"));
-				TRACE("found fixed/mobile: adding AND pa.ident IS NULL.\n");
-			} else {
-				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND NOT pa.ident IS NULL"));
-				TRACE("found fixed/mobile: adding AND NOT pa.ident IS NULL\n");
-			}
-		}
-	}
-
-	if ((db->sel_ident = dba_record_key_peek_value(rec, DBA_KEY_IDENT)) != NULL)
-	{
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident = ?"));
-		TRACE("found ident: adding AND pa.ident = ?.  val is %s\n", db->sel_ident);
-		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_ident, 0, 0);
-	}
-
 	PARM_INT(pindicator, DBA_KEY_PINDICATOR, " AND c.ptype = ?");
 	PARM_INT(p1, DBA_KEY_P1, " AND c.p1 = ?");
 	PARM_INT(p2, DBA_KEY_P2, " AND c.p2 = ?");
 	PARM_INT(leveltype, DBA_KEY_LEVELTYPE, " AND c.ltype = ?");
 	PARM_INT(l1, DBA_KEY_L1, " AND c.l1 = ?");
 	PARM_INT(l2, DBA_KEY_L2, " AND c.l2 = ?");
-
-	/*
-	PARM_INT(block, DBA_KEY_BLOCK, " AND pa.block = ?");
-	PARM_INT(station, DBA_KEY_STATION, " AND pa.station = ?");
-	*/
 
 	return dba_error_ok();
 
