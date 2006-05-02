@@ -493,7 +493,7 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_insert(a, id));
 	}
 
-	DBA_RUN_OR_GOTO(cleanup, update_pseudoana_extra_info(db, rec, *id));
+	/* DBA_RUN_OR_GOTO(cleanup, update_pseudoana_extra_info(db, rec, *id)); */
 	
 cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;

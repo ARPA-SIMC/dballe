@@ -66,6 +66,13 @@ typedef enum _dba_keyword {
 	DBA_KEY_COUNT		= 48,
 } dba_keyword;
 
+/* Shortcuts for commonly used variables */
+#define DBA_VAR_BLOCK		DBA_VAR(0, 1,  1)
+#define DBA_VAR_STATION		DBA_VAR(0, 1,  2)
+#define DBA_VAR_NAME		DBA_VAR(0, 1, 19)
+#define DBA_VAR_HEIGHT		DBA_VAR(0, 7,  1)
+#define DBA_VAR_HEIGHTBARO	DBA_VAR(0, 7, 31)
+
 struct _dba_record;
 struct _dba_item;
 
@@ -456,6 +463,16 @@ dba_err dba_record_var_set(dba_record rec, dba_varcode code, dba_var var);
  *   The error indicator for the function (@see dba_err).
  */
 dba_err dba_record_var_set_direct(dba_record rec, dba_var var);
+
+/**
+ * Set the date, level and timerange values to match the anagraphical context.
+ *
+ * @param rec
+ *   The record where the value is to be set.
+ * @return
+ *   The error indicator for the function (@see dba_err).
+ */
+dba_err dba_record_set_ana_context(dba_record rec);
 
 /**
  * Set the value of a parameter.

@@ -806,20 +806,7 @@ F77_INTEGER_FUNCTION(idba_seti)(
 			else if (strcmp(parm + 1, "context_id") == 0)
 				STATE.sys_context_id = *value;
 			else if (strcmp(parm + 1, "ana") == 0)
-			{
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_YEAR, 1000));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MONTH, 1));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_DAY, 1));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_HOUR, 0));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MIN, 0));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_SEC, 0));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_LEVELTYPE, 257));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L1, 0));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L2, 0));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_PINDICATOR, 0));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P1, 0));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P2, 0));
-			}
+				return dba_record_set_ana_context(STATE.input);
 			else
 				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
 			return dba_error_ok();

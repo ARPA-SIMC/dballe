@@ -552,6 +552,24 @@ dba_err dba_record_var_set_direct(dba_record rec, dba_var var)
 	return dba_error_ok();
 }
 
+dba_err dba_record_set_ana_context(dba_record rec)
+{
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEAR, 1000));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTH, 1));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAY, 1));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOUR, 0));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MIN, 0));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SEC, 0));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, 257));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L1, 0));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L2, 0));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, 0));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P1, 0));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P2, 0));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, 254));
+	return dba_error_ok();
+}
+
 dba_err dba_record_key_seti(dba_record rec, dba_keyword parameter, int value)
 {
 	assert_is_dba_record(rec);

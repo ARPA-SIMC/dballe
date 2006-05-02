@@ -51,11 +51,11 @@ struct dba_db_dballe_shar
 		sampleAna.set(DBA_KEY_HOUR_IDENT, 12);
 		sampleAna.set(DBA_KEY_MIN_IDENT, 30);
 		*/
-		extraAna.set(DBA_KEY_HEIGHT, 42);
-		extraAna.set(DBA_KEY_HEIGHTBARO, 234);
-		extraAna.set(DBA_KEY_BLOCK, 1);
-		extraAna.set(DBA_KEY_STATION, 52);
-		extraAna.set(DBA_KEY_NAME, "Cippo Lippo");
+		extraAna.set(DBA_VAR_HEIGHT, 42);
+		extraAna.set(DBA_VAR_HEIGHTBARO, 234);
+		extraAna.set(DBA_VAR_BLOCK, 1);
+		extraAna.set(DBA_VAR_STATION, 52);
+		extraAna.set(DBA_VAR_NAME, "Cippo Lippo");
 
 		// Common data
 		sampleBase.set(DBA_KEY_YEAR, 1945);
@@ -152,10 +152,17 @@ void to::test<2>()
 	/* Start with an empty database */
 	CHECKED(dba_db_reset(db, 0));
 
-	/* Fill in some data */
+	/* Insert the ana station */
 	dba_record_clear(insert);
+	CHECKED(dba_record_set_ana_context(insert));
 	sampleAna.copyTestDataToRecord(insert);
 	extraAna.copyTestDataToRecord(insert);
+	/* Insert the anagraphical record */
+	CHECKED(dba_db_insert_new(db, insert));
+
+	/* Fill in data for the first record */
+	dba_record_clear(insert);
+	sampleAna.copyTestDataToRecord(insert);
 	sampleBase.copyTestDataToRecord(insert);
 	sample0.copyTestDataToRecord(insert);
 	sample00.copyTestDataToRecord(insert);
@@ -171,7 +178,6 @@ void to::test<2>()
 	/* Insert another record (similar but not the same) */
 	dba_record_clear(insert);
 	sampleAna.copyTestDataToRecord(insert);
-	extraAna.copyTestDataToRecord(insert);
 	sampleBase.copyTestDataToRecord(insert);
 	sample1.copyTestDataToRecord(insert);
 	sample10.copyTestDataToRecord(insert);
@@ -201,7 +207,7 @@ void to::test<2>()
 
 		/* Check that the result matches */
 		ensureTestRecEquals(result, sampleAna);
-		ensureTestRecEquals(result, extraAna);
+		//ensureTestRecEquals(result, extraAna);
 
 		/* There should be only one item */
 		gen_ensure(is_last);
