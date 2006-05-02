@@ -238,8 +238,6 @@ dba_err generator::fill_pseudoana(dba_record rec, bool mobile)
 		/* Pseudoana */
 		DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_LAT, rnd(-90, 90)));
 		DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_LON, rnd(-180, 180)));
-		DBA_RUN_OR_RETURN(dba_record_key_setd(ana, DBA_KEY_HEIGHT, rnd(1, 3000)));
-		DBA_RUN_OR_RETURN(dba_record_key_setc(ana, DBA_KEY_NAME, rnd(20).c_str()));
 		if (mobile)
 		{
 			DBA_RUN_OR_RETURN(dba_record_key_setc(ana, DBA_KEY_IDENT, rnd(10).c_str()));
@@ -306,7 +304,6 @@ dba_err generator::fill_message(dba_msg msg, bool mobile)
 	DBA_RUN_OR_RETURN(fill_pseudoana(rec, mobile));
 	DBA_RUN_OR_RETURN(dba_msg_set_latitude_var(msg,		dba_record_key_peek(rec, DBA_KEY_LAT)));
 	DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg,	dba_record_key_peek(rec, DBA_KEY_LON)));
-	DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg,		dba_record_key_peek(rec, DBA_KEY_HEIGHT)));
 	/* DBA_RUN_OR_RETURN(dba_msg_set_name_var(msg,			dba_record_key_peek(rec, DBA_KEY_NAME))); */
 	if (mobile)
 	{

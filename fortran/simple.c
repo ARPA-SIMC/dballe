@@ -1,5 +1,6 @@
 #include <dballe/init.h>
 #include <dballe/core/verbose.h>
+#include <dballe/core/aliases.h>
 #include <dballe/db/dba_db.h>
 
 #include <f77.h>
@@ -791,6 +792,7 @@ F77_INTEGER_FUNCTION(idba_seti)(
 	char parm[20];
 	char* p;
 	dba_record rec;
+	dba_varcode code = 0;
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
 
@@ -816,7 +818,7 @@ F77_INTEGER_FUNCTION(idba_seti)(
 			break;
 	}
 
-	if (p[0] != 'B')
+	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
 	{
 		dba_keyword param = dba_record_keyword_byname(p);
 		if (param == DBA_KEY_ERROR)
@@ -827,10 +829,13 @@ F77_INTEGER_FUNCTION(idba_seti)(
 
 		return dba_record_key_seti(rec, param, *value);
 	} else {
-		if (*value == MISSING_INT)
-			return dba_record_var_unset(rec, DBA_STRING_TO_VAR(p + 1));
+		if (code == 0)
+			code = DBA_STRING_TO_VAR(p + 1);
 
-		return dba_record_var_seti(rec, DBA_STRING_TO_VAR(p + 1), *value);
+		if (*value == MISSING_INT)
+			return dba_record_var_unset(rec, code);
+
+		return dba_record_var_seti(rec, code, *value);
 	}
 }
 
@@ -862,6 +867,7 @@ F77_INTEGER_FUNCTION(idba_setr)(
 	char parm[20];
 	char* p;
 	dba_record rec;
+	dba_varcode code = 0;
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
 
@@ -874,7 +880,7 @@ F77_INTEGER_FUNCTION(idba_setr)(
 		p = parm;
 	}
 
-	if (p[0] != 'B')
+	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
 	{
 		dba_keyword param = dba_record_keyword_byname(p);
 		if (param == DBA_KEY_ERROR)
@@ -885,10 +891,13 @@ F77_INTEGER_FUNCTION(idba_setr)(
 
 		return dba_record_key_setd(rec, param, *value);
 	} else {
-		if (*value == MISSING_REAL)
-			return dba_record_var_unset(rec, DBA_STRING_TO_VAR(p + 1));
+		if (code == 0)
+			code = DBA_STRING_TO_VAR(p + 1);
 
-		return dba_record_var_setd(rec, DBA_STRING_TO_VAR(p + 1), *value);
+		if (*value == MISSING_REAL)
+			return dba_record_var_unset(rec, code);
+
+		return dba_record_var_setd(rec, code, *value);
 	}
 }
 
@@ -920,6 +929,7 @@ F77_INTEGER_FUNCTION(idba_setd)(
 	char parm[20];
 	char* p;
 	dba_record rec;
+	dba_varcode code = 0;
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
 
@@ -932,7 +942,7 @@ F77_INTEGER_FUNCTION(idba_setd)(
 		p = parm;
 	}
 
-	if (p[0] != 'B')
+	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
 	{
 		dba_keyword param = dba_record_keyword_byname(p);
 		if (param == DBA_KEY_ERROR)
@@ -943,10 +953,13 @@ F77_INTEGER_FUNCTION(idba_setd)(
 
 		return dba_record_key_setd(rec, param, *value);
 	} else {
-		if (*value == MISSING_DOUBLE)
-			return dba_record_var_unset(rec, DBA_STRING_TO_VAR(p + 1));
+		if (code == 0)
+			code = DBA_STRING_TO_VAR(p + 1);
 
-		return dba_record_var_setd(rec, DBA_STRING_TO_VAR(p + 1), *value);
+		if (*value == MISSING_DOUBLE)
+			return dba_record_var_unset(rec, code);
+
+		return dba_record_var_setd(rec, code, *value);
 	}
 }
 
@@ -980,6 +993,7 @@ F77_INTEGER_FUNCTION(idba_setc)(
 	char* p;
 	char val[255];
 	dba_record rec;
+	dba_varcode code = 0;
 
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
@@ -994,7 +1008,7 @@ F77_INTEGER_FUNCTION(idba_setc)(
 		p = parm;
 	}
 
-	if (p[0] != 'B')
+	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
 	{
 		/* Handle shortcuts */
 		if (strcmp(p, "date") == 0)
@@ -1083,10 +1097,13 @@ F77_INTEGER_FUNCTION(idba_setc)(
 			return dba_record_key_setc(rec, param, val);
 		}
 	} else {
-		if (val[0] == 0)
-			return dba_record_var_unset(rec, DBA_STRING_TO_VAR(p + 1));
+		if (code == 0)
+			code = DBA_STRING_TO_VAR(p + 1);
 
-		return dba_record_var_setc(rec, DBA_STRING_TO_VAR(p + 1), val);
+		if (val[0] == 0)
+			return dba_record_var_unset(rec, code);
+
+		return dba_record_var_setc(rec, code, val);
 	}
 }
 /*@}*/

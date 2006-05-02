@@ -385,6 +385,7 @@ fail0:
 	return err;
 }
 
+#if 0
 static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana)
 {
 	dba_var var;
@@ -436,6 +437,7 @@ static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana
 
 	return dba_error_ok();
 }
+#endif
 
 /*
  * Insert or replace data in pseudoana taking the values from rec.
@@ -730,6 +732,7 @@ static dba_err dba_ana_cursor_to_rec(dba_db_cursor cur, dba_record rec)
 	return dba_error_ok();
 }
 
+#if 0
 static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 {
 	/* Extra variables to add:
@@ -805,6 +808,7 @@ cleanup:
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
+#endif
 
 dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 {
@@ -829,7 +833,7 @@ dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 	DBA_RUN_OR_RETURN(dba_ana_cursor_to_rec(cur, rec));
 
 	/* Add the extra ana info */
-	DBA_RUN_OR_RETURN(dba_ana_add_extra(cur, rec));
+	//DBA_RUN_OR_RETURN(dba_ana_add_extra(cur, rec));
 
 	return dba_error_ok();
 }

@@ -128,8 +128,8 @@ public:
 		float_keys.push_back(DBA_KEY_LONMAX);
 		char_keys.push_back(DBA_KEY_REP_MEMO);
 		char_keys.push_back(DBA_KEY_IDENT);
-		char_keys.push_back(DBA_KEY_NAME);
 		char_keys.push_back(DBA_KEY_DATETIME);
+		char_keys.push_back(DBA_KEY_VAR);
 		char_keys.push_back(DBA_KEY_VARLIST);
 		int_vars.push_back(  DBA_VAR(0, 1,   1));
 		int_vars.push_back(  DBA_VAR(0, 1,   2));

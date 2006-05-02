@@ -22,15 +22,12 @@ block,       DBA_KEY_BLOCK
 station,     DBA_KEY_STATION
 mobile,      DBA_KEY_MOBILE
 ident,       DBA_KEY_IDENT
-name,        DBA_KEY_NAME
 lat,         DBA_KEY_LAT
 lon,         DBA_KEY_LON
 latmax,      DBA_KEY_LATMAX
 latmin,      DBA_KEY_LATMIN
 lonmax,      DBA_KEY_LONMAX
 lonmin,      DBA_KEY_LONMIN
-height,      DBA_KEY_HEIGHT
-heightbaro,  DBA_KEY_HEIGHTBARO
 datetime,    DBA_KEY_DATETIME
 year,        DBA_KEY_YEAR
 month,       DBA_KEY_MONTH
@@ -73,15 +70,12 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "WMO station number",                      "NUMERIC", 0, 0,   3, 0, 0, 0 },
 	{ 0, "Station is mobile",                       "NUMERIC", 0, 0,   1, 0, 0, 0 },
 	{ 0, "Identifier of flight or ship",          "CHARACTER", 0, 0,  64, 0, 0, 1 },
-	{ 0, "Station or site name",                  "CHARACTER", 0, 0,  20, 0, 0, 1 },
 	{ 0, "Latitude",                                 "DEGREE", 5, 0,   8, 0, 0, 0 },
 	{ 0, "Longitude",                                "DEGREE", 5, 0,   8, 0, 0, 0 },
 	{ 0, "Maximum latitude queried",                 "DEGREE", 5, 0,   8, 0, 0, 0 },
 	{ 0, "Minimum latitude queried",                 "DEGREE", 5, 0,   8, 0, 0, 0 },
 	{ 0, "Maximum longitude queried",                "DEGREE", 5, 0,   8, 0, 0, 0 },
 	{ 0, "Minimum longitude queried",                "DEGREE", 5, 0,   8, 0, 0, 0 },
-	{ 0, "Height",                                        "M", 0, 0,   7, 0, 0, 0 },
-	{ 0, "Height of barometer above msl",                 "M", 1, 0,   6, 0, 0, 0 },
 	{ 0, "Date and time informations",            "CHARACTER", 0, 0,  20, 0, 0, 1 },
 	{ 0, "Year",                                       "YEAR", 0, 0,   4, 0, 0, 0 },
 	{ 0, "Month",                                     "MONTH", 0, 0,   2, 0, 0, 0 },
