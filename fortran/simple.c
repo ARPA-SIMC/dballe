@@ -1015,6 +1015,42 @@ F77_INTEGER_FUNCTION(idba_setc)(
 			}
 			return dba_error_ok();
 		}
+		else if (strcmp(p, "datemin") == 0)
+		{
+			int year, month, day, hour, minute, second;
+			int matched = sscanf(value, "%04d-%02d-%02d %02d:%02d:%02d",
+					&year, &month, &day, &hour, &minute, &second);
+			if (matched != 6 && matched != 3)
+				return dba_error_consistency("datemin must be in the format \"yyyy-mm-dd\" or \"yyyy-mm-dd hh:mm:ss\"");
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEARMIN, year));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTHMIN, month));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAYMIN, day));
+			if (matched == 6)
+			{
+				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOURMIN, hour));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MINUMIN, minute));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SECMIN, second));
+			}
+			return dba_error_ok();
+		}
+		else if (strcmp(p, "datemax") == 0)
+		{
+			int year, month, day, hour, minute, second;
+			int matched = sscanf(value, "%04d-%02d-%02d %02d:%02d:%02d",
+					&year, &month, &day, &hour, &minute, &second);
+			if (matched != 6 && matched != 3)
+				return dba_error_consistency("datemax must be in the format \"yyyy-mm-dd\" or \"yyyy-mm-dd hh:mm:ss\"");
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEARMAX, year));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTHMAX, month));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAYMAX, day));
+			if (matched == 6)
+			{
+				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOURMAX, hour));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MINUMAX, minute));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SECMAX, second));
+			}
+			return dba_error_ok();
+		}
 		else if (strcmp(p, "level") == 0)
 		{
 			int type, l1, l2;
