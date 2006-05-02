@@ -805,6 +805,21 @@ F77_INTEGER_FUNCTION(idba_seti)(
 				STATE.sys_ana_id = *value;
 			else if (strcmp(parm + 1, "context_id") == 0)
 				STATE.sys_context_id = *value;
+			else if (strcmp(parm + 1, "ana") == 0)
+			{
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_YEAR, 1000));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MONTH, 1));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_DAY, 1));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_HOUR, 0));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MIN, 0));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_SEC, 0));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_LEVELTYPE, 257));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L1, 0));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L2, 0));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_PINDICATOR, 0));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P1, 0));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P2, 0));
+			}
 			else
 				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
 			return dba_error_ok();
@@ -994,14 +1009,56 @@ F77_INTEGER_FUNCTION(idba_setc)(
 
 	if (p[0] != 'B')
 	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
+		/* Handle shortcuts */
+		if (strcmp(p, "date") == 0)
+		{
+			int year, month, day, hour, minute, second;
+			int matched = sscanf(value, "%04d-%02d-%02d %02d:%02d:%02d",
+					&year, &month, &day, &hour, &minute, &second);
+			if (matched != 6 && matched != 3)
+				return dba_error_consistency("date must be in the format \"yyyy-mm-dd\" or \"yyyy-mm-dd hh:mm:ss\"");
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEAR, year));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTH, month));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAY, day));
+			if (matched == 6)
+			{
+				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOUR, hour));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MIN, minute));
+				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SEC, second));
+			}
+			return dba_error_ok();
+		}
+		else if (strcmp(p, "level") == 0)
+		{
+			int type, l1, l2;
+			if (sscanf(value, "%d,%d,%d", &type, &l1, &l2) != 3)
+				return dba_error_consistency("level must be in the format \"ltype,l1,l2\"");
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, type));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L1, l1));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L2, l2));
+			return dba_error_ok();
+		}
+		else if (strcmp(p, "timerange") == 0)
+		{
+			int type, p1, p2;
+			if (sscanf(value, "%d,%d,%d", &type, &p1, &p2) != 3)
+				return dba_error_consistency("timerange must be in the format \"pindicator,p1,p2\"");
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, type));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P1, p1));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P2, p2));
+			return dba_error_ok();
+		}
+		else
+		{
+			dba_keyword param = dba_record_keyword_byname(p);
+			if (param == DBA_KEY_ERROR)
+				return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
-		if (val[0] == 0)
-			return dba_record_key_unset(rec, param);
+			if (val[0] == 0)
+				return dba_record_key_unset(rec, param);
 
-		return dba_record_key_setc(rec, param, val);
+			return dba_record_key_setc(rec, param, val);
+		}
 	} else {
 		if (val[0] == 0)
 			return dba_record_var_unset(rec, DBA_STRING_TO_VAR(p + 1));
