@@ -106,10 +106,11 @@ dballe/db/Makefile
 fortran/Makefile
 tools/Makefile
 tables/Makefile
+tests/Makefile
+bench/Makefile
 swig/Makefile
 doc/Makefile
 doc/libdballe.dox
-tests/Makefile
 libdballe.pc
 ])
 AC_OUTPUT

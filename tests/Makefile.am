@@ -7,8 +7,6 @@ TESTS = $(check_PROGRAMS)
 export DBA_REPINFO=../tables/repinfo.csv
 export DBA_TABLES=../tables
 
-noinst_PROGRAMS=benchmark
-
 check_dballe_tut_SOURCES = \
 	tests/dba_err_error.cc \
 	tests/dba_core.cc \
@@ -37,16 +35,6 @@ check_mem_SOURCES=\
 check_mem_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf -lpopt
 check_mem_FFLAGS = -g -fno-second-underscore
 
-benchmark_SOURCES= \
-	benchmark.cc \
-	bench/Benchmark.cc \
-	bench/dba_var.cc \
-	bench/dba_record.cc \
-	bench/bufrex.cc \
-	bench/db.cc \
-	test-utils.cc
-benchmark_LDADD = ../dballe/libdballe.la -lpopt
-
 INCLUDES = -I..
 
-EXTRA_DIST = bench/Benchmark.h test-utils.h tut.h tut_reporter.h tut_restartable.h
+EXTRA_DIST = test-utils.h tut.h tut_reporter.h tut_restartable.h
