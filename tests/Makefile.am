@@ -1,4 +1,4 @@
-check_PROGRAMS = check_dballe_tut check_fdballe check_mem
+check_PROGRAMS = check_dballe_tut check_mem
 TESTS = $(check_PROGRAMS)
 #check_imports
 
@@ -31,11 +31,6 @@ check_dballe_tut_SOURCES = \
 	test-utils.cc \
 	tut-main.cc
 check_dballe_tut_LDADD = ../dballe/libdballe.la -lpopt
-
-check_fdballe_SOURCES=\
-	check_fdballe.f
-check_fdballe_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf -lpopt
-check_fdballe_FFLAGS = -g -fno-second-underscore
 
 check_mem_SOURCES=\
 	check_mem.f

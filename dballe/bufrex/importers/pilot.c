@@ -37,7 +37,7 @@ dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_raw raw)
 
 	for (i = 14; i < raw->vars_count && dba_var_code(raw->vars[i-1]) == DBA_VAR(0, 7, 4); i += 5)
 	{
-		int ltype = -1, l1 = -1;
+		long int ltype = -1, l1 = -1;
 
 		if (GET(i, "B07004"))
 		{
