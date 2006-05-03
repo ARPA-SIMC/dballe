@@ -8,6 +8,7 @@
 #include <dballe/core/dba_var.h>
 #include <dballe/core/csv.h>
 #include <dballe/core/verbose.h>
+#include <dballe/core/aliases.h>
 
 #include <config.h>
 
@@ -838,6 +839,80 @@ dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 	return dba_error_ok();
 }
 
+static dba_err decode_data_filter(const char* filter, dba_varinfo* info, const char** op, const char** val)
+{
+	static char operator[5];
+	static char value[255];
+	size_t len = strcspn(filter, "<=>");
+	const char* s = filter + len;
+	dba_varcode code;
+
+	if (filter[0] == 0)
+		return dba_error_consistency("filter is the empty string");
+
+	/* Parse the varcode */
+	if (filter[0] == 'B')
+		code = DBA_STRING_TO_VAR(filter + 1);
+	else
+	    code = dba_varcode_alias_resolve_substring(filter, len);
+	
+	if (code == 0)
+		return dba_error_consistency("cannot resolve the variable code or alias in \"%s\" (len %d)", filter, len);
+
+	/* Query informations for the varcode */
+	DBA_RUN_OR_RETURN(dba_varinfo_query_local(code, info));
+
+	/* Parse the operator */
+	len = strspn(s, "<=>");
+	if (len == 0 || len > 4)
+		return dba_error_consistency("invalid operator found in \"%s\"", filter);
+
+	memcpy(operator, s, len);
+	operator[len] = 0;
+	*op = operator;
+
+	/* Parse the value */
+	s += len;
+	if ((*info)->is_string)
+	{
+		/* Copy the string, escaping quotes */
+		int i = 0, j = 0;
+		value[j++] = '\'';
+		for (; s[i] && j < 253; ++i, ++j)
+		{
+			if (s[i] == '\'')
+				value[j++] = '\\';
+			value[j] = s[i];
+		}
+		value[j++] = '\'';
+		value[j] = 0;
+	}
+	else
+	{
+		dba_var tmpvar;
+		double dval;
+		if (sscanf(s, "%lf", &dval) != 1)
+			return dba_error_consistency("value in \"%s\" must be a number", filter);
+		DBA_RUN_OR_RETURN(dba_var_created(*info, dval, &tmpvar));
+		strncpy(value, dba_var_value(tmpvar), 255);
+		value[254] = 0;
+		dba_var_delete(tmpvar);
+	}
+	*val = value;
+	return dba_error_ok();
+}
+
+static dba_err append_cbs(dba_querybuf query)
+{
+	return dba_querybuf_append(query,
+				" JOIN context AS cbs ON "
+				"     c.id_ana = cbs.id_ana"
+				" AND cbs.id_report = 254"
+				" AND cbs.datetime = '1000-01-01 00:00:00'"
+				" AND cbs.ltype = 257 AND cbs.l1 = 0 AND cbs.l2 = 0"
+				" AND cbs.ptype = 0 AND cbs.p1 = 0 AND cbs.p2 = 0");
+}
+
 dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 {
 	dba_err err;
@@ -848,7 +923,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	int has_bs = 0;
 	int mod_best = 0;
 	int mod_datefirst = 0;
-	const char* mods;
+	int has_cbs = 0;
 
 
 	assert(db);
@@ -870,9 +945,9 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	(*cur)->stm = stm;
 
 	/* Decode query modifiers */
-	if ((mods = dba_record_key_peek_value(rec, DBA_KEY_QUERY)) != NULL)
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_QUERY)) != NULL)
 	{
-		char* s = mods;
+		const char* s = val;
 		while (*s)
 		{
 			size_t len = strcspn(s, ",");
@@ -935,13 +1010,8 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	if ((has_bs = (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL)
 		  || (dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)))
 	{
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, 
-					" JOIN context AS cbs ON "
-					"     c.id_ana = cbs.id_ana"
-					" AND cbs.id_report = 254"
-					" AND cbs.datetime = '1000-01-01 00:00:00'"
-					" AND cbs.ltype = 257 AND cbs.l1 = 0 AND cbs.l2 = 0"
-					" AND cbs.ptype = 0 AND cbs.p1 = 0 AND cbs.p2 = 0"));
+		DBA_RUN_OR_GOTO(failed, append_cbs(db->querybuf));
+		has_cbs = 1;
 		if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
 		{
 			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
@@ -954,6 +1024,44 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 					" JOIN data AS dsta ON dsta.id_context = cbs.id AND dsta.id_var = 258 AND dsta.value = "));
 			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
 		}
+	}
+
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_ANA_FILTER)) != NULL)
+	{
+		dba_varinfo info;
+		const char* op;
+		const char* value;
+		DBA_RUN_OR_GOTO(failed, decode_data_filter(val, &info, &op, &value));
+		if (!has_cbs)
+		{
+			DBA_RUN_OR_GOTO(failed, append_cbs(db->querybuf));
+			has_cbs = 1;
+		}
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf,
+				" JOIN data AS dana ON dana.id_context = cbs.id AND dana.id_var = %d AND dana.value %s %s",
+				info->var, op, value));
+	}
+
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_DATA_FILTER)) != NULL)
+	{
+		dba_varinfo info;
+		const char* op;
+		const char* value;
+		DBA_RUN_OR_GOTO(failed, decode_data_filter(val, &info, &op, &value));
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf,
+				" JOIN data AS ddf ON ddf.id_context = c.id AND ddf.id_var = %d AND ddf.value %s %s",
+				info->var, op, value));
+	}
+
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_ATTR_FILTER)) != NULL)
+	{
+		dba_varinfo info;
+		const char* op;
+		const char* value;
+		DBA_RUN_OR_GOTO(failed, decode_data_filter(val, &info, &op, &value));
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf,
+				" JOIN attr AS adf ON adf.id_context = c.id AND adf.id_var = d.id AND adf.type = %d AND adf.value %s %s",
+				info->var, op, value));
 	}
 
 	/* Add WHERE part */

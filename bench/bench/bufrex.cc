@@ -1,5 +1,5 @@
 #include "Benchmark.h"
-#include <tests/test-utils.h>
+#include <dballe/tests/test-utils.h>
 
 #include <dballe/dba_file.h>
 #include <dballe/io/dba_rawmsg.h>

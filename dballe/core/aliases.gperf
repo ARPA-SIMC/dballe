@@ -2,6 +2,7 @@
 %define lookup-function-name dba_varcode_alias_in_word_set
 %struct-type
 %global-table
+%compare-strncmp
 /* Using %switch may be faster (remember to check when doing optimizations) */
 
 %{
@@ -21,6 +22,15 @@ name,			DBA_VAR(0, 1, 19)
 dba_varcode dba_varcode_alias_resolve(const char* alias)
 {
 	struct aliasdef* res = dba_varcode_alias_in_word_set(alias, strlen(alias));
+	if (res == NULL)
+		return 0;
+	else
+		return res->var;
+}
+
+dba_varcode dba_varcode_alias_resolve_substring(const char* alias, int len)
+{
+	struct aliasdef* res = dba_varcode_alias_in_word_set(alias, len);
 	if (res == NULL)
 		return 0;
 	else

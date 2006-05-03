@@ -24,6 +24,19 @@ extern "C" {
  */
 dba_varcode dba_varcode_alias_resolve(const char* alias);
 
+/**
+ * Resolve a variable alias.
+ *
+ * @param alias
+ *   The alias to resolve (does not need to be null-terminated)
+ * @param len
+ *   The length of the string
+ * @return
+ *   The varcode corresponding to the aliase, or 0 if no variable has the given
+ *   alias.
+ */
+dba_varcode dba_varcode_alias_resolve_substring(const char* alias, int len);
+
 #ifdef  __cplusplus
 }
 #endif

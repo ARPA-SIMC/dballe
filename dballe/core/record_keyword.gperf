@@ -57,6 +57,9 @@ var,         DBA_KEY_VAR
 varlist,     DBA_KEY_VARLIST
 data_id,     DBA_KEY_DATA_ID
 querybest,   DBA_KEY_QUERY
+ana_filter,  DBA_KEY_ANA_FILTER
+data_filter, DBA_KEY_DATA_FILTER
+attr_filter, DBA_KEY_ATTR_FILTER
 %%
 
 static struct _dba_varinfo infos[] = {
@@ -105,6 +108,9 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "List of variables to query",            "CHARACTER", 0, 0, 255, 0, 0, 1 },
 	{ 0, "ID of the variable in the database",      "NUMERIC", 0, 0,  10, 0, 0, 0 },
 	{ 0, "Query behaviour modifier",              "CHARACTER", 0, 0, 255, 0, 0, 1 },
+	{ 0, "Filter on anagraphical data",           "CHARACTER", 0, 0, 255, 0, 0, 1 },
+	{ 0, "Filter on data", 			              "CHARACTER", 0, 0, 255, 0, 0, 1 },
+	{ 0, "Filter on data attributes",             "CHARACTER", 0, 0, 255, 0, 0, 1 },
 };
 
 /* End of table definitions */
