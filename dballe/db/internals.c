@@ -233,7 +233,7 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND pa.ident IS NULL"));
 				TRACE("found fixed/mobile: adding AND pa.ident IS NULL.\n");
 			} else {
-				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND NOT pa.ident IS NULL"));
+				DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, " AND NOT (pa.ident IS NULL)"));
 				TRACE("found fixed/mobile: adding AND NOT pa.ident IS NULL\n");
 			}
 		}

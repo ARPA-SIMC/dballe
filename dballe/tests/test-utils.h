@@ -8,7 +8,7 @@
 #include <dballe/marshal.h>
 #include <dballe/db/dba_db.h>
 
-#include <tut.h>
+#include <dballe/tests/tut.h>
 
 #include <string>
 #include <vector>
