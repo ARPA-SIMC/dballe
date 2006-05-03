@@ -1,11 +1,12 @@
-check_PROGRAMS = check_dballe_tut check_mem
+check_PROGRAMS = check_dballe_tut
 TESTS = $(check_PROGRAMS)
+#check_mem
 #check_imports
 
 #EXTRA_SCRIPTS = check_imports
 
-export DBA_REPINFO=../tables/repinfo.csv
-export DBA_TABLES=../tables
+export DBA_REPINFO=../../tables/repinfo.csv
+export DBA_TABLES=../../tables
 
 check_dballe_tut_SOURCES = \
 	tests/dba_err_error.cc \
@@ -28,12 +29,12 @@ check_dballe_tut_SOURCES = \
 	tests/dba_db_import.cc \
 	test-utils.cc \
 	tut-main.cc
-check_dballe_tut_LDADD = ../dballe/libdballe.la -lpopt
+check_dballe_tut_LDADD = ../libdballe.la -lpopt
 
-check_mem_SOURCES=\
-	check_mem.f
-check_mem_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf -lpopt
-check_mem_FFLAGS = -g -fno-second-underscore
+#check_mem_SOURCES=\
+#	check_mem.f
+#check_mem_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf -lpopt
+#check_mem_FFLAGS = -g -fno-second-underscore
 
 INCLUDES = -I..
 

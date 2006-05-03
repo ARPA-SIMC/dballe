@@ -1,8 +1,8 @@
-#include <tests/test-utils.h>
+#include "test-utils.h"
 
-#include <dballe/bufrex/bufrex.h>
-#include <dballe/bufrex/bufrex_raw.h>
-#include <dballe/aof/decoder.h>
+#include <../../dballe/bufrex/bufrex.h>
+#include <../../dballe/bufrex/bufrex_raw.h>
+#include <../../dballe/aof/decoder.h>
 
 #include <unistd.h>
 #include <sys/types.h>

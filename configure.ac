@@ -103,10 +103,10 @@ dballe/msg/Makefile
 dballe/bufrex/Makefile
 dballe/aof/Makefile
 dballe/db/Makefile
+dballe/tests/Makefile
 fortran/Makefile
 tools/Makefile
 tables/Makefile
-tests/Makefile
 bench/Makefile
 swig/Makefile
 doc/Makefile

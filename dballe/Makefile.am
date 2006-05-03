@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = err conv core msg io aof bufrex db
+SUBDIRS = err conv core msg io aof bufrex db tests
 
 CFLAGS += -DCONF_DIR=\"$(confdir)\"
 
