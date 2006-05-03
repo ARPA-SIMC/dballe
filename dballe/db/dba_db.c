@@ -733,7 +733,6 @@ static dba_err dba_ana_cursor_to_rec(dba_db_cursor cur, dba_record rec)
 	return dba_error_ok();
 }
 
-#if 0
 static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 {
 	/* Extra variables to add:
@@ -793,14 +792,8 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 			case DBA_VAR(0, 1,  2): // STATION
 				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_STATION, out_val));
 				break;
-			case DBA_VAR(0, 1, 19): // NAME
-				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_NAME, out_val));
-				break;
-			case DBA_VAR(0, 7,  1): // HEIGHT
-				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_HEIGHT, out_val));
-				break;
-			case DBA_VAR(0, 7, 31): // HEIGHTBARO
-				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_HEIGHTBARO, out_val));
+			default:
+				DBA_RUN_OR_GOTO(cleanup, dba_record_var_setc(rec, out_code, out_val));
 				break;
 		}
 	}
@@ -809,7 +802,6 @@ cleanup:
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
-#endif
 
 dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 {
@@ -834,7 +826,7 @@ dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 	DBA_RUN_OR_RETURN(dba_ana_cursor_to_rec(cur, rec));
 
 	/* Add the extra ana info */
-	//DBA_RUN_OR_RETURN(dba_ana_add_extra(cur, rec));
+	DBA_RUN_OR_RETURN(dba_ana_add_extra(cur, rec));
 
 	return dba_error_ok();
 }
