@@ -56,7 +56,7 @@ p2,          DBA_KEY_P2
 var,         DBA_KEY_VAR
 varlist,     DBA_KEY_VARLIST
 data_id,     DBA_KEY_DATA_ID
-querybest,   DBA_KEY_QUERYBEST
+querybest,   DBA_KEY_QUERY
 %%
 
 static struct _dba_varinfo infos[] = {
@@ -104,7 +104,7 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "Variable queried",                      "CHARACTER", 0, 0,   6, 0, 0, 1 },
 	{ 0, "List of variables to query",            "CHARACTER", 0, 0, 255, 0, 0, 1 },
 	{ 0, "ID of the variable in the database",      "NUMERIC", 0, 0,  10, 0, 0, 0 },
-	{ 0, "Only return values with best priority",    "NUMBER", 0, 0,   1, 0, 0, 0 },
+	{ 0, "Query behaviour modifier",              "CHARACTER", 0, 0, 255, 0, 0, 1 },
 };
 
 /* End of table definitions */

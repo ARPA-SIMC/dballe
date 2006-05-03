@@ -378,9 +378,13 @@ void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix)
 
 dba_err create_dba_db(dba_db* db)
 {
-	struct passwd *pwd = getpwuid(getuid());
-	const char* uname = pwd == NULL ? "test" : pwd->pw_name;
-	return dba_db_create("test", uname, "", db);
+	const char* uname = getenv("DBA_USER");
+	if (uname == NULL)
+	{
+		struct passwd *pwd = getpwuid(getuid());
+		uname = pwd == NULL ? "test" : pwd->pw_name;
+	}
+	return dba_db_create("test", uname , "", db);
 }
 
 }

@@ -840,30 +840,16 @@ dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 
 dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 {
-	const char* query =
-		"SELECT pa.id, pa.lat, pa.lon, pa.ident,"
-		"       c.ltype, c.l1, c.l2,"
-		"       c.ptype, c.p1, c.p2,"
-		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio"
-		"  FROM context AS c"
-		"  JOIN pseudoana AS pa ON c.id_ana = pa.id"
-		"  JOIN data AS d ON d.id_context = c.id"
-		"  JOIN repinfo AS ri ON c.id_report = ri.id";
-		/*
-SELECT  count(*)
- WHERE c.datetime = '2005-08-03 06:00:00'
-   AND c.ptype = 4 AND c.p1 = 64800 AND c.p2 = 151200
-   AND d.id_var = 3339
-   AND ri.memo = 'clepsspnpoel001'
- ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio
- 		*/
-	
 	dba_err err;
 	SQLHSTMT stm;
 	int res;
 	int pseq = 1;
 	const char* val;
 	int has_bs = 0;
+	int mod_best = 0;
+	int mod_datefirst = 0;
+	const char* mods;
+
 
 	assert(db);
 
@@ -883,11 +869,67 @@ SELECT  count(*)
 
 	(*cur)->stm = stm;
 
+	/* Decode query modifiers */
+	if ((mods = dba_record_key_peek_value(rec, DBA_KEY_QUERY)) != NULL)
+	{
+		char* s = mods;
+		while (*s)
+		{
+			size_t len = strcspn(s, ",");
+			int got = 1;
+			switch (len)
+			{
+				case 0:
+					/* If it's an empty token, skip it */
+					break;
+				case 4:
+					/* "best": if more values exist in a point, get only the
+					   best one */
+					if (strncmp(s, "best", 4) == 0)
+						mod_best = 1;
+					else
+						got = 0;
+					break;
+				case 6:
+					/* "bigana": optimize with date first */
+					if (strncmp(s, "bigana", 6) == 0)
+						mod_datefirst = 1;
+					else
+						got = 0;
+					break;
+				default:
+					got = 0;
+					break;
+			}
+
+			/* Check that we parsed it correctly */
+			if (!got)
+				return dba_error_consistency("Query modifier \"%.*s\" is not recognized", len, s);
+
+			/* Move to the next token */
+			s += len;
+			if (*s == ',')
+				++s;
+		}
+	}
+
+
 	/* Write the SQL query */
 
 	/* Initial query */
 	dba_querybuf_reset(db->querybuf);
-	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, query));
+	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, "SELECT "));
+	if (mod_datefirst)
+		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, "straight_join "));
+	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf,
+		"       pa.id, pa.lat, pa.lon, pa.ident,"
+		"       c.ltype, c.l1, c.l2,"
+		"       c.ptype, c.p1, c.p2,"
+		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio"
+		"  FROM context AS c"
+		"  JOIN pseudoana AS pa ON c.id_ana = pa.id"
+		"  JOIN data AS d ON d.id_context = c.id"
+		"  JOIN repinfo AS ri ON c.id_report = ri.id"));
 
 	/* Extend the JOIN part to look for given block and station */
 	if ((has_bs = (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL)
@@ -943,7 +985,7 @@ SELECT  count(*)
 	/* Add the select part */
 	DBA_RUN_OR_GOTO(failed, dba_db_prepare_select(db, rec, stm, &pseq));
 
-	if (dba_record_key_peek_value(rec, DBA_KEY_QUERYBEST) != NULL)
+	if (mod_best)
 		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
 			" GROUP BY d.id_var, c.id_ana, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, c.datetime"
 			" HAVING ri.prio=MAX(ri.prio)"

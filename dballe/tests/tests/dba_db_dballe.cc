@@ -413,7 +413,7 @@ void to::test<2>()
 
 		/* Prepare a query */
 		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
-		CHECKED(dba_record_key_setc(query, DBA_KEY_QUERYBEST, "1"));
+		CHECKED(dba_record_key_setc(query, DBA_KEY_QUERY, "best"));
 
 		/* Make the query */
 		CHECKED(dba_db_query(db, query, &cursor, &count));
