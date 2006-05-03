@@ -1010,92 +1010,14 @@ F77_INTEGER_FUNCTION(idba_setc)(
 
 	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
 	{
-		/* Handle shortcuts */
-		if (strcmp(p, "date") == 0)
-		{
-			int year, month, day, hour, minute, second;
-			int matched = sscanf(value, "%04d-%02d-%02d %02d:%02d:%02d",
-					&year, &month, &day, &hour, &minute, &second);
-			if (matched != 6 && matched != 3)
-				return dba_error_consistency("date must be in the format \"yyyy-mm-dd\" or \"yyyy-mm-dd hh:mm:ss\"");
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEAR, year));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTH, month));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAY, day));
-			if (matched == 6)
-			{
-				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOUR, hour));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MIN, minute));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SEC, second));
-			}
-			return dba_error_ok();
-		}
-		else if (strcmp(p, "datemin") == 0)
-		{
-			int year, month, day, hour, minute, second;
-			int matched = sscanf(value, "%04d-%02d-%02d %02d:%02d:%02d",
-					&year, &month, &day, &hour, &minute, &second);
-			if (matched != 6 && matched != 3)
-				return dba_error_consistency("datemin must be in the format \"yyyy-mm-dd\" or \"yyyy-mm-dd hh:mm:ss\"");
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEARMIN, year));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTHMIN, month));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAYMIN, day));
-			if (matched == 6)
-			{
-				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOURMIN, hour));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MINUMIN, minute));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SECMIN, second));
-			}
-			return dba_error_ok();
-		}
-		else if (strcmp(p, "datemax") == 0)
-		{
-			int year, month, day, hour, minute, second;
-			int matched = sscanf(value, "%04d-%02d-%02d %02d:%02d:%02d",
-					&year, &month, &day, &hour, &minute, &second);
-			if (matched != 6 && matched != 3)
-				return dba_error_consistency("datemax must be in the format \"yyyy-mm-dd\" or \"yyyy-mm-dd hh:mm:ss\"");
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEARMAX, year));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTHMAX, month));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAYMAX, day));
-			if (matched == 6)
-			{
-				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOURMAX, hour));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MINUMAX, minute));
-				DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SECMAX, second));
-			}
-			return dba_error_ok();
-		}
-		else if (strcmp(p, "level") == 0)
-		{
-			int type, l1, l2;
-			if (sscanf(value, "%d,%d,%d", &type, &l1, &l2) != 3)
-				return dba_error_consistency("level must be in the format \"ltype,l1,l2\"");
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, type));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L1, l1));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L2, l2));
-			return dba_error_ok();
-		}
-		else if (strcmp(p, "timerange") == 0)
-		{
-			int type, p1, p2;
-			if (sscanf(value, "%d,%d,%d", &type, &p1, &p2) != 3)
-				return dba_error_consistency("timerange must be in the format \"pindicator,p1,p2\"");
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, type));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P1, p1));
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P2, p2));
-			return dba_error_ok();
-		}
-		else
-		{
-			dba_keyword param = dba_record_keyword_byname(p);
-			if (param == DBA_KEY_ERROR)
-				return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
+		dba_keyword param = dba_record_keyword_byname(p);
+		if (param == DBA_KEY_ERROR)
+			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
-			if (val[0] == 0)
-				return dba_record_key_unset(rec, param);
+		if (val[0] == 0)
+			return dba_record_key_unset(rec, param);
 
-			return dba_record_key_setc(rec, param, val);
-		}
+		return dba_record_key_setc(rec, param, val);
 	} else {
 		if (code == 0)
 			code = DBA_STRING_TO_VAR(p + 1);
@@ -1106,6 +1028,119 @@ F77_INTEGER_FUNCTION(idba_setc)(
 		return dba_record_var_setc(rec, code, val);
 	}
 }
+
+F77_INTEGER_FUNCTION(idba_setlevel)(
+		INTEGER(handle),
+		INTEGER(ltype),
+		INTEGER(l1),
+		INTEGER(l2))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(ltype)
+	GENPTR_INTEGER(l1)
+	GENPTR_INTEGER(l2)
+
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_LEVELTYPE, *ltype));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L1, *l1));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L2, *l2));
+	return dba_error_ok();
+}
+
+F77_INTEGER_FUNCTION(idba_settimerange)(
+		INTEGER(handle),
+		INTEGER(ptype),
+		INTEGER(p1),
+		INTEGER(p2))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(ptype)
+	GENPTR_INTEGER(p1)
+	GENPTR_INTEGER(p2)
+
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_PINDICATOR, *ptype));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P1, *p1));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P2, *p2));
+	return dba_error_ok();
+}
+
+F77_INTEGER_FUNCTION(idba_setdate)(
+		INTEGER(handle),
+		INTEGER(year),
+		INTEGER(month),
+		INTEGER(day),
+		INTEGER(hour),
+		INTEGER(min),
+		INTEGER(sec))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(year)
+	GENPTR_INTEGER(month)
+	GENPTR_INTEGER(day)
+	GENPTR_INTEGER(hour)
+	GENPTR_INTEGER(min)
+	GENPTR_INTEGER(sec)
+
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_YEAR, *year));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MONTH, *month));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_DAY, *day));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_HOUR, *hour));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MIN, *min));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_SEC, *sec));
+	return dba_error_ok();
+}
+
+F77_INTEGER_FUNCTION(idba_setdatemin)(
+		INTEGER(handle),
+		INTEGER(year),
+		INTEGER(month),
+		INTEGER(day),
+		INTEGER(hour),
+		INTEGER(min),
+		INTEGER(sec))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(year)
+	GENPTR_INTEGER(month)
+	GENPTR_INTEGER(day)
+	GENPTR_INTEGER(hour)
+	GENPTR_INTEGER(min)
+	GENPTR_INTEGER(sec)
+
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_YEARMIN, *year));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MONTHMIN, *month));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_DAYMIN, *day));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_HOURMIN, *hour));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MINUMIN, *min));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_SECMIN, *sec));
+	return dba_error_ok();
+}
+
+F77_INTEGER_FUNCTION(idba_setdatemax)(
+		INTEGER(handle),
+		INTEGER(year),
+		INTEGER(month),
+		INTEGER(day),
+		INTEGER(hour),
+		INTEGER(min),
+		INTEGER(sec))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(year)
+	GENPTR_INTEGER(month)
+	GENPTR_INTEGER(day)
+	GENPTR_INTEGER(hour)
+	GENPTR_INTEGER(min)
+	GENPTR_INTEGER(sec)
+
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_YEARMAX, *year));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MONTHMAX, *month));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_DAYMAX, *day));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_HOURMAX, *hour));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MINUMAX, *min));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_SECMAX, *sec));
+	return dba_error_ok();
+}
+
 /*@}*/
 
 /**
