@@ -15,7 +15,8 @@
 #include <fcntl.h>		/* O_RDONLY */
 #endif
 
-#include "dba_var.h"
+#include <dballe/core/dba_var.h>
+#include <dballe/core/aliases.h>
 
 DBA_ARR_DEFINE(dba_varcode, varcode);
 
@@ -184,6 +185,8 @@ dba_varcode dba_descriptor_code(const char* entry)
 		case 'D':
 		case '3':
 			res = 3 << 14; break;
+		default:
+			return dba_varcode_alias_resolve(entry);
 	}
 	return res | DBA_STRING_TO_VAR(entry+1);
 }
