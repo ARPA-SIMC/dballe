@@ -45,4 +45,4 @@ aliases.c: aliases.gperf
 distclean-local:
 	rm -f record_keyword.c record_keyword.dox dba_varconv.c aliases.c
 
-EXTRA_DIST = core.dox record_keyword.gperf mkkeydoc
+EXTRA_DIST = core.dox record_keyword.gperf mkkeydoc aliases.gperf
