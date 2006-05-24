@@ -8,8 +8,6 @@ TESTS = $(check_PROGRAMS)
 export DBA_REPINFO=../../tables/repinfo.csv
 export DBA_TABLES=../../tables
 
-noinst_PROGRAMS=dump_dballe
-
 check_dballe_tut_SOURCES = \
 	tests/dba_err_error.cc \
 	tests/dba_core.cc \
@@ -37,11 +35,6 @@ check_dballe_tut_LDADD = ../libdballe.la -lpopt
 #	check_mem.f
 #check_mem_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf -lpopt
 #check_mem_FFLAGS = -g -fno-second-underscore
-
-dump_dballe_SOURCES=\
-dump   dump_dballe.f
-dump_dballe_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf -lpopt
-dump_dballe_FFLAGS = -g -fno-second-underscore
 
 INCLUDES = -I..
 

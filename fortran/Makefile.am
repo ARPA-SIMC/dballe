@@ -25,6 +25,12 @@ check_fdballe_SOURCES = check_fdballe.f
 check_fdballe_LDADD = ./libdballef.la ../dballe/libdballe.la -lcnf -lpopt
 check_fdballe_FFLAGS = -g -fno-second-underscore
 
+noinst_PROGRAMS=dump_dballe
+
+dump_dballe_SOURCES=\
+dump   dump_dballe.f
+dump_dballe_LDADD = ../fortran/libdballef.la ../dballe/libdballe.la -lcnf -lpopt
+dump_dballe_FFLAGS = -g -fno-second-underscore
 
 # Normal bureaucracy :)
 
