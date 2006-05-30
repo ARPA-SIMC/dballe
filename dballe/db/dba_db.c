@@ -750,8 +750,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 		"   AND c.datetime = '1000-01-01 00:00:00'"
 		"   AND c.id_report = 254"
 		"   AND c.ltype = 257 AND c.l1 = 0 AND c.l2 = 0"
-		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
-		"   AND d.id_var IN (257, 258, 275, 1793, 1823)";
+		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0";
 
 	dba_err err = DBA_OK;
 	SQLHSTMT stm;
