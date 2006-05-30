@@ -335,7 +335,7 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 {
 	dba_err err = DBA_OK;
 	newitem newitems = NULL;
-	SQLHSTMT stm;
+	SQLHSTMT stm = NULL;
 	int res;
 	int id;
 	int i;
@@ -377,9 +377,8 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 		}
 	}
 
-	res = SQLCloseCursor(stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_update_repinfo read cursor");
+	SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	stm = NULL;
 
 	/* Perform the changes */
 
@@ -392,6 +391,8 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 		int prio;
 		char descriptor[6];
 		int tablea;
+
+		DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
 
 		res = SQLPrepare(stm, (unsigned char*)
 				"INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
@@ -426,12 +427,8 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 			}
 		}
 
-		res = SQLCloseCursor(stm);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_update_repinfo insert cursor");
-			goto cleanup;
-		}
+		SQLFreeHandle(SQL_HANDLE_STMT, stm);
+		stm = NULL;
 	}
 
 	/* Update the items that were modified */
@@ -439,6 +436,8 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 	{
 		if (ri->cache[i].memo != NULL && ri->cache[i].new_memo != NULL)
 		{
+			DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
+
 			SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, ri->cache[i].new_memo, 0, 0);
 			SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, ri->cache[i].new_desc, 0, 0);
 			SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &(ri->cache[i].new_prio), 0, 0);
@@ -455,15 +454,13 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 				goto cleanup;
 			}
 
-			res = SQLCloseCursor(stm);
-			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_update_repinfo update cursor");
-				goto cleanup;
-			}
+			SQLFreeHandle(SQL_HANDLE_STMT, stm);
+			stm = NULL;
 		}
 		else if (ri->cache[i].memo != NULL && ri->cache[i].new_memo == NULL)
 		{
+			DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
+
 			SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &(ri->cache[i].id), 0, 0);
 
 			res = SQLExecDirect(stm, (unsigned char*)"DELETE FROM repinfo WHERE id=?", SQL_NTS);
@@ -473,17 +470,14 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 				goto cleanup;
 			}
 
-			res = SQLCloseCursor(stm);
-			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_update_repinfo delete cursor");
-				goto cleanup;
-			}
+			SQLFreeHandle(SQL_HANDLE_STMT, stm);
+			stm = NULL;
 		}
 	}
 
 cleanup:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	if (stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, stm);
 	while (newitems != NULL)
 	{
 		newitem next = newitems->next;

@@ -18,6 +18,7 @@ check_dballe_tut_SOURCES = \
 	tests/dba_msg.cc \
 	tests/dba_io_rawmsg.cc \
 	tests/dba_io_rawfile.cc \
+	tests/dba_db_repinfo.cc \
 	tests/dba_db_dballe.cc \
 	tests/dba_bufrex_opcode.cc \
 	tests/dba_bufrex_dtable.cc \
