@@ -34,8 +34,8 @@ c     Query all the stations
         call idba_enqi(handle_ana, "height", height)
         call idba_enqc(handle_ana,"rep_memo",rete)
         call idba_enqi(handle_ana,"rep_cod",codrete)
-        write (*,*) "Staz ",id," (",dlat,",",dlon,") ",
-     $      cname(:istrlen(cname))," ",height,
+        write (*,*) "Staz ",id," (",dlat,",",dlon,") '",
+     $      cname(:istrlen(cname)),"' h:",height,
      $      " ",rep_memo,":",rep_cod
         call idba_seti(handle,"ana_id",id)
         call idba_voglioquesto(handle,ndata)
