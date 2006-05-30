@@ -243,7 +243,7 @@ dba_err dba_db_repinfo_get_id(dba_db_repinfo ri, const char* memo, int* id)
 	int pos = cache_find_by_memo(ri, memo);
 	if (pos == -1)
 		return dba_error_notfound("looking for repinfo corresponding to '%s'", memo);
-	*id = ri->cache[pos].id;
+	*id = ri->memo_idx[pos].id;
 	return dba_error_ok();
 }
 
@@ -446,7 +446,7 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 			SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &(ri->cache[i].id), 0, 0);
 
 			res = SQLExecDirect(stm, (unsigned char*)
-					"UPDATE repinfo set memo=?, description=?, prio=?, descriptor=? tablea=?"
+					"UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
 					"  WHERE id=?", SQL_NTS);
 			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 			{
