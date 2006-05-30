@@ -31,6 +31,7 @@ extern "C" {
 #endif
 
 
+struct _dba_db_repinfo;
 struct _dba_db_pseudoana;
 struct _dba_db_context;
 struct _dba_db_data;
@@ -44,6 +45,7 @@ struct _dba_db
 	SQLHDBC	od_conn;
 	int connected;
 
+	struct _dba_db_repinfo* repinfo;
 	struct _dba_db_pseudoana* pseudoana;
 	struct _dba_db_context* context;
 	struct _dba_db_data* data;
@@ -121,15 +123,6 @@ dba_err dba_db_commit(dba_db db);
  * Rollback a transaction
  */
 void dba_db_rollback(dba_db db);
-
-/**
- * Get the report id from this record.
- *
- * If rep_memo is specified instead, the corresponding report id is queried in
- * the database and set as "rep_cod" in the record.
- */
-dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id);
-
 
 /**
  * Add select WHERE parameters from the data in query

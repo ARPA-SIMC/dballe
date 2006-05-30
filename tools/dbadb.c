@@ -149,12 +149,33 @@ dba_err do_wipe(poptContext optCon)
 	/* Throw away the command name */
 	action = poptGetArg(optCon);
 
-	/* Get the optional name of the */
+	/* Get the optional name of the repinfo file */
 	table = poptGetArg(optCon);
 
 	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
 	DBA_RUN_OR_RETURN(dba_db_reset(db, table));
+	dba_db_delete(db);
+	dba_shutdown();
+
+	return dba_error_ok();
+}
+
+dba_err do_repinfo(poptContext optCon)
+{
+	const char* action;
+	const char* table;
+	dba_db db;
+
+	/* Throw away the command name */
+	action = poptGetArg(optCon);
+
+	/* Get the optional name of the */
+	table = poptGetArg(optCon);
+
+	DBA_RUN_OR_RETURN(dba_init());
+	DBA_RUN_OR_RETURN(create_dba_db(&db));
+	DBA_RUN_OR_RETURN(dba_db_update_repinfo(db, table));
 	dba_db_delete(db);
 	dba_shutdown();
 
@@ -317,13 +338,20 @@ struct poptOption dbadb_export_options[] = {
 	POPT_TABLEEND
 };
 
+struct poptOption dbadb_repinfo_options[] = {
+	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
+		"Options used to connect to the database" },
+	POPT_TABLEEND
+};
+
 static void init()
 {
 	dbadb.desc = "Manage the DB-ALLe database";
 	dbadb.longdesc =
 		"It allows to initialise the database, dump its contents and import and export data "
 		"using BUFR, CREX or AOF encoding";
-	dbadb.ops = (struct op_dispatch_table*)calloc(5, sizeof(struct op_dispatch_table));
+	dbadb.ops = (struct op_dispatch_table*)calloc(6, sizeof(struct op_dispatch_table));
 
 	dbadb.ops[0].func = do_dump;
 	dbadb.ops[0].aliases[0] = "dump";
@@ -355,11 +383,21 @@ static void init()
 	dbadb.ops[3].longdesc = NULL;
 	dbadb.ops[3].optable = dbadb_export_options;
 
-	dbadb.ops[4].func = NULL;
-	dbadb.ops[4].usage = NULL;
-	dbadb.ops[4].desc = NULL;
+	dbadb.ops[4].func = do_repinfo;
+	dbadb.ops[4].aliases[0] = "repinfo";
+	dbadb.ops[4].usage = "repinfo [options] [filename]";
+	dbadb.ops[4].desc = "Update the report information table";
 	dbadb.ops[4].longdesc = NULL;
-	dbadb.ops[4].optable = NULL;
+			"Update the report information table with the data from the given "
+			"report type description file.  ";
+			"If no file is provided, a default version is used";
+	dbadb.ops[4].optable = dbadb_repinfo_options;
+
+	dbadb.ops[5].func = NULL;
+	dbadb.ops[5].usage = NULL;
+	dbadb.ops[5].desc = NULL;
+	dbadb.ops[5].longdesc = NULL;
+	dbadb.ops[5].optable = NULL;
 };
 
 int main (int argc, const char* argv[])

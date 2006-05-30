@@ -1,5 +1,6 @@
 #include <dballe/db/dba_db.h>
 #include <dballe/db/internals.h>
+#include <dballe/db/repinfo.h>
 #include <dballe/db/pseudoana.h>
 #include <dballe/db/context.h>
 #include <dballe/db/data.h>
@@ -127,6 +128,30 @@ static const char* init_queries[] = {
 	") " TABLETYPE,
 };
 
+/**
+ * Get the report id from this record.
+ *
+ * If rep_memo is specified instead, the corresponding report id is queried in
+ * the database and set as "rep_cod" in the record.
+ */
+static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
+{
+	const char* rep;
+	if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
+		DBA_RUN_OR_RETURN(dba_db_repinfo_get_id(db->repinfo, rep, id));
+	else if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_COD)) != NULL)
+	{
+		int exists;
+		*id = strtol(rep, 0, 10);
+		DBA_RUN_OR_RETURN(dba_db_repinfo_has_id(db->repinfo, *id, &exists));
+		if (!exists)
+			return dba_error_notfound("rep_cod %d does not exist in the database", *id);
+	}
+	else
+		return dba_error_notfound("looking for report type in rep_cod or rep_memo");
+	return dba_error_ok();
+}		
+
 
 dba_err dba_db_init()
 {
@@ -228,6 +253,7 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 		goto fail;
 	}
 
+	DBA_RUN_OR_GOTO(fail, dba_db_repinfo_create(*db, &((*db)->repinfo)));
 	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_create(*db, &((*db)->pseudoana)));
 	DBA_RUN_OR_GOTO(fail, dba_db_context_create(*db, &((*db)->context)));
 	DBA_RUN_OR_GOTO(fail, dba_db_data_create(*db, &((*db)->data)));
@@ -253,6 +279,8 @@ void dba_db_delete(dba_db db)
 		dba_db_context_delete(db->context);
 	if (db->pseudoana != NULL)
 		dba_db_pseudoana_delete(db->pseudoana);
+	if (db->repinfo != NULL)
+		dba_db_repinfo_delete(db->repinfo);
 	if (db->querybuf != NULL)
 		dba_querybuf_delete(db->querybuf);
 	if (db->od_conn != NULL)
@@ -286,12 +314,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 		return dba_error_system("opening file %s", deffile);
 
 	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-		goto fail0;
-	}
+	DBA_RUN_OR_GOTO(fail0, dba_db_statement_create(db, &stm));
 
 	/* Drop existing tables */
 	for (i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); i++)
@@ -384,6 +407,21 @@ fail1:
 fail0:
 	fclose(in);
 	return err;
+}
+
+dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file)
+{
+	return dba_db_repinfo_update(db->repinfo, repinfo_file);
+}
+
+dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)
+{
+	return dba_db_repinfo_get_id(db->repinfo, memo, rep_cod);
+}
+
+dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid)
+{
+	return dba_db_repinfo_has_id(db->repinfo, rep_cod, valid);
 }
 
 #if 0
@@ -761,9 +799,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 	SQLINTEGER out_val_ind;
 
 	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
 
 	/* Bind input fields */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_ana_id), 0, 0);
@@ -1247,11 +1283,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	assert(db);
 
 	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-	}
+	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
 
 	/* Write the SQL query */
 
@@ -1296,11 +1328,8 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	assert(db);
 
 	/* Allocate statement handles */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-	}
+	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
+
 	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm1);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
@@ -1423,9 +1452,7 @@ dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varco
 	}
 
 	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
 
 	/* Bind input parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);
@@ -1535,9 +1562,7 @@ dba_err dba_db_qc_remove(dba_db db, int id_context, dba_varcode id_var, dba_varc
 	}
 
 	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
 
 	/* Bind parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);

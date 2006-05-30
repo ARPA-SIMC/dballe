@@ -85,6 +85,23 @@ void dba_db_delete(dba_db db);
 dba_err dba_db_reset(dba_db db, const char* repinfo_file);
 
 /**
+ * Update the repinfo table in the database, with the data found in the given
+ * file.
+ *
+ * @param db
+ *   The dballe session id
+ * @param repinfo_file
+ *   The name of the CSV file with the report type information data to load.
+ *   The file is in CSV format with 6 columns: report code, mnemonic id,
+ *   description, priority, descriptor, table A category.
+ *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
+ *   used.
+ * @return
+ *   The error indicator for the function
+ */
+dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file);
+
+/**
  * Get the report code from a report mnemonic
  */
 dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod);

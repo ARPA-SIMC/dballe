@@ -8,6 +8,7 @@ dbincludedir = $(includedir)/dballe/db
 dbinclude_HEADERS = \
 		querybuf.h \
 		internals.h \
+		repinfo.h \
 		pseudoana.h \
 		context.h \
 		data.h \
@@ -20,6 +21,7 @@ noinst_LTLIBRARIES = libdb.la
 libdb_la_SOURCES = \
 		querybuf.c \
 		internals.c \
+		repinfo.c \
 		pseudoana.c \
 		context.c \
 		data.c \
