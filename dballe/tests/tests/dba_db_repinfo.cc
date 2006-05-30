@@ -50,7 +50,13 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
-	CHECKED(dba_db_repinfo_update(ri, NULL));
+	int added, deleted, updated;
+
+	CHECKED(dba_db_repinfo_update(ri, NULL, &added, &deleted, &updated));
+
+	gen_ensure_equals(added, 0);
+	gen_ensure_equals(deleted, 0);
+	gen_ensure_equals(updated, 62);
 }
 
 }

@@ -331,7 +331,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
+dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added, int* deleted, int* updated)
 {
 	dba_err err = DBA_OK;
 	newitem newitems = NULL;
@@ -339,6 +339,8 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 	int res;
 	int id;
 	int i;
+
+	*added = *deleted = *updated = 0;
 
 	/* Read the new repinfo data from file */
 	DBA_RUN_OR_RETURN(read_repinfo_file(ri, deffile, &newitems));
@@ -425,6 +427,8 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'data'");
 				goto cleanup;
 			}
+
+			++*added;
 		}
 
 		SQLFreeHandle(SQL_HANDLE_STMT, stm);
@@ -456,6 +460,8 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 
 			SQLFreeHandle(SQL_HANDLE_STMT, stm);
 			stm = NULL;
+
+			++*updated;
 		}
 		else if (ri->cache[i].memo != NULL && ri->cache[i].new_memo == NULL)
 		{
@@ -472,6 +478,8 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile)
 
 			SQLFreeHandle(SQL_HANDLE_STMT, stm);
 			stm = NULL;
+
+			++*deleted;
 		}
 	}
 

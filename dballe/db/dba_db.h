@@ -99,7 +99,7 @@ dba_err dba_db_reset(dba_db db, const char* repinfo_file);
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file);
+dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file, int* added, int* deleted, int* updated);
 
 /**
  * Get the report code from a report mnemonic

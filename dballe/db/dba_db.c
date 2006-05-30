@@ -409,9 +409,9 @@ fail0:
 	return err;
 }
 
-dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file)
+dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file, int* added, int* deleted, int* updated)
 {
-	return dba_db_repinfo_update(db->repinfo, repinfo_file);
+	return dba_db_repinfo_update(db->repinfo, repinfo_file, added, deleted, updated);
 }
 
 dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)

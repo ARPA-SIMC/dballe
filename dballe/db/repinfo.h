@@ -59,7 +59,7 @@ dba_err dba_db_repinfo_create(dba_db db, dba_db_repinfo* ins);
 void dba_db_repinfo_delete(dba_db_repinfo ins);
 dba_err dba_db_repinfo_get_id(dba_db_repinfo ri, const char* memo, int* id);
 dba_err dba_db_repinfo_has_id(dba_db_repinfo ri, int id, int* exists);
-dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile);
+dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added, int* deleted, int* updated);
 
 #if 0
 void dba_db_repinfo_set_ident(dba_db_repinfo ins, const char* ident);

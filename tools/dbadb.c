@@ -163,6 +163,7 @@ dba_err do_wipe(poptContext optCon)
 
 dba_err do_repinfo(poptContext optCon)
 {
+	int added, deleted, updated;
 	const char* action;
 	const char* table;
 	dba_db db;
@@ -175,7 +176,8 @@ dba_err do_repinfo(poptContext optCon)
 
 	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
-	DBA_RUN_OR_RETURN(dba_db_update_repinfo(db, table));
+	DBA_RUN_OR_RETURN(dba_db_update_repinfo(db, table, &added, &deleted, &updated));
+	printf("Update completed: %d added, %d deleted, %d updated.\n", added, deleted, updated);
 	dba_db_delete(db);
 	dba_shutdown();
 
