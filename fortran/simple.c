@@ -13,7 +13,7 @@
 #include "handles.h"
 
 #define MISSING_STRING ""
-#define MISSING_INT 0xffffffff
+#define MISSING_INT 0x7fffffff
 #define MISSING_REAL (-1.1754944E-38)
 #define MISSING_DOUBLE (-2.22507E-308)
 
@@ -496,12 +496,11 @@ static dba_varcode get_first_varcode(dba_record rec)
 
 static dba_err lookup_var(dba_record rec, const char* name, dba_var* var)
 {
-	dba_varcode code;
+	dba_varcode code = 0;
 
 	if (name[0] != 'B' && (code = dba_varcode_alias_resolve(name) == 0))
 	{
 		dba_keyword param = dba_record_keyword_byname(name);
-
 		if (param == DBA_KEY_ERROR)
 			return dba_error_notfound("looking for misspelled parameter \"%s\"", name);
 		*var = dba_record_key_peek(rec, param);
