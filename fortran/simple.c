@@ -494,6 +494,25 @@ static dba_varcode get_first_varcode(dba_record rec)
 
 /* TODO: find a way to pass 'parameter' to avoid a string copy */
 
+static dba_err lookup_var(dba_record rec, const char* name, dba_var* var)
+{
+	dba_varcode code;
+
+	if (name[0] != 'B' && (code = dba_varcode_alias_resolve(name) == 0))
+	{
+		dba_keyword param = dba_record_keyword_byname(name);
+
+		if (param == DBA_KEY_ERROR)
+			return dba_error_notfound("looking for misspelled parameter \"%s\"", name);
+		*var = dba_record_key_peek(rec, param);
+	} else {
+		if (code == 0)
+			code = DBA_STRING_TO_VAR(name + 1);
+		*var = dba_record_var_peek(rec, code);
+	}
+	return dba_error_ok();
+}
+
 /**
  * Read one integer value from the output record
  * 
@@ -521,6 +540,7 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 	char parm[20];
 	char* p;
 	dba_record rec;
+	dba_var var;
 
 	/*
 	else if (parameter_length >= 7 &&
@@ -554,22 +574,13 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 			break;
 	}
 
-	if (p[0] != 'B')
+	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
+	if (var == NULL)
 	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		int found;
-
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-		DBA_RUN_OR_RETURN(dba_record_contains_key(rec, param, &found));
-		if (!found)
-		{
-			*value = MISSING_INT;
-			return dba_error_ok();
-		}
-		return dba_record_key_enqi(rec, param, value);
-	} else 
-		return dba_record_var_enqi(rec, DBA_STRING_TO_VAR(p + 1), value);
+		*value = MISSING_INT;
+		return dba_error_ok();
+	} else
+		return dba_var_enqi(var, value);
 }
 
 /**
@@ -601,6 +612,7 @@ F77_INTEGER_FUNCTION(idba_enqr)(
 	dba_err err;
 	double dval;
 	dba_record rec;
+	dba_var var;
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
 
@@ -613,25 +625,16 @@ F77_INTEGER_FUNCTION(idba_enqr)(
 		p = parm;
 	}
 
-	if (p[0] != 'B')
+	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
+	if (var == NULL)
 	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		int found;
-
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-		DBA_RUN_OR_RETURN(dba_record_contains_key(rec, param, &found));
-		if (!found)
-		{
-			*value = MISSING_REAL;
-			return dba_error_ok();
-		}
-		err = dba_record_key_enqd(rec, param, &dval);
-	} else 
-		err = dba_record_var_enqd(rec, DBA_STRING_TO_VAR(p + 1), &dval);
-
-	*value = dval;
-	return err;
+		*value = MISSING_REAL;
+		return dba_error_ok();
+	} else {
+		err = dba_var_enqd(var, &dval);
+		*value = dval;
+		return err;
+	}
 }
 
 /**
@@ -661,6 +664,7 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 	char parm[20];
 	char* p;
 	dba_record rec;
+	dba_var var;
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
 
@@ -673,22 +677,13 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 		p = parm;
 	}
 
-	if (p[0] != 'B')
+	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
+	if (var == NULL)
 	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		int found;
-
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-		DBA_RUN_OR_RETURN(dba_record_contains_key(rec, param, &found));
-		if (!found)
-		{
-			*value = MISSING_DOUBLE;
-			return dba_error_ok();
-		}
-		return dba_record_key_enqd(rec, param, value);
-	} else 
-		return dba_record_var_enqd(rec, DBA_STRING_TO_VAR(p + 1), value);
+		*value = MISSING_DOUBLE;
+		return dba_error_ok();
+	} else
+		return dba_var_enqd(var, value);
 }
 
 /**
@@ -719,6 +714,7 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 	char parm[20];
 	char* p;
 	dba_record rec;
+	dba_var var;
 	const char* strval;
 	dba_err err;
 
@@ -734,27 +730,17 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 		p = parm;
 	}
 
-	if (p[0] != 'B')
+	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
+	if (var == NULL)
 	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		int found;
-
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-		DBA_RUN_OR_RETURN(dba_record_contains_key(rec, param, &found));
-		if (!found)
-		{
-			cnfExprt(MISSING_STRING, value, value_length);
-			return dba_error_ok();
-		}
-		err = dba_record_key_enqc(rec, param, &strval);
-	} else 
-		err = dba_record_var_enqc(rec, DBA_STRING_TO_VAR(p + 1), &strval);
-
-	if (err == DBA_OK)
-		cnfExprt(strval, value, value_length);
-
-	return err;
+		cnfExprt(MISSING_STRING, value, value_length);
+		return dba_error_ok();
+	} else {
+		err = dba_var_enqc(var, &strval);
+		if (err == DBA_OK)
+			cnfExprt(strval, value, value_length);
+		return err;
+	}
 }
 
 /*@}*/

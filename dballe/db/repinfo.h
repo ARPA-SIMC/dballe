@@ -51,18 +51,6 @@ struct _dba_db_repinfo
 	int cache_alloc_size;
 
 	dba_db_repinfo_memoidx memo_idx;
-
-	/*
-	SQLHSTMT sfstm;
-	SQLHSTMT smstm;
-	SQLHSTMT istm;
-	SQLHSTMT ustm;
-
-	int lat;
-	int lon;
-	char ident[64];
-	SQLINTEGER ident_ind;
-	*/
 };
 typedef struct _dba_db_repinfo* dba_db_repinfo;
 
