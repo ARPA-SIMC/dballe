@@ -1115,7 +1115,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	DBA_QUERY_BIND(14, SQL_C_SLONG, rep_cod);
 	DBA_QUERY_BIND(15, SQL_C_CHAR, rep_memo);
 	DBA_QUERY_BIND(16, SQL_C_SLONG, priority);
-	DBA_QUERY_BIND(22, SQL_C_SLONG, data_id);
+	DBA_QUERY_BIND(17, SQL_C_SLONG, data_id);
 #undef DBA_QUERY_BIND
 	
 	/* Add the select part */
