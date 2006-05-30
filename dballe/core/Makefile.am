@@ -25,7 +25,7 @@ libcore_la_SOURCES = \
 
 INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
 
-noinst_DATA = record_keyword.dox record_keyword.rst record_keyword.tex
+noinst_DATA = record_keyword.dox record_keyword.rst record_keyword.tex aliases.dox aliases.tex
 
 record_keyword.c: record_keyword.gperf
 	gperf < $< > $@
@@ -42,7 +42,13 @@ record_keyword.tex: record_keyword.gperf mkkeydoc
 aliases.c: aliases.gperf
 	gperf < $< > $@
 
-distclean-local:
-	rm -f record_keyword.c record_keyword.dox dba_varconv.c aliases.c
+aliases.dox: aliases.gperf mkaliasdoc
+	./mkaliasdoc dox < $< > $@
 
-EXTRA_DIST = core.dox record_keyword.gperf mkkeydoc aliases.gperf
+aliases.tex: aliases.gperf mkaliasdoc
+	./mkaliasdoc tex < $< > $@
+
+distclean-local:
+	rm -f record_keyword.c record_keyword.dox record_keyword.tex dba_varconv.c aliases.c aliases.dox aliases.tex
+
+EXTRA_DIST = core.dox record_keyword.gperf mkkeydoc aliases.gperf mkaliasdoc

@@ -229,9 +229,10 @@ c     A possible misunderstanding
       call idba_enqi(handle, "height", val)
 \end{verbatim}
 
-the result of the {\tt idba\_enqi} will not be 1, and it could be either an error
-(in case no {\tt height} parameter is set in the output parameters) or a
-{\tt height} value previously retrieved by an action routine.
+the value of {\tt val} after the {\tt idba\_enqi} will not probably be 1, and
+it could be either a value indicating ``missing value'' (in case no {\tt
+height} parameter is set in the output parameters) or a {\tt height} value
+previously retrieved by an action routine.
 
 To reset one input parameter you can use {\tt idba\_unset}:
 \label{fun-idba_unset}
@@ -257,6 +258,20 @@ c     ...
 There is no way to reset output parameters: it is not needed since all action
 routines will get rid of old output values before producing new ones.
 
+In case one of the {\tt idba\_enq*} functions is called on a parameter which
+does not exist, it will return a special value that indicates ``missing
+value''.  This is a list of such special values:
+
+\begin{tabular}{|l|l|}
+\hline
+{\em Data type} & {\em Missing value indicator}               \\
+\hline
+String  &  ""			\\
+Int     & 0xffffffff		\\
+Real    & -1.1754944E-38	\\
+Double  & -2.22507E-308		\\
+\hline
+\end{tabular}
 
 \section {API invariants}
 
@@ -474,10 +489,10 @@ c     Set the latitude to 30.0 degrees
       call idba_setc(handle, "lat", "3000000")
 \end{verbatim}
 
-\subsection {Available parameters}
+\subsection {Parameter names}
 
-There are two different kinds of parameter names one can use: the \dballe{}
-parameters and the WMO B variables.
+There are three different kinds of parameter names one can use: the \dballe{}
+parameters, the WMO B variables and the variable aliases.
 
 The \dballe{} parameters, fully described in \ref{parmtable}, are parameters
 that have a special meaning to \dballe{}: for example they can be part of the
@@ -491,6 +506,9 @@ where {\itshape xxyyy} are the X and Y values from the WMO table B.  For more
 details on working with observed data, see \ref{obsdata}.  For a list of all
 the currently available B table descriptors, see \ref{btable}.
 
+The variable aliases are short, easy to remember names which can be used
+instead of frequently used WMO B variables.  For a list of all the currently
+available aliases, see \ref{aliastable}.
 
 \subsection{Queries and observed data}
 \label{obsdata}
@@ -1251,6 +1269,12 @@ Code table 33197 \emph{Manual replacement in substitution}:
 \end{tabular}
 
 When the attribute B33197 is not present, then no substitution happened.
+
+
+\chapter{Variable aliases}
+
+\label{aliastable}
+\input{../dballe/core/aliases.tex}
 
 
 \chapter{Summary of routines}
