@@ -67,9 +67,23 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg* out)
 						totemp(OBS(os + 4)), get_conf6((OBS(os + 7) >> 12) & 0x3f),
 						100, press, 0, 0, 0, 0));
 		if (OBS(os + 5) != AOF_UNDEF)
+#if 0
+		{
+			dba_msg_datum d;
+			double dval;
+			fprintf(stderr, "HEIGHT: %d -> %f\n", OBS(os + 5) - 1000, ((double)OBS(os + 5) - 1000)*9.80665);
+#endif
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 3),
-						((double)OBS(os + 5) - 1000)*9.8, get_conf6((OBS(os + 7) >> 18) & 0x3f),
+						((double)OBS(os + 5) - 1000)*9.80665, get_conf6((OBS(os + 7) >> 18) & 0x3f),
 						100, press, 0, 0, 0, 0));
+#if 0
+			d = dba_msg_find(msg, DBA_VAR(0, 10, 3), 100, press, 0, 0, 0, 0);
+			if (d == NULL)
+				fprintf(stderr, "NO, QUESTO NO!\n");
+			DBA_RUN_OR_RETURN(dba_var_enqd(d->var, &dval));
+			fprintf(stderr, "HEIGHT: %d -> %f (was %f)\n", OBS(os + 5) - 1000, dval, ((double)OBS(os + 5) - 1000)*9.80665);
+		}
+#endif
 	}
 
 	*out = msg;
