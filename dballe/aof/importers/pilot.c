@@ -71,8 +71,10 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg* out)
 			}
 
 			/* Geopotential */
+			// Rounding the converted height->geopotential to preserve the
+			// correct amount of significant digits
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 3),
-						((double)OBS(os + 4) - 1000.0) * 9.80665, get_conf6((OBS(os+6) >> 12) & 0x3f),
+						round(((double)OBS(os + 4) - 1000.0) * 9.80665 / 10) * 10, get_conf6((OBS(os+6) >> 12) & 0x3f),
 						ltype, l1, 0, 0, 0, 0));
 		}
 
