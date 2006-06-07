@@ -4,7 +4,7 @@ ccc *****************************************
 ccc * Test suite for DBALLE Fortran bindings
 ccc *****************************************
 
-      integer dbahandle, handle,i,i1,i2,ival,saved_id
+      integer dbahandle, handle,i,i1,i2,i3,i4,i5,i6,ival,saved_id
       real rval
       real*8 dval
       character param*10,cval*255
@@ -48,11 +48,11 @@ c     { "name", "Cippo Lippo" },
       call ensure_no_error("seti 3")
       call idba_seti(handle, "month", 1)
       call ensure_no_error("seti 4")
-      call idba_seti(handle, "day", 1)
+      call idba_seti(handle, "day", 2)
       call ensure_no_error("seti 5")
-      call idba_seti(handle, "hour", 1)
+      call idba_seti(handle, "hour", 3)
       call ensure_no_error("seti 6")
-      call idba_seti(handle, "min", 1)
+      call idba_seti(handle, "min", 4)
       call ensure_no_error("seti 7")
 
       call idba_setc(handle, "leveltype", "1")
@@ -125,6 +125,24 @@ c     TODO: make a for loop instead
          call ensure_no_error("dammelo enqd 3")
          call idba_enqc(handle, "lon", cval)
          call ensure_no_error("dammelo enqc 4")
+         call idba_enqdate(handle, i1, i2, i3, i4, i5, i6)
+         call ensure_no_error("dammelo enqdate")
+         call ensure("enqdate i1", i1.eq.2006)
+         call ensure("enqdate i2", i2.eq.1)
+         call ensure("enqdate i3", i3.eq.2)
+         call ensure("enqdate i4", i4.eq.3)
+         call ensure("enqdate i5", i5.eq.4)
+         call ensure("enqdate i6", i6.eq.0)
+         call idba_enqlevel(handle, i1, i2, i3)
+         call ensure_no_error("dammelo enqlevel")
+         call ensure("enqdate i1", i1.eq.1)
+         call ensure("enqdate i2", i2.eq.1)
+         call ensure("enqdate i3", i3.eq.1)
+         call idba_enqtimerange(handle, i1, i2, i3)
+         call ensure_no_error("dammelo enqtimerange")
+         call ensure("enqdate i1", i1.eq.20)
+         call ensure("enqdate i2", i2.eq.1)
+         call ensure("enqdate i3", i3.eq.1)
          
          call idba_enqi(handle, "!ana_id", ival)
          call ensure_no_error("dammelo enqi !ana_id")
