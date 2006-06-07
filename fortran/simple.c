@@ -349,8 +349,8 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 
 	if (STATE.perms & PERM_ANA_RO && !(STATE.perms & PERM_DATA_RO))
 		return dba_error_consistency("when data is writable, ana should not be set to 'read' only");
-	if (STATE.perms & PERM_DATA_RO && !(STATE.perms & PERM_QC_RO))
-		return dba_error_consistency("when qc is writable, data should not be set to 'read' only");
+	if (STATE.perms & PERM_QC_RO && !(STATE.perms & PERM_DATA_RO))
+		return dba_error_consistency("when data is writable, attr should not be set to 'read' only");
 	
 	/* Allocate the records */
 	DBA_RUN_OR_GOTO(fail, dba_record_create(&(STATE.input)));
