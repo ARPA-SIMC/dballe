@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+extern int op_verbose;
+
 static int match_index(int idx, const char* expr)
 {
 	size_t pos;
@@ -235,6 +237,9 @@ dba_err process_all(
 		while (found)
 		{
 			++index;
+
+			if (op_verbose)
+				fprintf(stderr, "Reading message #%d...\n", index);
 
 			if (grepdata->index[0] == 0 || match_index(index, grepdata->index))
 			{

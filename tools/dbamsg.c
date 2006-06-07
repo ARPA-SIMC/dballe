@@ -14,6 +14,7 @@
 static int op_dump_interpreted = 0;
 static char* op_input_type = "auto";
 static char* op_output_type = "bufr";
+int op_verbose = 0;
 
 struct grep_t grepdata = { -1, -1, -1, 0, 0, "" };
 struct poptOption grepTable[] = {
@@ -434,6 +435,7 @@ static struct tool_desc dbamsg;
 
 struct poptOption dbamsg_scan_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -443,6 +445,7 @@ struct poptOption dbamsg_scan_options[] = {
 
 struct poptOption dbamsg_dump_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the unput data ('bufr', 'crex', 'aof')", "type" },
 	{ "interpreted", 0, 0, &op_dump_interpreted, 0,
@@ -454,6 +457,7 @@ struct poptOption dbamsg_dump_options[] = {
 
 struct poptOption dbamsg_cat_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -463,6 +467,7 @@ struct poptOption dbamsg_cat_options[] = {
 
 struct poptOption dbamsg_convert_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
@@ -474,6 +479,7 @@ struct poptOption dbamsg_convert_options[] = {
 
 struct poptOption dbamsg_compare_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "type1", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the first file to compare ('bufr', 'crex', 'aof')", "type" },
 	{ "type2", 'd', POPT_ARG_STRING, &op_output_type, 0,
@@ -485,6 +491,7 @@ struct poptOption dbamsg_compare_options[] = {
 
 struct poptOption dbamsg_filter_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -494,6 +501,7 @@ struct poptOption dbamsg_filter_options[] = {
 
 struct poptOption dbamsg_fixaof_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	POPT_TABLEEND
 };
 

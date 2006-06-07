@@ -53,6 +53,7 @@ static char* op_report = "";
 static char* op_output_type = "bufr";
 static char* op_output_template = "";
 static int op_overwrite = 0;
+int op_verbose = 0;
 
 struct poptOption dbTable[] = {
 	{ "dsn", 0, POPT_ARG_STRING, &op_dsn, 0,
@@ -300,6 +301,7 @@ static struct tool_desc dbadb;
 
 struct poptOption dbadb_dump_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
 		"Options used to connect to the database" },
 	POPT_TABLEEND
@@ -307,6 +309,7 @@ struct poptOption dbadb_dump_options[] = {
 
 struct poptOption dbadb_wipe_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
 		"Options used to connect to the database" },
 	POPT_TABLEEND
@@ -314,6 +317,7 @@ struct poptOption dbadb_wipe_options[] = {
 
 struct poptOption dbadb_import_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
@@ -329,6 +333,7 @@ struct poptOption dbadb_import_options[] = {
 
 struct poptOption dbadb_export_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
 		"force exported data to be of this report type, specified with code or memo", "rep" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
@@ -342,6 +347,7 @@ struct poptOption dbadb_export_options[] = {
 
 struct poptOption dbadb_repinfo_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
 		"Options used to connect to the database" },
 	POPT_TABLEEND

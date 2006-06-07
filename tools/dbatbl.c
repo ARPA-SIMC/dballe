@@ -10,6 +10,7 @@
 dba_vartable btable;
 bufrex_dtable dtable;
 static int op_csv;
+int op_verbose = 0;
 
 void unit_check(dba_varinfo info, void* data)
 {
