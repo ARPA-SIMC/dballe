@@ -1014,6 +1014,23 @@ F77_INTEGER_FUNCTION(idba_setc)(
 	}
 }
 
+F77_INTEGER_FUNCTION(idba_enqlevel)(
+		INTEGER(handle),
+		INTEGER(ltype),
+		INTEGER(l1),
+		INTEGER(l2))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(ltype)
+	GENPTR_INTEGER(l1)
+	GENPTR_INTEGER(l2)
+
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_LEVELTYPE, ltype));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_L1, l1));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_L2, l2));
+	return dba_error_ok();
+}
+
 F77_INTEGER_FUNCTION(idba_setlevel)(
 		INTEGER(handle),
 		INTEGER(ltype),
@@ -1031,6 +1048,23 @@ F77_INTEGER_FUNCTION(idba_setlevel)(
 	return dba_error_ok();
 }
 
+F77_INTEGER_FUNCTION(idba_enqtimerange)(
+		INTEGER(handle),
+		INTEGER(ptype),
+		INTEGER(p1),
+		INTEGER(p2))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(ptype)
+	GENPTR_INTEGER(p1)
+	GENPTR_INTEGER(p2)
+
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_PINDICATOR, ptype));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_P1, p1));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_P2, p2));
+	return dba_error_ok();
+}
+
 F77_INTEGER_FUNCTION(idba_settimerange)(
 		INTEGER(handle),
 		INTEGER(ptype),
@@ -1045,6 +1079,32 @@ F77_INTEGER_FUNCTION(idba_settimerange)(
 	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_PINDICATOR, *ptype));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P1, *p1));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P2, *p2));
+	return dba_error_ok();
+}
+
+F77_INTEGER_FUNCTION(idba_enqdate)(
+		INTEGER(handle),
+		INTEGER(year),
+		INTEGER(month),
+		INTEGER(day),
+		INTEGER(hour),
+		INTEGER(min),
+		INTEGER(sec))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(year)
+	GENPTR_INTEGER(month)
+	GENPTR_INTEGER(day)
+	GENPTR_INTEGER(hour)
+	GENPTR_INTEGER(min)
+	GENPTR_INTEGER(sec)
+
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_YEAR, year));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_MONTH, month));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_DAY, day));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_HOUR, hour));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_MIN, min));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.input, DBA_KEY_SEC, sec));
 	return dba_error_ok();
 }
 
