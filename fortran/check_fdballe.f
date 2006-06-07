@@ -44,7 +44,7 @@ c     { "block", "1" },
 c     { "station", "52" },
 c     { "name", "Cippo Lippo" },
 
-      call idba_seti(handle, "year", 1)
+      call idba_seti(handle, "year", 2006)
       call ensure_no_error("seti 3")
       call idba_seti(handle, "month", 1)
       call ensure_no_error("seti 4")

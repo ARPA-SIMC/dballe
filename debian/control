@@ -1,7 +1,7 @@
 Source: libdballe
 Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
-Build-Depends: cdbs, debhelper (>> 4.1), dh-buildinfo, doxygen, libtut-dev, check, unixodbc-dev, gperf, g77, libpopt-dev, latex2html
+Build-Depends: cdbs, debhelper (>> 4.1), dh-buildinfo, doxygen, libtut-dev, unixodbc-dev, gperf, g77, libpopt-dev, latex2html
 Standards-Version: 3.6.1
 
 Package: libdballe-dev

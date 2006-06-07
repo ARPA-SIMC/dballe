@@ -104,10 +104,10 @@ dballe/bufrex/Makefile
 dballe/aof/Makefile
 dballe/db/Makefile
 dballe/tests/Makefile
+dballe/bench/Makefile
 fortran/Makefile
 tools/Makefile
 tables/Makefile
-bench/Makefile
 swig/Makefile
 doc/Makefile
 doc/libdballe.dox

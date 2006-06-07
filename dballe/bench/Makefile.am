@@ -7,8 +7,8 @@ benchmark_SOURCES= \
 	bench/dba_record.cc \
 	bench/bufrex.cc \
 	bench/db.cc \
-	../dballe/tests/test-utils.cc
-benchmark_LDADD = ../dballe/libdballe.la -lpopt
+	../tests/test-utils.cc
+benchmark_LDADD = ../libdballe.la -lpopt
 
 INCLUDES = -I..
 
