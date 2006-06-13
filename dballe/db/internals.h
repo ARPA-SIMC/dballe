@@ -127,6 +127,7 @@ void dba_db_rollback(dba_db db);
 /**
  * Add select WHERE parameters from the data in query
  */
+dba_err dba_db_prepare_select_pseudoana(dba_db db, dba_record query, SQLHSTMT stm, int* pseq);
 dba_err dba_db_prepare_select(dba_db db, dba_record query, SQLHSTMT stm, int* pseq);
 
 

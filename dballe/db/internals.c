@@ -117,12 +117,11 @@ void dba_db_rollback(dba_db db) {}
 		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &db->sel_##field, 0, 0); \
 	} } while (0)
 
-static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
+dba_err dba_db_prepare_select_pseudoana(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
 {
 	const char* val;
 
 	/* Bind select fields */
-
 	PARM_INT(ana_id, DBA_KEY_ANA_ID, " AND pa.id = ?");
 	PARM_INT(latmin, DBA_KEY_LAT, " AND pa.lat = ?");
 	PARM_INT(latmin, DBA_KEY_LATMIN, " AND pa.lat >= ?");
@@ -153,6 +152,15 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 		TRACE("found ident: adding AND pa.ident = ?.  val is %s\n", db->sel_ident);
 		SQLBindParameter(stm, (*pseq)++, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)db->sel_ident, 0, 0);
 	}
+
+	return dba_error_ok();
+}
+
+static dba_err dba_db_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
+{
+	const char* val;
+
+	/* Bind select fields */
 
 	/* Set the time extremes */
 	{
@@ -211,10 +219,9 @@ static dba_err dba_prepare_select_context(dba_db db, dba_record rec, SQLHSTMT st
 	PARM_INT(l2, DBA_KEY_L2, " AND c.l2 = ?");
 
 	return dba_error_ok();
-
 }
 
-static dba_err dba_prepare_select_vars(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
+static dba_err dba_db_prepare_select_vars(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
 {
 	const char* val;
 
@@ -264,8 +271,9 @@ static dba_err dba_prepare_select_vars(dba_db db, dba_record rec, SQLHSTMT stm, 
 }
 dba_err dba_db_prepare_select(dba_db db, dba_record rec, SQLHSTMT stm, int* pseq)
 {
-	DBA_RUN_OR_RETURN(dba_prepare_select_context(db, rec, stm, pseq));
-	DBA_RUN_OR_RETURN(dba_prepare_select_vars(db, rec, stm, pseq));
+	DBA_RUN_OR_RETURN(dba_db_prepare_select_pseudoana(db, rec, stm, pseq));
+	DBA_RUN_OR_RETURN(dba_db_prepare_select_context(db, rec, stm, pseq));
+	DBA_RUN_OR_RETURN(dba_db_prepare_select_vars(db, rec, stm, pseq));
 
 	return dba_error_ok();
 

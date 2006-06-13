@@ -185,6 +185,18 @@ c     Remove the QC data for saved_data
       call idba_scusa(handle);
       call ensure_no_error("scusa 3")
 
+      call idba_unsetall(handle)
+      call ensure_no_error("unsetall quantesono 1")
+      call idba_quantesono(handle, i)
+      call ensure_no_error("quantesono 1")
+      call ensure("quantesono 1", i.eq.1)
+
+      call idba_setd(handle, "latmax", 20D00)
+      call ensure_no_error("seti quantesono 2")
+      call idba_quantesono(handle, i)
+      call ensure_no_error("quantesono 2")
+      call ensure("quantesono 1", i.eq.0)
+
       call idba_fatto(handle)
       call ensure_no_error("fatto")
 

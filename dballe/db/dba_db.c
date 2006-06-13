@@ -668,14 +668,87 @@ static dba_err dba_db_cursor_new(dba_db db, dba_db_cursor* cur)
 	return dba_error_ok();
 }
 
-dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count)
+static dba_err decode_data_filter(const char* filter, dba_varinfo* info, const char** op, const char** val)
 {
-	const char* query =
-		"SELECT pa.id, pa.lat, pa.lon, pa.ident"
-		"  FROM pseudoana AS pa"
-		" ORDER BY pa.id";
+	static char operator[5];
+	static char value[255];
+	size_t len = strcspn(filter, "<=>");
+	const char* s = filter + len;
+	dba_varcode code;
+
+	if (filter[0] == 0)
+		return dba_error_consistency("filter is the empty string");
+
+	/* Parse the varcode */
+	if (filter[0] == 'B')
+		code = DBA_STRING_TO_VAR(filter + 1);
+	else
+	    code = dba_varcode_alias_resolve_substring(filter, len);
+	
+	if (code == 0)
+		return dba_error_consistency("cannot resolve the variable code or alias in \"%s\" (len %d)", filter, len);
+
+	/* Query informations for the varcode */
+	DBA_RUN_OR_RETURN(dba_varinfo_query_local(code, info));
+
+	/* Parse the operator */
+	len = strspn(s, "<=>");
+	if (len == 0 || len > 4)
+		return dba_error_consistency("invalid operator found in \"%s\"", filter);
+
+	memcpy(operator, s, len);
+	operator[len] = 0;
+	*op = operator;
+
+	/* Parse the value */
+	s += len;
+	if ((*info)->is_string)
+	{
+		/* Copy the string, escaping quotes */
+		int i = 0, j = 0;
+		value[j++] = '\'';
+		for (; s[i] && j < 253; ++i, ++j)
+		{
+			if (s[i] == '\'')
+				value[j++] = '\\';
+			value[j] = s[i];
+		}
+		value[j++] = '\'';
+		value[j] = 0;
+	}
+	else
+	{
+		dba_var tmpvar;
+		double dval;
+		if (sscanf(s, "%lf", &dval) != 1)
+			return dba_error_consistency("value in \"%s\" must be a number", filter);
+		DBA_RUN_OR_RETURN(dba_var_created(*info, dval, &tmpvar));
+		strncpy(value, dba_var_value(tmpvar), 255);
+		value[254] = 0;
+		dba_var_delete(tmpvar);
+	}
+	*val = value;
+	return dba_error_ok();
+}
+
+static dba_err append_ana_cbs(dba_querybuf query)
+{
+	return dba_querybuf_append(query,
+				" JOIN context AS cbs ON "
+				"     pa.id = cbs.id_ana"
+				" AND cbs.id_report = 254"
+				" AND cbs.datetime = '1000-01-01 00:00:00'"
+				" AND cbs.ltype = 257 AND cbs.l1 = 0 AND cbs.l2 = 0"
+				" AND cbs.ptype = 0 AND cbs.p1 = 0 AND cbs.p2 = 0");
+}
+
+dba_err dba_db_ana_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
+{
 	dba_err err;
 	SQLHSTMT stm;
+	const char* val;
+	int has_cbs = 0;
+	int pseq = 1;
 	int res;
 
 	assert(db);
@@ -695,7 +768,56 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count)
 	}
 
 	(*cur)->stm = stm;
-	/* (*cur)->out_rep_id = -1; */
+
+	/* Write the SQL query */
+
+	/* Initial query */
+	dba_querybuf_reset(db->querybuf);
+	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf,
+		"SELECT pa.id, pa.lat, pa.lon, pa.ident"
+		"  FROM pseudoana AS pa"));
+
+	/* Extend the JOIN part to look for given block and station */
+	if (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL
+		  || dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)
+	{
+		DBA_RUN_OR_GOTO(failed, append_ana_cbs(db->querybuf));
+		has_cbs = 1;
+		if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
+		{
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
+					" JOIN data AS dblo ON dblo.id_context = cbs.id AND dblo.id_var = 257 AND dblo.value = "));
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
+		}
+		if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
+		{
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
+					" JOIN data AS dsta ON dsta.id_context = cbs.id AND dsta.id_var = 258 AND dsta.value = "));
+			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
+		}
+	}
+
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_ANA_FILTER)) != NULL)
+	{
+		dba_varinfo info;
+		const char* op;
+		const char* value;
+		DBA_RUN_OR_GOTO(failed, decode_data_filter(val, &info, &op, &value));
+		if (!has_cbs)
+		{
+			DBA_RUN_OR_GOTO(failed, append_ana_cbs(db->querybuf));
+			has_cbs = 1;
+		}
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf,
+				" JOIN data AS dana ON dana.id_context = cbs.id AND dana.id_var = %d AND dana.value %s %s",
+				info->var, op, value));
+	}
+
+	/* Add WHERE part */
+	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " WHERE true "));
+	DBA_RUN_OR_GOTO(failed, dba_db_prepare_select_pseudoana(db, rec, stm, &pseq));
+
+	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " ORDER BY pa.id"));
 
 	/* Bind output fields */
 #define DBA_QUERY_BIND(num, type, name) \
@@ -707,11 +829,12 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count)
 #undef DBA_QUERY_BIND
 
 	/* Perform the query */
-	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
+	TRACE("Performing ana query: %s\n", dba_querybuf_get(db->querybuf));
+	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE ANA query \"%s\"", query);
-		goto dba_ana_query_failed;
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE ANA query \"%s\"", dba_querybuf_get(db->querybuf));
+		goto failed;
 	}
 
 	/* Get the number of affected rows */
@@ -721,7 +844,7 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count)
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
 			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
-			goto dba_ana_query_failed;
+			goto failed;
 		}
 		(*cur)->count = ana_count;
 		*count = ana_count;
@@ -735,7 +858,7 @@ dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count)
 	return dba_error_ok();
 
 	/* Exit point with cleanup after error */
-dba_ana_query_failed:
+failed:
 	dba_db_cursor_delete(*cur);
 	*cur = 0;
 	return err;
@@ -863,69 +986,6 @@ dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
 	/* Add the extra ana info */
 	DBA_RUN_OR_RETURN(dba_ana_add_extra(cur, rec));
 
-	return dba_error_ok();
-}
-
-static dba_err decode_data_filter(const char* filter, dba_varinfo* info, const char** op, const char** val)
-{
-	static char operator[5];
-	static char value[255];
-	size_t len = strcspn(filter, "<=>");
-	const char* s = filter + len;
-	dba_varcode code;
-
-	if (filter[0] == 0)
-		return dba_error_consistency("filter is the empty string");
-
-	/* Parse the varcode */
-	if (filter[0] == 'B')
-		code = DBA_STRING_TO_VAR(filter + 1);
-	else
-	    code = dba_varcode_alias_resolve_substring(filter, len);
-	
-	if (code == 0)
-		return dba_error_consistency("cannot resolve the variable code or alias in \"%s\" (len %d)", filter, len);
-
-	/* Query informations for the varcode */
-	DBA_RUN_OR_RETURN(dba_varinfo_query_local(code, info));
-
-	/* Parse the operator */
-	len = strspn(s, "<=>");
-	if (len == 0 || len > 4)
-		return dba_error_consistency("invalid operator found in \"%s\"", filter);
-
-	memcpy(operator, s, len);
-	operator[len] = 0;
-	*op = operator;
-
-	/* Parse the value */
-	s += len;
-	if ((*info)->is_string)
-	{
-		/* Copy the string, escaping quotes */
-		int i = 0, j = 0;
-		value[j++] = '\'';
-		for (; s[i] && j < 253; ++i, ++j)
-		{
-			if (s[i] == '\'')
-				value[j++] = '\\';
-			value[j] = s[i];
-		}
-		value[j++] = '\'';
-		value[j] = 0;
-	}
-	else
-	{
-		dba_var tmpvar;
-		double dval;
-		if (sscanf(s, "%lf", &dval) != 1)
-			return dba_error_consistency("value in \"%s\" must be a number", filter);
-		DBA_RUN_OR_RETURN(dba_var_created(*info, dval, &tmpvar));
-		strncpy(value, dba_var_value(tmpvar), 255);
-		value[254] = 0;
-		dba_var_delete(tmpvar);
-	}
-	*val = value;
 	return dba_error_ok();
 }
 

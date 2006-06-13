@@ -135,7 +135,7 @@ dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid);
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_ana_query(dba_db db, dba_db_cursor* cur, int* count);
+dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count);
 
 /**
  * Get a new item from the results of an anagraphic query

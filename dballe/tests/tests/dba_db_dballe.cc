@@ -196,9 +196,10 @@ void to::test<2>()
 		CHECKED(dba_ana_count(db, &count));
 		fail_unless(count == 1);
 		*/
+		dba_record_clear(query);
 
 		/* Iterate the anagraphic database */
-		CHECKED(dba_db_ana_query(db, &cursor, &count));
+		CHECKED(dba_db_ana_query(db, query, &cursor, &count));
 		gen_ensure(cursor != 0);
 		gen_ensure_equals(count, 1);
 

@@ -1276,12 +1276,20 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 		STATE.ana_cur = NULL;
 	}
 
+	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
+	{
+		dba_verbose(DBA_VERB_DB_INPUT,
+				"invoking dba_db_ana_query(%d, <input>).  <input> is:\n",
+				*handle);
+		dba_record_print(STATE.input, DBA_VERBOSE_STREAM);
+	}
+
 	DBA_RUN_OR_RETURN(dba_db_ana_query(
 			SESSION,
+			STATE.input,
 			&(STATE.ana_cur),
 			count));
 
-	/*return dba_ana_count(STATE.session, count);*/
 	return dba_error_ok();
 }
 
