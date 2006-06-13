@@ -658,6 +658,40 @@ c     Set the confidence interval for that value of wind speed
       call idba_critica(handle)
 \end{verbatim}
 
+\subsubsection{{\tt !ana}}
+
+Sets date, level, timerange and rep\_cod to the special values that identify
+data \emph{about} the station rather than data \emph{of} the station.
+
+It is exactly equivalent to this code:
+
+\begin{verbatim}
+      call idba_seti(handle, "year", 1000));
+      call idba_seti(handle, "month", 1));
+      call idba_seti(handle, "day", 1));
+      call idba_seti(handle, "hour", 0));
+      call idba_seti(handle, "min", 0));
+      call idba_seti(handle, "sec", 0));
+      call idba_seti(handle, "leveltype", 257));
+      call idba_seti(handle, "l1", 0));
+      call idba_seti(handle, "l2", 0));
+      call idba_seti(handle, "pindicator", 0));
+      call idba_seti(handle, "p1", 0));
+      call idba_seti(handle, "p2", 0));
+      call idba_seti(handle, "rep_cod", 254));
+\end{verbatim}
+
+Setting this special value only happens with {\tt idba\_seti} and the value is
+ignored.  This example code queries all station data about the stations that
+are higher than 1000 meters:
+
+\begin{verbatim}
+      call idba_seti(handle, "!ana")
+      call idba_seti(handle, "ana_filter", "height>=1000")
+      call idba_voglioquesto(handle, count)
+\end{verbatim}
+
+
 \section {Querying the database}
 
 Queries are made by giving one or more extremes of space, time, level or time

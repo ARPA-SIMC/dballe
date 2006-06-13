@@ -82,6 +82,18 @@ our %comments = (
 			  "If set to 1, in case multiple values exist in the ".
 			  "same phisical space the results will only have the ".
 			  "one with the highest report priority" ],
+	ana_filter =>	[ "ignored", "optional", "absent",
+			  "Restricts the results to only those stations which ".
+			  "have a pseudoana value that matches the filter. ".
+			  "Examples: 'height>=1000', 'B02001=1'" ],
+	data_filter =>	[ "ignored", "optional", "absent",
+			  "Restricts the results to only those stations which ".
+			  "have a data value that matches the filter. ".
+			  "Examples: 't<260', 'B22021>2'" ],
+	attr_filter =>	[ "ignored", "optional", "absent",
+			  "Restricts the results to only those data which ".
+			  "have an attribute that matches the filter. ".
+			  "Examples: 'conf>70', 'B33197=0'" ],
 );
 
 my $op = $ARGV[0];

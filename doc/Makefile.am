@@ -51,7 +51,7 @@ fapi.dvi: $(fapisources)
 
 EXTRA_DIST = libdballe.dox $(guidesources) $(fapisources)
 
-CLEANFILES = libdballe.doxytags guide.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
+CLEANFILES = libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
 
 clean-local:
 	rm -rf dox_html
