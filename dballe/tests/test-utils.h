@@ -423,12 +423,12 @@ bufrex_raw _reencode_test(const char* file, int line, bufrex_raw msg);
 
 static inline int rnd(int min, int max)
 {
-	return min + (int) (max * (rand() / (RAND_MAX + 1.0)));
+	return min + (int) ((max - min) * (rand() / (RAND_MAX + 1.0)));
 }
 
 static inline double rnd(double min, double max)
 {
-	return min + (int) (max * (rand() / (RAND_MAX + 1.0)));
+	return min + (int) ((max - min) * (rand() / (RAND_MAX + 1.0)));
 }
 
 static inline std::string rnd(int len)

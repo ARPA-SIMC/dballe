@@ -16,6 +16,8 @@
 using namespace std;
 using namespace tut_dballe;
 
+namespace bench_db {
+
 const char* dsn = "test";
 const char* user = "enrico";
 const char* password = "";
@@ -30,6 +32,7 @@ static dba_err msg_counter(dba_msg msg, void* data)
 class db_work : public Benchmark
 {
 	generator gen;
+	bool fast;
 
 protected:
 	virtual dba_err main()
@@ -98,18 +101,18 @@ protected:
 		};
 
 		for (size_t i = 0; i < sizeof(bufr_files) / sizeof(const char*); i++)
-			DBA_RUN_OR_RETURN(read_file(BUFR, bufr_files[i], msgs));
+			DBA_RUN_OR_RETURN(read_file(BUFR, string("../tests/") + bufr_files[i], msgs));
 		for (size_t i = 0; i < sizeof(crex_files) / sizeof(const char*); i++)
-			DBA_RUN_OR_RETURN(read_file(CREX, crex_files[i], msgs));
+			DBA_RUN_OR_RETURN(read_file(CREX, string("../tests/") + crex_files[i], msgs));
 		for (size_t i = 0; i < sizeof(aof_files) / sizeof(const char*); i++)
-			DBA_RUN_OR_RETURN(read_file(AOF, aof_files[i], msgs));
+			DBA_RUN_OR_RETURN(read_file(AOF, string("../tests/") + aof_files[i], msgs));
 
 		DBA_RUN_OR_RETURN(dba_db_reset(db, NULL));
 		timing("reset the database");
 
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
-			DBA_RUN_OR_RETURN(dba_import_msg(db, *i, -1, 1));
+			DBA_RUN_OR_RETURN(dba_import_msg(db, *i, -1, 1, fast));
 
 		timing("inserted %d messages in the database", msgs.size());
 
@@ -145,7 +148,7 @@ protected:
 	}
 
 public:
-	db_work() : Benchmark("read") {}
+	db_work(bool fast = false) : Benchmark(fast ? "readfast" : "read"), fast(fast) {}
 	~db_work() {}
 };
 
@@ -290,9 +293,12 @@ public:
 	top() : Benchmark("db")
 	{
 		addChild(new db_work());
+		addChild(new db_work(true));
 	}
 };
 
 static RegisterRoot r(new top());
+
+}
 
 /* vim:set ts=4 sw=4: */

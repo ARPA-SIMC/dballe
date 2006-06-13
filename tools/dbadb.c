@@ -53,6 +53,7 @@ static char* op_report = "";
 static char* op_output_type = "bufr";
 static char* op_output_template = "";
 static int op_overwrite = 0;
+static int op_fast = 0;
 int op_verbose = 0;
 
 struct poptOption dbTable[] = {
@@ -93,11 +94,11 @@ static dba_err import_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, voi
 	else if (d->forced_repcod == -1 && msg->type == MSG_GENERIC)
 	{
 		/* Put generic messages in the generic rep_cod by default */
-		DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, 255, d->overwrite));
+		DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, 255, d->overwrite, op_fast));
 	}
 	else
 	{
-		DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, d->overwrite));
+		DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, d->overwrite, op_fast));
 	}
 	return dba_error_ok();
 }
@@ -324,6 +325,9 @@ struct poptOption dbadb_import_options[] = {
 		"overwrite existing data" },
 	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
 		"force data to be of this report type, specified with code or memo", "rep" },
+	{ "fast", 0, POPT_ARG_NONE, &op_fast, 0,
+		"make import faster, but an interruption will mean that there can be "
+		"data in the database for only part of an imported message" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
 		"Options used to connect to the database" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -395,9 +399,9 @@ static void init()
 	dbadb.ops[4].aliases[0] = "repinfo";
 	dbadb.ops[4].usage = "repinfo [options] [filename]";
 	dbadb.ops[4].desc = "Update the report information table";
-	dbadb.ops[4].longdesc = NULL;
+	dbadb.ops[4].longdesc =
 			"Update the report information table with the data from the given "
-			"report type description file.  ";
+			"report type description file.  "
 			"If no file is provided, a default version is used";
 	dbadb.ops[4].optable = dbadb_repinfo_options;
 

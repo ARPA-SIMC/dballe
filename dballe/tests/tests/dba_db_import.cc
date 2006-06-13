@@ -61,7 +61,7 @@ void to::test<1>()
 		dba_msg msg = read_test_msg(files[i], CREX);
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, -1, 0));
+		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
@@ -124,7 +124,7 @@ void to::test<2>()
 		dba_msg msg = read_test_msg(files[i], BUFR);
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, -1, 0));
+		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
@@ -181,7 +181,7 @@ void to::test<3>()
 		dba_msg msg = read_test_msg(files[i], AOF);
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, -1, 0));
+		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
@@ -222,8 +222,8 @@ void to::test<4>()
 	dba_msg msg2 = read_test_msg("bufr/obs0-3.504.bufr", BUFR);
 
 	CHECKED(dba_db_reset(db, NULL));
-	CHECKED(dba_import_msg(db, msg1, -1, 0));
-	CHECKED(dba_import_msg(db, msg2, -1, 0));
+	CHECKED(dba_import_msg(db, msg1, -1, 0, 0));
+	CHECKED(dba_import_msg(db, msg2, -1, 0, 0));
 
 	dba_record query;
 	CHECKED(dba_record_create(&query));
@@ -272,7 +272,7 @@ void to::test<5>()
 		dba_msg msg;
 		CHECKED(dba_msg_create(&msg));
 		gen.fill_message(msg, rnd(0.8));
-		CHECKED(dba_import_msg(db, msg, -1, 0));
+		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
 		dba_msg_delete(msg);
 	}
 
@@ -352,7 +352,7 @@ void to::test<6>()
 	for (msg_vector::const_iterator i = msgs.begin();
 			i != msgs.end(); i++)
 	{
-		CHECKED(dba_import_msg(db, *i, -1, 1));
+		CHECKED(dba_import_msg(db, *i, -1, 1, 0));
 		rep_cods[(*i)->type]++;
 	}
 

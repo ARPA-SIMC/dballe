@@ -3,6 +3,7 @@
 
 #include <sys/times.h>
 #include <unistd.h>
+#include <iostream>
 
 #define timing(fmt, ...) do { \
 	struct tms curtms; \
@@ -15,6 +16,8 @@
 			((curtms.tms_utime - lasttms.tms_utime) + (curtms.tms_stime - lasttms.tms_stime))/tps); \
 	lasttms = curtms; \
 } while (0)
+
+using namespace std;
 
 static void print_dba_error()
 {
@@ -40,6 +43,10 @@ int main(int argc, const char* argv[])
 
 	if (argc == 1)
 		DBA_RUN_OR_GOTO(fail, Benchmark::root()->run());
+	else if (argv[1] == string("--list"))
+	{
+		Benchmark::root()->list(cout);
+	}
 	else
 	{
 		for (int i = 1; i < argc; i++)

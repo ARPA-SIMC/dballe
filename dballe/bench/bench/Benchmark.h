@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include <iosfwd>
 
 class Benchmark
 {
@@ -50,6 +51,8 @@ public:
 				i != children.end(); i++)
 			delete *i;
 	}
+
+	void list(std::ostream& out);
 
 	// Run only the subtest at the given path
 	dba_err run(const std::string& path);

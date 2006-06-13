@@ -15,7 +15,7 @@
 #include <stdlib.h>
 
 
-dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
+dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fast)
 {
 	dba_err err = DBA_OK;
 	dba_msg_level l_ana = dba_msg_find_level(msg, 257, 0, 0);
@@ -38,7 +38,8 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 	mobile = dba_msg_get_ident_var(msg) == NULL ? 0 : 1;
 
 	/* Begin transaction */
-	DBA_RUN_OR_RETURN(dba_db_begin(db));
+	if (!fast)
+		DBA_RUN_OR_RETURN(dba_db_begin(db));
 
 	/* Fill up the pseudoana informations needed to fetch an existing ID */
 
@@ -193,11 +194,13 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite)
 		}
 	}
 
-    DBA_RUN_OR_GOTO(fail, dba_db_commit(db));
+	if (!fast)
+		DBA_RUN_OR_GOTO(fail, dba_db_commit(db));
     return dba_error_ok();
 
 fail:
-	dba_db_rollback(db);
+	if (!fast)
+		dba_db_rollback(db);
 	return err;
 }
 

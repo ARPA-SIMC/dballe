@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <unistd.h>
+#include <ostream>
 
 using namespace std;
 
@@ -15,6 +16,14 @@ Benchmark* Benchmark::root()
 
 
 double Benchmark::tps = sysconf(_SC_CLK_TCK);
+
+void Benchmark::list(ostream& out)
+{
+	out << fullName() << endl;
+	for (std::vector<Benchmark*>::iterator i = children.begin();
+			i != children.end(); i++)
+		(*i)->list(out);
+}
 
 dba_err Benchmark::timing(const char* fmt, ...)
 {

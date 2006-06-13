@@ -12,4 +12,4 @@ benchmark_LDADD = ../libdballe.la -lpopt
 
 INCLUDES = -I..
 
-EXTRA_DIST = Benchmark.h
+EXTRA_DIST = bench/Benchmark.h

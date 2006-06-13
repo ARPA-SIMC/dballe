@@ -2,6 +2,8 @@
 
 #include <dballe/core/dba_var.h>
 
+namespace bench_var {
+
 class create : public Benchmark
 {
 protected:
@@ -115,5 +117,7 @@ public:
 };
 
 static RegisterRoot r(new top());
+
+}
 
 /* vim:set ts=4 sw=4: */
