@@ -267,11 +267,67 @@ value''.  This is a list of such special values:
 {\em Data type} & {\em Missing value indicator}               \\
 \hline
 String  &  ""			\\
-Int     & 0xffffffff		\\
+Int     & 0x7fffffff		\\
 Real    & -1.1754944E-38	\\
 Double  & -2.22507E-308		\\
 \hline
 \end{tabular}
+
+\subsection {Input/output shortcuts}
+
+There are a few functions that are shortcuts to other input and output
+functions:
+
+\begin{description}
+\item[{\tt idba\_enqdate(handle, year, month, day, hour, minute, second)}]
+  is a shortcut to:
+  \begin{verbatim}
+  idba_enqi(handle, "year", year)
+  idba_enqi(handle, "month", month)
+  idba_enqi(handle, "day", day)
+  idba_enqi(handle, "hour", hour)
+  idba_enqi(handle, "min", minute)
+  idba_enqi(handle, "sec", second)
+  \end{verbatim}
+\item[{\tt idba\_setdate(handle, year, month, day, hour, minute, second)}]
+  is a shortcut to:
+  \begin{verbatim}
+  idba_seti(handle, "year", year)
+  idba_seti(handle, "month", month)
+  idba_seti(handle, "day", day)
+  idba_seti(handle, "hour", hour)
+  idba_seti(handle, "min", minute)
+  idba_seti(handle, "sec", second)
+  \end{verbatim}
+\item[{\tt idba\_enqlevel(handle, type, l1, l2)}]
+  is a shortcut to:
+  \begin{verbatim}
+  idba_enqi(handle, "leveltype", type)
+  idba_enqi(handle, "l1", l1)
+  idba_enqi(handle, "l2", l2)
+  \end{verbatim}
+\item[{\tt idba\_setlevel(handle, type, l1, l2)}]
+  is a shortcut to:
+  \begin{verbatim}
+  idba_seti(handle, "leveltype", type)
+  idba_seti(handle, "l1", l1)
+  idba_seti(handle, "l2", l2)
+  \end{verbatim}
+\item[{\tt idba\_enqtimerange(handle, type, p1, p2)}]
+  is a shortcut to:
+  \begin{verbatim}
+  idba_enqi(handle, "pindicator", type)
+  idba_enqi(handle, "p1", p1)
+  idba_enqi(handle, "p2", p2)
+  \end{verbatim}
+\item[{\tt idba\_settimerange(handle, type, p1, p2)}]
+  is a shortcut to:
+  \begin{verbatim}
+  idba_seti(handle, "pindicator", type)
+  idba_seti(handle, "p1", p1)
+  idba_seti(handle, "p2", p2)
+  \end{verbatim}
+\end{description}
 
 \section {API invariants}
 
