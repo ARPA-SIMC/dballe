@@ -94,6 +94,8 @@ our %comments = (
 			  "Restricts the results to only those data which ".
 			  "have an attribute that matches the filter. ".
 			  "Examples: 'conf>70', 'B33197=0'" ],
+	limit =>	[ "ignored", "optional", "absent",
+			  "Maximum number of results to return" ],
 );
 
 my $op = $ARGV[0];

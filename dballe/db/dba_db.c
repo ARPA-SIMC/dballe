@@ -819,6 +819,9 @@ dba_err dba_db_ana_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* cou
 
 	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " ORDER BY pa.id"));
 
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_LIMIT)) != NULL)
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf, " LIMIT %s", val));
+
 	/* Bind output fields */
 #define DBA_QUERY_BIND(num, type, name) \
 	SQLBindCol(stm, num, type, &(*cur)->out_##name, sizeof((*cur)->out_##name), &(*cur)->out_##name##_ind);
@@ -1189,6 +1192,9 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 	else
 		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
 			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio"));
+
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_LIMIT)) != NULL)
+		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf, " LIMIT %s", val));
 
 /* 	strcat(db->querybuf, " ORDER BY ri.prio, d.id_report"); */
 /* fprintf(stderr, "QUERY: %s\n", db->querybuf); */
