@@ -1,6 +1,29 @@
 README for Data Base All Enhanced version 0.7, still unreleased
 ===============================================================
 
+Introduction
+------------
+
+DB-ALLe is a database for punctual meteorological data intended to complement
+the existing tools to manage grid-based data.
+
+These are the main characteristics of DB-ALLe:
+
+ - it is temporary, to be used for a limited time and then be deleted.
+ - does not need backup, since it only contains replicated or derived data.
+ - write access is enabled for its users.
+ - it is fast for both read and for write access.
+ - it is based on physical principles, that is, the data it contains are
+   defined in terms of omogeneous and consistent physical data.  For example,
+   it is impossible for two incompatible values to exist in the same point in
+   space and time.
+ - it can manage fixed station and moving stations such as airplanes or ships.
+ - it can manage both observational and forecast data.
+ - it can manage data along all three dimensions in space, such as data from
+   soundings and airplanes.
+ - it can work based on physical parameters or on report types.
+
+
 Functionality
 -------------
 
@@ -342,14 +365,24 @@ ECWMF BUFR template codes:
 
  - http://www.ecmwf.int/research/ifsdocs/OBSERVATIONS/Chap2_Obs_types3.html
 
+
 Author
 ------
 
-The author of Dballe is::
+The author of DB-ALLe is Enrico Zini <enrico@enricozini.com>
 
-  Ditta Enrico Zini
-  via Schiassi 2
-  40016 San Giorgio di Piano (BO)
-  Tel. +39.347.4707604
-  http://www.enricozini.com
-  E-Mail: enrico@enricozini.com
+DB-ALLe is Copyright (C) 2005, 2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+
+DB-ALLe is licensed under the terms of the GNU General Public License version
+2.  Please see the file COPYING for details.
+
+Contact informations for ARPA-SIM:
+
+  Agenzia Regionale Prevenzione e Ambiente (ARPA)
+  Servizio Idro-Meteorologico (SIM)
+
+  Address: Viale Silvani 6, 40122 Bologna, Italy
+  Tel: + 39 051 6497511
+  Fax: + 39 051 6497501
+  Email: urpsim@smr.arpa.emr.it
+  Website: http://www.arpa.emr.it/sim/

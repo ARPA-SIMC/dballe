@@ -9,7 +9,7 @@ Section: libdevel
 Architecture: any
 Depends: libdballe1 (= ${Source-Version})
 Recommends: pkg-config
-Description: volatile database for computations on meteorological data
+Description: Database for computations on meteorological data
  .
  This is the development version of the library.
 
@@ -17,7 +17,7 @@ Package: libdballe1
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends} ${misc:Depends}
-Description: volatile database for computations on meteorological data
+Description: Database for computations on meteorological data
  .
 
 Package: libdballe-bin
