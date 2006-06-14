@@ -96,6 +96,12 @@ dba_err dba_db_reset(dba_db db, const char* repinfo_file);
  *   description, priority, descriptor, table A category.
  *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
  *   used.
+ * @retval added
+ *   The number of repinfo entryes that have been added
+ * @retval deleted
+ *   The number of repinfo entryes that have been deleted
+ * @retval updated
+ *   The number of repinfo entryes that have been updated
  * @return
  *   The error indicator for the function
  */
@@ -287,37 +293,41 @@ dba_err dba_db_remove(dba_db db, dba_record rec);
  *
  * @param db
  *   The dballe session id
- * @param id_data
- *   The database ID of the variable to which the QC data to query are referred
+ * @param id_context
+ *   The database id of the context related to the attributes to retrieve
+ * @param id_var
+ *   The varcode of the variable related to the attributes to retrieve
  * @param qcs
  *   The WMO codes of the QC values requested.  If it is NULL, then all values
  *   are returned.
  * @param qcs_size
  *   Number of elements in qcs
- * @param qc
- *   The dba_record that will hold the resulting QC data
+ * @param attrs
+ *   The dba_record that will hold the resulting attributes
  * @retval count
  *   Number of QC items returned in qc
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size, dba_record qc, int* count);
+dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size, dba_record attrs, int* count);
 
 /**
  * Insert a new QC value into the database.
  *
  * @param db
  *   The dballe session id
- * @param id_data
- *   The database id of the data item related to the QC values to insert
- * @param qc
- *   The QC data to be added
+ * @param id_context
+ *   The database id of the context related to the attributes to insert
+ * @param id_var
+ *   The varcode of the variable related to the attributes to add
+ * @param attrs
+ *   The record with the attributes to be added
  * @param can_replace
  *   If true, then existing data can be rewritten, else data can only be added.
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_var, dba_record qc, int can_replace);
+dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_var, dba_record attrs, int can_replace);
 
 /**
  * Insert a new QC value into the database.
@@ -327,14 +337,16 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_va
  *
  * @param db
  *   The dballe session id
- * @param id_data
- *   The database id of the data item related to the QC values to insert
- * @param qc
- *   The QC data to be added
+ * @param id_context
+ *   The database id of the context related to the attributes to insert
+ * @param id_var
+ *   The varcode of the variable related to the attributes to add
+ * @param attrs
+ *   The record with the attributes to be added
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_qc_insert(dba_db db, int id_context, dba_varcode id_var, dba_record qc);
+dba_err dba_db_qc_insert(dba_db db, int id_context, dba_varcode id_var, dba_record attrs);
 
 /**
  * Insert a new QC value into the database.
@@ -343,14 +355,16 @@ dba_err dba_db_qc_insert(dba_db db, int id_context, dba_varcode id_var, dba_reco
  *
  * @param db
  *   The dballe session id
- * @param id_data
- *   The database id of the data item related to the QC values to insert
- * @param qc
- *   The QC data to be added
+ * @param id_context
+ *   The database id of the context related to the attributes to insert
+ * @param id_var
+ *   The varcode of the variable related to the attributes to add
+ * @param attrs
+ *   The record with the attributes to be added
  * @return
  *   The error indicator for the function
  */
-dba_err dba_db_qc_insert_new(dba_db db, int id_context, dba_varcode id_var, dba_record qc);
+dba_err dba_db_qc_insert_new(dba_db db, int id_context, dba_varcode id_var, dba_record attrs);
 
 /**
  * Delete QC data for the variable `var' in record `rec' (coming from a previous
@@ -358,8 +372,10 @@ dba_err dba_db_qc_insert_new(dba_db db, int id_context, dba_varcode id_var, dba_
  *
  * @param db
  *   The dballe session id
- * @param id_data
- *   The database id of the data item related to the QC values to insert
+ * @param id_context
+ *   The database id of the context related to the attributes to remove
+ * @param id_var
+ *   The varcode of the variable related to the attributes to remove
  * @param qcs
  *   Array of WMO codes of the QC data to delete.  If NULL, all QC data
  *   associated to id_data will be deleted.

@@ -23,6 +23,11 @@ extern "C" {
  * @param overwrite
  *   If true, message data will overwrite existing values; if false, trying to
  *   insert existing data will cause an error.
+ * @param fast
+ *   If true, perform the import outside of the transaction.  This will make
+ *   the function faster but not atomic: if interrupted, for example in case of
+ *   error, then the data inserted before the interruption will stay in the
+ *   database.
  * @return
  *   The error indicator for the function
  */

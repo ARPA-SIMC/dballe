@@ -3,9 +3,9 @@ Tue Mar 15 11:02:21 CET 2005.
 
 Upstream Author: Enrico Zini <enrico@debian.org>
 
-Copyright (C) 2005 ARPA SMR ???? <?????????????????>
+Copyright (C) 2005,2006 ARPA SMR ???? <?????????????????>
 
-License: TODO
+License:
 
-This software is distributed under the GNU Lesser General Public License,
-which can be found at /usr/share/common-licenses/LGPL-2.1.
+This software is distributed under the GNU General Public License version 2,
+which can be found at /usr/share/common-licenses/GPL-2.
