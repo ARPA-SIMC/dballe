@@ -5,9 +5,9 @@ CREX and BUFR template-specific export functions.
 
 Procedure to add a new converter:
 
-\l Copy an existing one and adapt it
-\l Add an external declaration for its descriptor structure to the top of exporters.c
-\l Add a reference to its description structure to the exporters[] array in exporters.c
+\li Copy an existing one and adapt it
+\li Add an external declaration for its descriptor structure to the top of exporters.c
+\li Add a reference to its description structure to the exporters[] array in exporters.c
 
 <b>Module dependencies</b>
 \ref err

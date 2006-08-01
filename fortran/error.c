@@ -165,15 +165,8 @@ F77_INTEGER_FUNCTION(idba_error_set_callback)(
 /**
  * Remove a callback set previously.
  *
- * @param code
- *   The error code (@see ::dba_err_code) of the error that triggers this
- *   callback.  If DBA_ERR_NONE is used, then the callback is invoked on all
- *   errors.
- * @param func
- *   The function to be called.
- * @param data
- *   An arbitrary integer data that is passed verbatim to the callback function
- *   when invoked.
+ * @param handle
+ *   The handle previously returned by idba_error_set_callback
  * @return
  *   The error indicator for the function
  */

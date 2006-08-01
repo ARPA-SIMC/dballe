@@ -284,27 +284,29 @@ static int check_flag(const char* val, const char* buf, int len)
  * new pseudoana records), or dataflag=rewrite and qcflag=read (when deleting
  * data, their attributes are deleted as well).
  *
- * @param handle
+ * @param dbahandle
+ *   The main DB-ALLe connection handle
+ * @retval handle
  *   The session handle returned by the function
  * @param anaflag
  *   Controls access to pseudoana records and can have these values:
- *   \l \c "read" pseudoana records cannot be inserted.
- *   \l \c "write" it is possible to insert and delete pseudoana records.
+ *   \li \c "read" pseudoana records cannot be inserted.
+ *   \li \c "write" it is possible to insert and delete pseudoana records.
  * @param dataflag
  *   Controls access to observed data and can have these values:
- *    \l \c "read" data cannot be modified in any way.
- *    \l \c "add" data can be added to the database, but existing data cannot be
+ *    \li \c "read" data cannot be modified in any way.
+ *    \li \c "add" data can be added to the database, but existing data cannot be
  *    modified.  Deletions are disabled.  This is used to insert new data in the
  *    database while preserving the data that was already present in it.
- *    \l \c "write" data can freely be added, overwritten and deleted.
+ *    \li \c "write" data can freely be added, overwritten and deleted.
  * @param qcflag
  *    Controls access to data attributes and can have these values:
- *    \l \c "read" attributes cannot be modified in any way.
- *    \l \c "add" attributes can can be added to the database, but existing
+ *    \li \c "read" attributes cannot be modified in any way.
+ *    \li \c "add" attributes can can be added to the database, but existing
  *    attributes cannot be modified.  Deletion of attributes is disabled.  This is
  *    used to insert new attribute in the database while preserving the attributes
  *    that were already present in it.
- *    \l \c "write" attributes can freely be added, overwritten and deleted.
+ *    \li \c "write" attributes can freely be added, overwritten and deleted.
  * @return
  *   The error indication for the function.
  */
@@ -1037,6 +1039,20 @@ F77_INTEGER_FUNCTION(idba_setc)(
 	}
 }
 
+/**
+ * Shortcut function to read level data.
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @retval ltype
+ *   Level type from the output record
+ * @retval l1
+ *   L1 from the output record
+ * @retval l2
+ *   L2 from the output record
+ * @return
+ *   The error indicator for the function
+ */
 F77_INTEGER_FUNCTION(idba_enqlevel)(
 		INTEGER(handle),
 		INTEGER(ltype),
@@ -1054,6 +1070,20 @@ F77_INTEGER_FUNCTION(idba_enqlevel)(
 	return dba_error_ok();
 }
 
+/**
+ * Shortcut function to set level data.
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @param ltype
+ *   Level type to set in the input record
+ * @param l1
+ *   L1 to set in the input record
+ * @param l2
+ *   L2 to set in the input record
+ * @return
+ *   The error indicator for the function
+ */
 F77_INTEGER_FUNCTION(idba_setlevel)(
 		INTEGER(handle),
 		INTEGER(ltype),
@@ -1071,6 +1101,20 @@ F77_INTEGER_FUNCTION(idba_setlevel)(
 	return dba_error_ok();
 }
 
+/**
+ * Shortcut function to read time range data.
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @retval ptype
+ *   P indicator from the output record
+ * @retval p1
+ *   P1 from the output record
+ * @retval p2
+ *   P2 from the output record
+ * @return
+ *   The error indicator for the function
+ */
 F77_INTEGER_FUNCTION(idba_enqtimerange)(
 		INTEGER(handle),
 		INTEGER(ptype),
@@ -1088,6 +1132,20 @@ F77_INTEGER_FUNCTION(idba_enqtimerange)(
 	return dba_error_ok();
 }
 
+/**
+ * Shortcut function to set time range data.
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @param ptype
+ *   P indicator to set in the input record
+ * @param p1
+ *   P1 to set in the input record
+ * @param p2
+ *   P2 to set in the input record
+ * @return
+ *   The error indicator for the function
+ */
 F77_INTEGER_FUNCTION(idba_settimerange)(
 		INTEGER(handle),
 		INTEGER(ptype),
@@ -1105,6 +1163,26 @@ F77_INTEGER_FUNCTION(idba_settimerange)(
 	return dba_error_ok();
 }
 
+/**
+ * Shortcut function to read date information.
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @retval year
+ *   Year from the output record
+ * @retval month
+ *   Month the output record
+ * @retval day
+ *   Day the output record
+ * @retval hour
+ *   Hour the output record
+ * @retval min
+ *   Minute the output record
+ * @retval sec
+ *   Second the output record
+ * @return
+ *   The error indicator for the function
+ */
 F77_INTEGER_FUNCTION(idba_enqdate)(
 		INTEGER(handle),
 		INTEGER(year),
@@ -1131,6 +1209,26 @@ F77_INTEGER_FUNCTION(idba_enqdate)(
 	return dba_error_ok();
 }
 
+/**
+ * Shortcut function to set date information.
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @param year
+ *   Year to set in the input record
+ * @param month
+ *   Month to set in the input
+ * @param day
+ *   Day to set in the input
+ * @param hour
+ *   Hour to set in the input
+ * @param min
+ *   Minute to set in the input
+ * @param sec
+ *   Second to set in the input
+ * @return
+ *   The error indicator for the function
+ */
 F77_INTEGER_FUNCTION(idba_setdate)(
 		INTEGER(handle),
 		INTEGER(year),
@@ -1157,6 +1255,26 @@ F77_INTEGER_FUNCTION(idba_setdate)(
 	return dba_error_ok();
 }
 
+/**
+ * Shortcut function to set minimum date for a query.
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @param year
+ *   Minimum year to set in the query
+ * @param month
+ *   Minimum month to set in the query
+ * @param day
+ *   Minimum day to set in the query
+ * @param hour
+ *   Minimum hour to set in the query
+ * @param min
+ *   Minimum minute to set in the query
+ * @param sec
+ *   Minimum second to set in the query
+ * @return
+ *   The error indicator for the function
+ */
 F77_INTEGER_FUNCTION(idba_setdatemin)(
 		INTEGER(handle),
 		INTEGER(year),
@@ -1183,6 +1301,26 @@ F77_INTEGER_FUNCTION(idba_setdatemin)(
 	return dba_error_ok();
 }
 
+/**
+ * Shortcut function to set maximum date for a query.
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @param year
+ *   Maximum year to set in the query
+ * @param month
+ *   Maximum month to set in the query
+ * @param day
+ *   Maximum day to set in the query
+ * @param hour
+ *   Maximum hour to set in the query
+ * @param min
+ *   Maximum minute to set in the query
+ * @param sec
+ *   Maximum second to set in the query
+ * @return
+ *   The error indicator for the function
+ */
 F77_INTEGER_FUNCTION(idba_setdatemax)(
 		INTEGER(handle),
 		INTEGER(year),

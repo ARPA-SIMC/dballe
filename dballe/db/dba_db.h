@@ -150,6 +150,9 @@ dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid);
  *
  * @param db
  *   The dballe session id
+ * @param query
+ *   The record with the query data (see technical specifications, par. 1.6.4
+ *   "parameter output/input")
  * @retval cur
  *   The dba_db_cursor variable that will hold the resulting dba_db_cursor that can
  *   be used to get the result values (@see dba_ana_cursor_next).
@@ -198,7 +201,7 @@ dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_
  *   The dballe session id
  * @param rec
  *   The record with the query data (see technical specifications, par. 1.6.4
- *   "parameter output/input"
+ *   "parameter output/input")
  * @retval cur
  *   The dba_db_cursor variable that will hold the resulting dba_db_cursor that can
  *   be used to get the result values (@see dba_db_cursor_next)
