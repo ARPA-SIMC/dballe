@@ -78,10 +78,10 @@ our %comments = (
 	data_id =>	[ "ignored", "optional", "present",
 			  "Internal DB-ALLe ID referring to a value in the database, ".
 	                  "used as a shortcut reference" ],
-	querybest =>	[ "ignored", "optional", "absent",
-			  "If set to 1, in case multiple values exist in the ".
-			  "same phisical space the results will only have the ".
-			  "one with the highest report priority" ],
+	query =>	[ "ignored", "optional", "absent",
+			  "Comma-separated list of query modifiers.  Can have one of: ".
+			  "'best', 'bigana', 'nosort', 'stream'.  ".
+			  "Examples: 'best', 'nosort,stream'" ],
 	ana_filter =>	[ "ignored", "optional", "absent",
 			  "Restricts the results to only those stations which ".
 			  "have a pseudoana value that matches the filter. ".

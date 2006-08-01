@@ -1103,6 +1103,63 @@ ana\_id} value, if known, and get a faster search.
 data setting latitude, longitude, level layer, time range and so on, one can
 just provide the value of {\tt data\_id}, and also get a faster search.
 
+\section{Query modifiers}
+
+\dballe{} allows to set special query behaviours using the {\tt "query"}
+parameter.  The available options are:
+
+\begin{description}
+\item [best]
+  When measures from different kinds of reports exist in the same physical
+  space, do not return them all, but only return the one of the record type
+  with the highest priority.
+\item [bigana]
+  Use special query optimizations that make things faster when there are a lot
+  of stations in the database, and slower otherwise.  If you are having slow
+  queries, try setting this option and see if it helps.
+\item [nosort]
+  Return the results in a nondefined order.  It can make things faster when
+  writing algorithms that do not depend on the ordering of data from \dballe{}.
+\item [stream]
+  Normally the functions {\tt idba\_quantesono} or {\tt idba\_voglioquesto}
+  will read all the results from the server, count them and save them locally.
+
+  When using this option, those functions will return right after performing
+  the query, and the results will be read later using {\tt idba\_elencamele} or
+  {\tt idba\_dammelo}.  As a side effect, {\tt idba\_quantesono} and
+  {\tt idba\_voglioquesto} cannot know in advance the result count, and will
+  return some undefined value in it.
+
+  When using this option, the only way to find out when to stop reading is to
+  know that {\tt idba\_elencamele} and {\tt idba\_dammelo} will set all the
+  output parameters to undefined when there is no more data to read.  One could
+  thus use a loop like this:
+  \begin{verbatim}
+      call idba_setc (handle, "query", "stream")
+c     Make the query
+      call idba_voglioquesto (handle, N)
+c     Iterate the results.  Ignore N because it is
+c     meaningless when using query=stream
+      do
+        call idba_dammelo (handle, varname)
+c       If ana_id is missing value, then we are done
+        idba_enqi(handle, "ana_id", value)
+        if (value .eq. 2147483647) exit
+
+c       ...process the data...
+      enddo
+  \end{verbatim}
+
+  This option can be a significant improvement in speed and memory when the
+  result count is not needed in advance.  The speed improvement comes because
+  the client can start doing computations on the results while the server is
+  still generating the results, taking advantage of parallelism, especially if
+  the server and the application are on two different computers.
+
+  Without using this option, the client cannot start to use the results until
+  the server has finished computing and trasmitting them.
+\end{description}
+
 \chapter{Code examples}
 \label{ch-examples}
 
