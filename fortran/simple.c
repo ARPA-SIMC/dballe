@@ -338,9 +338,6 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 
 	STATE.session = *dbahandle;
 	STATE.perms = 0;
-	STATE.sys_ana_id = 0;
-	STATE.sys_context_id = 0;
-	STATE.sys_last_varcode = 0;
 	STATE.input = NULL;
 	STATE.output = NULL;
 	STATE.qcinput = NULL;
@@ -584,14 +581,6 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 			rec = STATE.qcoutput;
 			p = parm + 1;
 			break;
-		case '!':
-			if (strcmp(parm + 1, "ana_id") == 0)
-				*value = STATE.sys_ana_id;
-			else if (strcmp(parm + 1, "context_id") == 0)
-				*value = STATE.sys_context_id;
-			else
-				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
-			return dba_error_ok();
 		default:
 			rec = STATE.output;
 			p = parm;
@@ -812,16 +801,6 @@ F77_INTEGER_FUNCTION(idba_seti)(
 			rec = STATE.qcinput;
 			p = parm + 1;
 			break;
-		case '!':
-			if (strcmp(parm + 1, "ana_id") == 0)
-				STATE.sys_ana_id = *value;
-			else if (strcmp(parm + 1, "context_id") == 0)
-				STATE.sys_context_id = *value;
-			else if (strcmp(parm + 1, "ana") == 0)
-				return dba_record_set_ana_context(STATE.input);
-			else
-				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
-			return dba_error_ok();
 		default:
 			rec = STATE.input;
 			p = parm;
@@ -836,6 +815,19 @@ F77_INTEGER_FUNCTION(idba_seti)(
 
 		if (*value == MISSING_INT)
 			return dba_record_key_unset(rec, param);
+		else
+			switch (param)
+			{
+				case DBA_KEY_LAT:
+				case DBA_KEY_LON:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
+					break;
+				case DBA_KEY_ANA_ID:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
+					break;
+				default: break;
+			}
 
 		return dba_record_key_seti(rec, param, *value);
 	} else {
@@ -887,12 +879,6 @@ F77_INTEGER_FUNCTION(idba_setr)(
 			rec = STATE.qcinput;
 			p = parm + 1;
 			break;
-		case '!':
-			if (strcmp(parm + 1, "ana") == 0)
-				return dba_record_set_ana_context(STATE.input);
-			else
-				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
-			return dba_error_ok();
 		default:
 			rec = STATE.input;
 			p = parm;
@@ -907,6 +893,19 @@ F77_INTEGER_FUNCTION(idba_setr)(
 
 		if (*value == MISSING_REAL)
 			return dba_record_key_unset(rec, param);
+		else
+			switch (param)
+			{
+				case DBA_KEY_LAT:
+				case DBA_KEY_LON:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
+					break;
+				case DBA_KEY_ANA_ID:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
+					break;
+				default: break;
+			}
 
 		return dba_record_key_setd(rec, param, *value);
 	} else {
@@ -958,12 +957,6 @@ F77_INTEGER_FUNCTION(idba_setd)(
 			rec = STATE.qcinput;
 			p = parm + 1;
 			break;
-		case '!':
-			if (strcmp(parm + 1, "ana") == 0)
-				return dba_record_set_ana_context(STATE.input);
-			else
-				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
-			return dba_error_ok();
 		default:
 			rec = STATE.input;
 			p = parm;
@@ -978,6 +971,19 @@ F77_INTEGER_FUNCTION(idba_setd)(
 
 		if (*value == MISSING_DOUBLE)
 			return dba_record_key_unset(rec, param);
+		else
+			switch (param)
+			{
+				case DBA_KEY_LAT:
+				case DBA_KEY_LON:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
+					break;
+				case DBA_KEY_ANA_ID:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
+					break;
+				default: break;
+			}
 
 		return dba_record_key_setd(rec, param, *value);
 	} else {
@@ -1033,12 +1039,6 @@ F77_INTEGER_FUNCTION(idba_setc)(
 			rec = STATE.qcinput;
 			p = parm + 1;
 			break;
-		case '!':
-			if (strcmp(parm + 1, "ana") == 0)
-				return dba_record_set_ana_context(STATE.input);
-			else
-				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
-			return dba_error_ok();
 		default:
 			rec = STATE.input;
 			p = parm;
@@ -1053,6 +1053,19 @@ F77_INTEGER_FUNCTION(idba_setc)(
 
 		if (val[0] == 0)
 			return dba_record_key_unset(rec, param);
+		else
+			switch (param)
+			{
+				case DBA_KEY_LAT:
+				case DBA_KEY_LON:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
+					break;
+				case DBA_KEY_ANA_ID:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
+					break;
+				default: break;
+			}
 
 		return dba_record_key_setc(rec, param, val);
 	} else {
@@ -1064,6 +1077,21 @@ F77_INTEGER_FUNCTION(idba_setc)(
 
 		return dba_record_var_setc(rec, code, val);
 	}
+}
+
+/**
+ * Shortcut function to set query parameters to the anagraphical context
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_setcontextana)(
+		INTEGER(handle))
+{
+	GENPTR_INTEGER(handle)
+	return dba_record_set_ana_context(STATE.input);
 }
 
 /**
@@ -1423,6 +1451,31 @@ F77_INTEGER_FUNCTION(idba_unset)(
 		return dba_record_var_unset(rec, DBA_STRING_TO_VAR(p + 1));
 }
 
+static void clear_attr_rec(dba_record rec)
+{
+	const char* val;
+	int saved_context_id = -1;
+	char saved_varname[8];
+
+	/* Copy the values to be preserved */
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_CONTEXT_ID)) != NULL)
+		saved_context_id = strtol(val, NULL, 10);
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_VAR)) != NULL)
+	{
+		strncpy(saved_varname, val, 7);
+		saved_varname[6] = 0;
+	}
+	else
+		saved_varname[0] = 0;
+
+	dba_record_clear(rec);
+
+	if (saved_context_id != -1)
+		dba_record_key_seti(rec, DBA_KEY_CONTEXT_ID, saved_context_id);
+	if (saved_varname[0] != 0)
+		dba_record_key_setc(rec, DBA_KEY_VAR, saved_varname);
+}
+
 /**
  * Remove all parameters from the input record
  * 
@@ -1434,7 +1487,7 @@ F77_SUBROUTINE(idba_unsetall)(
 {
 	GENPTR_INTEGER(handle)
 
-	dba_record_clear(STATE.qcinput);
+	clear_attr_rec(STATE.qcinput);
 	dba_record_clear(STATE.input);
 }
 
@@ -1496,7 +1549,6 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	dba_err err;
 	int has_data;
 
 	if (STATE.ana_cur == NULL)
@@ -1572,7 +1624,6 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
 	const char* varstr;
-	dba_err err;
 	int has_data;
 
 	if (STATE.query_cur == NULL)
@@ -1592,12 +1643,17 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 	} else {
 		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(STATE.query_cur, STATE.output));
 		DBA_RUN_OR_RETURN(dba_record_key_enqc(STATE.output, DBA_KEY_VAR, &varstr));
-		STATE.sys_context_id = STATE.query_cur->out_context_id;
-		STATE.sys_last_varcode = STATE.query_cur->out_idvar;
+
+		/* Set context id and variable name on qcinput so that
+		 * attribute functions will refer to the last variable read */
+		DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.qcinput, DBA_KEY_CONTEXT_ID,
+							STATE.query_cur->out_context_id));
+		DBA_RUN_OR_RETURN(dba_record_key_setc(STATE.qcinput, DBA_KEY_VAR, varstr));
+
 		cnfExprt(varstr, parameter, parameter_length);
 	}
 
-	return err;
+	return dba_error_ok();
 }
 
 /**
@@ -1623,6 +1679,8 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 {
 	GENPTR_INTEGER(handle)
 	int ana_id, context_id;
+	dba_record_cursor cur;
+	dba_var var = NULL;
 
 	if (STATE.perms & PERM_DATA_RO)
 		return dba_error_consistency(
@@ -1644,9 +1702,30 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 				STATE.perms & PERM_ANA_WRITE ? 1 : 0,
 				&ana_id, &context_id));
 
-	STATE.sys_ana_id = ana_id;
-	STATE.sys_context_id = context_id;
-	STATE.sys_last_varcode = 0;
+	/* Set the values in the output */
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.output, DBA_KEY_ANA_ID, ana_id));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.output, DBA_KEY_CONTEXT_ID, context_id));
+
+	/* Set context id and variable name on qcinput so that
+	 * attribute functions will refer to what has been written */
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.qcinput, DBA_KEY_CONTEXT_ID, context_id));
+
+	/* If there was only one variable in the input, we can pass it on as a
+	 * default for attribute handling routines; otherwise we unset to mark
+	 * the ambiguity */
+	if ((cur = dba_record_iterate_first(STATE.input)) != NULL &&
+			dba_record_iterate_next(STATE.input, cur) == NULL)
+		var = dba_record_cursor_variable(cur);
+	
+	if (var != NULL)
+	{
+		dba_varcode code = dba_var_code(var);
+		char varname[8];
+		snprintf(varname, 7, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
+		DBA_RUN_OR_RETURN(dba_record_key_setc(STATE.qcinput, DBA_KEY_VAR, varname));
+	}
+	else
+		DBA_RUN_OR_RETURN(dba_record_key_unset(STATE.qcinput, DBA_KEY_VAR));
 
 	/* Copy the input on the output, so that QC functions can find the data
 	 * they need */
@@ -1683,8 +1762,10 @@ static dba_err get_referred_data_id(int* handle, int* id_context, dba_varcode* i
 {
 	const char* val;
 
-	*id_context = STATE.sys_context_id;
-	*id_var = STATE.sys_last_varcode;
+	/* Read context ID */
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.qcinput, DBA_KEY_CONTEXT_ID, id_context));
+
+	*id_var = 0;
 
 #if 0
 	/* First try with *data_id */
@@ -1767,7 +1848,7 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 
 	*count = STATE.qc_count;
 
-	dba_record_clear(STATE.qcinput);
+	clear_attr_rec(STATE.qcinput);
 
 cleanup:
 	if (arr != NULL)
@@ -1851,7 +1932,7 @@ F77_INTEGER_FUNCTION(idba_critica)(
 				SESSION, id_context, id_var, STATE.qcinput,
 				STATE.perms & PERM_ATTR_WRITE ? 1 : 0));
 
-	dba_record_clear(STATE.qcinput);
+	clear_attr_rec(STATE.qcinput);
 
 	return dba_error_ok();
 }
@@ -1918,7 +1999,7 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 				arr == NULL ? NULL : dba_arr_varcode_data(arr),
 				arr == NULL ? 0 : dba_arr_varcode_size(arr)));
 
-	dba_record_clear(STATE.qcinput);
+	clear_attr_rec(STATE.qcinput);
 
 cleanup:
 	if (arr != NULL)
