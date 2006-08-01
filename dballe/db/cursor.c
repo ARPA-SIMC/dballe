@@ -765,20 +765,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 
 	/* Get the results and save them in the record */
 	while (SQLFetch(stm) != SQL_NO_DATA)
-	{
-		switch (out_code)
-		{
-			case DBA_VAR(0, 1,  1): // BLOCK
-				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_BLOCK, out_val));
-				break;
-			case DBA_VAR(0, 1,  2): // STATION
-				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_STATION, out_val));
-				break;
-			default:
-				DBA_RUN_OR_GOTO(cleanup, dba_record_var_setc(rec, out_code, out_val));
-				break;
-		}
-	}
+		DBA_RUN_OR_GOTO(cleanup, dba_record_var_setc(rec, out_code, out_val));
 
 cleanup:
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
