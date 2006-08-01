@@ -41,14 +41,13 @@
 #define MISSING_DOUBLE (-2.22507E-308)
 
 #define PERM_ANA_RO		(1 << 0)
-#define PERM_ANA_REWRITE	(1 << 1)
-#define PERM_ANA_REUSE		(1 << 2)
-#define PERM_DATA_RO		(1 << 3)
-#define PERM_DATA_ADD		(1 << 4)
-#define PERM_DATA_REWRITE	(1 << 5)
-#define PERM_QC_RO		(1 << 6)
-#define PERM_QC_ADD		(1 << 7)
-#define PERM_QC_REWRITE		(1 << 8)
+#define PERM_ANA_WRITE		(1 << 1)
+#define PERM_DATA_RO		(1 << 2)
+#define PERM_DATA_ADD		(1 << 3)
+#define PERM_DATA_WRITE		(1 << 4)
+#define PERM_ATTR_RO		(1 << 5)
+#define PERM_ATTR_ADD		(1 << 6)
+#define PERM_ATTR_WRITE		(1 << 7)
 
 /** @defgroup fortransimple Simplified interface for Dballe
  * @ingroup fortran
@@ -289,19 +288,15 @@ static int check_flag(const char* val, const char* buf, int len)
  *   The session handle returned by the function
  * @param anaflag
  *   Controls access to pseudoana records and can have these values:
- *   \l \c "read" pseudoana records cannot be modified.
- *   \l \c "reuse" when inserting data, if an existing pseudoana record for the
- *   data is found, it will be reused.
- *   \l \c "rewrite" when inserting data, if an existing pseudoana record for the
- *   data is found, it will be completely overwritten with the parameters in
- *   input.
+ *   \l \c "read" pseudoana records cannot be inserted.
+ *   \l \c "write" it is possible to insert and delete pseudoana records.
  * @param dataflag
  *   Controls access to observed data and can have these values:
  *    \l \c "read" data cannot be modified in any way.
  *    \l \c "add" data can be added to the database, but existing data cannot be
  *    modified.  Deletions are disabled.  This is used to insert new data in the
  *    database while preserving the data that was already present in it.
- *    \l \c "rewrite" data can freely be added, overwritten and deleted.
+ *    \l \c "write" data can freely be added, overwritten and deleted.
  * @param qcflag
  *    Controls access to data attributes and can have these values:
  *    \l \c "read" attributes cannot be modified in any way.
@@ -309,7 +304,7 @@ static int check_flag(const char* val, const char* buf, int len)
  *    attributes cannot be modified.  Deletion of attributes is disabled.  This is
  *    used to insert new attribute in the database while preserving the attributes
  *    that were already present in it.
- *    \l \c "rewrite" attributes can freely be added, overwritten and deleted.
+ *    \l \c "write" attributes can freely be added, overwritten and deleted.
  * @return
  *   The error indication for the function.
  */
@@ -353,27 +348,32 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 
 	if (check_flag("read",	anaflag,  anaflag_length))
 		STATE.perms |= PERM_ANA_RO;
-	if (check_flag("rewrite",	anaflag,  anaflag_length))
-		STATE.perms |= PERM_ANA_REWRITE;
-	if (check_flag("reuse",		anaflag,  anaflag_length))
-		STATE.perms |= PERM_ANA_REUSE;
-	if (check_flag("read",		dataflag, dataflag_length))
+	if (check_flag("write",	anaflag,  anaflag_length))
+		STATE.perms |= PERM_ANA_WRITE;
+	if (check_flag("read",	dataflag, dataflag_length))
 		STATE.perms |= PERM_DATA_RO;
-	if (check_flag("add",		dataflag, dataflag_length))
+	if (check_flag("add",	dataflag, dataflag_length))
 		STATE.perms |= PERM_DATA_ADD;
-	if (check_flag("rewrite",	dataflag, dataflag_length))
-		STATE.perms |= PERM_DATA_REWRITE;
-	if (check_flag("read",		qcflag,   qcflag_length))
-		STATE.perms |= PERM_QC_RO;
-	if (check_flag("add",		qcflag,   qcflag_length))
-		STATE.perms |= PERM_QC_ADD;
-	if (check_flag("rewrite",	qcflag,   qcflag_length))
-		STATE.perms |= PERM_QC_REWRITE;
+	if (check_flag("write",	dataflag, dataflag_length))
+		STATE.perms |= PERM_DATA_WRITE;
+	if (check_flag("read",	qcflag,   qcflag_length))
+		STATE.perms |= PERM_ATTR_RO;
+	if (check_flag("add",	qcflag,   qcflag_length))
+		STATE.perms |= PERM_ATTR_ADD;
+	if (check_flag("write",	qcflag,   qcflag_length))
+		STATE.perms |= PERM_ATTR_WRITE;
 
-	if (STATE.perms & PERM_ANA_RO && !(STATE.perms & PERM_DATA_RO))
-		return dba_error_consistency("when data is writable, ana should not be set to 'read' only");
-	if (STATE.perms & PERM_QC_RO && !(STATE.perms & PERM_DATA_RO))
-		return dba_error_consistency("when data is writable, attr should not be set to 'read' only");
+	if ((STATE.perms & (PERM_ANA_RO | PERM_ANA_WRITE)) == 0)
+		return dba_error_consistency("pseudoana should be opened in either 'read' or 'write' mode");
+	if ((STATE.perms & (PERM_DATA_RO | PERM_DATA_ADD | PERM_DATA_WRITE)) == 0)
+		return dba_error_consistency("data should be opened in one of 'read', 'add' or 'write' mode");
+	if ((STATE.perms & (PERM_ATTR_RO | PERM_ATTR_ADD | PERM_ATTR_WRITE)) == 0)
+		return dba_error_consistency("attr should be opened in one of 'read', 'add' or 'write' mode");
+
+	if (STATE.perms & PERM_ANA_RO && STATE.perms & PERM_DATA_WRITE)
+		return dba_error_consistency("when data is 'write' ana must also be set to 'write', because deleting data can potentially also delete pseudoana");
+	if (STATE.perms & PERM_ATTR_RO && STATE.perms & PERM_DATA_WRITE)
+		return dba_error_consistency("when data is 'write' attr must also be set to 'write', because deleting data also delete its attributes");
 	
 	/* Allocate the records */
 	DBA_RUN_OR_GOTO(fail, dba_record_create(&(STATE.input)));
@@ -451,9 +451,9 @@ F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(r
 	GENPTR_CHARACTER(repinfofile)
 	char fname[PATH_MAX];
 
-	if (!(STATE.perms & PERM_DATA_REWRITE))
+	if (!(STATE.perms & PERM_DATA_WRITE))
 		return dba_error_consistency(
-			"idba_scopa must be run with the database open in data rewrite mode");
+			"idba_scopa must be run with the database open in data write mode");
 
 	cnfImprt(repinfofile, repinfofile_length > PATH_MAX ? PATH_MAX : repinfofile_length, fname);
 
@@ -1463,15 +1463,15 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 		dba_verbose(DBA_VERB_DB_INPUT,
 				"invoking dba_insert_or_replace(%d, <input>, %d, %d).  <input> is:\n",
 				*handle,
-				STATE.perms & PERM_DATA_REWRITE ? 1 : 0,
-				STATE.perms & PERM_ANA_REWRITE ? 1 : 0);
+				STATE.perms & PERM_DATA_WRITE ? 1 : 0,
+				STATE.perms & PERM_ANA_WRITE ? 1 : 0);
 		dba_record_print(STATE.input, DBA_VERBOSE_STREAM);
 	}
 
-	DBA_RUN_OR_RETURN(dba_db_insert_or_replace(
+	DBA_RUN_OR_RETURN(dba_db_insert(
 				SESSION, STATE.input,
-				STATE.perms & PERM_DATA_REWRITE ? 1 : 0,
-				STATE.perms & PERM_ANA_REWRITE ? 1 : 0,
+				STATE.perms & PERM_DATA_WRITE ? 1 : 0,
+				STATE.perms & PERM_ANA_WRITE ? 1 : 0,
 				&ana_id, &context_id));
 
 	STATE.sys_ana_id = ana_id;
@@ -1498,9 +1498,9 @@ F77_INTEGER_FUNCTION(idba_dimenticami)(
 {
 	GENPTR_INTEGER(handle)
 
-	if (! (STATE.perms & PERM_DATA_REWRITE))
+	if (! (STATE.perms & PERM_DATA_WRITE))
 		return dba_error_consistency(
-			"idba_dimenticami must be called with the database open in data rewrite mode");
+			"idba_dimenticami must be called with the database open in data write mode");
 
 	return dba_db_remove(SESSION, STATE.input);
 }
@@ -1671,7 +1671,7 @@ F77_INTEGER_FUNCTION(idba_critica)(
 	int id_context;
 	dba_varcode id_var;
 
-	if (STATE.perms & PERM_QC_RO)
+	if (STATE.perms & PERM_ATTR_RO)
 		return dba_error_consistency(
 			"idba_critica cannot be called with the database open in attribute readonly mode");
 
@@ -1679,7 +1679,7 @@ F77_INTEGER_FUNCTION(idba_critica)(
 
 	DBA_RUN_OR_RETURN(dba_db_qc_insert_or_replace(
 				SESSION, id_context, id_var, STATE.qcinput,
-				STATE.perms & PERM_QC_REWRITE ? 1 : 0));
+				STATE.perms & PERM_ATTR_WRITE ? 1 : 0));
 
 	dba_record_clear(STATE.qcinput);
 
@@ -1714,9 +1714,9 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 	int id_context;
 	dba_varcode id_var;
 
-	if (! (STATE.perms & PERM_QC_REWRITE))
+	if (! (STATE.perms & PERM_ATTR_WRITE))
 		return dba_error_consistency(
-			"idba_scusa must be called with the database open in attribute rewrite mode");
+			"idba_scusa must be called with the database open in attribute write mode");
 	
 	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
 

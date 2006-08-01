@@ -18,7 +18,7 @@ c     Database login
 
 c     Open a session
       call idba_preparati(dbahandle, handle,
-     $    "rewrite", "rewrite", "rewrite")
+     $    "write", "write", "write")
       call ensure_no_error("preparati")
 
 c     Clear the database

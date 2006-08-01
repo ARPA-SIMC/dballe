@@ -76,7 +76,7 @@ protected:
 			dba_record_clear(rec);
 			DBA_RUN_OR_RETURN(gen.fill_record(rec));
 			//dba_record_print(rec, stderr);
-			DBA_RUN_OR_RETURN(dba_db_insert(db, rec));
+			DBA_RUN_OR_RETURN(dba_db_insert(db, rec, 1, 1, NULL, NULL));
 		}
 
 		timing("inserted %d random records in the database", iterations);

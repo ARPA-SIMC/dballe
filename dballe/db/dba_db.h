@@ -163,21 +163,6 @@ dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid);
 dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count);
 
 /**
- * Insert a record into the database.
- *
- * In a record with the same phisical situation already exists, it is
- * overwritten
- *
- * @param db
- *   The dballe session id
- * @param rec
- *   The record to insert
- * @return
- *   The error indicator for the function
- */
-dba_err dba_db_insert(dba_db db, dba_record rec);
-
-/**
  * Insert a record into the database
  *
  * In a record with the same phisical situation already exists, the function
@@ -189,10 +174,9 @@ dba_err dba_db_insert(dba_db db, dba_record rec);
  *   The record to insert.
  * @param can_replace
  *   If true, then existing data can be rewritten, else data can only be added.
- * @param update_pseudoana
- *   If true, then the pseudoana informations are overwritten using information
- *   from rec; else data from rec is written into pseudoana only if there is no
- *   suitable existing anagraphical data for it.
+ * @param pseudoana_can_add
+ *   If true, then it is allowed to add new pseudoana records to the database.
+ *   Otherwise, data can be added only by reusing existing ones.
  * @retval ana_id
  *   ID of the pseudoana record for the entry just inserted.  NULL can be used
  *   if the caller is not interested in this value.
@@ -202,22 +186,7 @@ dba_err dba_db_insert(dba_db db, dba_record rec);
  * @return
  *   The error indicator for the function.
  */
-dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id, int* context_id);
-
-/**
- * Insert a record into the database
- *
- * In a record with the same phisical situation already exists, the function
- * fails.
- *
- * @param db
- *   The dballe session id
- * @param rec
- *   The record to insert
- * @return
- *   The error indicator for the function
- */
-dba_err dba_db_insert_new(dba_db db, dba_record rec);
+dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_can_add, int* ana_id, int* context_id);
 
 /**
  * Query the database.

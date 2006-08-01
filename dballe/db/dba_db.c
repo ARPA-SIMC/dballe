@@ -471,7 +471,7 @@ static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana
  * Insert or replace data in pseudoana taking the values from rec.
  * If rec did not contain ana_id, it will be set by this function.
  */
-static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewrite)
+static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int can_add, int* id)
 {
 	dba_err err = DBA_OK;
 	int mobile;
@@ -488,7 +488,7 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 		*id = -1;
 
 	/* If we don't need to rewrite, we are done */
-	if (*id != -1 && !rewrite)
+	if (*id != -1)
 		return dba_error_ok();
 
 	/* Look for the key data in the record */
@@ -508,23 +508,20 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int* id, int rewr
 	{
 		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_get_id(a, id));
 
-		/* If we don't have to update the data, we're done */
-		if (*id != -1 && !rewrite)
-			goto cleanup;
+		/* If not found, insert a new one */
+		if (*id == -1)
+		{
+			if (can_add)
+				DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_insert(a, id));
+			else
+			{
+				err = dba_error_consistency(
+						"trying to insert a pseudoana entry when it is forbidden");
+				goto cleanup;
+			}
+		}
 	}
 
-	/* Insert or update the values in the database */
-
-	if (*id != -1)
-	{
-		a->id = *id;
-		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_update(a));
-	} else {
-		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_insert(a, id));
-	}
-
-	/* DBA_RUN_OR_GOTO(cleanup, update_pseudoana_extra_info(db, rec, *id)); */
-	
 cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
@@ -590,7 +587,7 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
  * information from `rec'; else data from `rec' is written into pseudoana only
  * if there is no suitable anagraphical data for it.
  */
-dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int update_pseudoana, int* ana_id, int* context_id)
+dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_can_add, int* ana_id, int* context_id)
 {
 	dba_err err = DBA_OK;
 	dba_db_data d;
@@ -608,7 +605,7 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 	DBA_RUN_OR_RETURN(dba_db_begin(db));
 
 	/* Insert the pseudoana data, and get the ID */
-	DBA_RUN_OR_GOTO(fail, dba_insert_pseudoana(db, rec, &id_pseudoana, update_pseudoana));
+	DBA_RUN_OR_GOTO(fail, dba_insert_pseudoana(db, rec, pseudoana_can_add, &id_pseudoana));
 
 	/* Insert the context data, and get the ID */
 	DBA_RUN_OR_GOTO(fail, dba_insert_context(db, rec, id_pseudoana, &(d->id_context)));
@@ -635,16 +632,6 @@ dba_err dba_db_insert_or_replace(dba_db db, dba_record rec, int can_replace, int
 fail:
 	dba_db_rollback(db);
 	return err;
-}
-
-dba_err dba_db_insert(dba_db db, dba_record rec)
-{
-	return dba_db_insert_or_replace(db, rec, 1, 1, NULL, NULL);
-}
-
-dba_err dba_db_insert_new(dba_db db, dba_record rec)
-{
-	return dba_db_insert_or_replace(db, rec, 0, 0, NULL, NULL);
 }
 
 dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count)

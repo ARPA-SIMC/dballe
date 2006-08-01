@@ -205,7 +205,7 @@ void to::test<2>()
 	sampleAna.copyTestDataToRecord(insert);
 	extraAna.copyTestDataToRecord(insert);
 	/* Insert the anagraphical record */
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
 
 	/* Fill in data for the first record */
 	dba_record_clear(insert);
@@ -216,11 +216,11 @@ void to::test<2>()
 	sample01.copyTestDataToRecord(insert);
 
 	/* Insert the record */
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
 	/* Check if duplicate updates are allowed by insert */
-	CHECKED(dba_db_insert(db, insert));
+	CHECKED(dba_db_insert(db, insert, 1, 0, NULL, NULL));
 	/* Check if duplicate updates are trapped by insert_new */
-	gen_ensure(dba_db_insert_new(db, insert) == DBA_ERROR);
+	gen_ensure(dba_db_insert(db, insert, 0, 0, NULL, NULL) == DBA_ERROR);
 
 	/* Insert another record (similar but not the same) */
 	dba_record_clear(insert);
@@ -229,9 +229,9 @@ void to::test<2>()
 	sample1.copyTestDataToRecord(insert);
 	sample10.copyTestDataToRecord(insert);
 	sample11.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
 	/* Check again if duplicate updates are trapped */
-	gen_ensure(dba_db_insert_new(db, insert) == DBA_ERROR);
+	gen_ensure(dba_db_insert(db, insert, 0, 0, NULL, NULL) == DBA_ERROR);
 
 	/* Check dba_ana_* functions */
 	{
@@ -668,13 +668,13 @@ void to::test<3>()
 	a = base;
 	a.set(DBA_KEY_YEAR, 2005);
 	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
 
 	dba_record_clear(insert);
 	b = base;
 	b.set(DBA_KEY_YEAR, 2006);
 	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
 
 	{
 		int count;
@@ -734,14 +734,14 @@ void to::test<3>()
 	a.set(DBA_KEY_YEAR, 2006);
 	a.set(DBA_KEY_MONTH, 4);
 	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
 
 	dba_record_clear(insert);
 	b = base;
 	b.set(DBA_KEY_YEAR, 2006);
 	b.set(DBA_KEY_MONTH, 5);
 	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
 
 	{
 		int count;
@@ -805,7 +805,7 @@ void to::test<3>()
 	a.set(DBA_KEY_MONTH, 5);
 	a.set(DBA_KEY_DAY, 2);
 	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
 
 	dba_record_clear(insert);
 	b = base;
@@ -813,7 +813,7 @@ void to::test<3>()
 	b.set(DBA_KEY_MONTH, 5);
 	b.set(DBA_KEY_DAY, 3);
 	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
 
 	{
 		int count;
@@ -887,7 +887,7 @@ void to::test<3>()
 	a.set(DBA_KEY_DAY, 3);
 	a.set(DBA_KEY_HOUR, 12);
 	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
 
 	dba_record_clear(insert);
 	b = base;
@@ -896,7 +896,7 @@ void to::test<3>()
 	b.set(DBA_KEY_DAY, 3);
 	b.set(DBA_KEY_HOUR, 13);
 	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
 
 	{
 		int count;
@@ -968,7 +968,7 @@ void to::test<3>()
 	a.set(DBA_KEY_HOUR, 12);
 	a.set(DBA_KEY_MIN, 29);
 	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
 
 	dba_record_clear(insert);
 	b = base;
@@ -978,7 +978,7 @@ void to::test<3>()
 	b.set(DBA_KEY_HOUR, 12);
 	b.set(DBA_KEY_MIN, 30);
 	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert_new(db, insert));
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
 
 	{
 		int count;
