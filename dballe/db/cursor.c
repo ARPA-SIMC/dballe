@@ -296,6 +296,9 @@ static dba_err make_select(dba_db_cursor cur)
 	{
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id"));
 		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
+	} else if (cur->from_wanted & DBA_DB_FROM_D) {
+		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "d.id_context"));
+		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
 	}
 
 	return dba_error_ok();
@@ -615,11 +618,13 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	if (cur->modifiers & DBA_DB_MODIFIER_BIGANA)
 		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, "straight_join "));
 
-	/* Prepare SELECT Part and see what needs to be available in the FROM part */
-	DBA_RUN_OR_RETURN(make_select(cur));
-
 	/* Prepare WHERE part and see what needs to be available in the FROM part */
 	DBA_RUN_OR_RETURN(make_where(cur, query));
+
+	/* Prepare SELECT Part and see what needs to be available in the FROM part.
+	 * We do this after creating the WHERE part, so that we can add
+	 * more opportunistic extra values (see the end of make_select) */
+	DBA_RUN_OR_RETURN(make_select(cur));
 
 	/* Enforce join dependencies */
 	if (cur->from_wanted & (DBA_DB_FROM_DBLO | DBA_DB_FROM_DSTA | DBA_DB_FROM_DANA))

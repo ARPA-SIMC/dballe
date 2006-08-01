@@ -710,20 +710,26 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 {
 	dba_err err = DBA_OK;
 	dba_db_cursor cur = NULL;
-	SQLHSTMT stm = NULL;
+	SQLHSTMT stmd = NULL;
+	SQLHSTMT stma = NULL;
 	int res;
 
 	/* Allocate statement handle */
-	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stmd));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stma));
 
 	/* Compile the DELETE query for the data */
-	res = SQLPrepare(stm, (unsigned char*)
-			"DELETE FROM data, attr"
-			"  LEFT JOIN attr AS a ON a.id_context = d.id_context AND a.id_var = d.id_var"
-			"      WHERE data.id_context=? AND data.type=?", SQL_NTS);
+	res = SQLPrepare(stmd, (unsigned char*)"DELETE FROM data WHERE data.id_context=? AND data.id_var=?", SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to delete data entries");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stmd, "compiling query to delete data entries");
+		goto cleanup;
+	}
+	/* Compile the DELETE query for the attributes */
+	res = SQLPrepare(stma, (unsigned char*)"DELETE FROM attr WHERE attr.id_context=? AND attr.id_var=?", SQL_NTS);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stma, "compiling query to delete attribute entries");
 		goto cleanup;
 	}
 
@@ -731,8 +737,10 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	DBA_RUN_OR_RETURN(dba_db_cursor_create(db, &cur));
 
 	/* Bind parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_context_id), 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_idvar), 0, 0);
+	SQLBindParameter(stmd, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_context_id), 0, 0);
+	SQLBindParameter(stmd, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_idvar), 0, 0);
+	SQLBindParameter(stma, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_context_id), 0, 0);
+	SQLBindParameter(stma, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_idvar), 0, 0);
 
 	/* Get the list of data to delete */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_cursor_query(cur, rec, DBA_DB_WANT_VAR_NAME, 0));
@@ -742,19 +750,27 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	{
 		DBA_RUN_OR_RETURN(dba_db_cursor_next(cur));
 
-		/*fprintf(stderr, "Deleting %d\n", id);*/
-		res = SQLExecute(stm);
+		res = SQLExecute(stmd);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "deleting data entry %d/B%02d%03d and its attributes",
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stmd, "deleting data entry %d/B%02d%03d",
+					cur->out_context_id, DBA_VAR_X(cur->out_idvar), DBA_VAR_Y(cur->out_idvar));
+			goto cleanup;
+		}
+		res = SQLExecute(stma);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		{
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stma, "deleting attribute entries for %d/B%02d%03d",
 					cur->out_context_id, DBA_VAR_X(cur->out_idvar), DBA_VAR_Y(cur->out_idvar));
 			goto cleanup;
 		}
 	}
 
 cleanup:
-	if (stm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	if (stmd != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, stmd);
+	if (stma != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, stma);
 	if (cur != NULL)
 		dba_db_cursor_delete(cur);
 	return err == DBA_OK ? dba_error_ok() : err;
