@@ -33,12 +33,16 @@ using namespace tut_dballe;
 
 struct dba_core_record_shar
 {
+	dba_record rec;
+
 	dba_core_record_shar()
 	{
+		CHECKED(dba_record_create(&rec));
 	}
 
 	~dba_core_record_shar()
 	{
+		dba_record_delete(rec);
 	}
 };
 TESTGRP(dba_core_record);
@@ -105,10 +109,186 @@ void fail_unless_hasnt(dba_record rec, dba_varcode param)
 		gen_ensure_equals(string(val), string(value)); \
 	} while (0)
 
+
+// Check handling of keyword and variable information
 template<> template<>
 void to::test<1>()
 {
 	dba_varinfo info1, info2;
+
+	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 1, 1), &info1));
+
+	/* Keyword info handling */
+	dba_varinfo info;
+
+	gen_ensure(dba_record_keyword_byname("cippo") == DBA_KEY_ERROR);
+	gen_ensure(dba_record_keyword_byname("zzzip") == DBA_KEY_ERROR);
+
+	gen_ensure_equals(dba_record_keyword_byname("ana_id"), DBA_KEY_ANA_ID);
+	CHECKED(dba_record_keyword_info(DBA_KEY_ANA_ID, &info));
+	gen_ensure_equals(string(info->desc), string("Pseudoana database ID"));
+
+	gen_ensure_equals(dba_record_keyword_byname("yearmin"), DBA_KEY_YEARMIN);
+	CHECKED(dba_record_keyword_info(DBA_KEY_YEARMIN, &info));
+	gen_ensure_equals(string(info->desc), string("Year or minimum year queried"));
+
+	gen_ensure_equals(dba_record_keyword_byname("lat"), DBA_KEY_LAT);
+	CHECKED(dba_record_keyword_info(DBA_KEY_LAT, &info));
+	gen_ensure_equals(string(info->desc), string("Latitude"));
+
+	gen_ensure_equals(dba_record_keyword_byname("lon"), DBA_KEY_LON);
+	CHECKED(dba_record_keyword_info(DBA_KEY_LON, &info));
+	gen_ensure_equals(string(info->desc), string("Longitude"));
+	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 1, 2), &info2));
+}
+
+// Test type consistency checks
+template<> template<>
+void to::test<2>()
+{
+	dba_err err;
+
+	err = dba_record_key_seti(rec, DBA_KEY_VAR, 1);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_TYPE);
+
+	err = dba_record_var_seti(rec, DBA_VAR(0, 1, 19), 1);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_TYPE);
+}
+
+// Test get and set methods
+template<> template<>
+void to::test<3>()
+{
+	/* Record gets and sets */
+	dba_err err;
+	int ival;
+
+	// Check that things don't exist at the beginning
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_ANA_ID, &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_key_enqi(rec, DBA_KEY_ANA_ID, &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_key_enqi(rec, DBA_KEY_LAT, &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+
+	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_var_enqi(rec, DBA_VAR(0, 20, 1), &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+
+	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_var_enqi(rec, DBA_VAR(0, 20, 3), &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+
+	// Set various things
+	CHECKED(dba_record_key_seti(rec, DBA_KEY_ANA_ID, -10));
+	CHECKED(dba_record_key_seti(rec, DBA_KEY_LAT, 1234567));
+	CHECKED(dba_record_key_setd(rec, DBA_KEY_LON, 76.54321));
+	CHECKED(dba_record_key_setc(rec, DBA_KEY_YEARMIN, "1976"));
+	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 1), "456"));
+	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 3), "456"));
+
+	// Check that they now exist
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_ANA_ID, &ival));
+	gen_ensure_equals(ival, 1);
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
+	gen_ensure_equals(ival, 1);
+	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
+	gen_ensure_equals(ival, 1);
+	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
+	gen_ensure_equals(ival, 1);
+
+	// Check that they have the right value
+	fail_unless_int_is(key, DBA_KEY_ANA_ID, -10);
+	fail_unless_double_is(key, DBA_KEY_ANA_ID, -10.0);
+	fail_unless_int_is(key, DBA_KEY_LON, 7654321);
+	fail_unless_double_is(key, DBA_KEY_LON, 76.54321);
+	fail_unless_char_is(key, DBA_KEY_LON, "7654321");
+
+	fail_unless_int_is(key, DBA_KEY_LAT, 1234567);
+	fail_unless_double_is(key, DBA_KEY_LAT, 12.34567);
+	fail_unless_char_is(key, DBA_KEY_LAT, "1234567");
+
+	fail_unless_int_is(key, DBA_KEY_YEARMIN, 1976);
+	fail_unless_double_is(key, DBA_KEY_YEARMIN, 1976);
+	fail_unless_char_is(key, DBA_KEY_YEARMIN, "1976");
+
+	fail_unless_int_is(var, DBA_VAR(0, 20, 1), 456);
+	/*fail_unless_float_is(rec, "B02121", 45600000000.0)*/;
+	fail_unless_double_is(var, DBA_VAR(0, 20, 1), 4560);
+	fail_unless_char_is(var, DBA_VAR(0, 20, 1), "456");
+
+	fail_unless_int_is(var, DBA_VAR(0, 20, 3), 456);
+	/*fail_unless_float_is(rec, "B02121", 45600000000.0)*/;
+	fail_unless_double_is(var, DBA_VAR(0, 20, 3), 456);
+	fail_unless_char_is(var, DBA_VAR(0, 20, 3), "456");
+
+	// See if unset works for keywords
+	CHECKED(dba_record_key_unset(rec, DBA_KEY_LAT));
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_key_enqi(rec, DBA_KEY_LAT, &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+
+	// See if unset works for variables
+	CHECKED(dba_record_var_unset(rec, DBA_VAR(0, 20, 1)));
+	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_var_enqi(rec, DBA_VAR(0, 20, 1), &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+
+	/* fprintf(stderr, "IVAL: %d\n", ival); */
+	/* fprintf(stderr, "DVAL: %f\n", fval); */
+	/*
+	{
+		int i = 7654321;
+		double f = (double)i / 100000;
+		fprintf(stderr, "I: %d, F: %f\n", i, f);
+	}
+	*/
+
+	/* See if clear clears */
+	dba_record_clear(rec);
+	
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_key_enqi(rec, DBA_KEY_LAT, &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+
+	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_var_enqi(rec, DBA_VAR(0, 20, 3), &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+
+	dba_record_clear(rec);
+
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_key_enqi(rec, DBA_KEY_LAT, &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+
+	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
+	gen_ensure_equals(ival, 0);
+	err = dba_record_var_enqi(rec, DBA_VAR(0, 20, 3), &ival);
+	gen_ensure(err == DBA_ERROR);
+	gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
+}
+
 
 //	CHECKED(dba_record_keyword_selftest());
 
@@ -122,9 +302,6 @@ void to::test<1>()
 #endif
 
 	/*CHECKED(dba_vartable_create("dballe", &vartable));*/
-
-	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 1, 1), &info1));
-	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 1, 2), &info2));
 
 #if 0
 	{
@@ -208,108 +385,6 @@ void to::test<1>()
 		dba_record_delete(rec);
 	}
 #endif
-
-	{
-		/* Keyword info handling */
-		dba_varinfo info;
-
-		gen_ensure(dba_record_keyword_byname("cippo") == DBA_KEY_ERROR);
-		gen_ensure(dba_record_keyword_byname("zzzip") == DBA_KEY_ERROR);
-
-		gen_ensure_equals(dba_record_keyword_byname("ana_id"), DBA_KEY_ANA_ID);
-		CHECKED(dba_record_keyword_info(DBA_KEY_ANA_ID, &info));
-		gen_ensure_equals(string(info->desc), string("Pseudoana database ID"));
-
-		gen_ensure_equals(dba_record_keyword_byname("yearmin"), DBA_KEY_YEARMIN);
-		CHECKED(dba_record_keyword_info(DBA_KEY_YEARMIN, &info));
-		gen_ensure_equals(string(info->desc), string("Year or minimum year queried"));
-
-		gen_ensure_equals(dba_record_keyword_byname("lat"), DBA_KEY_LAT);
-		CHECKED(dba_record_keyword_info(DBA_KEY_LAT, &info));
-		gen_ensure_equals(string(info->desc), string("Latitude"));
-
-		gen_ensure_equals(dba_record_keyword_byname("lon"), DBA_KEY_LON);
-		CHECKED(dba_record_keyword_info(DBA_KEY_LON, &info));
-		gen_ensure_equals(string(info->desc), string("Longitude"));
-	}
-
-	{
-		/* Record gets and sets */
-		dba_err err;
-		int ival;
-		dba_record rec;
-
-		CHECKED(dba_record_create(&rec));
-
-		err = dba_record_key_enqi(rec, DBA_KEY_ANA_ID, &ival);
-		gen_ensure(err == DBA_ERROR);
-		gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
-
-		err = dba_record_key_enqi(rec, DBA_KEY_LAT, &ival);
-		gen_ensure(err == DBA_ERROR);
-		gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
-
-		err = dba_record_key_seti(rec, DBA_KEY_VAR, 1);
-		gen_ensure(err == DBA_ERROR);
-		gen_ensure(dba_error_get_code() == DBA_ERR_TYPE);
-
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_ANA_ID, -10));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_LAT, 1234567));
-		CHECKED(dba_record_key_setd(rec, DBA_KEY_LON, 76.54321));
-		CHECKED(dba_record_key_setc(rec, DBA_KEY_YEARMIN, "1976"));
-		CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 1), "456"));
-
-		fail_unless_int_is(key, DBA_KEY_ANA_ID, -10);
-		fail_unless_double_is(key, DBA_KEY_ANA_ID, -10.0);
-		fail_unless_int_is(key, DBA_KEY_LON, 7654321);
-		fail_unless_double_is(key, DBA_KEY_LON, 76.54321);
-		fail_unless_char_is(key, DBA_KEY_LON, "7654321");
-
-		fail_unless_int_is(key, DBA_KEY_LAT, 1234567);
-		fail_unless_double_is(key, DBA_KEY_LAT, 12.34567);
-		fail_unless_char_is(key, DBA_KEY_LAT, "1234567");
-
-		fail_unless_int_is(key, DBA_KEY_YEARMIN, 1976);
-		fail_unless_double_is(key, DBA_KEY_YEARMIN, 1976);
-		fail_unless_char_is(key, DBA_KEY_YEARMIN, "1976");
-
-		fail_unless_int_is(var, DBA_VAR(0, 20, 1), 456);
-		/*fail_unless_float_is(rec, "B02121", 45600000000.0)*/;
-		fail_unless_double_is(var, DBA_VAR(0, 20, 1), 4560);
-		fail_unless_char_is(var, DBA_VAR(0, 20, 1), "456");
-
-		CHECKED(dba_record_key_unset(rec, DBA_KEY_LAT));
-
-		err = dba_record_key_enqi(rec, DBA_KEY_LAT, &ival);
-		gen_ensure(err == DBA_ERROR);
-		gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
-
-		/* fprintf(stderr, "IVAL: %d\n", ival); */
-		/* fprintf(stderr, "DVAL: %f\n", fval); */
-		/*
-		{
-			int i = 7654321;
-			double f = (double)i / 100000;
-			fprintf(stderr, "I: %d, F: %f\n", i, f);
-		}
-		*/
-
-		/* See if clear clears */
-		dba_record_clear(rec);
-		
-		err = dba_record_key_enqi(rec, DBA_KEY_LAT, &ival);
-		gen_ensure(err == DBA_ERROR);
-		gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
-
-		dba_record_clear(rec);
-
-		err = dba_record_key_enqi(rec, DBA_KEY_LAT, &ival);
-		gen_ensure(err == DBA_ERROR);
-		gen_ensure(dba_error_get_code() == DBA_ERR_NOTFOUND);
-
-		dba_record_delete(rec);
-	}
-}
 
 }
 

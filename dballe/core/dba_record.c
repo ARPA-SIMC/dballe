@@ -722,7 +722,10 @@ dba_err dba_record_key_unset(dba_record rec, dba_keyword parameter)
 
 	/* Delete old value if it exists */
 	if (rec->keydata[parameter] != NULL)
-		dba_var_unset(rec->keydata[parameter]);
+	{
+		dba_var_delete(rec->keydata[parameter]);
+		rec->keydata[parameter] = NULL;
+	}
 	return dba_error_ok();
 }
 
