@@ -679,7 +679,7 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
 			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
 	else if (cur->from_wanted & DBA_DB_FROM_PA)
-		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, "ORDER BY pa.id"));
+		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, " ORDER BY pa.id"));
 
 	/* Append LIMIT if requested */
 	if ((val = dba_record_key_peek_value(query, DBA_KEY_LIMIT)) != NULL)
