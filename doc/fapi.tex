@@ -594,7 +594,7 @@ For example:
 c     Set the confidence of the wind speed value we inserted
 c     in the last 'idba_prendilo'
       call idba_setr(handle, "*B33007", 75.0)
-      call idba_setc(handle, "*var", "B11002")
+      call idba_setc(handle, "*var_related", "B11002")
       call idba_critica(handle)
 \end{verbatim}
 
@@ -649,7 +649,7 @@ c     ...finish reading all the varibales, compute things...
 
 c     Set the confidence interval for that value of wind speed
       call idba_seti(handle, "!context_id", context)
-      call idba_setc(handle, "*var", "B11002")
+      call idba_setc(handle, "*var_related", "B11002")
       call idba_setr(handle, "*B33007", confidence)
       call idba_critica(handle)
 \end{verbatim}
@@ -969,8 +969,8 @@ c     Insert wind speed and temperature
 c     Set the attributes
       call idba_seti(handle, "*B33007", 75)
 
-c     Use "*var" to indicate which of the two variables we are annotating
-      call idba_setc(handle, "*var", "B11002")
+c     Use "*var_related" to indicate which of the two variables we are annotating
+      call idba_setc(handle, "*var_related", "B11002")
 
       call idba_critica(handle)
 \end{verbatim}
@@ -1000,7 +1000,7 @@ c     Insert attributes about that interesting variable
 c     Select the variable using its context id
 c     and variable code
       call idba_seti(handle, "!context_id", saved_id)
-      call idba_seti(handle, "*var", "B11001")
+      call idba_seti(handle, "*var_related", "B11001")
       call idba_critica(handle)
 \end{verbatim}
 
@@ -1010,13 +1010,12 @@ This code introduces a new function:
 \item[{\tt idba\_critica}]
   Set one or more attributes about a variable.
   
-  The variable can be identified directly by using {\tt idba\_seti(handle, "!context\_id",
-  id)} and {\tt idba\_seti(handle, "*var", name)}, and by name using {\tt
-  idba\_setc(handle, "*var", "Bxxyyy")}.  If neither {\tt *context\_id} nor {\tt
-  *var} are set, {\tt idba\_critica} will refer to the last variable returned
-  by {\tt idba\_dammelo}.
+  The variable can be identified directly by using {\tt idba\_seti(handle,
+  "*context\_id", id)} and {\tt idba\_seti(handle, "*var\_related", name)}.
+  These parameters are automatically set by the {\tt idba\_dammelo} and {\tt
+  idba\_prendilo} action routines.
 
-  The QC attributes and values are set as input to {\tt idba\_critica} using the
+  The attributes and values are set as input to {\tt idba\_critica} using the
   {\tt idba\_set*} functions with an asterisk in front of the variable name.
 \end{description}
 
@@ -1045,7 +1044,7 @@ c     Delete the confidence interval from the wind speed
 c     The referring variable is identified in the same way as with
 c     idba_critica:
       call idba_seti(handle, "!context_id", saved_id)
-      call idba_seti(handle, "*var_id", "B11002")
+      call idba_seti(handle, "*var_related", "B11002")
 
 c     The attributes to delete are selected by setting "*varlist":
       call idba_setc(handle, "*varlist", "*B33007")
