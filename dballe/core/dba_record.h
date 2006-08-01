@@ -85,7 +85,8 @@ typedef enum _dba_keyword {
 	DBA_KEY_DATA_FILTER	= 46,
 	DBA_KEY_ATTR_FILTER	= 47,
 	DBA_KEY_LIMIT		= 48,
-	DBA_KEY_COUNT		= 49,
+	DBA_KEY_VAR_RELATED	= 49,
+	DBA_KEY_COUNT		= 50,
 } dba_keyword;
 
 /* Shortcuts for commonly used variables */

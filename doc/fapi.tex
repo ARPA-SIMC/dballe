@@ -1256,8 +1256,30 @@ c       Read the data about the station
 
 \chapter{Input and output parameters}
 
+\section{For data-related action routines}
+
 \label{parmtable}
 \input{../dballe/core/record_keyword.tex}
+
+\section{For attribute-related action routines}
+
+{\begin{scriptsize}
+\begin{longtable}{|@{\hspace{0.5mm}}l@{\hspace{0.5mm}}|@{\hspace{0.5mm}}l@{\hspace{0.5mm}}|@{\hspace{0.5mm}}l@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{2.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{1.4cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{1.4cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{1.4cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{3.5cm}@{\hspace{0.5mm}}|}
+\hline
+{\em Name} & {\em Unit} & {\em Format} & {\em Description} & {\em On insert input} & {\em On query input} & {\em On output} & {\em Comment} \\
+\hline
+\endhead
+\hline
+\endfoot
+{\tt *Bxxyyy} & depends & depends & Value of the attribute & required & ignored & present & \\
+{\tt *var} & Character & 7 chars & Attribute queried & ignored & optional & present, indicates the name of the last attribute returned &  \\
+{\tt *varlist} & Character & 255 chars & List of attributes to query & ignored & optional & absent & Comma-separated list of attribute B codes wanted on output \\
+{\tt *var\_related} & Character & 6 chars & Variable related to the attribute to query & required & required & absent & It is automatically set by {\tt idba\_dammelo} and {\tt idba\_prendilo} (when {\tt idba\_prendilo} inserts a single variable) \\
+{\tt *context\_id} & Numeric & 10 digits & Context ID of the variable related to the attribute to query & required & required & absent & It is automatically set by {\tt idba\_dammelo} and {\tt idba\_prendilo} \\
+\hline
+\end{longtable}
+\end{scriptsize}
+}
 
 
 \chapter{Values for level layer and time range}

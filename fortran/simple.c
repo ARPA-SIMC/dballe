@@ -1460,7 +1460,7 @@ static void clear_attr_rec(dba_record rec)
 	/* Copy the values to be preserved */
 	if ((val = dba_record_key_peek_value(rec, DBA_KEY_CONTEXT_ID)) != NULL)
 		saved_context_id = strtol(val, NULL, 10);
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_VAR)) != NULL)
+	if ((val = dba_record_key_peek_value(rec, DBA_KEY_VAR_RELATED)) != NULL)
 	{
 		strncpy(saved_varname, val, 7);
 		saved_varname[6] = 0;
@@ -1473,7 +1473,7 @@ static void clear_attr_rec(dba_record rec)
 	if (saved_context_id != -1)
 		dba_record_key_seti(rec, DBA_KEY_CONTEXT_ID, saved_context_id);
 	if (saved_varname[0] != 0)
-		dba_record_key_setc(rec, DBA_KEY_VAR, saved_varname);
+		dba_record_key_setc(rec, DBA_KEY_VAR_RELATED, saved_varname);
 }
 
 /**
@@ -1648,7 +1648,7 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 		 * attribute functions will refer to the last variable read */
 		DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.qcinput, DBA_KEY_CONTEXT_ID,
 							STATE.query_cur->out_context_id));
-		DBA_RUN_OR_RETURN(dba_record_key_setc(STATE.qcinput, DBA_KEY_VAR, varstr));
+		DBA_RUN_OR_RETURN(dba_record_key_setc(STATE.qcinput, DBA_KEY_VAR_RELATED, varstr));
 
 		cnfExprt(varstr, parameter, parameter_length);
 	}
@@ -1722,10 +1722,10 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 		dba_varcode code = dba_var_code(var);
 		char varname[8];
 		snprintf(varname, 7, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
-		DBA_RUN_OR_RETURN(dba_record_key_setc(STATE.qcinput, DBA_KEY_VAR, varname));
+		DBA_RUN_OR_RETURN(dba_record_key_setc(STATE.qcinput, DBA_KEY_VAR_RELATED, varname));
 	}
 	else
-		DBA_RUN_OR_RETURN(dba_record_key_unset(STATE.qcinput, DBA_KEY_VAR));
+		DBA_RUN_OR_RETURN(dba_record_key_unset(STATE.qcinput, DBA_KEY_VAR_RELATED));
 
 	/* Copy the input on the output, so that QC functions can find the data
 	 * they need */
@@ -1777,7 +1777,7 @@ static dba_err get_referred_data_id(int* handle, int* id_context, dba_varcode* i
 	}
 #endif
 	/* Then with *var */
-	if (*id_var == 0 && (val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
+	if (*id_var == 0 && (val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR_RELATED)) != NULL)
 		*id_var = DBA_STRING_TO_VAR(val + 1);
 #if 0
 	/* Lastly, with the data_id from last idba_dammelo */
@@ -1817,7 +1817,18 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
 
 	/* Retrieve the varcodes of the wanted QC values */
-	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VARLIST)) != NULL)
+	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
+	{
+		/* Get only the QC values in *varlist */
+		DBA_RUN_OR_RETURN(dba_arr_varcode_create(&arr));
+		if (*val != '*')
+		{
+			err = dba_error_consistency("QC values to delete must start with '*'");
+			goto cleanup;
+		}
+		DBA_RUN_OR_GOTO(cleanup, dba_arr_varcode_append(arr, DBA_STRING_TO_VAR(val + 2)));
+	}
+	else if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VARLIST)) != NULL)
 	{
 		/* Get only the QC values in *varlist */
 		size_t pos;

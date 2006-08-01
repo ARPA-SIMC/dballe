@@ -82,6 +82,7 @@ ana_filter,  DBA_KEY_ANA_FILTER
 data_filter, DBA_KEY_DATA_FILTER
 attr_filter, DBA_KEY_ATTR_FILTER
 limit,		 DBA_KEY_LIMIT
+var_related, DBA_KEY_VAR_RELATED
 %%
 
 static struct _dba_varinfo infos[] = {
@@ -126,7 +127,7 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "P indicator for time range",               "NUMBER", 0, 0,   5, 0, 0, 0 },
 	{ 0, "Time range P1",                            "SECOND", 0, 0,  11, 0, 0, 0 },
 	{ 0, "Time range P2",                            "SECOND", 0, 0,  11, 0, 0, 0 },
-	{ 0, "Variable queried",                      "CHARACTER", 0, 0,   6, 0, 0, 1 },
+	{ 0, "Variable queried",                      "CHARACTER", 0, 0,   7, 0, 0, 1 },
 	{ 0, "List of variables to query",            "CHARACTER", 0, 0, 255, 0, 0, 1 },
 	{ 0, "ID of the variable in the database",      "NUMERIC", 0, 0,  10, 0, 0, 0 },
 	{ 0, "Query behaviour modifier",              "CHARACTER", 0, 0, 255, 0, 0, 1 },
@@ -134,6 +135,7 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "Filter on data", 			              "CHARACTER", 0, 0, 255, 0, 0, 1 },
 	{ 0, "Filter on data attributes",             "CHARACTER", 0, 0, 255, 0, 0, 1 },
 	{ 0, "Maximum number of results to return",      "NUMBER", 0, 0,   5, 0, 0, 0 },
+	{ 0, "Variable related to attribute queried", "CHARACTER", 0, 0,   6, 0, 0, 1 },
 };
 
 /* End of table definitions */
