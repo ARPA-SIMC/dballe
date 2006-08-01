@@ -77,7 +77,7 @@ p2,          DBA_KEY_P2
 var,         DBA_KEY_VAR
 varlist,     DBA_KEY_VARLIST
 context_id,  DBA_KEY_CONTEXT_ID
-querybest,   DBA_KEY_QUERY
+query,		 DBA_KEY_QUERY
 ana_filter,  DBA_KEY_ANA_FILTER
 data_filter, DBA_KEY_DATA_FILTER
 attr_filter, DBA_KEY_ATTR_FILTER
