@@ -881,13 +881,22 @@ F77_INTEGER_FUNCTION(idba_setr)(
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
 
-	if (parm[0] == '*')
+	switch (parm[0])
 	{
-		rec = STATE.qcinput;
-		p = parm + 1;
-	} else {
-		rec = STATE.input;
-		p = parm;
+		case '*':
+			rec = STATE.qcinput;
+			p = parm + 1;
+			break;
+		case '!':
+			if (strcmp(parm + 1, "ana") == 0)
+				return dba_record_set_ana_context(STATE.input);
+			else
+				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
+			return dba_error_ok();
+		default:
+			rec = STATE.input;
+			p = parm;
+			break;
 	}
 
 	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
@@ -943,13 +952,22 @@ F77_INTEGER_FUNCTION(idba_setd)(
 	assert(parameter_length < 20);
 	cnfImprt(parameter, parameter_length, parm);
 
-	if (parm[0] == '*')
+	switch (parm[0])
 	{
-		rec = STATE.qcinput;
-		p = parm + 1;
-	} else {
-		rec = STATE.input;
-		p = parm;
+		case '*':
+			rec = STATE.qcinput;
+			p = parm + 1;
+			break;
+		case '!':
+			if (strcmp(parm + 1, "ana") == 0)
+				return dba_record_set_ana_context(STATE.input);
+			else
+				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
+			return dba_error_ok();
+		default:
+			rec = STATE.input;
+			p = parm;
+			break;
 	}
 
 	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
@@ -1009,13 +1027,22 @@ F77_INTEGER_FUNCTION(idba_setc)(
 	cnfImprt(parameter, parameter_length, parm);
 	cnfImprt(value, value_length, val);
 
-	if (parm[0] == '*')
+	switch (parm[0])
 	{
-		rec = STATE.qcinput;
-		p = parm + 1;
-	} else {
-		rec = STATE.input;
-		p = parm;
+		case '*':
+			rec = STATE.qcinput;
+			p = parm + 1;
+			break;
+		case '!':
+			if (strcmp(parm + 1, "ana") == 0)
+				return dba_record_set_ana_context(STATE.input);
+			else
+				return dba_error_notfound("looking for system parameter \"%s\"", parm + 1);
+			return dba_error_ok();
+		default:
+			rec = STATE.input;
+			p = parm;
+			break;
 	}
 
 	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
