@@ -458,11 +458,7 @@ these values:
 
 \begin{description}
 \item[{\tt "read"}] pseudoana records cannot be modified.
-\item[{\tt "reuse"}] when inserting data, if an existing pseudoana record for
-                     the data is found, it will be reused.
-\item[{\tt "rewrite"}] when inserting data, if an existing pseudoana record for
-		     the data is found, it will be completely overwritten with
-		     the parameters in input.
+\item[{\tt "write"}] pseudoana records can be added and removed.
 \end{description}
 
 The second extra parameter control access to observed data and can have
@@ -474,7 +470,7 @@ these values:
 		   be modified.  Deletions are disabled.  This is used to
 		   insert new data in the database while preserving the data
 		   that was already present in it.
-\item[{\tt "rewrite"}] data can freely be added, overwritten and deleted.
+\item[{\tt "write"}] data can freely be added, overwritten and deleted.
 \end{description}
 
 The third extra parameter controls access to data attributes and can have
@@ -487,7 +483,7 @@ these values:
 		   disabled.  This is used to insert new attribute in the
 		   database while preserving the attributes that were already
 		   present in it.
-\item[{\tt "rewrite"}] attributes can freely be added, overwritten and deleted.
+\item[{\tt "write"}] attributes can freely be added, overwritten and deleted.
 \end{description}
 
 Note that some combinations are illegal, such as pseudoana=read and data=add
