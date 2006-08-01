@@ -21,6 +21,11 @@
 
 #define _GNU_SOURCE
 #include <dballe/db/internals.h>
+#include <dballe/db/repinfo.h>
+#include <dballe/db/pseudoana.h>
+#include <dballe/db/context.h>
+#include <dballe/db/data.h>
+#include <dballe/db/attr.h>
 #include <dballe/core/verbose.h>
 
 #include <config.h>
@@ -132,5 +137,36 @@ dba_err dba_db_begin(dba_db db) { return dba_error_ok(); }
 dba_err dba_db_commit(dba_db db) { return dba_error_ok(); }
 void dba_db_rollback(dba_db db) {}
 #endif
+
+dba_err dba_db_need_repinfo(dba_db db)
+{
+	if (db->repinfo == NULL)
+		return dba_db_repinfo_create(db, &(db->repinfo));
+	return dba_error_ok();
+}
+dba_err dba_db_need_pseudoana(dba_db db)
+{
+	if (db->pseudoana == NULL)
+		return dba_db_pseudoana_create(db, &(db->pseudoana));
+	return dba_error_ok();
+}
+dba_err dba_db_need_context(dba_db db)
+{
+	if (db->context == NULL)
+		return dba_db_context_create(db, &(db->context));
+	return dba_error_ok();
+}
+dba_err dba_db_need_data(dba_db db)
+{
+	if (db->data == NULL)
+		return dba_db_data_create(db, &(db->data));
+	return dba_error_ok();
+}
+dba_err dba_db_need_attr(dba_db db)
+{
+	if (db->attr == NULL)
+		return dba_db_attr_create(db, &(db->attr));
+	return dba_error_ok();
+}
 
 /* vim:set ts=4 sw=4: */

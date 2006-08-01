@@ -63,6 +63,10 @@ struct _dba_db
 	SQLHDBC	od_conn;
 	int connected;
 
+	/*
+	 * Warning: before using these 5 pointers, ensure they are initialised
+	 * using one of the dba_db_need_* functions
+	 */
 	struct _dba_db_repinfo* repinfo;
 	struct _dba_db_pseudoana* pseudoana;
 	struct _dba_db_context* context;
@@ -188,6 +192,31 @@ dba_err dba_db_commit(dba_db db);
  * Rollback a transaction
  */
 void dba_db_rollback(dba_db db);
+
+/**
+ * Ensure that db->repinfo is initialized
+ */
+dba_err dba_db_need_repinfo(dba_db db);
+
+/**
+ * Ensure that db->pseudoana is initialized
+ */
+dba_err dba_db_need_pseudoana(dba_db db);
+
+/**
+ * Ensure that db->context is initialized
+ */
+dba_err dba_db_need_context(dba_db db);
+
+/**
+ * Ensure that db->data is initialized
+ */
+dba_err dba_db_need_data(dba_db db);
+
+/**
+ * Ensure that db->attr is initialized
+ */
+dba_err dba_db_need_attr(dba_db db);
 
 #ifdef  __cplusplus
 }

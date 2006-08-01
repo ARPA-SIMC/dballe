@@ -338,6 +338,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 #define ADD_INT(field, key, sql, needed) DBA_RUN_OR_RETURN(add_int(cur, query, field, key, sql, needed))
 	const char* val;
 
+	DBA_RUN_OR_RETURN(dba_db_need_repinfo(cur->db));
 	DBA_RUN_OR_RETURN(dba_querybuf_start_list(cur->where, " AND "));
 
 //	fprintf(stderr, "A1 '%s'\n", dba_querybuf_get(cur->where));
@@ -811,6 +812,7 @@ dba_err dba_db_cursor_to_record(dba_db_cursor cur, dba_record rec)
 	 * just overwrite the previous ones, as the range of output parameters does
 	 * not change */
 	/* dba_record_clear(rec); */
+	DBA_RUN_OR_RETURN(dba_db_need_repinfo(cur->db));
 
 	if (cur->from_wanted & DBA_DB_FROM_PA)
 	{

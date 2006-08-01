@@ -53,6 +53,10 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 	int inserted_pseudoana = 0;
 
 	/* Quick access to the various database components */
+	DBA_RUN_OR_RETURN(dba_db_need_pseudoana(db));
+	DBA_RUN_OR_RETURN(dba_db_need_context(db));
+	DBA_RUN_OR_RETURN(dba_db_need_data(db));
+	DBA_RUN_OR_RETURN(dba_db_need_attr(db));
 	da = db->pseudoana;
 	dc = db->context;
 	dd = db->data;

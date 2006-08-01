@@ -126,6 +126,7 @@ static const char* init_queries[] = {
 static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
 {
 	const char* rep;
+	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
 	if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
 		DBA_RUN_OR_RETURN(dba_db_repinfo_get_id(db->repinfo, rep, id));
 	else if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_COD)) != NULL)
@@ -241,12 +242,6 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 		err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_last_insert_id, "compiling query for querying the last insert id");
 		goto fail;
 	}
-
-	DBA_RUN_OR_GOTO(fail, dba_db_repinfo_create(*db, &((*db)->repinfo)));
-	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_create(*db, &((*db)->pseudoana)));
-	DBA_RUN_OR_GOTO(fail, dba_db_context_create(*db, &((*db)->context)));
-	DBA_RUN_OR_GOTO(fail, dba_db_data_create(*db, &((*db)->data)));
-	DBA_RUN_OR_GOTO(fail, dba_db_attr_create(*db, &((*db)->attr)));
 
 	return dba_error_ok();
 	
@@ -400,16 +395,19 @@ fail0:
 
 dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file, int* added, int* deleted, int* updated)
 {
+	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
 	return dba_db_repinfo_update(db->repinfo, repinfo_file, added, deleted, updated);
 }
 
 dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)
 {
+	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
 	return dba_db_repinfo_get_id(db->repinfo, memo, rep_cod);
 }
 
 dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid)
 {
+	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
 	return dba_db_repinfo_has_id(db->repinfo, rep_cod, valid);
 }
 
@@ -479,6 +477,7 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int can_add, int*
 	dba_db_pseudoana a;
 
 	assert(db);
+	DBA_RUN_OR_RETURN(dba_db_need_pseudoana(db));
 	a = db->pseudoana;
 
 	/* Look for an existing ID if provided */
@@ -531,6 +530,7 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	const char *year, *month, *day, *hour, *min, *sec;
 	dba_db_context c;
 	assert(db);
+	DBA_RUN_OR_RETURN(dba_db_need_context(db));
 	c = db->context;
 
 	/* Retrieve data */
@@ -595,6 +595,7 @@ dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_
 	int id_pseudoana;
 	
 	assert(db);
+	DBA_RUN_OR_RETURN(dba_db_need_data(db));
 	d = db->data;
 
 	/* Check for the existance of non-context data, otherwise it's all useless */
@@ -999,9 +1000,12 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_va
 {
 	dba_err err;
 	dba_record_cursor item;
-	dba_db_attr a = db->attr;
+	dba_db_attr a;
 	
 	assert(db);
+
+	DBA_RUN_OR_RETURN(dba_db_need_attr(db));
+	a = db->attr;
 
 	a->id_context = id_context;
 	a->id_var = id_var;

@@ -40,6 +40,7 @@ struct dba_db_repinfo_shar
 	{
 		CHECKED(dba_init());
 		CHECKED(create_dba_db(&db));
+		CHECKED(dba_db_need_repinfo(db));
 		ri = db->repinfo;
 	}
 
