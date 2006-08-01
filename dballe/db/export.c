@@ -148,13 +148,16 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
                 DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
                 DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
                 DBA_DB_WANT_REPCOD,
-				0));
+				DBA_DB_MODIFIER_STREAM));
 
 	/* Retrieve results */
 	last_datetime[0] = 0;
-	while (cur->count)
+	while (1)
 	{
-		DBA_RUN_OR_RETURN(dba_db_cursor_next(cur));
+		int has_data;
+		DBA_RUN_OR_RETURN(dba_db_cursor_next(cur, &has_data));
+		if (!has_data)
+			break;
 
 		TRACE("Got B%02d%03d %d,%d,%d %d,%d,%d %s\n",
 				DBA_VAR_X(cur->out_varcode), DBA_VAR_Y(cur->out_varcode),

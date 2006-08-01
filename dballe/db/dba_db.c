@@ -732,12 +732,16 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 
 	/* Get the list of data to delete */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_cursor_query(cur, rec,
-				DBA_DB_WANT_CONTEXT_ID | DBA_DB_WANT_VAR_NAME, 0));
+				DBA_DB_WANT_CONTEXT_ID | DBA_DB_WANT_VAR_NAME,
+				DBA_DB_MODIFIER_UNSORTED | DBA_DB_MODIFIER_STREAM));
 
 	/* Iterate all the results, deleting them */
-	while (cur->count)
+	while (1)
 	{
-		DBA_RUN_OR_RETURN(dba_db_cursor_next(cur));
+		int has_data;
+		DBA_RUN_OR_RETURN(dba_db_cursor_next(cur, &has_data));
+		if (!has_data)
+			break;
 
 		res = SQLExecute(stmd);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))

@@ -71,6 +71,8 @@ extern "C" {
 #define DBA_DB_MODIFIER_BIGANA		(1 << 1)
 #define DBA_DB_MODIFIER_DISTINCT	(1 << 2)
 #define DBA_DB_MODIFIER_ANAEXTRA	(1 << 3)
+#define DBA_DB_MODIFIER_UNSORTED	(1 << 4)
+#define DBA_DB_MODIFIER_STREAM		(1 << 5)
 
 #ifndef DBA_DB_DEFINED
 #define DBA_DB_DEFINED
@@ -139,6 +141,8 @@ int dba_db_cursor_remaining(dba_db_cursor cur);
  *
  * @param cur
  *   The cursor to use to iterate the results
+ * @retval has_data
+ *   True if a new record has been read, false if there is no more data to read
  * @return
  *   The error indicator for the function.  The error code DBA_ERR_NOTFOUND is
  *   used when there are no more results to get.
@@ -147,7 +151,7 @@ int dba_db_cursor_remaining(dba_db_cursor cur);
  *   Do not forget to call dba_db_cursor_delete after you have finished retrieving
  *   the query data.
  */
-dba_err dba_db_cursor_next(dba_db_cursor cur);
+dba_err dba_db_cursor_next(dba_db_cursor cur, int* has_data);
 
 /**
  * Fill in a record with the contents of a dba_db_cursor

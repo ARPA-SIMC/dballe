@@ -190,6 +190,10 @@ static dba_err init_modifiers(dba_db_cursor cur, dba_record query)
 					/* "bigana": optimize with date first */
 					if (strncmp(s, "bigana", 6) == 0)
 						cur->modifiers |= DBA_DB_MODIFIER_BIGANA;
+					else if (strncmp(s, "nosort", 6) == 0)
+						cur->modifiers |= DBA_DB_MODIFIER_UNSORTED;
+					else if (strncmp(s, "stream", 6) == 0)
+						cur->modifiers |= DBA_DB_MODIFIER_STREAM;
 					else
 						got = 0;
 					break;
@@ -673,27 +677,43 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	}
 
 	/* Append GROUP BY and ORDER BY as needed */
-	if (cur->modifiers & DBA_DB_MODIFIER_BEST)
-		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-			" GROUP BY d.id_var, c.id_ana, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, c.datetime "
-			"HAVING ri.prio=MAX(ri.prio) "
-			"ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
+	if (cur->modifiers & DBA_DB_MODIFIER_UNSORTED)
+	{
+		if (cur->modifiers & DBA_DB_MODIFIER_BEST)
+			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
+				" GROUP BY d.id_var, c.id_ana, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, c.datetime "
+				"HAVING ri.prio=MAX(ri.prio)"));
+	} else {
+		if (cur->modifiers & DBA_DB_MODIFIER_BEST)
+			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
+				" GROUP BY d.id_var, c.id_ana, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, c.datetime "
+				"HAVING ri.prio=MAX(ri.prio) "
+				"ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
 #define WANTS(mask) ((cur->from_wanted & (mask)) == (mask))
-	else if (WANTS(DBA_DB_FROM_C | DBA_DB_FROM_RI))
-		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio"));
+		else if (WANTS(DBA_DB_FROM_C | DBA_DB_FROM_RI))
+			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
+				" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio"));
 #undef WANTS
-	else if (cur->from_wanted & DBA_DB_FROM_C)
-		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
-	else if (cur->from_wanted & DBA_DB_FROM_PA)
-		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, " ORDER BY pa.id"));
+		else if (cur->from_wanted & DBA_DB_FROM_C)
+			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
+				" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
+		else if (cur->from_wanted & DBA_DB_FROM_PA)
+			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, " ORDER BY pa.id"));
+	}
 
 	/* Append LIMIT if requested */
 	if ((val = dba_record_key_peek_value(query, DBA_KEY_LIMIT)) != NULL)
 		DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, " LIMIT %s", val));
 
 	TRACE("Performing query: %s\n", dba_querybuf_get(cur->query));
+
+	if (cur->modifiers & DBA_DB_MODIFIER_STREAM)
+	{
+		int res = SQLSetStmtAttr(cur->stm, SQL_ATTR_CURSOR_TYPE, 
+				(SQLPOINTER)SQL_CURSOR_FORWARD_ONLY, SQL_IS_INTEGER);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+			return dba_db_error_odbc(SQL_HANDLE_STMT, cur->stm, "setting SQL_CURSOR_FORWARD_ONLY on DBALLE query");
+	}
 
 	/* Perform the query */
 	{
@@ -772,13 +792,13 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err dba_db_cursor_next(dba_db_cursor cur)
+dba_err dba_db_cursor_next(dba_db_cursor cur, int* has_data)
 {
 	/* Fetch new data */
-	if (SQLFetch(cur->stm) == SQL_NO_DATA)
-		return dba_error_notfound("retrieving a SQL query result (probably there are no more results to retrieve)");
+	*has_data = (SQLFetch(cur->stm) != SQL_NO_DATA);
 
-	--cur->count;
+	if (cur->count != -1)
+		--cur->count;
 
 	return dba_error_ok();
 }

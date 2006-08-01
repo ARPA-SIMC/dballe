@@ -144,9 +144,12 @@ dba_err do_dump(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_db_query(db, query, &cursor, &count));
 	DBA_RUN_OR_RETURN(dba_record_create(&result));
 
-	for (i = 0; i < count; i++)
+	while (1)
 	{
-		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor));
+		int has_data;
+		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, &has_data));
+		if (!has_data)
+			break;
 		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(cursor, result));
 		printf("#%d: -----------------------\n", i);
 		dba_record_print(result, stdout);

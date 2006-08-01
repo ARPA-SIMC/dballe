@@ -1,5 +1,7 @@
 check_PROGRAMS = check_dballe_tut
 TESTS = $(check_PROGRAMS)
+
+noinst_PROGRAMS = test-query
 #check_mem
 #check_imports
 
@@ -31,6 +33,9 @@ check_dballe_tut_SOURCES = \
 	test-utils.cc \
 	tut-main.cc
 check_dballe_tut_LDADD = ../libdballe.la -lpopt
+
+test_query_SOURCES = test-query.c
+test_query_LDADD = ../libdballe.la -lpopt
 
 #check_mem_SOURCES=\
 #	check_mem.f

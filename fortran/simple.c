@@ -1497,18 +1497,20 @@ F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
 	dba_err err;
+	int has_data;
 
 	if (STATE.ana_cur == NULL)
 		return dba_error_consistency("idba_elencamele called without a previous idba_quantesono");
 
-	err = dba_db_cursor_next(STATE.ana_cur);
-	if (err != DBA_OK)
+	DBA_RUN_OR_RETURN(dba_db_cursor_next(STATE.ana_cur, &has_data));
+	if (!has_data)
 	{
 		dba_db_cursor_delete(STATE.ana_cur);
 		STATE.ana_cur = NULL;
-	}
-
-	return dba_db_cursor_to_record(STATE.ana_cur, STATE.output);
+		dba_record_clear(STATE.output);
+		return dba_error_ok();
+	} else
+		return dba_db_cursor_to_record(STATE.ana_cur, STATE.output);
 }
 
 /**
@@ -1571,6 +1573,7 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 	GENPTR_CHARACTER(parameter)
 	const char* varstr;
 	dba_err err;
+	int has_data;
 
 	if (STATE.query_cur == NULL)
 		return dba_error_consistency("idba_dammelo called without a previous idba_voglioquesto");
@@ -1579,11 +1582,13 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 	 * leftover QC values from a previous query */
 	STATE.qc_iter = 0;
 
-	err = dba_db_cursor_next(STATE.query_cur);
-	if (err != DBA_OK)
+	DBA_RUN_OR_RETURN(dba_db_cursor_next(STATE.query_cur, &has_data));
+	if (!has_data)
 	{
 		dba_db_cursor_delete(STATE.query_cur);
 		STATE.query_cur = NULL;
+		cnfExprt("", parameter, parameter_length);
+		dba_record_clear(STATE.output);
 	} else {
 		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(STATE.query_cur, STATE.output));
 		DBA_RUN_OR_RETURN(dba_record_key_enqc(STATE.output, DBA_KEY_VAR, &varstr));
