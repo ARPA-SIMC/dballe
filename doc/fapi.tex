@@ -327,6 +327,23 @@ functions:
   idba_seti(handle, "p1", p1)
   idba_seti(handle, "p2", p2)
   \end{verbatim}
+\item[{\tt idba\_setcontextana(handle)}]
+  is a shortcut to:
+  \begin{verbatim}
+  idba_seti(handle, "year", 1000)
+  idba_seti(handle, "month", 1)
+  idba_seti(handle, "day", 1)
+  idba_seti(handle, "hour", 0)
+  idba_seti(handle, "min", 0)
+  idba_seti(handle, "sec", 0)
+  idba_seti(handle, "leveltype", 257)
+  idba_seti(handle, "l1", 0)
+  idba_seti(handle, "l2", 0)
+  idba_seti(handle, "pindicator", 0)
+  idba_seti(handle, "p1", 0)
+  idba_seti(handle, "p2", 0)
+  idba_seti(handle, "rep_cod", 254)
+  \end{verbatim}
 \end{description}
 
 \section {API invariants}
@@ -597,96 +614,6 @@ c     in the last 'idba_prendilo'
       call idba_setc(handle, "*var_related", "B11002")
       call idba_critica(handle)
 \end{verbatim}
-
-\subsection{Extra informations}
-
-Lastly, and only in case of special needs, there is a way of accessing useful
-information that does not fit in the normal input and output record.  This is
-done by calling {\tt idba\_enqi} for parameters starting with an exclamation
-mark (``!'').
-
-\subsubsection{{\tt !ana\_id}}
-
-Calling {\tt idba\_enqi(handle, "!ana\_id", value)} gives the database ID of
-the last inserted pseudoana informations.  This is useful to speed up
-insertions of multiple data for the same station:
-
-\begin{verbatim}
-c     Call idba_set* to fill in the data for the first value...
-
-      call idba_prendilo(handle)
-      call idba_enqi(handle, "!ana_id", ana_id)
-      call idba_seti(handle, "ana_id", ana_id)
-
-c     Call idba_set* to fill in the data for other values
-c     related to the same station...
-
-      call idba_prendilo(handle)
-\end{verbatim}
-
-\subsubsection{{\tt !context\_id}}
-
-Calling {\tt idba\_enqi(handle, "!ana\_id", value)} gives the database ID of
-the context informations for the last value retrieved with {\tt idba\_dammelo}
-or for the values inserted with the last {\tt idba\_prendilo}.  This is useful
-to be able to directly refer to a value in the same context later on in the
-program:
-
-% FIXME: put the dammelo in a loop and use a vector for 'context'
-
-\begin{verbatim}
-c     Make a query...
-
-      call idba_dammelo(handle, var)
-      if var.eq."B11002" then
-c       We are working on the attributes of wind speed, so
-c       save the context id to be able to refer to this
-c       variable later
-        call idba_enqi(handle, "!context_id", context)
-      endif
-
-c     ...finish reading all the varibales, compute things...
-
-c     Set the confidence interval for that value of wind speed
-      call idba_seti(handle, "!context_id", context)
-      call idba_setc(handle, "*var_related", "B11002")
-      call idba_setr(handle, "*B33007", confidence)
-      call idba_critica(handle)
-\end{verbatim}
-
-\subsubsection{{\tt !ana}}
-
-Sets date, level, timerange and rep\_cod to the special values that identify
-data \emph{about} the station rather than data \emph{of} the station.
-
-It is exactly equivalent to this code:
-
-\begin{verbatim}
-      call idba_seti(handle, "year", 1000));
-      call idba_seti(handle, "month", 1));
-      call idba_seti(handle, "day", 1));
-      call idba_seti(handle, "hour", 0));
-      call idba_seti(handle, "min", 0));
-      call idba_seti(handle, "sec", 0));
-      call idba_seti(handle, "leveltype", 257));
-      call idba_seti(handle, "l1", 0));
-      call idba_seti(handle, "l2", 0));
-      call idba_seti(handle, "pindicator", 0));
-      call idba_seti(handle, "p1", 0));
-      call idba_seti(handle, "p2", 0));
-      call idba_seti(handle, "rep_cod", 254));
-\end{verbatim}
-
-Setting this special value only happens with {\tt idba\_seti} and the value is
-ignored.  This example code queries all station data about the stations that
-are higher than 1000 meters:
-
-\begin{verbatim}
-      call idba_seti(handle, "!ana")
-      call idba_seti(handle, "ana_filter", "height>=1000")
-      call idba_voglioquesto(handle, count)
-\end{verbatim}
-
 
 \section {Querying the database}
 
@@ -986,7 +913,7 @@ c       ...process data...
 
 c       This variable is interesting: save the context ID
 c       to refer to it later
-        call idba_enqi(handle, "!context_id", saved_id)
+        call idba_enqi(handle, "context_id", saved_id)
         
         count = count - 1
       enddo
@@ -999,7 +926,7 @@ c     Insert attributes about that interesting variable
       
 c     Select the variable using its context id
 c     and variable code
-      call idba_seti(handle, "!context_id", saved_id)
+      call idba_seti(handle, "*context_id", saved_id)
       call idba_seti(handle, "*var_related", "B11001")
       call idba_critica(handle)
 \end{verbatim}
@@ -1043,7 +970,7 @@ c     Delete the confidence interval from the wind speed
 
 c     The referring variable is identified in the same way as with
 c     idba_critica:
-      call idba_seti(handle, "!context_id", saved_id)
+      call idba_seti(handle, "*context_id", saved_id)
       call idba_seti(handle, "*var_related", "B11002")
 
 c     The attributes to delete are selected by setting "*varlist":
