@@ -639,6 +639,8 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 		cur->from_wanted |= DBA_DB_FROM_C;
 	if (cur->from_wanted & (DBA_DB_FROM_ADF))
 		cur->from_wanted |= (DBA_DB_FROM_C | DBA_DB_FROM_D);
+	if (cur->from_wanted & DBA_DB_FROM_PA && cur->from_wanted & DBA_DB_FROM_D)
+		cur->from_wanted |= DBA_DB_FROM_C;
 
 	/* Ignore anagraphical context unless explicitly requested */
 	if (cur->from_wanted & DBA_DB_FROM_C && !cur->want_ana_context)
