@@ -1103,7 +1103,76 @@ ana\_id} value, if known, and get a faster search.
 data setting latitude, longitude, level layer, time range and so on, one can
 just provide the value of {\tt data\_id}, and also get a faster search.
 
-% TODO: put some example code snippets from real-world
+\chapter{Code examples}
+\label{ch-examples}
+
+% TODO: put some more example code snippets from real-world
+
+\section{Insert station data, then insert data}
+
+\begin{verbatim}
+      call idba_preparati(dbhandle, handle, "write", "add", "add")
+      
+c     Insert data about a station
+      call idba_seti (handle, "!ana", "")
+      call idba_setr (handle, "lat", 11.345)
+      call idba_setr (handle, "lon", 44.678)
+      call idba_setr (handle, "height", 23)
+      call idba_prendilo (handle)
+
+c     Read the station ID for the station we just inserted
+      call idba_enqi (handle, "!ana_id", anaid)
+
+c     Reset the input data
+      call idba_unsetall (handle)
+
+c     Add data to the station we just inserted
+      call idba_seti (handle, "ana_id", anaid)
+      call idba_setlevel (handle, 100, 1, 0)
+      call idba_settimerange (handle, 0, 0, 0)
+      call idba_setdate (handle, 2006, 06, 20, 19, 30, 0)
+      call idba_seti (handle, "t", 21)
+      call idba_setc (handle, "B12345", "ciao")
+      call idba_prendilo (handle)
+\end{verbatim}
+
+
+\section{Query data, then query station data}
+
+\begin{verbatim}
+      call idba_preparati(dbhandle, handle, "read", "read", "read")
+      call idba_preparati(dbhandle, handleana, "read", "read", "read")
+      
+c     Prepare a query
+      call idba_setd (handle, "latmin", 10)
+      ...
+      call idba_setd (handle, "lonmax", 60)
+
+c     Make the query
+      call idba_voglioquesto (handle, N)
+
+c     Iterate the results
+      do i=1,N
+        call idba_dammelo (handle, varname)
+
+c       Read data about the variable we just had
+        call idba_enqlevel (handle, ltype, l1, l2)
+
+c       Read pseudoana data about the variable we just had
+c       Setup a query for the station with 'quantesono'
+        call idba_enqi (handle, "ana_id", anaid)
+        call idba_seti (handleana, "ana_id", anaid)
+
+c       Query.  Nstaz should always be 1 because we query a specific station
+        call idba_quantesono (handleana, Nstaz)
+
+c       Fetch the data
+        call idba_elencamele (handleana)
+
+c       Read the data about the station
+        call idba_enqi (handleana, "height", height)
+      enddo
+\end{verbatim}
 
 
 \chapter{FAQ and Troubleshooting}
