@@ -47,6 +47,8 @@ extern "C" {
 #define DBA_DB_WANT_VAR_NAME	(1 << 5)
 #define DBA_DB_WANT_VAR_VALUE	(1 << 6)
 #define DBA_DB_WANT_REPCOD		(1 << 7)
+#define DBA_DB_WANT_ANA_ID		(1 << 8)
+#define DBA_DB_WANT_CONTEXT_ID	(1 << 9)
 
 /**
  * Constants used to define what is needed from the FROM part of the query

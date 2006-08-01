@@ -656,7 +656,7 @@ dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* c
 
 	/* Perform the query, limited to pseudoana values */
 	DBA_RUN_OR_GOTO(failed, dba_db_cursor_query(*cur, query,
-				DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
+				DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
 				DBA_DB_MODIFIER_ANAEXTRA));
 
 	/* Get the number of results */
@@ -684,6 +684,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 
 	/* Perform the query */
 	DBA_RUN_OR_GOTO(failed, dba_db_cursor_query(*cur, rec,
+				DBA_DB_WANT_ANA_ID | DBA_DB_WANT_CONTEXT_ID |
 				DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT | DBA_DB_WANT_LEVEL |
 				DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
 				DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
@@ -743,7 +744,8 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 	SQLBindParameter(stma, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_idvar), 0, 0);
 
 	/* Get the list of data to delete */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_cursor_query(cur, rec, DBA_DB_WANT_VAR_NAME, 0));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_cursor_query(cur, rec,
+				DBA_DB_WANT_CONTEXT_ID | DBA_DB_WANT_VAR_NAME, 0));
 
 	/* Iterate all the results, deleting them */
 	while (cur->count)

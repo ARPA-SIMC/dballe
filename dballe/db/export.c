@@ -143,6 +143,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 	DBA_RUN_OR_RETURN(dba_db_cursor_create(db, &cur));
 
 	DBA_RUN_OR_RETURN(dba_db_cursor_query(cur, rec,
+				DBA_DB_WANT_ANA_ID | DBA_DB_WANT_CONTEXT_ID |
 				DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT | DBA_DB_WANT_LEVEL |
                 DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
                 DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |

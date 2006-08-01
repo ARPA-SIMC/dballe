@@ -283,22 +283,28 @@ static dba_err make_select(dba_db_cursor cur)
 		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_priority), sizeof(cur->out_context_id), NULL);
 	}
 
-	/* Append opportunistic extra parameters */
-	if (cur->from_wanted & DBA_DB_FROM_PA)
+	/* For these parameters we can try to be opportunistic and avoid extra joins */
+	if (cur->wanted & DBA_DB_WANT_ANA_ID)
 	{
-		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "pa.id"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
-	} else if (cur->from_wanted & DBA_DB_FROM_C) {
-		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id_ana"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
+		if (!(cur->from_wanted & DBA_DB_FROM_PA) && cur->from_wanted & DBA_DB_FROM_C) {
+			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id_ana"));
+			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
+		} else {
+			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "pa.id"));
+			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
+			cur->from_wanted |= DBA_DB_FROM_PA;
+		}
 	}
-	if (cur->from_wanted & DBA_DB_FROM_C)
+	if (cur->wanted & DBA_DB_WANT_CONTEXT_ID)
 	{
-		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
-	} else if (cur->from_wanted & DBA_DB_FROM_D) {
-		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "d.id_context"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
+		if (!(cur->from_wanted & DBA_DB_FROM_C) && cur->from_wanted & DBA_DB_FROM_D) {
+			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "d.id_context"));
+			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
+		} else {
+			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id"));
+			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
+			cur->from_wanted |= DBA_DB_FROM_C;
+		}
 	}
 
 	return dba_error_ok();
