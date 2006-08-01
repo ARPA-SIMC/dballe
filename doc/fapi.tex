@@ -110,13 +110,13 @@ handle that you will later use to refer to it.
 \section {Pseudoana}
 
 Values in \dballe{} are associated to informations about their source, such as
-what kind of station generated the data and some caracteristics of the station.
+what kind of station generated the data and some characteristics of the station.
 
 These informations are called \emph{pseudoana} informations, to suggest that
 they are something similar to anagraphical informations about the sources of
 the values.
 
-A pseudoana entry is univocally identified by:
+A pseudoana entry is uniquely identified by:
 
 \begin{itemize}
 \item \emph{latitude}.
@@ -151,7 +151,7 @@ Priorities associated to the report type can be customized when creating the
 database (see \ref{fun-idba_scopa}).
 
 Every measured value in \dballe{} can be assigned any number of extra
-attibutes, which can be used, for example, for quality control.
+attributes, which can be used, for example, for quality control.
 
 
 \section {Attributes}
@@ -164,7 +164,7 @@ Attributes in \dballe{} consist on a value and a local B table descriptor,
 which describes the nature of the variable, such as what it represents and the
 units in which it is represented.
 
-Attributes are univocally identified by the variable they refer to and the B
+Attributes are uniquely identified by the variable they refer to and the B
 table descriptor of the attribute.  As a consequence, you can only have one
 attribute per value with a specific B table descriptor.  This means that, for
 example, a variable can have at most one confidence interval attribute.
@@ -921,7 +921,7 @@ This code introduces two new functions:
   Performs a query to retrieve attributes for the last variable read by
   {\tt idba\_dammelo}.  It returns the number of attributes available.
 \item[{\tt idba\_ancora}]
-  Retrieves one by one the values queried by {\tt idba\_voglioancora}.
+  Retrieves one by one the values queried by {\tt idba\_voglioancora} if
   there are no more items available, the function will fail.
 
   The parameter {\tt param} will be set to the name (in the form {\tt *Bxxyyy}) of
@@ -1095,11 +1095,11 @@ c     We do not need to work with dballe anymore
 database: the {\tt ana\_id} and the {\tt data\_id} keys, that are set in the
 output of every {\tt idba\_dammelo}.
 
-{\tt ana\_id} represents a pseudoana entry.  Everytime one needs to specify a
+{\tt ana\_id} represents a pseudoana entry.  Every time one needs to specify a
 set of latitude, longitude, fixed/mobile, one could use the corresponding {\tt
 ana\_id} value, if known, and get a faster search.
 
-{\tt data\_id} represents a data entry.  Everytime one needes to identify some
+{\tt data\_id} represents a data entry.  Every time one needs to identify some
 data setting latitude, longitude, level layer, time range and so on, one can
 just provide the value of {\tt data\_id}, and also get a faster search.
 
@@ -1357,7 +1357,7 @@ Notes about the time range values:
 \begin{itemize}
 \item For analysis products, or the first of a series of analysis products, the reference time (octets 13 to 17) indicates the valid time.
 \item For forecast products, or the first of a series of forecast products, the reference time indicates the valid time of the analysis upon which the (first) forecast is based.
-\item Initialized analysis products are allocated code figures distinct from those allocated to unitialized analysis products.
+\item Initialized analysis products are allocated code figures distinct from those allocated to uninitialized analysis products.
 \item Code figure 10 allows the period of a forecast to be extended over two octets; this is to assist with extended range forecasts.
 \item Where products or a series of products are averaged or accumulated, the number involved is to be represented in octets 22 and 23 of Section 1, while any number missing is to be represented in octet 24.
 \item Forecasts of the accumulation or difference of some quantity (e.g. quantitative precipitation forecasts), indicated by values of 4 or 5 in octet 21, have a product valid time given by the reference time + P2; the period of accumulation, or difference, can be calculated as $P2 - P1$.
@@ -1383,7 +1383,7 @@ Notes about the time range values:
       takes place. If, however, octet 21 has a value of 113, 114, 115, 116,
       117, 123, or 124, the P2 specifies the time interval between each of the
       fields (or the forecast initial times) that have been averaged or
-      accumulated. These latter values of octet 21 require the quantites
+      accumulated. These latter values of octet 21 require the quantities
       averaged to be equally separated in time; the former values, 3 and 4 in
       particular, allow for irregular or unspecified intervals of time between
       the fields that are averaged or accumulated.
