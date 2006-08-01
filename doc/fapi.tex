@@ -1235,6 +1235,23 @@ c       Read the data about the station
 \chapter{FAQ and Troubleshooting}
 \label{ch-trouble}
 
+\begin{description}
+\item [ {\tt call idba\_setc (handle, "query", "stream")} does not make any difference ]
+  Because of a quirk of the MySQL ODBC driver, you may need to add a special
+  configuration option to the MySQL driver.
+  
+  These are the instructions that you, or the person who set up ODBC in your
+  computer, can follow:
+  \begin{quote}
+  You need to add 1048576 to the value of the Options
+  field of the configuration of the ODBC DSN.
+
+  This can be done by adding the line {\tt Option = 1048576} to the file {\tt
+  odbc.ini}, or editing the Options field using the graphical ODBC
+  configuration tool.
+  \end{quote}
+\end{description}
+
 \appendix
 
 \chapter{Input and output parameters}
