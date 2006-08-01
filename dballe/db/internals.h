@@ -34,10 +34,7 @@ extern "C" {
  */
 
 #include <dballe/db/querybuf.h>
-#include <dballe/core/dba_record.h>
 
-#include <sql.h>
-#include <sqlext.h>
 #include <sqltypes.h>
 
 
@@ -78,42 +75,89 @@ struct _dba_db
 	SQLHSTMT stm_last_insert_id;
 	int last_insert_id;
 	
-	/*
-	 * This is very conservative:
-	 * The query size plus 30 possible select values, maximum of 30 characters each
-	 * plus 400 characters for the various combinations of the two min and max datetimes,
-	 * plus 255 for the blist
-	 */
 	dba_querybuf querybuf;
- 	char sel_dtmin[25];
- 	char sel_dtmax[25];
- 	char sel_dtlike[25];
-	int sel_latmin;
-	int sel_lonmin;
-	int sel_latmax;
-	int sel_lonmax;
-	const char* sel_ident;
-	int sel_pindicator;
-	int sel_p1;
-	int sel_p2;
-	int sel_leveltype;
-	int sel_l1;
-	int sel_l2;
-	int sel_b;
-	int sel_rep_cod;
-	const char* sel_rep_memo;
-	int sel_priority;
-	int sel_priomin;
-	int sel_priomax;
-	int sel_ana_id;
-	int sel_data_id;
-	int sel_block;
-	int sel_station;
 };
-#ifndef DBA_DB_H
+#ifndef DBA_DB_DEFINED
+#define DBA_DB_DEFINED
 typedef struct _dba_db* dba_db;
 #endif
 
+struct _dba_db_cursor
+{
+	/** Database to operate on */
+	dba_db db;
+	/** ODBC statement to use for the query */
+	SQLHSTMT stm;
+
+	/** Dynamically generated SQL query */
+	dba_querybuf query;
+
+	/** WHERE subquery */
+	dba_querybuf where;
+
+	/** What values are wanted from the query */
+	unsigned int wanted;
+
+	/** Modifier flags to enable special query behaviours */
+	unsigned int modifiers;
+
+	/** What is needed from the FROM part of the query */
+	unsigned int from_wanted;
+
+	/** Sequence number to use to bind ODBC input parameters */
+	unsigned int input_seq;
+
+	/** Sequence number to use to bind ODBC output parameters */
+	unsigned int output_seq;
+
+	/** True if there is a date query and it matches the anagraphical context */
+	int want_ana_context;
+
+	/** Selection parameters (input) for the query */
+ 	char	sel_dtmin[25];
+ 	char	sel_dtmax[25];
+	int		sel_latmin;
+	int		sel_latmax;
+	int		sel_lonmin;
+	int		sel_lonmax;
+	char	sel_ident[64];
+	int		sel_ltype;
+	int		sel_l1;
+	int		sel_l2;
+	int		sel_pind;
+	int		sel_p1;
+	int		sel_p2;
+	int		sel_b;
+	int		sel_rep_cod;
+	int		sel_priority;
+	int		sel_priomin;
+	int		sel_priomax;
+	int		sel_ana_id;
+	int		sel_context_id;
+	int		sel_block;
+	int		sel_station;
+
+	/** Query results */
+	int		out_lat;
+	int		out_lon;
+	char	out_ident[64];		SQLINTEGER out_ident_ind;
+	int		out_ltype;
+	int		out_l1;
+	int		out_l2;
+	int		out_pind;
+	int		out_p1;
+	int		out_p2;
+	int		out_idvar;
+	char	out_datetime[25];
+	char	out_value[255];
+	int		out_rep_cod;
+	int		out_ana_id;
+	int		out_context_id;
+	int		out_priority;
+
+	/** Number of results still to be fetched */
+	int count;
+};
 
 /**
  * Report an ODBC error, using informations from the ODBC diagnostic record
@@ -144,13 +188,6 @@ dba_err dba_db_commit(dba_db db);
  * Rollback a transaction
  */
 void dba_db_rollback(dba_db db);
-
-/**
- * Add select WHERE parameters from the data in query
- */
-dba_err dba_db_prepare_select_pseudoana(dba_db db, dba_record query, SQLHSTMT stm, int* pseq);
-dba_err dba_db_prepare_select(dba_db db, dba_record query, SQLHSTMT stm, int* pseq);
-
 
 #ifdef  __cplusplus
 }

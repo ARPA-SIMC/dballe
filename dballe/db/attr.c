@@ -24,6 +24,9 @@
 #include <dballe/db/internals.h>
 #include <dballe/core/verbose.h>
 
+#include <sql.h>
+#include <sqlext.h>
+
 #include <config.h>
 
 #include <stdlib.h>
@@ -46,6 +49,8 @@
 
 dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 {
+	const char* select_query =
+		"SELECT type, value FROM attr WHERE id_context=? and id_var=?";
 	const char* insert_query =
 		"INSERT INTO attr (id_context, id_var, type, value)"
 		" VALUES(?, ?, ?, ?)";
@@ -59,8 +64,22 @@ dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 	if ((res = (dba_db_attr)malloc(sizeof(struct _dba_db_attr))) == NULL)
 		return dba_error_alloc("creating a new dba_db_attr");
 	res->db = db;
+	res->sstm = NULL;
 	res->istm = NULL;
 	res->rstm = NULL;
+
+	/* Create the statement for select */
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sstm)));
+	SQLBindParameter(res->sstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
+	SQLBindParameter(res->sstm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
+	SQLBindCol(res->sstm, 1, SQL_C_SLONG, &(res->type), sizeof(res->type), NULL);
+	SQLBindCol(res->sstm, 2, SQL_C_CHAR, &(res->value), sizeof(res->value), NULL);
+	r = SQLPrepare(res->sstm, (unsigned char*)select_query, SQL_NTS);
+	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->sstm, "compiling query to get data from 'attr'");
+		goto cleanup;
+	}
 
 	/* Create the statement for insert */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->istm)));
@@ -99,6 +118,8 @@ cleanup:
 
 void dba_db_attr_delete(dba_db_attr ins)
 {
+	if (ins->sstm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, ins->sstm);
 	if (ins->istm != NULL)
 		SQLFreeHandle(SQL_HANDLE_STMT, ins->istm);
 	if (ins->rstm != NULL)
@@ -128,6 +149,38 @@ dba_err dba_db_attr_insert(dba_db_attr ins, int replace)
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting data into attr");
 	return dba_error_ok();
+}
+
+dba_err dba_db_attr_load(dba_db_attr ins, dba_var var)
+{
+	dba_err err = DBA_OK;
+	dba_var attr = NULL;
+
+	ins->id_var = dba_var_code(var);
+
+	int res = SQLExecute(ins->sstm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "looking for attributes");
+
+	/* Make attribues from the result, and add them to var */
+	while (SQLFetch(ins->sstm) != SQL_NO_DATA)
+	{
+		DBA_RUN_OR_GOTO(fail, dba_var_create_local(ins->type, &attr));
+		DBA_RUN_OR_GOTO(fail, dba_var_setc(attr, ins->value));
+		DBA_RUN_OR_GOTO(fail, dba_var_seta(var, attr));
+		attr = NULL;
+	}
+
+	res = SQLCloseCursor(ins->sstm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "closing dba_db_attr_load cursor");
+	return dba_error_ok();
+
+fail:
+	res = SQLCloseCursor(ins->sstm);
+	if (attr != NULL)
+		dba_var_delete(attr);
+	return err;
 }
 
 /* vim:set ts=4 sw=4: */

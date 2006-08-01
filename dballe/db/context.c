@@ -24,6 +24,9 @@
 #include <dballe/db/internals.h>
 #include <dballe/core/verbose.h>
 
+#include <sql.h>
+#include <sqlext.h>
+
 #include <config.h>
 
 #include <stdlib.h>
@@ -141,8 +144,6 @@ dba_err dba_db_context_get_id(dba_db_context ins, int *id)
 
 dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id)
 {
-	SQLHSTMT stm = ins->sstm;
-
 	/* Fill up the query parameters with the data for the anagraphical context */
 	if (ins->id_report == -1)
 		ins->id_report = 254;

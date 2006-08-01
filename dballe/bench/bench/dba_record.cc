@@ -141,7 +141,7 @@ public:
 		int_keys.push_back(DBA_KEY_PRIOMAX);
 		int_keys.push_back(DBA_KEY_PRIOMIN);
 		int_keys.push_back(DBA_KEY_LEVELTYPE);
-		int_keys.push_back(DBA_KEY_DATA_ID);
+		int_keys.push_back(DBA_KEY_CONTEXT_ID);
 		float_keys.push_back(DBA_KEY_LAT);
 		float_keys.push_back(DBA_KEY_LON);
 		float_keys.push_back(DBA_KEY_LATMAX);

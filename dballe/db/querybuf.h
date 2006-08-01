@@ -91,6 +91,19 @@ const char* dba_querybuf_get(dba_querybuf buf);
 int dba_querybuf_size(dba_querybuf buf);
 
 /**
+ * Begin a list of items separated by the given separator.  Items are added
+ * using dba_querybuf_append_list().
+ *
+ * @param buf
+ *   The buffer to operate on
+ * @param sep
+ *   The separator to add between every list item
+ * @return 
+ *   The error indicator for the function (@see dba_err)
+ */
+dba_err dba_querybuf_start_list(dba_querybuf buf, const char* sep);
+
+/**
  * Append a string to the querybuf
  *
  * @param buf
@@ -113,6 +126,21 @@ dba_err dba_querybuf_append(dba_querybuf buf, const char* str);
  *   The error indicator for the function (@see dba_err)
  */
 dba_err dba_querybuf_appendf(dba_querybuf buf, const char* fmt, ...);
+
+/**
+ * Append a string to the querybuf, as part of a list.
+ *
+ * This function will prepend str with the current list separator, unless it is
+ * the first item added to the list.
+ *
+ * @param buf
+ *   The buffer to operate on
+ * @param str
+ *   The string to append
+ * @return
+ *   The error indicator for the function (@see dba_err)
+ */
+dba_err dba_querybuf_append_list(dba_querybuf buf, const char* str);
 
 #ifdef  __cplusplus
 }

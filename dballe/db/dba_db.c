@@ -55,38 +55,6 @@
 #define DBA_USE_TRANSACTIONS
 #endif
 
-struct _dba_db_cursor {
-	dba_db db;
-	enum { ANA, DATA, QC } type;
-	SQLHSTMT stm;
-
-	int count;
-
-	/* Bound variables */
-#define DB_CUR_VAR(type, name) type out_##name; SQLINTEGER out_##name##_ind
-#define DB_CUR_CHARVAR(name, len) char out_##name[len]; SQLINTEGER out_##name##_ind
-	DB_CUR_VAR(int, lat);
-	DB_CUR_VAR(int, lon);
-	DB_CUR_CHARVAR(ident, 64);
-	DB_CUR_VAR(int, leveltype);
-	DB_CUR_VAR(int, l1);
-	DB_CUR_VAR(int, l2);
-	DB_CUR_VAR(int, pindicator);
-	DB_CUR_VAR(int, p1);
-	DB_CUR_VAR(int, p2);
-	DB_CUR_VAR(int, idvar);
-	DB_CUR_CHARVAR(datetime, 25);
-	DB_CUR_CHARVAR(value, 255);
-	/* DB_CUR_VAR(int, rep_id); */
-	DB_CUR_VAR(int, rep_cod);
-	DB_CUR_CHARVAR(rep_memo, 20);
-	DB_CUR_VAR(int, priority);
-	DB_CUR_VAR(int, ana_id);
-	DB_CUR_VAR(int, data_id);
-#undef DB_CUR_VAR
-#undef DB_CUR_CHARVAR
-};
-
 static SQLHENV dba_od_env;
 
 static const char* init_tables[] = {
@@ -679,201 +647,20 @@ dba_err dba_db_insert_new(dba_db db, dba_record rec)
 	return dba_db_insert_or_replace(db, rec, 0, 0, NULL, NULL);
 }
 
-static dba_err dba_db_cursor_new(dba_db db, dba_db_cursor* cur)
-{
-	assert(db);
-	*cur = (dba_db_cursor)calloc(1, sizeof(struct _dba_db_cursor));
-	if (!*cur)
-		return dba_error_alloc("trying to allocate a new dba_db_cursor object");
-	(*cur)->db = db;
-	return dba_error_ok();
-}
-
-static dba_err decode_data_filter(const char* filter, dba_varinfo* info, const char** op, const char** val)
-{
-	static char operator[5];
-	static char value[255];
-	size_t len = strcspn(filter, "<=>");
-	const char* s = filter + len;
-	dba_varcode code;
-
-	if (filter[0] == 0)
-		return dba_error_consistency("filter is the empty string");
-
-	/* Parse the varcode */
-	if (filter[0] == 'B')
-		code = DBA_STRING_TO_VAR(filter + 1);
-	else
-	    code = dba_varcode_alias_resolve_substring(filter, len);
-	
-	if (code == 0)
-		return dba_error_consistency("cannot resolve the variable code or alias in \"%s\" (len %d)", filter, len);
-
-	/* Query informations for the varcode */
-	DBA_RUN_OR_RETURN(dba_varinfo_query_local(code, info));
-
-	/* Parse the operator */
-	len = strspn(s, "<=>");
-	if (len == 0 || len > 4)
-		return dba_error_consistency("invalid operator found in \"%s\"", filter);
-
-	memcpy(operator, s, len);
-	operator[len] = 0;
-	*op = operator;
-
-	/* Parse the value */
-	s += len;
-	if ((*info)->is_string)
-	{
-		/* Copy the string, escaping quotes */
-		int i = 0, j = 0;
-		value[j++] = '\'';
-		for (; s[i] && j < 253; ++i, ++j)
-		{
-			if (s[i] == '\'')
-				value[j++] = '\\';
-			value[j] = s[i];
-		}
-		value[j++] = '\'';
-		value[j] = 0;
-	}
-	else
-	{
-		dba_var tmpvar;
-		double dval;
-		if (sscanf(s, "%lf", &dval) != 1)
-			return dba_error_consistency("value in \"%s\" must be a number", filter);
-		DBA_RUN_OR_RETURN(dba_var_created(*info, dval, &tmpvar));
-		strncpy(value, dba_var_value(tmpvar), 255);
-		value[254] = 0;
-		dba_var_delete(tmpvar);
-	}
-	*val = value;
-	return dba_error_ok();
-}
-
-static dba_err append_ana_cbs(dba_querybuf query)
-{
-	return dba_querybuf_append(query,
-				" JOIN context AS cbs ON "
-				"     pa.id = cbs.id_ana"
-				" AND cbs.id_report = 254"
-				" AND cbs.datetime = '1000-01-01 00:00:00'"
-				" AND cbs.ltype = 257 AND cbs.l1 = 0 AND cbs.l2 = 0"
-				" AND cbs.ptype = 0 AND cbs.p1 = 0 AND cbs.p2 = 0");
-}
-
-dba_err dba_db_ana_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
+dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count)
 {
 	dba_err err;
-	SQLHSTMT stm;
-	const char* val;
-	int has_cbs = 0;
-	int pseq = 1;
-	int res;
-
-	assert(db);
 
 	/* Allocate a new cursor */
-	DBA_RUN_OR_RETURN(dba_db_cursor_new(db, cur));
+	DBA_RUN_OR_RETURN(dba_db_cursor_create(db, cur));
 
-	/* Setup the new cursor */
-	(*cur)->type = ANA;
+	/* Perform the query, limited to pseudoana values */
+	DBA_RUN_OR_GOTO(failed, dba_db_cursor_query(*cur, query,
+				DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
+				DBA_DB_MODIFIER_ANAEXTRA));
 
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		free(*cur);
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-	}
-
-	(*cur)->stm = stm;
-
-	/* Write the SQL query */
-
-	/* Initial query */
-	dba_querybuf_reset(db->querybuf);
-	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf,
-		"SELECT pa.id, pa.lat, pa.lon, pa.ident"
-		"  FROM pseudoana AS pa"));
-
-	/* Extend the JOIN part to look for given block and station */
-	if (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL
-		  || dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)
-	{
-		DBA_RUN_OR_GOTO(failed, append_ana_cbs(db->querybuf));
-		has_cbs = 1;
-		if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
-		{
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
-					" JOIN data AS dblo ON dblo.id_context = cbs.id AND dblo.id_var = 257 AND dblo.value = "));
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
-		}
-		if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
-		{
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
-					" JOIN data AS dsta ON dsta.id_context = cbs.id AND dsta.id_var = 258 AND dsta.value = "));
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
-		}
-	}
-
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_ANA_FILTER)) != NULL)
-	{
-		dba_varinfo info;
-		const char* op;
-		const char* value;
-		DBA_RUN_OR_GOTO(failed, decode_data_filter(val, &info, &op, &value));
-		if (!has_cbs)
-		{
-			DBA_RUN_OR_GOTO(failed, append_ana_cbs(db->querybuf));
-			has_cbs = 1;
-		}
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf,
-				" JOIN data AS dana ON dana.id_context = cbs.id AND dana.id_var = %d AND dana.value %s %s",
-				info->var, op, value));
-	}
-
-	/* Add WHERE part */
-	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " WHERE true "));
-	DBA_RUN_OR_GOTO(failed, dba_db_prepare_select_pseudoana(db, rec, stm, &pseq));
-
-	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, " ORDER BY pa.id"));
-
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_LIMIT)) != NULL)
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf, " LIMIT %s", val));
-
-	/* Bind output fields */
-#define DBA_QUERY_BIND(num, type, name) \
-	SQLBindCol(stm, num, type, &(*cur)->out_##name, sizeof((*cur)->out_##name), &(*cur)->out_##name##_ind);
-	DBA_QUERY_BIND(1, SQL_C_SLONG, ana_id);
-	DBA_QUERY_BIND(2, SQL_C_SLONG, lat);
-	DBA_QUERY_BIND(3, SQL_C_SLONG, lon);
-	DBA_QUERY_BIND(4, SQL_C_CHAR, ident);
-#undef DBA_QUERY_BIND
-
-	/* Perform the query */
-	TRACE("Performing ana query: %s\n", dba_querybuf_get(db->querybuf));
-	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE ANA query \"%s\"", dba_querybuf_get(db->querybuf));
-		goto failed;
-	}
-
-	/* Get the number of affected rows */
-	{
-		SQLINTEGER ana_count;
-		res = SQLRowCount(stm, &ana_count);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
-			goto failed;
-		}
-		(*cur)->count = ana_count;
-		*count = ana_count;
-		/*fprintf(stderr, "COUNT: %d\n", count);*/
-	}
+	/* Get the number of results */
+	*count = dba_db_cursor_remaining(*cur);
 
 	/* Retrieve results will happen in dba_db_cursor_next() */
 
@@ -886,361 +673,25 @@ failed:
 	dba_db_cursor_delete(*cur);
 	*cur = 0;
 	return err;
-}
-
-#define CHECKED_STORE(settype, var, key) \
-	do{ \
-		if (cur->out_##var##_ind != SQL_NULL_DATA) {\
-			/*fprintf(stderr, "SETTING %s to %d\n", #var, cur->out_##var);*/ \
-			DBA_RUN_OR_RETURN(dba_record_key_##settype(rec, key, cur->out_##var)); \
-		} \
-	} while (0)
-
-static dba_err dba_ana_cursor_to_rec(dba_db_cursor cur, dba_record rec)
-{
-	assert(cur);
-	assert(cur->db);
-
-	/* Copy the resulting data into `rec' */
-	CHECKED_STORE(seti, ana_id, DBA_KEY_ANA_ID);
-	CHECKED_STORE(seti, lat, DBA_KEY_LAT);
-	CHECKED_STORE(seti, lon, DBA_KEY_LON);
-	if (cur->out_ident_ind != SQL_NULL_DATA && cur->out_ident[0] == 0)
-	{
-		CHECKED_STORE(setc, ident, DBA_KEY_IDENT);
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
-	}
-	else
-	{
-		dba_record_key_unset(rec, DBA_KEY_IDENT);
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));
-	}
-	return dba_error_ok();
-}
-
-static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
-{
-	/* Extra variables to add:
-	 *
-	 * HEIGHT,      B07001  1793
-	 * HEIGHT_BARO, B07031  1823
-	 * ST_NAME,     B01019   275
-	 * BLOCK,       B01001   257
-	 * STATION,     B01002   258
-	*/
-	const char* query =
-		"SELECT d.id_var, d.value"
-		"  FROM context AS c, data AS d"
-		" WHERE c.id = d.id_context AND c.id_ana = ?"
-		"   AND c.datetime = '1000-01-01 00:00:00'"
-		"   AND c.id_report = 254"
-		"   AND c.ltype = 257 AND c.l1 = 0 AND c.l2 = 0"
-		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0";
-
-	dba_err err = DBA_OK;
-	SQLHSTMT stm;
-	int res;
-	dba_db db = cur->db;
-	dba_varcode out_code;
-	char out_val[256];
-	SQLINTEGER out_val_ind;
-
-	/* Allocate statement handle */
-	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
-
-	/* Bind input fields */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_ana_id), 0, 0);
-
-	/* Bind output fields */
-	SQLBindCol(stm, 1, SQL_C_USHORT, &out_code, sizeof(out_code), 0);
-	SQLBindCol(stm, 2, SQL_C_CHAR, &out_val, sizeof(out_val), &out_val_ind);
-
-	/* Perform the query */
-	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE ANA extra query \"%s\"", query);
-		goto cleanup;
-	}
-
-	/* Get the results and save them in the record */
-	while (SQLFetch(stm) != SQL_NO_DATA)
-	{
-		switch (out_code)
-		{
-			case DBA_VAR(0, 1,  1): // BLOCK
-				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_BLOCK, out_val));
-				break;
-			case DBA_VAR(0, 1,  2): // STATION
-				DBA_RUN_OR_GOTO(cleanup, dba_record_key_setc(rec, DBA_KEY_STATION, out_val));
-				break;
-			default:
-				DBA_RUN_OR_GOTO(cleanup, dba_record_var_setc(rec, out_code, out_val));
-				break;
-		}
-	}
-
-cleanup:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err == DBA_OK ? dba_error_ok() : err;
-}
-
-dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last)
-{
-	assert(cur);
-	assert(cur->db);
-	assert(cur->type == ANA);
-
-	/* Fetch new data */
-	if (SQLFetch(cur->stm) == SQL_NO_DATA)
-	{
-		*is_last = 1;
-		return dba_error_notfound("retrieving a SQL query result (probably there are no more results to retrieve)");
-	}
-
-	/* Check if this is the last value */
-	*is_last = --cur->count == 0;
-
-	/* Empty the record from old data */
-	dba_record_clear(rec);
-
-	/* Store the data into the record */
-	DBA_RUN_OR_RETURN(dba_ana_cursor_to_rec(cur, rec));
-
-	/* Add the extra ana info */
-	DBA_RUN_OR_RETURN(dba_ana_add_extra(cur, rec));
-
-	return dba_error_ok();
-}
-
-static dba_err append_cbs(dba_querybuf query)
-{
-	return dba_querybuf_append(query,
-				" JOIN context AS cbs ON "
-				"     c.id_ana = cbs.id_ana"
-				" AND cbs.id_report = 254"
-				" AND cbs.datetime = '1000-01-01 00:00:00'"
-				" AND cbs.ltype = 257 AND cbs.l1 = 0 AND cbs.l2 = 0"
-				" AND cbs.ptype = 0 AND cbs.p1 = 0 AND cbs.p2 = 0");
 }
 
 dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
 {
 	dba_err err;
-	SQLHSTMT stm;
-	int res;
-	int pseq = 1;
-	const char* val;
-	int has_bs = 0;
-	int mod_best = 0;
-	int mod_datefirst = 0;
-	int has_cbs = 0;
-
-
-	assert(db);
 
 	/* Allocate a new cursor */
-	DBA_RUN_OR_RETURN(dba_db_cursor_new(db, cur));
-
-	/* Setup the new cursor */
-	(*cur)->type = DATA;
-
-	/* Allocate statement handle */
-	res = SQLAllocHandle(SQL_HANDLE_STMT, db->od_conn, &stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		free(cur);
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-	}
-
-	(*cur)->stm = stm;
-
-	/* Decode query modifiers */
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_QUERY)) != NULL)
-	{
-		const char* s = val;
-		while (*s)
-		{
-			size_t len = strcspn(s, ",");
-			int got = 1;
-			switch (len)
-			{
-				case 0:
-					/* If it's an empty token, skip it */
-					break;
-				case 4:
-					/* "best": if more values exist in a point, get only the
-					   best one */
-					if (strncmp(s, "best", 4) == 0)
-						mod_best = 1;
-					else
-						got = 0;
-					break;
-				case 6:
-					/* "bigana": optimize with date first */
-					if (strncmp(s, "bigana", 6) == 0)
-						mod_datefirst = 1;
-					else
-						got = 0;
-					break;
-				default:
-					got = 0;
-					break;
-			}
-
-			/* Check that we parsed it correctly */
-			if (!got)
-				return dba_error_consistency("Query modifier \"%.*s\" is not recognized", len, s);
-
-			/* Move to the next token */
-			s += len;
-			if (*s == ',')
-				++s;
-		}
-	}
-
-
-	/* Write the SQL query */
-
-	/* Initial query */
-	dba_querybuf_reset(db->querybuf);
-	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, "SELECT "));
-	if (mod_datefirst)
-		DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf, "straight_join "));
-	DBA_RUN_OR_RETURN(dba_querybuf_append(db->querybuf,
-		"       pa.id, pa.lat, pa.lon, pa.ident,"
-		"       c.ltype, c.l1, c.l2,"
-		"       c.ptype, c.p1, c.p2,"
-		"       d.id_var, c.datetime, d.value, ri.id, ri.memo, ri.prio, c.id"
-		"  FROM context AS c"
-		"  JOIN pseudoana AS pa ON c.id_ana = pa.id"
-		"  JOIN data AS d ON d.id_context = c.id"
-		"  JOIN repinfo AS ri ON c.id_report = ri.id"));
-
-	/* Extend the JOIN part to look for given block and station */
-	if ((has_bs = (dba_record_key_peek_value(rec, DBA_KEY_BLOCK) != NULL)
-		  || (dba_record_key_peek_value(rec, DBA_KEY_STATION) != NULL)))
-	{
-		DBA_RUN_OR_GOTO(failed, append_cbs(db->querybuf));
-		has_cbs = 1;
-		if ((val = dba_record_key_peek_value(rec, DBA_KEY_BLOCK)) != NULL)
-		{
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
-					" JOIN data AS dblo ON dblo.id_context = cbs.id AND dblo.id_var = 257 AND dblo.value = "));
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
-		}
-		if ((val = dba_record_key_peek_value(rec, DBA_KEY_STATION)) != NULL)
-		{
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
-					" JOIN data AS dsta ON dsta.id_context = cbs.id AND dsta.id_var = 258 AND dsta.value = "));
-			DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf, val));
-		}
-	}
-
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_ANA_FILTER)) != NULL)
-	{
-		dba_varinfo info;
-		const char* op;
-		const char* value;
-		DBA_RUN_OR_GOTO(failed, decode_data_filter(val, &info, &op, &value));
-		if (!has_cbs)
-		{
-			DBA_RUN_OR_GOTO(failed, append_cbs(db->querybuf));
-			has_cbs = 1;
-		}
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf,
-				" JOIN data AS dana ON dana.id_context = cbs.id AND dana.id_var = %d AND dana.value %s %s",
-				info->var, op, value));
-	}
-
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_DATA_FILTER)) != NULL)
-	{
-		dba_varinfo info;
-		const char* op;
-		const char* value;
-		DBA_RUN_OR_GOTO(failed, decode_data_filter(val, &info, &op, &value));
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf,
-				" JOIN data AS ddf ON ddf.id_context = c.id AND ddf.id_var = %d AND ddf.value %s %s",
-				info->var, op, value));
-	}
-
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_ATTR_FILTER)) != NULL)
-	{
-		dba_varinfo info;
-		const char* op;
-		const char* value;
-		DBA_RUN_OR_GOTO(failed, decode_data_filter(val, &info, &op, &value));
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf,
-				" JOIN attr AS adf ON adf.id_context = c.id AND adf.id_var = d.id AND adf.type = %d AND adf.value %s %s",
-				info->var, op, value));
-	}
-
-	/* Add WHERE part */
-	DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
-		" WHERE true "));
-
-	/* Bind output fields */
-#define DBA_QUERY_BIND(num, type, name) \
-	SQLBindCol(stm, num, type, &(*cur)->out_##name, sizeof((*cur)->out_##name), &(*cur)->out_##name##_ind);
-	DBA_QUERY_BIND( 1, SQL_C_SLONG, ana_id);
-	DBA_QUERY_BIND( 2, SQL_C_SLONG, lat);
-	DBA_QUERY_BIND( 3, SQL_C_SLONG, lon);
-	DBA_QUERY_BIND( 4, SQL_C_CHAR, ident);
-	DBA_QUERY_BIND( 5, SQL_C_SLONG, leveltype);
-	DBA_QUERY_BIND( 6, SQL_C_SLONG, l1);
-	DBA_QUERY_BIND( 7, SQL_C_SLONG, l2);
-	DBA_QUERY_BIND( 8, SQL_C_SLONG, pindicator);
-	DBA_QUERY_BIND( 9, SQL_C_SLONG, p1);
-	DBA_QUERY_BIND(10, SQL_C_SLONG, p2);
-	DBA_QUERY_BIND(11, SQL_C_SLONG, idvar);
-	DBA_QUERY_BIND(12, SQL_C_CHAR, datetime);
-	DBA_QUERY_BIND(13, SQL_C_CHAR, value);
-	/* DBA_QUERY_BIND(21, SQL_C_SLONG, rep_id); */
-	DBA_QUERY_BIND(14, SQL_C_SLONG, rep_cod);
-	DBA_QUERY_BIND(15, SQL_C_CHAR, rep_memo);
-	DBA_QUERY_BIND(16, SQL_C_SLONG, priority);
-	DBA_QUERY_BIND(17, SQL_C_SLONG, data_id);
-#undef DBA_QUERY_BIND
-	
-	/* Add the select part */
-	DBA_RUN_OR_GOTO(failed, dba_db_prepare_select(db, rec, stm, &pseq));
-
-	if (mod_best)
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
-			" GROUP BY d.id_var, c.id_ana, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, c.datetime"
-			" HAVING ri.prio=MAX(ri.prio)"
-			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
-	else
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_append(db->querybuf,
-			" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio"));
-
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_LIMIT)) != NULL)
-		DBA_RUN_OR_GOTO(failed, dba_querybuf_appendf(db->querybuf, " LIMIT %s", val));
-
-/* 	strcat(db->querybuf, " ORDER BY ri.prio, d.id_report"); */
-/* fprintf(stderr, "QUERY: %s\n", db->querybuf); */
-
-	TRACE("Performing query: %s\n", dba_querybuf_get(db->querybuf));
+	DBA_RUN_OR_RETURN(dba_db_cursor_create(db, cur));
 
 	/* Perform the query */
-	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(db->querybuf), dba_querybuf_size(db->querybuf));
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", dba_querybuf_get(db->querybuf));
-		goto failed;
-	}
+	DBA_RUN_OR_GOTO(failed, dba_db_cursor_query(*cur, rec,
+				DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT | DBA_DB_WANT_LEVEL |
+				DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
+				DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
+				DBA_DB_WANT_REPCOD,
+				0));
 
-	/* Get the number of affected rows */
-	{
-		SQLINTEGER rowcount;
-		res = SQLRowCount(stm, &rowcount);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
-			goto failed;
-		}
-		(*cur)->count = *count = rowcount;
-	}
+	/* Get the number of results */
+	*count = dba_db_cursor_remaining(*cur);
 
 	/* Retrieve results will happen in dba_db_cursor_next() */
 
@@ -1255,105 +706,60 @@ failed:
 	return err;
 }
 
-static dba_err dba_db_cursor_var_to_rec(dba_db_cursor cur, dba_record rec)
+dba_err dba_db_remove(dba_db db, dba_record rec)
 {
-	assert(cur);
-	assert(cur->db);
-	/*assert(cur->out_rep_id != -1); */
+	dba_err err = DBA_OK;
+	dba_db_cursor cur = NULL;
+	SQLHSTMT stm = NULL;
+	int res;
+
+	/* Allocate statement handle */
+	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
+
+	/* Compile the DELETE query for the data */
+	res = SQLPrepare(stm, (unsigned char*)
+			"DELETE FROM data, attr"
+			"  LEFT JOIN attr AS a ON a.id_context = d.id_context AND a.id_var = d.id_var"
+			"      WHERE data.id_context=? AND data.type=?", SQL_NTS);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
-		char bname[7];
-		snprintf(bname, 7, "B%02d%03d",
-					DBA_VAR_X(cur->out_idvar),
-					DBA_VAR_Y(cur->out_idvar));
-		DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_VAR, bname));
-		DBA_RUN_OR_RETURN(dba_record_var_setc(rec, cur->out_idvar, cur->out_value));
-	}
-	return dba_error_ok();
-}
-static dba_err dba_db_cursor_to_rec(dba_db_cursor cur, dba_record rec)
-{
-	assert(cur);
-	assert(cur->db);
-	/* assert(cur->out_rep_id != -1); */
-
-	/* Copy the resulting data into `rec' */
-	DBA_RUN_OR_RETURN(dba_ana_cursor_to_rec(cur, rec));
-
-	CHECKED_STORE(seti, leveltype, DBA_KEY_LEVELTYPE);
-	CHECKED_STORE(seti, l1, DBA_KEY_L1);
-	CHECKED_STORE(seti, l2, DBA_KEY_L2);
-	CHECKED_STORE(seti, pindicator, DBA_KEY_PINDICATOR);
-	CHECKED_STORE(seti, p1, DBA_KEY_P1);
-	CHECKED_STORE(seti, p2, DBA_KEY_P2);
-	if (cur->out_datetime_ind != SQL_NULL_DATA)
-	{
-		/*fprintf(stderr, "SETTING %s to %d\n", #var,  _db_cursor[cur].out_##var); */
-		int year, mon, day, hour, min, sec;
-		if (sscanf(cur->out_datetime,
-					"%04d-%02d-%02d %02d:%02d:%02d", &year, &mon, &day, &hour, &min, &sec) != 6)
-			return dba_error_consistency("parsing datetime string \"%s\"", cur->out_datetime);
-
-		DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_DATETIME, cur->out_datetime));
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEAR, year));
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTH, mon));
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAY, day));
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOUR, hour));
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MIN, min));
-		DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SEC, sec));
-	} 
-	/* CHECKED_STORE(seti, rep_id); */
-	CHECKED_STORE(seti, rep_cod, DBA_KEY_REP_COD);
-	CHECKED_STORE(setc, rep_memo, DBA_KEY_REP_MEMO);
-	CHECKED_STORE(seti, priority, DBA_KEY_PRIORITY);
-	CHECKED_STORE(seti, data_id, DBA_KEY_DATA_ID);
-	DBA_RUN_OR_RETURN(dba_db_cursor_var_to_rec(cur, rec));
-	return dba_error_ok();
-}
-
-dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, int* context_id, int* is_last)
-{
-	assert(cur);
-	assert(cur->db);
-
-	assert(cur->type == DATA);
-
-	/* Fetch the first row */
-	if (SQLFetch(cur->stm) == SQL_NO_DATA)
-	{
-		*is_last = 1;
-		return dba_error_notfound("retrieving a SQL query result (probably there are no more results to retrieve)");
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to delete data entries");
+		goto cleanup;
 	}
 
-	/* Empty the record from old data */
-	dba_record_clear(rec);
+	/* Allocate a new cursor */
+	DBA_RUN_OR_RETURN(dba_db_cursor_create(db, &cur));
 
-	/* Store the data into the record */
-	DBA_RUN_OR_RETURN(dba_db_cursor_to_rec(cur, rec));
+	/* Bind parameters */
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_context_id), 0, 0);
+	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_idvar), 0, 0);
 
-	/* Add the extra ana info */
-	/* DBA_RUN_OR_RETURN(dba_ana_add_extra(cur, rec)); */
+	/* Get the list of data to delete */
+	DBA_RUN_OR_GOTO(cleanup, dba_db_cursor_query(cur, rec, DBA_DB_WANT_VAR_NAME, 0));
 
-	/* Return the context ID to refer to the current context */
-	*context_id = cur->out_data_id;
+	/* Iterate all the results, deleting them */
+	while (cur->count)
+	{
+		DBA_RUN_OR_RETURN(dba_db_cursor_next(cur));
 
-	*is_last = --cur->count == 0;
+		/*fprintf(stderr, "Deleting %d\n", id);*/
+		res = SQLExecute(stm);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		{
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "deleting data entry %d/B%02d%03d and its attributes",
+					cur->out_context_id, DBA_VAR_X(cur->out_idvar), DBA_VAR_Y(cur->out_idvar));
+			goto cleanup;
+		}
+	}
 
-	/* Store the variable ID */
-	*var = cur->out_idvar;
-
-	return dba_error_ok();
+cleanup:
+	if (stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	if (cur != NULL)
+		dba_db_cursor_delete(cur);
+	return err == DBA_OK ? dba_error_ok() : err;
 }
-#undef CHECKED_STORE
-
-void dba_db_cursor_delete(dba_db_cursor cur)
-{
-	assert(cur);
-	assert(cur->db);
-
-	SQLFreeHandle(SQL_HANDLE_STMT, cur->stm);
-	free(cur);
-}
-
+#if 0
 #ifdef DBA_USE_DELETE_USING
 dba_err dba_db_remove(dba_db db, dba_record rec)
 {
@@ -1499,6 +905,7 @@ cleanup:
 	SQLFreeHandle(SQL_HANDLE_STMT, stm2);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
+#endif
 #endif
 
 dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size, dba_record qc, int* count)

@@ -34,6 +34,7 @@ extern "C" {
  */
 
 #include <dballe/db/internals.h>
+#include <dballe/core/dba_var.h>
 
 struct _dba_db;
 	
@@ -43,6 +44,7 @@ struct _dba_db;
 struct _dba_db_attr
 {
 	struct _dba_db* db;
+	SQLHSTMT sstm;
 	SQLHSTMT istm;
 	SQLHSTMT rstm;
 
@@ -61,6 +63,10 @@ void dba_db_attr_set(dba_db_attr ins, dba_var var);
 void dba_db_attr_set_value(dba_db_attr ins, const char* value);
 dba_err dba_db_attr_insert(dba_db_attr ins, int replace);
 
+/**
+ * Load from the database all the attributes for var
+ */
+dba_err dba_db_attr_load(dba_db_attr ins, dba_var var);
 
 #ifdef  __cplusplus
 }

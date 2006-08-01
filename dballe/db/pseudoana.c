@@ -26,6 +26,9 @@
 
 #include <config.h>
 
+#include <sql.h>
+#include <sqlext.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>

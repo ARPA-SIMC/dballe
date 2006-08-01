@@ -23,11 +23,14 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 
 struct _dba_querybuf
 {
 	int maxsize;
 	int size;
+	int list_first;
+	char list_sep[10];
 	char buf[];
 };
 
@@ -40,8 +43,7 @@ dba_err dba_querybuf_create(int maxsize, dba_querybuf* buf)
 		return dba_error_alloc("Allocating a new dba_querybuf");
 
 	(*buf)->maxsize = maxsize;
-	(*buf)->buf[0] = 0;
-	(*buf)->size = 0;
+	dba_querybuf_reset(*buf);
 
 	return dba_error_ok();
 }
@@ -55,6 +57,8 @@ void dba_querybuf_reset(dba_querybuf buf)
 {
 	buf->buf[0] = 0;
 	buf->size = 0;
+	buf->list_first = 1;
+	buf->list_sep[0] = 0;
 }
 
 const char* dba_querybuf_get(dba_querybuf buf)
@@ -65,6 +69,14 @@ const char* dba_querybuf_get(dba_querybuf buf)
 int dba_querybuf_size(dba_querybuf buf)
 {
 	return buf->size;
+}
+
+dba_err dba_querybuf_start_list(dba_querybuf buf, const char* sep)
+{
+	buf->list_first = 1;
+	strncpy(buf->list_sep, sep, 10);
+	buf->list_sep[9] = 0;
+	return dba_error_ok();
 }
 
 dba_err dba_querybuf_append(dba_querybuf buf, const char* str)
@@ -100,5 +112,15 @@ dba_err dba_querybuf_appendf(dba_querybuf buf, const char* fmt, ...)
 
 	return dba_error_ok();
 }
+
+dba_err dba_querybuf_append_list(dba_querybuf buf, const char* str)
+{
+	if (buf->list_first)
+		buf->list_first = 0;
+	else
+		DBA_RUN_OR_RETURN(dba_querybuf_append(buf, buf->list_sep));
+	return dba_querybuf_append(buf, str);
+}
+
 
 /* vim:set ts=4 sw=4: */

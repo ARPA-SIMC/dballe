@@ -79,7 +79,7 @@ typedef enum _dba_keyword {
 	DBA_KEY_P2			= 40,
 	DBA_KEY_VAR			= 41,
 	DBA_KEY_VARLIST		= 42,
-	DBA_KEY_DATA_ID		= 43,
+	DBA_KEY_CONTEXT_ID	= 43,
 	DBA_KEY_QUERY		= 44,
 	DBA_KEY_ANA_FILTER	= 45,
 	DBA_KEY_DATA_FILTER	= 46,

@@ -23,6 +23,8 @@
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>
 #include <dballe/db/dba_db.h>
+#include <dballe/db/cursor.h>
+#include <dballe/db/internals.h>
 
 #include <f77.h>
 #include <limits.h>
@@ -1329,19 +1331,19 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	int iis_last;
 	dba_err err;
 
 	if (STATE.ana_cur == NULL)
 		return dba_error_consistency("idba_elencamele called without a previous idba_quantesono");
 
-	err = dba_db_ana_cursor_next(STATE.ana_cur, STATE.output, &iis_last);
+	err = dba_db_cursor_next(STATE.ana_cur);
 	if (err != DBA_OK)
 	{
 		dba_db_cursor_delete(STATE.ana_cur);
 		STATE.ana_cur = NULL;
 	}
-	return err;
+
+	return dba_db_cursor_to_record(STATE.ana_cur, STATE.output);
 }
 
 /**
@@ -1402,10 +1404,7 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 {
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
-	dba_varcode var;
-	int context;
-	char varstr[10];
-	int iis_last;
+	const char* varstr;
 	dba_err err;
 
 	if (STATE.query_cur == NULL)
@@ -1415,19 +1414,18 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 	 * leftover QC values from a previous query */
 	STATE.qc_iter = 0;
 
-	err = dba_db_cursor_next(STATE.query_cur, STATE.output, &var, &context, &iis_last);
-	
+	err = dba_db_cursor_next(STATE.query_cur);
 	if (err != DBA_OK)
 	{
 		dba_db_cursor_delete(STATE.query_cur);
 		STATE.query_cur = NULL;
 	} else {
-		snprintf(varstr, 10, "B%02d%03d", DBA_VAR_X(var), DBA_VAR_Y(var));
+		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(STATE.query_cur, STATE.output));
+		DBA_RUN_OR_RETURN(dba_record_key_enqc(STATE.output, DBA_KEY_VAR, &varstr));
+		STATE.sys_context_id = STATE.query_cur->out_context_id;
+		STATE.sys_last_varcode = STATE.query_cur->out_idvar;
 		cnfExprt(varstr, parameter, parameter_length);
 	}
-
-	STATE.sys_context_id = context;
-	STATE.sys_last_varcode = var;
 
 	return err;
 }

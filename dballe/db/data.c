@@ -24,6 +24,9 @@
 #include <dballe/db/internals.h>
 #include <dballe/core/verbose.h>
 
+#include <sql.h>
+#include <sqlext.h>
+
 #include <config.h>
 
 #include <stdlib.h>

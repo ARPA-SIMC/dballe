@@ -28,6 +28,7 @@ extern "C" {
 
 #include <dballe/core/dba_record.h>
 #include <dballe/core/dba_var.h>
+#include <dballe/db/cursor.h>
 
 /** @file
  * @ingroup db
@@ -38,13 +39,10 @@ extern "C" {
 /**
  * DB-ALLe connection
  */
+#ifndef DBA_DB_DEFINED
+#define DBA_DB_DEFINED
 typedef struct _dba_db* dba_db;
-
-/**
- * Handle identifying a dballe cursor
- */
-typedef struct _dba_db_cursor* dba_db_cursor;
-
+#endif
 
 /**
  * Initialize the dballe subsystem.
@@ -165,26 +163,6 @@ dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid);
 dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count);
 
 /**
- * Get a new item from the results of an anagraphic query
- *
- * @param cur
- *   The cursor returned by dba_ana_query
- * @param rec
- *   The record where to store the values
- * @param is_last
- *   Variable that will be set to true if the element returned is the last one
- *   in the sequence, else to false.
- * @return
- *   The error indicator for the function.  The error code DBA_ERR_NOTFOUND is
- *   used when there are no more results to get.
- *
- * @note
- *   Do not forget to call dba_db_cursor_delete after you have finished retrieving
- *   the query data.
- */
-dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last);
-
-/**
  * Insert a record into the database.
  *
  * In a record with the same phisical situation already exists, it is
@@ -263,38 +241,6 @@ dba_err dba_db_insert_new(dba_db db, dba_record rec);
  *   The error indicator for the function
  */
 dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count);
-
-/**
- * Get a new item from the results of a query
- *
- * @param cur
- *   The cursor returned by dba_query
- * @param rec
- *   The record where to store the values
- * @retval var
- *   The variable read by this fetch
- * @retval context_id
- *   The context id for this data
- * @retval is_last
- *   Variable that will be set to true if the element returned is the last one
- *   in the sequence, else to false.
- * @return
- *   The error indicator for the function.  The error code DBA_ERR_NOTFOUND is
- *   used when there are no more results to get.
- *
- * @note
- *   Do not forget to call dba_db_cursor_delete after you have finished retrieving
- *   the query data.
- */
-dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, int* context_id, int* is_last);
-
-/**
- * Release a dba_db_cursor
- *
- * @param cur
- *   The cursor to delete
- */
-void dba_db_cursor_delete(dba_db_cursor cur);
 
 /**
  * Remove data from the database

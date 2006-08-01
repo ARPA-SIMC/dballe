@@ -146,10 +146,8 @@ dba_err do_dump(poptContext optCon)
 
 	for (i = 0; i < count; i++)
 	{
-		dba_varcode var;
-		int id_context;
-		int is_last;
-		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, result, &var, &id_context, &is_last));
+		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor));
+		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(cursor, result));
 		printf("#%d: -----------------------\n", i);
 		dba_record_print(result, stdout);
 	}

@@ -27,6 +27,9 @@
 
 #include <config.h>
 
+#include <sql.h>
+#include <sqlext.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -272,6 +275,20 @@ dba_err dba_db_repinfo_has_id(dba_db_repinfo ri, int id, int* exists)
 {
 	*exists = (cache_find_by_id(ri, id) != -1);
 	return dba_error_ok();
+}
+
+dba_db_repinfo_cache dba_db_repinfo_get_by_id(dba_db_repinfo ri, int id)
+{
+	int pos = cache_find_by_id(ri, id);
+	return pos == -1 ? NULL : &(ri->cache[pos]);
+}
+
+dba_db_repinfo_cache dba_db_repinfo_get_by_memo(dba_db_repinfo ri, const char* memo)
+{
+	int pos = cache_find_by_memo(ri, memo);
+	if (pos == -1)
+		return NULL;
+	return dba_db_repinfo_get_by_id(ri, ri->memo_idx[pos].id);
 }
 
 struct _newitem

@@ -366,8 +366,8 @@ ECWMF BUFR template codes:
  - http://www.ecmwf.int/research/ifsdocs/OBSERVATIONS/Chap2_Obs_types3.html
 
 
-Author
-------
+Contact and copyright information
+---------------------------------
 
 The author of DB-ALLe is Enrico Zini <enrico@enricozini.com>
 
@@ -386,3 +386,7 @@ Contact informations for ARPA-SIM:
   Fax: + 39 051 6497501
   Email: urpsim@smr.arpa.emr.it
   Website: http://www.arpa.emr.it/sim/
+
+The latest version of DB-ALLe can be downloaded from:
+
+  http://www.smr.arpa.emr.it/software/DBalle.html

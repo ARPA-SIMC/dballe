@@ -32,6 +32,9 @@
 #include <dballe/conv/conv.h>
 #include <dballe/msg/dba_msg.h>
 
+#include <sql.h>
+#include <sqlext.h>
+
 #include <string.h>
 #include <stdlib.h>
 
