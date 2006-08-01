@@ -192,8 +192,16 @@ void to::test<1>()
 	dba_querybuf_delete(buf);
 }
 
+// Ensure that reset will work on an empty database
 template<> template<>
 void to::test<2>()
+{
+	CHECKED(dba_db_delete_tables(db));
+	CHECKED(dba_db_reset(db, 0));
+}
+
+template<> template<>
+void to::test<3>()
 {
 	/*dba_error_set_callback(DBA_ERR_NONE, crash, 0);*/
 
@@ -645,7 +653,7 @@ void to::test<2>()
 
 /* Test datetime queries */
 template<> template<>
-void to::test<3>()
+void to::test<4>()
 {
 	/* Prepare test data */
 	TestRecord base, a, b;
