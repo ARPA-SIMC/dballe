@@ -22,6 +22,7 @@ while (<STDIN>)
 	my ($name, $val) = split(/,\s*/, $_, 2);
 
 	$val =~ s/DBA_VAR\(0,\s*([0-9]+),\s*([0-9]+)\)/sprintf("B%02d%03d", $1, $2)/e;
+	$name =~ s/_/\\_/g;
 
 	push @data, [$name, $val];
 }
