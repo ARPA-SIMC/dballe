@@ -1085,6 +1085,26 @@ void to::test<4>()
 	}
 }
 
+/* Test datetime queries */
+template<> template<>
+void to::test<5>()
+{
+	int count, has_data;
+	dba_db_cursor cursor;
+
+	dba_record_clear(query);
+	CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, 1));
+	CHECKED(dba_db_ana_query(db, query, &cursor, &count));
+	//cerr << dba_querybuf_get(cursor->query) << endl;
+
+	gen_ensure_equals(count, 1);
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(!has_data);
+	dba_db_cursor_delete(cursor);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

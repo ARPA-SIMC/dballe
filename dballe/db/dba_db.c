@@ -663,7 +663,7 @@ dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* c
 	/* Perform the query, limited to pseudoana values */
 	DBA_RUN_OR_GOTO(failed, dba_db_cursor_query(*cur, query,
 				DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
-				DBA_DB_MODIFIER_ANAEXTRA));
+				DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT));
 
 	/* Get the number of results */
 	*count = dba_db_cursor_remaining(*cur);
