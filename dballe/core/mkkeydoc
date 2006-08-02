@@ -75,9 +75,6 @@ our %comments = (
 	var =>		[ "ignored", "optional", "present, indicates the name of the last variable returned" ],
 	varlist =>	[ "ignored", "optional", "absent",
 			  "Comma-separated list of variable codes wanted on output" ],
-	data_id =>	[ "ignored", "optional", "present",
-			  "Internal DB-ALLe ID referring to a value in the database, ".
-	                  "used as a shortcut reference" ],
 	query =>	[ "ignored", "optional", "absent",
 			  "Comma-separated list of query modifiers.  Can have one of: ".
 			  "'best', 'bigana', 'nosort', 'stream'.  ".

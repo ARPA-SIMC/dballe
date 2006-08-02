@@ -90,11 +90,12 @@ typedef enum _dba_keyword {
 } dba_keyword;
 
 /* Shortcuts for commonly used variables */
-#define DBA_VAR_BLOCK		DBA_VAR(0, 1,  1)
-#define DBA_VAR_STATION		DBA_VAR(0, 1,  2)
-#define DBA_VAR_NAME		DBA_VAR(0, 1, 19)
-#define DBA_VAR_HEIGHT		DBA_VAR(0, 7,  1)
-#define DBA_VAR_HEIGHTBARO	DBA_VAR(0, 7, 31)
+#define DBA_VAR_BLOCK		DBA_VAR(0,  1,   1)
+#define DBA_VAR_STATION		DBA_VAR(0,  1,   2)
+#define DBA_VAR_NAME		DBA_VAR(0,  1,  19)
+#define DBA_VAR_HEIGHT		DBA_VAR(0,  7,   1)
+#define DBA_VAR_HEIGHTBARO	DBA_VAR(0,  7,  31)
+#define DBA_VAR_IDENTNR		DBA_VAR(0, 33, 195)
 
 struct _dba_record;
 struct _dba_item;
