@@ -140,6 +140,8 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 	int last_lon = -1;
 	char last_datetime[25];
 
+	DBA_RUN_OR_RETURN(dba_db_need_attr(db));
+
 	DBA_RUN_OR_RETURN(dba_db_cursor_create(db, &cur));
 
 	DBA_RUN_OR_RETURN(dba_db_cursor_query(cur, rec,
