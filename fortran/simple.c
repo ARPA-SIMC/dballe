@@ -864,7 +864,7 @@ F77_INTEGER_FUNCTION(idba_setr)(
 {
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
-	GENPTR_DOUBLE(value)
+	GENPTR_REAL(value)
 	GENPTR_INTEGER(err)
 	char parm[20];
 	char* p;
