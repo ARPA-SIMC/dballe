@@ -20,6 +20,7 @@
  */
 
 #include <dballe/err/dba_error.h>
+#include <dballe/cmdline.h>
 
 #include <f77.h>
 
@@ -176,4 +177,17 @@ F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
 	dba_error_remove_callback(CBDATA.error, fdba_error_callback_invoker, (void*)CBDATA.data);
 	fdba_handle_release_errcb(*handle);
 	return dba_error_ok();
+}
+
+/**
+ * Default callback that prints a message and exit.
+ *
+ * The message is printed only if a non-zero value is supplied as user data
+ */
+F77_INTEGER_FUNCTION(idba_default_error_handle)(LOGICAL(debug))
+{
+	GENPTR_LOGICAL(debug)
+	if (F77_ISFALSE(*debug))
+		dba_cmdline_print_dba_error();
+	exit(1);
 }
