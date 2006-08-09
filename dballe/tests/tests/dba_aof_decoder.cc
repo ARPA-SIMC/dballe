@@ -299,6 +299,24 @@ void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
 				}
 			}
 		}
+
+		// Decoding BUFR temp messages copies data from the surface level into
+		// more classical places: compensate by copying the same data in the
+		// AOF file
+		{
+			dba_var v;
+
+			if ((v = dba_msg_get_press_var(bmsg)) != NULL)
+				CHECKED(dba_msg_set_press_var(amsg, v));
+			if ((v = dba_msg_get_temp_2m_var(bmsg)) != NULL)
+				CHECKED(dba_msg_set_temp_2m_var(amsg, v));
+			if ((v = dba_msg_get_dewpoint_2m_var(bmsg)) != NULL)
+				CHECKED(dba_msg_set_dewpoint_2m_var(amsg, v));
+			if ((v = dba_msg_get_wind_dir_var(bmsg)) != NULL)
+				CHECKED(dba_msg_set_wind_dir_var(amsg, v));
+			if ((v = dba_msg_get_wind_speed_var(bmsg)) != NULL)
+				CHECKED(dba_msg_set_wind_speed_var(amsg, v));
+		}
 #endif
 	}
 

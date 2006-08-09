@@ -141,13 +141,17 @@ static dba_err add_sounding_levels(dba_msg msg, bufrex_raw dst, dba_varcode* tpl
 		dba_msg_level lev = msg->data[i];
 		double press = lev->l1;
 		dba_msg_datum d;
+		dba_msg_datum p;
 		int j;
 
 		if (lev->ltype != 100 ||
 				(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 0, 0, 0)) == NULL)
 			continue;
 
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_d(dst, DBA_VAR(0,  7,  4), press));
+		if ((p = dba_msg_level_find(lev, DBA_VAR(0, 10, 4), 0, 0, 0)) != NULL)
+			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, DBA_VAR(0,  7,  4), p->var));
+		else
+			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_d(dst, DBA_VAR(0,  7,  4), press));
 		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, DBA_VAR(0,  8,  1), d->var));
 
 		for (j = 0; j < tpl_count; j++)

@@ -66,10 +66,13 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg* out)
 
 		if (OBS(os + 0) == AOF_UNDEF)
 			return dba_error_consistency("pressure indication not found for level %d", i);
+		else
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 4),
+						OBS(os + 0) * 10, get_conf6(OBS(os + 6) & 0x3f),
+						100, press, 0, 0, 0, 0));
 					
 		DBA_RUN_OR_RETURN(dba_convert_AOFVSS_to_BUFR08001(vss, &vss));
 		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 1), vss, -1, 100, press, 0, 0, 0, 0));
-		/* DBA_RUN_OR_RETURN(dba_var_setd(msg->obs[i].var_press, (double)OBS(os + 0) * 10)); */
 
 		if (OBS(os + 1) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 1),
