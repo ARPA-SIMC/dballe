@@ -27,6 +27,9 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_raw raw)
 	int i;
 	int cloud_type_count = 0;
 	double press = -1;
+	dba_var press_var = NULL;
+	double surface_press = -1;
+	dba_var surface_press_var = NULL;
 
 	switch (raw->subtype)
 	{
@@ -99,8 +102,19 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_raw raw)
 */
 			case DBA_VAR(0,  7,  4):
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
+				press_var = var;
 				break;
-			case DBA_VAR(0,  8,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0,  8, 1), 100, press, 0, 0, 0, 0)); break;
+			case DBA_VAR(0,  8,  1): {
+				int vss;
+				DBA_RUN_OR_RETURN(dba_var_enqi(var, &vss));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0,  8, 1), 100, press, 0, 0, 0, 0));
+				if (vss & 64)
+				{
+					surface_press = press;
+					surface_press_var = press_var;
+				}
+				break;
+			}
 			case DBA_VAR(0, 10,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 3), 100, press, 0, 0, 0, 0)); break;
 			case DBA_VAR(0, 12,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 1), 100, press, 0, 0, 0, 0)); break;
 			case DBA_VAR(0, 12,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 2), 100, press, 0, 0, 0, 0)); break;
@@ -113,6 +127,27 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_raw raw)
 				break;
 			*/
 		}
+	}
+
+	/* Extract surface data from the surface level */
+	if (surface_press != -1)
+	{
+		dba_msg_datum d;
+		
+		/* Pressure is taken from a saved variable referencing to the original
+		 * pressure data in the message, to preserve data attributes
+		 */
+		if (surface_press_var != NULL && dba_var_value(surface_press_var) != NULL)
+			DBA_RUN_OR_RETURN(dba_msg_set_press_var(msg, surface_press_var));
+
+		if ((d = dba_msg_find(msg, DBA_VAR(0, 12, 1), 100, surface_press, 0, 0, 0, 0)) != NULL)
+			DBA_RUN_OR_RETURN(dba_msg_set_temp_2m_var(msg, d->var));
+		if ((d = dba_msg_find(msg, DBA_VAR(0, 12, 3), 100, surface_press, 0, 0, 0, 0)) != NULL)
+			DBA_RUN_OR_RETURN(dba_msg_set_dewpoint_2m_var(msg, d->var));
+		if ((d = dba_msg_find(msg, DBA_VAR(0, 11, 1), 100, surface_press, 0, 0, 0, 0)) != NULL)
+			DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, d->var));
+		if ((d = dba_msg_find(msg, DBA_VAR(0, 11, 2), 100, surface_press, 0, 0, 0, 0)) != NULL)
+			DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, d->var));
 	}
 
 	return dba_error_ok();
