@@ -315,16 +315,16 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 		INTEGER(handle),
 		CHARACTER(anaflag),
 		CHARACTER(dataflag),
-		CHARACTER(qcflag)
+		CHARACTER(attrflag)
 		TRAIL(anaflag)
 		TRAIL(dataflag)
-		TRAIL(qcflag))
+		TRAIL(attrflag))
 {
 	GENPTR_INTEGER(dbahandle)
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(anaflag)
 	GENPTR_CHARACTER(dataflag)
-	GENPTR_CHARACTER(qcflag)
+	GENPTR_CHARACTER(attrflag)
 	dba_err err;
 
 	/* Check here to warn users of the introduction of idba_presentati */
@@ -355,11 +355,11 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 		STATE.perms |= PERM_DATA_ADD;
 	if (check_flag("write",	dataflag, dataflag_length))
 		STATE.perms |= PERM_DATA_WRITE;
-	if (check_flag("read",	qcflag,   qcflag_length))
+	if (check_flag("read",	attrflag,   attrflag_length))
 		STATE.perms |= PERM_ATTR_RO;
-	if (check_flag("add",	qcflag,   qcflag_length))
+	if (check_flag("add",	attrflag,   attrflag_length))
 		STATE.perms |= PERM_ATTR_ADD;
-	if (check_flag("write",	qcflag,   qcflag_length))
+	if (check_flag("write",	attrflag,   attrflag_length))
 		STATE.perms |= PERM_ATTR_WRITE;
 
 	if ((STATE.perms & (PERM_ANA_RO | PERM_ANA_WRITE)) == 0)
