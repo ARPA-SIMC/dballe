@@ -386,6 +386,23 @@ void to::test<3>()
 	}
 #endif
 
+// This created a segfault
+template<> template<>
+void to::test<4>()
+{
+	dba_record rec;
+	CHECKED(dba_record_create(&rec));
+	CHECKED(dba_record_key_setc(rec, DBA_KEY_IDENT, "nosort"));
+
+	dba_record rec1;
+	CHECKED(dba_record_create(&rec1));
+	CHECKED(dba_record_copy(rec1, rec));
+	CHECKED(dba_record_key_setc(rec1, DBA_KEY_IDENT, "nosort"));
+
+	dba_record_delete(rec);
+	dba_record_delete(rec1);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

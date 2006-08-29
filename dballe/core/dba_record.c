@@ -225,6 +225,10 @@ dba_err dba_record_copy(dba_record dest, dba_record source)
 	assert_is_dba_record(dest);
 	assert_is_dba_record(source);
 
+	/* Prevent self-copying */
+	if (dest == source)
+		return dba_error_ok();
+
 	/* Copy the keyword table first */
 	for (i = 0; i < KEYWORD_TABLE_SIZE; i++)
 	{

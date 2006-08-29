@@ -158,13 +158,8 @@ dba_err dba_var_copy(dba_var source, dba_var* dest)
 
 	/* Copy the value */
 	if (source->value != NULL)
-	{
-		if (((*dest)->value = strdup(source->value)) == NULL)
-		{
-			err = dba_error_alloc("creating a duplicate of the value of a variable");
-			goto fail;
-		}
-	} else
+		DBA_RUN_OR_GOTO(fail, dba_var_setc(*dest, source->value));
+	else
 		(*dest)->value = NULL;
 
 	/* Copy the attributes */
