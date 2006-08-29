@@ -788,7 +788,7 @@ int dba_record_equals(dba_record rec1, dba_record rec2)
 	for (cur = dba_record_iterate_first(rec2); cur != NULL; cur = dba_record_iterate_next(rec2, cur))
 	{
 		dba_varcode code = dba_var_code(cur->var);
-		if (!dba_record_has_item(rec2, code))
+		if (!dba_record_has_item(rec1, code))
 			return 0;
 	}
 
@@ -834,7 +834,7 @@ void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out)
 	for (cur = dba_record_iterate_first(rec2); cur != NULL; cur = dba_record_iterate_next(rec2, cur))
 	{
 		dba_varcode code = dba_var_code(cur->var);
-		if (!dba_record_has_item(rec2, code))
+		if (!dba_record_has_item(rec1, code))
 		{
 			fprintf(out, "Variable %d%02d%03d only exists in second record\n",
 					DBA_VAR_F(code), DBA_VAR_X(code), DBA_VAR_Y(code));

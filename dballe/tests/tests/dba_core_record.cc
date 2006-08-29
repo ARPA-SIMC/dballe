@@ -420,23 +420,31 @@ void to::test<5>()
 	CHECKED(dba_record_create(&rec1));
 	CHECKED(dba_record_copy(rec1, rec));
 	gen_ensure(dba_record_equals(rec, rec1));
+	gen_ensure(dba_record_equals(rec1, rec));
 	CHECKED(dba_record_key_setc(rec1, DBA_KEY_YEARMIN, "1975"));
 	gen_ensure(!dba_record_equals(rec, rec1));
+	gen_ensure(!dba_record_equals(rec1, rec));
 
 	CHECKED(dba_record_copy(rec1, rec));
 	gen_ensure(dba_record_equals(rec, rec1));
+	gen_ensure(dba_record_equals(rec1, rec));
 	CHECKED(dba_record_key_unset(rec1, DBA_KEY_YEARMIN));
 	gen_ensure(!dba_record_equals(rec, rec1));
+	gen_ensure(!dba_record_equals(rec1, rec));
 
 	CHECKED(dba_record_copy(rec1, rec));
 	gen_ensure(dba_record_equals(rec, rec1));
+	gen_ensure(dba_record_equals(rec1, rec));
 	CHECKED(dba_record_var_setc(rec1, DBA_VAR(0, 20, 1), "45"));
 	gen_ensure(!dba_record_equals(rec, rec1));
+	gen_ensure(!dba_record_equals(rec1, rec));
 
 	CHECKED(dba_record_copy(rec1, rec));
 	gen_ensure(dba_record_equals(rec, rec1));
+	gen_ensure(dba_record_equals(rec1, rec));
 	CHECKED(dba_record_var_unset(rec1, DBA_VAR(0, 20, 1)));
 	gen_ensure(!dba_record_equals(rec, rec1));
+	gen_ensure(!dba_record_equals(rec1, rec));
 }
 
 }
