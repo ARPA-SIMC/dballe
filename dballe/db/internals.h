@@ -114,8 +114,8 @@ struct _dba_db_cursor
 	/** Sequence number to use to bind ODBC output parameters */
 	unsigned int output_seq;
 
-	/** True if there is a date query and it matches the anagraphical context */
-	int want_ana_context;
+	/** True if we also accept results from the anagraphical context */
+	int accept_from_ana_context;
 
 	/** Selection parameters (input) for the query */
  	char	sel_dtmin[25];
