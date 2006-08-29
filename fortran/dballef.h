@@ -24,7 +24,7 @@ interface
 
 ! Init/Shutdown routines
 
-subroutine idba_presentati(dbahandle, dsn. user, password)
+subroutine idba_presentati(dbahandle, dsn, user, password)
 	integer, intent(out) :: dbahandle
 	character (len=*), intent(in) :: dsn,user,password
 end subroutine idba_presentati
@@ -60,7 +60,7 @@ end subroutine idba_seti
 
 subroutine idba_enqr(handle,param,value)
        integer, intent(in) :: handle
-       real :: value
+       real, intent(out) :: value
        character (len=*), intent(in) :: param
 end subroutine idba_enqr
 
@@ -73,7 +73,7 @@ end subroutine idba_setr
 
 subroutine idba_enqd(handle,param,value)
        integer, intent(in) :: handle
-       double precision :: value
+       double precision, intent(out) :: value
        character (len=*), intent(in) :: param
 end subroutine idba_enqd
 
@@ -86,70 +86,73 @@ end subroutine idba_setd
 
 subroutine idba_enqc(handle,param,value)
        integer, intent(in) :: handle
-       character (len=*) :: param,value
+       character (len=*), intent(out) :: param,value
 end subroutine idba_enqc
 
 subroutine idba_setc(handle,param,value)
-       integer :: handle
-       character (len=*) :: param,value
+       integer, intent(in) :: handle
+       character (len=*), intent(in) :: param,value
 end subroutine idba_setc
 
 
 subroutine idba_unset(handle,param)
-       integer :: handle
-       character (len=*) :: param
+       integer, intent(in) :: handle
+       character (len=*), intent(in) :: param
 end subroutine idba_unset
 
 subroutine idba_unsetall(handle)
-       integer :: handle
+       integer, intent(in) :: handle
 end subroutine idba_unsetall
 
 
 subroutine idba_setcontextana(handle)
-       integer :: handle
+       integer, intent(in) :: handle
 end subroutine idba_setcontextana
 
 
 subroutine idba_enqlevel(handle,ltype,l1,l2)
-       integer :: handle,ltype,l1,l2
+       integer, intent(in) :: handle
+       integer, intent(out) :: ltype,l1,l2
 end subroutine idba_enqlevel
 
 subroutine idba_setlevel(handle,ltype,l1,l2)
-       integer :: handle,ltype,l1,l2
+       integer, intent(in) :: handle,ltype,l1,l2
 end subroutine idba_setlevel
 
 
 subroutine idba_enqtimerange(handle,ptype,p1,p2)
-       integer :: handle,ptype,p1,p2
+       integer, intent(in) :: handle
+       integer, intent(out) :: ptype,p1,p2
 end subroutine idba_enqtimerange
 
 subroutine idba_settimerange(handle,ptype,p1,p2)
-       integer :: handle,ptype,p1,p2
+       integer, intent(in) :: handle,ptype,p1,p2
 end subroutine idba_settimerange
 
 
 subroutine idba_enqdate(handle,year,month,day,hour,min,sec)
-       integer :: handle,year,month,day,hour,min,sec
+       integer, intent(in) :: handle
+       integer, intent(out) :: year,month,day,hour,min,sec
 end subroutine idba_enqdate
 
 subroutine idba_setdate(handle,year,month,day,hour,min,sec)
-       integer :: handle,year,month,day,hour,min,sec
+       integer, intent(in) :: handle,year,month,day,hour,min,sec
 end subroutine idba_setdate
 
 subroutine idba_setdatemin(handle,year,month,day,hour,min,sec)
-       integer :: handle,year,month,day,hour,min,sec
+       integer, intent(in) :: handle,year,month,day,hour,min,sec
 end subroutine idba_setdatemin
 
 subroutine idba_setdatemax(handle,year,month,day,hour,min,sec)
-       integer :: handle,year,month,day,hour,min,sec
+       integer, intent(in) :: handle,year,month,day,hour,min,sec
 end subroutine idba_setdatemax
 
 
 ! Action routines
 
 subroutine idba_scopa(handle, repinfofile)
-	integer :: handle
-	character (len=*) :: repinfofile
+	integer, intent(in) :: handle
+	character (len=*), intent(in) :: repinfofile
 end subroutine idba_scopa
 
 
