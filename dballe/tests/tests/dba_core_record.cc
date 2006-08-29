@@ -403,6 +403,42 @@ void to::test<4>()
 	dba_record_delete(rec1);
 }
 
+// Test dba_record_equals
+template<> template<>
+void to::test<5>()
+{
+	dba_record rec;
+	CHECKED(dba_record_create(&rec));
+	CHECKED(dba_record_key_seti(rec, DBA_KEY_ANA_ID, -10));
+	CHECKED(dba_record_key_seti(rec, DBA_KEY_LAT, 1234567));
+	CHECKED(dba_record_key_setd(rec, DBA_KEY_LON, 76.54321));
+	CHECKED(dba_record_key_setc(rec, DBA_KEY_YEARMIN, "1976"));
+	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 1), "456"));
+	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 3), "456"));
+
+	dba_record rec1;
+	CHECKED(dba_record_create(&rec1));
+	CHECKED(dba_record_copy(rec1, rec));
+	gen_ensure(dba_record_equals(rec, rec1));
+	CHECKED(dba_record_key_setc(rec1, DBA_KEY_YEARMIN, "1975"));
+	gen_ensure(!dba_record_equals(rec, rec1));
+
+	CHECKED(dba_record_copy(rec1, rec));
+	gen_ensure(dba_record_equals(rec, rec1));
+	CHECKED(dba_record_key_unset(rec1, DBA_KEY_YEARMIN));
+	gen_ensure(!dba_record_equals(rec, rec1));
+
+	CHECKED(dba_record_copy(rec1, rec));
+	gen_ensure(dba_record_equals(rec, rec1));
+	CHECKED(dba_record_var_setc(rec1, DBA_VAR(0, 20, 1), "45"));
+	gen_ensure(!dba_record_equals(rec, rec1));
+
+	CHECKED(dba_record_copy(rec1, rec));
+	gen_ensure(dba_record_equals(rec, rec1));
+	CHECKED(dba_record_var_unset(rec1, DBA_VAR(0, 20, 1)));
+	gen_ensure(!dba_record_equals(rec, rec1));
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

@@ -223,6 +223,18 @@ dba_err dba_record_add(dba_record dest, dba_record source);
 dba_err dba_record_difference(dba_record dest, dba_record source1, dba_record source2);
 
 /**
+ * Check if two records have the same content.
+ *
+ * @param rec1
+ *   The first record to compare
+ * @param rec2
+ *   The second record to compare
+ * @return
+ *   1 if the two records have the same contents, else 0
+ */
+int dba_record_equals(dba_record rec1, dba_record rec2);
+
+/**
  * Look at the value of a parameter, as dba_var.
  *
  * @param rec

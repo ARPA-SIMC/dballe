@@ -148,6 +148,18 @@ dba_err dba_var_copy(dba_var source, dba_var* dest);
 void dba_var_delete(dba_var var);
 
 /**
+ * Check if two variables contains the same data
+ *
+ * @param var1
+ *   First variable to compare
+ * @param var2
+ *   Second variable to compare
+ * @returns
+ *   1 if the two variables have the same data, 0 otherwise
+ */
+int dba_var_equals(dba_var var1, dba_var var2);
+
+/**
  * Get the value of a dba_var, as an integer
  *
  * @param var

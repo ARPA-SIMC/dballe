@@ -129,6 +129,9 @@ void to::test<3>()
 	gen_ensure(var1 != NULL);
 	gen_ensure_var_equals(var1, 234);
 
+	// Also check dba_var_equals
+	gen_ensure(dba_var_equals(var, var1));
+
 	CHECKED(dba_var_enqa(var1, DBA_VAR(0, 33, 7), &attr));
 	gen_ensure(attr != NULL);
 	gen_ensure_var_equals(attr, 75);
@@ -136,6 +139,10 @@ void to::test<3>()
 	CHECKED(dba_var_enqa(var1, DBA_VAR(0, 33, 15), &attr));
 	gen_ensure(attr != NULL);
 	gen_ensure_var_equals(attr, 45);
+
+	// Fiddle with the attribute and make sure dba_var_equals notices
+	CHECKED(dba_var_seti(attr, 10));
+	gen_ensure(!dba_var_equals(var, var1));
 
 
 	dba_var_delete(var);

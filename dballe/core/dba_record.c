@@ -754,6 +754,47 @@ void dba_record_print(dba_record rec, FILE* out)
 		dba_var_print(dba_record_cursor_variable(cur), out);
 }
 
+int dba_record_equals(dba_record rec1, dba_record rec2)
+{
+	int i;
+	dba_record_cursor cur;
+
+	/* First compare the keywords */
+	for (i = 0; i < KEYWORD_TABLE_SIZE; i++)
+		if (rec1->keydata[i] == NULL && rec2->keydata[i] == NULL)
+			continue;
+		else
+			if (!dba_var_equals(rec1->keydata[i], rec2->keydata[i]))
+				return 0;
+
+	/* Then compare the hash tables */
+	for (cur = dba_record_iterate_first(rec1); cur != NULL; cur = dba_record_iterate_next(rec1, cur))
+	{
+		dba_item item2;
+		dba_varcode code = dba_var_code(cur->var);
+		if (!dba_record_has_item(rec2, code))
+			return 0;
+
+		for (item2 = rec2->vars; item2 != NULL; item2 = item2->next)
+			if (dba_var_code(item2->var) == code)
+			{
+				if (!dba_var_equals(cur->var, item2->var))
+					return 0;
+				break;
+			}
+	}
+
+	/* Check for the items in the second one not present in the first one */
+	for (cur = dba_record_iterate_first(rec2); cur != NULL; cur = dba_record_iterate_next(rec2, cur))
+	{
+		dba_varcode code = dba_var_code(cur->var);
+		if (!dba_record_has_item(rec2, code))
+			return 0;
+	}
+
+	return 1;
+}
+
 void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out)
 {
 	int i;

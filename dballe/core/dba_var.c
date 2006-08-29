@@ -463,6 +463,69 @@ void dba_var_print(dba_var var, FILE* out)
 	}
 }
 
+int dba_var_equals(dba_var var1, dba_var var2)
+{
+	if (var1 == NULL && var2 == NULL)
+		return 1;
+	if (var1 == NULL || var2 == NULL)
+		return 0;
+	if (dba_var_code(var1) != dba_var_code(var2))
+		return 0;
+	if (var1->value == NULL && var2->value == NULL)
+		return 1;
+	if (var1->value == NULL || var2->value == NULL)
+		return 0;
+	if (var1->info->is_string || var1->info->scale == 0)
+	{
+		if (strcmp(var1->value, var2->value) != 0)
+			return 0;
+	}
+	else
+	{
+		double val1, val2;
+		dba_var_enqd(var1, &val1);
+		dba_var_enqd(var2, &val2);
+		if (val1 != val2)
+			return 0;
+	}
+
+	if ((var1->attrs != 0) != (var2->attrs != 0))
+		return 0;
+
+	dba_var_attr cur;
+	int count1 = 0, count2 = 0;
+
+	for (cur = var1->attrs; cur != NULL; cur = cur->next)
+		++count1;
+	for (cur = var2->attrs; cur != NULL; cur = cur->next)
+		++count2;
+
+	if (count1 != count2)
+		return 0;
+	else {
+		/* Check attributes */
+		for (cur = var1->attrs; cur != NULL; cur = cur->next)
+		{
+			dba_var_attr cur2;
+			int found = 0;
+
+			/* We cannot call enqa because it would tamper the error status */
+			for (cur2 = var2->attrs; cur2 != NULL; cur2 = cur2->next)
+				if (dba_var_code(cur2->var) == dba_var_code(cur->var))
+				{
+					found = 1;
+					if (!dba_var_equals(cur->var, cur2->var))
+						return 0;
+					break;
+				}
+
+			if (!found)
+				return 0;
+		}
+	}
+	return 1;
+}
+
 void dba_var_diff(dba_var var1, dba_var var2, int* diffs, FILE* out)
 {
 	if (var1 == NULL && var2 == NULL)
