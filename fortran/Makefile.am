@@ -2,6 +2,11 @@ if DO_FORTRAN
 
 # libdballef
 
+dballeincludedir = $(includedir)/dballe
+
+# Include the F90 interface file as well
+dballeinclude_HEADERS = dballef.h
+
 lib_LTLIBRARIES = libdballef.la
 
 libdballef_la_SOURCES = \
@@ -35,6 +40,6 @@ dump_dballe_FFLAGS = -g -fno-second-underscore
 
 INCLUDES = -I..
 
-EXTRA_DIST = handles.h
+EXTRA_DIST = handles.h dballef.h
  
 endif
