@@ -45,6 +45,7 @@ struct _dba_db_context
 	struct _dba_db* db;
 	SQLHSTMT sstm;
 	SQLHSTMT istm;
+	SQLHSTMT dstm;
 
 	int id;
 
@@ -93,6 +94,16 @@ dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id);
 
 dba_err dba_db_context_insert(dba_db_context ins, int *id);
 
+/**
+ * Remove a context record
+ *
+ * @param ins
+ *   The dba_db_context structure, with id filled with the id of the context to
+ *   remove.
+ * @return
+ *   The error indicator for the function (@see dba_err)
+ */
+dba_err dba_db_context_remove(dba_db_context ins);
 
 #ifdef  __cplusplus
 }

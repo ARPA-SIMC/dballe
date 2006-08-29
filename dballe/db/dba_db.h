@@ -238,6 +238,22 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count);
 dba_err dba_db_remove(dba_db db, dba_record rec);
 
 /**
+ * Remove orphan values from the database.
+ *
+ * Orphan values are currently:
+ * \l context values for which no data exists
+ * \l pseudoana values for which no context exists
+ *
+ * Depending on database size, this routine can take a few minutes to execute.
+ *
+ * @param db
+ *   Database to operate on
+ * @return
+ *   The error indicator for the function (@see dba_err)
+ */
+dba_err dba_db_remove_orphans(dba_db db);
+
+/**
  * Query QC data
  *
  * @param db

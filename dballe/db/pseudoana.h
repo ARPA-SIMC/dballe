@@ -47,6 +47,7 @@ struct _dba_db_pseudoana
 	SQLHSTMT smstm;
 	SQLHSTMT istm;
 	SQLHSTMT ustm;
+	SQLHSTMT dstm;
 
 	int id;
 	int lat;
@@ -64,6 +65,16 @@ dba_err dba_db_pseudoana_get_id(dba_db_pseudoana ins, int *id);
 dba_err dba_db_pseudoana_insert(dba_db_pseudoana ins, int *id);
 dba_err dba_db_pseudoana_update(dba_db_pseudoana ins);
 
+/**
+ * Remove a pseudoana record
+ *
+ * @param ins
+ *   The dba_db_pseudoana structure, with id filled with the id of the pseudoana to
+ *   remove.
+ * @return
+ *   The error indicator for the function (@see dba_err)
+ */
+dba_err dba_db_pseudoana_remove(dba_db_pseudoana ins);
 
 #ifdef  __cplusplus
 }

@@ -55,6 +55,8 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 		" AND ptype=? AND p1=? AND p2=?";
 	const char* insert_query =
 		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	const char* remove_query =
+		"DELETE FROM context WHERE id=?";
 	dba_err err = DBA_OK;
 	dba_db_context res = NULL;
 	int r;
@@ -64,6 +66,7 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 	res->db = db;
 	res->sstm = NULL;
 	res->istm = NULL;
+	res->dstm = NULL;
 
 	/* Create the statement for select fixed */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sstm)));
@@ -103,6 +106,16 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 		goto cleanup;
 	}
 
+	/* Create the statement for remove */
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->dstm)));
+	SQLBindParameter(res->dstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
+	r = SQLPrepare(res->dstm, (unsigned char*)remove_query, SQL_NTS);
+	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->dstm, "compiling query to remove from 'context'");
+		goto cleanup;
+	}
+
 	*ins = res;
 	res = NULL;
 	
@@ -118,6 +131,8 @@ void dba_db_context_delete(dba_db_context ins)
 		SQLFreeHandle(SQL_HANDLE_STMT, ins->sstm);
 	if (ins->istm != NULL)
 		SQLFreeHandle(SQL_HANDLE_STMT, ins->istm);
+	if (ins->dstm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, ins->dstm);
 	free(ins);
 }
 
@@ -170,6 +185,15 @@ dba_err dba_db_context_insert(dba_db_context ins, int *id)
 		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->istm, "inserting new data into context");
 
 	return dba_db_last_insert_id(ins->db, id);
+}
+
+dba_err dba_db_context_remove(dba_db_context ins)
+{
+	int res = SQLExecute(ins->dstm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->dstm, "removing a context record");
+
+	return dba_error_ok();
 }
 
 /* vim:set ts=4 sw=4: */

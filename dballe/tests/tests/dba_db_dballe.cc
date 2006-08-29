@@ -1105,6 +1105,14 @@ void to::test<5>()
 	dba_db_cursor_delete(cursor);
 }
 
+/* Run a search for orphan elements */
+template<> template<>
+void to::test<6>()
+{
+	CHECKED(dba_db_remove_orphans(db));
+}
+
+
 }
 
 /* vim:set ts=4 sw=4: */

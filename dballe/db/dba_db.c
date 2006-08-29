@@ -99,7 +99,8 @@ static const char* init_queries[] = {
 	"   INDEX (datetime),"
 	"   INDEX (ltype, l1, l2),"
 	"   INDEX (ptype, p1, p2),"
-	"   FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE"
+	"   FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
+	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
 	") " TABLETYPE,
 	"CREATE TABLE data ("
 	"   id_context	INTEGER NOT NULL,"
@@ -714,6 +715,43 @@ failed:
 	dba_db_cursor_delete(*cur);
 	*cur = 0;
 	return err;
+}
+
+dba_err dba_db_remove_orphans(dba_db db)
+{
+	static const char* cclean = "delete c from context as c left join data as d on d.id_context = c.id where d.id_context is NULL";
+	static const char* pclean = "delete p from pseudoana as p left join context as c on c.id_ana = p.id where c.id is NULL";
+	dba_err err = DBA_OK;
+	SQLHSTMT stm = NULL;
+	int res;
+
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
+
+	/* Delete orphan contexts */
+	res = SQLExecDirect(stm, (unsigned char*)cclean, SQL_NTS);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", cclean);
+		goto cleanup;
+	}
+
+	/* Done with context */
+	res = SQLCloseCursor(stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_remove_orphans cursor");
+
+	/* Delete orphan pseudoanas */
+	res = SQLExecDirect(stm, (unsigned char*)pclean, SQL_NTS);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", pclean);
+		goto cleanup;
+	}
+
+cleanup:
+	if (stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 dba_err dba_db_remove(dba_db db, dba_record rec)

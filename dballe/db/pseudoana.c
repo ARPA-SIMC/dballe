@@ -58,6 +58,8 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 		" VALUES (?, ?, ?);";
 	const char* update_query =
 		"UPDATE pseudoana SET lat=?, lon=?, ident=? WHERE id=?";
+	const char* remove_query =
+		"DELETE FROM pseudoana WHERE id=?";
 	dba_err err = DBA_OK;
 	dba_db_pseudoana res = NULL;
 	int r;
@@ -69,6 +71,7 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	res->smstm = NULL;
 	res->istm = NULL;
 	res->ustm = NULL;
+	res->dstm = NULL;
 
 	/* Create the statement for select fixed */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sfstm)));
@@ -117,6 +120,16 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
 		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->ustm, "compiling query to update pseudoana");
+		goto cleanup;
+	}
+
+	/* Create the statement for remove */
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->dstm)));
+	SQLBindParameter(res->dstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
+	r = SQLPrepare(res->dstm, (unsigned char*)remove_query, SQL_NTS);
+	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->dstm, "compiling query to remove from pseudoana");
 		goto cleanup;
 	}
 
@@ -186,6 +199,15 @@ dba_err dba_db_pseudoana_update(dba_db_pseudoana ins)
 	int res = SQLExecute(ins->ustm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->ustm, "updating pseudoana");
+
+	return dba_error_ok();
+}
+
+dba_err dba_db_pseudoana_remove(dba_db_pseudoana ins)
+{
+	int res = SQLExecute(ins->dstm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->dstm, "removing a pseudoana record");
 
 	return dba_error_ok();
 }
