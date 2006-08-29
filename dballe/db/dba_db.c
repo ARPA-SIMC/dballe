@@ -58,7 +58,7 @@
 static SQLHENV dba_od_env;
 
 static const char* init_tables[] = {
-	"repinfo", "pseudoana", "data", "context", "attr"
+	"attr", "data", "context", "pseudoana", "repinfo"
 };
 
 #ifdef DBA_USE_TRANSACTIONS
@@ -82,13 +82,6 @@ static const char* init_queries[] = {
 	"   ident      CHAR(64),"
 	"   UNIQUE INDEX(lat, lon, ident(8))"
 	") " TABLETYPE,
-	"CREATE TABLE data ("
-	"   id_context	INTEGER NOT NULL,"
-	"	id_var		SMALLINT NOT NULL,"
-	"	value		VARCHAR(255) NOT NULL,"
-	"	INDEX (id_context),"
-	"   UNIQUE INDEX(id_var, id_context)"
-	") " TABLETYPE,
 	"CREATE TABLE context ("
 	"   id			INTEGER auto_increment PRIMARY KEY,"
 	"   id_ana		INTEGER NOT NULL,"
@@ -105,7 +98,16 @@ static const char* init_queries[] = {
 	"   INDEX (id_report),"
 	"   INDEX (datetime),"
 	"   INDEX (ltype, l1, l2),"
-	"   INDEX (ptype, p1, p2)"
+	"   INDEX (ptype, p1, p2),"
+	"   FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE"
+	") " TABLETYPE,
+	"CREATE TABLE data ("
+	"   id_context	INTEGER NOT NULL,"
+	"	id_var		SMALLINT NOT NULL,"
+	"	value		VARCHAR(255) NOT NULL,"
+	"	INDEX (id_context),"
+	"   UNIQUE INDEX(id_var, id_context),"
+	"   FOREIGN KEY (id_context) REFERENCES context (id) ON DELETE CASCADE"
 	") " TABLETYPE,
 	"CREATE TABLE attr ("
 	"   id_context	INTEGER NOT NULL,"
@@ -113,7 +115,8 @@ static const char* init_queries[] = {
 	"   type		SMALLINT NOT NULL,"
 	"   value		VARCHAR(255) NOT NULL,"
 	"   INDEX (id_context, id_var),"
-	"   UNIQUE INDEX (id_context, id_var, type)"
+	"   UNIQUE INDEX (id_context, id_var, type),"
+	"   FOREIGN KEY (id_context, id_var) REFERENCES data (id_context, id_var) ON DELETE CASCADE"
 	") " TABLETYPE,
 };
 
