@@ -25,65 +25,67 @@ interface
 ! Init/Shutdown routines
 
 subroutine idba_presentati(dbahandle, dsn. user, password)
-	integer :: dbahandle
-	character (len=*) :: dsn,usr,password
+	integer, intent(out) :: dbahandle
+	character (len=*), intent(in) :: dsn,user,password
 end subroutine idba_presentati
 
 subroutine idba_arrivederci(dbahandle)
-	integer :: dbahandle
+	integer, intent(in) :: dbahandle
 end subroutine idba_arrivederci
 
 subroutine idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
-	integer :: dbahandle,handle
-	character (len=*) :: anaflag,dataflag,attrflag
+	integer, intent(in) :: dbahandle
+	integer, intent(out) :: handle
+	character (len=*), intent(in) :: anaflag,dataflag,attrflag
 end subroutine idba_preparati
 
 subroutine idba_fatto(handle)
-	integer :: handle
+	integer, intent(in) :: handle
 end subroutine idba_fatto
 
 
 ! Get/Set routines
 
 subroutine idba_enqi(handle,param,value)
-       integer :: handle,value
-       character (len=*) :: param
+       integer, intent(in) :: handle
+       integer, intent(out) :: value
+       character (len=*), intent(in) :: param
 end subroutine idba_enqi
 
 subroutine idba_seti(handle,param,value)
-       integer :: handle,value
-       character (len=*) :: param
+       integer, intent(in) :: handle,value
+       character (len=*), intent(in) :: param
 end subroutine idba_seti
 
 
 subroutine idba_enqr(handle,param,value)
-       integer :: handle
+       integer, intent(in) :: handle
        real :: value
-       character (len=*) :: param
+       character (len=*), intent(in) :: param
 end subroutine idba_enqr
 
 subroutine idba_setr(handle,param,value)
-       integer :: handle
-       real :: value
-       character (len=*) :: param
+       integer, intent(in) :: handle
+       real, intent(in) :: value
+       character (len=*), intent(in) :: param
 end subroutine idba_setr
 
 
 subroutine idba_enqd(handle,param,value)
-       integer :: handle
+       integer, intent(in) :: handle
        double precision :: value
-       character (len=*) :: param
+       character (len=*), intent(in) :: param
 end subroutine idba_enqd
 
 subroutine idba_setd(handle,param,value)
-       integer :: handle
-       double precision :: value
-       character (len=*) :: param
+       integer, intent(in) :: handle
+       double precision, intent(in) :: value
+       character (len=*), intent(in) :: param
 end subroutine idba_setd
 
 
 subroutine idba_enqc(handle,param,value)
-       integer :: handle
+       integer, intent(in) :: handle
        character (len=*) :: param,value
 end subroutine idba_enqc
 
