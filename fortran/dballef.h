@@ -86,7 +86,8 @@ end subroutine idba_setd
 
 subroutine idba_enqc(handle,param,value)
        integer, intent(in) :: handle
-       character (len=*), intent(out) :: param,value
+       character (len=*), intent(in) :: param
+       character (len=*), intent(out) :: value
 end subroutine idba_enqc
 
 subroutine idba_setc(handle,param,value)
