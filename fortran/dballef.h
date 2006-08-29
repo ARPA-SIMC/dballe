@@ -157,47 +157,50 @@ end subroutine idba_scopa
 
 
 subroutine idba_quantesono(handle, count)
-	integer :: handle,count
+	integer, intent(in) :: handle
+	integer, intent(out) :: count
 end subroutine idba_quantesono
 
 subroutine idba_elencamele(handle)
-	integer :: handle
+	integer, intent(in) :: handle
 end subroutine idba_elencamele
 
 
 subroutine idba_voglioquesto(handle, count)
-	integer :: handle,count
+	integer, intent(in) :: handle
+	integer, intent(out) :: count
 end subroutine idba_voglioquesto
 
 subroutine idba_dammelo(handle,param)
-	integer :: handle
-	character (len=*) :: param
+	integer, intent(in) :: handle
+	character (len=*), intent(out) :: param
 end subroutine idba_dammelo
 
 subroutine idba_prendilo(handle)
-	integer :: handle
+	integer, intent(in) :: handle
 end subroutine idba_prendilo
 
 subroutine idba_dimenticami(handle)
-	integer :: handle
+	integer, intent(in) :: handle
 end subroutine idba_dimenticami
 
 
 subroutine idba_voglioancora(handle, count)
-	integer :: handle,count
+	integer, intent(in) :: handle
+	integer, intent(out) :: count
 end subroutine idba_voglioancora
 
 subroutine idba_ancora(handle,param)
-	integer :: handle
-	character (len=*) :: param
+	integer, intent(in) :: handle
+	character (len=*), intent(out) :: param
 end subroutine idba_ancora
 
 subroutine idba_critica(handle)
-	integer :: handle
+	integer, intent(in) :: handle
 end subroutine idba_critica
 
 subroutine idba_scusa(handle)
-	integer :: handle
+	integer, intent(in) :: handle
 end subroutine idba_scusa
 
 
