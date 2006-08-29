@@ -432,7 +432,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 	ADD_INT(&cur->sel_pind, DBA_KEY_PINDICATOR, "c.ptype=?", DBA_DB_FROM_C);
 	ADD_INT(&cur->sel_p1, DBA_KEY_P1, "c.p1=?", DBA_DB_FROM_C);
 	ADD_INT(&cur->sel_p2, DBA_KEY_P2, "c.p2=?", DBA_DB_FROM_C);
-	// FIXME ADD_INT(&cur->sel_context_id, DBA_KEY_CONTEXT_ID, "c.id = ?", DBA_DB_FROM_C);
+	ADD_INT(&cur->sel_context_id, DBA_KEY_CONTEXT_ID, "c.id = ?", DBA_DB_FROM_C);
 
 	/* rep_memo has priority over rep_cod */
 	if ((val = dba_record_key_peek_value(query, DBA_KEY_REP_MEMO)) != NULL)
