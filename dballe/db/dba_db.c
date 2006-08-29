@@ -55,6 +55,9 @@
 #define DBA_USE_TRANSACTIONS
 #endif
 
+/* Define this to enable referential integrity */
+#undef USE_REF_INT
+
 static SQLHENV dba_od_env;
 
 static const char* init_tables[] = {
@@ -98,17 +101,21 @@ static const char* init_queries[] = {
 	"   INDEX (id_report),"
 	"   INDEX (datetime),"
 	"   INDEX (ltype, l1, l2),"
-	"   INDEX (ptype, p1, p2),"
-	"   FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
+	"   INDEX (ptype, p1, p2)"
+#ifdef USE_REF_INT
+	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
 	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
+#endif
 	") " TABLETYPE,
 	"CREATE TABLE data ("
 	"   id_context	INTEGER NOT NULL,"
 	"	id_var		SMALLINT NOT NULL,"
 	"	value		VARCHAR(255) NOT NULL,"
 	"	INDEX (id_context),"
-	"   UNIQUE INDEX(id_var, id_context),"
-	"   FOREIGN KEY (id_context) REFERENCES context (id) ON DELETE CASCADE"
+	"   UNIQUE INDEX(id_var, id_context)"
+#ifdef USE_REF_INT
+	"   , FOREIGN KEY (id_context) REFERENCES context (id) ON DELETE CASCADE"
+#endif
 	") " TABLETYPE,
 	"CREATE TABLE attr ("
 	"   id_context	INTEGER NOT NULL,"
@@ -116,8 +123,10 @@ static const char* init_queries[] = {
 	"   type		SMALLINT NOT NULL,"
 	"   value		VARCHAR(255) NOT NULL,"
 	"   INDEX (id_context, id_var),"
-	"   UNIQUE INDEX (id_context, id_var, type),"
-	"   FOREIGN KEY (id_context, id_var) REFERENCES data (id_context, id_var) ON DELETE CASCADE"
+	"   UNIQUE INDEX (id_context, id_var, type)"
+#ifdef USE_REF_INT
+	"   , FOREIGN KEY (id_context, id_var) REFERENCES data (id_context, id_var) ON DELETE CASCADE"
+#endif
 	") " TABLETYPE,
 };
 
