@@ -1097,14 +1097,13 @@ c       ...process the data...
       call idba_preparati(dbhandle, handle, "write", "add", "add")
       
 c     Insert data about a station
-      call idba_seti (handle, "!ana", "")
       call idba_setr (handle, "lat", 11.345)
       call idba_setr (handle, "lon", 44.678)
       call idba_setr (handle, "height", 23)
       call idba_prendilo (handle)
 
 c     Read the station ID for the station we just inserted
-      call idba_enqi (handle, "!ana_id", anaid)
+      call idba_enqi (handle, "ana_id", anaid)
 
 c     Reset the input data
       call idba_unsetall (handle)
@@ -1176,6 +1175,38 @@ c       Read the data about the station
   odbc.ini}, or editing the Options field using the graphical ODBC
   configuration tool.
   \end{quote}
+
+\item [ How do I access the extra station data? ]
+  There are two ways:
+  \begin{enumerate}
+  \item If you know in advances what variables you want to read, you can find
+        them among the results of {\tt idba\_elencamele}:
+	\begin{verbatim}
+c     Query station data
+      call idba_quantesono(handle, count)
+   
+c     Get the informations about a station
+      do i=1,count
+        call idba_elencamele(handle)
+        call idba_enqc(handle, "name", cname)
+        call idba_enqi(handle, "B02001", type)
+c       ....
+      enddo
+	\end{verbatim}
+  \item If you want to see all the extra station data available, you can make
+	an explicit query for the extra station data using {\tt
+	idba\_voglioquesto} and {\tt idba\_dammelo}
+	\begin{verbatim}
+      call idba_seti("ana_id", id)
+      call idba_voglioquesto(handle, count)
+      do i=1,count
+        call idba_dammelo(handle, param)
+c       get the value of this variable
+        call idba_enqc(handle, param, cvalue)
+        print*,param,": ",cvalue
+      enddo
+	\end{verbatim}
+  \end{enumerate}
 \end{description}
 
 \appendix
