@@ -1143,7 +1143,7 @@ dba_err dba_db_qc_remove(dba_db db, int id_context, dba_varcode id_var, dba_varc
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);
 	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
 
-	TRACE("Performing query %s for id %d\n", query, id_data);
+	dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_context, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 	
 	/* Execute the DELETE SQL query */
 	/* Casting to char* because ODBC is unaware of const */
