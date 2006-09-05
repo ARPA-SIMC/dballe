@@ -122,12 +122,9 @@ static dba_err read_strings(const char* tag, const char *descs[], int size)
 			else
 				break;
 
-		descs[index] = strdup(line);
+		descs[index] = strdup(s);
 
 	}
-
-	fclose(in);
-	in = NULL;
 
 cleanup:
 	if (in != NULL)
