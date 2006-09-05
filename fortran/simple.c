@@ -19,12 +19,16 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#define _GNU_SOURCE
+/* _GNU_SOURCE is defined to have asprintf */
+
 #include <dballe/init.h>
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>
 #include <dballe/db/dba_db.h>
 #include <dballe/db/cursor.h>
 #include <dballe/db/internals.h>
+#include <dballe/formatter.h>
 
 #include <f77.h>
 #include <limits.h>
@@ -208,14 +212,9 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	dba_err err;
 
 	/* Import input string parameters */
-	assert(dsn_length < 50);
-	cnfImprt(dsn, dsn_length, s_dsn);
-	
-	assert(user_length < 20);
-	cnfImprt(user, user_length, s_user);
-	
-	assert(password_length < 20);
-	cnfImprt(password, password_length, s_password);
+	cnfImpn(dsn, dsn_length, 49, s_dsn); s_dsn[49] = 0;
+	cnfImpn(user, user_length, 19, s_user); s_user[19] = 0;
+	cnfImpn(password, password_length, 19, s_password); s_password[19] = 0;
 
 	/* Initialize the library if needed */
 	if (usage_refcount == 0)
@@ -454,7 +453,7 @@ F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(r
 		return dba_error_consistency(
 			"idba_scopa must be run with the database open in data write mode");
 
-	cnfImprt(repinfofile, repinfofile_length > PATH_MAX ? PATH_MAX : repinfofile_length, fname);
+	cnfImpn(repinfofile, repinfofile_length,  PATH_MAX, fname); fname[PATH_MAX - 1] = 0;
 
 	return dba_db_reset(SESSION, fname[0] == 0 ? NULL : fname);
 }
@@ -572,8 +571,7 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 	}
 	*/
 	
-	assert(parameter_length < 20);
-	cnfImprt(parameter, parameter_length, parm);
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	switch (parm[0])
 	{
@@ -626,8 +624,8 @@ F77_INTEGER_FUNCTION(idba_enqr)(
 	double dval;
 	dba_record rec;
 	dba_var var;
-	assert(parameter_length < 20);
-	cnfImprt(parameter, parameter_length, parm);
+
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	if (parm[0] == '*')
 	{
@@ -678,8 +676,8 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 	char* p;
 	dba_record rec;
 	dba_var var;
-	assert(parameter_length < 20);
-	cnfImprt(parameter, parameter_length, parm);
+
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	if (parm[0] == '*')
 	{
@@ -731,8 +729,7 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 	const char* strval;
 	dba_err err;
 
-	assert(parameter_length < 20);
-	cnfImprt(parameter, parameter_length, parm);
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	if (parm[0] == '*')
 	{
@@ -792,8 +789,8 @@ F77_INTEGER_FUNCTION(idba_seti)(
 	char* p;
 	dba_record rec;
 	dba_varcode code = 0;
-	assert(parameter_length < 20);
-	cnfImprt(parameter, parameter_length, parm);
+
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	switch (parm[0])
 	{
@@ -870,8 +867,8 @@ F77_INTEGER_FUNCTION(idba_setr)(
 	char* p;
 	dba_record rec;
 	dba_varcode code = 0;
-	assert(parameter_length < 20);
-	cnfImprt(parameter, parameter_length, parm);
+
+	cnfImpn(parameter, parameter_length, 19, parm);
 
 	switch (parm[0])
 	{
@@ -948,8 +945,8 @@ F77_INTEGER_FUNCTION(idba_setd)(
 	char* p;
 	dba_record rec;
 	dba_varcode code = 0;
-	assert(parameter_length < 20);
-	cnfImprt(parameter, parameter_length, parm);
+
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	switch (parm[0])
 	{
@@ -1029,9 +1026,8 @@ F77_INTEGER_FUNCTION(idba_setc)(
 	dba_record rec;
 	dba_varcode code = 0;
 
-	assert(parameter_length < 20);
-	cnfImprt(parameter, parameter_length, parm);
-	cnfImprt(value, value_length, val);
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
+	cnfImpn(value, value_length, 254, val); val[254] = 0;
 
 	switch (parm[0])
 	{
@@ -1428,8 +1424,8 @@ F77_INTEGER_FUNCTION(idba_unset)(
 	char parm[20];
 	char* p;
 	dba_record rec;
-	assert(parameter_length < 20);
-	cnfImprt(parameter, parameter_length, parm);
+
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	if (parm[0] == '*')
 	{
@@ -2016,6 +2012,95 @@ cleanup:
 	if (arr != NULL)
 		dba_arr_varcode_delete(arr);
 	return err == DBA_OK ? dba_error_ok() : err;
+}
+
+F77_INTEGER_FUNCTION(idba_spiegal)(
+		INTEGER(handle),
+		INTEGER(ltype),
+		INTEGER(l1),
+		INTEGER(l2),
+		CHARACTER(result)
+		TRAIL(result))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(ltype)
+	GENPTR_INTEGER(l1)
+	GENPTR_INTEGER(l2)
+	GENPTR_CHARACTER(result)
+	char* res;
+
+	DBA_RUN_OR_RETURN(dba_formatter_describe_level(*ltype, *l1, *l2, &res));
+	cnfExprt(res, result, result_length);
+	free(res);
+	return dba_error_ok();
+}
+
+F77_INTEGER_FUNCTION(idba_spiegat)(
+		INTEGER(handle),
+		INTEGER(ptype),
+		INTEGER(p1),
+		INTEGER(p2),
+		CHARACTER(result)
+		TRAIL(result))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_INTEGER(ptype)
+	GENPTR_INTEGER(p1)
+	GENPTR_INTEGER(p2)
+	GENPTR_CHARACTER(result)
+	char* res;
+
+	DBA_RUN_OR_RETURN(dba_formatter_describe_trange(*ptype, *p1, *p2, &res));
+	cnfExprt(res, result, result_length);
+	free(res);
+	return dba_error_ok();
+}
+
+F77_INTEGER_FUNCTION(idba_spiegab)(
+		INTEGER(handle),
+		CHARACTER(varcode),
+		CHARACTER(value),
+		CHARACTER(result)
+		TRAIL(varcode)
+		TRAIL(value)
+		TRAIL(result))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_CHARACTER(varcode)
+	GENPTR_CHARACTER(value)
+	GENPTR_CHARACTER(result)
+	dba_var var = NULL;
+	char s_varcode[10];
+	char s_value[300];
+	char* res = NULL;
+	dba_varinfo info;
+	dba_err err = DBA_OK;
+
+	cnfImpn(varcode, varcode_length, 9, s_varcode); s_varcode[9] = 0;
+	cnfImpn(value, value_length, 299, s_value); s_value[299] = 0;
+
+	DBA_RUN_OR_RETURN(dba_varinfo_query_local(DBA_STRING_TO_VAR(s_varcode), &info));
+	DBA_RUN_OR_RETURN(dba_var_createc(info, s_value, &var));
+
+	if (info->is_string)
+	{
+		const char* s;
+		DBA_RUN_OR_GOTO(cleanup, dba_var_enqc(var, &s));
+		asprintf(&res, "%s (%s) %s", s, info->unit, info->desc);
+	} else {
+		double d;
+		DBA_RUN_OR_GOTO(cleanup, dba_var_enqd(var, &d));
+		asprintf(&res, "%f (%s) %s", d, info->unit, info->desc);
+	}
+
+	cnfExprt(res, result, result_length);
+
+cleanup:
+	if (var != NULL)
+		dba_var_delete(var);
+	if (res != NULL)
+		free(res);
+	return err != DBA_OK ? err : dba_error_ok();
 }
 
 /*@}*/

@@ -56,5 +56,5 @@
 
 #256   Cloud levels       & 0 & 0=General Cloud Group, 1=CL, 2=CM, 3=CH
 
-256   Synop cloud group %d
+256   Synop cloud group %d/%d
 257   Extra anagraphical information
