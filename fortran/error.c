@@ -187,7 +187,7 @@ F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
 F77_INTEGER_FUNCTION(idba_default_error_handle)(LOGICAL(debug))
 {
 	GENPTR_LOGICAL(debug)
-	if (F77_ISFALSE(*debug))
+	if (F77_ISTRUE(*debug))
 		dba_cmdline_print_dba_error();
 	exit(1);
 }
