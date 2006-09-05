@@ -85,6 +85,7 @@ static dba_err read_strings(const char* tag, const char *descs[], int size)
 	for ( ; fgets(line, 1000, in) != NULL; ++line_no)
 	{
 		char* s = line;
+		char* end;
 		int index;
 		// Skip leading spaces
 		while (*s && isspace(*s)) ++s;
@@ -116,9 +117,9 @@ static dba_err read_strings(const char* tag, const char *descs[], int size)
 		}
 
 		// Trim trailing spaces and newlines
-		for (s = line + strlen(line) - 1; s > line; --s)
-			if (isspace(*s))
-				*s = 0;
+		for (end = line + strlen(line) - 1; end > line; --end)
+			if (isspace(*end))
+				*end = 0;
 			else
 				break;
 
