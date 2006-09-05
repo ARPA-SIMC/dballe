@@ -33,7 +33,7 @@
 
 #define levels_count 258
 #define tranges_count 256
-static const char* def_desc = "Reserved";
+static const char* def_desc = "%3$d %d %d";
 static const char* ldescs[levels_count];
 static const char* tdescs[tranges_count];
 static int initialized = 0;
@@ -174,7 +174,7 @@ dba_err dba_formatter_describe_level(int ltype, int l1, int l2, char** buf)
 
 	DBA_RUN_OR_RETURN(want_levels());
 
-	if (asprintf(buf, ldescs[ltype], l1, l2) == -1)
+	if (asprintf(buf, ldescs[ltype], l1, l2, ltype) == -1)
 		return dba_error_system("formatting description string %s (ltype: %d, l1: %d, l2: %d)",
 				ldescs[ltype], ltype, l1, l2);
 
@@ -190,7 +190,7 @@ dba_err dba_formatter_describe_trange(int ptype, int p1, int p2, char** buf)
 
 	DBA_RUN_OR_RETURN(want_tranges());
 
-	if (asprintf(buf, tdescs[ptype], p1, p2) == -1)
+	if (asprintf(buf, tdescs[ptype], p1, p2, ptype) == -1)
 		return dba_error_system("formatting description string %s (ltype: %d, l1: %d, l2: %d)",
 				tdescs[ptype], ptype, p1, p2);
 
