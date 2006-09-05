@@ -275,6 +275,8 @@ Double  & -2.22507E-308		\\
 
 \subsection {Input/output shortcuts}
 
+\label{fun-shortcuts}
+
 There are a few functions that are shortcuts to other input and output
 functions:
 
@@ -1508,6 +1510,19 @@ These routines are used to set the input and read the output of action routines.
 {\tt idba\_enqr(h, param, val)} & Read a real from the output      & \ref{fun-idba_enq} \\
 {\tt idba\_enqd(h, param, val)} & Read a double from the output    & \ref{fun-idba_enq} \\
 {\tt idba\_enqc(h, param, val)} & Read a character from the output & \ref{fun-idba_enq} \\
+{\tt idba\_setcontextana(h)}	& Set query parameters to the anagraphical context & \ref{fun-shortcuts} \\
+{\tt idba\_enqlevel(h, type, l1, l2)} & Read level data		   & \ref{fun-shortcuts} \\
+{\tt idba\_setlevel(h, type, l1, l2)} & Set level data		   & \ref{fun-shortcuts} \\
+{\tt idba\_enqtimerange(h, type, p1, p2)} & Read time range data   & \ref{fun-shortcuts} \\
+{\tt idba\_settimerange(h, type, p1, p2)} & Set time range data	   & \ref{fun-shortcuts} \\
+{\tt idba\_enqdate(h, year, month, day, hour, min, sec)} &
+				  Read date information		   & \ref{fun-shortcuts} \\
+{\tt idba\_setdate(h, year, month, day, hour, min, sec)} &
+				  Set date information		   & \ref{fun-shortcuts} \\
+{\tt idba\_setdatemin(h, year, month, day, hour, min, sec)} &
+				  Set minimum date for a query	   & \ref{fun-shortcuts} \\
+{\tt idba\_setdatemax(h, year, month, day, hour, min, sec)} &
+				  Set maximum date for a query	   & \ref{fun-shortcuts} \\
 \hline
 \end{tabular}
 
@@ -1572,18 +1587,6 @@ These routines are used to begin and end working sessions with \dballe{}.
 {\tt idba\_error\_remove\_callback(h)} &
 	Remove a previously set callback &
 	\ref{fun-idba_error_remove_callback} \\
-
-{\tt idba\_scopa(h, filename)}     & Reinitialise the database       & \ref{fun-idba_scopa} \\
-{\tt idba\_quantesono(h, count)}   & Query the stations archive      & \ref{fun-idba_quantesono} \\
-{\tt idba\_elencamele(h)}          & Fetch data about a station      & \ref{fun-idba_elencamele} \\
-{\tt idba\_voglioquesto(h, count)} & Query the data archive          & \ref{fun-idba_voglioquesto} \\
-{\tt idba\_dammelo(h, param)}      & Fetch one observed data         & \ref{fun-idba_dammelo} \\
-{\tt idba\_prendilo(h)}            & Insert values in the database   & \ref{fun-idba_prendilo} \\
-{\tt idba\_dimenticami(h)}         & Remove values from the database & \ref{fun-idba_dimenticami} \\
-{\tt idba\_voglioancora(h, count)} & Query QC data about a value     & \ref{fun-idba_voglioancora} \\
-{\tt idba\_ancora(h, param)}       & Fetch QC data                   & \ref{fun-idba_ancora} \\
-{\tt idba\_critica(h)}             & Insert QC data about a value    & \ref{fun-idba_critica} \\
-{\tt idba\_scusa(h)}               & Remove QC data                  & \ref{fun-idba_scusa} \\
 \hline
 \end{tabular}
 
