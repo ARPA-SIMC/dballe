@@ -24,6 +24,7 @@
 #include <dballe/cmdline.h>
 #include <dballe/bufrex/bufrex_dtable.h>
 #include <dballe/conv/conv.h>
+#include <dballe/formatter.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -327,6 +328,51 @@ dba_err do_index(poptContext optCon)
 	return dba_error_ok();
 }
 
+dba_err do_describe(poptContext optCon)
+{
+	const char* what;
+
+	/* Throw away the command name */
+	poptGetArg(optCon);
+	if ((what = poptGetArg(optCon)) == NULL)
+		dba_cmdline_error(optCon, "you need to specify what you want to describe.  Available options are: 'level' and 'trange'");
+
+	if (strcmp(what, "level") == 0)
+	{
+		const char* sltype = poptGetArg(optCon);
+		const char* sl1 = poptGetArg(optCon);
+		const char* sl2 = poptGetArg(optCon);
+		char* formatted;
+		if (sltype == NULL)
+			dba_cmdline_error(optCon, "you need provide 1, 2 or 3 numbers that identify the level");
+		DBA_RUN_OR_RETURN(dba_formatter_describe_level(
+				strtoul(sltype, NULL, 10),
+				sl1 == NULL ? 0 : strtoul(sl1, NULL, 10),
+				sl2 == NULL ? 0 : strtoul(sl2, NULL, 10),
+				&formatted));
+		puts(formatted);
+		free(formatted);
+	} else if (strcmp(what, "trange") == 0) {
+		const char* sptype = poptGetArg(optCon);
+		const char* sp1 = poptGetArg(optCon);
+		const char* sp2 = poptGetArg(optCon);
+		char* formatted;
+		if (sptype == NULL)
+			dba_cmdline_error(optCon, "you need provide 1, 2 or 3 numbers that identify the time range");
+		DBA_RUN_OR_RETURN(dba_formatter_describe_trange(
+				strtoul(sptype, NULL, 10),
+				sp1 == NULL ? 0 : strtoul(sp1, NULL, 10),
+				sp2 == NULL ? 0 : strtoul(sp2, NULL, 10),
+				&formatted));
+		puts(formatted);
+		free(formatted);
+	} else
+		dba_cmdline_error(optCon, "cannot handle %s.  Available options are: 'level' and 'trange'.", what);
+	
+	return dba_error_ok();
+}
+
+
 static struct tool_desc dbatbl;
 
 struct poptOption dbatbl_cat_options[] = {
@@ -352,13 +398,18 @@ struct poptOption dbatbl_index_options[] = {
 	POPT_TABLEEND
 };
 
+struct poptOption dbatbl_describe_options[] = {
+	{ "help", '?', 0, 0, 1, "print an help message" },
+	POPT_TABLEEND
+};
+
 static void init()
 {
 	dbatbl.desc = "Manage on-disk reference tables for DB-ALLe";
 	dbatbl.longdesc =
 		"This tool allows to index and query the tables that are "
 		"needed for normal functioning of DB-ALLe";
-	dbatbl.ops = (struct op_dispatch_table*)calloc(6, sizeof(struct op_dispatch_table));
+	dbatbl.ops = (struct op_dispatch_table*)calloc(7, sizeof(struct op_dispatch_table));
 
 	dbatbl.ops[0].func = do_cat;
 	dbatbl.ops[0].aliases[0] = "cat";
@@ -395,11 +446,18 @@ static void init()
 	dbatbl.ops[4].longdesc = NULL;
 	dbatbl.ops[4].optable = dbatbl_index_options;
 
-	dbatbl.ops[5].func = NULL;
-	dbatbl.ops[5].usage = NULL;
-	dbatbl.ops[5].desc = NULL;
-	dbatbl.ops[5].longdesc = NULL;
-	dbatbl.ops[5].optable = NULL;
+	dbatbl.ops[5].func = do_describe;
+	dbatbl.ops[5].aliases[0] = "describe";
+	dbatbl.ops[5].usage = "describe [options] what [values]";
+	dbatbl.ops[5].desc = "Invoke the formatter to describe the given values";
+	dbatbl.ops[5].longdesc = "Supported so far are: \"level ltype l1 l2\", \"trange pind p1 p2\"";
+	dbatbl.ops[5].optable = dbatbl_describe_options;
+
+	dbatbl.ops[6].func = NULL;
+	dbatbl.ops[6].usage = NULL;
+	dbatbl.ops[6].desc = NULL;
+	dbatbl.ops[6].longdesc = NULL;
+	dbatbl.ops[6].optable = NULL;
 };
 
 int main (int argc, const char* argv[])
