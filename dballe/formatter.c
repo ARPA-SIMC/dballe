@@ -36,7 +36,8 @@
 static const char* def_desc = "%3$d %d %d";
 static const char* ldescs[levels_count];
 static const char* tdescs[tranges_count];
-static int initialized = 0;
+static int l_initialized = 0;
+static int t_initialized = 0;
 
 // FIXME: this is copied from dba_vartable.
 static const char* id_to_pathname(const char* id)
@@ -137,7 +138,7 @@ cleanup:
 static dba_err want_levels()
 {
 	int i;
-	if (initialized)
+	if (l_initialized)
 		return dba_error_ok();
 
 	for (i = 0; i < levels_count; ++i)
@@ -145,14 +146,14 @@ static dba_err want_levels()
 
 	DBA_RUN_OR_RETURN(read_strings("levels", ldescs, levels_count));
 
-	initialized = 1;
+	l_initialized = 1;
 	return dba_error_ok();
 }
 
 static dba_err want_tranges()
 {
 	int i;
-	if (initialized)
+	if (t_initialized)
 		return dba_error_ok();
 
 	for (i = 0; i < tranges_count; ++i)
@@ -160,7 +161,7 @@ static dba_err want_tranges()
 
 	DBA_RUN_OR_RETURN(read_strings("tranges", tdescs, tranges_count));
 
-	initialized = 1;
+	t_initialized = 1;
 	return dba_error_ok();
 }
 

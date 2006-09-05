@@ -30,6 +30,7 @@ check_dballe_tut_SOURCES = \
 	tests/dba_bufrex_crex_decoder.cc \
 	tests/dba_aof_decoder.cc \
 	tests/dba_db_import.cc \
+	tests/dba_formatter.cc \
 	test-utils.cc \
 	tut-main.cc
 check_dballe_tut_LDADD = ../libdballe.la -lpopt
