@@ -331,7 +331,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 	{
 		deffile = getenv("DBA_REPINFO");
 		if (deffile == 0 || deffile[0] == 0)
-			deffile = CONF_DIR "/repinfo.csv";
+			deffile = TABLE_DIR "/repinfo.csv";
 	}
 
 	/* Open the input CSV file */

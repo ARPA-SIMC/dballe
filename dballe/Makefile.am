@@ -2,7 +2,7 @@
 
 SUBDIRS = err conv core msg io aof bufrex db . bench tests
 
-CFLAGS += -DCONF_DIR=\"$(confdir)\" -DTABLE_DIR=\"$(tabledir)\"
+CFLAGS += -DTABLE_DIR=\"$(tabledir)\"
 
 dballeincludedir = $(includedir)/dballe
 

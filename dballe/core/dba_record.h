@@ -143,6 +143,19 @@ dba_err dba_record_keyword_info(dba_keyword keyword, dba_varinfo* info);
 dba_keyword dba_record_keyword_byname(const char* tag);
 
 /**
+ * Get the dba_keyword corresponding to the given name
+ *
+ * @param tag
+ *   The name to query.
+ * @param len
+ *   The length of the name in tag.
+ * @returns
+ *   The corresponding dba_keyword, or DBA_KEY_ERROR if tag does not match a
+ *   valid keyword.
+ */
+dba_keyword dba_record_keyword_byname_len(const char* tag, int len);
+
+/**
  * Create a new record
  *
  * @retval rec
@@ -603,6 +616,8 @@ dba_err dba_record_key_setc(dba_record rec, dba_keyword parameter, const char* v
  *   The error indicator for the function.
  */
 dba_err dba_record_var_setc(dba_record rec, dba_varcode code, const char* value);
+
+dba_err dba_record_set_from_string(dba_record rec, const char* str);
 
 /**
  * Remove a parameter from the record.

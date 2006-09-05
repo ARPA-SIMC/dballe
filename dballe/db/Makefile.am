@@ -32,6 +32,6 @@ libdb_la_SOURCES = \
 		import.c \
 		export.c
 
-INCLUDES = -DCONF_DIR=\"$(confdir)\"
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
 
 EXTRA_DIST = db.dox

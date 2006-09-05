@@ -21,6 +21,7 @@
 
 #include "dba_record.h"
 #include "dba_var.h"
+#include "aliases.h"
 
 #include "config.h"
 
@@ -347,6 +348,54 @@ dba_err dba_record_difference(dba_record dest, dba_record source1, dba_record so
 			}
 		}
 	}
+	return dba_error_ok();
+}
+
+dba_err dba_record_set_from_string(dba_record rec, const char* str)
+{
+	/* Split the input as name=val */
+	const char* s;
+	const char* val;
+	dba_varcode varcode;
+	dba_varinfo info;
+	dba_keyword param;
+	
+	if ((s = strchr(str, '=')) == NULL)
+		return dba_error_consistency("there should be an = between the name and the value in '%s'", str);
+
+//		name = strndup(queryparm, s - queryparm);
+	val = s + 1;
+
+	/* First see if it's an alias or a variable */
+	if ((varcode = dba_varcode_alias_resolve_substring(str, s - str)) != 0 || str[0] == 'B')
+	{
+		if (varcode == 0)
+			varcode = DBA_STRING_TO_VAR(str + 1);
+
+		/* Query informations about the parameter */
+		DBA_RUN_OR_RETURN(dba_varinfo_query_local(varcode, &info));
+
+		if (info->is_string)
+			DBA_RUN_OR_RETURN(dba_record_var_setc(rec, varcode, val));
+		else
+			DBA_RUN_OR_RETURN(dba_record_var_setd(rec, varcode, strtod(val, 0)));
+	} else {
+		/* Else handle a normal keyword */
+
+		param = dba_record_keyword_byname_len(str, s - str);
+
+		if (param == DBA_KEY_ERROR)
+			return dba_error_notfound("looking for misspelled keyword \"%.*s\"", s - str, str);
+
+		/* Query informations about the parameter */
+		DBA_RUN_OR_RETURN(dba_record_keyword_info(param, &info));
+
+		if (info->is_string)
+			DBA_RUN_OR_RETURN(dba_record_key_setc(rec, param, val));
+		else
+			DBA_RUN_OR_RETURN(dba_record_key_setd(rec, param, strtod(val, 0)));
+	}
+
 	return dba_error_ok();
 }
 

@@ -307,7 +307,7 @@ static dba_err read_repinfo_file(dba_db_repinfo ri, const char* deffile, newitem
 	{
 		deffile = getenv("DBA_REPINFO");
 		if (deffile == 0 || deffile[0] == 0)
-			deffile = CONF_DIR "/repinfo.csv";
+			deffile = TABLE_DIR "/repinfo.csv";
 	}
 
 	/* Open the input CSV file */

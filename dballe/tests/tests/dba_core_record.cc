@@ -128,6 +128,10 @@ void to::test<1>()
 	CHECKED(dba_record_keyword_info(DBA_KEY_ANA_ID, &info));
 	gen_ensure_equals(string(info->desc), string("Pseudoana database ID"));
 
+	gen_ensure_equals(dba_record_keyword_byname_len("ana_idi", 6), DBA_KEY_ANA_ID);
+	CHECKED(dba_record_keyword_info(DBA_KEY_ANA_ID, &info));
+	gen_ensure_equals(string(info->desc), string("Pseudoana database ID"));
+
 	gen_ensure_equals(dba_record_keyword_byname("yearmin"), DBA_KEY_YEARMIN);
 	CHECKED(dba_record_keyword_info(DBA_KEY_YEARMIN, &info));
 	gen_ensure_equals(string(info->desc), string("Year or minimum year queried"));
@@ -445,6 +449,45 @@ void to::test<5>()
 	CHECKED(dba_record_var_unset(rec1, DBA_VAR(0, 20, 1)));
 	gen_ensure(!dba_record_equals(rec, rec1));
 	gen_ensure(!dba_record_equals(rec1, rec));
+}
+
+// Test dba_record_equals
+template<> template<>
+void to::test<6>()
+{
+	int ival;
+	double dval;
+
+	dba_record rec;
+	CHECKED(dba_record_create(&rec));
+	CHECKED(dba_record_set_from_string(rec, "ana_id=10"));
+	CHECKED(dba_record_set_from_string(rec, "lat=-10"));
+	CHECKED(dba_record_set_from_string(rec, "lon=-10.45"));
+	CHECKED(dba_record_set_from_string(rec, "B20001=4560"));
+	CHECKED(dba_record_set_from_string(rec, "height=654"));
+
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_ANA_ID, &ival));
+	gen_ensure_equals(ival, 1);
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
+	gen_ensure_equals(ival, 1);
+	CHECKED(dba_record_contains_key(rec, DBA_KEY_LON, &ival));
+	gen_ensure_equals(ival, 1);
+	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
+	gen_ensure_equals(ival, 1);
+	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 7, 1), &ival));
+	gen_ensure_equals(ival, 1);
+
+	CHECKED(dba_record_key_enqi(rec, DBA_KEY_ANA_ID, &ival));
+	gen_ensure_equals(ival, 10);
+	CHECKED(dba_record_key_enqd(rec, DBA_KEY_LAT, &dval));
+	gen_ensure_equals(dval, -10.0);
+	CHECKED(dba_record_key_enqd(rec, DBA_KEY_LON, &dval));
+	gen_ensure_equals(dval, -10.45);
+
+	CHECKED(dba_record_var_enqd(rec, DBA_VAR(0, 20, 1), &dval));
+	gen_ensure_equals(dval, 4560.0);
+	CHECKED(dba_record_var_enqd(rec, DBA_VAR(0, 7, 1), &dval));
+	gen_ensure_equals(dval, 654.0);
 }
 
 }

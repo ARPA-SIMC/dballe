@@ -2079,7 +2079,7 @@ F77_INTEGER_FUNCTION(idba_spiegab)(
 	cnfImpn(varcode, varcode_length, 9, s_varcode); s_varcode[9] = 0;
 	cnfImpn(value, value_length, 299, s_value); s_value[299] = 0;
 
-	DBA_RUN_OR_RETURN(dba_varinfo_query_local(DBA_STRING_TO_VAR(s_varcode), &info));
+	DBA_RUN_OR_RETURN(dba_varinfo_query_local(DBA_STRING_TO_VAR(s_varcode + 1), &info));
 	DBA_RUN_OR_RETURN(dba_var_createc(info, s_value, &var));
 
 	if (info->is_string)

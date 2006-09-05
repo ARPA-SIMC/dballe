@@ -23,6 +23,7 @@
 %define lookup-function-name dba_record_keyword_in_word_set
 %struct-type
 %global-table
+%compare-strncmp
 /* Using %switch may be faster (remember to check when doing optimizations) */
 
 %{
@@ -148,6 +149,15 @@ dba_varinfo dba_record_keyword_byindex(int index)
 dba_keyword dba_record_keyword_byname(const char* tag)
 {
 	struct tagdef* res = dba_record_keyword_in_word_set(tag, strlen(tag));
+	if (res == NULL)
+		return DBA_KEY_ERROR;
+	else
+		return res->index;
+}
+
+dba_keyword dba_record_keyword_byname_len(const char* tag, int len)
+{
+	struct tagdef* res = dba_record_keyword_in_word_set(tag, len);
 	if (res == NULL)
 		return DBA_KEY_ERROR;
 	else

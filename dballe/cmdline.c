@@ -510,54 +510,13 @@ dba_err dba_cmdline_get_query(poptContext optCon, dba_record query)
 	while ((queryparm = poptPeekArg(optCon)) != NULL)
 	{
 		/* Split the input as name=val */
-		const char* s;
-		char* name;
-		const char* val;
-		dba_keyword param;
-		dba_varinfo info;
-		dba_varcode varcode;
-		
-		if ((s = strchr(queryparm, '=')) == NULL)
+		if (strchr(queryparm, '=') == NULL)
 			return dba_error_ok();
 
 		/* Mark as processed */
 		poptGetArg(optCon);
 
-		name = strndup(queryparm, s - queryparm);
-		val = s + 1;
-
-		if (name == NULL || val == NULL)
-			return dba_error_alloc("parsing query parameters");
-
-		if ((varcode = dba_varcode_alias_resolve(name)) != 0)
-		{
-			/* First see if it's an alias */
-
-			/* Query informations about the parameter */
-			DBA_RUN_OR_RETURN(dba_varinfo_query_local(varcode, &info));
-
-			if (info->is_string)
-				DBA_RUN_OR_RETURN(dba_record_var_setc(query, varcode, val));
-			else
-				DBA_RUN_OR_RETURN(dba_record_var_setd(query, varcode, strtod(val, 0)));
-		} else {
-			/* Else handle a normal keyword */
-
-			param = dba_record_keyword_byname(name);
-
-			if (param == DBA_KEY_ERROR)
-				return dba_error_notfound("looking for misspelled keyword \"%s\"", name);
-
-			/* Query informations about the parameter */
-			DBA_RUN_OR_RETURN(dba_record_keyword_info(param, &info));
-
-			if (info->is_string)
-				DBA_RUN_OR_RETURN(dba_record_key_setc(query, param, val));
-			else
-				DBA_RUN_OR_RETURN(dba_record_key_setd(query, param, strtod(val, 0)));
-		}
-
-		free(name);
+		DBA_RUN_OR_RETURN(dba_record_set_from_string(query, queryparm));
 	}
 	return dba_error_ok();
 }
