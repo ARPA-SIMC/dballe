@@ -1978,12 +1978,25 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 	
 	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
 
+	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
+	{
+		if (arr == NULL)
+			DBA_RUN_OR_RETURN(dba_arr_varcode_create(&arr));
+		if (*val != '*')
+		{
+			err = dba_error_consistency("QC values to delete must start with '*'");
+			goto cleanup;
+		}
+		DBA_RUN_OR_GOTO(cleanup, dba_arr_varcode_append(arr, DBA_STRING_TO_VAR(val + 1)));
+	}
+
 	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VARLIST)) != NULL)
 	{
 		// Delete only the QC values in *data_id
 		size_t pos;
 		size_t len;
-		DBA_RUN_OR_RETURN(dba_arr_varcode_create(&arr));
+		if (arr == NULL)
+			DBA_RUN_OR_RETURN(dba_arr_varcode_create(&arr));
 		for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
 		{
 			/*

@@ -183,7 +183,7 @@ c        Perform some useless scusa just to test the parser
 c     Remove the QC data for saved_data
       call idba_seti(handle, "*context_id", saved_id);
       call ensure_no_error("scusa seti 3")
-      call idba_setc(handle, "*var", "B01011")
+      call idba_setc(handle, "*var", "*B01011")
       call ensure_no_error("scusa setc 3")
       call idba_scusa(handle);
       call ensure_no_error("scusa 3")
