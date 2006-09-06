@@ -606,7 +606,7 @@ static dba_err add_other_froms(dba_db_cursor cur, unsigned int base)
 
 	if (wanted & DBA_DB_FROM_ADF)
 		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-					"JOIN attr AS adf ON adf.id_context=c.id AND adf.id_var=d.id "));
+					"JOIN attr AS adf ON adf.id_context=c.id AND adf.id_var=d.id_var "));
 
 	return dba_error_ok();
 }
