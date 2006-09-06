@@ -71,8 +71,9 @@ extern "C" {
 #define DBA_DB_MODIFIER_BIGANA		(1 << 1)
 #define DBA_DB_MODIFIER_DISTINCT	(1 << 2)
 #define DBA_DB_MODIFIER_ANAEXTRA	(1 << 3)
-#define DBA_DB_MODIFIER_UNSORTED	(1 << 4)
-#define DBA_DB_MODIFIER_STREAM		(1 << 5)
+#define DBA_DB_MODIFIER_NOANAEXTRA	(1 << 4)
+#define DBA_DB_MODIFIER_UNSORTED	(1 << 5)
+#define DBA_DB_MODIFIER_STREAM		(1 << 6)
 
 #ifndef DBA_DB_DEFINED
 #define DBA_DB_DEFINED

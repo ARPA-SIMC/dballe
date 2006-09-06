@@ -299,6 +299,7 @@ static dba_err make_select(dba_db_cursor cur)
 			cur->from_wanted |= DBA_DB_FROM_PA;
 		}
 	}
+
 	if (cur->wanted & DBA_DB_WANT_CONTEXT_ID)
 	{
 		if (!(cur->from_wanted & DBA_DB_FROM_C) && cur->from_wanted & DBA_DB_FROM_D) {
@@ -423,6 +424,9 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 		if (dba_record_key_peek_value(query, DBA_KEY_CONTEXT_ID) != NULL ||
 		    minvalues[0] == 1000 || maxvalues[0] == 1000)
 			cur->accept_from_ana_context = 1;
+
+		if (cur->modifiers & DBA_DB_MODIFIER_NOANAEXTRA)
+			cur->accept_from_ana_context = 0;
 	}
 
 //	fprintf(stderr, "A3 '%s'\n", dba_querybuf_get(cur->where));
@@ -646,6 +650,10 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	if (cur->from_wanted & (DBA_DB_FROM_ADF))
 		cur->from_wanted |= (DBA_DB_FROM_C | DBA_DB_FROM_D);
 	if (cur->from_wanted & DBA_DB_FROM_PA && cur->from_wanted & DBA_DB_FROM_D)
+		cur->from_wanted |= DBA_DB_FROM_C;
+
+	/* Always join with context if we need to weed out the extra ana data */
+	if (cur->modifiers & DBA_DB_MODIFIER_NOANAEXTRA)
 		cur->from_wanted |= DBA_DB_FROM_C;
 
 	/* Ignore anagraphical context unless explicitly requested */
