@@ -205,4 +205,20 @@ subroutine idba_scusa(handle)
 end subroutine idba_scusa
 
 
+subroutine idba_spiegal(handle,ltype,l1,l2,result)
+	integer, intent(in) :: handle,ltype,l1,l2
+	character (len=*), intent(out) :: result
+end subroutine idba_spiegal
+
+subroutine idba_spiegat(handle,ptype,p1,p2,result)
+	integer, intent(in) :: handle,ptype,p1,p2
+	character (len=*), intent(out) :: result
+end subroutine idba_spiegat
+
+subroutine idba_spiegab(handle,varcode,var,result)
+	integer, intent(in) :: handle
+	character (len=*), intent(in) :: varcode,var
+	character (len=*), intent(out) :: result
+end subroutine idba_spiegab
+
 end interface
