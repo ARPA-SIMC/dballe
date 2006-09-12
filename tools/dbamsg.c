@@ -396,6 +396,7 @@ inline static double get_input_lat_value(dba_record rec, dba_keyword key)
 dba_err do_filter(poptContext optCon)
 {
 	dba_encoding type;
+	dba_encoding otype;
 	struct filter_data fdata;
 	dba_record query;
 
@@ -414,8 +415,9 @@ dba_err do_filter(poptContext optCon)
 	fdata.lonmax = get_input_lat_value(query, DBA_KEY_LONMAX);
 
 	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
+	otype = dba_cmdline_stringToMsgType(op_output_type, optCon);
 
-	DBA_RUN_OR_RETURN(dba_file_create(&fdata.output, type, "(stdout)", "w"));
+	DBA_RUN_OR_RETURN(dba_file_create(&fdata.output, otype, "(stdout)", "w"));
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, filter_message, &fdata));
 	/*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
 	dba_file_delete(fdata.output);
@@ -515,6 +517,8 @@ struct poptOption dbamsg_filter_options[] = {
 	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
+	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
+		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages" },
 	POPT_TABLEEND
