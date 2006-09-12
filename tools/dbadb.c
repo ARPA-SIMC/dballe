@@ -144,7 +144,7 @@ dba_err do_dump(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_db_query(db, query, &cursor, &count));
 	DBA_RUN_OR_RETURN(dba_record_create(&result));
 
-	while (1)
+	for (i = 0; ; ++i)
 	{
 		int has_data;
 		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, &has_data));
