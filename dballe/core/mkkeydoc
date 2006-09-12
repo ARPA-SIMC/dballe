@@ -82,15 +82,15 @@ our %comments = (
 	ana_filter =>	[ "ignored", "optional", "absent",
 			  "Restricts the results to only those stations which ".
 			  "have a pseudoana value that matches the filter. ".
-			  "Examples: 'height>=1000', 'B02001=1'" ],
+			  "Examples: 'height>=1000', 'B02001=1', '1000<=height<=2000" ],
 	data_filter =>	[ "ignored", "optional", "absent",
 			  "Restricts the results to only those stations which ".
 			  "have a data value that matches the filter. ".
-			  "Examples: 't<260', 'B22021>2'" ],
+			  "Examples: 't<260', 'B22021>2', '10<=B22021<=20'" ],
 	attr_filter =>	[ "ignored", "optional", "absent",
 			  "Restricts the results to only those data which ".
 			  "have an attribute that matches the filter. ".
-			  "Examples: 'conf>70', 'B33197=0'" ],
+			  "Examples: 'conf>70', 'B33197=0', '25<=conf<=50'" ],
 	limit =>	[ "ignored", "optional", "absent",
 			  "Maximum number of results to return" ],
 );
