@@ -29,15 +29,15 @@ integer function idba_error_code()
 end function idba_error_code
 
 subroutine idba_error_message(message)
-	characeter (len=*), intent(out) :: message
+	character (len=*), intent(out) :: message
 end subroutine idba_error_message
 
 subroutine idba_error_context(message)
-	characeter (len=*), intent(out) :: message
+	character (len=*), intent(out) :: message
 end subroutine idba_error_context
 
 subroutine idba_error_details(message)
-	characeter (len=*), intent(out) :: message
+	character (len=*), intent(out) :: message
 end subroutine idba_error_details
 
 integer function idba_error_set_callback(code,func,data,handle)
