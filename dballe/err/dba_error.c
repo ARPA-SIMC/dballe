@@ -28,6 +28,7 @@
 #include <stdlib.h>	/* free */
 #include <string.h>	/* strerror */
 #include <stdarg.h> /* va_start, va_end */
+#include <regex.h>	/* regerror */
 #include <errno.h>
 #include <assert.h>
 
@@ -224,6 +225,20 @@ dba_err dba_error_system(const char* fmt, ...)
 	vasprintf(&context, fmt, ap);
 	va_end(ap);
 	details = strdup(strerror(errno));
+	add_backtrace();
+	dba_error_check_callbacks(callbacks);
+	return DBA_ERROR;
+}
+
+dba_err dba_error_regexp(int code, void* re, const char* fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	reset_error(DBA_ERR_REGEX);
+	vasprintf(&context, fmt, ap);
+	va_end(ap);
+	details = (char*)malloc(512);
+	regerror(code, (regex_t*)re, details, 512);
 	add_backtrace();
 	dba_error_check_callbacks(callbacks);
 	return DBA_ERROR;

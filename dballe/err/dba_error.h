@@ -59,7 +59,8 @@ typedef enum {
 	DBA_ERR_CONSISTENCY		=  8,
 	DBA_ERR_PARSE			=  9,
 	DBA_ERR_WRITE			= 10,
-	DBA_ERR_UNIMPLEMENTED	= 11
+	DBA_ERR_REGEX			= 11,
+	DBA_ERR_UNIMPLEMENTED	= 12
 } dba_err_code;
 
 /**
@@ -281,6 +282,22 @@ dba_err dba_error_system(const char* fmt, ...);
  *   DBA_ERROR
  */
 dba_err dba_error_parse(const char* file, int line, const char* fmt, ...);
+
+/**
+ * Report an error while handling regular expressions
+ *
+ * @param code
+ *   The error code returned by the regular expression functions.
+ * @param re
+ *   The pointer to the regex_t structure that was being used when the error
+ *   occurred.
+ * @param fmt
+ *   printf-style format string used to build the context informations for this
+ *   error
+ * @return
+ *   DBA_ERROR
+ */
+dba_err dba_error_regexp(int code, void* re, const char* fmt, ...);
 
 /**
  * Reports that a feature is still not implemented.

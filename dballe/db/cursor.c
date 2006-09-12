@@ -29,6 +29,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+
+#include <regex.h>
 #if 0
 #include <dballe/db/repinfo.h>
 #include <dballe/db/pseudoana.h>
@@ -93,46 +95,34 @@ int dba_db_cursor_remaining(dba_db_cursor cur)
 	return cur->count;
 }
 
-static dba_err decode_data_filter(const char* filter, dba_varinfo* info, const char** op, const char** val)
+static dba_err parse_varcode(const char* str, regmatch_t pos, dba_varcode* code)
 {
-	static char operator[5];
-	static char value[255];
-	size_t len = strcspn(filter, "<=>");
-	const char* s = filter + len;
-	dba_varcode code;
-
-	if (filter[0] == 0)
-		return dba_error_consistency("filter is the empty string");
-
+	dba_varcode res;
 	/* Parse the varcode */
-	if (filter[0] == 'B')
-		code = DBA_STRING_TO_VAR(filter + 1);
+	if (str[pos.rm_so] == 'B')
+		res = DBA_STRING_TO_VAR(str + pos.rm_so + 1);
 	else
-	    code = dba_varcode_alias_resolve_substring(filter, len);
-	
-	if (code == 0)
-		return dba_error_consistency("cannot resolve the variable code or alias in \"%s\" (len %d)", filter, len);
+	    res = dba_varcode_alias_resolve_substring(str + pos.rm_so, pos.rm_eo - pos.rm_so);
 
-	/* Query informations for the varcode */
-	DBA_RUN_OR_RETURN(dba_varinfo_query_local(code, info));
+	if (res == 0)
+		return dba_error_consistency("cannot resolve the variable code or alias in \"%.*s\"", pos.rm_eo - pos.rm_so, str + pos.rm_so);
 
-	/* Parse the operator */
-	len = strspn(s, "<=>");
-	if (len == 0 || len > 4)
-		return dba_error_consistency("invalid operator found in \"%s\"", filter);
+	*code = res;
+	return dba_error_ok();
+}
 
-	memcpy(operator, s, len);
-	operator[len] = 0;
-	*op = operator;
-
+static dba_err parse_value(const char* str, regmatch_t pos, dba_varinfo info, char* value)
+{
 	/* Parse the value */
-	s += len;
-	if ((*info)->is_string)
+	const char* s = str + pos.rm_so;
+	int len = pos.rm_eo - pos.rm_so;
+	if (info->is_string)
 	{
 		/* Copy the string, escaping quotes */
 		int i = 0, j = 0;
+
 		value[j++] = '\'';
-		for (; s[i] && j < 253; ++i, ++j)
+		for (; i < len && j < 253; ++i, ++j)
 		{
 			if (s[i] == '\'')
 				value[j++] = '\\';
@@ -146,13 +136,100 @@ static dba_err decode_data_filter(const char* filter, dba_varinfo* info, const c
 		dba_var tmpvar;
 		double dval;
 		if (sscanf(s, "%lf", &dval) != 1)
-			return dba_error_consistency("value in \"%s\" must be a number", filter);
-		DBA_RUN_OR_RETURN(dba_var_created(*info, dval, &tmpvar));
+			return dba_error_consistency("value in \"%.*s\" must be a number", len, s);
+		DBA_RUN_OR_RETURN(dba_var_created(info, dval, &tmpvar));
 		strncpy(value, dba_var_value(tmpvar), 255);
 		value[254] = 0;
 		dba_var_delete(tmpvar);
 	}
-	*val = value;
+	return dba_error_ok();
+}
+
+
+static dba_err decode_data_filter(const char* filter, dba_varinfo* info, const char** op, const char** val, const char** val1)
+{
+	static regex_t* re_normal = NULL;
+	static regex_t* re_between = NULL;
+	regmatch_t matches[4];
+
+	static char operator[5];
+	static char value[255];
+	static char value1[255];
+#if 0
+	size_t len = strcspn(filter, "<=>");
+	const char* s = filter + len;
+#endif
+	dba_varcode code;
+	int res;
+
+	/* Compile the regular expression if it has not yet been done */
+	if (re_normal == NULL)
+	{
+		if ((re_normal = (regex_t*)malloc(sizeof(regex_t))) == NULL)
+			return dba_error_alloc("building the regular expression to match normal filters");
+		if ((res = regcomp(re_normal, "^([^<=>]+)([<=>]+)([^<=>]+)$", REG_EXTENDED)) != 0)
+			return dba_error_regexp(res, re_normal, "compiling regular expression to match normal filters");
+	}
+	if (re_between == NULL)
+	{
+		if ((re_between = (regex_t*)malloc(sizeof(regex_t))) == NULL)
+			return dba_error_alloc("building the regular expression to match 'between' filters");
+		if ((res = regcomp(re_between, "^([^<=>]+)<=([^<=>]+)<=([^<=>]+)$", REG_EXTENDED)) != 0)
+			return dba_error_regexp(res, re_between, "compiling regular expression to match 'between' filters");
+	}
+
+	res = regexec(re_normal, filter, 4, matches, 0);
+	if (res != 0 && res != REG_NOMATCH)
+		return dba_error_regexp(res, re_normal, "Trying to parse '%s' as a 'normal' filter", filter);
+	if (res == 0)
+	{
+		int len;
+		/* We have a normal filter */
+
+		/* Parse the varcode */
+		DBA_RUN_OR_RETURN(parse_varcode(filter, matches[1], &code));
+		/* Query informations for the varcode */
+		DBA_RUN_OR_RETURN(dba_varinfo_query_local(code, info));
+		
+		/* Parse the operator */
+		len = matches[2].rm_eo - matches[2].rm_so;
+		if (len > 4)
+			return dba_error_consistency("operator %.*s is not valid", len, filter + matches[2].rm_so);
+		memcpy(operator, filter + matches[2].rm_so, len);
+		operator[len] = 0;
+		*op = operator;
+
+		/* Parse the value */
+		DBA_RUN_OR_RETURN(parse_value(filter, matches[3], *info, value));
+		*val = value;
+		*val1 = NULL;
+	}
+	else
+	{
+		res = regexec(re_between, filter, 4, matches, 0);
+		if (res == REG_NOMATCH)
+			return dba_error_consistency("%s is not a valid filter");
+		if (res != 0)
+			return dba_error_regexp(res, re_normal, "Trying to parse '%s' as a 'between' filter", filter);
+		if (res == 0)
+		{
+			/* We have a between filter */
+
+			/* Parse the varcode */
+			DBA_RUN_OR_RETURN(parse_varcode(filter, matches[2], &code));
+			/* Query informations for the varcode */
+			DBA_RUN_OR_RETURN(dba_varinfo_query_local(code, info));
+			/* No need to parse the operator */
+			operator[0] = 0;
+			*op = operator;
+			/* Parse the values */
+			DBA_RUN_OR_RETURN(parse_value(filter, matches[1], *info, value));
+			DBA_RUN_OR_RETURN(parse_value(filter, matches[3], *info, value1));
+			*val = value;
+			*val1 = value1;
+		}
+	}
+
 	return dba_error_ok();
 }
 
@@ -497,36 +574,45 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 	if ((val = dba_record_key_peek_value(query, DBA_KEY_ANA_FILTER)) != NULL)
 	{
 		dba_varinfo info;
-		const char* op;
-		const char* value;
-		DBA_RUN_OR_RETURN(decode_data_filter(val, &info, &op, &value));
+		const char *op, *value, *value1;
+		DBA_RUN_OR_RETURN(decode_data_filter(val, &info, &op, &value, &value1));
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "dana.id_var="));
-		DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->where, "%d AND dana.value%s%s",
-				info->var, op, value));
+		if (value1 == NULL)
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->where, "%d AND dana.value%s%s",
+					info->var, op, value));
+		else
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->where, "%d AND dana.value BETWEEN %s AND %s",
+					info->var, value, value1));
 		cur->from_wanted |= DBA_DB_FROM_DANA;
 	}
 
 	if ((val = dba_record_key_peek_value(query, DBA_KEY_DATA_FILTER)) != NULL)
 	{
 		dba_varinfo info;
-		const char* op;
-		const char* value;
-		DBA_RUN_OR_RETURN(decode_data_filter(val, &info, &op, &value));
+		const char *op, *value, *value1;
+		DBA_RUN_OR_RETURN(decode_data_filter(val, &info, &op, &value, &value1));
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "ddf.id_var="));
-		DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->where, "%d AND ddf.value%s%s",
-				info->var, op, value));
+		if (value1 == NULL)
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->where, "%d AND ddf.value%s%s",
+					info->var, op, value));
+		else
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->where, "%d AND ddf.value BETWEEN %s AND %s",
+					info->var, value, value1));
 		cur->from_wanted |= DBA_DB_FROM_DDF;
 	}
 
 	if ((val = dba_record_key_peek_value(query, DBA_KEY_ATTR_FILTER)) != NULL)
 	{
 		dba_varinfo info;
-		const char* op;
-		const char* value;
-		DBA_RUN_OR_RETURN(decode_data_filter(val, &info, &op, &value));
+		const char *op, *value, *value1;
+		DBA_RUN_OR_RETURN(decode_data_filter(val, &info, &op, &value, &value1));
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "adf.type="));
-		DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->where, "%d AND adf.value%s%s",
-				info->var, op, value));
+		if (value1 == NULL)
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->where, "%d AND adf.value%s%s",
+					info->var, op, value));
+		else
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->where, "%d AND adf.value BETWEEN %s AND %s",
+					info->var, op, value, value1));
 		cur->from_wanted |= DBA_DB_FROM_ADF;
 	}
 
