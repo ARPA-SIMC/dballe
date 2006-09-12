@@ -184,17 +184,17 @@ F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
  *
  * The message is printed only if a non-zero value is supplied as user data
  */
-F77_INTEGER_FUNCTION(idba_default_error_handler)(LOGICAL(debug))
+F77_INTEGER_FUNCTION(idba_default_error_handler)(INTEGER(debug))
 {
-	GENPTR_LOGICAL(debug)
-	if (F77_ISTRUE(*debug))
+	GENPTR_INTEGER(debug)
+	if (*debug)
 		dba_cmdline_print_dba_error();
 	exit(1);
 }
-F77_INTEGER_FUNCTION(idba_default_error_handle)(LOGICAL(debug))
+F77_INTEGER_FUNCTION(idba_default_error_handle)(INTEGER(debug))
 {
-	GENPTR_LOGICAL(debug)
-	if (F77_ISTRUE(*debug))
+	GENPTR_INTEGER(debug)
+	if (*debug)
 		dba_cmdline_print_dba_error();
 	exit(1);
 }

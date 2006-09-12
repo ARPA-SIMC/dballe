@@ -52,7 +52,7 @@ subroutine idba_error_remove_callback(handle)
 end subroutine idba_error_remove_callback
 
 integer function idba_default_error_handler(debug)
-	logical, intent(in) :: debug
+	integer, intent(in) :: debug
 end function idba_default_error_handler
 
 
