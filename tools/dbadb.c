@@ -150,6 +150,7 @@ dba_err do_dump(poptContext optCon)
 		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, &has_data));
 		if (!has_data)
 			break;
+		dba_record_clear(result);
 		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(cursor, result));
 		printf("#%d: -----------------------\n", i);
 		dba_record_print(result, stdout);
