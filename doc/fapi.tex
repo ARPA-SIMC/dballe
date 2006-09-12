@@ -448,6 +448,18 @@ This code introduces three new functions:
   description is available, it returns an empty string.
 \end{description}
 
+A similar error handling behaviour can be obtained by using the predefined
+convenience function {\tt idba\_default\_error\_handler}:
+
+\label{fun-error-handler}
+
+\begin{verbatim}
+c     Declare the external function
+      external idba_default_error_handler
+
+c     Use it as the error handling callback
+      call idba_error_set_callback(0, idba_default_error_handler, 42, cb_handle)
+\end{verbatim}
 
 
 \chapter {A working session}
@@ -1035,6 +1047,34 @@ ana\_id} value, if known, and get a faster search.
 data setting latitude, longitude, level layer, time range and so on, one can
 just provide the value of {\tt data\_id}, and also get a faster search.
 
+\section{Helpers for pretty printing}
+
+\label{fun-pprint}
+
+There are a number of functions in \dballe{}, the {\tt idba\_spiega\*} group of
+functions, that are not needed for normal processing but can be useful to
+improve the presentation of data to users.
+
+All these function take a number of parameters and a string, and they store a
+proper description of the values into the string.
+
+The functions are:
+
+\begin{description}
+\item[{\tt idba\_spiegal(handle,ltype,l1,l2,string)}]
+  Describes a level.  For example, {\tt idba\_spiegal(handle,106,10,20,string)}
+  will store in {\tt string} something like: ``\emph{Layer between 10hm and
+  20hm above ground}``.
+\item[{\tt idba\_spiegat(handle,ptype,p1,p2,string)}]
+  Describes a time range.  For example, {\tt idba\_spiegat(handle,3,0,600,string)}
+  will store in {\tt string} something like: ``\emph{Average between reference
+  time+0s to reference time+600s}``.
+\item[{\tt idba\_spiegab(handle,varcode,value,string)}]
+  Describe a value.  For example, {\tt idba\_spiegab(handle,B12001,280,string)}
+  will store in {\tt string} something like: ``\emph{280 (K)
+  TEMPERATURE/DRY-BULB TEMPERATURE}``.
+\end{description}
+
 \section{Query modifiers}
 
 \dballe{} allows to set special query behaviours using the {\tt "query"}
@@ -1572,6 +1612,18 @@ These routines are used to begin and end working sessions with \dballe{}.
 \hline
 \end{tabular}
 
+\section{Pretty printing routines}
+
+\begin{tabular}{|l|l|l|}
+\hline
+{\em Name} & {\em Description} & {\em See} \\
+\hline
+{\tt \small idba\_spiegal(handle,ltype,l1,l2,string)}   & Describe a level layer & \ref{fun-pprint} \\
+{\tt \small idba\_spiegat(handle,ptype,p1,p2,string)}   & Describe a time range  & \ref{fun-pprint} \\
+{\tt \small idba\_spiegab(handle,varcode,value,string)} & Describe a value       & \ref{fun-pprint} \\
+\hline
+\end{tabular}
+
 \section{Error management routines}
 
 \begin{tabular}{|l|p{6cm}|l|}
@@ -1590,6 +1642,8 @@ These routines are used to begin and end working sessions with \dballe{}.
 	Set a callback for handling errors			& \ref{fun-error} \\
 {\tt \small idba\_error\_remove\_callback(h)} &
 	Remove a previously set callback			& \ref{fun-error} \\
+{\tt \small idba\_default\_error\_handler}     &
+	Predefined convenience error handler			& \ref{fun-error-handler} \\
 \hline
 \end{tabular}
 
