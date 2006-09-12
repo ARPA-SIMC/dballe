@@ -19,7 +19,41 @@
  ! Author: Enrico Zini <enrico@enricozini.com>
  !
 
+! TODO: function o subroutine?
+
 interface
+
+! Error handling routines
+
+integer function idba_error_code()
+end function idba_error_code
+
+subroutine idba_error_message(message)
+	characeter (len=*), intent(out) :: message
+end subroutine idba_error_message
+
+subroutine idba_error_context(message)
+	characeter (len=*), intent(out) :: message
+end subroutine idba_error_context
+
+subroutine idba_error_details(message)
+	characeter (len=*), intent(out) :: message
+end subroutine idba_error_details
+
+integer function idba_error_set_callback(code,func,data,handle)
+	integer, intent(in) :: code
+	integer, external :: func
+	integer, intent(in) :: data
+	integer, intent(out) :: handle
+end function idba_error_set_callback
+
+integer function idba_error_remove_callback(handle)
+	integer, intent(in) :: handle
+end function idba_error_remove_callback
+
+integer function idba_default_error_handler(debug)
+	logical, intent(in) :: debug
+end function idba_default_error_handler
 
 
 ! Init/Shutdown routines
@@ -204,6 +238,8 @@ subroutine idba_scusa(handle)
 	integer, intent(in) :: handle
 end subroutine idba_scusa
 
+
+! Pretty printing routines
 
 subroutine idba_spiegal(handle,ltype,l1,l2,result)
 	integer, intent(in) :: handle,ltype,l1,l2
