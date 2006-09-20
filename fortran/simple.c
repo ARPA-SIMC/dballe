@@ -951,7 +951,7 @@ F77_INTEGER_FUNCTION(idba_setb)(
 		if (param == DBA_KEY_ERROR)
 			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
-		if (*value == MISSING_INT)
+		if (*value == MISSING_BYTE)
 			return dba_record_key_unset(rec, param);
 		else
 			switch (param)
