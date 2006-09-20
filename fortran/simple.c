@@ -32,6 +32,7 @@
 
 #include <f77.h>
 #include <limits.h>
+#include <float.h>
 
 #include <stdio.h>	// snprintf
 #include <string.h>	// strncpy
@@ -40,6 +41,7 @@
 #include "handles.h"
 
 #define MISSING_STRING ""
+#define MISSING_BYTE 0x7f
 #define MISSING_INT 0x7fffffff
 #define MISSING_REAL (-1.1754944E-38)
 #define MISSING_DOUBLE (-2.22507E-308)
@@ -595,6 +597,65 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 }
 
 /**
+ * Read one byte value from the output record
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @param parameter
+ *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
+ *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
+ *   (such as \c "*B01023") or a keyword among the ones defined in \ref
+ *   dba_record_keywords
+ * @param value
+ *   Where the value will be returned
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_enqb)(
+		INTEGER(handle),
+		CHARACTER(parameter),
+		BYTE(value)
+		TRAIL(parameter))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_CHARACTER(parameter)
+	GENPTR_BYTE(value)
+	char parm[20];
+	char* p;
+	dba_record rec;
+	dba_var var;
+
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
+
+	switch (parm[0])
+	{
+		case '*':
+			rec = STATE.qcoutput;
+			p = parm + 1;
+			break;
+		default:
+			rec = STATE.output;
+			p = parm;
+			break;
+	}
+
+	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
+	if (var == NULL)
+	{
+		*value = MISSING_BYTE;
+		return dba_error_ok();
+	} else {
+		int val;
+		dba_err res = dba_var_enqi(var, &val);
+		if (val < SCHAR_MIN || val > SCHAR_MAX)
+			return dba_error_consistency("value queried (%d) does not fit in a byte", val);
+		*value=(char)val;
+		return res;
+	}
+}
+
+
+/**
  * Read one real value from the output record
  * 
  * @param handle
@@ -643,6 +704,8 @@ F77_INTEGER_FUNCTION(idba_enqr)(
 		return dba_error_ok();
 	} else {
 		err = dba_var_enqd(var, &dval);
+		if (dval < -FLT_MAX || dval > FLT_MAX)
+			return dba_error_consistency("value queried (%f) does not fit in a real", dval);
 		*value = dval;
 		return err;
 	}
@@ -761,7 +824,7 @@ F77_INTEGER_FUNCTION(idba_enqc)(
  *@{*/
 
 /**
- * Set one character value into the input record
+ * Set one integer value into the input record
  * 
  * @param handle
  *   Handle to a DBALLE session
@@ -837,6 +900,85 @@ F77_INTEGER_FUNCTION(idba_seti)(
 		return dba_record_var_seti(rec, code, *value);
 	}
 }
+
+/**
+ * Set one byte value into the input record
+ * 
+ * @param handle
+ *   Handle to a DBALLE session
+ * @param parameter
+ *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
+ *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
+ *   (such as \c "*B01023") or a keyword among the ones defined in \ref
+ *   dba_record_keywords
+ * @param value
+ *   The value to assign to the parameter
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_setb)(
+		INTEGER(handle),
+		CHARACTER(parameter),
+		BYTE(value)
+		TRAIL(parameter))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_CHARACTER(parameter)
+	GENPTR_BYTE(value)
+	GENPTR_INTEGER(err)
+	char parm[20];
+	char* p;
+	dba_record rec;
+	dba_varcode code = 0;
+
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
+
+	switch (parm[0])
+	{
+		case '*':
+			rec = STATE.qcinput;
+			p = parm + 1;
+			break;
+		default:
+			rec = STATE.input;
+			p = parm;
+			break;
+	}
+
+	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
+	{
+		dba_keyword param = dba_record_keyword_byname(p);
+		if (param == DBA_KEY_ERROR)
+			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
+
+		if (*value == MISSING_INT)
+			return dba_record_key_unset(rec, param);
+		else
+			switch (param)
+			{
+				case DBA_KEY_LAT:
+				case DBA_KEY_LON:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
+					break;
+				case DBA_KEY_ANA_ID:
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
+					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
+					break;
+				default: break;
+			}
+
+		return dba_record_key_seti(rec, param, *value);
+	} else {
+		if (code == 0)
+			code = DBA_STRING_TO_VAR(p + 1);
+
+		if (*value == MISSING_INT)
+			return dba_record_var_unset(rec, code);
+
+		return dba_record_var_seti(rec, code, *value);
+	}
+}
+
 
 /**
  * Set one real value into the input record
