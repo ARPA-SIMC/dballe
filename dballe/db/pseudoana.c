@@ -53,6 +53,8 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident IS NULL";
 	const char* select_mobile_query =
 		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident=?";
+	const char* select_query =
+		"SELECT lat, lon, ident FROM pseudoana WHERE id=?";
 	const char* insert_query =
 		"INSERT INTO pseudoana (lat, lon, ident)"
 		" VALUES (?, ?, ?);";
@@ -69,6 +71,7 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	res->db = db;
 	res->sfstm = NULL;
 	res->smstm = NULL;
+	res->sstm = NULL;
 	res->istm = NULL;
 	res->ustm = NULL;
 	res->dstm = NULL;
@@ -95,6 +98,19 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
 		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->smstm, "compiling query to look for mobile pseudoana IDs");
+		goto cleanup;
+	}
+
+	/* Create the statement for select station data */
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sstm)));
+	SQLBindParameter(res->sstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
+	SQLBindCol(res->sstm, 1, SQL_C_SLONG, &(res->lat), sizeof(res->lat), 0);
+	SQLBindCol(res->sstm, 2, SQL_C_SLONG, &(res->lon), sizeof(res->lon), 0);
+	SQLBindCol(res->sstm, 2, SQL_C_CHAR, &(res->ident), sizeof(res->ident), &(res->ident_ind));
+	r = SQLPrepare(res->sstm, (unsigned char*)select_query, SQL_NTS);
+	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->sstm, "compiling query to look for pseudoana data by ID");
 		goto cleanup;
 	}
 
@@ -148,6 +164,8 @@ void dba_db_pseudoana_delete(dba_db_pseudoana ins)
 		SQLFreeHandle(SQL_HANDLE_STMT, ins->sfstm);
 	if (ins->smstm != NULL)
 		SQLFreeHandle(SQL_HANDLE_STMT, ins->smstm);
+	if (ins->sstm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, ins->sstm);
 	if (ins->istm != NULL)
 		SQLFreeHandle(SQL_HANDLE_STMT, ins->istm);
 	if (ins->ustm != NULL)
@@ -182,6 +200,21 @@ dba_err dba_db_pseudoana_get_id(dba_db_pseudoana ins, int *id)
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_pseudoana_get_id cursor");
 
+	return dba_error_ok();
+}
+
+dba_err dba_db_pseudoana_get_data(dba_db_pseudoana ins, int id)
+{
+	int res = SQLExecute(ins->sstm);
+	ins->id = id;
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "looking for pseudoana information");
+	/* Get the result */
+	if (SQLFetch(ins->sstm) == SQL_NO_DATA)
+		return dba_error_notfound("looking for information for ana_id %d", id);
+	res = SQLCloseCursor(ins->sstm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "closing dba_db_pseudoana_get_data cursor");
 	return dba_error_ok();
 }
 
