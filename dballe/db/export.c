@@ -198,6 +198,12 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 		
 			msg->type = dba_msg_type_from_repcod(cur->out_rep_cod);
 
+			/* Fill in the basic pseudoana values */
+			DBA_RUN_OR_GOTO(cleanup, dba_msg_seti(msg, DBA_VAR(0, 5, 1), cur->out_lat, -1, 257, 0, 0, 0, 0, 0));
+			DBA_RUN_OR_GOTO(cleanup, dba_msg_seti(msg, DBA_VAR(0, 6, 1), cur->out_lon, -1, 257, 0, 0, 0, 0, 0));
+			if (cur->out_ident_ind != SQL_NULL_DATA)
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_ident(msg, cur->out_ident, -1));
+
 			DBA_RUN_OR_GOTO(cleanup, fill_ana_layer(db, msg, cur->out_ana_id, 254));
 
 			strncpy(last_datetime, cur->out_datetime, 20);
