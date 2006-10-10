@@ -247,6 +247,9 @@ c     We don't want to limit results by latitude this time
       call idba_voglioquesto(handle, count)
 \end{verbatim}
 
+Alternatively, you can reset an input parameter by setting it to one of the
+special ``missing value'' values listed below.
+
 To reset all input parameters you can use {\tt idba\_unsetall}:
 \label{fun-idba_unsetall}
 
@@ -464,6 +467,18 @@ c     Use it as the error handling callback
 
 \chapter {A working session}
 \label{ch-work}
+
+\section{Including the \dballe{} interface file}
+
+If you work using Fortran 90, \dballe{} comes with an interface file that you
+can use to enable type checking on all the \dballe{} API.
+
+To make use of the interface file, just include it at the beginning of your
+program:
+
+\begin{verbatim}
+      include "dballe/dballef.h"
+\end{verbatim}
 
 \section{Starting the work}
 
