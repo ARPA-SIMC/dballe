@@ -972,7 +972,7 @@ F77_INTEGER_FUNCTION(idba_setb)(
 		if (code == 0)
 			code = DBA_STRING_TO_VAR(p + 1);
 
-		if (*value == MISSING_INT)
+		if (*value == MISSING_BYTE)
 			return dba_record_var_unset(rec, code);
 
 		return dba_record_var_seti(rec, code, *value);
