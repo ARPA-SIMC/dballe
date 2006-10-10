@@ -391,11 +391,35 @@ static double bufr_decoder_compute_value(bufrex_decoder decoder, const char* val
 }
 #endif
 
+static const double e10[] = {
+	1.0,
+	10.0,
+	100.0,
+	1000.0,
+	10000.0,
+	100000.0,
+	1000000.0,
+	10000000.0,
+	100000000.0,
+	1000000000.0,
+	10000000000.0,
+	100000000000.0,
+	1000000000000.0,
+	10000000000000.0,
+	100000000000000.0,
+	1000000000000000.0,
+	10000000000000000.0,
+};
+
 static double bufr_decode_int(decoder d, uint32_t ival, dba_varinfo info)
 {
 	double val = ival;
 	
-	val = (val + info->bit_ref) / pow(10, info->scale);
+	if (info->scale >= 0)
+		val = (val + info->bit_ref) / e10[info->scale];
+	else
+		val = (val + info->bit_ref) * e10[-info->scale];
+	//val = (val + info->bit_ref) / pow(10, info->scale);
 
 	return val;
 }
@@ -473,6 +497,8 @@ static dba_err bufr_decode_b_data(decoder d)
 	} else {
 		/* Read a value */
 		uint32_t val;
+
+		/* FIXME: this alters the global shared info definition! */
 		
 		/* Change the variable definition according to the current C modifiers */
 		info->scale += d->c_scale_change;
