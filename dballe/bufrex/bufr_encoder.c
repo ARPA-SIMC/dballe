@@ -408,6 +408,26 @@ fail:
 	return err;
 }
 
+static const double e10[] = {
+	1.0,
+	10.0,
+	100.0,
+	1000.0,
+	10000.0,
+	100000.0,
+	1000000.0,
+	10000000.0,
+	100000000.0,
+	1000000000.0,
+	10000000000.0,
+	100000000000.0,
+	1000000000000.0,
+	10000000000000.0,
+	100000000000000.0,
+	1000000000000000.0,
+	10000000000000000.0,
+};
+
 static dba_err encoder_encode_b_data(encoder e)
 {
 	dba_err err = DBA_OK;
@@ -495,18 +515,10 @@ static dba_err encoder_encode_b_data(encoder e)
 		if (e->c_scale_change > 0)
 		{
 			TRACE("Scale change: %d\n", e->c_scale_change);
-			/* Many stable multiplications */
-			int mult = 1;
-			int count = e->c_scale_change;
-			while (count--)
-				mult *= 10;
-			/* And only one division */
-			val /= mult;
+			val /= e10[e->c_scale_change];;
 		} else if (e->c_scale_change < 0) {
 			TRACE("Scale change: %d\n", e->c_scale_change);
-			int count = -e->c_scale_change;
-			while (count--)
-				val *= 10;
+			val *= e10[-e->c_scale_change];
 		}
 		TRACE("After scale change: %d\n", val);
 		if (e->c_width_change != 0)
