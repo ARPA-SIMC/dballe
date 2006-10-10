@@ -44,6 +44,9 @@ AC_ARG_ENABLE(swig,
 		esac],[swig=false])
 AM_CONDITIONAL(DO_SWIG, test x$swig = xtrue)
 
+AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
+AM_CONDITIONAL(DO_HTML, test x$have_latex2html = xyes)
+
 dnl To use subdirs
 AC_PROG_MAKE_SET
 

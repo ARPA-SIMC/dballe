@@ -1,4 +1,5 @@
 doc/dox_html
 doc/fapi_html
 doc/guide_html
+doc/*.ps
 doc/libdballe.doxytags

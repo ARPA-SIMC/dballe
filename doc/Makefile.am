@@ -4,12 +4,14 @@ guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.
 fapisources = fapi.tex
 
 LATEX2HTML = latex2html -local_icons
-#LATEX2HTML = latex2html -ascii_mode
 
 noinst_DATA =
 
 if DO_DOCS
-noinst_DATA += dox_html/index.html libdballe.doxytags fapi.ps guide.ps fapi_html/index.html guide_html/index.html
+noinst_DATA += libdballe.doxytags fapi.ps guide.ps
+if DO_HTML
+noinst_DATA += dox_html/index.html fapi_html/index.html guide_html/index.html
+endif
 endif
 
 libdballe.doxytags: libdballe.dox ../dballe/libdballe.la
