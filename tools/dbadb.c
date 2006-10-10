@@ -165,6 +165,47 @@ dba_err do_dump(poptContext optCon)
 	return dba_error_ok();
 }
 
+dba_err do_stations(poptContext optCon)
+{
+	const char* action;
+	int count, i;
+	dba_record query, result;
+	dba_db_cursor cursor;
+	dba_db db;
+
+	/* Throw away the command name */
+	action = poptGetArg(optCon);
+
+	/* Create the query */
+	DBA_RUN_OR_RETURN(dba_record_create(&query));
+	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
+
+	DBA_RUN_OR_RETURN(dba_init());
+	DBA_RUN_OR_RETURN(create_dba_db(&db));
+	DBA_RUN_OR_RETURN(dba_db_ana_query(db, query, &cursor, &count));
+	DBA_RUN_OR_RETURN(dba_record_create(&result));
+
+	for (i = 0; ; ++i)
+	{
+		int has_data;
+		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, &has_data));
+		if (!has_data)
+			break;
+		dba_record_clear(result);
+		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(cursor, result));
+		printf("#%d: -----------------------\n", i);
+		dba_record_print(result, stdout);
+	}
+
+	dba_db_delete(db);
+	dba_shutdown();
+
+	dba_record_delete(result);
+	dba_record_delete(query);
+
+	return dba_error_ok();
+}
+
 dba_err do_wipe(poptContext optCon)
 {
 	const char* action;
@@ -180,6 +221,27 @@ dba_err do_wipe(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
 	DBA_RUN_OR_RETURN(dba_db_reset(db, table));
+	dba_db_delete(db);
+	dba_shutdown();
+
+	return dba_error_ok();
+}
+
+dba_err do_cleanup(poptContext optCon)
+{
+	const char* action;
+	const char* table;
+	dba_db db;
+
+	/* Throw away the command name */
+	action = poptGetArg(optCon);
+
+	/* Get the optional name of the repinfo file */
+	table = poptGetArg(optCon);
+
+	DBA_RUN_OR_RETURN(dba_init());
+	DBA_RUN_OR_RETURN(create_dba_db(&db));
+	DBA_RUN_OR_RETURN(dba_db_remove_orphans(db));
 	dba_db_delete(db);
 	dba_shutdown();
 
@@ -347,7 +409,7 @@ struct poptOption dbadb_import_options[] = {
 	{ "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
 		"overwrite existing data" },
 	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
-		"force data to be of this report type, specified with code or memo", "rep" },
+		"force data to be of this type of report, specified with rep_cod or rep_memo values", "rep" },
 	{ "fast", 0, POPT_ARG_NONE, &op_fast, 0,
 		"make import faster, but an interruption will mean that there can be "
 		"data in the database for only part of an imported message" },
@@ -362,7 +424,7 @@ struct poptOption dbadb_export_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message" },
 	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
-		"force exported data to be of this report type, specified with code or memo", "rep" },
+		"force exported data to be of this type of report, specified with rep_cod or rep_memo values", "rep" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
 	{ "template", 't', POPT_ARG_STRING, &op_output_template, 0,
@@ -380,27 +442,44 @@ struct poptOption dbadb_repinfo_options[] = {
 	POPT_TABLEEND
 };
 
+struct poptOption dbadb_cleanup_options[] = {
+	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
+		"Options used to connect to the database" },
+	POPT_TABLEEND
+};
+
+struct poptOption dbadb_stations_options[] = {
+	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
+		"Options used to connect to the database" },
+	POPT_TABLEEND
+};
+
 static void init()
 {
 	dbadb.desc = "Manage the DB-ALLe database";
 	dbadb.longdesc =
 		"It allows to initialise the database, dump its contents and import and export data "
 		"using BUFR, CREX or AOF encoding";
-	dbadb.ops = (struct op_dispatch_table*)calloc(6, sizeof(struct op_dispatch_table));
+	dbadb.ops = (struct op_dispatch_table*)calloc(8, sizeof(struct op_dispatch_table));
 
 	dbadb.ops[0].func = do_dump;
 	dbadb.ops[0].aliases[0] = "dump";
 	dbadb.ops[0].usage = "dump [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
 	dbadb.ops[0].desc = "Dump data from the database";
-	dbadb.ops[0].longdesc = NULL;
+	dbadb.ops[0].longdesc = "Query parameters are the same of the Fortran API. "
+		"Please see the section \"Input and output parameters -- For data "
+		"related action routines\" of the Fortran API documentation for a "
+		"complete list.";
 	dbadb.ops[0].optable = dbadb_dump_options;
 
 	dbadb.ops[1].func = do_wipe;
 	dbadb.ops[1].aliases[0] = "wipe";
-	dbadb.ops[1].usage = "wipe [options] [optional rep_type description file]";
+	dbadb.ops[1].usage = "wipe [options] [optional rep_memo description file]";
 	dbadb.ops[1].desc = "Reinitialise the database, removing all data";
 	dbadb.ops[1].longdesc =
-			"Reinitialisation is done using the given report type description file. "
+			"Reinitialisation is done using the given report code description file. "
 			"If no file is provided, a default version is used";
 	dbadb.ops[1].optable = dbadb_wipe_options;
 
@@ -413,9 +492,12 @@ static void init()
 
 	dbadb.ops[3].func = do_export;
 	dbadb.ops[3].aliases[0] = "export";
-	dbadb.ops[3].usage = "export [options] type [queryparm1=val1 [queryparm2=val2 [...]]]";
+	dbadb.ops[3].usage = "export [options] rep_memo [queryparm1=val1 [queryparm2=val2 [...]]]";
 	dbadb.ops[3].desc = "Export data from the database";
-	dbadb.ops[3].longdesc = NULL;
+	dbadb.ops[3].longdesc = "Query parameters are the same of the Fortran API. "
+		"Please see the section \"Input and output parameters -- For data "
+		"related action routines\" of the Fortran API documentation for a "
+		"complete list.";
 	dbadb.ops[3].optable = dbadb_export_options;
 
 	dbadb.ops[4].func = do_repinfo;
@@ -424,15 +506,35 @@ static void init()
 	dbadb.ops[4].desc = "Update the report information table";
 	dbadb.ops[4].longdesc =
 			"Update the report information table with the data from the given "
-			"report type description file.  "
+			"report code description file.  "
 			"If no file is provided, a default version is used";
 	dbadb.ops[4].optable = dbadb_repinfo_options;
 
-	dbadb.ops[5].func = NULL;
-	dbadb.ops[5].usage = NULL;
-	dbadb.ops[5].desc = NULL;
-	dbadb.ops[5].longdesc = NULL;
-	dbadb.ops[5].optable = NULL;
+	dbadb.ops[5].func = do_cleanup;
+	dbadb.ops[5].aliases[0] = "cleanup";
+	dbadb.ops[5].usage = "cleanup [options]";
+	dbadb.ops[5].desc = "Perform database cleanup operations";
+	dbadb.ops[5].longdesc =
+			"The only operation currently performed by this command is "
+			"deleting stations that have no values.  If more will be added in "
+			"the future, they will be documented here.";
+	dbadb.ops[5].optable = dbadb_cleanup_options;
+
+	dbadb.ops[6].func = do_stations;
+	dbadb.ops[6].aliases[0] = "stations";
+	dbadb.ops[6].usage = "stations [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
+	dbadb.ops[6].desc = "List the stations present in the database";
+	dbadb.ops[6].longdesc = "Query parameters are the same of the Fortran API. "
+		"Please see the section \"Input and output parameters -- For data "
+		"related action routines\" of the Fortran API documentation for a "
+		"complete list.";
+	dbadb.ops[6].optable = dbadb_stations_options;
+
+	dbadb.ops[7].func = NULL;
+	dbadb.ops[7].usage = NULL;
+	dbadb.ops[7].desc = NULL;
+	dbadb.ops[7].longdesc = NULL;
+	dbadb.ops[7].optable = NULL;
 };
 
 int main (int argc, const char* argv[])
