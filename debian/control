@@ -9,7 +9,7 @@ Section: libdevel
 Architecture: any
 Depends: libdballe2 (= ${Source-Version}), libdballef2 (=${Source-Version})
 Recommends: pkg-config
-Description: Database for punctual meteorological data (development library for C and Fortran)
+Description: Database for punctual meteorological data (C and Fortran development)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
@@ -20,7 +20,6 @@ Section: libs
 Architecture: any
 Depends: ${shlibs:Depends} ${misc:Depends}
 Description: Database for punctual meteorological data (C shared library)
-Description: Database for computations on meteorological data
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
@@ -30,7 +29,7 @@ Package: libdballef2
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends} ${misc:Depends}
-Description: Database for computations on meteorological data (Fortran shared library)
+Description: Database for punctual meteorological data (Fortran shared library)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
@@ -40,7 +39,7 @@ Package: dballe
 Section: misc
 Architecture: any
 Depends: ${shlibs:Depends} ${misc:Depends}
-Description: Database for computations on meteorological data (Command line tools)
+Description: Database for punctual meteorological data (Command line tools)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
@@ -77,6 +76,4 @@ Description: Database for computations on meteorological data (Command line tool
     from soundings and airplanes.
   * Report information is preserved. It can work based on physical
     parameters or on report types.
-
-
 

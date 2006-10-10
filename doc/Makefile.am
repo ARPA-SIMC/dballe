@@ -4,6 +4,7 @@ guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.
 fapisources = fapi.tex
 
 LATEX2HTML = latex2html -local_icons
+#LATEX2HTML = latex2html -ascii_mode
 
 noinst_DATA =
 

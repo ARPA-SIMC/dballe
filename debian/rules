@@ -3,6 +3,9 @@
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
+# Work around to latex2html bug #368693
+export RGBDEF=/usr/share/latex2html/styles/rgb.txt
+
 #DEB_MAKE_CHECK_TARGET := check
 #DEB_CONFIGURE_EXTRA_FLAGS += --disable-shared --with-pic
 
