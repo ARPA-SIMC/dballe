@@ -2245,7 +2245,7 @@ F77_INTEGER_FUNCTION(idba_spiegab)(
 	} else {
 		double d;
 		DBA_RUN_OR_GOTO(cleanup, dba_var_enqd(var, &d));
-		asprintf(&res, "%f (%s) %s", d, info->unit, info->desc);
+		asprintf(&res, "%.*f (%s) %s", info->scale > 0 ? info->scale : 0, d, info->unit, info->desc);
 	}
 
 	cnfExprt(res, result, result_length);
