@@ -52,6 +52,9 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 	int mobile;
 	int inserted_pseudoana = 0;
 
+	if (l_ana == NULL)
+		return dba_error_consistency("cannot import into the database a message without pseudoana information");
+	
 	/* Quick access to the various database components */
 	DBA_RUN_OR_RETURN(dba_db_need_pseudoana(db));
 	DBA_RUN_OR_RETURN(dba_db_need_context(db));
@@ -61,7 +64,7 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 	dc = db->context;
 	dd = db->data;
 	dq = db->attr;
-	
+
 	/* Check if the station is mobile */
 	mobile = dba_msg_get_ident_var(msg) == NULL ? 0 : 1;
 
