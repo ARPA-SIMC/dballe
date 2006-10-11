@@ -126,7 +126,7 @@ void to::test<2>()
 	CHECKED(dba_msg_set_st_name_icao(	msg, "cip", 45));
 	CHECKED(dba_msg_set_st_type(		msg, 1,		45));
 	CHECKED(dba_msg_set_wind_inst(		msg, 3,		45));
-	CHECKED(dba_msg_set_temp_precision(	msg, 12300,	45));
+	CHECKED(dba_msg_set_temp_precision(	msg, 1.23,	45));
 	CHECKED(dba_msg_set_sonde_type(		msg, 3,		45));
 	CHECKED(dba_msg_set_sonde_method(	msg, 3,		45));
 	CHECKED(dba_msg_set_navsys(			msg, 3,		45));

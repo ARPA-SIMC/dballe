@@ -355,7 +355,7 @@ dba_err generator::fill_message(dba_msg msg, bool mobile)
 
 		dba_var var;
 		DBA_RUN_OR_RETURN(dba_var_create_local(generator_varcodes[rnd(0, sizeof(generator_varcodes) / sizeof(dba_varcode))], &var));
-		DBA_RUN_OR_RETURN(dba_var_setc(var, "11111"));
+		DBA_RUN_OR_RETURN(dba_var_setc(var, string(dba_var_info(var)->len, '8').c_str()));
 		DBA_RUN_OR_RETURN(dba_msg_set_nocopy(msg, var, ltype, l1, l2, pind, p1, p2));
 	}
 	return dba_error_ok();

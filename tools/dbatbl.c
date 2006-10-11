@@ -104,10 +104,25 @@ static void print_varinfo(dba_varinfo info)
 		fmtdesc[i] = 0;
 	}
 
+#if 0
+	if (info->is_string) 
+		printf("%d%02d%03d %s [%s, %s]\n", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
+				info->desc,
+				info->unit,
+				fmtdesc);
+	else
+		printf("%d%02d%03d %s [%s, %s] %f<=x<=%f\n", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
+				info->desc,
+				info->unit,
+				fmtdesc,
+				info->dmin,
+				info->dmax);
+#else
 	printf("%d%02d%03d %s [%s, %s]\n", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
 			info->desc,
 			info->unit,
 			fmtdesc);
+#endif
 }
 
 static void print_varinfo_csv(dba_varinfo info)

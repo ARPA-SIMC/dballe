@@ -28,7 +28,7 @@
 #include <ctype.h>		/* isspace */
 #include <math.h>		/* rint */
 #include <assert.h>		/* assert */
-#include <limits.h>		/* PATH_MAX */
+#include <limits.h>		/* PATH_MAX, INT_MIN, INT_MAX */
 
 #if 0
 #include <stdarg.h>
@@ -391,6 +391,25 @@ static dba_err dba_vartable_read(const char* id, int* index)
 				goto cleanup;
 			}
 		}
+
+		/* Postprocess the data, filling in minval and maxval */
+		if (entry->is_string)
+		{
+			entry->imin = entry->imax = 0;
+			entry->dmin = entry->dmax = 0.0;
+		} else {
+			if (entry->len >= 10)
+			{
+				entry->imin = INT_MIN;
+				entry->imax = INT_MAX;
+			} else {
+				entry->imin = -(int)(exp10(entry->len) - 1.0);
+				entry->imax = (int)(exp10(entry->len) - 1.0);
+			}
+			entry->dmin = dba_var_decode_int(entry->imin, entry);
+			entry->dmax = dba_var_decode_int(entry->imax, entry);
+		}
+
 		/*
 		fprintf(stderr, "Debug: B%05d len %d scale %d type %s desc %s\n",
 				bcode, entry->len, entry->scale, entry->type, entry->desc);

@@ -292,7 +292,7 @@ void to::test<5>()
 	{
 		dba_msg msg;
 		CHECKED(dba_msg_create(&msg));
-		gen.fill_message(msg, rnd(0.8));
+		CHECKED(gen.fill_message(msg, rnd(0.8)));
 		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
 		dba_msg_delete(msg);
 	}

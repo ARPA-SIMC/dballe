@@ -114,7 +114,7 @@ struct dba_db_dballe_shar
 		sample0.set(DBA_KEY_REP_COD, 1);
 		sample0.set(DBA_KEY_PRIORITY, 100);
 
-		sample00.set(DBA_VAR(0, 1, 11), "Hey Hey Ye");
+		sample00.set(DBA_VAR(0, 1, 11), "DB-All.e!");
 		sample01.set(DBA_VAR(0, 1, 12), 500);
 
 		sample1.set(DBA_KEY_MIN, 30);
@@ -122,7 +122,7 @@ struct dba_db_dballe_shar
 		sample1.set(DBA_KEY_REP_COD, 2);
 		sample1.set(DBA_KEY_PRIORITY, 80);
 
-		sample10.set(DBA_VAR(0, 1, 11), "Ho Ho Ho !");
+		sample10.set(DBA_VAR(0, 1, 11), "Arpa-Sim!");
 		sample11.set(DBA_VAR(0, 1, 12), 600);
 
 		/*
@@ -320,7 +320,7 @@ void to::test<3>()
 	TRY_QUERY(c, DBA_KEY_ANA_FILTER, "0<=B01001<=2", 4);
 	TRY_QUERY(c, DBA_KEY_ANA_FILTER, "1<=B01001<=1", 4);
 	TRY_QUERY(c, DBA_KEY_ANA_FILTER, "2<=B01001<=4", 0);
-	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01011=Hey Hey Ye", 2);
+	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01011=DB-All.e!", 2);
 	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012=500", 2);
 	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012>=500", 4);
 	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012>500", 2);
@@ -610,9 +610,9 @@ void to::test<3>()
 
 		/* Insert new QC data about this report */
 		dba_record_clear(qc);
-		dba_record_var_seti(qc, DBA_VAR(0, 33, 2), 11);
-		dba_record_var_seti(qc, DBA_VAR(0, 33, 3), 22);
-		dba_record_var_seti(qc, DBA_VAR(0, 33, 5), 33);
+		CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 33, 2), 7));
+		CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 33, 3), 5));
+		CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 33, 5), 33));
 		CHECKED(dba_db_qc_insert(db, context, DBA_VAR(0, 1, 11), qc));
 
 		/* Query back the data */
@@ -620,9 +620,9 @@ void to::test<3>()
 		CHECKED(dba_db_qc_query(db, context, DBA_VAR(0, 1, 11), NULL, 0, qc, &qc_count));
 
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val));
-		gen_ensure_equals(val, 11);
+		gen_ensure_equals(val, 7);
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val));
-		gen_ensure_equals(val, 22);
+		gen_ensure_equals(val, 5);
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val));
 		gen_ensure_equals(val, 33);
 
@@ -647,7 +647,7 @@ void to::test<3>()
 
 		gen_ensure(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val) == DBA_ERROR);
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val));
-		gen_ensure(val == 22);
+		gen_ensure(val == 5);
 		gen_ensure(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val) == DBA_ERROR);
 	}
 

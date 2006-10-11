@@ -419,7 +419,7 @@ dba_err dba_var_convert(dba_var orig, dba_varinfo info, dba_var* conv);
  * @returns
  *   The double value encoded as an integer
  */
-long dba_var_encode_int(double fval, dba_varinfo info);
+int dba_var_encode_int(double fval, dba_varinfo info);
 
 /**
  * Decode a double value from integer value using varinfo encoding
@@ -432,7 +432,7 @@ long dba_var_encode_int(double fval, dba_varinfo info);
  * @returns
  *   The decoded double value
  */
-double dba_var_decode_int(long val, dba_varinfo info);
+double dba_var_decode_int(int val, dba_varinfo info);
 
 /**
  * Print the variable to an output stream

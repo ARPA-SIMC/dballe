@@ -75,7 +75,7 @@ static const double scales[] = {
 
 /* Decode a double value from its integer representation and varinfo encoding
  * informations */
-double dba_var_decode_int(long val, dba_varinfo info)
+double dba_var_decode_int(int val, dba_varinfo info)
 {
 	if (info->scale > 0)
 		return (val - info->ref) / scales[info->scale];
@@ -87,14 +87,14 @@ double dba_var_decode_int(long val, dba_varinfo info)
 
 /* Encode a double value from its integer representation and varinfo encoding
  * informations */
-long dba_var_encode_int(double fval, dba_varinfo info)
+int dba_var_encode_int(double fval, dba_varinfo info)
 {
 	if (info->scale > 0)
-		return (long)rint((fval + info->ref) * scales[info->scale]);
+		return (int)rint((fval + info->ref) * scales[info->scale]);
 	else if (info->scale < 0)
-		return (long)rint((fval + info->ref) / scales[-info->scale]);
+		return (int)rint((fval + info->ref) / scales[-info->scale]);
 	else
-		return (long)rint(fval + info->ref);
+		return (int)rint(fval + info->ref);
 }
 
 dba_err dba_var_create(dba_varinfo info, dba_var* var)
@@ -326,6 +326,12 @@ dba_err dba_var_seti(dba_var var, int val)
 	if (var->info->is_string)
 		return dba_error_type("\"B%02d%03d\" is of type string and cannot be accessed as an integer",
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var));
+
+	/* Guard against overflows */
+	if (val < var->info->imin || val > var->info->imax)
+		return dba_error_toolong("Value %i is outside of the range [%i,%i] for B%02d%03d (%s)",
+				val, var->info->imin, var->info->imax,
+				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
 	
 	/* Set the value */
 	if (var->value == NULL &&
@@ -345,6 +351,12 @@ dba_err dba_var_setd(dba_var var, double val)
 		return dba_error_type("\"B%02d%03d\" is of type string and cannot be accessed as a floating-point",
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var));
 	
+	/* Guard against overflows */
+	if (val < var->info->dmin || val > var->info->dmax)
+		return dba_error_toolong("Value %f is outside of the range [%f,%f] for B%02d%03d (%s)",
+				val, var->info->dmin, var->info->dmax,
+				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
+
 	/* Set the value */
 	if (var->value == NULL && 
 		(var->value = (char*)malloc(var->info->len + 2)) == NULL)
@@ -357,10 +369,22 @@ dba_err dba_var_setd(dba_var var, double val)
 
 dba_err dba_var_setc(dba_var var, const char* val)
 {
+	int len;
+
 	/* Set the value */
 	if (var->value == NULL &&
 		(var->value = (char*)malloc(var->info->len + 2)) == NULL)
 		return dba_error_alloc("allocating space for dba_var value");
+
+	/* Guard against overflows */
+	len = strlen(val);
+	/* Tweak the length to account for the extra leading '-' allowed for
+	 * negative numeric values */
+	if (!var->info->is_string && val[0] == '-')
+		--len;
+	if (len > var->info->len)
+		return dba_error_toolong("Value \"%s\" is too long for B%02d%03d (%s): maximum length is %d",
+				val, DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc, var->info->len);
 
 	strncpy(var->value, val, var->info->len + 1);
 	var->value[var->info->len + 1] = 0;

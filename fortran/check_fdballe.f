@@ -72,7 +72,7 @@ c     { "name", "Cippo Lippo" },
       call idba_seti(handle, "rep_cod", 1)
       call ensure_no_error("seti 14")
 
-      call idba_setc(handle, "B01011", "Hey Hey Ye")
+      call idba_setc(handle, "B01011", "DB-All.e!")
       call ensure_no_error("setc 15")
 
 c     Perform the insert

@@ -74,6 +74,14 @@ struct _dba_varinfo
 	int bit_len;
 	/** True if the variable is a string; false if it is a numeric value */
 	int is_string;
+	/** Minimum unscaled value the field can have */
+	int imin;
+	/** Maximum unscaled value the field can have */
+	int imax;
+	/** Minimum scaled value the field can have */
+	double dmin;
+	/** Maximum scaled value the field can have */
+	double dmax;
 };
 typedef struct _dba_varinfo* dba_varinfo;
 
