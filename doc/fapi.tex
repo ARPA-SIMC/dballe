@@ -457,11 +457,28 @@ convenience function {\tt idba\_default\_error\_handler}:
 \label{fun-error-handler}
 
 \begin{verbatim}
-c     Declare the external function
+c     Declare the external function (not necessary if you include dballef.h)
       external idba_default_error_handler
 
 c     Use it as the error handling callback
-      call idba_error_set_callback(0, idba_default_error_handler, 42, cb_handle)
+      call idba_error_set_callback(0, idba_default_error_handler, 1, cb_handle)
+\end{verbatim}
+
+An alternative error handler called {\tt
+idba\_error\_handler\_tolerating\_overflows} is available: it exists on all
+errors instead of value overflows, in what case it prints a warning to standard
+error and allows the program to continue.  The overflow error can then be
+catched, if needed, by inspecting the error code returned by the \dballe{}
+function that causes the error.
+
+This is how to use it:
+
+\begin{verbatim}
+c     Declare the external function (not necessary if you include dballef.h)
+      external idba_error_handler_tolerating_overflows
+
+c     Use it as the error handling callback
+      call idba_error_set_callback(0, idba_error_handler_tolerating_overflows, 1, cb_handle)
 \end{verbatim}
 
 
@@ -1659,6 +1676,8 @@ These routines are used to begin and end working sessions with \dballe{}.
 	Remove a previously set callback			& \ref{fun-error} \\
 {\tt \small idba\_default\_error\_handler}     &
 	Predefined convenience error handler			& \ref{fun-error-handler} \\
+{\tt \small idba\_error\_handler\_tolerating\_overflows}     &
+	Predefined convenience error handler that does not exist on overflow errors & \ref{fun-error-handler} \\
 \hline
 \end{tabular}
 

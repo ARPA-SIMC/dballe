@@ -180,7 +180,7 @@ F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
 }
 
 /**
- * Default callback that prints a message and exit.
+ * Default callback that prints a message and exits.
  *
  * The message is printed only if a non-zero value is supplied as user data
  */
@@ -197,4 +197,23 @@ F77_INTEGER_FUNCTION(idba_default_error_handle)(INTEGER(debug))
 	if (*debug)
 		dba_cmdline_print_dba_error();
 	exit(1);
+}
+/**
+ * Default callback that prints a message and exists, except in case of overflows.
+ *
+ * In case of overflows it prints a warning and continues execution
+ */
+F77_INTEGER_FUNCTION(idba_error_handle_tolerating_overflows)(INTEGER(debug))
+{
+	GENPTR_INTEGER(debug)
+	int is_fatal = (dba_error_get_code() != DBA_ERR_NOTFOUND);
+	if (*debug)
+	{
+		if (!is_fatal)
+			fprintf(stderr, "Warning: ");
+		dba_cmdline_print_dba_error();
+	}
+	if (is_fatal)
+		exit(1);
+	return 0;
 }

@@ -134,6 +134,10 @@ interface
      logical, intent(in) :: debug
    end function idba_default_error_handler
 
+   integer function idba_error_handler_tolerating_overflows(debug)
+     logical, intent(in) :: debug
+   end function idba_error_handler_tolerating_overflows
+
 
 ! Init/Shutdown routines
    
