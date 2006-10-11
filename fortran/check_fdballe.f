@@ -89,7 +89,7 @@ c     Try to read the context id of the data just inserted
 c     Insert some QC flags
       call idba_setc(handle, "*B33002", "1")
       call ensure_no_error("critica setc 0")
-      call idba_setc(handle, "*B33003", "test")
+      call idba_setc(handle, "*B33003", "t")
       call ensure_no_error("critica setc 1")
       call idba_setc(handle, "*var", "B01011")
       call idba_critica(handle)
