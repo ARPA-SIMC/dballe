@@ -329,9 +329,12 @@ dba_err dba_var_seti(dba_var var, int val)
 
 	/* Guard against overflows */
 	if (val < var->info->imin || val > var->info->imax)
+	{
+		DBA_RUN_OR_RETURN(dba_var_unset(var));
 		return dba_error_toolong("Value %i is outside of the range [%i,%i] for B%02d%03d (%s)",
 				val, var->info->imin, var->info->imax,
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
+	}
 	
 	/* Set the value */
 	if (var->value == NULL &&
@@ -353,9 +356,12 @@ dba_err dba_var_setd(dba_var var, double val)
 	
 	/* Guard against overflows */
 	if (val < var->info->dmin || val > var->info->dmax)
+	{
+		DBA_RUN_OR_RETURN(dba_var_unset(var));
 		return dba_error_toolong("Value %f is outside of the range [%f,%f] for B%02d%03d (%s)",
 				val, var->info->dmin, var->info->dmax,
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
+	}
 
 	/* Set the value */
 	if (var->value == NULL && 
@@ -383,8 +389,11 @@ dba_err dba_var_setc(dba_var var, const char* val)
 	if (!var->info->is_string && val[0] == '-')
 		--len;
 	if (len > var->info->len)
+	{
+		DBA_RUN_OR_RETURN(dba_var_unset(var));
 		return dba_error_toolong("Value \"%s\" is too long for B%02d%03d (%s): maximum length is %d",
 				val, DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc, var->info->len);
+	}
 
 	strncpy(var->value, val, var->info->len + 1);
 	var->value[var->info->len + 1] = 0;
