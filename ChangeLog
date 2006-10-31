@@ -1,0 +1,18 @@
+Changes from version 2.5 to version 2.6
+
+ * dbadb: dbadb export failed to export various kinds of station data
+ * dbadb: implemented dbadb cleanup
+ * dbadb: implemented dbadb stations
+ * dbadb manpage: refer to report code and report memo instead of just
+   'type'
+ * dbadb manpage: mention what are the query parameters that can be used
+ * dba_var_set* and idba_set* operations now check for overflows and report
+   DBA_ERR_TOOLONG if it happens
+ * fortran API: idba_spiegab now formats the values with the right amount of
+   decimal digits
+ * fortran API: added another predefined callback
+   (idba_error_handle_tolerating_overflows) that only prints a warning in case
+   of overflow
+ * fapi.tex: documented that setting a variable to a missing value is
+   equivalent to an idba_unset
+ * fapi.tex: documented the use of the dballef.h Fortran 90 interface file
