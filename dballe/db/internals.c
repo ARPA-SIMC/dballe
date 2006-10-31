@@ -65,6 +65,38 @@ dba_err dba_db_error_odbc(SQLSMALLINT handleType, SQLHANDLE handle, const char* 
 	SQLSMALLINT mlen;
 
 	SQLGetDiagRec(handleType, handle, 1, (unsigned char*)stat, &err, (unsigned char*)msg, strsize, &mlen);
+	if (mlen > strsize) mlen = strsize;
+
+#if 0
+	fprintf(stderr, "SQL ERROR CODE: %s\n", stat);
+#endif
+
+	va_start(ap, fmt);
+	vasprintf(&context, fmt, ap);
+	va_end(ap);
+
+	return dba_error_generic0(DBA_ERR_ODBC, context, strndup(msg, mlen));
+}
+
+dba_err dba_db_error_odbc_except(const char* error_to_ignore, SQLSMALLINT handleType, SQLHANDLE handle, const char* fmt, ...)
+{
+	va_list ap;
+	static const int strsize = 200;
+	char stat[10], msg[strsize];
+	char* context;
+	SQLINTEGER err;
+	SQLSMALLINT mlen;
+
+	SQLGetDiagRec(handleType, handle, 1, (unsigned char*)stat, &err, (unsigned char*)msg, strsize, &mlen);
+	if (mlen > strsize) mlen = strsize;
+
+#if 0
+	fprintf(stderr, "SQL ERROR CODE: %s\n", stat);
+#endif
+
+	// Ignore the given SQL error
+	if (memcmp(stat, error_to_ignore, 5) == 0)
+		return DBA_OK;
 
 	va_start(ap, fmt);
 	vasprintf(&context, fmt, ap);

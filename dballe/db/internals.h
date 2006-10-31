@@ -169,6 +169,15 @@ struct _dba_db_cursor
 dba_err dba_db_error_odbc(SQLSMALLINT handleType, SQLHANDLE handle, const char* fmt, ...);
 
 /**
+ * Report an ODBC error, using informations from the ODBC diagnostic record,
+ * and ignoring one kind of SQL error.
+ *
+ * For an (incomplete) list of SQL error codes, see
+ * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/odbc/htm/odbcodbc_error_codes.asp
+ */
+dba_err dba_db_error_odbc_except(const char* error_to_ignore, SQLSMALLINT handleType, SQLHANDLE handle, const char* fmt, ...);
+
+/**
  * Create a new ODBC statement handle
  */
 dba_err dba_db_statement_create(dba_db db, SQLHSTMT* stm);

@@ -45,6 +45,16 @@
 
 #include <assert.h>
 
+#undef USE_POSTGRES
+#define USE_MYSQL
+
+#ifdef USE_POSTGRES
+#define DBA_ODBC_MISSING_TABLE "42P01"
+#endif
+
+#ifdef USE_MYSQL
+#define DBA_ODBC_MISSING_TABLE "42S01"
+
 /*
  * Define to true to enable the use of transactions during writes
  */
@@ -55,6 +65,8 @@
 #define DBA_USE_TRANSACTIONS
 #endif
 
+#endif
+
 /* Define this to enable referential integrity */
 #undef USE_REF_INT
 
@@ -63,6 +75,8 @@ static SQLHENV dba_od_env;
 static const char* init_tables[] = {
 	"attr", "data", "context", "pseudoana", "repinfo"
 };
+
+#ifdef USE_MYSQL
 
 #ifdef DBA_USE_TRANSACTIONS
 #define TABLETYPE "TYPE=InnoDB;"
@@ -83,7 +97,8 @@ static const char* init_queries[] = {
 	"   lat        INTEGER NOT NULL,"
 	"   lon        INTEGER NOT NULL,"
 	"   ident      CHAR(64),"
-	"   UNIQUE INDEX(lat, lon, ident(8))"
+	"   UNIQUE INDEX(lat, lon, ident(8)),"
+	"   INDEX(lon)"
 	") " TABLETYPE,
 	"CREATE TABLE context ("
 	"   id			INTEGER auto_increment PRIMARY KEY,"
@@ -129,6 +144,72 @@ static const char* init_queries[] = {
 #endif
 	") " TABLETYPE,
 };
+
+#endif
+
+#ifdef USE_POSTGRES
+static const char* init_queries[] = {
+	"CREATE TABLE repinfo ("
+	"   id		     INTEGER PRIMARY KEY,"
+	"	memo	 	 VARCHAR(30) NOT NULL,"
+	"	description	 VARCHAR(255) NOT NULL,"
+	"   prio	     INTEGER NOT NULL,"
+	"	descriptor	 CHAR(6) NOT NULL,"
+	"	tablea		 INTEGER NOT NULL"
+	") ",
+	"CREATE TABLE pseudoana ("
+	"   id         SERIAL PRIMARY KEY,"
+	"   lat        INTEGER NOT NULL,"
+	"   lon        INTEGER NOT NULL,"
+	"   ident      CHAR(64)"
+	") ",
+	"CREATE UNIQUE INDEX pa_uniq ON pseudoana(lat, lon, ident)",
+	"CREATE INDEX pa_lon ON pseudoana(lon)",
+	"CREATE TABLE context ("
+	"   id			SERIAL PRIMARY KEY,"
+	"   id_ana		INTEGER NOT NULL,"
+	"	id_report	INTEGER NOT NULL,"
+	"   datetime	TIMESTAMP NOT NULL,"
+	"	ltype		INTEGER NOT NULL,"
+	"	l1			INTEGER NOT NULL,"
+	"	l2			INTEGER NOT NULL,"
+	"	ptype		INTEGER NOT NULL,"
+	"	p1			INTEGER NOT NULL,"
+	"	p2			INTEGER NOT NULL"
+#ifdef USE_REF_INT
+	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
+	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
+#endif
+	") ",
+	"CREATE UNIQUE INDEX co_uniq ON context(id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report)",
+	"CREATE INDEX co_ana ON context(id_ana)",
+	"CREATE INDEX co_report ON context(id_report)",
+	"CREATE INDEX co_dt ON context(datetime)",
+	"CREATE INDEX co_lt ON context(ltype, l1, l2)",
+	"CREATE INDEX co_pt ON context(ptype, p1, p2)",
+	"CREATE TABLE data ("
+	"   id_context	INTEGER NOT NULL,"
+	"	id_var		INTEGER NOT NULL,"
+	"	value		VARCHAR(255) NOT NULL"
+#ifdef USE_REF_INT
+	"   , FOREIGN KEY (id_context) REFERENCES context (id) ON DELETE CASCADE"
+#endif
+	") ",
+	"CREATE INDEX da_co ON data(id_context)",
+	"CREATE UNIQUE INDEX da_uniq ON data(id_var, id_context)",
+	"CREATE TABLE attr ("
+	"   id_context	INTEGER NOT NULL,"
+	"	id_var		INTEGER NOT NULL,"
+	"   type		INTEGER NOT NULL,"
+	"   value		VARCHAR(255) NOT NULL"
+#ifdef USE_REF_INT
+	"   , FOREIGN KEY (id_context, id_var) REFERENCES data (id_context, id_var) ON DELETE CASCADE"
+#endif
+	") ",
+	"CREATE INDEX at_da ON attr(id_context, id_var)",
+	"CREATE UNIQUE INDEX at_uniq ON attr(id_context, id_var, type)",
+};
+#endif
 
 /**
  * Get the report id from this record.
@@ -302,13 +383,14 @@ dba_err dba_db_delete_tables(dba_db db)
 	for (i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); i++)
 	{
 		char buf[100];
-		int len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", init_tables[i]);
+		int len = snprintf(buf, 100, "DROP TABLE %s", init_tables[i]);
 		res = SQLExecDirect(stm, (unsigned char*)buf, len);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm,
+			err = dba_db_error_odbc_except(DBA_ODBC_MISSING_TABLE, SQL_HANDLE_STMT, stm,
 					"Removing old table %s", init_tables[i]);
-			goto cleanup;
+			if (err != DBA_OK)
+				goto cleanup;
 		}
 	}
 
