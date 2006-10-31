@@ -1,7 +1,7 @@
 dballe (2.6-1) unstable; urgency=low
 
   * New upstream release
-  * Build-depend on tetex-bin and gs-common.  Closes: bug#393047.
+  * Build-depend on tetex-bin, tetex-extra and gs-common.  Closes: bug#393047.
 
  -- Enrico Zini <enrico@debian.org>  Sat, 14 Oct 2006 22:24:16 +0100
 
