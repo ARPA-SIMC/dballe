@@ -44,6 +44,20 @@ The main characteristics of DB-ALL.e are:
  * Does not need backup, since it only contains replicated or derived data.
  * Write access is enabled for its users.
 
+Building DB-All.e
+-----------------
+
+DB-All.e is already packaged in both .rpm and .deb formats, and that provides
+easy installation for most Linux distributions.
+
+If you want to build and install DB-All.e yourself, you can proceed as in most
+other Unix software::
+
+  ./configure
+  make
+  make install
+
+
 Getting started
 ---------------
 
@@ -85,6 +99,15 @@ The C API and all the C internals are documented through Doxygen.
 
 Administration and maintanance of DB-All.e are covered in the guide.pdf
 document.
+
+
+Testing DB-All.e
+----------------
+
+Unit testing can be run using "make check", but it requires an existing DSN
+connection to a MySQL database, which should be called 'test'.  Please note
+that unit testing functions will wipe existing DB-All.e tables on the test DSN
+database.
 
 
 Useful resources
