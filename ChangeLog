@@ -16,3 +16,4 @@ Changes from version 2.5 to version 2.6
  * fapi.tex: documented that setting a variable to a missing value is
    equivalent to an idba_unset
  * fapi.tex: documented the use of the dballef.h Fortran 90 interface file
+ * README: rewritten to only provide quick start information

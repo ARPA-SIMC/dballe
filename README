@@ -4,322 +4,87 @@ README for Data Base All Enhanced version 0.7, still unreleased
 Introduction
 ------------
 
-DB-ALLe is a database for punctual meteorological data intended to complement
-the existing tools to manage grid-based data.
+DB-All.e is a fast on-disk database where meteorological observed and
+forecast data can be stored, searched, retrieved and updated.
 
-These are the main characteristics of DB-ALLe:
+This framework allows to manage large amounts of data using its simple
+Application Program Interface, and provides tools to visualise, import
+and export in the standard formats BUFR, AOF and CREX.
 
- - it is temporary, to be used for a limited time and then be deleted.
- - does not need backup, since it only contains replicated or derived data.
- - write access is enabled for its users.
- - it is fast for both read and for write access.
- - it is based on physical principles, that is, the data it contains are
-   defined in terms of omogeneous and consistent physical data.  For example,
-   it is impossible for two incompatible values to exist in the same point in
-   space and time.
- - it can manage fixed station and moving stations such as airplanes or ships.
- - it can manage both observational and forecast data.
- - it can manage data along all three dimensions in space, such as data from
-   soundings and airplanes.
- - it can work based on physical parameters or on report types.
+The main characteristics of DB-ALL.e are:
+
+ * Fortran, C, C++ and Python APIs are provided.
+ * To make computation easier, data is stored as physical quantities,
+   that is, as measures of a variable in a specific point of space and
+   time, rather than as a sequence of report.
+ * Internal representation is similar to BUFR and CREX WMO standard
+   (table code driven) and utility for import and export are included
+   (generic and ECMWF template).
+ * Representation is in 7 dimensions: latitude and longitude geographic
+   coordinates, table driven vertical coordinate, reference time,
+   table driven observation and forecast specification, table driven
+   data type.
+ * It allows to store extra information linked to the data, such as
+   confidence intervals for quality control.
+ * It allows to store extra information linked to the stations.
+ * Variables can be represented as real, integer and characters, with
+   appropriate precision for the type of measured value.
+ * It is based on physical principles, that is, the data it contains are
+   defined in terms of homogeneous and consistent physical data. For
+   example, it is impossible for two incompatible values to exist in the
+   same point in space and time.
+ * It can manage fixed stations and moving stations such as airplanes or
+   ships.
+ * It can manage both observational and forecast data.
+ * It can manage data along all three dimensions in space, such as data
+   from soundings and airplanes.
+ * Report information is preserved. It can work based on physical
+   parameters or on report types.
+ * It is temporary, to be used for a limited time and then be deleted.
+ * Does not need backup, since it only contains replicated or derived data.
+ * Write access is enabled for its users.
+
+Getting started
+---------------
+
+DB-All.e requires ODBC access to a MySQL database for most of its
+functionality.
+
+To set up DB-All.e on the MySQL side, you need to create a database and grant
+users create table, drop table, insert, delete and select access.  MySQL needs
+to run with InnoDB support.
+
+To set up ODBC access to the database (this is called a DSN) you can run a
+graphical configuration file like ODBCConfig.  Otherwise, this is a sample
+.odbc.ini you can use::
+
+  [dballe]
+  Description     = MySQL
+  Driver          = MySQL
+  Server          = localhost
+  Database        = dballe
+
+Once this is set up, you can initialise the DB-All.e database using the command::
+
+  dbadb wipe --dsn=dballe --user=username [--pass=password]
+
+"--user" can be omitted if it is the same as your Unix username; "--pass" can
+be omitted if the user has no password.
 
 
-Functionality
+Documentation
 -------------
 
-DB-ALLe is fully functional.
+Documentation for all commandline tools can be found in their manpages.  All
+commandline tools also have extensive commandline help that can be accessed
+using the "--help" option.
 
-It is currently under testing, benchmarking and optimization before being
-finally deployed.
+The Fortran API is documented in the fapi.pdf document.
 
+The C API and all the C internals are documented through Doxygen.
 
-Resources
----------
-
-* `dballe-0.7.tar.gz`_
-* `Documentazione API Fortran`_
-* `Documentazione Doxygen`_
-* `Guida per l'utente avanzato e l'amministratore`_
-
-.. _dballe-0.7.tar.gz: dballe-0.7.tar.gz
-.. _Documentazione API Fortran: doc-fapi/index.html
-.. _Guida per l'utente avanzato e l'amministratore: doc-guide/index.html
-.. _Documentazione Doxygen: doc-code/index.html
-
-
-What is in the release
-----------------------
-
-Release 0.7 of Dballe contains:
-
-* the full database functionality implemented and working;
-* the complete Fortran wrappers for the entire C API;
-* the simplified library interface to be used from Fortran;
-* guide for the simplified Fortran interface;
-* full BUFR and CREX support;
-* read-only AOF support;
-* import, export and conversion between DB-ALLe, ARPA Oracle database, CREX,
-  BUFR and AOF reports
-
-The C API has automated test suites that check its basic functionalities.
-Tests pass for all the database, bufr and crex functionality, and no faulty
-memory accesses are reported in Dballe's code while running the tests under
-valgrind's memory checker.
-
-What is not in release 0.7:
-
-* Support for CREX C data descriptors;
-* Support for some BUFR C data descriptors;
-* Write to AOF;
-* Export in VM format;
-
-
-Import/export capabilities
---------------------------
-
-=============== ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======
-Description	Cat&Sub	AOFType	Testobs	Int.rep	   BUFREX	      AOF	    DBalle	     VM
---------------- ------- ------- ------- ------- --------------- --------------- --------------- --------------
-.		.	.	.	.	Import	Export	Import	Export	Import	Export	Import	Export
-=============== ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======
-Synop land    	0   1	synop	yes	synop	tested	tested	tested	TODO	tested	tested	tocheck	TODO
-Synop land auto	0   3	synop	yes	synop	tested	tested	-	TODO	tested	tested	tocheck	TODO
-Synop ship abbr	1   9	ship	yes	sea	tested	tested	-	TODO	tested	tested	-	-
-Synop ship   	1  11	ship	yes	sea	tested	tested	tested	TODO	tested	tested	-	-
-Synop ship auto	1  13	ship	yes	sea	tested	tested	tested	TODO	tested	tested	-	-
-Synop ship redu	1  19	ship	yes	sea	tested	tested	-	TODO	tested	tested	-	-
-Surface buoy 	1  21	buoy	yes	sea	tested	tested	tested	TODO	tested	tested	tocheck	TODO
-Metar	 	1 140	(none)	yes	metar	tested	tested	-	-	tested	tested	TODO	TODO
-Pilot land	2  91	pilot	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
-Pilot ship	2  92	pilot	no	?	-	-	-	-	-	-	-	-
-Temp land	2 101	temp	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
-Temp ship	2 102	temp	yes	snding	tested	tested	tested	TODO	tested	tested	tocheck	TODO
-Temp mobile	2 106	temp	no	?	-	-	-	-	-	-	-	-
-Sing.lev.airep 	4 142	airep	yes	flight	tested	tested	-	TODO	tested	tested	-	-
-Sing.lev.amdar 	4 144 	airep	yes	flight	tested	tested	tested	TODO	tested	tested	-	-
-Sing.lev.acars 	4 145	acar	yes	acars	tested	tested	TODO	TODO	tested	tested	-	-
-Generic         (any)   (none)  no      gneric  tocheck tocheck	-	-	tocheck	tocheck	TODO	TODO
-=============== ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======= ======
-
-
-TODO-list items completed so far
---------------------------------
-
-These are the TODO-list items completed so far::
-
-TODO-list items being worked on
--------------------------------
-
-These are the TODO-list items currently being worked on::
-
- * dbadb
-    - Add a dbadb option to install a new repinfo, checking for consistency during
-      the operation
-
- * Optimizations
-    - Remove the big unique index on context (it's already been enforced by the
-      rest of the code, that looks up from and existing context index before
-      inserting, and does it inside a transaction)
-
- * Milestone release-extra
-    - Export AOF
-
- * BUFR
-    - In fase di export sounding BUFR e CREX, non esportare i livelli extra
-
- * Tools
-    - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
-      (lat, lon, ident, year, month, day, hour, min)
-       - Implementato e protetto da if(0)
-         è da vedere se non importare tutto il livello 257
-	 o se non importare solo gli 8 valori
-       - Attivarlo con una variabile di ambiente
-
- * Core
-    - Altezza anemometro lo salvo solo o lo uso anche per mettere i dati di
-      vento in un corrispondente livello di altezza?
-
- * Import da VM o database Oracle di ARPA
-    - Buttare via le stazioni con NULL su lat o long
-
- * Export per VM
-    - Procurarsi un tracciato VM di una stazione nota e scrivere test
-
- * Documentazione codice
-    - Spiegare l'architettura del sistema di I/O encoding e decoding
-    - Spiegare come aggiungere:
-       - nuovi template di export bufrex
-       - nuove conversioni tra unità di misura
-       - nuove funzioni ai tool a linea di comando
-       - import da nuovi template bufrex
-      (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
-
- * Tools
-    - In fase di conversione, aggiungere uno switch per fare unset di tutti i
-      valori che hanno intervallo di confidenza al di sotto di una soglia data
-    - Fare un import delle anagrafiche che scandisca una serie di CREX:
-       - mettendo assieme i dati anagrafici delle varie stazioni.
-       - controlli che le stazioni non si spostino e alla fine inserisca tutto
-	 nella tabella di anagrafica
-
- * Procedura per supportare un nuovo tipo report in un formato specifico
-    - Cercare un file con un'osservazione nel formato voluto
-    - Cercare un file con la stessa osservazione in un formato per cui è già
-      supportata, o in alternativa, cercare un dump dei dati presenti nel
-      campione
-    - Aggiungere il campione all'archivio dei test case
-    - Aggiungere a check_import i test per il nuovo file, usando l'altro file o
-      i dati del dump come riferimento
-    - Implementare
-
- - Appunti per un nuovo report:
-    - La nuova API (con un programma di esempio è forse meglio)
-    - Cosa è stato fatto finora
-    - Cosa verrà fatto in futuro
-    - MySQL 4? (transazioni (forse non servono), DELETE USING, performance, faremo
-      delle prove)
-    - Completamento API dalle specifiche
-       - semantica elencamele
-       - semantica QC
-       - semantica cancellazione
-
- * Note dalla presentazione
-    - Non è molto felice la definizione "reti"
-    - quadballitem: serve la idba_seti(handle, "rep_cod", 1) dopo la
-      seti("ana_id")?
-    - [no, perché nessuno poi la saprebbe/potrebbe mantenere] Fare
-      un'interfaccia python con solo quello che serve per fare toolettini
-      grafici per import, export, correzione dati anagrafici, correzione
-      singoli dati
-
- - Controllare se è piú veloce con mysql 3 o mysql 4
-    - Costruire un benchmark
-       - Inserimento di dati casuali
-       - Query su intervalli casuali
-       - Inserimento QC casuali
-       - Query di valori QC casuali
-   time DBA_TABLES=tables tools/dbadb import --user=enrico ../materiale/all/obs4-145.bufr
-
- - Articolo per ARPA rivista
- - Unit test
- - Mettere assert nel codice
- - Verificare memory leak
- - Controllare il keynote di Triggell alla LCA sui tool da avere per
-   controllare il software
- - AOF cambia endianness tra l'header (FDR e DDR) e le osservazioni
- - Rinominato "ident" in parameter selezione come "ident_select"
-
- - Domande
-    - Dove trovo un file con le code table associate ai valori nella tabella B?
-    - Scrivere il test per guidare la stesura del codice: dato un AOF (o uno
-      per tipo) fare l'elenco delle variabili fisiche che ci si aspetta in
-      output (coi loro codici WMO o B locale), e usarle per testare il codice.
-      -> Meglio: convertire 4/5 bufr di tipo diverso in AOF, poi darmi gli AOF e
-         il dump dei BUFR
-
-
-Future TODO-list items
-----------------------
-
-These are the TODO-list items that are to be addressed in the future::
-
- - Export in VM o database oracle di ARPA
- 
- * Tools
-    - Export di variabili in un foglio elettronico
-   
- * CREX
-    - Raggruppare i dati che abbiamo per tipo report e vedere quali
-      informazioni di contesto ci sono per ogni tipo report
-    - Documentazione
-    - Test
-
-    - Parse Entry C
-    - Testare il decoding di CREX con piú di una subsection
-    - Encoding CREX con piú di una subsection
-    - Encoding CREX con entry C
-    - Inserimento informazioni sul report
-
- * BUFR
-    - Gestire in input le entry C 22 e C24
-    - Export
-       - Fare un file di configurazione dove specificare il numero
-	 dell'originating centre da usare nell'Identification Section dei BUFR
-	 generati
-   
- * AOF
-    - Encoding
-      (Si può esportare in BUFR e poi usare il convertitore BUFR->AOF già
-       pronto)
-    - In scrittura, controllare le date di tutte le osservazioni scritte e alla
-      fine aggiornare l'header con la minima e la massima
-    - Export of attributes
-    - Il dump dell'AOF in dbamsg diventa quindi il dump del dba_msg
-      risultante.  Il dumpraw può essere una nuova funzione in aof_message
-      che stampa il dump piú grezzo dei contenuti dell'AOF
-
- * Interfaccia fortran
-    - Implementare la voglioancora
-    - Vedere se fornire una funzione di wrapping semplificata per le
-      dba_error_callback_*, che offra la possibilità di agganciare gli errori a
-      callback scelte tra un set predefinito implementato in C
-    - (dopo) Aggiungiamo un input di restrizioni alla quantesono? (Tipo solo fisse,
-      solo un tipo report, solo in un certo box di coordinate)
-
- * Refactoring
-    - Replace unit names with codes
-    - Fare degli "ANALISE" per incrementare le prestazioni (magari metterlo in
-      dbadb)
-       - Ancora meglio: fare una funzione "pack database" che rimuove anche
-	 anagrafiche e contesti non piú utilizzati, e poi fa un'ANALISE
-    - Future optimizations for dba_vartable can make use of string tables to
-      store varinfo descriptions and units instead of long fixed-length
-      records.
-       - The string table cannot grow dynamically or it will invalidate the
-         string pointers
-    - Distinguere nei messaggi:
-       - Metainformazioni (nome del file, offset del messaggio, numero
-         d'ordine, ...)
-       - Informazioni codificate (il messaggio codificato)
-       - Informazioni decodificate (il contenuto del messaggio)
-    - Refactoring dba_db per velocizzare l'import e export di report
-       - Fare una cache delle informazioni per il tipo report, da leggere alla
-	 connessione al database e tenere in memoria
-       - Fare cache di pseudoana id e context id
-       - Use foreign keys to automatically get rid of unused pseudoana and contexts
-   
- * Dballe
-    - Come gestire i cambiamenti alla B locale:
-       - Salvataggio nel database della tabella B usata per rappresentare i dati
-         al suo interno, e uso della tabella nel DB per l'import e l'export dei
-         dati
-       - Oppure tenere l'indice in /usr/local, che è condivisa
-    - Espansione code table quando si fa enqc di un parametro di tipo "CODE TABLE"
-      (sembra un compito impossibile, a meno ché qualcuno non trovi una lista
-      parsabile di tutte le variabili e i loro valori.  C'e' anche da vedere
-      come gestire eventuali aggiornamenti futuri)
-
- * Guida utente
-    - Troubleshooting
-       - Raccogliere casi mano a mano che si presentano
-
- - Wrappare con Swig per poter scrivere test e viewer piú facilmente
-    = Iniziato, ma non funziona (non si riesce a far andare i parametri in
-      output in maniera decente)
-    + Per uscirne, wrappare in C++ e swiggare il wrapper C++
-      (cosí funziona)
-    - Fare un'interfaccina a DB-ALLe in pygtk
-
- - Legalese
-    - Add copyright informations
-    - Solve distribution problems for crex tables
-
-
-Further stages of the development
----------------------------------
-
-Development will now proceed on implementing the few missing things and
-consolidating the code towards production quality.
+Administration and maintanance of DB-All.e are covered in the guide.pdf
+document.
 
 
 Useful resources
@@ -327,43 +92,21 @@ Useful resources
 
 ODBC links:
 
-* http://www.unixodbc.org/doc/ProgrammerManual/Tutorial/
-* http://msdn.microsoft.com/library/default.asp?url=/library/en-us/odbc/htm/odbcabout_this_manual.asp
-
-Announces go to: Paolo Patruno <ppatruno@smr.arpa.emr.it>, Daniele Branchini <DBranchini@smr.arpa.emr.it>, Massimo Bider <MBider@smr.arpa.emr.it>, Tiziana Paccagnella <t.paccagnella@smr.arpa.emr.it>, Davide Cesari <dcesari@smr.arpa.emr.it>, Chiara Marsigli <cmarsigli@smr.arpa.emr.it>
-
-Technical questions go to: Paolo Patruno <ppatruno@smr.arpa.emr.it>, Daniele Branchini <DBranchini@smr.arpa.emr.it>, Massimo Bider <MBider@smr.arpa.emr.it>
-
-Interni:
-	2603 Daniele Branchini <DBranchini@smr.arpa.emr.it>
-	2521 Rita Cipolla <rcipolla@arpa.emr.it>
-	2606 Sala Operativa
+ * http://www.unixodbc.org/doc/ProgrammerManual/Tutorial/
+ * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/odbc/htm/odbcabout_this_manual.asp
 
 BUFR decoding:
-* http://www.knmi.nl/~meulenvd/code/bufr/dmtn1.html
 
-Data dump queries:
-
-For one variable (X, Y)::
-
-   SELECT pa.id, pa.lat, pa.lon, pa.mobile, pa.ident, pa.identdt, pa.height, pa.heightbaro,
-          pa.block, pa.station, pa.name,
-          l.type, l.l1, l.l2,
-          p.type, p.p1, p.p2,
-          d.datetime, d.id_report, ri.memo, ri.prio, d.value
-     FROM pseudoana AS pa, levellayer AS l, timerange AS p, repinfo AS ri
-     JOIN data AS d             ON d.id_pseudoana = pa.id AND d.id_levellayer = l.id AND d.id_timerange = p.id
-			        AND d.id_report = ri.id
-    WHERE d.id_var = X * 256 + Y
+ * http://www.knmi.nl/~meulenvd/code/bufr/dmtn1.html
 
 AOF decoding:
 
- - Lettura di Fortran "unformatted sequential" da C/C++:
+ * Reading of Fortran "unformatted sequential" from C/C++:
    http://astronomy.swin.edu.au/~pbourke/dataformats/fortran/
 
 ECWMF BUFR template codes:
 
- - http://www.ecmwf.int/research/ifsdocs/OBSERVATIONS/Chap2_Obs_types3.html
+ * http://www.ecmwf.int/research/ifsdocs/OBSERVATIONS/Chap2_Obs_types3.html
 
 
 Contact and copyright information
