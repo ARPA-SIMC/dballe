@@ -34,7 +34,6 @@ extern "C" {
 
 #include <dballe/core/dba_record.h>
 #include <dballe/db/querybuf.h>
-#include <sqltypes.h>
 
 /**
  * Constants used to define what values we should retrieve from a query
