@@ -342,6 +342,7 @@ static dba_err read_repinfo_file(dba_db_repinfo ri, const char* deffile, newitem
 					err = dba_error_alloc("allocating memory to store a new repinfo item");
 					goto cleanup;
 				}
+				new->item.id = id;
 				new->item.new_memo = columns[1];
 				new->item.new_desc = columns[2];
 				new->item.new_prio = strtol(columns[3], 0, 10);
