@@ -55,6 +55,12 @@ struct _dba_db_context;
 struct _dba_db_data;
 struct _dba_db_attr;
 
+enum dba_db_server_type
+{
+	MYSQL,
+	SQLITE,
+};
+
 /**
  * DB-ALLe session structure
  */
@@ -62,6 +68,7 @@ struct _dba_db
 {
 	SQLHDBC	od_conn;
 	int connected;
+	enum dba_db_server_type server_type;
 
 	/*
 	 * Warning: before using these 5 pointers, ensure they are initialised

@@ -48,12 +48,11 @@
 #undef USE_POSTGRES
 #define USE_MYSQL
 
-#ifdef USE_POSTGRES
-#define DBA_ODBC_MISSING_TABLE "42P01"
-#endif
+#define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
+#define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
+#define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
 
 #ifdef USE_MYSQL
-#define DBA_ODBC_MISSING_TABLE "42S01"
 
 /*
  * Define to true to enable the use of transactions during writes
@@ -76,14 +75,12 @@ static const char* init_tables[] = {
 	"attr", "data", "context", "pseudoana", "repinfo"
 };
 
-#ifdef USE_MYSQL
-
 #ifdef DBA_USE_TRANSACTIONS
 #define TABLETYPE "TYPE=InnoDB;"
 #else
 #define TABLETYPE ";"
 #endif
-static const char* init_queries[] = {
+static const char* init_queries_mysql[] = {
 	"CREATE TABLE repinfo ("
 	"   id		     SMALLINT PRIMARY KEY,"
 	"	memo	 	 VARCHAR(30) NOT NULL,"
@@ -145,10 +142,7 @@ static const char* init_queries[] = {
 	") " TABLETYPE,
 };
 
-#endif
-
-#ifdef USE_POSTGRES
-static const char* init_queries[] = {
+static const char* init_queries_postgres[] = {
 	"CREATE TABLE repinfo ("
 	"   id		     INTEGER PRIMARY KEY,"
 	"	memo	 	 VARCHAR(30) NOT NULL,"
@@ -209,7 +203,70 @@ static const char* init_queries[] = {
 	"CREATE INDEX at_da ON attr(id_context, id_var)",
 	"CREATE UNIQUE INDEX at_uniq ON attr(id_context, id_var, type)",
 };
+
+static const char* init_queries_sqlite[] = {
+	"CREATE TABLE repinfo ("
+	"   id		     INTEGER PRIMARY KEY,"
+	"	memo	 	 VARCHAR(30) NOT NULL,"
+	"	description	 VARCHAR(255) NOT NULL,"
+	"   prio	     INTEGER NOT NULL,"
+	"	descriptor	 CHAR(6) NOT NULL,"
+	"	tablea		 INTEGER NOT NULL"
+	") ",
+	"CREATE TABLE pseudoana ("
+	"   id         INTEGER PRIMARY KEY,"
+	"   lat        INTEGER NOT NULL,"
+	"   lon        INTEGER NOT NULL,"
+	"   ident      CHAR(64),"
+	"   UNIQUE (lat, lon, ident)"
+	") ",
+	"CREATE INDEX pa_lon ON pseudoana(lon)",
+	"CREATE TABLE context ("
+	"   id			INTEGER PRIMARY KEY,"
+	"   id_ana		INTEGER NOT NULL,"
+	"	id_report	INTEGER NOT NULL,"
+	"   datetime	TEXT NOT NULL,"
+	"	ltype		INTEGER NOT NULL,"
+	"	l1			INTEGER NOT NULL,"
+	"	l2			INTEGER NOT NULL,"
+	"	ptype		INTEGER NOT NULL,"
+	"	p1			INTEGER NOT NULL,"
+	"	p2			INTEGER NOT NULL,"
+	"   UNIQUE (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report)"
+#ifdef USE_REF_INT
+	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
+	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
 #endif
+	") ",
+	"CREATE INDEX co_ana ON context(id_ana)",
+	"CREATE INDEX co_report ON context(id_report)",
+	"CREATE INDEX co_dt ON context(datetime)",
+	"CREATE INDEX co_lt ON context(ltype, l1, l2)",
+	"CREATE INDEX co_pt ON context(ptype, p1, p2)",
+	"CREATE TABLE data ("
+	"   id_context	INTEGER NOT NULL,"
+	"	id_var		INTEGER NOT NULL,"
+	"	value		VARCHAR(255) NOT NULL,"
+	"   UNIQUE (id_var, id_context)"
+#ifdef USE_REF_INT
+	"   , FOREIGN KEY (id_context) REFERENCES context (id) ON DELETE CASCADE"
+#endif
+	") ",
+	"CREATE INDEX da_co ON data(id_context)",
+	"CREATE TABLE attr ("
+	"   id_context	INTEGER NOT NULL,"
+	"	id_var		INTEGER NOT NULL,"
+	"   type		INTEGER NOT NULL,"
+	"   value		VARCHAR(255) NOT NULL,"
+	"   UNIQUE (id_context, id_var, type)"
+#ifdef USE_REF_INT
+	"   , FOREIGN KEY (id_context, id_var) REFERENCES data (id_context, id_var) ON DELETE CASCADE"
+#endif
+	") ",
+	"CREATE INDEX at_da ON attr(id_context, id_var)",
+};
+
+
 
 /**
  * Get the report id from this record.
@@ -263,7 +320,9 @@ void dba_db_shutdown()
 dba_err dba_db_create(const char* dsn, const char* user, const char* password, dba_db* db)
 {
 	dba_err err = DBA_OK;
+	char drivername[50];
 	int sqlres;
+	SQLSMALLINT len;
 
 	/* Allocate a new handle */
 	if ((*db = (dba_db)calloc(1, sizeof(struct _dba_db))) == NULL)
@@ -302,6 +361,22 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 	}
 	(*db)->connected = 1;
 
+	sqlres = SQLGetInfo((*db)->od_conn, SQL_DRIVER_NAME, (SQLPOINTER)drivername, 50, &len);
+	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn, "Getting ODBC driver name");
+		goto fail;
+	}
+	if (len >= 9 && strncmp(drivername, "libmyodbc", 9) == 0)
+		(*db)->server_type = MYSQL;
+	else if (len >= 6 && strncmp(drivername, "sqlite", 6) == 0)
+		(*db)->server_type = SQLITE;
+	else
+	{
+		fprintf(stderr, "ODBC driver %.*s is unsupported: assuming it's MySQL", len, drivername);
+		(*db)->server_type = MYSQL;
+	}
+
 #ifdef DBA_USE_TRANSACTIONS
 	DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_begin)));
 	sqlres = SQLPrepare((*db)->stm_begin, (unsigned char*)"BEGIN", SQL_NTS);
@@ -330,7 +405,15 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 
 	DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_last_insert_id)));
 	SQLBindCol((*db)->stm_last_insert_id, 1, SQL_C_SLONG, &((*db)->last_insert_id), sizeof(int), 0);
-	sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ID()", SQL_NTS);
+	switch ((*db)->server_type)
+	{
+		case MYSQL:
+			sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ID()", SQL_NTS);
+			break;
+		case SQLITE:
+			sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ROWID()", SQL_NTS);
+			break;
+	}
 	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
 	{
 		err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_last_insert_id, "compiling query for querying the last insert id");
@@ -383,14 +466,43 @@ dba_err dba_db_delete_tables(dba_db db)
 	for (i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); i++)
 	{
 		char buf[100];
-		int len = snprintf(buf, 100, "DROP TABLE %s", init_tables[i]);
-		res = SQLExecDirect(stm, (unsigned char*)buf, len);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		int len;
+
+		switch (db->server_type)
 		{
-			err = dba_db_error_odbc_except(DBA_ODBC_MISSING_TABLE, SQL_HANDLE_STMT, stm,
-					"Removing old table %s", init_tables[i]);
-			if (err != DBA_OK)
-				goto cleanup;
+			case MYSQL:
+				len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", init_tables[i]);
+				res = SQLExecDirect(stm, (unsigned char*)buf, len);
+				if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+				{
+					err = dba_db_error_odbc(SQL_HANDLE_STMT, stm,
+							"Removing old table %s", init_tables[i]);
+					if (err != DBA_OK)
+						goto cleanup;
+				}
+				break;
+			case SQLITE:
+				len = snprintf(buf, 100, "DROP TABLE %s", init_tables[i]);
+				res = SQLExecDirect(stm, (unsigned char*)buf, len);
+				if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+				{
+					err = dba_db_error_odbc_except(DBA_ODBC_MISSING_TABLE_SQLITE, SQL_HANDLE_STMT, stm,
+							"Removing old table %s", init_tables[i]);
+					if (err != DBA_OK)
+						goto cleanup;
+				}
+				break;
+			default:
+				len = snprintf(buf, 100, "DROP TABLE %s", init_tables[i]);
+				res = SQLExecDirect(stm, (unsigned char*)buf, len);
+				if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+				{
+					err = dba_db_error_odbc_except(DBA_ODBC_MISSING_TABLE_POSTGRES, SQL_HANDLE_STMT, stm,
+							"Removing old table %s", init_tables[i]);
+					if (err != DBA_OK)
+						goto cleanup;
+				}
+				break;
 		}
 	}
 
@@ -406,6 +518,8 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 	int i;
 	SQLHSTMT stm;
 	dba_err err;
+	const char** queries = NULL;
+	int query_count = 0;
 
 	assert(db);
 
@@ -427,15 +541,27 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 	/* Allocate statement handle */
 	DBA_RUN_OR_GOTO(fail0, dba_db_statement_create(db, &stm));
 
+	switch (db->server_type)
+	{
+		case MYSQL:
+			queries = init_queries_mysql;
+			query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
+		case SQLITE:
+			queries = init_queries_sqlite;
+			query_count = sizeof(init_queries_sqlite) / sizeof(init_queries_sqlite[0]); break;
+		default:
+			queries = init_queries_mysql;
+			query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
+	}
 	/* Create tables */
-	for (i = 0; i < sizeof(init_queries) / sizeof(init_queries[0]); i++)
+	for (i = 0; i < query_count; i++)
 	{
 		/* Casting out 'const' because ODBC API is not const-conscious */
-		res = SQLExecDirect(stm, (unsigned char*)init_queries[i], SQL_NTS);
+		res = SQLExecDirect(stm, (unsigned char*)queries[i], SQL_NTS);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
 			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm,
-					"Executing database-initialization query %s", init_queries[i]);
+					"Executing database-initialization query %s", queries[i]);
 			goto fail1;
 		}
 	}
@@ -810,11 +936,22 @@ failed:
 
 dba_err dba_db_remove_orphans(dba_db db)
 {
-	static const char* cclean = "delete c from context as c left join data as d on d.id_context = c.id where d.id_context is NULL";
-	static const char* pclean = "delete p from pseudoana as p left join context as c on c.id_ana = p.id where c.id is NULL";
+	static const char* cclean_mysql = "delete c from context as c left join data as d on d.id_context = c.id where d.id_context is NULL";
+	static const char* pclean_mysql = "delete p from pseudoana as p left join context as c on c.id_ana = p.id where c.id is NULL";
+	static const char* cclean_sqlite = "delete from context where id in (select c.id from context as c left join data as d on d.id_context = c.id where d.id_context is NULL)";
+	static const char* pclean_sqlite = "delete from pseudoana where id in (select p.id from pseudoana as p left join context as c on c.id_ana = p.id where c.id is NULL)";
+	static const char* cclean = NULL;
+	static const char* pclean = NULL;
 	dba_err err = DBA_OK;
 	SQLHSTMT stm = NULL;
 	int res;
+
+	switch (db->server_type)
+	{
+		case MYSQL: cclean = cclean_mysql; pclean = pclean_mysql; break;
+		case SQLITE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+		default: cclean = cclean_mysql; pclean = pclean_mysql; break;
+	}
 
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
 

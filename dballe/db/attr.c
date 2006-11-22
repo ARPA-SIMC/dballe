@@ -54,9 +54,12 @@ dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 	const char* insert_query =
 		"INSERT INTO attr (id_context, id_var, type, value)"
 		" VALUES(?, ?, ?, ?)";
-	const char* replace_query =
+	const char* replace_query_mysql =
 		"INSERT INTO attr (id_context, id_var, type, value)"
 		" VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
+	const char* replace_query_sqlite =
+		"INSERT OR REPLACE INTO attr (id_context, id_var, type, value)"
+		" VALUES(?, ?, ?, ?)";
 	dba_err err = DBA_OK;
 	dba_db_attr res = NULL;
 	int r;
@@ -100,7 +103,18 @@ dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 	SQLBindParameter(res->rstm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
 	SQLBindParameter(res->rstm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
 	SQLBindParameter(res->rstm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
-	r = SQLPrepare(res->rstm, (unsigned char*)replace_query, SQL_NTS);
+	switch (db->server_type)
+	{
+		case MYSQL:
+			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_mysql, SQL_NTS);
+			break;
+		case SQLITE:
+			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_sqlite, SQL_NTS);
+			break;
+		default:
+			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_mysql, SQL_NTS);
+			break;
+	}
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
 		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->rstm, "compiling query to replace in 'attr'");

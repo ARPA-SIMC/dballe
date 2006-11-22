@@ -255,6 +255,7 @@ void to::test<4>()
 	// Export with the old algorithm
 	vector<dba_msg> msgs;
 	CHECKED(dba_db_export(db, query, msg_collector, &msgs));
+	// Warning: this test fails on Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
 	gen_ensure_equals(msgs.size(), 2u);
 	gen_ensure(msgs[0] != NULL);
 	gen_ensure(msgs[1] != NULL);
