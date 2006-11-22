@@ -250,7 +250,7 @@ void to::test<4>()
 	CHECKED(dba_record_create(&query));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg1)));
 
-	fprintf(stderr, "Queried: %d\n", rep_cod_from_msg(msg1));
+	// fprintf(stderr, "Queried: %d\n", rep_cod_from_msg(msg1));
 
 	// Export with the old algorithm
 	vector<dba_msg> msgs;

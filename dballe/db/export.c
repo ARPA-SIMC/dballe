@@ -19,11 +19,12 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+/* #define TRACE_DB */
+
 #include <dballe/db/export.h>
 #include <dballe/msg/dba_msg.h>
 #include <dballe/db/dba_db.h>
 #include <dballe/db/querybuf.h>
-/* #define TRACE_DB */
 #include <dballe/db/internals.h>
 #include <dballe/db/attr.h>
 
@@ -162,7 +163,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 			break;
 
 		TRACE("Got B%02d%03d %d,%d,%d %d,%d,%d %s\n",
-				DBA_VAR_X(cur->out_varcode), DBA_VAR_Y(cur->out_varcode),
+				DBA_VAR_X(cur->out_idvar), DBA_VAR_Y(cur->out_idvar),
 				cur->out_ltype, cur->out_l1, cur->out_l2, cur->out_pind, cur->out_p1, cur->out_p2,
 				cur->out_value);
 
