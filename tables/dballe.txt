@@ -54,6 +54,8 @@
  012003 DEW-POINT TEMPERATURE                                            K                          1            0  12 K                         1          4
  012011 MAXIMUM TEMPERATURE                                              K                          1            0  12 K                         1          4
  012012 MINIMUM TEMPERATURE                                              K                          1            0  12 K                         1          4
+ 012030 SOIL TEMPERATURE                                                 K                          1            0  12 C                         1          3
+ 012061 SKIN TEMPERATURE                                                 K                          1            0  12 C                         1          3
  013001 SPECIFIC HUMIDITY                                                KG/KG                      5            0  14 KG/KG                     5          5
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
@@ -69,6 +71,7 @@
  020012 CLOUD TYPE                                                       CODE TABLE 20012           0            0   6 CODE TABLE 20012          0          2
  020013 HEIGHT OF BASE OF CLOUD                                          M                          0         -400  17 M                         0          5
  020019 SIGNIFICANT PRESENT OR FORECAST WEATHER                          CCITTIA5                   0            0  72 CHARACTER                 0          9
+ 020021 TYPE OF PRECIPITATION                                            FLAG TABLE 20021           0            0  30 FLAG TABLE 20021          0         10
  020062 STATE OF THE GROUND (WITH OR WITHOUT SNOW)                       CODE TABLE 20062           0            0   5 CODE TABLE 20062          0          2
  020193 [SIM] Cloud type (METAR)                                         CCITTIA5                   0            0  16 CHARACTER                 0          2
  022001 DIRECTION OF WAVES                                               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
