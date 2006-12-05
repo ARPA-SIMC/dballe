@@ -41,7 +41,7 @@ template<> template<>
 void to::test<1>()
 {
 	TestBufrexMsg test;
-	test.edition = 103;
+	test.edition = 1;
 	test.cat = 0;
 	test.subcat = 0;
 	test.subsets = 1;
@@ -63,7 +63,7 @@ template<> template<>
 void to::test<2>()
 {
 	TestBufrexMsg test;
-	test.edition = 103;
+	test.edition = 1;
 	test.cat = 0;
 	test.subcat = 0;
 	test.subsets = 1;
@@ -96,7 +96,7 @@ template<> template<>
 void to::test<3>()
 {
 	TestBufrexMsg test;
-	test.edition = 103;
+	test.edition = 1;
 	test.cat = 0;
 	test.subcat = 0;
 	test.subsets = 1;
@@ -118,7 +118,7 @@ template<> template<>
 void to::test<4>()
 {
 	TestBufrexMsg test;
-	test.edition = 103;
+	test.edition = 1;
 	test.cat = 0;
 	test.subcat = 0;
 	test.subsets = 1;
@@ -140,7 +140,7 @@ template<> template<>
 void to::test<5>()
 {
 	TestBufrexMsg test;
-	test.edition = 103;
+	test.edition = 1;
 	test.cat = 1;
 	test.subcat = 0;
 	test.subsets = 1;
@@ -162,7 +162,7 @@ template<> template<>
 void to::test<6>()
 {
 	TestBufrexMsg test;
-	test.edition = 103;
+	test.edition = 1;
 	test.cat = 1;
 	test.subcat = 0;
 	test.subsets = 1;
@@ -184,7 +184,7 @@ template<> template<>
 void to::test<7>()
 {
 	TestBufrexMsg test;
-	test.edition = 103;
+	test.edition = 1;
 	test.cat = 1;
 	test.subcat = 0;
 	test.subsets = 1;
@@ -206,7 +206,7 @@ template<> template<>
 void to::test<8>()
 {
 	TestBufrexMsg test;
-	test.edition = 103;
+	test.edition = 1;
 	test.cat = 2;
 	test.subcat = 0;
 	test.subsets = 1;

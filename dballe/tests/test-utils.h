@@ -67,17 +67,19 @@ std::string __ensure_errmsg(std::string f, int l, std::string msg);
 #define inner_ensure(x) ensure (__ensure_errmsg(file, line, #x).c_str(), (x))
 
 template <class T,class Q>
-void my_ensure_equals(const char* file, int line, const Q& actual, const T& expected)
+void my_ensure_equals(const char* file, int line, const Q& actual, const T& expected, const std::string& desc = std::string())
 {
 	if( expected != actual )
 	{
 		std::stringstream ss;
+		if (!desc.empty())
+			ss << " [" << desc << "]";
 		ss << "expected " << expected << " actual " << actual;
 		throw failure(__ensure_errmsg(file, line, ss.str()));
 	}
 }
-#define gen_ensure_equals(x, y) my_ensure_equals(__FILE__, __LINE__, (x), (y))
-#define inner_ensure_equals(x, y) my_ensure_equals(file, line, (x), (y))
+#define gen_ensure_equals(x, y, ...) my_ensure_equals(__FILE__, __LINE__, (x), (y), ##__VA_ARGS__)
+#define inner_ensure_equals(x, y, ...) my_ensure_equals(file, line, (x), (y), ##__VA_ARGS__)
 
 void _ensure_var_undef(const char* file, int line, dba_var var);
 void _ensure_var_equals(const char* file, int line, dba_var var, int val);
@@ -391,7 +393,7 @@ struct TestBufrexMsg
 		void setUndef(dba_varcode code) { tests.push_back(new TestUndef(code)); }
 		void checkIn(const char* file, int line, bufrex_subset sset) const
 		{
-			if (vars != -1) inner_ensure_equals(sset->vars_count, vars);
+			if (vars != -1) inner_ensure_equals(sset->vars_count, vars, "vars in subset");
 
 			/* Check the variables */
 			int start = 0;
@@ -459,11 +461,11 @@ public:
 	{
 		/* First check the metadata */
 
-		if (edition != -1) inner_ensure_equals(braw->edition, edition);
-		if (cat != -1) inner_ensure_equals(braw->type, cat);
-		if (subcat != -1) inner_ensure_equals(braw->subtype, subcat);
+		if (edition != -1) inner_ensure_equals(braw->edition, edition, "edition");
+		if (cat != -1) inner_ensure_equals(braw->type, cat, "category");
+		if (subcat != -1) inner_ensure_equals(braw->subtype, subcat, "subcategory");
 		//if (checkdigit != -1) inner_ensure_equals(braw->opt.crex.checkdigit, checkdigit);
-		if (subsets != -1) inner_ensure_equals(braw->subsets_count, subsets);
+		if (subsets != -1) inner_ensure_equals(braw->subsets_count, subsets, "subsets");
 
 		/* Then check the variables */
 		for (size_t i = 0; i < braw->subsets_count; ++i)

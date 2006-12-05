@@ -34,7 +34,7 @@
 #include <assert.h>	/* NAN */
 #include <errno.h>	/* NAN */
 
-//#define TRACE_DECODER
+/*  #define TRACE_DECODER */
 
 #ifdef TRACE_DECODER
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)
@@ -214,10 +214,8 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	CHECK_EOF("data descriptor section");
 
 	d->has_check_digit = 0;
-	for (i = 0; ; ++i)
+	while (1)
 	{
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(d->out, i, &(d->current_subset)));
-
 		if (*d->cur == 'B' || *d->cur == 'R' || *d->cur == 'C' || *d->cur == 'D')
 		{
 			dba_varcode var;
@@ -253,8 +251,9 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	/* Decode crex section 2 */
 	CHECK_EOF("data section");
 	d->sec2_start = d->cur - d->in->buf;
-	while (1)
+	for (i = 0; ; ++i)
 	{
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(d->out, i, &(d->current_subset)));
 		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(d->out, &(d->ops)));
 		DBA_RUN_OR_GOTO(fail, crex_decoder_parse_data_section(d));
 		SKIP_SPACES();

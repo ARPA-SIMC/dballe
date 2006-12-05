@@ -57,7 +57,12 @@ static dba_err msg_collector(dba_msgs msgs, void* data)
 {
 	vector<dba_msg>* vec = static_cast<vector<dba_msg>*>(data);
 	for (int i = 0; i < msgs->len; ++i)
+	{
 		(*vec).push_back(msgs->msgs[i]);
+		// Detach the message from the msgs
+		msgs->msgs[i] = NULL;
+	}
+	dba_msgs_delete(msgs);
 	return dba_error_ok();
 }
 
@@ -315,7 +320,7 @@ void to::test<5>()
 	vector<dba_msg> msgs;
 	CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 	gen_ensure_equals(msgs.size(), 100u);
-	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
+	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); ++i)
 		dba_msg_delete(*i);
 
 	dba_record_delete(query);
