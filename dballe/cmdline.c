@@ -391,7 +391,7 @@ by applications for fast access.
 			"for ARPA Emilia Romagna, Servizio Idrometeorologico.\n", self);
 }
 
-int dba_cmdline_dispatch_main (const struct tool_desc* desc, int argc, const char* argv[])
+int dba_cmdline_dispatch_main (const struct tool_desc* desc, const char* prgname, int argc, const char* argv[])
 {
 	int i;
 
@@ -407,7 +407,7 @@ int dba_cmdline_dispatch_main (const struct tool_desc* desc, int argc, const cha
 			if (i+1 < argc)
 			{
 				if (strcmp(argv[i+1], "manpage") == 0)
-					manpage(desc, argv[0], stdout);
+					manpage(desc, prgname, stdout);
 				else
 				{
 					poptContext optCon;

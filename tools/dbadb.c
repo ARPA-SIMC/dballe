@@ -550,7 +550,7 @@ static void init()
 int main (int argc, const char* argv[])
 {
 	init();
-	return dba_cmdline_dispatch_main(&dbadb, argc, argv);
+	return dba_cmdline_dispatch_main(&dbadb, "dbadb", argc, argv);
 }
 
 /* vim:set ts=4 sw=4: */

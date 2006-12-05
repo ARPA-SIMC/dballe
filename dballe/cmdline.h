@@ -75,7 +75,7 @@ dba_encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon);
 /**
  * Process commandline arguments and perform the action requested
  */
-int dba_cmdline_dispatch_main(const struct tool_desc* desc, int argc, const char* argv[]);
+int dba_cmdline_dispatch_main(const struct tool_desc* desc, const char* prgname, int argc, const char* argv[]);
 
 /**
  * Get a DB-ALLe query from commandline parameters in the form key=value
