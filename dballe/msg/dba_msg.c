@@ -320,6 +320,7 @@ dba_msg_type dba_msg_type_from_repcod(int repcod)
 		case 4:  return MSG_PILOT;
 		case 3:  return MSG_TEMP;		
 		case 11: return MSG_TEMP_SHIP;
+		case 200: return MSG_SAT;
 		case 255:
 		default: return MSG_GENERIC;
 	}
@@ -339,6 +340,7 @@ int dba_msg_repcod_from_type(dba_msg_type type)
 		case MSG_PILOT:		return 4;
 		case MSG_TEMP:		return 3;
 		case MSG_TEMP_SHIP:	return 11;
+		case MSG_SAT:		return 200;
 		case MSG_GENERIC:
 		default:			return 255;
 	}

@@ -139,7 +139,7 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			// -> attr
 
 			// 012063 BRIGHTNESS TEMPERATURE(K): 241.100000
-			case DBA_VAR(0, 12, 62): {
+			case DBA_VAR(0, 12, 63): {
 				if (l1 == -1) return dba_error_consistency("channel number not found in incoming message");
 				DBA_RUN_OR_RETURN(dba_var_copy(var, &copy));
 				if (scanline != NULL)
@@ -152,7 +152,7 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, wavenum));
 				if (chqf != NULL)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, chqf));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set(msg, copy, DBA_VAR(0, 12, 62), 8, l1, 0, 0, 0, 0));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set(msg, copy, DBA_VAR(0, 12, 63), 8, l1, 0, 0, 0, 0));
 				dba_var_delete(copy);
 				copy = NULL;
 				break;
