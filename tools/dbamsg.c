@@ -621,7 +621,7 @@ static void init()
 	dbamsg.ops[5].aliases[0] = "filter";
 	dbamsg.ops[5].usage = "filter [options] [queryparm1=val1 [queryparm2=val2 [...]]] filename1 [filename2...] ";
 	dbamsg.ops[5].desc = "Copy only those messages whose contents match the given query parameters";
-	dbamsg.ops[5].longdesc = "The query can be done using the same parameters as dbadb or the Fortran DB-ALLe API";
+	dbamsg.ops[5].longdesc = "The query can be done using the same parameters as dbadb or the Fortran DB-ALLe API.  Only the parameters starting with lat, lon, year, month, day, hour, minu, sec are actually used for filtering.";
 	dbamsg.ops[5].optable = dbamsg_filter_options;
 
 	dbamsg.ops[6].func = do_fixaof;
