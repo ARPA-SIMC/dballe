@@ -128,6 +128,7 @@ dba_err aof_decoder_decode(dba_rawmsg msg, dba_msgs* msgs)
 	DBA_RUN_OR_GOTO(cleanup, dba_msgs_append_acquire(outs, out));
 	out = NULL;
 	*msgs = outs;
+	outs = NULL;
 
 cleanup:
 	if (out) dba_msg_delete(out);

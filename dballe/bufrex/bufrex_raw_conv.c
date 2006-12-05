@@ -137,7 +137,7 @@ dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs)
 
 	DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&res));
 
-	for (i = 0; i < raw->subsets_count; ++i);
+	for (i = 0; i < raw->subsets_count; ++i)
 	{
 		DBA_RUN_OR_GOTO(cleanup, dba_msg_create(&msg));
 

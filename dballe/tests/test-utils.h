@@ -595,6 +595,7 @@ public:
 	}
 };
 
+void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix);
 void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& prefix);
 
 dba_err create_dba_db(dba_db* db);

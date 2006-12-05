@@ -32,7 +32,7 @@ extern "C" {
  */
 
 #include <dballe/db/dba_db.h>
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/dba_msgs.h>
 
 /**
  * Import a dba_msg message into the Dballe database
@@ -56,6 +56,30 @@ extern "C" {
  *   The error indicator for the function
  */
 dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fast);
+
+/**
+ * Import dba_msgs messages into the Dballe database
+ *
+ * @param db
+ *   The DBALLE database to write the data into
+ * @param msgs
+ *   The dba_msgs containing the data to import
+ * @param repcod
+ *   Report code to which imported data belong.  If -1 is passed, then it will
+ *   be chosen automatically based on the message type.
+ * @param overwrite
+ *   If true, message data will overwrite existing values; if false, trying to
+ *   insert existing data will cause an error.
+ * @param fast
+ *   If true, perform the import outside of the transaction.  This will make
+ *   the function faster but not atomic: if interrupted, for example in case of
+ *   error, then the data inserted before the interruption will stay in the
+ *   database.
+ * @return
+ *   The error indicator for the function
+ */
+dba_err dba_import_msgs(dba_db db, dba_msgs msgs, int repcod, int overwrite, int fast);
+
 
 #ifdef  __cplusplus
 }

@@ -53,10 +53,11 @@ static int rep_cod_from_msg(dba_msg msg)
 }
 
 
-static dba_err msg_collector(dba_msg msg, void* data)
+static dba_err msg_collector(dba_msgs msgs, void* data)
 {
 	vector<dba_msg>* vec = static_cast<vector<dba_msg>*>(data);
-	(*vec).push_back(msg);
+	for (int i = 0; i < msgs->len; ++i)
+		(*vec).push_back(msgs->msgs[i]);
 	return dba_error_ok();
 }
 
@@ -79,7 +80,8 @@ void to::test<1>()
 	for (int i = 0; files[i] != NULL; i++)
 	{
 		test_tag(files[i]);
-		dba_msg msg = read_test_msg(files[i], CREX);
+		dba_msgs inmsgs = read_test_msg(files[i], CREX);
+		dba_msg msg = inmsgs->msgs[0];
 
 		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
@@ -103,7 +105,7 @@ void to::test<1>()
 		if (diffs != 0) track_different_msgs(msg, msgs[0], "crex-old");
 		gen_ensure_equals(diffs, 0);
 
-		dba_msg_delete(msg);
+		dba_msgs_delete(inmsgs);
 		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
 			dba_msg_delete(*i);
 	}
@@ -142,7 +144,8 @@ void to::test<2>()
 	for (int i = 0; files[i] != NULL; i++)
 	{
 		test_tag(files[i]);
-		dba_msg msg = read_test_msg(files[i], BUFR);
+		dba_msgs inmsgs = read_test_msg(files[i], BUFR);
+		dba_msg msg = inmsgs->msgs[0];
 
 		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
@@ -167,7 +170,7 @@ void to::test<2>()
 		if (diffs != 0) track_different_msgs(msg, msgs[0], "bufr-old");
 		gen_ensure_equals(diffs, 0);
 
-		dba_msg_delete(msg);
+		dba_msgs_delete(inmsgs);
 		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
 			dba_msg_delete(*i);
 	}
@@ -199,7 +202,8 @@ void to::test<3>()
 	for (int i = 0; files[i] != NULL; i++)
 	{
 		test_tag(files[i]);
-		dba_msg msg = read_test_msg(files[i], AOF);
+		dba_msgs inmsgs = read_test_msg(files[i], AOF);
+		dba_msg msg = inmsgs->msgs[0];
 
 		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
@@ -224,7 +228,7 @@ void to::test<3>()
 		if (diffs != 0) track_different_msgs(msg, msgs[0], "aof-old");
 		gen_ensure_equals(diffs, 0);
 
-		dba_msg_delete(msg);
+		dba_msgs_delete(inmsgs);
 		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
 			dba_msg_delete(*i);
 	}
@@ -239,8 +243,10 @@ void to::test<4>()
 {
 	// msg1 has latitude 33.88
 	// msg2 has latitude 46.22
-	dba_msg msg1 = read_test_msg("bufr/obs0-1.22.bufr", BUFR);
-	dba_msg msg2 = read_test_msg("bufr/obs0-3.504.bufr", BUFR);
+	dba_msgs msgs1 = read_test_msg("bufr/obs0-1.22.bufr", BUFR);
+	dba_msgs msgs2 = read_test_msg("bufr/obs0-3.504.bufr", BUFR);
+	dba_msg msg1 = msgs1->msgs[0];
+	dba_msg msg2 = msgs2->msgs[0];
 
 	CHECKED(dba_db_reset(db, NULL));
 	CHECKED(dba_import_msg(db, msg1, -1, 0, 0));
@@ -271,8 +277,8 @@ void to::test<4>()
 	if (diffs != 0) track_different_msgs(msg2, msgs[1], "synop2-old");
 	gen_ensure_equals(diffs, 0);
 
-	dba_msg_delete(msg1);
-	dba_msg_delete(msg2);
+	dba_msgs_delete(msgs1);
+	dba_msgs_delete(msgs2);
 	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
 		dba_msg_delete(*i);
 
@@ -315,10 +321,10 @@ void to::test<5>()
 	dba_record_delete(query);
 }
 
-static dba_err msg_counter(dba_msg msg, void* data)
+static dba_err msg_counter(dba_msgs msgs, void* data)
 {
-	dba_msg_delete(msg);
-	(*(int*)data)++;
+	(*(int*)data) += msgs->len;
+	dba_msgs_delete(msgs);
 	return dba_error_ok();
 }
 
@@ -373,11 +379,10 @@ void to::test<6>()
 	CHECKED(dba_db_reset(db, NULL));
 
 	map<dba_msg_type, int> rep_cods;
-	for (msg_vector::const_iterator i = msgs.begin();
-			i != msgs.end(); i++)
+	for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
 	{
-		CHECKED(dba_import_msg(db, *i, -1, 1, 0));
-		rep_cods[(*i)->type]++;
+		CHECKED(dba_import_msgs(db, *i, -1, 1, 0));
+		rep_cods[(*i)->msgs[0]->type]++;
 	}
 
 	dba_record query;

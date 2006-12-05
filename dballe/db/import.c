@@ -39,6 +39,14 @@
 #include <stdlib.h>
 
 
+dba_err dba_import_msgs(dba_db db, dba_msgs msgs, int repcod, int overwrite, int fast)
+{
+	int i;
+	for (i = 0; i < msgs->len; ++i)
+		DBA_RUN_OR_RETURN(dba_import_msg(db, msgs->msgs[i], repcod, overwrite, fast));
+	return dba_error_ok();
+}
+
 dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fast)
 {
 	dba_err err = DBA_OK;
