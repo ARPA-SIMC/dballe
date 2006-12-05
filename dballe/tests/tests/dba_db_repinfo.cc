@@ -78,7 +78,7 @@ void to::test<2>()
 
 	gen_ensure_equals(added, 0);
 	gen_ensure_equals(deleted, 0);
-	gen_ensure_equals(updated, 62);
+	gen_ensure_equals(updated, 63);
 }
 
 }

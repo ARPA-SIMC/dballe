@@ -25,7 +25,7 @@
 
 static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
 
-bufrex_exporter bufrex_exporter_metar_0_140 = {
+struct _bufrex_exporter bufrex_exporter_metar_0_140 = {
 	/* Category */
 	0,
 	/* Subcategory */
@@ -44,6 +44,8 @@ bufrex_exporter bufrex_exporter_metar_0_140 = {
 		DBA_VAR(0, 33,  7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };

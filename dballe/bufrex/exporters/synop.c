@@ -25,7 +25,7 @@
 
 static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
 
-bufrex_exporter bufrex_exporter_synop_0_1 = {
+struct _bufrex_exporter bufrex_exporter_synop_0_1 = {
 	/* Category */
 	0,
 	/* Subcategory */
@@ -35,7 +35,7 @@ bufrex_exporter bufrex_exporter_synop_0_1 = {
 	/* Data descriptor section */
 	(dba_varcode[]){
 		DBA_VAR(3,  7,  5),
-		DBA_VAR(0, 13, 23),
+		DBA_VAR(0, 13, 22),
 		DBA_VAR(0, 13, 13),
 		DBA_VAR(2, 22,  0),
 		DBA_VAR(1,  1, 49),
@@ -46,11 +46,13 @@ bufrex_exporter bufrex_exporter_synop_0_1 = {
 		DBA_VAR(0, 33,  7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };
 
-bufrex_exporter bufrex_exporter_synop_0_3 = {
+struct _bufrex_exporter bufrex_exporter_synop_0_3 = {
 	/* Category */
 	0,
 	/* Subcategory */
@@ -60,7 +62,7 @@ bufrex_exporter bufrex_exporter_synop_0_3 = {
 	/* Data descriptor section */
 	(dba_varcode[]){
 		DBA_VAR(3,  7,  5),
-		DBA_VAR(0, 13, 23),
+		DBA_VAR(0, 13, 22),
 		DBA_VAR(0, 13, 13),
 		DBA_VAR(2, 22,  0),
 		DBA_VAR(1,  1, 49),
@@ -71,6 +73,8 @@ bufrex_exporter bufrex_exporter_synop_0_3 = {
 		DBA_VAR(0, 33,  7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };
@@ -128,7 +132,7 @@ static struct template tpl[] = {
 /* 44 */ { DBA_VAR(0, 20, 11), DBA_MSG_CLOUD_N4 },
 /* 45 */ { DBA_VAR(0, 20, 12), DBA_MSG_CLOUD_C4 },
 /* 46 */ { DBA_VAR(0, 20, 13), DBA_MSG_CLOUD_H4 },
-/* 47 */ { DBA_VAR(0, 13, 23), DBA_MSG_TOT_PREC24 },
+/* 47 */ { DBA_VAR(0, 13, 22), DBA_MSG_TOT_PREC12 },
 /* 48 */ { DBA_VAR(0, 13, 13), DBA_MSG_TOT_SNOW },
 };
 

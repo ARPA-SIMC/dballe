@@ -25,7 +25,7 @@
 
 static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
 
-bufrex_exporter bufrex_exporter_sea_1_9 = {
+struct _bufrex_exporter bufrex_exporter_sea_1_9 = {
 	/* Category */
 	1,
 	/* Subcategory */
@@ -46,11 +46,13 @@ bufrex_exporter bufrex_exporter_sea_1_9 = {
 		DBA_VAR(0, 33,   7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };
 
-bufrex_exporter bufrex_exporter_sea_1_11 = {
+struct _bufrex_exporter bufrex_exporter_sea_1_11 = {
 	/* Category */
 	1,
 	/* Subcategory */
@@ -71,11 +73,13 @@ bufrex_exporter bufrex_exporter_sea_1_11 = {
 		DBA_VAR(0, 33,   7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };
 
-bufrex_exporter bufrex_exporter_sea_1_13 = {
+struct _bufrex_exporter bufrex_exporter_sea_1_13 = {
 	/* Category */
 	1,
 	/* Subcategory */
@@ -96,11 +100,13 @@ bufrex_exporter bufrex_exporter_sea_1_13 = {
 		DBA_VAR(0, 33,   7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };
 
-bufrex_exporter bufrex_exporter_sea_1_19 = {
+struct _bufrex_exporter bufrex_exporter_sea_1_19 = {
 	/* Category */
 	1,
 	/* Subcategory */
@@ -121,6 +127,8 @@ bufrex_exporter bufrex_exporter_sea_1_19 = {
 		DBA_VAR(0, 33,   7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };

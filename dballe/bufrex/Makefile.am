@@ -28,6 +28,7 @@ libbufrex_la_SOURCES = \
 		importers/pilot.c \
 		importers/temp.c \
 		importers/flight.c \
+		exporters/exporters.c \
 		exporters/generic.c \
 		exporters/synop.c \
 		exporters/metar.c \

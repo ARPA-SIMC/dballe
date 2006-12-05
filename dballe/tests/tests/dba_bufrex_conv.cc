@@ -116,6 +116,7 @@ void to::test<2>()
 {
 	const char* files[] = {
 		"bufr/obs0-1.22.bufr", 
+		"bufr/obs0-1.11188.bufr",
 		"bufr/obs0-3.504.bufr", 
 		"bufr/obs1-9.2.bufr", 
 		"bufr/obs1-11.16.bufr", 

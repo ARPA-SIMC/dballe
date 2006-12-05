@@ -27,7 +27,7 @@
 
 static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
 
-bufrex_exporter bufrex_exporter_sea_1_21 = {
+struct _bufrex_exporter bufrex_exporter_sea_1_21 = {
 	/* Category */
 	1,
 	/* Subcategory */
@@ -46,6 +46,8 @@ bufrex_exporter bufrex_exporter_sea_1_21 = {
 		DBA_VAR(0, 33,   7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };

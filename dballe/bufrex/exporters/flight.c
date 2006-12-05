@@ -27,7 +27,7 @@
 static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
 static dba_err exporter_acars(dba_msg src, bufrex_subset dst, int type);
 
-bufrex_exporter bufrex_exporter_flight_4_142 = {
+struct _bufrex_exporter bufrex_exporter_flight_4_142 = {
 	/* Category */
 	4,
 	/* Subcategory */
@@ -46,11 +46,13 @@ bufrex_exporter bufrex_exporter_flight_4_142 = {
 		DBA_VAR(0, 33,  7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };
 
-bufrex_exporter bufrex_exporter_flight_4_144 = {
+struct _bufrex_exporter bufrex_exporter_flight_4_144 = {
 	/* Category */
 	4,
 	/* Subcategory */
@@ -69,11 +71,13 @@ bufrex_exporter bufrex_exporter_flight_4_144 = {
 		DBA_VAR(0, 33,  7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };
 
-bufrex_exporter bufrex_exporter_acars_4_145 = {
+struct _bufrex_exporter bufrex_exporter_acars_4_145 = {
 	/* Category */
 	4,
 	/* Subcategory */
@@ -119,6 +123,8 @@ bufrex_exporter bufrex_exporter_acars_4_145 = {
 		DBA_VAR(0, 33,  7),
 		0
 	},
+	/* Datadesc function */
+	bufrex_standard_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter_acars,
 };
