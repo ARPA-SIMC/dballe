@@ -38,7 +38,7 @@
 
 #include <assert.h>
 
-/* #define TRACE_DECODER */
+/*#define TRACE_DECODER*/
 
 #ifdef TRACE_DECODER
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)
@@ -310,11 +310,14 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	/* Initialize bit-decoding structures */
 	d->cursor = d->sec4 + 4 - d->in->buf;
 
-	/* Iterate on the number of subgroups */
 	if (d->compression)
 	{
+		/* Only needs to parse once */
 		d->current_subset = NULL;
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(d->out, &(d->ops)));
+		DBA_RUN_OR_GOTO(fail, bufr_decode_data_section(d));
 	} else {
+		/* Iterate on the number of subgroups */
 		for (i = 0; i < d->subsets; ++i)
 		{
 			DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(d->out, i, &(d->current_subset)));
