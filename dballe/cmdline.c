@@ -202,6 +202,8 @@ void manpage(const struct tool_desc* desc, const char* selfpath, FILE* out)
 	int i, op;
 	
 	if (self == NULL) self = selfpath; else self++;
+	/* Remove libtool cruft from program name if present */
+	if (strncmp(self, "lt-", 3) == 0) self += 3;
 	uself = strdup(self);
 	for (i = 0; uself[i] != '\0'; i++)
 		uself[i] = toupper(uself[i]);
@@ -391,7 +393,7 @@ by applications for fast access.
 			"for ARPA Emilia Romagna, Servizio Idrometeorologico.\n", self);
 }
 
-int dba_cmdline_dispatch_main (const struct tool_desc* desc, const char* prgname, int argc, const char* argv[])
+int dba_cmdline_dispatch_main (const struct tool_desc* desc, int argc, const char* argv[])
 {
 	int i;
 
@@ -407,7 +409,7 @@ int dba_cmdline_dispatch_main (const struct tool_desc* desc, const char* prgname
 			if (i+1 < argc)
 			{
 				if (strcmp(argv[i+1], "manpage") == 0)
-					manpage(desc, prgname, stdout);
+					manpage(desc, argv[0], stdout);
 				else
 				{
 					poptContext optCon;
