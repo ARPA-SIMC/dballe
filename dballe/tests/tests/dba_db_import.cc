@@ -55,16 +55,16 @@ static int rep_cod_from_msg(dba_msg msg)
 
 static dba_err msg_collector(dba_msgs msgs, void* data)
 {
-	cerr << "MSG COLLECTOR";
+//	cerr << "MSG COLLECTOR";
 	vector<dba_msg>* vec = static_cast<vector<dba_msg>*>(data);
 	for (int i = 0; i < msgs->len; ++i)
 	{
-		cerr << " got " << i << "/" << msgs->len << ":" << (int)msgs->msgs[i];
+//		cerr << " got " << i << "/" << msgs->len << ":" << (int)msgs->msgs[i];
 		(*vec).push_back(msgs->msgs[i]);
 		// Detach the message from the msgs
 		msgs->msgs[i] = NULL;
 	}
-	cerr << endl;
+//	cerr << endl;
 	dba_msgs_delete(msgs);
 	return dba_error_ok();
 }

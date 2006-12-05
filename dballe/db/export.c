@@ -135,6 +135,7 @@ static dba_err consume_one(dba_msg msg, dba_msg_consumer cons, void* data)
 {
 	dba_err err = DBA_OK;
 	dba_msgs msgs = NULL;
+//	fprintf(stderr, "CONSUME ONE %p\n", msg);
 	DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&msgs));
 	DBA_RUN_OR_GOTO(cleanup, dba_msgs_append_acquire(msgs, msg));
 	DBA_RUN_OR_GOTO(cleanup, cons(msgs, data));
@@ -252,7 +253,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 			dba_msg_delete(msg);
 			copy = NULL;
 		} else {
-			DBA_RUN_OR_GOTO(cleanup, consume_one(copy, cons, data));
+			DBA_RUN_OR_GOTO(cleanup, consume_one(msg, cons, data));
 		}
 		msg = NULL;
 	}
