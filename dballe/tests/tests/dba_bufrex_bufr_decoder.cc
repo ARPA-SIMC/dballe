@@ -379,6 +379,52 @@ void to::test<16>()
 	bufrex_msg_delete(msg1);
 }
 
+template<> template<>
+void to::test<17>()
+{
+	TestBufrexMsg test;
+	test.edition = 3;
+	test.cat = 3;
+	test.subcat = 3;
+	test.subsets = 180;
+	test.subset(0).vars = 127;
+	test.subset(1).vars = 127;
+	test.subset(2).vars = 127;
+	test.subset(179).vars = 127;
+
+	bufrex_msg msg = read_test_msg_raw("bufr/obs3-3.1.bufr", BUFR);
+	ensureBufrexRawEquals(test, msg);
+
+	bufrex_msg msg1 = reencode_test(msg);
+	ensureBufrexRawEquals(test, msg1);
+
+	bufrex_msg_delete(msg);
+	bufrex_msg_delete(msg1);
+}
+
+template<> template<>
+void to::test<18>()
+{
+	TestBufrexMsg test;
+	test.edition = 3;
+	test.cat = 3;
+	test.subcat = 56;
+	test.subsets = 35;
+	test.subset(0).vars = 225;
+	test.subset(1).vars = 225;
+	test.subset(2).vars = 225;
+	test.subset(34).vars = 225;
+
+	bufrex_msg msg = read_test_msg_raw("bufr/obs3-56.2.bufr", BUFR);
+	ensureBufrexRawEquals(test, msg);
+
+	bufrex_msg msg1 = reencode_test(msg);
+	ensureBufrexRawEquals(test, msg1);
+
+	bufrex_msg_delete(msg);
+	bufrex_msg_delete(msg1);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

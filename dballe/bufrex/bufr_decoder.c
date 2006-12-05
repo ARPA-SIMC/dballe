@@ -114,8 +114,10 @@ static int decoder_bits_left(decoder d)
 	return (d->in->len - d->cursor) * 8 + d->pbyte_len;
 }
 
+#define FILENAME(d) ((d)->in->file == NULL ? "(memory)" : (d)->in->file->name)
+
 #define PARSE_ERROR(pos, ...) do { \
-		err = dba_error_parse(d->in->file->name, d->in->offset + (pos - d->in->buf), __VA_ARGS__); \
+		err = dba_error_parse(FILENAME(d), d->in->offset + ((pos) - d->in->buf), __VA_ARGS__); \
 		goto fail; \
 	} while (0)
 
@@ -330,7 +332,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	if (decoder_bits_left(d) > 15)
 	{
 		fprintf(stderr, "The data section of %s still contains %d unparsed bits\n",
-				d->in->file->name, decoder_bits_left(d));
+				FILENAME(d), decoder_bits_left(d));
 		/*
 		err = dba_error_parse(msg->file->name, POS + vec->cursor,
 				"the data section still contains %d unparsed bits",
@@ -787,7 +789,7 @@ static dba_err bufr_decode_c_data(decoder d)
 				DBA_RUN_OR_GOTO(cleanup, bufr_decode_r_data(d));
 			} else {
 				err = dba_error_parse(
-						d->in->file->name,
+						FILENAME(d),
 						d->sec4 + 4 + decoder_offset(d) - d->in->buf,
 						"C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
@@ -801,7 +803,7 @@ static dba_err bufr_decode_c_data(decoder d)
 			{
 				DBA_RUN_OR_GOTO(cleanup, bufr_decode_r_data(d));
 			} else {
-				err = dba_error_parse(d->in->file->name, d->sec4 + 4 + decoder_offset(d) - d->in->buf,
+				err = dba_error_parse(FILENAME(d), d->sec4 + 4 + decoder_offset(d) - d->in->buf,
 						"C modifiers %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
 							DBA_VAR_X(code),
@@ -810,7 +812,7 @@ static dba_err bufr_decode_c_data(decoder d)
 			}
 			break;
 		default:
-			err = dba_error_parse(d->in->file->name, d->sec4 + 4 + decoder_offset(d) - d->in->buf,
+			err = dba_error_parse(FILENAME(d), d->sec4 + 4 + decoder_offset(d) - d->in->buf,
 					"C modifiers (%d%02d%03d in this case) are not yet supported",
 						DBA_VAR_F(code),
 						DBA_VAR_X(code),
@@ -879,7 +881,7 @@ static dba_err bufr_decode_data_section(decoder d)
 				break;
 			}
 			default:
-				return dba_error_parse(d->in->file->name, d->sec4 + 4 + decoder_offset(d) - d->in->buf,
+				return dba_error_parse(FILENAME(d), d->sec4 + 4 + decoder_offset(d) - d->in->buf,
 						"cannot handle field %01d%02d%03d",
 							DBA_VAR_F(d->ops->val),
 							DBA_VAR_X(d->ops->val),
