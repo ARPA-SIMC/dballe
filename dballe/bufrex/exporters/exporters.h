@@ -28,14 +28,14 @@ extern "C" {
 
 #include <dballe/core/dba_var.h>
 #include <dballe/msg/dba_msg.h>
-#include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/bufrex/bufrex_msg.h>
 	
 /**
  * Type can be:
  *  0: encode a BUFR
  *  1: encode a CREX
  */
-typedef dba_err (*bufrex_exporter_func)(dba_msg src, bufrex_raw dst, int type);
+typedef dba_err (*bufrex_exporter_func)(dba_msg src, bufrex_msg dst, int type);
 
 struct _bufrex_exporter
 {
