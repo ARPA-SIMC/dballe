@@ -105,7 +105,7 @@ void bufrex_msg_delete(bufrex_msg msg);
 
 void bufrex_msg_reset(bufrex_msg msg);
 
-dba_err bufrex_msg_get_subsection(bufrex_msg msg, int subsection, bufrex_subset* vars);
+dba_err bufrex_msg_get_subset(bufrex_msg msg, int subsection, bufrex_subset* vars);
 
 /**
  * Get the ID of the table used by this bufrex_msg
