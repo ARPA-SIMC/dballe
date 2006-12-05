@@ -201,7 +201,7 @@ dba_err process_input(
 			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&br, BUFREX_BUFR));
 			
 			if ( !(bufrex_msg_decode(br, rmsg) == DBA_OK &&
-				   bufrex_msg_to_dba_msgs(br, parsed) == DBA_OK) && print_errors)
+				   bufrex_msg_to_dba_msgs(br, &parsed) == DBA_OK) && print_errors)
 				print_parse_error("BUFR", rmsg);
 			if (grepdata != NULL) DBA_RUN_OR_GOTO(cleanup, match_bufr(rmsg, br, parsed, grepdata, &match));
 			break;
@@ -210,7 +210,7 @@ dba_err process_input(
 			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&br, BUFREX_CREX));
 			
 			if ( !(bufrex_msg_decode(br, rmsg) == DBA_OK &&
-				   bufrex_msg_to_dba_msgs(br, parsed) == DBA_OK) && print_errors)
+				   bufrex_msg_to_dba_msgs(br, &parsed) == DBA_OK) && print_errors)
 				print_parse_error("CREX", rmsg);
 			if (grepdata != NULL) DBA_RUN_OR_GOTO(cleanup, match_crex(rmsg, br, parsed, grepdata, &match));
 			break;
