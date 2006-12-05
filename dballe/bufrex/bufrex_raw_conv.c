@@ -31,6 +31,7 @@ extern dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_msg raw, bufrex_subset s
 extern dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 extern dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 extern dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
+extern dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 
 dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs)
 {
@@ -60,6 +61,7 @@ dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs)
 				else
 					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_temp(msg, raw, raw->subsets[i]));
 				break;
+			case 3: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_sat(msg, raw, raw->subsets[i])); break;
 			case 4: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_flight(msg, raw, raw->subsets[i])); break;
 			default: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_generic(msg, raw, raw->subsets[i])); break;
 		}

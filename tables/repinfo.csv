@@ -59,5 +59,6 @@
 161,necmwfeuspbil,previsti ECMWF IFS interpolato 4 punti piu' vicini,-10,pre,255
 162,necmwfeumed05,previsti ECMWF IFS media su box 0.5,-10,pre,255
 163,necmwfeumax05,previsti ECMWF IFS massimo su box 0.5,-10,pre,255
+200,noaa,NOAA satellites,40,oss,255
 254,ana,dati anagrafici,100,?,255
 255,generic,export generici da DB Meteo,0,?,255

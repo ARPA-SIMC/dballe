@@ -35,7 +35,7 @@ extern "C" {
 #include <dballe/msg/level.h>
 #include <stdio.h>
 
-typedef enum { MSG_GENERIC, MSG_SYNOP, MSG_PILOT, MSG_TEMP, MSG_TEMP_SHIP, MSG_AIREP, MSG_AMDAR, MSG_ACARS, MSG_SHIP, MSG_BUOY, MSG_METAR } dba_msg_type;
+typedef enum { MSG_GENERIC, MSG_SYNOP, MSG_PILOT, MSG_TEMP, MSG_TEMP_SHIP, MSG_AIREP, MSG_AMDAR, MSG_ACARS, MSG_SHIP, MSG_BUOY, MSG_METAR, MSG_SAT } dba_msg_type;
 
 struct _dba_msg
 {
