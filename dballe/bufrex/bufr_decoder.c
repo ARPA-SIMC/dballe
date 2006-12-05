@@ -38,7 +38,7 @@
 
 #include <assert.h>
 
-#define TRACE_DECODER
+/* #define TRACE_DECODER */
 
 #ifdef TRACE_DECODER
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)
@@ -148,33 +148,29 @@ fail:
 	return err;
 }
 
-#if 0
 /* Dump 'count' bits of 'buf', starting at the 'ofs-th' bit */
-static dba_err dump_bits(void* buf, int ofs, int count, FILE* out)
+static void dump_next_bits(decoder d, int count, FILE* out)
 {
-	bitvec vec;
-	int i, j;
-	DBA_RUN_OR_RETURN(bitvec_create(&vec, "mem", 0, buf, (count + ofs) / 8 + 2));
-	for (i = 0, j = 0; i < ofs; i++, j++)
+	int cursor = d->cursor;
+	int pbyte = d->pbyte;
+	int pbyte_len = d->pbyte_len;
+	int i;
+
+	for (i = 0; i < count; ++i) 
 	{
-		uint32_t val;
-		DBA_RUN_OR_RETURN(bitvec_get_bits(vec, 1, &val));
-		if (j != 0 && (j % 8) == 0)
+		if (d->cursor == d->in->len)
+			break;
+		if (pbyte_len == 0) 
+		{
+			pbyte_len = 8;
+			pbyte = d->in->buf[cursor++];
 			putc(' ', out);
-		putc(val ? ',' : '.', out);
+		}
+		putc((pbyte & 0x80) ? '1' : '0', out);
+		pbyte <<= 1;
+		--pbyte_len;
 	}
-	for (i = 0; i < count; i++, j++)
-	{
-		uint32_t val;
-		DBA_RUN_OR_RETURN(bitvec_get_bits(vec, 1, &val));
-		if (j != 0 && (j % 8) == 0)
-			putc(' ', out);
-		putc(val ? '1' : '0', out);
-	}
-	bitvec_delete(vec);
-	return dba_error_ok();
 }
-#endif
 
 
 /* Forward declaration of this static function, as we write recursive decoding
@@ -218,7 +214,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 	if (d->sec2 > d->in->buf + d->in->len)
 		PARSE_ERROR(d->sec1, "Section 1 claims to end past the end of the BUFR message");
 
-	has_optional = d->sec1[7] & 0x80;
+	has_optional = (d->sec1[7] & 0x80) ? 1 : 0;
 	d->out->opt.bufr.origin = d->sec1[5];
 	d->out->opt.bufr.master_table = d->sec1[10];
 	d->out->opt.bufr.local_table = d->sec1[11];
@@ -233,9 +229,12 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 	if ((int)d->sec1[17] != 0)
 		d->out->rep_year = (int)d->sec1[17] * 100 + (d->out->rep_year % 100);
 
-	TRACE(" -> category %d subcategory %d\n", 
-				(int)d->sec1[8],
-				(int)d->sec1[9]);
+	TRACE(" -> opt %d upd %d origin %d.%d tables %d.%d type %d.%d %04d-%02d-%02d %02d:%02d\n", 
+			has_optional, (int)d->sec1[6],
+			d->out->opt.bufr.origin, (int)d->sec1[4],
+			d->out->opt.bufr.master_table, d->out->opt.bufr.local_table,
+			d->out->type, d->out->subtype,
+			d->out->rep_year, d->out->rep_month, d->out->rep_day, d->out->rep_hour, d->out->rep_minute);
 
 	DBA_RUN_OR_GOTO(fail, bufrex_raw_load_tables(d->out));
 
@@ -282,6 +281,8 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 		dba_varcode var = (dba_varcode)ntohs(*(uint16_t*)(d->sec3 + 7 + (i*2)));
 		DBA_RUN_OR_GOTO(fail, bufrex_raw_append_datadesc(d->out, var));
 	}
+	TRACE(" subsets %d observed %d compression %d byte7 %x\n",
+			d->subsets, (d->sec3[6] & 0x80) ? 1 : 0, (d->sec3[6] & 0x40) ? 1 : 0, (unsigned int)d->sec3[6]);
 	/*
 	IFTRACE{
 		TRACE(" -> data descriptor section: ");
@@ -448,7 +449,7 @@ static dba_err bufr_decode_b_data(decoder d)
 				info->bit_ref,
 				DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
 				info->desc, info->unit);
-		/*DBA_RUN_OR_RETURN(dump_bits(d->in->buf + d->cursor - 1, 8 - d->pbyte_len, 32, stderr));*/
+		dump_next_bits(d, 64, stderr);
 		TRACE("\n");
 	}
 

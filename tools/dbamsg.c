@@ -146,11 +146,15 @@ static dba_err dump_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void*
 		case BUFR:
 			if (braw == NULL) return dba_error_ok();
 			DBA_RUN_OR_RETURN(print_bufr_header(rmsg, braw)); puts(":");
+			printf(" Edition %d, origin %d, master table %d, local table %d\n",
+					braw->edition, braw->opt.bufr.origin, braw->opt.bufr.master_table, braw->opt.bufr.local_table);
 			DBA_RUN_OR_RETURN(dump_dba_vars(braw));
 			break;
 		case CREX:
 			if (braw == NULL) return dba_error_ok();
 			DBA_RUN_OR_RETURN(print_crex_header(rmsg, braw)); puts(":");
+			printf(" Edition %d, master table %d, table %d\n",
+					braw->edition, braw->opt.crex.master_table, braw->opt.crex.table);
 			DBA_RUN_OR_RETURN(dump_dba_vars(braw));
 			break;
 		case AOF:
