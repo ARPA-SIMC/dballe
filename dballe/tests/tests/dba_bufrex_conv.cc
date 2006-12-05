@@ -152,47 +152,47 @@ void to::test<2>()
 
 		// Reencode the dba_msg in another dba_rawmsg
 		dba_rawmsg raw2;
-		CHECKED(bufrex_encode_bufr(msg1, type, subtype, &raw2));
+		CHECKED(bufrex_encode_bufr(msgs1, type, subtype, &raw2));
 
 		// Parse the second dba_rawmsg
-		dba_msg msg2;
-		CHECKED(bufrex_decode_bufr(raw2, &msg2));
+		dba_msgs msgs2;
+		CHECKED(bufrex_decode_bufr(raw2, &msgs2));
 
 		if (string(files[i]).find("2-101.16") != string::npos)
 		{
 			FILE* outraw = fopen("/tmp/1to2.txt", "w");
-			bufrex_raw braw;
-			CHECKED(bufrex_raw_create(&braw, BUFREX_BUFR));
+			bufrex_msg braw;
+			CHECKED(bufrex_msg_create(&braw, BUFREX_BUFR));
 			braw->type = type;
 			braw->subtype = subtype;
 			braw->opt.bufr.origin = 98;
 			braw->opt.bufr.master_table = 6;
 			braw->opt.bufr.local_table = 1;
-			CHECKED(bufrex_raw_load_tables(braw));
-			CHECKED(bufrex_raw_from_msg(braw, msg1));
-			bufrex_raw_print(braw, outraw);
+			CHECKED(bufrex_msg_load_tables(braw));
+			CHECKED(bufrex_msg_from_dba_msgs(braw, msgs1));
+			bufrex_msg_print(braw, outraw);
 			fclose(outraw);
-			bufrex_raw_delete(braw);
+			bufrex_msg_delete(braw);
 
 			FILE* out1 = fopen("/tmp/msg1.txt", "w");
 			FILE* out2 = fopen("/tmp/msg2.txt", "w");
 				
-			dba_msg_print(msg1, out1);
-			dba_msg_print(msg2, out2);
+			dba_msgs_print(msgs1, out1);
+			dba_msgs_print(msgs2, out2);
 			fclose(out1);
 			fclose(out2);
 		}
 
 		// Compare the two dba_msg
 		int diffs = 0;
-		dba_msg_diff(msg1, msg2, &diffs, stderr);
+		dba_msgs_diff(msgs1, msgs2, &diffs, stderr);
 		gen_ensure_equals(diffs, 0);
 
 		//cerr << files[i] << ": ok" << endl;
 
-		dba_msg_delete(msg1);
-		dba_msg_delete(msg2);
-		bufrex_raw_delete(braw1);
+		dba_msgs_delete(msgs1);
+		dba_msgs_delete(msgs2);
+		bufrex_msg_delete(braw1);
 		dba_rawmsg_delete(raw2);
 	}
 	test_untag();
@@ -219,7 +219,7 @@ void to::test<3>()
 		test_tag(files[i]);
 
 		// Read the test message in a bufrex_raw
-		bufrex_raw braw1 = read_test_msg_raw(files[i], CREX);
+		bufrex_msg braw1 = read_test_msg_raw(files[i], CREX);
 
 		// Save category as a reference for reencoding
 		int type = braw1->type;
@@ -228,16 +228,16 @@ void to::test<3>()
 			type = 0;
 		
 		// Finish converting in a dba_msg
-		dba_msg msg1;
-		CHECKED(bufrex_raw_to_msg(braw1, &msg1));
+		dba_msgs msgs1;
+		CHECKED(bufrex_msg_to_dba_msgs(braw1, &msgs1));
 
 		// Reencode the dba_msg in another dba_rawmsg
 		dba_rawmsg raw2;
-		CHECKED(bufrex_encode_crex(msg1, type, subtype, &raw2));
+		CHECKED(bufrex_encode_crex(msgs1, type, subtype, &raw2));
 
 		// Parse the second dba_rawmsg
-		dba_msg msg2;
-		CHECKED(bufrex_decode_crex(raw2, &msg2));
+		dba_msgs msgs2;
+		CHECKED(bufrex_decode_crex(raw2, &msgs2));
 
 		/*
 		if (string(files[i]).find("mare2") != string::npos)
@@ -249,12 +249,12 @@ void to::test<3>()
 
 		// Compare the two dba_msg
 		int diffs = 0;
-		dba_msg_diff(msg1, msg2, &diffs, stderr);
+		dba_msgs_diff(msgs1, msgs2, &diffs, stderr);
 		gen_ensure_equals(diffs, 0);
 
-		dba_msg_delete(msg1);
-		dba_msg_delete(msg2);
-		bufrex_raw_delete(braw1);
+		dba_msgs_delete(msgs1);
+		dba_msgs_delete(msgs2);
+		bufrex_msg_delete(braw1);
 		dba_rawmsg_delete(raw2);
 	}
 	test_untag();

@@ -81,11 +81,11 @@ void to::test<1>()
 		gen_ensure_equals(found, 1);
 
 		/* Parse it */
-		dba_msg msg = NULL;
-		CHECKED(aof_decoder_decode(raw, &msg));
-		gen_ensure(msg != NULL);
+		dba_msgs msgs = NULL;
+		CHECKED(aof_decoder_decode(raw, &msgs));
+		gen_ensure(msgs != NULL);
 
-		dba_msg_delete(msg);
+		dba_msgs_delete(msgs);
 		dba_file_delete(file);
 	}
 	test_untag();
@@ -93,242 +93,254 @@ void to::test<1>()
 	dba_rawmsg_delete(raw);
 }
 
-void strip_attributes(dba_msg msg)
+void strip_attributes(dba_msgs msgs)
 {
-	for (int i = 0; i < msg->data_count; i++)
+	for (int msgidx = 0; msgidx < msgs->len; ++msgidx)
 	{
-		dba_msg_level lev = msg->data[i];
-		for (int j = 0; j < lev->data_count; j++)
+		dba_msg msg = msgs->msgs[msgidx];
+		for (int i = 0; i < msg->data_count; i++)
 		{
-			dba_msg_datum dat = lev->data[j];
-			dba_var_clear_attrs(dat->var);
+			dba_msg_level lev = msg->data[i];
+			for (int j = 0; j < lev->data_count; j++)
+			{
+				dba_msg_datum dat = lev->data[j];
+				dba_var_clear_attrs(dat->var);
+			}
 		}
 	}
 }
 
-void normalise_encoding_quirks(dba_msg amsg, dba_msg bmsg)
+void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 {
-	// Recode BUFR attributes to match the AOF 2-bit values
-	for (int i = 0; i < bmsg->data_count; i++)
+	int len = amsgs->len;
+	if (len > bmsgs->len) len = bmsgs->len;
+	for (int msgidx = 0; msgidx < len; ++msgidx)
 	{
-		dba_msg_level lev = bmsg->data[i];
-		for (int j = 0; j < lev->data_count; j++)
-		{
-			dba_msg_datum dat = lev->data[j];
-			dba_var_attr_iterator iter = dba_var_attr_iterate(dat->var);
-			for (; iter != NULL; iter = dba_var_attr_iterator_next(iter))
-			{
-				dba_var attr = dba_var_attr_iterator_attr(iter);
-				if (dba_var_code(attr) == DBA_VAR(0, 33, 7))
-				{
-					int val;
-					CHECKED(dba_var_enqi(attr, &val));
-					// Recode val using one of the value in the 4 steps of AOF
-					if (val > 75)
-						val = 76;
-					else if (val > 50)
-						val = 51;
-					else if (val > 25)
-						val = 26;
-					else
-						val = 0;
-					CHECKED(dba_var_seti(attr, val));
-				}
-			}
-		}
-	}
-	
-	dba_var var;
+		dba_msg amsg = amsgs->msgs[msgidx];
+		dba_msg bmsg = bmsgs->msgs[msgidx];
 
-	if ((var = dba_msg_get_block_var(bmsg)) != NULL)
-		dba_var_clear_attrs(var);
-	if ((var = dba_msg_get_station_var(bmsg)) != NULL)
-		dba_var_clear_attrs(var);
-	if ((var = dba_msg_get_st_type_var(bmsg)) != NULL)
-		dba_var_clear_attrs(var);
-	if ((var = dba_msg_get_ident_var(bmsg)) != NULL)
-		dba_var_clear_attrs(var);
-	if ((var = dba_msg_get_flight_phase_var(bmsg)) != NULL)
-		dba_var_clear_attrs(var);
-
-	if ((var = dba_msg_get_cloud_cl_var(bmsg)) != NULL &&
-			strtoul(dba_var_value(var), NULL, 0) == 62 &&
-			dba_msg_get_cloud_cl_var(amsg) == NULL)
-		CHECKED(dba_msg_set_cloud_cl_var(amsg, var));
-
-	if ((var = dba_msg_get_cloud_cm_var(bmsg)) != NULL &&
-			strtoul(dba_var_value(var), NULL, 0) == 61 &&
-			dba_msg_get_cloud_cm_var(amsg) == NULL)
-		CHECKED(dba_msg_set_cloud_cm_var(amsg, var));
-
-	if ((var = dba_msg_get_cloud_ch_var(bmsg)) != NULL &&
-			strtoul(dba_var_value(var), NULL, 0) == 60 &&
-			dba_msg_get_cloud_ch_var(amsg) == NULL)
-		CHECKED(dba_msg_set_cloud_ch_var(amsg, var));
-
-	if ((var = dba_msg_get_height_anem_var(bmsg)) != NULL &&
-			dba_msg_get_height_anem_var(amsg) == NULL)
-		CHECKED(dba_msg_set_height_anem_var(amsg, var));
-
-	if ((var = dba_msg_get_navsys_var(bmsg)) != NULL &&
-			dba_msg_get_navsys_var(amsg) == NULL)
-		CHECKED(dba_msg_set_navsys_var(amsg, var));
-
-	// In AOF, only synops and ships can encode direction and speed
-	if (amsg->type != MSG_SHIP && amsg->type != MSG_SYNOP)
-	{
-		if ((var = dba_msg_get_st_dir_var(bmsg)) != NULL &&
-				dba_msg_get_st_dir_var(amsg) == NULL)
-			CHECKED(dba_msg_set_st_dir_var(amsg, var));
-
-		if ((var = dba_msg_get_st_speed_var(bmsg)) != NULL &&
-				dba_msg_get_st_speed_var(amsg) == NULL)
-			CHECKED(dba_msg_set_st_speed_var(amsg, var));
-	}
-
-	if ((var = dba_msg_get_press_tend_var(bmsg)) != NULL &&
-			dba_msg_get_press_tend_var(amsg) == NULL)
-		CHECKED(dba_msg_set_press_tend_var(amsg, var));
-
-	// AOF AMDAR has pressure indication, BUFR AMDAR has only height
-	if (amsg->type == MSG_AMDAR)
-	{
-		dba_var p = dba_msg_get_flight_press_var(amsg);
-#if 0
-		dba_var h = dba_msg_get_height_var(bmsg);
-		if (p && h)
-		{
-			double press, height;
-			CHECKED(dba_var_enqd(p, &press));
-			CHECKED(dba_var_enqd(h, &height));
-			dba_msg_level l = dba_msg_find_level(bmsg, 103, (int)height, 0);
-			if (l)
-			{
-				l->ltype = 100;
-				l->l1 = (int)(press/100);
-				CHECKED(dba_msg_set_flight_press_var(bmsg, p));
-			}
-		}
-#endif
-		if (p)
-			CHECKED(dba_msg_set_flight_press_var(bmsg, p));
-	}
-
-	if (amsg->type == MSG_TEMP)
-	{
-		if ((var = dba_msg_get_sonde_type_var(bmsg)) != NULL &&
-				dba_msg_get_sonde_type_var(amsg) == NULL)
-		CHECKED(dba_msg_set_sonde_type_var(amsg, var));
-
-		if ((var = dba_msg_get_sonde_method_var(bmsg)) != NULL &&
-				dba_msg_get_sonde_method_var(amsg) == NULL)
-		CHECKED(dba_msg_set_sonde_method_var(amsg, var));
-	}
-
-	if (amsg->type == MSG_TEMP_SHIP)
-	{
-		if ((var = dba_msg_get_height_var(bmsg)) != NULL &&
-				dba_msg_get_height_var(amsg) == NULL)
-		CHECKED(dba_msg_set_height_var(amsg, var));
-	}
-
- 	if (amsg->type == MSG_TEMP || amsg->type == MSG_TEMP_SHIP)
-	{
-		if ((var = dba_msg_get_cloud_n_var(bmsg)) != NULL &&
-				dba_msg_get_cloud_n_var(amsg) == NULL)
-			CHECKED(dba_msg_set_cloud_n_var(amsg, var));
-
-		if ((var = dba_msg_get_cloud_nh_var(bmsg)) != NULL &&
-				dba_msg_get_cloud_nh_var(amsg) == NULL)
-			CHECKED(dba_msg_set_cloud_nh_var(amsg, var));
-
-		if ((var = dba_msg_get_cloud_hh_var(bmsg)) != NULL &&
-				dba_msg_get_cloud_hh_var(amsg) == NULL)
-			CHECKED(dba_msg_set_cloud_hh_var(amsg, var));
-
-		if ((var = dba_msg_get_cloud_cl_var(bmsg)) != NULL &&
-				dba_msg_get_cloud_cl_var(amsg) == NULL)
-			CHECKED(dba_msg_set_cloud_cl_var(amsg, var));
-
-		if ((var = dba_msg_get_cloud_cm_var(bmsg)) != NULL &&
-				dba_msg_get_cloud_cm_var(amsg) == NULL)
-			CHECKED(dba_msg_set_cloud_cm_var(amsg, var));
-
-		if ((var = dba_msg_get_cloud_ch_var(bmsg)) != NULL &&
-				dba_msg_get_cloud_ch_var(amsg) == NULL)
-			CHECKED(dba_msg_set_cloud_ch_var(amsg, var));
-
-#define FIX_GEOPOTENTIAL
-#ifdef FIX_GEOPOTENTIAL
-		// Convert the geopotentials back to heights in a dirty way, but it
-		// should make the comparison more meaningful.  It catches this case:
-		//  - AOF has height, that gets multiplied by 9.80665
-		//    25667 becomes 251707
-		//  - BUFR stores geopotential, without the last digit cifra
-        //    251707 becomes 251710
-		//  - However, if we go back to heights, the precision should be
-		//    preserved
-        //    251710 / 9.80664 becomes 25667 as it was
-		for (int i = 0; i < amsg->data_count; i++)
-		{
-			dba_msg_level lev = amsg->data[i];
-			for (int j = 0; j < lev->data_count; j++)
-			{
-				dba_msg_datum dat = lev->data[j];
-				if (dba_var_code(dat->var) == DBA_VAR(0, 10, 3))
-				{
-					double dval;
-					CHECKED(dba_var_enqd(dat->var, &dval));
-					dval /= 9.80665;
-					CHECKED(dba_var_setd(dat->var, dval));
-				}
-			}
-		}
+		// Recode BUFR attributes to match the AOF 2-bit values
 		for (int i = 0; i < bmsg->data_count; i++)
 		{
 			dba_msg_level lev = bmsg->data[i];
 			for (int j = 0; j < lev->data_count; j++)
 			{
 				dba_msg_datum dat = lev->data[j];
-				if (dba_var_code(dat->var) == DBA_VAR(0, 10, 3))
+				dba_var_attr_iterator iter = dba_var_attr_iterate(dat->var);
+				for (; iter != NULL; iter = dba_var_attr_iterator_next(iter))
 				{
-					double dval;
-					CHECKED(dba_var_enqd(dat->var, &dval));
-					dval /= 9.80665;
-					CHECKED(dba_var_setd(dat->var, dval));
+					dba_var attr = dba_var_attr_iterator_attr(iter);
+					if (dba_var_code(attr) == DBA_VAR(0, 33, 7))
+					{
+						int val;
+						CHECKED(dba_var_enqi(attr, &val));
+						// Recode val using one of the value in the 4 steps of AOF
+						if (val > 75)
+							val = 76;
+						else if (val > 50)
+							val = 51;
+						else if (val > 25)
+							val = 26;
+						else
+							val = 0;
+						CHECKED(dba_var_seti(attr, val));
+					}
 				}
 			}
 		}
+		
+		dba_var var;
 
-		// Decoding BUFR temp messages copies data from the surface level into
-		// more classical places: compensate by copying the same data in the
-		// AOF file
+		if ((var = dba_msg_get_block_var(bmsg)) != NULL)
+			dba_var_clear_attrs(var);
+		if ((var = dba_msg_get_station_var(bmsg)) != NULL)
+			dba_var_clear_attrs(var);
+		if ((var = dba_msg_get_st_type_var(bmsg)) != NULL)
+			dba_var_clear_attrs(var);
+		if ((var = dba_msg_get_ident_var(bmsg)) != NULL)
+			dba_var_clear_attrs(var);
+		if ((var = dba_msg_get_flight_phase_var(bmsg)) != NULL)
+			dba_var_clear_attrs(var);
+
+		if ((var = dba_msg_get_cloud_cl_var(bmsg)) != NULL &&
+				strtoul(dba_var_value(var), NULL, 0) == 62 &&
+				dba_msg_get_cloud_cl_var(amsg) == NULL)
+			CHECKED(dba_msg_set_cloud_cl_var(amsg, var));
+
+		if ((var = dba_msg_get_cloud_cm_var(bmsg)) != NULL &&
+				strtoul(dba_var_value(var), NULL, 0) == 61 &&
+				dba_msg_get_cloud_cm_var(amsg) == NULL)
+			CHECKED(dba_msg_set_cloud_cm_var(amsg, var));
+
+		if ((var = dba_msg_get_cloud_ch_var(bmsg)) != NULL &&
+				strtoul(dba_var_value(var), NULL, 0) == 60 &&
+				dba_msg_get_cloud_ch_var(amsg) == NULL)
+			CHECKED(dba_msg_set_cloud_ch_var(amsg, var));
+
+		if ((var = dba_msg_get_height_anem_var(bmsg)) != NULL &&
+				dba_msg_get_height_anem_var(amsg) == NULL)
+			CHECKED(dba_msg_set_height_anem_var(amsg, var));
+
+		if ((var = dba_msg_get_navsys_var(bmsg)) != NULL &&
+				dba_msg_get_navsys_var(amsg) == NULL)
+			CHECKED(dba_msg_set_navsys_var(amsg, var));
+
+		// In AOF, only synops and ships can encode direction and speed
+		if (amsg->type != MSG_SHIP && amsg->type != MSG_SYNOP)
 		{
-			dba_var v;
+			if ((var = dba_msg_get_st_dir_var(bmsg)) != NULL &&
+					dba_msg_get_st_dir_var(amsg) == NULL)
+				CHECKED(dba_msg_set_st_dir_var(amsg, var));
 
-			if ((v = dba_msg_get_press_var(bmsg)) != NULL)
-				CHECKED(dba_msg_set_press_var(amsg, v));
-			if ((v = dba_msg_get_temp_2m_var(bmsg)) != NULL)
-				CHECKED(dba_msg_set_temp_2m_var(amsg, v));
-			if ((v = dba_msg_get_dewpoint_2m_var(bmsg)) != NULL)
-				CHECKED(dba_msg_set_dewpoint_2m_var(amsg, v));
-			if ((v = dba_msg_get_wind_dir_var(bmsg)) != NULL)
-				CHECKED(dba_msg_set_wind_dir_var(amsg, v));
-			if ((v = dba_msg_get_wind_speed_var(bmsg)) != NULL)
-				CHECKED(dba_msg_set_wind_speed_var(amsg, v));
+			if ((var = dba_msg_get_st_speed_var(bmsg)) != NULL &&
+					dba_msg_get_st_speed_var(amsg) == NULL)
+				CHECKED(dba_msg_set_st_speed_var(amsg, var));
 		}
-#endif
-	}
 
-	// Remove attributes from all vertical sounding significances
-	for (int i = 0; i < bmsg->data_count; i++)
-	{
-		dba_msg_level lev = bmsg->data[i];
-		for (int j = 0; j < lev->data_count; j++)
+		if ((var = dba_msg_get_press_tend_var(bmsg)) != NULL &&
+				dba_msg_get_press_tend_var(amsg) == NULL)
+			CHECKED(dba_msg_set_press_tend_var(amsg, var));
+
+		// AOF AMDAR has pressure indication, BUFR AMDAR has only height
+		if (amsg->type == MSG_AMDAR)
 		{
-			dba_msg_datum dat = lev->data[j];
-			if (dba_var_code(dat->var) == DBA_VAR(0, 8, 1))
-				dba_var_clear_attrs(dat->var);
+			dba_var p = dba_msg_get_flight_press_var(amsg);
+#if 0
+			dba_var h = dba_msg_get_height_var(bmsg);
+			if (p && h)
+			{
+				double press, height;
+				CHECKED(dba_var_enqd(p, &press));
+				CHECKED(dba_var_enqd(h, &height));
+				dba_msg_level l = dba_msg_find_level(bmsg, 103, (int)height, 0);
+				if (l)
+				{
+					l->ltype = 100;
+					l->l1 = (int)(press/100);
+					CHECKED(dba_msg_set_flight_press_var(bmsg, p));
+				}
+			}
+#endif
+			if (p)
+				CHECKED(dba_msg_set_flight_press_var(bmsg, p));
+		}
+
+		if (amsg->type == MSG_TEMP)
+		{
+			if ((var = dba_msg_get_sonde_type_var(bmsg)) != NULL &&
+					dba_msg_get_sonde_type_var(amsg) == NULL)
+			CHECKED(dba_msg_set_sonde_type_var(amsg, var));
+
+			if ((var = dba_msg_get_sonde_method_var(bmsg)) != NULL &&
+					dba_msg_get_sonde_method_var(amsg) == NULL)
+			CHECKED(dba_msg_set_sonde_method_var(amsg, var));
+		}
+
+		if (amsg->type == MSG_TEMP_SHIP)
+		{
+			if ((var = dba_msg_get_height_var(bmsg)) != NULL &&
+					dba_msg_get_height_var(amsg) == NULL)
+			CHECKED(dba_msg_set_height_var(amsg, var));
+		}
+
+		if (amsg->type == MSG_TEMP || amsg->type == MSG_TEMP_SHIP)
+		{
+			if ((var = dba_msg_get_cloud_n_var(bmsg)) != NULL &&
+					dba_msg_get_cloud_n_var(amsg) == NULL)
+				CHECKED(dba_msg_set_cloud_n_var(amsg, var));
+
+			if ((var = dba_msg_get_cloud_nh_var(bmsg)) != NULL &&
+					dba_msg_get_cloud_nh_var(amsg) == NULL)
+				CHECKED(dba_msg_set_cloud_nh_var(amsg, var));
+
+			if ((var = dba_msg_get_cloud_hh_var(bmsg)) != NULL &&
+					dba_msg_get_cloud_hh_var(amsg) == NULL)
+				CHECKED(dba_msg_set_cloud_hh_var(amsg, var));
+
+			if ((var = dba_msg_get_cloud_cl_var(bmsg)) != NULL &&
+					dba_msg_get_cloud_cl_var(amsg) == NULL)
+				CHECKED(dba_msg_set_cloud_cl_var(amsg, var));
+
+			if ((var = dba_msg_get_cloud_cm_var(bmsg)) != NULL &&
+					dba_msg_get_cloud_cm_var(amsg) == NULL)
+				CHECKED(dba_msg_set_cloud_cm_var(amsg, var));
+
+			if ((var = dba_msg_get_cloud_ch_var(bmsg)) != NULL &&
+					dba_msg_get_cloud_ch_var(amsg) == NULL)
+				CHECKED(dba_msg_set_cloud_ch_var(amsg, var));
+
+#define FIX_GEOPOTENTIAL
+#ifdef FIX_GEOPOTENTIAL
+			// Convert the geopotentials back to heights in a dirty way, but it
+			// should make the comparison more meaningful.  It catches this case:
+			//  - AOF has height, that gets multiplied by 9.80665
+			//    25667 becomes 251707
+			//  - BUFR stores geopotential, without the last digit cifra
+			//    251707 becomes 251710
+			//  - However, if we go back to heights, the precision should be
+			//    preserved
+			//    251710 / 9.80664 becomes 25667 as it was
+			for (int i = 0; i < amsg->data_count; i++)
+			{
+				dba_msg_level lev = amsg->data[i];
+				for (int j = 0; j < lev->data_count; j++)
+				{
+					dba_msg_datum dat = lev->data[j];
+					if (dba_var_code(dat->var) == DBA_VAR(0, 10, 3))
+					{
+						double dval;
+						CHECKED(dba_var_enqd(dat->var, &dval));
+						dval /= 9.80665;
+						CHECKED(dba_var_setd(dat->var, dval));
+					}
+				}
+			}
+			for (int i = 0; i < bmsg->data_count; i++)
+			{
+				dba_msg_level lev = bmsg->data[i];
+				for (int j = 0; j < lev->data_count; j++)
+				{
+					dba_msg_datum dat = lev->data[j];
+					if (dba_var_code(dat->var) == DBA_VAR(0, 10, 3))
+					{
+						double dval;
+						CHECKED(dba_var_enqd(dat->var, &dval));
+						dval /= 9.80665;
+						CHECKED(dba_var_setd(dat->var, dval));
+					}
+				}
+			}
+
+			// Decoding BUFR temp messages copies data from the surface level into
+			// more classical places: compensate by copying the same data in the
+			// AOF file
+			{
+				dba_var v;
+
+				if ((v = dba_msg_get_press_var(bmsg)) != NULL)
+					CHECKED(dba_msg_set_press_var(amsg, v));
+				if ((v = dba_msg_get_temp_2m_var(bmsg)) != NULL)
+					CHECKED(dba_msg_set_temp_2m_var(amsg, v));
+				if ((v = dba_msg_get_dewpoint_2m_var(bmsg)) != NULL)
+					CHECKED(dba_msg_set_dewpoint_2m_var(amsg, v));
+				if ((v = dba_msg_get_wind_dir_var(bmsg)) != NULL)
+					CHECKED(dba_msg_set_wind_dir_var(amsg, v));
+				if ((v = dba_msg_get_wind_speed_var(bmsg)) != NULL)
+					CHECKED(dba_msg_set_wind_speed_var(amsg, v));
+			}
+#endif
+		}
+
+		// Remove attributes from all vertical sounding significances
+		for (int i = 0; i < bmsg->data_count; i++)
+		{
+			dba_msg_level lev = bmsg->data[i];
+			for (int j = 0; j < lev->data_count; j++)
+			{
+				dba_msg_datum dat = lev->data[j];
+				if (dba_var_code(dat->var) == DBA_VAR(0, 8, 1))
+					dba_var_clear_attrs(dat->var);
+			}
 		}
 	}
 }
@@ -358,24 +370,24 @@ void to::test<2>()
 	{
 		test_tag(files[i]);
 
-		dba_msg amsg = read_test_msg(files[i], AOF);
+		dba_msgs amsgs = read_test_msg(files[i], AOF);
 		
 		dba_rawmsg raw;
-		CHECKED(dba_marshal_encode(amsg, BUFR, &raw));
+		CHECKED(dba_marshal_encode(amsgs, BUFR, &raw));
 
-		dba_msg bmsg;
-		CHECKED(dba_marshal_decode(raw, &bmsg));
+		dba_msgs bmsgs;
+		CHECKED(dba_marshal_decode(raw, &bmsgs));
 
-		normalise_encoding_quirks(amsg, bmsg);
+		normalise_encoding_quirks(amsgs, bmsgs);
 
 		// Compare the two dba_msg
 		int diffs = 0;
-		dba_msg_diff(amsg, bmsg, &diffs, stderr);
-		if (diffs) track_different_msgs(amsg, bmsg, "aof-bufr");
+		dba_msgs_diff(amsgs, bmsgs, &diffs, stderr);
+		if (diffs) track_different_msgs(amsgs, bmsgs, "aof-bufr");
 		gen_ensure_equals(diffs, 0);
 
-		dba_msg_delete(amsg);
-		dba_msg_delete(bmsg);
+		dba_msgs_delete(amsgs);
+		dba_msgs_delete(bmsgs);
 		dba_rawmsg_delete(raw);
 	}
 	test_untag();
@@ -406,25 +418,25 @@ void to::test<3>()
 	{
 		test_tag(files[i]);
 
-		dba_msg amsg = read_test_msg(files[i], AOF);
+		dba_msgs amsgs = read_test_msg(files[i], AOF);
 		
 		dba_rawmsg raw;
-		CHECKED(dba_marshal_encode(amsg, CREX, &raw));
+		CHECKED(dba_marshal_encode(amsgs, CREX, &raw));
 
-		dba_msg bmsg;
-		CHECKED(dba_marshal_decode(raw, &bmsg));
+		dba_msgs bmsgs;
+		CHECKED(dba_marshal_decode(raw, &bmsgs));
 
-		strip_attributes(amsg);
-		normalise_encoding_quirks(amsg, bmsg);
+		strip_attributes(amsgs);
+		normalise_encoding_quirks(amsgs, bmsgs);
 
 		// Compare the two dba_msg
 		int diffs = 0;
-		dba_msg_diff(amsg, bmsg, &diffs, stderr);
-		if (diffs) track_different_msgs(amsg, bmsg, "aof-crex");
+		dba_msgs_diff(amsgs, bmsgs, &diffs, stderr);
+		if (diffs) track_different_msgs(amsgs, bmsgs, "aof-crex");
 		gen_ensure_equals(diffs, 0);
 
-		dba_msg_delete(amsg);
-		dba_msg_delete(bmsg);
+		dba_msgs_delete(amsgs);
+		dba_msgs_delete(bmsgs);
 		dba_rawmsg_delete(raw);
 	}
 	test_untag();
@@ -454,18 +466,18 @@ void to::test<4>()
 	{
 		test_tag(files[i]);
 
-		dba_msg amsg = read_test_msg((files[i] + ".aof").c_str(), AOF);
-		dba_msg bmsg = read_test_msg((files[i] + ".bufr").c_str(), BUFR);
-		normalise_encoding_quirks(amsg, bmsg);
+		dba_msgs amsgs = read_test_msg((files[i] + ".aof").c_str(), AOF);
+		dba_msgs bmsgs = read_test_msg((files[i] + ".bufr").c_str(), BUFR);
+		normalise_encoding_quirks(amsgs, bmsgs);
 
 		// Compare the two dba_msg
 		int diffs = 0;
-		dba_msg_diff(amsg, bmsg, &diffs, stderr);
-		if (diffs) track_different_msgs(amsg, bmsg, "aof");
+		dba_msgs_diff(amsgs, bmsgs, &diffs, stderr);
+		if (diffs) track_different_msgs(amsgs, bmsgs, "aof");
 		gen_ensure_equals(diffs, 0);
 
-		dba_msg_delete(amsg);
-		dba_msg_delete(bmsg);
+		dba_msgs_delete(amsgs);
+		dba_msgs_delete(bmsgs);
 	}
 	test_untag();
 }

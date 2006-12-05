@@ -76,6 +76,11 @@ void dba_msgs_delete(dba_msgs msgs);
 dba_err dba_msgs_append_acquire(dba_msgs msgs, dba_msg msg);
 
 /**
+ * Dump a dba_msgs to the given FILE*
+ */
+void dba_msgs_print(dba_msgs msgs, FILE* out);
+
+/**
  * Compute and show the differences between two dba_msgs
  */
 void dba_msgs_diff(dba_msgs msgs1, dba_msgs msgs2, int* diffs, FILE* out);

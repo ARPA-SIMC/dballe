@@ -63,6 +63,16 @@ dba_err dba_msgs_append_acquire(dba_msgs msgs, dba_msg msg)
 	return dba_error_ok();
 }
 
+void dba_msgs_print(dba_msgs msgs, FILE* out)
+{
+	int i;
+	for (i = 0; i < msgs->len; ++i)
+	{
+		fprintf(out, "Subset %d:\n", i);
+		dba_msg_print(msgs->msgs[i], out);
+	}
+}
+
 void dba_msgs_diff(dba_msgs msgs1, dba_msgs msgs2, int* diffs, FILE* out)
 {
 	int i, count;

@@ -410,9 +410,8 @@ public:
 	int subcat;
 	int checkdigit;
 	int subsets;
-	int vars;
 
-	TestBufrexMsg() : edition(-1), cat(-1), subcat(-1), checkdigit(-1), subsets(-1), vars(-1) {}
+	TestBufrexMsg() : edition(-1), cat(-1), subcat(-1), checkdigit(-1), subsets(-1) {}
 	TestBufrexMsg(const TestBufrexMsg& r)
 	{
 		edition = r.edition;
@@ -420,7 +419,6 @@ public:
 		subcat = r.subcat;
 		checkdigit = r.checkdigit;
 		subsets = r.subsets;
-		vars = r.vars;
 		for (std::vector<TestBufrexSubset*>::const_iterator i = r.tests.begin();
 				i != r.tests.end(); i++)
 			tests.push_back((*i)->clone());
@@ -439,7 +437,6 @@ public:
 		subcat = r.subcat;
 		checkdigit = r.checkdigit;
 		subsets = r.subsets;
-		vars = r.vars;
 
 		for (std::vector<TestBufrexSubset*>::iterator i = tests.begin();
 				i != r.tests.end(); i++)
@@ -598,7 +595,7 @@ public:
 	}
 };
 
-void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix);
+void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& prefix);
 
 dba_err create_dba_db(dba_db* db);
 

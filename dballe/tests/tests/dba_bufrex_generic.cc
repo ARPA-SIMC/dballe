@@ -22,7 +22,6 @@
 #include <tests/test-utils.h>
 #include <dballe/dba_file.h>
 #include <dballe/bufrex/bufrex.h>
-#include <dballe/bufrex/bufrex_raw.h>
 #include <dballe/msg/dba_msg.h>
 
 namespace tut {
@@ -45,26 +44,31 @@ TESTGRP(dba_bufrex_generic);
 template<> template<>
 void to::test<1>()
 {
+	dba_msgs msgs;
+	CHECKED(dba_msgs_create(&msgs));
+
 	dba_msg msg;
 	CHECKED(dba_msg_create(&msg));
 
+	CHECKED(dba_msgs_append_acquire(msgs, msg));
+
 	/* Export msg as a generic message */
 	dba_rawmsg raw;
-	CHECKED(bufrex_encode_bufr(msg, 0, 0, &raw));
+	CHECKED(bufrex_encode_bufr(msgs, 0, 0, &raw));
 
 	/* Parse it back */
-	dba_msg msg1;
-	CHECKED(bufrex_decode_bufr(raw, &msg1));
+	dba_msgs msgs1;
+	CHECKED(bufrex_decode_bufr(raw, &msgs1));
 
 	/* Check that the data are the same */
 	int diffs = 0;
-	dba_msg_diff(msg, msg1, &diffs, stderr);
-	if (diffs != 0) track_different_msgs(msg, msg1, "generic0");
+	dba_msgs_diff(msgs, msgs1, &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msgs, msgs1, "generic0");
 	gen_ensure_equals(diffs, 0);
 
 	dba_rawmsg_delete(raw);
-	dba_msg_delete(msg);
-	dba_msg_delete(msg1);
+	dba_msgs_delete(msgs);
+	dba_msgs_delete(msgs1);
 }
 
 // Try encoding and decoding a generic message
@@ -146,30 +150,34 @@ void to::test<2>()
 	CHECKED(dba_msg_set_timesig(		msg, 3,		45));
 	CHECKED(dba_msg_set_flight_press(	msg, 3,		45));
 
+	dba_msgs msgs;
+	CHECKED(dba_msgs_create(&msgs));
+	CHECKED(dba_msgs_append_acquire(msgs, msg));
+
 	/* Export msg as a generic message */
 	dba_rawmsg raw;
-	CHECKED(bufrex_encode_bufr(msg, 0, 0, &raw));
+	CHECKED(bufrex_encode_bufr(msgs, 0, 0, &raw));
 
 	/* Parse it back */
-	dba_msg msg1;
-	CHECKED(bufrex_decode_bufr(raw, &msg1));
+	dba_msgs msgs1;
+	CHECKED(bufrex_decode_bufr(raw, &msgs1));
 
 	/* Check that the data are the same */
 	int diffs = 0;
-	dba_msg_diff(msg, msg1, &diffs, stderr);
+	dba_msgs_diff(msgs, msgs1, &diffs, stderr);
 	if (diffs != 0)
 	{
 		dba_file out;
 		CHECKED(dba_file_create(&out, BUFR, "/tmp/generic0.bufr", "w"));
 		CHECKED(dba_file_write_raw(out, raw));
 		dba_file_delete(out);
-		track_different_msgs(msg, msg1, "generic0");
+		track_different_msgs(msgs, msgs1, "generic0");
 	}
 	gen_ensure_equals(diffs, 0);
 
 	dba_rawmsg_delete(raw);
-	dba_msg_delete(msg);
-	dba_msg_delete(msg1);
+	dba_msgs_delete(msgs);
+	dba_msgs_delete(msgs1);
 }
 
 template<> template<>
@@ -178,7 +186,7 @@ void to::test<3>()
 	dba_file file_gen;
 	dba_file file_synop;
 	int gfound, bfound, count = 0;
-	dba_msg gen, synop;
+	dba_msgs gen, synop;
 
 	CHECKED(dba_file_create(&file_gen, BUFR, "bufr/gen-generic.bufr", "r"));
 	CHECKED(dba_file_create(&file_synop, BUFR, "bufr/gen-synop.bufr", "r"));
@@ -188,21 +196,21 @@ void to::test<3>()
 	gen_ensure_equals(gfound, bfound);
 	do {
 		count++;
-		gen_ensure_equals(gen->type, MSG_GENERIC);
+		gen_ensure_equals(gen->msgs[0]->type, MSG_GENERIC);
 
 		/* Export gen as a synop message */
 		/* TODO: use the same template as the other synop message */
 		dba_rawmsg raw;
-		gen->type = MSG_SYNOP;
+		gen->msgs[0]->type = MSG_SYNOP;
 		CHECKED(bufrex_encode_bufr(gen, 0, 0, &raw));
 
 		/* Parse the second dba_rawmsg */
-		dba_msg synop1;
+		dba_msgs synop1;
 		CHECKED(bufrex_decode_bufr(raw, &synop1));
 
 		/* Check that the data are the same */
 		int diffs = 0;
-		dba_msg_diff(synop, synop1, &diffs, stderr);
+		dba_msgs_diff(synop, synop1, &diffs, stderr);
 
 		if (diffs != 0)
 		{
@@ -227,9 +235,9 @@ void to::test<3>()
 
 		gen_ensure_equals(diffs, 0);
 
-		dba_msg_delete(gen);
-		dba_msg_delete(synop);
-		dba_msg_delete(synop1);
+		dba_msgs_delete(gen);
+		dba_msgs_delete(synop);
+		dba_msgs_delete(synop1);
 		CHECKED(dba_file_read(file_gen, &gen, &gfound));
 		CHECKED(dba_file_read(file_synop, &synop, &bfound));
 		gen_ensure_equals(gfound, bfound);
@@ -282,22 +290,26 @@ void to::test<4>()
 	/* Add the variable to the message */
 	CHECKED(dba_msg_set_nocopy(msg, var, 1, 0, 0, 0, 0, 0));
 
+	dba_msgs msgs;
+	CHECKED(dba_msgs_create(&msgs));
+	CHECKED(dba_msgs_append_acquire(msgs, msg));
+
 	/* Encode the message */
 	dba_rawmsg raw;
-	CHECKED(bufrex_encode_bufr(msg, 0, 0, &raw));
+	CHECKED(bufrex_encode_bufr(msgs, 0, 0, &raw));
 
 	/* Decode the message */
-	dba_msg msg1;
-	CHECKED(bufrex_decode_bufr(raw, &msg1));
+	dba_msgs msgs1;
+	CHECKED(bufrex_decode_bufr(raw, &msgs1));
 	dba_rawmsg_delete(raw);
 
 	/* Check that everything is still there */
 	int diffs = 0;
-	dba_msg_diff(msg, msg1, &diffs, stderr);
+	dba_msgs_diff(msgs, msgs1, &diffs, stderr);
 	gen_ensure_equals(diffs, 0);
 
-	dba_msg_delete(msg);
-	dba_msg_delete(msg1);
+	dba_msgs_delete(msgs);
+	dba_msgs_delete(msgs1);
 }
 
 }
