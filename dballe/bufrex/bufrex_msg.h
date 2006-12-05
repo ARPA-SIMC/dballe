@@ -222,7 +222,7 @@ dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs);
 /**
  * Fill in a dba_msgs with the contents of the bufrex_msg
  */
-dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs msgs);
+dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs);
 
 
 /**

@@ -87,8 +87,7 @@ protected:
 				i != msgbase.end(); i++)
 		{
 			dba_msgs msgs = 0;
-			DBA_RUN_OR_RETURN(dba_msgs_create(&msgs));
-			DBA_RUN_OR_RETURN(bufrex_msg_to_dba_msgs(*i, msgs));
+			DBA_RUN_OR_RETURN(bufrex_msg_to_dba_msgs(*i, &msgs));
 			dba_msgs_delete(msgs);
 		}
 		timing("interpreting %d bufrex_raw messages", msgbase.size());

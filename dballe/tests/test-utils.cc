@@ -89,8 +89,7 @@ dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_en
 
 		// Parse the decoded message into a synop
 		dba_msgs msgs;
-		INNER_CHECKED(dba_msgs_create(&msgs));
-		INNER_CHECKED(bufrex_msg_to_dba_msgs(bufrex, msgs));
+		INNER_CHECKED(bufrex_msg_to_dba_msgs(bufrex, &msgs));
 
 		bufrex_msg_delete(bufrex);
 		return msgs;

@@ -31,25 +31,19 @@ dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msgs* msgs)
 {
 	dba_err err = DBA_OK;
 	bufrex_msg rmsg = NULL;
-	dba_msgs res = NULL;
 
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&rmsg, BUFREX_BUFR));
-	DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&res));
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_decode(rmsg, raw));
 	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_MSG))
 	{
 		dba_verbose(DBA_VERB_BUFREX_MSG, "Decoded BUFR data:\n");
 		bufrex_msg_print(rmsg, DBA_VERBOSE_STREAM);
 	}
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_dba_msgs(rmsg, res));
-	*msgs = res;
-	res = NULL;
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_dba_msgs(rmsg, msgs));
 
 cleanup:
 	if (rmsg != NULL)
 		bufrex_msg_delete(rmsg);
-	if (res != NULL)
-		dba_msgs_delete(res);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
@@ -57,25 +51,19 @@ dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msgs* msgs)
 {
 	dba_err err = DBA_OK;
 	bufrex_msg rmsg = NULL;
-	dba_msgs res = NULL;
 
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&rmsg, BUFREX_CREX));
-	DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&res));
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_decode(rmsg, raw));
 	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_MSG))
 	{
 		dba_verbose(DBA_VERB_BUFREX_MSG, "Decoded CREX data:\n");
 		bufrex_msg_print(rmsg, DBA_VERBOSE_STREAM);
 	}
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_dba_msgs(rmsg, res));
-	*msgs = res;
-	res = NULL;
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_dba_msgs(rmsg, msgs));
 
 cleanup:
 	if (rmsg != NULL)
 		bufrex_msg_delete(rmsg);
-	if (res != NULL)
-		dba_msgs_delete(res);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 

@@ -128,11 +128,14 @@ static dba_err get_exporter(dba_msg src, int type, int subtype, bufrex_exporter*
 	*/
 }
 
-dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs msgs)
+dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs)
 {
 	dba_err err = DBA_OK;
+	dba_msgs res = NULL;
 	dba_msg msg = NULL;
 	int i;
+
+	DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&res));
 
 	for (i = 0; i < raw->subsets_count; ++i);
 	{
@@ -157,15 +160,18 @@ dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs msgs)
 			default: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_generic(msg, raw, raw->subsets[i])); break;
 		}
 
-		DBA_RUN_OR_GOTO(cleanup, dba_msgs_append_acquire(msgs, msg));
+		DBA_RUN_OR_GOTO(cleanup, dba_msgs_append_acquire(res, msg));
 		msg = NULL;
 	}
 
-	return dba_error_ok();
+	*msgs = res;
+	res = NULL;
 
 cleanup:
 	if (msg != NULL)
 		dba_msg_delete(msg);
+	if (res != NULL)
+		dba_msgs_delete(res);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 

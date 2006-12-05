@@ -22,7 +22,6 @@
 #include <tests/test-utils.h>
 #include <dballe/dba_file.h>
 #include <dballe/bufrex/bufrex.h>
-#include <dballe/bufrex/bufrex_raw.h>
 #include <dballe/msg/dba_msg.h>
 
 namespace tut {
@@ -55,7 +54,8 @@ TESTGRP(dba_bufrex_conv);
 template<> template<>
 void to::test<1>()
 {
-	dba_msg msg = read_test_msg("crex/test-synop0.crex", CREX);
+	dba_msgs msgs = read_test_msg("crex/test-synop0.crex", CREX);
+	dba_msg msg = msgs->msgs[0];
 	gen_ensure_equals(msg->type, MSG_SYNOP);
 
 	/* dba_msg_print((dba_msg)synop, stderr); */
@@ -140,15 +140,15 @@ void to::test<2>()
 		test_tag(files[i]);
 
 		// Read the test message in a bufrex_raw
-		bufrex_raw braw1 = read_test_msg_raw(files[i], BUFR);
+		bufrex_msg braw1 = read_test_msg_raw(files[i], BUFR);
 
 		// Save category as a reference for reencoding
 		int type = braw1->type;
 		int subtype = braw1->subtype;
 		
 		// Finish converting in a dba_msg
-		dba_msg msg1;
-		CHECKED(bufrex_raw_to_msg(braw1, &msg1));
+		dba_msgs msgs1;
+		CHECKED(bufrex_msg_to_dba_msgs(braw1, &msgs1));
 
 		// Reencode the dba_msg in another dba_rawmsg
 		dba_rawmsg raw2;
