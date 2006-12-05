@@ -134,6 +134,10 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					case 6: DBA_RUN_OR_RETURN(dba_msg_set_cloud_c4_var(msg, var)); break;
 			   }
 			   break;
+			case DBA_VAR(0, 13, 19): DBA_RUN_OR_RETURN(dba_msg_set_tot_prec1_var(msg, var)); break;
+			case DBA_VAR(0, 13, 20): DBA_RUN_OR_RETURN(dba_msg_set_tot_prec3_var(msg, var)); break;
+			case DBA_VAR(0, 13, 21): DBA_RUN_OR_RETURN(dba_msg_set_tot_prec6_var(msg, var)); break;
+			case DBA_VAR(0, 13, 22): DBA_RUN_OR_RETURN(dba_msg_set_tot_prec12_var(msg, var)); break;
 			case DBA_VAR(0, 13, 23): DBA_RUN_OR_RETURN(dba_msg_set_tot_prec24_var(msg, var)); break;
 			case DBA_VAR(0, 13, 13): DBA_RUN_OR_RETURN(dba_msg_set_tot_snow_var(msg, var)); break;
 			case DBA_VAR(0, 22, 42): DBA_RUN_OR_RETURN(dba_msg_set_water_temp_var(msg, var)); break;
