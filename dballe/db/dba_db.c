@@ -367,7 +367,8 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn, "Getting ODBC driver name");
 		goto fail;
 	}
-	if (len >= 9 && strncmp(drivername, "libmyodbc", 9) == 0)
+	if ((len >= 9 && (strncmp(drivername, "libmyodbc", 9) == 0))
+	 || (len >= 6 && (strncmp(drivername, "myodbc", 6) == 0)))
 		(*db)->server_type = MYSQL;
 	else if (len >= 6 && strncmp(drivername, "sqlite", 6) == 0)
 		(*db)->server_type = SQLITE;

@@ -39,6 +39,7 @@ extern "C" {
  * Holds the WMO variable code of a variable
  */
 typedef short unsigned int dba_varcode;
+typedef short unsigned int dba_alteration;
 
 DBA_ARR_DECLARE(dba_varcode, varcode);
 
@@ -82,6 +83,10 @@ struct _dba_varinfo
 	double dmin;
 	/** Maximum scaled value the field can have */
 	double dmax;
+	/** C-table alteration that has been applied to this entry */
+	dba_alteration alteration;
+	/** Othere altered versions of this varinfo */
+	struct _dba_varinfo* alterations;
 };
 typedef struct _dba_varinfo* dba_varinfo;
 
@@ -124,6 +129,20 @@ typedef struct _dba_vartable* dba_vartable;
  */
 #define DBA_VAR_Y(code) ((code) & 0xff)
 
+/**
+ * Create a variable alteration value
+ */
+#define DBA_ALT(width, scale) (((width)+128) << 8 | ((scale)+128))
+
+/**
+ * Read the width part of a variable alteration value
+ */
+#define DBA_ALT_WIDTH(code) (((code) >> 8) - 128)
+
+/**
+ * Read the scale part of a variable alteration value
+ */
+#define DBA_ALT_SCALE(code) (((code) & 0xff) - 128)
 
 /**
  * Query informations about the DBALLE variable definitions
@@ -137,6 +156,21 @@ typedef struct _dba_vartable* dba_vartable;
  *   The error indicator for this function (@see dba_err)
  */
 dba_err dba_varinfo_query_local(dba_varcode code, dba_varinfo* info);
+
+/**
+ * Query informations about the DBALLE variable definitions
+ * 
+ * @param code
+ *   The ::dba_varcode of the variable to query
+ * @param change
+ *   WMO C table entry specify a change on the variable characteristics
+ * @retval info
+ *   The ::dba_varinfo structure with the variable results.  It needs to be
+ *   deallocated using dba_varinfo_delete()
+ * @return
+ *   The error indicator for this function (@see dba_err)
+ */
+dba_err dba_varinfo_query_local_altered(dba_varcode code, dba_alteration change, dba_varinfo* info);
 
 /**
  * Get a copy of the local B table
@@ -198,6 +232,23 @@ const char* dba_vartable_id(dba_vartable table);
  *   The error status (@see dba_err)
  */
 dba_err dba_vartable_query(dba_vartable table, dba_varcode var, dba_varinfo* info);
+
+/**
+ * Query an altered version of the vartable
+ *
+ * @param table
+ *   vartable to query
+ * @param var
+ *   vartable entry number (i.e. the XXYYY number in BXXYYY)
+ * @param change
+ *   WMO C table entry specify a change on the variable characteristics
+ * @retval info
+ *   the ::dba_varinfo structure with the results of the query.  The returned
+ *   dba_varinfo needs to be deallocated using dba_varinfo_delete()
+ * @return
+ *   The error status (@see dba_err)
+ */
+dba_err dba_vartable_query_altered(dba_vartable table, dba_varcode var, dba_alteration change, dba_varinfo* info);
 
 typedef void (*dba_vartable_iterator)(dba_varinfo info, void* data);
 

@@ -68,9 +68,22 @@ void to::test<1>()
 	gen_ensure_equals(dba_descriptor_code("363255"), DBA_VAR(3, 63, 255));
 }
 
-/* Test querying CREX tables */
+/* Test varcode alteration functions */
 template<> template<>
 void to::test<2>()
+{
+	dba_alteration a = DBA_ALT(1, 2);
+	gen_ensure_equals(DBA_ALT_WIDTH(a), 1);
+	gen_ensure_equals(DBA_ALT_SCALE(a), 2);
+
+	a = DBA_ALT(-1, -2);
+	gen_ensure_equals(DBA_ALT_WIDTH(a), -1);
+	gen_ensure_equals(DBA_ALT_SCALE(a), -2);
+}
+
+/* Test querying CREX tables */
+template<> template<>
+void to::test<3>()
 {
 	/* dba_err err; */
 	LocalEnv le("DBA_TABLES", ".");
@@ -112,7 +125,7 @@ void to::test<2>()
 
 /* Test querying BUFR tables */
 template<> template<>
-void to::test<3>()
+void to::test<4>()
 {
 	/* dba_err err; */
 	LocalEnv le("DBA_TABLES", ".");

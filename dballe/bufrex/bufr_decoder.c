@@ -38,7 +38,7 @@
 
 #include <assert.h>
 
-/* #define TRACE_DECODER */
+#define TRACE_DECODER
 
 #ifdef TRACE_DECODER
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)
@@ -437,7 +437,9 @@ static dba_err bufr_decode_b_data(decoder d)
 		TRACE("\n");
 	}
 
-	DBA_RUN_OR_RETURN(bufrex_raw_query_btable(d->out, d->ops->val, &info));
+	DBA_RUN_OR_RETURN(dba_vartable_query_altered(
+				d->out->btable, d->ops->val,
+				DBA_ALT(d->c_width_change, d->c_scale_change), &info));
 
 	IFTRACE {
 		TRACE("Parsing @%d+%d [bl %d+%d sc %d+%d ref %d]: %d%02d%03d %s[%s]\n", d->cursor, 8-d->pbyte_len,
@@ -449,6 +451,11 @@ static dba_err bufr_decode_b_data(decoder d)
 		/*DBA_RUN_OR_RETURN(dump_bits(d->in->buf + d->cursor - 1, 8 - d->pbyte_len, 32, stderr));*/
 		TRACE("\n");
 	}
+
+	if (d->c_scale_change > 0)
+		TRACE("Applied %d scale change\n", d->c_scale_change);
+	if (d->c_width_change > 0)
+		TRACE("Applied %d width change\n", d->c_width_change);
 
 	/* Create the new dba_var */
 	DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
@@ -501,16 +508,18 @@ static dba_err bufr_decode_b_data(decoder d)
 		/* FIXME: this alters the global shared info definition! */
 		
 		/* Change the variable definition according to the current C modifiers */
+		/*
 		info->scale += d->c_scale_change;
 		info->bit_len += d->c_width_change;
 		if (d->c_scale_change > 0)
 			TRACE("Applied %d scale change\n", d->c_scale_change);
 		if (d->c_width_change > 0)
 			TRACE("Applied %d scale change\n", d->c_width_change);
+		*/
 
 		DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, info->bit_len, &val));
 
-		TRACE("Reading %s, size %d, starting point %d\n", info->desc, info->bit_len, val);
+		TRACE("Reading %s, size %d, scale %d, starting point %d\n", info->desc, info->bit_len, info->scale, val);
 
 		/* Check if there are bits which are not 1 (that is, if the value is present) */
 		if (val != (((1 << (info->bit_len - 1))-1) | (1 << (info->bit_len - 1))))
@@ -654,10 +663,10 @@ static dba_err bufr_decode_c_data(decoder d)
 	switch (DBA_VAR_X(code))
 	{
 		case 1:
-			d->c_width_change = DBA_VAR_Y(code) - 128;
+			d->c_width_change = DBA_VAR_Y(code) == 0 ? 0 : DBA_VAR_Y(code) - 128;
 			break;
 		case 2:
-			d->c_scale_change = DBA_VAR_Y(code) - 128;
+			d->c_scale_change = DBA_VAR_Y(code) == 0 ? 0 : DBA_VAR_Y(code) - 128;
 			break;
 		case 22:
 			if (DBA_VAR_Y(code) == 0)

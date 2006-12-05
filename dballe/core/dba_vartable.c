@@ -116,6 +116,14 @@ dba_err dba_varinfo_query_local(dba_varcode code, dba_varinfo* info)
 	return dba_vartable_query(local_vars, code, info);
 }
 
+dba_err dba_varinfo_query_local_altered(dba_varcode code, dba_alteration change, dba_varinfo* info)
+{
+	/* Load dballe WMO parameter resolution table */
+	if (local_vars == NULL)
+		DBA_RUN_OR_RETURN(dba_vartable_create("dballe", &local_vars));
+	return dba_vartable_query_altered(local_vars, code, change, info);
+}
+
 dba_err dba_varinfo_get_local_table(dba_vartable* table)
 {
 	/* Load dballe WMO parameter resolution table */
@@ -178,6 +186,73 @@ dba_err dba_vartable_query(dba_vartable table, dba_varcode var, dba_varinfo* inf
 
 	assert((*info)->var == var);
 
+	return dba_error_ok();
+}
+
+dba_err dba_vartable_query_altered(dba_vartable table, dba_varcode var, dba_alteration change, dba_varinfo* info)
+{
+	if (change == 0 || change == DBA_ALT(0, 0))
+		return dba_vartable_query(table, var, info);
+
+	/* Get the normal variable */
+	dba_varinfo start, i;
+	DBA_RUN_OR_RETURN(dba_vartable_query(table, var, &start));
+
+	/* Look for an existing alteration */
+	for (i = start; i->alteration != change && i->alterations != NULL ; i = i->alterations)
+		;
+
+	if (i->alteration != change)
+	{
+		/* Not found: we need to create it */
+		int alt;
+
+		/* Duplicate the original varinfo */
+		i->alterations = (dba_varinfo)malloc(sizeof(struct _dba_varinfo));
+		memcpy(i->alterations, start, sizeof(struct _dba_varinfo));
+		i = i->alterations;
+
+		/*
+		fprintf(stderr, "Before alteration(w:%d,s:%d): bl %d len %d scale %d\n",
+				DBA_ALT_WIDTH(change), DBA_ALT_SCALE(change),
+				i->bit_len, i->len, i->scale);
+		*/
+
+		/* Apply the alterations */
+		if ((alt = DBA_ALT_WIDTH(change)) != 0)
+		{
+			i->bit_len += alt;
+			i->len = (int)ceil(log10(1 << i->bit_len));
+		}
+		if ((alt = DBA_ALT_SCALE(change)) != 0)
+			i->scale += alt;
+
+		/*
+		fprintf(stderr, "After alteration(w:%d,s:%d): bl %d len %d scale %d\n",
+				DBA_ALT_WIDTH(change), DBA_ALT_SCALE(change),
+				i->bit_len, i->len, i->scale);
+		*/
+
+		/* Postprocess the data, filling in minval and maxval */
+		if (!i->is_string)
+		{
+			if (i->len >= 10)
+			{
+				i->imin = INT_MIN;
+				i->imax = INT_MAX;
+			} else {
+				i->imin = -(int)(exp10(i->len) - 1.0);
+				i->imax = (int)(exp10(i->len) - 1.0);
+			}
+			i->dmin = dba_var_decode_int(i->imin, i);
+			i->dmax = dba_var_decode_int(i->imax, i);
+		}
+
+		i->alteration = change;
+		i->alterations = NULL;
+	}
+
+	*info = i;
 	return dba_error_ok();
 }
 
@@ -409,6 +484,9 @@ static dba_err dba_vartable_read(const char* id, int* index)
 			entry->dmin = dba_var_decode_int(entry->imin, entry);
 			entry->dmax = dba_var_decode_int(entry->imax, entry);
 		}
+
+		entry->alteration = 0;
+		entry->alterations = NULL;
 
 		/*
 		fprintf(stderr, "Debug: B%05d len %d scale %d type %s desc %s\n",
