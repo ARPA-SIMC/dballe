@@ -6,6 +6,7 @@ bufrexincludedir = $(includedir)/dballe/bufrex
 bufrexinclude_HEADERS = \
 		bufrex_dtable.h \
 		bufrex_opcode.h \
+		bufrex_subset.h \
 		bufrex_raw.h \
 		bufrex.h
 
@@ -13,6 +14,7 @@ noinst_LTLIBRARIES = libbufrex.la
 libbufrex_la_SOURCES = \
 		bufrex_dtable.c \
 		bufrex_opcode.c \
+		bufrex_subset.c \
 		bufrex_raw.c \
 		bufr_decoder.c \
 		bufr_encoder.c \

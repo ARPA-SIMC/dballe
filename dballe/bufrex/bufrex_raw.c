@@ -28,291 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-dba_err bufrex_raw_vars_create(dba_vartable btable, bufrex_raw_vars* vars)
-{
-	*vars = (bufrex_raw_vars)calloc(1, sizeof(struct _bufrex_raw_vars));
-	if (*vars == NULL)
-		return dba_error_alloc("allocating new storage for a subsection of decoded BUFR/CREX data");
-	(*vars)->btable = btable;
-	return dba_error_ok();
-}
-
-void bufrex_raw_vars_delete(bufrex_raw_vars vars)
-{
-	bufrex_raw_vars_reset(vars);
-
-	if (vars->vars)
-	{
-		free(vars->vars);
-		vars->vars = NULL;
-		vars->vars_alloclen = 0;
-	}
-
-	free(vars);
-}
-
-void bufrex_raw_vars_reset(bufrex_raw_vars vars)
-{
-	int i;
-
-	/* Preserve vars and vars_alloclen so that allocated memory can be reused */
-	for (i = 0; i < vars->vars_count; i++)
-		dba_var_delete(vars->vars[i]);
-	vars->vars_count = 0;
-}
-
-dba_err bufrex_raw_vars_store_variable(bufrex_raw_vars vars, dba_var var)
-{
-	/* Check if we need to enlarge the buffer size */
-	if (vars->vars_count == vars->vars_alloclen)
-	{
-		/* Enlarge the buffer size */
-		if (vars->vars == NULL)
-		{
-			vars->vars_alloclen = 32;
-			if ((vars->vars = (dba_var*)malloc(vars->vars_alloclen * sizeof(dba_var))) == NULL)
-				return dba_error_alloc("allocating memory for decoded message variables");
-		} else {
-			dba_var* newbuf;
-
-			/* Grow by doubling the allocated space */
-			vars->vars_alloclen <<= 1;
-
-			if ((newbuf = (dba_var*)realloc(vars->vars, vars->vars_alloclen * sizeof(dba_var))) == NULL)
-				return dba_error_alloc("allocating more memory for message data");
-			vars->vars = newbuf;
-		}
-	}
-
-	vars->vars[vars->vars_count++] = var;
-	return dba_error_ok();
-}
-
-dba_err bufrex_raw_vars_store_variable_var(bufrex_raw_vars vars, dba_varcode code, dba_var val)
-{
-	dba_var var;
-	dba_varinfo info;
-	DBA_RUN_OR_RETURN(dba_vartable_query(vars->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_create(info, &var));
-	DBA_RUN_OR_RETURN(dba_var_copy_val(var, val));
-	return bufrex_raw_vars_store_variable(vars, var);
-}
-
-dba_err bufrex_raw_vars_store_variable_i(bufrex_raw_vars vars, dba_varcode code, int val)
-{
-	dba_var var;
-	dba_varinfo info;
-	DBA_RUN_OR_RETURN(dba_vartable_query(vars->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_createi(info, val, &var));
-	return bufrex_raw_vars_store_variable(vars, var);
-}
-
-dba_err bufrex_raw_vars_store_variable_d(bufrex_raw_vars vars, dba_varcode code, double val)
-{
-	dba_var var;
-	dba_varinfo info;
-	DBA_RUN_OR_RETURN(dba_vartable_query(vars->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_created(info, val, &var));
-	return bufrex_raw_vars_store_variable(vars, var);
-}
-
-dba_err bufrex_raw_vars_store_variable_c(bufrex_raw_vars vars, dba_varcode code, const char* val)
-{
-	if (val == NULL || val[0] == 0)
-	{
-		return bufrex_raw_vars_store_variable_undef(vars, code);
-	} else {
-		dba_var var;
-		dba_varinfo info;
-		DBA_RUN_OR_RETURN(dba_vartable_query(vars->btable, code, &info));
-		DBA_RUN_OR_RETURN(dba_var_createc(info, val, &var));
-		return bufrex_raw_vars_store_variable(vars, var);
-	}
-}
-
-dba_err bufrex_raw_vars_store_variable_undef(bufrex_raw_vars vars, dba_varcode code)
-{
-	dba_var var;
-	dba_varinfo info;
-	DBA_RUN_OR_RETURN(dba_vartable_query(vars->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_create(info, &var));
-	return bufrex_raw_vars_store_variable(vars, var);
-}
-
-
-dba_err bufrex_raw_vars_add_attr(bufrex_raw_vars vars, dba_var attr)
-{
-	if (vars->vars_count == 0)
-		return dba_error_consistency("checking that some variable was previously appended");
-	return dba_var_seta(vars->vars[vars->vars_count - 1], attr);
-}
-
-dba_err bufrex_raw_vars_add_attrs(bufrex_raw_vars vars, dba_var var)
-{
-	if (vars->vars_count == 0)
-		return dba_error_consistency("checking that some variable was previously appended");
-	return dba_var_copy_attrs(vars->vars[vars->vars_count - 1], var);
-}
-
-dba_err bufrex_raw_vars_apply_attributes(bufrex_raw_vars vars)
-{
-	int i = 0;
-	int cur_dpb = -1;
-	int cur_attr = -1;
-
-	/* First step: scan the variable list and note the index of the first data
-	 * present bitmap and the first quality attribute */
-	for ( ; i < vars->vars_count; i++)
-		if (dba_var_code(vars->vars[i]) == DBA_VAR(0, 31, 31))
-		{
-			cur_dpb = i;
-			break;
-		}
-	for ( ; i < vars->vars_count; i++)
-	{
-		dba_varcode code = dba_var_code(vars->vars[i]);
-		if (DBA_VAR_F(code) == 0 && DBA_VAR_X(code) == 33)
-		{
-			cur_attr = i;
-			break;
-		}
-	}
-
-	/* Nothing to do if the data is not present */
-	if (cur_dpb == -1 || cur_attr == -1)
-		return dba_error_ok();
-	
-
-	/* Second step: iterate through the three lists applying the changes */
-	for (i = 0; i < vars->vars_count &&
-			cur_dpb < vars->vars_count &&
-			dba_var_code(vars->vars[cur_dpb]) == DBA_VAR(0, 31, 31) &&
-			cur_attr < vars->vars_count &&
-			DBA_VAR_F(dba_var_code(vars->vars[cur_attr])) == 0 &&
-			DBA_VAR_X(dba_var_code(vars->vars[cur_attr])) == 33; i++)
-	{
-		dba_var attr;
-		/* Skip over special data like delayed repetition counts */
-		if (DBA_VAR_F(dba_var_code(vars->vars[i])) != 0)
-			continue;
-		/* Skip over variables that don't have a 0 in the data present bitmap */
-		if (dba_var_value(vars->vars[cur_dpb++]) == NULL)
-			continue;
-		attr = vars->vars[cur_attr++];
-		/* Skip over attributes with NULL values */
-		if (dba_var_value(attr) == NULL)
-			continue;
-		DBA_RUN_OR_RETURN(dba_var_seta(vars->vars[i], attr));
-	}
-	return dba_error_ok();
-}
-
-dba_err bufrex_raw_vars_append_dpb(bufrex_raw_vars vars, int size, dba_varcode attr)
-{
-	int i;
-
-	/* Add repetition count */
-	bufrex_raw_vars_store_variable_i(vars, DBA_VAR(0, 31, 2), size);
-	
-	/* Scan first 'size' variables checking for the presence of 'attr' */
-	for (i = 0; i < vars->vars_count && size > 0; i++)
-	{
-		dba_var test_var;
-
-#if 0
-		dba_varcode code = dba_var_code(vars->vars[i]);
-		/* Skip over special data like delayed repetition counts */
-		if (DBA_VAR_F(code) != 0 ||
-		    (DBA_VAR_F(code) == 0 && DBA_VAR_X(code) == 31))
-			continue;
-#endif
-
-		/* Check if the variable has the attribute we want */
-		DBA_RUN_OR_RETURN(dba_var_enqa(vars->vars[i], attr, &test_var));
-		if (test_var != NULL)
-			DBA_RUN_OR_RETURN(bufrex_raw_vars_store_variable_i(vars, DBA_VAR(0, 31, 31), 0));
-		else
-			DBA_RUN_OR_RETURN(bufrex_raw_vars_store_variable_undef(vars, DBA_VAR(0, 31, 31)));
-		size--;
-	}
-	return dba_error_ok();
-}
-
-dba_err bufrex_raw_vars_append_fixed_dpb(bufrex_raw_vars vars, int size)
-{
-	int i;
-
-	for (i = 0; i < size; i++)
-		DBA_RUN_OR_RETURN(bufrex_raw_vars_store_variable_i(vars, DBA_VAR(0, 31, 31), 0));
-
-	return dba_error_ok();
-}
-
-dba_err bufrex_raw_vars_append_attrs(bufrex_raw_vars vars, int size, dba_varcode attr)
-{
-	int i;
-	int repcount_idx;
-	int added = 0;
-
-	/* Add delayed repetition count with an initial value of 0, and mark its position */
-	bufrex_raw_vars_store_variable_i(vars, DBA_VAR(0, 31, 2), 0);
-	repcount_idx = vars->vars_count - 1;
-	
-	/* Scan first 'size' variables checking for the presence of 'attr' */
-	for (i = 0; i < vars->vars_count && size > 0; i++)
-	{
-		dba_var var_attr;
-
-#if 0
-		/* Skip over special data like delayed repetition counts */
-		if (DBA_VAR_F(dba_var_code(vars->vars[i])) != 0)
-			continue;
-#endif
-
-		/* Check if the variable has the attribute we want */
-		DBA_RUN_OR_RETURN(dba_var_enqa(vars->vars[i], attr, &var_attr));
-		if (var_attr != NULL)
-		{
-			DBA_RUN_OR_RETURN(bufrex_raw_vars_store_variable_var(vars, attr, var_attr));
-			added++;
-		}
-		size--;
-	}
-
-	/* Set the repetition count with the number of variables we added */
-	DBA_RUN_OR_RETURN(dba_var_seti(vars->vars[repcount_idx], added));
-
-	return dba_error_ok();
-}
-
-dba_err bufrex_raw_vars_append_fixed_attrs(bufrex_raw_vars vars, int size, dba_varcode attr)
-{
-	int i;
-	
-	/* Scan first 'size' variables checking for the presence of 'attr' */
-	for (i = 0; i < vars->vars_count && size > 0; i++)
-	{
-		dba_var var_attr;
-
-		/* Skip over special data like delayed repetition counts */
-		if (DBA_VAR_F(dba_var_code(vars->vars[i])) != 0)
-			continue;
-
-		/* Check if the variable has the attribute we want */
-		DBA_RUN_OR_RETURN(dba_var_enqa(vars->vars[i], attr, &var_attr));
-		if (var_attr != NULL)
-			DBA_RUN_OR_RETURN(bufrex_raw_vars_store_variable_var(vars, attr, var_attr));
-		else
-			DBA_RUN_OR_RETURN(bufrex_raw_vars_store_variable_undef(vars, attr));
-		size--;
-	}
-
-	return dba_error_ok();
-}
-
-
-
-
 
 dba_err bufrex_raw_create(bufrex_raw* msg, bufrex_type type)
 {
@@ -330,7 +45,7 @@ void bufrex_raw_reset(bufrex_raw msg)
 
 	/* Preserve vars and vars_alloclen so that allocated memory can be reused */
 	for (i = 0; i < msg->subgroups_count; i++)
-		bufrex_raw_vars_delete(msg->subgroups[i]);
+		bufrex_subset_delete(msg->subgroups[i]);
 	msg->subgroups_count = 0;
 
 	if (msg->datadesc != NULL)
@@ -357,7 +72,7 @@ void bufrex_raw_delete(bufrex_raw msg)
 	free(msg);
 }
 
-dba_err bufrex_raw_get_subsection(bufrex_raw msg, int subsection, bufrex_raw_vars* vars)
+dba_err bufrex_raw_get_subsection(bufrex_raw msg, int subsection, bufrex_subset* vars)
 {
 	/* First ensure we have the allocated space we need */
 	if (subsection >= msg->subgroups_alloclen)
@@ -365,17 +80,17 @@ dba_err bufrex_raw_get_subsection(bufrex_raw msg, int subsection, bufrex_raw_var
 		if (msg->subgroups == NULL)
 		{
 			msg->subgroups_alloclen = 1;
-			if ((msg->subgroups = (bufrex_raw_vars*)malloc(msg->subgroups_alloclen * sizeof(bufrex_raw_vars))) == NULL)
+			if ((msg->subgroups = (bufrex_subset*)malloc(msg->subgroups_alloclen * sizeof(bufrex_subset))) == NULL)
 				return dba_error_alloc("allocating memory for message subgroups");
 		} else {
-			bufrex_raw_vars* newbuf;
+			bufrex_subset* newbuf;
 
 			while (subsection >= msg->subgroups_alloclen)
 				/* Grow by doubling the allocated space */
 				msg->subgroups_alloclen <<= 1;
 
-			if ((newbuf = (bufrex_raw_vars*)realloc(
-					msg->subgroups, msg->subgroups_alloclen * sizeof(bufrex_raw_vars))) == NULL)
+			if ((newbuf = (bufrex_subset*)realloc(
+					msg->subgroups, msg->subgroups_alloclen * sizeof(bufrex_subset))) == NULL)
 				return dba_error_alloc("allocating more memory for message subgroups");
 			msg->subgroups = newbuf;
 		}
@@ -384,7 +99,7 @@ dba_err bufrex_raw_get_subsection(bufrex_raw msg, int subsection, bufrex_raw_var
 	/* Then see if we need to initialize more of the allocated subgroups */
 	while (msg->subgroups_count <= subsection)
 	{
-		DBA_RUN_OR_RETURN(bufrex_raw_vars_create(msg->btable, &(msg->subgroups[msg->subgroups_count])));
+		DBA_RUN_OR_RETURN(bufrex_subset_create(msg->btable, &(msg->subgroups[msg->subgroups_count])));
 		++msg->subgroups_count;
 	}
 
