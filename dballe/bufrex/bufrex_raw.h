@@ -57,6 +57,216 @@ struct _bufrex_crex_options {
 	int table;
 };
 
+struct _bufrex_raw_vars {
+	/* dba_vartable used to lookup B table codes (reference to the one in
+	 * bufrex_raw: memory management is done by bufrex_raw) */
+	dba_vartable btable;
+
+	/* Decoded variables */
+	dba_var* vars;
+	/* Number of decoded variables */
+	int vars_count;
+	/* Size (in dba_var*) of the buffer allocated for vars */
+	int vars_alloclen;
+
+};
+typedef struct _bufrex_raw_vars* bufrex_raw_vars;
+
+dba_err bufrex_raw_vars_create(dba_vartable btable, bufrex_raw_vars* vars);
+
+void bufrex_raw_vars_delete(bufrex_raw_vars vars);
+
+void bufrex_raw_vars_reset(bufrex_raw_vars vars);
+
+/**
+ * Store a decoded variable in the message, to be encoded later.
+ *
+ * The function will take ownership of the dba_var, and when the message is
+ * destroyed or reset, ::dba_var_delete() will be called on it.
+ *
+ * \param vars
+ *   The message that will hold the variable
+ * \param var
+ *   The variable to store in the message.  The message will take ownership of
+ *   memory management for the variable, which will be deallocated when the
+ *   message is deleted or reset.
+ * \return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_store_variable(bufrex_raw_vars vars, dba_var var);
+
+/**
+ * Store a new variable in the message, copying it from an already existing
+ * variable.
+ *
+ * @param vars
+ *   The message that will hold the variable
+ * @param code
+ *   The ::dba_varcode of the variable to add
+ * @param var
+ *   The variable holding the value for the variable to add
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_store_variable_var(bufrex_raw_vars vars, dba_varcode code, dba_var var);
+
+/**
+ * Store a new variable in the message, providing its value as an int
+ *
+ * @param vars
+ *   The message that will hold the variable
+ * @param code
+ *   The ::dba_varcode of the variable to add
+ * @param val
+ *   The value for the variable
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_store_variable_i(bufrex_raw_vars vars, dba_varcode code, int val);
+
+/**
+ * Store a new variable in the message, providing its value as a double
+ *
+ * @param vars
+ *   The message that will hold the variable
+ * @param code
+ *   The ::dba_varcode of the variable to add
+ * @param val
+ *   The value for the variable
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_store_variable_d(bufrex_raw_vars vars, dba_varcode code, double val);
+
+/**
+ * Store a new variable in the message, providing its value as a string
+ *
+ * @param vars
+ *   The message that will hold the variable
+ * @param code
+ *   The ::dba_varcode of the variable to add
+ * @param val
+ *   The value for the variable
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_store_variable_c(bufrex_raw_vars vars, dba_varcode code, const char* val);
+
+/**
+ * Store a new, undefined variable in the message
+ *
+ * @param vars
+ *   The message that will hold the variable
+ * @param code
+ *   The ::dba_varcode of the variable to add
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_store_variable_undef(bufrex_raw_vars vars, dba_varcode code);
+
+/**
+ * Add the attribute 'addr' to the last variable that was previously stored.
+ *
+ * The attribute is copied into the variable, so memory management of it will
+ * still belong to the caller.
+ *
+ * @param vars
+ *   The message to operate on
+ * @param attr
+ *   The attribute to copy in the last variable
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_add_attr(bufrex_raw_vars vars, dba_var attr); 
+
+/**
+ * Copy all the attributes from 'var' into the last variable that was
+ * previously stored.
+ *
+ * @param vars
+ *   The message to operate on
+ * @param var
+ *   The variable with the attributes to copy
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_add_attrs(bufrex_raw_vars vars, dba_var var); 
+
+/**
+ * Copy decoded variables that are attributes as attributes in the decoded
+ * variables they refer to.
+ *
+ * @param vars
+ *   The message to operate on
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_apply_attributes(bufrex_raw_vars vars);
+
+/**
+ * Compute and append a data present bitmap
+ *
+ * @param vars
+ *   The message to operate on
+ * @param size
+ *   The size of the bitmap
+ * @param attr
+ *   The code of the attribute that the bitmap will represent
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_append_dpb(bufrex_raw_vars vars, int size, dba_varcode attr);
+
+/**
+ * Append a fixed-size data present bitmap with all zeros
+ *
+ * @param vars
+ *   The message to operate on
+ * @param size
+ *   The size of the bitmap
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_append_fixed_dpb(bufrex_raw_vars vars, int size);
+
+/**
+ * Scan the first 'size' variables appending the attribute 'attr' when found.
+ *
+ * The delayed replicator factor with the number of attributes found will also
+ * be appended before the attributes.
+ *
+ * @param vars
+ *   The message to operate on
+ * @param size
+ *   The number of variables to scan
+ * @param attr
+ *   The code of the attribute to look for
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_append_attrs(bufrex_raw_vars vars, int size, dba_varcode attr);
+
+/**
+ * Scan the first 'size' variables appending the attribute 'attr' in any case.
+ *
+ * Exactly 'size' attributes will be appended, possibly with value 'undef' when
+ * they are not present.  No delayed replicator factor is appended.
+ *
+ * @param vars
+ *   The message to operate on
+ * @param size
+ *   The number of variables to scan
+ * @param attr
+ *   The code of the attribute to look for
+ * @return
+ *   The error indicator for the function.  @see dba_err
+ */
+dba_err bufrex_raw_vars_append_fixed_attrs(bufrex_raw_vars vars, int size, dba_varcode attr);
+
+
+
+
+
 struct _bufrex_raw
 {
 	/* Type of source/target encoding data */
@@ -84,11 +294,11 @@ struct _bufrex_raw
 	bufrex_dtable dtable;
 
 	/* Decoded variables */
-	dba_var* vars;
+	bufrex_raw_vars* subgroups;
 	/* Number of decoded variables */
-	int vars_count;
+	int subgroups_count;
 	/* Size (in dba_var*) of the buffer allocated for vars */
-	int vars_alloclen;
+	int subgroups_alloclen;
 
 	/* Parsed CREX data descriptor section */
 	bufrex_opcode datadesc;
@@ -103,6 +313,8 @@ dba_err bufrex_raw_create(bufrex_raw* msg, bufrex_type type);
 void bufrex_raw_delete(bufrex_raw msg);
 
 void bufrex_raw_reset(bufrex_raw msg);
+
+dba_err bufrex_raw_get_subsection(bufrex_raw msg, int subsection, bufrex_raw_vars* vars);
 
 /**
  * Get the ID of the table used by this bufrex_raw
@@ -183,192 +395,6 @@ dba_err bufrex_raw_get_datadesc(bufrex_raw msg, struct _bufrex_opcode** res);
  *   The error indicator for the function.  @see ::dba_err
  */
 dba_err bufrex_raw_append_datadesc(bufrex_raw msg, dba_varcode varcode);
-
-/**
- * Store a decoded variable in the message, to be encoded later.
- *
- * The function will take ownership of the dba_var, and when the message is
- * destroyed or reset, ::dba_var_delete() will be called on it.
- *
- * \param msg
- *   The message that will hold the variable
- * \param var
- *   The variable to store in the message.  The message will take ownership of
- *   memory management for the variable, which will be deallocated when the
- *   message is deleted or reset.
- * \return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_store_variable(bufrex_raw msg, dba_var var);
-
-/**
- * Store a new variable in the message, copying it from an already existing
- * variable.
- *
- * @param msg
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add
- * @param var
- *   The variable holding the value for the variable to add
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_store_variable_var(bufrex_raw msg, dba_varcode code, dba_var var);
-
-/**
- * Store a new variable in the message, providing its value as an int
- *
- * @param msg
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add
- * @param val
- *   The value for the variable
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_store_variable_i(bufrex_raw msg, dba_varcode code, int val);
-
-/**
- * Store a new variable in the message, providing its value as a double
- *
- * @param msg
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add
- * @param val
- *   The value for the variable
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_store_variable_d(bufrex_raw msg, dba_varcode code, double val);
-
-/**
- * Store a new variable in the message, providing its value as a string
- *
- * @param msg
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add
- * @param val
- *   The value for the variable
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_store_variable_c(bufrex_raw msg, dba_varcode code, const char* val);
-
-/**
- * Store a new, undefined variable in the message
- *
- * @param msg
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_store_variable_undef(bufrex_raw msg, dba_varcode code);
-
-/**
- * Add the attribute 'addr' to the last variable that was previously stored.
- *
- * The attribute is copied into the variable, so memory management of it will
- * still belong to the caller.
- *
- * @param msg
- *   The message to operate on
- * @param attr
- *   The attribute to copy in the last variable
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_add_attr(bufrex_raw msg, dba_var attr); 
-
-/**
- * Copy all the attributes from 'var' into the last variable that was
- * previously stored.
- *
- * @param msg
- *   The message to operate on
- * @param var
- *   The variable with the attributes to copy
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_add_attrs(bufrex_raw msg, dba_var var); 
-
-/**
- * Copy decoded variables that are attributes as attributes in the decoded
- * variables they refer to.
- *
- * @param msg
- *   The message to operate on
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_apply_attributes(bufrex_raw msg);
-
-/**
- * Compute and append a data present bitmap
- *
- * @param msg
- *   The message to operate on
- * @param size
- *   The size of the bitmap
- * @param attr
- *   The code of the attribute that the bitmap will represent
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_append_dpb(bufrex_raw msg, int size, dba_varcode attr);
-
-/**
- * Append a fixed-size data present bitmap with all zeros
- *
- * @param msg
- *   The message to operate on
- * @param size
- *   The size of the bitmap
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_append_fixed_dpb(bufrex_raw msg, int size);
-
-/**
- * Scan the first 'size' variables appending the attribute 'attr' when found.
- *
- * The delayed replicator factor with the number of attributes found will also
- * be appended before the attributes.
- *
- * @param msg
- *   The message to operate on
- * @param size
- *   The number of variables to scan
- * @param attr
- *   The code of the attribute to look for
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_append_attrs(bufrex_raw msg, int size, dba_varcode attr);
-
-/**
- * Scan the first 'size' variables appending the attribute 'attr' in any case.
- *
- * Exactly 'size' attributes will be appended, possibly with value 'undef' when
- * they are not present.  No delayed replicator factor is appended.
- *
- * @param msg
- *   The message to operate on
- * @param size
- *   The number of variables to scan
- * @param attr
- *   The code of the attribute to look for
- * @return
- *   The error indicator for the function.  @see dba_err
- */
-dba_err bufrex_raw_append_fixed_attrs(bufrex_raw msg, int size, dba_varcode attr);
-
 
 /**
  * Parse an encoded message into a bufrex_raw
