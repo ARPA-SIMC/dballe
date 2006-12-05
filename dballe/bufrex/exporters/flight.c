@@ -24,8 +24,8 @@
 
 #include "exporters.h"
 
-static dba_err exporter(dba_msg src, bufrex_raw dst, int type);
-static dba_err exporter_acars(dba_msg src, bufrex_raw dst, int type);
+static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
+static dba_err exporter_acars(dba_msg src, bufrex_subset dst, int type);
 
 bufrex_exporter bufrex_exporter_flight_4_142 = {
 	/* Category */
@@ -152,7 +152,7 @@ static struct template tpl_gen[] = {
 /* 17 */ { DBA_VAR(0, 20, 41), -1,			DBA_VAR(0, 20, 41) },	/* AIRFRAME ICING */
 };
 
-static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, bufrex_raw dst, int type)
+static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, bufrex_subset dst, int type)
 {
 	int ltype = -1, l1 = -1;
 	dba_msg_datum d;
@@ -192,24 +192,24 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 			d = dba_msg_find(src, tpl[i].msgcode, ltype, l1, 0, 0, 0, 0);
 
 		if (d != NULL)
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, tpl[i].code, d->var));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, d->var));
 		else
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, tpl[i].code));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 	}
 
 	return dba_error_ok();
 }
 
-static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
+static dba_err exporter(dba_msg src, bufrex_subset dst, int type)
 {
 	DBA_RUN_OR_RETURN(export_common(src, tpl_gen, sizeof(tpl_gen)/sizeof(struct template), dst, type));
 
 	if (type == 0)
 	{
-		DBA_RUN_OR_RETURN(bufrex_raw_append_fixed_dpb(dst, 18));
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 1, 32)));
-		DBA_RUN_OR_RETURN(bufrex_raw_append_fixed_attrs(dst, 18, DBA_VAR(0, 33, 7)));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_dpb(dst, 18));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 32)));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_attrs(dst, 18, DBA_VAR(0, 33, 7)));
 	}
 
 	return dba_error_ok();
@@ -246,16 +246,16 @@ static struct template tpl_acars[] = {
 /* 27 */ { DBA_VAR(0, 20, 41), -1,			DBA_VAR(0, 20, 41) },	/* AIRFRAME ICING */
 };
 
-static dba_err exporter_acars(dba_msg src, bufrex_raw dst, int type)
+static dba_err exporter_acars(dba_msg src, bufrex_subset dst, int type)
 {
 	DBA_RUN_OR_RETURN(export_common(src, tpl_acars, sizeof(tpl_acars)/sizeof(struct template), dst, type));
 
 	if (type == 0)
 	{
-		DBA_RUN_OR_RETURN(bufrex_raw_append_fixed_dpb(dst, 28));
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 12, 1)));
-		DBA_RUN_OR_RETURN(bufrex_raw_append_fixed_attrs(dst, 28, DBA_VAR(0, 33, 7)));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_dpb(dst, 28));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 12, 1)));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_attrs(dst, 28, DBA_VAR(0, 33, 7)));
 	}
 
 	return dba_error_ok();

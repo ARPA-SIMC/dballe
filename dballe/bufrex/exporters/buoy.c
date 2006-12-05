@@ -25,7 +25,7 @@
 
 #include "exporters.h"
 
-static dba_err exporter(dba_msg src, bufrex_raw dst, int type);
+static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
 
 bufrex_exporter bufrex_exporter_sea_1_21 = {
 	/* Category */
@@ -90,7 +90,7 @@ static struct template tpl[] = {
 /* 31 */ { DBA_VAR(0, 22, 42), DBA_MSG_WATER_TEMP },
 };
 
-static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
+static dba_err exporter(dba_msg src, bufrex_subset dst, int type)
 {
 	int i;
 	for (i = 0; i < sizeof(tpl)/sizeof(struct template); i++)
@@ -101,22 +101,22 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
 				dba_var var = dba_msg_get_ident_var(src);
 				const char* val = var == NULL ? NULL : dba_var_value(var);
 				if (val != NULL)
-					DBA_RUN_OR_RETURN(bufrex_raw_store_variable_i(dst, tpl[i].code, strtol(val, 0, 10)));
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, strtol(val, 0, 10)));
 				else
-					DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, tpl[i].code));
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				if (var != NULL)
-					DBA_RUN_OR_RETURN(bufrex_raw_add_attrs(dst, var));
+					DBA_RUN_OR_RETURN(bufrex_subset_add_attrs(dst, var));
 				break;
 			}
 			case 25:
-				DBA_RUN_OR_RETURN(bufrex_raw_store_variable_i(dst, tpl[i].code, 1));
+				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 1));
 				break;
 			default: {
 				dba_msg_datum d = dba_msg_find_by_id(src, tpl[i].var);
 				if (d != NULL)
-					DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, tpl[i].code, d->var));
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, d->var));
 				else
-					DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, tpl[i].code));
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;
 			}
 		}
@@ -124,10 +124,10 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
 
 	if (type == 0)
 	{
-		DBA_RUN_OR_RETURN(bufrex_raw_append_fixed_dpb(dst, 32));
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 1, 32)));
-		DBA_RUN_OR_RETURN(bufrex_raw_append_fixed_attrs(dst, 32, DBA_VAR(0, 33, 7)));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_dpb(dst, 32));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 32)));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_attrs(dst, 32, DBA_VAR(0, 33, 7)));
 	}
 
 	return dba_error_ok();

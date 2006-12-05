@@ -23,7 +23,7 @@
 
 #include "exporters.h"
 
-static dba_err exporter(dba_msg src, bufrex_raw dst, int type);
+static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
 
 bufrex_exporter bufrex_exporter_generic = {
 	/* Category */
@@ -38,7 +38,7 @@ bufrex_exporter bufrex_exporter_generic = {
 	(bufrex_exporter_func)exporter,
 };
 
-static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
+static dba_err exporter(dba_msg src, bufrex_subset dst, int type)
 {
 	dba_err err = DBA_OK;
 	int i, j;
@@ -58,37 +58,37 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
 			/* Update the context in the message, if needed */
 			if (ltype != lev->ltype)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable_i(dst, DBA_VAR(0, 7, 192), lev->ltype));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 192), lev->ltype));
 				ltype = lev->ltype;
 			}
 			if (l1 != lev->l1)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable_i(dst, DBA_VAR(0, 7, 193), lev->l1));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 193), lev->l1));
 				l1 = lev->l1;
 			}
 			if (l2 != lev->l2)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable_i(dst, DBA_VAR(0, 7, 194), lev->l2));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 194), lev->l2));
 				l2 = lev->l2;
 			}
 			if (pind != d->pind)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable_i(dst, DBA_VAR(0, 4, 192), d->pind));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 192), d->pind));
 				pind = d->pind;
 			}
 			if (p1 != d->p1)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable_i(dst, DBA_VAR(0, 4, 193), d->p1));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 193), d->p1));
 				p1 = d->p1;
 			}
 			if (p2 != d->p2)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable_i(dst, DBA_VAR(0, 4, 194), d->p2));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 194), d->p2));
 				p2 = d->p2;
 			}
 
 			/* Store the variable */
-			DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable_var(dst, dba_var_code(d->var), d->var));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(d->var), d->var));
 
 			/* Store the attributes */
 			for (iter = dba_var_attr_iterate(d->var);
@@ -96,7 +96,7 @@ static dba_err exporter(dba_msg src, bufrex_raw dst, int type)
 					iter = dba_var_attr_iterator_next(iter))
 			{
 				dba_var attr = dba_var_attr_iterator_attr(iter);
-				DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable_var(dst, dba_var_code(attr), attr));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(attr), attr));
 			}
 		}
 	}

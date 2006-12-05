@@ -169,9 +169,10 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err bufrex_msg_from_msg(bufrex_msg raw, dba_msg msg)
+dba_err bufrex_msg_from_dba_msg(bufrex_msg raw, dba_msg msg)
 {
 	bufrex_exporter* exp;
+	bufrex_subset subset;
 	int i;
 
 	/* Find the appropriate exporter, and compute type and subtype if missing */
@@ -187,8 +188,11 @@ dba_err bufrex_msg_from_msg(bufrex_msg raw, dba_msg msg)
 		DBA_RUN_OR_RETURN(bufrex_msg_append_datadesc(raw, exp->ddesc[i]));
 	}
 
+	/* Import the message into the first subset */
+	DBA_RUN_OR_RETURN(bufrex_msg_get_subset(raw, 0, &subset));
+
 	/* Fill up the bufrex_msg with variables from msg */
-	DBA_RUN_OR_RETURN(exp->exporter(msg, raw, raw->encoding_type == BUFREX_BUFR ? 0 : 1));
+	DBA_RUN_OR_RETURN(exp->exporter(msg, subset, raw->encoding_type == BUFREX_BUFR ? 0 : 1));
 
 	/* Fill in the nominal datetime informations */
 	{
@@ -202,6 +206,55 @@ dba_err bufrex_msg_from_msg(bufrex_msg raw, dba_msg msg)
 		if ((var = dba_msg_get_hour_var(msg)) != NULL)
 			DBA_RUN_OR_RETURN(dba_var_enqi(var, &(raw->rep_hour)));
 		if ((var = dba_msg_get_minute_var(msg)) != NULL)
+			DBA_RUN_OR_RETURN(dba_var_enqi(var, &(raw->rep_minute)));
+	}
+	
+	return dba_error_ok();
+}
+
+dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs)
+{
+	bufrex_exporter* exp;
+	int i;
+
+	if (msgs->len == 0)
+		return dba_error_consistency("tried to export an empty dba_msgs");
+
+	/* Find the appropriate exporter, and compute type and subtype if missing */
+	DBA_RUN_OR_RETURN(get_exporter(msgs->msgs[0], raw->type, raw->subtype, &exp));
+
+	/* Init the bufrex_msg data descriptor chain */
+	for (i = 0; exp->ddesc[i] != 0; i++)
+	{
+		/* Skip encoding of attributes for CREX */
+		if (raw->encoding_type == BUFREX_CREX && exp->ddesc[i] == DBA_VAR(2, 22, 0))
+			break;
+
+		DBA_RUN_OR_RETURN(bufrex_msg_append_datadesc(raw, exp->ddesc[i]));
+	}
+
+	/* Import each message into its own subset */
+	for (i = 0; i < msgs->len; ++i)
+	{
+		bufrex_subset subset;
+		DBA_RUN_OR_RETURN(bufrex_msg_get_subset(raw, i, &subset));
+
+		/* Fill up the bufrex_msg with variables from msg */
+		DBA_RUN_OR_RETURN(exp->exporter(msgs->msgs[i], subset, raw->encoding_type == BUFREX_BUFR ? 0 : 1));
+	}
+
+	/* Fill in the nominal datetime informations */
+	{
+		dba_var var;
+		if ((var = dba_msg_get_year_var(msgs->msgs[0])) != NULL)
+			DBA_RUN_OR_RETURN(dba_var_enqi(var, &(raw->rep_year)));
+		if ((var = dba_msg_get_month_var(msgs->msgs[0])) != NULL)
+			DBA_RUN_OR_RETURN(dba_var_enqi(var, &(raw->rep_month)));
+		if ((var = dba_msg_get_day_var(msgs->msgs[0])) != NULL)
+			DBA_RUN_OR_RETURN(dba_var_enqi(var, &(raw->rep_day)));
+		if ((var = dba_msg_get_hour_var(msgs->msgs[0])) != NULL)
+			DBA_RUN_OR_RETURN(dba_var_enqi(var, &(raw->rep_hour)));
+		if ((var = dba_msg_get_minute_var(msgs->msgs[0])) != NULL)
 			DBA_RUN_OR_RETURN(dba_var_enqi(var, &(raw->rep_minute)));
 	}
 	

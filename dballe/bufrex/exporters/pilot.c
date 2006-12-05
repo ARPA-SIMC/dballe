@@ -21,7 +21,7 @@
 
 #include "exporters.h"
 
-static dba_err exporter91(dba_msg msg, bufrex_raw dst, int type);
+static dba_err exporter91(dba_msg msg, bufrex_subset dst, int type);
 
 bufrex_exporter bufrex_exporter_pilot_2_91 = {
 	/* Category */
@@ -65,7 +65,7 @@ struct template {
 	int var;
 };
 
-static dba_err run_template(dba_msg msg, bufrex_raw dst, struct template* tpl, int tpl_count)
+static dba_err run_template(dba_msg msg, bufrex_subset dst, struct template* tpl, int tpl_count)
 {
 	int i;
 
@@ -75,16 +75,16 @@ static dba_err run_template(dba_msg msg, bufrex_raw dst, struct template* tpl, i
 		{
 			/* Special handling for vertical sounding significance */
 			if (tpl[i].code == DBA_VAR(0, 8, 2))
-				DBA_RUN_OR_RETURN(bufrex_raw_store_variable_i(dst, tpl[i].code, -tpl[i].var));
+				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, -tpl[i].var));
 		}
 		else
 		{
 			dba_msg_datum d = dba_msg_find_by_id(msg, tpl[i].var);
 
 			if (d != NULL)
-				DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, tpl[i].code, d->var));
+				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, d->var));
 			else
-				DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, tpl[i].code));
+				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 		}
 
 	return dba_error_ok();
@@ -104,7 +104,7 @@ static struct template tpl91[] = {
 /* 10 */ { DBA_VAR(0,  6,  1), DBA_MSG_LONGITUDE,	 },
 /* 11 */ { DBA_VAR(0,  7,  1), DBA_MSG_HEIGHT,		 },
 };
-static dba_err exporter91(dba_msg msg, bufrex_raw dst, int type)
+static dba_err exporter91(dba_msg msg, bufrex_subset dst, int type)
 {
 	const int tplsize = sizeof(tpl91)/sizeof(struct template);
 	dba_var var_levcount;
@@ -113,7 +113,7 @@ static dba_err exporter91(dba_msg msg, bufrex_raw dst, int type)
 
 	/* Fill up the message */
 	DBA_RUN_OR_RETURN(run_template(msg, dst, tpl91, tplsize));
-	DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 31,  1)));
+	DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 31,  1)));
 	var_levcount = dst->vars[dst->vars_count - 1];
 
 	for (i = 0; i < msg->data_count; i++)
@@ -126,30 +126,30 @@ static dba_err exporter91(dba_msg msg, bufrex_raw dst, int type)
 			continue;
 
 		if ((d1 = dba_msg_level_find(lev, DBA_VAR(0, 10, 4), 0, 0, 0)) != NULL)
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, DBA_VAR(0, 7, 4), d1->var));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 7, 4), d1->var));
 		else if (lev->ltype == 100)
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_d(dst, DBA_VAR(0, 7, 4), lev->l1 * 100));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, DBA_VAR(0, 7, 4), lev->l1 * 100));
 		else
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 7, 4)));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 7, 4)));
 
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, DBA_VAR(0, 8, 1), d->var));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 8, 1), d->var));
 
 		if ((d = dba_msg_level_find(lev, DBA_VAR(0, 10, 3), 0, 0, 0)) != NULL)
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, DBA_VAR(0, 10, 3), d->var));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 10, 3), d->var));
 		else if (lev->ltype == 103)
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_d(dst, DBA_VAR(0, 10, 3), (double)lev->l1 * 9.80665));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, DBA_VAR(0, 10, 3), (double)lev->l1 * 9.80665));
 		else
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 10, 3)));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 10, 3)));
 
 		if ((d = dba_msg_level_find(lev, DBA_VAR(0, 11, 1), 0, 0, 0)) != NULL)
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, DBA_VAR(0, 11, 1), d->var));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 11, 1), d->var));
 		else
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 11, 1)));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 11, 1)));
 
 		if ((d = dba_msg_level_find(lev, DBA_VAR(0, 11, 2), 0, 0, 0)) != NULL)
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_var(dst, DBA_VAR(0, 11, 2), d->var));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 11, 2), d->var));
 		else
-			DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 11, 2)));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 11, 2)));
 
 		lev_no++;
 	}
@@ -158,10 +158,10 @@ static dba_err exporter91(dba_msg msg, bufrex_raw dst, int type)
 
 	if (type == 0)
 	{
-		DBA_RUN_OR_RETURN(bufrex_raw_append_dpb(dst, tplsize + 1 + lev_no * 5, DBA_VAR(0, 33, 7)));
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
-		DBA_RUN_OR_RETURN(bufrex_raw_store_variable_undef(dst, DBA_VAR(0, 1, 32)));
-		DBA_RUN_OR_RETURN(bufrex_raw_append_attrs(dst, tplsize + 1 + lev_no * 5, DBA_VAR(0, 33, 7)));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_dpb(dst, tplsize + 1 + lev_no * 5, DBA_VAR(0, 33, 7)));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 32)));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_attrs(dst, tplsize + 1 + lev_no * 5, DBA_VAR(0, 33, 7)));
 	}
 
 	return dba_error_ok();
