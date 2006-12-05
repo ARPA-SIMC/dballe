@@ -7,14 +7,16 @@ messageinclude_HEADERS = \
 		datum.h \
 		level.h \
 		vars.h \
-		dba_msg.h
+		dba_msg.h \
+		dba_msgs.h
 
 noinst_LTLIBRARIES = libmsg.la
 libmsg_la_SOURCES = \
 		vars.c \
 		datum.c \
 		level.c \
-		dba_msg.c
+		dba_msg.c \
+		dba_msgs.c
 
 vars.h vars.c: vars.csv mkvars
 	./mkvars < $<
