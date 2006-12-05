@@ -29,9 +29,9 @@
 #include <string.h>
 
 
-dba_err bufrex_raw_create(bufrex_raw* msg, bufrex_type type)
+dba_err bufrex_msg_create(bufrex_msg* msg, bufrex_type type)
 {
-	*msg = (bufrex_raw)calloc(1, sizeof(struct _bufrex_raw));
+	*msg = (bufrex_msg)calloc(1, sizeof(struct _bufrex_msg));
 	if (*msg == NULL)
 		return dba_error_alloc("allocating new storage for decoded BUFR/CREX data");
     (*msg)->datadesc_last = &((*msg)->datadesc);
@@ -39,7 +39,7 @@ dba_err bufrex_raw_create(bufrex_raw* msg, bufrex_type type)
 	return dba_error_ok();
 }
 
-void bufrex_raw_reset(bufrex_raw msg)
+void bufrex_msg_reset(bufrex_msg msg)
 {
 	int i;
 
@@ -58,9 +58,9 @@ void bufrex_raw_reset(bufrex_raw msg)
 	msg->subtype = 0;
 }
 
-void bufrex_raw_delete(bufrex_raw msg)
+void bufrex_msg_delete(bufrex_msg msg)
 {
-	bufrex_raw_reset(msg);
+	bufrex_msg_reset(msg);
 
 	if (msg->subgroups)
 	{
@@ -72,7 +72,7 @@ void bufrex_raw_delete(bufrex_raw msg)
 	free(msg);
 }
 
-dba_err bufrex_raw_get_subsection(bufrex_raw msg, int subsection, bufrex_subset* vars)
+dba_err bufrex_msg_get_subsection(bufrex_msg msg, int subsection, bufrex_subset* vars)
 {
 	/* First ensure we have the allocated space we need */
 	if (subsection >= msg->subgroups_alloclen)
@@ -110,7 +110,7 @@ dba_err bufrex_raw_get_subsection(bufrex_raw msg, int subsection, bufrex_subset*
 }
 
 
-dba_err bufrex_raw_get_table_id(bufrex_raw msg, const char** id)
+dba_err bufrex_msg_get_table_id(bufrex_msg msg, const char** id)
 {
 	if (msg->btable == NULL)
 		*id = NULL;
@@ -119,7 +119,7 @@ dba_err bufrex_raw_get_table_id(bufrex_raw msg, const char** id)
 	return dba_error_ok();
 }
 
-dba_err bufrex_raw_load_tables(bufrex_raw msg)
+dba_err bufrex_msg_load_tables(bufrex_msg msg)
 {
 	char id[30];
 	switch (msg->encoding_type)
@@ -149,18 +149,18 @@ dba_err bufrex_raw_load_tables(bufrex_raw msg)
 	return dba_error_ok();
 }
 
-dba_err bufrex_raw_query_btable(bufrex_raw msg, dba_varcode code, dba_varinfo* info)
+dba_err bufrex_msg_query_btable(bufrex_msg msg, dba_varcode code, dba_varinfo* info)
 {
 	return dba_vartable_query(msg->btable, code, info);
 }
 
-dba_err bufrex_raw_query_dtable(bufrex_raw msg, dba_varcode code, struct _bufrex_opcode** res)
+dba_err bufrex_msg_query_dtable(bufrex_msg msg, dba_varcode code, struct _bufrex_opcode** res)
 {
 	return bufrex_dtable_query(msg->dtable, code, res);
 }
 
 
-void bufrex_raw_reset_datadesc(bufrex_raw msg)
+void bufrex_msg_reset_datadesc(bufrex_msg msg)
 {
 	if (msg->datadesc != NULL)
 	{
@@ -169,20 +169,20 @@ void bufrex_raw_reset_datadesc(bufrex_raw msg)
 	}
 }
 
-dba_err bufrex_raw_get_datadesc(bufrex_raw msg, bufrex_opcode* res)
+dba_err bufrex_msg_get_datadesc(bufrex_msg msg, bufrex_opcode* res)
 {
 	*res = NULL;
 	return bufrex_opcode_prepend(res, msg->datadesc);
 }
 
-dba_err bufrex_raw_append_datadesc(bufrex_raw msg, dba_varcode varcode)
+dba_err bufrex_msg_append_datadesc(bufrex_msg msg, dba_varcode varcode)
 {
 	DBA_RUN_OR_RETURN(bufrex_opcode_append(msg->datadesc_last, varcode));
 	msg->datadesc_last = &((*(msg->datadesc_last))->next);
 	return dba_error_ok();
 }
 
-dba_err bufrex_raw_decode(bufrex_raw msg, dba_rawmsg raw)
+dba_err bufrex_msg_decode(bufrex_msg msg, dba_rawmsg raw)
 {
 	switch (msg->encoding_type)
 	{
@@ -192,7 +192,7 @@ dba_err bufrex_raw_decode(bufrex_raw msg, dba_rawmsg raw)
 	return dba_error_consistency("Got invalid encoding type %d", msg->encoding_type);
 }
 
-dba_err bufrex_raw_encode(bufrex_raw msg, dba_rawmsg* raw)
+dba_err bufrex_msg_encode(bufrex_msg msg, dba_rawmsg* raw)
 {
 	dba_err err;
 
@@ -215,7 +215,7 @@ fail:
 	return err;
 }
 
-void bufrex_raw_print(bufrex_raw msg, FILE* out)
+void bufrex_msg_print(bufrex_msg msg, FILE* out)
 {
 	bufrex_opcode cur;
 	int i, j;
@@ -246,28 +246,28 @@ void bufrex_raw_print(bufrex_raw msg, FILE* out)
 
 #include <string.h> /* strcmp */
 
-void test_bufrex_raw()
+void test_bufrex_msg()
 {
 	/* dba_err err; */
 	int val, val1;
 	dba_var* vars;
-	bufrex_raw msg;
+	bufrex_msg msg;
 
-	CHECKED(bufrex_raw_create(&msg));
+	CHECKED(bufrex_msg_create(&msg));
 
 	/* Resetting things should not fail */
-	bufrex_raw_reset(msg);
+	bufrex_msg_reset(msg);
 
 	/* The message should be properly empty */
-	CHECKED(bufrex_raw_get_category(msg, &val, &val1));
+	CHECKED(bufrex_msg_get_category(msg, &val, &val1));
 	fail_unless(val == 0);
 	fail_unless(val1 == 0);
-	CHECKED(bufrex_raw_get_vars(msg, &vars, &val));
+	CHECKED(bufrex_msg_get_vars(msg, &vars, &val));
 	fail_unless(vars == 0);
 	fail_unless(val == 0);
 
-	CHECKED(bufrex_raw_set_category(msg, 42, 24));
-	CHECKED(bufrex_raw_get_category(msg, &val, &val1));
+	CHECKED(bufrex_msg_set_category(msg, 42, 24));
+	CHECKED(bufrex_msg_get_category(msg, &val, &val1));
 	fail_unless(val == 42);
 	fail_unless(val1 == 24);
 
@@ -276,17 +276,17 @@ void test_bufrex_raw()
 		dba_var v;
 		CHECKED(dba_varinfo_query_local(DBA_VAR(0, 1, 2), &info));
 		CHECKED(dba_var_createi(info, &v, 7));
-		CHECKED(bufrex_raw_store_variable(msg, v));
+		CHECKED(bufrex_msg_store_variable(msg, v));
 	}
 
-	CHECKED(bufrex_raw_get_vars(msg, &vars, &val));
+	CHECKED(bufrex_msg_get_vars(msg, &vars, &val));
 	fail_unless(vars != 0);
 	fail_unless(vars[0] != 0);
 	fail_unless(val == 1);
 	fail_unless(dba_var_code(vars[0]) == DBA_VAR(0, 1, 2));
 	fail_unless(strcmp(dba_var_value(vars[0]), "7") == 0);
 
-	bufrex_raw_delete(msg);
+	bufrex_msg_delete(msg);
 }
 
 #endif

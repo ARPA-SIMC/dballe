@@ -30,51 +30,51 @@
 dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msg* msg)
 {
 	dba_err err = DBA_OK;
-	bufrex_raw rmsg = NULL;
+	bufrex_msg rmsg = NULL;
 
-	DBA_RUN_OR_RETURN(bufrex_raw_create(&rmsg, BUFREX_BUFR));
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_decode(rmsg, raw));
-	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_RAW))
+	DBA_RUN_OR_RETURN(bufrex_msg_create(&rmsg, BUFREX_BUFR));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_decode(rmsg, raw));
+	if (dba_verbose_is_allowed(DBA_VERB_bufrex_msg))
 	{
-		dba_verbose(DBA_VERB_BUFREX_RAW, "Decoded BUFR data:\n");
-		bufrex_raw_print(rmsg, DBA_VERBOSE_STREAM);
+		dba_verbose(DBA_VERB_bufrex_msg, "Decoded BUFR data:\n");
+		bufrex_msg_print(rmsg, DBA_VERBOSE_STREAM);
 	}
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_to_msg(rmsg, msg));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_msg(rmsg, msg));
 
 cleanup:
 	if (rmsg != NULL)
-		bufrex_raw_delete(rmsg);
+		bufrex_msg_delete(rmsg);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msg* msg)
 {
 	dba_err err = DBA_OK;
-	bufrex_raw rmsg = NULL;
+	bufrex_msg rmsg = NULL;
 
-	DBA_RUN_OR_RETURN(bufrex_raw_create(&rmsg, BUFREX_CREX));
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_decode(rmsg, raw));
-	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_RAW))
+	DBA_RUN_OR_RETURN(bufrex_msg_create(&rmsg, BUFREX_CREX));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_decode(rmsg, raw));
+	if (dba_verbose_is_allowed(DBA_VERB_bufrex_msg))
 	{
-		dba_verbose(DBA_VERB_BUFREX_RAW, "Decoded CREX data:\n");
-		bufrex_raw_print(rmsg, DBA_VERBOSE_STREAM);
+		dba_verbose(DBA_VERB_bufrex_msg, "Decoded CREX data:\n");
+		bufrex_msg_print(rmsg, DBA_VERBOSE_STREAM);
 	}
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_to_msg(rmsg, msg));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_msg(rmsg, msg));
 
 cleanup:
 	if (rmsg != NULL)
-		bufrex_raw_delete(rmsg);
+		bufrex_msg_delete(rmsg);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 dba_err bufrex_encode_bufr(dba_msg msg, int type, int subtype, dba_rawmsg* raw)
 {
 	dba_err err = DBA_OK;
-	bufrex_raw braw = NULL;
+	bufrex_msg braw = NULL;
 	*raw = NULL;
 
-	/* Create and setup the bufrex_raw */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_create(&braw, BUFREX_BUFR));
+	/* Create and setup the bufrex_msg */
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&braw, BUFREX_BUFR));
 
 	/* Compute the right type and subtype if missing */
 	if (type == 0 || subtype == 0)
@@ -98,23 +98,23 @@ dba_err bufrex_encode_bufr(dba_msg msg, int type, int subtype, dba_rawmsg* raw)
 	}
 
 	/* Load appropriate tables for the target message */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_load_tables(braw));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_load_tables(braw));
 
 	/* Fill in with the vales from msg */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_from_msg(braw, msg));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_from_msg(braw, msg));
 
-	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_RAW))
+	if (dba_verbose_is_allowed(DBA_VERB_bufrex_msg))
 	{
-		dba_verbose(DBA_VERB_BUFREX_RAW, "BUFR data before encoding:\n");
-		bufrex_raw_print(braw, DBA_VERBOSE_STREAM);
+		dba_verbose(DBA_VERB_bufrex_msg, "BUFR data before encoding:\n");
+		bufrex_msg_print(braw, DBA_VERBOSE_STREAM);
 	}
 
 	/* Encode */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_encode(braw, raw));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_encode(braw, raw));
 
 cleanup:
 	if (braw != NULL)
-		bufrex_raw_delete(braw);
+		bufrex_msg_delete(braw);
 	if (err != DBA_OK && *raw != NULL)
 	{
 		dba_rawmsg_delete(*raw);
@@ -126,11 +126,11 @@ cleanup:
 dba_err bufrex_encode_crex(dba_msg msg, int type, int subtype, dba_rawmsg* raw)
 {
 	dba_err err = DBA_OK;
-	bufrex_raw braw = NULL;
+	bufrex_msg braw = NULL;
 	*raw = NULL;
 
-	/* Create and setup the bufrex_raw */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_create(&braw, BUFREX_CREX));
+	/* Create and setup the bufrex_msg */
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&braw, BUFREX_CREX));
 
 	/* Compute the right type and subtype if missing */
 	if (type == 0 || subtype == 0)
@@ -154,23 +154,23 @@ dba_err bufrex_encode_crex(dba_msg msg, int type, int subtype, dba_rawmsg* raw)
 	}
 
 	/* Load appropriate tables for the target message */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_load_tables(braw));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_load_tables(braw));
 
 	/* Fill in with the vales from msg */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_from_msg(braw, msg));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_from_msg(braw, msg));
 	
-	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_RAW))
+	if (dba_verbose_is_allowed(DBA_VERB_bufrex_msg))
 	{
-		dba_verbose(DBA_VERB_BUFREX_RAW, "CREX data before encoding:\n");
-		bufrex_raw_print(braw, DBA_VERBOSE_STREAM);
+		dba_verbose(DBA_VERB_bufrex_msg, "CREX data before encoding:\n");
+		bufrex_msg_print(braw, DBA_VERBOSE_STREAM);
 	}
 
 	/* Encode */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_encode(braw, raw));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_encode(braw, raw));
 
 cleanup:
 	if (braw != NULL)
-		bufrex_raw_delete(braw);
+		bufrex_msg_delete(braw);
 	if (err != DBA_OK && *raw != NULL)
 	{
 		dba_rawmsg_delete(*raw);

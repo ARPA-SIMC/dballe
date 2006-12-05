@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_BUFREX_RAW_H
-#define DBALLE_BUFREX_RAW_H
+#ifndef DBALLE_bufrex_msg_H
+#define DBALLE_bufrex_msg_H
 
 #ifdef  __cplusplus
 extern "C" {
@@ -58,7 +58,7 @@ struct _bufrex_crex_options {
 	int table;
 };
 
-struct _bufrex_raw
+struct _bufrex_msg
 {
 	/* Type of source/target encoding data */
 	bufrex_type encoding_type;
@@ -97,18 +97,18 @@ struct _bufrex_raw
 	 * point for appends; it always points to a NULL pointer */
 	bufrex_opcode* datadesc_last;
 };
-typedef struct _bufrex_raw* bufrex_raw;
+typedef struct _bufrex_msg* bufrex_msg;
 
-dba_err bufrex_raw_create(bufrex_raw* msg, bufrex_type type);
+dba_err bufrex_msg_create(bufrex_msg* msg, bufrex_type type);
 
-void bufrex_raw_delete(bufrex_raw msg);
+void bufrex_msg_delete(bufrex_msg msg);
 
-void bufrex_raw_reset(bufrex_raw msg);
+void bufrex_msg_reset(bufrex_msg msg);
 
-dba_err bufrex_raw_get_subsection(bufrex_raw msg, int subsection, bufrex_subset* vars);
+dba_err bufrex_msg_get_subsection(bufrex_msg msg, int subsection, bufrex_subset* vars);
 
 /**
- * Get the ID of the table used by this bufrex_raw
+ * Get the ID of the table used by this bufrex_msg
  *
  * @retval id
  *   The table id, as a pointer to an internal string.  It must not be
@@ -116,18 +116,18 @@ dba_err bufrex_raw_get_subsection(bufrex_raw msg, int subsection, bufrex_subset*
  * @returns
  *   The error indicator for the function (@see dba_err)
  */
-dba_err bufrex_raw_get_table_id(bufrex_raw msg, const char** id);
+dba_err bufrex_msg_get_table_id(bufrex_msg msg, const char** id);
 
 /**
  * Load a new set of tables to use for encoding this message
  */
-dba_err bufrex_raw_load_tables(bufrex_raw msg);
+dba_err bufrex_msg_load_tables(bufrex_msg msg);
 
 /**
  * Query the WMO B table used for this BUFR/CREX data
  *
  * @param msg
- *   ::bufrex_raw to query
+ *   ::bufrex_msg to query
  * @param code
  *   code of the variable to query
  * @retval info
@@ -136,13 +136,13 @@ dba_err bufrex_raw_load_tables(bufrex_raw msg);
  * @return
  *   The error status (@see dba_err)
  */
-dba_err bufrex_raw_query_btable(bufrex_raw msg, dba_varcode code, dba_varinfo* info);
+dba_err bufrex_msg_query_btable(bufrex_msg msg, dba_varcode code, dba_varinfo* info);
 
 /**
  * Query the WMO D table used for this BUFR/CREX data
  * 
  * @param msg
- *   ::bufrex_raw to query
+ *   ::bufrex_msg to query
  * @param code
  *   code of the entry to query
  * @param res
@@ -151,7 +151,7 @@ dba_err bufrex_raw_query_btable(bufrex_raw msg, dba_varcode code, dba_varinfo* i
  * @return
  *   The error status (@see dba_err)
  */
-dba_err bufrex_raw_query_dtable(bufrex_raw msg, dba_varcode code, struct _bufrex_opcode** res);
+dba_err bufrex_msg_query_dtable(bufrex_msg msg, dba_varcode code, struct _bufrex_opcode** res);
 
 /**
  * Reset the data descriptor section for the message
@@ -159,10 +159,10 @@ dba_err bufrex_raw_query_dtable(bufrex_raw msg, dba_varcode code, struct _bufrex
  * @param msg
  *   The message to act on
  */
-void bufrex_raw_reset_datadesc(bufrex_raw msg);
+void bufrex_msg_reset_datadesc(bufrex_msg msg);
 
 /**
- * Get the data descriptor section of this ::bufrex_raw
+ * Get the data descriptor section of this ::bufrex_msg
  *
  * @param msg
  *   The message to act on
@@ -173,7 +173,7 @@ void bufrex_raw_reset_datadesc(bufrex_raw msg);
  * @returns
  *   The error indicator for the function.  @see ::dba_err
  */
-dba_err bufrex_raw_get_datadesc(bufrex_raw msg, struct _bufrex_opcode** res);
+dba_err bufrex_msg_get_datadesc(bufrex_msg msg, struct _bufrex_opcode** res);
 
 /**
  * Append one ::dba_varcode to the data descriptor section of the message
@@ -185,40 +185,40 @@ dba_err bufrex_raw_get_datadesc(bufrex_raw msg, struct _bufrex_opcode** res);
  * @returns
  *   The error indicator for the function.  @see ::dba_err
  */
-dba_err bufrex_raw_append_datadesc(bufrex_raw msg, dba_varcode varcode);
+dba_err bufrex_msg_append_datadesc(bufrex_msg msg, dba_varcode varcode);
 
 /**
- * Parse an encoded message into a bufrex_raw
+ * Parse an encoded message into a bufrex_msg
  */
-dba_err bufrex_raw_decode(bufrex_raw msg, dba_rawmsg raw);
+dba_err bufrex_msg_decode(bufrex_msg msg, dba_rawmsg raw);
 
 /**
- * Encode the contents of the bufrex_raw
+ * Encode the contents of the bufrex_msg
  */
-dba_err bufrex_raw_encode(bufrex_raw msg, dba_rawmsg* raw);
+dba_err bufrex_msg_encode(bufrex_msg msg, dba_rawmsg* raw);
 
 /**
- * Fill in the bufrex_raw with the contents of a dba_msg
+ * Fill in the bufrex_msg with the contents of a dba_msg
  */
-dba_err bufrex_raw_from_msg(bufrex_raw raw, dba_msg msg);
+dba_err bufrex_msg_from_msg(bufrex_msg raw, dba_msg msg);
 
 /**
- * Fill in a dba_msg with the contents of the bufrex_raw
+ * Fill in a dba_msg with the contents of the bufrex_msg
  */
-dba_err bufrex_raw_to_msg(bufrex_raw raw, dba_msg* msg);
+dba_err bufrex_msg_to_msg(bufrex_msg raw, dba_msg* msg);
 
 
 /**
  * Encode a BUFR message
  * 
  * @param in
- *   The ::bufrex_raw with the data to encode
+ *   The ::bufrex_msg with the data to encode
  * @param out
  *   The ::dba_rawmsg that will hold the encoded data
  * @return
  *   The error indicator for the function.  @see ::dba_err
  */
-dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out);
+dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out);
 
 /**
  * Decode a BUFR message
@@ -226,7 +226,7 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out);
  * @param in
  *   The ::dba_msgraw with the data to decode
  * @param out
- *   The ::bufrex_raw that will hold the decoded data
+ *   The ::bufrex_msg that will hold the decoded data
  * @retval opt
  *   A newly created bufr_options with informations about the decoding process.
  *   If NULL is passed, nothing will be returned.  If a bufr_options is
@@ -234,19 +234,19 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out);
  * @return
  *   The error indicator for the function.  @see ::dba_err
  */
-dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out);
+dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out);
 
 /**
  * Encode a CREX message
  * 
  * @param in
- *   The ::bufrex_raw with the data to encode
+ *   The ::bufrex_msg with the data to encode
  * @param out
  *   The ::dba_rawmsg that will hold the encoded data
  * @return
  *   The error indicator for the function.  @see ::dba_err
  */
-dba_err crex_encoder_encode(bufrex_raw in, dba_rawmsg out);
+dba_err crex_encoder_encode(bufrex_msg in, dba_rawmsg out);
 
 /**
  * Decode a CREX message
@@ -254,7 +254,7 @@ dba_err crex_encoder_encode(bufrex_raw in, dba_rawmsg out);
  * @param in
  *   The ::dba_msgraw with the data to decode
  * @param out
- *   The ::bufrex_raw that will hold the decoded data
+ *   The ::bufrex_msg that will hold the decoded data
  * @retval opt
  *   A newly created bufr_options with informations about the decoding process.
  *   If NULL is passed, nothing will be returned.  If a bufr_options is
@@ -262,7 +262,7 @@ dba_err crex_encoder_encode(bufrex_raw in, dba_rawmsg out);
  * @return
  *   The error indicator for the function.  @see ::dba_err
  */
-dba_err crex_decoder_decode(dba_rawmsg in, bufrex_raw out);
+dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out);
 
 /**
  * Infer good type and subtype from a dba_msg
@@ -270,9 +270,9 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_raw out);
 dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype);
 	
 /**
- * Dump the contents of this bufrex_raw
+ * Dump the contents of this bufrex_msg
  */
-void bufrex_raw_print(bufrex_raw msg, FILE* out);
+void bufrex_msg_print(bufrex_msg msg, FILE* out);
 
 #ifdef  __cplusplus
 }
