@@ -22,7 +22,7 @@
 #include "config.h"
 
 #include "bufrex_opcode.h"
-#include "bufrex_raw.h"
+#include "bufrex_msg.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -47,7 +47,7 @@
 struct _encoder
 {
 	/* Input message data */
-	bufrex_raw in;
+	bufrex_msg in;
 	/* Output decoded variables */
 	dba_rawmsg out;
 
@@ -129,20 +129,17 @@ static dba_err encoder_raw_appendf(encoder e, const char* fmt, ...)
 
 static dba_err encode_data_section(encoder e);
 
-dba_err crex_encoder_encode(bufrex_raw in, dba_rawmsg out)
+dba_err crex_encoder_encode(bufrex_msg in, dba_rawmsg out)
 {
 	dba_err err = DBA_OK;
 	bufrex_opcode cur;
 	encoder e = NULL;
 	bufrex_opcode ops = NULL;
+	int i;
 
 	DBA_RUN_OR_RETURN(encoder_create(&e));
 	e->in = in;
 	e->out = out;
-
-	/* Initialise the encoder with the list of variables to encode */
-	e->nextvar = e->in->vars;
-	e->vars_left = e->in->vars_count;
 
 	/* Encode section 0 */
 	DBA_RUN_OR_GOTO(fail, encoder_raw_append(e, "CREX++\r\r\n", 9));
@@ -157,17 +154,17 @@ dba_err crex_encoder_encode(bufrex_raw in, dba_rawmsg out)
 				e->in->type,
 				e->in->subtype));
 
-	DBA_RUN_OR_GOTO(fail, bufrex_raw_get_datadesc(e->in, &ops));
+	DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(e->in, &ops));
 	if (ops == NULL)
 	{
-		/* Generate data description section from the variable list, if it was missing */
-		int i;
 		TRACE("Regenerating datadesc\n");
-		for (i = 0; i < e->vars_left; i++)
-			DBA_RUN_OR_GOTO(fail, bufrex_raw_append_datadesc(e->in, dba_var_code(e->nextvar[i])));
+
+		/* If the data descriptor list is not already present, try to generate it
+		 * from the varcodes of the variables in the first subgroup to encode */
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_generate_datadesc(e->in));
 
 		/* Reread the descriptors */
-		DBA_RUN_OR_GOTO(fail, bufrex_raw_get_datadesc(e->in, &ops));
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(e->in, &ops));
 	} else {
 		TRACE("Reusing datadesc\n");
 	}
@@ -201,23 +198,36 @@ dba_err crex_encoder_encode(bufrex_raw in, dba_rawmsg out)
 
 	/* Encode section 2 */
 	e->sec2_start = e->out->len;
-	while (e->vars_left > 0)
+	for (i = 0; i < e->in->subsets_count; ++i)
 	{
-		TRACE("Start encoding a subsection\n");
+		TRACE("Start encoding subsection %d\n", 1);
+
+		/* Initialise the encoder with the list of variables to encode */
+		e->nextvar = e->in->subsets[i]->vars;
+		e->vars_left = e->in->subsets[i]->vars_count;
+
+		/* Duplicate the data description section as the encoding TODO-list */
 		DBA_RUN_OR_GOTO(fail, bufrex_opcode_prepend(&(e->ops), ops));
 
+		/* Encode the values */
 		DBA_RUN_OR_GOTO(fail, encode_data_section(e));
 
 		if (e->vars_left > 0)
-			DBA_RUN_OR_GOTO(fail, encoder_raw_append(e, "+\r\r\n", 4));
-		else
-			DBA_RUN_OR_GOTO(fail, encoder_raw_append(e, "++\r\r\n", 5));
-
+		{
+			err = dba_error_consistency("not all variables have been encoded");
+			goto fail;
+		}
 		if (e->ops != NULL)
 		{
 			err = dba_error_consistency("not all operators have been encoded");
 			goto fail;
 		}
+
+		/* Encode the subsection terminator */
+		if (i < e->in->subsets_count - 1)
+			DBA_RUN_OR_GOTO(fail, encoder_raw_append(e, "+\r\r\n", 4));
+		else
+			DBA_RUN_OR_GOTO(fail, encoder_raw_append(e, "++\r\r\n", 5));
 	}
 
 	/* Encode section 3 */
@@ -270,7 +280,7 @@ static dba_err encode_b_data(encoder e)
 		return dba_error_consistency("checking for availability of data to encode");
 
 	/* Get informations about the variable */
-	DBA_RUN_OR_RETURN(bufrex_raw_query_btable(e->in, dba_var_code(*e->nextvar), &crexinfo));
+	DBA_RUN_OR_RETURN(bufrex_msg_query_btable(e->in, dba_var_code(*e->nextvar), &crexinfo));
 
 	len = crexinfo->len;
 	DBA_RUN_OR_GOTO(cleanup, encoder_raw_append(e, " ", 1));
@@ -513,7 +523,7 @@ static dba_err encode_data_section(encoder e)
 				/* Pop the first opcode */
 				DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(e->ops), &op));
 				
-				if ((err = bufrex_raw_query_dtable(e->in, op->val, &exp)) != DBA_OK)
+				if ((err = bufrex_msg_query_dtable(e->in, op->val, &exp)) != DBA_OK)
 				{
 					bufrex_opcode_delete(&op);
 					return err;

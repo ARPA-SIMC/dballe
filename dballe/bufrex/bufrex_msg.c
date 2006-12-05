@@ -182,6 +182,25 @@ dba_err bufrex_msg_append_datadesc(bufrex_msg msg, dba_varcode varcode)
 	return dba_error_ok();
 }
 
+dba_err bufrex_msg_generate_datadesc(bufrex_msg msg)
+{
+	bufrex_subset subset;
+	int i;
+
+	if (msg->subsets_count == 0)
+		return dba_error_consistency("tried to guess data description section from a bufrex_msg without subsets");
+	subset = msg->subsets[0];
+
+	for (i = 0; i < subset->vars_count; ++i)
+	{
+		dba_varcode code = dba_var_code(subset->vars[i]);
+		if (msg->subsets_count != 1 && DBA_VAR_X(code) == 31)
+			return dba_error_unimplemented("autogenerating data description sections from a variable list that contains delayed replication counts");
+		DBA_RUN_OR_RETURN(bufrex_msg_append_datadesc(msg, code));
+	}
+	return dba_error_ok();
+}
+
 dba_err bufrex_msg_decode(bufrex_msg msg, dba_rawmsg raw)
 {
 	switch (msg->encoding_type)

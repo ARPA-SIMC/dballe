@@ -321,26 +321,18 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 		goto fail;
 	}
 
-	/* If the data descriptor list is not already present, try to generate it
-	 * from the varcodes of the variables in the first subgroup to encode */
 	DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(e->in, &ops));
 	if (ops == NULL)
 	{
-		bufrex_subset subset;
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(e->in, 1, &subset));
-		for (i = 0; i < subset->vars_count; ++i)
-		{
-			dba_varcode code = dba_var_code(subset->vars[i]);
-			if (e->in->subsets_count != 1 && DBA_VAR_X(code) == 31)
-			{
-				err = dba_error_unimplemented("autogenerating data description sections from a variable list that contains delayed replication counts");
-				goto fail;
-			}
-			DBA_RUN_OR_GOTO(fail, bufrex_msg_append_datadesc(e->in, code));
-		}
+		TRACE("Regenerating datadesc\n");
+		/* If the data descriptor list is not already present, try to generate it
+		 * from the varcodes of the variables in the first subgroup to encode */
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_generate_datadesc(e->in));
 
 		/* Reread the descriptors */
 		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(e->in, &ops));
+	} else {
+		TRACE("Reusing datadesc\n");
 	}
 
 	/* Count the number of items in the data descriptor section */

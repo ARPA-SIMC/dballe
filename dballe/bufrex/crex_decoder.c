@@ -22,7 +22,7 @@
 #include "config.h"
 
 #include "bufrex_opcode.h"
-#include "bufrex_raw.h"
+#include "bufrex_msg.h"
 #include <dballe/io/dba_rawfile.h>
 
 #include <stdio.h>
@@ -49,7 +49,9 @@ struct _decoder
 	/* Input message data */
 	dba_rawmsg in;
 	/* Output decoded variables */
-	bufrex_raw out;
+	bufrex_msg out;
+	/* Current subset we are decoding */
+	bufrex_subset current_subset;
 
 	/* Offset of the start of CREX section 1 */
 	int sec1_start;
@@ -131,7 +133,7 @@ static dba_err crex_decoder_parse_data_section(decoder d);
 			PARSE_ERROR("end of CREX message while looking for " next); \
 	} while (0)
 
-dba_err crex_decoder_decode(dba_rawmsg in, bufrex_raw out)
+dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 {
 	dba_err err;
 	decoder d = NULL;
@@ -206,20 +208,22 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_raw out)
 	SKIP_SPACES();
 
 	/* Load tables and set category/subcategory */
-	DBA_RUN_OR_GOTO(fail, bufrex_raw_load_tables(d->out));
+	DBA_RUN_OR_GOTO(fail, bufrex_msg_load_tables(d->out));
 
 	/* data descriptors followed by (E?)\+\+ */
 	CHECK_EOF("data descriptor section");
 
 	d->has_check_digit = 0;
-	while (1)
+	for (i = 0; ; ++i)
 	{
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(d->out, i, &(d->current_subset)));
+
 		if (*d->cur == 'B' || *d->cur == 'R' || *d->cur == 'C' || *d->cur == 'D')
 		{
 			dba_varcode var;
 			CHECK_AVAILABLE_DATA(6, "one data descriptor");
 			var = dba_descriptor_code((const char*)d->cur);
-			DBA_RUN_OR_GOTO(fail, bufrex_raw_append_datadesc(d->out, var));
+			DBA_RUN_OR_GOTO(fail, bufrex_msg_append_datadesc(d->out, var));
 			SKIP_DATA_AND_SPACES(6);
 		}
 		else if (*d->cur == 'E')
@@ -240,7 +244,7 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_raw out)
 	IFTRACE{
 		bufrex_opcode ops = NULL;
 		TRACE(" -> data descriptor section: ");
-		DBA_RUN_OR_GOTO(fail, bufrex_raw_get_datadesc(d->out, &ops));
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(d->out, &ops));
 		bufrex_opcode_print(ops, stderr);
 		bufrex_opcode_delete(&ops);
 		TRACE("\n");
@@ -251,7 +255,7 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_raw out)
 	d->sec2_start = d->cur - d->in->buf;
 	while (1)
 	{
-		DBA_RUN_OR_GOTO(fail, bufrex_raw_get_datadesc(d->out, &(d->ops)));
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(d->out, &(d->ops)));
 		DBA_RUN_OR_GOTO(fail, crex_decoder_parse_data_section(d));
 		SKIP_SPACES();
 		CHECK_EOF("end of data section");
@@ -413,7 +417,7 @@ static dba_err crex_decoder_parse_b_data(decoder d)
 		TRACE("\n");
 	}
 
-	DBA_RUN_OR_RETURN(bufrex_raw_query_btable(d->out, d->ops->val, &crexinfo));
+	DBA_RUN_OR_RETURN(bufrex_msg_query_btable(d->out, d->ops->val, &crexinfo));
 
 	/* Create the new dba_var */
 	DBA_RUN_OR_GOTO(fail, dba_var_create(crexinfo, &var));
@@ -443,7 +447,7 @@ static dba_err crex_decoder_parse_b_data(decoder d)
 	}
 
 	/* Store the variable that we found */
-	DBA_RUN_OR_GOTO(fail, bufrex_raw_store_variable(d->out, var));
+	DBA_RUN_OR_GOTO(fail, bufrex_subset_store_variable(d->current_subset, var));
 	IFTRACE{
 		TRACE("  stored variable: "); dba_var_print(var, stderr); TRACE("\n");
 	}
@@ -566,9 +570,9 @@ static dba_err crex_decoder_parse_r_data(decoder d)
 		count = strtol((const char*)d_start, NULL, 10);
 
 		/* Insert the repetition count among the parsed variables */
-		DBA_RUN_OR_GOTO(fail, bufrex_raw_query_btable(d->out, DBA_VAR(0, 31, 1), &info));
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_query_btable(d->out, DBA_VAR(0, 31, 1), &info));
 		DBA_RUN_OR_GOTO(fail, dba_var_createi(info, count, &var));
-		DBA_RUN_OR_GOTO(fail, bufrex_raw_store_variable(d->out, var));
+		DBA_RUN_OR_GOTO(fail, bufrex_subset_store_variable(d->current_subset, var));
 
 		TRACE("read_c_data %d items %d times (delayed)\n", group, count);
 	} else
@@ -654,7 +658,7 @@ static dba_err crex_decoder_parse_data_section(decoder d)
 				/* Pop the first opcode */
 				DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(d->ops), &op));
 				
-				if ((err = bufrex_raw_query_dtable(d->out, op->val, &exp)) != DBA_OK)
+				if ((err = bufrex_msg_query_dtable(d->out, op->val, &exp)) != DBA_OK)
 				{
 					bufrex_opcode_delete(&op);
 					return err;

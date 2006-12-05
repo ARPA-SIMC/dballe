@@ -188,6 +188,17 @@ dba_err bufrex_msg_get_datadesc(bufrex_msg msg, struct _bufrex_opcode** res);
 dba_err bufrex_msg_append_datadesc(bufrex_msg msg, dba_varcode varcode);
 
 /**
+ * Try to generate a data description section by scanning the variable codes of
+ * the variables in the first data subset.
+ *
+ * @param msg
+ *   The message to act on
+ * @returns
+ *   The error indicator for the function.  @see ::dba_err
+ */
+dba_err bufrex_msg_generate_datadesc(bufrex_msg msg);
+
+/**
  * Parse an encoded message into a bufrex_msg
  */
 dba_err bufrex_msg_decode(bufrex_msg msg, dba_rawmsg raw);
