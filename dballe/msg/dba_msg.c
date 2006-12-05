@@ -301,6 +301,7 @@ const char* dba_msg_type_name(dba_msg_type type)
 		case MSG_SHIP: return "ship";
 		case MSG_BUOY: return "buoy";
 		case MSG_METAR: return "metar";
+		case MSG_SAT: return "sat";
 	}
 	return "(unknown)";
 }
