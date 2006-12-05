@@ -44,9 +44,9 @@ void bufrex_msg_reset(bufrex_msg msg)
 	int i;
 
 	/* Preserve vars and vars_alloclen so that allocated memory can be reused */
-	for (i = 0; i < msg->subgroups_count; i++)
-		bufrex_subset_delete(msg->subgroups[i]);
-	msg->subgroups_count = 0;
+	for (i = 0; i < msg->subsets_count; i++)
+		bufrex_subset_delete(msg->subsets[i]);
+	msg->subsets_count = 0;
 
 	if (msg->datadesc != NULL)
 	{
@@ -62,11 +62,11 @@ void bufrex_msg_delete(bufrex_msg msg)
 {
 	bufrex_msg_reset(msg);
 
-	if (msg->subgroups)
+	if (msg->subsets)
 	{
-		free(msg->subgroups);
-		msg->subgroups = NULL;
-		msg->subgroups_alloclen = 0;
+		free(msg->subsets);
+		msg->subsets = NULL;
+		msg->subsets_alloclen = 0;
 	}
 
 	free(msg);
@@ -75,36 +75,36 @@ void bufrex_msg_delete(bufrex_msg msg)
 dba_err bufrex_msg_get_subset(bufrex_msg msg, int subsection, bufrex_subset* vars)
 {
 	/* First ensure we have the allocated space we need */
-	if (subsection >= msg->subgroups_alloclen)
+	if (subsection >= msg->subsets_alloclen)
 	{
-		if (msg->subgroups == NULL)
+		if (msg->subsets == NULL)
 		{
-			msg->subgroups_alloclen = 1;
-			if ((msg->subgroups = (bufrex_subset*)malloc(msg->subgroups_alloclen * sizeof(bufrex_subset))) == NULL)
-				return dba_error_alloc("allocating memory for message subgroups");
+			msg->subsets_alloclen = 1;
+			if ((msg->subsets = (bufrex_subset*)malloc(msg->subsets_alloclen * sizeof(bufrex_subset))) == NULL)
+				return dba_error_alloc("allocating memory for message subsets");
 		} else {
 			bufrex_subset* newbuf;
 
-			while (subsection >= msg->subgroups_alloclen)
+			while (subsection >= msg->subsets_alloclen)
 				/* Grow by doubling the allocated space */
-				msg->subgroups_alloclen <<= 1;
+				msg->subsets_alloclen <<= 1;
 
 			if ((newbuf = (bufrex_subset*)realloc(
-					msg->subgroups, msg->subgroups_alloclen * sizeof(bufrex_subset))) == NULL)
-				return dba_error_alloc("allocating more memory for message subgroups");
-			msg->subgroups = newbuf;
+					msg->subsets, msg->subsets_alloclen * sizeof(bufrex_subset))) == NULL)
+				return dba_error_alloc("allocating more memory for message subsets");
+			msg->subsets = newbuf;
 		}
 	}
 
-	/* Then see if we need to initialize more of the allocated subgroups */
-	while (msg->subgroups_count <= subsection)
+	/* Then see if we need to initialize more of the allocated subsets */
+	while (msg->subsets_count <= subsection)
 	{
-		DBA_RUN_OR_RETURN(bufrex_subset_create(msg->btable, &(msg->subgroups[msg->subgroups_count])));
-		++msg->subgroups_count;
+		DBA_RUN_OR_RETURN(bufrex_subset_create(msg->btable, &(msg->subsets[msg->subsets_count])));
+		++msg->subsets_count;
 	}
 
 	/* Finally, return the subsection requested */
-	*vars = msg->subgroups[subsection];
+	*vars = msg->subsets[subsection];
 
 	return dba_error_ok();
 }
@@ -224,18 +224,18 @@ void bufrex_msg_print(bufrex_msg msg, FILE* out)
 		case BUFREX_BUFR: fprintf(out, "BUFR o%d m%d l%d", msg->opt.bufr.origin, msg->opt.bufr.master_table, msg->opt.bufr.local_table); break;
 		case BUFREX_CREX: fprintf(out, "CREX T00%02d%02d", msg->opt.crex.master_table, msg->opt.crex.table); break;
 	}
-	fprintf(out, " type %d subtype %d edition %d table %s alloc %d, %d subgroups.\n",
+	fprintf(out, " type %d subtype %d edition %d table %s alloc %d, %d subsets.\n",
 			msg->type, msg->subtype, msg->edition, msg->btable == NULL ? NULL : dba_vartable_id(msg->btable),
-			msg->subgroups_alloclen, msg->subgroups_count);
+			msg->subsets_alloclen, msg->subsets_count);
 	fprintf(out, "Data descriptors:");
 	for (cur = msg->datadesc; cur != NULL; cur = cur->next)
 		fprintf(out, " %d%02d%03d", DBA_VAR_F(cur->val), DBA_VAR_X(cur->val), DBA_VAR_Y(cur->val));
 	putc('\n', out);
-	for (i = 0; i < msg->subgroups_count; i++)
+	for (i = 0; i < msg->subsets_count; i++)
 	{
 		fprintf(out, "Variables in section %d:\n", i);
-		for (j = 0; j < msg->subgroups[i]->vars_count; ++j)
-			dba_var_print(msg->subgroups[i]->vars[j], out);
+		for (j = 0; j < msg->subsets[i]->vars_count; ++j)
+			dba_var_print(msg->subsets[i]->vars[j], out);
 	}
 }
 

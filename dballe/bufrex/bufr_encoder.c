@@ -315,7 +315,7 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 
 	/* Encode BUFR section 3 (Data description section) */
 
-	if (e->in->subgroups_count == 0)
+	if (e->in->subsets_count == 0)
 	{
 		err = dba_error_consistency("bufrex_msg to encode has no data subsets");
 		goto fail;
@@ -331,7 +331,7 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 		for (i = 0; i < subset->vars_count; ++i)
 		{
 			dba_varcode code = dba_var_code(subset->vars[i]);
-			if (e->in->subgroups_count != 1 && DBA_VAR_X(code) == 31)
+			if (e->in->subsets_count != 1 && DBA_VAR_X(code) == 31)
 			{
 				err = dba_error_unimplemented("autogenerating data description sections from a variable list that contains delayed replication counts");
 				goto fail;
@@ -352,7 +352,7 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 	/* Set to 0 (reserved) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 	/* Number of data subsets */
-	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->subgroups_count));
+	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->subsets_count));
 	/* Bit 0 = observed data; bit 1 = use compression */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 1));
 	
@@ -373,8 +373,8 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 	DBA_RUN_OR_RETURN(encoder_add_bits(e, 0, 24));
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 
-	/* Encode all the subgroups, uncompressed */
-	for (i = 0; i < e->in->subgroups_count; ++i)
+	/* Encode all the subsets, uncompressed */
+	for (i = 0; i < e->in->subsets_count; ++i)
 	{
 		bufrex_subset subset;
 		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(e->in, i, &subset));

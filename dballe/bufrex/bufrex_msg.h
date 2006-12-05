@@ -85,11 +85,11 @@ struct _bufrex_msg
 	bufrex_dtable dtable;
 
 	/* Decoded variables */
-	bufrex_subset* subgroups;
+	bufrex_subset* subsets;
 	/* Number of decoded variables */
-	int subgroups_count;
+	int subsets_count;
 	/* Size (in dba_var*) of the buffer allocated for vars */
-	int subgroups_alloclen;
+	int subsets_alloclen;
 
 	/* Parsed CREX data descriptor section */
 	bufrex_opcode datadesc;
