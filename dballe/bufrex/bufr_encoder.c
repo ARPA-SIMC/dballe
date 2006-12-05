@@ -22,7 +22,7 @@
 #include "config.h"
 
 #include "bufrex_opcode.h"
-#include "bufrex_raw.h"
+#include "bufrex_msg.h"
 
 #include <stdio.h>
 #include <netinet/in.h>
@@ -60,7 +60,7 @@ For encoding our generics:
 struct _encoder
 {
 	/* Input message data */
-	bufrex_raw in;
+	bufrex_msg in;
 	/* Output decoded variables */
 	dba_rawmsg out;
 
@@ -244,39 +244,26 @@ static dba_err bufr_message_append_24bit(bufr_message msg, unsigned int val)
 
 static dba_err encoder_encode_data_section(encoder e);
 
-dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
+dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 {
 	dba_err err = DBA_OK;
 	encoder e = NULL;
 	bufrex_opcode ops = NULL;
 	bufrex_opcode cur;
 	int dslen;
+	int i;
 
 	DBA_RUN_OR_RETURN(encoder_create(&e));
 	e->in = in;
 	e->out = out;
 
-	/* Initialise the encoder with the list of variables to encode */
-	e->nextvar = in->vars;
-	e->vars_left = in->vars_count;
-
-	DBA_RUN_OR_GOTO(fail, bufrex_raw_get_datadesc(e->in, &ops));
-	if (ops == NULL)
-	{
-		/* Generate data description section from the variable list, if it was missing */
-		int i;
-		for (i = 0; i < e->vars_left; i++)
-			DBA_RUN_OR_GOTO(fail, bufrex_raw_append_datadesc(e->in, dba_var_code(e->nextvar[i])));
-
-		/* Reread the descriptors */
-		DBA_RUN_OR_GOTO(fail, bufrex_raw_get_datadesc(e->in, &ops));
-	}
 
 	/* Encode bufr section 0 (Indicator section) */
 	DBA_RUN_OR_RETURN(encoder_raw_append(e, "BUFR\0\0\0\x03", 8));
 
 	TRACE("sec0 ends at %d\n", e->out->len);
 	e->sec1_start = e->out->len;
+
 
 	/* Encode bufr section 1 (Identification section) */
 	/* Length of section */
@@ -318,13 +305,43 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
 	TRACE("sec1 ends at %d\n", e->out->len);
 	e->sec2_start = e->out->len;
 
+
 	/* Encode BUFR section 2 (Optional section) */
 	/* Nothing to do */
 
 	TRACE("sec2 ends at %d\n", e->out->len);
 	e->sec3_start = e->out->len;
 
+
 	/* Encode BUFR section 3 (Data description section) */
+
+	if (e->in->subgroups_count == 0)
+	{
+		err = dba_error_consistency("bufrex_msg to encode has no data subsets");
+		goto fail;
+	}
+
+	/* If the data descriptor list is not already present, try to generate it
+	 * from the varcodes of the variables in the first subgroup to encode */
+	DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(e->in, &ops));
+	if (ops == NULL)
+	{
+		bufrex_subset subset;
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(e->in, 1, &subset));
+		for (i = 0; i < subset->vars_count; ++i)
+		{
+			dba_varcode code = dba_var_code(subset->vars[i]);
+			if (e->in->subgroups_count != 1 && DBA_VAR_X(code) == 31)
+			{
+				err = dba_error_unimplemented("autogenerating data description sections from a variable list that contains delayed replication counts");
+				goto fail;
+			}
+			DBA_RUN_OR_GOTO(fail, bufrex_msg_append_datadesc(e->in, code));
+		}
+
+		/* Reread the descriptors */
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(e->in, &ops));
+	}
 
 	/* Count the number of items in the data descriptor section */
 	for (cur = ops, dslen = 0; cur != NULL; cur = cur->next, dslen++)
@@ -332,8 +349,11 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
 
 	/* Length of section */
 	DBA_RUN_OR_RETURN(encoder_add_bits(e, 8 + 2*dslen, 24));
+	/* Set to 0 (reserved) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
-	DBA_RUN_OR_RETURN(encoder_append_short(e, 1));
+	/* Number of data subsets */
+	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->subgroups_count));
+	/* Bit 0 = observed data; bit 1 = use compression */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 1));
 	
 	/* Data descriptors */
@@ -346,26 +366,36 @@ dba_err bufr_encoder_encode(bufrex_raw in, dba_rawmsg out)
 	TRACE("sec3 ends at %d\n", e->out->len);
 	e->sec4_start = e->out->len;
 
+
 	/* Encode BUFR section 4 (Data section) */
 
 	/* Length of section (currently set to 0, will be filled in later) */
 	DBA_RUN_OR_RETURN(encoder_add_bits(e, 0, 24));
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 
-	/* Encode the data */
-	while (e->vars_left > 0)
+	/* Encode all the subgroups, uncompressed */
+	for (i = 0; i < e->in->subgroups_count; ++i)
 	{
-		DBA_RUN_OR_GOTO(fail, bufrex_opcode_prepend(&(e->ops), ops));
+		bufrex_subset subset;
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(e->in, i, &subset));
 
-		DBA_RUN_OR_GOTO(fail, encoder_encode_data_section(e));
+		/* Initialise the encoder with the list of variables to encode */
+		e->nextvar = subset->vars;
+		e->vars_left = subset->vars_count;
 
-		if (e->ops != NULL)
+		/* Encode the data */
+		while (e->vars_left > 0)
 		{
-			err = dba_error_consistency("not all operators have been encoded");
-			goto fail;
-		}
+			DBA_RUN_OR_GOTO(fail, bufrex_opcode_prepend(&(e->ops), ops));
 
-		/* TODO: increase the count of subsets when there are more than one */
+			DBA_RUN_OR_GOTO(fail, encoder_encode_data_section(e));
+
+			if (e->ops != NULL)
+			{
+				err = dba_error_consistency("not all operators have been encoded");
+				goto fail;
+			}
+		}
 	}
 
 	/* Write all the bits and pad the data section to reach an even length */
@@ -456,7 +486,7 @@ static dba_err encoder_encode_b_data(encoder e)
 	e->vars_left--;
 
 	/* Get informations from the variable */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_query_btable(e->in, dba_var_code(var), &info));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, dba_var_code(var), &info));
 
 	IFTRACE{
 #ifndef TRACE_ENCODER
@@ -741,7 +771,7 @@ static dba_err encoder_encode_data_section(encoder e)
 				/* Pop the first opcode */
 				DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(e->ops), &op));
 				
-				if ((err = bufrex_raw_query_dtable(e->in, op->val, &exp)) != DBA_OK)
+				if ((err = bufrex_msg_query_dtable(e->in, op->val, &exp)) != DBA_OK)
 				{
 					bufrex_opcode_delete(&op);
 					return err;
