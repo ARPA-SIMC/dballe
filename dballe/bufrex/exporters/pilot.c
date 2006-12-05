@@ -21,7 +21,7 @@
 
 #include "exporters.h"
 
-static dba_err exporter91(dba_msg msg, bufrex_subset dst, int type);
+static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int type);
 
 struct _bufrex_exporter bufrex_exporter_pilot_2_91 = {
 	/* Category */
@@ -106,7 +106,7 @@ static struct template tpl91[] = {
 /* 10 */ { DBA_VAR(0,  6,  1), DBA_MSG_LONGITUDE,	 },
 /* 11 */ { DBA_VAR(0,  7,  1), DBA_MSG_HEIGHT,		 },
 };
-static dba_err exporter91(dba_msg msg, bufrex_subset dst, int type)
+static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
 	const int tplsize = sizeof(tpl91)/sizeof(struct template);
 	dba_var var_levcount;

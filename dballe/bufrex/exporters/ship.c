@@ -23,7 +23,7 @@
 
 #include "exporters.h"
 
-static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
+static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
 struct _bufrex_exporter bufrex_exporter_sea_1_9 = {
 	/* Category */
@@ -175,7 +175,7 @@ static struct template tpl[] = {
 /* 33 */ { DBA_VAR(0, 10,197), DBA_MSG_HEIGHT_ANEM },
 };
 
-static dba_err exporter(dba_msg src, bufrex_subset dst, int type)
+static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
 	int i;
 	for (i = 0; i < sizeof(tpl)/sizeof(struct template); i++)

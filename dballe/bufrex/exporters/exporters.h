@@ -37,7 +37,7 @@ struct _bufrex_exporter;
  *  0: encode a BUFR
  *  1: encode a CREX
  */
-typedef dba_err (*bufrex_exporter_func)(dba_msg src, bufrex_subset dst, int type);
+typedef dba_err (*bufrex_exporter_func)(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
 typedef dba_err (*bufrex_datadesc_func)(struct _bufrex_exporter* exp, dba_msg src, bufrex_msg dst);
 

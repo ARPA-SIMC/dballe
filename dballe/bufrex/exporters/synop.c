@@ -23,7 +23,9 @@
 
 #include "exporters.h"
 
-static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
+static dba_err synop_datadesc_func(bufrex_exporter exp, dba_msg src, bufrex_msg dst);
+
+static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
 struct _bufrex_exporter bufrex_exporter_synop_0_1 = {
 	/* Category */
@@ -35,7 +37,7 @@ struct _bufrex_exporter bufrex_exporter_synop_0_1 = {
 	/* Data descriptor section */
 	(dba_varcode[]){
 		DBA_VAR(3,  7,  5),
-		DBA_VAR(0, 13, 22),
+		DBA_VAR(0, 13, 11),
 		DBA_VAR(0, 13, 13),
 		DBA_VAR(2, 22,  0),
 		DBA_VAR(1,  1, 49),
@@ -47,7 +49,7 @@ struct _bufrex_exporter bufrex_exporter_synop_0_1 = {
 		0
 	},
 	/* Datadesc function */
-	bufrex_standard_datadesc_func,
+	synop_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };
@@ -62,7 +64,7 @@ struct _bufrex_exporter bufrex_exporter_synop_0_3 = {
 	/* Data descriptor section */
 	(dba_varcode[]){
 		DBA_VAR(3,  7,  5),
-		DBA_VAR(0, 13, 22),
+		DBA_VAR(0, 13, 11),
 		DBA_VAR(0, 13, 13),
 		DBA_VAR(2, 22,  0),
 		DBA_VAR(1,  1, 49),
@@ -74,7 +76,7 @@ struct _bufrex_exporter bufrex_exporter_synop_0_3 = {
 		0
 	},
 	/* Datadesc function */
-	bufrex_standard_datadesc_func,
+	synop_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
 };
@@ -132,13 +134,27 @@ static struct template tpl[] = {
 /* 44 */ { DBA_VAR(0, 20, 11), DBA_MSG_CLOUD_N4 },
 /* 45 */ { DBA_VAR(0, 20, 12), DBA_MSG_CLOUD_C4 },
 /* 46 */ { DBA_VAR(0, 20, 13), DBA_MSG_CLOUD_H4 },
-/* 47 */ { DBA_VAR(0, 13, 22), DBA_MSG_TOT_PREC12 },
+/* 47 */ { DBA_VAR(0, 13, 22), -1 /* DBA_MSG_TOT_PREC12 */ },
 /* 48 */ { DBA_VAR(0, 13, 13), DBA_MSG_TOT_SNOW },
 };
 
-static dba_err exporter(dba_msg src, bufrex_subset dst, int type)
+static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
 	int i;
+	dba_varcode prectype = DBA_VAR(0, 13, 23);
+	bufrex_opcode op;
+
+	/* Check what precipitation type we are supposed to use */
+	for (op = bmsg->datadesc; op != NULL; op = op->next)
+	{
+		if (DBA_VAR_F(op->val) == 0 && DBA_VAR_X(op->val) == 13 &&
+				DBA_VAR_Y(op->val) >= 19 && DBA_VAR_Y(op->val) <= 23)
+		{
+			prectype = op->val;
+			break;
+		}
+	}
+
 	for (i = 0; i < sizeof(tpl)/sizeof(struct template); i++)
 	{
 		switch (i)
@@ -156,6 +172,23 @@ static dba_err exporter(dba_msg src, bufrex_subset dst, int type)
 			case 43:
 				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 4));
 				break;
+			case 47: {
+				dba_msg_datum d;
+				switch (prectype)
+				{
+					case DBA_VAR(0, 13, 23): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC24); break;
+					case DBA_VAR(0, 13, 22): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC12); break;
+					case DBA_VAR(0, 13, 21): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC6); break;
+					case DBA_VAR(0, 13, 20): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC3); break;
+					case DBA_VAR(0, 13, 19): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC1); break;
+					default: d = NULL;
+				}
+				if (d != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, prectype, d->var));
+				else
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, prectype));
+				break;
+			}
 			default: {
 				dba_msg_datum d = dba_msg_find_by_id(src, tpl[i].var);
 				if (d != NULL)
@@ -175,6 +208,36 @@ static dba_err exporter(dba_msg src, bufrex_subset dst, int type)
 		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_attrs(dst, 49, DBA_VAR(0, 33, 7)));
 	}
 
+	return dba_error_ok();
+}
+
+static dba_err synop_datadesc_func(bufrex_exporter exp, dba_msg src, bufrex_msg dst)
+{
+	int i;
+	/* Init the bufrex_msg data descriptor chain */
+	for (i = 0; exp->ddesc[i] != 0; i++)
+	{
+		/* Skip encoding of attributes for CREX */
+		if (dst->encoding_type == BUFREX_CREX && exp->ddesc[i] == DBA_VAR(2, 22, 0))
+			break;
+		/* Use the best kind of precipitation found in the message to encode */
+		if (exp->ddesc[i] == DBA_VAR(0, 13, 11))
+		{
+			dba_varcode code = DBA_VAR(0, 13, 23);
+			if (dba_msg_find_by_id(src, DBA_MSG_TOT_PREC24) != NULL)
+				code = DBA_VAR(0, 13, 23);
+			else if (dba_msg_find_by_id(src, DBA_MSG_TOT_PREC12) != NULL)
+				code = DBA_VAR(0, 13, 22);
+			else if (dba_msg_find_by_id(src, DBA_MSG_TOT_PREC6) != NULL)
+				code = DBA_VAR(0, 13, 21);
+			else if (dba_msg_find_by_id(src, DBA_MSG_TOT_PREC3) != NULL)
+				code = DBA_VAR(0, 13, 20);
+			else if (dba_msg_find_by_id(src, DBA_MSG_TOT_PREC1) != NULL)
+				code = DBA_VAR(0, 13, 19);
+			DBA_RUN_OR_RETURN(bufrex_msg_append_datadesc(dst, code));
+		} else
+			DBA_RUN_OR_RETURN(bufrex_msg_append_datadesc(dst, exp->ddesc[i]));
+	}
 	return dba_error_ok();
 }
 

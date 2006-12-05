@@ -24,8 +24,8 @@
 
 #include "exporters.h"
 
-static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
-static dba_err exporter_acars(dba_msg src, bufrex_subset dst, int type);
+static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
+static dba_err exporter_acars(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
 struct _bufrex_exporter bufrex_exporter_flight_4_142 = {
 	/* Category */
@@ -206,7 +206,7 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 	return dba_error_ok();
 }
 
-static dba_err exporter(dba_msg src, bufrex_subset dst, int type)
+static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
 	DBA_RUN_OR_RETURN(export_common(src, tpl_gen, sizeof(tpl_gen)/sizeof(struct template), dst, type));
 
@@ -252,7 +252,7 @@ static struct template tpl_acars[] = {
 /* 27 */ { DBA_VAR(0, 20, 41), -1,			DBA_VAR(0, 20, 41) },	/* AIRFRAME ICING */
 };
 
-static dba_err exporter_acars(dba_msg src, bufrex_subset dst, int type)
+static dba_err exporter_acars(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
 	DBA_RUN_OR_RETURN(export_common(src, tpl_acars, sizeof(tpl_acars)/sizeof(struct template), dst, type));
 

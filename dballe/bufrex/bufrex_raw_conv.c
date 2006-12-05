@@ -94,7 +94,7 @@ dba_err bufrex_msg_from_dba_msg(bufrex_msg raw, dba_msg msg)
 	DBA_RUN_OR_RETURN(bufrex_msg_get_subset(raw, 0, &subset));
 
 	/* Fill up the bufrex_msg with variables from msg */
-	DBA_RUN_OR_RETURN(exp->exporter(msg, subset, raw->encoding_type == BUFREX_BUFR ? 0 : 1));
+	DBA_RUN_OR_RETURN(exp->exporter(msg, raw, subset, raw->encoding_type == BUFREX_BUFR ? 0 : 1));
 
 	/* Fill in the nominal datetime informations */
 	{
@@ -135,7 +135,7 @@ dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs)
 		DBA_RUN_OR_RETURN(bufrex_msg_get_subset(raw, i, &subset));
 
 		/* Fill up the bufrex_msg with variables from msg */
-		DBA_RUN_OR_RETURN(exp->exporter(msgs->msgs[i], subset, raw->encoding_type == BUFREX_BUFR ? 0 : 1));
+		DBA_RUN_OR_RETURN(exp->exporter(msgs->msgs[i], raw, subset, raw->encoding_type == BUFREX_BUFR ? 0 : 1));
 	}
 
 	/* Fill in the nominal datetime informations */

@@ -23,7 +23,7 @@
 
 #include "exporters.h"
 
-static dba_err exporter(dba_msg src, bufrex_subset dst, int type);
+static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
 struct _bufrex_exporter bufrex_exporter_generic = {
 	/* Category */
@@ -40,7 +40,7 @@ struct _bufrex_exporter bufrex_exporter_generic = {
 	(bufrex_exporter_func)exporter,
 };
 
-static dba_err exporter(dba_msg src, bufrex_subset dst, int type)
+static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
 	dba_err err = DBA_OK;
 	int i, j;
