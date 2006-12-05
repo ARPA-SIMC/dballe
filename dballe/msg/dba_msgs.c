@@ -22,6 +22,7 @@
 #include "dba_msgs.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 dba_err dba_msgs_create(dba_msgs* msgs)
 {
@@ -60,6 +61,21 @@ dba_err dba_msgs_append_acquire(dba_msgs msgs, dba_msg msg)
 	}
 	msgs->msgs[msgs->len++] = msg;
 	return dba_error_ok();
+}
+
+void dba_msgs_diff(dba_msgs msgs1, dba_msgs msgs2, int* diffs, FILE* out)
+{
+	int i, count;
+	if (msgs1->len != msgs2->len)
+	{
+		fprintf(out, "the message groups contain a different number of messages (first is %d, second is %d)\n",
+				msgs1->len, msgs2->len);
+		(*diffs)++;
+	}
+	count = msgs1->len;
+	if (msgs2->len < count) count = msgs2->len;
+	for (i = 0; i < count; ++i)
+		dba_msg_diff(msgs1->msgs[i], msgs2->msgs[i], diffs, out);
 }
 
 /* vim:set ts=4 sw=4: */

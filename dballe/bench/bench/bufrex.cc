@@ -23,9 +23,10 @@
 #include <dballe/tests/test-utils.h>
 
 #include <dballe/dba_file.h>
+#include <dballe/msg/dba_msgs.h>
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/bufrex/bufrex.h>
-#include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/bufrex/bufrex_msg.h>
 
 #include <vector>
 
@@ -82,12 +83,13 @@ protected:
 				DBA_RUN_OR_RETURN(read_file(CREX, string("../tests/") + crex_files[count], msgbase));
 		timing("read and parse %d CREX messages of various kinds", count * iterations);
 		
-		for (vector<bufrex_raw>::iterator i = msgbase.begin();
+		for (vector<bufrex_msg>::iterator i = msgbase.begin();
 				i != msgbase.end(); i++)
 		{
-			dba_msg msg = 0;
-			DBA_RUN_OR_RETURN(bufrex_raw_to_msg(*i, &msg));
-			dba_msg_delete(msg);
+			dba_msgs msgs = 0;
+			DBA_RUN_OR_RETURN(dba_msgs_create(&msgs));
+			DBA_RUN_OR_RETURN(bufrex_msg_to_dba_msgs(*i, msgs));
+			dba_msgs_delete(msgs);
 		}
 		timing("interpreting %d bufrex_raw messages", msgbase.size());
 

@@ -32,13 +32,13 @@ extern "C" {
  */
 
 #include <dballe/db/dba_db.h>
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/dba_msgs.h>
 #include <dballe/core/dba_record.h>
 
 /**
  * Callback function used to collect the messages produced by export functions
  */
-typedef dba_err (*dba_msg_consumer)(dba_msg msg, void* data);
+typedef dba_err (*dba_msg_consumer)(dba_msgs msgs, void* data);
 
 /**
  * Perform the query in `query', and return the results as a NULL-terminated

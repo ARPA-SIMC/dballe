@@ -33,7 +33,7 @@ extern "C" {
 
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/io/encoding.h>
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/dba_msgs.h>
 
 struct _dba_file;
 typedef struct _dba_file* dba_file;
@@ -95,7 +95,7 @@ dba_err dba_file_read_raw(dba_file file, dba_rawmsg msg, int* found);
  * @return
  *   The error indicator for the function. @see dba_err
  */
-dba_err dba_file_read(dba_file file, dba_msg* msg, int* found);
+dba_err dba_file_read(dba_file file, dba_msgs* msgs, int* found);
 
 /**
  * Write an encoded message to the file.
@@ -123,7 +123,7 @@ dba_err dba_file_write_raw(dba_file file, dba_rawmsg msg);
  * @return
  *   The error indicator for the function. @see dba_err
  */
-dba_err dba_file_write(dba_file file, dba_msg msg, int cat, int subcat);
+dba_err dba_file_write(dba_file file, dba_msgs msgs, int cat, int subcat);
 
 #ifdef  __cplusplus
 }

@@ -21,11 +21,8 @@
 
 #include "common.h"
 
-dba_err aof_read_dribu(const uint32_t* obs, int obs_len, dba_msg* out)
+dba_err aof_read_dribu(const uint32_t* obs, int obs_len, dba_msg msg)
 {
-	dba_msg msg;
-
-	DBA_RUN_OR_RETURN(dba_msg_create(&msg));
 	msg->type = MSG_BUOY;
 
 	//DBA_RUN_OR_RETURN(dba_var_seti(msg->var_st_dir, 0));
@@ -55,7 +52,6 @@ dba_err aof_read_dribu(const uint32_t* obs, int obs_len, dba_msg* out)
 	if (OBS(24) != AOF_UNDEF)
 		DBA_RUN_OR_RETURN(dba_msg_set_water_temp(msg, (double)OBS(24) / 10.0, get_conf6((OBS(26) >> 18) & 0x3f)));
 
-	*out = (dba_msg)msg;
 	return dba_error_ok();
 }
 

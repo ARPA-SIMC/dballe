@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_CREX_H
-#define DBALLE_CREX_H
+#ifndef DBALLE_BUFREX_H
+#define DBALLE_BUFREX_H
 
 #ifdef  __cplusplus
 extern "C" {
@@ -32,7 +32,7 @@ extern "C" {
  */
 
 #include <dballe/io/dba_rawmsg.h>
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/dba_msgs.h>
 
 /**
  * Decode a BUFR message into a dba_msg
@@ -44,7 +44,7 @@ extern "C" {
  * @return
  *   The error status (@see dba_err)
  */
-dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msg* msg);
+dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msgs* msgs);
 
 /**
  * Decode a CREX message into a dba_msg
@@ -56,7 +56,7 @@ dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msg* msg);
  * @return
  *   The error status (@see dba_err)
  */
-dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msg* msg);
+dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msgs* msgs);
 
 /**
  * Encode a dba_msg into a BUFR message
@@ -72,7 +72,7 @@ dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msg* msg);
  * @return
  *   The error status (@see dba_err)
  */
-dba_err bufrex_encode_bufr(dba_msg msg, int type, int subtype, dba_rawmsg* raw);
+dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw);
 
 /**
  * Encode a dba_msg into a CREX message
@@ -88,7 +88,7 @@ dba_err bufrex_encode_bufr(dba_msg msg, int type, int subtype, dba_rawmsg* raw);
  * @return
  *   The error status (@see dba_err)
  */
-dba_err bufrex_encode_crex(dba_msg msg, int type, int subtype, dba_rawmsg* raw);
+dba_err bufrex_encode_crex(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw);
 
 #ifdef  __cplusplus
 }

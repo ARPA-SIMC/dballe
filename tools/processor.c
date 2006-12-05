@@ -55,15 +55,15 @@ static int match_index(int idx, const char* expr)
 	return 0;
 }
 
-dba_err match_common(dba_rawmsg rmsg, dba_msg msg, struct grep_t* grepdata, int* match)
+dba_err match_common(dba_rawmsg rmsg, dba_msgs msgs, struct grep_t* grepdata, int* match)
 {
-	if (msg == NULL && grepdata->parsable)
+	if (msgs == NULL && grepdata->parsable)
 	{
 		*match = 0;
 		return dba_error_ok();
 	}
 
-	if (msg != NULL && grepdata->unparsable)
+	if (msgs != NULL && grepdata->unparsable)
 	{
 		*match = 0;
 		return dba_error_ok();
@@ -73,9 +73,9 @@ dba_err match_common(dba_rawmsg rmsg, dba_msg msg, struct grep_t* grepdata, int*
 	return dba_error_ok();
 }
 
-dba_err match_bufrex(dba_rawmsg rmsg, bufrex_raw rm, dba_msg msg, struct grep_t* grepdata, int* match)
+dba_err match_bufrex(dba_rawmsg rmsg, bufrex_msg rm, dba_msgs msgs, struct grep_t* grepdata, int* match)
 {
-	DBA_RUN_OR_RETURN(match_common(rmsg, msg, grepdata, match));
+	DBA_RUN_OR_RETURN(match_common(rmsg, msgs, grepdata, match));
 	if (*match == 0)
 		return dba_error_ok();
 
@@ -97,9 +97,9 @@ dba_err match_bufrex(dba_rawmsg rmsg, bufrex_raw rm, dba_msg msg, struct grep_t*
 	return dba_error_ok();
 }
 
-dba_err match_bufr(dba_rawmsg rmsg, bufrex_raw rm, dba_msg msg, struct grep_t* grepdata, int* match)
+dba_err match_bufr(dba_rawmsg rmsg, bufrex_msg rm, dba_msgs msgs, struct grep_t* grepdata, int* match)
 {
-	DBA_RUN_OR_RETURN(match_bufrex(rmsg, rm, msg, grepdata, match));
+	DBA_RUN_OR_RETURN(match_bufrex(rmsg, rm, msgs, grepdata, match));
 
 	if (*match == 0)
 		return dba_error_ok();
@@ -108,9 +108,9 @@ dba_err match_bufr(dba_rawmsg rmsg, bufrex_raw rm, dba_msg msg, struct grep_t* g
 	return dba_error_ok();
 }
 
-dba_err match_crex(dba_rawmsg rmsg, bufrex_raw rm, dba_msg msg, struct grep_t* grepdata, int* match)
+dba_err match_crex(dba_rawmsg rmsg, bufrex_msg rm, dba_msgs msgs, struct grep_t* grepdata, int* match)
 {
-	DBA_RUN_OR_RETURN(match_bufrex(rmsg, rm, msg, grepdata, match));
+	DBA_RUN_OR_RETURN(match_bufrex(rmsg, rm, msgs, grepdata, match));
 
 	if (*match == 0)
 		return dba_error_ok();
@@ -132,12 +132,12 @@ dba_err match_crex(dba_rawmsg rmsg, bufrex_raw rm, dba_msg msg, struct grep_t* g
 	return dba_error_ok();
 }
 
-dba_err match_aof(dba_rawmsg rmsg, dba_msg msg, struct grep_t* grepdata, int* match)
+dba_err match_aof(dba_rawmsg rmsg, dba_msgs msgs, struct grep_t* grepdata, int* match)
 {
 	int category, subcategory;
 	DBA_RUN_OR_RETURN(aof_decoder_get_category(rmsg, &category, &subcategory));
 
-	DBA_RUN_OR_RETURN(match_common(rmsg, msg, grepdata, match));
+	DBA_RUN_OR_RETURN(match_common(rmsg, msgs, grepdata, match));
 	if (*match == 0)
 		return dba_error_ok();
 
@@ -190,32 +190,34 @@ dba_err process_input(
 {
 	dba_err err = DBA_OK;
 	int print_errors = (grepdata == NULL || !grepdata->unparsable);
-	dba_msg parsed = NULL;
-	bufrex_raw br = NULL;
+	dba_msgs parsed = NULL;
+	bufrex_msg br = NULL;
 	int match = 1;
 
 	switch (rmsg->encoding)
 	{
 		case BUFR:
-			DBA_RUN_OR_RETURN(bufrex_raw_create(&br, BUFREX_BUFR));
+			DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&parsed));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&br, BUFREX_BUFR));
 			
-			if ( !(bufrex_raw_decode(br, rmsg) == DBA_OK &&
-				   bufrex_raw_to_msg(br, &parsed) == DBA_OK) && print_errors)
+			if ( !(bufrex_msg_decode(br, rmsg) == DBA_OK &&
+				   bufrex_msg_to_dba_msgs(br, parsed) == DBA_OK) && print_errors)
 				print_parse_error("BUFR", rmsg);
-			if (grepdata != NULL) DBA_RUN_OR_RETURN(match_bufr(rmsg, br, parsed, grepdata, &match));
+			if (grepdata != NULL) DBA_RUN_OR_GOTO(cleanup, match_bufr(rmsg, br, parsed, grepdata, &match));
 			break;
 		case CREX:
-			DBA_RUN_OR_RETURN(bufrex_raw_create(&br, BUFREX_CREX));
+			DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&parsed));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&br, BUFREX_CREX));
 			
-			if ( !(bufrex_raw_decode(br, rmsg) == DBA_OK &&
-				   bufrex_raw_to_msg(br, &parsed) == DBA_OK) && print_errors)
+			if ( !(bufrex_msg_decode(br, rmsg) == DBA_OK &&
+				   bufrex_msg_to_dba_msgs(br, parsed) == DBA_OK) && print_errors)
 				print_parse_error("CREX", rmsg);
-			if (grepdata != NULL) DBA_RUN_OR_RETURN(match_crex(rmsg, br, parsed, grepdata, &match));
+			if (grepdata != NULL) DBA_RUN_OR_GOTO(cleanup, match_crex(rmsg, br, parsed, grepdata, &match));
 			break;
 		case AOF:
 			if (aof_decoder_decode(rmsg, &parsed) != DBA_OK && print_errors)
 				print_parse_error("AOF", rmsg);
-			if (grepdata != NULL) DBA_RUN_OR_RETURN(match_aof(rmsg, parsed, grepdata, &match));
+			if (grepdata != NULL) DBA_RUN_OR_GOTO(cleanup, match_aof(rmsg, parsed, grepdata, &match));
 			break;
 	}
 
@@ -226,9 +228,9 @@ dba_err process_input(
 
 cleanup:
 	if (parsed != NULL)
-		dba_msg_delete(parsed);
+		dba_msgs_delete(parsed);
 	if (br != NULL)
-		bufrex_raw_delete(br);
+		bufrex_msg_delete(br);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 

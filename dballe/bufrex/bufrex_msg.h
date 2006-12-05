@@ -35,6 +35,7 @@ extern "C" {
 #include <dballe/err/dba_error.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/msg/dba_msg.h>
+#include <dballe/msg/dba_msgs.h>
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/bufrex/bufrex_dtable.h>
 #include <dballe/bufrex/bufrex_subset.h>
@@ -211,12 +212,17 @@ dba_err bufrex_msg_encode(bufrex_msg msg, dba_rawmsg* raw);
 /**
  * Fill in the bufrex_msg with the contents of a dba_msg
  */
-dba_err bufrex_msg_from_msg(bufrex_msg raw, dba_msg msg);
+dba_err bufrex_msg_from_dba_msg(bufrex_msg raw, dba_msg msg);
 
 /**
- * Fill in a dba_msg with the contents of the bufrex_msg
+ * Fill in the bufrex_msg with the contents of a dba_msgs
  */
-dba_err bufrex_msg_to_msg(bufrex_msg raw, dba_msg* msg);
+dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs);
+
+/**
+ * Fill in a dba_msgs with the contents of the bufrex_msg
+ */
+dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs msgs);
 
 
 /**

@@ -54,7 +54,7 @@ struct poptOption grepTable[] = {
 	POPT_TABLEEND
 };
 
-static int count_nonnulls(bufrex_raw raw)
+static int count_nonnulls(bufrex_subset raw)
 {
 	int i, count = 0;
 	for (i = 0; i < raw->vars_count; i++)
@@ -63,34 +63,45 @@ static int count_nonnulls(bufrex_raw raw)
 	return count;
 }
 
-static dba_err print_bufr_header(dba_rawmsg rmsg, bufrex_raw braw)
+static dba_err print_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
 {
 	int size;
 	const char *table_id;
 	const unsigned char *buf;
+	int i;
 
 	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
-	DBA_RUN_OR_RETURN(bufrex_raw_get_table_id(braw, &table_id));
+	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
 
-	printf("#%d BUFR message: %d bytes, category %d, subcategory %d, table %s, %d/%d values",
-			rmsg->index, size, braw->type, braw->subtype, table_id, count_nonnulls(braw), braw->vars_count);
+	printf("#%d BUFR message: %d bytes, category %d, subcategory %d, table %s, subsets %d, values:",
+			rmsg->index, size, braw->type, braw->subtype, table_id, braw->subsets_count);
+	for (i = 0; i < braw->subsets_count; ++i)
+		printf( "%d/%d", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);
 
 	return dba_error_ok();
 }
 
-static dba_err print_crex_header(dba_rawmsg rmsg, bufrex_raw braw)
+static dba_err print_crex_header(dba_rawmsg rmsg, bufrex_msg braw)
 {
 	int size/*, checkdigit*/;
 	const char *table_id;
 	const unsigned char *buf;
+	int i;
 
 	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
-	DBA_RUN_OR_RETURN(bufrex_raw_get_table_id(braw, &table_id));
+	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
 
 	/* DBA_RUN_OR_RETURN(crex_message_has_check_digit(msg, &checkdigit)); */
 
+#if 0
 	printf("#%d CREX message: %d bytes, category %d, subcategory %d, table %s, %scheck digit, %d/%d values",
 			rmsg->index, size, braw->type, braw->subtype, table_id, /*checkdigit ? "" : "no "*/"? ", count_nonnulls(braw), braw->vars_count);
+#endif
+
+	printf("#%d CREX message: %d bytes, category %d, subcategory %d, table %s, subsets %d, values:",
+			rmsg->index, size, braw->type, braw->subtype, table_id, braw->subsets_count);
+	for (i = 0; i < braw->subsets_count; ++i)
+		printf( "%d/%d", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);
 
 	return dba_error_ok();
 }
@@ -110,7 +121,7 @@ static dba_err print_aof_header(dba_rawmsg rmsg)
 	return dba_error_ok();
 }
 
-static dba_err summarise_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+static dba_err summarise_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
 {
 	switch (rmsg->encoding)
 	{
@@ -129,7 +140,7 @@ static dba_err summarise_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, 
 	return dba_error_ok();
 }
 
-static dba_err dump_dba_vars(bufrex_raw msg)
+static dba_err dump_dba_vars(bufrex_subset msg)
 {
 	int i;
 
@@ -139,8 +150,9 @@ static dba_err dump_dba_vars(bufrex_raw msg)
 	return dba_error_ok();
 }
 
-static dba_err dump_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+static dba_err dump_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
 {
+	int i;
 	switch (rmsg->encoding)
 	{
 		case BUFR:
@@ -148,14 +160,22 @@ static dba_err dump_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void*
 			DBA_RUN_OR_RETURN(print_bufr_header(rmsg, braw)); puts(":");
 			printf(" Edition %d, origin %d, master table %d, local table %d\n",
 					braw->edition, braw->opt.bufr.origin, braw->opt.bufr.master_table, braw->opt.bufr.local_table);
-			DBA_RUN_OR_RETURN(dump_dba_vars(braw));
+			for (i = 0; i < braw->subsets_count; ++i)
+			{
+				printf("Subset %d:\n", i);
+				DBA_RUN_OR_RETURN(dump_dba_vars(braw->subsets[i]));
+			}
 			break;
 		case CREX:
 			if (braw == NULL) return dba_error_ok();
 			DBA_RUN_OR_RETURN(print_crex_header(rmsg, braw)); puts(":");
 			printf(" Edition %d, master table %d, table %d\n",
 					braw->edition, braw->opt.crex.master_table, braw->opt.crex.table);
-			DBA_RUN_OR_RETURN(dump_dba_vars(braw));
+			for (i = 0; i < braw->subsets_count; ++i)
+			{
+				printf("Subset %d:\n", i);
+				DBA_RUN_OR_RETURN(dump_dba_vars(braw->subsets[i]));
+			}
 			break;
 		case AOF:
 			DBA_RUN_OR_RETURN(print_aof_header(rmsg)); puts(":");
@@ -165,15 +185,19 @@ static dba_err dump_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void*
 	return dba_error_ok();
 }
 
-static dba_err dump_cooked_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+static dba_err dump_cooked_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
 {
-	if (msg == NULL) return dba_error_ok();
-	printf("#%d ", rmsg->index);
-	dba_msg_print(msg, stdout);
+	int i;
+	if (msgs == NULL) return dba_error_ok();
+	for (i = 0; i < msgs->len; ++i)
+	{
+		printf("#%d[%d] ", rmsg->index, i);
+		dba_msg_print(msgs->msgs[i], stdout);
+	}
 	return dba_error_ok();
 }
 
-dba_err write_raw_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+dba_err write_raw_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
 {
 	dba_file* file = (dba_file*)data;
 	if (*file == NULL)
@@ -252,8 +276,8 @@ dba_err do_compare(poptContext optCon)
 	dba_file file2;
 	const char* file1_name;
 	const char* file2_name;
-	dba_msg msg1;
-	dba_msg msg2;
+	dba_msgs msg1;
+	dba_msgs msg2;
 	int found1 = 1, found2 = 1;
 	int idx = 0;
 
@@ -284,13 +308,12 @@ dba_err do_compare(poptContext optCon)
 
 		if (found1 && found2)
 		{
-			dba_msg_diff(msg1, msg2, &diffs, stderr);
+			dba_msgs_diff(msg1, msg2, &diffs, stderr);
 			if (diffs > 0)
 				return dba_error_consistency("Messages #%d contain %d differences", idx, diffs);
-
-			dba_msg_delete(msg1);
-			dba_msg_delete(msg2);
 		}
+		dba_msgs_delete(msg1);
+		dba_msgs_delete(msg2);
 	}
 
 	dba_file_delete(file1);
@@ -330,57 +353,72 @@ inline static double get_lat_value(dba_msg msg, int value)
 }
 
 
-dba_err filter_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+dba_err filter_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
 {
 	struct filter_data* fdata = (struct filter_data*)data;
 	double dval;
-	
-	if (msg == NULL) return dba_error_ok();
+	int msgs_reject = 1;
+	int i;
 
-	if (fdata->mindate[0] != -1 || fdata->maxdate[0] != -1)
+	if (msgs == NULL) return dba_error_ok();
+
+	for (i = 0; i < msgs->len; ++i)
 	{
-		int i, date[6];
-		date[0] = get_date_value(msg, DBA_MSG_YEAR);
-		date[1] = get_date_value(msg, DBA_MSG_MONTH);
-		date[2] = get_date_value(msg, DBA_MSG_DAY);
-		date[3] = get_date_value(msg, DBA_MSG_HOUR);
-		date[4] = get_date_value(msg, DBA_MSG_MINUTE);
-		date[5] = 0;
+		dba_msg msg = msgs->msgs[i];
+		int msg_reject = 0;
 
-		/* Check that the message contains proper datetime indications */
-		for (i = 0; i < 6; i++)
-			if (date[i] == -1)
-				return dba_error_ok();
+		if (fdata->mindate[0] != -1 || fdata->maxdate[0] != -1)
+		{
+			int i, date[6];
+			date[0] = get_date_value(msg, DBA_MSG_YEAR);
+			date[1] = get_date_value(msg, DBA_MSG_MONTH);
+			date[2] = get_date_value(msg, DBA_MSG_DAY);
+			date[3] = get_date_value(msg, DBA_MSG_HOUR);
+			date[4] = get_date_value(msg, DBA_MSG_MINUTE);
+			date[5] = 0;
 
-		/* Compare with the two extremes */
-
-		if (fdata->mindate[0] != -1)
+			/* Check that the message contains proper datetime indications */
 			for (i = 0; i < 6; i++)
-				if (fdata->mindate[i] > date[i])
-					return dba_error_ok();
+				if (date[i] == -1)
+					msg_reject = 1;
 
-		if (fdata->maxdate[0] != -1)
-			for (i = 0; i < 6; i++)
-				if (fdata->maxdate[i] < date[i])
-					return dba_error_ok();
+			/* Compare with the two extremes */
+
+			if (fdata->mindate[0] != -1)
+				for (i = 0; !msg_reject && i < 6; i++)
+					if (fdata->mindate[i] > date[i])
+						msg_reject = 1;
+
+			if (fdata->maxdate[0] != -1)
+				for (i = 0; !msg_reject && i < 6; i++)
+					if (fdata->maxdate[i] < date[i])
+						msg_reject = 1;
+		}
+
+		/* Latitude and longitude must exist */
+		if (!msg_reject && (dval = get_lat_value(msg, DBA_MSG_LATITUDE)) == -1000000)
+			msg_reject = 1;
+		if (!msg_reject && fdata->latmin != -1000000 && fdata->latmin > dval)
+			msg_reject = 1;
+		if (!msg_reject && fdata->latmax != -1000000 && fdata->latmax < dval)
+			msg_reject = 1;
+
+		if (!msg_reject && (dval = get_lat_value(msg, DBA_MSG_LONGITUDE)) == -1000000)
+			msg_reject = 1;
+		if (!msg_reject && fdata->lonmin != -1000000 && fdata->lonmin > dval)
+			msg_reject = 1;
+		if (!msg_reject && fdata->lonmax != -1000000 && fdata->lonmax < dval)
+			msg_reject = 1;
+
+		if (!msg_reject)
+		{
+			msgs_reject = 0;
+			break;
+		}
 	}
 
-	/* Latitude and longitude must exist */
-	if ((dval = get_lat_value(msg, DBA_MSG_LATITUDE)) == -1000000)
-		return dba_error_ok();
-	if (fdata->latmin != -1000000 && fdata->latmin > dval)
-		return dba_error_ok();
-	if (fdata->latmax != -1000000 && fdata->latmax < dval)
-		return dba_error_ok();
-
-	if ((dval = get_lat_value(msg, DBA_MSG_LONGITUDE)) == -1000000)
-		return dba_error_ok();
-	if (fdata->lonmin != -1000000 && fdata->lonmin > dval)
-		return dba_error_ok();
-	if (fdata->lonmax != -1000000 && fdata->lonmax < dval)
-		return dba_error_ok();
-
-	DBA_RUN_OR_RETURN(dba_file_write_raw(fdata->output, rmsg));
+	if (!msgs_reject)
+		DBA_RUN_OR_RETURN(dba_file_write_raw(fdata->output, rmsg));
 
 	return dba_error_ok();
 }

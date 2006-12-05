@@ -22,7 +22,7 @@
 #include "test-utils.h"
 
 #include <../../dballe/bufrex/bufrex.h>
-#include <../../dballe/bufrex/bufrex_raw.h>
+#include <../../dballe/bufrex/bufrex_msg.h>
 #include <../../dballe/aof/decoder.h>
 
 #include <unistd.h>
@@ -33,7 +33,7 @@ namespace tut_dballe {
 
 static std::string tag;
 
-bufrex_raw _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type)
+bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type)
 {
 	dba_file input;
 	dba_rawmsg rawmsg;
@@ -50,20 +50,20 @@ bufrex_raw _read_test_msg_raw(const char* file, int line, const char* filename, 
 	dba_file_delete(input);
 
 	// Decode the sample message
-	bufrex_raw bufrex;
+	bufrex_msg bufrex;
 	switch (type)
 	{
-		case BUFR: INNER_CHECKED(bufrex_raw_create(&bufrex, BUFREX_BUFR)); break;
-		case CREX: INNER_CHECKED(bufrex_raw_create(&bufrex, BUFREX_CREX)); break;
+		case BUFR: INNER_CHECKED(bufrex_msg_create(&bufrex, BUFREX_BUFR)); break;
+		case CREX: INNER_CHECKED(bufrex_msg_create(&bufrex, BUFREX_CREX)); break;
 		default: inner_ensure(false); break;
 	}
-	INNER_CHECKED(bufrex_raw_decode(bufrex, rawmsg));
+	INNER_CHECKED(bufrex_msg_decode(bufrex, rawmsg));
 	
 	dba_rawmsg_delete(rawmsg);
 	return bufrex;
 }
 
-dba_msg _read_test_msg(const char* file, int line, const char* filename, dba_encoding type)
+dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type)
 {
 	if (type == AOF)
 	{
@@ -80,30 +80,31 @@ dba_msg _read_test_msg(const char* file, int line, const char* filename, dba_enc
 		dba_file_delete(input);
 
 		// Decode the sample message
-		dba_msg msg;
-		INNER_CHECKED(aof_decoder_decode(rawmsg, &msg));
+		dba_msgs msgs;
+		INNER_CHECKED(aof_decoder_decode(rawmsg, &msgs));
 		dba_rawmsg_delete(rawmsg);
-		return msg;
+		return msgs;
 	} else {
-		bufrex_raw bufrex = _read_test_msg_raw(file, line, filename, type);
+		bufrex_msg bufrex = _read_test_msg_raw(file, line, filename, type);
 
 		// Parse the decoded message into a synop
-		dba_msg msg;
-		INNER_CHECKED(bufrex_raw_to_msg(bufrex, &msg));
+		dba_msgs msgs;
+		INNER_CHECKED(dba_msgs_create(&msgs));
+		INNER_CHECKED(bufrex_msg_to_dba_msgs(bufrex, msgs));
 
-		bufrex_raw_delete(bufrex);
-		return msg;
+		bufrex_msg_delete(bufrex);
+		return msgs;
 	}
 }
 
-bufrex_raw _reencode_test(const char* file, int line, bufrex_raw msg)
+bufrex_msg _reencode_test(const char* file, int line, bufrex_msg msg)
 {
 	dba_rawmsg raw;
-	INNER_CHECKED(bufrex_raw_encode(msg, &raw));
+	INNER_CHECKED(bufrex_msg_encode(msg, &raw));
 
-	bufrex_raw bufrex;
-	INNER_CHECKED(bufrex_raw_create(&bufrex, msg->encoding_type));
-	INNER_CHECKED(bufrex_raw_decode(bufrex, raw));
+	bufrex_msg bufrex;
+	INNER_CHECKED(bufrex_msg_create(&bufrex, msg->encoding_type));
+	INNER_CHECKED(bufrex_msg_decode(bufrex, raw));
 
 	dba_rawmsg_delete(raw);
 

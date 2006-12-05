@@ -33,7 +33,7 @@ extern "C" {
  */
 
 #include <dballe/io/dba_rawmsg.h>
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/dba_msgs.h>
 
 /**
  * Decode an AOF message
@@ -45,7 +45,7 @@ extern "C" {
  * @return
  *   The error indicator for the function.  @see ::dba_err
  */
-dba_err aof_decoder_decode(dba_rawmsg msg, dba_msg* out);
+dba_err aof_decoder_decode(dba_rawmsg msg, dba_msgs* msgs);
 
 /**
  * Get category and subcategory of an AOF message

@@ -131,12 +131,34 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
+static dba_err consume_one(dba_msg msg, dba_msg_consumer cons, void* data)
+{
+	dba_err err = DBA_OK;
+	dba_msgs msgs = NULL;
+	DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&msgs));
+	DBA_RUN_OR_GOTO(cleanup, dba_msgs_append_acquire(msgs, msg));
+	DBA_RUN_OR_GOTO(cleanup, cons(msgs, data));
+	msgs = NULL;
+
+cleanup:
+	if (err != DBA_OK)
+	{
+		/* If we report a problem we don't consume msg, so we tell msgs not to
+		 * deallocate it */
+		msgs->msgs[0] = NULL;
+	}
+	if (msgs != NULL)
+		dba_msgs_delete(msgs);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
 dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* data)
 {
 	dba_err err = DBA_OK;
 	dba_db_cursor cur = NULL;
 	dba_var var = NULL;
 	dba_msg msg = NULL;
+	dba_msg copy = NULL;
 	int last_lat = -1;
 	int last_lon = -1;
 	char last_datetime[25];
@@ -184,13 +206,13 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 				TRACE("Sending old message to consumer\n");
 				if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 				{
-					dba_msg copy;
 					DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));
 					/* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-					DBA_RUN_OR_GOTO(cleanup, cons(copy, data));
+					DBA_RUN_OR_GOTO(cleanup, consume_one(copy, cons, data));
 					dba_msg_delete(msg);
+					copy = NULL;
 				} else {
-					DBA_RUN_OR_GOTO(cleanup, cons(msg, data));
+					DBA_RUN_OR_GOTO(cleanup, consume_one(msg, cons, data));
 				}
 				msg = NULL;
 			}
@@ -224,13 +246,13 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 		TRACE("Inserting leftover old message\n");
 		if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 		{
-			dba_msg copy;
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_pack_levels(msg, &copy));
 			/* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-			DBA_RUN_OR_GOTO(cleanup, cons(copy, data));
+			DBA_RUN_OR_GOTO(cleanup, consume_one(copy, cons, data));
 			dba_msg_delete(msg);
+			copy = NULL;
 		} else {
-			DBA_RUN_OR_GOTO(cleanup, cons(msg, data));
+			DBA_RUN_OR_GOTO(cleanup, consume_one(copy, cons, data));
 		}
 		msg = NULL;
 	}
@@ -240,6 +262,8 @@ cleanup:
 		dba_var_delete(var);
 	if (msg != NULL)
 		dba_msg_delete(msg);
+	if (copy != NULL)
+		dba_msg_delete(copy);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 /* vim:set ts=4 sw=4: */

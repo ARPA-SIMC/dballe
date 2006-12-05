@@ -22,7 +22,7 @@
 #include <dballe/err/dba_error.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/bufrex/bufrex.h>
-#include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/bufrex/bufrex_msg.h>
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/msg/dba_msg.h>
 #include <dballe/dba_file.h>
@@ -266,177 +266,223 @@ public:
 };
 #define ensureTestRecEquals(rec, tr) tr.ensureEquals(__FILE__, __LINE__, rec)
 
-class TestBufrexRaw
+struct TestBufrexMsg
 {
-protected:
-	class Test
+	struct TestBufrexSubset
 	{
 	protected:
-		dba_varcode m_code;
-		virtual void check_var(const char* file, int line, dba_var var) const = 0;
-		virtual std::string toString() const = 0;
-	public:
-		Test(dba_varcode code) : m_code(code) {}
-		virtual ~Test() {}
-		virtual int checkIn(const char* file, int line, bufrex_raw braw, int start) const
+		class Test
 		{
-			for (int i = start; i < braw->vars_count; i++)
-				if (dba_var_code(braw->vars[i]) == m_code)
+		protected:
+			dba_varcode m_code;
+			virtual void check_var(const char* file, int line, dba_var var) const = 0;
+			virtual std::string toString() const = 0;
+		public:
+			Test(dba_varcode code) : m_code(code) {}
+			virtual ~Test() {}
+			virtual int checkIn(const char* file, int line, bufrex_subset braw, int start) const
+			{
+				for (int i = start; i < braw->vars_count; i++)
+					if (dba_var_code(braw->vars[i]) == m_code)
+					{
+						check_var(file, line, braw->vars[i]);
+						return i + 1;
+					}
+				throw failure(__ensure_errmsg(file, line, "did not find a variable for test " + toString()));
+				return 0;
+			}
+			virtual Test* clone() = 0;
+		};
+		class TestUndef : public Test
+		{
+		protected:
+			virtual void check_var(const char* file, int line, dba_var var) const
+			{
+				inner_ensure_var_undef(var);
+			}
+			virtual std::string toString() const
+			{
+				ostringstream res;
+				switch (DBA_VAR_F(m_code))
 				{
-					check_var(file, line, braw->vars[i]);
-					return i + 1;
+					case 0: res << 'B'; break;
+					case 1: res << 'R'; break;
+					case 2: res << 'C'; break;
+					case 3: res << 'D'; break;
+					default: break;
 				}
-			throw failure(__ensure_errmsg(file, line, "did not find a variable for test " + toString()));
-			return 0;
-		}
-		virtual Test* clone() = 0;
-	};
-	class TestUndef : public Test
-	{
-	protected:
-		virtual void check_var(const char* file, int line, dba_var var) const
-		{
-			inner_ensure_var_undef(var);
-		}
-		virtual std::string toString() const
-		{
-			ostringstream res;
-			switch (DBA_VAR_F(m_code))
-			{
-				case 0: res << 'B'; break;
-				case 1: res << 'R'; break;
-				case 2: res << 'C'; break;
-				case 3: res << 'D'; break;
-				default: break;
+				//os << std::setfill('0') << std::setw(2) << DBA_VAR_X(code);
+				//os << std::setfill('0') << std::setw(3) << DBA_VAR_Y(code);
+				res << DBA_VAR_X(m_code);
+				res << DBA_VAR_Y(m_code);
+				res << ":undef";
+				//res << (dba_varcode)m_code << ":" << m_val;
+				return res.str();
 			}
-			//os << std::setfill('0') << std::setw(2) << DBA_VAR_X(code);
-			//os << std::setfill('0') << std::setw(3) << DBA_VAR_Y(code);
-			res << DBA_VAR_X(m_code);
-			res << DBA_VAR_Y(m_code);
-			res << ":undef";
-			//res << (dba_varcode)m_code << ":" << m_val;
-			return res.str();
-		}
-	public:
-		TestUndef(dba_varcode code) : Test(code) {}
-		virtual Test* clone() { return new TestUndef(m_code); }
-	};
-	template<class VAL>
-	class TestVar : public Test
-	{
-	protected:
-		VAL m_val;
-		virtual void check_var(const char* file, int line, dba_var var) const
+		public:
+			TestUndef(dba_varcode code) : Test(code) {}
+			virtual Test* clone() { return new TestUndef(m_code); }
+		};
+		template<class VAL>
+		class TestVar : public Test
 		{
-			inner_ensure_var_equals(var, m_val);
-		}
-		virtual std::string toString() const
-		{
-			ostringstream res;
-			switch (DBA_VAR_F(m_code))
+		protected:
+			VAL m_val;
+			virtual void check_var(const char* file, int line, dba_var var) const
 			{
-				case 0: res << 'B'; break;
-				case 1: res << 'R'; break;
-				case 2: res << 'C'; break;
-				case 3: res << 'D'; break;
-				default: break;
+				inner_ensure_var_equals(var, m_val);
 			}
-			//os << std::setfill('0') << std::setw(2) << DBA_VAR_X(code);
-			//os << std::setfill('0') << std::setw(3) << DBA_VAR_Y(code);
-			res << DBA_VAR_X(m_code);
-			res << DBA_VAR_Y(m_code);
-			res << ":" << m_val;
-			//res << (dba_varcode)m_code << ":" << m_val;
-			return res.str();
-		}
-	public:
-		TestVar(dba_varcode code, const VAL& val) : Test(code), m_val(val) {}
-		virtual Test* clone() { return new TestVar<VAL>(m_code, m_val); }
-	};
+			virtual std::string toString() const
+			{
+				ostringstream res;
+				switch (DBA_VAR_F(m_code))
+				{
+					case 0: res << 'B'; break;
+					case 1: res << 'R'; break;
+					case 2: res << 'C'; break;
+					case 3: res << 'D'; break;
+					default: break;
+				}
+				//os << std::setfill('0') << std::setw(2) << DBA_VAR_X(code);
+				//os << std::setfill('0') << std::setw(3) << DBA_VAR_Y(code);
+				res << DBA_VAR_X(m_code);
+				res << DBA_VAR_Y(m_code);
+				res << ":" << m_val;
+				//res << (dba_varcode)m_code << ":" << m_val;
+				return res.str();
+			}
+		public:
+			TestVar(dba_varcode code, const VAL& val) : Test(code), m_val(val) {}
+			virtual Test* clone() { return new TestVar<VAL>(m_code, m_val); }
+		};
 	
+		std::vector<Test*> tests;
+	
+	public:
+		int vars;
+		TestBufrexSubset() : vars(-1) {}
+		TestBufrexSubset(const TestBufrexSubset& r)
+		{
+			vars = r.vars;
+			for (std::vector<Test*>::const_iterator i = r.tests.begin();
+					i != r.tests.end(); i++)
+				tests.push_back((*i)->clone());
+		}
+		~TestBufrexSubset() {
+			for (std::vector<Test*>::iterator i = tests.begin();
+					i != tests.end(); i++)
+				delete *i;
+		}
+		TestBufrexSubset& operator=(const TestBufrexSubset& r)
+		{
+			vars = r.vars;
+			for (std::vector<Test*>::iterator i = tests.begin();
+					i != r.tests.end(); i++)
+				delete *i;
+			tests.clear();
+			for (std::vector<Test*>::const_iterator i = r.tests.begin();
+					i != r.tests.end(); i++)
+				tests.push_back((*i)->clone());
+			return *this;
+		}
+		TestBufrexSubset* clone() { return new TestBufrexSubset(*this); }
+		template<class VAL>
+		void set(dba_varcode code, VAL val) { tests.push_back(new TestVar<VAL>(code, val)); }
+		void setUndef(dba_varcode code) { tests.push_back(new TestUndef(code)); }
+		void checkIn(const char* file, int line, bufrex_subset sset) const
+		{
+			if (vars != -1) inner_ensure_equals(sset->vars_count, vars);
+
+			/* Check the variables */
+			int start = 0;
+			for (std::vector<Test*>::const_iterator i = tests.begin();
+					i != tests.end(); i++)
+				start = (*i)->checkIn(file, line, sset, start);
+		}
+	};
+
+protected:
+	std::vector<TestBufrexSubset*> tests;
+
+public:
 	int edition;
 	int cat;
 	int subcat;
-	//int checkdigit;
+	int checkdigit;
+	int subsets;
 	int vars;
 
-	std::vector<Test*> tests;
-public:
-	TestBufrexRaw() : edition(-1), cat(-1), subcat(-1)/*, checkdigit(-1)*/, vars(-1) {}
-	TestBufrexRaw(const TestBufrexRaw& r)
+	TestBufrexMsg() : edition(-1), cat(-1), subcat(-1), checkdigit(-1), subsets(-1), vars(-1) {}
+	TestBufrexMsg(const TestBufrexMsg& r)
 	{
 		edition = r.edition;
 		cat = r.cat;
 		subcat = r.subcat;
-		//checkdigit = r.checkdigit;
+		checkdigit = r.checkdigit;
+		subsets = r.subsets;
 		vars = r.vars;
-		for (std::vector<Test*>::const_iterator i = r.tests.begin();
+		for (std::vector<TestBufrexSubset*>::const_iterator i = r.tests.begin();
 				i != r.tests.end(); i++)
 			tests.push_back((*i)->clone());
 	}
-	~TestBufrexRaw() throw ()
+	~TestBufrexMsg() throw ()
 	{
-		for (std::vector<Test*>::iterator i = tests.begin();
+		for (std::vector<TestBufrexSubset*>::iterator i = tests.begin();
 				i != tests.end(); i++)
-			delete *i;
+			if (*i) delete *i;
+
 	}
-	TestBufrexRaw& operator=(const TestBufrexRaw& r)
+	TestBufrexMsg& operator=(const TestBufrexMsg& r)
 	{
 		edition = r.edition;
 		cat = r.cat;
 		subcat = r.subcat;
-		//checkdigit = r.checkdigit;
+		checkdigit = r.checkdigit;
+		subsets = r.subsets;
 		vars = r.vars;
 
-		for (std::vector<Test*>::iterator i = tests.begin();
+		for (std::vector<TestBufrexSubset*>::iterator i = tests.begin();
 				i != r.tests.end(); i++)
 			delete *i;
 		tests.clear();
-		for (std::vector<Test*>::const_iterator i = r.tests.begin();
+		for (std::vector<TestBufrexSubset*>::const_iterator i = r.tests.begin();
 				i != r.tests.end(); i++)
 			tests.push_back((*i)->clone());
 		return *this;
 	}
-	void setEdition(int val) { edition = val; }
-	void setCat(int val) { cat = val; }
-	void setSubcat(int val) { subcat = val; }
-	//void setCheckdigit(int val) { checkdigit = val; }
-	void setVars(int val) { vars = val; }
-	template<class VAL>
-	void set(dba_varcode code, VAL val) { tests.push_back(new TestVar<VAL>(code, val)); }
-	void setUndef(dba_varcode code) { tests.push_back(new TestUndef(code)); }
-	void ensureEquals(const char* file, int line, bufrex_raw braw)
+	TestBufrexSubset& subset(size_t idx)
+	{
+		if (idx >= tests.size())
+			tests.resize(idx+1, 0);
+		if (tests[idx] == 0)
+			tests[idx] = new TestBufrexSubset;
+		return *tests[idx];
+	}
+	void ensureEquals(const char* file, int line, bufrex_msg braw)
 	{
 		/* First check the metadata */
 
-		/*
-		CHECKED(bufrex_raw_get_edition(braw, &val));
-		inner_ensure_equals(val, edition);
-		*/
-
-		inner_ensure_equals(braw->type, cat);
-		inner_ensure_equals(braw->subtype, subcat);
-
-		//inner_ensure_equals(val, checkdigit);
-
-		inner_ensure_equals(braw->vars_count, vars);
+		if (edition != -1) inner_ensure_equals(braw->edition, edition);
+		if (cat != -1) inner_ensure_equals(braw->type, cat);
+		if (subcat != -1) inner_ensure_equals(braw->subtype, subcat);
+		//if (checkdigit != -1) inner_ensure_equals(braw->opt.crex.checkdigit, checkdigit);
+		if (subsets != -1) inner_ensure_equals(braw->subsets_count, subsets);
 
 		/* Then check the variables */
-		int start = 0;
-		for (std::vector<Test*>::const_iterator i = tests.begin();
-				i != tests.end(); i++)
-			start = (*i)->checkIn(file, line, braw, start);
+		for (size_t i = 0; i < braw->subsets_count; ++i)
+			if (i < tests.size() && tests[i])
+				tests[i]->checkIn(file, line, braw->subsets[i]);
 	}
 };
 #define ensureBufrexRawEquals(tr, br) tr.ensureEquals(__FILE__, __LINE__, br)
 
-dba_msg _read_test_msg(const char* file, int line, const char* filename, dba_encoding type);
+dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type);
 #define read_test_msg(filename, type) _read_test_msg(__FILE__, __LINE__, filename, type)
 
-bufrex_raw _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type);
+bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type);
 #define read_test_msg_raw(filename, type) _read_test_msg_raw(__FILE__, __LINE__, filename, type)
 
-bufrex_raw _reencode_test(const char* file, int line, bufrex_raw msg);
+bufrex_msg _reencode_test(const char* file, int line, bufrex_msg msg);
 #define reencode_test(filename) _reencode_test(__FILE__, __LINE__, msg)
 
 
@@ -496,58 +542,58 @@ public:
 
 dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons);
 
-class msg_vector : public dba_raw_consumer, public std::vector<dba_msg>
+class msg_vector : public dba_raw_consumer, public std::vector<dba_msgs>
 {
 public:
 	virtual ~msg_vector()
 	{
 		for (iterator i = begin(); i != end(); i++)
-			dba_msg_delete(*i);
+			dba_msgs_delete(*i);
 	}
 		
 	virtual dba_err consume(dba_rawmsg raw)
 	{
-		dba_msg msg;
+		dba_msgs msgs;
 
-		DBA_RUN_OR_RETURN(dba_marshal_decode(raw, &msg));
-		push_back(msg);
+		DBA_RUN_OR_RETURN(dba_marshal_decode(raw, &msgs));
+		push_back(msgs);
 
 		return dba_error_ok();
 	}
 };
 	
-class bufrex_vector : public dba_raw_consumer, public std::vector<bufrex_raw>
+class bufrex_vector : public dba_raw_consumer, public std::vector<bufrex_msg>
 {
 public:
 	virtual ~bufrex_vector()
 	{
 		for (iterator i = begin(); i != end(); i++)
-			bufrex_raw_delete(*i);
+			bufrex_msg_delete(*i);
 	}
 		
 	virtual dba_err consume(dba_rawmsg raw)
 	{
 		dba_err err = DBA_OK;
-		bufrex_raw msg;
+		bufrex_msg msg;
 
 		switch (raw->encoding)
 		{
 			case BUFR:
-				DBA_RUN_OR_RETURN(bufrex_raw_create(&msg, BUFREX_BUFR));
+				DBA_RUN_OR_RETURN(bufrex_msg_create(&msg, BUFREX_BUFR));
 				break;
 			case CREX:
-				DBA_RUN_OR_RETURN(bufrex_raw_create(&msg, BUFREX_CREX));
+				DBA_RUN_OR_RETURN(bufrex_msg_create(&msg, BUFREX_CREX));
 				break;
 			default:
 				return dba_error_consistency("unhandled message type");
 		}
-		DBA_RUN_OR_GOTO(fail, bufrex_raw_decode(msg, raw));
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_decode(msg, raw));
 		push_back(msg);
 
 		return dba_error_ok();
 
 	fail:
-		bufrex_raw_delete(msg);
+		bufrex_msg_delete(msg);
 		return err;
 	}
 };
@@ -575,3 +621,5 @@ public:
 };
 
 }
+
+// vim:set ts=4 sw=4:

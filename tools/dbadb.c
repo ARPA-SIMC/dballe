@@ -104,22 +104,28 @@ struct import_data
 	int forced_repcod;
 };
 
-static dba_err import_message(dba_rawmsg rmsg, bufrex_raw braw, dba_msg msg, void* data)
+static dba_err import_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
 {
 	struct import_data* d = (struct import_data*)data;
-	if (msg == NULL)
+	int i;
+	if (msgs == NULL)
 	{
 		fprintf(stderr, "Message #%d cannot be parsed: ignored\n",
 				rmsg->index);
+		return dba_error_ok();
 	}
-	else if (d->forced_repcod == -1 && msg->type == MSG_GENERIC)
+	for (i = 0; i < msgs->len; ++i)
 	{
-		/* Put generic messages in the generic rep_cod by default */
-		DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, 255, d->overwrite, op_fast));
-	}
-	else
-	{
-		DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, d->overwrite, op_fast));
+		dba_msg msg = msgs->msgs[i];
+		if (d->forced_repcod == -1 && msg->type == MSG_GENERIC)
+		{
+			/* Put generic messages in the generic rep_cod by default */
+			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, 255, d->overwrite, op_fast));
+		}
+		else
+		{
+			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, d->overwrite, op_fast));
+		}
 	}
 	return dba_error_ok();
 }
@@ -332,14 +338,18 @@ struct export_data
 	int forced_rep_cod;
 };
 
-static dba_err msg_writer(dba_msg msg, void* data)
+static dba_err msg_writer(dba_msgs msgs, void* data)
 {
 	struct export_data* d = (struct export_data*)data;
 	/* Override the message type if the user asks for it */
 	if (d->forced_rep_cod != -1)
-		msg->type = dba_msg_type_from_repcod(d->forced_rep_cod);
-	DBA_RUN_OR_RETURN(dba_file_write(d->file, msg, d->cat, d->subcat));
-	dba_msg_delete(msg);
+	{
+		int i;
+		for (i = 0; i < msgs->len; ++i)
+			msgs->msgs[i]->type = dba_msg_type_from_repcod(d->forced_rep_cod);
+	}
+	DBA_RUN_OR_RETURN(dba_file_write(d->file, msgs, d->cat, d->subcat));
+	dba_msgs_delete(msgs);
 	return dba_error_ok();
 }
 

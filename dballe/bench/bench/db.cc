@@ -29,7 +29,7 @@
 #include <dballe/db/export.h>
 #include <dballe/io/dba_rawmsg.h>
 #include <dballe/bufrex/bufrex.h>
-#include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/bufrex/bufrex_msg.h>
 
 #include <stdlib.h>
 #include <vector>
@@ -43,9 +43,9 @@ const char* dsn = "test";
 const char* user = "enrico";
 const char* password = "";
 
-static dba_err msg_counter(dba_msg msg, void* data)
+static dba_err msg_counter(dba_msgs msgs, void* data)
 {
-	dba_msg_delete(msg);
+	dba_msgs_delete(msgs);
 	(*(int*)data)++;
 	return dba_error_ok();
 }
@@ -133,7 +133,8 @@ protected:
 
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
-			DBA_RUN_OR_RETURN(dba_import_msg(db, *i, -1, 1, fast));
+			for (int j = 0; j < (*i)->len; ++j)
+			DBA_RUN_OR_RETURN(dba_import_msg(db, (*i)->msgs[j], -1, 1, fast));
 
 		timing("inserted %d messages in the database", msgs.size());
 
@@ -142,10 +143,11 @@ protected:
 		DBA_RUN_OR_RETURN(dba_record_create(&query));
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
-		{
-	        DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type((*i)->type)));
-			DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_counter, &count));
-		}
+			for (int j = 0; j < (*i)->len; ++j)
+			{
+				DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type((*i)->msgs[j]->type)));
+				DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_counter, &count));
+			}
 
 		timing("exported %d messages from the database, new style", count);
 

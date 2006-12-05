@@ -99,7 +99,7 @@ dba_err dba_file_read_raw(dba_file file, dba_rawmsg msg, int* found)
 	return dba_file_reader_read(file->reader, msg, found);
 }
 
-dba_err dba_file_read(dba_file file, dba_msg* msg, int* found)
+dba_err dba_file_read(dba_file file, dba_msgs* msgs, int* found)
 {
 	dba_err err = DBA_OK;
 	dba_rawmsg rm = NULL;
@@ -108,9 +108,9 @@ dba_err dba_file_read(dba_file file, dba_msg* msg, int* found)
 	DBA_RUN_OR_GOTO(cleanup, dba_file_read_raw(file, rm, found));
 	if (*found)
 		/* Parse the message */
-		DBA_RUN_OR_GOTO(cleanup, dba_marshal_decode(rm, msg));
+		DBA_RUN_OR_GOTO(cleanup, dba_marshal_decode(rm, msgs));
 	else
-		*msg = NULL;
+		*msgs = NULL;
 
 cleanup:
 	if (rm != NULL)
@@ -123,7 +123,7 @@ dba_err dba_file_write_raw(dba_file file, dba_rawmsg msg)
 	return dba_file_writer_write_raw(file->writer, msg);
 }
 
-dba_err dba_file_write(dba_file file, dba_msg msg, int cat, int subcat)
+dba_err dba_file_write(dba_file file, dba_msgs msgs, int cat, int subcat)
 {
 	dba_err err = DBA_OK;
 	dba_rawmsg raw = NULL;
@@ -131,11 +131,11 @@ dba_err dba_file_write(dba_file file, dba_msg msg, int cat, int subcat)
 	switch (file->type)
 	{
 		case BUFR:
-			DBA_RUN_OR_GOTO(cleanup, bufrex_encode_bufr(msg, cat, subcat, &raw));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_encode_bufr(msgs, cat, subcat, &raw));
 			DBA_RUN_OR_GOTO(cleanup, dba_file_write_raw(file, raw));
 			break;
 		case CREX:
-			DBA_RUN_OR_GOTO(cleanup, bufrex_encode_crex(msg, cat, subcat, &raw));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_encode_crex(msgs, cat, subcat, &raw));
 			DBA_RUN_OR_GOTO(cleanup, dba_file_write_raw(file, raw));
 			break;
 		case AOF: 

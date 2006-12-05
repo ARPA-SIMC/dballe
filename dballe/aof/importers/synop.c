@@ -21,13 +21,10 @@
 
 #include "common.h"
 
-dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out)
+dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 {
-	dba_msg msg;
 	int prcode;
 	int i;
-
-	DBA_RUN_OR_RETURN(dba_msg_create(&msg));
 
 	/* 07 Code type */
 	if (OBS(7) < 20)
@@ -238,8 +235,6 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out)
 	//DBA_RUN_OR_RETURN(dba_var_copy_val(synop->var_ident, vars[8]));
 	DBA_RUN_OR_RETURN(dba_var_copy_val(synop->var_press, vars[9]));
 #endif
-
-	*out = msg;
 
 	return dba_error_ok();
 }

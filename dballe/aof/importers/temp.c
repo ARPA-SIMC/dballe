@@ -21,13 +21,11 @@
 
 #include "common.h"
 
-dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg* out)
+dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 {
-	dba_msg msg;
 	int nlev = (obs_len - 20) / 8;
 	int i;
 
-	DBA_RUN_OR_RETURN(dba_msg_create(&msg));
 	/* DBA_RUN_OR_RETURN(dba_msg_sounding_resize_obs(msg, nlev)); */
 
 	/* 07 Code type */
@@ -112,7 +110,6 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg* out)
 		}
 	}
 
-	*out = msg;
 	return dba_error_ok();
 }
 

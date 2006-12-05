@@ -26,7 +26,7 @@
 /* #include <dballe/aof/aof_encoder.h> */
 #include <dballe/dba_file.h>
 
-static dba_err process_dba_msg(dba_msg msg, dba_file file, int type, int subtype)
+static dba_err process_dba_msg(dba_msgs msgs, dba_file file, int type, int subtype)
 {
 	dba_encoding ftype = dba_file_get_type(file);
 
@@ -35,7 +35,7 @@ static dba_err process_dba_msg(dba_msg msg, dba_file file, int type, int subtype
 		case BUFR:
 		{
 			dba_rawmsg raw;
-			DBA_RUN_OR_RETURN(bufrex_encode_bufr(msg, type, subtype, &raw));
+			DBA_RUN_OR_RETURN(bufrex_encode_bufr(msgs, type, subtype, &raw));
 			DBA_RUN_OR_RETURN(dba_file_write_raw(file, raw));
 			dba_rawmsg_delete(raw);
 			break;
@@ -43,7 +43,7 @@ static dba_err process_dba_msg(dba_msg msg, dba_file file, int type, int subtype
 		case CREX:
 		{
 			dba_rawmsg raw;
-			DBA_RUN_OR_RETURN(bufrex_encode_crex(msg, type, subtype, &raw));
+			DBA_RUN_OR_RETURN(bufrex_encode_crex(msgs, type, subtype, &raw));
 			DBA_RUN_OR_RETURN(dba_file_write_raw(file, raw));
 			dba_rawmsg_delete(raw);
 			break;
@@ -64,7 +64,7 @@ static dba_err process_dba_msg(dba_msg msg, dba_file file, int type, int subtype
 	return dba_error_ok();
 }
 
-dba_err convert_message(dba_rawmsg msg, bufrex_raw braw, dba_msg decoded, void* data)
+dba_err convert_message(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void* data)
 {
 	dba_file file = (dba_file)data;
 

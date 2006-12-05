@@ -24,7 +24,7 @@
 
 #include <dballe/dba_file.h>
 #include <dballe/io/dba_rawmsg.h>
-#include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/bufrex/bufrex_msg.h>
 #include <dballe/msg/dba_msg.h>
 
 
@@ -35,6 +35,6 @@ struct conversion_info
 	void* outActionData;
 };
 
-dba_err convert_message(dba_rawmsg msg, bufrex_raw braw, dba_msg decoded, void* data);
+dba_err convert_message(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void* data);
 
 #endif

@@ -32,7 +32,7 @@ extern "C" {
  */
 
 #include <dballe/io/dba_rawmsg.h>
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/dba_msgs.h>
 
 /**
  * Decode a message from its raw encoded representation
@@ -44,7 +44,7 @@ extern "C" {
  * @return
  *   The error indicator for the function. @see dba_err
  */
-dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msg *msg);
+dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msgs *msgs);
 
 /**
  * Encode a message into its raw encoded representation
@@ -58,7 +58,7 @@ dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msg *msg);
  * @return
  *   The error indicator for the function. @see dba_err
  */
-dba_err dba_marshal_encode(dba_msg msg, dba_encoding type, dba_rawmsg *rmsg);
+dba_err dba_marshal_encode(dba_msgs msgs, dba_encoding type, dba_rawmsg *rmsg);
 
 #ifdef  __cplusplus
 }

@@ -41,13 +41,13 @@
 
 #define AOF_UNDEF 0x7fffffff
 
-extern dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg* out);
-extern dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg* out);
-extern dba_err aof_read_satob(const uint32_t* obs, int obs_len, dba_msg* out);
-extern dba_err aof_read_dribu(const uint32_t* obs, int obs_len, dba_msg* out);
-extern dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg* out);
-extern dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg* out);
-extern dba_err aof_read_satem(const uint32_t* obs, int obs_len, dba_msg* out);
+extern dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg);
+extern dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg);
+extern dba_err aof_read_satob(const uint32_t* obs, int obs_len, dba_msg msg);
+extern dba_err aof_read_dribu(const uint32_t* obs, int obs_len, dba_msg msg);
+extern dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg);
+extern dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg);
+extern dba_err aof_read_satem(const uint32_t* obs, int obs_len, dba_msg msg);
 
 dba_err aof_decoder_get_category(dba_rawmsg msg, int* category, int* subcategory)
 {
@@ -72,14 +72,17 @@ dba_err aof_decoder_get_category(dba_rawmsg msg, int* category, int* subcategory
 
 #define OBS(n) (obs[n-1])
 
-dba_err aof_decoder_decode(dba_rawmsg msg, dba_msg* out)
+dba_err aof_decoder_decode(dba_rawmsg msg, dba_msgs* msgs)
 {
 	/* char id[10]; */
+	dba_err err = DBA_OK;
 	const unsigned char* buf;
 	const uint32_t* obs;
 	int obs_len;
+	dba_msgs outs = NULL;
+	dba_msg out = NULL;
 
-	assert(msg != NULL);
+	assert(msgs != NULL);
 
 	TRACE("aof_message_decode\n");
 
@@ -90,6 +93,9 @@ dba_err aof_decoder_decode(dba_rawmsg msg, dba_msg* out)
 
 	TRACE("05 grid box number: %d\n", OBS(5));
 	TRACE("obs type: %d, %d\n", OBS(6), OBS(7));
+
+	DBA_RUN_OR_RETURN(dba_msgs_create(&outs));
+	DBA_RUN_OR_RETURN(dba_msg_create(&out));
 
 #if 0
 	/* 13 Station ID (1:4) */
@@ -106,20 +112,27 @@ dba_err aof_decoder_decode(dba_rawmsg msg, dba_msg* out)
 	/* 07 Code type */
 	switch (OBS(6))
 	{
-		case 1: DBA_RUN_OR_RETURN(aof_read_synop(obs, obs_len, out)); break;
-		case 2: DBA_RUN_OR_RETURN(aof_read_flight(obs, obs_len, out)); break;
-		case 3: DBA_RUN_OR_RETURN(aof_read_satob(obs, obs_len, out)); break;
-		case 4: DBA_RUN_OR_RETURN(aof_read_dribu(obs, obs_len, out)); break;
-		case 5: DBA_RUN_OR_RETURN(aof_read_temp(obs, obs_len, out)); break;
-		case 6: DBA_RUN_OR_RETURN(aof_read_pilot(obs, obs_len, out)); break;
-		case 7: DBA_RUN_OR_RETURN(aof_read_satem(obs, obs_len, out)); break;
+		case 1: DBA_RUN_OR_GOTO(cleanup, aof_read_synop(obs, obs_len, out)); break;
+		case 2: DBA_RUN_OR_GOTO(cleanup, aof_read_flight(obs, obs_len, out)); break;
+		case 3: DBA_RUN_OR_GOTO(cleanup, aof_read_satob(obs, obs_len, out)); break;
+		case 4: DBA_RUN_OR_GOTO(cleanup, aof_read_dribu(obs, obs_len, out)); break;
+		case 5: DBA_RUN_OR_GOTO(cleanup, aof_read_temp(obs, obs_len, out)); break;
+		case 6: DBA_RUN_OR_GOTO(cleanup, aof_read_pilot(obs, obs_len, out)); break;
+		case 7: DBA_RUN_OR_GOTO(cleanup, aof_read_satem(obs, obs_len, out)); break;
 		default:
 			return dba_error_parse(msg->file->name, msg->offset,
 					"cannot handle AOF observation type %d subtype %d",
 					OBS(5), OBS(6));
 	}
 
-	return dba_error_ok();
+	DBA_RUN_OR_GOTO(cleanup, dba_msgs_append_acquire(outs, out));
+	out = NULL;
+	*msgs = outs;
+
+cleanup:
+	if (out) dba_msg_delete(out);
+	if (outs) dba_msgs_delete(outs);
+	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 void aof_decoder_dump(dba_rawmsg msg, FILE* out)
@@ -156,14 +169,14 @@ void aof_decoder_dump(dba_rawmsg msg, FILE* out)
 		}
 }
 
-dba_err aof_read_satob(const uint32_t* obs, int obs_len, dba_msg* out)
+dba_err aof_read_satob(const uint32_t* obs, int obs_len, dba_msg msg)
 {
 	return dba_error_unimplemented("parsing AOF SATOB observations");
 //	*out = NULL;
 //	return dba_error_ok();
 }
 
-dba_err aof_read_satem(const uint32_t* obs, int obs_len, dba_msg* out)
+dba_err aof_read_satem(const uint32_t* obs, int obs_len, dba_msg msg)
 {
 	return dba_error_unimplemented("parsing AOF SATEM observations");
 //	*out = NULL;
