@@ -22,7 +22,7 @@
 #include "config.h"
 
 #include "bufrex_opcode.h"
-#include "bufrex_raw.h"
+#include "bufrex_msg.h"
 #include <dballe/io/dba_rawfile.h>
 
 #include <stdio.h>
@@ -53,7 +53,7 @@ struct _decoder
 	/* Input message data */
 	dba_rawmsg in;
 	/* Output decoded variables */
-	bufrex_raw out;
+	bufrex_msg out;
 
 	/* Offset of the start of BUFR section 1 */
 	const unsigned char* sec1;
@@ -66,8 +66,14 @@ struct _decoder
 	/* Offset of the start of BUFR section 5 */
 	const unsigned char* sec5;
 
+	/* 1 if the BUFR message uses compression, else 0 */
+	int compression;
+
 	/* Number of subsets present in the message */
 	int subsets;
+
+	/* Current subset when decoding non-compressed BUFR messages */
+	bufrex_subset current_subset;
 
 	/* Current value of scale change from C modifier */
 	int c_scale_change;
@@ -183,14 +189,14 @@ static dba_err bufr_decode_data_section(decoder d);
 		TRACE(next " starts at %d and contains at least %d bytes\n", start - d->in->buf, datalen); \
 	} while (0)
 
-dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
+dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 {
 	dba_err err;
 	decoder d = NULL;
 	int has_optional;
 	int i;
 
-	bufrex_raw_reset(out);
+	bufrex_msg_reset(out);
 
 	DBA_RUN_OR_RETURN(decoder_create(&d));
 	d->in = in;
@@ -236,7 +242,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 			d->out->type, d->out->subtype,
 			d->out->rep_year, d->out->rep_month, d->out->rep_day, d->out->rep_hour, d->out->rep_minute);
 
-	DBA_RUN_OR_GOTO(fail, bufrex_raw_load_tables(d->out));
+	DBA_RUN_OR_GOTO(fail, bufrex_msg_load_tables(d->out));
 
 #if 0
 	fprintf(stderr, "S1 Len %d  table #%d  osc %d  oc %d  seq #%d  optsec %x\n",
@@ -276,13 +282,14 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 	if (d->sec4 > d->in->buf + d->in->len)
 		PARSE_ERROR(d->sec3, "Section 3 claims to end past the end of the BUFR message");
 	d->subsets = ntohs(*(uint16_t*)(d->sec3 + 4));
+	d->compression = (d->sec3[6] & 0x40) ? 1 : 0;
 	for (i = 0; i < (d->sec4 - d->sec3 - 8)/2; i++)
 	{
 		dba_varcode var = (dba_varcode)ntohs(*(uint16_t*)(d->sec3 + 7 + (i*2)));
-		DBA_RUN_OR_GOTO(fail, bufrex_raw_append_datadesc(d->out, var));
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_append_datadesc(d->out, var));
 	}
 	TRACE(" subsets %d observed %d compression %d byte7 %x\n",
-			d->subsets, (d->sec3[6] & 0x80) ? 1 : 0, (d->sec3[6] & 0x40) ? 1 : 0, (unsigned int)d->sec3[6]);
+			d->subsets, (d->sec3[6] & 0x80) ? 1 : 0, d->compression, (unsigned int)d->sec3[6]);
 	/*
 	IFTRACE{
 		TRACE(" -> data descriptor section: ");
@@ -304,10 +311,16 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 	d->cursor = d->sec4 + 4 - d->in->buf;
 
 	/* Iterate on the number of subgroups */
-	for (i = 0; i < d->subsets; i++)
+	if (d->compression)
 	{
-		DBA_RUN_OR_GOTO(fail, bufrex_raw_get_datadesc(d->out, &(d->ops)));
-		DBA_RUN_OR_GOTO(fail, bufr_decode_data_section(d));
+		d->current_subset = NULL;
+	} else {
+		for (i = 0; i < d->subsets; ++i)
+		{
+			DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(d->out, i, &(d->current_subset)));
+			DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(d->out, &(d->ops)));
+			DBA_RUN_OR_GOTO(fail, bufr_decode_data_section(d));
+		}
 	}
 
 	IFTRACE {
@@ -330,8 +343,13 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_raw out)
 	if (memcmp(d->sec5, "7777", 4) != 0)
 		PARSE_ERROR(d->sec5, "section 5 does not contain '7777'");
 
-	/* Copy the decoded attributes into the decoded variables */
-	DBA_RUN_OR_GOTO(fail, bufrex_raw_apply_attributes(out));
+	for (i = 0; i < d->subsets; ++i)
+	{
+		bufrex_subset subset;
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(out, i, &subset));
+		/* Copy the decoded attributes into the decoded variables */
+		DBA_RUN_OR_GOTO(fail, bufrex_subset_apply_attributes(subset));
+	}
 
 	if (d != NULL)
 		decoder_delete(d);
@@ -458,9 +476,6 @@ static dba_err bufr_decode_b_data(decoder d)
 	if (d->c_width_change > 0)
 		TRACE("Applied %d width change\n", d->c_width_change);
 
-	/* Create the new dba_var */
-	DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
-
 	/* Get the real datum */
 	if (info->is_string)
 	{
@@ -497,46 +512,128 @@ static dba_err bufr_decode_b_data(decoder d)
 			for (--len; len > 0 && isspace(str[len]);
 					len--)
 				str[len] = 0;
-
-			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(var, str));
 		}
 
 		TRACE("bufr_message_decode_b_data len %d val %s missing %d info-len %d info-desc %s\n", len, str, missing, info->bit_len, info->desc);
+
+		/* Store the variable that we found */
+		if (d->compression)
+		{
+			uint32_t diffbits;
+			int i;
+			/* If compression is in use, then we just decoded the base value.  Now
+			 * we need to decode all the offsets */
+
+			/* Decode the number of bits (encoded in 6 bits) that these difference
+			 * values occupy */
+			DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, 6, &diffbits));
+			if (diffbits != 0)
+			{
+				err = dba_error_unimplemented("applying difference values (this one has %d bits) on string variables in BUFR encoded with data compression", diffbits);
+				goto cleanup;
+			}
+			/* Add the string to all the subsets */
+			for (i = 0; i < d->subsets; ++i)
+			{
+				bufrex_subset subset;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));
+
+				/* Create the new dba_var */
+				if (missing)
+					DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+				else
+					DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
+				var = NULL;
+			}
+		} else {
+			/* Create the new dba_var */
+			if (missing)
+				DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+			else
+				DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(d->current_subset, var));
+			var = NULL;
+		}
 	} else {
 		/* Read a value */
 		uint32_t val;
-
-		/* FIXME: this alters the global shared info definition! */
-		
-		/* Change the variable definition according to the current C modifiers */
-		/*
-		info->scale += d->c_scale_change;
-		info->bit_len += d->c_width_change;
-		if (d->c_scale_change > 0)
-			TRACE("Applied %d scale change\n", d->c_scale_change);
-		if (d->c_width_change > 0)
-			TRACE("Applied %d scale change\n", d->c_width_change);
-		*/
+		int missing;
 
 		DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, info->bit_len, &val));
 
 		TRACE("Reading %s, size %d, scale %d, starting point %d\n", info->desc, info->bit_len, info->scale, val);
 
 		/* Check if there are bits which are not 1 (that is, if the value is present) */
-		if (val != (((1 << (info->bit_len - 1))-1) | (1 << (info->bit_len - 1))))
-		{
-			double dval = bufr_decode_int(d, val, info);
-			TRACE("Decoded as %f\n", dval);
-			DBA_RUN_OR_GOTO(cleanup, dba_var_setd(var, dval));
-		}
+		missing = (val == (((1 << (info->bit_len - 1))-1) | (1 << (info->bit_len - 1))));
 
 		/*bufr_decoder_debug(decoder, "  %s: %d%s\n", info.desc, val, info.type);*/
 		TRACE("bufr_message_decode_b_data len %d val %d info-len %d info-desc %s\n", info->bit_len, val, info->bit_len, info->desc);
-	}
 
-	/* Store the variable that we found */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable(d->out, var));
-	var = NULL;
+		/* Store the variable that we found */
+		if (d->compression)
+		{
+			uint32_t diffbits;
+			int i;
+			/* If compression is in use, then we just decoded the base value.  Now
+			 * we need to decode all the offsets */
+
+			/* Decode the number of bits (encoded in 6 bits) that these difference
+			 * values occupy */
+			DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, 6, &diffbits));
+			if (missing && diffbits != 0)
+			{
+				err = dba_error_consistency("When decoding compressed BUFR data, the difference bit length must be 0 (and not %d like in this case) when the base value is missing", diffbits);
+				goto cleanup;
+			}
+			for (i = 0; i < d->subsets; ++i)
+			{
+				uint32_t diff, newval;
+				/* Access the subset we are working on */
+				bufrex_subset subset;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));
+
+				/* Decode the difference value */
+				DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, diffbits, &diff));
+
+				/* Check if it's all 1: in that case it's a missing value */
+				if (missing || diff == (((1 << (diffbits - 1))-1) | (1 << (diffbits - 1))))
+				{
+					/* Missing value */
+					TRACE("Decoded[%d] as missing\n", i);
+
+					/* Create the new dba_var */
+					DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+				} else {
+					/* Compute the value for this subset */
+					newval = val + diff;
+					double dval = bufr_decode_int(d, newval, info);
+					TRACE("Decoded[%d] as %f\n", i, dval);
+
+					/* Create the new dba_var */
+					DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
+				}
+
+				/* Add it to this subset */
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
+				var = NULL;
+			}
+		} else {
+			if (missing)
+			{
+				/* Create the new dba_var */
+				TRACE("Decoded as missing\n");
+				DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+			} else {
+				double dval = bufr_decode_int(d, val, info);
+				TRACE("Decoded as %f\n", dval);
+				/* Create the new dba_var */
+				DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
+			}
+			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(d->current_subset, var));
+			var = NULL;
+		}
+	}
 
 	/* Remove from the chain the item that we handled */
 	{
@@ -591,18 +688,30 @@ static dba_err bufr_decode_r_data(decoder d)
 		DBA_RUN_OR_GOTO(cleanup, bufrex_opcode_pop(&(d->ops), &info_op));
 
 		/* Read variable informations about the delayed replicator count */
-		DBA_RUN_OR_GOTO(cleanup, bufrex_raw_query_btable(d->out, info_op->val, &info));
+		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(d->out, info_op->val, &info));
 		
 		/* Fetch the repetition count */
 		DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, info->bit_len, &_count));
 		count = _count;
 
 		/* Insert the repetition count among the parsed variables */
-		DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, count, &rep_var));
-		DBA_RUN_OR_GOTO(cleanup, bufrex_raw_store_variable(d->out, rep_var));
+		if (d->compression)
+		{
+			int i;
+			for (i = 0; i < d->subsets; ++i)
+			{
+				bufrex_subset subset;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));
+				DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, count, &rep_var));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, rep_var));
+			}
+		} else {
+			DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, count, &rep_var));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(d->current_subset, rep_var));
+		}
 
 		bufrex_opcode_delete(&info_op);
-	/*	dba_var_delete(rep_var);   rep_var is taken in charge by bufrex_raw */
+	/*	dba_var_delete(rep_var);   rep_var is taken in charge by bufrex_msg */
 
 		TRACE("bufr_decode_r_data %d items %d times (delayed)\n", group, count);
 	} else
@@ -750,7 +859,7 @@ static dba_err bufr_decode_data_section(decoder d)
 				/* Pop the first opcode */
 				DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(d->ops), &op));
 				
-				if ((err = bufrex_raw_query_dtable(d->out, op->val, &exp)) != DBA_OK)
+				if ((err = bufrex_msg_query_dtable(d->out, op->val, &exp)) != DBA_OK)
 				{
 					bufrex_opcode_delete(&op);
 					return err;
