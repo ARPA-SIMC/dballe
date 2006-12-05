@@ -20,9 +20,9 @@
  */
 
 #include <dballe/msg/dba_msg.h>
-#include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/bufrex/bufrex_msg.h>
 
-dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_raw raw)
+dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
 	int i;
 	int height_above_count = 0;
@@ -30,9 +30,9 @@ dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_raw raw)
 
 	msg->type = MSG_METAR;
 	
-	for (i = 0; i < raw->vars_count; i++)
+	for (i = 0; i < sset->vars_count; i++)
 	{
-		dba_var var = raw->vars[i];
+		dba_var var = sset->vars[i];
 
 		if (dba_var_value(var) == NULL)
 		{

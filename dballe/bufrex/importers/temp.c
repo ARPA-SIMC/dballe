@@ -20,9 +20,9 @@
  */
 
 #include <dballe/msg/dba_msg.h>
-#include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/bufrex/bufrex_msg.h>
 
-dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_raw raw)
+dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
 	int i;
 	int cloud_type_count = 0;
@@ -35,7 +35,7 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_raw raw)
 	{
 		case 0:
 			/* Guess looking at the variables */
-			if (raw->vars_count > 1 && dba_var_code(raw->vars[0]) == DBA_VAR(0, 1, 11))
+			if (sset->vars_count > 1 && dba_var_code(sset->vars[0]) == DBA_VAR(0, 1, 11))
 				msg->type = MSG_TEMP_SHIP;
 			else
 				msg->type = MSG_TEMP;
@@ -46,9 +46,9 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_raw raw)
 		default: msg->type = MSG_GENERIC; break;
 	}
 
-	for (i = 0; i < raw->vars_count; i++)
+	for (i = 0; i < sset->vars_count; i++)
 	{
-		dba_var var = raw->vars[i];
+		dba_var var = sset->vars[i];
 
 		if (dba_var_value(var) == NULL)
 		{

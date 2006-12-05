@@ -20,12 +20,12 @@
  */
 
 #include <dballe/msg/dba_msg.h>
-#include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/bufrex/bufrex_msg.h>
 #include <math.h>
 
-static inline dba_var get(bufrex_raw raw, int idx, dba_varcode code)
+static inline dba_var get(bufrex_subset sset, int idx, dba_varcode code)
 {
-	dba_var res = raw->vars[idx];
+	dba_var res = sset->vars[idx];
 	if (dba_var_code(res) != code)
 		return NULL;
 	if (dba_var_value(res) == NULL)
@@ -34,9 +34,9 @@ static inline dba_var get(bufrex_raw raw, int idx, dba_varcode code)
 }
 
 #define GET(idx1, code) \
-	(var = get(raw, idx1 - 1, DBA_STRING_TO_VAR(code + 1))) != NULL
+	(var = get(sset, idx1 - 1, DBA_STRING_TO_VAR(code + 1))) != NULL
 
-dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_raw raw)
+dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
 	int i;
 	dba_var var;
@@ -56,7 +56,7 @@ dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_raw raw)
 	if (GET(11, "B06001")) DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var));
 	if (GET(12, "B07001")) DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var));
 
-	for (i = 14; i < raw->vars_count && dba_var_code(raw->vars[i-1]) == DBA_VAR(0, 7, 4); i += 5)
+	for (i = 14; i < sset->vars_count && dba_var_code(sset->vars[i-1]) == DBA_VAR(0, 7, 4); i += 5)
 	{
 		long int ltype = -1, l1 = -1;
 

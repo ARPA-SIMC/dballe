@@ -20,10 +20,9 @@
  */
 
 #include <dballe/msg/dba_msg.h>
-#include <dballe/bufrex/bufrex_raw.h>
-#include <dballe/core/dba_record.h>
+#include <dballe/bufrex/bufrex_msg.h>
 
-dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_raw raw)
+dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
 	dba_err err = DBA_OK;
 	dba_var copy = NULL;
@@ -32,15 +31,15 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_raw raw)
 
 	msg->type = MSG_GENERIC;
 
-	for (i = 0; i < raw->vars_count; i++)
+	for (i = 0; i < sset->vars_count; i++)
 	{
-		dba_var var = raw->vars[i];
+		dba_var var = sset->vars[i];
 
 		if (dba_var_value(var) == NULL)
 		{
 			/* Also skip attributes if there are some following */
-			for ( ; i + 1 < raw->vars_count &&
-					DBA_VAR_X(dba_var_code(raw->vars[i + 1])) == 33; i++)
+			for ( ; i + 1 < sset->vars_count &&
+					DBA_VAR_X(dba_var_code(sset->vars[i + 1])) == 33; i++)
 				;
 			continue;
 		}
@@ -62,9 +61,9 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_raw raw)
 				DBA_RUN_OR_GOTO(cleanup, dba_var_copy(var, &copy));
 
 				/* Add attributes if there are some following */
-				for ( ; i + 1 < raw->vars_count &&
-						DBA_VAR_X(dba_var_code(raw->vars[i + 1])) == 33; i++)
-					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, raw->vars[i + 1]));
+				for ( ; i + 1 < sset->vars_count &&
+						DBA_VAR_X(dba_var_code(sset->vars[i + 1])) == 33; i++)
+					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, sset->vars[i + 1]));
 				
 				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, copy, ltype, l1, l2, pind, p1, p2));
 				copy = NULL;

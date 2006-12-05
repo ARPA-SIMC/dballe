@@ -20,15 +20,17 @@
  */
 
 #include "config.h"
-#include <dballe/bufrex/bufrex_raw.h>
+#include <dballe/bufrex/bufrex_msg.h>
+#include <dballe/bufrex/bufrex_subset.h>
+#include <dballe/msg/dba_msgs.h>
 #include "exporters/exporters.h"
 
-extern dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_raw raw);
-extern dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_raw raw);
-extern dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_raw raw);
-extern dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_raw raw);
-extern dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_raw raw);
-extern dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_raw raw);
+extern dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
+extern dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
+extern dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
+extern dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
+extern dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
+extern dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 
 extern bufrex_exporter bufrex_exporter_generic;
 extern bufrex_exporter bufrex_exporter_synop_0_1;
@@ -126,43 +128,48 @@ static dba_err get_exporter(dba_msg src, int type, int subtype, bufrex_exporter*
 	*/
 }
 
-dba_err bufrex_raw_to_msg(bufrex_raw raw, dba_msg* msg)
+dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs msgs)
 {
-	dba_err err;
-	dba_msg res;
+	dba_err err = DBA_OK;
+	dba_msg msg = NULL;
+	int i;
 
-	DBA_RUN_OR_RETURN(dba_msg_create(&res));
-
-	switch (raw->type)
+	for (i = 0; i < raw->subsets_count; ++i);
 	{
-		case 0:
-		case 1:
-			if (raw->subtype == 140)
-				DBA_RUN_OR_GOTO(failed, bufrex_copy_to_metar(res, raw));
-			else
-				DBA_RUN_OR_GOTO(failed, bufrex_copy_to_synop(res, raw));
-			break;
-		case 2:
-			if (raw->subtype == 91 || raw->subtype == 92)
-				DBA_RUN_OR_GOTO(failed, bufrex_copy_to_pilot(res, raw));
-			else
-				DBA_RUN_OR_GOTO(failed, bufrex_copy_to_temp(res, raw));
-			break;
-		case 4: DBA_RUN_OR_GOTO(failed, bufrex_copy_to_flight(res, raw)); break;
-		default: DBA_RUN_OR_GOTO(failed, bufrex_copy_to_generic(res, raw)); break;
-	}
+		DBA_RUN_OR_GOTO(cleanup, dba_msg_create(&msg));
 
-	*msg = res;
+		switch (raw->type)
+		{
+			case 0:
+			case 1:
+				if (raw->subtype == 140)
+					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_metar(msg, raw, raw->subsets[i]));
+				else
+					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_synop(msg, raw, raw->subsets[i]));
+				break;
+			case 2:
+				if (raw->subtype == 91 || raw->subtype == 92)
+					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_pilot(msg, raw, raw->subsets[i]));
+				else
+					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_temp(msg, raw, raw->subsets[i]));
+				break;
+			case 4: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_flight(msg, raw, raw->subsets[i])); break;
+			default: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_generic(msg, raw, raw->subsets[i])); break;
+		}
+
+		DBA_RUN_OR_GOTO(cleanup, dba_msgs_append_acquire(msgs, msg));
+		msg = NULL;
+	}
 
 	return dba_error_ok();
 
-failed:
-	dba_msg_delete(res);
-	*msg = NULL;
-	return err;
+cleanup:
+	if (msg != NULL)
+		dba_msg_delete(msg);
+	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err bufrex_raw_from_msg(bufrex_raw raw, dba_msg msg)
+dba_err bufrex_msg_from_msg(bufrex_msg raw, dba_msg msg)
 {
 	bufrex_exporter* exp;
 	int i;
@@ -170,17 +177,17 @@ dba_err bufrex_raw_from_msg(bufrex_raw raw, dba_msg msg)
 	/* Find the appropriate exporter, and compute type and subtype if missing */
 	DBA_RUN_OR_RETURN(get_exporter(msg, raw->type, raw->subtype, &exp));
 
-	/* Init the bufrex_raw data descriptor chain */
+	/* Init the bufrex_msg data descriptor chain */
 	for (i = 0; exp->ddesc[i] != 0; i++)
 	{
 		/* Skip encoding of attributes for CREX */
 		if (raw->encoding_type == BUFREX_CREX && exp->ddesc[i] == DBA_VAR(2, 22, 0))
 			break;
 
-		DBA_RUN_OR_RETURN(bufrex_raw_append_datadesc(raw, exp->ddesc[i]));
+		DBA_RUN_OR_RETURN(bufrex_msg_append_datadesc(raw, exp->ddesc[i]));
 	}
 
-	/* Fill up the bufrex_raw with variables from msg */
+	/* Fill up the bufrex_msg with variables from msg */
 	DBA_RUN_OR_RETURN(exp->exporter(msg, raw, raw->encoding_type == BUFREX_BUFR ? 0 : 1));
 
 	/* Fill in the nominal datetime informations */
