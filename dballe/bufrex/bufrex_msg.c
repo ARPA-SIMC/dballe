@@ -22,7 +22,7 @@
 #include <config.h>
 
 #include "bufrex_opcode.h"
-#include "bufrex_raw.h"
+#include "bufrex_msg.h"
 
 #include <stddef.h>
 #include <stdlib.h>

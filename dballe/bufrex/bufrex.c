@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "bufrex_raw.h"
+#include "bufrex_msg.h"
 #include "exporters/exporters.h"
 #include <dballe/core/verbose.h>
 
