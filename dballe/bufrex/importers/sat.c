@@ -22,16 +22,17 @@
 #include <dballe/msg/dba_msg.h>
 #include <dballe/conv/conv.h>
 #include <dballe/bufrex/bufrex_msg.h>
+#include <string.h>
 
 dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
 	dba_err err = DBA_OK;
 	int i;
-	int l1 = -1, iv;
+	int l1 = -1;
+	int id_satid = 0, id_sensorid = 0;
 	dba_var scanline = NULL, fov = NULL, framecount = NULL, wavenum = NULL, chqf = NULL;
 	dba_var copy = NULL;
-	char ident[7];
-	ident[6] = 0;
+	char ident[10];
 
 	switch (raw->subtype)
 	{
@@ -52,12 +53,16 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 		switch (dba_var_code(var))
 		{
 		  	// 001007 SATELLITE IDENTIFIER(CODE TABLE   1007): 3
-			case DBA_VAR(0, 1,  7): DBA_RUN_OR_RETURN(dba_var_enqi(var, &iv)); snprintf(ident, 3, "%03d", iv); break;
+			case DBA_VAR(0, 1,  7): DBA_RUN_OR_RETURN(dba_var_enqi(var, &id_satid)); break;
 			// 002048 SATELLITE SENSOR INDICATOR(CODE TABLE   2048): 0
-			case DBA_VAR(0, 2, 48): DBA_RUN_OR_RETURN(dba_var_enqi(var, &iv)); snprintf(ident + 3, 2, "%02d", iv); break;
-			// 005040 ORBIT NUMBER(NUMERIC): 1
-			case DBA_VAR(0, 5, 40): DBA_RUN_OR_RETURN(dba_var_enqi(var, &iv)); snprintf(ident + 5, 1, "%01d", iv); break;
+			case DBA_VAR(0, 2, 48): DBA_RUN_OR_RETURN(dba_var_enqi(var, &id_sensorid)); break;
 		    // -> Ident
+
+			// 005040 ORBIT NUMBER(NUMERIC): 1
+			case DBA_VAR(0, 5, 40):
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 5, 40), 8, 0, 0, 0, 0, 0));
+				break;
+		    // -> Data
 
 #if 0
 	-- Ignored
@@ -152,7 +157,7 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, wavenum));
 				if (chqf != NULL)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, chqf));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set(msg, copy, DBA_VAR(0, 12, 63), 8, l1, 0, 0, 0, 0));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set(msg, copy, DBA_VAR(0, 12, 193), 8, l1, 0, 0, 0, 0));
 				dba_var_delete(copy);
 				copy = NULL;
 				break;
@@ -161,6 +166,7 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 		}
 	}
 
+	snprintf(ident, 6, "%03d%02d", id_satid, id_sensorid);
 	DBA_RUN_OR_RETURN(dba_msg_set_ident(msg, ident, -1));
 cleanup:
 	if (copy != NULL) dba_var_delete(copy);
