@@ -24,7 +24,8 @@ libdballe_bufrex_la_SOURCES = \
 		bufr_decoder.c \
 		bufr_encoder.c \
 		crex_decoder.c \
-		crex_encoder.c
+		crex_encoder.c \
+		bufrex_codec.c
 libdballe_bufrex_la_LIBADD = \
 		../core/libdballe-core.la
 libdballe_bufrex_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
