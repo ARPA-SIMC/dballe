@@ -7,6 +7,7 @@ coredoxdeps = libdballe-core.dox \
 	      ../dballe/core/libdballe-core.la \
 	      ../dballe/core/core.dox \
 	      ../dballe/core/aliases.dox \
+	      ../dballe/core/btable.dox \
 	      ../dballe/core/record_keyword.dox
 
 bufrexdoxdeps = libdballe-bufrex.dox \

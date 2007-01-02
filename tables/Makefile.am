@@ -10,12 +10,12 @@ table_DATA = repinfo.csv dballe.txt $(crexbtables) $(crexdtables) $(bufrbtables)
 noinst_DATA = dballe.tex
 
 dballe.tex: dballe.txt mkbdoc
-	./mkbdoc < $< > $@ 
+	./mkbdoc tex < $< > $@ 
 
 B000000002001200.txt: dballe.txt
 	cut -b 0-119 < $< > $@
 
-EXTRA_DIST = $(table_DATA) $(conf_DATA) mkbdoc
+EXTRA_DIST = $(table_DATA) mkbdoc
 
-clean-local:
-	rm -f *.idx
+distclean-local:
+	rm -f dballe.tex B000000002001200.txt

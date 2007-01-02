@@ -79,7 +79,7 @@ tut_test_LDADD = \
 # Documentation bits
 #
 
-noinst_DATA = record_keyword.dox record_keyword.rst record_keyword.tex aliases.dox aliases.tex
+noinst_DATA = record_keyword.dox record_keyword.rst record_keyword.tex aliases.dox aliases.tex btable.dox
 
 record_keyword.rst: record_keyword.gperf mkkeydoc
 	cpp -P -C -I../.. $< | ./mkkeydoc rst > $@
@@ -96,7 +96,10 @@ aliases.dox: aliases.gperf mkaliasdoc
 aliases.tex: aliases.gperf mkaliasdoc
 	./mkaliasdoc tex < $< > $@
 
+btable.dox: ../../tables/dballe.txt ../../tables/mkbdoc
+	../../tables/mkbdoc dox < $< > $@ 
+
 distclean-local:
-	rm -f record_keyword.c record_keyword.dox record_keyword.tex aliases.c aliases.dox aliases.tex uniconv.c
+	rm -f record_keyword.c record_keyword.dox record_keyword.tex aliases.c aliases.dox aliases.tex uniconv.c btable.dox
 
 EXTRA_DIST = core.dox record_keyword.gperf mkkeydoc aliases.gperf mkaliasdoc uniconv.gperf

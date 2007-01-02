@@ -36,35 +36,35 @@ extern "C" {
  *
  * This module provides access to all this metadata:
  *
- * \li \b dba_varcode represents what is the quantity measured, and takes
+ * \li \b ::dba_varcode represents what is the quantity measured, and takes
  *    values from the WMO B tables used for BUFR and CREX encodings.
- *    The DBA_VAR macro can be used to construct dba_varcode values, and the
- *    DBA_VAR_F, DBA_VAR_X and DBA_VAR_Y macros can be used to access the
+ *    The ::DBA_VAR macro can be used to construct ::dba_varcode values, and the
+ *    ::DBA_VAR_F, ::DBA_VAR_X and ::DBA_VAR_Y macros can be used to access the
  *    various parts of the dba_varcode.
- * \li \b dba_varinfo contains all the expanded information about a variable:
- *    its dba_varcode, description, measurement units, significant digits,
+ * \li \b ::dba_varinfo contains all the expanded information about a variable:
+ *    its ::dba_varcode, description, measurement units, significant digits,
  *    minimum and maximum values it can have and other information useful for
  *    serialisation and deserialisation of values.
  *
  * There are many B tables with slight differences used by different
  * meteorological centre or equipment.  This module allows to access 
- * different vartables using dba_vartable_create.
+ * different vartables using dba_vartable_create().
  *
  * DB-All.e provides a default B table called the "local B table" which is used
  * for the encoding-independent values.  The local B table has the desirable
  * property of having unambiguous entries for the various physical values:
  * normal B tables can have more than one, for example low accuracy and
  * high accuracy latitudes.  The local B table can be queried using
- * dba_varinfo_query_local.
+ * dba_varinfo_query_local().
  *
- * dba_vartable and dba_varinfo have special memory management: they are never
+ * ::dba_vartable and ::dba_varinfo have special memory management: they are never
  * deallocated.  This is a precise design choice to speed up passing and
- * copying dba_varinfo values, that are used very intensely as they accompany
+ * copying ::dba_varinfo values, that are used very intensely as they accompany
  * all the physical values processed by DB-All.e and its components.
  * This behaviour should not be a cause of memory leaks, since a software would
  * only need to access a limited amount of B tables during its lifetime.
  *
- * To construct a dba_varcode value one needs to provide three numbers: F, X
+ * To construct a ::dba_varcode value one needs to provide three numbers: F, X
  * and Y.
  *
  * \li \b F (2 bits) identifies the type of table entry represented by the
@@ -74,10 +74,11 @@ extern "C" {
  * \li \b X (6 bits) identifies a section of the table.
  * \li \b Y (8 bits) identifies the value within the section.  
  *
- * The normal text representation of a dba_varcode for a WMO B table is Bxxyyy.
+ * The normal text representation of a ::dba_varcode for a WMO B table uses the
+ * format Bxxyyy.
  *
  * See @ref local_b_table for the contents of the local B table and their
- * relative dba_varcode values.
+ * relative ::dba_varcode values.
  */
 
 
