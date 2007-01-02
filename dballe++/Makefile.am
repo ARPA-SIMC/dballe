@@ -38,7 +38,6 @@ CXXFLAGS += -O0
 
 tut_test_SOURCES = \
 	tests/error.cc \
-	tests/db.cc \
 	tests/format.cc \
 	tests/record.cc \
 	tests/var.cc \
@@ -47,6 +46,9 @@ tut_test_SOURCES = \
 	../dballe/msg/test-utils-msg.cc \
 	../dballe/db/test-utils-db.cc \
 	../dballe/tut/tut-main.cc
+if DB_TESTS
+tut_test_SOURCES += tests/db.cc
+endif
 tut_test_LDADD = \
 	../dballe/core/libdballe-core.la \
 	../dballe/bufrex/libdballe-bufrex.la \

@@ -1,6 +1,11 @@
 ## Process this file with automake to produce Makefile.in
 
+TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
+
 TESTS = test.py
+if DB_TESTS
+TESTS += test-db.py
+endif
 
 python_LTLIBRARIES = _Dballe.la
 nodist_python_PYTHON = Dballe.py
