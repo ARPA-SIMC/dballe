@@ -61,7 +61,9 @@ const char* dba_encoding_name(dba_encoding enc);
 
 struct _dba_file;
 
-/** */
+/**
+ * Dynamic storage for encoded messages.
+ */
 struct _dba_rawmsg {
 	/**
 	 * File where the dba_rawmsg has been read.  It can be NULL when not
