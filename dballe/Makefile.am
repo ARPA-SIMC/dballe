@@ -22,7 +22,7 @@ libdballe_la_SOURCES = \
 		formatter.c \
 		cmdline.c
 libdballe_la_LIBADD = \
-		core/libcore.la \
+		core/libdballe-core.la \
 		io/libio.la \
 		msg/libmsg.la \
 		bufrex/libbufrex.la \

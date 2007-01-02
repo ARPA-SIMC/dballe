@@ -4,10 +4,35 @@ Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: cdbs, debhelper (>> 4.1), dh-buildinfo, doxygen, libtut-dev, unixodbc-dev, gperf, g77, libpopt-dev, libcnf-dev, tetex-bin, gs-common, tetex-extra
 Standards-Version: 3.7.2.0
 
+Package: libdballe-core-dev
+Section: libdevel
+Architecture: any
+Depends: libdballe-core3 (= ${Source-Version})
+Recommends: pkg-config
+Description: DB-ALL.e core C development library
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+ .
+ This is the core DB_All.e development the library.  It includes:
+ .
+  * Error handling infrastructure
+  * Unit conversion
+  * Handling of physical variables
+
+Package: libdballe-core3
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends} ${misc:Depends}
+Description: DB-ALL.e core shared library
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+ .
+ This is the core shared library for C programs.
+
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe2 (= ${Source-Version}), libdballef2 (=${Source-Version})
+Depends: libdballe2 (= ${Source-Version}), libdballef2 (=${Source-Version}), libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version})
 Recommends: pkg-config
 Description: Database for punctual meteorological data (C and Fortran development)
  DB-All.e is a fast on-disk database where meteorological observed and

@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libdballe-core
+Description: DB-All.e support for error handling, unit conversion and physical variables
+Version: @VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -ldballe-core

@@ -12,7 +12,7 @@ m4_DATA = libdballe.m4
 man_MANS = dbatbl.1 dbamsg.1 dbadb.1
 
 %.1: tools/%
-	$< help manpage > $@
+	( cd tools && ./`basename $<` help manpage ) > $@
 
 EXTRA_DIST = autogen.sh libdballe.m4 libdballe.pc.in $(conf_DATA) dballe.spec
 

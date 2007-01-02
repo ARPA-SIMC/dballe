@@ -13,8 +13,8 @@ coreinclude_HEADERS = \
 	vartable.h \
 	var.h
 
-noinst_LTLIBRARIES = libcore.la
-libcore_la_SOURCES = \
+lib_LTLIBRARIES = libdballe-core.la
+libdballe_core_la_SOURCES = \
 	error.c \
 	uniconv.c \
 	conv.c \

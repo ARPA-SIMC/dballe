@@ -111,7 +111,9 @@ tools/Makefile
 tables/Makefile
 swig/Makefile
 doc/Makefile
+doc/libdballe-core.dox
 doc/libdballe.dox
+libdballe-core.pc
 libdballe.pc
 ])
 AC_OUTPUT

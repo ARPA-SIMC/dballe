@@ -8,11 +8,17 @@ LATEX2HTML = latex2html -local_icons
 noinst_DATA =
 
 if DO_DOCS
-noinst_DATA += libdballe.doxytags fapi.ps guide.ps
+noinst_DATA += libdballe-core.doxytags libdballe.doxytags fapi.ps guide.ps
 if DO_HTML
-noinst_DATA += dox_html/index.html fapi_html/index.html guide_html/index.html
+noinst_DATA += coredox_html/index.html dox_html/index.html fapi_html/index.html guide_html/index.html
 endif
 endif
+
+libdballe-core.doxytags: libdballe-core.dox ../dballe/core/libdballe-core.la
+	doxygen $<
+
+coredox_html/index.html: libdballe-core.dox ../dballe/core/libdballe-core.la
+	doxygen $<
 
 libdballe.doxytags: libdballe.dox ../dballe/libdballe.la
 	doxygen $<
@@ -52,9 +58,9 @@ guide.dvi: $(guidesources)
 
 fapi.dvi: $(fapisources)
 
-EXTRA_DIST = libdballe.dox $(guidesources) $(fapisources)
+EXTRA_DIST = libdballe-core.dox libdballe.dox $(guidesources) $(fapisources)
 
-CLEANFILES = libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
+CLEANFILES = libdballe-core.doxytags libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
 
 clean-local:
 	rm -rf dox_html
