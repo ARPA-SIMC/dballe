@@ -210,9 +210,11 @@ dba_err dba_vartable_query_altered(dba_vartable table, dba_varcode var, dba_alte
 		memcpy(i->alterations, start, sizeof(struct _dba_varinfo));
 		i = i->alterations;
 
+#if 0
 		fprintf(stderr, "Before alteration(w:%d,s:%d): bl %d len %d scale %d\n",
 				DBA_ALT_WIDTH(change), DBA_ALT_SCALE(change),
 				i->bit_len, i->len, i->scale);
+#endif
 
 		/* Apply the alterations */
 		if ((alt = DBA_ALT_WIDTH(change)) != 0)
@@ -223,9 +225,11 @@ dba_err dba_vartable_query_altered(dba_vartable table, dba_varcode var, dba_alte
 		if ((alt = DBA_ALT_SCALE(change)) != 0)
 			i->scale += alt;
 
+#if 0
 		fprintf(stderr, "After alteration(w:%d,s:%d): bl %d len %d scale %d\n",
 				DBA_ALT_WIDTH(change), DBA_ALT_SCALE(change),
 				i->bit_len, i->len, i->scale);
+#endif
 
 		/* Postprocess the data, filling in minval and maxval */
 		if (!i->is_string)
