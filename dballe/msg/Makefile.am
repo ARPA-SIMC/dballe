@@ -111,4 +111,4 @@ tranges.tex: mktranges
 distclean-local:
 	rm -f ltypes.dox ltypes.tex tranges.dox tranges.tex
 
-EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mklevels mktranges
+EXTRA_DIST = mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mklevels mktranges

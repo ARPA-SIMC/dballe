@@ -54,9 +54,3 @@ tut_test_LDADD = \
 	../core/libdballe-core.la \
 	libdballe-bufrex.la
 
-
-#
-# Documentation bits
-#
-
-EXTRA_DIST = bufrex.dox

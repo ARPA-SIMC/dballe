@@ -73,5 +73,3 @@ tut_test_LDADD = \
 	../msg/libdballe-msg.la \
 	libdballe-db.la
 endif
-
-EXTRA_DIST = db.dox

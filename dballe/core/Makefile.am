@@ -103,4 +103,4 @@ btable.dox: ../../tables/dballe.txt ../../tables/mkbdoc
 distclean-local:
 	rm -f record_keyword.c record_keyword.dox record_keyword.tex aliases.c aliases.dox aliases.tex uniconv.c btable.dox
 
-EXTRA_DIST = core.dox record_keyword.gperf mkkeydoc aliases.gperf mkaliasdoc uniconv.gperf
+EXTRA_DIST = record_keyword.gperf mkkeydoc aliases.gperf mkaliasdoc uniconv.gperf
