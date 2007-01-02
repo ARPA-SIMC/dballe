@@ -12,16 +12,10 @@ TESTS = $(check_PROGRAMS)
 
 check_dballe_tut_SOURCES = \
 	tests/dba_msg.cc \
-	tests/dba_io_rawmsg.cc \
-	tests/dba_io_rawfile.cc \
 	tests/dba_db_repinfo.cc \
 	tests/dba_db_dballe.cc \
-	tests/dba_bufrex_opcode.cc \
-	tests/dba_bufrex_dtable.cc \
 	tests/dba_bufrex_conv.cc \
 	tests/dba_bufrex_generic.cc \
-	tests/dba_bufrex_bufr_decoder.cc \
-	tests/dba_bufrex_crex_decoder.cc \
 	tests/dba_aof_decoder.cc \
 	tests/dba_db_import.cc \
 	tests/dba_formatter.cc \

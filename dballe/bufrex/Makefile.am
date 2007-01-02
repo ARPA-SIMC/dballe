@@ -1,5 +1,11 @@
 ## Process this file with automake to produce Makefile.in
 
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
+
+#
+# Shared library
+#
+
 bufrexincludedir = $(includedir)/dballe/bufrex
 
 # Include the .cc files that contain template definitions
@@ -23,6 +29,26 @@ libdballe_bufrex_la_LIBADD = \
 		../core/libdballe-core.la
 libdballe_bufrex_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
+#
+# Unit testing
+#
+
+check_PROGRAMS = tut_test
+TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
+TESTS = $(check_PROGRAMS)
+
+tut_test_SOURCES = \
+	tests/dba_bufrex_bufr_decoder.cc \
+	tests/dba_bufrex_crex_decoder.cc \
+	tests/dba_bufrex_dtable.cc \
+	tests/dba_bufrex_opcode.cc \
+	$(top_srcdir)/extra/test-utils-core.cc \
+	$(top_srcdir)/extra/tut-main.cc
+tut_test_LDADD = $(DBALLELIBS) libdballe-bufrex.la
+
+
+#
+# Documentation bits
+#
 
 EXTRA_DIST = bufrex.dox

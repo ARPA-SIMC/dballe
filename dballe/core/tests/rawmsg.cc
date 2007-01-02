@@ -19,23 +19,23 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils.h>
+#include <extra/test-utils-core.h>
 #include <dballe/core/rawmsg.h>
 
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_io_rawmsg_shar
+struct rawmsg_shar
 {
-	dba_io_rawmsg_shar()
+	rawmsg_shar()
 	{
 	}
 
-	~dba_io_rawmsg_shar()
+	~rawmsg_shar()
 	{
 	}
 };
-TESTGRP(dba_io_rawmsg);
+TESTGRP(rawmsg);
 
 // Basic generic tests
 template<> template<>

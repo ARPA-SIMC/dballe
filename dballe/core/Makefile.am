@@ -54,13 +54,14 @@ aliases.c: aliases.gperf
 
 check_PROGRAMS = tut_test
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
-#TESTS_ENVIRONMENT = TOP_SRCDIR=$(top_srcdir) $(top_srcdir)/extra/runtest
 TESTS = $(check_PROGRAMS)
 
 tut_test_SOURCES = \
 	tests/aliases.cc \
 	tests/error.cc \
 	tests/fast.cc \
+	tests/rawfile.cc \
+	tests/rawmsg.cc \
 	tests/record.cc \
 	tests/var.cc \
 	tests/vartable.cc \

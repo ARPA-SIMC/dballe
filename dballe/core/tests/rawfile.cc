@@ -19,23 +19,23 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils.h>
+#include <extra/test-utils-core.h>
 #include <dballe/core/rawfile.h>
 
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_io_rawfile_shar
+struct rawfile_shar
 {
-	dba_io_rawfile_shar()
+	rawfile_shar()
 	{
 	}
 
-	~dba_io_rawfile_shar()
+	~rawfile_shar()
 	{
 	}
 };
-TESTGRP(dba_io_rawfile);
+TESTGRP(rawfile);
 
 // Trivial create test
 template<> template<>
