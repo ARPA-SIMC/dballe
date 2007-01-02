@@ -59,16 +59,13 @@ CXXFLAGS += -O0
 tut_test_SOURCES = \
 	tests/dba_db_repinfo.cc \
 	tests/dba_db_dballe.cc \
-	tests/dba_db_import.cc \
-	$(top_srcdir)/extra/test-utils-core.cc \
-	$(top_srcdir)/extra/test-utils-bufrex.cc \
-	$(top_srcdir)/extra/test-utils-msg.cc \
-	$(top_srcdir)/extra/test-utils-db.cc \
-	$(top_srcdir)/extra/tut-main.cc
-tut_test_LDADD = ../core/libdballe-core.la \
-		../bufrex/libdballe-bufrex.la \
-		../msg/libdballe-msg.la \
-		libdballe-db.la
+	tests/dba_db_import.cc
+tut_test_LDADD = \
+	../core/libdballe-core.la \
+	../bufrex/libdballe-bufrex.la \
+	../msg/libdballe-msg.la \
+	libdballe-db.la \
+	../../extra/libtests-main.la
 endif
 
 EXTRA_DIST = db.dox

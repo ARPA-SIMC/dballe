@@ -43,12 +43,11 @@ tut_test_SOURCES = \
 	tests/bufr_decoder.cc \
 	tests/crex_decoder.cc \
 	tests/dtable.cc \
-	tests/opcode.cc \
-	$(top_srcdir)/extra/test-utils-core.cc \
-	$(top_srcdir)/extra/test-utils-bufrex.cc \
-	$(top_srcdir)/extra/tut-main.cc
-tut_test_LDADD = ../core/libdballe-core.la \
-		libdballe-bufrex.la
+	tests/opcode.cc
+tut_test_LDADD = \
+	../core/libdballe-core.la \
+	libdballe-bufrex.la \
+	../../extra/libtests-main.la
 
 
 #

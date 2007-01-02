@@ -54,7 +54,7 @@ libdballe_msg_la_SOURCES = \
 		bufrex_exporters/pilot.c \
 		bufrex_exporters/temp.c \
 		bufrex_exporters/flight.c \
-		file.c \
+		file.c
 libdballe_msg_la_LIBADD = \
 		../core/libdballe-core.la \
 		../bufrex/libdballe-bufrex.la
@@ -78,13 +78,11 @@ tut_test_SOURCES = \
 	tests/bufrex_codec.cc \
 	tests/bufrex_codec_generic.cc \
 	tests/formatter.cc \
-	tests/msg.cc \
-	$(top_srcdir)/extra/test-utils-core.cc \
-	$(top_srcdir)/extra/test-utils-bufrex.cc \
-	$(top_srcdir)/extra/test-utils-msg.cc \
-	$(top_srcdir)/extra/tut-main.cc
-tut_test_LDADD = ../core/libdballe-core.la \
-		../bufrex/libdballe-bufrex.la \
-		libdballe-msg.la
+	tests/msg.cc
+tut_test_LDADD = \
+	../core/libdballe-core.la \
+	../bufrex/libdballe-bufrex.la \
+	libdballe-msg.la \
+	../../extra/libtests-main.la
 
 EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox

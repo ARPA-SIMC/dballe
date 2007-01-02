@@ -66,10 +66,10 @@ tut_test_SOURCES = \
 	tests/rawmsg.cc \
 	tests/record.cc \
 	tests/var.cc \
-	tests/vartable.cc \
-	$(top_srcdir)/extra/test-utils-core.cc \
-	$(top_srcdir)/extra/tut-main.cc
-tut_test_LDADD = $(DBALLELIBS) libdballe-core.la
+	tests/vartable.cc
+tut_test_LDADD = \
+	libdballe-core.la \
+	../../extra/libtests-main.la
 
 
 #

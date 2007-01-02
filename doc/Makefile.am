@@ -35,21 +35,21 @@ coredox_html/index.html: libdballe-core.dox ../dballe/core/libdballe-core.la
 libdballe-bufrex.doxytags: libdballe-bufrex.dox ../dballe/bufrex/libdballe-bufrex.la
 	doxygen $<
 
-bufrexdox_html/index.html: libdballe-bufrex.dox ../dballe/core/libdballe-bufrex.la
+bufrexdox_html/index.html: libdballe-bufrex.dox ../dballe/bufrex/libdballe-bufrex.la
 	doxygen $<
 
 
 libdballe-msg.doxytags: libdballe-msg.dox ../dballe/msg/libdballe-msg.la
 	doxygen $<
 
-msgdox_html/index.html: libdballe-msg.dox ../dballe/core/libdballe-msg.la
+msgdox_html/index.html: libdballe-msg.dox ../dballe/msg/libdballe-msg.la
 	doxygen $<
 
 
 libdballe-db.doxytags: libdballe-db.dox ../dballe/db/libdballe-db.la
 	doxygen $<
 
-dbdox_html/index.html: libdballe-db.dox ../dballe/core/libdballe-db.la
+dbdox_html/index.html: libdballe-db.dox ../dballe/db/libdballe-db.la
 	doxygen $<
 
 
