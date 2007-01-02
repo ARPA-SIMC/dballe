@@ -15,6 +15,7 @@ coreinclude_HEADERS = \
 	fast.h \
 	rawmsg.h \
 	file.h \
+	file_internals.h \
 	csv.h \
 	aliases.h \
 	record.h \
