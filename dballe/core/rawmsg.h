@@ -61,26 +61,27 @@ const char* dba_encoding_name(dba_encoding enc);
 
 struct _dba_file;
 
+/** */
 struct _dba_rawmsg {
-	/*
+	/**
 	 * File where the dba_rawmsg has been read.  It can be NULL when not
 	 * applicable, such as when the message is created from scratch and not yet
 	 * written
 	 */
 	struct _dba_file* file;
-	/* Start offset of this message inside the file where it is found */
+	/** Start offset of this message inside the file where it is found */
 	int offset;
-	/* Index of the message within the source */
+	/** Index of the message within the source */
 	int index;
 
-	/* Buffer with the raw encoded data */
+	/** Buffer with the raw encoded data */
 	unsigned char* buf;
-	/* Length of the raw encoded data */
+	/** Length of the raw encoded data */
 	int len;
-	/* Length of the allocated memory for buf */
+	/** Length of the allocated memory for buf */
 	int alloclen;
 
-	/* Encoding of the raw data */
+	/** Encoding of the raw data */
 	dba_encoding encoding;
 };
 typedef struct _dba_rawmsg* dba_rawmsg;

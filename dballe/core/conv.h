@@ -94,24 +94,30 @@ dba_err dba_convert_AOFVSS_to_BUFR08001(int from, int* to);
 /**
  * Conversion functions between various code tables
  * @{ */
-/* Cloud type */
+/** Cloud type */
 dba_err dba_convert_WMO0500_to_BUFR20012(int from, int* to);
-/* Cloud type (CH) */
+/** Cloud type (CH) */
 dba_err dba_convert_WMO0509_to_BUFR20012(int from, int* to);
-/* Cloud type (CM) */
+/** Cloud type (CM) */
 dba_err dba_convert_WMO0515_to_BUFR20012(int from, int* to);
-/* Cloud type (CL) */
+/** Cloud type (CL) */
 dba_err dba_convert_WMO0513_to_BUFR20012(int from, int* to);
-/* Present weather */
+/** Present weather */
 dba_err dba_convert_WMO4677_to_BUFR20003(int from, int* to);
-/* Past weather */
+/** Past weather */
 dba_err dba_convert_WMO4561_to_BUFR20004(int from, int* to);
 
+/** */
 dba_err dba_convert_BUFR20012_to_WMO0500(int from, int* to);
+/** */
 dba_err dba_convert_BUFR20012_to_WMO0509(int from, int* to);
+/** */
 dba_err dba_convert_BUFR20012_to_WMO0515(int from, int* to);
+/** */
 dba_err dba_convert_BUFR20012_to_WMO0513(int from, int* to);
+/** */
 dba_err dba_convert_BUFR20003_to_WMO4677(int from, int* to);
+/** */
 dba_err dba_convert_BUFR20004_to_WMO4561(int from, int* to);
 /* @} */
 

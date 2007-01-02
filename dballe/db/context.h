@@ -62,8 +62,10 @@ struct _dba_db_context
 };
 typedef struct _dba_db_context* dba_db_context;
 
-
+/** */
 dba_err dba_db_context_create(dba_db db, dba_db_context* ins);
+
+/** */
 void dba_db_context_delete(dba_db_context ins);
 
 /**
@@ -92,6 +94,7 @@ dba_err dba_db_context_get_id(dba_db_context ins, int *id);
  */
 dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id);
 
+/** */
 dba_err dba_db_context_insert(dba_db_context ins, int *id);
 
 /**

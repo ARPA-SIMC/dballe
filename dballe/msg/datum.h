@@ -41,10 +41,19 @@ struct _dba_msg_datum
 };
 typedef struct _dba_msg_datum* dba_msg_datum;
 
+/** */
 dba_err dba_msg_datum_create(dba_msg_datum* d, int pind, int p1, int p2);
+
+/** */
 dba_err dba_msg_datum_copy(dba_msg_datum src, dba_msg_datum* dst);
+
+/** */
 void dba_msg_datum_delete(dba_msg_datum d);
+
+/** */
 int dba_msg_datum_compare(const dba_msg_datum d1, const dba_msg_datum d2);
+
+/** */
 int dba_msg_datum_compare2(dba_msg_datum d, dba_varcode code, int pind, int p1, int p2);
 
 

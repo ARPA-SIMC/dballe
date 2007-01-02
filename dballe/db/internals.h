@@ -55,6 +55,9 @@ struct _dba_db_context;
 struct _dba_db_data;
 struct _dba_db_attr;
 
+/**
+ * Supported SQL servers.
+ */
 enum dba_db_server_type
 {
 	MYSQL,
@@ -93,6 +96,7 @@ struct _dba_db
 typedef struct _dba_db* dba_db;
 #endif
 
+/** */
 struct _dba_db_cursor
 {
 	/** Database to operate on */

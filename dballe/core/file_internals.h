@@ -34,11 +34,16 @@ extern "C" {
 #include <dballe/core/file.h>
 #include <stdio.h>
 
+/** */
 typedef dba_err (*dba_file_create_fun)(dba_encoding type, FILE* fd, const char* mode, dba_file* file);
+/** */
 typedef void (*dba_file_delete_fun)(dba_file);
+/** */
 typedef dba_err (*dba_file_read_fun)(dba_file file, dba_rawmsg msg, int* found);
+/** */
 typedef dba_err (*dba_file_write_fun)(dba_file file, dba_rawmsg msg);
 
+/** */
 struct _dba_file
 {
 	char* name;
@@ -55,8 +60,11 @@ struct _dba_file
 	dba_file_write_fun fun_write;
 };
 
+/** */
 extern dba_file_create_fun dba_file_aof_create;
+/** */
 extern dba_file_create_fun dba_file_bufr_create;
+/** */
 extern dba_file_create_fun dba_file_crex_create;
 
 /**

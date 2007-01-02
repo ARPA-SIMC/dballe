@@ -34,6 +34,7 @@ extern "C" {
 #include <dballe/core/error.h>
 #include <dballe/core/var.h>
 
+/** */
 typedef enum _dba_keyword {
 	DBA_KEY_ERROR		= -1,
 	DBA_KEY_PRIORITY	=  0,

@@ -38,8 +38,14 @@ extern "C" {
 /** Dynamic array of dba_msg */
 struct _dba_msgs
 {
+	/**
+	 * Array of dba_msg, reallocated when needed, doubling the allocated space
+	 * every time
+	 */
 	dba_msg* msgs;
+	/** Number of elements of msgs that are in use */
 	int len;
+	/** Number of elements of msgs that are allocated */
 	int alloclen;
 };
 typedef struct _dba_msgs* dba_msgs;

@@ -33,9 +33,10 @@ extern "C" {
 
 #include <stdlib.h>
 
-/* Adaptation from the _itoa_word function in glibc */
+/** */
 static inline char *itoa(long value, int len)
 {
+	/* Adaptation from the _itoa_word function in glibc */
 	static const char *digits = "0123456789";
 	static char buf[20] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 	char* buflim = buf+19;

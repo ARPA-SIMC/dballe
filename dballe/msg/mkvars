@@ -34,6 +34,7 @@ extern "C" {
 
 #include <dballe/msg/msg.h>
 
+/** */
 struct _dba_msg_var {
 	dba_varcode code;
 	int ltype, l1, l2;
@@ -41,29 +42,35 @@ struct _dba_msg_var {
 };
 typedef struct _dba_msg_var* dba_msg_var;
 
+/** */
 extern struct _dba_msg_var dba_msg_vartable[];
 
 |;
 my $i = 0;
 for my $v (@vars)
 {
+	printf OUT "/** */\n";
 	printf OUT "#define DBA_MSG_%s %d\n", $v->[0], $i++;
 }
 my %types = ( 'int' => 'int', 'num' => 'double', 'str' => 'const char*' );
 my %ftypes = ( 'int' => 'i', 'num' => 'd', 'str' => 'c' );
 for my $v (@vars)
 {
+	printf OUT "/** */\n";
 	printf OUT "inline static dba_err dba_msg_set_%s(dba_msg msg, %s val, int conf) ", lc $v->[0], $types{$v->[1]};
 	printf OUT "{ return dba_msg_set%s(msg, DBA_VAR(0, %d, %d), val, conf, %d, %d, %d, %d, %d, %d); }\n",
 		$ftypes{$v->[1]}, (@$v)[2..9];
 
+	printf OUT "/** */\n";
 	printf OUT "inline static dba_err dba_msg_set_%s_var(dba_msg msg, dba_var val) ", lc $v->[0];
 	printf OUT "{ return dba_msg_set(msg, val, DBA_VAR(0, %d, %d), %d, %d, %d, %d, %d, %d); }\n", (@$v)[2..9];
 
+	printf OUT "/** */\n";
 	printf OUT "inline static dba_var dba_msg_get_%s_var(dba_msg msg) ", lc $v->[0];
 	printf OUT "{ dba_msg_datum d = dba_msg_find_by_id(msg, DBA_MSG_%s); return d == NULL ? NULL : d->var; }\n",
 		$v->[0];
 }
+printf OUT "/** */\n";
 printf OUT "\n#define DBA_MSG_VARTABLE_SIZE %d\n", $i;
 print OUT q|
 #ifdef  __cplusplus

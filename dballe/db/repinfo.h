@@ -75,13 +75,95 @@ struct _dba_db_repinfo
 };
 typedef struct _dba_db_repinfo* dba_db_repinfo;
 
-
+/**
+ * Create a new dba_db_repinfo
+ *
+ * @param db
+ *   The database accessed by this dba_db_repinfo.
+ * @retval ins
+ *   The resulting dba_db_repinfo structure.
+ * @return
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_db_repinfo_create(dba_db db, dba_db_repinfo* ins);
+
+/**
+ * Delete a dba_db_repinfo
+ *
+ * @param ins
+ *   The dba_db_repinfo to delete.
+ */
 void dba_db_repinfo_delete(dba_db_repinfo ins);
+
+/**
+ * Get the id of a repinfo entry given its name
+ *
+ * @param ri
+ *   dba_db_repinfo used for the query
+ * @param memo
+ *   The name to query
+ * @retval id
+ *   The resulting id.  It will always be a valid one, because the functions
+ *   fails if memo is not found.
+ * @return
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_db_repinfo_get_id(dba_db_repinfo ri, const char* memo, int* id);
+
+/**
+ * Check if the database contains the given rep_cod id
+ *
+ * @param ri
+ *   dba_db_repinfo used for the query
+ * @param id
+ *   id to check
+ * @retval exists
+ *   Set to true if id exists, else false.
+ * @return
+ *   The error indicator for the function (@see dba_err)
+ */
 dba_err dba_db_repinfo_has_id(dba_db_repinfo ri, int id, int* exists);
+
+/**
+ * Get a repinfo cache entry by id.
+ *
+ * @param ri
+ *   dba_db_repinfo used for the query
+ * @param id
+ *   id to query
+ * @return
+ *   The dba_db_repinfo_cache structure found, or NULL if none was found.
+ */
 dba_db_repinfo_cache dba_db_repinfo_get_by_id(dba_db_repinfo ri, int id);
+
+/**
+ * Get a repinfo cache entry by name.
+ *
+ * @param ri
+ *   dba_db_repinfo used for the query
+ * @param memo
+ *   name to query
+ * @return
+ *   The dba_db_repinfo_cache structure found, or NULL if none was found.
+ */
 dba_db_repinfo_cache dba_db_repinfo_get_by_memo(dba_db_repinfo ri, const char* memo);
+
+/**
+ * Update the report type information in the database using the data from the
+ * given file.
+ *
+ * @param ri
+ *   dba_db_repinfo used to update the database
+ * @param deffile
+ *   Pathname of the file to use for the update.  The NULL value is accepted
+ *   and means to use the default configure repinfo.csv file.
+ * @retval added
+ *   Number of entries that have been added during the update.
+ * @retval deleted
+ *   Number of entries that have been deleted during the update.
+ * @retval updated
+ *   Number of entries that have been updated during the update.
+ */
 dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added, int* deleted, int* updated);
 
 #if 0
