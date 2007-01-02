@@ -101,8 +101,6 @@ dballe/Makefile
 dballe/core/Makefile
 dballe/bufrex/Makefile
 dballe/msg/Makefile
-dballe/msg/bufrex/Makefile
-dballe/msg/aof/Makefile
 dballe/db/Makefile
 dballe/tests/Makefile
 dballe/bench/Makefile

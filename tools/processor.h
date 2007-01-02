@@ -22,10 +22,10 @@
 #ifndef PROCESSOR_H
 #define PROCESSOR_H
 
-#include <dballe/dba_file.h>
-#include <dballe/io/dba_rawmsg.h>
+#include <dballe/core/rawmsg.h>
 #include <dballe/bufrex/bufrex_msg.h>
-#include <dballe/msg/dba_msgs.h>
+#include <dballe/msg/file.h>
+#include <dballe/msg/msgs.h>
 #include <popt.h>
 
 struct grep_t

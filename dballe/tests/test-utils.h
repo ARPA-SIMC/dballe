@@ -21,12 +21,12 @@
 
 #include <dballe/core/error.h>
 #include <dballe/core/record.h>
-#include <dballe/bufrex/bufrex.h>
+#include <dballe/core/rawmsg.h>
 #include <dballe/bufrex/bufrex_msg.h>
-#include <dballe/io/dba_rawmsg.h>
-#include <dballe/msg/dba_msg.h>
-#include <dballe/dba_file.h>
-#include <dballe/marshal.h>
+#include <dballe/msg/bufrex_codec.h>
+#include <dballe/msg/msg.h>
+#include <dballe/msg/file.h>
+#include <dballe/msg/marshal.h>
 #include <dballe/db/dba_db.h>
 
 #include <dballe/tests/tut.h>

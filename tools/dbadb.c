@@ -19,25 +19,13 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/msg/dba_msg.h>
-
-#include <dballe/init.h>
-#include <dballe/dba_file.h>
-/*
-#include <dballe/bufrex/bufr_file.h>
-#include <dballe/bufrex/crex_file.h>
-#include <dballe/aof/aof_file.h>
-
-#include <dballe/bufrex/bufrex_conv.h>
-#include <dballe/aof/aof_conv.h>
-*/
-
+#include <dballe/msg/msg.h>
+#include <dballe/msg/file.h>
+#include <dballe/msg/bufrex_codec.h>
 #include <dballe/db/dba_db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
-
-#include <dballe/bufrex/bufrex.h>
-
+#include <dballe/init.h>
 #include <dballe/cmdline.h>
 
 #include <string.h>

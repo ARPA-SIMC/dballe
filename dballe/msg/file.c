@@ -22,8 +22,8 @@
 #include "file.h"
 #include "readers.h"
 #include "writers.h"
-#include "aof/decoder.h"
-#include "bufrex/bufrex.h"
+#include "aof_codec.h"
+#include "bufrex_codec.h"
 #include "marshal.h"
 
 #include <stdlib.h>

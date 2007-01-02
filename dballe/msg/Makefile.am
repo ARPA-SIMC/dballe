@@ -1,7 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = . bufrex
-
 messageincludedir = $(includedir)/dballe/msg
 
 # Include the .cc files that contain template definitions
@@ -29,7 +27,7 @@ libmsg_la_SOURCES = \
 		writers.c \
 		marshal.c \
 		file.c \
-		aof_decoder.c \
+		aof_codec.c \
 		aof_importers/common.c \
 		aof_importers/synop.c \
 		aof_importers/dribu.c \
@@ -37,26 +35,26 @@ libmsg_la_SOURCES = \
 		aof_importers/temp.c \
 		aof_importers/pilot.c \
 		bufrex_codec.c \
-		importers/generic.c \
-		importers/synop.c \
-		importers/metar.c \
-		importers/pilot.c \
-		importers/temp.c \
-		importers/flight.c \
-		importers/sat.c \
-		exporters/exporters.c \
-		exporters/generic.c \
-		exporters/synop.c \
-		exporters/metar.c \
-		exporters/ship.c \
-		exporters/buoy.c \
-		exporters/pilot.c \
-		exporters/temp.c \
-		exporters/flight.c
+		bufrex_importers/generic.c \
+		bufrex_importers/synop.c \
+		bufrex_importers/metar.c \
+		bufrex_importers/pilot.c \
+		bufrex_importers/temp.c \
+		bufrex_importers/flight.c \
+		bufrex_importers/sat.c \
+		bufrex_exporters/exporters.c \
+		bufrex_exporters/generic.c \
+		bufrex_exporters/synop.c \
+		bufrex_exporters/metar.c \
+		bufrex_exporters/ship.c \
+		bufrex_exporters/buoy.c \
+		bufrex_exporters/pilot.c \
+		bufrex_exporters/temp.c \
+		bufrex_exporters/flight.c
 
 vars.h vars.c: vars.csv mkvars
 	./mkvars < $<
 
 INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
 
-EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c exporters/exporters.h exporters/exporters.dox
+EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c bufrex_exporters/exporters.h bufrex_exporters/exporters.dox

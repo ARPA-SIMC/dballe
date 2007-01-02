@@ -21,8 +21,8 @@
 
 #include <config.h>
 
-#include "decoder.h"
-#include <dballe/msg/msg.h>
+#include "aof_codec.h"
+#include "msg.h"
 #include <dballe/core/rawfile.h>
 
 #include <stdint.h>

@@ -21,8 +21,8 @@
 
 #include "processor.h"
 
-#include <dballe/bufrex/bufrex.h>
-#include <dballe/aof/decoder.h>
+#include <dballe/msg/bufrex_codec.h>
+#include <dballe/msg/aof_codec.h>
 
 #include <string.h>
 #include <stdlib.h>

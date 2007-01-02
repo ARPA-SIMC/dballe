@@ -20,8 +20,8 @@
  */
 
 #include "marshal.h"
-#include "aof/decoder.h"
-#include "bufrex/bufrex.h"
+#include "aof_codec.h"
+#include "bufrex_codec.h"
 
 dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msgs *msgs)
 {

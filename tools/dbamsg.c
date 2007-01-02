@@ -19,12 +19,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/msg/dba_msg.h>
-
-#include <dballe/aof/decoder.h>
+#include <dballe/msg/msg.h>
+#include <dballe/msg/aof_codec.h>
 #include <dballe/core/record.h>
-#include <dballe/io/dba_rawfile.h>
-#include <dballe/io/writers.h>
+#include <dballe/core/rawfile.h>
+#include <dballe/msg/writers.h>
 #include <dballe/cmdline.h>
 
 #include "processor.h"

@@ -21,9 +21,7 @@
 
 #include "test-utils.h"
 
-#include <../../dballe/bufrex/bufrex.h>
-#include <../../dballe/bufrex/bufrex_msg.h>
-#include <../../dballe/aof/decoder.h>
+#include <dballe/msg/aof_codec.h>
 
 #include <unistd.h>
 #include <sys/types.h>

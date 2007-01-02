@@ -22,9 +22,9 @@
 #include "conversion.h"
 #include "processor.h"
 
-#include <dballe/bufrex/bufrex.h>
+#include <dballe/msg/bufrex_codec.h>
 /* #include <dballe/aof/aof_encoder.h> */
-#include <dballe/dba_file.h>
+#include <dballe/msg/file.h>
 
 static dba_err process_dba_msg(dba_msgs msgs, dba_file file, int type, int subtype)
 {

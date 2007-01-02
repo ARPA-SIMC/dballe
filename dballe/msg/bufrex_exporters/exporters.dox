@@ -10,10 +10,7 @@ Procedure to add a new converter:
 \li Add a reference to its description structure to the exporters[] array in exporters.c
 
 <b>Module dependencies</b>
-\ref err
-\ref conv
 \ref core
-\ref msg
 \ref bufrex
 
 */

@@ -22,10 +22,7 @@
 #include "Benchmark.h"
 #include <dballe/tests/test-utils.h>
 
-#include <dballe/dba_file.h>
-#include <dballe/msg/dba_msgs.h>
-#include <dballe/io/dba_rawmsg.h>
-#include <dballe/bufrex/bufrex.h>
+#include <dballe/msg/bufrex_codec.h>
 #include <dballe/bufrex/bufrex_msg.h>
 
 #include <vector>
