@@ -18,17 +18,19 @@ libdballef_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 # Tests
 
-export DBA_REPINFO=../tables/repinfo.csv
-export DBA_TABLES=../tables
+TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 check_PROGRAMS = check_fdballe
-TESTS = $(check_PROGRAMS)
+TESTS =
+if DB_TESTS
+TESTS += $(check_PROGRAMS)
+endif
 
 check_fdballe_SOURCES = check_fdballe.f
 check_fdballe_LDADD = ./libdballef.la -lcnf -lpopt
 check_fdballe_FFLAGS = -g -fno-second-underscore
 
-noinst_PROGRAMS=dump_dballe
+noinst_PROGRAMS = dump_dballe
 
 dump_dballe_SOURCES = dump_dballe.f
 dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
