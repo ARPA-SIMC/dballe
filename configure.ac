@@ -61,7 +61,7 @@ AM_PROG_LIBTOOL
 
 if test x$docdir = x
 then
-	docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
+	docdir='${datadir}/doc/${PACKAGE_TARNAME}'
 	AC_SUBST(docdir)
 fi
 
