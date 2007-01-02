@@ -29,6 +29,55 @@ extern "C" {
 /** @file
  * @ingroup core
  * Implement fast access to information about WMO variables.
+ *
+ * The measured value of a physical quantity has little meaning without
+ * specifying what quantity it represents, what units are used to measure it,
+ * and how many digits are significant for the value.
+ *
+ * This module provides access to all this metadata:
+ *
+ * \li \b dba_varcode represents what is the quantity measured, and takes
+ *    values from the WMO B tables used for BUFR and CREX encodings.
+ *    The DBA_VAR macro can be used to construct dba_varcode values, and the
+ *    DBA_VAR_F, DBA_VAR_X and DBA_VAR_Y macros can be used to access the
+ *    various parts of the dba_varcode.
+ * \li \b dba_varinfo contains all the expanded information about a variable:
+ *    its dba_varcode, description, measurement units, significant digits,
+ *    minimum and maximum values it can have and other information useful for
+ *    serialisation and deserialisation of values.
+ *
+ * There are many B tables with slight differences used by different
+ * meteorological centre or equipment.  This module allows to access 
+ * different vartables using dba_vartable_create.
+ *
+ * DB-All.e provides a default B table called the "local B table" which is used
+ * for the encoding-independent values.  The local B table has the desirable
+ * property of having unambiguous entries for the various physical values:
+ * normal B tables can have more than one, for example low accuracy and
+ * high accuracy latitudes.  The local B table can be queried using
+ * dba_varinfo_query_local.
+ *
+ * dba_vartable and dba_varinfo have special memory management: they are never
+ * deallocated.  This is a precise design choice to speed up passing and
+ * copying dba_varinfo values, that are used very intensely as they accompany
+ * all the physical values processed by DB-All.e and its components.
+ * This behaviour should not be a cause of memory leaks, since a software would
+ * only need to access a limited amount of B tables during its lifetime.
+ *
+ * To construct a dba_varcode value one needs to provide three numbers: F, X
+ * and Y.
+ *
+ * \li \b F (2 bits) identifies the type of table entry represented by the
+ * dba_varcode, and is always 0 for B tables.  Different values are only used
+ * during encoding and decoding of BUFR and CREX messages and are not in use in
+ * other parts of DB-All.e.
+ * \li \b X (6 bits) identifies a section of the table.
+ * \li \b Y (8 bits) identifies the value within the section.  
+ *
+ * The normal text representation of a dba_varcode for a WMO B table is Bxxyyy.
+ *
+ * See @ref local_b_table for the contents of the local B table and their
+ * relative dba_varcode values.
  */
 
 
@@ -155,8 +204,9 @@ typedef struct _dba_vartable* dba_vartable;
  * @param code
  *   The ::dba_varcode of the variable to query
  * @retval info
- *   The ::dba_varinfo structure with the variable results.  It needs to be
- *   deallocated using dba_varinfo_delete()
+ *   the ::dba_varinfo structure with the results of the query.  The returned
+ *   dba_varinfo is stored inside the dba_vartable, can be freely copied around
+ *   and does not need to be deallocated.
  * @return
  *   The error indicator for this function (See @ref error.h)
  */
@@ -170,19 +220,21 @@ dba_err dba_varinfo_query_local(dba_varcode code, dba_varinfo* info);
  * @param change
  *   WMO C table entry specify a change on the variable characteristics
  * @retval info
- *   The ::dba_varinfo structure with the variable results.  It needs to be
- *   deallocated using dba_varinfo_delete()
+ *   the ::dba_varinfo structure with the results of the query.  The returned
+ *   dba_varinfo is stored inside the dba_vartable, can be freely copied around
+ *   and does not need to be deallocated.
  * @return
  *   The error indicator for this function (See @ref error.h)
  */
 dba_err dba_varinfo_query_local_altered(dba_varcode code, dba_alteration change, dba_varinfo* info);
 
 /**
- * Get a copy of the local B table
+ * Get a reference to the local B table
  *
  * @retval table
- *   The copy of the B table.  It needs to be deallocated with
- *   dba_varinfo_delete()
+ *   The local B table.  dba_vartable structures are never deallocated: the
+ *   pointer will be valid through the entire lifetime of the program, and can
+ *   be freely copied.
  * @return
  *   The error indicator for this function (See @ref error.h)
  */
@@ -206,7 +258,9 @@ dba_varcode dba_descriptor_code(const char* desc);
  * @param id
  *   ID of the vartable data to access
  * @retval table
- *   The vartable to access the data
+ *   The vartable to access the data.  dba_vartable structures are never
+ *   deallocated: the pointer will be valid through the entire lifetime of the
+ *   program, and can be freely copied.
  * @return
  *   The error status (See @ref error.h)
  */
@@ -232,7 +286,8 @@ const char* dba_vartable_id(dba_vartable table);
  *   vartable entry number (i.e. the XXYYY number in BXXYYY)
  * @retval info
  *   the ::dba_varinfo structure with the results of the query.  The returned
- *   dba_varinfo needs to be deallocated using dba_varinfo_delete()
+ *   dba_varinfo is stored inside the dba_vartable, can be freely copied around
+ *   and does not need to be deallocated.
  * @return
  *   The error status (See @ref error.h)
  */
@@ -249,7 +304,8 @@ dba_err dba_vartable_query(dba_vartable table, dba_varcode var, dba_varinfo* inf
  *   WMO C table entry specify a change on the variable characteristics
  * @retval info
  *   the ::dba_varinfo structure with the results of the query.  The returned
- *   dba_varinfo needs to be deallocated using dba_varinfo_delete()
+ *   dba_varinfo is stored inside the dba_vartable, can be freely copied around
+ *   and does not need to be deallocated.
  * @return
  *   The error status (See @ref error.h)
  */
