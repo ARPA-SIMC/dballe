@@ -21,7 +21,7 @@
 
 #include <config.h>
 
-#include <dballe/aof/decoder.h>
+#include "decoder.h"
 #include <dballe/msg/dba_msg.h>
 #include <dballe/io/dba_rawfile.h>
 

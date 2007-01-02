@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+SUBDIRS = . aof bufrex
+
 messageincludedir = $(includedir)/dballe/msg
 
 # Include the .cc files that contain template definitions

@@ -24,8 +24,8 @@
 #include <dballe/io/dba_rawfile.h>
 #include <dballe/io/readers.h>
 #include <dballe/io/writers.h>
-#include <dballe/aof/decoder.h>
-#include <dballe/bufrex/bufrex.h>
+#include <dballe/msg/aof/decoder.h>
+#include <dballe/msg/bufrex/bufrex.h>
 
 #include <stdlib.h>
 

@@ -21,8 +21,8 @@
 
 #include <dballe/marshal.h>
 
-#include <dballe/aof/decoder.h>
-#include <dballe/bufrex/bufrex.h>
+#include <dballe/msg/aof/decoder.h>
+#include <dballe/msg/bufrex/bufrex.h>
 
 dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msgs *msgs)
 {

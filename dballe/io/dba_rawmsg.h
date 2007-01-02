@@ -32,13 +32,22 @@ extern "C" {
  */
 
 #include <dballe/core/error.h>
-#include <dballe/io/encoding.h>
 
 /** @defgroup dbamessage Dballe message encoder and decoders 
  * @ingroup dballe
  *
  * Functions used to parse and encode messages in various formats.
  */
+
+/**
+ * Supported encodings for report data
+ */
+typedef enum {
+	BUFR = 0,
+	CREX = 1,
+	AOF = 2
+} dba_encoding;
+
 
 struct _dba_rawfile;
 

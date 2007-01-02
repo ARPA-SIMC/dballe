@@ -32,7 +32,6 @@ extern "C" {
  */
 
 #include <dballe/io/dba_rawmsg.h>
-#include <dballe/io/encoding.h>
 #include <dballe/msg/dba_msgs.h>
 
 struct _dba_file;

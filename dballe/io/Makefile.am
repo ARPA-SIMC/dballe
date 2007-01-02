@@ -4,7 +4,6 @@ ioincludedir = $(includedir)/dballe/io
 
 # Include the .cc files that contain template definitions
 ioinclude_HEADERS = \
-		encoding.h \
 		dba_rawmsg.h \
 		dba_rawfile.h \
 		readers.h \

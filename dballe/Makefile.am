@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = core msg io aof bufrex db . bench tests
+SUBDIRS = core msg io bufrex db . bench tests
 
 CFLAGS += -DTABLE_DIR=\"$(tabledir)\"
 
@@ -23,10 +23,11 @@ libdballe_la_SOURCES = \
 		cmdline.c
 libdballe_la_LIBADD = \
 		core/libdballe-core.la \
+		bufrex/libbufrex.la \
 		io/libio.la \
 		msg/libmsg.la \
-		bufrex/libbufrex.la \
-		aof/libaof.la \
+		msg/bufrex/libbufrex.la \
+		msg/aof/libaof.la \
 		db/libdb.la
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
