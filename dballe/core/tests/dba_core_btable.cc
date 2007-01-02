@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils.h>
+#include <extra/test-utils-core.h>
 #include <dballe/core/vartable.h>
 
 namespace tut {
@@ -86,7 +86,8 @@ template<> template<>
 void to::test<3>()
 {
 	/* dba_err err; */
-	LocalEnv le("DBA_TABLES", ".");
+	const char* testdatadir = getenv("DBA_TESTDATA");
+	LocalEnv le("DBA_TABLES", testdatadir ? testdatadir : ".");
 
 	dba_vartable table;
 	dba_varinfo info;
@@ -128,7 +129,8 @@ template<> template<>
 void to::test<4>()
 {
 	/* dba_err err; */
-	LocalEnv le("DBA_TABLES", ".");
+	const char* testdatadir = getenv("DBA_TESTDATA");
+	LocalEnv le("DBA_TABLES", testdatadir ? testdatadir : ".");
 
 	dba_vartable table;
 	dba_varinfo info;

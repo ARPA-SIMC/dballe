@@ -10,16 +10,7 @@ TESTS = $(check_PROGRAMS)
 
 #EXTRA_SCRIPTS = check_imports
 
-export DBA_REPINFO=../../tables/repinfo.csv
-export DBA_TABLES=../../tables
-
 check_dballe_tut_SOURCES = \
-	tests/dba_core_error.cc \
-	tests/dba_core.cc \
-	tests/dba_core_aliases.cc \
-	tests/dba_core_btable.cc \
-	tests/dba_core_var.cc \
-	tests/dba_core_record.cc \
 	tests/dba_msg.cc \
 	tests/dba_io_rawmsg.cc \
 	tests/dba_io_rawfile.cc \
@@ -34,6 +25,7 @@ check_dballe_tut_SOURCES = \
 	tests/dba_aof_decoder.cc \
 	tests/dba_db_import.cc \
 	tests/dba_formatter.cc \
+	$(top_srcdir)/extra/test-utils-core.cc \
 	$(top_srcdir)/extra/test-utils.cc \
 	$(top_srcdir)/extra/tut-main.cc
 check_dballe_tut_LDADD = $(DBALLELIBS) ../db/libdballe-db.la -lpopt

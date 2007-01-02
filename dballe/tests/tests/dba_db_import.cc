@@ -294,7 +294,7 @@ void to::test<4>()
 template<> template<>
 void to::test<5>()
 {
-	generator gen;
+	msg_generator gen;
 
 	CHECKED(dba_db_reset(db, NULL));
 

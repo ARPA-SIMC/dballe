@@ -1,5 +1,11 @@
 #!/bin/sh
 
+TOP_SRCDIR=`dirname $0`/..
+
+export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
+export DBA_TABLES=$TOP_SRCDIR/tables
+export DBA_TESTDATA=$TOP_SRCDIR/extra
+
 CMD="$1"
 
 #id=`date +%y%m%d%H%M%S`
