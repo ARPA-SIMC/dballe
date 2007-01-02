@@ -19,57 +19,12 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils-bufrex.h>
-#include <dballe/msg/bufrex_codec.h>
-#include <dballe/msg/msg.h>
-#include <dballe/msg/file.h>
-#include <dballe/msg/marshal.h>
+#include <extra/test-utils-msg.h>
 #include <dballe/db/db.h>
-
-#include <string>
-#include <vector>
-#include <iostream>
 
 namespace tut_dballe {
 using namespace std;
 using namespace tut;
-
-dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type);
-#define read_test_msg(filename, type) _read_test_msg(__FILE__, __LINE__, filename, type)
-
-/* Random message generation functions */
-
-class msg_generator : public generator
-{
-public:
-	dba_err fill_message(dba_msg msg, bool mobile);
-};
-
-
-/* Message reading functions */
-
-class msg_vector : public dba_raw_consumer, public std::vector<dba_msgs>
-{
-public:
-	virtual ~msg_vector()
-	{
-		for (iterator i = begin(); i != end(); i++)
-			dba_msgs_delete(*i);
-	}
-		
-	virtual dba_err consume(dba_rawmsg raw)
-	{
-		dba_msgs msgs;
-
-		DBA_RUN_OR_RETURN(dba_marshal_decode(raw, &msgs));
-		push_back(msgs);
-
-		return dba_error_ok();
-	}
-};
-	
-void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix);
-void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& prefix);
 
 dba_err create_dba_db(dba_db* db);
 

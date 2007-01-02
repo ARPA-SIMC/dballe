@@ -81,6 +81,7 @@ tut_test_SOURCES = \
 	tests/msg.cc \
 	$(top_srcdir)/extra/test-utils-core.cc \
 	$(top_srcdir)/extra/test-utils-bufrex.cc \
+	$(top_srcdir)/extra/test-utils-msg.cc \
 	$(top_srcdir)/extra/tut-main.cc
 tut_test_LDADD = ../core/libdballe-core.la \
 		../bufrex/libdballe-bufrex.la \

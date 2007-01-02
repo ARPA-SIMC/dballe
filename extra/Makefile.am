@@ -5,6 +5,12 @@ EXTRA_DIST = \
 	conversion.c \
 	processor.h \
 	processor.c \
+	test-utils-core.h \
+	test-utils-core.cc \
+	test-utils-bufrex.h \
+	test-utils-bufrex.cc \
+	test-utils-msg.h \
+	test-utils-msg.cc \
 	test-utils.h \
 	test-utils.cc \
 	tut.h \
