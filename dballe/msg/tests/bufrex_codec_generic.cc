@@ -183,13 +183,10 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-	dba_file file_gen;
-	dba_file file_synop;
+	dba_file file_gen = open_test_data("bufr/gen-generic.bufr", BUFR);
+	dba_file file_synop = open_test_data("bufr/gen-synop.bufr", BUFR);
 	int gfound, bfound, count = 0;
 	dba_msgs gen, synop;
-
-	CHECKED(dba_file_create(BUFR, "bufr/gen-generic.bufr", "r", &file_gen));
-	CHECKED(dba_file_create(BUFR, "bufr/gen-synop.bufr", "r", &file_synop));
 
 	CHECKED(dba_file_read_msgs(file_gen, &gen, &gfound));
 	CHECKED(dba_file_read_msgs(file_synop, &synop, &bfound));

@@ -157,13 +157,6 @@ dba_err dba_file_writer_set_crex_template(dba_file_writer writer, int type, int 
 	return dba_error_ok();
 }
 
-static dba_err crex_writer_write_raw(crex_writer writer, dba_rawmsg msg)
-{
-	DBA_RUN_OR_RETURN(dba_rawfile_write(writer->parent.file, msg));
-	if (fputs("\r\r\n", writer->parent.file->fd) == EOF)
-		return dba_error_system("writing CREX data on output");
-	return dba_error_ok();
-}
 
 static dba_err crex_writer_write(crex_writer writer, dba_msg msg)
 {

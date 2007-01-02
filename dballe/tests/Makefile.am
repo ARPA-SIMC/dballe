@@ -11,14 +11,9 @@ TESTS = $(check_PROGRAMS)
 #EXTRA_SCRIPTS = check_imports
 
 check_dballe_tut_SOURCES = \
-	tests/dba_msg.cc \
 	tests/dba_db_repinfo.cc \
 	tests/dba_db_dballe.cc \
-	tests/dba_bufrex_conv.cc \
-	tests/dba_bufrex_generic.cc \
-	tests/dba_aof_decoder.cc \
 	tests/dba_db_import.cc \
-	tests/dba_formatter.cc \
 	$(top_srcdir)/extra/test-utils-core.cc \
 	$(top_srcdir)/extra/test-utils-bufrex.cc \
 	$(top_srcdir)/extra/test-utils.cc \
