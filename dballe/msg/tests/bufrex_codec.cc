@@ -163,7 +163,7 @@ void to::test<2>()
 		{
 			FILE* outraw = fopen("/tmp/1to2.txt", "w");
 			bufrex_msg braw;
-			CHECKED(bufrex_msg_create(&braw, BUFREX_BUFR));
+			CHECKED(bufrex_msg_create(BUFREX_BUFR, &braw));
 			braw->type = type;
 			braw->subtype = subtype;
 			braw->opt.bufr.origin = 98;

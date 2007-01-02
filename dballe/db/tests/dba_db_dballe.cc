@@ -89,11 +89,11 @@ struct dba_db_dballe_shar
 		sampleAna.set(DBA_KEY_HOUR_IDENT, 12);
 		sampleAna.set(DBA_KEY_MIN_IDENT, 30);
 		*/
-		extraAna.set(DBA_VAR_HEIGHT, 42);
-		extraAna.set(DBA_VAR_HEIGHTBARO, 234);
-		extraAna.set(DBA_VAR_BLOCK, 1);
-		extraAna.set(DBA_VAR_STATION, 52);
-		extraAna.set(DBA_VAR_NAME, "Cippo Lippo");
+		extraAna.set(DBA_VAR(0, 7,  1), 42);		// Height
+		extraAna.set(DBA_VAR(0, 7, 31), 234);		// Heightbaro
+		extraAna.set(DBA_VAR(0, 1,  1), 1);			// Block
+		extraAna.set(DBA_VAR(0, 1,  2), 52);		// Station
+		extraAna.set(DBA_VAR(0, 1, 19), "Cippo Lippo");	// Name
 
 		// Common data
 		sampleBase.set(DBA_KEY_YEAR, 1945);

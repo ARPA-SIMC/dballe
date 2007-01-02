@@ -33,7 +33,20 @@ extern "C" {
 
 #include <stdlib.h>
 
-/** */
+/**
+ * Format a value into its decimal representation.
+ *
+ * @warning This function is not thread safe.
+ *
+ * @param value
+ *   Number to convert.
+ * @param len
+ *   Maximum length of the resulting string.
+ *   The most significant digits are truncated if the len is too short to fit
+ *   the value.
+ * @return
+ *   The string representation in a statically allocated string.
+ */
 static inline char *itoa(long value, int len)
 {
 	/* Adaptation from the _itoa_word function in glibc */

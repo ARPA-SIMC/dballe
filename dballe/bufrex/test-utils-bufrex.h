@@ -262,10 +262,10 @@ public:
 		switch (raw->encoding)
 		{
 			case BUFR:
-				DBA_RUN_OR_RETURN(bufrex_msg_create(&msg, BUFREX_BUFR));
+				DBA_RUN_OR_RETURN(bufrex_msg_create(BUFREX_BUFR, &msg));
 				break;
 			case CREX:
-				DBA_RUN_OR_RETURN(bufrex_msg_create(&msg, BUFREX_CREX));
+				DBA_RUN_OR_RETURN(bufrex_msg_create(BUFREX_CREX, &msg));
 				break;
 			default:
 				return dba_error_consistency("unhandled message type");

@@ -29,7 +29,7 @@
 #include <string.h>
 
 
-dba_err bufrex_msg_create(bufrex_msg* msg, bufrex_type type)
+dba_err bufrex_msg_create(bufrex_type type, bufrex_msg* msg)
 {
 	*msg = (bufrex_msg)calloc(1, sizeof(struct _bufrex_msg));
 	if (*msg == NULL)

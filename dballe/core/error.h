@@ -131,6 +131,7 @@ enum _dba_err {
 	DBA_OK = 0,
 	DBA_ERROR = 1
 };
+/** @copydoc ::_dba_err */
 typedef enum _dba_err dba_err;
 
 /**

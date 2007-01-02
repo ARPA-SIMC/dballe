@@ -50,6 +50,7 @@ struct _bufrex_subset {
 	int vars_alloclen;
 
 };
+/** @copydoc _bufrex_subset */
 typedef struct _bufrex_subset* bufrex_subset;
 
 /**

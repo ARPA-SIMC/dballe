@@ -34,11 +34,17 @@ extern "C" {
 
 #include <dballe/core/vartable.h>
 
+/**
+ * List node containing an entry of a BUFR or CREX data descriptor section.
+ */
 struct _bufrex_opcode
 {
+	/** Data descriptor as a B, C or D table entry */
 	dba_varcode val;
+	/** Next data descriptor in the list */
 	struct _bufrex_opcode* next;
 };
+/** @copydoc _bufrex_opcode */
 typedef struct _bufrex_opcode* bufrex_opcode;
 
 /**

@@ -45,7 +45,7 @@ dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msgs* msgs)
 	dba_err err = DBA_OK;
 	bufrex_msg rmsg = NULL;
 
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&rmsg, BUFREX_BUFR));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(BUFREX_BUFR, &rmsg));
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_decode(rmsg, raw));
 	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_MSG))
 	{
@@ -65,7 +65,7 @@ dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msgs* msgs)
 	dba_err err = DBA_OK;
 	bufrex_msg rmsg = NULL;
 
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&rmsg, BUFREX_CREX));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(BUFREX_CREX, &rmsg));
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_decode(rmsg, raw));
 	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_MSG))
 	{
@@ -89,7 +89,7 @@ dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw
 	if (msgs->len == 0) return dba_error_consistency("tried to encode an empty dba_msgs");
 
 	/* Create and setup the bufrex_msg */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&braw, BUFREX_BUFR));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(BUFREX_BUFR, &braw));
 
 	/* Compute the right type and subtype if missing */
 	if (type == 0 || subtype == 0)
@@ -147,7 +147,7 @@ dba_err bufrex_encode_crex(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw
 	if (msgs->len == 0) return dba_error_consistency("tried to encode an empty dba_msgs");
 
 	/* Create and setup the bufrex_msg */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&braw, BUFREX_CREX));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(BUFREX_CREX, &braw));
 
 	/* Compute the right type and subtype if missing */
 	if (type == 0 || subtype == 0)

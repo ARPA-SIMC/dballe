@@ -198,7 +198,7 @@ dba_err process_input(
 	{
 		case BUFR:
 			DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&parsed));
-			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&br, BUFREX_BUFR));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(BUFREX_BUFR, &br));
 			
 			if ( !(bufrex_msg_decode(br, rmsg) == DBA_OK &&
 				   bufrex_msg_to_dba_msgs(br, &parsed) == DBA_OK) && print_errors)
@@ -207,7 +207,7 @@ dba_err process_input(
 			break;
 		case CREX:
 			DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&parsed));
-			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(&br, BUFREX_CREX));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(BUFREX_CREX, &br));
 			
 			if ( !(bufrex_msg_decode(br, rmsg) == DBA_OK &&
 				   bufrex_msg_to_dba_msgs(br, &parsed) == DBA_OK) && print_errors)

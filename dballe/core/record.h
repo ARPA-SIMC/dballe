@@ -34,8 +34,10 @@ extern "C" {
 #include <dballe/core/error.h>
 #include <dballe/core/var.h>
 
-/** */
-typedef enum _dba_keyword {
+/**
+ * Keyword used to quickly access context and query information from a record.
+ */
+enum _dba_keyword {
 	DBA_KEY_ERROR		= -1,
 	DBA_KEY_PRIORITY	=  0,
 	DBA_KEY_PRIOMAX		=  1,
@@ -88,8 +90,12 @@ typedef enum _dba_keyword {
 	DBA_KEY_LIMIT		= 48,
 	DBA_KEY_VAR_RELATED	= 49,
 	DBA_KEY_COUNT		= 50,
-} dba_keyword;
+};
+/** @copydoc ::_dba_keyword */
+typedef enum _dba_keyword dba_keyword;
 
+/* TODO: should be deleted after checking if dbavm uses them */
+#if 0
 /* Shortcuts for commonly used variables */
 #define DBA_VAR_BLOCK		DBA_VAR(0,  1,   1)
 #define DBA_VAR_STATION		DBA_VAR(0,  1,   2)
@@ -97,6 +103,7 @@ typedef enum _dba_keyword {
 #define DBA_VAR_HEIGHT		DBA_VAR(0,  7,   1)
 #define DBA_VAR_HEIGHTBARO	DBA_VAR(0,  7,  31)
 #define DBA_VAR_DATA_ID		DBA_VAR(0, 33, 195)
+#endif
 
 struct _dba_record;
 struct _dba_item;

@@ -39,8 +39,8 @@ bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, 
 	bufrex_msg bufrex;
 	switch (type)
 	{
-		case BUFR: INNER_CHECKED(bufrex_msg_create(&bufrex, BUFREX_BUFR)); break;
-		case CREX: INNER_CHECKED(bufrex_msg_create(&bufrex, BUFREX_CREX)); break;
+		case BUFR: INNER_CHECKED(bufrex_msg_create(BUFREX_BUFR, &bufrex)); break;
+		case CREX: INNER_CHECKED(bufrex_msg_create(BUFREX_CREX, &bufrex)); break;
 		default: inner_ensure(false); break;
 	}
 	INNER_CHECKED(bufrex_msg_decode(bufrex, rawmsg));
@@ -55,7 +55,7 @@ bufrex_msg _reencode_test(const char* file, int line, bufrex_msg msg)
 	INNER_CHECKED(bufrex_msg_encode(msg, &raw));
 
 	bufrex_msg bufrex;
-	INNER_CHECKED(bufrex_msg_create(&bufrex, msg->encoding_type));
+	INNER_CHECKED(bufrex_msg_create(msg->encoding_type, &bufrex));
 	INNER_CHECKED(bufrex_msg_decode(bufrex, raw));
 
 	dba_rawmsg_delete(raw);

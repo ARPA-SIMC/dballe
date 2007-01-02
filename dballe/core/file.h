@@ -28,17 +28,22 @@ extern "C" {
 
 /** @file
  * @ingroup core
- * Encapsulates low-level file access.
+ * File I/O for files containing meterorological messages.
  *
- * File access is still mainly performed using normal stdio functions, however
- * dba_rawfile adds useful metadata to the normal FILE* stream, such as
- * tracking the file name and counting the number of messages that have been
- * read or written.
+ * This module provides a unified interface to read and write messages to files
+ * in various formats.
+ *
+ * Format-specific implementation is not provided by this module, but other
+ * libraries can implement format specific read and write functions and
+ * register them with ::dba_file.
  */
 
 #include <dballe/core/rawmsg.h>
 
 struct _dba_file;
+/**
+ * Opaque structure representing a file with meteorological data
+ */
 typedef struct _dba_file* dba_file;
 
 /**
@@ -101,7 +106,7 @@ const char* dba_file_name(dba_file file);
  */
 dba_err dba_file_read(dba_file file, dba_rawmsg msg, int* found);
 
-/*
+/**
  * Write the encoded message data to the file
  *
  * @param file

@@ -38,6 +38,12 @@ extern "C" {
  * Holds the WMO variable code of a variable
  */
 typedef short unsigned int dba_varcode;
+
+/**
+ * Describes how a dba_varinfo has been altered: it is used for supporting
+ * variables coming from BUFR and CREX messages that use C codes to alter
+ * variable information.
+ */
 typedef short unsigned int dba_alteration;
 
 /**
@@ -85,6 +91,7 @@ struct _dba_varinfo
 	/** Othere altered versions of this varinfo */
 	struct _dba_varinfo* alterations;
 };
+/** @copydoc _dba_varinfo */
 typedef struct _dba_varinfo* dba_varinfo;
 
 /**
@@ -95,6 +102,7 @@ typedef struct _dba_varinfo* dba_varinfo;
  * for all the lifetime of the program.
  */
 struct _dba_vartable;
+/** @copydoc _dba_vartable */
 typedef struct _dba_vartable* dba_vartable;
 
 /**
@@ -247,10 +255,27 @@ dba_err dba_vartable_query(dba_vartable table, dba_varcode var, dba_varinfo* inf
  */
 dba_err dba_vartable_query_altered(dba_vartable table, dba_varcode var, dba_alteration change, dba_varinfo* info);
 
+/**
+ * Type of callback called by dba_vartable_iterate() on every member of a dba_vartable
+ *
+ * @param info
+ *   Element of the table that is currently visited.
+ * @param data
+ *   Arbitrary user-supplied data given as the data parameter in dba_vartable_iterate()
+ */
 typedef void (*dba_vartable_iterator)(dba_varinfo info, void* data);
 
 /**
  * Iterate through all elements in a dba_vartable
+ *
+ * @param table
+ *   Table to iterate.
+ * @param func
+ *   Callback to be called for every item of the table.
+ * @param data
+ *   Arbitrary value passed as-is to the callback.
+ * @return
+ *   The error status (@see dba_err)
  */
 dba_err dba_vartable_iterate(dba_vartable table, dba_vartable_iterator func, void* data);
 

@@ -86,6 +86,7 @@ struct _dba_rawmsg {
 	/** Encoding of the raw data */
 	dba_encoding encoding;
 };
+/** @copydoc _dba_rawmsg */
 typedef struct _dba_rawmsg* dba_rawmsg;
 
 /**
