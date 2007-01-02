@@ -68,6 +68,15 @@ dba_err aof_codec_decode(dba_rawmsg msg, dba_msgs* msgs);
 
 /**
  * Get category and subcategory of an AOF message
+ *
+ * @param msg
+ *   The message to scan
+ * @retval category
+ *   The AOF category of the message
+ * @retval subcategory
+ *   The AOF subcategory of the message
+ * @return
+ *   The error indicator for the function.  @see ::dba_err
  */
 dba_err aof_codec_get_category(dba_rawmsg msg, int* category, int* subcategory);
 
