@@ -29,6 +29,7 @@ libdballe_core_la_SOURCES = \
 	record.c \
 	vartable.c \
 	var.c
+libdballe_core_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
 

@@ -1,5 +1,4 @@
 /** @defgroup core Core functions
-@ingroup dballe
 
 Core functions used by most DB-ALLe modules.
 */

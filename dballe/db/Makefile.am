@@ -31,6 +31,11 @@ libdballe_db_la_SOURCES = \
 		db.c \
 		import.c \
 		export.c
+libdballe_db_la_LIBADD = \
+		../core/libdballe-core.la \
+		../bufrex/libdballe-bufrex.la \
+		../msg/libdballe-msg.la
+libdballe_db_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
 

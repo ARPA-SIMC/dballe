@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = core msg bufrex db . bench tests
+SUBDIRS = core bufrex msg db . bench tests
 
 CFLAGS += -DTABLE_DIR=\"$(tabledir)\"
 

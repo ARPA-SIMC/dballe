@@ -53,6 +53,10 @@ libdballe_msg_la_SOURCES = \
 		bufrex_exporters/pilot.c \
 		bufrex_exporters/temp.c \
 		bufrex_exporters/flight.c
+libdballe_msg_la_LIBADD = \
+		../core/libdballe-core.la \
+		../bufrex/libdballe-bufrex.la
+libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 vars.h vars.c: vars.csv mkvars
 	./mkvars < $<
