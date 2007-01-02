@@ -86,5 +86,8 @@ int main(int argc,const char* argv[])
     std::cerr << "tut raised exception: " << ex.what() << std::endl;
   }
 
-  return 0;
+  int count_failed = visi.exceptions_count + visi.failures_count +
+	  visi.terminations_count + visi.warnings_count;
+
+  return count_failed == 0 ? 0 : 1;
 }
