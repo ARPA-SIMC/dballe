@@ -75,8 +75,8 @@ void to::test<1>()
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v1));
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v2));
 
-	CHECKED(dba_msg_datum_create(&d1, 1, 2, 3));
-	CHECKED(dba_msg_datum_create(&d2, 1, 3, 2));
+	CHECKED(dba_msg_datum_create(1, 2, 3, &d1));
+	CHECKED(dba_msg_datum_create(1, 3, 2, &d2));
 
 	gen_ensure_equals(d1->pind, 1);
 	gen_ensure_equals(d1->p1, 2);
@@ -115,8 +115,8 @@ void to::test<2>()
 {
 	dba_msg_level lev1, lev2;
 
-	CHECKED(dba_msg_level_create(&lev1, 1, 2, 3));
-	CHECKED(dba_msg_level_create(&lev2, 2, 1, 3));
+	CHECKED(dba_msg_level_create(1, 2, 3, &lev1));
+	CHECKED(dba_msg_level_create(2, 1, 3, &lev2));
 
 	gen_ensure_equals(lev1->data_count, 0);
 	gen_ensure_equals(lev1->ltype, 1);
@@ -150,7 +150,7 @@ void to::test<3>()
 {
 	dba_msg_level lev;
 
-	CHECKED(dba_msg_level_create(&lev, 1, 2, 3));
+	CHECKED(dba_msg_level_create(1, 2, 3, &lev));
 
 	dba_var v1, v2, v3, v4;
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v1));
