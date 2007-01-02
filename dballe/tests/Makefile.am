@@ -1,6 +1,7 @@
 DBALLELIBS = ../core/libdballe-core.la ../bufrex/libdballe-bufrex.la ../msg/libdballe-msg.la ../db/libdballe-db.la
 
 check_PROGRAMS = check_dballe_tut
+TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 TESTS = $(check_PROGRAMS)
 
 #noinst_PROGRAMS = test-query

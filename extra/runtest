@@ -1,0 +1,9 @@
+#!/bin/sh
+
+CMD="$1"
+
+#id=`date +%y%m%d%H%M%S`
+#$DEBUGGER $BIN $ARGS 2>&1 | tee `pwd`/testrun-$id
+#echo Output saved in `pwd`/testrun-$id
+
+$DEBUGGER $CMD $ARGS
