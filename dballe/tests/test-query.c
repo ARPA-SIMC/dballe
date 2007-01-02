@@ -21,7 +21,7 @@
 
 #include <dballe/init.h>
 #include <dballe/cmdline.h>
-#include <dballe/db/dba_db.h>
+#include <dballe/db/db.h>
 #include <dballe/db/internals.h>
 
 #include <sql.h>

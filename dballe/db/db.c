@@ -19,13 +19,13 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/db/dba_db.h>
-#include <dballe/db/internals.h>
-#include <dballe/db/repinfo.h>
-#include <dballe/db/pseudoana.h>
-#include <dballe/db/context.h>
-#include <dballe/db/data.h>
-#include <dballe/db/attr.h>
+#include "db.h"
+#include "internals.h"
+#include "repinfo.h"
+#include "pseudoana.h"
+#include "context.h"
+#include "data.h"
+#include "attr.h"
 #include <dballe/core/csv.h>
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>

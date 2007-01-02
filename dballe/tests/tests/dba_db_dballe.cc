@@ -22,7 +22,7 @@
 #include <tests/test-utils.h>
 #include <dballe/init.h>
 #include <dballe/db/querybuf.h>
-#include <dballe/db/dba_db.h>
+#include <dballe/db/db.h>
 #include <dballe/db/internals.h>
 
 namespace tut {

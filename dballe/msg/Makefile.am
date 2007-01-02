@@ -16,8 +16,8 @@ messageinclude_HEADERS = \
 		aof_codec.h \
 		bufrex_codec.h
 
-noinst_LTLIBRARIES = libmsg.la
-libmsg_la_SOURCES = \
+lib_LTLIBRARIES = libdballe-msg.la
+libdballe_msg_la_SOURCES = \
 		vars.c \
 		datum.c \
 		level.c \
@@ -57,4 +57,4 @@ vars.h vars.c: vars.csv mkvars
 
 INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
 
-EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c bufrex_exporters/exporters.h bufrex_exporters/exporters.dox
+EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox

@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libdballe-msg
+Description: Interpret weather reports into physical data, and organise physical data into weather reports
+Version: @VERSION@
+Requires: libdballe-core libdballe-bufrex
+Cflags: -I${includedir}
+Libs: -L${libdir} -ldballe-msg -lpopt

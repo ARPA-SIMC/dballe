@@ -22,7 +22,6 @@
 /* #define TRACE_DB */
 
 #include "export.h"
-#include "dba_db.h"
 #include "querybuf.h"
 #include "internals.h"
 #include "attr.h"

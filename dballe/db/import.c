@@ -27,7 +27,6 @@
 #include "context.h"
 #include "data.h"
 #include "attr.h"
-#include "dba_db.h"
 
 #include "dballe/core/conv.h"
 

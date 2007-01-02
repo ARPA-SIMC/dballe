@@ -14,12 +14,12 @@ dbinclude_HEADERS = \
 		data.h \
 		attr.h \
 		cursor.h \
-		dba_db.h \
+		db.h \
 		import.h \
 		export.h
 
-noinst_LTLIBRARIES = libdb.la
-libdb_la_SOURCES = \
+lib_LTLIBRARIES = libdballe-db.la
+libdballe_db_la_SOURCES = \
 		querybuf.c \
 		internals.c \
 		repinfo.c \
@@ -28,7 +28,7 @@ libdb_la_SOURCES = \
 		data.c \
 		attr.c \
 		cursor.c \
-		dba_db.c \
+		db.c \
 		import.c \
 		export.c
 

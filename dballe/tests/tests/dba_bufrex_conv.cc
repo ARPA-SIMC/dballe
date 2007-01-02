@@ -20,9 +20,9 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/dba_file.h>
-#include <dballe/bufrex/bufrex.h>
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/file.h>
+#include <dballe/msg/bufrex_codec.h>
+#include <dballe/msg/msg.h>
 
 namespace tut {
 using namespace tut_dballe;

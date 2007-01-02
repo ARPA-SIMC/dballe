@@ -8,11 +8,19 @@ LATEX2HTML = latex2html -local_icons
 noinst_DATA =
 
 if DO_DOCS
-noinst_DATA += libdballe-core.doxytags libdballe-bufrex.doxytags libdballe.doxytags fapi.ps guide.ps
+noinst_DATA += \
+	libdballe-core.doxytags \
+	libdballe-bufrex.doxytags \
+	libdballe-msg.doxytags \
+	libdballe-db.doxytags \
+	libdballe.doxytags \
+	fapi.ps guide.ps
 if DO_HTML
 noinst_DATA += \
 	coredox_html/index.html \
 	bufrexdox_html/index.html \
+	msgdox_html/index.html \
+	dbdox_html/index.html \
 	dox_html/index.html \
 	fapi_html/index.html \
 	guide_html/index.html
@@ -25,17 +33,34 @@ libdballe-core.doxytags: libdballe-core.dox ../dballe/core/libdballe-core.la
 coredox_html/index.html: libdballe-core.dox ../dballe/core/libdballe-core.la
 	doxygen $<
 
+
 libdballe-bufrex.doxytags: libdballe-bufrex.dox ../dballe/bufrex/libdballe-bufrex.la
 	doxygen $<
 
 bufrexdox_html/index.html: libdballe-bufrex.dox ../dballe/core/libdballe-bufrex.la
 	doxygen $<
 
+
+libdballe-msg.doxytags: libdballe-msg.dox ../dballe/msg/libdballe-msg.la
+	doxygen $<
+
+msgdox_html/index.html: libdballe-msg.dox ../dballe/core/libdballe-msg.la
+	doxygen $<
+
+
+libdballe-db.doxytags: libdballe-db.dox ../dballe/db/libdballe-db.la
+	doxygen $<
+
+dbdox_html/index.html: libdballe-db.dox ../dballe/core/libdballe-db.la
+	doxygen $<
+
+
 libdballe.doxytags: libdballe.dox ../dballe/libdballe.la
 	doxygen $<
 
 dox_html/index.html: libdballe.dox ../dballe/libdballe.la
 	doxygen $<
+
 
 fapi_html/index.html: $(fapisources)
 	$(LATEX2HTML) -dir fapi_html -mkdir $<

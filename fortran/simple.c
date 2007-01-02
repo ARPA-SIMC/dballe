@@ -25,7 +25,7 @@
 #include <dballe/init.h>
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>
-#include <dballe/db/dba_db.h>
+#include <dballe/db/db.h>
 #include <dballe/db/cursor.h>
 #include <dballe/db/internals.h>
 #include <dballe/formatter.h>

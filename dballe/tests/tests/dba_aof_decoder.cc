@@ -20,8 +20,8 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/aof/decoder.h>
-#include <dballe/dba_file.h>
+#include <dballe/msg/aof_codec.h>
+#include <dballe/msg/file.h>
 
 namespace tut {
 using namespace tut_dballe;

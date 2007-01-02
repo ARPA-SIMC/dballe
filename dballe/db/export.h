@@ -31,7 +31,7 @@ extern "C" {
  * Export functions from the DB-ALLe database to ::dba_msg
  */
 
-#include <dballe/db/dba_db.h>
+#include <dballe/db/db.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/core/record.h>
 

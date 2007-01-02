@@ -22,7 +22,7 @@
 #include <dballe/msg/msg.h>
 #include <dballe/msg/file.h>
 #include <dballe/msg/bufrex_codec.h>
-#include <dballe/db/dba_db.h>
+#include <dballe/db/db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
 #include <dballe/init.h>

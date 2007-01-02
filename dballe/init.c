@@ -21,7 +21,7 @@
 
 #include "dballe/init.h"
 #include "dballe/core/verbose.h"
-#include "dballe/db/dba_db.h"
+#include "dballe/db/db.h"
 
 dba_err dba_init()
 {

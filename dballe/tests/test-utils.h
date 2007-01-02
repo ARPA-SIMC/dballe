@@ -27,7 +27,7 @@
 #include <dballe/msg/msg.h>
 #include <dballe/msg/file.h>
 #include <dballe/msg/marshal.h>
-#include <dballe/db/dba_db.h>
+#include <dballe/db/db.h>
 
 #include <dballe/tests/tut.h>
 

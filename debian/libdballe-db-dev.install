@@ -1,0 +1,6 @@
+debian/tmp/usr/include/dballe/db/*
+debian/tmp/usr/lib/libdballe-db*.a
+debian/tmp/usr/lib/pkgconfig/libdballe-db*
+debian/tmp/usr/lib/libdballe-db*.la
+debian/tmp/usr/lib/libdballe-db*.so
+debian/tmp/usr/share/aclocal/libdballe-db*.m4

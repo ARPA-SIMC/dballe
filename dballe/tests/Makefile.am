@@ -1,3 +1,5 @@
+DBALLELIBS = ../core/libdballe-core.la ../bufrex/libdballe-bufrex.la ../msg/libdballe-msg.la ../db/libdballe-db.la
+
 check_PROGRAMS = check_dballe_tut
 TESTS = $(check_PROGRAMS)
 
@@ -33,7 +35,7 @@ check_dballe_tut_SOURCES = \
 	tests/dba_formatter.cc \
 	test-utils.cc \
 	tut-main.cc
-check_dballe_tut_LDADD = ../libdballe.la -lpopt
+check_dballe_tut_LDADD = $(DBALLELIBS) ../libdballe.la -lpopt
 
 test_query_SOURCES = test-query.c
 test_query_LDADD = ../libdballe.la -lpopt

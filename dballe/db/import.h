@@ -31,7 +31,7 @@ extern "C" {
  * Import functions from a ::dba_msg to the DB-ALLe database
  */
 
-#include <dballe/db/dba_db.h>
+#include <dballe/db/db.h>
 #include <dballe/msg/msgs.h>
 
 /**

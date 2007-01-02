@@ -20,8 +20,8 @@ libdballe_la_SOURCES = \
 libdballe_la_LIBADD = \
 		core/libdballe-core.la \
 		bufrex/libdballe-bufrex.la \
-		msg/libmsg.la \
-		db/libdb.la
+		msg/libdballe-msg.la \
+		db/libdballe-db.la
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 EXTRA_DIST = mainpage.dox dballe.dox

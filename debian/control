@@ -32,7 +32,7 @@ Description: DB-ALL.e core shared library
 Package: libdballe-bufrex-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe-bufrex3 (= ${Source-Version})
+Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version})
 Recommends: pkg-config
 Description: Read and write functions for BUFR and CREX weather data
  Functions to read and write weather data in WMO BUFR and CREX formats.
@@ -60,10 +60,133 @@ Description: Read and write functions for BUFR and CREX weather data (shared lib
  .
  This is the shared library.
 
+Package: libdballe-msg-dev
+Section: libdevel
+Architecture: any
+Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballemsg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version})
+Recommends: pkg-config
+Description: Interpret weather reports into physycal data, and vice-versa
+ The library implements dba_msg, a storage structure for physical data
+ precisely located in space and time.  The structure can be:
+ .
+  * Filled in with data from weather reports encoded BUFR, CREX or AOF formats
+  * Used to create BUFR or CREX weather reports
+  * Read from disk in BUFR, CREX or AOF files
+  * Written to disk in BUFR or CREX files
+  * Stored into a DB-All.e database via libdballe-db
+  * Queried from a DB-All.e database via libdballe-db
+ .
+ The representation is in 7 dimensions: latitude and longitude geographic
+ coordinates, table driven vertical coordinate, reference time, table driven
+ observation and forecast specification, table driven data type.
+ .
+ dba_msg is a very convenient way of accessing weather data already digested as
+ properly located physical quantities, as well as as a common middle ground for
+ performing conversions between the various supported message formats.
+
+Package: libdballe-msg3
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends} ${misc:Depends}
+Description: Interpret weather reports into physycal data, and vice-versa (shared library)
+ The library implements dba_msg, a storage structure for physical data
+ precisely located in space and time.  The structure can be:
+ .
+  * Filled in with data from weather reports encoded BUFR, CREX or AOF formats
+  * Used to create BUFR or CREX weather reports
+  * Read from disk in BUFR, CREX or AOF files
+  * Written to disk in BUFR or CREX files
+  * Stored into a DB-All.e database via libdballe-db
+  * Queried from a DB-All.e database via libdballe-db
+ .
+ The representation is in 7 dimensions: latitude and longitude geographic
+ coordinates, table driven vertical coordinate, reference time, table driven
+ observation and forecast specification, table driven data type.
+ .
+ dba_msg is a very convenient way of accessing weather data already digested as
+ properly located physical quantities, as well as as a common middle ground for
+ performing conversions between the various supported message formats.
+ .
+ This is the shared library.
+
+Package: libdballe-db-dev
+Section: libdevel
+Architecture: any
+Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballemsg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version})
+Recommends: pkg-config
+Description: Smart on-disk database for working with weather data as physical quantities
+ Fast on-disk database where meteorological observed and forecast data can be
+ stored, searched, retrieved and updated.
+ .
+ The main characteristics of the DB-ALL.e database are:
+ .
+  * To make computation easier, data is stored as physical quantities,
+    that is, as measures of a variable in a specific point of space and
+    time, rather than as a sequence of report.
+  * Representation is in 7 dimensions: latitude and longitude geographic
+    coordinates, table driven vertical coordinate, reference time,
+    table driven observation and forecast specification, table driven
+    data type.
+  * It allows to store extra information linked to the data, such as
+    confidence intervals for quality control.
+  * It allows to store extra information linked to the stations.
+  * Variables can be represented as real, integer and characters, with
+    appropriate precision for the type of measured value.
+  * It is based on physical principles, that is, the data it contains are
+    defined in terms of homogeneous and consistent physical data. For
+    example, it is impossible for two incompatible values to exist in the
+    same point in space and time.
+  * It can manage fixed stations and moving stations such as airplanes or
+    ships.
+  * It can manage both observational and forecast data.
+  * It can manage data along all three dimensions in space, such as data
+    from soundings and airplanes.
+  * Report information is preserved. It can work based on physical
+    parameters or on report types.
+  * Can concurrently access multiple MySQL and SQLite databases via ODBC
+
+Package: libdballe-db3
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends} ${misc:Depends}
+Description: Smart on-disk database for working with weather data as physical quantities
+ Fast on-disk database where meteorological observed and forecast data can be
+ stored, searched, retrieved and updated.
+ .
+ The main characteristics of the DB-ALL.e database are:
+ .
+  * To make computation easier, data is stored as physical quantities,
+    that is, as measures of a variable in a specific point of space and
+    time, rather than as a sequence of report.
+  * Representation is in 7 dimensions: latitude and longitude geographic
+    coordinates, table driven vertical coordinate, reference time,
+    table driven observation and forecast specification, table driven
+    data type.
+  * It allows to store extra information linked to the data, such as
+    confidence intervals for quality control.
+  * It allows to store extra information linked to the stations.
+  * Variables can be represented as real, integer and characters, with
+    appropriate precision for the type of measured value.
+  * It is based on physical principles, that is, the data it contains are
+    defined in terms of homogeneous and consistent physical data. For
+    example, it is impossible for two incompatible values to exist in the
+    same point in space and time.
+  * It can manage fixed stations and moving stations such as airplanes or
+    ships.
+  * It can manage both observational and forecast data.
+  * It can manage data along all three dimensions in space, such as data
+    from soundings and airplanes.
+  * Report information is preserved. It can work based on physical
+    parameters or on report types.
+  * Can concurrently access multiple MySQL and SQLite databases via ODBC
+ .
+ This is the shared library.
+
+
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe2 (= ${Source-Version}), libdballef2 (=${Source-Version}), libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version})
+Depends: libdballe2 (= ${Source-Version}), libdballef2 (=${Source-Version}), libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballemsg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version}), libdballe-db-dev (=${Source-Version}), libdballe-db3 (=${Source-Version})
 Recommends: pkg-config
 Description: Database for punctual meteorological data (C and Fortran development)
  DB-All.e is a fast on-disk database where meteorological observed and

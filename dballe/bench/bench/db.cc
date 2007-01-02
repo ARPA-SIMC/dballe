@@ -23,7 +23,7 @@
 #include <dballe/tests/test-utils.h>
 
 #include <dballe/core/record.h>
-#include <dballe/db/dba_db.h>
+#include <dballe/db/db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
 

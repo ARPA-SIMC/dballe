@@ -20,7 +20,7 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/bufrex/bufrex_opcode.h>
+#include <dballe/bufrex/opcode.h>
 
 namespace tut {
 using namespace tut_dballe;

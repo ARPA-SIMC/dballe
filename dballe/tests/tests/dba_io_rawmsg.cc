@@ -20,7 +20,7 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/io/dba_rawmsg.h>
+#include <dballe/core/rawmsg.h>
 
 namespace tut {
 using namespace tut_dballe;

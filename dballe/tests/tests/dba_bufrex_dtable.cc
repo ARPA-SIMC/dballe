@@ -20,7 +20,7 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/bufrex/bufrex_dtable.h>
+#include <dballe/bufrex/dtable.h>
 
 namespace tut {
 using namespace tut_dballe;
