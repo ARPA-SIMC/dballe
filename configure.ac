@@ -86,6 +86,7 @@ dballe/bufrex/Makefile
 dballe/msg/Makefile
 dballe/db/Makefile
 dballe/bench/Makefile
+dballe++/Makefile
 fortran/Makefile
 tools/Makefile
 tables/Makefile
