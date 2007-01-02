@@ -1,2 +1,2 @@
 doc/*.ps
-debian/tmp/usr/share/doc/dballe/doc_api
+debian/tmp/usr/share/doc/dballe/db_api

@@ -41,7 +41,7 @@ Description: DB-ALL.e core shared library
 Package: libdballe-bufrex-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version})
+Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex3 (=${Source-Version})
 Recommends: pkg-config
 Description: Read and write functions for BUFR and CREX weather data
  Functions to read and write weather data in WMO BUFR and CREX formats.
@@ -71,7 +71,7 @@ Description: Read and write functions for BUFR and CREX weather data (shared lib
 Package: libdballe-msg-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballemsg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version})
+Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballe-msg3 (=${Source-Version})
 Recommends: pkg-config
 Description: Interpret weather reports into physycal data, and vice-versa
  The library implements the dba_msg infrastructure for handling physical data
@@ -110,7 +110,7 @@ Description: Interpret weather reports into physycal data, and vice-versa (share
 Package: libdballe-db-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballemsg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version})
+Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballemsg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version}), libdballe-db3 (=${Source-Version})
 Recommends: pkg-config
 Description: Smart on-disk database for weather data
  Fast on-disk database where meteorological observed and forecast data can be
@@ -161,6 +161,18 @@ Description: Smart on-disk database for weather data (shared library)
  forecast data can be stored, searched, retrieved and updated.
  .
  This is the shared library for the database functions of DB-All.e.
+
+Package: libdballef-dev
+Section: libdevel
+Architecture: any
+Depends: libdballef3 (=${Source-Version})
+Recommends: pkg-config
+Description: Database for punctual meteorological data (Fortran development library)
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+ .
+ This is the DB-All.e Fortran API, designed to make it easy to use the DB-All.e
+ database as a smart working area for meteorological software.
 
 Package: libdballef3
 Section: libs

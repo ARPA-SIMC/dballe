@@ -55,13 +55,13 @@ endif
 install-data-local:
 	for pkg in core bufrex msg db; do \
 		test -d $${pkg}_api && \
-		$(mkinstalldirs) $(docdir)/$${pkg}_api && \
-		find $${pkg}_api -type f -exec $(INSTALL_DATA) '{}' $(docdir)/$${pkg}_api/ \; ; \
+		$(mkinstalldirs) $(DESTDIR)$(docdir)/$${pkg}_api && \
+		find $${pkg}_api -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/$${pkg}_api/ \; ; \
 	done || true
 	for pkg in fapi_html guide_html; do \
 		test -d $$pkg && \
-		$(mkinstalldirs) $(docdir)/$$pkg && \
-		find $$pkg -type f -exec $(INSTALL_DATA) '{}' $(docdir)/$$pkg/ \; ; \
+		$(mkinstalldirs) $(DESTDIR)$(docdir)/$$pkg && \
+		find $$pkg -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/$$pkg/ \; ; \
 	done || true
 
 libdballe-core.doxytags: $(coredoxdeps)
