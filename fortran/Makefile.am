@@ -12,7 +12,7 @@ lib_LTLIBRARIES = libdballef.la
 libdballef_la_SOURCES = \
 	error.c \
 	simple.c
-libdballef_la_LIBADD = ../dballe/db/libdballe-db.la ../extra/libextra.la -lcnf
+libdballef_la_LIBADD = ../dballe/db/libdballe-db.la ../extra/libcmdline.la -lcnf
 libdballef_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 

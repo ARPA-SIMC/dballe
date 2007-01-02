@@ -10,7 +10,10 @@ noinst_INCLUDES = \
 	tut_reporter.h \
 	tut_restartable.h
 
-noinst_LTLIBRARIES = libextra.la libtests.la libtests-main.la
+noinst_LTLIBRARIES = libcmdline.la libextra.la libtests.la libtests-main.la
+libcmdline_la_SOURCES = \
+	cmdline.c
+
 libextra_la_SOURCES = \
 	cmdline.c \
 	conversion.c \
