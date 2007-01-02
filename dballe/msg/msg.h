@@ -224,7 +224,7 @@ dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
  * @param msg
  *   The message to operate on
  * @param code
- *   The dba_varcode of the destination value.
+ *   The dba_varcode of the destination value..  See @ref vartable.h
  * @param val
  *   The integer value of the data
  * @param conf
@@ -254,7 +254,7 @@ dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype
  * @param msg
  *   The message to operate on
  * @param code
- *   The dba_varcode of the destination value.
+ *   The dba_varcode of the destination value.  See @ref vartable.h
  * @param val
  *   The double value of the data
  * @param conf
@@ -284,7 +284,7 @@ dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int lt
  * @param msg
  *   The message to operate on
  * @param code
- *   The dba_varcode of the destination value.
+ *   The dba_varcode of the destination value.  See @ref vartable.h
  * @param val
  *   The string value of the data
  * @param conf
@@ -331,7 +331,7 @@ dba_msg_level dba_msg_find_level(dba_msg msg, int ltype, int l1, int l2);
  * @param msg
  *   The dba_msg to query
  * @param code
- *   The ::dba_varcode of the variable to query
+ *   The ::dba_varcode of the variable to query. See @ref vartable.h
  * @param ltype
  *   Type of the level.  See @ref level_table.
  * @param l1

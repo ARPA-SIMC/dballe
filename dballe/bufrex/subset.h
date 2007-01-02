@@ -99,7 +99,7 @@ dba_err bufrex_subset_store_variable(bufrex_subset subset, dba_var var);
  * @param subset
  *   The message that will hold the variable
  * @param code
- *   The ::dba_varcode of the variable to add
+ *   The ::dba_varcode of the variable to add.  See @ref vartable.h
  * @param var
  *   The variable holding the value for the variable to add
  * @return
@@ -113,7 +113,7 @@ dba_err bufrex_subset_store_variable_var(bufrex_subset subset, dba_varcode code,
  * @param subset
  *   The message that will hold the variable
  * @param code
- *   The ::dba_varcode of the variable to add
+ *   The ::dba_varcode of the variable to add.  See @ref vartable.h
  * @param val
  *   The value for the variable
  * @return
@@ -127,7 +127,7 @@ dba_err bufrex_subset_store_variable_i(bufrex_subset subset, dba_varcode code, i
  * @param subset
  *   The message that will hold the variable
  * @param code
- *   The ::dba_varcode of the variable to add
+ *   The ::dba_varcode of the variable to add.  See @ref vartable.h
  * @param val
  *   The value for the variable
  * @return
@@ -141,7 +141,7 @@ dba_err bufrex_subset_store_variable_d(bufrex_subset subset, dba_varcode code, d
  * @param subset
  *   The message that will hold the variable
  * @param code
- *   The ::dba_varcode of the variable to add
+ *   The ::dba_varcode of the variable to add.  See @ref vartable.h
  * @param val
  *   The value for the variable
  * @return
@@ -155,7 +155,7 @@ dba_err bufrex_subset_store_variable_c(bufrex_subset subset, dba_varcode code, c
  * @param subset
  *   The message that will hold the variable
  * @param code
- *   The ::dba_varcode of the variable to add
+ *   The ::dba_varcode of the variable to add.  See @ref vartable.h
  * @return
  *   The error indicator for the function.  See @ref error.h
  */
@@ -208,7 +208,7 @@ dba_err bufrex_subset_apply_attributes(bufrex_subset subset);
  * @param size
  *   The size of the bitmap
  * @param attr
- *   The code of the attribute that the bitmap will represent
+ *   The code of the attribute that the bitmap will represent.  See @ref vartable.h
  * @return
  *   The error indicator for the function.  See @ref error.h
  */
@@ -237,7 +237,7 @@ dba_err bufrex_subset_append_fixed_dpb(bufrex_subset subset, int size);
  * @param size
  *   The number of variables to scan
  * @param attr
- *   The code of the attribute to look for
+ *   The code of the attribute to look for.  See @ref vartable.h
  * @return
  *   The error indicator for the function.  See @ref error.h
  */
@@ -254,7 +254,7 @@ dba_err bufrex_subset_append_attrs(bufrex_subset subset, int size, dba_varcode a
  * @param size
  *   The number of variables to scan
  * @param attr
- *   The code of the attribute to look for
+ *   The code of the attribute to look for.  See @ref vartable.h
  * @return
  *   The error indicator for the function.  See @ref error.h
  */

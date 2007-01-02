@@ -193,7 +193,7 @@ dba_err bufrex_msg_load_tables(bufrex_msg msg);
  * @param msg
  *   ::bufrex_msg to query
  * @param code
- *   code of the variable to query
+ *   code of the variable to query.  See @ref vartable.h
  * @retval info
  *   the ::dba_varinfo structure with the results of the query.  The returned
  *   ::dba_varinfo needs to be deallocated using dba_varinfo_delete()
@@ -208,7 +208,7 @@ dba_err bufrex_msg_query_btable(bufrex_msg msg, dba_varcode code, dba_varinfo* i
  * @param msg
  *   ::bufrex_msg to query
  * @param code
- *   code of the entry to query
+ *   code of the entry to query.  See @ref vartable.h
  * @param res
  *   the bufrex_opcode chain that contains the expansion elements
  *   (must be deallocated by the caller using bufrex_opcode_delete)
@@ -245,7 +245,7 @@ dba_err bufrex_msg_get_datadesc(bufrex_msg msg, struct _bufrex_opcode** res);
  * @param msg
  *   The message to act on
  * @param varcode
- *   The ::dba_varcode to append
+ *   The ::dba_varcode to append.  See @ref vartable.h
  * @returns
  *   The error indicator for the function.  See @ref error.h
  */

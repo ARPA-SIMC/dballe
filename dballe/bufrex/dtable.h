@@ -58,7 +58,7 @@ dba_err bufrex_dtable_create(const char* id, bufrex_dtable* table);
  * @param table
  *   bufrex_dtable to query
  * @param var
- *   entry code (i.e. the XXYYY number in BXXYYY)
+ *   entry code (i.e. DXXYYY as a ::dba_varcode DBA_VAR(3, xx, yyy).
  * @param res
  *   the bufrex_opcode chain that contains the expansion elements
  *   (must be deallocated by the caller using bufrex_opcode_delete)

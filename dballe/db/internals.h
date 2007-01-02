@@ -37,6 +37,9 @@ extern "C" {
 
 #include <sqltypes.h>
 
+/** Trace macros internally used for debugging
+ * @{
+ */
 
 /* #define TRACE_DB */
 
@@ -44,9 +47,13 @@ extern "C" {
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)
 #define IFTRACE if (1)
 #else
+/** Ouput a trace message */
 #define TRACE(...) do { } while (0)
+/** Prefix a block of code to compile only if trace is enabled */
 #define IFTRACE if (0)
 #endif
+
+/** @} */
 
 
 struct _dba_db_repinfo;

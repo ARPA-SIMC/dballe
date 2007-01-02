@@ -274,7 +274,7 @@ dba_var dba_record_key_peek(dba_record rec, dba_keyword parameter);
  * @param rec
  *   The record to get the value from.
  * @param code
- *   The variable to get the value for.
+ *   The variable to get the value for.  See @ref vartable.h
  * @return
  *   A const pointer to the internal variable, or NULL if the variable has not
  *   been found.
@@ -309,7 +309,7 @@ const char* dba_record_key_peek_value(dba_record rec, dba_keyword parameter);
  * @param rec
  *   The record to get the value from.
  * @param code
- *   The variable to get the value for.
+ *   The variable to get the value for.  See @ref vartable.h
  * @return
  *   The raw string value, or NULL if the variable has no value.
  */
@@ -364,7 +364,7 @@ dba_err dba_record_key_enq(dba_record rec, dba_keyword parameter, dba_var* var);
  * @param rec
  *   The record to get the value from.
  * @param code
- *   The variable to get the value for.
+ *   The variable to get the value for.  See @ref vartable.h
  * @retval var
  *   A copy of the internal dba_var with the parameter.  You need to deallocate
  *   it with dba_var_delete().
@@ -397,7 +397,7 @@ dba_err dba_record_key_enqi(dba_record rec, dba_keyword parameter, int* value);
  * @param rec
  *   The record to get the value from.
  * @param code
- *   The variable to get the value for.
+ *   The variable to get the value for.  See @ref vartable.h
  * @retval value
  *   The variable where the value should be stored.
  * @return
@@ -429,7 +429,7 @@ dba_err dba_record_key_enqd(dba_record rec, dba_keyword parameter, double* value
  * @param rec
  *   The record to get the value from.
  * @param code
- *   The variable to get the value for.
+ *   The variable to get the value for.  See @ref vartable.h
  * @retval value
  *   The variable where the value should be stored.
  * @return
@@ -463,7 +463,7 @@ dba_err dba_record_key_enqc(dba_record rec, dba_keyword parameter, const char** 
  * @param rec
  *   The record to get the value from.
  * @param code
- *   The variable to get the value for.
+ *   The variable to get the value for.  See @ref vartable.h
  * @retval value
  *   The variable where the value should be stored.
  * @return
@@ -497,7 +497,7 @@ dba_err dba_record_key_set(dba_record rec, dba_keyword parameter, dba_var var);
  * @param rec
  *   The record where the value is to be set.
  * @param code
- *   The variable to set the value for.
+ *   The variable to set the value for.  See @ref vartable.h
  * @param var
  *   A the dba_var with the parameter which will be copied inside the record.
  *   The record will copy the variable and will not take ownership of it:
@@ -555,7 +555,7 @@ dba_err dba_record_key_seti(dba_record rec, dba_keyword parameter, int value);
  * @param rec
  *   The record where the value is to be set.
  * @param code
- *   The variable to set the value for.
+ *   The variable to set the value for.  See @ref vartable.h
  * @param value
  *   The value to set, as an unscaled integer.
  * @return
@@ -587,7 +587,7 @@ dba_err dba_record_key_setd(dba_record rec, dba_keyword parameter, double value)
  * @param rec
  *   The record where the value is to be set.
  * @param code
- *   The variable to set the value for.
+ *   The variable to set the value for.  See @ref vartable.h
  * @param value
  *   The value to set.
  * @return
@@ -616,7 +616,7 @@ dba_err dba_record_key_setc(dba_record rec, dba_keyword parameter, const char* v
  * @param rec
  *   The record where the value is to be set.
  * @param code
- *   The variable to set the value for.
+ *   The variable to set the value for.  See @ref vartable.h
  * @param value
  *   The value to set.  If the parameter is numeric, value will be taken as a
  *   string representing the unscaled integer with the value.
@@ -658,7 +658,7 @@ dba_err dba_record_key_unset(dba_record rec, dba_keyword parameter);
  * @param rec
  *   The record where the value is to be set.
  * @param code
- *   The variable to remove.
+ *   The variable to remove.  See @ref vartable.h
  * @return
  *   The error indicator for the function.
  */

@@ -29,50 +29,72 @@ extern "C" {
 /** @file
  * @ingroup db
  *
- * Repinfo table management used by the db module, but not
- * exported as official API.
+ * Repinfo table management used by the db module.
  */
 
 #include <dballe/db/internals.h>
 
 struct _dba_db;
 
+/** repinfo cache entry */
 struct _dba_db_repinfo_cache {
+	/** Report code */
 	int id;
 
+	/** Report name */
 	char* memo;
+	/** Report description */
 	char* desc;
+	/** Report priority */
 	int	  prio;
+	/** Report descriptor (currently unused) */
 	char* descriptor;
+	/** Report A table value (currently unused) */
 	int   tablea;
 
+	/** New report name used when updating the repinfo table */
 	char* new_memo;
+	/** New report description used when updating the repinfo table */
 	char* new_desc;
+	/** New report priority used when updating the repinfo table */
 	int	  new_prio;
+	/** New report descriptor used when updating the repinfo table */
 	char* new_descriptor;
+	/** New report A table value used when updating the repinfo table */
 	int	  new_tablea;
 };
+/** @copydoc _dba_db_repinfo_cache */
 typedef struct _dba_db_repinfo_cache* dba_db_repinfo_cache;
 
+/** reverse rep_memo -> rep_cod cache entry */
 struct _dba_db_repinfo_memoidx {
+	/** Report name */
 	char memo[30];
+	/** Report code */
 	int id;
 };
+/** @copydoc _dba_db_repinfo_memoidx */
 typedef struct _dba_db_repinfo_memoidx* dba_db_repinfo_memoidx;
 
 /**
- * Precompiled query to insert a value in repinfo
+ * Fast cached access to the repinfo table
  */
 struct _dba_db_repinfo
 {
+	/** dba_db this dba_db_repinfo is part of */
 	struct _dba_db* db;
 
+	/** Cache of dba_db_repinfo entries */
 	dba_db_repinfo_cache cache;
+	/** Number of items present in the cache */
 	int cache_size;
+	/** Cache allocation size as number of items */
 	int cache_alloc_size;
 
+	/** rep_memo -> rep_cod reverse index */
 	dba_db_repinfo_memoidx memo_idx;
 };
+/** @copydoc _dba_db_repinfo */
 typedef struct _dba_db_repinfo* dba_db_repinfo;
 
 /**

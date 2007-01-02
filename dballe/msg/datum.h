@@ -107,7 +107,7 @@ int dba_msg_datum_compare(const dba_msg_datum d1, const dba_msg_datum d2);
  * @param d
  *   First dba_msg_datum to compare
  * @param code
- *   Variable code of the second datum in the comparison
+ *   Variable code of the second datum in the comparison.  See @ref vartable.h
  * @param pind
  *   Time range type indicator.  See @ref trange_table.
  * @param p1

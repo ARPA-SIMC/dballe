@@ -41,7 +41,7 @@ extern "C" {
  *   The alias to resolve
  * @return
  *   The varcode corresponding to the aliase, or 0 if no variable has the given
- *   alias.
+ *   alias.  See @ref vartable.h
  */
 dba_varcode dba_varcode_alias_resolve(const char* alias);
 
@@ -54,7 +54,7 @@ dba_varcode dba_varcode_alias_resolve(const char* alias);
  *   The length of the string
  * @return
  *   The varcode corresponding to the aliase, or 0 if no variable has the given
- *   alias.
+ *   alias.  See @ref vartable.h
  */
 dba_varcode dba_varcode_alias_resolve_substring(const char* alias, int len);
 

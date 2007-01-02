@@ -41,7 +41,7 @@ struct _dba_var;
  * Holds a DBALLE variable
  *
  * A ::dba_var contains:
- * \li a ::dba_varcode identifying what is measured
+ * \li a ::dba_varcode identifying what is measured.  See @ref vartable.h
  * \li a measured value, that can be an integer, double or string depending on
  *     the ::dba_varcode
  * \li zero or more attributes, in turn represented by ::dba_var structures
@@ -117,7 +117,7 @@ dba_err dba_var_createc(dba_varinfo info, const char* val, dba_var* var);
  * Create a variable with informations from the local table
  *
  * @param code
- *   The dba_varcode that identifies the variable in the local B table.
+ *   The dba_varcode that identifies the variable in the local B table.  See @ref vartable.h
  * @retval var
  *   The variable created.  It will need to be deallocated using
  *   dba_var_delete().
@@ -247,7 +247,7 @@ dba_err dba_var_unset(dba_var var);
  * @param var
  *   The variable to query
  * @param code
- *   The dba_varcode of the attribute requested
+ *   The dba_varcode of the attribute requested.  See @ref vartable.h
  * @retval attr
  *   A pointer to the attribute if it exists, else NULL.  The pointer points to
  *   the internal representation and must not be deallocated by the caller.
@@ -290,7 +290,7 @@ dba_err dba_var_seta_nocopy(dba_var var, dba_var attr);
  * @param var
  *   The variable to work on
  * @param code
- *   The dba_varcode of the attribute to remove
+ *   The dba_varcode of the attribute to remove.  See @ref vartable.h
  * @returns
  *   The error indicator for the function (See @ref error.h)
  */
@@ -312,7 +312,7 @@ void dba_var_clear_attrs(dba_var var);
  * @param var
  *   Variable to query
  * @returns
- *   The dba_varcode for the variable
+ *   The dba_varcode for the variable.  See @ref vartable.h
  */
 dba_varcode dba_var_code(dba_var var);
 

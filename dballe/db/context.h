@@ -29,8 +29,7 @@ extern "C" {
 /** @file
  * @ingroup db
  *
- * Pseudoana table management used by the db module, but not
- * exported as official API.
+ * Context table management used by the db module.
  */
 
 #include <dballe/db/internals.h>
@@ -38,34 +37,64 @@ extern "C" {
 struct _dba_db;
 	
 /**
- * Precompiled query to insert a value in context
+ * Precompiled query to manipulate the context table
  */
 struct _dba_db_context
 {
+	/** dba_db this dba_db_context is part of */
 	struct _dba_db* db;
+	/** Precompiled select statement */
 	SQLHSTMT sstm;
+	/** Precompiled insert statement */
 	SQLHSTMT istm;
+	/** Precompiled delete statement */
 	SQLHSTMT dstm;
 
+	/** Context ID SQL parameter */
 	int id;
 
+	/** Pseudoana ID SQL parameter */
 	int id_ana;
+	/** Report ID SQL parameter */
 	int id_report;
+	/** Date SQL parameter */
 	char date[25];
+	/** Date indicator */
 	SQLINTEGER date_ind;
+	/** Level type SQL parameter */
 	int ltype;
+	/** Level L1 SQL parameter */
 	int l1;
+	/** Level L2 SQL parameter */
 	int l2;
+	/** Time range type SQL parameter */
 	int pind;
+	/** Time range P1 SQL parameter */
 	int p1;
+	/** Time range P2 SQL parameter */
 	int p2;
 };
+/** @copydoc _dba_db_context */
 typedef struct _dba_db_context* dba_db_context;
 
-/** */
+/**
+ * Create a new dba_db_context
+ * 
+ * @param db
+ *   The ::dba_db this ::dba_db_context will access
+ * @retval ins
+ *   The newly created ::dba_db_context (it will need to be deallocated wth dba_db_context_delete())
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
 dba_err dba_db_context_create(dba_db db, dba_db_context* ins);
 
-/** */
+/**
+ * Deletes a dba_db_context
+ *
+ * @param ins
+ *   The ::dba_db_context to delete
+ */
 void dba_db_context_delete(dba_db_context ins);
 
 /**
@@ -94,7 +123,16 @@ dba_err dba_db_context_get_id(dba_db_context ins, int *id);
  */
 dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id);
 
-/** */
+/**
+ * Insert a new context in the database
+ *
+ * @param ins
+ *   The dba_db_context structure with all the input fields filled in.
+ * @retval id
+ *   The ID of the newly inserted context
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
 dba_err dba_db_context_insert(dba_db_context ins, int *id);
 
 /**

@@ -29,8 +29,7 @@ extern "C" {
 /** @file
  * @ingroup db
  *
- * Pseudoana table management used by the db module, but not
- * exported as official API.
+ * Attribute table management used by the db module.
  */
 
 #include <dballe/db/internals.h>
@@ -39,40 +38,96 @@ extern "C" {
 struct _dba_db;
 	
 /**
- * Precompiled query to insert a value in attr
+ * Precompiled queries to manipulate the attr table
  */
 struct _dba_db_attr
 {
+	/** dba_db this dba_db_attr is part of */
 	struct _dba_db* db;
+	/** Precompiled select statement */
 	SQLHSTMT sstm;
+	/** Precompiled insert statement */
 	SQLHSTMT istm;
+	/** Precompiled replace statement */
 	SQLHSTMT rstm;
 
+	/** context id SQL parameter */
 	int id_context;
+	/** variable id SQL parameter */
 	dba_varcode id_var;
+	/** attribute id SQL parameter */
 	dba_varcode type;
+	/** attribute value SQL parameter */
 	char value[255];
+	/** attribute value indicator */
 	SQLINTEGER value_ind;
 };
+/** @copydoc _dba_db_attr */
 typedef struct _dba_db_attr* dba_db_attr;
 
-/** */
+/**
+ * Create a new dba_db_attr
+ * 
+ * @param db
+ *   The ::dba_db this ::dba_db_attr will access
+ * @retval ins
+ *   The newly created ::dba_db_attr (it will need to be deallocated wth dba_db_attr_delete())
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
 dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins);
 
-/** */
+/**
+ * Deletes a dba_db_attr
+ *
+ * @param ins
+ *   The ::dba_db_attr to delete
+ */
 void dba_db_attr_delete(dba_db_attr ins);
 
-/** */
+/**
+ * Set the input fields of a ::dba_db_attr using the values in a ::dba_var
+ *
+ * @param ins
+ *   The ::dba_db_attr to fill in
+ * @param var
+ *   The ::dba_var with the data to copy into ins
+ */
 void dba_db_attr_set(dba_db_attr ins, dba_var var);
 
-/** */
+/**
+ * Set the value input field of a ::dba_db_attr from a string
+ *
+ * @param ins
+ *   The ::dba_db_attr to fill in
+ * @param value
+ *   The value to copy into ins
+ */
 void dba_db_attr_set_value(dba_db_attr ins, const char* value);
 
-/** */
+/**
+ * Insert an entry into the attr table
+ *
+ * @param ins
+ *   The ::dba_db_attr with the fields filled in with the data to insert.
+ * @param replace
+ *   If set to true, an existing attribute with the same context and
+ *   ::dba_varcode will be overwritten; else, trying to replace an existing
+ *   attribute will result in an error.
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
 dba_err dba_db_attr_insert(dba_db_attr ins, int replace);
 
 /**
  * Load from the database all the attributes for var
+ *
+ * @param ins
+ *   ::dba_db_attr to use for the query, with the context ID filled in
+ * @param var
+ *   ::dba_var to which the resulting attributes will be added
+ * @return
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_attr_load(dba_db_attr ins, dba_var var);
 

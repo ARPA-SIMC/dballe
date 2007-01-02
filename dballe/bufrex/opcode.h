@@ -39,7 +39,7 @@ extern "C" {
  */
 struct _bufrex_opcode
 {
-	/** Data descriptor as a B, C or D table entry */
+	/** Data descriptor as a B, C or D table entry.  See @ref vartable.h */
 	dba_varcode val;
 	/** Next data descriptor in the list */
 	struct _bufrex_opcode* next;
@@ -61,7 +61,7 @@ void bufrex_opcode_delete(bufrex_opcode* entry);
  * @param entry
  *   opcode entry to append the entry to
  * @param value
- *   Value to append to the entry
+ *   Value to append to the entry.  See @ref vartable.h
  * @return
  *   The error indicator for the function
  */

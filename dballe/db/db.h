@@ -147,13 +147,12 @@ dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid);
  * @param db
  *   The dballe session id
  * @param query
- *   The record with the query data (see technical specifications, par. 1.6.4
- *   "parameter output/input")
+ *   The record with the query data (see @ref dba_record_keywords)
  * @retval cur
  *   The dba_db_cursor variable that will hold the resulting dba_db_cursor that can
- *   be used to get the result values (See @ref dba_ana_cursor_next).
- *   dba_db_ana_query will create the cursor, and it is up to the caller to
- *   delete it using dba_db_cursor_delete.
+ *   be used to get the result values (See @ref dba_db_cursor_next).
+ *   dba_db_ana_query() will create the cursor, and it is up to the caller to
+ *   delete it using dba_db_cursor_delete().
  * @param count
  *   The count of items in the anagraphic archive, returned by the function
  * @return
@@ -247,7 +246,7 @@ dba_err dba_db_remove_orphans(dba_db db);
  * @param id_context
  *   The database id of the context related to the attributes to retrieve
  * @param id_var
- *   The varcode of the variable related to the attributes to retrieve
+ *   The varcode of the variable related to the attributes to retrieve.  See @ref vartable.h
  * @param qcs
  *   The WMO codes of the QC values requested.  If it is NULL, then all values
  *   are returned.
@@ -270,7 +269,7 @@ dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varco
  * @param id_context
  *   The database id of the context related to the attributes to insert
  * @param id_var
- *   The varcode of the variable related to the attributes to add
+ *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
  * @param attrs
  *   The record with the attributes to be added
  * @param can_replace
@@ -291,7 +290,7 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_va
  * @param id_context
  *   The database id of the context related to the attributes to insert
  * @param id_var
- *   The varcode of the variable related to the attributes to add
+ *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
  * @param attrs
  *   The record with the attributes to be added
  * @return
@@ -309,7 +308,7 @@ dba_err dba_db_qc_insert(dba_db db, int id_context, dba_varcode id_var, dba_reco
  * @param id_context
  *   The database id of the context related to the attributes to insert
  * @param id_var
- *   The varcode of the variable related to the attributes to add
+ *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
  * @param attrs
  *   The record with the attributes to be added
  * @return
@@ -326,7 +325,7 @@ dba_err dba_db_qc_insert_new(dba_db db, int id_context, dba_varcode id_var, dba_
  * @param id_context
  *   The database id of the context related to the attributes to remove
  * @param id_var
- *   The varcode of the variable related to the attributes to remove
+ *   The varcode of the variable related to the attributes to remove.  See @ref vartable.h
  * @param qcs
  *   Array of WMO codes of the QC data to delete.  If NULL, all QC data
  *   associated to id_data will be deleted.

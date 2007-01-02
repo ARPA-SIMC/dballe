@@ -158,7 +158,7 @@ dba_err dba_msg_level_setc(dba_msg msg, dba_varcode code, const char* val, int c
  * @param l
  *   The level to query
  * @param code
- *   The ::dba_varcode of the variable to query
+ *   The ::dba_varcode of the variable to query.  See @ref vartable.h
  * @param pind
  *   Time range type indicator.  See @ref trange_table.
  * @param p1
