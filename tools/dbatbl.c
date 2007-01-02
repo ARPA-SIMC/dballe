@@ -21,7 +21,7 @@
 
 #define _GNU_SOURCE  /* Needed for strcasestr */
 
-#include "cmdline.h"
+#include <extra/cmdline.h>
 #include <dballe/bufrex/dtable.h>
 #include <dballe/core/conv.h>
 #include <dballe/msg/formatter.h>

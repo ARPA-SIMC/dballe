@@ -107,6 +107,7 @@ dballe/bench/Makefile
 fortran/Makefile
 tools/Makefile
 tables/Makefile
+extra/Makefile
 swig/Makefile
 doc/Makefile
 doc/libdballe-core.dox

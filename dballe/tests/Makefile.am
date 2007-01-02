@@ -33,8 +33,8 @@ check_dballe_tut_SOURCES = \
 	tests/dba_aof_decoder.cc \
 	tests/dba_db_import.cc \
 	tests/dba_formatter.cc \
-	test-utils.cc \
-	tut-main.cc
+	$(top_srcdir)/extra/test-utils.cc \
+	$(top_srcdir)/extra/tut-main.cc
 check_dballe_tut_LDADD = $(DBALLELIBS) ../db/libdballe-db.la -lpopt
 
 #test_query_SOURCES = test-query.c

@@ -25,7 +25,8 @@
 #include <dballe/db/db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
-#include "cmdline.h"
+#include <extra/cmdline.h>
+#include <extra/processor.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -33,8 +34,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
-
-#include "processor.h"
 
 struct grep_t grepdata = { -1, -1, -1, 0, 0, "" };
 struct poptOption grepTable[] = {

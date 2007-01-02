@@ -7,9 +7,9 @@ benchmark_SOURCES= \
 	bench/dba_record.cc \
 	bench/bufrex.cc \
 	bench/db.cc \
-	../tests/test-utils.cc
+	$(top_srcdir)/extra/test-utils.cc
 benchmark_LDADD = ../db/libdballe-db.la -lpopt
 
-INCLUDES = -I..
+INCLUDES = -I$(top_srcdir)
 
 EXTRA_DIST = bench/Benchmark.h

@@ -29,7 +29,7 @@
 #include <dballe/msg/marshal.h>
 #include <dballe/db/db.h>
 
-#include <dballe/tests/tut.h>
+#include <extra/tut.h>
 
 #include <string>
 #include <vector>

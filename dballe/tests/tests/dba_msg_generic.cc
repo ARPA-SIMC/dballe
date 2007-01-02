@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <tests/test-utils.h>
+#include <extra/test-utils.h>
 #include <dballe/bufrex/bufrex_conv.h>
 #include <dballe/bufrex/crex_decoder.h>
 #include <dballe/bufrex/crex_encoder.h>

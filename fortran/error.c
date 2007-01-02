@@ -20,7 +20,7 @@
  */
 
 #include <dballe/core/error.h>
-#include <tools/cmdline.h>
+#include <extra/cmdline.h>
 
 #include <f77.h>
 

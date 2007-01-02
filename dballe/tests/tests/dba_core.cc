@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <tests/test-utils.h>
+#include <extra/test-utils.h>
 #include <dballe/core/fast.h>
 
 namespace tut {
