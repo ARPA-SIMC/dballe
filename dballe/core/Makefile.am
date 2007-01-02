@@ -3,28 +3,28 @@
 coreincludedir = $(includedir)/dballe/core
 
 coreinclude_HEADERS = \
-	dba_error.h \
+	error.h \
 	conv.h \
 	verbose.h \
 	fast.h \
 	csv.h \
 	aliases.h \
-	dba_record.h \
-	dba_vartable.h \
-	dba_var.h
+	record.h \
+	vartable.h \
+	var.h
 
 noinst_LTLIBRARIES = libcore.la
 libcore_la_SOURCES = \
-	dba_error.c \
+	error.c \
 	uniconv.c \
 	conv.c \
 	verbose.c \
 	csv.c \
 	aliases.c \
 	record_keyword.c \
-	dba_record.c \
-	dba_vartable.c \
-	dba_var.c
+	record.c \
+	vartable.c \
+	var.c
 
 INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
 
@@ -40,13 +40,13 @@ aliases.c: aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
 record_keyword.rst: record_keyword.gperf mkkeydoc
-	./mkkeydoc rst < $< > $@
+	cpp -P -C -I../.. $< | ./mkkeydoc rst > $@
 
 record_keyword.dox: record_keyword.gperf mkkeydoc
-	./mkkeydoc dox < $< > $@
+	cpp -P -C -I../.. $< | ./mkkeydoc dox > $@
 
 record_keyword.tex: record_keyword.gperf mkkeydoc
-	./mkkeydoc tex < $< > $@
+	cpp -P -C -I../.. $< | ./mkkeydoc tex > $@
 
 aliases.dox: aliases.gperf mkaliasdoc
 	./mkaliasdoc dox < $< > $@
@@ -55,6 +55,6 @@ aliases.tex: aliases.gperf mkaliasdoc
 	./mkaliasdoc tex < $< > $@
 
 distclean-local:
-	rm -f record_keyword.c record_keyword.dox record_keyword.tex dba_varconv.c aliases.c aliases.dox aliases.tex uniconv.c
+	rm -f record_keyword.c record_keyword.dox record_keyword.tex aliases.c aliases.dox aliases.tex uniconv.c
 
 EXTRA_DIST = core.dox record_keyword.gperf mkkeydoc aliases.gperf mkaliasdoc uniconv.gperf

@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "dba_record.h"
-#include "dba_var.h"
+#include "record.h"
+#include "var.h"
 #include "aliases.h"
 
 #include "config.h"

@@ -29,8 +29,8 @@
 %{
 #include <string.h>
 #include <limits.h>
-#include "dba_var.h"
-#include "dba_record.h"
+#include "var.h"
+#include "record.h"
 %}
 
 struct tagdef { const char* tag; dba_keyword index; };

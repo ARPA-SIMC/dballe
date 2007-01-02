@@ -22,7 +22,7 @@
 #include <dballe/msg/dba_msg.h>
 
 #include <dballe/aof/decoder.h>
-#include <dballe/core/dba_record.h>
+#include <dballe/core/record.h>
 #include <dballe/io/dba_rawfile.h>
 #include <dballe/io/writers.h>
 #include <dballe/cmdline.h>

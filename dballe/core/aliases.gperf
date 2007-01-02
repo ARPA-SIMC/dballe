@@ -28,7 +28,7 @@
 
 %{
 #include <string.h>
-#include "dba_var.h"
+#include "var.h"
 %}
 
 struct aliasdef { const char* alias; dba_varcode var; };

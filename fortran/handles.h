@@ -22,7 +22,7 @@
 #ifndef FDBA_HANDLES_H
 #define FDBA_HANDLES_H
 
-#include <dballe/core/dba_record.h>
+#include <dballe/core/record.h>
 #include <dballe/db/dba_db.h>
 #include <assert.h>
 

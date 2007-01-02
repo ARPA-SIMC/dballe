@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include <dballe/core/dba_var.h>
+#include <dballe/core/var.h>
 #include <dballe/msg/dba_msg.h>
 #include <dballe/bufrex/bufrex_msg.h>
 

@@ -32,7 +32,7 @@ extern "C" {
  * CREX message template.
  */
 
-#include <dballe/core/dba_var.h>
+#include <dballe/core/var.h>
 #include <dballe/msg/dba_msg.h>
 #include <dballe/msg/dba_msgs.h>
 #include <dballe/io/dba_rawmsg.h>

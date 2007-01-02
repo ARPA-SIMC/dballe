@@ -31,8 +31,7 @@ extern "C" {
  * Common functions for commandline tools
  */
 
-#include <dballe/core/dba_error.h>
-#include <dballe/core/dba_record.h>
+#include <dballe/core/error.h>
 
 /**
  * Describe a level layer.

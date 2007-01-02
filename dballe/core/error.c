@@ -20,7 +20,7 @@
  */
 
 #define _GNU_SOURCE
-#include "dba_error.h"
+#include "error.h"
 
 #include <config.h>
 

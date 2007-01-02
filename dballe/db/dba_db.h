@@ -26,8 +26,8 @@
 extern "C" {
 #endif
 
-#include <dballe/core/dba_record.h>
-#include <dballe/core/dba_var.h>
+#include <dballe/core/record.h>
+#include <dballe/core/var.h>
 #include <dballe/db/cursor.h>
 
 /** @file

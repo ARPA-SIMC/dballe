@@ -33,7 +33,7 @@ extern "C" {
 
 #include <dballe/db/dba_db.h>
 #include <dballe/msg/dba_msgs.h>
-#include <dballe/core/dba_record.h>
+#include <dballe/core/record.h>
 
 /**
  * Callback function used to collect the messages produced by export functions

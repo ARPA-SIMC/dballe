@@ -31,7 +31,7 @@ extern "C" {
  * In-memory storage of an encoded weather report.
  */
 
-#include <dballe/core/dba_error.h>
+#include <dballe/core/error.h>
 #include <dballe/io/encoding.h>
 
 /** @defgroup dbamessage Dballe message encoder and decoders 

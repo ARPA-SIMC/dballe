@@ -34,7 +34,7 @@ extern "C" {
  */
 
 #include <dballe/db/internals.h>
-#include <dballe/core/dba_var.h>
+#include <dballe/core/var.h>
 
 struct _dba_db;
 	

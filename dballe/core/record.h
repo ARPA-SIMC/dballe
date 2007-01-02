@@ -31,8 +31,8 @@ extern "C" {
  * Implement a storage object for a group of related observation data
  */
 
-#include <dballe/core/dba_error.h>
-#include <dballe/core/dba_var.h>
+#include <dballe/core/error.h>
+#include <dballe/core/var.h>
 
 typedef enum _dba_keyword {
 	DBA_KEY_ERROR		= -1,

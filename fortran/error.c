@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/dba_error.h>
+#include <dballe/core/error.h>
 #include <dballe/cmdline.h>
 
 #include <f77.h>

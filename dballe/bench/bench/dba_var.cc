@@ -21,7 +21,7 @@
 
 #include "Benchmark.h"
 
-#include <dballe/core/dba_var.h>
+#include <dballe/core/var.h>
 
 namespace bench_var {
 

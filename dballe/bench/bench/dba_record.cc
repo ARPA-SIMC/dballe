@@ -21,7 +21,7 @@
 
 #include "Benchmark.h"
 
-#include <dballe/core/dba_record.h>
+#include <dballe/core/record.h>
 
 #include <vector>
 

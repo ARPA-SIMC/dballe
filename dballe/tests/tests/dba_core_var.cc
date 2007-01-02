@@ -20,7 +20,7 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/core/dba_var.h>
+#include <dballe/core/var.h>
 
 namespace tut {
 using namespace tut_dballe;

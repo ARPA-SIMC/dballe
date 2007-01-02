@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#include <dballe/core/dba_record.h>
+#include <dballe/core/record.h>
 #include <dballe/db/querybuf.h>
 
 /**

@@ -31,7 +31,7 @@ extern "C" {
  * Resolve aliases to variable codes
  */
 
-#include <dballe/core/dba_var.h>
+#include <dballe/core/var.h>
 
 
 /**

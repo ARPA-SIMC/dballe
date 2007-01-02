@@ -32,7 +32,7 @@ extern "C" {
  * decoding process.
  */
 
-#include <dballe/core/dba_var.h>
+#include <dballe/core/vartable.h>
 
 struct _bufrex_opcode
 {

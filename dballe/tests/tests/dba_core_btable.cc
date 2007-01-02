@@ -20,7 +20,7 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/core/dba_vartable.h>
+#include <dballe/core/vartable.h>
 
 namespace tut {
 using namespace tut_dballe;

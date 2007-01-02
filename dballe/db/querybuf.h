@@ -31,7 +31,7 @@ extern "C" {
  * Implementation of an efficient string buffer for composing database queries
  */
 
-#include <dballe/core/dba_error.h>
+#include <dballe/core/error.h>
 
 struct _dba_querybuf;
 

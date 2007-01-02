@@ -31,7 +31,7 @@ extern "C" {
  * Implement fast access to information about WMO expansion tables D.
  */
 
-#include <dballe/core/dba_var.h>
+#include <dballe/core/vartable.h>
 #include <dballe/bufrex/bufrex_opcode.h>
 
 /**

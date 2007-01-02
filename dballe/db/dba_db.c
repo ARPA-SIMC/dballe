@@ -26,8 +26,6 @@
 #include <dballe/db/context.h>
 #include <dballe/db/data.h>
 #include <dballe/db/attr.h>
-#include <dballe/core/dba_record.h>
-#include <dballe/core/dba_var.h>
 #include <dballe/core/csv.h>
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>

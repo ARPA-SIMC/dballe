@@ -20,7 +20,7 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/core/dba_record.h>
+#include <dballe/core/record.h>
 
 /*
 extern "C" {

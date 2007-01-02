@@ -27,14 +27,8 @@
 #include <ctype.h>		/* isspace */
 #include <math.h>		/* rint */
 #include <assert.h>		/* assert */
-#if 0
-#include <stdarg.h>
-#include <strings.h>	/* bzero */
-#include <limits.h>		/* PATH_MAX */
-#include <fcntl.h>		/* O_RDONLY */
-#endif
 
-#include "dba_var.h"
+#include "var.h"
 #include "fast.h"
 #include "conv.h"
 

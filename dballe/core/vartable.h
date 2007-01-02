@@ -32,7 +32,7 @@ extern "C" {
  */
 
 
-#include <dballe/core/dba_error.h>
+#include <dballe/core/error.h>
 
 /**
  * Holds the WMO variable code of a variable

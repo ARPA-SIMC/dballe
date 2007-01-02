@@ -32,8 +32,8 @@ extern "C" {
  */
 
 
-#include <dballe/core/dba_error.h>
-#include <dballe/core/dba_vartable.h>
+#include <dballe/core/error.h>
+#include <dballe/core/vartable.h>
 #include <stdio.h>
 
 struct _dba_var;

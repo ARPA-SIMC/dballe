@@ -36,8 +36,8 @@
 #include <fcntl.h>		/* O_RDONLY */
 #endif
 
-#include <dballe/core/dba_var.h>
-#include <dballe/core/aliases.h>
+#include "var.h"
+#include "aliases.h"
 
 struct _dba_vartable
 {

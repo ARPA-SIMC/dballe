@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/dba_error.h>
-#include <dballe/core/dba_record.h>
+#include <dballe/core/error.h>
+#include <dballe/core/record.h>
 #include <dballe/bufrex/bufrex.h>
 #include <dballe/bufrex/bufrex_msg.h>
 #include <dballe/io/dba_rawmsg.h>

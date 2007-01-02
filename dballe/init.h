@@ -31,7 +31,7 @@ extern "C" {
  * Library initialisation and shutdown
  */
 
-#include <dballe/core/dba_error.h>
+#include <dballe/core/error.h>
 	
 /**
  * Initialize the library.

@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#include <dballe/core/dba_var.h>
+#include <dballe/core/var.h>
 
 struct _dba_msg_datum
 {

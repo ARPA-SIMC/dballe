@@ -32,7 +32,6 @@ print OUT q|#ifndef DBA_MSG_VARS_H
 extern "C" {
 #endif
 
-#include <dballe/core/dba_var.h>
 #include <dballe/msg/dba_msg.h>
 
 struct _dba_msg_var {
@@ -77,7 +76,6 @@ close OUT;
 
 open OUT, ">vars.c" or die "Cannot write to vars.c: $!";
 print OUT q|#include <dballe/msg/vars.h>
-#include <dballe/core/dba_var.h>
 
 struct _dba_msg_var dba_msg_vartable[] = {
 |;

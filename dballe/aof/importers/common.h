@@ -27,7 +27,6 @@
  */
 
 #include <dballe/core/conv.h>
-#include <dballe/core/dba_var.h>
 #include <dballe/msg/dba_msg.h>
 
 #include <stdio.h>

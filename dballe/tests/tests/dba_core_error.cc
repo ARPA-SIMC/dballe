@@ -20,7 +20,7 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/core/dba_error.h>
+#include <dballe/core/error.h>
 #include <string.h> /* strdup */
 
 namespace tut {
