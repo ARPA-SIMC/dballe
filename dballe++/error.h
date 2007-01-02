@@ -54,10 +54,16 @@ struct Regex : public Exception {};
 struct Unimplemented : public Exception {};
 /** @} */
 
+/**
+ * Throw an appropriate exception depending on the DB-All.e error status
+ */
 void throwAppropriateException();
 
 }
 
+/**
+ * Run a DB-All.e function, throwing an appropriate exception if it fails.
+ */
 static inline void checked(dba_err err)
 {
 	if (err != DBA_OK)

@@ -9,6 +9,7 @@
 
 namespace dballe {
 
+/** Iterate through the results of a database query */
 class Cursor
 {
 	dba_db_cursor m_cur;
@@ -46,7 +47,7 @@ public:
 };
 
 
-
+/** Wrap a dba_db */
 class DB
 {
 	dba_db m_db;
@@ -60,6 +61,7 @@ public:
 	/// Wraps an existing dba_db, taking charge of memory allocation
 	DB(dba_db db) : m_db(db) {}
 
+	/// Create a dba_db connecting to a database with the given parameters
 	DB(const std::string& dsn, const std::string& user, const std::string& password)
 	{
 		checked(dba_db_create(dsn.c_str(), user.c_str(), password.c_str(), &m_db));
@@ -69,6 +71,10 @@ public:
 		dba_db_delete(m_db);
 	}
 
+	/**
+	 * Wipe the database and reinitialize it, taking the initial repinfo
+	 * values from the given file, or from the default repinfo.csv
+	 */
 	void reset(const std::string& repinfo_file = std::string())
 	{
 		if (repinfo_file == std::string())
@@ -77,6 +83,10 @@ public:
 			checked(dba_db_reset(m_db, repinfo_file.c_str()));
 	}
 
+	/**
+	 * Query pseudoana information, retrieving the extra pseudoana info for
+	 * every station
+	 */
 	Cursor queryAna(Record& query)
 	{
 		int count;
@@ -85,6 +95,9 @@ public:
 		return Cursor(cur);
 	}
 
+	/**
+	 * Query data values
+	 */
 	Cursor query(Record& query)
 	{
 		int count;
@@ -93,15 +106,39 @@ public:
 		return Cursor(cur);
 	}
 
+	/**
+	 * Query pseudoana information, without retrieving the extra pseudoana
+	 * info.
+	 */
 	Cursor queryAnaSummary(Record& query);
+
+	/// Query the list of levels present in the database
 	Cursor queryLevels(Record& query);
+
+	/// Query the list of time ranges for which there is data in the
+	/// database
 	Cursor queryTimeRanges(Record& query);
+
+	/// Query the list of levels and time ranges for which there is data in
+	/// the database
 	Cursor queryLevelsAndTimeRanges(Record& query);
+
+	/// Query the list of variable types present in the database
 	Cursor queryVariableTypes(Record& query);
+
+	/// Query the list of movable station identifiers present in the
+	/// database
 	Cursor queryIdents(Record& query);
+
+	/// Query the report information for which there is data in the
+	/// database
 	Cursor queryReports(Record& query);
+
+	/// Query the list of date and times for which there is data in the
+	/// database
 	Cursor queryDateTimes(Record& query);
 
+	/// Query the attributes for the given variable in the given context
 	int attrQuery(int context, dba_varcode var, Record& res)
 	{
 		int count;
@@ -109,11 +146,27 @@ public:
 		return count;
 	}
 
+	/// Query the attributes for the variable currently referenced by the
+	/// given cursor
 	int attrQueryCurrent(const Cursor& cur, Record& res)
 	{
 		return attrQuery(cur.contextID(), cur.varcode(), res);
 	}
 
+	/**
+	 * Insert values from a record into the database
+	 *
+	 * @param rec
+	 *   The record with the values to insert.
+	 * @param canReplace
+	 *   True if existing values can be replaced.
+	 * @param addToPseudoana
+	 *   True if a nonexisting pseudoana entry can be created.
+	 * @retval anaid
+	 *   If a pseudoana entry has been created, this is its database ID.
+	 * @return
+	 *   The context id of the values that have been inserted.
+	 */
 	int insert(Record& rec, bool canReplace, bool addToPseudoana, int *anaid = NULL)
 	{
 		int context;
@@ -139,11 +192,13 @@ public:
 		attrInsertNew(cur.contextID(), cur.varcode(), data);
 	}
 
+	/// Remove from the database all the values that match the given query
 	void remove(Record& query)
 	{
 		checked(dba_db_remove(m_db, query.rec()));
 	}
 
+	/// Remove all the pseudoana and context entries which have no data
 	void removeOrphans()
 	{
 		checked(dba_db_remove_orphans(m_db));
@@ -172,14 +227,19 @@ public:
 	}
 	*/
 
+	/// Export the results of a query to a file, using the given encoding
 	void exportResults(Record& query, dba_encoding encoding, const std::string& file);
 
+	/// Export the results of a query to a file, using the given encoding
+	/// and a generic BUFR and CREX template
 	void exportResultsAsGeneric(Record& query, dba_encoding encoding, const std::string& file);
 
+	/// Access the underlying dba_db
 	const dba_db db() const
 	{
 		return m_db;
 	}
+	/// Access the underlying dba_db
 	dba_db db()
 	{
 		return m_db;
