@@ -206,6 +206,16 @@ Description: Database for punctual meteorological data (C++ shared library)
  .
  This is the shared library for C++ programs.
 
+Package: python-dballe
+Section: python
+Architecture: any
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
+Description: Database for punctual meteorological data (Python bindings)
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+ .
+ These are the python bindings.
+
 Package: dballe-common
 Section: misc
 Architecture: any

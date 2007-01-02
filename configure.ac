@@ -28,6 +28,15 @@ AC_ARG_ENABLE(docs,
 			*) AC_MSG_ERROR(bad value ${enableval} for --enable-docs) ;;
 		esac],[docs=true])
 
+AC_ARG_ENABLE(swig,
+		[  --enable-swig    Turn on generation of swig bindings using CNF],
+		[case "${enableval}" in
+			yes) swig=true ;;
+			no)  swig=false ;;
+			*) AC_MSG_ERROR(bad value ${enableval} for --enable-swig) ;;
+		esac],[swig=true])
+AM_CONDITIONAL(DO_SWIG, test x$swig = xtrue)
+
 AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
 
 dnl To use subdirs
@@ -49,6 +58,11 @@ dnl Use libtool
 dnl AM_ENABLE_STATIC
 dnl AM_DISABLE_SHARED
 AM_PROG_LIBTOOL
+
+if test x$swig = x"true"
+then
+	AM_PATH_PYTHON
+fi
 
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
        AC_MSG_ERROR([
@@ -91,6 +105,7 @@ fortran/Makefile
 tools/Makefile
 tables/Makefile
 extra/Makefile
+swig/Makefile
 doc/Makefile
 doc/libdballe-core.dox
 doc/libdballe-bufrex.dox
