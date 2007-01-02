@@ -354,6 +354,8 @@ dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype, int l1, int
  *
  * @param msg
  *   The message to query
+ * @param id
+ *   Shortcut ID of the value to set (see @ref vars.h)
  * @return
  *   The value found, or NULL if it was not found.
  */

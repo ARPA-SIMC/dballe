@@ -38,52 +38,86 @@ extern "C" {
 /**
  * Constants used to define what values we should retrieve from a query
  */
+/** Retrieve latitude and longitude */
 #define DBA_DB_WANT_COORDS		(1 << 0)
+/** Retrieve the mobile station identifier */
 #define DBA_DB_WANT_IDENT		(1 << 1)
+/** Retrieve the level information */
 #define DBA_DB_WANT_LEVEL		(1 << 2)
+/** Retrieve the time range information */
 #define DBA_DB_WANT_TIMERANGE	(1 << 3)
+/** Retrieve the date and time information */
 #define DBA_DB_WANT_DATETIME	(1 << 4)
+/** Retrieve the variable name */
 #define DBA_DB_WANT_VAR_NAME	(1 << 5)
+/** Retrieve the variable value */
 #define DBA_DB_WANT_VAR_VALUE	(1 << 6)
+/** Retrieve the report code */
 #define DBA_DB_WANT_REPCOD		(1 << 7)
+/** Retrieve the station ID */
 #define DBA_DB_WANT_ANA_ID		(1 << 8)
+/** Retrieve the context ID */
 #define DBA_DB_WANT_CONTEXT_ID	(1 << 9)
 
 /**
  * Constants used to define what is needed from the FROM part of the query
  */
+/** Add pseudoana to the FROM part of the query */
 #define DBA_DB_FROM_PA			(1 << 0)
+/** Add context to the FROM part of the query */
 #define DBA_DB_FROM_C			(1 << 1)
+/** Add data to the FROM part of the query */
 #define DBA_DB_FROM_D			(1 << 2)
+/** Add repinfo to the FROM part of the query */
 #define DBA_DB_FROM_RI			(1 << 3)
+/** Add the pseudoana context as 'cbs' to the FROM part of the query */
 #define DBA_DB_FROM_CBS			(1 << 4)
+/** Add the the block variables as 'dblo' to the FROM part of the query */
 #define DBA_DB_FROM_DBLO		(1 << 5)
+/** Add the the station variables as 'dsta' to the FROM part of the query */
 #define DBA_DB_FROM_DSTA		(1 << 6)
+/** Add the the pseudoana variables as 'dana' to the FROM part of the query */
 #define DBA_DB_FROM_DANA		(1 << 7)
+/** Add an extra data table as 'ddf' to the FROM part of the query, to restrict
+ * the query on variable values */
 #define DBA_DB_FROM_DDF			(1 << 8)
+/** Add an extra attr table as 'adf' to the FROM part of the query, to restrict
+ * the query on variable attributes */
 #define DBA_DB_FROM_ADF			(1 << 9)
 
 /**
  * Values for query modifier flags
  */
+/** When values from different reports exist on the same point, only report the
+ * one from the report with the highest priority */
 #define DBA_DB_MODIFIER_BEST		(1 << 0)
+/** Tell the database optimizer that this is a query on a database with a big
+ * pseudoana table (this serves to hint the MySQL optimizer, which would not
+ * otherwise apply the correct strategy */
 #define DBA_DB_MODIFIER_BIGANA		(1 << 1)
+/** Remove duplicates in the results */
 #define DBA_DB_MODIFIER_DISTINCT	(1 << 2)
+/** Include the extra anagraphical data in the results */
 #define DBA_DB_MODIFIER_ANAEXTRA	(1 << 3)
+/** Do not include the extra anagraphical data in the results */
 #define DBA_DB_MODIFIER_NOANAEXTRA	(1 << 4)
+/** Do not bother sorting the results */
 #define DBA_DB_MODIFIER_UNSORTED	(1 << 5)
+/** Start geting the results as soon as they are available, without waiting for
+ * the database to finish building the result set.  As a side effect, it is
+ * impossible to know in advance the number of results.  Currently, it does not
+ * work with the MySQL ODBC driver */
 #define DBA_DB_MODIFIER_STREAM		(1 << 6)
 
 #ifndef DBA_DB_DEFINED
 #define DBA_DB_DEFINED
 struct _dba_db;
+/** @copydoc _dba_db */
 typedef struct _dba_db* dba_db;
 #endif
 
-/**
- * Support structure for a full DB-ALLe query
- */
 struct _dba_db_cursor;
+/** @copydoc _dba_db_cursor */
 typedef struct _dba_db_cursor* dba_db_cursor;
 
 /**

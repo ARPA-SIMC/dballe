@@ -314,14 +314,6 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 	if ((*db = (dba_db)calloc(1, sizeof(struct _dba_db))) == NULL)
 		return dba_error_alloc("trying to allocate a new dba_db object");
 
-	/*
-	 * This is very conservative:
-	 * The query size plus 30 possible select values, maximum of 30 characters each
-	 * plus 400 characters for the various combinations of the two min and max datetimes,
-	 * plus 255 for the blist
-	 */
-	DBA_RUN_OR_GOTO(fail, dba_querybuf_create(170 + 30*30 + 400 + 255, &((*db)->querybuf)));
-
 	/* Allocate the ODBC connection handle */
 	sqlres = SQLAllocHandle(SQL_HANDLE_DBC, dba_od_env, &((*db)->od_conn));
 	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
@@ -429,8 +421,6 @@ void dba_db_delete(dba_db db)
 		dba_db_pseudoana_delete(db->pseudoana);
 	if (db->repinfo != NULL)
 		dba_db_repinfo_delete(db->repinfo);
-	if (db->querybuf != NULL)
-		dba_querybuf_delete(db->querybuf);
 	if (db->od_conn != NULL)
 	{
 		if (db->connected)
