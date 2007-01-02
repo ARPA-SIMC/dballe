@@ -29,8 +29,6 @@ extern "C" {
 /** @file
  * @ingroup msg
  * Dynamic array of dba_msg
- *
- * 
  */
 
 #include <dballe/msg/msg.h>
@@ -82,12 +80,27 @@ void dba_msgs_delete(dba_msgs msgs);
 dba_err dba_msgs_append_acquire(dba_msgs msgs, dba_msg msg);
 
 /**
- * Dump a dba_msgs to the given FILE*
+ * Dump all the contents of the message to the given stream
+ *
+ * @param msgs
+ *   The dba_msgs to dump
+ * @param out
+ *   The stream to dump the contents of the dba_msg to.
  */
 void dba_msgs_print(dba_msgs msgs, FILE* out);
 
 /**
- * Compute and show the differences between two dba_msgs
+ * Print the differences between two dba_msgs to a stream
+ *
+ * @param msgs1
+ *   First dba_msgs to compare
+ * @param msgs2
+ *   Second dba_msgs to compare
+ * @retval diffs
+ *   Integer variable that will be incremented by the number of differences
+ *   found.
+ * @param out
+ *   The stream to dump a description of the differences to.
  */
 void dba_msgs_diff(dba_msgs msgs1, dba_msgs msgs2, int* diffs, FILE* out);
 

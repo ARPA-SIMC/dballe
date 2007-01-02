@@ -113,7 +113,7 @@ dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype, int l1, int l2, 
 	{
 		/* Create the level if missing */
 
-		DBA_RUN_OR_RETURN(dba_msg_level_create(&lev, ltype, l1, l2));
+		DBA_RUN_OR_RETURN(dba_msg_level_create(ltype, l1, l2, &lev));
 		DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(msg, lev));
 	}
 

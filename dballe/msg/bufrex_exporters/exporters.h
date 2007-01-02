@@ -32,33 +32,46 @@ extern "C" {
 
 struct _bufrex_exporter;
 	
-/**
+/*
  * Type can be:
  *  0: encode a BUFR
  *  1: encode a CREX
+ * TODO: replace with the enum from bufrex_msg
+ */
+
+/**
+ * Type of function used by the exporters
  */
 typedef dba_err (*bufrex_exporter_func)(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
+/**
+ * Type of function used by the data description section generators
+ */
 typedef dba_err (*bufrex_datadesc_func)(struct _bufrex_exporter* exp, dba_msg src, bufrex_msg dst);
 
+/**
+ * Description of a BUFR/CREX exporter
+ */
 struct _bufrex_exporter
 {
+	/** Template type */
 	int type;
+	/** Template subtype */
 	int subtype;
 
-	/* dba_msg type it can convert from */
+	/** dba_msg type it can convert from */
 	dba_msg_type accept_type;
 
-	/* Data descriptor section */
+	/** Data descriptor section */
 	dba_varcode* ddesc;
 
-	/* Function to create the data description section */
+	/** Function to create the data description section */
 	bufrex_datadesc_func datadesc;
 
-	/* Exporter function */
+	/** Exporter function */
 	bufrex_exporter_func exporter;
 };
-
+/** @copydoc _bufrex_exporter */
 typedef struct _bufrex_exporter* bufrex_exporter;
 
 /**
@@ -77,9 +90,9 @@ dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype);
  */
 dba_err bufrex_get_exporter(dba_msg src, int type, int subtype, bufrex_exporter* exp);
 
-/* ID of originating center to put in encoded messages */
+/** ID of originating center to put in encoded messages */
 #define ORIG_CENTRE_ID 255
-/* ID of originating application to put in encoded messages */
+/** ID of originating application to put in encoded messages */
 #define ORIG_APP_ID 0
 
 #ifdef  __cplusplus

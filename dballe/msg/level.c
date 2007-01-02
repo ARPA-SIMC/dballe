@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-dba_err dba_msg_level_create(dba_msg_level* l, int ltype, int l1, int l2)
+dba_err dba_msg_level_create(int ltype, int l1, int l2, dba_msg_level* l)
 {
 	dba_msg_level res = (dba_msg_level)calloc(1, sizeof(struct _dba_msg_level));
 	if (res == NULL)
@@ -75,7 +75,7 @@ dba_err dba_msg_level_copy(dba_msg_level src, dba_msg_level* dst)
 	dba_err err = DBA_OK;
 	int i;
 
-	DBA_RUN_OR_RETURN(dba_msg_level_create(dst, src->ltype, src->l1, src->l2));
+	DBA_RUN_OR_RETURN(dba_msg_level_create(src->ltype, src->l1, src->l2, dst));
 	
 	/* Allocate enough space to copy the items */
 	while ((*dst)->data_alloc < src->data_count)
@@ -142,7 +142,7 @@ dba_err dba_msg_level_set_nocopy(dba_msg_level l, dba_var var, int pind, int p1,
 		if (l->data_count == l->data_alloc)
 			DBA_RUN_OR_RETURN(dba_msg_level_enlarge(l));
 
-		DBA_RUN_OR_RETURN(dba_msg_datum_create(&datum, pind, p1, p2));
+		DBA_RUN_OR_RETURN(dba_msg_datum_create(pind, p1, p2, &datum));
 		datum->var = var;
 
 		/* Insertionsort.  Crude, but our datasets should be too small for an

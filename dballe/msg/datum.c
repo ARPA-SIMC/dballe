@@ -23,7 +23,7 @@
 
 #include <stdlib.h>
 
-dba_err dba_msg_datum_create(dba_msg_datum* d, int pind, int p1, int p2)
+dba_err dba_msg_datum_create(int pind, int p1, int p2, dba_msg_datum* d)
 {
 	dba_msg_datum res = (dba_msg_datum)calloc(1, sizeof(struct _dba_msg_datum));
 	*d = res;
@@ -41,7 +41,7 @@ dba_err dba_msg_datum_copy(dba_msg_datum src, dba_msg_datum* dst)
 {
 	dba_err err;
 
-	DBA_RUN_OR_RETURN(dba_msg_datum_create(dst, src->pind, src->p1, src->p2));
+	DBA_RUN_OR_RETURN(dba_msg_datum_create(src->pind, src->p1, src->p2, dst));
 	DBA_RUN_OR_GOTO(fail, dba_var_copy(src->var, &((*dst)->var)));
 
 	return dba_error_ok();

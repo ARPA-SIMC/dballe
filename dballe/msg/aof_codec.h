@@ -119,7 +119,8 @@ void aof_codec_dump(dba_rawmsg msg, FILE* out);
  */
 dba_err aof_codec_read_record(dba_file file, uint32_t** rec, int* len);
 
-/* Write a fortran "unformatted sequential" record contained in an array of
+/**
+ * Write a fortran "unformatted sequential" record contained in an array of
  * 32-bit words.
  *
  * @param file
