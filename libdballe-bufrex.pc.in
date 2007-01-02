@@ -8,4 +8,4 @@ Description: Encoding and decoding functions for BUFR and CREX weather message f
 Version: @VERSION@
 Requires: libdballe-core
 Cflags: -I${includedir}
-Libs: -L${libdir} -ldballe-bufrex -lpopt
+Libs: -L${libdir} -ldballe-bufrex

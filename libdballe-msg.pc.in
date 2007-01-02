@@ -8,4 +8,4 @@ Description: Interpret weather reports into physical data, and organise physical
 Version: @VERSION@
 Requires: libdballe-core libdballe-bufrex
 Cflags: -I${includedir}
-Libs: -L${libdir} -ldballe-msg -lpopt
+Libs: -L${libdir} -ldballe-msg

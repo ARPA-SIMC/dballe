@@ -8,4 +8,4 @@ Description: DB-All.e ODBC database I/O
 Version: @VERSION@
 Requires: libdballe-core libdballe-bufrex libdballe-msg
 Cflags: -I${includedir}
-Libs: -L${libdir} -ldballe-db -lpopt
+Libs: -L${libdir} -ldballe-db

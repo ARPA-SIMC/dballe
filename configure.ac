@@ -99,6 +99,7 @@ libdballe-core.pc
 libdballe-bufrex.pc
 libdballe-msg.pc
 libdballe-db.pc
+libdballef.pc
 ])
 AC_OUTPUT
 #examples/Makefile

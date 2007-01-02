@@ -4,10 +4,10 @@ SUBDIRS = dballe fortran extra tools tables doc .
 #examples 
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA=libdballe-core.pc libdballe-bufrex.pc libdballe-msg.pc libdballe-db.pc
+pkgconfig_DATA=libdballe-core.pc libdballe-bufrex.pc libdballe-msg.pc libdballe-db.pc libdballef.pc
 
 m4dir = $(datadir)/aclocal
-m4_DATA = libdballe-core.m4 libdballe-bufrex.m4 libdballe-msg.m4 libdballe-db.m4
+m4_DATA = libdballe-core.m4 libdballe-bufrex.m4 libdballe-msg.m4 libdballe-db.m4 libdballef.m4
 
 man_MANS = dbatbl.1 dbamsg.1 dbadb.1
 
@@ -17,6 +17,7 @@ man_MANS = dbatbl.1 dbamsg.1 dbadb.1
 EXTRA_DIST = autogen.sh \
 	     libdballe-core.m4 libdballe-bufrex.m4 libdballe-msg.m4 libdballe-db.m4 \
 	     libdballe-core.pc.in libdballe-bufrex.pc.in libdballe-msg.pc.in libdballe-db.pc.in \
+	     libdballef.m4 libdballef.pc.in \
 	     $(conf_DATA) dballe.spec
 
 CLEANFILES = $(man_MANS)
