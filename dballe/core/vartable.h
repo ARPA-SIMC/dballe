@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBA_BTABLE_H
-#define DBA_BTABLE_H
+#ifndef DBA_VARTABLE_H
+#define DBA_VARTABLE_H
 
 #ifdef  __cplusplus
 extern "C" {

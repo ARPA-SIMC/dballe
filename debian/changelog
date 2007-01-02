@@ -1,3 +1,13 @@
+dballe (3.0-1) unstable; urgency=low
+
+  * New upstream version
+     + Split the package in various libraries to allow use of just a part (for
+       example, the BUFR or CREX encoder and decoder)
+     + Much improved C API documentation
+     + C++ interface
+
+ -- Enrico Zini <enrico@debian.org>  Thu, 21 Dec 2006 15:17:14 +0800
+
 dballe (2.6-1) unstable; urgency=low
 
   * New upstream release
