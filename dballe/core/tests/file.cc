@@ -20,33 +20,35 @@
  */
 
 #include <extra/test-utils-core.h>
-#include <dballe/core/rawfile.h>
+#include <dballe/core/file.h>
+#include <dballe/core/file_internals.h>
 
 namespace tut {
 using namespace tut_dballe;
 
-struct rawfile_shar
+struct file_shar
 {
-	rawfile_shar()
+	file_shar()
 	{
 	}
 
-	~rawfile_shar()
+	~file_shar()
 	{
 	}
 };
-TESTGRP(rawfile);
+TESTGRP(file);
 
 // Trivial create test
 template<> template<>
 void to::test<1>()
 {
-	dba_rawfile file;
+	DbaFileSlurpOnly slurp;
+	dba_file file;
 
 	/* Create the file reader */
-	CHECKED(dba_rawfile_create(&file, "(stdin)", "r"));
+	CHECKED(dba_file_create(BUFR, "(stdin)", "r", &file));
 
-	dba_rawfile_delete(file);
+	dba_file_delete(file);
 }
 
 #if 0

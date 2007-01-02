@@ -48,8 +48,18 @@ typedef enum {
 	AOF = 2
 } dba_encoding;
 
+/**
+ * Return a string with the name of the given encoding
+ *
+ * @param enc
+ *   The encoding to name.
+ * @return
+ *   A short name for the encoding, such as "BUFR", "CREX", "AOF" or
+ *   "(unknown)".  
+ */
+const char* dba_encoding_name(dba_encoding enc);
 
-struct _dba_rawfile;
+struct _dba_file;
 
 struct _dba_rawmsg {
 	/*
@@ -57,7 +67,7 @@ struct _dba_rawmsg {
 	 * applicable, such as when the message is created from scratch and not yet
 	 * written
 	 */
-	struct _dba_rawfile* file;
+	struct _dba_file* file;
 	/* Start offset of this message inside the file where it is found */
 	int offset;
 	/* Index of the message within the source */

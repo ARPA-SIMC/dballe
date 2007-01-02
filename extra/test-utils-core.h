@@ -323,6 +323,24 @@ public:
 	}
 };
 
+/**
+ * Setup the dba_file system so that reading from any file type results in a
+ * dba_rawmsg containing the whole file, and writing writes with the default
+ * write implementation.
+ *
+ * The class is a RAII-style class, so it restores everything to its previous
+ * state when it goes out of scope.
+ */
+class DbaFileSlurpOnly
+{
+	void* oldBufr;
+	void* oldCrex;
+	void* oldAof;
+public:
+	DbaFileSlurpOnly();
+	~DbaFileSlurpOnly();
+};
+
 }
 
 // vim:set ts=4 sw=4:

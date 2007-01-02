@@ -23,6 +23,17 @@
 
 #include <stdlib.h> /* malloc */
 
+const char* dba_encoding_name(dba_encoding enc)
+{
+	switch (enc)
+	{
+		case BUFR: return "BUFR";
+		case CREX: return "CREX";
+		case AOF: return "AOF";
+		default: return "(unknown)";
+	}
+}
+
 dba_err dba_rawmsg_create(dba_rawmsg* msg)
 {
 	if ((*msg = (dba_rawmsg)calloc(1, sizeof(struct _dba_rawmsg))) == NULL)

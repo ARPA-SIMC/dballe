@@ -34,26 +34,7 @@ extern "C" {
 
 #include <dballe/core/rawfile.h>
 
-struct _dba_file_reader;
-typedef struct _dba_file_reader* dba_file_reader;
 
-typedef void (*dba_file_reader_delete_fun)(dba_file_reader);
-typedef dba_err (*dba_file_reader_read_fun)(dba_file_reader reader, dba_rawmsg msg, int* found);
-
-/**
- * Encapsulates decoder logic for specific message types
- */
-struct _dba_file_reader
-{
-	/** Function to use to delete this decoder */
-	dba_file_reader_delete_fun delete_fun;
-
-	/** Function to use to read a message */
-	dba_file_reader_read_fun read_fun;
-
-	/** ::dba_rawfile object to use for reading */
-	dba_rawfile file;
-};
 
 
 /**

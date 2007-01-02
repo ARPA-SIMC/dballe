@@ -20,6 +20,7 @@
  */
 
 #include "test-utils.h"
+#include "dballe/core/file_internals.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -236,4 +237,61 @@ dba_err generator::fill_record(dba_record rec)
 	return dba_error_ok();
 }
 
+static dba_err slurp_file_read(dba_file file, dba_rawmsg msg, int* found)
+{
+	FILE* in = file->fd;
+
+	/* Reset bufr_message data in case this message has been used before */
+	dba_rawmsg_reset(msg);
+
+	/* Read the entire file contents */
+	while (!feof(in))
+	{
+		unsigned char c;
+		if (fread(&c, 1, 1, in) == 1)
+		{
+			if (msg->len >= msg->alloclen)
+				DBA_RUN_OR_RETURN(dba_rawmsg_expand_buffer(msg));
+			msg->buf[msg->len++] = c;
+		}
+	}
+	
+	msg->encoding = BUFR;
+	msg->file = file;
+	*found = msg->len != 0;
+	return dba_error_ok();
 }
+static void slurp_file_delete(dba_file file)
+{
+	free(file);
+}
+static dba_err slurp_file_create(dba_encoding type, FILE* fd, const char* mode, dba_file* file)
+{
+	*file = (dba_file)calloc(1, sizeof(struct _dba_file));
+	if (*file == NULL)
+		return dba_error_alloc("allocating new _dba_rawfile");
+	(*file)->fun_delete = slurp_file_delete;
+	(*file)->fun_read = slurp_file_read;
+	(*file)->fun_write = dba_file_default_write_impl;
+	return dba_error_ok();
+}
+
+DbaFileSlurpOnly::DbaFileSlurpOnly()
+{
+	oldBufr = (void*)dba_file_aof_create;
+	oldCrex = (void*)dba_file_bufr_create;
+	oldAof = (void*)dba_file_crex_create;
+	dba_file_aof_create = slurp_file_create;
+	dba_file_bufr_create = slurp_file_create;
+	dba_file_crex_create = slurp_file_create;
+}
+DbaFileSlurpOnly::~DbaFileSlurpOnly()
+{
+	dba_file_aof_create = (dba_file_create_fun)oldBufr;
+	dba_file_bufr_create = (dba_file_create_fun)oldCrex;
+	dba_file_crex_create = (dba_file_create_fun)oldAof;
+}
+
+}
+
+// vim:set ts=4 sw=4:

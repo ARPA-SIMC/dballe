@@ -35,31 +35,6 @@ extern "C" {
 #include <dballe/core/rawfile.h>
 #include <dballe/msg/msg.h>
 
-struct _dba_file_writer;
-typedef struct _dba_file_writer* dba_file_writer;
-
-typedef void (*dba_file_writer_delete_fun)(dba_file_writer);
-typedef dba_err (*dba_file_writer_write_fun)(dba_file_writer writer, dba_msg msg);
-typedef dba_err (*dba_file_writer_write_raw_fun)(dba_file_writer writer, dba_rawmsg msg);
-
-/**
- * Encapsulates writer logic for specific message types
- */
-struct _dba_file_writer
-{
-	/** Function to use to delete this decoder */
-	dba_file_writer_delete_fun delete_fun;
-
-	/** Function to use to encode and write a message */
-	dba_file_writer_write_fun write_fun;
-
-	/** Function to use to write an encoded message */
-	dba_file_writer_write_raw_fun write_raw_fun;
-
-	/** ::dba_rawfile object to use for writing */
-	dba_rawfile file;
-};
-
 
 /**
  * Create a writer for data in BUFR format

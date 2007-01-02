@@ -19,15 +19,15 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBA_RAWFILE_H
-#define DBA_RAWFILE_H
+#ifndef DBA_CORE_FILE_H
+#define DBA_CORE_FILE_H
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
 
 /** @file
- * @ingroup io
+ * @ingroup core
  * Encapsulates low-level file access.
  *
  * File access is still mainly performed using normal stdio functions, however
@@ -37,45 +37,71 @@ extern "C" {
  */
 
 #include <dballe/core/rawmsg.h>
-#include <stdio.h>
 
-struct _dba_rawfile
-{
-	char* name;
-	FILE* fd;
-	int close_on_exit;
-	int idx;
-};
-typedef struct _dba_rawfile* dba_rawfile;
-
-dba_err dba_rawfile_create(dba_rawfile* file, const char* name, const char* mode);
-void dba_rawfile_delete(dba_rawfile file);
+struct _dba_file;
+typedef struct _dba_file* dba_file;
 
 /**
- * Try to guess the file encoding by peeking at the first byte of the file.
+ * Create a dba_file structure.
  *
- * The byte read will be put back in the file stream using ungetc.
- * 
+ * @param type
+ *   The type of data contained in the file.  If -1 is passed, then
+ *   dba_file_create will attempt to autodetect the file type from its first
+ *   byte.
+ * @param name
+ *   The name of the file to access
+ * @param mode
+ *   The opening mode of the file (@see fopen)
+ * @retval file
+ *   The new file, to be deallocated with dba_file_delete()
+ * @returns
+ *   The error indicator for the function.  @see ::dba_err
+ */
+dba_err dba_file_create(dba_encoding type, const char* name, const char* mode, dba_file* file);
+
+/**
+ * Delete a dba_file.
+ *
  * @param file
- *   The file to scan
- * @retval enc
- *   The guessed encoding
+ *   The file to delete.
+ */
+void dba_file_delete(dba_file file);
+
+/**
+ * Get the type of the dba_file
+ *
+ * @param file
+ *   The dba_file to query.
+ * @return 
+ *   The file encoding.
+ */
+dba_encoding dba_file_get_type(dba_file file);
+
+/**
+ * Read a message from the file.
+ *
+ * @param file
+ *   ::dba_file to read from
+ * @param msg
+ *   The dba_rawmsg that will hold the data.
+ * @retval found
+ *   Will be set to true if a message has been found in the file, else to false.
  * @return
  *   The error indicator for the function. @see dba_err
  */
-dba_err dba_rawfile_guess_encoding(dba_rawfile file, dba_encoding* enc);
+dba_err dba_file_read(dba_file file, dba_rawmsg msg, int* found);
 
 /*
  * Write the encoded message data to the file
  *
  * @param file
- *   The file to write to
+ *   The ::dba_file to write to
  * @param msg
  *   The ::dba_rawmsg with the encoded data to write
  * @return
  *   The error indicator for the function. @see dba_err
  */
-dba_err dba_rawfile_write(dba_rawfile file, dba_rawmsg msg);
+dba_err dba_file_write(dba_file file, dba_rawmsg msg);
 
 #ifdef  __cplusplus
 }

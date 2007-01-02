@@ -14,7 +14,7 @@ coreinclude_HEADERS = \
 	verbose.h \
 	fast.h \
 	rawmsg.h \
-	rawfile.h \
+	file.h \
 	csv.h \
 	aliases.h \
 	record.h \
@@ -28,7 +28,7 @@ libdballe_core_la_SOURCES = \
 	conv.c \
 	verbose.c \
 	rawmsg.c \
-	rawfile.c \
+	file.c \
 	csv.c \
 	aliases.c \
 	record_keyword.c \
@@ -60,7 +60,7 @@ tut_test_SOURCES = \
 	tests/aliases.cc \
 	tests/error.cc \
 	tests/fast.cc \
-	tests/rawfile.cc \
+	tests/file.cc \
 	tests/rawmsg.cc \
 	tests/record.cc \
 	tests/var.cc \
