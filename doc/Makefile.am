@@ -63,6 +63,7 @@ EXTRA_DIST = libdballe-core.dox libdballe.dox $(guidesources) $(fapisources)
 CLEANFILES = libdballe-core.doxytags libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
 
 clean-local:
+	rm -rf coredox_html
 	rm -rf dox_html
 	rm -rf guide_html
 	rm -rf fapi_html
