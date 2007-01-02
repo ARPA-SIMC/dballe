@@ -58,12 +58,12 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 TESTS = $(check_PROGRAMS)
 
 tut_test_SOURCES = \
-	tests/dba_core_error.cc \
-	tests/dba_core.cc \
-	tests/dba_core_aliases.cc \
-	tests/dba_core_btable.cc \
-	tests/dba_core_var.cc \
-	tests/dba_core_record.cc \
+	tests/aliases.cc \
+	tests/error.cc \
+	tests/fast.cc \
+	tests/record.cc \
+	tests/var.cc \
+	tests/vartable.cc \
 	$(top_srcdir)/extra/test-utils-core.cc \
 	$(top_srcdir)/extra/tut-main.cc
 tut_test_LDADD = $(DBALLELIBS) libdballe-core.la

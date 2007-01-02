@@ -31,21 +31,21 @@ extern "C" {
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_core_record_shar
+struct record_shar
 {
 	dba_record rec;
 
-	dba_core_record_shar()
+	record_shar()
 	{
 		CHECKED(dba_record_create(&rec));
 	}
 
-	~dba_core_record_shar()
+	~record_shar()
 	{
 		dba_record_delete(rec);
 	}
 };
-TESTGRP(dba_core_record);
+TESTGRP(record);
 
 
 /*

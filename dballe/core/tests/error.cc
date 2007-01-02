@@ -26,17 +26,17 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_err_error_shar
+struct error_shar
 {
-	dba_err_error_shar()
+	error_shar()
 	{
 	}
 
-	~dba_err_error_shar()
+	~error_shar()
 	{
 	}
 };
-TESTGRP(dba_err_error);
+TESTGRP(error);
 
 static void cb_count(void* data)
 {

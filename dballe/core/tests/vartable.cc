@@ -25,17 +25,17 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_core_btable_shar
+struct vartable_shar
 {
-	dba_core_btable_shar()
+	vartable_shar()
 	{
 	}
 
-	~dba_core_btable_shar()
+	~vartable_shar()
 	{
 	}
 };
-TESTGRP(dba_core_btable);
+TESTGRP(vartable);
 
 /* Test varcode encoding functions */
 template<> template<>

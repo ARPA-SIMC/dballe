@@ -25,17 +25,17 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_core_var_shar
+struct var_shar
 {
-	dba_core_var_shar()
+	var_shar()
 	{
 	}
 
-	~dba_core_var_shar()
+	~var_shar()
 	{
 	}
 };
-TESTGRP(dba_core_var);
+TESTGRP(var);
 
 
 // Test variable creation
