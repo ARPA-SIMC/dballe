@@ -74,11 +74,11 @@ TESTS = $(check_PROGRAMS)
 CXXFLAGS += -O0
 
 tut_test_SOURCES = \
-	tests/dba_aof_decoder.cc \
-	tests/dba_bufrex_conv.cc \
-	tests/dba_bufrex_generic.cc \
-	tests/dba_formatter.cc \
-	tests/dba_msg.cc \
+	tests/aof_codec.cc \
+	tests/bufrex_codec.cc \
+	tests/bufrex_codec_generic.cc \
+	tests/formatter.cc \
+	tests/msg.cc \
 	$(top_srcdir)/extra/test-utils-core.cc \
 	$(top_srcdir)/extra/test-utils-bufrex.cc \
 	$(top_srcdir)/extra/tut-main.cc

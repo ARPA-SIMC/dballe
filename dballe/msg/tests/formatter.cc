@@ -25,10 +25,10 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_formatter_shar
+struct formatter_shar
 {
 };
-TESTGRP(dba_formatter);
+TESTGRP(formatter);
 
 // Try to get descriptions for all the layers
 template<> template<>

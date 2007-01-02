@@ -27,18 +27,18 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_bufrex_generic_shar
+struct bufrex_codec_generic_shar
 {
-	dba_bufrex_generic_shar()
+	bufrex_codec_generic_shar()
 	{
 	}
 
-	~dba_bufrex_generic_shar()
+	~bufrex_codec_generic_shar()
 	{
 		test_untag();
 	}
 };
-TESTGRP(dba_bufrex_generic);
+TESTGRP(bufrex_codec_generic);
 
 // Try encoding and decoding an empty generic message
 template<> template<>

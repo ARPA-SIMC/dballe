@@ -32,17 +32,17 @@ extern "C" {
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_msg_shar
+struct msg_shar
 {
-	dba_msg_shar()
+	msg_shar()
 	{
 	}
 
-	~dba_msg_shar()
+	~msg_shar()
 	{
 	}
 };
-TESTGRP(dba_msg);
+TESTGRP(msg);
 
 // Ensure that the datum vector inside the level is in strict ascending order
 void _ensure_level_is_sorted(const char* file, int line, dba_msg_level lev)

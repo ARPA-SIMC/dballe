@@ -26,17 +26,17 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_aof_decoder_shar
+struct aof_codec_shar
 {
-	dba_aof_decoder_shar()
+	aof_codec_shar()
 	{
 	}
 
-	~dba_aof_decoder_shar()
+	~aof_codec_shar()
 	{
 	}
 };
-TESTGRP(dba_aof_decoder);
+TESTGRP(aof_codec);
 
 // Test simple decoding
 template<> template<>

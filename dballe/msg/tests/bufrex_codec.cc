@@ -27,18 +27,18 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_bufrex_conv_shar
+struct bufrex_codec_shar
 {
-	dba_bufrex_conv_shar()
+	bufrex_codec_shar()
 	{
 	}
 
-	~dba_bufrex_conv_shar()
+	~bufrex_codec_shar()
 	{
 		test_untag();
 	}
 };
-TESTGRP(dba_bufrex_conv);
+TESTGRP(bufrex_codec);
 
 #define IS(field, val) do { \
 		dba_var var = dba_msg_get_##field##_var(msg); \
