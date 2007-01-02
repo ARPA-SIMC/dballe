@@ -58,39 +58,22 @@ void to::test<1>()
 		"aof/obs6-32.0.aof",
 		NULL,
 	};
-	dba_rawmsg raw;
-
-	/* Initialise decoding objects */
-	CHECKED(dba_rawmsg_create(&raw));
 
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
 		test_tag(files[i]);
 
-		dba_file file;
-		int found;
-
-		/* Create the file reader */
-		CHECKED(dba_file_create(AOF, files[i], "r", &file));
-
-		/* Read the file header */
-		/* CHECKED(aof_file_read_header(file, 0, 0)); */
-
-		/* Read the data from file */
-		CHECKED(dba_file_read(file, raw, &found));
-		gen_ensure_equals(found, 1);
+		dba_rawmsg raw = read_rawmsg(files[i], AOF);
 
 		/* Parse it */
 		dba_msgs msgs = NULL;
 		CHECKED(aof_codec_decode(raw, &msgs));
 		gen_ensure(msgs != NULL);
 
+		dba_rawmsg_delete(raw);
 		dba_msgs_delete(msgs);
-		dba_file_delete(file);
 	}
 	test_untag();
-
-	dba_rawmsg_delete(raw);
 }
 
 void strip_attributes(dba_msgs msgs)

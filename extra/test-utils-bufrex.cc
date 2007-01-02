@@ -31,21 +31,9 @@ namespace tut_dballe {
 
 bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type)
 {
-	const char* testdatadirenv = getenv("DBA_TESTDATA");
-	std::string testdatadir = testdatadirenv ? testdatadirenv : ".";
-	dba_file input;
-	dba_rawmsg rawmsg;
-	int found;
-
 	inner_ensure(type == BUFR || type == CREX);
 
-	// Read the sample message
-	INNER_CHECKED(dba_rawmsg_create(&rawmsg));
-	INNER_CHECKED(dba_file_create(type, (testdatadir + "/" + filename).c_str(), "r", &input));
-	INNER_CHECKED(dba_file_read(input, rawmsg, &found));
-	inner_ensure_equals(found, 1);
-
-	dba_file_delete(input);
+	dba_rawmsg rawmsg = _read_rawmsg(file, line, filename, type);
 
 	// Decode the sample message
 	bufrex_msg bufrex;
@@ -76,3 +64,5 @@ bufrex_msg _reencode_test(const char* file, int line, bufrex_msg msg)
 }
 
 }
+
+// vim:set ts=4 sw=4:

@@ -22,6 +22,7 @@
 #include <dballe/core/error.h>
 #include <dballe/core/record.h>
 #include <dballe/core/rawmsg.h>
+#include <dballe/core/file.h>
 
 #include <extra/tut.h>
 
@@ -315,6 +316,12 @@ public:
 };
 
 dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons);
+
+dba_file _open_test_data(const char* file, int line, const char* filename, dba_encoding type);
+#define open_test_data(filename, type) _open_test_data(__FILE__, __LINE__, filename, type)
+
+dba_rawmsg _read_rawmsg(const char* file, int line, const char* filename, dba_encoding type);
+#define read_rawmsg(filename, type) _read_rawmsg(__FILE__, __LINE__, filename, type)
 
 /* Test environment */
 

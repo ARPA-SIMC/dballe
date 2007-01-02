@@ -260,6 +260,33 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
+dba_file _open_test_data(const char* file, int line, const char* filename, dba_encoding type)
+{
+	const char* testdatadirenv = getenv("DBA_TESTDATA");
+	std::string testdatadir = testdatadirenv ? testdatadirenv : ".";
+	dba_file res;
+
+	INNER_CHECKED(dba_file_create(type, (testdatadir + "/" + filename).c_str(), "r", &res));
+
+	return res;
+}
+
+dba_rawmsg _read_rawmsg(const char* file, int line, const char* filename, dba_encoding type)
+{
+	dba_file input = _open_test_data(file, line, filename, type);
+	dba_rawmsg rawmsg;
+	int found;
+
+	// Read the sample message
+	INNER_CHECKED(dba_rawmsg_create(&rawmsg));
+	INNER_CHECKED(dba_file_read(input, rawmsg, &found));
+	inner_ensure_equals(found, 1);
+
+	dba_file_delete(input);
+
+	return rawmsg;
+}
+
 static dba_err slurp_file_read(dba_file file, dba_rawmsg msg, int* found)
 {
 	FILE* in = file->fd;

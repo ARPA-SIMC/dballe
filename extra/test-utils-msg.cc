@@ -33,21 +33,13 @@ dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_en
 {
 	if (type == AOF)
 	{
-		dba_file input;
-		dba_rawmsg rawmsg;
-		int found;
-
 		// Read the sample message
-		INNER_CHECKED(dba_rawmsg_create(&rawmsg));
-		INNER_CHECKED(dba_file_create(type, filename, "r", &input));
-		INNER_CHECKED(dba_file_read(input, rawmsg, &found));
-		inner_ensure_equals(found, 1);
-
-		dba_file_delete(input);
+		dba_rawmsg rawmsg = _read_rawmsg(file, line, filename, type);
 
 		// Decode the sample message
 		dba_msgs msgs;
 		INNER_CHECKED(aof_codec_decode(rawmsg, &msgs));
+
 		dba_rawmsg_delete(rawmsg);
 		return msgs;
 	} else {
@@ -175,3 +167,5 @@ void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& pre
 }
 
 }
+
+// vim:set ts=4 sw=4:
