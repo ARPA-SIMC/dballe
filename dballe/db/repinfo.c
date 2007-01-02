@@ -175,17 +175,17 @@ static dba_err dba_db_repinfo_read_cache(dba_db_repinfo ri)
 	dba_err err = DBA_OK;
 	SQLHSTMT stm;
 
-	int id;
+	unsigned long id;
 	char memo[30];
-	SQLINTEGER memo_ind;
+	SQLLEN memo_ind;
 	char description[255];
-	SQLINTEGER description_ind;
-	int prio;
-	SQLINTEGER prio_ind;
+	SQLLEN description_ind;
+	unsigned long prio;
+	SQLLEN prio_ind;
 	char descriptor[6];
-	SQLINTEGER descriptor_ind;
-	int tablea;
-	SQLINTEGER tablea_ind;
+	SQLLEN descriptor_ind;
+	unsigned long tablea;
+	SQLLEN tablea_ind;
 
 	int res;
 
@@ -372,7 +372,7 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 	newitem newitems = NULL;
 	SQLHSTMT stm = NULL;
 	int res;
-	int id;
+	unsigned long id;
 	int i;
 
 	*added = *deleted = *updated = 0;
@@ -425,9 +425,9 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 		newitem cur;
 		char memo[30];
 		char description[255];
-		int prio;
+		long prio;
 		char descriptor[6];
-		int tablea;
+		unsigned long tablea;
 
 		DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
 

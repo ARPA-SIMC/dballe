@@ -60,7 +60,7 @@ struct _dba_db_context
 	/** Date SQL parameter */
 	char date[25];
 	/** Date indicator */
-	SQLINTEGER date_ind;
+	SQLLEN date_ind;
 	/** Level type SQL parameter */
 	int ltype;
 	/** Level L1 SQL parameter */

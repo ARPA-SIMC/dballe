@@ -195,6 +195,8 @@ void to::test<2>()
 {
 	CHECKED(dba_db_delete_tables(db));
 	CHECKED(dba_db_reset(db, 0));
+	// Run twice to see if it is idempotent
+	CHECKED(dba_db_reset(db, 0));
 }
 
 template<> template<>

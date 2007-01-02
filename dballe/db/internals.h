@@ -186,7 +186,7 @@ struct _dba_db_cursor
 	 */
 	int		out_lat;
 	int		out_lon;
-	char	out_ident[64];		SQLINTEGER out_ident_ind;
+	char	out_ident[64];		SQLLEN out_ident_ind;
 	int		out_ltype;
 	int		out_l1;
 	int		out_l2;

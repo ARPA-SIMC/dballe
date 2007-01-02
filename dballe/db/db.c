@@ -545,12 +545,12 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 
 	/* Populate the tables with values */
 	{
-		int id;
+		unsigned long id;
 		char memo[30];
 		char description[255];
-		int prio;
+		long prio;
 		char descriptor[6];
-		int tablea;
+		unsigned long tablea;
 		int i;
 		char* columns[7];
 		int line;
@@ -589,7 +589,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 			res = SQLExecute(stm);
 			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'data'");
+				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'repinfo'");
 				goto fail1;
 			}
 

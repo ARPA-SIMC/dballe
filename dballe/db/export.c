@@ -50,8 +50,8 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 	/* Bound variables */
 	int out_varcode;
 	char out_value[255];
-	int out_attr_varcode;		SQLINTEGER out_attr_varcode_ind;
-	char out_attr_value[255];	SQLINTEGER out_attr_value_ind;
+	int out_attr_varcode;		SQLLEN out_attr_varcode_ind;
+	char out_attr_value[255];	SQLLEN out_attr_value_ind;
 	dba_varcode last_varcode = 0;
 	dba_var var = NULL;
 	dba_var attr = NULL;

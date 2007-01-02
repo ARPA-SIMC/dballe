@@ -56,7 +56,7 @@ struct _dba_db_data
 	/** Variable value SQL parameter */
 	char value[255];
 	/** Variable value indicator */
-	SQLINTEGER value_ind;
+	SQLLEN value_ind;
 };
 /** @copydoc _dba_db_data */
 typedef struct _dba_db_data* dba_db_data;

@@ -820,7 +820,7 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 
 	/* Get the number of affected rows */
 	{
-		SQLINTEGER rowcount;
+		SQLLEN rowcount;
 		int res = SQLRowCount(cur->stm, &rowcount);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 			return dba_db_error_odbc(SQL_HANDLE_STMT, cur->stm, "getting row count");
@@ -859,7 +859,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 	dba_db db = cur->db;
 	dba_varcode out_code;
 	char out_val[256];
-	SQLINTEGER out_val_ind;
+	SQLLEN out_val_ind;
 
 	/* Allocate statement handle */
 	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));

@@ -60,7 +60,7 @@ struct _dba_db_attr
 	/** attribute value SQL parameter */
 	char value[255];
 	/** attribute value indicator */
-	SQLINTEGER value_ind;
+	SQLLEN value_ind;
 };
 /** @copydoc _dba_db_attr */
 typedef struct _dba_db_attr* dba_db_attr;

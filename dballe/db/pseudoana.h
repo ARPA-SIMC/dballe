@@ -65,7 +65,7 @@ struct _dba_db_pseudoana
 	/** Mobile station identifier SQL parameter */
 	char ident[64];
 	/** Mobile station identifier indicator */
-	SQLINTEGER ident_ind;
+	SQLLEN ident_ind;
 };
 /** @copydoc _dba_db_pseudoana */
 typedef struct _dba_db_pseudoana* dba_db_pseudoana;
