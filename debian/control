@@ -29,6 +29,37 @@ Description: DB-ALL.e core shared library
  .
  This is the core shared library for C programs.
 
+Package: libdballe-bufrex-dev
+Section: libdevel
+Architecture: any
+Depends: libdballe-bufrex3 (= ${Source-Version})
+Recommends: pkg-config
+Description: Read and write functions for BUFR and CREX weather data
+ Functions to read and write weather data in WMO BUFR and CREX formats.
+ .
+ It is being used and tested with these kinds of BUFR and CREX messages:
+  * Fixed land and sea stations, like synops and buoys
+  * Mobile stations: ships, airplanes
+  * Soundings: temp, pilot
+  * METAR reports
+  * Satellite strides (decode only)
+
+Package: libdballe-bufrex3
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends} ${misc:Depends}
+Description: Read and write functions for BUFR and CREX weather data (shared library)
+ Functions to read and write weather data in WMO BUFR and CREX formats.
+ .
+ It is being used and tested with these kinds of BUFR and CREX messages:
+  * Fixed land and sea stations, like synops and buoys
+  * Mobile stations: ships, airplanes
+  * Soundings: temp, pilot
+  * METAR reports
+  * Satellite strides (decode only)
+ .
+ This is the shared library.
+
 Package: libdballe-dev
 Section: libdevel
 Architecture: any

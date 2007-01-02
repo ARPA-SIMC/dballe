@@ -4,17 +4,17 @@ bufrexincludedir = $(includedir)/dballe/bufrex
 
 # Include the .cc files that contain template definitions
 bufrexinclude_HEADERS = \
-		bufrex_dtable.h \
-		bufrex_opcode.h \
-		bufrex_subset.h \
-		bufrex_msg.h
+		dtable.h \
+		opcode.h \
+		subset.h \
+		msg.h
 
-noinst_LTLIBRARIES = libbufrex.la
-libbufrex_la_SOURCES = \
-		bufrex_dtable.c \
-		bufrex_opcode.c \
-		bufrex_subset.c \
-		bufrex_msg.c \
+lib_LTLIBRARIES = libdballe-bufrex.la
+libdballe_bufrex_la_SOURCES = \
+		dtable.c \
+		opcode.c \
+		subset.c \
+		msg.c \
 		bufr_decoder.c \
 		bufr_encoder.c \
 		crex_decoder.c \

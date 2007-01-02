@@ -21,7 +21,7 @@
 
 #include <config.h>
 
-#include "bufrex_subset.h"
+#include "subset.h"
 
 #include <stddef.h>
 #include <stdlib.h>

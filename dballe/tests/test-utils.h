@@ -22,7 +22,7 @@
 #include <dballe/core/error.h>
 #include <dballe/core/record.h>
 #include <dballe/core/rawmsg.h>
-#include <dballe/bufrex/bufrex_msg.h>
+#include <dballe/bufrex/msg.h>
 #include <dballe/msg/bufrex_codec.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/file.h>

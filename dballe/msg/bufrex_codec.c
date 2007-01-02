@@ -20,8 +20,8 @@
  */
 
 #include "bufrex_codec.h"
-#include <dballe/bufrex/bufrex_msg.h>
-#include <dballe/bufrex/bufrex_subset.h>
+#include <dballe/bufrex/msg.h>
+#include <dballe/bufrex/subset.h>
 #include "bufrex_exporters/exporters.h"
 #include <dballe/core/verbose.h>
 

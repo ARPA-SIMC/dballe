@@ -21,8 +21,8 @@
 
 #include "config.h"
 
-#include "bufrex_opcode.h"
-#include "bufrex_msg.h"
+#include "opcode.h"
+#include "msg.h"
 #include <dballe/core/rawfile.h>
 
 #include <stdio.h>

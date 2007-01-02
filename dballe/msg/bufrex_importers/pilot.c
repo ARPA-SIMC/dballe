@@ -20,7 +20,7 @@
  */
 
 #include "dballe/msg/msg.h"
-#include "dballe/bufrex/bufrex_msg.h"
+#include "dballe/bufrex/msg.h"
 #include <math.h>
 
 static inline dba_var get(bufrex_subset sset, int idx, dba_varcode code)

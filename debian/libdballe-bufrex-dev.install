@@ -1,0 +1,6 @@
+debian/tmp/usr/include/dballe/bufrex/*
+debian/tmp/usr/lib/libdballe-bufrex*.a
+debian/tmp/usr/lib/pkgconfig/libdballe-bufrex*
+debian/tmp/usr/lib/libdballe-bufrex*.la
+debian/tmp/usr/lib/libdballe-bufrex*.so
+debian/tmp/usr/share/aclocal/libdballe-bufrex*.m4

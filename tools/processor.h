@@ -23,7 +23,7 @@
 #define PROCESSOR_H
 
 #include <dballe/core/rawmsg.h>
-#include <dballe/bufrex/bufrex_msg.h>
+#include <dballe/bufrex/msg.h>
 #include <dballe/msg/file.h>
 #include <dballe/msg/msgs.h>
 #include <popt.h>

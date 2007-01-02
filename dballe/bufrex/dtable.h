@@ -32,7 +32,7 @@ extern "C" {
  */
 
 #include <dballe/core/vartable.h>
-#include <dballe/bufrex/bufrex_opcode.h>
+#include <dballe/bufrex/opcode.h>
 
 /**
  * Opaque structure representing a bufrex_dtable object

@@ -8,9 +8,14 @@ LATEX2HTML = latex2html -local_icons
 noinst_DATA =
 
 if DO_DOCS
-noinst_DATA += libdballe-core.doxytags libdballe.doxytags fapi.ps guide.ps
+noinst_DATA += libdballe-core.doxytags libdballe-bufrex.doxytags libdballe.doxytags fapi.ps guide.ps
 if DO_HTML
-noinst_DATA += coredox_html/index.html dox_html/index.html fapi_html/index.html guide_html/index.html
+noinst_DATA += \
+	coredox_html/index.html \
+	bufrexdox_html/index.html \
+	dox_html/index.html \
+	fapi_html/index.html \
+	guide_html/index.html
 endif
 endif
 
@@ -18,6 +23,12 @@ libdballe-core.doxytags: libdballe-core.dox ../dballe/core/libdballe-core.la
 	doxygen $<
 
 coredox_html/index.html: libdballe-core.dox ../dballe/core/libdballe-core.la
+	doxygen $<
+
+libdballe-bufrex.doxytags: libdballe-bufrex.dox ../dballe/bufrex/libdballe-bufrex.la
+	doxygen $<
+
+bufrexdox_html/index.html: libdballe-bufrex.dox ../dballe/core/libdballe-bufrex.la
 	doxygen $<
 
 libdballe.doxytags: libdballe.dox ../dballe/libdballe.la
@@ -58,12 +69,13 @@ guide.dvi: $(guidesources)
 
 fapi.dvi: $(fapisources)
 
-EXTRA_DIST = libdballe-core.dox libdballe.dox $(guidesources) $(fapisources)
+EXTRA_DIST = libdballe-core.dox libdballe-bufrex.dox libdballe.dox $(guidesources) $(fapisources)
 
-CLEANFILES = libdballe-core.doxytags libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
+CLEANFILES = libdballe-core.doxytags libdballe-bufrex.doxytags libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
 
 clean-local:
 	rm -rf coredox_html
+	rm -rf bufrexdox_html
 	rm -rf dox_html
 	rm -rf guide_html
 	rm -rf fapi_html

@@ -23,7 +23,7 @@
 #include <dballe/tests/test-utils.h>
 
 #include <dballe/msg/bufrex_codec.h>
-#include <dballe/bufrex/bufrex_msg.h>
+#include <dballe/bufrex/msg.h>
 
 #include <vector>
 

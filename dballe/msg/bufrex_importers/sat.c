@@ -20,7 +20,7 @@
  */
 
 #include "dballe/msg/msg.h"
-#include "dballe/bufrex/bufrex_msg.h"
+#include "dballe/bufrex/msg.h"
 #include <string.h>
 
 dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)

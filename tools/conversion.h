@@ -23,8 +23,8 @@
 #define CONVERSION_H
 
 #include <dballe/core/rawmsg.h>
-#include <dballe/msg/msg.h>
-#include <dballe/bufrex/bufrex_msg.h>
+#include <dballe/msg/msgs.h>
+#include <dballe/bufrex/msg.h>
 
 
 struct conversion_info

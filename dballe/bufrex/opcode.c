@@ -21,7 +21,7 @@
 
 #include "config.h"
 
-#include "bufrex_opcode.h"
+#include "opcode.h"
 
 #include <stdlib.h>	/* malloc */
 #include <string.h>	/* memcpy */

@@ -33,6 +33,7 @@ extern "C" {
 
 #include <dballe/core/rawmsg.h>
 #include <dballe/msg/msgs.h>
+#include <dballe/bufrex/msg.h>
 
 /**
  * Decode a BUFR message into a dba_msg
@@ -89,6 +90,29 @@ dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw
  *   The error status (@see dba_err)
  */
 dba_err bufrex_encode_crex(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw);
+
+
+/**
+ * Fill in the bufrex_msg with the contents of a dba_msg
+ */
+dba_err bufrex_msg_from_dba_msg(bufrex_msg raw, dba_msg msg);
+
+/**
+ * Fill in the bufrex_msg with the contents of a dba_msgs
+ */
+dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs);
+
+/**
+ * Fill in a dba_msgs with the contents of the bufrex_msg
+ */
+dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs);
+
+
+/**
+ * Infer good type and subtype from a dba_msg
+ */
+dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype);
+	
 
 #ifdef  __cplusplus
 }

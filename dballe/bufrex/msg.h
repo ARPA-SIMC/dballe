@@ -33,11 +33,9 @@ extern "C" {
  */
 
 #include <dballe/core/var.h>
-#include <dballe/msg/msg.h>
-#include <dballe/msg/msgs.h>
 #include <dballe/core/rawmsg.h>
-#include <dballe/bufrex/bufrex_dtable.h>
-#include <dballe/bufrex/bufrex_subset.h>
+#include <dballe/bufrex/dtable.h>
+#include <dballe/bufrex/subset.h>
 
 typedef enum { BUFREX_BUFR, BUFREX_CREX } bufrex_type;
 
@@ -208,21 +206,6 @@ dba_err bufrex_msg_decode(bufrex_msg msg, dba_rawmsg raw);
  */
 dba_err bufrex_msg_encode(bufrex_msg msg, dba_rawmsg* raw);
 
-/**
- * Fill in the bufrex_msg with the contents of a dba_msg
- */
-dba_err bufrex_msg_from_dba_msg(bufrex_msg raw, dba_msg msg);
-
-/**
- * Fill in the bufrex_msg with the contents of a dba_msgs
- */
-dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs);
-
-/**
- * Fill in a dba_msgs with the contents of the bufrex_msg
- */
-dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs);
-
 
 /**
  * Encode a BUFR message
@@ -280,11 +263,6 @@ dba_err crex_encoder_encode(bufrex_msg in, dba_rawmsg out);
  */
 dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out);
 
-/**
- * Infer good type and subtype from a dba_msg
- */
-dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype);
-	
 /**
  * Dump the contents of this bufrex_msg
  */

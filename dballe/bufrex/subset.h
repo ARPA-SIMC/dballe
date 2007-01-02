@@ -32,7 +32,7 @@ extern "C" {
  */
 
 #include <dballe/core/var.h>
-#include <dballe/bufrex/bufrex_dtable.h>
+#include <dballe/bufrex/dtable.h>
 
 /**
  * Represent a BUFR/CREX data subset as a list of decoded variables

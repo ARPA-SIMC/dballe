@@ -22,7 +22,7 @@
 #define _GNU_SOURCE
 #include "config.h"
 
-#include "bufrex_dtable.h"
+#include "dtable.h"
 
 #include <stdio.h>
 #include <stdarg.h>

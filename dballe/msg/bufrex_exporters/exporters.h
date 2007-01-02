@@ -28,7 +28,7 @@ extern "C" {
 
 #include <dballe/core/var.h>
 #include <dballe/msg/msg.h>
-#include <dballe/bufrex/bufrex_msg.h>
+#include <dballe/bufrex/msg.h>
 
 struct _bufrex_exporter;
 	
