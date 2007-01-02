@@ -20,6 +20,7 @@ check_dballe_tut_SOURCES = \
 	tests/dba_db_import.cc \
 	tests/dba_formatter.cc \
 	$(top_srcdir)/extra/test-utils-core.cc \
+	$(top_srcdir)/extra/test-utils-bufrex.cc \
 	$(top_srcdir)/extra/test-utils.cc \
 	$(top_srcdir)/extra/tut-main.cc
 check_dballe_tut_LDADD = $(DBALLELIBS) ../db/libdballe-db.la -lpopt

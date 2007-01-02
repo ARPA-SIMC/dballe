@@ -322,7 +322,7 @@ static dba_err msg_writer(dba_msgs msgs, void* data)
 		for (i = 0; i < msgs->len; ++i)
 			msgs->msgs[i]->type = dba_msg_type_from_repcod(d->forced_rep_cod);
 	}
-	DBA_RUN_OR_RETURN(dba_file_write(d->file, msgs, d->cat, d->subcat));
+	DBA_RUN_OR_RETURN(dba_file_write_msgs(d->file, msgs, d->cat, d->subcat));
 	dba_msgs_delete(msgs);
 	return dba_error_ok();
 }
@@ -353,7 +353,7 @@ dba_err do_export(poptContext optCon)
 	DBA_RUN_OR_RETURN(parse_op_report(db, &(d.forced_rep_cod)));
 
 	type = dba_cmdline_stringToMsgType(op_output_type, optCon);
-	DBA_RUN_OR_RETURN(dba_file_create(&d.file, type, "(stdout)", "w"));
+	DBA_RUN_OR_RETURN(dba_file_create(type, "(stdout)", "w", &d.file));
 
 	DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_writer, &d));
 

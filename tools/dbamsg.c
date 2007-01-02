@@ -22,8 +22,7 @@
 #include <dballe/msg/msg.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/core/record.h>
-#include <dballe/core/rawfile.h>
-#include <dballe/msg/writers.h>
+#include <dballe/core/file.h>
 #include <extra/cmdline.h>
 #include <extra/processor.h>
 #include <extra/conversion.h>
@@ -110,7 +109,7 @@ static dba_err print_aof_header(dba_rawmsg rmsg)
 	const unsigned char *buf;
 
 	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
-	DBA_RUN_OR_RETURN(aof_decoder_get_category(rmsg, &category, &subcategory));
+	DBA_RUN_OR_RETURN(aof_codec_get_category(rmsg, &category, &subcategory));
 	/* DBA_RUN_OR_RETURN(bufrex_message_get_vars(msg, &vars, &count)); */
 
 	printf("#%d AOF message: %d bytes, category %d, subcategory %d",
@@ -177,7 +176,7 @@ static dba_err dump_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, voi
 			break;
 		case AOF:
 			DBA_RUN_OR_RETURN(print_aof_header(rmsg)); puts(":");
-			aof_decoder_dump(rmsg, stdout);
+			aof_codec_dump(rmsg, stdout);
 			break;
 	}
 	return dba_error_ok();
@@ -199,8 +198,8 @@ dba_err write_raw_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void*
 {
 	dba_file* file = (dba_file*)data;
 	if (*file == NULL)
-		DBA_RUN_OR_RETURN(dba_file_create(file, rmsg->encoding, "(stdout)", "w"));
-	DBA_RUN_OR_RETURN(dba_file_write_raw(*file, rmsg));
+		DBA_RUN_OR_RETURN(dba_file_create(rmsg->encoding, "(stdout)", "w", file));
+	DBA_RUN_OR_RETURN(dba_file_write(*file, rmsg));
 	return dba_error_ok();
 }
 
@@ -258,7 +257,7 @@ dba_err do_convert(poptContext optCon)
 	intype = dba_cmdline_stringToMsgType(op_input_type, optCon);
 	outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
 
-	DBA_RUN_OR_RETURN(dba_file_create(&file, outtype, "(stdout)", "w"));
+	DBA_RUN_OR_RETURN(dba_file_create(outtype, "(stdout)", "w", &file));
 	/* DBA_RUN_OR_RETURN(dba_file_write_header(file, 0, 0)); */
 
 	DBA_RUN_OR_RETURN(process_all(optCon, intype, &grepdata, convert_message, (void*)file));
@@ -291,15 +290,15 @@ dba_err do_compare(poptContext optCon)
 	if (file2_name == NULL)
 		file2_name = "(stdin)";
 
-	DBA_RUN_OR_RETURN(dba_file_create(&file1, dba_cmdline_stringToMsgType(op_input_type, optCon), file1_name, "r"));
-	DBA_RUN_OR_RETURN(dba_file_create(&file2, dba_cmdline_stringToMsgType(op_output_type, optCon), file2_name, "r"));
+	DBA_RUN_OR_RETURN(dba_file_create(dba_cmdline_stringToMsgType(op_input_type, optCon), file1_name, "r", &file1));
+	DBA_RUN_OR_RETURN(dba_file_create(dba_cmdline_stringToMsgType(op_output_type, optCon), file2_name, "r", &file2));
 
 	while (found1 && found2)
 	{
 		int diffs = 0;
 		idx++;
-		DBA_RUN_OR_RETURN(dba_file_read(file1, &msg1, &found1));
-		DBA_RUN_OR_RETURN(dba_file_read(file2, &msg2, &found2));
+		DBA_RUN_OR_RETURN(dba_file_read_msgs(file1, &msg1, &found1));
+		DBA_RUN_OR_RETURN(dba_file_read_msgs(file2, &msg2, &found2));
 
 		if (found1 != found2)
 			return dba_error_consistency("The files contain a different number of messages");
@@ -416,7 +415,7 @@ dba_err filter_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* da
 	}
 
 	if (!msgs_reject)
-		DBA_RUN_OR_RETURN(dba_file_write_raw(fdata->output, rmsg));
+		DBA_RUN_OR_RETURN(dba_file_write(fdata->output, rmsg));
 
 	return dba_error_ok();
 }
@@ -457,7 +456,7 @@ dba_err do_filter(poptContext optCon)
 	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 	otype = dba_cmdline_stringToMsgType(op_output_type, optCon);
 
-	DBA_RUN_OR_RETURN(dba_file_create(&fdata.output, otype, "(stdout)", "w"));
+	DBA_RUN_OR_RETURN(dba_file_create(otype, "(stdout)", "w", &fdata.output));
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, filter_message, &fdata));
 	/*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
 	dba_file_delete(fdata.output);
@@ -469,7 +468,7 @@ dba_err do_fixaof(poptContext optCon)
 {
 	dba_err err = DBA_OK;
 	const char* filename;
-	dba_rawfile file = NULL;
+	dba_file file = NULL;
 	int count = 0;
 
 	/* Throw away the command name */
@@ -477,9 +476,9 @@ dba_err do_fixaof(poptContext optCon)
 
 	while ((filename = poptGetArg(optCon)) != NULL)
 	{
-		DBA_RUN_OR_GOTO(cleanup, dba_rawfile_create(&file, filename, "rb+"));
-		DBA_RUN_OR_GOTO(cleanup, aof_writer_fix_header(file));
-		dba_rawfile_delete(file);
+		DBA_RUN_OR_GOTO(cleanup, dba_file_create(AOF, filename, "rb+", &file));
+		DBA_RUN_OR_GOTO(cleanup, aof_codec_fix_header(file));
+		dba_file_delete(file);
 		file = NULL;
 		count++;
 	}
@@ -489,7 +488,7 @@ dba_err do_fixaof(poptContext optCon)
 
 cleanup:
 	if (file != NULL)
-		dba_rawfile_delete(file);
+		dba_file_delete(file);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 

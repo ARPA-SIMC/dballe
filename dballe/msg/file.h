@@ -28,7 +28,7 @@ extern "C" {
 
 /** @file
  * @ingroup dballe
- * High-level access to files with encoded weather data.
+ * I/O functions to dba_file using dba_msgs structures.
  */
 
 #include <dballe/core/file.h>

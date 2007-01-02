@@ -20,15 +20,13 @@
  */
 
 #include "file.h"
-#include "readers.h"
-#include "writers.h"
 #include "aof_codec.h"
 #include "bufrex_codec.h"
 #include "marshal.h"
 
 #include <stdlib.h>
 
-dba_err dba_file_read_msg(dba_file file, dba_msgs* msgs, int* found)
+dba_err dba_file_read_msgs(dba_file file, dba_msgs* msgs, int* found)
 {
 	dba_err err = DBA_OK;
 	dba_rawmsg rm = NULL;
@@ -47,12 +45,12 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err dba_file_write_msg(dba_file file, dba_msgs msgs, int cat, int subcat)
+dba_err dba_file_write_msgs(dba_file file, dba_msgs msgs, int cat, int subcat)
 {
 	dba_err err = DBA_OK;
 	dba_rawmsg raw = NULL;
 
-	switch (file->type)
+	switch (dba_file_type(file))
 	{
 		case BUFR:
 			DBA_RUN_OR_GOTO(cleanup, bufrex_encode_bufr(msgs, cat, subcat, &raw));

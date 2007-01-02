@@ -28,7 +28,7 @@
 
 static dba_err process_dba_msg(dba_msgs msgs, dba_file file, int type, int subtype)
 {
-	dba_encoding ftype = dba_file_get_type(file);
+	dba_encoding ftype = dba_file_type(file);
 
 	switch (ftype)
 	{
@@ -36,7 +36,7 @@ static dba_err process_dba_msg(dba_msgs msgs, dba_file file, int type, int subty
 		{
 			dba_rawmsg raw;
 			DBA_RUN_OR_RETURN(bufrex_encode_bufr(msgs, type, subtype, &raw));
-			DBA_RUN_OR_RETURN(dba_file_write_raw(file, raw));
+			DBA_RUN_OR_RETURN(dba_file_write(file, raw));
 			dba_rawmsg_delete(raw);
 			break;
 		}
@@ -44,7 +44,7 @@ static dba_err process_dba_msg(dba_msgs msgs, dba_file file, int type, int subty
 		{
 			dba_rawmsg raw;
 			DBA_RUN_OR_RETURN(bufrex_encode_crex(msgs, type, subtype, &raw));
-			DBA_RUN_OR_RETURN(dba_file_write_raw(file, raw));
+			DBA_RUN_OR_RETURN(dba_file_write(file, raw));
 			dba_rawmsg_delete(raw);
 			break;
 		}

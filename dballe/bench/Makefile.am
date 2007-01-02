@@ -8,6 +8,7 @@ benchmark_SOURCES= \
 	bench/bufrex.cc \
 	bench/db.cc \
 	$(top_srcdir)/extra/test-utils-core.cc \
+	$(top_srcdir)/extra/test-utils-bufrex.cc \
 	$(top_srcdir)/extra/test-utils.cc
 benchmark_LDADD = ../db/libdballe-db.la -lpopt
 

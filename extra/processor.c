@@ -135,7 +135,7 @@ dba_err match_crex(dba_rawmsg rmsg, bufrex_msg rm, dba_msgs msgs, struct grep_t*
 dba_err match_aof(dba_rawmsg rmsg, dba_msgs msgs, struct grep_t* grepdata, int* match)
 {
 	int category, subcategory;
-	DBA_RUN_OR_RETURN(aof_decoder_get_category(rmsg, &category, &subcategory));
+	DBA_RUN_OR_RETURN(aof_codec_get_category(rmsg, &category, &subcategory));
 
 	DBA_RUN_OR_RETURN(match_common(rmsg, msgs, grepdata, match));
 	if (*match == 0)
@@ -215,7 +215,7 @@ dba_err process_input(
 			if (grepdata != NULL) DBA_RUN_OR_GOTO(cleanup, match_crex(rmsg, br, parsed, grepdata, &match));
 			break;
 		case AOF:
-			if (aof_decoder_decode(rmsg, &parsed) != DBA_OK && print_errors)
+			if (aof_codec_decode(rmsg, &parsed) != DBA_OK && print_errors)
 				print_parse_error("AOF", rmsg);
 			if (grepdata != NULL) DBA_RUN_OR_GOTO(cleanup, match_aof(rmsg, parsed, grepdata, &match));
 			break;
@@ -253,9 +253,9 @@ dba_err process_all(
 	{
 		dba_file file;
 		int found;
-		DBA_RUN_OR_RETURN(dba_file_create(&file, type, name, "r"));
+		DBA_RUN_OR_RETURN(dba_file_create(type, name, "r", &file));
 
-		DBA_RUN_OR_RETURN(dba_file_read_raw(file, rmsg, &found));
+		DBA_RUN_OR_RETURN(dba_file_read(file, rmsg, &found));
 
 		while (found)
 		{
@@ -270,7 +270,7 @@ dba_err process_all(
 				DBA_RUN_OR_RETURN(process_input(file, rmsg, grepdata, action, data));
 			}
 
-			DBA_RUN_OR_RETURN(dba_file_read_raw(file, rmsg, &found));
+			DBA_RUN_OR_RETURN(dba_file_read(file, rmsg, &found));
 		}
 
 		dba_file_delete(file);

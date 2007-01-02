@@ -266,6 +266,7 @@ static dba_err slurp_file_read(dba_file file, dba_rawmsg msg, int* found)
 
 	/* Reset bufr_message data in case this message has been used before */
 	dba_rawmsg_reset(msg);
+	msg->offset = ftell(in);
 
 	/* Read the entire file contents */
 	while (!feof(in))
@@ -292,7 +293,7 @@ static dba_err slurp_file_create(dba_encoding type, FILE* fd, const char* mode, 
 {
 	*file = (dba_file)calloc(1, sizeof(struct _dba_file));
 	if (*file == NULL)
-		return dba_error_alloc("allocating new _dba_rawfile");
+		return dba_error_alloc("allocating new _dba_file");
 	(*file)->fun_delete = slurp_file_delete;
 	(*file)->fun_read = slurp_file_read;
 	(*file)->fun_write = dba_file_default_write_impl;

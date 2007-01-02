@@ -39,15 +39,15 @@ dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_en
 
 		// Read the sample message
 		INNER_CHECKED(dba_rawmsg_create(&rawmsg));
-		INNER_CHECKED(dba_file_create(&input, type, filename, "r"));
-		INNER_CHECKED(dba_file_read_raw(input, rawmsg, &found));
+		INNER_CHECKED(dba_file_create(type, filename, "r", &input));
+		INNER_CHECKED(dba_file_read(input, rawmsg, &found));
 		inner_ensure_equals(found, 1);
 
 		dba_file_delete(input);
 
 		// Decode the sample message
 		dba_msgs msgs;
-		INNER_CHECKED(aof_decoder_decode(rawmsg, &msgs));
+		INNER_CHECKED(aof_codec_decode(rawmsg, &msgs));
 		dba_rawmsg_delete(rawmsg);
 		return msgs;
 	} else {

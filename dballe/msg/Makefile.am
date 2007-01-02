@@ -10,8 +10,6 @@ messageinclude_HEADERS = \
 		vars.h \
 		msg.h \
 		msgs.h \
-		readers.h \
-		writers.h \
 		marshal.h \
 		file.h \
 		aof_codec.h \
@@ -25,10 +23,7 @@ libdballe_msg_la_SOURCES = \
 		level.c \
 		msg.c \
 		msgs.c \
-		readers.c \
-		writers.c \
 		marshal.c \
-		file.c \
 		aof_codec.c \
 		aof_importers/common.c \
 		aof_importers/synop.c \
@@ -52,7 +47,8 @@ libdballe_msg_la_SOURCES = \
 		bufrex_exporters/buoy.c \
 		bufrex_exporters/pilot.c \
 		bufrex_exporters/temp.c \
-		bufrex_exporters/flight.c
+		bufrex_exporters/flight.c \
+		file.c \
 libdballe_msg_la_LIBADD = \
 		../core/libdballe-core.la \
 		../bufrex/libdballe-bufrex.la

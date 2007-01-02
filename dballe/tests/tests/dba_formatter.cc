@@ -20,7 +20,6 @@
  */
 
 #include <extra/test-utils.h>
-#include <dballe/core/rawfile.h>
 #include <dballe/msg/formatter.h>
 
 namespace tut {

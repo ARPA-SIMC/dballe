@@ -168,8 +168,8 @@ void to::test<2>()
 	if (diffs != 0)
 	{
 		dba_file out;
-		CHECKED(dba_file_create(&out, BUFR, "/tmp/generic0.bufr", "w"));
-		CHECKED(dba_file_write_raw(out, raw));
+		CHECKED(dba_file_create(BUFR, "/tmp/generic0.bufr", "w", &out));
+		CHECKED(dba_file_write(out, raw));
 		dba_file_delete(out);
 		track_different_msgs(msgs, msgs1, "generic0");
 	}
@@ -188,11 +188,11 @@ void to::test<3>()
 	int gfound, bfound, count = 0;
 	dba_msgs gen, synop;
 
-	CHECKED(dba_file_create(&file_gen, BUFR, "bufr/gen-generic.bufr", "r"));
-	CHECKED(dba_file_create(&file_synop, BUFR, "bufr/gen-synop.bufr", "r"));
+	CHECKED(dba_file_create(BUFR, "bufr/gen-generic.bufr", "r", &file_gen));
+	CHECKED(dba_file_create(BUFR, "bufr/gen-synop.bufr", "r", &file_synop));
 
-	CHECKED(dba_file_read(file_gen, &gen, &gfound));
-	CHECKED(dba_file_read(file_synop, &synop, &bfound));
+	CHECKED(dba_file_read_msgs(file_gen, &gen, &gfound));
+	CHECKED(dba_file_read_msgs(file_synop, &synop, &bfound));
 	gen_ensure_equals(gfound, bfound);
 	do {
 		count++;
@@ -238,8 +238,8 @@ void to::test<3>()
 		dba_msgs_delete(gen);
 		dba_msgs_delete(synop);
 		dba_msgs_delete(synop1);
-		CHECKED(dba_file_read(file_gen, &gen, &gfound));
-		CHECKED(dba_file_read(file_synop, &synop, &bfound));
+		CHECKED(dba_file_read_msgs(file_gen, &gen, &gfound));
+		CHECKED(dba_file_read_msgs(file_synop, &synop, &bfound));
 		gen_ensure_equals(gfound, bfound);
 	} while (gfound);
 

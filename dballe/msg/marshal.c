@@ -29,7 +29,7 @@ dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msgs *msgs)
 	{
 		case BUFR: DBA_RUN_OR_RETURN(bufrex_decode_bufr(rmsg, msgs)); break;
 		case CREX: DBA_RUN_OR_RETURN(bufrex_decode_crex(rmsg, msgs)); break;
-		case AOF: DBA_RUN_OR_RETURN(aof_decoder_decode(rmsg, msgs)); break;
+		case AOF: DBA_RUN_OR_RETURN(aof_codec_decode(rmsg, msgs)); break;
 	}
 	return dba_error_ok();
 }

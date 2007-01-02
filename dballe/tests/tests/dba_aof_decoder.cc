@@ -71,18 +71,18 @@ void to::test<1>()
 		int found;
 
 		/* Create the file reader */
-		CHECKED(dba_file_create(&file, AOF, files[i], "r"));
+		CHECKED(dba_file_create(AOF, files[i], "r", &file));
 
 		/* Read the file header */
 		/* CHECKED(aof_file_read_header(file, 0, 0)); */
 
 		/* Read the data from file */
-		CHECKED(dba_file_read_raw(file, raw, &found));
+		CHECKED(dba_file_read(file, raw, &found));
 		gen_ensure_equals(found, 1);
 
 		/* Parse it */
 		dba_msgs msgs = NULL;
-		CHECKED(aof_decoder_decode(raw, &msgs));
+		CHECKED(aof_codec_decode(raw, &msgs));
 		gen_ensure(msgs != NULL);
 
 		dba_msgs_delete(msgs);
