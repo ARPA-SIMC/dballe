@@ -20,7 +20,7 @@
  */
 
 #include "Benchmark.h"
-#include <extra/test-utils-db.h>
+#include <../db/test-utils-db.h>
 
 #include <dballe/msg/bufrex_codec.h>
 #include <dballe/bufrex/msg.h>

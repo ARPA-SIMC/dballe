@@ -20,6 +20,7 @@
  */
 
 #include "exporters.h"
+#include <stdlib.h>
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 

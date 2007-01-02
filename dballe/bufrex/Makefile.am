@@ -39,15 +39,19 @@ TESTS = $(check_PROGRAMS)
 
 CXXFLAGS += -O0
 
+noinst_HEADERS = test-utils-bufrex.h
+
 tut_test_SOURCES = \
 	tests/bufr_decoder.cc \
 	tests/crex_decoder.cc \
 	tests/dtable.cc \
-	tests/opcode.cc
+	tests/opcode.cc \
+	../core/test-utils-core.cc \
+	test-utils-bufrex.cc \
+	../tut/tut-main.cc
 tut_test_LDADD = \
 	../core/libdballe-core.la \
-	libdballe-bufrex.la \
-	../../extra/libtests-main.la
+	libdballe-bufrex.la
 
 
 #

@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils-msg.h>
+#include <test-utils-msg.h>
 #include <dballe/msg/file.h>
 #include <dballe/msg/bufrex_codec.h>
 #include <dballe/msg/msg.h>

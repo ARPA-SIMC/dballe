@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils-bufrex.h>
+#include <test-utils-bufrex.h>
 
 namespace tut {
 using namespace tut_dballe;

@@ -73,16 +73,21 @@ TESTS = $(check_PROGRAMS)
 
 CXXFLAGS += -O0
 
+noinst_HEADERS = test-utils-msg.h
+
 tut_test_SOURCES = \
 	tests/aof_codec.cc \
 	tests/bufrex_codec.cc \
 	tests/bufrex_codec_generic.cc \
 	tests/formatter.cc \
-	tests/msg.cc
+	tests/msg.cc \
+	../core/test-utils-core.cc \
+	../bufrex/test-utils-bufrex.cc \
+	test-utils-msg.cc \
+	../tut/tut-main.cc
 tut_test_LDADD = \
 	../core/libdballe-core.la \
 	../bufrex/libdballe-bufrex.la \
-	libdballe-msg.la \
-	../../extra/libtests-main.la
+	libdballe-msg.la
 
 EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox

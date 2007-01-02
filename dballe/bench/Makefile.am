@@ -6,10 +6,13 @@ benchmark_SOURCES= \
 	bench/dba_var.cc \
 	bench/dba_record.cc \
 	bench/bufrex.cc \
-	bench/db.cc
+	bench/db.cc \
+	../core/test-utils-core.cc \
+	../bufrex/test-utils-bufrex.cc \
+	../msg/test-utils-msg.cc \
+	../db/test-utils-db.cc
 benchmark_LDADD = \
 	../db/libdballe-db.la \
-	../../extra/libtests.la \
 	-lpopt
 
 INCLUDES = -I$(top_srcdir)

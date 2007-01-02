@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils-db.h>
+#include <test-utils-db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
 

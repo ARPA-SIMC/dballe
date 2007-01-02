@@ -24,7 +24,7 @@
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/file.h>
 
-#include <extra/tut.h>
+#include <../tut/tut.h>
 
 #include <string>
 #include <vector>

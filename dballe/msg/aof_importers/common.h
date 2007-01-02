@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <stdint.h>		/* uint32_t */
+#include <math.h>
 
 // #define TRACE_DECODER
 

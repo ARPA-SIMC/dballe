@@ -56,16 +56,22 @@ TESTS += $(check_PROGRAMS)
 
 CXXFLAGS += -O0
 
+noinst_HEADERS = test-utils-db.h
+
 tut_test_SOURCES = \
 	tests/dba_db_repinfo.cc \
 	tests/dba_db_dballe.cc \
-	tests/dba_db_import.cc
+	tests/dba_db_import.cc \
+	../core/test-utils-core.cc \
+	../bufrex/test-utils-bufrex.cc \
+	../msg/test-utils-msg.cc \
+	test-utils-db.cc \
+	../tut/tut-main.cc
 tut_test_LDADD = \
 	../core/libdballe-core.la \
 	../bufrex/libdballe-bufrex.la \
 	../msg/libdballe-msg.la \
-	libdballe-db.la \
-	../../extra/libtests-main.la
+	libdballe-db.la
 endif
 
 EXTRA_DIST = db.dox

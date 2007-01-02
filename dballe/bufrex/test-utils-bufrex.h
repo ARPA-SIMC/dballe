@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils-core.h>
+#include <../core/test-utils-core.h>
 #include <dballe/bufrex/msg.h>
 
 #include <string>

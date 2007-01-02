@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils-core.h>
+#include <test-utils-core.h>
 #include <dballe/core/aliases.h>
 
 namespace tut {

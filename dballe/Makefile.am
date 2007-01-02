@@ -2,4 +2,8 @@
 
 SUBDIRS = core bufrex msg db . bench
 
-EXTRA_DIST = mainpage.dox dballe.dox
+EXTRA_DIST = mainpage.dox dballe.dox \
+	tut/tut.h \
+	tut/tut_reporter.h \
+	tut/tut_restartable.h \
+	tut/tut-main.cc

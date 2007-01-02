@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils-msg.h>
+#include <../msg/test-utils-msg.h>
 #include <dballe/db/db.h>
 
 namespace tut_dballe {

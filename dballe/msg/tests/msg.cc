@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils-msg.h>
+#include <test-utils-msg.h>
 #include <dballe/msg/datum.h>
 #include <dballe/msg/level.h>
 

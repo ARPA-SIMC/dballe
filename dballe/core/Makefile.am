@@ -58,6 +58,8 @@ TESTS = $(check_PROGRAMS)
 
 CXXFLAGS += -O0
 
+noinst_HEADERS = test-utils-core.h
+
 tut_test_SOURCES = \
 	tests/aliases.cc \
 	tests/error.cc \
@@ -66,10 +68,11 @@ tut_test_SOURCES = \
 	tests/rawmsg.cc \
 	tests/record.cc \
 	tests/var.cc \
-	tests/vartable.cc
+	tests/vartable.cc \
+	test-utils-core.cc \
+	../tut/tut-main.cc
 tut_test_LDADD = \
-	libdballe-core.la \
-	../../extra/libtests-main.la
+	libdballe-core.la
 
 
 #
