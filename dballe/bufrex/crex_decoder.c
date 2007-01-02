@@ -24,7 +24,7 @@
 #include "opcode.h"
 #include "msg.h"
 
-#include <dballe/core/rawfile.h>
+#include <dballe/core/file.h>
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -109,7 +109,7 @@ dba_err crex_decoder_set_check_digit(crex_decoder msg, int has_check_digit)
 static dba_err crex_decoder_parse_data_section(decoder d);
 
 #define PARSE_ERROR(...) do { \
-		err = dba_error_parse(d->in->file->name, d->in->offset + (d->cur - d->in->buf), __VA_ARGS__); \
+		err = dba_error_parse((d)->in->file == NULL ? "(memory)" : dba_file_name((d)->in->file), (d)->in->offset + ((d)->cur - (d)->in->buf), __VA_ARGS__); \
 		goto fail; \
 	} while (0)
 

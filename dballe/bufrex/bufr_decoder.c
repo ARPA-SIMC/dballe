@@ -23,7 +23,7 @@
 
 #include "opcode.h"
 #include "msg.h"
-#include <dballe/core/rawfile.h>
+#include <dballe/core/file.h>
 
 #include <stdio.h>
 #include <netinet/in.h>
@@ -114,7 +114,7 @@ static int decoder_bits_left(decoder d)
 	return (d->in->len - d->cursor) * 8 + d->pbyte_len;
 }
 
-#define FILENAME(d) ((d)->in->file == NULL ? "(memory)" : (d)->in->file->name)
+#define FILENAME(d) ((d)->in->file == NULL ? "(memory)" : dba_file_name((d)->in->file))
 
 #define PARSE_ERROR(pos, ...) do { \
 		err = dba_error_parse(FILENAME(d), d->in->offset + ((pos) - d->in->buf), __VA_ARGS__); \

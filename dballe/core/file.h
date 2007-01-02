@@ -75,7 +75,17 @@ void dba_file_delete(dba_file file);
  * @return 
  *   The file encoding.
  */
-dba_encoding dba_file_get_type(dba_file file);
+dba_encoding dba_file_type(dba_file file);
+
+/**
+ * Get the name of the dba_file
+ *
+ * @param file
+ *   The dba_file to query.
+ * @return 
+ *   The file name.
+ */
+const char* dba_file_name(dba_file file);
 
 /**
  * Read a message from the file.

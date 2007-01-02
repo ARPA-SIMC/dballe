@@ -29,38 +29,6 @@
 
 namespace tut_dballe {
 
-static std::string tag;
-
-bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type)
-{
-	dba_file input;
-	dba_rawmsg rawmsg;
-	int found;
-
-	inner_ensure(type == BUFR || type == CREX);
-
-	// Read the sample message
-	INNER_CHECKED(dba_rawmsg_create(&rawmsg));
-	INNER_CHECKED(dba_file_create(&input, type, filename, "r"));
-	INNER_CHECKED(dba_file_read_raw(input, rawmsg, &found));
-	inner_ensure_equals(found, 1);
-
-	dba_file_delete(input);
-
-	// Decode the sample message
-	bufrex_msg bufrex;
-	switch (type)
-	{
-		case BUFR: INNER_CHECKED(bufrex_msg_create(&bufrex, BUFREX_BUFR)); break;
-		case CREX: INNER_CHECKED(bufrex_msg_create(&bufrex, BUFREX_CREX)); break;
-		default: inner_ensure(false); break;
-	}
-	INNER_CHECKED(bufrex_msg_decode(bufrex, rawmsg));
-	
-	dba_rawmsg_delete(rawmsg);
-	return bufrex;
-}
-
 dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type)
 {
 	if (type == AOF)
@@ -92,20 +60,6 @@ dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_en
 		bufrex_msg_delete(bufrex);
 		return msgs;
 	}
-}
-
-bufrex_msg _reencode_test(const char* file, int line, bufrex_msg msg)
-{
-	dba_rawmsg raw;
-	INNER_CHECKED(bufrex_msg_encode(msg, &raw));
-
-	bufrex_msg bufrex;
-	INNER_CHECKED(bufrex_msg_create(&bufrex, msg->encoding_type));
-	INNER_CHECKED(bufrex_msg_decode(bufrex, raw));
-
-	dba_rawmsg_delete(raw);
-
-	return bufrex;
 }
 
 const static dba_varcode generator_varcodes[] = {
@@ -192,29 +146,6 @@ dba_err msg_generator::fill_message(dba_msg msg, bool mobile)
 		DBA_RUN_OR_RETURN(dba_msg_set_nocopy(msg, var, ltype, l1, l2, pind, p1, p2));
 	}
 	return dba_error_ok();
-}
-
-dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons)
-{
-	dba_err err = DBA_OK;
-	dba_file file = 0;
-	dba_rawmsg raw = 0;
-	int found;
-
-	DBA_RUN_OR_GOTO(cleanup, dba_file_create(&file, type, name.c_str(), "r"));
-	DBA_RUN_OR_GOTO(cleanup, dba_rawmsg_create(&raw));
-
-	DBA_RUN_OR_GOTO(cleanup, dba_file_read_raw(file, raw, &found));
-	while (found)
-	{
-		DBA_RUN_OR_GOTO(cleanup, cons.consume(raw));
-		DBA_RUN_OR_GOTO(cleanup, dba_file_read_raw(file, raw, &found));
-	}
-
-cleanup:
-	if (file) dba_file_delete(file);
-	if (raw) dba_rawmsg_delete(raw);
-	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix)

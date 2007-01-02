@@ -237,6 +237,29 @@ dba_err generator::fill_record(dba_record rec)
 	return dba_error_ok();
 }
 
+dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons)
+{
+	dba_err err = DBA_OK;
+	dba_file file = 0;
+	dba_rawmsg raw = 0;
+	int found;
+
+	DBA_RUN_OR_GOTO(cleanup, dba_file_create(type, name.c_str(), "r", &file));
+	DBA_RUN_OR_GOTO(cleanup, dba_rawmsg_create(&raw));
+
+	DBA_RUN_OR_GOTO(cleanup, dba_file_read(file, raw, &found));
+	while (found)
+	{
+		DBA_RUN_OR_GOTO(cleanup, cons.consume(raw));
+		DBA_RUN_OR_GOTO(cleanup, dba_file_read(file, raw, &found));
+	}
+
+cleanup:
+	if (file) dba_file_delete(file);
+	if (raw) dba_rawmsg_delete(raw);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
 static dba_err slurp_file_read(dba_file file, dba_rawmsg msg, int* found)
 {
 	FILE* in = file->fd;

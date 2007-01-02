@@ -126,7 +126,7 @@ dba_err dba_file_create(dba_encoding type, const char* name, const char* mode, d
 	
 	res->name = strdup(name);
 	res->fd = in;
-	res->close_on_exit;
+	res->close_on_exit = close_on_exit;
 	res->idx = 0;
 	res->type = type;
 	in = NULL;
@@ -214,9 +214,14 @@ void dba_file_delete(dba_file file)
 	file->fun_delete(file);
 }
 
-dba_encoding dba_file_get_type(dba_file file)
+dba_encoding dba_file_type(dba_file file)
 {
 	return file->type;
+}
+
+const char* dba_file_name(dba_file file)
+{
+	return file->name;
 }
 
 

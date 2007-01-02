@@ -304,6 +304,19 @@ public:
 	dba_err fill_record(dba_record rec);
 };
 
+/* Message reading functions */
+
+class dba_raw_consumer
+{
+public:
+	virtual ~dba_raw_consumer() {}
+
+	virtual dba_err consume(dba_rawmsg raw) = 0;
+};
+
+dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons);
+
+/* Test environment */
 
 class LocalEnv
 {

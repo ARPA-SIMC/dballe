@@ -37,14 +37,18 @@ check_PROGRAMS = tut_test
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 TESTS = $(check_PROGRAMS)
 
+CXXFLAGS += -O0
+
 tut_test_SOURCES = \
 	tests/bufr_decoder.cc \
 	tests/crex_decoder.cc \
 	tests/dtable.cc \
 	tests/opcode.cc \
 	$(top_srcdir)/extra/test-utils-core.cc \
+	$(top_srcdir)/extra/test-utils-bufrex.cc \
 	$(top_srcdir)/extra/tut-main.cc
-tut_test_LDADD = $(DBALLELIBS) libdballe-bufrex.la
+tut_test_LDADD = ../core/libdballe-core.la \
+		libdballe-bufrex.la
 
 
 #
