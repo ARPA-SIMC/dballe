@@ -1,7 +1,7 @@
 #ifndef TUT_REPORTER
 #define TUT_REPORTER
 
-#include <tut.h>
+#include "tut.h"
 
 /**
  * Template Unit Tests Framework for C++.

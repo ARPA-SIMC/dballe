@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <tut.h>
-#include <tut_reporter.h>
+#include "tut.h"
+#include "tut_reporter.h"
 #include <signal.h>
 
 namespace tut
