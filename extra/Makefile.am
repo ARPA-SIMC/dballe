@@ -1,4 +1,4 @@
-noinst_INCLUDES = \
+dist_noinst_INCLUDES = \
 	cmdline.h \
 	conversion.h \
 	processor.h
@@ -11,6 +11,8 @@ libextra_la_SOURCES = \
 	processor.c
 
 EXTRA_DIST = \
+	aof bufr crex \
+
 	runtest \
 	test-bufr-table.txt \
 	test-crex-d-table.txt \

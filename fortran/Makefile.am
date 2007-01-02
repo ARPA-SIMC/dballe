@@ -38,6 +38,6 @@ dump_dballe_FFLAGS = -g -fno-second-underscore
 
 INCLUDES = -I..
 
-EXTRA_DIST = handles.h dballef.h
+EXTRA_DIST = handles.h dballef.h fortran.dox
  
 endif
