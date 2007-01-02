@@ -20,7 +20,6 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/init.h>
 #include <dballe/db/querybuf.h>
 #include <dballe/db/db.h>
 #include <dballe/db/internals.h>
@@ -72,7 +71,6 @@ struct dba_db_dballe_shar
 	dba_db_dballe_shar()
 		: insert(NULL), query(NULL), result(NULL), qc(NULL), db(NULL)
 	{
-		CHECKED(dba_init());
 		CHECKED(create_dba_db(&db));
 
 		CHECKED(dba_record_create(&insert));
@@ -141,7 +139,6 @@ static struct test_data tdata3_patch[] = {
 		if (result != NULL) dba_record_delete(result);
 		if (qc != NULL) dba_record_delete(qc);
 		if (db != NULL) dba_db_delete(db);
-		dba_shutdown();
 	}
 };
 TESTGRP(dba_db_dballe);

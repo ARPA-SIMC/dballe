@@ -20,7 +20,6 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/init.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
 
@@ -34,14 +33,12 @@ struct dba_db_import_shar
 
 	dba_db_import_shar() : db(NULL)
 	{
-		CHECKED(dba_init());
 		CHECKED(create_dba_db(&db));
 	}
 
 	~dba_db_import_shar()
 	{
 		if (db != NULL) dba_db_delete(db);
-		dba_shutdown();
 		test_untag();
 	}
 };

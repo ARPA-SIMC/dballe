@@ -20,7 +20,6 @@
  */
 
 #include <tests/test-utils.h>
-#include <dballe/init.h>
 #include <dballe/db/querybuf.h>
 #include <dballe/db/db.h>
 #include <dballe/db/internals.h>
@@ -38,7 +37,6 @@ struct dba_db_repinfo_shar
 
 	dba_db_repinfo_shar() : db(NULL)
 	{
-		CHECKED(dba_init());
 		CHECKED(create_dba_db(&db));
 		CHECKED(dba_db_need_repinfo(db));
 		ri = db->repinfo;
@@ -47,7 +45,6 @@ struct dba_db_repinfo_shar
 	~dba_db_repinfo_shar()
 	{
 		if (db != NULL) dba_db_delete(db);
-		dba_shutdown();
 	}
 };
 TESTGRP(dba_db_repinfo);

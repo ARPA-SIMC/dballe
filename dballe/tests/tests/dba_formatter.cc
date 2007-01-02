@@ -21,7 +21,7 @@
 
 #include <tests/test-utils.h>
 #include <dballe/core/rawfile.h>
-#include <dballe/formatter.h>
+#include <dballe/msg/formatter.h>
 
 namespace tut {
 using namespace tut_dballe;
