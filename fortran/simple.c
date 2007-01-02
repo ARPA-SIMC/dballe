@@ -1931,6 +1931,74 @@ static dba_err get_referred_data_id(int* handle, int* id_context, dba_varcode* i
 	return dba_error_ok();
 }
 
+/* Reads the list of QC values to operate on, for dba_voglioancora and dba_scusa */
+static dba_err read_qc_list(int* handle, dba_varcode** res_arr, size_t* res_len)
+{
+	dba_err err = DBA_OK;
+	dba_varcode* arr = NULL;
+	size_t arr_len = 0;
+	const char* val;
+
+	/* Retrieve the varcodes of the wanted QC values */
+	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
+	{
+		/* Get only the QC values in *varlist */
+		if (*val != '*')
+		{
+			err = dba_error_consistency("QC values to delete must start with '*'");
+			goto cleanup;
+		}
+		if ((arr = (dba_varcode*)malloc(1 * sizeof(dba_varcode))) == NULL)
+		{
+			err = dba_error_alloc("allocating the dba_varcode array to pass to dba_qc_query");
+			goto cleanup;
+		}
+		arr_len = 1;
+		arr[0] = DBA_STRING_TO_VAR(val + 2);
+	}
+	else if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VARLIST)) != NULL)
+	{
+		/* Get only the QC values in *varlist */
+		size_t pos;
+		size_t len;
+		const char* s;
+		int i;
+
+		/* Count the number of commas (and therefore of items in the
+		 * list) to decide the size of arr */
+		for (s = val, arr_len = 1; *s; ++s)
+			++arr_len;
+		if ((arr = (dba_varcode*)malloc(arr_len * sizeof(dba_varcode))) == NULL)
+		{
+			err = dba_error_alloc("allocating the dba_varcode array to pass to dba_qc_query");
+			goto cleanup;
+		}
+
+		for (pos = 0, i = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
+		{
+			/*
+			fprintf(stderr, "str: \"%s\", str+pos: \"%s\", str+pos+len: \"%s\"\n",
+					val, val+pos, val+pos+len);
+			*/
+			if (*(val+pos) != '*')
+			{
+				err = dba_error_consistency("QC values to delete must start with '*'");
+				goto cleanup;
+			}
+			arr[i++] = DBA_STRING_TO_VAR(val + pos + 1);
+		}
+	}
+
+	*res_arr = arr;
+	*res_len = arr_len;
+	arr = NULL;
+	
+cleanup:
+	if (arr != NULL)
+		free(arr);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
 /**@name QC functions
  * @anchor qc
  * Functions used to manipulate QC data.
@@ -1946,8 +2014,8 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 	GENPTR_INTEGER(handle)
 	GENPTR_INTEGER(count)
 	dba_err err = DBA_OK;
-	dba_arr_varcode arr = NULL;
-	const char* val;
+	dba_varcode* arr = NULL;
+	size_t arr_len = 0;
 	int id_context;
 	dba_varcode id_var;
 
@@ -1955,42 +2023,12 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
 
 	/* Retrieve the varcodes of the wanted QC values */
-	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
-	{
-		/* Get only the QC values in *varlist */
-		DBA_RUN_OR_RETURN(dba_arr_varcode_create(&arr));
-		if (*val != '*')
-		{
-			err = dba_error_consistency("QC values to delete must start with '*'");
-			goto cleanup;
-		}
-		DBA_RUN_OR_GOTO(cleanup, dba_arr_varcode_append(arr, DBA_STRING_TO_VAR(val + 2)));
-	}
-	else if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VARLIST)) != NULL)
-	{
-		/* Get only the QC values in *varlist */
-		size_t pos;
-		size_t len;
-		DBA_RUN_OR_RETURN(dba_arr_varcode_create(&arr));
-		for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-		{
-			/*
-			fprintf(stderr, "str: \"%s\", str+pos: \"%s\", str+pos+len: \"%s\"\n",
-					val, val+pos, val+pos+len);
-			*/
-			if (*(val+pos) != '*')
-			{
-				err = dba_error_consistency("QC values to delete must start with '*'");
-				goto cleanup;
-			}
-			DBA_RUN_OR_GOTO(cleanup, dba_arr_varcode_append(arr, DBA_STRING_TO_VAR(val + pos + 1)));
-		}
-	}
+	DBA_RUN_OR_RETURN(read_qc_list(handle, &arr, &arr_len));
 
 	/* Do QC query */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_qc_query(SESSION, id_context, id_var, 
-				arr == NULL ? NULL : dba_arr_varcode_data(arr),
-				arr == NULL ? 0 : dba_arr_varcode_size(arr),
+				arr == NULL ? NULL : arr,
+				arr == NULL ? 0 : arr_len,
 				STATE.qcoutput, &(STATE.qc_count)));
 
 	STATE.qc_iter = dba_record_iterate_first(STATE.qcoutput);
@@ -2001,7 +2039,7 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 
 cleanup:
 	if (arr != NULL)
-		dba_arr_varcode_delete(arr);
+		free(arr);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
@@ -2109,8 +2147,8 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
 	dba_err err = DBA_OK;
-	dba_arr_varcode arr = NULL;
-	const char* val;
+	dba_varcode* arr = NULL;
+	size_t arr_len = 0;
 	int id_context;
 	dba_varcode id_var;
 
@@ -2120,52 +2158,21 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 	
 	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
 
-	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
-	{
-		if (arr == NULL)
-			DBA_RUN_OR_RETURN(dba_arr_varcode_create(&arr));
-		if (*val != '*')
-		{
-			err = dba_error_consistency("QC values to delete must start with '*'");
-			goto cleanup;
-		}
-		DBA_RUN_OR_GOTO(cleanup, dba_arr_varcode_append(arr, DBA_STRING_TO_VAR(val + 2)));
-	}
-
-	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VARLIST)) != NULL)
-	{
-		// Delete only the QC values in *data_id
-		size_t pos;
-		size_t len;
-		if (arr == NULL)
-			DBA_RUN_OR_RETURN(dba_arr_varcode_create(&arr));
-		for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-		{
-			/*
-			fprintf(stderr, "str: \"%s\", str+pos: \"%s\", str+pos+len: \"%s\"\n",
-					val, val+pos, val+pos+len);
-			*/
-			if (*(val+pos) != '*')
-			{
-				err = dba_error_consistency("QC values to delete must start with '*'");
-				goto cleanup;
-			}
-			DBA_RUN_OR_GOTO(cleanup, dba_arr_varcode_append(arr, DBA_STRING_TO_VAR(val + pos + 1)));
-		}
-	}
+	/* Retrieve the varcodes of the wanted QC values */
+	DBA_RUN_OR_RETURN(read_qc_list(handle, &arr, &arr_len));
 
 	// If arr is still 0, then dba_qc_delete deletes all QC values
 	DBA_RUN_OR_GOTO(cleanup,
 			dba_db_qc_remove(
 				SESSION, id_context, id_var,
-				arr == NULL ? NULL : dba_arr_varcode_data(arr),
-				arr == NULL ? 0 : dba_arr_varcode_size(arr)));
+				arr == NULL ? NULL : arr,
+				arr == NULL ? 0 : arr_len));
 
 	clear_attr_rec(STATE.qcinput);
 
 cleanup:
 	if (arr != NULL)
-		dba_arr_varcode_delete(arr);
+		free(arr);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
@@ -2259,3 +2266,5 @@ cleanup:
 }
 
 /*@}*/
+
+/* vim:set ts=4 sw=4: */

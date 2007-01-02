@@ -9,7 +9,6 @@ coreinclude_HEADERS = \
 	fast.h \
 	csv.h \
 	aliases.h \
-	dba_array.h \
 	dba_record.h \
 	dba_vartable.h \
 	dba_var.h
@@ -23,7 +22,6 @@ libcore_la_SOURCES = \
 	csv.c \
 	aliases.c \
 	record_keyword.c \
-	dba_array.c \
 	dba_record.c \
 	dba_vartable.c \
 	dba_var.c

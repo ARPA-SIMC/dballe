@@ -39,8 +39,6 @@
 #include <dballe/core/dba_var.h>
 #include <dballe/core/aliases.h>
 
-DBA_ARR_DEFINE(dba_varcode, varcode);
-
 struct _dba_vartable
 {
 	char id[20];

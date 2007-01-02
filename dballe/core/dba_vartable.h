@@ -33,15 +33,12 @@ extern "C" {
 
 
 #include <dballe/core/dba_error.h>
-#include <dballe/core/dba_array.h>
 
 /**
  * Holds the WMO variable code of a variable
  */
 typedef short unsigned int dba_varcode;
 typedef short unsigned int dba_alteration;
-
-DBA_ARR_DECLARE(dba_varcode, varcode);
 
 /**
  * Holds the information about a DBALLE variable.

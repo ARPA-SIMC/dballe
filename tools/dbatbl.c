@@ -23,7 +23,7 @@
 
 #include <dballe/cmdline.h>
 #include <dballe/bufrex/bufrex_dtable.h>
-#include <dballe/conv/conv.h>
+#include <dballe/core/conv.h>
 #include <dballe/formatter.h>
 
 #include <stdlib.h>
