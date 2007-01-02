@@ -98,8 +98,6 @@ CFLAGS="-Wall $CFLAGS"
 AC_CONFIG_FILES([
 Makefile
 dballe/Makefile
-dballe/err/Makefile
-dballe/conv/Makefile
 dballe/core/Makefile
 dballe/io/Makefile
 dballe/msg/Makefile

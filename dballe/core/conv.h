@@ -31,7 +31,7 @@ extern "C" {
  * Unit conversion functions.
  */
 
-#include <dballe/err/dba_error.h>
+#include <dballe/core/dba_error.h>
 
 /**
  * Convert between different units

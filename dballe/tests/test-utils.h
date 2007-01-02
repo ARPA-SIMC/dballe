@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/err/dba_error.h>
+#include <dballe/core/dba_error.h>
 #include <dballe/core/dba_record.h>
 #include <dballe/bufrex/bufrex.h>
 #include <dballe/bufrex/bufrex_msg.h>
@@ -465,7 +465,7 @@ public:
 		if (cat != -1) inner_ensure_equals(braw->type, cat, "category");
 		if (subcat != -1) inner_ensure_equals(braw->subtype, subcat, "subcategory");
 		//if (checkdigit != -1) inner_ensure_equals(braw->opt.crex.checkdigit, checkdigit);
-		if (subsets != -1) inner_ensure_equals(braw->subsets_count, subsets, "subsets");
+		if (subsets != -1) inner_ensure_equals(braw->subsets_count, (size_t)subsets, "subsets");
 
 		/* Then check the variables */
 		for (size_t i = 0; i < braw->subsets_count; ++i)

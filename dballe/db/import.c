@@ -21,16 +21,16 @@
 
 #include "config.h"
 
-#include <dballe/db/import.h>
-#include <dballe/db/internals.h>
-#include <dballe/db/pseudoana.h>
-#include <dballe/db/context.h>
-#include <dballe/db/data.h>
-#include <dballe/db/attr.h>
-#include <dballe/db/dba_db.h>
+#include "dballe/db/import.h"
+#include "dballe/db/internals.h"
+#include "dballe/db/pseudoana.h"
+#include "dballe/db/context.h"
+#include "dballe/db/data.h"
+#include "dballe/db/attr.h"
+#include "dballe/db/dba_db.h"
 
-#include <dballe/conv/conv.h>
-#include <dballe/msg/dba_msg.h>
+#include "dballe/core/conv.h"
+#include "dballe/msg/dba_msg.h"
 
 #include <sql.h>
 #include <sqlext.h>

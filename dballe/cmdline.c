@@ -22,7 +22,7 @@
 #define _GNU_SOURCE
 /* _GNU_SOURCE is defined only to have strndup */
 
-#include <dballe/cmdline.h>
+#include "cmdline.h"
 #include <dballe/core/aliases.h>
 
 #include <popt.h>

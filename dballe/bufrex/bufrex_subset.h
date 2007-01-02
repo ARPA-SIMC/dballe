@@ -31,7 +31,6 @@ extern "C" {
  * Handling of a BUFR/CREX data subset as a list of decoded variables.
  */
 
-#include <dballe/err/dba_error.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/bufrex/bufrex_dtable.h>
 

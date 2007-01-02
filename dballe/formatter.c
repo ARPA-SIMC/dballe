@@ -23,7 +23,7 @@
 /* _GNU_SOURCE is defined to have asprintf */
 #include "config.h"
 
-#include <dballe/formatter.h>
+#include "formatter.h"
 
 #include <stdio.h>
 #include <ctype.h>

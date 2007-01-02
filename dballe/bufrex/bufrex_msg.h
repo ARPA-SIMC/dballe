@@ -32,7 +32,6 @@ extern "C" {
  * CREX message template.
  */
 
-#include <dballe/err/dba_error.h>
 #include <dballe/core/dba_var.h>
 #include <dballe/msg/dba_msg.h>
 #include <dballe/msg/dba_msgs.h>
@@ -88,9 +87,9 @@ struct _bufrex_msg
 	/* Decoded variables */
 	bufrex_subset* subsets;
 	/* Number of decoded variables */
-	int subsets_count;
+	size_t subsets_count;
 	/* Size (in dba_var*) of the buffer allocated for vars */
-	int subsets_alloclen;
+	size_t subsets_alloclen;
 
 	/* Parsed CREX data descriptor section */
 	bufrex_opcode datadesc;

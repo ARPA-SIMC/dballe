@@ -19,9 +19,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/init.h>
-#include <dballe/core/verbose.h>
-#include <dballe/db/dba_db.h>
+#include "dballe/init.h"
+#include "dballe/core/verbose.h"
+#include "dballe/db/dba_db.h"
 
 dba_err dba_init()
 {

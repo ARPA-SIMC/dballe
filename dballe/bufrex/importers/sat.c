@@ -19,9 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/msg/dba_msg.h>
-#include <dballe/conv/conv.h>
-#include <dballe/bufrex/bufrex_msg.h>
+#include "dballe/msg/dba_msg.h"
+#include "dballe/bufrex/bufrex_msg.h"
 #include <string.h>
 
 dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)

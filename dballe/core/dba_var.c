@@ -35,9 +35,8 @@
 #endif
 
 #include "dba_var.h"
-
-#include <dballe/core/fast.h>
-#include <dballe/conv/conv.h>
+#include "fast.h"
+#include "conv.h"
 
 struct _dba_var_attr
 {

@@ -22,7 +22,7 @@
 #ifndef BENCHMARK_H
 #define BENCHMARK_H
 
-#include <dballe/err/dba_error.h>
+#include <dballe/core/dba_error.h>
 
 #include <sys/times.h>
 

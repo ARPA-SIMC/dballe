@@ -32,7 +32,7 @@ extern "C" {
  */
 
 
-#include <dballe/err/dba_error.h>
+#include <dballe/core/dba_error.h>
 #include <dballe/core/dba_array.h>
 
 /**

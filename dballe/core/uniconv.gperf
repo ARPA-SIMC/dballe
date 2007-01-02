@@ -27,7 +27,7 @@
 %{
 #include <stdio.h>
 #include <string.h>
-#include <dballe/conv/conv.h>
+#include "dballe/core/conv.h"
 %}
 
 /* Note: the _ref member of info is always set to 1 to avoid the structure

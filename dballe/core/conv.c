@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/conv/conv.h>
+#include "dballe/core/conv.h"
 
 #include <math.h>
 

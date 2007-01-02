@@ -19,8 +19,6 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/dba_record.h>
-
 #include "exporters.h"
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);

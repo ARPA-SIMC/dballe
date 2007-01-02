@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/db/querybuf.h>
+#include "dballe/db/querybuf.h"
 
 #include <stdlib.h>
 #include <stdarg.h>

@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = err conv core msg io aof bufrex db . bench tests
+SUBDIRS = core msg io aof bufrex db . bench tests
 
 CFLAGS += -DTABLE_DIR=\"$(tabledir)\"
 
@@ -22,8 +22,6 @@ libdballe_la_SOURCES = \
 		formatter.c \
 		cmdline.c
 libdballe_la_LIBADD = \
-		err/liberr.la \
-		conv/libconv.la \
 		core/libcore.la \
 		io/libio.la \
 		msg/libmsg.la \

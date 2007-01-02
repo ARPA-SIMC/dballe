@@ -4,7 +4,6 @@
 Core functions used by most DB-ALLe modules.
 
 <b>Module dependencies:</b>
-\li \ref err
 \li \ref conv
 
 */

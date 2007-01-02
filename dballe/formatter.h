@@ -31,8 +31,7 @@ extern "C" {
  * Common functions for commandline tools
  */
 
-#include <stdio.h>
-#include <dballe/err/dba_error.h>
+#include <dballe/core/dba_error.h>
 #include <dballe/core/dba_record.h>
 
 /**

@@ -27,8 +27,98 @@ extern "C" {
 #endif
 
 /** @file
- * @ingroup err
- * Error management module for DBALLE.
+@ingroup core
+Error management module for DBALLE.
+
+These functions, implement the error-handling framework used throrough all
+DB-ALLe.  It allows to have a uniform way and uniform expectations on the way
+functions report, detect and handle errors.
+
+All functions in DB-ALLe that can fail return a value of type 'dba_err'.  This
+value can be used to check if the function succeeded or not.  If a function
+does not return a value of dba_err, then it cannot fail: this allows to know
+the error behaviour of the function by just looking at its return value.
+
+In case the function failed, there are four functions that can be used to
+understand what happened: dba_error_get_code(), dba_error_get_message(),
+dba_error_get_context() and dba_error_get_details().
+
+A callback can also be set to be invoked when errors happen.  It can be set
+to be triggered only on a specific kind of error or on all errors.
+
+This is a simple invocation of a function that can fail:
+\code
+  if (dba_enqi(rec, 1234, &value))
+     handle_errors(...);
+\endcode
+
+This is a function that can print all possible details about an error:
+\code
+  const char* details = dba_error_get_details();
+  fprintf(stderr, "Error %d (%s) while %s",
+            dba_error_get_code(),
+            dba_error_get_message(),
+            dba_error_get_context());
+  if (details == NULL)
+    fputc('\n', stderr);
+  else
+    fprintf(stderr, ".  Details:\n%s\n", details);
+\endcode
+
+These are examples of setting callbacks:
+\code
+  void count(void* data) { ++(*(int*)data); }
+  void alloc_fail(void*) {
+    fprintf(stderr, "Memory exausted while %s: shutting down.\n",
+              dba_error_get_context());
+    emergency_shutdown();
+  }
+
+  int main(int argc, char* argv[])
+  {
+    int error_counter = 0;
+    ...
+    dba_error_set_callback(DBA_ERR_NONE, count, &error_counter);
+    dba_error_set_callback(DBA_ERR_ALLOC, alloc_fail, NULL);
+        ...
+    // We are not interested in counting errors anymore
+    dba_error_remove_callback(DBA_ERR_NONE, count, &error_counter);
+    ...
+  }
+\endcode
+
+Convenience macros are provided to implement trivial error-handling strategies:
+see ::DBA_RUN_OR_RETURN, ::DBA_RUN_OR_GOTO, ::DBA_FAIL_RETURN, ::DBA_FAIL_GOTO.
+
+When writing library code, these are the rules to keep in mind about error
+handling:
+
+\invariant 
+  if a function can fail, it must return a value of type ::dba_err.  It is not
+  allowed to return errors in any other way.
+
+\invariant
+  if a function does not return a ::dba_err, then it cannot fail.
+
+\invariant
+  a "destructor" function whose purpose is to deallocate some data structure
+  must never fail.
+
+\invariant
+  if a function that can fail needs to return values, it must do it using its
+  arguments.  When a function fails, it is required to still leave its
+  arguments in a consistent state.  For example, if an allocation function
+  fails because of lack of memory, it should still set its return argument to
+  NULL.
+ 
+\invariant
+  a function that does not fail cannot call a function that can fail, even if
+  it properly handles all of its failure cases.  This is for two reasons: one
+  is that more failure cases could be added in the future, and it would be hard
+  to track back all the failure-handling code.  The other is that the error
+  callbacks are triggered when an error happens, so even if the caller handles
+  all the error codes correctly, other blocks of code can still get notified of
+  the error condition and change their behaviour.
  */
 
 /**

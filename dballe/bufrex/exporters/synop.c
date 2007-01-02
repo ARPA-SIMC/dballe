@@ -19,8 +19,6 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/msg/dba_msg.h>
-
 #include "exporters.h"
 
 static dba_err synop_datadesc_func(bufrex_exporter exp, dba_msg src, bufrex_msg dst);
