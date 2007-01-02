@@ -175,6 +175,8 @@ dba_msg_datum dba_msg_level_find(dba_msg_level l, dba_varcode code, int pind, in
  *
  * @param l
  *   The level to query
+ * @param id
+ *   Shortcut ID of the value to set (see @ref vars.h)
  * @return
  *   The value found, or NULL if it was not found.
  */

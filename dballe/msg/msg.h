@@ -195,6 +195,8 @@ dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype, int l1, int l2, 
  *   The message to operate on
  * @param var
  *   The dba_var with the value to set, that will be copied into the dba_msg.
+ * @param id
+ *   Shortcut ID of the value to set (see @ref vars.h)
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
@@ -209,6 +211,8 @@ dba_err dba_msg_set_by_id(dba_msg msg, dba_var var, int id);
  * @param var
  *   The dba_var with the value to set.  This dba_msg will take ownership of
  *   memory management.
+ * @param id
+ *   Shortcut ID of the value to set (see @ref vars.h)
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
@@ -348,8 +352,8 @@ dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype, int l1, int
 /** 
  * Find a datum given its shortcut ID
  *
- * @param l
- *   The level to query
+ * @param msg
+ *   The message to query
  * @return
  *   The value found, or NULL if it was not found.
  */
