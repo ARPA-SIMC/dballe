@@ -30,19 +30,21 @@ dbdoxdeps = libdballe-db.dox \
 
 LATEX2HTML = latex2html -local_icons
 
+doc_DATA =
 noinst_DATA =
 
 if DO_DOCS
-noinst_DATA += \
+doc_DATA += \
 	libdballe-core.doxytags \
 	libdballe-bufrex.doxytags \
 	libdballe-msg.doxytags \
 	libdballe-db.doxytags \
-	fapi.ps guide.ps \
-	coredox_html/index.html \
-	bufrexdox_html/index.html \
-	msgdox_html/index.html \
-	dbdox_html/index.html
+	fapi.ps guide.ps
+noinst_DATA += \
+	core_api/index.html \
+	bufrex_api/index.html \
+	msg_api/index.html \
+	db_api/index.html
 if HAVE_LATEX2HTML
 noinst_DATA += \
 	fapi_html/index.html \
@@ -50,31 +52,43 @@ noinst_DATA += \
 endif
 endif
 
+install-data-local:
+	for pkg in core bufrex msg db; do \
+		test -d $${pkg}_api && \
+		$(mkinstalldirs) $(docdir)/$${pkg}_api && \
+		find $${pkg}_api -type f -exec $(INSTALL_DATA) '{}' $(docdir)/$${pkg}_api/ \; ; \
+	done || true
+	for pkg in fapi_html guide_html; do \
+		test -d $$pkg && \
+		$(mkinstalldirs) $(docdir)/$$pkg && \
+		find $$pkg -type f -exec $(INSTALL_DATA) '{}' $(docdir)/$$pkg/ \; ; \
+	done || true
+
 libdballe-core.doxytags: $(coredoxdeps)
 	doxygen $<
 
-coredox_html/index.html: $(coredoxdeps)
+core_api/index.html: $(coredoxdeps)
 	doxygen $<
 
 
 libdballe-bufrex.doxytags: $(bufrexdoxdeps)
 	doxygen $<
 
-bufrexdox_html/index.html: $(bufrexdoxdeps)
+bufrex_api/index.html: $(bufrexdoxdeps)
 	doxygen $<
 
 
 libdballe-msg.doxytags: $(msgdoxdeps)
 	doxygen $<
 
-msgdox_html/index.html: $(msgdoxdeps)
+msg_api/index.html: $(msgdoxdeps)
 	doxygen $<
 
 
 libdballe-db.doxytags: $(dbdoxdeps)
 	doxygen $<
 
-dbdox_html/index.html: $(dbdoxdeps)
+db_api/index.html: $(dbdoxdeps)
 	doxygen $<
 
 
@@ -115,6 +129,6 @@ EXTRA_DIST = libdballe-core.dox libdballe-bufrex.dox libdballe-msg.dox libdballe
 CLEANFILES = libdballe-{core,bufrex,msg,db}.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
 
 clean-local:
-	rm -rf {core,bufrex,msg,db}dox_html
+	rm -rf {core,bufrex,msg,db}_api
 	rm -rf guide_html
 	rm -rf fapi_html

@@ -567,7 +567,7 @@ GENERATE_HTML          = YES
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
 # put in front of it. If left blank `html' will be used as the default path.
 
-HTML_OUTPUT            = bufrexdox_html
+HTML_OUTPUT            = bufrex_api
 
 # The HTML_FILE_EXTENSION tag can be used to specify the file extension for 
 # each generated HTML page (for example: .htm,.php,.asp). If it is left blank 
@@ -984,7 +984,7 @@ SKIP_FUNCTION_MACROS   = YES
 # is run, you must also specify the path to the tagfile here.
 
 TAGFILES               = 
-#TAGFILES               = libdballe-core.doxytags=../coredox_html
+#TAGFILES               = libdballe-core.doxytags=../core_api
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create 
 # a tag file that is based on the input files it reads.

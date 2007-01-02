@@ -12,23 +12,3 @@ export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 # Store build information
 common-binary-post-install-arch common-binary-post-install-indep::
 	dh_buildinfo
-
-install/libdballe-core-doc::
-	chmod 0755 debian/install-doxygen
-	debian/install-doxygen core
-
-install/libdballe-bufrex-doc::
-	chmod 0755 debian/install-doxygen
-	debian/install-doxygen bufrex
-
-install/libdballe-msg-doc::
-	chmod 0755 debian/install-doxygen
-	debian/install-doxygen msg
-
-install/libdballe-db-doc::
-	chmod 0755 debian/install-doxygen
-	debian/install-doxygen db
-
-install/libdballe-doc::
-	chmod 0755 debian/install-doxygen
-	debian/install-doxygen dox_html $(cdbs_curpkg)
