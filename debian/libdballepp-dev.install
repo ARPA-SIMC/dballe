@@ -1,0 +1,6 @@
+debian/tmp/usr/include/dballe++
+debian/tmp/usr/lib/libdballepp*.a
+debian/tmp/usr/lib/pkgconfig/libdballepp*
+debian/tmp/usr/lib/libdballepp*.la
+debian/tmp/usr/lib/libdballepp*.so
+debian/tmp/usr/share/aclocal/libdballepp.m4

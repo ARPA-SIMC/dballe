@@ -184,6 +184,28 @@ Description: Database for punctual meteorological data (Fortran shared library)
  .
  This is the shared library for Fortran programs.
 
+Package: libdballepp-dev
+Section: libdevel
+Architecture: any
+Depends: libdballepp3 (=${Source-Version})
+Recommends: pkg-config
+Description: Database for punctual meteorological data (C++ development library)
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+ .
+ This is the DB-All.e C++ API, a thin wrapper around the C API that takes
+ advantage of C++ features.
+
+Package: libdballepp3
+Section: libs
+Architecture: any
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
+Description: Database for punctual meteorological data (C++ shared library)
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+ .
+ This is the shared library for C++ programs.
+
 Package: dballe-common
 Section: misc
 Architecture: any
