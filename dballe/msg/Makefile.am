@@ -108,4 +108,7 @@ tranges.dox: mktranges
 tranges.tex: mktranges
 	./mktranges tex < $< > $@
 
+distclean-local:
+	rm -f ltypes.dox ltypes.tex tranges.dox tranges.tex
+
 EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mkltypes mktranges
