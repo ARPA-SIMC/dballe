@@ -10,7 +10,6 @@ dballeincludedir = $(includedir)/dballe
 dballeinclude_HEADERS = \
 		init.h \
 		marshal.h \
-		dba_file.h \
 		formatter.h \
 		cmdline.h
 
@@ -18,7 +17,6 @@ lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
 		init.c \
 		marshal.c \
-		dba_file.c \
 		formatter.c \
 		cmdline.c
 libdballe_la_LIBADD = \

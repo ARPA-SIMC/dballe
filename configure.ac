@@ -99,11 +99,11 @@ AC_CONFIG_FILES([
 Makefile
 dballe/Makefile
 dballe/core/Makefile
-dballe/io/Makefile
 dballe/bufrex/Makefile
 dballe/msg/Makefile
 dballe/msg/bufrex/Makefile
 dballe/msg/aof/Makefile
+dballe/msg/io/Makefile
 dballe/db/Makefile
 dballe/tests/Makefile
 dballe/bench/Makefile
