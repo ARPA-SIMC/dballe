@@ -24,6 +24,7 @@
 
 #include "cmdline.h"
 #include <dballe/core/aliases.h>
+#include <dballe/core/verbose.h>
 
 #include <popt.h>
 #include <string.h>
@@ -396,6 +397,8 @@ by applications for fast access.
 int dba_cmdline_dispatch_main (const struct tool_desc* desc, int argc, const char* argv[])
 {
 	int i;
+
+	dba_verbose_init();
 
 	/* Dispatch execution to the handler for the various commands */
 	for (i = 1; i < argc; i++)

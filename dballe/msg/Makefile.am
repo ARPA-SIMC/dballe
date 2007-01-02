@@ -4,6 +4,7 @@ messageincludedir = $(includedir)/dballe/msg
 
 # Include the .cc files that contain template definitions
 messageinclude_HEADERS = \
+		formatter.h \
 		datum.h \
 		level.h \
 		vars.h \
@@ -18,6 +19,7 @@ messageinclude_HEADERS = \
 
 lib_LTLIBRARIES = libdballe-msg.la
 libdballe_msg_la_SOURCES = \
+		formatter.c \
 		vars.c \
 		datum.c \
 		level.c \

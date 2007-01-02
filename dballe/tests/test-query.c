@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/init.h>
+#include <dballe/core/verbose.h>
 #include <dballe/cmdline.h>
 #include <dballe/db/db.h>
 #include <dballe/db/internals.h>
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 	SQLHSTMT stm = NULL;
 	TIMER_DEF();
 
-	DBA_RUN_OR_GOTO(cleanup, dba_init());
+	dba_verbose_init();
 	TIME("dba_init");
 	DBA_RUN_OR_GOTO(cleanup, dba_db_create("big", "enrico", "", &db));
 	TIME("dba_db_create");
@@ -117,7 +117,6 @@ cleanup:
 		SQLFreeHandle(SQL_HANDLE_STMT, stm);
 	if (db != NULL)
 		dba_db_delete(db);
-	dba_shutdown();
 
 	if (err == DBA_OK)
 		return 0;

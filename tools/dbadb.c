@@ -25,7 +25,6 @@
 #include <dballe/db/db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
-#include <dballe/init.h>
 #include <dballe/cmdline.h>
 
 #include <string.h>
@@ -133,7 +132,6 @@ dba_err do_dump(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_record_create(&query));
 	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
-	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
 	DBA_RUN_OR_RETURN(dba_db_query(db, query, &cursor, &count));
 	DBA_RUN_OR_RETURN(dba_record_create(&result));
@@ -151,7 +149,6 @@ dba_err do_dump(poptContext optCon)
 	}
 
 	dba_db_delete(db);
-	dba_shutdown();
 
 	dba_record_delete(result);
 	dba_record_delete(query);
@@ -174,7 +171,6 @@ dba_err do_stations(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_record_create(&query));
 	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
-	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
 	DBA_RUN_OR_RETURN(dba_db_ana_query(db, query, &cursor, &count));
 	DBA_RUN_OR_RETURN(dba_record_create(&result));
@@ -192,7 +188,6 @@ dba_err do_stations(poptContext optCon)
 	}
 
 	dba_db_delete(db);
-	dba_shutdown();
 
 	dba_record_delete(result);
 	dba_record_delete(query);
@@ -212,11 +207,9 @@ dba_err do_wipe(poptContext optCon)
 	/* Get the optional name of the repinfo file */
 	table = poptGetArg(optCon);
 
-	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
 	DBA_RUN_OR_RETURN(dba_db_reset(db, table));
 	dba_db_delete(db);
-	dba_shutdown();
 
 	return dba_error_ok();
 }
@@ -233,11 +226,9 @@ dba_err do_cleanup(poptContext optCon)
 	/* Get the optional name of the repinfo file */
 	table = poptGetArg(optCon);
 
-	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
 	DBA_RUN_OR_RETURN(dba_db_remove_orphans(db));
 	dba_db_delete(db);
-	dba_shutdown();
 
 	return dba_error_ok();
 }
@@ -255,12 +246,10 @@ dba_err do_repinfo(poptContext optCon)
 	/* Get the optional name of the */
 	table = poptGetArg(optCon);
 
-	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
 	DBA_RUN_OR_RETURN(dba_db_update_repinfo(db, table, &added, &deleted, &updated));
 	printf("Update completed: %d added, %d deleted, %d updated.\n", added, deleted, updated);
 	dba_db_delete(db);
-	dba_shutdown();
 
 	return dba_error_ok();
 }
@@ -305,7 +294,6 @@ dba_err do_import(poptContext optCon)
 
 	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 
-	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&data.db));
 	data.overwrite = op_overwrite;
 	DBA_RUN_OR_RETURN(parse_op_report(data.db, &(data.forced_repcod)));
@@ -313,7 +301,6 @@ dba_err do_import(poptContext optCon)
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
 
 	dba_db_delete(data.db);
-	dba_shutdown();
 
 	return dba_error_ok();
 }
@@ -356,7 +343,6 @@ dba_err do_export(poptContext optCon)
 			dba_cmdline_error(optCon, "output template must be specified as 'type.subtype' (type number, then dot, then subtype number)");
 
 	/* Connect to the database */
-	DBA_RUN_OR_RETURN(dba_init());
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
 
 	/* Create the query */
@@ -374,7 +360,6 @@ dba_err do_export(poptContext optCon)
 
 	dba_file_delete(d.file);
 	dba_db_delete(db);
-	dba_shutdown();
 
 	dba_record_delete(query);
 

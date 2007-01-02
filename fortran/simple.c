@@ -22,13 +22,12 @@
 #define _GNU_SOURCE
 /* _GNU_SOURCE is defined to have asprintf */
 
-#include <dballe/init.h>
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>
 #include <dballe/db/db.h>
 #include <dballe/db/cursor.h>
 #include <dballe/db/internals.h>
-#include <dballe/formatter.h>
+#include <dballe/msg/formatter.h>
 
 #include <f77.h>
 #include <limits.h>
@@ -223,7 +222,6 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	{
 		fdba_handle_init_session();
 		fdba_handle_init_simple();
-		DBA_RUN_OR_RETURN(dba_init());
 	}
 	++usage_refcount;
 
@@ -238,7 +236,6 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	return dba_error_ok();
 
 fail:
-	dba_shutdown();
 	return err;
 }
 
@@ -256,8 +253,14 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 	FDBA_HANDLE(session, *dbahandle).session = NULL;
 	fdba_handle_release_session(*dbahandle);
 
+	/*
+	dba_shutdown does not exist anymore, but I keep this code commented out
+	here as a placeholder if in the future we'll need to hook actions when the
+	usage refcount goes to 0
+
 	if (--usage_refcount == 0)
 		dba_shutdown();
+	*/
 }
 
 static int check_flag(const char* val, const char* buf, int len)

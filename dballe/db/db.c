@@ -68,6 +68,7 @@
 #undef USE_REF_INT
 
 static SQLHENV dba_od_env;
+static int dba_od_env_initialized = 0;
 
 static const char* init_tables[] = {
 	"attr", "data", "context", "pseudoana", "repinfo"
@@ -292,35 +293,34 @@ static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
 }		
 
 
-dba_err dba_db_init()
-{
-	// Allocate ODBC environment handle and register version 
-	int res = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &dba_od_env);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Allocating main environment handle");
-
-	res = SQLSetEnvAttr(dba_od_env, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0); 
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		dba_err res = dba_db_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Asking for ODBC version 3");
-		SQLFreeHandle(SQL_HANDLE_ENV, dba_od_env);
-		return res;
-	}
-
-	return dba_error_ok();
-}
-
-void dba_db_shutdown()
-{
-	SQLFreeHandle(SQL_HANDLE_ENV, dba_od_env);
-}
-
 dba_err dba_db_create(const char* dsn, const char* user, const char* password, dba_db* db)
 {
 	dba_err err = DBA_OK;
 	char drivername[50];
 	int sqlres;
 	SQLSMALLINT len;
+
+	if (dba_od_env_initialized == 0)
+	{
+		// Allocate ODBC environment handle and register version 
+		int res = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &dba_od_env);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+			return dba_db_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Allocating main environment handle");
+
+		res = SQLSetEnvAttr(dba_od_env, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0); 
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		{
+			dba_err res = dba_db_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Asking for ODBC version 3");
+			SQLFreeHandle(SQL_HANDLE_ENV, dba_od_env);
+			return res;
+		}
+		dba_od_env_initialized = 1;
+
+		// One could close the main handle with this:
+		// SQLFreeHandle(SQL_HANDLE_ENV, dba_od_env);
+		// but there does not seem to be a big need of it.
+	}
+
 
 	/* Allocate a new handle */
 	if ((*db = (dba_db)calloc(1, sizeof(struct _dba_db))) == NULL)

@@ -20,7 +20,7 @@
  */
 
 #include "bench/Benchmark.h"
-#include <dballe/init.h>
+#include <dballe/core/verbose.h>
 
 #include <sys/times.h>
 #include <unistd.h>
@@ -60,7 +60,7 @@ int main(int argc, const char* argv[])
 	// We want predictable results
 	srand(1);
 
-	DBA_RUN_OR_GOTO(fail, dba_init());
+	dba_verbose_init();
 
 	if (argc == 1)
 		DBA_RUN_OR_GOTO(fail, Benchmark::root()->run());
@@ -76,8 +76,6 @@ int main(int argc, const char* argv[])
 			else
 				DBA_RUN_OR_GOTO(fail, Benchmark::root()->run(argv[i]));
 	}
-
-	dba_shutdown();
 
 	return 0;
 

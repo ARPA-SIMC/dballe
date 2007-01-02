@@ -8,14 +8,10 @@ dballeincludedir = $(includedir)/dballe
 
 # Include the .cc files that contain template definitions
 dballeinclude_HEADERS = \
-		init.h \
-		formatter.h \
 		cmdline.h
 
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
-		init.c \
-		formatter.c \
 		cmdline.c
 libdballe_la_LIBADD = \
 		core/libdballe-core.la \

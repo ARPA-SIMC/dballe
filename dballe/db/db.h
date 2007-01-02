@@ -45,20 +45,6 @@ typedef struct _dba_db* dba_db;
 #endif
 
 /**
- * Initialize the dballe subsystem.
- *
- * This function needs to be called just once at the beginning of the work.
- */
-dba_err dba_db_init();
-
-/**
- * Shutdown the dballe subsystem.
- *
- * This function needs to be called just once at the end of the work.
- */
-void dba_db_shutdown();
-
-/**
  * Start a session with DBALLE
  *
  * @param dsn
