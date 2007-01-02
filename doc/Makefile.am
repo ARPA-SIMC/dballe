@@ -3,6 +3,29 @@
 guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib db.dia db.eps
 fapisources = fapi.tex ../dballe/core/aliases.tex ../dballe/core/record_keyword.tex ../dballe/msg/ltypes.tex
 
+coredoxdeps = libdballe-core.dox \
+	      ../dballe/core/libdballe-core.la \
+	      ../dballe/core/core.dox \
+	      ../dballe/core/aliases.dox \
+	      ../dballe/core/record_keyword.dox
+
+bufrexdoxdeps = libdballe-bufrex.dox \
+	        ../dballe/bufrex/libdballe-bufrex.la \
+	        ../dballe/bufrex/bufrex.dox \
+	        $(coredoxdeps)
+
+msgdoxdeps = libdballe-msg.dox \
+	     ../dballe/msg/libdballe-msg.la \
+	     ../dballe/msg/msg.dox \
+	     ../dballe/msg/ltypes.dox \
+	     $(bufrexdoxdeps)
+
+dbdoxdeps = libdballe-db.dox \
+	    ../dballe/db/libdballe-db.la \
+	    ../dballe/db/db.dox \
+	    $(msgdoxdeps)
+
+
 LATEX2HTML = latex2html -local_icons
 
 noinst_DATA =
@@ -25,31 +48,31 @@ noinst_DATA += \
 endif
 endif
 
-libdballe-core.doxytags: libdballe-core.dox ../dballe/core/libdballe-core.la
+libdballe-core.doxytags: $(coredoxdeps)
 	doxygen $<
 
-coredox_html/index.html: libdballe-core.dox ../dballe/core/libdballe-core.la
-	doxygen $<
-
-
-libdballe-bufrex.doxytags: libdballe-bufrex.dox ../dballe/bufrex/libdballe-bufrex.la
-	doxygen $<
-
-bufrexdox_html/index.html: libdballe-bufrex.dox ../dballe/bufrex/libdballe-bufrex.la
+coredox_html/index.html: $(coredoxdeps)
 	doxygen $<
 
 
-libdballe-msg.doxytags: libdballe-msg.dox ../dballe/msg/libdballe-msg.la
+libdballe-bufrex.doxytags: $(bufrexdoxdeps)
 	doxygen $<
 
-msgdox_html/index.html: libdballe-msg.dox ../dballe/msg/libdballe-msg.la
+bufrexdox_html/index.html: $(bufrexdoxdeps)
 	doxygen $<
 
 
-libdballe-db.doxytags: libdballe-db.dox ../dballe/db/libdballe-db.la
+libdballe-msg.doxytags: $(msgdoxdeps)
 	doxygen $<
 
-dbdox_html/index.html: libdballe-db.dox ../dballe/db/libdballe-db.la
+msgdox_html/index.html: $(msgdoxdeps)
+	doxygen $<
+
+
+libdballe-db.doxytags: $(dbdoxdeps)
+	doxygen $<
+
+dbdox_html/index.html: $(dbdoxdeps)
 	doxygen $<
 
 

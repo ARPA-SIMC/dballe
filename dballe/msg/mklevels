@@ -29,7 +29,59 @@ while (<STDIN>)
 #	}
 }
 
-if ($op eq 'tex')
+
+# Formatting setup for Doxygen output
+
+my ($ltype, $desc, $l1, $l2);
+
+our $DoxIntro = q{/**@defgroup levels Level type values
+@ingroup tables
+
+This table lists the various level type, l1, l2 value combinations that can be
+used to specify a vertical level.
+
+They values closely correspond to how a level is specified in the GRIB file
+format.
+
+\verbatim
+};
+format DoxTop =
+Level type  Description                            L1 value                    L2 value
+
+.
+format Dox =
+@<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<
+$ltype,     $desc,                                 $l1,                        $l2
+~           ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<
+            $desc,                                 $l1,                        $l2
+~           ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<
+            $desc,                                 $l1,                        $l2
+~           ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<
+            $desc,                                 $l1,                        $l2
+~           ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<
+            $desc,                                 $l1,                        $l2
+
+.
+our $DoxBottom = q{\endverbatim
+*/
+};
+
+
+
+if ($op eq 'dox')
+{
+	print $DoxIntro;
+	$^L = "\n\n";
+	$^ = "DoxTop";
+	$~ = "Dox";
+	for my $l (@items)
+	{
+		($ltype, $desc, $l1, $l2) = @$l;
+		write STDOUT;	
+	}
+	print $DoxBottom;
+}
+elsif ($op eq 'tex')
 {
 	print q(\begin{scriptsize}
 \begin{longtable}{|@{\hspace{0.5mm}}l@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|}

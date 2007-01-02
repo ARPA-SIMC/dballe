@@ -94,7 +94,10 @@ tut_test_LDADD = \
 # Documentation bits
 #
 
-noinst_DATA = ltypes.tex
+noinst_DATA = ltypes.dox ltypes.tex
+
+ltypes.dox: ltypes.txt mklevels
+	./mklevels dox < $< > $@
 
 ltypes.tex: ltypes.txt mklevels
 	./mklevels tex < $< > $@
