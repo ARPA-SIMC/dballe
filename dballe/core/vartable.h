@@ -158,7 +158,7 @@ typedef struct _dba_vartable* dba_vartable;
  *   The ::dba_varinfo structure with the variable results.  It needs to be
  *   deallocated using dba_varinfo_delete()
  * @return
- *   The error indicator for this function (See @ref dba_err)
+ *   The error indicator for this function (See @ref error.h)
  */
 dba_err dba_varinfo_query_local(dba_varcode code, dba_varinfo* info);
 
@@ -173,7 +173,7 @@ dba_err dba_varinfo_query_local(dba_varcode code, dba_varinfo* info);
  *   The ::dba_varinfo structure with the variable results.  It needs to be
  *   deallocated using dba_varinfo_delete()
  * @return
- *   The error indicator for this function (See @ref dba_err)
+ *   The error indicator for this function (See @ref error.h)
  */
 dba_err dba_varinfo_query_local_altered(dba_varcode code, dba_alteration change, dba_varinfo* info);
 
@@ -184,7 +184,7 @@ dba_err dba_varinfo_query_local_altered(dba_varcode code, dba_alteration change,
  *   The copy of the B table.  It needs to be deallocated with
  *   dba_varinfo_delete()
  * @return
- *   The error indicator for this function (See @ref dba_err)
+ *   The error indicator for this function (See @ref error.h)
  */
 dba_err dba_varinfo_get_local_table(dba_vartable* table);
 
@@ -208,7 +208,7 @@ dba_varcode dba_descriptor_code(const char* desc);
  * @retval table
  *   The vartable to access the data
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err dba_vartable_create(const char* id, dba_vartable* table);
 
@@ -234,7 +234,7 @@ const char* dba_vartable_id(dba_vartable table);
  *   the ::dba_varinfo structure with the results of the query.  The returned
  *   dba_varinfo needs to be deallocated using dba_varinfo_delete()
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err dba_vartable_query(dba_vartable table, dba_varcode var, dba_varinfo* info);
 
@@ -251,7 +251,7 @@ dba_err dba_vartable_query(dba_vartable table, dba_varcode var, dba_varinfo* inf
  *   the ::dba_varinfo structure with the results of the query.  The returned
  *   dba_varinfo needs to be deallocated using dba_varinfo_delete()
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err dba_vartable_query_altered(dba_vartable table, dba_varcode var, dba_alteration change, dba_varinfo* info);
 
@@ -275,7 +275,7 @@ typedef void (*dba_vartable_iterator)(dba_varinfo info, void* data);
  * @param data
  *   Arbitrary value passed as-is to the callback.
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err dba_vartable_iterate(dba_vartable table, dba_vartable_iterator func, void* data);
 

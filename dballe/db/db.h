@@ -57,7 +57,7 @@ typedef struct _dba_db* dba_db;
  * @param db
  *   The dba_db handle returned by the function
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_create(const char* dsn, const char* user, const char* password, dba_db* db);
 
@@ -85,7 +85,7 @@ void dba_db_delete(dba_db db);
  *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
  *   used.
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_reset(dba_db db, const char* repinfo_file);
 
@@ -95,7 +95,7 @@ dba_err dba_db_reset(dba_db db, const char* repinfo_file);
  * @param db
  *   The dballe session id
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_delete_tables(dba_db db);
 
@@ -118,7 +118,7 @@ dba_err dba_db_delete_tables(dba_db db);
  * @retval updated
  *   The number of repinfo entryes that have been updated
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file, int* added, int* deleted, int* updated);
 
@@ -137,7 +137,7 @@ dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod);
  * @retval valid
  *   Set to 1 if the report code is supported, 0 if not
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid);
 
@@ -157,7 +157,7 @@ dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid);
  * @param count
  *   The count of items in the anagraphic archive, returned by the function
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count);
 
@@ -183,7 +183,7 @@ dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* c
  *   ID of the context record for the entry just inserted.  NULL can be used
  *   if the caller is not interested in this value.
  * @return
- *   The error indicator for the function (See @ref dba_err).
+ *   The error indicator for the function (See @ref error.h).
  */
 dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_can_add, int* ana_id, int* context_id);
 
@@ -206,7 +206,7 @@ dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_
  * @retval count
  *   The number of values returned by the query
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count);
 
@@ -219,7 +219,7 @@ dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count);
  *   The record with the query data (see technical specifications, par. 1.6.4
  *   "parameter output/input") to select the items to be deleted
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_remove(dba_db db, dba_record rec);
 
@@ -235,7 +235,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec);
  * @param db
  *   Database to operate on
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_remove_orphans(dba_db db);
 
@@ -258,7 +258,7 @@ dba_err dba_db_remove_orphans(dba_db db);
  * @retval count
  *   Number of QC items returned in qc
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size, dba_record attrs, int* count);
 
@@ -276,7 +276,7 @@ dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varco
  * @param can_replace
  *   If true, then existing data can be rewritten, else data can only be added.
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_var, dba_record attrs, int can_replace);
 
@@ -295,7 +295,7 @@ dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_va
  * @param attrs
  *   The record with the attributes to be added
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_qc_insert(dba_db db, int id_context, dba_varcode id_var, dba_record attrs);
 
@@ -313,7 +313,7 @@ dba_err dba_db_qc_insert(dba_db db, int id_context, dba_varcode id_var, dba_reco
  * @param attrs
  *   The record with the attributes to be added
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_qc_insert_new(dba_db db, int id_context, dba_varcode id_var, dba_record attrs);
 
@@ -333,7 +333,7 @@ dba_err dba_db_qc_insert_new(dba_db db, int id_context, dba_varcode id_var, dba_
  * @param qcs_size
  *   Number of items in the qcs array.
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_qc_remove(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size);
 

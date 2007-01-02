@@ -42,7 +42,7 @@ extern "C" {
  * @retval msgs
  *   The resulting ::dba_msg
  * @return
- *   The error indicator for the function. See @ref dba_err
+ *   The error indicator for the function. See @ref error.h
  */
 dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msgs *msgs);
 
@@ -56,7 +56,7 @@ dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msgs *msgs);
  * @retval rmsg
  *   The resulting ::dba_rawmsg
  * @return
- *   The error indicator for the function. See @ref dba_err
+ *   The error indicator for the function. See @ref error.h
  */
 dba_err dba_marshal_encode(dba_msgs msgs, dba_encoding type, dba_rawmsg *rmsg);
 

@@ -44,7 +44,7 @@ extern "C" {
  * @retval found
  *   Will be set to true if a message has been found in the file, else to false.
  * @return
- *   The error indicator for the function. See @ref dba_err
+ *   The error indicator for the function. See @ref error.h
  */
 dba_err dba_file_read_msgs(dba_file file, dba_msgs* msgs, int* found);
 
@@ -60,7 +60,7 @@ dba_err dba_file_read_msgs(dba_file file, dba_msgs* msgs, int* found);
  * @param subcat
  *   The BUFR of CREX message subcategory to use for encoding (0 for auto detect)
  * @return
- *   The error indicator for the function. See @ref dba_err
+ *   The error indicator for the function. See @ref error.h
  */
 dba_err dba_file_write_msgs(dba_file file, dba_msgs msgs, int cat, int subcat);
 

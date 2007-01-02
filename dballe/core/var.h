@@ -64,7 +64,7 @@ typedef struct _dba_var_attr* dba_var_attr_iterator;
  *   The variable created.  It will need to be deallocated using
  *   dba_var_delete().
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_create(dba_varinfo info, dba_var* var);
 
@@ -79,7 +79,7 @@ dba_err dba_var_create(dba_varinfo info, dba_var* var);
  *   The variable created.  It will need to be deallocated using
  *   dba_var_delete().
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_createi(dba_varinfo info, int val, dba_var* var);
 
@@ -94,7 +94,7 @@ dba_err dba_var_createi(dba_varinfo info, int val, dba_var* var);
  *   The variable created.  It will need to be deallocated using
  *   dba_var_delete().
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_created(dba_varinfo info, double val, dba_var* var);
 
@@ -109,7 +109,7 @@ dba_err dba_var_created(dba_varinfo info, double val, dba_var* var);
  *   The variable created.  It will need to be deallocated using
  *   dba_var_delete().
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_createc(dba_varinfo info, const char* val, dba_var* var);
 
@@ -122,7 +122,7 @@ dba_err dba_var_createc(dba_varinfo info, const char* val, dba_var* var);
  *   The variable created.  It will need to be deallocated using
  *   dba_var_delete().
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_create_local(dba_varcode code, dba_var* var);
 
@@ -135,7 +135,7 @@ dba_err dba_var_create_local(dba_varcode code, dba_var* var);
  *   The new copy of source.  It will need to be deallocated using
  *   dba_var_delete().
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_copy(dba_var source, dba_var* dest);
 
@@ -167,7 +167,7 @@ int dba_var_equals(dba_var var1, dba_var var2);
  * @retval val
  *   The resulting value
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_enqi(dba_var var, int* val);
 
@@ -179,7 +179,7 @@ dba_err dba_var_enqi(dba_var var, int* val);
  * @retval val
  *   The resulting value
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_enqd(dba_var var, double* val);
 
@@ -191,7 +191,7 @@ dba_err dba_var_enqd(dba_var var, double* val);
  * @retval val
  *   The resulting value
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_enqc(dba_var var, const char** val);
 
@@ -203,7 +203,7 @@ dba_err dba_var_enqc(dba_var var, const char** val);
  * @param val
  *   The value to set
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_seti(dba_var var, int val);
 
@@ -215,7 +215,7 @@ dba_err dba_var_seti(dba_var var, int val);
  * @param val
  *   The value to set
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_setd(dba_var var, double val);
 
@@ -227,7 +227,7 @@ dba_err dba_var_setd(dba_var var, double val);
  * @param val
  *   The value to set
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_setc(dba_var var, const char* val);
 
@@ -237,7 +237,7 @@ dba_err dba_var_setc(dba_var var, const char* val);
  * @param var
  *   The variable to unset
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_unset(dba_var var);
 
@@ -252,7 +252,7 @@ dba_err dba_var_unset(dba_var var);
  *   A pointer to the attribute if it exists, else NULL.  The pointer points to
  *   the internal representation and must not be deallocated by the caller.
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_enqa(dba_var var, dba_varcode code, dba_var* attr);
 
@@ -266,7 +266,7 @@ dba_err dba_var_enqa(dba_var var, dba_varcode code, dba_var* attr);
  *   The attribute to add.  It will be copied inside var, and memory management
  *   will still be in charge of the caller.
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_seta(dba_var var, dba_var attr);
 
@@ -280,7 +280,7 @@ dba_err dba_var_seta(dba_var var, dba_var attr);
  *   The attribute to add.  It will be used directly, and var will take care of
  *   its memory management.
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_seta_nocopy(dba_var var, dba_var attr);
 
@@ -292,7 +292,7 @@ dba_err dba_var_seta_nocopy(dba_var var, dba_var attr);
  * @param code
  *   The dba_varcode of the attribute to remove
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_unseta(dba_var var, dba_varcode code);
 
@@ -301,7 +301,7 @@ dba_err dba_var_unseta(dba_var var, dba_varcode code);
  * @param var
  *   The variable to work on
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 void dba_var_clear_attrs(dba_var var);
 
@@ -377,7 +377,7 @@ dba_var dba_var_attr_iterator_attr(dba_var_attr_iterator iter);
  * @param orig
  *   The variable to read the value from
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_copy_val(dba_var dest, dba_var orig);
 
@@ -389,7 +389,7 @@ dba_err dba_var_copy_val(dba_var dest, dba_var orig);
  * @param src
  *   The variable with the attributes to copy.
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_copy_attrs(dba_var dest, dba_var src);
 
@@ -404,7 +404,7 @@ dba_err dba_var_copy_attrs(dba_var dest, dba_var src);
  *   The converted variable.  It needs to be deallocated using
  *   dba_var_delete().
  * @returns
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_var_convert(dba_var orig, dba_varinfo info, dba_var* conv);
 

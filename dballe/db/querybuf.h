@@ -49,7 +49,7 @@ typedef struct _dba_querybuf* dba_querybuf;
  * @retval buf
  *   The query buffer
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_querybuf_create(int maxsize, dba_querybuf* buf);
 
@@ -99,7 +99,7 @@ int dba_querybuf_size(dba_querybuf buf);
  * @param sep
  *   The separator to add between every list item
  * @return 
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_querybuf_start_list(dba_querybuf buf, const char* sep);
 
@@ -111,7 +111,7 @@ dba_err dba_querybuf_start_list(dba_querybuf buf, const char* sep);
  * @param str
  *   The string to append
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_querybuf_append(dba_querybuf buf, const char* str);
 
@@ -123,7 +123,7 @@ dba_err dba_querybuf_append(dba_querybuf buf, const char* str);
  * @param fmt
  *   The string to append, which will be formatted in printf style
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_querybuf_appendf(dba_querybuf buf, const char* fmt, ...);
 
@@ -138,7 +138,7 @@ dba_err dba_querybuf_appendf(dba_querybuf buf, const char* fmt, ...);
  * @param str
  *   The string to append
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_querybuf_append_list(dba_querybuf buf, const char* str);
 

@@ -83,7 +83,7 @@ typedef struct _dba_db_repinfo* dba_db_repinfo;
  * @retval ins
  *   The resulting dba_db_repinfo structure.
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_repinfo_create(dba_db db, dba_db_repinfo* ins);
 
@@ -106,7 +106,7 @@ void dba_db_repinfo_delete(dba_db_repinfo ins);
  *   The resulting id.  It will always be a valid one, because the functions
  *   fails if memo is not found.
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_repinfo_get_id(dba_db_repinfo ri, const char* memo, int* id);
 
@@ -120,7 +120,7 @@ dba_err dba_db_repinfo_get_id(dba_db_repinfo ri, const char* memo, int* id);
  * @retval exists
  *   Set to true if id exists, else false.
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_repinfo_has_id(dba_db_repinfo ri, int id, int* exists);
 

@@ -62,7 +62,7 @@ extern "C" {
  * @retval msgs
  *   The decoded message
  * @return
- *   The error indicator for the function.  See @ref ::dba_err
+ *   The error indicator for the function.  See @ref error.h
  */
 dba_err aof_codec_decode(dba_rawmsg msg, dba_msgs* msgs);
 
@@ -76,7 +76,7 @@ dba_err aof_codec_decode(dba_rawmsg msg, dba_msgs* msgs);
  * @retval subcategory
  *   The AOF subcategory of the message
  * @return
- *   The error indicator for the function.  See @ref ::dba_err
+ *   The error indicator for the function.  See @ref error.h
  */
 dba_err aof_codec_get_category(dba_rawmsg msg, int* category, int* subcategory);
 
@@ -88,7 +88,7 @@ dba_err aof_codec_get_category(dba_rawmsg msg, int* category, int* subcategory);
  * @param in
  *   The message to encode
  * @return
- *   The error indicator for the function.  See @ref ::dba_err
+ *   The error indicator for the function.  See @ref error.h
  */
 /*
 dba_err aof_message_encode(aof_message msg, dba_msg in);

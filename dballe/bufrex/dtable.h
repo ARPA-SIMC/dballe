@@ -48,7 +48,7 @@ typedef struct _bufrex_dtable* bufrex_dtable;
  *   of the program, and it does not need to be deallocated.
  *
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err bufrex_dtable_create(const char* id, bufrex_dtable* table);
 
@@ -63,7 +63,7 @@ dba_err bufrex_dtable_create(const char* id, bufrex_dtable* table);
  *   the bufrex_opcode chain that contains the expansion elements
  *   (must be deallocated by the caller using bufrex_opcode_delete)
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err bufrex_dtable_query(bufrex_dtable table, dba_varcode var, bufrex_opcode* res);
 

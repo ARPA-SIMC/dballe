@@ -60,7 +60,7 @@ typedef struct _dba_file* dba_file;
  * @retval file
  *   The new file, to be deallocated with dba_file_delete()
  * @returns
- *   The error indicator for the function.  See @ref ::dba_err
+ *   The error indicator for the function.  See @ref error.h
  */
 dba_err dba_file_create(dba_encoding type, const char* name, const char* mode, dba_file* file);
 
@@ -102,7 +102,7 @@ const char* dba_file_name(dba_file file);
  * @retval found
  *   Will be set to true if a message has been found in the file, else to false.
  * @return
- *   The error indicator for the function. See @ref dba_err
+ *   The error indicator for the function. See @ref error.h
  */
 dba_err dba_file_read(dba_file file, dba_rawmsg msg, int* found);
 
@@ -114,7 +114,7 @@ dba_err dba_file_read(dba_file file, dba_rawmsg msg, int* found);
  * @param msg
  *   The ::dba_rawmsg with the encoded data to write
  * @return
- *   The error indicator for the function. See @ref dba_err
+ *   The error indicator for the function. See @ref error.h
  */
 dba_err dba_file_write(dba_file file, dba_rawmsg msg);
 

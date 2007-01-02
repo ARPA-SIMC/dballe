@@ -43,7 +43,7 @@ extern "C" {
  * @retval msgs
  *   The decoded message
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msgs* msgs);
 
@@ -55,7 +55,7 @@ dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msgs* msgs);
  * @retval msgs
  *   The decoded message
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msgs* msgs);
 
@@ -71,7 +71,7 @@ dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msgs* msgs);
  * @retval raw
  *   The raw encoded message
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw);
 
@@ -87,7 +87,7 @@ dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw
  * @retval raw
  *   The raw encoded message
  * @return
- *   The error status (See @ref dba_err)
+ *   The error status (See @ref error.h)
  */
 dba_err bufrex_encode_crex(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw);
 
@@ -100,7 +100,7 @@ dba_err bufrex_encode_crex(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw
  * @param msg
  *   The dba_msg to take the data from
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err bufrex_msg_from_dba_msg(bufrex_msg raw, dba_msg msg);
 
@@ -112,7 +112,7 @@ dba_err bufrex_msg_from_dba_msg(bufrex_msg raw, dba_msg msg);
  * @param msgs
  *   The dba_msgs to take the data from
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs);
 
@@ -124,7 +124,7 @@ dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs);
  * @retval msgs
  *   The dba_msgs with the interpreted data
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs);
 
@@ -139,7 +139,7 @@ dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs);
  * @retval subtype
  *   The subtype of the encoding template to use
  * @return
- *   The error indicator for the function (See @ref dba_err)
+ *   The error indicator for the function (See @ref error.h)
  */
 dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype);
 	
