@@ -85,13 +85,11 @@ guide.dvi: $(guidesources)
 
 fapi.dvi: $(fapisources)
 
-EXTRA_DIST = libdballe-core.dox libdballe-bufrex.dox libdballe.dox $(guidesources) $(fapisources)
+EXTRA_DIST = libdballe-core.dox libdballe-bufrex.dox libdballe-msg.dox libdballe-db.dox $(guidesources) $(fapisources)
 
-CLEANFILES = libdballe-core.doxytags libdballe-bufrex.doxytags libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
+CLEANFILES = libdballe-{core,bufrex,msg,db}.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
 
 clean-local:
-	rm -rf coredox_html
-	rm -rf bufrexdox_html
-	rm -rf dox_html
+	rm -rf {core,bufrex,msg,db}dox_html
 	rm -rf guide_html
 	rm -rf fapi_html
