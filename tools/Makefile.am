@@ -4,16 +4,16 @@ DBALLELIBS = ../dballe/core/libdballe-core.la ../dballe/bufrex/libdballe-bufrex.
 
 bin_PROGRAMS = dbatbl dbamsg dbadb
 
-dbatbl_SOURCES = processor.c conversion.c dbatbl.c
-dbatbl_LDFLAGS = $(DBALLELIBS) ../dballe/libdballe.la -lpopt
-dbatbl_DEPENDENCIES = $(DBALLELIBS) ../dballe/libdballe.la
+dbatbl_SOURCES = cmdline.c processor.c conversion.c dbatbl.c
+dbatbl_LDFLAGS = $(DBALLELIBS) -lpopt
+dbatbl_DEPENDENCIES = $(DBALLELIBS)
 
-dbamsg_SOURCES = processor.c conversion.c dbamsg.c
-dbamsg_LDFLAGS = $(DBALLELIBS) ../dballe/libdballe.la -lpopt
-dbamsg_DEPENDENCIES = $(DBALLELIBS) ../dballe/libdballe.la
+dbamsg_SOURCES = cmdline.c processor.c conversion.c dbamsg.c
+dbamsg_LDFLAGS = $(DBALLELIBS) -lpopt
+dbamsg_DEPENDENCIES = $(DBALLELIBS)
 
-dbadb_SOURCES = processor.c conversion.c dbadb.c
-dbadb_LDFLAGS = $(DBALLELIBS) ../dballe/libdballe.la -lpopt
-dbadb_DEPENDENCIES = $(DBALLELIBS) ../dballe/libdballe.la
+dbadb_SOURCES = cmdline.c processor.c conversion.c dbadb.c
+dbadb_LDFLAGS = $(DBALLELIBS) -lpopt
+dbadb_DEPENDENCIES = $(DBALLELIBS)
 
-EXTRA_DIST = processor.h conversion.h
+EXTRA_DIST = cmdline.h processor.h conversion.h

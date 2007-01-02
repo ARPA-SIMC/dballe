@@ -24,7 +24,7 @@
 #include <dballe/core/record.h>
 #include <dballe/core/rawfile.h>
 #include <dballe/msg/writers.h>
-#include <dballe/cmdline.h>
+#include "cmdline.h"
 
 #include "processor.h"
 #include "conversion.h"

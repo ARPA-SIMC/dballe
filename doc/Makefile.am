@@ -13,7 +13,6 @@ noinst_DATA += \
 	libdballe-bufrex.doxytags \
 	libdballe-msg.doxytags \
 	libdballe-db.doxytags \
-	libdballe.doxytags \
 	fapi.ps guide.ps
 if DO_HTML
 noinst_DATA += \
@@ -21,7 +20,6 @@ noinst_DATA += \
 	bufrexdox_html/index.html \
 	msgdox_html/index.html \
 	dbdox_html/index.html \
-	dox_html/index.html \
 	fapi_html/index.html \
 	guide_html/index.html
 endif
@@ -52,13 +50,6 @@ libdballe-db.doxytags: libdballe-db.dox ../dballe/db/libdballe-db.la
 	doxygen $<
 
 dbdox_html/index.html: libdballe-db.dox ../dballe/core/libdballe-db.la
-	doxygen $<
-
-
-libdballe.doxytags: libdballe.dox ../dballe/libdballe.la
-	doxygen $<
-
-dox_html/index.html: libdballe.dox ../dballe/libdballe.la
 	doxygen $<
 
 

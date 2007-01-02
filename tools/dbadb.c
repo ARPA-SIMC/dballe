@@ -25,7 +25,7 @@
 #include <dballe/db/db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
-#include <dballe/cmdline.h>
+#include "cmdline.h"
 
 #include <string.h>
 #include <stdlib.h>

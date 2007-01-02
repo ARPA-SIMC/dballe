@@ -1,23 +1,21 @@
 #!/bin/sh -ue
 
-SRC=$1
-shift
 PKG=$1
 shift
 
 TAGLOCATIONS=""
-for p in libdballe-core libdballe-bufrex libdballe-msg libdballe-db
+for p in core bufrex msg db
 do
-	if [ $PKG = $p-dev ]
+	if [ $PKG = libdballe-$p ]
 	then
 		break
 	else
-		TAGLOCATIONS="$TAGLOCATIONS -l $p.doxytags@../../$p/html"
+		TAGLOCATIONS="$TAGLOCATIONS -l libdballe-$p.doxytags@../../libdballe-$p-doc/html"
 	fi
 done
 
-SRCDIR=doc/$SRC
-DESTDIR=debian/$PKG/usr/share/doc/$PKG/html
+SRCDIR=doc/${PKG}dox_html
+DESTDIR=debian/libdballe-${PKG}-doc/usr/share/doc/libdballe-${PKG}-doc/html
 
 install -d -o root -g root -m 755 $DESTDIR
 find $SRCDIR -type f -exec install -o root -g root -m 0644 '{}' $DESTDIR/ ';'

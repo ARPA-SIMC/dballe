@@ -113,12 +113,10 @@ doc/libdballe-core.dox
 doc/libdballe-bufrex.dox
 doc/libdballe-msg.dox
 doc/libdballe-db.dox
-doc/libdballe.dox
 libdballe-core.pc
 libdballe-bufrex.pc
 libdballe-msg.pc
 libdballe-db.pc
-libdballe.pc
 ])
 AC_OUTPUT
 #examples/Makefile
