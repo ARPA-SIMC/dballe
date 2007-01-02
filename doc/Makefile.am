@@ -5,26 +5,22 @@ fapisources = fapi.tex ../dballe/core/aliases.tex ../dballe/core/record_keyword.
 
 coredoxdeps = libdballe-core.dox \
 	      ../dballe/core/libdballe-core.la \
-	      ../dballe/core/core.dox \
 	      ../dballe/core/aliases.dox \
 	      ../dballe/core/btable.dox \
 	      ../dballe/core/record_keyword.dox
 
 bufrexdoxdeps = libdballe-bufrex.dox \
 	        ../dballe/bufrex/libdballe-bufrex.la \
-	        ../dballe/bufrex/bufrex.dox \
 	        $(coredoxdeps)
 
 msgdoxdeps = libdballe-msg.dox \
 	     ../dballe/msg/libdballe-msg.la \
-	     ../dballe/msg/msg.dox \
 	     ../dballe/msg/ltypes.dox \
 	     ../dballe/msg/tranges.dox \
 	     $(bufrexdoxdeps)
 
 dbdoxdeps = libdballe-db.dox \
 	    ../dballe/db/libdballe-db.la \
-	    ../dballe/db/db.dox \
 	    $(msgdoxdeps)
 
 
@@ -64,31 +60,31 @@ install-data-local:
 		find $$pkg -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/$$pkg/ \; ; \
 	done || true
 
-libdballe-core.doxytags: $(coredoxdeps)
+libdballe-core.doxytags: $(coredoxdeps) ../dballe/main-core.dox
 	doxygen $<
 
-core_api/index.html: $(coredoxdeps)
-	doxygen $<
-
-
-libdballe-bufrex.doxytags: $(bufrexdoxdeps)
-	doxygen $<
-
-bufrex_api/index.html: $(bufrexdoxdeps)
+core_api/index.html: $(coredoxdeps) ../dballe/main-core.dox
 	doxygen $<
 
 
-libdballe-msg.doxytags: $(msgdoxdeps)
+libdballe-bufrex.doxytags: $(bufrexdoxdeps) ../dballe/main-bufrex.dox
 	doxygen $<
 
-msg_api/index.html: $(msgdoxdeps)
+bufrex_api/index.html: $(bufrexdoxdeps) ../dballe/main-bufrex.dox
 	doxygen $<
 
 
-libdballe-db.doxytags: $(dbdoxdeps)
+libdballe-msg.doxytags: $(msgdoxdeps) ../dballe/main-msg.dox
 	doxygen $<
 
-db_api/index.html: $(dbdoxdeps)
+msg_api/index.html: $(msgdoxdeps) ../dballe/main-msg.dox
+	doxygen $<
+
+
+libdballe-db.doxytags: $(dbdoxdeps) ../dballe/main-db.dox
+	doxygen $<
+
+db_api/index.html: $(dbdoxdeps) ../dballe/main-db.dox
 	doxygen $<
 
 

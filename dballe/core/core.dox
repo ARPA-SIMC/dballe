@@ -1,6 +1,0 @@
-/** @defgroup core Core functions
-
-Core functions used by most DB-ALLe modules.
-*/
-
-/** @addtogroup tables */

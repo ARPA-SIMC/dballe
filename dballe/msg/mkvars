@@ -35,7 +35,12 @@ extern "C" {
 /** @file
  * @ingroup msg
  * Shortcut IDs and functions to quickly refer to commonly used values inside a
- * dba_msg
+ * ::dba_msg.
+ *
+ * The shortcuts are defined in the file vars.csv, which maps a name to the tuple
+ * (preferred C type, BLocal, Level type, L1, L2, P indicator, P1, P2).  The file
+ * vars.csv is used to generate code (vars.h and vars.c) that provides a set of
+ * getters and setters for every named value.
  */
 
 #include <dballe/msg/msg.h>

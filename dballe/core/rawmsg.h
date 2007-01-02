@@ -33,12 +33,6 @@ extern "C" {
 
 #include <dballe/core/error.h>
 
-/** @defgroup dbamessage Dballe message encoder and decoders 
- * @ingroup dballe
- *
- * Functions used to parse and encode messages in various formats.
- */
-
 /**
  * Supported encodings for report data
  */

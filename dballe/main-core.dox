@@ -1,0 +1,13 @@
+/** @mainpage The DB-All.e core library
+
+\section core The DB-All.e core library
+
+This library provides various core functionality for weather applications.
+
+You can use it for:
+
+\li The infrastructure for error handling (see @ref error.h)
+\li The infrastructure for working with physical quantities (see @ref var.h, @ref vartable.h, @ref conv.h, @ref record.h)
+\li The infrastructure for reading and writing meteorological data (see @ref file.h, @ref rawmsg.h)
+
+*/

@@ -28,8 +28,44 @@ extern "C" {
 
 /** @file
  * @ingroup msg
- * Encoding-independent in-memory representation for any kind of weather
- * report.
+ *
+ * Abstraction for a weather report message which is independent from the
+ * encoding, used to make sense of decoded information and to carry data between
+ * the various import and export modules of DB-ALLe.
+ * 
+ * The internal representation is as connected as possible to physics rather than
+ * to observations.  dba_msg is a container for related weather information,
+ * stored in a nonambiguous way.
+ *
+ * To understand what is the difference betwee ::dba_msg and other ways of
+ * representing weather data, it is important to keep in mind how a value is
+ * usually defined in the various encodings:
+ * 
+ * \li by previous values and position, as in the AOF encoding
+ * \li by previous values, data descriptor and sometimes position, as in the BUFR
+ *     encoding
+ * \li by measure type and physical coordinates, as in ::dba_msg and the DB-ALLe
+ *     database
+ * 
+ * ::dba_msg contains values as tuples (variable, level layer, time range).
+ * 
+ * The variable is represented by a dba_var.  The dba_varcode of the dba_var
+ * refers to a local B table which lists physical measurements unambiguously.
+ * 
+ * Level layer is a triple (level type, l1, l2) and time range is a triple
+ * (pindicator, p1, p2).  The values of these two triples follow what is used in
+ * the GRIB encoding plus some local extensions, and an explanation of their
+ * possible value is found in the document "DB-ALLe Guide of the Fortran API".
+ * 
+ * Importers and exporters have to implement a mapping between their
+ * representation and the unambiguous physical representation.  Luckily this is
+ * necessarily possible, because the ultimate purpose of the various message
+ * encodings is to correctly transmit those physical data.
+ *
+ * Since to work with the full physical coordinates one needs to specify a lot of
+ * different parameters in order to identify a value (BLocal value, level layer,
+ * time range), there is a var.h module available with shortcut functions to
+ * the values that are used more commonly.
  */
 
 #include <dballe/msg/level.h>
