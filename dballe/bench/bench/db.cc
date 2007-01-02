@@ -20,7 +20,7 @@
  */
 
 #include "Benchmark.h"
-#include <extra/test-utils.h>
+#include <extra/test-utils-db.h>
 
 #include <dballe/core/record.h>
 #include <dballe/db/db.h>

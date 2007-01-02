@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 TOP_SRCDIR=`dirname $0`/..
 
@@ -13,3 +13,5 @@ CMD="$1"
 #echo Output saved in `pwd`/testrun-$id
 
 $DEBUGGER $CMD $ARGS
+
+exit $?

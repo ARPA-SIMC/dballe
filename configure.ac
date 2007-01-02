@@ -102,7 +102,6 @@ dballe/core/Makefile
 dballe/bufrex/Makefile
 dballe/msg/Makefile
 dballe/db/Makefile
-dballe/tests/Makefile
 dballe/bench/Makefile
 fortran/Makefile
 tools/Makefile

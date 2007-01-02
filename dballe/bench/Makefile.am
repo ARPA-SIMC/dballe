@@ -9,7 +9,7 @@ benchmark_SOURCES= \
 	bench/db.cc \
 	$(top_srcdir)/extra/test-utils-core.cc \
 	$(top_srcdir)/extra/test-utils-bufrex.cc \
-	$(top_srcdir)/extra/test-utils.cc
+	$(top_srcdir)/extra/test-utils-db.cc
 benchmark_LDADD = ../db/libdballe-db.la -lpopt
 
 INCLUDES = -I$(top_srcdir)

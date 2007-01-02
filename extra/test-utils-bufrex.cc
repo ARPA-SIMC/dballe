@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "test-utils.h"
+#include "test-utils-bufrex.h"
 
 #include <dballe/msg/aof_codec.h>
 

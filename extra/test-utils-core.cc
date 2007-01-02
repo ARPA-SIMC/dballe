@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "test-utils.h"
+#include "test-utils-core.h"
 #include "dballe/core/file_internals.h"
 
 #include <unistd.h>

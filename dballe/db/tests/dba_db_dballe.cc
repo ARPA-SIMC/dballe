@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/test-utils.h>
+#include <extra/test-utils-db.h>
 #include <dballe/db/querybuf.h>
 #include <dballe/db/db.h>
 #include <dballe/db/internals.h>

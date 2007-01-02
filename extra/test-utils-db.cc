@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "test-utils.h"
+#include "test-utils-db.h"
 
 #include <unistd.h>
 #include <sys/types.h>

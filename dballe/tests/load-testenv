@@ -1,2 +1,0 @@
-export DBA_TABLES=`pwd`/../../tables
-export DBA_REPINFO=`pwd`/../../tables/repinfo.csv
