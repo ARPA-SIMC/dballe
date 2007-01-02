@@ -22,7 +22,7 @@ Description: DB-ALL.e core C development library
 Package: libdballe-core3
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends} ${misc:Depends}
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
 Description: DB-ALL.e core shared library
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -47,7 +47,7 @@ Description: Read and write functions for BUFR and CREX weather data
 Package: libdballe-bufrex3
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends} ${misc:Depends}
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
 Description: Read and write functions for BUFR and CREX weather data (shared library)
  Functions to read and write weather data in WMO BUFR and CREX formats.
  .
@@ -87,7 +87,7 @@ Description: Interpret weather reports into physycal data, and vice-versa
 Package: libdballe-msg3
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends} ${misc:Depends}
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
 Description: Interpret weather reports into physycal data, and vice-versa (shared library)
  The library implements dba_msg, a storage structure for physical data
  precisely located in space and time.  The structure can be:
@@ -148,7 +148,7 @@ Description: Smart on-disk database for working with weather data as physical qu
 Package: libdballe-db3
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends} ${misc:Depends}
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
 Description: Smart on-disk database for working with weather data as physical quantities
  Fast on-disk database where meteorological observed and forecast data can be
  stored, searched, retrieved and updated.
@@ -186,7 +186,7 @@ Description: Smart on-disk database for working with weather data as physical qu
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe2 (= ${Source-Version}), libdballef2 (=${Source-Version}), libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballemsg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version}), libdballe-db-dev (=${Source-Version}), libdballe-db3 (=${Source-Version})
+Depends: libdballe3 (= ${Source-Version}), libdballef3 (=${Source-Version}), libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballemsg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version}), libdballe-db-dev (=${Source-Version}), libdballe-db3 (=${Source-Version})
 Recommends: pkg-config
 Description: Database for punctual meteorological data (C and Fortran development)
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -194,30 +194,41 @@ Description: Database for punctual meteorological data (C and Fortran developmen
  .
  This is the development version of the library.
 
-Package: libdballe2
+Package: libdballe3
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends} ${misc:Depends}
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
 Description: Database for punctual meteorological data (C shared library)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
  This is the shared library for C programs.
 
-Package: libdballef2
+Package: libdballef3
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends} ${misc:Depends}
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
 Description: Database for punctual meteorological data (Fortran shared library)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
  This is the shared library for Fortran programs.
 
+Package: dballe-common
+Section: misc
+Architecture: any
+Description: Common data files for all DB-All.e modules
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+ .
+ This package contains common DB-All.e data files, including variable metadata,
+ BUFR and CREX decoding tables, report metadata, level and time range
+ descriptions.
+
 Package: dballe
 Section: misc
 Architecture: any
-Depends: ${shlibs:Depends} ${misc:Depends}
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
 Description: Database for punctual meteorological data (Command line tools)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
