@@ -163,6 +163,8 @@ Notes about the time range values:
 		$n =~ s/\n+/\n/g;
 		print '\\li ', $n;
 	}
+
+	print "*/\n";
 }
 elsif ($op eq 'tex')
 {

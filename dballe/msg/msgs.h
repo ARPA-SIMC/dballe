@@ -46,6 +46,7 @@ struct _dba_msgs
 	/** Number of elements of msgs that are allocated */
 	int alloclen;
 };
+/** @copydoc _dba_msgs */
 typedef struct _dba_msgs* dba_msgs;
 
 /**

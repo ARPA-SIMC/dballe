@@ -40,8 +40,11 @@ extern "C" {
  */
 struct _dba_msg_level
 {
+	/** Type of the level.  See @ref level_table. */
 	int ltype;
+	/** L1 value of the level.  See @ref level_table. */
 	int l1;
+	/** L2 value of the level.  See @ref level_table. */
 	int l2;
 
 	/** Number of items in this level */
@@ -129,6 +132,12 @@ int dba_msg_level_compare2(const dba_msg_level l, int ltype, int l1, int l2);
  *   The level to add the variable to.
  * @param var
  *   The variable to add.
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
@@ -150,6 +159,12 @@ dba_err dba_msg_level_setc(dba_msg msg, dba_varcode code, const char* val, int c
  *   The level to query
  * @param code
  *   The ::dba_varcode of the variable to query
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   The value found, or NULL if it was not found.
  */
@@ -181,7 +196,7 @@ void dba_msg_level_print(dba_msg_level l, FILE* out);
  *
  * @param l1
  *   First level to compare
- * @param l1
+ * @param l2
  *   Second level to compare
  * @retval diffs
  *   Integer variable that will be incremented by the number of differences

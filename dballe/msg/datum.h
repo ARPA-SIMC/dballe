@@ -42,8 +42,11 @@ struct _dba_msg_datum
 	/** dba_var with the value and its metadata */
 	dba_var var;
 
+	/** Time range type indicator.  See @ref trange_table. */
 	int pind;
+	/** Time range P1 indicator.  See @ref trange_table. */
 	int p1;
+	/** Time range P2 indicator.  See @ref trange_table. */
 	int p2;
 };
 /** @copydoc _dba_msg_datum */
@@ -52,6 +55,12 @@ typedef struct _dba_msg_datum* dba_msg_datum;
 /**
  * Create a new dba_msg_datum
  *
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @retval d
  *   The newly created datum.
  * @return
@@ -99,6 +108,12 @@ int dba_msg_datum_compare(const dba_msg_datum d1, const dba_msg_datum d2);
  *   First dba_msg_datum to compare
  * @param code
  *   Variable code of the second datum in the comparison
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   -1 if p < code,ptype,p1,p2; 0 if p == code,ptype,p1,p2; 1 if p > code,ptype,p1,p2
  */

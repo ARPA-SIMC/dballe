@@ -56,7 +56,7 @@ typedef struct _dba_file* dba_file;
  * @param name
  *   The name of the file to access
  * @param mode
- *   The opening mode of the file (See @ref fopen)
+ *   The opening mode of the file, as used by fopen.
  * @retval file
  *   The new file, to be deallocated with dba_file_delete()
  * @returns

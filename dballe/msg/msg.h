@@ -151,6 +151,12 @@ void dba_msg_delete(dba_msg msg);
  *   L1 value of the level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
@@ -171,6 +177,12 @@ dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l
  *   L1 value of the level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
@@ -221,6 +233,12 @@ dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
  *   L1 value of the level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
@@ -245,6 +263,12 @@ dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype
  *   L1 value of the level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
@@ -269,6 +293,12 @@ dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int lt
  *   L1 value of the level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
@@ -304,6 +334,12 @@ dba_msg_level dba_msg_find_level(dba_msg msg, int ltype, int l1, int l2);
  *   L1 value of the level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   The level found, or NULL if it was not found.
  */
