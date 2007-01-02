@@ -1,5 +1,11 @@
 ## Process this file with automake to produce Makefile.in
 
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
+
+#
+# Shared library
+#
+
 messageincludedir = $(includedir)/dballe/msg
 
 # Include the .cc files that contain template definitions
@@ -57,6 +63,27 @@ libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 vars.h vars.c: vars.csv mkvars
 	./mkvars < $<
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
+#
+# Unit testing
+#
+
+check_PROGRAMS = tut_test
+TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
+TESTS = $(check_PROGRAMS)
+
+CXXFLAGS += -O0
+
+tut_test_SOURCES = \
+	tests/dba_aof_decoder.cc \
+	tests/dba_bufrex_conv.cc \
+	tests/dba_bufrex_generic.cc \
+	tests/dba_formatter.cc \
+	tests/dba_msg.cc \
+	$(top_srcdir)/extra/test-utils-core.cc \
+	$(top_srcdir)/extra/test-utils-bufrex.cc \
+	$(top_srcdir)/extra/tut-main.cc
+tut_test_LDADD = ../core/libdballe-core.la \
+		../bufrex/libdballe-bufrex.la \
+		libdballe-msg.la
 
 EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox

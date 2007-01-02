@@ -20,12 +20,6 @@
  */
 
 #include <extra/test-utils.h>
-#include <dballe/bufrex/bufrex_conv.h>
-#include <dballe/bufrex/crex_decoder.h>
-#include <dballe/bufrex/crex_encoder.h>
-#include <dballe/bufrex/bufr_decoder.h>
-#include <dballe/bufrex/bufr_encoder.h>
-#include <dballe/msg/dba_msg_synop.h>
 
 namespace tut {
 using namespace tut_dballe;
@@ -49,7 +43,8 @@ TESTGRP(dba_msg_generic);
 template<> template<>
 void to::test<1>()
 {
-	dba_msg m = read_test_msg("crex/test-synop0.crex", CREX);
+	dba_msgs msgs = read_test_msg("crex/test-synop0.crex", CREX);
+	dba_msg m = msgs->msgs[0];
 	gen_ensure_equals(m->type, MSG_SYNOP);
 	dba_msg_synop msg = (dba_msg_synop)m;
 
