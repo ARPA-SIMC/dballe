@@ -3,7 +3,7 @@
 
 #include <dballe/core/var.h>
 
-#include <dballe++/bindhelp.h>
+#include <dballe++/error.h>
 
 namespace dballe {
 

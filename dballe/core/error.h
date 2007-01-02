@@ -139,18 +139,31 @@ typedef enum _dba_err dba_err;
  * special handling for some kind of errors.
  */
 typedef enum {
+	/** No error */
 	DBA_ERR_NONE			=  0,
+	/** Item not found */
 	DBA_ERR_NOTFOUND		=  1,
+	/** Wrong variable type */
 	DBA_ERR_TYPE			=  2,
+	/** Cannot allocate memory */
 	DBA_ERR_ALLOC			=  3,
+	/** ODBC error */
 	DBA_ERR_ODBC			=  4,
+	/** Handle management error */
 	DBA_ERR_HANDLES			=  5,
+	/** Buffer is too short to fit data */
 	DBA_ERR_TOOLONG			=  6,
+	/** Error reported by the system */
 	DBA_ERR_SYSTEM			=  7,
+	/** Consistency check failed */
 	DBA_ERR_CONSISTENCY		=  8,
+	/** Parse error */
 	DBA_ERR_PARSE			=  9,
+	/** Write error */
 	DBA_ERR_WRITE			= 10,
+	/** Regular expression error */
 	DBA_ERR_REGEX			= 11,
+	/** Feature not implemented */
 	DBA_ERR_UNIMPLEMENTED	= 12
 } dba_err_code;
 

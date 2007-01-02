@@ -30,33 +30,4 @@ std::string describeTrange(int ptype, int p1, int p2)
 
 }
 
-#ifdef DBALLEPP_COMPILE_TESTSUITE
-
-#include <tests/test-utils.h>
-
-namespace tut {
-
-struct format_shar {
-};
-
-TESTGRP( format );
-
-using namespace dballe;
-
-template<> template<>
-void to::test<1>()
-{
-	for (int i = 0; i < 258; ++i)
-		gen_ensure(!describeLevel(i, 0, 0).empty());
-}
-
-template<> template<>
-void to::test<2>()
-{
-	for (int i = 0; i < 256; ++i)
-		gen_ensure(!describeTrange(i, 0, 0).empty());
-}
-
-}
-
-#endif
+// vim:set ts=4 sw=4:

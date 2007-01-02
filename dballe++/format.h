@@ -1,7 +1,7 @@
 #ifndef DBALLE_CPP_FORMAT_H
 #define DBALLE_CPP_FORMAT_H
 
-#include <dballe++/bindhelp.h>
+#include <string>
 
 namespace dballe {
 
