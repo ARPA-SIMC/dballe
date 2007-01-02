@@ -1323,72 +1323,7 @@ c       get the value of this variable
 
 This table lists all the various value combinations to use as a level layer:
 
-\begin{scriptsize}
-\begin{longtable}{|@{\hspace{0.5mm}}l@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|}
-\hline
-{\em Level type} & {\em Meaning} & {\em Contents ({\tt l1})} & {\em Contents ({\tt l2})} \\
-\hline
-\endhead
-\hline
-\endfoot
-  0     & Reserved & & \\
-  1     & Ground or water surface & 0 & \\
-  2     & Cloud base level & 0 & \\
-  3     & Level of cloud tops & 0 & \\
-  4     & Level of 0$^o$C isotherm & 0 & \\
-  5     & Level of adiabatic condensation lifted from the surface & 0 & \\
-  6     & Maximum wind level & 0 & \\
-  7     & Tropopause & 0 & \\
-  8     & Nominal top of atmosphere & 0 & \\
-  9     & Sea bottom & 0 & \\
-10-19   & Reserved & & \\
-20      & Isothermal level & Temperature in 1/100 K & \\
-21-99   & Reserved & & \\
-100     & Isobaric surface & Pressure in hPa (2 octets) & \\
-101     & Layer between two isobaric surfaces & Pressure of top in kPa & Pressure of bottom in kPa \\
-102     & Mean sea level & 0 & \\
-103     & Specified altitude above mean sea level  & Altitude in meters (2 octets) & \\
-104     & Layer between two specified altitudes above mean sea level & Altitude of top in hm & Altitude of bottom in hm \\
-105     & Specified height above ground & Height in meters (2 octets) & \\
-106     & Layer between two specified height levels above ground & Height of top in hm & Height of bottom in hm \\
-107     & Sigma level & Sigma value in 1/10000 (2 octets) & \\
-108     & Layer between two sigma levels & Sigma value of top in 1/100 & Sigma value of bottom in 1/100 \\
-109     & Hybrid level & Level number (2 octets) & \\
-110     & Layer between two hybrid levels & Level number of top & Level number of bottom \\
-111     & Depth below land surface & Depth in centimeters (2 octets) & \\
-112     & Layer between two depths below land surface & Depth of upper surface in cm & Depth of lower surface in cm \\
-113     & Isentropic (theta) level & Potential temperature in K (2 octets) & \\
-114     & Layer between two isentropic levels & 475 K minus theta of top in K & 475 K minus theta of bottom in K \\
-115     & Level at specified pressure difference from ground to level & Pressure difference in hPa (2 octets) & \\
-116     & Layer between two levels at specified pressure differences from ground to level & Pressure difference from ground to top level in hPa & Pressure difference from ground to bottom level in hPa \\
-117     & Potential vorticity surface & 10-9 K m2 kg-1 s-1 & \\
-118     & Reserved & & \\
-119     & ETA* level & ETA value in 1/10000 (2 octets) & \\
-120     & Layer between two ETA* levels & ETA value at top of layer in 1/100 & ETA value at bottom of layer in 1/100 \\
-121     & Layer between two isobaric surfaces (high precision) & 1100 hPa minus pressure of top in hPa & 1100 hPa minus pressure of bottom in hPa \\
-122-124 & & & \\
-125     & Specified height level above ground (high precision) & Height in centimeters (2 octets)  & \\
-126-127 & Reserved & \\
-128     & Layer between two sigma levels (high precision) & 1.1 minus sigma of top in 1/1000 of sigma & 1.1 minus sigma of bottom in 1/1000 of sigma \\
-129-140 & & & \\
-141     & Layer between two isobaric surfaces (mixed precision) & Pressure of top in kPa & 1100 hPa minus pressure of bottom in hPa \\
-142-159 & Reserved & & \\
-160     & Depth below sea level & Depth in meters (2 octets) & \\
-161-199 & Reserved & & \\
-200     & Entire atmosphere (considered as a single layer) & 0 & \\
-201     & Entire ocean (considered as a single layer) & 0 & \\
-202-254 & Reserved & & \\
-256	& Cloud levels       & 0 & 0=General Cloud Group, 1=CL, 2=CM, 3=CH \\
-256	& Synop cloud group 1 & 1 & 0 \\
-256	& Synop cloud group 2 & 2 & 0 \\
-256	& Synop cloud group 3 & 3 & 0 \\
-256	& Synop cloud group 4 & 4 & 0 \\
-257	& Extra anagraphical informations & & \\
-\hline
-\end{longtable}
-\end{scriptsize}
-
-
+\input{../dballe/msg/ltypes.tex}
 
 \section{Time range}
 

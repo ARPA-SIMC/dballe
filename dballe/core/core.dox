@@ -2,3 +2,5 @@
 
 Core functions used by most DB-ALLe modules.
 */
+
+/** @addtogroup tables */

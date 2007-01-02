@@ -143,7 +143,7 @@ while (<STDIN>)
 our ($tag, $unit, $format, $desc, $ins, $que, $res, $com);
 
 our $DoxIntro = q{/**@defgroup dba_record_keywords Keywords used by dba_record
-@ingroup core
+@ingroup tables
 
 This table lists the keywords used by ::dba_record.  You can use them to query
 and set data using function such as dba_enqi() and dba_seti().

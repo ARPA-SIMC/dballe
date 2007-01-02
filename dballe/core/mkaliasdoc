@@ -32,7 +32,7 @@ while (<STDIN>)
 our ($alias, $var);
 
 our $DoxIntro = q{/**@defgroup dba_core_aliases Variable aliases
-@ingroup core
+@ingroup tables
 
 This table lists the aliases that can be used to refer to varcodes.
 

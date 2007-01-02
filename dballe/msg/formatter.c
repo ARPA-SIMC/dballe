@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdlib.h>     /* strtoul, getenv */
 
-dba_err dba_formatter_describe_level(int ltype, int l1, int l2, char** buf)
+dba_err dba_formatter_describe_level(int ltype, int l1, int l2, char** res)
 {
 	switch (ltype)
 	{
@@ -93,7 +93,7 @@ dba_err dba_formatter_describe_level(int ltype, int l1, int l2, char** buf)
 	return dba_error_ok();
 }
 
-dba_err dba_formatter_describe_trange(int ptype, int p1, int p2, char** buf)
+dba_err dba_formatter_describe_trange(int ptype, int p1, int p2, char** res)
 {
 	switch (ptype)
 	{

@@ -1,0 +1,58 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+my $op = $ARGV[0];
+
+sub n($) {
+	return $_[0] if defined $_[0];
+	return '';
+}
+
+# Read the data
+my @items;
+while (<STDIN>)
+{
+	chop();
+	my @l = split("\t");
+#	if ($l[0] =~ /^(\d+)-(\d+)$/)
+#	{
+#		for my $i ($1..$2)
+#		{
+#			push @items, [$i, $l[1] or '', $l[2] or '', $l[3] or ''];
+#		}
+#	}
+#	else
+#	{
+		push @items, [$l[0], $l[1], n($l[2]), n($l[3])];
+#	}
+}
+
+if ($op eq 'tex')
+{
+	print q(\begin{scriptsize}
+\begin{longtable}{|@{\hspace{0.5mm}}l@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|}
+\hline
+{\em Level type} & {\em Meaning} & {\em Contents ({\tt l1})} & {\em Contents ({\tt l2})} \\\\
+\hline
+\endhead
+\hline
+\endfoot
+);
+
+	for my $l (@items)
+	{
+		print join(' & ', @$l), "\\\\\n";
+	}
+
+	print q(\hline
+\end{longtable}
+\end{scriptsize}
+);
+} else {
+	print STDERR "Unknown operation: $op\n";
+	exit 1;
+}
+
+exit 0;

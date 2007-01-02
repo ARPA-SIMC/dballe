@@ -90,4 +90,13 @@ tut_test_LDADD = \
 	../bufrex/libdballe-bufrex.la \
 	libdballe-msg.la
 
-EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox
+#
+# Documentation bits
+#
+
+noinst_DATA = ltypes.tex
+
+ltypes.tex: ltypes.txt mklevels
+	./mklevels tex < $< > $@
+
+EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mkltypes
