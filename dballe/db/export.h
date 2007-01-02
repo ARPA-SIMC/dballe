@@ -53,7 +53,7 @@ typedef dba_err (*dba_msg_consumer)(dba_msgs msgs, void* data);
  * @param data
  *   Arbitrary extra value to be passed as-is to the ::dba_msg_consumer
  * @returns
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_db_export(dba_db db, dba_record query, dba_msg_consumer cons, void* data);
 

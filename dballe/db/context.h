@@ -76,7 +76,7 @@ void dba_db_context_delete(dba_db_context ins);
  * @retval id
  *   The database ID, or -1 if no existing context entry matches the given values
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_db_context_get_id(dba_db_context ins, int *id);
 
@@ -90,7 +90,7 @@ dba_err dba_db_context_get_id(dba_db_context ins, int *id);
  * @retval id
  *   The database ID
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id);
 
@@ -104,7 +104,7 @@ dba_err dba_db_context_insert(dba_db_context ins, int *id);
  *   The dba_db_context structure, with id filled with the id of the context to
  *   remove.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_db_context_remove(dba_db_context ins);
 

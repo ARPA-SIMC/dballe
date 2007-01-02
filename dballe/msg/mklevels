@@ -34,7 +34,7 @@ while (<STDIN>)
 
 my ($ltype, $desc, $l1, $l2);
 
-our $DoxIntro = q{/**@defgroup levels Level type values
+our $DoxIntro = q{/**@defgroup level_table Level type values
 @ingroup tables
 
 This table lists the various level type, l1, l2 value combinations that can be

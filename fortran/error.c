@@ -41,7 +41,7 @@ FDBA_HANDLE_BODY(errcb, MAX_CALLBACKS, "Error handling callbacks")
 /**
  * Return the error code for the last error that happened
  *
- * @see dba_error_code()
+ * See @ref dba_error_code()
  *
  * @return
  *   The error code.  Please see the documentation of ::dba_err_code for the
@@ -59,7 +59,7 @@ F77_INTEGER_FUNCTION(idba_error_code)()
  * details of the specific condition that caused the error, use
  * fdba_error_context() and fdba_error_details()
  *
- * @see dba_error_message()
+ * See @ref dba_error_message()
  *
  * @param message
  *   The string holding the error messag.  If the string is not long enough, it
@@ -78,7 +78,7 @@ F77_SUBROUTINE(idba_error_message)(CHARACTER(message) TRAIL(message))
  *
  * This string describes what the code that failed was trying to do.
  *
- * @see dba_error_context()
+ * See @ref dba_error_context()
  *
  * @param message
  *   The string holding the error context.  If the string is not long enough,
@@ -99,7 +99,7 @@ F77_SUBROUTINE(idba_error_context)(CHARACTER(message) TRAIL(message))
  * able to get extra informations about it, for example by querying the error
  * functions of an underlying module.
  *
- * @see dba_error_details()
+ * See @ref dba_error_details()
  *
  * @param message
  *   The string holding the error details.  If the string is not long enough,
@@ -129,7 +129,7 @@ void fdba_error_callback_invoker(void* data)
  * Set a callback to be invoked when an error of a specific kind happens.
  *
  * @param code
- *   The error code (@see ::dba_err_code) of the error that triggers this
+ *   The error code (See @ref ::dba_err_code) of the error that triggers this
  *   callback.  If DBA_ERR_NONE is used, then the callback is invoked on all
  *   errors.
  * @param func

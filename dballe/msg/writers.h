@@ -42,7 +42,7 @@ extern "C" {
  * @retval writer
  *   The new writer, to be deallocated with dba_file_writer_delete()
  * @returns
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err dba_file_writer_create_bufr(dba_file_writer* writer, dba_rawfile file);
 
@@ -59,7 +59,7 @@ dba_err dba_file_writer_create_bufr(dba_file_writer* writer, dba_rawfile file);
  * @param subtype
  *   Message subtype of the template to use
  * @returns
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err dba_file_writer_set_bufr_template(dba_file_writer writer, int type, int subtype);
 
@@ -69,7 +69,7 @@ dba_err dba_file_writer_set_bufr_template(dba_file_writer writer, int type, int 
  * @retval writer
  *   The new writer, to be deallocated with dba_file_writer_delete()
  * @returns
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err dba_file_writer_create_crex(dba_file_writer* writer, dba_rawfile file);
 
@@ -86,7 +86,7 @@ dba_err dba_file_writer_create_crex(dba_file_writer* writer, dba_rawfile file);
  * @param subtype
  *   Message subtype of the template to use
  * @returns
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err dba_file_writer_set_crex_template(dba_file_writer writer, int type, int subtype);
 
@@ -96,7 +96,7 @@ dba_err dba_file_writer_set_crex_template(dba_file_writer writer, int type, int 
  * @retval writer
  *   The new writer, to be deallocated with dba_file_writer_delete()
  * @returns
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err dba_file_writer_create_aof(dba_file_writer* writer, dba_rawfile file);
 
@@ -110,7 +110,7 @@ dba_err dba_file_writer_create_aof(dba_file_writer* writer, dba_rawfile file);
  * @retval found
  *   Will be set to true if a message has been found in the file, else to false.
  * @return
- *   The error indicator for the function. @see dba_err
+ *   The error indicator for the function. See @ref dba_err
  */
 dba_err dba_file_writer_write(dba_file_writer writer, dba_msg msg);
 
@@ -124,7 +124,7 @@ dba_err dba_file_writer_write(dba_file_writer writer, dba_msg msg);
  * @retval found
  *   Will be set to true if a message has been found in the file, else to false.
  * @return
- *   The error indicator for the function. @see dba_err
+ *   The error indicator for the function. See @ref dba_err
  */
 dba_err dba_file_writer_write_raw(dba_file_writer writer, dba_rawmsg msg);
 

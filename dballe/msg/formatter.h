@@ -43,7 +43,7 @@ extern "C" {
  *   The formatted layer description, on a newly allocated string.  It is the
  *   responsibility of the caller to deallocate the string.
  * @returns
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_formatter_describe_level(int ltype, int l1, int l2, char** buf);
 
@@ -57,7 +57,7 @@ dba_err dba_formatter_describe_level(int ltype, int l1, int l2, char** buf);
  *   The formatted time range description, on a newly allocated string.  It is
  *   the responsibility of the caller to deallocate the string.
  * @returns
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_formatter_describe_trange(int ptype, int p1, int p2, char** buf);
 

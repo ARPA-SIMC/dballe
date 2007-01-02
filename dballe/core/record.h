@@ -135,7 +135,7 @@ typedef struct _dba_item* dba_record_cursor;
  * @retval info
  *   The ::dba_varinfo structure with the informations.
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err dba_record_keyword_info(dba_keyword keyword, dba_varinfo* info);
 
@@ -325,7 +325,7 @@ const char* dba_record_var_peek_value(dba_record rec, dba_varcode code);
  * @retval found
  *   true if the record contains a value for the parameter, else false.
  * @return
- *   The error indicator for the function (@see dba_err).
+ *   The error indicator for the function (See @ref dba_err).
  */
 dba_err dba_record_contains_key(dba_record rec, dba_keyword parameter, int* found);
 
@@ -339,7 +339,7 @@ dba_err dba_record_contains_key(dba_record rec, dba_keyword parameter, int* foun
  * @retval found
  *   true if the record contains a value for the parameter, else false.
  * @return
- *   The error indicator for the function (@see dba_err).
+ *   The error indicator for the function (See @ref dba_err).
  */
 dba_err dba_record_contains_var(dba_record rec, dba_varcode code, int* found);
 
@@ -354,7 +354,7 @@ dba_err dba_record_contains_var(dba_record rec, dba_varcode code, int* found);
  *   A copy of the internal dba_var with the parameter.  You need to deallocate
  *   it with dba_var_delete().
  * @return
- *   The error indicator for the function (@see dba_err).
+ *   The error indicator for the function (See @ref dba_err).
  */
 dba_err dba_record_key_enq(dba_record rec, dba_keyword parameter, dba_var* var);
 
@@ -369,7 +369,7 @@ dba_err dba_record_key_enq(dba_record rec, dba_keyword parameter, dba_var* var);
  *   A copy of the internal dba_var with the parameter.  You need to deallocate
  *   it with dba_var_delete().
  * @return
- *   The error indicator for the function (@see dba_err).
+ *   The error indicator for the function (See @ref dba_err).
  */
 dba_err dba_record_var_enq(dba_record rec, dba_varcode code, dba_var* var);
 
@@ -486,7 +486,7 @@ dba_err dba_record_var_enqc(dba_record rec, dba_varcode code, const char** value
  *   The record will copy the variable and will not take ownership of it:
  *   memory management will remain in charge of the caller.
  * @return
- *   The error indicator for the function (@see dba_err).
+ *   The error indicator for the function (See @ref dba_err).
  */
 dba_err dba_record_key_set(dba_record rec, dba_keyword parameter, dba_var var);
 
@@ -503,7 +503,7 @@ dba_err dba_record_key_set(dba_record rec, dba_keyword parameter, dba_var var);
  *   The record will copy the variable and will not take ownership of it:
  *   memory management will remain in charge of the caller.
  * @return
- *   The error indicator for the function (@see dba_err).
+ *   The error indicator for the function (See @ref dba_err).
  */
 dba_err dba_record_var_set(dba_record rec, dba_varcode code, dba_var var);
 
@@ -517,7 +517,7 @@ dba_err dba_record_var_set(dba_record rec, dba_varcode code, dba_var var);
  *   The record will copy the variable and will not take ownership of it:
  *   memory management will remain in charge of the caller.
  * @return
- *   The error indicator for the function (@see dba_err).
+ *   The error indicator for the function (See @ref dba_err).
  */
 dba_err dba_record_var_set_direct(dba_record rec, dba_var var);
 
@@ -527,7 +527,7 @@ dba_err dba_record_var_set_direct(dba_record rec, dba_var var);
  * @param rec
  *   The record where the value is to be set.
  * @return
- *   The error indicator for the function (@see dba_err).
+ *   The error indicator for the function (See @ref dba_err).
  */
 dba_err dba_record_set_ana_context(dba_record rec);
 
@@ -744,7 +744,7 @@ dba_var dba_record_cursor_variable(dba_record_cursor cur);
  *   An array of 6 integers that will be filled with the maximum year, month,
  *   day, hour, minute and seconds.
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err dba_record_parse_date_extremes(dba_record rec, int* minvalues, int* maxvalues);
 

@@ -54,7 +54,7 @@ typedef struct _dba_msgs* dba_msgs;
  * @retval msgs
  *   The newly created dba_msgs.
  * @returns
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msgs_create(dba_msgs *msgs);
 
@@ -75,7 +75,7 @@ void dba_msgs_delete(dba_msgs msgs);
  *   The message to append.  The dba_msgs array will take over memory
  *   management for it.
  * @returns
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msgs_append_acquire(dba_msgs msgs, dba_msg msg);
 

@@ -96,7 +96,7 @@ typedef struct _dba_rawmsg* dba_rawmsg;
  *   The new ::dba_rawmsg.  It will need to be deallocated using
  *   dba_rawmsg_delete()
  * \returns
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err dba_rawmsg_create(dba_rawmsg* msg);
 
@@ -106,7 +106,7 @@ dba_err dba_rawmsg_create(dba_rawmsg* msg);
  * \param msg
  *   The ::dba_rawmsg to delete
  * \returns
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 void dba_rawmsg_delete(dba_rawmsg msg);
 
@@ -134,7 +134,7 @@ dba_err dba_rawmsg_acquire_buf(dba_rawmsg msg, unsigned char* buf, int size);
  * \retval size
  *   The size of the data in buf
  * \returns
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err dba_rawmsg_get_raw(dba_rawmsg msg, const unsigned char** buf, int* size);
 
@@ -148,7 +148,7 @@ dba_err dba_rawmsg_get_raw(dba_rawmsg msg, const unsigned char** buf, int* size)
  * \param msg
  *   The message to enlarge
  * \returns
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err dba_rawmsg_expand_buffer(dba_rawmsg msg);
 

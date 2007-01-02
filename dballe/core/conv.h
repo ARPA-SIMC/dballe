@@ -45,7 +45,7 @@ extern "C" {
  * @retval res
  *   Converted value
  * @returns
- *   The error indicator for the function (@see ::dba_err)
+ *   The error indicator for the function (See @ref ::dba_err)
  */
 dba_err dba_convert_units(const char* from, const char* to, double val, double* res);
 
@@ -59,7 +59,7 @@ dba_err dba_convert_units(const char* from, const char* to, double val, double* 
  * @retval mul
  *   Multiplier factor used in the conversion
  * @returns
- *   The error indicator for the function (@see ::dba_err)
+ *   The error indicator for the function (See @ref ::dba_err)
  */
 dba_err dba_convert_units_get_mul(const char* from, const char* to, double* mul);
 

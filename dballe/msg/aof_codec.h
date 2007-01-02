@@ -62,7 +62,7 @@ extern "C" {
  * @retval msgs
  *   The decoded message
  * @return
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err aof_codec_decode(dba_rawmsg msg, dba_msgs* msgs);
 
@@ -76,7 +76,7 @@ dba_err aof_codec_decode(dba_rawmsg msg, dba_msgs* msgs);
  * @retval subcategory
  *   The AOF subcategory of the message
  * @return
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err aof_codec_get_category(dba_rawmsg msg, int* category, int* subcategory);
 
@@ -88,7 +88,7 @@ dba_err aof_codec_get_category(dba_rawmsg msg, int* category, int* subcategory);
  * @param in
  *   The message to encode
  * @return
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 /*
 dba_err aof_message_encode(aof_message msg, dba_msg in);
@@ -115,7 +115,7 @@ void aof_codec_dump(dba_rawmsg msg, FILE* out);
  * @retval len
  *   The length of the returned rec record.
  * @return
- *   The error indicator for the function. @see dba_err.
+ *   The error indicator for the function. See @ref dba_err.
  */
 dba_err aof_codec_read_record(dba_file file, uint32_t** rec, int* len);
 
@@ -130,7 +130,7 @@ dba_err aof_codec_read_record(dba_file file, uint32_t** rec, int* len);
  * @param len
  *   The number of elements in the rec array.
  * @return
- *   The error indicator for the function. @see dba_err.
+ *   The error indicator for the function. See @ref dba_err.
  */
 dba_err aof_codec_write_record(dba_file file, const uint32_t* rec, int len);
 
@@ -150,7 +150,7 @@ dba_err aof_codec_write_record(dba_file file, const uint32_t* rec, int len);
  * @retval ddr_len
  *   The length of the ddr array.
  * @return
- *   The error indicator for the function. @see dba_err.
+ *   The error indicator for the function. See @ref dba_err.
  */
 dba_err aof_codec_read_header(dba_file file, uint32_t** fdr, int* fdr_len, uint32_t** ddr, int* ddr_len);
 
@@ -164,7 +164,7 @@ dba_err aof_codec_read_header(dba_file file, uint32_t** fdr, int* fdr_len, uint3
  * @param file
  *   The file to write the header to.
  * @return
- *   The error indicator for the function. @see dba_err.
+ *   The error indicator for the function. See @ref dba_err.
  */
 dba_err aof_codec_write_dummy_header(dba_file file);
 
@@ -179,7 +179,7 @@ dba_err aof_codec_write_dummy_header(dba_file file);
  *   The file to operate on.  It must be open in read-write mode and be a
  *   seekable file.
  * @return
- *   The error indicator for the function. @see dba_err.
+ *   The error indicator for the function. See @ref dba_err.
  */
 dba_err aof_codec_fix_header(dba_file file);
 	

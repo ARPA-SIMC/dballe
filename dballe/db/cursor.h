@@ -94,7 +94,7 @@ typedef struct _dba_db_cursor* dba_db_cursor;
  * @retval cur
  *   The newly created cursor.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_db_cursor_create(dba_db db, dba_db_cursor* cur);
 
@@ -121,7 +121,7 @@ void dba_db_cursor_delete(dba_db_cursor cur);
  * @param modifiers
  *   Optional modifiers to ask for special query behaviours
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wanted, unsigned int modifiers);
 

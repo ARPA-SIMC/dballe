@@ -97,7 +97,7 @@ const char* dba_msg_type_name(dba_msg_type type);
  * @retval msg
  *   The newly created dba_msg.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_create(dba_msg* msg);
 
@@ -145,8 +145,14 @@ void dba_msg_delete(dba_msg msg);
  * @param code
  *   The dba_varcode of the destination value.  If it is different than the
  *   varcode of var, a conversion will be attempted.
+ * @param ltype
+ *   Type of the level.  See @ref level_table.
+ * @param l1
+ *   L1 value of the level.  See @ref level_table.
+ * @param l2
+ *   L2 value of the level.  See @ref level_table.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2);
 
@@ -159,8 +165,14 @@ dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l
  * @param var
  *   The dba_var with the value to set.  This dba_msg will take ownership of
  *   memory management.
+ * @param ltype
+ *   Type of the level.  See @ref level_table.
+ * @param l1
+ *   L1 value of the level.  See @ref level_table.
+ * @param l2
+ *   L2 value of the level.  See @ref level_table.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype, int l1, int l2, int pind, int p1, int p2);
 
@@ -172,7 +184,7 @@ dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype, int l1, int l2, 
  * @param var
  *   The dba_var with the value to set, that will be copied into the dba_msg.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_set_by_id(dba_msg msg, dba_var var, int id);
 
@@ -186,7 +198,7 @@ dba_err dba_msg_set_by_id(dba_msg msg, dba_var var, int id);
  *   The dba_var with the value to set.  This dba_msg will take ownership of
  *   memory management.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
 
@@ -203,8 +215,14 @@ dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
  *   The confidence interval of the data, as the value of a B33007 WMO B (per
  *   cent confidence) table entry, that is, a number between 0 and 100
  *   inclusive.
+ * @param ltype
+ *   Type of the level.  See @ref level_table.
+ * @param l1
+ *   L1 value of the level.  See @ref level_table.
+ * @param l2
+ *   L2 value of the level.  See @ref level_table.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
 
@@ -221,8 +239,14 @@ dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype
  *   The confidence interval of the data, as the value of a B33007 WMO B (per
  *   cent confidence) table entry, that is, a number between 0 and 100
  *   inclusive.
+ * @param ltype
+ *   Type of the level.  See @ref level_table.
+ * @param l1
+ *   L1 value of the level.  See @ref level_table.
+ * @param l2
+ *   L2 value of the level.  See @ref level_table.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
 
@@ -239,8 +263,14 @@ dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int lt
  *   The confidence interval of the data, as the value of a B33007 WMO B (per
  *   cent confidence) table entry, that is, a number between 0 and 100
  *   inclusive.
+ * @param ltype
+ *   Type of the level.  See @ref level_table.
+ * @param l1
+ *   L1 value of the level.  See @ref level_table.
+ * @param l2
+ *   L2 value of the level.  See @ref level_table.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
 
@@ -250,6 +280,12 @@ dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, i
  *
  * @param msg
  *   The dba_msg to query
+ * @param ltype
+ *   Type of the level.  See @ref level_table.
+ * @param l1
+ *   L1 value of the level.  See @ref level_table.
+ * @param l2
+ *   L2 value of the level.  See @ref level_table.
  * @return
  *   The level found, or NULL if it was not found.
  */
@@ -262,6 +298,12 @@ dba_msg_level dba_msg_find_level(dba_msg msg, int ltype, int l1, int l2);
  *   The dba_msg to query
  * @param code
  *   The ::dba_varcode of the variable to query
+ * @param ltype
+ *   Type of the level.  See @ref level_table.
+ * @param l1
+ *   L1 value of the level.  See @ref level_table.
+ * @param l2
+ *   L2 value of the level.  See @ref level_table.
  * @return
  *   The level found, or NULL if it was not found.
  */

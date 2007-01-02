@@ -103,7 +103,7 @@ while (<STDIN>)
 	last if $_ eq "%%\n";
 }
 
-#   /** The variable code.  @see DBA_VAR, DBA_VAR_X, DBA_VAR_Y. */
+#   /** The variable code.  See @ref DBA_VAR, DBA_VAR_X, DBA_VAR_Y. */
 # 0 dba_var var;
 #   /** The variable description. */
 # 1 char desc[64];

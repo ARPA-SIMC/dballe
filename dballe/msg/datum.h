@@ -55,7 +55,7 @@ typedef struct _dba_msg_datum* dba_msg_datum;
  * @retval d
  *   The newly created datum.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_datum_create(int pind, int p1, int p2, dba_msg_datum* d);
 
@@ -67,7 +67,7 @@ dba_err dba_msg_datum_create(int pind, int p1, int p2, dba_msg_datum* d);
  * @retval dst
  *   The newly created duplicate.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_datum_copy(dba_msg_datum src, dba_msg_datum* dst);
 

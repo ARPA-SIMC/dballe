@@ -86,7 +86,7 @@ dba_err dba_db_pseudoana_update(dba_db_pseudoana ins);
  *   The dba_db_pseudoana structure, with id filled with the id of the pseudoana to
  *   remove.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_db_pseudoana_remove(dba_db_pseudoana ins);
 

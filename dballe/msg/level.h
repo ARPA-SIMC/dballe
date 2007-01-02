@@ -67,7 +67,7 @@ typedef struct _dba_msg_level* dba_msg_level;
  * @retval l
  *   The newly created level.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_level_create(int ltype, int l1, int l2, dba_msg_level* l);
 
@@ -79,7 +79,7 @@ dba_err dba_msg_level_create(int ltype, int l1, int l2, dba_msg_level* l);
  * @retval dst
  *   The newly created duplicate.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_level_copy(dba_msg_level src, dba_msg_level* dst);
 
@@ -110,6 +110,12 @@ int dba_msg_level_compare(const dba_msg_level l1, const dba_msg_level l2);
  *
  * @param l
  *   First dba_msg_level to compare
+ * @param ltype
+ *   Type of the level.  See @ref level_table.
+ * @param l1
+ *   L1 value of the level.  See @ref level_table.
+ * @param l2
+ *   L2 value of the level.  See @ref level_table.
  * @return
  *   -1 if l < ltype,l1,l2; 0 if l == ltype,l1,l2; 1 if l > ltype,l1,l2
  */
@@ -124,7 +130,7 @@ int dba_msg_level_compare2(const dba_msg_level l, int ltype, int l1, int l2);
  * @param var
  *   The variable to add.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err dba_msg_level_set_nocopy(dba_msg_level l, dba_var var, int pind, int p1, int p2);
 

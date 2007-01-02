@@ -406,7 +406,7 @@ dba_err dba_error_regexp(int code, void* re, const char* fmt, ...);
  * Get the error code for the last error.
  *
  * @return
- *   The error code (@see dba_err_code)
+ *   The error code (See @ref dba_err_code)
  */
 dba_err_code dba_error_get_code();
 
@@ -449,7 +449,7 @@ const char* dba_error_get_backtrace();
  * Set a callback to be invoked when an error of a specific kind happens.
  *
  * @param code
- *   The error code (@see ::dba_err_code) of the error that triggers this
+ *   The error code (See @ref ::dba_err_code) of the error that triggers this
  *   callback.  If DBA_ERR_NONE is used, then the callback is invoked on all
  *   errors. 
  * @param cb

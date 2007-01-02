@@ -130,7 +130,7 @@ typedef struct _bufrex_msg* bufrex_msg;
  * @retval msg
  *   Newly created bufrex_msg
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err bufrex_msg_create(bufrex_type type, bufrex_msg* msg);
 
@@ -167,7 +167,7 @@ void bufrex_msg_reset(bufrex_msg msg);
  *   contain such a subsection before, but memory management is handled by the
  *   bufrex_msg structure.
  * @return
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err bufrex_msg_get_subset(bufrex_msg msg, int subsection, bufrex_subset* vars);
 
@@ -178,7 +178,7 @@ dba_err bufrex_msg_get_subset(bufrex_msg msg, int subsection, bufrex_subset* var
  *   The table id, as a pointer to an internal string.  It must not be
  *   deallocated by the caller.  It is set to NULL when no table has been set.
  * @returns
- *   The error indicator for the function (@see dba_err)
+ *   The error indicator for the function (See @ref dba_err)
  */
 dba_err bufrex_msg_get_table_id(bufrex_msg msg, const char** id);
 
@@ -198,7 +198,7 @@ dba_err bufrex_msg_load_tables(bufrex_msg msg);
  *   the ::dba_varinfo structure with the results of the query.  The returned
  *   ::dba_varinfo needs to be deallocated using dba_varinfo_delete()
  * @return
- *   The error status (@see dba_err)
+ *   The error status (See @ref dba_err)
  */
 dba_err bufrex_msg_query_btable(bufrex_msg msg, dba_varcode code, dba_varinfo* info);
 
@@ -213,7 +213,7 @@ dba_err bufrex_msg_query_btable(bufrex_msg msg, dba_varcode code, dba_varinfo* i
  *   the bufrex_opcode chain that contains the expansion elements
  *   (must be deallocated by the caller using bufrex_opcode_delete)
  * @return
- *   The error status (@see dba_err)
+ *   The error status (See @ref dba_err)
  */
 dba_err bufrex_msg_query_dtable(bufrex_msg msg, dba_varcode code, struct _bufrex_opcode** res);
 
@@ -235,7 +235,7 @@ void bufrex_msg_reset_datadesc(bufrex_msg msg);
  *   section.  It must be deallocated by the caller using
  *   bufrex_opcode_delete()
  * @returns
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err bufrex_msg_get_datadesc(bufrex_msg msg, struct _bufrex_opcode** res);
 
@@ -247,7 +247,7 @@ dba_err bufrex_msg_get_datadesc(bufrex_msg msg, struct _bufrex_opcode** res);
  * @param varcode
  *   The ::dba_varcode to append
  * @returns
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err bufrex_msg_append_datadesc(bufrex_msg msg, dba_varcode varcode);
 
@@ -258,7 +258,7 @@ dba_err bufrex_msg_append_datadesc(bufrex_msg msg, dba_varcode varcode);
  * @param msg
  *   The message to act on
  * @returns
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err bufrex_msg_generate_datadesc(bufrex_msg msg);
 
@@ -281,7 +281,7 @@ dba_err bufrex_msg_encode(bufrex_msg msg, dba_rawmsg* raw);
  * @param out
  *   The ::dba_rawmsg that will hold the encoded data
  * @return
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out);
 
@@ -297,7 +297,7 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out);
  *   If NULL is passed, nothing will be returned.  If a bufr_options is
  *   returned, it will need to be deleted with bufr_options_delete().
  * @return
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out);
 
@@ -309,7 +309,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out);
  * @param out
  *   The ::dba_rawmsg that will hold the encoded data
  * @return
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err crex_encoder_encode(bufrex_msg in, dba_rawmsg out);
 
@@ -325,7 +325,7 @@ dba_err crex_encoder_encode(bufrex_msg in, dba_rawmsg out);
  *   If NULL is passed, nothing will be returned.  If a bufr_options is
  *   returned, it will need to be deleted with bufr_options_delete().
  * @return
- *   The error indicator for the function.  @see ::dba_err
+ *   The error indicator for the function.  See @ref ::dba_err
  */
 dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out);
 

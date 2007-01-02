@@ -61,7 +61,7 @@ typedef struct _bufrex_subset* bufrex_subset;
  * @retval subset
  *   The newly created ::bufrex_subset.
  * @return
- *   The error indicator for the function.  @see dba_err.
+ *   The error indicator for the function.  See @ref dba_err.
  */
 dba_err bufrex_subset_create(dba_vartable btable, bufrex_subset* subset);
 
@@ -88,7 +88,7 @@ void bufrex_subset_reset(bufrex_subset subset);
  *   memory management for the variable, which will be deallocated when the
  *   message is deleted or reset.
  * \return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_store_variable(bufrex_subset subset, dba_var var);
 
@@ -103,7 +103,7 @@ dba_err bufrex_subset_store_variable(bufrex_subset subset, dba_var var);
  * @param var
  *   The variable holding the value for the variable to add
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_store_variable_var(bufrex_subset subset, dba_varcode code, dba_var var);
 
@@ -117,7 +117,7 @@ dba_err bufrex_subset_store_variable_var(bufrex_subset subset, dba_varcode code,
  * @param val
  *   The value for the variable
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_store_variable_i(bufrex_subset subset, dba_varcode code, int val);
 
@@ -131,7 +131,7 @@ dba_err bufrex_subset_store_variable_i(bufrex_subset subset, dba_varcode code, i
  * @param val
  *   The value for the variable
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_store_variable_d(bufrex_subset subset, dba_varcode code, double val);
 
@@ -145,7 +145,7 @@ dba_err bufrex_subset_store_variable_d(bufrex_subset subset, dba_varcode code, d
  * @param val
  *   The value for the variable
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_store_variable_c(bufrex_subset subset, dba_varcode code, const char* val);
 
@@ -157,7 +157,7 @@ dba_err bufrex_subset_store_variable_c(bufrex_subset subset, dba_varcode code, c
  * @param code
  *   The ::dba_varcode of the variable to add
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_store_variable_undef(bufrex_subset subset, dba_varcode code);
 
@@ -172,7 +172,7 @@ dba_err bufrex_subset_store_variable_undef(bufrex_subset subset, dba_varcode cod
  * @param attr
  *   The attribute to copy in the last variable
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_add_attr(bufrex_subset subset, dba_var attr); 
 
@@ -185,7 +185,7 @@ dba_err bufrex_subset_add_attr(bufrex_subset subset, dba_var attr);
  * @param var
  *   The variable with the attributes to copy
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_add_attrs(bufrex_subset subset, dba_var var); 
 
@@ -196,7 +196,7 @@ dba_err bufrex_subset_add_attrs(bufrex_subset subset, dba_var var);
  * @param subset
  *   The message to operate on
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_apply_attributes(bufrex_subset subset);
 
@@ -210,7 +210,7 @@ dba_err bufrex_subset_apply_attributes(bufrex_subset subset);
  * @param attr
  *   The code of the attribute that the bitmap will represent
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_append_dpb(bufrex_subset subset, int size, dba_varcode attr);
 
@@ -222,7 +222,7 @@ dba_err bufrex_subset_append_dpb(bufrex_subset subset, int size, dba_varcode att
  * @param size
  *   The size of the bitmap
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_append_fixed_dpb(bufrex_subset subset, int size);
 
@@ -239,7 +239,7 @@ dba_err bufrex_subset_append_fixed_dpb(bufrex_subset subset, int size);
  * @param attr
  *   The code of the attribute to look for
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_append_attrs(bufrex_subset subset, int size, dba_varcode attr);
 
@@ -256,7 +256,7 @@ dba_err bufrex_subset_append_attrs(bufrex_subset subset, int size, dba_varcode a
  * @param attr
  *   The code of the attribute to look for
  * @return
- *   The error indicator for the function.  @see dba_err
+ *   The error indicator for the function.  See @ref dba_err
  */
 dba_err bufrex_subset_append_fixed_attrs(bufrex_subset subset, int size, dba_varcode attr);
 
