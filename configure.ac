@@ -5,6 +5,13 @@ AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
 
+AC_ARG_ENABLE([db-tests],
+    [AS_HELP_STRING(
+        [--enable-db-tests],
+        [enable the dba_db tests that need an ODBC DSN previously set up])],
+    [],
+    [enable_db_tests="no"])
+
 AC_ARG_ENABLE(mysql4,
 		[  --enable-mysql4     Use features from MySQL 4],
 		[case "${enableval}" in
@@ -24,7 +31,6 @@ AC_ARG_ENABLE(fortran,
 			no)  fortran=false ;;
 			*) AC_MSG_ERROR(bad value ${enableval} for --enable-fortran) ;;
 		esac],[fortran=true])
-AM_CONDITIONAL(DO_FORTRAN, test x$fortran = xtrue)
 
 AC_ARG_ENABLE(docs,
 		[  --enable-docs    Turn on generation of documentation],
@@ -33,7 +39,6 @@ AC_ARG_ENABLE(docs,
 			no)  docs=false ;;
 			*) AC_MSG_ERROR(bad value ${enableval} for --enable-docs) ;;
 		esac],[docs=true])
-AM_CONDITIONAL(DO_DOCS, test x$docs = xtrue)
 
 AC_ARG_ENABLE(swig,
 		[  --enable-swig    Turn on generation of swig bindings],
@@ -42,10 +47,8 @@ AC_ARG_ENABLE(swig,
 			no)  swig=false ;;
 			*) AC_MSG_ERROR(bad value ${enableval} for --enable-swig) ;;
 		esac],[swig=false])
-AM_CONDITIONAL(DO_SWIG, test x$swig = xtrue)
 
 AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
-AM_CONDITIONAL(DO_HTML, test x$have_latex2html = xyes)
 
 dnl To use subdirs
 AC_PROG_MAKE_SET
@@ -95,6 +98,12 @@ AC_SUBST(LIBDBALLE_VERSION_INFO)
 
 CFLAGS="-Wall $CFLAGS"
 
+AM_CONDITIONAL([DO_FORTRAN], [test x$fortran = xtrue])
+AM_CONDITIONAL([DO_DOCS], [test x$docs = xtrue])
+AM_CONDITIONAL([DO_SWIG], [test x$swig = xtrue])
+AM_CONDITIONAL([HAVE_LATEX2HTML], [test x$have_latex2html = xyes])
+AM_CONDITIONAL([DB_TESTS], [test x"$enable_db_tests" = x"yes"])
+
 AC_CONFIG_FILES([
 Makefile
 dballe/Makefile
@@ -123,4 +132,12 @@ AC_OUTPUT
 
 dnl tests/Makefile
 dnl doc/Makefile
+
+AC_MSG_NOTICE([
+===================================================
+$PACKAGE_NAME-$PACKAGE_VERSION configuration:
+AS_HELP_STRING([documentation:], [$docs])
+AS_HELP_STRING([latex2html:], [$have_latex2html])
+AS_HELP_STRING([db_tests:], [$enable_db_tests])
+===================================================])
 

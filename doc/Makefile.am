@@ -13,13 +13,13 @@ noinst_DATA += \
 	libdballe-bufrex.doxytags \
 	libdballe-msg.doxytags \
 	libdballe-db.doxytags \
-	fapi.ps guide.ps
-if DO_HTML
-noinst_DATA += \
+	fapi.ps guide.ps \
 	coredox_html/index.html \
 	bufrexdox_html/index.html \
 	msgdox_html/index.html \
-	dbdox_html/index.html \
+	dbdox_html/index.html
+if HAVE_LATEX2HTML
+noinst_DATA += \
 	fapi_html/index.html \
 	guide_html/index.html
 endif

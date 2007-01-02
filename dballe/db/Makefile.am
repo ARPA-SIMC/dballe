@@ -45,9 +45,14 @@ libdballe_db_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 # Unit testing
 #
 
-check_PROGRAMS = tut_test
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
-TESTS = $(check_PROGRAMS)
+
+check_PROGRAMS =
+TESTS =
+
+if DB_TESTS
+check_PROGRAMS += tut_test
+TESTS += $(check_PROGRAMS)
 
 CXXFLAGS += -O0
 
@@ -64,5 +69,6 @@ tut_test_LDADD = ../core/libdballe-core.la \
 		../bufrex/libdballe-bufrex.la \
 		../msg/libdballe-msg.la \
 		libdballe-db.la
+endif
 
 EXTRA_DIST = db.dox
