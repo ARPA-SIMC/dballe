@@ -59,6 +59,12 @@ dnl AM_ENABLE_STATIC
 dnl AM_DISABLE_SHARED
 AM_PROG_LIBTOOL
 
+if test x$docdir = x
+then
+	docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
+	AC_SUBST(docdir)
+fi
+
 if test x$swig = x"true"
 then
 	AM_PATH_PYTHON
