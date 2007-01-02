@@ -42,10 +42,6 @@
  */
 /*
 */
-#ifdef USE_MYSQL4
-#define DBA_USE_DELETE_USING
-#define DBA_USE_TRANSACTIONS
-#endif
 
 static void clear_memo_index(dba_db_repinfo ri)
 {

@@ -20,7 +20,6 @@
  */
 
 #include <dballe/core/error.h>
-#include <extra/cmdline.h>
 
 #include <f77.h>
 
@@ -188,14 +187,14 @@ F77_INTEGER_FUNCTION(idba_default_error_handler)(INTEGER(debug))
 {
 	GENPTR_INTEGER(debug)
 	if (*debug)
-		dba_cmdline_print_dba_error();
+		dba_error_print_to_stderr();
 	exit(1);
 }
 F77_INTEGER_FUNCTION(idba_default_error_handle)(INTEGER(debug))
 {
 	GENPTR_INTEGER(debug)
 	if (*debug)
-		dba_cmdline_print_dba_error();
+		dba_error_print_to_stderr();
 	exit(1);
 }
 /**
@@ -211,7 +210,7 @@ F77_INTEGER_FUNCTION(idba_error_handle_tolerating_overflows)(INTEGER(debug))
 	{
 		if (!is_fatal)
 			fprintf(stderr, "Warning: ");
-		dba_cmdline_print_dba_error();
+		dba_error_print_to_stderr();
 	}
 	if (is_fatal)
 		exit(1);

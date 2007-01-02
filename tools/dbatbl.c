@@ -52,14 +52,14 @@ void unit_check(dba_varinfo info, void* data)
 		{
 			fprintf(stderr, "Checking conversion for var B%02d%03d: ",
 					DBA_VAR_X(varcode), DBA_VAR_Y(varcode));
-			dba_cmdline_print_dba_error();
+			dba_error_print_to_stderr();
 			*is_ok = 0;
 		}
 		else if (dba_convert_units(info->unit, local->unit, 1.0, &dval) != DBA_OK)
 		{
 			fprintf(stderr, "Checking conversion for var B%02d%03d: ",
 					DBA_VAR_X(varcode), DBA_VAR_Y(varcode));
-			dba_cmdline_print_dba_error();
+			dba_error_print_to_stderr();
 			*is_ok = 0;
 		}
 	}

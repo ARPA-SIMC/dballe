@@ -506,6 +506,12 @@ void dba_error_state_set(dba_error_info info);
 void dba_error_state_delete(dba_error_info* info);
 
 
+/**
+ * Convenience function to output the current error status to standard error.
+ */
+void dba_error_print_to_stderr();
+
+
 #ifdef  __cplusplus
 }
 #endif

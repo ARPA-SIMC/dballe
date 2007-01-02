@@ -345,4 +345,20 @@ void dba_error_state_delete(dba_error_info* info)
 	*info = 0;
 }
 
+void dba_error_print_to_stderr()
+{
+	const char* details = dba_error_get_details();
+	/* const char* backtrace = dba_error_get_backtrace(); */
+	fprintf(stderr, "Error %d (%s) while %s.\n",
+			dba_error_get_code(),
+			dba_error_get_message(),
+			dba_error_get_context());
+	if (details != NULL)
+		fprintf(stderr, "Details:\n%s\n", details);
+	/*
+	if (backtrace == NULL)
+		fprintf(stderr, "Stack trace:\n%s\n", backtrace);
+	*/
+}
+
 /* vim:set ts=4 sw=4: */

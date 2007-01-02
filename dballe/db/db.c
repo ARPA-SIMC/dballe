@@ -43,26 +43,14 @@
 
 #include <assert.h>
 
-#undef USE_POSTGRES
-#define USE_MYSQL
-
 #define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
 #define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
 #define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
 
-#ifdef USE_MYSQL
-
 /*
  * Define to true to enable the use of transactions during writes
  */
-/*
-*/
-#ifdef USE_MYSQL4
-#define DBA_USE_DELETE_USING
 #define DBA_USE_TRANSACTIONS
-#endif
-
-#endif
 
 /* Define this to enable referential integrity */
 #undef USE_REF_INT

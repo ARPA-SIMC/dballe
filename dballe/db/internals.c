@@ -43,12 +43,7 @@
 /*
  * Define to true to enable the use of transactions during writes
  */
-/*
-*/
-#ifdef USE_MYSQL4
-#define DBA_USE_DELETE_USING
 #define DBA_USE_TRANSACTIONS
-#endif
 
 
 /**

@@ -41,11 +41,6 @@
  */
 /*
 */
-#ifdef USE_MYSQL4
-#define DBA_USE_DELETE_USING
-#define DBA_USE_TRANSACTIONS
-#endif
-
 
 dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 {

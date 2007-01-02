@@ -12,18 +12,6 @@ AC_ARG_ENABLE([db-tests],
     [],
     [enable_db_tests="no"])
 
-AC_ARG_ENABLE(mysql4,
-		[  --enable-mysql4     Use features from MySQL 4],
-		[case "${enableval}" in
-			yes) mysql4=true ;;
-			no)  mysql4=false ;;
-			*) AC_MSG_ERROR(bad value ${enableval} for --enable-mysql4) ;;
-		esac],[mysql4=true])
-if test x$mysql4 = xtrue
-then
-	AC_DEFINE(USE_MYSQL4, 1, "Use features from MySQL 4")
-fi
-
 AC_ARG_ENABLE(fortran,
 		[  --enable-fortran    Turn on generation of fortran bindings using CNF],
 		[case "${enableval}" in

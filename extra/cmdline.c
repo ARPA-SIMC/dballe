@@ -38,18 +38,7 @@ static void usage(const struct tool_desc* desc, const char* selfpath, FILE* out)
 
 void dba_cmdline_print_dba_error()
 {
-	const char* details = dba_error_get_details();
-	/* const char* backtrace = dba_error_get_backtrace(); */
-	fprintf(stderr, "Error %d (%s) while %s.\n",
-			dba_error_get_code(),
-			dba_error_get_message(),
-			dba_error_get_context());
-	if (details != NULL)
-		fprintf(stderr, "Details:\n%s\n", details);
-	/*
-	if (backtrace == NULL)
-		fprintf(stderr, "Stack trace:\n%s\n", backtrace);
-	*/
+	dba_error_print_to_stderr();
 }
 
 void dba_cmdline_error(poptContext optCon, const char* fmt, ...)

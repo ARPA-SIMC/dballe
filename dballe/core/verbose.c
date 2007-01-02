@@ -49,14 +49,7 @@ void dba_verbose_init()
 		level = atoi(verb);
 	if (level != DBA_VERB_NONE)
 	{
-		fprintf(out, "%s\n", PACKAGE_NAME " " PACKAGE_VERSION ", compiled on " DATE " " TIME
-#ifdef USE_MYSQL4
-			" using"
-#else
-			" avoiding"
-#endif
-			" MySQL4 features"
-		);
+		fprintf(out, "%s\n", PACKAGE_NAME " " PACKAGE_VERSION ", compiled on " DATE " " TIME);
 		fprintf(out, "%s",
 			"Copyright (C) 2005-2006 ARPA Emilia Romagna.\n"
 			"DB-ALLe comes with ABSOLUTELY NO WARRANTY.\n"
