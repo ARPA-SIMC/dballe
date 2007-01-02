@@ -1,4 +1,4 @@
-dist_noinst_INCLUDES = \
+dist_noinst_HEADERS = \
 	cmdline.h \
 	conversion.h \
 	processor.h
