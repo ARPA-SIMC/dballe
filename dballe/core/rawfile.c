@@ -19,9 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "config.h"
-
-#include "file.h"
+#include "rawfile.h"
 
 #include <netinet/in.h>
 #include <stdlib.h>

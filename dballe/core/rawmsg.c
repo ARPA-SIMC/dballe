@@ -19,9 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <config.h>
-
-#include "msg.h"
+#include "rawmsg.h"
 
 #include <stdlib.h> /* malloc */
 

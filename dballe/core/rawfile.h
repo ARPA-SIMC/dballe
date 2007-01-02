@@ -36,7 +36,7 @@ extern "C" {
  * read or written.
  */
 
-#include <dballe/core/msg.h>
+#include <dballe/core/rawmsg.h>
 #include <stdio.h>
 
 struct _dba_rawfile

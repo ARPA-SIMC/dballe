@@ -7,8 +7,8 @@ coreinclude_HEADERS = \
 	conv.h \
 	verbose.h \
 	fast.h \
-	msg.h \
-	file.h \
+	rawmsg.h \
+	rawfile.h \
 	csv.h \
 	aliases.h \
 	record.h \
@@ -21,8 +21,8 @@ libdballe_core_la_SOURCES = \
 	uniconv.c \
 	conv.c \
 	verbose.c \
-	msg.c \
-	file.c \
+	rawmsg.c \
+	rawfile.c \
 	csv.c \
 	aliases.c \
 	record_keyword.c \
