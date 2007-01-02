@@ -26,6 +26,8 @@ using namespace tut_dballe;
 
 struct bufr_decoder_shar
 {
+	DbaFileSlurpOnly slurp;
+
 	bufr_decoder_shar()
 	{
 	}

@@ -31,6 +31,8 @@ namespace tut_dballe {
 
 bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type)
 {
+	const char* testdatadirenv = getenv("DBA_TESTDATA");
+	std::string testdatadir = testdatadirenv ? testdatadirenv : ".";
 	dba_file input;
 	dba_rawmsg rawmsg;
 	int found;
@@ -39,7 +41,7 @@ bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, 
 
 	// Read the sample message
 	INNER_CHECKED(dba_rawmsg_create(&rawmsg));
-	INNER_CHECKED(dba_file_create(type, filename, "r", &input));
+	INNER_CHECKED(dba_file_create(type, (testdatadir + "/" + filename).c_str(), "r", &input));
 	INNER_CHECKED(dba_file_read(input, rawmsg, &found));
 	inner_ensure_equals(found, 1);
 

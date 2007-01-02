@@ -41,7 +41,8 @@ TESTGRP(dtable);
 template<> template<>
 void to::test<1>()
 {
-	LocalEnv le("DBA_TABLES", ".");
+	const char* testdatadir = getenv("DBA_TESTDATA");
+	LocalEnv le("DBA_TABLES", testdatadir ? testdatadir : ".");
 
 	bufrex_dtable table;
 	bufrex_opcode chain;
