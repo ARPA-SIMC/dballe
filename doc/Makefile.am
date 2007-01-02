@@ -23,6 +23,8 @@ dbdoxdeps = libdballe-db.dox \
 	    ../dballe/db/libdballe-db.la \
 	    $(msgdoxdeps)
 
+cppdoxdeps = libdballepp.dox \
+	    ../dballe++/libdballepp.la
 
 LATEX2HTML = latex2html -local_icons
 
@@ -35,12 +37,14 @@ doc_DATA += \
 	libdballe-bufrex.doxytags \
 	libdballe-msg.doxytags \
 	libdballe-db.doxytags \
+	libdballepp.doxytags \
 	fapi.ps guide.ps
 noinst_DATA += \
 	core_api/index.html \
 	bufrex_api/index.html \
 	msg_api/index.html \
-	db_api/index.html
+	db_api/index.html \
+	c++_api/index.html
 if HAVE_LATEX2HTML
 noinst_DATA += \
 	fapi_html/index.html \
@@ -49,7 +53,7 @@ endif
 endif
 
 install-data-local:
-	for pkg in core bufrex msg db; do \
+	for pkg in core bufrex msg db c++; do \
 		test -d $${pkg}_api && \
 		$(mkinstalldirs) $(DESTDIR)$(docdir)/$${pkg}_api && \
 		find $${pkg}_api -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/$${pkg}_api/ \; ; \
@@ -60,31 +64,20 @@ install-data-local:
 		find $$pkg -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/$$pkg/ \; ; \
 	done || true
 
-libdballe-core.doxytags: $(coredoxdeps) ../dballe/main-core.dox
+
+libdballe-core.doxytags core_api/index.html: $(coredoxdeps) ../dballe/main-core.dox
 	doxygen $<
 
-core_api/index.html: $(coredoxdeps) ../dballe/main-core.dox
+libdballe-bufrex.doxytags bufrex_api/index.html: $(bufrexdoxdeps) ../dballe/main-bufrex.dox
 	doxygen $<
 
-
-libdballe-bufrex.doxytags: $(bufrexdoxdeps) ../dballe/main-bufrex.dox
+libdballe-msg.doxytags msg_api/index.html: $(msgdoxdeps) ../dballe/main-msg.dox
 	doxygen $<
 
-bufrex_api/index.html: $(bufrexdoxdeps) ../dballe/main-bufrex.dox
+libdballe-db.doxytags db_api/index.html: $(dbdoxdeps) ../dballe/main-db.dox
 	doxygen $<
 
-
-libdballe-msg.doxytags: $(msgdoxdeps) ../dballe/main-msg.dox
-	doxygen $<
-
-msg_api/index.html: $(msgdoxdeps) ../dballe/main-msg.dox
-	doxygen $<
-
-
-libdballe-db.doxytags: $(dbdoxdeps) ../dballe/main-db.dox
-	doxygen $<
-
-db_api/index.html: $(dbdoxdeps) ../dballe/main-db.dox
+libdballepp.doxytags c++_api/index.html: $(cppdoxdeps)
 	doxygen $<
 
 
