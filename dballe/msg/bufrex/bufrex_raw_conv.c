@@ -22,7 +22,7 @@
 #include "config.h"
 #include <dballe/bufrex/bufrex_msg.h>
 #include <dballe/bufrex/bufrex_subset.h>
-#include <dballe/msg/dba_msgs.h>
+#include <dballe/msg/msgs.h>
 #include "exporters/exporters.h"
 
 extern dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset);

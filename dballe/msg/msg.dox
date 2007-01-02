@@ -2,8 +2,8 @@
 @ingroup dballe
 
 Abstraction for a weather report message which is independent from the
-encoding, used to carry data between the various import and export modules of
-DB-ALLe.
+encoding, used to make sense of decoded information and to carry data between
+the various import and export modules of DB-ALLe.
 
 The internal representation is as connected as possible to physics rather than
 to observations.  dba_msg is a container for related weather information,
@@ -45,9 +45,11 @@ The shortcuts are defined in the file vars.csv, which maps a name to the tuple
 vars.csv is used to generate code (vars.h and vars.c) that is in turn included
 by dba_msg.h, and provides a set of getters and setters for every named value.
 
+The module also provides import/export functions from bufr, crex and aof, and
+to bufr and crex formats.
 
 <b>Module dependencies:</b>
-\li \ref err
 \li \ref core
+\li \ref bufrex
 
 */

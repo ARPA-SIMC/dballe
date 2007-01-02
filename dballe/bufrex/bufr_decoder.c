@@ -23,7 +23,7 @@
 
 #include "bufrex_opcode.h"
 #include "bufrex_msg.h"
-#include <dballe/io/dba_rawfile.h>
+#include <dballe/core/rawfile.h>
 
 #include <stdio.h>
 #include <netinet/in.h>

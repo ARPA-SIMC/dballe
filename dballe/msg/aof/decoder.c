@@ -22,8 +22,8 @@
 #include <config.h>
 
 #include "decoder.h"
-#include <dballe/msg/dba_msg.h>
-#include <dballe/io/dba_rawfile.h>
+#include <dballe/msg/msg.h>
+#include <dballe/core/rawfile.h>
 
 #include <stdint.h>
 

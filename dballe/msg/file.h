@@ -31,8 +31,8 @@ extern "C" {
  * High-level access to files with encoded weather data.
  */
 
-#include <dballe/io/dba_rawmsg.h>
-#include <dballe/msg/dba_msgs.h>
+#include <dballe/core/rawmsg.h>
+#include <dballe/msg/msgs.h>
 
 struct _dba_file;
 typedef struct _dba_file* dba_file;

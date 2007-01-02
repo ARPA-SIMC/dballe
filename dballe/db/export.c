@@ -21,12 +21,11 @@
 
 /* #define TRACE_DB */
 
-#include <dballe/db/export.h>
-#include <dballe/msg/dba_msg.h>
-#include <dballe/db/dba_db.h>
-#include <dballe/db/querybuf.h>
-#include <dballe/db/internals.h>
-#include <dballe/db/attr.h>
+#include "export.h"
+#include "dba_db.h"
+#include "querybuf.h"
+#include "internals.h"
+#include "attr.h"
 
 #include <stdlib.h>
 #include <string.h>

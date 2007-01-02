@@ -19,13 +19,12 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/dba_file.h>
-#include <dballe/marshal.h>
-#include <dballe/io/dba_rawfile.h>
-#include <dballe/io/readers.h>
-#include <dballe/io/writers.h>
-#include <dballe/msg/aof/decoder.h>
-#include <dballe/msg/bufrex/bufrex.h>
+#include "file.h"
+#include "readers.h"
+#include "writers.h"
+#include "aof/decoder.h"
+#include "bufrex/bufrex.h"
+#include "marshal.h"
 
 #include <stdlib.h>
 

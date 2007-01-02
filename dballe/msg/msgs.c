@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "dba_msgs.h"
+#include "msgs.h"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -33,7 +33,7 @@ extern "C" {
 
 #include <dballe/core/error.h>
 #include <dballe/core/record.h>
-#include <dballe/dba_file.h>
+#include <dballe/msg/file.h>
 #include <popt.h>
 
 struct op_dispatch_table

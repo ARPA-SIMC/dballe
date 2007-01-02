@@ -19,10 +19,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/marshal.h>
-
-#include <dballe/msg/aof/decoder.h>
-#include <dballe/msg/bufrex/bufrex.h>
+#include "marshal.h"
+#include "aof/decoder.h"
+#include "bufrex/bufrex.h"
 
 dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msgs *msgs)
 {

@@ -33,7 +33,7 @@ extern "C" {
  */
 
 #include <dballe/core/rawfile.h>
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/msg.h>
 
 struct _dba_file_writer;
 typedef struct _dba_file_writer* dba_file_writer;

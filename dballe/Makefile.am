@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = core msg io bufrex db . bench tests
+SUBDIRS = core msg bufrex db . bench tests
 
 CFLAGS += -DTABLE_DIR=\"$(tabledir)\"
 
@@ -9,20 +9,17 @@ dballeincludedir = $(includedir)/dballe
 # Include the .cc files that contain template definitions
 dballeinclude_HEADERS = \
 		init.h \
-		marshal.h \
 		formatter.h \
 		cmdline.h
 
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
 		init.c \
-		marshal.c \
 		formatter.c \
 		cmdline.c
 libdballe_la_LIBADD = \
 		core/libdballe-core.la \
 		bufrex/libbufrex.la \
-		io/libio.la \
 		msg/libmsg.la \
 		msg/bufrex/libbufrex.la \
 		msg/aof/libaof.la \

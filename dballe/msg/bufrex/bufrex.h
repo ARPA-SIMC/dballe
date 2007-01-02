@@ -31,8 +31,8 @@ extern "C" {
  * High level encoding and decoding functions
  */
 
-#include <dballe/io/dba_rawmsg.h>
-#include <dballe/msg/dba_msgs.h>
+#include <dballe/core/rawmsg.h>
+#include <dballe/msg/msgs.h>
 
 /**
  * Decode a BUFR message into a dba_msg

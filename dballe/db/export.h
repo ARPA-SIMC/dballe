@@ -32,7 +32,7 @@ extern "C" {
  */
 
 #include <dballe/db/dba_db.h>
-#include <dballe/msg/dba_msgs.h>
+#include <dballe/msg/msgs.h>
 #include <dballe/core/record.h>
 
 /**

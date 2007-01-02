@@ -32,7 +32,7 @@ extern "C" {
  */
 
 #include <dballe/db/dba_db.h>
-#include <dballe/msg/dba_msgs.h>
+#include <dballe/msg/msgs.h>
 
 /**
  * Import a dba_msg message into the Dballe database

@@ -32,8 +32,8 @@ extern "C" {
  * AOF message decoder
  */
 
-#include <dballe/io/dba_rawmsg.h>
-#include <dballe/msg/dba_msgs.h>
+#include <dballe/core/rawmsg.h>
+#include <dballe/msg/msgs.h>
 
 /**
  * Decode an AOF message

@@ -33,7 +33,7 @@ extern "C" {
  * 
  */
 
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/msg.h>
 
 /** Dynamic array of dba_msg */
 struct _dba_msgs

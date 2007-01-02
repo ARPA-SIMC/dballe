@@ -32,7 +32,7 @@ print OUT q|#ifndef DBA_MSG_VARS_H
 extern "C" {
 #endif
 
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/msg.h>
 
 struct _dba_msg_var {
 	dba_varcode code;

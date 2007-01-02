@@ -33,9 +33,9 @@ extern "C" {
  */
 
 #include <dballe/core/var.h>
-#include <dballe/msg/dba_msg.h>
-#include <dballe/msg/dba_msgs.h>
-#include <dballe/io/dba_rawmsg.h>
+#include <dballe/msg/msg.h>
+#include <dballe/msg/msgs.h>
+#include <dballe/core/rawmsg.h>
 #include <dballe/bufrex/bufrex_dtable.h>
 #include <dballe/bufrex/bufrex_subset.h>
 

@@ -27,7 +27,7 @@
  */
 
 #include <dballe/core/conv.h>
-#include <dballe/msg/dba_msg.h>
+#include <dballe/msg/msg.h>
 
 #include <stdio.h>
 #include <stdint.h>		/* uint32_t */

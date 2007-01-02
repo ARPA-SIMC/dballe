@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "dballe/msg/dba_msg.h"
+#include "dballe/msg/msg.h"
 #include "dballe/core/conv.h"
 #include "dballe/bufrex/bufrex_msg.h"
 
