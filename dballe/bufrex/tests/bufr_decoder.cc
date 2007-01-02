@@ -24,17 +24,17 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_bufrex_bufr_decoder_shar
+struct bufr_decoder_shar
 {
-	dba_bufrex_bufr_decoder_shar()
+	bufr_decoder_shar()
 	{
 	}
 
-	~dba_bufrex_bufr_decoder_shar()
+	~bufr_decoder_shar()
 	{
 	}
 };
-TESTGRP(dba_bufrex_bufr_decoder);
+TESTGRP(bufr_decoder);
 
 template<> template<>
 void to::test<1>()

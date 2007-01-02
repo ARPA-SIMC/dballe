@@ -25,17 +25,17 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_bufrex_crex_decoder_shar
+struct crex_decoder_shar
 {
-	dba_bufrex_crex_decoder_shar()
+	crex_decoder_shar()
 	{
 	}
 
-	~dba_bufrex_crex_decoder_shar()
+	~crex_decoder_shar()
 	{
 	}
 };
-TESTGRP(dba_bufrex_crex_decoder);
+TESTGRP(crex_decoder);
 
 template<> template<>
 void to::test<1>()

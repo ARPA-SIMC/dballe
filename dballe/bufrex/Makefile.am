@@ -38,10 +38,10 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 TESTS = $(check_PROGRAMS)
 
 tut_test_SOURCES = \
-	tests/dba_bufrex_bufr_decoder.cc \
-	tests/dba_bufrex_crex_decoder.cc \
-	tests/dba_bufrex_dtable.cc \
-	tests/dba_bufrex_opcode.cc \
+	tests/bufr_decoder.cc \
+	tests/crex_decoder.cc \
+	tests/dtable.cc \
+	tests/opcode.cc \
 	$(top_srcdir)/extra/test-utils-core.cc \
 	$(top_srcdir)/extra/tut-main.cc
 tut_test_LDADD = $(DBALLELIBS) libdballe-bufrex.la

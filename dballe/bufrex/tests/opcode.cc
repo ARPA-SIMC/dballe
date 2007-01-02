@@ -25,17 +25,17 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_bufrex_opcode_shar
+struct opcode_shar
 {
-	dba_bufrex_opcode_shar()
+	opcode_shar()
 	{
 	}
 
-	~dba_bufrex_opcode_shar()
+	~opcode_shar()
 	{
 	}
 };
-TESTGRP(dba_bufrex_opcode);
+TESTGRP(opcode);
 
 #define CHECK_CHAIN(chain, string) do { \
 		bufrex_opcode cur = chain; \

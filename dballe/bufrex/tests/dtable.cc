@@ -25,17 +25,17 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_bufrex_dtable_shar
+struct dtable_shar
 {
-	dba_bufrex_dtable_shar()
+	dtable_shar()
 	{
 	}
 
-	~dba_bufrex_dtable_shar()
+	~dtable_shar()
 	{
 	}
 };
-TESTGRP(dba_bufrex_dtable);
+TESTGRP(dtable);
 
 // Test basic queries
 template<> template<>
