@@ -21,7 +21,7 @@
 
 #include <config.h>
 
-#include "dba_rawmsg.h"
+#include "msg.h"
 
 #include <stdlib.h> /* malloc */
 

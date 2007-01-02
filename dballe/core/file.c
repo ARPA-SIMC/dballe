@@ -21,7 +21,7 @@
 
 #include "config.h"
 
-#include "dba_rawfile.h"
+#include "file.h"
 
 #include <netinet/in.h>
 #include <stdlib.h>

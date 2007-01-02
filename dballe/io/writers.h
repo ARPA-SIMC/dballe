@@ -32,7 +32,7 @@ extern "C" {
  * messages to files containing weather reports.
  */
 
-#include <dballe/io/dba_rawfile.h>
+#include <dballe/core/rawfile.h>
 #include <dballe/msg/dba_msg.h>
 
 struct _dba_file_writer;

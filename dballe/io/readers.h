@@ -32,7 +32,7 @@ extern "C" {
  * messages from files containing weather reports.
  */
 
-#include <dballe/io/dba_rawfile.h>
+#include <dballe/core/rawfile.h>
 
 struct _dba_file_reader;
 typedef struct _dba_file_reader* dba_file_reader;
