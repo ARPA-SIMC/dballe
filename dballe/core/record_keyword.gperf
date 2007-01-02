@@ -90,7 +90,6 @@ var_related, DBA_KEY_VAR_RELATED
 #define DEF_STRING(len) 0, 0, len, 0, 0, 1, 0, 0, 0.0, 0.0
 #define DEF_MAXINT 0, 0, 10, 0, 0, 0, INT_MIN, INT_MAX, (double)INT_MIN, (double)INT_MAX
 #define LIM_8_5 -99999999, 99999999, -999.99999, 999.99999
-#define LIM_5_0 -99999, 99999, -99999.0, 99999.0
 #define LIM_4_0 -9999, 9999, -9999.0, 9999.0
 #define LIM_2_0 -99, 99, -99.0, 99.0
 
@@ -130,10 +129,10 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "Minimum minutes queried",                  "MINUTE", 0, 0,   2, 0, 0, 0, LIM_2_0 },
 	{ 0, "Maxminum seconds queried",                 "SECOND", 0, 0,   2, 0, 0, 0, LIM_2_0 },
 	{ 0, "Minimum seconds queried",                  "SECOND", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Level type",                               "NUMBER", 0, 0,   5, 0, 0, 0, LIM_5_0 },
-	{ 0, "Level layer L1",                           "NUMBER", 0, 0,   5, 0, 0, 0, LIM_5_0 },
-	{ 0, "Level layer L2",                           "NUMBER", 0, 0,   5, 0, 0, 0, LIM_5_0 },
-	{ 0, "P indicator for time range",               "NUMBER", 0, 0,   5, 0, 0, 0, LIM_5_0 },
+	{ 0, "Level type",                               "NUMBER", DEF_MAXINT },
+	{ 0, "Level layer L1",                           "NUMBER", DEF_MAXINT },
+	{ 0, "Level layer L2",                           "NUMBER", DEF_MAXINT },
+	{ 0, "P indicator for time range",               "NUMBER", DEF_MAXINT },
 	{ 0, "Time range P1",                            "SECOND", DEF_MAXINT },
 	{ 0, "Time range P2",                            "SECOND", DEF_MAXINT },
 	{ 0, "Variable queried",                      "CHARACTER", DEF_STRING(7) },
@@ -143,7 +142,7 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "Filter on anagraphical data",           "CHARACTER", DEF_STRING(255) },
 	{ 0, "Filter on data", 			              "CHARACTER", DEF_STRING(255) },
 	{ 0, "Filter on data attributes",             "CHARACTER", DEF_STRING(255) },
-	{ 0, "Maximum number of results to return",      "NUMBER", 0, 0,   5, 0, 0, 0, LIM_5_0 },
+	{ 0, "Maximum number of results to return",      "NUMBER", DEF_MAXINT },
 	{ 0, "Variable related to attribute queried", "CHARACTER", DEF_STRING(6) },
 };
 
