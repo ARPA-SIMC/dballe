@@ -94,7 +94,7 @@ tut_test_LDADD = \
 # Documentation bits
 #
 
-noinst_DATA = ltypes.dox ltypes.tex
+noinst_DATA = ltypes.dox ltypes.tex tranges.dox tranges.tex
 
 ltypes.dox: ltypes.txt mklevels
 	./mklevels dox < $< > $@
@@ -102,4 +102,10 @@ ltypes.dox: ltypes.txt mklevels
 ltypes.tex: ltypes.txt mklevels
 	./mklevels tex < $< > $@
 
-EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mkltypes
+tranges.dox: mktranges
+	./mktranges dox < $< > $@
+
+tranges.tex: mktranges
+	./mktranges tex < $< > $@
+
+EXTRA_DIST = msg.dox mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mkltypes mktranges

@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib db.dia db.eps
-fapisources = fapi.tex ../dballe/core/aliases.tex ../dballe/core/record_keyword.tex ../dballe/msg/ltypes.tex
+fapisources = fapi.tex ../dballe/core/aliases.tex ../dballe/core/record_keyword.tex ../dballe/msg/ltypes.tex ../dballe/msg/tranges.tex
 
 coredoxdeps = libdballe-core.dox \
 	      ../dballe/core/libdballe-core.la \
@@ -18,6 +18,7 @@ msgdoxdeps = libdballe-msg.dox \
 	     ../dballe/msg/libdballe-msg.la \
 	     ../dballe/msg/msg.dox \
 	     ../dballe/msg/ltypes.dox \
+	     ../dballe/msg/tranges.dox \
 	     $(bufrexdoxdeps)
 
 dbdoxdeps = libdballe-db.dox \
