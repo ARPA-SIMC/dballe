@@ -240,11 +240,10 @@ dba_err generator::fill_record(dba_record rec)
 dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons)
 {
 	dba_err err = DBA_OK;
-	dba_file file = 0;
+	dba_file file = open_test_data(name.c_str(), type);
 	dba_rawmsg raw = 0;
 	int found;
 
-	DBA_RUN_OR_GOTO(cleanup, dba_file_create(type, name.c_str(), "r", &file));
 	DBA_RUN_OR_GOTO(cleanup, dba_rawmsg_create(&raw));
 
 	DBA_RUN_OR_GOTO(cleanup, dba_file_read(file, raw, &found));
