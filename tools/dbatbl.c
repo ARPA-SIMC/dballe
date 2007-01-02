@@ -24,7 +24,7 @@
 #include <dballe/cmdline.h>
 #include <dballe/bufrex/dtable.h>
 #include <dballe/core/conv.h>
-#include <dballe/formatter.h>
+#include <dballe/msg/formatter.h>
 
 #include <stdlib.h>
 #include <string.h>
