@@ -12,7 +12,6 @@ libextra_la_SOURCES = \
 
 EXTRA_DIST = \
 	aof bufr crex \
-
 	runtest \
 	test-bufr-table.txt \
 	test-crex-d-table.txt \
