@@ -27,8 +27,6 @@ using namespace tut_dballe;
 
 struct crex_decoder_shar
 {
-	DbaFileSlurpOnly slurp;
-
 	crex_decoder_shar()
 	{
 	}
