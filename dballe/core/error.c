@@ -46,7 +46,8 @@ static const char* dba_err_desc[] = {
 /*  8 */	"consistency check failed",
 /*  9 */	"parse error",
 /* 10 */	"write error",
-/* 11 */	"feature not implemented"
+/* 11 */	"regular expression error",
+/* 12 */	"feature not implemented"
 };
 
 struct _dba_error_info
