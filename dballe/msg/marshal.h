@@ -39,7 +39,7 @@ extern "C" {
  *
  * @param rmsg
  *   Encoded message
- * @retval msg
+ * @retval msgs
  *   The resulting ::dba_msg
  * @return
  *   The error indicator for the function. @see dba_err
@@ -49,7 +49,7 @@ dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msgs *msgs);
 /**
  * Encode a message into its raw encoded representation
  *
- * @param msg
+ * @param msgs
  *   Message to encode
  * @param type
  *   Format to use for encoding

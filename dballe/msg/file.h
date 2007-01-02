@@ -39,8 +39,8 @@ extern "C" {
  *
  * @param file
  *   ::dba_file to read from
- * @retval msg
- *   The resulting ::dba_msg
+ * @retval msgs
+ *   The resulting ::dba_msgs
  * @retval found
  *   Will be set to true if a message has been found in the file, else to false.
  * @return
@@ -53,8 +53,8 @@ dba_err dba_file_read_msgs(dba_file file, dba_msgs* msgs, int* found);
  *
  * @param file
  *   ::dba_file to write to
- * @param msg
- *   The dba_msg with to encode and write.
+ * @param msgs
+ *   The ::dba_msgs to encode and write.
  * @param cat
  *   The BUFR of CREX message category to use for encoding (0 for auto detect)
  * @param subcat

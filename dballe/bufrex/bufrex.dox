@@ -15,10 +15,6 @@ mapping to physical values.
 
 
 <b>Module dependencies:</b>
-\li \ref err
-\li \ref conv
 \li \ref core
-\li \ref io
-\li \ref msg
 
 */

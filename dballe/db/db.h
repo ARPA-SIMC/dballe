@@ -227,8 +227,8 @@ dba_err dba_db_remove(dba_db db, dba_record rec);
  * Remove orphan values from the database.
  *
  * Orphan values are currently:
- * \l context values for which no data exists
- * \l pseudoana values for which no context exists
+ * \li context values for which no data exists
+ * \li pseudoana values for which no context exists
  *
  * Depending on database size, this routine can take a few minutes to execute.
  *

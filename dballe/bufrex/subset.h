@@ -57,7 +57,7 @@ typedef struct _bufrex_subset* bufrex_subset;
  *
  * @param btable
  *   Reference to the B table to use to create variables.
- * @retval vars
+ * @retval subset
  *   The newly created ::bufrex_subset.
  * @return
  *   The error indicator for the function.  @see dba_err.

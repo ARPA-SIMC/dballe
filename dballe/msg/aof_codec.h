@@ -59,7 +59,7 @@ extern "C" {
  *
  * @param msg
  *   The aof_message with the data to decode
- * @retval out
+ * @retval msgs
  *   The decoded message
  * @return
  *   The error indicator for the function.  @see ::dba_err

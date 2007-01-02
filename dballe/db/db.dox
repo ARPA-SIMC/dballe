@@ -6,8 +6,6 @@ It includes both insert and query functions and import/export functions to and
 from dba_msg.
 
 <b>Module dependencies:</b>
-\li \ref err
-\li \ref conv
 \li \ref core
 \li \ref msg
 
