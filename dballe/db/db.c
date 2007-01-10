@@ -1199,7 +1199,8 @@ dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varco
 	SQLHSTMT stm;
 	dba_err err;
 	int res;
-	int out_type;
+	long in_id_context = id_context;
+	long out_type;
 	const char out_value[255];
 
 	assert(db);
@@ -1234,7 +1235,7 @@ dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varco
 	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
 
 	/* Bind input parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &in_id_context, 0, 0);
 	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
 
 	/* Bind output fields */
@@ -1320,6 +1321,7 @@ dba_err dba_db_qc_remove(dba_db db, int id_context, dba_varcode id_var, dba_varc
 	char query[60 + 100*6];
 	SQLHSTMT stm;
 	dba_err err;
+	long in_id_context = id_context;
 	int res;
 
 	assert(db);
@@ -1347,7 +1349,7 @@ dba_err dba_db_qc_remove(dba_db db, int id_context, dba_varcode id_var, dba_varc
 	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
 
 	/* Bind parameters */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_context, 0, 0);
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &in_id_context, 0, 0);
 	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
 
 	dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_context, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));

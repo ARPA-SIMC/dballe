@@ -159,47 +159,45 @@ struct _dba_db_cursor
 	 */
  	char	sel_dtmin[25];
  	char	sel_dtmax[25];
-	int		sel_latmin;
-	int		sel_latmax;
-	int		sel_lonmin;
-	int		sel_lonmax;
+	long	sel_latmin;
+	long	sel_latmax;
+	long	sel_lonmin;
+	long	sel_lonmax;
 	char	sel_ident[64];
-	int		sel_ltype;
-	int		sel_l1;
-	int		sel_l2;
-	int		sel_pind;
-	int		sel_p1;
-	int		sel_p2;
-	int		sel_b;
-	int		sel_rep_cod;
-	int		sel_priority;
-	int		sel_priomin;
-	int		sel_priomax;
-	int		sel_ana_id;
-	int		sel_context_id;
-	int		sel_block;
-	int		sel_station;
+	long	sel_ltype;
+	long	sel_l1;
+	long	sel_l2;
+	long	sel_pind;
+	long	sel_p1;
+	long	sel_p2;
+	long	sel_b;
+	long	sel_rep_cod;
+	long	sel_priority;
+	long	sel_priomin;
+	long	sel_priomax;
+	long	sel_ana_id;
+	long	sel_context_id;
 	/** @} */
 
 	/** Query results
 	 * @{
 	 */
-	int		out_lat;
-	int		out_lon;
+	long	out_lat;
+	long	out_lon;
 	char	out_ident[64];		SQLLEN out_ident_ind;
-	int		out_ltype;
-	int		out_l1;
-	int		out_l2;
-	int		out_pind;
-	int		out_p1;
-	int		out_p2;
-	int		out_idvar;
+	long	out_ltype;
+	long	out_l1;
+	long	out_l2;
+	long	out_pind;
+	long	out_p1;
+	long	out_p2;
+	long	out_idvar;
 	char	out_datetime[25];
 	char	out_value[255];
-	int		out_rep_cod;
-	int		out_ana_id;
-	int		out_context_id;
-	int		out_priority;
+	long	out_rep_cod;
+	long	out_ana_id;
+	long	out_context_id;
+	long	out_priority;
 	/** @} */
 
 	/** Number of results still to be fetched */

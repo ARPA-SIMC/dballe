@@ -395,7 +395,7 @@ static dba_err make_select(dba_db_cursor cur)
 static dba_err add_int(
 		dba_db_cursor cur,
 		dba_record query,
-		int* out,
+		long* out,
 		dba_keyword key,
 		const char* sql,
 		int needed_from)
@@ -519,7 +519,9 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 	/* rep_memo has priority over rep_cod */
 	if ((val = dba_record_key_peek_value(query, DBA_KEY_REP_MEMO)) != NULL)
 	{
-		DBA_RUN_OR_RETURN(dba_db_repinfo_get_id(cur->db->repinfo, val, &(cur->sel_rep_cod)));
+		int src_val;
+		DBA_RUN_OR_RETURN(dba_db_repinfo_get_id(cur->db->repinfo, val, &src_val));
+		cur->sel_rep_cod = src_val;
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.id_report=?"));
 		TRACE("found rep_memo %s: adding AND c.id_report = ?. val is %d\n", val, cur->sel_rep_cod);
 		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->sel_rep_cod), 0, 0);
@@ -977,7 +979,7 @@ dba_err dba_db_cursor_to_record(dba_db_cursor cur, dba_record rec)
 		if (cur->wanted & DBA_DB_WANT_VAR_NAME)
 		{
 			char bname[7];
-			snprintf(bname, 7, "B%02d%03d",
+			snprintf(bname, 7, "B%02ld%03ld",
 					DBA_VAR_X(cur->out_idvar),
 					DBA_VAR_Y(cur->out_idvar));
 			DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_VAR, bname));
