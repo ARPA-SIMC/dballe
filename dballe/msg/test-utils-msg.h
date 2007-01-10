@@ -70,6 +70,26 @@ public:
 void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix);
 void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& prefix);
 
+dba_var my_want_var(const char* file, int line, dba_msg msg, int id, const char* idname);
+#define want_var(msg, id) my_want_var(__FILE__, __LINE__, (msg), (id), #id)
+
+dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2);
+#define want_var_at(msg, code, ltype, l1, l2, pind, p1, p2) my_want_var_at(__FILE__, __LINE__, (msg), (code), (ltype), (l1), (l2), (pind), (p1), (p2))
+
+
+void my_ensure_msg_undef(const char* file, int line, dba_msg msg, int id, const char* idname);
+#define gen_ensure_msg_undef(msg, id) my_ensure_msg_undef(__FILE__, __LINE__, (msg), (id), #id)
+#define inner_ensure_msg_undef(msg, id) my_ensure_msg_undef(file, line, (msg), (id), #id)
+
+template <typename T>
+void my_ensure_msg_equals(const char* file, int line, dba_msg msg, int id, const char* idname, const T& value)
+{
+	dba_var var = my_want_var(file, line, msg, id, idname);
+	inner_ensure_var_equals(var, value);
+}
+#define gen_ensure_msg_equals(msg, id, value) my_ensure_msg_equals(__FILE__, __LINE__, (msg), (id), #id, (value))
+#define inner_ensure_msg_equals(msg, id, value) my_ensure_msg_equals(file, line, (msg), (id), #id, (value))
+
 }
 
 // vim:set ts=4 sw=4:

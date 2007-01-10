@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -227,6 +227,24 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_seti(msg, DBA_VAR(0, 6, 1), cur->out_lon, -1, 257, 0, 0, 0, 0, 0));
 			if (cur->out_ident_ind != SQL_NULL_DATA)
 				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_ident(msg, cur->out_ident, -1));
+
+			/* Fill in datetime */
+			{
+				int year, mon, day, hour, min, sec;
+				if (sscanf(cur->out_datetime,
+							"%04d-%02d-%02d %02d:%02d:%02d", &year, &mon, &day, &hour, &min, &sec) != 6)
+				{
+					err = dba_error_consistency("parsing datetime string \"%s\"", cur->out_datetime);
+					goto cleanup;
+				}
+
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_year(msg, year, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_month(msg, mon, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_day(msg, day, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_hour(msg, hour, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_minute(msg, min, -1));
+				/*DBA_RUN_OR_GOTO(cleanup, dba_msg_set_second(msg, sec, -1));*/
+			}
 
 			DBA_RUN_OR_GOTO(cleanup, fill_ana_layer(db, msg, cur->out_ana_id, 254));
 

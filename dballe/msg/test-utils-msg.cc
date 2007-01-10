@@ -166,6 +166,63 @@ void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& pre
 	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
 }
 
+dba_var my_want_var(const char* file, int line, dba_msg msg, int id, const char* idname)
+{
+	dba_msg_datum d = dba_msg_find_by_id(msg, id);
+	if (d == NULL)
+	{
+		std::stringstream ss;
+		ss << "message does not contain the value " << idname;
+		throw failure(__ensure_errmsg(file, line, ss.str()));
+	}
+	if (d->var == NULL)
+	{
+		std::stringstream ss;
+		ss << "message has a NULL variable in the datum for value " << idname;
+		throw failure(__ensure_errmsg(file, line, ss.str()));
+	}
+	return d->var;
+}
+
+dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2)
+{
+	dba_msg_datum d = dba_msg_find(msg, code, ltype, l1, l2, pind, p1, p2);
+
+	if (d == NULL)
+	{
+		char varname[10];
+		snprintf(varname, 10, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
+		std::stringstream ss;
+		ss << "message does not contain the value " << varname << " at "
+		   << "lev(" << ltype << "," << l1 << "," << l2 << ")"
+		   << "tr(" << pind << "," << p1 << "," << p2 << ")";
+		throw failure(__ensure_errmsg(file, line, ss.str()));
+	}
+	if (d->var == NULL)
+	{
+		char varname[10];
+		snprintf(varname, 10, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
+		std::stringstream ss;
+		ss << "message has a NULL variable in the datum for value " << varname << " at "
+		   << "lev(" << ltype << "," << l1 << "," << l2 << ")"
+		   << "tr(" << pind << "," << p1 << "," << p2 << ")";
+		throw failure(__ensure_errmsg(file, line, ss.str()));
+	}
+	return d->var;
+}
+
+
+void my_ensure_msg_undef(const char* file, int line, dba_msg msg, int id, const char* idname)
+{
+	dba_msg_datum d = dba_msg_find_by_id(msg, id);
+	if (d != NULL && d->var != NULL && dba_var_value(d->var) != NULL)
+	{
+		std::stringstream ss;
+		ss << "message has " << idname << " set to " << dba_var_value(d->var) << " instead of being undefined";
+		throw failure(__ensure_errmsg(file, line, ss.str()));
+	}
+}
+
 }
 
 // vim:set ts=4 sw=4:

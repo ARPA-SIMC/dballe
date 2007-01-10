@@ -66,6 +66,7 @@ tut_test_SOURCES = \
 	tests/attr.cc \
 	tests/dba_db_dballe.cc \
 	tests/dba_db_import.cc \
+	tests/export.cc \
 	../core/test-utils-core.cc \
 	../bufrex/test-utils-bufrex.cc \
 	../msg/test-utils-msg.cc \
