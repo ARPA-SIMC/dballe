@@ -130,7 +130,7 @@ protected:
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
 			for (int j = 0; j < (*i)->len; ++j)
-			DBA_RUN_OR_RETURN(dba_import_msg(db, (*i)->msgs[j], -1, 1, fast));
+			DBA_RUN_OR_RETURN(dba_import_msg(db, (*i)->msgs[j], -1, DBA_IMPORT_OVERWRITE | DBA_IMPORT_NO_TRANSACTIONS | DBA_IMPORT_ATTRS));
 
 		timing("inserted %d messages in the database", msgs.size());
 

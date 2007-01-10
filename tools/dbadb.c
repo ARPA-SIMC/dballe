@@ -61,6 +61,8 @@ static char* op_output_type = "bufr";
 static char* op_output_template = "";
 static int op_overwrite = 0;
 static int op_fast = 0;
+static int op_no_attrs = 0;
+static int op_full_pseudoana = 0;
 int op_verbose = 0;
 
 struct poptOption dbTable[] = {
@@ -93,24 +95,33 @@ struct import_data
 static dba_err import_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
 {
 	struct import_data* d = (struct import_data*)data;
-	int i;
+	int i, import_flags = 0;;
 	if (msgs == NULL)
 	{
 		fprintf(stderr, "Message #%d cannot be parsed: ignored\n",
 				rmsg->index);
 		return dba_error_ok();
 	}
+	if (d->overwrite)
+		import_flags |= DBA_IMPORT_OVERWRITE;
+	if (op_fast)
+		import_flags |= DBA_IMPORT_NO_TRANSACTIONS;
+	if (!op_no_attrs)
+		import_flags |= DBA_IMPORT_ATTRS;
+	if (op_full_pseudoana)
+		import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
+
 	for (i = 0; i < msgs->len; ++i)
 	{
 		dba_msg msg = msgs->msgs[i];
 		if (d->forced_repcod == -1 && msg->type == MSG_GENERIC)
 		{
 			/* Put generic messages in the generic rep_cod by default */
-			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, 255, d->overwrite, op_fast));
+			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, 255, import_flags));
 		}
 		else
 		{
-			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, d->overwrite, op_fast));
+			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, import_flags));
 		}
 	}
 	return dba_error_ok();
@@ -395,6 +406,10 @@ struct poptOption dbadb_import_options[] = {
 	{ "fast", 0, POPT_ARG_NONE, &op_fast, 0,
 		"make import faster, but an interruption will mean that there can be "
 		"data in the database for only part of an imported message" },
+	{ "no-attrs", 0, POPT_ARG_NONE, &op_no_attrs, 0,
+		"do not import data attributes" },
+	{ "full-pseudoana", 0, POPT_ARG_NONE, &op_full_pseudoana, 0,
+		"merge pseudoana extra values with the ones already existing in the database" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
 		"Options used to connect to the database" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,

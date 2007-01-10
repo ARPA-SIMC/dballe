@@ -34,6 +34,20 @@ extern "C" {
 #include <dballe/db/db.h>
 #include <dballe/msg/msgs.h>
 
+/* Import the attributes. */
+#define DBA_IMPORT_ATTRS		1
+/* Attempt to merge pseudoana extra information into the existing ones. */
+#define DBA_IMPORT_FULL_PSEUDOANA	2
+/* Import datetime information as data to preserve their attributes. */
+#define DBA_IMPORT_DATETIME_ATTRS	4
+/* Message data will overwrite existing values; otherwise, trying to insert
+ * existing data will cause an error. */
+#define DBA_IMPORT_OVERWRITE		8
+/* Perform the import outside of the transaction.  This will make the function
+ * faster but not atomic: if interrupted, for example in case of error, then
+ * the data inserted before the interruption will stay in the database. */
+#define DBA_IMPORT_NO_TRANSACTIONS	16
+
 /**
  * Import a dba_msg message into the Dballe database
  *
@@ -44,18 +58,13 @@ extern "C" {
  * @param repcod
  *   Report code to which imported data belong.  If -1 is passed, then it will
  *   be chosen automatically based on the message type.
- * @param overwrite
- *   If true, message data will overwrite existing values; if false, trying to
- *   insert existing data will cause an error.
- * @param fast
- *   If true, perform the import outside of the transaction.  This will make
- *   the function faster but not atomic: if interrupted, for example in case of
- *   error, then the data inserted before the interruption will stay in the
- *   database.
+ * @param flags
+ *   Customise different aspects of the import process.  It is a bitmask of the
+ *   various DBA_IMPORT_* macros.
  * @return
  *   The error indicator for the function
  */
-dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fast);
+dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags);
 
 /**
  * Import dba_msgs messages into the Dballe database
@@ -67,18 +76,13 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
  * @param repcod
  *   Report code to which imported data belong.  If -1 is passed, then it will
  *   be chosen automatically based on the message type.
- * @param overwrite
- *   If true, message data will overwrite existing values; if false, trying to
- *   insert existing data will cause an error.
- * @param fast
- *   If true, perform the import outside of the transaction.  This will make
- *   the function faster but not atomic: if interrupted, for example in case of
- *   error, then the data inserted before the interruption will stay in the
- *   database.
+ * @param flags
+ *   Customise different aspects of the import process.  It is a bitmask of the
+ *   various DBA_IMPORT_* macros.
  * @return
  *   The error indicator for the function
  */
-dba_err dba_import_msgs(dba_db db, dba_msgs msgs, int repcod, int overwrite, int fast);
+dba_err dba_import_msgs(dba_db db, dba_msgs msgs, int repcod, int flags);
 
 
 #ifdef  __cplusplus

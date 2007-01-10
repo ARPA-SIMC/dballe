@@ -89,7 +89,7 @@ void to::test<1>()
 		dba_msg msg = inmsgs->msgs[0];
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
+		CHECKED(dba_import_msg(db, msg, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
@@ -153,7 +153,7 @@ void to::test<2>()
 		dba_msg msg = inmsgs->msgs[0];
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
+		CHECKED(dba_import_msg(db, msg, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
@@ -211,7 +211,7 @@ void to::test<3>()
 		dba_msg msg = inmsgs->msgs[0];
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
+		CHECKED(dba_import_msg(db, msg, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
@@ -254,8 +254,8 @@ void to::test<4>()
 	dba_msg msg2 = msgs2->msgs[0];
 
 	CHECKED(dba_db_reset(db, NULL));
-	CHECKED(dba_import_msg(db, msg1, -1, 0, 0));
-	CHECKED(dba_import_msg(db, msg2, -1, 0, 0));
+	CHECKED(dba_import_msg(db, msg1, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+	CHECKED(dba_import_msg(db, msg2, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 
 	dba_record query;
 	CHECKED(dba_record_create(&query));
@@ -307,7 +307,7 @@ void to::test<5>()
 		dba_msg msg;
 		CHECKED(dba_msg_create(&msg));
 		CHECKED(gen.fill_message(msg, rnd(0.8)));
-		CHECKED(dba_import_msg(db, msg, -1, 0, 0));
+		CHECKED(dba_import_msg(db, msg, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 		dba_msg_delete(msg);
 	}
 
@@ -389,7 +389,7 @@ void to::test<6>()
 	map<dba_msg_type, int> rep_cods;
 	for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
 	{
-		CHECKED(dba_import_msgs(db, *i, -1, 1, 0));
+		CHECKED(dba_import_msgs(db, *i, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS | DBA_IMPORT_OVERWRITE));
 		rep_cods[(*i)->msgs[0]->type]++;
 	}
 
