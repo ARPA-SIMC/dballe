@@ -24,23 +24,24 @@
 #include <dballe/db/pseudoana.h>
 #include <dballe/db/context.h>
 #include <dballe/db/data.h>
+#include <dballe/db/attr.h>
 
 namespace tut {
 using namespace tut_dballe;
 
-struct data_shar
+struct attr_shar
 {
 	// DB handle
 	dba_db db;
-	dba_db_data da;
+	dba_db_attr at;
 
-	data_shar() : db(NULL)
+	attr_shar() : db(NULL)
 	{
 		CHECKED(create_dba_db(&db));
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_db_need_data(db));
-		da = db->data;
-		gen_ensure(da != NULL);
+		CHECKED(dba_db_need_attr(db));
+		at = db->attr;
+		gen_ensure(at != NULL);
 
 		CHECKED(dba_db_need_pseudoana(db));
 		dba_db_pseudoana pa = db->pseudoana;
@@ -49,6 +50,10 @@ struct data_shar
 		CHECKED(dba_db_need_context(db));
 		dba_db_context co = db->context;
 		gen_ensure(co != NULL);
+
+		CHECKED(dba_db_need_data(db));
+		dba_db_data da = db->data;
+		gen_ensure(da != NULL);
 
 		// Insert a fixed station
 		int id;
@@ -90,32 +95,44 @@ struct data_shar
 		co->p2 = 7;
 		CHECKED(dba_db_context_insert(co, &id));
 		gen_ensure_equals(id, 2);
+
+		// Insert a datum
+		da->id_context = 1;
+		da->id_var = DBA_VAR(0, 1, 2);
+		dba_db_data_set_value(da, "123");
+		CHECKED(dba_db_data_insert(da, 0));
+
+		// Insert another datum
+		da->id_context = 2;
+		da->id_var = DBA_VAR(0, 1, 2);
+		dba_db_data_set_value(da, "234");
+		CHECKED(dba_db_data_insert(da, 0));
 	}
 
-	~data_shar()
+	~attr_shar()
 	{
 		if (db != NULL) dba_db_delete(db);
 	}
 };
-TESTGRP(data);
+TESTGRP(attr);
 
 /* Test dba_db_data_set* */
 template<> template<>
 void to::test<1>()
 {
-	// Test dba_db_data_set
+	// Test dba_db_attr_set
 	dba_var var;
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &var));
 	CHECKED(dba_var_seti(var, 123));
-	dba_db_data_set(da, var);
-	gen_ensure_equals(da->value, string("123"));
-	gen_ensure_equals(da->value_ind, 3);
+	dba_db_attr_set(at, var);
+	gen_ensure_equals(at->value, string("123"));
+	gen_ensure_equals(at->value_ind, 3);
 	dba_var_delete(var);
 	
-	// Test dba_db_data_set_value
-	dba_db_data_set_value(da, "32");
-	gen_ensure_equals(da->value, string("32"));
-	gen_ensure_equals(da->value_ind, 2);
+	// Test dba_db_attr_set_value
+	dba_db_attr_set_value(at, "32");
+	gen_ensure_equals(at->value, string("32"));
+	gen_ensure_equals(at->value_ind, 2);
 }
 
 
@@ -124,40 +141,71 @@ template<> template<>
 void to::test<2>()
 {
 	// Insert a datum
-	da->id_context = 1;
-	da->id_var = DBA_VAR(0, 1, 2);
-	dba_db_data_set_value(da, "123");
-	CHECKED(dba_db_data_insert(da, 0));
+	at->id_context = 1;
+	at->id_var = DBA_VAR(0, 1, 2);
+	at->type = DBA_VAR(0, 33, 7);
+	dba_db_attr_set_value(at, "50");
+	CHECKED(dba_db_attr_insert(at, 0));
 
 	// Insert another datum
-	da->id_context = 2;
-	da->id_var = DBA_VAR(0, 1, 2);
-	dba_db_data_set_value(da, "234");
-	CHECKED(dba_db_data_insert(da, 0));
+	at->id_context = 2;
+	at->id_var = DBA_VAR(0, 1, 2);
+	at->type = DBA_VAR(0, 33, 7);
+	dba_db_attr_set_value(at, "75");
+	CHECKED(dba_db_attr_insert(at, 0));
 
 	// Reinsert a datum: it should fail
-	da->id_context = 1;
-	da->id_var = DBA_VAR(0, 1, 2);
-	dba_db_data_set_value(da, "123");
-	gen_ensure_equals(dba_db_data_insert(da, 0), DBA_ERROR);
+	at->id_context = 1;
+	at->id_var = DBA_VAR(0, 1, 2);
+	at->type = DBA_VAR(0, 33, 7);
+	dba_db_attr_set_value(at, "50");
+	gen_ensure_equals(dba_db_attr_insert(at, 0), DBA_ERROR);
 
 	// Reinsert the other datum: it should fail
-	da->id_context = 2;
-	da->id_var = DBA_VAR(0, 1, 2);
-	dba_db_data_set_value(da, "234");
-	gen_ensure_equals(dba_db_data_insert(da, 0), DBA_ERROR);
+	at->id_context = 2;
+	at->id_var = DBA_VAR(0, 1, 2);
+	at->type = DBA_VAR(0, 33, 7);
+	dba_db_attr_set_value(at, "75");
+	gen_ensure_equals(dba_db_attr_insert(at, 0), DBA_ERROR);
 
 	// Reinsert a datum with overwrite: it should work
-	da->id_context = 1;
-	da->id_var = DBA_VAR(0, 1, 2);
-	dba_db_data_set_value(da, "123");
-	CHECKED(dba_db_data_insert(da, 1));
+	at->id_context = 1;
+	at->id_var = DBA_VAR(0, 1, 2);
+	at->type = DBA_VAR(0, 33, 7);
+	dba_db_attr_set_value(at, "50");
+	CHECKED(dba_db_attr_insert(at, 1));
 
 	// Reinsert the other datum with overwrite: it should work
-	da->id_context = 2;
-	da->id_var = DBA_VAR(0, 1, 2);
-	dba_db_data_set_value(da, "234");
-	CHECKED(dba_db_data_insert(da, 1));
+	at->id_context = 2;
+	at->id_var = DBA_VAR(0, 1, 2);
+	at->type = DBA_VAR(0, 33, 7);
+	dba_db_attr_set_value(at, "75");
+	CHECKED(dba_db_attr_insert(at, 1));
+
+	// Load the attributes for the first variable
+	at->id_context = 1;
+	dba_var var;
+	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &var));
+	CHECKED(dba_db_attr_load(at, var));
+	dba_var_attr_iterator ai = dba_var_attr_iterate(var);
+	gen_ensure(ai != NULL);
+	dba_var attr = dba_var_attr_iterator_attr(ai);
+	gen_ensure(attr != NULL);
+	gen_ensure_equals(dba_var_value(attr), string("50"));
+	gen_ensure_equals(dba_var_attr_iterator_next(ai), (dba_var_attr_iterator)NULL);
+	dba_var_delete(var);
+
+	// Load the attributes for the second variable
+	at->id_context = 2;
+	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &var));
+	CHECKED(dba_db_attr_load(at, var));
+	ai = dba_var_attr_iterate(var);
+	gen_ensure(ai != NULL);
+	attr = dba_var_attr_iterator_attr(ai);
+	gen_ensure(attr != NULL);
+	gen_ensure_equals(dba_var_value(attr), string("75"));
+	gen_ensure_equals(dba_var_attr_iterator_next(ai), (dba_var_attr_iterator)NULL);
+	dba_var_delete(var);
 
 #if 0
 	// Get the ID of the first data

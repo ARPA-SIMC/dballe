@@ -63,6 +63,7 @@ tut_test_SOURCES = \
 	tests/pseudoana.cc \
 	tests/context.cc \
 	tests/data.cc \
+	tests/attr.cc \
 	tests/dba_db_dballe.cc \
 	tests/dba_db_import.cc \
 	../core/test-utils-core.cc \
