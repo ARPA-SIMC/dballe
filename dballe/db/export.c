@@ -163,6 +163,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 	int last_lat = -1;
 	int last_lon = -1;
 	char last_datetime[25];
+	char last_ident[70];
 
 	DBA_RUN_OR_RETURN(dba_db_need_attr(db));
 
@@ -178,12 +179,19 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 
 	/* Retrieve results */
 	last_datetime[0] = 0;
+	last_ident[0] = 0;
 	while (1)
 	{
 		int has_data;
+		int ident_differs;
 		DBA_RUN_OR_RETURN(dba_db_cursor_next(cur, &has_data));
 		if (!has_data)
 			break;
+
+		if (cur->out_ident_ind != SQL_NULL_DATA)
+			ident_differs = strncmp(last_ident, cur->out_ident, cur->out_ident_ind) != 0;
+		else
+			ident_differs = last_ident[0] != 0;
 
 		TRACE("Got B%02d%03d %d,%d,%d %d,%d,%d %s\n",
 				DBA_VAR_X(cur->out_idvar), DBA_VAR_Y(cur->out_idvar),
@@ -199,7 +207,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 		DBA_RUN_OR_GOTO(cleanup, dba_db_attr_load(db->attr, var));
 
 		/* See if we have the start of a new message */
-		if (cur->out_lat != last_lat || cur->out_lon != last_lon || strcmp(cur->out_datetime, last_datetime) != 0)
+		if (cur->out_lat != last_lat || cur->out_lon != last_lon || strcmp(cur->out_datetime, last_datetime) != 0 || ident_differs)
 		{
 			TRACE("New message\n");
 			if (msg != NULL)
@@ -251,6 +259,10 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 			strncpy(last_datetime, cur->out_datetime, 20);
 			last_lat = cur->out_lat;
 			last_lon = cur->out_lon;
+			if (cur->out_ident_ind != SQL_NULL_DATA)
+				strncpy(last_ident, cur->out_ident, cur->out_ident_ind);
+			else
+				last_ident[0] = 0;
 		}
 
 		TRACE("Inserting var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));

@@ -1,3 +1,10 @@
+dballe (3.0.1-1) unstable; urgency=low
+
+  * New upstream version
+     + Fixed database export problems.
+
+ -- Enrico Zini <enrico@enricozini.org>  Wed, 10 Jan 2007 12:52:00 +0100
+
 dballe (3.0-1) unstable; urgency=low
 
   * New upstream version
