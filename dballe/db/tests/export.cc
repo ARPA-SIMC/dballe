@@ -118,6 +118,14 @@ void to::test<1>()
 
 	gen_ensure_equals(msgs.size(), 4u);
 
+	if (msgs[2]->type == MSG_METAR)
+	{
+		// Since the order here is not determined, enforce one
+		dba_msg tmp = msgs[2];
+		msgs[2] = msgs[3];
+		msgs[3] = tmp;
+	}
+
 	gen_ensure_equals(msgs[0]->type, MSG_SYNOP);
 	gen_ensure_msg_equals(msgs[0], DBA_MSG_LATITUDE, 12.34560);
 	gen_ensure_msg_equals(msgs[0], DBA_MSG_LONGITUDE, 76.54321);
@@ -142,13 +150,6 @@ void to::test<1>()
 	var = want_var_at(msgs[1], DBA_VAR(0, 1, 12), 1, 2, 3, 4, 5, 6);
 	gen_ensure_var_equals(var, 400);
 
-	if (msgs[2]->type == MSG_METAR)
-	{
-		// Since the order here is not determined, enforce one
-		dba_msg tmp = msgs[2];
-		msgs[2] = msgs[3];
-		msgs[3] = tmp;
-	}
 	gen_ensure_equals(msgs[2]->type, MSG_SYNOP);
 	gen_ensure_msg_equals(msgs[2], DBA_MSG_LATITUDE, 12.34560);
 	gen_ensure_msg_equals(msgs[2], DBA_MSG_LONGITUDE, 76.54321);
