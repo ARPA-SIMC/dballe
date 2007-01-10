@@ -73,6 +73,11 @@ struct db_export_shar
 
 		CHECKED(dba_db_insert(db, rec, 0, 1, NULL, NULL));
 
+		CHECKED(dba_record_key_seti(rec, DBA_KEY_REP_COD, 2));
+		CHECKED(dba_record_var_seti(rec, DBA_VAR(0, 1, 12), 200));
+
+		CHECKED(dba_db_insert(db, rec, 0, 1, NULL, NULL));
+
 		dba_record_delete(rec);
 	}
 
@@ -111,7 +116,7 @@ void to::test<1>()
 	vector<dba_msg> msgs;
 	CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 
-	gen_ensure_equals(msgs.size(), 3u);
+	gen_ensure_equals(msgs.size(), 4u);
 
 	gen_ensure_equals(msgs[0]->type, MSG_SYNOP);
 	gen_ensure_msg_equals(msgs[0], DBA_MSG_LATITUDE, 12.34560);
@@ -125,6 +130,7 @@ void to::test<1>()
 	dba_var var = want_var_at(msgs[0], DBA_VAR(0, 1, 12), 1, 2, 3, 4, 5, 6);
 	gen_ensure_var_equals(var, 500);
 
+	gen_ensure_equals(msgs[1]->type, MSG_SYNOP);
 	gen_ensure_msg_equals(msgs[1], DBA_MSG_LATITUDE, 12.34560);
 	gen_ensure_msg_equals(msgs[1], DBA_MSG_LONGITUDE, 76.54321);
 	gen_ensure_msg_undef(msgs[1], DBA_MSG_IDENT);
@@ -136,6 +142,14 @@ void to::test<1>()
 	var = want_var_at(msgs[1], DBA_VAR(0, 1, 12), 1, 2, 3, 4, 5, 6);
 	gen_ensure_var_equals(var, 400);
 
+	if (msgs[2]->type == MSG_METAR)
+	{
+		// Since the order here is not determined, enforce one
+		dba_msg tmp = msgs[2];
+		msgs[2] = msgs[3];
+		msgs[3] = tmp;
+	}
+	gen_ensure_equals(msgs[2]->type, MSG_SYNOP);
 	gen_ensure_msg_equals(msgs[2], DBA_MSG_LATITUDE, 12.34560);
 	gen_ensure_msg_equals(msgs[2], DBA_MSG_LONGITUDE, 76.54321);
 	gen_ensure_msg_equals(msgs[2], DBA_MSG_IDENT, "ciao");
@@ -146,6 +160,18 @@ void to::test<1>()
 	gen_ensure_msg_equals(msgs[2], DBA_MSG_MINUTE, 0);
 	var = want_var_at(msgs[2], DBA_VAR(0, 1, 12), 1, 2, 3, 4, 5, 6);
 	gen_ensure_var_equals(var, 300);
+
+	gen_ensure_equals(msgs[3]->type, MSG_METAR);
+	gen_ensure_msg_equals(msgs[3], DBA_MSG_LATITUDE, 12.34560);
+	gen_ensure_msg_equals(msgs[3], DBA_MSG_LONGITUDE, 76.54321);
+	gen_ensure_msg_equals(msgs[3], DBA_MSG_IDENT, "ciao");
+	gen_ensure_msg_equals(msgs[3], DBA_MSG_YEAR, 1945);
+	gen_ensure_msg_equals(msgs[3], DBA_MSG_MONTH, 4);
+	gen_ensure_msg_equals(msgs[3], DBA_MSG_DAY, 26);
+	gen_ensure_msg_equals(msgs[3], DBA_MSG_HOUR, 8);
+	gen_ensure_msg_equals(msgs[3], DBA_MSG_MINUTE, 0);
+	var = want_var_at(msgs[3], DBA_VAR(0, 1, 12), 1, 2, 3, 4, 5, 6);
+	gen_ensure_var_equals(var, 200);
 
 	dba_record_delete(query);
 }

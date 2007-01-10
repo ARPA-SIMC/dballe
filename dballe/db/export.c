@@ -164,6 +164,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 	int last_lon = -1;
 	char last_datetime[25];
 	char last_ident[70];
+	int last_rep_cod = -1;
 
 	DBA_RUN_OR_RETURN(dba_db_need_attr(db));
 
@@ -207,7 +208,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 		DBA_RUN_OR_GOTO(cleanup, dba_db_attr_load(db->attr, var));
 
 		/* See if we have the start of a new message */
-		if (cur->out_lat != last_lat || cur->out_lon != last_lon || strcmp(cur->out_datetime, last_datetime) != 0 || ident_differs)
+		if (cur->out_lat != last_lat || cur->out_lon != last_lon || strcmp(cur->out_datetime, last_datetime) != 0 || ident_differs || cur->out_rep_cod != last_rep_cod)
 		{
 			TRACE("New message\n");
 			if (msg != NULL)
@@ -263,6 +264,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 				strncpy(last_ident, cur->out_ident, cur->out_ident_ind);
 			else
 				last_ident[0] = 0;
+			last_rep_cod = cur->out_rep_cod;
 		}
 
 		TRACE("Inserting var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
