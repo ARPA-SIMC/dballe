@@ -62,6 +62,7 @@ tut_test_SOURCES = \
 	tests/repinfo.cc \
 	tests/pseudoana.cc \
 	tests/context.cc \
+	tests/data.cc \
 	tests/dba_db_dballe.cc \
 	tests/dba_db_import.cc \
 	../core/test-utils-core.cc \
