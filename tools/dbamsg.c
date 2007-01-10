@@ -19,6 +19,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+/* For %zd */
+#define _ISOC99_SOURCE
+
 #include <dballe/msg/msg.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/core/record.h>
@@ -70,7 +73,7 @@ static dba_err print_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
 	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
 	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
 
-	printf("#%d BUFR message: %d bytes, category %d, subcategory %d, table %s, subsets %d, values:",
+	printf("#%d BUFR message: %d bytes, category %d, subcategory %d, table %s, subsets %zd, values:",
 			rmsg->index, size, braw->type, braw->subtype, table_id, braw->subsets_count);
 	for (i = 0; i < braw->subsets_count; ++i)
 		printf( "%d/%d", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);
@@ -95,7 +98,7 @@ static dba_err print_crex_header(dba_rawmsg rmsg, bufrex_msg braw)
 			rmsg->index, size, braw->type, braw->subtype, table_id, /*checkdigit ? "" : "no "*/"? ", count_nonnulls(braw), braw->vars_count);
 #endif
 
-	printf("#%d CREX message: %d bytes, category %d, subcategory %d, table %s, subsets %d, values:",
+	printf("#%d CREX message: %d bytes, category %d, subcategory %d, table %s, subsets %zd, values:",
 			rmsg->index, size, braw->type, braw->subtype, table_id, braw->subsets_count);
 	for (i = 0; i < braw->subsets_count; ++i)
 		printf( "%d/%d", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);

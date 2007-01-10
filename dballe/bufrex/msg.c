@@ -19,6 +19,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+/* For %z in printf */
+#define _ISOC99_SOURCE
+
 #include <config.h>
 
 #include "opcode.h"
@@ -243,7 +246,7 @@ void bufrex_msg_print(bufrex_msg msg, FILE* out)
 		case BUFREX_BUFR: fprintf(out, "BUFR o%d m%d l%d", msg->opt.bufr.origin, msg->opt.bufr.master_table, msg->opt.bufr.local_table); break;
 		case BUFREX_CREX: fprintf(out, "CREX T00%02d%02d", msg->opt.crex.master_table, msg->opt.crex.table); break;
 	}
-	fprintf(out, " type %d subtype %d edition %d table %s alloc %d, %d subsets.\n",
+	fprintf(out, " type %d subtype %d edition %d table %s alloc %zd, %zd subsets.\n",
 			msg->type, msg->subtype, msg->edition, msg->btable == NULL ? NULL : dba_vartable_id(msg->btable),
 			msg->subsets_alloclen, msg->subsets_count);
 	fprintf(out, "Data descriptors:");

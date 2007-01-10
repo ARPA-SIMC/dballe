@@ -19,6 +19,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+/* For round() */
+#define _ISOC99_SOURCE
+
 #include "dballe/msg/msg.h"
 #include "dballe/bufrex/msg.h"
 #include <math.h>

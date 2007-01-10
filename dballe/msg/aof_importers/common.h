@@ -22,6 +22,9 @@
 #ifndef DBA_AOF_IMPORTERS_COMMON_H
 #define DBA_AOF_IMPORTERS_COMMON_H
 
+/* For round() */
+#define _ISOC99_SOURCE
+
 /*
  * Common functions for all AOF decoders.
  */

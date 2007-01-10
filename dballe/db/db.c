@@ -129,6 +129,7 @@ static const char* init_queries_mysql[] = {
 	") " TABLETYPE,
 };
 
+/*
 static const char* init_queries_postgres[] = {
 	"CREATE TABLE repinfo ("
 	"   id		     INTEGER PRIMARY KEY,"
@@ -190,6 +191,7 @@ static const char* init_queries_postgres[] = {
 	"CREATE INDEX at_da ON attr(id_context, id_var)",
 	"CREATE UNIQUE INDEX at_uniq ON attr(id_context, id_var, type)",
 };
+*/
 
 static const char* init_queries_sqlite[] = {
 	"CREATE TABLE repinfo ("

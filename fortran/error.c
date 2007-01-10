@@ -22,6 +22,7 @@
 #include <dballe/core/error.h>
 
 #include <f77.h>
+#include <stdint.h>
 
 #include "handles.h"
 
@@ -120,7 +121,7 @@ F77_SUBROUTINE(idba_error_details)(CHARACTER(message) TRAIL(message))
 
 void fdba_error_callback_invoker(void* data)
 {
-	int ihandle = (int)data;
+	int ihandle = (int)(uintptr_t)data;
 	int* handle = &ihandle;
 	CBDATA.cb(INTEGER_ARG(&(CBDATA.data)));
 }
@@ -158,7 +159,7 @@ F77_INTEGER_FUNCTION(idba_error_set_callback)(
 	CBDATA.cb = (fdba_error_callback)func;
 	CBDATA.data = *data;
 
-	dba_error_set_callback(*code, fdba_error_callback_invoker, (void*)*handle);
+	dba_error_set_callback(*code, fdba_error_callback_invoker, (void*)(uintptr_t)*handle);
 	return dba_error_ok();
 }
 
@@ -173,7 +174,7 @@ F77_INTEGER_FUNCTION(idba_error_set_callback)(
 F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	dba_error_remove_callback(CBDATA.error, fdba_error_callback_invoker, (void*)CBDATA.data);
+	dba_error_remove_callback(CBDATA.error, fdba_error_callback_invoker, (void*)(uintptr_t)CBDATA.data);
 	fdba_handle_release_errcb(*handle);
 	return dba_error_ok();
 }
