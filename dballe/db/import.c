@@ -129,6 +129,10 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 		for (i = 0; i < l_ana->data_count; i++)
 		{
 			dba_var_attr_iterator iter;
+			dba_varcode code = dba_var_code(l_ana->data[i]->var);
+			/* Do not import datetime in the pseudoana layer */
+			if (code >= DBA_VAR(0, 4, 1) && code <= DBA_VAR(0, 4, 6))
+				continue;
 
 			dba_db_data_set(dd, l_ana->data[i]->var);
 			DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, overwrite));
@@ -190,10 +194,6 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 		int old_p1 = -1;
 		int old_p2 = -1;
 
-		/* Skip the anagraphical level */
-		if (lev->ltype == 257)
-			continue;
-
 		/* Fill in the context */
 		dc->ltype = lev->ltype;
 		dc->l1 = lev->l1;
@@ -203,6 +203,16 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 		{
 			dba_msg_datum dat = lev->data[j];
 			dba_var_attr_iterator iter;
+
+			/* Skip the anagraphical level */
+			if (lev->ltype == 257 && lev->l1 == 0 && lev->l2 == 0
+				&& dat->pind == 0 && dat->p1 == 0 && dat->p2 == 0)
+			{
+				dba_varcode code = dba_var_code(dat->var);
+				if (DBA_VAR_X(code) != 4 || DBA_VAR_Y(code) < 1 || DBA_VAR_Y(code) > 6)
+					continue;
+			}
+
 
 			if (dat->pind != old_pind || dat->p1 != old_p1 || dat->p2 != old_p2)
 			{

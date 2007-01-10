@@ -26,23 +26,23 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_db_import_shar
+struct db_import_shar
 {
 	// DB handle
 	dba_db db;
 
-	dba_db_import_shar() : db(NULL)
+	db_import_shar() : db(NULL)
 	{
 		CHECKED(create_dba_db(&db));
 	}
 
-	~dba_db_import_shar()
+	~db_import_shar()
 	{
 		if (db != NULL) dba_db_delete(db);
 		test_untag();
 	}
 };
-TESTGRP(dba_db_import);
+TESTGRP(db_import);
 
 static int rep_cod_from_msg(dba_msg msg)
 {

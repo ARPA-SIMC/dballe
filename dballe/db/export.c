@@ -86,7 +86,7 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 	last_varcode = -1;
 	while (SQLFetch(stm) != SQL_NO_DATA)
 	{
-		TRACE("Got B%02d%03d %s\n", DBA_VAR_X(out_varcode), DBA_VAR_Y(out_varcode), out_value);
+		TRACE("Got B%02ld%03ld %s\n", DBA_VAR_X(out_varcode), DBA_VAR_Y(out_varcode), out_value);
 
 		/* First process the variable, possibly inserting the old one in the message */
 		if (last_varcode != out_varcode)
@@ -176,7 +176,8 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
                 DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
                 DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
                 DBA_DB_WANT_REPCOD,
-				DBA_DB_MODIFIER_STREAM));
+				0));
+			/*	DBA_DB_MODIFIER_STREAM)); */
 
 	/* Retrieve results */
 	last_datetime[0] = 0;
@@ -194,7 +195,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 		else
 			ident_differs = last_ident[0] != 0;
 
-		TRACE("Got B%02d%03d %d,%d,%d %d,%d,%d %s\n",
+		TRACE("Got B%02ld%03ld %ld,%ld,%ld %ld,%ld,%ld %s\n",
 				DBA_VAR_X(cur->out_idvar), DBA_VAR_Y(cur->out_idvar),
 				cur->out_ltype, cur->out_l1, cur->out_l2, cur->out_pind, cur->out_p1, cur->out_p2,
 				cur->out_value);
