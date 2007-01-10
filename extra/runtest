@@ -12,6 +12,16 @@ CMD="$1"
 #$DEBUGGER $BIN $ARGS 2>&1 | tee `pwd`/testrun-$id
 #echo Output saved in `pwd`/testrun-$id
 
-$DEBUGGER $CMD $ARGS
+# Try to debug the libtool executable, if present
+DIR=`dirname $CMD`
+BASE=`basename $CMD`
+if [ ! -z "$DEBUGGER" ] && [ -x $DIR/.libs/lt-$BASE ]
+then
+	echo "Running $DEBUGGER $DIR/.libs/lt-$BASE $ARGS"
+	$DEBUGGER $DIR/.libs/lt-$BASE $ARGS
+else
+	echo "Running $DEBUGGER $CMD $ARGS"
+	$DEBUGGER $CMD $ARGS
+fi
 
 exit $?
