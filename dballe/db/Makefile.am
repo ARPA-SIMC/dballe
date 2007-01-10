@@ -59,7 +59,8 @@ CXXFLAGS += -O0
 noinst_HEADERS = test-utils-db.h
 
 tut_test_SOURCES = \
-	tests/dba_db_repinfo.cc \
+	tests/repinfo.cc \
+	tests/pseudoana.cc \
 	tests/dba_db_dballe.cc \
 	tests/dba_db_import.cc \
 	../core/test-utils-core.cc \

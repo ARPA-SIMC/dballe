@@ -55,7 +55,7 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 	dba_db_data dd;
 	dba_db_attr dq;
 	int i, j;
-	int mobile;
+	int mobile, val;
 	int inserted_pseudoana = 0;
 
 	if (l_ana == NULL)
@@ -82,11 +82,19 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 
 	/* Latitude */
 	if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_LATITUDE)) != NULL)
-		DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->lat)));
+	{
+		int lat;
+		DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &lat));
+		da->lat = lat;
+	}
 
 	/* Longitude */
 	if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_LONGITUDE)) != NULL)
-		DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &(da->lon)));
+	{
+		int lon;
+		DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &lon));
+		da->lon = lon;
+	}
 
 	/* Station identifier */
 	if (mobile)
@@ -103,16 +111,18 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 	}
 
 	/* Check if we can reuse a pseudoana row */
-	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_get_id(da, &(dc->id_ana)));
-	if (dc->id_ana == -1)
+	DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_get_id(da, &val));
+	if (val == -1)
 	{
-		DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_insert(da, &(dc->id_ana)));
+		DBA_RUN_OR_GOTO(fail, dba_db_pseudoana_insert(da, &val));
 		inserted_pseudoana = 1;
 	}
+	dc->id_ana = val;
 
 	/* Get the ana context */
 	dc->id_report = -1;
-	DBA_RUN_OR_GOTO(fail, dba_db_context_obtain_ana(dc, &(dd->id_context)));
+	DBA_RUN_OR_GOTO(fail, dba_db_context_obtain_ana(dc, &val));
+	dd->id_context = val;
 
 	/* Insert the rest of the pseudoana information */
 	if (overwrite || inserted_pseudoana)
@@ -201,9 +211,10 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int overwrite, int fa
 				dc->p1 = dat->p1;
 				dc->p2 = dat->p2;
 
-				DBA_RUN_OR_GOTO(fail, dba_db_context_get_id(dc, &(dd->id_context)));
-				if (dd->id_context == -1)
-					DBA_RUN_OR_GOTO(fail, dba_db_context_insert(dc, &(dd->id_context)));
+				DBA_RUN_OR_GOTO(fail, dba_db_context_get_id(dc, &val));
+				if (val == -1)
+					DBA_RUN_OR_GOTO(fail, dba_db_context_insert(dc, &val));
+				dd->id_context = val;
 
 				old_pind = dat->pind;
 				old_p1 = dat->p1;

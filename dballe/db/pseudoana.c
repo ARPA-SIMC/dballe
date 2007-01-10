@@ -101,7 +101,7 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	SQLBindParameter(res->sstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
 	SQLBindCol(res->sstm, 1, SQL_C_SLONG, &(res->lat), sizeof(res->lat), 0);
 	SQLBindCol(res->sstm, 2, SQL_C_SLONG, &(res->lon), sizeof(res->lon), 0);
-	SQLBindCol(res->sstm, 2, SQL_C_CHAR, &(res->ident), sizeof(res->ident), &(res->ident_ind));
+	SQLBindCol(res->sstm, 3, SQL_C_CHAR, &(res->ident), sizeof(res->ident), &(res->ident_ind));
 	r = SQLPrepare(res->sstm, (unsigned char*)select_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
@@ -170,11 +170,17 @@ void dba_db_pseudoana_delete(dba_db_pseudoana ins)
 
 void dba_db_pseudoana_set_ident(dba_db_pseudoana ins, const char* ident)
 {
-	int len = strlen(ident);
-	if (len > 64) len = 64;
-	memcpy(ins->ident, ident, len);
-	ins->ident[len] = 0;
-	ins->ident_ind = len; 
+	if (ident == NULL)
+	{
+		ins->ident[0] = 0;
+		ins->ident_ind = SQL_NULL_DATA; 
+	} else {
+		int len = strlen(ident);
+		if (len > 64) len = 64;
+		memcpy(ins->ident, ident, len);
+		ins->ident[len] = 0;
+		ins->ident_ind = len; 
+	}
 }
 
 dba_err dba_db_pseudoana_get_id(dba_db_pseudoana ins, int *id)
@@ -200,8 +206,9 @@ dba_err dba_db_pseudoana_get_id(dba_db_pseudoana ins, int *id)
 
 dba_err dba_db_pseudoana_get_data(dba_db_pseudoana ins, int id)
 {
-	int res = SQLExecute(ins->sstm);
+	int res;
 	ins->id = id;
+	res = SQLExecute(ins->sstm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "looking for pseudoana information");
 	/* Get the result */
@@ -210,6 +217,8 @@ dba_err dba_db_pseudoana_get_data(dba_db_pseudoana ins, int id)
 	res = SQLCloseCursor(ins->sstm);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "closing dba_db_pseudoana_get_data cursor");
+	if (ins->ident_ind == SQL_NULL_DATA)
+		ins->ident[0] = 0;
 	return dba_error_ok();
 }
 

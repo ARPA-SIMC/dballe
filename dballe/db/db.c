@@ -688,7 +688,7 @@ static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana
 static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int can_add, int* id)
 {
 	dba_err err = DBA_OK;
-	int mobile;
+	int mobile, lat, lon;
 	const char* val;
 	dba_db_pseudoana a;
 
@@ -707,8 +707,10 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int can_add, int*
 		return dba_error_ok();
 
 	/* Look for the key data in the record */
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &(a->lat)));
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LON, &(a->lon)));
+	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &lat));
+	a->lat = lat;
+	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LON, &lon));
+	a->lon = lon;
 	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_MOBILE, &mobile));
 	if (mobile)
 	{
@@ -744,6 +746,7 @@ cleanup:
 static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id)
 {
 	const char *year, *month, *day, *hour, *min, *sec;
+	int val;
 	dba_db_context c;
 	assert(db);
 	DBA_RUN_OR_RETURN(dba_db_need_context(db));
@@ -754,7 +757,8 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	c->id_ana = id_ana;
 
 	/* Get the ID of the report */
-	DBA_RUN_OR_RETURN(dba_db_get_rep_cod(db, rec, &(c->id_report)));
+	DBA_RUN_OR_RETURN(dba_db_get_rep_cod(db, rec, &val));
+	c->id_report = val;
 
 	/* Also input the seconds, defaulting to 0 if not found */
 	sec = dba_record_key_peek_value(rec, DBA_KEY_SEC);
@@ -777,12 +781,18 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	else
 		return dba_error_notfound("looking for datetime informations");
 
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE,	&(c->ltype)));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L1,			&(c->l1)));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L2,			&(c->l2)));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_PINDICATOR,	&(c->pind)));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P1,			&(c->p1)));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P2,			&(c->p2)));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE,	&val));
+	c->ltype = val;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L1,			&val));
+	c->l1 = val;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L2,			&val));
+	c->l2 = val;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_PINDICATOR,	&val));
+	c->pind = val;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P1,			&val));
+	c->p1 = val;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P2,			&val));
+	c->p2 = val;
 
 	/* Check for an existing context with these data */
 	DBA_RUN_OR_RETURN(dba_db_context_get_id(c, id));
@@ -808,7 +818,7 @@ dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_
 	dba_err err = DBA_OK;
 	dba_db_data d;
 	dba_record_cursor item;
-	int id_pseudoana;
+	int id_pseudoana, val;
 	
 	assert(db);
 	DBA_RUN_OR_RETURN(dba_db_need_data(db));
@@ -825,7 +835,8 @@ dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_
 	DBA_RUN_OR_GOTO(fail, dba_insert_pseudoana(db, rec, pseudoana_can_add, &id_pseudoana));
 
 	/* Insert the context data, and get the ID */
-	DBA_RUN_OR_GOTO(fail, dba_insert_context(db, rec, id_pseudoana, &(d->id_context)));
+	DBA_RUN_OR_GOTO(fail, dba_insert_context(db, rec, id_pseudoana, &val));
+	d->id_context = val;
 
 	/* Insert all found variables */
 	for (item = dba_record_iterate_first(rec); item != NULL;

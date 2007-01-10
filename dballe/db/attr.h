@@ -52,7 +52,7 @@ struct _dba_db_attr
 	SQLHSTMT rstm;
 
 	/** context id SQL parameter */
-	int id_context;
+	long id_context;
 	/** variable id SQL parameter */
 	dba_varcode id_var;
 	/** attribute id SQL parameter */

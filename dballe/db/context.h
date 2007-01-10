@@ -51,28 +51,28 @@ struct _dba_db_context
 	SQLHSTMT dstm;
 
 	/** Context ID SQL parameter */
-	int id;
+	long id;
 
 	/** Pseudoana ID SQL parameter */
-	int id_ana;
+	long id_ana;
 	/** Report ID SQL parameter */
-	int id_report;
+	long id_report;
 	/** Date SQL parameter */
 	char date[25];
 	/** Date indicator */
 	SQLLEN date_ind;
 	/** Level type SQL parameter */
-	int ltype;
+	long ltype;
 	/** Level L1 SQL parameter */
-	int l1;
+	long l1;
 	/** Level L2 SQL parameter */
-	int l2;
+	long l2;
 	/** Time range type SQL parameter */
-	int pind;
+	long pind;
 	/** Time range P1 SQL parameter */
-	int p1;
+	long p1;
 	/** Time range P2 SQL parameter */
-	int p2;
+	long p2;
 };
 /** @copydoc _dba_db_context */
 typedef struct _dba_db_context* dba_db_context;

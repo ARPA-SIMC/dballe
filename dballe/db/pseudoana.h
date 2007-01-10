@@ -57,11 +57,11 @@ struct _dba_db_pseudoana
 	SQLHSTMT dstm;
 
 	/** Station ID SQL parameter */
-	int id;
+	long id;
 	/** Station latitude SQL parameter */
-	int lat;
+	long lat;
 	/** Station longitude SQL parameter */
-	int lon;
+	long lon;
 	/** Mobile station identifier SQL parameter */
 	char ident[64];
 	/** Mobile station identifier indicator */
@@ -96,7 +96,7 @@ void dba_db_pseudoana_delete(dba_db_pseudoana ins);
  * @param ins
  *   ::dba_db_pseudoana structure to fill in
  * @param ident
- *   Value to copy into ins
+ *   Value to copy into ins.  NULL can be used to unset ident.
  */
 void dba_db_pseudoana_set_ident(dba_db_pseudoana ins, const char* ident);
 

@@ -29,25 +29,25 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct dba_db_repinfo_shar
+struct repinfo_shar
 {
 	// DB handle
 	dba_db db;
 	dba_db_repinfo ri;
 
-	dba_db_repinfo_shar() : db(NULL)
+	repinfo_shar() : db(NULL)
 	{
 		CHECKED(create_dba_db(&db));
 		CHECKED(dba_db_need_repinfo(db));
 		ri = db->repinfo;
 	}
 
-	~dba_db_repinfo_shar()
+	~repinfo_shar()
 	{
 		if (db != NULL) dba_db_delete(db);
 	}
 };
-TESTGRP(dba_db_repinfo);
+TESTGRP(repinfo);
 
 /* Test simple queries */
 template<> template<>
