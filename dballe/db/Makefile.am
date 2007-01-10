@@ -61,6 +61,7 @@ noinst_HEADERS = test-utils-db.h
 tut_test_SOURCES = \
 	tests/repinfo.cc \
 	tests/pseudoana.cc \
+	tests/context.cc \
 	tests/dba_db_dballe.cc \
 	tests/dba_db_import.cc \
 	../core/test-utils-core.cc \
