@@ -138,9 +138,19 @@ void to::test<2>()
 	dba_db_data_set_value(da, "123");
 	gen_ensure_equals(dba_db_data_insert(da, 0), DBA_ERROR);
 
+	// Reinsert the other datum: it should fail
+	da->id_context = 2;
+	dba_db_data_set_value(da, "234");
+	gen_ensure_equals(dba_db_data_insert(da, 0), DBA_ERROR);
+
 	// Reinsert a datum with overwrite: it should work
 	da->id_context = 1;
 	dba_db_data_set_value(da, "123");
+	CHECKED(dba_db_data_insert(da, 1));
+
+	// Reinsert the other datum with overwrite: it should work
+	da->id_context = 2;
+	dba_db_data_set_value(da, "234");
 	CHECKED(dba_db_data_insert(da, 1));
 
 #if 0
