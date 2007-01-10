@@ -48,9 +48,11 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 	dba_err err = DBA_OK;
 	SQLHSTMT stm = NULL;
 	/* Bound variables */
-	int out_varcode;
+	long in_id_ana = id_ana;
+	long in_id_report = id_report;
+	long out_varcode;
 	char out_value[255];
-	int out_attr_varcode;		SQLLEN out_attr_varcode_ind;
+	long out_attr_varcode;		SQLLEN out_attr_varcode_ind;
 	char out_attr_value[255];	SQLLEN out_attr_value_ind;
 	dba_varcode last_varcode = 0;
 	dba_var var = NULL;
@@ -61,8 +63,8 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
 
 	/* Bind input fields */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_ana, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &id_report, 0, 0);
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &in_id_ana, 0, 0);
+	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &in_id_report, 0, 0);
 
 	/* Bind output fields */
 	SQLBindCol(stm, 1, SQL_C_SLONG, &out_varcode, sizeof(out_varcode), NULL);
