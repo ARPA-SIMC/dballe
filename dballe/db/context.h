@@ -45,6 +45,8 @@ struct _dba_db_context
 	struct _dba_db* db;
 	/** Precompiled select statement */
 	SQLHSTMT sstm;
+	/** Precompiled select data statement */
+	SQLHSTMT sdstm;
 	/** Precompiled insert statement */
 	SQLHSTMT istm;
 	/** Precompiled delete statement */
@@ -108,6 +110,18 @@ void dba_db_context_delete(dba_db_context ins);
  *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_context_get_id(dba_db_context ins, int *id);
+
+/**
+ * Get context information given a context ID
+ *
+ * @param ins
+ *   ::dba_db_context to query
+ * @param id
+ *   ID of the context to query
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
+dba_err dba_db_context_get_data(dba_db_context ins, int id);
 
 /**
  * Get the context id for a pseudoana info context.

@@ -48,6 +48,8 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 		"SELECT id FROM context WHERE id_ana=? AND id_report=? AND datetime=?"
 		" AND ltype=? AND l1=? AND l2=?"
 		" AND ptype=? AND p1=? AND p2=?";
+	const char* select_data_query =
+		"SELECT id_ana, id_report, datetime, ltype, l1, l2, ptype, p1, p2 FROM context WHERE id=?";
 	const char* insert_query =
 		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	const char* remove_query =
@@ -60,6 +62,7 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 		return dba_error_alloc("creating a new dba_db_context");
 	res->db = db;
 	res->sstm = NULL;
+	res->sdstm = NULL;
 	res->istm = NULL;
 	res->dstm = NULL;
 
@@ -80,6 +83,25 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
 		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->sstm, "compiling query to look for context IDs");
+		goto cleanup;
+	}
+
+	/* Create the statement for select data */
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sdstm)));
+	SQLBindParameter(res->sdstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
+	SQLBindCol(res->sdstm, 1, SQL_C_SLONG, &(res->id_ana),	  sizeof(res->id_ana),	0);
+	SQLBindCol(res->sdstm, 2, SQL_C_SLONG, &(res->id_report), sizeof(res->id_report),	0);
+	SQLBindCol(res->sdstm, 3, SQL_C_CHAR,  &(res->date),	  sizeof(res->date),	    &(res->date_ind));
+	SQLBindCol(res->sdstm, 4, SQL_C_SLONG, &(res->ltype),	  sizeof(res->ltype),	    0);
+	SQLBindCol(res->sdstm, 5, SQL_C_SLONG, &(res->l1),		  sizeof(res->l1),		    0);
+	SQLBindCol(res->sdstm, 6, SQL_C_SLONG, &(res->l2),		  sizeof(res->l2),		    0);
+	SQLBindCol(res->sdstm, 7, SQL_C_SLONG, &(res->pind),	  sizeof(res->pind),	    0);
+	SQLBindCol(res->sdstm, 8, SQL_C_SLONG, &(res->p1),		  sizeof(res->p1),		    0);
+	SQLBindCol(res->sdstm, 9, SQL_C_SLONG, &(res->p2),		  sizeof(res->p2),		    0);
+	r = SQLPrepare(res->sdstm, (unsigned char*)select_data_query, SQL_NTS);
+	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->sdstm, "compiling query to retrieve context data");
 		goto cleanup;
 	}
 
@@ -124,6 +146,8 @@ void dba_db_context_delete(dba_db_context ins)
 {
 	if (ins->sstm != NULL)
 		SQLFreeHandle(SQL_HANDLE_STMT, ins->sstm);
+	if (ins->sdstm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, ins->sdstm);
 	if (ins->istm != NULL)
 		SQLFreeHandle(SQL_HANDLE_STMT, ins->istm);
 	if (ins->dstm != NULL)
@@ -149,6 +173,22 @@ dba_err dba_db_context_get_id(dba_db_context ins, int *id)
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_context_get_id cursor");
 
+	return dba_error_ok();
+}
+
+dba_err dba_db_context_get_data(dba_db_context ins, int id)
+{
+	int res;
+	ins->id = id;
+	res = SQLExecute(ins->sdstm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sdstm, "looking for context information");
+	/* Get the result */
+	if (SQLFetch(ins->sdstm) == SQL_NO_DATA)
+		return dba_error_notfound("looking for information for context_id %d", id);
+	res = SQLCloseCursor(ins->sdstm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sdstm, "closing dba_db_context_get_data cursor");
 	return dba_error_ok();
 }
 

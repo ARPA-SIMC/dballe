@@ -127,20 +127,31 @@ void to::test<1>()
 	CHECKED(dba_db_context_get_id(co, &id));
 	gen_ensure_equals(id, 2);
 
-#if 0
 	// Get info on the first context
 	CHECKED(dba_db_context_get_data(co, 1));
-	gen_ensure_equals(pa->lat, 4500000);
-	gen_ensure_equals(pa->lon, 1100000);
-	gen_ensure_equals(pa->ident, string("ciao"));
-	gen_ensure_equals(pa->ident_ind, 4);
+	gen_ensure_equals(co->id_ana, 1);
+	gen_ensure_equals(co->id_report, 1);
+	gen_ensure_equals(co->date, string("2001-02-03 04:05:06"));
+	gen_ensure_equals(co->date_ind, 19);
+	gen_ensure_equals(co->ltype, 1);
+	gen_ensure_equals(co->l1, 2);
+	gen_ensure_equals(co->l2, 3);
+	gen_ensure_equals(co->pind, 4);
+	gen_ensure_equals(co->p1, 5);
+	gen_ensure_equals(co->p2, 6);
 
 	// Get info on the second context
 	CHECKED(dba_db_context_get_data(co, 2));
-	gen_ensure_equals(pa->lat, 4600000);
-	gen_ensure_equals(pa->lon, 1200000);
-	gen_ensure_equals(pa->ident[0], 0);
-#endif
+	gen_ensure_equals(co->id_ana, 2);
+	gen_ensure_equals(co->id_report, 2);
+	gen_ensure_equals(co->date, string("2002-03-04 05:06:07"));
+	gen_ensure_equals(co->date_ind, 19);
+	gen_ensure_equals(co->ltype, 2);
+	gen_ensure_equals(co->l1, 3);
+	gen_ensure_equals(co->l2, 4);
+	gen_ensure_equals(co->pind, 5);
+	gen_ensure_equals(co->p1, 6);
+	gen_ensure_equals(co->p2, 7);
 
 #if 0
 	// Update the second context
