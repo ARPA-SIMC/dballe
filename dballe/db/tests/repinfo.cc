@@ -58,6 +58,9 @@ void to::test<1>()
 	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
 	gen_ensure_equals(id, 1);
 
+	CHECKED(dba_db_repinfo_get_id(ri, "ana", &id));
+	gen_ensure_equals(id, 105);
+
 	CHECKED(dba_db_repinfo_has_id(ri, 1, &i));
 	gen_ensure_equals((bool)i, true);
 
