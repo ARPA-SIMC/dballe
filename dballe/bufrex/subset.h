@@ -45,9 +45,9 @@ struct _bufrex_subset {
 	/** Decoded variables */
 	dba_var* vars;
 	/** Number of decoded variables */
-	int vars_count;
+	size_t vars_count;
 	/** Size (in dba_var*) of the buffer allocated for vars */
-	int vars_alloclen;
+	size_t vars_alloclen;
 
 };
 /** @copydoc _bufrex_subset */
