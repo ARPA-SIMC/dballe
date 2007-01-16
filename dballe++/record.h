@@ -66,7 +66,7 @@ class Record
 
 	/// Parse a string with a variable description (like "B01012") into a
 	/// dba_varcode
-	dba_varcode stringToVar(const std::string& str)
+	dba_varcode stringToVar(const std::string& str) const
 	{
 		const char* s = str.c_str();
 		return DBA_STRING_TO_VAR(s + 1);
@@ -137,7 +137,7 @@ public:
 	void clearVars() { dba_record_clear_vars(m_rec); }
 
 	/// Check if the record contains the given parameter or value
-	bool contains(const std::string& parm)
+	bool contains(const std::string& parm) const
 	{
 		if (parm[0] != 'B')
 			return keyContains(dba_record_keyword_byname(parm.c_str()));
@@ -145,14 +145,14 @@ public:
 			return varContains(stringToVar(parm));
 	}
 	/// Check if the record contains the given parameter
-	bool keyContains(dba_keyword parameter)
+	bool keyContains(dba_keyword parameter) const
 	{
 		int found;
 		checked(dba_record_contains_key(m_rec, parameter, &found));
 		return found != 0;
 	}
 	/// Check if the record contains the given value
-	bool varContains(dba_varcode code)
+	bool varContains(dba_varcode code) const
 	{
 		int found;
 		checked(dba_record_contains_var(m_rec, code, &found));
@@ -160,7 +160,7 @@ public:
 	}
 
 	/// Get the Var representation of a parameter or value
-	Var enq(const std::string& parm)
+	Var enq(const std::string& parm) const
 	{
 		if (parm[0] != 'B')
 			return keyEnq(dba_record_keyword_byname(parm.c_str()));
@@ -168,21 +168,21 @@ public:
 			return varEnq(stringToVar(parm));
 	}
 	/// Get the Var representation of a parameter
-	Var keyEnq(dba_keyword parameter)
+	Var keyEnq(dba_keyword parameter) const
 	{
 		dba_var var;
 		checked(dba_record_key_enq(m_rec, parameter, &var));
 		return Var(var);
 	}
 	/// Get the Var representation of a value
-	Var varEnq(dba_varcode code)
+	Var varEnq(dba_varcode code) const
 	{
 		dba_var var;
 		checked(dba_record_var_enq(m_rec, code, &var));
 		return Var(var);
 	}
 	/// Get the unscaled integer representation of a parameter or value
-	int enqi(const std::string& parm)
+	int enqi(const std::string& parm) const
 	{
 		if (parm[0] != 'B')
 			return keyEnqi(dba_record_keyword_byname(parm.c_str()));
@@ -190,21 +190,21 @@ public:
 			return varEnqi(stringToVar(parm));
 	}
 	/// Get the unscaled integer representation of a parameter
-	int keyEnqi(dba_keyword parameter)
+	int keyEnqi(dba_keyword parameter) const
 	{
 		int res;
 		checked(dba_record_key_enqi(m_rec, parameter, &res));
 		return res;
 	}
 	/// Get the unscaled integer representation of a value
-	int varEnqi(dba_varcode code)
+	int varEnqi(dba_varcode code) const
 	{
 		int res;
 		checked(dba_record_var_enqi(m_rec, code, &res));
 		return res;
 	}
 	/// Get the double representation of a parameter or value
-	double enqd(const std::string& parm)
+	double enqd(const std::string& parm) const
 	{
 		if (parm[0] != 'B')
 			return keyEnqd(dba_record_keyword_byname(parm.c_str()));
@@ -212,21 +212,21 @@ public:
 			return varEnqd(stringToVar(parm));
 	}
 	/// Get the double representation of a parameter
-	double keyEnqd(dba_keyword parameter)
+	double keyEnqd(dba_keyword parameter) const
 	{
 		double res;
 		checked(dba_record_key_enqd(m_rec, parameter, &res));
 		return res;
 	}
 	/// Get the double representation of a value
-	double varEnqd(dba_varcode code)
+	double varEnqd(dba_varcode code) const
 	{
 		double res;
 		checked(dba_record_var_enqd(m_rec, code, &res));
 		return res;
 	}
 	/// Get the string representation of a parameter or value
-	const char* enqc(const std::string& parm)
+	const char* enqc(const std::string& parm) const
 	{
 		if (parm[0] != 'B')
 			return keyEnqc(dba_record_keyword_byname(parm.c_str()));
@@ -234,21 +234,21 @@ public:
 			return varEnqc(stringToVar(parm));
 	}
 	/// Get the string representation of a parameter
-	const char* keyEnqc(dba_keyword parameter)
+	const char* keyEnqc(dba_keyword parameter) const
 	{
 		const char* res;
 		checked(dba_record_key_enqc(m_rec, parameter, &res));
 		return res;
 	}
 	/// Get the string representation of a value
-	const char* varEnqc(dba_varcode code)
+	const char* varEnqc(dba_varcode code) const
 	{
 		const char* res;
 		checked(dba_record_var_enqc(m_rec, code, &res));
 		return res;
 	}
 	/// Get the string representation of a parameter or value
-	std::string enqs(const std::string& parm)
+	std::string enqs(const std::string& parm) const
 	{
 		if (parm[0] != 'B')
 			return keyEnqs(dba_record_keyword_byname(parm.c_str()));
@@ -256,14 +256,14 @@ public:
 			return varEnqs(stringToVar(parm));
 	}
 	/// Get the string representation of a parameter
-	std::string keyEnqs(dba_keyword parameter)
+	std::string keyEnqs(dba_keyword parameter) const
 	{
 		const char* res;
 		checked(dba_record_key_enqc(m_rec, parameter, &res));
 		return res;
 	}
 	/// Get the string representation of a value
-	std::string varEnqs(dba_varcode code)
+	std::string varEnqs(dba_varcode code) const
 	{
 		const char* res;
 		checked(dba_record_var_enqc(m_rec, code, &res));
