@@ -55,6 +55,15 @@ using namespace dballe;
                         while i.valid():
                                 yield i.var()
                                 i.next()
+                def datetime(self):
+                        from datetime import datetime
+                        return datetime(self.enqi("year"), self.enqi("month"), self.enqi("day"), self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
+                def date(self):
+                        from datetime import date
+                        return date(self.enqi("year"), self.enqi("month"), self.enqi("day"))
+                def time(self):
+                        from datetime import time
+                        return time(self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
         %}
 }
 
