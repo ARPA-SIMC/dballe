@@ -10,7 +10,7 @@
 14,acars,acars,100,oss,4
 50,regioni,dati regioni per verifica LAMI,100,oss,255
 60,icecast,dati meteo autostradali,40,oss,255
-105,ana,campi analizzati tramite modello meteo,0,ana,255
+105,anamod,campi analizzati tramite modello meteo,0,ana,255
 106,ossmed04,osservati media su box 0.4,0,oss,255
 107,ossmax04,osservati massimo su box 0.4,0,oss,255
 108,ossmed05,osservati media su box 0.5,0,oss,255
