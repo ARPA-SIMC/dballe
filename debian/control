@@ -1,7 +1,7 @@
 Source: dballe
 Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
-Build-Depends: cdbs, debhelper (>> 4.1), dh-buildinfo, doxygen, libtut-dev, unixodbc-dev, gperf, g77, libpopt-dev, libcnf-dev, tetex-bin, gs-common, tetex-extra
+Build-Depends: cdbs, debhelper (>> 4.1), dh-buildinfo, doxygen, libtut-dev, unixodbc-dev, gperf, g77, libpopt-dev, libcnf-dev, tetex-bin, gs-common, tetex-extra, python-all-dev (>= 2.3.5-11)
 Standards-Version: 3.7.2.0
 
 Package: libdballe-core-dev
@@ -209,7 +209,9 @@ Description: Database for punctual meteorological data (C++ shared library)
 Package: python-dballe
 Section: python
 Architecture: any
-Depends: dballe-common, ${shlibs:Depends} ${misc:Depends}
+Depends: dballe-common, ${shlibs:Depends} ${misc:Depends} ${python:Depends}
+XB-Python-Version: ${python:Versions}
+Provides: ${python:Provides}
 Description: Database for punctual meteorological data (Python bindings)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
