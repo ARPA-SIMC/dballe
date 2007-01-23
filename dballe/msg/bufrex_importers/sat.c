@@ -156,7 +156,7 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, wavenum));
 				if (chqf != NULL)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, chqf));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set(msg, copy, DBA_VAR(0, 12, 193), 8, l1, 0, 0, 0, 0));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set(msg, copy, DBA_VAR(0, 12, 63), 8, l1, 0, 0, 0, 0));
 				dba_var_delete(copy);
 				copy = NULL;
 				break;
