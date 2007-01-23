@@ -271,7 +271,7 @@ public:
 	}
 
 	/// Set a parameter or value from a Var
-	void set(const std::string& parm, Var& var)
+	void set(const std::string& parm, const Var& var)
 	{
 		if (parm[0] != 'B')
 			keySet(dba_record_keyword_byname(parm.c_str()), var);
@@ -279,19 +279,19 @@ public:
 			varSet(stringToVar(parm), var);
 	}
 	/// Set a parameter from a Var
-	void keySet(dba_keyword parameter, Var& var)
+	void keySet(dba_keyword parameter, const Var& var)
 	{
 		checked(dba_record_key_set(m_rec, parameter, var.var()));
 	}
 	/// Set a value from a Var
-	void varSet(dba_varcode code, Var& var)
+	void varSet(dba_varcode code, const Var& var)
 	{
 		checked(dba_record_var_set(m_rec, code, var.var()));
 	}
 	/// Set a value from a Var
-	void set(Var& var) { varSet(var); }
+	void set(const Var& var) { varSet(var); }
 	/// Set a value from a Var
-	void varSet(Var& var)
+	void varSet(const Var& var)
 	{
 		checked(dba_record_var_set_direct(m_rec, var.var()));
 	}

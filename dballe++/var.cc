@@ -11,6 +11,13 @@ Varinfo Varinfo::create(dba_varcode code)
 	return Varinfo(info);
 }
 
+Var Var::clone(dba_var var)
+{
+	dba_var copy;
+	checked(dba_var_copy(var, &copy));
+	return Var(copy);
+}
+
 }
 
 // vim:set ts=4 sw=4:

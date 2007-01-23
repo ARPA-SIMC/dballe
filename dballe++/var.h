@@ -63,6 +63,10 @@ class Var
 public:
 	/// Wraps an existing dba_var, taking charge of memory allocation
 	Var(dba_var var) : m_var(var) {}
+
+	/// Wraps an existing dba_var, copying it
+	static Var clone(dba_var var);
+
 	/// Copy constructor
 	Var(const Var& var)
 	{
