@@ -5,7 +5,7 @@ dballe (3.0.1-1) unstable; urgency=low
      + More control on database import: please see "dbadb help import" for a
        list of the new options
 
- -- Enrico Zini <enrico@enricozini.org>  Wed, 10 Jan 2007 19:22:22 +0100
+ -- Enrico Zini <enrico@debian.org>  Fri, 19 Jan 2007 00:22:52 +0100
 
 dballe (3.0-1) unstable; urgency=low
 

@@ -1,10 +1,6 @@
 #!/usr/bin/make -f
 
-DEB_PYTHON_SYSTEM=pycentral
-# DEB_PYTHON_SYSTEM=pysupport
-
 include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/python-distutils.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
 # Work around to latex2html bug #368693
@@ -12,6 +8,10 @@ export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 
 #DEB_MAKE_CHECK_TARGET := check
 #DEB_CONFIGURE_EXTRA_FLAGS += --disable-shared --with-pic
+
+# From http://wiki.debian.org/DebianPython/NewPolicy
+binary-install/python-dballe::
+	dh_pycentral -ppython-dballe
 
 # Store build information
 common-binary-post-install-arch common-binary-post-install-indep::
