@@ -2,6 +2,7 @@ Source: dballe
 Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: cdbs (>= 0.4.43), debhelper (>> 4.1), dh-buildinfo, doxygen, libtut-dev, unixodbc-dev, gperf, gfortran | g77, libpopt-dev, libcnf-dev, swig, tetex-bin, gs-common, tetex-extra, python-all-dev (>= 2.3.5-11), python-central
+XS-Python-Version: all
 Standards-Version: 3.7.2.0
 
 Package: libdballe-core-dev
@@ -210,7 +211,6 @@ Package: python-dballe
 Section: python
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends} ${misc:Depends} ${python:Depends}
-XS-Python-Version: all
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
 Description: Database for punctual meteorological data (Python bindings)
