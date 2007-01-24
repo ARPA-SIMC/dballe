@@ -1114,6 +1114,62 @@ void to::test<6>()
 	CHECKED(dba_db_remove_orphans(db));
 }
 
+/* Insert some attributes and try to read them again */
+template<> template<>
+void to::test<7>()
+{
+	/* Start with an empty database */
+	CHECKED(dba_db_reset(db, 0));
+
+	/* Fill in data for the first record */
+	dba_record_clear(insert);
+	sampleAna.copyTestDataToRecord(insert);
+	sampleBase.copyTestDataToRecord(insert);
+	sample0.copyTestDataToRecord(insert);
+	sample00.copyTestDataToRecord(insert);
+	sample01.copyTestDataToRecord(insert);
+
+	/* Insert the record */
+	int anaid, contextid;
+	CHECKED(dba_db_insert(db, insert, 0, 1, &anaid, &contextid));
+
+	gen_ensure_equals(anaid, 1);
+	gen_ensure_equals(contextid, 1);
+
+	dba_record_clear(qc);
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 1, 7), 1));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 2, 48), 2));
+	CHECKED(dba_db_qc_insert_new(db, contextid, DBA_VAR(0, 1, 11), qc));
+
+	dba_record_clear(qc);
+	int count;
+	CHECKED(dba_db_qc_query(db, contextid, DBA_VAR(0, 1, 11), NULL, 0, qc, &count));
+
+	std::map<dba_varcode, std::string> values;
+	values.insert(make_pair(DBA_VAR(0, 1, 7), std::string("1")));
+	values.insert(make_pair(DBA_VAR(0, 2, 48), std::string("2")));
+
+	// Check that all the attributes come out
+	gen_ensure_equals(count, (int)values.size());
+	for (dba_record_cursor cur = dba_record_iterate_first(qc);
+			cur != NULL; cur = dba_record_iterate_next(qc, cur))
+	{
+		dba_var var = dba_record_cursor_variable(cur);
+		std::map<dba_varcode, std::string>::iterator v
+			= values.find(dba_var_code(var));
+		if (v == values.end())
+		{
+			char buf[20];
+			snprintf(buf, 20, "Attr B%02d%03d not found",
+					DBA_VAR_X(dba_var_code(var)),
+					DBA_VAR_Y(dba_var_code(var)));
+			ensure(false, buf);
+		} else {
+			gen_ensure_equals(string(dba_var_value(var)), v->second);
+			values.erase(v);
+		}
+	}
+}
 
 }
 

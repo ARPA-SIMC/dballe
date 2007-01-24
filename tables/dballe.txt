@@ -1,5 +1,6 @@
  001001 WMO BLOCK NUMBER                                                 NUMERIC                    0            0   7 NUMERIC                   0          2
  001002 WMO STATION NUMBER                                               NUMERIC                    0            0  10 NUMERIC                   0          3
+ 001007 SATELLITE IDENTIFIER                                             CODE TABLE 1007            0            0  10 CODE TABLE 1007           0          3
  001008 AIRCRAFT REGISTRATION NUMBER OR OTHER IDENTIFICATION             CCITTIA5                   0            0  64 CHARACTER                 0          8
  001011 SHIP OR MOBILE LAND STATION IDENTIFIER                           CCITTIA5                   0            0  72 CHARACTER                 0          9
  001012 DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM**               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
@@ -12,6 +13,7 @@
  002005 PRECISION OF TEMPERATURE OBSERVATION                             K                          2            0   7 K                         2          3
  002011 RADIOSONDE TYPE                                                  CODE TABLE 2011            0            0   8 CODE TABLE 2011           0          3
  002012 RADIOSONDE COMPUTATIONAL METHOD                                  CODE TABLE 2012            0            0   4 CODE TABLE 2012           0          2
+ 002048 SATELLITE SENSOR INDICATOR                                       CODE TABLE 2048            0            0   4 CODE TABLE 2048           0          2
  002061 AIRCRAFT NAVIGATIONAL SYSTEM                                     CODE TABLE 2061            0            0   3 CODE TABLE 2061           0          1
  002062 TYPE OF AIRCRAFT DATA RELAY SYSTEM                               CODE TABLE 2062            0            0   4 CODE TABLE 2062           0          2
  002063 AIRCRAFT ROLL ANGLE                                              DEGREE                     2       -18000  16 DEGREE                    2          5
