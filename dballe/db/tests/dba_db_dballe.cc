@@ -1137,8 +1137,17 @@ void to::test<7>()
 	gen_ensure_equals(contextid, 1);
 
 	dba_record_clear(qc);
-	CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 1, 7), 1));
-	CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 2, 48), 2));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0,  1,  7),  1));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0,  2, 48),  2));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0,  5, 40),  3));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0,  5, 41),  4));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0,  5, 43),  5));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 33, 32),  6));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0,  7, 24),  7));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0,  5, 21),  8));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0,  7, 25),  9));
+	CHECKED(dba_record_var_seti(qc, DBA_VAR(0,  5, 22), 10));
+
 	CHECKED(dba_db_qc_insert_new(db, contextid, DBA_VAR(0, 1, 11), qc));
 
 	dba_record_clear(qc);
@@ -1148,6 +1157,16 @@ void to::test<7>()
 	std::map<dba_varcode, std::string> values;
 	values.insert(make_pair(DBA_VAR(0, 1, 7), std::string("1")));
 	values.insert(make_pair(DBA_VAR(0, 2, 48), std::string("2")));
+	values.insert(make_pair(DBA_VAR(0,  1,  7), std::string("1")));
+	values.insert(make_pair(DBA_VAR(0,  2, 48), std::string("2")));
+	values.insert(make_pair(DBA_VAR(0,  5, 40), std::string("3")));
+	values.insert(make_pair(DBA_VAR(0,  5, 41), std::string("4")));
+	values.insert(make_pair(DBA_VAR(0,  5, 43), std::string("5")));
+	values.insert(make_pair(DBA_VAR(0, 33, 32), std::string("6")));
+	values.insert(make_pair(DBA_VAR(0,  7, 24), std::string("7")));
+	values.insert(make_pair(DBA_VAR(0,  5, 21), std::string("8")));
+	values.insert(make_pair(DBA_VAR(0,  7, 25), std::string("9")));
+	values.insert(make_pair(DBA_VAR(0,  5, 22), std::string("10")));
 
 	// Check that all the attributes come out
 	gen_ensure_equals(count, (int)values.size());
