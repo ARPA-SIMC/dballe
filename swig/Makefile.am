@@ -7,7 +7,7 @@ if DB_TESTS
 TESTS += test-db.py
 endif
 
-python_LTLIBRARIES = _Dballe.la
+pyexec_LTLIBRARIES = _Dballe.la
 nodist_python_PYTHON = Dballe.py
 
 nodist__Dballe_la_SOURCES = dballe_wrap_python.cc
