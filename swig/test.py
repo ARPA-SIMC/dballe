@@ -45,6 +45,30 @@ class DballeTest(unittest.TestCase):
 		rec.set(var)
 		self.assertEqual(rec.enqi("B01001"), 4)
 
+		dt = datetime.datetime(2001, 2, 3, 4, 5, 6)
+		rec.setdate(dt)
+		self.assertEqual(rec.enqdate(), dt)
+		self.assertEqual(rec.enqi("year"), 2001)
+		self.assertEqual(rec.enqi("month"), 2)
+		self.assertEqual(rec.enqi("day"), 3)
+		self.assertEqual(rec.enqi("hour"), 4)
+		self.assertEqual(rec.enqi("min"), 5)
+		self.assertEqual(rec.enqi("sec"), 6)
+
+		l = Level(1, 2, 3)
+		rec.setlevel(l)
+		self.assertEqual(rec.enqlevel(), l)
+		self.assertEqual(rec.enqi("leveltype"), 1)
+		self.assertEqual(rec.enqi("l1"), 2)
+		self.assertEqual(rec.enqi("l2"), 3)
+
+		t = TimeRange(4, 5, 6)
+		rec.settimerange(t)
+		self.assertEqual(rec.enqtimerange(), t)
+		self.assertEqual(rec.enqi("pindicator"), 4)
+		self.assertEqual(rec.enqi("p1"), 5)
+		self.assertEqual(rec.enqi("p2"), 6)
+
 
 	def testRecordCopying(self):
 		# Try out all copying functions

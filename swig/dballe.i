@@ -27,14 +27,16 @@ using namespace dballe;
 #ifdef SWIGPYTHON
 
 %pythoncode %{
+import datetime
+
 class Level(tuple):
 	"""
 	Represents a level value as a 3-tuple
 	"""
-	def __init__(self, *args):
-		if len(*args) != 3:
+	def __new__(self, *args):
+		if len(args) != 3:
 			raise ValueError, "Level wants exactly 3 values ("+str(len(args))+" provided)"
-		tuple.__init__(self, *args)
+		return tuple.__new__(self, args)
 	def type(self):
 		"Return the level type"
 		return self[0]
@@ -49,10 +51,10 @@ class TimeRange(tuple):
 	"""
 	Represents a time range value as a 3-tuple
 	"""
-	def __init__(self, *args):
-		if len(*args) != 3:
+	def __new__(self, *args):
+		if len(args) != 3:
 			raise ValueError, "TimeRange wants exactly 3 values ("+str(len(args))+" provided)"
-		tuple.__init__(self, *args)
+		return tuple.__new__(self, args)
 	def type(self):
 		"Return the time range type"
 		return self[0]
@@ -94,19 +96,27 @@ class TimeRange(tuple):
                         while i.valid():
                                 yield i.var()
                                 i.next()
-                def datetime(self):
-                        from datetime import datetime
-                        return datetime(self.enqi("year"), self.enqi("month"), self.enqi("day"), self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
-                def date(self):
-                        from datetime import date
-                        return date(self.enqi("year"), self.enqi("month"), self.enqi("day"))
-                def time(self):
-                        from datetime import time
-                        return time(self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
-                def level(self):
+                def enqdate(self):
+                        return datetime.datetime(self.enqi("year"), self.enqi("month"), self.enqi("day"), self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
+                def enqlevel(self):
                         return Level(self.enqi("leveltype"), self.enqi("l1"), self.enqi("l2"))
-                def timerange(self):
+                def enqtimerange(self):
                         return TimeRange(self.enqi("pindicator"), self.enqi("p1"), self.enqi("p2"))
+                def setdate(self, dt):
+                        self.seti("year", dt.year)
+                        self.seti("month", dt.month)
+                        self.seti("day", dt.day)
+                        self.seti("hour", dt.hour)
+                        self.seti("min", dt.minute)
+                        self.seti("sec", dt.second)
+                def setlevel(self, level):
+                        self.seti("leveltype", level[0])
+                        self.seti("l1", level[1])
+                        self.seti("l2", level[2])
+                def settimerange(self, trange):
+                        self.seti("pindicator", trange[0])
+                        self.seti("p1", trange[1])
+                        self.seti("p2", trange[2])
         %}
 }
 
