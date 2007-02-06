@@ -10,7 +10,7 @@ endif
 pyexec_LTLIBRARIES = _dballe.la
 nodist_python_PYTHON = dballe.py
 
-pkgpython_PYTHON = python/ma.py
+pkgpython_PYTHON = dballe/ma.py
 
 nodist__dballe_la_SOURCES = dballe_wrap_python.cc
 _dballe_la_LDFLAGS = -module
