@@ -7,12 +7,14 @@ if DB_TESTS
 TESTS += test-db.py
 endif
 
-pyexec_LTLIBRARIES = _Dballe.la
-nodist_python_PYTHON = Dballe.py
+pyexec_LTLIBRARIES = _dballe.la
+nodist_python_PYTHON = dballe.py
 
-nodist__Dballe_la_SOURCES = dballe_wrap_python.cc
-_Dballe_la_LDFLAGS = -module
-_Dballe_la_LIBADD = ../dballe++/libdballepp.la
+pkgpython_PYTHON = python/ma.py
+
+nodist__dballe_la_SOURCES = dballe_wrap_python.cc
+_dballe_la_LDFLAGS = -module
+_dballe_la_LIBADD = ../dballe++/libdballepp.la
 
 dballe_wrap_python.cc Dballe.py: dballe.i
 	swig -python -c++ -I.. -I/usr/include -o $@ $<
@@ -21,4 +23,4 @@ INCLUDES = -I/usr/include/python$(PYTHON_VERSION)
 
 EXTRA_DIST = README dballe.i test.py
 
-CLEANFILES = Dballe.py Dballe.pyc dballe_wrap_python.cc
+CLEANFILES = dballe.py dballe.pyc dballe_wrap_python.cc

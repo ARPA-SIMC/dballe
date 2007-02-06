@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from Dballe import *
+from dballe import *
 import unittest
 
 class DballeTest(unittest.TestCase):

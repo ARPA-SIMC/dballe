@@ -1,5 +1,5 @@
 // dballe.i - SWIG interface
-%module Dballe
+%module dballe
 
 %include "std_string.i"
 %include "typemaps.i"
