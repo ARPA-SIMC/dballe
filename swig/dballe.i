@@ -26,6 +26,45 @@ using namespace dballe;
 
 #ifdef SWIGPYTHON
 
+%pythoncode %{
+class Level(tuple):
+	"""
+	Represents a level value as a 3-tuple
+	"""
+	def __init__(self, *args):
+		if len(*args) != 3:
+			raise ValueError, "Level wants exactly 3 values ("+str(len(args))+" provided)"
+		tuple.__init__(self, *args)
+	def type(self):
+		"Return the level type"
+		return self[0]
+	def l1(self):
+		"Return l1"
+		return self[1]
+	def l2(self):
+		"Return l2"
+		return self[2]
+
+class TimeRange(tuple):
+	"""
+	Represents a time range value as a 3-tuple
+	"""
+	def __init__(self, *args):
+		if len(*args) != 3:
+			raise ValueError, "TimeRange wants exactly 3 values ("+str(len(args))+" provided)"
+		tuple.__init__(self, *args)
+	def type(self):
+		"Return the time range type"
+		return self[0]
+	def p1(self):
+		"Return p1"
+		return self[1]
+	def p2(self):
+		"Return p2"
+		return self[2]
+
+%}
+
 %extend dballe::Var {
         %pythoncode %{
                 def __cmp__(self, other):
@@ -64,6 +103,10 @@ using namespace dballe;
                 def time(self):
                         from datetime import time
                         return time(self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
+                def level(self):
+                        return Level(self.enqi("leveltype"), self.enqi("l1"), self.enqi("l2"))
+                def timerange(self):
+                        return TimeRange(self.enqi("pindicator"), self.enqi("p1"), self.enqi("p2"))
         %}
 }
 
