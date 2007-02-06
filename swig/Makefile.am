@@ -8,9 +8,9 @@ TESTS += test-db.py run-unittests
 endif
 
 pyexec_LTLIBRARIES = _dballe.la
-nodist_python_PYTHON = dballe.py
 
-pkgpython_PYTHON = dballe/ma.py dballe/__init__.py
+nodist_pkgpython_PYTHON = dballe.py
+pkgpython_PYTHON = ma.py __init__.py
 
 nodist__dballe_la_SOURCES = dballe_wrap_python.cc
 _dballe_la_LDFLAGS = -module
