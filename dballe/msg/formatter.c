@@ -109,7 +109,7 @@ dba_err dba_formatter_describe_trange(int ptype, int p1, int p2, char** res)
 #  Initialized analysis product for reference time (P1 = 0).
 #\item [2]
 #  Product with a valid time ranging between reference time + P1 and reference time + P2.
-3 Average between reference time+%ds to reference time+%ds.
+  3 Average between reference time+%ds to reference time+%ds.
 #\item [4]
 #  Accumulation (reference time + P1 to reference time + P2) product
 #  considered valid at reference time + P2.
