@@ -451,8 +451,7 @@ if __name__ == '__main__':
                         self.assertEquals(data.dims[0][3], (4, 20., 25., None))
                         self.assertEquals(data.dims[0][4], (5, 30., 15., None))
                         self.assertEquals(data.dims[0][5], (6, 30., 25., None))
-                        self.assertEquals(data.dims[1][0], (200, "noaa"))
-                        self.assertEquals(data.dims[1][1], (1, "synop"))
+                        self.assertEquals(set(data.dims[1]), set(((200, "noaa"), (1, "synop"))))
 
                 def testAnaTrangeNetwork(self):
                         # 3 dimensions: ana, timerange, network
@@ -508,22 +507,28 @@ if __name__ == '__main__':
                         self.assertNotEquals(vars["B10004"].dims[1], vars["B13011"].dims[1])
                         self.assertEquals(vars["B10004"].dims[2], vars["B13011"].dims[2])
 
-#query = dballe.Record()
-##query.set("var", "B12001")
-##vars = readv7d(db.query(query), (AnaIndex,NetworkIndex))
-##vars = readv7d(db.query(query), (AnaIndex,LevelIndex))
-##vars = read(db.query(query), (AnaIndex(),DateTimeIndex()))
-#
-#query.set("rep_memo", "noaa")
-#vars = read(db.query(query), (AnaIndex(),IntervalIndex(datetime(2007,01,11,11,24), timedelta(0, 120), timedelta(0, 60))))
-#
-#print vars
-##print vars['B12001'].dims[0][:20]
-##print vars['B12001'].dims[1][:20]
-#
-##print "Lat:", res[0][:10]
-##print "Lon:", res[1][:10]
-##print "Id :", res[2][:10]
-
+                def testAnaTrangeNetwork(self):
+                        # One station
+                        # 3 dimensions: timerange, network, datetime
+                        # 2 variables
+                        pass
 
         unittest.main()
+
+        #query = dballe.Record()
+        ##query.set("var", "B12001")
+        ##vars = readv7d(db.query(query), (AnaIndex,NetworkIndex))
+        ##vars = readv7d(db.query(query), (AnaIndex,LevelIndex))
+        ##vars = read(db.query(query), (AnaIndex(),DateTimeIndex()))
+        #
+        #query.set("rep_memo", "noaa")
+        #vars = read(db.query(query), (AnaIndex(),IntervalIndex(datetime(2007,01,11,11,24), timedelta(0, 120), timedelta(0, 60))))
+        #
+        #print vars
+        ##print vars['B12001'].dims[0][:20]
+        ##print vars['B12001'].dims[1][:20]
+        #
+        ##print "Lat:", res[0][:10]
+        ##print "Lon:", res[1][:10]
+        ##print "Id :", res[2][:10]
+
