@@ -87,37 +87,10 @@ class TimeRange(tuple):
                                 return -1
                         else:
                                 return cmp(self.enqi(), other.enqi())
-        %}
-}
-
-%extend dballe::Record {
-        %pythoncode %{
-                def __iter__(self):
-                        i = self.begin()
-                        while i.valid():
-                                yield i.var()
-                                i.next()
-                def enqdate(self):
-                        return datetime.datetime(self.enqi("year"), self.enqi("month"), self.enqi("day"), self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
-                def enqlevel(self):
-                        return Level(self.enqi("leveltype"), self.enqi("l1"), self.enqi("l2"))
-                def enqtimerange(self):
-                        return TimeRange(self.enqi("pindicator"), self.enqi("p1"), self.enqi("p2"))
-                def setdate(self, dt):
-                        self.seti("year", dt.year)
-                        self.seti("month", dt.month)
-                        self.seti("day", dt.day)
-                        self.seti("hour", dt.hour)
-                        self.seti("min", dt.minute)
-                        self.seti("sec", dt.second)
-                def setlevel(self, level):
-                        self.seti("leveltype", level[0])
-                        self.seti("l1", level[1])
-                        self.seti("l2", level[2])
-                def settimerange(self, trange):
-                        self.seti("pindicator", trange[0])
-                        self.seti("p1", trange[1])
-                        self.seti("p2", trange[2])
+                def __str__(self):
+                        return self.format("None")
+                def __repr__(self):
+                        return "Var(%s, %s)" % (self.code(), self.format())
         %}
 }
 
@@ -130,7 +103,8 @@ class TimeRange(tuple):
         %}
 }
 
-// Rewrite Record methods to make use of the None value
+// Rewrite Record methods to make use of the None value, and add convenience
+// methods and iteration
 %extend dballe::Record {
         %rename enqi enqi_orig;
         %rename enqd enqd_orig;
@@ -176,6 +150,33 @@ class TimeRange(tuple):
                                 self.sets_orig(name, value)
                 def setc(self, name, value):
                        return self.sets(name, value)
+
+                def __iter__(self):
+                        i = self.begin()
+                        while i.valid():
+                                yield i.var()
+                                i.next()
+                def enqdate(self):
+                        return datetime.datetime(self.enqi("year"), self.enqi("month"), self.enqi("day"), self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
+                def enqlevel(self):
+                        return Level(self.enqi("leveltype"), self.enqi("l1"), self.enqi("l2"))
+                def enqtimerange(self):
+                        return TimeRange(self.enqi("pindicator"), self.enqi("p1"), self.enqi("p2"))
+                def setdate(self, dt):
+                        self.seti("year", dt.year)
+                        self.seti("month", dt.month)
+                        self.seti("day", dt.day)
+                        self.seti("hour", dt.hour)
+                        self.seti("min", dt.minute)
+                        self.seti("sec", dt.second)
+                def setlevel(self, level):
+                        self.seti("leveltype", level[0])
+                        self.seti("l1", level[1])
+                        self.seti("l2", level[2])
+                def settimerange(self, trange):
+                        self.seti("pindicator", trange[0])
+                        self.seti("p1", trange[1])
+                        self.seti("p2", trange[2])
         %}
 }
 
