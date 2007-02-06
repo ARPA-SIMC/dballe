@@ -4,6 +4,7 @@
 %include "std_string.i"
 %include "typemaps.i"
 %include "exception.i"
+%include "../doc/dballe-doc.i"
 
 %exception {
 	try { $action }

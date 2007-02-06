@@ -44,7 +44,8 @@ noinst_DATA += \
 	bufrex_api/index.html \
 	msg_api/index.html \
 	db_api/index.html \
-	c++_api/index.html
+	c++_api/index.html \
+	dballe-doc.i
 if HAVE_LATEX2HTML
 noinst_DATA += \
 	fapi_html/index.html \
@@ -77,9 +78,11 @@ libdballe-msg.doxytags msg_api/index.html: $(msgdoxdeps) ../dballe/main-msg.dox
 libdballe-db.doxytags db_api/index.html: $(dbdoxdeps) ../dballe/main-db.dox
 	doxygen $<
 
-libdballepp.doxytags c++_api/index.html: $(cppdoxdeps)
+libdballepp.doxytags c++_api/index.html c++_xml/index.xml: $(cppdoxdeps)
 	doxygen $<
 
+dballe-doc.i: c++_xml/index.xml doxy2swig.py
+	./doxy2swig.py $< $@
 
 fapi_html/index.html: $(fapisources)
 	$(LATEX2HTML) -dir fapi_html -mkdir $<
@@ -115,9 +118,10 @@ fapi.dvi: $(fapisources)
 
 EXTRA_DIST = libdballe-core.dox libdballe-bufrex.dox libdballe-msg.dox libdballe-db.dox $(guidesources) fapi.tex
 
-CLEANFILES = libdballe-{core,bufrex,msg,db}.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
+CLEANFILES = libdballe-{core,bufrex,msg,db}.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg} dballe-doc.i
 
 clean-local:
-	rm -rf {core,bufrex,msg,db}_api
+	rm -rf {core,bufrex,msg,db,c++}_api
+	rm -rf c++_xml
 	rm -rf guide_html
 	rm -rf fapi_html

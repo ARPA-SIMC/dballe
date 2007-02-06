@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = dballe dballe++ fortran extra tools tables swig doc .
+SUBDIRS = dballe dballe++ fortran extra tools tables doc swig .
 #examples 
 
 pkgconfigdir = $(libdir)/pkgconfig

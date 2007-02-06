@@ -1,6 +1,13 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
+# TODO: aggiungere segnalazione di errore in caso di sovrascrittura
+# TODO: aggiungere un filtro ai dati in uscita (per selezionare, ad esempio, solo alcuni time range)
+# TODO: rendere piú facile decidere quali indici sono linkati
+# TODO: aggiungere metodi di query negli indici
+# TODO: leggere gli attributi (per dire, in res["B12001.B33001"])
+# TODO: leggere i dati di anagrafica
+
 import dballe
 from dballe import Level, TimeRange
 from datetime import *
@@ -213,7 +220,7 @@ class Data:
         def __init__(self, name, dims):
                 """
                 name = name of the variable (eg. "B12001")
-                dims = array of Index objects one for every dimension
+                dims = list of Index objects one for every dimension
                 """
                 # Variable name, as a B table entry (e.g. "B12001")
                 self.name = name

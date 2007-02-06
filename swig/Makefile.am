@@ -16,7 +16,7 @@ nodist__dballe_la_SOURCES = dballe_wrap_python.cc
 _dballe_la_LDFLAGS = -module
 _dballe_la_LIBADD = ../dballe++/libdballepp.la
 
-dballe_wrap_python.cc Dballe.py: dballe.i
+dballe_wrap_python.cc Dballe.py: dballe.i ../doc/dballe-doc.i
 	swig -python -c++ -I.. -I/usr/include -o $@ $<
 
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION)
