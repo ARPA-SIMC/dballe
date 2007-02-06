@@ -185,8 +185,8 @@ class IntervalIndex(Index):
 # + Level
 # + Time range
 # + Date
-# - Interval (like Date, but at regular intervals)
-# - IntervalWithTolerance (like Date, but at regular intervals, and catching in
+# + Interval (like Date, but at regular intervals)
+# + IntervalWithTolerance (like Date, but at regular intervals, and catching in
 #   the interval everything within a give range)
 
 class IndexMaker:

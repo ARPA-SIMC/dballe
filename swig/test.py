@@ -3,8 +3,8 @@
 from dballe import *
 import unittest
 
-class DballeTest(unittest.TestCase):
-	def testVarinfo(self):
+class VarinfoTest(unittest.TestCase):
+	def testData(self):
 		info = Varinfo.create("B01001")
 		self.assertEqual(info.var(), "B01001")
         	self.assertEqual(info.desc(), "WMO BLOCK NUMBER")
@@ -14,6 +14,39 @@ class DballeTest(unittest.TestCase):
         	self.assertEqual(info.len(), 2)
         	self.assertEqual(info.is_string(), False)
 
+	def testStringification(self):
+		info = Varinfo.create("B01001")
+		self.assertEqual(str(info).startswith("B01001"), True)
+		self.assertEqual(repr(info).startswith("Varinfo(B01001"), True)
+
+class VarTest(unittest.TestCase):
+	def testCreation(self):
+		var = Var("B01001")
+		self.assertEqual(var.code(), "B01001")
+		self.assertEqual(var.isset(), False)
+
+		var = Var("B05001", 12)
+		self.assertEqual(var.code(), "B05001")
+		self.assertEqual(var.isset(), True)
+		self.assertEqual(var.enqi(), 12)
+		self.assertEqual(var.enqd(), 0.00012)
+		self.assertEqual(var.enqc(), "12")
+
+		var = Var("B05001", 12.4)
+		self.assertEqual(var.code(), "B05001")
+		self.assertEqual(var.isset(), True)
+		self.assertEqual(var.enqi(), 1240000)
+		self.assertEqual(var.enqd(), 12.4)
+		self.assertEqual(var.enqc(), "1240000")
+
+		var = Var("B05001", "123456")
+		self.assertEqual(var.code(), "B05001")
+		self.assertEqual(var.isset(), True)
+		self.assertEqual(var.enqi(), 123456)
+		self.assertEqual(var.enqd(), 1.23456)
+		self.assertEqual(var.enqc(), "123456")
+
+class RecordTest(unittest.TestCase):
 	def testRecord(self):
 		# Check basic set/get and variable iteration
 		rec = Record()
@@ -115,6 +148,7 @@ class DballeTest(unittest.TestCase):
 		rec1 = rec.copy()
 		rec1.setc("query", "nosort")
 
+class FormatterTest(unittest.TestCase):
 	def testFormatter(self):
 		for i in range(258):
 			describeLevel(i, 0, 0)

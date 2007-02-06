@@ -4,6 +4,11 @@ using namespace std;
 
 namespace dballe {
 
+Varinfo::Varinfo(dba_varcode code)
+{
+	checked(dba_varinfo_query_local(code, &m_info));
+}
+
 Varinfo Varinfo::create(dba_varcode code)
 {
 	dba_varinfo info;

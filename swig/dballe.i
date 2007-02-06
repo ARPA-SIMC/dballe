@@ -94,6 +94,15 @@ class TimeRange(tuple):
         %}
 }
 
+%extend dballe::Varinfo {
+        %pythoncode %{
+                def __str__(self):
+                        return "%s (%s,%s)" % (self.var(), self.unit(), self.desc())
+                def __repr__(self):
+                        return "Varinfo(%s)" % (self.var(),)
+        %}
+}
+
 %extend dballe::Cursor {
         %pythoncode %{
                 def __iter__(self):
@@ -184,6 +193,10 @@ class TimeRange(tuple):
 	$1 = dba_record_keyword_byname(PyString_AsString($input));
 }
 
+%typemap(typecheck,precedence=SWIG_TYPECHECK_STRING) dba_keyword {
+        $1 = PyString_Check($input) ? 1 : 0;
+}
+
 %typemap(in) dba_encoding {
 	const char* tmp = PyString_AsString($input);
         if (strcmp(tmp, "BUFR") == 0)
@@ -206,6 +219,10 @@ class TimeRange(tuple):
 	char buf[10];
 	snprintf(buf, 10, "B%02d%03d", DBA_VAR_X($1), DBA_VAR_Y($1));
 	$result = PyString_FromString(buf);
+}
+
+%typemap(typecheck,precedence=SWIG_TYPECHECK_STRING) dba_varcode {
+        $1 = PyString_Check($input) ? 1 : 0;
 }
 
 %typemap(in, numinputs=0) dba_varcode *varcode (dba_varcode temp) {

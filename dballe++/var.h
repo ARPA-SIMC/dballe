@@ -16,6 +16,7 @@ class Varinfo
 	
 public:
 	Varinfo(dba_varinfo info) : m_info(info) {}
+        Varinfo(dba_varcode code);
 
 	/** The variable code. */
 	dba_varcode var() const { return m_info->var; }
@@ -49,6 +50,8 @@ public:
 	/** Maximum scaled value the field can have */
 	double dmax() const { return m_info->dmax; }
 
+        dba_varinfo raw() const { return m_info; }
+
 	/** Create a Varinfo from a dba_varcode using the local B table */
 	static Varinfo create(dba_varcode code);
 };
@@ -77,30 +80,54 @@ public:
 	{
 		checked(dba_var_create_local(code, &m_var));
 	}
-	/// Create a Var from a dba_info
-	Var(dba_varinfo info)
+	/// Create a Var from a Varinfo
+	Var(Varinfo info)
 	{
-		checked(dba_var_create(info, &m_var));
+		checked(dba_var_create(info.raw(), &m_var));
 	}
-	/// Create a Var from a dba_info and an integer value
-	Var(dba_varinfo info, int val)
+	/// Create a Var from a dba_varcode and an integer value
+	Var(dba_varcode code, int val)
 	{
-		checked(dba_var_createi(info, val, &m_var));
+                Varinfo info(code);
+		checked(dba_var_createi(info.raw(), val, &m_var));
 	}
-	/// Create a Var from a dba_info and a double value
-	Var(dba_varinfo info, double val)
+	/// Create a Var from a Varinfo and an integer value
+	Var(Varinfo info, int val)
 	{
-		checked(dba_var_created(info, val, &m_var));
+		checked(dba_var_createi(info.raw(), val, &m_var));
 	}
-	/// Create a Var from a dba_info and a string
-	Var(dba_varinfo info, const char* val)
+	/// Create a Var from a dba_varcode and a double value
+	Var(dba_varcode code, double val)
 	{
-		checked(dba_var_createc(info, val, &m_var));
+                Varinfo info(code);
+		checked(dba_var_created(info.raw(), val, &m_var));
 	}
-	/// Create a Var from a dba_info and a string
-	Var(dba_varinfo info, const std::string& val)
+	/// Create a Var from a Varinfo and a double value
+	Var(Varinfo info, double val)
 	{
-		checked(dba_var_createc(info, val.c_str(), &m_var));
+		checked(dba_var_created(info.raw(), val, &m_var));
+	}
+	/// Create a Var from a dba_varcode and a string
+	Var(dba_varcode code, const char* val)
+	{
+                Varinfo info(code);
+		checked(dba_var_createc(info.raw(), val, &m_var));
+	}
+	/// Create a Var from a Varinfo and a string
+	Var(Varinfo info, const char* val)
+	{
+		checked(dba_var_createc(info.raw(), val, &m_var));
+	}
+	/// Create a Var from a dba_varcode and a string
+	Var(dba_varcode code, const std::string& val)
+	{
+                Varinfo info(code);
+		checked(dba_var_createc(info.raw(), val.c_str(), &m_var));
+	}
+	/// Create a Var from a Varinfo and a string
+	Var(Varinfo info, const std::string& val)
+	{
+		checked(dba_var_createc(info.raw(), val.c_str(), &m_var));
 	}
 	~Var()
 	{
@@ -180,6 +207,12 @@ public:
 	{
 		checked(dba_var_setc(m_var, val.c_str()));
 	}
+
+        /// Check if the variable is set
+        bool isset() const
+        {
+                return dba_var_value(m_var) != NULL;
+        }
 
 	/// Unset the variable value
 	void unset()
