@@ -28,6 +28,11 @@ void to::test<1>()
 
 	int count = 0;
 	for (Record::iterator i = rec.begin(); i != rec.end(); ++i)
+		++count;
+	gen_ensure_equals(count, 2);
+
+    count = 0;
+	for (Record::var_iterator i = rec.varbegin(); i != rec.varend(); ++i)
 	{
 		Var v(*i);
 		gen_ensure_equals(v.code(), DBA_VAR(0, 4, 1));

@@ -13,33 +13,63 @@ namespace dballe {
 class RecordIterator
 {
 	dba_record m_rec;
+        dba_keyword m_kwd;
 	dba_record_cursor m_cur;
 
 public:
-	RecordIterator(dba_record rec)
+	RecordIterator(dba_record rec);
+	RecordIterator(dba_record rec, bool)
+                : m_rec(rec), m_kwd(DBA_KEY_COUNT), m_cur(0) {}
+
+	// Iterator methods
+	// operator->() is missing for simplicity's sake
+
+	bool operator==(const RecordIterator& rc);
+	bool operator!=(const RecordIterator& rc);
+	RecordIterator& operator++();
+	RecordIterator operator++(int);
+	Var operator*() const;
+
+	// Bindings-friendly methods
+	
+	bool valid() const { return m_kwd != DBA_KEY_COUNT || m_cur != NULL; }
+	bool next() { ++(*this); return valid(); }
+	Var var() const { return **this; }
+};
+
+/**
+ * Iterate the variables inside a record
+ */
+class RecordVarIterator
+{
+	dba_record m_rec;
+	dba_record_cursor m_cur;
+
+public:
+	RecordVarIterator(dba_record rec)
 		: m_rec(rec), m_cur(dba_record_iterate_first(rec)) {}
-	RecordIterator(dba_record rec, dba_record_cursor cur)
+	RecordVarIterator(dba_record rec, dba_record_cursor cur)
 		: m_rec(rec), m_cur(cur) {}
 
 	// Iterator methods
 	// operator->() is missing for simplicity's sake
 
-	bool operator==(const RecordIterator& rc)
+	bool operator==(const RecordVarIterator& rc)
 	{
 		return m_cur == rc.m_cur;
 	}
-	bool operator!=(const RecordIterator& rc)
+	bool operator!=(const RecordVarIterator& rc)
 	{
 		return m_cur != rc.m_cur;
 	}
-	RecordIterator& operator++()
+	RecordVarIterator& operator++()
 	{
 		m_cur = dba_record_iterate_next(m_rec, m_cur);
 		return *this;
 	}
-	RecordIterator operator++(int)
+	RecordVarIterator operator++(int)
 	{
-		RecordIterator res(*this);
+		RecordVarIterator res(*this);
 		m_cur = dba_record_iterate_next(m_rec, m_cur);
 		return res;
 	}
@@ -75,6 +105,7 @@ class Record
 public:
 	typedef Var value_type;
 	typedef RecordIterator iterator;
+	typedef RecordVarIterator var_iterator;
 
 	/// Wraps an existing dba_record, taking charge of memory allocation
 	Record(dba_record rec) : m_rec(rec) {}
@@ -443,7 +474,7 @@ public:
 	}
 
 	/**
-	 * Iterators on the values
+	 * Iterators on all the contents
 	 * @{
 	 */
 	iterator begin()
@@ -452,7 +483,21 @@ public:
 	}
 	iterator end()
 	{
-		return RecordIterator(m_rec, 0);
+		return RecordIterator(m_rec, false);
+	}
+	/** @} */
+
+	/**
+	 * Iterators on the values
+	 * @{
+	 */
+	var_iterator varbegin()
+	{
+		return RecordVarIterator(m_rec);
+	}
+	var_iterator varend()
+	{
+		return RecordVarIterator(m_rec, 0);
 	}
 	/** @} */
 
