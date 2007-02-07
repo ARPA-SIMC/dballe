@@ -157,7 +157,7 @@ void dba_var_delete(dba_var var);
  * @returns
  *   1 if the two variables have the same data, 0 otherwise
  */
-int dba_var_equals(dba_var var1, dba_var var2);
+int dba_var_equals(const dba_var var1, const dba_var var2);
 
 /**
  * Get the value of a dba_var, as an integer

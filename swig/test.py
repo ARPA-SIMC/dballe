@@ -1,11 +1,12 @@
 #!/usr/bin/python
 
 from dballe import *
+from datetime import *
 import unittest
 
 class VarinfoTest(unittest.TestCase):
 	def testData(self):
-		info = Varinfo.create("B01001")
+		info = Varinfo("B01001")
 		self.assertEqual(info.var(), "B01001")
         	self.assertEqual(info.desc(), "WMO BLOCK NUMBER")
         	self.assertEqual(info.unit(), "NUMERIC")
@@ -15,38 +16,87 @@ class VarinfoTest(unittest.TestCase):
         	self.assertEqual(info.is_string(), False)
 
 	def testStringification(self):
-		info = Varinfo.create("B01001")
+		info = Varinfo("B01001")
 		self.assertEqual(str(info).startswith("B01001"), True)
 		self.assertEqual(repr(info).startswith("Varinfo(B01001"), True)
 
 class VarTest(unittest.TestCase):
-	def testCreation(self):
+	def testUndefCreation(self):
 		var = Var("B01001")
 		self.assertEqual(var.code(), "B01001")
 		self.assertEqual(var.isset(), False)
-
+        def testIntCreation(self):
 		var = Var("B05001", 12)
 		self.assertEqual(var.code(), "B05001")
 		self.assertEqual(var.isset(), True)
 		self.assertEqual(var.enqi(), 12)
 		self.assertEqual(var.enqd(), 0.00012)
 		self.assertEqual(var.enqc(), "12")
-
+        def testFloatCreation(self):
 		var = Var("B05001", 12.4)
 		self.assertEqual(var.code(), "B05001")
 		self.assertEqual(var.isset(), True)
 		self.assertEqual(var.enqi(), 1240000)
 		self.assertEqual(var.enqd(), 12.4)
 		self.assertEqual(var.enqc(), "1240000")
-
+        def testStringCreation(self):
 		var = Var("B05001", "123456")
 		self.assertEqual(var.code(), "B05001")
 		self.assertEqual(var.isset(), True)
 		self.assertEqual(var.enqi(), 123456)
 		self.assertEqual(var.enqd(), 1.23456)
 		self.assertEqual(var.enqc(), "123456")
+	def testStringification(self):
+		var = Var("B01001")
+		self.assertEqual(str(var), "None")
+		self.assertEqual(repr(var), "Var(B01001, None)")
+
+		var = Var("B05001", 12.4)
+		self.assertEqual(str(var), "12.40000")
+		self.assertEqual(repr(var), "Var(B05001, 12.40000)")
+
 
 class RecordTest(unittest.TestCase):
+        def setUp(self):
+                self.r = Record()
+                self.r.set("block", 1)
+                self.r.set("station", 123)
+                self.r.set("lat", 45.12345)
+                self.r.set("lon", 11.54321)
+                self.r.setdate(datetime(2007, 2, 1, 1, 2, 3))
+                self.r.setlevel(Level(105, 2, 0))
+                self.r.settimerange(TimeRange(2, 3, 4))
+                self.r.set("B12001", 285.0)
+
+        def testReadDictOperators(self):
+                r = self.r
+                self.assertEqual(r["block"], 1)
+                self.assertEqual(r["station"], 123)
+                self.assertEqual(r["lat"], 45.12345)
+                self.assertEqual(r["lon"], 11.54321)
+                self.assertEqual(r["date"], datetime(2007, 2, 1, 1, 2, 3))
+                self.assertEqual(r["level"], Level(105, 2, 0))
+                self.assertEqual(r["timerange"], TimeRange(2, 3, 4))
+                self.assertEqual(r["B12001"], 285.0)
+        def testWriteDictOperators(self):
+                r = self.r.copy()
+                r["block"] = 2
+                r["station"] = 321
+                r["lat"] = 45.54321
+                r["lon"] = 11.12345
+                r["date"] = datetime(2006, 1, 2, 0, 1, 2)
+                r["level"] = Level(104, 1, 2)
+                r["timerange"] = TimeRange(1, 2, 3)
+                r["B12001"] = 294.5
+                self.assertEqual(r["block"], 2)
+                self.assertEqual(r["station"], 321)
+                self.assertEqual(r["lat"], 45.54321)
+                self.assertEqual(r["lon"], 11.12345)
+                self.assertEqual(r["date"], datetime(2006, 1, 2, 0, 1, 2))
+                self.assertEqual(r["level"], Level(104, 1, 2))
+                self.assertEqual(r["timerange"], TimeRange(1, 2, 3))
+                self.assertEqual(r["B12001"], 294.5)
+
 	def testRecord(self):
 		# Check basic set/get and variable iteration
 		rec = Record()
@@ -78,7 +128,7 @@ class RecordTest(unittest.TestCase):
 		rec.set(var)
 		self.assertEqual(rec.enqi("B01001"), 4)
 
-		dt = datetime.datetime(2001, 2, 3, 4, 5, 6)
+		dt = datetime(2001, 2, 3, 4, 5, 6)
 		rec.setdate(dt)
 		self.assertEqual(rec.enqdate(), dt)
 		self.assertEqual(rec.enqi("year"), 2001)

@@ -167,6 +167,8 @@ public:
 		else
 			return varEnq(stringToVar(parm));
 	}
+        /// enq as operator[]
+        Var operator[](const std::string& parm) const { return enq(parm); }
 	/// Get the Var representation of a parameter
 	Var keyEnq(dba_keyword parameter) const
 	{
@@ -174,6 +176,8 @@ public:
 		checked(dba_record_key_enq(m_rec, parameter, &var));
 		return Var(var);
 	}
+        /// keyEnq as operator[]
+        Var operator[](dba_keyword parameter) const { return keyEnq(parameter); }
 	/// Get the Var representation of a value
 	Var varEnq(dba_varcode code) const
 	{
@@ -181,6 +185,8 @@ public:
 		checked(dba_record_var_enq(m_rec, code, &var));
 		return Var(var);
 	}
+        /// varEnq as operator[]
+        Var operator[](dba_varcode code) const { return varEnq(code); }
 	/// Get the unscaled integer representation of a parameter or value
 	int enqi(const std::string& parm) const
 	{

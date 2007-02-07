@@ -116,7 +116,7 @@ guide.dvi: $(guidesources)
 
 fapi.dvi: $(fapisources)
 
-EXTRA_DIST = libdballe-core.dox libdballe-bufrex.dox libdballe-msg.dox libdballe-db.dox $(guidesources) fapi.tex
+EXTRA_DIST = libdballe-core.dox libdballe-bufrex.dox libdballe-msg.dox libdballe-db.dox $(guidesources) fapi.tex doxy2swig.py
 
 CLEANFILES = libdballe-{core,bufrex,msg,db}.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg} dballe-doc.i
 

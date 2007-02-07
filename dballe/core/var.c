@@ -489,7 +489,7 @@ void dba_var_print(dba_var var, FILE* out)
 	}
 }
 
-int dba_var_equals(dba_var var1, dba_var var2)
+int dba_var_equals(const dba_var var1, const dba_var var2)
 {
 	if (var1 == NULL && var2 == NULL)
 		return 1;

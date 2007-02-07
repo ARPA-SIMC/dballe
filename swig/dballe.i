@@ -90,7 +90,7 @@ class TimeRange(tuple):
                 def __str__(self):
                         return self.format("None")
                 def __repr__(self):
-                        return "Var(%s, %s)" % (self.code(), self.format())
+                        return "Var(%s, %s)" % (self.code(), self.format("None"))
         %}
 }
 
@@ -160,11 +160,6 @@ class TimeRange(tuple):
                 def setc(self, name, value):
                        return self.sets(name, value)
 
-                def __iter__(self):
-                        i = self.begin()
-                        while i.valid():
-                                yield i.var()
-                                i.next()
                 def enqdate(self):
                         return datetime.datetime(self.enqi("year"), self.enqi("month"), self.enqi("day"), self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
                 def enqlevel(self):
@@ -186,6 +181,40 @@ class TimeRange(tuple):
                         self.seti("pindicator", trange[0])
                         self.seti("p1", trange[1])
                         self.seti("p2", trange[2])
+                def __len__(self):
+                        pass
+                def __getitem__(self, key):
+                        if key == "date":
+                                return self.enqdate()
+                        elif key == "level":
+                                return self.enqlevel()
+                        elif key == "timerange":
+                                return self.enqtimerange()
+                        else:
+                                return self.enq(key)
+                def __setitem__(self, key, val):
+                        if key == "date":
+                                self.setdate(val)
+                        elif key == "level":
+                                self.setlevel(val)
+                        elif key == "timerange":
+                                self.settimerange(val)
+                        else:
+                                self.set(key, val)
+                def __delitem__(self, key):
+                        self.unset(key, val)
+                def __iter__(self):
+                        # TODO: iterate all elements, not just variables
+                        i = self.begin()
+                        while i.valid():
+                                yield i.var()
+                                i.next()
+                # TODO: iterkeys, itervals, iteritems
+                def itervars(self):
+                        i = self.begin()
+                        while i.valid():
+                                yield i.var()
+                                i.next()
         %}
 }
 

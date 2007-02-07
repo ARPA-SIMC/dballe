@@ -144,6 +144,17 @@ public:
 		return *this;
 	}
 
+        /// Comparison with int
+        bool operator==(int val) const { return enqi() == val; }
+        /// Comparison with double
+        bool operator==(double val) const { return enqd() == val; }
+        /// Comparison with C string
+        bool operator==(const char* val) const { return strcmp(enqc(), val) == 0; }
+        /// Comparison with string
+        bool operator==(const std::string& val) const { return enqs() == val; }
+        /// Comparison with Var
+        bool operator==(const Var& var) const { return dba_var_equals(m_var, var.m_var) == 1; }
+
 	/// Create a copy of this variable
 	Var copy() const
 	{
@@ -159,28 +170,28 @@ public:
 	}
 
 	/// Get the variable value, as an unscaled integer
-	int enqi()
+	int enqi() const
 	{
 		int res;
 		checked(dba_var_enqi(m_var, &res));
 		return res;
 	}
 	/// Get the variable value, as a double
-	double enqd()
+	double enqd() const
 	{
 		double res;
 		checked(dba_var_enqd(m_var, &res));
 		return res;
 	}
 	/// Get the variable value, as a string
-	const char* enqc()
+	const char* enqc() const
 	{
 		const char* res;
 		checked(dba_var_enqc(m_var, &res));
 		return res;
 	}
 	/// Get the variable value, as a string
-	std::string enqs()
+	std::string enqs() const
 	{
 		const char* res;
 		checked(dba_var_enqc(m_var, &res));
@@ -221,19 +232,19 @@ public:
 	}
 
 	/// Get the variable code
-	dba_varcode code()
+	dba_varcode code() const
 	{
 		return dba_var_code(m_var);
 	}
 	
 	/// Get the variable Varinfo metadata
-	Varinfo info()
+	Varinfo info() const
 	{
 		return Varinfo(dba_var_info(m_var));
 	}
 
 	/// Create a formatted string representation of the variable value
-	std::string format(const std::string& nullValue = "(undef)")
+	std::string format(const std::string& nullValue = "(undef)") const
 	{
 		if (dba_var_value(m_var) == NULL)
 			return nullValue;
@@ -249,7 +260,7 @@ public:
 	}
 	
 	/// Get the raw, string-serialised variable value
-	const char* raw()
+	const char* raw() const
 	{
 		return dba_var_value(m_var);
 	}
