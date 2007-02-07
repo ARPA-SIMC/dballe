@@ -124,6 +124,11 @@ class RecordTest(unittest.TestCase):
                         res += [(key, val.enq())]
                 self.assertEqual(len(res), len(known))
                 self.assertEqual(res, known)
+        def testSetDict(self):
+                r = Record()
+                r.set({"ana_id": 1, "lat": 12.34567, "ident": "ciao"})
+                self.assertEqual([x for x in r.iteritems()], [("ana_id", 1), ("ident", "ciao"), ("lat", 12.34567)])
+
 
 	def testRecord(self):
 		# Check basic set/get and variable iteration

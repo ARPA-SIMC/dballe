@@ -130,6 +130,7 @@ class TimeRange(tuple):
         %rename setd setd_orig;
         %rename sets sets_orig;
         %rename setc setc_orig;
+        %rename set set_orig;
         %pythoncode %{
                 def enqi(self, name):
                        if self.contains(name):
@@ -148,6 +149,18 @@ class TimeRange(tuple):
                                 return None
                 def enqc(self, name):
                        return self.enqs(name)
+
+                def set(self, *args):
+                       if len(args) == 2:
+                                self.set_orig(*args)
+                       elif len(args) == 1:
+                                if 'iteritems' in args[0].__class__.__dict__:
+                                        for key, val in args[0].iteritems():
+                                                self.set_orig(key, val)
+                                else:
+                                        self.set_orig(args[0])
+                       else:
+                                raise ValueError, "Set wants 1 or 2 values ("+str(len(args))+" provided)"
 
                 def seti(self, name, value):
                        if value == None:
@@ -188,8 +201,7 @@ class TimeRange(tuple):
                         self.seti("pindicator", trange[0])
                         self.seti("p1", trange[1])
                         self.seti("p2", trange[2])
-                def __len__(self):
-                        pass
+
                 def __getitem__(self, key):
                         if key == "date":
                                 return self.enqdate()
