@@ -146,11 +146,69 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "Variable related to attribute queried", "CHARACTER", DEF_STRING(6) },
 };
 
-/* End of table definitions */
+static const char* keyword_names[] = {
+	"priority",
+	"priomax",
+	"priomin",
+	"rep_cod",
+	"rep_memo",
+	"ana_id",
+	"block",
+	"station",
+	"mobile",
+	"ident",
+	"lat",
+	"lon",
+	"latmax",
+	"latmin",
+	"lonmax",
+	"lonmin",
+	"datetime",
+	"year",
+	"month",
+	"day",
+	"hour",
+	"min",
+	"sec",
+	"yearmax",
+	"yearmin",
+	"monthmax",
+	"monthmin",
+	"daymax",
+	"daymin",
+	"hourmax",
+	"hourmin",
+	"minumax",
+	"minumin",
+	"secmax",
+	"secmin",
+	"leveltype",
+	"l1",
+	"l2",
+	"pindicator",
+	"p1",
+	"p2",
+	"var",
+	"varlist",
+	"context_id",
+	"query",
+	"ana_filter",
+	"data_filter",
+	"attr_filter",
+	"limit",
+	"var_related",
+};
 
 dba_varinfo dba_record_keyword_byindex(int index)
 {
 	return &(infos[index]);
+}
+
+const char* dba_record_keyword_name(dba_keyword key)
+{
+	if (key < 0 || key >= DBA_KEY_COUNT)
+		return NULL;
+	return keyword_names[key];
 }
 
 dba_keyword dba_record_keyword_byname(const char* tag)

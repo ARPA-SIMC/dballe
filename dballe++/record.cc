@@ -70,6 +70,15 @@ Var RecordIterator::operator*() const
     return res;
 }
 
+bool RecordIterator::isKeyword() const
+{
+    return m_kwd != DBA_KEY_COUNT;
+}
+
+const char* RecordIterator::keywordName() const
+{
+	return dba_record_keyword_name(m_kwd);
+}
 
 void Record::dumpToStderr()
 {

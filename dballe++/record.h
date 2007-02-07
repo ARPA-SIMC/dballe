@@ -30,6 +30,10 @@ public:
 	RecordIterator operator++(int);
 	Var operator*() const;
 
+        bool isKeyword() const;
+        dba_keyword keyword() const { return m_kwd; }
+        const char* keywordName() const;
+
 	// Bindings-friendly methods
 	
 	bool valid() const { return m_kwd != DBA_KEY_COUNT || m_cur != NULL; }

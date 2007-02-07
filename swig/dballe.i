@@ -91,6 +91,13 @@ class TimeRange(tuple):
                         return self.format("None")
                 def __repr__(self):
                         return "Var(%s, %s)" % (self.code(), self.format("None"))
+                def enq(self):
+                        if self.info().is_string():
+                                return self.enqc()
+                        elif self.info().scale() == 0:
+                                return self.enqi()
+                        else:
+                                return self.enqd()
         %}
 }
 
@@ -204,17 +211,46 @@ class TimeRange(tuple):
                 def __delitem__(self, key):
                         self.unset(key, val)
                 def __iter__(self):
-                        # TODO: iterate all elements, not just variables
+                        "Iterate all the contents of the record"
                         i = self.begin()
                         while i.valid():
                                 yield i.var()
                                 i.next()
-                # TODO: iterkeys, itervals, iteritems
+                def iterkeys(self):
+                        "Iterate all the keyword and variable names in the record"
+                        i = self.begin()
+                        while i.valid():
+                                if i.isKeyword():
+                                        yield i.keywordName()
+                                else:
+                                        yield i.var().code()
+                                i.next()
+                def itervalues(self):
+                        "Iterate all the values in the record"
+                        return self.__iter__()
+                def iteritems(self):
+                        """
+                        Iterate all the keyword and variable names in the
+                        record, generating (name, value) tuples
+                        """
+                        i = self.begin()
+                        while i.valid():
+                                v = i.var()
+                                if i.isKeyword():
+                                        yield (i.keywordName(), v)
+                                else:
+                                        yield (v.code(), v)
+                                i.next()
                 def itervars(self):
-                        i = self.begin()
+                        "Iterate all the variables in the record"
+                        i = self.varbegin()
                         while i.valid():
                                 yield i.var()
                                 i.next()
+                def __str__(self):
+                        return "Record{"+",".join([str(key)+": "+str(val) for key, val in self.iteritems()])+"}"
+                def __repr__(self):
+                        return self.__str__();
         %}
 }
 

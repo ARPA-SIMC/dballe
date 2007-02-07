@@ -96,6 +96,34 @@ class RecordTest(unittest.TestCase):
                 self.assertEqual(r["level"], Level(104, 1, 2))
                 self.assertEqual(r["timerange"], TimeRange(1, 2, 3))
                 self.assertEqual(r["B12001"], 294.5)
+        def testIter(self):
+                known = [1, 123, 45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 2, 3, 4, 285.0]
+                res = []
+                for n in self.r:
+                        res += [n.enq()]
+                self.assertEqual(len(res), len(known))
+                self.assertEqual(res, known)
+                res = []
+                for n in self.r.itervalues():
+                        res += [n.enq()]
+                self.assertEqual(len(res), len(known))
+                self.assertEqual(res, known)
+        def testIterkeys(self):
+                known = ["block", "station", "lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype", "l1", "l2", "pindicator", "p1", "p2", "B12001"]
+                res = []
+                for n in self.r.iterkeys():
+                        res += [n]
+                self.assertEqual(len(res), len(known))
+                self.assertEqual(res, known)
+        def testIteritems(self):
+                k = ["block", "station", "lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype", "l1", "l2", "pindicator", "p1", "p2", "B12001"]
+                v = [1, 123, 45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 2, 3, 4, 285.0]
+                known = zip(k, v)
+                res = []
+                for key, val in self.r.iteritems():
+                        res += [(key, val.enq())]
+                self.assertEqual(len(res), len(known))
+                self.assertEqual(res, known)
 
 	def testRecord(self):
 		# Check basic set/get and variable iteration
@@ -112,7 +140,7 @@ class RecordTest(unittest.TestCase):
 		self.assertEqual(rec.enqi("B04001"), 2001)
 
 		count = 0
-		for var in rec:
+		for var in rec.itervars():
 			self.assertEqual(var.code(), "B04001")
 			count = count + 1
 		self.assertEqual(count, 1)

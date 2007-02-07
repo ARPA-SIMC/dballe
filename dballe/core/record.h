@@ -128,6 +128,16 @@ typedef struct _dba_record* dba_record;
 typedef struct _dba_item* dba_record_cursor;
 
 /**
+ * Return the name of a dba_keyword
+ *
+ * @param keyword
+ *   The keyword to get the name for
+ * @return
+ *   The keyword name, or NULL if keyword is not a valid keyword
+ */
+const char* dba_record_keyword_name(dba_keyword keyword);
+
+/**
  * Return informations about a keyword
  *
  * @param keyword
