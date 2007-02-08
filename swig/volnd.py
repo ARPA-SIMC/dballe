@@ -288,7 +288,22 @@ class Data:
                 # collected data.
                 self.vals = []
 
+		# Maps attribute names to Data objects with the attribute
+		# values.  The dimensions of the Data objects are fully
+		# synchronised with this one.
+		self.attrs = {}
+
 		self._checkConflicts = checkConflicts
+
+	def appendAtPos(self, pos, var):
+		"""
+		Collect a variable to be written on the specific indexes
+		"""
+		# TODO: handle the data type properly (object array for
+		# strings, int array for ints, byte array for small ints, float
+		# array for floats...)
+		val = var.enqd()
+		self.vals.append( (pos, val) )
         
         def append(self, rec):
                 """
@@ -301,12 +316,28 @@ class Data:
                         pos = map(lambda dim: dim.obtainIndex(rec), self.dims)
 
                         # Save the value with its indexes
-                        val = rec.enqd(self.name)
-                        self.vals += [(pos, val)]
+			self.appendAtPos(pos, rec.enq(self.name))
                 except SkipDatum:
                         # If the value cannot be mapped along this dimension,
                         # skip it
                         pass
+
+	def appendAttrs(self, rec):
+		"""
+		Collect attributes to append to the record.
+
+                You need to call finalise() before the values can be used.
+		"""
+		for var in rec.itervars():
+			if var.code() in self.attrs:
+				data = self.attrs[var.code()]
+			else:
+				data = Data(self.name, self.dims, False)
+				self.attrs[var.code()] = data
+			# Append at the same position as the last variable
+			# collected
+			data.appendAtPos(self.vals[-1][0], var)
+
 
         def finalise(self):
                 """
@@ -325,6 +356,10 @@ class Data:
 
                 # Replace the intermediate data with the results
                 self.vals = a
+
+		# Finalise all the attributes as well
+		for d in self.attrs.itervalues():
+			d.finalise();
         
         def __str__(self):
                 return "Data("+", ".join(map(lambda x: x.shortName(), self.dims))+"):"+str(self.vals)
@@ -333,9 +368,24 @@ class Data:
                 return "Data("+", ".join(map(lambda x: x.shortName(), self.dims))+"):"+self.vals.__repr__()
 
 
-def read(query, dims, filter=None, checkConflicts=True):
+def read(query, dims, filter=None, checkConflicts=True, attributes=None):
+	"""
+	query is a dballe.Cursor resulting from a dballe query
+	dims is the sequence of indexes to use for shaping the data matrixes
+	filter is an optional filter function that can be used to discard
+	  values from the query: if filter is not None, it will be called for
+	  every output record and if it returns False, the record will be
+	  discarded
+	checkConflicts tells if we should raise an exception if two values from
+	  the database would fill in the same position in the matrix
+	attributes tells if we should read attributes as well: if it is None,
+	  no attributes will be read; if it is True, all attributes will be
+	  read; if it is a sequence, then it is the sequence of attributes that
+	  should be read.
+	"""
         ndims = len(dims)
         vars = {}
+	arec = dballe.Record()
         # Iterate results
         for rec in query:
 		# Discard the values that filter does not like
@@ -360,6 +410,13 @@ def read(query, dims, filter=None, checkConflicts=True):
 
                 # Save every value with its indexes
                 var.append(rec)
+
+		# Add the attributes
+		if attributes != None:
+			if attributes == True:
+				count = query.attributes(arec)
+				var.appendAttrs(arec)
+
 
         # Now that we have collected all the values, create the arrays
         for var in vars.itervalues():
@@ -424,12 +481,15 @@ if __name__ == '__main__':
                 def setUp(self):
                         # We want a predictable dataset
                         random.seed(1)
+			rattr = random.Random()
+			rattr.seed(1)
 
                         self.db = dballe.DB("test", "enrico", "")
 
                         # Wipe the test database
                         self.db.reset()
 
+			attrs = dballe.Record()
                         rec = dballe.Record()
                         rec.seti("mobile", 0)
 
@@ -444,7 +504,7 @@ if __name__ == '__main__':
                                                 # 6 stations
 
                                                 start = datetime(2007, 01, 01, 0, 0, 0)
-                                                end = datetime(2007, 01, 16, 0, 0, 0)
+                                                end = datetime(2007, 01, 7, 0, 0, 0)
 
                                                 # 6 hours precipitations
                                                 cur = datetime(2007, 01, 01, 0, 0, 0)
@@ -454,7 +514,10 @@ if __name__ == '__main__':
                                                         rec.setdate(cur)
                                                         rec.setd("B13011", random.random()*10.)
                                                         if random.random() <= 0.9:
-                                                                self.db.insert(rec, False, True)
+                                                                a, c = self.db.insert(rec, False, True)
+								attrs["B33007"] = rattr.random()*100.
+								self.db.attrInsert(c, "B13011", attrs)
+								
                                                         cur += timedelta(0, 6*3600, 0)
 
                                                 # 12 hours precipitations at different times
@@ -465,7 +528,9 @@ if __name__ == '__main__':
                                                         rec.setdate(cur)
                                                         rec.setd("B13011", random.random()*10.)
                                                         if random.random() <= 0.9:
-                                                                self.db.insert(rec, False, True)
+                                                                a, c = self.db.insert(rec, False, True)
+								attrs["B33007"] = rattr.random()*100.
+								self.db.attrInsert(c, "B13011", attrs)
                                                         cur += timedelta(0, 12*3600, 0)
 
                                                 # Randomly measured
@@ -479,7 +544,9 @@ if __name__ == '__main__':
                                                         rec.setdate(cur + timedelta(0, random.randint(-600, 600)))
                                                         rec.setd("B13011", random.random()*10.)
                                                         if random.random() <= 0.9:
-                                                                self.db.insert(rec, False, True)
+                                                                a, c = self.db.insert(rec, False, True)
+								attrs["B33007"] = rattr.random()*100.
+								self.db.attrInsert(c, "B13011", attrs)
                                                         cur += timedelta(0, 6*3600, 0)
 
                                                 rec.unset("B13011")
@@ -492,7 +559,9 @@ if __name__ == '__main__':
                                                         rec.setdate(cur)
                                                         rec.setd("B10004", random.randint(70000, 105000))
                                                         if random.random() <= 0.9:
-                                                                self.db.insert(rec, False, True)
+                                                                a, c = self.db.insert(rec, False, True)
+								attrs["B33007"] = rattr.random()*100.
+								self.db.attrInsert(c, "B10004", attrs)
                                                         cur += timedelta(0, 12*3600, 0)
 
                                                 rec.unset("B10004")
@@ -585,7 +654,7 @@ if __name__ == '__main__':
                         self.assertEquals(data.vals.size(), 12)
                         self.assertEquals(data.vals.shape, (6, 2))
                         self.assertEquals(sum(data.vals.mask().flat), 1)
-                        self.assertEquals(int(average(data.vals.compressed())), 84339)
+                        self.assertEquals(int(average(data.vals.compressed())), 86890)
                         self.assertEquals(data.dims[0][0], (1, 10., 15., None))
                         self.assertEquals(data.dims[0][1], (2, 10., 25., None))
                         self.assertEquals(data.dims[0][2], (3, 20., 15., None))
