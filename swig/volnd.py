@@ -59,6 +59,11 @@ class AnaIndex(Index):
         """
         Index for stations, as they come out of the database
         """
+	def peekIndex(self, rec):
+                id = rec.enqi("ana_id")
+                if id not in self._map:
+                        return len(self)
+                return self._map[id]
         def obtainIndex(self, rec):
                 id = rec.enqi("ana_id")
                 if id not in self._map:
@@ -72,6 +77,11 @@ class NetworkIndex(Index):
         """
         Index for networks, as they come out of the database
         """
+        def peekIndex(self, rec):
+                id = rec.enqi("rep_cod")
+                if id not in self._map:
+                        return len(self)
+                return self._map[id]
         def obtainIndex(self, rec):
                 id = rec.enqi("rep_cod")
                 if id not in self._map:
@@ -85,6 +95,11 @@ class LevelIndex(Index):
         """
         Index for levels, as they come out of the database
         """
+        def peekIndex(self, rec):
+                id = rec.enqlevel()
+                if id not in self._map:
+                        return len(self)
+                return self._map[id]
         def obtainIndex(self, rec):
                 id = rec.enqlevel()
                 if id not in self._map:
@@ -109,11 +124,13 @@ class FixedLevelIndex(Index):
                 for pos, l in enumerate(self):
                         self._map[l] = pos
 
-        def obtainIndex(self, rec):
+        def peekIndex(self, rec):
                 id = rec.enqlevel()
                 if id not in self._map:
                         raise SkipDatum
                 return self._map[id]
+        def obtainIndex(self, rec):
+		return self.peekIndex(rec)
 
         def shortName(self):
                 return "FixedLevelIndex["+str(len(self))+"]"
@@ -122,6 +139,11 @@ class TimeRangeIndex(Index):
         """
         Index for time ranges, as they come out of the database
         """
+        def peekIndex(self, rec):
+                id = rec.enqtimerange()
+                if id not in self._map:
+                        return len(self)
+                return self._map[id]
         def obtainIndex(self, rec):
                 id = rec.enqtimerange()
                 if id not in self._map:
@@ -146,11 +168,13 @@ class FixedTimeRangeIndex(Index):
                 for pos, l in enumerate(self):
                         self._map[l] = pos
 
-        def obtainIndex(self, rec):
+        def peekIndex(self, rec):
                 id = rec.enqtimerange()
                 if id not in self._map:
                         raise SkipDatum
                 return self._map[id]
+        def obtainIndex(self, rec):
+		return self.peekIndex(rec)
 
         def shortName(self):
                 return "FixedTimeRangeIndex["+str(len(self))+"]"
@@ -159,6 +183,11 @@ class DateTimeIndex(Index):
         """
         Index for datetimes, as they come out of the database
         """
+        def peekIndex(self, rec):
+                id = rec.enqdate()
+                if id not in self._map:
+                        return len(self)
+                return self._map[id]
         def obtainIndex(self, rec):
                 id = rec.enqdate()
                 if id not in self._map:
@@ -232,6 +261,20 @@ class IntervalIndex(Index):
                 self._step = step
                 self._tolerance = timedelta(0)
 
+        def peekIndex(self, rec):
+                t = rec.enqdate()
+                # Skip all entries before the start
+                if (t < self._start):
+                        raise SkipDatum
+
+                # With integer division we get both the position and the skew
+                pos, skew = tddivmod(t - self._start, self._step)
+                if skew > self._step / 2:
+                        pos += 1
+                        skew = skew - self._step
+                if skew > self._tolerance:
+                        raise SkipDatum
+                return pos
         def obtainIndex(self, rec):
                 t = rec.enqdate()
                 # Skip all entries before the start
@@ -315,10 +358,15 @@ class Data:
                 """
                 try:
                         # Obtain the index for every dimension
-                        pos = map(lambda dim: dim.obtainIndex(rec), self.dims)
+                        pos = map(lambda dim: dim.peekIndex(rec), self.dims)
 
                         # Save the value with its indexes
                         self.appendAtPos(pos, rec.enqvar(self.name))
+
+			# The data has been accepted: commit the new index
+			# values
+			for dim in self.dims:
+				dim.obtainIndex(rec)
 
                         # Save the last position for appendAttrs
                         self._lastPos = pos
@@ -785,15 +833,14 @@ if __name__ == '__main__':
 			# If an index rejects a variable after another index
 			# has successfuly added an item, we used to end up with
 			# a 'ghost' index entry with no items in it
-                        indexes = (AnaIndex(), \
-                                  TimeRangeIndex(), \
+                        indexes = (TimeRangeIndex(), \
                                   FixedLevelIndex(Level(3, 2, 0)))
                         query = dballe.Record()
-                        query.set('rep_memo', 'synop')
+                        query.set('ana_id', 1)
                         query.set('var', 'B13011')
-                        query.setdate(datetime(2007, 1, 1, 0, 0, 0))
                         vars = read(self.db.query(query), indexes, \
-                                        checkConflicts=True)
+                                        checkConflicts=False)
+			self.assertEquals(vars.keys(), ["B13011"])
 			self.assertEquals(len(vars["B13011"].dims[1]), 1)
 			self.assertEquals(vars["B13011"].dims[1][0], TimeRange(4, -21600, 0))
 
