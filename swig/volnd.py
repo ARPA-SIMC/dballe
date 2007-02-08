@@ -318,7 +318,7 @@ class Data:
                         pos = map(lambda dim: dim.obtainIndex(rec), self.dims)
 
                         # Save the value with its indexes
-                        self.appendAtPos(pos, rec.enq(self.name))
+                        self.appendAtPos(pos, rec.enqvar(self.name))
 
                         # Save the last position for appendAttrs
                         self._lastPos = pos
@@ -423,7 +423,7 @@ def read(query, dims, filter=None, checkConflicts=True, attributes=None):
                 varname = rec.enqc("var")
 
                 # Skip string variables, because they do not fit into an array
-                if rec.enq(varname).info().is_string():
+                if rec.enqvar(varname).info().is_string():
                         continue
 
                 # Instantiate the index objects here for every variable
