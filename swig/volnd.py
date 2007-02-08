@@ -41,24 +41,24 @@ class SkipDatum(Exception): pass
 class Index(list):
         def __init__(self, shared=True):
                 self._map = {}
-		self._shared = shared
+                self._shared = shared
         def __str__(self):
                 return self.shortName() + ": " + list.__str__(self)
         def another(self):
-		"""
-		Return another version of this index: it can be a reference to
-		the exact same index if shared=True; otherwise it's a new,
-		empty version.
-		"""
-		if self._shared:
-			return self
-		else:
-			return self.__class__()
+                """
+                Return another version of this index: it can be a reference to
+                the exact same index if shared=True; otherwise it's a new,
+                empty version.
+                """
+                if self._shared:
+                        return self
+                else:
+                        return self.__class__()
 
 class AnaIndex(Index):
-	"""
-	Index for stations, as they come out of the database
-	"""
+        """
+        Index for stations, as they come out of the database
+        """
         def obtainIndex(self, rec):
                 id = rec.enqi("ana_id")
                 if id not in self._map:
@@ -69,9 +69,9 @@ class AnaIndex(Index):
                 return "AnaIndex["+str(len(self))+"]"
 
 class NetworkIndex(Index):
-	"""
-	Index for networks, as they come out of the database
-	"""
+        """
+        Index for networks, as they come out of the database
+        """
         def obtainIndex(self, rec):
                 id = rec.enqi("rep_cod")
                 if id not in self._map:
@@ -82,9 +82,9 @@ class NetworkIndex(Index):
                 return "NetworkIndex["+str(len(self))+"]"
 
 class LevelIndex(Index):
-	"""
-	Index for levels, as they come out of the database
-	"""
+        """
+        Index for levels, as they come out of the database
+        """
         def obtainIndex(self, rec):
                 id = rec.enqlevel()
                 if id not in self._map:
@@ -95,33 +95,33 @@ class LevelIndex(Index):
                 return "LevelIndex["+str(len(self))+"]"
 
 class FixedLevelIndex(Index):
-	"""
-	Index for levels, using a pregiven list of levels, and throwing away
-	all data that does not fit
-	"""
+        """
+        Index for levels, using a pregiven list of levels, and throwing away
+        all data that does not fit
+        """
         def __init__(self, levels, *args, **kwargs):
                 """
-		levels is the list of all allowed Level objects, in the wanted
-		order.
+                levels is the list of all allowed Level objects, in the wanted
+                order.
                 """
                 Index.__init__(self, *args, **kwargs)
                 self.extend(levels)
-		for pos, l in enumerate(self):
-			self._map[l] = pos
+                for pos, l in enumerate(self):
+                        self._map[l] = pos
 
         def obtainIndex(self, rec):
                 id = rec.enqlevel()
                 if id not in self._map:
-			raise SkipDatum
+                        raise SkipDatum
                 return self._map[id]
 
         def shortName(self):
                 return "FixedLevelIndex["+str(len(self))+"]"
 
 class TimeRangeIndex(Index):
-	"""
-	Index for time ranges, as they come out of the database
-	"""
+        """
+        Index for time ranges, as they come out of the database
+        """
         def obtainIndex(self, rec):
                 id = rec.enqtimerange()
                 if id not in self._map:
@@ -132,33 +132,33 @@ class TimeRangeIndex(Index):
                 return "TimeRangeIndex["+str(len(self))+"]"
 
 class FixedTimeRangeIndex(Index):
-	"""
-	Index for time ranges, using a pregiven list of time ranges, and
-	throwing away all data that does not fit
-	"""
+        """
+        Index for time ranges, using a pregiven list of time ranges, and
+        throwing away all data that does not fit
+        """
         def __init__(self, tranges, *args, **kwargs):
                 """
-		tranges is the list of all allowed TimeRange objects, in the
-		wanted order.
+                tranges is the list of all allowed TimeRange objects, in the
+                wanted order.
                 """
                 Index.__init__(self, *args, **kwargs)
                 self.extend(tranges)
-		for pos, l in enumerate(self):
-			self._map[l] = pos
+                for pos, l in enumerate(self):
+                        self._map[l] = pos
 
         def obtainIndex(self, rec):
                 id = rec.enqtimerange()
                 if id not in self._map:
-			raise SkipDatum
+                        raise SkipDatum
                 return self._map[id]
 
         def shortName(self):
                 return "FixedTimeRangeIndex["+str(len(self))+"]"
 
 class DateTimeIndex(Index):
-	"""
-	Index for datetimes, as they come out of the database
-	"""
+        """
+        Index for datetimes, as they come out of the database
+        """
         def obtainIndex(self, rec):
                 id = rec.enqdate()
                 if id not in self._map:
@@ -213,13 +213,13 @@ def tddivmod2(td1, td2):
 tddivmod = tddivmod2
 
 class IntervalIndex(Index):
-	"""
-	Index by fixed time intervals: index points are at fixed time
-	intervals, and data is acquired in one point only if it is within a
-	given tolerance from the interval.  The interval start at a pregiven
-	point in time, and continue for as long as there are fitting data
-	coming out of the database.
-	"""
+        """
+        Index by fixed time intervals: index points are at fixed time
+        intervals, and data is acquired in one point only if it is within a
+        given tolerance from the interval.  The interval start at a pregiven
+        point in time, and continue for as long as there are fitting data
+        coming out of the database.
+        """
         def __init__(self, start, step, tolerance = 0, *args, **kwargs):
                 """
                 start is a datetime with the starting moment
@@ -257,10 +257,10 @@ class IntervalIndex(Index):
                 return "IntervalIndex["+str(len(self))+"]"
 
         def another(self):
-		if self._shared:
-			return self
-		else:
-			return IntervalIndex(self._start, self._step, self._tolerance)
+                if self._shared:
+                        return self
+                else:
+                        return IntervalIndex(self._start, self._step, self._tolerance)
 
 class Data:
         """
@@ -274,8 +274,8 @@ class Data:
                 """
                 name = name of the variable (eg. "B12001")
                 dims = list of Index objects one for every dimension
-		if checkConflicts is True, then an exception is raised if two
-		  output values would end up filling the same matrix element
+                if checkConflicts is True, then an exception is raised if two
+                  output values would end up filling the same matrix element
                 """
                 # Variable name, as a B table entry (e.g. "B12001")
                 self.name = name
@@ -288,22 +288,22 @@ class Data:
                 # collected data.
                 self.vals = []
 
-		# Maps attribute names to Data objects with the attribute
-		# values.  The dimensions of the Data objects are fully
-		# synchronised with this one.
-		self.attrs = {}
+                # Maps attribute names to Data objects with the attribute
+                # values.  The dimensions of the Data objects are fully
+                # synchronised with this one.
+                self.attrs = {}
 
-		self._checkConflicts = checkConflicts
+                self._checkConflicts = checkConflicts
 
-	def appendAtPos(self, pos, var):
-		"""
-		Collect a variable to be written on the specific indexes
-		"""
-		# TODO: handle the data type properly (object array for
-		# strings, int array for ints, byte array for small ints, float
-		# array for floats...)
-		val = var.enqd()
-		self.vals.append( (pos, val) )
+        def appendAtPos(self, pos, var):
+                """
+                Collect a variable to be written on the specific indexes
+                """
+                # TODO: handle the data type properly (object array for
+                # strings, int array for ints, byte array for small ints, float
+                # array for floats...)
+                val = var.enqd()
+                self.vals.append( (pos, val) )
         
         def append(self, rec):
                 """
@@ -316,27 +316,27 @@ class Data:
                         pos = map(lambda dim: dim.obtainIndex(rec), self.dims)
 
                         # Save the value with its indexes
-			self.appendAtPos(pos, rec.enq(self.name))
+                        self.appendAtPos(pos, rec.enq(self.name))
                 except SkipDatum:
                         # If the value cannot be mapped along this dimension,
                         # skip it
                         pass
 
-	def appendAttrs(self, rec):
-		"""
-		Collect attributes to append to the record.
+        def appendAttrs(self, rec):
+                """
+                Collect attributes to append to the record.
 
                 You need to call finalise() before the values can be used.
-		"""
-		for var in rec.itervars():
-			if var.code() in self.attrs:
-				data = self.attrs[var.code()]
-			else:
-				data = Data(self.name, self.dims, False)
-				self.attrs[var.code()] = data
-			# Append at the same position as the last variable
-			# collected
-			data.appendAtPos(self.vals[-1][0], var)
+                """
+                for var in rec.itervars():
+                        if var.code() in self.attrs:
+                                data = self.attrs[var.code()]
+                        else:
+                                data = Data(self.name, self.dims, False)
+                                self.attrs[var.code()] = data
+                        # Append at the same position as the last variable
+                        # collected
+                        data.appendAtPos(self.vals[-1][0], var)
 
 
         def finalise(self):
@@ -349,17 +349,17 @@ class Data:
 
                 # Fill the array with all the values, at the given indexes
                 for pos, val in self.vals:
-			if not self._checkConflicts or a.mask()[pos] == 1:
-				a[pos] = val
-			else:
-				raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
+                        if not self._checkConflicts or a.mask()[pos] == 1:
+                                a[pos] = val
+                        else:
+                                raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
 
                 # Replace the intermediate data with the results
                 self.vals = a
 
-		# Finalise all the attributes as well
-		for d in self.attrs.itervalues():
-			d.finalise();
+                # Finalise all the attributes as well
+                for d in self.attrs.itervalues():
+                        d.finalise();
         
         def __str__(self):
                 return "Data("+", ".join(map(lambda x: x.shortName(), self.dims))+"):"+str(self.vals)
@@ -369,28 +369,32 @@ class Data:
 
 
 def read(query, dims, filter=None, checkConflicts=True, attributes=None):
-	"""
-	query is a dballe.Cursor resulting from a dballe query
-	dims is the sequence of indexes to use for shaping the data matrixes
-	filter is an optional filter function that can be used to discard
-	  values from the query: if filter is not None, it will be called for
-	  every output record and if it returns False, the record will be
-	  discarded
-	checkConflicts tells if we should raise an exception if two values from
-	  the database would fill in the same position in the matrix
-	attributes tells if we should read attributes as well: if it is None,
-	  no attributes will be read; if it is True, all attributes will be
-	  read; if it is a sequence, then it is the sequence of attributes that
-	  should be read.
-	"""
+        """
+        query is a dballe.Cursor resulting from a dballe query
+        dims is the sequence of indexes to use for shaping the data matrixes
+        filter is an optional filter function that can be used to discard
+          values from the query: if filter is not None, it will be called for
+          every output record and if it returns False, the record will be
+          discarded
+        checkConflicts tells if we should raise an exception if two values from
+          the database would fill in the same position in the matrix
+        attributes tells if we should read attributes as well: if it is None,
+          no attributes will be read; if it is True, all attributes will be
+          read; if it is a sequence, then it is the sequence of attributes that
+          should be read.
+        """
         ndims = len(dims)
         vars = {}
-	arec = dballe.Record()
+        rec = dballe.Record()
+        arec = dballe.Record()
         # Iterate results
-        for rec in query:
-		# Discard the values that filter does not like
-		if filter and not filter(rec):
-			continue
+        while True:
+                if not query.next(rec):
+                        break;
+
+                # Discard the values that filter does not like
+                if filter and not filter(rec):
+                        continue
 
                 varname = rec.enqc("var")
 
@@ -403,7 +407,7 @@ def read(query, dims, filter=None, checkConflicts=True, attributes=None):
                 # need to be shared and creating new indexes for the individual
                 # ones
                 if varname not in vars:
-			var = Data(varname, map(lambda x: x.another(), dims), checkConflicts)
+                        var = Data(varname, map(lambda x: x.another(), dims), checkConflicts)
                         vars[varname] = var
                 else:
                         var = vars[varname]
@@ -411,11 +415,11 @@ def read(query, dims, filter=None, checkConflicts=True, attributes=None):
                 # Save every value with its indexes
                 var.append(rec)
 
-		# Add the attributes
-		if attributes != None:
-			if attributes == True:
-				count = query.attributes(arec)
-				var.appendAttrs(arec)
+                # Add the attributes
+                if attributes != None:
+                        if attributes == True:
+                                count = query.attributes(arec)
+                                var.appendAttrs(arec)
 
 
         # Now that we have collected all the values, create the arrays
@@ -481,21 +485,25 @@ if __name__ == '__main__':
                 def setUp(self):
                         # We want a predictable dataset
                         random.seed(1)
-			rattr = random.Random()
-			rattr.seed(1)
+                        rattr = random.Random()
+                        rattr.seed(1)
 
                         self.db = dballe.DB("test", "enrico", "")
 
                         # Wipe the test database
                         self.db.reset()
 
-			attrs = dballe.Record()
+                        attrs = dballe.Record()
                         rec = dballe.Record()
                         rec.seti("mobile", 0)
 
                         # Enter some sample data
                         for net in ('synop', 'noaa'):
                                 rec.setc("rep_memo", net)
+                                if net == 'synop':
+                                        aname = 'B33007'
+                                else:
+                                        aname = 'B33040'
                                 # 2 networks
                                 for lat in (10., 20., 30.):
                                         rec.setd("lat", lat)
@@ -514,10 +522,10 @@ if __name__ == '__main__':
                                                         rec.setdate(cur)
                                                         rec.setd("B13011", random.random()*10.)
                                                         if random.random() <= 0.9:
-                                                                a, c = self.db.insert(rec, False, True)
-								attrs["B33007"] = rattr.random()*100.
-								self.db.attrInsert(c, "B13011", attrs)
-								
+                                                                c, a = self.db.insert(rec, False, True)
+                                                                attrs[aname] = rattr.random()*100.
+                                                                self.db.attrInsert(c, "B13011", attrs)
+                                                                
                                                         cur += timedelta(0, 6*3600, 0)
 
                                                 # 12 hours precipitations at different times
@@ -528,9 +536,9 @@ if __name__ == '__main__':
                                                         rec.setdate(cur)
                                                         rec.setd("B13011", random.random()*10.)
                                                         if random.random() <= 0.9:
-                                                                a, c = self.db.insert(rec, False, True)
-								attrs["B33007"] = rattr.random()*100.
-								self.db.attrInsert(c, "B13011", attrs)
+                                                                c, a = self.db.insert(rec, False, True)
+                                                                attrs[aname] = rattr.random()*100.
+                                                                self.db.attrInsert(c, "B13011", attrs)
                                                         cur += timedelta(0, 12*3600, 0)
 
                                                 # Randomly measured
@@ -544,9 +552,9 @@ if __name__ == '__main__':
                                                         rec.setdate(cur + timedelta(0, random.randint(-600, 600)))
                                                         rec.setd("B13011", random.random()*10.)
                                                         if random.random() <= 0.9:
-                                                                a, c = self.db.insert(rec, False, True)
-								attrs["B33007"] = rattr.random()*100.
-								self.db.attrInsert(c, "B13011", attrs)
+                                                                c, a = self.db.insert(rec, False, True)
+                                                                attrs[aname] = rattr.random()*100.
+                                                                self.db.attrInsert(c, "B13011", attrs)
                                                         cur += timedelta(0, 6*3600, 0)
 
                                                 rec.unset("B13011")
@@ -559,84 +567,84 @@ if __name__ == '__main__':
                                                         rec.setdate(cur)
                                                         rec.setd("B10004", random.randint(70000, 105000))
                                                         if random.random() <= 0.9:
-                                                                a, c = self.db.insert(rec, False, True)
-								attrs["B33007"] = rattr.random()*100.
-								self.db.attrInsert(c, "B10004", attrs)
+                                                                c, a = self.db.insert(rec, False, True)
+                                                                attrs[aname] = rattr.random()*100.
+                                                                self.db.attrInsert(c, "B10004", attrs)
                                                         cur += timedelta(0, 12*3600, 0)
 
                                                 rec.unset("B10004")
 
-		def testIndexFind(self):
+                def testIndexFind(self):
                         # Ana in one dimension, network in the other
                         query = dballe.Record()
-			query.set({'ana_id': 1, 'var': "B13011", 'rep_memo': "synop"})
+                        query.set({'ana_id': 1, 'var': "B13011", 'rep_memo': "synop"})
                         query.setdate(datetime(2007, 1, 1, 0, 0, 0))
                         vars = read(self.db.query(query), (AnaIndex(), TimeRangeIndex()))
-			self.assertEquals(vars["B13011"].dims[1].index(TimeRange(4, -21600, 0)), 1)
+                        self.assertEquals(vars["B13011"].dims[1].index(TimeRange(4, -21600, 0)), 1)
 
-		def testFilter(self):
+                def testFilter(self):
                         # Ana in one dimension, network in the other
                         query = dballe.Record()
-			query.set({'ana_id': 1, 'var': "B13011", 'rep_memo': "synop"})
+                        query.set({'ana_id': 1, 'var': "B13011", 'rep_memo': "synop"})
                         query.setdate(datetime(2007, 1, 1, 0, 0, 0))
-			vars = read(self.db.query(query), \
-				(AnaIndex(), TimeRangeIndex()), \
-				filter=lambda rec: rec.enqtimerange() == TimeRange(4, -21600, 0))
-			self.assertEquals(vars["B13011"].dims[1].index(TimeRange(4, -21600, 0)), 0)
+                        vars = read(self.db.query(query), \
+                                (AnaIndex(), TimeRangeIndex()), \
+                                filter=lambda rec: rec.enqtimerange() == TimeRange(4, -21600, 0))
+                        self.assertEquals(vars["B13011"].dims[1].index(TimeRange(4, -21600, 0)), 0)
 
-		def testUnsharedIndex(self):
+                def testUnsharedIndex(self):
                         # Ana in one dimension, network in the other
                         query = dballe.Record()
-			query.set({'ana_id': 1, 'rep_memo': "synop"})
+                        query.set({'ana_id': 1, 'rep_memo': "synop"})
 
-			vars = read(self.db.query(query), \
-				(AnaIndex(), TimeRangeIndex(), DateTimeIndex()))
-			self.assertEquals(len(vars["B13011"].dims[2]), len(vars["B10004"].dims[2]))
-			self.assertEquals(vars["B13011"].dims[2], vars["B10004"].dims[2])
+                        vars = read(self.db.query(query), \
+                                (AnaIndex(), TimeRangeIndex(), DateTimeIndex()))
+                        self.assertEquals(len(vars["B13011"].dims[2]), len(vars["B10004"].dims[2]))
+                        self.assertEquals(vars["B13011"].dims[2], vars["B10004"].dims[2])
 
-			vars = read(self.db.query(query), \
-				(AnaIndex(), TimeRangeIndex(), DateTimeIndex(shared=False)))
-			self.assertNotEquals(len(vars["B13011"].dims[2]), len(vars["B10004"].dims[2]))
+                        vars = read(self.db.query(query), \
+                                (AnaIndex(), TimeRangeIndex(), DateTimeIndex(shared=False)))
+                        self.assertNotEquals(len(vars["B13011"].dims[2]), len(vars["B10004"].dims[2]))
 
-		def testConflicts(self):
+                def testConflicts(self):
                         # Ana in one dimension, network in the other
                         query = dballe.Record()
-			query.set({'ana_id': 1, 'var': "B13011"})
+                        query.set({'ana_id': 1, 'var': "B13011"})
                         query.setdate(datetime(2007, 1, 1, 0, 0, 0))
-			# Here conflicting values are overwritten
-			vars = read(self.db.query(query), (AnaIndex(), ), checkConflicts=False)
-			self.assertEquals(type(vars), dict)
-			# Here insted they should be detected
-			self.assertRaises(IndexError, read, \
-				self.db.query(query),
-				(AnaIndex(),),
-				checkConflicts=True)
+                        # Here conflicting values are overwritten
+                        vars = read(self.db.query(query), (AnaIndex(), ), checkConflicts=False)
+                        self.assertEquals(type(vars), dict)
+                        # Here insted they should be detected
+                        self.assertRaises(IndexError, read, \
+                                self.db.query(query),
+                                (AnaIndex(),),
+                                checkConflicts=True)
 
-		def testFixedIndex(self):
+                def testFixedIndex(self):
                         # Ana in one dimension, network in the other
                         query = dballe.Record()
-			query.set({'ana_id': 1, 'rep_memo': "synop", 'year': 2007, 'month': 1, 'day': 1})
+                        query.set({'ana_id': 1, 'rep_memo': "synop", 'year': 2007, 'month': 1, 'day': 1})
 
-			vars = read(self.db.query(query), \
-				(AnaIndex(), FixedTimeRangeIndex( \
-						(TimeRange(4, -21600, 0), TimeRange(4, -43200, 0)) ) ), \
-				checkConflicts = False)
-			self.assertEquals(len(vars["B13011"].dims[1]), 2)
+                        vars = read(self.db.query(query), \
+                                (AnaIndex(), FixedTimeRangeIndex( \
+                                                (TimeRange(4, -21600, 0), TimeRange(4, -43200, 0)) ) ), \
+                                checkConflicts = False)
+                        self.assertEquals(len(vars["B13011"].dims[1]), 2)
 
-			vars = read(self.db.query(query), \
-				(AnaIndex(), TimeRangeIndex()), \
-				checkConflicts = False)
-			self.assertEquals(len(vars["B13011"].dims[1]), 3)
+                        vars = read(self.db.query(query), \
+                                (AnaIndex(), TimeRangeIndex()), \
+                                checkConflicts = False)
+                        self.assertEquals(len(vars["B13011"].dims[1]), 3)
 
-			vars = read(self.db.query(query), \
-				(AnaIndex(), FixedLevelIndex( (Level(1, 0, 0),) )), \
-				checkConflicts = False)
-			self.assertEquals(len(vars["B13011"].dims[1]), 1)
+                        vars = read(self.db.query(query), \
+                                (AnaIndex(), FixedLevelIndex( (Level(1, 0, 0),) )), \
+                                checkConflicts = False)
+                        self.assertEquals(len(vars["B13011"].dims[1]), 1)
 
-			vars = read(self.db.query(query), \
-				(AnaIndex(), LevelIndex()), \
-				checkConflicts = False)
-			self.assertEquals(len(vars["B13011"].dims[1]), 2)
+                        vars = read(self.db.query(query), \
+                                (AnaIndex(), LevelIndex()), \
+                                checkConflicts = False)
+                        self.assertEquals(len(vars["B13011"].dims[1]), 2)
 
                 def testAnaNetwork(self):
                         # Ana in one dimension, network in the other
@@ -648,6 +656,7 @@ if __name__ == '__main__':
                         self.assertEquals(vars.keys(), ["B10004"])
                         data = vars["B10004"]
                         self.assertEquals(data.name, "B10004")
+                        self.assertEquals(len(data.attrs), 0)
                         self.assertEquals(len(data.dims), 2)
                         self.assertEquals(len(data.dims[0]), 6)
                         self.assertEquals(len(data.dims[1]), 2)
@@ -668,12 +677,13 @@ if __name__ == '__main__':
                         # 2 variables
                         query = dballe.Record()
                         query.setdate(datetime(2007, 1, 1, 0, 0, 0))
-                        vars = read(self.db.query(query), (AnaIndex(), TimeRangeIndex(), NetworkIndex()))
+                        vars = read(self.db.query(query), (AnaIndex(), TimeRangeIndex(shared=False), NetworkIndex()))
                         self.assertEquals(len(vars), 2)
                         self.assertEquals(sorted(vars.keys()), ["B10004", "B13011"])
 
                         data = vars["B10004"]
                         self.assertEquals(data.name, "B10004")
+                        self.assertEquals(len(data.attrs), 0)
                         self.assertEquals(len(data.dims), 3)
                         self.assertEquals(len(data.dims[0]), 6)
                         self.assertEquals(len(data.dims[1]), 1)
@@ -681,7 +691,7 @@ if __name__ == '__main__':
                         self.assertEquals(data.vals.size(), 12)
                         self.assertEquals(data.vals.shape, (6, 1, 2))
                         self.assertEquals(sum(data.vals.mask().flat), 1)
-                        self.assertEquals(int(average(data.vals.compressed())), 84339)
+                        self.assertEquals(int(average(data.vals.compressed())), 86890)
                         self.assertEquals(data.dims[0][0], (1, 10., 15., None))
                         self.assertEquals(data.dims[0][1], (2, 10., 25., None))
                         self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -689,19 +699,19 @@ if __name__ == '__main__':
                         self.assertEquals(data.dims[0][4], (5, 30., 15., None))
                         self.assertEquals(data.dims[0][5], (6, 30., 25., None))
                         self.assertEquals(data.dims[1][0], (0, 0, 0))
-                        self.assertEquals(data.dims[2][0], (200, "noaa"))
-                        self.assertEquals(data.dims[2][1], (1, "synop"))
+                        self.assertEquals(set(data.dims[2]), set(((200, "noaa"), (1, "synop"))))
 
                         data = vars["B13011"]
                         self.assertEquals(data.name, "B13011")
+                        self.assertEquals(len(data.attrs), 0)
                         self.assertEquals(len(data.dims), 3)
                         self.assertEquals(len(data.dims[0]), 6)
                         self.assertEquals(len(data.dims[1]), 2)
                         self.assertEquals(len(data.dims[2]), 2)
                         self.assertEquals(data.vals.size(), 24)
                         self.assertEquals(data.vals.shape, (6, 2, 2))
-                        self.assertEquals(sum(data.vals.mask().flat), 0)
-                        self.assertEquals(int(average(data.vals.compressed())), 5)
+                        self.assertEquals(sum(data.vals.mask().flat), 3)
+                        self.assertEquals(int(average(data.vals.compressed())), 4)
                         self.assertEquals(data.dims[0][0], (1, 10., 15., None))
                         self.assertEquals(data.dims[0][1], (2, 10., 25., None))
                         self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -710,18 +720,32 @@ if __name__ == '__main__':
                         self.assertEquals(data.dims[0][5], (6, 30., 25., None))
                         self.assertEquals(data.dims[1][0], (4, -43200, 0))
                         self.assertEquals(data.dims[1][1], (4, -21600, 0))
-                        self.assertEquals(data.dims[2][0], (200, "noaa"))
-                        self.assertEquals(data.dims[2][1], (1, "synop"))
+                        self.assertEquals(set(data.dims[2]), set(((200, "noaa"), (1, "synop"))))
 
                         self.assertEquals(vars["B10004"].dims[0], vars["B13011"].dims[0])
                         self.assertNotEquals(vars["B10004"].dims[1], vars["B13011"].dims[1])
                         self.assertEquals(vars["B10004"].dims[2], vars["B13011"].dims[2])
 
-                def testAnaTrangeNetwork(self):
-                        # One station
-                        # 3 dimensions: timerange, network, datetime
-                        # 2 variables
-                        pass
+                def testAttrs(self):
+                        # Same export as testAnaNetwork, but check that the
+                        # attributes are synchronised
+                        query = dballe.Record()
+                        query.set("var", "B10004")
+                        query.setdate(datetime(2007, 1, 1, 0, 0, 0))
+                        vars = read(self.db.query(query), (AnaIndex(), NetworkIndex()), attributes=True)
+                        self.assertEquals(len(vars), 1)
+                        self.assertEquals(vars.keys(), ["B10004"])
+                        data = vars["B10004"]
+                        self.assertEquals(len(data.attrs), 2)
+                        self.assertEquals(sorted(data.attrs.keys()), ['B33007', 'B33040'])
+
+                        for a in ('B33007', 'B33040'):
+                                self.assertEquals(data.dims, data.attrs[a].dims)
+                                self.assertEquals(data.vals.size(), data.attrs[a].vals.size())
+                                self.assertEquals(data.vals.shape, data.attrs[a].vals.shape)
+                                self.assertEquals(data.vals.mask().flat, data.attrs[a].vals.mask().flat)
+                        self.assertEquals(average(data.attrs['B33007'].vals), 50.)
+                        self.assertEquals(average(data.attrs['B33040'].vals), 50.)
 
         unittest.main()
 
