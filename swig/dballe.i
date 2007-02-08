@@ -102,7 +102,9 @@ class TimeRange(tuple):
                 def __str__(self):
                         return "%s (%s,%s)" % (self.var(), self.unit(), self.desc())
                 def __repr__(self):
-                        return "Varinfo(%s)" % (self.var(),)
+                        return "Varinfo(%s,%s,%s,scale %d,len %d,string %s,irange %d..%d,frange: %f..%f)" % \
+                            (self.var(), self.unit(), self.desc(), self.scale(), self.len(), \
+                             str(self.is_string()), self.imin(), self.imax(), self.dmin(), self.dmax())
         %}
 }
 
@@ -145,10 +147,99 @@ class TimeRange(tuple):
         %rename sets sets_orig;
         %rename setc setc_orig;
         %rename set set_orig;
+        %rename unset unset_orig;
         %pythoncode %{
+                _enqdate_parms = ("year", "month", "day", "hour", "min", "sec")
+                _enqdatemin_parms = ("yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin")
+                _enqdatemax_parms = ("yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax")
+                _enqlevel_parms = ("leveltype", "l1", "l2")
+                _enqtimerange_parms = ("pindicator", "p1", "p2")
+                def _enqmany(self, names):
+                        # If there is an unset value among ours, return None
+                        parms = []
+                        for p in names:
+                                v = self.enqi(p)
+                                if v == None:
+                                        return None
+                                parms.append(v)
+                        return parms
+                def enqdate(self):
+                        parms = self._enqmany(self._enqdate_parms)
+                        if parms == None: return None
+                        return datetime.datetime(*parms)
+                def enqdatemin(self):
+                        parms = self._enqmany(self._enqdatemin_parms)
+                        if parms == None: return None
+                        return datetime.datetime(*parms)
+                def enqdatemax(self):
+                        parms = self._enqmany(self._enqdatemax_parms)
+                        if parms == None: return None
+                        return datetime.datetime(*parms)
+                def enqlevel(self):
+                        parms = self._enqmany(self._enqlevel_parms)
+                        if parms == None: return None
+                        return Level(*parms)
+                def enqtimerange(self):
+                        parms = self._enqmany(self._enqtimerange_parms)
+                        if parms == None: return None
+                        return TimeRange(*parms)
+                def setdate(self, dt):
+                        self.seti("year", dt.year)
+                        self.seti("month", dt.month)
+                        self.seti("day", dt.day)
+                        self.seti("hour", dt.hour)
+                        self.seti("min", dt.minute)
+                        self.seti("sec", dt.second)
+                def setdatemin(self, dt):
+                        self.seti("yearmin", dt.year)
+                        self.seti("monthmin", dt.month)
+                        self.seti("daymin", dt.day)
+                        self.seti("hourmin", dt.hour)
+                        self.seti("minumin", dt.minute)
+                        self.seti("secmin", dt.second)
+                def setdatemax(self, dt):
+                        self.seti("yearmax", dt.year)
+                        self.seti("monthmax", dt.month)
+                        self.seti("daymax", dt.day)
+                        self.seti("hourmax", dt.hour)
+                        self.seti("minumax", dt.minute)
+                        self.seti("secmax", dt.second)
+                def setlevel(self, level):
+                        self.seti("leveltype", level[0])
+                        self.seti("l1", level[1])
+                        self.seti("l2", level[2])
+                def settimerange(self, trange):
+                        self.seti("pindicator", trange[0])
+                        self.seti("p1", trange[1])
+                        self.seti("p2", trange[2])
+
+                _specialenqs = {
+                        'date': enqdate,
+                        'datemin': enqdatemin,
+                        'datemax': enqdatemax,
+                        'level': enqlevel,
+                        'timerange': enqtimerange
+                }
+                _specialsets = {
+                        'date': setdate,
+                        'datemin': setdatemin,
+                        'datemax': setdatemax,
+                        'level': setlevel,
+                        'timerange': settimerange
+                }
+                _specialunsets = {
+                        'date': _enqdate_parms,
+                        'datemin': _enqdatemin_parms,
+                        'datemax': _enqdatemax_parms,
+                        'level': _enqlevel_parms,
+                        'timerange': _enqtimerange_parms,
+                }
+
                 def enq(self, name):
-                       v = self.enqvar(name)
-                       return v.enq()
+                       if name in self._specialenqs:
+                                return self._specialenqs[name](self)
+                       else:
+                                return self.enqvar(name).enq()
                 def enqi(self, name):
                        if self.contains(name):
                                 return self.enqi_orig(name)
@@ -169,7 +260,10 @@ class TimeRange(tuple):
 
                 def set(self, *args):
                        if len(args) == 2:
-                                self.set_orig(*args)
+                                if args[0] in self._specialsets:
+                                        return self._specialsets[args[0]](self, args[1])
+                                else:
+                                        self.set_orig(*args)
                        elif len(args) == 1:
                                 if 'iteritems' in args[0].__class__.__dict__:
                                         for key, val in args[0].iteritems():
@@ -197,48 +291,29 @@ class TimeRange(tuple):
                 def setc(self, name, value):
                        return self.sets(name, value)
 
-                def enqdate(self):
-                        return datetime.datetime(self.enqi("year"), self.enqi("month"), self.enqi("day"), self.enqi("hour"), self.enqi("min"), self.enqi("sec"))
-                def enqlevel(self):
-                        return Level(self.enqi("leveltype"), self.enqi("l1"), self.enqi("l2"))
-                def enqtimerange(self):
-                        return TimeRange(self.enqi("pindicator"), self.enqi("p1"), self.enqi("p2"))
-                def setdate(self, dt):
-                        self.seti("year", dt.year)
-                        self.seti("month", dt.month)
-                        self.seti("day", dt.day)
-                        self.seti("hour", dt.hour)
-                        self.seti("min", dt.minute)
-                        self.seti("sec", dt.second)
-                def setlevel(self, level):
-                        self.seti("leveltype", level[0])
-                        self.seti("l1", level[1])
-                        self.seti("l2", level[2])
-                def settimerange(self, trange):
-                        self.seti("pindicator", trange[0])
-                        self.seti("p1", trange[1])
-                        self.seti("p2", trange[2])
+                def unset(self, name):
+                        if name in self._specialunsets:
+                                for i in self._specialunsets[name]:
+                                        self.unset(i)
+                        else:
+                                self.unset_orig(name)
 
                 def __getitem__(self, key):
-                        if key == "date":
-                                return self.enqdate()
-                        elif key == "level":
-                                return self.enqlevel()
-                        elif key == "timerange":
-                                return self.enqtimerange()
-                        else:
-                                return self.enq(key)
+                        return self.enq(key)
                 def __setitem__(self, key, val):
-                        if key == "date":
-                                self.setdate(val)
-                        elif key == "level":
-                                self.setlevel(val)
-                        elif key == "timerange":
-                                self.settimerange(val)
-                        else:
-                                self.set(key, val)
+                        self.set(key, val)
                 def __delitem__(self, key):
-                        self.unset(key, val)
+                        return self.unset(key)
+                def __contains__(self, key):
+                        if key in self._specialunsets:
+                                has = True
+                                for i in self._specialunsets[key]:
+                                        if not self.contains(i):
+                                                has = False
+                                                break
+                                return has
+                        else:
+                                self.contains(key)
                 def __iter__(self):
                         "Iterate all the contents of the record"
                         i = self.begin()
