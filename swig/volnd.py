@@ -41,12 +41,21 @@ from MA import *
 class SkipDatum(Exception): pass
 
 class Index(list):
-        def __init__(self):
+        def __init__(self, shared=True):
                 self._map = {}
+		self._shared = shared
         def __str__(self):
                 return self.shortName() + ": " + list.__str__(self)
-        def cloneEmpty(self):
-                return self.__class__()
+        def another(self):
+		"""
+		Return another version of this index: it can be a reference to
+		the exact same index if shared=True; otherwise it's a new,
+		empty version.
+		"""
+		if self._shared:
+			return self
+		else:
+			return self.__class__()
 
 class AnaIndex(Index):
         def obtainIndex(self, rec):
@@ -178,36 +187,11 @@ class IntervalIndex(Index):
 
         def shortName(self):
                 return "IntervalIndex["+str(len(self))+"]"
-        def cloneEmpty(self):
-                return IntervalIndex(self._start, self._step, self._tolerance)
-
-# TODO: Indexes to implement
-# + Level
-# + Time range
-# + Date
-# + Interval (like Date, but at regular intervals)
-# + IntervalWithTolerance (like Date, but at regular intervals, and catching in
-#   the interval everything within a give range)
-
-class IndexMaker:
-        """
-        Instantiate Index classes as shared or nonshared, as appropriate for
-        the Index class type.
-        """
-        def __init__(self):
-                # set of Index classes that should be shared
-                self._toshare = set((AnaIndex, NetworkIndex))
-
-        def make(self, index):
-                """
-                Return the instance for the given Index class
-                """
-                # If it's not an index to be shared, create it
-                if index.__class__ not in self._toshare:
-                        return index.cloneEmpty()
-
-                # Otherwise use the shared version
-                return index
+        def another(self):
+		if self._shared:
+			return self
+		else:
+			return IntervalIndex(self._start, self._step, self._tolerance)
 
 class Data:
         """
@@ -276,12 +260,15 @@ class Data:
                 return "Data("+", ".join(map(lambda x: x.shortName(), self.dims))+"):"+self.vals.__repr__()
 
 
-def read(q, dimdefs):
-        imaker = IndexMaker()
-        ndims = len(dimdefs)
+def read(query, dims, filter=None):
+        ndims = len(dims)
         vars = {}
         # Iterate results
-        for rec in q:
+        for rec in query:
+		# Discard the values that filter does not like
+		if filter and not filter(rec):
+			continue
+
                 varname = rec.enqc("var")
 
                 # Skip string variables, because they do not fit into an array
@@ -293,7 +280,7 @@ def read(q, dimdefs):
                 # need to be shared and creating new indexes for the individual
                 # ones
                 if varname not in vars:
-                        var = Data(varname, map(imaker.make, dimdefs))
+			var = Data(varname, map(lambda x: x.another(), dims))
                         vars[varname] = var
                 else:
                         var = vars[varname]
@@ -444,6 +431,30 @@ if __name__ == '__main__':
                         query.setdate(datetime(2007, 1, 1, 0, 0, 0))
                         vars = read(self.db.query(query), (AnaIndex(), TimeRangeIndex()))
 			self.assertEquals(vars["B13011"].dims[1].index(TimeRange(4, -21600, 0)), 1)
+
+		def testFilter(self):
+                        # Ana in one dimension, network in the other
+                        query = dballe.Record()
+			query.set({'ana_id': 1, 'var': "B13011", 'rep_memo': "synop"})
+                        query.setdate(datetime(2007, 1, 1, 0, 0, 0))
+			vars = read(self.db.query(query), \
+				(AnaIndex(), TimeRangeIndex()), \
+				filter=lambda rec: rec.enqtimerange() == TimeRange(4, -21600, 0))
+			self.assertEquals(vars["B13011"].dims[1].index(TimeRange(4, -21600, 0)), 0)
+
+		def testUnsharedIndex(self):
+                        # Ana in one dimension, network in the other
+                        query = dballe.Record()
+			query.set({'ana_id': 1, 'rep_memo': "synop"})
+
+			vars = read(self.db.query(query), \
+				(AnaIndex(), TimeRangeIndex(), DateTimeIndex()))
+			self.assertEquals(len(vars["B13011"].dims[2]), len(vars["B10004"].dims[2]))
+			self.assertEquals(vars["B13011"].dims[2], vars["B10004"].dims[2])
+
+			vars = read(self.db.query(query), \
+				(AnaIndex(), TimeRangeIndex(), DateTimeIndex(shared=False)))
+			self.assertNotEquals(len(vars["B13011"].dims[2]), len(vars["B10004"].dims[2]))
 
                 def testAnaNetwork(self):
                         # Ana in one dimension, network in the other
