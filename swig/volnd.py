@@ -152,6 +152,11 @@ def tddivmod2(td1, td2):
 tddivmod = tddivmod2
 
 class IntervalIndex(Index):
+	"""
+	Index by time intervals: index points are at fixed time intervals, and
+	data is acquired in one point only if it is within a given tolerance
+	from the interval.
+	"""
         def __init__(self, start, step, tolerance = 0):
                 """
                 start is a datetime with the starting moment
@@ -187,6 +192,7 @@ class IntervalIndex(Index):
 
         def shortName(self):
                 return "IntervalIndex["+str(len(self))+"]"
+
         def another(self):
 		if self._shared:
 			return self
@@ -201,10 +207,12 @@ class Data:
         If v is a Data object, you can access the tuple with the dimensions
         as v.dims, and the masked array with the values as v.vals.
         """
-        def __init__(self, name, dims):
+        def __init__(self, name, dims, checkConflicts=True):
                 """
                 name = name of the variable (eg. "B12001")
                 dims = list of Index objects one for every dimension
+		if checkConflicts is True, then an exception is raised if two
+		  output values would end up filling the same matrix element
                 """
                 # Variable name, as a B table entry (e.g. "B12001")
                 self.name = name
@@ -216,6 +224,8 @@ class Data:
                 # all the values.  Before calling finalise(), it is the list of
                 # collected data.
                 self.vals = []
+
+		self._checkConflicts = checkConflicts
         
         def append(self, rec):
                 """
@@ -245,7 +255,7 @@ class Data:
 
                 # Fill the array with all the values, at the given indexes
                 for pos, val in self.vals:
-			if a.mask()[pos] == 1:
+			if not self._checkConflicts or a.mask()[pos] == 1:
 				a[pos] = val
 			else:
 				raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
@@ -260,7 +270,7 @@ class Data:
                 return "Data("+", ".join(map(lambda x: x.shortName(), self.dims))+"):"+self.vals.__repr__()
 
 
-def read(query, dims, filter=None):
+def read(query, dims, filter=None, checkConflicts=True):
         ndims = len(dims)
         vars = {}
         # Iterate results
@@ -280,7 +290,7 @@ def read(query, dims, filter=None):
                 # need to be shared and creating new indexes for the individual
                 # ones
                 if varname not in vars:
-			var = Data(varname, map(lambda x: x.another(), dims))
+			var = Data(varname, map(lambda x: x.another(), dims), checkConflicts)
                         vars[varname] = var
                 else:
                         var = vars[varname]
@@ -455,6 +465,20 @@ if __name__ == '__main__':
 			vars = read(self.db.query(query), \
 				(AnaIndex(), TimeRangeIndex(), DateTimeIndex(shared=False)))
 			self.assertNotEquals(len(vars["B13011"].dims[2]), len(vars["B10004"].dims[2]))
+
+		def testConflicts(self):
+                        # Ana in one dimension, network in the other
+                        query = dballe.Record()
+			query.set({'ana_id': 1, 'var': "B13011"})
+                        query.setdate(datetime(2007, 1, 1, 0, 0, 0))
+			# Here conflicting values are overwritten
+			vars = read(self.db.query(query), (AnaIndex(), ), checkConflicts=False)
+			self.assertEquals(type(vars), dict)
+			# Here insted they should be detected
+			self.assertRaises(IndexError, read, \
+				self.db.query(query),
+				(AnaIndex(),),
+				checkConflicts=True)
 
                 def testAnaNetwork(self):
                         # Ana in one dimension, network in the other
