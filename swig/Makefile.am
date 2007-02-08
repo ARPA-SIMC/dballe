@@ -4,7 +4,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 TESTS = test.py
 if DB_TESTS
-TESTS += test-db.py run-unittests
+TESTS += test-db.py test-volnd.py run-unittests
 endif
 
 pyexec_LTLIBRARIES = _dballe.la
