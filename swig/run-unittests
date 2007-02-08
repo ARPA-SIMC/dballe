@@ -1,3 +1,3 @@
 #!/bin/sh -ue
 export PYTHONPATH='.'
-python volnd.py
+python volnd.py "$@"

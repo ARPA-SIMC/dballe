@@ -295,6 +295,8 @@ class Data:
 
                 self._checkConflicts = checkConflicts
 
+                self._lastPos = None
+
         def appendAtPos(self, pos, var):
                 """
                 Collect a variable to be written on the specific indexes
@@ -317,10 +319,15 @@ class Data:
 
                         # Save the value with its indexes
                         self.appendAtPos(pos, rec.enq(self.name))
+
+                        # Save the last position for appendAttrs
+                        self._lastPos = pos
+                        return True
                 except SkipDatum:
                         # If the value cannot be mapped along this dimension,
                         # skip it
-                        pass
+                        self._lastPos = None
+                        return False
 
         def appendAttrs(self, rec):
                 """
@@ -328,6 +335,8 @@ class Data:
 
                 You need to call finalise() before the values can be used.
                 """
+                if not self._lastPos:
+                        return
                 for var in rec.itervars():
                         if var.code() in self.attrs:
                                 data = self.attrs[var.code()]
@@ -336,7 +345,7 @@ class Data:
                                 self.attrs[var.code()] = data
                         # Append at the same position as the last variable
                         # collected
-                        data.appendAtPos(self.vals[-1][0], var)
+                        data.appendAtPos(self._lastPos, var)
 
 
         def finalise(self):
@@ -344,6 +353,15 @@ class Data:
                 Stop collecting values and create a masked array with all the
                 values collected so far.
                 """
+                # If one of the dimensions is empty, we don't have any valid data
+                # FIXME: this is a work-around: all the dimensions should be
+                # empty in this case, and at the moment we have spurious
+                # dimension entries that happen when the first dimension
+                # succeeds but the second raises SkipDatum
+                for i in self.dims:
+                        if len(i) == 0:
+                                return False
+
                 # Create the data array, with all values set as missing
                 a = array(zeros(map(len, self.dims)), typecode=float, mask = 1)
 
@@ -358,8 +376,14 @@ class Data:
                 self.vals = a
 
                 # Finalise all the attributes as well
-                for d in self.attrs.itervalues():
-                        d.finalise();
+                invalid = []
+                for key, d in self.attrs.iteritems():
+                        if not d.finalise():
+                                invalid.append(key)
+                # Delete empty attributes
+                for k in invalid:
+                        del self.addrs[k]
+                return True
         
         def __str__(self):
                 return "Data("+", ".join(map(lambda x: x.shortName(), self.dims))+"):"+str(self.vals)
@@ -413,7 +437,8 @@ def read(query, dims, filter=None, checkConflicts=True, attributes=None):
                         var = vars[varname]
 
                 # Save every value with its indexes
-                var.append(rec)
+                if not var.append(rec):
+                        continue
 
                 # Add the attributes
                 if attributes != None:
@@ -423,15 +448,18 @@ def read(query, dims, filter=None, checkConflicts=True, attributes=None):
 
 
         # Now that we have collected all the values, create the arrays
-        for var in vars.itervalues():
-                var.finalise()
+        invalid = []
+        for k, var in vars.iteritems():
+                if not var.finalise():
+                        invalid.append(k)
+        for k in invalid:
+                del vars[k]
 
         return vars
 
 
 if __name__ == '__main__':
-        import unittest
-        import random
+        import unittest, random, sys
         class TestTddiv(unittest.TestCase):
 
 #               def tons(td):
@@ -747,7 +775,24 @@ if __name__ == '__main__':
                         self.assertEquals(average(data.attrs['B33007'].vals), 50.)
                         self.assertEquals(average(data.attrs['B33040'].vals), 50.)
 
+                def testEmptyExport(self):
+                        query = dballe.Record()
+                        query.seti("ana_id", 5000)
+                        vars = read(self.db.query(query), (AnaIndex(), NetworkIndex()), attributes=True)
+                        self.assertEquals(len(vars), 0)
+
+                def testBuggyExport1(self):
+                        indexes = (AnaIndex(), \
+                                  FixedLevelIndex(Level(1, 0, 0), Level(3, 2, 0)), \
+                                  TimeRangeIndex(), \
+                                  DateTimeIndex())
+                        query = dballe.Record()
+                        query.set('rep_memo', 'synop')
+                        vars = read(self.db.query(query), indexes, \
+                                        checkConflicts=True, attributes=True)
+
         unittest.main()
+
 
         #query = dballe.Record()
         ##query.set("var", "B12001")
