@@ -77,6 +77,28 @@ class DballeTest(unittest.TestCase):
 			del expected[var.code()]
 			count = count + 1
 		self.assertEqual(count, 2)
+        def testQueryCursorAttrs(self):
+                query = Record()
+                query.set("var", "B01011")
+                cur = self.db.query(query);
+
+                tmp = Record()
+                self.failUnless(cur.next(tmp))
+
+		data, count = cur.attributes()
+		self.assertEqual(count, 2)
+
+		expected = {}
+		expected["B33007"] = 50
+		expected["B33036"] = 75
+
+		count = 0
+		for var in data:
+			assert expected.has_key(var.code())
+			self.assertEqual(var.enqi(), expected[var.code()])
+			del expected[var.code()]
+			count = count + 1
+		self.assertEqual(count, 2)
         def testQueryLevels(self):
 		query = Record()
 		cur = self.db.queryLevels(query)

@@ -54,6 +54,13 @@ bool Cursor::next(Record& rec)
 		return false;
 }
 
+int Cursor::attributes(Record& res)
+{
+    int count;
+    checked(dba_db_qc_query(m_cur->db, m_cur->out_context_id, m_cur->out_idvar, NULL, 0, res.rec(), &count));
+    return count;
+}
+
 Cursor DB::queryAnaSummary(Record& query)
 {
 	dba_db_cursor cur;

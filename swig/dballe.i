@@ -107,11 +107,28 @@ class TimeRange(tuple):
 }
 
 %extend dballe::Cursor {
+        %rename attributes attributes_orig;
         %pythoncode %{
                 def __iter__(self):
                         record = Record()
                         while self.next(record):
                                 yield record
+                def attributes(self, rec = None):
+                        """
+                        Read the attributes for the variable pointed by this record.
+
+                        If a rec argument is provided, it will write the
+                        attributes in that record and return the number of
+                        attributes read.  If rec is None, it will return a
+                        tuple (Record, count) with a newly created Record.
+                        """
+                        if rec == None:
+                                rec = Record()
+                                count = self.attributes_orig(rec)
+                                return rec, count
+                        else:
+                                count = self.attributes_orig(rec)
+                                return count
         %}
 }
 

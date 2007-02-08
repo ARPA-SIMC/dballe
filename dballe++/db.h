@@ -44,6 +44,10 @@ public:
 	 * @returns false when there is no more data to read.
 	 */
 	bool next(Record& rec);
+
+	/// Query the attributes for the variable currently referenced by the
+	/// cursor
+	int attributes(Record& res);
 };
 
 
@@ -144,13 +148,6 @@ public:
 		int count;
 		checked(dba_db_qc_query(m_db, context, var, NULL, 0, res.rec(), &count));
 		return count;
-	}
-
-	/// Query the attributes for the variable currently referenced by the
-	/// given cursor
-	int attrQueryCurrent(const Cursor& cur, Record& res)
-	{
-		return attrQuery(cur.contextID(), cur.varcode(), res);
 	}
 
 	/**
