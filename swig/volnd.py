@@ -370,6 +370,7 @@ class Data:
 
                         # Save the last position for appendAttrs
                         self._lastPos = pos
+
                         return True
                 except SkipDatum:
                         # If the value cannot be mapped along this dimension,

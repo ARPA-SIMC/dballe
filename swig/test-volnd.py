@@ -332,7 +332,7 @@ class TestRead(unittest.TestCase):
 		# has successfuly added an item, we used to end up with
 		# a 'ghost' index entry with no items in it
 		indexes = (TimeRangeIndex(), \
-			  FixedLevelIndex(Level(3, 2, 0)))
+			  FixedLevelIndex( (Level(3, 2, 0),) ))
 		query = dballe.Record()
 		query.set('ana_id', 1)
 		query.set('var', 'B13011')
@@ -340,7 +340,7 @@ class TestRead(unittest.TestCase):
 				checkConflicts=False)
 		self.assertEquals(vars.keys(), ["B13011"])
 		self.assertEquals(len(vars["B13011"].dims[1]), 1)
-		self.assertEquals(vars["B13011"].dims[1][0], TimeRange(4, -21600, 0))
+		self.assertEquals(vars["B13011"].dims[0][0], TimeRange(4, -21600, 0))
 
 	def testBuggyExport1(self):
 		indexes = (AnaIndex(), \
