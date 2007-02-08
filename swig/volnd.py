@@ -45,11 +45,11 @@ class Index(list):
                 self._map = {}
         def __str__(self):
                 return self.shortName() + ": " + list.__str__(self)
-        def clone(self):
+        def cloneEmpty(self):
                 return self.__class__()
 
 class AnaIndex(Index):
-        def index(self, rec):
+        def obtainIndex(self, rec):
                 id = rec.enqi("ana_id")
                 if id not in self._map:
                         self._map[id] = len(self)
@@ -59,7 +59,7 @@ class AnaIndex(Index):
                 return "AnaIndex["+str(len(self))+"]"
 
 class NetworkIndex(Index):
-        def index(self, rec):
+        def obtainIndex(self, rec):
                 id = rec.enqi("rep_cod")
                 if id not in self._map:
                         self._map[id] = len(self)
@@ -69,7 +69,7 @@ class NetworkIndex(Index):
                 return "NetworkIndex["+str(len(self))+"]"
 
 class LevelIndex(Index):
-        def index(self, rec):
+        def obtainIndex(self, rec):
                 id = rec.enqlevel()
                 if id not in self._map:
                         self._map[id] = len(self)
@@ -79,7 +79,7 @@ class LevelIndex(Index):
                 return "LevelIndex["+str(len(self))+"]"
 
 class TimeRangeIndex(Index):
-        def index(self, rec):
+        def obtainIndex(self, rec):
                 id = rec.enqtimerange()
                 if id not in self._map:
                         self._map[id] = len(self)
@@ -89,7 +89,7 @@ class TimeRangeIndex(Index):
                 return "TimeRangeIndex["+str(len(self))+"]"
 
 class DateTimeIndex(Index):
-        def index(self, rec):
+        def obtainIndex(self, rec):
                 id = rec.enqdate()
                 if id not in self._map:
                         self._map[id] = len(self)
@@ -155,7 +155,7 @@ class IntervalIndex(Index):
                 self._step = step
                 self._tolerance = timedelta(0)
 
-        def index(self, rec):
+        def obtainIndex(self, rec):
                 t = rec.enqdate()
                 # Skip all entries before the start
                 if (t < self._start):
@@ -178,7 +178,7 @@ class IntervalIndex(Index):
 
         def shortName(self):
                 return "IntervalIndex["+str(len(self))+"]"
-        def clone(self):
+        def cloneEmpty(self):
                 return IntervalIndex(self._start, self._step, self._tolerance)
 
 # TODO: Indexes to implement
@@ -204,7 +204,7 @@ class IndexMaker:
                 """
                 # If it's not an index to be shared, create it
                 if index.__class__ not in self._toshare:
-                        return index.clone()
+                        return index.cloneEmpty()
 
                 # Otherwise use the shared version
                 return index
@@ -241,7 +241,7 @@ class Data:
                 """
                 try:
                         # Obtain the index for every dimension
-                        pos = map(lambda dim: dim.index(rec), self.dims)
+                        pos = map(lambda dim: dim.obtainIndex(rec), self.dims)
 
                         # Save the value with its indexes
                         val = rec.enqd(self.name)
@@ -261,7 +261,10 @@ class Data:
 
                 # Fill the array with all the values, at the given indexes
                 for pos, val in self.vals:
-                        a[pos] = val
+			if a.mask()[pos] == 1:
+				a[pos] = val
+			else:
+				raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
 
                 # Replace the intermediate data with the results
                 self.vals = a
@@ -434,6 +437,13 @@ if __name__ == '__main__':
 
                                                 rec.unset("B10004")
 
+		def testIndexFind(self):
+                        # Ana in one dimension, network in the other
+                        query = dballe.Record()
+			query.set({'ana_id': 1, 'var': "B13011", 'rep_memo': "synop"})
+                        query.setdate(datetime(2007, 1, 1, 0, 0, 0))
+                        vars = read(self.db.query(query), (AnaIndex(), TimeRangeIndex()))
+			self.assertEquals(vars["B13011"].dims[1].index(TimeRange(4, -21600, 0)), 1)
 
                 def testAnaNetwork(self):
                         # Ana in one dimension, network in the other
