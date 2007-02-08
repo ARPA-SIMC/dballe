@@ -135,6 +135,7 @@ class TimeRange(tuple):
 // Rewrite Record methods to make use of the None value, and add convenience
 // methods and iteration
 %extend dballe::Record {
+        %rename enq enqvar;
         %rename enqi enqi_orig;
         %rename enqd enqd_orig;
         %rename enqs enqs_orig;
@@ -145,6 +146,9 @@ class TimeRange(tuple):
         %rename setc setc_orig;
         %rename set set_orig;
         %pythoncode %{
+                def enq(self, name):
+                       v = self.enqvar(name)
+                       return v.enq()
                 def enqi(self, name):
                        if self.contains(name):
                                 return self.enqi_orig(name)

@@ -54,6 +54,16 @@ class VarTest(unittest.TestCase):
 		var = Var("B05001", 12.4)
 		self.assertEqual(str(var), "12.40000")
 		self.assertEqual(repr(var), "Var(B05001, 12.40000)")
+	def testEnq(self):
+		var = Var("B01001", 1)
+		self.assertEqual(type(var.enq()), int)
+		self.assertEqual(var.enq(), 1)
+		var = Var("B05001", 1.12345)
+		self.assertEqual(type(var.enq()), float)
+		self.assertEqual(var.enq(), 1.12345)
+		var = Var("B01019", "ciao")
+		self.assertEqual(type(var.enq()), str)
+		self.assertEqual(var.enq(), "ciao")
 
 
 class RecordTest(unittest.TestCase):
@@ -156,7 +166,7 @@ class RecordTest(unittest.TestCase):
 		self.assertEqual(rec.contains("B04001"), False)
 
 		rec.set("B01001", 1)
-		var = rec.enq("B01001")
+		var = rec.enqvar("B01001")
 		var.set(4)
 		rec.set(var)
 		self.assertEqual(rec.enqi("B01001"), 4)
