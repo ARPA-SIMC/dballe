@@ -1,10 +1,8 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-# TODO: aggiungere segnalazione di errore in caso di sovrascrittura
-# TODO: aggiungere un filtro ai dati in uscita (per selezionare, ad esempio, solo alcuni time range)
-# TODO: rendere piú facile decidere quali indici sono linkati
-# TODO: aggiungere metodi di query negli indici
+# TODO: aggiungere metodi di query negli indici (eg. qual'è l'indice di questo
+#       ana_id?)
 # TODO: leggere gli attributi (per dire, in res["B12001.B33001"])
 # TODO: leggere i dati di anagrafica
 
@@ -58,6 +56,9 @@ class Index(list):
 			return self.__class__()
 
 class AnaIndex(Index):
+	"""
+	Index for stations, as they come out of the database
+	"""
         def obtainIndex(self, rec):
                 id = rec.enqi("ana_id")
                 if id not in self._map:
@@ -68,6 +69,9 @@ class AnaIndex(Index):
                 return "AnaIndex["+str(len(self))+"]"
 
 class NetworkIndex(Index):
+	"""
+	Index for networks, as they come out of the database
+	"""
         def obtainIndex(self, rec):
                 id = rec.enqi("rep_cod")
                 if id not in self._map:
@@ -78,6 +82,9 @@ class NetworkIndex(Index):
                 return "NetworkIndex["+str(len(self))+"]"
 
 class LevelIndex(Index):
+	"""
+	Index for levels, as they come out of the database
+	"""
         def obtainIndex(self, rec):
                 id = rec.enqlevel()
                 if id not in self._map:
@@ -87,7 +94,34 @@ class LevelIndex(Index):
         def shortName(self):
                 return "LevelIndex["+str(len(self))+"]"
 
+class FixedLevelIndex(Index):
+	"""
+	Index for levels, using a pregiven list of levels, and throwing away
+	all data that does not fit
+	"""
+        def __init__(self, levels, *args, **kwargs):
+                """
+		levels is the list of all allowed Level objects, in the wanted
+		order.
+                """
+                Index.__init__(self, *args, **kwargs)
+                self.extend(levels)
+		for pos, l in enumerate(self):
+			self._map[l] = pos
+
+        def obtainIndex(self, rec):
+                id = rec.enqlevel()
+                if id not in self._map:
+			raise SkipDatum
+                return self._map[id]
+
+        def shortName(self):
+                return "FixedLevelIndex["+str(len(self))+"]"
+
 class TimeRangeIndex(Index):
+	"""
+	Index for time ranges, as they come out of the database
+	"""
         def obtainIndex(self, rec):
                 id = rec.enqtimerange()
                 if id not in self._map:
@@ -97,7 +131,34 @@ class TimeRangeIndex(Index):
         def shortName(self):
                 return "TimeRangeIndex["+str(len(self))+"]"
 
+class FixedTimeRangeIndex(Index):
+	"""
+	Index for time ranges, using a pregiven list of time ranges, and
+	throwing away all data that does not fit
+	"""
+        def __init__(self, tranges, *args, **kwargs):
+                """
+		tranges is the list of all allowed TimeRange objects, in the
+		wanted order.
+                """
+                Index.__init__(self, *args, **kwargs)
+                self.extend(tranges)
+		for pos, l in enumerate(self):
+			self._map[l] = pos
+
+        def obtainIndex(self, rec):
+                id = rec.enqtimerange()
+                if id not in self._map:
+			raise SkipDatum
+                return self._map[id]
+
+        def shortName(self):
+                return "FixedTimeRangeIndex["+str(len(self))+"]"
+
 class DateTimeIndex(Index):
+	"""
+	Index for datetimes, as they come out of the database
+	"""
         def obtainIndex(self, rec):
                 id = rec.enqdate()
                 if id not in self._map:
@@ -153,18 +214,20 @@ tddivmod = tddivmod2
 
 class IntervalIndex(Index):
 	"""
-	Index by time intervals: index points are at fixed time intervals, and
-	data is acquired in one point only if it is within a given tolerance
-	from the interval.
+	Index by fixed time intervals: index points are at fixed time
+	intervals, and data is acquired in one point only if it is within a
+	given tolerance from the interval.  The interval start at a pregiven
+	point in time, and continue for as long as there are fitting data
+	coming out of the database.
 	"""
-        def __init__(self, start, step, tolerance = 0):
+        def __init__(self, start, step, tolerance = 0, *args, **kwargs):
                 """
                 start is a datetime with the starting moment
                 step is a timedelta with the interval between times
                 tolerance is a timedelta specifying how much skew a datum is
                   allowed to have from a sampling moment
                 """
-                Index.__init__(self)
+                Index.__init__(self, *args, **kwargs)
                 self._start = start
                 self._step = step
                 self._tolerance = timedelta(0)
@@ -479,6 +542,32 @@ if __name__ == '__main__':
 				self.db.query(query),
 				(AnaIndex(),),
 				checkConflicts=True)
+
+		def testFixedIndex(self):
+                        # Ana in one dimension, network in the other
+                        query = dballe.Record()
+			query.set({'ana_id': 1, 'rep_memo': "synop", 'year': 2007, 'month': 1, 'day': 1})
+
+			vars = read(self.db.query(query), \
+				(AnaIndex(), FixedTimeRangeIndex( \
+						(TimeRange(4, -21600, 0), TimeRange(4, -43200, 0)) ) ), \
+				checkConflicts = False)
+			self.assertEquals(len(vars["B13011"].dims[1]), 2)
+
+			vars = read(self.db.query(query), \
+				(AnaIndex(), TimeRangeIndex()), \
+				checkConflicts = False)
+			self.assertEquals(len(vars["B13011"].dims[1]), 3)
+
+			vars = read(self.db.query(query), \
+				(AnaIndex(), FixedLevelIndex( (Level(1, 0, 0),) )), \
+				checkConflicts = False)
+			self.assertEquals(len(vars["B13011"].dims[1]), 1)
+
+			vars = read(self.db.query(query), \
+				(AnaIndex(), LevelIndex()), \
+				checkConflicts = False)
+			self.assertEquals(len(vars["B13011"].dims[1]), 2)
 
                 def testAnaNetwork(self):
                         # Ana in one dimension, network in the other

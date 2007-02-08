@@ -34,10 +34,8 @@ class Level(tuple):
 	"""
 	Represents a level value as a 3-tuple
 	"""
-	def __new__(self, *args):
-		if len(args) != 3:
-			raise ValueError, "Level wants exactly 3 values ("+str(len(args))+" provided)"
-		return tuple.__new__(self, args)
+	def __new__(self, leveltype, l1=0, l2=0):
+		return tuple.__new__(self, (leveltype, l1, l2))
 	def type(self):
 		"Return the level type"
 		return self[0]
@@ -52,10 +50,8 @@ class TimeRange(tuple):
 	"""
 	Represents a time range value as a 3-tuple
 	"""
-	def __new__(self, *args):
-		if len(args) != 3:
-			raise ValueError, "TimeRange wants exactly 3 values ("+str(len(args))+" provided)"
-		return tuple.__new__(self, args)
+	def __new__(self, pindicator, p1=0, p2=0):
+		return tuple.__new__(self, (pindicator, p1, p2))
 	def type(self):
 		"Return the time range type"
 		return self[0]
