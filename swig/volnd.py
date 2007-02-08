@@ -781,6 +781,22 @@ if __name__ == '__main__':
                         vars = read(self.db.query(query), (AnaIndex(), NetworkIndex()), attributes=True)
                         self.assertEquals(len(vars), 0)
 
+		def testGhostIndexes(self):
+			# If an index rejects a variable after another index
+			# has successfuly added an item, we used to end up with
+			# a 'ghost' index entry with no items in it
+                        indexes = (AnaIndex(), \
+                                  TimeRangeIndex(), \
+                                  FixedLevelIndex(Level(3, 2, 0)))
+                        query = dballe.Record()
+                        query.set('rep_memo', 'synop')
+                        query.set('var', 'B13011')
+                        query.setdate(datetime(2007, 1, 1, 0, 0, 0))
+                        vars = read(self.db.query(query), indexes, \
+                                        checkConflicts=True)
+			self.assertEquals(len(vars["B13011"].dims[1]), 1)
+			self.assertEquals(vars["B13011"].dims[1][0], TimeRange(4, -21600, 0))
+
                 def testBuggyExport1(self):
                         indexes = (AnaIndex(), \
                                   FixedLevelIndex(Level(1, 0, 0), Level(3, 2, 0)), \
