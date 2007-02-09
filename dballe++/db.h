@@ -48,6 +48,10 @@ public:
 	/// Query the attributes for the variable currently referenced by the
 	/// cursor
 	int attributes(Record& res);
+
+	/// Query the attributes for the variable currently referenced by the
+	/// cursor
+	int attributes(const std::vector<dba_varcode>& wanted, Record& res);
 };
 
 
@@ -147,6 +151,14 @@ public:
 	{
 		int count;
 		checked(dba_db_qc_query(m_db, context, var, NULL, 0, res.rec(), &count));
+		return count;
+	}
+
+	/// Query the attributes for the given variable in the given context
+	int attrQuery(int context, dba_varcode var, const std::vector<dba_varcode>& wanted, Record& res)
+	{
+		int count;
+		checked(dba_db_qc_query(m_db, context, var, wanted.data(), wanted.size(), res.rec(), &count));
 		return count;
 	}
 

@@ -1,7 +1,7 @@
 // dballe.i - SWIG interface
 %module dballe
 
-%include "std_string.i"
+%include "stl.i"
 %include "typemaps.i"
 %include "exception.i"
 %include "../doc/dballe-doc.i"
@@ -13,7 +13,6 @@
                 SWIG_exception(SWIG_RuntimeError, e.what());
         }
 }
-
 
 %{
 #include <dballe++/db.h>
@@ -115,7 +114,7 @@ class TimeRange(tuple):
                         record = Record()
                         while self.next(record):
                                 yield record
-                def attributes(self, rec = None):
+                def attributes(self, *args):
                         """
                         Read the attributes for the variable pointed by this record.
 
@@ -124,13 +123,24 @@ class TimeRange(tuple):
                         attributes read.  If rec is None, it will return a
                         tuple (Record, count) with a newly created Record.
                         """
-                        if rec == None:
+                        if len(args) == 0:
+                                # attributes()
                                 rec = Record()
                                 count = self.attributes_orig(rec)
                                 return rec, count
-                        else:
-                                count = self.attributes_orig(rec)
-                                return count
+                        elif len(args) == 1:
+                                if isinstance(args[0], Record):
+                                        # attributes(rec)
+                                        return self.attributes_orig(args[0])
+                                else:
+                                        # attributes(seq)
+                                        rec = Record()
+                                        count = self.attributes_orig(args[0], rec)
+                                        return rec, count
+                        elif len(args) == 2:
+                                # attributes(seq, rec)
+                                return self.attributes_orig(args[0], args[1])
+
         %}
 }
 
@@ -356,6 +366,26 @@ class TimeRange(tuple):
                 def __repr__(self):
                         return self.__str__();
         %}
+}
+
+%typemap(in) const std::vector<dba_varcode>& (std::vector<dba_varcode> vec) {
+        if (!PySequence_Check($input))
+                SWIG_SetErrorMsg(PyExc_NotImplementedError,"A sequence is needed for the varcode list");
+        int len = PyObject_Length($input);
+        for (int i = 0; i < len; ++i)
+        {
+                PyObject* o = PySequence_GetItem($input, i);
+                if (o == NULL) break;
+                const char* str = PyString_AsString(o);
+                dba_varcode vc = 0;
+                if ((vc = dba_varcode_alias_resolve(str)) == 0)
+                        vc = DBA_STRING_TO_VAR(str + 1);
+                vec.push_back(vc);
+        }
+        $1 = &vec;
+}
+%typemap(typecheck) const std::vector<dba_varcode>& {
+        $1 = PySequence_Check($input) ? 1 : 0;
 }
 
 %typemap(in) dba_keyword {

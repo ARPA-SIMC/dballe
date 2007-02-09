@@ -71,12 +71,20 @@ class DballeTest(unittest.TestCase):
 		expected["B33036"] = 75
 
 		count = 0
-		for var in data:
+		for var in data.itervars():
 			assert expected.has_key(var.code())
 			self.assertEqual(var.enqi(), expected[var.code()])
 			del expected[var.code()]
 			count = count + 1
 		self.assertEqual(count, 2)
+
+        def testQuerySomeAttrs(self):
+		# Try limiting the set of wanted attributes
+		data = Record()
+		count = self.db.attrQuery(self.context, "B01011", ("B33036",), data)
+		self.assertEqual(count, 1)
+		self.assertEqual([(k, v.enq()) for k, v in data.iteritems()], [("B33036", 75)])
+
         def testQueryCursorAttrs(self):
                 query = Record()
                 query.set("var", "B01011")
@@ -99,6 +107,11 @@ class DballeTest(unittest.TestCase):
 			del expected[var.code()]
 			count = count + 1
 		self.assertEqual(count, 2)
+
+		# Try limiting the set of wanted attributes
+		data, count = cur.attributes( ("B33036",) )
+		self.assertEqual(count, 1)
+		self.assertEqual([(k, v.enq()) for k, v in data.iteritems()], [("B33036", 75)])
         def testQueryLevels(self):
 		query = Record()
 		cur = self.db.queryLevels(query)

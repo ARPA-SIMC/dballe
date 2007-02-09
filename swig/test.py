@@ -141,6 +141,18 @@ class RecordTest(unittest.TestCase):
 		self.assertEqual("level" not in r, True)
 		self.assertEqual("timerange" not in r, True)
 
+        def testIterEmpty(self):
+		r = Record()
+		self.assertEqual([x for x in r], [])
+		self.assertEqual([x for x in r.iterkeys()], [])
+		self.assertEqual([x for x in r.itervalues()], [])
+		self.assertEqual([x for x in r.iteritems()], [])
+		self.assertEqual([x for x in r.itervars()], [])
+        def testIterOne(self):
+		# Used to throw the wrong exception to stop iteration
+		r = Record()
+		r.seti("B33036", 75)
+		self.assertEqual([x for x in r.iteritems()], [("B33036", 75)])
         def testIter(self):
                 known = [1, 123, 45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 2, 3, 4, 285.0]
                 res = []
