@@ -395,6 +395,46 @@ class Data:
                         # collected
                         data.appendAtPos(self._lastPos, var)
 
+	def _instantiateIntMatrix(self):
+		if self.info.bit_ref() == 0:
+			# bit_ref is 0, so we are handling unsigned
+			# numbers and we know the exact number of bits
+			# used for encoding
+			bits = self.info.bit_len()
+			#print self.info, bits
+			if bits <= 8:
+				#print 'uint8'
+				a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint8'), mask = 1)
+			elif bits <= 16:
+				#print 'uint16'
+				a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint16'), mask = 1)
+			elif bits <= 32:
+				#print 'uint32'
+				a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint32'), mask = 1)
+			else:
+				#print 'uint64'
+				a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint64'), mask = 1)
+		else:
+			# We have a bit_ref, so we can have negative
+			# values or we can have positive values bigger
+			# than usual (for example, for negative bit_ref
+			# values).  Therefore, choose the size of the
+			# int in the matrix according to the value
+			# range instead of bit_len()
+			range = self.info.imax() - self.info.imin()
+			#print self.info, range
+			if range < 256:
+				#print 'int8'
+				a = MA.array(numpy.zeros(map(len, self.dims), dtype='int8'), mask = 1)
+			elif range < 65536:
+				#print 'int16'
+				a = MA.array(numpy.zeros(map(len, self.dims), dtype='int16'), mask = 1)
+			elif range <= 4294967296:
+				#print 'int32'
+				a = MA.array(numpy.zeros(map(len, self.dims), dtype='int32'), mask = 1)
+			else:
+				a = MA.array(numpy.zeros(map(len, self.dims), dtype=int), mask = 1)
+		return a
 
         def finalise(self):
                 """
@@ -418,44 +458,7 @@ class Data:
 					raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
 		else:
 			if self.info.scale() == 0:
-				if self.info.bit_ref() == 0:
-					# bit_ref is 0, so we are handling unsigned
-					# numbers and we know the exact number of bits
-					# used for encoding
-					bits = self.info.bit_len()
-					#print self.info, bits
-					if bits <= 8:
-						#print 'uint8'
-						a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint8'), mask = 1)
-					elif bits <= 16:
-						#print 'uint16'
-						a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint16'), mask = 1)
-					elif bits <= 32:
-						#print 'uint32'
-						a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint32'), mask = 1)
-					else:
-						#print 'uint64'
-						a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint64'), mask = 1)
-				else:
-					# We have a bit_ref, so we can have negative
-					# values or we can have positive values bigger
-					# than usual (for example, for negative bit_ref
-					# values).  Therefore, choose the size of the
-					# int in the matrix according to the value
-					# range instead of bit_len()
-					range = self.info.imax() - self.info.imin()
-					#print self.info, range
-					if range < 256:
-						#print 'int8'
-						a = MA.array(numpy.zeros(map(len, self.dims), dtype='int8'), mask = 1)
-					elif range < 65536:
-						#print 'int16'
-						a = MA.array(numpy.zeros(map(len, self.dims), dtype='int16'), mask = 1)
-					elif range <= 4294967296:
-						#print 'int32'
-						a = MA.array(numpy.zeros(map(len, self.dims), dtype='int32'), mask = 1)
-					else:
-						a = MA.array(numpy.zeros(map(len, self.dims), dtype=int), mask = 1)
+				a = self._instantiateIntMatrix()
 			else:
 				a = MA.array(numpy.zeros(map(len, self.dims), dtype=float), mask = 1)
 
