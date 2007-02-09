@@ -1195,63 +1195,64 @@ cleanup:
 #endif
 #endif
 
-dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size, dba_record qc, int* count)
+dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, const dba_varcode* qcs, size_t qcs_size, dba_record qc, int* count)
 {
-	char query[100 + 100*6];
-	SQLHSTMT stm;
-	dba_err err;
+	dba_querybuf query = NULL;
+	SQLHSTMT stm = NULL;
+	dba_err err = DBA_OK;
 	int res;
 	long in_id_context = id_context;
-	long out_type;
+	unsigned short out_type;
 	const char out_value[255];
 
 	assert(db);
 
+	DBA_RUN_OR_GOTO(cleanup, dba_querybuf_create(200, &query));
+
 	/* Create the query */
 	if (qcs == NULL || qcs_size == 0)
 		/* If qcs is null, query all QC data */
-		strcpy(query,
+		DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(query,
 				"SELECT type, value"
 				"  FROM attr"
-				" WHERE id_context = ? AND id_var = ?");
+				" WHERE id_context = ? AND id_var = ?"));
 	else {
-		int i, qs;
-		char* q;
+		size_t i;
 		if (qcs_size > 100)
 			return dba_error_consistency("checking bound of 100 QC values to retrieve per query");
-		strcpy(query,
+		DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(query,
 				"SELECT type, value"
 				"  FROM attr"
-				" WHERE id_context = ? AND id_var = ? AND type IN (");
-		qs = strlen(query);
-		q = query + qs;
+				" WHERE id_context = ? AND id_var = ? AND type IN ("));
+		DBA_RUN_OR_GOTO(cleanup, dba_querybuf_start_list(query, ", "));
 		for (i = 0; i < qcs_size; i++)
-			if (q == query + qs)
-				q += snprintf(q, 7, "%hd", qcs[i]);
-			else
-				q += snprintf(q, 8, ",%hd", qcs[i]);
-		strcpy(q, ")");
+		{
+			char buf[10];
+			snprintf(buf, 7, "%hd", qcs[i]);
+			DBA_RUN_OR_RETURN(dba_querybuf_append_list(query, buf));
+		}
+		DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(query, ")"));
 	}
 
 	/* Allocate statement handle */
-	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
 
 	/* Bind input parameters */
 	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &in_id_context, 0, 0);
 	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
 
 	/* Bind output fields */
-	SQLBindCol(stm, 1, SQL_C_SLONG, &out_type, sizeof(out_type), 0);
+	SQLBindCol(stm, 1, SQL_C_USHORT, &out_type, sizeof(out_type), 0);
 	SQLBindCol(stm, 2, SQL_C_CHAR, &out_value, sizeof(out_value), 0);
 	
-	TRACE("QC read query: %s with id_data %d\n", query, id_data);
+	TRACE("QC read query: %s with id_data %d\n", dba_querybuf_get(query), id_data);
 
 	/* Perform the query */
-	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
+	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(query), SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
 		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", query);
-		goto dba_qc_query_failed;
+		goto cleanup;
 	}
 
 	/* Retrieve results */
@@ -1265,13 +1266,12 @@ dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varco
 		(*count)++;
 	}
 
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return dba_error_ok();
-
-	/* Exit point with cleanup after error */
-dba_qc_query_failed:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err;
+cleanup:
+	if (query != NULL)
+		dba_querybuf_delete(query);
+	if (stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_var, dba_record qc, int can_replace)

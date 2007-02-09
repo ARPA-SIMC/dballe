@@ -259,7 +259,7 @@ dba_err dba_db_remove_orphans(dba_db db);
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size, dba_record attrs, int* count);
+dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, const dba_varcode* qcs, size_t qcs_size, dba_record attrs, int* count);
 
 /**
  * Insert a new QC value into the database.
