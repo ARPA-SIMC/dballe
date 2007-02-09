@@ -404,16 +404,16 @@ class Data:
 			#print self.info, bits
 			if bits <= 8:
 				#print 'uint8'
-				a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint8'), mask = 1)
+				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='uint8'), mask = 1)
 			elif bits <= 16:
 				#print 'uint16'
-				a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint16'), mask = 1)
+				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='uint16'), mask = 1)
 			elif bits <= 32:
 				#print 'uint32'
-				a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint32'), mask = 1)
+				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='uint32'), mask = 1)
 			else:
 				#print 'uint64'
-				a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint64'), mask = 1)
+				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='uint64'), mask = 1)
 		else:
 			# We have a bit_ref, so we can have negative
 			# values or we can have positive values bigger
@@ -425,15 +425,15 @@ class Data:
 			#print self.info, range
 			if range < 256:
 				#print 'int8'
-				a = MA.array(numpy.zeros(map(len, self.dims), dtype='int8'), mask = 1)
+				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='int8'), mask = 1)
 			elif range < 65536:
 				#print 'int16'
-				a = MA.array(numpy.zeros(map(len, self.dims), dtype='int16'), mask = 1)
+				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='int16'), mask = 1)
 			elif range <= 4294967296:
 				#print 'int32'
-				a = MA.array(numpy.zeros(map(len, self.dims), dtype='int32'), mask = 1)
+				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='int32'), mask = 1)
 			else:
-				a = MA.array(numpy.zeros(map(len, self.dims), dtype=int), mask = 1)
+				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype=int), mask = 1)
 		return a
 
         def finalise(self):
@@ -460,7 +460,7 @@ class Data:
 			if self.info.scale() == 0:
 				a = self._instantiateIntMatrix()
 			else:
-				a = MA.array(numpy.zeros(map(len, self.dims), dtype=float), mask = 1)
+				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype=float), mask = 1)
 
 			# Fill the array with all the values, at the given indexes
 			for pos, val in self.vals:
