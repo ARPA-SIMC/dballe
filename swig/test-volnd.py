@@ -149,6 +149,13 @@ class TestRead(unittest.TestCase):
 
 					rec.unset("B10004")
 
+                # Insert some pseudoana data for the station 1, to test
+                # pseudoana export and mixed data types
+                rec.clear()
+                rec.set({"ana_id": 1, "B01001": 12, "B01002": 123, "B01019": "Test of long station name"})
+                rec.setAnaContext()
+                self.db.insert(rec, False, True)
+
 	def testIndexFind(self):
 		# Ana in one dimension, network in the other
 		query = dballe.Record()
@@ -372,6 +379,13 @@ class TestRead(unittest.TestCase):
 		query.set('rep_memo', 'synop')
 		vars = read(self.db.query(query), indexes, \
 				checkConflicts=True, attributes=True)
+
+        def testExportAna(self):
+                indexes = (AnaIndex(),)
+                query = dballe.Record()
+                query.setAnaContext()
+		vars = read(self.db.query(query), indexes, checkConflicts=True)
+                self.assertEquals(sorted(vars.keys()), ["B01001", "B01002", "B01019"])
 
 if len(sys.argv) == 1:
 	unittest.main()

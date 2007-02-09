@@ -347,11 +347,7 @@ class Data:
                 """
                 Collect a variable to be written on the specific indexes
                 """
-                # TODO: handle the data type properly (object array for
-                # strings, int array for ints, byte array for small ints, float
-                # array for floats...)
-                val = var.enqd()
-                self.vals.append( (pos, val) )
+                self.vals.append( (pos, var.enq()) )
         
         def append(self, rec):
                 """
@@ -412,20 +408,63 @@ class Data:
 
                 # Create the data array, with all values set as missing
 		if self.info.is_string():
-			a = numpy.empty(map(len, self.dims), typecode=object)
-		elif self.info.scale() == 0:
-			# 'int8', 'int16', 'int32', bool
-			print self.info.bit_ref()
-			a = MA.array(numpy.zeros(map(len, self.dims), dtype=int), mask = 1)
+			#print self.info, "string"
+			a = numpy.empty(map(len, self.dims), dtype=object)
+			# Fill the array with all the values, at the given indexes
+			for pos, val in self.vals:
+				if not self._checkConflicts or a[pos] == (None,):
+					a[pos] = val
+				else:
+					raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
 		else:
-			a = MA.array(numpy.zeros(map(len, self.dims), dtype=float), mask = 1)
+			if self.info.scale() == 0:
+				if self.info.bit_ref() == 0:
+					# bit_ref is 0, so we are handling unsigned
+					# numbers and we know the exact number of bits
+					# used for encoding
+					bits = self.info.bit_len()
+					#print self.info, bits
+					if bits <= 8:
+						#print 'uint8'
+						a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint8'), mask = 1)
+					elif bits <= 16:
+						#print 'uint16'
+						a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint16'), mask = 1)
+					elif bits <= 32:
+						#print 'uint32'
+						a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint32'), mask = 1)
+					else:
+						#print 'uint64'
+						a = MA.array(numpy.zeros(map(len, self.dims), dtype='uint64'), mask = 1)
+				else:
+					# We have a bit_ref, so we can have negative
+					# values or we can have positive values bigger
+					# than usual (for example, for negative bit_ref
+					# values).  Therefore, choose the size of the
+					# int in the matrix according to the value
+					# range instead of bit_len()
+					range = self.info.imax() - self.info.imin()
+					#print self.info, range
+					if range < 256:
+						#print 'int8'
+						a = MA.array(numpy.zeros(map(len, self.dims), dtype='int8'), mask = 1)
+					elif range < 65536:
+						#print 'int16'
+						a = MA.array(numpy.zeros(map(len, self.dims), dtype='int16'), mask = 1)
+					elif range <= 4294967296:
+						#print 'int32'
+						a = MA.array(numpy.zeros(map(len, self.dims), dtype='int32'), mask = 1)
+					else:
+						a = MA.array(numpy.zeros(map(len, self.dims), dtype=int), mask = 1)
+			else:
+				a = MA.array(numpy.zeros(map(len, self.dims), dtype=float), mask = 1)
 
-                # Fill the array with all the values, at the given indexes
-                for pos, val in self.vals:
-                        if not self._checkConflicts or a.mask()[pos] == 1:
-                                a[pos] = val
-                        else:
-                                raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
+			# Fill the array with all the values, at the given indexes
+			for pos, val in self.vals:
+				if not self._checkConflicts or a.mask()[pos] == 1:
+					a[pos] = val
+				else:
+					raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
 
                 # Replace the intermediate data with the results
                 self.vals = a
@@ -476,10 +515,6 @@ def read(query, dims, filter=None, checkConflicts=True, attributes=None):
                         continue
 
                 varname = rec.enqc("var")
-
-                # Skip string variables, because they do not fit into an array
-                if rec.enqvar(varname).info().is_string():
-                        continue
 
                 # Instantiate the index objects here for every variable
                 # when it appears the first time, sharing those indexes that
