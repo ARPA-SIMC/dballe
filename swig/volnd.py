@@ -32,7 +32,8 @@ from datetime import *
 #  - livello, scadenza
 #
 
-from MA import *
+import MA
+import numpy
 
 
 class SkipDatum(Exception): pass
@@ -335,6 +336,9 @@ class Data:
                 # synchronised with this one.
                 self.attrs = {}
 
+		# Information about the variable
+		self.info = dballe.Varinfo(name)
+
                 self._checkConflicts = checkConflicts
 
                 self._lastPos = None
@@ -402,16 +406,19 @@ class Data:
                 values collected so far.
                 """
                 # If one of the dimensions is empty, we don't have any valid data
-                # FIXME: this is a work-around: all the dimensions should be
-                # empty in this case, and at the moment we have spurious
-                # dimension entries that happen when the first dimension
-                # succeeds but the second raises SkipDatum
                 for i in self.dims:
                         if len(i) == 0:
                                 return False
 
                 # Create the data array, with all values set as missing
-                a = array(zeros(map(len, self.dims)), typecode=float, mask = 1)
+		if self.info.is_string():
+			a = numpy.empty(map(len, self.dims), typecode=object)
+		elif self.info.scale() == 0:
+			# 'int8', 'int16', 'int32', bool
+			print self.info.bit_ref()
+			a = MA.array(numpy.zeros(map(len, self.dims), dtype=int), mask = 1)
+		else:
+			a = MA.array(numpy.zeros(map(len, self.dims), dtype=float), mask = 1)
 
                 # Fill the array with all the values, at the given indexes
                 for pos, val in self.vals:

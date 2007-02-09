@@ -5,6 +5,7 @@ from dballe import Level, TimeRange
 from dballe.volnd import *
 import unittest, random, sys
 from datetime import *
+import numpy
 
 class TestTddiv(unittest.TestCase):
 
@@ -237,7 +238,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.vals.size(), 12)
 		self.assertEquals(data.vals.shape, (6, 2))
 		self.assertEquals(sum(data.vals.mask().flat), 1)
-		self.assertEquals(int(average(data.vals.compressed())), 86890)
+		self.assertEquals(MA.average(data.vals), 86890)
 		self.assertEquals(data.dims[0][0], (1, 10., 15., None))
 		self.assertEquals(data.dims[0][1], (2, 10., 25., None))
 		self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -265,7 +266,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.vals.size(), 12)
 		self.assertEquals(data.vals.shape, (6, 1, 2))
 		self.assertEquals(sum(data.vals.mask().flat), 1)
-		self.assertEquals(int(average(data.vals.compressed())), 86890)
+		self.assertEquals(MA.average(data.vals), 86890)
 		self.assertEquals(data.dims[0][0], (1, 10., 15., None))
 		self.assertEquals(data.dims[0][1], (2, 10., 25., None))
 		self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -285,7 +286,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.vals.size(), 24)
 		self.assertEquals(data.vals.shape, (6, 2, 2))
 		self.assertEquals(sum(data.vals.mask().flat), 3)
-		self.assertEquals(int(average(data.vals.compressed())), 4)
+		self.assertEquals(MA.average(data.vals), 4)
 		self.assertEquals(data.dims[0][0], (1, 10., 15., None))
 		self.assertEquals(data.dims[0][1], (2, 10., 25., None))
 		self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -318,8 +319,8 @@ class TestRead(unittest.TestCase):
 			self.assertEquals(data.vals.size(), data.attrs[a].vals.size())
 			self.assertEquals(data.vals.shape, data.attrs[a].vals.shape)
 			self.assertEquals(data.vals.mask().flat, data.attrs[a].vals.mask().flat)
-		self.assertEquals(average(data.attrs['B33007'].vals), 50.)
-		self.assertEquals(average(data.attrs['B33040'].vals), 50.)
+		self.assertEquals(MA.average(data.attrs['B33007'].vals), 50.)
+		self.assertEquals(MA.average(data.attrs['B33040'].vals), 50.)
 
 	def testSomeAttrs(self):
 		# Same export as testAnaNetwork, but check that the
@@ -339,7 +340,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.vals.size(), a.vals.size())
 		self.assertEquals(data.vals.shape, a.vals.shape)
 		self.assertEquals(data.vals.mask().flat, a.vals.mask().flat)
-		self.assertEquals(average(a.vals), 50.)
+		self.assertEquals(MA.average(a.vals), 50.)
 
 	def testEmptyExport(self):
 		query = dballe.Record()
@@ -375,8 +376,9 @@ class TestRead(unittest.TestCase):
 if len(sys.argv) == 1:
 	unittest.main()
 else:
-	suite = unittest.TestLoader().loadTestsFromName(sys.argv[1])
-	unittest.TextTestRunner(verbosity=2).run(suite)
+	suite = unittest.TestLoader().loadTestsFromNames(
+			map(lambda x: __name__ + '.' + x, sys.argv[1:]))
+	unittest.TextTestRunner().run(suite)
 
 
 
