@@ -321,6 +321,26 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(average(data.attrs['B33007'].vals), 50.)
 		self.assertEquals(average(data.attrs['B33040'].vals), 50.)
 
+	def testSomeAttrs(self):
+		# Same export as testAnaNetwork, but check that the
+		# attributes are synchronised
+		query = dballe.Record()
+		query.set("var", "B10004")
+		query.setdate(datetime(2007, 1, 1, 0, 0, 0))
+		vars = read(self.db.query(query), (AnaIndex(), NetworkIndex()), attributes=('B33040',))
+		self.assertEquals(len(vars), 1)
+		self.assertEquals(vars.keys(), ["B10004"])
+		data = vars["B10004"]
+		self.assertEquals(len(data.attrs), 1)
+		self.assertEquals(data.attrs.keys(), ['B33040'])
+
+		a = data.attrs['B33040']
+		self.assertEquals(data.dims, a.dims)
+		self.assertEquals(data.vals.size(), a.vals.size())
+		self.assertEquals(data.vals.shape, a.vals.shape)
+		self.assertEquals(data.vals.mask().flat, a.vals.mask().flat)
+		self.assertEquals(average(a.vals), 50.)
+
 	def testEmptyExport(self):
 		query = dballe.Record()
 		query.seti("ana_id", 5000)

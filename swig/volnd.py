@@ -3,7 +3,6 @@
 
 # TODO: aggiungere metodi di query negli indici (eg. qual'è l'indice di questo
 #       ana_id?)
-# TODO: leggere gli attributi (per dire, in res["B12001.B33001"])
 # TODO: leggere i dati di anagrafica
 
 import dballe
@@ -493,6 +492,9 @@ def read(query, dims, filter=None, checkConflicts=True, attributes=None):
                 if attributes != None:
                         if attributes == True:
                                 count = query.attributes(arec)
+                                var.appendAttrs(arec)
+			else:
+                                count = query.attributes(attributes, arec)
                                 var.appendAttrs(arec)
 
 
