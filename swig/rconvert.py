@@ -51,8 +51,18 @@ def ma_to_r(arr, dimnames=None):
 	else:
 		return rpy.r.aperm(rpy.r.array(data=vec, dim=[i for i in reversed(arr.shape)]), perm=[i for i in reversed(range(1,len(arr.shape)+1))])
 
-def vnddata_to_r(data):
+def volnd_data_to_r(data):
 	dn = []
 	for i in data.dims:
 		dn.append(map(str, i))
 	return ma_to_r(data.vals, dimnames=dn)
+
+def volnd_save_to_r(vars, file):
+	tosave = []
+	for k, d in vars.iteritems():
+		rpy.r.assign(k, vnddata_to_r(d))
+		tosave.append(k)
+		for aname, adata in d.attrs.iteritems():
+			rpy.r.assign(k+"."+aname, vnddata_to_r(adata))
+			tosave.append(k+"."+aname)
+	rpy.r.save(list=tosave, file=file)
