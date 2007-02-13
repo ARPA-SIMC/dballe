@@ -387,12 +387,37 @@ class TestRead(unittest.TestCase):
 		vars = read(self.db.query(query), indexes, checkConflicts=True)
                 self.assertEquals(sorted(vars.keys()), ["B01001", "B01002", "B01019"])
 
-if len(sys.argv) == 1:
-	unittest.main()
-else:
-	suite = unittest.TestLoader().loadTestsFromNames(
-			map(lambda x: __name__ + '.' + x, sys.argv[1:]))
-	unittest.TextTestRunner().run(suite)
+	def testExportSyncAna(self):
+		# Export some data
+                indexes = (AnaIndex(), DateTimeIndex())
+                query = dballe.Record()
+		query["rep_memo"] = 'synop'
+		query.setlevel(Level(1, 0, 0))
+                query.settimerange(TimeRange(4, -21600, 0))
+		vars = read(self.db.query(query), indexes, checkConflicts=True)
+                self.assertEquals(sorted(vars.keys()), ["B13011"])
+
+		# Freeze all the indexes
+		for i in range(len(indexes)):
+			indexes[i].freeze()
+
+		# Export the pseudoana data in sync with the data
+		query.clear()
+                query.setAnaContext()
+		anas = read(self.db.query(query), (indexes[0],), checkConflicts=True)
+
+                self.assertEquals(sorted(anas.keys()), ["B01001", "B01002", "B01019"])
+		self.assertEquals(anas["B01001"].dims[0], vars["B13011"].dims[0])
+
+unittest.main()
+
+# This is already automatically done
+#if len(sys.argv) == 1:
+#	unittest.main()
+#else:
+#	suite = unittest.TestLoader().loadTestsFromNames(
+#			map(lambda x: __name__ + '.' + x, sys.argv[1:]))
+#	unittest.TextTestRunner().run(suite)
 
 
 

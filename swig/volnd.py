@@ -63,6 +63,12 @@ class Index(list):
 		preinit an index
 		"""
 		return el, el
+	def freeze(self):
+		"""
+		Set the index as frozen: indexing elements not already in the
+		index will raise a SkipDatum exception
+		"""
+		self._frozen = True
         def another(self):
                 """
                 Return another version of this index: it can be a reference to
