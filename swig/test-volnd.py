@@ -208,8 +208,8 @@ class TestRead(unittest.TestCase):
 		query.set({'ana_id': 1, 'rep_memo': "synop", 'year': 2007, 'month': 1, 'day': 1})
 
 		vars = read(self.db.query(query), \
-			(AnaIndex(), FixedTimeRangeIndex( \
-					(TimeRange(4, -21600, 0), TimeRange(4, -43200, 0)) ) ), \
+			(AnaIndex(), TimeRangeIndex(frozen=True, \
+				start=(TimeRange(4, -21600, 0), TimeRange(4, -43200, 0)) ) ), \
 			checkConflicts = False)
 		self.assertEquals(len(vars["B13011"].dims[1]), 2)
 
@@ -219,7 +219,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(len(vars["B13011"].dims[1]), 3)
 
 		vars = read(self.db.query(query), \
-			(AnaIndex(), FixedLevelIndex( (Level(1, 0, 0),) )), \
+			(AnaIndex(), LevelIndex(frozen=True, start=(Level(1, 0, 0),) )), \
 			checkConflicts = False)
 		self.assertEquals(len(vars["B13011"].dims[1]), 1)
 
@@ -360,7 +360,7 @@ class TestRead(unittest.TestCase):
 		# has successfuly added an item, we used to end up with
 		# a 'ghost' index entry with no items in it
 		indexes = (TimeRangeIndex(), \
-			  FixedLevelIndex( (Level(3, 2, 0),) ))
+			  LevelIndex(frozen=True, start=(Level(3, 2, 0),) ))
 		query = dballe.Record()
 		query.set('ana_id', 1)
 		query.set('var', 'B13011')
@@ -372,7 +372,7 @@ class TestRead(unittest.TestCase):
 
 	def testBuggyExport1(self):
 		indexes = (AnaIndex(), \
-			  FixedLevelIndex(Level(1, 0, 0), Level(3, 2, 0)), \
+			  LevelIndex(frozen=True, start=(Level(1, 0, 0), Level(3, 2, 0))), \
 			  TimeRangeIndex(), \
 			  DateTimeIndex())
 		query = dballe.Record()

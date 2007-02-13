@@ -39,11 +39,30 @@ import numpy
 class SkipDatum(Exception): pass
 
 class Index(list):
-        def __init__(self, shared=True):
+        def __init__(self, shared=True, frozen=False, start=None):
                 self._map = {}
                 self._shared = shared
+		self._frozen = frozen
+		if start:
+			for el in start:
+				id, val = self._splitInit(el)
+				self._map[id] = len(self)
+				self.append(val)
         def __str__(self):
                 return self.shortName() + ": " + list.__str__(self)
+	def _indexKey(self, rec):
+		"Extract the indexing key from the record"
+                return None
+	def _indexData(self, rec):
+		"Extract the full data information from the record"
+		return None
+	def _splitInit(self, el):
+		"""
+		Extract the indexing key and full data information from one of
+		the objects passed as the start= value to the constructor to
+		preinit an index
+		"""
+		return el, el
         def another(self):
                 """
                 Return another version of this index: it can be a reference to
@@ -54,22 +73,32 @@ class Index(list):
                         return self
                 else:
                         return self.__class__()
+	def peekIndex(self, rec):
+                key = self._indexKey(rec)
+                if key not in self._map:
+			if self._frozen:
+				raise SkipDatum
+			else:
+				return len(self)
+                return self._map[key]
+        def obtainIndex(self, rec):
+		if self._frozen: return self.peekIndex(rec)
+                key = self._indexKey(rec)
+                if key not in self._map:
+                        self._map[key] = len(self)
+                        self.append(self._indexData(rec))
+                return self._map[key]
 
 class AnaIndex(Index):
         """
         Index for stations, as they come out of the database
         """
-	def peekIndex(self, rec):
-                id = rec.enqi("ana_id")
-                if id not in self._map:
-                        return len(self)
-                return self._map[id]
-        def obtainIndex(self, rec):
-                id = rec.enqi("ana_id")
-                if id not in self._map:
-                        self._map[id] = len(self)
-                        self.append((id, rec.enqd("lat"), rec.enqd("lon"), rec.enqd("ident")))
-                return self._map[id]
+	def _indexKey(self, rec):
+                return rec.enqi("ana_id")
+	def _indexData(self, rec):
+                return (rec.enqi("ana_id"), rec.enqd("lat"), rec.enqd("lon"), rec.enqd("ident"))
+	def _splitInit(self, el):
+		return el[0], el
         def shortName(self):
                 return "AnaIndex["+str(len(self))+"]"
 
@@ -77,17 +106,12 @@ class NetworkIndex(Index):
         """
         Index for networks, as they come out of the database
         """
-        def peekIndex(self, rec):
-                id = rec.enqi("rep_cod")
-                if id not in self._map:
-                        return len(self)
-                return self._map[id]
-        def obtainIndex(self, rec):
-                id = rec.enqi("rep_cod")
-                if id not in self._map:
-                        self._map[id] = len(self)
-                        self.append((id, rec.enqc("rep_memo")))
-                return self._map[id]
+	def _indexKey(self, rec):
+                return rec.enqi("rep_cod")
+	def _indexData(self, rec):
+                return (rec.enqi("rep_cod"), rec.enqc("rep_memo"))
+	def _splitInit(self, el):
+		return el[0], el
         def shortName(self):
                 return "NetworkIndex["+str(len(self))+"]"
 
@@ -95,105 +119,32 @@ class LevelIndex(Index):
         """
         Index for levels, as they come out of the database
         """
-        def peekIndex(self, rec):
-                id = rec.enqlevel()
-                if id not in self._map:
-                        return len(self)
-                return self._map[id]
-        def obtainIndex(self, rec):
-                id = rec.enqlevel()
-                if id not in self._map:
-                        self._map[id] = len(self)
-                        self.append(id)
-                return self._map[id]
+	def _indexKey(self, rec):
+                return rec.enqlevel()
+	def _indexData(self, rec):
+                return rec.enqlevel()
         def shortName(self):
                 return "LevelIndex["+str(len(self))+"]"
-
-class FixedLevelIndex(Index):
-        """
-        Index for levels, using a pregiven list of levels, and throwing away
-        all data that does not fit
-        """
-        def __init__(self, levels, *args, **kwargs):
-                """
-                levels is the list of all allowed Level objects, in the wanted
-                order.
-                """
-                Index.__init__(self, *args, **kwargs)
-                self.extend(levels)
-                for pos, l in enumerate(self):
-                        self._map[l] = pos
-
-        def peekIndex(self, rec):
-                id = rec.enqlevel()
-                if id not in self._map:
-                        raise SkipDatum
-                return self._map[id]
-        def obtainIndex(self, rec):
-		return self.peekIndex(rec)
-
-        def shortName(self):
-                return "FixedLevelIndex["+str(len(self))+"]"
 
 class TimeRangeIndex(Index):
         """
         Index for time ranges, as they come out of the database
         """
-        def peekIndex(self, rec):
-                id = rec.enqtimerange()
-                if id not in self._map:
-                        return len(self)
-                return self._map[id]
-        def obtainIndex(self, rec):
-                id = rec.enqtimerange()
-                if id not in self._map:
-                        self._map[id] = len(self)
-                        self.append(id)
-                return self._map[id]
+	def _indexKey(self, rec):
+                return rec.enqtimerange()
+	def _indexData(self, rec):
+                return rec.enqtimerange()
         def shortName(self):
                 return "TimeRangeIndex["+str(len(self))+"]"
-
-class FixedTimeRangeIndex(Index):
-        """
-        Index for time ranges, using a pregiven list of time ranges, and
-        throwing away all data that does not fit
-        """
-        def __init__(self, tranges, *args, **kwargs):
-                """
-                tranges is the list of all allowed TimeRange objects, in the
-                wanted order.
-                """
-                Index.__init__(self, *args, **kwargs)
-                self.extend(tranges)
-                for pos, l in enumerate(self):
-                        self._map[l] = pos
-
-        def peekIndex(self, rec):
-                id = rec.enqtimerange()
-                if id not in self._map:
-                        raise SkipDatum
-                return self._map[id]
-        def obtainIndex(self, rec):
-		return self.peekIndex(rec)
-
-        def shortName(self):
-                return "FixedTimeRangeIndex["+str(len(self))+"]"
 
 class DateTimeIndex(Index):
         """
         Index for datetimes, as they come out of the database
         """
-        def peekIndex(self, rec):
-                id = rec.enqdate()
-                if id not in self._map:
-                        return len(self)
-                return self._map[id]
-        def obtainIndex(self, rec):
-                id = rec.enqdate()
-                if id not in self._map:
-                        self._map[id] = len(self)
-                        self.append(id)
-                return self._map[id]
+	def _indexKey(self, rec):
+                return rec.enqdate()
+	def _indexData(self, rec):
+                return rec.enqdate()
         def shortName(self):
                 return "DateTimeIndex["+str(len(self))+"]"
 
@@ -260,8 +211,7 @@ class IntervalIndex(Index):
                 self._start = start
                 self._step = step
                 self._tolerance = timedelta(0)
-
-        def peekIndex(self, rec):
+	def _getpos(self, rec):
                 t = rec.enqdate()
                 # Skip all entries before the start
                 if (t < self._start):
@@ -273,32 +223,24 @@ class IntervalIndex(Index):
                         pos += 1
                         skew = skew - self._step
                 if skew > self._tolerance:
+                        raise SkipDatum
+		return pos
+        def peekIndex(self, rec):
+		pos = self._getpos(rec)
+		if self._frozen and pos >= len(self):
                         raise SkipDatum
                 return pos
         def obtainIndex(self, rec):
-                t = rec.enqdate()
-                # Skip all entries before the start
-                if (t < self._start):
-                        raise SkipDatum
-
-                # With integer division we get both the position and the skew
-                pos, skew = tddivmod(t - self._start, self._step)
-                if skew > self._step / 2:
-                        pos += 1
-                        skew = skew - self._step
-                if skew > self._tolerance:
-                        raise SkipDatum
-
+		if self._frozen:
+			return self.peekIndex(rec)
+		pos = self._getpos(rec)
                 if pos >= len(self):
                         # Extend the list with the missing places
                         for i in xrange(len(self), pos+1):
                                 self.append(self._start + self._step * i)
-                        
                 return pos
-
         def shortName(self):
                 return "IntervalIndex["+str(len(self))+"]"
-
         def another(self):
                 if self._shared:
                         return self
