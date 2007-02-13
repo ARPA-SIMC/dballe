@@ -66,9 +66,9 @@ def volnd_save_to_r(vars, file):
 	"""
 	tosave = []
 	for k, d in vars.iteritems():
-		rpy.r.assign(k, vnddata_to_r(d))
+		rpy.r.assign(k, volnd_data_to_r(d))
 		tosave.append(k)
 		for aname, adata in d.attrs.iteritems():
-			rpy.r.assign(k+"."+aname, vnddata_to_r(adata))
+			rpy.r.assign(k+"."+aname, volnd_data_to_r(adata))
 			tosave.append(k+"."+aname)
 	rpy.r.save(list=tosave, file=file)
