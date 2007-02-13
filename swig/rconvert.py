@@ -1,6 +1,6 @@
 # Failed experiment: the __dict__ of MaskedArray is a dictproxy instance that
 # is read-only
-import dballe.volnd
+import volnd
 import MA, numpy
 import rpy
 
