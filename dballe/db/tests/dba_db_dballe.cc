@@ -294,6 +294,19 @@ void to::test<3>()
 		dba_db_cursor_delete(cursor); \
 	} while (0)
 
+#define TRY_QUERY1(type, param, value, expected_count) do {\
+		int count; \
+		dba_db_cursor cursor; \
+		dba_record_clear(query); \
+		CHECKED(dba_record_var_set##type(query, param, value)); \
+		CHECKED(dba_db_query(db, query, &cursor, &count)); \
+		gen_ensure(cursor != 0); \
+		if (0) \
+			print_results(cursor); \
+		gen_ensure_equals(count, expected_count); \
+		dba_db_cursor_delete(cursor); \
+	} while (0)
+
 	TRY_QUERY(c, DBA_KEY_ANA_ID, "1", 4);
 	TRY_QUERY(c, DBA_KEY_ANA_ID, "2", 0);
 	TRY_QUERY(i, DBA_KEY_YEAR, 1000, 5);
@@ -306,10 +319,10 @@ void to::test<3>()
 	TRY_QUERY(i, DBA_KEY_YEAR, 1944, 0);
 	TRY_QUERY(i, DBA_KEY_YEAR, 1945, 4);
 	TRY_QUERY(i, DBA_KEY_YEAR, 1946, 0);
-	TRY_QUERY(i, DBA_KEY_BLOCK, 1, 4);
-	TRY_QUERY(i, DBA_KEY_BLOCK, 2, 0);
-	TRY_QUERY(i, DBA_KEY_STATION, 52, 4);
-	TRY_QUERY(i, DBA_KEY_STATION, 53, 0);
+	TRY_QUERY1(i, DBA_VAR(0, 1, 1), 1, 4);
+	TRY_QUERY1(i, DBA_VAR(0, 1, 1), 2, 0);
+	TRY_QUERY1(i, DBA_VAR(0, 1, 2), 52, 4);
+	TRY_QUERY1(i, DBA_VAR(0, 1, 2), 53, 0);
 	TRY_QUERY(c, DBA_KEY_ANA_FILTER, "block=1", 4);
 	TRY_QUERY(c, DBA_KEY_ANA_FILTER, "B01001=1", 4);
 	TRY_QUERY(c, DBA_KEY_ANA_FILTER, "block>1", 0);

@@ -1,4 +1,5 @@
 #include <dballe++/record.h>
+#include <dballe/core/aliases.h>
 
 using namespace std;
 
@@ -78,6 +79,117 @@ bool RecordIterator::isKeyword() const
 const char* RecordIterator::keywordName() const
 {
 	return dba_record_keyword_name(m_kwd);
+}
+
+
+bool Record::contains(const std::string& parm) const
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		return varContains(code);
+	else if (parm[0] != 'B')
+		return keyContains(dba_record_keyword_byname(parm.c_str()));
+	else
+		return varContains(stringToVar(parm));
+}
+
+Var Record::enq(const std::string& parm) const
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		return varEnq(code);
+	else if (parm[0] != 'B')
+		return keyEnq(dba_record_keyword_byname(parm.c_str()));
+	else
+		return varEnq(stringToVar(parm));
+}
+int Record::enqi(const std::string& parm) const
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		return varEnqi(code);
+	else if (parm[0] != 'B')
+		return keyEnqi(dba_record_keyword_byname(parm.c_str()));
+	else
+		return varEnqi(stringToVar(parm));
+}
+double Record::enqd(const std::string& parm) const
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		return varEnqd(code);
+	else if (parm[0] != 'B')
+		return keyEnqd(dba_record_keyword_byname(parm.c_str()));
+	else
+		return varEnqd(stringToVar(parm));
+}
+const char* Record::enqc(const std::string& parm) const
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		return varEnqc(code);
+	else if (parm[0] != 'B')
+		return keyEnqc(dba_record_keyword_byname(parm.c_str()));
+	else
+		return varEnqc(stringToVar(parm));
+}
+std::string Record::enqs(const std::string& parm) const
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		return varEnqs(code);
+	else if (parm[0] != 'B')
+		return keyEnqs(dba_record_keyword_byname(parm.c_str()));
+	else
+		return varEnqs(stringToVar(parm));
+}
+void Record::set(const std::string& parm, const Var& var)
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		varSet(code, var);
+	else if (parm[0] != 'B')
+		keySet(dba_record_keyword_byname(parm.c_str()), var);
+	else
+		varSet(stringToVar(parm), var);
+}
+void Record::seti(const std::string& parm, int value)
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		varSeti(code, value);
+	else if (parm[0] != 'B')
+		keySeti(dba_record_keyword_byname(parm.c_str()), value);
+	else
+		varSeti(stringToVar(parm), value);
+}
+void Record::setd(const std::string& parm, double value)
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		varSetd(code, value);
+	else if (parm[0] != 'B')
+		keySetd(dba_record_keyword_byname(parm.c_str()), value);
+	else
+		varSetd(stringToVar(parm), value);
+}
+void Record::setc(const std::string& parm, const char* value)
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		varSetc(code, value);
+	else if (parm[0] != 'B')
+		keySetc(dba_record_keyword_byname(parm.c_str()), value);
+	else
+		varSetc(stringToVar(parm), value);
+}
+void Record::sets(const std::string& parm, const std::string& value)
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		varSets(code, value);
+	else if (parm[0] != 'B')
+		keySets(dba_record_keyword_byname(parm.c_str()), value);
+	else
+		varSets(stringToVar(parm), value);
+}
+void Record::unset(const std::string& parm)
+{
+	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
+		varUnset(code);
+	else if (parm[0] != 'B')
+		keyUnset(dba_record_keyword_byname(parm.c_str()));
+	else
+		varUnset(stringToVar(parm));
 }
 
 void Record::dumpToStderr()

@@ -18,9 +18,9 @@ void to::test<1>()
 {
 	Record rec;
 
-	rec.keySet(DBA_KEY_BLOCK, 3);
-	gen_ensure_equals(rec.keyEnqi(DBA_KEY_BLOCK), 3);
-	gen_ensure_equals(rec.keyEnq(DBA_KEY_BLOCK).enqi(), 3);
+	rec.keySet(DBA_KEY_ANA_ID, 3);
+	gen_ensure_equals(rec.keyEnqi(DBA_KEY_ANA_ID), 3);
+	gen_ensure_equals(rec.keyEnq(DBA_KEY_ANA_ID).enqi(), 3);
 
 	rec.varSet(DBA_VAR(0, 4, 1), 2001);
 	gen_ensure_equals(rec.varEnqi(DBA_VAR(0, 4, 1)), 2001);
@@ -173,6 +173,31 @@ void to::test<6>()
 	rec1.unset("B01001");
 	gen_ensure(!rec.equals(rec1));
 	gen_ensure(!rec1.equals(rec));
+}
+
+// Test set with aliases
+template<> template<>
+void to::test<7>()
+{
+	Record rec;
+	rec.setd("B12001", 280.1);
+	gen_ensure_equals(rec.enqd("B12001"), 280.1);
+	gen_ensure_equals(rec.enqd("t"), 280.1);
+	rec.set("t", 282.3);
+	gen_ensure_equals(rec.enqd("B12001"), 282.3);
+	gen_ensure_equals(rec.enqd("t"), 282.3);
+	rec.setd("t", 281.2);
+	gen_ensure_equals(rec.enqd("B12001"), 281.2);
+	gen_ensure_equals(rec.enqd("t"), 281.2);
+	rec.seti("t", 2834);
+	gen_ensure_equals(rec.enqi("B12001"), 2834);
+	gen_ensure_equals(rec.enqi("t"), 2834);
+	rec.setc("t", "2845");
+	gen_ensure_equals(string(rec.enqc("B12001")), "2845");
+	gen_ensure_equals(string(rec.enqc("t")), "2845");
+	rec.sets("t", "2845");
+	gen_ensure_equals(rec.enqs("B12001"), "2845");
+	gen_ensure_equals(rec.enqs("t"), "2845");
 }
 
 }

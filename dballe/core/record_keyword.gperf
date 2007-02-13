@@ -41,8 +41,6 @@ priomin,     DBA_KEY_PRIOMIN
 rep_cod,     DBA_KEY_REP_COD
 rep_memo,    DBA_KEY_REP_MEMO
 ana_id,      DBA_KEY_ANA_ID
-block,       DBA_KEY_BLOCK
-station,     DBA_KEY_STATION
 mobile,      DBA_KEY_MOBILE
 ident,       DBA_KEY_IDENT
 lat,         DBA_KEY_LAT
@@ -100,8 +98,6 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "Type of report",                           "NUMBER", DEF_MAXINT },
 	{ 0, "Mnemonic alias for type of report",     "CHARACTER", DEF_STRING(20) },
 	{ 0, "Pseudoana database ID",                   "NUMERIC", DEF_MAXINT },
-	{ 0, "WMO block number",                        "NUMERIC", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "WMO station number",                      "NUMERIC", DEF_MAXINT },
 	{ 0, "Station is mobile",                       "NUMERIC", DEF_MAXINT },
 	{ 0, "Identifier of flight or ship",          "CHARACTER", DEF_STRING(64) },
 	{ 0, "Latitude",                                 "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
@@ -153,8 +149,6 @@ static const char* keyword_names[] = {
 	"rep_cod",
 	"rep_memo",
 	"ana_id",
-	"block",
-	"station",
 	"mobile",
 	"ident",
 	"lat",

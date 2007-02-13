@@ -560,13 +560,13 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 	ADD_INT(&cur->sel_priomin, DBA_KEY_PRIOMIN, "ri.prio>=?", DBA_DB_FROM_RI);
 	ADD_INT(&cur->sel_priomax, DBA_KEY_PRIOMAX, "ri.prio<=?", DBA_DB_FROM_RI);
 
-	if ((val = dba_record_key_peek_value(query, DBA_KEY_BLOCK)) != NULL)
+	if ((val = dba_record_var_peek_value(query, DBA_VAR(0, 1, 1))) != NULL)
 	{
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "dblo.value="));
 		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->where, val));
 		cur->from_wanted |= DBA_DB_FROM_DBLO;
 	}
-	if ((val = dba_record_key_peek_value(query, DBA_KEY_STATION)) != NULL)
+	if ((val = dba_record_var_peek_value(query, DBA_VAR(0, 1, 2))) != NULL)
 	{
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "dsta.value="));
 		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->where, val));

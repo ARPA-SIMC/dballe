@@ -172,13 +172,7 @@ public:
 	void clearVars() { dba_record_clear_vars(m_rec); }
 
 	/// Check if the record contains the given parameter or value
-	bool contains(const std::string& parm) const
-	{
-		if (parm[0] != 'B')
-			return keyContains(dba_record_keyword_byname(parm.c_str()));
-		else
-			return varContains(stringToVar(parm));
-	}
+	bool contains(const std::string& parm) const;
 	/// Check if the record contains the given parameter
 	bool keyContains(dba_keyword parameter) const
 	{
@@ -195,13 +189,7 @@ public:
 	}
 
 	/// Get the Var representation of a parameter or value
-	Var enq(const std::string& parm) const
-	{
-		if (parm[0] != 'B')
-			return keyEnq(dba_record_keyword_byname(parm.c_str()));
-		else
-			return varEnq(stringToVar(parm));
-	}
+	Var enq(const std::string& parm) const;
         /// enq as operator[]
         Var operator[](const std::string& parm) const { return enq(parm); }
 	/// Get the Var representation of a parameter
@@ -223,13 +211,7 @@ public:
         /// varEnq as operator[]
         Var operator[](dba_varcode code) const { return varEnq(code); }
 	/// Get the unscaled integer representation of a parameter or value
-	int enqi(const std::string& parm) const
-	{
-		if (parm[0] != 'B')
-			return keyEnqi(dba_record_keyword_byname(parm.c_str()));
-		else
-			return varEnqi(stringToVar(parm));
-	}
+	int enqi(const std::string& parm) const;
 	/// Get the unscaled integer representation of a parameter
 	int keyEnqi(dba_keyword parameter) const
 	{
@@ -245,13 +227,7 @@ public:
 		return res;
 	}
 	/// Get the double representation of a parameter or value
-	double enqd(const std::string& parm) const
-	{
-		if (parm[0] != 'B')
-			return keyEnqd(dba_record_keyword_byname(parm.c_str()));
-		else
-			return varEnqd(stringToVar(parm));
-	}
+	double enqd(const std::string& parm) const;
 	/// Get the double representation of a parameter
 	double keyEnqd(dba_keyword parameter) const
 	{
@@ -267,13 +243,7 @@ public:
 		return res;
 	}
 	/// Get the string representation of a parameter or value
-	const char* enqc(const std::string& parm) const
-	{
-		if (parm[0] != 'B')
-			return keyEnqc(dba_record_keyword_byname(parm.c_str()));
-		else
-			return varEnqc(stringToVar(parm));
-	}
+	const char* enqc(const std::string& parm) const;
 	/// Get the string representation of a parameter
 	const char* keyEnqc(dba_keyword parameter) const
 	{
@@ -289,13 +259,7 @@ public:
 		return res;
 	}
 	/// Get the string representation of a parameter or value
-	std::string enqs(const std::string& parm) const
-	{
-		if (parm[0] != 'B')
-			return keyEnqs(dba_record_keyword_byname(parm.c_str()));
-		else
-			return varEnqs(stringToVar(parm));
-	}
+	std::string enqs(const std::string& parm) const;
 	/// Get the string representation of a parameter
 	std::string keyEnqs(dba_keyword parameter) const
 	{
@@ -312,13 +276,7 @@ public:
 	}
 
 	/// Set a parameter or value from a Var
-	void set(const std::string& parm, const Var& var)
-	{
-		if (parm[0] != 'B')
-			keySet(dba_record_keyword_byname(parm.c_str()), var);
-		else
-			varSet(stringToVar(parm), var);
-	}
+	void set(const std::string& parm, const Var& var);
 	/// Set a parameter from a Var
 	void keySet(dba_keyword parameter, const Var& var)
 	{
@@ -340,13 +298,7 @@ public:
 	/// Set a parameter or value from an unscaled int
 	void set(const std::string& parm, int value) { seti(parm, value); }
 	/// Set a parameter or value from an unscaled int
-	void seti(const std::string& parm, int value)
-	{
-		if (parm[0] != 'B')
-			keySeti(dba_record_keyword_byname(parm.c_str()), value);
-		else
-			varSeti(stringToVar(parm), value);
-	}
+	void seti(const std::string& parm, int value);
 	/// Set a parameter from an unscaled int
 	void keySet(dba_keyword parameter, int value) { keySeti(parameter, value); }
 	/// Set a parameter from an unscaled int
@@ -364,13 +316,7 @@ public:
 	/// Set a parameter or value from a double
 	void set(const std::string& parm, double value) { setd(parm, value); }
 	/// Set a parameter or value from a double
-	void setd(const std::string& parm, double value)
-	{
-		if (parm[0] != 'B')
-			keySetd(dba_record_keyword_byname(parm.c_str()), value);
-		else
-			varSetd(stringToVar(parm), value);
-	}
+	void setd(const std::string& parm, double value);
 	/// Set a parameter from a double
 	void keySet(dba_keyword parameter, double value) { keySetd(parameter, value); }
 	/// Set a parameter from a double
@@ -388,13 +334,7 @@ public:
 	/// Set a parameter or value from a string
 	void set(const std::string& parm, const char* value) { setc(parm, value); }
 	/// Set a parameter or value from a string
-	void setc(const std::string& parm, const char* value)
-	{
-		if (parm[0] != 'B')
-			keySetc(dba_record_keyword_byname(parm.c_str()), value);
-		else
-			varSetc(stringToVar(parm), value);
-	}
+	void setc(const std::string& parm, const char* value);
 	/// Set a parameter from a string
 	void keySet(dba_keyword parameter, const char* value) { keySetc(parameter, value); }
 	/// Set a parameter from a string
@@ -412,13 +352,7 @@ public:
 	/// Set a parameter or value from a string
 	void set(const std::string& parm, const std::string& value) { sets(parm, value); }
 	/// Set a parameter or value from a string
-	void sets(const std::string& parm, const std::string& value)
-	{
-		if (parm[0] != 'B')
-			keySets(dba_record_keyword_byname(parm.c_str()), value);
-		else
-			varSets(stringToVar(parm), value);
-	}
+	void sets(const std::string& parm, const std::string& value);
 	/// Set a parameter from a string
 	void keySet(dba_keyword parameter, const std::string& value) { keySets(parameter, value); }
 	/// Set a parameter from a string
@@ -442,13 +376,7 @@ public:
 	}
 
 	/// Unset a parameter or value
-	void unset(const std::string& parm)
-	{
-		if (parm[0] != 'B')
-			keyUnset(dba_record_keyword_byname(parm.c_str()));
-		else
-			varUnset(stringToVar(parm));
-	}
+	void unset(const std::string& parm);
 	/// Unset a parameter
 	void keyUnset(dba_keyword parameter)
 	{

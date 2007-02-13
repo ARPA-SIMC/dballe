@@ -20,6 +20,10 @@ class VarinfoTest(unittest.TestCase):
 		self.assertEqual(str(info).startswith("B01001"), True)
 		self.assertEqual(repr(info).startswith("Varinfo(B01001"), True)
 
+	def testFromAlias(self):
+		info = Varinfo("t")
+		self.assertEqual(info.var(), "B12001")
+
 class VarTest(unittest.TestCase):
 	def testUndefCreation(self):
 		var = Var("B01001")
@@ -46,6 +50,13 @@ class VarTest(unittest.TestCase):
 		self.assertEqual(var.enqi(), 123456)
 		self.assertEqual(var.enqd(), 1.23456)
 		self.assertEqual(var.enqc(), "123456")
+	def testAliasCreation(self):
+		var = Var("t", 280.3)
+		self.assertEqual(var.code(), "B12001")
+		self.assertEqual(var.isset(), True)
+		self.assertEqual(var.enqi(), 2803)
+		self.assertEqual(var.enqd(), 280.3)
+		self.assertEqual(var.enqc(), "2803")
 	def testStringification(self):
 		var = Var("B01001")
 		self.assertEqual(str(var), "None")
@@ -77,7 +88,14 @@ class RecordTest(unittest.TestCase):
                 self.r.setlevel(Level(105, 2, 0))
                 self.r.settimerange(TimeRange(2, 3, 4))
                 self.r.set("B12001", 285.0)
-
+                self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype", "l1", "l2", "pindicator", "p1", "p2", "B12001", "B01002", "B01001"]
+                self.known = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 2, 3, 4, 285.0, 123, 1]
+	def testAlias(self):
+		r = self.r.copy()
+                r.set("t", 282.3)
+		self.assertEqual(r["B12001"], 282.3)
+                r["t"] = 283.2
+		self.assertEqual(r["B12001"], 283.2)
         def testReadDictOperators(self):
                 r = self.r
                 self.assertEqual(r["block"], 1)
@@ -154,28 +172,22 @@ class RecordTest(unittest.TestCase):
 		r.seti("B33036", 75)
 		self.assertEqual([x for x in r.iteritems()], [("B33036", 75)])
         def testIter(self):
-                known = [1, 123, 45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 2, 3, 4, 285.0]
-                res = []
-                for n in self.r:
-                        res += [n.enq()]
-                self.assertEqual(len(res), len(known))
-                self.assertEqual(res, known)
+                res = [n.enq() for n in self.r]
+                self.assertEqual(len(res), len(self.known))
+                self.assertEqual(res, self.known)
                 res = []
                 for n in self.r.itervalues():
                         res += [n.enq()]
-                self.assertEqual(len(res), len(known))
-                self.assertEqual(res, known)
+                self.assertEqual(len(res), len(self.known))
+                self.assertEqual(res, self.known)
         def testIterkeys(self):
-                known = ["block", "station", "lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype", "l1", "l2", "pindicator", "p1", "p2", "B12001"]
                 res = []
                 for n in self.r.iterkeys():
                         res += [n]
-                self.assertEqual(len(res), len(known))
-                self.assertEqual(res, known)
+                self.assertEqual(len(res), len(self.knownkeys))
+                self.assertEqual(res, self.knownkeys)
         def testIteritems(self):
-                k = ["block", "station", "lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype", "l1", "l2", "pindicator", "p1", "p2", "B12001"]
-                v = [1, 123, 45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 2, 3, 4, 285.0]
-                known = zip(k, v)
+                known = zip(self.knownkeys, self.known)
                 res = []
                 for key, val in self.r.iteritems():
                         res += [(key, val.enq())]
@@ -191,10 +203,10 @@ class RecordTest(unittest.TestCase):
 		# Check basic set/get and variable iteration
 		rec = Record()
 
-		self.assertEqual(rec.contains("block"), False)
-		rec.set("block", 3)
-		self.assertEqual(rec.contains("block"), True)
-		self.assertEqual(rec.enqi("block"), 3)
+		self.assertEqual(rec.contains("ana_id"), False)
+		rec.set("ana_id", 3)
+		self.assertEqual(rec.contains("ana_id"), True)
+		self.assertEqual(rec.enqi("ana_id"), 3)
 
 		self.assertEqual(rec.contains("B04001"), False)
 		rec.set("B04001", 2001)
