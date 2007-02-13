@@ -15,7 +15,7 @@ def genfloat(a):
 
 def ma_to_r(arr, dimnames=None):
 	"""
-	Convert to an R object
+	Convert a Masked Array to an R object
 	"""
 
 	vlen = numpy.prod(arr.shape)
@@ -52,12 +52,18 @@ def ma_to_r(arr, dimnames=None):
 		return rpy.r.aperm(rpy.r.array(data=vec, dim=[i for i in reversed(arr.shape)]), perm=[i for i in reversed(range(1,len(arr.shape)+1))])
 
 def volnd_data_to_r(data):
+	"""
+	Convert a volnd data object to an R object
+	"""
 	dn = []
 	for i in data.dims:
 		dn.append(map(str, i))
 	return ma_to_r(data.vals, dimnames=dn)
 
 def volnd_save_to_r(vars, file):
+	"""
+	Convert the result of a volnd read into various R objects, and save them to the given file
+	"""
 	tosave = []
 	for k, d in vars.iteritems():
 		rpy.r.assign(k, vnddata_to_r(d))
