@@ -29,6 +29,6 @@ python-dballe.html: python-dballe.rst
 
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION)
 
-EXTRA_DIST = README dballe.i test.py doc-dballe
+EXTRA_DIST = README dballe.i test.py doc-dballe _dballe.so
 
 CLEANFILES = dballe.py dballe.pyc dballe_wrap_python.cc
