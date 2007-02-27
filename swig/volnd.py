@@ -66,8 +66,8 @@ from datetime import *
 #  - livello, scadenza
 #
 
-import MA
 import numpy
+import numpy.core.ma as ma
 
 
 class SkipDatum(Exception): pass
@@ -558,7 +558,7 @@ class Data:
                                         mask[pos] = False
 				else:
 					raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
-                        a = MA.array(a, mask=mask)
+                        a = ma.array(a, mask=mask)
 
                 # Replace the intermediate data with the results
                 self.vals = a

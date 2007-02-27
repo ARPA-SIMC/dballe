@@ -242,9 +242,9 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(len(data.dims), 2)
 		self.assertEquals(len(data.dims[0]), 6)
 		self.assertEquals(len(data.dims[1]), 2)
-		self.assertEquals(data.vals.size(), 12)
+		self.assertEquals(data.vals.size, 12)
 		self.assertEquals(data.vals.shape, (6, 2))
-		self.assertEquals(sum(data.vals.mask().flat), 1)
+		self.assertEquals(sum(data.vals.mask.flat), 1)
 		self.assertEquals(MA.average(data.vals), 86890)
 		self.assertEquals(data.dims[0][0], (1, 10., 15., None))
 		self.assertEquals(data.dims[0][1], (2, 10., 25., None))
@@ -270,9 +270,9 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(len(data.dims[0]), 6)
 		self.assertEquals(len(data.dims[1]), 1)
 		self.assertEquals(len(data.dims[2]), 2)
-		self.assertEquals(data.vals.size(), 12)
+		self.assertEquals(data.vals.size, 12)
 		self.assertEquals(data.vals.shape, (6, 1, 2))
-		self.assertEquals(sum(data.vals.mask().flat), 1)
+		self.assertEquals(sum(data.vals.mask.flat), 1)
 		self.assertEquals(MA.average(data.vals), 86890)
 		self.assertEquals(data.dims[0][0], (1, 10., 15., None))
 		self.assertEquals(data.dims[0][1], (2, 10., 25., None))
@@ -290,9 +290,9 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(len(data.dims[0]), 6)
 		self.assertEquals(len(data.dims[1]), 2)
 		self.assertEquals(len(data.dims[2]), 2)
-		self.assertEquals(data.vals.size(), 24)
+		self.assertEquals(data.vals.size, 24)
 		self.assertEquals(data.vals.shape, (6, 2, 2))
-		self.assertEquals(sum(data.vals.mask().flat), 3)
+		self.assertEquals(sum(data.vals.mask.flat), 3)
 		self.assertEquals(MA.average(data.vals), 4)
 		self.assertEquals(data.dims[0][0], (1, 10., 15., None))
 		self.assertEquals(data.dims[0][1], (2, 10., 25., None))
@@ -323,9 +323,9 @@ class TestRead(unittest.TestCase):
 
 		for a in ('B33007', 'B33040'):
 			self.assertEquals(data.dims, data.attrs[a].dims)
-			self.assertEquals(data.vals.size(), data.attrs[a].vals.size())
+			self.assertEquals(data.vals.size, data.attrs[a].vals.size)
 			self.assertEquals(data.vals.shape, data.attrs[a].vals.shape)
-			self.assertEquals(data.vals.mask().flat, data.attrs[a].vals.mask().flat)
+			self.assertEquals(data.vals.mask.flat, data.attrs[a].vals.mask.flat)
 		self.assertEquals(MA.average(data.attrs['B33007'].vals), 50.)
 		self.assertEquals(MA.average(data.attrs['B33040'].vals), 50.)
 
@@ -344,9 +344,9 @@ class TestRead(unittest.TestCase):
 
 		a = data.attrs['B33040']
 		self.assertEquals(data.dims, a.dims)
-		self.assertEquals(data.vals.size(), a.vals.size())
+		self.assertEquals(data.vals.size, a.vals.size)
 		self.assertEquals(data.vals.shape, a.vals.shape)
-		self.assertEquals(data.vals.mask().flat, a.vals.mask().flat)
+		self.assertEquals(data.vals.mask.flat, a.vals.mask.flat)
 		self.assertEquals(MA.average(a.vals), 50.)
 
 	def testEmptyExport(self):

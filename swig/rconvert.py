@@ -1,17 +1,19 @@
 # Failed experiment: the __dict__ of MaskedArray is a dictproxy instance that
 # is read-only
 import volnd
-import MA, numpy
+import numpy
+import numpy.core.ma as ma
+import Numeric as numeric
 import rpy
 
 #dballe.volnd.Data.__dict__['as_r'] = new.instancemethod(fun, None, dballe.volnd.Data)
 
-def genfloat(a):
-	for x in a.flat:
-		if MA.getmask(x) != 1:
-			yield float(x)
-		else:
-			yield rpy.r.NAN
+#def genfloat(a):
+#	for x in a.flat:
+#		if ma.getmask(x) != 1:
+#			yield float(x)
+#		else:
+#			yield rpy.r.NAN
 
 def ma_to_r(arr, dimnames=None):
 	"""
@@ -33,12 +35,19 @@ def ma_to_r(arr, dimnames=None):
 	# Trouble:
 	#  - a numpy array is converted as a list of lists
 	#  - I found no way to assign to an element in an R array
-	#  - cannot use a tuple to index a numpy/MA array
+	#  - cannot use a tuple to index a numpy/ma array
 
 	# Convert to floats
-	farray = MA.array(arr, typecode='d')
+	farray = ma.array(arr, dtype=float)
 	# Fill with NaNs
 	farray = farray.filled(rpy.r.NAN)
+
+	# Turn it into a Numeric array (bah, workaround the current python array mess)
+	farray = numeric.array(farray)
+
+	#old = numpy.seterr(invalid='ignore')
+	#print farray 
+	#numpy.seterr(**old)
 
 	# Convert to an R array
 	rpy.r.as_array.local_mode(rpy.NO_CONVERSION)
@@ -63,7 +72,7 @@ def ma_to_r(arr, dimnames=None):
 	##print "pre",; rpy.r.print_(vec)
 	##print "ma2r to float"
 	##for i, x in enumerate(farray.flat):
-	##	if MA.getmask(x) != 1:
+	##	if ma.getmask(x) != 1:
 	##		vec[i] = float(x)
 	##print "post",; rpy.r.print_(vec)
 	##return rpy.r.array(data=vec, dim=[i for i in arr.shape])
