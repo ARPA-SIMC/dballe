@@ -212,6 +212,7 @@ Section: python
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends} ${misc:Depends} ${python:Depends}
 Recommends: python-numpy
+Suggests: python-rpy
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
 Description: Database for punctual meteorological data (Python bindings)
