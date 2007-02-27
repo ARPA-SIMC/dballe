@@ -151,6 +151,8 @@ The DB-All.e Python bindings provide 2 levels of access to a DB-All.e database:
 a complete API similar to the Fortran and C++ API, and a high-level API called
 volnd that allows to automatically export matrixes of data out of the database.
 
+.. contents::
+
 The DB-All.e API
 ================
 

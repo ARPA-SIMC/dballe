@@ -158,7 +158,12 @@ class AnaIndexEntry(tuple):
 
 class AnaIndex(ListIndex):
         """
-        Index for stations, as they come out of the database
+        Index for stations, as they come out of the database.
+
+	The constructor syntax is: ``AnaIndex(shared=True, frozen=False, start=None)``.
+
+	The index saves all stations as AnaIndexEntry tuples, in the same order
+	as they come out of the database.
         """
 	def _indexKey(self, rec):
                 return rec.enqi("ana_id")
@@ -193,7 +198,12 @@ class NetworkIndexEntry(tuple):
 
 class NetworkIndex(ListIndex):
         """
-        Index for networks, as they come out of the database
+        Index for networks, as they come out of the database.
+
+	The constructor syntax is: ``NetworkIndex(shared=True, frozen=False, start=None)``.
+
+	The index saves all networks as NetworkIndexEntry tuples, in the same
+	order as they come out of the database.
         """
 	def _indexKey(self, rec):
                 return rec.enqi("rep_cod")
@@ -207,6 +217,11 @@ class NetworkIndex(ListIndex):
 class LevelIndex(ListIndex):
         """
         Index for levels, as they come out of the database
+
+	The constructor syntax is: ``LevelIndex(shared=True, frozen=False), start=None``.
+
+	The index saves all levels as dballe.Level tuples, in the same order
+	as they come out of the database.
         """
 	def _indexKey(self, rec):
                 return rec.enqlevel()
@@ -217,7 +232,12 @@ class LevelIndex(ListIndex):
 
 class TimeRangeIndex(ListIndex):
         """
-        Index for time ranges, as they come out of the database
+        Index for time ranges, as they come out of the database.
+
+	The constructor syntax is: ``TimeRangeIndex(shared=True, frozen=False, start=None)``.
+
+	The index saves all time ranges as dballe.TimeRange tuples, in the same
+	order as they come out of the database.
         """
 	def _indexKey(self, rec):
                 return rec.enqtimerange()
@@ -228,7 +248,12 @@ class TimeRangeIndex(ListIndex):
 
 class DateTimeIndex(ListIndex):
         """
-        Index for datetimes, as they come out of the database
+        Index for datetimes, as they come out of the database.
+
+	The constructor syntax is: ``DateTimeIndex(shared=True, frozen=False, start=None)``.
+
+	The index saves all datetime values as datetime.datetime objects, in
+	the same order as they come out of the database.
         """
 	def _indexKey(self, rec):
                 return rec.enqdate()
@@ -285,9 +310,23 @@ class IntervalIndex(Index):
         """
         Index by fixed time intervals: index points are at fixed time
         intervals, and data is acquired in one point only if it is within a
-        given tolerance from the interval.  The interval start at a pregiven
-        point in time, and continue for as long as there are fitting data
-        coming out of the database.
+        given tolerance from the interval.
+	
+	The constructor syntax is: ``IntervalIndex(start, step, tolerance=0, end=None, shared=True, frozen=False)``.
+
+	``start`` is a datetime.datetime object giving the starting time of the
+	time interval of this index.
+
+	``step`` is a datetime.timedelta object with the interval between
+	sampling points.
+
+	``tolerance`` is a datetime.timedelta object specifying the maximum
+	allowed interval between a datum datetime and the sampling step.  If
+	the interval is bigger than the tolerance, the data is discarded.
+
+	``end`` is an optional datetime.datetime object giving the ending time
+	of the time interval of the index.  If omitted, the index will end at
+	the latest accepted datum coming out of the database.
         """
         def __init__(self, start, step, tolerance = 0, end=None, *args, **kwargs):
                 """
