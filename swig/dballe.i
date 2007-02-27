@@ -44,6 +44,10 @@ class Level(tuple):
 	def l2(self):
 		"Return l2"
 		return self[2]
+        def __str__(self):
+                return describeLevel(*self)
+        def __repr__(self):
+                return "Level"+tuple.__repr__(self)
 
 class TimeRange(tuple):
 	"""
@@ -60,7 +64,10 @@ class TimeRange(tuple):
 	def p2(self):
 		"Return p2"
 		return self[2]
-
+        def __str__(self):
+                return describeTrange(*self)
+        def __repr__(self):
+                return "TimeRange"+tuple.__repr__(self)
 %}
 
 %extend dballe::Var {

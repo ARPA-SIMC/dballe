@@ -95,6 +95,33 @@ class Index(list):
                         self.append(self._indexData(rec))
                 return self._map[key]
 
+class AnaIndexEntry(tuple):
+	"""
+	AnaIndex entry, with various data about a single station
+	"""
+	def __new__(self, rec_or_ana_id, lat=None, lon=None, ident=None):
+		"""
+		Create an index entry.  The details can be given explitly, or
+		a dballe.Record can be passed and all data will be fetched from
+		it.
+		"""
+		if type(rec_or_ana_id) == int:
+			if lat == None:
+				raise TypeError, "got ana_id but latitude is None"
+			if lon == None:
+				raise TypeError, "got ana_id and latitude but longitude is None"
+			return tuple.__new__(self, (rec_or_ana_id, lat, lon, ident))
+		else:
+			rec = rec_or_ana_id
+			return tuple.__new__(self, (rec.enqi("ana_id"), rec.enqd("lat"), rec.enqd("lon"), rec.enqd("ident")))
+	def __str__(self):
+		if self[3] == None:
+			return "Station at lat %.5f lon %.5f" % self[1:3]
+		else:
+			return "%s at lat %.5f lon %.5f" % (self[3], self[1], self[2])
+	def __repr__(self):
+		return "AnaIndexEntry" + tuple.__repr__(self)
+
 class AnaIndex(Index):
         """
         Index for stations, as they come out of the database
@@ -102,11 +129,33 @@ class AnaIndex(Index):
 	def _indexKey(self, rec):
                 return rec.enqi("ana_id")
 	def _indexData(self, rec):
-                return (rec.enqi("ana_id"), rec.enqd("lat"), rec.enqd("lon"), rec.enqd("ident"))
+		return AnaIndexEntry(rec)
 	def _splitInit(self, el):
 		return el[0], el
         def shortName(self):
                 return "AnaIndex["+str(len(self))+"]"
+
+class NetworkIndexEntry(tuple):
+	"""
+	AnaIndex entry, with various data about a single station
+	"""
+	def __new__(self, rec_or_rep_cod, rep_memo=None):
+		"""
+		Create an index entry.  The details can be given explitly, or
+		a dballe.Record can be passed and all data will be fetched from
+		it.
+		"""
+		if type(rec_or_rep_cod) == int:
+			if rep_memo == None:
+				raise TypeError, "got rep_cod but rep_memo is None"
+			return tuple.__new__(self, (rec_or_rep_cod, rep_memo))
+		else:
+			rec = rec_or_rep_cod
+			return tuple.__new__(self, (rec.enqi("rep_cod"), rec.enqc("rep_memo")))
+	def __str__(self):
+		return self[1]
+	def __repr__(self):
+		return "NetworkIndexEntry" + tuple.__repr__(self)
 
 class NetworkIndex(Index):
         """
@@ -115,7 +164,7 @@ class NetworkIndex(Index):
 	def _indexKey(self, rec):
                 return rec.enqi("rep_cod")
 	def _indexData(self, rec):
-                return (rec.enqi("rep_cod"), rec.enqc("rep_memo"))
+                return NetworkIndexEntry(rec)
 	def _splitInit(self, el):
 		return el[0], el
         def shortName(self):

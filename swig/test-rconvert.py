@@ -31,5 +31,5 @@ vars = dballe.volnd.read(db.query(query), (dballe.volnd.AnaIndex(), dballe.volnd
 #rpy.r.assign('pippo', rconvert.vnddata_to_r(vars['B10004']))
 #rpy.r.save('pippo', file='/tmp/pippo')
 
-rconvert.vnd_save_to_r(vars, "/tmp/pippo")
+rconvert.volnd_save_to_r(vars, "/tmp/pippo")
 
