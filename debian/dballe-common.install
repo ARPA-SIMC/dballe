@@ -1,1 +1,3 @@
-debian/tmp/usr/share/dballe
+debian/tmp/usr/share/dballe/[BD]*
+debian/tmp/usr/share/dballe/dballe.txt
+debian/tmp/usr/share/dballe/repinfo.csv

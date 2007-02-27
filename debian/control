@@ -272,3 +272,14 @@ Description: Database for punctual meteorological data (Command line tools)
   * Report information is preserved. It can work based on physical
     parameters or on report types.
 
+Package: provami
+Section: misc
+Architecture: any
+Depends: python-dballe, ${shlibs:Depends} ${misc:Depends} ${python:Depends}
+XB-Python-Version: ${python:Versions}
+Provides: ${python:Provides}
+Description: Graphical interface to DB-All.e databases
+ provami is a GUI application to visualise and navigate DB-All.e databases.
+ .
+ It allows to perform simple editing tasks, and to graphically select and
+ export data subsets.

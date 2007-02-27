@@ -1,1 +1,2 @@
-debian/tmp/usr/lib/python*
+debian/tmp/usr/lib/python*/site-packages/_dballe*
+debian/tmp/usr/lib/python*/site-packages/dballe
