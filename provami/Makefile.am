@@ -53,6 +53,8 @@ provami/Paths.py: provami/Paths.py.in
 
 dist_bin_SCRIPTS = provami.py dballecsv
 
+man_MANS = provami.1
+
 install-exec-hook:
 	mv $(DESTDIR)$(bindir)/provami.py $(DESTDIR)$(bindir)/provami
 
