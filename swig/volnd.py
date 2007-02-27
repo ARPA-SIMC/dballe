@@ -131,7 +131,13 @@ class ListIndex(Index, list):
 
 class AnaIndexEntry(tuple):
 	"""
-	AnaIndex entry, with various data about a single station
+	AnaIndex entry, with various data about a single station.
+
+	It is a tuple of 4 values:
+	 * station id
+	 * latitude
+	 * longitude
+	 * mobile station identifier, or None
 	"""
 	def __new__(self, rec_or_ana_id, lat=None, lon=None, ident=None):
 		"""
@@ -176,7 +182,11 @@ class AnaIndex(ListIndex):
 
 class NetworkIndexEntry(tuple):
 	"""
-	AnaIndex entry, with various data about a single station
+	NetworkIndex entry, with various data about a single station.
+
+	It is a tuple of 2 values:
+	 * network code
+	 * network name
 	"""
 	def __new__(self, rec_or_rep_cod, rep_memo=None):
 		"""
