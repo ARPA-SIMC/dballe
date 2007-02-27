@@ -231,11 +231,12 @@ class MapChoice(wx.Frame, ModelListener, MapCanvasListener):
 		try :
 			if self.fieldUpdated == "area":
 				# Select the area from the area fields
-				lat1 = float(self.latminSpin.GetValue())
-				lat2 = float(self.latmaxSpin.GetValue())
-				lon1 = float(self.lonminSpin.GetValue())
-				lon2 = float(self.lonmaxSpin.GetValue())
-				self.model.setAreaFilter(min(lat1, lat2), max(lat1, lat2), min(lon1, lon2), max(lon1, lon2))
+				self.model.setAreaFilter( \
+					latmin = float(self.latminSpin.GetValue()), \
+					latmax = float(self.latmaxSpin.GetValue()), \
+					lonmin = float(self.lonminSpin.GetValue()), \
+					lonmax = float(self.lonmaxSpin.GetValue())  \
+					);
 			else:
 				# Select the station by ID
 				self.model.setStationFilter(int(self.idField.GetValue()))
