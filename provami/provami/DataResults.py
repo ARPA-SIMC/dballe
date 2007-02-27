@@ -155,11 +155,9 @@ class DataPanel(wx.Panel, ModelListener):
 					info = "Mobile station " + ident
 				info = info + ", lat %f, lon %f" % (record.enqd("lat"), record.enqd("lon"))
 			elif col == 3:
-				lev = Level(record)
-				info = lev.format()
+				info = str(record.enqlevel())
 			elif col == 4:
-				tr = TimeRange(record)
-				info = tr.format()
+				info = str(record.enqtimerange())
 			else:
 				info = record.enqvar(record.enqc("var")).info()
 				info = "%s (%s)" % (info.desc(), info.unit())
