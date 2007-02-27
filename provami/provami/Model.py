@@ -1,11 +1,10 @@
-import dballe, dballe.volnd
+import dballe, dballe.volnd, dballe.dbacsv
 import time
 import datetime
 import gc
 import os
 import sys
 import traceback
-import provami.CSV
 from provami.Paths import DATADIR
 
 def filePath(fileName):
@@ -384,8 +383,7 @@ class Model:
 		filter = self.activeFilter.copy()
 		filter.unset("limit")
 		if encoding == "CSV":
-			exporter = provami.CSV.Exporter(self.db)
-			exporter.output(filter, open(file, "w"))
+			exporter = dballe.dbacsv.export(self.db, filter, open(file, "w"))
 		elif encoding == "R":
 			import dballe.rconvert, rpy
 			idx = (dballe.volnd.AnaIndex(), \

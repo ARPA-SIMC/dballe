@@ -2,6 +2,7 @@
 
 import sys
 import os
+from optparse import OptionParser
 
 VERSION="0.1"
 
@@ -28,26 +29,17 @@ if not options.all and len(args) == 0:
     parser.print_help()
     sys.exit(0)
 
-import Dballe
-from optparse import OptionParser
-from wxDballe.CSV import Exporter
+import dballe, dballe.dbacsv
 
 # Parse the query
-query = Dballe.Record()
+query = dballe.Record()
 for q in args:
     query.setFromString(q)
 
 query.dumpToStderr()
 
-db = Dballe.DB(options.dsn, options.user, options.password)
+db = dballe.DB(options.dsn, options.user, options.password)
 
-exporter = Exporter(db)
-exporter.output(query, sys.stdout)
-
-#if cmd == "stations":
-#    db = DB(options.dsn, options.user, options.password)
-#    db.stations()
-#else:
-#    parser.error("I do not know how to handle the function " + cmd)
+exporter = dballe.dbacsv.export(db, query, sys.stdout)
 
 # vim:set ts=4 sw=4 expandtab:
