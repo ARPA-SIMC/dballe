@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
-import rpy_options
-rpy_options.set_options(VERBOSE=False)
+try:
+	import rpy_options
+	rpy_options.set_options(VERBOSE=False)
+except ImportError:
+	pass
 import dballe, dballe.volnd, dballe.rconvert
 import sys, re
 import inspect
