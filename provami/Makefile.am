@@ -50,7 +50,7 @@ noinst_DATA = provami/Paths.py
 provami/Paths.py: provami/Paths.py.in
 	sed -e 's|@DATADIR@|$(dballedatadir)|g' $< > $@
 
-dist_bin_SCRIPTS = provami.py dballecsv
+dist_bin_SCRIPTS = provami.py
 
 man_MANS = provami.1
 
@@ -59,6 +59,6 @@ install-exec-hook:
 
 EXTRA_DIST = dballe populate.py provami/Paths.py.in \
 	     $(dballedata_DATA) $(provamiModules) \
-	     provami.1
+	     provami.1 dballecsv
 
 CLEANFILES = provami/*.pyc provami/Paths.py
