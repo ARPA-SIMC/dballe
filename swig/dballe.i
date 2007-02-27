@@ -154,11 +154,35 @@ class TimeRange(tuple):
 // Rewrite Record methods to make use of the None value, and add convenience
 // methods and iteration
 %extend dballe::Record {
+        %ignore contains(dba_varcode) const;
+        %ignore contains(dba_keyword) const;
+        %ignore enq(dba_varcode) const;
+        %ignore enq(dba_keyword) const;
         %rename enq enqvar;
-        %rename enqi enqi_orig;
-        %rename enqd enqd_orig;
-        %rename enqs enqs_orig;
-        %rename enqc enqc_orig;
+        %ignore enqi;
+        %ignore enqd;
+        %ignore enqs;
+        %ignore enqc;
+        %ignore enqi_ifset(dba_varcode, bool&) const;
+        %ignore enqi_ifset(dba_keyword, bool&) const;
+        %ignore enqd_ifset(dba_varcode, bool&) const;
+        %ignore enqd_ifset(dba_keyword, bool&) const;
+        %ignore enqc_ifset(dba_varcode) const;
+        %ignore enqc_ifset(dba_keyword) const;
+        %ignore enqs_ifset(dba_varcode, bool&) const;
+        %ignore enqs_ifset(dba_keyword, bool&) const;
+        %ignore keySet;
+        %ignore keySeti;
+        %ignore keySetd;
+        %ignore keySetc;
+        %ignore keySets;
+        %ignore varSet;
+        %ignore varSeti;
+        %ignore varSetd;
+        %ignore varSetc;
+        %ignore varSets;
+        %ignore keyUnset;
+        %ignore varUnset;
         %rename seti seti_orig;
         %rename setd setd_orig;
         %rename sets sets_orig;
@@ -258,22 +282,21 @@ class TimeRange(tuple):
                        else:
                                 return self.enqvar(name).enq()
                 def enqi(self, name):
-                       if self.contains(name):
-                                return self.enqi_orig(name)
-                       else:
-                                return None
+                       val, found = self.enqi_ifset(name)
+                       if found: return val
+                       return None
                 def enqd(self, name):
-                       if self.contains(name):
-                                return self.enqd_orig(name)
-                       else:
-                                return None
+                       val, found = self.enqd_ifset(name)
+                       if found: return val
+                       return None
                 def enqs(self, name):
-                       if self.contains(name):
-                                return self.enqs_orig(name)
-                       else:
-                                return None
+                       val, found = self.enqs_ifset(name)
+                       if found: return val
+                       return None
                 def enqc(self, name):
-                       return self.enqs(name)
+                       val, found = self.enqs_ifset(name)
+                       if found: return val
+                       return None
 
                 def set(self, *args):
                        if len(args) == 2:
@@ -439,7 +462,7 @@ class TimeRange(tuple):
 	snprintf(buf, 10, "B%02d%03d", DBA_VAR_X(*$1), DBA_VAR_Y(*$1));
 	$result = SWIG_Python_AppendOutput($result, SWIG_FromCharPtr(buf));
 }
-
+%apply bool& OUTPUT { bool& found };
 %apply int *OUTPUT { int *count };
 %apply int *OUTPUT { int *contextid };
 %apply int *OUTPUT { int *anaid };
