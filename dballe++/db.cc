@@ -1,3 +1,5 @@
+#include <config.h>
+
 #include <dballe++/db.h>
 
 #include <dballe/db/cursor.h>
@@ -64,7 +66,15 @@ int Cursor::attributes(Record& res)
 int Cursor::attributes(const std::vector<dba_varcode>& wanted, Record& res)
 {
     int count;
+#ifdef HAVE_VECTOR_DATA
     checked(dba_db_qc_query(m_cur->db, m_cur->out_context_id, m_cur->out_idvar, wanted.data(), wanted.size(), res.rec(), &count));
+#else
+	// Work-around for when ::data() is not available on vector
+	dba_varcode buf[wanted.size()];
+	for (size_t i = 0; i < wanted.size(); ++i)
+		buf[i] = wanted[i];
+    checked(dba_db_qc_query(m_cur->db, m_cur->out_context_id, m_cur->out_idvar, buf, wanted.size(), res.rec(), &count));
+#endif
     return count;
 }
 
@@ -186,6 +196,21 @@ Cursor DB::queryDateTimes(Record& query)
 				DBA_DB_MODIFIER_DISTINCT));
 
 	return Cursor(cur);
+}
+
+int DB::attrQuery(int context, dba_varcode var, const std::vector<dba_varcode>& wanted, Record& res) const
+{
+	int count;
+#ifdef HAVE_VECTOR_DATA
+	checked(dba_db_qc_query(m_db, context, var, wanted.data(), wanted.size(), res.rec(), &count));
+#else
+	// Work-around for when ::data() is not available on vector
+	dba_varcode buf[wanted.size()];
+	for (size_t i = 0; i < wanted.size(); ++i)
+		buf[i] = wanted[i];
+	checked(dba_db_qc_query(m_db, context, var, buf, wanted.size(), res.rec(), &count));
+#endif
+	return count;
 }
 
 static dba_err msg_writer(dba_msgs msgs, void* data)

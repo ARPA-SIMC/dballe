@@ -147,7 +147,7 @@ public:
 	Cursor queryDateTimes(Record& query);
 
 	/// Query the attributes for the given variable in the given context
-	int attrQuery(int context, dba_varcode var, Record& res)
+	int attrQuery(int context, dba_varcode var, Record& res) const
 	{
 		int count;
 		checked(dba_db_qc_query(m_db, context, var, NULL, 0, res.rec(), &count));
@@ -155,12 +155,7 @@ public:
 	}
 
 	/// Query the attributes for the given variable in the given context
-	int attrQuery(int context, dba_varcode var, const std::vector<dba_varcode>& wanted, Record& res)
-	{
-		int count;
-		checked(dba_db_qc_query(m_db, context, var, wanted.data(), wanted.size(), res.rec(), &count));
-		return count;
-	}
+	int attrQuery(int context, dba_varcode var, const std::vector<dba_varcode>& wanted, Record& res) const;
 
 	/**
 	 * Insert values from a record into the database
