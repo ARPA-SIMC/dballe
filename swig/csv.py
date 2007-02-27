@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+"""
+Export data from DB-All.e into CSV format
+"""
+
 import dballe
 import csv
 
