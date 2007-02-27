@@ -1210,6 +1210,40 @@ void to::test<7>()
 	}
 }
 
+/* Query using lonmin > latmax */
+template<> template<>
+void to::test<8>()
+{
+	/* Start with an empty database */
+	CHECKED(dba_db_reset(db, 0));
+
+	/* Fill in data for the first record */
+	dba_record_clear(insert);
+	sampleAna.copyTestDataToRecord(insert);
+	sampleBase.copyTestDataToRecord(insert);
+	sample0.copyTestDataToRecord(insert);
+	sample00.copyTestDataToRecord(insert);
+	sample01.copyTestDataToRecord(insert);
+
+	/* Insert the record */
+	int anaid, contextid;
+	CHECKED(dba_db_insert(db, insert, 0, 1, &anaid, &contextid));
+
+	gen_ensure_equals(anaid, 1);
+	gen_ensure_equals(contextid, 1);
+
+	dba_record_clear(query);
+	CHECKED(dba_record_key_setd(query, DBA_KEY_LATMIN, 10.0));
+	CHECKED(dba_record_key_setd(query, DBA_KEY_LATMAX, 15.0));
+	CHECKED(dba_record_key_setd(query, DBA_KEY_LONMIN, 70.0));
+	CHECKED(dba_record_key_setd(query, DBA_KEY_LONMAX, -160.0));
+
+	int count, has_data;
+	dba_db_cursor cursor;
+	CHECKED(dba_db_query(db, query, &cursor, &count));
+	gen_ensure_equals(count, 2);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
