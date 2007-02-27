@@ -78,7 +78,7 @@ int Cursor::attributes(const std::vector<dba_varcode>& wanted, Record& res)
     return count;
 }
 
-Cursor DB::queryAnaSummary(Record& query)
+Cursor DB::queryAnaSummary(const Record& query)
 {
 	dba_db_cursor cur;
 
@@ -93,7 +93,7 @@ Cursor DB::queryAnaSummary(Record& query)
 	return Cursor(cur);
 }
 
-Cursor DB::queryLevels(Record& query)
+Cursor DB::queryLevels(const Record& query)
 {
 	dba_db_cursor cur;
 
@@ -108,7 +108,7 @@ Cursor DB::queryLevels(Record& query)
 	return Cursor(cur);
 }
 
-Cursor DB::queryTimeRanges(Record& query)
+Cursor DB::queryTimeRanges(const Record& query)
 {
 	dba_db_cursor cur;
 
@@ -123,7 +123,7 @@ Cursor DB::queryTimeRanges(Record& query)
 	return Cursor(cur);
 }
 
-Cursor DB::queryLevelsAndTimeRanges(Record& query)
+Cursor DB::queryLevelsAndTimeRanges(const Record& query)
 {
 	dba_db_cursor cur;
 
@@ -138,7 +138,7 @@ Cursor DB::queryLevelsAndTimeRanges(Record& query)
 	return Cursor(cur);
 }
 
-Cursor DB::queryVariableTypes(Record& query)
+Cursor DB::queryVariableTypes(const Record& query)
 {
 	dba_db_cursor cur;
 
@@ -153,7 +153,7 @@ Cursor DB::queryVariableTypes(Record& query)
 	return Cursor(cur);
 }
 
-Cursor DB::queryIdents(Record& query)
+Cursor DB::queryIdents(const Record& query)
 {
 	dba_db_cursor cur;
 
@@ -168,7 +168,7 @@ Cursor DB::queryIdents(Record& query)
 	return Cursor(cur);
 }
 
-Cursor DB::queryReports(Record& query)
+Cursor DB::queryReports(const Record& query)
 {
 	dba_db_cursor cur;
 
@@ -183,7 +183,7 @@ Cursor DB::queryReports(Record& query)
 	return Cursor(cur);
 }
 
-Cursor DB::queryDateTimes(Record& query)
+Cursor DB::queryDateTimes(const Record& query)
 {
 	dba_db_cursor cur;
 

@@ -95,7 +95,7 @@ public:
 	 * Query pseudoana information, retrieving the extra pseudoana info for
 	 * every station
 	 */
-	Cursor queryAna(Record& query)
+	Cursor queryAna(const Record& query)
 	{
 		int count;
 		dba_db_cursor cur;
@@ -106,7 +106,7 @@ public:
 	/**
 	 * Query data values
 	 */
-	Cursor query(Record& query)
+	Cursor query(const Record& query)
 	{
 		int count;
 		dba_db_cursor cur;
@@ -118,33 +118,33 @@ public:
 	 * Query pseudoana information, without retrieving the extra pseudoana
 	 * info.
 	 */
-	Cursor queryAnaSummary(Record& query);
+	Cursor queryAnaSummary(const Record& query);
 
 	/// Query the list of levels present in the database
-	Cursor queryLevels(Record& query);
+	Cursor queryLevels(const Record& query);
 
 	/// Query the list of time ranges for which there is data in the
 	/// database
-	Cursor queryTimeRanges(Record& query);
+	Cursor queryTimeRanges(const Record& query);
 
 	/// Query the list of levels and time ranges for which there is data in
 	/// the database
-	Cursor queryLevelsAndTimeRanges(Record& query);
+	Cursor queryLevelsAndTimeRanges(const Record& query);
 
 	/// Query the list of variable types present in the database
-	Cursor queryVariableTypes(Record& query);
+	Cursor queryVariableTypes(const Record& query);
 
 	/// Query the list of movable station identifiers present in the
 	/// database
-	Cursor queryIdents(Record& query);
+	Cursor queryIdents(const Record& query);
 
 	/// Query the report information for which there is data in the
 	/// database
-	Cursor queryReports(Record& query);
+	Cursor queryReports(const Record& query);
 
 	/// Query the list of date and times for which there is data in the
 	/// database
-	Cursor queryDateTimes(Record& query);
+	Cursor queryDateTimes(const Record& query);
 
 	/// Query the attributes for the given variable in the given context
 	int attrQuery(int context, dba_varcode var, Record& res) const
@@ -197,7 +197,7 @@ public:
 	}
 
 	/// Remove from the database all the values that match the given query
-	void remove(Record& query)
+	void remove(const Record& query)
 	{
 		checked(dba_db_remove(m_db, query.rec()));
 	}
