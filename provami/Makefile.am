@@ -34,8 +34,12 @@ provamiModules = \
 	provami/MapChoiceSingleQuery.py \
 	provami/Model.py \
 	provami/ModelSingleQuery.py \
+	provami/Navigator.py \
+	provami/ProgressDisplay.py \
+	provami/ProvamiArtProvider.py \
 	provami/QueryButton.py \
 	provami/QueryChoice.py \
+	provami/QueryPanel.py \
 	provami/QueryTextCtrl.py \
 	provami/ReportChoice.py \
 	provami/ResultGrid.py \
