@@ -607,6 +607,7 @@ void to::test<3>()
 		dba_db_cursor cursor;
 		int val;
 		int qc_count;
+		int found;
 
 		dba_record_clear(query);
 		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
@@ -631,11 +632,14 @@ void to::test<3>()
 		dba_record_clear(qc);
 		CHECKED(dba_db_qc_query(db, context, DBA_VAR(0, 1, 11), NULL, 0, qc, &qc_count));
 
-		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val));
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val, &found));
+		gen_ensure_equals(found, 1);
 		gen_ensure_equals(val, 7);
-		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val));
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val, &found));
+		gen_ensure_equals(found, 1);
 		gen_ensure_equals(val, 5);
-		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val));
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val, &found));
+		gen_ensure_equals(found, 1);
 		gen_ensure_equals(val, 33);
 
 		/* Delete a couple of items */
@@ -657,10 +661,13 @@ void to::test<3>()
 			CHECKED(dba_db_qc_query(db, context, DBA_VAR(0, 1, 11), toget, 3, qc, &qc_count));
 		}
 
-		gen_ensure(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val) == DBA_ERROR);
-		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val));
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val, &found));
+		gen_ensure_equals(found, 0);
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val, &found));
+		gen_ensure_equals(found, 1);
 		gen_ensure(val == 5);
-		gen_ensure(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val) == DBA_ERROR);
+		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 5), &val, &found));
+		gen_ensure_equals(found, 0);
 	}
 
 	/*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/

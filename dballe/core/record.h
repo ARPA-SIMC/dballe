@@ -324,6 +324,20 @@ const char* dba_record_key_peek_value(dba_record rec, dba_keyword parameter);
 const char* dba_record_var_peek_value(dba_record rec, dba_varcode code);
 
 /**
+ * Check if a keyword or value is set
+ *
+ * @param rec
+ *   The record to get the value from.
+ * @param name
+ *   The name of the item to check.
+ * @retval found
+ *   true if the record contains a value for the parameter, else false.
+ * @return
+ *   The error indicator for the function (See @ref error.h).
+ */
+dba_err dba_record_contains(dba_record rec, const char* name, int* found);
+
+/**
  * Check if a keyword is set
  *
  * @param rec
@@ -350,6 +364,21 @@ dba_err dba_record_contains_key(dba_record rec, dba_keyword parameter, int* foun
  *   The error indicator for the function (See @ref error.h).
  */
 dba_err dba_record_contains_var(dba_record rec, dba_varcode code, int* found);
+
+/**
+ * Get the value of an item, as dba_var.
+ *
+ * @param rec
+ *   The record to get the value from.
+ * @param name
+ *   The name of the item to get the value for.
+ * @retval var
+ *   A copy of the internal dba_var with the parameter.  You need to deallocate
+ *   it with dba_var_delete().
+ * @return
+ *   The error indicator for the function (See @ref error.h).
+ */
+dba_err dba_record_enq(dba_record rec, const char* name, dba_var* var);
 
 /**
  * Get the value of a parameter, as dba_var.
@@ -382,6 +411,24 @@ dba_err dba_record_key_enq(dba_record rec, dba_keyword parameter, dba_var* var);
 dba_err dba_record_var_enq(dba_record rec, dba_varcode code, dba_var* var);
 
 /**
+ * Get the value of an item, as an unscaled integer.
+ *
+ * The function will fail if the value is a string instead of a number.
+ *
+ * @param rec
+ *   The record to get the value from.
+ * @param name
+ *   The name of the item to get the value for.
+ * @retval value
+ *   The variable where the value, if found, should be stored.
+ * @retval found
+ *   1 if the value is set, 0 otherwise.
+ * @return
+ *   The error indicator for the function.
+ */
+dba_err dba_record_enqi(dba_record rec, const char* name, int* value, int* found);
+
+/**
  * Get the value of a parameter, as an unscaled integer.
  *
  * The function will fail if the value is a string instead of a number.
@@ -391,11 +438,13 @@ dba_err dba_record_var_enq(dba_record rec, dba_varcode code, dba_var* var);
  * @param parameter
  *   The parameter to get the value for.
  * @retval value
- *   The variable where the value should be stored.
+ *   The variable where the value, if found, should be stored.
+ * @retval found
+ *   1 if the value is set, 0 otherwise.
  * @return
  *   The error indicator for the function.
  */
-dba_err dba_record_key_enqi(dba_record rec, dba_keyword parameter, int* value);
+dba_err dba_record_key_enqi(dba_record rec, dba_keyword parameter, int* value, int* found);
 
 /**
  * Get the value of a parameter, as an unscaled integer.
@@ -407,11 +456,31 @@ dba_err dba_record_key_enqi(dba_record rec, dba_keyword parameter, int* value);
  * @param code
  *   The variable to get the value for.  See @ref vartable.h
  * @retval value
- *   The variable where the value should be stored.
+ *   The variable where the value, if found, should be stored.
+ * @retval found
+ *   1 if the value is set, 0 otherwise.
  * @return
  *   The error indicator for the function.
  */
-dba_err dba_record_var_enqi(dba_record rec, dba_varcode code, int* value);
+dba_err dba_record_var_enqi(dba_record rec, dba_varcode code, int* value, int* found);
+
+/**
+ * Get the value of an item, correctly scaled, in double precision.
+ *
+ * The function will fail if the value is a string instead of a number.
+ *
+ * @param rec
+ *   The record to get the value from.
+ * @param name
+ *   The name of the item to get the value for.
+ * @retval value
+ *   The variable where the value, if found, should be stored.
+ * @retval found
+ *   1 if the value is set, 0 otherwise.
+ * @return
+ *   The error indicator for the function.
+ */
+dba_err dba_record_enqd(dba_record rec, const char* name, double* value, int* found);
 
 /**
  * Get the value of a parameter, correctly scaled, in double precision.
@@ -423,11 +492,13 @@ dba_err dba_record_var_enqi(dba_record rec, dba_varcode code, int* value);
  * @param parameter
  *   The parameter to get the value for.
  * @retval value
- *   The variable where the value should be stored.
+ *   The variable where the value, if found, should be stored.
+ * @retval found
+ *   1 if the value is set, 0 otherwise.
  * @return
  *   The error indicator for the function.
  */
-dba_err dba_record_key_enqd(dba_record rec, dba_keyword parameter, double* value);
+dba_err dba_record_key_enqd(dba_record rec, dba_keyword parameter, double* value, int* found);
 
 /**
  * Get the value of a parameter, correctly scaled, in double precision.
@@ -439,11 +510,31 @@ dba_err dba_record_key_enqd(dba_record rec, dba_keyword parameter, double* value
  * @param code
  *   The variable to get the value for.  See @ref vartable.h
  * @retval value
- *   The variable where the value should be stored.
+ *   The variable where the value, if found, should be stored.
+ * @retval found
+ *   1 if the value is set, 0 otherwise.
  * @return
  *   The error indicator for the function.
  */
-dba_err dba_record_var_enqd(dba_record rec, dba_varcode code, double* value);
+dba_err dba_record_var_enqd(dba_record rec, dba_varcode code, double* value, int* found);
+
+/**
+ * Get the value of an item.
+ *
+ * The function will return a string representation of the uncaled number if
+ * the value is a number instead of a string.
+ *
+ * @param rec
+ *   The record to get the value from.
+ * @param name
+ *   The name of the item to get the value for.
+ * @retval value
+ *   The variable where the value, if found, should be stored.  It will be set
+ *   to NULL if the value is unset.
+ * @return
+ *   The error indicator for the function.
+ */
+dba_err dba_record_enqc(dba_record rec, const char* name, const char** value);
 
 /**
  * Get the value of a parameter.
@@ -456,7 +547,8 @@ dba_err dba_record_var_enqd(dba_record rec, dba_varcode code, double* value);
  * @param parameter
  *   The parameter to get the value for.
  * @retval value
- *   The variable where the value should be stored.
+ *   The variable where the value, if found, should be stored.  It will be set
+ *   to NULL if the value is unset.
  * @return
  *   The error indicator for the function.
  */
@@ -473,7 +565,8 @@ dba_err dba_record_key_enqc(dba_record rec, dba_keyword parameter, const char** 
  * @param code
  *   The variable to get the value for.  See @ref vartable.h
  * @retval value
- *   The variable where the value should be stored.
+ *   The variable where the value, if found, should be stored.  It will be set
+ *   to NULL if the value is unset.
  * @return
  *   The error indicator for the function.
  */

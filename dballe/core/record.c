@@ -332,7 +332,7 @@ dba_err dba_record_difference(dba_record dest, dba_record source1, dba_record so
 		for (c = source2->vars; c != NULL; c = c->next)
 		{
 			dba_varcode varcode = dba_var_code(c->var);
-			dba_item s1item;
+			dba_item s1item = NULL;
 
 			if (dba_record_get_item(source1, varcode, &s1item) == DBA_ERROR ||
 					strcmp(dba_var_value(s1item->var), dba_var_value(c->var)) != 0)
@@ -401,36 +401,45 @@ dba_err dba_record_set_from_string(dba_record rec, const char* str)
 
 static dba_err get_key(dba_record rec, dba_keyword parameter, dba_var* var)
 {
-	assert_is_dba_record(rec);
-
 	if (parameter < 0 || parameter >= DBA_KEY_COUNT)
 		return dba_error_notfound("keyword #%d is not in the range of valid keywords", parameter);
 
 	/* Lookup the variable in the keyword table */
 	if (rec->keydata[parameter] == NULL)
-	{
-		dba_varinfo info;
-		DBA_RUN_OR_RETURN(dba_record_keyword_info(parameter, &info));
-		return dba_error_notfound("looking for parameter %s", info->desc);
-	}
-
-	*var = rec->keydata[parameter];
+		*var = NULL;
+	else
+		*var = rec->keydata[parameter];
 
 	return dba_error_ok();
 }
 
 static dba_err get_var(dba_record rec, dba_varcode code, dba_var* var)
 {
-	dba_item i;
-
-	assert_is_dba_record(rec);
-
-	/* Lookup the variable in the hash table */
-	DBA_RUN_OR_RETURN(dba_record_get_item(rec, code, &i));
-
-	*var = i->var, var;
-
+	dba_item cur;
+	for (cur = rec->vars; cur != NULL; cur = cur->next)
+		if (dba_var_code(cur->var) == code)
+		{
+			*var = cur->var;
+			return dba_error_ok();
+		}
+	*var = NULL;
 	return dba_error_ok();
+}
+
+static dba_err get(dba_record rec, const char* name, dba_var* var)
+{
+	dba_varcode code = 0;
+    if (name[0] != 'B' && (code = dba_varcode_alias_resolve(name)) == 0)
+	{
+		dba_keyword param = dba_record_keyword_byname(name);
+		if (param == DBA_KEY_ERROR)
+			return dba_error_notfound("looking for misspelled parameter \"%s\"", name);
+		return get_key(rec, param, var);
+	} else {
+		if (code == 0)
+			code = DBA_STRING_TO_VAR(name + 1);
+		return get_var(rec, code, var);
+	}
 }
 
 dba_var dba_record_key_peek(dba_record rec, dba_keyword parameter)
@@ -465,6 +474,22 @@ const char* dba_record_var_peek_value(dba_record rec, dba_varcode code)
 	return var != NULL ? dba_var_value(var) : NULL;
 }
 
+dba_err dba_record_contains(dba_record rec, const char* name, int *found)
+{
+	dba_varcode code = 0;
+    if (name[0] != 'B' && (code = dba_varcode_alias_resolve(name)) == 0)
+	{
+		dba_keyword param = dba_record_keyword_byname(name);
+		if (param == DBA_KEY_ERROR)
+			return dba_error_notfound("looking for misspelled parameter \"%s\"", name);
+		return dba_record_contains_key(rec, param, found);
+	} else {
+		if (code == 0)
+			code = DBA_STRING_TO_VAR(name + 1);
+		return dba_record_contains_var(rec, code, found);
+	}
+}
+
 dba_err dba_record_contains_key(dba_record rec, dba_keyword parameter, int *found)
 {
 	assert_is_dba_record(rec);
@@ -486,64 +511,193 @@ dba_err dba_record_contains_var(dba_record rec, dba_varcode code, int *found)
 	return dba_error_ok();
 }
 
+dba_err dba_record_enq(dba_record rec, const char* name, dba_var* var)
+{
+	dba_varcode code = 0;
+    if (name[0] != 'B' && (code = dba_varcode_alias_resolve(name)) == 0)
+	{
+		dba_var myvar;
+		dba_keyword param = dba_record_keyword_byname(name);
+		if (param == DBA_KEY_ERROR)
+			return dba_error_notfound("looking for misspelled parameter \"%s\"", name);
+		DBA_RUN_OR_RETURN(get_key(rec, param, &myvar));
+		if (myvar == NULL)
+			return dba_var_create(dba_record_keyword_byindex(param), var);
+		else
+			return dba_var_copy(myvar, var);
+	} else {
+		dba_var myvar;
+		if (code == 0)
+			code = DBA_STRING_TO_VAR(name + 1);
+		DBA_RUN_OR_RETURN(get_var(rec, code, &myvar));
+		if (myvar == NULL)
+		{
+			dba_varinfo info;
+			DBA_RUN_OR_RETURN(dba_varinfo_query_local(code, &info));
+			return dba_var_create(info, var);
+		}
+		else
+			return dba_var_copy(myvar, var);
+	}
+}
+
 dba_err dba_record_key_enq(dba_record rec, dba_keyword parameter, dba_var* var)
 {
 	dba_var myvar;
 	DBA_RUN_OR_RETURN(get_key(rec, parameter, &myvar));
-
-	/* Return a reference to the variable */
-	return dba_var_copy(myvar, var);
+	if (myvar == NULL)
+		return dba_var_create(dba_record_keyword_byindex(parameter), var);
+	else
+		return dba_var_copy(myvar, var);
 }
 
 dba_err dba_record_var_enq(dba_record rec, dba_varcode code, dba_var* var)
 {
 	dba_var myvar;
 	DBA_RUN_OR_RETURN(get_var(rec, code, &myvar));
-
-	/* Return a reference to the variable */
-	return dba_var_copy(myvar, var);
+	if (myvar == NULL)
+	{
+		dba_varinfo info;
+		DBA_RUN_OR_RETURN(dba_varinfo_query_local(code, &info));
+		return dba_var_create(info, var);
+	}
+	else
+		return dba_var_copy(myvar, var);
 }
 
-dba_err dba_record_key_enqi(dba_record rec, dba_keyword parameter, int* val)
+dba_err dba_record_enqi(dba_record rec, const char* name, int* value, int* found)
+{
+	dba_var var;
+	DBA_RUN_OR_RETURN(get(rec, name, &var));
+	if (var == NULL)
+	{
+		*found = 0;
+		return dba_error_ok();
+	}
+	else
+	{
+		*found = 1;
+		return dba_var_enqi(var, value);
+	}
+}
+
+dba_err dba_record_key_enqi(dba_record rec, dba_keyword parameter, int* val, int* found)
 {
 	dba_var var;
 	DBA_RUN_OR_RETURN(get_key(rec, parameter, &var));
-	return dba_var_enqi(var, val);
+	if (var == NULL)
+	{
+		*found = 0;
+		return dba_error_ok();
+	}
+	else
+	{
+		*found = 1;
+		return dba_var_enqi(var, val);
+	}
 }
 
-dba_err dba_record_var_enqi(dba_record rec, dba_varcode code, int* val)
+dba_err dba_record_var_enqi(dba_record rec, dba_varcode code, int* val, int* found)
 {
 	dba_var var;
-	DBA_RUN_OR_RETURN(get_var(rec, code, &var));
-	return dba_var_enqi(var, val);
+	DBA_RUN_OR_RETURN(get_var(rec, code, &var)); // TAINTED
+	if (var == NULL)
+	{
+		*found = 0;
+		return dba_error_ok();
+	}
+	else
+	{
+		*found = 1;
+		return dba_var_enqi(var, val);
+	}
 }
 
-dba_err dba_record_key_enqd(dba_record rec, dba_keyword parameter, double* val)
+dba_err dba_record_enqd(dba_record rec, const char* name, double* val, int* found)
+{
+	dba_var var;
+	DBA_RUN_OR_RETURN(get(rec, name, &var));
+	if (var == NULL)
+	{
+		*found = 0;
+		return dba_error_ok();
+	}
+	else
+	{
+		*found = 1;
+		return dba_var_enqd(var, val);
+	}
+}
+
+dba_err dba_record_key_enqd(dba_record rec, dba_keyword parameter, double* val, int* found)
 {
 	dba_var var;
 	DBA_RUN_OR_RETURN(get_key(rec, parameter, &var));
-	return dba_var_enqd(var, val);
+	if (var == NULL)
+	{
+		*found = 0;
+		return dba_error_ok();
+	}
+	else
+	{
+		*found = 1;
+		return dba_var_enqd(var, val);
+	}
 }
 
-dba_err dba_record_var_enqd(dba_record rec, dba_varcode code, double* val)
+dba_err dba_record_var_enqd(dba_record rec, dba_varcode code, double* val, int* found)
 {
 	dba_var var;
 	DBA_RUN_OR_RETURN(get_var(rec, code, &var));
-	return dba_var_enqd(var, val);
+	if (var == NULL)
+	{
+		*found = 0;
+		return dba_error_ok();
+	}
+	else
+	{
+		*found = 1;
+		return dba_var_enqd(var, val);
+	}
+}
+
+dba_err dba_record_enqc(dba_record rec, const char* name, const char** val)
+{
+	dba_var var;
+	DBA_RUN_OR_RETURN(get(rec, name, &var));
+	if (var == NULL)
+	{
+		*val = NULL;
+		return dba_error_ok();
+	}
+	else
+		return dba_var_enqc(var, val);
 }
 
 dba_err dba_record_key_enqc(dba_record rec, dba_keyword parameter, const char** val)
 {
 	dba_var var;
 	DBA_RUN_OR_RETURN(get_key(rec, parameter, &var));
-	return dba_var_enqc(var, val);
+	if (var == NULL)
+	{
+		*val = NULL;
+		return dba_error_ok();
+	}
+	else
+		return dba_var_enqc(var, val);
 }
 
 dba_err dba_record_var_enqc(dba_record rec, dba_varcode code, const char** val)
 {
 	dba_var var;
 	DBA_RUN_OR_RETURN(get_var(rec, code, &var));
-	return dba_var_enqc(var, val);
+	if (var == NULL)
+	{
+		*val = NULL;
+		return dba_error_ok();
+	}
+	else
+		return dba_var_enqc(var, val);
 }
 
 dba_err dba_record_key_set(dba_record rec, dba_keyword parameter, dba_var var)

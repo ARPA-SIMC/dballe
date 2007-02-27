@@ -492,51 +492,11 @@ F77_SUBROUTINE(idba_ricominciamo)(INTEGER(handle))
 }
 */
 
-#if 0
-static int get_first_id(dba_record rec)
-{
-	dba_record_cursor cur = dba_record_iterate_first(rec);
-	if (cur == NULL)
-		return 0;
-	else
-		return dba_record_cursor_id(cur);
-}
-
-static dba_varcode get_first_varcode(dba_record rec)
-{
-	dba_record_cursor cur = dba_record_iterate_first(rec);
-	if (cur == NULL)
-		return 0;
-	else
-		return dba_var_code(dba_record_cursor_variable(cur));
-}
-#endif
-
 /**@name idba_enq*
  * @anchor idba_enq
  * Functions used to read the output values of the DBALLE action routines
  * @{
  */
-
-/* TODO: find a way to pass 'parameter' to avoid a string copy */
-
-static dba_err lookup_var(dba_record rec, const char* name, dba_var* var)
-{
-	dba_varcode code = 0;
-
-	if (name[0] != 'B' && (code = dba_varcode_alias_resolve(name)) == 0)
-	{
-		dba_keyword param = dba_record_keyword_byname(name);
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", name);
-		*var = dba_record_key_peek(rec, param);
-	} else {
-		if (code == 0)
-			code = DBA_STRING_TO_VAR(name + 1);
-		*var = dba_record_var_peek(rec, code);
-	}
-	return dba_error_ok();
-}
 
 /**
  * Read one integer value from the output record
@@ -564,18 +524,9 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 	GENPTR_INTEGER(value)
 	char parm[20];
 	char* p;
+	int found;
 	dba_record rec;
-	dba_var var;
 
-	/*
-	else if (parameter_length >= 7 &&
-	           memcmp(parameter, "data_id ", parameter_length > 7 ? 8 : 7) == 0)
-	{
-		*value = get_first_id(STATE.output);
-		return dba_error_ok();
-	}
-	*/
-	
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	switch (parm[0])
@@ -590,13 +541,10 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 			break;
 	}
 
-	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
-	if (var == NULL)
-	{
+	DBA_RUN_OR_RETURN(dba_record_enqi(rec, p, value, &found));
+	if (!found)
 		*value = MISSING_INT;
-		return dba_error_ok();
-	} else
-		return dba_var_enqi(var, value);
+	return dba_error_ok();
 }
 
 /**
@@ -625,8 +573,8 @@ F77_INTEGER_FUNCTION(idba_enqb)(
 	GENPTR_BYTE(value)
 	char parm[20];
 	char* p;
+	int ival, found;
 	dba_record rec;
-	dba_var var;
 
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
@@ -642,19 +590,16 @@ F77_INTEGER_FUNCTION(idba_enqb)(
 			break;
 	}
 
-	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
-	if (var == NULL)
-	{
+	DBA_RUN_OR_RETURN(dba_record_enqi(rec, p, &ival, &found));
+	if (!found)
 		*value = MISSING_BYTE;
-		return dba_error_ok();
-	} else {
-		int val;
-		dba_err res = dba_var_enqi(var, &val);
-		if (val < SCHAR_MIN || val > SCHAR_MAX)
-			return dba_error_consistency("value queried (%d) does not fit in a byte", val);
-		*value=(char)val;
-		return res;
+	else
+	{
+		if (ival < SCHAR_MIN || ival > SCHAR_MAX)
+			return dba_error_consistency("value queried (%d) does not fit in a byte", ival);
+		*value=(char)ival;
 	}
+	return dba_error_ok();
 }
 
 
@@ -684,10 +629,9 @@ F77_INTEGER_FUNCTION(idba_enqr)(
 	GENPTR_REAL(value)
 	char parm[20];
 	char* p;
-	dba_err err;
 	double dval;
+	int found;
 	dba_record rec;
-	dba_var var;
 
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
@@ -700,18 +644,16 @@ F77_INTEGER_FUNCTION(idba_enqr)(
 		p = parm;
 	}
 
-	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
-	if (var == NULL)
+	DBA_RUN_OR_RETURN(dba_record_enqd(rec, p, &dval, &found));
+	if (!found)
 	{
 		*value = MISSING_REAL;
-		return dba_error_ok();
 	} else {
-		err = dba_var_enqd(var, &dval);
 		if (dval < -FLT_MAX || dval > FLT_MAX)
 			return dba_error_consistency("value queried (%f) does not fit in a real", dval);
 		*value = dval;
-		return err;
 	}
+	return dba_error_ok();
 }
 
 /**
@@ -740,8 +682,8 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 	GENPTR_DOUBLE(value)
 	char parm[20];
 	char* p;
+	int found;
 	dba_record rec;
-	dba_var var;
 
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
@@ -754,13 +696,10 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 		p = parm;
 	}
 
-	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
-	if (var == NULL)
-	{
+	DBA_RUN_OR_RETURN(dba_record_enqd(rec, p, value, &found));
+	if (!found)
 		*value = MISSING_DOUBLE;
-		return dba_error_ok();
-	} else
-		return dba_var_enqd(var, value);
+	return dba_error_ok();
 }
 
 /**
@@ -791,9 +730,7 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 	char parm[20];
 	char* p;
 	dba_record rec;
-	dba_var var;
 	const char* strval;
-	dba_err err;
 
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
@@ -806,17 +743,12 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 		p = parm;
 	}
 
-	DBA_RUN_OR_RETURN(lookup_var(rec, p, &var));
-	if (var == NULL)
-	{
+	DBA_RUN_OR_RETURN(dba_record_enqc(rec, p, &strval));
+	if (strval == NULL)
 		cnfExprt(MISSING_STRING, value, value_length);
-		return dba_error_ok();
-	} else {
-		err = dba_var_enqc(var, &strval);
-		if (err == DBA_OK)
-			cnfExprt(strval, value, value_length);
-		return err;
-	}
+	else
+		cnfExprt(strval, value, value_length);
+	return dba_error_ok();
 }
 
 /*@}*/
@@ -1259,10 +1191,14 @@ F77_INTEGER_FUNCTION(idba_enqlevel)(
 	GENPTR_INTEGER(ltype)
 	GENPTR_INTEGER(l1)
 	GENPTR_INTEGER(l2)
+	int found;
 
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_LEVELTYPE, ltype));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_L1, l1));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_L2, l2));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_LEVELTYPE, ltype, &found));
+	if (!found) *ltype = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_L1, l1, &found));
+	if (!found) *l1 = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_L2, l2, &found));
+	if (!found) *l2 = MISSING_INT;
 	return dba_error_ok();
 }
 
@@ -1321,10 +1257,14 @@ F77_INTEGER_FUNCTION(idba_enqtimerange)(
 	GENPTR_INTEGER(ptype)
 	GENPTR_INTEGER(p1)
 	GENPTR_INTEGER(p2)
+	int found;
 
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_PINDICATOR, ptype));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_P1, p1));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_P2, p2));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_PINDICATOR, ptype, &found));
+	if (!found) *ptype = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_P1, p1, &found));
+	if (!found) *p1 = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_P2, p2, &found));
+	if (!found) *p2 = MISSING_INT;
 	return dba_error_ok();
 }
 
@@ -1395,13 +1335,20 @@ F77_INTEGER_FUNCTION(idba_enqdate)(
 	GENPTR_INTEGER(hour)
 	GENPTR_INTEGER(min)
 	GENPTR_INTEGER(sec)
+	int found;
 
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_YEAR, year));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_MONTH, month));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_DAY, day));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_HOUR, hour));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_MIN, min));
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_SEC, sec));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_YEAR, year, &found));
+	if (!found) *year = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_MONTH, month, &found));
+	if (!found) *month = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_DAY, day, &found));
+	if (!found) *day = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_HOUR, hour, &found));
+	if (!found) *hour = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_MIN, min, &found));
+	if (!found) *min = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_SEC, sec, &found));
+	if (!found) *sec = MISSING_INT;
 	return dba_error_ok();
 }
 
@@ -1902,9 +1849,12 @@ F77_INTEGER_FUNCTION(idba_dimenticami)(
 static dba_err get_referred_data_id(int* handle, int* id_context, dba_varcode* id_var)
 {
 	const char* val;
+	int found;
 
 	/* Read context ID */
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.qcinput, DBA_KEY_CONTEXT_ID, id_context));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.qcinput, DBA_KEY_CONTEXT_ID, id_context, &found));
+	if (!found)
+		return dba_error_notfound("looking for variable context id");
 
 	*id_var = 0;
 

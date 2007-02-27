@@ -690,7 +690,7 @@ static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana
 static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int can_add, int* id)
 {
 	dba_err err = DBA_OK;
-	int mobile, lat, lon;
+	int found, mobile, lat, lon;
 	const char* val;
 	dba_db_pseudoana a;
 
@@ -709,14 +709,29 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int can_add, int*
 		return dba_error_ok();
 
 	/* Look for the key data in the record */
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &lat));
+	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &lat, &found));
+	if (!found)
+	{
+		err = dba_error_notfound("looking for latitude when trying to insert a station in the database");
+		goto cleanup;
+	}
 	a->lat = lat;
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LON, &lon));
+	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LON, &lon, &found));
+	if (!found)
+	{
+		err = dba_error_notfound("looking for longitude when trying to insert a station in the database");
+		goto cleanup;
+	}
 	a->lon = lon;
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_MOBILE, &mobile));
-	if (mobile)
+	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_MOBILE, &mobile, &found));
+	if (found && mobile)
 	{
 		DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqc(rec, DBA_KEY_IDENT, &val));
+		if (val == NULL)
+		{
+			err = dba_error_notfound("looking for mobile station identifier when trying to insert a mobile station in the database");
+			goto cleanup;
+		}
 		dba_db_pseudoana_set_ident(a, val);
 	} else {
 		a->ident_ind = SQL_NULL_DATA;
@@ -748,7 +763,7 @@ cleanup:
 static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id)
 {
 	const char *year, *month, *day, *hour, *min, *sec;
-	int val;
+	int found, val;
 	dba_db_context c;
 	assert(db);
 	DBA_RUN_OR_RETURN(dba_db_need_context(db));
@@ -783,17 +798,23 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	else
 		return dba_error_notfound("looking for datetime informations");
 
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE,	&val));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE,	&val, &found));
+	if (!found) return dba_error_notfound("looking for level type");
 	c->ltype = val;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L1,			&val));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L1,			&val, &found));
+	if (!found) return dba_error_notfound("looking for l1");
 	c->l1 = val;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L2,			&val));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L2,			&val, &found));
+	if (!found) return dba_error_notfound("looking for l2");
 	c->l2 = val;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_PINDICATOR,	&val));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_PINDICATOR,	&val, &found));
+	if (!found) return dba_error_notfound("looking for time range indicator");
 	c->pind = val;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P1,			&val));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P1,			&val, &found));
+	if (!found) return dba_error_notfound("looking for p1");
 	c->p1 = val;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P2,			&val));
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P2,			&val, &found));
+	if (!found) return dba_error_notfound("looking for p2");
 	c->p2 = val;
 
 	/* Check for an existing context with these data */

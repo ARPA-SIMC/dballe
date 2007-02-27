@@ -67,9 +67,9 @@ void to::test<1>()
 	gen_ensure_equals(cur.remaining(), 1);
 	gen_ensure_equals(cur.next(result), true);
 	gen_ensure_equals(cur.remaining(), 0);
-	gen_ensure_equals(result.keyEnqd(DBA_KEY_LAT), 12.34560);
-	gen_ensure_equals(result.keyEnqd(DBA_KEY_LON), 76.54320);
-	gen_ensure_equals(result.varContains(DBA_VAR(0, 1, 11)), false);
+	gen_ensure_equals(result.enqd(DBA_KEY_LAT), 12.34560);
+	gen_ensure_equals(result.enqd(DBA_KEY_LON), 76.54320);
+	gen_ensure_equals(result.contains(DBA_VAR(0, 1, 11)), false);
 }
 	
 template<> template<>
@@ -85,12 +85,12 @@ void to::test<2>()
 	gen_ensure_equals(cur.next(result), true);
 	gen_ensure_equals(cur.remaining(), 1);
 	gen_ensure(expected.find(cur.varcode()) != expected.end());
-	gen_ensure_equals(result.varEnqs(cur.varcode()), expected[cur.varcode()]);
+	gen_ensure_equals(result.enqs(cur.varcode()), expected[cur.varcode()]);
 	expected.erase(cur.varcode());
 	gen_ensure_equals(cur.next(result), true);
 	gen_ensure_equals(cur.remaining(), 0);
 	gen_ensure(expected.find(cur.varcode()) != expected.end());
-	gen_ensure_equals(result.varEnqs(cur.varcode()), expected[cur.varcode()]);
+	gen_ensure_equals(result.enqs(cur.varcode()), expected[cur.varcode()]);
 	gen_ensure_equals(cur.next(result), false);
 }
 
@@ -115,9 +115,9 @@ void to::test<4>()
 	gen_ensure_equals(cur.remaining(), 1);
 	result.clear();
 	gen_ensure_equals(cur.next(result), true);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_LEVELTYPE), 10);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_L1), 11);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_L2), 22);
+	gen_ensure_equals(result.enqi(DBA_KEY_LEVELTYPE), 10);
+	gen_ensure_equals(result.enqi(DBA_KEY_L1), 11);
+	gen_ensure_equals(result.enqi(DBA_KEY_L2), 22);
 	gen_ensure_equals(cur.next(result), false);
 }
 
@@ -129,9 +129,9 @@ void to::test<5>()
 	gen_ensure_equals(cur.remaining(), 1);
 	result.clear();
 	gen_ensure_equals(cur.next(result), true);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_PINDICATOR), 20);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_P1), 111);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_P2), 222);
+	gen_ensure_equals(result.enqi(DBA_KEY_PINDICATOR), 20);
+	gen_ensure_equals(result.enqi(DBA_KEY_P1), 111);
+	gen_ensure_equals(result.enqi(DBA_KEY_P2), 222);
 	gen_ensure_equals(cur.next(result), false);
 }
 
@@ -143,12 +143,12 @@ void to::test<6>()
 	gen_ensure_equals(cur.remaining(), 1);
 	result.clear();
 	gen_ensure_equals(cur.next(result), true);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_LEVELTYPE), 10);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_L1), 11);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_L2), 22);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_PINDICATOR), 20);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_P1), 111);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_P2), 222);
+	gen_ensure_equals(result.enqi(DBA_KEY_LEVELTYPE), 10);
+	gen_ensure_equals(result.enqi(DBA_KEY_L1), 11);
+	gen_ensure_equals(result.enqi(DBA_KEY_L2), 22);
+	gen_ensure_equals(result.enqi(DBA_KEY_PINDICATOR), 20);
+	gen_ensure_equals(result.enqi(DBA_KEY_P1), 111);
+	gen_ensure_equals(result.enqi(DBA_KEY_P2), 222);
 	gen_ensure_equals(cur.next(result), false);
 }
 
@@ -178,7 +178,7 @@ void to::test<8>()
 	gen_ensure_equals(cur.remaining(), 1);
 	result.clear();
 	gen_ensure_equals(cur.next(result), true);
-	gen_ensure_equals(result.keyContains(DBA_KEY_IDENT), false);
+	gen_ensure_equals(result.contains(DBA_KEY_IDENT), false);
 	gen_ensure_equals(cur.next(result), false);
 }
 
@@ -190,8 +190,8 @@ void to::test<9>()
 	gen_ensure_equals(cur.remaining(), 1);
 	result.clear();
 	gen_ensure_equals(cur.next(result), true);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_REP_COD), 1);
-	gen_ensure_equals(result.keyEnqc(DBA_KEY_REP_MEMO), string("synop"));
+	gen_ensure_equals(result.enqi(DBA_KEY_REP_COD), 1);
+	gen_ensure_equals(result.enqc(DBA_KEY_REP_MEMO), string("synop"));
 	gen_ensure_equals(cur.next(result), false);
 }
 
@@ -203,12 +203,12 @@ void to::test<10>()
 	gen_ensure_equals(cur.remaining(), 1);
 	result.clear();
 	gen_ensure_equals(cur.next(result), true);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_YEAR), 1945);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_MONTH), 4);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_DAY), 25);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_HOUR), 8);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_MIN), 0);
-	gen_ensure_equals(result.keyEnqi(DBA_KEY_SEC), 0);
+	gen_ensure_equals(result.enqi(DBA_KEY_YEAR), 1945);
+	gen_ensure_equals(result.enqi(DBA_KEY_MONTH), 4);
+	gen_ensure_equals(result.enqi(DBA_KEY_DAY), 25);
+	gen_ensure_equals(result.enqi(DBA_KEY_HOUR), 8);
+	gen_ensure_equals(result.enqi(DBA_KEY_MIN), 0);
+	gen_ensure_equals(result.enqi(DBA_KEY_SEC), 0);
 	gen_ensure_equals(cur.next(result), false);
 }
 

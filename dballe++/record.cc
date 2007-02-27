@@ -81,62 +81,23 @@ const char* RecordIterator::keywordName() const
 	return dba_record_keyword_name(m_kwd);
 }
 
-
-bool Record::contains(const std::string& parm) const
+void Record::throw_notfound(const std::string& parm) const
 {
-	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
-		return varContains(code);
-	else if (parm[0] != 'B')
-		return keyContains(dba_record_keyword_byname(parm.c_str()));
+	checked(dba_error_notfound("looking for field '%s'", parm.c_str()));
+}
+void Record::throw_notfound(dba_keyword parm) const
+{
+	const char* name = dba_record_keyword_name(parm);
+	if (name == NULL)
+		checked(dba_error_notfound("looking for field (unknown keyword %d)", parm));
 	else
-		return varContains(stringToVar(parm));
+		checked(dba_error_notfound("looking for field \'%s\'", name));
+}
+void Record::throw_notfound(dba_varcode parm) const
+{
+	checked(dba_error_notfound("looking for field B%02d%03d", DBA_VAR_X(parm), DBA_VAR_Y(parm)));
 }
 
-Var Record::enq(const std::string& parm) const
-{
-	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
-		return varEnq(code);
-	else if (parm[0] != 'B')
-		return keyEnq(dba_record_keyword_byname(parm.c_str()));
-	else
-		return varEnq(stringToVar(parm));
-}
-int Record::enqi(const std::string& parm) const
-{
-	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
-		return varEnqi(code);
-	else if (parm[0] != 'B')
-		return keyEnqi(dba_record_keyword_byname(parm.c_str()));
-	else
-		return varEnqi(stringToVar(parm));
-}
-double Record::enqd(const std::string& parm) const
-{
-	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
-		return varEnqd(code);
-	else if (parm[0] != 'B')
-		return keyEnqd(dba_record_keyword_byname(parm.c_str()));
-	else
-		return varEnqd(stringToVar(parm));
-}
-const char* Record::enqc(const std::string& parm) const
-{
-	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
-		return varEnqc(code);
-	else if (parm[0] != 'B')
-		return keyEnqc(dba_record_keyword_byname(parm.c_str()));
-	else
-		return varEnqc(stringToVar(parm));
-}
-std::string Record::enqs(const std::string& parm) const
-{
-	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))
-		return varEnqs(code);
-	else if (parm[0] != 'B')
-		return keyEnqs(dba_record_keyword_byname(parm.c_str()));
-	else
-		return varEnqs(stringToVar(parm));
-}
 void Record::set(const std::string& parm, const Var& var)
 {
 	if (dba_varcode code = dba_varcode_alias_resolve(parm.c_str()))

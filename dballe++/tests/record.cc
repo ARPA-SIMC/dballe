@@ -17,14 +17,19 @@ template<> template<>
 void to::test<1>()
 {
 	Record rec;
+	bool found;
 
 	rec.keySet(DBA_KEY_ANA_ID, 3);
-	gen_ensure_equals(rec.keyEnqi(DBA_KEY_ANA_ID), 3);
-	gen_ensure_equals(rec.keyEnq(DBA_KEY_ANA_ID).enqi(), 3);
+	gen_ensure_equals(rec.enqi(DBA_KEY_ANA_ID), 3);
+	gen_ensure_equals(rec.enqi_ifset(DBA_KEY_ANA_ID, found), 3);
+	gen_ensure_equals(found, true);
+	gen_ensure_equals(rec.enq(DBA_KEY_ANA_ID).enqi(), 3);
 
 	rec.varSet(DBA_VAR(0, 4, 1), 2001);
-	gen_ensure_equals(rec.varEnqi(DBA_VAR(0, 4, 1)), 2001);
-	gen_ensure_equals(rec.varEnq(DBA_VAR(0, 4, 1)).enqi(), 2001);
+	gen_ensure_equals(rec.enqi(DBA_VAR(0, 4, 1)), 2001);
+	gen_ensure_equals(rec.enqi_ifset(DBA_VAR(0, 4, 1), found), 2001);
+	gen_ensure_equals(found, true);
+	gen_ensure_equals(rec.enq(DBA_VAR(0, 4, 1)).enqi(), 2001);
 
 	int count = 0;
 	for (Record::iterator i = rec.begin(); i != rec.end(); ++i)
