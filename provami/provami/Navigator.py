@@ -1,4 +1,4 @@
-import wx, os, re
+import wx, os, re, sys
 from provami.ProgressDisplay import ProgressDisplay
 from provami.Model import Model, ModelListener, ProgressListener
 from provami.MapChoice import MapChoice
@@ -318,6 +318,7 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
 									wx.OK | wx.ICON_ERROR | wx.ICON_INFORMATION
 									)
 						dlg.ShowModal()
+						print >>sys.stderr, error
 						dlg.Destroy()
 				finally:
 					if pdlg:
