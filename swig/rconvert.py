@@ -72,3 +72,5 @@ def volnd_save_to_r(vars, file):
 			rpy.r.assign(k+"."+aname, volnd_data_to_r(adata))
 			tosave.append(k+"."+aname)
 	rpy.r.save(list=tosave, file=file)
+	# Cleanup the names from the environment
+	rpy.r.remove(list=tosave)
