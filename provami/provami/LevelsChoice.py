@@ -13,7 +13,7 @@ class LevelsChoice(QueryChoice):
 		res = []
 		res.append(("All levels", None))
 		for lev in self.model.levels():
-			res.append((lev.format(), lev))
+			res.append((str(lev), lev))
 		return res
 
 	def selected(self, event):

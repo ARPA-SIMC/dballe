@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 import wx
 import wx.grid
-from provami.Model import ModelListener, Level, TRange
+from dballe import Level, TimeRange
+from provami.Model import ModelListener
 from provami.ResultGrid import ResultTable, ResultGrid
 from provami.DataMenu import DataMenu
 
@@ -43,12 +44,12 @@ class DataTable(ResultTable):
 				  sorter = lambda x, y: cmp(x.enqc("datetime"), y.enqc("datetime")))
 
 		self.appendColumn("Level", \
-				  renderer = lambda x: str(Level(x)), \
-				  sorter = lambda x, y: cmp(Level(x), Level(y)))
+				  renderer = lambda x: str(x.enqlevel()), \
+				  sorter = lambda x, y: cmp(x.enqlevel(), x.enqlevel(y)))
 
 		self.appendColumn("Time range", \
-				  renderer = lambda x: str(TRange(x)), \
-				  sorter = lambda x, y: cmp(TRange(x), TRange(y)))
+				  renderer = lambda x: str(x.enqtimerange()), \
+				  sorter = lambda x, y: cmp(x.enqtimerange(), y.enqtimerange()))
 
 		self.appendColumn("Variable", \
 				  renderer = lambda x: x.enqc("var"), \
@@ -157,7 +158,7 @@ class DataPanel(wx.Panel, ModelListener):
 				lev = Level(record)
 				info = lev.format()
 			elif col == 4:
-				tr = TRange(record)
+				tr = TimeRange(record)
 				info = tr.format()
 			else:
 				info = record.enqvar(record.enqc("var")).info()
@@ -179,7 +180,7 @@ class DataPanel(wx.Panel, ModelListener):
 			self.model.setLevelFilter(l.type, l.l1, l.l2)
 		elif event.GetId() == DataMenu.ACTION_SELECT_SAME_TRANGE:
 			record = self.dataMenu.getData()
-			t = TRange(record)
+			t = TimeRange(record)
 			self.model.setTimeRangeFilter(t.type, t.p1, t.p2)
 		elif event.GetId() == DataMenu.ACTION_SELECT_SAME_VAR:
 			record = self.dataMenu.getData()

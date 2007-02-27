@@ -1,7 +1,7 @@
 import dballe
 import wx
 import wx.grid
-from provami.Model import ModelListener, Level, TRange
+from provami.Model import ModelListener
 from provami.ResultGrid import ResultTable, ResultGrid
 from provami.DataMenu import DataMenu
 

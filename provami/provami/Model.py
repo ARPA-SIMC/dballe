@@ -71,47 +71,6 @@ def datetimeFromRecord(rec, fieldset = DateUtils.MIN):
 	fn = DateUtils.fields[fieldset]
 	return completeDate([rec.enqi(fn[x]) for x in range(6)], fieldset)
 
-
-class Level:
-	def __init__(self, rec):
-		self.type = rec.enqi("leveltype")
-		self.l1 = rec.enqi("l1")
-		self.l2 = rec.enqi("l2")
-	def __cmp__(self, other):
-		if other == None:
-			return 1
-		i = cmp(self.type, other.type)
-		if i != 0: return i
-		i = cmp(self.l1, other.l1)
-		if i != 0: return i
-		return cmp(self.l2, other.l2)
-	def __str__(self):
-		return ",".join([str(x) for x in (self.type, self.l1, self.l2)])
-	def __hash__(self):
-		return (self.type, self.l1, self.l2).__hash__()
-	def format(self):
-		return str(self.type) + ": " + dballe.describeLevel(self.type, self.l1, self.l2)
-
-class TRange:
-	def __init__(self, rec):
-		self.type = rec.enqi("pindicator")
-		self.p1 = rec.enqi("p1")
-		self.p2 = rec.enqi("p2")
-	def __cmp__(self, other):
-		if other == None:
-			return 1
-		i = cmp(self.type, other.type)
-		if i != 0: return i
-		i = cmp(self.p1, other.p1)
-		if i != 0: return i
-		return cmp(self.p2, other.p2)
-	def __str__(self):
-		return ",".join([str(x) for x in (self.type, self.p1, self.p2)])
-	def __hash__(self):
-		return (self.type, self.p1, self.p2).__hash__()
-	def format(self):
-		return "%d: %s" % (self.type, dballe.describeTrange(self.type, self.p1, self.p2))
-
 class TTracer:
 	def __init__(self, name):
 		self.start = time.clock()
@@ -521,7 +480,7 @@ class Model:
 			self.notifyProgress(55, "Querying level data...")
 			levels = {}
 			for results in self.queryLevels():
-				levels[Level(results)] = 1
+				levels[results.enqlevel()] = 1
 			self.cached_levels = levels.keys()
 			self.cached_levels.sort()
 			t.partial("got level data");
@@ -533,7 +492,7 @@ class Model:
 			self.notifyProgress(62, "Querying time range data...")
 			tranges = {}
 			for results in self.queryTimeRanges():
-				tranges[TRange(results)] = 1
+				tranges[results.enqtimerange()] = 1
 			self.cached_tranges = tranges.keys()
 			self.cached_tranges.sort()
 			t.partial("got time range data");
@@ -754,10 +713,7 @@ class Model:
 		return False
 
 	def getLevelFilter(self, record = None):
-		res = Level(record or self.filter)
-		if res.type != None and res.l1 != None and res.l2 != None:
-			return res;
-		return None
+		return (record or self.filter).enqlevel()
 
 	def setLevelFilter(self, ltype, l1, l2):
 		"""
@@ -774,10 +730,7 @@ class Model:
 		return False
 
 	def getTimeRangeFilter(self, record = None):
-		res = TRange(record or self.filter)
-		if res.type != None and res.p1 != None and res.p2 != None:
-			return res;
-		return None
+		return (record or self.filter).enqtimerange()
 
 	def setTimeRangeFilter(self, pind, p1, p2):
 		"""
