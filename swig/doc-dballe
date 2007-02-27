@@ -7,12 +7,14 @@ import sys, re
 import inspect
 
 def print_indented (spaces, string):
+	"Print a string, indented by the given number of spaces"
 	for line in string.split("\n"):
 		for i in range(1,spaces):
 			sys.stdout.write(" ")
 		sys.stdout.write(line)
 		sys.stdout.write("\n")
 
+# Convert C++ types to Python types
 doctypemap = {
 	'dba_varcode': 'variable code',
 	'double': 'float',
@@ -26,7 +28,15 @@ doctypemap = {
 	'const char *': 'str',
 }
 
+methodoverrides = {
+	'enqd_ifset(code, found)': ('float, bool', 'enqd_ifset(code)', [('code', 'variable code')]),
+}
+
 def fmtarg(str):
+	"""
+	Format an item in an argument list, returning a tuple (name, type) or
+	(name, None) when the type could not be understood
+	"""
 	#print >>sys.stderr, "split of", str,
 	mo = re.match(r'^\s*(.+?)\s*(\w+)\s*(=\s*.+?)?\s*$', str)
 	if mo:
@@ -70,19 +80,27 @@ def printSwigDoc(doc):
 		args = mo.group(2)
 		args = map(fmtarg, args.split(','))
 		method = method + "(" + ", ".join(map(lambda x: x[0], args)) + ")"
+	# Override known fancy methods
+	if method in methodoverrides:
+		retval, method, args = methodoverrides[method]
 
+	# Print the method definition
 	if retval != 'void':
 		rtype = doctypemap.get(retval, retval)
 		rtype = re.sub("[ .]", "_", rtype.lower())
 		print_indented(2, '``'+rtype+" = "+method+'``')
 	else:
 		print_indented(2, '``'+method+'``')
+
 	needFiller = True
+
+	# Print details about the arguments
 	for name, type in args:
 		if type != None:
 			print_indented(4, name + " is a " + type + "\n")
 			needFiller = False
 
+	# Print the rest of the documentation
 	if len(doc) > 0:
 		print_indented(4, "\n".join(filter(lambda x: x!="",doc)))
 	elif needFiller:
