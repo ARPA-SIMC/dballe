@@ -5,8 +5,8 @@ import gc
 import os
 import sys
 import traceback
-import wxDballe.CSV
-from wxDballe.Paths import DATADIR
+import provami.CSV
+from provami.Paths import DATADIR
 
 def filePath(fileName):
 	if os.access(fileName, os.R_OK):
@@ -384,7 +384,7 @@ class Model:
 		filter = self.activeFilter.copy()
 		filter.unset("limit")
 		if encoding == "CSV":
-			exporter = wxDballe.CSV.Exporter(self.db)
+			exporter = provami.CSV.Exporter(self.db)
 			exporter.output(filter, open(file, "w"))
 		elif encoding == "R":
 			import dballe.rconvert, rpy

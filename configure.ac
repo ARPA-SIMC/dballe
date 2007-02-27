@@ -118,6 +118,7 @@ doc/libdballe-bufrex.dox
 doc/libdballe-msg.dox
 doc/libdballe-db.dox
 doc/libdballepp.dox
+provami/Makefile
 libdballe-core.pc
 libdballe-bufrex.pc
 libdballe-msg.pc
