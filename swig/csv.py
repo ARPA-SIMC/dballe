@@ -174,6 +174,10 @@ class Exporter:
         self.cols = cols
 
     def output(self, filter, fd):
+        """
+        Perform a DB-All.e query using the given filter and output the results
+        in CSV format on the given file object
+        """
         #writer = csv.writer(fd, dialect="excel")
         writer = csv.writer(fd)
 
@@ -198,5 +202,13 @@ class Exporter:
             for c in self.cols:
                 fields.append(c[1](result))
             writer.writerow(fields)
+
+def export(db, query, file):
+    """
+    Perform a DB-All.e query using the given db and query filter, and output
+    the results in CSV format on the given file object
+    """
+    e = Exporter(db)
+    e.output(query, file)
 
 # vim:set ts=4 sw=4 expandtab:
