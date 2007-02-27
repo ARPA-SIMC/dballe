@@ -41,11 +41,13 @@ def ma_to_r(arr, dimnames=None):
 	rpy.r.aperm.local_mode(rpy.NO_CONVERSION)
 	vec = rpy.r.rep(rpy.r.NAN, vlen)
 	#print "pre",; rpy.r.print_(vec)
+	#print "ma2r to float"
 	for i, x in enumerate(arr.flat):
 		if MA.getmask(x) != 1:
 			vec[i] = float(x)
 	#print "post",; rpy.r.print_(vec)
 	#return rpy.r.array(data=vec, dim=[i for i in arr.shape])
+	#print "ma2r to R"
 	if dimnames:
 		return rpy.r.aperm(rpy.r.array(data=vec, dim=[i for i in reversed(arr.shape)], dimnames=[i for i in reversed(dimnames)]), perm=[i for i in reversed(range(1,len(arr.shape)+1))])
 	else:
@@ -66,6 +68,7 @@ def volnd_save_to_r(vars, file):
 	"""
 	tosave = []
 	for k, d in vars.iteritems():
+		#print "s2r", k
 		rpy.r.assign(k, volnd_data_to_r(d))
 		tosave.append(k)
 		for aname, adata in d.attrs.iteritems():

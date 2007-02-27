@@ -366,7 +366,7 @@ class Data:
 				break
 		if accepted:
                         # Obtain the index for every dimension
-			pos = [dim.getIndex(rec) for dim in self.dims]
+			pos = tuple([dim.getIndex(rec) for dim in self.dims])
 
                         # Save the value with its indexes
 			self.vals.append( (pos, rec.enqvar(self.name).enq()) )
@@ -408,16 +408,16 @@ class Data:
 			#print self.info, bits
 			if bits <= 8:
 				#print 'uint8'
-				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='uint8'), mask = 1)
+				a = numpy.empty(map(len, self.dims), dtype='uint8')
 			elif bits <= 16:
 				#print 'uint16'
-				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='uint16'), mask = 1)
+				a = numpy.empty(map(len, self.dims), dtype='uint16')
 			elif bits <= 32:
 				#print 'uint32'
-				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='uint32'), mask = 1)
+				a = numpy.empty(map(len, self.dims), dtype='uint32')
 			else:
 				#print 'uint64'
-				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='uint64'), mask = 1)
+				a = numpy.empty(map(len, self.dims), dtype='uint64')
 		else:
 			# We have a bit_ref, so we can have negative
 			# values or we can have positive values bigger
@@ -429,15 +429,15 @@ class Data:
 			#print self.info, range
 			if range < 256:
 				#print 'int8'
-				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='int8'), mask = 1)
+				a = numpy.empty(map(len, self.dims), dtype='int8')
 			elif range < 65536:
 				#print 'int16'
-				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='int16'), mask = 1)
+				a = numpy.empty(map(len, self.dims), dtype='int16')
 			elif range <= 4294967296:
 				#print 'int32'
-				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype='int32'), mask = 1)
+				a = numpy.empty(map(len, self.dims), dtype='int32')
 			else:
-				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype=int), mask = 1)
+				a = numpy.empty(map(len, self.dims), dtype=int)
 		return a
 
         def finalise(self):
@@ -457,7 +457,7 @@ class Data:
 			a = numpy.empty(map(len, self.dims), dtype=object)
 			# Fill the array with all the values, at the given indexes
 			for pos, val in self.vals:
-				if not self._checkConflicts or a[pos] == (None,):
+				if not self._checkConflicts or a[pos] == None:
 					a[pos] = val
 				else:
 					raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
@@ -465,14 +465,17 @@ class Data:
 			if self.info.scale() == 0:
 				a = self._instantiateIntMatrix()
 			else:
-				a = MA.masked_array(numpy.zeros(map(len, self.dims), dtype=float), mask = 1)
+				a = numpy.empty(map(len, self.dims), dtype=float)
+                        mask = numpy.ones(map(len, self.dims), dtype=bool)
 
 			# Fill the array with all the values, at the given indexes
 			for pos, val in self.vals:
-				if not self._checkConflicts or a.mask()[pos] == 1:
+				if not self._checkConflicts or mask[pos] == True:
 					a[pos] = val
+                                        mask[pos] = False
 				else:
 					raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
+                        a = MA.array(a, mask=mask)
 
                 # Replace the intermediate data with the results
                 self.vals = a
