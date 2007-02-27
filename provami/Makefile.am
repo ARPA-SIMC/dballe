@@ -17,43 +17,46 @@ dballedata_DATA = \
 provamipythondir = $(pythondir)/provami
 
 provamiModules = \
-	wxDballe/__init__.py \
-	wxDballe/AnaDetails.py \
-	wxDballe/AttrDetails.py \
-	wxDballe/CSV.py \
-	wxDballe/DataMenu.py \
-	wxDballe/DataResults.py \
-	wxDballe/DateCanvas.py \
-	wxDballe/DateChoice.py \
-	wxDballe/DateTimeCanvas.py \
-	wxDballe/FilterWindow.py \
-	wxDballe/IdentChoice.py \
-	wxDballe/LevelsChoice.py \
-	wxDballe/LimitChoice.py \
-	wxDballe/MapCanvas.py \
-	wxDballe/MapChoice.py \
-	wxDballe/MapChoiceSingleQuery.py \
-	wxDballe/Model.py \
-	wxDballe/ModelSingleQuery.py \
-	wxDballe/QueryButton.py \
-	wxDballe/QueryChoice.py \
-	wxDballe/QueryTextCtrl.py \
-	wxDballe/ReportChoice.py \
-	wxDballe/ResultGrid.py \
-	wxDballe/TimeRangeChoice.py \
-	wxDballe/VarNamesChoice.py
+	provami/__init__.py \
+	provami/AnaDetails.py \
+	provami/AttrDetails.py \
+	provami/CSV.py \
+	provami/DataMenu.py \
+	provami/DataResults.py \
+	provami/DateCanvas.py \
+	provami/DateChoice.py \
+	provami/DateTimeCanvas.py \
+	provami/FilterWindow.py \
+	provami/IdentChoice.py \
+	provami/LevelsChoice.py \
+	provami/LimitChoice.py \
+	provami/MapCanvas.py \
+	provami/MapChoice.py \
+	provami/MapChoiceSingleQuery.py \
+	provami/Model.py \
+	provami/ModelSingleQuery.py \
+	provami/QueryButton.py \
+	provami/QueryChoice.py \
+	provami/QueryTextCtrl.py \
+	provami/ReportChoice.py \
+	provami/ResultGrid.py \
+	provami/TimeRangeChoice.py \
+	provami/VarNamesChoice.py
 
 provamipython_PYTHON = $(provamiModules)
-nodist_provamipython_PYTHON = wxDballe/Paths.py
+nodist_provamipython_PYTHON = provami/Paths.py
 
-noinst_DATA = wxDballe/Paths.py
+noinst_DATA = provami/Paths.py
 
-wxDballe/Paths.py: wxDballe/Paths.py.in
+provami/Paths.py: provami/Paths.py.in
 	sed -e 's|@DATADIR@|$(dballedatadir)|g' $< > $@
 
-dist_bin_SCRIPTS = provami dballecsv dballecsv
+dist_bin_SCRIPTS = provami.py dballecsv
 
-EXTRA_DIST = dballe populate.py wxDballe/Paths.py.in \
-	     $(dballedata_DATA) $(wxDballeModules)
+install-exec-hook:
+	mv $(DESTDIR)$(bindir)/provami.py $(DESTDIR)$(bindir)/provami
 
-CLEANFILES = wxDballe/*.pyc wxDballe/Paths.py
+EXTRA_DIST = dballe populate.py provami/Paths.py.in \
+	     $(dballedata_DATA) $(provamiModules)
+
+CLEANFILES = provami/*.pyc provami/Paths.py
