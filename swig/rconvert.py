@@ -35,23 +35,43 @@ def ma_to_r(arr, dimnames=None):
 	#  - I found no way to assign to an element in an R array
 	#  - cannot use a tuple to index a numpy/MA array
 
-	oldmode = rpy.r.rep.local_mode()
-	rpy.r.rep.local_mode(rpy.NO_CONVERSION)
-	rpy.r.array.local_mode(rpy.NO_CONVERSION)
-	rpy.r.aperm.local_mode(rpy.NO_CONVERSION)
-	vec = rpy.r.rep(rpy.r.NAN, vlen)
-	#print "pre",; rpy.r.print_(vec)
-	#print "ma2r to float"
-	for i, x in enumerate(arr.flat):
-		if MA.getmask(x) != 1:
-			vec[i] = float(x)
-	#print "post",; rpy.r.print_(vec)
-	#return rpy.r.array(data=vec, dim=[i for i in arr.shape])
-	#print "ma2r to R"
+	# Convert to floats
+	farray = MA.array(arr, typecode='d')
+	# Fill with NaNs
+	farray = farray.filled(rpy.r.NAN)
+
+	# Convert to an R array
+	rpy.r.as_array.local_mode(rpy.NO_CONVERSION)
+	farray = rpy.r.as_array(farray)
+
+	# Add dimension names
 	if dimnames:
-		return rpy.r.aperm(rpy.r.array(data=vec, dim=[i for i in reversed(arr.shape)], dimnames=[i for i in reversed(dimnames)]), perm=[i for i in reversed(range(1,len(arr.shape)+1))])
-	else:
-		return rpy.r.aperm(rpy.r.array(data=vec, dim=[i for i in reversed(arr.shape)]), perm=[i for i in reversed(range(1,len(arr.shape)+1))])
+		rpy.r.attr__.local_mode(rpy.NO_CONVERSION)
+		farray = rpy.r.attr__(farray, "dimnames", dimnames)
+		#rpy.r.print_(farray)
+
+	return farray
+
+	## Flatten shape to become a vector
+	#farray = vlen
+
+	#oldmode = rpy.r.rep.local_mode()
+	#rpy.r.rep.local_mode(rpy.NO_CONVERSION)
+	#rpy.r.array.local_mode(rpy.NO_CONVERSION)
+	#rpy.r.aperm.local_mode(rpy.NO_CONVERSION)
+	##vec = rpy.r.rep(rpy.r.NAN, vlen)
+	##print "pre",; rpy.r.print_(vec)
+	##print "ma2r to float"
+	##for i, x in enumerate(farray.flat):
+	##	if MA.getmask(x) != 1:
+	##		vec[i] = float(x)
+	##print "post",; rpy.r.print_(vec)
+	##return rpy.r.array(data=vec, dim=[i for i in arr.shape])
+	##print "ma2r to R"
+	#if dimnames:
+	#	return rpy.r.aperm(rpy.r.array(data=farray, dim=[i for i in reversed(arr.shape)], dimnames=[i for i in reversed(dimnames)]), perm=[i for i in reversed(range(1,len(arr.shape)+1))])
+	#else:
+	#	return rpy.r.aperm(rpy.r.array(data=farray, dim=[i for i in reversed(arr.shape)]), perm=[i for i in reversed(range(1,len(arr.shape)+1))])
 
 def volnd_data_to_r(data):
 	"""
