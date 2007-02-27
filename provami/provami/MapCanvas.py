@@ -233,7 +233,7 @@ class MapCanvas(wx.Window, ModelListener):
 		self.model.setStationFilter(id)
 		return id, lat, lon, ident
 
-	def selectArea(self, lon1, lat1, lon2, lat2):
+	def selectClosedArea(self, lon1, lat1, lon2, lat2):
 		#print "selectarea", lon1, lat1, lon2, lat2
 		#print "filter", min(lat1, lat2), max(lat1, lat2), min(lon1, lon2), max(lon1, lon2)
 		self.model.setAreaFilter(min(lat1, lat2), max(lat1, lat2), min(lon1, lon2), max(lon1, lon2))
@@ -364,7 +364,7 @@ class MapCanvas(wx.Window, ModelListener):
 		lon, lat = self.coordsToWorld(event.GetPosition())
 
 		if self.mode == MapCanvas.MODE_SELECT_AREA:
-			self.selectArea(lon, lat, lon, lat)
+			self.selectClosedArea(lon, lat, lon, lat)
 			pass
 		elif self.mode == MapCanvas.MODE_SELECT_STATION:
 			lon, lat = self.coordsToWorld(event.GetPosition())
@@ -379,7 +379,7 @@ class MapCanvas(wx.Window, ModelListener):
 		if self.mode == MapCanvas.MODE_SELECT_AREA:
 			lon1, lat1 = self.coordsToWorld(self.mouseDownCoords)
 			lon2, lat2 = self.coordsToWorld(event.GetPosition())
-			self.selectArea(lon1, lat1, lon2, lat2)
+			self.selectClosedArea(lon1, lat1, lon2, lat2)
 		#	#self.canvas.RemoveObject(self.selectRectangle)
 		#	#self.canvas.Draw()
 		#	#self.mode = 0
@@ -409,7 +409,7 @@ class MapCanvas(wx.Window, ModelListener):
 			elif self.mode == MapCanvas.MODE_SELECT_AREA:
 				lon1, lat1 = self.coordsToWorld(self.mouseDownCoords)
 				lon2, lat2 = self.coordsToWorld(event.GetPosition())
-				self.selectArea(lon1, lat1, lon2, lat2)
+				self.selectClosedArea(lon1, lat1, lon2, lat2)
 			elif self.mode == MapCanvas.MODE_SELECT_STATION:
 				lon, lat = self.coordsToWorld(event.GetPosition())
 				id, lat, lon, ident = self.selectNearest(lon, lat)
@@ -503,12 +503,18 @@ class MapCanvas(wx.Window, ModelListener):
 			if has_id and id == sel_id:
 				# Try selecting by ID
 				selected = True
-			elif (sel_latmin != None and lat >= sel_latmin) and \
-			     (sel_latmax != None and lat <= sel_latmax) and \
-			     (sel_lonmin != None and lon >= sel_lonmin) and \
-			     (sel_lonmax != None and lon <= sel_lonmax):
+			elif sel_latmin != None and sel_latmax != None and \
+			     sel_lonmin != None and sel_lonmax != None:
 				# Try selecting by area, intersected with ident
-				selected = sel_mobile == None or sel_ident == ident
+				if sel_lonmin <= sel_lonmax:
+					if sel_latmin <= lat <= sel_latmax and \
+					   sel_lonmin <= lon <= sel_lonmax:
+						selected = sel_mobile == None or sel_ident == ident
+				else:
+					if sel_latmin <= lat <= sel_latmax and \
+					   (-180 <= lon <= sel_lonmax or \
+					    sel_lonmin <= lon <= 180):
+						selected = sel_mobile == None or sel_ident == ident
 			else:
 				# Try selecting by ident
 				selected = not has_area and sel_mobile != None and sel_ident == ident
@@ -536,9 +542,25 @@ class MapCanvas(wx.Window, ModelListener):
 		if sel_latmin != None and sel_lonmin != None and sel_latmax != None and sel_lonmax != None:
 			dc.SetPen(wx.Pen("BLACK"))
 			dc.SetBrush(wx.Brush("WHITE", wx.TRANSPARENT))
-			x, y = self.coordsToPixels((sel_lonmin, sel_latmin))
-			w, h = self.distanceToPixels((sel_lonmax - sel_lonmin, sel_latmax - sel_latmin))
-			dc.DrawRectangle(x, y, w, h)
+			ly = min(sel_latmin, sel_latmax)
+			lh = max(sel_latmin, sel_latmax) - ly
+			if sel_lonmin <= sel_lonmax:
+				lx = sel_lonmin
+				lw = sel_lonmax - sel_lonmin
+				x, y = self.coordsToPixels((lx, ly))
+				w, h = self.distanceToPixels((lw, lh))
+				dc.DrawRectangle(x, y, w, h)
+			else:
+				lx1 = -180
+				lw1 = sel_lonmax - lx1
+				lx2 = sel_lonmin
+				lw2 = 180 - lx2
+				x, y = self.coordsToPixels((lx1, ly))
+				w, h = self.distanceToPixels((lw1, lh))
+				dc.DrawRectangle(x, y, w, h)
+				x, y = self.coordsToPixels((lx2, ly))
+				w, h = self.distanceToPixels((lw2, lh))
+				dc.DrawRectangle(x, y, w, h)
 
 		dc.EndDrawing()
 

@@ -50,7 +50,7 @@ class DataMenu(wx.Menu):
 				self.Append(DataMenu.ACTION_SELECT_SAME_IDENT, "Select all fixed stations")
 
 			if not isAnaContext:
-				self.Append(DataMenu.ACTION_SELECT_SAME_LEVEL, "Select level " + str(Level(data)))
+				self.Append(DataMenu.ACTION_SELECT_SAME_LEVEL, "Select level " + str(data.enqlevel()))
 				self.Append(DataMenu.ACTION_SELECT_SAME_TRANGE, "Select time range " + str(TRange(data)))
 				self.Append(DataMenu.ACTION_SELECT_SAME_VAR, "Select variable type " + data.enqc("var"))
 			self.Append(DataMenu.ACTION_SELECT_SAME_REPCOD, "Select report type " + data.enqc("rep_memo"))
