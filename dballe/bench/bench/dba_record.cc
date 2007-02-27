@@ -64,7 +64,7 @@ protected:
 	virtual dba_err main()
 	{
 		static const int iterations = 1500000;
-		int ival; double dval; const char* cval;
+		int ival; double dval; const char* cval; int bval;
 		dba_record rec;
 
 		DBA_RUN_OR_RETURN(dba_record_create(&rec));
@@ -86,12 +86,12 @@ protected:
 
 		for (int i = 0; i < iterations; i++)
 			for (vector<dba_keyword>::const_iterator j = int_keys.begin(); j != int_keys.end(); j++)
-				DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, *j, &ival));
+				DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, *j, &ival, &bval));
 		timing("%d dba_record_key_enqi", iterations);
 
 		for (int i = 0; i < iterations; i++)
 			for (vector<dba_keyword>::const_iterator j = float_keys.begin(); j != float_keys.end(); j++)
-				DBA_RUN_OR_RETURN(dba_record_key_enqd(rec, *j, &dval));
+				DBA_RUN_OR_RETURN(dba_record_key_enqd(rec, *j, &dval, &bval));
 		timing("%d dba_record_key_enqd", iterations);
 
 		for (int i = 0; i < iterations; i++)
@@ -116,12 +116,12 @@ protected:
 
 		for (int i = 0; i < iterations; i++)
 			for (vector<dba_varcode>::const_iterator j = int_vars.begin(); j != int_vars.end(); j++)
-				DBA_RUN_OR_RETURN(dba_record_var_enqi(rec, *j, &ival));
+				DBA_RUN_OR_RETURN(dba_record_var_enqi(rec, *j, &ival, &bval));
 		timing("%d dba_record_var_enqi", iterations);
 
 		for (int i = 0; i < iterations; i++)
 			for (vector<dba_varcode>::const_iterator j = float_vars.begin(); j != float_vars.end(); j++)
-				DBA_RUN_OR_RETURN(dba_record_var_enqd(rec, *j, &dval));
+				DBA_RUN_OR_RETURN(dba_record_var_enqd(rec, *j, &dval, &bval));
 		timing("%d dba_record_var_enqd", iterations);
 
 		for (int i = 0; i < iterations; i++)
