@@ -51,7 +51,7 @@ class DballeTest(unittest.TestCase):
 		expected["B01012"] = "500";
 
                 query = Record()
-		query.keySetd("latmin", 10.0)
+		query.setd("latmin", 10.0)
 		cur = self.db.query(query)
 		self.assertEqual(cur.remaining(), 2)
 		count = 0
