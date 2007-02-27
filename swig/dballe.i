@@ -377,7 +377,7 @@ class TimeRange(tuple):
 
 %typemap(in) const std::vector<dba_varcode>& (std::vector<dba_varcode> vec) {
         if (!PySequence_Check($input))
-                SWIG_SetErrorMsg(PyExc_NotImplementedError,"A sequence is needed for the varcode list");
+                PyErr_SetString(PyExc_NotImplementedError,"A sequence is needed for the varcode list");
         int len = PyObject_Length($input);
         for (int i = 0; i < len; ++i)
         {
