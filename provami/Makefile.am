@@ -57,6 +57,7 @@ install-exec-hook:
 	mv $(DESTDIR)$(bindir)/provami.py $(DESTDIR)$(bindir)/provami
 
 EXTRA_DIST = dballe populate.py provami/Paths.py.in \
-	     $(dballedata_DATA) $(provamiModules)
+	     $(dballedata_DATA) $(provamiModules) \
+	     provami.1
 
 CLEANFILES = provami/*.pyc provami/Paths.py
