@@ -19,6 +19,13 @@ _dballe_la_LIBADD = ../dballe++/libdballepp.la
 dballe_wrap_python.cc Dballe.py: dballe.i ../doc/dballe-doc.i
 	swig -python -c++ -I.. -I/usr/include -o $@ $<
 
+dballe.rst: doc-dballe dballe.py volnd.py rconvert.py dballe.i
+	./doc-dballe > $@ || (rm -f $@; false)
+
+dballe.html: dballe.rst
+	rst2html $< > $@ || (rm -f $@; false)
+
+
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION)
 
 EXTRA_DIST = README dballe.i test.py

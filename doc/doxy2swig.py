@@ -348,7 +348,7 @@ class Doxy2SWIG:
         ret = []
         for i in _data.split('\n\n'):
             if i == 'Parameters:':
-                ret.extend(['Parameters:\n-----------', '\n\n'])
+                ret.extend(['Parameters:', '\n\n'])
             elif i.find('// File:') > -1: # leave comments alone.
                 ret.extend([i, '\n'])
             else:

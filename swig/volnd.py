@@ -1,6 +1,39 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
+"""
+volnd is an easy way of extracting entire matrixes of data out of a DB-All.e
+database.
+
+This module allows to extract multidimensional matrixes of data given a list of
+dimension definitions.  Every dimension definition defines what kind of data
+goes along that dimension.
+
+Dimension definitions can be shared across different extracted matrixes and
+multiple extractions, allowing to have different matrixes whose indexes have
+the same meaning.
+
+This example code extracts temperatures in a station by datetime matrix::
+
+        query = dballe.Record()
+        query.set("var", "B12001")
+        query.set("rep_memo", "synop")
+        query.setlevel(dballe.Level(105, 2, 0))
+        query.settimerange(dballe.Timerange(0, 0, 0))
+        vars = read(self.db.query(query), (AnaIndex(), DateTimeIndex()))
+        data = vars["B12001"]
+        # Data is now a 2-dimensional Masked Array with the data
+        #
+        # Information about what values correspond to an index in the various
+        # directions can be accessed in data.dims, which contains one list per
+        # dimension with all the information corresponding to every index.
+        print "Ana dimension is", len(data.dims[0]), "items long"
+        print "Datetime dimension is", len(data.dims[1]), "items long"
+        print "First 10 stations along the Ana dimension:", data.dims[0][:10]
+        print "First 10 datetimes along the DateTime dimension:", data.dims[1][:10]
+"""
+
+
 # TODO: aggiungere metodi di query negli indici (eg. qual'è l'indice di questo
 #       ana_id?)
 # TODO: leggere i dati di anagrafica
@@ -8,6 +41,7 @@
 import dballe
 from dballe import Level, TimeRange
 from datetime import *
+
 
 #
 #  * Dati
@@ -500,18 +534,22 @@ class Data:
 
 def read(query, dims, filter=None, checkConflicts=True, attributes=None):
         """
-        query is a dballe.Cursor resulting from a dballe query
-        dims is the sequence of indexes to use for shaping the data matrixes
-        filter is an optional filter function that can be used to discard
-          values from the query: if filter is not None, it will be called for
-          every output record and if it returns False, the record will be
-          discarded
-        checkConflicts tells if we should raise an exception if two values from
-          the database would fill in the same position in the matrix
-        attributes tells if we should read attributes as well: if it is None,
-          no attributes will be read; if it is True, all attributes will be
-          read; if it is a sequence, then it is the sequence of attributes that
-          should be read.
+        *query* is a dballe.Cursor resulting from a dballe query
+
+        *dims* is the sequence of indexes to use for shaping the data matrixes
+
+	*filter* is an optional filter function that can be used to discard
+	values from the query: if filter is not None, it will be called for
+	every output record and if it returns False, the record will be
+	discarded
+
+	*checkConflicts* tells if we should raise an exception if two values from
+	the database would fill in the same position in the matrix
+
+	*attributes* tells if we should read attributes as well: if it is None,
+	no attributes will be read; if it is True, all attributes will be read;
+	if it is a sequence, then it is the sequence of attributes that should
+	be read.
         """
         ndims = len(dims)
         vars = {}
