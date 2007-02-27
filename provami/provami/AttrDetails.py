@@ -2,8 +2,8 @@ import dballe
 import wx
 import wx.grid
 import traceback
-from wxDballe.Model import ModelListener
-from wxDballe.ResultGrid import ResultTable, ResultGrid
+from provami.Model import ModelListener
+from provami.ResultGrid import ResultTable, ResultGrid
 
 def val_compare(a, b):
 	isstra = a.info().is_string()

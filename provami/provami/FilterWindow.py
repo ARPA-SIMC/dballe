@@ -2,8 +2,8 @@ import dballe
 import wx
 import wx.html
 import re
-from wxDballe.Model import *
-from wxDballe.QueryTextCtrl import QueryTextCtrl
+from provami.Model import *
+from provami.QueryTextCtrl import QueryTextCtrl
 
 class FilterWindow(wx.Frame):
 	def __init__(self, parent, model):

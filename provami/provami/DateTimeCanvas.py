@@ -1,7 +1,7 @@
 import string
 import wx
 import datetime
-from wxDballe.Model import Model, ModelListener, TTracer
+from provami.Model import Model, ModelListener, TTracer
 
 def dtToMinutes(datetime):
 	days = datetime.date().toordinal()

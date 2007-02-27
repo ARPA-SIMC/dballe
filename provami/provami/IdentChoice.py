@@ -1,5 +1,5 @@
 import wx
-from wxDballe.QueryChoice import QueryChoice
+from provami.QueryChoice import QueryChoice
 
 class IdentChoice(QueryChoice):
 	def __init__(self, parent, model):

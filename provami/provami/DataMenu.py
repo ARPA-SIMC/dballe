@@ -1,5 +1,5 @@
 import wx
-from wxDballe.Model import *
+from provami.Model import *
 
 class DataMenu(wx.Menu):
 	ACTION_SELECT_SAME_ANA_ID = wx.NewId()

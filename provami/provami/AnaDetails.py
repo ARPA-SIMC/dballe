@@ -1,9 +1,9 @@
 import dballe
 import wx
 import wx.grid
-from wxDballe.Model import ModelListener, Level, TRange
-from wxDballe.ResultGrid import ResultTable, ResultGrid
-from wxDballe.DataMenu import DataMenu
+from provami.Model import ModelListener, Level, TRange
+from provami.ResultGrid import ResultTable, ResultGrid
+from provami.DataMenu import DataMenu
 
 def val_compare(a, b):
 	vara = a.enqvar(a.enqc("var"))

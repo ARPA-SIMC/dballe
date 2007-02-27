@@ -2,7 +2,7 @@ import re
 import wx
 import wx.calendar
 import datetime
-from wxDballe.Model import *
+from provami.Model import *
 
 #def datetime_from_controls(wxdate, wxtime):
 #	date = wxdate.GetValue()

@@ -8,23 +8,23 @@ import re
 from optparse import OptionParser
 import wx
 
-from wxDballe.Model import *
-#from wxDballe.ModelSingleQuery import Model
-from wxDballe.MapCanvas import MapCanvas
-from wxDballe.MapChoice import MapChoice
-#from wxDballe.MapChoiceSingleQuery import MapChoice
-from wxDballe.LimitChoice import LimitChoice
-from wxDballe.LevelsChoice import LevelsChoice
-from wxDballe.ReportChoice import ReportChoice
-from wxDballe.TimeRangeChoice import TimeRangeChoice
-from wxDballe.VarNamesChoice import VarNamesChoice
-from wxDballe.DateChoice import MinDateChoice, MaxDateChoice
-#from wxDballe.DateCanvas import DateCanvas
-from wxDballe.DataResults import DataPanel
-from wxDballe.AttrDetails import AttrResults
-from wxDballe.AnaDetails import AnaResults
-from wxDballe.ResultGrid import ResultGrid
-from wxDballe.FilterWindow import FilterWindow
+from provami.Model import *
+#from provami.ModelSingleQuery import Model
+from provami.MapCanvas import MapCanvas
+from provami.MapChoice import MapChoice
+#from provami.MapChoiceSingleQuery import MapChoice
+from provami.LimitChoice import LimitChoice
+from provami.LevelsChoice import LevelsChoice
+from provami.ReportChoice import ReportChoice
+from provami.TimeRangeChoice import TimeRangeChoice
+from provami.VarNamesChoice import VarNamesChoice
+from provami.DateChoice import MinDateChoice, MaxDateChoice
+#from provami.DateCanvas import DateCanvas
+from provami.DataResults import DataPanel
+from provami.AttrDetails import AttrResults
+from provami.AnaDetails import AnaResults
+from provami.ResultGrid import ResultGrid
+from provami.FilterWindow import FilterWindow
 
 VERSION="1.0"
 

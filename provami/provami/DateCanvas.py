@@ -1,7 +1,7 @@
 import string
 import wx
 import datetime
-from wxDballe.Model import Model, ModelListener, TTracer
+from provami.Model import Model, ModelListener, TTracer
 
 class DateCanvas(wx.Window, ModelListener):
 	def __init__(self, parent, model):
