@@ -1,4 +1,4 @@
-import dballe, dballe.volnd, dballe.dbacsv
+import dballe, dballe.dbacsv
 import time
 import datetime
 import gc
@@ -6,6 +6,18 @@ import os
 import sys
 import traceback
 from provami.Paths import DATADIR
+
+try:
+	import dballe.rconvert, rpy
+	HAS_R = True
+except ImportError:
+	HAS_R = False
+
+try:
+	import dballe.volnd
+	HAS_VOLND = True
+except ImportError:
+	HAS_VOLND = False
 
 def filePath(fileName):
 	if os.access(fileName, os.R_OK):
@@ -344,7 +356,6 @@ class Model:
 		if encoding == "CSV":
 			exporter = dballe.dbacsv.export(self.db, filter, open(file, "w"))
 		elif encoding == "R":
-			import dballe.rconvert, rpy
 			idx = (dballe.volnd.AnaIndex(), \
 			       dballe.volnd.DateTimeIndex(), \
 			       dballe.volnd.LevelIndex(), \

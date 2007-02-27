@@ -237,10 +237,14 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
 #					self, message="Save file as...", defaultDir=os.getcwd(), 
 #					defaultFile="", style=wx.SAVE
 #					)
+			wildcards="According to file extension|*|BUFR optimal template (*.bufr)|*.bufr|BUFR generic template (*.bufr)|*.bufr|CREX (*.crex)|*.crex|Comma Separated Values (*.csv)|*.csv"
+			if Model.HAS_R:
+				wildcards += "|GNU R data file (*.Rdata)|*.Rdata"
+
 			dlg = wx.FileDialog(
 					self, message="Save file as...", defaultDir=os.getcwd(), 
 					#defaultFile="", wildcard="According to file extension|*|BUFR optimal template (*.bufr)|*.bufr|BUFR generic template (*.bufr)|*.bufr|CREX (*.crex)|*.crex|Comma Separated Values (*.csv)|*.csv|GNU R data file (*.Rdata)|*.Rdata|Pickled volNd Python objects (*.volnd)|*.volnd", style=wx.SAVE
-					defaultFile="", wildcard="According to file extension|*|BUFR optimal template (*.bufr)|*.bufr|BUFR generic template (*.bufr)|*.bufr|CREX (*.crex)|*.crex|Comma Separated Values (*.csv)|*.csv|GNU R data file (*.Rdata)|*.Rdata", style=wx.SAVE
+					defaultFile="", wildcard=wildcards, style=wx.SAVE
 					)
 
 			# Show the dialog and retrieve the user response. If it is the OK response, 
