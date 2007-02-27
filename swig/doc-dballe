@@ -29,7 +29,9 @@ doctypemap = {
 }
 
 methodoverrides = {
+	'enqi_ifset(code, found)': ('int, bool', 'enqi_ifset(code)', [('code', 'variable code')]),
 	'enqd_ifset(code, found)': ('float, bool', 'enqd_ifset(code)', [('code', 'variable code')]),
+	'enqs_ifset(code, found)': ('str, bool', 'enqs_ifset(code)', [('code', 'variable code')]),
 }
 
 def fmtarg(str):
