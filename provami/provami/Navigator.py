@@ -1,4 +1,5 @@
 import wx
+import os
 from provami.ProgressDisplay import ProgressDisplay
 from provami.Model import Model, ModelListener, ProgressListener
 from provami.MapChoice import MapChoice
@@ -290,15 +291,27 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
 				#elif eidx == 6:
 				#	encoding = "VOLND"
 
+				pdlg = None
 				try:
-					self.model.exportToFile(str(path), encoding)
-				except RuntimeError:
-					error = ": ".join(map(str, sys.exc_info()[:2]))
-					dlg = wx.MessageDialog(self, "Saving " + path + " failed: " + error,
-								'Error saving ' + path,
-								wx.OK | wx.ICON_ERROR | wx.ICON_INFORMATION
-								)
-					dlg.ShowModal()
-					dlg.Destroy()
+					try:
+						pdlg = wx.ProgressDialog("Saving...",
+								"Saving file " + path,
+								maximum=100,
+								parent=self,
+								style=wx.PD_APP_MODAL)
+						wx.Yield()
+						self.model.exportToFile(str(path), encoding)
+					except RuntimeError:
+						error = ": ".join(map(str, sys.exc_info()[:2]))
+						dlg = wx.MessageDialog(self, "Saving " + path + " failed: " + error,
+									'Error saving ' + path,
+									wx.OK | wx.ICON_ERROR | wx.ICON_INFORMATION
+									)
+						dlg.ShowModal()
+						dlg.Destroy()
+				finally:
+					if pdlg:
+						pdlg.Update(100, "Done.")
+						pdlg.Destroy()
 		else:
 			event.Skip()
