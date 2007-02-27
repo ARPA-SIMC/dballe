@@ -9,9 +9,9 @@ from provami.Paths import DATADIR
 
 try:
 	import dballe.rconvert, rpy
-	HAS_R = True
+	HAS_RPY = True
 except ImportError:
-	HAS_R = False
+	HAS_RPY = False
 
 try:
 	import dballe.volnd
@@ -113,6 +113,8 @@ class UpdateInterrupted:
 	pass
 
 class Model:
+	HAS_RPY = HAS_RPY
+	HAS_VOLND = HAS_VOLND
 	def __init__(self, dsn, user, password):
 		# Init DB-ALLe and connect to the database
 		self.db = dballe.DB(dsn, user, password)
@@ -355,7 +357,7 @@ class Model:
 		filter.unset("limit")
 		if encoding == "CSV":
 			exporter = dballe.dbacsv.export(self.db, filter, open(file, "w"))
-		elif encoding == "R":
+		elif encoding == "R" and HAS_VOLND and HAS_RPY:
 			idx = (dballe.volnd.AnaIndex(), \
 			       dballe.volnd.DateTimeIndex(), \
 			       dballe.volnd.LevelIndex(), \

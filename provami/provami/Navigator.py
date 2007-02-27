@@ -238,7 +238,7 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
 #					defaultFile="", style=wx.SAVE
 #					)
 			wildcards="According to file extension|*|BUFR optimal template (*.bufr)|*.bufr|BUFR generic template (*.bufr)|*.bufr|CREX (*.crex)|*.crex|Comma Separated Values (*.csv)|*.csv"
-			if Model.HAS_R:
+			if Model.HAS_RPY:
 				wildcards += "|GNU R data file (*.Rdata)|*.Rdata"
 
 			dlg = wx.FileDialog(
