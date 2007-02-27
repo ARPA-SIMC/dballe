@@ -1,0 +1,7 @@
+PyGTK + Mathplotlib:
+  http://www.serpia.org/pygtk
+
+Coastlines and other lines:
+  http://oas.ngdc.noaa.gov/mgg/plsql/extract.search_screen?p_lat_min=0.0&p_lat_max=75.5&p_lon_min=-28.0&p_lon_max=72.0
+
+Test DSN with lots of data: --dsn="big"
