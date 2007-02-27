@@ -39,10 +39,30 @@ import numpy
 class SkipDatum(Exception): pass
 
 class Index(list):
-        def __init__(self, shared=True, frozen=False, start=None):
-                self._map = {}
+	def __init__(self, shared=True, frozen=False):
                 self._shared = shared
 		self._frozen = frozen
+	def freeze(self):
+		"""
+		Set the index as frozen: indexing elements not already in the
+		index will raise a SkipDatum exception
+		"""
+		self._frozen = True
+        def another(self):
+                """
+                Return another version of this index: it can be a reference to
+                the exact same index if shared=True; otherwise it's a new,
+                empty version.
+                """
+                if self._shared:
+                        return self
+                else:
+                        return self.__class__()
+
+class ListIndex(Index, list):
+        def __init__(self, shared=True, frozen=False, start=None):
+		Index.__init__(self, shared, frozen)
+                self._map = {}
 		if start:
 			for el in start:
 				id, val = self._splitInit(el)
@@ -63,37 +83,17 @@ class Index(list):
 		preinit an index
 		"""
 		return el, el
-	def freeze(self):
-		"""
-		Set the index as frozen: indexing elements not already in the
-		index will raise a SkipDatum exception
-		"""
-		self._frozen = True
-        def another(self):
-                """
-                Return another version of this index: it can be a reference to
-                the exact same index if shared=True; otherwise it's a new,
-                empty version.
-                """
-                if self._shared:
-                        return self
-                else:
-                        return self.__class__()
-	def peekIndex(self, rec):
+	def approve(self, rec):
                 key = self._indexKey(rec)
-                if key not in self._map:
-			if self._frozen:
-				raise SkipDatum
-			else:
-				return len(self)
-                return self._map[key]
-        def obtainIndex(self, rec):
-		if self._frozen: return self.peekIndex(rec)
+		return not self._frozen or key in self._map
+	def getIndex(self, rec):
                 key = self._indexKey(rec)
-                if key not in self._map:
-                        self._map[key] = len(self)
+		pos = self._map.get(key, -1)
+		if pos == -1:
+			pos = len(self)
+                        self._map[key] = pos
                         self.append(self._indexData(rec))
-                return self._map[key]
+		return pos
 
 class AnaIndexEntry(tuple):
 	"""
@@ -122,7 +122,7 @@ class AnaIndexEntry(tuple):
 	def __repr__(self):
 		return "AnaIndexEntry" + tuple.__repr__(self)
 
-class AnaIndex(Index):
+class AnaIndex(ListIndex):
         """
         Index for stations, as they come out of the database
         """
@@ -157,7 +157,7 @@ class NetworkIndexEntry(tuple):
 	def __repr__(self):
 		return "NetworkIndexEntry" + tuple.__repr__(self)
 
-class NetworkIndex(Index):
+class NetworkIndex(ListIndex):
         """
         Index for networks, as they come out of the database
         """
@@ -170,7 +170,7 @@ class NetworkIndex(Index):
         def shortName(self):
                 return "NetworkIndex["+str(len(self))+"]"
 
-class LevelIndex(Index):
+class LevelIndex(ListIndex):
         """
         Index for levels, as they come out of the database
         """
@@ -181,7 +181,7 @@ class LevelIndex(Index):
         def shortName(self):
                 return "LevelIndex["+str(len(self))+"]"
 
-class TimeRangeIndex(Index):
+class TimeRangeIndex(ListIndex):
         """
         Index for time ranges, as they come out of the database
         """
@@ -192,7 +192,7 @@ class TimeRangeIndex(Index):
         def shortName(self):
                 return "TimeRangeIndex["+str(len(self))+"]"
 
-class DateTimeIndex(Index):
+class DateTimeIndex(ListIndex):
         """
         Index for datetimes, as they come out of the database
         """
@@ -255,7 +255,7 @@ class IntervalIndex(Index):
         point in time, and continue for as long as there are fitting data
         coming out of the database.
         """
-        def __init__(self, start, step, tolerance = 0, *args, **kwargs):
+        def __init__(self, start, step, tolerance = 0, end=None, *args, **kwargs):
                 """
                 start is a datetime with the starting moment
                 step is a timedelta with the interval between times
@@ -265,42 +265,55 @@ class IntervalIndex(Index):
                 Index.__init__(self, *args, **kwargs)
                 self._start = start
                 self._step = step
+		self._end = end
+		if end != None:
+			self._size = (end-start)/step
+		else:
+			self._size = 0
                 self._tolerance = timedelta(0)
-	def _getpos(self, rec):
+
+	def approve(self, rec):
                 t = rec.enqdate()
                 # Skip all entries before the start
-                if (t < self._start):
-                        raise SkipDatum
-
+                if t < self._start:
+			return False
+		if self._end and t > self._end:
+			return False
                 # With integer division we get both the position and the skew
                 pos, skew = tddivmod(t - self._start, self._step)
                 if skew > self._step / 2:
                         pos += 1
                         skew = skew - self._step
                 if skew > self._tolerance:
-                        raise SkipDatum
+			return False
+		if self._frozen and pos >= self._size:
+			return False
+		return True
+
+	def getIndex(self, rec):
+                t = rec.enqdate()
+                # With integer division we get both the position and the skew
+                pos, skew = tddivmod(t - self._start, self._step)
+                if skew > self._step / 2:
+                        pos += 1
+		if pos >= self._size:
+			self._size = pos + 1
 		return pos
-        def peekIndex(self, rec):
-		pos = self._getpos(rec)
-		if self._frozen and pos >= len(self):
-                        raise SkipDatum
-                return pos
-        def obtainIndex(self, rec):
-		if self._frozen:
-			return self.peekIndex(rec)
-		pos = self._getpos(rec)
-                if pos >= len(self):
-                        # Extend the list with the missing places
-                        for i in xrange(len(self), pos+1):
-                                self.append(self._start + self._step * i)
-                return pos
+
+	def __len__(self):
+		return self._size
+	def __iter__(self):
+		for i in xrange(self._size):
+			yield self._start + self._step * i
+        def __str__(self):
+                return self.shortName() + ": " + ", ".join(self)
         def shortName(self):
-                return "IntervalIndex["+str(len(self))+"]"
+                return "IntervalIndex["+str(self._size)+"]"
         def another(self):
                 if self._shared:
                         return self
                 else:
-                        return IntervalIndex(self._start, self._step, self._tolerance)
+                        return IntervalIndex(self._start, self._step, self._tolerance, self._end)
 
 class Data:
         """
@@ -340,35 +353,29 @@ class Data:
 
                 self._lastPos = None
 
-        def appendAtPos(self, pos, var):
-                """
-                Collect a variable to be written on the specific indexes
-                """
-                self.vals.append( (pos, var.enq()) )
-        
         def append(self, rec):
                 """
                 Collect a new value from the given dballe record.
 
                 You need to call finalise() before the values can be used.
                 """
-                try:
+		accepted = True
+		for dim in self.dims:
+			if not dim.approve(rec):
+				accepted = False
+				break
+		if accepted:
                         # Obtain the index for every dimension
-                        pos = map(lambda dim: dim.peekIndex(rec), self.dims)
+			pos = [dim.getIndex(rec) for dim in self.dims]
 
                         # Save the value with its indexes
-                        self.appendAtPos(pos, rec.enqvar(self.name))
-
-			# The data has been accepted: commit the new index
-			# values
-			for dim in self.dims:
-				dim.obtainIndex(rec)
+			self.vals.append( (pos, rec.enqvar(self.name).enq()) )
 
                         # Save the last position for appendAttrs
                         self._lastPos = pos
 
                         return True
-                except SkipDatum:
+		else:
                         # If the value cannot be mapped along this dimension,
                         # skip it
                         self._lastPos = None
@@ -390,7 +397,7 @@ class Data:
                                 self.attrs[var.code()] = data
                         # Append at the same position as the last variable
                         # collected
-                        data.appendAtPos(self._lastPos, var)
+			data.vals.append( (self._lastPos, var.enq()) )
 
 	def _instantiateIntMatrix(self):
 		if self.info.bit_ref() == 0:
@@ -444,6 +451,7 @@ class Data:
                                 return False
 
                 # Create the data array, with all values set as missing
+		#print "volnd finalise instantiate"
 		if self.info.is_string():
 			#print self.info, "string"
 			a = numpy.empty(map(len, self.dims), dtype=object)
@@ -470,6 +478,7 @@ class Data:
                 self.vals = a
 
                 # Finalise all the attributes as well
+		#print "volnd finalise fill"
                 invalid = []
                 for key, d in self.attrs.iteritems():
                         if not d.finalise():
@@ -505,6 +514,7 @@ def read(query, dims, filter=None, checkConflicts=True, attributes=None):
         vars = {}
         rec = dballe.Record()
         arec = dballe.Record()
+	#print "volnd iterate"
         # Iterate results
         while True:
                 if not query.next(rec):
@@ -541,6 +551,7 @@ def read(query, dims, filter=None, checkConflicts=True, attributes=None):
 
 
         # Now that we have collected all the values, create the arrays
+	#print "volnd finalise"
         invalid = []
         for k, var in vars.iteritems():
                 if not var.finalise():
