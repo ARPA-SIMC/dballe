@@ -8,7 +8,7 @@
 namespace dballe {
 
 /**
- * Wrap a dba_varinfo
+ * Access all available information about a DB-All.e mesured value.
  */
 class Varinfo
 {
