@@ -20,7 +20,6 @@ provamiModules = \
 	provami/__init__.py \
 	provami/AnaDetails.py \
 	provami/AttrDetails.py \
-	provami/CSV.py \
 	provami/DataMenu.py \
 	provami/DataResults.py \
 	provami/DateCanvas.py \

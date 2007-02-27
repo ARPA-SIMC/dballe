@@ -10,7 +10,7 @@ endif
 pyexec_LTLIBRARIES = _dballe.la
 
 nodist_pkgpython_PYTHON = dballe.py
-pkgpython_PYTHON = volnd.py rconvert.py __init__.py
+pkgpython_PYTHON = csv.py volnd.py rconvert.py __init__.py
 
 nodist__dballe_la_SOURCES = dballe_wrap_python.cc
 _dballe_la_LDFLAGS = -module
