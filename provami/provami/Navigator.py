@@ -1,5 +1,4 @@
-import wx
-import os
+import wx, os, re
 from provami.ProgressDisplay import ProgressDisplay
 from provami.Model import Model, ModelListener, ProgressListener
 from provami.MapChoice import MapChoice
@@ -268,12 +267,12 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
 				encoding = "BUFR"
 				# According to file extension
 				if eidx == 0:
-					crexmatch = re.compile('.crex$', re.IGNORECASE)
-					csvmatch = re.compile('.csv$', re.IGNORECASE)
-					if crexmatch.search(path):
+					if re.search('.crex$', path, re.IGNORECASE):
 						encoding = "CREX"
-					elif csvmatch.search(path):
+					elif re.search('.csv$', path, re.IGNORECASE):
 						encoding = "CSV"
+					elif re.search('.Rdata$', path, re.IGNORECASE):
+						encoding = "R"
 				# BUFR optimal template (*.bufr)
 				elif eidx == 1:
 					encoding = "BUFR"
@@ -291,16 +290,27 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
 				#elif eidx == 6:
 				#	encoding = "VOLND"
 
+				# Add extension if missing
+				if os.path.basename(path).find(".") == -1:
+					extensions = {"BUFR": ".bufr",
+						      "gBUFR": ".bufr",
+						      "CREX": ".crex",
+						      "CSV": ".csv",
+						      "R": ".Rdata"}
+					path = path + extensions.get(encoding, "")
+
 				pdlg = None
 				try:
 					try:
 						pdlg = wx.ProgressDialog("Saving...",
-								"Saving file " + path,
+								"Saving file " + path + "...",
 								maximum=100,
 								parent=self,
 								style=wx.PD_APP_MODAL)
 						wx.Yield()
 						self.model.exportToFile(str(path), encoding)
+						# It seems that it never returns from this function
+						#pdlg.Update(100, "Done.")
 					except RuntimeError:
 						error = ": ".join(map(str, sys.exc_info()[:2]))
 						dlg = wx.MessageDialog(self, "Saving " + path + " failed: " + error,
@@ -311,7 +321,6 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
 						dlg.Destroy()
 				finally:
 					if pdlg:
-						pdlg.Update(100, "Done.")
 						pdlg.Destroy()
 		else:
 			event.Skip()
