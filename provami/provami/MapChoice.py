@@ -1,8 +1,8 @@
 import wx
-from wxDballe.Model import *
-from wxDballe.MapCanvas import MapCanvas, MapCanvasListener
-from wxDballe.IdentChoice import IdentChoice
-from wxDballe.QueryButton import QueryButton
+from provami.Model import *
+from provami.MapCanvas import MapCanvas, MapCanvasListener
+from provami.IdentChoice import IdentChoice
+from provami.QueryButton import QueryButton
 
 class MapChoice(wx.Frame, ModelListener, MapCanvasListener):
 

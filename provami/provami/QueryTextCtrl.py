@@ -1,5 +1,5 @@
 import wx
-from wxDballe.Model import ModelListener
+from provami.Model import ModelListener
 
 class QueryTextCtrl(wx.TextCtrl, ModelListener):
 	def __init__(self, parent, model, filterTag, updateFunc = None, isValid = None):

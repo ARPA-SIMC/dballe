@@ -1,6 +1,6 @@
 import dballe
 import wx
-from wxDballe.QueryChoice import QueryChoice
+from provami.QueryChoice import QueryChoice
 
 class VarNamesChoice(QueryChoice):
 	def __init__(self, parent, model):

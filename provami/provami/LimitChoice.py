@@ -1,6 +1,6 @@
 import wx
-from wxDballe.Model import ModelListener
-from wxDballe.QueryButton import QueryButton
+from provami.Model import ModelListener
+from provami.QueryButton import QueryButton
 
 class LimitChoice(wx.Panel, ModelListener):
 	def __init__(self, parent, model, id=-1):

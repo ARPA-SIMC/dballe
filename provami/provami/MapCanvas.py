@@ -1,6 +1,6 @@
 import string
 import wx
-from wxDballe.Model import Model, ModelListener, TTracer
+from provami.Model import Model, ModelListener, TTracer
 
 class MapCanvasListener:
 	def modeChanged (self, oldMode, mode):

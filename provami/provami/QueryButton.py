@@ -1,5 +1,5 @@
 import wx
-from wxDballe.Model import ModelListener
+from provami.Model import ModelListener
 
 class QueryButton(wx.Button, ModelListener):
 	def __init__(self, parent, model, id=-1):

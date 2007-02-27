@@ -1,5 +1,5 @@
 import wx
-from wxDballe.Model import ModelListener
+from provami.Model import ModelListener
 
 class QueryChoice(wx.Choice, ModelListener):
 	def __init__(self, parent, model, filterTag, dataTag):
