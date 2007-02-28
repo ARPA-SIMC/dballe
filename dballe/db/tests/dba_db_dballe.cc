@@ -307,6 +307,21 @@ void to::test<3>()
 		dba_db_cursor_delete(cursor); \
 	} while (0)
 
+#define TRY_QUERY2(lonmin, lonmax, expected_count) do {\
+		int count; \
+		dba_db_cursor cursor; \
+		dba_record_clear(query); \
+		CHECKED(dba_record_key_setd(query, DBA_KEY_LONMIN, lonmin)); \
+		CHECKED(dba_record_key_setd(query, DBA_KEY_LONMAX, lonmax)); \
+		CHECKED(dba_db_query(db, query, &cursor, &count)); \
+		gen_ensure(cursor != 0); \
+		if (0) \
+			print_results(cursor); \
+		gen_ensure_equals(count, expected_count); \
+		dba_db_cursor_delete(cursor); \
+	} while (0)
+
+
 	TRY_QUERY(c, DBA_KEY_ANA_ID, "1", 4);
 	TRY_QUERY(c, DBA_KEY_ANA_ID, "2", 0);
 	TRY_QUERY(i, DBA_KEY_YEAR, 1000, 5);
@@ -370,12 +385,12 @@ void to::test<3>()
 	TRY_QUERY(d, DBA_KEY_LATMAX, 11, 0);
 	TRY_QUERY(d, DBA_KEY_LATMAX, 12.34560, 4);
 	TRY_QUERY(d, DBA_KEY_LATMAX, 13, 4);
-	TRY_QUERY(d, DBA_KEY_LONMIN, 75, 4);
-	TRY_QUERY(d, DBA_KEY_LONMIN, 76.54320, 4);
-	TRY_QUERY(d, DBA_KEY_LONMIN, 77, 0);
-	TRY_QUERY(d, DBA_KEY_LONMAX, 75, 0);
-	TRY_QUERY(d, DBA_KEY_LONMAX, 76.5432, 4);
-	TRY_QUERY(d, DBA_KEY_LONMAX, 77, 4);
+	TRY_QUERY2(75., 77., 4);
+	TRY_QUERY2(76.54320, 76.54320, 4);
+	TRY_QUERY2(76.54330, 77., 0);
+	TRY_QUERY2(77., 76.54330, 4);
+	TRY_QUERY2(77., 76.54320, 4);
+	TRY_QUERY2(77., -10, 0);
 	TRY_QUERY(i, DBA_KEY_MOBILE, 0, 4);
 	TRY_QUERY(i, DBA_KEY_MOBILE, 1, 0);
 	//TRY_QUERY(c, DBA_KEY_IDENT_SELECT, "pippo");

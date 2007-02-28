@@ -411,6 +411,12 @@ static dba_err add_int(
 	return dba_error_ok();
 }
 
+// Normalise longitude values to the [-180..180] interval
+static inline int normalon(int lon)
+{
+	return ((lon + 18000000) % 36000000) - 18000000;
+}
+
 static dba_err make_where(dba_db_cursor cur, dba_record query)
 {
 #define ADD_INT(field, key, sql, needed) DBA_RUN_OR_RETURN(add_int(cur, query, field, key, sql, needed))
@@ -425,28 +431,35 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 	ADD_INT(&cur->sel_latmin, DBA_KEY_LAT, "pa.lat=?", DBA_DB_FROM_PA);
 	ADD_INT(&cur->sel_latmin, DBA_KEY_LATMIN, "pa.lat>=?", DBA_DB_FROM_PA);
 	ADD_INT(&cur->sel_latmax, DBA_KEY_LATMAX, "pa.lat<=?", DBA_DB_FROM_PA);
-	ADD_INT(&cur->sel_lonmin, DBA_KEY_LON, "pa.lon=?", DBA_DB_FROM_PA);
+	//ADD_INT(&cur->sel_lonmin, DBA_KEY_LON, "pa.lon=?", DBA_DB_FROM_PA);
+	if ((val = dba_record_key_peek_value(query, DBA_KEY_LON)) != NULL)
+	{
+		cur->sel_lonmin = normalon(strtol(val, 0, 10));
+		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "pa.lon=?"));
+		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &cur->sel_lonmin, 0, 0);
+		cur->from_wanted |= DBA_DB_FROM_PA;
+	}
 	if (dba_record_key_peek_value(query, DBA_KEY_LONMIN) != NULL &&
 	    dba_record_key_peek_value(query, DBA_KEY_LONMAX) != NULL)
 	{
 		int lonmin, lonmax, ival;
 		DBA_RUN_OR_RETURN(dba_record_key_enqi(query, DBA_KEY_LONMIN, &lonmin, &ival));
 		DBA_RUN_OR_RETURN(dba_record_key_enqi(query, DBA_KEY_LONMAX, &lonmax, &ival));
+		cur->sel_lonmin = normalon(lonmin);
+		cur->sel_lonmax = normalon(lonmax);
 		if (lonmin < lonmax)
 		{
-			ADD_INT(&cur->sel_lonmin, DBA_KEY_LONMIN, "pa.lon>=?", DBA_DB_FROM_PA);
-			ADD_INT(&cur->sel_lonmax, DBA_KEY_LONMAX, "pa.lon<=?", DBA_DB_FROM_PA);
+			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "pa.lon>=? AND pa.lon<=?"));
 		} else {
-			cur->sel_lonmin = lonmin;
-			cur->sel_lonmax = lonmax;
-			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "((pa.lon>=-18000000 AND pa.lon<=?) OR (pa.lon>=? AND pa.lon <= 18000000))"));
-			SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &cur->sel_lonmax, 0, 0);
-			SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &cur->sel_lonmin, 0, 0);
-			cur->from_wanted |= DBA_DB_FROM_PA;
+			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "((pa.lon>=? AND pa.lon<=18000000) OR (pa.lon>=-18000000 AND pa.lon<=?))"));
 		}
-	} else {
-		ADD_INT(&cur->sel_lonmin, DBA_KEY_LONMIN, "pa.lon>=?", DBA_DB_FROM_PA);
-		ADD_INT(&cur->sel_lonmax, DBA_KEY_LONMAX, "pa.lon<=?", DBA_DB_FROM_PA);
+		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &cur->sel_lonmin, 0, 0);
+		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &cur->sel_lonmax, 0, 0);
+		cur->from_wanted |= DBA_DB_FROM_PA;
+	} else if (dba_record_key_peek_value(query, DBA_KEY_LONMIN) != NULL) {
+		return dba_error_consistency("'lonmin' query parameter was specified without 'lonmax'");
+	} else if (dba_record_key_peek_value(query, DBA_KEY_LONMAX) != NULL) {
+		return dba_error_consistency("'lonmax' query parameter was specified without 'lonmin'");
 	}
 
 //	fprintf(stderr, "A2 '%s'\n", dba_querybuf_get(cur->where));
