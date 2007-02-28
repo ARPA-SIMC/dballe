@@ -683,6 +683,12 @@ static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana
 }
 #endif
 
+// Normalise longitude values to the [-180..180[ interval
+static inline int normalon(int lon)
+{
+	return ((lon + 18000000) % 36000000) - 18000000;
+}
+
 /*
  * Insert or replace data in pseudoana taking the values from rec.
  * If rec did not contain ana_id, it will be set by this function.
@@ -722,7 +728,7 @@ static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int can_add, int*
 		err = dba_error_notfound("looking for longitude when trying to insert a station in the database");
 		goto cleanup;
 	}
-	a->lon = lon;
+	a->lon = normalon(lon);
 	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_MOBILE, &mobile, &found));
 	if (found && mobile)
 	{

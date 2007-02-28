@@ -411,7 +411,7 @@ static dba_err add_int(
 	return dba_error_ok();
 }
 
-// Normalise longitude values to the [-180..180] interval
+// Normalise longitude values to the [-180..180[ interval
 static inline int normalon(int lon)
 {
 	return ((lon + 18000000) % 36000000) - 18000000;
