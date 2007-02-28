@@ -71,6 +71,7 @@ class TimeRange(tuple):
 %}
 
 %extend dballe::Var {
+        %ignore operator==;
         %pythoncode %{
                 def __cmp__(self, other):
                         if other == None:
@@ -93,6 +94,13 @@ class TimeRange(tuple):
                         return self.format("None")
                 def __repr__(self):
                         return "Var(%s, %s)" % (self.code(), self.format("None"))
+                def __eq__(self, var):
+                        if var is None:
+                                return False
+                        elif not issubclass(var.__class__, Var):
+                                return self.enq() == var
+                        else:
+                                return self.equals(var)
                 def enq(self):
                         if self.info().is_string():
                                 return self.enqc()

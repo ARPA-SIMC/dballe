@@ -75,6 +75,14 @@ class VarTest(unittest.TestCase):
 		var = Var("B01019", "ciao")
 		self.assertEqual(type(var.enq()), str)
 		self.assertEqual(var.enq(), "ciao")
+	def testEq(self):
+		var = Var("B01001", 1)
+		self.assertEqual(var, var)
+		self.assertEqual(var, Var("B01001", 1))
+		self.assertNotEqual(var, Var("B01001", 2))
+		self.assertNotEqual(var, Var("B01002", 1))
+		self.assertNotEqual(var, None)
+		self.assertNotEqual(Var("B01001"), None)
 
 
 class RecordTest(unittest.TestCase):
