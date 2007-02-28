@@ -1,11 +1,12 @@
-dballe (3.0.1unreleased2-1) unstable; urgency=low
+dballe (3.1-1) unstable; urgency=low
 
   * New upstream version
      + Moved provami into the package
      + Added dballe.volnd and dballe.rconvert Python modules
      + Improved C++ and Python bindings
+  * Conflict with old libdballe-dev.  Closes: bug#411975.
 
- -- Enrico Zini <enrico@debian.org>  Wed, 14 Feb 2007 10:06:33 +0100
+ -- Enrico Zini <enrico@debian.org>  Wed, 28 Feb 2007 13:47:20 +0100
 
 dballe (3.0.1-1) unstable; urgency=low
 

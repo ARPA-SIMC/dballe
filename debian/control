@@ -9,6 +9,7 @@ Package: libdballe-core-dev
 Section: libdevel
 Architecture: any
 Depends: libdballe-core3 (= ${Source-Version})
+Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: DB-ALL.e core C development library
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -43,6 +44,7 @@ Package: libdballe-bufrex-dev
 Section: libdevel
 Architecture: any
 Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex3 (=${Source-Version})
+Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Read and write functions for BUFR and CREX weather data
  Functions to read and write weather data in WMO BUFR and CREX formats.
@@ -73,6 +75,7 @@ Package: libdballe-msg-dev
 Section: libdevel
 Architecture: any
 Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballe-msg3 (=${Source-Version})
+Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Interpret weather reports into physycal data, and vice-versa
  The library implements the dba_msg infrastructure for handling physical data
@@ -112,6 +115,7 @@ Package: libdballe-db-dev
 Section: libdevel
 Architecture: any
 Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballe-msg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version}), libdballe-db3 (=${Source-Version})
+Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Smart on-disk database for weather data
  Fast on-disk database where meteorological observed and forecast data can be
@@ -167,6 +171,7 @@ Package: libdballef-dev
 Section: libdevel
 Architecture: any
 Depends: libdballef3 (=${Source-Version})
+Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Database for punctual meteorological data (Fortran development library)
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -189,6 +194,7 @@ Package: libdballepp-dev
 Section: libdevel
 Architecture: any
 Depends: libdballepp3 (=${Source-Version}), libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballe-msg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version}), libdballe-db-dev (=${Source-Version}), libdballe-db3 (=${Source-Version})
+Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Database for punctual meteorological data (C++ development library)
  DB-All.e is a fast on-disk database where meteorological observed and
