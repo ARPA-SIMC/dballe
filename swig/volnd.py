@@ -473,6 +473,7 @@ class Data:
                 if not self._lastPos:
                         return
                 for var in rec.itervars():
+			#print "Attr", var.code(), "for", self.name, "at", self._lastPos
                         if var.code() in self.attrs:
                                 data = self.attrs[var.code()]
                         else:

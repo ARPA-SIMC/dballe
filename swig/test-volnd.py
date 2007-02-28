@@ -6,6 +6,7 @@ from dballe.volnd import *
 import unittest, random, sys
 from datetime import *
 import numpy
+import numpy.core.ma as ma
 
 class TestTddiv(unittest.TestCase):
 
@@ -98,6 +99,7 @@ class TestRead(unittest.TestCase):
 						rec.setd("B13011", random.random()*10.)
 						if random.random() <= 0.9:
 							c, a = self.db.insert(rec, False, True)
+							attrs.clear()
 							attrs[aname] = rattr.random()*100.
 							self.db.attrInsert(c, "B13011", attrs)
 							
@@ -112,6 +114,7 @@ class TestRead(unittest.TestCase):
 						rec.setd("B13011", random.random()*10.)
 						if random.random() <= 0.9:
 							c, a = self.db.insert(rec, False, True)
+							attrs.clear()
 							attrs[aname] = rattr.random()*100.
 							self.db.attrInsert(c, "B13011", attrs)
 						cur += timedelta(0, 12*3600, 0)
@@ -128,6 +131,7 @@ class TestRead(unittest.TestCase):
 						rec.setd("B13011", random.random()*10.)
 						if random.random() <= 0.9:
 							c, a = self.db.insert(rec, False, True)
+							attrs.clear()
 							attrs[aname] = rattr.random()*100.
 							self.db.attrInsert(c, "B13011", attrs)
 						cur += timedelta(0, 6*3600, 0)
@@ -143,6 +147,7 @@ class TestRead(unittest.TestCase):
 						rec.setd("B10004", random.randint(70000, 105000))
 						if random.random() <= 0.9:
 							c, a = self.db.insert(rec, False, True)
+							attrs.clear()
 							attrs[aname] = rattr.random()*100.
 							self.db.attrInsert(c, "B10004", attrs)
 						cur += timedelta(0, 12*3600, 0)
@@ -245,7 +250,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.vals.size, 12)
 		self.assertEquals(data.vals.shape, (6, 2))
 		self.assertEquals(sum(data.vals.mask.flat), 1)
-		self.assertEquals(MA.average(data.vals), 86890)
+		self.assertEquals(ma.average(data.vals), 86890)
 		self.assertEquals(data.dims[0][0], (1, 10., 15., None))
 		self.assertEquals(data.dims[0][1], (2, 10., 25., None))
 		self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -273,7 +278,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.vals.size, 12)
 		self.assertEquals(data.vals.shape, (6, 1, 2))
 		self.assertEquals(sum(data.vals.mask.flat), 1)
-		self.assertEquals(MA.average(data.vals), 86890)
+		self.assertEquals(ma.average(data.vals), 86890)
 		self.assertEquals(data.dims[0][0], (1, 10., 15., None))
 		self.assertEquals(data.dims[0][1], (2, 10., 25., None))
 		self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -293,7 +298,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.vals.size, 24)
 		self.assertEquals(data.vals.shape, (6, 2, 2))
 		self.assertEquals(sum(data.vals.mask.flat), 3)
-		self.assertEquals(MA.average(data.vals), 4)
+		self.assertAlmostEquals(ma.average(data.vals), 4.033333, 6)
 		self.assertEquals(data.dims[0][0], (1, 10., 15., None))
 		self.assertEquals(data.dims[0][1], (2, 10., 25., None))
 		self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -321,13 +326,25 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(len(data.attrs), 2)
 		self.assertEquals(sorted(data.attrs.keys()), ['B33007', 'B33040'])
 
-		for a in ('B33007', 'B33040'):
+		for net, a in ('synop', 'B33007'), ('noaa', 'B33040'):
 			self.assertEquals(data.dims, data.attrs[a].dims)
 			self.assertEquals(data.vals.size, data.attrs[a].vals.size)
 			self.assertEquals(data.vals.shape, data.attrs[a].vals.shape)
-			self.assertEquals(data.vals.mask.flat, data.attrs[a].vals.mask.flat)
-		self.assertEquals(MA.average(data.attrs['B33007'].vals), 50.)
-		self.assertEquals(MA.average(data.attrs['B33040'].vals), 50.)
+
+			# Find what is the network dimension where we have the attributes
+			netidx = -1
+			for idx, n in enumerate(data.dims[1]):
+				if n[1] == net:
+					netidx = idx
+					break
+			self.assertNotEquals(netidx, -1)
+
+			# No attrs in the other network
+			self.assertEquals([x for x in data.attrs[a].vals.mask[:,1-netidx].flat], [True]*len(data.attrs[a].vals.mask[:,1-netidx].flat))
+			# Same attrs as values in this network
+			self.assertEquals([x for x in data.vals.mask[:,netidx].flat], [x for x in data.attrs[a].vals.mask[:,netidx].flat])
+		self.assertEquals(ma.average(data.attrs['B33007'].vals), 53.5)
+		self.assertEquals(ma.average(data.attrs['B33040'].vals), 36.8)
 
 	def testSomeAttrs(self):
 		# Same export as testAnaNetwork, but check that the
@@ -346,8 +363,19 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.dims, a.dims)
 		self.assertEquals(data.vals.size, a.vals.size)
 		self.assertEquals(data.vals.shape, a.vals.shape)
-		self.assertEquals(data.vals.mask.flat, a.vals.mask.flat)
-		self.assertEquals(MA.average(a.vals), 50.)
+
+		# Find the noaa index
+		netidx = -1
+		for idx, n in enumerate(data.dims[1]):
+			if n[1] == "noaa":
+				netidx = idx
+				break
+		self.assertNotEquals(netidx, -1)
+
+		# Only compare the values on the noaa index
+		self.assertEquals([x for x in a.vals.mask[:,1-netidx].flat], [True]*len(a.vals.mask[:,1-netidx].flat))
+		self.assertEquals([x for x in data.vals.mask[:,netidx].flat], [x for x in a.vals.mask[:,netidx].flat])
+		self.assertEquals(ma.average(a.vals), 36.8)
 
 	def testEmptyExport(self):
 		query = dballe.Record()
