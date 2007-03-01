@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+import os
+os.environ["DBALLE_BUILDING_DOCS"]="true"
+
 try:
 	import rpy_options
 	rpy_options.set_options(VERBOSE=False)

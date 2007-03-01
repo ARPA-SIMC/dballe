@@ -66,8 +66,10 @@ from datetime import *
 #  - livello, scadenza
 #
 
-import numpy
-import numpy.core.ma as ma
+import os
+if os.environ["DBALLE_BUILDING_DOCS"] != 'true':
+	import numpy
+	import numpy.core.ma as ma
 
 
 class SkipDatum(Exception): pass

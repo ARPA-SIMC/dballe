@@ -1,10 +1,12 @@
 # Failed experiment: the __dict__ of MaskedArray is a dictproxy instance that
 # is read-only
 import volnd
-import numpy
-import numpy.core.ma as ma
-import Numeric as numeric
-import rpy
+import os
+if os.environ["DBALLE_BUILDING_DOCS"] != 'true':
+	import numpy
+	import numpy.core.ma as ma
+	import Numeric as numeric
+	import rpy
 
 #dballe.volnd.Data.__dict__['as_r'] = new.instancemethod(fun, None, dballe.volnd.Data)
 
