@@ -68,7 +68,7 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 		if (msg->type != MSG_AMDAR || (OBS(24) == AOF_UNDEF))
 		{
 			ltype = 100;
-			l1 = press / 100;
+			l1 = press;
 			/* fprintf(stderr, "Press float: %f int: %d encoded: %s\n", press, l1, dba_var_value(dba_msg_get_flight_press_var(msg))); */
 		}
 	}

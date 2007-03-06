@@ -77,7 +77,7 @@ dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				DBA_RUN_OR_RETURN(dba_msg_set_flight_press_var(msg, var));
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
 				ltype = 100;
-				l1 = press / 100;
+				l1 = press;
 				break;
 			}
 			case DBA_VAR(0, 11,  1):

@@ -67,7 +67,7 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
 		if (OBS(os + 0) != AOF_UNDEF)
 		{
 			ltype = 100;
-			l1 = OBS(os + 0) / 10;
+			l1 = OBS(os + 0) * 10;
 			/* Pressure */
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 4),
 						((double)OBS(os + 0) * 10), get_conf6(OBS(os+5) & 0x3f),

@@ -130,7 +130,7 @@ static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int t
 		if ((d1 = dba_msg_level_find(lev, DBA_VAR(0, 10, 4), 0, 0, 0)) != NULL)
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 7, 4), d1->var));
 		else if (lev->ltype == 100)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, DBA_VAR(0, 7, 4), lev->l1 * 100));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, DBA_VAR(0, 7, 4), lev->l1));
 		else
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 7, 4)));
 

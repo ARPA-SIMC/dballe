@@ -68,7 +68,7 @@ dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			double press;
 			DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
 			ltype = 100;
-			l1 = press / 100;
+			l1 = press;
 			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 4), ltype, l1, 0, 0, 0, 0));
 		}
 		if (GET(i + 2, "B10003"))

@@ -166,10 +166,10 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 	{
 		double press;
 		DBA_RUN_OR_RETURN(dba_var_enqd(d->var, &press));
-		if (dba_msg_find_level(src, 100, press/100, 0) != NULL)
+		if (dba_msg_find_level(src, 100, press, 0) != NULL)
 		{
 			ltype = 100;
-			l1 = press / 100;
+			l1 = press;
 			/* fprintf(stderr, "BUFR Press float: %f int: %d encoded: %s\n", press, l1, dba_var_value(d->var)); */
 		}
 	}
