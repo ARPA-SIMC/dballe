@@ -63,7 +63,7 @@ struct _bufrex_exporter bufrex_exporter_synop_0_1high = {
 	/* Data descriptor section */
 	(dba_varcode[]){
 		DBA_VAR(3,  7,  7),
-		DBA_VAR(0, 13, 23),
+		DBA_VAR(0, 13, 11),
 		DBA_VAR(0, 13, 13),
 		DBA_VAR(2, 22,  0),
 		DBA_VAR(1,  1, 34),
