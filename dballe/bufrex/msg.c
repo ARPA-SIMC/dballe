@@ -261,6 +261,117 @@ void bufrex_msg_print(bufrex_msg msg, FILE* out)
 	}
 }
 
+void bufrex_msg_diff(bufrex_msg msg1, bufrex_msg msg2, int* diffs, FILE* out)
+{
+	if (msg1->encoding_type != msg2->encoding_type)
+	{
+		fprintf(out, "Encoding types differ (first is %d, second is %d)\n",
+				msg1->encoding_type, msg2->encoding_type);
+		++*diffs;
+	} else {
+		switch (msg1->encoding_type)
+		{
+			case BUFR:
+				if (msg1->opt.bufr.origin != msg2->opt.bufr.origin)
+				{
+					fprintf(out, "BUFR origins differ (first is %d, second is %d)\n",
+							msg1->opt.bufr.origin, msg2->opt.bufr.origin);
+					++*diffs;
+				}
+				if (msg1->opt.bufr.master_table != msg2->opt.bufr.master_table)
+				{
+					fprintf(out, "BUFR master tables differ (first is %d, second is %d)\n",
+							msg1->opt.bufr.master_table, msg2->opt.bufr.master_table);
+					++*diffs;
+				}
+				if (msg1->opt.bufr.local_table != msg2->opt.bufr.local_table)
+				{
+					fprintf(out, "BUFR local tables differ (first is %d, second is %d)\n",
+							msg1->opt.bufr.local_table, msg2->opt.bufr.local_table);
+					++*diffs;
+				}
+				break;
+			case CREX:
+				if (msg1->opt.crex.master_table != msg2->opt.crex.master_table)
+				{
+					fprintf(out, "CREX master tables differ (first is %d, second is %d)\n",
+							msg1->opt.crex.master_table, msg2->opt.crex.master_table);
+					++*diffs;
+				}
+				if (msg1->opt.crex.table != msg2->opt.crex.table)
+				{
+					fprintf(out, "CREX local tables differ (first is %d, second is %d)\n",
+							msg1->opt.crex.table, msg2->opt.crex.table);
+					++*diffs;
+				}
+				break;
+		}
+	}
+	if (msg1->type != msg2->type)
+	{
+		fprintf(out, "Template types differ (first is %d, second is %d)\n",
+				msg1->type, msg2->type);
+		++*diffs;
+	}
+	if (msg1->subtype != msg2->subtype)
+	{
+		fprintf(out, "Template subtypes differ (first is %d, second is %d)\n",
+				msg1->subtype, msg2->subtype);
+		++*diffs;
+	}
+	if (msg1->edition != msg2->edition)
+	{
+		fprintf(out, "Table editions differ (first is %d, second is %d)\n",
+				msg1->edition, msg2->edition);
+		++*diffs;
+	}
+	if (msg1->rep_year != msg2->rep_year)
+	{
+		fprintf(out, "Reference years differ (first is %d, second is %d)\n",
+				msg1->rep_year, msg2->rep_year);
+		++*diffs;
+	}
+	if (msg1->rep_month != msg2->rep_month)
+	{
+		fprintf(out, "Reference months differ (first is %d, second is %d)\n",
+				msg1->rep_month, msg2->rep_month);
+		++*diffs;
+	}
+	if (msg1->rep_day != msg2->rep_day)
+	{
+		fprintf(out, "Reference days differ (first is %d, second is %d)\n",
+				msg1->rep_day, msg2->rep_day);
+		++*diffs;
+	}
+	if (msg1->rep_hour != msg2->rep_hour)
+	{
+		fprintf(out, "Reference hours differ (first is %d, second is %d)\n",
+				msg1->rep_hour, msg2->rep_hour);
+		++*diffs;
+	}
+	if (msg1->rep_minute != msg2->rep_minute)
+	{
+		fprintf(out, "Reference minutes differ (first is %d, second is %d)\n",
+				msg1->rep_minute, msg2->rep_minute);
+		++*diffs;
+	}
+
+	// TODO: btable
+	// TODO: dtable
+	// TODO: datadesc
+
+	if (msg1->subsets_count != msg2->subsets_count)
+	{
+		fprintf(out, "Number of subsets differ (first is %d, second is %d)\n",
+				msg1->subsets_count, msg2->subsets_count);
+		++*diffs;
+	} else {
+		int i;
+		for (i = 0; i < msg1->subsets_count; ++i)
+			bufrex_subset_diff(msg1->subsets[i], msg2->subsets[i], diffs, out);
+	}
+}
+
 #if 0
 #include <dballe/dba_check.h>
 

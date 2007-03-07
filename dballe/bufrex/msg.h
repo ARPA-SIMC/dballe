@@ -334,6 +334,11 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out);
  */
 void bufrex_msg_print(bufrex_msg msg, FILE* out);
 
+/**
+ * Compute the differences between two bufrex_msg
+ */
+void bufrex_msg_diff(bufrex_msg msg1, bufrex_msg msg2, int* diffs, FILE* out);
+
 #ifdef  __cplusplus
 }
 #endif

@@ -309,4 +309,20 @@ dba_err bufrex_subset_append_fixed_attrs(bufrex_subset subset, int size, dba_var
 	return dba_error_ok();
 }
 
+void bufrex_subset_diff(bufrex_subset s1, bufrex_subset s2, int* diffs, FILE* out)
+{
+	// TODO: btable;
+
+	if (s1->vars_count != s2->vars_count)
+	{
+		fprintf(out, "Number of variables differ (first is %d, second is %d)\n",
+				s1->vars_count, s2->vars_count);
+		++*diffs;
+	} else {
+		int i;
+		for (i = 0; i < s1->vars_count; ++i)
+			dba_var_diff(s1->vars[i], s2->vars[i], diffs, out);
+	}
+}
+
 /* vim:set ts=4 sw=4: */

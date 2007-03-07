@@ -260,6 +260,12 @@ dba_err bufrex_subset_append_attrs(bufrex_subset subset, int size, dba_varcode a
  */
 dba_err bufrex_subset_append_fixed_attrs(bufrex_subset subset, int size, dba_varcode attr);
 
+/**
+ * Compute the differences between two bufrex_subsets
+ */
+void bufrex_subset_diff(bufrex_subset s1, bufrex_subset s2, int* diffs, FILE* out);
+
+
 #ifdef  __cplusplus
 }
 #endif
