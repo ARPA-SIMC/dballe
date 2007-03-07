@@ -28,6 +28,7 @@ LATITUDE,		num,	B05001,		257,  0, 0,		0,      0, 0, Latitude of the station
 LONGITUDE,		num,	B06001,		257,  0, 0,		0,      0, 0, Longiture of the station
 HEIGHT,			int,	B07001,		257,  0, 0,		0,      0, 0, Height of station
 HEIGHT_BARO,		int,	B07031,		257,  0, 0,		0,      0, 0, Height of barometer above mean sea level
+ISOBARIC_SURFACE,	num,	B07004,		257,  0, 0,		0,      0, 0, Isobaric surface
 PRESS,			num,	B10004,		  1,  0, 0,		0,      0, 0, Pressure at ground level
 PRESS_3H,		num,	B10061,		  1,  0, 0,		5, -10800, 0, 3 hour pressure change at ground level
 PRESS_MSL,		num,	B10051,		102,  0, 0,		0,      0, 0, Pressure reduced to mean sea level
