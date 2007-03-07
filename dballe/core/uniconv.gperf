@@ -93,8 +93,8 @@ struct uniconv { const char* tag; double mul; double add; };
 "m/sec->M/S",           1,              0
 "m/s/10->M/S",			0.1,	0
 "M/S->m/s/10",		   10,		0
-"nodi->M/S",			0.51446,	0
-"M/S->nodi",			1.9438,		0
+"nodi->M/S",			0.51444,	0
+"M/S->nodi",			1.94384,	0
 "PA->mBar",				0.01,	0
 "mBar->PA",	 	      100,		0
 "PA->Bar",				0.00001,	0
