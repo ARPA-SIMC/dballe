@@ -153,6 +153,27 @@ void to::test<2>()
 		dba_msgs msgs1;
 		CHECKED(bufrex_msg_to_dba_msgs(braw1, &msgs1));
 
+		/// Test if reencoded bufr_msg matches
+
+		// Reencode the message to BUFR using the same template
+		bufrex_msg b2;
+		CHECKED(bufrex_msg_create(BUFREX_BUFR, &b2));
+		b2->type = braw1->type;
+		b2->subtype = braw1->subtype;
+		b2->opt.bufr.origin = braw1->opt.bufr.origin;
+		b2->opt.bufr.master_table = braw1->opt.bufr.master_table;
+		b2->opt.bufr.local_table = braw1->opt.bufr.local_table;
+		CHECKED(bufrex_msg_load_tables(b2));
+		CHECKED(bufrex_msg_from_dba_msg(b2, msgs1->msgs[0]));
+
+		// Compare braw1 and b2
+		int bdiffs = 0;
+		bufrex_msg_diff(braw1, b2, &bdiffs, stderr);
+		gen_ensure_equals(bdiffs, 0);
+
+
+		/// Test if reencoded dba_msg match
+
 		// Reencode the dba_msg in another dba_rawmsg
 		dba_rawmsg raw2;
 		CHECKED(bufrex_encode_bufr(msgs1, type, subtype, &raw2));
