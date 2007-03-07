@@ -88,6 +88,8 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0,  6,  1):
 			case DBA_VAR(0,  6,  2): DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var)); break;
 			case DBA_VAR(0,  7,  1): DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var)); break;
+			case DBA_VAR(0,  7,  4): DBA_RUN_OR_RETURN(dba_msg_set_isobaric_surface_var(msg, var)); break;
+			case DBA_VAR(0, 10,  3): DBA_RUN_OR_RETURN(dba_msg_set_geopotential_var(msg, var)); break;
 			case DBA_VAR(0, 10,  4): DBA_RUN_OR_RETURN(dba_msg_set_press_var(msg, var)); break;
 			case DBA_VAR(0, 10, 51): DBA_RUN_OR_RETURN(dba_msg_set_press_msl_var(msg, var)); break;
 			case DBA_VAR(0, 10, 61): DBA_RUN_OR_RETURN(dba_msg_set_press_3h_var(msg, var)); break;

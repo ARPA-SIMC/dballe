@@ -23,6 +23,7 @@
 
 extern struct _bufrex_exporter bufrex_exporter_generic;
 extern struct _bufrex_exporter bufrex_exporter_synop_0_1;
+extern struct _bufrex_exporter bufrex_exporter_synop_0_1high;
 extern struct _bufrex_exporter bufrex_exporter_synop_0_3;
 extern struct _bufrex_exporter bufrex_exporter_sea_1_9;
 extern struct _bufrex_exporter bufrex_exporter_sea_1_11;
@@ -105,7 +106,17 @@ dba_err bufrex_get_exporter(dba_msg src, int type, int subtype, bufrex_exporter*
 		if (exporters[i]->type        == type &&
 			exporters[i]->subtype     == subtype)
 		{
-			*exp = exporters[i];
+			if (type == 0 && subtype == 1)
+				// Template ambiguity workaround: if we are handling a synop
+				// that has geopotential in the ana level, then it's a
+				// high-level station and we need to fetch the alternate output
+				// template for the same type and subtype.
+				if (dba_msg_get_geopotential_var(src) != NULL)
+					*exp = &bufrex_exporter_synop_0_1high;
+				else
+					*exp = exporters[i];
+			else
+				*exp = exporters[i];
 			/*return exporters[i]->exporter(src, dst);*/
 			return dba_error_ok();
 		}

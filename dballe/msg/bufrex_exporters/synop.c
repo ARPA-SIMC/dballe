@@ -24,6 +24,7 @@
 static dba_err synop_datadesc_func(bufrex_exporter exp, dba_msg src, bufrex_msg dst);
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
+static dba_err exporterhigh(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
 struct _bufrex_exporter bufrex_exporter_synop_0_1 = {
 	/* Category */
@@ -50,6 +51,33 @@ struct _bufrex_exporter bufrex_exporter_synop_0_1 = {
 	synop_datadesc_func,
 	/* Exporter function */
 	(bufrex_exporter_func)exporter,
+};
+
+struct _bufrex_exporter bufrex_exporter_synop_0_1high = {
+	/* Category */
+	0,
+	/* Subcategory */
+	1,
+	/* dba_msg type it can convert from */
+	MSG_SYNOP,
+	/* Data descriptor section */
+	(dba_varcode[]){
+		DBA_VAR(3,  7,  7),
+		DBA_VAR(0, 13, 23),
+		DBA_VAR(0, 13, 13),
+		DBA_VAR(2, 22,  0),
+		DBA_VAR(1,  1, 34),
+		DBA_VAR(0, 31, 31),
+		DBA_VAR(0,  1, 31),
+		DBA_VAR(0,  1, 32),
+		DBA_VAR(1,  1, 34),
+		DBA_VAR(0, 33,  7),
+		0
+	},
+	/* Datadesc function */
+	synop_datadesc_func,
+	/* Exporter function */
+	(bufrex_exporter_func)exporterhigh,
 };
 
 struct _bufrex_exporter bufrex_exporter_synop_0_3 = {
@@ -136,6 +164,44 @@ static struct template tpl[] = {
 /* 48 */ { DBA_VAR(0, 13, 13), DBA_MSG_TOT_SNOW },
 };
 
+static struct template tplhigh[] = {
+/*  0 */ { DBA_VAR(0,  1,  1), DBA_MSG_BLOCK },
+/*  1 */ { DBA_VAR(0,  1,  2), DBA_MSG_STATION },
+/*  2 */ { DBA_VAR(0,  2,  1), DBA_MSG_ST_TYPE },
+/*  3 */ { DBA_VAR(0,  4,  1), DBA_MSG_YEAR },
+/*  4 */ { DBA_VAR(0,  4,  2), DBA_MSG_MONTH },
+/*  5 */ { DBA_VAR(0,  4,  3), DBA_MSG_DAY },
+/*  6 */ { DBA_VAR(0,  4,  4), DBA_MSG_HOUR },
+/*  7 */ { DBA_VAR(0,  4,  5), DBA_MSG_MINUTE },
+/*  8 */ { DBA_VAR(0,  5,  1), DBA_MSG_LATITUDE },
+/*  9 */ { DBA_VAR(0,  6,  1), DBA_MSG_LONGITUDE },
+/* 10 */ { DBA_VAR(0,  7,  1), DBA_MSG_HEIGHT },
+/* 11 */ { DBA_VAR(0, 10,  4), DBA_MSG_PRESS },
+/* 12 */ { DBA_VAR(0,  7,  4), DBA_MSG_ISOBARIC_SURFACE },
+/* 13 */ { DBA_VAR(0, 10,  3), DBA_MSG_GEOPOTENTIAL },
+/* 14 */ { DBA_VAR(0, 10, 61), DBA_MSG_PRESS_3H },
+/* 15 */ { DBA_VAR(0, 10, 63), DBA_MSG_PRESS_TEND },
+/* 16 */ { DBA_VAR(0, 11, 11), DBA_MSG_WIND_DIR },
+/* 17 */ { DBA_VAR(0, 11, 12), DBA_MSG_WIND_SPEED },
+/* 18 */ { DBA_VAR(0, 12,  4), DBA_MSG_TEMP_2M },
+/* 19 */ { DBA_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M },
+/* 20 */ { DBA_VAR(0, 13,  3), DBA_MSG_HUMIDITY },
+/* 21 */ { DBA_VAR(0, 20,  1), DBA_MSG_VISIBILITY },
+/* 22 */ { DBA_VAR(0, 20,  3), DBA_MSG_PRES_WTR },
+/* 23 */ { DBA_VAR(0, 20,  4), DBA_MSG_PAST_WTR1 },
+/* 24 */ { DBA_VAR(0, 20,  5), DBA_MSG_PAST_WTR2 },
+/* 25 */ { DBA_VAR(0, 20, 10), DBA_MSG_CLOUD_N },
+/* 26 */ { DBA_VAR(0,  8,  2), -1 },
+/* 27 */ { DBA_VAR(0, 20, 11), DBA_MSG_CLOUD_NH },
+/* 28 */ { DBA_VAR(0, 20, 13), DBA_MSG_CLOUD_HH },
+/* 29 */ { DBA_VAR(0, 20, 12), DBA_MSG_CLOUD_CL },
+/* 30 */ { DBA_VAR(0, 20, 12), DBA_MSG_CLOUD_CM },
+/* 31 */ { DBA_VAR(0, 20, 12), DBA_MSG_CLOUD_CH },
+/* 32 */ { DBA_VAR(0, 13, 22), -1 /* DBA_MSG_TOT_PREC12 */ },
+/* 33 */ { DBA_VAR(0, 13, 13), DBA_MSG_TOT_SNOW },
+};
+
+
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
 	int i;
@@ -208,6 +274,70 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 
 	return dba_error_ok();
 }
+
+static dba_err exporterhigh(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
+{
+	int i;
+	dba_varcode prectype = DBA_VAR(0, 13, 23);
+	bufrex_opcode op;
+
+	/* Check what precipitation type we are supposed to use */
+	for (op = bmsg->datadesc; op != NULL; op = op->next)
+	{
+		if (DBA_VAR_F(op->val) == 0 && DBA_VAR_X(op->val) == 13 &&
+				DBA_VAR_Y(op->val) >= 19 && DBA_VAR_Y(op->val) <= 23)
+		{
+			prectype = op->val;
+			break;
+		}
+	}
+
+	for (i = 0; i < sizeof(tplhigh)/sizeof(struct template); i++)
+	{
+		switch (i)
+		{
+			case 26:
+				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tplhigh[i].code, 1));
+				break;
+			case 32: {
+				dba_msg_datum d;
+				switch (prectype)
+				{
+					case DBA_VAR(0, 13, 23): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC24); break;
+					case DBA_VAR(0, 13, 22): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC12); break;
+					case DBA_VAR(0, 13, 21): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC6); break;
+					case DBA_VAR(0, 13, 20): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC3); break;
+					case DBA_VAR(0, 13, 19): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC1); break;
+					default: d = NULL;
+				}
+				if (d != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, prectype, d->var));
+				else
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, prectype));
+				break;
+			}
+			default: {
+				dba_msg_datum d = dba_msg_find_by_id(src, tplhigh[i].var);
+				if (d != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tplhigh[i].code, d->var));
+				else
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tplhigh[i].code));
+				break;
+			}
+		}
+	}
+
+	if (type == 0)
+	{
+		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_dpb(dst, 34));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 31), ORIG_CENTRE_ID));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 32), ORIG_APP_ID));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_attrs(dst, 34, DBA_VAR(0, 33, 7)));
+	}
+
+	return dba_error_ok();
+}
+
 
 static dba_err synop_datadesc_func(bufrex_exporter exp, dba_msg src, bufrex_msg dst)
 {
