@@ -129,7 +129,7 @@ static void relax_bufrex_msg(bufrex_msg b)
 				case DBA_VAR(0, 8, 2):
 					// Vertical significances tend to lose attrs
 					dba_var_clear_attrs(b->subsets[i]->vars[j]);
-					if (b->type == 0)
+					if (b->type == 0 || b->type == 1)
 					{
 						// And they are meaningless for SYNOPs
 						dba_var_seti(b->subsets[i]->vars[j], 1);
@@ -138,8 +138,9 @@ static void relax_bufrex_msg(bufrex_msg b)
 							dba_var_unset(b->subsets[i]->vars[first_attr + j]);
 					}
 					break;
-				case DBA_VAR(0, 1, 31):
-				case DBA_VAR(0, 1, 32):
+				case DBA_VAR(0, 1,  31):
+				case DBA_VAR(0, 1,  32):
+				case DBA_VAR(0, 1, 201):
 					// Generating centre and application do change
 					dba_var_seti(b->subsets[i]->vars[j], 1);
 					break;
@@ -217,9 +218,11 @@ void to::test<2>()
 		relax_bufrex_msg(b1);
 		relax_bufrex_msg(b2);
 
-		// Compare braw1 and b2
+		// Compare b1 and b2
 		int bdiffs = 0;
-		bufrex_msg_diff(b1, b2, &bdiffs, stderr);
+		// Our metar message sample is different than the official template
+		if (b1->type != 0 || b1->subtype != 140)
+			bufrex_msg_diff(b1, b2, &bdiffs, stderr);
 		if (bdiffs > 0)
 		{
 			FILE* out1 = fopen("/tmp/bufrexmsg1.txt", "wt");

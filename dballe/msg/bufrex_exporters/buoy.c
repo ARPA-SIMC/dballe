@@ -33,14 +33,14 @@ struct _bufrex_exporter bufrex_exporter_sea_1_21 = {
 	MSG_BUOY,
 	/* Data descriptor section */
 	(dba_varcode[]){
-		DBA_VAR(3,  8,   3),
-		DBA_VAR(2, 22,   0),
-		DBA_VAR(1,  1,  32),
-		DBA_VAR(0, 31,  31),
-		DBA_VAR(0,  1,  31),
-		DBA_VAR(0,  1,  32),
-		DBA_VAR(1,  1,  32),
-		DBA_VAR(0, 33,   7),
+		DBA_VAR(3,  8,    3),
+		DBA_VAR(2, 22,    0),
+		DBA_VAR(1,  1,   32),
+		DBA_VAR(0, 31,   31),
+		DBA_VAR(0,  1,   31),
+		DBA_VAR(0,  1,  201),
+		DBA_VAR(1,  1,   32),
+		DBA_VAR(0, 33,    7),
 		0
 	},
 	/* Datadesc function */
@@ -124,8 +124,8 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 	if (type == 0)
 	{
 		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_dpb(dst, 32));
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 32)));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1,  31), ORIG_CENTRE_ID));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 201), ORIG_APP_ID));
 		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_attrs(dst, 32, DBA_VAR(0, 33, 7)));
 	}
 
