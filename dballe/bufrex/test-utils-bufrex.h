@@ -46,7 +46,7 @@ struct TestBufrexMsg
 			virtual ~Test() {}
 			virtual int checkIn(const char* file, int line, bufrex_subset braw, int start) const
 			{
-				for (int i = start; i < braw->vars_count; i++)
+				for (size_t i = start; i < braw->vars_count; i++)
 					if (dba_var_code(braw->vars[i]) == m_code)
 					{
 						check_var(file, line, braw->vars[i]);
@@ -155,7 +155,7 @@ struct TestBufrexMsg
 		void setUndef(dba_varcode code) { tests.push_back(new TestUndef(code)); }
 		void checkIn(const char* file, int line, bufrex_subset sset) const
 		{
-			if (vars != -1) inner_ensure_equals(sset->vars_count, vars, "vars in subset");
+			if (vars != -1) inner_ensure_equals(sset->vars_count, (size_t)vars, "vars in subset");
 
 			/* Check the variables */
 			int start = 0;
