@@ -37,4 +37,4 @@ INCLUDES = -I/usr/include/python$(PYTHON_VERSION)
 
 EXTRA_DIST = README dballe.i test.py doc-dballe
 
-CLEANFILES = dballe.py dballe.pyc dballe_wrap_python.cc dballe _dballe.so
+CLEANFILES = dballe.py dballe.pyc dballe_wrap_python.cc dballe _dballe.so python-dballe.rst python-dballe.html
