@@ -76,6 +76,12 @@ void bufrex_subset_delete(bufrex_subset subset);
 void bufrex_subset_reset(bufrex_subset subset);
 
 /**
+ * Truncate the subset at the given position.  All variables beyond the given
+ * size will be deleted.
+ */
+void bufrex_subset_truncate(bufrex_subset subset, size_t size);
+
+/**
  * Store a decoded variable in the message, to be encoded later.
  *
  * The function will take ownership of the dba_var, and when the message is

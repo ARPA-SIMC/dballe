@@ -60,6 +60,15 @@ void bufrex_subset_reset(bufrex_subset subset)
 	subset->vars_count = 0;
 }
 
+void bufrex_subset_truncate(bufrex_subset subset, size_t size)
+{
+	int i;
+	/* Preserve vars and vars_alloclen so that allocated memory can be reused */
+	for (i = size; i < subset->vars_count; ++i)
+		dba_var_delete(subset->vars[i]);
+	subset->vars_count = size;
+}
+
 dba_err bufrex_subset_store_variable(bufrex_subset subset, dba_var var)
 {
 	/* Check if we need to enlarge the buffer size */
@@ -315,7 +324,7 @@ void bufrex_subset_diff(bufrex_subset s1, bufrex_subset s2, int* diffs, FILE* ou
 
 	if (s1->vars_count != s2->vars_count)
 	{
-		fprintf(out, "Number of variables differ (first is %d, second is %d)\n",
+		fprintf(out, "Number of variables differ (first is %zd, second is %zd)\n",
 				s1->vars_count, s2->vars_count);
 		++*diffs;
 	} else {
