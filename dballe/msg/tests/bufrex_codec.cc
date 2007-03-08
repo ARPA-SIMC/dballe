@@ -260,7 +260,11 @@ void to::test<2>()
 		// Compare b1 and b2
 		int bdiffs = 0;
 		// Our metar message sample is different than the official template
-		if (b1->type != 0 || b1->subtype != 140)
+		// and test-airep1 uses the wrong varcode for originating appliation
+		// and test-temp1 uses a nonstandard template
+		if ((b1->type != 0 || b1->subtype != 140)
+				&& string(files[i]) != "bufr/test-airep1.bufr"
+				&& string(files[i]) != "bufr/test-temp1.bufr")
 			bufrex_msg_diff(b1, b2, &bdiffs, stderr);
 		if (bdiffs > 0)
 		{
