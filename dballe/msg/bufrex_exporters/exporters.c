@@ -111,7 +111,7 @@ dba_err bufrex_get_exporter(dba_msg src, int type, int subtype, bufrex_exporter*
 				// that has geopotential in the ana level, then it's a
 				// high-level station and we need to fetch the alternate output
 				// template for the same type and subtype.
-				if (dba_msg_get_geopotential_var(src) != NULL)
+				if (dba_msg_get_isobaric_surface_var(src) != NULL)
 					*exp = &bufrex_exporter_synop_0_1high;
 				else
 					*exp = exporters[i];
