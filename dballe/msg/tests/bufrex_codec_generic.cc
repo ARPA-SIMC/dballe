@@ -180,6 +180,12 @@ void to::test<2>()
 	dba_msgs_delete(msgs1);
 }
 
+/*
+ * Iterate two exports of the same data, one as synop and the other as generic.
+ *
+ * Test that the generic data, when encoded as synop, contains the same
+ * information as the synop export.
+ */
 template<> template<>
 void to::test<3>()
 {
