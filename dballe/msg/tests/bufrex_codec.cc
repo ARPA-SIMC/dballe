@@ -394,6 +394,23 @@ void to::test<3>()
 	test_untag();
 }
 
+/* Check that a BUFR from a synop high-level station correctly reports isobaric
+ * surface and geopotential */
+template<> template<>
+void to::test<4>()
+{
+	dba_msgs msgs = read_test_msg("bufr/obs0-1.11188.bufr", BUFR);
+	dba_msg src = msgs->msgs[0];
+	dba_var var;
+
+	gen_ensure((var = dba_msg_get_isobaric_surface_var(src)) != NULL);
+	gen_ensure(dba_var_value(var) != NULL);
+	gen_ensure((var = dba_msg_get_geopotential_var(src)) != NULL);
+	gen_ensure(dba_var_value(var) != NULL);
+
+	dba_msgs_delete(msgs);
+}
+
 /* TODO: add entries for more of the sample messages, taking data from another decoder */
 
 }
