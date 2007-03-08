@@ -118,7 +118,8 @@ static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int t
 	DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 31,  1)));
 	var_levcount = dst->vars[dst->vars_count - 1];
 
-	for (i = 0; i < msg->data_count; i++)
+	/* Iterate backwards as we need to add levels in decreasing pressure order */
+	for (i = msg->data_count - 1; i >= 0; --i)
 	{
 		dba_msg_level lev = msg->data[i];
 		dba_msg_datum d, d1;

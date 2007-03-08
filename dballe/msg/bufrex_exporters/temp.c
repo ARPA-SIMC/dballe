@@ -140,7 +140,8 @@ static int count_levels(dba_msg msg)
 static dba_err add_sounding_levels(dba_msg msg, bufrex_subset dst, dba_varcode* tpl, int tpl_count)
 {
 	int i;
-	for (i = 0; i < msg->data_count; i++)
+	/* Iterate backwards as we need to add levels in decreasing pressure order */
+	for (i = msg->data_count - 1; i >= 0; --i)
 	{
 		dba_msg_level lev = msg->data[i];
 		double press = lev->l1;

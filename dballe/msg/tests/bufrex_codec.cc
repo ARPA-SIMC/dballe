@@ -112,6 +112,9 @@ void to::test<1>()
 
 static void relax_bufrex_msg(bufrex_msg b)
 {
+	int sounding_workarounds = 
+		b->type == 2 && (b->subtype == 91 || b->subtype == 101 || b->subtype == 102);
+
 	if (b->rep_year < 100)
 		b->rep_year += 2000;
 	for (size_t i = 0; i < b->subsets_count; ++i)
@@ -121,6 +124,18 @@ static void relax_bufrex_msg(bufrex_msg b)
 		for (; first_attr < b->subsets[i]->vars_count; ++first_attr)
 			if (dba_var_code(b->subsets[i]->vars[first_attr]) == DBA_VAR(0, 33, 7))
 				break;
+	
+		// See what is the index of the data present indicator
+		size_t first_dds = 0;
+		for (; first_dds < b->subsets[i]->vars_count; ++first_dds)
+			if (dba_var_code(b->subsets[i]->vars[first_dds]) == DBA_VAR(0, 31, 31))
+				break;
+
+		// FIXME: I still haven't figured out a good way of comparing the
+		// trailing confidence intervals for temps, so I get rid of them and
+		// their leading delayed replication factor 
+		if (sounding_workarounds)
+			bufrex_subset_truncate(b->subsets[i], first_attr - 1);
 
 		for (size_t j = 0; j < b->subsets[i]->vars_count; ++j)
 		{
@@ -137,6 +152,20 @@ static void relax_bufrex_msg(bufrex_msg b)
 						if (first_attr + j < b->subsets[i]->vars_count)
 							dba_var_unset(b->subsets[i]->vars[first_attr + j]);
 					}
+					// For temps, we also need to unset the data present indicators
+					if (sounding_workarounds)
+						if (first_dds + j < b->subsets[i]->vars_count)
+							dba_var_unset(b->subsets[i]->vars[first_dds + j]);
+					break;
+				case DBA_VAR(0, 31, 1):
+					// Delayed replication factors' confidence intervals are
+					// SICK and we don't support them
+					dba_var_clear_attrs(b->subsets[i]->vars[j]);
+					if (first_attr + j < b->subsets[i]->vars_count)
+						dba_var_unset(b->subsets[i]->vars[first_attr + j]);
+					if (sounding_workarounds)
+						if (first_dds + j < b->subsets[i]->vars_count)
+							dba_var_unset(b->subsets[i]->vars[first_dds + j]);
 					break;
 				case DBA_VAR(0, 1,  31):
 				case DBA_VAR(0, 1,  32):
@@ -151,9 +180,19 @@ static void relax_bufrex_msg(bufrex_msg b)
 				// Remove confidence intervals for unset variables
 				if (first_attr + j < b->subsets[i]->vars_count)
 					dba_var_unset(b->subsets[i]->vars[first_attr + j]);
+				// For temps, we also need to unset the data present indicators
+				if (sounding_workarounds)
+					if (first_dds + j < b->subsets[i]->vars_count)
+						dba_var_unset(b->subsets[i]->vars[first_dds + j]);
 			}
 		}
 	}
+	// Some temp ship D table entries are not found in CREX D tables, so we
+	// replace them with their expansion.  As a result, we cannot compare the
+	// data descriptor sections of temp ship and we throw them away here.
+	if (b->type == 2 && b->subtype == 102)
+		bufrex_msg_reset_datadesc(b);
+
 }
 
 /* Test going from dba_msg to BUFR and back */
