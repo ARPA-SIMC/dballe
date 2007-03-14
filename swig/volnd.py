@@ -67,7 +67,7 @@ from datetime import *
 #
 
 import os
-if os.environ["DBALLE_BUILDING_DOCS"] != 'true':
+if os.environ.get("DBALLE_BUILDING_DOCS", "") != 'true':
 	import numpy
 	import numpy.core.ma as ma
 
