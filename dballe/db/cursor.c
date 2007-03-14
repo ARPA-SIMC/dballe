@@ -823,8 +823,6 @@ static dba_err setstmtattr(SQLHSTMT stm, SQLINTEGER attr, SQLPOINTER val, SQLINT
  * change the size of the result set */
 static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted, unsigned int modifiers, long* count)
 {
-	const char* val;
-
 	/* Reset the cursor to start a new query */
 	dba_querybuf_reset(cur->query);
 	dba_querybuf_reset(cur->where);
@@ -988,6 +986,16 @@ static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted
 	return dba_error_ok();
 }
 
+static dba_err add_to_orderby(dba_querybuf query, const char* fields, int* first)
+{
+	if (*first) {
+		DBA_RUN_OR_RETURN(dba_querybuf_append(query, " ORDER BY "));
+		*first = 0;
+	} else
+		DBA_RUN_OR_RETURN(dba_querybuf_append(query, ", "));
+	return dba_querybuf_append(query, fields);
+}
+
 dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wanted, unsigned int modifiers)
 {
 	const char* val;
@@ -1088,19 +1096,27 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	/* Append ORDER BY as needed */
 	if (!(cur->modifiers & DBA_DB_MODIFIER_UNSORTED))
 	{
-		if (cur->modifiers & DBA_DB_MODIFIER_BEST)
+		int first = 1;
+		if (cur->modifiers & DBA_DB_MODIFIER_BEST) {
 			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
 				"ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
-#define WANTS(mask) ((cur->select_wanted & (mask)) == (mask))
-		else if (WANTS(DBA_DB_FROM_C | DBA_DB_FROM_RI))
-			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-				" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, ri.prio"));
-#undef WANTS
-		else if (cur->select_wanted & DBA_DB_FROM_C)
-			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-				" ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
-		else if (cur->select_wanted & DBA_DB_FROM_PA)
-			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, " ORDER BY pa.id"));
+		} else if (cur->select_wanted & DBA_DB_FROM_C) {
+			if (cur->wanted & DBA_DB_WANT_ANA_ID)
+				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.id_ana", &first));
+			if (cur->wanted & DBA_DB_WANT_DATETIME)
+				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.datetime", &first));
+			if (cur->wanted & DBA_DB_WANT_LEVEL)
+				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.ltype, c.l1, c.l2", &first));
+			if (cur->wanted & DBA_DB_WANT_TIMERANGE)
+				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.ptype, c.p1, c.p2", &first));
+			if (cur->select_wanted & DBA_DB_FROM_RI)
+				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "ri.prio", &first));
+		} else if (cur->select_wanted & DBA_DB_FROM_PA) {
+			if (cur->wanted & DBA_DB_WANT_ANA_ID)
+				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "pa.id", &first));
+			if (cur->wanted & DBA_DB_WANT_IDENT)
+				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "pa.ident", &first));
+		}
 	}
 
 	/* Append LIMIT if requested */
