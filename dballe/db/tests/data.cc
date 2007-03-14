@@ -68,7 +68,7 @@ struct data_shar
 		// Insert a context
 		co->id_ana = 1;
 		co->id_report = 1;
-		co->date_ind = snprintf(co->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2001, 2, 3, 4, 5, 6);
+		co->date = mkts(2001, 2, 3, 4, 5, 6);
 		co->ltype = 1;
 		co->l1 = 2;
 		co->l2 = 3;
@@ -81,7 +81,7 @@ struct data_shar
 		// Insert another context
 		co->id_ana = 2;
 		co->id_report = 2;
-		co->date_ind = snprintf(co->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2002, 3, 4, 5, 6, 7);
+		co->date = mkts(2002, 3, 4, 5, 6, 7);
 		co->ltype = 2;
 		co->l1 = 3;
 		co->l2 = 4;
@@ -94,6 +94,7 @@ struct data_shar
 
 	~data_shar()
 	{
+		CHECKED(dba_db_commit(db));
 		if (db != NULL) dba_db_delete(db);
 	}
 };
@@ -128,36 +129,42 @@ void to::test<2>()
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "123");
 	CHECKED(dba_db_data_insert(da, 0));
+	CHECKED(dba_db_commit(db));
 
 	// Insert another datum
 	da->id_context = 2;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "234");
 	CHECKED(dba_db_data_insert(da, 0));
+	CHECKED(dba_db_commit(db));
 
 	// Reinsert a datum: it should fail
 	da->id_context = 1;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "123");
 	gen_ensure_equals(dba_db_data_insert(da, 0), DBA_ERROR);
+	CHECKED(dba_db_commit(db));
 
 	// Reinsert the other datum: it should fail
 	da->id_context = 2;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "234");
 	gen_ensure_equals(dba_db_data_insert(da, 0), DBA_ERROR);
+	CHECKED(dba_db_commit(db));
 
 	// Reinsert a datum with overwrite: it should work
 	da->id_context = 1;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "123");
 	CHECKED(dba_db_data_insert(da, 1));
+	CHECKED(dba_db_commit(db));
 
 	// Reinsert the other datum with overwrite: it should work
 	da->id_context = 2;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "234");
 	CHECKED(dba_db_data_insert(da, 1));
+	CHECKED(dba_db_commit(db));
 
 #if 0
 	// Get the ID of the first data

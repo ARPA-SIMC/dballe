@@ -43,6 +43,7 @@ struct pseudoana_shar
 
 	~pseudoana_shar()
 	{
+		CHECKED(dba_db_commit(db));
 		if (db != NULL) dba_db_delete(db);
 	}
 };

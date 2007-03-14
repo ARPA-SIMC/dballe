@@ -63,6 +63,7 @@ struct context_shar
 
 	~context_shar()
 	{
+		CHECKED(dba_db_commit(db));
 		if (db != NULL) dba_db_delete(db);
 	}
 };
@@ -76,7 +77,7 @@ void to::test<1>()
 	int id;
 	co->id_ana = 1;
 	co->id_report = 1;
-	co->date_ind = snprintf(co->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2001, 2, 3, 4, 5, 6);
+	co->date = mkts(2001, 2, 3, 4, 5, 6);
 	co->ltype = 1;
 	co->l1 = 2;
 	co->l2 = 3;
@@ -89,7 +90,7 @@ void to::test<1>()
 	// Insert another context
 	co->id_ana = 2;
 	co->id_report = 2;
-	co->date_ind = snprintf(co->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2002, 3, 4, 5, 6, 7);
+	co->date = mkts(2002, 3, 4, 5, 6, 7);
 	co->ltype = 2;
 	co->l1 = 3;
 	co->l2 = 4;
@@ -103,7 +104,7 @@ void to::test<1>()
 	co->id = 0;
 	co->id_ana = 1;
 	co->id_report = 1;
-	co->date_ind = snprintf(co->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2001, 2, 3, 4, 5, 6);
+	co->date = mkts(2001, 2, 3, 4, 5, 6);
 	co->ltype = 1;
 	co->l1 = 2;
 	co->l2 = 3;
@@ -117,7 +118,7 @@ void to::test<1>()
 	co->id = 0;
 	co->id_ana = 2;
 	co->id_report = 2;
-	co->date_ind = snprintf(co->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2002, 3, 4, 5, 6, 7);
+	co->date = mkts(2002, 3, 4, 5, 6, 7);
 	co->ltype = 2;
 	co->l1 = 3;
 	co->l2 = 4;
@@ -131,8 +132,8 @@ void to::test<1>()
 	CHECKED(dba_db_context_get_data(co, 1));
 	gen_ensure_equals(co->id_ana, 1);
 	gen_ensure_equals(co->id_report, 1);
-	gen_ensure_equals(co->date, string("2001-02-03 04:05:06"));
-	gen_ensure_equals(co->date_ind, 19);
+	gen_ensure_equals(co->date, mkts(2001, 2, 3, 4, 5, 6));
+	//gen_ensure_equals(co->date_ind, 19);
 	gen_ensure_equals(co->ltype, 1);
 	gen_ensure_equals(co->l1, 2);
 	gen_ensure_equals(co->l2, 3);
@@ -144,8 +145,8 @@ void to::test<1>()
 	CHECKED(dba_db_context_get_data(co, 2));
 	gen_ensure_equals(co->id_ana, 2);
 	gen_ensure_equals(co->id_report, 2);
-	gen_ensure_equals(co->date, string("2002-03-04 05:06:07"));
-	gen_ensure_equals(co->date_ind, 19);
+	gen_ensure_equals(co->date, mkts(2002, 3, 4, 5, 6, 7));
+	//gen_ensure_equals(co->date_ind, 19);
 	gen_ensure_equals(co->ltype, 2);
 	gen_ensure_equals(co->l1, 3);
 	gen_ensure_equals(co->l2, 4);

@@ -118,11 +118,11 @@ protected:
 		};
 
 		for (size_t i = 0; i < sizeof(bufr_files) / sizeof(const char*); i++)
-			DBA_RUN_OR_RETURN(read_file(BUFR, string("../tests/") + bufr_files[i], msgs));
+			DBA_RUN_OR_RETURN(read_file(BUFR, string("../../extra/") + bufr_files[i], msgs));
 		for (size_t i = 0; i < sizeof(crex_files) / sizeof(const char*); i++)
-			DBA_RUN_OR_RETURN(read_file(CREX, string("../tests/") + crex_files[i], msgs));
+			DBA_RUN_OR_RETURN(read_file(CREX, string("../../extra/") + crex_files[i], msgs));
 		for (size_t i = 0; i < sizeof(aof_files) / sizeof(const char*); i++)
-			DBA_RUN_OR_RETURN(read_file(AOF, string("../tests/") + aof_files[i], msgs));
+			DBA_RUN_OR_RETURN(read_file(AOF, string("../../extra/") + aof_files[i], msgs));
 
 		DBA_RUN_OR_RETURN(dba_db_reset(db, NULL));
 		timing("reset the database");

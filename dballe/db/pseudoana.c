@@ -61,6 +61,17 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 	dba_db_pseudoana res = NULL;
 	int r;
 
+	switch (db->server_type)
+	{
+		case ORACLE:
+			/* Override queries for Oracle */
+			insert_query = "INSERT INTO pseudoana (id, lat, lon, ident) VALUES (seq_pseudoana.NextVal, ?, ?, ?)";
+			break;
+		case POSTGRES:
+			insert_query = "INSERT INTO pseudoana (id, lat, lon, ident) VALUES (nextval('seq_pseudoana'), ?, ?, ?)";
+			break;
+	}
+
 	if ((res = (dba_db_pseudoana)malloc(sizeof(struct _dba_db_pseudoana))) == NULL)
 		return dba_error_alloc("creating a new dba_db_pseudoana");
 	res->db = db;
@@ -228,7 +239,16 @@ dba_err dba_db_pseudoana_insert(dba_db_pseudoana ins, int *id)
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->istm, "inserting new data into pseudoana");
 
-	return dba_db_last_insert_id(ins->db, id);
+	switch (ins->db->server_type)
+	{
+		case ORACLE:
+		case POSTGRES:
+			DBA_RUN_OR_RETURN(dba_db_seq_read(ins->db->seq_pseudoana));
+			*id = ins->db->seq_pseudoana->out;
+			return dba_error_ok();
+		default:
+			return dba_db_last_insert_id(ins->db, id);
+	}
 }
 
 dba_err dba_db_pseudoana_update(dba_db_pseudoana ins)

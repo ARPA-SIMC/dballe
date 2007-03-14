@@ -82,13 +82,8 @@ struct dba_db_dballe_shar
 		sampleAna.set(DBA_KEY_LAT, 12.34560);
 		sampleAna.set(DBA_KEY_LON, 76.54320);
 		sampleAna.set(DBA_KEY_MOBILE, 0);
-		/*
-		sampleAna.set(DBA_KEY_YEAR_IDENT, 2003);
-		sampleAna.set(DBA_KEY_MONTH_IDENT, 3);
-		sampleAna.set(DBA_KEY_DAY_IDENT, 23);
-		sampleAna.set(DBA_KEY_HOUR_IDENT, 12);
-		sampleAna.set(DBA_KEY_MIN_IDENT, 30);
-		*/
+
+		// Extra ana info
 		extraAna.set(DBA_VAR(0, 7,  1), 42);		// Height
 		extraAna.set(DBA_VAR(0, 7, 31), 234);		// Heightbaro
 		extraAna.set(DBA_VAR(0, 1,  1), 1);			// Block
@@ -134,14 +129,57 @@ static struct test_data tdata3_patch[] = {
 
 	~dba_db_dballe_shar()
 	{
+		CHECKED(dba_db_commit(db));
 		if (insert != NULL) dba_record_delete(insert);
 		if (query != NULL) dba_record_delete(query);
 		if (result != NULL) dba_record_delete(result);
 		if (qc != NULL) dba_record_delete(qc);
 		if (db != NULL) dba_db_delete(db);
 	}
+
+	void reset_database();
 };
 TESTGRP(dba_db_dballe);
+
+void dba_db_dballe_shar::reset_database()
+{
+	/* Start with an empty database */
+	CHECKED(dba_db_reset(db, 0));
+
+	/* Insert the ana station */
+	dba_record_clear(insert);
+	CHECKED(dba_record_set_ana_context(insert));
+	sampleAna.copyTestDataToRecord(insert);
+	extraAna.copyTestDataToRecord(insert);
+	/* Insert the anagraphical record */
+	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
+
+	/* Fill in data for the first record */
+	dba_record_clear(insert);
+	sampleAna.copyTestDataToRecord(insert);
+	sampleBase.copyTestDataToRecord(insert);
+	sample0.copyTestDataToRecord(insert);
+	sample00.copyTestDataToRecord(insert);
+	sample01.copyTestDataToRecord(insert);
+
+	/* Insert the record */
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
+	/* Check if duplicate updates are allowed by insert */
+	CHECKED(dba_db_insert(db, insert, 1, 0, NULL, NULL));
+	/* Check if duplicate updates are trapped by insert_new */
+	gen_ensure(dba_db_insert(db, insert, 0, 0, NULL, NULL) == DBA_ERROR);
+
+	/* Insert another record (similar but not the same) */
+	dba_record_clear(insert);
+	sampleAna.copyTestDataToRecord(insert);
+	sampleBase.copyTestDataToRecord(insert);
+	sample1.copyTestDataToRecord(insert);
+	sample10.copyTestDataToRecord(insert);
+	sample11.copyTestDataToRecord(insert);
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
+	/* Check again if duplicate updates are trapped */
+	gen_ensure(dba_db_insert(db, insert, 0, 0, NULL, NULL) == DBA_ERROR);
+}
 
 /* Test querybuf */
 template<> template<>
@@ -202,92 +240,59 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-	/*dba_error_set_callback(DBA_ERR_NONE, crash, 0);*/
-
-	/* Test a dballe session */
-
-	/* Start with an empty database */
-	CHECKED(dba_db_reset(db, 0));
-
-	/* Insert the ana station */
-	dba_record_clear(insert);
-	CHECKED(dba_record_set_ana_context(insert));
-	sampleAna.copyTestDataToRecord(insert);
-	extraAna.copyTestDataToRecord(insert);
-	/* Insert the anagraphical record */
-	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
-
-	/* Fill in data for the first record */
-	dba_record_clear(insert);
-	sampleAna.copyTestDataToRecord(insert);
-	sampleBase.copyTestDataToRecord(insert);
-	sample0.copyTestDataToRecord(insert);
-	sample00.copyTestDataToRecord(insert);
-	sample01.copyTestDataToRecord(insert);
-
-	/* Insert the record */
-	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
-	/* Check if duplicate updates are allowed by insert */
-	CHECKED(dba_db_insert(db, insert, 1, 0, NULL, NULL));
-	/* Check if duplicate updates are trapped by insert_new */
-	gen_ensure(dba_db_insert(db, insert, 0, 0, NULL, NULL) == DBA_ERROR);
-
-	/* Insert another record (similar but not the same) */
-	dba_record_clear(insert);
-	sampleAna.copyTestDataToRecord(insert);
-	sampleBase.copyTestDataToRecord(insert);
-	sample1.copyTestDataToRecord(insert);
-	sample10.copyTestDataToRecord(insert);
-	sample11.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
-	/* Check again if duplicate updates are trapped */
-	gen_ensure(dba_db_insert(db, insert, 0, 0, NULL, NULL) == DBA_ERROR);
+	reset_database();
 
 	/* Check dba_ana_* functions */
-	{
-		int has_data;
-		int count = 0;
-		dba_db_cursor cursor;
+	int has_data;
+	int count = 0;
+	dba_db_cursor cursor;
 
-		/*
-		CHECKED(dba_ana_count(db, &count));
-		fail_unless(count == 1);
-		*/
-		dba_record_clear(query);
+	/*
+	CHECKED(dba_ana_count(db, &count));
+	fail_unless(count == 1);
+	*/
+	dba_record_clear(query);
 
-		/* Iterate the anagraphic database */
-		CHECKED(dba_db_ana_query(db, query, &cursor, &count));
+	/* Iterate the anagraphic database */
+	CHECKED(dba_db_ana_query(db, query, &cursor, &count));
 
-		gen_ensure(cursor != 0);
-		gen_ensure_equals(count, 1);
+	gen_ensure(cursor != 0);
+	gen_ensure_equals(count, 1);
 
-		/* There should be an item */
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
+	/* There should be an item */
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
+	CHECKED(dba_db_cursor_to_record(cursor, result));
 
-		/* Check that the result matches */
-		ensureTestRecEquals(result, sampleAna);
-		//ensureTestRecEquals(result, extraAna);
+	/* Check that the result matches */
+	ensureTestRecEquals(result, sampleAna);
+	//ensureTestRecEquals(result, extraAna);
 
-		/* There should be only one item */
-		gen_ensure_equals(dba_db_cursor_remaining(cursor), 0);
+	/* There should be only one item */
+	gen_ensure_equals(dba_db_cursor_remaining(cursor), 0);
 
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(!has_data);
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(!has_data);
 
-		dba_db_cursor_delete(cursor);
-	}
+	dba_db_cursor_delete(cursor);
+}
 
+template<> template<>
+void to::test<4>()
+{
 	/* Try many possible queries */
 
+	reset_database();
+
 #define TRY_QUERY(type, param, value, expected_count) do {\
-		int count; \
+		int count, has_data; \
 		dba_db_cursor cursor; \
 		dba_record_clear(query); \
 		CHECKED(dba_record_key_set##type(query, param, value)); \
 		CHECKED(dba_db_query(db, query, &cursor, &count)); \
 		gen_ensure(cursor != 0); \
+		for (count = -1, has_data = 1; has_data; ++count) \
+			CHECKED(dba_db_cursor_next(cursor, &has_data)); \
 		if (0) \
 			print_results(cursor); \
 		gen_ensure_equals(count, expected_count); \
@@ -295,12 +300,14 @@ void to::test<3>()
 	} while (0)
 
 #define TRY_QUERY1(type, param, value, expected_count) do {\
-		int count; \
+		int count, has_data; \
 		dba_db_cursor cursor; \
 		dba_record_clear(query); \
 		CHECKED(dba_record_var_set##type(query, param, value)); \
 		CHECKED(dba_db_query(db, query, &cursor, &count)); \
 		gen_ensure(cursor != 0); \
+		for (count = -1, has_data = 1; has_data; ++count) \
+			CHECKED(dba_db_cursor_next(cursor, &has_data)); \
 		if (0) \
 			print_results(cursor); \
 		gen_ensure_equals(count, expected_count); \
@@ -308,13 +315,15 @@ void to::test<3>()
 	} while (0)
 
 #define TRY_QUERY2(lonmin, lonmax, expected_count) do {\
-		int count; \
+		int count, has_data; \
 		dba_db_cursor cursor; \
 		dba_record_clear(query); \
 		CHECKED(dba_record_key_setd(query, DBA_KEY_LONMIN, lonmin)); \
 		CHECKED(dba_record_key_setd(query, DBA_KEY_LONMAX, lonmax)); \
 		CHECKED(dba_db_query(db, query, &cursor, &count)); \
 		gen_ensure(cursor != 0); \
+		for (count = -1, has_data = 1; has_data; ++count) \
+			CHECKED(dba_db_cursor_next(cursor, &has_data)); \
 		if (0) \
 			print_results(cursor); \
 		gen_ensure_equals(count, expected_count); \
@@ -426,136 +435,152 @@ void to::test<3>()
 	TRY_QUERY(i, DBA_KEY_PRIOMAX, 90, 2);
 	TRY_QUERY(i, DBA_KEY_PRIOMAX, 100, 4);
 	TRY_QUERY(i, DBA_KEY_PRIOMAX, 110, 4);
+}
 
-	/* Try a query */
-	{
-		int has_data;
-		int count;
-		dba_db_cursor cursor;
+template<> template<>
+void to::test<5>()
+{
+	/* Try a query checking all the steps */
+	reset_database();
 
-		dba_record_clear(query);
+	int has_data;
+	int count;
+	dba_db_cursor cursor;
 
-		/* Prepare a query */
-		CHECKED(dba_record_key_setd(query, DBA_KEY_LATMIN, 10.0));
+	dba_record_clear(query);
 
-		/* Make the query */
-		CHECKED(dba_db_query(db, query, &cursor, &count));
+	/* Prepare a query */
+	CHECKED(dba_record_key_setd(query, DBA_KEY_LATMIN, 10.0));
 
-		/* See that a cursor has in fact been allocated */
-		gen_ensure(cursor != 0);
-		/* 2 + 2 of actual data */
-		gen_ensure_equals(count, 4);
+	/* Make the query */
+	CHECKED(dba_db_query(db, query, &cursor, &count));
 
-		/* There should be at least one item */
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
+	/* See that a cursor has in fact been allocated */
+	gen_ensure(cursor != 0);
+	/* 2 + 2 of actual data */
+	gen_ensure_equals(count, 4);
 
-		/* Check that the results match */
-		ensureTestRecEquals(result, sampleAna);
-		ensureTestRecEquals(result, sampleBase);
-		ensureTestRecEquals(result, sample0);
+	/* There should be at least one item */
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
+	CHECKED(dba_db_cursor_to_record(cursor, result));
 
-		/*
-		printrecord(result, "RES: ");
-		exit(0);
-		*/
+	/* Check that the results match */
+	ensureTestRecEquals(result, sampleAna);
+	ensureTestRecEquals(result, sampleBase);
+	ensureTestRecEquals(result, sample0);
 
-		gen_ensure(cursor->out_idvar == DBA_VAR(0, 1, 11) || cursor->out_idvar == DBA_VAR(0, 1, 12));
-		if (cursor->out_idvar == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(result, sample00);
-		if (cursor->out_idvar == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(result, sample01);
+	/*
+	printrecord(result, "RES: ");
+	exit(0);
+	*/
 
-		/* The item should have two data in it */
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
+	gen_ensure(cursor->out_idvar == DBA_VAR(0, 1, 11) || cursor->out_idvar == DBA_VAR(0, 1, 12));
+	if (cursor->out_idvar == DBA_VAR(0, 1, 11))
+		ensureTestRecEquals(result, sample00);
+	if (cursor->out_idvar == DBA_VAR(0, 1, 12))
+		ensureTestRecEquals(result, sample01);
 
-		gen_ensure(cursor->out_idvar == DBA_VAR(0, 1, 11) || cursor->out_idvar == DBA_VAR(0, 1, 12));
-		if (cursor->out_idvar == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(result, sample00);
-		if (cursor->out_idvar == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(result, sample01);
+	/* The item should have two data in it */
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
+	CHECKED(dba_db_cursor_to_record(cursor, result));
 
-		/* There should be also another item */
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
+	gen_ensure(cursor->out_idvar == DBA_VAR(0, 1, 11) || cursor->out_idvar == DBA_VAR(0, 1, 12));
+	if (cursor->out_idvar == DBA_VAR(0, 1, 11))
+		ensureTestRecEquals(result, sample00);
+	if (cursor->out_idvar == DBA_VAR(0, 1, 12))
+		ensureTestRecEquals(result, sample01);
 
-		/* Check that the results matches */
-		ensureTestRecEquals(result, sampleAna);
-		ensureTestRecEquals(result, sampleBase);
-		ensureTestRecEquals(result, sample1);
+	/* There should be also another item */
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
+	CHECKED(dba_db_cursor_to_record(cursor, result));
 
-		gen_ensure(cursor->out_idvar == DBA_VAR(0, 1, 11) || cursor->out_idvar == DBA_VAR(0, 1, 12));
-		if (cursor->out_idvar == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(result, sample10);
-		if (cursor->out_idvar == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(result, sample11);
+	/* Check that the results matches */
+	ensureTestRecEquals(result, sampleAna);
+	ensureTestRecEquals(result, sampleBase);
+	ensureTestRecEquals(result, sample1);
 
-		/* The item should have two data in it */
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
+	gen_ensure(cursor->out_idvar == DBA_VAR(0, 1, 11) || cursor->out_idvar == DBA_VAR(0, 1, 12));
+	if (cursor->out_idvar == DBA_VAR(0, 1, 11))
+		ensureTestRecEquals(result, sample10);
+	if (cursor->out_idvar == DBA_VAR(0, 1, 12))
+		ensureTestRecEquals(result, sample11);
 
-		gen_ensure(cursor->out_idvar == DBA_VAR(0, 1, 11) || cursor->out_idvar == DBA_VAR(0, 1, 12));
-		if (cursor->out_idvar == DBA_VAR(0, 1, 11))
-			ensureTestRecEquals(result, sample10);
-		if (cursor->out_idvar == DBA_VAR(0, 1, 12))
-			ensureTestRecEquals(result, sample11);
+	/* The item should have two data in it */
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
+	CHECKED(dba_db_cursor_to_record(cursor, result));
 
-		/* Now there should not be anything anymore */
-		gen_ensure_equals(dba_db_cursor_remaining(cursor), 0);
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(!has_data);
+	gen_ensure(cursor->out_idvar == DBA_VAR(0, 1, 11) || cursor->out_idvar == DBA_VAR(0, 1, 12));
+	if (cursor->out_idvar == DBA_VAR(0, 1, 11))
+		ensureTestRecEquals(result, sample10);
+	if (cursor->out_idvar == DBA_VAR(0, 1, 12))
+		ensureTestRecEquals(result, sample11);
 
-		/* Deallocate the cursor */
-		dba_db_cursor_delete(cursor);
-	}
+	/* Now there should not be anything anymore */
+	gen_ensure_equals(dba_db_cursor_remaining(cursor), 0);
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(!has_data);
 
+	/* Deallocate the cursor */
+	dba_db_cursor_delete(cursor);
+}
+
+template<> template<>
+void to::test<6>()
+{
 	/* Try a query for best value */
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
+	reset_database();
 
-		dba_record_clear(query);
+	//if (db->server_type == ORACLE || db->server_type == POSTGRES)
+		//return;
 
-		/* Prepare a query */
-		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
-		CHECKED(dba_record_key_setc(query, DBA_KEY_QUERY, "best"));
+	int count, has_data;
+	dba_db_cursor cursor;
 
-		/* Make the query */
-		CHECKED(dba_db_query(db, query, &cursor, &count));
+	dba_record_clear(query);
 
-		/* See that a cursor has in fact been allocated */
-		gen_ensure(cursor != 0);
+	/* Prepare a query */
+	CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
+	CHECKED(dba_record_key_setc(query, DBA_KEY_QUERY, "best"));
 
-		/* There should be four items */
-		gen_ensure_equals(count, 4);
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		gen_ensure_equals(dba_db_cursor_remaining(cursor), 3);
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		gen_ensure_equals(dba_db_cursor_remaining(cursor), 2);
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		gen_ensure_equals(dba_db_cursor_remaining(cursor), 1);
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
+	/* Make the query */
+	CHECKED(dba_db_query(db, query, &cursor, &count));
 
-		/* Now there should not be anything anymore */
-		gen_ensure_equals(dba_db_cursor_remaining(cursor), 0);
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(!has_data);
+	/* See that a cursor has in fact been allocated */
+	gen_ensure(cursor != 0);
 
-		/* Deallocate the cursor */
-		dba_db_cursor_delete(cursor);
-	}
+	/* There should be four items */
+	gen_ensure_equals(count, 4);
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
+	gen_ensure_equals(dba_db_cursor_remaining(cursor), 3);
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
+	gen_ensure_equals(dba_db_cursor_remaining(cursor), 2);
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
+	gen_ensure_equals(dba_db_cursor_remaining(cursor), 1);
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(has_data);
 
+	/* Now there should not be anything anymore */
+	gen_ensure_equals(dba_db_cursor_remaining(cursor), 0);
+	CHECKED(dba_db_cursor_next(cursor, &has_data));
+	gen_ensure(!has_data);
 
-	/* Delete one of the items */
+	/* Deallocate the cursor */
+	dba_db_cursor_delete(cursor);
+}
+
+template<> template<>
+void to::test<7>()
+{
+	/* Check if deletion works */
+	reset_database();
+
 	dba_record_clear(query);
 	CHECKED(dba_record_key_seti(query, DBA_KEY_YEARMIN, 1945));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_MONTHMIN, 4));
@@ -563,20 +588,6 @@ void to::test<3>()
 	CHECKED(dba_record_key_seti(query, DBA_KEY_HOURMIN, 8));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_MINUMIN, 10));
 	CHECKED(dba_db_remove(db, query));
-
-#if 0
-	/* Querying for both exact time and a time range should fail */
-	{
-		int count;
-		dba_cursor cursor;
-		CHECKED(dba_seti(query, "min", 10));
-		fail_unless(dba_query(db, query, &cursor, &count) == DBA_ERROR);
-		/*
-		 * No need to delete, as dba_query failed 
-		dba_cursor_delete(cursor);
-		 */
-	}
-#endif
 
 	/* See if the results change after deleting the tdata2 item */
 	{
@@ -615,7 +626,14 @@ void to::test<3>()
 		dba_db_cursor_delete(cursor);
 	}
 
-	/* Insert some QC data */
+}
+
+template<> template<>
+void to::test<8>()
+{
+	/* Test working with QC data */
+	reset_database();
+
 	{
 		int count, has_data;
 		int context;
@@ -690,7 +708,7 @@ void to::test<3>()
 
 /* Test datetime queries */
 template<> template<>
-void to::test<4>()
+void to::test<9>()
 {
 	/* Prepare test data */
 	TestRecord base, a, b;
@@ -1122,10 +1140,12 @@ void to::test<4>()
 	}
 }
 
-/* Test datetime queries */
+/* Test ana queries */
 template<> template<>
-void to::test<5>()
+void to::test<10>()
 {
+	reset_database();
+
 	int count, has_data;
 	dba_db_cursor cursor;
 
@@ -1144,14 +1164,14 @@ void to::test<5>()
 
 /* Run a search for orphan elements */
 template<> template<>
-void to::test<6>()
+void to::test<11>()
 {
 	CHECKED(dba_db_remove_orphans(db));
 }
 
 /* Insert some attributes and try to read them again */
 template<> template<>
-void to::test<7>()
+void to::test<12>()
 {
 	/* Start with an empty database */
 	CHECKED(dba_db_reset(db, 0));
@@ -1227,7 +1247,7 @@ void to::test<7>()
 
 /* Query using lonmin > latmax */
 template<> template<>
-void to::test<8>()
+void to::test<13>()
 {
 	/* Start with an empty database */
 	CHECKED(dba_db_reset(db, 0));
@@ -1253,7 +1273,7 @@ void to::test<8>()
 	CHECKED(dba_record_key_setd(query, DBA_KEY_LONMIN, 70.0));
 	CHECKED(dba_record_key_setd(query, DBA_KEY_LONMAX, -160.0));
 
-	int count, has_data;
+	int count;
 	dba_db_cursor cursor;
 	CHECKED(dba_db_query(db, query, &cursor, &count));
 	gen_ensure_equals(count, 2);

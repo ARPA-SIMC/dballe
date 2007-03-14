@@ -73,7 +73,7 @@ struct attr_shar
 		// Insert a context
 		co->id_ana = 1;
 		co->id_report = 1;
-		co->date_ind = snprintf(co->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2001, 2, 3, 4, 5, 6);
+		co->date = mkts(2001, 2, 3, 4, 5, 6);
 		co->ltype = 1;
 		co->l1 = 2;
 		co->l2 = 3;
@@ -86,7 +86,7 @@ struct attr_shar
 		// Insert another context
 		co->id_ana = 2;
 		co->id_report = 2;
-		co->date_ind = snprintf(co->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2002, 3, 4, 5, 6, 7);
+		co->date = mkts(2002, 3, 4, 5, 6, 7);
 		co->ltype = 2;
 		co->l1 = 3;
 		co->l2 = 4;
@@ -111,6 +111,7 @@ struct attr_shar
 
 	~attr_shar()
 	{
+		CHECKED(dba_db_commit(db));
 		if (db != NULL) dba_db_delete(db);
 	}
 };
@@ -146,6 +147,7 @@ void to::test<2>()
 	at->type = DBA_VAR(0, 33, 7);
 	dba_db_attr_set_value(at, "50");
 	CHECKED(dba_db_attr_insert(at, 0));
+	CHECKED(dba_db_commit(db));
 
 	// Insert another datum
 	at->id_context = 2;
@@ -153,6 +155,7 @@ void to::test<2>()
 	at->type = DBA_VAR(0, 33, 7);
 	dba_db_attr_set_value(at, "75");
 	CHECKED(dba_db_attr_insert(at, 0));
+	CHECKED(dba_db_commit(db));
 
 	// Reinsert a datum: it should fail
 	at->id_context = 1;
@@ -160,6 +163,7 @@ void to::test<2>()
 	at->type = DBA_VAR(0, 33, 7);
 	dba_db_attr_set_value(at, "50");
 	gen_ensure_equals(dba_db_attr_insert(at, 0), DBA_ERROR);
+	CHECKED(dba_db_commit(db));
 
 	// Reinsert the other datum: it should fail
 	at->id_context = 2;
@@ -167,6 +171,7 @@ void to::test<2>()
 	at->type = DBA_VAR(0, 33, 7);
 	dba_db_attr_set_value(at, "75");
 	gen_ensure_equals(dba_db_attr_insert(at, 0), DBA_ERROR);
+	CHECKED(dba_db_commit(db));
 
 	// Reinsert a datum with overwrite: it should work
 	at->id_context = 1;
@@ -174,6 +179,7 @@ void to::test<2>()
 	at->type = DBA_VAR(0, 33, 7);
 	dba_db_attr_set_value(at, "50");
 	CHECKED(dba_db_attr_insert(at, 1));
+	CHECKED(dba_db_commit(db));
 
 	// Reinsert the other datum with overwrite: it should work
 	at->id_context = 2;
@@ -181,6 +187,7 @@ void to::test<2>()
 	at->type = DBA_VAR(0, 33, 7);
 	dba_db_attr_set_value(at, "75");
 	CHECKED(dba_db_attr_insert(at, 1));
+	CHECKED(dba_db_commit(db));
 
 	// Load the attributes for the first variable
 	at->id_context = 1;
@@ -194,6 +201,7 @@ void to::test<2>()
 	gen_ensure_equals(dba_var_value(attr), string("50"));
 	gen_ensure_equals(dba_var_attr_iterator_next(ai), (dba_var_attr_iterator)NULL);
 	dba_var_delete(var);
+	CHECKED(dba_db_commit(db));
 
 	// Load the attributes for the second variable
 	at->id_context = 2;
@@ -206,6 +214,7 @@ void to::test<2>()
 	gen_ensure_equals(dba_var_value(attr), string("75"));
 	gen_ensure_equals(dba_var_attr_iterator_next(ai), (dba_var_attr_iterator)NULL);
 	dba_var_delete(var);
+	CHECKED(dba_db_commit(db));
 
 #if 0
 	// Get the ID of the first data

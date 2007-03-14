@@ -233,7 +233,7 @@ dba_err generator::fill_record(dba_record rec)
 {
 	DBA_RUN_OR_RETURN(fill_pseudoana(rec, rnd(0.8)));
 	DBA_RUN_OR_RETURN(fill_context(rec));
-	DBA_RUN_OR_RETURN(dba_record_var_setc(rec, generator_varcodes[rnd(0, sizeof(generator_varcodes) / sizeof(dba_varcode))], "11111"));
+	DBA_RUN_OR_RETURN(dba_record_var_setc(rec, generator_varcodes[rnd(0, sizeof(generator_varcodes) / sizeof(dba_varcode))], "1"));
 	return dba_error_ok();
 }
 

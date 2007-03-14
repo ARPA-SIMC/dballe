@@ -29,13 +29,15 @@ namespace tut_dballe {
 
 dba_err create_dba_db(dba_db* db)
 {
+/*
 	const char* uname = getenv("DBA_USER");
 	if (uname == NULL)
 	{
 		struct passwd *pwd = getpwuid(getuid());
 		uname = pwd == NULL ? "test" : pwd->pw_name;
 	}
-	return dba_db_create("test", uname , "", db);
+*/
+	return dba_db_create("test", "" , "", db);
 }
 
 }

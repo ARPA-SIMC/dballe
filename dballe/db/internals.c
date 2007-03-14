@@ -133,10 +133,119 @@ dba_err dba_db_last_insert_id(dba_db db, int* id)
 	return dba_error_ok();
 }
 
+dba_err dba_db_seq_create(dba_db db, const char* name, dba_db_seq* seq)
+{
+	dba_err err = DBA_OK;
+	dba_db_seq res = NULL;
+	char qbuf[100];
+	int qlen, r;
+
+	if ((res = (dba_db_seq)malloc(sizeof(struct _dba_db_pseudoana))) == NULL)
+		return dba_error_alloc("creating a new dba_db_pseudoana");
+	res->stm = NULL;
+
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->stm)));
+	SQLBindCol(res->stm, 1, SQL_C_SLONG, &(res->out), sizeof(res->out), 0);
+	if (db->server_type == ORACLE)
+		qlen = snprintf(qbuf, 100, "SELECT %s.CurrVal FROM dual", name);	
+	else
+		qlen = snprintf(qbuf, 100, "SELECT last_value FROM %s", name);	
+	r = SQLPrepare(res->stm, (unsigned char*)qbuf, qlen);
+	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->stm, "compiling query to read the current %s sequence value", name);
+		goto cleanup;
+	}
+
+	*seq = res;
+	res = NULL;
+
+cleanup:
+	if (res != NULL)
+		dba_db_seq_delete(res);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
+dba_err dba_db_seq_read(dba_db_seq seq)
+{
+	int res;
+	res = SQLExecute(seq->stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, seq->stm, "reading sequence value");
+	/* Get the result */
+	if (SQLFetch(seq->stm) == SQL_NO_DATA)
+		return dba_error_notfound("fetching results of sequence value reads");
+	res = SQLCloseCursor(seq->stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, seq->stm, "closing dba_db_seq_read cursor");
+	return dba_error_ok();
+}
+
+void dba_db_seq_delete(dba_db_seq seq)
+{
+	if (seq->stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, seq->stm);
+	free(seq);
+}
+
+#define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
+#define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
+#define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
+#define DBA_ODBC_MISSING_TABLE_ORACLE "42S02"
+
+dba_err dba_db_drop_table_if_exists(dba_db db, const char* name)
+{
+	dba_err err = DBA_OK;
+	SQLHSTMT stm = NULL;
+	char buf[100];
+	int len, res;
+
+	/* Allocate statement handle */
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
+
+	if (db->server_type == MYSQL)
+	{
+		len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", name);
+		res = SQLExecDirect(stm, (unsigned char*)buf, len);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		{
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm,
+					"Removing old table %s", name);
+			goto cleanup;
+		}
+	} else {
+		const char* code = DBA_ODBC_MISSING_TABLE_POSTGRES;
+
+		switch (db->server_type)
+		{
+			case MYSQL: code = DBA_ODBC_MISSING_TABLE_MYSQL; break;
+			case SQLITE: code = DBA_ODBC_MISSING_TABLE_SQLITE; break;
+			case ORACLE: code = DBA_ODBC_MISSING_TABLE_ORACLE; break;
+			case POSTGRES: code = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
+			default: code = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
+		}
+
+		len = snprintf(buf, 100, "DROP TABLE %s", name);
+		res = SQLExecDirect(stm, (unsigned char*)buf, len);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+			DBA_RUN_OR_GOTO(cleanup, dba_db_error_odbc_except(code,
+					SQL_HANDLE_STMT, stm,
+					"Removing old table %s", name));
+		DBA_RUN_OR_GOTO(cleanup, dba_db_commit(db));
+	}
+
+cleanup:
+	if (stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
 
 #ifdef DBA_USE_TRANSACTIONS
 dba_err dba_db_begin(dba_db db)
 {
+	// TODO: set manual transaction and get rid of this method
+	if (db->stm_begin == NULL) return dba_error_ok();
 	int res = SQLExecute(db->stm_begin);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_begin, "Beginning a transaction");
@@ -145,16 +254,19 @@ dba_err dba_db_begin(dba_db db)
 
 dba_err dba_db_commit(dba_db db)
 {
-	int res = SQLExecute(db->stm_commit);
+	int res = SQLEndTran(SQL_HANDLE_DBC, db->od_conn, SQL_COMMIT);
+	/*int res = SQLExecute(db->stm_commit);*/
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_commit, "Committing a transaction");
+		/*return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_commit, "Committing a transaction");*/
+		return dba_db_error_odbc(SQL_HANDLE_DBC, db->od_conn, "Committing a transaction");
 	return dba_error_ok();
 }
 
 /* Run unchecked to avoid altering the error status */
 void dba_db_rollback(dba_db db)
 {
-	int res = SQLExecute(db->stm_rollback);
+	/* int res = SQLExecute(db->stm_rollback); */
+	int res = SQLEndTran(SQL_HANDLE_DBC, db->od_conn, SQL_ROLLBACK);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return;
 }

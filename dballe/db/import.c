@@ -181,13 +181,12 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 			goto fail;
 		}
 
-		dc->date_ind = snprintf(dc->date, 25,
-				"%04ld-%02ld-%02ld %02ld:%02ld:00",
-					strtol(year, 0, 10),
-					strtol(month, 0, 10),
-					strtol(day, 0, 10),
-					strtol(hour, 0, 10),
-					strtol(min, 0, 10));
+		dc->date.year = strtol(year, 0, 10);
+		dc->date.month = strtol(month, 0, 10);
+		dc->date.day = strtol(day, 0, 10);
+		dc->date.hour = strtol(hour, 0, 10);
+		dc->date.minute = strtol(min, 0, 10);
+		dc->date.second = 0;
 	}
 
 	/* Insert the rest of the data */

@@ -39,10 +39,10 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 {
 	static const char query[] =
 		"SELECT d.id_var, d.value, a.type, a.value"
-		"  FROM context AS c, data AS d"
-		"  LEFT JOIN attr AS a ON a.id_context = d.id_context AND a.id_var = d.id_var"
+		"  FROM context c, data d"
+		"  LEFT JOIN attr a ON a.id_context = d.id_context AND a.id_var = d.id_var"
 		" WHERE d.id_context = c.id AND c.id_ana = ? AND c.id_report = ?"
-		"   AND c.datetime = '1000-01-01 00:00:00' AND c.ltype = 257 AND c.l1 = 0"
+		"   AND c.datetime = {ts '1000-01-01 00:00:00'} AND c.ltype = 257 AND c.l1 = 0"
 		"   AND c.l2 = 0 AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
 		" ORDER BY d.id_var, a.type";
 	dba_err err = DBA_OK;
@@ -153,6 +153,11 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
+static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_STRUCT* b)
+{
+	return memcmp(a, b, sizeof(SQL_TIMESTAMP_STRUCT));
+}
+
 dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* data)
 {
 	dba_err err = DBA_OK;
@@ -162,7 +167,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 	dba_msg copy = NULL;
 	int last_lat = -1;
 	int last_lon = -1;
-	char last_datetime[25];
+	SQL_TIMESTAMP_STRUCT last_datetime;
 	char last_ident[70];
 	int last_rep_cod = -1;
 
@@ -180,7 +185,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 			/*	DBA_DB_MODIFIER_STREAM)); */
 
 	/* Retrieve results */
-	last_datetime[0] = 0;
+	last_datetime.year = 0;
 	last_ident[0] = 0;
 	while (1)
 	{
@@ -209,7 +214,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 		DBA_RUN_OR_GOTO(cleanup, dba_db_attr_load(db->attr, var));
 
 		/* See if we have the start of a new message */
-		if (cur->out_lat != last_lat || cur->out_lon != last_lon || strcmp(cur->out_datetime, last_datetime) != 0 || ident_differs || cur->out_rep_cod != last_rep_cod)
+		if (cur->out_lat != last_lat || cur->out_lon != last_lon || sqltimecmp(&(cur->out_datetime), &last_datetime) != 0 || ident_differs || cur->out_rep_cod != last_rep_cod)
 		{
 			TRACE("New message\n");
 			if (msg != NULL)
@@ -240,6 +245,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 
 			/* Fill in datetime */
 			{
+				/*
 				int year, mon, day, hour, min, sec;
 				if (sscanf(cur->out_datetime,
 							"%04d-%02d-%02d %02d:%02d:%02d", &year, &mon, &day, &hour, &min, &sec) != 6)
@@ -247,18 +253,19 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 					err = dba_error_consistency("parsing datetime string \"%s\"", cur->out_datetime);
 					goto cleanup;
 				}
+				*/
 
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_year(msg, year, -1));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_month(msg, mon, -1));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_day(msg, day, -1));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_hour(msg, hour, -1));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_minute(msg, min, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_year(msg, cur->out_datetime.year, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_month(msg, cur->out_datetime.month, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_day(msg, cur->out_datetime.day, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_hour(msg, cur->out_datetime.hour, -1));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_minute(msg, cur->out_datetime.minute, -1));
 				/*DBA_RUN_OR_GOTO(cleanup, dba_msg_set_second(msg, sec, -1));*/
 			}
 
 			DBA_RUN_OR_GOTO(cleanup, fill_ana_layer(db, msg, cur->out_ana_id, 254));
 
-			strncpy(last_datetime, cur->out_datetime, 20);
+			last_datetime = cur->out_datetime;
 			last_lat = cur->out_lat;
 			last_lon = cur->out_lon;
 			if (cur->out_ident_ind != SQL_NULL_DATA)
@@ -290,6 +297,9 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 		}
 		msg = NULL;
 	}
+
+	/* Useful for Oracle to end the session */
+    DBA_RUN_OR_GOTO(cleanup, dba_db_commit(db));
 
 cleanup:
 	if (var != NULL)

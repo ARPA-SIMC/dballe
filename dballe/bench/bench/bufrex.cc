@@ -72,12 +72,12 @@ protected:
 		// Read data from a collection of files
 		for (int i = 0; i < iterations; i++)
 			for (count = 0; count < sizeof(bufr_files) / sizeof(const char*); count++)
-				DBA_RUN_OR_RETURN(read_file(BUFR, string("../tests/") + bufr_files[count], msgbase));
+				DBA_RUN_OR_RETURN(read_file(BUFR, string("../../extra/") + bufr_files[count], msgbase));
 		timing("read and parse %d BUFR messages of various kinds", count * iterations);
 
 		for (int i = 0; i < iterations; i++)
 			for (count = 0; count < sizeof(crex_files) / sizeof(const char*); count++)
-				DBA_RUN_OR_RETURN(read_file(CREX, string("../tests/") + crex_files[count], msgbase));
+				DBA_RUN_OR_RETURN(read_file(CREX, string("../../extra/") + crex_files[count], msgbase));
 		timing("read and parse %d CREX messages of various kinds", count * iterations);
 		
 		for (vector<bufrex_msg>::iterator i = msgbase.begin();

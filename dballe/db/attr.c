@@ -55,6 +55,15 @@ dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 	const char* replace_query_sqlite =
 		"INSERT OR REPLACE INTO attr (id_context, id_var, type, value)"
 		" VALUES(?, ?, ?, ?)";
+	const char* replace_query_oracle =
+		"MERGE INTO attr USING"
+		" (SELECT ? as cnt, ? as var, ? as t, ? as val FROM dual)"
+		" ON (id_context=cnt AND id_var=var AND type=t)"
+		" WHEN MATCHED THEN UPDATE SET value=val"
+		" WHEN NOT MATCHED THEN"
+		"  INSERT (id_context, id_var, type, value) VALUES (cnt, var, t, val)";
+	const char* replace_query_postgres =
+		"UPDATE attr SET value=? WHERE id_context=? AND id_var=? AND type=?";
 	dba_err err = DBA_OK;
 	dba_db_attr res = NULL;
 	int r;
@@ -94,10 +103,18 @@ dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 
 	/* Create the statement for replace */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->rstm)));
-	SQLBindParameter(res->rstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
-	SQLBindParameter(res->rstm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
-	SQLBindParameter(res->rstm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
-	SQLBindParameter(res->rstm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
+	if (db->server_type == POSTGRES)
+	{
+		SQLBindParameter(res->rstm, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
+		SQLBindParameter(res->rstm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
+		SQLBindParameter(res->rstm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
+		SQLBindParameter(res->rstm, 4, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
+	} else {
+		SQLBindParameter(res->rstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
+		SQLBindParameter(res->rstm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
+		SQLBindParameter(res->rstm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
+		SQLBindParameter(res->rstm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
+	}
 	switch (db->server_type)
 	{
 		case MYSQL:
@@ -105,6 +122,12 @@ dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 			break;
 		case SQLITE:
 			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_sqlite, SQL_NTS);
+			break;
+		case ORACLE:
+			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_oracle, SQL_NTS);
+			break;
+		case POSTGRES:
+			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_postgres, SQL_NTS);
 			break;
 		default:
 			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_mysql, SQL_NTS);
@@ -153,10 +176,38 @@ void dba_db_attr_set_value(dba_db_attr ins, const char* value)
 
 dba_err dba_db_attr_insert(dba_db_attr ins, int replace)
 {
-	SQLHSTMT stm = replace ? ins->rstm : ins->istm;
-	int res = SQLExecute(stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting data into attr");
+	if (ins->db->server_type == POSTGRES && replace)
+	{
+		/* TODO for postgres: do the insert or replace with:
+		 * 1. lock table (or do this somehow atomically)
+		 * 2. update
+		 * 3. if it says not found, then insert
+		 * 4. unlock table
+		 */
+		SQLHSTMT stm = ins->rstm;
+		SQLLEN rowcount;
+		int res = SQLExecute(stm);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO) && (res != SQL_NO_DATA))
+			return dba_db_error_odbc(SQL_HANDLE_STMT, stm, 
+						"updating data into table 'attr'");
+        res = SQLRowCount(stm, &rowcount);
+        if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+            return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+		if (rowcount == 0)
+		{
+			/* Update failed, the element did not exist.  Create it */
+			stm = ins->istm;
+			int res = SQLExecute(stm);
+			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+				return dba_db_error_odbc(SQL_HANDLE_STMT, stm, 
+							  "inserting data into table 'attr'");
+		}
+	} else {
+		SQLHSTMT stm = replace ? ins->rstm : ins->istm;
+		int res = SQLExecute(stm);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+			return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting data into attr");
+	}
 	return dba_error_ok();
 }
 

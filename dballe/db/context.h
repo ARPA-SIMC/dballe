@@ -60,9 +60,7 @@ struct _dba_db_context
 	/** Report ID SQL parameter */
 	long id_report;
 	/** Date SQL parameter */
-	char date[25];
-	/** Date indicator */
-	SQLLEN date_ind;
+	SQL_TIMESTAMP_STRUCT date;
 	/** Level type SQL parameter */
 	long ltype;
 	/** Level L1 SQL parameter */

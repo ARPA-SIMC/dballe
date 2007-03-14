@@ -58,6 +58,16 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 	dba_db_context res = NULL;
 	int r;
 
+	switch (db->server_type)
+	{
+		case ORACLE:
+			insert_query = "INSERT INTO context VALUES (seq_context.NextVal, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			break;
+		case POSTGRES:
+			insert_query = "INSERT INTO context VALUES (nextval('seq_context'), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			break;
+	}
+
 	if ((res = (dba_db_context)malloc(sizeof(struct _dba_db_context))) == NULL)
 		return dba_error_alloc("creating a new dba_db_context");
 	res->db = db;
@@ -65,12 +75,16 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 	res->sdstm = NULL;
 	res->istm = NULL;
 	res->dstm = NULL;
+	res->date.fraction = 0;
 
 	/* Create the statement for select fixed */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sstm)));
 	SQLBindParameter(res->sstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_ana), 0, 0);
 	SQLBindParameter(res->sstm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_report), 0, 0);
-	SQLBindParameter(res->sstm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->date), 0, &(res->date_ind));
+	if (db->server_type == POSTGRES)
+		SQLBindParameter(res->sstm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(res->date), 0, 0);
+	else
+		SQLBindParameter(res->sstm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &(res->date), 0, 0);
 	SQLBindParameter(res->sstm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->ltype), 0, 0);
 	SQLBindParameter(res->sstm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
 	SQLBindParameter(res->sstm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
@@ -91,7 +105,7 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 	SQLBindParameter(res->sdstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
 	SQLBindCol(res->sdstm, 1, SQL_C_SLONG, &(res->id_ana),	  sizeof(res->id_ana),	0);
 	SQLBindCol(res->sdstm, 2, SQL_C_SLONG, &(res->id_report), sizeof(res->id_report),	0);
-	SQLBindCol(res->sdstm, 3, SQL_C_CHAR,  &(res->date),	  sizeof(res->date),	    &(res->date_ind));
+	SQLBindCol(res->sdstm, 3, SQL_C_TYPE_TIMESTAMP,  &(res->date),	  sizeof(res->date), 0);
 	SQLBindCol(res->sdstm, 4, SQL_C_SLONG, &(res->ltype),	  sizeof(res->ltype),	    0);
 	SQLBindCol(res->sdstm, 5, SQL_C_SLONG, &(res->l1),		  sizeof(res->l1),		    0);
 	SQLBindCol(res->sdstm, 6, SQL_C_SLONG, &(res->l2),		  sizeof(res->l2),		    0);
@@ -109,7 +123,10 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->istm)));
 	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_ana), 0, 0);
 	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_report), 0, 0);
-	SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->date), 0, &(res->date_ind));
+	if (db->server_type == POSTGRES)
+		SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(res->date), 0, 0);
+	else
+		SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &(res->date), 0, 0);
 	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->ltype), 0, 0);
 	SQLBindParameter(res->istm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
 	SQLBindParameter(res->istm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
@@ -197,8 +214,10 @@ dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id)
 	/* Fill up the query parameters with the data for the anagraphical context */
 	if (ins->id_report == -1)
 		ins->id_report = 254;
-	memcpy(ins->date, "1000-01-01 00:00:00", 20);
-	ins->date_ind = 19;
+	ins->date.year = 1000;
+	ins->date.month = 1;
+	ins->date.day = 1;
+	ins->date.hour = ins->date.minute = ins->date.second = 0;
 	ins->ltype = 257;
 	ins->l1 = ins->l2 = 0;
 	ins->pind = ins->p1 = ins->p2 = 0;
@@ -219,7 +238,16 @@ dba_err dba_db_context_insert(dba_db_context ins, int *id)
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->istm, "inserting new data into context");
 
-	return dba_db_last_insert_id(ins->db, id);
+	switch (ins->db->server_type)
+	{
+		case ORACLE:
+		case POSTGRES:
+			DBA_RUN_OR_RETURN(dba_db_seq_read(ins->db->seq_context));
+			*id = ins->db->seq_context->out;
+			return dba_error_ok();
+		default:
+			return dba_db_last_insert_id(ins->db, id);
+	}
 }
 
 dba_err dba_db_context_remove(dba_db_context ins)
