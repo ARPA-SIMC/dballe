@@ -452,6 +452,8 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 	}
 
     /* TODO: no need to precompile all these queries anymore */
+	(*db)->stm_begin = NULL;
+#if 0
 	if ((*db)->server_type == ORACLE)
 		/* Oracle does not want a begin and starts transactions automatically */
 		(*db)->stm_begin = NULL;
@@ -464,6 +466,7 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 			goto fail;
 		}
 	}
+#endif
 
 	DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_commit)));
 	sqlres = SQLPrepare((*db)->stm_commit, (unsigned char*)"COMMIT", SQL_NTS);
