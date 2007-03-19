@@ -53,26 +53,26 @@ struct _dba_db_context
 	SQLHSTMT dstm;
 
 	/** Context ID SQL parameter */
-	long id;
+	DBALLE_SQL_C_SINT_TYPE id;
 
 	/** Pseudoana ID SQL parameter */
-	long id_ana;
+	DBALLE_SQL_C_SINT_TYPE id_ana;
 	/** Report ID SQL parameter */
-	long id_report;
+	DBALLE_SQL_C_SINT_TYPE id_report;
 	/** Date SQL parameter */
 	SQL_TIMESTAMP_STRUCT date;
 	/** Level type SQL parameter */
-	long ltype;
+	DBALLE_SQL_C_SINT_TYPE ltype;
 	/** Level L1 SQL parameter */
-	long l1;
+	DBALLE_SQL_C_SINT_TYPE l1;
 	/** Level L2 SQL parameter */
-	long l2;
+	DBALLE_SQL_C_SINT_TYPE l2;
 	/** Time range type SQL parameter */
-	long pind;
+	DBALLE_SQL_C_SINT_TYPE pind;
 	/** Time range P1 SQL parameter */
-	long p1;
+	DBALLE_SQL_C_SINT_TYPE p1;
 	/** Time range P2 SQL parameter */
-	long p2;
+	DBALLE_SQL_C_SINT_TYPE p2;
 };
 /** @copydoc _dba_db_context */
 typedef struct _dba_db_context* dba_db_context;

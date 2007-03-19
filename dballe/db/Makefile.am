@@ -10,6 +10,7 @@ dbincludedir = $(includedir)/dballe/db
 
 # Include the .cc files that contain template definitions
 dbinclude_HEADERS = \
+		odbcworkarounds.h \
 		querybuf.h \
 		internals.h \
 		repinfo.h \

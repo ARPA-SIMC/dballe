@@ -175,16 +175,16 @@ static dba_err dba_db_repinfo_read_cache(dba_db_repinfo ri)
 	dba_err err = DBA_OK;
 	SQLHSTMT stm;
 
-	unsigned long id;
+	DBALLE_SQL_C_UINT_TYPE id;
 	char memo[30];
 	SQLLEN memo_ind;
 	char description[255];
 	SQLLEN description_ind;
-	unsigned long prio;
+	DBALLE_SQL_C_UINT_TYPE prio;
 	SQLLEN prio_ind;
 	char descriptor[6];
 	SQLLEN descriptor_ind;
-	unsigned long tablea;
+	DBALLE_SQL_C_UINT_TYPE tablea;
 	SQLLEN tablea_ind;
 
 	int res;
@@ -193,12 +193,12 @@ static dba_err dba_db_repinfo_read_cache(dba_db_repinfo ri)
 
 	DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
 
-	SQLBindCol(stm, 1, SQL_C_ULONG, &id, sizeof(id), 0);
+	SQLBindCol(stm, 1, DBALLE_SQL_C_UINT, &id, sizeof(id), 0);
 	SQLBindCol(stm, 2, SQL_C_CHAR, &memo, sizeof(memo), &memo_ind);
 	SQLBindCol(stm, 3, SQL_C_CHAR, &description, sizeof(description), &description_ind);
-	SQLBindCol(stm, 4, SQL_C_ULONG, &prio, sizeof(prio), &prio_ind);
+	SQLBindCol(stm, 4, DBALLE_SQL_C_UINT, &prio, sizeof(prio), &prio_ind);
 	SQLBindCol(stm, 5, SQL_C_CHAR, &descriptor, sizeof(descriptor), &descriptor_ind);
-	SQLBindCol(stm, 6, SQL_C_ULONG, &tablea, sizeof(tablea), &tablea_ind);
+	SQLBindCol(stm, 6, DBALLE_SQL_C_UINT, &tablea, sizeof(tablea), &tablea_ind);
 
 	res = SQLExecDirect(stm, (unsigned char*)
 			"SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id", SQL_NTS);
@@ -372,7 +372,7 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 	newitem newitems = NULL;
 	SQLHSTMT stm = NULL;
 	int res;
-	unsigned long id;
+	DBALLE_SQL_C_UINT_TYPE id;
 	int i;
 
 	*added = *deleted = *updated = 0;
@@ -382,7 +382,7 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 
 	/* Verify that the update is possible */
 	DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &id, 0, 0);
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &id, 0, 0);
 	res = SQLPrepare(stm, (unsigned char*)"SELECT id FROM context WHERE id_report = ? LIMIT 1", SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
@@ -425,9 +425,9 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 		newitem cur;
 		char memo[30];
 		char description[255];
-		long prio;
+		DBALLE_SQL_C_SINT_TYPE prio;
 		char descriptor[6];
-		unsigned long tablea;
+		DBALLE_SQL_C_UINT_TYPE tablea;
 
 		DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
 
@@ -440,12 +440,12 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 			goto cleanup;
 		}
 
-		SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &id, 0, 0);
+		SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &id, 0, 0);
 		SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, memo, 0, 0);
 		SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, description, 0, 0);
-		SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &prio, 0, 0);
+		SQLBindParameter(stm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &prio, 0, 0);
 		SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, descriptor, 0, 0);
-		SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &tablea, 0, 0);
+		SQLBindParameter(stm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &tablea, 0, 0);
 
 		for (cur = newitems; cur != NULL; cur = cur->next)
 		{
@@ -479,10 +479,10 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 
 			SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, ri->cache[i].new_memo, 0, 0);
 			SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, ri->cache[i].new_desc, 0, 0);
-			SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &(ri->cache[i].new_prio), 0, 0);
+			SQLBindParameter(stm, 3, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(ri->cache[i].new_prio), 0, 0);
 			SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, ri->cache[i].new_descriptor, 0, 0);
-			SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &(ri->cache[i].new_tablea), 0, 0);
-			SQLBindParameter(stm, 6, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &(ri->cache[i].id), 0, 0);
+			SQLBindParameter(stm, 5, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &(ri->cache[i].new_tablea), 0, 0);
+			SQLBindParameter(stm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &(ri->cache[i].id), 0, 0);
 
 			res = SQLExecDirect(stm, (unsigned char*)
 					"UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
@@ -502,7 +502,7 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 		{
 			DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
 
-			SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &(ri->cache[i].id), 0, 0);
+			SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &(ri->cache[i].id), 0, 0);
 
 			res = SQLExecDirect(stm, (unsigned char*)"DELETE FROM repinfo WHERE id=?", SQL_NTS);
 			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))

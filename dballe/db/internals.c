@@ -145,7 +145,7 @@ dba_err dba_db_seq_create(dba_db db, const char* name, dba_db_seq* seq)
 	res->stm = NULL;
 
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->stm)));
-	SQLBindCol(res->stm, 1, SQL_C_SLONG, &(res->out), sizeof(res->out), 0);
+	SQLBindCol(res->stm, 1, DBALLE_SQL_C_SINT, &(res->out), sizeof(res->out), 0);
 	if (db->server_type == ORACLE)
 		qlen = snprintf(qbuf, 100, "SELECT %s.CurrVal FROM dual", name);	
 	else

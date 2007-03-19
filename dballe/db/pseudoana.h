@@ -57,11 +57,11 @@ struct _dba_db_pseudoana
 	SQLHSTMT dstm;
 
 	/** Station ID SQL parameter */
-	long id;
+	DBALLE_SQL_C_SINT_TYPE id;
 	/** Station latitude SQL parameter */
-	long lat;
+	DBALLE_SQL_C_SINT_TYPE lat;
 	/** Station longitude SQL parameter */
-	long lon;
+	DBALLE_SQL_C_SINT_TYPE lon;
 	/** Mobile station identifier SQL parameter */
 	char ident[64];
 	/** Mobile station identifier indicator */

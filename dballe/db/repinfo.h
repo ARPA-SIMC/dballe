@@ -39,29 +39,29 @@ struct _dba_db;
 /** repinfo cache entry */
 struct _dba_db_repinfo_cache {
 	/** Report code */
-	unsigned long id;
+	DBALLE_SQL_C_UINT_TYPE id;
 
 	/** Report name */
 	char* memo;
 	/** Report description */
 	char* desc;
 	/** Report priority */
-	unsigned long prio;
+	DBALLE_SQL_C_UINT_TYPE prio;
 	/** Report descriptor (currently unused) */
 	char* descriptor;
 	/** Report A table value (currently unused) */
-	unsigned long tablea;
+	DBALLE_SQL_C_UINT_TYPE tablea;
 
 	/** New report name used when updating the repinfo table */
 	char* new_memo;
 	/** New report description used when updating the repinfo table */
 	char* new_desc;
 	/** New report priority used when updating the repinfo table */
-	unsigned long new_prio;
+	DBALLE_SQL_C_UINT_TYPE new_prio;
 	/** New report descriptor used when updating the repinfo table */
 	char* new_descriptor;
 	/** New report A table value used when updating the repinfo table */
-	unsigned long new_tablea;
+	DBALLE_SQL_C_UINT_TYPE new_tablea;
 };
 /** @copydoc _dba_db_repinfo_cache */
 typedef struct _dba_db_repinfo_cache* dba_db_repinfo_cache;

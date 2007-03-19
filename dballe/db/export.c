@@ -48,11 +48,11 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 	dba_err err = DBA_OK;
 	SQLHSTMT stm = NULL;
 	/* Bound variables */
-	long in_id_ana = id_ana;
-	long in_id_report = id_report;
-	long out_varcode;
+	DBALLE_SQL_C_SINT_TYPE in_id_ana = id_ana;
+	DBALLE_SQL_C_SINT_TYPE in_id_report = id_report;
+	DBALLE_SQL_C_SINT_TYPE out_varcode;
 	char out_value[255];
-	long out_attr_varcode;		SQLLEN out_attr_varcode_ind;
+	DBALLE_SQL_C_SINT_TYPE out_attr_varcode;		SQLLEN out_attr_varcode_ind;
 	char out_attr_value[255];	SQLLEN out_attr_value_ind;
 	dba_varcode last_varcode = 0;
 	dba_var var = NULL;
@@ -63,13 +63,13 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
 
 	/* Bind input fields */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &in_id_ana, 0, 0);
-	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &in_id_report, 0, 0);
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &in_id_ana, 0, 0);
+	SQLBindParameter(stm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &in_id_report, 0, 0);
 
 	/* Bind output fields */
-	SQLBindCol(stm, 1, SQL_C_SLONG, &out_varcode, sizeof(out_varcode), NULL);
+	SQLBindCol(stm, 1, DBALLE_SQL_C_SINT, &out_varcode, sizeof(out_varcode), NULL);
 	SQLBindCol(stm, 2, SQL_C_CHAR, &out_value, sizeof(out_value), NULL);
-	SQLBindCol(stm, 3, SQL_C_SLONG, &out_attr_varcode, sizeof(out_attr_varcode), &out_attr_varcode_ind);
+	SQLBindCol(stm, 3, DBALLE_SQL_C_SINT, &out_attr_varcode, sizeof(out_attr_varcode), &out_attr_varcode_ind);
 	SQLBindCol(stm, 4, SQL_C_CHAR, &out_attr_value, sizeof(out_attr_value), &out_attr_value_ind);
 
 	TRACE("Performing query: %s\n", query);

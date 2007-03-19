@@ -79,20 +79,20 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 
 	/* Create the statement for select fixed */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sstm)));
-	SQLBindParameter(res->sstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_ana), 0, 0);
-	SQLBindParameter(res->sstm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_report), 0, 0);
-	if (db->server_type == POSTGRES)
+	SQLBindParameter(res->sstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_ana), 0, 0);
+	SQLBindParameter(res->sstm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_report), 0, 0);
+	if (db->server_type == POSTGRES || db->server_type == SQLITE)
 		SQLBindParameter(res->sstm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(res->date), 0, 0);
 	else
 		SQLBindParameter(res->sstm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &(res->date), 0, 0);
-	SQLBindParameter(res->sstm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->ltype), 0, 0);
-	SQLBindParameter(res->sstm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
-	SQLBindParameter(res->sstm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
-	SQLBindParameter(res->sstm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
-	SQLBindParameter(res->sstm, 8, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
-	SQLBindParameter(res->sstm, 9, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
+	SQLBindParameter(res->sstm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype), 0, 0);
+	SQLBindParameter(res->sstm, 5, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
+	SQLBindParameter(res->sstm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
+	SQLBindParameter(res->sstm, 7, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
+	SQLBindParameter(res->sstm, 8, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
+	SQLBindParameter(res->sstm, 9, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
 
-	SQLBindCol(res->sstm, 1, SQL_C_SLONG, &(res->id), sizeof(res->id), 0);
+	SQLBindCol(res->sstm, 1, DBALLE_SQL_C_SINT, &(res->id), sizeof(res->id), 0);
 	r = SQLPrepare(res->sstm, (unsigned char*)select_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
@@ -102,16 +102,16 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 
 	/* Create the statement for select data */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sdstm)));
-	SQLBindParameter(res->sdstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
-	SQLBindCol(res->sdstm, 1, SQL_C_SLONG, &(res->id_ana),	  sizeof(res->id_ana),	0);
-	SQLBindCol(res->sdstm, 2, SQL_C_SLONG, &(res->id_report), sizeof(res->id_report),	0);
+	SQLBindParameter(res->sdstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
+	SQLBindCol(res->sdstm, 1, DBALLE_SQL_C_SINT, &(res->id_ana),	  sizeof(res->id_ana),	0);
+	SQLBindCol(res->sdstm, 2, DBALLE_SQL_C_SINT, &(res->id_report), sizeof(res->id_report),	0);
 	SQLBindCol(res->sdstm, 3, SQL_C_TYPE_TIMESTAMP,  &(res->date),	  sizeof(res->date), 0);
-	SQLBindCol(res->sdstm, 4, SQL_C_SLONG, &(res->ltype),	  sizeof(res->ltype),	    0);
-	SQLBindCol(res->sdstm, 5, SQL_C_SLONG, &(res->l1),		  sizeof(res->l1),		    0);
-	SQLBindCol(res->sdstm, 6, SQL_C_SLONG, &(res->l2),		  sizeof(res->l2),		    0);
-	SQLBindCol(res->sdstm, 7, SQL_C_SLONG, &(res->pind),	  sizeof(res->pind),	    0);
-	SQLBindCol(res->sdstm, 8, SQL_C_SLONG, &(res->p1),		  sizeof(res->p1),		    0);
-	SQLBindCol(res->sdstm, 9, SQL_C_SLONG, &(res->p2),		  sizeof(res->p2),		    0);
+	SQLBindCol(res->sdstm, 4, DBALLE_SQL_C_SINT, &(res->ltype),	  sizeof(res->ltype),	    0);
+	SQLBindCol(res->sdstm, 5, DBALLE_SQL_C_SINT, &(res->l1),		  sizeof(res->l1),		    0);
+	SQLBindCol(res->sdstm, 6, DBALLE_SQL_C_SINT, &(res->l2),		  sizeof(res->l2),		    0);
+	SQLBindCol(res->sdstm, 7, DBALLE_SQL_C_SINT, &(res->pind),	  sizeof(res->pind),	    0);
+	SQLBindCol(res->sdstm, 8, DBALLE_SQL_C_SINT, &(res->p1),		  sizeof(res->p1),		    0);
+	SQLBindCol(res->sdstm, 9, DBALLE_SQL_C_SINT, &(res->p2),		  sizeof(res->p2),		    0);
 	r = SQLPrepare(res->sdstm, (unsigned char*)select_data_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
@@ -121,18 +121,18 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 
 	/* Create the statement for insert */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->istm)));
-	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_ana), 0, 0);
-	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id_report), 0, 0);
-	if (db->server_type == POSTGRES)
+	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_ana), 0, 0);
+	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_report), 0, 0);
+	if (db->server_type == POSTGRES || db->server_type == SQLITE)
 		SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(res->date), 0, 0);
 	else
 		SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &(res->date), 0, 0);
-	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->ltype), 0, 0);
-	SQLBindParameter(res->istm, 5, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
-	SQLBindParameter(res->istm, 6, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
-	SQLBindParameter(res->istm, 7, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
-	SQLBindParameter(res->istm, 8, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
-	SQLBindParameter(res->istm, 9, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
+	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype), 0, 0);
+	SQLBindParameter(res->istm, 5, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
+	SQLBindParameter(res->istm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
+	SQLBindParameter(res->istm, 7, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
+	SQLBindParameter(res->istm, 8, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
+	SQLBindParameter(res->istm, 9, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
 	r = SQLPrepare(res->istm, (unsigned char*)insert_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
@@ -142,7 +142,7 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 
 	/* Create the statement for remove */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->dstm)));
-	SQLBindParameter(res->dstm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
+	SQLBindParameter(res->dstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
 	r = SQLPrepare(res->dstm, (unsigned char*)remove_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{

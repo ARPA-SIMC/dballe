@@ -50,7 +50,7 @@ struct _dba_db_data
 	SQLHSTMT ustm;
 
 	/** Context ID SQL parameter */
-	long id_context;
+	DBALLE_SQL_C_SINT_TYPE id_context;
 	/** Variable type SQL parameter */
 	dba_varcode id_var;
 	/** Variable value SQL parameter */

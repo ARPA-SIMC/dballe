@@ -300,9 +300,9 @@ static dba_err make_select(dba_db_cursor cur)
 		cur->from_wanted |= DBA_DB_FROM_PA;
 		cur->select_wanted |= DBA_DB_FROM_PA;
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "pa.lat"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_lat), sizeof(cur->out_lat), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_lat), sizeof(cur->out_lat), NULL);
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "pa.lon"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_lon), sizeof(cur->out_lon), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_lon), sizeof(cur->out_lon), NULL);
 	}
 	if (cur->wanted & DBA_DB_WANT_IDENT)
 	{
@@ -316,22 +316,22 @@ static dba_err make_select(dba_db_cursor cur)
 		cur->from_wanted |= DBA_DB_FROM_C;
 		cur->select_wanted |= DBA_DB_FROM_C;
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.ltype"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_ltype), sizeof(cur->out_ltype), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_ltype), sizeof(cur->out_ltype), NULL);
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.l1"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_l1), sizeof(cur->out_l1), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_l1), sizeof(cur->out_l1), NULL);
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.l2"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_l2), sizeof(cur->out_l2), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_l2), sizeof(cur->out_l2), NULL);
 	}
 	if (cur->wanted & DBA_DB_WANT_TIMERANGE)
 	{
 		cur->from_wanted |= DBA_DB_FROM_C;
 		cur->select_wanted |= DBA_DB_FROM_C;
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.ptype"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_pind), sizeof(cur->out_pind), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_pind), sizeof(cur->out_pind), NULL);
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.p1"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_p1), sizeof(cur->out_p1), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_p1), sizeof(cur->out_p1), NULL);
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.p2"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_p2), sizeof(cur->out_p2), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_p2), sizeof(cur->out_p2), NULL);
 	}
 	if (cur->wanted & DBA_DB_WANT_DATETIME)
 	{
@@ -345,14 +345,14 @@ static dba_err make_select(dba_db_cursor cur)
 		cur->from_wanted |= DBA_DB_FROM_C;
 		cur->select_wanted |= DBA_DB_FROM_D;
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id_report"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_rep_cod), sizeof(cur->out_rep_cod), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_rep_cod), sizeof(cur->out_rep_cod), NULL);
 	}
 	if (cur->wanted & DBA_DB_WANT_VAR_NAME)
 	{
 		cur->from_wanted |= DBA_DB_FROM_D;
 		cur->select_wanted |= DBA_DB_FROM_D;
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "d.id_var"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_idvar), sizeof(cur->out_idvar), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_idvar), sizeof(cur->out_idvar), NULL);
 	}
 	if (cur->wanted & DBA_DB_WANT_VAR_VALUE)
 	{
@@ -368,7 +368,7 @@ static dba_err make_select(dba_db_cursor cur)
 		cur->from_wanted |= DBA_DB_FROM_RI;
 		cur->select_wanted |= DBA_DB_FROM_RI;
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "ri.prio"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_priority), sizeof(cur->out_context_id), NULL);
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_priority), sizeof(cur->out_context_id), NULL);
 	}
 
 	/* For these parameters we can try to be opportunistic and avoid extra joins */
@@ -378,15 +378,15 @@ static dba_err make_select(dba_db_cursor cur)
 		{
 			/* Try pa first */
 			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "pa.id"));
-			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
+			SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
 		} else if (cur->select_wanted & DBA_DB_FROM_C) {
 			/* Then c */
 			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id_ana"));
-			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
+			SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
 		} else {
 			/* If we don't have anything to reuse, get it from pa */
 			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "pa.id"));
-			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
+			SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_ana_id), sizeof(cur->out_ana_id), NULL);
 			cur->from_wanted |= DBA_DB_FROM_PA;
 			cur->select_wanted |= DBA_DB_FROM_PA;
 		}
@@ -398,15 +398,15 @@ static dba_err make_select(dba_db_cursor cur)
 		{
 			/* Try c first */
 			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id"));
-			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
+			SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
 		} else if (cur->select_wanted & DBA_DB_FROM_D) {
 			/* Then c */
 			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "d.id_context"));
-			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
+			SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
 		} else {
 			/* If we don't have anything to reuse, get it from c */
 			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id"));
-			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
+			SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_context_id), sizeof(cur->out_context_id), NULL);
 			cur->from_wanted |= DBA_DB_FROM_C;
 		}
 	}
@@ -417,7 +417,7 @@ static dba_err make_select(dba_db_cursor cur)
 static dba_err add_int(
 		dba_db_cursor cur,
 		dba_record query,
-		long* out,
+		DBALLE_SQL_C_SINT_TYPE* out,
 		dba_keyword key,
 		const char* sql,
 		int needed_from)
@@ -427,7 +427,7 @@ static dba_err add_int(
 		*out = strtol(val, 0, 10);
 		//TRACE("found %s: adding %s. val is %d\n", info(key)->desc, sql, *out);
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, sql));
-		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, out, 0, 0);
+		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, out, 0, 0);
 		cur->from_wanted |= needed_from;
 	}
 	return dba_error_ok();
@@ -458,7 +458,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 	{
 		cur->sel_lonmin = normalon(strtol(val, 0, 10));
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "pa.lon=?"));
-		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &cur->sel_lonmin, 0, 0);
+		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &cur->sel_lonmin, 0, 0);
 		cur->from_wanted |= DBA_DB_FROM_PA;
 	}
 	if (dba_record_key_peek_value(query, DBA_KEY_LONMIN) != NULL &&
@@ -475,8 +475,8 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 		} else {
 			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "((pa.lon>=? AND pa.lon<=18000000) OR (pa.lon>=-18000000 AND pa.lon<=?))"));
 		}
-		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &cur->sel_lonmin, 0, 0);
-		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &cur->sel_lonmax, 0, 0);
+		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &cur->sel_lonmin, 0, 0);
+		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &cur->sel_lonmax, 0, 0);
 		cur->from_wanted |= DBA_DB_FROM_PA;
 	} else if (dba_record_key_peek_value(query, DBA_KEY_LONMIN) != NULL) {
 		return dba_error_consistency("'lonmin' query parameter was specified without 'lonmax'");
@@ -528,7 +528,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 				cur->sel_dtmin.fraction = 0;
 				DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime=?"));
 				TRACE("found exact time: adding AND c.datetime = ?.  val is %s\n", cur->sel_dtmin);
-				if (cur->db->server_type == POSTGRES)
+				if (cur->db->server_type == POSTGRES || cur->db->server_type == SQLITE)
 					SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(cur->sel_dtmin), 0, 0);
 				else
 					SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &(cur->sel_dtmin), 0, 0);
@@ -548,7 +548,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 					cur->sel_dtmin.fraction = 0;
 					DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime>=?"));
 					TRACE("found min time interval: adding AND c.datetime >= ?.  val is %s\n", cur->sel_dtmin);
-					if (cur->db->server_type == POSTGRES)
+					if (cur->db->server_type == POSTGRES || cur->db->server_type == SQLITE)
 						SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &cur->sel_dtmin, 0, 0);
 					else
 						SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &cur->sel_dtmin, 0, 0);
@@ -565,7 +565,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 					cur->sel_dtmax.fraction = 0;
 					DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime<=?"));
 					TRACE("found max time interval: adding AND c.datetime <= ?.  val is %s\n", cur->sel_dtmax);
-					if (cur->db->server_type == POSTGRES)
+					if (cur->db->server_type == POSTGRES || cur->db->server_type == SQLITE)
 						SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &cur->sel_dtmax, 0, 0);
 					else
 						SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &cur->sel_dtmax, 0, 0);
@@ -600,7 +600,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 		cur->sel_rep_cod = src_val;
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.id_report=?"));
 		TRACE("found rep_memo %s: adding AND c.id_report = ?. val is %d\n", val, cur->sel_rep_cod);
-		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->sel_rep_cod), 0, 0);
+		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(cur->sel_rep_cod), 0, 0);
 		cur->from_wanted |= DBA_DB_FROM_C;
 	} else
 		ADD_INT(&cur->sel_rep_cod, DBA_KEY_REP_COD, "c.id_report=?", DBA_DB_FROM_C);
@@ -611,7 +611,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 		cur->sel_b = dba_descriptor_code(val);
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "d.id_var=?"));
 		TRACE("found b: adding AND d.id_var = ?. val is %d %s\n", cur->sel_b, val);
-		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &cur->sel_b, 0, 0);
+		SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &cur->sel_b, 0, 0);
 		cur->from_wanted |= DBA_DB_FROM_D;
 	}
 	if ((val = dba_record_key_peek_value(query, DBA_KEY_VARLIST)) != NULL)
@@ -731,7 +731,7 @@ static dba_err add_other_froms(dba_db_cursor cur, unsigned int base)
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
 							" JOIN context cbs ON pa.id=cbs.id_ana"
 							" AND cbs.id_report=254"
-							" AND cbs.datetime={ts '1000-01-01 00:00:00'}"
+							" AND cbs.datetime={ts '1000-01-01 00:00:00.0'}"
 							" AND cbs.ltype=257 AND cbs.l1=0 AND cbs.l2=0"
 							" AND cbs.ptype=0 AND cbs.p1=0 AND cbs.p2=0 "));
 				break;
@@ -739,7 +739,7 @@ static dba_err add_other_froms(dba_db_cursor cur, unsigned int base)
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
 							" JOIN context cbs ON c.id_ana=cbs.id_ana"
 							" AND cbs.id_report=254"
-							" AND cbs.datetime={ts '1000-01-01 00:00:00'}"
+							" AND cbs.datetime={ts '1000-01-01 00:00:00.0'}"
 							" AND cbs.ltype=257 AND cbs.l1=0 AND cbs.l2=0"
 							" AND cbs.ptype=0 AND cbs.p1=0 AND cbs.p2=0 "));
 				break;
@@ -775,7 +775,7 @@ static dba_err add_other_froms(dba_db_cursor cur, unsigned int base)
 	return dba_error_ok();
 }
 
-static dba_err rowcount(dba_db db, const char* table, long* count)
+static dba_err rowcount(dba_db db, const char* table, DBALLE_SQL_C_SINT_TYPE* count)
 {
 	dba_err err = DBA_OK;
 	SQLHSTMT stm = NULL;
@@ -786,7 +786,7 @@ static dba_err rowcount(dba_db db, const char* table, long* count)
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
 
 	/* Bind count directly in the output  */
-	SQLBindCol(stm, 1, SQL_C_SLONG, count, sizeof(*count), NULL);
+	SQLBindCol(stm, 1, DBALLE_SQL_C_SINT, count, sizeof(*count), NULL);
 
 	len = snprintf(buf, 100, "SELECT COUNT(*) FROM %s", table);
 	res = SQLExecDirect(stm, (unsigned char*)buf, len);
@@ -821,7 +821,7 @@ static dba_err setstmtattr(SQLHSTMT stm, SQLINTEGER attr, SQLPOINTER val, SQLINT
 /* FIXME: this is a temporary solution giving an approximate row count only:
  * insert/delete/update queries run between the count and the select will
  * change the size of the result set */
-static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted, unsigned int modifiers, long* count)
+static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted, unsigned int modifiers, DBALLE_SQL_C_SINT_TYPE* count)
 {
 	/* Reset the cursor to start a new query */
 	dba_querybuf_reset(cur->query);
@@ -845,7 +845,7 @@ static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted
 	else
 #endif
 		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, "COUNT(*) "));
-	SQLBindCol(cur->stm, cur->output_seq++, SQL_C_SLONG, count, sizeof(*count), NULL);
+	SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, count, sizeof(*count), NULL);
 
 	/* Prepare WHERE part and see what needs to be available in the FROM part */
 	DBA_RUN_OR_RETURN(make_where(cur, query));
@@ -923,8 +923,8 @@ static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted
 	/* Ignore anagraphical context unless explicitly requested */
 	if (cur->from_wanted & DBA_DB_FROM_C && !cur->accept_from_ana_context)
 	{
-		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime>={ts '1001-01-01 00:00:00'}"));
-		TRACE("ignoring anagraphical context as it has not been explicitly requested: adding AND c.datetime >= {ts '1001-01-01 00:00:00'}\n");
+		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime>={ts '1001-01-01 00:00:00.0'}"));
+		TRACE("ignoring anagraphical context as it has not been explicitly requested: adding AND c.datetime >= {ts '1001-01-01 00:00:00.0'}\n");
 	}
 
 	/* Create the FROM part with everything that is needed */
@@ -1006,7 +1006,7 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 
 	if (cur->db->server_type == ORACLE && !(cur->modifiers & DBA_DB_MODIFIER_STREAM))
 	{
-		long count;
+		DBALLE_SQL_C_SINT_TYPE count;
 		DBA_RUN_OR_RETURN(getcount(cur, query, wanted, modifiers, &count));
 		cur->count = count;
 	}
@@ -1052,8 +1052,8 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	/* Ignore anagraphical context unless explicitly requested */
 	if (cur->from_wanted & DBA_DB_FROM_C && !cur->accept_from_ana_context)
 	{
-		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime>={ts '1001-01-01 00:00:00'}"));
-		TRACE("ignoring anagraphical context as it has not been explicitly requested: adding AND c.datetime >= {ts '1001-01-01 00:00:00'}\n");
+		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime>={ts '1001-01-01 00:00:00.0'}"));
+		TRACE("ignoring anagraphical context as it has not been explicitly requested: adding AND c.datetime >= {ts '1001-01-01 00:00:00.0'}\n");
 	}
 
 	/* Create the FROM part with everything that is needed */
@@ -1180,7 +1180,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 		"SELECT d.id_var, d.value"
 		"  FROM context c, data d"
 		" WHERE c.id = d.id_context AND c.id_ana = ?"
-		"   AND c.datetime = {ts '1000-01-01 00:00:00'}"
+		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'}"
 		"   AND c.id_report = 254"
 		"   AND c.ltype = 257 AND c.l1 = 0 AND c.l2 = 0"
 		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0";
@@ -1197,7 +1197,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
 
 	/* Bind input fields */
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &(cur->out_ana_id), 0, 0);
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(cur->out_ana_id), 0, 0);
 
 	/* Bind output fields */
 	SQLBindCol(stm, 1, SQL_C_USHORT, &out_code, sizeof(out_code), 0);
