@@ -49,7 +49,6 @@ latmax,      DBA_KEY_LATMAX
 latmin,      DBA_KEY_LATMIN
 lonmax,      DBA_KEY_LONMAX
 lonmin,      DBA_KEY_LONMIN
-datetime,    DBA_KEY_DATETIME
 year,        DBA_KEY_YEAR
 month,       DBA_KEY_MONTH
 day,         DBA_KEY_DAY
@@ -106,7 +105,6 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "Minimum latitude queried",                 "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
 	{ 0, "Maximum longitude queried",                "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
 	{ 0, "Minimum longitude queried",                "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
-	{ 0, "Date and time informations",            "CHARACTER", DEF_STRING(20) },
 	{ 0, "Year",                                       "YEAR", 0, 0,   4, 0, 0, 0, LIM_4_0 },
 	{ 0, "Month",                                     "MONTH", 0, 0,   2, 0, 0, 0, LIM_2_0 },
 	{ 0, "Day",                                         "DAY", 0, 0,   2, 0, 0, 0, LIM_2_0 },
@@ -157,7 +155,6 @@ static const char* keyword_names[] = {
 	"latmin",
 	"lonmax",
 	"lonmin",
-	"datetime",
 	"year",
 	"month",
 	"day",
