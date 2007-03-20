@@ -28,13 +28,13 @@ endif
 
 check_fdballe_SOURCES = check_fdballe.f
 check_fdballe_LDADD = ./libdballef.la -lcnf -lpopt
-check_fdballe_FFLAGS = -g -fno-second-underscore
+check_fdballe_FCFLAGS = -g
 
 noinst_PROGRAMS = dump_dballe
 
 dump_dballe_SOURCES = dump_dballe.f
 dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
-dump_dballe_FFLAGS = -g -fno-second-underscore
+dump_dballe_FCFLAGS = -g 
 
 # Normal bureaucracy :)
 
