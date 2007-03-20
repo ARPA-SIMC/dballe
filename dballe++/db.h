@@ -76,7 +76,24 @@ public:
 	}
 	~DB()
 	{
-		dba_db_delete(m_db);
+		if (m_db)
+			dba_db_delete(m_db);
+	}
+
+	/**
+	 * Explicitly disconnect from the database. 
+	 *
+	 * This is normally performed in the contructor, but an explicit
+	 * disconnect is needed to support language bindings, such as python
+	 * previously to 2.5, with unpredictable object destruction patterns.
+	 */
+	void disconnect()
+	{
+		if (m_db)
+		{
+			dba_db_delete(m_db);
+			m_db = 0;
+		}
 	}
 
 	/**

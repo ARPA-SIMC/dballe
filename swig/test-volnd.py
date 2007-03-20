@@ -161,6 +161,9 @@ class TestRead(unittest.TestCase):
                 rec.setAnaContext()
                 self.db.insert(rec, False, True)
 
+	def tearDown(self):
+		self.db.disconnect()
+
 	def testIndexFind(self):
 		# Ana in one dimension, network in the other
 		query = dballe.Record()

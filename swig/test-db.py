@@ -33,6 +33,9 @@ class DballeTest(unittest.TestCase):
 		data.set("B33007", 50)
 		data.set("B33036", 75)
 		self.db.attrInsert(self.context, "B01011", data)
+
+	def tearDown(self):
+		self.db.disconnect()
 			
 	def testQueryAna(self):
 		query = Record()

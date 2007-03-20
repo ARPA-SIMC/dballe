@@ -61,7 +61,7 @@ static const char* init_sequences[] = {
 	"seq_context", "seq_pseudoana"
 };
 static const char* init_functions[] = {
-	"identity (val anyelement, val1 anyelement)",
+/*	"identity (val anyelement, val1 anyelement)", */
 };
 
 #ifdef DBA_USE_TRANSACTIONS
@@ -205,8 +205,8 @@ static const char* init_queries_postgres[] = {
 	") ",
 	"CREATE INDEX at_da ON attr(id_context, id_var)",
 	"CREATE UNIQUE INDEX at_uniq ON attr(id_context, id_var, type)",
-	"CREATE FUNCTION identity (val anyelement, val1 anyelement, OUT val anyelement) AS 'select $2' LANGUAGE sql STRICT",
-	"CREATE AGGREGATE anyval ( basetype=anyelement, sfunc='identity', stype='anyelement' )",
+	/*"CREATE FUNCTION identity (val anyelement, val1 anyelement, OUT val anyelement) AS 'select $2' LANGUAGE sql STRICT",
+	"CREATE AGGREGATE anyval ( basetype=anyelement, sfunc='identity', stype='anyelement' )",*/
 };
 
 static const char* init_queries_sqlite[] = {
