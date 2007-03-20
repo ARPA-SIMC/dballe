@@ -80,7 +80,10 @@ fail:
 void dba_db_cursor_delete(dba_db_cursor cur)
 {
 	if (cur->stm != NULL)
+	{
+		SQLEndTran(SQL_HANDLE_DBC, cur->stm, SQL_COMMIT);
 		SQLFreeHandle(SQL_HANDLE_STMT, cur->stm);
+	}
 	if (cur->query != NULL)
 		dba_querybuf_delete(cur->query);
 	if (cur->where != NULL)
