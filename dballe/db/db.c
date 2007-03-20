@@ -537,7 +537,10 @@ void dba_db_delete(dba_db db)
 	if (db->od_conn != NULL)
 	{
 		if (db->connected)
+		{
+			SQLEndTran(SQL_HANDLE_DBC, db->od_conn, SQL_COMMIT);
 			SQLDisconnect(db->od_conn);
+		}
 		SQLFreeHandle(SQL_HANDLE_DBC, db->od_conn);
 	}
 	if (db->stm_last_insert_id != NULL)
