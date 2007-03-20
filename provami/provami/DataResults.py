@@ -40,8 +40,8 @@ class DataTable(ResultTable):
 				  sorter = lambda x, y: cmp(x.enqc("rep_memo"), y.enqc("rep_memo")))
 
 		self.appendColumn("Date", \
-				  renderer = lambda x: x.enqc("datetime"), \
-				  sorter = lambda x, y: cmp(x.enqc("datetime"), y.enqc("datetime")))
+				  renderer = lambda x: x.enqdate(), \
+				  sorter = lambda x, y: cmp(x.enqdate(), y.enqdate()))
 
 		self.appendColumn("Level", \
 				  renderer = lambda x: str(x.enqlevel()), \
