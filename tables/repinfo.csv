@@ -1,64 +1,14 @@
 01,synop,report synottico,100,oss,0
 02,metar,metar,80,oss,0
-03,temp,radiosondaggio,100,oss,2
+03,temp,radiosondaggio,98,oss,2
 04,pilot,sondaggi pilot,80,oss,2
-09,boe,dati omdametrici,100,oss,31
-10,ship,synop da nave,100,oss,1
+09,boe,dati omdametrici,50,oss,31
+10,ship,synop da nave,99,oss,1
 11,tempship,temp da nave,100,oss,2
 12,airep,airep,80,oss,4
-13,amdar,amdar,100,oss,4
-14,acars,acars,100,oss,4
-50,regioni,dati regioni per verifica LAMI,100,oss,255
+13,amdar,amdar,97,oss,4
+14,acars,acars,96,oss,4
+50,regioni,dati regioni per verifica LAMI,90,oss,255
 60,icecast,dati meteo autostradali,40,oss,255
-105,anamod,campi analizzati tramite modello meteo,0,ana,255
-106,ossmed04,osservati media su box 0.4,0,oss,255
-107,ossmax04,osservati massimo su box 0.4,0,oss,255
-108,ossmed05,osservati media su box 0.5,0,oss,255
-109,ossmax05,osservati massimo su box 0.5,0,oss,255
-110,lmsmr2031spnpo,previsione LAMI nudging 35 livelli interpolato punto piu' vicino,-10,pre,255
-111,lmsmr2031spbil,previsione LAMI nudging 35 livelli interpolato 4 punti piu' vicini,-10,pre,255
-112,lmsmr2032spnpo,previsione LAMI prognostica 35 livelli interpolato punto piu' vicino,-10,pre,255
-113,lmsmr2032spbil,previsione LAMI prognostica 35 livelli interpolato 4 punti piu' vicini,-10,pre,255
-114,lmsmr3032spnpo,previsione LAMI prognostica 40 livelli interpolato punto piu' vicino,-1,pre,255
-115,lmsmr3032spbil,previsione LAMI prognostica 40 livelli interpolato 4 punti piu' vicini,-1,pre,255
-116,lmsmr3033spnpo,previsione LAMI Runge-Kutta 40 livelli interpolato punto piu' vicino,-1,pre,255
-117,lmsmr3033spbil,previsione LAMI Runge-Kutta 40 livelli interpolato 4 punti piu' vicini,-1,pre,255
-118,lmdetspnpo,previsione LM su ECMWF (deterministico di COSMO-LEPS) 35 livelli interpolato punto piu' vicino,-1,pre,255
-119,lmdet40spnpo,previsione LM su ECMWF (deterministico di COSMO-LEPS) 40 livelli interpolato 4 punti piu' vicini,-1,pre,255
-120,lmsmr2031med04,previsione LAMI nudging 35 livelli media su box 0.4,-1,pre,255
-121,lmsmr2032med04,previsione LAMI prognostica 35 livelli media su box 0.4,-10,pre,255
-122,lmsmr3032med04,previsione LAMI prognostica 40 livelli media su box 0.4,-10,pre,255
-123,lmsmr3033med04,previsione LAMI Runge-Kutta 40 livelli media su box 0.4,-1,pre,255
-124,lmdet40med04,previsione LM su ECMWF (deterministico di COSMO-LEPS) 40 livelli media su box 0.4,-1,pre,255
-125,lmsmr2031max04,previsione LAMI nudging 35 livelli massimo su box 0.4,-1,pre,255
-126,lmsmr2032max04,previsione LAMI prognostica 35 livelli massimo su box 0.4,-10,pre,255
-127,lmsmr3032max04,previsione LAMI prognostica 40 livelli massimo su box 0.4,-10,pre,255
-128,lmsmr3033max04,previsione LAMI Runge-Kutta 40 livelli massimo su box 0.4,-1,pre,255
-129,lmdet40max04,previsione LM su ECMWF (deterministico di COSMO-LEPS) 40 livelli massimo su box 0.4,-1,pre,255
-130,clepsmed05el001,previsti COSMO-LEPS media su box 0.5 elemento 1,-10,pre,255
-131,clepsmed05el002,previsti COSMO-LEPS media su box 0.5 elemento 2,-10,pre,255
-132,clepsmed05el003,previsti COSMO-LEPS media su box 0.5 elemento 3,-10,pre,255
-133,clepsmed05el004,previsti COSMO-LEPS media su box 0.5 elemento 4,-10,pre,255
-134,clepsmed05el005,previsti COSMO-LEPS media su box 0.5 elemento 5,-10,pre,255
-135,clepsmed05el006,previsti COSMO-LEPS media su box 0.5 elemento 6,-10,pre,255
-136,clepsmed05el007,previsti COSMO-LEPS media su box 0.5 elemento 7,-10,pre,255
-137,clepsmed05el008,previsti COSMO-LEPS media su box 0.5 elemento 8,-10,pre,255
-138,clepsmed05el009,previsti COSMO-LEPS media su box 0.5 elemento 9,-10,pre,255
-139,clepsmed05el010,previsti COSMO-LEPS media su box 0.5 elemento 10,-10,pre,255
-140,clepsspnpoel001,previsti COSMO-LEPS interpolato npo elemento 1,-10,pre,255
-141,clepsspnpoel002,previsti COSMO-LEPS interpolato npo elemento 2,-10,pre,255
-142,clepsspnpoel003,previsti COSMO-LEPS interpolato npo elemento 3,-10,pre,255
-143,clepsspnpoel004,previsti COSMO-LEPS interpolato npo elemento 4,-10,pre,255
-144,clepsspnpoel005,previsti COSMO-LEPS interpolato npo elemento 5,-10,pre,255
-145,clepsspnpoel006,previsti COSMO-LEPS interpolato npo elemento 6,-10,pre,255
-146,clepsspnpoel007,previsti COSMO-LEPS interpolato npo elemento 7,-10,pre,255
-147,clepsspnpoel008,previsti COSMO-LEPS interpolato npo elemento 8,-10,pre,255
-148,clepsspnpoel009,previsti COSMO-LEPS interpolato npo elemento 9,-10,pre,255
-149,clepsspnpoel010,previsti COSMO-LEPS interpolato npo elemento 10,-10,pre,255
-160,necmwfeuspnpo,previsti ECMWF IFS interpolato punto piu' vicino,-10,pre,255
-161,necmwfeuspbil,previsti ECMWF IFS interpolato 4 punti piu' vicini,-10,pre,255
-162,necmwfeumed05,previsti ECMWF IFS media su box 0.5,-10,pre,255
-163,necmwfeumax05,previsti ECMWF IFS massimo su box 0.5,-10,pre,255
-200,noaa,NOAA satellites,40,oss,255
-254,ana,dati anagrafici,100,?,255
-255,generic,export generici da DB Meteo,0,?,255
+254,ana,dati anagrafici,5000,?,255
+255,generic,export generici da DB Meteo,1000,?,255
