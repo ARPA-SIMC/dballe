@@ -1002,6 +1002,7 @@ static dba_err add_to_orderby(dba_querybuf query, const char* fields, int* first
 dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wanted, unsigned int modifiers)
 {
 	const char* val;
+	int limit = -1;
 
 	/* Scan query modifiers */
 	cur->modifiers = modifiers;
@@ -1024,8 +1025,8 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	cur->output_seq = 1;
 	cur->accept_from_ana_context = 0;
 
-	if ((val = dba_record_key_peek_value(query, DBA_KEY_LIMIT)) != NULL && cur->db->server_type == ORACLE)
-		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, "SELECT * FROM ("));
+	if ((val = dba_record_key_peek_value(query, DBA_KEY_LIMIT)) != NULL)
+		limit = strtoul(val, NULL, 10);
 
 	DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, "SELECT "));
 	if (cur->modifiers & DBA_DB_MODIFIER_DISTINCT)
@@ -1093,6 +1094,10 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 					" GROUP BY d.id_var, d.id_context "
 					"HAVING ri.prio=MAX(ri.prio)"));
 				break;
+			case ORACLE:
+				if (limit != -1)
+					return dba_error_unimplemented("best-value queries with result limit are not implemented for Oracle");
+				/* Continue to the query */
 			default:
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
 					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE sc.id_ana=c.id_ana AND sc.ltype=c.ltype AND sc.l1=c.l1 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
@@ -1103,6 +1108,9 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	if (!(cur->modifiers & DBA_DB_MODIFIER_UNSORTED))
 	{
 		int first = 1;
+		if (limit != -1 && cur->db->server_type == ORACLE)
+			return dba_error_unimplemented("sorted queries with result limit are not implemented for Oracle");
+
 		if (cur->modifiers & DBA_DB_MODIFIER_BEST) {
 			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
 				"ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
@@ -1126,12 +1134,12 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	}
 
 	/* Append LIMIT if requested */
-	if ((val = dba_record_key_peek_value(query, DBA_KEY_LIMIT)) != NULL)
+	if (limit != -1)
 		if (cur->db->server_type == ORACLE)
 		{
-			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, ") WHERE rownum <= %s", val));
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, " AND rownum <= %d", limit));
 		} else {
-			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, " LIMIT %s", val));
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, " LIMIT %d", limit));
 		}
 
 	TRACE("Performing query: %s\n", dba_querybuf_get(cur->query));
