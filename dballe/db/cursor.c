@@ -1024,6 +1024,9 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	cur->output_seq = 1;
 	cur->accept_from_ana_context = 0;
 
+	if ((val = dba_record_key_peek_value(query, DBA_KEY_LIMIT)) != NULL && cur->db->server_type == ORACLE)
+		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, "SELECT * FROM ("));
+
 	DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, "SELECT "));
 	if (cur->modifiers & DBA_DB_MODIFIER_DISTINCT)
 		DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query, "DISTINCT "));
@@ -1124,7 +1127,12 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 
 	/* Append LIMIT if requested */
 	if ((val = dba_record_key_peek_value(query, DBA_KEY_LIMIT)) != NULL)
-		DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, " LIMIT %s", val));
+		if (cur->db->server_type == ORACLE)
+		{
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, ") WHERE rownum <= %s", val));
+		} else {
+			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, " LIMIT %s", val));
+		}
 
 	TRACE("Performing query: %s\n", dba_querybuf_get(cur->query));
 
