@@ -76,7 +76,9 @@ static const char* init_queries_mysql[] = {
 	"	description	 VARCHAR(255) NOT NULL,"
 	"   prio	     INTEGER NOT NULL,"
 	"	descriptor	 CHAR(6) NOT NULL,"
-	"	tablea		 INTEGER NOT NULL"
+	"	tablea		 INTEGER NOT NULL,"
+	"   UNIQUE INDEX (prio),"
+	"   UNIQUE INDEX (memo)"
 	") " TABLETYPE,
 	"CREATE TABLE pseudoana ("
 	"   id         INTEGER auto_increment PRIMARY KEY,"
@@ -140,6 +142,8 @@ static const char* init_queries_postgres[] = {
 	"	descriptor	 CHAR(6) NOT NULL,"
 	"	tablea		 INTEGER NOT NULL"
 	") ",
+	"CREATE UNIQUE INDEX ri_memo_uniq ON repinfo(memo)",
+	"CREATE UNIQUE INDEX ri_prio_uniq ON repinfo(prio)",
 	"CREATE SEQUENCE seq_pseudoana",
 	"CREATE TABLE pseudoana ("
 	"   id         INTEGER PRIMARY KEY,"
@@ -216,7 +220,9 @@ static const char* init_queries_sqlite[] = {
 	"	description	 VARCHAR(255) NOT NULL,"
 	"   prio	     INTEGER NOT NULL,"
 	"	descriptor	 CHAR(6) NOT NULL,"
-	"	tablea		 INTEGER NOT NULL"
+	"	tablea		 INTEGER NOT NULL,"
+	"   UNIQUE (prio),"
+	"   UNIQUE (memo)"
 	") ",
 	"CREATE TABLE pseudoana ("
 	"   id         INTEGER PRIMARY KEY,"
@@ -278,7 +284,9 @@ static const char* init_queries_oracle[] = {
 	"	description	 VARCHAR2(255) NOT NULL,"
 	"   prio	     INTEGER NOT NULL,"
 	"	descriptor	 CHAR(6) NOT NULL,"
-	"	tablea		 INTEGER NOT NULL"
+	"	tablea		 INTEGER NOT NULL,"
+	"   UNIQUE (prio),"
+	"   UNIQUE (memo)"
 	") ",
 	"CREATE TABLE pseudoana ("
 	"   id         INTEGER PRIMARY KEY,"
@@ -645,10 +653,10 @@ cleanup:
 
 dba_err dba_db_reset(dba_db db, const char* deffile)
 {
+	dba_err err = DBA_OK;
+	SQLHSTMT stm = NULL;
 	int res;
 	int i;
-	SQLHSTMT stm;
-	dba_err err;
 	const char** queries = NULL;
 	int query_count = 0;
 
@@ -661,16 +669,24 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 			deffile = TABLE_DIR "/repinfo.csv";
 	}
 
+	/* fprintf(stderr, "Reset with %s\n", deffile); */
+
 	/* Open the input CSV file */
+	/*
 	FILE* in = fopen(deffile, "r");
 	if (in == NULL)
 		return dba_error_system("opening file %s", deffile);
+	*/
 
 	/* Drop existing tables */
-	DBA_RUN_OR_GOTO(fail0, dba_db_delete_tables(db));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_delete_tables(db));
+
+	/* Invalidate the repinfo cache if we have a repinfo structure active */
+	if (db->repinfo != NULL)
+		dba_db_repinfo_invalidate_cache(db->repinfo);
 
 	/* Allocate statement handle */
-	DBA_RUN_OR_GOTO(fail0, dba_db_statement_create(db, &stm));
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
 
 	switch (db->server_type)
 	{
@@ -699,12 +715,17 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 		{
 			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm,
 					"Executing database-initialization query %s", queries[i]);
-			goto fail1;
+			goto cleanup;
 		}
 	}
 
 	/* Populate the tables with values */
 	{
+		int added, deleted, updated;
+		DBA_RUN_OR_GOTO(cleanup, dba_db_need_repinfo(db));
+		DBA_RUN_OR_GOTO(cleanup, dba_db_repinfo_update(db->repinfo, deffile, &added, &deleted, &updated));
+		/* fprintf(stderr, "%d added, %d deleted, %d updated\n", added, deleted, updated); */
+		/*
 		DBALLE_SQL_C_UINT_TYPE id;
 		char memo[30];
 		char description[255];
@@ -721,7 +742,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 		{
 			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'repinfo'");
-			goto fail1;
+			goto cleanup;
 		}
 
 		SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &id, 0, 0);
@@ -736,7 +757,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 			if (i != 6)
 			{
 				err = dba_error_parse(deffile, line, "Expected 6 columns, got %d", i);
-				goto fail1;
+				goto cleanup;
 			}
 				
 			id = strtol(columns[0], 0, 10);
@@ -750,23 +771,22 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 			{
 				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'repinfo'");
-				goto fail1;
+				goto cleanup;
 			}
 
 			for (i = 0; i < 6; i++)
 				free(columns[i]);
 		}
+		*/
 	}
 
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
+cleanup:
+	if (stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, stm);
 
-	return dba_error_ok();
+	/* fclose(in); */
 
-fail1:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-fail0:
-	fclose(in);
-	return err;
+	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file, int* added, int* deleted, int* updated)

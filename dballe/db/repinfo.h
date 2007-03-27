@@ -118,6 +118,15 @@ dba_err dba_db_repinfo_create(dba_db db, dba_db_repinfo* ins);
 void dba_db_repinfo_delete(dba_db_repinfo ins);
 
 /**
+ * Invalidate the repinfo cache.  To be called if the repinfo table is modified
+ * externally; for example, when the table is recreated on database reset.
+ *
+ * @param ins
+ *   The dba_db_repinfo whose cache is to be invalidated.
+ */
+void dba_db_repinfo_invalidate_cache(dba_db_repinfo ins);
+
+/**
  * Get the id of a repinfo entry given its name
  *
  * @param ri

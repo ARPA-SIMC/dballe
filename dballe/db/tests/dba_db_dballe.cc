@@ -105,7 +105,7 @@ struct dba_db_dballe_shar
 		sample0.set(DBA_KEY_MIN, 0);
 		sample0.set(DBA_KEY_P2, 122);
 		sample0.set(DBA_KEY_REP_COD, 1);
-		sample0.set(DBA_KEY_PRIORITY, 100);
+		sample0.set(DBA_KEY_PRIORITY, 101);
 
 		sample00.set(DBA_VAR(0, 1, 11), "DB-All.e!");
 		sample01.set(DBA_VAR(0, 1, 12), 500);
@@ -113,7 +113,7 @@ struct dba_db_dballe_shar
 		sample1.set(DBA_KEY_MIN, 30);
 		sample1.set(DBA_KEY_P2, 123);
 		sample1.set(DBA_KEY_REP_COD, 2);
-		sample1.set(DBA_KEY_PRIORITY, 80);
+		sample1.set(DBA_KEY_PRIORITY, 81);
 
 		sample10.set(DBA_VAR(0, 1, 11), "Arpa-Sim!");
 		sample11.set(DBA_VAR(0, 1, 12), 600);
@@ -422,18 +422,18 @@ void to::test<4>()
 	TRY_QUERY(i, DBA_KEY_REP_COD, 1, 2);
 	TRY_QUERY(i, DBA_KEY_REP_COD, 2, 2);
 	TRY_QUERY(i, DBA_KEY_REP_COD, 3, 0);
-	TRY_QUERY(i, DBA_KEY_PRIORITY, 100, 2);
-	TRY_QUERY(i, DBA_KEY_PRIORITY, 80, 2);
-	TRY_QUERY(i, DBA_KEY_PRIORITY, 101, 0);
+	TRY_QUERY(i, DBA_KEY_PRIORITY, 101, 2);
+	TRY_QUERY(i, DBA_KEY_PRIORITY, 81, 2);
+	TRY_QUERY(i, DBA_KEY_PRIORITY, 102, 0);
 	TRY_QUERY(i, DBA_KEY_PRIOMIN, 70, 4);
 	TRY_QUERY(i, DBA_KEY_PRIOMIN, 80, 4);
 	TRY_QUERY(i, DBA_KEY_PRIOMIN, 90, 2);
 	TRY_QUERY(i, DBA_KEY_PRIOMIN, 100, 2);
 	TRY_QUERY(i, DBA_KEY_PRIOMIN, 110, 0);
 	TRY_QUERY(i, DBA_KEY_PRIOMAX, 70, 0);
-	TRY_QUERY(i, DBA_KEY_PRIOMAX, 80, 2);
-	TRY_QUERY(i, DBA_KEY_PRIOMAX, 90, 2);
-	TRY_QUERY(i, DBA_KEY_PRIOMAX, 100, 4);
+	TRY_QUERY(i, DBA_KEY_PRIOMAX, 81, 2);
+	TRY_QUERY(i, DBA_KEY_PRIOMAX, 100, 2);
+	TRY_QUERY(i, DBA_KEY_PRIOMAX, 101, 4);
 	TRY_QUERY(i, DBA_KEY_PRIOMAX, 110, 4);
 }
 
@@ -733,7 +733,7 @@ void to::test<9>()
 	base.set(DBA_KEY_P2, 0);
 
 	base.set(DBA_KEY_REP_COD, 1);
-	base.set(DBA_KEY_PRIORITY, 100);
+	base.set(DBA_KEY_PRIORITY, 101);
 
 	base.set(DBA_VAR(0, 1, 12), 500);
 

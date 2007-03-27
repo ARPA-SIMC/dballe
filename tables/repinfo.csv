@@ -1,11 +1,11 @@
-01,synop,report synottico,100,oss,0
-02,metar,metar,80,oss,0
+01,synop,report synottico,101,oss,0
+02,metar,metar,81,oss,0
 03,temp,radiosondaggio,98,oss,2
 04,pilot,sondaggi pilot,80,oss,2
-09,boe,dati omdametrici,50,oss,31
+09,boe,dati ondametrici,50,oss,31
 10,ship,synop da nave,99,oss,1
 11,tempship,temp da nave,100,oss,2
-12,airep,airep,80,oss,4
+12,airep,airep,82,oss,4
 13,amdar,amdar,97,oss,4
 14,acars,acars,96,oss,4
 50,regioni,dati regioni per verifica LAMI,90,oss,255

@@ -38,6 +38,7 @@ struct repinfo_shar
 	repinfo_shar() : db(NULL)
 	{
 		CHECKED(create_dba_db(&db));
+		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_db_need_repinfo(db));
 		ri = db->repinfo;
 	}
@@ -73,13 +74,19 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
-	int added, deleted, updated;
+	int id, added, deleted, updated;
+
+	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
+	gen_ensure_equals(id, 1);
 
 	CHECKED(dba_db_repinfo_update(ri, NULL, &added, &deleted, &updated));
 
 	gen_ensure_equals(added, 0);
 	gen_ensure_equals(deleted, 0);
-	gen_ensure_equals(updated, 64);
+	gen_ensure_equals(updated, 14);
+
+	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
+	gen_ensure_equals(id, 1);
 }
 
 }
