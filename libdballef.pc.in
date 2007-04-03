@@ -6,6 +6,5 @@ includedir=@includedir@
 Name: libdballef
 Description: DB-All.e Fortran API
 Version: @VERSION@
-Requires: libdballe-db
 Cflags: -I${includedir}
 Libs: -L${libdir} -ldballef
