@@ -21,6 +21,6 @@ class TimeRangeChoice(QueryChoice):
         sel = self.GetSelection()
         tr = self.GetClientData(sel)
         if tr == None:
-            self.model.setTimeRangeFilter(None, None, None)
+            self.model.setTimeRangeFilter(None)
         else:
-            self.model.setTimeRangeFilter(tr.type, tr.p1, tr.p2)
+            self.model.setTimeRangeFilter(tr)

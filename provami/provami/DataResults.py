@@ -174,12 +174,10 @@ class DataPanel(wx.Panel, ModelListener):
             self.model.setIdentFilter(ident != None, ident)
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_LEVEL:
             record = self.dataMenu.getData()
-            l = Level(record)
-            self.model.setLevelFilter(l.type, l.l1, l.l2)
+            self.model.setLevelFilter(Level(record))
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_TRANGE:
             record = self.dataMenu.getData()
-            t = TimeRange(record)
-            self.model.setTimeRangeFilter(t.type, t.p1, t.p2)
+            self.model.setTimeRangeFilter(TimeRange(record))
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_VAR:
             record = self.dataMenu.getData()
             self.model.setVarFilter(record.enqc("var"))

@@ -728,16 +728,14 @@ class Model:
     def getLevelFilter(self, record = None):
         return (record or self.filter).enqlevel()
 
-    def setLevelFilter(self, ltype, l1, l2):
+    def setLevelFilter(self, level):
         """
         Set the filter to match a given level.
 
         Returns True if the filter has been changed, else False
         """
-        r1 = self.setiFilter("leveltype", ltype)
-        r2 = self.setiFilter("l1", l1)
-        r3 = self.setiFilter("l2", l2)
-        if r1 or r2 or r3:
+        if level != self.filter.enqlevel():
+            self.filter.setlevel(level)
             self.filterChanged("level")
             return True
         return False
@@ -745,16 +743,14 @@ class Model:
     def getTimeRangeFilter(self, record = None):
         return (record or self.filter).enqtimerange()
 
-    def setTimeRangeFilter(self, pind, p1, p2):
+    def setTimeRangeFilter(self, tr):
         """
         Set the filter to match a given time range.
 
         Returns True if the filter has been changed, else False
         """
-        r1 = self.setiFilter("pindicator", pind)
-        r2 = self.setiFilter("p1", p1)
-        r3 = self.setiFilter("p2", p2)
-        if r1 or r2 or r3:
+        if tr != self.filter.enqtimerange():
+            self.filter.settimerange(tr)
             self.filterChanged("trange")
             return True
         return False

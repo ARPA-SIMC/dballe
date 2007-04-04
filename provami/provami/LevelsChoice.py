@@ -21,6 +21,6 @@ class LevelsChoice(QueryChoice):
         sel = self.GetSelection()
         lev = self.GetClientData(sel)
         if lev == None:
-            self.model.setLevelFilter(None, None, None)
+            self.model.setLevelFilter(None)
         else:
-            self.model.setLevelFilter(lev.type, lev.l1, lev.l2)
+            self.model.setLevelFilter(lev)
