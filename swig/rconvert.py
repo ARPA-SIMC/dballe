@@ -45,7 +45,7 @@ def ma_to_r(arr, dimnames=None):
 	farray = farray.filled(rpy.r.NAN)
 
 	# Turn it into a Numeric array (bah, workaround the current python array mess)
-	farray = numeric.array(farray)
+	farray = numeric.array(farray, typecode='d')
 
 	#old = numpy.seterr(invalid='ignore')
 	#print farray 
