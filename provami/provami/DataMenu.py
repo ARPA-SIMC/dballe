@@ -51,7 +51,7 @@ class DataMenu(wx.Menu):
 
 			if not isAnaContext:
 				self.Append(DataMenu.ACTION_SELECT_SAME_LEVEL, "Select level " + str(data.enqlevel()))
-				self.Append(DataMenu.ACTION_SELECT_SAME_TRANGE, "Select time range " + str(data.enqtimerange(data)))
+				self.Append(DataMenu.ACTION_SELECT_SAME_TRANGE, "Select time range " + str(data.enqtimerange()))
 				self.Append(DataMenu.ACTION_SELECT_SAME_VAR, "Select variable type " + data.enqc("var"))
 			self.Append(DataMenu.ACTION_SELECT_SAME_REPCOD, "Select report type " + data.enqc("rep_memo"))
 
