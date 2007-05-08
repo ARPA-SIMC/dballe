@@ -44,11 +44,11 @@ class DataTable(ResultTable):
                   sorter = lambda x, y: cmp(x.enqdate(), y.enqdate()))
 
         self.appendColumn("Level", \
-                  renderer = lambda x: str(x.enqlevel()), \
-                  sorter = lambda x, y: cmp(x.enqlevel(), x.enqlevel(y)))
+                  renderer = lambda x: "%d,%d,%d" % x.enqlevel(), \
+                  sorter = lambda x, y: cmp(x.enqlevel(), y.enqlevel()))
 
         self.appendColumn("Time range", \
-                  renderer = lambda x: str(x.enqtimerange()), \
+                  renderer = lambda x: "%d,%d,%d" % x.enqtimerange(), \
                   sorter = lambda x, y: cmp(x.enqtimerange(), y.enqtimerange()))
 
         self.appendColumn("Variable", \

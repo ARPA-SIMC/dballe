@@ -13,7 +13,7 @@ class TimeRangeChoice(QueryChoice):
         res = []
         res.append(("All time ranges", None))
         for tr in self.model.timeranges():
-            res.append((str(tr), tr))
+            res.append(("%d,%d,%d" % tr, tr))
         return res
 
     def selected(self, event):
