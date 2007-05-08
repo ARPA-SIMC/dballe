@@ -2,7 +2,7 @@
 import wx
 import wx.grid
 from dballe import Level, TimeRange
-from provami.Model import ModelListener
+from provami.Model import ModelListener, DateUtils, datetimeFromRecord
 from provami.ResultGrid import ResultTable, ResultGrid
 from provami.DataMenu import DataMenu
 
