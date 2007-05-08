@@ -258,9 +258,9 @@ class TimeRange(tuple):
                         self.seti("l1", level and level[1] or None)
                         self.seti("l2", level and level[2] or None)
                 def settimerange(self, trange):
-                        self.seti("pindicator", level and trange[0] or None)
-                        self.seti("p1", level and trange[1] or None)
-                        self.seti("p2", level and trange[2] or None)
+                        self.seti("pindicator", trange and trange[0] or None)
+                        self.seti("p1", trange and trange[1] or None)
+                        self.seti("p2", trange and trange[2] or None)
 
                 _specialenqs = {
                         'date': enqdate,
