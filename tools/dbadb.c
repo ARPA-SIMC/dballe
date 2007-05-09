@@ -404,8 +404,7 @@ struct poptOption dbadb_import_options[] = {
 	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
 		"force data to be of this type of report, specified with rep_cod or rep_memo values", "rep" },
 	{ "fast", 0, POPT_ARG_NONE, &op_fast, 0,
-		"make import faster, but an interruption will mean that there can be "
-		"data in the database for only part of an imported message" },
+		"Ignored.  This option is left here for compatibility with old versions of dbadb." },
 	{ "no-attrs", 0, POPT_ARG_NONE, &op_no_attrs, 0,
 		"do not import data attributes" },
 	{ "full-pseudoana", 0, POPT_ARG_NONE, &op_full_pseudoana, 0,

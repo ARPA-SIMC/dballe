@@ -75,7 +75,7 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 	mobile = dba_msg_get_ident_var(msg) == NULL ? 0 : 1;
 
 	/* Begin transaction */
-	if (!(flags & DBA_IMPORT_NO_TRANSACTIONS))
+	/*if (!(flags & DBA_IMPORT_NO_TRANSACTIONS))*/
 		DBA_RUN_OR_RETURN(dba_db_begin(db));
 
 	/* Fill up the pseudoana informations needed to fetch an existing ID */
@@ -259,7 +259,7 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 		}
 	}
 
-	if (!(flags & DBA_IMPORT_NO_TRANSACTIONS))
+	/*if (!(flags & DBA_IMPORT_NO_TRANSACTIONS))*/
 		DBA_RUN_OR_GOTO(fail, dba_db_commit(db));
     return dba_error_ok();
 
