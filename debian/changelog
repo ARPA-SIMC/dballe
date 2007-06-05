@@ -1,3 +1,14 @@
+dballe (3.4-1) unstable; urgency=low
+
+  * New upstream version
+     + Properly import and export synop high level stations
+     + Improved database independence: now it can connect via ODBC to Postgres,
+       SQLite and Oracle
+  * Applied GVV 4.3 patch from tbm.  Closes: #417155.
+  * Use ${binary:Version} instead of ${Source-Version}.  Closes: #414337.
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 23 May 2007 14:14:48 +0000
+
 dballe (3.1-1) unstable; urgency=low
 
   * New upstream version
