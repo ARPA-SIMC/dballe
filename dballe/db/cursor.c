@@ -31,29 +31,6 @@
 #include <string.h>
 
 #include <regex.h>
-#if 0
-#include <dballe/db/repinfo.h>
-#include <dballe/db/pseudoana.h>
-#include <dballe/db/context.h>
-#include <dballe/db/data.h>
-#include <dballe/db/attr.h>
-#include <dballe/core/dba_record.h>
-#include <dballe/core/dba_var.h>
-#include <dballe/core/csv.h>
-#include <dballe/core/verbose.h>
-#include <dballe/core/aliases.h>
-
-#include <config.h>
-
-#include <sql.h>
-#include <sqlext.h>
-#include <sqltypes.h>
-
-#include <stdio.h>
-#include <stdarg.h>
-
-#include <assert.h>
-#endif
 
 dba_err dba_db_cursor_create(dba_db db, dba_db_cursor* cur)
 {
@@ -81,7 +58,7 @@ void dba_db_cursor_delete(dba_db_cursor cur)
 {
 	if (cur->stm != NULL)
 	{
-		SQLEndTran(SQL_HANDLE_DBC, cur->stm, SQL_COMMIT);
+		SQLEndTran(SQL_HANDLE_DBC, cur->db->od_conn, SQL_COMMIT);
 		SQLFreeHandle(SQL_HANDLE_STMT, cur->stm);
 	}
 	if (cur->query != NULL)

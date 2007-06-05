@@ -551,6 +551,10 @@ class Model:
             self.tidyUpAfterInterruptedQuery()
             for l in self.progressListeners: l.queryError(str(e))
 
+        # This is another good moment to call the garbage collector, to get rid
+        # of the database handles and temporary data that could still be around
+        gc.collect()
+
         self.oldData = {}
         self.updating = False
 
