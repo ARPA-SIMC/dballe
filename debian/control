@@ -8,7 +8,7 @@ Standards-Version: 3.7.2.0
 Package: libdballe-core-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe-core3 (= ${Source-Version})
+Depends: libdballe-core3 (= ${binary:Version})
 Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: DB-ALL.e core C development library
@@ -43,7 +43,7 @@ Description: DB-ALL.e core shared library
 Package: libdballe-bufrex-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex3 (=${Source-Version})
+Depends: libdballe-core-dev (=${binary:Version}), libdballe-core3 (= ${binary:Version}), libdballe-bufrex3 (=${binary:Version})
 Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Read and write functions for BUFR and CREX weather data
@@ -74,7 +74,7 @@ Description: Read and write functions for BUFR and CREX weather data (shared lib
 Package: libdballe-msg-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballe-msg3 (=${Source-Version})
+Depends: libdballe-core-dev (=${binary:Version}), libdballe-core3 (= ${binary:Version}), libdballe-bufrex-dev (=${binary:Version}), libdballe-bufrex3 (=${binary:Version}), libdballe-msg3 (=${binary:Version})
 Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Interpret weather reports into physycal data, and vice-versa
@@ -114,7 +114,7 @@ Description: Interpret weather reports into physycal data, and vice-versa (share
 Package: libdballe-db-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballe-msg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version}), libdballe-db3 (=${Source-Version})
+Depends: libdballe-core-dev (=${binary:Version}), libdballe-core3 (= ${binary:Version}), libdballe-bufrex-dev (=${binary:Version}), libdballe-bufrex3 (=${binary:Version}), libdballe-msg-dev (=${binary:Version}), libdballe-msg3 (=${binary:Version}), libdballe-db3 (=${binary:Version})
 Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Smart on-disk database for weather data
@@ -170,7 +170,7 @@ Description: Smart on-disk database for weather data (shared library)
 Package: libdballef-dev
 Section: libdevel
 Architecture: any
-Depends: libdballef3 (=${Source-Version})
+Depends: libdballef3 (=${binary:Version})
 Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Database for punctual meteorological data (Fortran development library)
@@ -193,7 +193,7 @@ Description: Database for punctual meteorological data (Fortran shared library)
 Package: libdballepp-dev
 Section: libdevel
 Architecture: any
-Depends: libdballepp3 (=${Source-Version}), libdballe-core-dev (=${Source-Version}), libdballe-core3 (= ${Source-Version}), libdballe-bufrex-dev (=${Source-Version}), libdballe-bufrex3 (=${Source-Version}), libdballe-msg-dev (=${Source-Version}), libdballe-msg3 (=${Source-Version}), libdballe-db-dev (=${Source-Version}), libdballe-db3 (=${Source-Version})
+Depends: libdballepp3 (=${binary:Version}), libdballe-core-dev (=${binary:Version}), libdballe-core3 (= ${binary:Version}), libdballe-bufrex-dev (=${binary:Version}), libdballe-bufrex3 (=${binary:Version}), libdballe-msg-dev (=${binary:Version}), libdballe-msg3 (=${binary:Version}), libdballe-db-dev (=${binary:Version}), libdballe-db3 (=${binary:Version})
 Conflicts: libdballe-dev (<= 3.0)
 Recommends: pkg-config
 Description: Database for punctual meteorological data (C++ development library)
