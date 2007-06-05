@@ -1,3 +1,11 @@
+2007-06-05  Enrico Zini  <enrico@viaza>
+
+	* Fixed transactions in cursor.c: now queries don't all happen in a
+	  single, huge transaction
+	* Version updated to 3.5
+
+Older changes:
+
 Changes from version 2.5 to version 2.6
 
  * dbadb: dbadb export failed to export various kinds of station data
