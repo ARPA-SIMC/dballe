@@ -2,6 +2,8 @@
 
 #include <dballe/msg/formatter.h>
 
+#include <cstdlib>
+
 using namespace std;
 
 namespace dballe {

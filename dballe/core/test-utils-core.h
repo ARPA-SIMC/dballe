@@ -26,6 +26,8 @@
 
 #include <dballe/tut/tut.h>
 
+#include <cstdlib>
+#include <climits>
 #include <string>
 #include <vector>
 #include <iostream>
