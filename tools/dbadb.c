@@ -376,6 +376,36 @@ dba_err do_export(poptContext optCon)
 	return dba_error_ok();
 }
 
+dba_err do_delete(poptContext optCon)
+{
+	dba_record query;
+	dba_db db;
+
+	/* Throw away the command name */
+	poptGetArg(optCon);
+
+	if (poptPeekArg(optCon) == NULL)
+		dba_cmdline_error(optCon, "you need to specify some query parameters");
+
+	/* Connect to the database */
+	DBA_RUN_OR_RETURN(create_dba_db(&db));
+
+	/* Create the query */
+	DBA_RUN_OR_RETURN(dba_record_create(&query));
+
+	/* Add the query data from commandline */
+	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
+
+	// TODO: check that there is something
+
+	DBA_RUN_OR_RETURN(dba_db_remove(db, query));
+
+	dba_db_delete(db);
+	dba_record_delete(query);
+
+	return dba_error_ok();
+}
+
 static struct tool_desc dbadb;
 
 struct poptOption dbadb_dump_options[] = {
@@ -452,13 +482,20 @@ struct poptOption dbadb_stations_options[] = {
 	POPT_TABLEEND
 };
 
+struct poptOption dbadb_delete_options[] = {
+	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
+		"Options used to connect to the database" },
+	POPT_TABLEEND
+};
+
 static void init()
 {
 	dbadb.desc = "Manage the DB-ALLe database";
 	dbadb.longdesc =
 		"It allows to initialise the database, dump its contents and import and export data "
 		"using BUFR, CREX or AOF encoding";
-	dbadb.ops = (struct op_dispatch_table*)calloc(8, sizeof(struct op_dispatch_table));
+	dbadb.ops = (struct op_dispatch_table*)calloc(9, sizeof(struct op_dispatch_table));
 
 	dbadb.ops[0].func = do_dump;
 	dbadb.ops[0].aliases[0] = "dump";
@@ -526,11 +563,21 @@ static void init()
 		"complete list.";
 	dbadb.ops[6].optable = dbadb_stations_options;
 
-	dbadb.ops[7].func = NULL;
-	dbadb.ops[7].usage = NULL;
-	dbadb.ops[7].desc = NULL;
-	dbadb.ops[7].longdesc = NULL;
-	dbadb.ops[7].optable = NULL;
+	dbadb.ops[7].func = do_delete;
+	dbadb.ops[7].aliases[0] = "delete";
+	dbadb.ops[7].usage = "delete [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
+	dbadb.ops[7].desc = "Delete all the data matching the given query parameters";
+	dbadb.ops[7].longdesc = "Query parameters are the same of the Fortran API. "
+		"Please see the section \"Input and output parameters -- For data "
+		"related action routines\" of the Fortran API documentation for a "
+		"complete list.";
+	dbadb.ops[7].optable = dbadb_delete_options;
+
+	dbadb.ops[8].func = NULL;
+	dbadb.ops[8].usage = NULL;
+	dbadb.ops[8].desc = NULL;
+	dbadb.ops[8].longdesc = NULL;
+	dbadb.ops[8].optable = NULL;
 };
 
 int main (int argc, const char* argv[])
