@@ -77,7 +77,7 @@ class Exporter:
             rcod[d.enqi("rep_cod")] = d.enqc("rep_memo")
 
             # Date
-            dates.add(d.enqc("datetime"))
+            dates.add(d.enqdate())
 
             # Level layer
             levels.add("%d,%d,%d" % (d.enqi("leveltype"), d.enqi("l1"), d.enqi("l2")))
@@ -130,7 +130,7 @@ class Exporter:
         if len(dates) == 1:
             title = title + "Date: %s." % (dates.pop())
         elif len(dates) > 1:
-            cols.append(["Date", lambda x: x.enqc("datetime")])
+            cols.append(["Date", lambda x: x.enqdate()])
 
         # Level layer
         if len(levels) == 1:
