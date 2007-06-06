@@ -1,3 +1,7 @@
+2007-06-06  Enrico Zini  <enrico@viaza>
+
+	* Clean records before reading in new data in fortran idba_dammelo
+
 2007-06-05  Enrico Zini  <enrico@viaza>
 
 	* Fixed transactions in cursor.c: now queries don't all happen in a

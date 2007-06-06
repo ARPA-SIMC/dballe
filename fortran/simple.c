@@ -1729,6 +1729,7 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 		cnfExprt("", parameter, parameter_length);
 		dba_record_clear(STATE.output);
 	} else {
+		dba_record_clear(STATE.output);
 		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(STATE.query_cur, STATE.output));
 		DBA_RUN_OR_RETURN(dba_record_key_enqc(STATE.output, DBA_KEY_VAR, &varstr));
 
