@@ -39,11 +39,12 @@
 
 #include "handles.h"
 
-#define MISSING_STRING ""
+//#define MISSING_STRING ""
 #define MISSING_BYTE 0x7f
+// integer 2 byte   32767
 #define MISSING_INT 0x7fffffff
-#define MISSING_REAL (-1.1754944E-38)
-#define MISSING_DOUBLE (-2.22507E-308)
+#define MISSING_REAL (3.4028235E+38)
+#define MISSING_DOUBLE (1.7976931348623167E+308)
 
 #define PERM_ANA_RO		(1 << 0)
 #define PERM_ANA_WRITE		(1 << 1)
@@ -745,7 +746,7 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 
 	DBA_RUN_OR_RETURN(dba_record_enqc(rec, p, &strval));
 	if (strval == NULL)
-		cnfExprt(MISSING_STRING, value, value_length);
+		bzero(value, value_length);
 	else
 		cnfExprt(strval, value, value_length);
 	return dba_error_ok();
