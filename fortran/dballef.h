@@ -21,12 +21,24 @@
 
 ! TODO: function o subroutine?
 
-real, parameter :: DBA_MVR=-1.1754944E-38
-double precision, parameter :: DBA_MVD=-1.1754944E-38
-integer, parameter :: DBA_MVI=Z"7fffffff"
-integer (kind=1), parameter :: DBA_MVB=Z"7f"
-character(len=0) , parameter :: DBA_MVC=""
+! missing value
 
+INTEGER, PARAMETER, PUBLIC :: &
+dba_int_b    = SELECTED_INT_KIND(1), & ! Byte  integer
+dba_int_s    = SELECTED_INT_KIND(4), & ! Short integer
+dba_int_l    = SELECTED_INT_KIND(8)    ! Long  integer
+
+INTEGER, PARAMETER, PUBLIC :: &
+dba_fp_s = SELECTED_REAL_KIND(6), & ! Single precision
+dba_fp_d = SELECTED_REAL_KIND(15)   ! Double precision
+
+
+REAL, PARAMETER :: DBA_MVR = HUGE(1.0)
+!REAL(dba_kind=fp_s), PARAMETER ::  = HUGE(1.0_dba_fp_s)
+REAL(kind=dba_fp_d), PARAMETER :: DBA_MVD = HUGE(1.0_dba_fp_d)
+INTEGER, PARAMETER :: DBA_MVI = HUGE(0)
+INTEGER(kind=int_b), PARAMETER :: DBA_MVB = HUGE(0_dba_int_b)
+CHARACTER(len=1), PARAMETER :: DBA_MVC = char(0)
 
 
 ! Get/Set routines
