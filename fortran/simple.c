@@ -1922,7 +1922,8 @@ static dba_err read_qc_list(int* handle, dba_varcode** res_arr, size_t* res_len)
 		/* Count the number of commas (and therefore of items in the
 		 * list) to decide the size of arr */
 		for (s = val, arr_len = 1; *s; ++s)
-			++arr_len;
+			if (*s == ',')
+				++arr_len;
 		if ((arr = (dba_varcode*)malloc(arr_len * sizeof(dba_varcode))) == NULL)
 		{
 			err = dba_error_alloc("allocating the dba_varcode array to pass to dba_qc_query");
