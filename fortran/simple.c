@@ -1900,7 +1900,7 @@ static dba_err read_qc_list(int* handle, dba_varcode** res_arr, size_t* res_len)
 		/* Get only the QC values in *varlist */
 		if (*val != '*')
 		{
-			err = dba_error_consistency("QC values to delete must start with '*'");
+			err = dba_error_consistency("QC values must start with '*'");
 			goto cleanup;
 		}
 		if ((arr = (dba_varcode*)malloc(1 * sizeof(dba_varcode))) == NULL)
