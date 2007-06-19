@@ -155,6 +155,17 @@ database (see \ref{fun-idba_scopa}).
 Every measured value in \dballe{} can be assigned any number of extra
 attributes, which can be used, for example, for quality control.
 
+\dballe{} also supports storing values \emph{about} a station (such as station
+height, or station name).  These are called \emph{pseudoana values} and are
+handled just like values, with the exception that vertical coordinates,
+datetime and time range have no meanings and are forced to default values.
+
+Pseudoana values, just like normal values in \dballe{}, can have attributes and
+any B code.  It is possible to have pseudoana values for a station on different
+networks, although this is rarely needed and the {\tt ana} network is normally
+used for pseudoana values.
+
+See section \ref{sec-querying} for examples on how to work with values.
 
 \section {Attributes}
 
@@ -171,6 +182,7 @@ table descriptor of the attribute.  As a consequence, you can only have one
 attribute per value with a specific B table descriptor.  This means that, for
 example, a variable can have at most one confidence interval attribute.
 
+See section \ref{sec-attrs} for examples on how to handle attributes.
 
 \section {Input, output, actions}
 \label{basics-inout}
@@ -650,6 +662,8 @@ c     Also set the temperature
 
 \subsection{Attributes}
 
+\label{sec-attrs}
+
 The {\tt idba\_set} and {\tt idba\_enq} groups of functions can also be used to
 set and get attributes on data.  To do so, use as parameter the string {\tt
 "*Bxxyyy"}, where {\tt xx} and {\tt yyy} are the X and Y values of the
@@ -666,6 +680,8 @@ c     in the last 'idba_prendilo'
 \end{verbatim}
 
 \section {Querying the database}
+
+\ref{sec-querying}
 
 Queries are made by giving one or more extremes of space, time, level or time
 range.  You can refer to section \ref{parmtable} for a list of all available
@@ -685,9 +701,11 @@ Example code to query all the stations in a given area:
       call idba_quantesono(handle, count)
       do while (count.gt.0)
         call idba_elencamele(handle)
-        call idba_enqc(handle, "name", cname)
         call idba_enqi(handle, "ana_id", id)
-c       query more data and work with it
+c       Pseudoana values can be read as well:
+        call idba_enqc(handle, "name", cname)
+        call idba_enqd(handle, "B07001", height)
+c       ...query more data and work with it...
         count = count - 1
       enddo
 \end{verbatim}
@@ -702,6 +720,10 @@ This code introduces two new functions:
   gets a station out of the results of {\tt idba\_quantesono}.  If there are no
   more stations, the function fails.
 \end{description}
+
+After {\tt idba\_elencamele}, the output record will also contain all the
+pseudoana values available for the station on the network {\tt ana}.
+
 
 \subsection {Querying the values}
 
