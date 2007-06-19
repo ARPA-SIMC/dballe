@@ -2,6 +2,7 @@
 
 	* Fixed handling of varlist when querying attributes from fortran
 	* Documentation improvements for fapi.tex
+	* Hack a way to sync the values of missing values between Fortran and C
 
 2007-06-15  Enrico Zini  <enrico@viaza>
 
