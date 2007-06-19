@@ -938,6 +938,35 @@ This code introduces two new functions:
   the attribute just read.
 \end{description}
 
+It is possible to read attributes at a later time giving a context ID and a B
+table value:
+
+\begin{verbatim}
+c     Read the context ID after a prendilo or a dammelo
+      idba_enqi(handle, "context_id", id)
+
+c     ...a while later...
+
+c     Query the attributes of the variable with the given
+c     context ID and B table value
+      idba_seti(handle, "*context_id", id)
+      idba_seti(handle, "*var_related", "B12001")
+
+c     These are ways one could choose specific attributes:
+c     one attribute: idba_setc(handle, "*var", "B33007")
+c     some attributes: idba_setc(handle, "*varlist", "B33007,B33036")
+c     by default, all attributes are returned
+
+c     Read QC informations about the last value read
+      call idba_voglioancora(handle, qc_count)
+      do while (qc_count.gt.0)
+          call idba_ancora(handle, param) 
+          call idba_enqc(handle, param, value)
+c         ...process the value...
+          qc_count = qc_count - 1
+      enddo
+\end{verbatim}
+
 \subsection{Writing attributes}
 
 \label{fun-idba_critica}
