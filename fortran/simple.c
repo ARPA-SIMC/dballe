@@ -35,19 +35,37 @@
 
 #include <stdio.h>	// snprintf
 #include <string.h>	// strncpy
-#include <math.h>	// strncpy
+#include <math.h>
 
 #include "handles.h"
 
-#define TRACEMISSING(type) fprintf(stderr, "SET TO MISSING (" type ")\n")
-//#define TRACEMISSING(type) do {} while(0)
+//#define TRACEMISSING(type) fprintf(stderr, "SET TO MISSING (" type ")\n")
+#define TRACEMISSING(type) do {} while(0)
 
+/*
+ * First attempt using constants
 //#define MISSING_STRING ""
 #define MISSING_BYTE 0x7f
 // integer 2 byte   32767
 #define MISSING_INT 0x7fffffff
-#define MISSING_REAL (3.4028235E+38)
-#define MISSING_DOUBLE (1.7976931348623167E+308)
+#define MISSING_REAL (3.4028235E+38f)
+#define MISSING_DOUBLE   (1.7976931348623167E+308)
+//#define MISSING_DOUBLE   (1.797693134862316E+308)
+//#define MISSING_DOUBLE   (1.79769313486E+308)
+//#define MISSING_DOUBLE ((double)0x7FEFFFFFFFFFFFFF)
+ */
+
+/*
+ * Second attempt getting values from fortran
+ */
+extern F77_INTEGER_TYPE __missing__fortran_missing_int;
+extern F77_BYTE_TYPE __missing__fortran_missing_byte;
+extern F77_DOUBLE_TYPE __missing__fortran_missing_double;
+extern F77_REAL_TYPE __missing__fortran_missing_real;
+#define MISSING_BYTE __missing__fortran_missing_byte
+#define MISSING_INT __missing__fortran_missing_int
+#define MISSING_REAL __missing__fortran_missing_real
+#define MISSING_DOUBLE __missing__fortran_missing_double
 
 #define PERM_ANA_RO		(1 << 0)
 #define PERM_ANA_WRITE		(1 << 1)
@@ -700,6 +718,13 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 		p = parm;
 	}
 
+	/*
+	{
+		double mv = MISSING_DOUBLE;
+		fprintf(stderr, "%llx\n", *(long long int*)&mv);
+	}
+	*/
+
 	DBA_RUN_OR_RETURN(dba_record_enqd(rec, p, value, &found));
 	if (!found)
 		*value = MISSING_DOUBLE;
@@ -749,7 +774,16 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 
 	DBA_RUN_OR_RETURN(dba_record_enqc(rec, p, &strval));
 	if (strval == NULL)
-		bzero(value, value_length);
+	{
+		//fprintf(stderr, "RETURN EMPTY STRING[%d]\n", value_length);
+		if (value_length > 0)
+		{
+			// The missing string value has been defined as a
+			// null byte plus blank padding.
+			value[0] = 0;
+			memset(value+1, ' ', value_length - 1);
+		}
+	}
 	else
 		cnfExprt(strval, value, value_length);
 	return dba_error_ok();
@@ -1059,13 +1093,25 @@ F77_INTEGER_FUNCTION(idba_setd)(
 			break;
 	}
 
+	/*
+	{
+		double mv = MISSING_DOUBLE;
+		fprintf(stderr, "MINE %llx\n", *(long long int*)&mv);
+		fprintf(stderr, "FORT %llx\n", *(long long int*)value);
+	}
+	fprintf(stderr, "IN %f\nIN %f\nComp: %d\n",
+		(double)*value,
+		(double)MISSING_DOUBLE,
+		*value == MISSING_DOUBLE);
+	*/
+
 	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
 	{
 		dba_keyword param = dba_record_keyword_byname(p);
 		if (param == DBA_KEY_ERROR)
 			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
-		if (*value == MISSING_DOUBLE)
+		if (!isnormal(*value) || *value == MISSING_DOUBLE)
 		{
 			TRACEMISSING("double");
 			return dba_record_key_unset(rec, param);
@@ -1089,7 +1135,7 @@ F77_INTEGER_FUNCTION(idba_setd)(
 		if (code == 0)
 			code = DBA_STRING_TO_VAR(p + 1);
 
-		if (*value == MISSING_DOUBLE)
+		if (!isnormal(*value) || *value == MISSING_DOUBLE)
 		{
 			TRACEMISSING("double");
 			return dba_record_var_unset(rec, code);
@@ -1153,7 +1199,10 @@ F77_INTEGER_FUNCTION(idba_setc)(
 			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
 		if (val[0] == 0)
+		{
+			TRACEMISSING("char");
 			return dba_record_key_unset(rec, param);
+		}
 		else
 			switch (param)
 			{
@@ -1171,7 +1220,10 @@ F77_INTEGER_FUNCTION(idba_setc)(
 		return dba_record_key_setc(rec, param, val);
 	} else {
 		if (code == 0)
+		{
+			TRACEMISSING("char");
 			code = DBA_STRING_TO_VAR(p + 1);
+		}
 
 		if (val[0] == 0)
 			return dba_record_var_unset(rec, code);

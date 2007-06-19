@@ -10,6 +10,7 @@ dballeinclude_HEADERS = dballef.h
 lib_LTLIBRARIES = libdballef.la
 
 libdballef_la_SOURCES = \
+	missing.f90 \
 	error.c \
 	simple.c
 libdballef_la_LIBADD = ../dballe/db/libdballe-db.la -lcnf
