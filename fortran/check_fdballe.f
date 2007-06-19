@@ -4,6 +4,8 @@ ccc *****************************************
 ccc * Test suite for DBALLE Fortran bindings
 ccc *****************************************
 
+      include "dballef.h"
+
       integer dbahandle, handle,i,i1,i2,i3,i4,i5,i6,ival,saved_id
       real rval
       real*8 dval
@@ -24,6 +26,12 @@ c     Open a session
 c     Clear the database
       call idba_scopa(handle, "") 
       call ensure_no_error("scopa")
+
+c     Try using the 'missing' values
+      call idba_setc(handle, "lat", DBA_MVC)
+      call idba_seti(handle, "lat", DBA_MVI)
+      call idba_setr(handle, "lat", DBA_MVR)
+      call idba_setd(handle, "lat", DBA_MVD)
 
 c     Insert some data
       call idba_setd(handle, "lat", 30D00)
