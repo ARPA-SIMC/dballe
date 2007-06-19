@@ -1,3 +1,12 @@
+2007-06-19  Enrico Zini  <enrico@viaza>
+
+	* Fixed handling of varlist when querying attributes from fortran
+	* Documentation improvements for fapi.tex
+
+2007-06-15  Enrico Zini  <enrico@viaza>
+
+	* Fixed bufr decoder to work on ARM
+
 2007-06-06  Enrico Zini  <enrico@viaza>
 
 	* Clean records before reading in new data in fortran idba_dammelo
