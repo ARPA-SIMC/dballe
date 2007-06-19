@@ -281,6 +281,7 @@ dba_rawmsg _read_rawmsg(const char* file, int line, const char* filename, dba_en
 	INNER_CHECKED(dba_file_read(input, rawmsg, &found));
 	inner_ensure_equals(found, 1);
 
+	rawmsg->file = NULL:
 	dba_file_delete(input);
 
 	return rawmsg;
