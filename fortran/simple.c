@@ -39,6 +39,9 @@
 
 #include "handles.h"
 
+#define TRACEMISSING(type) fprintf(stderr, "SET TO MISSING (" type ")\n")
+//#define TRACEMISSING(type) do {} while(0)
+
 //#define MISSING_STRING ""
 #define MISSING_BYTE 0x7f
 // integer 2 byte   32767
@@ -810,7 +813,10 @@ F77_INTEGER_FUNCTION(idba_seti)(
 			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
 		if (*value == MISSING_INT)
+		{
+			TRACEMISSING("int");
 			return dba_record_key_unset(rec, param);
+		}
 		else
 			switch (param)
 			{
@@ -831,7 +837,10 @@ F77_INTEGER_FUNCTION(idba_seti)(
 			code = DBA_STRING_TO_VAR(p + 1);
 
 		if (*value == MISSING_INT)
+		{
+			TRACEMISSING("int");
 			return dba_record_var_unset(rec, code);
+		}
 
 		return dba_record_var_seti(rec, code, *value);
 	}
@@ -888,7 +897,10 @@ F77_INTEGER_FUNCTION(idba_setb)(
 			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
 		if (*value == MISSING_BYTE)
+		{
+			TRACEMISSING("byte");
 			return dba_record_key_unset(rec, param);
+		}
 		else
 			switch (param)
 			{
@@ -909,7 +921,10 @@ F77_INTEGER_FUNCTION(idba_setb)(
 			code = DBA_STRING_TO_VAR(p + 1);
 
 		if (*value == MISSING_BYTE)
+		{
+			TRACEMISSING("byte");
 			return dba_record_var_unset(rec, code);
+		}
 
 		return dba_record_var_seti(rec, code, *value);
 	}
@@ -967,7 +982,10 @@ F77_INTEGER_FUNCTION(idba_setr)(
 			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
 		if (*value == MISSING_REAL)
+		{
+			TRACEMISSING("real");
 			return dba_record_key_unset(rec, param);
+		}
 		else
 			switch (param)
 			{
@@ -988,7 +1006,10 @@ F77_INTEGER_FUNCTION(idba_setr)(
 			code = DBA_STRING_TO_VAR(p + 1);
 
 		if (*value == MISSING_REAL)
+		{
+			TRACEMISSING("real");
 			return dba_record_var_unset(rec, code);
+		}
 
 		return dba_record_var_setd(rec, code, *value);
 	}
@@ -1045,7 +1066,10 @@ F77_INTEGER_FUNCTION(idba_setd)(
 			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
 		if (*value == MISSING_DOUBLE)
+		{
+			TRACEMISSING("double");
 			return dba_record_key_unset(rec, param);
+		}
 		else
 			switch (param)
 			{
@@ -1066,7 +1090,10 @@ F77_INTEGER_FUNCTION(idba_setd)(
 			code = DBA_STRING_TO_VAR(p + 1);
 
 		if (*value == MISSING_DOUBLE)
+		{
+			TRACEMISSING("double");
 			return dba_record_var_unset(rec, code);
+		}
 
 		return dba_record_var_setd(rec, code, *value);
 	}

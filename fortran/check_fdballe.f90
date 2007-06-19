@@ -26,12 +26,6 @@
       call idba_scopa(handle, "") 
       call ensure_no_error("scopa")
 
-!     Try using the 'missing' values
-      call idba_setc(handle, "lat", DBA_MVC)
-      call idba_seti(handle, "lat", DBA_MVI)
-      call idba_setr(handle, "lat", DBA_MVR)
-      call idba_setd(handle, "lat", DBA_MVD)
-
 !     Insert some data
       call idba_setd(handle, "lat", 30D00)
       call ensure_no_error("setd 0")
