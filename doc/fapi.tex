@@ -184,6 +184,9 @@ example, a variable can have at most one confidence interval attribute.
 
 See section \ref{sec-attrs} for examples on how to handle attributes.
 
+\dballe{} defines some extra code tables to use as values for attributes: a
+list is provided in section \ref{extract}.
+
 \section {Input, output, actions}
 \label{basics-inout}
 
@@ -1487,8 +1490,15 @@ Notes about the time range values:
 \input{../tables/dballe.tex}
 
 \section{Extra code tables}
+\label{extract}
 
-Code table 33196 \emph{Data has been invalidated}:
+This section lists extra code tables defined by \dballe{} that define useful
+values to be used as attributes.
+
+\subsection{Code table 33196: \emph{Data has been invalidated}}
+
+This attribute is useful to mark when a value has been invalidated as a
+consequence of quality checks.
 
 \begin{tabular}{|l|l|}
 \hline
@@ -1501,7 +1511,11 @@ Code table 33196 \emph{Data has been invalidated}:
 When the attribute B33196 is not present, then the data has not been
 invalidated.
 
-Code table 33197 \emph{Manual replacement in substitution}:
+\subsection{Code table 33197 \emph{Manual replacement in substitution}}
+
+This attribute is useful to track when a value has been manually substitute,
+and it allows to identify both the original value and the new value that
+substituted it.
 
 \begin{tabular}{|l|l|}
 \hline
