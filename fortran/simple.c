@@ -1938,11 +1938,19 @@ static dba_err read_qc_list(int* handle, dba_varcode** res_arr, size_t* res_len)
 			*/
 			if (*(val+pos) != '*')
 			{
-				err = dba_error_consistency("QC values to delete must start with '*'");
+				err = dba_error_consistency("QC value names must start with '*'");
 				goto cleanup;
 			}
-			arr[i++] = DBA_STRING_TO_VAR(val + pos + 1);
+			arr[i++] = DBA_STRING_TO_VAR(val + pos + 2);
+			//fprintf(stderr, "GOT %s -> B%02d%03d\n", val+pos+1, DBA_VAR_X(arr[i-1]), DBA_VAR_Y(arr[i-1]));
 		}
+
+		//fprintf(stderr, "%d found\n", arr_len);
+		//for (pos = 0; pos < arr_len; ++pos)
+		//{
+			//fprintf(stderr, "%d: %02d%03d\n", pos, DBA_VAR_X(arr[pos]), DBA_VAR_Y(arr[pos]));
+		//}
+		//fprintf(stderr, "happy\n");
 	}
 
 	*res_arr = arr;

@@ -89,7 +89,7 @@ c     Insert test data
       call ensure_no_error("query voglioancora 3")
       call ensure("I need 2 values", nattr.eq.2)
 
-      call idba_fatto(handle_init)
+      call idba_fatto(handleinit)
       call idba_fatto(handle)
       call idba_arrivederci(dbahandle)
 
