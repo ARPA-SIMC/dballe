@@ -1,8 +1,8 @@
       program check_fdballe
 
-ccc *****************************************
-ccc * Test suite for DBALLE Fortran bindings
-ccc *****************************************
+! *****************************************
+! * Test suite for DBALLE Fortran bindings
+! *****************************************
 
       include "dballef.h"
 
@@ -12,28 +12,27 @@ ccc *****************************************
       character param*10,cval*255
       external testcb
 
-c      call fdba_error_set_callback(0, testcb, 2, i)
+!      call fdba_error_set_callback(0, testcb, 2, i)
 
-c     Database login
+!     Database login
       call idba_presentati(dbahandle, "test", "enrico", "")
       call ensure_no_error("presentati")
 
-c     Open a session
-      call idba_preparati(dbahandle, handle,
-     $    "write", "write", "write")
+!     Open a session
+      call idba_preparati(dbahandle, handle, "write", "write", "write")
       call ensure_no_error("preparati")
 
-c     Clear the database
+!     Clear the database
       call idba_scopa(handle, "") 
       call ensure_no_error("scopa")
 
-c     Try using the 'missing' values
+!     Try using the 'missing' values
       call idba_setc(handle, "lat", DBA_MVC)
       call idba_seti(handle, "lat", DBA_MVI)
       call idba_setr(handle, "lat", DBA_MVR)
       call idba_setd(handle, "lat", DBA_MVD)
 
-c     Insert some data
+!     Insert some data
       call idba_setd(handle, "lat", 30D00)
       call ensure_no_error("setd 0")
       call idba_setr(handle, "lon", 10.0)
@@ -41,16 +40,16 @@ c     Insert some data
       call idba_setc(handle, "mobile", "0")
       call ensure_no_error("setc 2")
 
-c     { "year_ident", "2003" },
-c     { "month_ident", "3" },
-c     { "day_ident", "23" },
-c     { "hour_ident", "12" },
-c     { "min_ident", "30" },
-c     { "height", "42" },
-c     { "heightbaro", "234" },
-c     { "block", "1" },
-c     { "station", "52" },
-c     { "name", "Cippo Lippo" },
+!     { "year_ident", "2003" },
+!     { "month_ident", "3" },
+!     { "day_ident", "23" },
+!     { "hour_ident", "12" },
+!     { "min_ident", "30" },
+!     { "height", "42" },
+!     { "heightbaro", "234" },
+!     { "block", "1" },
+!     { "station", "52" },
+!     { "name", "Cippo Lippo" },
 
       call idba_seti(handle, "year", 2006)
       call ensure_no_error("seti 3")
@@ -83,29 +82,29 @@ c     { "name", "Cippo Lippo" },
       call idba_setc(handle, "B01011", "DB-All.e!")
       call ensure_no_error("setc 15")
 
-c     Perform the insert
+!     Perform the insert
       call idba_prendilo(handle)
       call ensure_no_error("first prendilo")
 
-c     Try to read the id of the pseudoana data just inserted
+!     Try to read the id of the pseudoana data just inserted
       call idba_enqi(handle, "ana_id", i)
       call ensure_no_error("enqi ana_id")
-c     Try to read the context id of the data just inserted
+!     Try to read the context id of the data just inserted
       call idba_enqi(handle, "context_id", i)
       call ensure_no_error("enqi context_id")
 
-c     Insert some QC flags
+!     Insert some QC flags
       call idba_setc(handle, "*B33002", "1")
       call ensure_no_error("critica setc 0")
       call idba_setc(handle, "*B33003", "t")
       call ensure_no_error("critica setc 1")
       call idba_setc(handle, "*var", "B01011")
       call idba_critica(handle)
-c      call idba_critica(handle, "B01011")
+!      call idba_critica(handle, "B01011")
       call ensure_no_error("prima critica")
 
-c     Query back the data
-c      call idba_ricominciamo(handle)
+!     Query back the data
+!      call idba_ricominciamo(handle)
       call idba_unsetall(handle)
       call ensure_no_error("ricominciamo")
       call idba_setr(handle, "latmin", 20.0)
@@ -121,8 +120,8 @@ c      call idba_ricominciamo(handle)
 
       call ensure("voglioquesto result", i.eq.1)
 
-c     Read the results of the query
-c     TODO: make a for loop instead
+!     Read the results of the query
+!     TODO: make a for loop instead
       do while (i.gt.0)
          call idba_dammelo(handle, param)
          call ensure_no_error("dammelo")
@@ -162,7 +161,7 @@ c     TODO: make a for loop instead
          call idba_enqi(handle, "context_id", ival)
          call ensure_no_error("dammelo enqi context_id")
 
-c        Save the id for reusing it later
+!        Save the id for reusing it later
          saved_id = ival
 
          call idba_voglioancora(handle, i1)
@@ -175,7 +174,7 @@ c        Save the id for reusing it later
             i1 = i1 - 1
          enddo
 
-c        Perform some useless scusa just to test the parser
+!        Perform some useless scusa just to test the parser
          call idba_setc(handle, "*varlist", "*B12345");
          call ensure_no_error("scusa setc 1")
          call idba_scusa(handle);
@@ -188,7 +187,7 @@ c        Perform some useless scusa just to test the parser
          i = i - 1
       enddo
 
-c     Remove the QC data for saved_data
+!     Remove the QC data for saved_data
       call idba_seti(handle, "*context_id", saved_id);
       call ensure_no_error("scusa seti 3")
       call idba_setc(handle, "*var", "*B01011")
@@ -215,36 +214,36 @@ c     Remove the QC data for saved_data
       call ensure_no_error("arrivederci")
 
 
-c     If we made it so far, exit with no error
+!     If we made it so far, exit with no error
       print*,"check_fdballe: all tests succeed."
 
       call exit (0)
     
-      end
+      end program
 
-ccc ********************
-ccc * Utility functions
-ccc ********************
+!!! ********************
+!!! * Utility functions
+!!! ********************
 
-c     Compute the length of a string
+!     Compute the length of a string
       integer function istrlen(string)
       character string*(*)
       istrlen = len(string)
-      do while ((string(istrlen:istrlen).eq." " .or.
-     $     string(istrlen:istrlen).eq."").and.
-     $     istrlen.gt.0)
+      do while ((string(istrlen:istrlen).eq." " .or. &
+           string(istrlen:istrlen).eq."").and. &
+           istrlen.gt.0)
          istrlen = istrlen - 1
       enddo
       return
       end
 
-c     Continue execution only if there was no error
+!     Continue execution only if there was no error
       subroutine ensure_no_error(message)
       character message*(*)
       integer idba_error_code, ier
       character buf*1000
 
-c      print *,"siamo a ",message
+!      print *,"siamo a ",message
       ier = idba_error_code()
       if (ier.ne.0) then
          print *,ier," in ",message
@@ -260,7 +259,7 @@ c      print *,"siamo a ",message
 
       end
 
-c     Print an error if the given logical value is false
+!     Print an error if the given logical value is false
       subroutine ensure(message, value)
       character message*(*)
       logical value

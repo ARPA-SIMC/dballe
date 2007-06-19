@@ -26,7 +26,7 @@ if DB_TESTS
 TESTS += $(check_PROGRAMS)
 endif
 
-check_fdballe_SOURCES = check_fdballe.f
+check_fdballe_SOURCES = check_fdballe.f90
 check_fdballe_LDADD = ./libdballef.la -lcnf -lpopt
 check_fdballe_FCFLAGS = -g
 
