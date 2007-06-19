@@ -350,7 +350,8 @@ functions:
   idba_seti(handle, "p2", p2)
   \end{verbatim}
 \item[{\tt idba\_setcontextana(handle)}]
-  is a shortcut to:
+  sets the date, time, level and time range in the input record to the fixed
+  values that identify pseudoana values.  It is a shortcut to:
   \begin{verbatim}
   idba_seti(handle, "year", 1000)
   idba_seti(handle, "month", 1)
@@ -366,6 +367,8 @@ functions:
   idba_seti(handle, "p2", 0)
   idba_seti(handle, "rep_cod", 254)
   \end{verbatim}
+  {\tt rep\_cod} can be modified after calling {\tt idba\_setcontextana} to
+  work with pseudoana values on different reports.
 \end{description}
 
 \section {API invariants}
