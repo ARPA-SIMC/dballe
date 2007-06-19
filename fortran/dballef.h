@@ -23,21 +23,21 @@
 
 ! missing value
 
-INTEGER, PARAMETER, PUBLIC :: &
+INTEGER, PARAMETER :: &
 dba_int_b    = SELECTED_INT_KIND(1), & ! Byte  integer
 dba_int_s    = SELECTED_INT_KIND(4), & ! Short integer
 dba_int_l    = SELECTED_INT_KIND(8)    ! Long  integer
 
-INTEGER, PARAMETER, PUBLIC :: &
+INTEGER, PARAMETER :: &
 dba_fp_s = SELECTED_REAL_KIND(6), & ! Single precision
 dba_fp_d = SELECTED_REAL_KIND(15)   ! Double precision
 
 
 REAL, PARAMETER :: DBA_MVR = HUGE(1.0)
-!REAL(dba_kind=fp_s), PARAMETER ::  = HUGE(1.0_dba_fp_s)
+!REAL(dba_kind=dba_fp_s), PARAMETER ::  = HUGE(1.0_dba_fp_s)
 REAL(kind=dba_fp_d), PARAMETER :: DBA_MVD = HUGE(1.0_dba_fp_d)
 INTEGER, PARAMETER :: DBA_MVI = HUGE(0)
-INTEGER(kind=int_b), PARAMETER :: DBA_MVB = HUGE(0_dba_int_b)
+INTEGER(kind=dba_int_b), PARAMETER :: DBA_MVB = HUGE(0_dba_int_b)
 CHARACTER(len=1), PARAMETER :: DBA_MVC = char(0)
 
 
