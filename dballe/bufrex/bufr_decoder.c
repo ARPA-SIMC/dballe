@@ -48,6 +48,19 @@
 #define IFTRACE if (0)
 #endif
 
+// Unmarshal a big endian integer value n bytes long
+static inline int readNumber(const unsigned char* buf, int bytes)
+{
+	int res = 0;
+	int i;
+	for (i = 0; i < bytes; ++i)
+	{
+		res <<= 8;
+		res |= buf[i];
+	}
+	return res;
+}
+
 struct _decoder 
 {
 	/* Input message data */
@@ -218,7 +231,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 
 	/* Read bufr section 1 (Identification section) */
 	CHECK_AVAILABLE_DATA(d->sec1, 18, "section 1 of BUFR message (identification section)");
-	d->sec2 = d->sec1 + (ntohl(*(uint32_t*)(d->sec1)) >> 8);
+	d->sec2 = d->sec1 + readNumber(d->sec1, 3);
 	if (d->sec2 > d->in->buf + d->in->len)
 		PARSE_ERROR(d->sec1, "Section 1 claims to end past the end of the BUFR message");
 
@@ -272,7 +285,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	if (has_optional)
 	{
 		CHECK_AVAILABLE_DATA(d->sec2, 4, "section 2 of BUFR message (optional section)");
-		d->sec3 = d->sec2 + (ntohl(*(uint32_t*)(d->sec2)) >> 8);
+		d->sec3 = d->sec2 + readNumber(d->sec2, 3);
 		if (d->sec3 > d->in->buf + d->in->len)
 			PARSE_ERROR(d->sec2, "Section 2 claims to end past the end of the BUFR message");
 	} else
@@ -280,14 +293,14 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 
 	/* Read BUFR section 3 (Data description section) */
 	CHECK_AVAILABLE_DATA(d->sec3, 8, "section 3 of BUFR message (data description section)");
-	d->sec4 = d->sec3 + (ntohl(*(uint32_t*)(d->sec3)) >> 8);
+	d->sec4 = d->sec3 + readNumber(d->sec3, 3);
 	if (d->sec4 > d->in->buf + d->in->len)
 		PARSE_ERROR(d->sec3, "Section 3 claims to end past the end of the BUFR message");
-	d->subsets = ntohs(*(uint16_t*)(d->sec3 + 4));
+	d->subsets = readNumber(d->sec3 + 4, 2);
 	d->compression = (d->sec3[6] & 0x40) ? 1 : 0;
 	for (i = 0; i < (d->sec4 - d->sec3 - 8)/2; i++)
 	{
-		dba_varcode var = (dba_varcode)ntohs(*(uint16_t*)(d->sec3 + 7 + (i*2)));
+		dba_varcode var = (dba_varcode)readNumber(d->sec3 + 7 + i * 2, 2);
 		DBA_RUN_OR_GOTO(fail, bufrex_msg_append_datadesc(d->out, var));
 	}
 	TRACE(" subsets %d observed %d compression %d byte7 %x\n",
@@ -303,10 +316,10 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	/* Read BUFR section 4 (Data section) */
 	CHECK_AVAILABLE_DATA(d->sec4, 4, "section 4 of BUFR message (data section)");
 
-	d->sec5 = d->sec4 + (ntohl(*(uint32_t*)(d->sec4)) >> 8);
+	d->sec5 = d->sec4 + readNumber(d->sec4, 3);
 	if (d->sec5 > d->in->buf + d->in->len)
 		PARSE_ERROR(d->sec4, "Section 4 claims to end past the end of the BUFR message");
-	TRACE("section 4 is %d bytes long (%02x %02x %02x %02x)\n", (ntohl(*(uint32_t*)(d->sec4)) >> 8),
+	TRACE("section 4 is %d bytes long (%02x %02x %02x %02x)\n", readNumber(d->sec4, 3),
 			(unsigned int)*(d->sec4), (unsigned int)*(d->sec4+1), (unsigned int)*(d->sec4+2), (unsigned int)*(d->sec4+3));
 
 	/* Initialize bit-decoding structures */
