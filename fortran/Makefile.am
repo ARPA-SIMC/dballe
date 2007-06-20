@@ -35,7 +35,7 @@ check_attrs_SOURCES = check_attrs.f
 check_attrs_LDADD = ./libdballef.la -lcnf -lpopt
 check_attrs_FCFLAGS = -g
 
-check_missing_SOURCES = check_missing.f
+check_missing_SOURCES = check_missing.f90
 check_missing_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_FCFLAGS = -g
 

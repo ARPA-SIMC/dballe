@@ -8,7 +8,7 @@ export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 
 DEB_MAKE_CHECK_TARGET := check
 #DEB_CONFIGURE_EXTRA_FLAGS += --disable-shared --with-pic
-#DEB_CONFIGURE_EXTRA_FLAGS += --enable-db-tests
+DEB_CONFIGURE_EXTRA_FLAGS += --enable-db-tests
 
 # From http://wiki.debian.org/DebianPython/NewPolicy
 binary-install/python-dballe::

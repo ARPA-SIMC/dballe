@@ -158,6 +158,9 @@ dba_err do_dump(poptContext optCon)
 		dba_record_print(result, stdout);
 	}
 
+	//fprintf(stdout, "***\n");
+	//dba_record_print(query, stdout);
+
 	dba_db_delete(db);
 
 	dba_record_delete(result);
