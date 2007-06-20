@@ -1727,11 +1727,11 @@ F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 		return dba_error_consistency("idba_elencamele called without a previous idba_quantesono");
 
 	DBA_RUN_OR_RETURN(dba_db_cursor_next(STATE.ana_cur, &has_data));
+	dba_record_clear(STATE.output);
 	if (!has_data)
 	{
 		dba_db_cursor_delete(STATE.ana_cur);
 		STATE.ana_cur = NULL;
-		dba_record_clear(STATE.output);
 		return dba_error_ok();
 	} else
 		return dba_db_cursor_to_record(STATE.ana_cur, STATE.output);
