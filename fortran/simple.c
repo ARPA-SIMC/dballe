@@ -44,20 +44,20 @@
 
 /*
  * First attempt using constants
+ */
 //#define MISSING_STRING ""
 #define MISSING_BYTE 0x7f
 // integer 2 byte   32767
 #define MISSING_INT 0x7fffffff
 #define MISSING_REAL (3.4028235E+38f)
-#define MISSING_DOUBLE   (1.7976931348623167E+308)
+#define MISSING_DOUBLE   (1.79769E+308)
+//#define MISSING_DOUBLE   (1.7976931348623167E+308)
 //#define MISSING_DOUBLE   (1.797693134862316E+308)
 //#define MISSING_DOUBLE   (1.79769313486E+308)
 //#define MISSING_DOUBLE ((double)0x7FEFFFFFFFFFFFFF)
- */
 
 /*
  * Second attempt getting values from fortran
- */
 extern F77_INTEGER_TYPE __missing__fortran_missing_int;
 extern F77_BYTE_TYPE __missing__fortran_missing_byte;
 extern F77_DOUBLE_TYPE __missing__fortran_missing_double;
@@ -66,6 +66,7 @@ extern F77_REAL_TYPE __missing__fortran_missing_real;
 #define MISSING_INT __missing__fortran_missing_int
 #define MISSING_REAL __missing__fortran_missing_real
 #define MISSING_DOUBLE __missing__fortran_missing_double
+ */
 
 #define PERM_ANA_RO		(1 << 0)
 #define PERM_ANA_WRITE		(1 << 1)
@@ -722,6 +723,7 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 	{
 		double mv = MISSING_DOUBLE;
 		fprintf(stderr, "%llx\n", *(long long int*)&mv);
+		fprintf(stderr, "%f\n", MISSING_DOUBLE);
 	}
 	*/
 
