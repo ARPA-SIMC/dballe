@@ -93,6 +93,9 @@ c     Insert test data
       call idba_fatto(handle)
       call idba_arrivederci(dbahandle)
 
+!     If we made it so far, exit with no error
+      print*,"check_attrs: all tests succeed."
+
       call exit (0)
     
       end

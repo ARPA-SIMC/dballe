@@ -30,8 +30,8 @@
 #include <dballe/msg/formatter.h>
 
 #include <f77.h>
-#include <limits.h>
 #include <float.h>
+#include <limits.h>
 
 #include <stdio.h>	// snprintf
 #include <string.h>	// strncpy
@@ -49,8 +49,10 @@
 #define MISSING_BYTE 0x7f
 // integer 2 byte   32767
 #define MISSING_INT 0x7fffffff
-#define MISSING_REAL (3.4028235E+38f)
-#define MISSING_DOUBLE   (1.79769E+308)
+//#define MISSING_REAL (3.4028235E+38f)
+#define MISSING_REAL FLT_MAX
+#define MISSING_DOUBLE   DBL_MAX
+//#define MISSING_DOUBLE   (1.79769E+308)
 //#define MISSING_DOUBLE   (1.7976931348623167E+308)
 //#define MISSING_DOUBLE   (1.797693134862316E+308)
 //#define MISSING_DOUBLE   (1.79769313486E+308)
@@ -723,7 +725,7 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 	{
 		double mv = MISSING_DOUBLE;
 		fprintf(stderr, "%llx\n", *(long long int*)&mv);
-		fprintf(stderr, "%f\n", MISSING_DOUBLE);
+		fprintf(stderr, "%.20le\n", MISSING_DOUBLE);
 	}
 	*/
 
