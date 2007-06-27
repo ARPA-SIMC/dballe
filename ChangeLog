@@ -1,3 +1,10 @@
+2007-06-20  Enrico Zini  <enrico@viaza>
+
+	* Use standard floating point huge values to exchange missing values
+	  with Fortran
+	* Fortran API: idba_elencamele now properly cleans old values from the
+	  output record
+
 2007-06-19  Enrico Zini  <enrico@viaza>
 
 	* Fixed handling of varlist when querying attributes from fortran

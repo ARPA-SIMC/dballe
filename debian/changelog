@@ -1,9 +1,10 @@
-dballe (3.5-1) unstable; urgency=low
+dballe (3.6-1) unstable; urgency=low
 
   * New upstream version
      + Builds on ARM
+  * Various fixes in the Fortran API code and documentation
 
- -- Enrico Zini <enrico@debian.org>  Tue, 05 Jun 2007 18:23:48 +0100
+ -- Enrico Zini <enrico@debian.org>  Wed, 20 Jun 2007 19:42:07 +0100
 
 dballe (3.4-1) unstable; urgency=low
 
