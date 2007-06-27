@@ -4,6 +4,7 @@ Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: cdbs (>= 0.4.43), debhelper (>> 4.1), dh-buildinfo, doxygen, libtut-dev, unixodbc-dev, gperf, gfortran | g77, libpopt-dev, libcnf-dev, swig, texlive-base, texlive-latex-base, texlive-latex-extra, texlive-latex-recommended, gs, python-all-dev (>= 2.3.5-11), python-central (>= 0.5), python-docutils
 XS-Python-Version: all
 Standards-Version: 3.7.2.0
+XS-Vcs-Svn: https://svn.smr.arpa.emr.it/dballe
 
 Package: libdballe-core-dev
 Section: libdevel
