@@ -18,6 +18,7 @@ messageinclude_HEADERS = \
 		msgs.h \
 		marshal.h \
 		file.h \
+		filter.h \
 		aof_codec.h \
 		bufrex_codec.h
 
@@ -30,6 +31,7 @@ libdballe_msg_la_SOURCES = \
 		msg.c \
 		msgs.c \
 		marshal.c \
+		filter.c \
 		aof_codec.c \
 		aof_importers/common.c \
 		aof_importers/synop.c \
