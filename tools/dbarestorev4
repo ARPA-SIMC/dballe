@@ -92,6 +92,10 @@ end
     row = stmt.fetch
     row == nil ? nil : row[0].to_i
 }
+@getananull = @conn.proc("SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident IS NULL") { |stmt|
+    row = stmt.fetch
+    row == nil ? nil : row[0].to_i
+}
 @newana = @conn.proc("INSERT INTO pseudoana (lat, lon, ident) VALUES (?, ?, ?)") { |stmt|
     stmt.nrows
 }
@@ -113,7 +117,11 @@ newattr = @conn.proc("INSERT INTO attr (id_data, type, value) VALUES (?, ?, ?)")
 
 
 def obtainAna(lat, lon, ident)
-    id = @getana.call(lat, lon, ident)
+	if ident
+		id = @getana.call(lat, lon, ident)
+	else
+		id = @getananull.call(lat, lon)
+	end
     if id == nil
         @newana.call(lat, lon, ident)
         return @lastid.call()
@@ -193,6 +201,7 @@ ensure
     newri.statement.drop
     @lastid.statement.drop
     @getana.statement.drop
+    @getananull.statement.drop
     @newana.statement.drop
     @getdim4.statement.drop
     @newdim4.statement.drop
