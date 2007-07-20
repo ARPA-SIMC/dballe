@@ -7,10 +7,19 @@ $dsn = ARGV.shift
 $uid = ARGV.shift
 $pwd = ARGV.shift
 
-conn = ODBC.connect($dsn, $uid, $pwd)
+@conn = ODBC.connect($dsn, $uid, $pwd)
 
-def resetTables
-    mkri = <<-EOT
+def recreate(name, query)
+    begin
+        @conn.do("DROP TABLE " + name)
+    rescue
+        # Ignore errors on DROP TABLE
+    end
+    @conn.do(query)
+end
+
+def recreateV3Tables
+    recreate('repinfo', <<-EOT)
     CREATE TABLE repinfo (
        id           SMALLINT PRIMARY KEY,
        memo         VARCHAR(30) NOT NULL,
@@ -18,11 +27,11 @@ def resetTables
        prio         INTEGER NOT NULL,
        descriptor   CHAR(6) NOT NULL,
        tablea       INTEGER NOT NULL,
-       UNIQUE INDEX (prio),
+       INDEX (prio),
        UNIQUE INDEX (memo)
     ) TYPE=InnoDB;
     EOT
-    mkpa = <<-EOT
+    recreate('pseudoana', <<-EOT)
     CREATE TABLE pseudoana (
        id         INTEGER auto_increment PRIMARY KEY,
        lat        INTEGER NOT NULL,
@@ -32,7 +41,7 @@ def resetTables
        INDEX(lon)
     ) TYPE=InnoDB;
     EOT
-    mkco = <<-EOT
+    recreate('context', <<-EOT)
     CREATE TABLE context (
        id          INTEGER auto_increment PRIMARY KEY,
        id_ana      INTEGER NOT NULL,
@@ -52,7 +61,7 @@ def resetTables
        INDEX (ptype, p1, p2)
     ) TYPE=InnoDB;
     EOT
-    mkda = <<-EOT
+    recreate('data', <<-EOT)
     CREATE TABLE data (
        id_context  INTEGER NOT NULL,
        id_var      SMALLINT NOT NULL,
@@ -61,7 +70,7 @@ def resetTables
        UNIQUE INDEX(id_var, id_context)
     ) TYPE=InnoDB;
     EOT
-    mkat = <<-EOT
+    recreate('attr', <<-EOT)
     CREATE TABLE attr (
        id_context  INTEGER NOT NULL,
        id_var      SMALLINT NOT NULL,
@@ -73,36 +82,44 @@ def resetTables
     EOT
 end
 
-@lastid = conn.proc("SELECT LAST_INSERT_ID()") { |stmt|
+@lastid = @conn.proc("SELECT LAST_INSERT_ID()") { |stmt|
 	row = stmt.fetch
 	row == nil ? nil : row[0].to_i
 }
-@getana = conn.proc("SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident=?") { |stmt|
+@getana = @conn.proc("SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident=?") { |stmt|
 	row = stmt.fetch
 	row == nil ? nil : row[0].to_i
 }
-@newana = conn.proc("INSERT INTO pseudoana (lat, lon, ident) VALUES (?, ?, ?)") { |stmt|
+@getananull = @conn.proc("SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident IS NULL") { |stmt|
+    row = stmt.fetch
+    row == nil ? nil : row[0].to_i
+}
+@newana = @conn.proc("INSERT INTO pseudoana (lat, lon, ident) VALUES (?, ?, ?)") { |stmt|
 	stmt.nrows
 }
-@getctx = conn.proc("SELECT id FROM context WHERE id_ana = ? AND datetime=? AND ltype=? AND l1=? AND l2=? AND ptype=? AND p1=? AND p2=? AND id_report = ?") { |stmt|
+@getctx = @conn.proc("SELECT id FROM context WHERE id_ana=? AND datetime=? AND ltype=? AND l1=? AND l2=? AND ptype=? AND p1=? AND p2=? AND id_report=?") { |stmt|
 	row = stmt.fetch
 	row == nil ? nil : row[0].to_i
 }
-@newctx = conn.proc("INSERT INTO context (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") { |stmt|
+@newctx = @conn.proc("INSERT INTO context (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") { |stmt|
 	stmt.nrows
 }
-getri = conn.proc("SELECT id FROM repinfo WHERE id = ?") { |stmt|
+getri = @conn.proc("SELECT id FROM repinfo WHERE id = ?") { |stmt|
 	row = stmt.fetch
 	row == nil ? nil : row[0].to_i
 }
-newri = conn.proc("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea) VALUES (?, ?, ?, ?, ?, ?)") { |stmt| stmt.nrows }
-replaceri = conn.proc("UPDATE repinfo SET memo=?, description=?, prio=?, descriptor=?, tablea=? WHERE id=?") { |stmt| stmt.nrows }
-newdata = conn.proc("INSERT INTO data (id_context, id_var, value) VALUES (?, ?, ?)") { |stmt| stmt.nrows }
-newattr = conn.proc("INSERT INTO attr (id_context, id_var, type, value) VALUES (?, ?, ?, ?)") { |stmt| stmt.nrows }
+newri = @conn.proc("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea) VALUES (?, ?, ?, ?, ?, ?)") { |stmt| stmt.nrows }
+replaceri = @conn.proc("UPDATE repinfo SET memo=?, description=?, prio=?, descriptor=?, tablea=? WHERE id=?") { |stmt| stmt.nrows }
+newdata = @conn.proc("INSERT INTO data (id_context, id_var, value) VALUES (?, ?, ?)") { |stmt| stmt.nrows }
+newattr = @conn.proc("INSERT INTO attr (id_context, id_var, type, value) VALUES (?, ?, ?, ?)") { |stmt| stmt.nrows }
 
 
 def obtainAna(lat, lon, ident)
-	id = @getana.call(lat, lon, ident)
+	if ident
+		id = @getana.call(lat, lon, ident)
+	else
+		id = @getananull.call(lat, lon)
+	end
 	if id == nil
 		@newana.call(lat, lon, ident)
 		return @lastid.call()
@@ -111,6 +128,7 @@ def obtainAna(lat, lon, ident)
 end
 
 def obtainContext(pa, dt, lt, l1, l2, pt, p1, p2, rep)
+	dt.gsub!(/.+?(\d+-\d+-\d+ \d+:\d+:\d+).+/, '\1');
 	id = @getctx.call(pa, dt, lt, l1, l2, pt, p1, p2, rep)
 	if id == nil
 		@newctx.call(pa, dt, lt, l1, l2, pt, p1, p2, rep)
@@ -120,6 +138,9 @@ def obtainContext(pa, dt, lt, l1, l2, pt, p1, p2, rep)
 end
 
 begin
+	# Recreate the database tables with the v4 structure
+	recreateV3Tables
+
 	context_id = nil
 	var_id = nil
 
@@ -129,9 +150,13 @@ begin
 			# Repinfo
 			id = row[1].to_i
 			if getri.call(id)
-				replaceri.call(*(row[2..6] + [id]))
+			    replaceri.call(*(row[2..6] + [id]))
 			else
-				newri.call(row[1].to_i, row[2..6])
+			    # Work around a bug of old repinfo.csv that created repinfo
+			    # tables with conflicting memo entries
+			    if not (id == 105 and row[2] == 'ana')
+				newri.call(id, *row[2..6])
+			    end
 			end
 		elsif row[0] == 'D'
 			# Data
@@ -165,6 +190,7 @@ ensure
 	newri.statement.drop
 	@lastid.statement.drop
 	@getana.statement.drop
+	@getananull.statement.drop
 	@newana.statement.drop
 	@getctx.statement.drop
 	@newctx.statement.drop
