@@ -139,6 +139,7 @@ def obtainDim4(lt, l1, l2, pt, p1, p2, rep, var)
 end
 
 def obtainData(dim4, pa, dt, val)
+    dt.gsub!(/.+?(\d+-\d+-\d+ \d+:\d+:\d+).+/, '\1');
     @newdata.call(dim4, pa, dt, val)
     return @lastid.call()
     
