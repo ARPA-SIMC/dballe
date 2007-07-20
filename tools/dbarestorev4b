@@ -1,0 +1,212 @@
+#!/usr/bin/ruby
+
+require 'odbc'
+require 'csv'
+
+$dsn = ARGV.shift
+$uid = ARGV.shift
+$pwd = ARGV.shift
+
+@conn = ODBC.connect($dsn, $uid, $pwd)
+
+def recreate(name, query)
+    begin
+        @conn.do("DROP TABLE " + name)
+    rescue
+        # Ignore errors on DROP TABLE
+    end
+    @conn.do(query)
+end
+
+def recreateV4Tables
+    recreate('repinfo', <<-EOT)
+    CREATE TABLE repinfo (
+       id           SMALLINT PRIMARY KEY,
+       memo         VARCHAR(30) NOT NULL,
+       description  VARCHAR(255) NOT NULL,
+       prio         INTEGER NOT NULL,
+       descriptor   CHAR(6) NOT NULL,
+       tablea       INTEGER NOT NULL,
+       UNIQUE INDEX (prio),
+       UNIQUE INDEX (memo)
+    ) TYPE=InnoDB;
+    EOT
+    recreate('pseudoana', <<-EOT)
+    CREATE TABLE pseudoana (
+       id         INTEGER auto_increment PRIMARY KEY,
+       lat        INTEGER NOT NULL,
+       lon        INTEGER NOT NULL,
+       ident      CHAR(64),
+       UNIQUE INDEX(lat, lon, ident(8)),
+       INDEX(lat),
+       INDEX(lon)
+    ) TYPE=InnoDB;
+    EOT
+    recreate('dim4', <<-EOT)
+    CREATE TABLE dim4 (
+       id          INTEGER auto_increment PRIMARY KEY,
+       id_ana      INTEGER NOT NULL,
+       id_report   SMALLINT NOT NULL,
+       ltype       SMALLINT NOT NULL,
+       l1          INTEGER NOT NULL,
+       l2          INTEGER NOT NULL,
+       ptype       SMALLINT NOT NULL,
+       p1          INTEGER NOT NULL,
+       p2          INTEGER NOT NULL,
+       var         SMALLINT NOT NULL,
+       UNIQUE INDEX (id_ana, ltype, l1, l2, ptype, p1, p2, id_report, var),
+       INDEX (id_ana),
+       INDEX (id_report),
+       INDEX (var),
+       INDEX (ltype, l1, l2),
+       INDEX (ptype, p1, p2)
+    ) TYPE=InnoDB;
+    EOT
+    recreate('data', <<-EOT)
+    CREATE TABLE data (
+       id          INTEGER auto_increment PRIMARY KEY,
+       id_dim4     INTEGER NOT NULL,
+       datetime    DATETIME NOT NULL,
+       value       VARCHAR(255) NOT NULL,
+       INDEX (id_dim4),
+       INDEX (datetime),
+       UNIQUE INDEX(id_dim4, datetime)
+    ) TYPE=InnoDB;
+    EOT
+    recreate('attr', <<-EOT)
+    CREATE TABLE attr (
+       id_data      INTEGER NOT NULL,
+       type        SMALLINT NOT NULL,
+       value       VARCHAR(255) NOT NULL,
+       INDEX (id_data),
+       UNIQUE INDEX (id_data, type)
+    ) TYPE=InnoDB;
+    EOT
+end
+
+@lastid = @conn.proc("SELECT LAST_INSERT_ID()") { |stmt|
+    row = stmt.fetch
+    row == nil ? nil : row[0].to_i
+}
+@getana = @conn.proc("SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident=?") { |stmt|
+    row = stmt.fetch
+    row == nil ? nil : row[0].to_i
+}
+@getananull = @conn.proc("SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident IS NULL") { |stmt|
+    row = stmt.fetch
+    row == nil ? nil : row[0].to_i
+}
+@newana = @conn.proc("INSERT INTO pseudoana (lat, lon, ident) VALUES (?, ?, ?)") { |stmt|
+    stmt.nrows
+}
+@getdim4 = @conn.proc("SELECT id FROM dim4 WHERE id_ana=? AND ltype=? AND l1=? AND l2=? AND ptype=? AND p1=? AND p2=? AND id_report=? AND var=?") { |stmt|
+    row = stmt.fetch
+    row == nil ? nil : row[0].to_i
+}
+@newdim4 = @conn.proc("INSERT INTO dim4 (id_ana, ltype, l1, l2, ptype, p1, p2, id_report, var) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") { |stmt|
+    stmt.nrows
+}
+getri = @conn.proc("SELECT id FROM repinfo WHERE id = ?") { |stmt|
+    row = stmt.fetch
+    row == nil ? nil : row[0].to_i
+}
+newri = @conn.proc("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea) VALUES (?, ?, ?, ?, ?, ?)") { |stmt| stmt.nrows }
+replaceri = @conn.proc("UPDATE repinfo SET memo=?, description=?, prio=?, descriptor=?, tablea=? WHERE id=?") { |stmt| stmt.nrows }
+@newdata = @conn.proc("INSERT INTO data (id_dim4, datetime, value) VALUES (?, ?, ?)") { |stmt| stmt.nrows }
+newattr = @conn.proc("INSERT INTO attr (id_data, type, value) VALUES (?, ?, ?)") { |stmt| stmt.nrows }
+
+
+def obtainAna(lat, lon, ident)
+	if ident
+		id = @getana.call(lat, lon, ident)
+	else
+		id = @getananull.call(lat, lon)
+	end
+    if id == nil
+        @newana.call(lat, lon, ident)
+        return @lastid.call()
+    end
+    return id
+end
+
+def obtainDim4(ana, lt, l1, l2, pt, p1, p2, rep, var)
+    id = @getdim4.call(ana, lt, l1, l2, pt, p1, p2, rep, var)
+    if id == nil
+        @newdim4.call(ana, lt, l1, l2, pt, p1, p2, rep, var)
+        return @lastid.call()
+    end
+    return id
+end
+
+def obtainData(dim4, dt, val)
+    dt.gsub!(/.+?(\d+-\d+-\d+ \d+:\d+:\d+).+/, '\1');
+    @newdata.call(dim4, dt, val)
+    return @lastid.call()
+end
+
+begin
+    # Recreate the database tables with the v4 structure
+    recreateV4Tables
+
+    context_id = nil
+    var_id = nil
+
+    $stdin.each { |line|
+        row = CSV.parse_line(line)
+        begin
+            if row[0] == 'R'
+                # Repinfo
+                id = row[1].to_i
+                if getri.call(id)
+                    replaceri.call(*(row[2..6] + [id]))
+                else
+                    # Work around a bug of old repinfo.csv that created repinfo
+                    # tables with conflicting memo entries
+                    if not (id == 105 and row[2] == 'ana')
+                        newri.call(id, *row[2..6])
+                    end
+                end
+            elsif row[0] == 'D'
+                # Data
+
+                #  4 c.datetime,
+                #  5 c.ltype,
+                #  6 c.l1,
+                #  7 c.l2,
+                #  8 c.ptype,
+                #  9 c.p1,
+                # 10 c.p2,
+                # 11 c.id_report,
+                # 12 d.id_var,
+                # 13 d.value
+
+                ana_id = obtainAna(row[1].to_i, row[2].to_i, row[3])
+                dim4_id = obtainDim4(ana_id, *row[5..12])
+                var_id = obtainData(dim4_id, row[4], row[13])
+            elsif row[0] == 'A'
+                # Attributes
+                type, value = row[0].to_i, row[1]
+                newattr.call(var_id, type, value)
+            else
+                $stderr.puts "Unknown line type: #{row[0]} at line #{$.}"
+            end
+        rescue
+            $stderr.puts "Offending line: #{line}"
+            raise
+        end
+    }
+ensure
+    getri.statement.drop
+    replaceri.statement.drop
+    newri.statement.drop
+    @lastid.statement.drop
+    @getana.statement.drop
+    @getananull.statement.drop
+    @newana.statement.drop
+    @getdim4.statement.drop
+    @newdim4.statement.drop
+    @newdata.statement.drop
+    newattr.statement.drop
+end
+
+# vim:set ts=4 sw=4:
