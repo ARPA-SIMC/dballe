@@ -271,10 +271,10 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 	/* Master table number */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 	/* Originating/generating sub-centre (defined by Originating/generating centre) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.subcentre));
 	/* Originating/generating centre (Common Code tableC-1) */
 	/*DBA_RUN_OR_RETURN(bufr_message_append_byte(e, 0xff));*/
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.origin));
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.centre));
 	/* Update sequence number (zero for original BUFR messages; incremented for updates) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 	/* Bit 1= 0 No optional section = 1 Optional section included Bits 2 ­ 8 set to zero (reserved) */

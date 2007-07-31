@@ -54,7 +54,9 @@ struct _bufrex_opcode;
 /** BUFR-specific encoding options */
 struct _bufrex_bufr_options {
 	/** Common Code table C-1 identifying the originating centre */
-	int origin;
+	int centre;
+	/** Centre-specific subcentre code */
+	int subcentre;
 	/** Version number of master tables used */
 	int master_table;
 	/** Version number of local tables used to augment the master table */
@@ -84,8 +86,10 @@ struct _bufrex_msg
 
 	/** Message category */
 	int type;
-	/** Message subcategory */
+	/** International message subcategory */
 	int subtype;
+	/** Local message subcategory */
+	int localsubtype;
 
 	/** Edition number */
 	int edition;
@@ -97,6 +101,7 @@ struct _bufrex_msg
 	int rep_day;	/**< Day */
 	int rep_hour;	/**< Hour */
 	int rep_minute;	/**< Minute */
+	int rep_second;	/**< Second */
 	/** @} */
 
 	/** dba_vartable used to lookup B table codes */

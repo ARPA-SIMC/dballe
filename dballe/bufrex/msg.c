@@ -128,11 +128,26 @@ dba_err bufrex_msg_load_tables(bufrex_msg msg)
 	switch (msg->encoding_type)
 	{
 		case BUFREX_BUFR:
-			sprintf(id, "B00000%03d%03d%02d%02d",
-					0,
-					msg->opt.bufr.origin,
-					msg->opt.bufr.master_table,
-					msg->opt.bufr.local_table);
+			switch (msg->edition)
+			{
+				case 3:
+					sprintf(id, "B00000%03d%03d%02d%02d",
+							0,
+							msg->opt.bufr.centre,
+							msg->opt.bufr.master_table,
+							msg->opt.bufr.local_table);
+						break;
+				case 4:
+					sprintf(id, "B00%03d%04d%04d%03d%03d",
+							0,
+							msg->opt.bufr.subcentre,
+							msg->opt.bufr.centre,
+							msg->opt.bufr.master_table,
+							msg->opt.bufr.local_table);
+						break;
+				default:
+					return dba_error_consistency("BUFR edition number is %d but I can only load tables for 3 or 4", msg->edition);
+			}
 			break;
 		case BUFREX_CREX:
 			sprintf(id, "B%02d%02d%02d",
@@ -243,7 +258,7 @@ void bufrex_msg_print(bufrex_msg msg, FILE* out)
 	int i, j;
 	switch (msg->encoding_type)
 	{
-		case BUFREX_BUFR: fprintf(out, "BUFR o%d m%d l%d", msg->opt.bufr.origin, msg->opt.bufr.master_table, msg->opt.bufr.local_table); break;
+		case BUFREX_BUFR: fprintf(out, "BUFR c%d/%d m%d l%d", msg->opt.bufr.centre, msg->opt.bufr.subcentre, msg->opt.bufr.master_table, msg->opt.bufr.local_table); break;
 		case BUFREX_CREX: fprintf(out, "CREX T00%02d%02d", msg->opt.crex.master_table, msg->opt.crex.table); break;
 	}
 	fprintf(out, " type %d subtype %d edition %d table %s alloc %zd, %zd subsets.\n",
@@ -272,10 +287,16 @@ void bufrex_msg_diff(bufrex_msg msg1, bufrex_msg msg2, int* diffs, FILE* out)
 		switch (msg1->encoding_type)
 		{
 			case BUFR:
-				if (msg1->opt.bufr.origin != msg2->opt.bufr.origin)
+				if (msg1->opt.bufr.centre != msg2->opt.bufr.centre)
 				{
-					fprintf(out, "BUFR origins differ (first is %d, second is %d)\n",
-							msg1->opt.bufr.origin, msg2->opt.bufr.origin);
+					fprintf(out, "BUFR centres differ (first is %d, second is %d)\n",
+							msg1->opt.bufr.centre, msg2->opt.bufr.centre);
+					++*diffs;
+				}
+				if (msg1->opt.bufr.subcentre != msg2->opt.bufr.subcentre)
+				{
+					fprintf(out, "BUFR subcentres differ (first is %d, second is %d)\n",
+							msg1->opt.bufr.subcentre, msg2->opt.bufr.subcentre);
 					++*diffs;
 				}
 				if (msg1->opt.bufr.master_table != msg2->opt.bufr.master_table)
@@ -362,7 +383,7 @@ void bufrex_msg_diff(bufrex_msg msg1, bufrex_msg msg2, int* diffs, FILE* out)
 
 	if (msg1->subsets_count != msg2->subsets_count)
 	{
-		fprintf(out, "Number of subsets differ (first is %d, second is %d)\n",
+		fprintf(out, "Number of subsets differ (first is %zd, second is %zd)\n",
 				msg1->subsets_count, msg2->subsets_count);
 		++*diffs;
 	} else {

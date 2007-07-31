@@ -225,8 +225,8 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	TRACE(" -> is BUFR\n");
 
 	/* Check the BUFR edition number */
-	if (d->in->buf[7] != 3)
-		PARSE_ERROR(d->in->buf + 7, "Only BUFR edition 3 is supported (this message is edition %d)", (unsigned)d->in->buf[7]);
+	if (d->in->buf[7] != 3 && d->in->buf[7] != 4)
+		PARSE_ERROR(d->in->buf + 7, "Only BUFR edition 3 and 4 are supported (this message is edition %d)", (unsigned)d->in->buf[7]);
 	d->out->edition = d->in->buf[7];
 
 	/* Read bufr section 1 (Identification section) */
@@ -235,20 +235,66 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	if (d->sec2 > d->in->buf + d->in->len)
 		PARSE_ERROR(d->sec1, "Section 1 claims to end past the end of the BUFR message");
 
-	has_optional = (d->sec1[7] & 0x80) ? 1 : 0;
-	d->out->opt.bufr.origin = d->sec1[5];
-	d->out->opt.bufr.master_table = d->sec1[10];
-	d->out->opt.bufr.local_table = d->sec1[11];
-	d->out->type = (int)d->sec1[8];
-	d->out->subtype = (int)d->sec1[9];
+	switch (d->out->edition)
+	{
+		case 3:
+			// TODO: misses master table number in sec1[3]
+			// TODO: misses update sequence number sec1[7]
+			has_optional = (d->sec1[7] & 0x80) ? 1 : 0;
+			// subcentre in sec1[4]
+			d->out->opt.bufr.subcentre = (int)d->sec1[4];
+			// centre in sec1[5]
+			d->out->opt.bufr.centre = (int)d->sec1[5];
+			d->out->opt.bufr.master_table = d->sec1[10];
+			d->out->opt.bufr.local_table = d->sec1[11];
+			d->out->type = (int)d->sec1[8];
+			d->out->subtype = (int)d->sec1[9];
 
-	d->out->rep_year = (int)d->sec1[12];
-	d->out->rep_month = (int)d->sec1[13];
-	d->out->rep_day = (int)d->sec1[14];
-	d->out->rep_hour = (int)d->sec1[15];
-	d->out->rep_minute = (int)d->sec1[16];
-	if ((int)d->sec1[17] != 0)
-		d->out->rep_year = (int)d->sec1[17] * 100 + (d->out->rep_year % 100);
+			d->out->rep_year = (int)d->sec1[12];
+			d->out->rep_month = (int)d->sec1[13];
+			d->out->rep_day = (int)d->sec1[14];
+			d->out->rep_hour = (int)d->sec1[15];
+			d->out->rep_minute = (int)d->sec1[16];
+			if ((int)d->sec1[17] != 0)
+				d->out->rep_year = (int)d->sec1[17] * 100 + (d->out->rep_year % 100);
+			break;
+		case 4:
+			// TODO: misses master table number in sec1[3]
+			// TODO: misses update sequence number sec1[8]
+			// centre in sec1[4-5]
+			d->out->opt.bufr.centre = readNumber(d->sec1+4, 2);
+			// subcentre in sec1[6-7]
+			d->out->opt.bufr.subcentre = readNumber(d->sec1+6, 2);
+			// has_optional in sec1[9]
+			has_optional = (d->sec1[9] & 0x80) ? 1 : 0;
+			// category in sec1[10]
+			d->out->type = (int)d->sec1[10];
+			// international data sub-category in sec1[11]
+			d->out->subtype = (int)d->sec1[11];
+			// local data sub-category in sec1[12]
+			d->out->localsubtype = (int)d->sec1[12];
+			// version number of master table in sec1[13]
+			d->out->opt.bufr.master_table = d->sec1[13];
+			// version number of local table in sec1[14]
+			d->out->opt.bufr.local_table = d->sec1[14];
+			// year in sec1[15-16]
+			d->out->rep_year = readNumber(d->sec1 + 15, 2);
+			// month in sec1[17]
+			d->out->rep_month = (int)d->sec1[17];
+			// day in sec1[18]
+			d->out->rep_day = (int)d->sec1[18];
+			// hour in sec1[19]
+			d->out->rep_hour = (int)d->sec1[19];
+			// minute in sec1[20]
+			d->out->rep_minute = (int)d->sec1[20];
+			// sec in sec1[21]
+			d->out->rep_second = (int)d->sec1[21];
+
+			if ((int)d->sec1[17] != 0)
+				d->out->rep_year = (int)d->sec1[17] * 100 + (d->out->rep_year % 100);
+			break;
+			break;
+	}
 
 	TRACE(" -> opt %d upd %d origin %d.%d tables %d.%d type %d.%d %04d-%02d-%02d %02d:%02d\n", 
 			has_optional, (int)d->sec1[6],

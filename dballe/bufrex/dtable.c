@@ -42,7 +42,7 @@ struct _bdt_entry {
 
 struct _bufrex_dtable
 {
-	char id[20];
+	char id[40];
 	int code_size;
 	int code_alloc;
 	dba_varcode* codes;
@@ -217,8 +217,8 @@ static dba_err dtb_create(bufrex_dtable* v, const char* id)
 		return dba_error_alloc("allocating space for 400 bufrex_dtable entries");
 	}
 
-	strncpy((*v)->id, id, 18);
-	(*v)->id[19] = 0;
+	strncpy((*v)->id, id, 38);
+	(*v)->id[39] = 0;
 	(*v)->code_alloc = 3000;
 	(*v)->code_size = 0;
 	(*v)->tbl_alloc = 400;

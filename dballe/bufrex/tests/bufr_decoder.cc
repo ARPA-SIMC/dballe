@@ -435,6 +435,34 @@ void to::test<18>()
 #endif
 }
 
+template<> template<>
+void to::test<19>()
+{
+	TestBufrexMsg test;
+	test.edition = 4;
+	test.cat = 8;
+	test.subcat = 255;
+	test.subsets = 128;
+	test.subset(0).vars = 26;
+	test.subset(1).vars = 26;
+	test.subset(2).vars = 26;
+	test.subset(128).vars = 26;
+
+	bufrex_msg msg = read_test_msg_raw("bufr/ed4.bufr", BUFR);
+	ensureBufrexRawEquals(test, msg);
+
+#if 0
+	Still cannot encode satellite info
+	bufrex_msg msg1 = reencode_test(msg);
+	ensureBufrexRawEquals(test, msg1);
+#endif
+
+	bufrex_msg_delete(msg);
+#if 0
+	bufrex_msg_delete(msg1);
+#endif
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
