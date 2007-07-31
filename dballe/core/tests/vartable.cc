@@ -170,6 +170,48 @@ void to::test<4>()
 	gen_ensure(!info->is_string);
 }
 
+/* Test reading BUFR edition 4 tables */
+template<> template<>
+void to::test<5>()
+{
+	dba_vartable table;
+	dba_varinfo info;
+
+	CHECKED(dba_vartable_create("B0000000000098013102", &table));
+
+	gen_ensure_equals(dba_vartable_query(table, DBA_VAR(0, 2, 99), &info), DBA_ERROR);
+
+	CHECKED(dba_vartable_query(table, DBA_VAR(0, 1, 6), &info));
+	gen_ensure_equals(info->var, DBA_VAR(0, 1, 6));
+	gen_ensure_equals(strcmp(info->desc, "AIRCRAFT FLIGHT NUMBER"), 0);
+	gen_ensure_equals(strcmp(info->unit, "CCITTIA5"), 0);
+	gen_ensure_equals(info->scale, 0) ;
+	gen_ensure_equals(info->ref, 0);
+	gen_ensure_equals(info->bit_len, 64);
+	gen_ensure_equals(info->len, 8);
+	gen_ensure(info->is_string);
+
+	CHECKED(dba_vartable_query(table, DBA_VAR(0, 2, 114), &info));
+	gen_ensure_equals(info->var, DBA_VAR(0, 2, 114));
+	gen_ensure_equals(strcmp(info->desc, "ANTENNA EFFECTIVE SURFACE AREA"), 0);
+	gen_ensure_equals(strcmp(info->unit, "M**2"), 0);
+	gen_ensure_equals(info->scale, 0) ;
+	gen_ensure_equals(info->ref, 0);
+	gen_ensure_equals(info->bit_len, 15);
+	gen_ensure_equals(info->len, 5);
+	gen_ensure(!info->is_string);
+
+	CHECKED(dba_vartable_query(table, DBA_VAR(0, 11, 35), &info));
+	gen_ensure_equals(info->var, DBA_VAR(0, 11, 35));
+	gen_ensure_equals(strcmp(info->desc, "VERTICAL GUST ACCELERATION"), 0);
+	gen_ensure_equals(strcmp(info->unit, "M/S**2"), 0);
+	gen_ensure_equals(info->scale, 2) ;
+	gen_ensure_equals(info->bit_ref, -8192);
+	gen_ensure_equals(info->bit_len, 14);
+	gen_ensure_equals(info->len, 5);
+	gen_ensure(!info->is_string);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

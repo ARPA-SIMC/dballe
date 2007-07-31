@@ -41,7 +41,7 @@
 
 struct _dba_vartable
 {
-	char id[20];
+	char id[40];
 	int size;
 	int alloc_size;
 	struct _dba_varinfo* items;
@@ -326,8 +326,8 @@ static dba_err vtb_create(dba_vartable* v, const char* id)
 	}
 	(*v)->alloc_size = 1500;
 	(*v)->size = 0;
-	strncpy((*v)->id, id, 18);
-	(*v)->id[19] = 0;
+	strncpy((*v)->id, id, 38);
+	(*v)->id[39] = 0;
 	return dba_error_ok();
 }
 
