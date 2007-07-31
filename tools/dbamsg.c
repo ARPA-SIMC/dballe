@@ -158,8 +158,8 @@ static dba_err dump_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, voi
 		case BUFR:
 			if (braw == NULL) return dba_error_ok();
 			DBA_RUN_OR_RETURN(print_bufr_header(rmsg, braw)); puts(":");
-			printf(" Edition %d, origin %d, master table %d, local table %d\n",
-					braw->edition, braw->opt.bufr.origin, braw->opt.bufr.master_table, braw->opt.bufr.local_table);
+			printf(" Edition %d, origin %d/%d, master table %d, local table %d\n",
+					braw->edition, braw->opt.bufr.centre, braw->opt.bufr.subcentre, braw->opt.bufr.master_table, braw->opt.bufr.local_table);
 			for (i = 0; i < braw->subsets_count; ++i)
 			{
 				printf("Subset %d:\n", i);

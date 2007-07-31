@@ -96,11 +96,13 @@ dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw
 	/* Setup encoding parameters */
 	if (msgs->msgs[0]->type == MSG_GENERIC)
 	{
-		braw->opt.bufr.origin = 200;
+		braw->opt.bufr.centre = 200;
+		braw->opt.bufr.subcentre = 0;
 		braw->opt.bufr.master_table = 12;
 		braw->opt.bufr.local_table = 0;
 	} else {
-		braw->opt.bufr.origin = 98;
+		braw->opt.bufr.centre = 98;
+		braw->opt.bufr.subcentre = 0;
 		braw->opt.bufr.master_table = 6;
 		braw->opt.bufr.local_table = 1;
 	}
