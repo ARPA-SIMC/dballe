@@ -1965,6 +1965,8 @@ static dba_err get_referred_data_id(int* handle, int* id_context, dba_varcode* i
 	}
 #endif
 	/*return dba_error_consistency("looking for data ID (no id specified, and no variable previously selected with idba_setc(handle, \"*b\", \"Bxxyyy\"))");*/
+	if (*id_var == 0)
+		return dba_error_consistency("finding out which variabile to add attributes to, *var is not set");
 
 	return dba_error_ok();
 }
