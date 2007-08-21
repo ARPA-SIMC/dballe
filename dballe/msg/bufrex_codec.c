@@ -84,6 +84,9 @@ dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw
 	/* Create and setup the bufrex_msg */
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(BUFREX_BUFR, &braw));
 
+	/* Always create BUFR edition 3 */
+	braw->edition = 3;
+
 	/* Compute the right type and subtype if missing */
 	if (type == 0 && subtype == 0)
 		DBA_RUN_OR_GOTO(cleanup, bufrex_infer_type_subtype(msgs->msgs[0], &(braw->type), &(braw->subtype)));
