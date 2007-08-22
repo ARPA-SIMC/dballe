@@ -63,6 +63,7 @@ static int op_overwrite = 0;
 static int op_fast = 0;
 static int op_no_attrs = 0;
 static int op_full_pseudoana = 0;
+static int op_dump = 0;
 int op_verbose = 0;
 
 struct poptOption dbTable[] = {
@@ -341,6 +342,14 @@ static dba_err msg_writer(dba_msgs msgs, void* data)
 	return dba_error_ok();
 }
 
+static dba_err msg_dumper(dba_msgs msgs, void* data)
+{
+	FILE* out = (FILE*)data;
+	dba_msgs_print(msgs, out);
+	dba_msgs_delete(msgs);
+	return dba_error_ok();
+}
+
 dba_err do_export(poptContext optCon)
 {
 	struct export_data d = { NULL, 0, 0, -1 };
@@ -364,14 +373,19 @@ dba_err do_export(poptContext optCon)
 	/* Add the query data from commandline */
 	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
 
-	DBA_RUN_OR_RETURN(parse_op_report(db, &(d.forced_rep_cod)));
+	if (op_dump)
+	{
+		DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_dumper, stdout));
+	} else {
+		DBA_RUN_OR_RETURN(parse_op_report(db, &(d.forced_rep_cod)));
 
-	type = dba_cmdline_stringToMsgType(op_output_type, optCon);
-	DBA_RUN_OR_RETURN(dba_file_create(type, "(stdout)", "w", &d.file));
+		type = dba_cmdline_stringToMsgType(op_output_type, optCon);
+		DBA_RUN_OR_RETURN(dba_file_create(type, "(stdout)", "w", &d.file));
 
-	DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_writer, &d));
+		DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_writer, &d));
+		dba_file_delete(d.file);
+	}
 
-	dba_file_delete(d.file);
 	dba_db_delete(db);
 
 	dba_record_delete(query);
@@ -458,6 +472,8 @@ struct poptOption dbadb_export_options[] = {
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
 	{ "template", 't', POPT_ARG_STRING, &op_output_template, 0,
 		"template of the data in output (autoselect if not specified)", "type.sub" },
+	{ "dump", 0, POPT_ARG_NONE, &op_dump, 0,
+		"dump data to be encoded instead of encoding it" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
 		"Options used to connect to the database" },
 	POPT_TABLEEND
