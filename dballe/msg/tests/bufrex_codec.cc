@@ -247,7 +247,8 @@ void to::test<2>()
 		b2->type = b1->type;
 		b2->subtype = b1->subtype;
 		b2->edition = b1->edition;
-		b2->opt.bufr.origin = b1->opt.bufr.origin;
+		b2->opt.bufr.centre = b1->opt.bufr.centre;
+		b2->opt.bufr.subcentre = b1->opt.bufr.subcentre;
 		b2->opt.bufr.master_table = b1->opt.bufr.master_table;
 		b2->opt.bufr.local_table = b1->opt.bufr.local_table;
 		CHECKED(bufrex_msg_load_tables(b2));
@@ -297,9 +298,11 @@ void to::test<2>()
 			FILE* outraw = fopen("/tmp/1to2.txt", "w");
 			bufrex_msg braw;
 			CHECKED(bufrex_msg_create(BUFREX_BUFR, &braw));
+			braw->edition = 3;
 			braw->type = type;
 			braw->subtype = subtype;
-			braw->opt.bufr.origin = 98;
+			braw->opt.bufr.centre = 98;
+			braw->opt.bufr.subcentre = 0;
 			braw->opt.bufr.master_table = 6;
 			braw->opt.bufr.local_table = 1;
 			CHECKED(bufrex_msg_load_tables(braw));
