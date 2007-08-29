@@ -1024,13 +1024,16 @@ dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_
 	dba_db_data d;
 	dba_record_cursor item;
 	int id_pseudoana, val;
+	const char* s_year;
 	
 	assert(db);
 	DBA_RUN_OR_RETURN(dba_db_need_data(db));
 	d = db->data;
 
-	/* Check for the existance of non-context data, otherwise it's all useless */
-	if (dba_record_iterate_first(rec) == NULL)
+	/* Check for the existance of non-context data, otherwise it's all
+	 * useless.  Not inserting data is fine in case of setcontextana */
+	if (!(((s_year = dba_record_key_peek_value(rec, DBA_KEY_YEAR)) != NULL) && strcmp(s_year, "1000") == 0)
+	    && dba_record_iterate_first(rec) == NULL)
 		return dba_error_consistency("looking for data to insert");
 
 	/* Begin the transaction */
