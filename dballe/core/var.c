@@ -479,7 +479,7 @@ void dba_var_print(dba_var var, FILE* out)
 	{
 		double val;
 		dba_var_enqd(var, &val);
-		fprintf(out, "%f\n", val);
+		fprintf(out, "%.*f\n", var->info->scale > 0 ? var->info->scale : 0, val);
 	}
 
 	for (cur = var->attrs; cur != NULL; cur = cur->next)
