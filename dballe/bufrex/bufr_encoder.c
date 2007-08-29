@@ -391,10 +391,18 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 	}
 
 	/* Write all the bits and pad the data section to reach an even length */
+	TRACE("PRE FLUSH %d:%d\n", e->out->len, e->pbyte_len);
 	DBA_RUN_OR_RETURN(encoder_flush(e));
+	TRACE("POST FLUSH %d:%d\n", e->out->len, e->pbyte_len);
 	if ((e->out->len % 2) == 1)
+	{
+		TRACE("PRE APPENDBYTE %d:%d\n", e->out->len, e->pbyte_len);
 		DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+		TRACE("POST APPENDBYTE %d:%d\n", e->out->len, e->pbyte_len);
+	}
+	TRACE("PRE FLUSH2 %d:%d\n", e->out->len, e->pbyte_len);
 	DBA_RUN_OR_RETURN(encoder_flush(e));
+	TRACE("POST FLUSH2 %d:%d\n", e->out->len, e->pbyte_len);
 
 	/* Write the length of the section in its header */
 	{

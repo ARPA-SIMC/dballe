@@ -38,7 +38,7 @@
 
 #include <assert.h>
 
-/*#define TRACE_DECODER*/
+/* #define TRACE_DECODER */
 
 #ifdef TRACE_DECODER
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)
@@ -201,7 +201,7 @@ static dba_err bufr_decode_data_section(decoder d);
 #define CHECK_AVAILABLE_DATA(start, datalen, next) do { \
 		if (start + datalen > d->in->buf + d->in->len) \
 			PARSE_ERROR(start, "end of BUFR message while looking for " next); \
-		TRACE(next " starts at %d and contains at least %d bytes\n", start - d->in->buf, datalen); \
+		TRACE(next " starts at %d and contains at least %d bytes\n", (int)(start - d->in->buf), datalen); \
 	} while (0)
 
 dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
@@ -293,12 +293,14 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 			if ((int)d->sec1[17] != 0)
 				d->out->rep_year = (int)d->sec1[17] * 100 + (d->out->rep_year % 100);
 			break;
+		default:
+			err = dba_error_consistency("BUFR edition is %d, but I can only decode 3 and 4", d->out->edition);
 			break;
 	}
 
 	TRACE(" -> opt %d upd %d origin %d.%d tables %d.%d type %d.%d %04d-%02d-%02d %02d:%02d\n", 
 			has_optional, (int)d->sec1[6],
-			d->out->opt.bufr.origin, (int)d->sec1[4],
+			d->out->opt.bufr.centre, d->out->opt.bufr.subcentre,
 			d->out->opt.bufr.master_table, d->out->opt.bufr.local_table,
 			d->out->type, d->out->subtype,
 			d->out->rep_year, d->out->rep_month, d->out->rep_day, d->out->rep_hour, d->out->rep_minute);
@@ -388,10 +390,10 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	}
 
 	IFTRACE {
-	if (decoder_bits_left(d) > 15)
+	if (decoder_bits_left(d) > 32)
 	{
 		fprintf(stderr, "The data section of %s still contains %d unparsed bits\n",
-				FILENAME(d), decoder_bits_left(d));
+				FILENAME(d), decoder_bits_left(d) - 32);
 		/*
 		err = dba_error_parse(msg->file->name, POS + vec->cursor,
 				"the data section still contains %d unparsed bits",
