@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-DBALLELIBS = ../dballe/core/libdballe-core.la ../dballe/bufrex/libdballe-bufrex.la ../dballe/msg/libdballe-msg.la ../dballe/db/libdballe-db.la ../extra/libextra.la
+DBALLELIBS = ../extra/libextra.la  ../dballe/db/libdballe-db.la ../dballe/msg/libdballe-msg.la ../dballe/bufrex/libdballe-bufrex.la ../dballe/core/libdballe-core.la 
 
 bin_PROGRAMS = dbatbl dbamsg dbadb
 
