@@ -150,7 +150,7 @@ class Exporter:
 
         # Variables
         for v in sorted(vars):
-            cols.append([v, lambda x: x.enqvar(x.enqc("var")).format("")])
+            cols.append([v, lambda x, v=v: x.enqvar(v).format("")])
 
         # Column for special station ana data
         for av in sorted(anaVars.keys()):
