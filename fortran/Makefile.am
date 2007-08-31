@@ -31,7 +31,7 @@ check_fdballe_SOURCES = check_fdballe.f90
 check_fdballe_LDADD = ./libdballef.la -lcnf -lpopt
 check_fdballe_FCFLAGS = -g
 
-check_attrs_SOURCES = check_attrs.f
+check_attrs_SOURCES = check_attrs.f90
 check_attrs_LDADD = ./libdballef.la -lcnf -lpopt
 check_attrs_FCFLAGS = -g
 
@@ -49,6 +49,6 @@ dump_dballe_FCFLAGS = -g
 
 INCLUDES = -I..
 
-EXTRA_DIST = handles.h dballef.h fortran.dox
+EXTRA_DIST = handles.h dballef.h fortran.dox check-utils.h
  
 endif
