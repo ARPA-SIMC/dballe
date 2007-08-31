@@ -21,7 +21,7 @@ libdballef_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
-check_PROGRAMS = check_fdballe check_attrs check_missing
+check_PROGRAMS = check_fdballe check_attrs check_missing check_real0
 TESTS =
 if DB_TESTS
 TESTS += $(check_PROGRAMS)
@@ -38,6 +38,10 @@ check_attrs_FCFLAGS = -g
 check_missing_SOURCES = check_missing.f90
 check_missing_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_FCFLAGS = -g
+
+check_real0_SOURCES = check_real0.f90
+check_real0_LDADD = ./libdballef.la -lcnf -lpopt
+check_real0_FCFLAGS = -g
 
 noinst_PROGRAMS = dump_dballe
 
