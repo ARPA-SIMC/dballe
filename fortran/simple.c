@@ -201,6 +201,19 @@ FDBA_HANDLE_BODY(session, MAX_SESSION, "Dballe sessions")
 
 static int usage_refcount = 0;
 
+static inline int double_is_missing(double d)
+{
+	switch (fpclassify(d))
+	{
+		case FP_ZERO:
+			return 0;
+		case FP_NORMAL:
+			return d == MISSING_DOUBLE;
+		default:
+			return 1;
+	}
+}
+
 /**
  * Start working with a DBALLE database.
  *
@@ -1115,7 +1128,7 @@ F77_INTEGER_FUNCTION(idba_setd)(
 		if (param == DBA_KEY_ERROR)
 			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
 
-		if (!isnormal(*value) || *value == MISSING_DOUBLE)
+		if (double_is_missing(*value))
 		{
 			TRACEMISSING("double");
 			return dba_record_key_unset(rec, param);
@@ -1139,7 +1152,7 @@ F77_INTEGER_FUNCTION(idba_setd)(
 		if (code == 0)
 			code = DBA_STRING_TO_VAR(p + 1);
 
-		if (!isnormal(*value) || *value == MISSING_DOUBLE)
+		if (double_is_missing(*value))
 		{
 			TRACEMISSING("double");
 			return dba_record_var_unset(rec, code);
