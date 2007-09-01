@@ -85,7 +85,7 @@ dba_err dba_file_create(dba_encoding type, const char* name, const char* mode, d
 			case 'B': type = BUFR; break;
 			case 'C': type = CREX; break;
 			case 0: type = AOF; break;
-			case 38: type = AOF; break;
+			case 0x38: type = AOF; break;
 			default:
 				err = dba_error_notfound("could not detect the encoding of %s", name);
 				goto cleanup;

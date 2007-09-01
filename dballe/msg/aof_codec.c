@@ -596,8 +596,6 @@ static dba_err aof_file_write(dba_file file, dba_rawmsg msg)
 {
 	long pos = ftell(file->fd);
 
-	fprintf(stderr, "%d\n", errno);
-
 	if (pos == -1 && errno != ESPIPE)
 		return dba_error_system("reading current position in output file %s", dba_file_name(file));
 
