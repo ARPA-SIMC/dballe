@@ -32,6 +32,7 @@
 #include <string.h>
 #include <byteswap.h>
 #include <time.h>
+#include <errno.h>
 
 // #define TRACE_DECODER
 
@@ -595,8 +596,15 @@ static dba_err aof_file_write(dba_file file, dba_rawmsg msg)
 {
 	long pos = ftell(file->fd);
 
-	if (pos == -1)
+	fprintf(stderr, "%d\n", errno);
+
+	if (pos == -1 && errno != ESPIPE)
 		return dba_error_system("reading current position in output file %s", dba_file_name(file));
+
+	/* If it's a non-seekable file, we use idx to see if we're at the beginning */
+	if (pos == -1 && errno == ESPIPE && file->idx == 0)
+		pos = 0;
+		
 	/* If we are at the beginning of the file, write a dummy header */
 	if (pos == 0)
 		DBA_RUN_OR_RETURN(aof_codec_write_dummy_header(file));

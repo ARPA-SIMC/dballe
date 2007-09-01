@@ -60,7 +60,7 @@ struct _dba_file
 	FILE* fd;
 	/** Set to true if fd should be closed when dba_file_delete() is called */
 	int close_on_exit;
-	/** Index of the last message read from the file */
+	/** Index of the last message read from the file or written to the file */
 	int idx;
 	/** File encoding */
 	dba_encoding type;

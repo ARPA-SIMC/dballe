@@ -230,7 +230,11 @@ dba_err dba_file_read(dba_file file, dba_rawmsg msg, int* found)
 	if (file->fun_read == NULL)
 		return dba_error_unimplemented("reading %s files is not implemented", dba_encoding_name(file->type));
 	else
-		return file->fun_read(file, msg, found);
+	{
+		DBA_RUN_OR_RETURN(file->fun_read(file, msg, found));
+		++file->idx;
+		return dba_error_ok();
+	}
 }
 
 dba_err dba_file_write(dba_file file, dba_rawmsg msg)
@@ -238,7 +242,11 @@ dba_err dba_file_write(dba_file file, dba_rawmsg msg)
 	if (file->fun_write == NULL)
 		return dba_error_unimplemented("writing %s files is not implemented", dba_encoding_name(file->type));
 	else
-		return file->fun_write(file, msg);
+	{
+		DBA_RUN_OR_RETURN(file->fun_write(file, msg));
+		++file->idx;
+		return dba_error_ok();
+	}
 }
 
 
