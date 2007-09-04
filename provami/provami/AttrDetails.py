@@ -6,224 +6,226 @@ from provami.Model import ModelListener
 from provami.ResultGrid import ResultTable, ResultGrid
 
 def val_compare(a, b):
-	isstra = a.info().is_string()
-	isstrb = b.info().is_string()
-	if isstra and isstrb:
-		return cmp(a.enqc(), b.enqc())
-	elif isstra and not isstrb:
-		return 1
-	elif not isstra and isstrb:
-		return -1
-	else:
-		return cmp(a.enqd(), b.enqd())
+    isstra = a.info().is_string()
+    isstrb = b.info().is_string()
+    if isstra and isstrb:
+        return cmp(a.enqc(), b.enqc())
+    elif isstra and not isstrb:
+        return 1
+    elif not isstra and isstrb:
+        return -1
+    else:
+        return cmp(a.enqd(), b.enqd())
 
 class AttrMenu(wx.Menu):
-	ACTION_DELETE_CURRENT = wx.NewId()
-	ACTION_DELETE_SELECTED = wx.NewId()
+    ACTION_DELETE_CURRENT = wx.NewId()
+    ACTION_DELETE_SELECTED = wx.NewId()
 
-	def __init__(self):
-		wx.Menu.__init__(self)
-		self.row, self.col, self.data, self.grid = None, None, None, None
+    def __init__(self):
+        wx.Menu.__init__(self)
+        self.row, self.col, self.data, self.grid = None, None, None, None
 
-	def clearMenu(self):
-		"Removes all items from the menu"
-		while self.GetMenuItemCount() > 0:
-			item = self.FindItemByPosition(0)
-			self.DestroyItem(item)
+    def clearMenu(self):
+        "Removes all items from the menu"
+        while self.GetMenuItemCount() > 0:
+            item = self.FindItemByPosition(0)
+            self.DestroyItem(item)
 
-	def getCell(self):
-		return self.row, self.col
+    def getCell(self):
+        return self.row, self.col
 
-	def getData(self):
-		return self.data
+    def getData(self):
+        return self.data
 
-	def getGrid(self):
-		return self.grid
+    def getGrid(self):
+        return self.grid
 
-	def configureCell(self, grid, row, col, data):
-		"Reconfigure the menu to pop up on the given grid cell"
+    def configureCell(self, grid, row, col, data):
+        "Reconfigure the menu to pop up on the given grid cell"
 
-		hasVoices = False
-		self.clearMenu()
+        hasVoices = False
+        self.clearMenu()
 
-		if data != None:
-			self.Append(AttrMenu.ACTION_DELETE_CURRENT, "Delete value")
-			hasVoices = True
+        if data != None:
+            self.Append(AttrMenu.ACTION_DELETE_CURRENT, "Delete value")
+            hasVoices = True
 
-		selCount = grid.countSelectedRows()
-		if selCount > 1:
-			self.Append(AttrMenu.ACTION_DELETE_SELECTED, "Delete %d selected values" % (selCount))
-			hasVoices = True;
+        selCount = grid.countSelectedRows()
+        if selCount > 1:
+            self.Append(AttrMenu.ACTION_DELETE_SELECTED, "Delete %d selected values" % (selCount))
+            hasVoices = True;
 
-		if hasVoices:
-			self.row, self.col, self.data, self.grid = row, col, data, grid
+        if hasVoices:
+            self.row, self.col, self.data, self.grid = row, col, data, grid
 
-		# If there are no entries, we do not pop up
-		return hasVoices
+        # If there are no entries, we do not pop up
+        return hasVoices
 
 
 class AttributeTable(ResultTable):
-	def __init__(self, model):
-		ResultTable.__init__(self)
+    def __init__(self, model):
+        ResultTable.__init__(self)
 
-		self.model = model
+        self.model = model
 
-		self.appendColumn("Variable", \
-				  renderer = lambda x: x.code(), \
-				  sorter = lambda x, y: cmp(x.code(), y.code()))
+        self.appendColumn("Variable", \
+                  renderer = lambda x: x.code(), \
+                  sorter = lambda x, y: cmp(x.code(), y.code()))
 
-		self.appendColumn("Value", \
-				  renderer = lambda x: x.format(), \
-				  sorter = val_compare,
-				  editable = True)
+        self.appendColumn("Value", \
+                  renderer = lambda x: x.format(), \
+                  sorter = val_compare,
+                  editable = True)
 
-		self.appendColumn("Unit", \
-				  renderer = lambda x: x.info().unit(), \
-				  sorter = val_compare)
+        self.appendColumn("Unit", \
+                  renderer = lambda x: x.info().unit(), \
+                  sorter = val_compare)
 
-		self.appendColumn("Description", \
-				  renderer = lambda x: x.info().desc(), \
-				  sorter = val_compare)
-	
-		self.context = None
-		self.varcode = None
+        self.appendColumn("Description", \
+                  renderer = lambda x: x.info().desc(), \
+                  sorter = val_compare)
+    
+        self.context = None
+        self.varcode = None
 
-	def SetValue(self, row, col, value):
-		if row >= len(self.items): return
-		if col != 1: return
+    def SetValue(self, row, col, value):
+        if row >= len(self.items): return
+        if col != 1: return
 
-		try :
-			var = self.items[row]
-			if var.info().is_string():
-				var.set(str(value))
-			else:
-				var.set(float(value))
-			self.model.updateAttribute(self.context, self.varcode, var)
-		except ValueError:
-			pass
+        try :
+            var = self.items[row]
+            if var.info().is_string():
+                var.set(str(value))
+            else:
+                var.set(float(value))
+            self.model.updateAttribute(self.context, self.varcode, var)
+        except ValueError:
+            pass
 
-	def display (self, context, var):
-		count = len(self.items)
-		self.items = []
-		self.context = context
-		self.varcode = var
+    def display (self, context, var):
+        count = len(self.items)
+        self.items = []
+        self.context = context
+        self.varcode = var
 
-		if context != None:
-			attrs = dballe.Record()
-			self.model.db.attrQuery(context, var, attrs)
+        if context != None:
+            attrs = dballe.Record()
+            self.model.db.attrQuery(context, var, attrs)
 
-			for var in attrs:
-				self.items.append(var)
+            for var in attrs:
+                self.items.append(var)
 
-			self.sort()
+            self.sort()
 
-		view = self.GetView()
-		if view != None:
-			view.ProcessTableMessage(
-				wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, count))
-			view.ProcessTableMessage(
-				wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.items)))
-			# FIXME: wxwidgets bug workaround to have the
-			# scrollbars to resize
-			# See: http://wiki.wxpython.org/index.cgi/Frequently_Asked_Questions#head-43f3f79f739a4c503584c4fb9620d40bf273e418
-			view.FitInside()
+        view = self.GetView()
+        if view != None:
+            view.ProcessTableMessage(
+                wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, count))
+            view.ProcessTableMessage(
+                wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.items)))
+            # FIXME: wxwidgets bug workaround to have the
+            # scrollbars to resize
+            # See: http://wiki.wxpython.org/index.cgi/Frequently_Asked_Questions#head-43f3f79f739a4c503584c4fb9620d40bf273e418
+            view.FitInside()
 
-	def getRow(self, data):
-		if data == None: return None
-		var = data.code()
-		for row, d in enumerate(self.items):
-			if d.code() == var:
-				return row
-		return None
+    def getRow(self, data):
+        if data == None: return None
+        var = data.code()
+        for row, d in enumerate(self.items):
+            if d.code() == var:
+                return row
+        return None
 
 class AttrResults(wx.Frame, ModelListener):
-	def __init__(self, parent, model):
-		wx.Frame.__init__(self, parent, title = "Attributes", size = (400, 400),
-				style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE)
+    def __init__(self, parent, model):
+        wx.Frame.__init__(self, parent, title = "Attributes", size = (400, 400),
+                style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE)
 
-		self.parent = parent
-		self.model = model
-		self.model.registerUpdateListener(self)
+        self.SetSizeHints(500, 300)
 
-		self.currentID = (None, None)
+        self.parent = parent
+        self.model = model
+        self.model.registerUpdateListener(self)
 
-		self.statusBar = self.CreateStatusBar()
+        self.currentID = (None, None)
 
-		self.dataMenu = AttrMenu()
-		self.dataMenu.Bind(wx.EVT_MENU, self.onDataMenu)
+        self.statusBar = self.CreateStatusBar()
 
-		self.data = ResultGrid(self)
-		self.data.SetTable(AttributeTable(model))
-		self.data.setPopupMenu(self.dataMenu)
-		self.data.Bind(ResultGrid.EVT_FLYOVER, self.onFlyOver)
+        self.dataMenu = AttrMenu()
+        self.dataMenu.Bind(wx.EVT_MENU, self.onDataMenu)
 
-		self.details = wx.StaticText(self)
+        self.data = ResultGrid(self)
+        self.data.SetTable(AttributeTable(model))
+        self.data.setPopupMenu(self.dataMenu)
+        self.data.Bind(ResultGrid.EVT_FLYOVER, self.onFlyOver)
 
-		box = wx.BoxSizer(wx.VERTICAL)
-		box.Add(self.details, 0, wx.EXPAND)
-		box.Add(self.data, 1, wx.EXPAND)
-		self.SetSizerAndFit(box)
+        self.details = wx.StaticText(self)
 
-		self.Bind(wx.EVT_CLOSE, self.onClose)
+        box = wx.BoxSizer(wx.VERTICAL)
+        box.Add(self.details, 0, wx.EXPAND)
+        box.Add(self.data, 1, wx.EXPAND)
+        self.SetSizerAndFit(box)
 
-	def invalidate (self):
-		self.current = self.data.saveCurrent()
-		#self.data.GetTable().clear()
+        self.Bind(wx.EVT_CLOSE, self.onClose)
 
-	def hasData (self, what):
-		if what == "all":
-			self.data.updating = True
-			if self.model.hasVariable(self.currentID[0], self.currentID[1]):
-				self.displayID(self.currentID[0], self.currentID[1])
-			else:
-				self.displayID(None, None)
-			self.data.restoreCurrent(self.current)
-			self.data.updating = False
+    def invalidate (self):
+        self.current = self.data.saveCurrent()
+        #self.data.GetTable().clear()
 
-	def displayID(self, context, var):
-		#print "DISPLAY ID", context, var
-		#traceback.print_stack()
-		current = self.data.saveCurrent()
-		if context == None or var == None:
-			self.details.SetLabel("No variable is currently selected")
-		else:
-			self.details.SetLabel("Variable %s in context %d" % (var, context))
-		self.data.GetTable().display(context, var)
-		self.currentID = (context, var)
-		self.data.restoreCurrent(current)
+    def hasData (self, what):
+        if what == "all":
+            self.data.updating = True
+            if self.model.hasVariable(self.currentID[0], self.currentID[1]):
+                self.displayID(self.currentID[0], self.currentID[1])
+            else:
+                self.displayID(None, None)
+            self.data.restoreCurrent(self.current)
+            self.data.updating = False
 
-	def display(self, record):
-		#print "ATTR Got record", record.enqi("context_id"), record.enqc("var")
-		if record != None:
-			self.displayID(record.enqi("context_id"), record.enqc("var"))
-		else:
-			self.displayID(None, None)
+    def displayID(self, context, var):
+        #print "DISPLAY ID", context, var
+        #traceback.print_stack()
+        current = self.data.saveCurrent()
+        if context == None or var == None:
+            self.details.SetLabel("No variable is currently selected")
+        else:
+            self.details.SetLabel("Variable %s in context %d" % (var, context))
+        self.data.GetTable().display(context, var)
+        self.currentID = (context, var)
+        self.data.restoreCurrent(current)
 
-	def onFlyOver(self, event):
-		row, col = event.GetCell()
-		var = event.GetData()
-		if var != None:
-			info = var.info()
-			info = "%s (%s)" % (info.desc(), info.unit())
-			self.statusBar.SetStatusText(info, 0)
+    def display(self, record):
+        #print "ATTR Got record", record.enqi("context_id"), record.enqc("var")
+        if record != None:
+            self.displayID(record.enqi("context_id"), record.enqc("var"))
+        else:
+            self.displayID(None, None)
 
-	def onClose(self, event):
-		# Hide the window
-		self.Hide()
-		# Don't destroy the window
-		event.Veto()
-		# Notify parent that we've been closed
-		self.parent.attrHasClosed()
+    def onFlyOver(self, event):
+        row, col = event.GetCell()
+        var = event.GetData()
+        if var != None:
+            info = var.info()
+            info = "%s (%s)" % (info.desc(), info.unit())
+            self.statusBar.SetStatusText(info, 0)
 
-	def onDataMenu(self, event):
-		if event.GetId() == AttrMenu.ACTION_DELETE_CURRENT:
-			table = self.data.GetTable()
-			context, id = table.context, table.varcode
-			var = self.dataMenu.getData()
-			self.model.deleteAttrs(context, id, (var.code(),))
-		elif event.GetId() == AttrMenu.ACTION_DELETE_SELECTED:
-			table = self.data.GetTable()
-			context, id = table.context, table.varcode
-			self.model.deleteAttrs(context, id, [v.code() for v in self.data.getSelectedData()])
-		else:
-			event.Skip()
+    def onClose(self, event):
+        # Hide the window
+        self.Hide()
+        # Don't destroy the window
+        event.Veto()
+        # Notify parent that we've been closed
+        self.parent.attrHasClosed()
+
+    def onDataMenu(self, event):
+        if event.GetId() == AttrMenu.ACTION_DELETE_CURRENT:
+            table = self.data.GetTable()
+            context, id = table.context, table.varcode
+            var = self.dataMenu.getData()
+            self.model.deleteAttrs(context, id, (var.code(),))
+        elif event.GetId() == AttrMenu.ACTION_DELETE_SELECTED:
+            table = self.data.GetTable()
+            context, id = table.context, table.varcode
+            self.model.deleteAttrs(context, id, [v.code() for v in self.data.getSelectedData()])
+        else:
+            event.Skip()
