@@ -119,11 +119,11 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 	}
 	dc->id_ana = val;
 
+	/* Report code */
+	dc->id_report = repcod != -1 ? repcod : dba_msg_repcod_from_type(msg->type);
+
 	if (flags & DBA_IMPORT_FULL_PSEUDOANA || inserted_pseudoana)
 	{
-		/* Get the ana context */
-		dc->id_report = dba_msg_repcod_from_type(msg->type);
-
 		DBA_RUN_OR_GOTO(fail, dba_db_context_obtain_ana(dc, &val));
 		dd->id_context = val;
 
@@ -159,9 +159,6 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 	}
 
 	/* Fill up the common contexts information for the rest of the data */
-
-	/* Report code */
-	dc->id_report = repcod != -1 ? repcod : dba_msg_repcod_from_type(msg->type);
 
 	/* Date and time */
 	{
