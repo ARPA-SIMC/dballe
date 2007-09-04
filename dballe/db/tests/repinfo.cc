@@ -60,8 +60,8 @@ void to::test<1>()
 	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
 	gen_ensure_equals(id, 1);
 
-	CHECKED(dba_db_repinfo_get_id(ri, "ana", &id));
-	gen_ensure_equals(id, 254);
+	CHECKED(dba_db_repinfo_get_id(ri, "generic", &id));
+	gen_ensure_equals(id, 255);
 
 	CHECKED(dba_db_repinfo_has_id(ri, 1, &i));
 	gen_ensure_equals((bool)i, true);
@@ -83,7 +83,7 @@ void to::test<2>()
 
 	gen_ensure_equals(added, 0);
 	gen_ensure_equals(deleted, 0);
-	gen_ensure_equals(updated, 15);
+	gen_ensure_equals(updated, 14);
 
 	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
 	gen_ensure_equals(id, 1);

@@ -794,7 +794,7 @@ dba_err dba_record_set_ana_context(dba_record rec)
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, 0));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P1, 0));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P2, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, 254));
+	/* DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, 254)); */
 	return dba_error_ok();
 }
 

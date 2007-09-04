@@ -212,8 +212,6 @@ dba_err dba_db_context_get_data(dba_db_context ins, int id)
 dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id)
 {
 	/* Fill up the query parameters with the data for the anagraphical context */
-	if (ins->id_report == -1)
-		ins->id_report = 254;
 	ins->date.year = 1000;
 	ins->date.month = 1;
 	ins->date.day = 1;

@@ -708,6 +708,11 @@ static dba_err add_other_froms(dba_db_cursor cur, unsigned int base)
 		switch (base)
 		{
 			case DBA_DB_FROM_PA:
+				/*
+				 * If we are here, it means that no rep_cod or rep_memo has
+				 * been specified, and either height or ana_filter have been
+				 * asked.  This means that we cannot know what network should
+				 * be used.
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
 							" JOIN context cbs ON pa.id=cbs.id_ana"
 							" AND cbs.id_report=254"
@@ -715,10 +720,12 @@ static dba_err add_other_froms(dba_db_cursor cur, unsigned int base)
 							" AND cbs.ltype=257 AND cbs.l1=0 AND cbs.l2=0"
 							" AND cbs.ptype=0 AND cbs.p1=0 AND cbs.p2=0 "));
 				break;
+				*/
+				return dba_error_consistency("please specify rep_cod or rep_memo among the query parameters, otherwise the query is ambiguous in this case");
 			case DBA_DB_FROM_C:
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
 							" JOIN context cbs ON c.id_ana=cbs.id_ana"
-							" AND cbs.id_report=254"
+							" AND cbs.id_report=c.id_report"
 							" AND cbs.datetime={ts '1000-01-01 00:00:00.0'}"
 							" AND cbs.ltype=257 AND cbs.l1=0 AND cbs.l2=0"
 							" AND cbs.ptype=0 AND cbs.p1=0 AND cbs.p2=0 "));
@@ -1173,13 +1180,14 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 	 * STATION,     B01002   258
 	*/
 	const char* query =
-		"SELECT d.id_var, d.value"
-		"  FROM context c, data d"
-		" WHERE c.id = d.id_context AND c.id_ana = ?"
+		"SELECT d.id_var, d.value, ri.prio"
+		"  FROM context c, data d, repinfo ri"
+		" WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
 		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'}"
-		"   AND c.id_report = 254"
 		"   AND c.ltype = 257 AND c.l1 = 0 AND c.l2 = 0"
-		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0";
+		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
+		" GROUP BY ri.id "
+		"HAVING ri.prio=MAX(ri.prio)";
 
 	dba_err err = DBA_OK;
 	SQLHSTMT stm;

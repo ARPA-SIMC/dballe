@@ -263,7 +263,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 				/*DBA_RUN_OR_GOTO(cleanup, dba_msg_set_second(msg, sec, -1));*/
 			}
 
-			DBA_RUN_OR_GOTO(cleanup, fill_ana_layer(db, msg, cur->out_ana_id, 254));
+			DBA_RUN_OR_GOTO(cleanup, fill_ana_layer(db, msg, cur->out_ana_id, cur->out_rep_cod));
 
 			last_datetime = cur->out_datetime;
 			last_lat = cur->out_lat;

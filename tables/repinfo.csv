@@ -11,5 +11,4 @@
 50,regioni,dati regioni per verifica LAMI,90,oss,255
 60,icecast,dati meteo autostradali,40,oss,255
 200,noaa,NOAA satellites,41,oss,255
-254,ana,dati anagrafici,5000,?,255
 255,generic,export generici da DB Meteo,1000,?,255

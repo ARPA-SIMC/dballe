@@ -122,7 +122,8 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 	if (flags & DBA_IMPORT_FULL_PSEUDOANA || inserted_pseudoana)
 	{
 		/* Get the ana context */
-		dc->id_report = -1;
+		dc->id_report = dba_msg_repcod_from_type(msg->type);
+
 		DBA_RUN_OR_GOTO(fail, dba_db_context_obtain_ana(dc, &val));
 		dd->id_context = val;
 

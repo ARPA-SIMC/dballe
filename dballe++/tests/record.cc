@@ -89,7 +89,7 @@ void to::test<3>()
 	gen_ensure_equals(rec.enqi("pindicator"), 0);
 	gen_ensure_equals(rec.enqi("p1"), 0);
 	gen_ensure_equals(rec.enqi("p2"), 0);
-	gen_ensure_equals(rec.enqi("rep_cod"), 254);
+	gen_ensure(!rec.contains("rep_cod"));
 }
 
 // Try out all copying functions

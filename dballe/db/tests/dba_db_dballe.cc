@@ -149,9 +149,14 @@ void dba_db_dballe_shar::reset_database()
 	/* Insert the ana station */
 	dba_record_clear(insert);
 	CHECKED(dba_record_set_ana_context(insert));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_REP_COD, 1));
 	sampleAna.copyTestDataToRecord(insert);
 	extraAna.copyTestDataToRecord(insert);
 	/* Insert the anagraphical record */
+	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
+
+	/* Insert the ana info also for rep_cod 2 */
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_REP_COD, 2));
 	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
 
 	/* Fill in data for the first record */
@@ -284,6 +289,7 @@ void to::test<4>()
 
 	reset_database();
 
+/* Try a query using a KEY query parameter */
 #define TRY_QUERY(type, param, value, expected_count) do {\
 		int count, has_data; \
 		dba_db_cursor cursor; \
@@ -299,6 +305,7 @@ void to::test<4>()
 		dba_db_cursor_delete(cursor); \
 	} while (0)
 
+/* Try a query using a VAR query parameter */
 #define TRY_QUERY1(type, param, value, expected_count) do {\
 		int count, has_data; \
 		dba_db_cursor cursor; \
@@ -314,6 +321,7 @@ void to::test<4>()
 		dba_db_cursor_delete(cursor); \
 	} while (0)
 
+/* Try a query using a longitude range */
 #define TRY_QUERY2(lonmin, lonmax, expected_count) do {\
 		int count, has_data; \
 		dba_db_cursor cursor; \
@@ -333,7 +341,7 @@ void to::test<4>()
 
 	TRY_QUERY(c, DBA_KEY_ANA_ID, "1", 4);
 	TRY_QUERY(c, DBA_KEY_ANA_ID, "2", 0);
-	TRY_QUERY(i, DBA_KEY_YEAR, 1000, 5);
+	TRY_QUERY(i, DBA_KEY_YEAR, 1000, 10);
 	TRY_QUERY(i, DBA_KEY_YEAR, 1001, 0);
 	TRY_QUERY(i, DBA_KEY_YEARMIN, 1999, 0);
 	TRY_QUERY(i, DBA_KEY_YEARMIN, 1945, 4);
