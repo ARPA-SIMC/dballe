@@ -44,6 +44,35 @@ The main characteristics of DB-ALL.e are:
  * Does not need backup, since it only contains replicated or derived data.
  * Write access is enabled for its users.
 
+Dependencies
+------------
+
+DB-All.e requires unixodbc, gperf and popt in order to be built.
+
+Additionally, to build the Fortran API the CNF library is required, and
+gfortran is required to build its unit tests.
+
+To build the documentation, you need doxygen and LaTeX.  If latex2html is
+present, HTML documentation will also be built.  If rst2html is present, the
+README file will also be converted to HTML.
+
+In Fedora, the names of the packages depended on are:
+
+ * unixODBC-devel gperf gcc-gfortran doxygen tetex tetex-latex latex2html
+ * For CNF there is an unofficial starmet package: contact the DB-All.e team
+   about it.
+
+In Debian, the names of the packages depended on are:
+
+ * unixodbc-dev gperf libpopt-dev libcnf-dev gfortran doxygen python-docutils
+ * tetex-bin tetex-extra (in etch), or 
+ * texlive-base texlive-latex-base texlive-latex-extra
+   texlive-latex-recommended (in lenny and sid)
+ * latex2html (optional, from non-free)
+
+(see http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64)
+
+
 Building DB-All.e
 -----------------
 
