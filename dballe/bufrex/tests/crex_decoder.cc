@@ -45,6 +45,10 @@ void to::test<1>()
 	test.cat = 0;
 	test.subcat = 0;
 	test.subsets = 1;
+
+	bufrex_msg msgr = read_test_msg_header_raw("crex/test-synop0.crex", CREX);
+	ensureBufrexRawEquals(test, msgr);
+
 	test.subset(0).vars = 49;
 	test.subset(0).set(DBA_VAR(0, 5, 1), 48.22);
 	test.subset(0).set(DBA_VAR(0, 6, 1),  9.92);
@@ -56,6 +60,7 @@ void to::test<1>()
 	ensureBufrexRawEquals(test, msg1);
 
 	bufrex_msg_delete(msg);
+	bufrex_msg_delete(msgr);
 	bufrex_msg_delete(msg1);
 }
 

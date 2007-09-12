@@ -44,6 +44,10 @@ void to::test<1>()
 	test.cat = 1;
 	test.subcat = 21;
 	test.subsets = 1;
+
+	bufrex_msg msgr = read_test_msg_raw("bufr/bufr1", BUFR);
+	ensureBufrexRawEquals(test, msgr);
+
 	test.subset(0).vars = 98;
 	test.subset(0).set(DBA_VAR(0, 5, 2), 68.27);
 	test.subset(0).set(DBA_VAR(0, 6, 2),  9.68);
@@ -56,6 +60,7 @@ void to::test<1>()
 
 	bufrex_msg_delete(msg);
 	bufrex_msg_delete(msg1);
+	bufrex_msg_delete(msgr);
 }
 
 template<> template<>
@@ -443,6 +448,10 @@ void to::test<19>()
 	test.cat = 8;
 	test.subcat = 255;
 	test.subsets = 128;
+
+	bufrex_msg msgr = read_test_msg_header_raw("bufr/ed4.bufr", BUFR);
+	ensureBufrexRawEquals(test, msgr);
+
 	test.subset(0).vars = 26;
 	test.subset(1).vars = 26;
 	test.subset(2).vars = 26;
@@ -457,6 +466,7 @@ void to::test<19>()
 	ensureBufrexRawEquals(test, msg1);
 #endif
 
+	bufrex_msg_delete(msgr);
 	bufrex_msg_delete(msg);
 #if 0
 	bufrex_msg_delete(msg1);

@@ -79,12 +79,6 @@ struct _decoder
 	/* Offset of the start of BUFR section 5 */
 	const unsigned char* sec5;
 
-	/* 1 if the BUFR message uses compression, else 0 */
-	int compression;
-
-	/* Number of subsets present in the message */
-	int subsets;
-
 	/* Current subset when decoding non-compressed BUFR messages */
 	bufrex_subset current_subset;
 
@@ -130,8 +124,7 @@ static int decoder_bits_left(decoder d)
 #define FILENAME(d) ((d)->in->file == NULL ? "(memory)" : dba_file_name((d)->in->file))
 
 #define PARSE_ERROR(pos, ...) do { \
-		err = dba_error_parse(FILENAME(d), d->in->offset + ((pos) - d->in->buf), __VA_ARGS__); \
-		goto fail; \
+		return dba_error_parse(FILENAME(d), d->in->offset + ((pos) - d->in->buf), __VA_ARGS__); \
 	} while (0)
 
 
@@ -141,7 +134,6 @@ static int decoder_bits_left(decoder d)
  */
 static dba_err decoder_get_bits (decoder d, int n, uint32_t *val)
 {
-	dba_err err;
 	uint32_t result = 0;
 	int i;
 
@@ -165,8 +157,6 @@ static dba_err decoder_get_bits (decoder d, int n, uint32_t *val)
 	*val = result;
 
 	return dba_error_ok();
-fail:
-	return err;
 }
 
 /* Dump 'count' bits of 'buf', starting at the 'ofs-th' bit */
@@ -204,18 +194,9 @@ static dba_err bufr_decode_data_section(decoder d);
 		TRACE(next " starts at %d and contains at least %d bytes\n", (int)(start - d->in->buf), datalen); \
 	} while (0)
 
-dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
+static dba_err decode_header(decoder d)
 {
-	dba_err err;
-	decoder d = NULL;
-	int has_optional;
 	int i;
-
-	bufrex_msg_reset(out);
-
-	DBA_RUN_OR_RETURN(decoder_create(&d));
-	d->in = in;
-	d->out = out;
 
 	/* Read BUFR section 0 (Indicator section) */
 	CHECK_AVAILABLE_DATA(d->in->buf, 8, "section 0 of BUFR message (indicator section)");
@@ -240,7 +221,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 		case 3:
 			// TODO: misses master table number in sec1[3]
 			// TODO: misses update sequence number sec1[7]
-			has_optional = (d->sec1[7] & 0x80) ? 1 : 0;
+			d->out->opt.bufr.has_optional = (d->sec1[7] & 0x80) ? 1 : 0;
 			// subcentre in sec1[4]
 			d->out->opt.bufr.subcentre = (int)d->sec1[4];
 			// centre in sec1[5]
@@ -266,7 +247,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 			// subcentre in sec1[6-7]
 			d->out->opt.bufr.subcentre = readNumber(d->sec1+6, 2);
 			// has_optional in sec1[9]
-			has_optional = (d->sec1[9] & 0x80) ? 1 : 0;
+			d->out->opt.bufr.has_optional = (d->sec1[9] & 0x80) ? 1 : 0;
 			// category in sec1[10]
 			d->out->type = (int)d->sec1[10];
 			// international data sub-category in sec1[11]
@@ -294,18 +275,15 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 				d->out->rep_year = (int)d->sec1[17] * 100 + (d->out->rep_year % 100);
 			break;
 		default:
-			err = dba_error_consistency("BUFR edition is %d, but I can only decode 3 and 4", d->out->edition);
-			break;
+			return dba_error_consistency("BUFR edition is %d, but I can only decode 3 and 4", d->out->edition);
 	}
 
 	TRACE(" -> opt %d upd %d origin %d.%d tables %d.%d type %d.%d %04d-%02d-%02d %02d:%02d\n", 
-			has_optional, (int)d->sec1[6],
+			d->out->opt.bufr.has_optional, (int)d->sec1[6],
 			d->out->opt.bufr.centre, d->out->opt.bufr.subcentre,
 			d->out->opt.bufr.master_table, d->out->opt.bufr.local_table,
 			d->out->type, d->out->subtype,
 			d->out->rep_year, d->out->rep_month, d->out->rep_day, d->out->rep_hour, d->out->rep_minute);
-
-	DBA_RUN_OR_GOTO(fail, bufrex_msg_load_tables(d->out));
 
 #if 0
 	fprintf(stderr, "S1 Len %d  table #%d  osc %d  oc %d  seq #%d  optsec %x\n",
@@ -330,7 +308,7 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 #endif
 	
 	/* Read BUFR section 2 (Optional section) */
-	if (has_optional)
+	if (d->out->opt.bufr.has_optional)
 	{
 		CHECK_AVAILABLE_DATA(d->sec2, 4, "section 2 of BUFR message (optional section)");
 		d->sec3 = d->sec2 + readNumber(d->sec2, 3);
@@ -344,15 +322,15 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	d->sec4 = d->sec3 + readNumber(d->sec3, 3);
 	if (d->sec4 > d->in->buf + d->in->len)
 		PARSE_ERROR(d->sec3, "Section 3 claims to end past the end of the BUFR message");
-	d->subsets = readNumber(d->sec3 + 4, 2);
-	d->compression = (d->sec3[6] & 0x40) ? 1 : 0;
+	d->out->opt.bufr.subsets = readNumber(d->sec3 + 4, 2);
+	d->out->opt.bufr.compression = (d->sec3[6] & 0x40) ? 1 : 0;
 	for (i = 0; i < (d->sec4 - d->sec3 - 8)/2; i++)
 	{
 		dba_varcode var = (dba_varcode)readNumber(d->sec3 + 7 + i * 2, 2);
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_append_datadesc(d->out, var));
+		DBA_RUN_OR_RETURN(bufrex_msg_append_datadesc(d->out, var));
 	}
 	TRACE(" subsets %d observed %d compression %d byte7 %x\n",
-			d->subsets, (d->sec3[6] & 0x80) ? 1 : 0, d->compression, (unsigned int)d->sec3[6]);
+			d->out->opt.bufr.subsets, (d->sec3[6] & 0x80) ? 1 : 0, d->out->opt.bufr.compression, (unsigned int)d->sec3[6]);
 	/*
 	IFTRACE{
 		TRACE(" -> data descriptor section: ");
@@ -360,6 +338,16 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 		TRACE("\n");
 	}
 	*/
+
+	return dba_error_ok();
+}
+
+static dba_err decode_data(decoder d)
+{
+	int i;
+
+	/* Load decoding tables */
+	DBA_RUN_OR_RETURN(bufrex_msg_load_tables(d->out));
 
 	/* Read BUFR section 4 (Data section) */
 	CHECK_AVAILABLE_DATA(d->sec4, 4, "section 4 of BUFR message (data section)");
@@ -373,19 +361,19 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	/* Initialize bit-decoding structures */
 	d->cursor = d->sec4 + 4 - d->in->buf;
 
-	if (d->compression)
+	if (d->out->opt.bufr.compression)
 	{
 		/* Only needs to parse once */
 		d->current_subset = NULL;
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(d->out, &(d->ops)));
-		DBA_RUN_OR_GOTO(fail, bufr_decode_data_section(d));
+		DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(d->out, &(d->ops)));
+		DBA_RUN_OR_RETURN(bufr_decode_data_section(d));
 	} else {
 		/* Iterate on the number of subgroups */
-		for (i = 0; i < d->subsets; ++i)
+		for (i = 0; i < d->out->opt.bufr.subsets; ++i)
 		{
-			DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(d->out, i, &(d->current_subset)));
-			DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(d->out, &(d->ops)));
-			DBA_RUN_OR_GOTO(fail, bufr_decode_data_section(d));
+			DBA_RUN_OR_RETURN(bufrex_msg_get_subset(d->out, i, &(d->current_subset)));
+			DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(d->out, &(d->ops)));
+			DBA_RUN_OR_RETURN(bufr_decode_data_section(d));
 		}
 	}
 
@@ -409,13 +397,55 @@ dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	if (memcmp(d->sec5, "7777", 4) != 0)
 		PARSE_ERROR(d->sec5, "section 5 does not contain '7777'");
 
-	for (i = 0; i < d->subsets; ++i)
+	for (i = 0; i < d->out->opt.bufr.subsets; ++i)
 	{
 		bufrex_subset subset;
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(out, i, &subset));
+		DBA_RUN_OR_RETURN(bufrex_msg_get_subset(d->out, i, &subset));
 		/* Copy the decoded attributes into the decoded variables */
-		DBA_RUN_OR_GOTO(fail, bufrex_subset_apply_attributes(subset));
+		DBA_RUN_OR_RETURN(bufrex_subset_apply_attributes(subset));
 	}
+
+	return dba_error_ok();
+}
+
+dba_err bufr_decoder_decode_header(dba_rawmsg in, bufrex_msg out)
+{
+	dba_err err;
+	decoder d = NULL;
+
+	bufrex_msg_reset(out);
+
+	DBA_RUN_OR_GOTO(fail, decoder_create(&d));
+	d->in = in;
+	d->out = out;
+
+	DBA_RUN_OR_GOTO(fail, decode_header(d));
+
+	if (d != NULL)
+		decoder_delete(d);
+	return dba_error_ok();
+
+fail:
+	TRACE(" -> bufr_message_decode_header failed.\n");
+
+	if (d != NULL)
+		decoder_delete(d);
+	return err;
+}
+
+dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out)
+{
+	dba_err err;
+	decoder d = NULL;
+
+	bufrex_msg_reset(out);
+
+	DBA_RUN_OR_GOTO(fail, decoder_create(&d));
+	d->in = in;
+	d->out = out;
+
+	DBA_RUN_OR_GOTO(fail, decode_header(d));
+	DBA_RUN_OR_GOTO(fail, decode_data(d));
 
 	if (d != NULL)
 		decoder_delete(d);
@@ -583,7 +613,7 @@ static dba_err bufr_decode_b_data(decoder d)
 		TRACE("bufr_message_decode_b_data len %d val %s missing %d info-len %d info-desc %s\n", len, str, missing, info->bit_len, info->desc);
 
 		/* Store the variable that we found */
-		if (d->compression)
+		if (d->out->opt.bufr.compression)
 		{
 			uint32_t diffbits;
 			int i;
@@ -599,7 +629,7 @@ static dba_err bufr_decode_b_data(decoder d)
 				goto cleanup;
 			}
 			/* Add the string to all the subsets */
-			for (i = 0; i < d->subsets; ++i)
+			for (i = 0; i < d->out->opt.bufr.subsets; ++i)
 			{
 				bufrex_subset subset;
 				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));
@@ -637,7 +667,7 @@ static dba_err bufr_decode_b_data(decoder d)
 		TRACE("bufr_message_decode_b_data len %d val %d info-len %d info-desc %s\n", info->bit_len, val, info->bit_len, info->desc);
 
 		/* Store the variable that we found */
-		if (d->compression)
+		if (d->out->opt.bufr.compression)
 		{
 			uint32_t diffbits;
 			int i;
@@ -652,7 +682,7 @@ static dba_err bufr_decode_b_data(decoder d)
 				err = dba_error_consistency("When decoding compressed BUFR data, the difference bit length must be 0 (and not %d like in this case) when the base value is missing", diffbits);
 				goto cleanup;
 			}
-			for (i = 0; i < d->subsets; ++i)
+			for (i = 0; i < d->out->opt.bufr.subsets; ++i)
 			{
 				uint32_t diff, newval;
 				/* Access the subset we are working on */
@@ -761,10 +791,10 @@ static dba_err bufr_decode_r_data(decoder d)
 		count = _count;
 
 		/* Insert the repetition count among the parsed variables */
-		if (d->compression)
+		if (d->out->opt.bufr.compression)
 		{
 			int i;
-			for (i = 0; i < d->subsets; ++i)
+			for (i = 0; i < d->out->opt.bufr.subsets; ++i)
 			{
 				bufrex_subset subset;
 				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));

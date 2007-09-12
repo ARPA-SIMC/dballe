@@ -29,6 +29,26 @@
 
 namespace tut_dballe {
 
+bufrex_msg _read_test_msg_header_raw(const char* file, int line, const char* filename, dba_encoding type)
+{
+	inner_ensure(type == BUFR || type == CREX);
+
+	dba_rawmsg rawmsg = _read_rawmsg(file, line, filename, type);
+
+	// Decode the sample message
+	bufrex_msg bufrex;
+	switch (type)
+	{
+		case BUFR: INNER_CHECKED(bufrex_msg_create(BUFREX_BUFR, &bufrex)); break;
+		case CREX: INNER_CHECKED(bufrex_msg_create(BUFREX_CREX, &bufrex)); break;
+		default: inner_ensure(false); break;
+	}
+	INNER_CHECKED(bufrex_msg_decode_header(bufrex, rawmsg));
+	
+	dba_rawmsg_delete(rawmsg);
+	return bufrex;
+}
+
 bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type)
 {
 	inner_ensure(type == BUFR || type == CREX);

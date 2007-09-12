@@ -219,6 +219,16 @@ dba_err bufrex_msg_generate_datadesc(bufrex_msg msg)
 	return dba_error_ok();
 }
 
+dba_err bufrex_msg_decode_header(bufrex_msg msg, dba_rawmsg raw)
+{
+	switch (msg->encoding_type)
+	{
+		case BUFREX_BUFR: return bufr_decoder_decode_header(raw, msg);
+		case BUFREX_CREX: return crex_decoder_decode_header(raw, msg);
+	}
+	return dba_error_consistency("Got invalid encoding type %d", msg->encoding_type);
+}
+
 dba_err bufrex_msg_decode(bufrex_msg msg, dba_rawmsg raw)
 {
 	switch (msg->encoding_type)

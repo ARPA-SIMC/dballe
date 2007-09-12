@@ -54,7 +54,9 @@ typedef struct _dba_file* dba_file;
  *   dba_file_create will attempt to autodetect the file type from its first
  *   byte.
  * @param name
- *   The name of the file to access
+ *   The name of the file to access.  "(stdin)", "(stdout)" and "(stderr)" are
+ *   special file names, that will use the corresponding stream instead of open
+ *   a file.
  * @param mode
  *   The opening mode of the file, as used by fopen.
  * @retval file

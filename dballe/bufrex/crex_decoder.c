@@ -63,8 +63,6 @@ struct _decoder
 	/* Offset of the start of CREX section 4 */
 	int sec4_start;
 
-	/* True if the CREX message uses the check digit feature */
-	int has_check_digit;
 	/* Value of the next expected check digit */
 	int expected_check_digit;
 
@@ -90,27 +88,12 @@ static void decoder_delete(decoder res)
 	free(res);
 }
 
-#if 0
-dba_err crex_decoder_has_check_digit(crex_decoder msg, int* has_check_digit)
-{
-	*has_check_digit = msg->has_check_digit;
-	return dba_error_ok();
-}
-
-dba_err crex_decoder_set_check_digit(crex_decoder msg, int has_check_digit)
-{
-	msg->has_check_digit = has_check_digit;
-	return dba_error_ok();
-}
-#endif
-
 /* Forward declaration of this static function, as we write recursive decoding
  * functions later */
 static dba_err crex_decoder_parse_data_section(decoder d);
 
 #define PARSE_ERROR(...) do { \
-		err = dba_error_parse((d)->in->file == NULL ? "(memory)" : dba_file_name((d)->in->file), (d)->in->offset + ((d)->cur - (d)->in->buf), __VA_ARGS__); \
-		goto fail; \
+		return dba_error_parse((d)->in->file == NULL ? "(memory)" : dba_file_name((d)->in->file), (d)->in->offset + ((d)->cur - (d)->in->buf), __VA_ARGS__); \
 	} while (0)
 
 #define SKIP_SPACES() do { \
@@ -134,17 +117,8 @@ static dba_err crex_decoder_parse_data_section(decoder d);
 			PARSE_ERROR("end of CREX message while looking for " next); \
 	} while (0)
 
-dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
+static dba_err decode_header(decoder d)
 {
-	dba_err err;
-	decoder d = NULL;
-	int i;
-
-	DBA_RUN_OR_RETURN(decoder_create(&d));
-	d->in = in;
-	d->out = out;
-	d->cur = in->buf;
-	
 	/* Read crex section 0 (Indicator section) */
 	CHECK_AVAILABLE_DATA(6, "initial header of CREX message");
 	if (strncmp((const char*)d->cur, "CREX++", 6) != 0)
@@ -163,6 +137,7 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 		PARSE_ERROR("version not found in CREX data description");
 
 	{
+		int i;
 		char edition[11];
 		for (i = 0; i < 10 && d->cur < (d->in->buf + d->in->len) && !isspace(*d->cur); d->cur++, i++)
 			edition[i] = *d->cur;
@@ -172,7 +147,7 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 					&(d->out->opt.crex.master_table),
 					&(d->out->edition),
 					&(d->out->opt.crex.table)) != 3)
-			DBA_FAIL_GOTO(fail, dba_error_consistency("Edition (T%s) is not in format Ttteevv", edition+1));
+			return dba_error_consistency("Edition (T%s) is not in format Ttteevv", edition+1);
 		
 		SKIP_SPACES();
 		TRACE(" -> edition %d\n", strtol(edition + 1, 0, 10));
@@ -184,7 +159,7 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 		PARSE_ERROR("A Table informations not found in CREX data description");
 	{
 		char atable[20];
-		int val;
+		int val, i;
 		for (i = 0, d->cur++; d->cur < (d->in->buf + d->in->len) && i < 10 && isdigit(*d->cur); d->cur++, i++)
 			atable[i] = *d->cur;
 		atable[i] = 0;
@@ -202,19 +177,15 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 				TRACE(" -> category %d, subcategory %d\n", val / 1000, val % 1000);
 				break;
 			default:
-				err = dba_error_consistency("Cannot parse an A table indicator %d digits long", strlen(atable));
-				goto fail;
+				return dba_error_consistency("Cannot parse an A table indicator %d digits long", strlen(atable));
 		}
 	}
 	SKIP_SPACES();
 
-	/* Load tables and set category/subcategory */
-	DBA_RUN_OR_GOTO(fail, bufrex_msg_load_tables(d->out));
-
 	/* data descriptors followed by (E?)\+\+ */
 	CHECK_EOF("data descriptor section");
 
-	d->has_check_digit = 0;
+	d->out->opt.crex.has_check_digit = 0;
 	while (1)
 	{
 		if (*d->cur == 'B' || *d->cur == 'R' || *d->cur == 'C' || *d->cur == 'D')
@@ -222,12 +193,12 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 			dba_varcode var;
 			CHECK_AVAILABLE_DATA(6, "one data descriptor");
 			var = dba_descriptor_code((const char*)d->cur);
-			DBA_RUN_OR_GOTO(fail, bufrex_msg_append_datadesc(d->out, var));
+			DBA_RUN_OR_RETURN(bufrex_msg_append_datadesc(d->out, var));
 			SKIP_DATA_AND_SPACES(6);
 		}
 		else if (*d->cur == 'E')
 		{
-			d->has_check_digit = 1;
+			d->out->opt.crex.has_check_digit = 1;
 			d->expected_check_digit = 1;
 			SKIP_DATA_AND_SPACES(1);
 		}
@@ -243,20 +214,29 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	IFTRACE{
 		bufrex_opcode ops = NULL;
 		TRACE(" -> data descriptor section: ");
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(d->out, &ops));
+		DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(d->out, &ops));
 		bufrex_opcode_print(ops, stderr);
 		bufrex_opcode_delete(&ops);
 		TRACE("\n");
 	}
+
+	return dba_error_ok();
+}
+
+static dba_err decode_data(decoder d)
+{
+	int i;
+	/* Load tables and set category/subcategory */
+	DBA_RUN_OR_RETURN(bufrex_msg_load_tables(d->out));
 
 	/* Decode crex section 2 */
 	CHECK_EOF("data section");
 	d->sec2_start = d->cur - d->in->buf;
 	for (i = 0; ; ++i)
 	{
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(d->out, i, &(d->current_subset)));
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(d->out, &(d->ops)));
-		DBA_RUN_OR_GOTO(fail, crex_decoder_parse_data_section(d));
+		DBA_RUN_OR_RETURN(bufrex_msg_get_subset(d->out, i, &(d->current_subset)));
+		DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(d->out, &(d->ops)));
+		DBA_RUN_OR_RETURN(crex_decoder_parse_data_section(d));
 		SKIP_SPACES();
 		CHECK_EOF("end of data section");
 
@@ -289,6 +269,46 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
 	d->sec4_start = d->cur - d->in->buf;
 	if (strncmp((const char*)d->cur, "7777", 4) != 0)
 		PARSE_ERROR("unexpected data after data section or optional section 3");
+	
+	return dba_error_ok();
+}
+
+dba_err crex_decoder_decode_header(dba_rawmsg in, bufrex_msg out)
+{
+	dba_err err;
+	decoder d = NULL;
+
+	DBA_RUN_OR_GOTO(fail, decoder_create(&d));
+	d->in = in;
+	d->out = out;
+	d->cur = in->buf;
+
+	DBA_RUN_OR_GOTO(fail, decode_header(d));
+
+	if (d != NULL)
+		decoder_delete(d);
+	return dba_error_ok();
+
+fail:
+	TRACE(" -> crex_decoder_parse failed.\n");
+
+	if (d != NULL)
+		decoder_delete(d);
+	return err;
+}
+
+dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out)
+{
+	dba_err err;
+	decoder d = NULL;
+
+	DBA_RUN_OR_GOTO(fail, decoder_create(&d));
+	d->in = in;
+	d->out = out;
+	d->cur = in->buf;
+
+	DBA_RUN_OR_GOTO(fail, decode_header(d));
+	DBA_RUN_OR_GOTO(fail, decode_data(d));
 
 	if (d != NULL)
 		decoder_delete(d);
@@ -311,14 +331,12 @@ static dba_err crex_decoder_parse_value(
 			const unsigned char** d_start,
 			const unsigned char** d_end)
 {
-	dba_err err;
-
 	TRACE("crex_decoder_parse_value(%d, %s): ", len, is_signed ? "signed" : "unsigned");
 
 	/* Check for 2 more because we may have extra sign and check digit */
 	CHECK_AVAILABLE_DATA(len + 2, "end of data descriptor section");
 
-	if (d->has_check_digit)
+	if (d->out->opt.crex.has_check_digit)
 	{
 		if ((*d->cur - '0') != d->expected_check_digit)
 			PARSE_ERROR("check digit mismatch: expected %d, found %d, rest of message: %.*s",
@@ -351,9 +369,6 @@ static dba_err crex_decoder_parse_value(
 	TRACE("%.*s\n", *d_end - *d_start, *d_start);
 
 	return dba_error_ok();
-
-fail:
-	return err;
 }
 
 #if 0
@@ -620,8 +635,6 @@ fail:
  */
 static dba_err crex_decoder_parse_data_section(decoder d)
 {
-	dba_err err;
-
 	/*
 	fprintf(stderr, "read_data: ");
 	bufrex_opcode_print(ops, stderr);
@@ -654,6 +667,7 @@ static dba_err crex_decoder_parse_data_section(decoder d)
 				/* D table opcode: expand the chain */
 				bufrex_opcode op;
 				bufrex_opcode exp;
+				dba_err err;
 
 				/* Pop the first opcode */
 				DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(d->ops), &op));
@@ -683,9 +697,6 @@ static dba_err crex_decoder_parse_data_section(decoder d)
 	}
 
 	return dba_error_ok();
-
-fail:
-	return err;
 }
 
 /* vim:set ts=4 sw=4: */

@@ -237,6 +237,9 @@ public:
 };
 #define ensureBufrexRawEquals(tr, br) tr.ensureEquals(__FILE__, __LINE__, br)
 
+bufrex_msg _read_test_msg_header_raw(const char* file, int line, const char* filename, dba_encoding type);
+#define read_test_msg_header_raw(filename, type) _read_test_msg_raw(__FILE__, __LINE__, filename, type)
+
 bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type);
 #define read_test_msg_raw(filename, type) _read_test_msg_raw(__FILE__, __LINE__, filename, type)
 

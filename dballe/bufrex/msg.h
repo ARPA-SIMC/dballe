@@ -52,7 +52,7 @@ typedef enum _bufrex_type bufrex_type;
 struct _bufrex_opcode;
 
 /** BUFR-specific encoding options */
-struct _bufrex_bufr_options {
+struct _bufrex_bufr_info {
 	/** Common Code table C-1 identifying the originating centre */
 	int centre;
 	/** Centre-specific subcentre code */
@@ -61,13 +61,22 @@ struct _bufrex_bufr_options {
 	int master_table;
 	/** Version number of local tables used to augment the master table */
 	int local_table;
+
+    /** 1 if the BUFR message uses compression, else 0 */
+    int compression;
+	/** 1 if the BUFR message contains an optional section, else 0 */
+	int has_optional;
+    /** Number of subsets present in the message */
+    int subsets;
 };
 /** CREX-specific encoding options */
-struct _bufrex_crex_options {
+struct _bufrex_crex_info {
 	/** Master table (00 for standard WMO FM95 CREX tables) */
 	int master_table;
 	/** Table version number */
 	int table;
+	/** True if the CREX message uses the check digit feature */
+	int has_check_digit;
 };
 
 /**
@@ -80,8 +89,8 @@ struct _bufrex_msg
 
 	/** Encoding-specific information */
 	union {
-		struct _bufrex_crex_options crex;
-		struct _bufrex_bufr_options bufr;
+		struct _bufrex_crex_info crex;
+		struct _bufrex_bufr_info bufr;
 	} opt;
 
 	/** Message category */
@@ -268,6 +277,11 @@ dba_err bufrex_msg_append_datadesc(bufrex_msg msg, dba_varcode varcode);
 dba_err bufrex_msg_generate_datadesc(bufrex_msg msg);
 
 /**
+ * Parse only the header of an encoded message into a bufrex_msg
+ */
+dba_err bufrex_msg_decode_header(bufrex_msg msg, dba_rawmsg raw);
+
+/**
  * Parse an encoded message into a bufrex_msg
  */
 dba_err bufrex_msg_decode(bufrex_msg msg, dba_rawmsg raw);
@@ -291,16 +305,24 @@ dba_err bufrex_msg_encode(bufrex_msg msg, dba_rawmsg* raw);
 dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out);
 
 /**
+ * Decode only the header of a BUFR message
+ * 
+ * @param in
+ *   The ::dba_msgraw with the data to decode
+ * @param out
+ *   The ::bufrex_msg that will hold the decoded header data
+ * @return
+ *   The error indicator for the function.  See @ref error.h
+ */
+dba_err bufr_decoder_decode_header(dba_rawmsg in, bufrex_msg out);
+
+/**
  * Decode a BUFR message
  * 
  * @param in
  *   The ::dba_msgraw with the data to decode
  * @param out
  *   The ::bufrex_msg that will hold the decoded data
- * @retval opt
- *   A newly created bufr_options with informations about the decoding process.
- *   If NULL is passed, nothing will be returned.  If a bufr_options is
- *   returned, it will need to be deleted with bufr_options_delete().
  * @return
  *   The error indicator for the function.  See @ref error.h
  */
@@ -325,14 +347,22 @@ dba_err crex_encoder_encode(bufrex_msg in, dba_rawmsg out);
  *   The ::dba_msgraw with the data to decode
  * @param out
  *   The ::bufrex_msg that will hold the decoded data
- * @retval opt
- *   A newly created bufr_options with informations about the decoding process.
- *   If NULL is passed, nothing will be returned.  If a bufr_options is
- *   returned, it will need to be deleted with bufr_options_delete().
  * @return
  *   The error indicator for the function.  See @ref error.h
  */
 dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out);
+
+/**
+ * Decode only the header of a CREX message
+ * 
+ * @param in
+ *   The ::dba_msgraw with the data to decode
+ * @param out
+ *   The ::bufrex_msg that will hold the decoded data
+ * @return
+ *   The error indicator for the function.  See @ref error.h
+ */
+dba_err crex_decoder_decode_header(dba_rawmsg in, bufrex_msg out);
 
 /**
  * Dump the contents of this bufrex_msg
