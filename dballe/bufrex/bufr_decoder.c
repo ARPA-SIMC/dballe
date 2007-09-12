@@ -232,6 +232,11 @@ static dba_err decode_header(decoder d)
 			d->out->subtype = (int)d->sec1[9];
 
 			d->out->rep_year = (int)d->sec1[12];
+			// Fix the century with a bit of euristics
+			if (d->out->rep_year > 50)
+				d->out->rep_year += 1900;
+			else
+				d->out->rep_year += 2000;
 			d->out->rep_month = (int)d->sec1[13];
 			d->out->rep_day = (int)d->sec1[14];
 			d->out->rep_hour = (int)d->sec1[15];
