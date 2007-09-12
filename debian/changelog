@@ -1,3 +1,10 @@
+dballe (3.6.2-1) unstable; urgency=low
+
+  * New upstream version
+     + Allow to only parse the header of a BUFR and CREX message
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 12 Sep 2007 16:53:09 +0100
+
 dballe (3.6-1) unstable; urgency=low
 
   * New upstream version
