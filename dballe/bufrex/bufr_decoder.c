@@ -275,9 +275,6 @@ static dba_err decode_header(decoder d)
 			d->out->rep_minute = (int)d->sec1[20];
 			// sec in sec1[21]
 			d->out->rep_second = (int)d->sec1[21];
-
-			if ((int)d->sec1[17] != 0)
-				d->out->rep_year = (int)d->sec1[17] * 100 + (d->out->rep_year % 100);
 			break;
 		default:
 			return dba_error_consistency("BUFR edition is %d, but I can only decode 3 and 4", d->out->edition);

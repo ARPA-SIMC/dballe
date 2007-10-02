@@ -473,6 +473,52 @@ void to::test<19>()
 #endif
 }
 
+template<> template<>
+void to::test<20>()
+{
+	TestBufrexMsg test;
+	test.edition = 4;
+	test.cat = 8;
+	test.subcat = 255;
+	test.subsets = 128;
+
+	bufrex_msg msgr = read_test_msg_header_raw("bufr/ed4date.bufr", BUFR);
+	ensureBufrexRawEquals(test, msgr);
+	ensure_equals(msgr->rep_year, 2000);
+	ensure_equals(msgr->rep_month, 1);
+	ensure_equals(msgr->rep_day, 2);
+	ensure_equals(msgr->rep_hour, 7);
+	ensure_equals(msgr->rep_minute, 0);
+	ensure_equals(msgr->rep_second, 0);
+
+	test.subset(0).vars = 26;
+	test.subset(1).vars = 26;
+	test.subset(2).vars = 26;
+	test.subset(128).vars = 26;
+
+	bufrex_msg msg = read_test_msg_raw("bufr/ed4date.bufr", BUFR);
+	ensureBufrexRawEquals(test, msg);
+	ensure_equals(msgr->rep_year, 2000);
+	ensure_equals(msgr->rep_month, 1);
+	ensure_equals(msgr->rep_day, 2);
+	ensure_equals(msgr->rep_hour, 7);
+	ensure_equals(msgr->rep_minute, 0);
+	ensure_equals(msgr->rep_second, 0);
+
+#if 0
+	Still cannot encode BUFR 4
+	bufrex_msg msg1 = reencode_test(msg);
+	ensureBufrexRawEquals(test, msg1);
+#endif
+
+	bufrex_msg_delete(msgr);
+	bufrex_msg_delete(msg);
+#if 0
+	bufrex_msg_delete(msg1);
+#endif
+}
+
+
 }
 
 /* vim:set ts=4 sw=4: */
