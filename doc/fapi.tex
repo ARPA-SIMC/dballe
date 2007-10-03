@@ -126,19 +126,44 @@ A pseudoana entry is uniquely identified by:
 \item \emph{station identifier} (if the station is mobile).
 \end{itemize}
 
+\section {Level or layer}
+
+The vertical coordinate of a value in \dballe{} is described using a level (or
+layer) description; it is defined univocally by a code table (\texttt{leveltype})
+and two numerical values (\texttt{l1} and \texttt{l2}, see \ref{levels}).
+
+\section {Time range}
+
+Another characteristic of a value in \dballe{} is the time period to which the
+datum refers: it can be, for example, a value measured in a specific instant,
+or a cumulated or averaged value over an interval of time.
+
+The time range is defined by a table code (\texttt{pindicator}) and two
+numerical values (\texttt{p1} and \texttt{p2}, see \ref{tranges}).
+
 \section {Values}
 
-The main work of \dballe{} is to store and access \emph{measured values}.  A
-measured value is described by:
+The main work of \dballe{} is to store and access \emph{measured values}.
+
+A measured value is a datum that can be expressed as a floating point (single
+or double precision), integer, character or byte, depending on what value it
+measures.
+
+Every datum is univocally defined by a system of coordinates with 7 dimensions:
 
 \begin{enumerate}
-\item The \emph{local B table descriptor}, which describes the nature of the
+\item The variable \emph{type}, which describes the nature of the
       variable, such as what it measures and the units used for measuring.
-\item The measured \emph{value}.
-\item \emph{pseudoana} information about what generated the value.
+      It is identified by a \emph{local B table descriptor} (see \ref{btable}).
+\item The \emph{date and time} of validity of the datum, be it observed,
+      forecast or estimated.
+\item \emph{pseudoana} information about what generated the value (also
+      defining its x and y coordinates).
 \item The vertical coordinates in space, as a description of the \emph{level layer}.
 \item The \emph{time range} of the measurement.
-\item The type of report (for example: measured value, forecast...).
+\item A \emph{network} or \emph{report} type, defining an homogeneous group of
+      stations with the same kind of measures and management (for example:
+      synop, metar, a specific kind of forecast...).
 \end{enumerate}
 
 You can find a list of all current B table descriptors in \ref{btable}.
@@ -1383,14 +1408,17 @@ c       get the value of this variable
 \chapter{Values for level layer and time range}
 
 \section{Level layer}
+\label{levels}
 
 This table lists all the various value combinations to use as a level layer:
 
 \input{../dballe/msg/ltypes.tex}
 
 \section{Time range}
+\label{tranges}
 
-This table lists all the various value combinations to use as a time range:
+This table lists all the various time range interpretation of \emph{P1} and
+\emph{P2} for every value of \emph{pindicator}:
 
 \begin{description}
 \item [0]
