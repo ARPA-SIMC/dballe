@@ -391,8 +391,6 @@ functions:
   idba_seti(handle, "p1", 0)
   idba_seti(handle, "p2", 0)
   \end{verbatim}
-  {\tt rep\_cod} always needs to be set before a query, to identify which
-  network of pseudoana values is desired.
 \end{description}
 
 \section {API invariants}
@@ -757,7 +755,11 @@ This code introduces two new functions:
 \end{description}
 
 After {\tt idba\_elencamele}, the output record will also contain all the
-pseudoana values available for the station on the network {\tt ana}.
+pseudoana values available for the station.  If {\tt rep\_cod} or {\tt
+rep\_memo} are specified as query parameters, the pseudoana values of that
+network will be used.  Else, {\tt idba\_elencamele} will use all available
+pseudoana values, choosing the one in the network with the highest priority in
+case the same pseudoana value is available on more than one network.
 
 
 \subsection {Querying the values}
