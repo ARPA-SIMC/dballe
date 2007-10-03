@@ -390,10 +390,9 @@ functions:
   idba_seti(handle, "pindicator", 0)
   idba_seti(handle, "p1", 0)
   idba_seti(handle, "p2", 0)
-  idba_seti(handle, "rep_cod", 254)
   \end{verbatim}
-  {\tt rep\_cod} can be modified after calling {\tt idba\_setcontextana} to
-  work with pseudoana values on different reports.
+  {\tt rep\_cod} always needs to be set before a query, to identify which
+  network of pseudoana values is desired.
 \end{description}
 
 \section {API invariants}
