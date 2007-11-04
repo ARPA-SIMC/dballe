@@ -57,6 +57,7 @@ libdballe_msg_la_SOURCES = \
 		bufrex_exporters/pilot.c \
 		bufrex_exporters/temp.c \
 		bufrex_exporters/flight.c \
+		bufrex_exporters/pollution.c \
 		file.c
 libdballe_msg_la_LIBADD = \
 		../core/libdballe-core.la \
