@@ -414,6 +414,21 @@ void to::test<4>()
 	dba_msgs_delete(msgs);
 }
 
+/* Test import of environment BUFR4 messages */
+template<> template<>
+void to::test<5>()
+{
+	dba_msgs msgs = read_test_msg("bufr/ed4.bufr", BUFR);
+	dba_msg src = msgs->msgs[0];
+	dba_msg_datum d;
+	dba_var var;
+
+	gen_ensure((d = dba_msg_find(src, DBA_VAR(0, 15, 192), 1, 0, 0, 0, 0, 0)) != NULL);
+	gen_ensure(dba_var_value(d->var) != NULL);
+
+	dba_msgs_delete(msgs);
+}
+
 /* TODO: add entries for more of the sample messages, taking data from another decoder */
 
 }

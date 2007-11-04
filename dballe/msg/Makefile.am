@@ -47,6 +47,7 @@ libdballe_msg_la_SOURCES = \
 		bufrex_importers/temp.c \
 		bufrex_importers/flight.c \
 		bufrex_importers/sat.c \
+		bufrex_importers/pollution.c \
 		bufrex_exporters/exporters.c \
 		bufrex_exporters/generic.c \
 		bufrex_exporters/synop.c \

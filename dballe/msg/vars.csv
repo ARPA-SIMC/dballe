@@ -24,6 +24,7 @@ MONTH,			int,	B04002,		257,  0, 0,		0,	0, 0, Month of the observation
 DAY,			int,	B04003,		257,  0, 0,		0,	0, 0, Day of the observation
 HOUR,			int,	B04004,		257,  0, 0,		0,	0, 0, Hour of the observation
 MINUTE,			int,	B04005,		257,  0, 0,		0,	0, 0, Minute of the observation
+SECOND,			int,	B04006,		257,  0, 0,		0,	0, 0, Second of the observation
 LATITUDE,		num,	B05001,		257,  0, 0,		0,      0, 0, Latitude of the station
 LONGITUDE,		num,	B06001,		257,  0, 0,		0,      0, 0, Longiture of the station
 HEIGHT,			int,	B07001,		257,  0, 0,		0,      0, 0, Height of station

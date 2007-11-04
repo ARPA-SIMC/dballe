@@ -86,7 +86,8 @@ enum _dba_msg_type {
 	MSG_SHIP,		/**< Ship measured data */
 	MSG_BUOY,		/**< Buoy measured data */
 	MSG_METAR,		/**< Metar data */
-	MSG_SAT			/**< Satellite data */
+	MSG_SAT,		/**< Satellite data */
+	MSG_POLLUTION	/**< Pollution data */
 };
 /** @copydoc _dba_msg_type */
 typedef enum _dba_msg_type dba_msg_type;
