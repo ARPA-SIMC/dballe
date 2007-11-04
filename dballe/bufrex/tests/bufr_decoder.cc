@@ -505,17 +505,12 @@ void to::test<20>()
 	ensure_equals(msgr->rep_minute, 0);
 	ensure_equals(msgr->rep_second, 0);
 
-#if 0
-	Still cannot encode BUFR 4
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
-#endif
 
 	bufrex_msg_delete(msgr);
 	bufrex_msg_delete(msg);
-#if 0
 	bufrex_msg_delete(msg1);
-#endif
 }
 
 

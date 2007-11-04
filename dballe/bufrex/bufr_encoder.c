@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -244,27 +244,8 @@ static dba_err bufr_message_append_24bit(bufr_message msg, unsigned int val)
 
 static dba_err encoder_encode_data_section(encoder e);
 
-dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
+static dba_err encoder_encode_sec1ed3(encoder e)
 {
-	dba_err err = DBA_OK;
-	encoder e = NULL;
-	bufrex_opcode ops = NULL;
-	bufrex_opcode cur;
-	int dslen;
-	int i;
-
-	DBA_RUN_OR_RETURN(encoder_create(&e));
-	e->in = in;
-	e->out = out;
-
-
-	/* Encode bufr section 0 (Indicator section) */
-	DBA_RUN_OR_RETURN(encoder_raw_append(e, "BUFR\0\0\0\x03", 8));
-
-	TRACE("sec0 ends at %d\n", e->out->len);
-	e->sec1_start = e->out->len;
-
-
 	/* Encode bufr section 1 (Identification section) */
 	/* Length of section */
 	DBA_RUN_OR_RETURN(encoder_add_bits(e, 18, 24));
@@ -301,6 +282,86 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_minute));
 	/* Century */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_year / 100));
+
+	return dba_error_ok();
+}
+
+static dba_err encoder_encode_sec1ed4(encoder e)
+{
+	/* Encode bufr section 1 (Identification section) */
+	/* Length of section */
+	DBA_RUN_OR_RETURN(encoder_add_bits(e, 22, 24));
+	/* Master table number */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	/* Originating/generating centre (Common Code tableC-1) */
+	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->opt.bufr.centre));
+	/* Originating/generating sub-centre (defined by Originating/generating centre) */
+	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->opt.bufr.subcentre));
+	/* Update sequence number (zero for original BUFR messages; incremented for updates) */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	/* Bit 1= 0 No optional section = 1 Optional section included Bits 2 ­ 8 set to zero (reserved) */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+
+	/* Data category (BUFR Table A) */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->type));
+	/* International data sub-category */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->subtype));
+ 	/* Local subcategory (defined by local ADP centres) */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->localsubtype));
+	/* Version number of master tables used (currently 9 for WMO FM 94 BUFR tables) */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.master_table));
+	/* Version number of local tables used to augment the master table in use */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.local_table));
+
+	/* Year of century */
+	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->rep_year));
+	/* Month */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_month));
+	/* Day */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_day));
+	/* Hour */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_hour));
+	/* Minute */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_minute));
+	/* Second */
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_second));
+
+	return dba_error_ok();
+}
+
+dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
+{
+	dba_err err = DBA_OK;
+	encoder e = NULL;
+	bufrex_opcode ops = NULL;
+	bufrex_opcode cur;
+	int dslen;
+	int i;
+
+	DBA_RUN_OR_RETURN(encoder_create(&e));
+	e->in = in;
+	e->out = out;
+
+
+	/* Encode bufr section 0 (Indicator section) */
+	DBA_RUN_OR_RETURN(encoder_raw_append(e, "BUFR\0\0\0", 7));
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->edition));
+
+	TRACE("sec0 ends at %d\n", e->out->len);
+	e->sec1_start = e->out->len;
+
+	switch (e->in->edition)
+	{
+		case 3:
+			DBA_RUN_OR_RETURN(encoder_encode_sec1ed3(e));
+			break;
+		case 4:
+			DBA_RUN_OR_RETURN(encoder_encode_sec1ed4(e));
+			break;
+		default:
+			break;
+	}
+
 
 	TRACE("sec1 ends at %d\n", e->out->len);
 	e->sec2_start = e->out->len;

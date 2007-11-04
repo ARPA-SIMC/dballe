@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -194,6 +194,70 @@ static dba_err bufr_decode_data_section(decoder d);
 		TRACE(next " starts at %d and contains at least %d bytes\n", (int)(start - d->in->buf), datalen); \
 	} while (0)
 
+static dba_err decode_sec1ed3(decoder d)
+{
+	// TODO: misses master table number in sec1[3]
+	// TODO: misses update sequence number sec1[7]
+	d->out->opt.bufr.has_optional = (d->sec1[7] & 0x80) ? 1 : 0;
+	// subcentre in sec1[4]
+	d->out->opt.bufr.subcentre = (int)d->sec1[4];
+	// centre in sec1[5]
+	d->out->opt.bufr.centre = (int)d->sec1[5];
+	d->out->opt.bufr.master_table = d->sec1[10];
+	d->out->opt.bufr.local_table = d->sec1[11];
+	d->out->type = (int)d->sec1[8];
+	d->out->subtype = (int)d->sec1[9];
+
+	d->out->rep_year = (int)d->sec1[12];
+	// Fix the century with a bit of euristics
+	if (d->out->rep_year > 50)
+		d->out->rep_year += 1900;
+	else
+		d->out->rep_year += 2000;
+	d->out->rep_month = (int)d->sec1[13];
+	d->out->rep_day = (int)d->sec1[14];
+	d->out->rep_hour = (int)d->sec1[15];
+	d->out->rep_minute = (int)d->sec1[16];
+	if ((int)d->sec1[17] != 0)
+		d->out->rep_year = (int)d->sec1[17] * 100 + (d->out->rep_year % 100);
+	return dba_error_ok();
+}
+
+static dba_err decode_sec1ed4(decoder d)
+{
+	// TODO: misses master table number in sec1[3]
+	// TODO: misses update sequence number sec1[8]
+	// centre in sec1[4-5]
+	d->out->opt.bufr.centre = readNumber(d->sec1+4, 2);
+	// subcentre in sec1[6-7]
+	d->out->opt.bufr.subcentre = readNumber(d->sec1+6, 2);
+	// has_optional in sec1[9]
+	d->out->opt.bufr.has_optional = (d->sec1[9] & 0x80) ? 1 : 0;
+	// category in sec1[10]
+	d->out->type = (int)d->sec1[10];
+	// international data sub-category in sec1[11]
+	d->out->subtype = (int)d->sec1[11];
+	// local data sub-category in sec1[12]
+	d->out->localsubtype = (int)d->sec1[12];
+	// version number of master table in sec1[13]
+	d->out->opt.bufr.master_table = d->sec1[13];
+	// version number of local table in sec1[14]
+	d->out->opt.bufr.local_table = d->sec1[14];
+	// year in sec1[15-16]
+	d->out->rep_year = readNumber(d->sec1 + 15, 2);
+	// month in sec1[17]
+	d->out->rep_month = (int)d->sec1[17];
+	// day in sec1[18]
+	d->out->rep_day = (int)d->sec1[18];
+	// hour in sec1[19]
+	d->out->rep_hour = (int)d->sec1[19];
+	// minute in sec1[20]
+	d->out->rep_minute = (int)d->sec1[20];
+	// sec in sec1[21]
+	d->out->rep_second = (int)d->sec1[21];
+	return dba_error_ok();
+}
+
 static dba_err decode_header(decoder d)
 {
 	int i;
@@ -218,64 +282,8 @@ static dba_err decode_header(decoder d)
 
 	switch (d->out->edition)
 	{
-		case 3:
-			// TODO: misses master table number in sec1[3]
-			// TODO: misses update sequence number sec1[7]
-			d->out->opt.bufr.has_optional = (d->sec1[7] & 0x80) ? 1 : 0;
-			// subcentre in sec1[4]
-			d->out->opt.bufr.subcentre = (int)d->sec1[4];
-			// centre in sec1[5]
-			d->out->opt.bufr.centre = (int)d->sec1[5];
-			d->out->opt.bufr.master_table = d->sec1[10];
-			d->out->opt.bufr.local_table = d->sec1[11];
-			d->out->type = (int)d->sec1[8];
-			d->out->subtype = (int)d->sec1[9];
-
-			d->out->rep_year = (int)d->sec1[12];
-			// Fix the century with a bit of euristics
-			if (d->out->rep_year > 50)
-				d->out->rep_year += 1900;
-			else
-				d->out->rep_year += 2000;
-			d->out->rep_month = (int)d->sec1[13];
-			d->out->rep_day = (int)d->sec1[14];
-			d->out->rep_hour = (int)d->sec1[15];
-			d->out->rep_minute = (int)d->sec1[16];
-			if ((int)d->sec1[17] != 0)
-				d->out->rep_year = (int)d->sec1[17] * 100 + (d->out->rep_year % 100);
-			break;
-		case 4:
-			// TODO: misses master table number in sec1[3]
-			// TODO: misses update sequence number sec1[8]
-			// centre in sec1[4-5]
-			d->out->opt.bufr.centre = readNumber(d->sec1+4, 2);
-			// subcentre in sec1[6-7]
-			d->out->opt.bufr.subcentre = readNumber(d->sec1+6, 2);
-			// has_optional in sec1[9]
-			d->out->opt.bufr.has_optional = (d->sec1[9] & 0x80) ? 1 : 0;
-			// category in sec1[10]
-			d->out->type = (int)d->sec1[10];
-			// international data sub-category in sec1[11]
-			d->out->subtype = (int)d->sec1[11];
-			// local data sub-category in sec1[12]
-			d->out->localsubtype = (int)d->sec1[12];
-			// version number of master table in sec1[13]
-			d->out->opt.bufr.master_table = d->sec1[13];
-			// version number of local table in sec1[14]
-			d->out->opt.bufr.local_table = d->sec1[14];
-			// year in sec1[15-16]
-			d->out->rep_year = readNumber(d->sec1 + 15, 2);
-			// month in sec1[17]
-			d->out->rep_month = (int)d->sec1[17];
-			// day in sec1[18]
-			d->out->rep_day = (int)d->sec1[18];
-			// hour in sec1[19]
-			d->out->rep_hour = (int)d->sec1[19];
-			// minute in sec1[20]
-			d->out->rep_minute = (int)d->sec1[20];
-			// sec in sec1[21]
-			d->out->rep_second = (int)d->sec1[21];
-			break;
+		case 3: DBA_RUN_OR_RETURN(decode_sec1ed3(d)); break;
+		case 4: DBA_RUN_OR_RETURN(decode_sec1ed4(d)); break;
 		default:
 			return dba_error_consistency("BUFR edition is %d, but I can only decode 3 and 4", d->out->edition);
 	}
