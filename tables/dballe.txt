@@ -23,6 +23,7 @@
  004003 DAY                                                              DAY                        0            0   6 DAY                       0          2
  004004 HOUR                                                             HOUR                       0            0   5 HOUR                      0          2
  004005 MINUTE                                                           MINUTE                     0            0   6 MINUTE                    0          2
+ 004006 SECOND                                                           SECOND                     0            0   6 SECOND                    0          2
  004192 [SIM] Time range type                                            NUMERIC                    0            0  10 NUMERIC                   0          4
  004193 [SIM] Time range P1                                              NUMERIC                    0   -536870912  31 NUMERIC                   0         10
  004194 [SIM] Time range P2                                              NUMERIC                    0   -536870912  31 NUMERIC                   0         10
