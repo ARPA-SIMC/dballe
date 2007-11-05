@@ -38,6 +38,7 @@ AC_ARG_ENABLE(swig,
 AM_CONDITIONAL(DO_SWIG, test x$swig = xtrue)
 
 AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
+AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
 
 dnl To use subdirs
 AC_PROG_MAKE_SET
@@ -121,6 +122,7 @@ CFLAGS="-Wall $CFLAGS"
 AM_CONDITIONAL([DO_FORTRAN], [test x$fortran = xtrue])
 AM_CONDITIONAL([DO_DOCS], [test x$docs = xtrue])
 AM_CONDITIONAL([HAVE_LATEX2HTML], [test x$have_latex2html = xyes])
+AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
 AM_CONDITIONAL([DB_TESTS], [test x"$enable_db_tests" = x"yes"])
 
 AC_CONFIG_FILES([
@@ -162,6 +164,7 @@ AC_MSG_NOTICE([
 $PACKAGE_NAME-$PACKAGE_VERSION configuration:
 AS_HELP_STRING([documentation:], [$docs])
 AS_HELP_STRING([latex2html:], [$have_latex2html])
+AS_HELP_STRING([rst2html:], [$have_rst2html])
 AS_HELP_STRING([db_tests:], [$enable_db_tests])
 ===================================================])
 

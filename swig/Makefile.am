@@ -7,7 +7,11 @@ if DB_TESTS
 TESTS += test-db.py test-volnd.py run-unittests
 endif
 
-doc_DATA = python-dballe.rst python-dballe.html
+doc_DATA = python-dballe.rst
+
+if HAVE_RST2HTML
+doc_DATA += python-dballe.html
+endif
 
 pyexec_LTLIBRARIES = _dballe.la
 
