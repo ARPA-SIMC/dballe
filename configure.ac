@@ -61,6 +61,12 @@ dnl AM_ENABLE_STATIC
 dnl AM_DISABLE_SHARED
 AM_PROG_LIBTOOL
 
+AC_CHECK_PROG(have_gperf, gperf, true)
+if test x$have_gperf != xtrue
+then
+	AC_MSG_ERROR([gperf was not found])
+fi
+
 dnl Check if std::vector has a std::vector::data method
 AC_CACHE_CHECK(whether the compiler has std::vector::data (),
 	ac_cv_cxx_have_vector_data,
