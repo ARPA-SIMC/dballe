@@ -419,6 +419,9 @@ static inline int normalon(int lon)
 	return ((lon + 18000000) % 36000000) - 18000000;
 }
 
+/*
+ * Create the WHERE part of the query
+ */
 static dba_err make_where(dba_db_cursor cur, dba_record query)
 {
 #define ADD_INT(field, key, sql, needed) DBA_RUN_OR_RETURN(add_int(cur, query, field, key, sql, needed))
@@ -680,6 +683,83 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 #undef ADD_INT
 }
 
+static dba_err resolve_dependencies(dba_db_cursor cur)
+{
+	if (cur->wanted & DBA_DB_WANT_COORDS)
+	{
+		cur->from_wanted |= DBA_DB_FROM_PA;
+	}
+	if (cur->wanted & DBA_DB_WANT_IDENT)
+	{
+		cur->from_wanted |= DBA_DB_FROM_PA;
+	}
+	if (cur->wanted & DBA_DB_WANT_LEVEL)
+	{
+		cur->from_wanted |= DBA_DB_FROM_C;
+	}
+	if (cur->wanted & DBA_DB_WANT_TIMERANGE)
+	{
+		cur->from_wanted |= DBA_DB_FROM_C;
+	}
+	if (cur->wanted & DBA_DB_WANT_DATETIME)
+	{
+		cur->from_wanted |= DBA_DB_FROM_C;
+	}
+	if (cur->wanted & DBA_DB_WANT_REPCOD)
+	{
+		cur->from_wanted |= DBA_DB_FROM_C;
+	}
+	if (cur->wanted & DBA_DB_WANT_VAR_NAME)
+	{
+		cur->from_wanted |= DBA_DB_FROM_D;
+	}
+	if (cur->wanted & DBA_DB_WANT_VAR_VALUE)
+	{
+		cur->from_wanted |= DBA_DB_FROM_D;
+	}
+
+	/* If querybest is used, then we need ri.prio here so that GROUP BY can use it */
+	if (cur->modifiers & DBA_DB_MODIFIER_BEST)
+	{
+		cur->from_wanted |= DBA_DB_FROM_RI;
+	}
+
+	/* For these parameters we can try to be opportunistic and avoid extra joins */
+	if (cur->wanted & DBA_DB_WANT_ANA_ID)
+	{
+		if (!(cur->from_wanted & DBA_DB_FROM_PA) && cur->from_wanted & DBA_DB_FROM_C) {
+		} else {
+			cur->from_wanted |= DBA_DB_FROM_PA;
+		}
+	}
+
+	if (cur->wanted & DBA_DB_WANT_CONTEXT_ID)
+	{
+		if (!(cur->from_wanted & DBA_DB_FROM_C) && cur->from_wanted & DBA_DB_FROM_D) {
+		} else {
+			cur->from_wanted |= DBA_DB_FROM_C;
+		}
+	}
+
+	/* Enforce join dependencies */
+	if (cur->from_wanted & (DBA_DB_FROM_DBLO | DBA_DB_FROM_DSTA | DBA_DB_FROM_DANA))
+		cur->from_wanted |= DBA_DB_FROM_CBS;
+	if (cur->from_wanted & (DBA_DB_FROM_DDF))
+		cur->from_wanted |= DBA_DB_FROM_C;
+	if (cur->from_wanted & (DBA_DB_FROM_ADF))
+		cur->from_wanted |= (DBA_DB_FROM_C | DBA_DB_FROM_D);
+	if (cur->from_wanted & DBA_DB_FROM_PA && cur->from_wanted & DBA_DB_FROM_D)
+		cur->from_wanted |= DBA_DB_FROM_C;
+	if (cur->from_wanted & (DBA_DB_FROM_CBS))
+		cur->from_wanted |= DBA_DB_FROM_C;
+
+	/* Always join with context if we need to weed out the extra ana data */
+	if (cur->modifiers & DBA_DB_MODIFIER_NOANAEXTRA)
+		cur->from_wanted |= DBA_DB_FROM_C;
+
+	return dba_error_ok();
+}
+
 static dba_err add_other_froms(dba_db_cursor cur, unsigned int base)
 {
 	/* Remove the base table from the things to add */
@@ -837,75 +917,8 @@ static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted
 	/* Prepare WHERE part and see what needs to be available in the FROM part */
 	DBA_RUN_OR_RETURN(make_where(cur, query));
 
-	if (cur->wanted & DBA_DB_WANT_COORDS)
-	{
-		cur->from_wanted |= DBA_DB_FROM_PA;
-	}
-	if (cur->wanted & DBA_DB_WANT_IDENT)
-	{
-		cur->from_wanted |= DBA_DB_FROM_PA;
-	}
-	if (cur->wanted & DBA_DB_WANT_LEVEL)
-	{
-		cur->from_wanted |= DBA_DB_FROM_C;
-	}
-	if (cur->wanted & DBA_DB_WANT_TIMERANGE)
-	{
-		cur->from_wanted |= DBA_DB_FROM_C;
-	}
-	if (cur->wanted & DBA_DB_WANT_DATETIME)
-	{
-		cur->from_wanted |= DBA_DB_FROM_C;
-	}
-	if (cur->wanted & DBA_DB_WANT_REPCOD)
-	{
-		cur->from_wanted |= DBA_DB_FROM_C;
-	}
-	if (cur->wanted & DBA_DB_WANT_VAR_NAME)
-	{
-		cur->from_wanted |= DBA_DB_FROM_D;
-	}
-	if (cur->wanted & DBA_DB_WANT_VAR_VALUE)
-	{
-		cur->from_wanted |= DBA_DB_FROM_D;
-	}
-
-	/* If querybest is used, then we need ri.prio here so that GROUP BY can use it */
-	if (cur->modifiers & DBA_DB_MODIFIER_BEST)
-	{
-		cur->from_wanted |= DBA_DB_FROM_RI;
-	}
-
-	/* For these parameters we can try to be opportunistic and avoid extra joins */
-	if (cur->wanted & DBA_DB_WANT_ANA_ID)
-	{
-		if (!(cur->from_wanted & DBA_DB_FROM_PA) && cur->from_wanted & DBA_DB_FROM_C) {
-		} else {
-			cur->from_wanted |= DBA_DB_FROM_PA;
-		}
-	}
-
-	if (cur->wanted & DBA_DB_WANT_CONTEXT_ID)
-	{
-		if (!(cur->from_wanted & DBA_DB_FROM_C) && cur->from_wanted & DBA_DB_FROM_D) {
-		} else {
-			cur->from_wanted |= DBA_DB_FROM_C;
-		}
-	}
-
-	/* Enforce join dependencies */
-	if (cur->from_wanted & (DBA_DB_FROM_DBLO | DBA_DB_FROM_DSTA | DBA_DB_FROM_DANA))
-		cur->from_wanted |= DBA_DB_FROM_CBS;
-	if (cur->from_wanted & (DBA_DB_FROM_DDF))
-		cur->from_wanted |= DBA_DB_FROM_C;
-	if (cur->from_wanted & (DBA_DB_FROM_ADF))
-		cur->from_wanted |= (DBA_DB_FROM_C | DBA_DB_FROM_D);
-	if (cur->from_wanted & DBA_DB_FROM_PA && cur->from_wanted & DBA_DB_FROM_D)
-		cur->from_wanted |= DBA_DB_FROM_C;
-
-	/* Always join with context if we need to weed out the extra ana data */
-	if (cur->modifiers & DBA_DB_MODIFIER_NOANAEXTRA)
-		cur->from_wanted |= DBA_DB_FROM_C;
+	/* Solve dependencies among the various parts of the query */
+	DBA_RUN_OR_RETURN(resolve_dependencies(cur));
 
 	/* Ignore anagraphical context unless explicitly requested */
 	if (cur->from_wanted & DBA_DB_FROM_C && !cur->accept_from_ana_context)
@@ -1026,19 +1039,8 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	 * more opportunistic extra values (see the end of make_select) */
 	DBA_RUN_OR_RETURN(make_select(cur));
 
-	/* Enforce join dependencies */
-	if (cur->from_wanted & (DBA_DB_FROM_DBLO | DBA_DB_FROM_DSTA | DBA_DB_FROM_DANA))
-		cur->from_wanted |= DBA_DB_FROM_CBS;
-	if (cur->from_wanted & (DBA_DB_FROM_DDF))
-		cur->from_wanted |= DBA_DB_FROM_C;
-	if (cur->from_wanted & (DBA_DB_FROM_ADF))
-		cur->from_wanted |= (DBA_DB_FROM_C | DBA_DB_FROM_D);
-	if (cur->from_wanted & DBA_DB_FROM_PA && cur->from_wanted & DBA_DB_FROM_D)
-		cur->from_wanted |= DBA_DB_FROM_C;
-
-	/* Always join with context if we need to weed out the extra ana data */
-	if (cur->modifiers & DBA_DB_MODIFIER_NOANAEXTRA)
-		cur->from_wanted |= DBA_DB_FROM_C;
+	/* Solve dependencies among the various parts of the query */
+	DBA_RUN_OR_RETURN(resolve_dependencies(cur));
 
 	/* Ignore anagraphical context unless explicitly requested */
 	if (cur->from_wanted & DBA_DB_FROM_C && !cur->accept_from_ana_context)
@@ -1119,12 +1121,14 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 
 	/* Append LIMIT if requested */
 	if (limit != -1)
+	{
 		if (cur->db->server_type == ORACLE)
 		{
 			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, " AND rownum <= %d", limit));
 		} else {
 			DBA_RUN_OR_RETURN(dba_querybuf_appendf(cur->query, " LIMIT %d", limit));
 		}
+	}
 
 	TRACE("Performing query: %s\n", dba_querybuf_get(cur->query));
 

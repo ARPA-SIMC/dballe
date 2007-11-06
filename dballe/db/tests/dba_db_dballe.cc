@@ -1287,6 +1287,34 @@ void to::test<13>()
 	gen_ensure_equals(count, 2);
 }
 
+/* This query caused problems */
+template<> template<>
+void to::test<14>()
+{
+	reset_database();
+
+	dba_record_clear(query);
+	CHECKED(dba_record_key_setc(query, DBA_KEY_ANA_FILTER, "B07001>1"));
+
+	int count, has_data;
+	dba_db_cursor cur;
+
+	/* Allocate a new cursor */
+	CHECKED(dba_db_cursor_create(db, &cur));
+
+	/* Perform the query, limited to level values */
+	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_ANA_ID, 0));
+
+	gen_ensure_equals(dba_db_cursor_remaining(cur), 2);
+	CHECKED(dba_db_cursor_next(cur, &has_data));
+	gen_ensure(has_data);
+	CHECKED(dba_db_cursor_next(cur, &has_data));
+	gen_ensure(has_data);
+	CHECKED(dba_db_cursor_next(cur, &has_data));
+	gen_ensure(!has_data);
+	dba_db_cursor_delete(cur);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
