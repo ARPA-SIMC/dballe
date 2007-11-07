@@ -422,9 +422,12 @@ void to::test<5>()
 	dba_msg src = msgs->msgs[0];
 	dba_msg_datum d;
 	dba_var var;
+	double val;
 
-	gen_ensure((d = dba_msg_find(src, DBA_VAR(0, 15, 192), 1, 0, 0, 0, 0, 0)) != NULL);
+	gen_ensure((d = dba_msg_find(src, DBA_VAR(0, 15, 193), 105, 3, 0, 3, -3600, 0)) != NULL);
 	gen_ensure(dba_var_value(d->var) != NULL);
+	CHECKED(dba_var_enqd(d->var, &val));
+	gen_ensure_equals(val, 2700000e-14);
 
 	dba_msgs_delete(msgs);
 }
