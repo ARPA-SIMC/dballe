@@ -225,7 +225,7 @@ dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs)
 				break;
 			case 3: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_sat(msg, raw, raw->subsets[i])); break;
 			case 4: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_flight(msg, raw, raw->subsets[i])); break;
-			case 13: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_pollution(msg, raw, raw->subsets[i])); break;
+			case 8: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_pollution(msg, raw, raw->subsets[i])); break;
 			default: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_generic(msg, raw, raw->subsets[i])); break;
 		}
 
