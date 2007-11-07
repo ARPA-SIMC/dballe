@@ -28,6 +28,8 @@
 dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
 	int i;
+	// Above ground is ltype = 105, l1 = metri (se undef, cosa metto? Chiedo a
+	// Stortini per un default?)
 	int ltype = -1, l1 = -1;
 	int ptype = -1, p1 = -1, p2 = -1;
 	int valtype = 0;
