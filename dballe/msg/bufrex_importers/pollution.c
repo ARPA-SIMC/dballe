@@ -34,6 +34,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 	int l1 = -1;
 	int p1 = -1;
 	int valtype = 0;
+	int curdecscale = 0;
 	int decscale = 0;
 	double value = 0;
 	dba_var attr_conf = NULL;
@@ -253,9 +254,18 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			case DBA_VAR(0,  8,  90):
 				if (dba_var_value(var) == NULL)
 					/* If the value is missing, we reset decimal scaling */
-					decscale = 0;
-				else
-					DBA_RUN_OR_RETURN(dba_var_enqi(var, &decscale));
+					curdecscale = 0;
+				else {
+					DBA_RUN_OR_RETURN(dba_var_enqi(var, &curdecscale));
+					
+					/*
+					 * Sadly, someone seems to have decided that "all 8 bits to
+					 * 1" missing data is the same as encoding -127, so they
+					 * encode "all 8 bits to 0 with a reference value of -127"
+					 */
+					if (curdecscale == -127)
+						curdecscale = 0;
+				}
 				break;
 			/*
 			 * This is the most suitable parameter (that I can find) in BUFR to
@@ -270,6 +280,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 				if (dba_var_value(var) == NULL)
 					return dba_error_consistency("message cannot be imported because the constituent type is missing");
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &value));
+				decscale = curdecscale;
 				break;
 			/*
 			 * Parameter to give a qualitative measure of the quality of the
