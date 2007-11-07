@@ -173,6 +173,12 @@ static void relax_bufrex_msg(bufrex_msg b)
 					// Generating centre and application do change
 					dba_var_seti(b->subsets[i]->vars[j], 1);
 					break;
+				case DBA_VAR(0, 7,  32):
+					// Some pollution stations don't transmit the sensor
+					// height, but when it happens we use a default
+					if (b->type == 8)
+						dba_var_unset(b->subsets[i]->vars[j]);
+					break;
 			}
 
 			if (dba_var_value(b->subsets[i]->vars[j]) == NULL)
@@ -220,7 +226,7 @@ void to::test<2>()
 		"bufr/obs4-145.4.bufr", 
 		"bufr/test-airep1.bufr",
 		"bufr/test-temp1.bufr", 
-//		"bufr/ed4.bufr", 
+		"bufr/ed4.bufr", 
 		NULL
 	};
 
@@ -256,7 +262,7 @@ void to::test<2>()
 		b2->opt.bufr.master_table = b1->opt.bufr.master_table;
 		b2->opt.bufr.local_table = b1->opt.bufr.local_table;
 		CHECKED(bufrex_msg_load_tables(b2));
-		CHECKED(bufrex_msg_from_dba_msg(b2, msgs1->msgs[0]));
+		CHECKED(bufrex_msg_from_dba_msgs(b2, msgs1));
 
 		// FIXME: relax checks a bit
 		relax_bufrex_msg(b1);

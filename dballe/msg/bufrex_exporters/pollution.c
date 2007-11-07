@@ -19,7 +19,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#define _GNU_SOURCE
 #include "exporters.h"
+#include <math.h>
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
@@ -41,14 +43,9 @@ struct _bufrex_exporter bufrex_exporter_pollution_8_102 = {
 		DBA_VAR(0,  1, 215),
 		DBA_VAR(0,  1, 216),
 		DBA_VAR(0,  1, 217),
-		DBA_VAR(0,  4,   1),
-		DBA_VAR(0,  4,   2),
-		DBA_VAR(0,  4,   3),
-		DBA_VAR(0,  4,   4),
-		DBA_VAR(0,  4,   5),
-		DBA_VAR(0,  4,   6),
-		DBA_VAR(0,  5,   1),
-		DBA_VAR(0,  6,   1),
+		DBA_VAR(3,  1,  11),
+		DBA_VAR(3,  1,  13),
+		DBA_VAR(3,  1,  21),
 		DBA_VAR(0,  7,  30),
 		DBA_VAR(0,  7,  32),
 		DBA_VAR(0,  8,  21),
@@ -112,6 +109,9 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 	dba_var attr_pmc = NULL;
 	int l1 = -1, p1 = -1;
 	int constituent = -1;
+	int decscale = 0;
+	double value;
+	int scaled = 0;
 
 	dba_msg_print(src, stderr);
 
@@ -152,7 +152,38 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 	}
 
 	// Compute the decimal scaling factor
+	DBA_RUN_OR_RETURN(dba_var_enqd(var, &value));
 
+	if (value < 0)
+		// Negative values are meaningless
+		scaled = 0;
+#if 0
+	else if (value < dSMALLNUM)
+	{
+		// Prevent divide by zero
+		scaled = 0;
+	}
+#endif
+	else
+	{
+		static const int bits = 24;
+		static const int maxscale = 126, minscale = -127;
+		static const double numerator = (double)((1 << bits) - 2);
+		int factor = (int)floor(log10(numerator/value));
+
+		if (factor > maxscale)
+	    	// Factor is too big: collapse to 0
+			scaled = 0;
+		else if (factor < minscale)
+			// Factor is too small
+			return dba_error_consistency("scale factor is too small (%d): cannot encode because value would not fit in", factor);
+		else
+		{
+			decscale = -factor;
+			//fprintf(stderr, "scale: %d, unscaled: %e, scaled: %f\n", decscale, value, rint(value * exp10(factor)));
+			scaled = (int)rint(value * exp10(factor));
+		}
+	}
 
 	for (i = 0; i < sizeof(tpl)/sizeof(struct template); i++)
 	{
@@ -164,9 +195,11 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 			case 19: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, constituent)); break;
 			case 20: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_cas)); break;
 			case 21: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_pmc)); break;
-			case 22: DBA_VAR(0,  8,  90); break;
-			case 23: DBA_VAR(0, 15,  23); break;
-			case 24: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code)); break;
+			case 22: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, decscale)); break;
+			case 23: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, scaled)); break;
+			/* Here it should have been bufrex_subset_store_variable_undef, but
+			 * instead someone decided that we have to store the integer value -127 instead */
+			case 24: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, -127)); break;
 			case 25: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_conf)); break;
 			default: {
 				dba_msg_datum d = dba_msg_find_by_id(src, tpl[i].var);
