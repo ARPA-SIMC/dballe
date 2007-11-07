@@ -52,6 +52,7 @@
  008001 VERTICAL SOUNDING SIGNIFICANCE                                   FLAG TABLE 8001            0            0   7 FLAG TABLE 8001           0          3
  008004 PHASE OF AIRCRAFT FLIGHT                                         CODE TABLE 8004            0            0   3 CODE TABLE 8004           0          1
  008021 TIME SIGNIFICANCE                                                CODE TABLE 8021            0            0   5 CODE TABLE 8021           0          2
+ 008044 (VAL) CAS REGISTRY NUMBER                                        CCITTIA5                   0            0  88 CHARACTER                 0         11 
  010003 GEOPOTENTIAL                                                     M**2/S**2                  0        -4000  24 M**2/S**2                 0          7
  010004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
  010051 PRESSURE REDUCED TO MEAN SEA LEVEL                               PA                        -1            0  14 PA                       -1          5
