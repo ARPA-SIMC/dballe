@@ -168,12 +168,14 @@ static dba_err decode_header(decoder d)
 		{
 			case 3:
 				d->out->type = val;
-				d->out->subtype = 0;
+				d->out->subtype = 255;
+				d->out->localsubtype = 0;
 				TRACE(" -> category %d\n", strtol(atable, 0, 10));
 				break;
 			case 6:
 				d->out->type = val / 1000;
-				d->out->subtype = val % 1000;
+				d->out->subtype = 255;
+				d->out->localsubtype = val % 1000;
 				TRACE(" -> category %d, subcategory %d\n", val / 1000, val % 1000);
 				break;
 			default:

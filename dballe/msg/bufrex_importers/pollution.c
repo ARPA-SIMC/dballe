@@ -58,11 +58,11 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			/* Airbase local code -- Up to 7 characters reflecting the local
 			 * station code supplied with the observations. If not given then
 			 * leave blank. */
-			case DBA_VAR(0,  1, 212): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 1, 212), 257, 0, 0, 0, 0, 0)); break;
+			case DBA_VAR(0,  1, 212): DBA_RUN_OR_RETURN(dba_msg_set_poll_lcode_var(msg, var)); break;
 			/* Airbase station code -- 7 character code supplied with AirBase
 			 * observations (see Ref 1, II.1.4, page 23). If not supplied then
 			 * leave blank.*/
-			case DBA_VAR(0,  1, 213): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 1, 213), 257, 0, 0, 0, 0, 0)); break;
+			case DBA_VAR(0,  1, 213): DBA_RUN_OR_RETURN(dba_msg_set_poll_scode_var(msg, var)); break;
 			/* GEMS code -- 6 character code suggested at RAQ Paris meeting,
 			 * December 2006. First 2 characters to be country code (using
 			 * ISO 3166-1-alpha-2 code), next 4 characters to be unique station
@@ -70,7 +70,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * be defined and maintained by each GEMS RAQ partner responsible
 			 * for collecting observations within each national boundar
 			 * invovled)*/
-			case DBA_VAR(0,  1, 214): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 1, 214), 257, 0, 0, 0, 0, 0)); break;
+			case DBA_VAR(0,  1, 214): DBA_RUN_OR_RETURN(dba_msg_set_poll_gemscode_var(msg, var)); break;
 			/*
 			 * Dominant emission source influencing the air pollution
 			 * concentrations at the station (based on Ref 1, II.2.2,  page 28)
@@ -81,7 +81,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * 3-6   reserved (do not use)
 			 * 7     missing (or unknown)
 			 */
-			case DBA_VAR(0,  1, 215): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 1, 215), 257, 0, 0, 0, 0, 0)); break;
+			case DBA_VAR(0,  1, 215): DBA_RUN_OR_RETURN(dba_msg_set_poll_source_var(msg, var)); break;
 			/*
 			 * Type of area in which station is located (based on Ref 1, II.2.1, page 27)
 			 * Possible values are:
@@ -91,7 +91,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * 3-6   reserved (do not use)
 			 * 7     missing (or unknown)
 			 */
-			case DBA_VAR(0,  1, 216): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 1, 216), 257, 0, 0, 0, 0, 0)); break;
+			case DBA_VAR(0,  1, 216): DBA_RUN_OR_RETURN(dba_msg_set_poll_atype_var(msg, var)); break;
 			/*
 			 * Type of terrain in which the station is located (based on table in Ref 1, II.1.12, page 26)
 			 * Possible values are:
@@ -104,7 +104,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * 6-14  reserved (do not use)
 			 * 15    missing (or unknown)
 			 */
-			case DBA_VAR(0,  1, 217): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 1, 217), 257, 0, 0, 0, 0, 0)); break;
+			case DBA_VAR(0,  1, 217): DBA_RUN_OR_RETURN(dba_msg_set_poll_ttype_var(msg, var)); break;
 			/*
 			 * Date and time of observation in UTC. Should be the time of the
 			 * observation, i.e. time at the end of the averaging
@@ -252,6 +252,11 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * calculate the decimal scaling factor.
 			 */
 			case DBA_VAR(0,  8,  90):
+				/* Someone seemed to have thought that C fields in BUFR data
+				 * section were not crazy enough, and went on reimplementing
+				 * them using B fields.  So we have to reimplement the same
+				 * logic here.
+				 */
 				if (dba_var_value(var) == NULL)
 					/* If the value is missing, we reset decimal scaling */
 					curdecscale = 0;

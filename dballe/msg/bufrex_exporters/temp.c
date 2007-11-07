@@ -28,6 +28,8 @@ struct _bufrex_exporter bufrex_exporter_temp_2_101 = {
 	/* Category */
 	2,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	101,
 	/* dba_msg type it can convert from */
 	MSG_TEMP,
@@ -55,6 +57,8 @@ struct _bufrex_exporter bufrex_exporter_temp_2_102 = {
 	/* Category */
 	2,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	102,
 	/* dba_msg type it can convert from */
 	MSG_TEMP_SHIP,

@@ -43,7 +43,8 @@ void to::test<1>()
 	TestBufrexMsg test;
 	test.edition = 1;
 	test.cat = 0;
-	test.subcat = 0;
+	test.subcat = 255;
+	test.localsubcat = 0;
 	test.subsets = 1;
 
 	bufrex_msg msgr = read_test_msg_header_raw("crex/test-synop0.crex", CREX);
@@ -70,7 +71,8 @@ void to::test<2>()
 	TestBufrexMsg test;
 	test.edition = 1;
 	test.cat = 0;
-	test.subcat = 0;
+	test.subcat = 255;
+	test.localsubcat = 0;
 	test.subsets = 1;
 	test.subset(0).vars = 21;
 	test.subset(0).set(DBA_VAR(0, 5, 1), 53.55);
@@ -103,7 +105,8 @@ void to::test<3>()
 	TestBufrexMsg test;
 	test.edition = 1;
 	test.cat = 0;
-	test.subcat = 0;
+	test.subcat = 255;
+	test.localsubcat = 0;
 	test.subsets = 1;
 	test.subset(0).vars = 49;
 	test.subset(0).set(DBA_VAR(0, 5, 1), 47.83);
@@ -125,7 +128,8 @@ void to::test<4>()
 	TestBufrexMsg test;
 	test.edition = 1;
 	test.cat = 0;
-	test.subcat = 0;
+	test.subcat = 255;
+	test.localsubcat = 0;
 	test.subsets = 1;
 	test.subset(0).vars = 27;
 	test.subset(0).set(DBA_VAR(0, 5, 1), 61.85);
@@ -147,7 +151,8 @@ void to::test<5>()
 	TestBufrexMsg test;
 	test.edition = 1;
 	test.cat = 1;
-	test.subcat = 0;
+	test.subcat = 255;
+	test.localsubcat = 0;
 	test.subsets = 1;
 	test.subset(0).vars = 32;
 	test.subset(0).set(DBA_VAR(0, 5, 2), 68.27);
@@ -169,7 +174,8 @@ void to::test<6>()
 	TestBufrexMsg test;
 	test.edition = 1;
 	test.cat = 1;
-	test.subcat = 0;
+	test.subcat = 255;
+	test.localsubcat = 0;
 	test.subsets = 1;
 	test.subset(0).vars = 32;
 	test.subset(0).set(DBA_VAR(0, 5, 2),  43.02);
@@ -191,7 +197,8 @@ void to::test<7>()
 	TestBufrexMsg test;
 	test.edition = 1;
 	test.cat = 1;
-	test.subcat = 0;
+	test.subcat = 255;
+	test.localsubcat = 0;
 	test.subsets = 1;
 	test.subset(0).vars = 39;
 	test.subset(0).set(DBA_VAR(0, 5, 2), 33.90);
@@ -213,7 +220,8 @@ void to::test<8>()
 	TestBufrexMsg test;
 	test.edition = 1;
 	test.cat = 2;
-	test.subcat = 0;
+	test.subcat = 255;
+	test.localsubcat = 0;
 	test.subsets = 1;
 	test.subset(0).vars = 550;
 	test.subset(0).set(DBA_VAR(0, 5, 1), 55.75);

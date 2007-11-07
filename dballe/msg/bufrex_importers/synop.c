@@ -35,7 +35,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			msg->type = MSG_SYNOP;
 			break;
 		case 1:
-			switch (raw->subtype)
+			switch (raw->localsubtype)
 			{
 				case 21: msg->type = MSG_BUOY; break;
 				case 9:

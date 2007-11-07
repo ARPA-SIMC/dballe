@@ -216,7 +216,7 @@ int DB::attrQuery(int context, dba_varcode var, const std::vector<dba_varcode>& 
 static dba_err msg_writer(dba_msgs msgs, void* data)
 {
 	dba_file file = (dba_file)data;
-	return dba_file_write_msgs(file, msgs, 0, 0);
+	return dba_file_write_msgs(file, msgs, 0, 0, 0);
 }
 
 static dba_err msg_generic_writer(dba_msgs msgs, void* data)
@@ -224,7 +224,7 @@ static dba_err msg_generic_writer(dba_msgs msgs, void* data)
 	dba_file file = (dba_file)data;
 	for (int i = 0; i < msgs->len; ++i)
 		msgs->msgs[i]->type = MSG_GENERIC;
-	return dba_file_write_msgs(file, msgs, 0, 0);
+	return dba_file_write_msgs(file, msgs, 0, 0, 0);
 }
 
 void DB::exportResults(Record& query, dba_encoding encoding, const std::string& file)

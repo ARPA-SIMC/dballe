@@ -27,6 +27,8 @@ struct _bufrex_exporter bufrex_exporter_sea_1_9 = {
 	/* Category */
 	1,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	9,
 	/* dba_msg type it can convert from */
 	MSG_SHIP,
@@ -54,6 +56,8 @@ struct _bufrex_exporter bufrex_exporter_sea_1_11 = {
 	/* Category */
 	1,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	11,
 	/* dba_msg type it can convert from */
 	MSG_SHIP,
@@ -81,6 +85,8 @@ struct _bufrex_exporter bufrex_exporter_sea_1_13 = {
 	/* Category */
 	1,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	13,
 	/* dba_msg type it can convert from */
 	MSG_SHIP,
@@ -108,6 +114,8 @@ struct _bufrex_exporter bufrex_exporter_sea_1_19 = {
 	/* Category */
 	1,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	19,
 	/* dba_msg type it can convert from */
 	MSG_SHIP,

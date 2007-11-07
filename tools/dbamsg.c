@@ -73,10 +73,10 @@ static dba_err print_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
 	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
 	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
 
-	printf("#%d BUFR message: %d bytes, category %d, subcategory %d, table %s, subsets %zd, values:",
-			rmsg->index, size, braw->type, braw->subtype, table_id, braw->subsets_count);
+	printf("#%d BUFR message: %d bytes, category %d:%d:%d, table %s, subsets %zd, values:",
+			rmsg->index, size, braw->type, braw->subtype, braw->localsubtype, table_id, braw->subsets_count);
 	for (i = 0; i < braw->subsets_count; ++i)
-		printf( "%d/%d", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);
+		printf( "%d/%zd", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);
 
 	return dba_error_ok();
 }
@@ -101,7 +101,7 @@ static dba_err print_crex_header(dba_rawmsg rmsg, bufrex_msg braw)
 	printf("#%d CREX message: %d bytes, category %d, subcategory %d, table %s, subsets %zd, values:",
 			rmsg->index, size, braw->type, braw->subtype, table_id, braw->subsets_count);
 	for (i = 0; i < braw->subsets_count; ++i)
-		printf( "%d/%d", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);
+		printf( "%d/%zd", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);
 
 	return dba_error_ok();
 }

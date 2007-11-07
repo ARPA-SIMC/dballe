@@ -45,7 +45,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err dba_file_write_msgs(dba_file file, dba_msgs msgs, int cat, int subcat)
+dba_err dba_file_write_msgs(dba_file file, dba_msgs msgs, int cat, int subcat, int localsubcat)
 {
 	dba_err err = DBA_OK;
 	dba_rawmsg raw = NULL;
@@ -53,11 +53,11 @@ dba_err dba_file_write_msgs(dba_file file, dba_msgs msgs, int cat, int subcat)
 	switch (dba_file_type(file))
 	{
 		case BUFR:
-			DBA_RUN_OR_GOTO(cleanup, bufrex_encode_bufr(msgs, cat, subcat, &raw));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_encode_bufr(msgs, cat, subcat, localsubcat, &raw));
 			DBA_RUN_OR_GOTO(cleanup, dba_file_write(file, raw));
 			break;
 		case CREX:
-			DBA_RUN_OR_GOTO(cleanup, bufrex_encode_crex(msgs, cat, subcat, &raw));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_encode_crex(msgs, cat, localsubcat, &raw));
 			DBA_RUN_OR_GOTO(cleanup, dba_file_write(file, raw));
 			break;
 		case AOF: 

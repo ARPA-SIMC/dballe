@@ -83,7 +83,7 @@ void to::test<2>()
 
 	gen_ensure_equals(added, 0);
 	gen_ensure_equals(deleted, 0);
-	gen_ensure_equals(updated, 14);
+	gen_ensure_equals(updated, 15);
 
 	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
 	gen_ensure_equals(id, 1);

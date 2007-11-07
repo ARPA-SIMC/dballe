@@ -27,6 +27,8 @@ struct _bufrex_exporter bufrex_exporter_pilot_2_91 = {
 	/* Category */
 	2,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	91,
 	/* dba_msg type it can convert from */
 	MSG_PILOT,

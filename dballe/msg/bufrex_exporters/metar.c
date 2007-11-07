@@ -27,6 +27,8 @@ struct _bufrex_exporter bufrex_exporter_metar_0_140 = {
 	/* Category */
 	0,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	140,
 	/* dba_msg type it can convert from */
 	MSG_SYNOP,

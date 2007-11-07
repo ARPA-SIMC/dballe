@@ -31,7 +31,7 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	double surface_press = -1;
 	dba_var surface_press_var = NULL;
 
-	switch (raw->subtype)
+	switch (raw->localsubtype)
 	{
 		case 0:
 			/* Guess looking at the variables */

@@ -42,7 +42,8 @@ void to::test<1>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 1;
-	test.subcat = 21;
+	test.subcat = 255;
+	test.localsubcat = 21;
 	test.subsets = 1;
 
 	bufrex_msg msgr = read_test_msg_raw("bufr/bufr1", BUFR);
@@ -69,7 +70,8 @@ void to::test<2>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 1;
-	test.subcat = 21;
+	test.subcat = 255;
+	test.localsubcat = 21;
 	test.subsets = 1;
 	test.subset(0).vars = 98;
 	test.subset(0).set(DBA_VAR(0, 5, 2),  43.02);
@@ -116,7 +118,8 @@ void to::test<4>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 0;
-	test.subcat = 1;
+	test.subcat = 255;
+	test.localsubcat = 1;
 	test.subsets = 1;
 	test.subset(0).vars = 149;
 	test.subset(0).set(DBA_VAR(0, 20, 13), 250.0);
@@ -141,7 +144,8 @@ void to::test<5>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 0;
-	test.subcat = 3;
+	test.subcat = 255;
+	test.localsubcat = 3;
 	test.subsets = 1;
 	test.subset(0).vars = 149;
 	test.subset(0).set(DBA_VAR(0, 20, 12), 37.0);
@@ -168,7 +172,8 @@ void to::test<6>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 1;
-	test.subcat = 9;
+	test.subcat = 255;
+	test.localsubcat = 9;
 	test.subsets = 1;
 	test.subset(0).vars = 104;
 	test.subset(0).set(DBA_VAR(0,  1,  11), "DFPC");
@@ -189,7 +194,8 @@ void to::test<7>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 1;
-	test.subcat = 11;
+	test.subcat = 255;
+	test.localsubcat = 11;
 	test.subsets = 1;
 	test.subset(0).vars = 104;
 	test.subset(0).set(DBA_VAR(0, 10, 197), 46.0);
@@ -210,7 +216,8 @@ void to::test<8>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 1;
-	test.subcat = 13;
+	test.subcat = 255;
+	test.localsubcat = 13;
 	test.subsets = 1;
 	test.subset(0).vars = 104;
 
@@ -230,7 +237,8 @@ void to::test<9>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 1;
-	test.subcat = 19;
+	test.subcat = 255;
+	test.localsubcat = 19;
 	test.subsets = 1;
 	test.subset(0).vars = 104;
 
@@ -250,7 +258,8 @@ void to::test<10>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 1;
-	test.subcat = 21;
+	test.subcat = 255;
+	test.localsubcat = 21;
 	test.subsets = 1;
 	test.subset(0).vars = 98;
 
@@ -270,7 +279,8 @@ void to::test<11>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 2;
-	test.subcat = 101;
+	test.subcat = 255;
+	test.localsubcat = 101;
 	test.subsets = 1;
 	test.subset(0).vars = 1655;
 
@@ -290,7 +300,8 @@ void to::test<12>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 2;
-	test.subcat = 102;
+	test.subcat = 255;
+	test.localsubcat = 102;
 	test.subsets = 1;
 	test.subset(0).vars = 1082;
 
@@ -310,7 +321,8 @@ void to::test<13>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 2;
-	test.subcat = 91;
+	test.subcat = 255;
+	test.localsubcat = 91;
 	test.subsets = 1;
 	test.subset(0).vars = 349;
 
@@ -330,7 +342,8 @@ void to::test<14>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 4;
-	test.subcat = 142;
+	test.subcat = 255;
+	test.localsubcat = 142;
 	test.subsets = 1;
 	test.subset(0).vars = 56;
 
@@ -350,7 +363,8 @@ void to::test<15>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 4;
-	test.subcat = 144;
+	test.subcat = 255;
+	test.localsubcat = 144;
 	test.subsets = 1;
 	test.subset(0).vars = 56;
 
@@ -370,7 +384,8 @@ void to::test<16>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 4;
-	test.subcat = 145;
+	test.subcat = 255;
+	test.localsubcat = 145;
 	test.subsets = 1;
 	test.subset(0).vars = 86;
 
@@ -390,7 +405,8 @@ void to::test<17>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 3;
-	test.subcat = 3;
+	test.subcat = 255;
+	test.localsubcat = 3;
 	test.subsets = 180;
 	test.subset(0).vars = 127;
 	test.subset(1).vars = 127;
@@ -418,7 +434,8 @@ void to::test<18>()
 	TestBufrexMsg test;
 	test.edition = 3;
 	test.cat = 3;
-	test.subcat = 56;
+	test.subcat = 255;
+	test.localsubcat = 56;
 	test.subsets = 35;
 	test.subset(0).vars = 225;
 	test.subset(1).vars = 225;
@@ -447,6 +464,7 @@ void to::test<19>()
 	test.edition = 4;
 	test.cat = 8;
 	test.subcat = 255;
+	test.localsubcat = 171;
 	test.subsets = 128;
 
 	bufrex_msg msgr = read_test_msg_header_raw("bufr/ed4.bufr", BUFR);
@@ -480,6 +498,7 @@ void to::test<20>()
 	test.edition = 4;
 	test.cat = 8;
 	test.subcat = 255;
+	test.localsubcat = 171;
 	test.subsets = 128;
 
 	bufrex_msg msgr = read_test_msg_header_raw("bufr/ed4date.bufr", BUFR);

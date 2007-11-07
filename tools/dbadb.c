@@ -324,6 +324,7 @@ struct export_data
 	dba_file file;
 	int cat;
 	int subcat;
+	int localsubcat;
 	int forced_rep_cod;
 };
 
@@ -337,7 +338,7 @@ static dba_err msg_writer(dba_msgs msgs, void* data)
 		for (i = 0; i < msgs->len; ++i)
 			msgs->msgs[i]->type = dba_msg_type_from_repcod(d->forced_rep_cod);
 	}
-	DBA_RUN_OR_RETURN(dba_file_write_msgs(d->file, msgs, d->cat, d->subcat));
+	DBA_RUN_OR_RETURN(dba_file_write_msgs(d->file, msgs, d->cat, d->subcat, d->localsubcat));
 	dba_msgs_delete(msgs);
 	return dba_error_ok();
 }

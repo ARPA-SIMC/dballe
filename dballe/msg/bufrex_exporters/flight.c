@@ -28,6 +28,8 @@ struct _bufrex_exporter bufrex_exporter_flight_4_142 = {
 	/* Category */
 	4,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	142,
 	/* dba_msg type it can convert from */
 	MSG_AIREP,
@@ -53,6 +55,8 @@ struct _bufrex_exporter bufrex_exporter_flight_4_144 = {
 	/* Category */
 	4,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	144,
 	/* dba_msg type it can convert from */
 	MSG_AMDAR,
@@ -78,6 +82,8 @@ struct _bufrex_exporter bufrex_exporter_acars_4_145 = {
 	/* Category */
 	4,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	145,
 	/* dba_msg type it can convert from */
 	MSG_ACARS,

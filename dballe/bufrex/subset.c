@@ -102,7 +102,8 @@ dba_err bufrex_subset_store_variable_var(bufrex_subset subset, dba_varcode code,
 	dba_varinfo info;
 	DBA_RUN_OR_RETURN(dba_vartable_query(subset->btable, code, &info));
 	DBA_RUN_OR_RETURN(dba_var_create(info, &var));
-	DBA_RUN_OR_RETURN(dba_var_copy_val(var, val));
+	if (val != NULL)
+		DBA_RUN_OR_RETURN(dba_var_copy_val(var, val));
 	return bufrex_subset_store_variable(subset, var);
 }
 

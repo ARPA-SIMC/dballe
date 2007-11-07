@@ -37,7 +37,7 @@ extern struct _bufrex_exporter bufrex_exporter_flight_4_142;
 extern struct _bufrex_exporter bufrex_exporter_flight_4_144;
 extern struct _bufrex_exporter bufrex_exporter_acars_4_145;
 extern struct _bufrex_exporter bufrex_exporter_metar_0_140;
-extern struct _bufrex_exporter bufrex_exporter_pollution_13_102;
+extern struct _bufrex_exporter bufrex_exporter_pollution_8_102;
 
 static bufrex_exporter exporters[] = {
 	&bufrex_exporter_generic,
@@ -55,11 +55,11 @@ static bufrex_exporter exporters[] = {
 	&bufrex_exporter_flight_4_144,
 	&bufrex_exporter_acars_4_145,
 	&bufrex_exporter_metar_0_140,
-	&bufrex_exporter_pollution_13_102,
+	&bufrex_exporter_pollution_8_102,
 	0
 };
 
-dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype)
+dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype, int* localsubtype)
 {
 	bufrex_exporter exp = NULL;
 	switch (msg->type)
@@ -93,23 +93,26 @@ dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype)
 		}
 		case MSG_BUOY:		exp = &bufrex_exporter_sea_1_21;		break;
 		case MSG_METAR:		exp = &bufrex_exporter_metar_0_140;		break;
-		case MSG_POLLUTION:	exp = &bufrex_exporter_pollution_13_102;	break;
+		case MSG_POLLUTION:	exp = &bufrex_exporter_pollution_8_102;	break;
 		case MSG_SAT:	exp = &bufrex_exporter_generic;			break;
 	}
 	*type = exp->type;
 	*subtype = exp->subtype;
+	*localsubtype = exp->localsubtype;
 	return dba_error_ok();
 }
 
-dba_err bufrex_get_exporter(dba_msg src, int type, int subtype, bufrex_exporter* exp)
+dba_err bufrex_get_exporter(dba_msg src, int type, int subtype, int localsubtype, bufrex_exporter* exp)
 {
 	int i;
 	for (i = 0; exporters[i] != NULL; i++)
 	{
+		/* fprintf(stderr, "TRY %d %d %d for %d %d %d\n", exporters[i]->type, exporters[i]->subtype, exporters[i]->localsubtype, type, subtype, localsubtype); */
 		if (exporters[i]->type        == type &&
-			exporters[i]->subtype     == subtype)
+			exporters[i]->subtype     == subtype &&
+			exporters[i]->localsubtype     == localsubtype)
 		{
-			if (type == 0 && subtype == 1)
+			if (type == 0 && localsubtype == 1)
 				// Template ambiguity workaround: if we are handling a synop
 				// that has geopotential in the ana level, then it's a
 				// high-level station and we need to fetch the alternate output

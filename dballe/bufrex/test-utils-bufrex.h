@@ -172,15 +172,17 @@ public:
 	int edition;
 	int cat;
 	int subcat;
+	int localsubcat;
 	int checkdigit;
 	int subsets;
 
-	TestBufrexMsg() : edition(-1), cat(-1), subcat(-1), checkdigit(-1), subsets(-1) {}
+	TestBufrexMsg() : edition(-1), cat(-1), subcat(-1), localsubcat(-1), checkdigit(-1), subsets(-1) {}
 	TestBufrexMsg(const TestBufrexMsg& r)
 	{
 		edition = r.edition;
 		cat = r.cat;
 		subcat = r.subcat;
+		localsubcat = r.localsubcat;
 		checkdigit = r.checkdigit;
 		subsets = r.subsets;
 		for (std::vector<TestBufrexSubset*>::const_iterator i = r.tests.begin();
@@ -199,6 +201,7 @@ public:
 		edition = r.edition;
 		cat = r.cat;
 		subcat = r.subcat;
+		localsubcat = r.localsubcat;
 		checkdigit = r.checkdigit;
 		subsets = r.subsets;
 
@@ -226,6 +229,7 @@ public:
 		if (edition != -1) inner_ensure_equals(braw->edition, edition, "edition");
 		if (cat != -1) inner_ensure_equals(braw->type, cat, "category");
 		if (subcat != -1) inner_ensure_equals(braw->subtype, subcat, "subcategory");
+		if (localsubcat != -1) inner_ensure_equals(braw->localsubtype, localsubcat, "localsubcategory");
 		//if (checkdigit != -1) inner_ensure_equals(braw->opt.crex.checkdigit, checkdigit);
 		if (subsets != -1) inner_ensure_equals(braw->subsets_count, (size_t)subsets, "subsets");
 

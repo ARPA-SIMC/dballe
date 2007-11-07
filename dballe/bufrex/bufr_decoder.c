@@ -206,7 +206,8 @@ static dba_err decode_sec1ed3(decoder d)
 	d->out->opt.bufr.master_table = d->sec1[10];
 	d->out->opt.bufr.local_table = d->sec1[11];
 	d->out->type = (int)d->sec1[8];
-	d->out->subtype = (int)d->sec1[9];
+	d->out->subtype = 255;
+	d->out->localsubtype = (int)d->sec1[9];
 
 	d->out->rep_year = (int)d->sec1[12];
 	// Fix the century with a bit of euristics

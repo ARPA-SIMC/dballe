@@ -59,10 +59,12 @@ dba_err dba_file_read_msgs(dba_file file, dba_msgs* msgs, int* found);
  *   The BUFR of CREX message category to use for encoding (0 for auto detect)
  * @param subcat
  *   The BUFR of CREX message subcategory to use for encoding (0 for auto detect)
+ * @param localsubcat
+ *   The BUFR of CREX message subcategory (defined by local centres) to use for encoding (0 for auto detect)
  * @return
  *   The error indicator for the function. See @ref error.h
  */
-dba_err dba_file_write_msgs(dba_file file, dba_msgs msgs, int cat, int subcat);
+dba_err dba_file_write_msgs(dba_file file, dba_msgs msgs, int cat, int subcat, int localsubcat);
 
 #ifdef  __cplusplus
 }

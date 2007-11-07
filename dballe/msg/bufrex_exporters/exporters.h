@@ -58,6 +58,8 @@ struct _bufrex_exporter
 	int type;
 	/** Template subtype */
 	int subtype;
+	/** Template local subtype */
+	int localsubtype;
 
 	/** dba_msg type it can convert from */
 	dba_msg_type accept_type;
@@ -82,13 +84,13 @@ dba_err bufrex_standard_datadesc_func(bufrex_exporter exp, dba_msg src, bufrex_m
 /**
  * Infer good type and subtype from a dba_msg.
  */
-dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype);
+dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype, int* localsubtype);
 
 /**
  * Get an exporter structure to export the given dba_msg to a template of the
  * given type and subtype.
  */
-dba_err bufrex_get_exporter(dba_msg src, int type, int subtype, bufrex_exporter* exp);
+dba_err bufrex_get_exporter(dba_msg src, int type, int subtype, int localsubtype, bufrex_exporter* exp);
 
 /** ID of originating center to put in encoded messages */
 #define ORIG_CENTRE_ID 255

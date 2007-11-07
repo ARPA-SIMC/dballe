@@ -28,7 +28,7 @@ dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	int i;
 	int ltype = -1, l1 = -1;
 
-	switch (raw->subtype)
+	switch (raw->localsubtype)
 	{
 		case 142: msg->type = MSG_AIREP; break;
 		case 144: msg->type = MSG_AMDAR; break;

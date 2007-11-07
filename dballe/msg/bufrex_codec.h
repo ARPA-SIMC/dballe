@@ -73,7 +73,7 @@ dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msgs* msgs);
  * @return
  *   The error status (See @ref error.h)
  */
-dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw);
+dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, int localsubtype, dba_rawmsg* raw);
 
 /**
  * Encode a dba_msg into a CREX message
@@ -141,7 +141,7 @@ dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs);
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype);
+dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype, int* localsubtype);
 	
 
 #ifdef  __cplusplus

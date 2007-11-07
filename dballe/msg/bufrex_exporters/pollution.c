@@ -23,11 +23,13 @@
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
-struct _bufrex_exporter bufrex_exporter_pollution_13_102 = {
+struct _bufrex_exporter bufrex_exporter_pollution_8_102 = {
 	/* Category */
-	13,
+	8,
 	/* Subcategory */
-	102,
+	255,
+	/* Local subcategory */
+	171,
 	/* dba_msg type it can convert from */
 	MSG_POLLUTION,
 	/* Data descriptor section */
@@ -72,13 +74,13 @@ struct template {
 };
 
 static struct template tpl[] = {
-/*  0 */ { DBA_VAR(0,  1,  19), -1 },
-/*  1 */ { DBA_VAR(0,  1, 212), -1 },
-/*  2 */ { DBA_VAR(0,  1, 213), -1 },
-/*  3 */ { DBA_VAR(0,  1, 214), -1 },
-/*  4 */ { DBA_VAR(0,  1, 215), -1 },
-/*  5 */ { DBA_VAR(0,  1, 216), -1 },
-/*  6 */ { DBA_VAR(0,  1, 217), -1 },
+/*  0 */ { DBA_VAR(0,  1,  19), DBA_MSG_ST_NAME },
+/*  1 */ { DBA_VAR(0,  1, 212), DBA_MSG_POLL_LCODE },
+/*  2 */ { DBA_VAR(0,  1, 213), DBA_MSG_POLL_SCODE },
+/*  3 */ { DBA_VAR(0,  1, 214), DBA_MSG_POLL_GEMSCODE },
+/*  4 */ { DBA_VAR(0,  1, 215), DBA_MSG_POLL_SOURCE },
+/*  5 */ { DBA_VAR(0,  1, 216), DBA_MSG_POLL_ATYPE },
+/*  6 */ { DBA_VAR(0,  1, 217), DBA_MSG_POLL_TTYPE },
 /*  7 */ { DBA_VAR(0,  4,  1), DBA_MSG_YEAR },
 /*  8 */ { DBA_VAR(0,  4,  2), DBA_MSG_MONTH },
 /*  9 */ { DBA_VAR(0,  4,  3), DBA_MSG_DAY },
@@ -103,30 +105,69 @@ static struct template tpl[] = {
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
-	int i;
-	bufrex_opcode op;
+	int i, li, di;
+	dba_var var = NULL;
+	dba_var attr_conf = NULL;
+	dba_var attr_cas = NULL;
+	dba_var attr_pmc = NULL;
+	int l1 = -1, p1 = -1;
+	int constituent = -1;
+
+	dba_msg_print(src, stderr);
+
+	// Get the variable out of msg
+	for (li = 0; li < src->data_count; ++li)
+	{
+		if (src->data[li]->ltype != 105) continue;
+		for (di = 0; di < src->data[li]->data_count; ++di)
+		{
+			dba_msg_datum d = src->data[li]->data[di];
+			if (d->pind != 3) continue;
+			dba_varcode code = dba_var_code(d->var);
+			if (code < DBA_VAR(0, 15, 193) || code > DBA_VAR(0, 15, 195)) continue;
+			if (var != NULL)
+				return dba_error_consistency("found more than one variable to export in one template");
+			var = d->var;
+			l1 = src->data[li]->l1;
+			p1 = d->p1;
+		}
+	}
+
+	if (var == NULL)
+		return dba_error_consistency("found no variable to export");
+
+	// Extract the various attributes
+	DBA_RUN_OR_RETURN(dba_var_enqa(var, DBA_VAR(0, 33,   3), &attr_conf));
+	DBA_RUN_OR_RETURN(dba_var_enqa(var, DBA_VAR(0,  8,  44), &attr_cas));
+	DBA_RUN_OR_RETURN(dba_var_enqa(var, DBA_VAR(0,  8,  45), &attr_pmc));
+
+	// Compute the constituent type
+	switch (dba_var_code(var))
+	{
+		case DBA_VAR(0, 15, 193): constituent =  5; break;
+		case DBA_VAR(0, 15, 194): constituent =  0; break;
+		case DBA_VAR(0, 15, 195): constituent = 27; break;
+		default:
+			return dba_error_consistency("found unknown variable type when getting constituent type");
+	}
+
+	// Compute the decimal scaling factor
+
 
 	for (i = 0; i < sizeof(tpl)/sizeof(struct template); i++)
 	{
 		switch (i)
 		{
-			case  0: DBA_VAR(0,  1,  19); break;
-			case  1: DBA_VAR(0,  1, 212); break;
-			case  2: DBA_VAR(0,  1, 213); break;
-			case  3: DBA_VAR(0,  1, 214); break;
-			case  4: DBA_VAR(0,  1, 215); break;
-			case  5: DBA_VAR(0,  1, 216); break;
-			case  6: DBA_VAR(0,  1, 217); break;
-			case 16: DBA_VAR(0,  7,  32); break;
-			case 17: DBA_VAR(0,  8,  21); break;
-			case 18: DBA_VAR(0,  4,  25); break;
-			case 19: DBA_VAR(0,  8,  43); break;
-			case 20: DBA_VAR(0,  8,  44); break;
-			case 21: DBA_VAR(0,  8,  45); break;
+			case 16: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, l1)); break;
+			case 17: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 2)); break;
+			case 18: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, p1/60)); break;
+			case 19: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, constituent)); break;
+			case 20: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_cas)); break;
+			case 21: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_pmc)); break;
 			case 22: DBA_VAR(0,  8,  90); break;
 			case 23: DBA_VAR(0, 15,  23); break;
 			case 24: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code)); break;
-			case 25: DBA_VAR(0, 33,   3); break;
+			case 25: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_conf)); break;
 			default: {
 				dba_msg_datum d = dba_msg_find_by_id(src, tpl[i].var);
 				if (d != NULL)

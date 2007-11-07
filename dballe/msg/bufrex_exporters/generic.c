@@ -27,6 +27,8 @@ struct _bufrex_exporter bufrex_exporter_generic = {
 	/* Category */
 	255,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	0,
 	/* dba_msg type it can convert from */
 	MSG_GENERIC,

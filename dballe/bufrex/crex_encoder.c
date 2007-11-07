@@ -152,7 +152,7 @@ dba_err crex_encoder_encode(bufrex_msg in, dba_rawmsg out)
 				e->in->edition,
 				e->in->opt.crex.table,
 				e->in->type,
-				e->in->subtype));
+				e->in->localsubtype));
 
 	DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(e->in, &ops));
 	if (ops == NULL)

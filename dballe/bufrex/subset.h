@@ -107,7 +107,8 @@ dba_err bufrex_subset_store_variable(bufrex_subset subset, dba_var var);
  * @param code
  *   The ::dba_varcode of the variable to add.  See @ref vartable.h
  * @param var
- *   The variable holding the value for the variable to add
+ *   The variable holding the value for the variable to add.  If it is NULL,
+ *   the call is equivalent to bufrex_subset_store_variable_undef.
  * @return
  *   The error indicator for the function.  See @ref error.h
  */

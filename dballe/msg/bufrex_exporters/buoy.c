@@ -28,6 +28,8 @@ struct _bufrex_exporter bufrex_exporter_sea_1_21 = {
 	/* Category */
 	1,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	21,
 	/* dba_msg type it can convert from */
 	MSG_BUOY,

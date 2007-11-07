@@ -113,7 +113,7 @@ void to::test<1>()
 static void relax_bufrex_msg(bufrex_msg b)
 {
 	int sounding_workarounds = 
-		b->type == 2 && (b->subtype == 91 || b->subtype == 101 || b->subtype == 102);
+		b->type == 2 && (b->localsubtype == 91 || b->localsubtype == 101 || b->localsubtype == 102);
 
 	if (b->rep_year < 100)
 		b->rep_year += 2000;
@@ -190,7 +190,7 @@ static void relax_bufrex_msg(bufrex_msg b)
 	// Some temp ship D table entries are not found in CREX D tables, so we
 	// replace them with their expansion.  As a result, we cannot compare the
 	// data descriptor sections of temp ship and we throw them away here.
-	if (b->type == 2 && b->subtype == 102)
+	if (b->type == 2 && b->localsubtype == 102)
 		bufrex_msg_reset_datadesc(b);
 
 }
@@ -220,6 +220,7 @@ void to::test<2>()
 		"bufr/obs4-145.4.bufr", 
 		"bufr/test-airep1.bufr",
 		"bufr/test-temp1.bufr", 
+//		"bufr/ed4.bufr", 
 		NULL
 	};
 
@@ -233,6 +234,7 @@ void to::test<2>()
 		// Save category as a reference for reencoding
 		int type = braw1->type;
 		int subtype = braw1->subtype;
+		int localsubtype = braw1->localsubtype;
 		
 		// Finish converting in a dba_msg
 		dba_msgs msgs1;
@@ -246,6 +248,8 @@ void to::test<2>()
 		CHECKED(bufrex_msg_create(BUFREX_BUFR, &b2));
 		b2->type = b1->type;
 		b2->subtype = b1->subtype;
+		b2->localsubtype = b1->localsubtype;
+		//fprintf(stderr, "Read %s %d %d %d\n", files[i], b1->type, b1->subtype, b1->localsubtype);
 		b2->edition = b1->edition;
 		b2->opt.bufr.centre = b1->opt.bufr.centre;
 		b2->opt.bufr.subcentre = b1->opt.bufr.subcentre;
@@ -263,7 +267,7 @@ void to::test<2>()
 		// Our metar message sample is different than the official template
 		// and test-airep1 uses the wrong varcode for originating appliation
 		// and test-temp1 uses a nonstandard template
-		if ((b1->type != 0 || b1->subtype != 140)
+		if ((b1->type != 0 || b1->subtype != 255 || b1->localsubtype != 140)
 				&& string(files[i]) != "bufr/test-airep1.bufr"
 				&& string(files[i]) != "bufr/test-temp1.bufr")
 			bufrex_msg_diff(b1, b2, &bdiffs, stderr);
@@ -287,7 +291,7 @@ void to::test<2>()
 
 		// Reencode the dba_msg in another dba_rawmsg
 		dba_rawmsg raw2;
-		CHECKED(bufrex_encode_bufr(msgs1, type, subtype, &raw2));
+		CHECKED(bufrex_encode_bufr(msgs1, type, subtype, localsubtype, &raw2));
 
 		// Parse the second dba_rawmsg
 		dba_msgs msgs2;
@@ -301,6 +305,7 @@ void to::test<2>()
 			braw->edition = 3;
 			braw->type = type;
 			braw->subtype = subtype;
+			braw->localsubtype = localsubtype;
 			braw->opt.bufr.centre = 98;
 			braw->opt.bufr.subcentre = 0;
 			braw->opt.bufr.master_table = 6;
@@ -361,7 +366,8 @@ void to::test<3>()
 		// Save category as a reference for reencoding
 		int type = braw1->type;
 		int subtype = braw1->subtype;
-		if (subtype == 0)
+		int localsubtype = braw1->localsubtype;
+		if (localsubtype == 0)
 			type = 0;
 		
 		// Finish converting in a dba_msg
@@ -370,7 +376,7 @@ void to::test<3>()
 
 		// Reencode the dba_msg in another dba_rawmsg
 		dba_rawmsg raw2;
-		CHECKED(bufrex_encode_crex(msgs1, type, subtype, &raw2));
+		CHECKED(bufrex_encode_crex(msgs1, type, localsubtype, &raw2));
 
 		// Parse the second dba_rawmsg
 		dba_msgs msgs2;

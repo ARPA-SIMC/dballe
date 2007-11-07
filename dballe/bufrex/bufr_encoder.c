@@ -264,7 +264,7 @@ static dba_err encoder_encode_sec1ed3(encoder e)
 	/* Data category (BUFR Table A) */
 	/* Data sub-category (defined by local ADP centres) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->type));
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->subtype));
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->localsubtype));
 	/* Version number of master tables used (currently 9 for WMO FM 94 BUFR tables) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.master_table));
 	/* Version number of local tables used to augment the master table in use */

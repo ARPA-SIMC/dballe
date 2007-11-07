@@ -33,7 +33,7 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	dba_var copy = NULL;
 	char ident[10];
 
-	switch (raw->subtype)
+	switch (raw->localsubtype)
 	{
 #if 0
 		case 142: msg->type = MSG_AIREP; break;

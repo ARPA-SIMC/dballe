@@ -30,6 +30,8 @@ struct _bufrex_exporter bufrex_exporter_synop_0_1 = {
 	/* Category */
 	0,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	1,
 	/* dba_msg type it can convert from */
 	MSG_SYNOP,
@@ -57,6 +59,8 @@ struct _bufrex_exporter bufrex_exporter_synop_0_1high = {
 	/* Category */
 	0,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	1,
 	/* dba_msg type it can convert from */
 	MSG_SYNOP,
@@ -84,6 +88,8 @@ struct _bufrex_exporter bufrex_exporter_synop_0_3 = {
 	/* Category */
 	0,
 	/* Subcategory */
+	255,
+	/* Local subcategory */
 	3,
 	/* dba_msg type it can convert from */
 	MSG_SYNOP,

@@ -4,12 +4,12 @@ ST_DIR,			int,	B01012,		257,  0, 0,		0,      0, 0, Direction of motion of moving
 ST_SPEED,		int,	B01013,		257,  0, 0,		0,      0, 0, Speed of motion of moving observing platform
 ST_NAME,		str,	B01019,		257,  0, 0,		0,      0, 0, Station or site name
 ST_NAME_ICAO,		str,	B01063,		257,  0, 0,		0,      0, 0, ICAO location indicator
-POLL_LCODE		int,	B01212		257,  0, 0,		0,	0, 0, Air quality observing station local code
-POLL_SCODE		int,	B01213		257,  0, 0,		0,	0, 0, Airbase air quality observing station code
-POLL_GEMSCODE		int,	B01214		257,  0, 0,		0,	0, 0, GEMS air quality observing station code
-POLL_SOURCE		int,	B01215		257,  0, 0,		0,	0, 0, Air quality observing station dominant emission source
-POLL_ATYPE		int,	B01216		257,  0, 0,		0,	0, 0, Air quality observing station area type
-POLL_TTYPE		int,	B01217		257,  0, 0,		0,	0, 0, Air quality observing station terrain type
+POLL_LCODE,		int,	B01212,		257,  0, 0,		0,      0, 0, Air quality observing station local code
+POLL_SCODE,		int,	B01213,		257,  0, 0,		0,      0, 0, Airbase air quality observing station code
+POLL_GEMSCODE,		int,	B01214,		257,  0, 0,		0,      0, 0, GEMS air quality observing station code
+POLL_SOURCE,		int,	B01215,		257,  0, 0,		0,      0, 0, Air quality observing station dominant emission source
+POLL_ATYPE,		int,	B01216,		257,  0, 0,		0,      0, 0, Air quality observing station area type
+POLL_TTYPE,		int,	B01217,		257,  0, 0,		0,      0, 0, Air quality observing station terrain type
 FLIGHT_REG_NO,		str,	B01008,		257,  0, 0,		0,      0, 0, Aircraft registration number or other identification
 FLIGHT_PHASE,		int,	B08004,		257,  0, 0,		0,      0, 0, Phase of aircraft flight
 FLIGHT_ROLL,		num,	B02063,		257,  0, 0,		0,      0, 0, Aircraft roll angle

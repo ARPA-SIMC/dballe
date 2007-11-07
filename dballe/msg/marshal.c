@@ -38,7 +38,7 @@ dba_err dba_marshal_encode(dba_msgs msgs, dba_encoding type, dba_rawmsg *rmsg)
 {
 	switch (type)
 	{
-		case BUFR: DBA_RUN_OR_RETURN(bufrex_encode_bufr(msgs, 0, 0, rmsg)); break;
+		case BUFR: DBA_RUN_OR_RETURN(bufrex_encode_bufr(msgs, 0, 0, 0, rmsg)); break;
 		case CREX: DBA_RUN_OR_RETURN(bufrex_encode_crex(msgs, 0, 0, rmsg)); break;
 		case AOF: return dba_error_unimplemented("exporting to AOF"); break;
 	}

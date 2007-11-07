@@ -74,7 +74,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw)
+dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, int localsubtype, dba_rawmsg* raw)
 {
 	dba_err err = DBA_OK;
 	bufrex_msg braw = NULL;
@@ -89,12 +89,13 @@ dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw
 	braw->edition = 3;
 
 	/* Compute the right type and subtype if missing */
-	if (type == 0 && subtype == 0)
-		DBA_RUN_OR_GOTO(cleanup, bufrex_infer_type_subtype(msgs->msgs[0], &(braw->type), &(braw->subtype)));
+	if (type == 0 && subtype == 0 && localsubtype == 0)
+		DBA_RUN_OR_GOTO(cleanup, bufrex_infer_type_subtype(msgs->msgs[0], &(braw->type), &(braw->subtype), &(braw->localsubtype)));
 	else
 	{
 		braw->type = type;
 		braw->subtype = subtype;
+		braw->localsubtype = localsubtype;
 	}
 
 	/* Setup encoding parameters */
@@ -137,7 +138,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err bufrex_encode_crex(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw)
+dba_err bufrex_encode_crex(dba_msgs msgs, int type, int localsubtype, dba_rawmsg* raw)
 {
 	dba_err err = DBA_OK;
 	bufrex_msg braw = NULL;
@@ -149,12 +150,13 @@ dba_err bufrex_encode_crex(dba_msgs msgs, int type, int subtype, dba_rawmsg* raw
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_create(BUFREX_CREX, &braw));
 
 	/* Compute the right type and subtype if missing */
-	if (type == 0 || subtype == 0)
-		DBA_RUN_OR_GOTO(cleanup, bufrex_infer_type_subtype(msgs->msgs[0], &(braw->type), &(braw->subtype)));
+	if (type == 0 || localsubtype == 0)
+		DBA_RUN_OR_GOTO(cleanup, bufrex_infer_type_subtype(msgs->msgs[0], &(braw->type), &(braw->subtype), &(braw->localsubtype)));
 	else
 	{
 		braw->type = type;
-		braw->subtype = subtype;
+		braw->subtype = 255;
+		braw->subtype = localsubtype;
 	}
 
 	/* Setup encoding parameters */
@@ -212,13 +214,13 @@ dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs)
 		{
 			case 0:
 			case 1:
-				if (raw->subtype == 140)
+				if (raw->localsubtype == 140)
 					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_metar(msg, raw, raw->subsets[i]));
 				else
 					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_synop(msg, raw, raw->subsets[i]));
 				break;
 			case 2:
-				if (raw->subtype == 91 || raw->subtype == 92)
+				if (raw->localsubtype == 91 || raw->localsubtype == 92)
 					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_pilot(msg, raw, raw->subsets[i]));
 				else
 					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_temp(msg, raw, raw->subsets[i]));
@@ -250,7 +252,7 @@ dba_err bufrex_msg_from_dba_msg(bufrex_msg raw, dba_msg msg)
 	bufrex_subset subset;
 
 	/* Find the appropriate exporter, and compute type and subtype if missing */
-	DBA_RUN_OR_RETURN(bufrex_get_exporter(msg, raw->type, raw->subtype, &exp));
+	DBA_RUN_OR_RETURN(bufrex_get_exporter(msg, raw->type, raw->subtype, raw->localsubtype, &exp));
 
 	/* Init the bufrex_msg data descriptor chain */
 	DBA_RUN_OR_RETURN(exp->datadesc(exp, msg, raw));
@@ -288,7 +290,7 @@ dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs)
 		return dba_error_consistency("tried to export an empty dba_msgs");
 
 	/* Find the appropriate exporter, and compute type and subtype if missing */
-	DBA_RUN_OR_RETURN(bufrex_get_exporter(msgs->msgs[0], raw->type, raw->subtype, &exp));
+	DBA_RUN_OR_RETURN(bufrex_get_exporter(msgs->msgs[0], raw->type, raw->subtype, raw->localsubtype, &exp));
 
 	/* Init the bufrex_msg data descriptor chain */
 	DBA_RUN_OR_RETURN(exp->datadesc(exp, msgs->msgs[0], raw));

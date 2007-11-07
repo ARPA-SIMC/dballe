@@ -54,7 +54,7 @@ void to::test<1>()
 
 	/* Export msg as a generic message */
 	dba_rawmsg raw;
-	CHECKED(bufrex_encode_bufr(msgs, 0, 0, &raw));
+	CHECKED(bufrex_encode_bufr(msgs, 0, 0, 0, &raw));
 
 	/* Parse it back */
 	dba_msgs msgs1;
@@ -156,7 +156,7 @@ void to::test<2>()
 
 	/* Export msg as a generic message */
 	dba_rawmsg raw;
-	CHECKED(bufrex_encode_bufr(msgs, 0, 0, &raw));
+	CHECKED(bufrex_encode_bufr(msgs, 0, 0, 0, &raw));
 
 	/* Parse it back */
 	dba_msgs msgs1;
@@ -205,7 +205,7 @@ void to::test<3>()
 		/* TODO: use the same template as the other synop message */
 		dba_rawmsg raw;
 		gen->msgs[0]->type = MSG_SYNOP;
-		CHECKED(bufrex_encode_bufr(gen, 0, 0, &raw));
+		CHECKED(bufrex_encode_bufr(gen, 0, 0, 0, &raw));
 
 		/* Parse the second dba_rawmsg */
 		dba_msgs synop1;
@@ -299,7 +299,7 @@ void to::test<4>()
 
 	/* Encode the message */
 	dba_rawmsg raw;
-	CHECKED(bufrex_encode_bufr(msgs, 0, 0, &raw));
+	CHECKED(bufrex_encode_bufr(msgs, 0, 0, 0, &raw));
 
 	/* Decode the message */
 	dba_msgs msgs1;
