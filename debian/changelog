@@ -1,3 +1,9 @@
+dballe (4.0.0-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 07 Nov 2007 18:29:17 +0100
+
 dballe (3.6.2-1) unstable; urgency=low
 
   * New upstream version
