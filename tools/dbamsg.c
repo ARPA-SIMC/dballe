@@ -32,7 +32,13 @@
 
 #include <stdlib.h>
 
+#include <dballe/bufrex/opcode.h>
+#include <string.h>
+#include <strings.h>
+#include <ctype.h>
+
 static int op_dump_interpreted = 0;
+static int op_dump_text = 0;
 static char* op_input_type = "auto";
 static char* op_output_type = "bufr";
 int op_verbose = 0;
@@ -197,6 +203,82 @@ static dba_err dump_cooked_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs ms
 	return dba_error_ok();
 }
 
+static dba_err print_var(dba_var var)
+{
+	printf("B%02d%03d", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
+	if (dba_var_value(var) != NULL)
+	{
+		if (dba_var_info(var)->is_string)
+		{
+			printf(" %s\n", dba_var_value(var));
+		} else {
+			double value;
+			DBA_RUN_OR_RETURN(dba_var_enqd(var, &value));
+			printf(" %.*f\n", dba_var_info(var)->scale > 0 ? dba_var_info(var)->scale : 0, value);
+		}
+	} else
+		printf("\n");
+	return dba_error_ok();
+}
+
+static dba_err dump_text(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
+{
+	int i;
+	struct _bufrex_opcode* opcode;
+	if (braw == NULL)
+		return dba_error_consistency("source is not a BUFR or CREX message");
+	if (braw->encoding_type != BUFREX_BUFR)
+		return dba_error_consistency("source is not BUFR");
+	printf("Edition: %d\n", braw->edition);
+	printf("Type: %d\n", braw->type);
+	printf("Subtype: %d\n", braw->subtype);
+	printf("Localsubtype: %d\n", braw->localsubtype);
+	printf("Centre: %d\n", braw->opt.bufr.centre);
+	printf("Subcentre: %d\n", braw->opt.bufr.subcentre);
+	printf("Mastertable: %d\n", braw->opt.bufr.master_table);
+	printf("Localtable: %d\n", braw->opt.bufr.local_table);
+	printf("Compression: %d\n", braw->opt.bufr.compression);
+	printf("Reftime: %04d-%02d-%02d %02d:%02d:%02d\n",
+			braw->rep_year, braw->rep_month, braw->rep_day,
+			braw->rep_hour, braw->rep_minute, braw->rep_second);
+	printf("Descriptors:");
+	DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(braw, &opcode));
+	for ( ; opcode != NULL; opcode = opcode->next)
+	{
+		char type;
+		switch (DBA_VAR_F(opcode->val))
+		{
+			case 0: type = 'B'; break;
+			case 1: type = 'R'; break;
+			case 2: type = 'C'; break;
+			case 3: type = 'D'; break;
+			default: type = '?'; break;
+		}
+			
+		printf(" %c%02d%03d", type, DBA_VAR_X(opcode->val), DBA_VAR_Y(opcode->val));
+	}
+	printf("\n");
+	for (i = 0; i < braw->subsets_count; ++i)
+	{
+		bufrex_subset subset = braw->subsets[i];
+		int j;
+		printf("Data:\n");
+		for (j = 0; j < subset->vars_count; ++j)
+		{
+			dba_var_attr_iterator ai;
+			dba_var var = subset->vars[j];
+			printf(" ");
+			DBA_RUN_OR_RETURN(print_var(var));
+			for (ai = dba_var_attr_iterate(var); ai; ai = dba_var_attr_iterator_next(ai))
+			{
+				printf(" *");
+				DBA_RUN_OR_RETURN(print_var(dba_var_attr_iterator_attr(ai)));
+			}
+		}
+	}
+	return dba_error_ok();
+}
+
 dba_err write_raw_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
 {
 	dba_file* file = (dba_file*)data;
@@ -220,7 +302,8 @@ dba_err do_scan(poptContext optCon)
 
 dba_err do_dump(poptContext optCon)
 {
-	action action = op_dump_interpreted ? dump_cooked_message : dump_message;
+	action action = op_dump_interpreted ? dump_cooked_message :
+					op_dump_text ? dump_text : dump_message;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
@@ -495,6 +578,215 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
+static dba_err readfield(FILE* in, char** name, char** value)
+{
+	static char line[1000];
+	char* s;
+
+	if (fgets(line, 1000, in) == NULL)
+	{
+		*name = *value = NULL;
+		return dba_error_ok();
+	}
+
+	s = strchr(line, ':');
+	if (s == NULL)
+	{
+		*name = NULL;
+		*value = line;
+	}
+	else
+	{
+		*s = 0;
+		*name = line;
+		*value = s + 1;
+	}
+
+	if (*value)
+	{
+		int len;
+		/* Trim value */
+		while (**value && isspace(**value))
+			++*value;
+
+		len = strlen(*value);
+		while (len > 0 && isspace((*value)[len-1]))
+		{
+			--len;
+			(*value)[len] = 0;
+		}
+	}
+
+	return dba_error_ok();
+}
+
+static dba_err parsetextgrib(FILE* in, bufrex_msg msg, int* found)
+{
+	dba_err err = DBA_OK;
+	bufrex_subset subset = NULL;
+	char* name;
+	char* value;
+	dba_var var = NULL;
+
+	*found = 0;
+	bufrex_msg_reset(msg);
+
+	while (1)
+	{
+		DBA_RUN_OR_GOTO(cleanup, readfield(in, &name, &value));
+		fprintf(stderr, "GOT NAME %s VALUE \"%s\"\n", name, value);
+		if (name != NULL)
+		{
+			if (strcasecmp(name, "edition") == 0) {
+				msg->edition = strtoul(value, 0, 10);
+			} else if (strcasecmp(name, "type") == 0) {
+				msg->type = strtoul(value, 0, 10);
+			} else if (strcasecmp(name, "subtype") == 0) {
+				msg->subtype = strtoul(value, 0, 10);
+			} else if (strcasecmp(name, "localsubtype") == 0) {
+				msg->localsubtype = strtoul(value, 0, 10);
+			} else if (strcasecmp(name, "centre") == 0) {
+				msg->opt.bufr.centre = strtoul(value, 0, 10);
+			} else if (strcasecmp(name, "subcentre") == 0) {
+				msg->opt.bufr.subcentre = strtoul(value, 0, 10);
+			} else if (strcasecmp(name, "mastertable") == 0) {
+				msg->opt.bufr.master_table = strtoul(value, 0, 10);
+			} else if (strcasecmp(name, "localtable") == 0) {
+				msg->opt.bufr.local_table = strtoul(value, 0, 10);
+			} else if (strcasecmp(name, "compression") == 0) {
+				msg->opt.bufr.compression = strtoul(value, 0, 10);
+			} else if (strcasecmp(name, "reftime") == 0) {
+				if (sscanf(value, "%04d-%02d-%02d %02d:%02d:%02d",
+					&msg->rep_year, &msg->rep_month, &msg->rep_day,
+					&msg->rep_hour, &msg->rep_minute, &msg->rep_second) != 6)
+					return dba_error_consistency("Reference time \"%s\" cannot be parsed", value);
+			} else if (strcasecmp(name, "descriptors") == 0) {
+				const char* s = value;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_load_tables(msg));
+				while (1)
+				{
+					size_t size = strcspn(s, " \t");
+					s += size;
+					size = strspn(s, "BCDR0123456789");
+					if (size == 0)
+						break;
+					else
+						DBA_RUN_OR_GOTO(cleanup, bufrex_msg_append_datadesc(msg, dba_descriptor_code(s)));
+				}
+			} else if (strcasecmp(name, "data") == 0) {
+				/* Start a new subset */
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(msg, msg->subsets_count, &subset));
+				*found = 1;
+			} 
+		} else if (value != NULL) {
+			dba_varinfo info;
+			int isattr = 0;
+			dba_varcode code;
+			if (value[0] == 0)
+				/* End of one message */
+				break;
+
+			/* Read a Bsomething (value or attribute) and append it to the subset */
+			if (value[0] == '*')
+			{
+				isattr = 1;
+				++value;
+			}
+
+			code = dba_descriptor_code(value);
+			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(msg, code, &info));
+			while (*value && !isspace(*value))
+				++value;
+			while (*value && isspace(*value))
+				++value;
+			if (*value == 0)
+			{
+				/* Undef */
+				DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+			} else {
+				if (info->is_string)
+				{
+					DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, value, &var));
+				} else {
+					DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, strtod(value, NULL), &var));
+				}
+			}
+			if (isattr)
+			{
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_add_attr(subset, var));
+				dba_var_delete(var);
+			}
+			else
+			{
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
+			}
+			var = NULL;
+		} else {
+			/* End of input */
+			break;
+		}
+	}
+
+cleanup:
+	if (var)
+		dba_var_delete(var);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
+dba_err do_makebufr(poptContext optCon)
+{
+	dba_err err = DBA_OK;
+	bufrex_msg msg = NULL;
+	dba_rawmsg rmsg = NULL;
+	dba_file outfile = NULL;
+	const char* filename;
+	FILE* in = NULL;
+	int count = 0;
+
+	DBA_RUN_OR_RETURN(bufrex_msg_create(BUFREX_BUFR, &msg));
+	DBA_RUN_OR_GOTO(cleanup, dba_file_create(BUFR, "(stdout)", "w", &outfile));
+
+	/* Throw away the command name */
+	poptGetArg(optCon);
+
+	while ((filename = poptGetArg(optCon)) != NULL)
+	{
+		int found;
+		in = fopen(filename, "r");
+		if (in == NULL)
+		{
+			err = dba_error_system("opening file %s", filename);
+			goto cleanup;
+		}
+		while (1)
+		{
+			DBA_RUN_OR_GOTO(cleanup, parsetextgrib(in, msg, &found));
+			if (found)
+			{
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_encode(msg, &rmsg));
+				DBA_RUN_OR_GOTO(cleanup, dba_file_write(outfile, rmsg));
+				dba_rawmsg_delete(rmsg); rmsg = NULL;
+			} else
+				break;
+		}
+		fclose(in); in = NULL;
+		++count;
+	}
+
+	if (count == 0)
+		dba_cmdline_error(optCon, "at least one input file needs to be specified");
+
+cleanup:
+	if (in != NULL)
+		fclose(in);
+	if (msg)
+		bufrex_msg_delete(msg);
+	if (rmsg)
+		dba_rawmsg_delete(rmsg);
+	if (outfile)
+		dba_file_delete(outfile);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
 
 static struct tool_desc dbamsg;
 
@@ -515,6 +807,8 @@ struct poptOption dbamsg_dump_options[] = {
 		"format of the unput data ('bufr', 'crex', 'aof')", "type" },
 	{ "interpreted", 0, 0, &op_dump_interpreted, 0,
 		"dump the message as understood by the importer" },
+	{ "text", 0, 0, &op_dump_text, 0,
+		"dump as text that can be processed by dbamsg makebufr" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages" },
 	POPT_TABLEEND
@@ -572,13 +866,19 @@ struct poptOption dbamsg_fixaof_options[] = {
 	POPT_TABLEEND
 };
 
+struct poptOption dbamsg_makebufr_options[] = {
+	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	POPT_TABLEEND
+};
+
 static void init()
 {
 	dbamsg.desc = "Work with encoded meteorological data";
 	dbamsg.longdesc =
 		"Examine, dump and convert files containing meteorological data. "
 		"It supports observations encoded in BUFR, CREX and AOF formats";
-	dbamsg.ops = (struct op_dispatch_table*)calloc(8, sizeof(struct op_dispatch_table));
+	dbamsg.ops = (struct op_dispatch_table*)calloc(9, sizeof(struct op_dispatch_table));
 
 	dbamsg.ops[0].func = do_scan;
 	dbamsg.ops[0].aliases[0] = "scan";
@@ -631,11 +931,19 @@ static void init()
 	dbamsg.ops[6].longdesc = NULL;
 	dbamsg.ops[6].optable = dbamsg_fixaof_options;
 
-	dbamsg.ops[7].func = NULL;
-	dbamsg.ops[7].usage = NULL;
-	dbamsg.ops[7].desc = NULL;
-	dbamsg.ops[7].longdesc = NULL;
-	dbamsg.ops[7].optable = NULL;
+	dbamsg.ops[7].func = do_makebufr;
+	dbamsg.ops[7].aliases[0] = "makebufr";
+	dbamsg.ops[7].aliases[1] = "mkbufr";
+	dbamsg.ops[7].usage = "makebufr [options] filename [filename1 [...]]]";
+	dbamsg.ops[7].desc = "Read a simple description of a BUFR file and output the BUFR file.";
+	dbamsg.ops[7].longdesc = "Read a simple description of a BUFR file and output the BUFR file.  This only works for simple BUFR messages without attributes encoded with data present bitmaps";
+	dbamsg.ops[7].optable = dbamsg_makebufr_options;
+
+	dbamsg.ops[8].func = NULL;
+	dbamsg.ops[8].usage = NULL;
+	dbamsg.ops[8].desc = NULL;
+	dbamsg.ops[8].longdesc = NULL;
+	dbamsg.ops[8].optable = NULL;
 };
 
 int main (int argc, const char* argv[])

@@ -226,7 +226,7 @@ void to::test<2>()
 		"bufr/obs4-145.4.bufr", 
 		"bufr/test-airep1.bufr",
 		"bufr/test-temp1.bufr", 
-//		"bufr/ed4.bufr", 
+		"bufr/ed4.bufr", 
 		NULL
 	};
 
