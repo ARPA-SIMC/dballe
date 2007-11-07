@@ -8,6 +8,12 @@
  001019 LONG STATION OR SITE NAME                                        CCITTIA5                   0            0 256 CHARACTER                 0         32
  001063 ICAO LOCATION INDICATOR                                          CCITTIA5                   0            0  64 CHARACTER                 0          8
  001192 [SIM] MeteoDB station ID                                         NUMERIC                    0            0  24 NUMERIC                   0          8
+ 001212 AIR QUALITY OBSERVING STATION LOCAL CODE                         CCITTIA5                   0            0  56 CHARACTER                 0          7
+ 001213 AIRBASE AIR QUALITY OBSERVING STATION CODE                       CCITTIA5                   0            0  56 CHARACTER                 0          7
+ 001214 GEMS AIR QUALITY OBSERVING STATION CODE                          CCITTIA5                   0            0  48 CHARACTER                 0          6
+ 001215 AIR QUALITY OBSERVING STATION DOMINANT EMISSION SOURCE           CODE TABLE 001215          0            0   3 CODE TABLE 001215         0          1
+ 001216 AIR QUALITY OBSERVING STATION AREA TYPE                          CODE TABLE 001216          0            0   3 CODE TABLE 001216         0          1
+ 001217 AIR QUALITY OBSERVING STATION TERRAIN TYPE                       CODE TABLE 001217          0            0   4 CODE TABLE 001217         0          2
  002001 TYPE OF STATION                                                  CODE TABLE 2001            0            0   2 CODE TABLE 2001           0          1
  002002 TYPE OF INSTRUMENTATION FOR WIND MEASUREMENT                     FLAG TABLE 2002            0            0   4 FLAG TABLE 2002           0          2
  002005 PRECISION OF TEMPERATURE OBSERVATION                             K                          2            0   7 K                         2          3
