@@ -634,7 +634,7 @@ static dba_err parsetextgrib(FILE* in, bufrex_msg msg, int* found)
 	while (1)
 	{
 		DBA_RUN_OR_GOTO(cleanup, readfield(in, &name, &value));
-		fprintf(stderr, "GOT NAME %s VALUE \"%s\"\n", name, value);
+		/* fprintf(stderr, "GOT NAME %s VALUE \"%s\"\n", name, value); */
 		if (name != NULL)
 		{
 			if (strcasecmp(name, "edition") == 0) {
