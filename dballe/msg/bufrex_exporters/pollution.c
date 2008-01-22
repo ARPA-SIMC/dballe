@@ -113,7 +113,7 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 	double value;
 	int scaled = 0;
 
-	dba_msg_print(src, stderr);
+	//dba_msg_print(src, stderr);
 
 	// Get the variable out of msg
 	for (li = 0; li < src->data_count; ++li)
