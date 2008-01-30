@@ -1190,7 +1190,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'}"
 		"   AND c.ltype = 257 AND c.l1 = 0 AND c.l2 = 0"
 		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
-		" GROUP BY ri.id "
+		" GROUP BY d.id_var,ri.id "
 		"HAVING ri.prio=MAX(ri.prio)";
 
 	dba_err err = DBA_OK;
