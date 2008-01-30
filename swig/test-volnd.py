@@ -157,7 +157,7 @@ class TestRead(unittest.TestCase):
                 # Insert some pseudoana data for the station 1, to test
                 # pseudoana export and mixed data types
                 rec.clear()
-                rec.set({"ana_id": 1, "B01001": 12, "B01002": 123, "B01019": "Test of long station name"})
+                rec.set({"ana_id": 1, "B01001": 12, "B01002": 123, "B01019": "Test of long station name", "rep_cod": 1})
                 rec.setAnaContext()
                 self.db.insert(rec, False, True)
 
