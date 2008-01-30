@@ -1184,7 +1184,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 	 * STATION,     B01002   258
 	*/
 	const char* query =
-		"SELECT d.id_var, d.value, ri.prio"
+		"SELECT d.id_var, d.value, ri.id, ri.prio"
 		"  FROM context c, data d, repinfo ri"
 		" WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
 		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'}"
@@ -1200,6 +1200,8 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 	dba_varcode out_code;
 	char out_val[256];
 	SQLLEN out_val_ind;
+	DBALLE_SQL_C_SINT_TYPE out_rep_cod;
+
 
 	/* Allocate statement handle */
 	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
@@ -1210,6 +1212,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 	/* Bind output fields */
 	SQLBindCol(stm, 1, SQL_C_USHORT, &out_code, sizeof(out_code), 0);
 	SQLBindCol(stm, 2, SQL_C_CHAR, &out_val, sizeof(out_val), &out_val_ind);
+	SQLBindCol(stm, 3, DBALLE_SQL_C_SINT, &out_rep_cod, sizeof(out_rep_cod), NULL);
 
 	/* Perform the query */
 	res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
@@ -1221,7 +1224,10 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 
 	/* Get the results and save them in the record */
 	while (SQLFetch(stm) != SQL_NO_DATA)
+	{
 		DBA_RUN_OR_GOTO(cleanup, dba_record_var_setc(rec, out_code, out_val));
+		DBA_RUN_OR_GOTO(cleanup, dba_record_key_seti(rec, DBA_KEY_REP_COD, out_rep_cod));
+	}
 
 cleanup:
 	SQLFreeHandle(SQL_HANDLE_STMT, stm);
