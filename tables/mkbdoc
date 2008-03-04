@@ -38,8 +38,10 @@ sub mkformat($$$)
 		return "$len chars";
 	} elsif ($dec == 0) {
 		return "$len digits";
-	} else {
+	} elsif ($dec > 0) {
 		return '#' x ($len - $dec) . '.' . '#' x $dec;
+	} elsif ($dec < 0) {
+		return '#' x $len . '0' x (-$dec);
 	}
 }
 
