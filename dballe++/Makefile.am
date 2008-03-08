@@ -10,6 +10,7 @@ dballeinclude_HEADERS = \
 		error.h \
 		var.h \
 		record.h \
+		msg.h \
 		db.h \
 		format.h
 
@@ -17,6 +18,7 @@ lib_LTLIBRARIES = libdballepp.la
 libdballepp_la_SOURCES = \
 		error.cc \
 		var.cc \
+		msg.cc \
 		db.cc \
 		format.cc \
 		record.cc
@@ -40,6 +42,7 @@ tut_test_SOURCES = \
 	tests/error.cc \
 	tests/format.cc \
 	tests/record.cc \
+	tests/msg.cc \
 	tests/var.cc \
 	../dballe/core/test-utils-core.cc \
 	../dballe/bufrex/test-utils-bufrex.cc \

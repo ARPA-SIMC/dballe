@@ -17,6 +17,7 @@
 %{
 #include <dballe++/db.h>
 #include <dballe++/format.h>
+#include <dballe++/msg.h>
 #include <dballe/core/aliases.h>
 #include <iostream>
 
@@ -514,5 +515,6 @@ class TimeRange(tuple):
 
 %include <dballe++/var.h>
 %include <dballe++/record.h>
+%include <dballe++/msg.h>
 %include <dballe++/db.h>
 %include <dballe++/format.h>

@@ -5,84 +5,84 @@ from datetime import *
 import unittest
 
 class VarinfoTest(unittest.TestCase):
-	def testData(self):
-		info = Varinfo("B01001")
-		self.assertEqual(info.var(), "B01001")
-        	self.assertEqual(info.desc(), "WMO BLOCK NUMBER")
-        	self.assertEqual(info.unit(), "NUMERIC")
-        	self.assertEqual(info.scale(), 0)
-        	self.assertEqual(info.ref(), 0)
-        	self.assertEqual(info.len(), 2)
-        	self.assertEqual(info.is_string(), False)
+        def testData(self):
+                info = Varinfo("B01001")
+                self.assertEqual(info.var(), "B01001")
+                self.assertEqual(info.desc(), "WMO BLOCK NUMBER")
+                self.assertEqual(info.unit(), "NUMERIC")
+                self.assertEqual(info.scale(), 0)
+                self.assertEqual(info.ref(), 0)
+                self.assertEqual(info.len(), 2)
+                self.assertEqual(info.is_string(), False)
 
-	def testStringification(self):
-		info = Varinfo("B01001")
-		self.assertEqual(str(info).startswith("B01001"), True)
-		self.assertEqual(repr(info).startswith("Varinfo(B01001"), True)
+        def testStringification(self):
+                info = Varinfo("B01001")
+                self.assertEqual(str(info).startswith("B01001"), True)
+                self.assertEqual(repr(info).startswith("Varinfo(B01001"), True)
 
-	def testFromAlias(self):
-		info = Varinfo("t")
-		self.assertEqual(info.var(), "B12001")
+        def testFromAlias(self):
+                info = Varinfo("t")
+                self.assertEqual(info.var(), "B12001")
 
 class VarTest(unittest.TestCase):
-	def testUndefCreation(self):
-		var = Var("B01001")
-		self.assertEqual(var.code(), "B01001")
-		self.assertEqual(var.isset(), False)
+        def testUndefCreation(self):
+                var = Var("B01001")
+                self.assertEqual(var.code(), "B01001")
+                self.assertEqual(var.isset(), False)
         def testIntCreation(self):
-		var = Var("B05001", 12)
-		self.assertEqual(var.code(), "B05001")
-		self.assertEqual(var.isset(), True)
-		self.assertEqual(var.enqi(), 12)
-		self.assertEqual(var.enqd(), 0.00012)
-		self.assertEqual(var.enqc(), "12")
+                var = Var("B05001", 12)
+                self.assertEqual(var.code(), "B05001")
+                self.assertEqual(var.isset(), True)
+                self.assertEqual(var.enqi(), 12)
+                self.assertEqual(var.enqd(), 0.00012)
+                self.assertEqual(var.enqc(), "12")
         def testFloatCreation(self):
-		var = Var("B05001", 12.4)
-		self.assertEqual(var.code(), "B05001")
-		self.assertEqual(var.isset(), True)
-		self.assertEqual(var.enqi(), 1240000)
-		self.assertEqual(var.enqd(), 12.4)
-		self.assertEqual(var.enqc(), "1240000")
+                var = Var("B05001", 12.4)
+                self.assertEqual(var.code(), "B05001")
+                self.assertEqual(var.isset(), True)
+                self.assertEqual(var.enqi(), 1240000)
+                self.assertEqual(var.enqd(), 12.4)
+                self.assertEqual(var.enqc(), "1240000")
         def testStringCreation(self):
-		var = Var("B05001", "123456")
-		self.assertEqual(var.code(), "B05001")
-		self.assertEqual(var.isset(), True)
-		self.assertEqual(var.enqi(), 123456)
-		self.assertEqual(var.enqd(), 1.23456)
-		self.assertEqual(var.enqc(), "123456")
-	def testAliasCreation(self):
-		var = Var("t", 280.3)
-		self.assertEqual(var.code(), "B12001")
-		self.assertEqual(var.isset(), True)
-		self.assertEqual(var.enqi(), 2803)
-		self.assertEqual(var.enqd(), 280.3)
-		self.assertEqual(var.enqc(), "2803")
-	def testStringification(self):
-		var = Var("B01001")
-		self.assertEqual(str(var), "None")
-		self.assertEqual(repr(var), "Var(B01001, None)")
+                var = Var("B05001", "123456")
+                self.assertEqual(var.code(), "B05001")
+                self.assertEqual(var.isset(), True)
+                self.assertEqual(var.enqi(), 123456)
+                self.assertEqual(var.enqd(), 1.23456)
+                self.assertEqual(var.enqc(), "123456")
+        def testAliasCreation(self):
+                var = Var("t", 280.3)
+                self.assertEqual(var.code(), "B12001")
+                self.assertEqual(var.isset(), True)
+                self.assertEqual(var.enqi(), 2803)
+                self.assertEqual(var.enqd(), 280.3)
+                self.assertEqual(var.enqc(), "2803")
+        def testStringification(self):
+                var = Var("B01001")
+                self.assertEqual(str(var), "None")
+                self.assertEqual(repr(var), "Var(B01001, None)")
 
-		var = Var("B05001", 12.4)
-		self.assertEqual(str(var), "12.40000")
-		self.assertEqual(repr(var), "Var(B05001, 12.40000)")
-	def testEnq(self):
-		var = Var("B01001", 1)
-		self.assertEqual(type(var.enq()), int)
-		self.assertEqual(var.enq(), 1)
-		var = Var("B05001", 1.12345)
-		self.assertEqual(type(var.enq()), float)
-		self.assertEqual(var.enq(), 1.12345)
-		var = Var("B01019", "ciao")
-		self.assertEqual(type(var.enq()), str)
-		self.assertEqual(var.enq(), "ciao")
-	def testEq(self):
-		var = Var("B01001", 1)
-		self.assertEqual(var, var)
-		self.assertEqual(var, Var("B01001", 1))
-		self.assertNotEqual(var, Var("B01001", 2))
-		self.assertNotEqual(var, Var("B01002", 1))
-		self.assertNotEqual(var, None)
-		self.assertNotEqual(Var("B01001"), None)
+                var = Var("B05001", 12.4)
+                self.assertEqual(str(var), "12.40000")
+                self.assertEqual(repr(var), "Var(B05001, 12.40000)")
+        def testEnq(self):
+                var = Var("B01001", 1)
+                self.assertEqual(type(var.enq()), int)
+                self.assertEqual(var.enq(), 1)
+                var = Var("B05001", 1.12345)
+                self.assertEqual(type(var.enq()), float)
+                self.assertEqual(var.enq(), 1.12345)
+                var = Var("B01019", "ciao")
+                self.assertEqual(type(var.enq()), str)
+                self.assertEqual(var.enq(), "ciao")
+        def testEq(self):
+                var = Var("B01001", 1)
+                self.assertEqual(var, var)
+                self.assertEqual(var, Var("B01001", 1))
+                self.assertNotEqual(var, Var("B01001", 2))
+                self.assertNotEqual(var, Var("B01002", 1))
+                self.assertNotEqual(var, None)
+                self.assertNotEqual(Var("B01001"), None)
 
 
 class RecordTest(unittest.TestCase):
@@ -98,12 +98,12 @@ class RecordTest(unittest.TestCase):
                 self.r.set("B12001", 285.0)
                 self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype", "l1", "l2", "pindicator", "p1", "p2", "B12001", "B01002", "B01001"]
                 self.known = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 2, 3, 4, 285.0, 123, 1]
-	def testAlias(self):
-		r = self.r.copy()
+        def testAlias(self):
+                r = self.r.copy()
                 r.set("t", 282.3)
-		self.assertEqual(r["B12001"], 282.3)
+                self.assertEqual(r["B12001"], 282.3)
                 r["t"] = 283.2
-		self.assertEqual(r["B12001"], 283.2)
+                self.assertEqual(r["B12001"], 283.2)
         def testReadDictOperators(self):
                 r = self.r
                 self.assertEqual(r["block"], 1)
@@ -132,53 +132,53 @@ class RecordTest(unittest.TestCase):
                 self.assertEqual(r["level"], Level(104, 1, 2))
                 self.assertEqual(r["timerange"], TimeRange(1, 2, 3))
                 self.assertEqual(r["B12001"], 294.5)
-	def testSpecials(self):
+        def testSpecials(self):
                 r = self.r.copy()
-		r.set("datemin", datetime(2005, 3, 4, 5, 6, 7))
-		r.set("datemax", datetime(2004, 4, 5, 6, 7, 8))
+                r.set("datemin", datetime(2005, 3, 4, 5, 6, 7))
+                r.set("datemax", datetime(2004, 4, 5, 6, 7, 8))
                 self.assertEqual(r["date"], datetime(2007, 2, 1, 1, 2, 3))
-		self.assertEqual(r["datemin"], datetime(2005, 3, 4, 5, 6, 7))
-		self.assertEqual(r["datemax"], datetime(2004, 4, 5, 6, 7, 8))
+                self.assertEqual(r["datemin"], datetime(2005, 3, 4, 5, 6, 7))
+                self.assertEqual(r["datemax"], datetime(2004, 4, 5, 6, 7, 8))
                 self.assertEqual(r["level"], Level(105, 2, 0))
                 self.assertEqual(r["timerange"], TimeRange(2, 3, 4))
                 self.assertEqual(r.enq("date"), datetime(2007, 2, 1, 1, 2, 3))
-		self.assertEqual(r.enq("datemin"), datetime(2005, 3, 4, 5, 6, 7))
-		self.assertEqual(r.enq("datemax"), datetime(2004, 4, 5, 6, 7, 8))
+                self.assertEqual(r.enq("datemin"), datetime(2005, 3, 4, 5, 6, 7))
+                self.assertEqual(r.enq("datemax"), datetime(2004, 4, 5, 6, 7, 8))
                 self.assertEqual(r.enq("level"), Level(105, 2, 0))
                 self.assertEqual(r.enq("timerange"), TimeRange(2, 3, 4))
-		self.assertEqual("date" in r, True)
-		self.assertEqual("datemin" in r, True)
-		self.assertEqual("datemax" in r, True)
-		self.assertEqual("level" in r, True)
-		self.assertEqual("timerange" in r, True)
-		del(r["date"])
-		del(r["datemin"])
-		del(r["datemax"])
-		del(r["level"])
-		del(r["timerange"])
-		self.assertEqual(r["date"], None)
-		self.assertEqual(r["datemin"], None)
-		self.assertEqual(r["datemax"], None)
-		self.assertEqual(r["level"], None)
-		self.assertEqual(r["timerange"], None)
-		self.assertEqual("date" not in r, True)
-		self.assertEqual("datemin" not in r, True)
-		self.assertEqual("datemax" not in r, True)
-		self.assertEqual("level" not in r, True)
-		self.assertEqual("timerange" not in r, True)
+                self.assertEqual("date" in r, True)
+                self.assertEqual("datemin" in r, True)
+                self.assertEqual("datemax" in r, True)
+                self.assertEqual("level" in r, True)
+                self.assertEqual("timerange" in r, True)
+                del(r["date"])
+                del(r["datemin"])
+                del(r["datemax"])
+                del(r["level"])
+                del(r["timerange"])
+                self.assertEqual(r["date"], None)
+                self.assertEqual(r["datemin"], None)
+                self.assertEqual(r["datemax"], None)
+                self.assertEqual(r["level"], None)
+                self.assertEqual(r["timerange"], None)
+                self.assertEqual("date" not in r, True)
+                self.assertEqual("datemin" not in r, True)
+                self.assertEqual("datemax" not in r, True)
+                self.assertEqual("level" not in r, True)
+                self.assertEqual("timerange" not in r, True)
 
         def testIterEmpty(self):
-		r = Record()
-		self.assertEqual([x for x in r], [])
-		self.assertEqual([x for x in r.iterkeys()], [])
-		self.assertEqual([x for x in r.itervalues()], [])
-		self.assertEqual([x for x in r.iteritems()], [])
-		self.assertEqual([x for x in r.itervars()], [])
+                r = Record()
+                self.assertEqual([x for x in r], [])
+                self.assertEqual([x for x in r.iterkeys()], [])
+                self.assertEqual([x for x in r.itervalues()], [])
+                self.assertEqual([x for x in r.iteritems()], [])
+                self.assertEqual([x for x in r.itervars()], [])
         def testIterOne(self):
-		# Used to throw the wrong exception to stop iteration
-		r = Record()
-		r.seti("B33036", 75)
-		self.assertEqual([x for x in r.iteritems()], [("B33036", 75)])
+                # Used to throw the wrong exception to stop iteration
+                r = Record()
+                r.seti("B33036", 75)
+                self.assertEqual([x for x in r.iteritems()], [("B33036", 75)])
         def testIter(self):
                 res = [n.enq() for n in self.r]
                 self.assertEqual(len(res), len(self.known))
@@ -207,113 +207,122 @@ class RecordTest(unittest.TestCase):
                 self.assertEqual([x for x in r.iteritems()], [("ana_id", 1), ("ident", "ciao"), ("lat", 12.34567)])
 
 
-	def testRecord(self):
-		# Check basic set/get and variable iteration
-		rec = Record()
+        def testRecord(self):
+                # Check basic set/get and variable iteration
+                rec = Record()
 
-		self.assertEqual(rec.contains("ana_id"), False)
-		rec.set("ana_id", 3)
-		self.assertEqual(rec.contains("ana_id"), True)
-		self.assertEqual(rec.enqi("ana_id"), 3)
+                self.assertEqual(rec.contains("ana_id"), False)
+                rec.set("ana_id", 3)
+                self.assertEqual(rec.contains("ana_id"), True)
+                self.assertEqual(rec.enqi("ana_id"), 3)
 
-		self.assertEqual(rec.contains("B04001"), False)
-		rec.set("B04001", 2001)
-		self.assertEqual(rec.contains("B04001"), True)
-		self.assertEqual(rec.enqi("B04001"), 2001)
+                self.assertEqual(rec.contains("B04001"), False)
+                rec.set("B04001", 2001)
+                self.assertEqual(rec.contains("B04001"), True)
+                self.assertEqual(rec.enqi("B04001"), 2001)
 
-		count = 0
-		for var in rec.itervars():
-			self.assertEqual(var.code(), "B04001")
-			count = count + 1
-		self.assertEqual(count, 1)
+                count = 0
+                for var in rec.itervars():
+                        self.assertEqual(var.code(), "B04001")
+                        count = count + 1
+                self.assertEqual(count, 1)
 
-		rec.unset("block")
-		self.assertEqual(rec.contains("block"), False)
-		rec.unset("B04001")
-		self.assertEqual(rec.contains("B04001"), False)
+                rec.unset("block")
+                self.assertEqual(rec.contains("block"), False)
+                rec.unset("B04001")
+                self.assertEqual(rec.contains("B04001"), False)
 
-		rec.set("B01001", 1)
-		var = rec.enqvar("B01001")
-		var.set(4)
-		rec.set(var)
-		self.assertEqual(rec.enqi("B01001"), 4)
+                rec.set("B01001", 1)
+                var = rec.enqvar("B01001")
+                var.set(4)
+                rec.set(var)
+                self.assertEqual(rec.enqi("B01001"), 4)
 
-		dt = datetime(2001, 2, 3, 4, 5, 6)
-		rec.setdate(dt)
-		self.assertEqual(rec.enqdate(), dt)
-		self.assertEqual(rec.enqi("year"), 2001)
-		self.assertEqual(rec.enqi("month"), 2)
-		self.assertEqual(rec.enqi("day"), 3)
-		self.assertEqual(rec.enqi("hour"), 4)
-		self.assertEqual(rec.enqi("min"), 5)
-		self.assertEqual(rec.enqi("sec"), 6)
+                dt = datetime(2001, 2, 3, 4, 5, 6)
+                rec.setdate(dt)
+                self.assertEqual(rec.enqdate(), dt)
+                self.assertEqual(rec.enqi("year"), 2001)
+                self.assertEqual(rec.enqi("month"), 2)
+                self.assertEqual(rec.enqi("day"), 3)
+                self.assertEqual(rec.enqi("hour"), 4)
+                self.assertEqual(rec.enqi("min"), 5)
+                self.assertEqual(rec.enqi("sec"), 6)
 
-		l = Level(1, 2, 3)
-		rec.setlevel(l)
-		self.assertEqual(rec.enqlevel(), l)
-		self.assertEqual(rec.enqi("leveltype"), 1)
-		self.assertEqual(rec.enqi("l1"), 2)
-		self.assertEqual(rec.enqi("l2"), 3)
+                l = Level(1, 2, 3)
+                rec.setlevel(l)
+                self.assertEqual(rec.enqlevel(), l)
+                self.assertEqual(rec.enqi("leveltype"), 1)
+                self.assertEqual(rec.enqi("l1"), 2)
+                self.assertEqual(rec.enqi("l2"), 3)
 
-		t = TimeRange(4, 5, 6)
-		rec.settimerange(t)
-		self.assertEqual(rec.enqtimerange(), t)
-		self.assertEqual(rec.enqi("pindicator"), 4)
-		self.assertEqual(rec.enqi("p1"), 5)
-		self.assertEqual(rec.enqi("p2"), 6)
+                t = TimeRange(4, 5, 6)
+                rec.settimerange(t)
+                self.assertEqual(rec.enqtimerange(), t)
+                self.assertEqual(rec.enqi("pindicator"), 4)
+                self.assertEqual(rec.enqi("p1"), 5)
+                self.assertEqual(rec.enqi("p2"), 6)
 
 
-	def testRecordCopying(self):
-		# Try out all copying functions
+        def testRecordCopying(self):
+                # Try out all copying functions
 
-		master = Record()
-		master.set("block", 4)
-		master.set("latmin", 4.1234)
-		master.set("B01001", 4)
+                master = Record()
+                master.set("block", 4)
+                master.set("latmin", 4.1234)
+                master.set("B01001", 4)
 
-		if True:
-			r1 = master;
-			self.assertEqual(r1.enqi("block"), 4)
-			self.assertEqual(r1.enqd("latmin"), 4.1234)
-			self.assertEqual(r1.enqi("B01001"), 4)
+                if True:
+                        r1 = master;
+                        self.assertEqual(r1.enqi("block"), 4)
+                        self.assertEqual(r1.enqd("latmin"), 4.1234)
+                        self.assertEqual(r1.enqi("B01001"), 4)
 
-		r2 = master.copy()
-		self.assertEqual(r2.enqi("block"), 4)
-		self.assertEqual(r2.enqd("latmin"), 4.1234)
-		self.assertEqual(r2.enqi("B01001"), 4)
+                r2 = master.copy()
+                self.assertEqual(r2.enqi("block"), 4)
+                self.assertEqual(r2.enqd("latmin"), 4.1234)
+                self.assertEqual(r2.enqi("B01001"), 4)
 
-		r3 = r2.copy()
-		self.assertEqual(r3.enqi("block"), 4)
-		self.assertEqual(r3.enqd("latmin"), 4.1234)
-		self.assertEqual(r3.enqi("B01001"), 4)
-		r2.unset("latmin")
-		self.assertEqual(r3.enqd("latmin"), 4.1234)
-		r3.setd("latmin", 4.3214)
-		self.assertEqual(r3.enqd("latmin"), 4.3214)
+                r3 = r2.copy()
+                self.assertEqual(r3.enqi("block"), 4)
+                self.assertEqual(r3.enqd("latmin"), 4.1234)
+                self.assertEqual(r3.enqi("B01001"), 4)
+                r2.unset("latmin")
+                self.assertEqual(r3.enqd("latmin"), 4.1234)
+                r3.setd("latmin", 4.3214)
+                self.assertEqual(r3.enqd("latmin"), 4.3214)
 
-		r3 = r3
-		self.assertEqual(r3.enqi("block"), 4)
-		self.assertEqual(r3.enqd("latmin"), 4.3214)
-		self.assertEqual(r3.enqi("B01001"), 4)
+                r3 = r3
+                self.assertEqual(r3.enqi("block"), 4)
+                self.assertEqual(r3.enqd("latmin"), 4.3214)
+                self.assertEqual(r3.enqi("B01001"), 4)
 
-		master = r3
-		self.assertEqual(master.enqi("block"), 4)
-		self.assertEqual(master.enqd("latmin"), 4.3214)
-		self.assertEqual(master.enqi("B01001"), 4)
+                master = r3
+                self.assertEqual(master.enqi("block"), 4)
+                self.assertEqual(master.enqd("latmin"), 4.3214)
+                self.assertEqual(master.enqi("B01001"), 4)
 
-	def testRecordCopying1(self):
-		# This caused a repeatable segfault
-		rec = Record()
-		rec.setc("query", "nosort")
-		rec1 = rec.copy()
-		rec1.setc("query", "nosort")
+        def testRecordCopying1(self):
+                # This caused a repeatable segfault
+                rec = Record()
+                rec.setc("query", "nosort")
+                rec1 = rec.copy()
+                rec1.setc("query", "nosort")
+
+class MsgTest(unittest.TestCase):
+    def testBUFRCreation(self):
+        msg = Msg()
+        msg.setd("B12001", 289.2, 100, 1, 0, 0, 0, 0, 0)
+        buf = msg.encodeBUFR(0, 0, 0)
+        assert len(buf) > 8
+        self.assertEqual(buf[:4], "BUFR")
+        self.assertEqual(buf[-4:], "7777")
 
 class FormatterTest(unittest.TestCase):
-	def testFormatter(self):
-		for i in range(258):
-			describeLevel(i, 0, 0)
-		for i in range(256):
-			describeTrange(i, 0, 0)
+        def testFormatter(self):
+                for i in range(258):
+                        describeLevel(i, 0, 0)
+                for i in range(256):
+                        describeTrange(i, 0, 0)
 
 
 
