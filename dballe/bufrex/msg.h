@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,6 +84,13 @@ struct _bufrex_crex_info {
  */
 struct _bufrex_msg
 {
+	/**
+	 * Reference count
+	 *
+	 * This is not used by C, but it is used by the C++ bindings
+	 */
+	int _refcount;
+
 	/** Type of source/target encoding data */
 	bufrex_type encoding_type;
 

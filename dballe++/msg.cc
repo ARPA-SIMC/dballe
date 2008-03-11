@@ -9,6 +9,7 @@ namespace dballe {
 Msg::Msg()
 {
 	checked(dba_msg_create(&m_msg));
+	m_msg->type = MSG_SYNOP;
 }
 Msg::~Msg()
 {

@@ -1,0 +1,23 @@
+#include <dballe++/bufrex.h>
+#include <dballe/core/test-utils-core.h>
+
+using namespace std;
+
+namespace tut {
+using namespace tut_dballe;
+
+struct bufrex_shar {
+};
+
+TESTGRP( bufrex );
+
+using namespace dballe;
+
+template<> template<>
+void to::test<1>()
+{
+}
+
+}
+
+// vim:set ts=4 sw=4:
