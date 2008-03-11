@@ -17,6 +17,7 @@
 %{
 #include <dballe++/db.h>
 #include <dballe++/format.h>
+#include <dballe++/bufrex.h>
 #include <dballe++/msg.h>
 #include <dballe/core/aliases.h>
 #include <iostream>
@@ -453,7 +454,7 @@ class TimeRange(tuple):
                 const char* str = PyString_AsString(o);
                 dba_varcode vc = 0;
                 if ((vc = dba_varcode_alias_resolve(str)) == 0)
-                        vc = DBA_STRING_TO_VAR(str + 1);
+                        vc = dba_descriptor_code(str);
                 vec.push_back(vc);
         }
         $1 = &vec;
@@ -485,7 +486,7 @@ class TimeRange(tuple):
 %typemap(in) dba_varcode {
 	const char* tmp = PyString_AsString($input);
         if (($1 = dba_varcode_alias_resolve(tmp)) == 0)
-                $1 = DBA_STRING_TO_VAR(tmp + 1);
+                $1 = dba_descriptor_code(tmp);
 }
 
 %typemap(out) dba_varcode {
@@ -515,6 +516,7 @@ class TimeRange(tuple):
 
 %include <dballe++/var.h>
 %include <dballe++/record.h>
+%include <dballe++/bufrex.h>
 %include <dballe++/msg.h>
 %include <dballe++/db.h>
 %include <dballe++/format.h>

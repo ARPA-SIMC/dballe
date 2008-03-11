@@ -14,12 +14,12 @@ void BufrexSubset::truncate(int idx)
 	bufrex_subset_truncate(m_sub, idx);
 }
 
-void BufrexSubset::append(dba_varcode code, const Var& var)
+void BufrexSubset::appendvar(dba_varcode code, const Var& var)
 {
 	checked(bufrex_subset_store_variable_var(m_sub, code, var.var()));
 }
 
-void BufrexSubset::append(const Var& var)
+void BufrexSubset::appendvar(const Var& var)
 {
 	checked(bufrex_subset_store_variable_var(m_sub, var.code(), var.var()));
 }

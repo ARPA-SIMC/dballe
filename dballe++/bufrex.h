@@ -16,14 +16,44 @@ public:
 
 	void reset();
 	void truncate(int idx);
-	void append(dba_varcode code, const Var& var);
-	void append(const Var& var);
+	void appendvar(dba_varcode code, const Var& var);
+	void appendvar(const Var& var);
 
 	bool empty() const { return m_sub->vars_count == 0; }
 	size_t size() const { return m_sub->vars_count; }
 
 	Var operator[](int idx) const { return getVar(idx); }
 	Var getVar(int idx) const;
+
+	void appendi(dba_varcode code, int val)
+	{
+		checked(bufrex_subset_store_variable_i(m_sub, code, val));
+	}
+	void appendd(dba_varcode code, double val)
+	{
+		checked(bufrex_subset_store_variable_d(m_sub, code, val));
+	}
+	void appendc(dba_varcode code, const char* val)
+	{
+		checked(bufrex_subset_store_variable_c(m_sub, code, val));
+	}
+	void appends(dba_varcode code, const std::string& val)
+	{
+		checked(bufrex_subset_store_variable_c(m_sub, code, val.c_str()));
+	}
+	void appendu(dba_varcode code)
+	{
+		checked(bufrex_subset_store_variable_undef(m_sub, code));
+	}
+
+	// Overloaded version
+	void append(dba_varcode code, const Var& var) { appendvar(code, var); }
+	void append(const Var& var) { appendvar(var); }
+	void append(dba_varcode code, int val) { appendi(code, val); }
+	void append(dba_varcode code, double val) { appendd(code, val); }
+	void append(dba_varcode code, const char* val) { appendc(code, val); }
+	void append(dba_varcode code, const std::string& val) { appends(code, val); }
+	void append(dba_varcode code) { appendu(code); }
 };
 
 /**
