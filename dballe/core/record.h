@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,22 +71,23 @@ enum _dba_keyword {
 	DBA_KEY_MINUMIN		= 29,
 	DBA_KEY_SECMAX		= 30,
 	DBA_KEY_SECMIN		= 31,
-	DBA_KEY_LEVELTYPE	= 32,
+	DBA_KEY_LEVELTYPE1	= 32,
 	DBA_KEY_L1			= 33,
-	DBA_KEY_L2			= 34,
-	DBA_KEY_PINDICATOR	= 35,
-	DBA_KEY_P1			= 36,
-	DBA_KEY_P2			= 37,
-	DBA_KEY_VAR			= 38,
-	DBA_KEY_VARLIST		= 39,
-	DBA_KEY_CONTEXT_ID	= 40,
-	DBA_KEY_QUERY		= 41,
-	DBA_KEY_ANA_FILTER	= 42,
-	DBA_KEY_DATA_FILTER	= 43,
-	DBA_KEY_ATTR_FILTER	= 44,
-	DBA_KEY_LIMIT		= 45,
-	DBA_KEY_VAR_RELATED	= 46,
-	DBA_KEY_COUNT		= 47,
+	DBA_KEY_LEVELTYPE2	= 34,
+	DBA_KEY_L2			= 35,
+	DBA_KEY_PINDICATOR	= 36,
+	DBA_KEY_P1			= 37,
+	DBA_KEY_P2			= 38,
+	DBA_KEY_VAR			= 39,
+	DBA_KEY_VARLIST		= 40,
+	DBA_KEY_CONTEXT_ID	= 41,
+	DBA_KEY_QUERY		= 42,
+	DBA_KEY_ANA_FILTER	= 43,
+	DBA_KEY_DATA_FILTER	= 44,
+	DBA_KEY_ATTR_FILTER	= 45,
+	DBA_KEY_LIMIT		= 46,
+	DBA_KEY_VAR_RELATED	= 47,
+	DBA_KEY_COUNT		= 48,
 };
 /** @copydoc ::_dba_keyword */
 typedef enum _dba_keyword dba_keyword;

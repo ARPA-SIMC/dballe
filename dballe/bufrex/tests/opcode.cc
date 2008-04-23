@@ -27,6 +27,8 @@ using namespace tut_dballe;
 
 struct opcode_shar
 {
+	TestBufrexEnv testenv;
+
 	opcode_shar()
 	{
 	}
@@ -39,7 +41,7 @@ TESTGRP(opcode);
 
 #define CHECK_CHAIN(chain, string) do { \
 		bufrex_opcode cur = chain; \
-		char* scur = string; \
+		const char* scur = string; \
 		for (; cur != NULL; cur = cur->next, scur++) \
 			gen_ensure_equals(cur->val, *scur); \
 		gen_ensure_equals(*scur, 0); \

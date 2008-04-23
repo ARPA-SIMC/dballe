@@ -1,4 +1,5 @@
 #include <dballe++/record.h>
+#include <dballe++/init.h>
 #include <dballe/core/test-utils-core.h>
 
 using namespace std;
@@ -7,6 +8,7 @@ namespace tut {
 using namespace tut_dballe;
 
 struct record_shar {
+	dballe::DballeInit dballeInit;
 };
 
 TESTGRP( record );
@@ -83,8 +85,9 @@ void to::test<3>()
 	gen_ensure_equals(rec.enqi("hour"), 0);
 	gen_ensure_equals(rec.enqi("min"), 0);
 	gen_ensure_equals(rec.enqi("sec"), 0);
-	gen_ensure_equals(rec.enqi("leveltype"), 257);
+	gen_ensure_equals(rec.enqi("leveltype1"), 257);
 	gen_ensure_equals(rec.enqi("l1"), 0);
+	gen_ensure_equals(rec.enqi("leveltype2"), 0);
 	gen_ensure_equals(rec.enqi("l2"), 0);
 	gen_ensure_equals(rec.enqi("pindicator"), 0);
 	gen_ensure_equals(rec.enqi("p1"), 0);

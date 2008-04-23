@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 	// Above ground is ltype = 105, l1 = metri (se undef, cosa metto? Chiedo a
 	// Stortini per un default?)
 	int l1 = -1;
-	int p1 = -1;
+	int p1 = -1, p2 = -1;
 	int valtype = 0;
 	int curdecscale = 0;
 	int decscale = 0;
@@ -162,6 +162,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 				DBA_RUN_OR_RETURN(dba_var_enqi(var, &p1));
 				// Convert from minutes to seconds
 				p1 = p1*60;
+				p2 = -p1;
 				break;
 			/*
 			 * VAL stands for validation and signifies that this parameter has
@@ -308,7 +309,10 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 	if (l1 == -1)
 		l1 = 3;
 	if (p1 == -1)
+	{
 		p1 = -3600;
+		p2 = 3600;
+	}
 	
 	/* Create the final variable */
 	DBA_RUN_OR_RETURN(dba_var_create_local(valtype, &finalvar));
@@ -326,7 +330,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 		DBA_RUN_OR_GOTO(cleanup, dba_var_seta(finalvar, attr_pmc));
 
 	/* Store it into the dba_msg */
-	DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, finalvar, 105, l1, 0, 3, p1, 0));
+	DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, finalvar, 103, l1*1000, 0, 0, 0, p1, p2));
 	finalvar = NULL;
 
 cleanup:

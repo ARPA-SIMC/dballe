@@ -172,7 +172,7 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 	{
 		double press;
 		DBA_RUN_OR_RETURN(dba_var_enqd(d->var, &press));
-		if (dba_msg_find_level(src, 100, press, 0) != NULL)
+		if (dba_msg_find_level(src, 100, press, 0, 0) != NULL)
 		{
 			ltype = 100;
 			l1 = press;
@@ -183,7 +183,7 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 	{
 		double height;
 		DBA_RUN_OR_RETURN(dba_var_enqd(d->var, &height));
-		ltype = 103;
+		ltype = 102;
 		l1 = height;
 	}
 
@@ -198,7 +198,7 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 		if (tpl[i].var != -1)
 			d = dba_msg_find_by_id(src, tpl[i].var);
 		else
-			d = dba_msg_find(src, tpl[i].msgcode, ltype, l1, 0, 0, 0, 0);
+			d = dba_msg_find(src, tpl[i].msgcode, ltype, l1, 0, 0, 254, 0, 0);
 
 		if (d != NULL)
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, d->var));

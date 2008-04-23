@@ -543,6 +543,14 @@ void to::test<7>()
 	gen_ensure_equals(string(cval), "oaic");
 }
 
+// Test getters and setters of various elements
+template<> template<>
+void to::test<8>()
+{
+	// Start from cases that failed in the past only
+	CHECKED(dba_record_key_seti(rec, DBA_KEY_P2, 2));
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

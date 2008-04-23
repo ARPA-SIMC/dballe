@@ -93,11 +93,11 @@ class RecordTest(unittest.TestCase):
                 self.r.set("lat", 45.12345)
                 self.r.set("lon", 11.54321)
                 self.r.setdate(datetime(2007, 2, 1, 1, 2, 3))
-                self.r.setlevel(Level(105, 2, 0))
+                self.r.setlevel(Level(105, 2, 0, 0))
                 self.r.settimerange(TimeRange(2, 3, 4))
                 self.r.set("B12001", 285.0)
-                self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype", "l1", "l2", "pindicator", "p1", "p2", "B12001", "B01002", "B01001"]
-                self.known = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 2, 3, 4, 285.0, 123, 1]
+                self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype1", "l1", "leveltype2", "l2", "pindicator", "p1", "p2", "B12001", "B01002", "B01001"]
+                self.known = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 0, 2, 3, 4, 285.0, 123, 1]
         def testAlias(self):
                 r = self.r.copy()
                 r.set("t", 282.3)
@@ -111,7 +111,7 @@ class RecordTest(unittest.TestCase):
                 self.assertEqual(r["lat"], 45.12345)
                 self.assertEqual(r["lon"], 11.54321)
                 self.assertEqual(r["date"], datetime(2007, 2, 1, 1, 2, 3))
-                self.assertEqual(r["level"], Level(105, 2, 0))
+                self.assertEqual(r["level"], Level(105, 2, 0, 0))
                 self.assertEqual(r["timerange"], TimeRange(2, 3, 4))
                 self.assertEqual(r["B12001"], 285.0)
         def testWriteDictOperators(self):
@@ -121,7 +121,7 @@ class RecordTest(unittest.TestCase):
                 r["lat"] = 45.54321
                 r["lon"] = 11.12345
                 r["date"] = datetime(2006, 1, 2, 0, 1, 2)
-                r["level"] = Level(104, 1, 2)
+                r["level"] = Level(104, 1, 105, 2)
                 r["timerange"] = TimeRange(1, 2, 3)
                 r["B12001"] = 294.5
                 self.assertEqual(r["block"], 2)
@@ -129,7 +129,7 @@ class RecordTest(unittest.TestCase):
                 self.assertEqual(r["lat"], 45.54321)
                 self.assertEqual(r["lon"], 11.12345)
                 self.assertEqual(r["date"], datetime(2006, 1, 2, 0, 1, 2))
-                self.assertEqual(r["level"], Level(104, 1, 2))
+                self.assertEqual(r["level"], Level(104, 1, 105, 2))
                 self.assertEqual(r["timerange"], TimeRange(1, 2, 3))
                 self.assertEqual(r["B12001"], 294.5)
         def testSpecials(self):
@@ -139,12 +139,12 @@ class RecordTest(unittest.TestCase):
                 self.assertEqual(r["date"], datetime(2007, 2, 1, 1, 2, 3))
                 self.assertEqual(r["datemin"], datetime(2005, 3, 4, 5, 6, 7))
                 self.assertEqual(r["datemax"], datetime(2004, 4, 5, 6, 7, 8))
-                self.assertEqual(r["level"], Level(105, 2, 0))
+                self.assertEqual(r["level"], Level(105, 2, 0, 0))
                 self.assertEqual(r["timerange"], TimeRange(2, 3, 4))
                 self.assertEqual(r.enq("date"), datetime(2007, 2, 1, 1, 2, 3))
                 self.assertEqual(r.enq("datemin"), datetime(2005, 3, 4, 5, 6, 7))
                 self.assertEqual(r.enq("datemax"), datetime(2004, 4, 5, 6, 7, 8))
-                self.assertEqual(r.enq("level"), Level(105, 2, 0))
+                self.assertEqual(r.enq("level"), Level(105, 2, 0, 0))
                 self.assertEqual(r.enq("timerange"), TimeRange(2, 3, 4))
                 self.assertEqual("date" in r, True)
                 self.assertEqual("datemin" in r, True)
@@ -248,11 +248,12 @@ class RecordTest(unittest.TestCase):
                 self.assertEqual(rec.enqi("min"), 5)
                 self.assertEqual(rec.enqi("sec"), 6)
 
-                l = Level(1, 2, 3)
+                l = Level(1, 2, 1, 3)
                 rec.setlevel(l)
                 self.assertEqual(rec.enqlevel(), l)
-                self.assertEqual(rec.enqi("leveltype"), 1)
+                self.assertEqual(rec.enqi("leveltype1"), 1)
                 self.assertEqual(rec.enqi("l1"), 2)
+                self.assertEqual(rec.enqi("leveltype2"), 1)
                 self.assertEqual(rec.enqi("l2"), 3)
 
                 t = TimeRange(4, 5, 6)
@@ -376,20 +377,19 @@ class BufrexTest(unittest.TestCase):
 class MsgTest(unittest.TestCase):
     def testBUFRCreation(self):
         msg = Msg()
-        msg.setd("B12001", 289.2, 100, 1, 0, 0, 0, 0, 0)
+        msg.setd("B12001", 289.2, 100, 1, 0, 0, 0, 0, 0, 0)
         buf = msg.encodeBUFR(0, 0, 0)
         assert len(buf) > 8
         self.assertEqual(buf[:4], "BUFR")
         self.assertEqual(buf[-4:], "7777")
 
 class FormatterTest(unittest.TestCase):
-        def testFormatter(self):
-                for i in range(258):
-                        describeLevel(i, 0, 0)
-                for i in range(256):
-                        describeTrange(i, 0, 0)
-
-
+    def testFormatter(self):
+        for i in range(258):
+            describeLevel(i, 0, 0, 0)
+            describeLevel(i, 0, 1, 0)
+        for i in range(256):
+            describeTrange(i, 0, 0)
 
 if __name__ == "__main__":
         unittest.main()

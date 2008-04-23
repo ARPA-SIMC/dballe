@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir)
 
 #
 # Shared library
@@ -19,10 +19,14 @@ messageinclude_HEADERS = \
 		marshal.h \
 		file.h \
 		filter.h \
-		aof_codec.h \
-		bufrex_codec.h
+		aof_codec.h
 
-lib_LTLIBRARIES = libdballe-msg.la
+if DO_DBALLE_BUFREX
+messageinclude_HEADERS += \
+		bufrex_codec.h
+endif
+
+noinst_LTLIBRARIES = libdballe-msg.la
 libdballe_msg_la_SOURCES = \
 		formatter.c \
 		vars.c \
@@ -39,6 +43,9 @@ libdballe_msg_la_SOURCES = \
 		aof_importers/flight.c \
 		aof_importers/temp.c \
 		aof_importers/pilot.c \
+		file.c
+if DO_DBALLE_BUFREX
+libdballe_msg_la_SOURCES += \
 		bufrex_codec.c \
 		bufrex_importers/generic.c \
 		bufrex_importers/synop.c \
@@ -57,15 +64,12 @@ libdballe_msg_la_SOURCES = \
 		bufrex_exporters/pilot.c \
 		bufrex_exporters/temp.c \
 		bufrex_exporters/flight.c \
-		bufrex_exporters/pollution.c \
-		file.c
-libdballe_msg_la_LIBADD = \
-		../core/libdballe-core.la \
-		../bufrex/libdballe-bufrex.la
+		bufrex_exporters/pollution.c
+endif
 libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 vars.h vars.c: vars.csv mkvars
-	./mkvars < $<
+	$(srcdir)/mkvars < $<
 
 #
 # Unit testing
@@ -90,9 +94,9 @@ tut_test_SOURCES = \
 	test-utils-msg.cc \
 	../tut/tut-main.cc
 tut_test_LDADD = \
-	../core/libdballe-core.la \
+	libdballe-msg.la \
 	../bufrex/libdballe-bufrex.la \
-	libdballe-msg.la
+	../core/libdballe-core.la
 
 #
 # Documentation bits
@@ -101,16 +105,16 @@ tut_test_LDADD = \
 noinst_DATA = ltypes.dox ltypes.tex tranges.dox tranges.tex
 
 ltypes.dox: ltypes.txt mklevels
-	./mklevels dox < $< > $@
+	$(srcdir)/mklevels dox < $< > $@
 
 ltypes.tex: ltypes.txt mklevels
-	./mklevels tex < $< > $@
+	$(srcdir)/mklevels tex < $< > $@
 
 tranges.dox: mktranges
-	./mktranges dox < $< > $@
+	$(srcdir)/mktranges dox < $< > $@
 
 tranges.tex: mktranges
-	./mktranges tex < $< > $@
+	$(srcdir)/mktranges tex < $< > $@
 
 distclean-local:
 	rm -f ltypes.dox ltypes.tex tranges.dox tranges.tex

@@ -27,7 +27,21 @@
 #include <sys/types.h>
 #include <pwd.h>
 
+extern "C" {
+void aof_codec_init(void);
+void aof_codec_shutdown(void);
+}
+
 namespace tut_dballe {
+
+TestMsgEnv::TestMsgEnv()
+{
+	aof_codec_init();
+}
+TestMsgEnv::~TestMsgEnv()
+{
+	aof_codec_shutdown();
+}
 
 dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type)
 {
@@ -125,10 +139,11 @@ dba_err msg_generator::fill_message(dba_msg msg, bool mobile)
 		DBA_RUN_OR_RETURN(fill_context(rec));
 
 		int found;
-		int ltype, l1, l2, pind, p1, p2;
+		int ltype1, l1, ltype2, l2, pind, p1, p2;
 		// Since I just filled, I'm sure that the values are there
-		DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE, &ltype, &found));
+		DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE1, &ltype1, &found));
 		DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L1, &l1, &found));
+		DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE2, &ltype2, &found));
 		DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L2, &l2, &found));
 		DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_PINDICATOR, &pind, &found));
 		DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P1, &p1, &found));
@@ -137,7 +152,7 @@ dba_err msg_generator::fill_message(dba_msg msg, bool mobile)
 		dba_var var;
 		DBA_RUN_OR_RETURN(dba_var_create_local(generator_varcodes[rnd(0, sizeof(generator_varcodes) / sizeof(dba_varcode))], &var));
 		DBA_RUN_OR_RETURN(dba_var_setc(var, string(dba_var_info(var)->len, '8').c_str()));
-		DBA_RUN_OR_RETURN(dba_msg_set_nocopy(msg, var, ltype, l1, l2, pind, p1, p2));
+		DBA_RUN_OR_RETURN(dba_msg_set_nocopy(msg, var, ltype1, l1, ltype2, l2, pind, p1, p2));
 	}
 	return dba_error_ok();
 }
@@ -186,9 +201,9 @@ dba_var my_want_var(const char* file, int line, dba_msg msg, int id, const char*
 	return d->var;
 }
 
-dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2)
+dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
-	dba_msg_datum d = dba_msg_find(msg, code, ltype, l1, l2, pind, p1, p2);
+	dba_msg_datum d = dba_msg_find(msg, code, ltype1, l1, ltype2, l2, pind, p1, p2);
 
 	if (d == NULL)
 	{
@@ -196,7 +211,7 @@ dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code
 		snprintf(varname, 10, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
 		std::stringstream ss;
 		ss << "message does not contain the value " << varname << " at "
-		   << "lev(" << ltype << "," << l1 << "," << l2 << ")"
+		   << "lev(" << ltype1 << "," << l1 << "," << ltype2 << "," << l2 << ")"
 		   << "tr(" << pind << "," << p1 << "," << p2 << ")";
 		throw failure(__ensure_errmsg(file, line, ss.str()));
 	}
@@ -206,7 +221,7 @@ dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code
 		snprintf(varname, 10, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
 		std::stringstream ss;
 		ss << "message has a NULL variable in the datum for value " << varname << " at "
-		   << "lev(" << ltype << "," << l1 << "," << l2 << ")"
+		   << "lev(" << ltype1 << "," << l1 << ltype2 << "," << l2 << ")"
 		   << "tr(" << pind << "," << p1 << "," << p2 << ")";
 		throw failure(__ensure_errmsg(file, line, ss.str()));
 	}

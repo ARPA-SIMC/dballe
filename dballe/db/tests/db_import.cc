@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@ using namespace tut_dballe;
 
 struct db_import_shar
 {
+	TestMsgEnv testenv;
+
 	// DB handle
 	dba_db db;
 
@@ -141,6 +143,7 @@ void to::test<2>()
 		"bufr/obs4-142.1.bufr", 
 		"bufr/obs4-144.4.bufr", 
 		"bufr/obs4-145.4.bufr", 
+		"bufr/obs255-255.0.bufr", 
 		"bufr/test-airep1.bufr",
 		"bufr/test-temp1.bufr", 
 		"bufr/ed4.bufr",

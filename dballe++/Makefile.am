@@ -3,28 +3,55 @@
 #
 # Shared library
 #
+INCLUDES = -I$(top_srcdir)
 
 dballeincludedir = $(includedir)/dballe++
 
 dballeinclude_HEADERS = \
+		init.h \
 		error.h \
 		var.h \
-		record.h \
-		bufrex.h \
+		record.h
+
+if DO_DBALLE_BUFREX
+dballeinclude_HEADERS += \
+		bufrex.h
+endif
+
+if DO_DBALLE_MSG
+dballeinclude_HEADERS += \
 		msg.h \
-		db.h \
 		format.h
+endif
+
+if DO_DBALLE_DB
+dballeinclude_HEADERS += \
+		db.h
+endif
 
 lib_LTLIBRARIES = libdballepp.la
 libdballepp_la_SOURCES = \
+		init.cc \
 		error.cc \
 		var.cc \
-		bufrex.cc \
-		msg.cc \
-		db.cc \
-		format.cc \
 		record.cc
-libdballepp_la_LIBADD = ../dballe/db/libdballe-db.la
+
+if DO_DBALLE_BUFREX
+libdballepp_la_SOURCES += \
+		bufrex.cc
+endif
+
+if DO_DBALLE_MSG
+libdballepp_la_SOURCES += \
+		msg.cc \
+		format.cc
+endif
+
+if DO_DBALLE_DB
+libdballepp_la_SOURCES += \
+		db.cc
+endif
+libdballepp_la_LIBADD = ../dballe/libdballe.la
 libdballepp_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 
@@ -42,22 +69,35 @@ CXXFLAGS += -O0
 
 tut_test_SOURCES = \
 	tests/error.cc \
-	tests/format.cc \
-	tests/record.cc \
-	tests/bufrex.cc \
-	tests/msg.cc \
 	tests/var.cc \
+	tests/record.cc \
 	../dballe/core/test-utils-core.cc \
-	../dballe/bufrex/test-utils-bufrex.cc \
-	../dballe/msg/test-utils-msg.cc \
-	../dballe/db/test-utils-db.cc \
 	../dballe/tut/tut-main.cc
-if DB_TESTS
-tut_test_SOURCES += tests/db.cc
+
+if DO_DBALLE_BUFREX
+tut_test_SOURCES += \
+	tests/bufrex.cc \
+	../dballe/bufrex/test-utils-bufrex.cc
 endif
+
+if DO_DBALLE_MSG
+tut_test_SOURCES += \
+	tests/format.cc \
+	tests/msg.cc \
+	../dballe/msg/test-utils-msg.cc
+endif
+
+if DO_DBALLE_DB
+if DO_TEST_DB
+tut_test_SOURCES += \
+	tests/db.cc \
+	../dballe/db/test-utils-db.cc
+endif
+endif
+
 tut_test_LDADD = \
-	../dballe/core/libdballe-core.la \
-	../dballe/bufrex/libdballe-bufrex.la \
-	../dballe/msg/libdballe-msg.la \
+	libdballepp.la \
 	../dballe/db/libdballe-db.la \
-	libdballepp.la
+	../dballe/msg/libdballe-msg.la \
+	../dballe/bufrex/libdballe-bufrex.la \
+	../dballe/core/libdballe-core.la

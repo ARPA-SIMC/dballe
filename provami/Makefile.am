@@ -51,7 +51,10 @@ nodist_provamipython_PYTHON = provami/Paths.py
 
 noinst_DATA = provami/Paths.py
 
-provami/Paths.py: provami/Paths.py.in
+# mkdir is there for VPATH builds, as the provami directory at this point only
+# exists in $(srcdir)
+provami/Paths.py: $(srcdir)/provami/Paths.py.in
+	mkdir -p provami
 	sed -e 's|@DATADIR@|$(dballedatadir)|g' $< > $@
 
 dist_bin_SCRIPTS = provami.py
@@ -60,6 +63,9 @@ man_MANS = provami.1
 
 install-exec-hook:
 	mv $(DESTDIR)$(bindir)/provami.py $(DESTDIR)$(bindir)/provami
+
+uninstall-hook:
+	rm -f $(DESTDIR)$(bindir)/provami
 
 EXTRA_DIST = dballe populate.py provami/Paths.py.in \
 	     $(dballedata_DATA) $(provamiModules) \

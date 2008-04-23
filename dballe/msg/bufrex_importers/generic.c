@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	dba_err err = DBA_OK;
 	dba_var copy = NULL;
 	int i;
-	int ltype = -1, l1 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
+	int ltype1 = -1, ltype2 = -1, l1 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
 
 	msg->type = MSG_GENERIC;
 
@@ -49,14 +49,15 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0, 4, 192): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &pind)); break;
 			case DBA_VAR(0, 4, 193): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &p1)); break;
 			case DBA_VAR(0, 4, 194): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &p2)); break;
-			case DBA_VAR(0, 7, 192): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype)); break;
+			case DBA_VAR(0, 7, 192): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype1)); break;
 			case DBA_VAR(0, 7, 193): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l1)); break;
 			case DBA_VAR(0, 7, 194): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l2)); break;
+			case DBA_VAR(0, 7, 195): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype2)); break;
 			default:
-				if (ltype == -1 || l1 == -1 || l2 == -1 || pind == -1 || p1 == -1 || p2 == -1)
+				if (ltype1 == -1 || l1 == -1 || ltype2 == -1 || l2 == -1 || pind == -1 || p1 == -1 || p2 == -1)
 					DBA_FAIL_GOTO(cleanup, dba_error_consistency(
-							"Incomplete context informations l(%d,%d,%d),p(%d,%d,%d) for variable %d%02d%03d",
-							ltype, l1, l2, pind, p1, p2, dba_var_code(var)));
+							"Incomplete context informations l(%d,%d, %d,%d),p(%d,%d,%d) for variable %d%02d%03d",
+							ltype1, l1, ltype2, l2, pind, p1, p2, dba_var_code(var)));
 
 				DBA_RUN_OR_GOTO(cleanup, dba_var_copy(var, &copy));
 
@@ -65,7 +66,7 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 						DBA_VAR_X(dba_var_code(sset->vars[i + 1])) == 33; i++)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, sset->vars[i + 1]));
 				
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, copy, ltype, l1, l2, pind, p1, p2));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, copy, ltype1, l1, ltype2, l2, pind, p1, p2));
 				copy = NULL;
 				break;
 		}

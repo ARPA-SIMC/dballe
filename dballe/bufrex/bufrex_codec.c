@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -231,7 +231,7 @@ static dba_err crex_file_create(dba_encoding type, FILE* fd, const char* mode, d
 static dba_file_create_fun old_bufr_create_fun;
 static dba_file_create_fun old_crex_create_fun;
 
-void __attribute__ ((constructor)) bufrex_codec_init(void)
+void bufrex_codec_init(void)
 {
 	old_bufr_create_fun = dba_file_bufr_create;
 	old_crex_create_fun = dba_file_crex_create;
@@ -239,7 +239,7 @@ void __attribute__ ((constructor)) bufrex_codec_init(void)
 	dba_file_crex_create = crex_file_create;
 }
 
-void __attribute__ ((destructor)) bufrex_codec_shutdown(void)
+void bufrex_codec_shutdown(void)
 {
 	dba_file_bufr_create = old_bufr_create_fun;
 	dba_file_crex_create = old_crex_create_fun;

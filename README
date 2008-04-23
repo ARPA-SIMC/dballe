@@ -114,6 +114,10 @@ Once this is set up, you can initialise the DB-All.e database using the command:
 "--user" can be omitted if it is the same as your Unix username; "--pass" can
 be omitted if the user has no password.
 
+If you do not already have access to datasets to import, some are available
+from http://www.ncar.ucar.edu/tools/datasets/ after registering (for free) on
+the website.
+
 
 Documentation
 -------------

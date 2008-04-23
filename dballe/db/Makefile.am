@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir)
 
 #
 # Shared library
@@ -19,11 +19,15 @@ dbinclude_HEADERS = \
 		data.h \
 		attr.h \
 		cursor.h \
-		db.h \
+		db.h
+
+if DO_DBALLE_MSG
+dbinclude_HEADERS += \
 		import.h \
 		export.h
+endif
 
-lib_LTLIBRARIES = libdballe-db.la
+noinst_LTLIBRARIES = libdballe-db.la
 libdballe_db_la_SOURCES = \
 		querybuf.c \
 		internals.c \
@@ -33,13 +37,14 @@ libdballe_db_la_SOURCES = \
 		data.c \
 		attr.c \
 		cursor.c \
-		db.c \
+		db.c
+
+if DO_DBALLE_MSG
+libdballe_db_la_SOURCES += \
 		import.c \
 		export.c
-libdballe_db_la_LIBADD = \
-		../core/libdballe-core.la \
-		../bufrex/libdballe-bufrex.la \
-		../msg/libdballe-msg.la
+endif
+
 libdballe_db_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 #
@@ -51,7 +56,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 check_PROGRAMS =
 TESTS =
 
-if DB_TESTS
+if DO_TEST_DB
 check_PROGRAMS += tut_test
 TESTS += $(check_PROGRAMS)
 
@@ -74,8 +79,8 @@ tut_test_SOURCES = \
 	test-utils-db.cc \
 	../tut/tut-main.cc
 tut_test_LDADD = \
-	../core/libdballe-core.la \
-	../bufrex/libdballe-bufrex.la \
+	libdballe-db.la \
 	../msg/libdballe-msg.la \
-	libdballe-db.la
+	../bufrex/libdballe-bufrex.la \
+	../core/libdballe-core.la
 endif

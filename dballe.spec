@@ -1,16 +1,20 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 3.0.1
-Release: 1
+Version: 4.0.0
+Release: 4%{?dist}
 License: GPL
 Group: Applications/Meteo
-URL: http://www.arpa.emr.it/sim
+URL: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: unixODBC-devel, gperf, starmet, tetex, tetex-latex, doxygen
-Requires: MyODBC, mysql >= 4.1.1 , sqlite sqliteodbc, %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils
+#Requires:  mysql >= 4.1.1 ,mysql-connector-odbc, sqlite sqliteodbc, %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires:  %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 
- 
+%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+%{!?python_siteinc: %define python_siteinc %(%{__python} -c "from distutils.sysconfig import get_python_inc; print get_python_inc()")}
+
 %description
  Database for punctual meteorological data (Command line tools)
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -51,215 +55,80 @@ Requires: MyODBC, mysql >= 4.1.1 , sqlite sqliteodbc, %{name}-common = %{?epoch:
     parameters or on report types.
 
 
-%package  -n libdballe-core-dev
+%package  -n provami
+Summary: Graphical interface to DB-All.e databases
+Group: Applications/Meteo
+requires: wxPython, dballe >= 3.0-1
+
+%description -n provami
+ provami is a GUI application to visualise and navigate DB-All.e databases.
+ It also allows to perform simple editing tasks, and to graphically select and
+ export data subsets.
+
+
+%package  -n libdballe-devel
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
-Requires: lib%{name}-core3 = %{?epoch:%epoch:}%{version}-%{release}
+Requires: lib%{name}4 = %{?epoch:%epoch:}%{version}-%{release}
 
-%description -n libdballe-core-dev
+%description -n libdballe-devel
  DB-ALL.e core C development library
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
+
+The Fedora packaging of DB-All.e includes all the features of the libraries,
+ but any subset can be used without interference from other subsets.  It is
+ also possible to rebuild the library to include only those features that are
+ needed.
  .
- This is the core DB_All.e development the library.  It includes:
+ Features provided:
  .
-  * Error handling infrastructure
   * Unit conversion
   * Handling of physical variables
+  * Encoding and decoding of BUFR and CREX reports from:
+     * fixed land and sea stations, like synops and buoys
+     * mobile stations: ships, airplanes
+     * soundings: temp, pilot
+     * METAR reports
+     * Satellite strides (decode only)
+  * Decoding of AOF reports
+  * Interpretation of weather reports as physical data precisely located in
+    space and time, and encoding of physical data into weather reports.
+  * Smart on-disk database for observed and forecast weather data based on
+    physical principles, built to support operations such as quality control,
+    data thinning, correlation of data from mixed sources
 
-%package -n libdballe-core-doc
+%package -n libdballe-doc
 Summary:   DB-ALL.e core C development library (documentation)
 Group: Applications/Meteo
-%description  -n libdballe-core-doc
+%description  -n libdballe-doc
  DB-ALL.e core C development library (documentation)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
- This is the documentation for the core DB_All.e development the library.
+ This is the documentation for the core DB_All.e development library.
 
 
-%package  -n libdballe-core3
+%package  -n libdballe4
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 
-%description -n libdballe-core3
-DB-ALL.e core shared library
+%description -n libdballe4
+DB-ALL.e C shared library
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
- This is the core shared library for C programs.
+ This is the shared library for C programs.
 
 
+%package    -n  libdballef-devel
 
-%package -n libdballe-bufrex-dev
-Summary:   Read and write functions for BUFR and CREX weather data
+Summary:  DB-All.e Fortran development library
 Group:    Applications/Meteo
-Requires: lib%{name}-core-dev = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-core3 = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-bufrex3 = %{?epoch:%epoch:}%{version}-%{release}
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},lib%{name}f-devel = %{?epoch:%epoch:}%{version}-%{release}
 
-%description -n libdballe-bufrex-dev
- Read and write functions for BUFR and CREX weather data
- Functions to read and write weather data in WMO BUFR and CREX formats.
- .
- It is being used and tested with these kinds of BUFR and CREX messages:
-  * Fixed land and sea stations, like synops and buoys
-  * Mobile stations: ships, airplanes
-  * Soundings: temp, pilot
-  * METAR reports
-  * Satellite strides (decode only)
-
-
-
-%package -n libdballe-bufrex-doc
-Summary:   Read and write functions for BUFR and CREX weather data (documentation)
-Group:    Applications/Meteo
-
-%description  -n libdballe-bufrex-doc 
- Read and write functions for BUFR and CREX weather data (documentation)
- Documentation for the functions to read and write weather data in WMO BUFR and
- CREX formats.
-
-
-
-%package  -n libdballe-bufrex3
-Summary:   Read and write functions for BUFR and CREX weather data (shared library)
-Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-
-%description -n libdballe-bufrex3
- Read and write functions for BUFR and CREX weather data (shared library)
- Shared library with functions to read and write weather data in WMO BUFR and
- CREX formats.
-
-
-%package   -n libdballe-msg-dev
-Summary:    Interpret weather reports into physycal data, and vice-versa
-Group:    Applications/Meteo
-Requires: lib%{name}-core-dev = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-core3  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-bufrex-dev = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-bufrex3  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-msg3 = %{?epoch:%epoch:}%{version}-%{release} 
-%description  -n libdballe-msg-dev
-Interpret weather reports into physycal data, and vice-versa
- The library implements the dba_msg infrastructure for handling physical data
- precisely located in space and time.  The structure can be:
- .
-  * Filled in with data from weather reports encoded BUFR, CREX or AOF formats
-  * Used to create BUFR or CREX weather reports
-  * Read from disk in BUFR, CREX or AOF files
-  * Written to disk in BUFR or CREX files
-  * Stored into a DB-All.e database via libdballe-db
-  * Queried from a DB-All.e database via libdballe-db
- .
- The representation is in 7 dimensions: latitude and longitude geographic
- coordinates, table driven vertical coordinate, reference time, table driven
- observation and forecast specification, table driven data type.
- .
- dba_msg is a very convenient way of accessing weather data already digested as
- properly located physical quantities, as well as as a common middle ground for
- performing conversions between the various supported message formats.
-
-
-
-%package   -n libdballe-msg-doc
-Summary:  Interpret weather reports into physycal data, and vice-versa (documentation)
-Group:    Applications/Meteo
-
-%description  -n libdballe-msg-doc
-Interpret weather reports into physycal data, and vice-versa (documentation)
- Documentation for the C API of the dba_msg infrastructure for handling
- physical data precisely located in space and time.
-
-
-%package   -n libdballe-msg3
-Summary:   Interpret weather reports into physycal data, and vice-versa (shared library)
-Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-
-%description -n libdballe-msg3
-Interpret weather reports into physycal data, and vice-versa (shared library)
- Shared library for the dba_msg infrastructure for handling physical data
- precisely located in space and time.
-
-
-
-
-
-%package   -n libdballe-db-dev
-
-Summary:   Smart on-disk database for weather data
-Group:    Applications/Meteo
-Requires: lib%{name}-core-dev = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-core3  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-bufrex-dev = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-bufrex3  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-msg-dev  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-msg3 = %{?epoch:%epoch:}%{version}-%{release}, libdballe-db3 = %{?epoch:%epoch:}%{version}-%{release}
-
-%description  -n libdballe-db-dev
-
-Smart on-disk database for weather data
- Fast on-disk database where meteorological observed and forecast data can be
- stored, searched, retrieved and updated.
- .
- The main characteristics of the DB-ALL.e database are:
- .
-  * To make computation easier, data is stored as physical quantities,
-    that is, as measures of a variable in a specific point of space and
-    time, rather than as a sequence of report.
-  * Representation is in 7 dimensions: latitude and longitude geographic
-    coordinates, table driven vertical coordinate, reference time,
-    table driven observation and forecast specification, table driven
-    data type.
-  * It allows to store extra information linked to the data, such as
-    confidence intervals for quality control.
-  * It allows to store extra information linked to the stations.
-  * Variables can be represented as real, integer and characters, with
-    appropriate precision for the type of measured value.
-  * It is based on physical principles, that is, the data it contains are
-    defined in terms of homogeneous and consistent physical data. For
-    example, it is impossible for two incompatible values to exist in the
-    same point in space and time.
-  * It can manage fixed stations and moving stations such as airplanes or
-    ships.
-  * It can manage both observational and forecast data.
-  * It can manage data along all three dimensions in space, such as data
-    from soundings and airplanes.
-  * Report information is preserved. It can work based on physical
-    parameters or on report types.
-  * Can concurrently access multiple MySQL and SQLite databases via ODBC
-
-
-
-
-%package   -n libdballe-db-doc
-
-Summary:   Smart on-disk database for weather data (documentation)
-Group:    Applications/Meteo
-
-%description -n libdballe-db-doc
- Smart on-disk database for weather data (documentation)
- DB-All.e is a fast on-disk database where meteorological observed and
- forecast data can be stored, searched, retrieved and updated.
- .
- This is the C API documentation for the database functions of DB-All.e.
-
-
-
-%package    -n libdballe-db3
-Summary:  Smart on-disk database for weather data (shared library)
-Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-
-%description  -n libdballe-db3
- Smart on-disk database for weather data (shared library)
- DB-All.e is a fast on-disk database where meteorological observed and
- forecast data can be stored, searched, retrieved and updated.
- .
- This is the shared library for the database functions of DB-All.e.
-
-
-
-%package    -n  libdballef-dev
-
-Summary:  Database for punctual meteorological data (Fortran development library)
-Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},lib%{name}f-dev = %{?epoch:%epoch:}%{version}-%{release}
-
-%description -n libdballef-dev
- Database for punctual meteorological data (Fortran development library)
+%description -n libdballef-devel
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
@@ -267,22 +136,17 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},lib%{name}f-de
  database as a smart working area for meteorological software.
 
 
+%package    -n libdballef4
 
-
-%package    -n libdballef3
-
-Summary:  Database for punctual meteorological data (Fortran shared library)
+Summary:  DB-ALL.e Fortran shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 
-%description -n libdballef3
- Database for punctual meteorological data (Fortran shared library)
+%description -n libdballef4
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
  This is the shared library for Fortran programs.
-
-
 
 
 %package    common
@@ -302,12 +166,12 @@ Common data files for all DB-All.e modules
 
 
 
-%package -n libdballepp3
+%package -n libdballepp4
 
-Summary:  Database for punctual meteorological data (C++ shared library)
+Summary:  DB-ALL.e C++ shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-%description -n libdballepp3
+%description -n libdballepp4
  Database for punctual meteorological data (C++ shared library)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -315,12 +179,12 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
  This is the shared library for C++ programs.
 
 
-%package -n  libdballepp-dev
-Summary:  Database for punctual meteorological data (C++ development library)
+%package -n  libdballepp-devel
+Summary:  DB-All.e C++ development library
 Group:    Applications/Meteo
-Requires: lib%{name}-core-dev = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-core3  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-bufrex-dev = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-bufrex3  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-msg-dev  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-msg3 = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-db-dev  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}-db3 = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}pp3 = %{?epoch:%epoch:}%{version}-%{release} 
+Requires: lib%{name}-devel = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}4  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}pp4 = %{?epoch:%epoch:}%{version}-%{release} 
 
-%description -n libdballepp-dev
+%description -n libdballepp-devel
  Database for punctual meteorological data (C++ development library) 
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -330,167 +194,156 @@ Requires: lib%{name}-core-dev = %{?epoch:%epoch:}%{version}-%{release}, lib%{nam
 
 
 %package -n python-dballe
-Summary:  Database for punctual meteorological data (Python bindings)
+Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 
 %description -n python-dballe
- Database for punctual meteorological data (Python bindings)
+ DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
- .
+
  These are the python bindings.
 
 
 %prep
-%setup -q
+%setup -q 
 
 %build
-%configure
+### configure  pyexecdir=%{python_sitearch}/dballe pkgpythondir=%{python_sitelib}/dballe
+%configure --disable-rpath FC=gfortran F90=gfortan F77=gfortran
+
+# do not work smp
+#make %{?_smp_mflags}
+
 make
+
+#make SITELIB=%{python_sitelib}
+#make  pyexecdir=%{python_sitearch}/dballe pkgpythondir=%{python_sitelib}/dballe
+
 #make check
 
 %install
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
-#rm -rf $RPM_BUILD_ROOT
-%makeinstall
+
+#make install DESTDIR=$RPM_BUILD_ROOT pyexecdir=%{python_sitearch}/dballe  pkgpythondir=%{python_sitelib}/dballe
+#make install DESTDIR=$RPM_BUILD_ROOT SITELIB=%{python_sitelib}
+
+make install DESTDIR=$RPM_BUILD_ROOT
 
 %clean
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
 #rm -rf $RPM_BUILD_ROOT
 
 
-
-
 %files
 %defattr(-,root,root,-)
-%dir /usr/bin
-%dir /usr/share/man/man1
-/usr/bin/*
-%doc /usr/share/man/man1/*
-%doc /usr/share/doc/dballe/guide.ps
-%doc /usr/share/doc/dballe/guide_html
-%doc doc
+%dir %{_bindir}
+%dir %{_mandir}/man1
+%{_bindir}/dbadb
+%{_bindir}/dbamsg
+%{_bindir}/dbatbl
+%doc %{_mandir}/man1/dbadb*
+%doc %{_mandir}/man1/dbamsg*
+%doc %{_mandir}/man1/dbatbl*
+%doc %{_docdir}/dballe/guide.ps
+%doc %{_docdir}/dballe/guide_html/*
 
+
+%files -n provami
+%defattr(-,root,root,-)
+%dir /usr/bin
+%{_bindir}/provami
+
+%dir %{python_sitearch}/
+%{python_sitearch}//provami
+%dir %{_mandir}/man1
+%doc %{_mandir}/man1/provami*
+/usr/share/dballe/icon*.png
+/usr/share/dballe/world.dat
 
 %files common
 %defattr(-,root,root,-)
-/usr/share/dballe
+/usr/share/dballe/[DB]*
+/usr/share/dballe/dballe.txt
+/usr/share/dballe/repinfo.csv
 
-
-%files -n libdballe-bufrex3
+%files -n libdballe4
 %defattr(-,root,root,-)
-/usr/lib/libdballe-bufrex*.so.*
+%{_libdir}/libdballe.so.*
+#%{_libdir}/libdballe[0-9]*.so.*
 
-%files -n libdballe-bufrex-dev
+%files -n libdballe-devel
 %defattr(-,root,root,-)
-%doc /usr/share/doc/dballe/libdballe-bufrex.doxytags
-/usr/include/dballe/bufrex/*
-/usr/lib/libdballe-bufrex*.a
-/usr/lib/pkgconfig/libdballe-bufrex*
-/usr/lib/libdballe-bufrex*.la
-/usr/lib/libdballe-bufrex*.so
-/usr/share/aclocal/libdballe-bufrex*.m4
+%doc %{_docdir}/dballe/libdballe.doxytags
+%{_includedir}/dballe/core/*
+%{_includedir}/dballe/bufrex/*
+%{_includedir}/dballe/msg/*
+%{_includedir}/dballe/db/*
+%{_includedir}/dballe/init.h
 
-%files -n libdballe-core3
-%defattr(-,root,root,-)
-/usr/lib/libdballe-core*.so.*
+%{_libdir}/libdballe.a
+%{_libdir}/libdballe.la
+%{_libdir}/libdballe.so
+#%{_libdir}/libdballe[0-9]*.so
+%{_libdir}/pkgconfig/libdballe.pc
+/usr/share/aclocal/libdballe.m4
 
-%files -n libdballe-core-dev
-%defattr(-,root,root,-)
-%doc /usr/share/doc/dballe/libdballe-core.doxytags
-/usr/include/dballe/core/*
-/usr/lib/libdballe-core*.a
-/usr/lib/pkgconfig/libdballe-core*
-/usr/lib/libdballe-core*.la
-/usr/lib/libdballe-core*.so
-/usr/share/aclocal/libdballe-core*.m4
 
-%files -n libdballe-db3
-%defattr(-,root,root,-)
-/usr/lib/libdballe-db*.so.*
-
-%files -n libdballe-db-dev
-%defattr(-,root,root,-)
-%doc /usr/share/doc/dballe/libdballe-db.doxytags
-/usr/include/dballe/db/*
-/usr/lib/libdballe-db*.a
-/usr/lib/pkgconfig/libdballe-db*
-/usr/lib/libdballe-db*.la
-/usr/lib/libdballe-db*.so
-/usr/share/aclocal/libdballe-db*.m4
-
-%files -n libdballef-dev
+%files -n libdballef-devel
 %defattr(-,root,root,-)
 
-%doc /usr/share/doc/dballe/fapi_html
-%doc /usr/share/doc/dballe/fapi.ps
+%doc %{_docdir}/dballe/fapi_html
+%doc %{_docdir}/dballe/fapi.ps
 
-/usr/include/dballe/dballef.h
-/usr/lib/libdballef*.a
-/usr/lib/pkgconfig/libdballef*
-/usr/lib/libdballef*.la
-/usr/lib/libdballef*.so
+%{_includedir}/dballe/dballef.h
+%{_libdir}/libdballef*.a
+%{_libdir}/pkgconfig/libdballef*
+%{_libdir}/libdballef*.la
+%{_libdir}/libdballef*.so
 /usr/share/aclocal/libdballef*.m4
 
 
-%files -n libdballef3
-%defattr(-,root,root,-)
-/usr/lib/libdballef*.so.*
 
-%files -n libdballe-msg3
-%defattr(-,root,root,-)
-/usr/lib/libdballe-msg*.so.*
 
-%files -n libdballe-msg-dev
+%files -n libdballef4
 %defattr(-,root,root,-)
-%doc /usr/share/doc/dballe/libdballe-msg.doxytags
-/usr/include/dballe/msg/*
-/usr/lib/libdballe-msg*.a
-/usr/lib/pkgconfig/libdballe-msg*
-/usr/lib/libdballe-msg*.la
-/usr/lib/libdballe-msg*.so
-/usr/share/aclocal/libdballe-msg*.m4
+%{_libdir}/libdballef*.so.*
 
 
 %files -n python-dballe
 %defattr(-,root,root,-)
-/usr/lib/python*
+%dir %{python_sitearch}/
+%{python_sitearch}//*
 
-%files -n libdballepp3
+#%dir %{python_sitelib}/dballe
+#%{python_sitelib}/dballe/*
+
+%doc %{_docdir}/dballe/python-dballe*
+
+
+%files -n libdballepp4
 %defattr(-,root,root,-)
-/usr/lib/libdballepp*.so.*
+%{_libdir}/libdballepp*.so.*
 
-
-
-%files -n libdballe-core-doc
-%defattr(-,root,root,-)
-%doc /usr/share/doc/dballe/core_api
-
-%files -n libdballe-bufrex-doc
-%defattr(-,root,root,-)
-%doc /usr/share/doc/dballe/bufrex_api
-
-%files -n libdballe-msg-doc
-%defattr(-,root,root,-)
-%doc /usr/share/doc/dballe/msg_api
-
-%files -n libdballe-db-doc
-%defattr(-,root,root,-)
-%doc /usr/share/doc/dballe/db_api
-
-%files -n libdballepp-dev
+%files -n libdballepp-devel
 %defattr(-,root,root,-)
 
-%doc /usr/share/doc/dballe/libdballepp.doxytags
-%doc /usr/share/doc/dballe/c++_api
+%doc %{_docdir}/dballe/libdballepp.doxytags
+%doc %{_docdir}/dballe/c++_api
 
-/usr/include/dballe++
-/usr/lib/libdballepp*.a
-/usr/lib/pkgconfig/libdballepp*
-/usr/lib/libdballepp*.la
-/usr/lib/libdballepp*.so
+%{_includedir}/dballe++
+%{_libdir}/libdballepp*.a
+%{_libdir}/pkgconfig/libdballepp*
+%{_libdir}/libdballepp*.la
+%{_libdir}/libdballepp*.so
 /usr/share/aclocal/libdballepp.m4
+
+
+%files -n libdballe-doc
+%defattr(-,root,root,-)
+%doc %{_docdir}/dballe/c_api
+
 
 %post
 /sbin/ldconfig
@@ -500,6 +353,9 @@ make
 
 
 %changelog
+* Tue Mar 18 2008 root <root@spinacio> - %epoch:}%{version}-%{release}:4.0.0-4
+- new pachage (less pachages)
+
 * Tue Dec 19 2006 root <root@strip.metarpa> - 3.0-1
 - spitted in more packages for version 3.0
 

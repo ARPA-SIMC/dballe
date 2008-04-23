@@ -18,7 +18,7 @@ This example code extracts temperatures in a station by datetime matrix::
         query = dballe.Record()
         query.set("var", "B12001")
         query.set("rep_memo", "synop")
-        query.setlevel(dballe.Level(105, 2, 0))
+        query.setlevel(dballe.Level(105, 2, 0, 0))
         query.settimerange(dballe.Timerange(0, 0, 0))
         vars = read(self.db.query(query), (AnaIndex(), DateTimeIndex()))
         data = vars["B12001"]

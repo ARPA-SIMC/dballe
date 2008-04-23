@@ -59,7 +59,7 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 
 			// 005040 ORBIT NUMBER(NUMERIC): 1
 			case DBA_VAR(0, 5, 40):
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 5, 40), 8, 0, 0, 0, 0, 0));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 5, 40), 8, 0, 0, 0, 254, 0, 0));
 				break;
 		    // -> Data
 
@@ -96,19 +96,19 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 
 			// 007024 SATELLITE ZENITH ANGLE(DEGREE): 56.830000
 			case DBA_VAR(0,  7, 24): 
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 7, 24), 8, 0, 0, 0, 0, 0));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 7, 24), 8, 0, 0, 0, 254, 0, 0));
 				break;
 			// 005021 BEARING OR AZIMUTH(DEGREE TRUE): 28.650000
 			case DBA_VAR(0,  5, 21): 
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 5, 21), 8, 0, 0, 0, 0, 0));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 5, 21), 8, 0, 0, 0, 254, 0, 0));
 				break;
 			// 007025 SOLAR ZENITH ANGLE(DEGREE): 74.240000
 			case DBA_VAR(0,  7, 25): 
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 7, 25), 8, 0, 0, 0, 0, 0));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 7, 25), 8, 0, 0, 0, 254, 0, 0));
 				break;
 			// 005022 SOLAR AZIMUTH(DEGREE TRUE): 273.710000
 			case DBA_VAR(0,  5, 22): 
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 5, 22), 8, 0, 0, 0, 0, 0));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 5, 22), 8, 0, 0, 0, 254, 0, 0));
 				break;
 			// -> data
 
@@ -156,7 +156,7 @@ dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, wavenum));
 				if (chqf != NULL)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, chqf));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set(msg, copy, DBA_VAR(0, 12, 63), 8, l1, 0, 0, 0, 0));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set(msg, copy, DBA_VAR(0, 12, 63), 8, l1, 0, 0, 254, 0, 0));
 				dba_var_delete(copy);
 				copy = NULL;
 				break;

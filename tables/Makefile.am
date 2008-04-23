@@ -11,10 +11,10 @@ table_DATA = repinfo.csv dballe.txt $(crexbtables) $(crexdtables) $(bufrbtables)
 noinst_DATA = dballe.tex
 
 dballe.tex: dballe.txt mkbdoc
-	./mkbdoc tex < $< > $@ 
+	$(srcdir)/mkbdoc tex < $< > $@ 
 
 B000000002001200.txt: dballe.txt
-	cut -b 0-119 < $< > $@
+	cut -b 1-119 < $< > $@
 
 EXTRA_DIST = $(table_DATA) mkbdoc
 

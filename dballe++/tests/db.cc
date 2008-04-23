@@ -1,4 +1,5 @@
 #include <dballe++/db.h>
+#include <dballe++/init.h>
 
 using namespace std;
 
@@ -22,6 +23,8 @@ std::string getuname()
 }
 
 struct db_shar {
+	DballeInit dballeInit;
+
 	DB db;
 	Record query;
 	Record result;
@@ -39,8 +42,9 @@ struct db_shar {
 		data.keySet(DBA_KEY_DAY, 25);
 		data.keySet(DBA_KEY_HOUR, 8);
 		data.keySet(DBA_KEY_MIN, 0);
-		data.keySet(DBA_KEY_LEVELTYPE, 10);
+		data.keySet(DBA_KEY_LEVELTYPE1, 10);
 		data.keySet(DBA_KEY_L1, 11);
+		data.keySet(DBA_KEY_LEVELTYPE2, 15);
 		data.keySet(DBA_KEY_L2, 22);
 		data.keySet(DBA_KEY_PINDICATOR, 20);
 		data.keySet(DBA_KEY_P1, 111);
@@ -115,8 +119,9 @@ void to::test<4>()
 	gen_ensure_equals(cur.remaining(), 1);
 	result.clear();
 	gen_ensure_equals(cur.next(result), true);
-	gen_ensure_equals(result.enqi(DBA_KEY_LEVELTYPE), 10);
+	gen_ensure_equals(result.enqi(DBA_KEY_LEVELTYPE1), 10);
 	gen_ensure_equals(result.enqi(DBA_KEY_L1), 11);
+	gen_ensure_equals(result.enqi(DBA_KEY_LEVELTYPE2), 15);
 	gen_ensure_equals(result.enqi(DBA_KEY_L2), 22);
 	gen_ensure_equals(cur.next(result), false);
 }
@@ -143,8 +148,9 @@ void to::test<6>()
 	gen_ensure_equals(cur.remaining(), 1);
 	result.clear();
 	gen_ensure_equals(cur.next(result), true);
-	gen_ensure_equals(result.enqi(DBA_KEY_LEVELTYPE), 10);
+	gen_ensure_equals(result.enqi(DBA_KEY_LEVELTYPE1), 10);
 	gen_ensure_equals(result.enqi(DBA_KEY_L1), 11);
+	gen_ensure_equals(result.enqi(DBA_KEY_LEVELTYPE2), 15);
 	gen_ensure_equals(result.enqi(DBA_KEY_L2), 22);
 	gen_ensure_equals(result.enqi(DBA_KEY_PINDICATOR), 20);
 	gen_ensure_equals(result.enqi(DBA_KEY_P1), 111);

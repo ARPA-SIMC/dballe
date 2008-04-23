@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1280,20 +1280,24 @@ F77_INTEGER_FUNCTION(idba_setcontextana)(
  */
 F77_INTEGER_FUNCTION(idba_enqlevel)(
 		INTEGER(handle),
-		INTEGER(ltype),
+		INTEGER(ltype1),
 		INTEGER(l1),
+		INTEGER(ltype2),
 		INTEGER(l2))
 {
 	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(ltype)
+	GENPTR_INTEGER(ltype1)
 	GENPTR_INTEGER(l1)
+	GENPTR_INTEGER(ltype2)
 	GENPTR_INTEGER(l2)
 	int found;
 
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_LEVELTYPE, ltype, &found));
-	if (!found) *ltype = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_LEVELTYPE1, ltype1, &found));
+	if (!found) *ltype1 = MISSING_INT;
 	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_L1, l1, &found));
 	if (!found) *l1 = MISSING_INT;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_LEVELTYPE2, ltype2, &found));
+	if (!found) *ltype2 = MISSING_INT;
 	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_L2, l2, &found));
 	if (!found) *l2 = MISSING_INT;
 	return dba_error_ok();
@@ -1315,17 +1319,20 @@ F77_INTEGER_FUNCTION(idba_enqlevel)(
  */
 F77_INTEGER_FUNCTION(idba_setlevel)(
 		INTEGER(handle),
-		INTEGER(ltype),
+		INTEGER(ltype1),
 		INTEGER(l1),
+		INTEGER(ltype2),
 		INTEGER(l2))
 {
 	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(ltype)
+	GENPTR_INTEGER(ltype1)
 	GENPTR_INTEGER(l1)
+	GENPTR_INTEGER(ltype2)
 	GENPTR_INTEGER(l2)
 
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_LEVELTYPE, *ltype));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_LEVELTYPE1, *ltype1));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L1, *l1));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_LEVELTYPE2, *ltype2));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L2, *l2));
 	return dba_error_ok();
 }
@@ -2240,8 +2247,9 @@ cleanup:
 
 F77_INTEGER_FUNCTION(idba_spiegal)(
 		INTEGER(handle),
-		INTEGER(ltype),
+		INTEGER(ltype1),
 		INTEGER(l1),
+		INTEGER(ltype2),
 		INTEGER(l2),
 		CHARACTER(result)
 		TRAIL(result))
@@ -2253,7 +2261,7 @@ F77_INTEGER_FUNCTION(idba_spiegal)(
 	GENPTR_CHARACTER(result)
 	char* res;
 
-	DBA_RUN_OR_RETURN(dba_formatter_describe_level(*ltype, *l1, *l2, &res));
+	DBA_RUN_OR_RETURN(dba_formatter_describe_level_or_layer(*ltype1, *l1, *ltype2, *l2, &res));
 	cnfExprt(res, result, result_length);
 	free(res);
 	return dba_error_ok();

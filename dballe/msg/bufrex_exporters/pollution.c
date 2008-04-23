@@ -118,17 +118,17 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 	// Get the variable out of msg
 	for (li = 0; li < src->data_count; ++li)
 	{
-		if (src->data[li]->ltype != 105) continue;
+		if (src->data[li]->ltype1 != 103) continue;
 		for (di = 0; di < src->data[li]->data_count; ++di)
 		{
 			dba_msg_datum d = src->data[li]->data[di];
-			if (d->pind != 3) continue;
+			if (d->pind != 0) continue;
 			dba_varcode code = dba_var_code(d->var);
 			if (code < DBA_VAR(0, 15, 193) || code > DBA_VAR(0, 15, 195)) continue;
 			if (var != NULL)
 				return dba_error_consistency("found more than one variable to export in one template");
 			var = d->var;
-			l1 = src->data[li]->l1;
+			l1 = src->data[li]->l1 / 1000;
 			p1 = d->p1;
 		}
 	}

@@ -1,4 +1,5 @@
 #include <dballe++/var.h>
+#include <dballe++/init.h>
 #include <dballe/core/test-utils-core.h>
 
 using namespace std;
@@ -7,6 +8,7 @@ namespace tut {
 using namespace tut_dballe;
 
 struct var_shar {
+	dballe::DballeInit dballeInit;
 };
 
 TESTGRP( var );

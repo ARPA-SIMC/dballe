@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@ using namespace tut_dballe;
 
 struct context_shar
 {
+	TestMsgEnv testenv;
+
 	// DB handle
 	dba_db db;
 	dba_db_context co;
@@ -78,8 +80,9 @@ void to::test<1>()
 	co->id_ana = 1;
 	co->id_report = 1;
 	co->date = mkts(2001, 2, 3, 4, 5, 6);
-	co->ltype = 1;
+	co->ltype1 = 1;
 	co->l1 = 2;
+	co->ltype2 = 0;
 	co->l2 = 3;
 	co->pind = 4;
 	co->p1 = 5;
@@ -91,8 +94,9 @@ void to::test<1>()
 	co->id_ana = 2;
 	co->id_report = 2;
 	co->date = mkts(2002, 3, 4, 5, 6, 7);
-	co->ltype = 2;
+	co->ltype1 = 2;
 	co->l1 = 3;
+	co->ltype2 = 1;
 	co->l2 = 4;
 	co->pind = 5;
 	co->p1 = 6;
@@ -105,8 +109,9 @@ void to::test<1>()
 	co->id_ana = 1;
 	co->id_report = 1;
 	co->date = mkts(2001, 2, 3, 4, 5, 6);
-	co->ltype = 1;
+	co->ltype1 = 1;
 	co->l1 = 2;
+	co->ltype2 = 0;
 	co->l2 = 3;
 	co->pind = 4;
 	co->p1 = 5;
@@ -119,8 +124,9 @@ void to::test<1>()
 	co->id_ana = 2;
 	co->id_report = 2;
 	co->date = mkts(2002, 3, 4, 5, 6, 7);
-	co->ltype = 2;
+	co->ltype1 = 2;
 	co->l1 = 3;
+	co->ltype2 = 1;
 	co->l2 = 4;
 	co->pind = 5;
 	co->p1 = 6;
@@ -134,8 +140,9 @@ void to::test<1>()
 	gen_ensure_equals(co->id_report, 1);
 	gen_ensure_equals(co->date, mkts(2001, 2, 3, 4, 5, 6));
 	//gen_ensure_equals(co->date_ind, 19);
-	gen_ensure_equals(co->ltype, 1);
+	gen_ensure_equals(co->ltype1, 1);
 	gen_ensure_equals(co->l1, 2);
+	gen_ensure_equals(co->ltype2, 0);
 	gen_ensure_equals(co->l2, 3);
 	gen_ensure_equals(co->pind, 4);
 	gen_ensure_equals(co->p1, 5);
@@ -147,8 +154,9 @@ void to::test<1>()
 	gen_ensure_equals(co->id_report, 2);
 	gen_ensure_equals(co->date, mkts(2002, 3, 4, 5, 6, 7));
 	//gen_ensure_equals(co->date_ind, 19);
-	gen_ensure_equals(co->ltype, 2);
+	gen_ensure_equals(co->ltype1, 2);
 	gen_ensure_equals(co->l1, 3);
+	gen_ensure_equals(co->ltype2, 1);
 	gen_ensure_equals(co->l2, 4);
 	gen_ensure_equals(co->pind, 5);
 	gen_ensure_equals(co->p1, 6);

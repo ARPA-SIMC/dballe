@@ -75,7 +75,7 @@ dba_err dba_msg_filter_copy(dba_msg src, dba_msg* dst, dba_record filter)
 				continue;
 			
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_set(res, d->var, dba_var_code(d->var),
-					l->ltype, l->l1, l->l2,
+					l->ltype1, l->l1, l->ltype2, l->l2,
 					d->pind, d->p1, d->p2));
 			++copied;
 		}

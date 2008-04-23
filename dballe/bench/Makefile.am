@@ -13,6 +13,9 @@ benchmark_SOURCES= \
 	../db/test-utils-db.cc
 benchmark_LDADD = \
 	../db/libdballe-db.la \
+	../msg/libdballe-msg.la \
+	../bufrex/libdballe-bufrex.la \
+	../core/libdballe-core.la \
 	-lpopt
 
 INCLUDES = -I$(top_srcdir)

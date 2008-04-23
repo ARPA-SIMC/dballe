@@ -134,8 +134,8 @@ static int count_levels(dba_msg msg)
 
 	/* Count the number of levels */
 	for (i = 0; i < msg->data_count; i++)
-		if (msg->data[i]->ltype == 100 &&
-				dba_msg_level_find(msg->data[i], DBA_VAR(0, 8, 1), 0, 0, 0) != NULL)
+		if (msg->data[i]->ltype1 == 100 &&
+				dba_msg_level_find(msg->data[i], DBA_VAR(0, 8, 1), 254, 0, 0) != NULL)
 			lev_no++;
 
 	return lev_no;
@@ -153,18 +153,18 @@ static dba_err add_sounding_levels(dba_msg msg, bufrex_subset dst, dba_varcode* 
 		dba_msg_datum p;
 		int j;
 
-		if (lev->ltype != 100 ||
-				(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 0, 0, 0)) == NULL)
+		if (lev->ltype1 != 100 ||
+				(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 254, 0, 0)) == NULL)
 			continue;
 
-		if ((p = dba_msg_level_find(lev, DBA_VAR(0, 10, 4), 0, 0, 0)) != NULL)
+		if ((p = dba_msg_level_find(lev, DBA_VAR(0, 10, 4), 254, 0, 0)) != NULL)
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0,  7,  4), p->var));
 		else
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, DBA_VAR(0,  7,  4), press));
 		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0,  8,  1), d->var));
 
 		for (j = 0; j < tpl_count; j++)
-			if ((d = dba_msg_level_find(lev, tpl[j], 0, 0, 0)) != NULL)
+			if ((d = dba_msg_level_find(lev, tpl[j], 254, 0, 0)) != NULL)
 				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[j], d->var));
 			else
 				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[j]));

@@ -40,10 +40,12 @@ extern "C" {
  */
 struct _dba_msg_level
 {
-	/** Type of the level.  See @ref level_table. */
-	int ltype;
+	/** Type of the first level.  See @ref level_table. */
+	int ltype1;
 	/** L1 value of the level.  See @ref level_table. */
 	int l1;
+	/** Type of the second level.  See @ref level_table. */
+	int ltype2;
 	/** L2 value of the level.  See @ref level_table. */
 	int l2;
 
@@ -72,7 +74,7 @@ typedef struct _dba_msg_level* dba_msg_level;
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_msg_level_create(int ltype, int l1, int l2, dba_msg_level* l);
+dba_err dba_msg_level_create(int ltype1, int l1, int ltype2, int l2, dba_msg_level* l);
 
 /**
  * Copy an existing level
@@ -122,7 +124,7 @@ int dba_msg_level_compare(const dba_msg_level l1, const dba_msg_level l2);
  * @return
  *   -1 if l < ltype,l1,l2; 0 if l == ltype,l1,l2; 1 if l > ltype,l1,l2
  */
-int dba_msg_level_compare2(const dba_msg_level l, int ltype, int l1, int l2);
+int dba_msg_level_compare2(const dba_msg_level l, int ltype1, int l1, int ltype2, int l2);
 
 
 /**

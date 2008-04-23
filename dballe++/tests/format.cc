@@ -1,4 +1,5 @@
 #include <dballe++/format.h>
+#include <dballe++/init.h>
 #include <dballe/core/test-utils-core.h>
 
 using namespace std;
@@ -7,6 +8,7 @@ namespace tut {
 using namespace tut_dballe;
 
 struct format_shar {
+	dballe::DballeInit dballeInit;
 };
 
 TESTGRP( format );
@@ -17,7 +19,10 @@ template<> template<>
 void to::test<1>()
 {
 	for (int i = 0; i < 258; ++i)
-		gen_ensure(!describeLevel(i, 0, 0).empty());
+	{
+		gen_ensure(!describeLevel(i, 0, 0, 0).empty());
+		gen_ensure(!describeLevel(i, 0, i, 0).empty());
+	}
 }
 
 template<> template<>

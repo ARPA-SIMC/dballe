@@ -27,6 +27,8 @@ using namespace tut_dballe;
 
 struct dtable_shar
 {
+	TestBufrexEnv testenv;
+
 	dtable_shar()
 	{
 	}

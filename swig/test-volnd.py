@@ -92,7 +92,7 @@ class TestRead(unittest.TestCase):
 
 					# 6 hours precipitations
 					cur = datetime(2007, 01, 01, 0, 0, 0)
-					rec.setlevel(Level(1, 0, 0))
+					rec.setlevel(Level(1, 0, 0, 0))
 					rec.settimerange(TimeRange(4, -21600, 0))
 					while cur < end:
 						rec.setdate(cur)
@@ -107,7 +107,7 @@ class TestRead(unittest.TestCase):
 
 					# 12 hours precipitations at different times
 					cur = datetime(2007, 01, 01, 0, 0, 0)
-					rec.setlevel(Level(1, 0, 0))
+					rec.setlevel(Level(1, 0, 0, 0))
 					rec.settimerange(TimeRange(4, -43200, 0))
 					while cur < end:
 						rec.setdate(cur)
@@ -124,7 +124,7 @@ class TestRead(unittest.TestCase):
 					# (meaningless) level
 					# At slightly off times
 					cur = datetime(2007, 01, 01, 0, 0, 0)
-					rec.setlevel(Level(3, 2, 0))
+					rec.setlevel(Level(3, 2, 0, 0))
 					rec.settimerange(TimeRange(4, -21600, 0))
 					while cur < end:
 						rec.setdate(cur + timedelta(0, random.randint(-600, 600)))
@@ -140,7 +140,7 @@ class TestRead(unittest.TestCase):
 
 					# Pressures every 12 hours
 					cur = datetime(2007, 01, 01, 0, 0, 0)
-					rec.setlevel(Level(1, 0, 0))
+					rec.setlevel(Level(1, 0, 0, 0))
 					rec.settimerange(TimeRange(0, 0, 0))
 					while cur < end:
 						rec.setdate(cur)
@@ -415,6 +415,7 @@ class TestRead(unittest.TestCase):
                 indexes = (AnaIndex(),)
                 query = dballe.Record()
                 query.setAnaContext()
+                query["rep_cod"] = 1
 		vars = read(self.db.query(query), indexes, checkConflicts=True)
                 self.assertEquals(sorted(vars.keys()), ["B01001", "B01002", "B01019"])
 
@@ -423,7 +424,7 @@ class TestRead(unittest.TestCase):
                 indexes = (AnaIndex(), DateTimeIndex())
                 query = dballe.Record()
 		query["rep_memo"] = 'synop'
-		query.setlevel(Level(1, 0, 0))
+		query.setlevel(Level(1, 0, 0, 0))
                 query.settimerange(TimeRange(4, -21600, 0))
 		vars = read(self.db.query(query), indexes, checkConflicts=True)
                 self.assertEquals(sorted(vars.keys()), ["B13011"])
@@ -435,6 +436,7 @@ class TestRead(unittest.TestCase):
 		# Export the pseudoana data in sync with the data
 		query.clear()
                 query.setAnaContext()
+                query["rep_cod"] = 1
 		anas = read(self.db.query(query), (indexes[0],), checkConflicts=True)
 
                 self.assertEquals(sorted(anas.keys()), ["B01001", "B01002", "B01019"])

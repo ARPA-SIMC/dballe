@@ -17,12 +17,15 @@
 %{
 #include <dballe++/db.h>
 #include <dballe++/format.h>
+#include <dballe++/init.h>
 #include <dballe++/bufrex.h>
 #include <dballe++/msg.h>
 #include <dballe/core/aliases.h>
 #include <iostream>
 
 using namespace dballe;
+
+DballeInit dballeInit;
 
 %}
 
@@ -33,19 +36,22 @@ import datetime
 
 class Level(tuple):
 	"""
-	Represents a level value as a 3-tuple
+	Represents a level value as a 4-tuple
 	"""
-	def __new__(self, leveltype, l1=0, l2=0):
-		return tuple.__new__(self, (leveltype, l1, l2))
-	def type(self):
-		"Return the level type"
+	def __new__(self, leveltype1=0, l1=0, leveltype2=0, l2=0):
+		return tuple.__new__(self, (leveltype1, l1, leveltype2, l2))
+	def type1(self):
+		"Return the type of the first level"
 		return self[0]
 	def l1(self):
 		"Return l1"
 		return self[1]
+	def type2(self):
+		"Return the type of the second level"
+		return self[2]
 	def l2(self):
 		"Return l2"
-		return self[2]
+		return self[3]
         def __str__(self):
                 return describeLevel(*self)
         def __repr__(self):
@@ -203,7 +209,7 @@ class TimeRange(tuple):
                 _enqdate_parms = ("year", "month", "day", "hour", "min", "sec")
                 _enqdatemin_parms = ("yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin")
                 _enqdatemax_parms = ("yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax")
-                _enqlevel_parms = ("leveltype", "l1", "l2")
+                _enqlevel_parms = ("leveltype1", "l1", "leveltype2", "l2")
                 _enqtimerange_parms = ("pindicator", "p1", "p2")
                 def _enqmany(self, names):
                         # If there is an unset value among ours, return None
@@ -282,13 +288,15 @@ class TimeRange(tuple):
                                 self.seti("secmax", dt.second)
                 def setlevel(self, level):
                         if level == None:
-                                self.seti("leveltype", None)
+                                self.seti("leveltype1", None)
                                 self.seti("l1", None)
+                                self.seti("leveltype2", None)
                                 self.seti("l2", None)
                         else:
-                                self.seti("leveltype", level[0])
+                                self.seti("leveltype1", level[0])
                                 self.seti("l1", level[1])
-                                self.seti("l2", level[2])
+                                self.seti("leveltype2", level[2])
+                                self.seti("l2", level[3])
                 def settimerange(self, trange):
                         if trange == None:
                                 self.seti("pindicator", None)

@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,15 @@
 #include <dballe/msg/file.h>
 #include <dballe/msg/bufrex_codec.h>
 #include <dballe/msg/msg.h>
+#include <cstring>
 
 namespace tut {
 using namespace tut_dballe;
 
 struct bufrex_codec_shar
 {
+	TestMsgEnv testenv;
+
 	bufrex_codec_shar()
 	{
 	}
@@ -224,6 +227,7 @@ void to::test<2>()
 		"bufr/obs4-142.1.bufr", 
 		"bufr/obs4-144.4.bufr", 
 		"bufr/obs4-145.4.bufr", 
+		"bufr/obs255-255.0.bufr", 
 		"bufr/test-airep1.bufr",
 		"bufr/test-temp1.bufr", 
 		"bufr/ed4.bufr", 
@@ -241,7 +245,7 @@ void to::test<2>()
 		int type = braw1->type;
 		int subtype = braw1->subtype;
 		int localsubtype = braw1->localsubtype;
-		
+
 		// Finish converting in a dba_msg
 		dba_msgs msgs1;
 		CHECKED(bufrex_msg_to_dba_msgs(braw1, &msgs1));
@@ -440,7 +444,7 @@ void to::test<5>()
 	dba_var var;
 	double val;
 
-	gen_ensure((d = dba_msg_find(src, DBA_VAR(0, 15, 193), 105, 3, 0, 3, -3600, 0)) != NULL);
+	gen_ensure((d = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
 	gen_ensure(dba_var_value(d->var) != NULL);
 	CHECKED(dba_var_enqd(d->var, &val));
 	gen_ensure_equals(val, 2700000e-14);

@@ -71,12 +71,12 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
 			/* Pressure */
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 4),
 						((double)OBS(os + 0) * 10), get_conf6(OBS(os+5) & 0x3f),
-						ltype, l1, 0, 0, 0, 0));
+						ltype, l1, 0, 0, 254, 0, 0));
 		}
 		if (OBS(os + 4) != AOF_UNDEF) {
 			if (ltype == -1)
 			{
-				ltype = 103;
+				ltype = 102;
 				l1 = OBS(os + 4) - 1000;
 #if 0
 				/* Save ICAO pressure instead of geopotential.  Tried but
@@ -94,30 +94,30 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
 			// correct amount of significant digits
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 3),
 						round(((double)OBS(os + 4) - 1000.0) * 9.80665 / 10) * 10, get_conf6((OBS(os+6) >> 12) & 0x3f),
-						ltype, l1, 0, 0, 0, 0));
+						ltype, l1, 0, 0, 254, 0, 0));
 		}
 
 		if (ltype == -1)
 			return dba_error_notfound("looking for pressure or height in an AOF PILOT message");
 
-		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 1), vss, -1, ltype, l1, 0, 0, 0, 0));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 1), vss, -1, ltype, l1, 0, 0, 254, 0, 0));
 		/* DBA_RUN_OR_RETURN(dba_var_setd(msg->obs[i].var_press, (double)OBS(os + 0) * 10)); */
 
 		/* Wind direction */
 		if (OBS(os + 1) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 1),
 						OBS(os + 1), get_conf6((OBS(os+5) >> 6) & 0x3f),
-						ltype, l1, 0, 0, 0, 0));
+						ltype, l1, 0, 0, 254, 0, 0));
 		/* Wind speed */
 		if (OBS(os + 2) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 2),
 						OBS(os + 2), get_conf6(OBS(os+6) & 0x3f),
-						ltype, l1, 0, 0, 0, 0));
+						ltype, l1, 0, 0, 254, 0, 0));
 		/* Air temperature */
 		if (OBS(os + 3) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 1),
 						totemp(OBS(os + 3)), get_conf6((OBS(os+6) >> 6) & 0x3f),
-						ltype, l1, 0, 0, 0, 0));
+						ltype, l1, 0, 0, 254, 0, 0));
 	}
 
 	return dba_error_ok();

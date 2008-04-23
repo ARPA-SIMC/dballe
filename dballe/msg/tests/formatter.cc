@@ -34,10 +34,14 @@ TESTGRP(formatter);
 template<> template<>
 void to::test<1>()
 {
-	for (int i = 0; i < 258; ++i)
+	for (int i = 0; i < 260; ++i)
 	{
 		char* t = 0;
-		CHECKED(dba_formatter_describe_level(i, 0, 0, &t));
+		CHECKED(dba_formatter_describe_level(i, 0, &t));
+		gen_ensure(t != 0);
+		free(t);
+
+		CHECKED(dba_formatter_describe_level_or_layer(i, 0, i, 0, &t));
 		gen_ensure(t != 0);
 		free(t);
 	}

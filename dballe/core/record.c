@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -788,8 +788,9 @@ dba_err dba_record_set_ana_context(dba_record rec)
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOUR, 0));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MIN, 0));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SEC, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, 257));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE1, 257));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L1, 0));
+	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE2, 0));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L2, 0));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, 0));
 	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P1, 0));

@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: libdballepp
 Description: DB-All.e C++ API
 Version: @VERSION@
-Requires: libdballe-db
+Requires: libdballe
 Cflags: -I${includedir}
 Libs: -L${libdir} -ldballepp

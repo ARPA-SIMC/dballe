@@ -183,8 +183,9 @@ struct _dba_db_cursor
 	DBALLE_SQL_C_SINT_TYPE	sel_lonmin;
 	DBALLE_SQL_C_SINT_TYPE	sel_lonmax;
 	char	sel_ident[64];
-	DBALLE_SQL_C_SINT_TYPE	sel_ltype;
+	DBALLE_SQL_C_SINT_TYPE	sel_ltype1;
 	DBALLE_SQL_C_SINT_TYPE	sel_l1;
+	DBALLE_SQL_C_SINT_TYPE	sel_ltype2;
 	DBALLE_SQL_C_SINT_TYPE	sel_l2;
 	DBALLE_SQL_C_SINT_TYPE	sel_pind;
 	DBALLE_SQL_C_SINT_TYPE	sel_p1;
@@ -204,8 +205,9 @@ struct _dba_db_cursor
 	DBALLE_SQL_C_SINT_TYPE	out_lat;
 	DBALLE_SQL_C_SINT_TYPE	out_lon;
 	char	out_ident[64];		SQLLEN out_ident_ind;
-	DBALLE_SQL_C_SINT_TYPE	out_ltype;
+	DBALLE_SQL_C_SINT_TYPE	out_ltype1;
 	DBALLE_SQL_C_SINT_TYPE	out_l1;
+	DBALLE_SQL_C_SINT_TYPE	out_ltype2;
 	DBALLE_SQL_C_SINT_TYPE	out_l2;
 	DBALLE_SQL_C_SINT_TYPE	out_pind;
 	DBALLE_SQL_C_SINT_TYPE	out_p1;

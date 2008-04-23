@@ -22,6 +22,7 @@
 /* For %zd */
 #define _ISOC99_SOURCE
 
+#include <dballe/init.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/core/record.h>
@@ -948,8 +949,12 @@ static void init()
 
 int main (int argc, const char* argv[])
 {
+	int res;
+	dba_init();
 	init();
-	return dba_cmdline_dispatch_main(&dbamsg, argc, argv);
+	res = dba_cmdline_dispatch_main(&dbamsg, argc, argv);
+	dba_shutdown();
+	return res;
 }
 
 /* vim:set ts=4 sw=4: */

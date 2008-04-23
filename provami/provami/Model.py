@@ -302,8 +302,9 @@ class Model:
     def queryLevels(self):
         filter = self.filter.copy()
         filter.setc("query", "nosort")
-        filter.unset("leveltype")
+        filter.unset("leveltype1")
         filter.unset("l1")
+        filter.unset("leveltype2")
         filter.unset("l2")
         return self.db.queryLevels(filter)
 
@@ -445,7 +446,7 @@ class Model:
                 idents[result.enqc("ident")] = 1
             self.cached_idents = idents.keys()
             self.cached_idents.sort()
-            t.partial("got station and ident data")
+            t.partial("got station (%d items) and ident (%d items) data" % (len(self.cached_stations), len(self.cached_idents)))
 
             self.notifyProgress(15, "Notifying station data...")
             for l in self.updateListeners: l.hasData("stations")
@@ -461,7 +462,7 @@ class Model:
                          result.enqi('day'), result.enqi('hour'),
                          result.enqi('min'), result.enqi('sec')))
             self.cached_dtimes.sort()
-            t.partial("got date and time data")
+            t.partial("got date and time data (%d items)" % (len(self.cached_dtimes)))
             self.notifyProgress(30, "Notifying date and time data...")
             for l in self.updateListeners: l.hasData("dtimes")
             t.partial("notified date and time data")
@@ -483,7 +484,7 @@ class Model:
                     self.resultsCount = self.resultsCount - 1
                     self.resultsTruncated = True
                     break
-            t.partial("got variable data");
+            t.partial("got variable data (%d items)" % (len(self.cached_results)));
             self.notifyProgress(52, "Notifying result data...")
             for l in self.updateListeners: l.hasData("data")
             t.partial("notified variable data");
@@ -496,7 +497,7 @@ class Model:
                 levels[results.enqlevel()] = 1
             self.cached_levels = levels.keys()
             self.cached_levels.sort()
-            t.partial("got level data");
+            t.partial("got level data (%d items)" % (len(self.cached_levels)));
             self.notifyProgress(60, "Notifying level data...")
             for l in self.updateListeners: l.hasData("levels")
             t.partial("notified level data");
@@ -508,7 +509,7 @@ class Model:
                 tranges[results.enqtimerange()] = 1
             self.cached_tranges = tranges.keys()
             self.cached_tranges.sort()
-            t.partial("got time range data");
+            t.partial("got time range data (%d items)" % (len(self.cached_tranges)));
             self.notifyProgress(68, "Notifying time range data...")
             for l in self.updateListeners: l.hasData("tranges")
             t.partial("notified time range data");
@@ -517,7 +518,7 @@ class Model:
             self.notifyProgress(70, "Querying variable types...")
             for results in self.queryVariableTypes():
                 self.cached_vartypes.append(results.enqc("var"))
-            t.partial("got variable type data");
+            t.partial("got variable type data (%d items)" % (len(self.cached_vartypes)));
             self.notifyProgress(82, "Notifying variable types...")
             for l in self.updateListeners: l.hasData("vartypes")
             t.partial("notified variable type data");
@@ -526,7 +527,7 @@ class Model:
             self.notifyProgress(85, "Querying report types...")
             for results in self.queryReportTypes():
                 self.cached_repinfo.append((results.enqi("rep_cod"), results.enqc("rep_memo")))
-            t.partial("got repinfo data");
+            t.partial("got repinfo data (%d items)" % (len(self.cached_repinfo)));
             self.notifyProgress(95, "Notifying report types...")
             for l in self.updateListeners: l.hasData("repinfo")
             t.partial("notified repinfo data");

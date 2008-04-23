@@ -182,10 +182,12 @@ void dba_msg_delete(dba_msg msg);
  * @param code
  *   The dba_varcode of the destination value.  If it is different than the
  *   varcode of var, a conversion will be attempted.
- * @param ltype
- *   Type of the level.  See @ref level_table.
+ * @param ltype1
+ *   Type of the first level.  See @ref level_table.
  * @param l1
  *   L1 value of the level.  See @ref level_table.
+ * @param ltype2
+ *   Type of the second level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
  * @param pind
@@ -197,7 +199,7 @@ void dba_msg_delete(dba_msg msg);
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 /**
  * Add or replace a value in the dba_msg, taking ownership of the source
@@ -223,7 +225,7 @@ dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 /**
  * Add or replace a value in the dba_msg
@@ -283,7 +285,7 @@ dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 /**
  * Add or replace a double value in the dba_msg
@@ -313,7 +315,7 @@ dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 /**
  * Add or replace a string value in the dba_msg
@@ -343,7 +345,7 @@ dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int lt
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 
 /**
@@ -360,7 +362,7 @@ dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, i
  * @return
  *   The level found, or NULL if it was not found.
  */
-dba_msg_level dba_msg_find_level(dba_msg msg, int ltype, int l1, int l2);
+dba_msg_level dba_msg_find_level(dba_msg msg, int ltype1, int l1, int ltype2, int l2);
 
 /**
  * Find a datum given its description
@@ -384,7 +386,7 @@ dba_msg_level dba_msg_find_level(dba_msg msg, int ltype, int l1, int l2);
  * @return
  *   The level found, or NULL if it was not found.
  */
-dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 /** 
  * Find a datum given its shortcut ID

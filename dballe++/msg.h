@@ -23,14 +23,14 @@ public:
 	Msg();
 	~Msg();
 
-	void set(Var& var, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2)
+	void set(Var& var, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 	{
-		checked(dba_msg_set(m_msg, var.var(), code, ltype, l1, l2, pind, p1, p2));
+		checked(dba_msg_set(m_msg, var.var(), code, ltype1, l1, ltype2, l2, pind, p1, p2));
 	}
 
-	void setd(dba_varcode code, double val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2)
+	void setd(dba_varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 	{
-		checked(dba_msg_setd(m_msg, code, val, conf, ltype, l1, l2, pind, p1, p2));
+		checked(dba_msg_setd(m_msg, code, val, conf, ltype1, l1, ltype2, l2, pind, p1, p2));
 	}
 
 	/// Access the underlying dba_var

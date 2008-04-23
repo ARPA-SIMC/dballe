@@ -37,7 +37,7 @@ class Model:
 			        	record.enqd("lat"), \
 			        	record.enqd("lon"), \
 			        	record.enqd("ident") ]
-			self.cache_levels[",".join(map(lambda x: record.enqc(x), ["leveltype", "l1", "l2"]))] = 1
+			self.cache_levels[",".join(map(lambda x: record.enqc(x), ["leveltype1", "l1", "leveltype2", "l2"]))] = 1
 			self.cache_tranges[",".join(map(lambda x: record.enqc(x), ["pindicator", "p1", "p2"]))] = 1
 			self.cache_vtypes[dcur.varcode()] = 1
 			self.cache_idents[record.enqc("ident")] = 1
@@ -128,14 +128,17 @@ class Model:
 		if updated:
 			self.update()
 
-	def setLevelFilter(self, ltype, l1, l2):
+	def setLevelFilter(self, ltype1, l1, ltype2, l2):
 		# If the value has changed, perform the update
 		updated = False
-		if ltype != self.filter.enqi("leveltype"):
-			self.filter.seti("leveltype", ltype)
+		if ltype1 != self.filter.enqi("leveltype1"):
+			self.filter.seti("leveltype1", ltype1)
 			updated = True
 		if l1 != self.filter.enqi("l1"):
 			self.filter.seti("l1", l1)
+			updated = True
+		if ltype2 != self.filter.enqi("leveltype2"):
+			self.filter.seti("leveltype2", ltype2)
 			updated = True
 		if l2 != self.filter.enqi("l2"):
 			self.filter.seti("l2", l2)

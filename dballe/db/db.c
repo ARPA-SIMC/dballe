@@ -93,17 +93,18 @@ static const char* init_queries_mysql[] = {
 	"   id_ana		INTEGER NOT NULL,"
 	"	id_report	SMALLINT NOT NULL,"
 	"   datetime	DATETIME NOT NULL,"
-	"	ltype		SMALLINT NOT NULL,"
+	"	ltype1		SMALLINT NOT NULL,"
 	"	l1			INTEGER NOT NULL,"
+	"	ltype2		SMALLINT NOT NULL,"
 	"	l2			INTEGER NOT NULL,"
 	"	ptype		SMALLINT NOT NULL,"
 	"	p1			INTEGER NOT NULL,"
 	"	p2			INTEGER NOT NULL,"
-	"   UNIQUE INDEX (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report),"
+	"   UNIQUE INDEX (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report),"
 	"   INDEX (id_ana),"
 	"   INDEX (id_report),"
 	"   INDEX (datetime),"
-	"   INDEX (ltype, l1, l2),"
+	"   INDEX (ltype1, l1, ltype2, l2),"
 	"   INDEX (ptype, p1, p2)"
 #ifdef USE_REF_INT
 	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
@@ -159,8 +160,9 @@ static const char* init_queries_postgres[] = {
 	"   id_ana		INTEGER NOT NULL,"
 	"	id_report	INTEGER NOT NULL,"
 	"   datetime	TIMESTAMP NOT NULL,"
-	"	ltype		INTEGER NOT NULL,"
+	"	ltype1		INTEGER NOT NULL,"
 	"	l1			INTEGER NOT NULL,"
+	"	ltype2		INTEGER NOT NULL,"
 	"	l2			INTEGER NOT NULL,"
 	"	ptype		INTEGER NOT NULL,"
 	"	p1			INTEGER NOT NULL,"
@@ -170,11 +172,11 @@ static const char* init_queries_postgres[] = {
 	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
 #endif
 	") ",
-	"CREATE UNIQUE INDEX co_uniq ON context(id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report)",
+	"CREATE UNIQUE INDEX co_uniq ON context(id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)",
 	"CREATE INDEX co_ana ON context(id_ana)",
 	"CREATE INDEX co_report ON context(id_report)",
 	"CREATE INDEX co_dt ON context(datetime)",
-	"CREATE INDEX co_lt ON context(ltype, l1, l2)",
+	"CREATE INDEX co_lt ON context(ltype1, l1, ltype2, l2)",
 	"CREATE INDEX co_pt ON context(ptype, p1, p2)",
 	"CREATE TABLE data ("
 	"   id_context	INTEGER NOT NULL,"
@@ -237,13 +239,14 @@ static const char* init_queries_sqlite[] = {
 	"   id_ana		INTEGER NOT NULL,"
 	"	id_report	INTEGER NOT NULL,"
 	"   datetime	TEXT NOT NULL,"
-	"	ltype		INTEGER NOT NULL,"
+	"	ltype1		INTEGER NOT NULL,"
 	"	l1			INTEGER NOT NULL,"
+	"	ltype2		INTEGER NOT NULL,"
 	"	l2			INTEGER NOT NULL,"
 	"	ptype		INTEGER NOT NULL,"
 	"	p1			INTEGER NOT NULL,"
 	"	p2			INTEGER NOT NULL,"
-	"   UNIQUE (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report)"
+	"   UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)"
 #ifdef USE_REF_INT
 	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
 	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
@@ -252,7 +255,7 @@ static const char* init_queries_sqlite[] = {
 	"CREATE INDEX co_ana ON context(id_ana)",
 	"CREATE INDEX co_report ON context(id_report)",
 	"CREATE INDEX co_dt ON context(datetime)",
-	"CREATE INDEX co_lt ON context(ltype, l1, l2)",
+	"CREATE INDEX co_lt ON context(ltype1, l1, ltype2, l2)",
 	"CREATE INDEX co_pt ON context(ptype, p1, p2)",
 	"CREATE TABLE data ("
 	"   id_context	INTEGER NOT NULL,"
@@ -302,13 +305,14 @@ static const char* init_queries_oracle[] = {
 	"   id_ana		INTEGER NOT NULL,"
 	"	id_report	INTEGER NOT NULL,"
 	"   datetime	DATE NOT NULL,"
-	"	ltype		INTEGER NOT NULL,"
+	"	ltype1		INTEGER NOT NULL,"
 	"	l1			INTEGER NOT NULL,"
+	"	ltype2		INTEGER NOT NULL,"
 	"	l2			INTEGER NOT NULL,"
 	"	ptype		INTEGER NOT NULL,"
 	"	p1			INTEGER NOT NULL,"
 	"	p2			INTEGER NOT NULL,"
-	"   UNIQUE (id_ana, datetime, ltype, l1, l2, ptype, p1, p2, id_report)"
+	"   UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)"
 #ifdef USE_REF_INT
 	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
 	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
@@ -317,7 +321,7 @@ static const char* init_queries_oracle[] = {
 	"CREATE INDEX co_ana ON context(id_ana)",
 	"CREATE INDEX co_report ON context(id_report)",
 	"CREATE INDEX co_dt ON context(datetime)",
-	"CREATE INDEX co_lt ON context(ltype, l1, l2)",
+	"CREATE INDEX co_lt ON context(ltype1, l1, ltype2, l2)",
 	"CREATE INDEX co_pt ON context(ptype, p1, p2)",
 	"CREATE SEQUENCE seq_context",
 	"CREATE TABLE data ("
@@ -980,15 +984,16 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 	else
 		return dba_error_notfound("looking for datetime informations");
 
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE,	&val, &found));
-	if (!found) return dba_error_notfound("looking for level type");
-	c->ltype = val;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE1,	&val, &found));
+	if (!found) return dba_error_notfound("looking for first level type");
+	c->ltype1 = val;
 	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L1,			&val, &found));
 	if (!found) return dba_error_notfound("looking for l1");
 	c->l1 = val;
+	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE2,	&val, &found));
+	c->ltype2 = found ? val : 0;
 	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L2,			&val, &found));
-	if (!found) return dba_error_notfound("looking for l2");
-	c->l2 = val;
+	c->l2 = found ? val : 0;
 	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_PINDICATOR,	&val, &found));
 	if (!found) return dba_error_notfound("looking for time range indicator");
 	c->pind = val;

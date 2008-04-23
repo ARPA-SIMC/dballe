@@ -42,8 +42,8 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 		"  FROM context c, data d"
 		"  LEFT JOIN attr a ON a.id_context = d.id_context AND a.id_var = d.id_var"
 		" WHERE d.id_context = c.id AND c.id_ana = ? AND c.id_report = ?"
-		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'} AND c.ltype = 257 AND c.l1 = 0"
-		"   AND c.l2 = 0 AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
+		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'} AND c.ltype1 = 257 AND c.l1 = 0"
+		"   AND c.ltype2 = 0 AND c.l2 = 0 AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
 		" ORDER BY d.id_var, a.type";
 	dba_err err = DBA_OK;
 	SQLHSTMT stm = NULL;
@@ -95,7 +95,7 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 			if (var != NULL)
 			{
 				TRACE("Inserting old var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var, 257, 0, 0, 0, 0, 0));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var, 257, 0, 0, 0, 0, 0, 0));
 				var = NULL;
 			}
 			DBA_RUN_OR_GOTO(cleanup, dba_var_create_local(out_varcode, &var));
@@ -117,7 +117,7 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 	if (var != NULL)
 	{
 		TRACE("Inserting leftover old var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
-		DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var, 257, 0, 0, 0, 0, 0));
+		DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var, 257, 0, 0, 0, 0, 0, 0));
 		var = NULL;
 	}
 
@@ -200,9 +200,9 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 		else
 			ident_differs = last_ident[0] != 0;
 
-		TRACE("Got B%02ld%03ld %ld,%ld,%ld %ld,%ld,%ld %s\n",
+		TRACE("Got B%02ld%03ld %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
 				DBA_VAR_X(cur->out_idvar), DBA_VAR_Y(cur->out_idvar),
-				cur->out_ltype, cur->out_l1, cur->out_l2, cur->out_pind, cur->out_p1, cur->out_p2,
+				cur->out_ltype1, cur->out_l1, cur->out_ltype2, cur->out_l2, cur->out_pind, cur->out_p1, cur->out_p2,
 				cur->out_value);
 
 		/* Create the variable that we got from here */
@@ -238,8 +238,8 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 			msg->type = dba_msg_type_from_repcod(cur->out_rep_cod);
 
 			/* Fill in the basic pseudoana values */
-			DBA_RUN_OR_GOTO(cleanup, dba_msg_seti(msg, DBA_VAR(0, 5, 1), cur->out_lat, -1, 257, 0, 0, 0, 0, 0));
-			DBA_RUN_OR_GOTO(cleanup, dba_msg_seti(msg, DBA_VAR(0, 6, 1), cur->out_lon, -1, 257, 0, 0, 0, 0, 0));
+			DBA_RUN_OR_GOTO(cleanup, dba_msg_seti(msg, DBA_VAR(0, 5, 1), cur->out_lat, -1, 257, 0, 0, 0, 0, 0, 0));
+			DBA_RUN_OR_GOTO(cleanup, dba_msg_seti(msg, DBA_VAR(0, 6, 1), cur->out_lon, -1, 257, 0, 0, 0, 0, 0, 0));
 			if (cur->out_ident_ind != SQL_NULL_DATA)
 				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_ident(msg, cur->out_ident, -1));
 
@@ -277,7 +277,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 
 		TRACE("Inserting var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
 		DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var,
-					cur->out_ltype, cur->out_l1, cur->out_l2,
+					cur->out_ltype1, cur->out_l1, cur->out_ltype2, cur->out_l2,
 					cur->out_pind, cur->out_p1, cur->out_p2));
 		var = NULL;
 	}

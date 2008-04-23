@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
 			ltype = 100;
 			l1 = press;
-			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 4), ltype, l1, 0, 0, 0, 0));
+			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 4), ltype, l1, 0, 0, 254, 0, 0));
 		}
 		if (GET(i + 2, "B10003"))
 		{
@@ -77,17 +77,17 @@ dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			DBA_RUN_OR_RETURN(dba_var_enqd(var, &geopot));
 			if (ltype == -1)
 			{
-				ltype = 103;
+				ltype = 102;
 				l1 = lround((double)geopot / 9.80665);
 			}
-			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 3), ltype, l1, 0, 0, 0, 0));
+			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 3), ltype, l1, 0, 0, 254, 0, 0));
 		}
 		if (ltype == -1)
 			return dba_error_notfound("looking for pressure or height in a BUFR/CREX PILOT message");
 
-		if (GET(i+1, "B08001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0,  8, 1), ltype, l1, 0, 0, 0, 0));
-		if (GET(i+3, "B11001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1), ltype, l1, 0, 0, 0, 0));
-		if (GET(i+4, "B11002")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 2), ltype, l1, 0, 0, 0, 0));
+		if (GET(i+1, "B08001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0,  8, 1), ltype, l1, 0, 0, 254, 0, 0));
+		if (GET(i+3, "B11001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1), ltype, l1, 0, 0, 254, 0, 0));
+		if (GET(i+4, "B11002")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 2), ltype, l1, 0, 0, 254, 0, 0));
 	}
 
 	return dba_error_ok();

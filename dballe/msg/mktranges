@@ -6,131 +6,38 @@ use strict;
 use warnings;
 
 my @descs = (
-	[ 0, q{Forecast product valid for reference time + P1 (P1 > 0), or Uninitialized
-analysis product for reference time (P1 = 0), or Image product for reference
-time (P1 = 0).} ],
-	[ 1, 'Initialized analysis product for reference time (P1 = 0).' ],
-	[ 2, 'Product with a valid time ranging between reference time + P1 and reference time + P2.' ],
-	[ 3, 'Average (reference time + P1  to reference time + P2).' ],
-	[ 4, q{Accumulation (reference time + P1 to reference time + P2).
-Product considered valid at reference time + P2.
-} ],
-	[ 5, q{Difference (reference time + P2 minus reference time + P1).
-Product considered valid at reference time + P2.
-} ],
-	[ '6-9', 'Reserved.' ],
-	[ 10, q{P2 = 0; product valid at reference time + P1.} ],
-	[ '11-50', 'Reserved.' ],
-	[ 51, q{Climatological Mean Value: multiple year averages of quantities which are
-themselves means over some period of time (P2) less than a year. The
-reference time (R) indicates the date and time of the start of a period of
-time, given by R to R + P2 , over which a mean is formed; N indicates the
-number of such period-means that are averaged together to form the
-climatological value, assuming that the N period-mean fields are separated by
-one year. The reference time indicates the start of the N-year climatology. N
-is given in octets 22 and 23 of the PDS.
-
-If P1 = 0, then the data averaged in the basic interval P2 are assumed to be
-continuous (i.e., all available data are simply averaged together).
-
-If P1 = 1 (the units of time - octet 18,Code table 4 - are not relevant
-here), then the data averaged together in the basic interval P2 are valid
-only at the time (hour, minute) given in the reference time, for all the days
-included in the P2 period. The units of P2  are given by the contents of
-octet 18 and Code table 4.
-} ],
-	[ '52-112', 'Reserved.' ],
-	[ 113, q{Average of N forecasts (or initialized analyses); each product has forecast
-period of P1 (P1 = 0 for initialized analyses); products have reference
-times at intervals of P2, beginning at the given reference time.
-} ],
-	[ 114, q{Accumulation of N forecasts (or initialized analyses); each product has
-forecast period of P1 (P1 = 0 for initialized analyses); products have
-reference times at intervals of P2, beginning at the given reference time.
-} ],
-	[ 115, q{Average of N forecasts, all with the same reference time; the first has a
-forecast period of P1, the remaining forecasts follow at intervals of P2.
-} ],
-	[ 116, q{Accumulation of N forecasts, all with the same reference time; the first has
-a forecast period of P1, the remaining forecasts follow at intervals of P2.
-} ],
-	[ 117, q{Average of N forecasts; the first has a forecast period of P1, the
-subsequent ones have forecast periods reduced from the previous one by an
-interval of P2; the reference time for the first is given in octets 13 to 17,
-the subsequent ones have reference times increased from the previous one by
-an interval of P2. Thus all the forecasts have the same valid time, given by
-the reference time + P1.
-} ],
-	[ 118, q{Temporal variance, or covariance, of N initialized analyses; each product has
-forecast period of P1  = 0; products have reference times at intervals of P2,
-beginning at the given reference time.
-} ],
-	[ 119, q{Standard deviation of N forecasts, all with the same reference time with
-respect to the time average of forecasts; the first forecast has a forecast
-period of P1, the remaining forecasts follow at intervals of P2.
-} ],
-	[ 120-122, 'Reserved.' ],
-	[ 123, q{Average of N uninitialized analyses, starting at the reference time, at
-intervals of P2.
-} ],
-	[ 124, q{Accumulation of N uninitialized analyses, starting at the reference time, at
-intervals of P2.
-} ],
-	[ 125-254, 'Reserved.' ],
+	[ 0, q{Average} ],
+	[ 1, q{Accumulation} ],
+	[ 2, q{Maximum} ],
+	[ 3, q{Minimum} ],
+	[ 4, q{Difference (value at the end of the time range minus value at the beginning)} ],
+	[ 5, q{Root Mean Square} ],
+	[ 6, q{Standard Deviation} ],
+	[ 7, q{Covariance (temporal variance)} ],
+	[ 8, q{Difference (value at the beginning of the time range minus value at the end)} ],
+	[ 9, q{Ratio} ],
+	[ 51, q{Climatological Mean Value} ],
+	[ '10-191', q{Reserved} ],
+	[ '192-254', q{Reserved for Local Use} ],
+	[ 200, q{Vectorial mean} ],
+	[ 201, q{Mode} ],
+	[ 202, q{Standard deviation vectorial mean} ],
+	[ 203, q{Vectorial maximum} ],
+	[ 204, q{Vectorial minimum} ],
+	[ 205, q{Product with a valid time ranging inside the given period} ],
+	[ 254, q{Istantaneous value} ],
 );
 
 my @notes = (
-	q{For analysis products, or the first of a series of analysis products,
-the reference time (octets 13 to 17) indicates the valid time.
-},
-	q{For forecast products, or the first of a series of forecast products,
-the reference time indicates the valid time of the analysis upon which
-the (first) forecast is based.
-},
-	q{Initialized analysis products are allocated code figures distinct
-from those allocated to uninitialized analysis products.
-},
-	q{Code figure 10 allows the period of a forecast to be extended over
-two octets; this is to assist with extended range forecasts.
-},
-	q{Where products or a series of products are averaged or accumulated,
-the number involved is to be represented in octets 22 and 23 of Section
-1, while any number missing is to be represented in octet 24.
-},
-	q{Forecasts of the accumulation or difference of some quantity (e.g.
-quantitative precipitation forecasts), indicated by values of 4 or 5 in
-octet 21, have a product valid time given by the reference time + P2;
-the period of accumulation, or difference, can be calculated as P2 -
-P1.
-},
-	q{A few examples may help to clarify the use of Code table 5.
+	q{For instantaneous values: the date and time in DB-All.e are the validity date and time of a value; P1 and P2 are 0.},
 
-For analysis products, P1 will be zero and the time range indicator
-(octet 21) will also be zero; for initialized products (sometimes
-called "zero hour forecasts"), P1 will be zero, but octet 21 will be
-set to 1.
+	q{For statistically processed values (for example average, accumulation, extreme values): the date and time in DB-All.e are the date and time of end of the time interval.},
+	
+	q{P1 is defined as the difference in seconds between the time in DB-All.e ( validity date and time or end of the time interval ) and the reference time. It can be negative only when the time in DB-All.e is earlier than the reference time. In other words, Note that, for observed values, the reference time is the same as the time in DB-All.e, therefore for observed values P1 is always zero.},
 
-For forecasts, typically, P1 will contain the number of hours of the
-forecast (the unit indicator given in octet 18 would be 1) and octet 21
-would contain a zero.
-},
-	q{Code value 115 would be used, typically, for multiple day mean
-forecasts, all derived from the same initial conditions.  "Code value 117 would
-be used, typically, for Monte Carlo type calculations; many forecasts valid at
-the same time from different initial (reference) times.
-},
-	q{Averages, accumulations, and differences get a somewhat specialized
-treatment. If octet 21 has a value between 2 and 5 (inclusive), then the
-reference time + P1  is the initial date/time and the reference time + P2 is
-the final date/time of the period over which averaging or accumulation takes
-place. If, however, octet 21 has a value of 113, 114, 115, 116, 117, 123, or
-124, the P2 specifies the time interval between each of the fields (or the
-forecast initial times) that have been averaged or accumulated. These latter
-values of octet 21 require the quantities averaged to be equally separated in
-time; the former values, 3 and 4 in particular, allow for irregular or
-unspecified intervals of time between the fields that are averaged or
-accumulated.
-},
+	q{P2 is defined as the duration of the period over which statistical processing, and is always positive. Note that, for non statistical values, P2 is always zero.},
+
+#	q{The Eta (NAM) vertical coordinate system involves normalizing the pressure at some point on a specific level by the mean sea level pressure at that point.},
 );
 
 
@@ -168,10 +75,7 @@ Notes about the time range values:
 }
 elsif ($op eq 'tex')
 {
-	print q(\\section{Time range}
-
-This table lists all the various value combinations to use as a time range:
-
+	print q( 
 \\begin{description}
 );
 
@@ -190,7 +94,7 @@ Notes about the time range values:
 
 	for my $n (@notes)
 	{
-		print '\\item ', $n;
+		print '\\item ', $n, "\n";
 	}
 
 	print q(\\end{itemize}

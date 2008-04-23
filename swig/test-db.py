@@ -17,8 +17,9 @@ class DballeTest(unittest.TestCase):
 		data.seti("day", 25)
 		data.seti("hour", 8)
 		data.seti("min", 0)
-		data.seti("leveltype", 10)
+		data.seti("leveltype1", 10)
 		data.seti("l1", 11)
+		data.seti("leveltype2", 15)
 		data.seti("l2", 22)
 		data.seti("pindicator", 20)
 		data.seti("p1", 111)
@@ -120,8 +121,9 @@ class DballeTest(unittest.TestCase):
 		cur = self.db.queryLevels(query)
 		self.assertEqual(cur.remaining(), 1)
 		for result in cur:
-			self.assertEqual(result.enqi("leveltype"), 10)
+			self.assertEqual(result.enqi("leveltype1"), 10)
 			self.assertEqual(result.enqi("l1"), 11)
+			self.assertEqual(result.enqi("leveltype2"), 15)
 			self.assertEqual(result.enqi("l2"), 22)
         def testQueryTimeRanges(self):
 		query = Record()
@@ -136,8 +138,9 @@ class DballeTest(unittest.TestCase):
 		cur = self.db.queryLevelsAndTimeRanges(query)
 		self.assertEqual(cur.remaining(), 1)
 		for result in cur:
-			self.assertEqual(result.enqi("leveltype"), 10)
+			self.assertEqual(result.enqi("leveltype1"), 10)
 			self.assertEqual(result.enqi("l1"), 11)
+			self.assertEqual(result.enqi("leveltype2"), 15)
 			self.assertEqual(result.enqi("l2"), 22)
 			self.assertEqual(result.enqi("pindicator"), 20)
 			self.assertEqual(result.enqi("p1"), 111)

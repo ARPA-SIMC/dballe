@@ -30,7 +30,7 @@
       call ensure_no_error("init 1")
       call idba_setd(handleinit, "lon", 12.345D00)
       call ensure_no_error("init 2")
-      call idba_setlevel(handleinit, 1, 0, 0)
+      call idba_setlevel(handleinit, 1, 0, 0, 0)
       call ensure_no_error("init 3")
       call idba_settimerange(handleinit, 0, 0, 0)
       call ensure_no_error("init 4")

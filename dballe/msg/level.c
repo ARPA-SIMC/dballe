@@ -25,14 +25,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-dba_err dba_msg_level_create(int ltype, int l1, int l2, dba_msg_level* l)
+dba_err dba_msg_level_create(int ltype1, int l1, int ltype2, int l2, dba_msg_level* l)
 {
 	dba_msg_level res = (dba_msg_level)calloc(1, sizeof(struct _dba_msg_level));
 	if (res == NULL)
 		return dba_error_alloc("allocating new dba_msg_level");
 
-	res->ltype = ltype;
+	res->ltype1 = ltype1;
 	res->l1 = l1;
+	res->ltype2 = ltype2;
 	res->l2 = l2;
 	res->data_count = 0;
 	res->data_alloc = 0;
@@ -75,7 +76,7 @@ dba_err dba_msg_level_copy(dba_msg_level src, dba_msg_level* dst)
 	dba_err err = DBA_OK;
 	int i;
 
-	DBA_RUN_OR_RETURN(dba_msg_level_create(src->ltype, src->l1, src->l2, dst));
+	DBA_RUN_OR_RETURN(dba_msg_level_create(src->ltype1, src->l1, src->ltype2, src->l2, dst));
 	
 	/* Allocate enough space to copy the items */
 	while ((*dst)->data_alloc < src->data_count)
@@ -109,19 +110,23 @@ void dba_msg_level_delete(dba_msg_level l)
 
 int dba_msg_level_compare(const dba_msg_level l1, const dba_msg_level l2)
 {
-	if (l1->ltype != l2->ltype)
-		return l1->ltype - l2->ltype;
+	if (l1->ltype1 != l2->ltype1)
+		return l1->ltype1 - l2->ltype1;
 	if (l1->l1 != l2->l1)
 		return l1->l1 - l2->l1;
+	if (l1->ltype2 != l2->ltype2)
+		return l1->ltype2 - l2->ltype2;
 	return l1->l2 - l2->l2;
 }
 
-int dba_msg_level_compare2(const dba_msg_level l, int ltype, int l1, int l2)
+int dba_msg_level_compare2(const dba_msg_level l, int ltype1, int l1, int ltype2, int l2)
 {
-	if (l->ltype != ltype)
-		return l->ltype - ltype;
+	if (l->ltype1 != ltype1)
+		return l->ltype1 - ltype1;
 	if (l->l1 != l1)
 		return l->l1 - l1;
+	if (l->ltype2 != ltype2)
+		return l->ltype2 - ltype2;
 	return l->l2 - l2;
 }
 
@@ -192,14 +197,14 @@ void dba_msg_level_print(dba_msg_level l, FILE* out)
 	if (l->data_count > 0)
 	{
 		int i;
-		fprintf(out, "Level %d,%d,%d, %d vars:\n", l->ltype, l->l1, l->l2, l->data_count);
+		fprintf(out, "Level %d,%d, %d,%d, %d vars:\n", l->ltype1, l->l1, l->ltype2, l->l2, l->data_count);
 		for (i = 0; i < l->data_count; i++)
 		{
 			fprintf(out, "   p %d,%d,%d ", l->data[i]->pind, l->data[i]->p1, l->data[i]->p2);
 			dba_var_print(l->data[i]->var, out);
 		}
 	} else
-		fprintf(out, "Level %d,%d,%d exists but is empty.\n", l->ltype, l->l1, l->l2);
+		fprintf(out, "Level %d,%d, %d,%d exists but is empty.\n", l->ltype1, l->l1, l->ltype2, l->l2);
 }
 
 static void datum_summary(dba_msg_datum d, FILE* out)
@@ -215,10 +220,11 @@ static void datum_summary(dba_msg_datum d, FILE* out)
 void dba_msg_level_diff(dba_msg_level l1, dba_msg_level l2, int* diffs, FILE* out)
 {
 	int i1 = 0, i2 = 0;
-	if (l1->ltype != l2->ltype || l1->l1 != l2->l1 || l1->l2 != l2->l2)
+	if (l1->ltype1 != l2->ltype1 || l1->l1 != l2->l1 || l1->ltype2 != l2->ltype2 || l1->l2 != l2->l2)
 	{
-		fprintf(out, "the levels are different (first is %d,%d,%d, second is %d,%d,%d)\n",
-				l1->ltype, l1->l1, l1->l2, l2->ltype, l2->l1, l2->l2);
+		fprintf(out, "the levels are different (first is %d,%d, %d,%d, second is %d,%d, %d,%d)\n",
+				l1->ltype1, l1->l1, l1->ltype2, l1->l2,
+				l2->ltype1, l2->l1, l2->ltype2, l2->l2);
 		(*diffs)++;
 		return;
 	}
@@ -227,12 +233,12 @@ void dba_msg_level_diff(dba_msg_level l1, dba_msg_level l2, int* diffs, FILE* ou
 	{
 		if (i1 == l1->data_count)
 		{
-			fprintf(out, "Variable l(%d,%d,%d) ", l1->ltype, l1->l1, l1->l2); datum_summary(l2->data[i2], out);
+			fprintf(out, "Variable l(%d,%d, %d,%d) ", l2->ltype1, l2->l1, l2->ltype2, l2->l2); datum_summary(l2->data[i2], out);
 			fprintf(out, " exists only in the second message\n");
 			++i2;
 			++*diffs;
 		} else if (i2 == l2->data_count) {
-			fprintf(out, "Variable l(%d,%d,%d) ", l1->ltype, l1->l1, l1->l2); datum_summary(l1->data[i1], out);
+			fprintf(out, "Variable l(%d,%d, %d,%d) ", l1->ltype1, l1->l1, l1->ltype2, l1->l2); datum_summary(l1->data[i1], out);
 			fprintf(out, " exists only in the first message\n");
 			++i1;
 			++*diffs;
@@ -246,7 +252,7 @@ void dba_msg_level_diff(dba_msg_level l1, dba_msg_level l2, int* diffs, FILE* ou
 			} else if (cmp < 0) {
 				if (dba_var_value(l1->data[i1]->var) != NULL)
 				{
-					fprintf(out, "Variable l(%d,%d,%d) ", l1->ltype, l1->l1, l1->l2); datum_summary(l1->data[i1], out);
+					fprintf(out, "Variable l(%d,%d, %d,%d) ", l1->ltype1, l1->l1, l1->ltype2, l1->l2); datum_summary(l1->data[i1], out);
 					fprintf(out, " exists only in the first message\n");
 					++*diffs;
 				}
@@ -254,7 +260,7 @@ void dba_msg_level_diff(dba_msg_level l1, dba_msg_level l2, int* diffs, FILE* ou
 			} else {
 				if (dba_var_value(l2->data[i2]->var) != NULL)
 				{
-					fprintf(out, "Variable l(%d,%d,%d) ", l1->ltype, l1->l1, l1->l2); datum_summary(l2->data[i2], out);
+					fprintf(out, "Variable l(%d,%d, %d,%d) ", l2->ltype1, l2->l1, l2->ltype2, l2->l2); datum_summary(l2->data[i2], out);
 					fprintf(out, " exists only in the second message\n");
 					++*diffs;
 				}

@@ -112,6 +112,12 @@ struct uniconv { const char* tag; double mul; double add; };
 "KG/M**2->mm",			1,		0
 "degree true->DEGREE TRUE",			1,		0
 "DEGREE TRUE->degree true",			1,		0
+"GPM->MGP",			1,   	0
+"MGP->GPM",			1,   	0
+"GPM->m**2/s**2",            9.80665,   0
+"MGP->m**2/s**2",            9.80665,   0
+"m**2/s**2->GPM",            0.101971621,   0
+"m**2/s**2->MGP",            0.101971621,   0
 %%
 
 int dba_convert_units_allowed(const char* from, const char* to)

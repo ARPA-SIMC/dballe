@@ -48,7 +48,7 @@ dba_err dba_import_msgs(dba_db db, dba_msgs msgs, int repcod, int flags)
 dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 {
 	dba_err err = DBA_OK;
-	dba_msg_level l_ana = dba_msg_find_level(msg, 257, 0, 0);
+	dba_msg_level l_ana = dba_msg_find_level(msg, 257, 0, 0, 0);
 	dba_msg_datum d;
 	dba_db_pseudoana da;
 	dba_db_context dc;
@@ -196,8 +196,9 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 		int old_p2 = -1;
 
 		/* Fill in the context */
-		dc->ltype = lev->ltype;
+		dc->ltype1 = lev->ltype1;
 		dc->l1 = lev->l1;
+		dc->ltype2 = lev->ltype2;
 		dc->l2 = lev->l2;
 
 		for (j = 0; j < lev->data_count; j++)
@@ -206,7 +207,7 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 			dba_var_attr_iterator iter;
 
 			/* Skip the anagraphical level */
-			if (lev->ltype == 257 && lev->l1 == 0 && lev->l2 == 0
+			if (lev->ltype1 == 257 && lev->l1 == 0 && lev->ltype2 == 0 && lev->l2 == 0
 				&& dat->pind == 0 && dat->p1 == 0 && dat->p2 == 0)
 			{
 				dba_varcode code = dba_var_code(dat->var);

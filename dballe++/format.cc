@@ -8,11 +8,11 @@ using namespace std;
 
 namespace dballe {
 
-std::string describeLevel(int ltype, int l1, int l2)
+std::string describeLevel(int ltype1, int l1, int ltype2, int l2)
 {
 	char* desc;
 
-	checked(dba_formatter_describe_level(ltype, l1, l2, &desc));
+	checked(dba_formatter_describe_level_or_layer(ltype1, l1, ltype2, l2, &desc));
 
 	std::string res(desc);
 	free(desc);

@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,12 +46,12 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 {
 	const char* select_query =
 		"SELECT id FROM context WHERE id_ana=? AND id_report=? AND datetime=?"
-		" AND ltype=? AND l1=? AND l2=?"
+		" AND ltype1=? AND l1=? AND ltype2=? AND l2=?"
 		" AND ptype=? AND p1=? AND p2=?";
 	const char* select_data_query =
-		"SELECT id_ana, id_report, datetime, ltype, l1, l2, ptype, p1, p2 FROM context WHERE id=?";
+		"SELECT id_ana, id_report, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM context WHERE id=?";
 	const char* insert_query =
-		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	const char* remove_query =
 		"DELETE FROM context WHERE id=?";
 	dba_err err = DBA_OK;
@@ -61,10 +61,10 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 	switch (db->server_type)
 	{
 		case ORACLE:
-			insert_query = "INSERT INTO context VALUES (seq_context.NextVal, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			insert_query = "INSERT INTO context VALUES (seq_context.NextVal, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			break;
 		case POSTGRES:
-			insert_query = "INSERT INTO context VALUES (nextval('seq_context'), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			insert_query = "INSERT INTO context VALUES (nextval('seq_context'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			break;
 	}
 
@@ -85,12 +85,13 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 		SQLBindParameter(res->sstm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(res->date), 0, 0);
 	else
 		SQLBindParameter(res->sstm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &(res->date), 0, 0);
-	SQLBindParameter(res->sstm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype), 0, 0);
+	SQLBindParameter(res->sstm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype1), 0, 0);
 	SQLBindParameter(res->sstm, 5, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
-	SQLBindParameter(res->sstm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
-	SQLBindParameter(res->sstm, 7, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
-	SQLBindParameter(res->sstm, 8, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
-	SQLBindParameter(res->sstm, 9, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
+	SQLBindParameter(res->sstm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype2), 0, 0);
+	SQLBindParameter(res->sstm, 7, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
+	SQLBindParameter(res->sstm, 8, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
+	SQLBindParameter(res->sstm, 9, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
+	SQLBindParameter(res->sstm, 10, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
 
 	SQLBindCol(res->sstm, 1, DBALLE_SQL_C_SINT, &(res->id), sizeof(res->id), 0);
 	r = SQLPrepare(res->sstm, (unsigned char*)select_query, SQL_NTS);
@@ -106,12 +107,13 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 	SQLBindCol(res->sdstm, 1, DBALLE_SQL_C_SINT, &(res->id_ana),	  sizeof(res->id_ana),	0);
 	SQLBindCol(res->sdstm, 2, DBALLE_SQL_C_SINT, &(res->id_report), sizeof(res->id_report),	0);
 	SQLBindCol(res->sdstm, 3, SQL_C_TYPE_TIMESTAMP,  &(res->date),	  sizeof(res->date), 0);
-	SQLBindCol(res->sdstm, 4, DBALLE_SQL_C_SINT, &(res->ltype),	  sizeof(res->ltype),	    0);
+	SQLBindCol(res->sdstm, 4, DBALLE_SQL_C_SINT, &(res->ltype1),	  sizeof(res->ltype1),	    0);
 	SQLBindCol(res->sdstm, 5, DBALLE_SQL_C_SINT, &(res->l1),		  sizeof(res->l1),		    0);
-	SQLBindCol(res->sdstm, 6, DBALLE_SQL_C_SINT, &(res->l2),		  sizeof(res->l2),		    0);
-	SQLBindCol(res->sdstm, 7, DBALLE_SQL_C_SINT, &(res->pind),	  sizeof(res->pind),	    0);
-	SQLBindCol(res->sdstm, 8, DBALLE_SQL_C_SINT, &(res->p1),		  sizeof(res->p1),		    0);
-	SQLBindCol(res->sdstm, 9, DBALLE_SQL_C_SINT, &(res->p2),		  sizeof(res->p2),		    0);
+	SQLBindCol(res->sdstm, 6, DBALLE_SQL_C_SINT, &(res->ltype2),	  sizeof(res->ltype2),	    0);
+	SQLBindCol(res->sdstm, 7, DBALLE_SQL_C_SINT, &(res->l2),		  sizeof(res->l2),		    0);
+	SQLBindCol(res->sdstm, 8, DBALLE_SQL_C_SINT, &(res->pind),	  sizeof(res->pind),	    0);
+	SQLBindCol(res->sdstm, 9, DBALLE_SQL_C_SINT, &(res->p1),		  sizeof(res->p1),		    0);
+	SQLBindCol(res->sdstm, 10, DBALLE_SQL_C_SINT, &(res->p2),		  sizeof(res->p2),		    0);
 	r = SQLPrepare(res->sdstm, (unsigned char*)select_data_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
@@ -127,12 +129,13 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 		SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(res->date), 0, 0);
 	else
 		SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &(res->date), 0, 0);
-	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype), 0, 0);
+	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype1), 0, 0);
 	SQLBindParameter(res->istm, 5, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
-	SQLBindParameter(res->istm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
-	SQLBindParameter(res->istm, 7, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
-	SQLBindParameter(res->istm, 8, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
-	SQLBindParameter(res->istm, 9, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
+	SQLBindParameter(res->istm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype2), 0, 0);
+	SQLBindParameter(res->istm, 7, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
+	SQLBindParameter(res->istm, 8, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
+	SQLBindParameter(res->istm, 9, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
+	SQLBindParameter(res->istm, 10, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
 	r = SQLPrepare(res->istm, (unsigned char*)insert_query, SQL_NTS);
 	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
 	{
@@ -216,8 +219,8 @@ dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id)
 	ins->date.month = 1;
 	ins->date.day = 1;
 	ins->date.hour = ins->date.minute = ins->date.second = 0;
-	ins->ltype = 257;
-	ins->l1 = ins->l2 = 0;
+	ins->ltype1 = 257;
+	ins->l1 = ins->ltype2 = ins->l2 = 0;
 	ins->pind = ins->p1 = ins->p2 = 0;
 
 	/* See if the context entry already exists */

@@ -30,6 +30,12 @@ namespace tut_dballe {
 using namespace std;
 using namespace tut;
 
+struct TestBufrexEnv
+{
+	TestBufrexEnv();
+	~TestBufrexEnv();
+};
+
 struct TestBufrexMsg
 {
 	struct TestBufrexSubset

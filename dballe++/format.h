@@ -6,7 +6,7 @@
 namespace dballe {
 
 /// Return a string description of a level
-std::string describeLevel(int ltype, int l1, int l2);
+std::string describeLevel(int ltype1, int l1, int ltype2, int l2);
 
 /// Return a string description of a time range
 std::string describeTrange(int ptype, int p1, int p2);

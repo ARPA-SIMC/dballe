@@ -1,6 +1,0 @@
-debian/tmp/usr/include/dballe/core/*
-debian/tmp/usr/lib/libdballe-core*.a
-debian/tmp/usr/lib/pkgconfig/libdballe-core*
-debian/tmp/usr/lib/libdballe-core*.la
-debian/tmp/usr/lib/libdballe-core*.so
-debian/tmp/usr/share/aclocal/libdballe-core*.m4

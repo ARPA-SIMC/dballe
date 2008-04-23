@@ -27,7 +27,21 @@
 #include <sys/types.h>
 #include <pwd.h>
 
+extern "C" {
+void bufrex_codec_init(void);
+void bufrex_codec_shutdown(void);
+}
+
 namespace tut_dballe {
+
+TestBufrexEnv::TestBufrexEnv()
+{
+	bufrex_codec_init();
+}
+TestBufrexEnv::~TestBufrexEnv()
+{
+	bufrex_codec_shutdown();
+}
 
 bufrex_msg _read_test_msg_header_raw(const char* file, int line, const char* filename, dba_encoding type)
 {

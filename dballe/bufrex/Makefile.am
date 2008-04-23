@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir)
 
 #
 # Shared library
@@ -15,7 +15,7 @@ bufrexinclude_HEADERS = \
 		subset.h \
 		msg.h
 
-lib_LTLIBRARIES = libdballe-bufrex.la
+noinst_LTLIBRARIES = libdballe-bufrex.la
 libdballe_bufrex_la_SOURCES = \
 		dtable.c \
 		opcode.c \
@@ -26,8 +26,6 @@ libdballe_bufrex_la_SOURCES = \
 		crex_decoder.c \
 		crex_encoder.c \
 		bufrex_codec.c
-libdballe_bufrex_la_LIBADD = \
-		../core/libdballe-core.la
 libdballe_bufrex_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
 #

@@ -36,7 +36,7 @@ program check_real0
       call ensure_no_error("set mobile")
       call idba_set (handle,"rep_memo","synop")
       call ensure_no_error("set rep_memo")
-      call idba_setlevel (handle,1,0,0)
+      call idba_setlevel (handle,1,0,0,0)
       call ensure_no_error("set level")
       call idba_settimerange (handle,0,0,0)
       call ensure_no_error("set timerange")

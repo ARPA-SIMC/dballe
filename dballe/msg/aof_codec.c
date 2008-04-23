@@ -629,13 +629,13 @@ static dba_err aof_file_create(dba_encoding type, FILE* fd, const char* mode, db
 
 static dba_file_create_fun old_aof_create_fun;
 
-void __attribute__ ((constructor)) aof_codec_init(void)
+void aof_codec_init(void)
 {
 	old_aof_create_fun = dba_file_aof_create;
 	dba_file_aof_create = aof_file_create;
 }
 
-void __attribute__ ((destructor)) aof_codec_shutdown(void)
+void aof_codec_shutdown(void)
 {
 	dba_file_aof_create = old_aof_create_fun;
 }

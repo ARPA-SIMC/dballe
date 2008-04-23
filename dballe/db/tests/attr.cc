@@ -31,6 +31,8 @@ using namespace tut_dballe;
 
 struct attr_shar
 {
+	TestMsgEnv testenv;
+
 	// DB handle
 	dba_db db;
 	dba_db_attr at;
@@ -74,8 +76,9 @@ struct attr_shar
 		co->id_ana = 1;
 		co->id_report = 1;
 		co->date = mkts(2001, 2, 3, 4, 5, 6);
-		co->ltype = 1;
+		co->ltype1 = 1;
 		co->l1 = 2;
+		co->ltype2 = 0;
 		co->l2 = 3;
 		co->pind = 4;
 		co->p1 = 5;
@@ -87,8 +90,9 @@ struct attr_shar
 		co->id_ana = 2;
 		co->id_report = 2;
 		co->date = mkts(2002, 3, 4, 5, 6, 7);
-		co->ltype = 2;
+		co->ltype1 = 2;
 		co->l1 = 3;
+		co->ltype2 = 1;
 		co->l2 = 4;
 		co->pind = 5;
 		co->p1 = 6;

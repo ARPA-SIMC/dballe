@@ -34,6 +34,8 @@ using namespace tut_dballe;
 
 struct msg_shar
 {
+	TestMsgEnv testenv;
+
 	msg_shar()
 	{
 	}
@@ -115,16 +117,18 @@ void to::test<2>()
 {
 	dba_msg_level lev1, lev2;
 
-	CHECKED(dba_msg_level_create(1, 2, 3, &lev1));
-	CHECKED(dba_msg_level_create(2, 1, 3, &lev2));
+	CHECKED(dba_msg_level_create(1, 2, 3, 4, &lev1));
+	CHECKED(dba_msg_level_create(2, 1, 4, 3, &lev2));
 
 	gen_ensure_equals(lev1->data_count, 0);
-	gen_ensure_equals(lev1->ltype, 1);
+	gen_ensure_equals(lev1->ltype1, 1);
 	gen_ensure_equals(lev1->l1, 2);
-	gen_ensure_equals(lev1->l2, 3);
+	gen_ensure_equals(lev1->ltype2, 3);
+	gen_ensure_equals(lev1->l2, 4);
 	gen_ensure_equals(lev2->data_count, 0);
-	gen_ensure_equals(lev2->ltype, 2);
+	gen_ensure_equals(lev2->ltype1, 2);
 	gen_ensure_equals(lev2->l1, 1);
+	gen_ensure_equals(lev2->ltype2, 4);
 	gen_ensure_equals(lev2->l2, 3);
 
 	gen_ensure(dba_msg_level_compare(lev1, lev2) < 0);
@@ -132,13 +136,13 @@ void to::test<2>()
 	gen_ensure_equals(dba_msg_level_compare(lev1, lev1), 0);
 	gen_ensure_equals(dba_msg_level_compare(lev2, lev2), 0);
 
-	gen_ensure(dba_msg_level_compare2(lev1, 1, 2, 4) < 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 1, 2, 2) > 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 1, 3, 3) < 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 1, 1, 3) > 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 2, 2, 3) < 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 0, 2, 3) > 0);
-	gen_ensure_equals(dba_msg_level_compare2(lev1, 1, 2, 3), 0);
+	gen_ensure(dba_msg_level_compare2(lev1, 1, 2, 4, 4) < 0);
+	gen_ensure(dba_msg_level_compare2(lev1, 1, 2, 2, 4) > 0);
+	gen_ensure(dba_msg_level_compare2(lev1, 1, 3, 3, 4) < 0);
+	gen_ensure(dba_msg_level_compare2(lev1, 1, 1, 3, 4) > 0);
+	gen_ensure(dba_msg_level_compare2(lev1, 2, 2, 3, 4) < 0);
+	gen_ensure(dba_msg_level_compare2(lev1, 0, 2, 3, 4) > 0);
+	gen_ensure_equals(dba_msg_level_compare2(lev1, 1, 2, 3, 4), 0);
 
 	dba_msg_level_delete(lev1);
 	dba_msg_level_delete(lev2);
@@ -150,7 +154,7 @@ void to::test<3>()
 {
 	dba_msg_level lev;
 
-	CHECKED(dba_msg_level_create(1, 2, 3, &lev));
+	CHECKED(dba_msg_level_create(1, 2, 3, 4, &lev));
 
 	dba_var v1, v2, v3, v4;
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v1));
@@ -200,30 +204,30 @@ void to::test<4>()
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v3));
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v4));
 
-	CHECKED(dba_msg_set_nocopy(msg, v4, 2, 2, 2, 1, 1, 1));
+	CHECKED(dba_msg_set_nocopy(msg, v4, 2, 2, 2, 2, 1, 1, 1));
 	gen_ensure_equals(msg->data_count, 1);
-	CHECKED(dba_msg_set_nocopy(msg, v3, 2, 2, 2, 1, 1, 1));
+	CHECKED(dba_msg_set_nocopy(msg, v3, 2, 2, 2, 2, 1, 1, 1));
 	gen_ensure_equals(msg->data_count, 1);
-	CHECKED(dba_msg_set_nocopy(msg, v1, 1, 1, 1, 1, 1, 1));
+	CHECKED(dba_msg_set_nocopy(msg, v1, 1, 1, 1, 1, 1, 1, 1));
 	gen_ensure_equals(msg->data_count, 2);
-	CHECKED(dba_msg_set_nocopy(msg, v2, 1, 1, 1, 2, 2, 2));
+	CHECKED(dba_msg_set_nocopy(msg, v2, 1, 1, 1, 1, 2, 2, 2));
 	gen_ensure_equals(msg->data_count, 2);
 
 	gen_ensure_msg_is_sorted(msg);
 
-	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1) != NULL);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1)->var, v1);
+	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1) != NULL);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1)->var, v1);
 
-	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 2, 2, 2) != NULL);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 2, 2, 2)->var, v2);
+	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2) != NULL);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2)->var, v2);
 
-	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 2, 2, 2, 1, 1, 1) != NULL);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 2, 2, 2, 1, 1, 1)->var, v3);
+	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1) != NULL);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1)->var, v3);
 
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 2), 1, 1, 1, 2, 2, 2), (dba_msg_datum)0);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 0, 0, 0, 1, 1, 1), (dba_msg_datum)0);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 3, 3, 3, 1, 1, 1), (dba_msg_datum)0);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 3, 3, 3), (dba_msg_datum)0);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 2), 1, 1, 1, 1, 2, 2, 2), (dba_msg_datum)0);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 0, 0, 0, 0, 1, 1, 1), (dba_msg_datum)0);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 3, 3, 3, 3, 1, 1, 1), (dba_msg_datum)0);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 3, 3, 3), (dba_msg_datum)0);
 }
 
 #if 0

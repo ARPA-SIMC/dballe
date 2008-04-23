@@ -19,16 +19,21 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include "config.h"
 #include "marshal.h"
 #include "aof_codec.h"
+#ifdef HAVE_DBALLE_BUFREX
 #include "bufrex_codec.h"
+#endif
 
 dba_err dba_marshal_decode(dba_rawmsg rmsg, dba_msgs *msgs)
 {
 	switch (rmsg->encoding)
 	{
+#ifdef HAVE_DBALLE_BUFREX
 		case BUFR: DBA_RUN_OR_RETURN(bufrex_decode_bufr(rmsg, msgs)); break;
 		case CREX: DBA_RUN_OR_RETURN(bufrex_decode_crex(rmsg, msgs)); break;
+#endif
 		case AOF: DBA_RUN_OR_RETURN(aof_codec_decode(rmsg, msgs)); break;
 	}
 	return dba_error_ok();
@@ -38,8 +43,10 @@ dba_err dba_marshal_encode(dba_msgs msgs, dba_encoding type, dba_rawmsg *rmsg)
 {
 	switch (type)
 	{
+#ifdef HAVE_DBALLE_BUFREX
 		case BUFR: DBA_RUN_OR_RETURN(bufrex_encode_bufr(msgs, 0, 0, 0, rmsg)); break;
 		case CREX: DBA_RUN_OR_RETURN(bufrex_encode_crex(msgs, 0, 0, rmsg)); break;
+#endif
 		case AOF: return dba_error_unimplemented("exporting to AOF"); break;
 	}
 	return dba_error_ok();

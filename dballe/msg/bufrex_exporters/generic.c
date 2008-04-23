@@ -44,7 +44,7 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 {
 	dba_err err = DBA_OK;
 	int i, j;
-	int ltype = -1, l1 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
+	int ltype1 = -1, l1 = -1, ltype2 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
 
 	for (i = 0; i < src->data_count; i++)
 	{
@@ -58,15 +58,20 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 				continue;
 
 			/* Update the context in the message, if needed */
-			if (ltype != lev->ltype)
+			if (ltype1 != lev->ltype1)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 192), lev->ltype));
-				ltype = lev->ltype;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 192), lev->ltype1));
+				ltype1 = lev->ltype1;
 			}
 			if (l1 != lev->l1)
 			{
 				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 193), lev->l1));
 				l1 = lev->l1;
+			}
+			if (ltype2 != lev->ltype2)
+			{
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 195), lev->ltype2));
+				ltype2 = lev->ltype2;
 			}
 			if (l2 != lev->l2)
 			{

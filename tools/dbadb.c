@@ -19,6 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include <dballe/init.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/file.h>
 #include <dballe/msg/bufrex_codec.h>
@@ -602,8 +603,12 @@ static void init()
 
 int main (int argc, const char* argv[])
 {
+	int res;
+	dba_init();
 	init();
-	return dba_cmdline_dispatch_main(&dbadb, argc, argv);
+	res = dba_cmdline_dispatch_main(&dbadb, argc, argv);
+	dba_shutdown();
+	return res;
 }
 
 /* vim:set ts=4 sw=4: */

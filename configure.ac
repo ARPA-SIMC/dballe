@@ -5,40 +5,65 @@ AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
 
-AC_ARG_ENABLE([db-tests],
+AC_ARG_ENABLE([dballe-bufrex],
     [AS_HELP_STRING(
-        [--enable-db-tests],
-        [enable the dba_db tests that need an ODBC DSN previously set up])],
+        [--enable-dballe-bufrex],
+        [build BUFR and CREX support])],
     [],
-    [enable_db_tests="no"])
+    [enable_dballe_bufrex="yes"])
 
-AC_ARG_ENABLE(fortran,
-		[  --enable-fortran    Turn on generation of fortran bindings using CNF],
-		[case "${enableval}" in
-			yes) fortran=true ;;
-			no)  fortran=false ;;
-			*) AC_MSG_ERROR(bad value ${enableval} for --enable-fortran) ;;
-		esac],[fortran=true])
+AC_ARG_ENABLE([dballe-msg],
+    [AS_HELP_STRING(
+        [--enable-dballe-msg],
+        [build AOF, BUFR and CREX sensemaking support])],
+    [],
+    [enable_dballe_msg="yes"])
 
-AC_ARG_ENABLE(docs,
-		[  --enable-docs    Turn on generation of documentation],
-		[case "${enableval}" in
-			yes) docs=true ;;
-			no)  docs=false ;;
-			*) AC_MSG_ERROR(bad value ${enableval} for --enable-docs) ;;
-		esac],[docs=true])
+AC_ARG_ENABLE([dballe-db],
+    [AS_HELP_STRING(
+        [--enable-dballe-db],
+        [build DB-All.e database support])],
+    [],
+    [enable_dballe_db="yes"])
 
-AC_ARG_ENABLE(swig,
-		[  --enable-swig    Turn on generation of swig bindings using CNF],
-		[case "${enableval}" in
-			yes) swig=true ;;
-			no)  swig=false ;;
-			*) AC_MSG_ERROR(bad value ${enableval} for --enable-swig) ;;
-		esac],[swig=true])
-AM_CONDITIONAL(DO_SWIG, test x$swig = xtrue)
+AC_ARG_ENABLE([dballepp],
+    [AS_HELP_STRING(
+        [--enable-dballepp],
+        [build DB-All.e C++ bindings])],
+    [],
+    [enable_dballepp="yes"])
+
+AC_ARG_ENABLE([dballef],
+    [AS_HELP_STRING(
+        [--enable-dballef],
+        [build DB-All.e Fortran bindings])],
+    [],
+    [enable_dballef="yes"])
+
+AC_ARG_ENABLE([dballe-python],
+    [AS_HELP_STRING(
+        [--enable-dballe-python],
+        [build DB-All.e Python bindings])],
+    [],
+    [enable_dballe_python="yes"])
+
+AC_ARG_ENABLE([test-db],
+    [AS_HELP_STRING(
+        [--enable-test-db],
+        [enable the database tests that need an ODBC DSN previously set up])],
+    [],
+    [enable_test_db="no"])
+
+AC_ARG_ENABLE([docs],
+    [AS_HELP_STRING(
+        [--enable-docs],
+        [enable building of the documentation])],
+    [],
+    [enable_docs="yes"])
 
 AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
 AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
+AC_CHECK_PROG(have_swig, swig, yes, no)
 
 dnl To use subdirs
 AC_PROG_MAKE_SET
@@ -91,18 +116,22 @@ then
 	AC_SUBST(docdir)
 fi
 
-if test x$swig = x"true"
+if test x$have_swig = x"yes"
 then
 	AM_PATH_PYTHON
+else
+	enable_dballe_python=no
 fi
 
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
-       AC_MSG_ERROR([
-*** sql.h not found. Check 'config.log' for more details.]))
+        AC_MSG_WARN([*** sql.h not found. Check 'config.log' for more details.])
+	enable_dballe_db=false
+)
 
 AC_CHECK_LIB(odbc, SQLAllocHandle, LIBS="$LIBS -lodbc",
-       AC_MSG_ERROR([
-*** libodbc not found. Check 'config.log' for more details.]))
+        AC_MSG_WARN([*** libodbc not found. Check 'config.log' for more details.])
+	enable_dballe_db=false
+)
 
 LIBS="$LIBS -lm"
 
@@ -119,11 +148,46 @@ AC_SUBST(LIBDBALLE_VERSION_INFO)
 
 CFLAGS="-Wall $CFLAGS"
 
-AM_CONDITIONAL([DO_FORTRAN], [test x$fortran = xtrue])
-AM_CONDITIONAL([DO_DOCS], [test x$docs = xtrue])
+# Enforce dependencies
+if ! test x"$enable_dballe_db"=x"yes"
+then
+	enable_test_db=no
+fi
+if ! test x"$enable_dballepp"=x"yes"
+then
+	enable_dballe_python=no
+fi
+
+if test x"$enable_dballe_bufrex"=x"yes"; then
+	AC_DEFINE(HAVE_DBALLE_BUFREX,[],[Have BUFREX module])
+fi
+if test x"$enable_dballe_msg"=x"yes"; then
+	AC_DEFINE(HAVE_DBALLE_MSG,[],[Have MSG module])
+fi
+if test x"$enable_dballe_db"=x"yes"; then
+	AC_DEFINE(HAVE_DBALLE_DB,[],[Have DB module])
+fi
+if test x"$enable_dballepp"=x"yes"; then
+	AC_DEFINE(HAVE_DBALLEPP,[],[Have C++ bindings])
+fi
+if test x"$enable_dballef"=x"yes"; then
+	AC_DEFINE(HAVE_DBALLEF,[],[Have Fortran bindings])
+fi
+if test x"$enable_dballe_python"=x"yes"; then
+	AC_DEFINE(HAVE_DBALLE_PYTHON,[],[Have Python bindings])
+fi
+
+AM_CONDITIONAL([DO_DBALLE_BUFREX], [test x"$enable_dballe_bufrex" = x"yes"])
+AM_CONDITIONAL([DO_DBALLE_MSG], [test x"$enable_dballe_msg" = x"yes"])
+AM_CONDITIONAL([DO_DBALLE_DB], [test x"$enable_dballe_db" = x"yes"])
+AM_CONDITIONAL([DO_DBALLEPP], [test x"$enable_dballepp" = x"yes"])
+AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
+AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
+AM_CONDITIONAL([DO_TEST_DB], [test x"$enable_test_db" = x"yes"])
+AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
+
 AM_CONDITIONAL([HAVE_LATEX2HTML], [test x$have_latex2html = xyes])
 AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
-AM_CONDITIONAL([DB_TESTS], [test x"$enable_db_tests" = x"yes"])
 
 AC_CONFIG_FILES([
 Makefile
@@ -140,16 +204,10 @@ tables/Makefile
 extra/Makefile
 swig/Makefile
 doc/Makefile
-doc/libdballe-core.dox
-doc/libdballe-bufrex.dox
-doc/libdballe-msg.dox
-doc/libdballe-db.dox
+doc/libdballe.dox
 doc/libdballepp.dox
 provami/Makefile
-libdballe-core.pc
-libdballe-bufrex.pc
-libdballe-msg.pc
-libdballe-db.pc
+libdballe.pc
 libdballef.pc
 libdballepp.pc
 ])
@@ -162,9 +220,14 @@ dnl doc/Makefile
 AC_MSG_NOTICE([
 ===================================================
 $PACKAGE_NAME-$PACKAGE_VERSION configuration:
-AS_HELP_STRING([documentation:], [$docs])
+AS_HELP_STRING([bufrex:], [$enable_dballe_bufrex])
+AS_HELP_STRING([msg:], [$enable_dballe_msg])
+AS_HELP_STRING([db:], [$enable_dballe_db])
+AS_HELP_STRING([C++:], [$enable_dballepp])
+AS_HELP_STRING([Fortran:], [$enable_dballef])
+AS_HELP_STRING([Python:], [$enable_dballe_python])
+AS_HELP_STRING([db tests:], [$enable_test_db])
+AS_HELP_STRING([documentation:], [$enable_docs])
 AS_HELP_STRING([latex2html:], [$have_latex2html])
 AS_HELP_STRING([rst2html:], [$have_rst2html])
-AS_HELP_STRING([db_tests:], [$enable_db_tests])
 ===================================================])
-

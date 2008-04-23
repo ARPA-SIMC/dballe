@@ -33,6 +33,14 @@ namespace tut_dballe {
 using namespace std;
 using namespace tut;
 
+struct TestMsgEnv
+{
+	TestBufrexEnv bufrexenv;
+
+	TestMsgEnv();
+	~TestMsgEnv();
+};
+
 dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type);
 #define read_test_msg(filename, type) _read_test_msg(__FILE__, __LINE__, filename, type)
 
@@ -73,8 +81,8 @@ void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& pre
 dba_var my_want_var(const char* file, int line, dba_msg msg, int id, const char* idname);
 #define want_var(msg, id) my_want_var(__FILE__, __LINE__, (msg), (id), #id)
 
-dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2);
-#define want_var_at(msg, code, ltype, l1, l2, pind, p1, p2) my_want_var_at(__FILE__, __LINE__, (msg), (code), (ltype), (l1), (l2), (pind), (p1), (p2))
+dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+#define want_var_at(msg, code, ltype1, l1, ltype2, l2, pind, p1, p2) my_want_var_at(__FILE__, __LINE__, (msg), (code), (ltype1), (l1), (ltype2), (l2), (pind), (p1), (p2))
 
 
 void my_ensure_msg_undef(const char* file, int line, dba_msg msg, int id, const char* idname);

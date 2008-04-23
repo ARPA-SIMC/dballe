@@ -1,53 +1,67 @@
 0	Reserved
-1	Ground or water surface
-2	Cloud base level
-3	Level of cloud tops
-4	Level of 0$^o$C isotherm
-5	Level of adiabatic condensation lifted from the surface
-6	Maximum wind level
+1	Ground or Water Surface
+2	Cloud Base Level
+3	Level of Cloud Tops
+4	Level of 0C Isotherm
+5	Level of Adiabatic Condensation Lifted from the Surface
+6	Maximum Wind Level
 7	Tropopause
-8	Nominal top of atmosphere
-9	Sea bottom
+8	Nominal Top of the Atmosphere		DB-All.e encodes the channel number of polar satellites in L1
+9	Sea Bottom
 10-19	Reserved
-20	Isothermal level	Temperature in 1/100 K
+20	Isothermal Level			K/10
 21-99	Reserved
-100	Isobaric surface	Pressure in hPa
-101	Layer between two isobaric surfaces	Pressure of top in kPa	Pressure of bottom in kPa
-102	Mean sea level
-103	Specified altitude above mean sea level	Altitude in meters
-104	Layer between two specified altitudes above mean sea level	Altitude of top in hm	Altitude of bottom in hm
-105	Specified height above ground	Height in meters
-106	Layer between two specified height levels above ground	Height of top in hm	Height of bottom in hm
-107	Sigma level	Sigma value in 1/10000
-108	Layer between two sigma levels	Sigma value of top in 1/100	Sigma value of bottom in 1/100
-109	Hybrid level	Level number
-110	Layer between two hybrid levels	Level number of top	Level number of bottom
-111	Depth below land surface	Depth in centimeters
-112	Layer between two depths below land surface	Depth of upper surface in cm	Depth of lower surface in cm
-113	Isentropic (theta) level	Potential temperature in K
-114	Layer between two isentropic levels	475 K minus theta of top in K	475 K minus theta of bottom in K
-115	Level at specified pressure difference from ground to level	Pressure difference in hPa
-116	Layer between two levels at specified pressure differences from ground to level	Pressure difference from ground to top level in hPa	Pressure difference from ground to bottom level in hPa
-117	Potential vorticity surface	10-9 K m2 kg-1 s-1
-118	Reserved
-119	ETA* level	ETA value in 1/10000
-120	Layer between two ETA* levels	ETA value at top of layer in 1/100	ETA value at bottom of layer in 1/100
-121	Layer between two isobaric surfaces (high precision)	1100 hPa minus pressure of top in hPa	1100 hPa minus pressure of bottom in hPa
-122-124	Reserved
-125	Specified height level above ground (high precision)	Height in centimeters
-126-127	Reserved
-128	Layer between two sigma levels (high precision)	1.1 minus sigma of top in 1/1000 of sigma	1.1 minus sigma of bottom in 1/1000 of sigma
-129-140	Reserved
-141	Layer between two isobaric surfaces (mixed precision)	Pressure of top in kPa	1100 hPa minus pressure of bottom in hPa
-142-159	Reserved
-160	Depth below sea level	Depth in meters
-161-199	Reserved
+100	Isobaric Surface			Pa
+101	Mean Sea Level
+102	Specific Altitude Above Mean Sea Level	mm
+103	Specified Height Level Above Ground	mm
+104	Sigma Level	       	     		1/10000
+105	Hybrid Level
+106	Depth Below Land Surface		mm
+107	Isentropic (theta) Level		K/10
+108	Level at Specified Pressure Difference from Ground to Level	Pa
+109	Potential Vorticity Surface		10-9 K m2 kg-1 s-1
+110	Reserved
+111	Eta (NAM) Level (see note below)	1/10000
+112	116 Reserved
+117	Mixed Layer Depth			mm
+118-159 Reserved
+160	Depth Below Sea Level			mm
+161-191 Reserved
 200	Entire atmosphere (considered as a single layer)
 201	Entire ocean (considered as a single layer)
-202-254	Reserved
-256	Cloud levels	0	0=General Cloud Group, 1=CL, 2=CM, 3=CH
-256	Synop cloud group 1	1
-256	Synop cloud group 2	2
-256	Synop cloud group 3	3
-256	Synop cloud group 4	4
-257	Extra anagraphical informations
+204	Highest tropospheric freezing level
+206	Grid scale cloud bottom level
+207	Grid scale cloud top level
+209	Boundary layer cloud bottom level
+210	Boundary layer cloud top level
+211	Boundary layer cloud layer
+212	Low cloud bottom level
+213	Low cloud top level
+214	Low cloud layer
+215	Cloud ceiling
+220	Planetary Boundary Layer
+222	Middle cloud bottom level
+223	Middle cloud top level
+224	Middle cloud layer
+232	High cloud bottom level
+233	High cloud top level
+234	High cloud layer
+235	Ocean Isotherm Level			K/10
+240	Ocean Mixed Layer
+241	Ordered Sequence of Data
+242	Convective cloud bottom level
+243	Convective cloud top level
+244	Convective cloud layer
+245	Lowest level of the wet bulb zero
+246	Maximum equivalent potential temperature level
+247	Equilibrium level
+248	Shallow convective cloud bottom level
+249	Shallow convective cloud top level
+251	Deep convective cloud bottom level
+252	Deep convective cloud top level
+253	Lowest bottom level of supercooled liquid water layer
+254	Highest top level of supercooled liquid water layer
+256	Cloud 	    	     		 L is 0 for total cloud, 1 for CL, 2 for CM, 3 for CH)
+257	Information about the station that generated the data
+258	Synop cloud group     	      L is the group number, from 1 to 4

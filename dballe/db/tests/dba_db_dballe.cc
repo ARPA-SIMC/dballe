@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,8 @@ static void print_results(dba_db_cursor cur)
 
 struct dba_db_dballe_shar
 {
+	TestMsgEnv testenv;
+
 	// Records with test data
 	TestRecord sampleAna;
 	TestRecord extraAna;
@@ -95,8 +97,9 @@ struct dba_db_dballe_shar
 		sampleBase.set(DBA_KEY_MONTH, 4);
 		sampleBase.set(DBA_KEY_DAY, 25);
 		sampleBase.set(DBA_KEY_HOUR, 8);
-		sampleBase.set(DBA_KEY_LEVELTYPE, 10);
+		sampleBase.set(DBA_KEY_LEVELTYPE1, 10);
 		sampleBase.set(DBA_KEY_L1, 11);
+		sampleBase.set(DBA_KEY_LEVELTYPE2, 15);
 		sampleBase.set(DBA_KEY_L2, 22);
 		sampleBase.set(DBA_KEY_PINDICATOR, 20);
 		sampleBase.set(DBA_KEY_P1, 111);
@@ -418,8 +421,10 @@ void to::test<4>()
 	TRY_QUERY(i, DBA_KEY_P2, 121, 0);
 	TRY_QUERY(i, DBA_KEY_P2, 122, 2);
 	TRY_QUERY(i, DBA_KEY_P2, 123, 2);
-	TRY_QUERY(i, DBA_KEY_LEVELTYPE, 10, 4);
-	TRY_QUERY(i, DBA_KEY_LEVELTYPE, 11, 0);
+	TRY_QUERY(i, DBA_KEY_LEVELTYPE1, 10, 4);
+	TRY_QUERY(i, DBA_KEY_LEVELTYPE1, 11, 0);
+	TRY_QUERY(i, DBA_KEY_LEVELTYPE2, 15, 4);
+	TRY_QUERY(i, DBA_KEY_LEVELTYPE2, 16, 0);
 	TRY_QUERY(i, DBA_KEY_L1, 11, 4);
 	TRY_QUERY(i, DBA_KEY_L1, 12, 0);
 	TRY_QUERY(i, DBA_KEY_L2, 22, 4);
@@ -733,8 +738,9 @@ void to::test<9>()
 	base.set(DBA_KEY_NAME, "Cippo Lippo");
 	*/
 
-	base.set(DBA_KEY_LEVELTYPE, 1);
+	base.set(DBA_KEY_LEVELTYPE1, 1);
 	base.set(DBA_KEY_L1, 0);
+	base.set(DBA_KEY_LEVELTYPE2, 1);
 	base.set(DBA_KEY_L2, 0);
 	base.set(DBA_KEY_PINDICATOR, 1);
 	base.set(DBA_KEY_P1, 0);
@@ -1312,6 +1318,89 @@ void to::test<14>()
 	gen_ensure(has_data);
 	CHECKED(dba_db_cursor_next(cur, &has_data));
 	gen_ensure(!has_data);
+	dba_db_cursor_delete(cur);
+}
+
+/* Insert with undef leveltype2 and l2 */
+template<> template<>
+void to::test<15>()
+{
+	reset_database();
+
+	dba_record_clear(insert);
+
+	sampleAna.copyTestDataToRecord(insert);
+	sampleBase.copyTestDataToRecord(insert);
+	sample0.copyTestDataToRecord(insert);
+	sample01.copyTestDataToRecord(insert);
+
+	dba_record_key_seti(insert, DBA_KEY_LEVELTYPE1, 44);
+	dba_record_key_seti(insert, DBA_KEY_L1, 55);
+	dba_record_key_unset(insert, DBA_KEY_LEVELTYPE2);
+	dba_record_key_unset(insert, DBA_KEY_L2);
+
+	/* Insert the record */
+	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
+
+	dba_record_clear(query);
+	CHECKED(dba_record_key_seti(query, DBA_KEY_LEVELTYPE1, 44));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_L1, 55));
+
+	int count, has_data;
+	dba_db_cursor cur;
+
+	/* Allocate a new cursor */
+	CHECKED(dba_db_cursor_create(db, &cur));
+
+	/* Perform the query, limited to level values */
+	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE | DBA_DB_WANT_LEVEL, 0));
+
+	gen_ensure_equals(dba_db_cursor_remaining(cur), 1);
+	CHECKED(dba_db_cursor_next(cur, &has_data));
+
+	dba_record_clear(result);
+	CHECKED(dba_db_cursor_to_record(cur, result));
+
+	int val, found;
+	CHECKED(dba_record_key_enqi(result, DBA_KEY_LEVELTYPE1, &val, &found));
+	gen_ensure(found);
+	gen_ensure_equals(val, 44);
+	CHECKED(dba_record_key_enqi(result, DBA_KEY_L1, &val, &found));
+	gen_ensure(found);
+	gen_ensure_equals(val, 55);
+	CHECKED(dba_record_key_enqi(result, DBA_KEY_LEVELTYPE2, &val, &found));
+	gen_ensure(found);
+	gen_ensure_equals(val, 0);
+	CHECKED(dba_record_key_enqi(result, DBA_KEY_L2, &val, &found));
+	gen_ensure(found);
+	gen_ensure_equals(val, 0);
+
+	gen_ensure(has_data);
+	CHECKED(dba_db_cursor_next(cur, &has_data));
+	gen_ensure(!has_data);
+	dba_db_cursor_delete(cur);
+}
+
+/* Query with undef leveltype2 and l2 */
+template<> template<>
+void to::test<16>()
+{
+	reset_database();
+
+	dba_record_clear(query);
+	CHECKED(dba_record_key_seti(query, DBA_KEY_LEVELTYPE1, 10));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_L1, 11));
+
+	int count, has_data;
+	dba_db_cursor cur;
+
+	/* Allocate a new cursor */
+	CHECKED(dba_db_cursor_create(db, &cur));
+
+	/* Perform the query, limited to level values */
+	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE, 0));
+
+	gen_ensure_equals(dba_db_cursor_remaining(cur), 4);
 	dba_db_cursor_delete(cur);
 }
 

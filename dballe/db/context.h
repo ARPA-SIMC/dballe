@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,10 +61,12 @@ struct _dba_db_context
 	DBALLE_SQL_C_SINT_TYPE id_report;
 	/** Date SQL parameter */
 	SQL_TIMESTAMP_STRUCT date;
-	/** Level type SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE ltype;
+	/** First level type SQL parameter */
+	DBALLE_SQL_C_SINT_TYPE ltype1;
 	/** Level L1 SQL parameter */
 	DBALLE_SQL_C_SINT_TYPE l1;
+	/** Second level type SQL parameter */
+	DBALLE_SQL_C_SINT_TYPE ltype2;
 	/** Level L2 SQL parameter */
 	DBALLE_SQL_C_SINT_TYPE l2;
 	/** Time range type SQL parameter */

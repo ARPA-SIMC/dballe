@@ -27,6 +27,8 @@ using namespace tut_dballe;
 
 struct crex_decoder_shar
 {
+	TestBufrexEnv testenv;
+
 	crex_decoder_shar()
 	{
 	}

@@ -1,0 +1,11 @@
+debian/tmp/usr/include/dballe/core
+debian/tmp/usr/include/dballe/bufrex
+debian/tmp/usr/include/dballe/msg
+debian/tmp/usr/include/dballe/db
+debian/tmp/usr/include/dballe/init.h
+debian/tmp/usr/lib/libdballe.a
+debian/tmp/usr/lib/pkgconfig/libdballe.pc
+debian/tmp/usr/lib/libdballe.la
+debian/tmp/usr/lib/libdballe.so
+debian/tmp/usr/lib/libdballe[0-9]*.so
+debian/tmp/usr/share/aclocal/libdballe.m4

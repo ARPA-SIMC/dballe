@@ -126,32 +126,32 @@ static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int t
 		dba_msg_level lev = msg->data[i];
 		dba_msg_datum d, d1;
 
-		if ((lev->ltype != 100 && lev->ltype != 103) ||
-			(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 0, 0, 0)) == NULL)
+		if ((lev->ltype1 != 100 && lev->ltype1 != 102) ||
+			(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 254, 0, 0)) == NULL)
 			continue;
 
-		if ((d1 = dba_msg_level_find(lev, DBA_VAR(0, 10, 4), 0, 0, 0)) != NULL)
+		if ((d1 = dba_msg_level_find(lev, DBA_VAR(0, 10, 4), 254, 0, 0)) != NULL)
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 7, 4), d1->var));
-		else if (lev->ltype == 100)
+		else if (lev->ltype1 == 100)
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, DBA_VAR(0, 7, 4), lev->l1));
 		else
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 7, 4)));
 
 		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 8, 1), d->var));
 
-		if ((d = dba_msg_level_find(lev, DBA_VAR(0, 10, 3), 0, 0, 0)) != NULL)
+		if ((d = dba_msg_level_find(lev, DBA_VAR(0, 10, 3), 254, 0, 0)) != NULL)
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 10, 3), d->var));
-		else if (lev->ltype == 103)
+		else if (lev->ltype1 == 102)
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, DBA_VAR(0, 10, 3), (double)lev->l1 * 9.80665));
 		else
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 10, 3)));
 
-		if ((d = dba_msg_level_find(lev, DBA_VAR(0, 11, 1), 0, 0, 0)) != NULL)
+		if ((d = dba_msg_level_find(lev, DBA_VAR(0, 11, 1), 254, 0, 0)) != NULL)
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 11, 1), d->var));
 		else
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 11, 1)));
 
-		if ((d = dba_msg_level_find(lev, DBA_VAR(0, 11, 2), 0, 0, 0)) != NULL)
+		if ((d = dba_msg_level_find(lev, DBA_VAR(0, 11, 2), 254, 0, 0)) != NULL)
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 11, 2), d->var));
 		else
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 11, 2)));

@@ -2,9 +2,13 @@
 
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
+export PYTHONPATH=.
+
 TESTS = test.py
-if DB_TESTS
+if DO_DBALLE_DB
+if DO_TEST_DB
 TESTS += test-db.py test-volnd.py run-unittests
+endif
 endif
 
 doc_DATA = python-dballe.rst
@@ -16,17 +20,20 @@ endif
 pyexec_LTLIBRARIES = _dballe.la
 
 nodist_pkgpython_PYTHON = dballe.py
-pkgpython_PYTHON = dbacsv.py volnd.py rconvert.py __init__.py
+pkgpython_PYTHON = dbacsv.py rconvert.py __init__.py
+if DO_DBALLE_DB
+pkgpython_PYTHON += volnd.py
+endif
 
 nodist__dballe_la_SOURCES = dballe_wrap_python.cc
 _dballe_la_LDFLAGS = -module
 _dballe_la_LIBADD = ../dballe++/libdballepp.la
 
 dballe_wrap_python.cc Dballe.py: dballe.i ../doc/dballe-doc.i
-	swig -python -c++ -I.. -I/usr/include -o $@ $<
+	swig -python -c++ -I$(top_srcdir) -I/usr/include -o $@ $<
 
-python-dballe.rst: doc-dballe dballe.py dballe volnd.py rconvert.py dballe.i _dballe.so
-	./doc-dballe > $@ || (rm -f $@; false)
+python-dballe.rst: doc-dballe $(pkgpython_PYTHON) dballe dballe.i _dballe.so
+	$(srcdir)/doc-dballe > $@ || (rm -f $@; false)
 
 python-dballe.html: python-dballe.rst
 	rst2html $< > $@ || (rm -f $@; false)
@@ -36,8 +43,9 @@ _dballe.so: _dballe.la
 
 dballe:
 	ln -s . $@
+	for x in $(pkgpython_PYTHON); do test -f $$x || cp $(srcdir)/$$x .; done
 
-INCLUDES = -I/usr/include/python$(PYTHON_VERSION)
+INCLUDES = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
 EXTRA_DIST = README dballe.i test.py doc-dballe
 

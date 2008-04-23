@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,13 +102,13 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 */
 			case DBA_VAR(0,  7,  4):
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 4), 100, press, 0, 0, 0, 0));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 4), 100, press, 0, 0, 254, 0, 0));
 				press_var = var;
 				break;
 			case DBA_VAR(0,  8,  1): {
 				int vss;
 				DBA_RUN_OR_RETURN(dba_var_enqi(var, &vss));
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0,  8, 1), 100, press, 0, 0, 0, 0));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0,  8, 1), 100, press, 0, 0, 254, 0, 0));
 				if (vss & 64)
 				{
 					surface_press = press;
@@ -116,12 +116,12 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				}
 				break;
 			}
-			case DBA_VAR(0, 10,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 3), 100, press, 0, 0, 0, 0)); break;
-			case DBA_VAR(0, 12,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 1), 100, press, 0, 0, 0, 0)); break;
-			case DBA_VAR(0, 12,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 2), 100, press, 0, 0, 0, 0)); break;
-			case DBA_VAR(0, 12,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 3), 100, press, 0, 0, 0, 0)); break;
-			case DBA_VAR(0, 11,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1), 100, press, 0, 0, 0, 0)); break;
-			case DBA_VAR(0, 11,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 2), 100, press, 0, 0, 0, 0)); break;
+			case DBA_VAR(0, 10,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 3), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 12,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 1), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 12,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 2), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 12,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 3), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 11,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 11,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 2), 100, press, 0, 0, 254, 0, 0)); break;
 			/*
 			default:
 				fprintf(stderr, "Unhandled variable: "); dba_var_print(var, stderr);
@@ -143,16 +143,16 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 		    && (v = dba_msg_get_press_var(msg)) == NULL)
 			DBA_RUN_OR_RETURN(dba_msg_set_press_var(msg, surface_press_var));
 
-		if ((d = dba_msg_find(msg, DBA_VAR(0, 12, 1), 100, surface_press, 0, 0, 0, 0)) != NULL
+		if ((d = dba_msg_find(msg, DBA_VAR(0, 12, 1), 100, surface_press, 0, 0, 254, 0, 0)) != NULL
 		    && (v = dba_msg_get_temp_2m_var(msg)) == NULL)
 			DBA_RUN_OR_RETURN(dba_msg_set_temp_2m_var(msg, d->var));
-		if ((d = dba_msg_find(msg, DBA_VAR(0, 12, 3), 100, surface_press, 0, 0, 0, 0)) != NULL
+		if ((d = dba_msg_find(msg, DBA_VAR(0, 12, 3), 100, surface_press, 0, 0, 254, 0, 0)) != NULL
 		    && (v = dba_msg_get_dewpoint_2m_var(msg)) == NULL)
 			DBA_RUN_OR_RETURN(dba_msg_set_dewpoint_2m_var(msg, d->var));
-		if ((d = dba_msg_find(msg, DBA_VAR(0, 11, 1), 100, surface_press, 0, 0, 0, 0)) != NULL
+		if ((d = dba_msg_find(msg, DBA_VAR(0, 11, 1), 100, surface_press, 0, 0, 254, 0, 0)) != NULL
 		    && (v = dba_msg_get_wind_dir_var(msg)) == NULL)
 			DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, d->var));
-		if ((d = dba_msg_find(msg, DBA_VAR(0, 11, 2), 100, surface_press, 0, 0, 0, 0)) != NULL
+		if ((d = dba_msg_find(msg, DBA_VAR(0, 11, 2), 100, surface_press, 0, 0, 254, 0, 0)) != NULL
 		    && (v = dba_msg_get_wind_speed_var(msg)) == NULL)
 			DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, d->var));
 	}

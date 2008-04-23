@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,27 +67,27 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 		else
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 4),
 						OBS(os + 0) * 10, get_conf6(OBS(os + 6) & 0x3f),
-						100, press, 0, 0, 0, 0));
+						100, press, 0, 0, 254, 0, 0));
 					
 		DBA_RUN_OR_RETURN(dba_convert_AOFVSS_to_BUFR08001(vss, &vss));
-		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 1), vss, -1, 100, press, 0, 0, 0, 0));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 1), vss, -1, 100, press, 0, 0, 254, 0, 0));
 
 		if (OBS(os + 1) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 1),
 						OBS(os + 1), get_conf6((OBS(os + 6) >> 6) & 0x3f),
-						100, press, 0, 0, 0, 0));
+						100, press, 0, 0, 254, 0, 0));
 		if (OBS(os + 2) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 2),
 						OBS(os + 2), get_conf6(OBS(os + 7) & 0x3f),
-						100, press, 0, 0, 0, 0));
+						100, press, 0, 0, 254, 0, 0));
 		if (OBS(os + 3) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 1),
 						totemp(OBS(os + 3)), get_conf6((OBS(os + 7) >> 6) & 0x3f),
-						100, press, 0, 0, 0, 0));
+						100, press, 0, 0, 254, 0, 0));
 		if (OBS(os + 4) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 3),
 						totemp(OBS(os + 4)), get_conf6((OBS(os + 7) >> 12) & 0x3f),
-						100, press, 0, 0, 0, 0));
+						100, press, 0, 0, 254, 0, 0));
 		if (OBS(os + 5) != AOF_UNDEF)
 		{
 #if 0
@@ -99,7 +99,7 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 			// correct amount of significant digits
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 3),
 						round(((double)OBS(os + 5) - 1000)*9.80665/10)*10, get_conf6((OBS(os + 7) >> 18) & 0x3f),
-						100, press, 0, 0, 0, 0));
+						100, press, 0, 0, 254, 0, 0));
 #if 0
 			d = dba_msg_find(msg, DBA_VAR(0, 10, 3), 100, press, 0, 0, 0, 0);
 			if (d == NULL)

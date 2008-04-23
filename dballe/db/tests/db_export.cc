@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ using namespace tut_dballe;
 
 struct db_export_shar
 {
+	TestMsgEnv testenv;
+
 	// DB handle
 	dba_db db;
 
@@ -49,8 +51,9 @@ struct db_export_shar
 		CHECKED(dba_record_key_seti(rec, DBA_KEY_HOUR, 8));
 		CHECKED(dba_record_key_seti(rec, DBA_KEY_MIN, 0));
 
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, 1));
+		CHECKED(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE1, 1));
 		CHECKED(dba_record_key_seti(rec, DBA_KEY_L1, 2));
+		CHECKED(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE2, 0));
 		CHECKED(dba_record_key_seti(rec, DBA_KEY_L2, 3));
 		CHECKED(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, 4));
 		CHECKED(dba_record_key_seti(rec, DBA_KEY_P1, 5));
@@ -135,7 +138,7 @@ void to::test<1>()
 	gen_ensure_msg_equals(msgs[0], DBA_MSG_DAY, 25);
 	gen_ensure_msg_equals(msgs[0], DBA_MSG_HOUR, 8);
 	gen_ensure_msg_equals(msgs[0], DBA_MSG_MINUTE, 0);
-	dba_var var = want_var_at(msgs[0], DBA_VAR(0, 1, 12), 1, 2, 3, 4, 5, 6);
+	dba_var var = want_var_at(msgs[0], DBA_VAR(0, 1, 12), 1, 2, 0, 3, 4, 5, 6);
 	gen_ensure_var_equals(var, 500);
 
 	gen_ensure_equals(msgs[1]->type, MSG_SYNOP);
@@ -147,7 +150,7 @@ void to::test<1>()
 	gen_ensure_msg_equals(msgs[1], DBA_MSG_DAY, 26);
 	gen_ensure_msg_equals(msgs[1], DBA_MSG_HOUR, 8);
 	gen_ensure_msg_equals(msgs[1], DBA_MSG_MINUTE, 0);
-	var = want_var_at(msgs[1], DBA_VAR(0, 1, 12), 1, 2, 3, 4, 5, 6);
+	var = want_var_at(msgs[1], DBA_VAR(0, 1, 12), 1, 2, 0, 3, 4, 5, 6);
 	gen_ensure_var_equals(var, 400);
 
 	gen_ensure_equals(msgs[2]->type, MSG_SYNOP);
@@ -159,7 +162,7 @@ void to::test<1>()
 	gen_ensure_msg_equals(msgs[2], DBA_MSG_DAY, 26);
 	gen_ensure_msg_equals(msgs[2], DBA_MSG_HOUR, 8);
 	gen_ensure_msg_equals(msgs[2], DBA_MSG_MINUTE, 0);
-	var = want_var_at(msgs[2], DBA_VAR(0, 1, 12), 1, 2, 3, 4, 5, 6);
+	var = want_var_at(msgs[2], DBA_VAR(0, 1, 12), 1, 2, 0, 3, 4, 5, 6);
 	gen_ensure_var_equals(var, 300);
 
 	gen_ensure_equals(msgs[3]->type, MSG_METAR);
@@ -171,7 +174,7 @@ void to::test<1>()
 	gen_ensure_msg_equals(msgs[3], DBA_MSG_DAY, 26);
 	gen_ensure_msg_equals(msgs[3], DBA_MSG_HOUR, 8);
 	gen_ensure_msg_equals(msgs[3], DBA_MSG_MINUTE, 0);
-	var = want_var_at(msgs[3], DBA_VAR(0, 1, 12), 1, 2, 3, 4, 5, 6);
+	var = want_var_at(msgs[3], DBA_VAR(0, 1, 12), 1, 2, 0, 3, 4, 5, 6);
 	gen_ensure_var_equals(var, 200);
 
 	dba_record_delete(query);

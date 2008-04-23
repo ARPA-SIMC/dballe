@@ -295,10 +295,12 @@ static dba_err make_select(dba_db_cursor cur)
 	{
 		cur->from_wanted |= DBA_DB_FROM_C;
 		cur->select_wanted |= DBA_DB_FROM_C;
-		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.ltype"));
-		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_ltype), sizeof(cur->out_ltype), NULL);
+		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.ltype1"));
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_ltype1), sizeof(cur->out_ltype1), NULL);
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.l1"));
 		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_l1), sizeof(cur->out_l1), NULL);
+		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.ltype2"));
+		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_ltype2), sizeof(cur->out_ltype2), NULL);
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.l2"));
 		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_l2), sizeof(cur->out_l2), NULL);
 	}
@@ -327,19 +329,20 @@ static dba_err make_select(dba_db_cursor cur)
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "c.id_report"));
 		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_rep_cod), sizeof(cur->out_rep_cod), NULL);
 	}
-	if (cur->wanted & DBA_DB_WANT_VAR_NAME)
+	if (cur->wanted & DBA_DB_WANT_VAR_NAME || cur->wanted & DBA_DB_WANT_VAR_VALUE)
 	{
 		cur->from_wanted |= DBA_DB_FROM_D;
 		cur->select_wanted |= DBA_DB_FROM_D;
 		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "d.id_var"));
 		SQLBindCol(cur->stm, cur->output_seq++, DBALLE_SQL_C_SINT, &(cur->out_idvar), sizeof(cur->out_idvar), NULL);
-	}
-	if (cur->wanted & DBA_DB_WANT_VAR_VALUE)
-	{
-		cur->from_wanted |= DBA_DB_FROM_D;
-		cur->select_wanted |= DBA_DB_FROM_D;
-		DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "d.value"));
-		SQLBindCol(cur->stm, cur->output_seq++, SQL_C_CHAR, &(cur->out_value), sizeof(cur->out_value), NULL);
+
+		if (cur->wanted & DBA_DB_WANT_VAR_VALUE)
+		{
+			cur->from_wanted |= DBA_DB_FROM_D;
+			cur->select_wanted |= DBA_DB_FROM_D;
+			DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query, "d.value"));
+			SQLBindCol(cur->stm, cur->output_seq++, SQL_C_CHAR, &(cur->out_value), sizeof(cur->out_value), NULL);
+		}
 	}
 
 	/* If querybest is used, then we need ri.prio here so that GROUP BY can use it */
@@ -567,8 +570,9 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 
 //	fprintf(stderr, "A3 '%s'\n", dba_querybuf_get(cur->where));
 
-	ADD_INT(&cur->sel_ltype, DBA_KEY_LEVELTYPE, "c.ltype=?", DBA_DB_FROM_C);
+	ADD_INT(&cur->sel_ltype1, DBA_KEY_LEVELTYPE1, "c.ltype1=?", DBA_DB_FROM_C);
 	ADD_INT(&cur->sel_l1, DBA_KEY_L1, "c.l1=?", DBA_DB_FROM_C);
+	ADD_INT(&cur->sel_ltype2, DBA_KEY_LEVELTYPE2, "c.ltype2=?", DBA_DB_FROM_C);
 	ADD_INT(&cur->sel_l2, DBA_KEY_L2, "c.l2=?", DBA_DB_FROM_C);
 	ADD_INT(&cur->sel_pind, DBA_KEY_PINDICATOR, "c.ptype=?", DBA_DB_FROM_C);
 	ADD_INT(&cur->sel_p1, DBA_KEY_P1, "c.p1=?", DBA_DB_FROM_C);
@@ -709,11 +713,7 @@ static dba_err resolve_dependencies(dba_db_cursor cur)
 	{
 		cur->from_wanted |= DBA_DB_FROM_C;
 	}
-	if (cur->wanted & DBA_DB_WANT_VAR_NAME)
-	{
-		cur->from_wanted |= DBA_DB_FROM_D;
-	}
-	if (cur->wanted & DBA_DB_WANT_VAR_VALUE)
+	if (cur->wanted & DBA_DB_WANT_VAR_NAME || cur->wanted & DBA_DB_WANT_VAR_VALUE)
 	{
 		cur->from_wanted |= DBA_DB_FROM_D;
 	}
@@ -807,7 +807,7 @@ static dba_err add_other_froms(dba_db_cursor cur, unsigned int base)
 							" JOIN context cbs ON c.id_ana=cbs.id_ana"
 							" AND cbs.id_report=c.id_report"
 							" AND cbs.datetime={ts '1000-01-01 00:00:00.0'}"
-							" AND cbs.ltype=257 AND cbs.l1=0 AND cbs.l2=0"
+							" AND cbs.ltype1=257 AND cbs.l1=0 AND cbs.ltype2=0 AND cbs.l2=0"
 							" AND cbs.ptype=0 AND cbs.p1=0 AND cbs.p2=0 "));
 				break;
 			default:
@@ -955,12 +955,12 @@ static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted
 		{
 			case MYSQL:
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-					" GROUP BY d.id_var, c.id_ana, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2, c.datetime "
+					" GROUP BY d.id_var, c.id_ana, c.ltype1, c.l1, c.ltype2, c.l2, c.ptype, c.p1, c.p2, c.datetime "
 					"HAVING ri.prio=MAX(ri.prio)"));
 				break;
 			default:
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE sc.id_ana=c.id_ana AND sc.ltype=c.ltype AND sc.l1=c.l1 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
+					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE sc.id_ana=c.id_ana AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
 				break;
 		}
 
@@ -1086,7 +1086,7 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 				/* Continue to the query */
 			default:
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE sc.id_ana=c.id_ana AND sc.ltype=c.ltype AND sc.l1=c.l1 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
+					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE sc.id_ana=c.id_ana AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
 				break;
 		}
 
@@ -1099,14 +1099,14 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 
 		if (cur->modifiers & DBA_DB_MODIFIER_BEST) {
 			DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-				"ORDER BY c.id_ana, c.datetime, c.ltype, c.l1, c.l2, c.ptype, c.p1, c.p2"));
+				"ORDER BY c.id_ana, c.datetime, c.ltype1, c.l1, c.ltype2, c.l2, c.ptype, c.p1, c.p2"));
 		} else if (cur->select_wanted & DBA_DB_FROM_C) {
 			if (cur->wanted & DBA_DB_WANT_ANA_ID)
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.id_ana", &first));
 			if (cur->wanted & DBA_DB_WANT_DATETIME)
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.datetime", &first));
 			if (cur->wanted & DBA_DB_WANT_LEVEL)
-				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.ltype, c.l1, c.l2", &first));
+				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.ltype1, c.l1, c.ltype2, c.l2", &first));
 			if (cur->wanted & DBA_DB_WANT_TIMERANGE)
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.ptype, c.p1, c.p2", &first));
 			if (cur->select_wanted & DBA_DB_FROM_RI)
@@ -1188,7 +1188,7 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 		"  FROM context c, data d, repinfo ri"
 		" WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
 		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'}"
-		"   AND c.ltype = 257 AND c.l1 = 0 AND c.l2 = 0"
+		"   AND c.ltype1 = 257 AND c.l1 = 0 AND c.ltype2 = 0 AND c.l2 = 0"
 		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
 		" GROUP BY d.id_var,ri.id "
 		"HAVING ri.prio=MAX(ri.prio)";
@@ -1286,8 +1286,9 @@ dba_err dba_db_cursor_to_record(dba_db_cursor cur, dba_record rec)
 
 		if (cur->wanted & DBA_DB_WANT_LEVEL)
 		{
-			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE, cur->out_ltype));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE1, cur->out_ltype1));
 			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L1, cur->out_l1));
+			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE2, cur->out_ltype2));
 			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L2, cur->out_l2));
 		}
 
@@ -1321,17 +1322,17 @@ dba_err dba_db_cursor_to_record(dba_db_cursor cur, dba_record rec)
 		if (!(cur->from_wanted & DBA_DB_FROM_C))
 			DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_CONTEXT_ID, cur->out_context_id));
 
-		if (cur->wanted & DBA_DB_WANT_VAR_NAME)
+		if (cur->wanted & DBA_DB_WANT_VAR_NAME || cur->wanted & DBA_DB_WANT_VAR_VALUE)
 		{
 			char bname[7];
 			snprintf(bname, 7, "B%02ld%03ld",
 					DBA_VAR_X(cur->out_idvar),
 					DBA_VAR_Y(cur->out_idvar));
 			DBA_RUN_OR_RETURN(dba_record_key_setc(rec, DBA_KEY_VAR, bname));
-		}
 
-		if (cur->wanted & DBA_DB_WANT_VAR_VALUE)
-			DBA_RUN_OR_RETURN(dba_record_var_setc(rec, cur->out_idvar, cur->out_value));
+			if (cur->wanted & DBA_DB_WANT_VAR_VALUE)
+				DBA_RUN_OR_RETURN(dba_record_var_setc(rec, cur->out_idvar, cur->out_value));
+		}
 	}
 
 	if (cur->from_wanted & (DBA_DB_FROM_RI | DBA_DB_FROM_C))

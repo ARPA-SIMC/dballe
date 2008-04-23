@@ -36,16 +36,30 @@ extern "C" {
 /**
  * Describe a level layer.
  *
- * @param ltype  The layer type
- * @param l1 The l1 value for the layer
- * @param l2 The l2 value for the layer
+ * @param ltype  The level type
+ * @param l1 The l1 value for the level
  * @retval buf
  *   The formatted layer description, on a newly allocated string.  It is the
  *   responsibility of the caller to deallocate the string.
  * @returns
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_formatter_describe_level(int ltype, int l1, int l2, char** buf);
+dba_err dba_formatter_describe_level(int ltype, int l1, char** buf);
+
+/**
+ * Describe a level or a layer.
+ *
+ * @param ltype1  The type of the first level
+ * @param l1 The value of the first level
+ * @param ltype2  The type of the second level
+ * @param l2 The value of the second level
+ * @retval buf
+ *   The formatted layer description, on a newly allocated string.  It is the
+ *   responsibility of the caller to deallocate the string.
+ * @returns
+ *   The error indicator for the function (See @ref error.h)
+ */
+dba_err dba_formatter_describe_level_or_layer(int ltype1, int l1, int ltype2, int l2, char** buf);
 
 /**
  * Describe a time range.

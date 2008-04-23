@@ -104,16 +104,16 @@ fail:
 	return err;
 }
 
-dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype, int l1, int l2, int pind, int p1, int p2)
+dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
 	dba_err err;
-	dba_msg_level lev = dba_msg_find_level(msg, ltype, l1, l2);
+	dba_msg_level lev = dba_msg_find_level(msg, ltype1, l1, ltype2, l2);
 
 	if (lev == NULL)
 	{
 		/* Create the level if missing */
 
-		DBA_RUN_OR_RETURN(dba_msg_level_create(ltype, l1, l2, &lev));
+		DBA_RUN_OR_RETURN(dba_msg_level_create(ltype1, l1, ltype2, l2, &lev));
 		DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(msg, lev));
 	}
 
@@ -128,7 +128,7 @@ fail:
 dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id)
 {
 	dba_msg_var v = &dba_msg_vartable[id];
-	return dba_msg_set_nocopy(msg, var, v->ltype, v->l1, v->l2, v->pind, v->p1, v->p2);
+	return dba_msg_set_nocopy(msg, var, v->ltype1, v->l1, v->ltype2, v->l2, v->pind, v->p1, v->p2);
 }
 
 dba_err dba_msg_set_by_id(dba_msg msg, dba_var var, int id)
@@ -142,7 +142,7 @@ dba_err dba_msg_set_by_id(dba_msg msg, dba_var var, int id)
 	/* Use copy_val to ensure we get the variable code we want */
 	DBA_RUN_OR_GOTO(fail, dba_var_copy_val(copy, var));
 
-	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, copy, v->ltype, v->l1, v->l2, v->pind, v->p1, v->p2));
+	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, copy, v->ltype1, v->l1, v->ltype2, v->l2, v->pind, v->p1, v->p2));
 
 	return dba_error_ok();
 
@@ -152,7 +152,7 @@ fail:
 	return err;
 }
 
-dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2)
+dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
 	dba_err err;
 	dba_var copy = NULL;
@@ -162,7 +162,7 @@ dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l
 	/* Use copy_val to ensure we get the variable code we want */
 	DBA_RUN_OR_GOTO(fail, dba_var_copy_val(copy, var));
 
-	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, copy, ltype, l1, l2, pind, p1, p2));
+	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, copy, ltype1, l1, ltype2, l2, pind, p1, p2));
 
 	return dba_error_ok();
 
@@ -172,7 +172,7 @@ fail:
 	return err;
 }
 
-dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2)
+dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
 	dba_err err;
 	dba_var var = NULL;
@@ -186,7 +186,7 @@ dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype
 		DBA_RUN_OR_GOTO(fail, dba_var_seta_nocopy(var, attr));
 		attr = NULL;
 	}
-	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, var, ltype, l1, l2, pind, p1, p2));
+	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, var, ltype1, l1, ltype2, l2, pind, p1, p2));
 	return dba_error_ok();
 	
 fail:
@@ -197,7 +197,7 @@ fail:
 	return err;
 }
 
-dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2)
+dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
 	dba_err err;
 	dba_var var = NULL;
@@ -211,7 +211,7 @@ dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int lt
 		DBA_RUN_OR_GOTO(fail, dba_var_seta_nocopy(var, attr));
 		attr = NULL;
 	}
-	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, var, ltype, l1, l2, pind, p1, p2));
+	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, var, ltype1, l1, ltype2, l2, pind, p1, p2));
 	return dba_error_ok();
 	
 fail:
@@ -222,7 +222,7 @@ fail:
 	return err;
 }
 
-dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2)
+dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
 	dba_err err;
 	dba_var var = NULL;
@@ -236,7 +236,7 @@ dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, i
 		DBA_RUN_OR_GOTO(fail, dba_var_seta_nocopy(var, attr));
 		attr = NULL;
 	}
-	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, var, ltype, l1, l2, pind, p1, p2));
+	DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, var, ltype1, l1, ltype2, l2, pind, p1, p2));
 	return dba_error_ok();
 	
 fail:
@@ -247,7 +247,7 @@ fail:
 	return err;
 }
 
-dba_msg_level dba_msg_find_level(dba_msg msg, int ltype, int l1, int l2)
+dba_msg_level dba_msg_find_level(dba_msg msg, int ltype1, int l1, int ltype2, int l2)
 {
 	int begin, end;
 
@@ -256,20 +256,20 @@ dba_msg_level dba_msg_find_level(dba_msg msg, int ltype, int l1, int l2)
 	while (end - begin > 1)
 	{
 		int cur = (end + begin) / 2;
-		if (dba_msg_level_compare2(msg->data[cur], ltype, l1, l2) > 0)
+		if (dba_msg_level_compare2(msg->data[cur], ltype1, l1, ltype2, l2) > 0)
 			end = cur;
 		else
 			begin = cur;
 	}
-	if (begin == -1 || dba_msg_level_compare2(msg->data[begin], ltype, l1, l2) != 0)
+	if (begin == -1 || dba_msg_level_compare2(msg->data[begin], ltype1, l1, ltype2, l2) != 0)
 		return NULL;
 	else
 		return msg->data[begin];
 }
 
-dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2)
+dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
-	dba_msg_level lev = dba_msg_find_level(msg, ltype, l1, l2);
+	dba_msg_level lev = dba_msg_find_level(msg, ltype1, l1, ltype2, l2);
 	if (lev == NULL)
 		return NULL;
 	return dba_msg_level_find(lev, code, pind, p1, p2);
@@ -278,7 +278,7 @@ dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype, int l1, int
 dba_msg_datum dba_msg_find_by_id(dba_msg msg, int id)
 {
 	dba_msg_var v = &dba_msg_vartable[id];
-	return dba_msg_find(msg, v->code, v->ltype, v->l1, v->l2, v->pind, v->p1, v->p2);
+	return dba_msg_find(msg, v->code, v->ltype1, v->l1, v->ltype2, v->l2, v->pind, v->p1, v->p2);
 }
 
 dba_msg_type dba_msg_get_type(dba_msg msg)
@@ -365,8 +365,8 @@ dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst)
 		dba_msg_datum d;
 		int j;
 
-        if (lev->ltype != 100 ||
-				(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 0, 0, 0)) == NULL ||
+        if (lev->ltype1 != 100 ||
+				(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 254, 0, 0)) == NULL ||
 				dba_var_value(d->var) == NULL)
 		{
 			DBA_RUN_OR_GOTO(fail, dba_msg_add_level(res, msg->data[i]));
@@ -377,7 +377,7 @@ dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst)
 		{
 			dba_var copy;
 			DBA_RUN_OR_GOTO(fail, dba_var_copy(lev->data[j]->var, &copy));
-			DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(res, copy, lev->ltype, lev->l1, 0, d->pind, d->p1, d->p2));
+			DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(res, copy, lev->ltype1, lev->l1, 0, 0, d->pind, d->p1, d->p2));
 		}
 	}
 
@@ -415,8 +415,8 @@ dba_err dba_msg_sounding_unpack_levels(dba_msg msg, dba_msg* dst)
 		dba_msg_level copy;
 		dba_msg_datum d;
 		int vsig;
-        if (lev->ltype != 100 ||
-				(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 0, 0, 0)) == NULL ||
+        if (lev->ltype1 != 100 ||
+				(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 254, 0, 0)) == NULL ||
 				dba_var_value(d->var) == NULL)
 		{
 			DBA_RUN_OR_GOTO(fail, dba_msg_add_level(res, msg->data[i]));
@@ -500,8 +500,8 @@ void dba_msg_print(dba_msg msg, FILE* out)
 				for (i = 0; i < msg->data_count; i++)
 				{
 					dba_msg_datum d;
-					if (msg->data[i]->ltype == 100 &&
-							(d = dba_msg_level_find(msg->data[i], DBA_VAR(0, 8, 1), 0, 0, 0)) != NULL &&
+					if (msg->data[i]->ltype1 == 100 &&
+							(d = dba_msg_level_find(msg->data[i], DBA_VAR(0, 8, 1), 254, 0, 0)) != NULL &&
 							dba_var_value(d->var) != NULL)
 					{
 						int vsig = strtol(dba_var_value(d->var), 0, 10);
@@ -551,7 +551,7 @@ void dba_msg_print(dba_msg msg, FILE* out)
 
 static void level_summary(dba_msg_level l, FILE* out)
 {
-	fprintf(out, "l(%d,%d,%d)", l->ltype, l->l1, l->l2);
+	fprintf(out, "l(%d,%d, %d,%d)", l->ltype1, l->l1, l->ltype2, l->l2);
 }
 
 void dba_msg_diff(dba_msg msg1, dba_msg msg2, int* diffs, FILE* out)

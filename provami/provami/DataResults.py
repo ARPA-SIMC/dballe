@@ -44,7 +44,7 @@ class DataTable(ResultTable):
                   sorter = lambda x, y: cmp(x.enqdate(), y.enqdate()))
 
         self.appendColumn("Level", \
-                  renderer = lambda x: "%d,%d,%d" % x.enqlevel(), \
+                  renderer = lambda x: "%d,%d,%d,%d" % x.enqlevel(), \
                   sorter = lambda x, y: cmp(x.enqlevel(), y.enqlevel()))
 
         self.appendColumn("Time range", \

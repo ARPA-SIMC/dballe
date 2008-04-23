@@ -22,6 +22,7 @@
 #define _GNU_SOURCE  /* Needed for strcasestr */
 
 #include <extra/cmdline.h>
+#include <dballe/init.h>
 #include <dballe/bufrex/dtable.h>
 #include <dballe/core/conv.h>
 #include <dballe/msg/formatter.h>
@@ -354,15 +355,17 @@ dba_err do_describe(poptContext optCon)
 
 	if (strcmp(what, "level") == 0)
 	{
-		const char* sltype = poptGetArg(optCon);
+		const char* sltype1 = poptGetArg(optCon);
 		const char* sl1 = poptGetArg(optCon);
+		const char* sltype2 = poptGetArg(optCon);
 		const char* sl2 = poptGetArg(optCon);
 		char* formatted;
-		if (sltype == NULL)
-			dba_cmdline_error(optCon, "you need provide 1, 2 or 3 numbers that identify the level");
-		DBA_RUN_OR_RETURN(dba_formatter_describe_level(
-				strtoul(sltype, NULL, 10),
+		if (sltype1 == NULL)
+			dba_cmdline_error(optCon, "you need provide 1, 2, 3 or 4 numbers that identify the level or layer");
+		DBA_RUN_OR_RETURN(dba_formatter_describe_level_or_layer(
+				strtoul(sltype1, NULL, 10),
 				sl1 == NULL ? 0 : strtoul(sl1, NULL, 10),
+				sltype2 == NULL ? 0 : strtoul(sltype2, NULL, 10),
 				sl2 == NULL ? 0 : strtoul(sl2, NULL, 10),
 				&formatted));
 		puts(formatted);
@@ -477,8 +480,12 @@ static void init()
 
 int main (int argc, const char* argv[])
 {
+	int res;
+	dba_init();
 	init();
-	return dba_cmdline_dispatch_main(&dbatbl, argc, argv);
+	res = dba_cmdline_dispatch_main(&dbatbl, argc, argv);
+	dba_shutdown();
+	return res;
 }
 
 /* vim:set ts=4 sw=4: */

@@ -190,13 +190,13 @@ interface
    end subroutine idba_setcontextana
 
 
-   subroutine idba_enqlevel(handle,ltype,l1,l2)
+   subroutine idba_enqlevel(handle,ltype1,l1,ltype2,l2)
      integer, intent(in) :: handle
-     integer, intent(out) :: ltype,l1,l2
+     integer, intent(out) :: ltype1,l1,ltype2,l2
    end subroutine idba_enqlevel
 
-   subroutine idba_setlevel(handle,ltype,l1,l2)
-     integer, intent(in) :: handle,ltype,l1,l2
+   subroutine idba_setlevel(handle,ltype1,l1,ltype2,l2)
+     integer, intent(in) :: handle,ltype1,l1,ltype2,l2
    end subroutine idba_setlevel
 
 
@@ -286,8 +286,8 @@ interface
 
 ! Pretty printing routines
 
-   subroutine idba_spiegal(handle,ltype,l1,l2,result)
-     integer, intent(in) :: handle,ltype,l1,l2
+   subroutine idba_spiegal(handle,ltype1,l1,ltype2,l2,result)
+     integer, intent(in) :: handle,ltype1,l1,ltype2,l2
      character (len=*), intent(out) :: result
    end subroutine idba_spiegal
 

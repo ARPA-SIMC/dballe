@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\"
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir)
 
 #
 # Shared library
@@ -22,7 +22,7 @@ coreinclude_HEADERS = \
 	vartable.h \
 	var.h
 
-lib_LTLIBRARIES = libdballe-core.la
+noinst_LTLIBRARIES = libdballe-core.la
 libdballe_core_la_SOURCES = \
 	error.c \
 	uniconv.c \
@@ -83,22 +83,22 @@ tut_test_LDADD = \
 noinst_DATA = record_keyword.dox record_keyword.rst record_keyword.tex aliases.dox aliases.tex btable.dox
 
 record_keyword.rst: record_keyword.gperf mkkeydoc
-	cpp -P -C -I../.. $< | ./mkkeydoc rst > $@
+	cpp -P -C -I$(top_srcdir) $< | $(srcdir)/mkkeydoc rst > $@
 
 record_keyword.dox: record_keyword.gperf mkkeydoc
-	cpp -P -C -I../.. $< | ./mkkeydoc dox > $@
+	cpp -P -C -I$(top_srcdir) $< | $(srcdir)/mkkeydoc dox > $@
 
 record_keyword.tex: record_keyword.gperf mkkeydoc
-	cpp -P -C -I../.. $< | ./mkkeydoc tex > $@
+	cpp -P -C -I$(top_srcdir) $< | $(srcdir)/mkkeydoc tex > $@
 
 aliases.dox: aliases.gperf mkaliasdoc
-	./mkaliasdoc dox < $< > $@
+	$(srcdir)/mkaliasdoc dox < $< > $@
 
 aliases.tex: aliases.gperf mkaliasdoc
-	./mkaliasdoc tex < $< > $@
+	$(srcdir)/mkaliasdoc tex < $< > $@
 
-btable.dox: ../../tables/dballe.txt ../../tables/mkbdoc
-	../../tables/mkbdoc dox < $< > $@ 
+btable.dox: $(top_srcdir)/tables/dballe.txt $(top_srcdir)/tables/mkbdoc
+	$(top_srcdir)/tables/mkbdoc dox < $< > $@ 
 
 distclean-local:
 	rm -f record_keyword.c record_keyword.dox record_keyword.tex aliases.c aliases.dox aliases.tex uniconv.c btable.dox
