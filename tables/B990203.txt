@@ -66,6 +66,7 @@
  001093 BALLOON LOT NUMBER                                               CCITTIA5                   0            0  96 CHARACTER                 0         12
  001094 WBAN NUMBER                                                      NUMERIC                    0            0  17 NUMERIC                   0          5
  001095 OBSERVER IDENTIFICATION                                          CCITTIA5                   0            0  32 CHARACTER                 0          4
+ 001192 [SIM] MeteoDB station ID                                         NUMERIC                    0            0  24 NUMERIC                   0          8
  001196 CONSTANT LEVEL BALLOON IDENTIFIER                                CCITTIA5                   0            0  72 CHARACTER                 0          9
  001197 RTP - PLATFORM TYPE                                              CODE TABLE   1197          0            0  10 CODE TABLE                0          4
  001198 ITP - DECK ID                                                    CODE TABLE   1198          0            0  10 CODE TABLE                0          4
@@ -259,8 +260,8 @@
  004074 SHORT TIME PERIOD OR DISPLACEMENT                                HOUR                       0         -128   8 HOUR                      0          2
  004075 SHORT TIME PERIOD OR DISPLACEMENT                                MINUTE                     0         -128   8 MINUTE                    0          2
  004192 [SIM] Time range type                                            NUMERIC                    0            0  10 NUMERIC                   0          3
- 004193 [SIM] Time range P1                                              NUMERIC                    0            0  10 NUMERIC                   0          3
- 004194 [SIM] Time range P2                                              NUMERIC                    0            0  10 NUMERIC                   0          3
+ 004193 [SIM] Time range P1                                              NUMERIC                    0            0  10 NUMERIC                   0          5
+ 004194 [SIM] Time range P2                                              NUMERIC                    0            0  10 NUMERIC                   0          5
  005001 LATITUDE (HIGH ACCURACY)                                         DEGREE                     5     -9000000  25 DEGREE                    5          7
  005002 LATITUDE (COARSE ACCURACY)                                       DEGREE                     2        -9000  15 DEGREE                    2          4
  005011 LATITUDE INCREMENT (HIGH ACCURACY)                               DEGREE                     5     -9000000  25 DEGREE                    5          7
@@ -312,8 +313,9 @@
  007064 HEIGHT ABOVE STATION (SENSOR HEIGHT ARTIFICIALLY CORRECTED) (SEE M                          0            0   4 M                         0          2
  007070 DROGUE DEPTH                                                     M                          0            0  10 M                         0          4
  007192 [SIM] Level type                                                 NUMERIC                    0            0  10 NUMERIC                   0          3
- 007193 [SIM] Level L1                                                   NUMERIC                    0            0  10 NUMERIC                   0          3
- 007194 [SIM] Level L2                                                   NUMERIC                    0            0  10 NUMERIC                   0          3
+ 007193 [SIM] Level L1                                                   NUMERIC                    0            0  10 NUMERIC                   0          6
+ 007194 [SIM] Level L2                                                   NUMERIC                    0            0  10 NUMERIC                   0          6
+ 007195 [SIM] Level type 2                                               NUMERIC                    0            0  10 NUMERIC                   0          3
  008001 VERTICAL SOUNDING SIGNIFICANCE                                   FLAG TABLE 8001            0            0   7 FLAG TABLE 8001           0          3
  008002 VERTICAL SIGNIFICANCE (SURFACE OBSERVATIONS)                     CODE TABLE 8002            0            0   6 CODE TABLE 8002           0          2
  008003 VERTICAL SIGNIFICANCE (SATELLITE OBSERVATIONS)                   CODE TABLE 8003            0            0   6 CODE TABLE 8003           0          2
@@ -949,6 +951,8 @@
  033040 CONFIDENCE INTERVAL                                              %                          0            0   7 PERCENT                   0          3
  033041 ATTRIBUTE OF FOLLOWING VALUE                                     CODE TABLE 33041           0            0   2 CODE TABLE 33041          0          1
  033050 GLOBAL GTSPP QUALITY FLAG                                        CODE TABLE 33050           0            0   4 CODE TABLE 33050          0          2
+ 033195 [SIM] MeteoDB variable ID                                        NUMERIC                    0            0  24 NUMERIC                   0          8
+ 033196 [SIM] Data has been invalidated                                  CODE TABLE 33196           0            0   1 CODE TABLE 33196          0          1
  035000 FM AND REGIONAL CODE NUMBER                                      CODE TABLE 35000           0            0  10 CODE TABLE 35000          0          3
  035001 TIME-FRAME FOR MONITORING                                        CODE TABLE 35001           0            0   3 CODE TABLE 35001          0          1
  035011 NUMBER OF REPORTS ACTUALLY RECEIVED                              NUMERIC                    0            0  14 NUMERIC                   0          4
