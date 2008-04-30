@@ -147,6 +147,12 @@ class AnaResults(wx.Frame, ModelListener):
         self.current = self.data.saveCurrent()
         #self.data.GetTable().clear()
 
+    def filterChanged(self, what):
+        if what == "station":
+            id = self.model.filter.enq("ana_id")
+            if id != None:
+                self.displayID(id);
+
     def hasData (self, what):
         if what == "all":
             self.data.updating = True
@@ -182,7 +188,7 @@ class AnaResults(wx.Frame, ModelListener):
             else:
                 self.st_type.SetLabel("mobile station " + ident)
         self.currentID = id
-        self.data.restoreCurrent(current)
+        #self.data.restoreCurrent(current)
 
     def displayRecord(self, record):
         current = self.data.saveCurrent()

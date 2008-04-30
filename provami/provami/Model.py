@@ -178,6 +178,12 @@ class Model:
         for id, lat, lon, ident in self.cached_stations:
             if id == station_id:
                 return id, lat, lon, ident
+        # Not found in cache, query through elencamele so we can give basic
+        # details of stations not in the result set, or stations with no data
+        filter = dballe.Record()
+        filter.seti("ana_id", station_id)
+        for result in self.db.queryAna(filter):
+            return result.enqi("ana_id"), result.enqd("lat"), result.enqd("lon"), result.enqc("ident")
         return None, None, None, None
 
     def recordByContextAndVar(self, context, var):
