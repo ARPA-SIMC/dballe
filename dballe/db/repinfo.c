@@ -471,14 +471,14 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 
 	/* Verify that the update is possible */
 	DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &id, 0, 0);
-	SQLBindCol(stm, 1, DBALLE_SQL_C_UINT, &count, sizeof(count), 0);
 	res = SQLPrepare(stm, (unsigned char*)"SELECT COUNT(1) FROM context WHERE id_report = ?", SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
 		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to check if a repinfo item is in use");
 		goto cleanup;
 	}
+	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &id, 0, 0);
+	SQLBindCol(stm, 1, DBALLE_SQL_C_UINT, &count, sizeof(count), 0);
 
 	for (i = 0; i < ri->cache_size; ++i)
 	{
@@ -505,6 +505,13 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 				err = dba_error_consistency(
 						"trying to delete repinfo entry %d,%s which is currently in use",
 						ri->cache[i].id, ri->cache[i].memo);
+				goto cleanup;
+			}
+
+			res = SQLCloseCursor(stm);
+			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+			{
+				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_remove_orphans cursor");
 				goto cleanup;
 			}
 		}
