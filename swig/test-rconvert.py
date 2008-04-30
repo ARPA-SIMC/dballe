@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 #import rpy, MA, numpy, rconvert
-import MA, numpy, rconvert, rpy
+import numpy, rconvert, rpy
 import dballe, dballe.volnd
 from datetime import *
 
@@ -31,5 +31,20 @@ vars = dballe.volnd.read(db.query(query), (dballe.volnd.AnaIndex(), dballe.volnd
 #rpy.r.assign('pippo', rconvert.vnddata_to_r(vars['B10004']))
 #rpy.r.save('pippo', file='/tmp/pippo')
 
+rconvert.volnd_save_to_r(vars, "/tmp/pippo")
+
+
+
+#
+# Second test case reported by Paolo
+#
+
+query = dballe.Record()
+#query.setd("latmin", 10.)
+#query.setd("latmax", 60.)
+#query.setd("lonmin", -10.)
+#query.setd("lonmax", 40.)
+query.setc("var", "B13011")
+vars = dballe.volnd.read(db.query(query), (dballe.volnd.AnaIndex(),dballe.volnd.DateTimeIndex()), checkConflicts=False)
 rconvert.volnd_save_to_r(vars, "/tmp/pippo")
 

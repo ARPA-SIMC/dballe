@@ -5,7 +5,7 @@ import os
 if os.environ.get("DBALLE_BUILDING_DOCS", "") != 'true':
 	import numpy
 	import numpy.core.ma as ma
-	import Numeric as numeric
+	#import Numeric as numeric
 	import rpy
 
 #dballe.volnd.Data.__dict__['as_r'] = new.instancemethod(fun, None, dballe.volnd.Data)
@@ -45,7 +45,7 @@ def ma_to_r(arr, dimnames=None):
 	farray = farray.filled(rpy.r.NAN)
 
 	# Turn it into a Numeric array (bah, workaround the current python array mess)
-	farray = numeric.array(farray, typecode='d')
+	#farray = numeric.array(farray, typecode='d')
 
 	#old = numpy.seterr(invalid='ignore')
 	#print farray 
