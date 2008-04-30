@@ -91,6 +91,27 @@ void to::test<2>()
 	gen_ensure_equals(id, 1);
 }
 
+/* Test update from a file that was known to fail */
+template<> template<>
+void to::test<3>()
+{
+	int id, added, deleted, updated;
+
+	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
+	gen_ensure_equals(id, 1);
+
+	CHECKED(dba_db_repinfo_update(ri, (string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated));
+
+	gen_ensure_equals(added, 2);
+	gen_ensure_equals(deleted, 12);
+	gen_ensure_equals(updated, 3);
+
+	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
+	gen_ensure_equals(id, 1);
+	CHECKED(dba_db_repinfo_get_id(ri, "FIXspnpo", &id));
+	gen_ensure_equals(id, 200);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

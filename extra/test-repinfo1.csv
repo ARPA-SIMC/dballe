@@ -1,0 +1,5 @@
+01,synop,report synottico,101,oss,0
+200,FIXspnpo,FIX experiment,200,pre,255
+210,LCBspnpo,LCB experiment,210,pre,255
+220,MODspnpo,MOD experiment,220,pre,255
+255,generic,export generici da DB Meteo,1000,?,255

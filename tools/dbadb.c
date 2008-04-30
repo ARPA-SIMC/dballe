@@ -258,7 +258,7 @@ dba_err do_repinfo(poptContext optCon)
 	/* Throw away the command name */
 	action = poptGetArg(optCon);
 
-	/* Get the optional name of the */
+	/* Get the optional name of the repinfo file.  If missing, the default will be used */
 	table = poptGetArg(optCon);
 
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
