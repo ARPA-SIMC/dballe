@@ -130,6 +130,7 @@ dba_err bufrex_msg_load_tables(bufrex_msg msg)
 		case BUFREX_BUFR:
 			switch (msg->edition)
 			{
+				case 2:
 				case 3:
 					sprintf(id, "B00000%03d%03d%02d%02d",
 							0,

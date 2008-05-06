@@ -271,7 +271,7 @@ static dba_err decode_header(decoder d)
 	TRACE(" -> is BUFR\n");
 
 	/* Check the BUFR edition number */
-	if (d->in->buf[7] != 3 && d->in->buf[7] != 4)
+	if (d->in->buf[7] != 2 &&d->in->buf[7] != 3 && d->in->buf[7] != 4)
 		PARSE_ERROR(d->in->buf + 7, "Only BUFR edition 3 and 4 are supported (this message is edition %d)", (unsigned)d->in->buf[7]);
 	d->out->edition = d->in->buf[7];
 
@@ -283,6 +283,7 @@ static dba_err decode_header(decoder d)
 
 	switch (d->out->edition)
 	{
+		case 2: DBA_RUN_OR_RETURN(decode_sec1ed3(d)); break;
 		case 3: DBA_RUN_OR_RETURN(decode_sec1ed3(d)); break;
 		case 4: DBA_RUN_OR_RETURN(decode_sec1ed4(d)); break;
 		default:
@@ -770,7 +771,7 @@ static dba_err bufr_decode_r_data(decoder d)
 	dba_err err = DBA_OK;
 	int group = DBA_VAR_X(d->ops->val);
 	int count = DBA_VAR_Y(d->ops->val);
-	bufrex_opcode rep_op;
+	bufrex_opcode rep_op = NULL;
 	
 	TRACE("R DATA %01d%02d%03d %d %d", 
 			DBA_VAR_F(d->ops->val), DBA_VAR_X(d->ops->val), DBA_VAR_Y(d->ops->val), group, count);
@@ -858,7 +859,8 @@ static dba_err bufr_decode_r_data(decoder d)
 	}
 
 cleanup:
-	bufrex_opcode_delete(&rep_op);
+	if (rep_op != NULL)
+		bufrex_opcode_delete(&rep_op);
 
 	return err == DBA_OK ? dba_error_ok() : err;
 }
