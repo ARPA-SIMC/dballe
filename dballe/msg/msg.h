@@ -269,7 +269,7 @@ dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
  * @param conf
  *   The confidence interval of the data, as the value of a B33007 WMO B (per
  *   cent confidence) table entry, that is, a number between 0 and 100
- *   inclusive.
+ *   inclusive.  -1 means no confidence interval attribute.
  * @param ltype
  *   Type of the level.  See @ref level_table.
  * @param l1
@@ -299,7 +299,7 @@ dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype
  * @param conf
  *   The confidence interval of the data, as the value of a B33007 WMO B (per
  *   cent confidence) table entry, that is, a number between 0 and 100
- *   inclusive.
+ *   inclusive.  -1 means no confidence interval attribute.
  * @param ltype
  *   Type of the level.  See @ref level_table.
  * @param l1
@@ -329,7 +329,7 @@ dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int lt
  * @param conf
  *   The confidence interval of the data, as the value of a B33007 WMO B (per
  *   cent confidence) table entry, that is, a number between 0 and 100
- *   inclusive.
+ *   inclusive.  -1 means no confidence interval attribute.
  * @param ltype
  *   Type of the level.  See @ref level_table.
  * @param l1
