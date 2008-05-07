@@ -230,6 +230,45 @@ void to::test<4>()
 	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 3, 3, 3), (dba_msg_datum)0);
 }
 
+/* Try to write a generic message from scratch */
+template<> template<>
+void to::test<5>()
+{
+	dba_msg msg;
+
+	CHECKED(dba_msg_create(&msg));
+	msg->type = MSG_GENERIC;
+	//msg->type = MSG_SYNOP;
+
+	// Fill in the dba_msg
+	CHECKED(dba_msg_seti(msg, DBA_VAR(0, 4, 1), 2008,   -1, 257, 0, 0, 0, 0, 0, 0));
+	CHECKED(dba_msg_seti(msg, DBA_VAR(0, 4, 2),    5,   -1, 257, 0, 0, 0, 0, 0, 0));
+	CHECKED(dba_msg_seti(msg, DBA_VAR(0, 4, 3),    7,   -1, 257, 0, 0, 0, 0, 0, 0));
+	// ...
+	CHECKED(dba_msg_setd(msg, DBA_VAR(0, 5, 1),   45.0, -1, 257, 0, 0, 0, 0, 0, 0));
+	CHECKED(dba_msg_setd(msg, DBA_VAR(0, 6, 1),   11.0, -1, 257, 0, 0, 0, 0, 0, 0));
+	// ...
+	CHECKED(dba_msg_setd(msg, DBA_VAR(0,12, 1),  273.0, 75, 102, 2000, 0, 0, 254, 0, 0));
+
+	// Append the dba_msg to a dba_msgs
+	dba_msgs msgs;
+	CHECKED(dba_msgs_create(&msgs));
+	CHECKED(dba_msgs_append_acquire(msgs, msg));
+
+	// Encode to BUFR
+	dba_rawmsg rmsg;
+	CHECKED(dba_marshal_encode(msgs, BUFR, &rmsg));
+
+	// Write it out
+	//dba_file file;
+	//CHECKED(dba_file_create(BUFR, "/tmp/prova", "wb", &file));
+	//CHECKED(dba_file_write(file, rmsg));
+
+	dba_file_delete(file);
+	dba_rawmsg_delete(rmsg);
+	dba_msgs_delete(msgs);
+}
+
 #if 0
 	{
 		int i;
