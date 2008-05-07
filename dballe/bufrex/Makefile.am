@@ -42,6 +42,7 @@ noinst_HEADERS = test-utils-bufrex.h
 
 tut_test_SOURCES = \
 	tests/bufr_decoder.cc \
+	tests/bufr_encoder.cc \
 	tests/crex_decoder.cc \
 	tests/dtable.cc \
 	tests/opcode.cc \

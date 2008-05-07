@@ -616,7 +616,7 @@ static dba_err bufr_decode_b_data(decoder d)
 		{
 			str[len] = 0;
 
-			/* Trim trailing spaces */
+			/* Convert space-padding into zero-padding */
 			for (--len; len > 0 && isspace(str[len]);
 					len--)
 				str[len] = 0;

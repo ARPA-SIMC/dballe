@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -581,6 +581,7 @@ static dba_err encoder_encode_b_data(encoder e)
 		for (i = 0, bi = 0; bi < len; i++)
 		{
 			TRACE("len: %d, smax: %d, i: %d, bi: %d\n", len, smax, i, bi);
+			/* Strings are space-padded in BUFR */
 			char todo = (i < smax) ? val[i] : ' ';
 			if (len - bi >= 8)
 			{
