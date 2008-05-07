@@ -1,3 +1,14 @@
+2008-05-07  enrico@enricozini.org
+
+	* New version 4.0.1
+	   - Fix repinfo update
+	   - Ported rconvert to new rpy module
+	   - Show the currently selected station details in provami, even if
+	     it has no data
+	   - Decode BUFR edition 2
+	   - Added tables to decode BUFR edition 2 radar reports
+	   - Fixed encoding of BUFR flags
+
 2007-11-06  enrico@enricozini.org
 
 	* Fixed the problem in provami that fails when the only restriction
