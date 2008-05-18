@@ -263,8 +263,8 @@ void to::test<5>()
 	//dba_file file;
 	//CHECKED(dba_file_create(BUFR, "/tmp/prova", "wb", &file));
 	//CHECKED(dba_file_write(file, rmsg));
+	//dba_file_delete(file);
 
-	dba_file_delete(file);
 	dba_rawmsg_delete(rmsg);
 	dba_msgs_delete(msgs);
 }
