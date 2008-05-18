@@ -20,6 +20,7 @@
  */
 
 #include <test-utils-bufrex.h>
+#include <string.h>
 
 namespace tut {
 using namespace tut_dballe;

@@ -1,3 +1,10 @@
+dballe (4.0.2-1) unstable; urgency=low
+
+  * New upstream version
+     - Added missing include.  Closes: #481397, #481738
+
+ -- Enrico Zini <enrico@debian.org>  Sun, 18 May 2008 17:39:17 +0100
+
 dballe (4.0.1-1) unstable; urgency=low
 
   * New upstream version
