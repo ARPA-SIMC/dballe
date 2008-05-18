@@ -1,3 +1,8 @@
+2008-05-18  enrico@enricozini.org
+
+	* New version 4.0.2
+	   - Fix a compiler error with newer GCC
+
 2008-05-07  enrico@enricozini.org
 
 	* New version 4.0.1
