@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,12 +24,19 @@
 dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 {
 	int ltype = -1, l1 = -1;
+	int is_fixed_airep = 0;
+	int flags_start = 25;
 
 	/* 07 Code type */
 	switch (OBS(7))
 	{
 		/* case 244: ACAR */
-		case 141: msg->type = MSG_AIREP; break;
+		case 141:
+			msg->type = MSG_AIREP;
+			/* If it is an airep and the length is 28, then it's a new style fixed airep */
+			is_fixed_airep = obs_len == 28;
+			if (is_fixed_airep) flags_start = 26;
+			break;
 		case 144: msg->type = MSG_AMDAR; break;
 		case 244: msg->type = MSG_ACARS; break;
 		case 41: /* CODAR */
@@ -62,7 +69,7 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 
 		/* Save the pressure in the anagraphical layer only */
 		/* FIXME: vedere se va memorizzato o no nell'anagrafica */
-		DBA_RUN_OR_RETURN(dba_msg_set_flight_press(msg, press, get_conf6(OBS(25) & 0x3f)));
+		DBA_RUN_OR_RETURN(dba_msg_set_flight_press(msg, press, get_conf6(OBS(flags_start) & 0x3f)));
 
 		/* Default to height for AMDAR */
 		if (msg->type != MSG_AMDAR || (OBS(24) == AOF_UNDEF))
@@ -76,7 +83,7 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 	{
 		/* FIXME: vedere se va memorizzato o no nell'anagrafica (può non aver
 		 * senso se è calcolata dalla pressione) */
-		DBA_RUN_OR_RETURN(dba_msg_set_height(msg, (double)OBS(24), get_conf6((OBS(26) >> 18) & 0x3f)));
+		DBA_RUN_OR_RETURN(dba_msg_set_height(msg, (double)OBS(24), get_conf6((OBS(flags_start + 1) >> 18) & 0x3f)));
 		if (ltype == -1)
 		{
 			ltype = 102;
@@ -90,13 +97,20 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 
 	/* 21 Wind direction [degrees] */
 	if (OBS(21) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11,  1), OBS(21), get_conf6(OBS(26) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
+		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11,  1), OBS(21), get_conf6(OBS(flags_start + 1) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
 	/* 22 Wind speed [m/s] */
 	if (OBS(22) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11,  2), OBS(22), get_conf6((OBS(26) >> 6) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
+		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11,  2), OBS(22), get_conf6((OBS(flags_start + 1) >> 6) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
 	/* 23 Air temperature [1/10 K] */
 	if (OBS(23) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  1), totemp(OBS(23)), get_conf6((OBS(26) >> 12) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
+		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  1), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 12) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
+
+	if (is_fixed_airep)
+	{
+		if (OBS(25) != AOF_UNDEF)
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  3), OBS(23), get_conf6((OBS(flags_start + 1) >> 24) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
+		
+	}
 
 	return dba_error_ok();
 }
