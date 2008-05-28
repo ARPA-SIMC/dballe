@@ -321,41 +321,6 @@ void to::test<4>()
 	dba_msgs_delete(msgs1);
 }
 
-// Reproduce a bug with a specific generic message
-template<> template<>
-void to::test<5>()
-{
-	dba_var var;
-	int ival;
-	double dval;
-
-	dba_msgs msgs = read_test_msg("bufr/gen1.bufr", BUFR);
-	dba_msg msg = msgs->msgs[0];
-
-	var = dba_msg_get_year_var(msg);
-	gen_ensure(var != 0);
-	CHECKED(dba_var_enqi(var, &ival));
-	gen_ensure_equals(ival, 2008);
-
-	var = dba_msg_get_month_var(msg);
-	gen_ensure(var != 0);
-	CHECKED(dba_var_enqi(var, &ival));
-	gen_ensure_equals(ival, 3);
-
-	var = dba_msg_get_day_var(msg);
-	gen_ensure(var != 0);
-	CHECKED(dba_var_enqi(var, &ival));
-	gen_ensure_equals(ival, 11);
-
-	dba_msg_datum d = dba_msg_find(msg, DBA_VAR(0, 13, 11), 1, 0, 0, 0, 1, -21600, 21600);
-	gen_ensure(d != 0);
-	CHECKED(dba_var_enqd(d->var, &dval));
-	gen_ensure_equals(dval, 1.0);
-
-	dba_msgs_delete(msgs);
-}
-
-
 }
 
 /* vim:set ts=4 sw=4: */

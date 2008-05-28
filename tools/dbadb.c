@@ -354,7 +354,7 @@ static dba_err msg_dumper(dba_msgs msgs, void* data)
 
 dba_err do_export(poptContext optCon)
 {
-	struct export_data d = { NULL, 0, 0, -1 };
+	struct export_data d = { NULL, 0, 0, 0, -1 };
 	dba_encoding type;
 	dba_record query;
 	dba_db db;
