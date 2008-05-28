@@ -58,6 +58,10 @@ void to::test<1>()
 		"aof/obs5-36.30.aof",
 		"aof/obs6-32.1573.aof",
 		"aof/obs6-32.0.aof",
+		"aof/aof_27-2-144.aof",
+		"aof/aof_28-2-144.aof",
+		"aof/aof_27-2-244.aof",
+		"aof/aof_28-2-244.aof",
 		NULL,
 	};
 
@@ -348,6 +352,10 @@ void to::test<2>()
 		"aof/obs5-36.30.aof",
 		"aof/obs6-32.1573.aof",
 		"aof/obs6-32.0.aof",
+		"aof/aof_27-2-144.aof",
+		"aof/aof_28-2-144.aof",
+		"aof/aof_27-2-244.aof",
+		"aof/aof_28-2-244.aof",
 		NULL,
 	};
 
@@ -396,6 +404,10 @@ void to::test<3>()
 		"aof/obs5-36.30.aof",
 		"aof/obs6-32.1573.aof",
 		"aof/obs6-32.0.aof",
+		"aof/aof_27-2-144.aof",
+		"aof/aof_28-2-144.aof",
+		"aof/aof_27-2-244.aof",
+		"aof/aof_28-2-244.aof",
 		NULL,
 	};
 
@@ -463,6 +475,36 @@ void to::test<4>()
 
 		dba_msgs_delete(amsgs);
 		dba_msgs_delete(bmsgs);
+	}
+	test_untag();
+}
+
+// Compare no-dew-point AOF plane reports with those with dew point
+template<> template<>
+void to::test<5>()
+{
+	string prefix = "aof/aof_";
+	const char* files[] = {
+		"-2-144.aof",
+		"-2-244.aof",
+		NULL,
+	};
+
+	for (size_t i = 0; files[i] != NULL; i++)
+	{
+		test_tag(prefix + "2x" + files[i]);
+
+		dba_msgs amsgs1 = read_test_msg((prefix + "27" + files[i]).c_str(), AOF);
+		dba_msgs amsgs2 = read_test_msg((prefix + "28" + files[i]).c_str(), AOF);
+		
+		// Compare the two dba_msg
+		int diffs = 0;
+		dba_msgs_diff(amsgs1, amsgs2, &diffs, stderr);
+		if (diffs) track_different_msgs(amsgs1, amsgs2, "aof-2728");
+		gen_ensure_equals(diffs, 0);
+
+		dba_msgs_delete(amsgs1);
+		dba_msgs_delete(amsgs2);
 	}
 	test_untag();
 }

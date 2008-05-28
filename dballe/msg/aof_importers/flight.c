@@ -24,19 +24,18 @@
 dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 {
 	int ltype = -1, l1 = -1;
-	int is_fixed_airep = 0;
+	int is_fixed = 0;
 	int flags_start = 25;
+
+	/* If the length is 28, then it's a new style message with dew point */
+	is_fixed = obs_len == 28;
+	if (is_fixed) flags_start = 26;
 
 	/* 07 Code type */
 	switch (OBS(7))
 	{
 		/* case 244: ACAR */
-		case 141:
-			msg->type = MSG_AIREP;
-			/* If it is an airep and the length is 28, then it's a new style fixed airep */
-			is_fixed_airep = obs_len == 28;
-			if (is_fixed_airep) flags_start = 26;
-			break;
+		case 141: msg->type = MSG_AIREP; break;
 		case 144: msg->type = MSG_AMDAR; break;
 		case 244: msg->type = MSG_ACARS; break;
 		case 41: /* CODAR */
@@ -105,10 +104,10 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 	if (OBS(23) != AOF_UNDEF)
 		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  1), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 12) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
 
-	if (is_fixed_airep)
+	if (is_fixed)
 	{
 		if (OBS(25) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  3), OBS(23), get_conf6((OBS(flags_start + 1) >> 24) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  3), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 24) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
 		
 	}
 
