@@ -80,7 +80,7 @@ class Exporter:
             dates.add(d.enqdate())
 
             # Level layer
-            levels.add("%d,%d,%d" % (d.enqi("leveltype"), d.enqi("l1"), d.enqi("l2")))
+            levels.add("%d,%d,%d,%d" % (d.enqi("leveltype1"), d.enqi("l1"), d.enqi("leveltype2"), d.enqi("l2")))
 
             # Time range
             tranges.add("%d,%d,%d" % (d.enqi("pindicator"), d.enqi("p1"), d.enqi("p2")))
@@ -136,8 +136,9 @@ class Exporter:
         if len(levels) == 1:
             title = title + "Level: %s." % (levels.pop())
         elif len(levels) > 1:
-            cols.append(["Level", lambda x: x.enqi("leveltype")])
+            cols.append(["Level1", lambda x: x.enqi("leveltype1")])
             cols.append(["L1", lambda x: x.enqi("l1")])
+            cols.append(["Level2", lambda x: x.enqi("leveltype2")])
             cols.append(["L2", lambda x: x.enqi("l2")])
 
         # Time range
