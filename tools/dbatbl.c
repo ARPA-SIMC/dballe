@@ -478,12 +478,19 @@ static void init()
 	dbatbl.ops[6].optable = NULL;
 };
 
+static struct program_info proginfo = {
+	"dbatbl",
+	NULL,
+	NULL,
+	NULL
+};
+
 int main (int argc, const char* argv[])
 {
 	int res;
 	dba_init();
 	init();
-	res = dba_cmdline_dispatch_main(&dbatbl, argc, argv);
+	res = dba_cmdline_dispatch_main(&proginfo, &dbatbl, argc, argv);
 	dba_shutdown();
 	return res;
 }

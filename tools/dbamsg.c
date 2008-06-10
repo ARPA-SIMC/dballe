@@ -947,12 +947,34 @@ static void init()
 	dbamsg.ops[8].optable = NULL;
 };
 
+static struct program_info proginfo = {
+	"dbamsg",
+	"Here are some example invocations of \\fBdbamsg\\fP:\n"
+	".P\n"
+	".nf\n"
+	"  # Convert an AOF message to BUFR\n"
+	"  dbamsg convert file.aof > file.bufr\n"
+	"\n"
+	"  # Convert a BUFR message to CREX\n"
+	"  dbamsg convert file.bufr -d crex > file.crex\n"
+	"\n"
+	"  # Dump the content of a message, as they are in the message\n"
+	"  dbamsg dump file.bufr\n"
+	"\n"
+	"  # Dump the content of a message, interpreted as physical quantities\n"
+	"  dbamsg dump --interpreted file.bufr\n"
+	".fi\n"
+	,
+	NULL,
+	NULL
+};
+
 int main (int argc, const char* argv[])
 {
 	int res;
 	dba_init();
 	init();
-	res = dba_cmdline_dispatch_main(&dbamsg, argc, argv);
+	res = dba_cmdline_dispatch_main(&proginfo, &dbamsg, argc, argv);
 	dba_shutdown();
 	return res;
 }

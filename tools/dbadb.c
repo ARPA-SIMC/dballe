@@ -601,12 +601,19 @@ static void init()
 	dbadb.ops[8].optable = NULL;
 };
 
+static struct program_info proginfo = {
+	"dbadb",
+	NULL,
+	NULL,
+	NULL
+};
+
 int main (int argc, const char* argv[])
 {
 	int res;
 	dba_init();
 	init();
-	res = dba_cmdline_dispatch_main(&dbadb, argc, argv);
+	res = dba_cmdline_dispatch_main(&proginfo, &dbadb, argc, argv);
 	dba_shutdown();
 	return res;
 }

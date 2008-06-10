@@ -55,6 +55,14 @@ struct tool_desc
 	struct op_dispatch_table* ops;	
 };
 
+struct program_info
+{
+	const char* name;
+	const char* manpage_examples_section;
+	const char* manpage_files_section;
+	const char* manpage_seealso_section;
+};
+
 /**
  * Print informations about the last error to stderr
  */
@@ -74,7 +82,7 @@ dba_encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon);
 /**
  * Process commandline arguments and perform the action requested
  */
-int dba_cmdline_dispatch_main(const struct tool_desc* desc, int argc, const char* argv[]);
+int dba_cmdline_dispatch_main(const struct program_info* pinfo, const struct tool_desc* desc, int argc, const char* argv[]);
 
 /**
  * Get a DB-ALLe query from commandline parameters in the form key=value

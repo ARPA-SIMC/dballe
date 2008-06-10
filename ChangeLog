@@ -4,6 +4,7 @@
 	* Implemented bufrex_msg_reset_sections
 	* Implemented Bufrex::resetSections and same in Python
 	* Test against NaN on setr and setd
+	* Use clean program name in manpages
 
 2008-05-18  enrico@enricozini.org
 

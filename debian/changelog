@@ -3,8 +3,9 @@ dballe (4.0.3-1) unstable; urgency=low
   * New upstream version
      - Fixed import of 12-hours cumulated rain
      - Test against NaN on setr and setd
+     - Improved manpages
 
- -- Enrico Zini <enrico@debian.org>  Tue, 10 Jun 2008 11:46:52 +0200
+ -- Enrico Zini <enrico@debian.org>  Tue, 10 Jun 2008 12:10:13 +0200
 
 dballe (4.0.2-1) unstable; urgency=low
 

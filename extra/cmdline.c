@@ -181,17 +181,16 @@ static void manpage_print_options(const char* title, struct poptOption* optable,
 	}
 }
 
-void manpage(const struct tool_desc* desc, const char* selfpath, FILE* out)
+static void manpage(const struct program_info* pinfo, const struct tool_desc* desc, FILE* out)
 {
 	static const char* months[] = { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
 	const struct op_dispatch_table* op_table = desc->ops;
-	const char* self = strrchr(selfpath, '/');
+	const char* self = pinfo->name;
 	char* uself;
 	time_t curtime = time(NULL);
 	struct tm* loctime = localtime(&curtime);
 	int i, op;
 	
-	if (self == NULL) self = selfpath; else self++;
 	/* Remove libtool cruft from program name if present */
 	if (strncmp(self, "lt-", 3) == 0) self += 3;
 	uself = strdup(self);
@@ -344,6 +343,29 @@ void manpage(const struct tool_desc* desc, const char* selfpath, FILE* out)
 				(struct poptOption*)op_table[op].optable, 
 				out);
 	}
+
+	/* .SH EXAMPLES */
+	if (pinfo->manpage_examples_section != NULL)
+	{
+		fprintf(out, ".SH EXAMPLES\n");
+		fputs(pinfo->manpage_examples_section, out);
+	}
+
+	/* .SH FILES */
+	if (pinfo->manpage_files_section != NULL)
+	{
+		fprintf(out, ".SH FILES\n");
+		fputs(pinfo->manpage_files_section, out);
+	}
+
+	/* .SH SEE ALSO */
+	if (pinfo->manpage_seealso_section != NULL)
+	{
+		fprintf(out, ".SH SEE ALSO\n");
+		fputs(pinfo->manpage_seealso_section, out);
+	}
+		
+		
 /*
 .SH FILES
 .TP
@@ -383,7 +405,7 @@ by applications for fast access.
 			"for ARPA Emilia Romagna, Servizio Idrometeorologico.\n", self);
 }
 
-int dba_cmdline_dispatch_main (const struct tool_desc* desc, int argc, const char* argv[])
+int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct tool_desc* desc, int argc, const char* argv[])
 {
 	int i;
 
@@ -401,7 +423,7 @@ int dba_cmdline_dispatch_main (const struct tool_desc* desc, int argc, const cha
 			if (i+1 < argc)
 			{
 				if (strcmp(argv[i+1], "manpage") == 0)
-					manpage(desc, argv[0], stdout);
+					manpage(pinfo, desc, stdout);
 				else
 				{
 					poptContext optCon;
