@@ -247,6 +247,16 @@ dba_err bufrex_msg_query_dtable(bufrex_msg msg, dba_varcode code, struct _bufrex
 void bufrex_msg_reset_datadesc(bufrex_msg msg);
 
 /**
+ * Remove all sections from the message.
+ *
+ * This can be used to start a new message keeping the previous data section
+ *
+ * @param msg
+ *   The message to act on
+ */
+void bufrex_msg_reset_sections(bufrex_msg msg);
+
+/**
  * Get the data descriptor section of this ::bufrex_msg
  *
  * @param msg

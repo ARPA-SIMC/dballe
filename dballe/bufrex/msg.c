@@ -42,7 +42,16 @@ dba_err bufrex_msg_create(bufrex_type type, bufrex_msg* msg)
 	return dba_error_ok();
 }
 
-void bufrex_msg_reset(bufrex_msg msg)
+void bufrex_msg_reset_datadesc(bufrex_msg msg)
+{
+	if (msg->datadesc != NULL)
+	{
+		bufrex_opcode_delete(&(msg->datadesc));
+		msg->datadesc_last = &(msg->datadesc);
+	}
+}
+
+void bufrex_msg_reset_sections(bufrex_msg msg)
 {
 	int i;
 
@@ -50,12 +59,12 @@ void bufrex_msg_reset(bufrex_msg msg)
 	for (i = 0; i < msg->subsets_count; i++)
 		bufrex_subset_delete(msg->subsets[i]);
 	msg->subsets_count = 0;
+}
 
-	if (msg->datadesc != NULL)
-	{
-		bufrex_opcode_delete(&(msg->datadesc));
-		msg->datadesc_last = &(msg->datadesc);
-	}
+void bufrex_msg_reset(bufrex_msg msg)
+{
+	bufrex_msg_reset_sections(msg);
+	bufrex_msg_reset_datadesc(msg);
 
 	msg->type = 0;
 	msg->subtype = 0;
@@ -178,15 +187,6 @@ dba_err bufrex_msg_query_dtable(bufrex_msg msg, dba_varcode code, struct _bufrex
 	return bufrex_dtable_query(msg->dtable, code, res);
 }
 
-
-void bufrex_msg_reset_datadesc(bufrex_msg msg)
-{
-	if (msg->datadesc != NULL)
-	{
-		bufrex_opcode_delete(&(msg->datadesc));
-		msg->datadesc_last = &(msg->datadesc);
-	}
-}
 
 dba_err bufrex_msg_get_datadesc(bufrex_msg msg, bufrex_opcode* res)
 {

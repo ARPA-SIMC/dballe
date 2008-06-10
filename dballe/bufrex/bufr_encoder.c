@@ -406,6 +406,8 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 	/* Number of data subsets */
 	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->subsets_count));
+	/* Ensure the bufr subsets indicator in the dba_msg is correct */
+	e->in->opt.bufr.subsets = e->in->subsets_count;
 	/* Bit 0 = observed data; bit 1 = use compression */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 128));
 	
