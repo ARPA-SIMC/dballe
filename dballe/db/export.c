@@ -72,7 +72,7 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 	SQLBindCol(stm, 3, DBALLE_SQL_C_SINT, &out_attr_varcode, sizeof(out_attr_varcode), &out_attr_varcode_ind);
 	SQLBindCol(stm, 4, SQL_C_CHAR, &out_attr_value, sizeof(out_attr_value), &out_attr_value_ind);
 
-	TRACE("Performing query: %s\n", query);
+	TRACE("FAL Performing query: %s\n", query);
 
 	/* Perform the query */
 	res = SQLExecDirect(stm, (unsigned char*)query, sizeof(query));
@@ -86,15 +86,15 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 	last_varcode = -1;
 	while (SQLFetch(stm) != SQL_NO_DATA)
 	{
-		TRACE("Got B%02ld%03ld %s\n", DBA_VAR_X(out_varcode), DBA_VAR_Y(out_varcode), out_value);
+		TRACE("FAL Got B%02ld%03ld %s\n", DBA_VAR_X(out_varcode), DBA_VAR_Y(out_varcode), out_value);
 
 		/* First process the variable, possibly inserting the old one in the message */
 		if (last_varcode != out_varcode)
 		{
-			TRACE("New var\n");
+			TRACE("FAL New var\n");
 			if (var != NULL)
 			{
-				TRACE("Inserting old var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
+				TRACE("FAL Inserting old var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
 				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var, 257, 0, 0, 0, 0, 0, 0));
 				var = NULL;
 			}
@@ -106,7 +106,7 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 
 		if (out_attr_varcode_ind != -1)
 		{
-			TRACE("New attribute\n");
+			TRACE("FAL New attribute\n");
 			DBA_RUN_OR_GOTO(cleanup, dba_var_create_local(out_attr_varcode, &attr));
 			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(attr, out_attr_value));
 			DBA_RUN_OR_GOTO(cleanup, dba_var_seta(var, attr));
@@ -116,7 +116,7 @@ static dba_err fill_ana_layer(dba_db db, dba_msg msg, int id_ana, int id_report)
 
 	if (var != NULL)
 	{
-		TRACE("Inserting leftover old var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
+		TRACE("FAL Inserting leftover old var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
 		DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var, 257, 0, 0, 0, 0, 0, 0));
 		var = NULL;
 	}
@@ -275,7 +275,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 			last_rep_cod = cur->out_rep_cod;
 		}
 
-		TRACE("Inserting var B%02d%03d\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
+		TRACE("Inserting var B%02d%03d (%s)\n", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)), dba_var_value(var));
 		DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, var,
 					cur->out_ltype1, cur->out_l1, cur->out_ltype2, cur->out_l2,
 					cur->out_pind, cur->out_p1, cur->out_p2));
