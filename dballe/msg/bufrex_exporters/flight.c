@@ -151,14 +151,14 @@ static struct template tpl_gen[] = {
 /*  7 */ { DBA_VAR(0,  5,  1), DBA_MSG_LATITUDE,		0 },
 /*  8 */ { DBA_VAR(0,  6,  1), DBA_MSG_LONGITUDE,		0 },
 /*  9 */ { DBA_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE,	0 },
-/* 10 */ { DBA_VAR(0,  7,  2), DBA_MSG_HEIGHT,			0 },
-/* 11 */ { DBA_VAR(0, 12,  1), -1,			DBA_VAR(0, 12,  1) },	/* TEMPERATURE/DRY-BULB TEMPERATURE */
-/* 12 */ { DBA_VAR(0, 11,  1), -1,			DBA_VAR(0, 11,  1) },	/* WIND DIRECTION */
-/* 13 */ { DBA_VAR(0, 11,  2), -1,			DBA_VAR(0, 11,  2) },	/* WIND SPEED */
-/* 14 */ { DBA_VAR(0, 11, 31), -1,			DBA_VAR(0, 11, 31) },	/* DEGREE OF TURBULENCE */
-/* 15 */ { DBA_VAR(0, 11, 32), -1,			DBA_VAR(0, 11, 32) },	/* HEIGHT OF BASE OF TURBULENCE */
-/* 16 */ { DBA_VAR(0, 11, 33), -1,			DBA_VAR(0, 11, 33) },	/* HEIGHT OF TOP OF TURBULENCE */
-/* 17 */ { DBA_VAR(0, 20, 41), -1,			DBA_VAR(0, 20, 41) },	/* AIRFRAME ICING */
+/* 10 */ { DBA_VAR(0,  7,  2), -1,	DBA_VAR(0,  7,  1) },	/* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
+/* 11 */ { DBA_VAR(0, 12,  1), -1,	DBA_VAR(0, 12,  1) },	/* TEMPERATURE/DRY-BULB TEMPERATURE */
+/* 12 */ { DBA_VAR(0, 11,  1), -1,	DBA_VAR(0, 11,  1) },	/* WIND DIRECTION */
+/* 13 */ { DBA_VAR(0, 11,  2), -1,	DBA_VAR(0, 11,  2) },	/* WIND SPEED */
+/* 14 */ { DBA_VAR(0, 11, 31), -1,	DBA_VAR(0, 11, 31) },	/* DEGREE OF TURBULENCE */
+/* 15 */ { DBA_VAR(0, 11, 32), -1,	DBA_VAR(0, 11, 32) },	/* HEIGHT OF BASE OF TURBULENCE */
+/* 16 */ { DBA_VAR(0, 11, 33), -1,	DBA_VAR(0, 11, 33) },	/* HEIGHT OF TOP OF TURBULENCE */
+/* 17 */ { DBA_VAR(0, 20, 41), -1,	DBA_VAR(0, 20, 41) },	/* AIRFRAME ICING */
 };
 
 static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, bufrex_subset dst, int type)
@@ -167,6 +167,31 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 	dba_msg_datum d;
 	int i;
 	
+	for (i = 0; i < src->data_count; ++i)
+	{
+		dba_msg_level l = src->data[i];
+		int use = 0;
+		switch (l->ltype1)
+		{
+			case 100: {
+				use = dba_msg_level_find(l, DBA_VAR(0, 10, 4), 254, 0, 0) != NULL;
+				break;
+			}
+			case 102: {
+				use = dba_msg_level_find(l, DBA_VAR(0,  7, 1), 254, 0, 0) != NULL;
+				break;
+			}
+		}
+		if (use)
+		{
+			if (ltype != -1 && ltype != l->ltype1)
+				return dba_error_consistency("contradicting height indication found (both %d and %d)", ltype, l->ltype1);
+			ltype = l->ltype1;
+			l1 = l->l1;
+		}
+	}
+
+#if 0
 	/* Get the pressure to identify the level layer where the airplane is */
 	if ((d = dba_msg_find_by_id(src, DBA_MSG_FLIGHT_PRESS)) != NULL)
 	{
@@ -186,6 +211,7 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 		ltype = 102;
 		l1 = height;
 	}
+#endif
 
 	if (ltype == -1)
 		return dba_error_notfound("looking for airplane pressure or height in flight message");
@@ -242,7 +268,7 @@ static struct template tpl_acars[] = {
 /* 14 */ { DBA_VAR(0,  5,  2), DBA_MSG_LATITUDE,		0 },
 /* 15 */ { DBA_VAR(0,  6,  2), DBA_MSG_LONGITUDE,		0 },
 /* 16 */ { DBA_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE,	0 },
-/* 17 */ { DBA_VAR(0,  7,  4), DBA_MSG_FLIGHT_PRESS,	0 },
+/* 17 */ { DBA_VAR(0,  7,  4), -1,			DBA_VAR(0, 10,  4) },
 /* 18 */ { DBA_VAR(0,  8, 21), DBA_MSG_TIMESIG,			0 },
 /* 19 */ { DBA_VAR(0, 11,  1), -1,			DBA_VAR(0, 11,  1) },	/* WIND DIRECTION */
 /* 20 */ { DBA_VAR(0, 11,  2), -1,			DBA_VAR(0, 11,  2) },	/* WIND SPEED */

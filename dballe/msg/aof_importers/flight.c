@@ -62,13 +62,30 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 			DBA_RUN_OR_RETURN(dba_msg_set_flight_phase(msg, angle, -1));
 	}
 
-	if (OBS(20) != AOF_UNDEF)
+	/* 
+	 * If both pressure and height are present, use height, as makeaof makes
+	 * pressure a function of height
+	 */
+	if (OBS(24) != AOF_UNDEF)
 	{
+		/* Save the height in an analogous height layer.
+		 * We cannot save in the ana layer because a flight can pass twice in
+		 * the same point, at two different heights */
+		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0,  7,  1), (double)OBS(24), get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
+			102, OBS(24), 0, 0, 254, 0, 0));
+		if (ltype == -1)
+		{
+			ltype = 102;
+			l1 = OBS(24);
+		}
+	} else if (OBS(20) != AOF_UNDEF) {
 		double press = OBS(20) * 10.0;
 
-		/* Save the pressure in the anagraphical layer only */
-		/* FIXME: vedere se va memorizzato o no nell'anagrafica */
-		DBA_RUN_OR_RETURN(dba_msg_set_flight_press(msg, press, get_conf6(OBS(flags_start) & 0x3f)));
+		/* Save the pressure in an analogous pressure layer.
+		 * We cannot save in the ana layer because a flight can pass twice in
+		 * the same point, at two different pressures */
+		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10,  4), press, get_conf6(OBS(flags_start) & 0x3f),
+			100, press, 0, 0, 254, 0, 0));
 
 		/* Default to height for AMDAR */
 		if (msg->type != MSG_AMDAR || (OBS(24) == AOF_UNDEF))
@@ -76,17 +93,6 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 			ltype = 100;
 			l1 = press;
 			/* fprintf(stderr, "Press float: %f int: %d encoded: %s\n", press, l1, dba_var_value(dba_msg_get_flight_press_var(msg))); */
-		}
-	}
-	if (OBS(24) != AOF_UNDEF)
-	{
-		/* FIXME: vedere se va memorizzato o no nell'anagrafica (può non aver
-		 * senso se è calcolata dalla pressione) */
-		DBA_RUN_OR_RETURN(dba_msg_set_height(msg, (double)OBS(24), get_conf6((OBS(flags_start + 1) >> 18) & 0x3f)));
-		if (ltype == -1)
-		{
-			ltype = 102;
-			l1 = OBS(24);
 		}
 	}
 	if (ltype == -1)

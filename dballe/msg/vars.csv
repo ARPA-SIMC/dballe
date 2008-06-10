@@ -13,7 +13,6 @@ POLL_TTYPE,     int,    B01217,     257,     -, -, -,    -,      -,     -, Air q
 FLIGHT_REG_NO,  str,    B01008,     257,     -, -, -,    -,      -,     -, Aircraft registration number or other identification
 FLIGHT_PHASE,   int,    B08004,     257,     -, -, -,    -,      -,     -, Phase of aircraft flight
 FLIGHT_ROLL,    num,    B02063,     257,     -, -, -,    -,      -,     -, Aircraft roll angle
-FLIGHT_PRESS,   num,    B10004,     257,     -, -, -,    -,      -,     -, Pressure at aircraft position
 NAVSYS,         int,    B02061,     257,     -, -, -,    -,      -,     -, Aircraft navigational system
 DATA_RELAY,     int,    B02062,     257,     -, -, -,    -,      -,     -, Aircraft data relay system
 WIND_INST,      int,    B02002,     257,     -, -, -,    -,      -,     -, Type of instrumentation for wind measurement

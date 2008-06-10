@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -193,7 +193,22 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 		// AOF AMDAR has pressure indication, BUFR AMDAR has only height
 		if (amsg->type == MSG_AMDAR)
 		{
-			dba_var p = dba_msg_get_flight_press_var(amsg);
+			// dba_var p = dba_msg_get_flight_press_var(amsg);
+			for (int i = 0; i < amsg->data_count; ++i)
+			{
+				dba_msg_level l = amsg->data[i];
+				if (l->ltype1 == 100)
+				{
+					dba_msg_datum datum = dba_msg_level_find(l, DBA_VAR(0, 10, 4), 254, 0, 0);
+					if (datum)
+					{
+						CHECKED(dba_msg_set(bmsg, datum->var, DBA_VAR(0, 10, 4),
+							l->ltype1, l->l1, l->ltype2, l->l2,
+							254, 0, 0));
+						break;
+					}
+				}
+			}
 #if 0
 			dba_var h = dba_msg_get_height_var(bmsg);
 			if (p && h)
@@ -210,8 +225,6 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 				}
 			}
 #endif
-			if (p)
-				CHECKED(dba_msg_set_flight_press_var(bmsg, p));
 		}
 
 		if (amsg->type == MSG_TEMP)

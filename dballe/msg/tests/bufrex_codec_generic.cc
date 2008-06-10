@@ -150,7 +150,7 @@ void to::test<2>()
 	CHECKED(dba_msg_set_height_baro(	msg, 3,		45));
 	CHECKED(dba_msg_set_flight_phase(	msg, 3,		45));
 	CHECKED(dba_msg_set_timesig(		msg, 3,		45));
-	CHECKED(dba_msg_set_flight_press(	msg, 3,		45));
+	//CHECKED(dba_msg_set_flight_press(	msg, 3,		45));
 
 	dba_msgs msgs;
 	CHECKED(dba_msgs_create(&msgs));

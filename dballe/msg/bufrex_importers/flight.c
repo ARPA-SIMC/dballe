@@ -66,18 +66,18 @@ dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0,  8, 21): DBA_RUN_OR_RETURN(dba_msg_set_timesig_var(msg, var)); break;
 			case DBA_VAR(0,  7,  2): {
 				double height;
-				DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var));
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &height));
 				ltype = 102;
 				l1 = height;
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0,  7,  1), ltype, l1, 0, 0, 254, 0, 0));
 				break;
 			}
 			case DBA_VAR(0,  7,  4): {
 				double press;
-				DBA_RUN_OR_RETURN(dba_msg_set_flight_press_var(msg, var));
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
 				ltype = 100;
 				l1 = press;
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10,  4), ltype, l1, 0, 0, 254, 0, 0));
 				break;
 			}
 			case DBA_VAR(0, 11,  1):
