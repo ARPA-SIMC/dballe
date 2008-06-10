@@ -1,3 +1,10 @@
+dballe (4.0.3-1) unstable; urgency=low
+
+  * New upstream version
+     - Fixed import of 12-hours cumulated rain
+
+ -- Enrico Zini <enrico@debian.org>  Tue, 10 Jun 2008 09:52:18 +0200
+
 dballe (4.0.2-1) unstable; urgency=low
 
   * New upstream version
