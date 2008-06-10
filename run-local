@@ -1,0 +1,9 @@
+#!/bin/bash
+
+TOP_SRCDIR=$(cd $(dirname $0) && pwd)
+export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
+export DBA_TABLES=$TOP_SRCDIR/tables/
+export PYTHONPATH=$TOP_SRCDIR/swig
+export PATH="$TOP_SRCDIR/tools:$PATH"
+
+exec "$@"
