@@ -84,6 +84,6 @@ CLOUD_H4,       num,    B20013,     258,     4, -, -,  254,      -,     -, Heigh
 TOT_PREC1,      num,    B13011,       1,     -, -, -,    1,  -3600,  3600, Total precipitation in the last hour
 TOT_PREC3,      num,    B13011,       1,     -, -, -,    1, -10800, 10800, Total precipitation in the last 3 hours
 TOT_PREC6,      num,    B13011,       1,     -, -, -,    1, -21600, 21600, Total precipitation in the last 6 hours
-TOT_PREC12,     num,    B13011,       1,     -, -, -,    1, -43200, 42300, Total precipitation in the last 12 hours
+TOT_PREC12,     num,    B13011,       1,     -, -, -,    1, -43200, 43200, Total precipitation in the last 12 hours
 TOT_PREC24,     num,    B13011,       1,     -, -, -,    1, -86400, 86400, Total precipitation in the last 24 hours
 TOT_SNOW,       num,    B13013,       1,     -, -, -,  254,      -,     -, Total show depth
