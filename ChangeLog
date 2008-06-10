@@ -5,6 +5,7 @@
 	* Implemented Bufrex::resetSections and same in Python
 	* Test against NaN on setr and setd
 	* Use clean program name in manpages
+	* Store height and pressure as data and not as ana, for flights
 
 2008-05-18  enrico@enricozini.org
 
