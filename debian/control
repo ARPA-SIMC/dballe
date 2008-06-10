@@ -114,7 +114,7 @@ Description: DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
- These are the python bindings.
+ These are the Python bindings.
 
 Package: dballe-common
 Section: misc
