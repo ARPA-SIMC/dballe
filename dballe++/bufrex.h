@@ -94,6 +94,8 @@ public:
 
 	BufrexSubset append();
 
+	void resetSections();
+
 /*
 	void set(Var& var, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2)
 	{

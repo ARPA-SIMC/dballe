@@ -317,6 +317,7 @@ class BufrexTest(unittest.TestCase):
         msg.appendDatadesc("B13011")
         msg.appendDatadesc("B13013")
         subset = msg.append()
+        self.assertEqual(msg.size(), 1)
         subset.appendi("B01001", 60)
         subset.appendi("B01002", 150)
         subset.appendi("B02001", 1)
@@ -373,6 +374,9 @@ class BufrexTest(unittest.TestCase):
         assert len(buf) > 8
         self.assertEqual(buf[:4], "BUFR")
         self.assertEqual(buf[-4:], "7777")
+
+        msg.resetSections()
+        self.assertEqual(msg.size(), 0)
 
 class MsgTest(unittest.TestCase):
     def testBUFRCreation(self):

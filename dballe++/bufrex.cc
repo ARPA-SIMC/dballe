@@ -144,6 +144,12 @@ BufrexSubset Bufrex::append()
 	return res;
 }
 
+void Bufrex::resetSections()
+{
+	bufrex_msg_reset_sections(m_msg);
+}
+
+
 }
 
 // vim:set ts=4 sw=4:
