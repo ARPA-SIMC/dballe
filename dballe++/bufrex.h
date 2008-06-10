@@ -74,6 +74,7 @@ public:
 
 	static Bufrex createBUFR(int centre, int subcentre,
 					         int mastertable, int localtable,
+							 int edition = 3,
 					         bool compressed = false);
 
 	void setTemplate(int type, int subtype, int localsubtype);

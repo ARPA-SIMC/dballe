@@ -67,7 +67,7 @@ Bufrex& Bufrex::operator=(const Bufrex& msg)
 
 Bufrex Bufrex::createBUFR(int centre, int subcentre,
 				           int mastertable, int localtable,
-				           bool compressed)
+				           int edition, bool compressed)
 {
 	bufrex_msg msg;
 	checked(bufrex_msg_create(BUFREX_BUFR, &msg));
@@ -76,7 +76,7 @@ Bufrex Bufrex::createBUFR(int centre, int subcentre,
 	msg->opt.bufr.master_table = mastertable;
 	msg->opt.bufr.local_table = localtable;
 	msg->opt.bufr.compression = compressed ? 1 : 0;
-	msg->edition = 3;
+	msg->edition = edition;
 	// Wrap here, so that if load_tables throws, we cleanup properly
 	Bufrex res(msg);
 	checked(bufrex_msg_load_tables(msg));
