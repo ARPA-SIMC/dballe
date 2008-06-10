@@ -21,6 +21,7 @@
 
 #include <test-utils-core.h>
 #include <dballe/core/var.h>
+#include <math.h>
 
 namespace tut {
 using namespace tut_dballe;
@@ -150,7 +151,23 @@ void to::test<3>()
 	dba_var_delete(var);
 	dba_var_delete(var1);
 }
-	
+
+// Test missing checks
+template<> template<>
+void to::test<4>()
+{
+	dba_var var;
+	dba_varinfo info;
+
+	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 12, 3), &info));
+	CHECKED(dba_var_created(info, logf(0), &var));
+	gen_ensure(var != NULL);
+	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 12, 3));
+	gen_ensure_equals(dba_var_info(var), info);
+	gen_ensure_equals(dba_var_value(var), (const char*)"0");
+	dba_var_delete(var);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
