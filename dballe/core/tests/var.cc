@@ -158,13 +158,21 @@ void to::test<4>()
 {
 	dba_var var;
 	dba_varinfo info;
+	dba_err err;
 
 	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 12, 3), &info));
-	CHECKED(dba_var_created(info, logf(0), &var));
-	gen_ensure(var != NULL);
-	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 12, 3));
-	gen_ensure_equals(dba_var_info(var), info);
-	gen_ensure_equals(dba_var_value(var), (const char*)"0");
+	CHECKED(dba_var_create(info, &var));
+
+	err = dba_var_setd(var, logf(0));
+	gen_ensure_equals(err, DBA_ERROR);
+	gen_ensure_equals(dba_error_get_code(), 6);
+	gen_ensure(dba_var_value(var) == NULL);
+
+	err = dba_var_setd(var, logf(0)/logf(0));
+	gen_ensure_equals(err, DBA_ERROR);
+	gen_ensure_equals(dba_error_get_code(), 6);
+	gen_ensure(dba_var_value(var) == NULL);
+
 	dba_var_delete(var);
 }
 

@@ -24,10 +24,10 @@ program check_range
 
 !     Check that NaN values are trapped
       rval = 0.
+      rval = log(rval) / log(rval)
       call idba_set(handle, "B12003", log(rval))
       errcode = idba_error_code()
-      print*,"CCACACA",errcode
-      call ensure("did not fail", errcode == 6)
+      call ensure("set to NaN", errcode == 6)
 
       call idba_fatto(handle)
       call ensure_no_error("fatto")

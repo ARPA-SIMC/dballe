@@ -346,6 +346,15 @@ dba_err dba_var_setd(dba_var var, double val)
 	if (var->info->is_string)
 		return dba_error_type("\"B%02d%03d\" is of type string and cannot be accessed as a floating-point",
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var));
+
+	/* Guard against NaNs */
+	if (isnan(val))
+	{
+		DBA_RUN_OR_RETURN(dba_var_unset(var));
+		return dba_error_toolong("Value %f is outside of the range [%f,%f] for B%02d%03d (%s)",
+				val, var->info->dmin, var->info->dmax,
+				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
+	}
 	
 	/* Guard against overflows */
 	if (val < var->info->dmin || val > var->info->dmax)

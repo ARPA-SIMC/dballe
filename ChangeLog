@@ -3,6 +3,7 @@
 	* Fixed TOT_PREC12 time range values
 	* Implemented bufrex_msg_reset_sections
 	* Implemented Bufrex::resetSections and same in Python
+	* Test against NaN on setr and setd
 
 2008-05-18  enrico@enricozini.org
 
