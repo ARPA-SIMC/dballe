@@ -37,7 +37,7 @@ HEIGHT_BARO,    int,    B07031,     257,     -, -, -,    -,      -,     -, Heigh
 ISOBARIC_SURFACE, num,  B07004,     257,     -, -, -,    -,      -,     -, Isobaric surface
 GEOPOTENTIAL,   num,    B10003,       1,     -, -, -,  254,      -,     -, Geopotential
 PRESS,          num,    B10004,       1,     -, -, -,  254,      -,     -, Pressure at ground level
-PRESS_3H,       num,    B10061,       1,     -, -, -,    4, -10800, 10800, 3 hour pressure change at ground level
+PRESS_3H,       num,    B10061,       1,     -, -, -,    4,      0, 10800, 3 hour pressure change at ground level
 PRESS_MSL,      num,    B10051,     101,     -, -, -,  254,      -,     -, Pressure reduced to mean sea level
 QNH,            num,    B10052,     102,  2000, -, -,  254,      -,     -, Altimeter setting (QNH)
 WIND_DIR,       num,    B11001,     102, 10000, -, -,  254,      -,     -, Wind direction at 10 metres above ground
@@ -51,11 +51,11 @@ DEWPOINT_2M,    num,    B12003,     102,  2000, -, -,  254,      -,     -, Dew p
 HUMIDITY,       num,    B13003,     102,  2000, -, -,  254,      -,     -, Humidity at 2 metres above ground
 WATER_TEMP,     num,    B22042,       1,     -, -, -,  254,      -,     -, Sea/water surface temperature
 HEIGHT_ANEM,    num,    B10197,       1,     -, -, -,  254,      -,     -, Anemometer height
-PRESS_TEND,     num,    B10063,       1,     -, -, -,  205, -10800, 10800, Characteristic of pressure tendency
+PRESS_TEND,     num,    B10063,       1,     -, -, -,  205,      0, 10800, Characteristic of pressure tendency
 VISIBILITY,     num,    B20001,       1,     -, -, -,  254,      -,     -, Visibility
 PRES_WTR,       int,    B20003,       1,     -, -, -,  254,      -,     -, Present weather
-PAST_WTR1,      int,    B20004,       1,     -, -, -,  205, -21600, 21600, Past weather (1)
-PAST_WTR2,      int,    B20005,       1,     -, -, -,  205, -21600, 21600, Past weather (2)
+PAST_WTR1,      int,    B20004,       1,     -, -, -,  205,      0, 21600, Past weather (1)
+PAST_WTR2,      int,    B20005,       1,     -, -, -,  205,      0, 21600, Past weather (2)
 METAR_WTR,      int,    B20009,       1,     -, -, -,  254,      -,     -, General weather indicator (TAF/METAR)
 CLOUD_N ,       int,    B20010,     256,     0, -, -,  254,      -,     -, Total cloud cover (N)
 CLOUD_NH,       int,    B20011,     256,     0, -, -,  254,      -,     -, Cloud amount (NH)
@@ -80,9 +80,9 @@ CLOUD_N4,       int,    B20011,     258,     4, -, -,  254,      -,     -, Cloud
 CLOUD_C4,       int,    B20012,     258,     4, -, -,  254,      -,     -, Cloud amount (C4)
 CLOUD_H4,       num,    B20013,     258,     4, -, -,  254,      -,     -, Height of base of cloud (H4)
 
-TOT_PREC1,      num,    B13011,       1,     -, -, -,    1,  -3600,  3600, Total precipitation in the last hour
-TOT_PREC3,      num,    B13011,       1,     -, -, -,    1, -10800, 10800, Total precipitation in the last 3 hours
-TOT_PREC6,      num,    B13011,       1,     -, -, -,    1, -21600, 21600, Total precipitation in the last 6 hours
-TOT_PREC12,     num,    B13011,       1,     -, -, -,    1, -43200, 43200, Total precipitation in the last 12 hours
-TOT_PREC24,     num,    B13011,       1,     -, -, -,    1, -86400, 86400, Total precipitation in the last 24 hours
+TOT_PREC1,      num,    B13011,       1,     -, -, -,    1,      0,  3600, Total precipitation in the last hour
+TOT_PREC3,      num,    B13011,       1,     -, -, -,    1,      0, 10800, Total precipitation in the last 3 hours
+TOT_PREC6,      num,    B13011,       1,     -, -, -,    1,      0, 21600, Total precipitation in the last 6 hours
+TOT_PREC12,     num,    B13011,       1,     -, -, -,    1,      0, 43200, Total precipitation in the last 12 hours
+TOT_PREC24,     num,    B13011,       1,     -, -, -,    1,      0, 86400, Total precipitation in the last 24 hours
 TOT_SNOW,       num,    B13013,       1,     -, -, -,  254,      -,     -, Total show depth
