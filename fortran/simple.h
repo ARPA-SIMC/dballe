@@ -45,7 +45,7 @@ struct API
 	 * @return
 	 *   The error indicator for the function
 	 */
-	virtual void scopa(const char* repinfofile = 0);
+	virtual void scopa(const char* repinfofile = 0) = 0;
 
 	/**@name enq*
 	 * @anchor enq
@@ -85,7 +85,7 @@ struct API
 	 * @return
 	 *   The error indicator for the function
 	 */
-	virtual unsigned char enqb(const char* param) = 0;
+	virtual signed char enqb(const char* param) = 0;
 
 	/**
 	 * Read one real value from the output record
@@ -177,7 +177,7 @@ struct API
 	 * @return
 	 *   The error indicator for the function
 	 */
-	virtual void setb(const char* param, unsigned char value) = 0;
+	virtual void setb(const char* param, signed char value) = 0;
 
 	/**
 	 * Set one real value into the input record

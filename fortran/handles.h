@@ -24,6 +24,7 @@
 
 #include <dballe/core/record.h>
 #include <dballe/db/db.h>
+#include "simple.h"
 #include <assert.h>
 
 #define FDBA_HANDLE_START_DECL(name) \
@@ -81,15 +82,7 @@ FDBA_HANDLE_END_DECL(session)
 
 FDBA_HANDLE_START_DECL(simple)
 	int session;
-	int perms;
-	dba_record input;
-	dba_record output;
-	dba_record qcinput;
-	dba_record qcoutput;
-	dba_db_cursor ana_cur;
-	dba_db_cursor query_cur;
-	dba_record_cursor qc_iter;
-	int qc_count;
+	dballef::API* api;
 FDBA_HANDLE_END_DECL(simple)
 
 typedef void (*fdba_error_callback)(INTEGER(data));

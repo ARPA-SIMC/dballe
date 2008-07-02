@@ -5,14 +5,19 @@ if DO_DBALLEF
 dballeincludedir = $(includedir)/dballe
 
 # Include the F90 interface file as well
-dballeinclude_HEADERS = dballef.h
+dist_dballeinclude_HEADERS = dballef.h
+
+dist_noinst_HEADERS = simple.h commonapi.h dbapi.h handles.h
 
 lib_LTLIBRARIES = libdballef.la
 
 # missing.f90
 libdballef_la_SOURCES = \
-	error.c \
-	simple.c
+	error.cc \
+	simple.cc \
+	commonapi.cc \
+	dbapi.cc \
+	binding.cc
 libdballef_la_LIBADD = ../dballe/libdballe.la -lcnf
 libdballef_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
@@ -57,6 +62,6 @@ dump_dballe_FCFLAGS = -g
 
 INCLUDES = -I$(top_srcdir)
 
-EXTRA_DIST = handles.h dballef.h fortran.dox check-utils.h
+EXTRA_DIST = fortran.dox check-utils.h
 
 endif

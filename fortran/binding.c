@@ -58,27 +58,6 @@
 //#define MISSING_DOUBLE   (1.79769313486E+308)
 //#define MISSING_DOUBLE ((double)0x7FEFFFFFFFFFFFFF)
 
-/*
- * Second attempt getting values from fortran
-extern F77_INTEGER_TYPE __missing__fortran_missing_int;
-extern F77_BYTE_TYPE __missing__fortran_missing_byte;
-extern F77_DOUBLE_TYPE __missing__fortran_missing_double;
-extern F77_REAL_TYPE __missing__fortran_missing_real;
-#define MISSING_BYTE __missing__fortran_missing_byte
-#define MISSING_INT __missing__fortran_missing_int
-#define MISSING_REAL __missing__fortran_missing_real
-#define MISSING_DOUBLE __missing__fortran_missing_double
- */
-
-#define PERM_ANA_RO		(1 << 0)
-#define PERM_ANA_WRITE		(1 << 1)
-#define PERM_DATA_RO		(1 << 2)
-#define PERM_DATA_ADD		(1 << 3)
-#define PERM_DATA_WRITE		(1 << 4)
-#define PERM_ATTR_RO		(1 << 5)
-#define PERM_ATTR_ADD		(1 << 6)
-#define PERM_ATTR_WRITE		(1 << 7)
-
 /** @defgroup fortransimple Simplified interface for Dballe
  * @ingroup fortran
  *
@@ -213,6 +192,8 @@ static inline int double_is_missing(double d)
 			return 1;
 	}
 }
+
+extern "C" {
 
 /**
  * Start working with a DBALLE database.
@@ -379,60 +360,13 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 	DBA_RUN_OR_RETURN(fdba_handle_alloc_simple(handle));
 
 	STATE.session = *dbahandle;
-	STATE.perms = 0;
-	STATE.input = NULL;
-	STATE.output = NULL;
-	STATE.qcinput = NULL;
-	STATE.qcoutput = NULL;
-	STATE.ana_cur = NULL;
-	STATE.query_cur = NULL;
-
-	if (check_flag("read",	anaflag,  anaflag_length))
-		STATE.perms |= PERM_ANA_RO;
-	if (check_flag("write",	anaflag,  anaflag_length))
-		STATE.perms |= PERM_ANA_WRITE;
-	if (check_flag("read",	dataflag, dataflag_length))
-		STATE.perms |= PERM_DATA_RO;
-	if (check_flag("add",	dataflag, dataflag_length))
-		STATE.perms |= PERM_DATA_ADD;
-	if (check_flag("write",	dataflag, dataflag_length))
-		STATE.perms |= PERM_DATA_WRITE;
-	if (check_flag("read",	attrflag,   attrflag_length))
-		STATE.perms |= PERM_ATTR_RO;
-	if (check_flag("add",	attrflag,   attrflag_length))
-		STATE.perms |= PERM_ATTR_ADD;
-	if (check_flag("write",	attrflag,   attrflag_length))
-		STATE.perms |= PERM_ATTR_WRITE;
-
-	if ((STATE.perms & (PERM_ANA_RO | PERM_ANA_WRITE)) == 0)
-		return dba_error_consistency("pseudoana should be opened in either 'read' or 'write' mode");
-	if ((STATE.perms & (PERM_DATA_RO | PERM_DATA_ADD | PERM_DATA_WRITE)) == 0)
-		return dba_error_consistency("data should be opened in one of 'read', 'add' or 'write' mode");
-	if ((STATE.perms & (PERM_ATTR_RO | PERM_ATTR_ADD | PERM_ATTR_WRITE)) == 0)
-		return dba_error_consistency("attr should be opened in one of 'read', 'add' or 'write' mode");
-
-	if (STATE.perms & PERM_ANA_RO && STATE.perms & PERM_DATA_WRITE)
-		return dba_error_consistency("when data is 'write' ana must also be set to 'write', because deleting data can potentially also delete pseudoana");
-	if (STATE.perms & PERM_ATTR_RO && STATE.perms & PERM_DATA_WRITE)
-		return dba_error_consistency("when data is 'write' attr must also be set to 'write', because deleting data also delete its attributes");
-	
-	/* Allocate the records */
-	DBA_RUN_OR_GOTO(fail, dba_record_create(&(STATE.input)));
-	DBA_RUN_OR_GOTO(fail, dba_record_create(&(STATE.output)));
-	DBA_RUN_OR_GOTO(fail, dba_record_create(&(STATE.qcinput)));
-	DBA_RUN_OR_GOTO(fail, dba_record_create(&(STATE.qcoutput)));
+	STATE.api = new DbAPI(c_anaflag, c_dataflag, c_attrflag);
 
 	return dba_error_ok();
 
 fail:
-	if (STATE.qcoutput != NULL)
-		dba_record_delete(STATE.qcoutput);
-	if (STATE.qcinput != NULL)
-		dba_record_delete(STATE.qcinput);
-	if (STATE.output != NULL)
-		dba_record_delete(STATE.output);
-	if (STATE.input != NULL)
-		dba_record_delete(STATE.input);
+	if (STATE.api != NULL)
+		delete STATE.api;
 
 	fdba_handle_release_simple(*handle);
 
@@ -2333,6 +2267,8 @@ cleanup:
 	if (res != NULL)
 		free(res);
 	return err != DBA_OK ? err : dba_error_ok();
+}
+
 }
 
 /*@}*/
