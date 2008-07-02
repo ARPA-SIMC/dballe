@@ -21,11 +21,15 @@
 
 #include <dballe/core/error.h>
 
+extern "C" {
 #include <f77.h>
+}
+
 #include <stdint.h>
 
 #include "handles.h"
 
+extern "C" {
 
 /** @file
  * @ingroup fortranfull
@@ -159,7 +163,7 @@ F77_INTEGER_FUNCTION(idba_error_set_callback)(
 	CBDATA.cb = (fdba_error_callback)func;
 	CBDATA.data = *data;
 
-	dba_error_set_callback(*code, fdba_error_callback_invoker, (void*)(uintptr_t)*handle);
+	dba_error_set_callback((dba_err_code)*code, fdba_error_callback_invoker, (void*)(uintptr_t)*handle);
 	return dba_error_ok();
 }
 
@@ -174,7 +178,7 @@ F77_INTEGER_FUNCTION(idba_error_set_callback)(
 F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	dba_error_remove_callback(CBDATA.error, fdba_error_callback_invoker, (void*)(uintptr_t)CBDATA.data);
+	dba_error_remove_callback((dba_err_code)CBDATA.error, fdba_error_callback_invoker, (void*)(uintptr_t)CBDATA.data);
 	fdba_handle_release_errcb(*handle);
 	return dba_error_ok();
 }
@@ -216,4 +220,6 @@ F77_INTEGER_FUNCTION(idba_error_handle_tolerating_overflows)(INTEGER(debug))
 	if (is_fatal)
 		exit(1);
 	return 0;
+}
+
 }

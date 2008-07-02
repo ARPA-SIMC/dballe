@@ -19,9 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#define _GNU_SOURCE
-/* _GNU_SOURCE is defined to have asprintf */
-
+#include "dbapi.h"
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>
 #include <dballe/db/db.h>
@@ -29,7 +27,9 @@
 #include <dballe/db/internals.h>
 #include <dballe/msg/formatter.h>
 
+extern "C" {
 #include <f77.h>
+}
 #include <float.h>
 #include <limits.h>
 
@@ -57,6 +57,18 @@
 //#define MISSING_DOUBLE   (1.797693134862316E+308)
 //#define MISSING_DOUBLE   (1.79769313486E+308)
 //#define MISSING_DOUBLE ((double)0x7FEFFFFFFFFFFFFF)
+
+using namespace dballef;
+
+static inline void tofortran(int& val)
+{
+	if (val == API::missing_int)
+		val = MISSING_INT;
+}
+static inline int fromfortran(int val)
+{
+	return val == MISSING_INT ? API::missing_int : val;
+}
 
 /** @defgroup fortransimple Simplified interface for Dballe
  * @ingroup fortran
@@ -349,6 +361,13 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 	GENPTR_CHARACTER(dataflag)
 	GENPTR_CHARACTER(attrflag)
 	dba_err err;
+	char c_anaflag[10];
+	char c_dataflag[10];
+	char c_attrflag[10];
+
+	cnfImpn(anaflag, anaflag_length,  10, c_anaflag);
+	cnfImpn(dataflag, dataflag_length,  10, c_dataflag);
+	cnfImpn(attrflag, attrflag_length,  10, c_attrflag);
 
 	/* Check here to warn users of the introduction of idba_presentati */
 	/*
@@ -360,7 +379,17 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 	DBA_RUN_OR_RETURN(fdba_handle_alloc_simple(handle));
 
 	STATE.session = *dbahandle;
-	STATE.api = new DbAPI(c_anaflag, c_dataflag, c_attrflag);
+	try {
+		STATE.api = new DbAPI(FDBA_HANDLE(session, *dbahandle).session, c_anaflag, c_dataflag, c_attrflag);
+	} catch (APIException& e) {
+		err = e.err;
+		goto fail;
+	}
+	if (!STATE.api)
+	{
+		err = dba_error_alloc("Allocating a new DbAPI");
+		goto fail;
+	}
 
 	return dba_error_ok();
 
@@ -383,27 +412,9 @@ F77_INTEGER_FUNCTION(idba_fatto)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
 
-	if (STATE.ana_cur != NULL)
-		dba_db_cursor_delete(STATE.ana_cur);
-	if (STATE.query_cur != NULL)
-		dba_db_cursor_delete(STATE.query_cur);
-	if (STATE.qcoutput != NULL)
-		dba_record_delete(STATE.qcoutput);
-	if (STATE.qcinput != NULL)
-		dba_record_delete(STATE.qcinput);
-	if (STATE.output != NULL)
-		dba_record_delete(STATE.output);
-	if (STATE.input != NULL)
-		dba_record_delete(STATE.input);
-
-	STATE.ana_cur = NULL;
-	STATE.query_cur = NULL;
-	STATE.qcoutput = NULL;
-	STATE.qcinput = NULL;
-	STATE.output = NULL;
-	STATE.input = NULL;
-
+	delete STATE.api;
 	fdba_handle_release_simple(*handle);
+
 	return dba_error_ok();
 }
 
@@ -426,43 +437,19 @@ F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(r
 	GENPTR_CHARACTER(repinfofile)
 	char fname[PATH_MAX];
 
-	if (!(STATE.perms & PERM_DATA_WRITE))
-		return dba_error_consistency(
-			"idba_scopa must be run with the database open in data write mode");
-
 	cnfImpn(repinfofile, repinfofile_length,  PATH_MAX, fname); fname[PATH_MAX - 1] = 0;
 
-	return dba_db_reset(SESSION, fname[0] == 0 ? NULL : fname);
+	try {
+		if (fname[0] == 0)
+			STATE.api->scopa(0);
+		else
+			STATE.api->scopa(fname);
+
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
-
-/**
- * Stop reading query results and start with a new query.
- *
- * @note The query parameters of the last query are preserved for the next one.
- *
- * @param handle
- *   Handle to a DBALLE session
- */
-/*
-F77_SUBROUTINE(idba_ricominciamo)(INTEGER(handle))
-{
-	GENPTR_INTEGER(handle)
-	
-	if (STATE.ana_cur != NULL)
-		dba_cursor_delete(STATE.ana_cur);
-	STATE.ana_cur = NULL;
-
-	if (STATE.query_cur != NULL)
-		dba_cursor_delete(STATE.query_cur);
-	STATE.query_cur = NULL;
-
-	STATE.state = QUERY;
-
-	dba_record_clear(STATE.query);
-	dba_record_clear(STATE.work);
-	dba_record_clear(STATE.qc);
-}
-*/
 
 /**@name idba_enq*
  * @anchor idba_enq
@@ -495,28 +482,15 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 	GENPTR_CHARACTER(parameter)
 	GENPTR_INTEGER(value)
 	char parm[20];
-	char* p;
-	int found;
-	dba_record rec;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	switch (parm[0])
-	{
-		case '*':
-			rec = STATE.qcoutput;
-			p = parm + 1;
-			break;
-		default:
-			rec = STATE.output;
-			p = parm;
-			break;
+	try {
+		*value = STATE.api->enqi(parm);
+		tofortran(*value);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-
-	DBA_RUN_OR_RETURN(dba_record_enqi(rec, p, value, &found));
-	if (!found)
-		*value = MISSING_INT;
-	return dba_error_ok();
 }
 
 /**
@@ -544,34 +518,16 @@ F77_INTEGER_FUNCTION(idba_enqb)(
 	GENPTR_CHARACTER(parameter)
 	GENPTR_BYTE(value)
 	char parm[20];
-	char* p;
-	int ival, found;
-	dba_record rec;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	switch (parm[0])
-	{
-		case '*':
-			rec = STATE.qcoutput;
-			p = parm + 1;
-			break;
-		default:
-			rec = STATE.output;
-			p = parm;
-			break;
+	try {
+		*value = STATE.api->enqb(parm);
+		if (*value == API::missing_byte)
+			*value = MISSING_BYTE;
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-
-	DBA_RUN_OR_RETURN(dba_record_enqi(rec, p, &ival, &found));
-	if (!found)
-		*value = MISSING_BYTE;
-	else
-	{
-		if (ival < SCHAR_MIN || ival > SCHAR_MAX)
-			return dba_error_consistency("value queried (%d) does not fit in a byte", ival);
-		*value=(char)ival;
-	}
-	return dba_error_ok();
 }
 
 
@@ -600,32 +556,16 @@ F77_INTEGER_FUNCTION(idba_enqr)(
 	GENPTR_CHARACTER(parameter)
 	GENPTR_REAL(value)
 	char parm[20];
-	char* p;
-	double dval;
-	int found;
-	dba_record rec;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	if (parm[0] == '*')
-	{
-		rec = STATE.qcoutput;
-		p = parm + 1;
-	} else {
-		rec = STATE.output;
-		p = parm;
+	try {
+		*value = STATE.api->enqr(parm);
+		if (*value == API::missing_float)
+			*value = MISSING_REAL;
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-
-	DBA_RUN_OR_RETURN(dba_record_enqd(rec, p, &dval, &found));
-	if (!found)
-	{
-		*value = MISSING_REAL;
-	} else {
-		if (dval < -FLT_MAX || dval > FLT_MAX)
-			return dba_error_consistency("value queried (%f) does not fit in a real", dval);
-		*value = dval;
-	}
-	return dba_error_ok();
 }
 
 /**
@@ -653,33 +593,16 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 	GENPTR_CHARACTER(parameter)
 	GENPTR_DOUBLE(value)
 	char parm[20];
-	char* p;
-	int found;
-	dba_record rec;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	if (parm[0] == '*')
-	{
-		rec = STATE.qcoutput;
-		p = parm + 1;
-	} else {
-		rec = STATE.output;
-		p = parm;
+	try {
+		*value = STATE.api->enqd(parm);
+		if (*value == API::missing_double)
+			*value = MISSING_DOUBLE;
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-
-	/*
-	{
-		double mv = MISSING_DOUBLE;
-		fprintf(stderr, "%llx\n", *(long long int*)&mv);
-		fprintf(stderr, "%.20le\n", MISSING_DOUBLE);
-	}
-	*/
-
-	DBA_RUN_OR_RETURN(dba_record_enqd(rec, p, value, &found));
-	if (!found)
-		*value = MISSING_DOUBLE;
-	return dba_error_ok();
 }
 
 /**
@@ -708,36 +631,25 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 	GENPTR_CHARACTER(parameter)
 	GENPTR_CHARACTER(value)
 	char parm[20];
-	char* p;
-	dba_record rec;
-	const char* strval;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	if (parm[0] == '*')
-	{
-		rec = STATE.qcoutput;
-		p = parm + 1;
-	} else {
-		rec = STATE.output;
-		p = parm;
-	}
-
-	DBA_RUN_OR_RETURN(dba_record_enqc(rec, p, &strval));
-	if (strval == NULL)
-	{
-		//fprintf(stderr, "RETURN EMPTY STRING[%d]\n", value_length);
-		if (value_length > 0)
+	try {
+		const char* v = STATE.api->enqc(parm);
+		if (!v)
 		{
-			// The missing string value has been defined as a
-			// null byte plus blank padding.
-			value[0] = 0;
-			memset(value+1, ' ', value_length - 1);
-		}
+			if (value_length > 0)
+			{
+				// The missing string value has been defined as a
+				// null byte plus blank padding.
+				value[0] = 0;
+				memset(value+1, ' ', value_length - 1);
+			}
+		} else
+			cnfExprt(v, value, value_length);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-	else
-		cnfExprt(strval, value, value_length);
-	return dba_error_ok();
 }
 
 /*@}*/
@@ -771,63 +683,20 @@ F77_INTEGER_FUNCTION(idba_seti)(
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
 	GENPTR_INTEGER(value)
-	GENPTR_INTEGER(err)
 	char parm[20];
-	char* p;
-	dba_record rec;
-	dba_varcode code = 0;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	switch (parm[0])
-	{
-		case '*':
-			rec = STATE.qcinput;
-			p = parm + 1;
-			break;
-		default:
-			rec = STATE.input;
-			p = parm;
-			break;
-	}
-
-	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
-	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-
+	try {
 		if (*value == MISSING_INT)
 		{
 			TRACEMISSING("int");
-			return dba_record_key_unset(rec, param);
+			STATE.api->unset(parm);
 		}
 		else
-			switch (param)
-			{
-				case DBA_KEY_LAT:
-				case DBA_KEY_LON:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
-					break;
-				case DBA_KEY_ANA_ID:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
-					break;
-				default: break;
-			}
-
-		return dba_record_key_seti(rec, param, *value);
-	} else {
-		if (code == 0)
-			code = DBA_STRING_TO_VAR(p + 1);
-
-		if (*value == MISSING_INT)
-		{
-			TRACEMISSING("int");
-			return dba_record_var_unset(rec, code);
-		}
-
-		return dba_record_var_seti(rec, code, *value);
+			STATE.api->seti(parm, *value);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
 }
 
@@ -855,63 +724,20 @@ F77_INTEGER_FUNCTION(idba_setb)(
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
 	GENPTR_BYTE(value)
-	GENPTR_INTEGER(err)
 	char parm[20];
-	char* p;
-	dba_record rec;
-	dba_varcode code = 0;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	switch (parm[0])
-	{
-		case '*':
-			rec = STATE.qcinput;
-			p = parm + 1;
-			break;
-		default:
-			rec = STATE.input;
-			p = parm;
-			break;
-	}
-
-	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
-	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-
+	try {
 		if (*value == MISSING_BYTE)
 		{
 			TRACEMISSING("byte");
-			return dba_record_key_unset(rec, param);
+			STATE.api->unset(parm);
 		}
 		else
-			switch (param)
-			{
-				case DBA_KEY_LAT:
-				case DBA_KEY_LON:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
-					break;
-				case DBA_KEY_ANA_ID:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
-					break;
-				default: break;
-			}
-
-		return dba_record_key_seti(rec, param, *value);
-	} else {
-		if (code == 0)
-			code = DBA_STRING_TO_VAR(p + 1);
-
-		if (*value == MISSING_BYTE)
-		{
-			TRACEMISSING("byte");
-			return dba_record_var_unset(rec, code);
-		}
-
-		return dba_record_var_seti(rec, code, *value);
+			STATE.api->setb(parm, *value);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
 }
 
@@ -940,63 +766,20 @@ F77_INTEGER_FUNCTION(idba_setr)(
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
 	GENPTR_REAL(value)
-	GENPTR_INTEGER(err)
 	char parm[20];
-	char* p;
-	dba_record rec;
-	dba_varcode code = 0;
+	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	cnfImpn(parameter, parameter_length, 19, parm);
-
-	switch (parm[0])
-	{
-		case '*':
-			rec = STATE.qcinput;
-			p = parm + 1;
-			break;
-		default:
-			rec = STATE.input;
-			p = parm;
-			break;
-	}
-
-	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
-	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-
+	try {
 		if (*value == MISSING_REAL)
 		{
 			TRACEMISSING("real");
-			return dba_record_key_unset(rec, param);
+			STATE.api->unset(parm);
 		}
 		else
-			switch (param)
-			{
-				case DBA_KEY_LAT:
-				case DBA_KEY_LON:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
-					break;
-				case DBA_KEY_ANA_ID:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
-					break;
-				default: break;
-			}
-
-		return dba_record_key_setd(rec, param, *value);
-	} else {
-		if (code == 0)
-			code = DBA_STRING_TO_VAR(p + 1);
-
-		if (*value == MISSING_REAL)
-		{
-			TRACEMISSING("real");
-			return dba_record_var_unset(rec, code);
-		}
-
-		return dba_record_var_setd(rec, code, *value);
+			STATE.api->setr(parm, *value);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
 }
 
@@ -1024,75 +807,20 @@ F77_INTEGER_FUNCTION(idba_setd)(
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
 	GENPTR_DOUBLE(value)
-	GENPTR_INTEGER(err)
 	char parm[20];
-	char* p;
-	dba_record rec;
-	dba_varcode code = 0;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	switch (parm[0])
-	{
-		case '*':
-			rec = STATE.qcinput;
-			p = parm + 1;
-			break;
-		default:
-			rec = STATE.input;
-			p = parm;
-			break;
-	}
-
-	/*
-	{
-		double mv = MISSING_DOUBLE;
-		fprintf(stderr, "MINE %llx\n", *(long long int*)&mv);
-		fprintf(stderr, "FORT %llx\n", *(long long int*)value);
-	}
-	fprintf(stderr, "IN %f\nIN %f\nComp: %d\n",
-		(double)*value,
-		(double)MISSING_DOUBLE,
-		*value == MISSING_DOUBLE);
-	*/
-
-	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
-	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-
-		if (double_is_missing(*value))
+	try {
+		if (*value == MISSING_DOUBLE)
 		{
 			TRACEMISSING("double");
-			return dba_record_key_unset(rec, param);
+			STATE.api->unset(parm);
 		}
 		else
-			switch (param)
-			{
-				case DBA_KEY_LAT:
-				case DBA_KEY_LON:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
-					break;
-				case DBA_KEY_ANA_ID:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
-					break;
-				default: break;
-			}
-
-		return dba_record_key_setd(rec, param, *value);
-	} else {
-		if (code == 0)
-			code = DBA_STRING_TO_VAR(p + 1);
-
-		if (double_is_missing(*value))
-		{
-			TRACEMISSING("double");
-			return dba_record_var_unset(rec, code);
-		}
-
-		return dba_record_var_setd(rec, code, *value);
+			STATE.api->setd(parm, *value);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
 }
 
@@ -1121,65 +849,22 @@ F77_INTEGER_FUNCTION(idba_setc)(
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
 	GENPTR_CHARACTER(value)
-	GENPTR_INTEGER(err)
 	char parm[20];
-	char* p;
 	char val[255];
-	dba_record rec;
-	dba_varcode code = 0;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 	cnfImpn(value, value_length, 254, val); val[254] = 0;
 
-	switch (parm[0])
-	{
-		case '*':
-			rec = STATE.qcinput;
-			p = parm + 1;
-			break;
-		default:
-			rec = STATE.input;
-			p = parm;
-			break;
-	}
-
-	if (p[0] != 'B' && (code = dba_varcode_alias_resolve(p)) == 0)
-	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-
+	try {
 		if (val[0] == 0)
 		{
 			TRACEMISSING("char");
-			return dba_record_key_unset(rec, param);
+			STATE.api->unset(parm);
 		}
 		else
-			switch (param)
-			{
-				case DBA_KEY_LAT:
-				case DBA_KEY_LON:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_ANA_ID));
-					break;
-				case DBA_KEY_ANA_ID:
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LAT));
-					DBA_RUN_OR_RETURN(dba_record_key_unset(rec, DBA_KEY_LON));
-					break;
-				default: break;
-			}
-
-		return dba_record_key_setc(rec, param, val);
-	} else {
-		if (code == 0)
-		{
-			TRACEMISSING("char");
-			code = DBA_STRING_TO_VAR(p + 1);
-		}
-
-		if (val[0] == 0)
-			return dba_record_var_unset(rec, code);
-
-		return dba_record_var_setc(rec, code, val);
+			STATE.api->setc(parm, val);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
 }
 
@@ -1195,7 +880,12 @@ F77_INTEGER_FUNCTION(idba_setcontextana)(
 		INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	return dba_record_set_ana_context(STATE.input);
+	try {
+		STATE.api->setcontextana();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -1224,17 +914,14 @@ F77_INTEGER_FUNCTION(idba_enqlevel)(
 	GENPTR_INTEGER(l1)
 	GENPTR_INTEGER(ltype2)
 	GENPTR_INTEGER(l2)
-	int found;
-
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_LEVELTYPE1, ltype1, &found));
-	if (!found) *ltype1 = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_L1, l1, &found));
-	if (!found) *l1 = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_LEVELTYPE2, ltype2, &found));
-	if (!found) *ltype2 = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_L2, l2, &found));
-	if (!found) *l2 = MISSING_INT;
-	return dba_error_ok();
+	try {
+		STATE.api->enqlevel(*ltype1, *l1, *ltype2, *l2);
+		tofortran(*ltype1); tofortran(*l1);
+		tofortran(*ltype2); tofortran(*l2);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -1263,12 +950,14 @@ F77_INTEGER_FUNCTION(idba_setlevel)(
 	GENPTR_INTEGER(l1)
 	GENPTR_INTEGER(ltype2)
 	GENPTR_INTEGER(l2)
-
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_LEVELTYPE1, *ltype1));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L1, *l1));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_LEVELTYPE2, *ltype2));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_L2, *l2));
-	return dba_error_ok();
+	try {
+		STATE.api->setlevel(
+			fromfortran(*ltype1), fromfortran(*l1),
+			fromfortran(*ltype2), fromfortran(*l2));
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -1295,15 +984,13 @@ F77_INTEGER_FUNCTION(idba_enqtimerange)(
 	GENPTR_INTEGER(ptype)
 	GENPTR_INTEGER(p1)
 	GENPTR_INTEGER(p2)
-	int found;
-
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_PINDICATOR, ptype, &found));
-	if (!found) *ptype = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_P1, p1, &found));
-	if (!found) *p1 = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_P2, p2, &found));
-	if (!found) *p2 = MISSING_INT;
-	return dba_error_ok();
+	try {
+		STATE.api->enqtimerange(*ptype, *p1, *p2);
+		tofortran(*ptype); tofortran(*p1); tofortran(*p2);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -1330,11 +1017,13 @@ F77_INTEGER_FUNCTION(idba_settimerange)(
 	GENPTR_INTEGER(ptype)
 	GENPTR_INTEGER(p1)
 	GENPTR_INTEGER(p2)
-
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_PINDICATOR, *ptype));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P1, *p1));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_P2, *p2));
-	return dba_error_ok();
+	try {
+		STATE.api->settimerange(
+			fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2));
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -1373,21 +1062,14 @@ F77_INTEGER_FUNCTION(idba_enqdate)(
 	GENPTR_INTEGER(hour)
 	GENPTR_INTEGER(min)
 	GENPTR_INTEGER(sec)
-	int found;
-
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_YEAR, year, &found));
-	if (!found) *year = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_MONTH, month, &found));
-	if (!found) *month = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_DAY, day, &found));
-	if (!found) *day = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_HOUR, hour, &found));
-	if (!found) *hour = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_MIN, min, &found));
-	if (!found) *min = MISSING_INT;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_SEC, sec, &found));
-	if (!found) *sec = MISSING_INT;
-	return dba_error_ok();
+	try {
+		STATE.api->enqdate(*year, *month, *day, *hour, *min, *sec);
+		tofortran(*year), tofortran(*month), tofortran(*day);
+		tofortran(*hour), tofortran(*min), tofortran(*sec);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -1426,14 +1108,14 @@ F77_INTEGER_FUNCTION(idba_setdate)(
 	GENPTR_INTEGER(hour)
 	GENPTR_INTEGER(min)
 	GENPTR_INTEGER(sec)
-
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_YEAR, *year));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MONTH, *month));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_DAY, *day));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_HOUR, *hour));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MIN, *min));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_SEC, *sec));
-	return dba_error_ok();
+	try {
+		STATE.api->setdate(
+			fromfortran(*year), fromfortran(*month), fromfortran(*day),
+			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -1472,14 +1154,14 @@ F77_INTEGER_FUNCTION(idba_setdatemin)(
 	GENPTR_INTEGER(hour)
 	GENPTR_INTEGER(min)
 	GENPTR_INTEGER(sec)
-
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_YEARMIN, *year));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MONTHMIN, *month));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_DAYMIN, *day));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_HOURMIN, *hour));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MINUMIN, *min));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_SECMIN, *sec));
-	return dba_error_ok();
+	try {
+		STATE.api->setdatemin(
+			fromfortran(*year), fromfortran(*month), fromfortran(*day),
+			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -1518,14 +1200,14 @@ F77_INTEGER_FUNCTION(idba_setdatemax)(
 	GENPTR_INTEGER(hour)
 	GENPTR_INTEGER(min)
 	GENPTR_INTEGER(sec)
-
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_YEARMAX, *year));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MONTHMAX, *month));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_DAYMAX, *day));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_HOURMAX, *hour));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_MINUMAX, *min));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.input, DBA_KEY_SECMAX, *sec));
-	return dba_error_ok();
+	try {
+		STATE.api->setdatemax(
+			fromfortran(*year), fromfortran(*month), fromfortran(*day),
+			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /*@}*/
@@ -1552,54 +1234,14 @@ F77_INTEGER_FUNCTION(idba_unset)(
 	GENPTR_CHARACTER(parameter)
 	GENPTR_INTEGER(err)
 	char parm[20];
-	char* p;
-	dba_record rec;
-
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	if (parm[0] == '*')
-	{
-		rec = STATE.qcinput;
-		p = parm + 1;
-	} else {
-		rec = STATE.input;
-		p = parm;
+	try {
+		STATE.api->unset(parm);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-
-	if (p[0] != 'B')
-	{
-		dba_keyword param = dba_record_keyword_byname(p);
-		if (param == DBA_KEY_ERROR)
-			return dba_error_notfound("looking for misspelled parameter \"%s\"", p);
-
-		return dba_record_key_unset(rec, param);
-	} else
-		return dba_record_var_unset(rec, DBA_STRING_TO_VAR(p + 1));
-}
-
-static void clear_attr_rec(dba_record rec)
-{
-	const char* val;
-	int saved_context_id = -1;
-	char saved_varname[8];
-
-	/* Copy the values to be preserved */
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_CONTEXT_ID)) != NULL)
-		saved_context_id = strtol(val, NULL, 10);
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_VAR_RELATED)) != NULL)
-	{
-		strncpy(saved_varname, val, 7);
-		saved_varname[6] = 0;
-	}
-	else
-		saved_varname[0] = 0;
-
-	dba_record_clear(rec);
-
-	if (saved_context_id != -1)
-		dba_record_key_seti(rec, DBA_KEY_CONTEXT_ID, saved_context_id);
-	if (saved_varname[0] != 0)
-		dba_record_key_setc(rec, DBA_KEY_VAR_RELATED, saved_varname);
 }
 
 /**
@@ -1613,8 +1255,7 @@ F77_SUBROUTINE(idba_unsetall)(
 {
 	GENPTR_INTEGER(handle)
 
-	clear_attr_rec(STATE.qcinput);
-	dba_record_clear(STATE.input);
+	STATE.api->unsetall();
 }
 
 /**
@@ -1637,27 +1278,12 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 	GENPTR_INTEGER(handle)
 	GENPTR_INTEGER(count)
 
-	if (STATE.ana_cur != NULL)
-	{
-		dba_db_cursor_delete(STATE.ana_cur);
-		STATE.ana_cur = NULL;
+	try {
+		*count = STATE.api->quantesono();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-
-	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
-	{
-		dba_verbose(DBA_VERB_DB_INPUT,
-				"invoking dba_db_ana_query(%d, <input>).  <input> is:\n",
-				*handle);
-		dba_record_print(STATE.input, DBA_VERBOSE_STREAM);
-	}
-
-	DBA_RUN_OR_RETURN(dba_db_ana_query(
-			SESSION,
-			STATE.input,
-			&(STATE.ana_cur),
-			count));
-
-	return dba_error_ok();
 }
 
 /**
@@ -1675,20 +1301,13 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	int has_data;
 
-	if (STATE.ana_cur == NULL)
-		return dba_error_consistency("idba_elencamele called without a previous idba_quantesono");
-
-	DBA_RUN_OR_RETURN(dba_db_cursor_next(STATE.ana_cur, &has_data));
-	dba_record_clear(STATE.output);
-	if (!has_data)
-	{
-		dba_db_cursor_delete(STATE.ana_cur);
-		STATE.ana_cur = NULL;
+	try {
+		STATE.api->elencamele();
 		return dba_error_ok();
-	} else
-		return dba_db_cursor_to_record(STATE.ana_cur, STATE.output);
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -1710,23 +1329,12 @@ F77_INTEGER_FUNCTION(idba_voglioquesto)(
 	GENPTR_INTEGER(handle)
 	GENPTR_INTEGER(count)
 
-	if (STATE.query_cur != NULL)
-	{
-		dba_db_cursor_delete(STATE.query_cur);
-		STATE.query_cur = NULL;
+	try {
+		*count = STATE.api->voglioquesto();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-
-	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
-	{
-		dba_verbose(DBA_VERB_DB_INPUT,
-				"invoking dba_query(%d, <input>).  <input> is:\n",
-				*handle);
-		dba_record_print(STATE.input, DBA_VERBOSE_STREAM);
-	}
-
-	DBA_RUN_OR_RETURN(dba_db_query(SESSION, STATE.input, &(STATE.query_cur), count));
-
-	return dba_error_ok();
 }
 
 /**
@@ -1749,38 +1357,17 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 {
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
-	const char* varstr;
-	int has_data;
 
-	if (STATE.query_cur == NULL)
-		return dba_error_consistency("idba_dammelo called without a previous idba_voglioquesto");
-
-	/* Reset qc record iterator, so that idba_ancora will not return
-	 * leftover QC values from a previous query */
-	STATE.qc_iter = 0;
-
-	DBA_RUN_OR_RETURN(dba_db_cursor_next(STATE.query_cur, &has_data));
-	if (!has_data)
-	{
-		dba_db_cursor_delete(STATE.query_cur);
-		STATE.query_cur = NULL;
-		cnfExprt("", parameter, parameter_length);
-		dba_record_clear(STATE.output);
-	} else {
-		dba_record_clear(STATE.output);
-		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(STATE.query_cur, STATE.output));
-		DBA_RUN_OR_RETURN(dba_record_key_enqc(STATE.output, DBA_KEY_VAR, &varstr));
-
-		/* Set context id and variable name on qcinput so that
-		 * attribute functions will refer to the last variable read */
-		DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.qcinput, DBA_KEY_CONTEXT_ID,
-							STATE.query_cur->out_context_id));
-		DBA_RUN_OR_RETURN(dba_record_key_setc(STATE.qcinput, DBA_KEY_VAR_RELATED, varstr));
-
-		cnfExprt(varstr, parameter, parameter_length);
+	try {
+		const char* res = STATE.api->dammelo();
+		if (!res)
+			cnfExprt("", parameter, parameter_length);
+		else
+			cnfExprt(res, parameter, parameter_length);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-
-	return dba_error_ok();
 }
 
 /**
@@ -1805,58 +1392,12 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 		INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	int ana_id, context_id;
-	dba_record_cursor cur;
-	dba_var var = NULL;
-
-	if (STATE.perms & PERM_DATA_RO)
-		return dba_error_consistency(
-			"idba_prendilo cannot be called with the database open in data readonly mode");
-
-	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
-	{
-		dba_verbose(DBA_VERB_DB_INPUT,
-				"invoking dba_insert_or_replace(%d, <input>, %d, %d).  <input> is:\n",
-				*handle,
-				STATE.perms & PERM_DATA_WRITE ? 1 : 0,
-				STATE.perms & PERM_ANA_WRITE ? 1 : 0);
-		dba_record_print(STATE.input, DBA_VERBOSE_STREAM);
+	try {
+		STATE.api->prendilo();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-
-	DBA_RUN_OR_RETURN(dba_db_insert(
-				SESSION, STATE.input,
-				STATE.perms & PERM_DATA_WRITE ? 1 : 0,
-				STATE.perms & PERM_ANA_WRITE ? 1 : 0,
-				&ana_id, &context_id));
-
-	/* Set the values in the output */
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.output, DBA_KEY_ANA_ID, ana_id));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.output, DBA_KEY_CONTEXT_ID, context_id));
-
-	/* Set context id and variable name on qcinput so that
-	 * attribute functions will refer to what has been written */
-	DBA_RUN_OR_RETURN(dba_record_key_seti(STATE.qcinput, DBA_KEY_CONTEXT_ID, context_id));
-
-	/* If there was only one variable in the input, we can pass it on as a
-	 * default for attribute handling routines; otherwise we unset to mark
-	 * the ambiguity */
-	if ((cur = dba_record_iterate_first(STATE.input)) != NULL &&
-			dba_record_iterate_next(STATE.input, cur) == NULL)
-		var = dba_record_cursor_variable(cur);
-	
-	if (var != NULL)
-	{
-		dba_varcode code = dba_var_code(var);
-		char varname[8];
-		snprintf(varname, 7, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
-		DBA_RUN_OR_RETURN(dba_record_key_setc(STATE.qcinput, DBA_KEY_VAR_RELATED, varname));
-	}
-	else
-		DBA_RUN_OR_RETURN(dba_record_key_unset(STATE.qcinput, DBA_KEY_VAR_RELATED));
-
-	/* Copy the input on the output, so that QC functions can find the data
-	 * they need */
-	return dba_error_ok();
 }
 
 /**
@@ -1873,133 +1414,12 @@ F77_INTEGER_FUNCTION(idba_dimenticami)(
 		INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-
-	if (! (STATE.perms & PERM_DATA_WRITE))
-		return dba_error_consistency(
-			"idba_dimenticami must be called with the database open in data write mode");
-
-	return dba_db_remove(SESSION, STATE.input);
-}
-
-/*
- * Look for the ID of the data which a critica or scusa operation are
- * supposed to operate on.
- */
-static dba_err get_referred_data_id(int* handle, int* id_context, dba_varcode* id_var)
-{
-	const char* val;
-	int found;
-
-	/* Read context ID */
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.qcinput, DBA_KEY_CONTEXT_ID, id_context, &found));
-	if (!found)
-		return dba_error_notfound("looking for variable context id");
-
-	*id_var = 0;
-
-#if 0
-	/* First try with *data_id */
-	if (*id == 0 && (val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_DATA_ID)) != NULL)
-	{
-		*id = strtol(val, 0, 10);
-		if (*id == 0)
-			return dba_error_consistency("checking *data_id is set to non-zero");
+	try {
+		STATE.api->dimenticami();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
 	}
-#endif
-	/* Then with *var */
-	if (*id_var == 0 && (val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR_RELATED)) != NULL)
-		*id_var = DBA_STRING_TO_VAR(val + 1);
-#if 0
-	/* Lastly, with the data_id from last idba_dammelo */
-	if (*id == 0)
-	{
-		DBA_RUN_OR_RETURN(dba_record_key_enqi(STATE.output, DBA_KEY_DATA_ID, id));
-		if (*id == 0)
-			return dba_error_consistency("checking that data_id left by previous idba_dammelo is set to non-zero");
-	}
-#endif
-	/*return dba_error_consistency("looking for data ID (no id specified, and no variable previously selected with idba_setc(handle, \"*b\", \"Bxxyyy\"))");*/
-	if (*id_var == 0)
-		return dba_error_consistency("finding out which variabile to add attributes to, *var is not set");
-
-	return dba_error_ok();
-}
-
-/* Reads the list of QC values to operate on, for dba_voglioancora and dba_scusa */
-static dba_err read_qc_list(int* handle, dba_varcode** res_arr, size_t* res_len)
-{
-	dba_err err = DBA_OK;
-	dba_varcode* arr = NULL;
-	size_t arr_len = 0;
-	const char* val;
-
-	/* Retrieve the varcodes of the wanted QC values */
-	if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VAR)) != NULL)
-	{
-		/* Get only the QC values in *varlist */
-		if (*val != '*')
-		{
-			err = dba_error_consistency("QC values must start with '*'");
-			goto cleanup;
-		}
-		if ((arr = (dba_varcode*)malloc(1 * sizeof(dba_varcode))) == NULL)
-		{
-			err = dba_error_alloc("allocating the dba_varcode array to pass to dba_qc_query");
-			goto cleanup;
-		}
-		arr_len = 1;
-		arr[0] = DBA_STRING_TO_VAR(val + 2);
-	}
-	else if ((val = dba_record_key_peek_value(STATE.qcinput, DBA_KEY_VARLIST)) != NULL)
-	{
-		/* Get only the QC values in *varlist */
-		size_t pos;
-		size_t len;
-		const char* s;
-		int i;
-
-		/* Count the number of commas (and therefore of items in the
-		 * list) to decide the size of arr */
-		for (s = val, arr_len = 1; *s; ++s)
-			if (*s == ',')
-				++arr_len;
-		if ((arr = (dba_varcode*)malloc(arr_len * sizeof(dba_varcode))) == NULL)
-		{
-			err = dba_error_alloc("allocating the dba_varcode array to pass to dba_qc_query");
-			goto cleanup;
-		}
-
-		for (pos = 0, i = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-		{
-			/*
-			fprintf(stderr, "str: \"%s\", str+pos: \"%s\", str+pos+len: \"%s\"\n",
-					val, val+pos, val+pos+len);
-			*/
-			if (*(val+pos) != '*')
-			{
-				err = dba_error_consistency("QC value names must start with '*'");
-				goto cleanup;
-			}
-			arr[i++] = DBA_STRING_TO_VAR(val + pos + 2);
-			//fprintf(stderr, "GOT %s -> B%02d%03d\n", val+pos+1, DBA_VAR_X(arr[i-1]), DBA_VAR_Y(arr[i-1]));
-		}
-
-		//fprintf(stderr, "%d found\n", arr_len);
-		//for (pos = 0; pos < arr_len; ++pos)
-		//{
-			//fprintf(stderr, "%d: %02d%03d\n", pos, DBA_VAR_X(arr[pos]), DBA_VAR_Y(arr[pos]));
-		//}
-		//fprintf(stderr, "happy\n");
-	}
-
-	*res_arr = arr;
-	*res_len = arr_len;
-	arr = NULL;
-	
-cleanup:
-	if (arr != NULL)
-		free(arr);
-	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 /**@name QC functions
@@ -2016,34 +1436,12 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 {
 	GENPTR_INTEGER(handle)
 	GENPTR_INTEGER(count)
-	dba_err err = DBA_OK;
-	dba_varcode* arr = NULL;
-	size_t arr_len = 0;
-	int id_context;
-	dba_varcode id_var;
-
-	/* Retrieve the ID of the data to query */
-	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
-
-	/* Retrieve the varcodes of the wanted QC values */
-	DBA_RUN_OR_RETURN(read_qc_list(handle, &arr, &arr_len));
-
-	/* Do QC query */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_qc_query(SESSION, id_context, id_var, 
-				arr == NULL ? NULL : arr,
-				arr == NULL ? 0 : arr_len,
-				STATE.qcoutput, &(STATE.qc_count)));
-
-	STATE.qc_iter = dba_record_iterate_first(STATE.qcoutput);
-
-	*count = STATE.qc_count;
-
-	clear_attr_rec(STATE.qcinput);
-
-cleanup:
-	if (arr != NULL)
-		free(arr);
-	return err == DBA_OK ? dba_error_ok() : err;
+	try {
+		*count = STATE.api->voglioancora();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -2063,20 +1461,17 @@ F77_INTEGER_FUNCTION(idba_ancora)(
 {
 	GENPTR_INTEGER(handle)
 	GENPTR_CHARACTER(parameter)
-	dba_varcode var;
-	char parm[20];
 
-	if (STATE.qc_iter == NULL)
-		return dba_error_notfound("reading a QC item");
-
-	var = dba_var_code(dba_record_cursor_variable(STATE.qc_iter));
-	snprintf(parm, 20, "*B%02d%03d", DBA_VAR_X(var), DBA_VAR_Y(var));
-	cnfExprt(parm, parameter, parameter_length);
-
-	/* Get next value from qc */
-	STATE.qc_iter = dba_record_iterate_next(STATE.qcoutput, STATE.qc_iter);
-
-	return dba_error_ok();
+	try {
+		const char* res = STATE.api->ancora();
+		if (!res)
+			cnfExprt("", parameter, parameter_length);
+		else
+			cnfExprt(res, parameter, parameter_length);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -2109,22 +1504,13 @@ F77_INTEGER_FUNCTION(idba_critica)(
 		INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	int id_context;
-	dba_varcode id_var;
 
-	if (STATE.perms & PERM_ATTR_RO)
-		return dba_error_consistency(
-			"idba_critica cannot be called with the database open in attribute readonly mode");
-
-	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
-
-	DBA_RUN_OR_RETURN(dba_db_qc_insert_or_replace(
-				SESSION, id_context, id_var, STATE.qcinput,
-				STATE.perms & PERM_ATTR_WRITE ? 1 : 0));
-
-	clear_attr_rec(STATE.qcinput);
-
-	return dba_error_ok();
+	try {
+		STATE.api->critica();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 /**
@@ -2149,34 +1535,13 @@ F77_INTEGER_FUNCTION(idba_critica)(
 F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	dba_err err = DBA_OK;
-	dba_varcode* arr = NULL;
-	size_t arr_len = 0;
-	int id_context;
-	dba_varcode id_var;
 
-	if (! (STATE.perms & PERM_ATTR_WRITE))
-		return dba_error_consistency(
-			"idba_scusa must be called with the database open in attribute write mode");
-	
-	DBA_RUN_OR_RETURN(get_referred_data_id(handle, &id_context, &id_var));
-
-	/* Retrieve the varcodes of the wanted QC values */
-	DBA_RUN_OR_RETURN(read_qc_list(handle, &arr, &arr_len));
-
-	// If arr is still 0, then dba_qc_delete deletes all QC values
-	DBA_RUN_OR_GOTO(cleanup,
-			dba_db_qc_remove(
-				SESSION, id_context, id_var,
-				arr == NULL ? NULL : arr,
-				arr == NULL ? 0 : arr_len));
-
-	clear_attr_rec(STATE.qcinput);
-
-cleanup:
-	if (arr != NULL)
-		free(arr);
-	return err == DBA_OK ? dba_error_ok() : err;
+	try {
+		STATE.api->scusa();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 F77_INTEGER_FUNCTION(idba_spiegal)(
@@ -2189,16 +1554,20 @@ F77_INTEGER_FUNCTION(idba_spiegal)(
 		TRAIL(result))
 {
 	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(ltype)
+	GENPTR_INTEGER(ltype1)
 	GENPTR_INTEGER(l1)
+	GENPTR_INTEGER(ltype2)
 	GENPTR_INTEGER(l2)
 	GENPTR_CHARACTER(result)
-	char* res;
 
-	DBA_RUN_OR_RETURN(dba_formatter_describe_level_or_layer(*ltype1, *l1, *ltype2, *l2, &res));
-	cnfExprt(res, result, result_length);
-	free(res);
-	return dba_error_ok();
+	try {
+		char* res = STATE.api->spiegal(*ltype1, *l1, *ltype2, *l2);
+		cnfExprt(res, result, result_length);
+		free(res);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 F77_INTEGER_FUNCTION(idba_spiegat)(
@@ -2214,12 +1583,15 @@ F77_INTEGER_FUNCTION(idba_spiegat)(
 	GENPTR_INTEGER(p1)
 	GENPTR_INTEGER(p2)
 	GENPTR_CHARACTER(result)
-	char* res;
 
-	DBA_RUN_OR_RETURN(dba_formatter_describe_trange(*ptype, *p1, *p2, &res));
-	cnfExprt(res, result, result_length);
-	free(res);
-	return dba_error_ok();
+	try {
+		char* res = STATE.api->spiegat(*ptype, *p1, *p2);
+		cnfExprt(res, result, result_length);
+		free(res);
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 F77_INTEGER_FUNCTION(idba_spiegab)(
@@ -2235,38 +1607,19 @@ F77_INTEGER_FUNCTION(idba_spiegab)(
 	GENPTR_CHARACTER(varcode)
 	GENPTR_CHARACTER(value)
 	GENPTR_CHARACTER(result)
-	dba_var var = NULL;
 	char s_varcode[10];
 	char s_value[300];
-	char* res = NULL;
-	dba_varinfo info;
-	dba_err err = DBA_OK;
-
 	cnfImpn(varcode, varcode_length, 9, s_varcode); s_varcode[9] = 0;
 	cnfImpn(value, value_length, 299, s_value); s_value[299] = 0;
 
-	DBA_RUN_OR_RETURN(dba_varinfo_query_local(DBA_STRING_TO_VAR(s_varcode + 1), &info));
-	DBA_RUN_OR_RETURN(dba_var_createc(info, s_value, &var));
-
-	if (info->is_string)
-	{
-		const char* s;
-		DBA_RUN_OR_GOTO(cleanup, dba_var_enqc(var, &s));
-		asprintf(&res, "%s (%s) %s", s, info->unit, info->desc);
-	} else {
-		double d;
-		DBA_RUN_OR_GOTO(cleanup, dba_var_enqd(var, &d));
-		asprintf(&res, "%.*f (%s) %s", info->scale > 0 ? info->scale : 0, d, info->unit, info->desc);
-	}
-
-	cnfExprt(res, result, result_length);
-
-cleanup:
-	if (var != NULL)
-		dba_var_delete(var);
-	if (res != NULL)
+	try {
+		char* res = STATE.api->spiegab(s_varcode, s_value);
+		cnfExprt(res, result, result_length);
 		free(res);
-	return err != DBA_OK ? err : dba_error_ok();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
 }
 
 }

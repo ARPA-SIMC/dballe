@@ -1,3 +1,5 @@
+#ifndef FDBA_COMMONAPI_H
+#define FDBA_COMMONAPI_H
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
@@ -111,38 +113,38 @@ public:
 	CommonAPIImplementation();
 	virtual ~CommonAPIImplementation();
 
-	virtual int enqi(const char* param) = 0;
-	virtual signed char enqb(const char* param) = 0;
-	virtual float enqr(const char* param) = 0;
-	virtual double enqd(const char* param) = 0;
-	virtual const char* enqc(const char* param) = 0;
+	virtual int enqi(const char* param);
+	virtual signed char enqb(const char* param);
+	virtual float enqr(const char* param);
+	virtual double enqd(const char* param);
+	virtual const char* enqc(const char* param);
 
-	virtual void seti(const char* param, int value) = 0;
-	virtual void setb(const char* param, signed char value) = 0;
-	virtual void setr(const char* param, float value) = 0;
-	virtual void setd(const char* param, double value) = 0;
-	virtual void setc(const char* param, const char* value) = 0;
+	virtual void seti(const char* param, int value);
+	virtual void setb(const char* param, signed char value);
+	virtual void setr(const char* param, float value);
+	virtual void setd(const char* param, double value);
+	virtual void setc(const char* param, const char* value);
 
-	virtual void setcontextana() = 0;
+	virtual void setcontextana();
 
-	virtual void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) = 0;
-	virtual void setlevel(int ltype1, int l1, int ltype2, int l2) = 0;
+	virtual void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2);
+	virtual void setlevel(int ltype1, int l1, int ltype2, int l2);
 
-	virtual void enqtimerange(int& ptype, int& p1, int& p2) = 0;
-	virtual void settimerange(int ptype, int p1, int p2) = 0;
+	virtual void enqtimerange(int& ptype, int& p1, int& p2);
+	virtual void settimerange(int ptype, int p1, int p2);
 
-	virtual void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) = 0;
-	virtual void setdate(int year, int month, int day, int hour, int min, int sec) = 0;
+	virtual void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec);
+	virtual void setdate(int year, int month, int day, int hour, int min, int sec);
 
-	virtual void setdatemin(int year, int month, int day, int hour, int min, int sec) = 0;
-	virtual void setdatemax(int year, int month, int day, int hour, int min, int sec) = 0;
+	virtual void setdatemin(int year, int month, int day, int hour, int min, int sec);
+	virtual void setdatemax(int year, int month, int day, int hour, int min, int sec);
 
-	virtual void unset(const char* param) = 0;
-	virtual void unsetall() = 0;
+	virtual void unset(const char* param);
+	virtual void unsetall();
 
-	virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
-	virtual const char* spiegat(int ptype, int p1, int p2) = 0;
-	virtual const char* spiegab(const char* varcode, const char* value) = 0;
+	virtual char* spiegal(int ltype1, int l1, int ltype2, int l2);
+	virtual char* spiegat(int ptype, int p1, int p2);
+	virtual char* spiegab(const char* varcode, const char* value);
 
 
 	virtual const char* ancora();
@@ -151,3 +153,4 @@ public:
 }
 
 /* vim:set ts=4 sw=4: */
+#endif

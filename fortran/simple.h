@@ -1,3 +1,6 @@
+#ifndef FDBA_SIMPLE_H
+#define FDBA_SIMPLE_H
+
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
@@ -582,13 +585,14 @@ struct API
 
 	/*@}*/
 
-	virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
+	virtual char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
 
-	virtual const char* spiegat(int ptype, int p1, int p2) = 0;
+	virtual char* spiegat(int ptype, int p1, int p2) = 0;
 
-	virtual const char* spiegab(const char* varcode, const char* value) = 0;
+	virtual char* spiegab(const char* varcode, const char* value) = 0;
 };
 
 }
 
 /* vim:set ts=4 sw=4: */
+#endif

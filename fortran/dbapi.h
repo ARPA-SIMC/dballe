@@ -1,3 +1,6 @@
+#ifndef FDBA_DBAPI_H
+#define FDBA_DBAPI_H
+
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
@@ -58,3 +61,4 @@ public:
 }
 
 /* vim:set ts=4 sw=4: */
+#endif

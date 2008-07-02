@@ -278,10 +278,25 @@ void CommonAPIImplementation::enqlevel(int& ltype1, int& l1, int& ltype2, int& l
 
 void CommonAPIImplementation::setlevel(int ltype1, int l1, int ltype2, int l2)
 {
-	checked(dba_record_key_seti(input, DBA_KEY_LEVELTYPE1, ltype1));
-	checked(dba_record_key_seti(input, DBA_KEY_L1, l1));
-	checked(dba_record_key_seti(input, DBA_KEY_LEVELTYPE2, ltype2));
-	checked(dba_record_key_seti(input, DBA_KEY_L2, l2));
+	if (ltype1 == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_LEVELTYPE1));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_LEVELTYPE1, ltype1));
+
+	if (l1 == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_L1));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_L1, l1));
+
+	if (ltype2 == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_LEVELTYPE2));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_LEVELTYPE2, ltype2));
+
+	if (l2 == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_L2));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_L2, l2));
 }
 
 void CommonAPIImplementation::enqtimerange(int& ptype, int& p1, int& p2)
@@ -297,9 +312,18 @@ void CommonAPIImplementation::enqtimerange(int& ptype, int& p1, int& p2)
 
 void CommonAPIImplementation::settimerange(int ptype, int p1, int p2)
 {
-	checked(dba_record_key_seti(input, DBA_KEY_PINDICATOR, ptype));
-	checked(dba_record_key_seti(input, DBA_KEY_P1, p1));
-	checked(dba_record_key_seti(input, DBA_KEY_P2, p2));
+	if (ptype == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_PINDICATOR));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_PINDICATOR, ptype));
+	if (p1 == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_P1));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_P1, p1));
+	if (p2 == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_P2));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_P2, p2));
 }
 
 void CommonAPIImplementation::enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec)
@@ -321,12 +345,30 @@ void CommonAPIImplementation::enqdate(int& year, int& month, int& day, int& hour
 
 void CommonAPIImplementation::setdate(int year, int month, int day, int hour, int min, int sec)
 {
-	checked(dba_record_key_seti(input, DBA_KEY_YEAR, year));
-	checked(dba_record_key_seti(input, DBA_KEY_MONTH, month));
-	checked(dba_record_key_seti(input, DBA_KEY_DAY, day));
-	checked(dba_record_key_seti(input, DBA_KEY_HOUR, hour));
-	checked(dba_record_key_seti(input, DBA_KEY_MIN, min));
-	checked(dba_record_key_seti(input, DBA_KEY_SEC, sec));
+	if (year == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_YEAR));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_YEAR, year));
+	if (month == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_MONTH));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_MONTH, month));
+	if (day == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_DAY));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_DAY, day));
+	if (hour == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_HOUR));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_HOUR, hour));
+	if (min == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_MIN));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_MIN, min));
+	if (sec == missing_int)
+		checked(dba_record_key_unset(input, DBA_KEY_SEC));
+	else
+		checked(dba_record_key_seti(input, DBA_KEY_SEC, sec));
 }
 
 void CommonAPIImplementation::setdatemin(int year, int month, int day, int hour, int min, int sec)
@@ -366,11 +408,11 @@ void CommonAPIImplementation::unset(const char* param)
 
 void CommonAPIImplementation::unsetall()
 {
-	dba_record_clear(qcinput);
+	clear_qcinput();
 	dba_record_clear(input);
 }
 
-const char* CommonAPIImplementation::spiegal(int ltype1, int l1, int ltype2, int l2)
+char* CommonAPIImplementation::spiegal(int ltype1, int l1, int ltype2, int l2)
 {
 	if (cached_spiega)
 	{
@@ -381,7 +423,7 @@ const char* CommonAPIImplementation::spiegal(int ltype1, int l1, int ltype2, int
 	return cached_spiega;
 }
 
-const char* CommonAPIImplementation::spiegat(int ptype, int p1, int p2)
+char* CommonAPIImplementation::spiegat(int ptype, int p1, int p2)
 {
 	if (cached_spiega)
 	{
@@ -392,7 +434,7 @@ const char* CommonAPIImplementation::spiegat(int ptype, int p1, int p2)
 	return cached_spiega;
 }
 
-const char* CommonAPIImplementation::spiegab(const char* varcode, const char* value)
+char* CommonAPIImplementation::spiegab(const char* varcode, const char* value)
 {
 	dba_var var = NULL;
 	dba_varinfo info;
@@ -511,7 +553,6 @@ void CommonAPIImplementation::read_qc_list(dba_varcode** res_arr, size_t* res_le
 
 void CommonAPIImplementation::clear_qcinput()
 {
-	const char* val;
 	int saved_context_id = -1;
 	char saved_varname[8];
 

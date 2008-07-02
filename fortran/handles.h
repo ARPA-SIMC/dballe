@@ -27,6 +27,8 @@
 #include "simple.h"
 #include <assert.h>
 
+extern "C" {
+
 #define FDBA_HANDLE_START_DECL(name) \
 	struct fdba_handle_##name { \
 		int used;
@@ -92,5 +94,7 @@ FDBA_HANDLE_START_DECL(errcb)
 	fdba_error_callback cb;
 	int data;
 FDBA_HANDLE_END_DECL(errcb)
+
+}
 
 #endif
