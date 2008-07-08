@@ -424,7 +424,7 @@ fail:
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_preparati_msg)(
+F77_INTEGER_FUNCTION(idba_messaggi)(
 		INTEGER(handle),
 		CHARACTER(filename),
 		CHARACTER(mode),

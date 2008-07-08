@@ -567,6 +567,12 @@ This code will open a connection with \dballe{}, then it will start a session:
 c     Connect to the database and get a handle to work with it
       call idba_presentati(dbhandle, "dsn", "username", "password")
       call idba_preparati(dbhandle, handle, "read", "read", "read")
+
+c     ...do your work...
+
+c     End of the work
+      call idba_fatto(handle)
+      call idba_arrivederci(dbhandle)
 \end{verbatim}
 
 You can call {\tt idba\_preparati} many times and get more handles.  This allows
@@ -613,6 +619,45 @@ Note that some combinations are illegal, such as pseudoana=read and data=add
 (when adding a new data, it's sometimes necessary to insert new pseudoana
 records), or data=rewrite and attr=read (when deleting data, their attributes
 are deleted as well).
+
+\section{Starting the work on a message}
+
+Instead of connecting to a database, you can use the \dballe{} API to read and
+write message reports in BUFR, CREX format, and read, but not write, messages
+in AOF format.
+
+To do that, use {\tt idba\_messaggi} instead of both {\tt idba\_presentati} and
+{\tt idba\_preparati}.  To write a message, your code will look like:
+
+\begin{verbatim}
+c     Connect to the database and get a handle to work with it
+      call idba_messagi(handle, "file.bufr", "r", "auto")
+
+c     ...do your work...
+
+c     End of the work
+      call idba_fatto(handle)
+\end{verbatim}
+
+\label{fun-idba_messaggi}
+
+{\tt idba\_messaggi} has three parameters:
+
+\begin{enumerate}
+\item the name of the file to open
+\item the open mode ("r" for read, "w" for write or create)
+\item the file format.  It can be "BUFR", "CREX", "AOF" or "AUTO".  "AUTO"
+      tells \dballe{} to autodetect the file format, but it only works when
+      reading files, not when writing new one.
+\end{enumerate}
+
+You can call {\tt idba\_messaggi} many times and read or write many files.  You
+can even call {\tt idba\_messaggi} many time on the same file as long as you
+open it read only.
+
+Once you open a file, you can use the other \dballe{} functions on it.  There
+are slight differences between working on a database and working on a file, and
+they are explained later in the section ``Working with files'' (see \ref{db-file-differences}).
 
 
 \section{Setting input and reading output}
@@ -1263,6 +1308,31 @@ c       ...process the data...
   the server has finished computing and trasmitting them.
 \end{description}
 
+\section{Working with files}
+\label{db-file-differences}
+
+This is a list of the differences between working with files and working with
+databases:
+
+\begin{itemize}
+\item You do not need to call {\tt idba\_presentati} and {\tt
+      idba\_arrivederci}: the work session starts at {\tt idba\_messaggi} and ends at
+      {\tt idba\_fatto}
+\item When reading, performing {\tt idba\_quantesono} or {\tt
+      idba\_voglioquesto} a second time advances to the next message in the file.
+\item When reading, you will see that there are no more messages because {\tt
+      idba\_quantesono} or {\tt idba\_voglioquesto} will return 0.
+\item When writing, you can use the {\tt query} input parameter to {\tt
+      idba\_prendilo} to control when a new message is started.  If you set it
+      to {\tt subset}, then the data will be inserted in a new BUFR or CREX
+      subset.  If you set it to {\tt message}, then the data will be inserted
+      in a new message.
+\item You cannot use {\tt rep\_memo}: only {\tt rep\_cod} works.  Setting {\tt
+      rep\_cod} you can influence the output template of messages: if you set it to a
+      synop report code, you will create a synop message.
+\end{itemize}
+
+
 \chapter{Code examples}
 \label{ch-examples}
 
@@ -1542,6 +1612,7 @@ These routines are used to begin and end working sessions with \dballe{}.
 \hline
 {\tt \small idba\_presentati(dbh,dsn,user,pwd)} & Connect to the database & \ref{fun-idba_presentati} \\
 {\tt \small idba\_preparati(dbh,h,mana,mdata,mattr)} & Open a new session & \ref{fun-idba_preparati} \\
+{\tt \small idba\_messaggi(h,filename,mode,type)} & Work with a message file & \ref{fun-idba_messaggi} \\
 {\tt \small idba\_fatto(h)}                        & Close a session              & \ref{fun-idba_fatto} \\
 {\tt \small idba\_arrivederci(dbh)}                & Disconnect from the database & \ref{fun-idba_arrivederci} \\
 \hline
