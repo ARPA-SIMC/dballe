@@ -338,38 +338,29 @@ void MsgAPI::dimenticami()
 
 int MsgAPI::voglioancora()
 {
-#if 0
-	int id_context;
-	dba_varcode id_var;
+	dba_msg msg = curmsg();
+	if (msg == 0 || iter_l == -1 || iter_d == -1)
+		checked(dba_error_consistency("voglioancora called before dammelo"));
 
-	/* Retrieve the ID of the data to query */
-	get_referred_data_id(&id_context, &id_var);
+	if (iter_l >= msg->data_count) return 0;
+	dba_msg_level level = msg->data[iter_l];
 
-	dba_varcode* arr = NULL;
-	size_t arr_len = 0;
+	if (iter_d >= level->data_count) return 0;
+	dba_var var = level->data[iter_d]->var;
+	if (!var) return 0;
 
-	try {
-		/* Retrieve the varcodes of the wanted QC values */
-		read_qc_list(&arr, &arr_len);
+	dba_record_clear(qcoutput);
 
-		/* Do QC query */
-		int qc_count;
-		checked(dba_db_qc_query(db, id_context, id_var, 
-					arr == NULL ? NULL : arr,
-					arr == NULL ? 0 : arr_len,
-					qcoutput, &qc_count));
-		qc_iter = dba_record_iterate_first(qcoutput);
-
-		clear_qcinput();
-		free(arr);
-
-		return qc_count;
-	} catch (...) {
-		if (arr != NULL)
-			free(arr);
-		throw;
+	int count = 0;
+	for (dba_var_attr_iterator i = dba_var_attr_iterate(var); i; i = dba_var_attr_iterator_next(i))
+	{
+		dba_record_var_set_direct(qcoutput, dba_var_attr_iterator_attr(i));
+		++count;
 	}
-#endif
+
+	qc_iter = dba_record_iterate_first(qcoutput);
+
+	return count;
 }
 
 void MsgAPI::critica()

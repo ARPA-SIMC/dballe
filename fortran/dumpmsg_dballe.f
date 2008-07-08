@@ -45,14 +45,14 @@ c     Query all the stations
             write (*,*) '  var ',btable(:istrlen(btable)),": ",
      $        value(:istrlen(btable))
 
-c           call idba_voglioancora (handle,nattr)
-c           write (*,*) "   ",nattr," attributi:"
-c           do i2=1, nattr
-c             call idba_ancora(handle,starbtable)
-c             call idba_enqc(handle,starbtable,avalue)
-c             write(*,*) "    attr ",starbtable(:istrlen(starbtable)),
-c    $          ": ",avalue(:istrlen(avalue))
-c           enddo
+            call idba_voglioancora (handle,nattr)
+            write (*,*) "   ",nattr," attributi:"
+            do i2=1, nattr
+              call idba_ancora(handle,starbtable)
+              call idba_enqc(handle,starbtable,avalue)
+              write(*,*) "    attr ",starbtable(:istrlen(starbtable)),
+     $          ": ",avalue(:istrlen(avalue))
+            enddo
           enddo
         enddo
       enddo
