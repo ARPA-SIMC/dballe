@@ -34,7 +34,7 @@ namespace dballef {
 
 
 MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
-	: file(0), state(0), msgs(0), curmsgidx(0), iter_l(-1), iter_d(-1)
+	: file(0), state(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_l(-1), iter_d(-1)
 {
 	if (strchr(mode, 'r') != NULL)
 	{
@@ -56,11 +56,24 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 
 	checked(dba_file_create(etype, fname, mode, &file));
 
-	readNextMessage();
+	if (strchr(mode, 'r') != NULL)
+		readNextMessage();
 }
 
 MsgAPI::~MsgAPI()
 {
+	if (perms & (PERM_DATA_WRITE | PERM_DATA_ADD))
+	{
+		if (wmsg)
+			flushSubset();
+		if (msgs)
+			flushMessage();
+	} else {
+		if (wmsg)
+			dba_msg_delete(wmsg);
+		if (msgs)
+			dba_msgs_delete(msgs);
+	}
 	if (file)
 		dba_file_delete(file);
 }
@@ -273,67 +286,109 @@ const char* MsgAPI::dammelo()
 	return res;
 }
 
+void MsgAPI::flushSubset()
+{
+	if (wmsg)
+	{
+		checked(dba_msgs_append_acquire(msgs, wmsg));
+		wmsg = 0;
+		wvar = 0;
+	}
+}
+
+void MsgAPI::flushMessage()
+{
+	if (msgs)
+	{
+		flushSubset();
+		checked(dba_file_write_msgs(file, msgs, 0, 0, 0));
+		dba_msgs_delete(msgs);
+		msgs = 0;
+	}
+}
+
 void MsgAPI::prendilo()
 {
-#if 0
 	if (perms & PERM_DATA_RO)
 		checked(dba_error_consistency(
-			"idba_prendilo cannot be called with the database open in data readonly mode"));
+			"prendilo cannot be called with the file open in read mode"));
 
-	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
+	const char* query;
+	checked(dba_record_key_enqc(input, DBA_KEY_QUERY, &query));
+	if (query != NULL)
 	{
-		dba_verbose(DBA_VERB_DB_INPUT,
-				"invoking dba_insert_or_replace(db, <input>, %d, %d).  <input> is:\n",
-				perms & PERM_DATA_WRITE ? 1 : 0,
-				perms & PERM_ANA_WRITE ? 1 : 0);
-		dba_record_print(input, DBA_VERBOSE_STREAM);
+		if (strcasecmp(query, "subset") == 0)
+		{
+			flushSubset();
+		} else if (strcasecmp(query, "message") == 0) {
+			flushMessage();
+		} else
+			checked(dba_error_consistency("Query type \"%s\" is not among the supported values", query));
+
+		// Uset query after using it: it needs to be explicitly set every time
+		checked(dba_record_key_unset(input, DBA_KEY_QUERY));
 	}
 
-	int ana_id, context_id;
-	checked(dba_db_insert(
-				db, input,
-				perms & PERM_DATA_WRITE ? 1 : 0,
-				perms & PERM_ANA_WRITE ? 1 : 0,
-				&ana_id, &context_id));
+	if (!msgs)
+		checked(dba_msgs_create(&msgs));
+	if (!wmsg)
+		checked(dba_msg_create(&wmsg));
 
-	/* Set the values in the output */
-	checked(dba_record_key_seti(output, DBA_KEY_ANA_ID, ana_id));
-	checked(dba_record_key_seti(output, DBA_KEY_CONTEXT_ID, context_id));
+	// Store record metainfo
+	const char* sval;
+	int ival, found;
+	double dval;
+	checked(dba_record_key_enqi(input, DBA_KEY_REP_COD, &ival, &found));
+	if (found) wmsg->type = dba_msg_type_from_repcod(ival);
+	checked(dba_record_key_enqi(input, DBA_KEY_ANA_ID, &ival, &found));
+	if (found) checked(dba_msg_seti(wmsg, DBA_VAR(0, 1, 192), ival, -1, 257, 0, 0, 0, 0, 0, 0));
+	checked(dba_record_key_enqc(input, DBA_KEY_IDENT, &sval));
+	if (sval) checked(dba_msg_set_ident(wmsg, sval, -1));
+	checked(dba_record_key_enqd(input, DBA_KEY_LAT, &dval, &found));
+	if (found) checked(dba_msg_set_latitude(wmsg, dval, -1));
+	checked(dba_record_key_enqd(input, DBA_KEY_LON, &dval, &found));
+	if (found) checked(dba_msg_set_longitude(wmsg, dval, -1));
+	checked(dba_record_key_enqi(input, DBA_KEY_YEAR, &ival, &found));
+	if (found) checked(dba_msg_set_year(wmsg, ival, -1));
+	checked(dba_record_key_enqi(input, DBA_KEY_MONTH, &ival, &found));
+	if (found) checked(dba_msg_set_month(wmsg, ival, -1));
+	checked(dba_record_key_enqi(input, DBA_KEY_DAY, &ival, &found));
+	if (found) checked(dba_msg_set_day(wmsg, ival, -1));
+	checked(dba_record_key_enqi(input, DBA_KEY_HOUR, &ival, &found));
+	if (found) checked(dba_msg_set_hour(wmsg, ival, -1));
+	checked(dba_record_key_enqi(input, DBA_KEY_MIN, &ival, &found));
+	if (found) checked(dba_msg_set_minute(wmsg, ival, -1));
+	checked(dba_record_key_enqi(input, DBA_KEY_SEC, &ival, &found));
+	if (found) checked(dba_msg_set_second(wmsg, ival, -1));
 
-	/* Set context id and variable name on qcinput so that
-	 * attribute functions will refer to what has been written */
-	checked(dba_record_key_seti(qcinput, DBA_KEY_CONTEXT_ID, context_id));
-
-	/* If there was only one variable in the input, we can pass it on as a
-	 * default for attribute handling routines; otherwise we unset to mark
-	 * the ambiguity */
-	dba_record_cursor cur;
-	dba_var var = NULL;
-	if ((cur = dba_record_iterate_first(input)) != NULL &&
-			dba_record_iterate_next(input, cur) == NULL)
-		var = dba_record_cursor_variable(cur);
+	int ltype1, l1, ltype2, l2, pind, p1, p2;
+	checked(dba_record_key_enqi(input, DBA_KEY_LEVELTYPE1, &ltype1, &found));
+	if (!found) checked(dba_error_consistency("leveltype1 is not set"));
+	checked(dba_record_key_enqi(input, DBA_KEY_L1, &l1, &found));
+	if (!found) checked(dba_error_consistency("l1 is not set"));
+	checked(dba_record_key_enqi(input, DBA_KEY_LEVELTYPE2, &ltype2, &found));
+	if (!found) checked(dba_error_consistency("leveltype2 is not set"));
+	checked(dba_record_key_enqi(input, DBA_KEY_L2, &l2, &found));
+	if (!found) checked(dba_error_consistency("l2 is not set"));
+	checked(dba_record_key_enqi(input, DBA_KEY_PINDICATOR, &pind, &found));
+	if (!found) checked(dba_error_consistency("pindicator is not set"));
+	checked(dba_record_key_enqi(input, DBA_KEY_P1, &p1, &found));
+	if (!found) checked(dba_error_consistency("p1 is not set"));
+	checked(dba_record_key_enqi(input, DBA_KEY_P2, &p2, &found));
+	if (!found) checked(dba_error_consistency("p2 is not set"));
 	
-	if (var != NULL)
+	for (dba_record_cursor c = dba_record_iterate_first(input);
+			c; c = dba_record_iterate_next(input, c))
 	{
-		dba_varcode code = dba_var_code(var);
-		char varname[8];
-		snprintf(varname, 7, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
-		checked(dba_record_key_setc(qcinput, DBA_KEY_VAR_RELATED, varname));
+		wvar = dba_record_cursor_variable(c);
+		checked(dba_msg_set(wmsg, wvar, dba_var_code(wvar), ltype1, l1, ltype2, l2, pind, p1, p2));
 	}
-	else
-		checked(dba_record_key_unset(qcinput, DBA_KEY_VAR_RELATED));
-#endif
 }
 
 void MsgAPI::dimenticami()
 {
-#if 0
-	if (! (perms & PERM_DATA_WRITE))
-		checked(dba_error_consistency(
-			"dimenticami must be called with the database open in data write mode"));
-
-	checked(dba_db_remove(db, input));
-#endif
+	checked(dba_error_consistency(
+		"dimenticami does not make sense when writing messages"));
 }
 
 int MsgAPI::voglioancora()
@@ -365,54 +420,24 @@ int MsgAPI::voglioancora()
 
 void MsgAPI::critica()
 {
-#if 0
 	if (perms & PERM_ATTR_RO)
 		checked(dba_error_consistency(
 			"critica cannot be called with the database open in attribute readonly mode"));
+	if (wvar == 0)
+		checked(dba_error_consistency(
+			"critica has been called without a previous prendilo"));
 
-	int id_context;
-	dba_varcode id_var;
-	get_referred_data_id(&id_context, &id_var);
+	for (dba_record_cursor c = dba_record_iterate_first(qcinput);
+			c; c = dba_record_iterate_next(qcinput, c))
+		checked(dba_var_seta(wvar, dba_record_cursor_variable(c)));
 
-	checked(dba_db_qc_insert_or_replace(
-				db, id_context, id_var, qcinput,
-				perms & PERM_ATTR_WRITE ? 1 : 0));
-
-	clear_qcinput();
-#endif
+	dba_record_clear(qcinput);
 }
 
 void MsgAPI::scusa()
 {
-#if 0
-	if (! (perms & PERM_ATTR_WRITE))
-		checked(dba_error_consistency(
-			"scusa must be called with the database open in attribute write mode"));
-
-	int id_context;
-	dba_varcode id_var;
-	get_referred_data_id(&id_context, &id_var);
-
-	dba_varcode* arr = NULL;
-	size_t arr_len = 0;
-	try {
-		/* Retrieve the varcodes of the wanted QC values */
-		read_qc_list(&arr, &arr_len);
-
-		// If arr is still 0, then dba_qc_delete deletes all QC values
-		checked(dba_db_qc_remove(
-					db, id_context, id_var,
-					arr == NULL ? NULL : arr,
-					arr == NULL ? 0 : arr_len));
-
-		clear_qcinput();
-		free(arr);
-	} catch (...) {
-		if (arr != NULL)
-			free(arr);
-		throw;
-	}
-#endif
+	checked(dba_error_consistency(
+		"scusa does not make sense when writing messages"));
 }
 
 }

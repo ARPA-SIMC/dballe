@@ -53,7 +53,7 @@ check_range_SOURCES = check_range.f90
 check_range_LDADD = ./libdballef.la -lcnf -lpopt
 check_range_FCFLAGS = -g
 
-noinst_PROGRAMS = dump_dballe dumpmsg_dballe
+noinst_PROGRAMS = dump_dballe dumpmsg_dballe mkmsg
 
 dump_dballe_SOURCES = dump_dballe.f
 dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
@@ -62,6 +62,10 @@ dump_dballe_FCFLAGS = -g
 dumpmsg_dballe_SOURCES = dumpmsg_dballe.f
 dumpmsg_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
 dumpmsg_dballe_FCFLAGS = -g 
+
+mkmsg_SOURCES = mkmsg.f
+mkmsg_LDADD = ../fortran/libdballef.la -lcnf -lpopt
+mkmsg_FCFLAGS = -g 
 
 # Normal bureaucracy :)
 

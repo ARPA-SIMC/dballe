@@ -44,6 +44,10 @@ protected:
 	 */
 	unsigned int state;
 	dba_msgs msgs;
+	/// Message being written
+	dba_msg wmsg;
+	/// Pointer to the last variable written, to set attributes
+	dba_var wvar;
 	int curmsgidx;
 	int iter_l;
 	int iter_d;
@@ -67,6 +71,9 @@ protected:
 	 * Get a pointer to the current message being read or written
 	 */
 	dba_msg curmsg();
+
+	void flushSubset();
+	void flushMessage();
 
 public:
 	/**
