@@ -16,7 +16,7 @@ ccc *********************************************
 
 c     Open a session
       call getarg(1,fname)
-      call idba_preparati_msg(handle, fname, "r", "AUTO")
+      call idba_messaggi(handle, fname, "r", "AUTO")
 
 c     Query all the stations
       do while (.true.)
