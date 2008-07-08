@@ -7,7 +7,7 @@ dballeincludedir = $(includedir)/dballe
 # Include the F90 interface file as well
 dist_dballeinclude_HEADERS = dballef.h
 
-dist_noinst_HEADERS = simple.h commonapi.h dbapi.h handles.h
+dist_noinst_HEADERS = simple.h commonapi.h dbapi.h msgapi.h handles.h
 
 lib_LTLIBRARIES = libdballef.la
 
@@ -17,6 +17,7 @@ libdballef_la_SOURCES = \
 	simple.cc \
 	commonapi.cc \
 	dbapi.cc \
+	msgapi.cc \
 	binding.cc
 libdballef_la_LIBADD = ../dballe/libdballe.la -lcnf
 libdballef_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
