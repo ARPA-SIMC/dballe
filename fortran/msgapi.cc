@@ -110,6 +110,7 @@ int MsgAPI::quantesono()
 		readNextMessage();
 	if (state & STATE_EOF)
 		return 0;
+	state |= STATE_QUANTESONO;
 		
 	return 1;
 }
@@ -188,6 +189,7 @@ int MsgAPI::voglioquesto()
 		readNextMessage();
 	if (state & STATE_EOF)
 		return 0;
+	state |= STATE_VOGLIOQUESTO;
 		
 	iter_l = iter_d = -1;
 

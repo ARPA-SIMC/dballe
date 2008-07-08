@@ -20,12 +20,14 @@
  */
 
 #include "dbapi.h"
+#include "msgapi.h"
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>
 #include <dballe/db/db.h>
 #include <dballe/db/cursor.h>
 #include <dballe/db/internals.h>
 #include <dballe/msg/formatter.h>
+#include <dballe/init.h>
 
 extern "C" {
 #include <f77.h>
@@ -192,6 +194,18 @@ FDBA_HANDLE_BODY(session, MAX_SESSION, "Dballe sessions")
 
 static int usage_refcount = 0;
 
+static void lib_init()
+{
+	if (usage_refcount > 0)
+		return;
+
+	dba_init();
+	fdba_handle_init_session();
+	fdba_handle_init_simple();
+
+	++usage_refcount;
+}
+
 #if 0
 static inline int double_is_missing(double d)
 {
@@ -251,12 +265,7 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	cnfImpn(password, password_length, 19, s_password); s_password[19] = 0;
 
 	/* Initialize the library if needed */
-	if (usage_refcount == 0)
-	{
-		fdba_handle_init_session();
-		fdba_handle_init_simple();
-	}
-	++usage_refcount;
+	lib_init();
 
 	/* Allocate and initialize a new handle */
 	DBA_RUN_OR_RETURN(fdba_handle_alloc_session(dbahandle));
@@ -393,6 +402,79 @@ fail:
 
 	return err;
 }
+
+/**
+ * Access a file with wheter messages
+ *
+ * @retval handle
+ *   The session handle returned by the function
+ * @param filename
+ *   Name of the file to open
+ * @param mode
+ *   File open mode.  It can be:
+ *   \li \c r for read
+ *   \li \c w for write (the old file is deleted)
+ *   \li \c a for append
+ * @param type
+ *   Format of the data in the file.  It can be:
+ *   \li \c "BUFR"
+ *   \li \c "CREX"
+ *   \li \c "AOF" (read only)
+ *   \li \c "AUTO" (autodetect, read only)
+ * @return
+ *   The error indication for the function.
+ */
+F77_INTEGER_FUNCTION(idba_preparati_msg)(
+		INTEGER(handle),
+		CHARACTER(filename),
+		CHARACTER(mode),
+		CHARACTER(type)
+		TRAIL(filename)
+		TRAIL(mode)
+		TRAIL(type))
+{
+	GENPTR_INTEGER(handle)
+	GENPTR_CHARACTER(filename)
+	GENPTR_CHARACTER(mode)
+	GENPTR_CHARACTER(type)
+	dba_err err;
+	char c_filename[512];
+	char c_mode[10];
+	char c_type[10];
+
+	cnfImpn(filename, filename_length,  512, c_filename);
+	cnfImpn(mode, mode_length,  10, c_mode);
+	cnfImpn(type, type_length,  10, c_type);
+
+	lib_init();
+
+	/* Allocate and initialize a new handle */
+	DBA_RUN_OR_RETURN(fdba_handle_alloc_simple(handle));
+
+	STATE.session = 0;
+	try {
+		STATE.api = new MsgAPI(c_filename, c_mode, c_type);
+	} catch (APIException& e) {
+		err = e.err;
+		goto fail;
+	}
+	if (!STATE.api)
+	{
+		err = dba_error_alloc("Allocating a new MsgAPI");
+		goto fail;
+	}
+
+	return dba_error_ok();
+
+fail:
+	if (STATE.api != NULL)
+		delete STATE.api;
+
+	fdba_handle_release_simple(*handle);
+
+	return err;
+}
+
 
 /**
  * Ends a session with DBALLE
