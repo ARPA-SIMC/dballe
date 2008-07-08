@@ -34,8 +34,8 @@ extern "C" {
 #include <limits.h>
 
 #include <stdio.h>	// snprintf
-#include <string.h>	// strncpy
-#include <math.h>
+#include <string.h>	// memset
+//#include <math.h>
 
 #include "handles.h"
 
@@ -192,6 +192,7 @@ FDBA_HANDLE_BODY(session, MAX_SESSION, "Dballe sessions")
 
 static int usage_refcount = 0;
 
+#if 0
 static inline int double_is_missing(double d)
 {
 	switch (fpclassify(d))
@@ -204,6 +205,7 @@ static inline int double_is_missing(double d)
 			return 1;
 	}
 }
+#endif
 
 extern "C" {
 
@@ -292,16 +294,6 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 	if (--usage_refcount == 0)
 		dba_shutdown();
 	*/
-}
-
-static int check_flag(const char* val, const char* buf, int len)
-{
-	int val_len = strlen(val);
-	if (len < val_len)
-		return 0;
-	if (strncasecmp(val, buf, val_len) != 0)
-		return 0;
-	return len == val_len || buf[val_len] == ' ';
 }
 
 /**
