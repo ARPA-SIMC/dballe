@@ -35,8 +35,8 @@ using namespace tut_dballe;
 
 namespace bench_db {
 
-const char* dsn = "test";
-const char* user = "enrico";
+const char* dsn = "benchmark";
+const char* user = "benchmark";
 const char* password = "";
 
 static dba_err msg_counter(dba_msgs msgs, void* data)
