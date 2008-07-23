@@ -369,9 +369,9 @@ void MsgAPI::prendilo()
 		checked(dba_record_key_enqi(input, DBA_KEY_L1, &l1, &found));
 		if (!found) checked(dba_error_consistency("l1 is not set"));
 		checked(dba_record_key_enqi(input, DBA_KEY_LEVELTYPE2, &ltype2, &found));
-		if (!found) checked(dba_error_consistency("leveltype2 is not set"));
+		if (!found) ltype2 = 0;
 		checked(dba_record_key_enqi(input, DBA_KEY_L2, &l2, &found));
-		if (!found) checked(dba_error_consistency("l2 is not set"));
+		if (!found) l2 = 0;
 		checked(dba_record_key_enqi(input, DBA_KEY_PINDICATOR, &pind, &found));
 		if (!found) checked(dba_error_consistency("pindicator is not set"));
 		checked(dba_record_key_enqi(input, DBA_KEY_P1, &p1, &found));
