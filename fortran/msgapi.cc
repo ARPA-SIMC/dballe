@@ -361,27 +361,29 @@ void MsgAPI::prendilo()
 	checked(dba_record_key_enqi(input, DBA_KEY_SEC, &ival, &found));
 	if (found) checked(dba_msg_set_second(wmsg, ival, -1));
 
-	int ltype1, l1, ltype2, l2, pind, p1, p2;
-	checked(dba_record_key_enqi(input, DBA_KEY_LEVELTYPE1, &ltype1, &found));
-	if (!found) checked(dba_error_consistency("leveltype1 is not set"));
-	checked(dba_record_key_enqi(input, DBA_KEY_L1, &l1, &found));
-	if (!found) checked(dba_error_consistency("l1 is not set"));
-	checked(dba_record_key_enqi(input, DBA_KEY_LEVELTYPE2, &ltype2, &found));
-	if (!found) checked(dba_error_consistency("leveltype2 is not set"));
-	checked(dba_record_key_enqi(input, DBA_KEY_L2, &l2, &found));
-	if (!found) checked(dba_error_consistency("l2 is not set"));
-	checked(dba_record_key_enqi(input, DBA_KEY_PINDICATOR, &pind, &found));
-	if (!found) checked(dba_error_consistency("pindicator is not set"));
-	checked(dba_record_key_enqi(input, DBA_KEY_P1, &p1, &found));
-	if (!found) checked(dba_error_consistency("p1 is not set"));
-	checked(dba_record_key_enqi(input, DBA_KEY_P2, &p2, &found));
-	if (!found) checked(dba_error_consistency("p2 is not set"));
-	
-	for (dba_record_cursor c = dba_record_iterate_first(input);
-			c; c = dba_record_iterate_next(input, c))
+	if (dba_record_cursor c = dba_record_iterate_first(input))
 	{
-		wvar = dba_record_cursor_variable(c);
-		checked(dba_msg_set(wmsg, wvar, dba_var_code(wvar), ltype1, l1, ltype2, l2, pind, p1, p2));
+		int ltype1, l1, ltype2, l2, pind, p1, p2;
+		checked(dba_record_key_enqi(input, DBA_KEY_LEVELTYPE1, &ltype1, &found));
+		if (!found) checked(dba_error_consistency("leveltype1 is not set"));
+		checked(dba_record_key_enqi(input, DBA_KEY_L1, &l1, &found));
+		if (!found) checked(dba_error_consistency("l1 is not set"));
+		checked(dba_record_key_enqi(input, DBA_KEY_LEVELTYPE2, &ltype2, &found));
+		if (!found) checked(dba_error_consistency("leveltype2 is not set"));
+		checked(dba_record_key_enqi(input, DBA_KEY_L2, &l2, &found));
+		if (!found) checked(dba_error_consistency("l2 is not set"));
+		checked(dba_record_key_enqi(input, DBA_KEY_PINDICATOR, &pind, &found));
+		if (!found) checked(dba_error_consistency("pindicator is not set"));
+		checked(dba_record_key_enqi(input, DBA_KEY_P1, &p1, &found));
+		if (!found) checked(dba_error_consistency("p1 is not set"));
+		checked(dba_record_key_enqi(input, DBA_KEY_P2, &p2, &found));
+		if (!found) checked(dba_error_consistency("p2 is not set"));
+		
+		for ( ; c; c = dba_record_iterate_next(input, c))
+		{
+			wvar = dba_record_cursor_variable(c);
+			checked(dba_msg_set(wmsg, wvar, dba_var_code(wvar), ltype1, l1, ltype2, l2, pind, p1, p2));
+		}
 	}
 }
 
