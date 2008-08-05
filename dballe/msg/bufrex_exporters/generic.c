@@ -45,6 +45,12 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 	dba_err err = DBA_OK;
 	int i, j;
 	int ltype1 = -1, l1 = -1, ltype2 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
+	dba_var repcod = dba_msg_get_rep_cod_var(src);
+
+	if (repcod)
+		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(repcod), repcod));
+	else if (src->type != MSG_GENERIC)
+		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 193), dba_msg_repcod_from_type(src->type)));
 
 	for (i = 0; i < src->data_count; i++)
 	{
