@@ -8,6 +8,7 @@
  001019 LONG STATION OR SITE NAME                                        CCITTIA5                   0            0 256 CHARACTER                 0         32
  001063 ICAO LOCATION INDICATOR                                          CCITTIA5                   0            0  64 CHARACTER                 0          8
  001192 [SIM] MeteoDB station ID                                         NUMERIC                    0            0  24 NUMERIC                   0          8
+ 001193 [SIM] Report code                                                NUMERIC                    0            0  16 NUMERIC                   0          5
  001212 AIR QUALITY OBSERVING STATION LOCAL CODE                         CCITTIA5                   0            0  56 CHARACTER                 0          7
  001213 AIRBASE AIR QUALITY OBSERVING STATION CODE                       CCITTIA5                   0            0  56 CHARACTER                 0          7
  001214 GEMS AIR QUALITY OBSERVING STATION CODE                          CCITTIA5                   0            0  48 CHARACTER                 0          6
