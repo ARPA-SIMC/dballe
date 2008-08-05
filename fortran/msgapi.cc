@@ -184,12 +184,12 @@ bool MsgAPI::incrementMsgIters()
 		++iter_l;
 		iter_d = 0;
 	}
-	// Skip the pseudoana layer
-	if (level->ltype1 == 257)
-	{
-		++iter_l;
-		iter_d = 0;
-	}
+	// No not skip the pseudoana layer
+	// if (level->ltype1 == 257)
+	// {
+	// 	++iter_l;
+	// 	iter_d = 0;
+	// }
 	if (iter_l >= msg->data_count)
 		return false;
 
@@ -213,7 +213,7 @@ int MsgAPI::voglioquesto()
 	for (int l = 0; l < msg->data_count; ++l)
 	{
 		dba_msg_level level = msg->data[l];
-		if (level->ltype1 == 257) continue;
+		//if (level->ltype1 == 257) continue;
 		count += level->data_count;
 	}
 	return count;
