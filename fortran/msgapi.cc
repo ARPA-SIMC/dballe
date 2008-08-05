@@ -33,8 +33,8 @@ using namespace std;
 namespace dballef {
 
 
-MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
-	: file(0), state(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_l(-1), iter_d(-1)
+MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type, int force_report)
+	: file(0), state(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_l(-1), iter_d(-1), forced_report(force_report)
 {
 	if (strchr(mode, 'r') != NULL)
 	{
@@ -301,6 +301,12 @@ void MsgAPI::flushMessage()
 	if (msgs)
 	{
 		flushSubset();
+		if (forced_report)
+		{
+			dba_msg_type ftype = dba_msg_type_from_repcod(forced_report);
+			for (int i = 0; i < msgs->len; ++i)
+				msgs->msgs[i]->type = ftype;
+		}
 		checked(dba_file_write_msgs(file, msgs, 0, 0, 0));
 		dba_msgs_delete(msgs);
 		msgs = 0;
@@ -339,7 +345,11 @@ void MsgAPI::prendilo()
 	int ival, found;
 	double dval;
 	checked(dba_record_key_enqi(input, DBA_KEY_REP_COD, &ival, &found));
-	if (found) wmsg->type = dba_msg_type_from_repcod(ival);
+	if (found) 
+	{
+		checked(dba_msg_set_rep_cod(wmsg, ival, -1));
+		wmsg->type = dba_msg_type_from_repcod(ival);
+	}
 	checked(dba_record_key_enqi(input, DBA_KEY_ANA_ID, &ival, &found));
 	if (found) checked(dba_msg_seti(wmsg, DBA_VAR(0, 1, 192), ival, -1, 257, 0, 0, 0, 0, 0, 0));
 	checked(dba_record_key_enqc(input, DBA_KEY_IDENT, &sval));

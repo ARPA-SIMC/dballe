@@ -631,7 +631,7 @@ To do that, use {\tt idba\_messaggi} instead of both {\tt idba\_presentati} and
 
 \begin{verbatim}
 c     Connect to the database and get a handle to work with it
-      call idba_messaggi(handle, "file.bufr", "r", "auto")
+      call idba_messaggi(handle, "file.bufr", "r", "auto", 0)
 
 c     ...do your work...
 
@@ -641,7 +641,7 @@ c     End of the work
 
 \label{fun-idba_messaggi}
 
-{\tt idba\_messaggi} has three parameters:
+{\tt idba\_messaggi} has four parameters:
 
 \begin{enumerate}
 \item the name of the file to open
@@ -649,6 +649,9 @@ c     End of the work
 \item the file format.  It can be "BUFR", "CREX", "AOF" or "AUTO".  "AUTO"
       tells \dballe{} to autodetect the file format, but it only works when
       reading files, not when writing new one.
+\item the report code to use to choose the output message template.  A value of
+      0 means to guess automatically based on the {\tt rep\_cod} set with the
+      data.
 \end{enumerate}
 
 You can call {\tt idba\_messaggi} many times and read or write many files.  You
@@ -1612,7 +1615,7 @@ These routines are used to begin and end working sessions with \dballe{}.
 \hline
 {\tt \small idba\_presentati(dbh,dsn,user,pwd)} & Connect to the database & \ref{fun-idba_presentati} \\
 {\tt \small idba\_preparati(dbh,h,mana,mdata,mattr)} & Open a new session & \ref{fun-idba_preparati} \\
-{\tt \small idba\_messaggi(h,filename,mode,type)} & Work with a message file & \ref{fun-idba_messaggi} \\
+{\tt \small idba\_messaggi(h,filename,mode,type,forced\_repcod)} & Work with a message file & \ref{fun-idba_messaggi} \\
 {\tt \small idba\_fatto(h)}                        & Close a session              & \ref{fun-idba_fatto} \\
 {\tt \small idba\_arrivederci(dbh)}                & Disconnect from the database & \ref{fun-idba_arrivederci} \\
 \hline

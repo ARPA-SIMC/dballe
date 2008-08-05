@@ -421,6 +421,9 @@ fail:
  *   \li \c "CREX"
  *   \li \c "AOF" (read only)
  *   \li \c "AUTO" (autodetect, read only)
+ * @param force_report
+ *   if 0, nothing happens; otherwise, choose the output message template
+ *   using this report type instead of the one in the message
  * @return
  *   The error indication for the function.
  */
@@ -428,7 +431,8 @@ F77_INTEGER_FUNCTION(idba_messaggi)(
 		INTEGER(handle),
 		CHARACTER(filename),
 		CHARACTER(mode),
-		CHARACTER(type)
+		CHARACTER(type),
+		INTEGER(force_report)
 		TRAIL(filename)
 		TRAIL(mode)
 		TRAIL(type))
@@ -437,6 +441,7 @@ F77_INTEGER_FUNCTION(idba_messaggi)(
 	GENPTR_CHARACTER(filename)
 	GENPTR_CHARACTER(mode)
 	GENPTR_CHARACTER(type)
+	GENPTR_INTEGER(force_report)
 	dba_err err;
 	char c_filename[512];
 	char c_mode[10];
@@ -453,7 +458,7 @@ F77_INTEGER_FUNCTION(idba_messaggi)(
 
 	STATE.session = 0;
 	try {
-		STATE.api = new MsgAPI(c_filename, c_mode, c_type);
+		STATE.api = new MsgAPI(c_filename, c_mode, c_type, *force_report);
 	} catch (APIException& e) {
 		err = e.err;
 		goto fail;
