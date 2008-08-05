@@ -1,3 +1,21 @@
+2008-08-05  enrico@enricozini.org
+
+	* Version 4.0.4
+	* Store rep_cod information in generic messages
+
+2008-07-23  enrico@enricozini.org
+
+	* Allow to create messages without having to set leveltype2 and l2 if
+	  not needed
+
+2008-07-08  enrico@enricozini.org
+
+	* Implemented working with messages with the Fortran API
+
+2008-07-02  enrico@enricozini.org
+
+	* Refactored the code for the Fortran API
+
 2008-06-10  enrico@enricozini.org
 
 	* Fixed TOT_PREC12 time range values
