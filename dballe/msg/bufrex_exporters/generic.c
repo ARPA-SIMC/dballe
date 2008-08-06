@@ -62,6 +62,9 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 			dba_msg_datum d = lev->data[j];
 			if (dba_var_value(d->var) == NULL)
 				continue;
+			// Don't add rep_cod again
+			if (d->var == repcod)
+				continue;
 
 			/* Update the context in the message, if needed */
 			if (ltype1 != lev->ltype1)
