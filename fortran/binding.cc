@@ -1642,7 +1642,6 @@ F77_INTEGER_FUNCTION(idba_spiegal)(
 	try {
 		char* res = STATE.api->spiegal(*ltype1, *l1, *ltype2, *l2);
 		cnfExprt(res, result, result_length);
-		free(res);
 		return dba_error_ok();
 	} catch (APIException& e) {
 		return e.err;
@@ -1666,7 +1665,6 @@ F77_INTEGER_FUNCTION(idba_spiegat)(
 	try {
 		char* res = STATE.api->spiegat(*ptype, *p1, *p2);
 		cnfExprt(res, result, result_length);
-		free(res);
 		return dba_error_ok();
 	} catch (APIException& e) {
 		return e.err;
@@ -1694,7 +1692,6 @@ F77_INTEGER_FUNCTION(idba_spiegab)(
 	try {
 		char* res = STATE.api->spiegab(s_varcode, s_value);
 		cnfExprt(res, result, result_length);
-		free(res);
 		return dba_error_ok();
 	} catch (APIException& e) {
 		return e.err;
