@@ -83,7 +83,8 @@
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
  013013 TOTAL SNOW DEPTH                                                 M                          3          -20  20 M                         3          6
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
- 014018 INSTANTANEOUS SHORT-WAVE RADIATION                               J/M**2                    -3        -2048  12 W/M**2                   -3          4
+ 014018 INSTANTANEOUS SHORT-WAVE RADIATION                               W/M**2                    -3        -2048  12 W/M**2                   -3          4
+ 014021 GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED         J/M**2                    -4            0  15 J/M**2                   -4          5
  015192 [SIM] NO Concentration                                           KG/M**3                    9            0  31 KG/M**3                  16         10
  015193 [SIM] NO2 Concentration                                          KG/M**3                    9            0  31 KG/M**3                  16         10
  015194 [SIM] O3 Concentration                                           KG/M**3                    9            0  31 KG/M**3                  16         10

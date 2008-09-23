@@ -118,6 +118,8 @@ struct uniconv { const char* tag; double mul; double add; };
 "MGP->m**2/s**2",            9.80665,   0
 "m**2/s**2->GPM",            0.101971621,   0
 "m**2/s**2->MGP",            0.101971621,   0
+"cal/s/cm**2->W/M**2",            41868,   0
+"cal/h/cm**2->W/M**2",            11.63,   0
 %%
 
 int dba_convert_units_allowed(const char* from, const char* to)
