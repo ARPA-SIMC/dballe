@@ -40,16 +40,16 @@ GEOPOTENTIAL,   num,    B10003,       1,     -, -, -,  254,      -,     -, Geopo
 PRESS,          num,    B10004,       1,     -, -, -,  254,      -,     -, Pressure at ground level
 PRESS_3H,       num,    B10061,       1,     -, -, -,    4,      0, 10800, 3 hour pressure change at ground level
 PRESS_MSL,      num,    B10051,     101,     -, -, -,  254,      -,     -, Pressure reduced to mean sea level
-QNH,            num,    B10052,     102,  2000, -, -,  254,      -,     -, Altimeter setting (QNH)
-WIND_DIR,       num,    B11001,     102, 10000, -, -,  254,      -,     -, Wind direction at 10 metres above ground
-WIND_SPEED,     num,    B11002,     102, 10000, -, -,  254,      -,     -, Wind speed at 10 metres above ground
-WIND_MAX,       num,    B11041,     102, 10000, -, -,  254,      -,     -, Maximum wind gust speed at 10 metres above ground
-EX_CCW_WIND,    num,    B11016,     102, 10000, -, -,  254,      -,     -, Extreme counterclockwise wind direction of a variable wind at 10 metres above ground
-EX_CW_WIND,     num,    B11017,     102, 10000, -, -,  254,      -,     -, Extreme clockwise wind direction of a variable wind at 10 metres above ground
-TEMP_2M,        num,    B12001,     102,  2000, -, -,  254,      -,     -, Temperature at 2 metres above ground
-WET_TEMP_2M,    num,    B12002,     102,  2000, -, -,  254,      -,     -, Wet bulb temperature at 2 metres above ground
-DEWPOINT_2M,    num,    B12003,     102,  2000, -, -,  254,      -,     -, Dew point at 2 metres above ground
-HUMIDITY,       num,    B13003,     102,  2000, -, -,  254,      -,     -, Humidity at 2 metres above ground
+QNH,            num,    B10052,     103,  2000, -, -,  254,      -,     -, Altimeter setting (QNH)
+WIND_DIR,       num,    B11001,     103, 10000, -, -,  254,      -,     -, Wind direction at 10 metres above ground
+WIND_SPEED,     num,    B11002,     103, 10000, -, -,  254,      -,     -, Wind speed at 10 metres above ground
+WIND_MAX,       num,    B11041,     103, 10000, -, -,  254,      -,     -, Maximum wind gust speed at 10 metres above ground
+EX_CCW_WIND,    num,    B11016,     103, 10000, -, -,  254,      -,     -, Extreme counterclockwise wind direction of a variable wind at 10 metres above ground
+EX_CW_WIND,     num,    B11017,     103, 10000, -, -,  254,      -,     -, Extreme clockwise wind direction of a variable wind at 10 metres above ground
+TEMP_2M,        num,    B12001,     103,  2000, -, -,  254,      -,     -, Temperature at 2 metres above ground
+WET_TEMP_2M,    num,    B12002,     103,  2000, -, -,  254,      -,     -, Wet bulb temperature at 2 metres above ground
+DEWPOINT_2M,    num,    B12003,     103,  2000, -, -,  254,      -,     -, Dew point at 2 metres above ground
+HUMIDITY,       num,    B13003,     103,  2000, -, -,  254,      -,     -, Humidity at 2 metres above ground
 WATER_TEMP,     num,    B22042,       1,     -, -, -,  254,      -,     -, Sea/water surface temperature
 HEIGHT_ANEM,    num,    B10197,       1,     -, -, -,  254,      -,     -, Anemometer height
 PRESS_TEND,     num,    B10063,       1,     -, -, -,  205,      0, 10800, Characteristic of pressure tendency
