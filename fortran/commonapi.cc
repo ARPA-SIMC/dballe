@@ -155,6 +155,7 @@ float CommonAPIImplementation::enqr(const char* param)
 	checked(dba_record_enqd(rec, param, &value, &found));
 
 	if (!found) return missing_float;
+	fprintf(stderr, "%f %f\n", numeric_limits<float>::min(), numeric_limits<float>::max());
 	if (value < numeric_limits<float>::min()
 	 || value > numeric_limits<float>::max())
 		checked(dba_error_consistency("value queried (%f) does not fit in a real", value));
