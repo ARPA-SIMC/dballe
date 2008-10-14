@@ -175,7 +175,12 @@ static dba_err decode_data_filter(const char* filter, dba_varinfo* info, const c
 			return dba_error_consistency("operator %.*s is not valid", len, filter + matches[2].rm_so);
 		memcpy(operator, filter + matches[2].rm_so, len);
 		operator[len] = 0;
-		*op = operator;
+		if (strcmp(operator, "!=") == 0)
+			*op = "<>";
+		else if (strcmp(operator, "==") == 0)
+			*op = "=";
+		else
+			*op = operator;
 
 		/* Parse the value */
 		DBA_RUN_OR_RETURN(parse_value(filter, matches[3], *info, value));
