@@ -6,7 +6,7 @@ from dballe.volnd import *
 import unittest, random, sys
 from datetime import *
 import numpy
-import numpy.core.ma as ma
+import numpy.ma as ma
 
 class TestTddiv(unittest.TestCase):
 

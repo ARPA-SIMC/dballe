@@ -4,7 +4,7 @@ import volnd
 import os
 if os.environ.get("DBALLE_BUILDING_DOCS", "") != 'true':
 	import numpy
-	import numpy.core.ma as ma
+	import numpy.ma as ma
 	#import Numeric as numeric
 	import rpy
 
