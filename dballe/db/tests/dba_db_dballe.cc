@@ -1404,6 +1404,28 @@ void to::test<16>()
 	dba_db_cursor_delete(cur);
 }
 
+/* Query with an incorrect attr_filter */
+template<> template<>
+void to::test<17>()
+{
+	reset_database();
+
+	dba_record_clear(query);
+	CHECKED(dba_record_key_setc(query, DBA_KEY_ATTR_FILTER, "B12001"));
+
+	int count, has_data;
+	dba_db_cursor cur;
+
+	/* Allocate a new cursor */
+	CHECKED(dba_db_cursor_create(db, &cur));
+
+	/* Perform the query, limited to level values */
+	gen_ensure(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE, 0) != 0);
+	dba_error_ok();
+
+	dba_db_cursor_delete(cur);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

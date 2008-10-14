@@ -186,7 +186,7 @@ static dba_err decode_data_filter(const char* filter, dba_varinfo* info, const c
 	{
 		res = regexec(re_between, filter, 4, matches, 0);
 		if (res == REG_NOMATCH)
-			return dba_error_consistency("%s is not a valid filter");
+			return dba_error_consistency("%s is not a valid filter", filter);
 		if (res != 0)
 			return dba_error_regexp(res, re_normal, "Trying to parse '%s' as a 'between' filter", filter);
 		if (res == 0)
