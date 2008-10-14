@@ -29,6 +29,15 @@ program check_range
       errcode = idba_error_code()
       call ensure("set to NaN", errcode == 6)
 
+!     Check that negative reals can be read
+      call idba_set(handle, "lon", -12.3456)
+      call ensure_no_error("set lon negative")
+      call idba_test_input_to_output(handle)
+      call ensure_no_error("input to output")
+      call idba_enqr(handle, "lon", rval)
+      call ensure_no_error("enq lon negative")
+      call ensure("read negative real", rval == -12.3456)
+
       call idba_fatto(handle)
       call ensure_no_error("fatto")
 

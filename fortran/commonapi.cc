@@ -115,6 +115,11 @@ dba_record CommonAPIImplementation::choose_output_record(const char*& param)
 	}
 }
 
+void CommonAPIImplementation::test_input_to_output()
+{
+	checked(dba_record_copy(output, input));
+}
+
 int CommonAPIImplementation::enqi(const char* param)
 {
 	dba_record rec = choose_output_record(param);

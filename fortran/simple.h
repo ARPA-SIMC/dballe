@@ -590,6 +590,9 @@ struct API
 	virtual char* spiegat(int ptype, int p1, int p2) = 0;
 
 	virtual char* spiegab(const char* varcode, const char* value) = 0;
+
+	// Function used for test purposes only
+	virtual void test_input_to_output() = 0;
 };
 
 }

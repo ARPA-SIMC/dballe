@@ -1698,6 +1698,19 @@ F77_INTEGER_FUNCTION(idba_spiegab)(
 	}
 }
 
+F77_INTEGER_FUNCTION(idba_test_input_to_output)(
+		INTEGER(handle))
+{
+	GENPTR_INTEGER(handle)
+
+	try {
+		STATE.api->test_input_to_output();
+		return dba_error_ok();
+	} catch (APIException& e) {
+		return e.err;
+	}
+}
+
 }
 
 /*@}*/

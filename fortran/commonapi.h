@@ -113,6 +113,8 @@ public:
 	CommonAPIImplementation();
 	virtual ~CommonAPIImplementation();
 
+	virtual void test_input_to_output();
+
 	virtual int enqi(const char* param);
 	virtual signed char enqb(const char* param);
 	virtual float enqr(const char* param);
