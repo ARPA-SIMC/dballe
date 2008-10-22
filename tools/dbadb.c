@@ -20,6 +20,7 @@
  */
 
 #include <dballe/init.h>
+#include <dballe/bufrex/msg.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/file.h>
 #include <dballe/msg/bufrex_codec.h>
@@ -363,8 +364,7 @@ dba_err do_export(poptContext optCon)
 	poptGetArg(optCon);
 
 	if (op_output_template[0] != 0)
-		if (sscanf(op_output_template, "%d.%d.%d", &d.cat, &d.subcat, &d.localsubcat) != 3)
-			dba_cmdline_error(optCon, "output template must be specified as 'type.subtype.localsubtype' (type number, then dot, then subtype number, then dot, then local subtype number)");
+		DBA_RUN_OR_RETURN(bufrex_msg_parse_template(op_output_template, &d.cat, &d.subcat, &d.localsubcat));
 
 	/* Connect to the database */
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
@@ -473,7 +473,7 @@ struct poptOption dbadb_export_options[] = {
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
 	{ "template", 't', POPT_ARG_STRING, &op_output_template, 0,
-		"template of the data in output (autoselect if not specified)", "type.sub" },
+		"template of the data in output (autoselect if not specified)", "type.sub.local" },
 	{ "dump", 0, POPT_ARG_NONE, &op_dump, 0,
 		"dump data to be encoded instead of encoding it" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
