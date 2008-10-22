@@ -391,6 +391,25 @@ void bufrex_msg_print(bufrex_msg msg, FILE* out);
  */
 void bufrex_msg_diff(bufrex_msg msg1, bufrex_msg msg2, int* diffs, FILE* out);
 
+/**
+ * Parse a string containing a bufr/crex template selector.
+ *
+ * The string can be 3 numbers separated by dots (type.subtype.localsubtype) or
+ * an alias among those listed in template-aliases.txt
+ *
+ * @param str
+ *   The string to parse
+ * @retval cat
+ *   The parsed message category
+ * @retval subcat
+ *   The parsed message subcategory
+ * @retval localsubcat
+ *   The parsed local category
+ * @return
+ *   The error indicator for the function.  See @ref error.h
+ */
+dba_err bufrex_msg_parse_template(const char* str, int* cat, int* subcat, int* localsubcat);
+
 #ifdef  __cplusplus
 }
 #endif

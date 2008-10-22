@@ -17,6 +17,7 @@ bufrexinclude_HEADERS = \
 
 noinst_LTLIBRARIES = libdballe-bufrex.la
 libdballe_bufrex_la_SOURCES = \
+		template-aliases.c \
 		dtable.c \
 		opcode.c \
 		subset.c \
@@ -27,6 +28,13 @@ libdballe_bufrex_la_SOURCES = \
 		crex_encoder.c \
 		bufrex_codec.c
 libdballe_bufrex_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
+
+template-aliases.c: template-aliases.gperf
+	if ! gperf < $< > $@; then rm $@; /bin/false; fi
+
+template-aliases.tex: template-aliases.gperf mktaliases
+	if ! $(srcdir)/mktaliases < $< ; then rm $@; /bin/false; fi
+	
 
 #
 # Unit testing
@@ -46,6 +54,7 @@ tut_test_SOURCES = \
 	tests/crex_decoder.cc \
 	tests/dtable.cc \
 	tests/opcode.cc \
+	tests/msg.cc \
 	../core/test-utils-core.cc \
 	test-utils-bufrex.cc \
 	../tut/tut-main.cc
@@ -53,3 +62,7 @@ tut_test_LDADD = \
 	../core/libdballe-core.la \
 	libdballe-bufrex.la
 
+distclean-local:
+	rm -f template-aliases.c template-aliases.tex
+
+EXTRA_DIST=template-aliases.gperf mktaliases
