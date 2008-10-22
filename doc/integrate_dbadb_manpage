@@ -1,0 +1,55 @@
+#!/usr/bin/python
+
+import sys, re
+
+SPLIT=re.compile(r"\s*,\s*")
+
+class Alias:
+    def __init__(self, name, cat, subcat, lcat):
+        self.name = name
+        self.cat = int(cat)
+        self.subcat = int(subcat)
+        self.lcat = int(lcat)
+
+# Read the aliases
+aliases = []
+state = 0
+for line in open("dballe/bufrex/template-aliases.gperf"):
+    line = line.strip()
+    if state == 0:
+        if line == "%%":
+            state = 1
+        continue
+    if state == 1:
+        if line == "%%":
+            state = 2
+            continue
+        if line.startswith("#"): continue
+        if len(line) == 0: continue
+        vals = SPLIT.split(line)
+        if len(vals) != 4:
+            raise RuntimeError, "Cannot parse line '%s'" % line
+        aliases.append(Alias(*vals))
+aliases.sort(key=lambda x: x.name)
+
+for line in sys.stdin:
+    if line.startswith(".SH AUTHOR"):
+        print r"""
+.SH TEMPLATE NAMES
+This is a list of possible template names for the \fBexport\fP
+\fB\-\-template\fP switch:
+.P
+"""
+
+        for a in aliases:
+            print ".TP"
+            print r"\fB%s\fP" % a.name
+            print ".br"
+            print "Cagegory %d, subcategory %d, local category %d." % (a.cat, a.subcat, a.lcat)
+
+        print r"""
+.P
+It is also possible to specify a template directly by number, with the syntax
+"category.subcategory.localcategory", for example: "1.255.21" for buoy templates.
+"""
+    print line,

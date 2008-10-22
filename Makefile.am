@@ -25,6 +25,9 @@ m4_DATA = libdballe.m4 libdballef.m4 libdballepp.m4
 
 man_MANS = dbatbl.1 dbamsg.1 dbadb.1
 
+dbadb.1: tools/dbadb doc/integrate_dbadb_manpage
+	( cd tools && ./`basename $<` help manpage ) | $(srcdir)/doc/integrate_dbadb_manpage > $@
+
 %.1: tools/%
 	( cd tools && ./`basename $<` help manpage ) > $@
 
