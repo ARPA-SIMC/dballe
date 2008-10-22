@@ -169,6 +169,11 @@ interface
      character (len=*), intent(in) :: anaflag,dataflag,attrflag
    end subroutine idba_preparati
 
+   subroutine idba_messaggi(handle, filename, mode, type)
+     integer, intent(out) :: handle
+     character (len=*), intent(in) :: filename,mode,type
+   end subroutine idba_messaggi
+
    subroutine idba_fatto(handle)
      integer, intent(in) :: handle
    end subroutine idba_fatto
