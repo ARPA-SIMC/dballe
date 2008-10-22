@@ -51,7 +51,12 @@ protected:
 	int curmsgidx;
 	int iter_l;
 	int iter_d;
-	int forced_report;
+	/// Category set for the message that we are writing
+	int cached_cat;
+	/// Subcategory set for the message that we are writing
+	int cached_subcat;
+	/// Local category set for the message that we are writing
+	int cached_lcat;
 
 
 	/**
@@ -85,11 +90,8 @@ public:
 	 * @param type
 	 *   the encoding to use for the file.  It can be "BUFR", "CREX", "AOF"
 	 *   (read only) or "AUTO" (read only).
-	 * @param force_report
-	 *   if 0, nothing happens; otherwise, choose the output message template
-	 *   using this report type instead of the one in the message
 	 */
-	MsgAPI(const char* fname, const char* mode, const char* type, int force_report = 0);
+	MsgAPI(const char* fname, const char* mode, const char* type);
 	virtual ~MsgAPI();
 
 	virtual void scopa(const char* repinfofile = 0);

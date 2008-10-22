@@ -22,9 +22,11 @@
 #include "msgapi.h"
 #include <dballe/core/aliases.h>
 #include <dballe/core/verbose.h>
+#include <dballe/bufrex/msg.h>
 #include <dballe/msg/file.h>
 #include <cstdlib>
 #include <cstring>
+#include <cctype>
 #include <strings.h>
 
 
@@ -33,8 +35,9 @@ using namespace std;
 namespace dballef {
 
 
-MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type, int force_report)
-	: file(0), state(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_l(-1), iter_d(-1), forced_report(force_report)
+MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
+	: file(0), state(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_l(-1), iter_d(-1),
+		cached_cat(0), cached_subcat(0), cached_lcat(0)
 {
 	if (strchr(mode, 'r') != NULL)
 	{
@@ -301,13 +304,7 @@ void MsgAPI::flushMessage()
 	if (msgs)
 	{
 		flushSubset();
-		if (forced_report)
-		{
-			dba_msg_type ftype = dba_msg_type_from_repcod(forced_report);
-			for (int i = 0; i < msgs->len; ++i)
-				msgs->msgs[i]->type = ftype;
-		}
-		checked(dba_file_write_msgs(file, msgs, 0, 0, 0));
+		checked(dba_file_write_msgs(file, msgs, cached_cat, cached_subcat, cached_lcat));
 		dba_msgs_delete(msgs);
 		msgs = 0;
 	}
@@ -326,7 +323,22 @@ void MsgAPI::prendilo()
 		if (strcasecmp(query, "subset") == 0)
 		{
 			flushSubset();
-		} else if (strcasecmp(query, "message") == 0) {
+		} else if (strncasecmp(query, "message", 7) == 0) {
+			// Check that message is followed by spaces or end of string
+			const char* s = query + 7;
+			if (*s != 0 && !isblank(*s))
+				checked(dba_error_consistency("Query type \"%s\" is not among the supported values", query));
+			// Skip the spaces after message
+			while (*s != 0 && isblank(*s))
+				++s;
+
+			if (*s)
+				// If a template is specified, open a new message with that template
+				checked(bufrex_msg_parse_template(s, &cached_cat, &cached_subcat, &cached_lcat));
+			else
+				// Else, open a new message with template guessing
+				cached_cat = cached_subcat = cached_lcat = 0;
+
 			flushMessage();
 		} else
 			checked(dba_error_consistency("Query type \"%s\" is not among the supported values", query));

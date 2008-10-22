@@ -17,7 +17,7 @@ ccc ****************************
 c     Open a session
       call getarg(1,fname)
       call getarg(2,encoding)
-      call idba_messaggi(handle, fname, "w", encoding, 0)
+      call idba_messaggi(handle, fname, "w", encoding)
 
       call idba_setd(handle, "lat", 44.D0)
       call idba_setd(handle, "lon", 11.D0)
