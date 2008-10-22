@@ -36,7 +36,7 @@ fh = open("template-aliases.tex", "w")
 
 print >>fh, r"""
 \begin{scriptsize}
-\begin{table}{l|r|r|r}
+\begin{tabular}{|l|r|r|r|}
 \hline
 {\em Name} & {\em Category} & {\em Subcategory} & {\em Local category} \\
 \hline
@@ -46,7 +46,8 @@ for a in aliases:
     print >>fh, r"%s & %d & %d & %d \\" % (a.name, a.cat, a.subcat, a.lcat)
 
 print >>fh, r"""
-\end{table}
+\hline
+\end{tabular}
 \end{scriptsize}
 """
 

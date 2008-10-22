@@ -631,7 +631,7 @@ To do that, use {\tt idba\_messaggi} instead of both {\tt idba\_presentati} and
 
 \begin{verbatim}
 c     Connect to the database and get a handle to work with it
-      call idba_messaggi(handle, "file.bufr", "r", "auto", 0)
+      call idba_messaggi(handle, "file.bufr", "r", "auto")
 
 c     ...do your work...
 
@@ -641,7 +641,7 @@ c     End of the work
 
 \label{fun-idba_messaggi}
 
-{\tt idba\_messaggi} has four parameters:
+{\tt idba\_messaggi} has three parameters:
 
 \begin{enumerate}
 \item the name of the file to open
@@ -649,9 +649,6 @@ c     End of the work
 \item the file format.  It can be "BUFR", "CREX", "AOF" or "AUTO".  "AUTO"
       tells \dballe{} to autodetect the file format, but it only works when
       reading files, not when writing new one.
-\item the report code to use to choose the output message template.  A value of
-      0 means to guess automatically based on the {\tt rep\_cod} set with the
-      data.
 \end{enumerate}
 
 You can call {\tt idba\_messaggi} many times and read or write many files.  You
@@ -1328,8 +1325,12 @@ databases:
 \item When writing, you can use the {\tt query} input parameter to {\tt
       idba\_prendilo} to control when a new message is started.  If you set it
       to {\tt subset}, then the data will be inserted in a new BUFR or CREX
-      subset.  If you set it to {\tt message}, then the data will be inserted
-      in a new message.
+      subset.  If you set it to {\tt message}, you will start a new message.
+
+      After ``message'' you can specify a template for the message, using one
+      of the names defined in \ref{tbl-templates}, for example: ``{\tt message
+      generic}''.  If you do not specify a template, an appropriate template
+      will automatically be chosen for you.
 \item You cannot use {\tt rep\_memo}: only {\tt rep\_cod} works.  Setting {\tt
       rep\_cod} you can influence the output template of messages: if you set it to a
       synop report code, you will create a synop message.
@@ -1559,6 +1560,15 @@ When the attribute B33197 is not present, then no substitution happened.
 \label{aliastable}
 \input{../dballe/core/aliases.tex}
 
+\chapter{Message template aliases}
+
+These are the names that can be used to specify a BUFR or CREX message template:
+
+\label{tbl-templates}
+\input{../dballe/bufrex/template-aliases.tex}
+
+Alternatively, a template can be specified as {\em category}, {\em subcategory}
+and {\em local category}, separated by dots.  For example: ``{\tt 0.255.0}''.
 
 \chapter{Summary of routines}
 

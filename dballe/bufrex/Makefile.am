@@ -35,6 +35,11 @@ template-aliases.c: template-aliases.gperf
 template-aliases.tex: template-aliases.gperf mktaliases
 	if ! $(srcdir)/mktaliases < $< ; then rm $@; /bin/false; fi
 	
+distclean-local:
+	rm -f template-aliases.c template-aliases.tex
+
+BUILT_SOURCES=template-aliases.c template-aliases.tex
+EXTRA_DIST=template-aliases.gperf mktaliases
 
 #
 # Unit testing
@@ -62,7 +67,3 @@ tut_test_LDADD = \
 	../core/libdballe-core.la \
 	libdballe-bufrex.la
 
-distclean-local:
-	rm -f template-aliases.c template-aliases.tex
-
-EXTRA_DIST=template-aliases.gperf mktaliases
