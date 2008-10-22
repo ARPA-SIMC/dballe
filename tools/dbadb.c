@@ -363,8 +363,8 @@ dba_err do_export(poptContext optCon)
 	poptGetArg(optCon);
 
 	if (op_output_template[0] != 0)
-		if (sscanf(op_output_template, "%d.%d", &d.cat, &d.subcat) != 2)
-			dba_cmdline_error(optCon, "output template must be specified as 'type.subtype' (type number, then dot, then subtype number)");
+		if (sscanf(op_output_template, "%d.%d.%d", &d.cat, &d.subcat, &d.localsubcat) != 3)
+			dba_cmdline_error(optCon, "output template must be specified as 'type.subtype.localsubtype' (type number, then dot, then subtype number, then dot, then local subtype number)");
 
 	/* Connect to the database */
 	DBA_RUN_OR_RETURN(create_dba_db(&db));
