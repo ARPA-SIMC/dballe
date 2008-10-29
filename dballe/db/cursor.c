@@ -1082,7 +1082,8 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 		{
 			case MYSQL:
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-					" GROUP BY d.id_var, d.id_context "
+					" GROUP BY d.id_var, c.id_ana, c.ltype1, c.l1, c.ltype2, c.l2,"
+                                        " c.ptype, c.p1, c.p2, c.datetime "
 					"HAVING ri.prio=MAX(ri.prio)"));
 				break;
 			case ORACLE:
