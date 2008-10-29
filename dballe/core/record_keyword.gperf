@@ -133,7 +133,7 @@ static struct _dba_varinfo infos[] = {
 	{ 0, "Time range P2",                            "SECOND", DEF_MAXINT },
 	{ 0, "Variable queried",                      "CHARACTER", DEF_STRING(7) },
 	{ 0, "List of variables to query",            "CHARACTER", DEF_STRING(255) },
-	{ 0, "ID of the variable in the database",      "NUMERIC", DEF_MAXINT },
+	{ 0, "Context ID of the variable",              "NUMERIC", DEF_MAXINT },
 	{ 0, "Query behaviour modifier",              "CHARACTER", DEF_STRING(255) },
 	{ 0, "Filter on anagraphical data",           "CHARACTER", DEF_STRING(255) },
 	{ 0, "Filter on data", 			              "CHARACTER", DEF_STRING(255) },
