@@ -1,3 +1,10 @@
+dballe (4.0.7-1) unstable; urgency=low
+
+  * New upstream version
+     - fixed handling of queries using query=best on MySQL
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 29 Oct 2008 15:56:26 +0000
+
 dballe (4.0.6-1) unstable; urgency=low
 
   * New upstream version
