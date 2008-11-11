@@ -254,6 +254,16 @@ dba_err dba_varinfo_get_local_table(dba_vartable* table);
 dba_varcode dba_descriptor_code(const char* desc);
 
 /**
+ * Check if the given vartable exists on disk
+ * 
+ * @param id
+ *   ID of the vartable data to check
+ * @return
+ *   true if the vartable file exists, else false
+ */
+int dba_vartable_exists(const char* id);
+
+/**
  * Create a new vartable structure
  *
  * @param id

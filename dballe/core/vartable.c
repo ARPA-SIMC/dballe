@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>		/* malloc, strtod, getenv */
 #include <string.h>		/* strncmp */
+#include <unistd.h>		/* access */
 #include <ctype.h>		/* isspace */
 #include <math.h>		/* rint */
 #include <assert.h>		/* assert */
@@ -357,6 +358,12 @@ static dba_err vtb_new_entry(dba_vartable v, dba_varinfo* info)
 	*info = v->items + v->size;
 	v->size++;
 	return dba_error_ok();
+}
+
+int dba_vartable_exists(const char* id)
+{
+	const char* file = id_to_pathname(id);
+	return access(file, F_OK) == 0;
 }
 
 static dba_err dba_vartable_read(const char* id, int* index)

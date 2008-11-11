@@ -146,7 +146,17 @@ dba_err bufrex_msg_load_tables(bufrex_msg msg)
 							msg->opt.bufr.centre,
 							msg->opt.bufr.master_table,
 							msg->opt.bufr.local_table);
-						break;
+					/* Some tables used by BUFR3 are
+ 					 * distributed using BUFR4 names
+					 */
+					if (!dba_vartable_exists(id))
+						sprintf(id, "B00%03d%04d%04d%03d%03d",
+								0,
+								0,
+								msg->opt.bufr.centre,
+								msg->opt.bufr.master_table,
+								msg->opt.bufr.local_table);
+							break;
 				case 4:
 					sprintf(id, "B00%03d%04d%04d%03d%03d",
 							0,
