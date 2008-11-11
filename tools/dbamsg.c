@@ -396,9 +396,12 @@ dba_err do_compare(poptContext optCon)
 			if (diffs > 0)
 				return dba_error_consistency("Messages #%d contain %d differences", idx, diffs);
 		}
-		dba_msgs_delete(msg1);
-		dba_msgs_delete(msg2);
+		if (msg1) dba_msgs_delete(msg1);
+		if (msg2) dba_msgs_delete(msg2);
 	}
+
+	if (idx == 0)
+		return dba_error_consistency("The files do not contain messages");
 
 	dba_file_delete(file1);
 	dba_file_delete(file2);
