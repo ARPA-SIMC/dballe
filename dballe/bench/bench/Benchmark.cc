@@ -23,6 +23,7 @@
 
 #include <stdarg.h>
 #include <unistd.h>
+#include <cstdio>
 #include <ostream>
 
 using namespace std;

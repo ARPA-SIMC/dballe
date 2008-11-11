@@ -22,6 +22,7 @@
 #include "bench/Benchmark.h"
 #include <dballe/core/verbose.h>
 
+#include <cstdio>
 #include <cstdlib>
 #include <sys/times.h>
 #include <unistd.h>
