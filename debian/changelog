@@ -5,8 +5,9 @@ dballe (4.0.8-1) unstable; urgency=low
      - Added missing headers for GCC 4.4.  Closes: #504903
      - Do not allow CREX data to interfere with units and scale when decoding
        and encoding BUFR
+     - Fixed template alias for synop messages
 
- -- Enrico Zini <enrico@debian.org>  Tue, 11 Nov 2008 14:35:04 +0000
+ -- Enrico Zini <enrico@debian.org>  Tue, 11 Nov 2008 17:29:47 +0000
 
 dballe (4.0.7-1) unstable; urgency=low
 
