@@ -35,7 +35,7 @@
 struct aliasdef { const char* name; int cat; int subcat; int lcat; };
 %%
 generic,  255, 255,   0
-synop,      0, 255,   0
+synop,      0, 255,   1
 buoy,       1, 255,  21
 pilot,      2, 255,  91
 temp,       2, 255, 101

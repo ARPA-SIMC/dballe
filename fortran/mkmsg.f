@@ -57,6 +57,12 @@ c     One setting 'query' to message, and making a synop
       call idba_seti(handle, "B13003",  80)
       call idba_prendilo(handle)
 
+c     One setting 'query' to message, and making a synop
+      call idba_setc(handle, "query", "message synop")
+      call idba_seti(handle, "rep_cod", 1)
+      call idba_seti(handle, "B12001",  2731+90)
+      call idba_prendilo(handle)
+
       call idba_fatto(handle)
 
       call exit (0)
