@@ -140,6 +140,10 @@ struct _dba_varinfo
 	dba_alteration alteration;
 	/** Othere altered versions of this varinfo */
 	struct _dba_varinfo* alterations;
+	/** The measurement unit of the variable when encoded in BUFR. */
+	char bufr_unit[24];
+	/** The scale of the variable when encoded in BUFR. */
+	int bufr_scale;
 };
 /** @copydoc _dba_varinfo */
 typedef struct _dba_varinfo* dba_varinfo;

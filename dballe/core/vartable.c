@@ -419,10 +419,12 @@ static dba_err dba_vartable_read(const char* id, int* index)
 		
 		/* Read the BUFR type */
 		memcpy(entry->unit, line+73, 24);
+		memcpy(entry->bufr_unit, line+73, 24);
 		/* Zero-terminate the type */
 		for (i = 23; i >= 0 && isspace(entry->unit[i]); i--)
 			;
 		entry->unit[i+1] = 0;
+		entry->bufr_unit[i+1] = 0;
 
 		entry->is_string = (
 				strcmp(entry->unit, "CCITTIA5") == 0 /*||
@@ -430,6 +432,7 @@ static dba_err dba_vartable_read(const char* id, int* index)
 		);
 
 		entry->scale = strtol(line+98, 0, 10);
+		entry->bufr_scale = strtol(line+98, 0, 10);
 		entry->bit_ref = strtol(line+102, 0, 10);
 		entry->bit_len = strtol(line+115, 0, 10);
 
