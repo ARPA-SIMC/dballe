@@ -99,7 +99,7 @@ dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, int localsubtyp
 	}
 
 	/* Setup encoding parameters */
-	if (msgs->msgs[0]->type == MSG_GENERIC || (braw->type == 255 && braw->subtype == 255 && braw->localsubtype == 0))
+	if (braw->type == 255 && braw->subtype == 255 && braw->localsubtype == 0)
 	{
 		braw->opt.bufr.centre = 200;
 		braw->opt.bufr.subcentre = 0;
