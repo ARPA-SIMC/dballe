@@ -21,6 +21,9 @@
 
 #include "config.h"
 
+#define _ISOC99_SOURCE  // For round()
+
+#include <dballe/core/conv.h>
 #include "opcode.h"
 #include "msg.h"
 
@@ -521,6 +524,14 @@ static const double e10[] = {
 	10000000000000000.0,
 };
 
+static int bufr_encode_double(encoder e, double dval, int ref, int scale)
+{
+	if (scale >= 0)
+		return (int)round(dval * e10[scale]) - ref;
+	else
+		return (int)round(dval / e10[-scale]) - ref;
+}
+
 static dba_err encoder_encode_b_data(encoder e)
 {
 	dba_err err = DBA_OK;
@@ -602,34 +613,30 @@ static dba_err encoder_encode_b_data(encoder e)
 			}
 		}
 	} else {
-		int val;
-		DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &val));
-		TRACE("Starting point %s: %d\n", info->desc, val);
-		/* Apply scale change */
-		if (e->c_scale_change > 0)
-		{
-			TRACE("Scale change: %d\n", e->c_scale_change);
-			val /= e10[e->c_scale_change];;
-		} else if (e->c_scale_change < 0) {
-			TRACE("Scale change: %d\n", e->c_scale_change);
-			val *= e10[-e->c_scale_change];
-		}
-		TRACE("After scale change: %d\n", val);
+		double dval;
+		int ival;
+		DBA_RUN_OR_GOTO(cleanup, dba_var_enqd(var, &dval));
+		TRACE("Starting point %s: %f %s\n", info->desc, dval, info->unit);
+		DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->unit, info->bufr_unit, dval, &dval));
+		TRACE("Unit conversion gives: %f %s\n", dval, info->bufr_unit);
+		/* Convert to int, optionally applying scale change */
+		TRACE("Scale change: %d\n", e->c_scale_change);
+		ival = bufr_encode_double(e, dval, info->bit_ref, info->bufr_scale - e->c_scale_change);
+		TRACE("Converted to int (ref %d, scale %d): %d\n", info->bit_ref, info->bufr_scale - e->c_scale_change, ival);
 		if (e->c_width_change != 0)
 			TRACE("Width change: %d\n", e->c_width_change);
-		val -= info->bit_ref;
-		TRACE("After changing ref: %d.  Writing with size %d\n", val, len + e->c_width_change);
+		TRACE("Writing with size %d\n", ival, len + e->c_width_change);
 		/* In case of overflow, store 'missing value' */
-		if ((unsigned)val >= (1u<<(len + e->c_width_change)))
+		if ((unsigned)ival >= (1u<<(len + e->c_width_change)))
 		{
 			TRACE("Overflow: %x %u %d >= (1<<(%u + %u)) = %x %u %d\n",
-				val, val, val,
+				ival, ival, ival,
 				len, e->c_width_change,
 				1<<(len + e->c_width_change), 1<<(len + e->c_width_change), 1<<(len + e->c_width_change));
-			val = 0xffffffff;
+			ival = 0xffffffff;
 		}
-		TRACE("About to encode: %x %u %d\n", val, val, val);
-		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, val, len + e->c_width_change));
+		TRACE("About to encode: %x %u %d\n", ival, ival, ival);
+		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, ival, len + e->c_width_change));
 	}
 	
 	/* Remove from the chain the item that we handled */

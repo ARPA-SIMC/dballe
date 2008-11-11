@@ -542,10 +542,10 @@ static double bufr_decode_int(decoder d, uint32_t ival, dba_varinfo info)
 {
 	double val = ival;
 	
-	if (info->scale >= 0)
-		val = (val + info->bit_ref) / e10[info->scale];
+	if (info->bufr_scale >= 0)
+		val = (val + info->bit_ref) / e10[info->bufr_scale];
 	else
-		val = (val + info->bit_ref) * e10[-info->scale];
+		val = (val + info->bit_ref) * e10[-info->bufr_scale];
 	//val = (val + info->bit_ref) / pow(10, info->scale);
 
 	return val;
@@ -670,7 +670,7 @@ static dba_err bufr_decode_b_data(decoder d)
 
 		DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, info->bit_len, &val));
 
-		TRACE("Reading %s, size %d, scale %d, starting point %d\n", info->desc, info->bit_len, info->scale, val);
+		TRACE("Reading %s (%s), size %d, scale %d, starting point %d\n", info->desc, info->bufr_unit, info->bit_len, info->scale, val);
 
 		/* Check if there are bits which are not 1 (that is, if the value is present) */
 		missing = (val == (((1 << (info->bit_len - 1))-1) | (1 << (info->bit_len - 1))));
@@ -716,7 +716,11 @@ static dba_err bufr_decode_b_data(decoder d)
 					/* Compute the value for this subset */
 					newval = val + diff;
 					double dval = bufr_decode_int(d, newval, info);
-					TRACE("Decoded[%d] as %f\n", i, dval);
+					TRACE("Decoded[%d] as %f %s\n", i, dval, info->bufr_unit);
+
+					/* Convert to target unit */
+					DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
+					TRACE("Converted to %f %s\n", dval, info->unit);
 
 					/* Create the new dba_var */
 					DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
@@ -734,7 +738,10 @@ static dba_err bufr_decode_b_data(decoder d)
 				DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
 			} else {
 				double dval = bufr_decode_int(d, val, info);
-				TRACE("Decoded as %f\n", dval);
+				TRACE("Decoded as %f %s\n", dval, info->bufr_unit);
+				/* Convert to target unit */
+				DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
+				TRACE("Converted to %f %s\n", dval, info->unit);
 				/* Create the new dba_var */
 				DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
 			}
