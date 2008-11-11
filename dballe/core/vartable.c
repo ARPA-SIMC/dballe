@@ -224,7 +224,10 @@ dba_err dba_vartable_query_altered(dba_vartable table, dba_varcode var, dba_alte
 			i->len = (int)ceil(log10(1 << i->bit_len));
 		}
 		if ((alt = DBA_ALT_SCALE(change)) != 0)
+		{
 			i->scale += alt;
+			i->bufr_scale += alt;
+		}
 
 #if 0
 		fprintf(stderr, "After alteration(w:%d,s:%d): bl %d len %d scale %d\n",
