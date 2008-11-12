@@ -57,7 +57,7 @@ void to::test<1>()
 	CHECKED(bufrex_msg_parse_template("synop", &c, &sc, &lc));
 	gen_ensure_equals(c, 0);
 	gen_ensure_equals(sc, 255);
-	gen_ensure_equals(lc, 0);
+	gen_ensure_equals(lc, 1);
 
 	CHECKED(bufrex_msg_parse_template("temp", &c, &sc, &lc));
 	gen_ensure_equals(c, 2);
