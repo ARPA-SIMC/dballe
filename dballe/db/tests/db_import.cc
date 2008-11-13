@@ -518,6 +518,86 @@ void to::test<7>()
 	#endif
 }
 
+// Check a case when two messages imported get mangled and export exports
+// different messages
+template<> template<>
+void to::test<8>()
+{
+	msg_vector msgs;
+	const char* fname = "bufr/synotemp.bufr";
+
+	CHECKED(read_file(BUFR, fname, msgs));
+
+	CHECKED(dba_db_reset(db, NULL));
+
+	//map<dba_msg_type, int> rep_cods;
+	for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
+	{
+		CHECKED(dba_import_msgs(db, *i, -1, DBA_IMPORT_ATTRS));
+		//rep_cods[(*i)->msgs[0]->type]++;
+	}
+
+	dba_record query;
+	CHECKED(dba_record_create(&query));
+	msg_vector msgs1;
+	CHECKED(dba_db_export(db, query, msgs_collector, &msgs1));
+	gen_ensure_equals(msgs1.size(), 2u);
+
+	//clear_datetime_attrs(msgs[0]->msgs[0]);
+	//clear_datetime_attrs(msgs[1]->msgs[0]);
+
+	#if 0
+	fprintf(stderr, "msgs[0]\n");
+	dba_msg_print(msgs[0]->msgs[0], stderr);
+	fprintf(stderr, "msgs[1]\n");
+	dba_msg_print(msgs[1]->msgs[0], stderr);
+	fprintf(stderr, "msgs1[0]\n");
+	dba_msg_print(msgs1[0]->msgs[0], stderr);
+	fprintf(stderr, "msgs1[1]\n");
+	dba_msg_print(msgs1[1]->msgs[0], stderr);
+	#endif
+
+	#if 0
+	// Compare the two dba_msg
+	int diffs = 0;
+	dba_msg_diff(msgs[0]->msgs[0], msgs1[0]->msgs[0], &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msgs[0], msgs1[0], "aof-reexported1");
+	gen_ensure_equals(diffs, 0);
+
+	diffs = 0;
+	dba_msg_diff(msgs[1]->msgs[0], msgs1[1]->msgs[0], &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msgs[1], msgs1[1], "aof-reexported2");
+	gen_ensure_equals(diffs, 0);
+	#endif
+
+	//dba_rawmsg rmsg;
+	//CHECKED(dba_marshal_encode(msgs[0], BUFR, &rmsg));
+	//dba_rawmsg_delete(rmsg);
+	//CHECKED(dba_marshal_encode(msgs[1], BUFR, &rmsg));
+	//dba_rawmsg_delete(rmsg);
+	//CHECKED(dba_marshal_encode(msgs1[0], BUFR, &rmsg));
+	//dba_rawmsg_delete(rmsg);
+	//CHECKED(dba_marshal_encode(msgs1[1], BUFR, &rmsg));
+	//dba_rawmsg_delete(rmsg);
+
+
+	dba_record_delete(query);
+
+
+	#if 0
+	dba_record query;
+	CHECKED(dba_record_create(&query));
+	for (map<dba_msg_type, int>::const_iterator i = rep_cods.begin(); i != rep_cods.end(); i++)
+	{
+		test_tag(dba_msg_type_name(i->first));
+
+		int count = 0;
+		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type(i->first)));
+		CHECKED(dba_db_export(db, query, msg_counter, &count));
+		gen_ensure_equals(count, i->second);
+	}
+	#endif
+}
 
 }
 

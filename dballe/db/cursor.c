@@ -1109,14 +1109,21 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 		} else if (cur->select_wanted & DBA_DB_FROM_C) {
 			if (cur->wanted & DBA_DB_WANT_ANA_ID)
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.id_ana", &first));
+			if (cur->modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT)
+				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.id_report", &first));
 			if (cur->wanted & DBA_DB_WANT_DATETIME)
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.datetime", &first));
 			if (cur->wanted & DBA_DB_WANT_LEVEL)
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.ltype1, c.l1, c.ltype2, c.l2", &first));
 			if (cur->wanted & DBA_DB_WANT_TIMERANGE)
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.ptype, c.p1, c.p2", &first));
-			if (cur->select_wanted & DBA_DB_FROM_RI)
-				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "ri.prio", &first));
+			if (!(cur->modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT))
+			{
+				if (cur->select_wanted & DBA_DB_FROM_RI)
+					DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "ri.prio", &first));
+				else 
+					DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.id_report", &first));
+			}
 		} else if (cur->select_wanted & DBA_DB_FROM_PA) {
 			if (cur->wanted & DBA_DB_WANT_ANA_ID)
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "pa.id", &first));

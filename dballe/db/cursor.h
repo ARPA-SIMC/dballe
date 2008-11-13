@@ -108,6 +108,8 @@ extern "C" {
  * impossible to know in advance the number of results.  Currently, it does not
  * work with the MySQL ODBC driver */
 #define DBA_DB_MODIFIER_STREAM		(1 << 6)
+/** Sort by rep_cod after ana_id, to ease reconstructing messages on export */
+#define DBA_DB_MODIFIER_SORT_FOR_EXPORT	(1 << 7)
 
 #ifndef DBA_DB_DEFINED
 #define DBA_DB_DEFINED

@@ -181,7 +181,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
                 DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
                 DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
                 DBA_DB_WANT_REPCOD,
-				0));
+				DBA_DB_MODIFIER_SORT_FOR_EXPORT));
 			/*	DBA_DB_MODIFIER_STREAM)); */
 
 	/* Retrieve results */
