@@ -1,3 +1,12 @@
+dballe (4.0.9-1) unstable; urgency=low
+
+  * New upstream version
+     - Fixed export of data with same context except for rep_cod
+     - Importing with --full-pseudoana will try to integrate existing data
+       without overwriting them
+
+ -- Enrico Zini <enrico@debian.org>  Tue, 18 Nov 2008 17:30:08 +0000
+
 dballe (4.0.8-1) unstable; urgency=low
 
   * New upstream version
