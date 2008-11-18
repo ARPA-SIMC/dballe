@@ -104,13 +104,13 @@ struct attr_shar
 		da->id_context = 1;
 		da->id_var = DBA_VAR(0, 1, 2);
 		dba_db_data_set_value(da, "123");
-		CHECKED(dba_db_data_insert(da, 0));
+		CHECKED(dba_db_data_insert_or_fail(da));
 
 		// Insert another datum
 		da->id_context = 2;
 		da->id_var = DBA_VAR(0, 1, 2);
 		dba_db_data_set_value(da, "234");
-		CHECKED(dba_db_data_insert(da, 0));
+		CHECKED(dba_db_data_insert_or_fail(da));
 	}
 
 	~attr_shar()

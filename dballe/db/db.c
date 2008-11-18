@@ -1057,7 +1057,10 @@ dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_
 	{
 		/* Datum to be inserted, linked to id_pseudoana and all the other IDs */
 		dba_db_data_set(d, dba_record_cursor_variable(item));
-		DBA_RUN_OR_GOTO(fail, dba_db_data_insert(d, can_replace));
+		if (can_replace)
+			DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_overwrite(d));
+		else
+			DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_fail(d));
 	}
 
 	if (ana_id != NULL)

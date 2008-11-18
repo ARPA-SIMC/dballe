@@ -60,6 +60,16 @@ dba_err dba_db_data_create(dba_db db, dba_db_data* ins)
 		"  INSERT (id_context, id_var, value) VALUES (cnt, var, val)";
 	const char* replace_query_postgres =
 		"UPDATE data SET value=? WHERE id_context=? AND id_var=?";
+	const char* insert_ignore_query_mysql =
+		"INSERT IGNORE INTO data (id_context, id_var, value) VALUES(?, ?, ?)";
+	const char* insert_ignore_query_sqlite =
+		"INSERT OR IGNORE INTO data (id_context, id_var, value) VALUES(?, ?, ?)";
+	const char* insert_ignore_query_oracle =
+		"MERGE INTO data USING"
+		" (SELECT ? as cnt, ? as var, ? as val FROM dual)"
+		" ON (id_context=cnt AND id_var=var)"
+		" WHEN NOT MATCHED THEN"
+		"  INSERT (id_context, id_var, value) VALUES (cnt, var, val)";
 
 	dba_err err = DBA_OK;
 	dba_db_data res = NULL;
@@ -119,6 +129,35 @@ dba_err dba_db_data_create(dba_db db, dba_db_data* ins)
 		goto cleanup;
 	}
 
+	/* Create the statement for insert ignore */
+	if (db->server_type != POSTGRES)
+	{
+		DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->iistm)));
+		SQLBindParameter(res->iistm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
+		SQLBindParameter(res->iistm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
+		SQLBindParameter(res->iistm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
+		switch (db->server_type)
+		{
+			case MYSQL: 
+				r = SQLPrepare(res->iistm, (unsigned char*)insert_ignore_query_mysql, SQL_NTS);
+				break;
+			case SQLITE: 
+				r = SQLPrepare(res->iistm, (unsigned char*)insert_ignore_query_sqlite, SQL_NTS);
+				break;
+			case ORACLE: 
+				r = SQLPrepare(res->iistm, (unsigned char*)insert_ignore_query_oracle, SQL_NTS);
+				break;
+			default:
+				r = SQLPrepare(res->iistm, (unsigned char*)insert_ignore_query_sqlite, SQL_NTS);
+				break;
+		}
+		if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
+		{
+			err = dba_db_error_odbc(SQL_HANDLE_STMT, res->iistm, "compiling query to insert/ignore in 'data'");
+			goto cleanup;
+		}
+	}
+
 	*ins = res;
 	res = NULL;
 	
@@ -152,9 +191,48 @@ void dba_db_data_set_value(dba_db_data ins, const char* value)
 	ins->value_ind = len;
 }
 
-dba_err dba_db_data_insert(dba_db_data ins, int rewrite)
+dba_err dba_db_data_insert_or_fail(dba_db_data ins)
 {
-	if (ins->db->server_type == POSTGRES && rewrite)
+	SQLHSTMT stm = ins->istm;
+	int res = SQLExecute(stm);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting data into table 'data'");
+	return dba_error_ok();
+}
+
+dba_err dba_db_data_insert_or_ignore(dba_db_data ins, int* inserted)
+{
+	if (ins->db->server_type == POSTGRES)
+	{
+		/* Try to insert, but ignore error results */
+		SQLHSTMT stm = ins->istm;
+		int res = SQLExecute(stm);
+		/* TODO: when testing on postgres, find out the proper error code to
+		 * ignore and still act on the others */
+		*inserted = ((res == SQL_SUCCESS) || (res == SQL_SUCCESS_WITH_INFO));
+		/*
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+			return dba_db_error_odbc(SQL_HANDLE_STMT, stm, 
+						  "inserting data into table 'data'");
+		*/
+		return dba_error_ok();
+	} else {
+		SQLLEN rowcount;
+		SQLHSTMT stm = ins->iistm;
+		int res = SQLExecute(stm);
+		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+			return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting/ignoring data into table 'data'");
+        res = SQLRowCount(stm, &rowcount);
+        if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+            return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
+		*inserted = (rowcount != 0);
+	}
+	return dba_error_ok();
+}
+
+dba_err dba_db_data_insert_or_overwrite(dba_db_data ins)
+{
+	if (ins->db->server_type == POSTGRES)
 	{
 		/* TODO for postgres: do the insert or replace with:
 		 * 1. lock table (or do this somehow atomically)
@@ -181,12 +259,10 @@ dba_err dba_db_data_insert(dba_db_data ins, int rewrite)
 							  "inserting data into table 'data'");
 		}
 	} else {
-		SQLHSTMT stm = rewrite ? ins->ustm : ins->istm;
+		SQLHSTMT stm = ins->ustm;
 		int res = SQLExecute(stm);
 		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-			return dba_db_error_odbc(SQL_HANDLE_STMT, stm, 
-					rewrite ? "inserting/rewriting data into table 'data'" :
-							  "inserting data into table 'data'");
+			return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting/rewriting data into table 'data'");
 	}
 	return dba_error_ok();
 }

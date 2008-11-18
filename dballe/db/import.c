@@ -122,40 +122,48 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 	/* Report code */
 	dc->id_report = repcod != -1 ? repcod : dba_msg_repcod_from_type(msg->type);
 
-	if (flags & DBA_IMPORT_FULL_PSEUDOANA || inserted_pseudoana)
+	if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
 	{
 		DBA_RUN_OR_GOTO(fail, dba_db_context_obtain_ana(dc, &val));
 		dd->id_context = val;
 
 		/* Insert the rest of the pseudoana information */
-		if ((flags & DBA_IMPORT_OVERWRITE) || inserted_pseudoana)
-			for (i = 0; i < l_ana->data_count; i++)
+		for (i = 0; i < l_ana->data_count; i++)
+		{
+			int inserted;
+			dba_var_attr_iterator iter;
+			dba_varcode code = dba_var_code(l_ana->data[i]->var);
+			/* Do not import datetime in the pseudoana layer */
+			if (code >= DBA_VAR(0, 4, 1) && code <= DBA_VAR(0, 4, 6))
+				continue;
+
+			dba_db_data_set(dd, l_ana->data[i]->var);
+
+			if ((flags & DBA_IMPORT_OVERWRITE) == 0)
 			{
-				dba_var_attr_iterator iter;
-				dba_varcode code = dba_var_code(l_ana->data[i]->var);
-				/* Do not import datetime in the pseudoana layer */
-				if (code >= DBA_VAR(0, 4, 1) && code <= DBA_VAR(0, 4, 6))
-					continue;
-
-				dba_db_data_set(dd, l_ana->data[i]->var);
-				DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, (flags & DBA_IMPORT_OVERWRITE)));
-
-				dq->id_context = dd->id_context;
-				dq->id_var = dba_var_code(l_ana->data[i]->var);
-
-				/* Insert the attributes */
-				if (flags & DBA_IMPORT_ATTRS)
-					for (iter = dba_var_attr_iterate(l_ana->data[i]->var); iter != NULL; 
-							iter = dba_var_attr_iterator_next(iter))
-					{
-						dba_var attr = dba_var_attr_iterator_attr(iter);
-						if (dba_var_value(attr) != NULL)
-						{
-							dba_db_attr_set(dq, attr);
-							DBA_RUN_OR_GOTO(fail, dba_db_attr_insert(dq, (flags & DBA_IMPORT_OVERWRITE)));
-						}
-					}
+				/* Insert only if it is missing */
+				DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_ignore(dd, &inserted));
+			} else {
+				DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_overwrite(dd));
+				inserted = 1;
 			}
+
+			dq->id_context = dd->id_context;
+			dq->id_var = dba_var_code(l_ana->data[i]->var);
+
+			/* Insert the attributes */
+			if (inserted && (flags & DBA_IMPORT_ATTRS))
+				for (iter = dba_var_attr_iterate(l_ana->data[i]->var); iter != NULL; 
+						iter = dba_var_attr_iterator_next(iter))
+				{
+					dba_var attr = dba_var_attr_iterator_attr(iter);
+					if (dba_var_value(attr) != NULL)
+					{
+						dba_db_attr_set(dq, attr);
+						DBA_RUN_OR_GOTO(fail, dba_db_attr_insert(dq, (flags & DBA_IMPORT_OVERWRITE)));
+					}
+				}
+		}
 	}
 
 	/* Fill up the common contexts information for the rest of the data */
@@ -236,7 +244,10 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 
 			/* Insert the variable */
 			dba_db_data_set(dd, dat->var);
-			DBA_RUN_OR_GOTO(fail, dba_db_data_insert(dd, (flags & DBA_IMPORT_OVERWRITE)));
+			if (flags & DBA_IMPORT_OVERWRITE)
+				DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_overwrite(dd));
+			else
+				DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_fail(dd));
 
 			/* Insert the attributes */
 			if (flags & DBA_IMPORT_ATTRS)

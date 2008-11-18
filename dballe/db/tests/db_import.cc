@@ -533,7 +533,7 @@ void to::test<8>()
 	//map<dba_msg_type, int> rep_cods;
 	for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
 	{
-		CHECKED(dba_import_msgs(db, *i, -1, DBA_IMPORT_ATTRS));
+		CHECKED(dba_import_msgs(db, *i, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 		//rep_cods[(*i)->msgs[0]->type]++;
 	}
 
@@ -557,18 +557,16 @@ void to::test<8>()
 	dba_msg_print(msgs1[1]->msgs[0], stderr);
 	#endif
 
-	#if 0
 	// Compare the two dba_msg
 	int diffs = 0;
-	dba_msg_diff(msgs[0]->msgs[0], msgs1[0]->msgs[0], &diffs, stderr);
-	if (diffs != 0) track_different_msgs(msgs[0], msgs1[0], "aof-reexported1");
+	dba_msg_diff(msgs[0]->msgs[0], msgs1[1]->msgs[0], &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msgs[0], msgs1[1], "synotemp-reexported1");
 	gen_ensure_equals(diffs, 0);
 
 	diffs = 0;
-	dba_msg_diff(msgs[1]->msgs[0], msgs1[1]->msgs[0], &diffs, stderr);
-	if (diffs != 0) track_different_msgs(msgs[1], msgs1[1], "aof-reexported2");
+	dba_msg_diff(msgs[1]->msgs[0], msgs1[0]->msgs[0], &diffs, stderr);
+	if (diffs != 0) track_different_msgs(msgs[1], msgs1[0], "synotemp-reexported2");
 	gen_ensure_equals(diffs, 0);
-	#endif
 
 	//dba_rawmsg rmsg;
 	//CHECKED(dba_marshal_encode(msgs[0], BUFR, &rmsg));

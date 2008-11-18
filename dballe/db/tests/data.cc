@@ -132,42 +132,59 @@ void to::test<2>()
 	da->id_context = 1;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "123");
-	CHECKED(dba_db_data_insert(da, 0));
+	CHECKED(dba_db_data_insert_or_fail(da));
 	CHECKED(dba_db_commit(db));
 
 	// Insert another datum
 	da->id_context = 2;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "234");
-	CHECKED(dba_db_data_insert(da, 0));
+	CHECKED(dba_db_data_insert_or_fail(da));
 	CHECKED(dba_db_commit(db));
 
 	// Reinsert a datum: it should fail
 	da->id_context = 1;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "123");
-	gen_ensure_equals(dba_db_data_insert(da, 0), DBA_ERROR);
+	gen_ensure_equals(dba_db_data_insert_or_fail(da), DBA_ERROR);
 	CHECKED(dba_db_commit(db));
 
 	// Reinsert the other datum: it should fail
 	da->id_context = 2;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "234");
-	gen_ensure_equals(dba_db_data_insert(da, 0), DBA_ERROR);
+	gen_ensure_equals(dba_db_data_insert_or_fail(da), DBA_ERROR);
 	CHECKED(dba_db_commit(db));
 
 	// Reinsert a datum with overwrite: it should work
 	da->id_context = 1;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "123");
-	CHECKED(dba_db_data_insert(da, 1));
+	CHECKED(dba_db_data_insert_or_overwrite(da));
 	CHECKED(dba_db_commit(db));
 
 	// Reinsert the other datum with overwrite: it should work
 	da->id_context = 2;
 	da->id_var = DBA_VAR(0, 1, 2);
 	dba_db_data_set_value(da, "234");
-	CHECKED(dba_db_data_insert(da, 1));
+	CHECKED(dba_db_data_insert_or_overwrite(da));
+	CHECKED(dba_db_commit(db));
+
+	// Insert a new datum with ignore: it should insert
+	int inserted;
+	da->id_context = 3;
+	da->id_var = DBA_VAR(0, 1, 2);
+	dba_db_data_set_value(da, "234");
+	CHECKED(dba_db_data_insert_or_ignore(da, &inserted));
+	gen_ensure_equals(inserted, 1);
+	CHECKED(dba_db_commit(db));
+
+	// Reinsert the same datum with ignore: it should ignore
+	da->id_context = 3;
+	da->id_var = DBA_VAR(0, 1, 2);
+	dba_db_data_set_value(da, "234");
+	CHECKED(dba_db_data_insert_or_ignore(da, &inserted));
+	gen_ensure_equals(inserted, 0);
 	CHECKED(dba_db_commit(db));
 
 #if 0

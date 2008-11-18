@@ -48,6 +48,8 @@ struct _dba_db_data
 	SQLHSTMT istm;
 	/** Precompiled update statement */
 	SQLHSTMT ustm;
+	/** Precompiled insert or ignore statement */
+	SQLHSTMT iistm;
 
 	/** Context ID SQL parameter */
 	DBALLE_SQL_C_SINT_TYPE id_context;
@@ -102,18 +104,41 @@ void dba_db_data_set(dba_db_data ins, dba_var var);
 void dba_db_data_set_value(dba_db_data ins, const char* value);
 
 /**
- * Insert an entry into the data table
+ * Insert an entry into the data table, failing on conflicts.
+ *
+ * Trying to replace an existing value will result in an error.
  *
  * @param ins
  *   The ::dba_db_data with the fields filled in with the data to insert.
- * @param rewrite
- *   If set to true, an existing data with the same context and ::dba_varcode
- *   will be overwritten; else, trying to replace an existing value will result
- *   in an error.
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_db_data_insert(dba_db_data ins, int rewrite);
+dba_err dba_db_data_insert_or_fail(dba_db_data ins);
+
+/**
+ * Insert an entry into the data table, ignoring conflicts.
+ *
+ * Trying to replace an existing value will do nothing.
+ *
+ * @param ins
+ *   The ::dba_db_data with the fields filled in with the data to insert.
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
+dba_err dba_db_data_insert_or_ignore(dba_db_data ins, int* inserted);
+
+/**
+ * Insert an entry into the data table, overwriting on conflicts.
+ *
+ * An existing data with the same context and ::dba_varcode will be
+ * overwritten.
+ *
+ * @param ins
+ *   The ::dba_db_data with the fields filled in with the data to insert.
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
+dba_err dba_db_data_insert_or_overwrite(dba_db_data ins);
 
 
 #ifdef  __cplusplus
