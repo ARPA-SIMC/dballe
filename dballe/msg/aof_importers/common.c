@@ -247,8 +247,17 @@ dba_err dba_aof_parse_general_cloud_group(dba_msg msg, const uint32_t* obs)
 dba_err dba_aof_parse_cloud_group(uint32_t val, int* ns, int* c, int* h)
 {
 	*ns = (val >> 19) & 0xf;
-	DBA_RUN_OR_RETURN(dba_convert_WMO0500_to_BUFR20012((val >> 15) & 0xf, c));
+	if (*ns == 0xf) *ns = AOF_UNDEF;
+
+	*c = (val >> 15) & 0xf;
+	if (*c == 0xf)
+		*c = AOF_UNDEF;
+	else
+		DBA_RUN_OR_RETURN(dba_convert_WMO0500_to_BUFR20012(*c, c));
+
 	*h = val & 0x7fff;
+	if (*h == 0x7fff) *h = AOF_UNDEF;
+
 	return dba_error_ok();
 }
 

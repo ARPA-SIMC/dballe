@@ -62,6 +62,7 @@ void to::test<1>()
 		"aof/aof_28-2-144.aof",
 		"aof/aof_27-2-244.aof",
 		"aof/aof_28-2-244.aof",
+		"aof/missing-cloud-h.aof",
 		"aof/brokentemp.aof",
 		NULL,
 	};
@@ -521,6 +522,20 @@ void to::test<5>()
 		dba_msgs_delete(amsgs2);
 	}
 	test_untag();
+}
+
+// Ensure that missing values in existing synop optional sections are caught
+// correctly
+template<> template<>
+void to::test<6>()
+{
+	dba_msgs msgs = read_test_msg("aof/missing-cloud-h.aof", AOF);
+	gen_ensure_equals(msgs->len, 1);
+
+	dba_msg msg = msgs->msgs[0];
+	gen_ensure_equals(dba_msg_get_cloud_h1_var(msg), (dba_var)NULL);
+
+	dba_msgs_delete(msgs);
 }
 
 #if 0

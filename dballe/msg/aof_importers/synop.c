@@ -135,9 +135,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		uint32_t conf = dba_aof_get_extra_conf(obs, i - 33);
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
 
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_n1(msg, n, get_conf2((conf >> 4) & 0x3)));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_c1(msg, c, get_conf2((conf >> 2) & 0x3)));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_h1(msg, h, get_conf2(conf & 0x3)));
+		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n1(msg, n, get_conf2((conf >> 4) & 0x3)));
+		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c1(msg, c, get_conf2((conf >> 2) & 0x3)));
+		if (h != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_h1(msg, h, get_conf2(conf & 0x3)));
 		++i;
 	}
 	if (OBS(32) & 0x2)
@@ -146,9 +146,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		uint32_t conf = dba_aof_get_extra_conf(obs, i - 33);
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
 
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_n2(msg, n, get_conf2(conf & 0x3)));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_c2(msg, c, get_conf2((conf >> 2) & 0x3)));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_h2(msg, h, get_conf2((conf >> 4) & 0x3)));
+		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n2(msg, n, get_conf2(conf & 0x3)));
+		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c2(msg, c, get_conf2((conf >> 2) & 0x3)));
+		if (h != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_h2(msg, h, get_conf2((conf >> 4) & 0x3)));
 		++i;
 	}
 	if (OBS(32) & 0x4)
@@ -157,9 +157,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		uint32_t conf = dba_aof_get_extra_conf(obs, i - 33);
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
 
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_n3(msg, n, get_conf2(conf & 0x3)));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_c3(msg, c, get_conf2((conf >> 2) & 0x3)));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_h3(msg, h, get_conf2((conf >> 4) & 0x3)));
+		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n3(msg, n, get_conf2(conf & 0x3)));
+		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c3(msg, c, get_conf2((conf >> 2) & 0x3)));
+		if (h != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_h3(msg, h, get_conf2((conf >> 4) & 0x3)));
 		++i;
 	}
 	if (OBS(32) & 0x8)
@@ -168,9 +168,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		uint32_t conf = dba_aof_get_extra_conf(obs, i - 33);
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
 
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_n4(msg, n, get_conf2(conf & 0x3)));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_c4(msg, c, get_conf2((conf >> 2) & 0x3)));
-		DBA_RUN_OR_RETURN(dba_msg_set_cloud_h4(msg, h, get_conf2((conf >> 4) & 0x3)));
+		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n4(msg, n, get_conf2(conf & 0x3)));
+		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c4(msg, c, get_conf2((conf >> 2) & 0x3)));
+		if (h != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_h4(msg, h, get_conf2((conf >> 4) & 0x3)));
 		++i;
 	}
 	if (OBS(32) & 0x10) /* Ground group */
