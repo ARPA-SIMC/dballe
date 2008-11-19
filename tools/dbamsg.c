@@ -399,7 +399,7 @@ static dba_err bisect(
 
 	/* If we already narrowed it down to 1 messages, there is no need to test
 	 * further */
-	if (cand->last = cand->first + 1)
+	if (cand->last == cand->first + 1)
 		return dba_error_ok();
 
 	if (op_verbose)
@@ -429,6 +429,7 @@ dba_err do_bisect(poptContext optCon)
 {
 	struct message_vector vec = { 0, 0, 0 };
 	struct bisect_candidate candidate;
+	int old_op_verbose = op_verbose;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
@@ -437,9 +438,11 @@ dba_err do_bisect(poptContext optCon)
 		return dba_error_consistency("you need to use --test=command");
 
 	/* Read all input messages a vector of dba_rawmsg */
+	op_verbose = 0;
 	DBA_RUN_OR_RETURN(process_all(optCon, 
 				dba_cmdline_stringToMsgType(op_input_type, optCon),
 				&grepdata, store_messages, &vec));
+	op_verbose = old_op_verbose;
 
 	/* Bisect working on the vector */
 	candidate.first = 0;
