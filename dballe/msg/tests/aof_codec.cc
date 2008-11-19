@@ -62,6 +62,7 @@ void to::test<1>()
 		"aof/aof_28-2-144.aof",
 		"aof/aof_27-2-244.aof",
 		"aof/aof_28-2-244.aof",
+		"aof/brokentemp.aof",
 		NULL,
 	};
 
