@@ -42,6 +42,7 @@ static int op_dump_interpreted = 0;
 static int op_dump_text = 0;
 static char* op_input_type = "auto";
 static char* op_output_type = "bufr";
+static char* op_bisect_cmd = NULL;
 int op_verbose = 0;
 
 struct grep_t grepdata = { -1, -1, -1, 0, 0, "" };
@@ -329,6 +330,132 @@ dba_err do_cat(poptContext optCon)
 				&grepdata, write_raw_message, &file));
 	if (file != NULL)
 		dba_file_delete(file);
+
+	return dba_error_ok();
+}
+
+struct message_vector
+{
+	dba_rawmsg* messages;
+	size_t len;
+	size_t alloclen;
+};
+
+static dba_err store_messages(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
+{
+	struct message_vector* vec = (struct message_vector*)data;
+	if (vec->alloclen == 0)
+	{
+		vec->messages = (dba_rawmsg*)malloc(500 * sizeof(dba_rawmsg));
+		if (vec->messages == NULL)
+			return dba_error_alloc("allocating 500 dba_rawmsg pointers");
+		vec->alloclen = 500;
+	}
+	if (vec->alloclen == vec->len)
+	{
+		/* Double the size of the array */
+		dba_rawmsg* newarr;
+		vec->alloclen <<= 1;
+		if ((newarr = (dba_rawmsg*)realloc(vec->messages, vec->alloclen * sizeof(dba_rawmsg))) == NULL)
+			return dba_error_alloc("allocating memory for expanding data in message vector");
+		vec->messages = newarr;
+	}
+	DBA_RUN_OR_RETURN(dba_rawmsg_copy(&(vec->messages[vec->len]), rmsg));
+	/* Set the file pointer to null, since the dba_file we have now is temporary */
+	vec->messages[vec->len]->file = NULL;
+	++(vec->len);
+	return dba_error_ok();
+}
+
+static dba_err bisect_test(struct message_vector* vec, size_t first, size_t last, int* fails)
+{
+	FILE* out = popen(op_bisect_cmd, "w");
+	int res;
+	for (; first < last; ++first)
+	{
+		dba_rawmsg msg = vec->messages[first];
+		if (fwrite(msg->buf, msg->len, 1, out) == 0)
+			return dba_error_system("writing message %d to test script", msg->index);
+	}
+	res = pclose(out);
+	if (res == -1)
+		return dba_error_system("running test script", first);
+	*fails = (res != 0);
+	return dba_error_ok();
+}
+
+struct bisect_candidate
+{
+	size_t first;
+	size_t last;
+};
+
+static dba_err bisect(
+	struct bisect_candidate* cand,
+   	struct message_vector* vec,
+   	size_t first, size_t last)
+{
+	int fails = 0;
+
+	/* If we already narrowed it down to 1 messages, there is no need to test
+	 * further */
+	if (cand->last = cand->first + 1)
+		return dba_error_ok();
+
+	if (op_verbose)
+		fprintf(stderr, "Trying messages %zd-%zd... ", first, last);
+
+	DBA_RUN_OR_RETURN(bisect_test(vec, first, last, &fails));
+
+	if (op_verbose)
+		fprintf(stderr, fails ? "fail.\n" : "ok.\n");
+
+	if (fails)
+	{
+		size_t mid = (first + last) / 2;
+		if (last-first < cand->last - cand->first)
+		{
+			cand->last = last;
+			cand->first = first;
+		}
+		if (first < mid && mid != last) DBA_RUN_OR_RETURN(bisect(cand, vec, first, mid));
+		if (mid < last && mid != first) DBA_RUN_OR_RETURN(bisect(cand, vec, mid, last));
+	}
+
+	return dba_error_ok();
+}
+
+dba_err do_bisect(poptContext optCon)
+{
+	struct message_vector vec = { 0, 0, 0 };
+	struct bisect_candidate candidate;
+
+	/* Throw away the command name */
+	poptGetArg(optCon);
+
+	if (op_bisect_cmd == NULL)
+		return dba_error_consistency("you need to use --test=command");
+
+	/* Read all input messages a vector of dba_rawmsg */
+	DBA_RUN_OR_RETURN(process_all(optCon, 
+				dba_cmdline_stringToMsgType(op_input_type, optCon),
+				&grepdata, store_messages, &vec));
+
+	/* Bisect working on the vector */
+	candidate.first = 0;
+	candidate.last = vec.len;
+	DBA_RUN_OR_RETURN(bisect(&candidate, &vec, candidate.first, candidate.last));
+
+	if (op_verbose)
+		fprintf(stderr, "Selected messages %zd-%zd.\n", candidate.first, candidate.last);
+
+	/* Output the candidate messages */
+	for (; candidate.first < candidate.last; ++candidate.first)
+	{
+		dba_rawmsg msg = vec.messages[candidate.first];
+		if (fwrite(msg->buf, msg->len, 1, stdout) == 0)
+			return dba_error_system("writing message %d to standard output", msg->index);
+	}
 
 	return dba_error_ok();
 }
@@ -876,13 +1003,25 @@ struct poptOption dbamsg_makebufr_options[] = {
 	POPT_TABLEEND
 };
 
+struct poptOption dbamsg_bisect_options[] = {
+	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	{ "test", 0, POPT_ARG_STRING, &op_bisect_cmd, 0,
+		"command to run to test a message group", "cmd" },
+	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
+		"format of the input data ('bufr', 'crex', 'aof')", "type" },
+	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
+		"Options used to filter messages" },
+	POPT_TABLEEND
+};
+
 static void init()
 {
 	dbamsg.desc = "Work with encoded meteorological data";
 	dbamsg.longdesc =
 		"Examine, dump and convert files containing meteorological data. "
 		"It supports observations encoded in BUFR, CREX and AOF formats";
-	dbamsg.ops = (struct op_dispatch_table*)calloc(9, sizeof(struct op_dispatch_table));
+	dbamsg.ops = (struct op_dispatch_table*)calloc(10, sizeof(struct op_dispatch_table));
 
 	dbamsg.ops[0].func = do_scan;
 	dbamsg.ops[0].aliases[0] = "scan";
@@ -943,11 +1082,18 @@ static void init()
 	dbamsg.ops[7].longdesc = "Read a simple description of a BUFR file and output the BUFR file.  This only works for simple BUFR messages without attributes encoded with data present bitmaps";
 	dbamsg.ops[7].optable = dbamsg_makebufr_options;
 
-	dbamsg.ops[8].func = NULL;
-	dbamsg.ops[8].usage = NULL;
-	dbamsg.ops[8].desc = NULL;
-	dbamsg.ops[8].longdesc = NULL;
-	dbamsg.ops[8].optable = NULL;
+	dbamsg.ops[8].func = do_bisect;
+	dbamsg.ops[8].aliases[0] = "bisect";
+	dbamsg.ops[8].usage = "bisect [options] --test=testscript filename";
+	dbamsg.ops[8].desc = "Bisect filename and output the minimum subsequence found for which testscript fails.";
+	dbamsg.ops[8].longdesc = "Run testscript passing parts of filename on its stdin and checking the return code.  Then divide the input in half and try on each half.  Keep going until testscript does not fail in any portion of the file.  Output to stdout the smallest portion for which testscript fails.  This is useful to isolate the few messages in a file that cause problems";
+	dbamsg.ops[8].optable = dbamsg_bisect_options;
+
+	dbamsg.ops[9].func = NULL;
+	dbamsg.ops[9].usage = NULL;
+	dbamsg.ops[9].desc = NULL;
+	dbamsg.ops[9].longdesc = NULL;
+	dbamsg.ops[9].optable = NULL;
 };
 
 static struct program_info proginfo = {

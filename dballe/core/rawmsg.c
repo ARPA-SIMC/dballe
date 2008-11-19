@@ -104,4 +104,33 @@ dba_err dba_rawmsg_expand_buffer(dba_rawmsg msg)
 	return dba_error_ok();
 }
 
+dba_err dba_rawmsg_copy(dba_rawmsg* dst, dba_rawmsg src)
+{
+	dba_err err = DBA_OK;
+	dba_rawmsg res = NULL;
+
+	DBA_RUN_OR_GOTO(cleanup, dba_rawmsg_create(&res));
+	res->file = src->file;
+	res->offset = src->offset;
+	res->index = src->index;
+	res->encoding = src->encoding;
+
+	res->buf = (unsigned char*)malloc(src->len * sizeof(unsigned char));
+	if (res->buf == NULL)
+	{
+		err = dba_error_alloc("allocating copy of existing dba_rawmsg");
+		goto cleanup;
+	}
+	memcpy(res->buf, src->buf, src->len);
+	res->len = src->len;
+	res->alloclen = src->len;
+
+	*dst = res;
+	res = NULL;
+
+cleanup:
+	if (res != NULL) dba_rawmsg_delete(res);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
 /* vim:set ts=4 sw=4: */

@@ -146,6 +146,22 @@ dba_err dba_rawmsg_get_raw(dba_rawmsg msg, const unsigned char** buf, int* size)
  */
 dba_err dba_rawmsg_expand_buffer(dba_rawmsg msg);
 
+/**
+ * Make a copy of a message.
+ *
+ * Note: the resulting message will reference the same dba_file as the source
+ * message.
+ *
+ * \param dst
+ *   Destination message.  It will be freshly allocated, and it will need to be
+ *   deallocated by the caller.
+ * \param src
+ *   The source message.
+ * \returns
+ *   The error indicator for the function.  See @ref error.h
+ */
+dba_err dba_rawmsg_copy(dba_rawmsg* dst, dba_rawmsg src);
+
 #ifdef  __cplusplus
 }
 #endif
