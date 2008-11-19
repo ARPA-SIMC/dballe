@@ -430,6 +430,7 @@ dba_err do_bisect(poptContext optCon)
 	struct message_vector vec = { 0, 0, 0 };
 	struct bisect_candidate candidate;
 	int old_op_verbose = op_verbose;
+	size_t i;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
@@ -459,6 +460,10 @@ dba_err do_bisect(poptContext optCon)
 		if (fwrite(msg->buf, msg->len, 1, stdout) == 0)
 			return dba_error_system("writing message %d to standard output", msg->index);
 	}
+
+	for (i = 0; i < vec.len; ++i)
+		dba_rawmsg_delete(vec.messages[i]);
+	free(vec.messages);
 
 	return dba_error_ok();
 }
