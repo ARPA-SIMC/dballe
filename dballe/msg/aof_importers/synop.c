@@ -129,6 +129,11 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 	i = 33;
 
 	/* Iterate among the optional groups */
+	/* Note: the AOF specification is unclear on whether flags on optional
+	 * words are one section 2.2 6bit flag per word or 3 section 2.3 3bit flag
+	 * per word.  The specification seems to want the 2.2 6bit flags, but
+	 * makeaof uses 2.3 3bit flags.  We will follow makeaof.
+	 */
 	if (OBS(32) & 0x1)	/* 1st cloud group */
 	{
 		int n, c, h;
@@ -207,9 +212,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		/* dump_word("Ship group: ", OBS(i)); fprintf(stderr, "\n"); */
 
 		if (dir != 0x3ff)
-			DBA_RUN_OR_RETURN(dba_msg_set_st_dir(msg, dir, get_conf2(conf & 0x3)));
+			DBA_RUN_OR_RETURN(dba_msg_set_st_dir(msg, dir, get_conf2((conf >> 2) & 0x3)));
 		if (speed != 0xff)
-			DBA_RUN_OR_RETURN(dba_msg_set_st_speed(msg, speed, get_conf2((conf >> 2) & 0x3)));
+			DBA_RUN_OR_RETURN(dba_msg_set_st_speed(msg, speed, get_conf2(conf & 0x3)));
 
 		i++;
 	}

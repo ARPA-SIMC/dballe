@@ -52,7 +52,7 @@
 
 
 /* Parse a 2 bit confidence interval into a percent confidence interval */
-static inline int get_conf2(int conf)
+static inline int get_conf2(uint32_t conf)
 {
 	switch (conf & 3)
 	{
@@ -65,7 +65,7 @@ static inline int get_conf2(int conf)
 }
 
 /* Parse a 6 bit confidence interval into a percent confidence interval */
-static inline int get_conf6(int conf)
+static inline int get_conf6(uint32_t conf)
 {
 	return get_conf2(conf >> 3);
 }
