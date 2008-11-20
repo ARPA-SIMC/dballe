@@ -37,6 +37,9 @@
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
 
 static int op_dump_interpreted = 0;
 static int op_dump_text = 0;
@@ -61,6 +64,14 @@ struct poptOption grepTable[] = {
 		"match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
 	POPT_TABLEEND
 };
+
+volatile int flag_bisect_stop = 0;
+void stop_bisect(int sig)
+{
+	/* The signal handler just clears the flag and re-enables itself. */
+	flag_bisect_stop = 1;
+	signal(sig, stop_bisect);
+}
 
 static int count_nonnulls(bufrex_subset raw)
 {
@@ -399,11 +410,11 @@ static dba_err bisect(
 
 	/* If we already narrowed it down to 1 messages, there is no need to test
 	 * further */
-	if (cand->last == cand->first + 1)
+	if (flag_bisect_stop || cand->last == cand->first + 1)
 		return dba_error_ok();
 
 	if (op_verbose)
-		fprintf(stderr, "Trying messages %zd-%zd... ", first, last);
+		fprintf(stderr, "Trying messages %zd-%zd (%zd selected, kill -HUP %d to stop)... ", first, last, cand->last - cand->first, getpid());
 
 	DBA_RUN_OR_RETURN(bisect_test(vec, first, last, &fails));
 
@@ -445,13 +456,20 @@ dba_err do_bisect(poptContext optCon)
 				&grepdata, store_messages, &vec));
 	op_verbose = old_op_verbose;
 
+	/* Establish a handler for SIGHUP signals. */
+	signal(SIGHUP, stop_bisect);
+
 	/* Bisect working on the vector */
 	candidate.first = 0;
 	candidate.last = vec.len;
 	DBA_RUN_OR_RETURN(bisect(&candidate, &vec, candidate.first, candidate.last));
 
 	if (op_verbose)
+	{
+		if (flag_bisect_stop)
+			fprintf(stderr, "Stopped by SIGHUP.\n");
 		fprintf(stderr, "Selected messages %zd-%zd.\n", candidate.first, candidate.last);
+	}
 
 	/* Output the candidate messages */
 	for (; candidate.first < candidate.last; ++candidate.first)

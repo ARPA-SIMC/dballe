@@ -59,6 +59,7 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 	for (i = 0; i < nlev; i++)
 	{
 		int os = 20 + i*8;
+		// Pressure
 		double press = (double)OBS(os + 0) * 10;
 		int vss = (OBS(os + 6) >> 12) & 0x1ff;
 
@@ -69,27 +70,34 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 						OBS(os + 0) * 10, get_conf6(OBS(os + 6) & 0x3f),
 						100, press, 0, 0, 254, 0, 0));
 					
+		// Vertical sounding significance
 		DBA_RUN_OR_RETURN(dba_convert_AOFVSS_to_BUFR08001(vss, &vss));
 		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 1), vss, -1, 100, press, 0, 0, 254, 0, 0));
 
+		// Wind direction
 		if (OBS(os + 1) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 1),
 						OBS(os + 1), get_conf6((OBS(os + 6) >> 6) & 0x3f),
 						100, press, 0, 0, 254, 0, 0));
+		// Wind speed
 		if (OBS(os + 2) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 2),
 						OBS(os + 2), get_conf6(OBS(os + 7) & 0x3f),
 						100, press, 0, 0, 254, 0, 0));
+		// Air temperature
 		if (OBS(os + 3) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 1),
 						totemp(OBS(os + 3)), get_conf6((OBS(os + 7) >> 6) & 0x3f),
 						100, press, 0, 0, 254, 0, 0));
+		// Dew point temperature
 		if (OBS(os + 4) != AOF_UNDEF)
 			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 3),
 						totemp(OBS(os + 4)), get_conf6((OBS(os + 7) >> 12) & 0x3f),
 						100, press, 0, 0, 254, 0, 0));
+		// Height + 1000
 		if (OBS(os + 5) != AOF_UNDEF)
 		{
+			// Convert height to geopotential
 #if 0
 			dba_msg_datum d;
 			double dval;

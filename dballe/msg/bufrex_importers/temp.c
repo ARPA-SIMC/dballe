@@ -100,11 +100,13 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				break;
 			}
 */
+			// Pressure
 			case DBA_VAR(0,  7,  4):
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
 				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 4), 100, press, 0, 0, 254, 0, 0));
 				press_var = var;
 				break;
+			// Vertical sounding significance
 			case DBA_VAR(0,  8,  1): {
 				int vss;
 				DBA_RUN_OR_RETURN(dba_var_enqi(var, &vss));
@@ -116,11 +118,17 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				}
 				break;
 			}
+			// Geopotential
 			case DBA_VAR(0, 10,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 3), 100, press, 0, 0, 254, 0, 0)); break;
+			// Dry bulb temperature
 			case DBA_VAR(0, 12,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 1), 100, press, 0, 0, 254, 0, 0)); break;
+			// Wet bulb temperature
 			case DBA_VAR(0, 12,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 2), 100, press, 0, 0, 254, 0, 0)); break;
+			// Dew point temperature
 			case DBA_VAR(0, 12,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 3), 100, press, 0, 0, 254, 0, 0)); break;
+			// Wind direction
 			case DBA_VAR(0, 11,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1), 100, press, 0, 0, 254, 0, 0)); break;
+			// Wind speed
 			case DBA_VAR(0, 11,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 2), 100, press, 0, 0, 254, 0, 0)); break;
 			/*
 			default:
