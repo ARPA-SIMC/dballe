@@ -538,6 +538,26 @@ void to::test<6>()
 	dba_msgs_delete(msgs);
 }
 
+// Verify decoding of confidence intervals in optional ship group
+template<> template<>
+void to::test<7>()
+{
+	dba_msgs msgs = read_test_msg("aof/confship.aof", AOF);
+	gen_ensure_equals(msgs->len, 1);
+
+	dba_msg msg = msgs->msgs[0];
+	dba_var var = dba_msg_get_st_dir_var(msg);
+	gen_ensure(var != NULL);
+	dba_var attr;
+	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 7), &attr));
+	gen_ensure(attr != NULL);
+	int ival;
+	CHECKED(dba_var_enqi(attr, &ival));
+	ensure_equals(ival, 51);
+
+	dba_msgs_delete(msgs);
+}
+
 #if 0
 	CHECKED(dba_aof_decoder_start(decoder, "test-aof-01"));
 	while (1)
