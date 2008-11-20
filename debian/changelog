@@ -2,8 +2,9 @@ dballe (4.0.NEXT) unstable; urgency=low
 
   * Implemented dbamsg bisect to find messages with problems among larte
     message sets
+  * ship direction and ship speed flags were swapped when reading from AOF
 
- -- Enrico Zini <enrico@debian.org>  Thu, 20 Nov 2008 11:27:11 +0000
+ -- Enrico Zini <enrico@debian.org>  Thu, 20 Nov 2008 15:27:04 +0000
 
 dballe (4.0.9-1) unstable; urgency=low
 
