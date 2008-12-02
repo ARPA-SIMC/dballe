@@ -52,7 +52,11 @@ static dba_vartable* tables = NULL;
 static int tables_size = 0;
 static int tables_alloc_size = 0;
 
-static dba_err dba_vartable_read(const char* id, int* index);
+#define VARTABLE_READ_DBALLE 0
+#define VARTABLE_READ_BUFR 1
+#define VARTABLE_READ_CREX 2
+
+static dba_err dba_vartable_read(const char* id, int* index, int style);
 
 /**
  * Insert a new vartable index in 'tables', keeping it sorted
@@ -147,8 +151,18 @@ dba_err dba_vartable_create(const char* id, dba_vartable* table)
 			begin = cur;
 	}
 	if (begin == -1 || strcmp(tables[begin]->id, id) != 0)
+	{
 		/* Table not found: load it */
-		DBA_RUN_OR_RETURN(dba_vartable_read(id, &begin));
+		if (strcmp(id, "dballe") == 0)
+			DBA_RUN_OR_RETURN(dba_vartable_read(id, &begin, VARTABLE_READ_DBALLE));
+		else {
+			size_t idlen = strlen(id);
+			if (idlen == 7)
+				DBA_RUN_OR_RETURN(dba_vartable_read(id, &begin, VARTABLE_READ_CREX));
+			else
+				DBA_RUN_OR_RETURN(dba_vartable_read(id, &begin, VARTABLE_READ_BUFR));
+		}
+	}
 
 	*table = tables[begin];
 
@@ -369,7 +383,7 @@ int dba_vartable_exists(const char* id)
 	return access(file, F_OK) == 0;
 }
 
-static dba_err dba_vartable_read(const char* id, int* index)
+static dba_err dba_vartable_read(const char* id, int* index, int style)
 {
 	dba_err err = DBA_OK;
 	dba_vartable vartable = NULL;
@@ -439,7 +453,7 @@ static dba_err dba_vartable_read(const char* id, int* index)
 		entry->bit_ref = strtol(line+102, 0, 10);
 		entry->bit_len = strtol(line+115, 0, 10);
 
-		if (strlen(line) < 157)
+		if (strlen(line) < 157 || style == VARTABLE_READ_BUFR)
 		{
 			entry->ref = 0;
 			if (entry->is_string)

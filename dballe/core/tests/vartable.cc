@@ -99,8 +99,8 @@ void to::test<3>()
 
 	CHECKED(dba_vartable_query(table, DBA_VAR(0, 1, 6), &info));
 	gen_ensure_equals(info->var, DBA_VAR(0, 1, 6));
-	gen_ensure_equals(strcmp(info->desc, "AIRCRAFT FLIGHT NUMBER"), 0);
-	gen_ensure_equals(strcmp(info->unit, "CHARACTER"), 0);
+	gen_ensure_equals(string(info->desc), string("AIRCRAFT FLIGHT NUMBER"));
+	gen_ensure_equals(string(info->unit), string("CCITTIA5"));
 	gen_ensure_equals(info->scale, 0) ;
 	gen_ensure_equals(info->ref, 0);
 	gen_ensure_equals(info->len, 8);
