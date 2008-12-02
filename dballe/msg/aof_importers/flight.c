@@ -71,8 +71,22 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 		/* Save the height in an analogous height layer.
 		 * We cannot save in the ana layer because a flight can pass twice in
 		 * the same point, at two different heights */
-		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0,  7,  1), (double)OBS(24), get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
-			102, OBS(24), 0, 0, 254, 0, 0));
+
+		if (OBS(24) > AOF_UNDEF)
+		{
+			// The AOF specification says nothing about negative heights,
+			// completely disregarding the feelings of people in Schiphol or
+			// Furnace Creek.  Makeaof, however, happily encodes negative
+			// heights, so we try to match what it does.
+			// makeaof encodes negative numbers with whatever is used in the
+			// local machine.  We hope it is two's complement.
+			uint32_t absheight = ~OBS(24) + 1;
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0,  7,  1), -(double)absheight, get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
+				102, OBS(24), 0, 0, 254, 0, 0));
+		} else {
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0,  7,  1), (double)OBS(24), get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
+				102, OBS(24), 0, 0, 254, 0, 0));
+		}
 		if (ltype == -1)
 		{
 			ltype = 102;
