@@ -1,10 +1,12 @@
-dballe (4.0.NEXT) unstable; urgency=low
+dballe (4.0.10-1) unstable; urgency=low
 
   * Implemented dbamsg bisect to find messages with problems among larte
     message sets
   * ship direction and ship speed flags were swapped when reading from AOF
+  * Ignore CREX data when loading tables for BUFR decoding/encoding
+  * Handle negative heights in AOF aireps, somehow 
 
- -- Enrico Zini <enrico@debian.org>  Thu, 20 Nov 2008 15:27:04 +0000
+ -- Enrico Zini <enrico@debian.org>  Tue, 02 Dec 2008 12:39:55 +0000
 
 dballe (4.0.9-1) unstable; urgency=low
 
