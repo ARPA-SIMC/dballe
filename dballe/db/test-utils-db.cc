@@ -22,7 +22,6 @@
 #include "test-utils-db.h"
 #include <dballe/db/internals.h>
 
-#include <tut.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
