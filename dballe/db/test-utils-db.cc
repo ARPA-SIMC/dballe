@@ -31,8 +31,22 @@ namespace tut_dballe {
 
 db_test::db_test() : db(NULL)
 {
-	CHECKED(create_dba_db(&db));
-	if (db == NULL) return;
+/*
+	const char* uname = getenv("DBA_USER");
+	if (uname == NULL)
+	{
+		struct passwd *pwd = getpwuid(getuid());
+		uname = pwd == NULL ? "test" : pwd->pw_name;
+	}
+*/
+	const char* dsn = getenv("DBA_TEST_DSN");
+	const char* user = getenv("DBA_TEST_USER");
+	const char* pass = getenv("DBA_TEST_PASS");
+	if (dsn == NULL) return;
+	if (user == NULL) user = "";
+	if (pass == NULL) pass = "";
+
+	CHECKED(dba_db_create(dsn, user, pass, &db));
 	CHECKED(dba_db_reset(db, NULL));
 }
 db_test::~db_test()
@@ -47,19 +61,6 @@ void db_test::use_db()
 {
 	if (db == NULL)
 		throw tut::no_such_test();
-}
-
-dba_err create_dba_db(dba_db* db)
-{
-/*
-	const char* uname = getenv("DBA_USER");
-	if (uname == NULL)
-	{
-		struct passwd *pwd = getpwuid(getuid());
-		uname = pwd == NULL ? "test" : pwd->pw_name;
-	}
-*/
-	return dba_db_create("test", "" , "", db);
 }
 
 }

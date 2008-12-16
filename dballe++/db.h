@@ -58,9 +58,9 @@ public:
 /** Wrap a dba_db */
 class DB
 {
+private:
 	dba_db m_db;
 
-private:
 	// Forbid copying
 	DB(const DB& db);
 	DB& operator=(const DB& var);
@@ -83,7 +83,7 @@ public:
 	/**
 	 * Explicitly disconnect from the database. 
 	 *
-	 * This is normally performed in the contructor, but an explicit
+	 * This is normally performed in the destructor, but an explicit
 	 * disconnect is needed to support language bindings, such as python
 	 * previously to 2.5, with unpredictable object destruction patterns.
 	 */
@@ -265,6 +265,20 @@ public:
 	{
 		return m_db;
 	}
+};
+
+/**
+ * Database used for tests.
+ *
+ * If the user has not set up a test environment, this database may not be
+ * valid.  In that case, the db() method will return NULL.
+ */
+class TestDB : public DB
+{
+public:
+	TestDB();
+
+	bool valid() const { return db() != 0; }
 };
 
 }

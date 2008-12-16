@@ -27,8 +27,6 @@ namespace tut_dballe {
 using namespace std;
 using namespace tut;
 
-dba_err create_dba_db(dba_db* db);
-
 struct db_test
 {
     // DB handle

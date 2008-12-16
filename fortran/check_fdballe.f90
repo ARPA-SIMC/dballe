@@ -4,19 +4,21 @@
 ! * Test suite for DBALLE Fortran bindings
 ! *****************************************
 
+      use dbtest
+
       include "dballef.h"
 
-      integer dbahandle, handle,i,i1,i2,i3,i4,i5,i6,ival,saved_id
-      real rval
-      real*8 dval
-      character param*10,cval*255
-      external testcb
+      integer :: dbahandle, handle,i,i1,i2,i3,i4,i5,i6,ival,saved_id
+      real :: rval
+      double precision :: dval
+      character (len=10) :: param
+      character (len=255) :: cval
+      external :: testcb
 
 !      call fdba_error_set_callback(0, testcb, 2, i)
 
 !     Database login
-      call idba_presentati(dbahandle, "test", "enrico", "")
-      call ensure_no_error("presentati")
+      call dbinit(dbahandle)
 
 !     Open a session
       call idba_preparati(dbahandle, handle, "write", "write", "write")
@@ -219,3 +221,4 @@
       end program
 
       include "check-utils.h"
+

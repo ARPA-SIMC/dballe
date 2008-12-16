@@ -18,7 +18,7 @@ numpy.seterr(divide="raise", over="raise", under="raise", invalid="raise")
 
 
 # Test from volnd
-db = dballe.DB("test", "enrico", "")
+db = dballe.TestDB()
 query = dballe.Record()
 #query.set("var", "B10004")
 #query.settimerange(dballe.TimeRange(0,0,0))

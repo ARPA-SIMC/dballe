@@ -47,13 +47,6 @@ AC_ARG_ENABLE([dballe-python],
     [],
     [enable_dballe_python="yes"])
 
-AC_ARG_ENABLE([test-db],
-    [AS_HELP_STRING(
-        [--enable-test-db],
-        [enable the database tests that need an ODBC DSN previously set up])],
-    [],
-    [enable_test_db="no"])
-
 AC_ARG_ENABLE([docs],
     [AS_HELP_STRING(
         [--enable-docs],
@@ -149,10 +142,6 @@ AC_SUBST(LIBDBALLE_VERSION_INFO)
 CFLAGS="-Wall $CFLAGS"
 
 # Enforce dependencies
-if ! test x"$enable_dballe_db"=x"yes"
-then
-	enable_test_db=no
-fi
 if ! test x"$enable_dballepp"=x"yes"
 then
 	enable_dballe_python=no
@@ -183,7 +172,6 @@ AM_CONDITIONAL([DO_DBALLE_DB], [test x"$enable_dballe_db" = x"yes"])
 AM_CONDITIONAL([DO_DBALLEPP], [test x"$enable_dballepp" = x"yes"])
 AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
-AM_CONDITIONAL([DO_TEST_DB], [test x"$enable_test_db" = x"yes"])
 AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
 
 AM_CONDITIONAL([HAVE_LATEX2HTML], [test x$have_latex2html = xyes])
@@ -226,7 +214,6 @@ AS_HELP_STRING([db:], [$enable_dballe_db])
 AS_HELP_STRING([C++:], [$enable_dballepp])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
-AS_HELP_STRING([db tests:], [$enable_test_db])
 AS_HELP_STRING([documentation:], [$enable_docs])
 AS_HELP_STRING([latex2html:], [$have_latex2html])
 AS_HELP_STRING([rst2html:], [$have_rst2html])

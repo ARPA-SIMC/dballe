@@ -6,7 +6,7 @@ import unittest
 contexts = []
 anas = []
 
-db = DB("test", "enrico", "")
+db = TestDB()
 
 rec = Record()
 rec.setd("lat", 12.34560)

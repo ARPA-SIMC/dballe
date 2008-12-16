@@ -3,9 +3,11 @@
 from dballe import *
 import unittest
 
+db = None
+
 class DballeTest(unittest.TestCase):
         def setUp(self):
-		self.db = DB("test", "enrico", "")
+		self.db = db
 		self.db.reset()
 
 		data = Record()
@@ -35,8 +37,9 @@ class DballeTest(unittest.TestCase):
 		data.set("B33036", 75)
 		self.db.attrInsert(self.context, "B01011", data)
 
-	def tearDown(self):
-		self.db.disconnect()
+#	def tearDown(self):
+#               if self.db.valid():
+#               self.db.disconnect()
 			
 	def testQueryAna(self):
 		query = Record()
@@ -191,4 +194,6 @@ class DballeTest(unittest.TestCase):
 		self.db.attrRemove(1, "B01011", "B33007")
 
 if __name__ == "__main__":
-        unittest.main()
+        db = TestDB()
+        if db.valid():
+            unittest.main()

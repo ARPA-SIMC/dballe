@@ -6,9 +6,7 @@ export PYTHONPATH=.
 
 TESTS = test.py
 if DO_DBALLE_DB
-if DO_TEST_DB
 TESTS += test-db.py test-volnd.py run-unittests
-endif
 endif
 
 doc_DATA = python-dballe.rst

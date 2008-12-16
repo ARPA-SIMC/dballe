@@ -15,22 +15,17 @@ namespace tut {
 using namespace tut_dballe;
 using namespace dballe;
 
-std::string getuname()
-{
-	struct passwd *pwd = getpwuid(getuid());
-	const char* uname = pwd == NULL ? "test" : pwd->pw_name;
-	return uname;
-}
-
 struct db_shar {
 	DballeInit dballeInit;
 
-	DB db;
+	TestDB db;
 	Record query;
 	Record result;
 	int context;
 
-	db_shar() : db("test", getuname().c_str(), "") {
+	db_shar() {
+		if (!db.valid()) return;
+
 		db.reset();
 
 		Record data;
@@ -60,6 +55,12 @@ struct db_shar {
 		data.varSet(DBA_VAR(0, 33, 36), 75);
 		db.attrInsert(context, DBA_VAR(0, 1, 11), data);
 	}
+
+	void use_db()
+	{
+		if (!db.valid())
+			throw tut::no_such_test();
+	}
 };
 
 TESTGRP( db );
@@ -67,6 +68,8 @@ TESTGRP( db );
 template<> template<>
 void to::test<1>()
 {
+	use_db();
+
 	Cursor cur = db.queryAna(query);
 	gen_ensure_equals(cur.remaining(), 1);
 	gen_ensure_equals(cur.next(result), true);
@@ -79,6 +82,8 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
+	use_db();
+
 	map<dba_varcode, string> expected;
 	expected[DBA_VAR(0, 1, 11)] = "Hey Hey!!";
 	expected[DBA_VAR(0, 1, 12)] = "500";
@@ -101,6 +106,8 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
+	use_db();
+
 	Record data;
 	int count = db.attrQuery(context, DBA_VAR(0, 1, 11), data);
 	gen_ensure_equals(count, 2);
@@ -114,6 +121,8 @@ void to::test<3>()
 template<> template<>
 void to::test<4>()
 {
+	use_db();
+
 	query.clear();
 	Cursor cur = db.queryLevels(query);
 	gen_ensure_equals(cur.remaining(), 1);
@@ -129,6 +138,8 @@ void to::test<4>()
 template<> template<>
 void to::test<5>()
 {
+	use_db();
+
 	query.clear();
 	Cursor cur = db.queryTimeRanges(query);
 	gen_ensure_equals(cur.remaining(), 1);
@@ -143,6 +154,8 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
+	use_db();
+
 	query.clear();
 	Cursor cur = db.queryLevelsAndTimeRanges(query);
 	gen_ensure_equals(cur.remaining(), 1);
@@ -161,6 +174,8 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
+	use_db();
+
 	query.clear();
 	Cursor cur = db.queryVariableTypes(query);
 	gen_ensure_equals(cur.remaining(), 2);
@@ -179,6 +194,8 @@ void to::test<7>()
 template<> template<>
 void to::test<8>()
 {
+	use_db();
+
 	query.clear();
 	Cursor cur = db.queryIdents(query);
 	gen_ensure_equals(cur.remaining(), 1);
@@ -191,6 +208,8 @@ void to::test<8>()
 template<> template<>
 void to::test<9>()
 {
+	use_db();
+
 	query.clear();
 	Cursor cur = db.queryReports(query);
 	gen_ensure_equals(cur.remaining(), 1);
@@ -204,6 +223,8 @@ void to::test<9>()
 template<> template<>
 void to::test<10>()
 {
+	use_db();
+
 	query.clear();
 	Cursor cur = db.queryDateTimes(query);
 	gen_ensure_equals(cur.remaining(), 1);

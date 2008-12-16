@@ -7,8 +7,6 @@ include /usr/share/cdbs/1/class/autotools.mk
 export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 
 DEB_MAKE_CHECK_TARGET := check
-#DEB_CONFIGURE_EXTRA_FLAGS += --enable-test-db
-DEB_CONFIGURE_EXTRA_FLAGS += --disable-test-db
 
 # From http://wiki.debian.org/DebianPython/NewPolicy
 binary-install/python-dballe::

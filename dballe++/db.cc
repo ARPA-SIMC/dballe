@@ -7,6 +7,8 @@
 #include <dballe/db/export.h>
 #include <dballe/msg/file.h>
 
+#include <stdlib.h>
+
 namespace dballe {
 
 Cursor::~Cursor()
@@ -253,6 +255,24 @@ void DB::exportResultsAsGeneric(Record& query, dba_encoding encoding, const std:
 		throw;
 	}
 	dba_file_delete(out);
+}
+
+static dba_db test_db()
+{
+	dba_db db = NULL;
+	const char* dsn = getenv("DBA_TEST_DSN");
+	const char* user = getenv("DBA_TEST_USER");
+	const char* pass = getenv("DBA_TEST_PASS");
+	if (dsn == NULL || dsn[0] == 0) return db;
+	if (user == NULL) user = "";
+	if (pass == NULL) pass = "";
+
+	checked(dba_db_create(dsn, user, pass, &db));
+	return db;
+}
+
+TestDB::TestDB() : DB(test_db())
+{
 }
 
 }

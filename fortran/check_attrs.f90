@@ -1,5 +1,9 @@
       program check_attrs
 
+      use dbtest
+
+      include "dballef.h"
+
 ! *****************************************
 ! * Dump the contents of a dballe database
 ! *****************************************
@@ -15,8 +19,7 @@
 !      call idba_error_set_callback(0, errorrep, 2, i)
 
 !     Database login
-      call idba_presentati(dbahandle, "test", "enrico", "")
-      call ensure_no_error("presentati")
+      call dbinit(dbahandle)
 
 !     Open a session
       call idba_preparati(dbahandle, handle, "read", "read", "read")
@@ -36,7 +39,7 @@
       call ensure_no_error("init 4")
       call idba_setdate(handleinit, 2007, 06, 13, 0, 0, 0)
       call ensure_no_error("init 5")
-      call idba_setd(handleinit, "B12001", 12.345)
+      call idba_setd(handleinit, "B12001", 12.345D0)
       call ensure_no_error("init 6")
       call idba_setc(handleinit, "rep_memo", 'synop')
       call ensure_no_error("init 6b")
@@ -53,14 +56,14 @@
       call idba_critica(handleinit)
       call ensure_no_error("critica 1")
 
-      call idba_setr(handleinit, "*B33040", 80)
+      call idba_setr(handleinit, "*B33040", 80.0)
       call ensure_no_error("init 11")
       call idba_setc(handleinit, "*var_related", "B12001")
       call ensure_no_error("init 12")
       call idba_critica(handleinit)
       call ensure_no_error("critica 2")
 
-      call idba_setr(handleinit, "*B33036", 90)
+      call idba_setr(handleinit, "*B33036", 90.0)
       call ensure_no_error("init 14")
       call idba_setc(handleinit, "*var_related", "B12001")
       call ensure_no_error("init 15")

@@ -4,6 +4,8 @@
 ! * Test suite for DBALLE Fortran bindings
 ! *****************************************
 
+      use dbtest
+
       include "dballef.h"
 
       integer dbahandle, handle, ival
@@ -16,8 +18,7 @@
 !      call fdba_error_set_callback(0, testcb, 2, i)
 
 !     Database login
-      call idba_presentati(dbahandle, "test", "enrico", "")
-      call ensure_no_error("presentati")
+      call dbinit(dbahandle)
 
 !     Open a session
       call idba_preparati(dbahandle, handle, "write", "write", "write")

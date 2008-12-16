@@ -56,7 +56,6 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 check_PROGRAMS =
 TESTS =
 
-if DO_TEST_DB
 check_PROGRAMS += tut_test
 TESTS += $(check_PROGRAMS)
 
@@ -83,4 +82,3 @@ tut_test_LDADD = \
 	../msg/libdballe-msg.la \
 	../bufrex/libdballe-bufrex.la \
 	../core/libdballe-core.la
-endif

@@ -88,11 +88,9 @@ tut_test_SOURCES += \
 endif
 
 if DO_DBALLE_DB
-if DO_TEST_DB
 tut_test_SOURCES += \
 	tests/db.cc \
 	../dballe/db/test-utils-db.cc
-endif
 endif
 
 tut_test_LDADD = \

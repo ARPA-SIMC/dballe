@@ -8,6 +8,8 @@ from datetime import *
 import numpy
 import numpy.ma as ma
 
+db = None
+
 class TestTddiv(unittest.TestCase):
 
 #       def tons(td):
@@ -64,7 +66,7 @@ class TestRead(unittest.TestCase):
 		rattr = random.Random()
 		rattr.seed(1)
 
-		self.db = dballe.DB("test", "enrico", "")
+		self.db = db
 
 		# Wipe the test database
 		self.db.reset()
@@ -162,7 +164,8 @@ class TestRead(unittest.TestCase):
                 self.db.insert(rec, False, True)
 
 	def tearDown(self):
-		self.db.disconnect()
+		#self.db.disconnect()
+                pass
 
 	def testIndexFind(self):
 		# Ana in one dimension, network in the other
@@ -442,7 +445,10 @@ class TestRead(unittest.TestCase):
                 self.assertEquals(sorted(anas.keys()), ["B01001", "B01002", "B01019"])
 		self.assertEquals(anas["B01001"].dims[0], vars["B13011"].dims[0])
 
-unittest.main()
+if __name__ == "__main__":
+        db = dballe.TestDB()
+        if db.valid():
+            unittest.main()
 
 # This is already automatically done
 #if len(sys.argv) == 1:

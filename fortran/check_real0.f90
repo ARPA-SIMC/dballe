@@ -1,12 +1,14 @@
-program check_real0
+      program check_real0
 
 ! *****************************************
 ! * Test suite for DBALLE Fortran bindings
 ! *****************************************
 
+      use dbtest
+
       include "dballef.h" 
       
-      integer :: handle,idbhandle,handle_err
+      integer :: dbahandle, handle,idbhandle,handle_err
       !data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
       !integer debug
       !data debug/1/
@@ -14,8 +16,7 @@ program check_real0
       !call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
   
 !     Database login
-      call idba_presentati(idbhandle, 'test', 'enrico', '')
-      call ensure_no_error("presentati")
+      call dbinit(dbahandle)
 
 !     Open a session
       call idba_preparati(idbhandle,handle,"write","write","write")
