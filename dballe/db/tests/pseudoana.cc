@@ -26,27 +26,19 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct pseudoana_shar
+struct pseudoana_shar : public db_test
 {
 	TestMsgEnv testenv;
 
-	// DB handle
-	dba_db db;
 	dba_db_pseudoana pa;
 
-	pseudoana_shar() : db(NULL)
+	pseudoana_shar()
 	{
-		CHECKED(create_dba_db(&db));
-		CHECKED(dba_db_reset(db, NULL));
+		if (!has_db()) return;
+
 		CHECKED(dba_db_need_pseudoana(db));
 		pa = db->pseudoana;
 		gen_ensure(pa != NULL);
-	}
-
-	~pseudoana_shar()
-	{
-		CHECKED(dba_db_commit(db));
-		if (db != NULL) dba_db_delete(db);
 	}
 };
 TESTGRP(pseudoana);
@@ -55,6 +47,8 @@ TESTGRP(pseudoana);
 template<> template<>
 void to::test<1>()
 {
+	use_db();
+
 	// Set to a valid value
 	dba_db_pseudoana_set_ident(pa, "ciao");
 	gen_ensure_equals(pa->ident, string("ciao"));
@@ -69,6 +63,8 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
+	use_db();
+
 	// Insert a fixed station
 	int id;
 	pa->lat = 4500000;

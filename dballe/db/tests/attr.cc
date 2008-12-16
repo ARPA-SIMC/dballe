@@ -29,18 +29,15 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct attr_shar
+struct attr_shar : public db_test
 {
 	TestMsgEnv testenv;
-
-	// DB handle
-	dba_db db;
 	dba_db_attr at;
 
-	attr_shar() : db(NULL)
+	attr_shar()
 	{
-		CHECKED(create_dba_db(&db));
-		CHECKED(dba_db_reset(db, NULL));
+		if (!has_db()) return;
+
 		CHECKED(dba_db_need_attr(db));
 		at = db->attr;
 		gen_ensure(at != NULL);
@@ -112,12 +109,6 @@ struct attr_shar
 		dba_db_data_set_value(da, "234");
 		CHECKED(dba_db_data_insert_or_fail(da));
 	}
-
-	~attr_shar()
-	{
-		CHECKED(dba_db_commit(db));
-		if (db != NULL) dba_db_delete(db);
-	}
 };
 TESTGRP(attr);
 
@@ -125,6 +116,8 @@ TESTGRP(attr);
 template<> template<>
 void to::test<1>()
 {
+	use_db();
+
 	// Test dba_db_attr_set
 	dba_var var;
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &var));
@@ -145,6 +138,8 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
+	use_db();
+
 	// Insert a datum
 	at->id_context = 1;
 	at->id_var = DBA_VAR(0, 1, 2);

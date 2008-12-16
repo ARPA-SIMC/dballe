@@ -28,18 +28,17 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct data_shar
+struct data_shar : public db_test
 {
 	TestMsgEnv testenv;
 
 	// DB handle
-	dba_db db;
 	dba_db_data da;
 
-	data_shar() : db(NULL)
+	data_shar()
 	{
-		CHECKED(create_dba_db(&db));
-		CHECKED(dba_db_reset(db, NULL));
+		if (!has_db()) return;
+
 		CHECKED(dba_db_need_data(db));
 		da = db->data;
 		gen_ensure(da != NULL);
@@ -95,12 +94,6 @@ struct data_shar
 		CHECKED(dba_db_context_insert(co, &id));
 		gen_ensure_equals(id, 2);
 	}
-
-	~data_shar()
-	{
-		CHECKED(dba_db_commit(db));
-		if (db != NULL) dba_db_delete(db);
-	}
 };
 TESTGRP(data);
 
@@ -108,6 +101,8 @@ TESTGRP(data);
 template<> template<>
 void to::test<1>()
 {
+	use_db();
+
 	// Test dba_db_data_set
 	dba_var var;
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &var));
@@ -128,6 +123,8 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
+	use_db();
+
 	// Insert a datum
 	da->id_context = 1;
 	da->id_var = DBA_VAR(0, 1, 2);

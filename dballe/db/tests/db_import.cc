@@ -26,21 +26,16 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct db_import_shar
+struct db_import_shar : public db_test
 {
 	TestMsgEnv testenv;
 
-	// DB handle
-	dba_db db;
-
-	db_import_shar() : db(NULL)
+	db_import_shar()
 	{
-		CHECKED(create_dba_db(&db));
 	}
 
 	~db_import_shar()
 	{
-		if (db != NULL) dba_db_delete(db);
 		test_untag();
 	}
 };
@@ -79,6 +74,8 @@ static dba_err msgs_collector(dba_msgs msgs, void* data)
 template<> template<>
 void to::test<1>()
 {
+	use_db();
+
 	const char* files[] = {
 		"crex/test-mare0.crex",
 		"crex/test-mare1.crex",
@@ -132,6 +129,8 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
+	use_db();
+
 	const char* files[] = {
 		"bufr/obs0-1.22.bufr", 
 		"bufr/obs0-1.11188.bufr", 
@@ -202,6 +201,8 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
+	use_db();
+
 	const char* files[] = {
 		"aof/obs1-14.63.aof",
 		"aof/obs1-21.1.aof",
@@ -261,6 +262,8 @@ void to::test<3>()
 template<> template<>
 void to::test<4>()
 {
+	use_db();
+
 	// msg1 has latitude 33.88
 	// msg2 has latitude 46.22
 	dba_msgs msgs1 = read_test_msg("bufr/obs0-1.22.bufr", BUFR);
@@ -309,6 +312,8 @@ void to::test<4>()
 template<> template<>
 void to::test<5>()
 {
+	use_db();
+
 	msg_generator gen;
 
 	CHECKED(dba_db_reset(db, NULL));
@@ -355,6 +360,8 @@ static dba_err msg_counter(dba_msgs msgs, void* data)
 template<> template<>
 void to::test<6>()
 {
+	use_db();
+
 	msg_vector msgs;
 
 	// All the various input messages with unique data
@@ -442,6 +449,8 @@ static void clear_datetime_attrs(dba_msg msg)
 template<> template<>
 void to::test<7>()
 {
+	use_db();
+
 	msg_vector msgs;
 	const char* fname = "aof/err1.aof";
 
@@ -523,6 +532,8 @@ void to::test<7>()
 template<> template<>
 void to::test<8>()
 {
+	use_db();
+
 	msg_vector msgs;
 	const char* fname = "bufr/synotemp.bufr";
 

@@ -46,7 +46,7 @@ static void print_results(dba_db_cursor cur)
 }
 
 
-struct dba_db_dballe_shar
+struct dba_db_dballe_shar : public db_test
 {
 	TestMsgEnv testenv;
 
@@ -67,13 +67,10 @@ struct dba_db_dballe_shar
 	dba_record result;
 	dba_record qc;
 
-	// DB handle
-	dba_db db;
-
 	dba_db_dballe_shar()
-		: insert(NULL), query(NULL), result(NULL), qc(NULL), db(NULL)
+		: insert(NULL), query(NULL), result(NULL), qc(NULL)
 	{
-		CHECKED(create_dba_db(&db));
+		if (!has_db()) return;
 
 		CHECKED(dba_record_create(&insert));
 		CHECKED(dba_record_create(&query));
@@ -132,12 +129,10 @@ static struct test_data tdata3_patch[] = {
 
 	~dba_db_dballe_shar()
 	{
-		CHECKED(dba_db_commit(db));
 		if (insert != NULL) dba_record_delete(insert);
 		if (query != NULL) dba_record_delete(query);
 		if (result != NULL) dba_record_delete(result);
 		if (qc != NULL) dba_record_delete(qc);
-		if (db != NULL) dba_db_delete(db);
 	}
 
 	void reset_database();
@@ -239,6 +234,8 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
+	use_db();
+
 	CHECKED(dba_db_delete_tables(db));
 	CHECKED(dba_db_reset(db, 0));
 	// Run twice to see if it is idempotent
@@ -248,6 +245,8 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
+	use_db();
+
 	reset_database();
 
 	/* Check dba_ana_* functions */
@@ -288,6 +287,8 @@ void to::test<3>()
 template<> template<>
 void to::test<4>()
 {
+	use_db();
+
 	/* Try many possible queries */
 
 	reset_database();
@@ -453,6 +454,8 @@ void to::test<4>()
 template<> template<>
 void to::test<5>()
 {
+	use_db();
+
 	/* Try a query checking all the steps */
 	reset_database();
 
@@ -544,6 +547,8 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
+	use_db();
+
 	/* Try a query for best value */
 	reset_database();
 
@@ -591,6 +596,8 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
+	use_db();
+
 	/* Check if deletion works */
 	reset_database();
 
@@ -644,6 +651,8 @@ void to::test<7>()
 template<> template<>
 void to::test<8>()
 {
+	use_db();
+
 	/* Test working with QC data */
 	reset_database();
 
@@ -723,6 +732,8 @@ void to::test<8>()
 template<> template<>
 void to::test<9>()
 {
+	use_db();
+
 	/* Prepare test data */
 	TestRecord base, a, b;
 
@@ -1158,6 +1169,8 @@ void to::test<9>()
 template<> template<>
 void to::test<10>()
 {
+	use_db();
+
 	reset_database();
 
 	int count, has_data;
@@ -1180,6 +1193,8 @@ void to::test<10>()
 template<> template<>
 void to::test<11>()
 {
+	use_db();
+
 	CHECKED(dba_db_remove_orphans(db));
 }
 
@@ -1187,6 +1202,8 @@ void to::test<11>()
 template<> template<>
 void to::test<12>()
 {
+	use_db();
+
 	/* Start with an empty database */
 	CHECKED(dba_db_reset(db, 0));
 
@@ -1263,6 +1280,8 @@ void to::test<12>()
 template<> template<>
 void to::test<13>()
 {
+	use_db();
+
 	/* Start with an empty database */
 	CHECKED(dba_db_reset(db, 0));
 
@@ -1297,6 +1316,8 @@ void to::test<13>()
 template<> template<>
 void to::test<14>()
 {
+	use_db();
+
 	reset_database();
 
 	dba_record_clear(query);
@@ -1325,6 +1346,8 @@ void to::test<14>()
 template<> template<>
 void to::test<15>()
 {
+	use_db();
+
 	reset_database();
 
 	dba_record_clear(insert);
@@ -1385,6 +1408,8 @@ void to::test<15>()
 template<> template<>
 void to::test<16>()
 {
+	use_db();
+
 	reset_database();
 
 	dba_record_clear(query);
@@ -1408,6 +1433,8 @@ void to::test<16>()
 template<> template<>
 void to::test<17>()
 {
+	use_db();
+
 	reset_database();
 
 	dba_record_clear(query);

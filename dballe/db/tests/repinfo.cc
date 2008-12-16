@@ -29,26 +29,18 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct repinfo_shar
+struct repinfo_shar : public db_test
 {
 	TestMsgEnv testenv;
 
-	// DB handle
-	dba_db db;
 	dba_db_repinfo ri;
 
-	repinfo_shar() : db(NULL)
+	repinfo_shar()
 	{
-		CHECKED(create_dba_db(&db));
-		CHECKED(dba_db_reset(db, NULL));
+		if (!has_db()) return;
+
 		CHECKED(dba_db_need_repinfo(db));
 		ri = db->repinfo;
-	}
-
-	~repinfo_shar()
-	{
-		CHECKED(dba_db_commit(db));
-		if (db != NULL) dba_db_delete(db);
 	}
 };
 TESTGRP(repinfo);
@@ -57,6 +49,8 @@ TESTGRP(repinfo);
 template<> template<>
 void to::test<1>()
 {
+	use_db();
+
 	int id, i;
 
 	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
@@ -76,6 +70,8 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
+	use_db();
+
 	int id, added, deleted, updated;
 
 	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
@@ -95,6 +91,8 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
+	use_db();
+
 	int id, added, deleted, updated;
 
 	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));

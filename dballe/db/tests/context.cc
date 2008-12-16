@@ -27,18 +27,16 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct context_shar
+struct context_shar : public db_test
 {
 	TestMsgEnv testenv;
 
-	// DB handle
-	dba_db db;
 	dba_db_context co;
 
-	context_shar() : db(NULL)
+	context_shar()
 	{
-		CHECKED(create_dba_db(&db));
-		CHECKED(dba_db_reset(db, NULL));
+		if (!has_db()) return;
+
 		CHECKED(dba_db_need_context(db));
 		co = db->context;
 		gen_ensure(co != NULL);
@@ -62,12 +60,6 @@ struct context_shar
 		CHECKED(dba_db_pseudoana_insert(pa, &id));
 		gen_ensure_equals(id, 2);
 	}
-
-	~context_shar()
-	{
-		CHECKED(dba_db_commit(db));
-		if (db != NULL) dba_db_delete(db);
-	}
 };
 TESTGRP(context);
 
@@ -75,6 +67,8 @@ TESTGRP(context);
 template<> template<>
 void to::test<1>()
 {
+	use_db();
+
 	// Insert a context
 	int id;
 	co->id_ana = 1;

@@ -29,6 +29,19 @@ using namespace tut;
 
 dba_err create_dba_db(dba_db* db);
 
+struct db_test
+{
+    // DB handle
+    dba_db db;
+
+	bool has_db() const { return db != NULL; }
+	void use_db();
+
+    db_test();
+	~db_test();
+};
+
+
 static inline SQL_TIMESTAMP_STRUCT mkts(int year, int month, int day, int hour, int minute, int second)
 {
 	SQL_TIMESTAMP_STRUCT res;

@@ -20,12 +20,34 @@
  */
 
 #include "test-utils-db.h"
+#include <dballe/db/internals.h>
 
+#include <tut.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 
 namespace tut_dballe {
+
+db_test::db_test() : db(NULL)
+{
+	CHECKED(create_dba_db(&db));
+	if (db == NULL) return;
+	CHECKED(dba_db_reset(db, NULL));
+}
+db_test::~db_test()
+{
+	if (db != NULL)
+	{
+		CHECKED(dba_db_commit(db));
+		dba_db_delete(db);
+	}
+}
+void db_test::use_db()
+{
+	if (db == NULL)
+		throw tut::no_such_test();
+}
 
 dba_err create_dba_db(dba_db* db)
 {

@@ -25,17 +25,13 @@
 namespace tut {
 using namespace tut_dballe;
 
-struct db_export_shar
+struct db_export_shar : public db_test
 {
 	TestMsgEnv testenv;
 
-	// DB handle
-	dba_db db;
-
-	db_export_shar() : db(NULL)
+	db_export_shar()
 	{
-		CHECKED(create_dba_db(&db));
-		CHECKED(dba_db_reset(db, NULL));
+		if (!has_db()) return;
 
 		dba_record rec;
 		CHECKED(dba_record_create(&rec));
@@ -86,7 +82,6 @@ struct db_export_shar
 
 	~db_export_shar()
 	{
-		if (db != NULL) dba_db_delete(db);
 		test_untag();
 	}
 };
@@ -112,6 +107,8 @@ static dba_err msg_collector(dba_msgs msgs, void* data)
 template<> template<>
 void to::test<1>()
 {
+	use_db();
+
 	// Query back the data
 	dba_record query;
 	CHECKED(dba_record_create(&query));
