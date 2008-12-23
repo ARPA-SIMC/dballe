@@ -1196,17 +1196,8 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 	 * BLOCK,       B01001   257
 	 * STATION,     B01002   258
 	*/
-	const char* query =
-		"SELECT d.id_var, d.value, ri.id, ri.prio"
-		"  FROM context c, data d, repinfo ri"
-		" WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
-		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'}"
-		"   AND c.ltype1 = 257 AND c.l1 = 0 AND c.ltype2 = 0 AND c.l2 = 0"
-		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
-		" GROUP BY d.id_var,ri.id "
-		"HAVING ri.prio=MAX(ri.prio)";
-
 	dba_err err = DBA_OK;
+	const char* query;
 	SQLHSTMT stm;
 	int res;
 	dba_db db = cur->db;
@@ -1215,6 +1206,34 @@ static dba_err dba_ana_add_extra(dba_db_cursor cur, dba_record rec)
 	SQLLEN out_val_ind;
 	DBALLE_SQL_C_SINT_TYPE out_rep_cod;
 
+#define BASE_QUERY \
+		"SELECT d.id_var, d.value, ri.id, ri.prio" \
+		"  FROM context c, data d, repinfo ri" \
+		" WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?" \
+		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'}" \
+		"   AND c.ltype1 = 257 AND c.l1 = 0 AND c.ltype2 = 0 AND c.l2 = 0" \
+		"   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
+
+	switch (cur->db->server_type)
+	{
+		case MYSQL:
+			query = BASE_QUERY
+				" GROUP BY d.id_var,ri.id "
+				"HAVING ri.prio=MAX(ri.prio)";
+			break;
+		default:
+			query = BASE_QUERY
+				" AND ri.prio=("
+				"  SELECT MAX(sri.prio) FROM repinfo sri"
+				"    JOIN context sc ON sri.id=sc.id_report"
+				"    JOIN data sd ON sc.id=sd.id_context"
+				"  WHERE sc.id_ana=c.id_ana"
+				"    AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2"
+				"    AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2"
+				"    AND sc.datetime=c.datetime AND sd.id_var=d.id_var)";
+			break;
+	}
+#undef BASE_QUERY
 
 	/* Allocate statement handle */
 	DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
