@@ -8,7 +8,7 @@
 
       include "dballef.h" 
       
-      integer :: dbahandle, handle,idbhandle,handle_err
+      integer :: handle,idbhandle,handle_err
       !data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
       !integer debug
       !data debug/1/
@@ -16,7 +16,7 @@
       !call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
   
 !     Database login
-      call dbinit(dbahandle)
+      call dbinit(idbhandle)
 
 !     Open a session
       call idba_preparati(idbhandle,handle,"write","write","write")

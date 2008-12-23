@@ -80,6 +80,12 @@
       call idba_setd(handle, "B12001", DBA_MVD)
       call ensure_no_error("unset var double")
 
+      call idba_fatto(handle)
+      call ensure_no_error("fatto")
+
+      call idba_arrivederci(dbahandle)
+      call ensure_no_error("arrivederci")
+  
 !     If we made it so far, exit with no error
       print*,"check_missing: all tests succeed."
 
