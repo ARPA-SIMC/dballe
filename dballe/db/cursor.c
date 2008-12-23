@@ -1117,7 +1117,7 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.ltype1, c.l1, c.ltype2, c.l2", &first));
 			if (cur->wanted & DBA_DB_WANT_TIMERANGE)
 				DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "c.ptype, c.p1, c.p2", &first));
-			if (!(cur->modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT))
+			if (!(cur->modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT) && (cur->wanted & DBA_DB_WANT_REPCOD))
 			{
 				if (cur->select_wanted & DBA_DB_FROM_RI)
 					DBA_RUN_OR_RETURN(add_to_orderby(cur->query, "ri.prio", &first));
