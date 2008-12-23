@@ -64,10 +64,14 @@ dba_err dba_db_data_create(dba_db db, dba_db_data* ins)
 		"INSERT IGNORE INTO data (id_context, id_var, value) VALUES(?, ?, ?)";
 	const char* insert_ignore_query_sqlite =
 		"INSERT OR IGNORE INTO data (id_context, id_var, value) VALUES(?, ?, ?)";
+	/* FIXME: there is a useless WHEN MATCHED, but there does not seem a way to
+	 * have a MERGE with only a WHEN NOT, although on the internet one finds
+	 * several examples with it */
 	const char* insert_ignore_query_oracle =
 		"MERGE INTO data USING"
 		" (SELECT ? as cnt, ? as var, ? as val FROM dual)"
 		" ON (id_context=cnt AND id_var=var)"
+		" WHEN MATCHED THEN UPDATE SET value=value"
 		" WHEN NOT MATCHED THEN"
 		"  INSERT (id_context, id_var, value) VALUES (cnt, var, val)";
 
@@ -130,7 +134,7 @@ dba_err dba_db_data_create(dba_db db, dba_db_data* ins)
 	}
 
 	/* Create the statement for insert ignore */
-	if (db->server_type != POSTGRES)
+	if (db->server_type != POSTGRES && db->server_type != ORACLE)
 	{
 		DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->iistm)));
 		SQLBindParameter(res->iistm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
@@ -202,7 +206,7 @@ dba_err dba_db_data_insert_or_fail(dba_db_data ins)
 
 dba_err dba_db_data_insert_or_ignore(dba_db_data ins, int* inserted)
 {
-	if (ins->db->server_type == POSTGRES)
+	if (ins->db->server_type == POSTGRES || ins->db->server_type == ORACLE)
 	{
 		/* Try to insert, but ignore error results */
 		SQLHSTMT stm = ins->istm;
@@ -210,11 +214,22 @@ dba_err dba_db_data_insert_or_ignore(dba_db_data ins, int* inserted)
 		/* TODO: when testing on postgres, find out the proper error code to
 		 * ignore and still act on the others */
 		*inserted = ((res == SQL_SUCCESS) || (res == SQL_SUCCESS_WITH_INFO));
-		/*
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-			return dba_db_error_odbc(SQL_HANDLE_STMT, stm, 
-						  "inserting data into table 'data'");
-		*/
+		if (!*inserted)
+		{
+			const char* code;
+
+			switch (ins->db->server_type)
+			{
+				/* Code for "Unique constraint violated" */
+				case ORACLE: code = "23000"; break;
+				case POSTGRES: code = "FIXME"; break;
+				default: code = "FIXME"; break;
+			}
+
+			DBA_RUN_OR_RETURN(dba_db_error_odbc_except(code,
+						SQL_HANDLE_STMT, stm,
+						"inserting data into table 'data'"));
+		}
 		return dba_error_ok();
 	} else {
 		SQLLEN rowcount;
