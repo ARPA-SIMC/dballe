@@ -95,11 +95,13 @@ void to::test<2>()
 	gen_ensure_equals(cur.remaining(), 1);
 	gen_ensure(expected.find(cur.varcode()) != expected.end());
 	gen_ensure_equals(result.enqs(cur.varcode()), expected[cur.varcode()]);
+	dba_varcode seen = cur.varcode();
 	expected.erase(cur.varcode());
 	gen_ensure_equals(cur.next(result), true);
 	gen_ensure_equals(cur.remaining(), 0);
 	gen_ensure(expected.find(cur.varcode()) != expected.end());
 	gen_ensure_equals(result.enqs(cur.varcode()), expected[cur.varcode()]);
+	gen_ensure(not result.contains(seen));
 	gen_ensure_equals(cur.next(result), false);
 }
 

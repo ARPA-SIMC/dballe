@@ -52,6 +52,7 @@ bool Cursor::next(Record& rec)
 	checked(dba_db_cursor_next(m_cur, &has_data));
 	if (has_data)
 	{
+		dba_record_clear(rec.rec());
 		checked(dba_db_cursor_to_record(m_cur, rec.rec()));
 		return true;
 	} else
