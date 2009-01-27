@@ -1,0 +1,3 @@
+DBA_TEST_DSN=test
+#DBA_TEST_USER=foo
+#DBA_TEST_PASS=bar
