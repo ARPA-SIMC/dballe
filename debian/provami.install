@@ -1,5 +1,5 @@
-debian/tmp/usr/bin/provami
-debian/tmp/usr/share/man/man1/provami*
-debian/tmp/usr/lib/python*/site-packages/provami
-debian/tmp/usr/share/dballe/icon*.png
-debian/tmp/usr/share/dballe/world.dat
+usr/bin/provami
+usr/share/man/man1/provami*
+usr/lib/python*/site-packages/provami
+usr/share/dballe/icon*.png
+usr/share/dballe/world.dat

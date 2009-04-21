@@ -1,2 +1,1 @@
-debian/tmp/usr/lib/libdballe.so.*
-debian/tmp/usr/lib/libdballe[0-9]*.so.*
+usr/lib/libdballe.so.*

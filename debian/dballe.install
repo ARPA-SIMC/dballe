@@ -1,6 +1,6 @@
-debian/tmp/usr/bin/dbadb
-debian/tmp/usr/bin/dbamsg
-debian/tmp/usr/bin/dbatbl
-debian/tmp/usr/share/man/man1/dbadb*
-debian/tmp/usr/share/man/man1/dbamsg*
-debian/tmp/usr/share/man/man1/dbatbl*
+usr/bin/dbadb
+usr/bin/dbamsg
+usr/bin/dbatbl
+usr/share/man/man1/dbadb*
+usr/share/man/man1/dbamsg*
+usr/share/man/man1/dbatbl*

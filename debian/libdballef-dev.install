@@ -1,6 +1,6 @@
-debian/tmp/usr/include/dballe/dballef.h
-debian/tmp/usr/lib/libdballef*.a
-debian/tmp/usr/lib/pkgconfig/libdballef*
-debian/tmp/usr/lib/libdballef*.la
-debian/tmp/usr/lib/libdballef*.so
-debian/tmp/usr/share/aclocal/libdballef*.m4
+usr/include/dballe/dballef.h
+usr/lib/libdballef*.a
+usr/lib/pkgconfig/libdballef*
+usr/lib/libdballef*.la
+usr/lib/libdballef*.so
+usr/share/aclocal/libdballef*.m4
