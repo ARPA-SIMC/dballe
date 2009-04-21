@@ -41,7 +41,7 @@ Description: DB-All.e C development library for weather research
 
 Package: libdballe-doc
 Section: libdevel
-Architecture: any
+Architecture: all
 Description: documentation for the DB-ALL.e C library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
