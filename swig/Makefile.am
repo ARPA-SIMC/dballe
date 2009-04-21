@@ -4,9 +4,9 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 export PYTHONPATH=.
 
-TESTS = test.py
+TESTS = test.py test-csv.py
 if DO_DBALLE_DB
-TESTS += test-db.py test-volnd.py run-unittests
+TESTS += test-db.py test-volnd.py
 endif
 
 doc_DATA = python-dballe.rst
@@ -45,6 +45,6 @@ dballe:
 
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
-EXTRA_DIST = README dballe.i test.py doc-dballe
+EXTRA_DIST = README dballe.i test.py test-db.py test-volnd.py test-rconvert.py test-csv.py doc-dballe
 
 CLEANFILES = dballe.py dballe.pyc dballe_wrap_python.cc dballe _dballe.so python-dballe.rst python-dballe.html

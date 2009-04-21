@@ -11,8 +11,9 @@ dballe (4.0.10-1) unstable; urgency=low
   * Build-Depend on ghostscript instead of gs
   * Added missing ${misc:Depends}
   * Updated debhelper compatibility level
+  * Move libdballe-doc to Section: doc.  Closes: #515920
 
- -- Enrico Zini <enrico@debian.org>  Tue, 21 Apr 2009 13:35:58 +0100
+ -- Enrico Zini <enrico@debian.org>  Tue, 21 Apr 2009 13:39:38 +0100
 
 dballe (4.0.9-1) unstable; urgency=low
 

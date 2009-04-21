@@ -40,7 +40,7 @@ Description: DB-All.e C development library for weather research
     data thinning, correlation of data from mixed sources
 
 Package: libdballe-doc
-Section: libdevel
+Section: doc
 Architecture: all
 Depends: ${misc:Depends}
 Description: documentation for the DB-ALL.e C library for weather research

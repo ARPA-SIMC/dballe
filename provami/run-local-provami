@@ -1,6 +1,0 @@
-#!/bin/sh
-export DBA_REPINFO=../tables/repinfo.csv
-export DBA_TABLES=../tables/
-export DBATBL=../tables
-export PYTHONPATH='../swig'
-exec ./provami.py "$@"

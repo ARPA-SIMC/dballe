@@ -34,6 +34,7 @@ dbadb.1: tools/dbadb doc/integrate_dbadb_manpage
 EXTRA_DIST = autogen.sh \
 	     libdballe.m4 libdballef.m4 libdballepp.m4 \
 	     libdballe.pc.in libdballef.pc.in libdballepp.pc.in \
-	     $(conf_DATA) dballe.spec
+	     $(conf_DATA) dballe.spec get_line_no run-check.conf.example \
+	     run-check run-local show_code_notes
 
 CLEANFILES = $(man_MANS)
