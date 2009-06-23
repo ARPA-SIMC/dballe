@@ -71,11 +71,9 @@ dba_err dba_file_create(dba_encoding type, const char* name, const char* mode, d
 		int c = getc(in);
 		if (c == EOF)
 		{
-			err = dba_error_system("reading the first byte of %s to detect its encoding", name);
-			goto cleanup;
-		}
-		if (ungetc(c, in) == EOF)
-		{
+			// In case of EOF, pick any type that will handle EOF gracefulle.
+			c = 'B';
+		} else if (ungetc(c, in) == EOF) {
 			err = dba_error_system("putting the first byte of %s back into the input stream", name);
 			goto cleanup;
 		}
