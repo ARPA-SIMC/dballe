@@ -85,6 +85,8 @@
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
  014018 INSTANTANEOUS SHORT-WAVE RADIATION                               W/M**2                    -3        -2048  12 W/M**2                   -3          4
  014021 GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED         J/M**2                    -4            0  15 J/M**2                   -4          5
+ 014192 [SIM] Instantenous sensible heat flux                            W m-2                     -3        -2048  12 W m-2                    -3          4
+ 014193 [SIM] Instantenous latent heat flux                              W m-2                     -3        -2048  12 W m-2                    -3          4
  015192 [SIM] NO Concentration                                           KG/M**3                    9            0  31 KG/M**3                  16         10
  015193 [SIM] NO2 Concentration                                          KG/M**3                    9            0  31 KG/M**3                  16         10
  015194 [SIM] O3 Concentration                                           KG/M**3                    9            0  31 KG/M**3                  16         10
