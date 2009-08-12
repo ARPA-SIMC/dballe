@@ -1,7 +1,8 @@
 dballe (4.0.11-1) unstable; urgency=low
 
-  * Don't give error in case of empty input
-  * Fixed byteswapping of AOF on big endian machines. Closes: #526021.
+  * New upstream version.
+     + Don't give error in case of empty input
+     + Fixed byteswapping of AOF on big endian machines. Closes: #526021.
   * Updated Standards-Version. No changes needed.
 
  -- Enrico Zini <enrico@debian.org>  Sat, 04 Jul 2009 17:27:24 +0200
