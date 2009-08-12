@@ -1,8 +1,8 @@
       program mkmsg
 
-ccc ****************************
-ccc * Create a test message file
-ccc ****************************
+! ****************************
+! * Create a test message file
+! ****************************
 
       integer handle, nstaz, ndata, nattr
       integer i, i1, i2, tmp
@@ -14,7 +14,7 @@ ccc ****************************
 
       call idba_error_set_callback(0, errorrep, 2, i)
 
-c     Open a session
+!     Open a session
       call getarg(1,fname)
       call getarg(2,encoding)
       call idba_messaggi(handle, fname, "w", encoding)
@@ -25,7 +25,7 @@ c     Open a session
       call idba_settimerange(handle, 254, 0, 0)
       call idba_setdate(handle, 2008, 7, 6, 5, 4, 3)
 
-c     One without setting 'query'
+!     One without setting 'query'
       call idba_seti(handle, "B12001", 2731+120)
       call idba_prendilo(handle)
       call idba_seti(handle, "*B33192", 74)
@@ -35,7 +35,7 @@ c     One without setting 'query'
       call idba_seti(handle, "B12003", 2731+100)
       call idba_prendilo(handle)
 
-c     One setting 'query' to subset
+!     One setting 'query' to subset
       call idba_setc(handle, "query", "subset")
       call idba_seti(handle, "B12001", 2731+110)
       call idba_prendilo(handle)
@@ -46,7 +46,7 @@ c     One setting 'query' to subset
       call idba_seti(handle, "B12003", 2731+100)
       call idba_prendilo(handle)
 
-c     One setting 'query' to message, and making a synop
+!     One setting 'query' to message, and making a synop
       call idba_setc(handle, "query", "message")
       call idba_seti(handle, "rep_cod", 1)
       call idba_seti(handle, "B12001",  2731+90)
@@ -57,7 +57,7 @@ c     One setting 'query' to message, and making a synop
       call idba_seti(handle, "B13003",  80)
       call idba_prendilo(handle)
 
-c     One setting 'query' to message, and making a synop
+!     One setting 'query' to message, and making a synop
       call idba_setc(handle, "query", "message synop")
       call idba_seti(handle, "rep_cod", 1)
       call idba_seti(handle, "B12001",  2731+90)
@@ -69,17 +69,17 @@ c     One setting 'query' to message, and making a synop
     
       end
 
-ccc ********************
-ccc * Utility functions
-ccc ********************
+! ********************
+! * Utility functions
+! ********************
 
-c     Compute the length of a string
+!     Compute the length of a string
       integer function istrlen(string)
       character string*(*)
       istrlen = len(string)
-      do while ((string(istrlen:istrlen).eq." " .or.
-     $     string(istrlen:istrlen).eq."").and.
-     $     istrlen.gt.0)
+      do while ((string(istrlen:istrlen).eq." " .or. &
+           string(istrlen:istrlen).eq."").and. &
+           istrlen.gt.0)
          istrlen = istrlen - 1
       enddo
       return

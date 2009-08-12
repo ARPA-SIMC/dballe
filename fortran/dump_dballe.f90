@@ -1,8 +1,8 @@
       program dump_dballe
 
-ccc *****************************************
-ccc * Dump the contents of a dballe database
-ccc *****************************************
+! *****************************************
+! * Dump the contents of a dballe database
+! *****************************************
 
       integer dbahandle, handle, handle_ana, nstaz, ndata, nattr
       integer i, i1, i2, tmp
@@ -14,14 +14,14 @@ ccc *****************************************
 
       call idba_error_set_callback(0, errorrep, 2, i)
 
-c     Database login
+!     Database login
       call idba_presentati(dbahandle, "test", "enrico", "")
 
-c     Open a session
+!     Open a session
       call idba_preparati(dbahandle, handle_ana, "read", "read", "read")
       call idba_preparati(dbahandle, handle, "read", "read", "read")
 
-c     Query all the stations
+!     Query all the stations
       call idba_quantesono(handle_ana, nstaz)
       write (*,*) nstaz," stazioni:"
 
@@ -34,17 +34,17 @@ c     Query all the stations
         call idba_enqi(handle_ana, "height", height)
         call idba_enqc(handle_ana,"rep_memo",rete)
         call idba_enqi(handle_ana,"rep_cod",codrete)
-        write (*,*) "Staz ",id," (",dlat,",",dlon,") '",
-     $      cname(:istrlen(cname)),"' h:",height,
-     $      " ",rep_memo,":",rep_cod
+        write (*,*) "Staz ",id," (",dlat,",",dlon,") '", &
+            cname(:istrlen(cname)),"' h:",height, &
+            " ",rep_memo,":",rep_cod
         call idba_seti(handle,"ana_id",id)
         call idba_voglioquesto(handle,ndata)
         write (*,*) " ",ndata," dati:"
         do i1=1, ndata
           call idba_dammelo(handle,btable)
           call idba_enqc(handle,btable,value)
-          write (*,*) '  var ',btable(:istrlen(btable)),": ",
-     $      value(:istrlen(btable))
+          write (*,*) '  var ',btable(:istrlen(btable)),": ", &
+            value(:istrlen(btable))
 
           call idba_enqi(handle,"!context_id",tmp)
           write (*,*) "  CTX: ",tmp
@@ -54,8 +54,8 @@ c     Query all the stations
           do i2=1, nattr
             call idba_ancora(handle,starbtable)
             call idba_enqc(handle,starbtable,avalue)
-            write(*,*) "    attr ",starbtable(:istrlen(starbtable)),
-     $        ": ",avalue(:istrlen(avalue))
+            write(*,*) "    attr ",starbtable(:istrlen(starbtable)), &
+              ": ",avalue(:istrlen(avalue))
           enddo
         enddo
       enddo
@@ -68,17 +68,17 @@ c     Query all the stations
     
       end
 
-ccc ********************
-ccc * Utility functions
-ccc ********************
+! ********************
+! * Utility functions
+! ********************
 
-c     Compute the length of a string
+!     Compute the length of a string
       integer function istrlen(string)
       character string*(*)
       istrlen = len(string)
-      do while ((string(istrlen:istrlen).eq." " .or.
-     $     string(istrlen:istrlen).eq."").and.
-     $     istrlen.gt.0)
+      do while ((string(istrlen:istrlen).eq." " .or. &
+           string(istrlen:istrlen).eq."").and. &
+           istrlen.gt.0)
          istrlen = istrlen - 1
       enddo
       return
