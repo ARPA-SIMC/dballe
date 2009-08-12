@@ -27,7 +27,6 @@
 #include <dballe/core/file_internals.h>
 
 #include <assert.h>
-#include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
 #include <byteswap.h>
@@ -215,7 +214,7 @@ dba_err aof_codec_read_record(dba_file file, uint32_t** rec, int* len)
 	if ((len_word & 0xFF000000) != 0)
 	{
 		swapwords = 1;
-		len_word = ntohl(len_word);
+		len_word = bswap_32(len_word);
 	}
 
 	if (len_word % 4 != 0)
@@ -245,8 +244,8 @@ dba_err aof_codec_read_record(dba_file file, uint32_t** rec, int* len)
 	{
 		int i;
 		for (i = 0; i < len_word / 4; i++)
-			(*rec)[i] = ntohl((*rec)[i]);
-		len_word1 = ntohl(len_word1);
+			(*rec)[i] = bswap_32((*rec)[i]);
+		len_word1 = bswap_32(len_word1);
 	}
 
 	if (len_word != len_word1)
