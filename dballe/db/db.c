@@ -465,7 +465,7 @@ static dba_err dba_db_postinit(dba_db* db)
 			goto fail;
 		}
 	} else {
-		DBA_RUN_OR_GOTO(fail, dba_db_run_sql(*db, "PRAGMA journal_mode = TRUNCATE"));
+		DBA_RUN_OR_GOTO(fail, dba_db_run_sql(*db, "PRAGMA journal_mode = MEMORY"));
 		DBA_RUN_OR_GOTO(fail, dba_db_run_sql(*db, "PRAGMA legacy_file_format = 0"));
 	}
 
