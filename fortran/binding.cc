@@ -48,11 +48,15 @@ extern "C" {
  * First attempt using constants
  */
 //#define MISSING_STRING ""
-#define MISSING_BYTE 0x7f
+// Largest signed one byte value
+#define MISSING_BYTE SCHAR_MAX
 // integer 2 byte   32767
-#define MISSING_INT 0x7fffffff
+// Largest signed int value
+#define MISSING_INT INT_MAX
 //#define MISSING_REAL (3.4028235E+38f)
+// Largest positive float value
 #define MISSING_REAL FLT_MAX
+// Largest positive double value
 #define MISSING_DOUBLE   DBL_MAX
 //#define MISSING_DOUBLE   (1.79769E+308)
 //#define MISSING_DOUBLE   (1.7976931348623167E+308)

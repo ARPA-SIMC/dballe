@@ -1,3 +1,9 @@
+dballe (4.0.12-1) unstable; urgency=low
+
+  * Redefine Fortran<->C constants to be more portable
+
+ -- Enrico Zini <enrico@debian.org>  Tue, 15 Sep 2009 13:24:32 +0200
+
 dballe (4.0.11-1) unstable; urgency=low
 
   * New upstream version.
