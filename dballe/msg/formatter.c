@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>     /* strtoul, getenv */
+#include <limits.h>
 
 dba_err dba_formatter_describe_level(int ltype, int l1, char** res)
 {
@@ -92,6 +93,7 @@ dba_err dba_formatter_describe_level(int ltype, int l1, char** res)
 		case 252: *res = strdup("Deep convective cloud top level"); break;
 		case 253: *res = strdup("Lowest bottom level of supercooled liquid water layer"); break;
 		case 254: *res = strdup("Highest top level of supercooled liquid water layer"); break;
+		case 255: *res = strdup("Missing"); break;
 		case 256:
 			switch (l1) {
 				case 0: *res = strdup("General cloud group"); break;
@@ -122,7 +124,7 @@ dba_err dba_formatter_describe_level_or_layer(int ltype1, int l1, int ltype2, in
 	char* a = NULL;
 	char* b = NULL;
 
-	if (ltype2 == 0 && l2 == 0)
+	if (ltype2 < 0 || ltype2 == INT_MAX)
 		return dba_formatter_describe_level(ltype1, l1, buf);
 
 	DBA_RUN_OR_GOTO(cleanup, dba_formatter_describe_level(ltype1, l1, &a));

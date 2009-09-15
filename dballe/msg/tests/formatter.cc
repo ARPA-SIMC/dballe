@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,6 +60,26 @@ void to::test<2>()
 	}
 }
 
+// Verify some well-known descriptions
+template<> template<>
+void to::test<3>()
+{
+	char* t = 0;
+	CHECKED(dba_formatter_describe_level(2147483647, 2147483647, &t));
+	gen_ensure(t != 0);
+	gen_ensure_equals(string(t), "2147483647 2147483647");
+	free(t);
+
+	CHECKED(dba_formatter_describe_level_or_layer(103, 2000, INT_MAX, INT_MAX, &t));
+	gen_ensure(t != 0);
+	gen_ensure_equals(string(t), "2.000m above ground");
+	free(t);
+
+	CHECKED(dba_formatter_describe_level_or_layer(103, 2000, 103, 4000, &t));
+	gen_ensure(t != 0);
+	gen_ensure_equals(string(t), "Layer from [2.000m above ground] to [4.000m above ground]");
+	free(t);
+}
 
 }
 
