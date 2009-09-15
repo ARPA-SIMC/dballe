@@ -1,0 +1,11 @@
+*.idx
+*.dvi
+*.log
+*.ps
+*.toc
+*.aux
+*.blg
+c++_api/
+c++_xml/
+c_api/
+dballe-doc.i
