@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ typedef struct _dba_db* dba_db;
 #endif
 
 /**
- * Start a session with DBALLE
+ * Start a session with DB-All.e
  *
  * @param dsn
  *   The ODBC DSN of the database to use
@@ -54,12 +54,26 @@ typedef struct _dba_db* dba_db;
  * @param password
  *   The password to use to connect to the DSN.  To specify an empty password,
  *   pass "" or NULL
- * @param db
+ * @retval db
  *   The dba_db handle returned by the function
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_create(const char* dsn, const char* user, const char* password, dba_db* db);
+
+/**
+ * Start a session with DB-All.e
+ *
+ * @param config
+ *   The string with the configuration to use to start the connection. This is
+ *   passed as is to SQLDriverConnect, so see ODBC documentation for its
+ *   format.
+ * @retval db
+ *   The dba_db handle returned by the function
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
+dba_err dba_db_create_generic(const char* config, dba_db* db);
 
 /**
  * End a session with DBALLE.

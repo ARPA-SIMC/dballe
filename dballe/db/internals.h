@@ -278,6 +278,11 @@ void dba_db_seq_delete(dba_db_seq seq);
 dba_err dba_db_drop_table_if_exists(dba_db db, const char* name);
 
 /**
+ * Run a one-off SQL query
+ */
+dba_err dba_db_run_sql(dba_db db, const char* query);
+
+/**
  * Begin a transaction
  */
 dba_err dba_db_begin(dba_db db);

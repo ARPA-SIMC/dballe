@@ -41,11 +41,19 @@ db_test::db_test() : db(NULL)
 	const char* dsn = getenv("DBA_TEST_DSN");
 	const char* user = getenv("DBA_TEST_USER");
 	const char* pass = getenv("DBA_TEST_PASS");
-	if (dsn == NULL) return;
-	if (user == NULL) user = "";
-	if (pass == NULL) pass = "";
+	if (dsn != NULL)
+	{
+		if (user == NULL) user = "";
+		if (pass == NULL) pass = "";
 
-	CHECKED(dba_db_create(dsn, user, pass, &db));
+		CHECKED(dba_db_create(dsn, user, pass, &db));
+	} else {
+		char* wd = get_current_dir_name();
+		string cfg(wd);
+		free(wd);
+		cfg = "Driver=SQLite3;Database="+cfg+"/test.sqlite;";
+		CHECKED(dba_db_create_generic(cfg.c_str(), &db));
+	}
 	CHECKED(dba_db_reset(db, NULL));
 }
 db_test::~db_test()

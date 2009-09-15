@@ -373,13 +373,11 @@ static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
 	return dba_error_ok();
 }		
 
-
-dba_err dba_db_create(const char* dsn, const char* user, const char* password, dba_db* db)
+// First part of initialising a dba_db
+static dba_err dba_db_preinit(dba_db* db)
 {
 	dba_err err = DBA_OK;
-	char drivername[50];
 	int sqlres;
-	SQLSMALLINT len;
 
 	if (dba_od_env_initialized == 0)
 	{
@@ -419,18 +417,20 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 	/* Set the connection timeout */
 	/* SQLSetConnectAttr(pc.od_conn, SQL_LOGIN_TIMEOUT, (SQLPOINTER *)5, 0); */
 
-	/* Connect to the DSN */
-	sqlres = SQLConnect((*db)->od_conn,
-						(SQLCHAR*)dsn, SQL_NTS,
-						(SQLCHAR*)user, SQL_NTS,
-						(SQLCHAR*)(password == NULL ? "" : password), SQL_NTS);
-	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
-				"Connecting to DSN %s as user %s", dsn, user);
-		goto fail;
-	}
-	(*db)->connected = 1;
+	return dba_error_ok();
+
+fail:
+	dba_db_delete(*db);
+	*db = 0;
+	return err;
+}
+
+static dba_err dba_db_postinit(dba_db* db)
+{
+	dba_err err = DBA_OK;
+	char drivername[50];
+	int sqlres;
+	SQLSMALLINT len;
 
 	/* Find out what kind of database we are working with */
 	sqlres = SQLGetInfo((*db)->od_conn, SQL_DRIVER_NAME, (SQLPOINTER)drivername, 50, &len);
@@ -456,11 +456,17 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 
 #ifdef DBA_USE_TRANSACTIONS
 	/* Set manual commit */
-	sqlres = SQLSetConnectAttr((*db)->od_conn, SQL_ATTR_AUTOCOMMIT, SQL_AUTOCOMMIT_OFF, 0);
-	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+	if ((*db)->server_type != SQLITE)
 	{
-		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn, "Disabling ODBC autocommit");
-		goto fail;
+		sqlres = SQLSetConnectAttr((*db)->od_conn, SQL_ATTR_AUTOCOMMIT, SQL_AUTOCOMMIT_OFF, 0);
+		if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+		{
+			err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn, "Disabling ODBC autocommit");
+			goto fail;
+		}
+	} else {
+		DBA_RUN_OR_GOTO(fail, dba_db_run_sql(*db, "PRAGMA journal_mode = TRUNCATE"));
+		DBA_RUN_OR_GOTO(fail, dba_db_run_sql(*db, "PRAGMA legacy_file_format = 0"));
 	}
 
     /* TODO: no need to precompile all these queries anymore */
@@ -528,6 +534,71 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 	
 fail:
 	dba_db_delete(*db);
+	*db = 0;
+	return err;
+}
+
+dba_err dba_db_create(const char* dsn, const char* user, const char* password, dba_db* db)
+{
+	dba_err err = DBA_OK;
+	int sqlres;
+	*db = NULL;
+
+	DBA_RUN_OR_GOTO(fail, dba_db_preinit(db));
+
+	/* Connect to the DSN */
+	sqlres = SQLConnect((*db)->od_conn,
+						(SQLCHAR*)dsn, SQL_NTS,
+						(SQLCHAR*)user, SQL_NTS,
+						(SQLCHAR*)(password == NULL ? "" : password), SQL_NTS);
+	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
+				"Connecting to DSN %s as user %s", dsn, user);
+		goto fail;
+	}
+	(*db)->connected = 1;
+
+	DBA_RUN_OR_GOTO(fail, dba_db_postinit(db));
+
+	return dba_error_ok();
+	
+fail:
+	if (*db != NULL) dba_db_delete(*db);
+	*db = 0;
+	return err;
+}
+
+dba_err dba_db_create_generic(const char* config, dba_db* db)
+{
+	dba_err err = DBA_OK;
+	char sdcout[1024];
+	int sqlres;
+	SQLSMALLINT outlen;
+	*db = NULL;
+
+	DBA_RUN_OR_GOTO(fail, dba_db_preinit(db));
+
+	/* Connect to the DSN */
+	sqlres = SQLDriverConnect((*db)->od_conn, NULL,
+					(SQLCHAR*)config, SQL_NTS,
+					sdcout, 1024, &outlen,
+					SQL_DRIVER_NOPROMPT);
+
+	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
+				"Connecting to DB using configuration %s", config);
+		goto fail;
+	}
+	(*db)->connected = 1;
+
+	DBA_RUN_OR_GOTO(fail, dba_db_postinit(db));
+
+	return dba_error_ok();
+	
+fail:
+	if (*db != NULL) dba_db_delete(*db);
 	*db = 0;
 	return err;
 }

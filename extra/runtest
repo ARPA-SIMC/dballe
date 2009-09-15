@@ -1,12 +1,25 @@
 #!/bin/sh -e
 
-TOP_SRCDIR=`dirname $0`/..
+TOP_SRCDIR=`pwd`/`dirname $0`/..
+
+CMD=`pwd`/"$1"
+
+## Set up the test environment
 
 export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
 export DBA_TABLES=$TOP_SRCDIR/tables
 export DBA_TESTDATA=$TOP_SRCDIR/extra
 
-CMD="$1"
+TESTDIR="`mktemp -d`"
+cd "$TESTDIR"
+
+touch test.sqlite
+
+## Clean up the test environment at exit unless asked otherwise
+cleanup() {
+	test -z "$PRESERVE" && rm -rf "$TESTDIR"
+}
+trap cleanup EXIT
 
 #id=`date +%y%m%d%H%M%S`
 #$DEBUGGER $BIN $ARGS 2>&1 | tee `pwd`/testrun-$id
@@ -18,10 +31,28 @@ BASE=`basename $CMD`
 if [ ! -z "$DEBUGGER" ] && [ -x $DIR/.libs/lt-$BASE ]
 then
 	echo "Running $DEBUGGER $DIR/.libs/lt-$BASE $ARGS"
-	$DEBUGGER $DIR/.libs/lt-$BASE $ARGS
+	RES=0
+	if ! $DEBUGGER $DIR/.libs/lt-$BASE $ARGS
+	then
+		RES=$?
+		echo "Failed with result $RES"
+	fi
 else
 	echo "Running $DEBUGGER $CMD $ARGS"
-	$DEBUGGER $CMD $ARGS
+	RES=0
+	if !  $DEBUGGER $CMD $ARGS
+	then
+		RES=$?
+		echo "Failed with result $RES"
+	fi
 fi
 
-exit $?
+
+if [ ! -z "$PAUSE" ]
+then
+	echo "Post-test inspection requested."
+	echo "Exit this shell to cleanup the test environment."
+	bash
+fi
+
+exit $RES

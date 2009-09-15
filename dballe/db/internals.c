@@ -240,6 +240,27 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
+dba_err dba_db_run_sql(dba_db db, const char* query)
+{
+	dba_err err = DBA_OK;
+	SQLHSTMT stm = NULL;
+	int res;
+
+	/* Allocate statement handle */
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
+
+	res = SQLExecDirect(stm, query, SQL_NTS);
+	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Running query '%s'", query);
+		goto cleanup;
+	}
+
+cleanup:
+	if (stm != NULL)
+		SQLFreeHandle(SQL_HANDLE_STMT, stm);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
 
 #ifdef DBA_USE_TRANSACTIONS
 dba_err dba_db_begin(dba_db db)
