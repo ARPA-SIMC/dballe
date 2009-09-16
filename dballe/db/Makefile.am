@@ -59,7 +59,7 @@ TESTS =
 check_PROGRAMS += tut_test
 TESTS += $(check_PROGRAMS)
 
-CXXFLAGS += -O0
+CXXFLAGS += -O0 -Werror
 
 noinst_HEADERS = test-utils-db.h
 

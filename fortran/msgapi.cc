@@ -146,7 +146,7 @@ void MsgAPI::elencamele()
 
 	checked(dba_record_set_ana_context(output));
 	checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 0));
-	checked(dba_record_key_seti(output, DBA_KEY_REP_COD, dba_msg_repcod_from_type(msg->type)));
+	checked(dba_record_key_setc(output, DBA_KEY_REP_MEMO, dba_msg_repmemo_from_type(msg->type)));
 
 	for (int l = 0; l < level->data_count; ++l)
 	{
@@ -239,7 +239,7 @@ const char* MsgAPI::dammelo()
 	if (dba_msg_level level = dba_msg_find_level(msg, 257, 0, 0, 0))
 	{
 		checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 0));
-		checked(dba_record_key_seti(output, DBA_KEY_REP_COD, dba_msg_repcod_from_type(msg->type)));
+		checked(dba_record_key_setc(output, DBA_KEY_REP_MEMO, dba_msg_repmemo_from_type(msg->type)));
 
 		for (int l = 0; l < level->data_count; ++l)
 		{
@@ -356,11 +356,11 @@ void MsgAPI::prendilo()
 	const char* sval;
 	int ival, found;
 	double dval;
-	checked(dba_record_key_enqi(input, DBA_KEY_REP_COD, &ival, &found));
-	if (found) 
+	checked(dba_record_key_enqc(input, DBA_KEY_REP_MEMO, &sval));
+	if (sval) 
 	{
-		checked(dba_msg_set_rep_cod(wmsg, ival, -1));
-		wmsg->type = dba_msg_type_from_repcod(ival);
+		checked(dba_msg_set_rep_memo(wmsg, sval, -1));
+		wmsg->type = dba_msg_type_from_repmemo(sval);
 	}
 	checked(dba_record_key_enqi(input, DBA_KEY_ANA_ID, &ival, &found));
 	if (found) checked(dba_msg_seti(wmsg, DBA_VAR(0, 1, 192), ival, -1, 257, 0, 0, 0, 0, 0, 0));

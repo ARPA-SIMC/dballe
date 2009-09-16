@@ -55,16 +55,16 @@ extern "C" {
  *   The DBALLE database to write the data into
  * @param msg
  *   The dba_msg containing the data to import
- * @param repcod
- *   Report code to which imported data belong.  If -1 is passed, then it will
- *   be chosen automatically based on the message type.
+ * @param repmemo
+ *   Report mnemonic to which imported data belong.  If NULL is passed, then it
+ *   will be chosen automatically based on the message type.
  * @param flags
  *   Customise different aspects of the import process.  It is a bitmask of the
  *   various DBA_IMPORT_* macros.
  * @return
  *   The error indicator for the function
  */
-dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags);
+dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags);
 
 /**
  * Import dba_msgs messages into the Dballe database
@@ -73,16 +73,16 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags);
  *   The DBALLE database to write the data into
  * @param msgs
  *   The dba_msgs containing the data to import
- * @param repcod
- *   Report code to which imported data belong.  If -1 is passed, then it will
- *   be chosen automatically based on the message type.
+ * @param repmemo
+ *   Report mnemonic to which imported data belong.  If NULL is passed, then it
+ *   will be chosen automatically based on the message type.
  * @param flags
  *   Customise different aspects of the import process.  It is a bitmask of the
  *   various DBA_IMPORT_* macros.
  * @return
  *   The error indicator for the function
  */
-dba_err dba_import_msgs(dba_db db, dba_msgs msgs, int repcod, int flags);
+dba_err dba_import_msgs(dba_db db, dba_msgs msgs, const char* repmemo, int flags);
 
 
 #ifdef  __cplusplus

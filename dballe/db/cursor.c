@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -847,6 +847,7 @@ static dba_err add_other_froms(dba_db_cursor cur, unsigned int base)
 	return dba_error_ok();
 }
 
+#if 0
 static dba_err rowcount(dba_db db, const char* table, DBALLE_SQL_C_SINT_TYPE* count)
 {
 	dba_err err = DBA_OK;
@@ -889,6 +890,7 @@ static dba_err setstmtattr(SQLHSTMT stm, SQLINTEGER attr, SQLPOINTER val, SQLINT
 		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, context);
 	return dba_error_ok();
 }
+#endif
 
 /* FIXME: this is a temporary solution giving an approximate row count only:
  * insert/delete/update queries run between the count and the select will

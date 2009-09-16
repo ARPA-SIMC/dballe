@@ -45,12 +45,12 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 	dba_err err = DBA_OK;
 	int i, j;
 	int ltype1 = -1, l1 = -1, ltype2 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
-	dba_var repcod = dba_msg_get_rep_cod_var(src);
+	dba_var repmemo = dba_msg_get_rep_memo_var(src);
 
-	if (repcod)
-		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(repcod), repcod));
+	if (repmemo)
+		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(repmemo), repmemo));
 	else if (src->type != MSG_GENERIC)
-		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 193), dba_msg_repcod_from_type(src->type)));
+		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_c(dst, DBA_VAR(0, 1, 194), dba_msg_repmemo_from_type(src->type)));
 
 	for (i = 0; i < src->data_count; i++)
 	{
@@ -63,7 +63,7 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 			if (dba_var_value(d->var) == NULL)
 				continue;
 			// Don't add rep_cod again
-			if (d->var == repcod)
+			if (d->var == repmemo)
 				continue;
 
 			/* Update the context in the message, if needed */

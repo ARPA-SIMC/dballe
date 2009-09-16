@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,6 +69,9 @@ dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
 			break;
 		case POSTGRES:
 			insert_query = "INSERT INTO pseudoana (id, lat, lon, ident) VALUES (nextval('seq_pseudoana'), ?, ?, ?)";
+			break;
+		case MYSQL:
+		case SQLITE:
 			break;
 	}
 

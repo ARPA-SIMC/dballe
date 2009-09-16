@@ -164,7 +164,6 @@ static struct template tpl_gen[] = {
 static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, bufrex_subset dst, int type)
 {
 	int ltype = -1, l1 = -1;
-	dba_msg_datum d;
 	int i;
 	
 	for (i = 0; i < src->data_count; ++i)

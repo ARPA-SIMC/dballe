@@ -142,6 +142,11 @@ dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file, int* added, i
 dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod);
 
 /**
+ * Get the report mnemonic from a report code
+ */
+dba_err dba_db_rep_memo_from_cod(dba_db db, int rep_cod, const char** memo);
+
+/**
  * Verify that a rep_cod is supported by the database
  *
  * @param db

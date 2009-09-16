@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 dba_err dba_msg_create(dba_msg* msg)
 {
@@ -307,45 +308,57 @@ const char* dba_msg_type_name(dba_msg_type type)
 	return "(unknown)";
 }
 
-dba_msg_type dba_msg_type_from_repcod(int repcod)
+dba_msg_type dba_msg_type_from_repmemo(const char* repmemo)
 {
-	switch (repcod)
+	if (repmemo == NULL || repmemo[0] == 0) return MSG_GENERIC;
+	switch (tolower(repmemo[0]))
 	{
-		case 1:  return MSG_SYNOP;
-		case 2:  return MSG_METAR;
-		case 10: return MSG_SHIP;
-		case 9:  return MSG_BUOY;
-		case 12: return MSG_AIREP;
-		case 13: return MSG_AMDAR;
-		case 14: return MSG_ACARS;
-		case 4:  return MSG_PILOT;
-		case 3:  return MSG_TEMP;		
-		case 11: return MSG_TEMP_SHIP;
-		case 200: return MSG_SAT;
-		case 8:  return MSG_POLLUTION;
-		case 255:
-		default: return MSG_GENERIC;
+		case 'a':
+			if (strcasecmp(repmemo+1, "cars")==0) return MSG_ACARS;
+			if (strcasecmp(repmemo+1, "irep")==0) return MSG_AIREP;
+			if (strcasecmp(repmemo+1, "mdar")==0) return MSG_AMDAR;
+			break;
+		case 'b':
+			if (strcasecmp(repmemo+1, "uoy")==0) return MSG_BUOY;
+			break;
+		case 'm':
+			if (strcasecmp(repmemo+1, "etar")==0) return MSG_METAR;
+			break;
+		case 'p':
+			if (strcasecmp(repmemo+1, "ilot")==0) return MSG_PILOT;
+			if (strcasecmp(repmemo+1, "ollution")==0) return MSG_POLLUTION;
+			break;
+		case 's':
+			if (strcasecmp(repmemo+1, "atellite")==0) return MSG_SAT;
+			if (strcasecmp(repmemo+1, "hip")==0) return MSG_SHIP;
+			if (strcasecmp(repmemo+1, "ynop")==0) return MSG_SYNOP;
+			break;
+		case 't':
+			if (strcasecmp(repmemo+1, "emp")==0) return MSG_TEMP;
+			if (strcasecmp(repmemo+1, "empship")==0) return MSG_TEMP_SHIP;
+			break;
 	}
+	return MSG_GENERIC;
 }
 
-int dba_msg_repcod_from_type(dba_msg_type type)
+const char* dba_msg_repmemo_from_type(dba_msg_type type)
 {
 	switch (type)
 	{
-		case MSG_SYNOP:		return 1;
-		case MSG_METAR:		return 2;
-		case MSG_SHIP:		return 10;
-		case MSG_BUOY:		return 9;
-		case MSG_AIREP:		return 12;
-		case MSG_AMDAR:		return 13;
-		case MSG_ACARS:		return 14;
-		case MSG_PILOT:		return 4;
-		case MSG_TEMP:		return 3;
-		case MSG_TEMP_SHIP:	return 11;
-		case MSG_SAT:		return 200;
-		case MSG_POLLUTION:	return 8;
+		case MSG_SYNOP:		return "synop";
+		case MSG_METAR:		return "metar";
+		case MSG_SHIP:		return "ship";
+		case MSG_BUOY:		return "buoy";
+		case MSG_AIREP:		return "airep";
+		case MSG_AMDAR:		return "amdar";
+		case MSG_ACARS:		return "acars";
+		case MSG_PILOT:		return "pilot";
+		case MSG_TEMP:		return "temp";
+		case MSG_TEMP_SHIP:	return "tempship";
+		case MSG_SAT:		return "satellite";
+		case MSG_POLLUTION:	return "pollution";
 		case MSG_GENERIC:
-		default:			return 255;
+		default:			return "generic";
 	}
 }
 

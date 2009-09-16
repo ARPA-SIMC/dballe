@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -130,7 +130,7 @@ protected:
 		for (msg_vector::const_iterator i = msgs.begin();
 				i != msgs.end(); i++)
 			for (int j = 0; j < (*i)->len; ++j)
-			DBA_RUN_OR_RETURN(dba_import_msg(db, (*i)->msgs[j], -1, DBA_IMPORT_OVERWRITE | DBA_IMPORT_NO_TRANSACTIONS | DBA_IMPORT_ATTRS));
+			DBA_RUN_OR_RETURN(dba_import_msg(db, (*i)->msgs[j], NULL, DBA_IMPORT_OVERWRITE | DBA_IMPORT_NO_TRANSACTIONS | DBA_IMPORT_ATTRS));
 
 		timing("inserted %d messages in the database", msgs.size());
 
@@ -141,7 +141,7 @@ protected:
 				i != msgs.end(); i++)
 			for (int j = 0; j < (*i)->len; ++j)
 			{
-				DBA_RUN_OR_RETURN(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type((*i)->msgs[j]->type)));
+				DBA_RUN_OR_RETURN(dba_record_key_setc(query, DBA_KEY_REP_MEMO, dba_msg_repmemo_from_type((*i)->msgs[j]->type)));
 				DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_counter, &count));
 			}
 

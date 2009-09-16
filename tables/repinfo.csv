@@ -1,15 +1,13 @@
-01,synop,report synottico,101,oss,0
+01,synop,synop,101,oss,0
 02,metar,metar,81,oss,0
-03,temp,radiosondaggio,98,oss,2
-04,pilot,sondaggi pilot,80,oss,2
-09,boe,dati ondametrici,50,oss,31
-10,ship,synop da nave,99,oss,1
-11,tempship,temp da nave,100,oss,2
+03,temp,sounding,98,oss,2
+04,pilot,wind profile,80,oss,2
+09,buoy,buoy,50,oss,31
+10,ship,synop ship,99,oss,1
+11,tempship,temp ship,100,oss,2
 12,airep,airep,82,oss,4
 13,amdar,amdar,97,oss,4
 14,acars,acars,96,oss,4
 42,pollution,pollution,199,oss,8
-50,regioni,dati regioni per verifica LAMI,90,oss,255
-60,icecast,dati meteo autostradali,40,oss,255
-200,noaa,NOAA satellites,41,oss,255
-255,generic,export generici da DB Meteo,1000,?,255
+200,satellite,NOAA satellites,41,oss,255
+255,generic,generic data,1000,?,255

@@ -139,7 +139,7 @@ dnl AC_DEFINE_UNQUOTED(TABLE_DIR, "$def_tabledir", "Default location for table f
 LIBDBALLE_VERSION_INFO=`echo $VERSION | awk -F. '{ printf "%d:%d:%d", $1+$2, $3, $2 }'`
 AC_SUBST(LIBDBALLE_VERSION_INFO)
 
-CFLAGS="-Wall $CFLAGS"
+CFLAGS="-Wall -Werror $CFLAGS"
 
 # Enforce dependencies
 if ! test x"$enable_dballepp"=x"yes"

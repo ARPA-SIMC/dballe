@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,9 +41,9 @@ struct db_import_shar : public db_test
 };
 TESTGRP(db_import);
 
-static int rep_cod_from_msg(dba_msg msg)
+static const char* rep_memo_from_msg(dba_msg msg)
 {
-	return dba_msg_repcod_from_type(msg->type);
+	return dba_msg_repmemo_from_type(msg->type);
 }
 
 
@@ -96,10 +96,10 @@ void to::test<1>()
 		dba_msg msg = inmsgs->msgs[0];
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 
 		vector<dba_msg> msgs;
-		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
+		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg)));
 		CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 		gen_ensure_equals(msgs.size(), 1u);
 		gen_ensure(msgs[0] != NULL);
@@ -167,10 +167,10 @@ void to::test<2>()
 		dba_msg msg = inmsgs->msgs[0];
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 
 		vector<dba_msg> msgs;
-		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
+		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg)));
 		CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 		gen_ensure_equals(msgs.size(), 1u);
 		gen_ensure(msgs[0] != NULL);
@@ -227,10 +227,10 @@ void to::test<3>()
 		dba_msg msg = inmsgs->msgs[0];
 
 		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 
 		vector<dba_msg> msgs;
-		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg)));
+		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg)));
 		CHECKED(dba_db_export(db, query, msg_collector, &msgs));
 		gen_ensure_equals(msgs.size(), 1u);
 		gen_ensure(msgs[0] != NULL);
@@ -272,12 +272,12 @@ void to::test<4>()
 	dba_msg msg2 = msgs2->msgs[0];
 
 	CHECKED(dba_db_reset(db, NULL));
-	CHECKED(dba_import_msg(db, msg1, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
-	CHECKED(dba_import_msg(db, msg2, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+	CHECKED(dba_import_msg(db, msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+	CHECKED(dba_import_msg(db, msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 
 	dba_record query;
 	CHECKED(dba_record_create(&query));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, rep_cod_from_msg(msg1)));
+	CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg1)));
 
 	// fprintf(stderr, "Queried: %d\n", rep_cod_from_msg(msg1));
 
@@ -327,7 +327,7 @@ void to::test<5>()
 		dba_msg msg;
 		CHECKED(dba_msg_create(&msg));
 		CHECKED(gen.fill_message(msg, rnd(0.8)));
-		CHECKED(dba_import_msg(db, msg, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 		dba_msg_delete(msg);
 	}
 
@@ -411,7 +411,7 @@ void to::test<6>()
 	map<dba_msg_type, int> rep_cods;
 	for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
 	{
-		CHECKED(dba_import_msgs(db, *i, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS | DBA_IMPORT_OVERWRITE));
+		CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS | DBA_IMPORT_OVERWRITE));
 		rep_cods[(*i)->msgs[0]->type]++;
 	}
 
@@ -422,7 +422,7 @@ void to::test<6>()
 		test_tag(dba_msg_type_name(i->first));
 
 		int count = 0;
-		CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type(i->first)));
+		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, dba_msg_repmemo_from_type(i->first)));
 		CHECKED(dba_db_export(db, query, msg_counter, &count));
 		gen_ensure_equals(count, i->second);
 	}
@@ -461,7 +461,7 @@ void to::test<7>()
 	//map<dba_msg_type, int> rep_cods;
 	for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
 	{
-		CHECKED(dba_import_msgs(db, *i, -1, DBA_IMPORT_ATTRS));
+		CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS));
 		//rep_cods[(*i)->msgs[0]->type]++;
 	}
 
@@ -544,7 +544,7 @@ void to::test<8>()
 	//map<dba_msg_type, int> rep_cods;
 	for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
 	{
-		CHECKED(dba_import_msgs(db, *i, -1, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+		CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 		//rep_cods[(*i)->msgs[0]->type]++;
 	}
 

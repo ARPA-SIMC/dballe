@@ -381,6 +381,43 @@ void to::test<5>()
 	}
 #endif
 
+/* Test repmemo handling */
+template<> template<>
+void to::test<6>()
+{
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_SYNOP)), MSG_SYNOP);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_METAR)), MSG_METAR);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_SHIP)), MSG_SHIP);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_BUOY)), MSG_BUOY);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_AIREP)), MSG_AIREP);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_AMDAR)), MSG_AMDAR);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_ACARS)), MSG_ACARS);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_PILOT)), MSG_PILOT);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_TEMP)), MSG_TEMP);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_TEMP_SHIP)), MSG_TEMP_SHIP);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_SAT)), MSG_SAT);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_POLLUTION)), MSG_POLLUTION);
+	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_GENERIC)), MSG_GENERIC);
+
+	gen_ensure_equals(dba_msg_type_from_repmemo("synop"), MSG_SYNOP);
+	gen_ensure_equals(dba_msg_type_from_repmemo("SYNOP"), MSG_SYNOP); // Case insensitive
+	gen_ensure_equals(dba_msg_type_from_repmemo("metar"), MSG_METAR);
+	gen_ensure_equals(dba_msg_type_from_repmemo("ship"), MSG_SHIP);
+	gen_ensure_equals(dba_msg_type_from_repmemo("buoy"), MSG_BUOY);
+	gen_ensure_equals(dba_msg_type_from_repmemo("airep"), MSG_AIREP);
+	gen_ensure_equals(dba_msg_type_from_repmemo("amdar"), MSG_AMDAR);
+	gen_ensure_equals(dba_msg_type_from_repmemo("acars"), MSG_ACARS);
+	gen_ensure_equals(dba_msg_type_from_repmemo("pilot"), MSG_PILOT);
+	gen_ensure_equals(dba_msg_type_from_repmemo("temp"), MSG_TEMP);
+	gen_ensure_equals(dba_msg_type_from_repmemo("tempship"), MSG_TEMP_SHIP);
+	gen_ensure_equals(dba_msg_type_from_repmemo("satellite"), MSG_SAT);
+	gen_ensure_equals(dba_msg_type_from_repmemo("pollution"), MSG_POLLUTION);
+	gen_ensure_equals(dba_msg_type_from_repmemo("generic"), MSG_GENERIC);
+	gen_ensure_equals(dba_msg_type_from_repmemo("antani"), MSG_GENERIC);
+	gen_ensure_equals(dba_msg_type_from_repmemo(""), MSG_GENERIC);
+	gen_ensure_equals(dba_msg_type_from_repmemo(NULL), MSG_GENERIC);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

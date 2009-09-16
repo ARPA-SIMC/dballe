@@ -53,13 +53,15 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0, 7, 193): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l1)); break;
 			case DBA_VAR(0, 7, 194): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l2)); break;
 			case DBA_VAR(0, 7, 195): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype2)); break;
-			case DBA_VAR(0, 1, 193):
+			case DBA_VAR(0, 1, 194):
 			{
-				// Set the repcod if we found it
-				int rc;
-				DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &rc));
-				msg->type = dba_msg_type_from_repcod(rc);
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_rep_cod(msg, rc, -1));
+				// Set the rep memo if we found it
+				const char* val = dba_var_value(var);
+				if (val)
+				{
+					msg->type = dba_msg_type_from_repmemo(val);
+					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_rep_memo(msg, val, -1));
+				}
 				break;
 			}
 			default:

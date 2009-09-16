@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -249,7 +249,7 @@ dba_err dba_db_run_sql(dba_db db, const char* query)
 	/* Allocate statement handle */
 	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
 
-	res = SQLExecDirect(stm, query, SQL_NTS);
+	res = SQLExecDirect(stm, (SQLCHAR*)query, SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
 	{
 		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "Running query '%s'", query);

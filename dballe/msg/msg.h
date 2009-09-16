@@ -415,12 +415,12 @@ dba_msg_type dba_msg_get_type(dba_msg msg);
 /**
  * Get the message source type corresponding to the given report code
  */
-dba_msg_type dba_msg_type_from_repcod(int repcod);
+dba_msg_type dba_msg_type_from_repmemo(const char* repmemo);
 
 /**
  * Get the report code corresponding to the given message source type
  */
-int dba_msg_repcod_from_type(dba_msg_type type);
+const char* dba_msg_repmemo_from_type(dba_msg_type type);
 
 
 /**

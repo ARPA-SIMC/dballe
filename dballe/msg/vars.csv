@@ -4,7 +4,7 @@ ST_DIR,         int,    B01012,     257,     -, -, -,    -,      -,     -, Direc
 ST_SPEED,       int,    B01013,     257,     -, -, -,    -,      -,     -, Speed of motion of moving observing platform
 ST_NAME,        str,    B01019,     257,     -, -, -,    -,      -,     -, Station or site name
 ST_NAME_ICAO,   str,    B01063,     257,     -, -, -,    -,      -,     -, ICAO location indicator
-REP_COD,        int,    B01193,     257,     -, -, -,    -,      -,     -, Report code
+REP_MEMO,       str,    B01194,     257,     -, -, -,    -,      -,     -, Report mnemonic
 POLL_LCODE,     int,    B01212,     257,     -, -, -,    -,      -,     -, Air quality observing station local code
 POLL_SCODE,     int,    B01213,     257,     -, -, -,    -,      -,     -, Airbase air quality observing station code
 POLL_GEMSCODE,  int,    B01214,     257,     -, -, -,    -,      -,     -, GEMS air quality observing station code

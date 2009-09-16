@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -121,6 +121,7 @@ static void clear_cache_item(struct _dba_db_repinfo_cache* item)
 	}
 }
 
+/*
 static void commit_cache_item(struct _dba_db_repinfo_cache* item)
 {
 	if (item->memo != NULL)
@@ -138,6 +139,7 @@ static void commit_cache_item(struct _dba_db_repinfo_cache* item)
 	item->descriptor = item->new_descriptor;
 	item->new_descriptor = NULL;
 }
+*/
 
 
 void dba_db_repinfo_invalidate_cache(dba_db_repinfo ri)
@@ -202,8 +204,8 @@ static dba_err rebuild_memo_idx(dba_db_repinfo ri)
 		return dba_error_alloc("allocating new repinfo memo index");
 	for (i = 0; i < ri->cache_size; ++i)
 	{
-		strncpy(ri->memo_idx[i].memo, ri->cache[i].memo, 30);
-		ri->memo_idx[i].memo[29] = 0;
+		strncpy(ri->memo_idx[i].memo, ri->cache[i].memo, 20);
+		ri->memo_idx[i].memo[19] = 0;
 		ri->memo_idx[i].id = ri->cache[i].id;
 	}
 	qsort(ri->memo_idx, ri->cache_size, sizeof(struct _dba_db_repinfo_memoidx), memoidx_cmp);
@@ -216,7 +218,7 @@ static dba_err dba_db_repinfo_read_cache(dba_db_repinfo ri)
 	SQLHSTMT stm;
 
 	DBALLE_SQL_C_UINT_TYPE id;
-	char memo[30];
+	char memo[20];
 	SQLLEN memo_ind;
 	char description[255];
 	SQLLEN description_ind;
@@ -577,7 +579,7 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 	if (newitems != NULL)
 	{
 		newitem cur;
-		char memo[30];
+		char memo[20];
 		char description[255];
 		DBALLE_SQL_C_SINT_TYPE prio;
 		char descriptor[6];
@@ -604,7 +606,7 @@ dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added
 		for (cur = newitems; cur != NULL; cur = cur->next)
 		{
 			id = cur->item.id;
-			strncpy(memo, cur->item.new_memo, 30); memo[29] = 0;
+			strncpy(memo, cur->item.new_memo, 20); memo[19] = 0;
 			strncpy(description, cur->item.new_desc, 255); description[254] = 0;
 			prio = cur->item.new_prio;
 			strncpy(descriptor, cur->item.new_descriptor, 6); descriptor[5] = 0;

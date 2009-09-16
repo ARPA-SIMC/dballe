@@ -166,9 +166,9 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 #endif
 	else
 	{
-		static const int bits = 24;
+		//static const int bits = 24;
 		static const int maxscale = 126, minscale = -127;
-		static const double numerator = (double)((1 << bits) - 2);
+		static const double numerator = (double)((1 << 24 /* aka, bits */) - 2);
 		int factor = (int)floor(log10(numerator/value));
 
 		if (factor > maxscale)

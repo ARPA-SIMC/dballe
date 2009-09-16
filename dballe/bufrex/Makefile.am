@@ -49,7 +49,7 @@ check_PROGRAMS = tut_test
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 TESTS = $(check_PROGRAMS)
 
-CXXFLAGS += -O0
+CXXFLAGS += -O0 -Werror
 
 noinst_HEADERS = test-utils-bufrex.h
 

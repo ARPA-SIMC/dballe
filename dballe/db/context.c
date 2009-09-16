@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,6 +65,9 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 			break;
 		case POSTGRES:
 			insert_query = "INSERT INTO context VALUES (nextval('seq_context'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			break;
+		case MYSQL:
+		case SQLITE:
 			break;
 	}
 

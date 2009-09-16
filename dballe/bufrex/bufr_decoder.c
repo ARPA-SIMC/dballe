@@ -24,6 +24,7 @@
 #include "opcode.h"
 #include "msg.h"
 #include <dballe/core/file.h>
+#include <dballe/core/conv.h>
 
 #include <stdio.h>
 #include <netinet/in.h>

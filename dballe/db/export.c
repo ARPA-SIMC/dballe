@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -235,7 +235,11 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_create(&msg));
 		
-			msg->type = dba_msg_type_from_repcod(cur->out_rep_cod);
+			{
+				const char* memo;
+				DBA_RUN_OR_GOTO(cleanup, dba_db_rep_memo_from_cod(db, cur->out_rep_cod, &memo));
+				msg->type = dba_msg_type_from_repmemo(memo);
+			}
 
 			/* Fill in the basic pseudoana values */
 			DBA_RUN_OR_GOTO(cleanup, dba_msg_seti(msg, DBA_VAR(0, 5, 1), cur->out_lat, -1, 257, 0, 0, 0, 0, 0, 0));

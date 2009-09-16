@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ struct import_data
 {
 	dba_db db;
 	int overwrite;
-	int forced_repcod;
+	const char* forced_repmemo;
 };
 
 static dba_err import_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
@@ -117,14 +117,14 @@ static dba_err import_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, v
 	for (i = 0; i < msgs->len; ++i)
 	{
 		dba_msg msg = msgs->msgs[i];
-		if (d->forced_repcod == -1 && msg->type == MSG_GENERIC)
+		if (d->forced_repmemo == NULL && msg->type == MSG_GENERIC)
 		{
 			/* Put generic messages in the generic rep_cod by default */
-			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, 255, import_flags));
+			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, "generic", import_flags));
 		}
 		else
 		{
-			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repcod, import_flags));
+			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repmemo, import_flags));
 		}
 	}
 	return dba_error_ok();
@@ -270,7 +270,7 @@ dba_err do_repinfo(poptContext optCon)
 	return dba_error_ok();
 }
 
-dba_err parse_op_report(dba_db db, int* res)
+dba_err parse_op_report(dba_db db, const char** res)
 {
 	if (op_report[0] != 0)
 	{
@@ -281,21 +281,14 @@ dba_err parse_op_report(dba_db db, int* res)
 				is_cod = 0;
 		
 		if (is_cod)
-		{
-			int valid;
-			*res = strtoul(op_report, NULL, 0);
-			DBA_RUN_OR_RETURN(dba_db_check_rep_cod(db, *res, &valid));
-			if (valid)
-				return dba_error_ok();
-			else
-				return dba_error_consistency("report code %d not found in the database", *res);
-		}
+			return dba_db_rep_memo_from_cod(db, strtoul(op_report, NULL, 0), res);
 		else
 		{
-			return dba_db_rep_cod_from_memo(db, op_report, res);
+			*res = op_report;
+			return dba_error_ok();
 		}
 	} else {
-		*res = -1;
+		*res = NULL;
 		return dba_error_ok();
 	}
 }
@@ -312,7 +305,7 @@ dba_err do_import(poptContext optCon)
 
 	DBA_RUN_OR_RETURN(create_dba_db(&data.db));
 	data.overwrite = op_overwrite;
-	DBA_RUN_OR_RETURN(parse_op_report(data.db, &(data.forced_repcod)));
+	DBA_RUN_OR_RETURN(parse_op_report(data.db, &(data.forced_repmemo)));
 
 	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
 
@@ -327,18 +320,18 @@ struct export_data
 	int cat;
 	int subcat;
 	int localsubcat;
-	int forced_rep_cod;
+	const char* forced_rep_memo;
 };
 
 static dba_err msg_writer(dba_msgs msgs, void* data)
 {
 	struct export_data* d = (struct export_data*)data;
 	/* Override the message type if the user asks for it */
-	if (d->forced_rep_cod != -1)
+	if (d->forced_rep_memo != NULL)
 	{
 		int i;
 		for (i = 0; i < msgs->len; ++i)
-			msgs->msgs[i]->type = dba_msg_type_from_repcod(d->forced_rep_cod);
+			msgs->msgs[i]->type = dba_msg_type_from_repmemo(d->forced_rep_memo);
 	}
 	DBA_RUN_OR_RETURN(dba_file_write_msgs(d->file, msgs, d->cat, d->subcat, d->localsubcat));
 	dba_msgs_delete(msgs);
@@ -355,7 +348,7 @@ static dba_err msg_dumper(dba_msgs msgs, void* data)
 
 dba_err do_export(poptContext optCon)
 {
-	struct export_data d = { NULL, 0, 0, 0, -1 };
+	struct export_data d = { NULL, 0, 0, 0, NULL };
 	dba_encoding type;
 	dba_record query;
 	dba_db db;
@@ -379,7 +372,7 @@ dba_err do_export(poptContext optCon)
 	{
 		DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_dumper, stdout));
 	} else {
-		DBA_RUN_OR_RETURN(parse_op_report(db, &(d.forced_rep_cod)));
+		DBA_RUN_OR_RETURN(parse_op_report(db, &(d.forced_rep_memo)));
 
 		type = dba_cmdline_stringToMsgType(op_output_type, optCon);
 		DBA_RUN_OR_RETURN(dba_file_create(type, "(stdout)", "w", &d.file));

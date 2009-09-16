@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ typedef struct _dba_db_repinfo_cache* dba_db_repinfo_cache;
 /** reverse rep_memo -> rep_cod cache entry */
 struct _dba_db_repinfo_memoidx {
 	/** Report name */
-	char memo[30];
+	char memo[20];
 	/** Report code */
 	int id;
 };

@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,15 +37,15 @@
 #include <stdlib.h>
 
 
-dba_err dba_import_msgs(dba_db db, dba_msgs msgs, int repcod, int flags)
+dba_err dba_import_msgs(dba_db db, dba_msgs msgs, const char* repmemo, int flags)
 {
 	int i;
 	for (i = 0; i < msgs->len; ++i)
-		DBA_RUN_OR_RETURN(dba_import_msg(db, msgs->msgs[i], repcod, flags));
+		DBA_RUN_OR_RETURN(dba_import_msg(db, msgs->msgs[i], repmemo, flags));
 	return dba_error_ok();
 }
 
-dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
+dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags)
 {
 	dba_err err = DBA_OK;
 	dba_msg_level l_ana = dba_msg_find_level(msg, 257, 0, 0, 0);
@@ -120,7 +120,11 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, int repcod, int flags)
 	dc->id_ana = val;
 
 	/* Report code */
-	dc->id_report = repcod != -1 ? repcod : dba_msg_repcod_from_type(msg->type);
+	{
+		int res;
+		DBA_RUN_OR_GOTO(fail, dba_db_rep_cod_from_memo(db, repmemo != NULL ? repmemo : dba_msg_repmemo_from_type(msg->type), &res));
+		dc->id_report = res;
+	}
 
 	if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
 	{

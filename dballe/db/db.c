@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ static const char* init_functions[] = {
 static const char* init_queries_mysql[] = {
 	"CREATE TABLE repinfo ("
 	"   id		     SMALLINT PRIMARY KEY,"
-	"	memo	 	 VARCHAR(30) NOT NULL,"
+	"	memo	 	 VARCHAR(20) NOT NULL,"
 	"	description	 VARCHAR(255) NOT NULL,"
 	"   prio	     INTEGER NOT NULL,"
 	"	descriptor	 CHAR(6) NOT NULL,"
@@ -510,18 +510,20 @@ static dba_err dba_db_postinit(dba_db* db)
 			DBA_RUN_OR_GOTO(fail, dba_db_seq_create((*db), "seq_pseudoana", &((*db)->seq_pseudoana)));
 			DBA_RUN_OR_GOTO(fail, dba_db_seq_create((*db), "seq_context", &((*db)->seq_context)));
 			break;
-		default:
+		case MYSQL:
 			DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_last_insert_id)));
 			SQLBindCol((*db)->stm_last_insert_id, 1, DBALLE_SQL_C_SINT, &((*db)->last_insert_id), sizeof((*db)->last_insert_id), 0);
-			switch ((*db)->server_type)
+			sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ID()", SQL_NTS);
+			if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
 			{
-				case MYSQL:
-					sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ID()", SQL_NTS);
-					break;
-				case SQLITE:
-					sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ROWID()", SQL_NTS);
-					break;
+				err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_last_insert_id, "compiling query for querying the last insert id");
+				goto fail;
 			}
+			break;
+		case SQLITE:
+			DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_last_insert_id)));
+			SQLBindCol((*db)->stm_last_insert_id, 1, DBALLE_SQL_C_SINT, &((*db)->last_insert_id), sizeof((*db)->last_insert_id), 0);
+			sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ROWID()", SQL_NTS);
 			if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
 			{
 				err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_last_insert_id, "compiling query for querying the last insert id");
@@ -582,7 +584,7 @@ dba_err dba_db_create_generic(const char* config, dba_db* db)
 	/* Connect to the DSN */
 	sqlres = SQLDriverConnect((*db)->od_conn, NULL,
 					(SQLCHAR*)config, SQL_NTS,
-					sdcout, 1024, &outlen,
+					(SQLCHAR*)sdcout, 1024, &outlen,
 					SQL_DRIVER_NOPROMPT);
 
 	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
@@ -874,6 +876,15 @@ dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)
 {
 	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
 	return dba_db_repinfo_get_id(db->repinfo, memo, rep_cod);
+}
+
+dba_err dba_db_rep_memo_from_cod(dba_db db, int rep_cod, const char** memo)
+{
+	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
+	dba_db_repinfo_cache c = dba_db_repinfo_get_by_id(db->repinfo, rep_cod);
+	if (c == NULL) return dba_error_notfound("looking for rep_memo corresponding to rep_cod '%d'", rep_cod);
+	*memo = c->memo;
+	return dba_error_ok();
 }
 
 dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid)

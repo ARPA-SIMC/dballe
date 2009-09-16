@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ void to::test<2>()
 
 	gen_ensure_equals(added, 0);
 	gen_ensure_equals(deleted, 0);
-	gen_ensure_equals(updated, 15);
+	gen_ensure_equals(updated, 13);
 
 	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
 	gen_ensure_equals(id, 1);
@@ -101,7 +101,7 @@ void to::test<3>()
 	CHECKED(dba_db_repinfo_update(ri, (string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated));
 
 	gen_ensure_equals(added, 2);
-	gen_ensure_equals(deleted, 12);
+	gen_ensure_equals(deleted, 10);
 	gen_ensure_equals(updated, 3);
 
 	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
