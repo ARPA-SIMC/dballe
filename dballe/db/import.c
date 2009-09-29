@@ -122,7 +122,19 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags)
 	/* Report code */
 	{
 		int res;
-		DBA_RUN_OR_GOTO(fail, dba_db_rep_cod_from_memo(db, repmemo != NULL ? repmemo : dba_msg_repmemo_from_type(msg->type), &res));
+		if (repmemo != NULL)
+		{
+			DBA_RUN_OR_GOTO(fail, dba_db_rep_cod_from_memo(db, repmemo, &res));
+		} else {
+			// TODO: check if B01194 first
+			dba_var var = dba_msg_get_rep_memo_var(msg);
+			if (var)
+			{
+				DBA_RUN_OR_GOTO(fail, dba_db_rep_cod_from_memo(db, dba_var_value(var), &res));
+			} else {
+				DBA_RUN_OR_GOTO(fail, dba_db_rep_cod_from_memo(db, dba_msg_repmemo_from_type(msg->type), &res));
+			}
+		}
 		dc->id_report = res;
 	}
 

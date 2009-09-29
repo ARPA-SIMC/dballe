@@ -97,6 +97,8 @@ void to::test<1>()
 
 		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+		// Explicitly set rep_memo so that the messages later match
+		CHECKED(dba_msg_set_rep_memo(msg, rep_memo_from_msg(msg), -1));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg)));
@@ -168,6 +170,8 @@ void to::test<2>()
 
 		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+		// Explicitly set rep_memo so that the messages later match
+		CHECKED(dba_msg_set_rep_memo(msg, rep_memo_from_msg(msg), -1));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg)));
@@ -228,6 +232,8 @@ void to::test<3>()
 
 		CHECKED(dba_db_reset(db, NULL));
 		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+		// Explicitly set rep_memo so that the messages later match
+		CHECKED(dba_msg_set_rep_memo(msg, rep_memo_from_msg(msg), -1));
 
 		vector<dba_msg> msgs;
 		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg)));
@@ -274,6 +280,9 @@ void to::test<4>()
 	CHECKED(dba_db_reset(db, NULL));
 	CHECKED(dba_import_msg(db, msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
 	CHECKED(dba_import_msg(db, msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+	// Explicitly set rep_memo so that the messages later match
+	CHECKED(dba_msg_set_rep_memo(msg1, rep_memo_from_msg(msg1), -1));
+	CHECKED(dba_msg_set_rep_memo(msg2, rep_memo_from_msg(msg2), -1));
 
 	dba_record query;
 	CHECKED(dba_record_create(&query));
@@ -567,6 +576,10 @@ void to::test<8>()
 	fprintf(stderr, "msgs1[1]\n");
 	dba_msg_print(msgs1[1]->msgs[0], stderr);
 	#endif
+
+	// Explicitly set rep_memo so that the messages later match
+	CHECKED(dba_msg_set_rep_memo(msgs[0]->msgs[0], rep_memo_from_msg(msgs[0]->msgs[0]), -1));
+	CHECKED(dba_msg_set_rep_memo(msgs[1]->msgs[0], rep_memo_from_msg(msgs[1]->msgs[0]), -1));
 
 	// Compare the two dba_msg
 	int diffs = 0;

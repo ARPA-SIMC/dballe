@@ -238,6 +238,7 @@ dba_err dba_db_export(dba_db db, dba_record rec, dba_msg_consumer cons, void* da
 			{
 				const char* memo;
 				DBA_RUN_OR_GOTO(cleanup, dba_db_rep_memo_from_cod(db, cur->out_rep_cod, &memo));
+				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_rep_memo(msg, memo, -1));
 				msg->type = dba_msg_type_from_repmemo(memo);
 			}
 
