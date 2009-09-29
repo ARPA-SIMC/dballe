@@ -203,7 +203,7 @@ dba_err dba_formatter_describe_trange(int ptype, int p1, int p2, char** res)
 		case 203: asprintf(res, "Vectorial maximum%s%s", duration, offset); break;
 		case 204: asprintf(res, "Vectorial minimum%s%s", duration, offset); break;
 		case 205: asprintf(res, "Product with a valid time ranging%s%s", duration, offset); break;
-		case 254: *res = strdup("Istantaneous value"); break;
+		case 254: asprintf(res, "Instantaneous value%s", offset); break;
 		default:  asprintf(res, "%d %d %d", ptype, p1, p2); break;
 	}
 	return dba_error_ok();

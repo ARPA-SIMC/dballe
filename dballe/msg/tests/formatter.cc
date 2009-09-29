@@ -79,6 +79,11 @@ void to::test<3>()
 	gen_ensure(t != 0);
 	gen_ensure_equals(string(t), "Layer from [2.000m above ground] to [4.000m above ground]");
 	free(t);
+
+	CHECKED(dba_formatter_describe_trange(254, 86400, 0, &t));
+	gen_ensure(t != 0);
+	gen_ensure_equals(string(t), "Instantaneous value, forecast time 1d");
+	free(t);
 }
 
 }
