@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <assert.h>
 
@@ -300,9 +301,15 @@ void dba_db_repinfo_delete(dba_db_repinfo ins)
 
 dba_err dba_db_repinfo_get_id(dba_db_repinfo ri, const char* memo, int* id)
 {
+	char lc_memo[20];
+	int i;
+	for (i = 0; i < 19 && memo[i]; ++i)
+		lc_memo[i] = tolower(memo[i]);
+	lc_memo[i] = 0;
+
 	if (ri->memo_idx == NULL)
 		DBA_RUN_OR_RETURN(rebuild_memo_idx(ri));
-	int pos = cache_find_by_memo(ri, memo);
+	int pos = cache_find_by_memo(ri, lc_memo);
 	if (pos == -1)
 		return dba_error_notfound("looking for repinfo corresponding to '%s'", memo);
 	*id = ri->memo_idx[pos].id;
@@ -336,6 +343,12 @@ struct _newitem
 };
 typedef struct _newitem* newitem;
 
+static inline void inplace_tolower(char* buf)
+{
+	for ( ; *buf; ++buf)
+		*buf = tolower(*buf);
+}
+
 static dba_err read_repinfo_file(dba_db_repinfo ri, const char* deffile, newitem* newitems)
 {
 	dba_err err = DBA_OK;
@@ -368,6 +381,9 @@ static dba_err read_repinfo_file(dba_db_repinfo ri, const char* deffile, newitem
 				err = dba_error_parse(deffile, line, "Expected 6 columns, got %d", i);
 				goto cleanup;
 			}
+
+			// Lowercase all rep_memos
+			inplace_tolower(columns[1]);
 
 			id = strtol(columns[0], 0, 10);
 			pos = cache_find_by_id(ri, id);
