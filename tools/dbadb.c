@@ -120,7 +120,7 @@ static dba_err import_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, v
 		if (d->forced_repmemo == NULL && msg->type == MSG_GENERIC)
 		{
 			/* Put generic messages in the generic rep_cod by default */
-			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, "generic", import_flags));
+			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, NULL, import_flags));
 		}
 		else
 		{
