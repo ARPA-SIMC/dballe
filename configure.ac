@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, 4.0.12, [enrico@enricozini.org])
+AC_INIT(dballe, 4.0.13, [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
@@ -139,7 +139,7 @@ dnl AC_DEFINE_UNQUOTED(TABLE_DIR, "$def_tabledir", "Default location for table f
 LIBDBALLE_VERSION_INFO=`echo $VERSION | awk -F. '{ printf "%d:%d:%d", $1+$2, $3, $2 }'`
 AC_SUBST(LIBDBALLE_VERSION_INFO)
 
-CFLAGS="-Wall -Werror $CFLAGS"
+CFLAGS="-Wall $CFLAGS"
 
 # Enforce dependencies
 if ! test x"$enable_dballepp"=x"yes"
