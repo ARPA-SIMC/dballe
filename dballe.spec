@@ -1,7 +1,7 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 4.0.0
-Release: 4%{?dist}
+Version: 4.0.13
+Release: 2326%{?dist}
 License: GPL
 Group: Applications/Meteo
 URL: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
@@ -58,7 +58,7 @@ Requires:  %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 %package  -n provami
 Summary: Graphical interface to DB-All.e databases
 Group: Applications/Meteo
-requires: wxPython, dballe >= 3.0-1
+requires: wxPython, dballe >= 3.0-1 ,rpy, numpy
 
 %description -n provami
  provami is a GUI application to visualise and navigate DB-All.e databases.
@@ -196,7 +196,7 @@ Requires: lib%{name}-devel = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}4
 %package -n python-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},rpy,numpy
 
 %description -n python-dballe
  DB-ALL.e Python library for weather research
@@ -211,7 +211,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 
 %build
 ### configure  pyexecdir=%{python_sitearch}/dballe pkgpythondir=%{python_sitelib}/dballe
-%configure --disable-rpath FC=gfortran F90=gfortan F77=gfortran
+%configure --disable-rpath FC=gfortran F90=gfortan F77=gfortran --enable-dballe-bufrex --enable-dballe-msg --enable-dballe-db --enable-dballepp --enable-dballef --enable-dballe-python --enable-docs
 
 # do not work smp
 #make %{?_smp_mflags}
@@ -255,8 +255,8 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %dir /usr/bin
 %{_bindir}/provami
 
-%dir %{python_sitearch}/
-%{python_sitearch}//provami
+%dir %{python_sitelib}/
+%{python_sitelib}/provami/*
 %dir %{_mandir}/man1
 %doc %{_mandir}/man1/provami*
 /usr/share/dballe/icon*.png
@@ -313,11 +313,12 @@ make install DESTDIR=$RPM_BUILD_ROOT
 
 %files -n python-dballe
 %defattr(-,root,root,-)
-%dir %{python_sitearch}/
-%{python_sitearch}//*
-
-#%dir %{python_sitelib}/dballe
-#%{python_sitelib}/dballe/*
+%dir %{python_sitelib}/dballe
+%{python_sitelib}/dballe/*
+%dir %{python_sitearch}
+%{python_sitearch}/*.a
+%{python_sitearch}/*.la
+%{python_sitearch}/*.so*
 
 %doc %{_docdir}/dballe/python-dballe*
 
@@ -353,6 +354,15 @@ make install DESTDIR=$RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Nov 11 2008 root <root@strip.metarpa> - %epoch:}%{version}-%{release}:4.0.8-1
+- bug resolved about units conversion in import/export and template used in api query message
+
+* Wed Oct 29 2008 root <root@strip.metarpa> - %epoch:}%{version}-%{release}:4.0.7-1
+- bug on query best corrected
+
+* Wed Apr  2 2008 root <root@localhost.localdomain> - %epoch:}%{version}-%{release}:4.0.0-8
+- added some units conversion
+
 * Tue Mar 18 2008 root <root@spinacio> - %epoch:}%{version}-%{release}:4.0.0-4
 - new pachage (less pachages)
 
