@@ -176,6 +176,63 @@ const char* dba_vartable_id(dba_vartable table)
 	return table->id;
 }
 
+/* Postprocess the data, filling in minval and maxval */
+static void postprocess_entry(dba_varinfo i)
+{
+	if (i->is_string)
+	{
+		i->imin = i->imax = 0;
+		i->dmin = i->dmax = 0.0;
+	} else {
+		if (i->len >= 10)
+		{
+			i->imin = INT_MIN;
+			i->imax = INT_MAX;
+		} else {
+			/*
+			// We subtract 2 because 2^bit_len-1 is the
+			// BUFR missing value
+			int bufr_min = i->bit_ref;
+			int bufr_max = exp2(i->bit_len) + i->bit_ref - 2;
+			// We subtract 2 because 10^len-1 is the
+			// CREX missing value
+			int crex_min = -(int)(exp10(i->len) - 1.0);
+			int crex_max = (int)(exp10(i->len) - 2.0);
+			// Actually, we cannot subtract 2 because RADAR BUFR
+			// messages have 255 subsets, and the delayed
+			// replication field is 8 bits, so 255 is the missing
+			// value, and if we disallow it here we cannot import
+			// radars anymore.
+			*/
+			/*
+			 * If the unit is the same between BUFR and CREX, take
+			 * the most restrictive extremes.
+			 *
+			 * If the unit is different, take the most permissive
+			 * extremes, to make sure to fit values in both units
+			 */
+			/*
+			if (strcmp(i->unit, i->bufr_unit) == 0)
+			{
+				i->imin = bufr_min > crex_min ? bufr_min : crex_min;
+				i->imax = bufr_max < crex_max ? bufr_max : crex_max;
+			} else {
+				i->imin = bufr_min < crex_min ? bufr_min : crex_min;
+				i->imax = bufr_max > crex_max ? bufr_max : crex_max;
+			}
+			*/
+			/*
+			i->imin = i->bit_ref;
+			i->imax = exp2(i->bit_len) + i->bit_ref - 2;
+			*/
+			i->imin = -(int)(exp10(i->len) - 1.0);
+			i->imax = (int)(exp10(i->len) - 1.0);
+		}
+		i->dmin = dba_var_decode_int(i->imin, i);
+		i->dmax = dba_var_decode_int(i->imax, i);
+	}
+}
+
 dba_err dba_vartable_query(dba_vartable table, dba_varcode var, dba_varinfo* info)
 {
 	int begin, end;
@@ -250,19 +307,7 @@ dba_err dba_vartable_query_altered(dba_vartable table, dba_varcode var, dba_alte
 #endif
 
 		/* Postprocess the data, filling in minval and maxval */
-		if (!i->is_string)
-		{
-			if (i->len >= 10)
-			{
-				i->imin = INT_MIN;
-				i->imax = INT_MAX;
-			} else {
-				i->imin = -(int)(exp10(i->len) - 1.0);
-				i->imax = (int)(exp10(i->len) - 1.0);
-			}
-			i->dmin = dba_var_decode_int(i->imin, i);
-			i->dmax = dba_var_decode_int(i->imax, i);
-		}
+		postprocess_entry(i);
 
 		i->alteration = change;
 		i->alterations = NULL;
@@ -493,22 +538,7 @@ static dba_err dba_vartable_read(const char* id, int* index, int style)
 		}
 
 		/* Postprocess the data, filling in minval and maxval */
-		if (entry->is_string)
-		{
-			entry->imin = entry->imax = 0;
-			entry->dmin = entry->dmax = 0.0;
-		} else {
-			if (entry->len >= 10)
-			{
-				entry->imin = INT_MIN;
-				entry->imax = INT_MAX;
-			} else {
-				entry->imin = -(int)(exp10(entry->len) - 1.0);
-				entry->imax = (int)(exp10(entry->len) - 1.0);
-			}
-			entry->dmin = dba_var_decode_int(entry->imin, entry);
-			entry->dmax = dba_var_decode_int(entry->imax, entry);
-		}
+		postprocess_entry(entry);
 
 		entry->alteration = 0;
 		entry->alterations = NULL;

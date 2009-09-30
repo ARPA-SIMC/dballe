@@ -108,7 +108,7 @@ struct dba_db_dballe_shar : public db_test
 		sample0.set(DBA_KEY_PRIORITY, 101);
 
 		sample00.set(DBA_VAR(0, 1, 11), "DB-All.e!");
-		sample01.set(DBA_VAR(0, 1, 12), 500);
+		sample01.set(DBA_VAR(0, 1, 12), 300);
 
 		sample1.set(DBA_KEY_MIN, 30);
 		sample1.set(DBA_KEY_P2, 123);
@@ -116,7 +116,7 @@ struct dba_db_dballe_shar : public db_test
 		sample1.set(DBA_KEY_PRIORITY, 81);
 
 		sample10.set(DBA_VAR(0, 1, 11), "Arpa-Sim!");
-		sample11.set(DBA_VAR(0, 1, 12), 600);
+		sample11.set(DBA_VAR(0, 1, 12), 400);
 
 		/*
 static struct test_data tdata3_patch[] = {
@@ -369,11 +369,11 @@ void to::test<4>()
 	TRY_QUERY(c, DBA_KEY_ANA_FILTER, "1<=B01001<=1", 4);
 	TRY_QUERY(c, DBA_KEY_ANA_FILTER, "2<=B01001<=4", 0);
 	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01011=DB-All.e!", 2);
-	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012=500", 2);
-	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012>=500", 4);
-	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012>500", 2);
-	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012<600", 2);
-	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012<=600", 4);
+	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012=300", 2);
+	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012>=300", 4);
+	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012>300", 2);
+	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012<400", 2);
+	TRY_QUERY(c, DBA_KEY_DATA_FILTER, "B01012<=400", 4);
 
 	/*
 	TRY_QUERY(i, DBA_KEY_MONTHMIN, 1);
@@ -678,7 +678,7 @@ void to::test<8>()
 
 		/* Insert new QC data about this report */
 		dba_record_clear(qc);
-		CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 33, 2), 7));
+		CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 33, 2), 2));
 		CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 33, 3), 5));
 		CHECKED(dba_record_var_seti(qc, DBA_VAR(0, 33, 5), 33));
 		CHECKED(dba_db_qc_insert(db, context, DBA_VAR(0, 1, 11), qc));
@@ -689,7 +689,7 @@ void to::test<8>()
 
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 2), &val, &found));
 		gen_ensure_equals(found, 1);
-		gen_ensure_equals(val, 7);
+		gen_ensure_equals(val, 2);
 		CHECKED(dba_record_var_enqi(qc, DBA_VAR(0, 33, 3), &val, &found));
 		gen_ensure_equals(found, 1);
 		gen_ensure_equals(val, 5);
