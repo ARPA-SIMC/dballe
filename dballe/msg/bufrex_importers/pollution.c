@@ -209,7 +209,10 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 				switch (val)
 				{
 					case  0: valtype = DBA_VAR(0, 15, 194); break;
+					case  4: valtype = DBA_VAR(0, 15, 196); break;
 					case  5: valtype = DBA_VAR(0, 15, 193); break;
+					case  8: valtype = DBA_VAR(0, 15, 197); break;
+					case 26: valtype = DBA_VAR(0, 15, 198); break;
 					case 27: valtype = DBA_VAR(0, 15, 195); break;
 					default:
 						return dba_error_consistency("cannot import constituent %d as there is no mapping for it", val);
