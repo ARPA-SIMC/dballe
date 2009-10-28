@@ -161,6 +161,7 @@ void MsgAPI::elencamele()
 				checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 1));
 				break;
 			case DBA_VAR(0, 1, 192): checked(dba_record_key_set(output, DBA_KEY_ANA_ID, d->var)); break;
+			case DBA_VAR(0, 1, 194): checked(dba_record_key_set(output, DBA_KEY_REP_MEMO, d->var)); break;
 			default:
 				checked(dba_record_var_set_direct(output, d->var));
 		}
