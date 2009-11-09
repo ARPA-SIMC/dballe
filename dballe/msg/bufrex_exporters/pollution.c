@@ -124,7 +124,7 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 			dba_msg_datum d = src->data[li]->data[di];
 			if (d->pind != 0) continue;
 			dba_varcode code = dba_var_code(d->var);
-			if (code < DBA_VAR(0, 15, 193) || code > DBA_VAR(0, 15, 195)) continue;
+			if (code < DBA_VAR(0, 15, 193) || code > DBA_VAR(0, 15, 198)) continue;
 			if (var != NULL)
 				return dba_error_consistency("found more than one variable to export in one template");
 			var = d->var;
@@ -147,6 +147,9 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 		case DBA_VAR(0, 15, 193): constituent =  5; break;
 		case DBA_VAR(0, 15, 194): constituent =  0; break;
 		case DBA_VAR(0, 15, 195): constituent = 27; break;
+		case DBA_VAR(0, 15, 196): constituent =  4; break;
+		case DBA_VAR(0, 15, 197): constituent =  8; break;
+		case DBA_VAR(0, 15, 198): constituent = 26; break;
 		default:
 			return dba_error_consistency("found unknown variable type when getting constituent type");
 	}
