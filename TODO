@@ -1,0 +1,511 @@
+Feature
+
+ + implementare idba_seti(h, "!ana")
+ + implementare macro per settare direttamente data, data minima, data massima,
+   level type e time range
+ + cambiare la prendilo in modo che inserisca o dati anagrafici o dati dati,
+   non tutti e due assieme
+ + far sí che block, station, height, heightbaro, name siano alias a dei B, e
+   che si possano aggiungere altri alias a dei B non necessariamente di
+   anagrafica
+ + query per {ana_filter,data_filter,attr_filter}="B12345{<,>,=,<=,>=}value"
+    - rimuovere block e station tra i parametri di dba_record
+ + far leggere alla elencamele anche tutti i dati del contesto di anagrafica,
+   assicurandosi che le funzioni enq* non falliscano in caso di dato mancante.
+ + documentare quali sono i valori delle enq* per 'dato mancante'
+ + autogenerare la tabella degli alias per la documentazione
+ + aggiungere altri alias
+ + aggiornamento della rep_cod on the fly
+ + perdita di precisione nella conversione del geopotenziale da AOF a BUFR per
+   i temp
+   Se si arrotonda con rint (in caso di equidistanza, al piú vicino numero pari):
+    - AOF height 11248 diventa geopotential 110305 arrotondato a 110300;
+      110300/9.80665 = 11247,47 arrotondato 11247
+   Se si arrotonda con double (in caso di equidistanza, allontanandosi dallo 0):
+    - AOF height 8716 diventa geopotential 85475 arrotondato a 85480;
+      85480/9.80665 = 8716,5342 arrotondato 8717
+ = passare a MyISAM e vedere che race condition ci sono
+    - race condition non sono un problema: si può usare lock tables
+    - sono un problema i rollback, soprattutto per casi complessi come l'import
+      di un messaggio con overwrite di dati esistenti: il rollback con le
+      operazioni inverse diventa impossibile.
+    - InnoDB con innodb_file_per_table cancella le tabelle quando si fa drop.
+      Viva!
+ + fare enqdate... analoghe alle setdate...
+   (confermato, entro martedí)
+ + aggiungere informazioni di progress a dbadb import
+ + aggiungere parametri di query alla quantesono
+   (confermato, entro martedí)
+ + implementare limit alle query
+ + aggiornare documentazione fortran
+    + scorciatoie enq* e set*
+    + query per ana_filter, data_filter, attr_filter
+    + contesto di anagrafica (set?(handle, "!ana"))]
+    + limit
+ + Aggiungere header con licenza
+ + La elencamele deve dare tutti i dati sulla stazione
+ + Correggere "querybest" (dev'essere "query")
+ + Rivedere la presentati ora che è cambiato il modo di lavorare con i dati
+   della pseudoana
+ + Documentare i cambiamenti alla presentati
+ + Documentare some tipical code cases
+ + Mettere a posto i warning di doxygen
+ = Aggiungere dichiarazioni di foreign key che cancellano automaticamente le
+   pseudoana e le context quando diventano orfane (non si può fare)
+ + Aggiunto file di interface per Fortran
+ + Aggiungere idba_spiegami(handle, varcode, unit, desc, value) che restituisce
+   dato un B la sua descrizione, la sua unità di misura, e se quel B ha un
+   valore nel record di output, anche il valore formattato col numero giusto di
+   cifre e di decimali
+
+ + dbadb export crea report vuoti
+ + Le funzioni dump non fanno vedere lat e lon
+ + implementare la cancellazione degli orfani in dbadb
+ + Nella documentazione di dbadb, si parla di 'type' che è in realtà il rep_cod
+ + Documentare quali sono i parametri di query di dbadb (che sono gli stessi
+   dell'API fortran, rimandando alla documentazione)
+ + Aggiungere dbadb dumpstations che fa queryana invece di query
+
+ + Ci sono troppi decimali nel risultato della spiegab (bisogna prenderli dalle
+   info variabile)
+ + controllare a ogni set se il valore sta nell'intervallo consentito dalla
+   memorizzazione
+    + Verificare solo con il numero di cifre decimali
+    + Fare un nuovo tipo di errore (usato TOOLONG, che era inutilizzato)
+    + Fare una seconda callback di default che stampi un warning ma prosegua in
+      caso di overflow
+
+ + Documentare che dato mancante in una set* fa la unset
+ + Documentare l'esistenza dell'header di interface nelle fapi
+
+ + Far andare con sqlite 2 e 3
+
+ + Inserire i dati da satellite nel database mettendo come attributo:
+   * category 3, subcategory 9 (MHS)
+   Livello: 8 Nominal top of atmosphere, 0 o numero del canale (dipendente dalla rete), 0
+   Scadenza: 0,0,0
+   Rete: 200 noaa
+   Riferire 033032 CHANNEL QUALITY FLAGS FOR ATOVS(FLAG TABLE  33032): 1572864
+          e 025076 LOG-10 OF (TEMP-RAD CENTRAL WAVENUMBER) FOR ATOVS(LOGM-1): 2.786368
+	  e 005040 ORBIT NUMBER(NUMERIC): 1
+	  e 005041 SCAN LINE NUMBER(NUMERIC): 508
+	  e 005043 FIELD OF VIEW NUMBER(NUMERIC): 0
+	  e 025070 MAJOR FRAME COUNT(NUMERIC): (undef)
+	  e 033033 FIELD OF VIEW QUALITY FLAGS FOR ATOVS(FLAG TABLE  33033): 0
+          a 012063 BRIGHTNESS TEMPERATURE(K): 256.800000
+   Ignorare:
+   	025077 BANDWIDTH CORRECTION COEFFICIENT 1 FOR ATOVS(NUMERIC): 0.000000
+	025078 BANDWIDTH CORRECTION COEFFICIENT 2 FOR ATOVS(NUMERIC): 1.000000
+   Altri dati misurati:
+        007024 SATELLITE ZENITH ANGLE(DEGREE): 59.140000
+	005021 BEARING OR AZIMUTH(DEGREE TRUE): 27.810000
+	007025 SOLAR ZENITH ANGLE(DEGREE): 73.900000
+	005022 SOLAR AZIMUTH(DEGREE TRUE): 273.050000
+   Non definito per HIRS:
+     002150 TOVS/ATOVS/HIRS INSTRUMENT CHANNEL NUMBER(CODE TABLE   2150): 20
+     025079 ALBEDO-RAD SOLAR FILTERED IRRADIANCE FOR ATOVS(WM-2): 0.000000
+     025080 ALBEDO-RAD FILTER WIDTH FOR ATOVS(M): 0.000000
+     033032 CHANNEL QUALITY FLAGS FOR ATOVS(FLAG TABLE  33032): 0
+     014045 CHANNEL RADIANCE(W/M**2*STER*CM**(-1)): 16
+ + MSG_SAT normalmente non è handled in switch
+
+ + Importando il satellite, l'ident non è xxxyyz ma solo yy
+
+ + Pacchettizzare in pacchetti separati (core, bufrex, msg, db, resto)
+ + Togliere init.h (no: o distribuirlo tra le varie librerie)
+ + Spostare formatter in msg/
+ + fare un pacchetto -common con le tabelle
+ + installare la documentazione HTML doxygen nei -dev
+ + guardare che i doxygen si trovino l'un l'altro
+ + messi i soname giusti in tutte le librerie
+ + la documentazione è grossa: installarla in pacchetti separati
+ + Spostare l'infrastruttura esterna alla libreria in $(top_srcdir)/extra/
+ + Unificati dba_rawfile e dba_file, dando modo ai codec di aggiungersi con un
+   costruttore di libreria
+ + fare test-utils-bufrex.{h,cc} e far andare i test di bufrex
+ + Implementare il codec aof per il nuovo dba_file
+ + Implementare il codec bufrex per il nuovo dba_file
+ + in tut_main, uscire con errore quando un test fallisce
+ + fare un automake conditional per abilitare/disabilitare i test del modulo db
+ + remove vestigial swig support (swig/, configure.ac)
+ + togliere il conditional per MySQL4 dal configure.ac
+ + Fare un capitolo per le tabelle nella documentazione Doxygen
+ + Formatter, invece di leggere dei csv coi dati per livelli e scadenze, può
+   usare uno switch con dentro delle sprintf: in questo modo si possono fare
+   formattazioni custom per alcuni casi, che possono richiedere elaborazioni
+   aggiuntive (tipo formattare un numero di secondi come ore:minuti:secondi, o
+   solo ore se minuti e secondi sono 0)
+ + Sostituire @see con @ref
+ + Sostituire @ref dba_err con una reference all'intero modulo di gestione
+   errori.  Nello specifico: error.h
+ + Riferire i ltype,l1,l2 alla tabella dei livelli
+ + Riferire i pind,p1,p2 alla tabella dei time range
+ + Documentare gli ID scorciatoia di dba_msg
+ + Riferire i vari parametri ID alla documentazione degli ID scorciatoia
+ + Documentare cos'è un dba_varcode
+ + Linkare la documentazione di vartable.h alla B locale
+ + Fare un @ref alla documentazione del varcode in tutti i parametri
+   dba_varcode
+ + Nella documentazione di dba_varcode, spiegare che cos'è, a che tabella WMO
+   corrisponde, con che macro si crea e decodifica, linkare alla B locale.
+ + Sistemare i warning di doxygen
+ + Installare la documentazione usando automake
+ + Fare il pacchetto -dev anche per il fortran
+ + Mettere una descrizione generale nella front page
+ + Spostare il codec BUFR/CREX da msg a bufrex
+ + Distribuire i binding C++ come parte di dballe
+ + Distribuire i binding python come parte di dballe
+ + Far andare a 64bit
+ + Generare binding python con le docstring:
+   http://www.ae.iitm.ac.in/~prabhu/software/code/python/doxy2swig.py
+   http://sourceforge.net/mailarchive/message.php?msg_id=9720800
+   http://www.swig.org/Doc1.3/Python.html#Python_nn65
+ + Implementare __str__ in Var
+ + Implementare __repr__ in Var
+ + Implementare __str__ in Varinfo
+ + Implementare __repr__ in Varinfo
+ + Far in modo di poter creare delle dballe.Var da python
+ + Implementare __str__ in Record
+ + Implementare __repr__ in Record
+ + Implementare la set di un record che prenda un dict o simili
+ + Implementare record come un dizionario
+ + enqvar
+ + enq che restituisce il tipo giusto a seconda del varcode
+ + enq e set di datemin e datemax
+ + allocare lo slot per il lavoro su oracle
+ + latmin, latmax, lonmin, lonmax non sono swappabili: per le latitudini, dare
+   errore; per le longitudini, min > max significa fare il giro della terra
+   dall'altra parte.
+ + Le longitudini sono anche da considerare in modulo normalizzate
+   all'intervallo -180 - 180.
+ + dballe.ma:
+    + rinominare in volnd
+    + il metodo index degli indicizzatori sovrascrive l'utile metodo index delle liste
+    + segnalare se due dati finiscono nello stesso buco
+    + fare un filtro sui record da accettare
+    + scegliere quali indici sono condivisi
+    + fare un indicizzatore per i livelli che prende una lista data di livelli
+    + fare un indicizzatore per i time range che prende una lista data di time range
+    + esportare attributi
+    + mettere gli attributi come Data.attrs['B33123']
+    + risolvere il problema degli indici 'fantasma' che vengono introdotti se
+      per un indice la creazione va bene ma per l'indice successivo invece
+      fallisce
+    + esportare solo gli attributi dati dall'utente
+    + chiedere a Varinfo quanti bit servono per una variabile, e usare il tipo giusto
+    + fare masked array di interi per le variabili che sono intere
+    + per le variabili stringa, non fare MA ma array numpy (con stringhe vuote) (no),
+      oppure liste di liste (tanto i conti non ci sono da fare) (no)
+      oppure array numpy dtype=object, usando None come dato mancante (si)
+    + fare un esempio in cui si passano dati a R
+      rpy.r.summary(x.vals[0].__array__())
+    + vedere se/come fare la as_r con i masked array (se si può)
+      (banalmente si puo' fare creando un array numpy temporaneo coi NaN o i min_int)
+    = oppure passare a R tramite scrittura su file coi NaN o NA
+    + testare che sia possibile usare gli alias invece dei varcode
+    + poter passare come indici degli indici gia' tirati fuori dal database e
+      impostati come fissi
+    + fare la as_r per la volnd.Data
+    + esportare i dati di anagrafica come vari array a 1 dimensione, uno per rete,
+      o come un array bidimensionale (ana, rete), sincronizzati con gli indici
+      (e poi array paralleli per gli attributi)
+       + Fatto ora che si possono riciclare gli indici per altre query, si può
+         fare un export delle anagrafiche sincronizzato coi dati
+    + spostare l'export CSV da provami a un sottomodulo di dballe
+    + fare degli stringificatori per gli elementi degli indici, per (tra le
+      altre cose) creare etichette migliori per R
+    = salvare nel workspace di R
+      si è visto che è preferibile salvare in un file che si può caricare
+      semplicemente da R usando load
+    + far compilare con FC4
+    + fare una nuova enq{i,d,c} in C++ in dballe.i che restituisca None in caso
+      l'elemento sia mancante.  Il guadagno è evitare di fare una contains in
+      python, che significa anche una conversione in piú da stringa a varinfo
+    + bug enstest.sql.bz2
+
+ + Import e export per il template 0.1 high-level station, discriminato a
+   seconda della presenza o meno di 07004
+ (alcuni test ancora non passano)
+ + Usare SQLEndTran per commit e rollback
+ + Usare SQL_TIMESTAMP_STRUCT per le date invece di query specifiche per i vari database
+ + Far andare con Oracle
+ + Far andare con Postgres, o documentare dove sono i blocchi
+ + Far andare con SQLite
+
+ - dballe.ma:
+    - fare un exporter a linea di comando che esporti una query dballe in uno
+      dei vari formati (come il salvataggio di provami)
+
+    - fare il listone [(pos, val)] su file temporaneo
+
+    - documentazione
+       + la sintassi di read
+       + l'elenco degli indici
+       - esempi, tanti esempi
+
+ - Implementare supporto per piú parametri di query in dbamsg filter
+
+ - Cambiare l'interfaccia per NON usare SQLRowCount, che non è implementato da
+   molti driver ODBC.  Questo significa un cambiamento anche nelle API fortran,
+   o almeno nella loro documentazione (il numero di risultati diventa sempre
+   -1)
+
+ - Documentare quali parti dell'API sono considerate stabili
+
+ - Spiegare nel record la differenza tra i parametri e i valori
+
+ - Sistemare la documentazione dei moduli (secondo tab in doxygen)
+
+ - Dare background su dba_msg, che al momento è oscura da approcciare.
+   Spiegare le motivazioni che hanno portato alla sua creazione, perché i dati
+   sono organizzati a quel modo, come usarlo.
+   [msg.dox ha già qualcosa, forse vecchio.  Vedere cosa mettere in msg.dox e
+   cosa in msg.h: msg.dox dovrebbe parlare anche dei codec]
+
+ - Aggiungere documentazione specifica per ogni libreria:
+    + Contenuto della B locale
+    - Elenco dei campi dei record
+    - Lista feature di codifica supportate per dballe-bufrex
+    - Tabella di template supportati in import/export per dballe-msg
+    - Spiegazione di livelli, scadenze, livello di anagrafica e le varie altre
+      caratteristiche di dba_msg
+    - Spiegazione della differenza tra dba_msg e dba_msgs
+    - Lista database supportati in dballe-db e istruzioni sul setup dei vari
+      tipi di DSN
+
+ - Implementare i case mancanti del formatter (serve Paolo)
+ 
+ - Usare i BUFR da satellite anche in altri test di lettura, ricodifica, import, export
+ - Usare SQLite nel make check
+ - Aggiungere test per il codec BUFR/CREX alla libreria bufrex
+
+ - Reintrodurre la hash table nel record, visto che i dati extra di anagrafica
+   ora vanno tutti nella listona delle variabili
+
+ - Fare un generatore di query casuali sullo stile di mysqld.log e testare cosa
+   succede a InnoDB quando si inserisce un mare di roba
+
+ - Esportare i dati dei satelliti in NetCDF per Lokal col formato che mi darà
+   la Francesca
+
+Prestazioni
+
+ + vedere come va con postgres
+ - esplorare layout di tabelle alternativi usando un dataset piú piccolo che
+   permetta di lavorare al volo con delle alter table
+ - provare a far cache degli ID di repinfo, pseudoana e context
+
+
+TODO-list items being worked on
+-------------------------------
+
+These are the TODO-list items currently being worked on::
+
+ * dbadb
+    + Add a dbadb option to install a new repinfo, checking for consistency during
+      the operation
+
+ * Optimizations
+    - Remove the big unique index on context (it's already been enforced by the
+      rest of the code, that looks up from and existing context index before
+      inserting, and does it inside a transaction)
+
+ * Milestone release-extra
+    - Export AOF
+
+ * BUFR
+    - In fase di export sounding BUFR e CREX, non esportare i livelli extra
+
+ * Tools
+    - dbadb: scegliere se importare o no i dati di anagrafica nel livello 257
+      (lat, lon, ident, year, month, day, hour, min)
+       - Implementato e protetto da if(0)
+         è da vedere se non importare tutto il livello 257
+	 o se non importare solo gli 8 valori
+       - Attivarlo con una variabile di ambiente
+
+ * Core
+    - Altezza anemometro lo salvo solo o lo uso anche per mettere i dati di
+      vento in un corrispondente livello di altezza?
+
+ * Import da VM o database Oracle di ARPA
+    - Buttare via le stazioni con NULL su lat o long
+
+ * Export per VM
+    - Procurarsi un tracciato VM di una stazione nota e scrivere test
+
+ * Documentazione codice
+    - Spiegare l'architettura del sistema di I/O encoding e decoding
+    - Spiegare come aggiungere:
+       - nuovi template di export bufrex
+       - nuove conversioni tra unità di misura
+       - nuove funzioni ai tool a linea di comando
+       - import da nuovi template bufrex
+      (farlo mettendo questa documentazione in un nuovo gruppo 'tasks')
+
+ * Tools
+    - In fase di conversione, aggiungere uno switch per fare unset di tutti i
+      valori che hanno intervallo di confidenza al di sotto di una soglia data
+    - Fare un import delle anagrafiche che scandisca una serie di CREX:
+       - mettendo assieme i dati anagrafici delle varie stazioni.
+       - controlli che le stazioni non si spostino e alla fine inserisca tutto
+	 nella tabella di anagrafica
+
+ * Procedura per supportare un nuovo tipo report in un formato specifico
+    - Cercare un file con un'osservazione nel formato voluto
+    - Cercare un file con la stessa osservazione in un formato per cui è già
+      supportata, o in alternativa, cercare un dump dei dati presenti nel
+      campione
+    - Aggiungere il campione all'archivio dei test case
+    - Aggiungere a check_import i test per il nuovo file, usando l'altro file o
+      i dati del dump come riferimento
+    - Implementare
+
+ - Appunti per un nuovo report:
+    - La nuova API (con un programma di esempio è forse meglio)
+    - Cosa è stato fatto finora
+    - Cosa verrà fatto in futuro
+    - MySQL 4? (transazioni (forse non servono), DELETE USING, performance, faremo
+      delle prove)
+    - Completamento API dalle specifiche
+       - semantica elencamele
+       - semantica QC
+       - semantica cancellazione
+
+ * Note dalla presentazione
+    - Non è molto felice la definizione "reti"
+    - quadballitem: serve la idba_seti(handle, "rep_cod", 1) dopo la
+      seti("ana_id")?
+    - [no, perché nessuno poi la saprebbe/potrebbe mantenere] Fare
+      un'interfaccia python con solo quello che serve per fare toolettini
+      grafici per import, export, correzione dati anagrafici, correzione
+      singoli dati
+
+ - Controllare se è piú veloce con mysql 3 o mysql 4
+    - Costruire un benchmark
+       - Inserimento di dati casuali
+       - Query su intervalli casuali
+       - Inserimento QC casuali
+       - Query di valori QC casuali
+   time DBA_TABLES=tables tools/dbadb import --user=enrico ../materiale/all/obs4-145.bufr
+
+ - Articolo per ARPA rivista
+ - Unit test
+ - Mettere assert nel codice
+ - Verificare memory leak
+ - Controllare il keynote di Triggell alla LCA sui tool da avere per
+   controllare il software
+ - AOF cambia endianness tra l'header (FDR e DDR) e le osservazioni
+ - Rinominato "ident" in parameter selezione come "ident_select"
+
+ - Domande
+    - Dove trovo un file con le code table associate ai valori nella tabella B?
+    - Scrivere il test per guidare la stesura del codice: dato un AOF (o uno
+      per tipo) fare l'elenco delle variabili fisiche che ci si aspetta in
+      output (coi loro codici WMO o B locale), e usarle per testare il codice.
+      -> Meglio: convertire 4/5 bufr di tipo diverso in AOF, poi darmi gli AOF e
+         il dump dei BUFR
+
+
+Future TODO-list items
+----------------------
+
+These are the TODO-list items that are to be addressed in the future::
+
+ - Export in VM o database oracle di ARPA
+ 
+ * Tools
+    - Export di variabili in un foglio elettronico
+   
+ * CREX
+    - Raggruppare i dati che abbiamo per tipo report e vedere quali
+      informazioni di contesto ci sono per ogni tipo report
+    - Documentazione
+    - Test
+
+    - Parse Entry C
+    - Testare il decoding di CREX con piú di una subsection
+    - Encoding CREX con piú di una subsection
+    - Encoding CREX con entry C
+    - Inserimento informazioni sul report
+
+ * BUFR
+    - Gestire in input le entry C 22 e C24
+    - Export
+       - Fare un file di configurazione dove specificare il numero
+	 dell'originating centre da usare nell'Identification Section dei BUFR
+	 generati
+   
+ * AOF
+    - Encoding
+      (Si può esportare in BUFR e poi usare il convertitore BUFR->AOF già
+       pronto)
+    - In scrittura, controllare le date di tutte le osservazioni scritte e alla
+      fine aggiornare l'header con la minima e la massima
+    - Export of attributes
+    - Il dump dell'AOF in dbamsg diventa quindi il dump del dba_msg
+      risultante.  Il dumpraw può essere una nuova funzione in aof_message
+      che stampa il dump piú grezzo dei contenuti dell'AOF
+
+ * Interfaccia fortran
+    - Implementare la voglioancora
+    - Vedere se fornire una funzione di wrapping semplificata per le
+      dba_error_callback_*, che offra la possibilità di agganciare gli errori a
+      callback scelte tra un set predefinito implementato in C
+    - (dopo) Aggiungiamo un input di restrizioni alla quantesono? (Tipo solo fisse,
+      solo un tipo report, solo in un certo box di coordinate)
+
+ * Refactoring
+    - Replace unit names with codes
+    - Fare degli "ANALISE" per incrementare le prestazioni (magari metterlo in
+      dbadb)
+       - Ancora meglio: fare una funzione "pack database" che rimuove anche
+	 anagrafiche e contesti non piú utilizzati, e poi fa un'ANALISE
+    - Future optimizations for dba_vartable can make use of string tables to
+      store varinfo descriptions and units instead of long fixed-length
+      records.
+       - The string table cannot grow dynamically or it will invalidate the
+         string pointers
+    - Distinguere nei messaggi:
+       - Metainformazioni (nome del file, offset del messaggio, numero
+         d'ordine, ...)
+       - Informazioni codificate (il messaggio codificato)
+       - Informazioni decodificate (il contenuto del messaggio)
+    - Refactoring dba_db per velocizzare l'import e export di report
+       - Fare una cache delle informazioni per il tipo report, da leggere alla
+	 connessione al database e tenere in memoria
+       - Fare cache di pseudoana id e context id
+       - Use foreign keys to automatically get rid of unused pseudoana and contexts
+   
+ * Dballe
+    - Come gestire i cambiamenti alla B locale:
+       - Salvataggio nel database della tabella B usata per rappresentare i dati
+         al suo interno, e uso della tabella nel DB per l'import e l'export dei
+         dati
+       - Oppure tenere l'indice in /usr/local, che è condivisa
+    - Espansione code table quando si fa enqc di un parametro di tipo "CODE TABLE"
+      (sembra un compito impossibile, a meno ché qualcuno non trovi una lista
+      parsabile di tutte le variabili e i loro valori.  C'e' anche da vedere
+      come gestire eventuali aggiornamenti futuri)
+
+ * Guida utente
+    - Troubleshooting
+       - Raccogliere casi mano a mano che si presentano
+
+ - Wrappare con Swig per poter scrivere test e viewer piú facilmente
+    = Iniziato, ma non funziona (non si riesce a far andare i parametri in
+      output in maniera decente)
+    + Per uscirne, wrappare in C++ e swiggare il wrapper C++
+      (cosí funziona)
+    - Fare un'interfaccina a DB-ALLe in pygtk
+
+ - Legalese
+    - Add copyright informations
+    - Solve distribution problems for crex tables
+
+
+Further stages of the development
+---------------------------------
+
+Development will now proceed on implementing the few missing things and
+consolidating the code towards production quality.
