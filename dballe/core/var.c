@@ -324,7 +324,7 @@ dba_err dba_var_seti(dba_var var, int val)
 	if (val < var->info->imin || val > var->info->imax)
 	{
 		DBA_RUN_OR_RETURN(dba_var_unset(var));
-		return dba_error_toolong("Value %i is outside of the range [%i,%i] for B%02d%03d (%s)",
+		return dba_error_toolong("Value %i is outside the range [%i,%i] for B%02d%03d (%s)",
 				val, var->info->imin, var->info->imax,
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
 	}
@@ -351,7 +351,7 @@ dba_err dba_var_setd(dba_var var, double val)
 	if (isnan(val))
 	{
 		DBA_RUN_OR_RETURN(dba_var_unset(var));
-		return dba_error_toolong("Value %f is outside of the range [%f,%f] for B%02d%03d (%s)",
+		return dba_error_toolong("Value %g is outside the range [%g,%g] for B%02d%03d (%s)",
 				val, var->info->dmin, var->info->dmax,
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
 	}
@@ -360,7 +360,7 @@ dba_err dba_var_setd(dba_var var, double val)
 	if (val < var->info->dmin || val > var->info->dmax)
 	{
 		DBA_RUN_OR_RETURN(dba_var_unset(var));
-		return dba_error_toolong("Value %f is outside of the range [%f,%f] for B%02d%03d (%s)",
+		return dba_error_toolong("Value %g is outside the range [%g,%g] for B%02d%03d (%s)",
 				val, var->info->dmin, var->info->dmax,
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
 	}
