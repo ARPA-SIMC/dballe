@@ -272,7 +272,7 @@ static dba_err encode_b_data(encoder e)
 
 		TRACE("Next 5 variables:\n");
 		int i = 0;
-		for (; i < 5 && e->nextvar[i] != NULL; i++)
+		for (; i < 5 && i < e->vars_left; i++)
 			dba_var_print(e->nextvar[i], stderr);
 	}
 
