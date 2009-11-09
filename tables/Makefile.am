@@ -16,7 +16,10 @@ dballe.tex: dballe.txt mkbdoc
 B000000002001200.txt: dballe.txt
 	cut -b 1-119 < $< > $@
 
+B990203.txt: dballe.txt
+	cp $< $@
+
 EXTRA_DIST = $(table_DATA) mkbdoc
 
 distclean-local:
-	rm -f dballe.tex B000000002001200.txt
+	rm -f dballe.tex B000000002001200.txt B990203.txt
