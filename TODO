@@ -231,6 +231,177 @@ Feature
  + Far andare con Oracle
  + Far andare con Postgres, o documentare dove sono i blocchi
  + Far andare con SQLite
+ = Cambiare l'interfaccia per NON usare SQLRowCount, che non è implementato da
+   molti driver ODBC.  Questo significa un cambiamento anche nelle API fortran,
+   o almeno nella loro documentazione (il numero di risultati diventa sempre
+   -1)
+ + Implementate query LIMIT in Oracle
+ + Guardare se dbadb import --fast fa commit dei dati (no, ora che autocommit è
+   disabilitato: ignorato --fast)
+ + aumentare il parametro keysize di MySQL (copia degli indici in memoria)
+   (ma lavora solo su MyISAM; innodb ha lo stesso ma con un nome diverso)
+   (non ho trovato dove sia questo parametro in innodb)
+ + Non accettare la rete 254 per i dati di anagrafica: se si importano i dati
+   di anagrafica, bisogna dire la rete.
+    + La setcontextana non setta piú la rete e la lascia com'è
+    + In fase di import, si usa la rete dei dati in import
+ + aggiungere tabella dipendenze al README
+ + query con solo ana_filter non va
+	CHECKED(dba_db_cursor_next(cur, &has_data));
+	gen_ensure(!has_data);
+
+TODO
+(18:02:30) pat1@jabber.linux.it: pare che provami non chiuda la connessione al db
+(18:02:40) pat1@jabber.linux.it: questo quando si esce
+(18:02:45) pat1@jabber.linux.it: mysql non fa una piega
+(18:02:53) pat1@jabber.linux.it: oracle pare non molli invece
+(18:03:03) pat1@jabber.linux.it: e obbliga a un ctrl-C
+
+ + API fortran, simile a simple.c, per leggere e scrivere dei msg, e per
+   importarli/esportarli in bufr e crex
+    - voglioquesto/quantesono -> legge bufr successivo
+    - funzioni api fortran implementate in una classe C++ virtuale
+    - le funzioni C di simple.c diventano dispatcher che recuperano il
+      puntatore all'oggetto dalla struttura associata alla handle, convertono
+      da/per fortran e chiamano il metodo
+
+ + Nei decoder, usare sempre rep_memo invece di rep_cod, e non settare rep_cod,
+   poi vedere cosa si rompe e come gestirlo (encoder e decoder usano msg->type,
+   il problema non si pone)
+ + togliere rep_cod da vars.csv
+ + greppare 193 nel codice per cercare set di rep_cod a mano
+ = togliere le funzioni che passano da rep_cod a rep_memo (usata al momento da
+   export per prendere il memo dato il cod uscito dal database)
+ - non accettare rep_cod da command line (al momento lo accetta ancora per
+   compatibilità)
+ + togliere B01193 (rep_cod) dalla B locale
+
+
+ - guardare software di Opera (licenza ignota) per codifica/decodifica BUFR
+   satellite
+ - aggiungere 'getting started' al README
+ - mancano tetex-extra, swig, python-dev tra le dipendenze elencate nel sito
+ - pacchettizzare debian/
+ - Per i test: 172.20.10.242
+
+STORED PROCEDURE
+ + Requisiti: MySQL 5 e libmyodbc >= 3.51.14
+ + Convertiti: pseudoana e context
+ - Da fare: speedup prendilo, speedup import
+    - prendilo: usare ODBC bulk insert
+    - import: usare ODBC bulk insert sia per dati che per attributi
+    - valutare sistema di speedup estrazione e inserimento per vol7d
+   http://dev.mysql.com/doc/refman/5.0/en/declare-handlers.html
+   http://dev.mysql.com/doc/refman/5.0/en/cursors.html
+
+ - Ridisegnare msg?
+    - info ana
+       - base
+       - dati extra ana
+          - attributi
+    - datetime
+    - dati (con livelli, scadenze, reti)
+       - attributi
+
+Batch insert
+
+(12:54:30) pat1@jabber.linux.it: "in lettura invece ti viene dato quello della rete 254 a meno ché non chiedi una rete diversa"
+non mi è chiaro:
+1) se non specifico la rete (le voglio tutte); ottengo una temperatura synop, mi dice che la rete è synop, chiedo il nome stazione e mi viene dato quello della 254; poi ottengo una temp metar, mi dice che la rete è metar, chiedo il nome stazione e mi viene dato quello della 254
+2) specifico la rete: voglio la temp synop, mi da la temp synop, mi dice che è un synop, chiedo il nome stazione e mi da quello synop; poi specifico la rete metar e voglio la temp, mi da la temp metar, mi dice che è un metar, chiedo il nome stazione e mi da quello synop
+strano ?
+(12:56:03) spanezz@jabber.linux.it/Home: no, spetta
+(12:56:30) spanezz@jabber.linux.it/Home: distinguiamo quantesono e voglioquesto
+(12:56:48) spanezz@jabber.linux.it/Home: nella quantesono, ti dà in automatico anche tutti i dati della rete 254
+(12:57:08) spanezz@jabber.linux.it/Home: non credo si possa scegliere un'altra rete per i dati extra: non mi sono mai posto il problema.  Se serve, ci ragioniamo
+(12:57:22) spanezz@jabber.linux.it/Home: nella voglioquesto, puoi fare setcontextana o non farlo
+(12:57:28) spanezz@jabber.linux.it/Home: se non lo fai, non ti dà nessun dato di anagrafica
+(12:57:37) spanezz@jabber.linux.it/Home: se lo fai e non setti la rete, ti dà i dati della 254
+(12:57:44) spanezz@jabber.linux.it/Home: se lo fai e setti la rete, ti dà i dati di quella rete
+(12:57:56) spanezz@jabber.linux.it/Home: ma se fai setcontextana, NON ti dà i dati misurati: ti dà solo i dati di anagrafica
+(12:59:06) pat1@jabber.linux.it: si scusa ho fatto casino con le lat e lon che son invece sempre restituite 
+(12:59:59) spanezz@jabber.linux.it/Home: Senti... mi copi e incolli questa conversazione sul wiki?
+(13:00:18) spanezz@jabber.linux.it/Home: Mi sembra che chiarisca benino il comportamento dei dati di anagrafica nelle varie query
+(13:00:25) spanezz@jabber.linux.it/Home: oppure se vuoi la incollo nelle FAQ di dballe
+
+
+
+(16:52:15) pat1@jabber.linux.it: settavo una var_related ...... esiste ? non è solo *var_related ?
+(16:53:06) spanezz@jabber.linux.it/Home: in teoria solo *var_related, però non ho un modo semplice per bloccare var_related
+ -> invece di mettere var_related nel record, trappare "var_related" quando si
+    usa l'asterisco e salvarlo da qualche parte fuori dal record: si riduce la
+    dimensione del record, non c'è da ricordarselo a parte per la unsetall e si
+    trappa l'errore in caso di setc("var_related") senza l'asterisco
+
+ - Fare una nuova tabella dati e attr per i dati di pseudoana, visto che
+   vengono sempre comunque gestiti diversamente
+
+ - Controllare che gli indici UNIQUE abbiano un senso, altrimenti tenerli solo
+   per debug: ad ogni modo io in fase di insert devo fare una select, quindi...
+ - Controllare che l'indice unique di pseudoana abbia un senso quando ident is
+   null, altrimenti si può pensare di toglierlo
+
+ - Aggregare (report, livello, scadenza, B) in vtype o dim4
+ - Oppure il report metterlo assiemea all'ana
+ - Aggregare (dim4, ana, data) in context
+ - Anche il datetime può stare in una tabella sua (vado da 3 a 20 variabili per
+   datetime, di piú se faccio un sondaggio, o peggio ancora un satellite)
+ - Fare un tool che data una tabella di un DB fa un analisi di quali tabelle
+   sono correlate e di quanti valori distinti ci sono in ogni suo sottoinsieme
+   di colonne
+   	$ mysql test2 -e "SELECT DISTINCT id_ana, datetime FROM data" | wc -l
+	103334
+	enrico@viaza:~/lavori/arpa$ mysql test2 -e "SELECT COUNT(1) FROM data" | wc -l
+	2
+	enrico@viaza:~/lavori/arpa$ mysql test2 -e "SELECT COUNT(1) FROM data"
+	+----------+
+	| COUNT(1) |
+	+----------+
+	|  1298237 | 
+	+----------+
+	$ mysql test2 -e "SELECT DISTINCT id_ana, id_dim4 FROM data" | wc -l
+	4869
+	$ mysql test2 -e "SELECT COUNT(1) FROM dim4"
+	+----------+
+	| COUNT(1) |
+	+----------+
+	|       41 | 
+	+----------+
+ - Aggiungere una tabella 'info (key varchar(255) primary key, val
+   varchar(255))' in cui salvare metadati sul database tipo la versione del suo
+   formato, e controllarla sempre in fase di apertura del database, dando
+   errore se il formato non è supportato
+
+ - Cannot parse AOF message #247653: error 1 (item not found) while value 15
+   not found in WMO code table 0500 at offset 7415080.  Message #247653 cannot
+   be parsed: ignored (in uno degli AOF di esempio che abbiamo)
+   Cannot parse AOF message #287985: error 8 (consistency check failed) while pressure indication not found for level 0 at offset 13628528.
+   Message #287985 cannot be parsed: ignored
+   Cannot parse AOF message #329800: error 8 (consistency check failed) while pressure indication not found for level 0 at offset 4804388.
+
+
+ - Fare un programmino o uno script che fa dump di un database scrivendo in
+   output tutti (e soli) i dati necessari a rigenerarlo, in un formato
+   indipendente dalla struttura del database.  Usarlo per fare dump e restore
+   in caso cambi la struttura del database, e per provare database con
+   struttura diversa.
+
+ - Branch riorganizzazione livelli
+    + Uniformare i livelli 101 e 121 e 141, 105 e 125, 108 e 128
+    + Vedere come committare i livelli uniformati
+    - Cambiare i livelli in Oracle
+
+ - Aggregare id variabile, livello, scadenza, rete (perché normalmente hanno un
+   certo livello di correlazione e darebbero una tabella piccola)
+
+ - http://www.easysoft.com/developer/interfaces/odbc/linux.html#cursor_lib_unixodbc
+
+ - normalizzare livelli e scadenze
+ - aggiungere opzione per disabilitare gli indici durante l'inserimento e
+   riabilitarli dopo
+
+ - Valutare di portare il codice variabile dentro alla context (xgrib indicizza
+   a questo modo) (v. p. 20 della documentazione di xgrib della picodata)
 
  - dballe.ma:
     - fare un exporter a linea di comando che esporti una query dballe in uno
@@ -243,12 +414,9 @@ Feature
        + l'elenco degli indici
        - esempi, tanti esempi
 
+ - Implementare i case mancanti del formatter (serve Paolo)
+ 
  - Implementare supporto per piú parametri di query in dbamsg filter
-
- - Cambiare l'interfaccia per NON usare SQLRowCount, che non è implementato da
-   molti driver ODBC.  Questo significa un cambiamento anche nelle API fortran,
-   o almeno nella loro documentazione (il numero di risultati diventa sempre
-   -1)
 
  - Documentare quali parti dell'API sono considerate stabili
 
@@ -273,8 +441,6 @@ Feature
     - Lista database supportati in dballe-db e istruzioni sul setup dei vari
       tipi di DSN
 
- - Implementare i case mancanti del formatter (serve Paolo)
- 
  - Usare i BUFR da satellite anche in altri test di lettura, ricodifica, import, export
  - Usare SQLite nel make check
  - Aggiungere test per il codec BUFR/CREX alla libreria bufrex
