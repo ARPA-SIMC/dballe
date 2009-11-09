@@ -105,6 +105,11 @@ dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, int localsubtyp
 		braw->opt.bufr.subcentre = 0;
 		braw->opt.bufr.master_table = 12;
 		braw->opt.bufr.local_table = 0;
+	} else if (braw->type == 8 && braw->subtype == 255 && braw->localsubtype == 171) {
+		braw->opt.bufr.centre = 98;
+		braw->opt.bufr.subcentre = 0;
+		braw->opt.bufr.master_table = 13;
+		braw->opt.bufr.local_table = 102;
 	} else {
 		braw->opt.bufr.centre = 98;
 		braw->opt.bufr.subcentre = 0;
@@ -156,27 +161,34 @@ dba_err bufrex_encode_crex(dba_msgs msgs, int type, int localsubtype, dba_rawmsg
 	{
 		braw->type = type;
 		braw->subtype = 255;
-		braw->subtype = localsubtype;
+		braw->localsubtype = localsubtype;
 	}
 
+/* fprintf(stderr, "From %d %d chosen %d %d %d\n", type, localsubtype, braw->type, braw->subtype, braw->localsubtype); */
+
 	/* Setup encoding parameters */
-	if (msgs->msgs[0]->type == MSG_GENERIC)
+	switch (msgs->msgs[0]->type)
 	{
-		braw->opt.crex.master_table = 99;
-		braw->edition = 2;
-		braw->opt.crex.table = 3;
-	} else {
-		braw->opt.crex.master_table = 0;
-		braw->edition = 1;
-		braw->opt.crex.table = 3;
+		case MSG_GENERIC:
+			braw->opt.crex.master_table = 99;
+			braw->edition = 2;
+			braw->opt.crex.table = 3;
+			break;
+		default:
+			braw->opt.crex.master_table = 0;
+			braw->edition = 1;
+			braw->opt.crex.table = 3;
+			break;
 	}
+
+/* fprintf(stderr, "TYPE IS %s, chosen %d %d %d\n", dba_msg_type_name(msgs->msgs[0]->type), braw->opt.crex.master_table, braw->edition, braw->opt.crex.table); */
 
 	/* Load appropriate tables for the target message */
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_load_tables(braw));
 
 	/* Fill in with the vales from msg */
 	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_from_dba_msgs(braw, msgs));
-	
+
 	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_MSG))
 	{
 		dba_verbose(DBA_VERB_BUFREX_MSG, "CREX data before encoding:\n");
