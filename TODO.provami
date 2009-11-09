@@ -1,0 +1,282 @@
+Interfaccia C++
+ + Attributi
+ + Iterare le variabili in un dba_record
+ - dba_file / marshal (senza i dettagli dei vari tipi di messaggi)
+ - dba_db_update_repinfo
+
+Binding Python
+ + iteratori
+ + usare setc invece di sets (rinominare a livello di binding swig)
+
+Interfaccia di navigazione
+ = vedere se xplanet/xearth può essere usato per generare delle bitmap da
+   leggere e mettere in un GtkImage
+ + visualizzazione degli attributi
+ + refactoring usando MVC, dove il model è fatto coi model di GTK
+ + partire dai filtri e non dalle anagrafiche
+    + inizializzare i filtri coi range di valori presenti nel database
+ + fare una tabella sortabile
+ + filtri sui dati da visualizzare
+ + filtro su rep-cod
+ = vedere se non conviene togliere il limit alle query e tirar giú tutti i
+   dati, e mentre li si tira giú segnarsi i dataset per tutti i campi di query
+   (no: quando non si hanno filtri alle query, corrisponde a scaricarsi tutto
+   il database)
+ + portare la mappa in una finestra separata
+ + Riportare dentro i bottoni in basso a destra
+ + aggiungere la possibilità di fare query con un flag unsorted che toglie
+   l'order by (e si fa molto prima)
+ = aggiungere possibiltà di fare query con SQL_CURSOR_FORWARD_ONLY
+   con MySQL si può fare solo una query alla volta
+ + Aggiungere un tasto 'Query' per lanciare la query
+
+ + possibilita' di annullare un drag di rettangolo (se la query va attivata con
+   query, allora si puo' confermare e rifare)
+ + visualizzare i numeri di latitudine e longitudine mentre si trascina il rettangolo
+ + selezione singola stazione
+
+ + filtro per datetime
+
+ + aggiungere una progressbar
+ + aggiungere un modo per fare cancel di query lunghe
+
+ + aggiungere un bottone 'Query' anche alla finestra della mappa
+ + mettere i vari bottoni della mappa in una toolbar
+
+ + descrizione variabile, unità di misura
+
+ + dare la possibilità di aprire e chiudere le finestre aggiuntive (toolbar
+   nella finestra principale?)
+ + colorazione dei dati per vedere dove cambiano
+ + mostrare il rep_memo nella tabella
+
+ + separare le query di livello e scadenza per far funzionare il discorso
+   "mostra tutte le alternative risultanti dal filtraggio con tutti i filtri
+   escluso il mio"
+
+ + aggiungere alla MapChoice la possibilità di far query per ID
+
+ + mostrare tutte le stazioni selezionate dai soli parametri di selezione che
+   non riguardano le stazioni
+    - colorare diversamente quelle selezionate dal filtro di area
+    - lo zoom dopo l'update deve centrarsi sul bounding box delle sole stazioni
+      selezionate dal filtro di area
+
+ + usare il nuovo MapCanvas invece del FloatCanvas
+
+ + selezionare "per ident": se uno sceglie una stazione fissa, si selezionano
+   tutte le fisse.  Altrimenti si selezionano tutte quelle con il suo ident.
+
+ + mettere l'unità di misura nella descrizione del popup di selezione variabili
+   (che poi può essere usato come riferimento se non ci stanno le descrizioni
+   nell'area del risultato)
+
+ + mostrare gli attributi del record selezionato
+ + mostrare i dati extra di anagrafica del record selezionato
+ + possibile fare un'area che switcha da anagrafica a attributi a seconda di
+   dove uno clicca nell'area risultato
+ + mostrare anche gli attributi dei dati di anagrafica
+
+ + mostrare i dati (lat, lon, ident) di anagrafica in un box "Pseudoana
+   details", assieme ai dati extra
+
+ + togliere lat lon e ident dalle righe e mettere l'ID
+
+ + scrivere una test suite per la copia dei Dballe.Record
+   copiando la sequenza di set e get del filtro del Model, senza il workaround
+   unset("query")
+
+ + cancellare tutti i dati visualizzati
+
+ + export dei dati visualizzati come BUFR o CREX
+
+ + le info nel footer di AnaDetails non seguono lo scrolling
+
+ + spostare IdentChoice nella finestra della mappa
+
+ + query "per esempio" sulla riga, dove selezionando una cella si può dire
+   'dammi solo quelli che hanno questo valore in questa cella'
+
+ + min e max time si resettano dopo le query
+
+ + la selezione di datetime è ancora scomoda
+
+ + mantenere una copia del filtro corrispondete alla query fatta, e verificare
+   se i cambiamenti al filtro lo riportano all'originale.  Se capita,
+   notificare che il filtro non è piú dirty.
+
+ + delete/export dei dati visualizzati (ignorando il filtro corrente, ma usando il
+   filtro dell'ultima query)
+
+ + dopo una delete, cancellare anche i context e gli pseudoana orfani
+   visto che prende troppo tempo, aggiunta la funzione come voce di menu
+
+ + menu popup anche nei dettagli ana
+
+ + quando si sceglie una stazione dalla mappa, mostrarne i dettagli nell'AnaDetails
+   (è l'unico modo per accedere ai dati di anagrafica di una stazione che non
+   ha dati misurati)
+
+ + aggiungere descr e unità di misura nell'ana e negli attributi
+
+ + nei pull-down della query, marcare quelli che corrispondono al filtro
+   dell'ultima query
+
+ + icone
+ + packaging
+
+ + dopo l'annulla, l'interfaccia rimane in uno stato incoerente
+ + gestire gli errori delle query
+
+ + input di data_filter, ana_filter, attr_filter
+
+ + fare un controllo di sintassi dei filtri dando feedback col colore di sfondo
+
+ + startuppare subito e mostrare la progressbar mentre si fa la query iniziale
+
+ + make the table editable wrt the values
+   (no undo)
+ = fare un piccolo dialog con un form per editare valori
+ + possibilità di correggere dei dati
+
+ + mostrare la colonna di ordinamento
+   http://wiki.wxpython.org/index.cgi/DrawingOnGridColumnLabel
+   http://mail.python.org/pipermail/python-list/2005-February/268727.html
+
+ + menu popup anche nei dettagli attributi
+
+ + dopo la query, cercare di riportare il cursore dov'era
+
+ + riportare il cursore anche sulla colonna dov'era
+ + riportare il cursore dov'era anche dopo la prima query
+
+ + mettere a punto la dimensione iniziale delle finestre
+
+ + i contenuti di AnaDetails non vengono aggiornati quando il modello ha fatto
+   l'update (per riprodurre, cancellarne un elemento)
+    = far sí che le varie griglie si aggiornino tra dei BeginBatch e degli
+      EndBatch, e ripristino la posizione del cursore dopo l'update e prima
+      degli EndBatch
+
+ + fare l'icona per la finestra dei filtri extra
+
+ + livello e scadenza con nomi invece di numeri
+    = come?  Le descrizioni che ho (nella documentazione) sono molto (troppo)
+      lunghe
+    = approssimazione: fare un tooltip che descrive il leveltype e il
+      timerange, ma senza metterci dentro i valori
+    + fare la funzione di spiegazione in dballe e wrapparla da fortran
+
+ + zommando troppo si distorce l'aspect ratio.  Zoomando troppo all'indietro lo
+   si rimette a posto
+
+ + la VarNamesChoice mostra anche le variabili del contesto di anagrafica
+
+ + export in csv e/o per OpenOffice
+    + Provare prima in un comando python da commandline
+       - usare la nuova dba_record_set_from_string per parsare la query dai
+	 parametri a commandline
+    = se c'è VAR nella query, esporta gli attributi.  Sennò esporta variabili.
+    = esportare la tabella di anagrafica con tutti i dati di anagrafica
+    = esportare solo la tabella dati
+    + fare l'unione dei vari tipi di attributi che ci sono, e assegnarne uno
+      per colonna.  Stessa cosa per i dati di anagrafica
+       = farsi dare i titoli con una query che chiede 'che attrbuti ci sono per
+	 questi dati?'
+       = Stessa cosa per tutti i dati di una stazione
+
+ + Far scegliere il formato in uscita in modo piú esplicito
+    + (al momento, è impossibile esportare dei synop come generici, per esempio)
+
+ + bug report (su dati da dec2005_ita_obs_ecmwf.bufr)
+    + prova a scrivere l'id stazione ... simpatico ;)
+      < Problema?  Forse non era in modo stazione o modo aereo >
+      quando si modifica l'ID, l'applicazione reagisce dopo un piccolo
+      intervallo di tempo e riporta il cursore all'inizio.
+      Stessa cosa sugli input per le latitudini e longitudini.
+    + seleziona 1 variabile
+       export csv
+       alla fine di ogni record ci sono valori alla caz
+      -> Esportato come csvexporttest, ci sono vari valori strani, da vedere se
+         sono anche nel database. 
+      -> Corretto: python ha uno scoping scemo per i parametri delle funzioni
+         anonime
+    + export in formato bufr (template o generico)
+       mancano un tot di dati; pare a caso
+      -> Sarebbe buono avere un esempio specifico: io ne ho guardato uno e ci
+         ho trovato dentro tutto.
+      risolto: data e ora veniva scritto nel livello di anagrafica e esportato
+      sovrascrivendo gli altri valori
+
+ + In provami, il limit non si attiva se i dati sono minori di limit
+   (serve se uno vuol cambiare query da una molto ben definita a una che
+   restituisce un mare di dati)
+
+ + export per R
+ + export 'vol7d'
+    - 4 matrici coi dati:
+       - datiana(ana,anavar,network)
+       - attrdatiana(ana,attranavar,network,attrana)
+       - dati(ana,time,level,timerange,dativar,network)
+       - attrdati(ana,time,level,timerange,attrdativar,network,attrdati)
+    - vari vettori che fanno la corrispondenza (indice sulla dimensione della
+      matrice -> cosa significa)
+       - ana= numero stazioni
+       - anavar= numero variabili dell'anagrafica
+       - network= numero delle reti
+       - attranavar= numero variabili degli attributi dell'anagrafica
+       - attrana= numero variabili degli attributi dell'anagrafica
+       - time= numero di istanti temporali di riferimento
+       - level= numero di livelli
+       - timerange= numero di timerange
+       - dativar= numero di variabili dei dati
+       - attrdativar= numero di variabili degli attributi dei dati
+      (attr ancora da capire come e' fatto)
+ + interfaccia python a dballe che generi array
+ + salvare nel workspace di R
+
+ + durante il salvataggio, fare un box che dice che sta salvando
+ + quando si salva, aggiungere l'estensione se manca
+
+ + Model.py fa import dballe, dballe.volnd, dballe.dbacsv
+   che lo fa automaticamente dipendere da numpy
+
+ - aggiornare AnaDetails anche quando la mappa o la ResultGrid prendono il
+   focus
+
+ - export volnd salvato con cPickle usando indici fissi
+    - Al momento non si può perché MA non supporta pickle
+
+ - fare piccoli tool per correggere dati, cosi' si prototipano le routine 
+   di correzione (esempio: correggere i dati ana di una stazione)
+ - modifica dei dati (dato in una riga, dati in tutte le righe della query:
+   setta a un valore, setta a dato mancante)
+ - eventualmente tool extra (mergiare un'anagrafica in un'altra, cambiare lat
+   long ident di un'anagrafica esistente)
+
+ - quando il filtro è dirty, cambiare lo sfondo dei dati nella griglia per far
+   vedere quali dati sono selezionati dal nuovo filtro
+    - Fare un metodo di dba_record che faccia match di un altro dba_record
+
+ - nelle aree risultato, mettere la descrizione in un tooltip
+ - tooltip diverso per ogni cella:
+   http://lists.wxwidgets.org/archive/wxPython-users/msg11486.html
+
+ - sperimentare una magic lens per variabile in output, che al passaggio colora
+   le stazioni con una palette dipendente dalla variabile selezionata
+   (serve una palette per ogni diverso tipo di selezione: giocare su:
+    - saturazione per distinguere nel filtro di area / fuori dal filtro di
+      area
+    - luminosità per il valore della variabile
+    - colore per selezionato / non selezionato
+   (nota: è possibile solo quando una stazione ha un solo valore possibile, il
+    ché è complesso da ottenere (datetime, livello e scadenza devono tutti
+    essere prefissati))
+
+ - linea temporale creata con un canvas, e istogrammi (in scala logaritmica)
+   con numero di elementi per pixel
+
+*** Test 
+ - lanciare su un database vuoto
+ - lanciare su un database con un solo elemento
+ - lanciare su un database grosso
