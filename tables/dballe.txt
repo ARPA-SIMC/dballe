@@ -88,13 +88,13 @@
  014021 GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED         J/M**2                    -4            0  15 J/M**2                   -4          5
  014192 [SIM] Instantenous sensible heat flux                            W m-2                     -3        -2048  12 W m-2                    -3          4
  014193 [SIM] Instantenous latent heat flux                              W m-2                     -3        -2048  12 W m-2                    -3          4
- 015192 [SIM] NO Concentration                                           KG/M**3                    9            0  31 KG/M**3                  16         10
- 015193 [SIM] NO2 Concentration                                          KG/M**3                    9            0  31 KG/M**3                  16         10
- 015194 [SIM] O3 Concentration                                           KG/M**3                    9            0  31 KG/M**3                  16         10
- 015195 [SIM] PM10 Concentration                                         KG/M**3                    9            0  31 KG/M**3                  16         10
- 015196 [SIM] CO Concentration                                           KG/M**3                    9            0  31 KG/M**3                  16         10
- 015197 [SIM] SO2 Concentration                                          KG/M**3                    9            0  31 KG/M**3                  16         10
- 015198 [SIM] PM2.5 Concentration                                        KG/M**3                    9            0  31 KG/M**3                  16         10
+ 015192 [SIM] NO Concentration                                           KG/M**3                   10            0  14 KG/M**3                  10          4
+ 015193 [SIM] NO2 Concentration                                          KG/M**3                   10            0  14 KG/M**3                  10          4
+ 015194 [SIM] O3 Concentration                                           KG/M**3                   10            0  14 KG/M**3                  10          4
+ 015195 [SIM] PM10 Concentration                                         KG/M**3                   10            0  14 KG/M**3                  10          4
+ 015196 [SIM] CO Concentration                                           KG/M**3                   10            0  14 KG/M**3                  10          4
+ 015197 [SIM] SO2 Concentration                                          KG/M**3                   10            0  14 KG/M**3                  10          4
+ 015198 [SIM] PM2.5 Concentration                                        KG/M**3                   10            0  14 KG/M**3                  10          4
  020001 HORIZONTAL VISIBILITY                                            M                         -1            0  13 M                        -1          4
  020003 PRESENT WEATHER (SEE NOTE 1)                                     CODE TABLE 20003           0            0   9 CODE TABLE 20003          0          3
  020004 PAST WEATHER (1) (SEE NOTE 2)                                    CODE TABLE 20004           0            0   5 CODE TABLE 20004          0          2
