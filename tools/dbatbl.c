@@ -119,7 +119,7 @@ static void print_varinfo(dba_varinfo info)
 				info->dmin,
 				info->dmax);
 #else
-	printf("%d%02d%03d %s [%s, %s] range (%g-%g)\n", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
+	printf("%d%02d%03d %s [%s, %s] range (%g -- %g)\n", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
 			info->desc,
 			info->unit,
 			fmtdesc,
