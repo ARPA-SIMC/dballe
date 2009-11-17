@@ -568,6 +568,7 @@ struct filter_data
 	int mindate[6];
 	int maxdate[6];
 	double latmin, latmax, lonmin, lonmax;
+	dba_var varfilter[20];
 };
 
 inline static int get_date_value(dba_msg msg, int value)
@@ -597,11 +598,30 @@ dba_err filter_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* da
 {
 	struct filter_data* fdata = (struct filter_data*)data;
 	double dval;
-	int msgs_reject = 1;
-	int i;
+	int msgs_reject;
+	int i, j, k;
 
 	if (msgs == NULL) return dba_error_ok();
 
+	for (i = 0; i < 20 && fdata->varfilter[i] != NULL; ++i)
+	{
+		dba_var test = fdata->varfilter[i];
+		int found = 0;
+		for (j = 0; !found && j < braw->subsets_count; ++j)
+		{
+			for (k = 0; !found && k < braw->subsets[j]->vars_count; ++k)
+			{
+				dba_var t = braw->subsets[j]->vars[k];
+				if (dba_var_code(test) == dba_var_code(t)
+				 && strcmp(dba_var_value(test), dba_var_value(t)) == 0)
+					found = 1;
+			}
+		}
+		if (!found)
+			return dba_error_ok();
+	}
+
+	msgs_reject = 1;
 	for (i = 0; i < msgs->len; ++i)
 	{
 		dba_msg msg = msgs->msgs[i];
@@ -681,6 +701,10 @@ dba_err do_filter(poptContext optCon)
 	dba_encoding otype;
 	struct filter_data fdata;
 	dba_record query;
+	memset(&fdata, 0, sizeof(fdata));
+	fdata.varfilter[0] = NULL;
+	dba_record_cursor c;
+	int i;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
@@ -695,6 +719,10 @@ dba_err do_filter(poptContext optCon)
 	fdata.latmax = get_input_lat_value(query, DBA_KEY_LATMAX);
 	fdata.lonmin = get_input_lat_value(query, DBA_KEY_LONMIN);
 	fdata.lonmax = get_input_lat_value(query, DBA_KEY_LONMAX);
+
+	for (i = 0, c = dba_record_iterate_first(query);
+			c != NULL && i < 20; c = dba_record_iterate_next(query, c), ++i)
+		fdata.varfilter[i] = dba_record_cursor_variable(c);
 
 	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 	otype = dba_cmdline_stringToMsgType(op_output_type, optCon);
