@@ -4,6 +4,7 @@ AC_INIT(dballe, 4.0.14, [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_ARG_ENABLE([dballe-bufrex],
     [AS_HELP_STRING(
