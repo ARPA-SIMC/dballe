@@ -68,6 +68,7 @@
  011002 WIND SPEED                                                       M/S                        1            0  12 M/S                       1          4
  011003 U-COMPONENT                                                      M/S                        1        -4096  13 M/S                       1          4
  011004 V-COMPONENT                                                      M/S                        1        -4096  13 M/S                       1          4
+ 011005 W-COMPONENT                                                      PA/S                       1         -512  10 PA/S                      1          4
  011016 EXTREME COUNTERCLOCKWISE WIND DIRECTION OF A VARIABLE WIND       DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011017 EXTREME CLOCKWISE WIND DIRECTION OF A VARIABLE WIND              DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011041 MAXIMUM WIND GUST SPEED                                          M/S                        1            0  12 M/S                       1          4
