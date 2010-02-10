@@ -41,7 +41,7 @@ TESTGRP(bufr_encoder);
 
 bool memfind(dba_rawmsg rmsg, const char* str, size_t len)
 {
-	for (int i = 0; true; ++i)
+	for (size_t i = 0; true; ++i)
 	{
 		if (i + len >= rmsg->len) return false;
 		if (memcmp(rmsg->buf + i, str, len) == 0)
