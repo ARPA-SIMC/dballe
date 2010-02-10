@@ -57,7 +57,7 @@ check_PROGRAMS = tut_test
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 TESTS = $(check_PROGRAMS)
 
-CXXFLAGS += -O0 -Werror
+CXXFLAGS += -O0
 
 noinst_HEADERS = test-utils-core.h
 
