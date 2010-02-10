@@ -1,5 +1,11 @@
 dballe (4.0.14-1) unstable; urgency=low
 
+  * Fixed a misbehaviour in the Fortran API to create BUFR messages
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 10 Feb 2010 14:50:33 +0000
+
+dballe (4.0.14-1) unstable; urgency=low
+
   * Allow to filter by variable names in dbamsg filter
 
  -- Enrico Zini <enrico@debian.org>  Tue, 17 Nov 2009 23:08:19 +0000

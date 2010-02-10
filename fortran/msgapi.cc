@@ -318,37 +318,6 @@ void MsgAPI::prendilo()
 		checked(dba_error_consistency(
 			"prendilo cannot be called with the file open in read mode"));
 
-	const char* query;
-	checked(dba_record_key_enqc(input, DBA_KEY_QUERY, &query));
-	if (query != NULL)
-	{
-		if (strcasecmp(query, "subset") == 0)
-		{
-			flushSubset();
-		} else if (strncasecmp(query, "message", 7) == 0) {
-			// Check that message is followed by spaces or end of string
-			const char* s = query + 7;
-			if (*s != 0 && !isblank(*s))
-				checked(dba_error_consistency("Query type \"%s\" is not among the supported values", query));
-			// Skip the spaces after message
-			while (*s != 0 && isblank(*s))
-				++s;
-
-			if (*s)
-				// If a template is specified, open a new message with that template
-				checked(bufrex_msg_parse_template(s, &cached_cat, &cached_subcat, &cached_lcat));
-			else
-				// Else, open a new message with template guessing
-				cached_cat = cached_subcat = cached_lcat = 0;
-
-			flushMessage();
-		} else
-			checked(dba_error_consistency("Query type \"%s\" is not among the supported values", query));
-
-		// Uset query after using it: it needs to be explicitly set every time
-		checked(dba_record_key_unset(input, DBA_KEY_QUERY));
-	}
-
 	if (!msgs)
 		checked(dba_msgs_create(&msgs));
 	if (!wmsg)
@@ -408,6 +377,37 @@ void MsgAPI::prendilo()
 			wvar = dba_record_cursor_variable(c);
 			checked(dba_msg_set(wmsg, wvar, dba_var_code(wvar), ltype1, l1, ltype2, l2, pind, p1, p2));
 		}
+	}
+
+	const char* query;
+	checked(dba_record_key_enqc(input, DBA_KEY_QUERY, &query));
+	if (query != NULL)
+	{
+		if (strcasecmp(query, "subset") == 0)
+		{
+			flushSubset();
+		} else if (strncasecmp(query, "message", 7) == 0) {
+			// Check that message is followed by spaces or end of string
+			const char* s = query + 7;
+			if (*s != 0 && !isblank(*s))
+				checked(dba_error_consistency("Query type \"%s\" is not among the supported values", query));
+			// Skip the spaces after message
+			while (*s != 0 && isblank(*s))
+				++s;
+
+			if (*s)
+				// If a template is specified, open a new message with that template
+				checked(bufrex_msg_parse_template(s, &cached_cat, &cached_subcat, &cached_lcat));
+			else
+				// Else, open a new message with template guessing
+				cached_cat = cached_subcat = cached_lcat = 0;
+
+			flushMessage();
+		} else
+			checked(dba_error_consistency("Query type \"%s\" is not among the supported values", query));
+
+		// Uset query after using it: it needs to be explicitly set every time
+		checked(dba_record_key_unset(input, DBA_KEY_QUERY));
 	}
 }
 
