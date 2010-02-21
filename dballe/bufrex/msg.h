@@ -64,8 +64,9 @@ struct _bufrex_bufr_info {
 
 	/** 1 if the BUFR message uses compression, else 0 */
 	int compression;
-	/** 1 if the BUFR message contains an optional section, else 0 */
-	int has_optional;
+	/** 0 if the BUFR message does not contain an optional section, else
+	 *  its length in bytes */
+	int optional_section_length;
 	/** Raw contents of the optional section */
 	unsigned char* optional_section;
 	/** Number of subsets present in the message */

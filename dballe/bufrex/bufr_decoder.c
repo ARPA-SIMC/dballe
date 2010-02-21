@@ -199,7 +199,9 @@ static dba_err decode_sec1ed3(decoder d)
 {
 	// TODO: misses master table number in sec1[3]
 	// TODO: misses update sequence number sec1[7]
-	d->out->opt.bufr.has_optional = (d->sec1[7] & 0x80) ? 1 : 0;
+	// Set length to 1 for now, will set the proper length later when we
+	// parse the section itself
+	d->out->opt.bufr.optional_section_length = (d->sec1[7] & 0x80) ? 1 : 0;
 	// subcentre in sec1[4]
 	d->out->opt.bufr.subcentre = (int)d->sec1[4];
 	// centre in sec1[5]
@@ -234,7 +236,9 @@ static dba_err decode_sec1ed4(decoder d)
 	// subcentre in sec1[6-7]
 	d->out->opt.bufr.subcentre = readNumber(d->sec1+6, 2);
 	// has_optional in sec1[9]
-	d->out->opt.bufr.has_optional = (d->sec1[9] & 0x80) ? 1 : 0;
+	// Set length to 1 for now, will set the proper length later when we
+	// parse the section itself
+	d->out->opt.bufr.optional_section_length = (d->sec1[9] & 0x80) ? 1 : 0;
 	// category in sec1[10]
 	d->out->type = (int)d->sec1[10];
 	// international data sub-category in sec1[11]
@@ -292,7 +296,7 @@ static dba_err decode_header(decoder d)
 	}
 
 	TRACE(" -> opt %d upd %d origin %d.%d tables %d.%d type %d.%d %04d-%02d-%02d %02d:%02d\n", 
-			d->out->opt.bufr.has_optional, (int)d->sec1[6],
+			d->out->opt.bufr.optional_section_length, (int)d->sec1[6],
 			d->out->opt.bufr.centre, d->out->opt.bufr.subcentre,
 			d->out->opt.bufr.master_table, d->out->opt.bufr.local_table,
 			d->out->type, d->out->subtype,
@@ -321,7 +325,7 @@ static dba_err decode_header(decoder d)
 #endif
 	
 	/* Read BUFR section 2 (Optional section) */
-	if (d->out->opt.bufr.has_optional)
+	if (d->out->opt.bufr.optional_section_length)
 	{
 		CHECK_AVAILABLE_DATA(d->sec2, 4, "section 2 of BUFR message (optional section)");
 		d->sec3 = d->sec2 + readNumber(d->sec2, 3);
