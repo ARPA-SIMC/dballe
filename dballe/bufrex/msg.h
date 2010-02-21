@@ -62,12 +62,12 @@ struct _bufrex_bufr_info {
 	/** Version number of local tables used to augment the master table */
 	int local_table;
 
-    /** 1 if the BUFR message uses compression, else 0 */
-    int compression;
+	/** 1 if the BUFR message uses compression, else 0 */
+	int compression;
 	/** 1 if the BUFR message contains an optional section, else 0 */
 	int has_optional;
-    /** Number of subsets present in the message */
-    int subsets;
+	/** Number of subsets present in the message */
+	int subsets;
 };
 /** CREX-specific encoding options */
 struct _bufrex_crex_info {
