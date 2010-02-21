@@ -56,32 +56,32 @@ void to::test<1>()
 
 	CHECKED(bufrex_msg_create(BUFREX_BUFR, &msg));
 
-    /* Initialise common message bits */
-    msg->edition = 3;            // BUFR ed.4
-    msg->type = 0;               // Template 8.255.171
-    msg->subtype = 255;
-    msg->localsubtype = 0;
-    msg->opt.bufr.centre = 98;
-    msg->opt.bufr.subcentre = 0;
-    msg->opt.bufr.master_table = 12;
-    msg->opt.bufr.local_table = 1;
-    msg->opt.bufr.compression = 1;
-    msg->rep_year = 2008;
-    msg->rep_month = 5;
-    msg->rep_day = 3;
-    msg->rep_hour = 12;
-    msg->rep_minute = 30;
-    msg->rep_second = 0;
+	/* Initialise common message bits */
+	msg->edition = 3;            // BUFR ed.4
+	msg->type = 0;               // Template 8.255.171
+	msg->subtype = 255;
+	msg->localsubtype = 0;
+	msg->opt.bufr.centre = 98;
+	msg->opt.bufr.subcentre = 0;
+	msg->opt.bufr.master_table = 12;
+	msg->opt.bufr.local_table = 1;
+	msg->opt.bufr.compression = 1;
+	msg->rep_year = 2008;
+	msg->rep_month = 5;
+	msg->rep_day = 3;
+	msg->rep_hour = 12;
+	msg->rep_minute = 30;
+	msg->rep_second = 0;
 
-    /* Load encoding tables */
-    CHECKED(bufrex_msg_load_tables(msg));
+	/* Load encoding tables */
+	CHECKED(bufrex_msg_load_tables(msg));
 
-    /* Fill up the data descriptor section */
-    CHECKED(bufrex_msg_append_datadesc(msg, DBA_VAR(0,  0,  13)));
+	/* Fill up the data descriptor section */
+	CHECKED(bufrex_msg_append_datadesc(msg, DBA_VAR(0,  0,  13)));
 
 	/* Get the working subset */
 	bufrex_subset s;
-    CHECKED(bufrex_msg_get_subset(msg, 0, &s));
+	CHECKED(bufrex_msg_get_subset(msg, 0, &s));
 
 	/* Set a text variable */
 	CHECKED(bufrex_subset_store_variable_c(s, DBA_VAR(0, 0, 13), "12345678901234567890"));
@@ -90,16 +90,16 @@ void to::test<1>()
 	CHECKED(dba_var_setc(s->vars[0], "abcdefg"));
 
 	/* Encode */
-    dba_rawmsg rmsg = NULL;
+	dba_rawmsg rmsg = NULL;
 	CHECKED(bufrex_msg_encode(msg, &rmsg));
 
 	// Ensure that the encoded strings are space-padded
 	ensure(memfind(rmsg, "abcdefg       ", 14));
 
-    // Decode the message
-    bufrex_msg msg1;
+	// Decode the message
+	bufrex_msg msg1;
 	CHECKED(bufrex_msg_create(BUFREX_BUFR, &msg1));
-    CHECKED(bufrex_msg_decode(msg1, rmsg));
+	CHECKED(bufrex_msg_decode(msg1, rmsg));
 
 	dba_rawmsg_delete(rmsg);
 
