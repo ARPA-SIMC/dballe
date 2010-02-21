@@ -329,11 +329,11 @@ static dba_err decode_header(decoder d)
 	{
 		CHECK_AVAILABLE_DATA(d->sec2, 4, "section 2 of BUFR message (optional section)");
 		d->sec3 = d->sec2 + readNumber(d->sec2, 3);
-		d->out->opt.bufr.optional_section_length = readNumber(d->sec2, 3);
+		d->out->opt.bufr.optional_section_length = readNumber(d->sec2, 3) - 4;
 		d->out->opt.bufr.optional_section = (char*)calloc(1, d->out->opt.bufr.optional_section_length);
 		if (d->out->opt.bufr.optional_section == NULL)
 			return dba_error_alloc("allocating space for the optional section");
-		memcpy(d->out->opt.bufr.optional_section, d->sec2 + 4, d->out->opt.bufr.optional_section_length - 4);
+		memcpy(d->out->opt.bufr.optional_section, d->sec2 + 4, d->out->opt.bufr.optional_section_length);
 		if (d->sec3 > d->in->buf + d->in->len)
 			PARSE_ERROR(d->sec2, "Section 2 claims to end past the end of the BUFR message");
 	} else

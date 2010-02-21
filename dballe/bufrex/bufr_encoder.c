@@ -374,14 +374,18 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 	/* Nothing to do */
 	if (e->in->opt.bufr.optional_section_length)
 	{
+		int pad;
 		/* Length of section */
-		DBA_RUN_OR_RETURN(encoder_add_bits(e, 4 + e->in->opt.bufr.optional_section_length, 24));
+		if ((pad = (e->in->opt.bufr.optional_section_length % 2 == 1)))
+			DBA_RUN_OR_RETURN(encoder_add_bits(e, 4 + e->in->opt.bufr.optional_section_length + 1, 24));
+		else
+			DBA_RUN_OR_RETURN(encoder_add_bits(e, 4 + e->in->opt.bufr.optional_section_length, 24));
 		/* Set to 0 (reserved) */
 		DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 
 		DBA_RUN_OR_RETURN(encoder_raw_append(e, e->in->opt.bufr.optional_section, e->in->opt.bufr.optional_section_length));
 		// Padd to even number of bytes
-		if (e->out->len % 2 == 1)
+		if (pad)
 			DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 	}
 
