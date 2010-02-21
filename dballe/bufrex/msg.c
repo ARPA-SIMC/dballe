@@ -68,6 +68,11 @@ void bufrex_msg_reset(bufrex_msg msg)
 
 	msg->type = 0;
 	msg->subtype = 0;
+	if (msg->encoding_type == BUFREX_BUFR && msg->opt.bufr.optional_section)
+	{
+		free(msg->opt.bufr.optional_section);
+		msg->opt.bufr.optional_section = NULL;
+	}
 }
 
 void bufrex_msg_delete(bufrex_msg msg)
