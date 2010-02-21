@@ -82,6 +82,75 @@ static int count_nonnulls(bufrex_subset raw)
 	return count;
 }
 
+static dba_err dump_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
+{
+	int size;
+	const char *table_id;
+	const unsigned char *buf;
+
+	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
+	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
+
+	printf("Message %d\n", rmsg->index);
+	printf("Size: %d\n", size);
+	printf("Edition: %d\n", braw->encoding_type);
+	printf("Centre: %d:%d\n", braw->opt.bufr.centre, braw->opt.bufr.subcentre);
+	printf("Category: %d:%d:%d\n", braw->type, braw->subtype, braw->localsubtype);
+	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
+			braw->rep_year, braw->rep_month, braw->rep_day,
+			braw->rep_hour, braw->rep_minute, braw->rep_second);
+	printf("Tables: %d:%d\n", braw->opt.bufr.master_table, braw->opt.bufr.local_table);
+	printf("Table: %s\n", table_id);
+	printf("Compression: %s\n", braw->opt.bufr.compression ? "yes" : "no");
+	printf("Optional section length: %d\n", braw->opt.bufr.optional_section_length);
+	printf("Subsets: %zd\n\n", braw->subsets_count);
+
+	// Copy data descriptor section
+	//for (bufrex_opcode i = orig->datadesc; i != NULL; i = i->next)
+		//DBA_RUN_OR_GOTO(cleanup, bufrex_msg_append_datadesc(msg, i->val));
+
+	return dba_error_ok();
+}
+
+static dba_err dump_crex_header(dba_rawmsg rmsg, bufrex_msg braw)
+{
+	int size/*, checkdigit*/;
+	const char *table_id;
+	const unsigned char *buf;
+
+	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
+	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
+
+	printf("Message %d\n", rmsg->index);
+	printf("Size: %d\n", size);
+	printf("Edition: %d\n", braw->encoding_type);
+	printf("Category: %d:%d:%d\n", braw->type, braw->subtype, braw->localsubtype);
+	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
+			braw->rep_year, braw->rep_month, braw->rep_day,
+			braw->rep_hour, braw->rep_minute, braw->rep_second);
+	printf("Tables: %d:%d\n", braw->opt.crex.master_table, braw->opt.crex.table);
+	printf("Table: %s\n", table_id);
+	printf("Check digit: %s\n\n", braw->opt.crex.has_check_digit ? "yes" : "no");
+
+	return dba_error_ok();
+}
+
+static dba_err dump_aof_header(dba_rawmsg rmsg)
+{
+	int size, category, subcategory;
+	const unsigned char *buf;
+
+	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
+	DBA_RUN_OR_RETURN(aof_codec_get_category(rmsg, &category, &subcategory));
+	/* DBA_RUN_OR_RETURN(bufrex_message_get_vars(msg, &vars, &count)); */
+
+	printf("Message %d\n", rmsg->index);
+	printf("Size: %d\n", size);
+	printf("Category: %d:%d\n\n", category, subcategory);
+
+	return dba_error_ok();
+}
+
 static dba_err print_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
 {
 	int size;
@@ -154,6 +223,25 @@ static dba_err summarise_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs
 			break;
 		case AOF:
 			DBA_RUN_OR_RETURN(print_aof_header(rmsg)); puts(".");
+			break;
+	}
+	return dba_error_ok();
+}
+
+static dba_err head_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
+{
+	switch (rmsg->encoding)
+	{
+		case BUFR:
+			if (braw == NULL) return dba_error_ok();
+			DBA_RUN_OR_RETURN(dump_bufr_header(rmsg, braw));
+			break;
+		case CREX:
+			if (braw == NULL) return dba_error_ok();
+			DBA_RUN_OR_RETURN(dump_crex_header(rmsg, braw));
+			break;
+		case AOF:
+			DBA_RUN_OR_RETURN(dump_aof_header(rmsg));
 			break;
 	}
 	return dba_error_ok();
@@ -309,6 +397,18 @@ dba_err do_scan(poptContext optCon)
 	DBA_RUN_OR_RETURN(process_all(optCon, 
 				dba_cmdline_stringToMsgType(op_input_type, optCon),
 				&grepdata, summarise_message, 0));
+
+	return dba_error_ok();
+}
+
+dba_err do_head(poptContext optCon)
+{
+	/* Throw away the command name */
+	poptGetArg(optCon);
+
+	DBA_RUN_OR_RETURN(process_all(optCon, 
+				dba_cmdline_stringToMsgType(op_input_type, optCon),
+				&grepdata, head_message, 0));
 
 	return dba_error_ok();
 }
@@ -1075,7 +1175,7 @@ static void init()
 	dbamsg.longdesc =
 		"Examine, dump and convert files containing meteorological data. "
 		"It supports observations encoded in BUFR, CREX and AOF formats";
-	dbamsg.ops = (struct op_dispatch_table*)calloc(10, sizeof(struct op_dispatch_table));
+	dbamsg.ops = (struct op_dispatch_table*)calloc(11, sizeof(struct op_dispatch_table));
 
 	dbamsg.ops[0].func = do_scan;
 	dbamsg.ops[0].aliases[0] = "scan";
@@ -1143,11 +1243,18 @@ static void init()
 	dbamsg.ops[8].longdesc = "Run testscript passing parts of filename on its stdin and checking the return code.  Then divide the input in half and try on each half.  Keep going until testscript does not fail in any portion of the file.  Output to stdout the smallest portion for which testscript fails.  This is useful to isolate the few messages in a file that cause problems";
 	dbamsg.ops[8].optable = dbamsg_bisect_options;
 
-	dbamsg.ops[9].func = NULL;
-	dbamsg.ops[9].usage = NULL;
-	dbamsg.ops[9].desc = NULL;
+	dbamsg.ops[9].func = do_head;
+	dbamsg.ops[9].aliases[0] = "head";
+	dbamsg.ops[9].usage = "head [options] filename [filename [...]]";
+	dbamsg.ops[9].desc = "Dump the contents of the header of a file with meteorological data";
 	dbamsg.ops[9].longdesc = NULL;
-	dbamsg.ops[9].optable = NULL;
+	dbamsg.ops[9].optable = dbamsg_scan_options;
+
+	dbamsg.ops[10].func = NULL;
+	dbamsg.ops[10].usage = NULL;
+	dbamsg.ops[10].desc = NULL;
+	dbamsg.ops[10].longdesc = NULL;
+	dbamsg.ops[10].optable = NULL;
 };
 
 static struct program_info proginfo = {
