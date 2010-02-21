@@ -262,7 +262,7 @@ static dba_err encoder_encode_sec1ed3(encoder e)
 	/* Update sequence number (zero for original BUFR messages; incremented for updates) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 	/* Bit 1= 0 No optional section = 1 Optional section included Bits 2 ­ 8 set to zero (reserved) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.optional_section_length ? 0x80 : 0));
 
 	/* Data category (BUFR Table A) */
 	/* Data sub-category (defined by local ADP centres) */
@@ -303,7 +303,7 @@ static dba_err encoder_encode_sec1ed4(encoder e)
 	/* Update sequence number (zero for original BUFR messages; incremented for updates) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
 	/* Bit 1= 0 No optional section = 1 Optional section included Bits 2 ­ 8 set to zero (reserved) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.optional_section_length ? 0x80 : 0));
 
 	/* Data category (BUFR Table A) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->type));
@@ -372,6 +372,18 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 
 	/* Encode BUFR section 2 (Optional section) */
 	/* Nothing to do */
+	if (e->in->opt.bufr.optional_section_length)
+	{
+		/* Length of section */
+		DBA_RUN_OR_RETURN(encoder_add_bits(e, 4 + e->in->opt.bufr.optional_section_length, 24));
+		/* Set to 0 (reserved) */
+		DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+
+		DBA_RUN_OR_RETURN(encoder_raw_append(e, e->in->opt.bufr.optional_section, e->in->opt.bufr.optional_section_length));
+		// Padd to even number of bytes
+		if (e->out->len % 2 == 1)
+			DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	}
 
 	TRACE("sec2 ends at %d\n", e->out->len);
 	e->sec3_start = e->out->len;

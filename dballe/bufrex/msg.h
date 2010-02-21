@@ -68,7 +68,7 @@ struct _bufrex_bufr_info {
 	 *  its length in bytes */
 	int optional_section_length;
 	/** Raw contents of the optional section */
-	unsigned char* optional_section;
+	char* optional_section;
 	/** Number of subsets present in the message */
 	int subsets;
 };

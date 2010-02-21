@@ -330,7 +330,7 @@ static dba_err decode_header(decoder d)
 		CHECK_AVAILABLE_DATA(d->sec2, 4, "section 2 of BUFR message (optional section)");
 		d->sec3 = d->sec2 + readNumber(d->sec2, 3);
 		d->out->opt.bufr.optional_section_length = readNumber(d->sec2, 3);
-		d->out->opt.bufr.optional_section = (unsigned char*)calloc(1, d->out->opt.bufr.optional_section_length);
+		d->out->opt.bufr.optional_section = (char*)calloc(1, d->out->opt.bufr.optional_section_length);
 		if (d->out->opt.bufr.optional_section == NULL)
 			return dba_error_alloc("allocating space for the optional section");
 		memcpy(d->out->opt.bufr.optional_section, d->sec2 + 4, d->out->opt.bufr.optional_section_length - 4);
