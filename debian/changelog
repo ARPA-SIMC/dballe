@@ -5,8 +5,9 @@ dballe (4.0.15-1) unstable; urgency=low
     This change may break ABI, but I am not bumping SONAME because as far as I
     know I can still handle rebuilds for each library user.
   * Implemented "dbamsg head"
+  * Added msg/repinfo.h with dba_repinfo_default_filename
 
- -- Enrico Zini <enrico@debian.org>  Sun, 21 Feb 2010 15:14:05 +0000
+ -- Enrico Zini <enrico@debian.org>  Sun, 21 Feb 2010 23:49:05 +0000
 
 dballe (4.0.14-1) unstable; urgency=low
 

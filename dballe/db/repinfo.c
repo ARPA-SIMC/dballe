@@ -24,8 +24,7 @@
 #include <dballe/db/internals.h>
 #include <dballe/core/verbose.h>
 #include <dballe/core/csv.h>
-
-#include <config.h>
+#include <dballe/msg/repinfo.h>
 
 #include <sql.h>
 #include <sqlext.h>
@@ -355,11 +354,7 @@ static dba_err read_repinfo_file(dba_db_repinfo ri, const char* deffile, newitem
 	FILE* in;
 
 	if (deffile == 0)
-	{
-		deffile = getenv("DBA_REPINFO");
-		if (deffile == 0 || deffile[0] == 0)
-			deffile = TABLE_DIR "/repinfo.csv";
-	}
+		DBA_RUN_OR_RETURN(dba_repinfo_default_filename(&deffile));
 
 	/* Open the input CSV file */
 	in = fopen(deffile, "r");

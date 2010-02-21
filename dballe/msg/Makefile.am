@@ -19,6 +19,7 @@ messageinclude_HEADERS = \
 		marshal.h \
 		file.h \
 		filter.h \
+		repinfo.h \
 		aof_codec.h
 
 if DO_DBALLE_BUFREX
@@ -36,6 +37,7 @@ libdballe_msg_la_SOURCES = \
 		msgs.c \
 		marshal.c \
 		filter.c \
+		repinfo.c \
 		aof_codec.c \
 		aof_importers/common.c \
 		aof_importers/synop.c \
