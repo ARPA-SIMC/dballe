@@ -103,7 +103,7 @@ static dba_err dump_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
 	printf("Table: %s\n", table_id);
 	printf("Compression: %s\n", braw->opt.bufr.compression ? "yes" : "no");
 	printf("Optional section length: %d\n", braw->opt.bufr.optional_section_length);
-	printf("Subsets: %zd\n\n", braw->subsets_count);
+	printf("Subsets: %d (decoded %zd)\n\n", braw->opt.bufr.subsets, braw->subsets_count);
 
 	// Copy data descriptor section
 	//for (bufrex_opcode i = orig->datadesc; i != NULL; i = i->next)
