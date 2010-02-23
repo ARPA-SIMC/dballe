@@ -427,14 +427,14 @@ static inline int normalon(int lon)
 	return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-static dba_err add_repinfo_where(dba_db_cursor cur, dba_record query, const char* colname)
+static dba_err add_repinfo_where(dba_db_cursor cur, dba_querybuf buf, dba_record query, const char* colname)
 {
 	const char* val;
 #define ADD_INT(key, sql, needed) do { \
 	if ((val = dba_record_key_peek_value(query, key)) != NULL) { \
 		int ival = strtol(val, 0, 10); \
 		/*TRACE("found %s: adding %s. val is %d\n", info(key)->desc, sql, *out);*/ \
-		DBA_RUN_OR_RETURN(dba_querybuf_append_listf(cur->where, sql, colname, ival)); \
+		DBA_RUN_OR_RETURN(dba_querybuf_append_listf(buf, sql, colname, ival)); \
 		cur->from_wanted |= needed; \
 	} } while (0)
 	
@@ -642,7 +642,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 		cur->from_wanted |= DBA_DB_FROM_D;
 	}
 
-	DBA_RUN_OR_RETURN(add_repinfo_where(cur, query, "ri"));
+	DBA_RUN_OR_RETURN(add_repinfo_where(cur, cur->where, query, "ri"));
 
 	if ((val = dba_record_var_peek_value(query, DBA_VAR(0, 1, 1))) != NULL)
 	{
@@ -983,7 +983,11 @@ static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted
 				break;
 			default:
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE sc.id_ana=c.id_ana AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
+					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE "));
+				DBA_RUN_OR_RETURN(dba_querybuf_start_list(cur->query, " AND "));
+				DBA_RUN_OR_RETURN(add_repinfo_where(cur, cur->query, query, "sri"));
+				DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query,
+					"sc.id_ana=c.id_ana AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
 				break;
 		}
 
@@ -1110,7 +1114,11 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 				/* Continue to the query */
 			default:
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE sc.id_ana=c.id_ana AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
+					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE "));
+				DBA_RUN_OR_RETURN(dba_querybuf_start_list(cur->query, " AND "));
+				DBA_RUN_OR_RETURN(add_repinfo_where(cur, cur->query, query, "sri"));
+				DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query,
+					"sc.id_ana=c.id_ana AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
 				break;
 		}
 
