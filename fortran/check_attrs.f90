@@ -28,6 +28,9 @@
              "write", "write", "write")
       call ensure_no_error("preparati handleinit")
 
+      call idba_scopa(handleinit, DBA_MVC)
+      call ensure_no_error("scopa")
+
 !     Insert test data
       call idba_setd(handleinit, "lat", 12.345D00)
       call ensure_no_error("init 1")

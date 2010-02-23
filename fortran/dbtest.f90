@@ -3,20 +3,21 @@
       contains
 
       subroutine dbinit(dbahandle)
-      integer::dbahandle
-      character (len=160) :: dsn,user,pass,testname
-        call getenv("DBA_TEST_DSN", dsn)
-        call getenv("DBA_TEST_USER", user)
-        call getenv("DBA_TEST_PASS", pass)
+      integer::dbahandle, handle
+      character (len=160) :: dsn,testname
+        call getenv("DBA_DB", dsn)
         call getarg(0, testname)
  
         if (dsn=="") then
-          print *,trim(testname),": DBA_TEST_DSN not set: test skipped"
-          call exit(0)
+          dsn = "test:"
         end if
 
-        call idba_presentati(dbahandle, dsn, user, pass)
+        call idba_presentati(dbahandle, dsn, char(0), char(0))
         call ensure_no_error("presentati")
+
+        call idba_preparati(dbahandle, handle, "read", "read", "read")
+        call idba_scopa(handle, char(0))
+        call idba_fatto(handle)
       endsubroutine dbinit
 
 !     Continue execution only if there was no error

@@ -258,6 +258,7 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	GENPTR_CHARACTER(dsn)
 	GENPTR_CHARACTER(user)
 	GENPTR_CHARACTER(password)
+	const char* chosen_dsn;
 	char s_dsn[50];
 	char s_user[20];
 	char s_password[20];
@@ -275,8 +276,22 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	DBA_RUN_OR_RETURN(fdba_handle_alloc_session(dbahandle));
 
 	/* Open the DBALLE session */
-	DBA_RUN_OR_GOTO(fail, dba_db_create(s_dsn, s_user, s_password,
-				&(FDBA_HANDLE(session, *dbahandle).session)));
+
+	/* If dsn is missing, look in the environment */
+	if (s_dsn[0] == 0)
+	{
+		chosen_dsn = getenv("DBA_DB");
+		if (chosen_dsn == NULL) chosen_dsn = "";
+	} else
+		chosen_dsn = s_dsn;
+
+	/* If dsn looks like a url, treat it accordingly */
+	if (dba_db_is_url(chosen_dsn))
+		DBA_RUN_OR_GOTO(fail, dba_db_create_from_url(chosen_dsn,
+					&(FDBA_HANDLE(session, *dbahandle).session)));
+	else
+		DBA_RUN_OR_GOTO(fail, dba_db_create(chosen_dsn, s_user, s_password,
+					&(FDBA_HANDLE(session, *dbahandle).session)));
 
 	/* Open the database session */
 	return dba_error_ok();
