@@ -1500,10 +1500,15 @@ void to::test<18>()
 		CHECKED(dba_db_insert(db, insert, 0, 1, &paid, NULL));
 	}
 
+	int count, has_data;
+	dba_db_cursor cur;
+	int repcod, found;
+
+	// Query with querybest only
+	CHECKED(dba_db_cursor_create(db, &cur));
+
 	dba_record_clear(query);
-	CHECKED(dba_record_key_seti(query, DBA_KEY_PRIOMAX, 100));
 	CHECKED(dba_record_key_setc(query, DBA_KEY_QUERY, "best"));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_ANA_ID, 1));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2009));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 11));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 11));
@@ -1511,14 +1516,6 @@ void to::test<18>()
 	CHECKED(dba_record_key_seti(query, DBA_KEY_MIN, 0));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_SEC, 0));
 	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12001"));
-
-	int count, has_data;
-	dba_db_cursor cur;
-
-	/* Allocate a new cursor */
-	CHECKED(dba_db_cursor_create(db, &cur));
-
-	/* Perform the query, limited to level values */
 	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
 
 	gen_ensure_equals(dba_db_cursor_remaining(cur), 1);
@@ -1529,7 +1526,35 @@ void to::test<18>()
 	dba_record_clear(result);
 	CHECKED(dba_db_cursor_to_record(cur, result));
 
-	int repcod, found;
+	CHECKED(dba_record_key_enqi(result, DBA_KEY_REP_COD, &repcod, &found));
+	gen_ensure(found);
+	gen_ensure_equals(repcod, 255);
+
+	dba_db_cursor_delete(cur);
+
+	// Query with querybest and priomax
+	CHECKED(dba_db_cursor_create(db, &cur));
+
+	dba_record_clear(query);
+	CHECKED(dba_record_key_seti(query, DBA_KEY_PRIOMAX, 100));
+	CHECKED(dba_record_key_setc(query, DBA_KEY_QUERY, "best"));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2009));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 11));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 11));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 0));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_MIN, 0));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_SEC, 0));
+	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12001"));
+	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
+
+	gen_ensure_equals(dba_db_cursor_remaining(cur), 1);
+
+	CHECKED(dba_db_cursor_next(cur, &has_data));
+	gen_ensure(has_data);
+
+	dba_record_clear(result);
+	CHECKED(dba_db_cursor_to_record(cur, result));
+
 	CHECKED(dba_record_key_enqi(result, DBA_KEY_REP_COD, &repcod, &found));
 	gen_ensure(found);
 	gen_ensure_equals(repcod, 11);
