@@ -590,6 +590,7 @@ dba_err do_convert(poptContext optCon)
 {
 	dba_file file;
 	dba_encoding intype, outtype;
+	struct conversion_info convinfo;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
@@ -600,7 +601,8 @@ dba_err do_convert(poptContext optCon)
 	DBA_RUN_OR_RETURN(dba_file_create(outtype, "(stdout)", "w", &file));
 	/* DBA_RUN_OR_RETURN(dba_file_write_header(file, 0, 0)); */
 
-	DBA_RUN_OR_RETURN(process_all(optCon, intype, &grepdata, convert_message, (void*)file));
+	convinfo.file = file;
+	DBA_RUN_OR_RETURN(process_all(optCon, intype, &grepdata, convert_message, (void*)&convinfo));
 
 	dba_file_delete(file);
 

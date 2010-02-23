@@ -66,15 +66,15 @@ static dba_err process_dba_msg(dba_msgs msgs, dba_file file, int type, int subty
 
 dba_err convert_message(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void* data)
 {
-	dba_file file = (dba_file)data;
+	struct conversion_info* info = (struct conversion_info*)data;
 
 	if (decoded == NULL)
 		return dba_error_ok();
 
 	if (braw != NULL)
-		DBA_RUN_OR_RETURN(process_dba_msg(decoded, file, braw->subtype == 0 ? 0 : braw->type, braw->subtype, braw->localsubtype));
+		DBA_RUN_OR_RETURN(process_dba_msg(decoded, info->file, braw->subtype == 0 ? 0 : braw->type, braw->subtype, braw->localsubtype));
 	else
-		DBA_RUN_OR_RETURN(process_dba_msg(decoded, file, 0, 0, 0));
+		DBA_RUN_OR_RETURN(process_dba_msg(decoded, info->file, 0, 0, 0));
 
 	return dba_error_ok();
 }

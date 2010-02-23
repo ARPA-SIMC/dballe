@@ -22,6 +22,7 @@
 #ifndef CONVERSION_H
 #define CONVERSION_H
 
+#include <dballe/core/file.h>
 #include <dballe/core/rawmsg.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/bufrex/msg.h>
@@ -29,9 +30,12 @@
 
 struct conversion_info
 {
+	dba_file file;
+#if 0
 	dba_encoding outType;
 	void* outAction;
 	void* outActionData;
+#endif
 };
 
 dba_err convert_message(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void* data);
