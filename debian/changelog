@@ -1,3 +1,9 @@
+dballe (4.0.16-1) unstable; urgency=low
+
+  * Allow to use priority filters on query=best queries
+
+ -- Enrico Zini <enrico@debian.org>  Tue, 23 Feb 2010 10:27:56 +0000
+
 dballe (4.0.15-1) unstable; urgency=low
 
   * Fixed a misbehaviour in the Fortran API to create BUFR messages
