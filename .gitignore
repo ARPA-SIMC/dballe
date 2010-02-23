@@ -32,8 +32,6 @@ dballe/core/uniconv.c
 dballe/bufrex/template-aliases.c
 dballe/msg/vars.c
 dballe/msg/vars.h
-doc/libdballe.dox
-doc/libdballepp.dox
 libdballe.pc
 libdballef.pc
 libdballepp.pc
