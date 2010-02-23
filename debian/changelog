@@ -4,8 +4,9 @@ dballe (4.0.16-1) unstable; urgency=low
   * Implemented dbadb --dbfile to directly use sqlite file databases
   * Added dba_db_create_{from_file,from_url,test}
   * Allow to provide a url instead of a dsn as the dsn parameter in presentati
+  * Implemented dbamsg convert --template to force output template
 
- -- Enrico Zini <enrico@debian.org>  Tue, 23 Feb 2010 13:17:32 +0000
+ -- Enrico Zini <enrico@debian.org>  Tue, 23 Feb 2010 14:28:08 +0000
 
 dballe (4.0.15-1) unstable; urgency=low
 
