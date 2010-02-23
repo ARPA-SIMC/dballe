@@ -76,7 +76,7 @@ class TestRead(unittest.TestCase):
 		rec.seti("mobile", 0)
 
 		# Enter some sample data
-		for net in ('synop', 'noaa'):
+		for net in ('synop', 'temp'):
 			rec.setc("rep_memo", net)
 			if net == 'synop':
 				aname = 'B33007'
@@ -263,7 +263,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.dims[0][3], (4, 20., 25., None))
 		self.assertEquals(data.dims[0][4], (5, 30., 15., None))
 		self.assertEquals(data.dims[0][5], (6, 30., 25., None))
-		self.assertEquals(set(data.dims[1]), set(((200, "noaa"), (1, "synop"))))
+		self.assertEquals(set(data.dims[1]), set(((3, "temp"), (1, "synop"))))
 
 	def testAnaTrangeNetwork(self):
 		# 3 dimensions: ana, timerange, network
@@ -292,7 +292,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.dims[0][4], (5, 30., 15., None))
 		self.assertEquals(data.dims[0][5], (6, 30., 25., None))
 		self.assertEquals(data.dims[1][0], (0, 0, 0))
-		self.assertEquals(set(data.dims[2]), set(((200, "noaa"), (1, "synop"))))
+		self.assertEquals(set(data.dims[2]), set(((3, "temp"), (1, "synop"))))
 
 		data = vars["B13011"]
 		self.assertEquals(data.name, "B13011")
@@ -313,7 +313,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.dims[0][5], (6, 30., 25., None))
 		self.assertEquals(data.dims[1][0], (4, -43200, 0))
 		self.assertEquals(data.dims[1][1], (4, -21600, 0))
-		self.assertEquals(set(data.dims[2]), set(((200, "noaa"), (1, "synop"))))
+		self.assertEquals(set(data.dims[2]), set(((3, "temp"), (1, "synop"))))
 
 		self.assertEquals(vars["B10004"].dims[0], vars["B13011"].dims[0])
 		self.assertNotEquals(vars["B10004"].dims[1], vars["B13011"].dims[1])
@@ -332,7 +332,7 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(len(data.attrs), 2)
 		self.assertEquals(sorted(data.attrs.keys()), ['B33007', 'B33040'])
 
-		for net, a in ('synop', 'B33007'), ('noaa', 'B33040'):
+		for net, a in ('synop', 'B33007'), ('temp', 'B33040'):
 			self.assertEquals(data.dims, data.attrs[a].dims)
 			self.assertEquals(data.vals.size, data.attrs[a].vals.size)
 			self.assertEquals(data.vals.shape, data.attrs[a].vals.shape)
@@ -370,15 +370,15 @@ class TestRead(unittest.TestCase):
 		self.assertEquals(data.vals.size, a.vals.size)
 		self.assertEquals(data.vals.shape, a.vals.shape)
 
-		# Find the noaa index
+		# Find the temp index
 		netidx = -1
 		for idx, n in enumerate(data.dims[1]):
-			if n[1] == "noaa":
+			if n[1] == "temp":
 				netidx = idx
 				break
 		self.assertNotEquals(netidx, -1)
 
-		# Only compare the values on the noaa index
+		# Only compare the values on the temp index
 		self.assertEquals([x for x in a.vals.mask[:,1-netidx].flat], [True]*len(a.vals.mask[:,1-netidx].flat))
 		self.assertEquals([x for x in data.vals.mask[:,netidx].flat], [x for x in a.vals.mask[:,netidx].flat])
 		self.assertEquals(ma.average(a.vals), 36.8)
@@ -466,7 +466,7 @@ if __name__ == "__main__":
 ##vars = readv7d(db.query(query), (AnaIndex,LevelIndex))
 ##vars = read(db.query(query), (AnaIndex(),DateTimeIndex()))
 #
-#query.set("rep_memo", "noaa")
+#query.set("rep_memo", "temp")
 #vars = read(db.query(query), (AnaIndex(),IntervalIndex(datetime(2007,01,11,11,24), timedelta(0, 120), timedelta(0, 60))))
 #
 #print vars
