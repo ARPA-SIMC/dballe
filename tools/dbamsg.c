@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ static int op_dump_interpreted = 0;
 static int op_dump_text = 0;
 static char* op_input_type = "auto";
 static char* op_output_type = "bufr";
+static char* op_output_template = "";
 static char* op_bisect_cmd = NULL;
 int op_verbose = 0;
 
@@ -598,10 +599,20 @@ dba_err do_convert(poptContext optCon)
 	intype = dba_cmdline_stringToMsgType(op_input_type, optCon);
 	outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
 
+	if (op_output_template[0] != 0)
+		DBA_RUN_OR_RETURN(bufrex_msg_parse_template(op_output_template,
+					&convinfo.dest_type, &convinfo.dest_subtype, &convinfo.dest_localsubtype));
+	else {
+		convinfo.dest_type = 0;
+		convinfo.dest_subtype = 0;
+		convinfo.dest_localsubtype = 0;
+	}
+
 	DBA_RUN_OR_RETURN(dba_file_create(outtype, "(stdout)", "w", &file));
 	/* DBA_RUN_OR_RETURN(dba_file_write_header(file, 0, 0)); */
 
 	convinfo.file = file;
+
 	DBA_RUN_OR_RETURN(process_all(optCon, intype, &grepdata, convert_message, (void*)&convinfo));
 
 	dba_file_delete(file);
@@ -1118,6 +1129,8 @@ struct poptOption dbamsg_convert_options[] = {
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
+	{ "template", 0, POPT_ARG_STRING, &op_output_template, 0,
+		"template of the data in output (autoselect if not specified)", "type.sub.local" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages" },
 	POPT_TABLEEND

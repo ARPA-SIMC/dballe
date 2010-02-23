@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,9 @@ dba_err convert_message(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void*
 	if (decoded == NULL)
 		return dba_error_ok();
 
-	if (braw != NULL)
+	if (info->dest_type != 0)
+		DBA_RUN_OR_RETURN(process_dba_msg(decoded, info->file, info->dest_type, info->dest_subtype, info->dest_localsubtype));
+	else if (braw != NULL)
 		DBA_RUN_OR_RETURN(process_dba_msg(decoded, info->file, braw->subtype == 0 ? 0 : braw->type, braw->subtype, braw->localsubtype));
 	else
 		DBA_RUN_OR_RETURN(process_dba_msg(decoded, info->file, 0, 0, 0));
