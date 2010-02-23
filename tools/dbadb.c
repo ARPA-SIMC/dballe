@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <pwd.h>
 
@@ -57,6 +58,7 @@ struct poptOption grepTable[] = {
 static char* op_dsn = "test";
 static char* op_user = "";
 static char* op_pass = "";
+static char* op_dbfile = "";
 static char* op_input_type = "auto";
 static char* op_report = "";
 static char* op_output_type = "bufr";
@@ -69,23 +71,40 @@ static int op_dump = 0;
 int op_verbose = 0;
 
 struct poptOption dbTable[] = {
+	{ "dbfile", 0, POPT_ARG_STRING, &op_dbfile, 0,
+		"SQLite DB-All.e database" },
 	{ "dsn", 0, POPT_ARG_STRING, &op_dsn, 0,
-		"DSN to use for connecting to the DBALLE database" },
+		"DSN to use for connecting to the DB-All.e database" },
 	{ "user", 0, POPT_ARG_STRING, &op_user, 0,
-		"username to use for connecting to the DBALLE database" },
+		"username to use for connecting to the DB-All.e database" },
 	{ "pass", 0, POPT_ARG_STRING, &op_pass, 0,
-		"password to use for connecting to the DBALLE database" },
+		"password to use for connecting to the DB-All.e database" },
 	POPT_TABLEEND
 };
 
 static dba_err create_dba_db(dba_db* db)
 {
-	if (op_user[0] == 0)
-	{
-		struct passwd *pwd = getpwuid(getuid());
-		op_user = pwd == NULL ? "test" : pwd->pw_name;
-	}
-	return dba_db_create(op_dsn, op_user, op_pass, db);
+        if (op_dbfile[0] == 0)
+        {
+		// No dbfile specified, use dsn, user and pass
+		if (op_user[0] == 0)
+		{
+			struct passwd *pwd = getpwuid(getuid());
+			op_user = pwd == NULL ? "test" : pwd->pw_name;
+		}
+		return dba_db_create(op_dsn, op_user, op_pass, db);
+        } else {
+		// Access sqlite file directly
+		char buf[PATH_MAX];
+		if (op_dbfile[0] != '/')
+		{
+			char cwd[PATH_MAX];
+			snprintf(buf, PATH_MAX, "Driver=SQLite3;Database=%s/%s;", getcwd(cwd, PATH_MAX), op_dbfile);
+		}
+		else
+                	snprintf(buf, PATH_MAX, "Driver=SQLite3;Database=%s;", op_dbfile);
+                return dba_db_create_generic(buf, db);
+        }
 }
 
 struct import_data
