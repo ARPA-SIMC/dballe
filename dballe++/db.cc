@@ -81,6 +81,31 @@ int Cursor::attributes(const std::vector<dba_varcode>& wanted, Record& res)
     return count;
 }
 
+DB::DB(const std::string& dsn, const std::string& user, const std::string& password)
+{
+	const char* chosen_dsn;
+
+	/* If dsn is missing, look in the environment */
+	if (dsn.empty())
+	{
+		chosen_dsn = getenv("DBA_DB");
+		if (chosen_dsn == NULL) chosen_dsn = "";
+	} else
+		chosen_dsn = dsn.c_str();
+
+	/* If dsn looks like a url, treat it accordingly */
+	if (dba_db_is_url(chosen_dsn))
+		checked(dba_db_create_from_url(chosen_dsn, &m_db));
+	else
+		checked(dba_db_create(chosen_dsn, user.c_str(), password.c_str(), &m_db));
+}
+
+DB::~DB()
+{
+	if (m_db)
+		dba_db_delete(m_db);
+}
+
 Cursor DB::queryAnaSummary(const Record& query)
 {
 	dba_db_cursor cur;

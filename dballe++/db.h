@@ -70,15 +70,8 @@ public:
 	DB(dba_db db) : m_db(db) {}
 
 	/// Create a dba_db connecting to a database with the given parameters
-	DB(const std::string& dsn, const std::string& user, const std::string& password)
-	{
-		checked(dba_db_create(dsn.c_str(), user.c_str(), password.c_str(), &m_db));
-	}
-	~DB()
-	{
-		if (m_db)
-			dba_db_delete(m_db);
-	}
+	DB(const std::string& dsn, const std::string& user, const std::string& password);
+	~DB();
 
 	/**
 	 * Explicitly disconnect from the database. 

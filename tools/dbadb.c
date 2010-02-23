@@ -54,8 +54,6 @@ struct poptOption grepTable[] = {
 	POPT_TABLEEND
 };
 
-static char* op_db = "";
-static char* op_dbfile = "";
 static char* op_dsn = "";
 static char* op_user = "";
 static char* op_pass = "";
@@ -71,12 +69,8 @@ static int op_dump = 0;
 int op_verbose = 0;
 
 struct poptOption dbTable[] = {
-	{ "db", 0, POPT_ARG_STRING, &op_db, 0,
-		"URL-like definition of DB-All.e database (can also be specified in the environment as DBA_DB)" },
-	{ "dbfile", 0, POPT_ARG_STRING, &op_dbfile, 0,
-		"SQLite DB-All.e database" },
 	{ "dsn", 0, POPT_ARG_STRING, &op_dsn, 0,
-		"DSN to use for connecting to the DB-All.e database" },
+		"DSN, or URL-like database definition, to use for connecting to the DB-All.e database (can also be specified in the environment as DBA_DB)" },
 	{ "user", 0, POPT_ARG_STRING, &op_user, 0,
 		"username to use for connecting to the DB-All.e database" },
 	{ "pass", 0, POPT_ARG_STRING, &op_pass, 0,
@@ -86,13 +80,22 @@ struct poptOption dbTable[] = {
 
 static dba_err create_dba_db(dba_db* db)
 {
-	const char* fromenv;
-	if (op_db[0] != 0) return dba_db_create_from_url(op_db, db);
-	if (op_dbfile[0] != 0) return dba_db_create_from_file(op_dbfile, db);
-	if (op_dsn[0] != 0) return dba_db_create(op_dsn, op_user, op_pass, db);
-	fromenv = getenv("DBA_DB"); 
-	if (fromenv != NULL) return dba_db_create_from_url(fromenv, db);
-	return dba_error_consistency("no database specified");
+	const char* chosen_dsn;
+
+	/* If dsn is missing, look in the environment */
+	if (op_dsn[0] == 0)
+	{
+		chosen_dsn = getenv("DBA_DB");
+		if (chosen_dsn == NULL)
+			return dba_error_consistency("no database specified");
+	} else
+		chosen_dsn = op_dsn;
+
+	/* If dsn looks like a url, treat it accordingly */
+	if (dba_db_is_url(chosen_dsn))
+		return dba_db_create_from_url(chosen_dsn, db);
+	else
+		return dba_db_create(chosen_dsn, op_user, op_pass, db);
 }
 
 struct import_data
