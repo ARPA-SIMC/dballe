@@ -76,6 +76,57 @@ dba_err dba_db_create(const char* dsn, const char* user, const char* password, d
 dba_err dba_db_create_generic(const char* config, dba_db* db);
 
 /**
+ * Create from a SQLite file pathname
+ * 
+ * @param pathname
+ *   The pathname to a SQLite file
+ * @retval db
+ *   The dba_db handle returned by the function
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
+dba_err dba_db_create_from_file(const char* pathname, dba_db* db);
+
+/**
+ * Create from an url-like specification, that can be:
+ * 
+ * @l file:[//]foo.sqlite
+ * @l odbc://[user[:pass]@]dsn
+ * @l test:[//]
+ *
+ * @param url
+ *   The url-like connection descriptor
+ * @retval db
+ *   The dba_db handle returned by the function
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
+dba_err dba_db_create_from_url(const char* url, dba_db* db);
+
+/**
+ * Return TRUE if the string looks like a DB URL
+ *
+ * @param str
+ *   The string to test
+ * @return
+ *   1 if it looks like a URL, else 0
+ */
+int dba_db_is_url(const char* str);
+
+/**
+ * Start a session with DB-All.e
+ *
+ * Take information from the environment (@see dba_db_create_from_env) and
+ * default to ./test.sqlite if nothing is specified.
+ *
+ * @retval db
+ *   The dba_db handle returned by the function
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
+dba_err dba_db_create_test(dba_db* db);
+
+/**
  * End a session with DBALLE.
  *
  * All the resources associated with db will be freed.  db should not be used

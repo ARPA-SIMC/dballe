@@ -3,7 +3,7 @@
 if [ -f run-check.conf ]
 then
 	. run-check.conf
-	export DBA_TEST_DSN DBA_TEST_USER DBA_TEST_PASS
+	export DBA_DB
 fi
 
 exec make check "$@"

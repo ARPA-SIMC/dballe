@@ -41,6 +41,8 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
+#include <unistd.h>
 
 #include <assert.h>
 
@@ -604,6 +606,62 @@ fail:
 	if (*db != NULL) dba_db_delete(*db);
 	*db = 0;
 	return err;
+}
+
+dba_err dba_db_create_from_file(const char* pathname, dba_db* db)
+{
+	// Access sqlite file directly
+	char buf[PATH_MAX];
+	if (pathname[0] != '/')
+	{
+		char cwd[PATH_MAX];
+		snprintf(buf, PATH_MAX, "Driver=SQLite3;Database=%s/%s;", getcwd(cwd, PATH_MAX), pathname);
+	}
+	else
+		snprintf(buf, PATH_MAX, "Driver=SQLite3;Database=%s;", pathname);
+	return dba_db_create_generic(buf, db);
+}
+
+dba_err dba_db_create_test(dba_db* db)
+{
+	const char* envurl = getenv("DBA_DB");
+	if (envurl != NULL)
+		return dba_db_create_from_url(envurl, db);
+	else
+		return dba_db_create_from_file("test.sqlite", db);
+}
+
+dba_err dba_db_create_from_url(const char* url, dba_db* db)
+{
+	if (strncmp(url, "file://", 7) == 0)
+		return dba_db_create_from_file(url + 7, db);
+	if (strncmp(url, "file:", 5) == 0)
+		return dba_db_create_from_file(url + 5, db);
+	if (strncmp(url, "odbc://", 7) == 0)
+	{
+		char buf[PATH_MAX];
+		strncpy(buf, url + 7, PATH_MAX - 1);
+		buf[PATH_MAX - 1] = 0;
+		char* dsn = strchr(buf, '@');
+		if (dsn == NULL) return dba_db_create(buf, "", "", db); // odbc://dsn
+		// Split the string at '@'
+		*dsn = 0; ++dsn;
+		char* pwd = strchr(buf, ':');
+		if (pwd == NULL) return dba_db_create(dsn, buf, "", db); // odbc://user@dsn
+		*pwd = 0; ++pwd;
+		return dba_db_create(dsn, buf, pwd, db); // odbc://user:pass@dsn
+	}
+	if (strncmp(url, "test:", 5) == 0)
+		return dba_db_create_test(db);
+	return dba_error_consistency("unknown url \"%s\"", url);
+}
+
+int dba_db_is_url(const char* str)
+{
+	if (strncmp(str, "file:", 5) == 0) return 1;
+	if (strncmp(str, "odbc://", 7) == 0) return 1;
+	if (strncmp(str, "test:", 5) == 0) return 1;
+	return 0;
 }
 
 void dba_db_delete(dba_db db)

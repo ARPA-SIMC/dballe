@@ -34,7 +34,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <limits.h>
 #include <sys/types.h>
 #include <pwd.h>
 
@@ -55,10 +54,11 @@ struct poptOption grepTable[] = {
 	POPT_TABLEEND
 };
 
-static char* op_dsn = "test";
+static char* op_db = "";
+static char* op_dbfile = "";
+static char* op_dsn = "";
 static char* op_user = "";
 static char* op_pass = "";
-static char* op_dbfile = "";
 static char* op_input_type = "auto";
 static char* op_report = "";
 static char* op_output_type = "bufr";
@@ -71,6 +71,8 @@ static int op_dump = 0;
 int op_verbose = 0;
 
 struct poptOption dbTable[] = {
+	{ "db", 0, POPT_ARG_STRING, &op_db, 0,
+		"URL-like definition of DB-All.e database (can also be specified in the environment as DBA_DB)" },
 	{ "dbfile", 0, POPT_ARG_STRING, &op_dbfile, 0,
 		"SQLite DB-All.e database" },
 	{ "dsn", 0, POPT_ARG_STRING, &op_dsn, 0,
@@ -84,27 +86,13 @@ struct poptOption dbTable[] = {
 
 static dba_err create_dba_db(dba_db* db)
 {
-        if (op_dbfile[0] == 0)
-        {
-		// No dbfile specified, use dsn, user and pass
-		if (op_user[0] == 0)
-		{
-			struct passwd *pwd = getpwuid(getuid());
-			op_user = pwd == NULL ? "test" : pwd->pw_name;
-		}
-		return dba_db_create(op_dsn, op_user, op_pass, db);
-        } else {
-		// Access sqlite file directly
-		char buf[PATH_MAX];
-		if (op_dbfile[0] != '/')
-		{
-			char cwd[PATH_MAX];
-			snprintf(buf, PATH_MAX, "Driver=SQLite3;Database=%s/%s;", getcwd(cwd, PATH_MAX), op_dbfile);
-		}
-		else
-                	snprintf(buf, PATH_MAX, "Driver=SQLite3;Database=%s;", op_dbfile);
-                return dba_db_create_generic(buf, db);
-        }
+	const char* fromenv;
+	if (op_db[0] != 0) return dba_db_create_from_url(op_db, db);
+	if (op_dbfile[0] != 0) return dba_db_create_from_file(op_dbfile, db);
+	if (op_dsn[0] != 0) return dba_db_create(op_dsn, op_user, op_pass, db);
+	fromenv = getenv("DBA_DB"); 
+	if (fromenv != NULL) return dba_db_create_from_url(fromenv, db);
+	return dba_error_consistency("no database specified");
 }
 
 struct import_data
