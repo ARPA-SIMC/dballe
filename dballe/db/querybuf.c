@@ -123,5 +123,28 @@ dba_err dba_querybuf_append_list(dba_querybuf buf, const char* str)
 	return dba_querybuf_append(buf, str);
 }
 
+dba_err dba_querybuf_append_listf(dba_querybuf buf, const char* fmt, ...)
+{
+	int size;
+	va_list ap;
+	va_start(ap, fmt);
+
+	if (buf->list_first)
+		buf->list_first = 0;
+	else
+		DBA_RUN_OR_RETURN(dba_querybuf_append(buf, buf->list_sep));
+
+	size = vsnprintf(buf->buf + buf->size, buf->maxsize - buf->size, fmt, ap);
+	if (size >= buf->maxsize - buf->size)
+	{
+		buf->buf[buf->maxsize - 1] = 0;
+		return dba_error_consistency("checking that the formatted string to append fits in the querybuf");
+	}
+	buf->size += size;
+	va_end(ap);
+
+	return dba_error_ok();
+}
+
 
 /* vim:set ts=4 sw=4: */

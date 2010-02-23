@@ -192,9 +192,6 @@ struct _dba_db_cursor
 	DBALLE_SQL_C_SINT_TYPE	sel_p2;
 	DBALLE_SQL_C_SINT_TYPE	sel_b;
 	DBALLE_SQL_C_SINT_TYPE	sel_rep_cod;
-	DBALLE_SQL_C_SINT_TYPE	sel_priority;
-	DBALLE_SQL_C_SINT_TYPE	sel_priomin;
-	DBALLE_SQL_C_SINT_TYPE	sel_priomax;
 	DBALLE_SQL_C_SINT_TYPE	sel_ana_id;
 	DBALLE_SQL_C_SINT_TYPE	sel_context_id;
 	/** @} */

@@ -142,6 +142,22 @@ dba_err dba_querybuf_appendf(dba_querybuf buf, const char* fmt, ...);
  */
 dba_err dba_querybuf_append_list(dba_querybuf buf, const char* str);
 
+/**
+ * Append a formatted string to the querybuf, as part of a list.
+ *
+ * This function will prepend str with the current list separator, unless it is
+ * the first item added to the list.
+ *
+ * @param buf
+ *   The buffer to operate on
+ * @param str
+ *   The string to append
+ * @return
+ *   The error indicator for the function (See @ref error.h)
+ */
+dba_err dba_querybuf_append_listf(dba_querybuf buf, const char* fmt, ...);
+
+
 #ifdef  __cplusplus
 }
 #endif

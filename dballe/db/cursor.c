@@ -427,6 +427,24 @@ static inline int normalon(int lon)
 	return ((lon + 18000000) % 36000000) - 18000000;
 }
 
+static dba_err add_repinfo_where(dba_db_cursor cur, dba_record query, const char* colname)
+{
+	const char* val;
+#define ADD_INT(key, sql, needed) do { \
+	if ((val = dba_record_key_peek_value(query, key)) != NULL) { \
+		int ival = strtol(val, 0, 10); \
+		/*TRACE("found %s: adding %s. val is %d\n", info(key)->desc, sql, *out);*/ \
+		DBA_RUN_OR_RETURN(dba_querybuf_append_listf(cur->where, sql, colname, ival)); \
+		cur->from_wanted |= needed; \
+	} } while (0)
+	
+	ADD_INT(DBA_KEY_PRIORITY, "%s.prio=%d", DBA_DB_FROM_RI);
+	ADD_INT(DBA_KEY_PRIOMIN, "%s.prio>=%d", DBA_DB_FROM_RI);
+	ADD_INT(DBA_KEY_PRIOMAX, "%s.prio<=%d", DBA_DB_FROM_RI);
+#undef ADD_INT
+	return dba_error_ok();
+}
+
 /*
  * Create the WHERE part of the query
  */
@@ -624,9 +642,7 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 		cur->from_wanted |= DBA_DB_FROM_D;
 	}
 
-	ADD_INT(&cur->sel_priority, DBA_KEY_PRIORITY, "ri.prio=?", DBA_DB_FROM_RI);
-	ADD_INT(&cur->sel_priomin, DBA_KEY_PRIOMIN, "ri.prio>=?", DBA_DB_FROM_RI);
-	ADD_INT(&cur->sel_priomax, DBA_KEY_PRIOMAX, "ri.prio<=?", DBA_DB_FROM_RI);
+	DBA_RUN_OR_RETURN(add_repinfo_where(cur, query, "ri"));
 
 	if ((val = dba_record_var_peek_value(query, DBA_VAR(0, 1, 1))) != NULL)
 	{
@@ -1160,9 +1176,9 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	DBA_RUN_OR_RETURN(setstmtattr(cur->stm, SQL_ATTR_CURSOR_SCROLLABLE, (SQLPOINTER)SQL_SCROLLABLE, SQL_IS_INTEGER, "Setting SQL_SCROLLABLE"));
 	DBA_RUN_OR_RETURN(setstmtattr(cur->stm, SQL_ATTR_CURSOR_TYPE, (SQLPOINTER)SQL_CURSOR_DYNAMIC, SQL_IS_INTEGER, "Setting SQL_CURSOR_DYNAMIC"));
 
-	fprintf(stderr, "********************** 0 ************\n");
-	fprintf(stderr, "** Q %s\n", dba_querybuf_get(cur->query));
 #endif
+	//fprintf(stderr, "********************** 0 ************\n");
+	//fprintf(stderr, "** Q %s\n", dba_querybuf_get(cur->query));
 
 	/* Perform the query */
 	{
