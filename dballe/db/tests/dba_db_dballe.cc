@@ -1323,7 +1323,7 @@ void to::test<14>()
 	dba_record_clear(query);
 	CHECKED(dba_record_key_setc(query, DBA_KEY_ANA_FILTER, "B07001>1"));
 
-	int count, has_data;
+	int has_data;
 	dba_db_cursor cur;
 
 	/* Allocate a new cursor */
@@ -1369,7 +1369,7 @@ void to::test<15>()
 	CHECKED(dba_record_key_seti(query, DBA_KEY_LEVELTYPE1, 44));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_L1, 55));
 
-	int count, has_data;
+	int has_data;
 	dba_db_cursor cur;
 
 	/* Allocate a new cursor */
@@ -1416,7 +1416,6 @@ void to::test<16>()
 	CHECKED(dba_record_key_seti(query, DBA_KEY_LEVELTYPE1, 10));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_L1, 11));
 
-	int count, has_data;
 	dba_db_cursor cur;
 
 	/* Allocate a new cursor */
@@ -1440,7 +1439,6 @@ void to::test<17>()
 	dba_record_clear(query);
 	CHECKED(dba_record_key_setc(query, DBA_KEY_ATTR_FILTER, "B12001"));
 
-	int count, has_data;
 	dba_db_cursor cur;
 
 	/* Allocate a new cursor */
@@ -1449,6 +1447,92 @@ void to::test<17>()
 	/* Perform the query, limited to level values */
 	gen_ensure(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE, 0) != 0);
 	dba_error_ok();
+
+	dba_db_cursor_delete(cur);
+}
+
+/* Test querying priomax together with query=best */
+template<> template<>
+void to::test<18>()
+{
+	use_db();
+
+	/* Start with an empty database */
+	CHECKED(dba_db_reset(db, 0));
+
+	/* Prepare the common parts of some data */
+	dba_record_clear(insert);
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_LAT, 1));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_LON, 1));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_LEVELTYPE1, 1));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_L1, 0));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_PINDICATOR, 254));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_P1, 0));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_P2, 0));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_YEAR, 2009));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_MONTH, 11));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_DAY, 11));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_HOUR, 0));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_MIN, 0));
+	CHECKED(dba_record_key_seti(insert, DBA_KEY_SEC, 0));
+
+	//  1,synop,synop,101,oss,0
+	//  2,metar,metar,81,oss,0
+	//  3,temp,sounding,98,oss,2
+	//  4,pilot,wind profile,80,oss,2
+	//  9,buoy,buoy,50,oss,31
+	// 10,ship,synop ship,99,oss,1
+	// 11,tempship,temp ship,100,oss,2
+	// 12,airep,airep,82,oss,4
+	// 13,amdar,amdar,97,oss,4
+	// 14,acars,acars,96,oss,4
+	// 42,pollution,pollution,199,oss,8
+	// 200,satellite,NOAA satellites,41,oss,255
+	// 255,generic,generic data,1000,?,255
+
+	static int rep_cods[] = { 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 42, 200, 255, -1 };
+
+	for (int* i = rep_cods; *i != -1; ++i)
+	{
+		CHECKED(dba_record_key_seti(insert, DBA_KEY_REP_COD, *i));
+		CHECKED(dba_record_var_seti(insert, DBA_VAR(0, 12, 1), *i));
+		int paid;
+		CHECKED(dba_db_insert(db, insert, 0, 1, &paid, NULL));
+	}
+
+	dba_record_clear(query);
+	CHECKED(dba_record_key_seti(query, DBA_KEY_PRIOMAX, 100));
+	CHECKED(dba_record_key_setc(query, DBA_KEY_QUERY, "best"));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_ANA_ID, 1));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2009));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 11));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 11));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 0));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_MIN, 0));
+	CHECKED(dba_record_key_seti(query, DBA_KEY_SEC, 0));
+	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12001"));
+
+	int count, has_data;
+	dba_db_cursor cur;
+
+	/* Allocate a new cursor */
+	CHECKED(dba_db_cursor_create(db, &cur));
+
+	/* Perform the query, limited to level values */
+	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
+
+	gen_ensure_equals(dba_db_cursor_remaining(cur), 1);
+
+	CHECKED(dba_db_cursor_next(cur, &has_data));
+	gen_ensure(has_data);
+
+	dba_record_clear(result);
+	CHECKED(dba_db_cursor_to_record(cur, result));
+
+	int repcod, found;
+	CHECKED(dba_record_key_enqi(result, DBA_KEY_REP_COD, &repcod, &found));
+	gen_ensure(found);
+	gen_ensure_equals(repcod, 11);
 
 	dba_db_cursor_delete(cur);
 }
