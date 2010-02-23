@@ -14,6 +14,9 @@ cdoxdeps = libdballe.dox \
 cppdoxdeps = libdballepp.dox \
 	    ../dballe++/libdballepp.la
 
+fortrandoxdeps = libdballef.dox \
+	    ../fortran/libdballef.la
+
 LATEX2HTML = latex2html -local_icons
 
 doc_DATA =
@@ -27,7 +30,8 @@ doc_DATA += libdballepp.doxytags
 noinst_DATA += c++_api/index.html
 endif
 if DO_DBALLEF
-doc_DATA += fapi.ps
+doc_DATA += fapi.ps libdballef.doxytags
+noinst_DATA += fortran_api/index.html
 endif
 if DO_DBALLE_PYTHON
 noinst_DATA += dballe-doc.i
@@ -40,7 +44,7 @@ endif
 endif
 
 install-data-local:
-	for pkg in c c++; do \
+	for pkg in c c++ fortran; do \
 		test -d $${pkg}_api && \
 		$(mkinstalldirs) $(DESTDIR)$(docdir)/$${pkg}_api && \
 		find $${pkg}_api -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/$${pkg}_api/ \; ; \
@@ -73,6 +77,9 @@ libdballe.doxytags c_api/index.html: $(cdoxdeps) $(mainpages)
 	doxygen $<
 
 libdballepp.doxytags c++_api/index.html c++_xml/index.xml: $(cppdoxdeps)
+	doxygen $<
+
+libdballef.doxytags fortran_api/index.html: $(fortrandoxdeps)
 	doxygen $<
 
 dballe-doc.i: c++_xml/index.xml doxy2swig.py
@@ -115,7 +122,7 @@ EXTRA_DIST = libdballe.dox $(guidesources) fapi.tex doxy2swig.py integrate_dbadb
 CLEANFILES = libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg} dballe-doc.i
 
 clean-local:
-	rm -rf {c,c++}_api
+	rm -rf {c,c++,fortran}_api
 	rm -rf c++_xml
 	rm -rf guide_html
 	rm -rf fapi_html

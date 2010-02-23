@@ -195,6 +195,7 @@ swig/Makefile
 doc/Makefile
 doc/libdballe.dox
 doc/libdballepp.dox
+doc/libdballef.dox
 provami/Makefile
 libdballe.pc
 libdballef.pc
