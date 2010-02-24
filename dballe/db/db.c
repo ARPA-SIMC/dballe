@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -633,9 +633,9 @@ dba_err dba_db_create_test(dba_db* db)
 
 dba_err dba_db_create_from_url(const char* url, dba_db* db)
 {
-	if (strncmp(url, "file://", 7) == 0)
+	if (strncmp(url, "sqlite://", 9) == 0)
 		return dba_db_create_from_file(url + 7, db);
-	if (strncmp(url, "file:", 5) == 0)
+	if (strncmp(url, "sqlite:", 7) == 0)
 		return dba_db_create_from_file(url + 5, db);
 	if (strncmp(url, "odbc://", 7) == 0)
 	{
@@ -658,7 +658,7 @@ dba_err dba_db_create_from_url(const char* url, dba_db* db)
 
 int dba_db_is_url(const char* str)
 {
-	if (strncmp(str, "file:", 5) == 0) return 1;
+	if (strncmp(str, "sqlite:", 7) == 0) return 1;
 	if (strncmp(str, "odbc://", 7) == 0) return 1;
 	if (strncmp(str, "test:", 5) == 0) return 1;
 	return 0;

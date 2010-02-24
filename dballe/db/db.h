@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ dba_err dba_db_create_from_file(const char* pathname, dba_db* db);
 /**
  * Create from an url-like specification, that can be:
  * 
- * @l file:[//]foo.sqlite
+ * @l sqlite:[//]foo.sqlite
  * @l odbc://[user[:pass]@]dsn
  * @l test:[//]
  *

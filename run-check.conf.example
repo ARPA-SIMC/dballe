@@ -2,4 +2,4 @@
 #DBA_DB=odbc://testdsn
 #DBA_DB=odbc://user@testdsn
 #DBA_DB=odbc://user:pass@testdsn
-#DBA_DB=file://test.sqlite
+#DBA_DB=sqlite://test.sqlite
