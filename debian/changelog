@@ -1,13 +1,15 @@
 dballe (4.0.16-1) unstable; urgency=low
 
-  * Allow to use priority filters on query=best queries
-  * Implemented dbadb --dbfile to directly use sqlite file databases
-  * Added dba_db_create_{from_file,from_url,test}
-  * Allow to provide a url instead of a dsn as the dsn parameter in presentati
-  * Implemented dbamsg convert --template to force output template
-  * Implemented dbamsg convert --report to force output message type
+  * New upstream version
+     + Allow to use priority filters on query=best queries
+     + Implemented dbadb --dbfile to directly use sqlite file databases
+     + Added dba_db_create_{from_file,from_url,test}
+     + Allow to provide a url instead of a dsn as the dsn parameter in presentati
+     + Implemented dbamsg convert --template to force output template
+     + Implemented dbamsg convert --report to force output message type
+  * Build-depends on python-dev instead of python-all-dev. Closes: #571228
 
- -- Enrico Zini <enrico@debian.org>  Wed, 24 Feb 2010 12:10:33 +0000
+ -- Enrico Zini <enrico@debian.org>  Wed, 24 Feb 2010 19:20:21 +0000
 
 dballe (4.0.15-1) unstable; urgency=low
 
