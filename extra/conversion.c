@@ -71,11 +71,23 @@ dba_err convert_message(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void*
 	if (decoded == NULL)
 		return dba_error_ok();
 
+	if (info->dest_rep_memo != NULL)
+	{
+		// Force message type (will also influence choice of template later)
+		dba_msg_type type = dba_msg_type_from_repmemo(info->dest_rep_memo);
+		size_t i;
+		for (i = 0; i < decoded->len; ++i)
+			decoded->msgs[i]->type = type;
+	}
+
 	if (info->dest_type != 0)
+		// Force template
 		DBA_RUN_OR_RETURN(process_dba_msg(decoded, info->file, info->dest_type, info->dest_subtype, info->dest_localsubtype));
-	else if (braw != NULL)
+	else if (braw != NULL && info->dest_rep_memo == NULL)
+		// Preserve template
 		DBA_RUN_OR_RETURN(process_dba_msg(decoded, info->file, braw->subtype == 0 ? 0 : braw->type, braw->subtype, braw->localsubtype));
 	else
+		// Choose appropriate template
 		DBA_RUN_OR_RETURN(process_dba_msg(decoded, info->file, 0, 0, 0));
 
 	return dba_error_ok();

@@ -46,6 +46,7 @@ static int op_dump_text = 0;
 static char* op_input_type = "auto";
 static char* op_output_type = "bufr";
 static char* op_output_template = "";
+static char* op_report = "";
 static char* op_bisect_cmd = NULL;
 int op_verbose = 0;
 
@@ -599,6 +600,11 @@ dba_err do_convert(poptContext optCon)
 	intype = dba_cmdline_stringToMsgType(op_input_type, optCon);
 	outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
 
+	if (op_report[0] != 0)
+		convinfo.dest_rep_memo = op_report;
+	else
+		convinfo.dest_rep_memo = NULL;
+
 	if (op_output_template[0] != 0)
 		DBA_RUN_OR_RETURN(bufrex_msg_parse_template(op_output_template,
 					&convinfo.dest_type, &convinfo.dest_subtype, &convinfo.dest_localsubtype));
@@ -1131,6 +1137,8 @@ struct poptOption dbamsg_convert_options[] = {
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
 	{ "template", 0, POPT_ARG_STRING, &op_output_template, 0,
 		"template of the data in output (autoselect if not specified)", "type.sub.local" },
+	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
+		"force output data to be of this type of report", "rep_memo" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages" },
 	POPT_TABLEEND

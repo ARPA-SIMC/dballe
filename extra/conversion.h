@@ -34,6 +34,7 @@ struct conversion_info
 	int dest_type;
 	int dest_subtype;
 	int dest_localsubtype;
+	const char* dest_rep_memo;
 #if 0
 	dba_encoding outType;
 	void* outAction;
