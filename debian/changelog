@@ -9,8 +9,9 @@ dballe (4.0.16-1) unstable; urgency=low
      + Implemented dbamsg convert --report to force output message type
   * Build-depends on python-dev instead of python-all-dev. Closes: #571228
   * Applied patch by Alessio Treglia to work with python 2.6. Closes: #535839
+  * Stricter shlibs
 
- -- Enrico Zini <enrico@debian.org>  Wed, 24 Feb 2010 19:43:33 +0000
+ -- Enrico Zini <enrico@debian.org>  Wed, 24 Feb 2010 19:46:00 +0000
 
 dballe (4.0.15-1) unstable; urgency=low
 
