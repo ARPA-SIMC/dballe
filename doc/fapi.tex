@@ -575,6 +575,11 @@ c     End of the work
       call idba_arrivederci(dbhandle)
 \end{verbatim}
 
+You call {\tt idba\_presentati} to connect to the databse. The parameters are
+the usual ODBC triplet of DSN, username and password. 
+There are alternative ways of invoking {\tt idba\_presentati}: see appendix
+\ref{dburls} for details.
+
 You can call {\tt idba\_preparati} many times and get more handles.  This allows
 to perform many operations on the database at the same time.
 
@@ -1569,6 +1574,96 @@ These are the names that can be used to specify a BUFR or CREX message template:
 
 Alternatively, a template can be specified as {\em category}, {\em subcategory}
 and {\em local category}, separated by dots.  For example: ``{\tt 0.255.0}''.
+
+\chapter{Database connection methods}
+
+\label{dburls}
+
+Instead of the usual DSN, user and password triplet it is possible to connect
+to the database using an URL-like syntax.
+
+\section{Connecting via ODBC}
+
+Specifying DSN, user and password:
+
+\begin{description}
+\item[in Fortran]
+  {\tt call idba\_presentati(dbhandle, "dsn", "username", "password")}
+\item[with dbadb]
+  {\tt dbadb \-\-dsn=dsn \-\-user=username \-\-pass=password}
+\item[with provami]
+  {\tt provami \-\-dsn=dsn \-\-user=username \-\-pass=password}
+\end{description}
+
+Via URL:
+
+\begin{description}
+\item[in Fortran]
+  {\tt call idba\_presentati(dbhandle, "odbc://username:password@dsn", DBA\_MVC, DBA\_MVC)}
+\item[with dbadb]
+  {\tt dbadb \-\-dsn="odbc://username:password@dsn" \dots}
+\item[with provami]
+  {\tt provami \-\-dsn="odbc://username:password@dsn"}
+\end{description}
+
+Via an environment variable:
+
+\begin{verbatim}
+# Export the environment variable
+export DBA_DB="odbc://username:password@dsn"
+\end{verbatim}
+
+\begin{description}
+\item[in Fortran]
+  {\tt call idba\_presentati(dbhandle, DBA\_MVC, DBA\_MVC, DBA\_MVC)}
+\item[with dbadb]
+  {\tt dbadb \dots}
+\item[with provami]
+  {\tt provami}
+\end{description}
+
+\section{Using a SQLite file directly}
+
+Using SQLite makes \dballe{} very slow, but it is very useful when working with
+small datasets since it does not require any ODBC set up. For example, it can
+be used to run software to process small BUFR files:
+
+\begin{verbatim}
+export DBA_DB="sqlite:temp.sqlite"
+dbadb wipe
+dbadb import data.bufr
+# ...run something here that processes the data...
+dbadb export > processed-data.bufr
+rm temp.sqlite
+\end{verbatim}
+
+Via URL:
+
+\begin{description}
+\item[in Fortran]
+  {\tt call idba\_presentati(dbhandle, "sqlite:file.sqlite", DBA\_MVC, DBA\_MVC)}
+\item[with dbadb]
+  {\tt dbadb \-\-dsn="sqlite:file.sqlite" \dots}
+\item[with provami]
+  {\tt provami \-\-dsn="sqlite:file.sqlite"}
+\end{description}
+
+Via an environment variable:
+
+\begin{verbatim}
+# Export the environment variable
+export DBA_DB="sqlite:file.sqlite"
+\end{verbatim}
+
+\begin{description}
+\item[in Fortran]
+  {\tt call idba\_presentati(dbhandle, DBA\_MVC, DBA\_MVC, DBA\_MVC)}
+\item[with dbadb]
+  {\tt dbadb \dots}
+\item[with provami]
+  {\tt provami}
+\end{description}
+
 
 \chapter{Summary of routines}
 
