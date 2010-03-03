@@ -156,7 +156,7 @@ class MapCanvas(wx.Window, ModelListener):
 
 	def zoomToFitSelection (self):
 		"Zoom the image to fit all the stations"
-		sel_id = self.model.filter.enqd("ana_id")
+		sel_id = self.model.filter.enqi("ana_id")
 		latmin = self.model.filter.enqd("latmin")
 		latmax = self.model.filter.enqd("latmax")
 		lonmin = self.model.filter.enqd("lonmin")
