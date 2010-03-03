@@ -46,7 +46,7 @@ class MapChoice(wx.Frame, ModelListener, MapCanvasListener):
 
 		# Flag set to true when the input fields are updated internally
 		# insted of on user input
-		self.updating = False
+		self.updating = True
 
 		self.tb = self.CreateToolBar(wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT | wx.TB_TEXT)
 		        
@@ -96,6 +96,8 @@ class MapChoice(wx.Frame, ModelListener, MapCanvasListener):
 
 		for i in self.latminSpin, self.latmaxSpin, self.lonminSpin, self.lonmaxSpin, self.idField:
 			i.Enable(False)
+
+		self.updating = False
 
 		bpsizer.Add(wx.StaticText(buttonPanel, -1, "Lat: "), (0, 0), (1, 1), flag=wx.ALIGN_CENTER_VERTICAL)
 		bpsizer.Add(self.latminSpin, (0, 1), (1, 1))
