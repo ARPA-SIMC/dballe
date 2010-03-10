@@ -634,9 +634,9 @@ dba_err dba_db_create_test(dba_db* db)
 dba_err dba_db_create_from_url(const char* url, dba_db* db)
 {
 	if (strncmp(url, "sqlite://", 9) == 0)
-		return dba_db_create_from_file(url + 7, db);
+		return dba_db_create_from_file(url + 9, db);
 	if (strncmp(url, "sqlite:", 7) == 0)
-		return dba_db_create_from_file(url + 5, db);
+		return dba_db_create_from_file(url + 7, db);
 	if (strncmp(url, "odbc://", 7) == 0)
 	{
 		char buf[PATH_MAX];
