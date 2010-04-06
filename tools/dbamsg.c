@@ -95,7 +95,7 @@ static dba_err dump_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
 
 	printf("Message %d\n", rmsg->index);
 	printf("Size: %d\n", size);
-	printf("Edition: %d\n", braw->encoding_type);
+	printf("Edition: %d\n", braw->edition);
 	printf("Centre: %d:%d\n", braw->opt.bufr.centre, braw->opt.bufr.subcentre);
 	printf("Category: %d:%d:%d\n", braw->type, braw->subtype, braw->localsubtype);
 	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
@@ -125,7 +125,7 @@ static dba_err dump_crex_header(dba_rawmsg rmsg, bufrex_msg braw)
 
 	printf("Message %d\n", rmsg->index);
 	printf("Size: %d\n", size);
-	printf("Edition: %d\n", braw->encoding_type);
+	printf("Edition: %d\n", braw->edition);
 	printf("Category: %d:%d:%d\n", braw->type, braw->subtype, braw->localsubtype);
 	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
 			braw->rep_year, braw->rep_month, braw->rep_day,
