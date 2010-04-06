@@ -68,7 +68,10 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				if (ltype1 == -1 || l1 == -1 || ltype2 == -1 || l2 == -1 || pind == -1 || p1 == -1 || p2 == -1)
 					DBA_FAIL_GOTO(cleanup, dba_error_consistency(
 							"Incomplete context informations l(%d,%d, %d,%d),p(%d,%d,%d) for variable %d%02d%03d",
-							ltype1, l1, ltype2, l2, pind, p1, p2, dba_var_code(var)));
+							ltype1, l1, ltype2, l2, pind, p1, p2,
+							DBA_VAR_F(dba_var_code(var)),
+							DBA_VAR_X(dba_var_code(var)),
+							DBA_VAR_Y(dba_var_code(var))));
 
 				DBA_RUN_OR_GOTO(cleanup, dba_var_copy(var, &copy));
 
