@@ -26,6 +26,15 @@
 /* #include <dballe/aof/aof_encoder.h> */
 #include <dballe/msg/file.h>
 
+static dba_err process_bufrex_msg(bufrex_msg msg, dba_file file)
+{
+	dba_rawmsg raw;
+	DBA_RUN_OR_RETURN(bufrex_msg_encode(msg, &raw));
+	DBA_RUN_OR_RETURN(dba_file_write(file, raw));
+	dba_rawmsg_delete(raw);
+	return dba_error_ok();
+}
+
 static dba_err process_dba_msg(dba_msgs msgs, dba_file file, int type, int subtype, int localsubtype)
 {
 	dba_encoding ftype = dba_file_type(file);
@@ -68,8 +77,45 @@ dba_err convert_message(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void*
 {
 	struct conversion_info* info = (struct conversion_info*)data;
 
-	if (decoded == NULL)
-		return dba_error_ok();
+	if (decoded == NULL || decoded->len == 0)
+	{
+		fprintf(stderr, "No interpreted information available: is a recoding enough?\n");
+		// See if we can just recode the raw data
+
+		// We want bufrex raw data
+		if (braw == NULL)
+		{
+			fprintf(stderr, "No BUFREX raw data to attempt low-level bufrex recoding\n");
+			return dba_error_ok();
+		}
+
+		// No report override
+		if (info->dest_rep_memo != NULL)
+		{
+			fprintf(stderr, "report override not allowed for low-level bufrex recoding\n");
+			return dba_error_ok();
+		}
+
+		// Same encoding
+		if ((dba_file_type(info->file) == BUFR && braw->encoding_type == BUFREX_CREX)
+		     || (dba_file_type(info->file) == CREX && braw->encoding_type == BUFREX_BUFR))
+		{
+			fprintf(stderr, "encoding change not yet supported for low-level bufrex recoding\n");
+			return dba_error_ok();
+		}
+
+		// No template change
+		if ((info->dest_type != 0 || info->dest_subtype != 0 || info->dest_localsubtype != 0)
+		        || (info->dest_type == braw->type && info->dest_subtype == braw->subtype && info->dest_localsubtype == braw->localsubtype))
+		{
+			fprintf(stderr, "template change not supported for low-level bufrex recoding\n");
+			return dba_error_ok();
+		}
+
+		// We can just recode the raw braw
+		fprintf(stderr, "we can do a low-level bufrex recoding\n");
+		return process_bufrex_msg(braw, info->file);
+	}
 
 	if (info->dest_rep_memo != NULL)
 	{
@@ -80,7 +126,7 @@ dba_err convert_message(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void*
 			decoded->msgs[i]->type = type;
 	}
 
-	if (info->dest_type != 0)
+	if (info->dest_type != 0 || info->dest_subtype != 0 || info->dest_localsubtype != 0)
 		// Force template
 		DBA_RUN_OR_RETURN(process_dba_msg(decoded, info->file, info->dest_type, info->dest_subtype, info->dest_localsubtype));
 	else if (braw != NULL && info->dest_rep_memo == NULL)
