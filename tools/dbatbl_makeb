@@ -232,6 +232,9 @@ class App(object):
         readline.parse_and_bind("tab: complete")
 
         self.entry = self.get_entry(var)
+        if self.entry is None:
+            self.entry = Entry()
+            self.entry.var = var
 
         while True:
             print "Current entry value:"
