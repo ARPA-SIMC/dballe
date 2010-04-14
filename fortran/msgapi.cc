@@ -376,6 +376,7 @@ void MsgAPI::prendilo()
 		{
 			dba_var v;
 			checked(dba_var_copy(dba_record_cursor_variable(c), &v));
+			// FIXME: if the next one throws, we leak v
 			checked(dba_msg_set_nocopy(wmsg, v, ltype1, l1, ltype2, l2, pind, p1, p2));
 			if (last_set_code != 0)
 			{
