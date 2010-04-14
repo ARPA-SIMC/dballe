@@ -67,6 +67,7 @@ tables/B000000002001200.txt
 /fortran/dump_dballe
 /fortran/dumpmsg_dballe
 /fortran/mkmsg
+/fortran/genattr
 /provami/provami/Paths.py
 /swig/_dballe.so
 /swig/dballe
