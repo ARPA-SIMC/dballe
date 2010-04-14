@@ -299,6 +299,23 @@ void to::test<4>()
 	/* Add the variable to the message */
 	CHECKED(dba_msg_set_nocopy(msg, var, 1, 0, 0, 0, 0, 0, 0));
 
+	/* Create a second variable to add to the message */
+	CHECKED(dba_var_create_local(DBA_VAR(0, 12, 2), &var));
+	CHECKED(dba_var_setd(var, 272));
+
+	/* Add some attributes to the variable */
+	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 3), &attr));
+	CHECKED(dba_var_seti(attr, 1));
+	CHECKED(dba_var_seta_nocopy(var, attr));
+
+	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 5), &attr));
+	CHECKED(dba_var_seti(attr, 2));
+	CHECKED(dba_var_seta_nocopy(var, attr));
+
+	/* Add the variable to the message */
+	CHECKED(dba_msg_set_nocopy(msg, var, 1, 0, 0, 0, 0, 0, 0));
+
+
 	dba_msgs msgs;
 	CHECKED(dba_msgs_create(&msgs));
 	CHECKED(dba_msgs_append_acquire(msgs, msg));
