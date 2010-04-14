@@ -1,3 +1,11 @@
+dballe (4.0.17-1) UNRELEASED; urgency=low
+
+  * New upstream version
+     + Complain if trying to encode a generic message containing a variable
+       with an attribute which is not a B33YYY variable
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 14 Apr 2010 10:39:52 +0200
+
 dballe (4.0.16-1) unstable; urgency=low
 
   * New upstream version

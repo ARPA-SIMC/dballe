@@ -112,6 +112,11 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 					iter = dba_var_attr_iterator_next(iter))
 			{
 				dba_var attr = dba_var_attr_iterator_attr(iter);
+				if (DBA_VAR_X(dba_var_code(attr)) != 33)
+				{
+					err = dba_error_consistency("attempt to encode attribute B%02d%03d which is not B33YYY", DBA_VAR_X(dba_var_code(attr)), DBA_VAR_Y(dba_var_code(attr)));
+					goto cleanup;
+				}
 				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(attr), attr));
 			}
 		}
