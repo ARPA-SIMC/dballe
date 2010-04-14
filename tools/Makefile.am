@@ -5,6 +5,7 @@ DBALLELIBS = ../extra/libextra.la  ../dballe/libdballe.la
 INCLUDES = -I$(top_srcdir)
 
 bin_PROGRAMS = dbatbl dbamsg dbadb
+dist_bin_SCRIPTS = dbatbl_makeb
 
 dbatbl_SOURCES = dbatbl.c
 dbatbl_LDFLAGS = $(DBALLELIBS) -lpopt
