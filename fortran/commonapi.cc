@@ -36,7 +36,7 @@ using namespace std;
 namespace dballef {
 
 CommonAPIImplementation::CommonAPIImplementation()
-	: perms(0), input(NULL), output(NULL), qcinput(NULL), qcoutput(NULL), qc_iter(NULL), qc_count(0), cached_spiega(0)
+	: perms(0), input(NULL), output(NULL), qcinput(NULL), qcoutput(NULL), qc_iter(NULL), qc_count(0), last_set_code(0), cached_spiega(0)
 {
 	/* Allocate the records */
 	checked(dba_record_create(&input));
@@ -219,6 +219,7 @@ void CommonAPIImplementation::seti(const char* param, int value)
 	if (code)
 	{
 		checked(dba_record_var_seti(rec, code, value));
+		last_set_code = code;
 	} else {
 		dba_keyword key = prepare_key_change(rec, param);
 		checked(dba_record_key_seti(rec, key, value));
@@ -242,6 +243,7 @@ void CommonAPIImplementation::setd(const char* param, double value)
 
 	if (code)
 	{
+		last_set_code = code;
 		checked(dba_record_var_setd(rec, code, value));
 	} else {
 		dba_keyword key = prepare_key_change(rec, param);
@@ -256,6 +258,7 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
 
 	if (code)
 	{
+		last_set_code = code;
 		checked(dba_record_var_setc(rec, code, value));
 	} else {
 		dba_keyword key = prepare_key_change(rec, param);

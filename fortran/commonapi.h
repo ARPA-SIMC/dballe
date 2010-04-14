@@ -73,6 +73,7 @@ protected:
 	dba_record qcoutput;
 	dba_record_cursor qc_iter;
 	int qc_count;
+	dba_varcode last_set_code;
 	// Last string returned by one of the spiega* functions, held here so
 	// that we can deallocate it when needed.
 	char* cached_spiega;
