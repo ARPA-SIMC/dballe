@@ -374,8 +374,16 @@ void MsgAPI::prendilo()
 		
 		for ( ; c; c = dba_record_iterate_next(input, c))
 		{
-			wvar = dba_record_cursor_variable(c);
-			checked(dba_msg_set(wmsg, wvar, dba_var_code(wvar), ltype1, l1, ltype2, l2, pind, p1, p2));
+			dba_var v;
+			checked(dba_var_copy(dba_record_cursor_variable(c), &v));
+			checked(dba_msg_set_nocopy(wmsg, v, ltype1, l1, ltype2, l2, pind, p1, p2));
+			if (last_set_code != 0)
+			{
+				if (dba_var_code(v) == last_set_code)
+					wvar = v;
+			}
+			else
+				wvar = v;
 		}
 	}
 
