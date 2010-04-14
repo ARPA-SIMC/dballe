@@ -159,3 +159,4 @@
  033195 [SIM] MeteoDB variable ID                                        NUMERIC                    0            0  24 NUMERIC                   0          8
  033196 [SIM] Data has been invalidated                                  CODE TABLE 33196           0            0   1 CODE TABLE 33196          0          1
  033197 [SIM] Manual replacement in substitution                         CODE TABLE 33197           0            0   2 CODE TABLE 33197          0          1
+ 033198 [SIM] Observation increment                                      NUMERIC                    2            0  24 NUMERIC                   2          8
