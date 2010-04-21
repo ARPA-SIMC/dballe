@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -172,6 +172,29 @@ void to::test<4>()
 	gen_ensure_equals(err, DBA_ERROR);
 	gen_ensure_equals(dba_error_get_code(), 6);
 	gen_ensure(dba_var_value(var) == NULL);
+
+	dba_var_delete(var);
+}
+
+// Test ranges
+template<> template<>
+void to::test<5>()
+{
+	dba_var var;
+	dba_varinfo info;
+	dba_err err;
+
+	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 33, 198), &info));
+	CHECKED(dba_var_create(info, &var));
+
+	double val;
+	CHECKED(dba_var_setd(var, 1));
+	CHECKED(dba_var_enqd(var, &val));
+	gen_ensure_equals(val, 1);
+
+	CHECKED(dba_var_setd(var, -1));
+	CHECKED(dba_var_enqd(var, &val));
+	gen_ensure_equals(val, -1);
 
 	dba_var_delete(var);
 }

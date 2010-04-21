@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -641,10 +641,12 @@ static dba_err encoder_encode_b_data(encoder e)
 		TRACE("Converted to int (ref %d, scale %d): %d\n", info->bit_ref, info->bufr_scale - e->c_scale_change, ival);
 		if (e->c_width_change != 0)
 			TRACE("Width change: %d\n", e->c_width_change);
-		TRACE("Writing with size %d\n", ival, len + e->c_width_change);
+		TRACE("Writing %u with size %d\n", ival, len + e->c_width_change);
 		/* In case of overflow, store 'missing value' */
 		if ((unsigned)ival >= (1u<<(len + e->c_width_change)))
 		{
+			err = dba_error_consistency("value %f does not fit in variable B%02d%03d", dval, DBA_VAR_X(info->var), DBA_VAR_Y(info->var));
+			goto cleanup;
 			TRACE("Overflow: %x %u %d >= (1<<(%u + %u)) = %x %u %d\n",
 				ival, ival, ival,
 				len, e->c_width_change,

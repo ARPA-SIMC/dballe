@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -198,6 +198,51 @@ void to::test<2>()
 	bufrex_msg_delete(msg);
 	bufrex_msg_delete(msg1);
 }
+
+// Test variable ranges during encoding
+template<> template<>
+void to::test<3>()
+{
+	bufrex_msg msg;
+
+	CHECKED(bufrex_msg_create(BUFREX_BUFR, &msg));
+
+	/* Initialise common message bits */
+	msg->edition = 3;            // BUFR ed.4
+	msg->type = 0;               // Template 8.255.171
+	msg->subtype = 255;
+	msg->localsubtype = 0;
+	msg->opt.bufr.centre = 98;
+	msg->opt.bufr.subcentre = 0;
+	msg->opt.bufr.master_table = 12;
+	msg->opt.bufr.local_table = 1;
+	msg->opt.bufr.compression = 0;
+	msg->rep_year = 2008;
+	msg->rep_month = 5;
+	msg->rep_day = 3;
+	msg->rep_hour = 12;
+	msg->rep_minute = 30;
+	msg->rep_second = 0;
+
+	/* Load encoding tables */
+	CHECKED(bufrex_msg_load_tables(msg));
+
+	/* Fill up the data descriptor section */
+	CHECKED(bufrex_msg_append_datadesc(msg, DBA_VAR(0, 1, 1)));
+
+	/* Get the working subset */
+	bufrex_subset s;
+	CHECKED(bufrex_msg_get_subset(msg, 0, &s));
+
+	/* Set the test variable */
+	CHECKED(bufrex_subset_store_variable_d(s, DBA_VAR(0, 1, 1), -1.0));
+
+	/* Encode gives error because of overflow */
+	dba_rawmsg rmsg = NULL;
+	dba_err err = bufrex_msg_encode(msg, &rmsg);
+	ensure(err == DBA_ERROR);
+}
+
 
 
 }
