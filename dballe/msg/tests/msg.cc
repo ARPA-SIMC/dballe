@@ -418,6 +418,17 @@ void to::test<6>()
 	gen_ensure_equals(dba_msg_type_from_repmemo(NULL), MSG_GENERIC);
 }
 
+/* Test variable alias resolution */
+template<> template<>
+void to::test<7>()
+{
+	gen_ensure_equals(dba_msg_resolve_var("tot_prec1"), DBA_MSG_TOT_PREC1);
+	gen_ensure_equals(dba_msg_resolve_var("cloud_h4"), DBA_MSG_CLOUD_H4);
+	gen_ensure_equals(dba_msg_resolve_var("st_type"), DBA_MSG_ST_TYPE);
+	gen_ensure_equals(dba_msg_resolve_var("tot_snow"), DBA_MSG_TOT_SNOW);
+	gen_ensure_equals(dba_msg_resolve_var("block"), DBA_MSG_BLOCK);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

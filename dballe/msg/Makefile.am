@@ -70,8 +70,11 @@ libdballe_msg_la_SOURCES += \
 endif
 libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 
-vars.h vars.c: vars.csv mkvars
+vars.h vars.gperf: vars.csv mkvars
 	$(srcdir)/mkvars < $<
+
+vars.c: vars.gperf
+	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
 #
 # Unit testing
@@ -121,4 +124,4 @@ tranges.tex: mktranges
 distclean-local:
 	rm -f ltypes.dox ltypes.tex tranges.dox tranges.tex
 
-EXTRA_DIST = mkvars vars.csv vars.h vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mklevels mktranges
+EXTRA_DIST = mkvars vars.csv vars.h vars.gperf vars.c aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mklevels mktranges

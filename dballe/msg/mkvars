@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys,re
+import sys, re, os
 
 class VC:
     def __init__(self, name):
@@ -96,6 +96,11 @@ typedef struct _dba_msg_var* dba_msg_var;
   */
 extern struct _dba_msg_var dba_msg_vartable[];
 
+/** Resolve a var name to a var ID */
+int dba_msg_resolve_var(const char* name);
+
+/** Resolve a var name to a var ID, avoiding to compute the length of name */
+int dba_msg_resolve_var_substring(const char* name, int len);
 """
 
 for i, v in enumerate(vars):
@@ -133,17 +138,50 @@ print >>fh, """
 """
 fh.close()
 
-fc = open("vars.c", "w")
-print >>fc, """#include <dballe/msg/vars.h>
+fc = open("vars.gperf", "w")
+print >>fc, """
+%define slot-name name
+%define lookup-function-name dba_msg_resolve_var_in_word_set
+%struct-type
+%global-table
+%compare-strncmp
+/* Using %switch may be faster (remember to check when doing optimizations) */
 
-struct _dba_msg_var dba_msg_vartable[] = {
+%{
+#include <dballe/msg/vars.h>
+#include <string.h>
+%}
+
+struct msgvardef { const char* name; int var; };
+%%"""
+for v in vars:
+    print >>fc, "%s, DBA_MSG_%s" % (v.name.lower(), v.name)
+print >>fc, """%%
+
+int dba_msg_resolve_var(const char* name)
+{
+	struct msgvardef* res = dba_msg_resolve_var_in_word_set(name, strlen(name));
+	if (res == NULL)
+		return -1;
+	else
+		return res->var;
+}
+
+int dba_msg_resolve_var_substring(const char* name, int len)
+{
+	struct msgvardef* res = dba_msg_resolve_var_in_word_set(name, len);
+	if (res == NULL)
+		return -1;
+	else
+		return res->var;
+}
 """
 
+print >>fc, "struct _dba_msg_var dba_msg_vartable[] = {"
 for v in vars:
     print >>fc, " { DBA_VAR(0, %d, %d), %d, %d, %d, %d, %d, %d, %d }," % tuple([v.b.x, v.b.y] + v.letr)
-    
-print >>fc, """};
-"""
+print >>fc, "};"
+
 fc.close()
 
 sys.exit()
