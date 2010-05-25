@@ -30,6 +30,7 @@ dballe/core/aliases.c
 dballe/core/record_keyword.c
 dballe/core/uniconv.c
 dballe/bufrex/template-aliases.c
+dballe/msg/vars.gperf
 dballe/msg/vars.c
 dballe/msg/vars.h
 libdballe.pc
