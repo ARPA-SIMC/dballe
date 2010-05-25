@@ -230,6 +230,8 @@ void to::test<2>()
 		"bufr/obs255-255.0.bufr", 
 		"bufr/test-airep1.bufr",
 		"bufr/test-temp1.bufr", 
+		"bufr/test-buoy1.bufr", 
+		"bufr/test-soli1.bufr", 
 		"bufr/ed4.bufr", 
 		NULL
 	};
