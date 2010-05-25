@@ -127,6 +127,31 @@ AC_CHECK_LIB(odbc, SQLAllocHandle, LIBS="$LIBS -lodbc",
 	enable_dballe_db=false
 )
 
+dnl Check for lua
+PKG_CHECK_EXISTS([lua5.1], [have_lua=yes], [have_lua=no])
+if test x$have_lua = xyes
+then
+        PKG_CHECK_MODULES(LUA,lua5.1,,[have_lua=no])
+else
+        PKG_CHECK_EXISTS([lua], [have_lua=yes], [have_lua=no])
+        if test x$have_lua = xyes
+        then
+                PKG_CHECK_MODULES(LUA,lua,,[have_lua=no])
+        else
+                dnl We don't always have the luxury of .pc files for lua, it seems
+                have_lua=yes
+                AC_CHECK_LIB([lua], [lua_gettop], [true], [have_lua=no])
+                AC_CHECK_HEADER([lua.h], [true], [have_lua=no])
+                LUA_CFLAGS=
+                LUA_LIBS="-llualib -llua"
+        fi
+fi
+if test x$have_lua = xyes
+then
+        AC_DEFINE([HAVE_LUA], 1, [lua is available])
+fi
+AM_CONDITIONAL([LUA], [test x"$have_lua" = x"yes"])
+
 LIBS="$LIBS -lm"
 
 confdir='$(sysconfdir)'"/$PACKAGE"

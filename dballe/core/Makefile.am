@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir)
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(LUA_CFLAGS)
 
 #
 # Shared library
@@ -36,7 +36,12 @@ libdballe_core_la_SOURCES = \
 	record.c \
 	vartable.c \
 	var.c
-libdballe_core_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
+
+if LUA
+libdballe_core_la_SOURCES += var-lua.c
+endif
+
+libdballe_core_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(LUA_LIBS)
 
 
 uniconv.c: uniconv.gperf
@@ -73,7 +78,15 @@ tut_test_SOURCES = \
 	test-utils-core.cc \
 	../tut/tut-main.cc
 tut_test_LDADD = \
-	libdballe-core.la
+	libdballe-core.la \
+	$(LUA_LIBS)
+
+if LUA
+noinst_HEADERS += test-utils-lua.h
+tut_test_SOURCES += \
+	tests/lua.cc \
+	test-utils-lua.cc
+endif
 
 
 #

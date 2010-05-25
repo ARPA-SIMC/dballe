@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -458,6 +458,22 @@ void dba_var_print(dba_var var, FILE* out);
  *   The output stream to use for printing
  */
 void dba_var_diff(dba_var var1, dba_var var2, int* diffs, FILE* out);
+
+
+struct lua_State;
+
+/**
+ * Push the variable as an object in the lua stack
+ */
+dba_err dba_var_lua_push(dba_var var, struct lua_State* L);
+
+/**
+ * Check that the element at \a idx is a dba_var
+ *
+ * @return the dba_var element, or NULL if the check failed
+ */
+dba_var dba_var_lua_check(struct lua_State* L, int idx);
+
 
 #ifdef  __cplusplus
 }
