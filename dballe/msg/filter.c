@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
  */
 
 #include "filter.h"
+#include "context.h"
 
 /*
  * 1: the message matches
@@ -27,24 +28,27 @@
  */
 static int match_message(dba_msg m, dba_record filter)
 {
+#warning to be implemented
 	return 1;
 };
 
 /*
- * 1: the level matches
- * 0: the level does not match
+ * 1: the context matches
+ * 0: the context does not match
  */
-static int match_level(dba_msg m, dba_msg_level l, dba_record filter)
+static int match_context(dba_msg m, dba_msg_context l, dba_record filter)
 {
+#warning to be implemented
 	return 1;
 };
 
 /*
- * 1: the datum matches
- * 0: the datum does not match
+ * 1: the variable matches
+ * 0: the variable does not match
  */
-static int match_datum(dba_msg m, dba_msg_level l, dba_msg_datum d, dba_record filter)
+static int match_var(dba_msg m, dba_msg_context l, dba_var var, dba_record filter)
 {
+#warning to be implemented
 	return 1;
 }
 
@@ -65,18 +69,18 @@ dba_err dba_msg_filter_copy(dba_msg src, dba_msg* dst, dba_record filter)
 
 	for (li = 0; li < src->data_count; ++li)
 	{
-		dba_msg_level l = src->data[li];
-		if (!match_level(src, l, filter))
+		dba_msg_context l = src->data[li];
+		if (!match_context(src, l, filter))
 			continue;
 		for (di = 0; di < l->data_count; ++di)
 		{
-			dba_msg_datum d = l->data[di];
-			if (!match_datum(src, l, d, filter))
+			dba_var var = l->data[di];
+			if (!match_var(src, l, var, filter))
 				continue;
 			
-			DBA_RUN_OR_GOTO(cleanup, dba_msg_set(res, d->var, dba_var_code(d->var),
+			DBA_RUN_OR_GOTO(cleanup, dba_msg_set(res, var, dba_var_code(var),
 					l->ltype1, l->l1, l->ltype2, l->l2,
-					d->pind, d->p1, d->p2));
+					l->pind, l->p1, l->p2));
 			++copied;
 		}
 	}

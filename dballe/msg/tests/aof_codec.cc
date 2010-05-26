@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include <test-utils-msg.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/msg/file.h>
+#include <dballe/msg/context.h>
 
 namespace tut {
 using namespace tut_dballe;
@@ -91,12 +92,9 @@ void strip_attributes(dba_msgs msgs)
 		dba_msg msg = msgs->msgs[msgidx];
 		for (int i = 0; i < msg->data_count; i++)
 		{
-			dba_msg_level lev = msg->data[i];
-			for (int j = 0; j < lev->data_count; j++)
-			{
-				dba_msg_datum dat = lev->data[j];
-				dba_var_clear_attrs(dat->var);
-			}
+			dba_msg_context ctx = msg->data[i];
+			for (int j = 0; j < ctx->data_count; j++)
+				dba_var_clear_attrs(ctx->data[j]);
 		}
 	}
 }
@@ -113,11 +111,11 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 		// Recode BUFR attributes to match the AOF 2-bit values
 		for (int i = 0; i < bmsg->data_count; i++)
 		{
-			dba_msg_level lev = bmsg->data[i];
-			for (int j = 0; j < lev->data_count; j++)
+			dba_msg_context ctx = bmsg->data[i];
+			for (int j = 0; j < ctx->data_count; j++)
 			{
-				dba_msg_datum dat = lev->data[j];
-				dba_var_attr_iterator iter = dba_var_attr_iterate(dat->var);
+				dba_var var = ctx->data[j];
+				dba_var_attr_iterator iter = dba_var_attr_iterate(var);
 				for (; iter != NULL; iter = dba_var_attr_iterator_next(iter))
 				{
 					dba_var attr = dba_var_attr_iterator_attr(iter);
@@ -198,13 +196,13 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 			// dba_var p = dba_msg_get_flight_press_var(amsg);
 			for (int i = 0; i < amsg->data_count; ++i)
 			{
-				dba_msg_level l = amsg->data[i];
-				if (l->ltype1 == 100)
+				dba_msg_context l = amsg->data[i];
+				if (l->ltype1 == 100 && l->pind == 254 && l->p1 == 0 && l->p2 == 0)
 				{
-					dba_msg_datum datum = dba_msg_level_find(l, DBA_VAR(0, 10, 4), 254, 0, 0);
-					if (datum)
+					dba_var var = dba_msg_context_find(l, DBA_VAR(0, 10, 4));
+					if (var)
 					{
-						CHECKED(dba_msg_set(bmsg, datum->var, DBA_VAR(0, 10, 4),
+						CHECKED(dba_msg_set(bmsg, var, DBA_VAR(0, 10, 4),
 							l->ltype1, l->l1, l->ltype2, l->l2,
 							254, 0, 0));
 						break;
@@ -286,31 +284,31 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 			//    251710 / 9.80664 becomes 25667 as it was
 			for (int i = 0; i < amsg->data_count; i++)
 			{
-				dba_msg_level lev = amsg->data[i];
-				for (int j = 0; j < lev->data_count; j++)
+				dba_msg_context ctx = amsg->data[i];
+				for (int j = 0; j < ctx->data_count; j++)
 				{
-					dba_msg_datum dat = lev->data[j];
-					if (dba_var_code(dat->var) == DBA_VAR(0, 10, 3))
+					dba_var var = ctx->data[j];
+					if (dba_var_code(var) == DBA_VAR(0, 10, 3))
 					{
 						double dval;
-						CHECKED(dba_var_enqd(dat->var, &dval));
+						CHECKED(dba_var_enqd(var, &dval));
 						dval /= 9.80665;
-						CHECKED(dba_var_setd(dat->var, dval));
+						CHECKED(dba_var_setd(var, dval));
 					}
 				}
 			}
 			for (int i = 0; i < bmsg->data_count; i++)
 			{
-				dba_msg_level lev = bmsg->data[i];
-				for (int j = 0; j < lev->data_count; j++)
+				dba_msg_context ctx = bmsg->data[i];
+				for (int j = 0; j < ctx->data_count; j++)
 				{
-					dba_msg_datum dat = lev->data[j];
-					if (dba_var_code(dat->var) == DBA_VAR(0, 10, 3))
+					dba_var var = ctx->data[j];
+					if (dba_var_code(var) == DBA_VAR(0, 10, 3))
 					{
 						double dval;
-						CHECKED(dba_var_enqd(dat->var, &dval));
+						CHECKED(dba_var_enqd(var, &dval));
 						dval /= 9.80665;
-						CHECKED(dba_var_setd(dat->var, dval));
+						CHECKED(dba_var_setd(var, dval));
 					}
 				}
 			}
@@ -338,12 +336,12 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 		// Remove attributes from all vertical sounding significances
 		for (int i = 0; i < bmsg->data_count; i++)
 		{
-			dba_msg_level lev = bmsg->data[i];
-			for (int j = 0; j < lev->data_count; j++)
+			dba_msg_context ctx = bmsg->data[i];
+			for (int j = 0; j < ctx->data_count; j++)
 			{
-				dba_msg_datum dat = lev->data[j];
-				if (dba_var_code(dat->var) == DBA_VAR(0, 8, 1))
-					dba_var_clear_attrs(dat->var);
+				dba_var var = ctx->data[j];
+				if (dba_var_code(var) == DBA_VAR(0, 8, 1))
+					dba_var_clear_attrs(var);
 			}
 		}
 	}

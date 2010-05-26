@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +68,8 @@ extern "C" {
  * the values that are used more commonly.
  */
 
-#include <dballe/msg/level.h>
+#include <dballe/core/error.h>
+#include <dballe/core/var.h>
 #include <stdio.h>
 
 /**
@@ -92,6 +93,10 @@ enum _dba_msg_type {
 /** @copydoc _dba_msg_type */
 typedef enum _dba_msg_type dba_msg_type;
 
+struct _dba_msg_context;
+/** @copydoc _dba_msg_context */
+typedef struct _dba_msg_context* dba_msg_context;
+
 /**
  * Storage for related physical data
  */
@@ -112,7 +117,7 @@ struct _dba_msg
 	/**
 	 * The array with the data, reallocated as needed
 	 */
-	dba_msg_level* data;
+	dba_msg_context* data;
 };
 /** @copydoc _dba_msg */
 typedef struct _dba_msg* dba_msg;
@@ -359,13 +364,19 @@ dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, i
  *   L1 value of the level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
- *   The level found, or NULL if it was not found.
+ *   The context found, or NULL if it was not found.
  */
-dba_msg_level dba_msg_find_level(dba_msg msg, int ltype1, int l1, int ltype2, int l2);
+dba_msg_context dba_msg_find_context(dba_msg msg, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 /**
- * Find a datum given its description
+ * Find a variable given its description
  *
  * @param msg
  *   The dba_msg to query
@@ -377,16 +388,10 @@ dba_msg_level dba_msg_find_level(dba_msg msg, int ltype1, int l1, int ltype2, in
  *   L1 value of the level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
- * @param pind
- *   Time range type indicator.  See @ref trange_table.
- * @param p1
- *   Time range P1 indicator.  See @ref trange_table.
- * @param p2
- *   Time range P2 indicator.  See @ref trange_table.
  * @return
- *   The level found, or NULL if it was not found.
+ *   The variable found, or NULL if it was not found.
  */
-dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+dba_var dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 /** 
  * Find a datum given its shortcut ID
@@ -398,7 +403,7 @@ dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, in
  * @return
  *   The value found, or NULL if it was not found.
  */
-dba_msg_datum dba_msg_find_by_id(dba_msg msg, int id);
+dba_var dba_msg_find_by_id(dba_msg msg, int id);
 
 
 /**

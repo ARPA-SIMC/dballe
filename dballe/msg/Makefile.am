@@ -11,8 +11,7 @@ messageincludedir = $(includedir)/dballe/msg
 # Include the .cc files that contain template definitions
 messageinclude_HEADERS = \
 		formatter.h \
-		datum.h \
-		level.h \
+		context.h \
 		vars.h \
 		msg.h \
 		msgs.h \
@@ -31,8 +30,7 @@ noinst_LTLIBRARIES = libdballe-msg.la
 libdballe_msg_la_SOURCES = \
 		formatter.c \
 		vars.c \
-		datum.c \
-		level.c \
+		context.c \
 		msg.c \
 		msgs.c \
 		marshal.c \

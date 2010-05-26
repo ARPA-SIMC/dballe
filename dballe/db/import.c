@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include "attr.h"
 
 #include "dballe/core/conv.h"
+#include "dballe/msg/context.h"
 
 #include <sql.h>
 #include <sqlext.h>
@@ -48,8 +49,8 @@ dba_err dba_import_msgs(dba_db db, dba_msgs msgs, const char* repmemo, int flags
 dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags)
 {
 	dba_err err = DBA_OK;
-	dba_msg_level l_ana = dba_msg_find_level(msg, 257, 0, 0, 0);
-	dba_msg_datum d;
+	dba_msg_context l_ana = dba_msg_find_context(msg, 257, 0,  0, 0,  0, 0, 0);
+	dba_var var;
 	dba_db_pseudoana da;
 	dba_db_context dc;
 	dba_db_data dd;
@@ -81,26 +82,26 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags)
 	/* Fill up the pseudoana informations needed to fetch an existing ID */
 
 	/* Latitude */
-	if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_LATITUDE)) != NULL)
+	if ((var = dba_msg_context_find_by_id(l_ana, DBA_MSG_LATITUDE)) != NULL)
 	{
 		int lat;
-		DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &lat));
+		DBA_RUN_OR_GOTO(fail, dba_var_enqi(var, &lat));
 		da->lat = lat;
 	}
 
 	/* Longitude */
-	if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_LONGITUDE)) != NULL)
+	if ((var = dba_msg_context_find_by_id(l_ana, DBA_MSG_LONGITUDE)) != NULL)
 	{
 		int lon;
-		DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &lon));
+		DBA_RUN_OR_GOTO(fail, dba_var_enqi(var, &lon));
 		da->lon = lon;
 	}
 
 	/* Station identifier */
 	if (mobile)
 	{
-		if ((d = dba_msg_level_find_by_id(l_ana, DBA_MSG_IDENT)) != NULL)
-			dba_db_pseudoana_set_ident(da, dba_var_value(d->var));
+		if ((var = dba_msg_context_find_by_id(l_ana, DBA_MSG_IDENT)) != NULL)
+			dba_db_pseudoana_set_ident(da, dba_var_value(var));
 		else {
 			err = dba_error_notfound("looking for ident in message to insert");
 			goto fail;
@@ -148,12 +149,12 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags)
 		{
 			int inserted;
 			dba_var_attr_iterator iter;
-			dba_varcode code = dba_var_code(l_ana->data[i]->var);
+			dba_varcode code = dba_var_code(l_ana->data[i]);
 			/* Do not import datetime in the pseudoana layer */
 			if (code >= DBA_VAR(0, 4, 1) && code <= DBA_VAR(0, 4, 6))
 				continue;
 
-			dba_db_data_set(dd, l_ana->data[i]->var);
+			dba_db_data_set(dd, l_ana->data[i]);
 
 			if ((flags & DBA_IMPORT_OVERWRITE) == 0)
 			{
@@ -165,11 +166,11 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags)
 			}
 
 			dq->id_context = dd->id_context;
-			dq->id_var = dba_var_code(l_ana->data[i]->var);
+			dq->id_var = dba_var_code(l_ana->data[i]);
 
 			/* Insert the attributes */
 			if (inserted && (flags & DBA_IMPORT_ATTRS))
-				for (iter = dba_var_attr_iterate(l_ana->data[i]->var); iter != NULL; 
+				for (iter = dba_var_attr_iterate(l_ana->data[i]); iter != NULL; 
 						iter = dba_var_attr_iterator_next(iter))
 				{
 					dba_var attr = dba_var_attr_iterator_attr(iter);
@@ -187,15 +188,15 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags)
 	/* Date and time */
 	{
 		const char* year = 
-			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_YEAR)) == NULL ? NULL : dba_var_value(d->var);
+			(var = dba_msg_context_find_by_id(l_ana, DBA_MSG_YEAR)) == NULL ? NULL : dba_var_value(var);
 		const char* month = 
-			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_MONTH)) == NULL ? NULL : dba_var_value(d->var);
+			(var = dba_msg_context_find_by_id(l_ana, DBA_MSG_MONTH)) == NULL ? NULL : dba_var_value(var);
 		const char* day = 
-			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_DAY)) == NULL ? NULL : dba_var_value(d->var);
+			(var = dba_msg_context_find_by_id(l_ana, DBA_MSG_DAY)) == NULL ? NULL : dba_var_value(var);
 		const char* hour = 
-			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_HOUR)) == NULL ? NULL : dba_var_value(d->var);
+			(var = dba_msg_context_find_by_id(l_ana, DBA_MSG_HOUR)) == NULL ? NULL : dba_var_value(var);
 		const char* min = 
-			(d = dba_msg_level_find_by_id(l_ana, DBA_MSG_MINUTE)) == NULL ? NULL : dba_var_value(d->var);
+			(var = dba_msg_context_find_by_id(l_ana, DBA_MSG_MINUTE)) == NULL ? NULL : dba_var_value(var);
 
 		if (year == NULL || month == NULL || day == NULL || hour == NULL || min == NULL)
 		{
@@ -214,52 +215,46 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags)
 	/* Insert the rest of the data */
 	for (i = 0; i < msg->data_count; i++)
 	{
-		dba_msg_level lev = msg->data[i];
-		int old_pind = -1;
-		int old_p1 = -1;
-		int old_p2 = -1;
+		dba_msg_context ctx = msg->data[i];
+		int is_ana_level = (ctx->ltype1 == 257 && ctx->l1 == 0
+				 && ctx->ltype2 == 0 && ctx->l2 == 0
+				 && ctx->pind == 0 && ctx->p1 == 0 && ctx->p2 == 0);
 
-		/* Fill in the context */
-		dc->ltype1 = lev->ltype1;
-		dc->l1 = lev->l1;
-		dc->ltype2 = lev->ltype2;
-		dc->l2 = lev->l2;
+		/* Skip the anagraphical level */
+		if (is_ana_level && !(flags & DBA_IMPORT_DATETIME_ATTRS))
+			continue;
 
-		for (j = 0; j < lev->data_count; j++)
+		/* Insert the new context */
+		dc->ltype1 = ctx->ltype1;
+		dc->l1 = ctx->l1;
+		dc->ltype2 = ctx->ltype2;
+		dc->l2 = ctx->l2;
+		dc->pind = ctx->pind;
+		dc->p1 = ctx->p1;
+		dc->p2 = ctx->p2;
+		DBA_RUN_OR_GOTO(fail, dba_db_context_get_id(dc, &val));
+		if (val == -1)
+			DBA_RUN_OR_GOTO(fail, dba_db_context_insert(dc, &val));
+
+		/* Get the database ID of the context */
+		dd->id_context = val;
+
+		for (j = 0; j < ctx->data_count; j++)
 		{
-			dba_msg_datum dat = lev->data[j];
+			dba_var var = ctx->data[j];
 			dba_var_attr_iterator iter;
 
-			/* Skip the anagraphical level */
-			if (lev->ltype1 == 257 && lev->l1 == 0 && lev->ltype2 == 0 && lev->l2 == 0
-				&& dat->pind == 0 && dat->p1 == 0 && dat->p2 == 0)
+			// Only import dates from ana level, and only if requested
+			if (is_ana_level)
 			{
-				dba_varcode code = dba_var_code(dat->var);
+				dba_varcode code = dba_var_code(var);
 				if (!(flags & DBA_IMPORT_DATETIME_ATTRS)
 					|| DBA_VAR_X(code) != 4 || DBA_VAR_Y(code) < 1 || DBA_VAR_Y(code) > 6)
 					continue;
 			}
 
-
-			if (dat->pind != old_pind || dat->p1 != old_p1 || dat->p2 != old_p2)
-			{
-				/* Insert the new context when the datum coordinates change */
-				dc->pind = dat->pind;
-				dc->p1 = dat->p1;
-				dc->p2 = dat->p2;
-
-				DBA_RUN_OR_GOTO(fail, dba_db_context_get_id(dc, &val));
-				if (val == -1)
-					DBA_RUN_OR_GOTO(fail, dba_db_context_insert(dc, &val));
-				dd->id_context = val;
-
-				old_pind = dat->pind;
-				old_p1 = dat->p1;
-				old_p2 = dat->p2;
-			}
-
 			/* Insert the variable */
-			dba_db_data_set(dd, dat->var);
+			dba_db_data_set(dd, var);
 			if (flags & DBA_IMPORT_OVERWRITE)
 				DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_overwrite(dd));
 			else
@@ -269,9 +264,9 @@ dba_err dba_import_msg(dba_db db, dba_msg msg, const char* repmemo, int flags)
 			if (flags & DBA_IMPORT_ATTRS)
 			{
 				dq->id_context = dd->id_context;
-				dq->id_var = dba_var_code(dat->var);
+				dq->id_var = dba_var_code(var);
 
-				for (iter = dba_var_attr_iterate(dat->var); iter != NULL; 
+				for (iter = dba_var_attr_iterate(var); iter != NULL; 
 						iter = dba_var_attr_iterator_next(iter))
 				{
 					dba_var attr = dba_var_attr_iterator_attr(iter);

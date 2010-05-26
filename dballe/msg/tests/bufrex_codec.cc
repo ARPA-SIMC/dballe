@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -442,13 +442,12 @@ void to::test<5>()
 {
 	dba_msgs msgs = read_test_msg("bufr/ed4.bufr", BUFR);
 	dba_msg src = msgs->msgs[0];
-	dba_msg_datum d;
 	dba_var var;
 	double val;
 
-	gen_ensure((d = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
-	gen_ensure(dba_var_value(d->var) != NULL);
-	CHECKED(dba_var_enqd(d->var, &val));
+	gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
+	gen_ensure(dba_var_value(var) != NULL);
+	CHECKED(dba_var_enqd(var, &val));
 	gen_ensure_equals(val, 2700000e-14);
 
 	dba_msgs_delete(msgs);

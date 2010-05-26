@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
  */
 
 #include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 #include "dballe/bufrex/msg.h"
 
 dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
@@ -141,28 +142,34 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	/* Extract surface data from the surface level */
 	if (surface_press != -1)
 	{
-		dba_msg_datum d;
-		dba_var v;
+		dba_msg_context surface_context;
 		
 		/* Pressure is taken from a saved variable referencing to the original
 		 * pressure data in the message, to preserve data attributes
 		 */
 		if (surface_press_var != NULL && dba_var_value(surface_press_var) != NULL
-		    && (v = dba_msg_get_press_var(msg)) == NULL)
+		    && dba_msg_get_press_var(msg) == NULL)
 			DBA_RUN_OR_RETURN(dba_msg_set_press_var(msg, surface_press_var));
 
-		if ((d = dba_msg_find(msg, DBA_VAR(0, 12, 1), 100, surface_press, 0, 0, 254, 0, 0)) != NULL
-		    && (v = dba_msg_get_temp_2m_var(msg)) == NULL)
-			DBA_RUN_OR_RETURN(dba_msg_set_temp_2m_var(msg, d->var));
-		if ((d = dba_msg_find(msg, DBA_VAR(0, 12, 3), 100, surface_press, 0, 0, 254, 0, 0)) != NULL
-		    && (v = dba_msg_get_dewpoint_2m_var(msg)) == NULL)
-			DBA_RUN_OR_RETURN(dba_msg_set_dewpoint_2m_var(msg, d->var));
-		if ((d = dba_msg_find(msg, DBA_VAR(0, 11, 1), 100, surface_press, 0, 0, 254, 0, 0)) != NULL
-		    && (v = dba_msg_get_wind_dir_var(msg)) == NULL)
-			DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, d->var));
-		if ((d = dba_msg_find(msg, DBA_VAR(0, 11, 2), 100, surface_press, 0, 0, 254, 0, 0)) != NULL
-		    && (v = dba_msg_get_wind_speed_var(msg)) == NULL)
-			DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, d->var));
+		surface_context = dba_msg_find_context(msg, 100, surface_press, 0, 0, 254, 0, 0);
+		if (surface_context != NULL)
+		{
+			dba_var var = dba_msg_context_find(surface_context, DBA_VAR(0, 12, 1));
+			if (var != NULL && dba_msg_get_temp_2m_var(msg) == NULL)
+				DBA_RUN_OR_RETURN(dba_msg_set_temp_2m_var(msg, var));
+
+			var = dba_msg_context_find(surface_context, DBA_VAR(0, 12, 3));
+			if (var != NULL && dba_msg_get_dewpoint_2m_var(msg) == NULL)
+				DBA_RUN_OR_RETURN(dba_msg_set_dewpoint_2m_var(msg, var));
+
+			var = dba_msg_context_find(surface_context, DBA_VAR(0, 11, 1));
+			if (var != NULL && dba_msg_get_wind_dir_var(msg) == NULL)
+				DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, var));
+
+			var = dba_msg_context_find(surface_context, DBA_VAR(0, 11, 2));
+			if (var != NULL && dba_msg_get_wind_speed_var(msg) == NULL)
+				DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, var));
+		}
 	}
 
 	return dba_error_ok();

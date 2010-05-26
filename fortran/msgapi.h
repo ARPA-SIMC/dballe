@@ -4,7 +4,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,8 +49,8 @@ protected:
 	/// Pointer to the last variable written, to set attributes
 	dba_var wvar;
 	int curmsgidx;
-	int iter_l;
-	int iter_d;
+	int iter_ctx;
+	int iter_var;
 	/// Category set for the message that we are writing
 	int cached_cat;
 	/// Subcategory set for the message that we are writing

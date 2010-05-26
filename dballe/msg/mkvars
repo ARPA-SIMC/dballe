@@ -1,4 +1,23 @@
 #!/usr/bin/python
+#
+# DB-ALLe - Archive for punctual meteorological data
+#
+# Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+#
+# Author: Enrico Zini <enrico@enricozini.com>
 
 import sys, re, os
 
@@ -126,7 +145,7 @@ for v in vars:
 
     print >>fh, "/** Get the \"%s\" physical value stored in the message */" % v.desc;
     print >>fh, "inline static dba_var dba_msg_get_%s_var(dba_msg msg) " % v.name.lower();
-    print >>fh, "{ dba_msg_datum d = dba_msg_find_by_id(msg, DBA_MSG_%s); return d == NULL ? NULL : d->var; }" % \
+    print >>fh, "{ return dba_msg_find_by_id(msg, DBA_MSG_%s); }" % \
         v.name;
 
 print >>fh, """

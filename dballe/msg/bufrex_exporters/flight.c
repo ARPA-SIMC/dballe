@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
  */
 
 #include "exporters.h"
+#include "dballe/msg/context.h"
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 static dba_err exporter_acars(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
@@ -168,25 +169,27 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 	
 	for (i = 0; i < src->data_count; ++i)
 	{
-		dba_msg_level l = src->data[i];
+		dba_msg_context ctx = src->data[i];
 		int use = 0;
-		switch (l->ltype1)
+		if (ctx->pind != 254 || ctx->p1 != 0 || ctx->p2 != 0) continue;
+
+		switch (ctx->ltype1)
 		{
 			case 100: {
-				use = dba_msg_level_find(l, DBA_VAR(0, 10, 4), 254, 0, 0) != NULL;
+				use = dba_msg_context_find(ctx, DBA_VAR(0, 10, 4)) != NULL;
 				break;
 			}
 			case 102: {
-				use = dba_msg_level_find(l, DBA_VAR(0,  7, 1), 254, 0, 0) != NULL;
+				use = dba_msg_context_find(ctx, DBA_VAR(0,  7, 1)) != NULL;
 				break;
 			}
 		}
 		if (use)
 		{
-			if (ltype != -1 && ltype != l->ltype1)
-				return dba_error_consistency("contradicting height indication found (both %d and %d)", ltype, l->ltype1);
-			ltype = l->ltype1;
-			l1 = l->l1;
+			if (ltype != -1 && ltype != ctx->ltype1)
+				return dba_error_consistency("contradicting height indication found (both %d and %d)", ltype, ctx->ltype1);
+			ltype = ctx->ltype1;
+			l1 = ctx->l1;
 		}
 	}
 
@@ -218,15 +221,15 @@ static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, b
 	/* Fill up the message */
 	for (i = 0; i < tpl_count; i++)
 	{
-		dba_msg_datum d;
+		dba_var var;
 
 		if (tpl[i].var != -1)
-			d = dba_msg_find_by_id(src, tpl[i].var);
+			var = dba_msg_find_by_id(src, tpl[i].var);
 		else
-			d = dba_msg_find(src, tpl[i].msgcode, ltype, l1, 0, 0, 254, 0, 0);
+			var = dba_msg_find(src, tpl[i].msgcode, ltype, l1, 0, 0, 254, 0, 0);
 
-		if (d != NULL)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, d->var));
+		if (var != NULL)
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
 		else
 			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 	}

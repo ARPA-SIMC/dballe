@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -113,9 +113,9 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 1));
 				break;
 			default: {
-				dba_msg_datum d = dba_msg_find_by_id(src, tpl[i].var);
-				if (d != NULL)
-					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, d->var));
+				dba_var var = dba_msg_find_by_id(src, tpl[i].var);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
 				else
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;

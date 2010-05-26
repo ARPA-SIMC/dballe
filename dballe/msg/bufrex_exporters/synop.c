@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -243,26 +243,26 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 4));
 				break;
 			case 47: {
-				dba_msg_datum d;
+				dba_var var;
 				switch (prectype)
 				{
-					case DBA_VAR(0, 13, 23): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC24); break;
-					case DBA_VAR(0, 13, 22): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC12); break;
-					case DBA_VAR(0, 13, 21): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC6); break;
-					case DBA_VAR(0, 13, 20): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC3); break;
-					case DBA_VAR(0, 13, 19): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC1); break;
-					default: d = NULL;
+					case DBA_VAR(0, 13, 23): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC24); break;
+					case DBA_VAR(0, 13, 22): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC12); break;
+					case DBA_VAR(0, 13, 21): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC6); break;
+					case DBA_VAR(0, 13, 20): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC3); break;
+					case DBA_VAR(0, 13, 19): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC1); break;
+					default: var = NULL;
 				}
-				if (d != NULL)
-					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, prectype, d->var));
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, prectype, var));
 				else
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, prectype));
 				break;
 			}
 			default: {
-				dba_msg_datum d = dba_msg_find_by_id(src, tpl[i].var);
-				if (d != NULL)
-					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, d->var));
+				dba_var var = dba_msg_find_by_id(src, tpl[i].var);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
 				else
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;
@@ -306,26 +306,26 @@ static dba_err exporterhigh(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int
 				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tplhigh[i].code, 1));
 				break;
 			case 32: {
-				dba_msg_datum d;
+				dba_var var;
 				switch (prectype)
 				{
-					case DBA_VAR(0, 13, 23): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC24); break;
-					case DBA_VAR(0, 13, 22): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC12); break;
-					case DBA_VAR(0, 13, 21): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC6); break;
-					case DBA_VAR(0, 13, 20): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC3); break;
-					case DBA_VAR(0, 13, 19): d = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC1); break;
-					default: d = NULL;
+					case DBA_VAR(0, 13, 23): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC24); break;
+					case DBA_VAR(0, 13, 22): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC12); break;
+					case DBA_VAR(0, 13, 21): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC6); break;
+					case DBA_VAR(0, 13, 20): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC3); break;
+					case DBA_VAR(0, 13, 19): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC1); break;
+					default: var = NULL;
 				}
-				if (d != NULL)
-					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, prectype, d->var));
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, prectype, var));
 				else
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, prectype));
 				break;
 			}
 			default: {
-				dba_msg_datum d = dba_msg_find_by_id(src, tplhigh[i].var);
-				if (d != NULL)
-					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tplhigh[i].code, d->var));
+				dba_var var = dba_msg_find_by_id(src, tplhigh[i].var);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tplhigh[i].code, var));
 				else
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tplhigh[i].code));
 				break;

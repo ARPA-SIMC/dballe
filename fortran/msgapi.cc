@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include <dballe/core/verbose.h>
 #include <dballe/bufrex/msg.h>
 #include <dballe/msg/file.h>
+#include <dballe/msg/context.h>
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
@@ -36,7 +37,7 @@ namespace dballef {
 
 
 MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
-	: file(0), state(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_l(-1), iter_d(-1),
+	: file(0), state(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
 		cached_cat(0), cached_subcat(0), cached_lcat(0)
 {
 	if (strchr(mode, 'r') != NULL)
@@ -141,52 +142,52 @@ void MsgAPI::elencamele()
 	dba_msg msg = curmsg();
 	if (!msg) return;
 
-	dba_msg_level level = dba_msg_find_level(msg, 257, 0, 0, 0);
-	if (!level) return;
+	dba_msg_context ctx = dba_msg_find_context(msg, 257, 0, 0, 0, 0, 0, 0);
+	if (!ctx) return;
 
 	checked(dba_record_set_ana_context(output));
 	checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 0));
 	checked(dba_record_key_setc(output, DBA_KEY_REP_MEMO, dba_msg_repmemo_from_type(msg->type)));
 
-	for (int l = 0; l < level->data_count; ++l)
+	for (int l = 0; l < ctx->data_count; ++l)
 	{
-		dba_msg_datum d = level->data[l];
-		if (!d->var) continue;
-		switch (dba_var_code(d->var))
+		dba_var var = ctx->data[l];
+		if (!var) continue;
+		switch (dba_var_code(var))
 		{
-			case DBA_VAR(0, 5,   1): checked(dba_record_key_set(output, DBA_KEY_LAT, d->var)); break;
-			case DBA_VAR(0, 6,   1): checked(dba_record_key_set(output, DBA_KEY_LON, d->var)); break;
+			case DBA_VAR(0, 5,   1): checked(dba_record_key_set(output, DBA_KEY_LAT, var)); break;
+			case DBA_VAR(0, 6,   1): checked(dba_record_key_set(output, DBA_KEY_LON, var)); break;
 			case DBA_VAR(0, 1,  11):
-				checked(dba_record_key_set(output, DBA_KEY_IDENT, d->var));
+				checked(dba_record_key_set(output, DBA_KEY_IDENT, var));
 				checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 1));
 				break;
-			case DBA_VAR(0, 1, 192): checked(dba_record_key_set(output, DBA_KEY_ANA_ID, d->var)); break;
-			case DBA_VAR(0, 1, 194): checked(dba_record_key_set(output, DBA_KEY_REP_MEMO, d->var)); break;
+			case DBA_VAR(0, 1, 192): checked(dba_record_key_set(output, DBA_KEY_ANA_ID, var)); break;
+			case DBA_VAR(0, 1, 194): checked(dba_record_key_set(output, DBA_KEY_REP_MEMO, var)); break;
 			default:
-				checked(dba_record_var_set_direct(output, d->var));
+				checked(dba_record_var_set_direct(output, var));
 		}
 	}
 }
 
 bool MsgAPI::incrementMsgIters()
 {
-	if (iter_l == -1)
+	if (iter_ctx == -1)
 	{
-		iter_l = 0;
-		iter_d = -1;
+		iter_ctx = 0;
+		iter_var = -1;
 	}
 
 	dba_msg msg = curmsg();
-	if (iter_l >= msg->data_count)
+	if (iter_ctx >= msg->data_count)
 		return false;
 
-	dba_msg_level level = msg->data[iter_l];
-	if (iter_d < level->data_count - 1)
+	dba_msg_context ctx = msg->data[iter_ctx];
+	if (iter_var < ctx->data_count - 1)
 	{
-		++iter_d;
+		++iter_var;
 	} else {
-		++iter_l;
-		iter_d = 0;
+		++iter_ctx;
+		iter_var = 0;
 	}
 	// No not skip the pseudoana layer
 	// if (level->ltype1 == 257)
@@ -194,7 +195,7 @@ bool MsgAPI::incrementMsgIters()
 	// 	++iter_l;
 	// 	iter_d = 0;
 	// }
-	if (iter_l >= msg->data_count)
+	if (iter_ctx >= msg->data_count)
 		return false;
 
 	return true;
@@ -208,7 +209,7 @@ int MsgAPI::voglioquesto()
 		return 0;
 	state |= STATE_VOGLIOQUESTO;
 		
-	iter_l = iter_d = -1;
+	iter_ctx = iter_var = -1;
 
 	dba_msg msg = curmsg();
 	if (!msg) return 0;
@@ -216,9 +217,9 @@ int MsgAPI::voglioquesto()
 	int count = 0;
 	for (int l = 0; l < msg->data_count; ++l)
 	{
-		dba_msg_level level = msg->data[l];
+		dba_msg_context ctx = msg->data[l];
 		//if (level->ltype1 == 257) continue;
-		count += level->data_count;
+		count += ctx->data_count;
 	}
 	return count;
 }
@@ -237,56 +238,56 @@ const char* MsgAPI::dammelo()
 		return 0;
 
 	// Set metainfo from msg ana layer
-	if (dba_msg_level level = dba_msg_find_level(msg, 257, 0, 0, 0))
+	if (dba_msg_context ctx = dba_msg_find_context(msg, 257, 0, 0, 0, 0, 0, 0))
 	{
 		checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 0));
 		checked(dba_record_key_setc(output, DBA_KEY_REP_MEMO, dba_msg_repmemo_from_type(msg->type)));
 
-		for (int l = 0; l < level->data_count; ++l)
+		for (int l = 0; l < ctx->data_count; ++l)
 		{
-			dba_msg_datum d = level->data[l];
-			if (!d->var) continue;
-			switch (dba_var_code(d->var))
+			dba_var var = ctx->data[l];
+			if (!var) continue;
+			switch (dba_var_code(var))
 			{
-				case DBA_VAR(0, 5,   1): checked(dba_record_key_set(output, DBA_KEY_LAT, d->var)); break;
-				case DBA_VAR(0, 6,   1): checked(dba_record_key_set(output, DBA_KEY_LON, d->var)); break;
-				case DBA_VAR(0, 4,   1): checked(dba_record_key_set(output, DBA_KEY_YEAR, d->var)); break;
-				case DBA_VAR(0, 4,   2): checked(dba_record_key_set(output, DBA_KEY_MONTH, d->var)); break;
-				case DBA_VAR(0, 4,   3): checked(dba_record_key_set(output, DBA_KEY_DAY, d->var)); break;
-				case DBA_VAR(0, 4,   4): checked(dba_record_key_set(output, DBA_KEY_HOUR, d->var)); break;
-				case DBA_VAR(0, 4,   5): checked(dba_record_key_set(output, DBA_KEY_MIN, d->var)); break;
-				case DBA_VAR(0, 4,   6): checked(dba_record_key_set(output, DBA_KEY_SEC, d->var)); break;
+				case DBA_VAR(0, 5,   1): checked(dba_record_key_set(output, DBA_KEY_LAT, var)); break;
+				case DBA_VAR(0, 6,   1): checked(dba_record_key_set(output, DBA_KEY_LON, var)); break;
+				case DBA_VAR(0, 4,   1): checked(dba_record_key_set(output, DBA_KEY_YEAR, var)); break;
+				case DBA_VAR(0, 4,   2): checked(dba_record_key_set(output, DBA_KEY_MONTH, var)); break;
+				case DBA_VAR(0, 4,   3): checked(dba_record_key_set(output, DBA_KEY_DAY, var)); break;
+				case DBA_VAR(0, 4,   4): checked(dba_record_key_set(output, DBA_KEY_HOUR, var)); break;
+				case DBA_VAR(0, 4,   5): checked(dba_record_key_set(output, DBA_KEY_MIN, var)); break;
+				case DBA_VAR(0, 4,   6): checked(dba_record_key_set(output, DBA_KEY_SEC, var)); break;
 				case DBA_VAR(0, 1,  11):
-					checked(dba_record_key_set(output, DBA_KEY_IDENT, d->var));
+					checked(dba_record_key_set(output, DBA_KEY_IDENT, var));
 					checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 1));
 					break;
-				case DBA_VAR(0, 1, 192): checked(dba_record_key_set(output, DBA_KEY_ANA_ID, d->var)); break;
-				case DBA_VAR(0, 1, 194): checked(dba_record_key_set(output, DBA_KEY_REP_MEMO, d->var)); break;
+				case DBA_VAR(0, 1, 192): checked(dba_record_key_set(output, DBA_KEY_ANA_ID, var)); break;
+				case DBA_VAR(0, 1, 194): checked(dba_record_key_set(output, DBA_KEY_REP_MEMO, var)); break;
 				default:
-					checked(dba_record_var_set_direct(output, d->var));
+					checked(dba_record_var_set_direct(output, var));
 			}
 		}
 	}
 
-	dba_msg_level level = msg->data[iter_l];
-	checked(dba_record_key_seti(output, DBA_KEY_LEVELTYPE1, level->ltype1));
-	checked(dba_record_key_seti(output, DBA_KEY_L1, level->l1));
-	checked(dba_record_key_seti(output, DBA_KEY_LEVELTYPE2, level->ltype2));
-	checked(dba_record_key_seti(output, DBA_KEY_L2, level->l2));
+	dba_msg_context ctx = msg->data[iter_ctx];
+	checked(dba_record_key_seti(output, DBA_KEY_LEVELTYPE1, ctx->ltype1));
+	checked(dba_record_key_seti(output, DBA_KEY_L1, ctx->l1));
+	checked(dba_record_key_seti(output, DBA_KEY_LEVELTYPE2, ctx->ltype2));
+	checked(dba_record_key_seti(output, DBA_KEY_L2, ctx->l2));
+	checked(dba_record_key_seti(output, DBA_KEY_PINDICATOR, ctx->pind));
+	checked(dba_record_key_seti(output, DBA_KEY_P1, ctx->p1));
+	checked(dba_record_key_seti(output, DBA_KEY_P2, ctx->p2));
 
-	dba_msg_datum datum = level->data[iter_d];
-	checked(dba_record_key_seti(output, DBA_KEY_PINDICATOR, datum->pind));
-	checked(dba_record_key_seti(output, DBA_KEY_P1, datum->p1));
-	checked(dba_record_key_seti(output, DBA_KEY_P2, datum->p2));
+	dba_var var = ctx->data[iter_var];
 
 	char vname[10];
-	dba_varcode code = dba_var_code(datum->var);
+	dba_varcode code = dba_var_code(var);
 	snprintf(vname, 10, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
 	checked(dba_record_key_setc(output, DBA_KEY_VAR, vname));
 	const char* res;
 	checked(dba_record_key_enqc(output, DBA_KEY_VAR, &res));
 
-	checked(dba_record_var_set_direct(output, datum->var));
+	checked(dba_record_var_set_direct(output, var));
 
 	return res;
 }
@@ -429,14 +430,14 @@ void MsgAPI::dimenticami()
 int MsgAPI::voglioancora()
 {
 	dba_msg msg = curmsg();
-	if (msg == 0 || iter_l == -1 || iter_d == -1)
+	if (msg == 0 || iter_ctx == -1 || iter_var == -1)
 		checked(dba_error_consistency("voglioancora called before dammelo"));
 
-	if (iter_l >= msg->data_count) return 0;
-	dba_msg_level level = msg->data[iter_l];
+	if (iter_ctx >= msg->data_count) return 0;
+	dba_msg_context ctx = msg->data[iter_ctx];
 
-	if (iter_d >= level->data_count) return 0;
-	dba_var var = level->data[iter_d]->var;
+	if (iter_var >= ctx->data_count) return 0;
+	dba_var var = ctx->data[iter_var];
 	if (!var) return 0;
 
 	dba_record_clear(qcoutput);

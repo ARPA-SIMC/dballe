@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,13 +32,13 @@
 extern "C" {
 #endif
 
-#include <dballe/msg/datum.h>
+#include <dballe/msg/msg.h>
 #include <stdio.h>
 
 /**
  * Store an array of physical data all on the same level
  */
-struct _dba_msg_level
+struct _dba_msg_context
 {
 	/** Type of the first level.  See @ref level_table. */
 	int ltype1;
@@ -48,6 +48,12 @@ struct _dba_msg_level
 	int ltype2;
 	/** L2 value of the level.  See @ref level_table. */
 	int l2;
+	/** Time range type indicator.  See @ref trange_table. */
+	int pind;
+	/** Time range P1 indicator.  See @ref trange_table. */
+	int p1;
+	/** Time range P2 indicator.  See @ref trange_table. */
+	int p2;
 
 	/** Number of items in this level */
 	int data_count;
@@ -61,20 +67,18 @@ struct _dba_msg_level
 	/**
 	 * The array with the data, reallocated as needed
 	 */
-	dba_msg_datum* data;
+	dba_var* data;
 };
-/** @copydoc _dba_msg_level */
-typedef struct _dba_msg_level* dba_msg_level;
 
 /**
- * Create a new dba_msg_level
+ * Create a new dba_msg_context
  *
  * @retval l
  *   The newly created level.
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_msg_level_create(int ltype1, int l1, int ltype2, int l2, dba_msg_level* l);
+dba_err dba_msg_context_create(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2, dba_msg_context* l);
 
 /**
  * Copy an existing level
@@ -86,45 +90,51 @@ dba_err dba_msg_level_create(int ltype1, int l1, int ltype2, int l2, dba_msg_lev
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_msg_level_copy(dba_msg_level src, dba_msg_level* dst);
+dba_err dba_msg_context_copy(dba_msg_context src, dba_msg_context* dst);
 
 /**
- * Delete a dba_msg_level
+ * Delete a dba_msg_context
  *
  * @param l
  *   The level to delete.
  */
-void dba_msg_level_delete(dba_msg_level l);
+void dba_msg_context_delete(dba_msg_context l);
 
 
 /**
- * Compare two dba_msg_level strutures, for use in sorting.
+ * Compare two dba_msg_context strutures, for use in sorting.
  *
  * @param l1
- *   First dba_msg_level to compare
+ *   First dba_msg_context to compare
  * @param l2
- *   Second dba_msg_level to compare
+ *   Second dba_msg_context to compare
  * @return
  *   -1 if l1 < l2, 0 if l1 == l2, 1 if l1 > l2
  */
-int dba_msg_level_compare(const dba_msg_level l1, const dba_msg_level l2);
+int dba_msg_context_compare(const dba_msg_context l1, const dba_msg_context l2);
 
 /**
- * Compare a dba_msg_level struture with some level information, for use in
+ * Compare a dba_msg_context struture with some level information, for use in
  * sorting.
  *
  * @param l
- *   First dba_msg_level to compare
+ *   First dba_msg_context to compare
  * @param ltype
  *   Type of the level.  See @ref level_table.
  * @param l1
  *   L1 value of the level.  See @ref level_table.
  * @param l2
  *   L2 value of the level.  See @ref level_table.
+ * @param pind
+ *   Time range type indicator.  See @ref trange_table.
+ * @param p1
+ *   Time range P1 indicator.  See @ref trange_table.
+ * @param p2
+ *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   -1 if l < ltype,l1,l2; 0 if l == ltype,l1,l2; 1 if l > ltype,l1,l2
  */
-int dba_msg_level_compare2(const dba_msg_level l, int ltype1, int l1, int ltype2, int l2);
+int dba_msg_context_compare2(const dba_msg_context l, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 
 /**
@@ -134,24 +144,18 @@ int dba_msg_level_compare2(const dba_msg_level l, int ltype1, int l1, int ltype2
  *   The level to add the variable to.
  * @param var
  *   The variable to add.
- * @param pind
- *   Time range type indicator.  See @ref trange_table.
- * @param p1
- *   Time range P1 indicator.  See @ref trange_table.
- * @param p2
- *   Time range P2 indicator.  See @ref trange_table.
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_msg_level_set_nocopy(dba_msg_level l, dba_var var, int pind, int p1, int p2);
+dba_err dba_msg_context_set_nocopy(dba_msg_context l, dba_var var);
 
 #if 0
-dba_err dba_msg_level_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2);
-dba_err dba_msg_level_set_by_id(dba_msg msg, dba_var var, int id);
-dba_err dba_msg_level_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
-dba_err dba_msg_level_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
-dba_err dba_msg_level_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
-dba_err dba_msg_level_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_err dba_msg_context_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_err dba_msg_context_set_by_id(dba_msg msg, dba_var var, int id);
+dba_err dba_msg_context_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
+dba_err dba_msg_context_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_err dba_msg_context_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
+dba_err dba_msg_context_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
 #endif
 
 /**
@@ -161,16 +165,10 @@ dba_err dba_msg_level_setc(dba_msg msg, dba_varcode code, const char* val, int c
  *   The level to query
  * @param code
  *   The ::dba_varcode of the variable to query.  See @ref vartable.h
- * @param pind
- *   Time range type indicator.  See @ref trange_table.
- * @param p1
- *   Time range P1 indicator.  See @ref trange_table.
- * @param p2
- *   Time range P2 indicator.  See @ref trange_table.
  * @return
- *   The value found, or NULL if it was not found.
+ *   The variable found, or NULL if it was not found.
  */
-dba_msg_datum dba_msg_level_find(dba_msg_level l, dba_varcode code, int pind, int p1, int p2);
+dba_var dba_msg_context_find(dba_msg_context l, dba_varcode code);
 
 /** 
  * Find a datum given its shortcut ID
@@ -180,10 +178,16 @@ dba_msg_datum dba_msg_level_find(dba_msg_level l, dba_varcode code, int pind, in
  * @param id
  *   Shortcut ID of the value to set (see @ref vars.h)
  * @return
- *   The value found, or NULL if it was not found.
+ *   The variable found, or NULL if it was not found.
  */
-dba_msg_datum dba_msg_level_find_by_id(dba_msg_level l, int id);
+dba_var dba_msg_context_find_by_id(dba_msg_context l, int id);
 
+/**
+ * If this context is the right context for a vertical sounding significance
+ * and contains a vertical sounding significance variable, return it. Else,
+ * return NULL.
+ */
+dba_var dba_msg_context_find_vsig(dba_msg_context l);
 
 /**
  * Dump all the contents of the level to the given stream
@@ -193,10 +197,10 @@ dba_msg_datum dba_msg_level_find_by_id(dba_msg_level l, int id);
  * @param out
  *   The stream to dump the contents of the level to.
  */
-void dba_msg_level_print(dba_msg_level l, FILE* out);
+void dba_msg_context_print(dba_msg_context l, FILE* out);
 
 /**
- * Print the differences between two dba_msg_level to a stream
+ * Print the differences between two dba_msg_context to a stream
  *
  * @param l1
  *   First level to compare
@@ -208,7 +212,7 @@ void dba_msg_level_print(dba_msg_level l, FILE* out);
  * @param out
  *   The stream to dump a description of the differences to.
  */
-void dba_msg_level_diff(dba_msg_level l1, dba_msg_level l2, int* diffs, FILE* out);
+void dba_msg_context_diff(dba_msg_context l1, dba_msg_context l2, int* diffs, FILE* out);
 
 #ifdef  __cplusplus
 }

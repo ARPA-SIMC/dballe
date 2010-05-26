@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
  */
 
 #include "msg.h"
+#include "context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -49,13 +50,13 @@ static dba_err dba_msg_enlarge(dba_msg msg)
 
 	if (msg->data == NULL)
 	{
-		msg->data = (dba_msg_level*)calloc(new_size, sizeof(dba_msg_level));
+		msg->data = (dba_msg_context*)calloc(new_size, sizeof(dba_msg_context));
 		if (msg->data == NULL)
 			return dba_error_alloc("enlarging the size of a dba_msg");
 	} else {
 		int i;
-		dba_msg_level* new_data;
-		new_data = (dba_msg_level*)realloc(msg->data, new_size * sizeof(dba_msg_level));
+		dba_msg_context* new_data;
+		new_data = (dba_msg_context*)realloc(msg->data, new_size * sizeof(dba_msg_context));
 		if (new_data == NULL)
 			return dba_error_alloc("enlarging the size of a dba_msg");
 		msg->data = new_data;
@@ -68,7 +69,7 @@ static dba_err dba_msg_enlarge(dba_msg msg)
 	return dba_error_ok();
 }
 
-static dba_err dba_msg_add_level_nocopy(dba_msg msg, dba_msg_level lev)
+static dba_err dba_msg_add_context_nocopy(dba_msg msg, dba_msg_context ctx)
 {
 	int pos;
 
@@ -80,49 +81,49 @@ static dba_err dba_msg_add_level_nocopy(dba_msg msg, dba_msg_level lev)
 	 * RB-Tree to be worth */
 
 	for (pos = msg->data_count; pos > 0; pos--)
-		if (dba_msg_level_compare(msg->data[pos - 1], lev) > 0)
+		if (dba_msg_context_compare(msg->data[pos - 1], ctx) > 0)
 			msg->data[pos] = msg->data[pos - 1];
 		else
 			break;
-	msg->data[pos] = lev;
+	msg->data[pos] = ctx;
 
 	msg->data_count++;
 
 	return dba_error_ok();
 }
 
-static dba_err dba_msg_add_level(dba_msg msg, dba_msg_level lev)
+static dba_err dba_msg_add_context(dba_msg msg, dba_msg_context ctx)
 {
 	dba_err err;
-	dba_msg_level copy = NULL;
-	DBA_RUN_OR_RETURN(dba_msg_level_copy(lev, &copy));
-	DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(msg, copy));
+	dba_msg_context copy = NULL;
+	DBA_RUN_OR_RETURN(dba_msg_context_copy(ctx, &copy));
+	DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(msg, copy));
 	return dba_error_ok();
 
 fail:
 	if (copy)
-		dba_msg_level_delete(copy);
+		dba_msg_context_delete(copy);
 	return err;
 }
 
 dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
 	dba_err err;
-	dba_msg_level lev = dba_msg_find_level(msg, ltype1, l1, ltype2, l2);
+	dba_msg_context ctx = dba_msg_find_context(msg, ltype1, l1, ltype2, l2, pind, p1, p2);
 
-	if (lev == NULL)
+	if (ctx == NULL)
 	{
 		/* Create the level if missing */
 
-		DBA_RUN_OR_RETURN(dba_msg_level_create(ltype1, l1, ltype2, l2, &lev));
-		DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(msg, lev));
+		DBA_RUN_OR_RETURN(dba_msg_context_create(ltype1, l1, ltype2, l2, pind, p1, p2, &ctx));
+		DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(msg, ctx));
 	}
 
-	return dba_msg_level_set_nocopy(lev, var, pind, p1, p2);
+	return dba_msg_context_set_nocopy(ctx, var);
 	
 fail:
-	if (lev != NULL)
-		dba_msg_level_delete(lev);
+	if (ctx != NULL)
+		dba_msg_context_delete(ctx);
 	return err;
 }
 
@@ -248,35 +249,34 @@ fail:
 	return err;
 }
 
-dba_msg_level dba_msg_find_level(dba_msg msg, int ltype1, int l1, int ltype2, int l2)
+dba_msg_context dba_msg_find_context(dba_msg msg, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
-	int begin, end;
-
 	/* Binary search */
-	begin = -1, end = msg->data_count;
-	while (end - begin > 1)
+	int low = 0, high = msg->data_count - 1;
+	while (low <= high)
 	{
-		int cur = (end + begin) / 2;
-		if (dba_msg_level_compare2(msg->data[cur], ltype1, l1, ltype2, l2) > 0)
-			end = cur;
+		int middle = low + (high - low)/2;
+//fprintf(stderr, "DMFC lo %d hi %d mid %d\n", low, high, middle);
+		int cmp = -dba_msg_context_compare2(msg->data[middle], ltype1, l1, ltype2, l2, pind, p1, p2);
+		if (cmp < 0)
+			high = middle - 1;
+		else if (cmp > 0)
+			low = middle + 1;
 		else
-			begin = cur;
+			return msg->data[middle];
 	}
-	if (begin == -1 || dba_msg_level_compare2(msg->data[begin], ltype1, l1, ltype2, l2) != 0)
-		return NULL;
-	else
-		return msg->data[begin];
+	return NULL;
 }
 
-dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
+dba_var dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
-	dba_msg_level lev = dba_msg_find_level(msg, ltype1, l1, ltype2, l2);
-	if (lev == NULL)
+	dba_msg_context ctx = dba_msg_find_context(msg, ltype1, l1, ltype2, l2, pind, p1, p2);
+	if (ctx == NULL)
 		return NULL;
-	return dba_msg_level_find(lev, code, pind, p1, p2);
+	return dba_msg_context_find(ctx, code);
 }
 
-dba_msg_datum dba_msg_find_by_id(dba_msg msg, int id)
+dba_var dba_msg_find_by_id(dba_msg msg, int id)
 {
 	dba_msg_var v = &dba_msg_vartable[id];
 	return dba_msg_find(msg, v->code, v->ltype1, v->l1, v->ltype2, v->l2, v->pind, v->p1, v->p2);
@@ -374,23 +374,20 @@ dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst)
 
 	for (i = 0; i < msg->data_count; i++)
 	{
-		dba_msg_level lev = msg->data[i];
-		dba_msg_datum d;
+		dba_msg_context ctx = msg->data[i];
 		int j;
 
-        if (lev->ltype1 != 100 ||
-				(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 254, 0, 0)) == NULL ||
-				dba_var_value(d->var) == NULL)
+		if (dba_msg_context_find_vsig(ctx) == NULL)
 		{
-			DBA_RUN_OR_GOTO(fail, dba_msg_add_level(res, msg->data[i]));
+			DBA_RUN_OR_GOTO(fail, dba_msg_add_context(res, msg->data[i]));
 			continue;
 		}
 
-		for (j = 0; j < lev->data_count; j++)
+		for (j = 0; j < ctx->data_count; j++)
 		{
 			dba_var copy;
-			DBA_RUN_OR_GOTO(fail, dba_var_copy(lev->data[j]->var, &copy));
-			DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(res, copy, lev->ltype1, lev->l1, 0, 0, d->pind, d->p1, d->p2));
+			DBA_RUN_OR_GOTO(fail, dba_var_copy(ctx->data[j], &copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(res, copy, ctx->ltype1, ctx->l1, 0, 0, ctx->pind, ctx->p1, ctx->p2));
 		}
 	}
 
@@ -424,23 +421,22 @@ dba_err dba_msg_sounding_unpack_levels(dba_msg msg, dba_msg* dst)
 
 	for (i = 0; i < msg->data_count; i++)
 	{
-		dba_msg_level lev = msg->data[i];
-		dba_msg_level copy;
-		dba_msg_datum d;
+		dba_msg_context ctx = msg->data[i];
+		dba_msg_context copy;
+		dba_var vsig_var = dba_msg_context_find_vsig(ctx);
 		int vsig;
-        if (lev->ltype1 != 100 ||
-				(d = dba_msg_level_find(lev, DBA_VAR(0, 8, 1), 254, 0, 0)) == NULL ||
-				dba_var_value(d->var) == NULL)
+
+		if (vsig_var == NULL)
 		{
-			DBA_RUN_OR_GOTO(fail, dba_msg_add_level(res, msg->data[i]));
+			DBA_RUN_OR_GOTO(fail, dba_msg_add_context(res, msg->data[i]));
 			continue;
 		}
 
-		DBA_RUN_OR_GOTO(fail, dba_var_enqi(d->var, &vsig));
+		DBA_RUN_OR_GOTO(fail, dba_var_enqi(vsig_var, &vsig));
 		if (vsig & VSIG_MISSING)
 		{
 			/* If there is no vsig, then we consider it a normal level */
-			DBA_RUN_OR_GOTO(fail, dba_msg_add_level(res, msg->data[i]));
+			DBA_RUN_OR_GOTO(fail, dba_msg_add_context(res, msg->data[i]));
 			continue;
 		}
 
@@ -450,39 +446,39 @@ dba_err dba_msg_sounding_unpack_levels(dba_msg msg, dba_msg* dst)
 
 		if (vsig & VSIG_SIGWIND)
 		{
-			DBA_RUN_OR_GOTO(fail, dba_msg_level_copy(lev, &copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
 			copy->l2 = 6;
-			DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(res, copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
 		}
 		if (vsig & VSIG_SIGTEMP)
 		{
-			DBA_RUN_OR_GOTO(fail, dba_msg_level_copy(lev, &copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
 			copy->l2 = 5;
-			DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(res, copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
 		}
 		if (vsig & VSIG_MAXWIND)
 		{
-			DBA_RUN_OR_GOTO(fail, dba_msg_level_copy(lev, &copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
 			copy->l2 = 4;
-			DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(res, copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
 		}
 		if (vsig & VSIG_TROPOPAUSE)
 		{
-			DBA_RUN_OR_GOTO(fail, dba_msg_level_copy(lev, &copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
 			copy->l2 = 3;
-			DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(res, copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
 		}
 		if (vsig & VSIG_STANDARD)
 		{
-			DBA_RUN_OR_GOTO(fail, dba_msg_level_copy(lev, &copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
 			copy->l2 = 2;
-			DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(res, copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
 		}
 		if (vsig & VSIG_SURFACE)
 		{
-			DBA_RUN_OR_GOTO(fail, dba_msg_level_copy(lev, &copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
 			copy->l2 = 1;
-			DBA_RUN_OR_GOTO(fail, dba_msg_add_level_nocopy(res, copy));
+			DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
 		}
 	}
 
@@ -499,72 +495,65 @@ fail:
 
 void dba_msg_print(dba_msg msg, FILE* out)
 {
+	int i;
+
 	fprintf(out, "%s message\n", dba_msg_type_name(msg->type));
+
+	if (msg->data_count == 0) return;
+	fprintf(out, "%d contexts:\n", msg->data_count);
 
 	switch (msg->type)
 	{
 		case MSG_PILOT:
 		case MSG_TEMP:
 		case MSG_TEMP_SHIP:
-			if (msg->data_count > 0)
+			for (i = 0; i < msg->data_count; i++)
 			{
-				int i;
-				fprintf(out, "%d levels:\n", msg->data_count);
-				for (i = 0; i < msg->data_count; i++)
+				dba_var vsig_var = dba_msg_context_find_vsig(msg->data[i]);
+				if (vsig_var != NULL)
 				{
-					dba_msg_datum d;
-					if (msg->data[i]->ltype1 == 100 &&
-							(d = dba_msg_level_find(msg->data[i], DBA_VAR(0, 8, 1), 254, 0, 0)) != NULL &&
-							dba_var_value(d->var) != NULL)
-					{
-						int vsig = strtol(dba_var_value(d->var), 0, 10);
-						const int VSIG_EXTRA = 128;
-						const int VSIG_SURFACE = 64;
-						const int VSIG_STANDARD = 32;
-						const int VSIG_TROPOPAUSE = 16;
-						const int VSIG_MAXWIND = 8;
-						const int VSIG_SIGTEMP = 4;
-						const int VSIG_SIGWIND = 2;
-						const int VSIG_MISSING = 1;
+					int vsig = strtol(dba_var_value(vsig_var), 0, 10);
+					const int VSIG_EXTRA = 128;
+					const int VSIG_SURFACE = 64;
+					const int VSIG_STANDARD = 32;
+					const int VSIG_TROPOPAUSE = 16;
+					const int VSIG_MAXWIND = 8;
+					const int VSIG_SIGTEMP = 4;
+					const int VSIG_SIGWIND = 2;
+					const int VSIG_MISSING = 1;
 
-						fprintf(out, "Sounding #%d (level %d -", i + 1, vsig);
-						if (vsig & VSIG_EXTRA)
-							fprintf(out, " extra");
-						if (vsig & VSIG_SURFACE)
-							fprintf(out, " surface");
-						if (vsig & VSIG_STANDARD)
-							fprintf(out, " standard");
-						if (vsig & VSIG_TROPOPAUSE)
-							fprintf(out, " tropopause");
-						if (vsig & VSIG_MAXWIND)
-							fprintf(out, " maxwind");
-						if (vsig & VSIG_SIGTEMP)
-							fprintf(out, " sigtemp");
-						if (vsig & VSIG_SIGWIND)
-							fprintf(out, " sigwind");
-						if (vsig & VSIG_MISSING)
-							fprintf(out, " missing");
-						fprintf(out, ") ");
-					}
-					dba_msg_level_print(msg->data[i], out);
+					fprintf(out, "Sounding #%d (level %d -", i + 1, vsig);
+					if (vsig & VSIG_EXTRA)
+						fprintf(out, " extra");
+					if (vsig & VSIG_SURFACE)
+						fprintf(out, " surface");
+					if (vsig & VSIG_STANDARD)
+						fprintf(out, " standard");
+					if (vsig & VSIG_TROPOPAUSE)
+						fprintf(out, " tropopause");
+					if (vsig & VSIG_MAXWIND)
+						fprintf(out, " maxwind");
+					if (vsig & VSIG_SIGTEMP)
+						fprintf(out, " sigtemp");
+					if (vsig & VSIG_SIGWIND)
+						fprintf(out, " sigwind");
+					if (vsig & VSIG_MISSING)
+						fprintf(out, " missing");
+					fprintf(out, ") ");
 				}
+				dba_msg_context_print(msg->data[i], out);
 			}
 			break;
 		default:
-			if (msg->data_count > 0)
-			{
-				int i;
-				fprintf(out, "%d levels:\n", msg->data_count);
-				for (i = 0; i < msg->data_count; i++)
-					dba_msg_level_print(msg->data[i], out);
-			}
+			for (i = 0; i < msg->data_count; i++)
+				dba_msg_context_print(msg->data[i], out);
 			break;
 	}
 }
 
-static void level_summary(dba_msg_level l, FILE* out)
+static void context_summary(dba_msg_context c, FILE* out)
 {
-	fprintf(out, "l(%d,%d, %d,%d)", l->ltype1, l->l1, l->ltype2, l->l2);
+	fprintf(out, "c(%d,%d, %d,%d, %d,%d,%d)", c->ltype1, c->l1, c->ltype2, c->l2, c->pind, c->p1, c->p2);
 }
 
 void dba_msg_diff(dba_msg msg1, dba_msg msg2, int* diffs, FILE* out)
@@ -581,26 +570,26 @@ void dba_msg_diff(dba_msg msg1, dba_msg msg2, int* diffs, FILE* out)
 	{
 		if (i1 == msg1->data_count)
 		{
-			fprintf(out, "Level "); level_summary(msg2->data[i2], out);
+			fprintf(out, "Context "); context_summary(msg2->data[i2], out);
 			fprintf(out, " exists only in the second message\n");
 			++i2;
 			++*diffs;
 		} else if (i2 == msg2->data_count) {
-			fprintf(out, "Level "); level_summary(msg1->data[i1], out);
+			fprintf(out, "Context "); context_summary(msg1->data[i1], out);
 			fprintf(out, " exists only in the first message\n");
 			++i1;
 			++*diffs;
 		} else {
-			int cmp = dba_msg_level_compare(msg1->data[i1], msg2->data[i2]);
+			int cmp = dba_msg_context_compare(msg1->data[i1], msg2->data[i2]);
 			if (cmp == 0)
 			{
-				dba_msg_level_diff(msg1->data[i1], msg2->data[i2], diffs, out);
+				dba_msg_context_diff(msg1->data[i1], msg2->data[i2], diffs, out);
 				++i1;
 				++i2;
 			} else if (cmp < 0) {
 				if (msg1->data[i1]->data_count != 0)
 				{
-					fprintf(out, "Level "); level_summary(msg1->data[i1], out);
+					fprintf(out, "Context "); context_summary(msg1->data[i1], out);
 					fprintf(out, " exists only in the first message\n");
 					++*diffs;
 				}
@@ -608,7 +597,7 @@ void dba_msg_diff(dba_msg msg1, dba_msg msg2, int* diffs, FILE* out)
 			} else {
 				if (msg2->data[i2]->data_count != 0)
 				{
-					fprintf(out, "Level "); level_summary(msg2->data[i2], out);
+					fprintf(out, "Context "); context_summary(msg2->data[i2], out);
 					fprintf(out, " exists only in the second message\n");
 					++*diffs;
 				}
@@ -624,7 +613,7 @@ void dba_msg_delete(dba_msg m)
 	{
 		int i;
 		for (i = 0; i < m->data_count; i++)
-			dba_msg_level_delete(m->data[i]);
+			dba_msg_context_delete(m->data[i]);
 		free(m->data);
 	}
 	free(m);

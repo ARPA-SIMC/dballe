@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 #define _GNU_SOURCE
 #include "exporters.h"
+#include "dballe/msg/context.h"
 #include <math.h>
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
@@ -118,18 +119,19 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 	// Get the variable out of msg
 	for (li = 0; li < src->data_count; ++li)
 	{
-		if (src->data[li]->ltype1 != 103) continue;
-		for (di = 0; di < src->data[li]->data_count; ++di)
+		dba_msg_context ctx = src->data[li];
+		if (ctx->ltype1 != 103) continue;
+		for (di = 0; di < ctx->data_count; ++di)
 		{
-			dba_msg_datum d = src->data[li]->data[di];
-			if (d->pind != 0) continue;
-			dba_varcode code = dba_var_code(d->var);
+			dba_var nvar = ctx->data[di];
+			if (ctx->pind != 0) continue;
+			dba_varcode code = dba_var_code(nvar);
 			if (code < DBA_VAR(0, 15, 193) || code > DBA_VAR(0, 15, 198)) continue;
 			if (var != NULL)
 				return dba_error_consistency("found more than one variable to export in one template");
-			var = d->var;
-			l1 = src->data[li]->l1 / 1000;
-			p1 = d->p1;
+			var = nvar;
+			l1 = ctx->l1 / 1000;
+			p1 = ctx->p1;
 		}
 	}
 
@@ -205,9 +207,9 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 			case 24: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, -127)); break;
 			case 25: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_conf)); break;
 			default: {
-				dba_msg_datum d = dba_msg_find_by_id(src, tpl[i].var);
-				if (d != NULL)
-					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, d->var));
+				dba_var var = dba_msg_find_by_id(src, tpl[i].var);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
 				else
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;

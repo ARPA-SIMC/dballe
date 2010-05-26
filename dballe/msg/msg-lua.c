@@ -48,6 +48,10 @@ static int dbalua_msg_type(lua_State *L)
 	return 1;
 }
 
+// TODO: dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+// TODO: dba_msg_datum dba_msg_find_by_id(dba_msg msg, int id);
+// TODO: iterate
+
 /*
 static int dbalua_var_enqd(lua_State *L)
 {

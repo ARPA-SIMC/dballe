@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include <test-utils-db.h>
 #include <dballe/db/import.h>
 #include <dballe/db/export.h>
+#include <dballe/msg/context.h>
 
 namespace tut {
 using namespace tut_dballe;
@@ -443,13 +444,13 @@ static void clear_datetime_attrs(dba_msg msg)
 {
 	for (int i = 0; i < msg->data_count; i++)
 	{
-		dba_msg_level lev = msg->data[i];
-		if (lev->ltype1 != 257) continue;
-		for (int j = 0; j < lev->data_count; j++)
+		dba_msg_context ctx = msg->data[i];
+		if (ctx->ltype1 != 257) continue;
+		for (int j = 0; j < ctx->data_count; j++)
 		{
-			dba_msg_datum dat = lev->data[j];
-			if (DBA_VAR_X(dba_var_code(dat->var)) != 4) continue;
-			dba_var_clear_attrs(dat->var);
+			dba_var var = ctx->data[j];
+			if (DBA_VAR_X(dba_var_code(var)) != 4) continue;
+			dba_var_clear_attrs(var);
 		}
     }
 }

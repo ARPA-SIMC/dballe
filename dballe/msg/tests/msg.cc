@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,7 @@
  */
 
 #include <test-utils-msg.h>
-#include <dballe/msg/datum.h>
-#include <dballe/msg/level.h>
+#include <dballe/msg/context.h>
 
 /*
 extern "C" {
@@ -46,79 +45,89 @@ struct msg_shar
 };
 TESTGRP(msg);
 
-// Ensure that the datum vector inside the level is in strict ascending order
-void _ensure_level_is_sorted(const char* file, int line, dba_msg_level lev)
+// Ensure that the datum vector inside the context is in strict ascending order
+void _ensure_context_is_sorted(const char* file, int line, dba_msg_context ctx)
 {
-	if (lev->data_count < 2)
+	if (ctx->data_count < 2)
 		return;
-	for (int i = 0; i < lev->data_count - 1; i++)
-		inner_ensure(dba_msg_datum_compare(lev->data[i], lev->data[i + 1]) < 0);
+	for (int i = 0; i < ctx->data_count - 1; i++)
+		inner_ensure(dba_var_code(ctx->data[i]) < dba_var_code(ctx->data[i + 1]));
 }
-#define gen_ensure_level_is_sorted(x) _ensure_level_is_sorted(__FILE__, __LINE__, (x))
+#define gen_ensure_context_is_sorted(x) _ensure_context_is_sorted(__FILE__, __LINE__, (x))
 
-// Ensure that the level vector inside the message is in strict ascending order
+// Ensure that the context vector inside the message is in strict ascending order
 void _ensure_msg_is_sorted(const char* file, int line, dba_msg msg)
 {
 	if (msg->data_count < 2)
 		return;
 	for (int i = 0; i < msg->data_count - 1; i++)
-		inner_ensure(dba_msg_level_compare(msg->data[i], msg->data[i + 1]) < 0);
+		inner_ensure(dba_msg_context_compare(msg->data[i], msg->data[i + 1]) < 0);
 }
 #define gen_ensure_msg_is_sorted(x) _ensure_msg_is_sorted(__FILE__, __LINE__, (x))
 
 
-/* Test dba_msg_datum */
+/* Test dba_msg_context */
 template<> template<>
 void to::test<1>()
 {
-	dba_msg_datum d1, d2;
+	dba_msg_context d1, d2;
 	dba_var v1, v2;
 
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v1));
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v2));
 
-	CHECKED(dba_msg_datum_create(1, 2, 3, &d1));
-	CHECKED(dba_msg_datum_create(1, 3, 2, &d2));
+	CHECKED(dba_msg_context_create(9, 8, 7, 6, 1, 2, 3, &d1));
+	CHECKED(dba_msg_context_create(9, 8, 7, 6, 1, 3, 2, &d2));
 
+	gen_ensure_equals(d1->data_count, 0);
+	gen_ensure_equals(d1->ltype1, 9);
+	gen_ensure_equals(d1->l1, 8);
+	gen_ensure_equals(d1->ltype2, 7);
+	gen_ensure_equals(d1->l2, 6);
 	gen_ensure_equals(d1->pind, 1);
 	gen_ensure_equals(d1->p1, 2);
 	gen_ensure_equals(d1->p2, 3);
+	gen_ensure_equals(d2->data_count, 0);
+	gen_ensure_equals(d2->ltype1, 9);
+	gen_ensure_equals(d2->l1, 8);
+	gen_ensure_equals(d2->ltype2, 7);
+	gen_ensure_equals(d2->l2, 6);
 	gen_ensure_equals(d2->pind, 1);
 	gen_ensure_equals(d2->p1, 3);
 	gen_ensure_equals(d2->p2, 2);
 
-	d1->var = v1;
-	d2->var = v2;
+	CHECKED(dba_msg_context_set_nocopy(d1, v1));
+	CHECKED(dba_msg_context_set_nocopy(d2, v2));
 
-	gen_ensure(dba_msg_datum_compare(d1, d2) < 0);
-	gen_ensure(dba_msg_datum_compare(d2, d1) > 0);
-	gen_ensure_equals(dba_msg_datum_compare(d1, d1), 0);
-	gen_ensure_equals(dba_msg_datum_compare(d2, d2), 0);
+	gen_ensure(dba_msg_context_compare(d1, d2) < 0);
+	gen_ensure(dba_msg_context_compare(d2, d1) > 0);
+	gen_ensure_equals(dba_msg_context_compare(d1, d1), 0);
+	gen_ensure_equals(dba_msg_context_compare(d2, d2), 0);
 
-	gen_ensure(dba_msg_datum_compare2(d1, DBA_VAR(0, 1, 1), 1, 2, 4) < 0);
-	gen_ensure(dba_msg_datum_compare2(d1, DBA_VAR(0, 1, 1), 1, 2, 2) > 0);
-	gen_ensure(dba_msg_datum_compare2(d1, DBA_VAR(0, 1, 1), 1, 3, 3) < 0);
-	gen_ensure(dba_msg_datum_compare2(d1, DBA_VAR(0, 1, 1), 1, 1, 3) > 0);
-	gen_ensure(dba_msg_datum_compare2(d1, DBA_VAR(0, 1, 1), 2, 2, 3) < 0);
-	gen_ensure(dba_msg_datum_compare2(d1, DBA_VAR(0, 1, 1), 0, 2, 3) > 0);
-	gen_ensure(dba_msg_datum_compare2(d1, DBA_VAR(0, 1, 2), 1, 2, 3) < 0);
-	gen_ensure(dba_msg_datum_compare2(d1, DBA_VAR(0, 1, 0), 1, 2, 3) > 0);
-	gen_ensure_equals(dba_msg_datum_compare2(d1, DBA_VAR(0, 1, 1), 1, 2, 3), 0);
+	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 2, 4) < 0);
+	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 2, 2) > 0);
+	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 3, 3) < 0);
+	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 1, 3) > 0);
+	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 2, 2, 3) < 0);
+	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 0, 2, 3) > 0);
+	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 7, 1, 2, 3) < 0);
+	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 5, 1, 2, 3) > 0);
+	gen_ensure_equals(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 2, 3), 0);
 
 	/* No need to delete v1 and v2, since dba_msg_datum takes ownership of the
 	 * variables */
-	dba_msg_datum_delete(d1);
-	dba_msg_datum_delete(d2);
+	dba_msg_context_delete(d1);
+	dba_msg_context_delete(d2);
 }
 
-/* Test dba_msg_level external ordering */
+/* Test dba_msg_context external ordering */
 template<> template<>
 void to::test<2>()
 {
-	dba_msg_level lev1, lev2;
+	dba_msg_context lev1, lev2;
 
-	CHECKED(dba_msg_level_create(1, 2, 3, 4, &lev1));
-	CHECKED(dba_msg_level_create(2, 1, 4, 3, &lev2));
+	CHECKED(dba_msg_context_create(1, 2, 3, 4, 1, 2, 3, &lev1));
+	CHECKED(dba_msg_context_create(2, 1, 4, 3, 1, 2, 3, &lev2));
 
 	gen_ensure_equals(lev1->data_count, 0);
 	gen_ensure_equals(lev1->ltype1, 1);
@@ -131,63 +140,59 @@ void to::test<2>()
 	gen_ensure_equals(lev2->ltype2, 4);
 	gen_ensure_equals(lev2->l2, 3);
 
-	gen_ensure(dba_msg_level_compare(lev1, lev2) < 0);
-	gen_ensure(dba_msg_level_compare(lev2, lev1) > 0);
-	gen_ensure_equals(dba_msg_level_compare(lev1, lev1), 0);
-	gen_ensure_equals(dba_msg_level_compare(lev2, lev2), 0);
+	gen_ensure(dba_msg_context_compare(lev1, lev2) < 0);
+	gen_ensure(dba_msg_context_compare(lev2, lev1) > 0);
+	gen_ensure_equals(dba_msg_context_compare(lev1, lev1), 0);
+	gen_ensure_equals(dba_msg_context_compare(lev2, lev2), 0);
 
-	gen_ensure(dba_msg_level_compare2(lev1, 1, 2, 4, 4) < 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 1, 2, 2, 4) > 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 1, 3, 3, 4) < 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 1, 1, 3, 4) > 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 2, 2, 3, 4) < 0);
-	gen_ensure(dba_msg_level_compare2(lev1, 0, 2, 3, 4) > 0);
-	gen_ensure_equals(dba_msg_level_compare2(lev1, 1, 2, 3, 4), 0);
+	gen_ensure(dba_msg_context_compare2(lev1, 1, 2, 4, 4, 1, 2, 3) < 0);
+	gen_ensure(dba_msg_context_compare2(lev1, 1, 2, 2, 4, 1, 2, 3) > 0);
+	gen_ensure(dba_msg_context_compare2(lev1, 1, 3, 3, 4, 1, 2, 3) < 0);
+	gen_ensure(dba_msg_context_compare2(lev1, 1, 1, 3, 4, 1, 2, 3) > 0);
+	gen_ensure(dba_msg_context_compare2(lev1, 2, 2, 3, 4, 1, 2, 3) < 0);
+	gen_ensure(dba_msg_context_compare2(lev1, 0, 2, 3, 4, 1, 2, 3) > 0);
+	gen_ensure_equals(dba_msg_context_compare2(lev1, 1, 2, 3, 4, 1, 2, 3), 0);
 
-	dba_msg_level_delete(lev1);
-	dba_msg_level_delete(lev2);
+	dba_msg_context_delete(lev1);
+	dba_msg_context_delete(lev2);
 }
 
-/* Test dba_msg_level internal ordering */
+/* Test dba_msg_context internal ordering */
 template<> template<>
 void to::test<3>()
 {
-	dba_msg_level lev;
+	dba_msg_context lev;
 
-	CHECKED(dba_msg_level_create(1, 2, 3, 4, &lev));
+	CHECKED(dba_msg_context_create(1, 2, 3, 4, 1, 2, 3, &lev));
 
 	dba_var v1, v2, v3, v4;
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v1));
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v2));
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v3));
+	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &v2));
+	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 7), &v3));
 	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v4));
 
-	CHECKED(dba_msg_level_set_nocopy(lev, v1, 1, 2, 2));
+	CHECKED(dba_msg_context_set_nocopy(lev, v1));
 	gen_ensure_equals(lev->data_count, 1);
-	CHECKED(dba_msg_level_set_nocopy(lev, v2, 1, 1, 2));
+	CHECKED(dba_msg_context_set_nocopy(lev, v2));
 	gen_ensure_equals(lev->data_count, 2);
-	CHECKED(dba_msg_level_set_nocopy(lev, v4, 1, 2, 1));
+	CHECKED(dba_msg_context_set_nocopy(lev, v3));
 	gen_ensure_equals(lev->data_count, 3);
-	// Variables with same code on same timerange must get substituded and not
-	// added
-	CHECKED(dba_msg_level_set_nocopy(lev, v3, 1, 2, 1));
+	// Variables with same code must get substituded and not added
+	CHECKED(dba_msg_context_set_nocopy(lev, v4));
 	gen_ensure_equals(lev->data_count, 3);
 
-	gen_ensure_level_is_sorted(lev);
+	gen_ensure_context_is_sorted(lev);
 
-	gen_ensure(dba_msg_level_find(lev, DBA_VAR(0, 1, 1), 1, 2, 2) != NULL);
-	gen_ensure_equals(dba_msg_level_find(lev, DBA_VAR(0, 1, 1), 1, 2, 2)->var, v1);
+	gen_ensure(dba_msg_context_find(lev, DBA_VAR(0, 1, 1)) != NULL);
+	gen_ensure_equals(dba_msg_context_find(lev, DBA_VAR(0, 1, 1)), v4);
 
-	gen_ensure(dba_msg_level_find(lev, DBA_VAR(0, 1, 1), 1, 1, 2) != NULL);
-	gen_ensure_equals(dba_msg_level_find(lev, DBA_VAR(0, 1, 1), 1, 1, 2)->var, v2);
+	gen_ensure(dba_msg_context_find(lev, DBA_VAR(0, 1, 2)) != NULL);
+	gen_ensure_equals(dba_msg_context_find(lev, DBA_VAR(0, 1, 2)), v2);
 
-	gen_ensure(dba_msg_level_find(lev, DBA_VAR(0, 1, 1), 1, 2, 1) != NULL);
-	gen_ensure_equals(dba_msg_level_find(lev, DBA_VAR(0, 1, 1), 1, 2, 1)->var, v3);
+	gen_ensure(dba_msg_context_find(lev, DBA_VAR(0, 1, 7)) != NULL);
+	gen_ensure_equals(dba_msg_context_find(lev, DBA_VAR(0, 1, 7)), v3);
 
-	gen_ensure_equals(dba_msg_level_find(lev, DBA_VAR(0, 1, 2), 1, 2, 2), (dba_msg_datum)0);
-	gen_ensure_equals(dba_msg_level_find(lev, DBA_VAR(0, 1, 1), 2, 2, 2), (dba_msg_datum)0);
-	gen_ensure_equals(dba_msg_level_find(lev, DBA_VAR(0, 1, 1), 1, 0, 2), (dba_msg_datum)0);
-	gen_ensure_equals(dba_msg_level_find(lev, DBA_VAR(0, 1, 1), 1, 2, 0), (dba_msg_datum)0);
+	gen_ensure_equals(dba_msg_context_find(lev, DBA_VAR(0, 1, 8)), (dba_var)0);
 }
 
 /* Test dba_msg internal ordering */
@@ -211,23 +216,23 @@ void to::test<4>()
 	CHECKED(dba_msg_set_nocopy(msg, v1, 1, 1, 1, 1, 1, 1, 1));
 	gen_ensure_equals(msg->data_count, 2);
 	CHECKED(dba_msg_set_nocopy(msg, v2, 1, 1, 1, 1, 2, 2, 2));
-	gen_ensure_equals(msg->data_count, 2);
+	gen_ensure_equals(msg->data_count, 3);
 
 	gen_ensure_msg_is_sorted(msg);
 
 	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1) != NULL);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1)->var, v1);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1), v1);
 
 	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2) != NULL);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2)->var, v2);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2), v2);
 
 	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1) != NULL);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1)->var, v3);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1), v3);
 
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 2), 1, 1, 1, 1, 2, 2, 2), (dba_msg_datum)0);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 0, 0, 0, 0, 1, 1, 1), (dba_msg_datum)0);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 3, 3, 3, 3, 1, 1, 1), (dba_msg_datum)0);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 3, 3, 3), (dba_msg_datum)0);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 2), 1, 1, 1, 1, 2, 2, 2), (dba_var)0);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 0, 0, 0, 0, 1, 1, 1), (dba_var)0);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 3, 3, 3, 3, 1, 1, 1), (dba_var)0);
+	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 3, 3, 3), (dba_var)0);
 }
 
 /* Try to write a generic message from scratch */

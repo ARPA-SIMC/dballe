@@ -692,8 +692,7 @@ struct filter_data
 
 inline static int get_date_value(dba_msg msg, int value)
 {
-	dba_msg_datum d = dba_msg_find_by_id(msg, value);
-	dba_var var = d == NULL ? NULL : d->var;
+	dba_var var = dba_msg_find_by_id(msg, value);
 	const char* val = var == NULL ? NULL : dba_var_value(var);
 	if (val == NULL)
 		return -1;
@@ -704,8 +703,7 @@ inline static int get_date_value(dba_msg msg, int value)
 inline static double get_lat_value(dba_msg msg, int value)
 {
 	double res;
-	dba_msg_datum d = dba_msg_find_by_id(msg, value);
-	dba_var var = d == NULL ? NULL : d->var;
+	dba_var var = dba_msg_find_by_id(msg, value);
 	if (var == NULL || dba_var_value(var) == NULL)
 		return -1000000;
 	dba_var_enqd(var, &res);

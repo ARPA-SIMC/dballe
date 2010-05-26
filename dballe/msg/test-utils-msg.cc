@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -185,27 +185,21 @@ void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& pre
 
 dba_var my_want_var(const char* file, int line, dba_msg msg, int id, const char* idname)
 {
-	dba_msg_datum d = dba_msg_find_by_id(msg, id);
-	if (d == NULL)
+	dba_var var = dba_msg_find_by_id(msg, id);
+	if (var == NULL)
 	{
 		std::stringstream ss;
 		ss << "message does not contain the value " << idname;
 		throw failure(__ensure_errmsg(file, line, ss.str()));
 	}
-	if (d->var == NULL)
-	{
-		std::stringstream ss;
-		ss << "message has a NULL variable in the datum for value " << idname;
-		throw failure(__ensure_errmsg(file, line, ss.str()));
-	}
-	return d->var;
+	return var;
 }
 
 dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
-	dba_msg_datum d = dba_msg_find(msg, code, ltype1, l1, ltype2, l2, pind, p1, p2);
+	dba_var var = dba_msg_find(msg, code, ltype1, l1, ltype2, l2, pind, p1, p2);
 
-	if (d == NULL)
+	if (var == NULL)
 	{
 		char varname[10];
 		snprintf(varname, 10, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
@@ -215,27 +209,17 @@ dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code
 		   << "tr(" << pind << "," << p1 << "," << p2 << ")";
 		throw failure(__ensure_errmsg(file, line, ss.str()));
 	}
-	if (d->var == NULL)
-	{
-		char varname[10];
-		snprintf(varname, 10, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
-		std::stringstream ss;
-		ss << "message has a NULL variable in the datum for value " << varname << " at "
-		   << "lev(" << ltype1 << "," << l1 << ltype2 << "," << l2 << ")"
-		   << "tr(" << pind << "," << p1 << "," << p2 << ")";
-		throw failure(__ensure_errmsg(file, line, ss.str()));
-	}
-	return d->var;
+	return var;
 }
 
 
 void my_ensure_msg_undef(const char* file, int line, dba_msg msg, int id, const char* idname)
 {
-	dba_msg_datum d = dba_msg_find_by_id(msg, id);
-	if (d != NULL && d->var != NULL && dba_var_value(d->var) != NULL)
+	dba_var var = dba_msg_find_by_id(msg, id);
+	if (var != NULL && dba_var_value(var) != NULL)
 	{
 		std::stringstream ss;
-		ss << "message has " << idname << " set to " << dba_var_value(d->var) << " instead of being undefined";
+		ss << "message has " << idname << " set to " << dba_var_value(var) << " instead of being undefined";
 		throw failure(__ensure_errmsg(file, line, ss.str()));
 	}
 }

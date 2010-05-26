@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
  */
 
 #include "exporters.h"
+#include "dballe/msg/context.h"
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
 
@@ -54,60 +55,60 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 
 	for (i = 0; i < src->data_count; i++)
 	{
-		dba_msg_level lev = src->data[i];
+		dba_msg_context ctx = src->data[i];
 
-		for (j = 0; j < lev->data_count; j++)
+		for (j = 0; j < ctx->data_count; j++)
 		{
 			dba_var_attr_iterator iter;
-			dba_msg_datum d = lev->data[j];
-			if (dba_var_value(d->var) == NULL)
+			dba_var var = ctx->data[j];
+			if (dba_var_value(var) == NULL)
 				continue;
-			// Don't add rep_cod again
-			if (d->var == repmemo)
+			// Don't add rep_memo again
+			if (var == repmemo)
 				continue;
 
 			/* Update the context in the message, if needed */
-			if (ltype1 != lev->ltype1)
+			if (ltype1 != ctx->ltype1)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 192), lev->ltype1));
-				ltype1 = lev->ltype1;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 192), ctx->ltype1));
+				ltype1 = ctx->ltype1;
 			}
-			if (l1 != lev->l1)
+			if (l1 != ctx->l1)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 193), lev->l1));
-				l1 = lev->l1;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 193), ctx->l1));
+				l1 = ctx->l1;
 			}
-			if (ltype2 != lev->ltype2)
+			if (ltype2 != ctx->ltype2)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 195), lev->ltype2));
-				ltype2 = lev->ltype2;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 195), ctx->ltype2));
+				ltype2 = ctx->ltype2;
 			}
-			if (l2 != lev->l2)
+			if (l2 != ctx->l2)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 194), lev->l2));
-				l2 = lev->l2;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 194), ctx->l2));
+				l2 = ctx->l2;
 			}
-			if (pind != d->pind)
+			if (pind != ctx->pind)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 192), d->pind));
-				pind = d->pind;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 192), ctx->pind));
+				pind = ctx->pind;
 			}
-			if (p1 != d->p1)
+			if (p1 != ctx->p1)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 193), d->p1));
-				p1 = d->p1;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 193), ctx->p1));
+				p1 = ctx->p1;
 			}
-			if (p2 != d->p2)
+			if (p2 != ctx->p2)
 			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 194), d->p2));
-				p2 = d->p2;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 194), ctx->p2));
+				p2 = ctx->p2;
 			}
 
 			/* Store the variable */
-			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(d->var), d->var));
+			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(var), var));
 
 			/* Store the attributes */
-			for (iter = dba_var_attr_iterate(d->var);
+			for (iter = dba_var_attr_iterate(var);
 					iter != NULL;
 					iter = dba_var_attr_iterator_next(iter))
 			{
