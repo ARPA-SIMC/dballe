@@ -43,35 +43,32 @@ static int dbalua_msg_type(lua_State *L)
 	return 1;
 }
 
+static int dbalua_msg_size(lua_State *L)
+{
+	dba_msg msg = dba_msg_lua_check(L, 1);
+	lua_pushinteger(L, msg->data_count);
+	return 1;
+}
+
+static int dbalua_msg_foreach(lua_State *L)
+{
+	dba_msg msg = dba_msg_lua_check(L, 1);
+	int i;
+	for (i = 0; i < msg->data_count; ++i)
+	{
+		lua_pushvalue(L, -1);
+		dba_msg_context_lua_push(msg->data[i], L);
+		/* do the call (1 argument, 0 results) */
+		if (lua_pcall(L, 1, 0, 0) != 0)
+			lua_error(L);
+	}
+	return 0;
+}
+
 // TODO: dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 // TODO: dba_msg_datum dba_msg_find_by_id(dba_msg msg, int id);
-// TODO: iterate
 
 /*
-static int dbalua_var_enqd(lua_State *L)
-{
-	dba_msg var = dba_msg_lua_check(L, 1);
-	if (dba_msg_value(var) != NULL)
-	{
-		double res;
-		dbalua_checked(L, dba_msg_enqd(var, &res));
-		lua_pushnumber(L, res);
-	} else
-		lua_pushnil(L);
-	return 1;
-}
-
-static int dbalua_var_enqc(lua_State *L)
-{
-	dba_msg var = dba_msg_lua_check(L, 1);
-	const char* res = dba_msg_value(var);
-	if (res != NULL)
-		lua_pushstring(L, res);
-	else
-		lua_pushnil(L);
-	return 1;
-}
-
 static int dbalua_var_tostring(lua_State *L)
 {
 	dba_msg var = dba_msg_lua_check(L, 1);
@@ -97,6 +94,8 @@ static int dbalua_var_tostring(lua_State *L)
 
 static const struct luaL_reg dbalua_msg_lib [] = {
         { "type", dbalua_msg_type },
+        { "size", dbalua_msg_size },
+        { "foreach", dbalua_msg_foreach },
         // { "__tostring", dbalua_var_tostring },
         {NULL, NULL}
 };
@@ -130,8 +129,32 @@ dba_msg dba_msg_lua_check(lua_State* L, int idx)
 	return (v != NULL) ? *v : NULL;
 }
 
+
+static int dbalua_msg_context_size(lua_State *L)
+{
+	dba_msg_context ctx = dba_msg_context_lua_check(L, 1);
+	lua_pushinteger(L, ctx->data_count);
+	return 1;
+}
+
+static int dbalua_msg_context_foreach(lua_State *L)
+{
+	dba_msg_context ctx = dba_msg_context_lua_check(L, 1);
+	int i;
+	for (i = 0; i < ctx->data_count; ++i)
+	{
+		lua_pushvalue(L, -1);
+		dba_var_lua_push(ctx->data[i], L);
+		/* do the call (1 argument, 0 results) */
+		if (lua_pcall(L, 1, 0, 0) != 0)
+			lua_error(L);
+	}
+	return 0;
+}
+
 static const struct luaL_reg dbalua_msg_context_lib [] = {
-        // { "type", dbalua_msg_type },
+        { "size", dbalua_msg_context_size },
+        { "foreach", dbalua_msg_context_foreach },
         // { "__tostring", dbalua_var_tostring },
         {NULL, NULL}
 };
@@ -139,7 +162,7 @@ static const struct luaL_reg dbalua_msg_context_lib [] = {
 dba_err dba_msg_context_lua_push(dba_msg_context var, lua_State* L)
 {
         // The object is a userdata that holds a pointer to this dba_msg_context structure
-        dba_msg_context* s = (dba_msg*)lua_newuserdata(L, sizeof(dba_msg_context));
+        dba_msg_context* s = (dba_msg_context*)lua_newuserdata(L, sizeof(dba_msg_context));
         *s = var;
 
         // Set the metatable for the userdata
