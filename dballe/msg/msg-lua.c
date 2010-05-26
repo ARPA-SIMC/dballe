@@ -65,38 +65,25 @@ static int dbalua_msg_foreach(lua_State *L)
 	return 0;
 }
 
-// TODO: dba_msg_datum dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
-// TODO: dba_msg_datum dba_msg_find_by_id(dba_msg msg, int id);
+// TODO: dba_var dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+// TODO: dba_var dba_msg_find_by_id(dba_msg msg, int id);
 
-/*
-static int dbalua_var_tostring(lua_State *L)
+static int dbalua_msg_tostring(lua_State *L)
 {
-	dba_msg var = dba_msg_lua_check(L, 1);
-	const char* res = dba_msg_value(var);
-	if (res == NULL)
-		lua_pushstring(L, "(undef)");
-	else {
-		dba_msginfo info = dba_msg_info(var);
-		if (info->is_string || info->scale == 0)
-			lua_pushstring(L, res);
-		else
-		{
-			double val;
-			char buf[25];
-			dbalua_checked(L, dba_msg_enqd(var, &val));
-			snprintf(buf, 25, "%.*f\n", info->scale > 0 ? info->scale : 0, val);
-			lua_pushstring(L, buf);
-		}
-	}
+	dba_msg msg = dba_msg_lua_check(L, 1);
+	int i, varcount = 0;
+	for (i = 0; i < msg->data_count; ++i)
+		varcount += msg->data[i]->data_count;
+	lua_pushfstring(L, "dba_msg(%s, %d ctx, %d vars)", 
+		dba_msg_type_name(msg->type), msg->data_count, varcount);
 	return 1;
 }
-*/
 
 static const struct luaL_reg dbalua_msg_lib [] = {
         { "type", dbalua_msg_type },
         { "size", dbalua_msg_size },
         { "foreach", dbalua_msg_foreach },
-        // { "__tostring", dbalua_var_tostring },
+        { "__tostring", dbalua_msg_tostring },
         {NULL, NULL}
 };
 
@@ -152,10 +139,17 @@ static int dbalua_msg_context_foreach(lua_State *L)
 	return 0;
 }
 
+static int dbalua_msg_context_tostring(lua_State *L)
+{
+	dba_msg_context ctx = dba_msg_context_lua_check(L, 1);
+	lua_pushfstring(L, "dba_msg_context(%d vars)", ctx->data_count);
+	return 1;
+}
+
 static const struct luaL_reg dbalua_msg_context_lib [] = {
         { "size", dbalua_msg_context_size },
         { "foreach", dbalua_msg_context_foreach },
-        // { "__tostring", dbalua_var_tostring },
+        { "__tostring", dbalua_msg_context_tostring },
         {NULL, NULL}
 };
 
