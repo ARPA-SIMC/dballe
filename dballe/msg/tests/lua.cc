@@ -67,6 +67,13 @@ void to::test<1>()
 		"  msg:foreach(function(x) x:foreach(function(y) count = count + 1 end) end)\n"
 		"  if count ~= 39 then return 'count is '..count..' instead of 39' end\n"
 
+		"  var = msg:find('temp_2m')\n"
+		"  if var == nil then return 'temp_2m is nil' end\n"
+		"  if var:enqd() ~= 289.2 then return 'temp_2m is '..var:enqd()..' instead of 289.2' end\n"
+
+		"  var = msg:find('B12001', 103, 2000, 0, 0, 254, 0, 0)\n"
+		"  if var == nil then return 'B12001 is nil' end\n"
+		"  if var:enqd() ~= 289.2 then return 'B12001 is '..var:enqd()..' instead of 289.2' end\n"
 		"end \n"
 	);
 

@@ -36,6 +36,15 @@ static void dbalua_checked(lua_State* L, dba_err err)
 	}
 }
 
+static dba_varcode dbalua_to_varcode(lua_State* L, int idx)
+{
+	const char* str = lua_tostring(L, idx);
+	if (str == NULL)
+		return 0;
+	else
+		return dba_descriptor_code(str);
+}
+
 static int dbalua_msg_type(lua_State *L)
 {
 	dba_msg msg = dba_msg_lua_check(L, 1);
@@ -58,15 +67,42 @@ static int dbalua_msg_foreach(lua_State *L)
 	{
 		lua_pushvalue(L, -1);
 		dba_msg_context_lua_push(msg->data[i], L);
-		/* do the call (1 argument, 0 results) */
+		/* Do the call (1 argument, 0 results) */
 		if (lua_pcall(L, 1, 0, 0) != 0)
 			lua_error(L);
 	}
 	return 0;
 }
 
-// TODO: dba_var dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
-// TODO: dba_var dba_msg_find_by_id(dba_msg msg, int id);
+static int dbalua_msg_find(lua_State *L)
+{
+	dba_msg msg = dba_msg_lua_check(L, 1);
+	dba_var res;
+	if (lua_gettop(L) == 2)
+	{
+		// By ID
+		size_t len;
+		const char* name = lua_tolstring(L, 2, &len);
+		int id = dba_msg_resolve_var_substring(name, len);
+		res = dba_msg_find_by_id(msg, id);
+	} else {
+		// By all details
+		dba_varcode code = dbalua_to_varcode(L, 2);
+		int ltype1 = lua_tointeger(L, 3);
+		int l1 = lua_tointeger(L, 4);
+		int ltype2 = lua_tointeger(L, 5);
+		int l2 = lua_tointeger(L, 6);
+		int ptype = lua_tointeger(L, 7);
+		int p1 = lua_tointeger(L, 8);
+		int p2 = lua_tointeger(L, 9);
+		res = dba_msg_find(msg, code, ltype1, l1, ltype2, l2, ptype, p1, p2);
+	}
+	if (res == NULL)
+		lua_pushnil(L);
+	else
+		dba_var_lua_push(res, L);
+	return 1;
+}
 
 static int dbalua_msg_tostring(lua_State *L)
 {
@@ -83,6 +119,7 @@ static const struct luaL_reg dbalua_msg_lib [] = {
         { "type", dbalua_msg_type },
         { "size", dbalua_msg_size },
         { "foreach", dbalua_msg_foreach },
+        { "find", dbalua_msg_find },
         { "__tostring", dbalua_msg_tostring },
         {NULL, NULL}
 };
