@@ -444,6 +444,22 @@ dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst);
  */
 dba_err dba_msg_sounding_unpack_levels(dba_msg msg, dba_msg* dst);
 
+
+struct lua_State;
+
+/**
+ * Push the variable as an object in the lua stack
+ */
+dba_err dba_msg_lua_push(dba_msg var, struct lua_State* L);
+
+/**
+ * Check that the element at \a idx is a dba_msg
+ *
+ * @return the dba_msg element, or NULL if the check failed
+ */
+dba_msg dba_msg_lua_check(struct lua_State* L, int idx);
+
+
 #include <dballe/msg/vars.h>
 
 #ifdef  __cplusplus

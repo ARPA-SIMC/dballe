@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir)
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(LUA_CFLAGS)
 
 #
 # Shared library
@@ -68,7 +68,10 @@ libdballe_msg_la_SOURCES += \
 		bufrex_exporters/flight.c \
 		bufrex_exporters/pollution.c
 endif
-libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
+if LUA
+libdballe_msg_la_SOURCES += msg-lua.c
+endif
+libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(LUA_LIBS)
 
 vars.h vars.gperf: vars.csv mkvars
 	$(srcdir)/mkvars < $<
@@ -101,7 +104,14 @@ tut_test_SOURCES = \
 tut_test_LDADD = \
 	libdballe-msg.la \
 	../bufrex/libdballe-bufrex.la \
-	../core/libdballe-core.la
+	../core/libdballe-core.la \
+	$(LUA_LIBS)
+
+if LUA
+tut_test_SOURCES += tests/lua.cc \
+	../core/test-utils-lua.cc
+endif
+
 
 #
 # Documentation bits
