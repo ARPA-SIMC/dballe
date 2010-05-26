@@ -214,6 +214,21 @@ void dba_msg_context_print(dba_msg_context l, FILE* out);
  */
 void dba_msg_context_diff(dba_msg_context l1, dba_msg_context l2, int* diffs, FILE* out);
 
+
+struct lua_State;
+
+/**
+ * Push the variable as an object in the lua stack
+ */
+dba_err dba_msg_context_lua_push(dba_msg_context var, struct lua_State* L);
+
+/**
+ * Check that the element at \a idx is a dba_msg_context
+ *
+ * @return the dba_msg_context element, or NULL if the check failed
+ */
+dba_msg_context dba_msg_context_lua_check(struct lua_State* L, int idx);
+
 #ifdef  __cplusplus
 }
 #endif

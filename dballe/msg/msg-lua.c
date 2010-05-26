@@ -21,16 +21,11 @@
 
 #include "config.h"
 #include "msg.h"
+#include "context.h"
 
 #ifdef HAVE_LUA
 #include <lauxlib.h>
 #include <lualib.h>
-
-dba_msg dba_msg_lua_check(lua_State* L, int idx)
-{
-        dba_msg* v = (dba_msg*)luaL_checkudata(L, idx, "dballe.msg");
-	return (v != NULL) ? *v : NULL;
-}
 
 static void dbalua_checked(lua_State* L, dba_err err)
 {
@@ -100,7 +95,7 @@ static int dbalua_var_tostring(lua_State *L)
 }
 */
 
-static const struct luaL_reg dbalua_var_lib [] = {
+static const struct luaL_reg dbalua_msg_lib [] = {
         { "type", dbalua_msg_type },
         // { "__tostring", dbalua_var_tostring },
         {NULL, NULL}
@@ -121,7 +116,7 @@ dba_err dba_msg_lua_push(dba_msg var, lua_State* L)
                 lua_settable(L, -3);  /* metatable.__index = metatable */
 
                 // Load normal methods
-                luaL_register(L, NULL, dbalua_var_lib);
+                luaL_register(L, NULL, dbalua_msg_lib);
         }
 
         lua_setmetatable(L, -2);
@@ -129,12 +124,61 @@ dba_err dba_msg_lua_push(dba_msg var, lua_State* L)
 	return dba_error_ok();
 }
 
+dba_msg dba_msg_lua_check(lua_State* L, int idx)
+{
+        dba_msg* v = (dba_msg*)luaL_checkudata(L, idx, "dballe.msg");
+	return (v != NULL) ? *v : NULL;
+}
+
+static const struct luaL_reg dbalua_msg_context_lib [] = {
+        // { "type", dbalua_msg_type },
+        // { "__tostring", dbalua_var_tostring },
+        {NULL, NULL}
+};
+
+dba_err dba_msg_context_lua_push(dba_msg_context var, lua_State* L)
+{
+        // The object is a userdata that holds a pointer to this dba_msg_context structure
+        dba_msg_context* s = (dba_msg*)lua_newuserdata(L, sizeof(dba_msg_context));
+        *s = var;
+
+        // Set the metatable for the userdata
+        if (luaL_newmetatable(L, "dballe.msg.context"));
+        {
+                // If the metatable wasn't previously created, create it now
+                lua_pushstring(L, "__index");
+                lua_pushvalue(L, -2);  /* pushes the metatable */
+                lua_settable(L, -3);  /* metatable.__index = metatable */
+
+                // Load normal methods
+                luaL_register(L, NULL, dbalua_msg_context_lib);
+        }
+
+        lua_setmetatable(L, -2);
+
+	return dba_error_ok();
+}
+
+dba_msg_context dba_msg_context_lua_check(lua_State* L, int idx)
+{
+        dba_msg_context* v = (dba_msg_context*)luaL_checkudata(L, idx, "dballe.msg.context");
+	return (v != NULL) ? *v : NULL;
+}
+
 #else
 dba_err dba_msg_lua_push(dba_msg var, lua_State* L)
 {
 	return dba_error_unimplemented("DB-All.e compiled without Lua support");
 }
-dba_msg dba_msg_lua_check(lua_State* L, int idx) const
+dba_msg dba_msg_lua_check(lua_State* L, int idx)
+{
+	return dba_error_unimplemented("DB-All.e compiled without Lua support");
+}
+dba_err dba_msg_context_lua_push(dba_msg_context var, lua_State* L)
+{
+	return dba_error_unimplemented("DB-All.e compiled without Lua support");
+}
+dba_msg_context dba_msg_context_lua_check(lua_State* L, int idx)
 {
 	return dba_error_unimplemented("DB-All.e compiled without Lua support");
 }
