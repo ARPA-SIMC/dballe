@@ -67,6 +67,16 @@ void to::test<1>()
 		"  msg:foreach(function(x) x:foreach(function(y) count = count + 1 end) end)\n"
 		"  if count ~= 39 then return 'count is '..count..' instead of 39' end\n"
 
+		"  context = nil\n"
+		"  msg:foreach(function(x) context=x end)\n"
+		"  if context.ltype1 == nil then return 'context.ltype1 is nil' end\n"
+		"  if context.l1 == nil then return 'context.l1 is nil' end\n"
+		"  if context.ltype2 == nil then return 'context.ltype2 is nil' end\n"
+		"  if context.l2 == nil then return 'context.l2 is nil' end\n"
+		"  if context.pind == nil then return 'context.pind is nil' end\n"
+		"  if context.p1 == nil then return 'context.p1 is nil' end\n"
+		"  if context.p2 == nil then return 'context.p2 is nil' end\n"
+
 		"  var = msg:find('temp_2m')\n"
 		"  if var == nil then return 'temp_2m is nil' end\n"
 		"  if var:enqd() ~= 289.2 then return 'temp_2m is '..var:enqd()..' instead of 289.2' end\n"

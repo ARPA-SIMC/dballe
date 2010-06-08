@@ -183,7 +183,29 @@ static int dbalua_msg_context_tostring(lua_State *L)
 	return 1;
 }
 
+#define make_accessor(name) static int dbalua_msg_context_##name(lua_State *L) { \
+	dba_msg_context ctx = dba_msg_context_lua_check(L, 1); \
+	lua_pushinteger(L, ctx->name); \
+	return 1; \
+}
+make_accessor(ltype1)
+make_accessor(l1)
+make_accessor(ltype2)
+make_accessor(l2)
+make_accessor(pind)
+make_accessor(p1)
+make_accessor(p2)
+#undef make_accessor
+
+
 static const struct luaL_reg dbalua_msg_context_lib [] = {
+        { "ltype1", dbalua_msg_context_ltype1 },
+        { "l1", dbalua_msg_context_l1 },
+        { "ltype2", dbalua_msg_context_ltype2 },
+        { "l2", dbalua_msg_context_l2 },
+        { "pind", dbalua_msg_context_pind },
+        { "p1", dbalua_msg_context_p1 },
+        { "p2", dbalua_msg_context_p2 },
         { "size", dbalua_msg_context_size },
         { "foreach", dbalua_msg_context_foreach },
         { "__tostring", dbalua_msg_context_tostring },
