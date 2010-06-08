@@ -93,7 +93,7 @@ static int dbalua_var_tostring(lua_State *L)
 			double val;
 			char buf[25];
 			dbalua_checked(L, dba_var_enqd(var, &val));
-			snprintf(buf, 25, "%.*f\n", info->scale > 0 ? info->scale : 0, val);
+			snprintf(buf, 25, "%.*f", info->scale > 0 ? info->scale : 0, val);
 			lua_pushstring(L, buf);
 		}
 	}
