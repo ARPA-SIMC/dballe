@@ -77,8 +77,6 @@
  012001 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          1            0  12 K                         1          4
  012002 WET-BULB TEMPERATURE                                             K                          1            0  12 K                         1          4
  012003 DEW-POINT TEMPERATURE                                            K                          1            0  12 K                         1          4
- 012011 MAXIMUM TEMPERATURE                                              K                          1            0  12 K                         1          4
- 012012 MINIMUM TEMPERATURE                                              K                          1            0  12 K                         1          4
  012030 SOIL TEMPERATURE                                                 K                          1            0  12 K                         1          4
  012061 SKIN TEMPERATURE                                                 K                          1            0  12 K                         1          4
  012063 BRIGHTNESS TEMPERATURE                                           K                          1            0  12 K                         1          4
