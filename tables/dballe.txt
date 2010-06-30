@@ -157,4 +157,13 @@
  033195 [SIM] MeteoDB variable ID                                        NUMERIC                    0            0  24 NUMERIC                   0          8
  033196 [SIM] Data has been invalidated                                  CODE TABLE 33196           0            0   1 CODE TABLE 33196          0          1
  033197 [SIM] Manual replacement in substitution                         CODE TABLE 33197           0            0   2 CODE TABLE 33197          0          1
- 033198 [SIM] Observation increment                                      NUMERIC                    4   -536870912  31 NUMERIC                   4         10
+ 033198 [SIM] Observation increment                                      NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
+ 033201 [SIM] Kalman coefficient n.1                                     NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
+ 033202 [SIM] Kalman coefficient n.2                                     NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
+ 033203 [SIM] Kalman coefficient n.3                                     NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
+ 033204 [SIM] Kalman coefficient n.4                                     NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
+ 033205 [SIM] Kalman coefficient n.5                                     NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
+ 033206 [SIM] Kalman coefficient n.6                                     NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
+ 033207 [SIM] Kalman missing counting                                    DAY                        0            0   9 NUMERIC                   0          3
+ 033208 [SIM] Kalman missing counting                                    DAY                        0            0   9 NUMERIC                   0          3
+

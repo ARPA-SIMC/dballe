@@ -31,9 +31,9 @@ class Entry(object):
         self.desc = ""
         self.unit = ""
         self.scale = 0
-        self.ref = 0
+        self.ref = -10
         self.len = 0
-        self.bit_ref = 0
+        self.bit_ref = -10
         self.bit_len = 0
         self.bufr_unit = ""
         self.bufr_scale = 0
