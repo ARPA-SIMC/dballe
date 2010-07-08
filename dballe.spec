@@ -1,7 +1,7 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 4.0.13
-Release: 2326%{?dist}
+Version: 4.0.18
+Release: 2513%{dist}
 License: GPL
 Group: Applications/Meteo
 URL: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
@@ -9,7 +9,7 @@ Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils
 #Requires:  mysql >= 4.1.1 ,mysql-connector-odbc, sqlite sqliteodbc, %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-Requires:  %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires:  %{name}-common = %{?epoch:%epoch:}%{version}-%{release} unixODBC sqliteodbc
 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
@@ -248,6 +248,8 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %doc %{_mandir}/man1/dbatbl*
 %doc %{_docdir}/dballe/guide.ps
 %doc %{_docdir}/dballe/guide_html/*
+%doc %{_docdir}/dballe/fortran_api/*
+%doc %{_docdir}/dballe/libdballef.doxytags
 
 
 %files -n provami
@@ -319,6 +321,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{python_sitearch}/*.a
 %{python_sitearch}/*.la
 %{python_sitearch}/*.so*
+%{_bindir}/dbatbl_makeb
 
 %doc %{_docdir}/dballe/python-dballe*
 
@@ -354,6 +357,12 @@ make install DESTDIR=$RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Jul  8 2010 Daniele Branchini <dbranchini@carenza.metarpa> - 4.0.18-2513%{dist}
+- Aggiornato alla revisione 2513
+
+* Thu Feb 25 2010 Daniele Branchini <dbranchini@localhost.localdomain> - 4.0.16-2451
+- corretta sintassi release di pacchettizzazione
+
 * Tue Nov 11 2008 root <root@strip.metarpa> - %epoch:}%{version}-%{release}:4.0.8-1
 - bug resolved about units conversion in import/export and template used in api query message
 
