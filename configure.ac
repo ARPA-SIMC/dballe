@@ -117,6 +117,7 @@ else
 	enable_dballe_python=no
 fi
 
+dnl Check for unixodbc
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
         AC_MSG_WARN([*** sql.h not found. Check 'config.log' for more details.])
 	enable_dballe_db=false
@@ -151,6 +152,14 @@ then
         AC_DEFINE([HAVE_LUA], 1, [lua is available])
 fi
 AM_CONDITIONAL([LUA], [test x"$have_lua" = x"yes"])
+
+dnl Check for popt
+AC_CHECK_HEADER(popt.h, AC_DEFINE(HAVE_POPT_H, 1, popt.h has been found),
+        AC_MSG_ERROR([*** popt.h not found. Check 'config.log' for more details.])
+)
+AC_CHECK_LIB(popt, poptGetContext, LIBS="$LIBS -lpopt",
+        AC_MSG_ERROR([*** libpopt not found. Check 'config.log' for more details.])
+)
 
 LIBS="$LIBS -lm"
 
