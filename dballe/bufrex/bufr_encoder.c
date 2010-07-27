@@ -260,7 +260,7 @@ static dba_err encoder_encode_sec1ed3(encoder e)
 	/*DBA_RUN_OR_RETURN(bufr_message_append_byte(e, 0xff));*/
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.centre));
 	/* Update sequence number (zero for original BUFR messages; incremented for updates) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.update_sequence_number));
 	/* Bit 1= 0 No optional section = 1 Optional section included Bits 2 ­ 8 set to zero (reserved) */
 	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.optional_section_length ? 0x80 : 0));
 

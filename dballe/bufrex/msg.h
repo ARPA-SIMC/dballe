@@ -64,6 +64,8 @@ struct _bufrex_bufr_info {
 
 	/** 1 if the BUFR message uses compression, else 0 */
 	int compression;
+	/** Update sequence number from octet 7 in section 1*/
+	int update_sequence_number;
 	/** 0 if the BUFR message does not contain an optional section, else
 	 *  its length in bytes */
 	int optional_section_length;

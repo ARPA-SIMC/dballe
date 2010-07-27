@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -198,7 +198,8 @@ static dba_err bufr_decode_data_section(decoder d);
 static dba_err decode_sec1ed3(decoder d)
 {
 	// TODO: misses master table number in sec1[3]
-	// TODO: misses update sequence number sec1[7]
+	// Update sequence number sec1[6]
+	d->out->opt.bufr.update_sequence_number = d->sec1[6];
 	// Set length to 1 for now, will set the proper length later when we
 	// parse the section itself
 	d->out->opt.bufr.optional_section_length = (d->sec1[7] & 0x80) ? 1 : 0;

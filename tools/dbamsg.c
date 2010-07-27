@@ -104,6 +104,7 @@ static dba_err dump_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
 	printf("Tables: %d:%d\n", braw->opt.bufr.master_table, braw->opt.bufr.local_table);
 	printf("Table: %s\n", table_id);
 	printf("Compression: %s\n", braw->opt.bufr.compression ? "yes" : "no");
+	printf("Update sequence number: %d\n", braw->opt.bufr.update_sequence_number);
 	printf("Optional section length: %d\n", braw->opt.bufr.optional_section_length);
 	printf("Subsets: %d (decoded %zd)\n\n", braw->opt.bufr.subsets, braw->subsets_count);
 
