@@ -158,8 +158,8 @@ void to::test<4>()
 	gen_ensure_equals(info->ref, 0);
 	gen_ensure_equals(info->bit_len, 15);
 	gen_ensure_equals(info->len, 5);
-	gen_ensure_equals(info->imin, -99999);
-	gen_ensure_equals(info->imax, 99999);
+	gen_ensure_equals(info->imin, 0);
+	gen_ensure_equals(info->imax, 32766);
 	gen_ensure(!info->is_string);
 
 	CHECKED(dba_vartable_query(table, DBA_VAR(0, 11, 35), &info));

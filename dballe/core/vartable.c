@@ -189,21 +189,21 @@ static void postprocess_entry(dba_varinfo i)
 			i->imin = INT_MIN;
 			i->imax = INT_MAX;
 		} else {
-			/*
-			// We subtract 2 because 2^bit_len-1 is the
-			// BUFR missing value
 			int bufr_min = i->bit_ref;
-			int bufr_max = exp2(i->bit_len) + i->bit_ref - 2;
+			int bufr_max = exp2(i->bit_len) + i->bit_ref;
+			// We subtract 2 because 2^bit_len-1 is the
+			// BUFR missing value.
+			// We cannot subtract 2 from the delayed replication
+			// factors because RADAR BUFR messages have 255
+			// subsets, and the delayed replication field is 8
+			// bits, so 255 is the missing value, and if we
+			// disallow it here we cannot import radars anymore.
+			if (DBA_VAR_X(i->var) != 31)
+				bufr_max -= 2;
 			// We subtract 2 because 10^len-1 is the
 			// CREX missing value
 			int crex_min = -(int)(exp10(i->len) - 1.0);
 			int crex_max = (int)(exp10(i->len) - 2.0);
-			// Actually, we cannot subtract 2 because RADAR BUFR
-			// messages have 255 subsets, and the delayed
-			// replication field is 8 bits, so 255 is the missing
-			// value, and if we disallow it here we cannot import
-			// radars anymore.
-			*/
 			/*
 			 * If the unit is the same between BUFR and CREX, take
 			 * the most restrictive extremes.
@@ -211,7 +211,6 @@ static void postprocess_entry(dba_varinfo i)
 			 * If the unit is different, take the most permissive
 			 * extremes, to make sure to fit values in both units
 			 */
-			/*
 			if (strcmp(i->unit, i->bufr_unit) == 0)
 			{
 				i->imin = bufr_min > crex_min ? bufr_min : crex_min;
@@ -220,13 +219,12 @@ static void postprocess_entry(dba_varinfo i)
 				i->imin = bufr_min < crex_min ? bufr_min : crex_min;
 				i->imax = bufr_max > crex_max ? bufr_max : crex_max;
 			}
-			*/
 			/*
 			i->imin = i->bit_ref;
 			i->imax = exp2(i->bit_len) + i->bit_ref - 2;
 			*/
-			i->imin = -(int)(exp10(i->len) - 1.0);
-			i->imax = (int)(exp10(i->len) - 1.0);
+			//i->imin = -(int)(exp10(i->len) - 1.0);
+			//i->imax = (int)(exp10(i->len) - 1.0);
 		}
 		i->dmin = dba_var_decode_int(i->imin, i);
 		i->dmax = dba_var_decode_int(i->imax, i);
