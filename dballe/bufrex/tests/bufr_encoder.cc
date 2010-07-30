@@ -235,12 +235,17 @@ void to::test<3>()
 	CHECKED(bufrex_msg_get_subset(msg, 0, &s));
 
 	/* Set the test variable */
-	CHECKED(bufrex_subset_store_variable_d(s, DBA_VAR(0, 1, 1), -1.0));
+	//CHECKED(bufrex_subset_store_variable_d(s, DBA_VAR(0, 1, 1), -1.0));
+	/* Now it errors here, because the range check is appropriately strict */
+	dba_err err = bufrex_subset_store_variable_d(s, DBA_VAR(0, 1, 1), -1.0);
+	ensure(err == DBA_ERROR);
 
+#if 0
 	/* Encode gives error because of overflow */
 	dba_rawmsg rmsg = NULL;
 	dba_err err = bufrex_msg_encode(msg, &rmsg);
 	ensure(err == DBA_ERROR);
+#endif
 }
 
 
