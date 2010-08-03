@@ -171,6 +171,16 @@ void to::test<4>()
 	gen_ensure_equals(info->bit_len, 14);
 	gen_ensure_equals(info->len, 5);
 	gen_ensure(!info->is_string);
+
+	CHECKED(dba_vartable_query(table, DBA_VAR(0, 7, 31), &info));
+	gen_ensure_equals(info->var, DBA_VAR(0, 7, 31));
+	gen_ensure_equals(string(info->desc), string("HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL"));
+	gen_ensure_equals(string(info->unit), "M");
+	gen_ensure_equals(info->scale, 1) ;
+	gen_ensure_equals(info->bit_ref, -4000);
+	gen_ensure_equals(info->bit_len, 17);
+	gen_ensure_equals(info->len, 6);
+	gen_ensure(!info->is_string);
 }
 
 /* Test reading BUFR edition 4 tables */

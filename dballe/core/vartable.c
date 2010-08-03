@@ -426,6 +426,22 @@ int dba_vartable_exists(const char* id)
 	return access(file, F_OK) == 0;
 }
 
+long getnumber(char* str)
+{
+	while (*str && isspace(*str))
+		++str;
+	if (!*str) return 0;
+	if (*str == '-')
+	{
+		++str;
+		// Eat spaces after the - (oh my this makes me sad)
+		while (*str && isspace(*str))
+			++str;
+		return -strtol(str, 0, 10);
+	} else
+		return strtol(str, 0, 10);
+}
+
 static dba_err dba_vartable_read(const char* id, int* index, int style)
 {
 	dba_err err = DBA_OK;
@@ -491,10 +507,10 @@ static dba_err dba_vartable_read(const char* id, int* index, int style)
 				strncmp(entry->unit, "CODE TABLE", 10) == 08*/
 		);
 
-		entry->scale = strtol(line+98, 0, 10);
-		entry->bufr_scale = strtol(line+98, 0, 10);
-		entry->bit_ref = strtol(line+102, 0, 10);
-		entry->bit_len = strtol(line+115, 0, 10);
+		entry->scale = getnumber(line+98);
+		entry->bufr_scale = getnumber(line+98);
+		entry->bit_ref = getnumber(line+102);
+		entry->bit_len = getnumber(line+115);
 
 		if (strlen(line) < 157 || style == VARTABLE_READ_BUFR)
 		{
@@ -517,9 +533,9 @@ static dba_err dba_vartable_read(const char* id, int* index, int style)
 				;
 			entry->unit[i+1] = 0;
 
-			entry->scale = strtol(line+138, 0, 10);
+			entry->scale = getnumber(line+138);
 			entry->ref = 0;
-			entry->len = strtol(line+149, 0, 10);
+			entry->len = getnumber(line+149);
 
 			crex_is_string = (
 					strcmp(entry->unit, "CHARACTER") == 0 /* ||

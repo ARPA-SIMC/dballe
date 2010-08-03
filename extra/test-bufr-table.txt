@@ -320,7 +320,7 @@
  007024 SATELLITE ZENITH ANGLE                                           DEGREE                     2        -9000  15
  007025 SOLAR ZENITH ANGLE                                               DEGREE                     2        -9000  15
  007030 HEIGHT OF STATION GROUND ABOVE MEAN SEA LEVEL                    M                          1        -4000  17
- 007031 HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL                         M                          1        -4000  17
+ 007031 HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL                         M                          1       - 4000  17
  007032 HEIGHT OF SENSOR ABOVE LOCAL GROUND ( OR DECK OF MARINE PLATFORM M                          2            0  16
  007033 HEIGHT OF SENSOR ABOVE WATER SURFACE                             M                          1            0  12
  007061 DEPTH BELOW LAND SURFACE                                         M                          2            0  14
