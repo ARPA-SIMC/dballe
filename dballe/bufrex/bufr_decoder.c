@@ -347,13 +347,13 @@ static dba_err decode_header(decoder d)
 		PARSE_ERROR(d->sec3, "Section 3 claims to end past the end of the BUFR message");
 	d->out->opt.bufr.subsets = readNumber(d->sec3 + 4, 2);
 	d->out->opt.bufr.compression = (d->sec3[6] & 0x40) ? 1 : 0;
-	for (i = 0; i < (d->sec4 - d->sec3 - 8)/2; i++)
+	for (i = 0; i < (d->sec4 - d->sec3 - 7)/2; i++)
 	{
 		dba_varcode var = (dba_varcode)readNumber(d->sec3 + 7 + i * 2, 2);
 		DBA_RUN_OR_RETURN(bufrex_msg_append_datadesc(d->out, var));
 	}
-	TRACE(" subsets %d observed %d compression %d byte7 %x\n",
-			d->out->opt.bufr.subsets, (d->sec3[6] & 0x80) ? 1 : 0, d->out->opt.bufr.compression, (unsigned int)d->sec3[6]);
+	TRACE(" s3length %d subsets %d observed %d compression %d byte7 %x\n",
+			(int)(d->sec4 - d->sec3), d->out->opt.bufr.subsets, (d->sec3[6] & 0x80) ? 1 : 0, d->out->opt.bufr.compression, (unsigned int)d->sec3[6]);
 	/*
 	IFTRACE{
 		TRACE(" -> data descriptor section: ");
