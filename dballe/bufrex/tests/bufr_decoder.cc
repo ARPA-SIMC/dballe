@@ -666,6 +666,105 @@ void to::test<24>()
 	//bufrex_msg_delete(msg1);
 }
 
+// BUFR4 with compressed strings
+template<> template<>
+void to::test<25>()
+{
+	/*
+	TestBufrexMsg test;
+	test.edition = 2;
+	test.cat = 6;
+	test.subcat = 255;
+	test.localsubcat = 0;
+	test.subsets = 1;
+	*/
+
+	bufrex_msg msg = read_test_msg_header_raw("bufr/ed4-compr-string.bufr", BUFR);
+	/*
+	ensureBufrexRawEquals(test, msg);
+	ensure_equals(msg->rep_year, 2007);
+	ensure_equals(msg->rep_month, 8);
+	ensure_equals(msg->rep_day, 13);
+	ensure_equals(msg->rep_hour, 18);
+	ensure_equals(msg->rep_minute, 30);
+	ensure_equals(msg->rep_second, 0);
+
+	test.subset(0).vars = 4606;
+	*/
+
+	//bufrex_msg msg1 = reencode_test(msg);
+	//ensureBufrexRawEquals(test, msg1);
+
+	bufrex_msg_delete(msg);
+	//bufrex_msg_delete(msg1);
+}
+
+// BUFR4 which gives a parse error
+template<> template<>
+void to::test<26>()
+{
+	/*
+	TestBufrexMsg test;
+	test.edition = 2;
+	test.cat = 6;
+	test.subcat = 255;
+	test.localsubcat = 0;
+	test.subsets = 1;
+	*/
+
+	bufrex_msg msg = read_test_msg_header_raw("bufr/ed4-parseerror1.bufr", BUFR);
+	/*
+	ensureBufrexRawEquals(test, msg);
+	ensure_equals(msg->rep_year, 2007);
+	ensure_equals(msg->rep_month, 8);
+	ensure_equals(msg->rep_day, 13);
+	ensure_equals(msg->rep_hour, 18);
+	ensure_equals(msg->rep_minute, 30);
+	ensure_equals(msg->rep_second, 0);
+
+	test.subset(0).vars = 4606;
+	*/
+
+	//bufrex_msg msg1 = reencode_test(msg);
+	//ensureBufrexRawEquals(test, msg1);
+
+	bufrex_msg_delete(msg);
+	//bufrex_msg_delete(msg1);
+}
+
+// BUFR4 which does not give a parse error but looks empty
+template<> template<>
+void to::test<27>()
+{
+	/*
+	TestBufrexMsg test;
+	test.edition = 2;
+	test.cat = 6;
+	test.subcat = 255;
+	test.localsubcat = 0;
+	test.subsets = 1;
+	*/
+
+	bufrex_msg msg = read_test_msg_header_raw("bufr/ed4-empty.bufr", BUFR);
+	/*
+	ensureBufrexRawEquals(test, msg);
+	ensure_equals(msg->rep_year, 2007);
+	ensure_equals(msg->rep_month, 8);
+	ensure_equals(msg->rep_day, 13);
+	ensure_equals(msg->rep_hour, 18);
+	ensure_equals(msg->rep_minute, 30);
+	ensure_equals(msg->rep_second, 0);
+
+	test.subset(0).vars = 4606;
+	*/
+
+	//bufrex_msg msg1 = reencode_test(msg);
+	//ensureBufrexRawEquals(test, msg1);
+
+	bufrex_msg_delete(msg);
+	//bufrex_msg_delete(msg1);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
