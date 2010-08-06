@@ -648,22 +648,76 @@ static dba_err bufr_decode_b_data(decoder d)
 			DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, 6, &diffbits));
 			if (diffbits != 0)
 			{
-				err = dba_error_unimplemented("applying difference values (this one has %d bits) on string variables in BUFR encoded with data compression", diffbits);
-				goto cleanup;
-			}
-			/* Add the string to all the subsets */
-			for (i = 0; i < d->out->opt.bufr.subsets; ++i)
-			{
-				bufrex_subset subset;
-				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));
+				/* For compressed strings, the reference value must be all zeros */
+				for (i = 0; i < len; ++i)
+					if (str[i] != 0)
+					{
+						err = dba_error_unimplemented("compressed strings with %d bit deltas have non-zero reference value", diffbits);
+						goto cleanup;
+					}
 
-				/* Create the new dba_var */
-				if (missing)
-					DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
-				else
-					DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
-				var = NULL;
+				/* Let's also check that the number of
+				 * difference characters is the same length as
+				 * the reference string */
+				if (diffbits != len)
+				{
+					err = dba_error_unimplemented("compressed strings with %d characters have %d bit deltas (they should be the same)", len, diffbits);
+					goto cleanup;
+				}
+
+				for (i = 0; i < d->out->opt.bufr.subsets; ++i)
+				{
+					int j, missing = 1;
+
+					/* Access the subset we are working on */
+					bufrex_subset subset;
+					DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));
+
+					/* Decode the difference value, reusing the str buffer */
+					for (j = 0; j < len; ++j)
+					{
+						uint32_t bitval;
+						DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, 8, &bitval));
+						/* Check that the string is not all 0xff, meaning missing value */
+						if (bitval != 0xff && bitval != 0)
+							missing = 0;
+						str[j] = bitval;
+					}
+					str[j] = 0;
+
+					if (missing)
+					{
+						/* Missing value */
+						TRACE("Decoded[%d] as missing\n", i);
+
+						/* Create the new dba_var */
+						DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+					} else {
+						/* Compute the value for this subset */
+						TRACE("Decoded[%d] as %s\n", i, str);
+
+						DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
+					}
+
+					/* Add it to this subset */
+					DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
+					var = NULL;
+				}
+			} else {
+				/* Add the string to all the subsets */
+				for (i = 0; i < d->out->opt.bufr.subsets; ++i)
+				{
+					bufrex_subset subset;
+					DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));
+
+					/* Create the new dba_var */
+					if (missing)
+						DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+					else
+						DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
+					DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
+					var = NULL;
+				}
 			}
 		} else {
 			/* Create the new dba_var */
