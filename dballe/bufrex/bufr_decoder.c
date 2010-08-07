@@ -646,6 +646,9 @@ static dba_err bufr_decode_b_data(decoder d)
 			/* Decode the number of bits (encoded in 6 bits) that these difference
 			 * values occupy */
 			DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, 6, &diffbits));
+
+			TRACE("Compressed string, diff bits %d\n", diffbits);
+
 			if (diffbits != 0)
 			{
 				/* For compressed strings, the reference value must be all zeros */
@@ -659,9 +662,9 @@ static dba_err bufr_decode_b_data(decoder d)
 				/* Let's also check that the number of
 				 * difference characters is the same length as
 				 * the reference string */
-				if (diffbits != len)
+				if (diffbits > len)
 				{
-					err = dba_error_unimplemented("compressed strings with %d characters have %d bit deltas (they should be the same)", len, diffbits);
+					err = dba_error_unimplemented("compressed strings with %d characters have %d bit deltas (deltas should not be longer than field)", len, diffbits);
 					goto cleanup;
 				}
 
@@ -674,7 +677,7 @@ static dba_err bufr_decode_b_data(decoder d)
 					DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));
 
 					/* Decode the difference value, reusing the str buffer */
-					for (j = 0; j < len; ++j)
+					for (j = 0; j < diffbits; ++j)
 					{
 						uint32_t bitval;
 						DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, 8, &bitval));
@@ -759,6 +762,9 @@ static dba_err bufr_decode_b_data(decoder d)
 				err = dba_error_consistency("When decoding compressed BUFR data, the difference bit length must be 0 (and not %d like in this case) when the base value is missing", diffbits);
 				goto cleanup;
 			}
+
+			TRACE("Compressed number, base value %d diff bits %d\n", val, diffbits);
+
 			for (i = 0; i < d->out->opt.bufr.subsets; ++i)
 			{
 				uint32_t diff, newval;
@@ -781,7 +787,7 @@ static dba_err bufr_decode_b_data(decoder d)
 					/* Compute the value for this subset */
 					newval = val + diff;
 					double dval = bufr_decode_int(d, newval, info);
-					TRACE("Decoded[%d] as %f %s\n", i, dval, info->bufr_unit);
+					TRACE("Decoded[%d] as %d+%d=%d->%f %s\n", i, val, diff, newval, dval, info->bufr_unit);
 
 					/* Convert to target unit */
 					DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
