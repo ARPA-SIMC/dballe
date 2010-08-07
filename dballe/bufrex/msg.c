@@ -139,36 +139,37 @@ dba_err bufrex_msg_get_table_id(bufrex_msg msg, const char** id)
 dba_err bufrex_msg_load_tables(bufrex_msg msg)
 {
 	char id[30];
+	int ce = msg->opt.bufr.centre;
+	int sc = msg->opt.bufr.subcentre;
+	int mt = msg->opt.bufr.master_table;
+	int lt = msg->opt.bufr.local_table;
+
+	/* If standard tables are used, use WMO centre for finding tables */
+        if (lt == 0 || lt == 255)
+            ce = sc = lt = 0;
+
 	switch (msg->encoding_type)
 	{
 		case BUFREX_BUFR:
 			switch (msg->edition)
 			{
 				case 2:
+					sprintf(id, "B%05d%02d%02d", ce, mt, lt);
+					if (dba_vartable_exists(id))
+						break;
 				case 3:
 					sprintf(id, "B00000%03d%03d%02d%02d",
-							0,
-							msg->opt.bufr.centre,
-							msg->opt.bufr.master_table,
-							msg->opt.bufr.local_table);
+							0, ce, mt, lt);
 					/* Some tables used by BUFR3 are
  					 * distributed using BUFR4 names
 					 */
-					if (!dba_vartable_exists(id))
-						sprintf(id, "B00%03d%04d%04d%03d%03d",
-								0,
-								0,
-								msg->opt.bufr.centre,
-								msg->opt.bufr.master_table,
-								msg->opt.bufr.local_table);
-							break;
+					if (dba_vartable_exists(id))
+						break;
+					else
+						sc = 0;
 				case 4:
 					sprintf(id, "B00%03d%04d%04d%03d%03d",
-							0,
-							msg->opt.bufr.subcentre,
-							msg->opt.bufr.centre,
-							msg->opt.bufr.master_table,
-							msg->opt.bufr.local_table);
+							0, sc, ce, mt, lt);
 						break;
 				default:
 					return dba_error_consistency("BUFR edition number is %d but I can only load tables for 3 or 4", msg->edition);
