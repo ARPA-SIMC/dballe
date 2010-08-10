@@ -1001,6 +1001,22 @@ static dba_err bufr_decode_c_data(decoder d)
 		case 2:
 			d->c_scale_change = DBA_VAR_Y(code) == 0 ? 0 : DBA_VAR_Y(code) - 128;
 			break;
+		case 5: {
+			int cdatalen = DBA_VAR_Y(code);
+			char buf[300];
+			int i;
+			TRACE("C DATA character data %d long\n", cdatalen);
+			for (i = 0; i < cdatalen; ++i)
+			{
+				uint32_t bitval;
+				DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, 8, &bitval));
+				TRACE("C DATA decoded character %d %c\n", (int)bitval, (char)bitval);
+				buf[i] = bitval;
+			}
+			buf[i] = 0;
+			TRACE("C DATA decoded string %s\n", buf);
+			break;
+		}
 		case 22:
 			if (DBA_VAR_Y(code) == 0)
 			{
@@ -1022,7 +1038,7 @@ static dba_err bufr_decode_c_data(decoder d)
 				DBA_RUN_OR_GOTO(cleanup, bufr_decode_r_data(d));
 			} else {
 				err = dba_error_parse(FILENAME(d), d->sec4 + 4 + decoder_offset(d) - d->in->buf,
-						"C modifiers %d%02d%03d not yet supported",
+						"C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
 							DBA_VAR_X(code),
 							DBA_VAR_Y(code));
