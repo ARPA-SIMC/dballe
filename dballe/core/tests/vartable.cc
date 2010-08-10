@@ -235,6 +235,28 @@ void to::test<6>()
 	CHECKED(dba_vartable_create("B0000000000000014000", &table));
 }
 
+/* Test the calculation of bounds */
+template<> template<>
+void to::test<7>()
+{
+	dba_vartable table;
+	dba_varinfo info;
+
+	CHECKED(dba_vartable_create("dballe", &table));
+
+	CHECKED(dba_vartable_query(table, DBA_VAR(0, 15, 194), &info));
+	gen_ensure_equals(info->var, DBA_VAR(0, 15, 194));
+	gen_ensure_equals(info->desc, string("[SIM] O3 Concentration"));
+	gen_ensure_equals(info->unit, string("KG/M**3"));
+	gen_ensure_equals(info->scale, 10) ;
+	gen_ensure_equals(info->bit_ref, 0);
+	gen_ensure_equals(info->bit_len, 14);
+	gen_ensure_equals(info->len, 4);
+	gen_ensure_equals(info->dmin, 0);
+	gen_ensure_equals(info->dmax, 9.998e-07);
+	gen_ensure(!info->is_string);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
