@@ -251,9 +251,9 @@ void to::test<7>()
 	gen_ensure_equals(info->scale, 10) ;
 	gen_ensure_equals(info->bit_ref, 0);
 	gen_ensure_equals(info->bit_len, 14);
-	gen_ensure_equals(info->len, 4);
+	gen_ensure_equals(info->len, 5);
 	gen_ensure_equals(info->dmin, 0);
-	gen_ensure_equals(info->dmax, 9.998e-07);
+	gen_ensure_equals(info->dmax, 1.6382e-06);
 	gen_ensure(!info->is_string);
 }
 
