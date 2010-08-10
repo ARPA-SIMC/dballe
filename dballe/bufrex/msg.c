@@ -144,6 +144,8 @@ dba_err bufrex_msg_load_tables(bufrex_msg msg)
 	int mt = msg->opt.bufr.master_table;
 	int lt = msg->opt.bufr.local_table;
 
+/* fprintf(stderr, "ce %d sc %d mt %d lt %d\n", ce, sc, mt, lt); */
+
 	/* If standard tables are used, use WMO centre for finding tables */
         if (lt == 0 || lt == 255)
             ce = sc = lt = 0;
