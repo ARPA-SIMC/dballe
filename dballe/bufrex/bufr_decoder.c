@@ -883,12 +883,48 @@ static dba_err bufr_decode_r_data(decoder d)
 		/* Insert the repetition count among the parsed variables */
 		if (d->out->opt.bufr.compression)
 		{
+			uint32_t diffbits;
+			uint32_t repval = 0;
 			int i;
+			/* If compression is in use, then we just decoded the base value.  Now
+			 * we need to decode all the repetition factors and see
+			 * that they are the same */
+
+			/* Decode the number of bits (encoded in 6 bits) that these difference
+			 * values occupy */
+			DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, 6, &diffbits));
+
+			TRACE("Compressed delayed repetition, base value %d diff bits %d\n", count, diffbits);
+
 			for (i = 0; i < d->out->opt.bufr.subsets; ++i)
 			{
+				uint32_t diff, newval;
+				/* Access the subset we are working on */
 				bufrex_subset subset;
 				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d->out, i, &subset));
-				DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, count, &rep_var));
+
+				/* Decode the difference value */
+				DBA_RUN_OR_GOTO(cleanup, decoder_get_bits(d, diffbits, &diff));
+
+				/* Compute the value for this subset */
+				newval = count + diff;
+				TRACE("Decoded[%d] as %d+%d=%d\n", i, count, diff, newval);
+
+				if (i == 0)
+					repval = newval;
+				else if (repval != newval)
+				{
+					err = dba_error_parse(
+							FILENAME(d),
+							d->sec4 + 4 + decoder_offset(d) - d->in->buf,
+							"compressed delayed replication factor has different values for subsets (%d and %d)", repval, newval);
+					goto cleanup;
+				}
+
+				/* Create the new dba_var */
+				DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, newval, &rep_var));
+
+				/* Add it to this subset */
 				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, rep_var));
 			}
 		} else {
