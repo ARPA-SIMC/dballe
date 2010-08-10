@@ -152,31 +152,49 @@ dba_err bufrex_msg_load_tables(bufrex_msg msg)
 
 	switch (msg->encoding_type)
 	{
-		case BUFREX_BUFR:
-			switch (msg->edition)
+		case BUFREX_BUFR: {
+			int found = 0;
+			int i;
+			for (i = 0; !found && i < 3; ++i)
 			{
-				case 2:
-					sprintf(id, "B%05d%02d%02d", ce, mt, lt);
-					if (dba_vartable_exists(id))
+				if (i == 1)
+				{
+					// Default to WMO tables if the first
+					// attempt with local tables failed
+					ce = sc = lt = 0;
+				} else if (i == 2 && mt < 14) {
+					// Default to the latest WMO table that
+					// we have if the previous attempt has
+					// failed
+					mt = 14;
+				}
+				switch (msg->edition)
+				{
+					case 2:
+						sprintf(id, "B%05d%02d%02d", ce, mt, lt);
+						if ((found = dba_vartable_exists(id)))
+							break;
+					case 3:
+						sprintf(id, "B00000%03d%03d%02d%02d",
+								0, ce, mt, lt);
+						/* Some tables used by BUFR3 are
+						 * distributed using BUFR4 names
+						 */
+						if ((found = dba_vartable_exists(id)))
+							break;
+						else
+							sc = 0;
+					case 4:
+						sprintf(id, "B00%03d%04d%04d%03d%03d",
+								0, sc, ce, mt, lt);
+						found = dba_vartable_exists(id);
 						break;
-				case 3:
-					sprintf(id, "B00000%03d%03d%02d%02d",
-							0, ce, mt, lt);
-					/* Some tables used by BUFR3 are
- 					 * distributed using BUFR4 names
-					 */
-					if (dba_vartable_exists(id))
-						break;
-					else
-						sc = 0;
-				case 4:
-					sprintf(id, "B00%03d%04d%04d%03d%03d",
-							0, sc, ce, mt, lt);
-						break;
-				default:
-					return dba_error_consistency("BUFR edition number is %d but I can only load tables for 3 or 4", msg->edition);
+					default:
+						return dba_error_consistency("BUFR edition number is %d but I can only load tables for 3 or 4", msg->edition);
+				}
 			}
 			break;
+		}
 		case BUFREX_CREX:
 			sprintf(id, "B%02d%02d%02d",
 					msg->opt.crex.master_table,
