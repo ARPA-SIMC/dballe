@@ -161,11 +161,13 @@ dba_err bufrex_msg_load_tables(bufrex_msg msg)
 				{
 					// Default to WMO tables if the first
 					// attempt with local tables failed
+					/* fprintf(stderr, "FALLBACK from %d %d %d %d to 0 %d 0 0\n", sc, ce, mt, lt, mt); */
 					ce = sc = lt = 0;
 				} else if (i == 2 && mt < 14) {
 					// Default to the latest WMO table that
 					// we have if the previous attempt has
 					// failed
+					/* fprintf(stderr, "FALLBACK from %d %d %d %d to 0 14 0 0\n", sc, ce, mt, lt); */
 					mt = 14;
 				}
 				switch (msg->edition)

@@ -225,6 +225,16 @@ void to::test<5>()
 	gen_ensure(!info->is_string);
 }
 
+/* Test reading WMO standard tables */
+template<> template<>
+void to::test<6>()
+{
+	dba_vartable table;
+	CHECKED(dba_vartable_create("B0000000000000012000", &table));
+	CHECKED(dba_vartable_create("B0000000000000013000", &table));
+	CHECKED(dba_vartable_create("B0000000000000014000", &table));
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
