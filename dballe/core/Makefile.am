@@ -68,6 +68,7 @@ noinst_HEADERS = test-utils-core.h
 
 tut_test_SOURCES = \
 	tests/aliases.cc \
+	tests/conv.cc \
 	tests/error.cc \
 	tests/fast.cc \
 	tests/file.cc \

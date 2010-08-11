@@ -53,8 +53,10 @@ void to::test<1>()
 	ensureBufrexRawEquals(test, msgr);
 
 	test.subset(0).vars = 49;
-	test.subset(0).set(DBA_VAR(0, 5, 1), 48.22);
-	test.subset(0).set(DBA_VAR(0, 6, 1),  9.92);
+	test.subset(0).set(DBA_VAR(0,  5, 1), 48.22);
+	test.subset(0).set(DBA_VAR(0,  6, 1),  9.92);
+	test.subset(0).set(DBA_VAR(0, 12, 4),  3.0);
+	test.subset(0).set(DBA_VAR(0, 12, 6),  0.7);
 
 	bufrex_msg msg = read_test_msg_raw("crex/test-synop0.crex", CREX);
 	ensureBufrexRawEquals(test, msg);

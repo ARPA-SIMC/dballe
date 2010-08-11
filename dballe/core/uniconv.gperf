@@ -34,10 +34,10 @@
  * being deallocated from dba_varinfo_delete */
 struct uniconv { const char* tag; double mul; double add; };
 %%
-"K->C",				1,	-273.15
-"C->K",				1,	273.15
-"K->C/10",			10,	-2731.5
-"C/10->K",			0.1,	273.15
+"K->C",				1,	-273.15001f
+"C->K",				1,	273.15001f
+"K->C/10",			10,	-2731.5001f
+"C/10->K",			0.1,	273.15001f
 "C->C/10",			10,	0
 "C/10->C",			0.1,	0
 "YEARS->YEAR",			1,	0
