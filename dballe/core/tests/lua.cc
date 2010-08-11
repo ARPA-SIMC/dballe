@@ -49,6 +49,7 @@ void to::test<1>()
 
 	Lua test(
 		"function test() \n"
+		"  if var:code() ~= 'B12001' then return 'code is '..var:code()..' instead of B12001' end \n"
 		"  if var:enqi() ~= 123 then return 'enqi is '..var:enqi()..' instead of 123' end \n"
 		"  if var:enqd() ~= 12.3 then return 'enqd is '..var:enqd()..' instead of 12.3' end \n"
 		"  if var:enqc() ~= '123' then return 'enqc is '..var:enqc()..' instead of 123' end \n"

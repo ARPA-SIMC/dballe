@@ -78,6 +78,15 @@ static int dbalua_var_enqc(lua_State *L)
 	return 1;
 }
 
+static int dbalua_var_code(lua_State *L)
+{
+	dba_var var = dba_var_lua_check(L, 1);
+	char buf[10];
+	snprintf(buf, 10, "B%02d%03d", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
+	lua_pushstring(L, buf);
+	return 1;
+}
+
 static int dbalua_var_tostring(lua_State *L)
 {
 	dba_var var = dba_var_lua_check(L, 1);
@@ -102,6 +111,7 @@ static int dbalua_var_tostring(lua_State *L)
 
 
 static const struct luaL_reg dbalua_var_lib [] = {
+	{ "code", dbalua_var_code },
         { "enqi", dbalua_var_enqi },
         { "enqd", dbalua_var_enqd },
         { "enqc", dbalua_var_enqc },
