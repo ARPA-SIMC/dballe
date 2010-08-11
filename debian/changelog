@@ -1,3 +1,16 @@
+dballe (4.0.19-1) unstable; urgency=low
+
+  * Smarter lookup of tables, with fallback on standard WMO tables
+  * Access variable codes via Lua
+  * Tweak to SIM table entries for pollutants
+  * Many improvements to BUFR decoder: compressed strings, compressed delayed
+    repetitions, C05 modifiers
+  * Stricter range tests on variable assignments
+  * Handle BUFR update sequence numbers
+  * Tweaked unit conversion factors
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 11 Aug 2010 13:25:07 +0100
+
 dballe (4.0.18-1) unstable; urgency=low
 
   * New upstream version
