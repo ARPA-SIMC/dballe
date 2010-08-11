@@ -117,7 +117,7 @@ guide.dvi: $(guidesources)
 
 fapi.dvi: $(fapisources)
 
-EXTRA_DIST = libdballe.dox $(guidesources) fapi.tex doxy2swig.py integrate_dbadb_manpage
+EXTRA_DIST = libdballe.dox $(guidesources) fapi.tex doxy2swig.py integrate_dbadb_manpage introduzione.odt
 
 CLEANFILES = libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg} dballe-doc.i
 
