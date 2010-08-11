@@ -115,6 +115,7 @@ btable.dox: $(top_srcdir)/tables/dballe.txt $(top_srcdir)/tables/mkbdoc
 	$(top_srcdir)/tables/mkbdoc dox < $< > $@ 
 
 distclean-local:
-	rm -f record_keyword.c record_keyword.dox record_keyword.tex aliases.c aliases.dox aliases.tex uniconv.c btable.dox
+	rm -f record_keyword.dox record_keyword.tex aliases.dox aliases.tex btable.dox
 
+BUILT_SOURCES = record_keyword.c aliases.c uniconv.c
 EXTRA_DIST = record_keyword.gperf mkkeydoc aliases.gperf mkaliasdoc uniconv.gperf
