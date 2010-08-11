@@ -36,7 +36,7 @@ template-aliases.tex: template-aliases.gperf mktaliases
 	if ! $(srcdir)/mktaliases < $< ; then rm $@; /bin/false; fi
 	
 distclean-local:
-	rm -f template-aliases.c template-aliases.tex
+	rm -f template-aliases.tex
 
 BUILT_SOURCES=template-aliases.c template-aliases.tex
 EXTRA_DIST=template-aliases.gperf mktaliases
