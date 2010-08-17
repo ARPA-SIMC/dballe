@@ -160,7 +160,7 @@ void to::test<4>()
 	dba_varinfo info;
 	dba_err err;
 
-	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 12, 3), &info));
+	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 12, 103), &info));
 	CHECKED(dba_var_create(info, &var));
 
 	err = dba_var_setd(var, logf(0));

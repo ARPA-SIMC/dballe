@@ -45,7 +45,7 @@ void to::test<1>()
 	double res;
 	CHECKED(dba_convert_units("C", "K", 0.7, &res));
 
-	fprintf(stderr, "RES %.20f\n", res);
+	/* fprintf(stderr, "RES %.20f\n", res); */
 	gen_ensure_equals(res, 273.85);
 }
 	

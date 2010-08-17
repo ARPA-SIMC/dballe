@@ -526,11 +526,11 @@ void to::test<7>()
 	gen_ensure_equals(found, 1);
 	gen_ensure_equals(ival, 5);
 
-	CHECKED(dba_record_var_setd(rec, DBA_VAR(0, 12, 1), 12.5));
+	CHECKED(dba_record_var_setd(rec, DBA_VAR(0, 12, 101), 12.5));
 	CHECKED(dba_record_enqd(rec, "t", &dval, &found));
 	gen_ensure_equals(found, 1);
 	gen_ensure_equals(dval, 12.5);
-	CHECKED(dba_record_enqd(rec, "B12001", &dval, &found));
+	CHECKED(dba_record_enqd(rec, "B12101", &dval, &found));
 	gen_ensure_equals(found, 1);
 	gen_ensure_equals(dval, 12.5);
 

@@ -44,15 +44,15 @@ template<> template<>
 void to::test<1>()
 {
 	dba_var var;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 12, 1), &var));
+	CHECKED(dba_var_create_local(DBA_VAR(0, 12, 101), &var));
 	CHECKED(dba_var_setd(var, 12.3));
 
 	Lua test(
 		"function test() \n"
-		"  if var:code() ~= 'B12001' then return 'code is '..var:code()..' instead of B12001' end \n"
-		"  if var:enqi() ~= 123 then return 'enqi is '..var:enqi()..' instead of 123' end \n"
+		"  if var:code() ~= 'B12101' then return 'code is '..var:code()..' instead of B12101' end \n"
+		"  if var:enqi() ~= 1230 then return 'enqi is '..var:enqi()..' instead of 1230' end \n"
 		"  if var:enqd() ~= 12.3 then return 'enqd is '..var:enqd()..' instead of 12.3' end \n"
-		"  if var:enqc() ~= '123' then return 'enqc is '..var:enqc()..' instead of 123' end \n"
+		"  if var:enqc() ~= '1230' then return 'enqc is '..var:enqc()..' instead of 1230' end \n"
 		"end \n"
 	);
 
