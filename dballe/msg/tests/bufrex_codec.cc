@@ -228,11 +228,17 @@ void to::test<2>()
 		"bufr/obs4-144.4.bufr", 
 		"bufr/obs4-145.4.bufr", 
 		"bufr/obs255-255.0.bufr", 
+		"bufr/synop3new.bufr", 
 		"bufr/test-airep1.bufr",
 		"bufr/test-temp1.bufr", 
 		"bufr/test-buoy1.bufr", 
-		"bufr/test-soli1.bufr", 
+		"bufr/test-soil1.bufr", 
 		"bufr/ed4.bufr", 
+		"bufr/ed4-compr-string.bufr",
+		"bufr/ed4-parseerror1.bufr",
+		"bufr/ed4-empty.bufr",
+		"bufr/C05060.bufr",
+		"bufr/tempforecast.bufr",
 		NULL
 	};
 
@@ -449,6 +455,25 @@ void to::test<5>()
 	gen_ensure(dba_var_value(var) != NULL);
 	CHECKED(dba_var_enqd(var, &val));
 	gen_ensure_equals(val, 2700000e-14);
+
+	dba_msgs_delete(msgs);
+}
+
+/* Test import of environment WMO GTS synop messages */
+template<> template<>
+void to::test<6>()
+{
+	dba_msgs msgs = read_test_msg("bufr/ed4-compr-string.bufr", BUFR);
+	dba_msg msg = msgs->msgs[0];
+	dba_var var;
+	double val;
+
+	gen_ensure_equals(msg->type, MSG_SYNOP);
+
+	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
+	//gen_ensure(dba_var_value(var) != NULL);
+	//CHECKED(dba_var_enqd(var, &val));
+	//gen_ensure_equals(val, 2700000e-14);
 
 	dba_msgs_delete(msgs);
 }
