@@ -39,6 +39,7 @@ ISOBARIC_SURFACE, num,  B07004,     257,     -, -, -,    -,      -,     -, Isoba
 GEOPOTENTIAL,   num,    B10003,       1,     -, -, -,  254,      -,     -, Geopotential
 PRESS,          num,    B10004,       1,     -, -, -,  254,      -,     -, Pressure at ground level
 PRESS_3H,       num,    B10061,       1,     -, -, -,    4,      0, 10800, 3 hour pressure change at ground level
+PRESS_24H,      num,    B10061,       1,     -, -, -,    4,      0, 86400, 24 hour pressure change at ground level
 PRESS_MSL,      num,    B10051,     101,     -, -, -,  254,      -,     -, Pressure reduced to mean sea level
 QNH,            num,    B10052,     103,  2000, -, -,  254,      -,     -, Altimeter setting (QNH)
 WIND_DIR,       num,    B11001,     103, 10000, -, -,  254,      -,     -, Wind direction at 10 metres above ground
