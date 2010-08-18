@@ -88,3 +88,5 @@ TOT_PREC6,      num,    B13011,       1,     -, -, -,    1,      0, 21600, Total
 TOT_PREC12,     num,    B13011,       1,     -, -, -,    1,      0, 43200, Total precipitation in the last 12 hours
 TOT_PREC24,     num,    B13011,       1,     -, -, -,    1,      0, 86400, Total precipitation in the last 24 hours
 TOT_SNOW,       num,    B13013,       1,     -, -, -,  254,      -,     -, Total show depth
+
+STATE_GROUND,	num,	B20062,	      1,     -, -, -,  254,      -,     -, State of ground (with or without snow)

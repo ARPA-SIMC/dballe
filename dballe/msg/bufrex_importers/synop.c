@@ -26,6 +26,7 @@
 #define MISSING_PRESS_STD 0.0
 #define MISSING_SENSOR_H -10000
 #define MISSING_VSS 63
+#define MISSING_TIME_PERIOD -10000
 
 dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
@@ -34,6 +35,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	double press_std = MISSING_PRESS_STD;
 	double height_sensor = MISSING_SENSOR_H;
 	int vs = MISSING_VSS;
+	int time_period = MISSING_TIME_PERIOD;
 
 	switch (raw->type)
 	{
@@ -63,9 +65,39 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	
 	for (i = 0; i < sset->vars_count; i++)
 	{
+		int processed = 1;
 		dba_var var = sset->vars[i];
 
-		if (dba_var_value(var) == NULL)
+		switch (dba_var_code(var))
+		{
+/* Context items */
+			case DBA_VAR(0,  7, 32):
+				/* Height to use later as layer for what needs it */
+				if (dba_var_value(var) != NULL)
+					DBA_RUN_OR_RETURN(dba_var_enqd(var, &height_sensor));
+				else
+					height_sensor = MISSING_SENSOR_H;
+				break;
+			case DBA_VAR(0,  8,  2):
+				/* Vertical significance */
+				if (dba_var_value(var) != NULL)
+					DBA_RUN_OR_RETURN(dba_var_enqi(var, &vs));
+				else
+					vs = MISSING_VSS;
+				break;
+			case DBA_VAR(0,  4, 24):
+				/* Time period in hours */
+				if (dba_var_value(var) != NULL)
+					DBA_RUN_OR_RETURN(dba_var_enqi(var, &time_period));
+				else
+					vs = MISSING_TIME_PERIOD;
+				break;
+			default:
+				processed = 0;
+				break;
+		}
+
+		if (processed || dba_var_value(var) == NULL)
 			continue;
 
 		switch (dba_var_code(var))
@@ -257,10 +289,15 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				break;
 
 /* Cloud data */
+/* Individual cloud layers or masses */
+/* Clouds with bases below station level */
+/* Direction of cloud drift */
 			case DBA_VAR(0, 20, 10): DBA_RUN_OR_RETURN(dba_msg_set_cloud_n_var(msg, var)); break;
 			case DBA_VAR(0, 20, 11):
 			case DBA_VAR(0, 20, 12):
 			case DBA_VAR(0, 20, 13):
+			case DBA_VAR(0, 20, 17):
+			case DBA_VAR(0, 20, 54):
 				/* Compute a sequence number for this cloud sublevel */
 				for (j = 1; ; ++j)
 					if (dba_msg_find(msg, dba_var_code(var), 259, vs, 256, j, 254, 0, 0) == NULL)
@@ -270,15 +307,74 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 							254, 0, 0));
 				break;
 
+/* Direction and elevation of cloud */
+/* TODO: beware it contains another B20012 */
+/* TODO: what level? */
+
+/* State of ground, snow depth, ground minimum temperature (complete) */
+			case DBA_VAR(0, 20,  62): DBA_RUN_OR_RETURN(dba_msg_set_state_ground_var(msg, var)); break;
+			case DBA_VAR(0, 13,  13): DBA_RUN_OR_RETURN(dba_msg_set_tot_snow_var(msg, var)); break;
+			case DBA_VAR(0, 12, 113):
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 121),
+							1, 0, 0, 0,
+							3, 0, 43200));
+						  break;
+
 /* Basic synoptic "period" data */
+
+/* Present and past weather (complete) */
+			case DBA_VAR(0, 20,  3): DBA_RUN_OR_RETURN(dba_msg_set_pres_wtr_var(msg, var)); break;
+
+			case DBA_VAR(0, 20,  4):
+				if (time_period == MISSING_TIME_PERIOD)
+					DBA_RUN_OR_RETURN(dba_msg_set_past_wtr1_var(msg, var));
+				else
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 20, 4),
+								1, 0, 0, 0,
+								205, 0, time_period * 3600));
+				break;
+			case DBA_VAR(0, 20,  5):
+				if (time_period == MISSING_TIME_PERIOD)
+					DBA_RUN_OR_RETURN(dba_msg_set_past_wtr2_var(msg, var));
+				else
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 20, 5),
+								1, 0, 0, 0,
+								205, 0, time_period * 3600));
+				break;
+
+/* Sunshine data (complete) */
+			case DBA_VAR(0, 14, 31):
+				if (time_period == MISSING_TIME_PERIOD)
+					return dba_error_consistency("total sunshine B14031 given without time period indication");
+				else
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 14, 31),
+								1, 0, 0, 0,
+								1, 0, time_period * 3600));
+				break;
+
+/* Precipitation measurement (complete) */
+			case DBA_VAR(0, 13, 11):
+				if (time_period == MISSING_TIME_PERIOD)
+					return dba_error_consistency("total precipitation B13011 given without time period indication");
+				else {
+					if (height_sensor == MISSING_SENSOR_H)
+						DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 11),
+									1, 0, 0, 0,
+									1, 0, time_period * 3600));
+					else
+						DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 11),
+									103, height_sensor * 1000, 0, 0,
+									1, 0, time_period * 3600));
+				}
+				break;
+
+/* Extreme temperature data */
+
+/* Wind data */
 
 
 			case DBA_VAR(0, 11, 11): DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, var)); break;
 			case DBA_VAR(0, 11, 12): DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, var)); break;
-			case DBA_VAR(0, 20,  3): DBA_RUN_OR_RETURN(dba_msg_set_pres_wtr_var(msg, var)); break;
-			case DBA_VAR(0, 20,  4): DBA_RUN_OR_RETURN(dba_msg_set_past_wtr1_var(msg, var)); break;
-			case DBA_VAR(0, 20,  5): DBA_RUN_OR_RETURN(dba_msg_set_past_wtr2_var(msg, var)); break;
-			case DBA_VAR(0, 13, 13): DBA_RUN_OR_RETURN(dba_msg_set_tot_snow_var(msg, var)); break;
 			case DBA_VAR(0, 22, 42): DBA_RUN_OR_RETURN(dba_msg_set_water_temp_var(msg, var)); break;
 			case DBA_VAR(0, 12,  5): DBA_RUN_OR_RETURN(dba_msg_set_wet_temp_2m_var(msg, var)); break;
 			case DBA_VAR(0, 10,197): DBA_RUN_OR_RETURN(dba_msg_set_height_anem_var(msg, var)); break;
