@@ -180,20 +180,29 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 
 			case DBA_VAR(0, 12,   4):
 			case DBA_VAR(0, 12, 101):
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 101),
-							103, height_sensor == MISSING_SENSOR_H ? 2 : height_sensor, 0, 0,
-							254, 0, 0));
+				if (height_sensor == MISSING_SENSOR_H)
+					DBA_RUN_OR_RETURN(dba_msg_set_temp_2m_var(msg, var));
+				else
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 101),
+								103, height_sensor * 1000, 0, 0,
+								254, 0, 0));
 				break;
 			case DBA_VAR(0, 12,  6):
 			case DBA_VAR(0, 12, 103):
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 103),
-							103, height_sensor == MISSING_SENSOR_H ? 2 : height_sensor, 0, 0,
-							254, 0, 0));
+				if (height_sensor == MISSING_SENSOR_H)
+					DBA_RUN_OR_RETURN(dba_msg_set_dewpoint_2m_var(msg, var));
+				else
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 103),
+								103, height_sensor * 1000, 0, 0,
+								254, 0, 0));
 				break;
 			case DBA_VAR(0, 13,  3):
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 3),
-							103, height_sensor == MISSING_SENSOR_H ? 2 : height_sensor, 0, 0,
-							254, 0, 0));
+				if (height_sensor == MISSING_SENSOR_H)
+					DBA_RUN_OR_RETURN(dba_msg_set_humidity_var(msg, var));
+				else
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 3),
+								103, height_sensor * 1000, 0, 0,
+								254, 0, 0));
 				break;
 
 /* Visibility data (complete) */
@@ -202,17 +211,17 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_RETURN(dba_msg_set_visibility_var(msg, var));
 				else
 					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 20, 1),
-								103, height_sensor, 0, 0,
+								103, height_sensor * 1000, 0, 0,
 								254, 0, 0));
 				break;
 
 /* Precipitation past 24h (complete) */
 			case DBA_VAR(0, 13, 19):
 				if (height_sensor == MISSING_SENSOR_H)
-					DBA_RUN_OR_RETURN(dba_msg_set_tot_prec1_var(msg, var)); break;
+					DBA_RUN_OR_RETURN(dba_msg_set_tot_prec1_var(msg, var));
 				else
 					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 11),
-								103, height_sensor, 0, 0,
+								103, height_sensor * 1000, 0, 0,
 								1, 0, 3600));
 				break;
 			case DBA_VAR(0, 13, 20):
@@ -220,7 +229,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_RETURN(dba_msg_set_tot_prec3_var(msg, var));
 				else
 					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 11),
-								103, height_sensor, 0, 0,
+								103, height_sensor * 1000, 0, 0,
 								1, 0, 10800));
 				break;
 			case DBA_VAR(0, 13, 21):
@@ -228,7 +237,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_RETURN(dba_msg_set_tot_prec6_var(msg, var));
 				else
 					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 11),
-								103, height_sensor, 0, 0,
+								103, height_sensor * 1000, 0, 0,
 								1, 0, 21600));
 				break;
 			case DBA_VAR(0, 13, 22):
@@ -236,7 +245,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_RETURN(dba_msg_set_tot_prec12_var(msg, var));
 				else
 					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 11),
-								103, height_sensor, 0, 0,
+								103, height_sensor * 1000, 0, 0,
 								1, 0, 43200));
 				break;
 			case DBA_VAR(0, 13, 23):
