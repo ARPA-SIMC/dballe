@@ -65,3 +65,4 @@
 256	Cloud 	    	     		 L is 0 for total cloud, 1 for CL, 2 for CM, 3 for CH)
 257	Information about the station that generated the data
 258	Synop cloud group     	      L is the group number, from 1 to 4
+259	Vertical sounding significance	L is the vss value from code table 08002
