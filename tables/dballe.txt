@@ -81,6 +81,7 @@
  012063 BRIGHTNESS TEMPERATURE                                           K                          1            0  12 K                         1          4
  012101 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          2            0  16 K                         2          5             
  012103 DEW-POINT TEMPERATURE                                            K                          2            0  16 K                         2          5              
+ 012121 GROUND MINIMUM TEMPERATURE                                       K                          2            0  16 C                         2          4 
  013001 SPECIFIC HUMIDITY                                                KG/KG                      5            0  14 KG/KG                     5          5
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
@@ -88,6 +89,7 @@
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
  014018 INSTANTANEOUS SHORT-WAVE RADIATION                               W/M**2                    -3        -2048  12 W/M**2                   -3          4
  014021 GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED         J/M**2                    -4            0  15 J/M**2                   -4          5
+ 014031 TOTAL SUNSHINE                                                   MINUTE                     0            0  11 MINUTE                    0          4
  014192 [SIM] Instantenous sensible heat flux                            W m-2                     -3        -2048  12 W m-2                    -3          4
  014193 [SIM] Instantenous latent heat flux                              W m-2                     -3        -2048  12 W m-2                    -3          4
  015192 [SIM] NO Concentration                                           KG/M**3                   10            0  17 KG/M**3                  10          5
@@ -106,6 +108,7 @@
  020011 CLOUD AMOUNT                                                     CODE TABLE 20011           0            0   4 CODE TABLE 20011          0          2
  020012 CLOUD TYPE                                                       CODE TABLE 20012           0            0   6 CODE TABLE 20012          0          2
  020013 HEIGHT OF BASE OF CLOUD                                          M                          0         -400  17 M                         0          5
+ 020017 CLOUD TOP DESCRIPTION                                            CODE TABLE 20017           0            0   4 CODE TABLE 20017          0          2 
  020019 SIGNIFICANT PRESENT OR FORECAST WEATHER                          CCITTIA5                   0            0  72 CHARACTER                 0          9
  020021 TYPE OF PRECIPITATION                                            FLAG TABLE 20021           0            0  30 FLAG TABLE 20021          0         10
  020062 STATE OF THE GROUND (WITH OR WITHOUT SNOW)                       CODE TABLE 20062           0            0   5 CODE TABLE 20062          0          2
