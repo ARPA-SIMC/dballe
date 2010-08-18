@@ -527,7 +527,8 @@ void to::test<9>()
 
 	gen_ensure_equals(msg->type, MSG_SYNOP);
 
-	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
+	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 11, 1), 103, 10000, 0, 0, 0, -600, 600)) != NULL);
+	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 11, 1), 103, 10000, 0, 0, 0, -600, 600)) != NULL);
 	//gen_ensure(dba_var_value(var) != NULL);
 	//CHECKED(dba_var_enqd(var, &val));
 	//gen_ensure_equals(val, 2700000e-14);

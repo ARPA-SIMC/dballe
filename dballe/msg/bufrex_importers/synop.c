@@ -26,7 +26,8 @@
 #define MISSING_PRESS_STD 0.0
 #define MISSING_SENSOR_H -10000
 #define MISSING_VSS 63
-#define MISSING_TIME_PERIOD -10000
+#define MISSING_TIME_PERIOD -100000000
+#define MISSING_TIME_SIG -10000
 
 dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
@@ -35,7 +36,8 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	double press_std = MISSING_PRESS_STD;
 	double height_sensor = MISSING_SENSOR_H;
 	int vs = MISSING_VSS;
-	int time_period = MISSING_TIME_PERIOD;
+	double time_period = MISSING_TIME_PERIOD;
+	int time_sig = MISSING_TIME_SIG;
 	int cloudleveltype = 0;
 	int cloudl1 = -1;
 
@@ -131,7 +133,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 								254, 0, 0));
 				break;
 			}
-			case DBA_VAR(0, 5, 21):
+			case DBA_VAR(0,  5, 21):
 				cloudleveltype = 262;
 				cloudl1 = 0;
 				processed = 0;
@@ -139,10 +141,29 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0,  4, 24):
 				/* Time period in hours */
 				if (dba_var_value(var) != NULL)
-					DBA_RUN_OR_RETURN(dba_var_enqi(var, &time_period));
+				{
+					DBA_RUN_OR_RETURN(dba_var_enqd(var, &time_period));
+					time_period *= 3600;
+				}
 				else
-					vs = MISSING_TIME_PERIOD;
+					time_period = MISSING_TIME_PERIOD;
 				break;
+			case DBA_VAR(0,  4, 25):
+				/* Time period in minutes */
+				if (dba_var_value(var) != NULL)
+				{
+					DBA_RUN_OR_RETURN(dba_var_enqd(var, &time_period));
+					time_period *= 60;
+				}
+				else
+					time_period = MISSING_TIME_PERIOD;
+				break;
+			case DBA_VAR(0,  8, 21):
+				/* Time significance */
+				if (dba_var_value(var) != NULL)
+					DBA_RUN_OR_RETURN(dba_var_enqi(var, &time_sig));
+				else
+					time_sig = MISSING_TIME_SIG;
 			default:
 				processed = 0;
 				break;
@@ -389,7 +410,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				else
 					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 20, 4),
 								1, 0, 0, 0,
-								205, 0, time_period * 3600));
+								205, 0, time_period));
 				break;
 			case DBA_VAR(0, 20,  5):
 				if (time_period == MISSING_TIME_PERIOD)
@@ -397,7 +418,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				else
 					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 20, 5),
 								1, 0, 0, 0,
-								205, 0, time_period * 3600));
+								205, 0, time_period));
 				break;
 
 /* Sunshine data (complete) */
@@ -407,7 +428,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				else
 					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 14, 31),
 								1, 0, 0, 0,
-								1, 0, time_period * 3600));
+								1, 0, time_period));
 				break;
 
 /* Precipitation measurement (complete) */
@@ -418,11 +439,11 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					if (height_sensor == MISSING_SENSOR_H)
 						DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 11),
 									1, 0, 0, 0,
-									1, 0, time_period * 3600));
+									1, 0, time_period));
 					else
 						DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 11),
 									103, height_sensor * 1000, 0, 0,
-									1, 0, time_period * 3600));
+									1, 0, time_period));
 				}
 				break;
 
@@ -432,7 +453,71 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 
 /* Wind data */
 			case DBA_VAR(0, 2, 2):
-				return dba_error_unimplemented("wow, a synop with wind info, please give it to Enrico");
+				if (height_sensor == MISSING_SENSOR_H)
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 2, 2),
+								103, 10 * 1000, 0, 0,
+								254, 0, 0));
+				else
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 2, 2),
+								103, height_sensor * 1000, 0, 0,
+								254, 0, 0));
+				break;
+
+			/* Note B/C 1.10.5.3.2 Calm shall be reported by
+			 * setting wind direction to 0 and wind speed to 0.
+			 * Variable shall be reported by setting wind direction
+			 * to 0 and wind speed to a positive value, not a
+			 * missing value indicator.
+			 */
+			case DBA_VAR(0, 11,  1): {
+				if (time_sig != MISSING_TIME_SIG && time_sig != 2)
+					return dba_error_consistency("Found unsupported time significance %d for wind direction", time_sig);
+				int h = height_sensor == MISSING_SENSOR_H ? 10 : height_sensor;
+				if (time_period == MISSING_TIME_PERIOD)
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1),
+								103, h * 1000, 0, 0,
+								254, 0, 0));
+				else
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1),
+								103, h * 1000, 0, 0,
+								0, -time_period, time_period));
+				break;
+			}
+			case DBA_VAR(0, 11,  2): {
+				if (time_sig != MISSING_TIME_SIG && time_sig != 2)
+					return dba_error_consistency("Found unsupported time significance %d for wind speed", time_sig);
+				int h = height_sensor == MISSING_SENSOR_H ? 10 : height_sensor;
+				if (time_period == MISSING_TIME_PERIOD)
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 2),
+								103, h * 1000, 0, 0,
+								254, 0, 0));
+				else
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 2),
+								103, h * 1000, 0, 0,
+								0, -time_period, time_period));
+				break;
+			}
+			case DBA_VAR(0, 11, 43): {
+				int h = height_sensor == MISSING_SENSOR_H ? 10 : height_sensor;
+				if (time_period == MISSING_TIME_PERIOD)
+					return dba_error_consistency("Wind gust direction reported with a missing time period");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 43),
+							103, h * 1000, 0, 0,
+							0, -time_period, time_period));
+				break;
+			}
+			case DBA_VAR(0, 11, 41): {
+				int h = height_sensor == MISSING_SENSOR_H ? 10 : height_sensor;
+				if (time_period == MISSING_TIME_PERIOD)
+					return dba_error_consistency("Wind gust speed reported with a missing time period");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 41),
+							103, h * 1000, 0, 0,
+							0, -time_period, time_period));
+				break;
+			}
+
+			case DBA_VAR(0, 11, 11): DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, var)); break;
+			case DBA_VAR(0, 11, 12): DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, var)); break;
 
 /* Evaporation data */
 			case DBA_VAR(0, 13, 33):
@@ -446,8 +531,6 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0, 12, 49):
 				return dba_error_unimplemented("wow, a synop with temperature change info, please give it to Enrico");
 
-			case DBA_VAR(0, 11, 11): DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, var)); break;
-			case DBA_VAR(0, 11, 12): DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, var)); break;
 			case DBA_VAR(0, 22, 42): DBA_RUN_OR_RETURN(dba_msg_set_water_temp_var(msg, var)); break;
 			case DBA_VAR(0, 12,  5): DBA_RUN_OR_RETURN(dba_msg_set_wet_temp_2m_var(msg, var)); break;
 			case DBA_VAR(0, 10,197): DBA_RUN_OR_RETURN(dba_msg_set_height_anem_var(msg, var)); break;

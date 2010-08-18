@@ -75,6 +75,7 @@
  011016 EXTREME COUNTERCLOCKWISE WIND DIRECTION OF A VARIABLE WIND       DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011017 EXTREME CLOCKWISE WIND DIRECTION OF A VARIABLE WIND              DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011041 MAXIMUM WIND GUST SPEED                                          M/S                        1            0  12 M/S                       1          4
+ 011043 MAXIMUM WIND GUST DIRECTION                                      DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  012002 WET-BULB TEMPERATURE                                             K                          1            0  12 K                         1          4
  012030 SOIL TEMPERATURE                                                 K                          1            0  12 K                         1          4
  012061 SKIN TEMPERATURE                                                 K                          1            0  12 K                         1          4
