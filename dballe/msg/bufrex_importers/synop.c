@@ -36,6 +36,10 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	double height_sensor = MISSING_SENSOR_H;
 	int vs = MISSING_VSS;
 	int time_period = MISSING_TIME_PERIOD;
+	dba_varcode last_var1 = 0;
+	dba_varcode last_var2 = 0;
+	int cloudleveltype = 0;
+	int cloudl1 = -1;
 
 	switch (raw->type)
 	{
@@ -78,13 +82,54 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				else
 					height_sensor = MISSING_SENSOR_H;
 				break;
-			case DBA_VAR(0,  8,  2):
+			case DBA_VAR(0,  8,  2): {
 				/* Vertical significance */
+				dba_varcode prev, next;
+				if (i == 0) return dba_error_consistency("B08002 found at beginning of message");
+				if (i == sset->vars_count-1) return dba_error_consistency("B08002 found at end of message");
+				prev = dba_var_code(sset->vars[i-1]);
+				next = dba_var_code(sset->vars[i+1]);
+
 				if (dba_var_value(var) != NULL)
 					DBA_RUN_OR_RETURN(dba_var_enqi(var, &vs));
 				else
 					vs = MISSING_VSS;
+
+				if (prev == DBA_VAR(0, 20, 10))
+				{
+					/* Cloud Data */
+					cloudleveltype = 258;
+					cloudl1 = 0;
+				} else if (next == DBA_VAR(0, 20, 11)) {
+					/* Individual cloud group and clouds with bases below */
+					if (cloudleveltype != 259)
+					{
+						cloudleveltype = 259;
+						cloudl1 = 1;
+					} else {
+						++cloudl1;
+					}
+				} else if (next == DBA_VAR(0, 20, 54)) {
+					/* Direction of cloud drift */
+					if (cloudleveltype != 260)
+					{
+						cloudleveltype = 260;
+						cloudl1 = 1;
+					} else {
+						++cloudl1;
+					}
+				} else if (dba_var_value(var) == NULL) {
+					cloudleveltype = 0;
+				} else
+					return dba_error_consistency("Vertical significance %d found in unrecognised context", vs);
+
+				/* Store original VS value as a measured value */
+				if (dba_var_value(var) != NULL)
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 4),
+								256, 0, cloudleveltype, cloudl1,
+								254, 0, 0));
 				break;
+			}
 			case DBA_VAR(0,  4, 24):
 				/* Time period in hours */
 				if (dba_var_value(var) != NULL)
@@ -289,23 +334,36 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				break;
 
 /* Cloud data */
+			case DBA_VAR(0, 20, 10): DBA_RUN_OR_RETURN(dba_msg_set_cloud_n_var(msg, var)); break;
+
 /* Individual cloud layers or masses */
 /* Clouds with bases below station level */
 /* Direction of cloud drift */
-			case DBA_VAR(0, 20, 10): DBA_RUN_OR_RETURN(dba_msg_set_cloud_n_var(msg, var)); break;
 			case DBA_VAR(0, 20, 11):
-			case DBA_VAR(0, 20, 12):
 			case DBA_VAR(0, 20, 13):
 			case DBA_VAR(0, 20, 17):
 			case DBA_VAR(0, 20, 54):
-				/* Compute a sequence number for this cloud sublevel */
-				for (j = 1; ; ++j)
-					if (dba_msg_find(msg, dba_var_code(var), 259, vs, 256, j, 254, 0, 0) == NULL)
-						break;
 				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, dba_var_code(var),
-							259, vs, 256, j,
+							256, 0, cloudleveltype, cloudl1,
 							254, 0, 0));
 				break;
+			case DBA_VAR(0, 20, 12): {
+				int lt2 = cloudleveltype, l2=cloudl1;
+				if (lt2 == 258)
+				{
+					l2 = 1;
+					if (i > 0 && dba_var_code(sset->vars[i-1]) == DBA_VAR(0, 20, 12))
+					{
+						++l2;
+						if (i > 1 && dba_var_code(sset->vars[i-2]) == DBA_VAR(0, 20, 12))
+							++l2;
+					}
+				}
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, dba_var_code(var),
+							256, 0, lt2, l2,
+							254, 0, 0));
+				break;
+			}
 
 /* Direction and elevation of cloud */
 /* TODO: beware it contains another B20012 */
@@ -372,6 +430,11 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 
 /* Wind data */
 
+/* Evaporation data */
+
+/* Radiation data */
+
+/* Temperature change */
 
 			case DBA_VAR(0, 11, 11): DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, var)); break;
 			case DBA_VAR(0, 11, 12): DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, var)); break;
