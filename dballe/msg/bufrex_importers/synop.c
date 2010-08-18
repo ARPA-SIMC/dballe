@@ -25,18 +25,15 @@
 #define MISSING_BARO -10000
 #define MISSING_PRESS_STD 0.0
 #define MISSING_SENSOR_H -10000
+#define MISSING_VSS 63
 
 dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
-	int i;
-	int cloud_type_count = 0;
-	int cloud_amt_count = 0;
-	int cloud_height_count = 0;
-
-	/* Default values */
+	int i, j;
 	double height_baro = MISSING_BARO;
 	double press_std = MISSING_PRESS_STD;
 	double height_sensor = MISSING_SENSOR_H;
+	int vs = MISSING_VSS;
 
 	switch (raw->type)
 	{
@@ -69,17 +66,27 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 		dba_var var = sset->vars[i];
 
 		if (dba_var_value(var) == NULL)
-		{
-			switch (dba_var_code(var))
-			{
-				case DBA_VAR(0, 20, 11): cloud_amt_count++; break;
-				case DBA_VAR(0, 20, 13): cloud_height_count++; break;
-				case DBA_VAR(0, 20, 12): cloud_type_count++; break;
-			}
 			continue;
-		}
+
 		switch (dba_var_code(var))
 		{
+/* Context items */
+			case DBA_VAR(0,  7, 32):
+				/* Remember the height to use later as layer for what needs it */
+				if (dba_var_value(var) != NULL)
+					DBA_RUN_OR_RETURN(dba_var_enqd(var, &height_sensor));
+				else
+					height_sensor = MISSING_SENSOR_H;
+				break;
+			case DBA_VAR(0,  8, 2):
+				/* Remember the vertical significance */
+				if (dba_var_value(var) != NULL)
+					DBA_RUN_OR_RETURN(dba_var_enqi(var, &vs));
+				else
+					vs = MISSING_VSS;
+				break;
+
+
 /* Fixed surface station identification, time, horizontal and vertical
  * coordinates (complete) */
 			case DBA_VAR(0,  1,  1): DBA_RUN_OR_RETURN(dba_msg_set_block_var(msg, var)); break;
@@ -170,14 +177,6 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 /* Basic synoptic "instantaneous" data */
 
 /* Temperature and humidity data (complete) */
-			case DBA_VAR(0,  7, 32):
-				/* Remember the height to use later as layer for what needs it */
-				if (dba_var_value(var) != NULL)
-					DBA_RUN_OR_RETURN(dba_var_enqd(var, &height_sensor));
-				else
-					height_sensor = MISSING_SENSOR_H;
-				break;
-
 			case DBA_VAR(0, 12,   4):
 			case DBA_VAR(0, 12, 101):
 				if (height_sensor == MISSING_SENSOR_H)
@@ -253,11 +252,23 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_RETURN(dba_msg_set_tot_prec24_var(msg, var));
 				else
 					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 11),
-								103, height_sensor, 0, 0,
+								103, height_sensor * 1000, 0, 0,
 								1, 0, 86400));
 				break;
 
 /* Cloud data */
+			case DBA_VAR(0, 20, 10): DBA_RUN_OR_RETURN(dba_msg_set_cloud_n_var(msg, var)); break;
+			case DBA_VAR(0, 20, 11):
+			case DBA_VAR(0, 20, 12):
+			case DBA_VAR(0, 20, 13):
+				/* Compute a sequence number for this cloud sublevel */
+				for (j = 1; ; ++j)
+					if (dba_msg_find(msg, dba_var_code(var), 259, vs, 256, j, 254, 0, 0) == NULL)
+						break;
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, dba_var_code(var),
+							259, vs, 256, j,
+							254, 0, 0));
+				break;
 
 /* Basic synoptic "period" data */
 
@@ -267,39 +278,6 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0, 20,  3): DBA_RUN_OR_RETURN(dba_msg_set_pres_wtr_var(msg, var)); break;
 			case DBA_VAR(0, 20,  4): DBA_RUN_OR_RETURN(dba_msg_set_past_wtr1_var(msg, var)); break;
 			case DBA_VAR(0, 20,  5): DBA_RUN_OR_RETURN(dba_msg_set_past_wtr2_var(msg, var)); break;
-			case DBA_VAR(0, 20, 10): DBA_RUN_OR_RETURN(dba_msg_set_cloud_n_var(msg, var)); break;
-			case DBA_VAR(0, 20, 11):
-				switch (cloud_amt_count++)
-				{
-					case 0: DBA_RUN_OR_RETURN(dba_msg_set_cloud_nh_var(msg, var)); break;
-					case 1: DBA_RUN_OR_RETURN(dba_msg_set_cloud_n1_var(msg, var)); break;
-					case 2: DBA_RUN_OR_RETURN(dba_msg_set_cloud_n2_var(msg, var)); break;
-					case 3: DBA_RUN_OR_RETURN(dba_msg_set_cloud_n3_var(msg, var)); break;
-					case 4: DBA_RUN_OR_RETURN(dba_msg_set_cloud_n4_var(msg, var)); break;
-				}
-				break;
-			case DBA_VAR(0, 20, 13):
-				switch (cloud_height_count++)
-				{
-					 case 0: DBA_RUN_OR_RETURN(dba_msg_set_cloud_hh_var(msg, var)); break;
-					 case 1: DBA_RUN_OR_RETURN(dba_msg_set_cloud_h1_var(msg, var)); break;
-					 case 2: DBA_RUN_OR_RETURN(dba_msg_set_cloud_h2_var(msg, var)); break;
-					 case 3: DBA_RUN_OR_RETURN(dba_msg_set_cloud_h3_var(msg, var)); break;
-					 case 4: DBA_RUN_OR_RETURN(dba_msg_set_cloud_h4_var(msg, var)); break;
-				}
-				break;
-			case DBA_VAR(0, 20, 12):
-			   switch (cloud_type_count++)
-			   {
-					case 0: DBA_RUN_OR_RETURN(dba_msg_set_cloud_cl_var(msg, var)); break;
-					case 1: DBA_RUN_OR_RETURN(dba_msg_set_cloud_cm_var(msg, var)); break;
-					case 2: DBA_RUN_OR_RETURN(dba_msg_set_cloud_ch_var(msg, var)); break;
-					case 3: DBA_RUN_OR_RETURN(dba_msg_set_cloud_c1_var(msg, var)); break;
-					case 4: DBA_RUN_OR_RETURN(dba_msg_set_cloud_c2_var(msg, var)); break;
-					case 5: DBA_RUN_OR_RETURN(dba_msg_set_cloud_c3_var(msg, var)); break;
-					case 6: DBA_RUN_OR_RETURN(dba_msg_set_cloud_c4_var(msg, var)); break;
-			   }
-			   break;
 			case DBA_VAR(0, 13, 13): DBA_RUN_OR_RETURN(dba_msg_set_tot_snow_var(msg, var)); break;
 			case DBA_VAR(0, 22, 42): DBA_RUN_OR_RETURN(dba_msg_set_water_temp_var(msg, var)); break;
 			case DBA_VAR(0, 12,  5): DBA_RUN_OR_RETURN(dba_msg_set_wet_temp_2m_var(msg, var)); break;
