@@ -30,14 +30,12 @@
 
 dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 {
-	int i, j;
+	int i;
 	double height_baro = MISSING_BARO;
 	double press_std = MISSING_PRESS_STD;
 	double height_sensor = MISSING_SENSOR_H;
 	int vs = MISSING_VSS;
 	int time_period = MISSING_TIME_PERIOD;
-	dba_varcode last_var1 = 0;
-	dba_varcode last_var2 = 0;
 	int cloudleveltype = 0;
 	int cloudl1 = -1;
 
