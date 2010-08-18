@@ -530,9 +530,9 @@ void to::test<9>()
 	// Check the context information for the wind data
 	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 1), 103, 10000, 0, 0, 0, -600, 600)) != NULL);
 	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 140);
-	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 0, -600, 600)) != NULL);
+	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 205, -600, 600)) != NULL);
 	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 15.4);
-	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 0, -10800, 10800)) != NULL);
+	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 205, -10800, 10800)) != NULL);
 	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 15.4);
 
 	dba_msgs_delete(msgs);
