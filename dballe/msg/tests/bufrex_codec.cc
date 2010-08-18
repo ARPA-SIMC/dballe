@@ -527,11 +527,13 @@ void to::test<9>()
 
 	gen_ensure_equals(msg->type, MSG_SYNOP);
 
-	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 11, 1), 103, 10000, 0, 0, 0, -600, 600)) != NULL);
-	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 11, 1), 103, 10000, 0, 0, 0, -600, 600)) != NULL);
-	//gen_ensure(dba_var_value(var) != NULL);
-	//CHECKED(dba_var_enqd(var, &val));
-	//gen_ensure_equals(val, 2700000e-14);
+	// Check the context information for the wind data
+	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 1), 103, 10000, 0, 0, 0, -600, 600)) != NULL);
+	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 140);
+	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 0, -600, 600)) != NULL);
+	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 15.4);
+	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 0, -10800, 10800)) != NULL);
+	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 15.4);
 
 	dba_msgs_delete(msgs);
 }
