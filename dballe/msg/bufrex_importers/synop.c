@@ -118,8 +118,11 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					}
 				} else if (dba_var_value(var) == NULL) {
 					cloudleveltype = 0;
-				} else
-					return dba_error_consistency("Vertical significance %d found in unrecognised context", vs);
+				} else {
+					/* Unless we can detect known buggy situations, raise an error */
+					if (next != DBA_VAR(0, 20, 62))
+						return dba_error_consistency("Vertical significance %d found in unrecognised context", vs);
+				}
 
 				/* Store original VS value as a measured value */
 				if (dba_var_value(var) != NULL)
@@ -139,13 +142,6 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_RUN_OR_RETURN(dba_var_enqi(var, &time_period));
 				else
 					vs = MISSING_TIME_PERIOD;
-				break;
-			case DBA_VAR(0,  7, 32):
-				/* Remember the height to use later as layer for what needs it */
-				if (dba_var_value(var) != NULL)
-					DBA_RUN_OR_RETURN(dba_var_enqd(var, &height_sensor));
-				else
-					height_sensor = MISSING_SENSOR_H;
 				break;
 			default:
 				processed = 0;
