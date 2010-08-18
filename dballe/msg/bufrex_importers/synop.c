@@ -125,7 +125,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 
 				/* Store original VS value as a measured value */
 				if (dba_var_value(var) != NULL)
-					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 4),
+					DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 8, 2),
 								256, 0, cloudleveltype, cloudl1,
 								254, 0, 0));
 				break;
