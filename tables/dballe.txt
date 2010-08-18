@@ -78,8 +78,8 @@
  012030 SOIL TEMPERATURE                                                 K                          1            0  12 K                         1          4
  012061 SKIN TEMPERATURE                                                 K                          1            0  12 K                         1          4
  012063 BRIGHTNESS TEMPERATURE                                           K                          1            0  12 K                         1          4
- 012101 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          2            0  16 C                         2          4             
- 012103 DEW-POINT TEMPERATURE                                            K                          2            0  16 C                         2          4              
+ 012101 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          2            0  16 K                         2          5             
+ 012103 DEW-POINT TEMPERATURE                                            K                          2            0  16 K                         2          5              
  013001 SPECIFIC HUMIDITY                                                KG/KG                      5            0  14 KG/KG                     5          5
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
