@@ -140,6 +140,13 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				else
 					vs = MISSING_TIME_PERIOD;
 				break;
+			case DBA_VAR(0,  7, 32):
+				/* Remember the height to use later as layer for what needs it */
+				if (dba_var_value(var) != NULL)
+					DBA_RUN_OR_RETURN(dba_var_enqd(var, &height_sensor));
+				else
+					height_sensor = MISSING_SENSOR_H;
+				break;
 			default:
 				processed = 0;
 				break;
@@ -150,23 +157,6 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 
 		switch (dba_var_code(var))
 		{
-/* Context items */
-			case DBA_VAR(0,  7, 32):
-				/* Remember the height to use later as layer for what needs it */
-				if (dba_var_value(var) != NULL)
-					DBA_RUN_OR_RETURN(dba_var_enqd(var, &height_sensor));
-				else
-					height_sensor = MISSING_SENSOR_H;
-				break;
-			case DBA_VAR(0,  8, 2):
-				/* Remember the vertical significance */
-				if (dba_var_value(var) != NULL)
-					DBA_RUN_OR_RETURN(dba_var_enqi(var, &vs));
-				else
-					vs = MISSING_VSS;
-				break;
-
-
 /* Fixed surface station identification, time, horizontal and vertical
  * coordinates (complete) */
 			case DBA_VAR(0,  1,  1): DBA_RUN_OR_RETURN(dba_msg_set_block_var(msg, var)); break;
@@ -441,14 +431,24 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				break;
 
 /* Extreme temperature data */
+			case DBA_VAR(0, 2, 111):
+				return dba_error_unimplemented("wow, a synop with extreme temperature info, please give it to Enrico");
 
 /* Wind data */
+			case DBA_VAR(0, 2, 2):
+				return dba_error_unimplemented("wow, a synop with wind info, please give it to Enrico");
 
 /* Evaporation data */
+			case DBA_VAR(0, 13, 33):
+				return dba_error_unimplemented("wow, a synop with evaporation info, please give it to Enrico");
 
 /* Radiation data */
+			case DBA_VAR(0, 14, 2):
+				return dba_error_unimplemented("wow, a synop with radiation info, please give it to Enrico");
 
 /* Temperature change */
+			case DBA_VAR(0, 12, 49):
+				return dba_error_unimplemented("wow, a synop with temperature change info, please give it to Enrico");
 
 			case DBA_VAR(0, 11, 11): DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, var)); break;
 			case DBA_VAR(0, 11, 12): DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, var)); break;
