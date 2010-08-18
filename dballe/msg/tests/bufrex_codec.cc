@@ -82,8 +82,8 @@ void to::test<1>()
 	IS(press_tend, 7.0);
 	IS(wind_dir, 80.0);
 	IS(wind_speed, 6.0);
-	IS(temp_2m, 276.2);
-	IS(dewpoint_2m, 273.9);
+	IS(temp_2m, 276.15);
+	IS(dewpoint_2m, 273.85);
 	UN(humidity);
 	IS(visibility, 5000.0);
 	IS(pres_wtr, 10);
