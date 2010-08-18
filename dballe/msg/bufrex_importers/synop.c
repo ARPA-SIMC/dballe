@@ -503,7 +503,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					return dba_error_consistency("Wind gust direction reported with a missing time period");
 				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 43),
 							103, h * 1000, 0, 0,
-							0, time_period, -time_period));
+							205, time_period, -time_period));
 				break;
 			}
 			case DBA_VAR(0, 11, 41): {
@@ -512,7 +512,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					return dba_error_consistency("Wind gust speed reported with a missing time period");
 				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 41),
 							103, h * 1000, 0, 0,
-							0, time_period, -time_period));
+							205, time_period, -time_period));
 				break;
 			}
 
