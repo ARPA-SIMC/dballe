@@ -459,11 +459,87 @@ void to::test<5>()
 	dba_msgs_delete(msgs);
 }
 
-/* Test import of environment WMO GTS synop messages */
+/* Test import of WMO GTS synop messages */
 template<> template<>
 void to::test<6>()
 {
 	dba_msgs msgs = read_test_msg("bufr/ed4-compr-string.bufr", BUFR);
+	dba_msg msg = msgs->msgs[0];
+	dba_var var;
+	double val;
+
+	gen_ensure_equals(msg->type, MSG_SYNOP);
+
+	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
+	//gen_ensure(dba_var_value(var) != NULL);
+	//CHECKED(dba_var_enqd(var, &val));
+	//gen_ensure_equals(val, 2700000e-14);
+
+	dba_msgs_delete(msgs);
+}
+
+/* Test import of WMO GTS synop messages */
+template<> template<>
+void to::test<7>()
+{
+	dba_msgs msgs = read_test_msg("bufr/synop-cloudbelow.bufr", BUFR);
+	dba_msg msg = msgs->msgs[0];
+	dba_var var;
+	double val;
+
+	gen_ensure_equals(msg->type, MSG_SYNOP);
+
+	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
+	//gen_ensure(dba_var_value(var) != NULL);
+	//CHECKED(dba_var_enqd(var, &val));
+	//gen_ensure_equals(val, 2700000e-14);
+
+	dba_msgs_delete(msgs);
+}
+
+/* Test import of WMO GTS synop messages */
+template<> template<>
+void to::test<8>()
+{
+	dba_msgs msgs = read_test_msg("bufr/synop-groundtemp.bufr", BUFR);
+	dba_msg msg = msgs->msgs[0];
+	dba_var var;
+	double val;
+
+	gen_ensure_equals(msg->type, MSG_SYNOP);
+
+	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
+	//gen_ensure(dba_var_value(var) != NULL);
+	//CHECKED(dba_var_enqd(var, &val));
+	//gen_ensure_equals(val, 2700000e-14);
+
+	dba_msgs_delete(msgs);
+}
+
+/* Test import of WMO GTS synop messages */
+template<> template<>
+void to::test<9>()
+{
+	dba_msgs msgs = read_test_msg("bufr/synop-sunshine.bufr", BUFR);
+	dba_msg msg = msgs->msgs[0];
+	dba_var var;
+	double val;
+
+	gen_ensure_equals(msg->type, MSG_SYNOP);
+
+	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
+	//gen_ensure(dba_var_value(var) != NULL);
+	//CHECKED(dba_var_enqd(var, &val));
+	//gen_ensure_equals(val, 2700000e-14);
+
+	dba_msgs_delete(msgs);
+}
+
+/* Test import of a WMO GTS synop message with a stray vertical significance */
+template<> template<>
+void to::test<10>()
+{
+	dba_msgs msgs = read_test_msg("bufr/synop-strayvs.bufr", BUFR);
 	dba_msg msg = msgs->msgs[0];
 	dba_var var;
 	double val;
