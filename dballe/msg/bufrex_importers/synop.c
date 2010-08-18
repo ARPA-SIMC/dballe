@@ -130,6 +130,11 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 								254, 0, 0));
 				break;
 			}
+			case DBA_VAR(0, 5, 21):
+				cloudleveltype = 262;
+				cloudl1 = 0;
+				processed = 0;
+				break;
 			case DBA_VAR(0,  4, 24):
 				/* Time period in hours */
 				if (dba_var_value(var) != NULL)
@@ -336,9 +341,9 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 /* Cloud data */
 			case DBA_VAR(0, 20, 10): DBA_RUN_OR_RETURN(dba_msg_set_cloud_n_var(msg, var)); break;
 
-/* Individual cloud layers or masses */
-/* Clouds with bases below station level */
-/* Direction of cloud drift */
+/* Individual cloud layers or masses (complete) */
+/* Clouds with bases below station level (complete) */
+/* Direction of cloud drift (complete) */
 			case DBA_VAR(0, 20, 11):
 			case DBA_VAR(0, 20, 13):
 			case DBA_VAR(0, 20, 17):
@@ -365,9 +370,20 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				break;
 			}
 
-/* Direction and elevation of cloud */
-/* TODO: beware it contains another B20012 */
-/* TODO: what level? */
+/* Direction and elevation of cloud (complete) */
+			case DBA_VAR(0, 5, 21):
+				cloudleveltype = 262;
+				cloudl1 = 0;
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 5, 21),
+							256, 0, cloudleveltype, cloudl1,
+							254, 0, 0));
+				break;
+			case DBA_VAR(0, 7, 21):
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 7, 21),
+							256, 0, cloudleveltype, cloudl1,
+							254, 0, 0));
+				break;
+			/* Cloud type is handled by the generic cloud type handler */
 
 /* State of ground, snow depth, ground minimum temperature (complete) */
 			case DBA_VAR(0, 20,  62): DBA_RUN_OR_RETURN(dba_msg_set_state_ground_var(msg, var)); break;
