@@ -520,8 +520,17 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0, 11, 12): DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, var)); break;
 
 /* Evaporation data */
+			case DBA_VAR(0, 2, 4):
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 2, 4),
+							  1, 0, 0, 0, 254, 0, 0));
+				break;
 			case DBA_VAR(0, 13, 33):
-				return dba_error_unimplemented("wow, a synop with evaporation info, please give it to Enrico");
+				if (time_period == MISSING_TIME_PERIOD)
+					return dba_error_consistency("Evaporation reported with a missing time period");
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 13, 33),
+							1, 0, 0, 0,
+							1, time_period, -time_period));
+				break;
 
 /* Radiation data */
 			case DBA_VAR(0, 14, 2):

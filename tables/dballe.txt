@@ -18,6 +18,7 @@
  001217 AIR QUALITY OBSERVING STATION TERRAIN TYPE                       CODE TABLE 001217          0            0   4 CODE TABLE 001217         0          2
  002001 TYPE OF STATION                                                  CODE TABLE 2001            0            0   2 CODE TABLE 2001           0          1
  002002 TYPE OF INSTRUMENTATION FOR WIND MEASUREMENT                     FLAG TABLE 2002            0            0   4 FLAG TABLE 2002           0          2
+ 002004 TYPE OF INSTRUMENTATION FOR EVAPORATION MEASUREMENT OR TYPE OF C CODE TABLE 2004            0            0   4 CODE TABLE 2004           0          2
  002005 PRECISION OF TEMPERATURE OBSERVATION                             K                          2            0   7 K                         2          3
  002011 RADIOSONDE TYPE                                                  CODE TABLE 2011            0            0   8 CODE TABLE 2011           0          3
  002012 RADIOSONDE COMPUTATIONAL METHOD                                  CODE TABLE 2012            0            0   4 CODE TABLE 2012           0          2
@@ -87,6 +88,7 @@
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
  013013 TOTAL SNOW DEPTH                                                 M                          3          -20  20 M                         3          6
+ 013033 EVAPORATION/EVAPOTRANSPIRATION                                   KG/M**2                    1            0  10 KG/M**2                   1          4
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
  014018 INSTANTANEOUS SHORT-WAVE RADIATION                               W/M**2                    -3        -2048  12 W/M**2                   -3          4
  014021 GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED         J/M**2                    -4            0  15 J/M**2                   -4          5

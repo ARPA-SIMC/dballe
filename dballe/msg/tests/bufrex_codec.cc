@@ -567,11 +567,11 @@ void to::test<11>()
 	double val;
 
 	gen_ensure_equals(msg->type, MSG_SYNOP);
+	gen_ensure_equals(msgs->len, 14);
 
-	//gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
-	//gen_ensure(dba_var_value(var) != NULL);
-	//CHECKED(dba_var_enqd(var, &val));
-	//gen_ensure_equals(val, 2700000e-14);
+	msg = msgs->msgs[4];
+	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
+	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
 
 	dba_msgs_delete(msgs);
 }
