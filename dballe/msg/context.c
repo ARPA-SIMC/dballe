@@ -237,6 +237,11 @@ void dba_msg_context_print(dba_msg_context l, FILE* out)
 
 static void var_summary(dba_var var, FILE* out)
 {
+	if (var == NULL)
+	{
+		fprintf(out, "(null var)");
+		return;
+	}
 	dba_varcode v = dba_var_code(var);
 	dba_varinfo info = dba_var_info(var);
 	fprintf(out, "%d%02d%03d[%s]",
