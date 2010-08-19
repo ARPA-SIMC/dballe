@@ -283,7 +283,7 @@ void to::test<2>()
 		// Compare b1 and b2
 		int bdiffs = 0;
 		// Our metar message sample is different than the official template
-		// and test-airep1 uses the wrong varcode for originating appliation
+		// and test-airep1 uses the wrong varcode for originating application
 		// and test-temp1 uses a nonstandard template
 		#if 0
 		if ((b1->type != 0 || b1->subtype != 255 || b1->localsubtype != 140)
@@ -324,22 +324,26 @@ void to::test<2>()
 
 			if (diffs != 0)
 			{
-				FILE* outraw = fopen("/tmp/1to2.txt", "w");
-				bufrex_msg braw;
-				CHECKED(bufrex_msg_create(BUFREX_BUFR, &braw));
-				braw->edition = 3;
-				braw->type = type;
-				braw->subtype = subtype;
-				braw->localsubtype = localsubtype;
-				braw->opt.bufr.centre = 98;
-				braw->opt.bufr.subcentre = 0;
-				braw->opt.bufr.master_table = 6;
-				braw->opt.bufr.local_table = 1;
-				CHECKED(bufrex_msg_load_tables(braw));
-				CHECKED(bufrex_msg_from_dba_msgs(braw, msgs1));
-				bufrex_msg_print(braw, outraw);
-				fclose(outraw);
-				bufrex_msg_delete(braw);
+				FILE* outraw1 = fopen("/tmp/raw1.txt", "w");
+				bufrex_msg_print(braw1, outraw1);
+				fclose(outraw1);
+
+				FILE* outraw2 = fopen("/tmp/raw2.txt", "w");
+				bufrex_msg braw2;
+				CHECKED(bufrex_msg_create(BUFREX_BUFR, &braw2));
+				braw2->edition = 3;
+				braw2->type = type;
+				braw2->subtype = subtype;
+				braw2->localsubtype = localsubtype;
+				braw2->opt.bufr.centre = 98;
+				braw2->opt.bufr.subcentre = 0;
+				braw2->opt.bufr.master_table = 6;
+				braw2->opt.bufr.local_table = 1;
+				CHECKED(bufrex_msg_load_tables(braw2));
+				CHECKED(bufrex_msg_from_dba_msgs(braw2, msgs1));
+				bufrex_msg_print(braw2, outraw2);
+				fclose(outraw2);
+				bufrex_msg_delete(braw2);
 
 				FILE* out1 = fopen("/tmp/msg1.txt", "w");
 				FILE* out2 = fopen("/tmp/msg2.txt", "w");
