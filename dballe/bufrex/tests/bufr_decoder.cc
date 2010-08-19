@@ -349,7 +349,7 @@ void to::test<14>()
 	test.subsets = 1;
 	test.subset(0).vars = 56;
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs4-142.13803.bufr", BUFR);
+	bufrex_msg msg = read_test_msg_raw("bufr/airep-old-4-142.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
 
 	bufrex_msg msg1 = reencode_test(msg);
