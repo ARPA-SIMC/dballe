@@ -188,23 +188,23 @@ template<> template<>
 void to::test<7>()
 {
 	Record rec;
-	rec.setd("B12001", 280.1);
-	gen_ensure_equals(rec.enqd("B12001"), 280.1);
+	rec.setd("B12101", 280.1);
+	gen_ensure_equals(rec.enqd("B12101"), 280.1);
 	gen_ensure_equals(rec.enqd("t"), 280.1);
 	rec.set("t", 282.3);
-	gen_ensure_equals(rec.enqd("B12001"), 282.3);
+	gen_ensure_equals(rec.enqd("B12101"), 282.3);
 	gen_ensure_equals(rec.enqd("t"), 282.3);
 	rec.setd("t", 281.2);
-	gen_ensure_equals(rec.enqd("B12001"), 281.2);
+	gen_ensure_equals(rec.enqd("B12101"), 281.2);
 	gen_ensure_equals(rec.enqd("t"), 281.2);
 	rec.seti("t", 2834);
-	gen_ensure_equals(rec.enqi("B12001"), 2834);
+	gen_ensure_equals(rec.enqi("B12101"), 2834);
 	gen_ensure_equals(rec.enqi("t"), 2834);
 	rec.setc("t", "2845");
-	gen_ensure_equals(string(rec.enqc("B12001")), "2845");
+	gen_ensure_equals(string(rec.enqc("B12101")), "2845");
 	gen_ensure_equals(string(rec.enqc("t")), "2845");
 	rec.sets("t", "2845");
-	gen_ensure_equals(rec.enqs("B12001"), "2845");
+	gen_ensure_equals(rec.enqs("B12101"), "2845");
 	gen_ensure_equals(rec.enqs("t"), "2845");
 }
 
