@@ -439,8 +439,8 @@ void to::test<4>()
 	dba_msg src = msgs->msgs[0];
 	dba_var var;
 
-	gen_ensure((var = dba_msg_get_isobaric_surface_var(src)) != NULL);
-	gen_ensure(dba_var_value(var) != NULL);
+	//gen_ensure((var = dba_msg_get_isobaric_surface_var(src)) != NULL);
+	//gen_ensure(dba_var_value(var) != NULL);
 	gen_ensure((var = dba_msg_get_geopotential_var(src)) != NULL);
 	gen_ensure(dba_var_value(var) != NULL);
 
