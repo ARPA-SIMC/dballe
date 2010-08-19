@@ -223,7 +223,7 @@ void to::test<2>()
 		"bufr/obs2-91.2.bufr", 
 //		"bufr/obs3-3.1.bufr",
 //		"bufr/obs3-56.2.bufr",
-		"bufr/obs4-142.13803.bufr", 
+		"bufr/airep-old-4-142.bufr", 
 		"bufr/obs4-142.1.bufr", 
 		"bufr/obs4-144.4.bufr", 
 		"bufr/obs4-145.4.bufr", 
