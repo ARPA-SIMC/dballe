@@ -110,11 +110,11 @@ dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				break;
 			case DBA_VAR(0, 12,  1):
 				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12,  1), ltype, l1, 0, 0, 254, 0, 0));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12,  101), ltype, l1, 0, 0, 254, 0, 0));
 				break;
 			case DBA_VAR(0, 12,  3):
 				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");
-				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12,  3), ltype, l1, 0, 0, 254, 0, 0));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12,  103), ltype, l1, 0, 0, 254, 0, 0));
 				break;
 			case DBA_VAR(0, 13,  3):
 				if (ltype == -1) return dba_error_consistency("pressure or height not found in incoming message");

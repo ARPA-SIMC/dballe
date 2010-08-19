@@ -146,20 +146,20 @@ static struct template tpl_gen[] = {
 /*  1 */ { DBA_VAR(0,  2, 61), DBA_MSG_NAVSYS,			0 },
 /*  2 */ { DBA_VAR(0,  4,  1), DBA_MSG_YEAR,			0 },
 /*  3 */ { DBA_VAR(0,  4,  2), DBA_MSG_MONTH,			0 },
-/*  4 */ { DBA_VAR(0,  4,  3), DBA_MSG_DAY,				0 },
+/*  4 */ { DBA_VAR(0,  4,  3), DBA_MSG_DAY,			0 },
 /*  5 */ { DBA_VAR(0,  4,  4), DBA_MSG_HOUR,			0 },
 /*  6 */ { DBA_VAR(0,  4,  5), DBA_MSG_MINUTE,			0 },
 /*  7 */ { DBA_VAR(0,  5,  1), DBA_MSG_LATITUDE,		0 },
 /*  8 */ { DBA_VAR(0,  6,  1), DBA_MSG_LONGITUDE,		0 },
-/*  9 */ { DBA_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE,	0 },
-/* 10 */ { DBA_VAR(0,  7,  2), -1,	DBA_VAR(0,  7,  1) },	/* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
-/* 11 */ { DBA_VAR(0, 12,  1), -1,	DBA_VAR(0, 12,  1) },	/* TEMPERATURE/DRY-BULB TEMPERATURE */
-/* 12 */ { DBA_VAR(0, 11,  1), -1,	DBA_VAR(0, 11,  1) },	/* WIND DIRECTION */
-/* 13 */ { DBA_VAR(0, 11,  2), -1,	DBA_VAR(0, 11,  2) },	/* WIND SPEED */
-/* 14 */ { DBA_VAR(0, 11, 31), -1,	DBA_VAR(0, 11, 31) },	/* DEGREE OF TURBULENCE */
-/* 15 */ { DBA_VAR(0, 11, 32), -1,	DBA_VAR(0, 11, 32) },	/* HEIGHT OF BASE OF TURBULENCE */
-/* 16 */ { DBA_VAR(0, 11, 33), -1,	DBA_VAR(0, 11, 33) },	/* HEIGHT OF TOP OF TURBULENCE */
-/* 17 */ { DBA_VAR(0, 20, 41), -1,	DBA_VAR(0, 20, 41) },	/* AIRFRAME ICING */
+/*  9 */ { DBA_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE,            0 },
+/* 10 */ { DBA_VAR(0,  7,  2), -1,	DBA_VAR(0,  7,   1) },	/* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
+/* 11 */ { DBA_VAR(0, 12,  1), -1,	DBA_VAR(0, 12, 101) },	/* TEMPERATURE/DRY-BULB TEMPERATURE */
+/* 12 */ { DBA_VAR(0, 11,  1), -1,	DBA_VAR(0, 11,   1) },	/* WIND DIRECTION */
+/* 13 */ { DBA_VAR(0, 11,  2), -1,	DBA_VAR(0, 11,   2) },	/* WIND SPEED */
+/* 14 */ { DBA_VAR(0, 11, 31), -1,	DBA_VAR(0, 11,  31) },	/* DEGREE OF TURBULENCE */
+/* 15 */ { DBA_VAR(0, 11, 32), -1,	DBA_VAR(0, 11,  32) },	/* HEIGHT OF BASE OF TURBULENCE */
+/* 16 */ { DBA_VAR(0, 11, 33), -1,	DBA_VAR(0, 11,  33) },	/* HEIGHT OF TOP OF TURBULENCE */
+/* 17 */ { DBA_VAR(0, 20, 41), -1,	DBA_VAR(0, 20,  41) },	/* AIRFRAME ICING */
 };
 
 static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, bufrex_subset dst, int type)
@@ -270,17 +270,17 @@ static struct template tpl_acars[] = {
 /* 14 */ { DBA_VAR(0,  5,  2), DBA_MSG_LATITUDE,		0 },
 /* 15 */ { DBA_VAR(0,  6,  2), DBA_MSG_LONGITUDE,		0 },
 /* 16 */ { DBA_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE,	0 },
-/* 17 */ { DBA_VAR(0,  7,  4), -1,			DBA_VAR(0, 10,  4) },
+/* 17 */ { DBA_VAR(0,  7,  4), -1,			DBA_VAR(0, 10,   4) },
 /* 18 */ { DBA_VAR(0,  8, 21), DBA_MSG_TIMESIG,			0 },
-/* 19 */ { DBA_VAR(0, 11,  1), -1,			DBA_VAR(0, 11,  1) },	/* WIND DIRECTION */
-/* 20 */ { DBA_VAR(0, 11,  2), -1,			DBA_VAR(0, 11,  2) },	/* WIND SPEED */
-/* 21 */ { DBA_VAR(0, 11, 31), -1,			DBA_VAR(0, 11, 31) },	/* DEGREE OF TURBULENCE */
-/* 22 */ { DBA_VAR(0, 11, 34), -1,			DBA_VAR(0, 11, 34) },	/* VERTICAL GUST VELOCITY */
-/* 23 */ { DBA_VAR(0, 11, 35), -1,			DBA_VAR(0, 11, 35) },	/* VERTICAL GUST ACCELERATION */
-/* 24 */ { DBA_VAR(0, 12,  1), -1,			DBA_VAR(0, 12,  1) },	/* TEMPERATURE/DRY-BULB TEMPERATURE */
-/* 25 */ { DBA_VAR(0, 12,  3), -1,			DBA_VAR(0, 12,  3) },	/* DEW-POINT TEMPERATURE */
-/* 26 */ { DBA_VAR(0, 13,  3), -1,			DBA_VAR(0, 13,  3) },	/* RELATIVE HUMIDITY */
-/* 27 */ { DBA_VAR(0, 20, 41), -1,			DBA_VAR(0, 20, 41) },	/* AIRFRAME ICING */
+/* 19 */ { DBA_VAR(0, 11,  1), -1,			DBA_VAR(0, 11,   1) },	/* WIND DIRECTION */
+/* 20 */ { DBA_VAR(0, 11,  2), -1,			DBA_VAR(0, 11,   2) },	/* WIND SPEED */
+/* 21 */ { DBA_VAR(0, 11, 31), -1,			DBA_VAR(0, 11,  31) },	/* DEGREE OF TURBULENCE */
+/* 22 */ { DBA_VAR(0, 11, 34), -1,			DBA_VAR(0, 11,  34) },	/* VERTICAL GUST VELOCITY */
+/* 23 */ { DBA_VAR(0, 11, 35), -1,			DBA_VAR(0, 11,  35) },	/* VERTICAL GUST ACCELERATION */
+/* 24 */ { DBA_VAR(0, 12,  1), -1,			DBA_VAR(0, 12, 101) },	/* TEMPERATURE/DRY-BULB TEMPERATURE */
+/* 25 */ { DBA_VAR(0, 12,  3), -1,			DBA_VAR(0, 12, 103) },	/* DEW-POINT TEMPERATURE */
+/* 26 */ { DBA_VAR(0, 13,  3), -1,			DBA_VAR(0, 13,   3) },	/* RELATIVE HUMIDITY */
+/* 27 */ { DBA_VAR(0, 20, 41), -1,			DBA_VAR(0, 20,  41) },	/* AIRFRAME ICING */
 };
 
 static dba_err exporter_acars(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
