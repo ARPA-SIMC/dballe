@@ -93,13 +93,14 @@ static struct template tpl[] = {
 
 static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
+	dba_var var;
 	int i;
 	for (i = 0; i < sizeof(tpl)/sizeof(struct template); i++)
 	{
 		switch (i)
 		{
-			case 0: {
-				dba_var var = dba_msg_get_ident_var(src);
+			case 0:
+				var = dba_msg_get_ident_var(src);
 				const char* val = var == NULL ? NULL : dba_var_value(var);
 				if (val != NULL)
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, strtol(val, 0, 10)));
@@ -108,18 +109,20 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 				if (var != NULL)
 					DBA_RUN_OR_RETURN(bufrex_subset_add_attrs(dst, var));
 				break;
-			}
 			case 25:
-				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 1));
-				break;
-			default: {
-				dba_var var = dba_msg_find_by_id(src, tpl[i].var);
+				var = dba_msg_find(src, DBA_VAR(0, 8, 2), 256, 0, 258, 0, 254, 0, 0);
 				if (var != NULL)
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
 				else
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;
-			}
+			default:
+				var = dba_msg_find_by_id(src, tpl[i].var);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
+				else
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
+				break;
 		}
 	}
 
