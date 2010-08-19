@@ -103,7 +103,7 @@ dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, int localsubtyp
 	{
 		braw->opt.bufr.centre = 200;
 		braw->opt.bufr.subcentre = 0;
-		braw->opt.bufr.master_table = 12;
+		braw->opt.bufr.master_table = 14;
 		braw->opt.bufr.local_table = 0;
 	} else if (braw->type == 8 && braw->subtype == 255 && braw->localsubtype == 171) {
 		braw->opt.bufr.centre = 98;

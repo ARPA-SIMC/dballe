@@ -253,7 +253,7 @@ void to::test<5>()
 	CHECKED(dba_msg_setd(msg, DBA_VAR(0, 5, 1),   45.0, -1, 257, 0, 0, 0, 0, 0, 0));
 	CHECKED(dba_msg_setd(msg, DBA_VAR(0, 6, 1),   11.0, -1, 257, 0, 0, 0, 0, 0, 0));
 	// ...
-	CHECKED(dba_msg_setd(msg, DBA_VAR(0,12, 1),  273.0, 75, 102, 2000, 0, 0, 254, 0, 0));
+	CHECKED(dba_msg_setd(msg, DBA_VAR(0,12, 101),  273.0, 75, 102, 2000, 0, 0, 254, 0, 0));
 
 	// Append the dba_msg to a dba_msgs
 	dba_msgs msgs;

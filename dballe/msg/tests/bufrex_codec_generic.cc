@@ -279,7 +279,7 @@ void to::test<4>()
 
 	/* Create a variable to add to the message */
 	dba_var var;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 12, 1), &var));
+	CHECKED(dba_var_create_local(DBA_VAR(0, 12, 101), &var));
 	CHECKED(dba_var_setd(var, 270.15));
 
 	/* Add some attributes to the variable */
