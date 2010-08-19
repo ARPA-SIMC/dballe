@@ -2,7 +2,7 @@
 
 if [ -f run-check.conf ]
 then
-	. run-check.conf
+	. ./run-check.conf
 	export DBA_DB
 fi
 
