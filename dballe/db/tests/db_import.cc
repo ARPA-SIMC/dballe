@@ -210,7 +210,7 @@ void to::test<3>()
 
 	const char* files[] = {
 		"aof/obs1-14.63.aof",
-		"aof/synop-old-buoy.aof",
+		"aof/obs1-21.1.aof",
 		"aof/obs1-24.2104.aof",
 		"aof/obs1-24.34.aof",
 		"aof/obs2-144.2198.aof",
@@ -400,7 +400,7 @@ void to::test<6>()
 	};
 	static const char* aof_files[] = {
 		"aof/obs1-14.63.aof",
-		"aof/synop-old-buoy.aof",
+		"aof/obs1-21.1.aof",
 		"aof/obs1-24.2104.aof",
 		"aof/obs1-24.34.aof",
 		"aof/obs2-144.2198.aof",
