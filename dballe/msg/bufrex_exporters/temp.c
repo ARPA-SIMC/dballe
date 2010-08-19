@@ -169,10 +169,18 @@ static dba_err add_sounding_levels(dba_msg msg, bufrex_subset dst, dba_varcode* 
 
 		/* Add the rest */
 		for (j = 0; j < tpl_count; j++)
-			if ((var = dba_msg_context_find(ctx, tpl[j])) != NULL)
+		{
+			dba_varcode src = tpl[j];
+			switch (src)
+			{
+				case DBA_VAR(0, 12, 1): src = DBA_VAR(0, 12, 101); break;
+				case DBA_VAR(0, 12, 3): src = DBA_VAR(0, 12, 103); break;
+			}
+			if ((var = dba_msg_context_find(ctx, src)) != NULL)
 				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[j], var));
 			else
 				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[j]));
+		}
 	}
 
 	return dba_error_ok();

@@ -122,11 +122,11 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			// Geopotential
 			case DBA_VAR(0, 10,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 3), 100, press, 0, 0, 254, 0, 0)); break;
 			// Dry bulb temperature
-			case DBA_VAR(0, 12,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 1), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 12,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 101), 100, press, 0, 0, 254, 0, 0)); break;
 			// Wet bulb temperature
 			case DBA_VAR(0, 12,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 2), 100, press, 0, 0, 254, 0, 0)); break;
 			// Dew point temperature
-			case DBA_VAR(0, 12,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 3), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 12,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 103), 100, press, 0, 0, 254, 0, 0)); break;
 			// Wind direction
 			case DBA_VAR(0, 11,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1), 100, press, 0, 0, 254, 0, 0)); break;
 			// Wind speed
