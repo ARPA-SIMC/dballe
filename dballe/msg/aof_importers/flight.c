@@ -122,12 +122,12 @@ dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg)
 		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11,  2), OBS(22), get_conf6((OBS(flags_start + 1) >> 6) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
 	/* 23 Air temperature [1/10 K] */
 	if (OBS(23) != AOF_UNDEF)
-		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  1), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 12) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
+		DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 101), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 12) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
 
 	if (is_fixed)
 	{
 		if (OBS(25) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12,  3), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 24) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 103), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 24) & 0x3f), ltype, l1, 0, 0, 254, 0, 0));
 		
 	}
 

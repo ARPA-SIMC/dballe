@@ -86,12 +86,12 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 						100, press, 0, 0, 254, 0, 0));
 		// Air temperature
 		if (OBS(os + 3) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 1),
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 101),
 						totemp(OBS(os + 3)), get_conf6((OBS(os + 7) >> 6) & 0x3f),
 						100, press, 0, 0, 254, 0, 0));
 		// Dew point temperature
 		if (OBS(os + 4) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 3),
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 103),
 						totemp(OBS(os + 4)), get_conf6((OBS(os + 7) >> 12) & 0x3f),
 						100, press, 0, 0, 254, 0, 0));
 		// Height + 1000

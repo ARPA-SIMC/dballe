@@ -115,7 +115,7 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
 						ltype, l1, 0, 0, 254, 0, 0));
 		/* Air temperature */
 		if (OBS(os + 3) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 1),
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 101),
 						totemp(OBS(os + 3)), get_conf6((OBS(os+6) >> 6) & 0x3f),
 						ltype, l1, 0, 0, 254, 0, 0));
 	}

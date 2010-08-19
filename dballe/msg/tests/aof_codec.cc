@@ -108,13 +108,14 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 		dba_msg amsg = amsgs->msgs[msgidx];
 		dba_msg bmsg = bmsgs->msgs[msgidx];
 
-		// Recode BUFR attributes to match the AOF 2-bit values
 		for (int i = 0; i < bmsg->data_count; i++)
 		{
 			dba_msg_context ctx = bmsg->data[i];
 			for (int j = 0; j < ctx->data_count; j++)
 			{
 				dba_var var = ctx->data[j];
+
+				// Recode BUFR attributes to match the AOF 2-bit values
 				dba_var_attr_iterator iter = dba_var_attr_iterate(var);
 				for (; iter != NULL; iter = dba_var_attr_iterator_next(iter))
 				{
@@ -134,6 +135,14 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 							val = 0;
 						CHECKED(dba_var_seti(attr, val));
 					}
+				}
+
+				// Propagate Vertical Significances
+				if (dba_var_code(var) == DBA_VAR(0, 8, 2))
+				{
+					dba_msg_set(amsg, var, DBA_VAR(0, 8, 2),
+							ctx->ltype1, ctx->l1, ctx->ltype2, ctx->l2,
+							ctx->pind, ctx->p1, ctx->p2);
 				}
 			}
 		}

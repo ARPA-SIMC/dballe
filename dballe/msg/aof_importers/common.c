@@ -212,6 +212,7 @@ dba_err dba_aof_parse_general_cloud_group(dba_msg msg, const uint32_t* obs)
 	{
 		/* DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(ch, &val)); */
 		DBA_RUN_OR_RETURN(dba_msg_set_cloud_ch(msg, ch + 10, get_conf2(OBS(31) >> 18)));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 3, -1, 256, 0, 259, 3, 254, 0, 0));
 	}
 
 	/* B20012 CLOUD TYPE: 35.000000 CODE TABLE 20012 */
@@ -219,26 +220,37 @@ dba_err dba_aof_parse_general_cloud_group(dba_msg msg, const uint32_t* obs)
 	{
 		/* DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(cm, &val)) */;
 		DBA_RUN_OR_RETURN(dba_msg_set_cloud_cm(msg, cm + 20, get_conf2(OBS(31) >> 20)));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 2, -1, 256, 0, 259, 2, 254, 0, 0));
 	}
 
 	/* B20013 HEIGHT OF BASE OF CLOUD in  M */
 	if (h != 0x7ff)
+	{
 		DBA_RUN_OR_RETURN(dba_msg_set_cloud_hh(msg, h * 10.0, get_conf2(OBS(31) >> 22)));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 1, -1, 256, 0, 258, 0, 254, 0, 0));
+	}
 
 	/* B20012 CLOUD TYPE: 35.000000 CODE TABLE 20012 */
 	if (cl != 0xf)
 	{
 		/* DBA_RUN_OR_RETURN(dba_convert_WMO0513_to_BUFR20012(cl, &val)) */;
 		DBA_RUN_OR_RETURN(dba_msg_set_cloud_cl(msg, cl + 30, get_conf2(OBS(31) >> 24)));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 1, -1, 256, 0, 259, 1, 254, 0, 0));
 	}
 
 	/* B20011 CLOUD AMOUNT in CODE TABLE 20011 */
 	if (nh != 0xf)
+	{
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 1, -1, 256, 0, 258, 0, 254, 0, 0));
 		DBA_RUN_OR_RETURN(dba_msg_set_cloud_nh(msg, nh, get_conf2(OBS(31) >> 26)));
+	}
 
 	/* B20010 CLOUD COVER (TOTAL) in % */
 	if (n != 0xf)
+	{
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 1, -1, 256, 0, 258, 0, 254, 0, 0));
 		DBA_RUN_OR_RETURN(dba_msg_set_cloud_n(msg, n * 100 / 8, get_conf2(OBS(31) >> 28)));
+	}
 
 	return dba_error_ok();
 }

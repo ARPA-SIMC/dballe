@@ -139,6 +139,7 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		int n, c, h;
 		uint32_t conf = dba_aof_get_extra_conf(obs, i - 33);
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 1, -1, 256, 0, 259, 1, 254, 0, 0));
 
 		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n1(msg, n, get_conf2((conf >> 4) & 0x3)));
 		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c1(msg, c, get_conf2((conf >> 2) & 0x3)));
@@ -150,6 +151,7 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		int n, c, h;
 		uint32_t conf = dba_aof_get_extra_conf(obs, i - 33);
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 2, -1, 256, 0, 259, 2, 254, 0, 0));
 
 		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n2(msg, n, get_conf2(conf & 0x3)));
 		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c2(msg, c, get_conf2((conf >> 2) & 0x3)));
@@ -161,6 +163,7 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		int n, c, h;
 		uint32_t conf = dba_aof_get_extra_conf(obs, i - 33);
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 3, -1, 256, 0, 259, 3, 254, 0, 0));
 
 		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n3(msg, n, get_conf2(conf & 0x3)));
 		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c3(msg, c, get_conf2((conf >> 2) & 0x3)));
@@ -172,6 +175,7 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		int n, c, h;
 		uint32_t conf = dba_aof_get_extra_conf(obs, i - 33);
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
+		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 4, -1, 256, 0, 259, 4, 254, 0, 0));
 
 		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n4(msg, n, get_conf2(conf & 0x3)));
 		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c4(msg, c, get_conf2((conf >> 2) & 0x3)));
