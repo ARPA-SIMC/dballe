@@ -1608,7 +1608,7 @@ dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, const dba
 	SQLBindCol(stm, 1, SQL_C_USHORT, &out_type, sizeof(out_type), 0);
 	SQLBindCol(stm, 2, SQL_C_CHAR, &out_value, sizeof(out_value), 0);
 	
-	TRACE("QC read query: %s with id_data %d\n", dba_querybuf_get(query), id_data);
+	TRACE("QC read query: %s with ctx %d var %d\n", dba_querybuf_get(query), in_id_context, id_var);
 
 	/* Perform the query */
 	res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(query), SQL_NTS);

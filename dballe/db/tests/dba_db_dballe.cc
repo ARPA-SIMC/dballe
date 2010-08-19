@@ -1495,7 +1495,7 @@ void to::test<18>()
 	for (int* i = rep_cods; *i != -1; ++i)
 	{
 		CHECKED(dba_record_key_seti(insert, DBA_KEY_REP_COD, *i));
-		CHECKED(dba_record_var_seti(insert, DBA_VAR(0, 12, 1), *i));
+		CHECKED(dba_record_var_seti(insert, DBA_VAR(0, 12, 101), *i));
 		int paid;
 		CHECKED(dba_db_insert(db, insert, 0, 1, &paid, NULL));
 	}
@@ -1515,7 +1515,7 @@ void to::test<18>()
 	CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 0));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_MIN, 0));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_SEC, 0));
-	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12001"));
+	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12101"));
 	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
 
 	gen_ensure_equals(dba_db_cursor_remaining(cur), 1);
@@ -1544,7 +1544,7 @@ void to::test<18>()
 	CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 0));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_MIN, 0));
 	CHECKED(dba_record_key_seti(query, DBA_KEY_SEC, 0));
-	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12001"));
+	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12101"));
 	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
 
 	gen_ensure_equals(dba_db_cursor_remaining(cur), 1);

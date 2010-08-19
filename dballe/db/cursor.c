@@ -536,7 +536,8 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 				cur->sel_dtmin.second = minvalues[5];
 				cur->sel_dtmin.fraction = 0;
 				DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime=?"));
-				TRACE("found exact time: adding AND c.datetime = ?.  val is %s\n", cur->sel_dtmin);
+				TRACE("found exact time: adding AND c.datetime=?. val is %04d-%02d-%02d %02d:%02d:%02d\n",
+						minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
 				if (cur->db->server_type == POSTGRES || cur->db->server_type == SQLITE)
 					SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(cur->sel_dtmin), 0, 0);
 				else
@@ -556,7 +557,8 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 					cur->sel_dtmin.second = minvalues[5];
 					cur->sel_dtmin.fraction = 0;
 					DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime>=?"));
-					TRACE("found min time interval: adding AND c.datetime >= ?.  val is %s\n", cur->sel_dtmin);
+					TRACE("found min time: adding AND c.datetime>=?. val is %04d-%02d-%02d %02d:%02d:%02d\n",
+						minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
 					if (cur->db->server_type == POSTGRES || cur->db->server_type == SQLITE)
 						SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &cur->sel_dtmin, 0, 0);
 					else
@@ -573,7 +575,8 @@ static dba_err make_where(dba_db_cursor cur, dba_record query)
 					cur->sel_dtmax.second = maxvalues[5];
 					cur->sel_dtmax.fraction = 0;
 					DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->where, "c.datetime<=?"));
-					TRACE("found max time interval: adding AND c.datetime <= ?.  val is %s\n", cur->sel_dtmax);
+					TRACE("found max time: adding AND c.datetime<=?. val is %04d-%02d-%02d %02d:%02d:%02d\n",
+						minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
 					if (cur->db->server_type == POSTGRES || cur->db->server_type == SQLITE)
 						SQLBindParameter(cur->stm, cur->input_seq++, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &cur->sel_dtmax, 0, 0);
 					else
@@ -974,21 +977,13 @@ static dba_err getcount(dba_db_cursor cur, dba_record query, unsigned int wanted
 	}
 
 	if (cur->modifiers & DBA_DB_MODIFIER_BEST)
-		switch (cur->db->server_type)
 		{
-			case MYSQL:
-				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-					" GROUP BY d.id_var, c.id_ana, c.ltype1, c.l1, c.ltype2, c.l2, c.ptype, c.p1, c.p2, c.datetime "
-					"HAVING ri.prio=MAX(ri.prio)"));
-				break;
-			default:
 				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
 					" AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE "));
 				DBA_RUN_OR_RETURN(dba_querybuf_start_list(cur->query, " AND "));
 				DBA_RUN_OR_RETURN(add_repinfo_where(cur, cur->query, query, "sri"));
 				DBA_RUN_OR_RETURN(dba_querybuf_append_list(cur->query,
 					"sc.id_ana=c.id_ana AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) "));
-				break;
 		}
 
 	TRACE("Performing query: %s\n", dba_querybuf_get(cur->query));
@@ -1102,12 +1097,6 @@ dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wa
 	if (cur->modifiers & DBA_DB_MODIFIER_BEST)
 		switch (cur->db->server_type)
 		{
-			case MYSQL:
-				DBA_RUN_OR_RETURN(dba_querybuf_append(cur->query,
-					" GROUP BY d.id_var, c.id_ana, c.ltype1, c.l1, c.ltype2, c.l2,"
-                                        " c.ptype, c.p1, c.p2, c.datetime "
-					"HAVING ri.prio=MAX(ri.prio)"));
-				break;
 			case ORACLE:
 				if (limit != -1)
 					return dba_error_unimplemented("best-value queries with result limit are not implemented for Oracle");
