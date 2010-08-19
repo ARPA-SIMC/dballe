@@ -216,7 +216,7 @@ void to::test<2>()
 		"bufr/obs1-11.16.bufr", 
 		"bufr/obs1-13.36.bufr", 
 		"bufr/obs1-19.3.bufr", 
-		"bufr/obs1-21.1.bufr", 
+		"bufr/synop-old-buoy.bufr", 
 		"bufr/obs1-140.454.bufr", 
 		"bufr/obs2-101.16.bufr", 
 		"bufr/obs2-102.1.bufr", 

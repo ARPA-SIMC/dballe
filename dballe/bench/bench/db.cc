@@ -85,7 +85,7 @@ protected:
 			"bufr/obs1-11.16.bufr",
 			"bufr/obs1-13.36.bufr",
 			"bufr/obs1-19.3.bufr",
-			"bufr/obs1-21.1.bufr",
+			"bufr/synop-old-buoy.bufr",
 			"bufr/obs1-9.2.bufr",
 			"bufr/obs2-101.16.bufr",
 			"bufr/obs2-102.1.bufr",
@@ -107,7 +107,7 @@ protected:
 		};
 		static const char* aof_files[] = {
 			"aof/obs1-14.63.aof",
-			"aof/obs1-21.1.aof",
+			"aof/synop-old-buoy.aof",
 			"aof/obs1-24.2104.aof",
 			"aof/obs1-24.34.aof",
 			"aof/obs2-144.2198.aof",
@@ -253,7 +253,7 @@ protected:
 			"bufr/obs1-11.16.bufr", 
 			"bufr/obs1-13.36.bufr", 
 			"bufr/obs1-19.3.bufr", 
-			"bufr/obs1-21.1.bufr", 
+			"bufr/synop-old-buoy.bufr", 
 			"bufr/obs1-9.2.bufr", 
 			"bufr/obs2-101.16.bufr", 
 			"bufr/obs2-102.1.bufr", 

@@ -265,7 +265,7 @@ void to::test<10>()
 	test.subsets = 1;
 	test.subset(0).vars = 98;
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs1-21.1.bufr", BUFR);
+	bufrex_msg msg = read_test_msg_raw("bufr/synop-old-buoy.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
 
 	bufrex_msg msg1 = reencode_test(msg);

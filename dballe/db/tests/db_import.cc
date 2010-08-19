@@ -142,7 +142,7 @@ void to::test<2>()
 		"bufr/obs1-11.16.bufr", 
 		"bufr/obs1-13.36.bufr", 
 		"bufr/obs1-19.3.bufr", 
-		"bufr/obs1-21.1.bufr", 
+		"bufr/synop-old-buoy.bufr", 
 		"bufr/obs1-140.454.bufr", 
 		"bufr/obs2-101.16.bufr", 
 		"bufr/obs2-102.1.bufr", 
@@ -181,7 +181,7 @@ void to::test<2>()
 		gen_ensure(msgs[0] != NULL);
 
 		/*
-		if (string(files[i]).find("1-21") != string::npos)
+		if (string(files[i]).find("synop-old-buoy") != string::npos)
 		{
 			dba_msg_print(msg, stderr);
 			dba_msg_print(msgs[0], stderr);
@@ -210,7 +210,7 @@ void to::test<3>()
 
 	const char* files[] = {
 		"aof/obs1-14.63.aof",
-		"aof/obs1-21.1.aof",
+		"aof/synop-old-buoy.aof",
 		"aof/obs1-24.2104.aof",
 		"aof/obs1-24.34.aof",
 		"aof/obs2-144.2198.aof",
@@ -243,7 +243,7 @@ void to::test<3>()
 		gen_ensure(msgs[0] != NULL);
 
 		/*
-		if (string(files[i]).find("1-21") != string::npos)
+		if (string(files[i]).find("synop-old-buoy") != string::npos)
 		{
 			dba_msg_print(msg, stderr);
 			dba_msg_print(msgs[0], stderr);
@@ -381,7 +381,7 @@ void to::test<6>()
 		"bufr/obs1-11.16.bufr",
 		"bufr/obs1-13.36.bufr",
 		"bufr/obs1-19.3.bufr",
-		"bufr/obs1-21.1.bufr",
+		"bufr/synop-old-buoy.bufr",
 		"bufr/obs1-9.2.bufr",
 		"bufr/obs1-140.454.bufr",
 		"bufr/obs2-101.16.bufr",
@@ -400,7 +400,7 @@ void to::test<6>()
 	};
 	static const char* aof_files[] = {
 		"aof/obs1-14.63.aof",
-		"aof/obs1-21.1.aof",
+		"aof/synop-old-buoy.aof",
 		"aof/obs1-24.2104.aof",
 		"aof/obs1-24.34.aof",
 		"aof/obs2-144.2198.aof",
