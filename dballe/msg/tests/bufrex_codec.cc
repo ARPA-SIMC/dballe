@@ -318,7 +318,11 @@ void to::test<2>()
 			dba_msgs msgs2;
 			CHECKED(bufrex_decode_bufr(raw2, &msgs2));
 
-			if (string(files[i]).find("2-101.16") != string::npos)
+			// Compare the two dba_msg
+			int diffs = 0;
+			dba_msgs_diff(msgs1, msgs2, &diffs, stderr);
+
+			if (diffs != 0)
 			{
 				FILE* outraw = fopen("/tmp/1to2.txt", "w");
 				bufrex_msg braw;
@@ -346,9 +350,6 @@ void to::test<2>()
 				fclose(out2);
 			}
 
-			// Compare the two dba_msg
-			int diffs = 0;
-			dba_msgs_diff(msgs1, msgs2, &diffs, stderr);
 			gen_ensure_equals(diffs, 0);
 
 			//cerr << files[i] << ": ok" << endl;

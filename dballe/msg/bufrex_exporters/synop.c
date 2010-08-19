@@ -213,6 +213,7 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 	int i;
 	dba_varcode prectype = DBA_VAR(0, 13, 23);
 	bufrex_opcode op;
+	dba_var var;
 
 	/* Check what precipitation type we are supposed to use */
 	for (op = bmsg->datadesc; op != NULL; op = op->next)
@@ -230,20 +231,41 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 		switch (i)
 		{
 			case 25:
+				var = dba_msg_find(src, DBA_VAR(0, 8, 2), 256, 0, 258, 0, 254, 0, 0);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
+				else
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
+				break;
 			case 31:
-				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 1));
+				var = dba_msg_find(src, DBA_VAR(0, 8, 2), 256, 0, 259, 1, 254, 0, 0);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
+				else
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;
 			case 35:
-				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 2));
+				var = dba_msg_find(src, DBA_VAR(0, 8, 2), 256, 0, 259, 2, 254, 0, 0);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
+				else
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;
 			case 39:
-				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 3));
+				var = dba_msg_find(src, DBA_VAR(0, 8, 2), 256, 0, 259, 3, 254, 0, 0);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
+				else
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;
 			case 43:
-				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 4));
+				var = dba_msg_find(src, DBA_VAR(0, 8, 2), 256, 0, 259, 4, 254, 0, 0);
+				if (var != NULL)
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
+				else
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;
-			case 47: {
-				dba_var var;
+			case 47:
 				switch (prectype)
 				{
 					case DBA_VAR(0, 13, 23): var = dba_msg_find_by_id(src, DBA_MSG_TOT_PREC24); break;
@@ -258,15 +280,13 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 				else
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, prectype));
 				break;
-			}
-			default: {
-				dba_var var = dba_msg_find_by_id(src, tpl[i].var);
+			default:
+				var = dba_msg_find_by_id(src, tpl[i].var);
 				if (var != NULL)
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
 				else
 					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
 				break;
-			}
 		}
 	}
 
