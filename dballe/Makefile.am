@@ -38,4 +38,4 @@ libdballe_la_LIBADD = \
 		bufrex/libdballe-bufrex.la \
 		msg/libdballe-msg.la \
 		db/libdballe-db.la
-libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
+libdballe_la_LDFLAGS = -lstdc++ -version-info @LIBDBALLE_VERSION_INFO@

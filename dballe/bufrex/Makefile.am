@@ -22,7 +22,7 @@ libdballe_bufrex_la_SOURCES = \
 		opcode.c \
 		subset.c \
 		msg.c \
-		bufr_decoder.c \
+		bufr_decoder.cc \
 		bufr_encoder.c \
 		crex_decoder.c \
 		crex_encoder.c \
