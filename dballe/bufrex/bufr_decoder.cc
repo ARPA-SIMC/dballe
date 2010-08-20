@@ -69,16 +69,6 @@ static inline int readNumber(const unsigned char* buf, int bytes)
 
 namespace {
 
-#define PARSE_ERROR(pos, ...) do { \
-		return dba_error_parse(filename(), in->offset + ((pos) - in->buf), __VA_ARGS__); \
-	} while (0)
-
-#define CHECK_AVAILABLE_DATA(start, datalen, next) do { \
-		if (start + datalen > in->buf + in->len) \
-			PARSE_ERROR(start, "end of BUFR message while looking for " next); \
-		TRACE(next " starts at %d and contains at least %d bytes\n", (int)(start - in->buf), datalen); \
-	} while (0)
-
 static const double e10[] = {
 	1.0,
 	10.0,
@@ -112,6 +102,13 @@ static double decode_int(uint32_t ival, dba_varinfo info)
 	return val;
 }
 
+#define CHECK_AVAILABLE_DATA(start, datalen, next) do { \
+	if (start + datalen > in->buf + in->len) \
+		return parse_error(start, "end of BUFR message while looking for " next); \
+	TRACE(next " starts at %d and contains at least %d bytes\n", (int)(start - in->buf), datalen); \
+} while (0)
+
+
 
 struct decoder 
 {
@@ -131,33 +128,13 @@ struct decoder
 	/* Offset of the start of BUFR section 5 */
 	const unsigned char* sec5;
 
-	/* Current subset when decoding non-compressed BUFR messages */
-	bufrex_subset current_subset;
-
-	/* Current value of scale change from C modifier */
-	int c_scale_change;
-	/* Current value of width change from C modifier */
-	int c_width_change;
-
-	/* List of opcodes to decode */
-	bufrex_opcode ops;
-
-	/* Bit decoding data */
-	int cursor;
-	unsigned char pbyte;
-	int pbyte_len;
-
 	decoder(dba_rawmsg in, bufrex_msg out)
-		: in(in), out(out), sec1(0), sec2(0), sec3(0), sec4(0), sec5(0),
-		  current_subset(0), c_scale_change(0), c_width_change(0), ops(0),
-		  cursor(0), pbyte(0), pbyte_len(0)
+		: in(in), out(out), sec1(0), sec2(0), sec3(0), sec4(0), sec5(0)
 	{
 	}
 
 	~decoder()
 	{
-		if (ops != NULL)
-			bufrex_opcode_delete(&ops);
 	}
 
 	const char* filename() const
@@ -168,70 +145,20 @@ struct decoder
 			return dba_file_name(in->file);
 	}
 
-	int offset() const { return cursor; }
-	int bits_left() const { return (in->len - cursor) * 8 + pbyte_len; }
-
-	/**
-	 * Get the integer value of the next 'n' bits from the decode input
-	 * n must be <= 32.
-	 */
-	dba_err get_bits(int n, uint32_t *val)
+	dba_err parse_error(const unsigned char* pos, const char* fmt, ...)
 	{
-		uint32_t result = 0;
-		int i;
+		char* context;
+		char* message;
 
-		if (cursor == in->len)
-			PARSE_ERROR(in->buf + cursor, "end of buffer while looking for %d bits of bit-packed data", n);
+		va_list ap;
+		va_start(ap, fmt);
+		vasprintf(&message, fmt, ap);
+		va_end(ap);
 
-		for (i = 0; i < n; i++) 
-		{
-			if (pbyte_len == 0) 
-			{
-				pbyte_len = 8;
-				pbyte = in->buf[cursor++];
-			}
-			result <<= 1;
-			if (pbyte & 0x80)
-				result |= 1;
-			pbyte <<= 1;
-			pbyte_len--;
-		}
-
-		*val = result;
-
-		return dba_error_ok();
+		asprintf(&context, "parsing %s:%d+%d", filename(), in->offset, pos - in->buf);
+		
+		return dba_error_generic0(DBA_ERR_PARSE, context, message);
 	}
-
-	/* Dump 'count' bits of 'buf', starting at the 'ofs-th' bit */
-	void dump_next_bits(int count, FILE* out)
-	{
-		int cursor = cursor;
-		int pbyte = pbyte;
-		int pbyte_len = pbyte_len;
-		int i;
-
-		for (i = 0; i < count; ++i) 
-		{
-			if (cursor == in->len)
-				break;
-			if (pbyte_len == 0) 
-			{
-				pbyte_len = 8;
-				pbyte = in->buf[cursor++];
-				putc(' ', out);
-			}
-			putc((pbyte & 0x80) ? '1' : '0', out);
-			pbyte <<= 1;
-			--pbyte_len;
-		}
-	}
-
-	/* Forward declaration, as we write recursive decoding
-	 * functions later */
-	dba_err decode_data_section();
-	dba_err decode_b_data();
-	dba_err decode_r_data();
-	dba_err decode_c_data();
 
 	dba_err decode_sec1ed3()
 	{
@@ -303,6 +230,7 @@ struct decoder
 		return dba_error_ok();
 	}
 
+	/* Decode the message header only */
 	dba_err decode_header()
 	{
 		int i;
@@ -311,19 +239,19 @@ struct decoder
 		CHECK_AVAILABLE_DATA(in->buf, 8, "section 0 of BUFR message (indicator section)");
 		sec1 = in->buf + 8;
 		if (memcmp(in->buf, "BUFR", 4) != 0)
-			PARSE_ERROR(in->buf, "data does not start with BUFR header (\"%.4s\" was read instead)", in->buf);
+			return parse_error(in->buf, "data does not start with BUFR header (\"%.4s\" was read instead)", in->buf);
 		TRACE(" -> is BUFR\n");
 
 		/* Check the BUFR edition number */
 		if (in->buf[7] != 2 &&in->buf[7] != 3 && in->buf[7] != 4)
-			PARSE_ERROR(in->buf + 7, "Only BUFR edition 3 and 4 are supported (this message is edition %d)", (unsigned)in->buf[7]);
+			return parse_error(in->buf + 7, "Only BUFR edition 3 and 4 are supported (this message is edition %d)", (unsigned)in->buf[7]);
 		out->edition = in->buf[7];
 
 		/* Read bufr section 1 (Identification section) */
 		CHECK_AVAILABLE_DATA(sec1, 18, "section 1 of BUFR message (identification section)");
 		sec2 = sec1 + readNumber(sec1, 3);
 		if (sec2 > in->buf + in->len)
-			PARSE_ERROR(sec1, "Section 1 claims to end past the end of the BUFR message");
+			return parse_error(sec1, "Section 1 claims to end past the end of the BUFR message");
 
 		switch (out->edition)
 		{
@@ -374,7 +302,7 @@ struct decoder
 				return dba_error_alloc("allocating space for the optional section");
 			memcpy(out->opt.bufr.optional_section, sec2 + 4, out->opt.bufr.optional_section_length);
 			if (sec3 > in->buf + in->len)
-				PARSE_ERROR(sec2, "Section 2 claims to end past the end of the BUFR message");
+				return parse_error(sec2, "Section 2 claims to end past the end of the BUFR message");
 		} else
 			sec3 = sec2;
 
@@ -382,7 +310,7 @@ struct decoder
 		CHECK_AVAILABLE_DATA(sec3, 8, "section 3 of BUFR message (data description section)");
 		sec4 = sec3 + readNumber(sec3, 3);
 		if (sec4 > in->buf + in->len)
-			PARSE_ERROR(sec3, "Section 3 claims to end past the end of the BUFR message");
+			return parse_error(sec3, "Section 3 claims to end past the end of the BUFR message");
 		out->opt.bufr.subsets = readNumber(sec3 + 4, 2);
 		out->opt.bufr.compression = (sec3[6] & 0x40) ? 1 : 0;
 		for (i = 0; i < (sec4 - sec3 - 7)/2; i++)
@@ -403,37 +331,196 @@ struct decoder
 		return dba_error_ok();
 	}
 
-	dba_err decode_data()
+	/* Decode message data section after the header has been decoded */
+	dba_err decode_data();
+};
+
+struct opcode_interpreter
+{
+	decoder& d;
+
+	/* Current subset when decoding non-compressed BUFR messages */
+	bufrex_subset current_subset;
+
+	/* Current value of scale change from C modifier */
+	int c_scale_change;
+	/* Current value of width change from C modifier */
+	int c_width_change;
+
+	/* List of opcodes to decode */
+	bufrex_opcode ops;
+
+	/* Bit decoding data */
+	int cursor;
+	unsigned char pbyte;
+	int pbyte_len;
+
+	opcode_interpreter(decoder& d, int start_ofs)
+		: d(d), current_subset(0),
+		  c_scale_change(0), c_width_change(0),
+		  ops(0), cursor(start_ofs), pbyte(0), pbyte_len(0)
+	{
+	}
+
+	~opcode_interpreter()
+	{
+		if (ops != NULL)
+			bufrex_opcode_delete(&ops);
+	}
+
+	/// Return the currently decoded filename
+	const char* filename() const { return d.filename(); }
+
+	/* Return the current decoding byte offset */
+	int offset() const { return cursor; }
+
+	/* Return the number of bits left in the message to be decoded */
+	int bits_left() const { return (d.in->len - cursor) * 8 + pbyte_len; }
+
+	/**
+	 * Get the integer value of the next 'n' bits from the decode input
+	 * n must be <= 32.
+	 */
+	dba_err get_bits(int n, uint32_t *val)
+	{
+		uint32_t result = 0;
+		int i;
+
+		if (cursor == d.in->len)
+			return d.parse_error(d.in->buf + cursor, "end of buffer while looking for %d bits of bit-packed data", n);
+
+		for (i = 0; i < n; i++) 
+		{
+			if (pbyte_len == 0) 
+			{
+				pbyte_len = 8;
+				pbyte = d.in->buf[cursor++];
+			}
+			result <<= 1;
+			if (pbyte & 0x80)
+				result |= 1;
+			pbyte <<= 1;
+			pbyte_len--;
+		}
+
+		*val = result;
+
+		return dba_error_ok();
+	}
+
+	/* Dump 'count' bits of 'buf', starting at the 'ofs-th' bit */
+	void dump_next_bits(int count, FILE* out)
+	{
+		int cursor = cursor;
+		int pbyte = pbyte;
+		int pbyte_len = pbyte_len;
+		int i;
+
+		for (i = 0; i < count; ++i) 
+		{
+			if (cursor == d.in->len)
+				break;
+			if (pbyte_len == 0) 
+			{
+				pbyte_len = 8;
+				pbyte = d.in->buf[cursor++];
+				putc(' ', out);
+			}
+			putc((pbyte & 0x80) ? '1' : '0', out);
+			pbyte <<= 1;
+			--pbyte_len;
+		}
+	}
+
+	dba_err decode_b_data();
+	dba_err decode_r_data();
+	dba_err decode_c_data();
+
+	/* Run the opcode interpreter to decode the data section */
+	dba_err decode_data_section()
+	{
+		dba_err err = DBA_OK;
+
+		/*
+		fprintf(stderr, "read_data: ");
+		bufrex_opcode_print(ops, stderr);
+		fprintf(stderr, "\n");
+		*/
+		TRACE("bufr_message_decode_data_section: START\n");
+
+		while (ops != NULL)
+		{
+			IFTRACE{
+				TRACE("bufr_message_decode_data_section TODO: ");
+				bufrex_opcode_print(ops, stderr);
+				TRACE("\n");
+			}
+
+			switch (DBA_VAR_F(ops->val))
+			{
+				case 0:
+					DBA_RUN_OR_RETURN(decode_b_data());
+					break;
+				case 1:
+					DBA_RUN_OR_RETURN(decode_r_data());
+					break;
+				case 2:
+					DBA_RUN_OR_RETURN(decode_c_data());
+					/* DBA_RUN_OR_RETURN(bufr_message_decode_c_data(msg, ops, &s)); */
+					break;
+				case 3:
+				{
+					/* D table opcode: expand the chain */
+					bufrex_opcode op;
+					bufrex_opcode exp;
+
+					/* Pop the first opcode */
+					DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(ops), &op));
+					
+					if ((err = bufrex_msg_query_dtable(d.out, op->val, &exp)) != DBA_OK)
+					{
+						bufrex_opcode_delete(&op);
+						return err;
+					}
+					bufrex_opcode_delete(&op);
+
+					/* Push the expansion back in the fields */
+					if ((err = bufrex_opcode_join(&exp, ops)) != DBA_OK)
+					{
+						bufrex_opcode_delete(&exp);
+						return err;
+					}
+					ops = exp;
+					break;
+				}
+				default:
+					return d.parse_error(d.sec4 + 4 + offset(),
+							"cannot handle field %01d%02d%03d",
+								DBA_VAR_F(ops->val),
+								DBA_VAR_X(ops->val),
+								DBA_VAR_Y(ops->val));
+			}
+		}
+
+		return dba_error_ok();
+	}
+
+	dba_err run()
 	{
 		int i;
 
-		/* Load decoding tables */
-		DBA_RUN_OR_RETURN(bufrex_msg_load_tables(out));
-
-		/* Read BUFR section 4 (Data section) */
-		CHECK_AVAILABLE_DATA(sec4, 4, "section 4 of BUFR message (data section)");
-
-		sec5 = sec4 + readNumber(sec4, 3);
-		if (sec5 > in->buf + in->len)
-			PARSE_ERROR(sec4, "Section 4 claims to end past the end of the BUFR message");
-		TRACE("section 4 is %d bytes long (%02x %02x %02x %02x)\n", readNumber(sec4, 3),
-				(unsigned int)*(sec4), (unsigned int)*(sec4+1), (unsigned int)*(sec4+2), (unsigned int)*(sec4+3));
-
-		/* Initialize bit-decoding structures */
-		cursor = sec4 + 4 - in->buf;
-
-		if (out->opt.bufr.compression)
+		if (d.out->opt.bufr.compression)
 		{
 			/* Only needs to parse once */
 			current_subset = NULL;
-			DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(out, &(ops)));
+			DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(d.out, &(ops)));
 			DBA_RUN_OR_RETURN(decode_data_section());
 		} else {
 			/* Iterate on the number of subgroups */
-			for (i = 0; i < out->opt.bufr.subsets; ++i)
+			for (i = 0; i < d.out->opt.bufr.subsets; ++i)
 			{
-				DBA_RUN_OR_RETURN(bufrex_msg_get_subset(out, i, &(current_subset)));
-				DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(out, &(ops)));
+				DBA_RUN_OR_RETURN(bufrex_msg_get_subset(d.out, i, &(current_subset)));
+				DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(d.out, &(ops)));
 				DBA_RUN_OR_RETURN(decode_data_section());
 			}
 		}
@@ -451,25 +538,44 @@ struct decoder
 			*/
 		}
 		}
+	}
+};
 
-		/* Read BUFR section 5 (Data section) */
-		CHECK_AVAILABLE_DATA(sec5, 4, "section 5 of BUFR message (end section)");
+dba_err decoder::decode_data()
+{
+	int i;
 
-		if (memcmp(sec5, "7777", 4) != 0)
-			PARSE_ERROR(sec5, "section 5 does not contain '7777'");
+	/* Load decoding tables */
+	DBA_RUN_OR_RETURN(bufrex_msg_load_tables(out));
 
-		for (i = 0; i < out->opt.bufr.subsets; ++i)
-		{
-			bufrex_subset subset;
-			DBA_RUN_OR_RETURN(bufrex_msg_get_subset(out, i, &subset));
-			/* Copy the decoded attributes into the decoded variables */
-			DBA_RUN_OR_RETURN(bufrex_subset_apply_attributes(subset));
-		}
+	/* Read BUFR section 4 (Data section) */
+	CHECK_AVAILABLE_DATA(sec4, 4, "section 4 of BUFR message (data section)");
 
-		return dba_error_ok();
+	sec5 = sec4 + readNumber(sec4, 3);
+	if (sec5 > in->buf + in->len)
+		return parse_error(sec4, "Section 4 claims to end past the end of the BUFR message");
+	TRACE("section 4 is %d bytes long (%02x %02x %02x %02x)\n", readNumber(sec4, 3),
+			(unsigned int)*(sec4), (unsigned int)*(sec4+1), (unsigned int)*(sec4+2), (unsigned int)*(sec4+3));
+
+	opcode_interpreter interpreter(*this, sec4 + 4 - in->buf);
+	interpreter.run();
+
+	/* Read BUFR section 5 (Data section) */
+	CHECK_AVAILABLE_DATA(sec5, 4, "section 5 of BUFR message (end section)");
+
+	if (memcmp(sec5, "7777", 4) != 0)
+		return parse_error(sec5, "section 5 does not contain '7777'");
+
+	for (i = 0; i < out->opt.bufr.subsets; ++i)
+	{
+		bufrex_subset subset;
+		DBA_RUN_OR_RETURN(bufrex_msg_get_subset(out, i, &subset));
+		/* Copy the decoded attributes into the decoded variables */
+		DBA_RUN_OR_RETURN(bufrex_subset_apply_attributes(subset));
 	}
 
-};
+	return dba_error_ok();
+}
 
 }
 
@@ -557,7 +663,7 @@ static double bufr_decoder_compute_value(bufrex_decoder decoder, const char* val
 }
 #endif
 
-dba_err decoder::decode_b_data()
+dba_err opcode_interpreter::decode_b_data()
 {
 	dba_err err = DBA_OK;
 	dba_var var = NULL;
@@ -571,7 +677,7 @@ dba_err decoder::decode_b_data()
 	}
 
 	DBA_RUN_OR_RETURN(dba_vartable_query_altered(
-				out->btable, ops->val,
+				d.out->btable, ops->val,
 				DBA_ALT(c_width_change, c_scale_change), &info));
 
 	IFTRACE {
@@ -631,7 +737,7 @@ dba_err decoder::decode_b_data()
 		TRACE("bufr_message_decode_b_data len %d val %s missing %d info-len %d info-desc %s\n", len, str, missing, info->bit_len, info->desc);
 
 		/* Store the variable that we found */
-		if (out->opt.bufr.compression)
+		if (d.out->opt.bufr.compression)
 		{
 			uint32_t diffbits;
 			int i;
@@ -663,13 +769,13 @@ dba_err decoder::decode_b_data()
 					goto cleanup;
 				}
 
-				for (i = 0; i < out->opt.bufr.subsets; ++i)
+				for (i = 0; i < d.out->opt.bufr.subsets; ++i)
 				{
 					int j, missing = 1;
 
 					/* Access the subset we are working on */
 					bufrex_subset subset;
-					DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(out, i, &subset));
+					DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
 
 					/* Decode the difference value, reusing the str buffer */
 					for (j = 0; j < diffbits; ++j)
@@ -703,10 +809,10 @@ dba_err decoder::decode_b_data()
 				}
 			} else {
 				/* Add the string to all the subsets */
-				for (i = 0; i < out->opt.bufr.subsets; ++i)
+				for (i = 0; i < d.out->opt.bufr.subsets; ++i)
 				{
 					bufrex_subset subset;
-					DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(out, i, &subset));
+					DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
 
 					/* Create the new dba_var */
 					if (missing)
@@ -742,7 +848,7 @@ dba_err decoder::decode_b_data()
 		TRACE("bufr_message_decode_b_data len %d val %d info-len %d info-desc %s\n", info->bit_len, val, info->bit_len, info->desc);
 
 		/* Store the variable that we found */
-		if (out->opt.bufr.compression)
+		if (d.out->opt.bufr.compression)
 		{
 			uint32_t diffbits;
 			int i;
@@ -760,12 +866,12 @@ dba_err decoder::decode_b_data()
 
 			TRACE("Compressed number, base value %d diff bits %d\n", val, diffbits);
 
-			for (i = 0; i < out->opt.bufr.subsets; ++i)
+			for (i = 0; i < d.out->opt.bufr.subsets; ++i)
 			{
 				uint32_t diff, newval;
 				/* Access the subset we are working on */
 				bufrex_subset subset;
-				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(out, i, &subset));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
 
 				/* Decode the difference value */
 				DBA_RUN_OR_GOTO(cleanup, get_bits(diffbits, &diff));
@@ -839,7 +945,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err decoder::decode_r_data()
+dba_err opcode_interpreter::decode_r_data()
 {
 	dba_err err = DBA_OK;
 	int group = DBA_VAR_X(ops->val);
@@ -869,14 +975,14 @@ dba_err decoder::decode_r_data()
 		DBA_RUN_OR_GOTO(cleanup, bufrex_opcode_pop(&(ops), &info_op));
 
 		/* Read variable informations about the delayed replicator count */
-		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(out, info_op->val, &info));
+		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(d.out, info_op->val, &info));
 		
 		/* Fetch the repetition count */
 		DBA_RUN_OR_GOTO(cleanup, get_bits(info->bit_len, &_count));
 		count = _count;
 
 		/* Insert the repetition count among the parsed variables */
-		if (out->opt.bufr.compression)
+		if (d.out->opt.bufr.compression)
 		{
 			uint32_t diffbits;
 			uint32_t repval = 0;
@@ -891,12 +997,12 @@ dba_err decoder::decode_r_data()
 
 			TRACE("Compressed delayed repetition, base value %d diff bits %d\n", count, diffbits);
 
-			for (i = 0; i < out->opt.bufr.subsets; ++i)
+			for (i = 0; i < d.out->opt.bufr.subsets; ++i)
 			{
 				uint32_t diff, newval;
 				/* Access the subset we are working on */
 				bufrex_subset subset;
-				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(out, i, &subset));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
 
 				/* Decode the difference value */
 				DBA_RUN_OR_GOTO(cleanup, get_bits(diffbits, &diff));
@@ -909,9 +1015,8 @@ dba_err decoder::decode_r_data()
 					repval = newval;
 				else if (repval != newval)
 				{
-					err = dba_error_parse(
-							filename(),
-							sec4 + 4 + offset() - in->buf,
+					err = d.parse_error(
+							d.sec4 + 4 + offset(),
 							"compressed delayed replication factor has different values for subsets (%d and %d)", repval, newval);
 					goto cleanup;
 				}
@@ -974,7 +1079,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err decoder::decode_c_data()
+dba_err opcode_interpreter::decode_c_data()
 {
 	dba_err err = DBA_OK;
 	dba_varcode code = ops->val;
@@ -1017,9 +1122,7 @@ dba_err decoder::decode_c_data()
 			{
 				DBA_RUN_OR_GOTO(cleanup, decode_r_data());
 			} else {
-				err = dba_error_parse(
-						filename(),
-						sec4 + 4 + offset() - in->buf,
+				err = d.parse_error(d.sec4 + 4 + offset(),
 						"C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
 							DBA_VAR_X(code),
@@ -1032,7 +1135,7 @@ dba_err decoder::decode_c_data()
 			{
 				DBA_RUN_OR_GOTO(cleanup, decode_r_data());
 			} else {
-				err = dba_error_parse(filename(), sec4 + 4 + offset() - in->buf,
+				err = d.parse_error(d.sec4 + 4 + offset(),
 						"C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
 							DBA_VAR_X(code),
@@ -1041,7 +1144,7 @@ dba_err decoder::decode_c_data()
 			}
 			break;
 		default:
-			err = dba_error_parse(filename(), sec4 + 4 + offset() - in->buf,
+			err = d.parse_error(d.sec4 + 4 + offset(),
 					"C modifiers (%d%02d%03d in this case) are not yet supported",
 						DBA_VAR_F(code),
 						DBA_VAR_X(code),
@@ -1052,73 +1155,4 @@ dba_err decoder::decode_c_data()
 cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
-
-dba_err decoder::decode_data_section()
-{
-	dba_err err = DBA_OK;
-
-	/*
-	fprintf(stderr, "read_data: ");
-	bufrex_opcode_print(ops, stderr);
-	fprintf(stderr, "\n");
-	*/
-	TRACE("bufr_message_decode_data_section: START\n");
-
-	while (ops != NULL)
-	{
-		IFTRACE{
-			TRACE("bufr_message_decode_data_section TODO: ");
-			bufrex_opcode_print(ops, stderr);
-			TRACE("\n");
-		}
-
-		switch (DBA_VAR_F(ops->val))
-		{
-			case 0:
-				DBA_RUN_OR_RETURN(decode_b_data());
-				break;
-			case 1:
-				DBA_RUN_OR_RETURN(decode_r_data());
-				break;
-			case 2:
-				DBA_RUN_OR_RETURN(decode_c_data());
-				/* DBA_RUN_OR_RETURN(bufr_message_decode_c_data(msg, ops, &s)); */
-				break;
-			case 3:
-			{
-				/* D table opcode: expand the chain */
-				bufrex_opcode op;
-				bufrex_opcode exp;
-
-				/* Pop the first opcode */
-				DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(ops), &op));
-				
-				if ((err = bufrex_msg_query_dtable(out, op->val, &exp)) != DBA_OK)
-				{
-					bufrex_opcode_delete(&op);
-					return err;
-				}
-				bufrex_opcode_delete(&op);
-
-				/* Push the expansion back in the fields */
-				if ((err = bufrex_opcode_join(&exp, ops)) != DBA_OK)
-				{
-					bufrex_opcode_delete(&exp);
-					return err;
-				}
-				ops = exp;
-				break;
-			}
-			default:
-				return dba_error_parse(filename(), sec4 + 4 + offset() - in->buf,
-						"cannot handle field %01d%02d%03d",
-							DBA_VAR_F(ops->val),
-							DBA_VAR_X(ops->val),
-							DBA_VAR_Y(ops->val));
-		}
-	}
-
-	return dba_error_ok();
-}
-
 /* vim:set ts=4 sw=4: */
