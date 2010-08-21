@@ -543,6 +543,12 @@ struct opcode_interpreter
 	}
 };
 
+struct opcode_interpreter_compressed : public opcode_interpreter
+{
+	opcode_interpreter_compressed(decoder& d, int start_ofs)
+		: opcode_interpreter(d, start_ofs) {}
+};
+
 dba_err decoder::decode_data()
 {
 	int i;
@@ -559,8 +565,14 @@ dba_err decoder::decode_data()
 	TRACE("section 4 is %d bytes long (%02x %02x %02x %02x)\n", readNumber(sec4, 3),
 			(unsigned int)*(sec4), (unsigned int)*(sec4+1), (unsigned int)*(sec4+2), (unsigned int)*(sec4+3));
 
-	opcode_interpreter interpreter(*this, sec4 + 4 - in->buf);
-	interpreter.run();
+	if (out->opt.bufr.compression)
+	{
+		opcode_interpreter_compressed interpreter(*this, sec4 + 4 - in->buf);
+		interpreter.run();
+	} else {
+		opcode_interpreter interpreter(*this, sec4 + 4 - in->buf);
+		interpreter.run();
+	}
 
 	/* Read BUFR section 5 (Data section) */
 	CHECK_AVAILABLE_DATA(sec5, 4, "section 5 of BUFR message (end section)");
