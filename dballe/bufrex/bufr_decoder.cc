@@ -433,6 +433,8 @@ struct opcode_interpreter
 	}
 
 	dba_err decode_b_data();
+	virtual dba_err decode_b_string(dba_varinfo info);
+	virtual dba_err decode_b_num(dba_varinfo info);
 	dba_err decode_r_data();
 	dba_err decode_c_data();
 
@@ -666,9 +668,7 @@ static double bufr_decoder_compute_value(bufrex_decoder decoder, const char* val
 dba_err opcode_interpreter::decode_b_data()
 {
 	dba_err err = DBA_OK;
-	dba_var var = NULL;
 	dba_varinfo info = NULL;
-	char *str = NULL;
 
 	IFTRACE {
 		TRACE("bufr_message_decode_b_data: items: ");
@@ -699,227 +699,9 @@ dba_err opcode_interpreter::decode_b_data()
 	/* Get the real datum */
 	if (info->is_string)
 	{
-		/* Read a string */
-		int toread = info->bit_len;
-		int len = 0;
-		int missing = 1;
-
-		str = (char*)malloc(info->bit_len / 8 + 2);
-
-		if (str == NULL)
-		{
-			err = dba_error_alloc("allocating space for a BUFR string variable");
-			goto cleanup;
-		}
-
-		while (toread > 0)
-		{
-			uint32_t bitval;
-			int count = toread > 8 ? 8 : toread;
-			DBA_RUN_OR_GOTO(cleanup, get_bits(count, &bitval));
-			/* Check that the string is not all 0xff, meaning missing value */
-			if (bitval != 0xff && bitval != 0)
-				missing = 0;
-			str[len++] = bitval;
-			toread -= count;
-		}
-
-		if (!missing)
-		{
-			str[len] = 0;
-
-			/* Convert space-padding into zero-padding */
-			for (--len; len > 0 && isspace(str[len]);
-					len--)
-				str[len] = 0;
-		}
-
-		TRACE("bufr_message_decode_b_data len %d val %s missing %d info-len %d info-desc %s\n", len, str, missing, info->bit_len, info->desc);
-
-		/* Store the variable that we found */
-		if (d.out->opt.bufr.compression)
-		{
-			uint32_t diffbits;
-			int i;
-			/* If compression is in use, then we just decoded the base value.  Now
-			 * we need to decode all the offsets */
-
-			/* Decode the number of bits (encoded in 6 bits) that these difference
-			 * values occupy */
-			DBA_RUN_OR_GOTO(cleanup, get_bits(6, &diffbits));
-
-			TRACE("Compressed string, diff bits %d\n", diffbits);
-
-			if (diffbits != 0)
-			{
-				/* For compressed strings, the reference value must be all zeros */
-				for (i = 0; i < len; ++i)
-					if (str[i] != 0)
-					{
-						err = dba_error_unimplemented("compressed strings with %d bit deltas have non-zero reference value", diffbits);
-						goto cleanup;
-					}
-
-				/* Let's also check that the number of
-				 * difference characters is the same length as
-				 * the reference string */
-				if (diffbits > len)
-				{
-					err = dba_error_unimplemented("compressed strings with %d characters have %d bit deltas (deltas should not be longer than field)", len, diffbits);
-					goto cleanup;
-				}
-
-				for (i = 0; i < d.out->opt.bufr.subsets; ++i)
-				{
-					int j, missing = 1;
-
-					/* Access the subset we are working on */
-					bufrex_subset subset;
-					DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
-
-					/* Decode the difference value, reusing the str buffer */
-					for (j = 0; j < diffbits; ++j)
-					{
-						uint32_t bitval;
-						DBA_RUN_OR_GOTO(cleanup, get_bits(8, &bitval));
-						/* Check that the string is not all 0xff, meaning missing value */
-						if (bitval != 0xff && bitval != 0)
-							missing = 0;
-						str[j] = bitval;
-					}
-					str[j] = 0;
-
-					if (missing)
-					{
-						/* Missing value */
-						TRACE("Decoded[%d] as missing\n", i);
-
-						/* Create the new dba_var */
-						DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
-					} else {
-						/* Compute the value for this subset */
-						TRACE("Decoded[%d] as %s\n", i, str);
-
-						DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
-					}
-
-					/* Add it to this subset */
-					DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
-					var = NULL;
-				}
-			} else {
-				/* Add the string to all the subsets */
-				for (i = 0; i < d.out->opt.bufr.subsets; ++i)
-				{
-					bufrex_subset subset;
-					DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
-
-					/* Create the new dba_var */
-					if (missing)
-						DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
-					else
-						DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
-					DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
-					var = NULL;
-				}
-			}
-		} else {
-			/* Create the new dba_var */
-			if (missing)
-				DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
-			else
-				DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
-			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(current_subset, var));
-			var = NULL;
-		}
+		DBA_RUN_OR_GOTO(cleanup, decode_b_string(info));
 	} else {
-		/* Read a value */
-		uint32_t val;
-		int missing;
-
-		DBA_RUN_OR_GOTO(cleanup, get_bits(info->bit_len, &val));
-
-		TRACE("Reading %s (%s), size %d, scale %d, starting point %d\n", info->desc, info->bufr_unit, info->bit_len, info->scale, val);
-
-		/* Check if there are bits which are not 1 (that is, if the value is present) */
-		missing = (val == (((1 << (info->bit_len - 1))-1) | (1 << (info->bit_len - 1))));
-
-		/*bufr_decoder_debug(decoder, "  %s: %d%s\n", info.desc, val, info.type);*/
-		TRACE("bufr_message_decode_b_data len %d val %d info-len %d info-desc %s\n", info->bit_len, val, info->bit_len, info->desc);
-
-		/* Store the variable that we found */
-		if (d.out->opt.bufr.compression)
-		{
-			uint32_t diffbits;
-			int i;
-			/* If compression is in use, then we just decoded the base value.  Now
-			 * we need to decode all the offsets */
-
-			/* Decode the number of bits (encoded in 6 bits) that these difference
-			 * values occupy */
-			DBA_RUN_OR_GOTO(cleanup, get_bits(6, &diffbits));
-			if (missing && diffbits != 0)
-			{
-				err = dba_error_consistency("When decoding compressed BUFR data, the difference bit length must be 0 (and not %d like in this case) when the base value is missing", diffbits);
-				goto cleanup;
-			}
-
-			TRACE("Compressed number, base value %d diff bits %d\n", val, diffbits);
-
-			for (i = 0; i < d.out->opt.bufr.subsets; ++i)
-			{
-				uint32_t diff, newval;
-				/* Access the subset we are working on */
-				bufrex_subset subset;
-				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
-
-				/* Decode the difference value */
-				DBA_RUN_OR_GOTO(cleanup, get_bits(diffbits, &diff));
-
-				/* Check if it's all 1: in that case it's a missing value */
-				if (missing || diff == (((1 << (diffbits - 1))-1) | (1 << (diffbits - 1))))
-				{
-					/* Missing value */
-					TRACE("Decoded[%d] as missing\n", i);
-
-					/* Create the new dba_var */
-					DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
-				} else {
-					/* Compute the value for this subset */
-					newval = val + diff;
-					double dval = decode_int(newval, info);
-					TRACE("Decoded[%d] as %d+%d=%%f %s\n", i, val, diff, newval, dval, info->bufr_unit);
-
-					/* Convert to target unit */
-					DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
-					TRACE("Converted to %f %s\n", dval, info->unit);
-
-					/* Create the new dba_var */
-					DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
-				}
-
-				/* Add it to this subset */
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
-				var = NULL;
-			}
-		} else {
-			if (missing)
-			{
-				/* Create the new dba_var */
-				TRACE("Decoded as missing\n");
-				DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
-			} else {
-				double dval = decode_int(val, info);
-				TRACE("Decoded as %f %s\n", dval, info->bufr_unit);
-				/* Convert to target unit */
-				DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
-				TRACE("Converted to %f %s\n", dval, info->unit);
-				/* Create the new dba_var */
-				DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
-			}
-			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(current_subset, var));
-			var = NULL;
-		}
+		DBA_RUN_OR_GOTO(cleanup, decode_b_num(info));
 	}
 
 	/* Remove from the chain the item that we handled */
@@ -938,8 +720,248 @@ dba_err opcode_interpreter::decode_b_data()
 	*/
 
 cleanup:
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
+dba_err opcode_interpreter::decode_b_string(dba_varinfo info)
+{
+	/* Read a string */
+	dba_err err = DBA_OK;
+	dba_var var = NULL;
+	char *str = NULL;
+	int toread = info->bit_len;
+	int len = 0;
+	int missing = 1;
+
+	str = (char*)malloc(info->bit_len / 8 + 2);
+	if (str == NULL)
+	{
+		err = dba_error_alloc("allocating space for a BUFR string variable");
+		goto cleanup;
+	}
+
+	while (toread > 0)
+	{
+		uint32_t bitval;
+		int count = toread > 8 ? 8 : toread;
+		DBA_RUN_OR_GOTO(cleanup, get_bits(count, &bitval));
+		/* Check that the string is not all 0xff, meaning missing value */
+		if (bitval != 0xff && bitval != 0)
+			missing = 0;
+		str[len++] = bitval;
+		toread -= count;
+	}
+
+	if (!missing)
+	{
+		str[len] = 0;
+
+		/* Convert space-padding into zero-padding */
+		for (--len; len > 0 && isspace(str[len]);
+				len--)
+			str[len] = 0;
+	}
+
+	TRACE("bufr_message_decode_b_data len %d val %s missing %d info-len %d info-desc %s\n", len, str, missing, info->bit_len, info->desc);
+
+	/* Store the variable that we found */
+	if (d.out->opt.bufr.compression)
+	{
+		uint32_t diffbits;
+		int i;
+		/* If compression is in use, then we just decoded the base value.  Now
+		 * we need to decode all the offsets */
+
+		/* Decode the number of bits (encoded in 6 bits) that these difference
+		 * values occupy */
+		DBA_RUN_OR_GOTO(cleanup, get_bits(6, &diffbits));
+
+		TRACE("Compressed string, diff bits %d\n", diffbits);
+
+		if (diffbits != 0)
+		{
+			/* For compressed strings, the reference value must be all zeros */
+			for (i = 0; i < len; ++i)
+				if (str[i] != 0)
+				{
+					err = dba_error_unimplemented("compressed strings with %d bit deltas have non-zero reference value", diffbits);
+					goto cleanup;
+				}
+
+			/* Let's also check that the number of
+			 * difference characters is the same length as
+			 * the reference string */
+			if (diffbits > len)
+			{
+				err = dba_error_unimplemented("compressed strings with %d characters have %d bit deltas (deltas should not be longer than field)", len, diffbits);
+				goto cleanup;
+			}
+
+			for (i = 0; i < d.out->opt.bufr.subsets; ++i)
+			{
+				int j, missing = 1;
+
+				/* Access the subset we are working on */
+				bufrex_subset subset;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
+
+				/* Decode the difference value, reusing the str buffer */
+				for (j = 0; j < diffbits; ++j)
+				{
+					uint32_t bitval;
+					DBA_RUN_OR_GOTO(cleanup, get_bits(8, &bitval));
+					/* Check that the string is not all 0xff, meaning missing value */
+					if (bitval != 0xff && bitval != 0)
+						missing = 0;
+					str[j] = bitval;
+				}
+				str[j] = 0;
+
+				if (missing)
+				{
+					/* Missing value */
+					TRACE("Decoded[%d] as missing\n", i);
+
+					/* Create the new dba_var */
+					DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+				} else {
+					/* Compute the value for this subset */
+					TRACE("Decoded[%d] as %s\n", i, str);
+
+					DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
+				}
+
+				/* Add it to this subset */
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
+				var = NULL;
+			}
+		} else {
+			/* Add the string to all the subsets */
+			for (i = 0; i < d.out->opt.bufr.subsets; ++i)
+			{
+				bufrex_subset subset;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
+
+				/* Create the new dba_var */
+				if (missing)
+					DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+				else
+					DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
+				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
+				var = NULL;
+			}
+		}
+	} else {
+		/* Create the new dba_var */
+		if (missing)
+			DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+		else
+			DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
+		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(current_subset, var));
+		var = NULL;
+	}
+
+cleanup:
 	if (str != NULL)
 		free(str);
+	if (var != NULL)
+		dba_var_delete(var);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
+dba_err opcode_interpreter::decode_b_num(dba_varinfo info)
+{
+	dba_err err = DBA_OK;
+	dba_var var = NULL;
+	/* Read a value */
+	uint32_t val;
+	int missing;
+
+	DBA_RUN_OR_GOTO(cleanup, get_bits(info->bit_len, &val));
+
+	TRACE("Reading %s (%s), size %d, scale %d, starting point %d\n", info->desc, info->bufr_unit, info->bit_len, info->scale, val);
+
+	/* Check if there are bits which are not 1 (that is, if the value is present) */
+	missing = (val == (((1 << (info->bit_len - 1))-1) | (1 << (info->bit_len - 1))));
+
+	/*bufr_decoder_debug(decoder, "  %s: %d%s\n", info.desc, val, info.type);*/
+	TRACE("bufr_message_decode_b_data len %d val %d info-len %d info-desc %s\n", info->bit_len, val, info->bit_len, info->desc);
+
+	/* Store the variable that we found */
+	if (d.out->opt.bufr.compression)
+	{
+		uint32_t diffbits;
+		int i;
+		/* If compression is in use, then we just decoded the base value.  Now
+		 * we need to decode all the offsets */
+
+		/* Decode the number of bits (encoded in 6 bits) that these difference
+		 * values occupy */
+		DBA_RUN_OR_GOTO(cleanup, get_bits(6, &diffbits));
+		if (missing && diffbits != 0)
+		{
+			err = dba_error_consistency("When decoding compressed BUFR data, the difference bit length must be 0 (and not %d like in this case) when the base value is missing", diffbits);
+			goto cleanup;
+		}
+
+		TRACE("Compressed number, base value %d diff bits %d\n", val, diffbits);
+
+		for (i = 0; i < d.out->opt.bufr.subsets; ++i)
+		{
+			uint32_t diff, newval;
+			/* Access the subset we are working on */
+			bufrex_subset subset;
+			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
+
+			/* Decode the difference value */
+			DBA_RUN_OR_GOTO(cleanup, get_bits(diffbits, &diff));
+
+			/* Check if it's all 1: in that case it's a missing value */
+			if (missing || diff == (((1 << (diffbits - 1))-1) | (1 << (diffbits - 1))))
+			{
+				/* Missing value */
+				TRACE("Decoded[%d] as missing\n", i);
+
+				/* Create the new dba_var */
+				DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+			} else {
+				/* Compute the value for this subset */
+				newval = val + diff;
+				double dval = decode_int(newval, info);
+				TRACE("Decoded[%d] as %d+%d=%%f %s\n", i, val, diff, newval, dval, info->bufr_unit);
+
+				/* Convert to target unit */
+				DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
+				TRACE("Converted to %f %s\n", dval, info->unit);
+
+				/* Create the new dba_var */
+				DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
+			}
+
+			/* Add it to this subset */
+			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
+			var = NULL;
+		}
+	} else {
+		if (missing)
+		{
+			/* Create the new dba_var */
+			TRACE("Decoded as missing\n");
+			DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
+		} else {
+			double dval = decode_int(val, info);
+			TRACE("Decoded as %f %s\n", dval, info->bufr_unit);
+			/* Convert to target unit */
+			DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
+			TRACE("Converted to %f %s\n", dval, info->unit);
+			/* Create the new dba_var */
+			DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
+		}
+		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(current_subset, var));
+		var = NULL;
+	}
+
+cleanup:
 	if (var != NULL)
 		dba_var_delete(var);
 	return err == DBA_OK ? dba_error_ok() : err;
