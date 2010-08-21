@@ -547,6 +547,7 @@ struct opcode_interpreter_compressed : public opcode_interpreter
 {
 	opcode_interpreter_compressed(decoder& d, int start_ofs)
 		: opcode_interpreter(d, start_ofs) {}
+	virtual dba_err decode_b_num(dba_varinfo info);
 };
 
 dba_err decoder::decode_data()
@@ -900,76 +901,98 @@ dba_err opcode_interpreter::decode_b_num(dba_varinfo info)
 	TRACE("bufr_message_decode_b_data len %d val %d info-len %d info-desc %s\n", info->bit_len, val, info->bit_len, info->desc);
 
 	/* Store the variable that we found */
-	if (d.out->opt.bufr.compression)
+	if (missing)
 	{
-		uint32_t diffbits;
-		int i;
-		/* If compression is in use, then we just decoded the base value.  Now
-		 * we need to decode all the offsets */
-
-		/* Decode the number of bits (encoded in 6 bits) that these difference
-		 * values occupy */
-		DBA_RUN_OR_GOTO(cleanup, get_bits(6, &diffbits));
-		if (missing && diffbits != 0)
-		{
-			err = dba_error_consistency("When decoding compressed BUFR data, the difference bit length must be 0 (and not %d like in this case) when the base value is missing", diffbits);
-			goto cleanup;
-		}
-
-		TRACE("Compressed number, base value %d diff bits %d\n", val, diffbits);
-
-		for (i = 0; i < d.out->opt.bufr.subsets; ++i)
-		{
-			uint32_t diff, newval;
-			/* Access the subset we are working on */
-			bufrex_subset subset;
-			DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
-
-			/* Decode the difference value */
-			DBA_RUN_OR_GOTO(cleanup, get_bits(diffbits, &diff));
-
-			/* Check if it's all 1: in that case it's a missing value */
-			if (missing || diff == (((1 << (diffbits - 1))-1) | (1 << (diffbits - 1))))
-			{
-				/* Missing value */
-				TRACE("Decoded[%d] as missing\n", i);
-
-				/* Create the new dba_var */
-				DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
-			} else {
-				/* Compute the value for this subset */
-				newval = val + diff;
-				double dval = decode_int(newval, info);
-				TRACE("Decoded[%d] as %d+%d=%%f %s\n", i, val, diff, newval, dval, info->bufr_unit);
-
-				/* Convert to target unit */
-				DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
-				TRACE("Converted to %f %s\n", dval, info->unit);
-
-				/* Create the new dba_var */
-				DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
-			}
-
-			/* Add it to this subset */
-			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
-			var = NULL;
-		}
+		/* Create the new dba_var */
+		TRACE("Decoded as missing\n");
+		DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
 	} else {
-		if (missing)
+		double dval = decode_int(val, info);
+		TRACE("Decoded as %f %s\n", dval, info->bufr_unit);
+		/* Convert to target unit */
+		DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
+		TRACE("Converted to %f %s\n", dval, info->unit);
+		/* Create the new dba_var */
+		DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
+	}
+	DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(current_subset, var));
+	var = NULL;
+
+cleanup:
+	if (var != NULL)
+		dba_var_delete(var);
+	return err == DBA_OK ? dba_error_ok() : err;
+}
+
+dba_err opcode_interpreter_compressed::decode_b_num(dba_varinfo info)
+{
+	dba_err err = DBA_OK;
+	dba_var var = NULL;
+	/* Read a value */
+	uint32_t val;
+	int missing;
+
+	DBA_RUN_OR_GOTO(cleanup, get_bits(info->bit_len, &val));
+
+	TRACE("Reading %s (%s), size %d, scale %d, starting point %d\n", info->desc, info->bufr_unit, info->bit_len, info->scale, val);
+
+	/* Check if there are bits which are not 1 (that is, if the value is present) */
+	missing = (val == (((1 << (info->bit_len - 1))-1) | (1 << (info->bit_len - 1))));
+
+	/*bufr_decoder_debug(decoder, "  %s: %d%s\n", info.desc, val, info.type);*/
+	TRACE("bufr_message_decode_b_data len %d val %d info-len %d info-desc %s\n", info->bit_len, val, info->bit_len, info->desc);
+
+	/* Store the variable that we found */
+	uint32_t diffbits;
+	int i;
+	/* If compression is in use, then we just decoded the base value.  Now
+	 * we need to decode all the offsets */
+
+	/* Decode the number of bits (encoded in 6 bits) that these difference
+	 * values occupy */
+	DBA_RUN_OR_GOTO(cleanup, get_bits(6, &diffbits));
+	if (missing && diffbits != 0)
+	{
+		err = dba_error_consistency("When decoding compressed BUFR data, the difference bit length must be 0 (and not %d like in this case) when the base value is missing", diffbits);
+		goto cleanup;
+	}
+
+	TRACE("Compressed number, base value %d diff bits %d\n", val, diffbits);
+
+	for (i = 0; i < d.out->opt.bufr.subsets; ++i)
+	{
+		uint32_t diff, newval;
+		/* Access the subset we are working on */
+		bufrex_subset subset;
+		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
+
+		/* Decode the difference value */
+		DBA_RUN_OR_GOTO(cleanup, get_bits(diffbits, &diff));
+
+		/* Check if it's all 1: in that case it's a missing value */
+		if (missing || diff == (((1 << (diffbits - 1))-1) | (1 << (diffbits - 1))))
 		{
+			/* Missing value */
+			TRACE("Decoded[%d] as missing\n", i);
+
 			/* Create the new dba_var */
-			TRACE("Decoded as missing\n");
 			DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
 		} else {
-			double dval = decode_int(val, info);
-			TRACE("Decoded as %f %s\n", dval, info->bufr_unit);
+			/* Compute the value for this subset */
+			newval = val + diff;
+			double dval = decode_int(newval, info);
+			TRACE("Decoded[%d] as %d+%d=%%f %s\n", i, val, diff, newval, dval, info->bufr_unit);
+
 			/* Convert to target unit */
 			DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
 			TRACE("Converted to %f %s\n", dval, info->unit);
+
 			/* Create the new dba_var */
 			DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
 		}
-		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(current_subset, var));
+
+		/* Add it to this subset */
+		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
 		var = NULL;
 	}
 
