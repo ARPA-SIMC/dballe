@@ -67,6 +67,13 @@ static inline int readNumber(const unsigned char* buf, int bytes)
 	return res;
 }
 
+// Return a value with bitlen bits set to 1
+static inline uint32_t all_ones(int bitlen)
+{
+	return ((1 << (bitlen - 1))-1) | (1 << (bitlen - 1));
+}
+
+
 namespace {
 
 static const double e10[] = {
@@ -909,7 +916,7 @@ dba_err opcode_interpreter::decode_b_num(dba_varinfo info)
 	TRACE("Reading %s (%s), size %d, scale %d, starting point %d\n", info->desc, info->bufr_unit, info->bit_len, info->scale, val);
 
 	/* Check if there are bits which are not 1 (that is, if the value is present) */
-	missing = (val == (((1 << (info->bit_len - 1))-1) | (1 << (info->bit_len - 1))));
+	missing = (val == all_ones(info->bit_len));
 
 	/*bufr_decoder_debug(decoder, "  %s: %d%s\n", info.desc, val, info.type);*/
 	TRACE("bufr_message_decode_b_data len %d val %d info-len %d info-desc %s\n", info->bit_len, val, info->bit_len, info->desc);
@@ -951,7 +958,7 @@ dba_err opcode_interpreter_compressed::decode_b_num(dba_varinfo info)
 	TRACE("Reading %s (%s), size %d, scale %d, starting point %d\n", info->desc, info->bufr_unit, info->bit_len, info->scale, val);
 
 	/* Check if there are bits which are not 1 (that is, if the value is present) */
-	missing = (val == (((1 << (info->bit_len - 1))-1) | (1 << (info->bit_len - 1))));
+	missing = (val == all_ones(info->bit_len));
 
 	/*bufr_decoder_debug(decoder, "  %s: %d%s\n", info.desc, val, info.type);*/
 	TRACE("bufr_message_decode_b_data len %d val %d info-len %d info-desc %s\n", info->bit_len, val, info->bit_len, info->desc);
@@ -984,7 +991,7 @@ dba_err opcode_interpreter_compressed::decode_b_num(dba_varinfo info)
 		DBA_RUN_OR_GOTO(cleanup, get_bits(diffbits, &diff));
 
 		/* Check if it's all 1: in that case it's a missing value */
-		if (missing || diff == (((1 << (diffbits - 1))-1) | (1 << (diffbits - 1))))
+		if (missing || diff == all_ones(diffbits))
 		{
 			/* Missing value */
 			TRACE("Decoded[%d] as missing\n", i);
@@ -1071,9 +1078,6 @@ dba_err opcode_interpreter::decode_r_data()
 			for (i = 0; i < d.out->opt.bufr.subsets; ++i)
 			{
 				uint32_t diff, newval;
-				/* Access the subset we are working on */
-				bufrex_subset subset;
-				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
 
 				/* Decode the difference value */
 				DBA_RUN_OR_GOTO(cleanup, get_bits(diffbits, &diff));
@@ -1089,6 +1093,10 @@ dba_err opcode_interpreter::decode_r_data()
 					err = parse_error("compressed delayed replication factor has different values for subsets (%d and %d)", repval, newval);
 					goto cleanup;
 				}
+
+				/* Access the subset we are working on */
+				bufrex_subset subset;
+				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
 
 				/* Create the new dba_var */
 				DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, newval, &rep_var));
