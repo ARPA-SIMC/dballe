@@ -370,6 +370,10 @@ struct opcode_interpreter
 	std::vector<bool> bitmap;
 	/* Number of elements set to true in the bitmap */
 	int bitmap_count;
+	/* Next bitmap element for which we decode values */
+	int bitmap_use_index;
+	/* Next subset element for which we decode attributes */
+	int bitmap_subset_index;
 	/* True if the bitmap is in use */
 	bool bitmap_used;
 
@@ -466,6 +470,30 @@ struct opcode_interpreter
 		}
 	}
 
+	dba_err bitmap_next()
+	{
+		TRACE("bitmap_next pre %d %d %zd\n", bitmap_use_index, bitmap_subset_index, bitmap.size());
+		if (d.out->subsets_count == 0)
+			return parse_error("no subsets created yet, but already applying a data present bitmap");
+		++bitmap_use_index;
+		++bitmap_subset_index;
+		while ((bitmap_use_index < 0 || !bitmap[bitmap_use_index]) && bitmap_use_index < (signed)bitmap.size())
+		{
+			TRACE("INCR\n");
+			++bitmap_use_index;
+			++bitmap_subset_index;
+			while (bitmap_subset_index < d.out->subsets[0]->vars_count &&
+				DBA_VAR_F(dba_var_code(d.out->subsets[0]->vars[bitmap_subset_index])) != 0)
+				++bitmap_subset_index;
+		}
+		if (bitmap_use_index == bitmap.size())
+			return parse_error("end of data present bitmap reached");
+		if (bitmap_subset_index == d.out->subsets[0]->vars_count)
+			return parse_error("end of data reached when applying attributes");
+		TRACE("bitmap_next post %d %d\n", bitmap_use_index, bitmap_subset_index);
+		return dba_error_ok();
+	}
+
 	dba_err decode_b_data();
 	dba_err decode_bitmap();
 	virtual dba_err decode_b_string(dba_varinfo info);
@@ -480,6 +508,37 @@ struct opcode_interpreter
 	dba_err decode_replication_info(int& group, int& count);
 	dba_err decode_r_data();
 	dba_err decode_c_data();
+
+	dba_err add_var(bufrex_subset subset, dba_var& var)
+	{
+		TRACE("Adding %p to %p %d\n", var, subset, bitmap_subset_index);
+		if (bitmap_used && DBA_VAR_X(dba_var_code(var)) == 33)
+		{
+			TRACE("ZA %d %d\n", bitmap_subset_index, subset->vars_count);
+			TRACE("Adding var %01d%02d%03d %s as attribute to %01d%02d%03d\n",
+					DBA_VAR_F(dba_var_code(var)),
+					DBA_VAR_X(dba_var_code(var)),
+					DBA_VAR_Y(dba_var_code(var)),
+					dba_var_value(var),
+					DBA_VAR_F(dba_var_code(subset->vars[bitmap_subset_index])),
+					DBA_VAR_X(dba_var_code(subset->vars[bitmap_subset_index])),
+					DBA_VAR_Y(dba_var_code(subset->vars[bitmap_subset_index]))
+					);
+			DBA_RUN_OR_RETURN(dba_var_seta_nocopy(subset->vars[bitmap_subset_index], var));
+		}
+		else
+		{
+			TRACE("ZB\n");
+			TRACE("Adding var %01d%02d%03d %s to subset\n",
+					DBA_VAR_F(dba_var_code(var)),
+					DBA_VAR_X(dba_var_code(var)),
+					DBA_VAR_Y(dba_var_code(var)),
+					dba_var_value(var));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable(subset, var));
+		}
+		var = NULL;
+		return dba_error_ok();
+	}
 
 	/* Run the opcode interpreter to decode the data section */
 	dba_err decode_data_section()
@@ -623,6 +682,7 @@ dba_err decoder::decode_data()
 	if (memcmp(sec5, "7777", 4) != 0)
 		return parse_error(sec5, "section 5 does not contain '7777'");
 
+#if 0
 	for (i = 0; i < out->opt.bufr.subsets; ++i)
 	{
 		bufrex_subset subset;
@@ -630,6 +690,7 @@ dba_err decoder::decode_data()
 		/* Copy the decoded attributes into the decoded variables */
 		DBA_RUN_OR_RETURN(bufrex_subset_apply_attributes(subset));
 	}
+#endif
 
 	return dba_error_ok();
 }
@@ -773,6 +834,9 @@ dba_err opcode_interpreter::decode_b_string(dba_varinfo info)
 
 	TRACE("bufr_message_decode_b_data len %d val %s missing %d info-len %d info-desc %s\n", len, str, missing, info->bit_len, info->desc);
 
+	if (DBA_VAR_X(info->var) == 33)
+		DBA_RUN_OR_GOTO(cleanup, bitmap_next());
+
 	/* Store the variable that we found */
 	if (d.out->opt.bufr.compression)
 	{
@@ -841,8 +905,7 @@ dba_err opcode_interpreter::decode_b_string(dba_varinfo info)
 				}
 
 				/* Add it to this subset */
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
-				var = NULL;
+				DBA_RUN_OR_GOTO(cleanup, add_var(subset, var));
 			}
 		} else {
 			/* Add the string to all the subsets */
@@ -856,8 +919,8 @@ dba_err opcode_interpreter::decode_b_string(dba_varinfo info)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
 				else
 					DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
-				var = NULL;
+
+				DBA_RUN_OR_GOTO(cleanup, add_var(subset, var));
 			}
 		}
 	} else {
@@ -866,8 +929,7 @@ dba_err opcode_interpreter::decode_b_string(dba_varinfo info)
 			DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
 		else
 			DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, str, &var));
-		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(current_subset, var));
-		var = NULL;
+		DBA_RUN_OR_GOTO(cleanup, add_var(current_subset, var));
 	}
 
 cleanup:
@@ -885,6 +947,9 @@ dba_err opcode_interpreter::decode_b_num(dba_varinfo info)
 	/* Read a value */
 	uint32_t val;
 	int missing;
+
+	if (DBA_VAR_X(info->var) == 33)
+		DBA_RUN_OR_GOTO(cleanup, bitmap_next());
 
 	DBA_RUN_OR_GOTO(cleanup, get_bits(info->bit_len, &val));
 
@@ -911,8 +976,7 @@ dba_err opcode_interpreter::decode_b_num(dba_varinfo info)
 		/* Create the new dba_var */
 		DBA_RUN_OR_GOTO(cleanup, dba_var_created(info, dval, &var));
 	}
-	DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(current_subset, var));
-	var = NULL;
+	DBA_RUN_OR_GOTO(cleanup, add_var(current_subset, var));
 
 cleanup:
 	if (var != NULL)
@@ -927,6 +991,9 @@ dba_err opcode_interpreter_compressed::decode_b_num(dba_varinfo info)
 	/* Read a value */
 	uint32_t val;
 	int missing;
+
+	if (DBA_VAR_X(info->var) == 33)
+		DBA_RUN_OR_GOTO(cleanup, bitmap_next());
 
 	DBA_RUN_OR_GOTO(cleanup, get_bits(info->bit_len, &val));
 
@@ -988,8 +1055,7 @@ dba_err opcode_interpreter_compressed::decode_b_num(dba_varinfo info)
 		}
 
 		/* Add it to this subset */
-		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
-		var = NULL;
+		DBA_RUN_OR_GOTO(cleanup, add_var(subset, var));
 	}
 
 cleanup:
@@ -1227,7 +1293,10 @@ dba_err opcode_interpreter::decode_c_data()
 		case 22:
 			if (DBA_VAR_Y(code) == 0)
 			{
-				DBA_RUN_OR_GOTO(cleanup, decode_r_data());
+				DBA_RUN_OR_GOTO(cleanup, decode_bitmap());
+				// Move to first bitmap use index
+				bitmap_use_index = -1;
+				bitmap_subset_index = -1;
 			} else {
 				err = parse_error("C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
