@@ -39,6 +39,8 @@
 
 #include <assert.h>
 
+#include <vector>
+
 /* #define TRACE_DECODER */
 
 #ifdef TRACE_DECODER
@@ -53,6 +55,8 @@ extern "C" {
 dba_err bufr_decoder_decode_header(dba_rawmsg in, bufrex_msg out);
 dba_err bufr_decoder_decode(dba_rawmsg in, bufrex_msg out);
 }
+
+using namespace std;
 
 // Unmarshal a big endian integer value n bytes long
 static inline int readNumber(const unsigned char* buf, int bytes)
@@ -455,8 +459,17 @@ struct opcode_interpreter
 	}
 
 	dba_err decode_b_data();
+	dba_err decode_bitmap(vector<bool>& res);
 	virtual dba_err decode_b_string(dba_varinfo info);
 	virtual dba_err decode_b_num(dba_varinfo info);
+
+	/**
+	 * Decode instant or delayed replication information.
+	 *
+	 * In case of delayed replication, store a variable in the subset(s)
+	 * with the repetition count.
+	 */
+	dba_err decode_replication_info(int& group, int& count);
 	dba_err decode_r_data();
 	dba_err decode_c_data();
 
@@ -977,15 +990,10 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err opcode_interpreter::decode_r_data()
+dba_err opcode_interpreter::decode_replication_info(int& group, int& count)
 {
-	dba_err err = DBA_OK;
-	int group = DBA_VAR_X(ops->val);
-	int count = DBA_VAR_Y(ops->val);
-	bufrex_opcode rep_op = NULL;
-	
-	TRACE("R DATA %01d%02d%03d %d %d", 
-			DBA_VAR_F(ops->val), DBA_VAR_X(ops->val), DBA_VAR_Y(ops->val), group, count);
+	group = DBA_VAR_X(ops->val);
+	count = DBA_VAR_Y(ops->val);
 
 	/* Pop the R repetition node, since we have read its value in group and count */
 	{
@@ -1004,13 +1012,13 @@ dba_err opcode_interpreter::decode_r_data()
 		uint32_t _count;
 		
 		/* Read the descriptor for the delayed replicator count */
-		DBA_RUN_OR_GOTO(cleanup, bufrex_opcode_pop(&(ops), &info_op));
+		DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(ops), &info_op));
 
 		/* Read variable informations about the delayed replicator count */
-		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(d.out, info_op->val, &info));
+		DBA_RUN_OR_RETURN(bufrex_msg_query_btable(d.out, info_op->val, &info));
 		
 		/* Fetch the repetition count */
-		DBA_RUN_OR_GOTO(cleanup, get_bits(info->bit_len, &_count));
+		DBA_RUN_OR_RETURN(get_bits(info->bit_len, &_count));
 		count = _count;
 
 		/* Insert the repetition count among the parsed variables */
@@ -1025,7 +1033,7 @@ dba_err opcode_interpreter::decode_r_data()
 
 			/* Decode the number of bits (encoded in 6 bits) that these difference
 			 * values occupy */
-			DBA_RUN_OR_GOTO(cleanup, get_bits(6, &diffbits));
+			DBA_RUN_OR_RETURN(get_bits(6, &diffbits));
 
 			TRACE("Compressed delayed repetition, base value %d diff bits %d\n", count, diffbits);
 
@@ -1034,7 +1042,7 @@ dba_err opcode_interpreter::decode_r_data()
 				uint32_t diff, newval;
 
 				/* Decode the difference value */
-				DBA_RUN_OR_GOTO(cleanup, get_bits(diffbits, &diff));
+				DBA_RUN_OR_RETURN(get_bits(diffbits, &diff));
 
 				/* Compute the value for this subset */
 				newval = count + diff;
@@ -1043,24 +1051,21 @@ dba_err opcode_interpreter::decode_r_data()
 				if (i == 0)
 					repval = newval;
 				else if (repval != newval)
-				{
-					err = parse_error("compressed delayed replication factor has different values for subsets (%d and %d)", repval, newval);
-					goto cleanup;
-				}
+					return parse_error("compressed delayed replication factor has different values for subsets (%d and %d)", repval, newval);
 
 				/* Access the subset we are working on */
 				bufrex_subset subset;
-				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_get_subset(d.out, i, &subset));
+				DBA_RUN_OR_RETURN(bufrex_msg_get_subset(d.out, i, &subset));
 
 				/* Create the new dba_var */
-				DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, newval, &rep_var));
+				DBA_RUN_OR_RETURN(dba_var_createi(info, newval, &rep_var));
 
 				/* Add it to this subset */
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, rep_var));
+				DBA_RUN_OR_RETURN(bufrex_subset_store_variable(subset, rep_var));
 			}
 		} else {
-			DBA_RUN_OR_GOTO(cleanup, dba_var_createi(info, count, &rep_var));
-			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(current_subset, rep_var));
+			DBA_RUN_OR_RETURN(dba_var_createi(info, count, &rep_var));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable(current_subset, rep_var));
 		}
 
 		bufrex_opcode_delete(&info_op);
@@ -1070,9 +1075,65 @@ dba_err opcode_interpreter::decode_r_data()
 	} else
 		TRACE("bufr_decode_r_data %d items %d times\n", group, count);
 
+	return dba_error_ok();
+}
+
+dba_err opcode_interpreter::decode_bitmap(vector<bool>& res)
+{
+	int group;
+	int count;
+
+	DBA_RUN_OR_RETURN(decode_replication_info(group, count));
+
+	// Sanity checks
+
+	if (group != 1)
+		return parse_error("bitmap section replicates %d descriptors instead of one", group);
+
+	if (ops == NULL)
+		return parse_error("there are no descriptor after bitmap replicator (expected B31031)");
+
+	if (ops->val != DBA_VAR(0, 31, 31))
+		return parse_error("bitmap element descriptor is %02d%02d%03d instead of B31031",
+				DBA_VAR_F(ops->val), DBA_VAR_X(ops->val), DBA_VAR_Y(ops->val));
+
+	// If compressed, ensure that the difference bits are 0 and they are
+	// not trying to transmit odd things like delta bitmaps 
+	if (d.out->opt.bufr.compression)
+	{
+		uint32_t diffbits;
+		/* Decode the number of bits (encoded in 6 bits) that these difference
+		 * values occupy */
+		DBA_RUN_OR_RETURN(get_bits(6, &diffbits));
+		if (diffbits != 0)
+			return parse_error("bitmap declares %d difference bits per bitmap value, but we only support 0");
+	}
+
+	// Bitmap size is now in count
+	while (count--)
+	{
+		uint32_t val;
+		DBA_RUN_OR_RETURN(get_bits(1, &val));
+		res.push_back(val == 0);
+	}
+
+	return dba_error_ok();
+}
+
+dba_err opcode_interpreter::decode_r_data()
+{
+	dba_err err = DBA_OK;
+	int group, count;
+	bufrex_opcode rep_op = NULL;
+	
+	TRACE("R DATA %01d%02d%03d %d %d", 
+			DBA_VAR_F(ops->val), DBA_VAR_X(ops->val), DBA_VAR_Y(ops->val), group, count);
+
+	/* Read replication information */
+	DBA_RUN_OR_RETURN(decode_replication_info(group, count));
+
 	/* Pop the first `group' nodes, since we handle them here */
 	DBA_RUN_OR_RETURN(bufrex_opcode_pop_n(&(ops), &rep_op, group));
-
 
 	/* Perform replication */
 	while (count--)
