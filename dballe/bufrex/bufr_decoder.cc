@@ -653,52 +653,6 @@ fail:
 }
 
 
-#if 0
-/**
- * Compute a value from a BUFR message
- *
- * @param value
- *   The value as found in the BUFR message
- *
- * @param info
- *   The B table informations for the value
- *
- * @param cmodifier
- *   The C table modifier in effect for this value, or NULL if no C table
- *   modifier is in effect
- *
- * @returns
- *   The decoded value
- */
-/* TODO: implement c modifier computation */
-static double bufr_decoder_compute_value(bufrex_decoder decoder, const char* value, dba_varinfo* info)
-{
-	double val;
-
-	/* TODO use the C table values */
-	
-	if (value[0] == '/')
-		return NAN;
- 
-	val = strtol(value, NULL, 10);
-
-	if (info->scale != 0)
-	{
-		int scale = info->scale;
-
-		if (info->scale > 0)
-			while (scale--)
-				val /= 10;
-		else
-			while (scale++)
-				val *= 10;
-	}
-
-	3A
-	return val;
-}
-#endif
-
 dba_err opcode_interpreter::decode_b_data()
 {
 	dba_err err = DBA_OK;
