@@ -368,6 +368,21 @@ struct opcode_interpreter
 			bufrex_opcode_delete(&ops);
 	}
 
+	dba_err parse_error(const char* fmt, ...)
+	{
+		char* context;
+		char* message;
+
+		va_list ap;
+		va_start(ap, fmt);
+		vasprintf(&message, fmt, ap);
+		va_end(ap);
+
+		asprintf(&context, "parsing %s:%d+%d", filename(), d.in->offset, cursor);
+		
+		return dba_error_generic0(DBA_ERR_PARSE, context, message);
+	}
+
 	/// Return the currently decoded filename
 	const char* filename() const { return d.filename(); }
 
@@ -387,7 +402,7 @@ struct opcode_interpreter
 		int i;
 
 		if (cursor == d.in->len)
-			return d.parse_error(d.in->buf + cursor, "end of buffer while looking for %d bits of bit-packed data", n);
+			return parse_error("end of buffer while looking for %d bits of bit-packed data", n);
 
 		for (i = 0; i < n; i++) 
 		{
@@ -496,8 +511,7 @@ struct opcode_interpreter
 					break;
 				}
 				default:
-					return d.parse_error(d.sec4 + 4 + offset(),
-							"cannot handle field %01d%02d%03d",
+					return parse_error("cannot handle field %01d%02d%03d",
 								DBA_VAR_F(ops->val),
 								DBA_VAR_X(ops->val),
 								DBA_VAR_Y(ops->val));
@@ -1072,9 +1086,7 @@ dba_err opcode_interpreter::decode_r_data()
 					repval = newval;
 				else if (repval != newval)
 				{
-					err = d.parse_error(
-							d.sec4 + 4 + offset(),
-							"compressed delayed replication factor has different values for subsets (%d and %d)", repval, newval);
+					err = parse_error("compressed delayed replication factor has different values for subsets (%d and %d)", repval, newval);
 					goto cleanup;
 				}
 
@@ -1179,8 +1191,7 @@ dba_err opcode_interpreter::decode_c_data()
 			{
 				DBA_RUN_OR_GOTO(cleanup, decode_r_data());
 			} else {
-				err = d.parse_error(d.sec4 + 4 + offset(),
-						"C modifier %d%02d%03d not yet supported",
+				err = parse_error("C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
 							DBA_VAR_X(code),
 							DBA_VAR_Y(code));
@@ -1192,8 +1203,7 @@ dba_err opcode_interpreter::decode_c_data()
 			{
 				DBA_RUN_OR_GOTO(cleanup, decode_r_data());
 			} else {
-				err = d.parse_error(d.sec4 + 4 + offset(),
-						"C modifier %d%02d%03d not yet supported",
+				err = parse_error("C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
 							DBA_VAR_X(code),
 							DBA_VAR_Y(code));
@@ -1201,8 +1211,7 @@ dba_err opcode_interpreter::decode_c_data()
 			}
 			break;
 		default:
-			err = d.parse_error(d.sec4 + 4 + offset(),
-					"C modifiers (%d%02d%03d in this case) are not yet supported",
+			err = parse_error("C modifiers (%d%02d%03d in this case) are not yet supported",
 						DBA_VAR_F(code),
 						DBA_VAR_X(code),
 						DBA_VAR_Y(code));
