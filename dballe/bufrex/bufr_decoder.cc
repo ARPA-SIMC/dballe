@@ -366,10 +366,18 @@ struct opcode_interpreter
 	unsigned char pbyte;
 	int pbyte_len;
 
+	/* Data present bitmap */
+	std::vector<bool> bitmap;
+	/* Number of elements set to true in the bitmap */
+	int bitmap_count;
+	/* True if the bitmap is in use */
+	bool bitmap_used;
+
 	opcode_interpreter(decoder& d, int start_ofs)
 		: d(d), current_subset(0),
 		  c_scale_change(0), c_width_change(0),
-		  ops(0), cursor(start_ofs), pbyte(0), pbyte_len(0)
+		  ops(0), cursor(start_ofs), pbyte(0), pbyte_len(0),
+		  bitmap_count(0), bitmap_used(false)
 	{
 	}
 
@@ -459,7 +467,7 @@ struct opcode_interpreter
 	}
 
 	dba_err decode_b_data();
-	dba_err decode_bitmap(vector<bool>& res);
+	dba_err decode_bitmap();
 	virtual dba_err decode_b_string(dba_varinfo info);
 	virtual dba_err decode_b_num(dba_varinfo info);
 
@@ -1078,7 +1086,7 @@ dba_err opcode_interpreter::decode_replication_info(int& group, int& count)
 	return dba_error_ok();
 }
 
-dba_err opcode_interpreter::decode_bitmap(vector<bool>& res)
+dba_err opcode_interpreter::decode_bitmap()
 {
 	int group;
 	int count;
@@ -1110,12 +1118,19 @@ dba_err opcode_interpreter::decode_bitmap(vector<bool>& res)
 	}
 
 	// Bitmap size is now in count
+
+	// Read the bitmap
+	bitmap_count = 0;
+	bitmap.clear();
+	bitmap.reserve(count);
 	while (count--)
 	{
 		uint32_t val;
 		DBA_RUN_OR_RETURN(get_bits(1, &val));
-		res.push_back(val == 0);
+		bitmap.push_back(val == 0);
+		if (val == 0) ++bitmap_count;
 	}
+	bitmap_used = true;
 
 	return dba_error_ok();
 }
