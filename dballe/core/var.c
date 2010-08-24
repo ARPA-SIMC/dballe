@@ -280,7 +280,7 @@ dba_err dba_var_enqi(dba_var var, int* val)
 					DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
 
 	/* Ensure that we're working with a numeric value */
-	if (var->info->is_string)
+	if (VARINFO_IS_STRING(var->info))
 		return dba_error_type("\"B%02d%03d\" (%s) is of type string and cannot be accessed as an integer",
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
 
@@ -295,7 +295,7 @@ dba_err dba_var_enqd(dba_var var, double* val)
 					DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
 
 	/* Ensure that we're working with a numeric value */
-	if (var->info->is_string)
+	if (VARINFO_IS_STRING(var->info))
 		return dba_error_type("\"B%02d%03d\" (%s) is of type string and cannot be accessed as a floating-point",
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var), var->info->desc);
 
@@ -316,7 +316,7 @@ dba_err dba_var_enqc(dba_var var, const char** val)
 dba_err dba_var_seti(dba_var var, int val)
 {
 	/* Ensure that we're working with a numeric value */
-	if (var->info->is_string)
+	if (VARINFO_IS_STRING(var->info))
 		return dba_error_type("\"B%02d%03d\" is of type string and cannot be accessed as an integer",
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var));
 
@@ -343,7 +343,7 @@ dba_err dba_var_seti(dba_var var, int val)
 dba_err dba_var_setd(dba_var var, double val)
 {
 	/* Ensure that we're working with a numeric value */
-	if (var->info->is_string)
+	if (VARINFO_IS_STRING(var->info))
 		return dba_error_type("\"B%02d%03d\" is of type string and cannot be accessed as a floating-point",
 				DBA_VAR_X(var->info->var), DBA_VAR_Y(var->info->var));
 
@@ -388,7 +388,7 @@ dba_err dba_var_setc(dba_var var, const char* val)
 	len = strlen(val);
 	/* Tweak the length to account for the extra leading '-' allowed for
 	 * negative numeric values */
-	if (!var->info->is_string && val[0] == '-')
+	if (!VARINFO_IS_STRING(var->info) && val[0] == '-')
 		--len;
 	if (len > var->info->len)
 	{
@@ -420,7 +420,7 @@ dba_err dba_var_copy_val(dba_var dest, dba_var orig)
 	{
 		DBA_RUN_OR_GOTO(cleanup, dba_var_unset(dest));
 	} else {
-		if (destinfo->is_string)
+		if (VARINFO_IS_STRING(destinfo))
 		{
 			DBA_RUN_OR_GOTO(cleanup, dba_var_setc(dest, dba_var_value(orig)));
 		} else {
@@ -482,7 +482,7 @@ void dba_var_print(dba_var var, FILE* out)
 
 	if (var->value == NULL)
 		fprintf(out, "(undef)\n");
-	else if (var->info->is_string || var->info->scale == 0)
+	else if (VARINFO_IS_STRING(var->info) || var->info->scale == 0)
 		fprintf(out, "%s\n", var->value);
 	else
 	{
@@ -510,7 +510,7 @@ int dba_var_equals(const dba_var var1, const dba_var var2)
 		return 1;
 	if (var1->value == NULL || var2->value == NULL)
 		return 0;
-	if (var1->info->is_string || var1->info->scale == 0)
+	if (VARINFO_IS_STRING(var1->info) || var1->info->scale == 0)
 	{
 		if (strcmp(var1->value, var2->value) != 0)
 			return 0;
@@ -605,7 +605,7 @@ void dba_var_diff(dba_var var1, dba_var var2, int* diffs, FILE* out)
 		(*diffs)++;
 		return;
 	}
-	if (var1->info->is_string || var1->info->scale == 0)
+	if (VARINFO_IS_STRING(var1->info) || var1->info->scale == 0)
 	{
 		if (strcmp(var1->value, var2->value) != 0)
 		{

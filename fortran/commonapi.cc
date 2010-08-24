@@ -457,7 +457,7 @@ char* CommonAPIImplementation::spiegab(const char* varcode, const char* value)
 		checked(dba_varinfo_query_local(DBA_STRING_TO_VAR(varcode + 1), &info));
 		checked(dba_var_createc(info, value, &var));
 
-		if (info->is_string)
+		if (VARINFO_IS_STRING(info))
 		{
 			const char* s;
 			checked(dba_var_enqc(var, &s));

@@ -94,7 +94,7 @@ static dba_err parse_value(const char* str, regmatch_t pos, dba_varinfo info, ch
 	/* Parse the value */
 	const char* s = str + pos.rm_so;
 	int len = pos.rm_eo - pos.rm_so;
-	if (info->is_string)
+	if (VARINFO_IS_STRING(info))
 	{
 		/* Copy the string, escaping quotes */
 		int i = 0, j = 0;

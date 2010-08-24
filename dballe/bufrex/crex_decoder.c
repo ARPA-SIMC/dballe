@@ -440,12 +440,12 @@ static dba_err crex_decoder_parse_b_data(decoder d)
 	DBA_RUN_OR_GOTO(fail, dba_var_create(crexinfo, &var));
 
 	/* Parse value from the data section */
-	DBA_RUN_OR_GOTO(fail, crex_decoder_parse_value(d, crexinfo->len, !crexinfo->is_string, &d_start, &d_end));
+	DBA_RUN_OR_GOTO(fail, crex_decoder_parse_value(d, crexinfo->len, !VARINFO_IS_STRING(crexinfo), &d_start, &d_end));
 
 	/* If the variable is not missing, set its value */
 	if (*d_start != '/')
 	{
-		if (crexinfo->is_string)
+		if (VARINFO_IS_STRING(crexinfo))
 		{
 			const int len = d_end - d_start;
 			char* buf = (char*)malloc(len + 1);

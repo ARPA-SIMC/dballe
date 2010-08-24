@@ -40,7 +40,7 @@ public:
      * scaling and changing reference value) */
     int bit_len() const { return m_info->bit_len; }
     /** True if the variable is a string; false if it is a numeric value */
-    bool is_string() const { return m_info->is_string != 0; }
+    bool is_string() const { return VARINFO_IS_STRING(m_info); }
     /** Minimum unscaled value the field can have */
     int imin() const { return m_info->imin; }
     /** Maximum unscaled value the field can have */
@@ -248,7 +248,7 @@ public:
     {
         if (dba_var_value(m_var) == NULL)
             return nullValue;
-        else if (dba_var_info(m_var)->is_string)
+        else if (VARINFO_IS_STRING(dba_var_info(m_var)))
             return dba_var_value(m_var);
         else
         {

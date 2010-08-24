@@ -603,7 +603,7 @@ static dba_err encoder_encode_b_data(encoder e)
 	if (dba_var_value(var) == NULL)
 	{
 		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, 0xffffffff, len));
-	} else if (info->is_string) {
+	} else if (VARINFO_IS_STRING(info)) {
 		const char* val = dba_var_value(var);
 		int i, bi;
 		int smax = strlen(val);

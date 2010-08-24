@@ -764,7 +764,7 @@ dba_err opcode_interpreter::decode_b_data()
 		TRACE("Applied %d width change\n", c_width_change);
 
 	/* Get the real datum */
-	if (info->is_string)
+	if (VARINFO_IS_STRING(info))
 	{
 		DBA_RUN_OR_GOTO(cleanup, decode_b_string(info));
 	} else {

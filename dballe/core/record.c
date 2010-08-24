@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -375,7 +375,7 @@ dba_err dba_record_set_from_string(dba_record rec, const char* str)
 		/* Query informations about the parameter */
 		DBA_RUN_OR_RETURN(dba_varinfo_query_local(varcode, &info));
 
-		if (info->is_string)
+		if (VARINFO_IS_STRING(info))
 			DBA_RUN_OR_RETURN(dba_record_var_setc(rec, varcode, val));
 		else
 			DBA_RUN_OR_RETURN(dba_record_var_setd(rec, varcode, strtod(val, 0)));
@@ -390,7 +390,7 @@ dba_err dba_record_set_from_string(dba_record rec, const char* str)
 		/* Query informations about the parameter */
 		DBA_RUN_OR_RETURN(dba_record_keyword_info(param, &info));
 
-		if (info->is_string)
+		if (VARINFO_IS_STRING(info))
 			DBA_RUN_OR_RETURN(dba_record_key_setc(rec, param, val));
 		else
 			DBA_RUN_OR_RETURN(dba_record_key_setd(rec, param, strtod(val, 0)));

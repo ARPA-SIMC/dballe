@@ -95,7 +95,7 @@ static int dbalua_var_tostring(lua_State *L)
 		lua_pushstring(L, "(undef)");
 	else {
 		dba_varinfo info = dba_var_info(var);
-		if (info->is_string || info->scale == 0)
+		if (VARINFO_IS_STRING(info) || info->scale == 0)
 			lua_pushstring(L, res);
 		else
 		{

@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ void unit_check(dba_varinfo info, void* data)
 		fprintf(stderr, "Testing %s %d\n", ids[i], var);
 	*/
 
-	if (varcode != 0 && !info->is_string)
+	if (varcode != 0 && !VARINFO_IS_STRING(info))
 	{
 		double dval;
 		if (dba_varinfo_query_local(varcode, &local) != DBA_OK)
@@ -81,7 +81,7 @@ static void print_varinfo(dba_varinfo info)
 {
 	char fmtdesc[100];
 
-	if (info->is_string)
+	if (VARINFO_IS_STRING(info))
 		snprintf(fmtdesc, 99, "%d characters", info->len);
 	else if (info->scale == 0)
 		snprintf(fmtdesc, 99, "%d digits", info->len);
@@ -106,7 +106,7 @@ static void print_varinfo(dba_varinfo info)
 	}
 
 #if 0
-	if (info->is_string) 
+	if (VARINFO_IS_STRING(info))
 		printf("%d%02d%03d %s [%s, %s]\n", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
 				info->desc,
 				info->unit,
@@ -132,7 +132,7 @@ static void print_varinfo_csv(dba_varinfo info)
 	char fmtdesc[100];
 	const char* s;
 
-	if (info->is_string)
+	if (VARINFO_IS_STRING(info))
 		snprintf(fmtdesc, 99, "%d characters", info->len);
 	else if (info->scale == 0)
 		snprintf(fmtdesc, 99, "%d digits", info->len);

@@ -104,7 +104,7 @@ void to::test<3>()
 	gen_ensure_equals(info->scale, 0) ;
 	gen_ensure_equals(info->ref, 0);
 	gen_ensure_equals(info->len, 8);
-	gen_ensure(info->is_string);
+	gen_ensure(VARINFO_IS_STRING(info));
 
 	CHECKED(dba_vartable_query(table, DBA_VAR(0, 2, 114), &info));
 	gen_ensure_equals(info->var, DBA_VAR(0, 2, 114));
@@ -113,7 +113,7 @@ void to::test<3>()
 	gen_ensure_equals(info->scale, 0) ;
 	gen_ensure_equals(info->ref, 0);
 	gen_ensure_equals(info->len, 5);
-	gen_ensure(!info->is_string);
+	gen_ensure(!VARINFO_IS_STRING(info));
 
 	CHECKED(dba_vartable_query(table, DBA_VAR(0, 2, 153), &info));
 	gen_ensure_equals(info->var, DBA_VAR(0, 2, 153));
@@ -122,7 +122,7 @@ void to::test<3>()
 	gen_ensure_equals(info->scale, -8) ;
 	gen_ensure_equals(info->ref, 0);
 	gen_ensure_equals(info->len, 8);
-	gen_ensure(!info->is_string);
+	gen_ensure(!VARINFO_IS_STRING(info));
 }
 
 /* Test querying BUFR tables */
@@ -148,7 +148,7 @@ void to::test<4>()
 	gen_ensure_equals(info->ref, 0);
 	gen_ensure_equals(info->bit_len, 64);
 	gen_ensure_equals(info->len, 8);
-	gen_ensure(info->is_string);
+	gen_ensure(VARINFO_IS_STRING(info));
 
 	CHECKED(dba_vartable_query(table, DBA_VAR(0, 2, 114), &info));
 	gen_ensure_equals(info->var, DBA_VAR(0, 2, 114));
@@ -160,7 +160,7 @@ void to::test<4>()
 	gen_ensure_equals(info->len, 5);
 	gen_ensure_equals(info->imin, 0);
 	gen_ensure_equals(info->imax, 32766);
-	gen_ensure(!info->is_string);
+	gen_ensure(!VARINFO_IS_STRING(info));
 
 	CHECKED(dba_vartable_query(table, DBA_VAR(0, 11, 35), &info));
 	gen_ensure_equals(info->var, DBA_VAR(0, 11, 35));
@@ -170,7 +170,7 @@ void to::test<4>()
 	gen_ensure_equals(info->bit_ref, -8192);
 	gen_ensure_equals(info->bit_len, 14);
 	gen_ensure_equals(info->len, 5);
-	gen_ensure(!info->is_string);
+	gen_ensure(!VARINFO_IS_STRING(info));
 
 	CHECKED(dba_vartable_query(table, DBA_VAR(0, 7, 31), &info));
 	gen_ensure_equals(info->var, DBA_VAR(0, 7, 31));
@@ -180,7 +180,7 @@ void to::test<4>()
 	gen_ensure_equals(info->bit_ref, -4000);
 	gen_ensure_equals(info->bit_len, 17);
 	gen_ensure_equals(info->len, 6);
-	gen_ensure(!info->is_string);
+	gen_ensure(!VARINFO_IS_STRING(info));
 }
 
 /* Test reading BUFR edition 4 tables */
@@ -202,7 +202,7 @@ void to::test<5>()
 	gen_ensure_equals(info->ref, 0);
 	gen_ensure_equals(info->bit_len, 64);
 	gen_ensure_equals(info->len, 8);
-	gen_ensure(info->is_string);
+	gen_ensure(VARINFO_IS_STRING(info));
 
 	CHECKED(dba_vartable_query(table, DBA_VAR(0, 2, 114), &info));
 	gen_ensure_equals(info->var, DBA_VAR(0, 2, 114));
@@ -212,7 +212,7 @@ void to::test<5>()
 	gen_ensure_equals(info->ref, 0);
 	gen_ensure_equals(info->bit_len, 15);
 	gen_ensure_equals(info->len, 5);
-	gen_ensure(!info->is_string);
+	gen_ensure(!VARINFO_IS_STRING(info));
 
 	CHECKED(dba_vartable_query(table, DBA_VAR(0, 11, 35), &info));
 	gen_ensure_equals(info->var, DBA_VAR(0, 11, 35));
@@ -222,7 +222,7 @@ void to::test<5>()
 	gen_ensure_equals(info->bit_ref, -8192);
 	gen_ensure_equals(info->bit_len, 14);
 	gen_ensure_equals(info->len, 5);
-	gen_ensure(!info->is_string);
+	gen_ensure(!VARINFO_IS_STRING(info));
 }
 
 /* Test reading WMO standard tables */
@@ -254,7 +254,7 @@ void to::test<7>()
 	gen_ensure_equals(info->len, 5);
 	gen_ensure_equals(info->dmin, 0);
 	gen_ensure_equals(info->dmax, 9.9998e-06);
-	gen_ensure(!info->is_string);
+	gen_ensure(!VARINFO_IS_STRING(info));
 }
 
 }

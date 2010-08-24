@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,6 +96,12 @@ typedef short unsigned int dba_varcode;
  */
 typedef short unsigned int dba_alteration;
 
+#define VARINFO_FLAG_STRING	0x01
+#define VARINFO_FLAG_SINGLEUSE	0x02
+
+#define VARINFO_IS_STRING(varinfo) (((varinfo)->flags & VARINFO_FLAG_STRING) != 0)
+#define VARINFO_IS_SINGLEUSE(varinfo) (((varinfo)->flags & VARINFO_FLAG_SINGLEUSE) != 0)
+
 /**
  * Holds the information about a DBALLE variable.
  *
@@ -127,7 +133,7 @@ struct _dba_varinfo
 	 * scaling and changing reference value) */
 	int bit_len;
 	/** True if the variable is a string; false if it is a numeric value */
-	int is_string;
+	int flags;
 	/** Minimum unscaled value the field can have */
 	int imin;
 	/** Maximum unscaled value the field can have */
@@ -138,7 +144,7 @@ struct _dba_varinfo
 	double dmax;
 	/** C-table alteration that has been applied to this entry */
 	dba_alteration alteration;
-	/** Othere altered versions of this varinfo */
+	/** Other altered versions of this varinfo */
 	struct _dba_varinfo* alterations;
 	/** The measurement unit of the variable when encoded in BUFR. */
 	char bufr_unit[24];

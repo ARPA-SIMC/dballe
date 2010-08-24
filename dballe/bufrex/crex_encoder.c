@@ -291,7 +291,7 @@ static dba_err encode_b_data(encoder e)
 		TRACE("len0: %d\n", len);
 		for (i = 0; i < len; i++)
 			DBA_RUN_OR_GOTO(cleanup, encoder_raw_append(e, "/", 1));
-	} else if (crexinfo->is_string) {
+	} else if (VARINFO_IS_STRING(crexinfo)) {
 		TRACE("len1: %d\n", len);
 		DBA_RUN_OR_GOTO(cleanup, encoder_raw_appendf(e, "%-*.*s", len, len, dba_var_value(*e->nextvar)));
 	} else {

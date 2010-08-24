@@ -312,7 +312,7 @@ static dba_err print_var(dba_var var)
 	printf("B%02d%03d", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
 	if (dba_var_value(var) != NULL)
 	{
-		if (dba_var_info(var)->is_string)
+		if (VARINFO_IS_STRING(dba_var_info(var)))
 		{
 			printf(" %s\n", dba_var_value(var));
 		} else {
@@ -1007,7 +1007,7 @@ static dba_err parsetextgrib(FILE* in, bufrex_msg msg, int* found)
 				/* Undef */
 				DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &var));
 			} else {
-				if (info->is_string)
+				if (VARINFO_IS_STRING(info))
 				{
 					DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, value, &var));
 				} else {

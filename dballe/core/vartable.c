@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -179,7 +179,7 @@ const char* dba_vartable_id(dba_vartable table)
 /* Postprocess the data, filling in minval and maxval */
 static void postprocess_entry(dba_varinfo i)
 {
-	if (i->is_string)
+	if (VARINFO_IS_STRING(i))
 	{
 		i->imin = i->imax = 0;
 		i->dmin = i->dmax = 0.0;
@@ -464,6 +464,7 @@ static dba_err dba_vartable_read(const char* id, int* index, int style)
 		dba_varinfo entry = NULL;
 
 		DBA_RUN_OR_GOTO(cleanup, vtb_new_entry(vartable, &entry));
+		entry->flags = 0;
 
 		/*fprintf(stderr, "Line: %s\n", line);*/
 
@@ -502,10 +503,10 @@ static dba_err dba_vartable_read(const char* id, int* index, int style)
 		entry->unit[i+1] = 0;
 		entry->bufr_unit[i+1] = 0;
 
-		entry->is_string = (
+		if (
 				strcmp(entry->unit, "CCITTIA5") == 0 /*||
 				strncmp(entry->unit, "CODE TABLE", 10) == 08*/
-		);
+		) entry->flags |= VARINFO_FLAG_STRING;
 
 		entry->scale = getnumber(line+98);
 		entry->bufr_scale = getnumber(line+98);
@@ -515,7 +516,7 @@ static dba_err dba_vartable_read(const char* id, int* index, int style)
 		if (strlen(line) < 157 || style == VARTABLE_READ_BUFR)
 		{
 			entry->ref = 0;
-			if (entry->is_string)
+			if (VARINFO_IS_STRING(entry))
 			{
 				entry->len = entry->bit_len / 8;
 			} else {
@@ -540,13 +541,13 @@ static dba_err dba_vartable_read(const char* id, int* index, int style)
 			crex_is_string = (
 					strcmp(entry->unit, "CHARACTER") == 0 /* ||
 					strncmp(entry->unit, "CODE TABLE", 10) == 0 */
-			);
+			) ? VARINFO_FLAG_STRING : 0;
 
-			if (entry->is_string != crex_is_string)
+			if ((entry->flags & VARINFO_FLAG_STRING) != crex_is_string)
 			{
 				err = dba_error_parse(file, line_no,
 						"CREX is_string (%d) is different than BUFR is_string (%d)",
-						crex_is_string, entry->is_string);
+						crex_is_string, VARINFO_IS_STRING(entry));
 				goto cleanup;
 			}
 		}
