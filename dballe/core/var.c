@@ -146,8 +146,12 @@ dba_err dba_var_create_local(dba_varcode code, dba_var* var)
 dba_err dba_var_copy(dba_var source, dba_var* dest)
 {
 	dba_err err;
+	dba_varinfo newinfo = NULL;
 
-	DBA_RUN_OR_RETURN(dba_var_create(source->info, dest));
+	*dest = NULL;
+	/* Make a copy in case source uses a singleuse varinfo */
+	DBA_RUN_OR_GOTO(fail, dba_varinfo_copy(source->info, &newinfo));
+	DBA_RUN_OR_GOTO(fail, dba_var_create(newinfo, dest));
 
 	/* Copy the value */
 	if (source->value != NULL)
@@ -161,8 +165,13 @@ dba_err dba_var_copy(dba_var source, dba_var* dest)
 	return dba_error_ok();
 
 fail:
-	dba_var_delete(*dest);
-	*dest = NULL;
+	if (*dest != NULL)
+	{
+		dba_var_delete(*dest);
+		*dest = NULL;
+	}
+	if (newinfo != NULL)
+		dba_varinfo_delete(newinfo);
 	return err;
 }
 
@@ -182,7 +191,7 @@ void dba_var_delete(dba_var var)
 	if (var->value != NULL)
 		free(var->value);
 	if (VARINFO_IS_SINGLEUSE(var->info))
-		dba_varinfo_delete_singleuse(var->info);
+		dba_varinfo_delete(var->info);
 	dba_var_clear_attrs(var);
 	free(var);
 }

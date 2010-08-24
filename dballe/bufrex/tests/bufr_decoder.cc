@@ -51,7 +51,7 @@ void to::test<1>()
 	bufrex_msg msgr = read_test_msg_raw("bufr/bufr1", BUFR);
 	ensureBufrexRawEquals(test, msgr);
 
-	test.subset(0).vars = 34;
+	test.subset(0).vars = 35;
 	test.subset(0).set(DBA_VAR(0, 5, 2), 68.27);
 	test.subset(0).set(DBA_VAR(0, 6, 2),  9.68);
 

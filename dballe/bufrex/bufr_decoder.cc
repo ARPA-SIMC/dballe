@@ -39,8 +39,6 @@
 
 #include <assert.h>
 
-#include <vector>
-
 /* #define TRACE_DECODER */
 
 #ifdef TRACE_DECODER
@@ -367,21 +365,19 @@ struct opcode_interpreter
 	int pbyte_len;
 
 	/* Data present bitmap */
-	std::vector<bool> bitmap;
+	dba_var bitmap;
 	/* Number of elements set to true in the bitmap */
 	int bitmap_count;
 	/* Next bitmap element for which we decode values */
 	int bitmap_use_index;
 	/* Next subset element for which we decode attributes */
 	int bitmap_subset_index;
-	/* True if the bitmap is in use */
-	bool bitmap_used;
 
 	opcode_interpreter(decoder& d, int start_ofs)
 		: d(d), current_subset(0),
 		  c_scale_change(0), c_width_change(0),
 		  ops(0), cursor(start_ofs), pbyte(0), pbyte_len(0),
-		  bitmap_count(0), bitmap_used(false)
+		  bitmap(0), bitmap_count(0)
 	{
 	}
 
@@ -473,11 +469,14 @@ struct opcode_interpreter
 	dba_err bitmap_next()
 	{
 		TRACE("bitmap_next pre %d %d %zd\n", bitmap_use_index, bitmap_subset_index, bitmap.size());
+		if (bitmap == 0)
+			return parse_error("applying a data present bitmap with no current bitmap");
 		if (d.out->subsets_count == 0)
 			return parse_error("no subsets created yet, but already applying a data present bitmap");
 		++bitmap_use_index;
 		++bitmap_subset_index;
-		while (bitmap_use_index < (signed)bitmap.size() && (bitmap_use_index < 0 || !bitmap[bitmap_use_index]))
+		while (bitmap_use_index < dba_var_info(bitmap)->len &&
+			(bitmap_use_index < 0 || dba_var_value(bitmap)[bitmap_use_index] == '-'))
 		{
 			TRACE("INCR\n");
 			++bitmap_use_index;
@@ -486,7 +485,7 @@ struct opcode_interpreter
 				DBA_VAR_F(dba_var_code(d.out->subsets[0]->vars[bitmap_subset_index])) != 0)
 				++bitmap_subset_index;
 		}
-		if (bitmap_use_index == bitmap.size())
+		if (bitmap_use_index == dba_var_info(bitmap)->len)
 			return parse_error("end of data present bitmap reached");
 		if (bitmap_subset_index == d.out->subsets[0]->vars_count)
 			return parse_error("end of data reached when applying attributes");
@@ -495,7 +494,7 @@ struct opcode_interpreter
 	}
 
 	dba_err decode_b_data();
-	dba_err decode_bitmap();
+	dba_err decode_bitmap(dba_varcode code);
 	virtual dba_err decode_b_string(dba_varinfo info);
 	virtual dba_err decode_b_num(dba_varinfo info);
 
@@ -511,7 +510,7 @@ struct opcode_interpreter
 
 	dba_err add_var(bufrex_subset subset, dba_var& var)
 	{
-		if (bitmap_used && DBA_VAR_X(dba_var_code(var)) == 33)
+		if (bitmap && DBA_VAR_X(dba_var_code(var)) == 33)
 		{
 			TRACE("Adding var %01d%02d%03d %s as attribute to %01d%02d%03d bsi %d/%d\n",
 					DBA_VAR_F(dba_var_code(var)),
@@ -1149,10 +1148,12 @@ dba_err opcode_interpreter::decode_replication_info(int& group, int& count)
 	return dba_error_ok();
 }
 
-dba_err opcode_interpreter::decode_bitmap()
+dba_err opcode_interpreter::decode_bitmap(dba_varcode code)
 {
 	int group;
 	int count;
+
+	bitmap = 0;
 
 	DBA_RUN_OR_RETURN(decode_replication_info(group, count));
 
@@ -1191,21 +1192,56 @@ dba_err opcode_interpreter::decode_bitmap()
 
 	// Read the bitmap
 	bitmap_count = 0;
-	bitmap.clear();
-	bitmap.reserve(count);
-	while (count--)
+	char bitmapstr[count + 1];
+	for (int i = 0; i < count; ++i)
 	{
 		uint32_t val;
 		DBA_RUN_OR_RETURN(get_bits(1, &val));
-		bitmap.push_back(val == 0);
+		bitmapstr[i] = (val == 0) ? '+' : '-';
 		if (val == 0) ++bitmap_count;
 	}
-	bitmap_used = true;
+	bitmapstr[count] = 0;
+
+	// Create a single use varinfo to store the bitmap
+	dba_varinfo info;
+	DBA_RUN_OR_RETURN(dba_varinfo_create_singleuse(code, &info));
+	strcpy(info->desc, "DATA PRESENT BITMAP");
+	strcpy(info->unit, "CCITTIA5");
+	strcpy(info->bufr_unit, "CCITTIA5");
+	info->len = count;
+	info->bit_len = info->len * 8;
+
+	// Store the bitmap
+	// FIXME: leaks memory in case of errors, use the cleanup strategy
+	DBA_RUN_OR_RETURN(dba_var_createc(info, bitmapstr, &bitmap));
+
+	// Add var to subset(s)
+	if (d.out->opt.bufr.compression)
+	{
+		for (int i = 0; i < d.out->opt.bufr.subsets; ++i)
+		{
+			bufrex_subset subset;
+			DBA_RUN_OR_RETURN(bufrex_msg_get_subset(d.out, i, &subset));
+
+			dba_var var1;
+			if (i > 0)
+				DBA_RUN_OR_RETURN(dba_var_copy(bitmap, &var1));
+			else
+				var1 = bitmap;
+
+			DBA_RUN_OR_RETURN(add_var(subset, var1));
+		}
+	} else {
+		DBA_RUN_OR_RETURN(add_var(current_subset, bitmap));
+	}
+
+	// Bitmap will stay set as a reference to the variable to use as the
+	// current bitmap. The subset(s) are taking care of memory managing it.
 
 	IFTRACE {
 		TRACE("Decoded bitmap count %d: ", bitmap_count);
-		for (size_t i = 0; i < bitmap.size(); ++i)
-			TRACE(bitmap[i] ? "+" : "-");
+		for (size_t i = 0; i < dba_var_info(bitmap)->len; ++i)
+			TRACE(dba_var_value(bitmap)[i]);
 		TRACE("\n");
 	}
 
@@ -1304,7 +1340,7 @@ dba_err opcode_interpreter::decode_c_data()
 		case 22:
 			if (DBA_VAR_Y(code) == 0)
 			{
-				DBA_RUN_OR_GOTO(cleanup, decode_bitmap());
+				DBA_RUN_OR_GOTO(cleanup, decode_bitmap(code));
 				// Move to first bitmap use index
 				bitmap_use_index = -1;
 				bitmap_subset_index = -1;

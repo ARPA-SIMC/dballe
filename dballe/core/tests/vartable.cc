@@ -267,7 +267,7 @@ void to::test<8>()
 	gen_ensure(info != NULL);
 	gen_ensure_equals(info->var, DBA_VAR(2, 20, 0));
 	gen_ensure(VARINFO_IS_SINGLEUSE(info));
-	dba_varinfo_delete_singleuse(info);
+	dba_varinfo_delete(info);
 }
 
 }

@@ -258,9 +258,18 @@ dba_err dba_varinfo_query_local_altered(dba_varcode code, dba_alteration change,
 dba_err dba_varinfo_create_singleuse(dba_varcode code, dba_varinfo* info);
 
 /**
- * Delete a singleuse dba_varinfo
+ * Copy a dba_varinfo.
+ *
+ * if src is singleuse, dst will be a newly allocated singleuse varinfo; else,
+ * dst will be the same value as src
  */
-void dba_varinfo_delete_singleuse(dba_varinfo info);
+dba_err dba_varinfo_copy(dba_varinfo src, dba_varinfo* dst);
+
+/**
+ * Delete a dba_varinfo if it is a singleuse one. Else, do nothing.
+ *
+ */
+void dba_varinfo_delete(dba_varinfo info);
 
 /**
  * Get a reference to the local B table

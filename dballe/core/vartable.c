@@ -136,10 +136,23 @@ dba_err dba_varinfo_create_singleuse(dba_varcode code, dba_varinfo* info)
 	return dba_error_ok();
 }
 
-void dba_varinfo_delete_singleuse(dba_varinfo info)
+void dba_varinfo_delete(dba_varinfo info)
 {
 	if (!VARINFO_IS_SINGLEUSE(info)) return;
 	free(info);
+}
+
+dba_err dba_varinfo_copy(dba_varinfo src, dba_varinfo* dst)
+{
+	if (VARINFO_IS_SINGLEUSE(src))
+	{
+		if ((*dst = (dba_varinfo)malloc(sizeof(struct _dba_varinfo))) == NULL)
+			return dba_error_alloc("creating new single use dba_varinfo");
+		memcpy(*dst, src, sizeof(struct _dba_varinfo));
+	} else {
+		*dst = src;
+	}
+	return dba_error_ok();
 }
 
 dba_err dba_varinfo_get_local_table(dba_vartable* table)
