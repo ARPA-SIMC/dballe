@@ -477,7 +477,7 @@ struct opcode_interpreter
 			return parse_error("no subsets created yet, but already applying a data present bitmap");
 		++bitmap_use_index;
 		++bitmap_subset_index;
-		while ((bitmap_use_index < 0 || !bitmap[bitmap_use_index]) && bitmap_use_index < (signed)bitmap.size())
+		while (bitmap_use_index < (signed)bitmap.size() && (bitmap_use_index < 0 || !bitmap[bitmap_use_index]))
 		{
 			TRACE("INCR\n");
 			++bitmap_use_index;
@@ -511,24 +511,21 @@ struct opcode_interpreter
 
 	dba_err add_var(bufrex_subset subset, dba_var& var)
 	{
-		TRACE("Adding %p to %p %d\n", var, subset, bitmap_subset_index);
 		if (bitmap_used && DBA_VAR_X(dba_var_code(var)) == 33)
 		{
-			TRACE("ZA %d %d\n", bitmap_subset_index, subset->vars_count);
-			TRACE("Adding var %01d%02d%03d %s as attribute to %01d%02d%03d\n",
+			TRACE("Adding var %01d%02d%03d %s as attribute to %01d%02d%03d bsi %d/%d\n",
 					DBA_VAR_F(dba_var_code(var)),
 					DBA_VAR_X(dba_var_code(var)),
 					DBA_VAR_Y(dba_var_code(var)),
 					dba_var_value(var),
 					DBA_VAR_F(dba_var_code(subset->vars[bitmap_subset_index])),
 					DBA_VAR_X(dba_var_code(subset->vars[bitmap_subset_index])),
-					DBA_VAR_Y(dba_var_code(subset->vars[bitmap_subset_index]))
-					);
+					DBA_VAR_Y(dba_var_code(subset->vars[bitmap_subset_index])),
+					bitmap_subset_index, subset->vars_count);
 			DBA_RUN_OR_RETURN(dba_var_seta_nocopy(subset->vars[bitmap_subset_index], var));
 		}
 		else
 		{
-			TRACE("ZB\n");
 			TRACE("Adding var %01d%02d%03d %s to subset\n",
 					DBA_VAR_F(dba_var_code(var)),
 					DBA_VAR_X(dba_var_code(var)),
@@ -1145,9 +1142,9 @@ dba_err opcode_interpreter::decode_replication_info(int& group, int& count)
 		bufrex_opcode_delete(&info_op);
 	/*	dba_var_delete(rep_var);   rep_var is taken in charge by bufrex_msg */
 
-		TRACE("bufr_decode_r_data %d items %d times (delayed)\n", group, count);
+		TRACE("decode_replication_info %d items %d times (delayed)\n", group, count);
 	} else
-		TRACE("bufr_decode_r_data %d items %d times\n", group, count);
+		TRACE("decode_replication_info %d items %d times\n", group, count);
 
 	return dba_error_ok();
 }
@@ -1183,6 +1180,13 @@ dba_err opcode_interpreter::decode_bitmap()
 			return parse_error("bitmap declares %d difference bits per bitmap value, but we only support 0");
 	}
 
+	// Consume the data present indicator from the opcodes to process
+	{
+		bufrex_opcode op;
+		DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(ops), &op));
+		bufrex_opcode_delete(&op);
+	}
+
 	// Bitmap size is now in count
 
 	// Read the bitmap
@@ -1198,6 +1202,13 @@ dba_err opcode_interpreter::decode_bitmap()
 	}
 	bitmap_used = true;
 
+	IFTRACE {
+		TRACE("Decoded bitmap count %d: ", bitmap_count);
+		for (size_t i = 0; i < bitmap.size(); ++i)
+			TRACE(bitmap[i] ? "+" : "-");
+		TRACE("\n");
+	}
+
 	return dba_error_ok();
 }
 
@@ -1207,7 +1218,7 @@ dba_err opcode_interpreter::decode_r_data()
 	int group, count;
 	bufrex_opcode rep_op = NULL;
 	
-	TRACE("R DATA %01d%02d%03d %d %d", 
+	TRACE("R DATA %01d%02d%03d %d %d\n", 
 			DBA_VAR_F(ops->val), DBA_VAR_X(ops->val), DBA_VAR_Y(ops->val), group, count);
 
 	/* Read replication information */
