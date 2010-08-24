@@ -140,7 +140,10 @@ dba_err dba_var_create_local(dba_varcode code, dba_var* var);
 dba_err dba_var_copy(dba_var source, dba_var* dest);
 
 /**
- * Delete a dba_var
+ * Delete a dba_var.
+ *
+ * If the variable was created using a singleuse varinfo, the varinfo will also
+ * be deallocated.
  *
  * @param var
  *   The variable to delete

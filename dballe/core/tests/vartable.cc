@@ -257,6 +257,19 @@ void to::test<7>()
 	gen_ensure(!VARINFO_IS_STRING(info));
 }
 
+/* Test the calculation of bounds */
+template<> template<>
+void to::test<8>()
+{
+	dba_varinfo info;
+
+	CHECKED(dba_varinfo_create_singleuse(DBA_VAR(2, 20, 0), &info));
+	gen_ensure(info != NULL);
+	gen_ensure_equals(info->var, DBA_VAR(2, 20, 0));
+	gen_ensure(VARINFO_IS_SINGLEUSE(info));
+	dba_varinfo_delete_singleuse(info);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

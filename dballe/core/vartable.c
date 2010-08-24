@@ -127,6 +127,21 @@ dba_err dba_varinfo_query_local_altered(dba_varcode code, dba_alteration change,
 	return dba_vartable_query_altered(local_vars, code, change, info);
 }
 
+dba_err dba_varinfo_create_singleuse(dba_varcode code, dba_varinfo* info)
+{
+	if ((*info = (dba_varinfo)calloc(1, sizeof(struct _dba_varinfo))) == NULL)
+		return dba_error_alloc("creating new single use dba_varinfo");
+	(*info)->var = code;
+	(*info)->flags |= VARINFO_FLAG_SINGLEUSE;
+	return dba_error_ok();
+}
+
+void dba_varinfo_delete_singleuse(dba_varinfo info)
+{
+	if (!VARINFO_IS_SINGLEUSE(info)) return;
+	free(info);
+}
+
 dba_err dba_varinfo_get_local_table(dba_vartable* table)
 {
 	/* Load dballe WMO parameter resolution table */

@@ -240,6 +240,29 @@ dba_err dba_varinfo_query_local(dba_varcode code, dba_varinfo* info);
 dba_err dba_varinfo_query_local_altered(dba_varcode code, dba_alteration change, dba_varinfo* info);
 
 /**
+ * Create a single use varinfo structure.
+ *
+ * A single use varinfo structure is not memory managed by the varinfo module
+ * and needs to be deallocated explicitly when it is not needed anymore.
+ *
+ * The various fields of the resulting varinfo will be zeroed, except var (set
+ * to \a code) and flags (which will have VARINFO_FLAG_SINGLEUSE set)
+ * 
+ * @param code
+ *   The ::dba_varcode of the variable to query
+ * @retval info
+ *   the ::dba_varinfo structure with the results of the query.
+ * @return
+ *   The error indicator for this function (See @ref error.h)
+ */
+dba_err dba_varinfo_create_singleuse(dba_varcode code, dba_varinfo* info);
+
+/**
+ * Delete a singleuse dba_varinfo
+ */
+void dba_varinfo_delete_singleuse(dba_varinfo info);
+
+/**
  * Get a reference to the local B table
  *
  * @retval table

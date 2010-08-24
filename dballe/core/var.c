@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -181,6 +181,8 @@ void dba_var_delete(dba_var var)
 {
 	if (var->value != NULL)
 		free(var->value);
+	if (VARINFO_IS_SINGLEUSE(var->info))
+		dba_varinfo_delete_singleuse(var->info);
 	dba_var_clear_attrs(var);
 	free(var);
 }
