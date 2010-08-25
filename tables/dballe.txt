@@ -18,10 +18,13 @@
  001217 AIR QUALITY OBSERVING STATION TERRAIN TYPE                       CODE TABLE 001217          0            0   4 CODE TABLE 001217         0          2
  002001 TYPE OF STATION                                                  CODE TABLE 2001            0            0   2 CODE TABLE 2001           0          1
  002002 TYPE OF INSTRUMENTATION FOR WIND MEASUREMENT                     FLAG TABLE 2002            0            0   4 FLAG TABLE 2002           0          2
+ 002003 TYPE OF MEASURING EQUIPMENT USED                                 CODE TABLE 2003            0            0   4 CODE TABLE 2003           0          2
  002004 TYPE OF INSTRUMENTATION FOR EVAPORATION MEASUREMENT OR TYPE OF C CODE TABLE 2004            0            0   4 CODE TABLE 2004           0          2
  002005 PRECISION OF TEMPERATURE OBSERVATION                             K                          2            0   7 K                         2          3
  002011 RADIOSONDE TYPE                                                  CODE TABLE 2011            0            0   8 CODE TABLE 2011           0          3
  002012 RADIOSONDE COMPUTATIONAL METHOD                                  CODE TABLE 2012            0            0   4 CODE TABLE 2012           0          2
+ 002013 SOLAR AND INFRARED RADIATION CORRECTION                          CODE TABLE 2013            0            0   4 CODE TABLE 2013           0          2
+ 002014 TRACKING TECHNIQUE/STATUS OF SYSTEM USED                         CODE TABLE 2014            0            0   7 CODE TABLE 2014           0          3
  002048 SATELLITE SENSOR INDICATOR                                       CODE TABLE 2048            0            0   4 CODE TABLE 2048           0          2
  002061 AIRCRAFT NAVIGATIONAL SYSTEM                                     CODE TABLE 2061            0            0   3 CODE TABLE 2061           0          1
  002062 TYPE OF AIRCRAFT DATA RELAY SYSTEM                               CODE TABLE 2062            0            0   4 CODE TABLE 2062           0          2
