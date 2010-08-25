@@ -38,6 +38,19 @@ struct bufr_decoder_shar
 };
 TESTGRP(bufr_decoder);
 
+#define ensure_has_33007(msg, subset, var, val) _ensure_has_33007(__FILE__, __LINE__, msg, subset, var, val)
+void _ensure_has_33007(const char* file, int line, bufrex_msg msg, int subset, int var, int val)
+{
+	dba_var attr;
+	INNER_CHECKED(dba_var_enqa(msg->subsets[subset]->vars[var], DBA_VAR(0, 33, 7), &attr));
+	inner_ensure(attr != NULL);
+
+	int ival;
+	INNER_CHECKED(dba_var_enqi(attr, &ival));
+	inner_ensure_equals(ival, val);
+}
+
+
 template<> template<>
 void to::test<1>()
 {
@@ -58,6 +71,9 @@ void to::test<1>()
 	bufrex_msg msg = read_test_msg_raw("bufr/bufr1", BUFR);
 	ensureBufrexRawEquals(test, msg);
 
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
+
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
 
@@ -75,12 +91,15 @@ void to::test<2>()
 	test.subcat = 255;
 	test.localsubcat = 21;
 	test.subsets = 1;
-	test.subset(0).vars = 98;
+	test.subset(0).vars = 35;
 	test.subset(0).set(DBA_VAR(0, 5, 2),  43.02);
 	test.subset(0).set(DBA_VAR(0, 6, 2), -12.45);
 
 	bufrex_msg msg = read_test_msg_raw("bufr/bufr2", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -123,7 +142,7 @@ void to::test<4>()
 	test.subcat = 255;
 	test.localsubcat = 1;
 	test.subsets = 1;
-	test.subset(0).vars = 149;
+	test.subset(0).vars = 52;
 	test.subset(0).set(DBA_VAR(0, 20, 13), 250.0);
 	test.subset(0).set(DBA_VAR(0, 20, 13), 320.0);
 	test.subset(0).set(DBA_VAR(0, 20, 13), 620.0);
@@ -132,6 +151,9 @@ void to::test<4>()
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs0-1.22.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -149,7 +171,7 @@ void to::test<5>()
 	test.subcat = 255;
 	test.localsubcat = 3;
 	test.subsets = 1;
-	test.subset(0).vars = 149;
+	test.subset(0).vars = 52;
 	test.subset(0).set(DBA_VAR(0, 20, 12), 37.0);
 	test.subset(0).set(DBA_VAR(0, 20, 12), 22.0);
 	test.subset(0).set(DBA_VAR(0, 20, 12), 60.0);
@@ -160,6 +182,9 @@ void to::test<5>()
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs0-3.504.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -177,11 +202,14 @@ void to::test<6>()
 	test.subcat = 255;
 	test.localsubcat = 9;
 	test.subsets = 1;
-	test.subset(0).vars = 104;
+	test.subset(0).vars = 37;
 	test.subset(0).set(DBA_VAR(0,  1,  11), "DFPC");
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs1-9.2.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -199,11 +227,14 @@ void to::test<7>()
 	test.subcat = 255;
 	test.localsubcat = 11;
 	test.subsets = 1;
-	test.subset(0).vars = 104;
+	test.subset(0).vars = 37;
 	test.subset(0).set(DBA_VAR(0, 10, 197), 46.0);
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs1-11.16.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -221,10 +252,13 @@ void to::test<8>()
 	test.subcat = 255;
 	test.localsubcat = 13;
 	test.subsets = 1;
-	test.subset(0).vars = 104;
+	test.subset(0).vars = 37;
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs1-13.36.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -242,10 +276,13 @@ void to::test<9>()
 	test.subcat = 255;
 	test.localsubcat = 19;
 	test.subsets = 1;
-	test.subset(0).vars = 104;
+	test.subset(0).vars = 37;
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs1-19.3.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -263,10 +300,13 @@ void to::test<10>()
 	test.subcat = 255;
 	test.localsubcat = 21;
 	test.subsets = 1;
-	test.subset(0).vars = 98;
+	test.subset(0).vars = 35;
 
 	bufrex_msg msg = read_test_msg_raw("bufr/synop-old-buoy.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -284,10 +324,13 @@ void to::test<11>()
 	test.subcat = 255;
 	test.localsubcat = 101;
 	test.subsets = 1;
-	test.subset(0).vars = 1655;
+	test.subset(0).vars = 619;
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs2-101.16.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -305,10 +348,13 @@ void to::test<12>()
 	test.subcat = 255;
 	test.localsubcat = 102;
 	test.subsets = 1;
-	test.subset(0).vars = 1082;
+	test.subset(0).vars = 403;
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs2-102.1.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 5, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -326,10 +372,13 @@ void to::test<13>()
 	test.subcat = 255;
 	test.localsubcat = 91;
 	test.subsets = 1;
-	test.subset(0).vars = 349;
+	test.subset(0).vars = 127;
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs2-91.2.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -347,10 +396,13 @@ void to::test<14>()
 	test.subcat = 255;
 	test.localsubcat = 142;
 	test.subsets = 1;
-	test.subset(0).vars = 56;
+	test.subset(0).vars = 21;
 
 	bufrex_msg msg = read_test_msg_raw("bufr/airep-old-4-142.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -368,10 +420,13 @@ void to::test<15>()
 	test.subcat = 255;
 	test.localsubcat = 144;
 	test.subsets = 1;
-	test.subset(0).vars = 56;
+	test.subset(0).vars = 21;
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs4-144.4.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -389,10 +444,13 @@ void to::test<16>()
 	test.subcat = 255;
 	test.localsubcat = 145;
 	test.subsets = 1;
-	test.subset(0).vars = 86;
+	test.subset(0).vars = 31;
 
 	bufrex_msg msg = read_test_msg_raw("bufr/obs4-145.4.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	bufrex_msg msg1 = reencode_test(msg);
 	ensureBufrexRawEquals(test, msg1);
@@ -544,6 +602,8 @@ void to::test<21>()
 	test.localsubcat = 0;
 	test.subsets = 1;
 
+	test.subset(0).vars = 4606;
+
 	bufrex_msg msg = read_test_msg_header_raw("bufr/ed2radar.bufr", BUFR);
 	ensureBufrexRawEquals(test, msg);
 	ensure_equals(msg->rep_year, 2007);
@@ -552,8 +612,6 @@ void to::test<21>()
 	ensure_equals(msg->rep_hour, 18);
 	ensure_equals(msg->rep_minute, 30);
 	ensure_equals(msg->rep_second, 0);
-
-	test.subset(0).vars = 4606;
 
 	//bufrex_msg msg1 = reencode_test(msg);
 	//ensureBufrexRawEquals(test, msg1);
@@ -865,6 +923,9 @@ void to::test<30>()
 
 	test.subset(0).vars = 4606;
 	*/
+
+	ensure_has_33007(msg, 0, 0, 70);
+	ensure_has_33007(msg, 0, 1, 70);
 
 	//bufrex_msg msg1 = reencode_test(msg);
 	//ensureBufrexRawEquals(test, msg1);

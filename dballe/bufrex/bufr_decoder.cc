@@ -39,7 +39,7 @@
 
 #include <assert.h>
 
-#define TRACE_DECODER
+/* #define TRACE_DECODER */
 
 #ifdef TRACE_DECODER
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)

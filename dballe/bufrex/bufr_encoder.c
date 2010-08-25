@@ -86,8 +86,10 @@ struct _encoder
 	/* Current value of width change from C modifier */
 	int c_width_change;
 
-	/* List of opcodes to decode */
+	/* List of opcodes to encode */
 	bufrex_opcode ops;
+	/* Current subset we are encoding */
+	bufrex_subset subset;
 	/* Pointed to next variable not yet encoded in the variable array */
 	dba_var* nextvar;
 	/* Number of variables left to encode */
@@ -96,6 +98,12 @@ struct _encoder
 	/* Support for binary append */
 	unsigned char pbyte;
 	int pbyte_len;
+
+	/* Set these to non-null if we are encoding a data present bitmap */
+	dba_var bitmap_to_encode;
+	int bitmap_encode_cur;
+	int bitmap_use_cur;
+	int bitmap_subset_cur;
 };
 typedef struct _encoder* encoder;
 
@@ -450,12 +458,11 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 	/* Encode all the subsets, uncompressed */
 	for (i = 0; i < e->in->subsets_count; ++i)
 	{
-		bufrex_subset subset;
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(e->in, i, &subset));
+		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(e->in, i, &e->subset));
 
 		/* Initialise the encoder with the list of variables to encode */
-		e->nextvar = subset->vars;
-		e->vars_left = subset->vars_count;
+		e->nextvar = e->subset->vars;
+		e->vars_left = e->subset->vars_count;
 
 		/* Encode the data */
 		while (e->vars_left > 0)
@@ -548,6 +555,32 @@ static int bufr_encode_double(encoder e, double dval, int ref, int scale)
 		return (int)round(dval / e10[-scale]) - ref;
 }
 
+static dba_err bitmap_next(encoder e)
+{
+	if (e->bitmap_to_encode == NULL)
+		return dba_error_consistency("applying a data present bitmap with no current bitmap");
+	TRACE("bitmap_next pre %d %d %d\n", e->bitmap_use_cur, e->bitmap_subset_cur, dba_var_info(e->bitmap_to_encode)->len);
+	++e->bitmap_use_cur;
+	++e->bitmap_subset_cur;
+	while (e->bitmap_use_cur < dba_var_info(e->bitmap_to_encode)->len &&
+		(e->bitmap_use_cur < 0 || dba_var_value(e->bitmap_to_encode)[e->bitmap_use_cur] == '-'))
+	{
+		TRACE("INCR\n");
+		++e->bitmap_use_cur;
+		++e->bitmap_subset_cur;
+
+		while (e->bitmap_subset_cur < e->subset->vars_count &&
+			DBA_VAR_F(dba_var_code(e->subset->vars[e->bitmap_subset_cur])) != 0)
+			++e->bitmap_subset_cur;
+	}
+	if (e->bitmap_use_cur > dba_var_info(e->bitmap_to_encode)->len)
+		return dba_error_consistency("moved past end of data present bitmap");
+	if (e->bitmap_subset_cur == e->subset->vars_count)
+		return dba_error_consistency("end of data reached when applying attributes");
+	TRACE("bitmap_next post %d %d\n", e->bitmap_use_cur, e->bitmap_subset_cur);
+	return dba_error_ok();
+}
+
 static dba_err encoder_encode_b_data(encoder e)
 {
 	dba_err err = DBA_OK;
@@ -564,19 +597,44 @@ static dba_err encoder_encode_b_data(encoder e)
 		bufrex_opcode_print(e->ops, stderr);
 		TRACE("\n");
 	}
-
-	/* Get the next variable to encode */
-	if (e->vars_left <= 0)
+	
+	if (e->bitmap_to_encode != NULL && e->bitmap_encode_cur < dba_var_info(e->bitmap_to_encode)->len)
 	{
-		err = dba_error_consistency("checking for availability of data to encode");
-		goto cleanup;
-	}
-	var = *e->nextvar;
-	e->nextvar++;
-	e->vars_left--;
+		TRACE("Encode bitmap entry %d/%d\n", e->bitmap_encode_cur, dba_var_info(e->bitmap_to_encode)->len);
+		/* Get data from the current bitmap instead of a variable in
+		 * the input subset */
+		var = NULL;
+		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, e->ops->val, &info));
+	} else if (DBA_VAR_F(e->ops->val) == 0 && DBA_VAR_X(e->ops->val) == 33
+		   && e->bitmap_to_encode != NULL && e->bitmap_use_cur < dba_var_info(e->bitmap_to_encode)->len) {
+		TRACE("Encode attribute %01d%02d%03d %d/%d subset %d/%zd\n",
+			DBA_VAR_F(e->ops->val), DBA_VAR_X(e->ops->val), DBA_VAR_Y(e->ops->val),
+			e->bitmap_use_cur, dba_var_info(e->bitmap_to_encode)->len,
+			e->bitmap_subset_cur, e->subset->vars_count);
+		/* Read the variable to encode from the attributes */
+		DBA_RUN_OR_GOTO(cleanup, dba_var_enqa(e->subset->vars[e->bitmap_subset_cur], e->ops->val, &var));
+		DBA_RUN_OR_GOTO(cleanup, bitmap_next(e));
+		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, e->ops->val, &info));
+		/* var could be NULL if the attribute is missing: create a temporary one */
+		if (var == NULL)
+		{
+			DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &tmpvar));
+			var = tmpvar;
+		}
+	} else {
+		/* Get the next variable to encode */
+		if (e->vars_left <= 0)
+		{
+			err = dba_error_consistency("checking for availability of data to encode");
+			goto cleanup;
+		}
+		var = *e->nextvar;
+		e->nextvar++;
+		e->vars_left--;
 
-	/* Get informations from the variable */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, dba_var_code(var), &info));
+		/* Get informations from the variable */
+		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, dba_var_code(var), &info));
+	}
 
 	IFTRACE{
 #ifndef TRACE_ENCODER
@@ -588,7 +646,10 @@ static dba_err encoder_encode_b_data(encoder e)
 				info->bit_ref);
 		startofs = e->out->len;
 		startbofs = e->pbyte_len;
-		dba_var_print(var, stderr);
+		if (var)
+			dba_var_print(var, stderr);
+		else
+			TRACE("dpb %c\n", dba_var_value(e->bitmap_to_encode)[e->bitmap_encode_cur]);
 	}
 
 	if (info->var != e->ops->val)
@@ -600,8 +661,17 @@ static dba_err encoder_encode_b_data(encoder e)
 	}
 	
 	len = info->bit_len;
-	if (dba_var_value(var) == NULL)
+	if (e->bitmap_to_encode != NULL && e->bitmap_encode_cur < dba_var_info(e->bitmap_to_encode)->len)
 	{
+		if (e->bitmap_encode_cur >= dba_var_info(e->bitmap_to_encode)->len)
+		{
+			err = dba_error_consistency("trying to encode bitmap item %d but bitmap is only %d long",
+					e->bitmap_encode_cur, dba_var_info(e->bitmap_to_encode)->len);
+			goto cleanup;
+		}
+		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, dba_var_value(e->bitmap_to_encode)[e->bitmap_encode_cur] == '+' ? 0 : 1, len));
+		++e->bitmap_encode_cur;
+	} else if (var == NULL || dba_var_value(var) == NULL) {
 		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, 0xffffffff, len));
 	} else if (VARINFO_IS_STRING(info)) {
 		const char* val = dba_var_value(var);
@@ -670,9 +740,11 @@ static dba_err encoder_encode_b_data(encoder e)
 		int startofs, startbofs;
 #endif
 		*/
+		/*
 		TRACE("Encoded as: ");
-		/*DBA_RUN_OR_RETURN(dump_bits(e->out->buf + startofs, startbofs, 32, stderr));*/
+		DBA_RUN_OR_RETURN(dump_bits(e->out->buf + startofs, startbofs, 32, stderr));
 		TRACE("\n");
+		*/
 
 		TRACE("bufr_message_encode_b_data (items:");
 		bufrex_opcode_print(e->ops, stderr);
@@ -685,7 +757,10 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-static dba_err encoder_encode_r_data(encoder e)
+/* If using delayed replication and count is not -1, use count for the delayed
+ * replication factor; else, look for a delayed replication factor among the
+ * input variables */
+static dba_err encoder_encode_r_data(encoder e, int rep_count)
 {
 	dba_err err = DBA_OK;
 	dba_varinfo info = NULL;
@@ -693,7 +768,7 @@ static dba_err encoder_encode_r_data(encoder e)
 	int count = DBA_VAR_Y(e->ops->val);
 	bufrex_opcode rep_op = NULL;
 	
-	TRACE("R DATA %01d%02d%03d %d %d", 
+	TRACE("R DATA %01d%02d%03d %d %d\n", 
 			DBA_VAR_F(e->ops->val), DBA_VAR_X(e->ops->val), DBA_VAR_Y(e->ops->val), group, count);
 
 	/* Pop the R repetition node, since we have read its value in group and count */
@@ -706,23 +781,33 @@ static dba_err encoder_encode_r_data(encoder e)
 	if (count == 0)
 	{
 		/* Delayed replication */
-		if (e->vars_left <= 0)
+
+		if (rep_count == -1)
 		{
-			err = dba_error_consistency("checking for availability of data to encode");
-			goto cleanup;
+			/* Look for a delayed replication factor in the input vars */
+			if (e->vars_left <= 0)
+			{
+				err = dba_error_consistency("checking for availability of data to encode");
+				goto cleanup;
+			}
+
+			/* Get the repetition count */
+			DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(*e->nextvar, &count));
+
+			e->nextvar++;
+			e->vars_left--;
+
+			TRACE("delayed replicator count read as %d\n", count);
+		} else {
+			count = rep_count;
+			TRACE("delayed replicator count passed by caller as %d\n", count);
 		}
 
 		/* Get encoding informations for this repetition count */
-		info = dba_var_info(*e->nextvar);
-
-		/* Get the repetition count */
-		DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(*e->nextvar, &count));
+		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, e->ops->val, &info));
 
 		/* Encode the repetition count */
 		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, count, info->bit_len));
-
-		e->nextvar++;
-		e->vars_left--;
 
 		/* Pop the node with the repetition count */
 		{
@@ -772,6 +857,50 @@ cleanup:
 	return err = DBA_OK ? dba_error_ok() : err;
 }
 
+static dba_err encoder_encode_bitmap(encoder e)
+{
+	dba_varcode code = dba_var_info(*e->nextvar)->var;
+	if (e->bitmap_to_encode != NULL && e->bitmap_encode_cur < dba_var_info(e->bitmap_to_encode)->len)
+		return dba_error_consistency("request to encode a bitmap before we finished encoding the previous one");
+	if (DBA_VAR_F(code) != 2)
+		return dba_error_consistency("request to encode a bitmap but the input variable is %01d%02d%03d",
+				DBA_VAR_F(code), DBA_VAR_X(code), DBA_VAR_Y(code));
+
+	e->bitmap_to_encode = *e->nextvar;
+	e->nextvar++;
+	e->vars_left--;
+
+	e->bitmap_encode_cur = 0;
+	e->bitmap_use_cur = -1;
+	e->bitmap_subset_cur = -1;
+
+	IFTRACE{
+		TRACE("Encoding data present bitmap:");
+		dba_var_print(e->bitmap_to_encode, stderr);
+	}
+
+	/* Encode the bitmap */
+	DBA_RUN_OR_RETURN(encoder_encode_r_data(e, dba_var_info(e->bitmap_to_encode)->len));
+
+	IFTRACE {
+		if (e->bitmap_encode_cur < dba_var_info(e->bitmap_to_encode)->len)
+			return dba_error_consistency("bitmap not fully encoded (%d/%d)",
+					e->bitmap_encode_cur, dba_var_info(e->bitmap_to_encode)->len);
+	}
+
+	/* Point to the first attribute to encode */
+	DBA_RUN_OR_RETURN(bitmap_next(e));
+
+/*	
+	TRACE("Decoded bitmap count %d: ", bitmap_count);
+	for (size_t i = 0; i < dba_var_info(bitmap)->len; ++i)
+		TRACE("%c", dba_var_value(bitmap)[i]);
+	TRACE("\n");
+*/
+
+	return dba_error_ok();
+}
+
 static dba_err encoder_encode_c_data(encoder e)
 {
 	dba_err err = DBA_OK;
@@ -797,7 +926,9 @@ static dba_err encoder_encode_c_data(encoder e)
 		case 22:
 			if (DBA_VAR_Y(code) == 0)
 			{
-				DBA_RUN_OR_GOTO(cleanup, encoder_encode_r_data(e));
+				TRACE("PRE BITMAP\n");
+				DBA_RUN_OR_GOTO(cleanup, encoder_encode_bitmap(e));
+				TRACE("POST BITMAP\n");
 			} else
 				return dba_error_consistency("C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
@@ -807,7 +938,7 @@ static dba_err encoder_encode_c_data(encoder e)
 		case 24:
 			if (DBA_VAR_Y(code) == 0)
 			{
-				DBA_RUN_OR_GOTO(cleanup, encoder_encode_r_data(e));
+				DBA_RUN_OR_GOTO(cleanup, encoder_encode_r_data(e, -1));
 			} else
 				return dba_error_consistency("C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
@@ -838,6 +969,11 @@ static dba_err encoder_encode_data_section(encoder e)
 			TRACE("bufr_message_encode_data_section TODO: ");
 			bufrex_opcode_print(e->ops, stderr);
 			TRACE("\n");
+			TRACE("bufr_message_encode_data_section NEXTVAR: ");
+			if (e->vars_left)
+				dba_var_print(*e->nextvar, stderr);
+			else
+				TRACE("(none)\n");
 		}
 
 		switch (DBA_VAR_F(e->ops->val))
@@ -846,7 +982,7 @@ static dba_err encoder_encode_data_section(encoder e)
 				DBA_RUN_OR_RETURN(encoder_encode_b_data(e));
 				break;
 			case 1:
-				DBA_RUN_OR_RETURN(encoder_encode_r_data(e));
+				DBA_RUN_OR_RETURN(encoder_encode_r_data(e, -1));
 				break;
 			case 2:
 				DBA_RUN_OR_RETURN(encoder_encode_c_data(e));
