@@ -468,9 +468,9 @@ struct opcode_interpreter
 
 	dba_err bitmap_next()
 	{
-		TRACE("bitmap_next pre %d %d %zd\n", bitmap_use_index, bitmap_subset_index, bitmap.size());
 		if (bitmap == 0)
 			return parse_error("applying a data present bitmap with no current bitmap");
+		TRACE("bitmap_next pre %d %d %zd\n", bitmap_use_index, bitmap_subset_index, dba_var_info(bitmap)->len);
 		if (d.out->subsets_count == 0)
 			return parse_error("no subsets created yet, but already applying a data present bitmap");
 		++bitmap_use_index;
@@ -485,8 +485,8 @@ struct opcode_interpreter
 				DBA_VAR_F(dba_var_code(d.out->subsets[0]->vars[bitmap_subset_index])) != 0)
 				++bitmap_subset_index;
 		}
-		if (bitmap_use_index == dba_var_info(bitmap)->len)
-			return parse_error("end of data present bitmap reached");
+		if (bitmap_use_index > dba_var_info(bitmap)->len)
+			return parse_error("moved past end of data present bitmap");
 		if (bitmap_subset_index == d.out->subsets[0]->vars_count)
 			return parse_error("end of data reached when applying attributes");
 		TRACE("bitmap_next post %d %d\n", bitmap_use_index, bitmap_subset_index);
@@ -504,7 +504,7 @@ struct opcode_interpreter
 	 * In case of delayed replication, store a variable in the subset(s)
 	 * with the repetition count.
 	 */
-	dba_err decode_replication_info(int& group, int& count);
+	dba_err decode_replication_info(int& group, int& count, bool store_in_subset=true);
 	dba_err decode_r_data();
 	dba_err decode_c_data();
 
@@ -1040,7 +1040,7 @@ dba_err opcode_interpreter_compressed::decode_b_num(dba_varinfo info)
 			/* Compute the value for this subset */
 			newval = val + diff;
 			double dval = decode_int(newval, info);
-			TRACE("Decoded[%d] as %d+%d=%%f %s\n", i, val, diff, newval, dval, info->bufr_unit);
+			TRACE("Decoded[%d] as %d+%d=%d->%f %s\n", i, val, diff, newval, dval, info->bufr_unit);
 
 			/* Convert to target unit */
 			DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->bufr_unit, info->unit, dval, &dval));
@@ -1060,7 +1060,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err opcode_interpreter::decode_replication_info(int& group, int& count)
+dba_err opcode_interpreter::decode_replication_info(int& group, int& count, bool store_in_subset)
 {
 	group = DBA_VAR_X(ops->val);
 	count = DBA_VAR_Y(ops->val);
@@ -1123,19 +1123,25 @@ dba_err opcode_interpreter::decode_replication_info(int& group, int& count)
 				else if (repval != newval)
 					return parse_error("compressed delayed replication factor has different values for subsets (%d and %d)", repval, newval);
 
-				/* Access the subset we are working on */
-				bufrex_subset subset;
-				DBA_RUN_OR_RETURN(bufrex_msg_get_subset(d.out, i, &subset));
+				if (store_in_subset)
+				{
+					/* Access the subset we are working on */
+					bufrex_subset subset;
+					DBA_RUN_OR_RETURN(bufrex_msg_get_subset(d.out, i, &subset));
 
-				/* Create the new dba_var */
-				DBA_RUN_OR_RETURN(dba_var_createi(info, newval, &rep_var));
+					/* Create the new dba_var */
+					DBA_RUN_OR_RETURN(dba_var_createi(info, newval, &rep_var));
 
-				/* Add it to this subset */
-				DBA_RUN_OR_RETURN(bufrex_subset_store_variable(subset, rep_var));
+					/* Add it to this subset */
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable(subset, rep_var));
+				}
 			}
 		} else {
-			DBA_RUN_OR_RETURN(dba_var_createi(info, count, &rep_var));
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable(current_subset, rep_var));
+			if (store_in_subset)
+			{
+				DBA_RUN_OR_RETURN(dba_var_createi(info, count, &rep_var));
+				DBA_RUN_OR_RETURN(bufrex_subset_store_variable(current_subset, rep_var));
+			}
 		}
 
 		bufrex_opcode_delete(&info_op);
@@ -1155,7 +1161,7 @@ dba_err opcode_interpreter::decode_bitmap(dba_varcode code)
 
 	bitmap = 0;
 
-	DBA_RUN_OR_RETURN(decode_replication_info(group, count));
+	DBA_RUN_OR_RETURN(decode_replication_info(group, count, false));
 
 	// Sanity checks
 
@@ -1232,7 +1238,8 @@ dba_err opcode_interpreter::decode_bitmap(dba_varcode code)
 			DBA_RUN_OR_RETURN(add_var(subset, var1));
 		}
 	} else {
-		DBA_RUN_OR_RETURN(add_var(current_subset, bitmap));
+		dba_var var1 = bitmap;
+		DBA_RUN_OR_RETURN(add_var(current_subset, var1));
 	}
 
 	// Bitmap will stay set as a reference to the variable to use as the
@@ -1241,7 +1248,7 @@ dba_err opcode_interpreter::decode_bitmap(dba_varcode code)
 	IFTRACE {
 		TRACE("Decoded bitmap count %d: ", bitmap_count);
 		for (size_t i = 0; i < dba_var_info(bitmap)->len; ++i)
-			TRACE(dba_var_value(bitmap)[i]);
+			TRACE("%c", dba_var_value(bitmap)[i]);
 		TRACE("\n");
 	}
 
