@@ -619,6 +619,63 @@ void to::test<13>()
 	dba_msgs_delete(msgs);
 }
 
+/* Test import of WMO GTS temp messages */
+template<> template<>
+void to::test<14>()
+{
+	dba_msgs msgs = read_test_msg("bufr/temp-gts1.bufr", BUFR);
+	dba_msg msg = msgs->msgs[0];
+	dba_var var;
+	double val;
+
+	gen_ensure_equals(msg->type, MSG_TEMP);
+	gen_ensure_equals(msgs->len, 26);
+
+	//msg = msgs->msgs[4];
+	//gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
+	//CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
+
+	dba_msgs_delete(msgs);
+}
+
+/* Test import of WMO GTS synop messages */
+template<> template<>
+void to::test<15>()
+{
+	dba_msgs msgs = read_test_msg("bufr/temp-gts2.bufr", BUFR);
+	dba_msg msg = msgs->msgs[0];
+	dba_var var;
+	double val;
+
+	gen_ensure_equals(msg->type, MSG_TEMP);
+	gen_ensure_equals(msgs->len, 26);
+
+	//msg = msgs->msgs[4];
+	//gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
+	//CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
+
+	dba_msgs_delete(msgs);
+}
+
+/* Test import of WMO GTS synop messages */
+template<> template<>
+void to::test<16>()
+{
+	dba_msgs msgs = read_test_msg("bufr/temp-gts3.bufr", BUFR);
+	dba_msg msg = msgs->msgs[0];
+	dba_var var;
+	double val;
+
+	gen_ensure_equals(msg->type, MSG_TEMP);
+	gen_ensure_equals(msgs->len, 26);
+
+	//msg = msgs->msgs[4];
+	//gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
+	//CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
+
+	dba_msgs_delete(msgs);
+}
+
 /* TODO: add entries for more of the sample messages, taking data from another decoder */
 
 }
