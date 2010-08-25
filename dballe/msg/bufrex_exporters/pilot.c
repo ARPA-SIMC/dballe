@@ -168,10 +168,11 @@ static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int t
 
 	if (type == 0)
 	{
-		DBA_RUN_OR_RETURN(bufrex_subset_append_dpb(dst, tplsize + 1 + lev_no * 5, DBA_VAR(0, 33, 7)));
+		int count;
+		DBA_RUN_OR_RETURN(bufrex_subset_append_dpb(dst, DBA_VAR(2, 22, 0), tplsize + 1 + lev_no * 5, DBA_VAR(0, 33, 7), &count));
 		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
 		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 32)));
-		DBA_RUN_OR_RETURN(bufrex_subset_append_attrs(dst, tplsize + 1 + lev_no * 5, DBA_VAR(0, 33, 7)));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 31, 2), count));
 	}
 
 	return dba_error_ok();

@@ -197,41 +197,36 @@ dba_err bufrex_subset_add_attr(bufrex_subset subset, dba_var attr);
 dba_err bufrex_subset_add_attrs(bufrex_subset subset, dba_var var); 
 
 /**
- * Copy decoded variables that are attributes as attributes in the decoded
- * variables they refer to.
- *
- * @param subset
- *   The message to operate on
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_apply_attributes(bufrex_subset subset);
-
-/**
  * Compute and append a data present bitmap
  *
  * @param subset
  *   The message to operate on
+ * @param ccode
+ *   The C code that uses this bitmap
  * @param size
  *   The size of the bitmap
  * @param attr
  *   The code of the attribute that the bitmap will represent.  See @ref vartable.h
+ * @retval count
+ *   The number of attributes that will be encoded (for which the dpb has '+')
  * @return
  *   The error indicator for the function.  See @ref error.h
  */
-dba_err bufrex_subset_append_dpb(bufrex_subset subset, int size, dba_varcode attr);
+dba_err bufrex_subset_append_dpb(bufrex_subset subset, dba_varcode ccode, int size, dba_varcode attr, int* count);
 
 /**
  * Append a fixed-size data present bitmap with all zeros
  *
  * @param subset
  *   The message to operate on
+ * @param ccode
+ *   The C code that uses this bitmap
  * @param size
  *   The size of the bitmap
  * @return
  *   The error indicator for the function.  See @ref error.h
  */
-dba_err bufrex_subset_append_fixed_dpb(bufrex_subset subset, int size);
+dba_err bufrex_subset_append_fixed_dpb(bufrex_subset subset, dba_varcode ccode, int size);
 
 /**
  * Scan the first 'size' variables appending the attribute 'attr' when found.
@@ -249,23 +244,6 @@ dba_err bufrex_subset_append_fixed_dpb(bufrex_subset subset, int size);
  *   The error indicator for the function.  See @ref error.h
  */
 dba_err bufrex_subset_append_attrs(bufrex_subset subset, int size, dba_varcode attr);
-
-/**
- * Scan the first 'size' variables appending the attribute 'attr' in any case.
- *
- * Exactly 'size' attributes will be appended, possibly with value 'undef' when
- * they are not present.  No delayed replicator factor is appended.
- *
- * @param subset
- *   The message to operate on
- * @param size
- *   The number of variables to scan
- * @param attr
- *   The code of the attribute to look for.  See @ref vartable.h
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_append_fixed_attrs(bufrex_subset subset, int size, dba_varcode attr);
 
 /**
  * Compute the differences between two bufrex_subsets

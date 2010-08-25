@@ -128,10 +128,9 @@ static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int typ
 
 	if (type == 0)
 	{
-		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_dpb(dst, 32));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_dpb(dst, DBA_VAR(2, 22, 0), 32));
 		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1,  31), ORIG_CENTRE_ID));
 		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 201), ORIG_APP_ID));
-		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_attrs(dst, 32, DBA_VAR(0, 33, 7)));
 	}
 
 	return dba_error_ok();

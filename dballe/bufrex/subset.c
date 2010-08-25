@@ -163,70 +163,53 @@ dba_err bufrex_subset_add_attrs(bufrex_subset subset, dba_var var)
 	return dba_var_copy_attrs(subset->vars[subset->vars_count - 1], var);
 }
 
-dba_err bufrex_subset_apply_attributes(bufrex_subset subset)
+static dba_err bufrex_subset_append_c_with_dpb(bufrex_subset subset, dba_varcode ccode, int count, const char* bitmap)
 {
-	int i = 0;
-	int cur_dpb = -1;
-	int cur_attr = -1;
+	dba_err err = DBA_OK;
+	dba_varinfo info = NULL;
+	dba_var var = NULL;
 
-	/* First step: scan the variable list and note the index of the first data
-	 * present bitmap and the first quality attribute */
-	for ( ; i < subset->vars_count; i++)
-		if (dba_var_code(subset->vars[i]) == DBA_VAR(0, 31, 31))
-		{
-			cur_dpb = i;
-			break;
-		}
-	for ( ; i < subset->vars_count; i++)
-	{
-		dba_varcode code = dba_var_code(subset->vars[i]);
-		if (DBA_VAR_F(code) == 0 && DBA_VAR_X(code) == 33)
-		{
-			cur_attr = i;
-			break;
-		}
-	}
+	/* Create a single use varinfo to store the bitmap */
+	DBA_RUN_OR_GOTO(cleanup, dba_varinfo_create_singleuse(ccode, &info));
+	strcpy(info->desc, "DATA PRESENT BITMAP");
+	strcpy(info->unit, "CCITTIA5");
+	strcpy(info->bufr_unit, "CCITTIA5");
+	info->len = count;
+	info->bit_len = info->len * 8;
 
-	/* Nothing to do if the data is not present */
-	if (cur_dpb == -1 || cur_attr == -1)
-		return dba_error_ok();
-	
+	/* Create the dba_var with the bitmap */
+	DBA_RUN_OR_GOTO(cleanup, dba_var_createc(info, bitmap, &var));
+	info = NULL;
 
-	/* Second step: iterate through the three lists applying the changes */
-	for (i = 0; i < subset->vars_count &&
-			cur_dpb < subset->vars_count &&
-			dba_var_code(subset->vars[cur_dpb]) == DBA_VAR(0, 31, 31) &&
-			cur_attr < subset->vars_count &&
-			DBA_VAR_F(dba_var_code(subset->vars[cur_attr])) == 0 &&
-			DBA_VAR_X(dba_var_code(subset->vars[cur_attr])) == 33; i++)
-	{
-		dba_var attr;
-		/* Skip over special data like delayed repetition counts */
-		if (DBA_VAR_F(dba_var_code(subset->vars[i])) != 0)
-			continue;
-		/* Skip over variables that don't have a 0 in the data present bitmap */
-		if (dba_var_value(subset->vars[cur_dpb++]) == NULL)
-			continue;
-		attr = subset->vars[cur_attr++];
-		/* Skip over attributes with NULL values */
-		if (dba_var_value(attr) == NULL)
-			continue;
-		DBA_RUN_OR_RETURN(dba_var_seta(subset->vars[i], attr));
-	}
-	return dba_error_ok();
+	/* Store the variable in the subset */
+	DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable(subset, var));
+	var = NULL;
+
+cleanup:
+	if (info != NULL) dba_varinfo_delete(info);
+	if (var != NULL) dba_var_delete(var);
+
+	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err bufrex_subset_append_dpb(bufrex_subset subset, int size, dba_varcode attr)
+dba_err bufrex_subset_append_dpb(bufrex_subset subset, dba_varcode ccode, int size, dba_varcode attr, int* count)
 {
-	int i;
+	dba_err err = DBA_OK;
+	char* bitmap = (char*)malloc(size + 1);
+	int src, dst;
+	*count = 0;
 
-	/* Add repetition count */
-	bufrex_subset_store_variable_i(subset, DBA_VAR(0, 31, 2), size);
-	
+	if (bitmap == 0)
+		return dba_error_alloc("Allocating space for building a data present bitmap");
+
 	/* Scan first 'size' variables checking for the presence of 'attr' */
-	for (i = 0; i < subset->vars_count && size > 0; i++)
+	for (src = 0, dst = 0; src < subset->vars_count && dst < size; dst++)
 	{
 		dba_var test_var;
+
+		/* Skip extra, special vars */
+		while (src < subset->vars_count && DBA_VAR_F(dba_var_code(subset->vars[src])) != 0)
+			++src;
 
 #if 0
 		dba_varcode code = dba_var_code(subset->vars[i]);
@@ -237,24 +220,42 @@ dba_err bufrex_subset_append_dpb(bufrex_subset subset, int size, dba_varcode att
 #endif
 
 		/* Check if the variable has the attribute we want */
-		DBA_RUN_OR_RETURN(dba_var_enqa(subset->vars[i], attr, &test_var));
-		if (test_var != NULL)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(subset, DBA_VAR(0, 31, 31), 0));
+		DBA_RUN_OR_GOTO(cleanup, dba_var_enqa(subset->vars[src], attr, &test_var));
+
+		if (test_var == NULL)
+			bitmap[dst] = '-';
 		else
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(subset, DBA_VAR(0, 31, 31)));
-		size--;
+		{
+			bitmap[dst] = '+';
+			++*count;
+		}
 	}
-	return dba_error_ok();
+	bitmap[size] = 0;
+
+	/* Append the bitmap to the message */
+	DBA_RUN_OR_GOTO(cleanup, bufrex_subset_append_c_with_dpb(subset, ccode, size, bitmap));
+
+cleanup:
+	if (bitmap != NULL) free(bitmap);
+
+	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err bufrex_subset_append_fixed_dpb(bufrex_subset subset, int size)
+dba_err bufrex_subset_append_fixed_dpb(bufrex_subset subset, dba_varcode ccode, int size)
 {
-	int i;
+	dba_err err = DBA_OK;
+	char* bitmap = (char*)malloc(size + 1);
 
-	for (i = 0; i < size; i++)
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(subset, DBA_VAR(0, 31, 31), 0));
+	memset(bitmap, '+', size);
+	bitmap[size] = 0;
 
-	return dba_error_ok();
+	/* Append the bitmap to the message */
+	DBA_RUN_OR_GOTO(cleanup, bufrex_subset_append_c_with_dpb(subset, ccode, size, bitmap));
+
+cleanup:
+	if (bitmap != NULL) free(bitmap);
+
+	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 dba_err bufrex_subset_append_attrs(bufrex_subset subset, int size, dba_varcode attr)
@@ -290,31 +291,6 @@ dba_err bufrex_subset_append_attrs(bufrex_subset subset, int size, dba_varcode a
 
 	/* Set the repetition count with the number of variables we added */
 	DBA_RUN_OR_RETURN(dba_var_seti(subset->vars[repcount_idx], added));
-
-	return dba_error_ok();
-}
-
-dba_err bufrex_subset_append_fixed_attrs(bufrex_subset subset, int size, dba_varcode attr)
-{
-	int i;
-	
-	/* Scan first 'size' variables checking for the presence of 'attr' */
-	for (i = 0; i < subset->vars_count && size > 0; i++)
-	{
-		dba_var var_attr;
-
-		/* Skip over special data like delayed repetition counts */
-		if (DBA_VAR_F(dba_var_code(subset->vars[i])) != 0)
-			continue;
-
-		/* Check if the variable has the attribute we want */
-		DBA_RUN_OR_RETURN(dba_var_enqa(subset->vars[i], attr, &var_attr));
-		if (var_attr != NULL)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(subset, attr, var_attr));
-		else
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(subset, attr));
-		size--;
-	}
 
 	return dba_error_ok();
 }
