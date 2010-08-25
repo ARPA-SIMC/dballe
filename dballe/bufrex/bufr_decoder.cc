@@ -39,7 +39,7 @@
 
 #include <assert.h>
 
-/* #define TRACE_DECODER */
+#define TRACE_DECODER
 
 #ifdef TRACE_DECODER
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)
@@ -830,7 +830,7 @@ dba_err opcode_interpreter::decode_b_string(dba_varinfo info)
 
 	TRACE("bufr_message_decode_b_data len %d val %s missing %d info-len %d info-desc %s\n", len, str, missing, info->bit_len, info->desc);
 
-	if (DBA_VAR_X(info->var) == 33)
+	if (DBA_VAR_X(info->var) == 33 && bitmap)
 		DBA_RUN_OR_GOTO(cleanup, bitmap_next());
 
 	/* Store the variable that we found */
@@ -944,7 +944,7 @@ dba_err opcode_interpreter::decode_b_num(dba_varinfo info)
 	uint32_t val;
 	int missing;
 
-	if (DBA_VAR_X(info->var) == 33)
+	if (DBA_VAR_X(info->var) == 33 && bitmap)
 		DBA_RUN_OR_GOTO(cleanup, bitmap_next());
 
 	DBA_RUN_OR_GOTO(cleanup, get_bits(info->bit_len, &val));
@@ -988,7 +988,7 @@ dba_err opcode_interpreter_compressed::decode_b_num(dba_varinfo info)
 	uint32_t val;
 	int missing;
 
-	if (DBA_VAR_X(info->var) == 33)
+	if (DBA_VAR_X(info->var) == 33 && bitmap)
 		DBA_RUN_OR_GOTO(cleanup, bitmap_next());
 
 	DBA_RUN_OR_GOTO(cleanup, get_bits(info->bit_len, &val));
