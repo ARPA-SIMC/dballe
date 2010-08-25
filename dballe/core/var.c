@@ -282,6 +282,7 @@ dba_err dba_var_seta_nocopy(dba_var var, dba_var attr)
 	return dba_error_ok();
 }
 
+/* TODO: to be implemented */
 dba_err dba_var_unseta(dba_var var, dba_varcode code);
 
 dba_err dba_var_enqi(dba_var var, int* val)

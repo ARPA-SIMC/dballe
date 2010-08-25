@@ -53,19 +53,19 @@ void to::test<1>()
 	Lua test(
 		"function test() \n"
 		"  if msg:type() ~= 'synop' then return 'type is '..msg:type()..' instead of synop' end \n"
-		"  if msg:size() ~= 16 then return 'size is '..msg:size()..' instead of 16' end \n"
+		"  if msg:size() ~= 17 then return 'size is '..msg:size()..' instead of 17' end \n"
 
 		"  count = 0\n"
 		"  msg:foreach(function(x) count = count + 1 end)\n"
-		"  if count ~= 16 then return 'count is '..count..' instead of 16' end\n"
+		"  if count ~= 17 then return 'count is '..count..' instead of 17' end\n"
 
 		"  count = 0\n"
 		"  msg:foreach(function(x) count = count + x:size() end)\n"
-		"  if count ~= 39 then return 'count is '..count..' instead of 39' end\n"
+		"  if count ~= 43 then return 'count is '..count..' instead of 43' end\n"
 
 		"  count = 0\n"
 		"  msg:foreach(function(x) x:foreach(function(y) count = count + 1 end) end)\n"
-		"  if count ~= 39 then return 'count is '..count..' instead of 39' end\n"
+		"  if count ~= 43 then return 'count is '..count..' instead of 43' end\n"
 
 		"  context = nil\n"
 		"  msg:foreach(function(x) context=x end)\n"
@@ -81,7 +81,7 @@ void to::test<1>()
 		"  if var == nil then return 'temp_2m is nil' end\n"
 		"  if var:enqd() ~= 289.2 then return 'temp_2m is '..var:enqd()..' instead of 289.2' end\n"
 
-		"  var = msg:find('B12001', 103, 2000, 0, 0, 254, 0, 0)\n"
+		"  var = msg:find('B12101', 103, 2000, 0, 0, 254, 0, 0)\n"
 		"  if var == nil then return 'B12001 is nil' end\n"
 		"  if var:enqd() ~= 289.2 then return 'B12001 is '..var:enqd()..' instead of 289.2' end\n"
 		"end \n"

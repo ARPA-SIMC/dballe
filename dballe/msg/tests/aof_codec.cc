@@ -113,6 +113,7 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 			dba_msg_context ctx = bmsg->data[i];
 			for (int j = 0; j < ctx->data_count; j++)
 			{
+				int qc_is_undef = 0;
 				dba_var var = ctx->data[j];
 
 				// Recode BUFR attributes to match the AOF 2-bit values
@@ -122,20 +123,29 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 					dba_var attr = dba_var_attr_iterator_attr(iter);
 					if (dba_var_code(attr) == DBA_VAR(0, 33, 7))
 					{
-						int val;
-						CHECKED(dba_var_enqi(attr, &val));
-						// Recode val using one of the value in the 4 steps of AOF
-						if (val > 75)
-							val = 76;
-						else if (val > 50)
-							val = 51;
-						else if (val > 25)
-							val = 26;
+						if (dba_var_value(attr) == NULL)
+							qc_is_undef = 1;
 						else
-							val = 0;
-						CHECKED(dba_var_seti(attr, val));
+						{
+							int val;
+							CHECKED(dba_var_enqi(attr, &val));
+							// Recode val using one of the value in the 4 steps of AOF
+							if (val > 75)
+								val = 76;
+							else if (val > 50)
+								val = 51;
+							else if (val > 25)
+								val = 26;
+							else
+								val = 0;
+							CHECKED(dba_var_seti(attr, val));
+						}
 					}
 				}
+				/* TODO: enable when unseta will be implemented
+				if (qc_is_undef)
+					CHECKED(dba_var_unseta(var, DBA_VAR(0, 33, 7)));
+					*/
 
 				// Propagate Vertical Significances
 				if (dba_var_code(var) == DBA_VAR(0, 8, 2))
