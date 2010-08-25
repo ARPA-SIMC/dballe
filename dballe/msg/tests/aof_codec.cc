@@ -124,7 +124,9 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 					if (dba_var_code(attr) == DBA_VAR(0, 33, 7))
 					{
 						if (dba_var_value(attr) == NULL)
+						{
 							qc_is_undef = 1;
+						}
 						else
 						{
 							int val;
@@ -142,10 +144,10 @@ void normalise_encoding_quirks(dba_msgs amsgs, dba_msgs bmsgs)
 						}
 					}
 				}
-				/* TODO: enable when unseta will be implemented
 				if (qc_is_undef)
+				{
 					CHECKED(dba_var_unseta(var, DBA_VAR(0, 33, 7)));
-					*/
+				}
 
 				// Propagate Vertical Significances
 				if (dba_var_code(var) == DBA_VAR(0, 8, 2))
