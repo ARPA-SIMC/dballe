@@ -200,6 +200,9 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				/* Remember the height to use later as layer for pressure */
 				if (dba_var_value(var) != NULL)
 					DBA_RUN_OR_RETURN(dba_var_enqd(var, &height_baro));
+				/* Store also in the ana level, so that if the
+				 * pressure later is missing we still have
+				 * access to the value */
 				DBA_RUN_OR_RETURN(dba_msg_set_height_baro_var(msg, var));
 				break;
 

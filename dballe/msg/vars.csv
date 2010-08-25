@@ -1,7 +1,7 @@
 # Name,         Type,   B local,    Level (ltype1, l1, ltype2, l2), Timerange (pind, p1, p2)
 ST_TYPE,        int,    B02001,     257,     -, -, -,    -,      -,     -, Type of station
-ST_DIR,         int,    B01012,     257,     -, -, -,    -,      -,     -, Direction of motion of moving observing platform
-ST_SPEED,       int,    B01013,     257,     -, -, -,    -,      -,     -, Speed of motion of moving observing platform
+ST_DIR,         int,    B01012,       1,     -, -, -,  254,      -,     -, Direction of motion of moving observing platform
+ST_SPEED,       int,    B01013,       1,     -, -, -,  254,      -,     -, Speed of motion of moving observing platform
 ST_NAME,        str,    B01019,     257,     -, -, -,    -,      -,     -, Station or site name
 ST_NAME_ICAO,   str,    B01063,     257,     -, -, -,    -,      -,     -, ICAO location indicator
 REP_MEMO,       str,    B01194,     257,     -, -, -,    -,      -,     -, Report mnemonic
@@ -20,8 +20,11 @@ WIND_INST,      int,    B02002,     257,     -, -, -,    -,      -,     -, Type 
 TEMP_PRECISION, num,    B02005,     257,     -, -, -,    -,      -,     -, Precision of temperature observation
 LATLON_SPEC,    int,    B02070,     257,     -, -, -,    -,      -,     -, Original specification of latitude/longitude
 TIMESIG,        int,    B08021,     257,     -, -, -,    -,      -,     -, Time significance
-SONDE_TYPE,     int,    B02011,     257,     -, -, -,    -,      -,     -, Radiosonde type
-SONDE_METHOD,   int,    B02012,     257,     -, -, -,    -,      -,     -, Radiosonde computational method
+MEAS_EQUIP_TYPE, int,   B02003,       1,     -, -, -,  254,      -,     -, Type of measuring equipment used
+SONDE_TYPE,     int,    B02011,       1,     -, -, -,  254,      -,     -, Radiosonde type
+SONDE_METHOD,   int,    B02012,       1,     -, -, -,  254,      -,     -, Radiosonde computational method
+SONDE_CORRECTION, int,  B02013,       1,     -, -, -,  254,      -,     -, Solar and infrared radiation correction
+SONDE_TRACKING, int,    B02014,       1,     -, -, -,  254,      -,     -, Tracking technique/status of system used
 BLOCK,          int,    B01001,     257,     -, -, -,    -,      -,     -, WMO block number
 STATION,        int,    B01002,     257,     -, -, -,    -,      -,     -, WMO station number
 IDENT,          str,    B01011,     257,     -, -, -,    -,      -,     -, Mobile station identifier

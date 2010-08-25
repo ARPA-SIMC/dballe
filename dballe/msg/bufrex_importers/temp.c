@@ -67,18 +67,32 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0,  1, 11): DBA_RUN_OR_RETURN(dba_msg_set_ident_var(msg, var)); break;
 			case DBA_VAR(0,  1, 12): DBA_RUN_OR_RETURN(dba_msg_set_st_dir_var(msg, var)); break;
 			case DBA_VAR(0,  1, 13): DBA_RUN_OR_RETURN(dba_msg_set_st_speed_var(msg, var)); break;
+			case DBA_VAR(0,  2,  3): DBA_RUN_OR_RETURN(dba_msg_set_meas_equip_type_var(msg, var)); break;
 			case DBA_VAR(0,  2, 11): DBA_RUN_OR_RETURN(dba_msg_set_sonde_type_var(msg, var)); break;
 			case DBA_VAR(0,  2, 12): DBA_RUN_OR_RETURN(dba_msg_set_sonde_method_var(msg, var)); break;
+			case DBA_VAR(0,  2, 13): DBA_RUN_OR_RETURN(dba_msg_set_sonde_correction_var(msg, var)); break;
+			case DBA_VAR(0,  2, 14): DBA_RUN_OR_RETURN(dba_msg_set_sonde_tracking_var(msg, var)); break;
+			case DBA_VAR(0,  8, 21): {
+				int val;
+				if (dba_var_value(var) == NULL)
+					return dba_error_consistency("TEMP time significance is undefined");
+				DBA_RUN_OR_RETURN(dba_var_enqi(var, &val));
+				if (val != 18)
+					return dba_error_consistency("TEMP time significance is %d instead of 18", val);
+				break;
+			}
 			case DBA_VAR(0,  4,  1): DBA_RUN_OR_RETURN(dba_msg_set_year_var(msg, var)); break;
 			case DBA_VAR(0,  4,  2): DBA_RUN_OR_RETURN(dba_msg_set_month_var(msg, var)); break;
 			case DBA_VAR(0,  4,  3): DBA_RUN_OR_RETURN(dba_msg_set_day_var(msg, var)); break;
 			case DBA_VAR(0,  4,  4): DBA_RUN_OR_RETURN(dba_msg_set_hour_var(msg, var)); break;
 			case DBA_VAR(0,  4,  5): DBA_RUN_OR_RETURN(dba_msg_set_minute_var(msg, var)); break;
+			case DBA_VAR(0,  4,  6): DBA_RUN_OR_RETURN(dba_msg_set_second_var(msg, var)); break;
 			case DBA_VAR(0,  5,  1): DBA_RUN_OR_RETURN(dba_msg_set_latitude_var(msg, var)); break;
 			case DBA_VAR(0,  5,  2): DBA_RUN_OR_RETURN(dba_msg_set_latitude_var(msg, var)); break;
 			case DBA_VAR(0,  6,  1): DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var)); break;
 			case DBA_VAR(0,  6,  2): DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var)); break;
 			case DBA_VAR(0,  7,  1): DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var)); break;
+			case DBA_VAR(0,  7, 30): DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var)); break;
 
 			case DBA_VAR(0, 20, 10): DBA_RUN_OR_RETURN(dba_msg_set_cloud_n_var(msg, var)); break;
 			case DBA_VAR(0, 20, 11): DBA_RUN_OR_RETURN(dba_msg_set_cloud_nh_var(msg, var)); break;
