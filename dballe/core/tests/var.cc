@@ -199,6 +199,40 @@ void to::test<5>()
 	dba_var_delete(var);
 }
 
+// Test attributes
+template<> template<>
+void to::test<6>()
+{
+	dba_var var;
+	dba_varinfo info;
+
+	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 33, 198), &info));
+	CHECKED(dba_var_create(info, &var));
+
+	// No attrs at the beginning
+	dba_var attr;
+	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 7), &attr));
+	gen_ensure(attr == NULL);
+
+	// Set an attr
+	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 7), &attr));
+	CHECKED(dba_var_seti(attr, 42));
+	CHECKED(dba_var_seta_nocopy(var, attr));
+
+	// Query it back
+	attr = NULL;
+	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 7), &attr));
+	gen_ensure(attr != NULL);
+	gen_ensure_equals(string(dba_var_value(attr)), string("42"));
+
+	// Unset it
+	CHECKED(dba_var_unseta(var, DBA_VAR(0, 33, 7)));
+
+	// Query it back: it should be NULL
+	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 7), &attr));
+	gen_ensure(attr == NULL);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

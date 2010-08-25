@@ -282,8 +282,37 @@ dba_err dba_var_seta_nocopy(dba_var var, dba_var attr)
 	return dba_error_ok();
 }
 
-/* TODO: to be implemented */
-dba_err dba_var_unseta(dba_var var, dba_varcode code);
+dba_err dba_var_unseta(dba_var var, dba_varcode code)
+{
+	dba_var_attr cur;
+
+	/* Handle no attrs */
+	if (var->attrs == NULL)
+		return dba_error_ok();
+
+	/* Handle the head */
+	if (dba_var_code(var->attrs->var) == code)
+	{
+		dba_var_attr next = var->attrs->next;
+		dba_var_delete(var->attrs->var);
+		free(var->attrs);
+		var->attrs = next;
+		return dba_error_ok();
+	}
+
+	/* Handle the tail */
+	for (cur = var->attrs; cur->next != NULL; cur = cur->next)
+		if (dba_var_code(cur->next->var) == code)
+		{
+			dba_var_attr next = cur->next->next;
+			dba_var_delete(cur->next->var);
+			free(cur->next);
+			cur->next = next;
+			return dba_error_ok();
+		}
+	
+	return dba_error_ok();
+}
 
 dba_err dba_var_enqi(dba_var var, int* val)
 {
