@@ -80,7 +80,7 @@ dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				ltype = 102;
 				l1 = lround((double)geopot / 9.80665);
 			}
-			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 3), ltype, l1, 0, 0, 254, 0, 0));
+			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 8), ltype, l1, 0, 0, 254, 0, 0));
 		}
 		if (ltype == -1)
 			return dba_error_notfound("looking for pressure or height in a BUFR/CREX PILOT message");
