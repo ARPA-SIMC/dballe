@@ -32,19 +32,25 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	double surface_press = -1;
 	dba_var surface_press_var = NULL;
 
-	switch (raw->localsubtype)
+	switch (raw->subtype)
 	{
-		case 0:
-			/* Guess looking at the variables */
-			if (sset->vars_count > 1 && dba_var_code(sset->vars[0]) == DBA_VAR(0, 1, 11))
-				msg->type = MSG_TEMP_SHIP;
-			else
-				msg->type = MSG_TEMP;
+		case 4: msg->type = MSG_TEMP; break;
+		case 255:
+			switch (raw->localsubtype)
+			{
+				case 0:
+					/* Guess looking at the variables */
+					if (sset->vars_count > 1 && dba_var_code(sset->vars[0]) == DBA_VAR(0, 1, 11))
+						msg->type = MSG_TEMP_SHIP;
+					else
+						msg->type = MSG_TEMP;
+					break;
+				case 101: msg->type = MSG_TEMP; break;
+				case 92:
+				case 102: msg->type = MSG_TEMP_SHIP; break;
+				default: msg->type = MSG_GENERIC; break;
+			}
 			break;
-		case 101: msg->type = MSG_TEMP; break;
-		case 92:
-		case 102: msg->type = MSG_TEMP_SHIP; break;
-		default: msg->type = MSG_GENERIC; break;
 	}
 
 	for (i = 0; i < sset->vars_count; i++)
