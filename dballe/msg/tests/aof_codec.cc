@@ -23,6 +23,7 @@
 #include <dballe/msg/aof_codec.h>
 #include <dballe/msg/file.h>
 #include <dballe/msg/context.h>
+#include <math.h>
 
 namespace tut {
 using namespace tut_dballe;
@@ -420,6 +421,33 @@ void to::test<2>()
 	test_untag();
 }
 
+/* Round temperatures to 1 decimal digit, as transition from CREX does not
+ * preserve more than that */
+static void roundtemps(dba_msgs msgs)
+{
+	double val;
+	for (int m = 0; m < msgs->len; ++m)
+	{
+		dba_msg msg = msgs->msgs[m];
+		for (int c = 0; c < msg->data_count; ++c)
+		{
+			dba_msg_context ctx = msg->data[c];
+			for (int v = 0; v < ctx->data_count; ++v)
+			{
+				dba_var var = ctx->data[v];
+				switch (dba_var_code(var))
+				{
+					case DBA_VAR(0, 12, 101):
+					case DBA_VAR(0, 12, 103):
+						CHECKED(dba_var_enqd(var, &val));
+						CHECKED(dba_var_setd(var, round(val*10.0)/10.0));
+						break;
+				}
+			}
+		}
+	}
+}
+
 // Reencode to CREX and compare
 template<> template<>
 void to::test<3>()
@@ -459,6 +487,8 @@ void to::test<3>()
 
 		strip_attributes(amsgs);
 		normalise_encoding_quirks(amsgs, bmsgs);
+		roundtemps(amsgs);
+		roundtemps(bmsgs);
 
 		// Compare the two dba_msg
 		int diffs = 0;
