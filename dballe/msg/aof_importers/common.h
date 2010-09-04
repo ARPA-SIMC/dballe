@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ static inline int get_conf6(uint32_t conf)
 	return get_conf2(conf >> 3);
 }
 
-/* Convert Kelvin into Celsius */
+/* Convert Kelvin from AOF to Kelvins */
 static inline double totemp(double k) { return k / 10.0; }
 
 /* Dump a word */
