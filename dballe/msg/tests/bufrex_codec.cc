@@ -23,6 +23,7 @@
 #include <dballe/msg/file.h>
 #include <dballe/msg/bufrex_codec.h>
 #include <dballe/msg/msg.h>
+#include <dballe/msg/context.h>
 #include <cstring>
 
 namespace tut {
@@ -629,11 +630,20 @@ void to::test<14>()
 	double val;
 
 	gen_ensure_equals(msg->type, MSG_TEMP);
-	gen_ensure_equals(msgs->len, 26);
+	gen_ensure_equals(msgs->len, 1);
 
-	//msg = msgs->msgs[4];
-	//gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
-	//CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
+	// Ensure we decoded all the sounding levels
+	int pres_lev_count = 0;
+	for (int i = 0; i < msg->data_count; ++i)
+		if (msg->data[i]->ltype1 == 100)
+			++pres_lev_count;
+	gen_ensure_equals(pres_lev_count, 56);
+
+	// Ensure we got the wind shear section
+	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 61), 100, 35560, 0, 0, 254, 0, 0)) != NULL);
+	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 13.1);
+	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 62), 100, 35560, 0, 0, 254, 0, 0)) != NULL);
+	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 5.6);
 
 	dba_msgs_delete(msgs);
 }
