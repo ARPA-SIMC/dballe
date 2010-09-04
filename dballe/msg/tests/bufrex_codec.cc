@@ -638,7 +638,7 @@ void to::test<14>()
 	dba_msgs_delete(msgs);
 }
 
-/* Test import of WMO GTS synop messages */
+/* Test import of WMO GTS temp messages */
 template<> template<>
 void to::test<15>()
 {
@@ -657,7 +657,7 @@ void to::test<15>()
 	dba_msgs_delete(msgs);
 }
 
-/* Test import of WMO GTS synop messages */
+/* Test import of WMO GTS temp messages */
 template<> template<>
 void to::test<16>()
 {
