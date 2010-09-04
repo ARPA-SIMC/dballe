@@ -714,8 +714,14 @@ void dba_var_diff(dba_var var1, dba_var var2, int* diffs, FILE* out)
 				for (cur2 = var2->attrs; cur2 != NULL; cur2 = cur2->next)
 					if (dba_var_code(cur2->var) == dba_var_code(cur->var))
 					{
+						int olddiffs = *diffs;
 						found = 1;
 						dba_var_diff(cur->var, cur2->var, diffs, out);
+						if (*diffs != olddiffs)
+						{
+							fprintf(out, "  comparing attr of variable ");
+							dba_var_print(cur->var, out);
+						}
 						break;
 					}
 
