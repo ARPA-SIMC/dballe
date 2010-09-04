@@ -36,19 +36,23 @@
  004004 HOUR                                                             HOUR                       0            0   5 HOUR                      0          2
  004005 MINUTE                                                           MINUTE                     0            0   6 MINUTE                    0          2
  004006 SECOND                                                           SECOND                     0            0   6 SECOND                    0          2
+ 004086 LONG TIME PERIOD OR DISPLACEMENT                                 SECOND                     0        -8192  15 SECOND                    0          5
  004192 [SIM] Time range type                                            NUMERIC                    0            0  10 NUMERIC                   0          4
  004193 [SIM] Time range P1                                              NUMERIC                    0   -536870912  31 NUMERIC                   0         10
  004194 [SIM] Time range P2                                              NUMERIC                    0   -536870912  31 NUMERIC                   0         10
  005001 LATITUDE (HIGH ACCURACY)                                         DEGREE                     5     -9000000  25 DEGREE                    5          7
+ 005015 LATITUDE DISPLACEMENT (HIGH ACCURACY)                            DEGREE                     5     -9000000  25 DEGREE                    5          7
  005021 BEARING OR AZIMUTH                                               DEGREE TRUE                2            0  16 DEGREE TRUE               2          5
  005022 SOLAR AZIMUTH                                                    DEGREE TRUE                2            0  16 DEGREE TRUE               2          5
  005040 ORBIT NUMBER                                                     NUMERIC                    0            0  24 NUMERIC                   0          8
  005041 SCAN LINE NUMBER                                                 NUMERIC                    0            0   8 NUMERIC                   0          3
  005043 FIELD OF VIEW NUMBER                                             NUMERIC                    0            0   8 NUMERIC                   0          3
  006001 LONGITUDE (HIGH ACCURACY)                                        DEGREE                     5    -18000000  26 DEGREE                    5          8
+ 006015 LONGITUDE DISPLACEMENT (HIGH ACCURACY)                           DEGREE                     5    -18000000  26 DEGREE                    5          8
  007001 HEIGHT OF STATION (SEE NOTE 1)                                   M                          0         -400  15 M                         0          5
  007002 HEIGHT OR ALTITUDE                                               M                         -1          -40  16 M                        -1          5
  007004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
+ 007007 HEIGHT                                                           M                          0        -1000  17 M                         0          6
  007024 SATELLITE ZENITH ANGLE                                           DEGREE                     2        -9000  15 DEGREE                    2          5
  007025 SOLAR ZENITH ANGLE                                               DEGREE                     2        -9000  15 DEGREE                    2          5
  007031 HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL (SEE NOTE 4)            M                          1       - 4000  17 M                         1          5
@@ -60,10 +64,11 @@
  008002 VERTICAL SIGNIFICANCE (SURFACE OBSERVATIONS)                     CODE TABLE 8002            0            0   6 CODE TABLE 8002           0          2
  008004 PHASE OF AIRCRAFT FLIGHT                                         CODE TABLE 8004            0            0   3 CODE TABLE 8004           0          1
  008021 TIME SIGNIFICANCE                                                CODE TABLE 8021            0            0   5 CODE TABLE 8021           0          2
+ 008042 EXTENDED VERTICAL SOUNDING SIGNIFICANCE                          FLAG TABLE 8042            0            0  18 FLAG TABLE 8042           0          6
  008044 (VAL) CAS REGISTRY NUMBER                                        CCITTIA5                   0            0  88 CHARACTER                 0         11 
- 010003 GEOPOTENTIAL                                                     M**2/S**2                  0        -4000  24 M**2/S**2                 0          7
  010004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
  010007 HEIGHT                                                           M                          0        -1000  17 M                         0          6
+ 010008 GEOPOTENTIAL                                                     M**2/S**2                  0       -10000  20 M**2/S**2                 0          7
  010009 GEOPOTENTIAL HEIGHT                                              GPM                        0        -1000  17 GPM                       0          5
  010051 PRESSURE REDUCED TO MEAN SEA LEVEL                               PA                        -1            0  14 PA                       -1          5
  010052 ALTIMETER SETTING (QNH)                                          PA                        -1            0  14 PA                       -1          5
@@ -80,6 +85,8 @@
  011017 EXTREME CLOCKWISE WIND DIRECTION OF A VARIABLE WIND              DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011041 MAXIMUM WIND GUST SPEED                                          M/S                        1            0  12 M/S                       1          4
  011043 MAXIMUM WIND GUST DIRECTION                                      DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
+ 011061 ABSOLUTE WIND SHEAR IN 1 KM LAYER BELOW                          M/S                        1            0  12 M/S                       1          4
+ 011062 ABSOLUTE WIND SHEAR IN 1 KM LAYER ABOVE                          M/S                        1            0  12 M/S                       1          4
  012002 WET-BULB TEMPERATURE                                             K                          1            0  12 K                         1          4
  012030 SOIL TEMPERATURE                                                 K                          1            0  12 K                         1          4
  012061 SKIN TEMPERATURE                                                 K                          1            0  12 K                         1          4

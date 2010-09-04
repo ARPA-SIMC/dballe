@@ -62,6 +62,7 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 
 		switch (dba_var_code(var))
 		{
+/* Identification of launch site and instrumentation */
 			case DBA_VAR(0,  1,  1): DBA_RUN_OR_RETURN(dba_msg_set_block_var(msg, var)); break;
 			case DBA_VAR(0,  1,  2): DBA_RUN_OR_RETURN(dba_msg_set_station_var(msg, var)); break;
 			case DBA_VAR(0,  1, 11): DBA_RUN_OR_RETURN(dba_msg_set_ident_var(msg, var)); break;
@@ -72,6 +73,7 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0,  2, 12): DBA_RUN_OR_RETURN(dba_msg_set_sonde_method_var(msg, var)); break;
 			case DBA_VAR(0,  2, 13): DBA_RUN_OR_RETURN(dba_msg_set_sonde_correction_var(msg, var)); break;
 			case DBA_VAR(0,  2, 14): DBA_RUN_OR_RETURN(dba_msg_set_sonde_tracking_var(msg, var)); break;
+/* Date/time of launch */
 			case DBA_VAR(0,  8, 21): {
 				int val;
 				if (dba_var_value(var) == NULL)
@@ -87,13 +89,23 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			case DBA_VAR(0,  4,  4): DBA_RUN_OR_RETURN(dba_msg_set_hour_var(msg, var)); break;
 			case DBA_VAR(0,  4,  5): DBA_RUN_OR_RETURN(dba_msg_set_minute_var(msg, var)); break;
 			case DBA_VAR(0,  4,  6): DBA_RUN_OR_RETURN(dba_msg_set_second_var(msg, var)); break;
+/* Horizontal and vertical coordinates of launch site */
 			case DBA_VAR(0,  5,  1): DBA_RUN_OR_RETURN(dba_msg_set_latitude_var(msg, var)); break;
 			case DBA_VAR(0,  5,  2): DBA_RUN_OR_RETURN(dba_msg_set_latitude_var(msg, var)); break;
 			case DBA_VAR(0,  6,  1): DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var)); break;
 			case DBA_VAR(0,  6,  2): DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var)); break;
 			case DBA_VAR(0,  7,  1): DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var)); break;
 			case DBA_VAR(0,  7, 30): DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var)); break;
-
+			case DBA_VAR(0,  7, 31): DBA_RUN_OR_RETURN(dba_msg_set_height_baro_var(msg, var)); break;
+			case DBA_VAR(0,  7,  7): DBA_RUN_OR_RETURN(dba_msg_set_height_release_var(msg, var)); break;
+			case DBA_VAR(0, 33, 24): DBA_RUN_OR_RETURN(dba_msg_set_station_height_quality_var(msg, var)); break;
+/* Cloud information reported with vertical soundings */
+			case DBA_VAR(0,  8, 2): {
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 8, 2),
+							256, 0, 258, 0,
+							254, 0, 0));
+				break;
+			}
 			case DBA_VAR(0, 20, 10): DBA_RUN_OR_RETURN(dba_msg_set_cloud_n_var(msg, var)); break;
 			case DBA_VAR(0, 20, 11): DBA_RUN_OR_RETURN(dba_msg_set_cloud_nh_var(msg, var)); break;
 			case DBA_VAR(0, 20, 13): DBA_RUN_OR_RETURN(dba_msg_set_cloud_hh_var(msg, var)); break;
@@ -105,16 +117,11 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					case 2: DBA_RUN_OR_RETURN(dba_msg_set_cloud_ch_var(msg, var)); break;
 				}
 				break;
-/*
-			case DBA_VAR(0, 31,  1):
-		    {
-				int size;
-				DBA_RUN_OR_RETURN(dba_var_enqi(var, &size));
-				DBA_RUN_OR_RETURN(dba_msg_sounding_resize_obs(so, size));
-				obs = -1;
-				break;
-			}
-*/
+/* Temperature, dew-point and wind data at pressure levels */
+			// Long time period or displacement (since launch time)
+			case DBA_VAR(0,  4, 86): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 4, 86), 100, press, 0, 0, 254, 0, 0)); break;
+			// Extended vertical sounding significance
+			case DBA_VAR(0,  8, 42): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 8, 42), 100, press, 0, 0, 254, 0, 0)); break;
 			// Pressure
 			case DBA_VAR(0,  7,  4):
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
@@ -134,17 +141,28 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				break;
 			}
 			// Geopotential
-			case DBA_VAR(0, 10,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 3), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 10,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 8), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 10,  8): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 8), 100, press, 0, 0, 254, 0, 0)); break;
+			// Latitude displacement
+			case DBA_VAR(0,  5, 15): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 5, 15), 100, press, 0, 0, 254, 0, 0)); break;
+			// Longitude displacement
+			case DBA_VAR(0,  6, 15): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 6, 15), 100, press, 0, 0, 254, 0, 0)); break;
 			// Dry bulb temperature
 			case DBA_VAR(0, 12,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 101), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 12, 101): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 101), 100, press, 0, 0, 254, 0, 0)); break;
 			// Wet bulb temperature
 			case DBA_VAR(0, 12,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 2), 100, press, 0, 0, 254, 0, 0)); break;
 			// Dew point temperature
 			case DBA_VAR(0, 12,  3): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 103), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 12, 103): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 12, 103), 100, press, 0, 0, 254, 0, 0)); break;
 			// Wind direction
 			case DBA_VAR(0, 11,  1): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1), 100, press, 0, 0, 254, 0, 0)); break;
 			// Wind speed
 			case DBA_VAR(0, 11,  2): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 2), 100, press, 0, 0, 254, 0, 0)); break;
+/* Wind shear data at a pressure level */
+			case DBA_VAR(0, 11, 61): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 61), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0, 11, 62): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 62), 100, press, 0, 0, 254, 0, 0)); break;
+
 			/*
 			default:
 				fprintf(stderr, "Unhandled variable: "); dba_var_print(var, stderr);

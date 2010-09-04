@@ -76,7 +76,7 @@ dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 		{
 /* Context items */
 			case DBA_VAR(0,  7, 32):
-				/* Height to use later as layer for what needs it */
+				/* Height to use later as level for what needs it */
 				if (dba_var_value(var) != NULL)
 					DBA_RUN_OR_RETURN(dba_var_enqd(var, &height_sensor));
 				else
