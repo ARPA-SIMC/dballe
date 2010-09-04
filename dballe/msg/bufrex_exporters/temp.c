@@ -112,8 +112,16 @@ static dba_err run_template(dba_msg msg, bufrex_subset dst, struct template* tpl
 		if (tpl[i].var < 0)
 		{
 			/* Special handling for vertical sounding significance */
-			if (tpl[i].code == DBA_VAR(0, 8, 2))
-				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, -tpl[i].var));
+			dba_var var = dba_msg_find(msg, DBA_VAR(0, 8, 2),
+					256, 0, 258, 0,
+					254, 0, 0);
+			if (var != NULL)
+			{
+				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
+			} else {
+				if (tpl[i].code == DBA_VAR(0, 8, 2))
+					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, -tpl[i].var));
+			}
 		}
 		else
 		{
