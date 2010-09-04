@@ -127,7 +127,15 @@ dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			// Long time period or displacement (since launch time)
 			case DBA_VAR(0,  4, 86): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 4, 86), 100, press, 0, 0, 254, 0, 0)); break;
 			// Extended vertical sounding significance
-			case DBA_VAR(0,  8, 42): DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 8, 42), 100, press, 0, 0, 254, 0, 0)); break;
+			case DBA_VAR(0,  8, 42): {
+				dba_var next;
+				if (i == sset->vars_count-1) return dba_error_consistency("B08042 found at end of message");
+				next = sset->vars[i+1];
+				if (dba_var_code(next) == DBA_VAR(0, 7, 4))
+					// Pressure is reported later, we need to look ahead to compute the right level
+					DBA_RUN_OR_RETURN(dba_var_enqd(next, &press));
+				DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 8, 42), 100, press, 0, 0, 254, 0, 0)); break;
+			}
 			// Pressure
 			case DBA_VAR(0,  7,  4):
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));

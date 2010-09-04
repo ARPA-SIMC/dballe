@@ -645,6 +645,11 @@ void to::test<14>()
 	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 62), 100, 35560, 0, 0, 254, 0, 0)) != NULL);
 	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 5.6);
 
+	// Ensure the extended vertical significances are put in the right
+	// level, since they appear before the pressure context
+	gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 8, 42), 100, 100000, 0, 0, 254, 0, 0)) != NULL);
+	CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 65536);
+
 	dba_msgs_delete(msgs);
 }
 
@@ -658,7 +663,15 @@ void to::test<15>()
 	double val;
 
 	gen_ensure_equals(msg->type, MSG_TEMP);
-	gen_ensure_equals(msgs->len, 26);
+	gen_ensure_equals(msgs->len, 6);
+
+	// Ensure we decoded all the sounding levels
+	int pres_lev_count = 0;
+	for (int i = 0; i < msg->data_count; ++i)
+		if (msg->data[i]->ltype1 == 100)
+			++pres_lev_count;
+	gen_ensure_equals(pres_lev_count, 45);
+
 
 	//msg = msgs->msgs[4];
 	//gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
@@ -677,7 +690,14 @@ void to::test<16>()
 	double val;
 
 	gen_ensure_equals(msg->type, MSG_TEMP);
-	gen_ensure_equals(msgs->len, 26);
+	gen_ensure_equals(msgs->len, 1);
+
+	// Ensure we decoded all the sounding levels
+	int pres_lev_count = 0;
+	for (int i = 0; i < msg->data_count; ++i)
+		if (msg->data[i]->ltype1 == 100)
+			++pres_lev_count;
+	gen_ensure_equals(pres_lev_count, 26);
 
 	//msg = msgs->msgs[4];
 	//gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
