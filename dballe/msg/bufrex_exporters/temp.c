@@ -173,6 +173,7 @@ static dba_err add_sounding_levels(dba_msg msg, bufrex_subset dst, dba_varcode* 
 			dba_varcode src = tpl[j];
 			switch (src)
 			{
+				case DBA_VAR(0, 10, 3): src = DBA_VAR(0, 10,   8); break;
 				case DBA_VAR(0, 12, 1): src = DBA_VAR(0, 12, 101); break;
 				case DBA_VAR(0, 12, 3): src = DBA_VAR(0, 12, 103); break;
 			}

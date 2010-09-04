@@ -105,7 +105,7 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 #endif
 			// Rounding the converted height->geopotential to preserve the
 			// correct amount of significant digits
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 3),
+			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 8),
 						round(((double)OBS(os + 5) - 1000)*9.80665/10)*10, get_conf6((OBS(os + 7) >> 18) & 0x3f),
 						100, press, 0, 0, 254, 0, 0));
 #if 0
