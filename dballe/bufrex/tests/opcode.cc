@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,15 @@
 #include <test-utils-bufrex.h>
 #include <dballe/bufrex/opcode.h>
 
+using namespace dballe;
+using namespace bufrex;
+using namespace std;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct opcode_shar
 {
-	TestBufrexEnv testenv;
+	bufrex::tests::TestBufrexEnv testenv;
 
 	opcode_shar()
 	{
@@ -58,39 +61,18 @@ TESTGRP(opcode);
 template<> template<>
 void to::test<1>()
 {
-	bufrex_opcode ch0 = NULL;
-	bufrex_opcode ch1 = NULL;
-	bufrex_opcode ch2 = NULL;
-	bufrex_opcode ch3 = NULL;
+	vector<Varcode> ch0_vec;
+	ch0_vec.push_back('A');
+	ch0_vec.push_back('n');
+	ch0_vec.push_back('t');
 
-	CHECK_CHAIN(ch0, "");
-	CHECKED(bufrex_opcode_append(&ch0, 'A'));
-	CHECK_CHAIN(ch0, "A");
-	CHECKED(bufrex_opcode_append(&ch0, 'n'));
-	CHECK_CHAIN(ch0, "An");
-	CHECKED(bufrex_opcode_append(&ch0, 't'));
-	CHECK_CHAIN(ch0, "Ant");
+	Opcodes ch0(ch0_vec);
+	ensure_equals(ch0.head(), 'A');
+	ensure_equals(ch0.next().head(), 'n');
+	ensure_equals(ch0.next().next().head(), 't');
+	ensure_equals(ch0.next().next().next().head(), 0);
 
-	CHECKED(bufrex_opcode_append(&ch1, 'a'));
-	CHECK_CHAIN(ch1, "a");
-	CHECKED(bufrex_opcode_append(&ch1, 'n'));
-	CHECK_CHAIN(ch1, "an");
-	CHECKED(bufrex_opcode_append(&ch1, 'i'));
-	CHECK_CHAIN(ch1, "ani");
-
-	CHECKED(bufrex_opcode_prepend(&ch1, ch0));
-	CHECK_CHAIN(ch0, "Ant");
-	CHECK_CHAIN(ch1, "Antani");
-
-	CHECKED(bufrex_opcode_join(&ch0, ch1));
-	CHECK_CHAIN(ch0, "AntAntani");
-	CHECK_CHAIN(ch1, "Antani");
-
-	CHECKED(bufrex_opcode_pop(&ch0, &ch2));
-	CHECK_CHAIN(ch0, "ntAntani");
-	CHECK_CHAIN(ch1, "Antani");
-	CHECK_CHAIN(ch2, "A");
-
+#if 0 // TODO when implementing subchains
 	CHECKED(bufrex_opcode_pop_n(&ch0, &ch3, 3));
 	/*
 	PRINT_CHAIN(ch0);
@@ -115,6 +97,7 @@ void to::test<1>()
 
 	bufrex_opcode_delete(&ch2);
 	bufrex_opcode_delete(&ch3);
+#endif
 
 #if 0
 	/* Set the location where the tables can be found */

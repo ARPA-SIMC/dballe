@@ -21,11 +21,12 @@
 
 #include "config.h"
 
-#define _ISOC99_SOURCE  // For round()
-
-#include <dballe/core/conv.h>
 #include "opcode.h"
 #include "msg.h"
+
+// #define _ISOC99_SOURCE  // For round()
+
+#include <dballe/core/conv.h>
 
 #include <stdio.h>
 #include <netinet/in.h>
@@ -49,7 +50,7 @@ For encoding our generics:
 #define DEFAULT_TABLE_ID "B000000002551200"
 */
 
-/* #define TRACE_ENCODER */
+// #define TRACE_ENCODER
 
 #ifdef TRACE_ENCODER
 #define TRACE(...) fprintf(stderr, __VA_ARGS__)
@@ -59,13 +60,31 @@ For encoding our generics:
 #define IFTRACE if (0)
 #endif
 
+using namespace dballe;
+using namespace std;
 
-struct _encoder
+namespace bufrex {
+
+namespace {
+/// Iterate variables in a subset, one at a time
+struct Varqueue
+{
+	const Subset& subset;
+	unsigned cur;
+
+	Varqueue(const Subset& subset) : subset(subset), cur(0) {}
+
+	const bool empty() const { return cur >= subset.size(); }
+	const Var& peek() const { return subset[cur]; }
+	const Var& pop() { return subset[cur++]; }
+};
+
+struct Encoder
 {
 	/* Input message data */
-	bufrex_msg in;
+	const BufrMsg& in;
 	/* Output decoded variables */
-	dba_rawmsg out;
+	Rawmsg& out;
 
 	/* We have to memorise offsets rather than pointers, because e->out->buf
 	 * can get reallocated during the encoding */
@@ -86,41 +105,112 @@ struct _encoder
 	/* Current value of width change from C modifier */
 	int c_width_change;
 
-	/* List of opcodes to encode */
-	bufrex_opcode ops;
-	/* Current subset we are encoding */
-	bufrex_subset subset;
-	/* Pointed to next variable not yet encoded in the variable array */
-	dba_var* nextvar;
-	/* Number of variables left to encode */
-	int vars_left;
-
 	/* Support for binary append */
 	unsigned char pbyte;
 	int pbyte_len;
 
+	/* Subset we are encoding */
+	const Subset* subset;
+
 	/* Set these to non-null if we are encoding a data present bitmap */
-	dba_var bitmap_to_encode;
+	const Var* bitmap_to_encode;
 	int bitmap_encode_cur;
 	int bitmap_use_cur;
 	int bitmap_subset_cur;
+
+	Encoder(const BufrMsg& in, Rawmsg& out)
+		: in(in), out(out),
+		  sec1_start(0), sec2_start(0), sec3_start(0), sec4_start(0), sec5_start(0),
+		  c_scale_change(0), c_width_change(0), pbyte(0), pbyte_len(0),
+		  bitmap_to_encode(0), bitmap_encode_cur(0), bitmap_use_cur(0), bitmap_subset_cur(0)
+	{
+	}
+
+	void flush();
+
+	void add_bits(uint32_t val, int n);
+	void raw_append(const char* str, int len);
+	void append_short(unsigned short val);
+	void append_byte(unsigned char val);
+
+	void bitmap_next();
+
+	void encode_sec1ed3();
+	void encode_sec1ed4();
+	void encode_sec2();
+	void encode_sec3();
+	void encode_sec4();
+
+	void encode_data_section(const Opcodes& ops, Varqueue& vars);
+	unsigned encode_b_data(const Opcodes& ops, Varqueue& vars);
+	unsigned encode_r_data(const Opcodes& ops, Varqueue& vars, const Var* bitmap = NULL);
+	unsigned encode_c_data(const Opcodes& ops, Varqueue& vars);
+	unsigned encode_bitmap(const Opcodes& ops, Varqueue& vars);
+
+	// Run the encoding, copying data from in to out
+	void run();
 };
-typedef struct _encoder* encoder;
 
-static dba_err encoder_create(encoder* res)
+/* Write all bits left to the buffer, padding with zeros */
+void Encoder::flush()
 {
-	if ((*res = (encoder)calloc(1, sizeof(struct _encoder))) == NULL)
-		return dba_error_alloc("allocating a new crex encoder");
-	return dba_error_ok();
+	if (pbyte_len == 0) return;
+
+	while (pbyte_len < 8)
+	{
+		pbyte <<= 1;
+		pbyte_len++;
+	}
+
+	out.append((const char*)&pbyte, 1);
+	pbyte_len = 0;
+	pbyte = 0;
 }
 
-static void encoder_delete(encoder res)
+/**
+ * Append n bits from 'val'.  n must be <= 32.
+ */
+void Encoder::add_bits(uint32_t val, int n)
 {
-	if (res->ops != NULL)
-		bufrex_opcode_delete(&(res->ops));
-	free(res);
+	/* Mask for reading data out of val */
+	uint32_t mask = 1 << (n - 1);
+	int i;
+
+	for (i = 0; i < n; i++) 
+	{
+		pbyte <<= 1;
+		pbyte |= ((val & mask) != 0) ? 1 : 0;
+		val <<= 1;
+		pbyte_len++;
+
+		if (pbyte_len == 8) 
+			flush();
+	}
+#if 0
+	IFTRACE {
+		/* Prewrite it when tracing, to allow to dump the buffer as it's
+		 * written */
+		while (e->out->len + 1 > e->out->alloclen)
+			DBA_RUN_OR_RETURN(dba_rawmsg_expand_buffer(e->out));
+		e->out->buf[e->out->len] = e->pbyte << (8 - e->pbyte_len);
+	}
+#endif
 }
 
+void Encoder::raw_append(const char* str, int len)
+{
+	out.append(str, len);
+}
+
+void Encoder::append_short(unsigned short val)
+{
+	add_bits(val, 16);
+}
+
+void Encoder::append_byte(unsigned char val)
+{
+	add_bits(val, 8);
+}
 #if 0
 /* Dump 'count' bits of 'buf', starting at the 'ofs-th' bit */
 static dba_err dump_bits(void* buf, int ofs, int count, FILE* out)
@@ -150,267 +240,119 @@ static dba_err dump_bits(void* buf, int ofs, int count, FILE* out)
 #endif
 
 
-/* Write all bits left to the buffer, padding with zeros */
-static dba_err encoder_flush(encoder e)
-{
-	if (e->pbyte_len == 0)
-		return dba_error_ok();
-
-	while (e->pbyte_len < 8)
-	{
-		e->pbyte <<= 1;
-		e->pbyte_len++;
-	}
-
-	while (e->out->len + 1 > e->out->alloclen)
-		DBA_RUN_OR_RETURN(dba_rawmsg_expand_buffer(e->out));
-	e->out->buf[e->out->len++] = e->pbyte;
-	e->pbyte_len = 0;
-	e->pbyte = 0;
-
-	return dba_error_ok();
-}
-
-/**
- * Append n bits from 'val'.  n must be <= 32.
- */
-static dba_err encoder_add_bits(encoder e, uint32_t val, int n)
-{
-	/* Mask for reading data out of val */
-	uint32_t mask = 1 << (n - 1);
-	int i;
-
-	for (i = 0; i < n; i++) 
-	{
-		e->pbyte <<= 1;
-		e->pbyte |= ((val & mask) != 0) ? 1 : 0;
-		val <<= 1;
-		e->pbyte_len++;
-
-		if (e->pbyte_len == 8) 
-			DBA_RUN_OR_RETURN(encoder_flush(e));
-	}
-#if 0
-	IFTRACE {
-		/* Prewrite it when tracing, to allow to dump the buffer as it's
-		 * written */
-		while (e->out->len + 1 > e->out->alloclen)
-			DBA_RUN_OR_RETURN(dba_rawmsg_expand_buffer(e->out));
-		e->out->buf[e->out->len] = e->pbyte << (8 - e->pbyte_len);
-	}
-#endif
-
-	return dba_error_ok();
-}
-
-static dba_err encoder_raw_append(encoder e, const char* str, int len)
-{
-	while (e->out->len + len > e->out->alloclen)
-		DBA_RUN_OR_RETURN(dba_rawmsg_expand_buffer(e->out));
-	memcpy(e->out->buf + e->out->len, str, len);
-	e->out->len += len;
-	return dba_error_ok();
-}
-
-static dba_err encoder_append_short(encoder e, unsigned short val)
-{
-	return encoder_add_bits(e, val, 16);
-}
-static dba_err encoder_append_byte(encoder e, unsigned char val)
-{
-	return encoder_add_bits(e, val, 8);
-}
-
-#if 0
-static dba_err bufr_message_append_byte(bufr_message msg, unsigned char val)
-{
-	while (msg->len + 1 > msg->alloclen)
-		DBA_RUN_OR_RETURN(dba_message_expand_buffer(msg));
-	memcpy(msg->buf + msg->len, &val, 1);
-	msg->len += 1;
-	return dba_error_ok();
-}
-
-static dba_err bufr_message_append_short(bufr_message msg, unsigned short val)
-{
-	uint16_t encval = htons(val);
-	while (msg->len + 2 > msg->alloclen)
-		DBA_RUN_OR_RETURN(dba_message_expand_buffer(msg));
-	memcpy(msg->buf + msg->len, &encval, 2);
-	msg->len += 2;
-	return dba_error_ok();
-}
-
-static dba_err bufr_message_append_24bit(bufr_message msg, unsigned int val)
-{
-	uint32_t encval = htonl(val);
-	while (msg->len + 3 > msg->alloclen)
-		DBA_RUN_OR_RETURN(dba_message_expand_buffer(msg));
-	memcpy(msg->buf + msg->len, ((char*)&encval) + 1, 3);
-	msg->len += 3;
-	return dba_error_ok();
-}
-#endif
-
-
-static dba_err encoder_encode_data_section(encoder e);
-
-static dba_err encoder_encode_sec1ed3(encoder e)
+void Encoder::encode_sec1ed3()
 {
 	/* Encode bufr section 1 (Identification section) */
 	/* Length of section */
-	DBA_RUN_OR_RETURN(encoder_add_bits(e, 18, 24));
+	add_bits(18, 24);
 	/* Master table number */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	append_byte(0);
 	/* Originating/generating sub-centre (defined by Originating/generating centre) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.subcentre));
+	append_byte(in.subcentre);
 	/* Originating/generating centre (Common Code tableC-1) */
 	/*DBA_RUN_OR_RETURN(bufr_message_append_byte(e, 0xff));*/
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.centre));
+	append_byte(in.centre);
 	/* Update sequence number (zero for original BUFR messages; incremented for updates) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.update_sequence_number));
+	append_byte(in.update_sequence_number);
 	/* Bit 1= 0 No optional section = 1 Optional section included Bits 2 ­ 8 set to zero (reserved) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.optional_section_length ? 0x80 : 0));
+	append_byte(in.optional_section_length ? 0x80 : 0);
 
 	/* Data category (BUFR Table A) */
 	/* Data sub-category (defined by local ADP centres) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->type));
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->localsubtype));
+	append_byte(in.type);
+	append_byte(in.localsubtype);
 	/* Version number of master tables used (currently 9 for WMO FM 94 BUFR tables) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.master_table));
+	append_byte(in.master_table);
 	/* Version number of local tables used to augment the master table in use */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.local_table));
+	append_byte(in.local_table);
 
 	/* Year of century */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_year == 2000 ? 100 : (e->in->rep_year % 100)));
+	append_byte(in.rep_year == 2000 ? 100 : (in.rep_year % 100));
 	/* Month */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_month));
+	append_byte(in.rep_month);
 	/* Day */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_day));
+	append_byte(in.rep_day);
 	/* Hour */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_hour));
+	append_byte(in.rep_hour);
 	/* Minute */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_minute));
+	append_byte(in.rep_minute);
 	/* Century */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_year / 100));
-
-	return dba_error_ok();
+	append_byte(in.rep_year / 100);
 }
 
-static dba_err encoder_encode_sec1ed4(encoder e)
+void Encoder::encode_sec1ed4()
 {
 	/* Encode bufr section 1 (Identification section) */
 	/* Length of section */
-	DBA_RUN_OR_RETURN(encoder_add_bits(e, 22, 24));
+	add_bits(22, 24);
 	/* Master table number */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	append_byte(0);
 	/* Originating/generating centre (Common Code tableC-1) */
-	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->opt.bufr.centre));
+	append_short(in.centre);
 	/* Originating/generating sub-centre (defined by Originating/generating centre) */
-	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->opt.bufr.subcentre));
+	append_short(in.subcentre);
 	/* Update sequence number (zero for original BUFR messages; incremented for updates) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	append_byte(0);
 	/* Bit 1= 0 No optional section = 1 Optional section included Bits 2 ­ 8 set to zero (reserved) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.optional_section_length ? 0x80 : 0));
+	append_byte(in.optional_section_length ? 0x80 : 0);
 
 	/* Data category (BUFR Table A) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->type));
+	append_byte(in.type);
 	/* International data sub-category */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->subtype));
+	append_byte(in.subtype);
  	/* Local subcategory (defined by local ADP centres) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->localsubtype));
+	append_byte(in.localsubtype);
 	/* Version number of master tables used (currently 9 for WMO FM 94 BUFR tables) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.master_table));
+	append_byte(in.master_table);
 	/* Version number of local tables used to augment the master table in use */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->opt.bufr.local_table));
+	append_byte(in.local_table);
 
 	/* Year of century */
-	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->rep_year));
+	append_short(in.rep_year);
 	/* Month */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_month));
+	append_byte(in.rep_month);
 	/* Day */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_day));
+	append_byte(in.rep_day);
 	/* Hour */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_hour));
+	append_byte(in.rep_hour);
 	/* Minute */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_minute));
+	append_byte(in.rep_minute);
 	/* Second */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->rep_second));
-
-	return dba_error_ok();
+	append_byte(in.rep_second);
 }
 
-dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
+void Encoder::encode_sec2()
 {
-	dba_err err = DBA_OK;
-	encoder e = NULL;
-	bufrex_opcode ops = NULL;
-	bufrex_opcode cur;
-	int dslen;
-	int i;
-
-	DBA_RUN_OR_RETURN(encoder_create(&e));
-	e->in = in;
-	e->out = out;
-
-
-	/* Encode bufr section 0 (Indicator section) */
-	DBA_RUN_OR_RETURN(encoder_raw_append(e, "BUFR\0\0\0", 7));
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, e->in->edition));
-
-	TRACE("sec0 ends at %d\n", e->out->len);
-	e->sec1_start = e->out->len;
-
-	switch (e->in->edition)
-	{
-		case 3:
-			DBA_RUN_OR_RETURN(encoder_encode_sec1ed3(e));
-			break;
-		case 4:
-			DBA_RUN_OR_RETURN(encoder_encode_sec1ed4(e));
-			break;
-		default:
-			break;
-	}
-
-
-	TRACE("sec1 ends at %d\n", e->out->len);
-	e->sec2_start = e->out->len;
-
-
 	/* Encode BUFR section 2 (Optional section) */
 	/* Nothing to do */
-	if (e->in->opt.bufr.optional_section_length)
+	if (in.optional_section_length)
 	{
 		int pad;
 		/* Length of section */
-		if ((pad = (e->in->opt.bufr.optional_section_length % 2 == 1)))
-			DBA_RUN_OR_RETURN(encoder_add_bits(e, 4 + e->in->opt.bufr.optional_section_length + 1, 24));
+		if ((pad = (in.optional_section_length % 2 == 1)))
+			add_bits(4 + in.optional_section_length + 1, 24);
 		else
-			DBA_RUN_OR_RETURN(encoder_add_bits(e, 4 + e->in->opt.bufr.optional_section_length, 24));
+			add_bits(4 + in.optional_section_length, 24);
 		/* Set to 0 (reserved) */
-		DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+		append_byte(0);
 
-		DBA_RUN_OR_RETURN(encoder_raw_append(e, e->in->opt.bufr.optional_section, e->in->opt.bufr.optional_section_length));
+		raw_append(in.optional_section, in.optional_section_length);
 		// Padd to even number of bytes
-		if (pad)
-			DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+		if (pad) append_byte(0);
 	}
+}
 
-	TRACE("sec2 ends at %d\n", e->out->len);
-	e->sec3_start = e->out->len;
-
-
+void Encoder::encode_sec3()
+{
 	/* Encode BUFR section 3 (Data description section) */
 
-	if (e->in->subsets_count == 0)
-	{
-		err = dba_error_consistency("bufrex_msg to encode has no data subsets");
-		goto fail;
-	}
+	if (in.subsets.empty())
+		throw error_consistency("message to encode has no data subsets");
 
-	DBA_RUN_OR_GOTO(fail, bufrex_msg_get_datadesc(e->in, &ops));
-	if (ops == NULL)
+	if (in.datadesc.empty())
+		throw error_consistency("message to encode has no data descriptors");
+#if 0
+	if (in.datadesc.empty())
 	{
 		TRACE("Regenerating datadesc\n");
 		/* If the data descriptor list is not already present, try to generate it
@@ -422,109 +364,62 @@ dba_err bufr_encoder_encode(bufrex_msg in, dba_rawmsg out)
 	} else {
 		TRACE("Reusing datadesc\n");
 	}
-
-	/* Count the number of items in the data descriptor section */
-	for (cur = ops, dslen = 0; cur != NULL; cur = cur->next, dslen++)
-		;
-
+#endif
 	/* Length of section */
-	DBA_RUN_OR_RETURN(encoder_add_bits(e, 8 + 2*dslen, 24));
+	add_bits(8 + 2*in.datadesc.size(), 24);
 	/* Set to 0 (reserved) */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	append_byte(0);
 	/* Number of data subsets */
-	DBA_RUN_OR_RETURN(encoder_append_short(e, e->in->subsets_count));
-	/* Ensure the bufr subsets indicator in the dba_msg is correct */
-	e->in->opt.bufr.subsets = e->in->subsets_count;
+	append_short(in.subsets.size());
 	/* Bit 0 = observed data; bit 1 = use compression */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 128));
+	append_byte(128);
 	
 	/* Data descriptors */
-	for (cur = ops; cur != NULL; cur = cur->next)
-		DBA_RUN_OR_RETURN(encoder_append_short(e, cur->val));
+	for (unsigned i = 0; i < in.datadesc.size(); ++i)
+		append_short(in.datadesc[i]);
 
 	/* One padding byte to make the section even */
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	append_byte(0);
+}
 
-	TRACE("sec3 ends at %d\n", e->out->len);
-	e->sec4_start = e->out->len;
-
-
+void Encoder::encode_sec4()
+{
 	/* Encode BUFR section 4 (Data section) */
 
 	/* Length of section (currently set to 0, will be filled in later) */
-	DBA_RUN_OR_RETURN(encoder_add_bits(e, 0, 24));
-	DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
+	add_bits(0, 24);
+	append_byte(0);
 
 	/* Encode all the subsets, uncompressed */
-	for (i = 0; i < e->in->subsets_count; ++i)
+	for (unsigned i = 0; i < in.subsets.size(); ++i)
 	{
-		DBA_RUN_OR_GOTO(fail, bufrex_msg_get_subset(e->in, i, &e->subset));
-
-		/* Initialise the encoder with the list of variables to encode */
-		e->nextvar = e->subset->vars;
-		e->vars_left = e->subset->vars_count;
-
-		/* Encode the data */
-		while (e->vars_left > 0)
-		{
-			DBA_RUN_OR_GOTO(fail, bufrex_opcode_prepend(&(e->ops), ops));
-
-			DBA_RUN_OR_GOTO(fail, encoder_encode_data_section(e));
-
-			if (e->ops != NULL)
-			{
-				err = dba_error_consistency("not all operators have been encoded");
-				goto fail;
-			}
-		}
+		/* Encode the data of this subset */
+		subset = &in.subset(i);
+		Varqueue varqueue(*subset);
+		encode_data_section(Opcodes(in.datadesc), varqueue);
 	}
 
 	/* Write all the bits and pad the data section to reach an even length */
-	TRACE("PRE FLUSH %d:%d\n", e->out->len, e->pbyte_len);
-	DBA_RUN_OR_RETURN(encoder_flush(e));
-	TRACE("POST FLUSH %d:%d\n", e->out->len, e->pbyte_len);
-	if ((e->out->len % 2) == 1)
+	TRACE("PRE FLUSH %d:%d\n", out.size(), pbyte_len);
+	flush();
+	TRACE("POST FLUSH %d:%d\n", out.size(), pbyte_len);
+	if ((out.size() % 2) == 1)
 	{
-		TRACE("PRE APPENDBYTE %d:%d\n", e->out->len, e->pbyte_len);
-		DBA_RUN_OR_RETURN(encoder_append_byte(e, 0));
-		TRACE("POST APPENDBYTE %d:%d\n", e->out->len, e->pbyte_len);
+		TRACE("PRE APPENDBYTE %d:%d\n", out.size(), pbyte_len);
+		append_byte(0);
+		TRACE("POST APPENDBYTE %d:%d\n", out.size(), pbyte_len);
 	}
-	TRACE("PRE FLUSH2 %d:%d\n", e->out->len, e->pbyte_len);
-	DBA_RUN_OR_RETURN(encoder_flush(e));
-	TRACE("POST FLUSH2 %d:%d\n", e->out->len, e->pbyte_len);
+	TRACE("PRE FLUSH2 %d:%d\n", out.size(), pbyte_len);
+	flush();
+	TRACE("POST FLUSH2 %d:%d\n", out.size(), pbyte_len);
 
 	/* Write the length of the section in its header */
 	{
-		uint32_t val = htonl(e->out->len - e->sec4_start);
-		memcpy(e->out->buf + e->sec4_start, ((char*)&val) + 1, 3);
+		uint32_t val = htonl(out.size() - sec4_start);
+		memcpy((char*)out.data() + sec4_start, ((char*)&val) + 1, 3);
 
-		TRACE("sec4 size %d\n", e->out->len - e->sec4_start);
+		TRACE("sec4 size %d\n", out.size() - sec4_start);
 	}
-
-	TRACE("sec4 ends at %d\n", e->out->len);
-	e->sec5_start = e->out->len;
-
-	/* Encode section 5 (End section) */
-	DBA_RUN_OR_RETURN(encoder_raw_append(e, "7777", 4));
-
-	TRACE("sec5 ends at %d\n", e->out->len);
-
-	/* Write the length of the BUFR message in its header */
-	{
-		uint32_t val = htonl(e->out->len);
-		memcpy(e->out->buf + 4, ((char*)&val) + 1, 3);
-
-		TRACE("msg size %d\n", e->out->len);
-	}
-
-	e->out->encoding = BUFR;
-
-	return dba_error_ok();
-
-fail:
-	if (e != NULL)
-		encoder_delete(e);
-	return err;
 }
 
 static const double e10[] = {
@@ -547,7 +442,7 @@ static const double e10[] = {
 	10000000000000000.0,
 };
 
-static int bufr_encode_double(encoder e, double dval, int ref, int scale)
+static int encode_double(double dval, int ref, int scale)
 {
 	if (scale >= 0)
 		return (int)round(dval * e10[scale]) - ref;
@@ -555,126 +450,96 @@ static int bufr_encode_double(encoder e, double dval, int ref, int scale)
 		return (int)round(dval / e10[-scale]) - ref;
 }
 
-static dba_err bitmap_next(encoder e)
+void Encoder::bitmap_next()
 {
-	if (e->bitmap_to_encode == NULL)
-		return dba_error_consistency("applying a data present bitmap with no current bitmap");
-	TRACE("bitmap_next pre %d %d %d\n", e->bitmap_use_cur, e->bitmap_subset_cur, dba_var_info(e->bitmap_to_encode)->len);
-	++e->bitmap_use_cur;
-	++e->bitmap_subset_cur;
-	while (e->bitmap_use_cur < dba_var_info(e->bitmap_to_encode)->len &&
-		(e->bitmap_use_cur < 0 || dba_var_value(e->bitmap_to_encode)[e->bitmap_use_cur] == '-'))
+	if (bitmap_to_encode == NULL)
+		throw error_consistency("applying a data present bitmap with no current bitmap");
+	TRACE("bitmap_next pre %d %d %d\n", bitmap_use_cur, bitmap_subset_cur, bitmap_to_encode->info()->len);
+	++bitmap_use_cur;
+	++bitmap_subset_cur;
+	while (bitmap_use_cur < bitmap_to_encode->info()->len &&
+		(bitmap_use_cur < 0 || bitmap_to_encode->value()[bitmap_use_cur] == '-'))
 	{
 		TRACE("INCR\n");
-		++e->bitmap_use_cur;
-		++e->bitmap_subset_cur;
+		++bitmap_use_cur;
+		++bitmap_subset_cur;
 
-		while (e->bitmap_subset_cur < e->subset->vars_count &&
-			DBA_VAR_F(dba_var_code(e->subset->vars[e->bitmap_subset_cur])) != 0)
-			++e->bitmap_subset_cur;
+		while (bitmap_subset_cur < subset->size() &&
+			DBA_VAR_F((*subset)[bitmap_subset_cur].code()) != 0)
+			++bitmap_subset_cur;
 	}
-	if (e->bitmap_use_cur > dba_var_info(e->bitmap_to_encode)->len)
-		return dba_error_consistency("moved past end of data present bitmap");
-	if (e->bitmap_subset_cur == e->subset->vars_count)
-		return dba_error_consistency("end of data reached when applying attributes");
-	TRACE("bitmap_next post %d %d\n", e->bitmap_use_cur, e->bitmap_subset_cur);
-	return dba_error_ok();
+	if (bitmap_use_cur > bitmap_to_encode->info()->len)
+		throw error_consistency("moved past end of data present bitmap");
+	if (bitmap_subset_cur == subset->size())
+		throw error_consistency("end of data reached when applying attributes");
+	TRACE("bitmap_next post %d %d\n", bitmap_use_cur, bitmap_subset_cur);
 }
 
-static dba_err encoder_encode_b_data(encoder e)
+unsigned Encoder::encode_b_data(const Opcodes& ops, Varqueue& vars)
 {
-	dba_err err = DBA_OK;
-	dba_varinfo info = NULL;
+	unsigned used;
+#if 0
 	unsigned int len;
 	dba_var var;
 	dba_var tmpvar = NULL;
-#ifdef TRACE_ENCODER
-	int startofs, startbofs;
 #endif
 
 	IFTRACE{
 		TRACE("bufr_message_encode_b_data: items: ");
-		bufrex_opcode_print(e->ops, stderr);
+		ops.print(stderr);
 		TRACE("\n");
 	}
-	
-	if (e->bitmap_to_encode != NULL && e->bitmap_encode_cur < dba_var_info(e->bitmap_to_encode)->len)
-	{
-		TRACE("Encode bitmap entry %d/%d\n", e->bitmap_encode_cur, dba_var_info(e->bitmap_to_encode)->len);
-		/* Get data from the current bitmap instead of a variable in
-		 * the input subset */
-		var = NULL;
-		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, e->ops->val, &info));
-	} else if (DBA_VAR_F(e->ops->val) == 0 && DBA_VAR_X(e->ops->val) == 33
-		   && e->bitmap_to_encode != NULL && e->bitmap_use_cur < dba_var_info(e->bitmap_to_encode)->len) {
-		TRACE("Encode attribute %01d%02d%03d %d/%d subset %d/%zd\n",
-			DBA_VAR_F(e->ops->val), DBA_VAR_X(e->ops->val), DBA_VAR_Y(e->ops->val),
-			e->bitmap_use_cur, dba_var_info(e->bitmap_to_encode)->len,
-			e->bitmap_subset_cur, e->subset->vars_count);
-		/* Read the variable to encode from the attributes */
-		DBA_RUN_OR_GOTO(cleanup, dba_var_enqa(e->subset->vars[e->bitmap_subset_cur], e->ops->val, &var));
-		DBA_RUN_OR_GOTO(cleanup, bitmap_next(e));
-		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, e->ops->val, &info));
-		/* var could be NULL if the attribute is missing: create a temporary one */
-		if (var == NULL)
-		{
-			DBA_RUN_OR_GOTO(cleanup, dba_var_create(info, &tmpvar));
-			var = tmpvar;
-		}
-	} else {
-		/* Get the next variable to encode */
-		if (e->vars_left <= 0)
-		{
-			err = dba_error_consistency("checking for availability of data to encode");
-			goto cleanup;
-		}
-		var = *e->nextvar;
-		e->nextvar++;
-		e->vars_left--;
 
-		/* Get informations from the variable */
-		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, dba_var_code(var), &info));
+	Varinfo info = in.btable->query(ops.head());
+	const Var* var = NULL;
+	
+	// Choose which value we should encode
+	if (DBA_VAR_F(ops.head()) == 0 && DBA_VAR_X(ops.head()) == 33
+		   && bitmap_to_encode != NULL && bitmap_use_cur < bitmap_to_encode->info()->len)
+	{
+		// Attribute of the variable pointed by the bitmap
+		TRACE("Encode attribute %01d%02d%03d %d/%d subset %d/%zd\n",
+			DBA_VAR_F(ops.head()), DBA_VAR_X(ops.head()), DBA_VAR_Y(ops.head()),
+			bitmap_use_cur, bitmap_to_encode->info()->len,
+			bitmap_subset_cur, subset->size());
+		var = (*subset)[bitmap_subset_cur].enqa(ops.head());
+		bitmap_next();
+		used = 1;
+	} else {
+		// Proper variable
+		if (vars.empty()) error_consistency("no more data to encode");
+		var = &vars.pop();
+		used = 1;
 	}
 
 	IFTRACE{
-#ifndef TRACE_ENCODER
-		int startofs, startbofs;
-#endif
-		TRACE("Encoding @.d+%d [bl %d+%d sc %d+%d ref %d]: ", /*e->in->len - (e->sec4_start + 4),*/ e->pbyte_len,
-				info->bit_len, e->c_width_change,
-				info->scale, e->c_scale_change,
+		TRACE("Encoding @.d+%d [bl %d+%d sc %d+%d ref %d]: ", /*e->in->len - (e->sec4_start + 4),*/ pbyte_len,
+				info->bit_len, c_width_change,
+				info->scale, c_scale_change,
 				info->bit_ref);
-		startofs = e->out->len;
-		startbofs = e->pbyte_len;
 		if (var)
-			dba_var_print(var, stderr);
-		else
-			TRACE("dpb %c\n", dba_var_value(e->bitmap_to_encode)[e->bitmap_encode_cur]);
+			var->print(stderr);
+		else // FIXME: if attr to encode is missing, we end up here and do the wrong thing
+			TRACE("dpb %c\n", bitmap_to_encode->value()[bitmap_encode_cur]);
 	}
 
-	if (info->var != e->ops->val)
-	{
-		err = dba_error_consistency("input variable %d%02d%03d differs from expected variable %d%02d%03d",
-				DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
-				DBA_VAR_F(e->ops->val), DBA_VAR_X(e->ops->val), DBA_VAR_Y(e->ops->val));
-		goto cleanup;
-	}
+	if (var && var->code() != ops.head())
+		error_consistency::throwf("input variable %d%02d%03d differs from expected variable %d%02d%03d",
+				DBA_VAR_F(var->code()), DBA_VAR_X(var->code()), DBA_VAR_Y(var->code()),
+				DBA_VAR_F(ops.head()), DBA_VAR_X(ops.head()), DBA_VAR_Y(ops.head()));
 	
-	len = info->bit_len;
-	if (e->bitmap_to_encode != NULL && e->bitmap_encode_cur < dba_var_info(e->bitmap_to_encode)->len)
+	unsigned len = info->bit_len;
+	if (c_width_change != 0)
 	{
-		if (e->bitmap_encode_cur >= dba_var_info(e->bitmap_to_encode)->len)
-		{
-			err = dba_error_consistency("trying to encode bitmap item %d but bitmap is only %d long",
-					e->bitmap_encode_cur, dba_var_info(e->bitmap_to_encode)->len);
-			goto cleanup;
-		}
-		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, dba_var_value(e->bitmap_to_encode)[e->bitmap_encode_cur] == '+' ? 0 : 1, len));
-		++e->bitmap_encode_cur;
-	} else if (var == NULL || dba_var_value(var) == NULL) {
-		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, 0xffffffff, len));
-	} else if (VARINFO_IS_STRING(info)) {
-		const char* val = dba_var_value(var);
+		TRACE("Width change: %d (len %d->%d)\n", c_width_change, len, len + c_width_change);
+		len += c_width_change;
+	}
+
+	if (var == NULL || var->value() == NULL)
+	{
+		add_bits(0xffffffff, len);
+	} else if (info->is_string()) {
+		const char* val = var->value();
 		int i, bi;
 		int smax = strlen(val);
 		for (i = 0, bi = 0; bi < len; i++)
@@ -684,7 +549,7 @@ static dba_err encoder_encode_b_data(encoder e)
 			char todo = (i < smax) ? val[i] : ' ';
 			if (len - bi >= 8)
 			{
-				DBA_RUN_OR_GOTO(cleanup, encoder_append_byte(e, todo));
+				append_byte(todo);
 				bi += 8;
 			}
 			else
@@ -694,46 +559,33 @@ static dba_err encoder_encode_b_data(encoder e)
 				 * writing partial bytes at the moment and it's better to fail
 				 * gracefully, as my understanding is that this case should
 				 * never happen anyway. */
-				DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, 0, len - bi));
+				add_bits(0, len - bi);
 				bi = len;
 			}
 		}
 	} else {
-		double dval;
-		int ival;
-		DBA_RUN_OR_GOTO(cleanup, dba_var_enqd(var, &dval));
+		double dval = var->enqd();
 		TRACE("Starting point %s: %f %s\n", info->desc, dval, info->unit);
-		DBA_RUN_OR_GOTO(cleanup, dba_convert_units(info->unit, info->bufr_unit, dval, &dval));
+		int ival = convert_units(info->unit, info->bufr_unit, dval);
 		TRACE("Unit conversion gives: %f %s\n", dval, info->bufr_unit);
 		/* Convert to int, optionally applying scale change */
-		TRACE("Scale change: %d\n", e->c_scale_change);
-		ival = bufr_encode_double(e, dval, info->bit_ref, info->bufr_scale - e->c_scale_change);
-		TRACE("Converted to int (ref %d, scale %d): %d\n", info->bit_ref, info->bufr_scale - e->c_scale_change, ival);
-		if (e->c_width_change != 0)
-			TRACE("Width change: %d\n", e->c_width_change);
-		TRACE("Writing %u with size %d\n", ival, len + e->c_width_change);
+		TRACE("Scale change: %d\n", c_scale_change);
+		ival = encode_double(dval, info->bit_ref, info->bufr_scale + c_scale_change);
+		TRACE("Converted to int (ref %d, scale %d): %d\n", info->bit_ref, info->bufr_scale + c_scale_change, ival);
+		TRACE("Writing %u with size %d\n", ival, len);
 		/* In case of overflow, store 'missing value' */
-		if ((unsigned)ival >= (1u<<(len + e->c_width_change)))
+		if ((unsigned)ival >= (1u<<len))
 		{
-			err = dba_error_consistency("value %f does not fit in variable B%02d%03d", dval, DBA_VAR_X(info->var), DBA_VAR_Y(info->var));
-			goto cleanup;
-			TRACE("Overflow: %x %u %d >= (1<<(%u + %u)) = %x %u %d\n",
-				ival, ival, ival,
-				len, e->c_width_change,
-				1<<(len + e->c_width_change), 1<<(len + e->c_width_change), 1<<(len + e->c_width_change));
+			error_consistency::throwf("value %f does not fit in variable B%02d%03d", dval, DBA_VAR_X(info->var), DBA_VAR_Y(info->var));
+			TRACE("Overflow: %x %u %d >= (1<<%u) = %x %u %d\n",
+				ival, ival, ival, len,
+				1<<len, 1<<len, 1<<len);
 			ival = 0xffffffff;
 		}
 		TRACE("About to encode: %x %u %d\n", ival, ival, ival);
-		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, ival, len + e->c_width_change));
+		add_bits(ival, len);
 	}
 	
-	/* Remove from the chain the item that we handled */
-	{
-		bufrex_opcode op;
-		DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(e->ops), &op));
-		bufrex_opcode_delete(&op);
-	}
-
 	IFTRACE {
 		/*
 #ifndef TRACE_ENCODER
@@ -747,149 +599,111 @@ static dba_err encoder_encode_b_data(encoder e)
 		*/
 
 		TRACE("bufr_message_encode_b_data (items:");
-		bufrex_opcode_print(e->ops, stderr);
+		ops.print(stderr);
 		TRACE(")\n");
 	}
 
-cleanup:
-	if (tmpvar != NULL)
-		dba_var_delete(tmpvar);
-	return err == DBA_OK ? dba_error_ok() : err;
+	return used;
 }
 
 /* If using delayed replication and count is not -1, use count for the delayed
  * replication factor; else, look for a delayed replication factor among the
  * input variables */
-static dba_err encoder_encode_r_data(encoder e, int rep_count)
+unsigned Encoder::encode_r_data(const Opcodes& ops, Varqueue& vars, const Var* bitmap)
 {
-	dba_err err = DBA_OK;
-	dba_varinfo info = NULL;
-	int group = DBA_VAR_X(e->ops->val);
-	int count = DBA_VAR_Y(e->ops->val);
-	bufrex_opcode rep_op = NULL;
+	unsigned used = 1;
+	int group = DBA_VAR_X(ops.head());
+	int count = DBA_VAR_Y(ops.head());
 	
-	TRACE("R DATA %01d%02d%03d %d %d\n", 
-			DBA_VAR_F(e->ops->val), DBA_VAR_X(e->ops->val), DBA_VAR_Y(e->ops->val), group, count);
-
-	/* Pop the R repetition node, since we have read its value in group and count */
-	{
-		bufrex_opcode op;
-		DBA_RUN_OR_GOTO(cleanup, bufrex_opcode_pop(&(e->ops), &op));
-		bufrex_opcode_delete(&op);
+	IFTRACE{
+		TRACE("bufr_message_encode_r_data %01d%02d%03d %d %d: items: ",
+			DBA_VAR_F(ops.head()), DBA_VAR_X(ops.head()), DBA_VAR_Y(ops.head()), group, count);
+		ops.print(stderr);
+		TRACE("\n");
 	}
 
 	if (count == 0)
 	{
 		/* Delayed replication */
 
-		if (rep_count == -1)
+		if (bitmap == NULL)
 		{
 			/* Look for a delayed replication factor in the input vars */
-			if (e->vars_left <= 0)
-			{
-				err = dba_error_consistency("checking for availability of data to encode");
-				goto cleanup;
-			}
+			if (vars.empty())
+				throw error_consistency("checking for availability of data to encode");
 
 			/* Get the repetition count */
-			DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(*e->nextvar, &count));
-
-			e->nextvar++;
-			e->vars_left--;
+			count = vars.pop().enqi();
 
 			TRACE("delayed replicator count read as %d\n", count);
 		} else {
-			count = rep_count;
+			count = bitmap->info()->len;
 			TRACE("delayed replicator count passed by caller as %d\n", count);
 		}
 
 		/* Get encoding informations for this repetition count */
-		DBA_RUN_OR_GOTO(cleanup, bufrex_msg_query_btable(e->in, e->ops->val, &info));
+		Varinfo info = in.btable->query(ops[used]);
 
 		/* Encode the repetition count */
-		DBA_RUN_OR_GOTO(cleanup, encoder_add_bits(e, count, info->bit_len));
+		add_bits(count, info->bit_len);
 
-		/* Pop the node with the repetition count */
-		{
-			bufrex_opcode op;
-			DBA_RUN_OR_GOTO(cleanup, bufrex_opcode_pop(&(e->ops), &op));
-			bufrex_opcode_delete(&op);
-		}
+		/* Move past the node with the repetition count */
+		++used;
 
 		TRACE("encode_r_data %d items %d times (delayed)\n", group, count);
 	} else
 		TRACE("encode_r_data %d items %d times\n", group, count);
 
-	/* Pop the first `group' nodes, since we handle them here */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_opcode_pop_n(&(e->ops), &rep_op, group));
-
-	/* Perform replication */
-	while (count--)
+	if (bitmap)
 	{
-		/* fprintf(stderr, "Debug: rep %d left\n", count); */
-		bufrex_opcode chain = NULL;
-		bufrex_opcode saved = NULL;
-		DBA_RUN_OR_GOTO(cleanup, bufrex_opcode_prepend(&chain, rep_op));
+		// Encode the bitmap here directly
+		if (ops[used] != DBA_VAR(0, 31, 31))
+			error_consistency::throwf("bitmap data descriptor is %d%02d%03d instead of B31031",
+					DBA_VAR_F(ops[used]), DBA_VAR_X(ops[used]), DBA_VAR_Y(ops[used]));
 
-		IFTRACE{
-			TRACE("encode_r_data %d items %d times left; items: ", group, count);
-			bufrex_opcode_print(chain, stderr);
-			TRACE("\n");
-		}
+		for (int i = 0; i < bitmap->info()->len; ++i)
+			// One bit from the current bitmap
+			add_bits(bitmap->value()[i] == '+' ? 0 : 1, 1);
+		TRACE("Encoded %d bitmap entries\n", bitmap->info()->len);
+	} else {
+		// Extract the first `group' nodes, to handle here
+		Opcodes group_ops = ops.sub(used, group);
 
-		saved = e->ops;
-		e->ops = chain;
-		if ((err = encoder_encode_data_section(e)) != DBA_OK)
-		{
-			if (e->ops != NULL)
-				bufrex_opcode_delete(&(e->ops));
-			e->ops = saved;
-			goto cleanup;
-		}
-		/* chain should always be NULL when encoding succeeded */
-		assert(e->ops == NULL);
-		e->ops = saved;
+		// encode_data_section on it `count' times
+		for (int i = 0; i < count; ++i)
+			encode_data_section(group_ops, vars);
 	}
 
-cleanup:
-	bufrex_opcode_delete(&rep_op);
-
-	return err = DBA_OK ? dba_error_ok() : err;
+	return used + group;
 }
 
-static dba_err encoder_encode_bitmap(encoder e)
+unsigned Encoder::encode_bitmap(const Opcodes& ops, Varqueue& vars)
 {
-	dba_varcode code = dba_var_info(*e->nextvar)->var;
-	if (e->bitmap_to_encode != NULL && e->bitmap_encode_cur < dba_var_info(e->bitmap_to_encode)->len)
-		return dba_error_consistency("request to encode a bitmap before we finished encoding the previous one");
+	unsigned used = 0;
+
+	Varcode code = vars.peek().code();
+	if (bitmap_to_encode != NULL && bitmap_encode_cur < bitmap_to_encode->info()->len)
+		throw error_consistency("request to encode a bitmap before we finished encoding the previous one");
 	if (DBA_VAR_F(code) != 2)
-		return dba_error_consistency("request to encode a bitmap but the input variable is %01d%02d%03d",
+		error_consistency::throwf("request to encode a bitmap but the input variable is %01d%02d%03d",
 				DBA_VAR_F(code), DBA_VAR_X(code), DBA_VAR_Y(code));
 
-	e->bitmap_to_encode = *e->nextvar;
-	e->nextvar++;
-	e->vars_left--;
-
-	e->bitmap_encode_cur = 0;
-	e->bitmap_use_cur = -1;
-	e->bitmap_subset_cur = -1;
+	bitmap_to_encode = &vars.pop();
+	++used;
+	bitmap_encode_cur = 0;
+	bitmap_use_cur = -1;
+	bitmap_subset_cur = -1;
 
 	IFTRACE{
 		TRACE("Encoding data present bitmap:");
-		dba_var_print(e->bitmap_to_encode, stderr);
+		bitmap_to_encode->print(stderr);
 	}
 
 	/* Encode the bitmap */
-	DBA_RUN_OR_RETURN(encoder_encode_r_data(e, dba_var_info(e->bitmap_to_encode)->len));
-
-	IFTRACE {
-		if (e->bitmap_encode_cur < dba_var_info(e->bitmap_to_encode)->len)
-			return dba_error_consistency("bitmap not fully encoded (%d/%d)",
-					e->bitmap_encode_cur, dba_var_info(e->bitmap_to_encode)->len);
-	}
+	used += encode_r_data(ops.sub(used), vars, bitmap_to_encode);
 
 	/* Point to the first attribute to encode */
-	DBA_RUN_OR_RETURN(bitmap_next(e));
+	bitmap_next();
 
 /*	
 	TRACE("Decoded bitmap count %d: ", bitmap_count);
@@ -897,132 +711,150 @@ static dba_err encoder_encode_bitmap(encoder e)
 		TRACE("%c", dba_var_value(bitmap)[i]);
 	TRACE("\n");
 */
-
-	return dba_error_ok();
+	return used;
 }
 
-static dba_err encoder_encode_c_data(encoder e)
+unsigned Encoder::encode_c_data(const Opcodes& ops, Varqueue& vars)
 {
-	dba_err err = DBA_OK;
-	dba_varcode code = e->ops->val;
+	Varcode code = ops.head();
 
 	TRACE("C DATA %01d%02d%03d\n", DBA_VAR_F(code), DBA_VAR_X(code), DBA_VAR_Y(code));
 
-	/* Pop the C node, since we have read its value in `code' */
-	{
-		bufrex_opcode op;
-		DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(e->ops), &op));
-		bufrex_opcode_delete(&op);
-	}
-
 	switch (DBA_VAR_X(code))
 	{
-		case 1:
-			e->c_width_change = DBA_VAR_Y(code) - 128;
-			break;
-		case 2:
-			e->c_scale_change = DBA_VAR_Y(code) - 128;
-			break;
+		case 1: 
+			c_width_change = DBA_VAR_Y(code) ? DBA_VAR_Y(code) - 128 : 0;
+			TRACE("Set width change to %d\n", c_width_change);
+			return 1;
+		case 2: 
+			c_scale_change = DBA_VAR_Y(code) ? DBA_VAR_Y(code) - 128 : 0;
+			TRACE("Set scale change to %d\n", c_scale_change);
+			return 1;
 		case 22:
 			if (DBA_VAR_Y(code) == 0)
 			{
 				TRACE("PRE BITMAP\n");
-				DBA_RUN_OR_GOTO(cleanup, encoder_encode_bitmap(e));
+				return encode_bitmap(ops, vars);
 				TRACE("POST BITMAP\n");
 			} else
-				return dba_error_consistency("C modifier %d%02d%03d not yet supported",
+				error_consistency::throwf("C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
 							DBA_VAR_X(code),
 							DBA_VAR_Y(code));
-			break;
 		case 24:
 			if (DBA_VAR_Y(code) == 0)
 			{
-				DBA_RUN_OR_GOTO(cleanup, encoder_encode_r_data(e, -1));
+				return 1 + encode_r_data(ops.sub(1), vars);
 			} else
-				return dba_error_consistency("C modifier %d%02d%03d not yet supported",
+				error_consistency::throwf("C modifier %d%02d%03d not yet supported",
 							DBA_VAR_F(code),
 							DBA_VAR_X(code),
 							DBA_VAR_Y(code));
-			break;
 		default:
-			return dba_error_unimplemented("C modifier %d%02d%03d is not yet supported",
+			error_unimplemented::throwf("C modifier %d%02d%03d is not yet supported",
 						DBA_VAR_F(code),
 						DBA_VAR_X(code),
 						DBA_VAR_Y(code));
 	}
-
-cleanup:
-	return err == DBA_OK ? dba_error_ok() : err;
 }
 
 
-static dba_err encoder_encode_data_section(encoder e)
+void Encoder::encode_data_section(const Opcodes& ops, Varqueue& vars)
 {
-	dba_err err;
-
 	TRACE("bufr_message_encode_data_section: START\n");
 
-	while (e->ops != NULL)
+	for (unsigned i = 0; i < ops.size(); )
 	{
 		IFTRACE{
 			TRACE("bufr_message_encode_data_section TODO: ");
-			bufrex_opcode_print(e->ops, stderr);
+			ops.sub(i).print(stderr);
 			TRACE("\n");
 			TRACE("bufr_message_encode_data_section NEXTVAR: ");
-			if (e->vars_left)
-				dba_var_print(*e->nextvar, stderr);
-			else
+			if (vars.empty())
 				TRACE("(none)\n");
+			else
+				vars.peek().print(stderr);
 		}
 
-		switch (DBA_VAR_F(e->ops->val))
+		switch (DBA_VAR_F(ops[i]))
 		{
-			case 0:
-				DBA_RUN_OR_RETURN(encoder_encode_b_data(e));
-				break;
-			case 1:
-				DBA_RUN_OR_RETURN(encoder_encode_r_data(e, -1));
-				break;
-			case 2:
-				DBA_RUN_OR_RETURN(encoder_encode_c_data(e));
-				break;
+			case 0: i += encode_b_data(ops.sub(i), vars); break;
+			case 1: i += encode_r_data(ops.sub(i), vars); break;
+			case 2: i += encode_c_data(ops.sub(i), vars); break;
 			case 3:
 			{
-				/* D table opcode: expand the chain */
-				bufrex_opcode op;
-				bufrex_opcode exp;
-
-				/* Pop the first opcode */
-				DBA_RUN_OR_RETURN(bufrex_opcode_pop(&(e->ops), &op));
-				
-				if ((err = bufrex_msg_query_dtable(e->in, op->val, &exp)) != DBA_OK)
-				{
-					bufrex_opcode_delete(&op);
-					return err;
-				}
-
-				/* Push the expansion back in the fields */
-				if ((err = bufrex_opcode_join(&exp, e->ops)) != DBA_OK)
-				{
-					bufrex_opcode_delete(&op);
-					bufrex_opcode_delete(&exp);
-					return err;
-				}
-				e->ops = exp;
+				Opcodes exp = in.dtable->query(ops[i]);
+				encode_data_section(exp, vars);
+				++i;
 				break;
 			}
 			default:
-				return dba_error_consistency(
+				error_consistency::throwf(
 						"variable %01d%02d%03d cannot be handled",
-							DBA_VAR_F(e->ops->val),
-							DBA_VAR_X(e->ops->val),
-							DBA_VAR_Y(e->ops->val));
+							DBA_VAR_F(ops[i]),
+							DBA_VAR_X(ops[i]),
+							DBA_VAR_Y(ops[i]));
 		}
 	}
-
-	return dba_error_ok();
 }
 
+void Encoder::run()
+{
+	/* Encode bufr section 0 (Indicator section) */
+	raw_append("BUFR\0\0\0", 7);
+	append_byte(in.edition);
+
+	TRACE("sec0 ends at %d\n", out.size());
+	sec1_start = out.size();
+
+	switch (in.edition)
+	{
+		case 2:
+		case 3: encode_sec1ed3(); break;
+		case 4: encode_sec1ed4(); break;
+		default:
+			error_unimplemented::throwf("Encoding BUFR edition %d is not implemented", in.edition);
+	}
+
+
+	TRACE("sec1 ends at %d\n", out.size());
+	sec2_start = out.size();
+	encode_sec2();
+
+	TRACE("sec2 ends at %d\n", out.size());
+	sec3_start = out.size();
+	encode_sec3();
+
+	TRACE("sec3 ends at %d\n", out.size());
+	sec4_start = out.size();
+	encode_sec4();
+
+	TRACE("sec4 ends at %d\n", out.size());
+	sec5_start = out.size();
+
+	/* Encode section 5 (End section) */
+	raw_append("7777", 4);
+	TRACE("sec5 ends at %d\n", out.size());
+
+	/* Write the length of the BUFR message in its header */
+	{
+		uint32_t val = htonl(out.size());
+		memcpy((char*)out.data() + 4, ((char*)&val) + 1, 3);
+
+		TRACE("msg size %u\n", out.size());
+	}
+}
+
+} // Unnamed namespace
+
+void BufrMsg::encode(Rawmsg& out) const
+{
+	Encoder e(*this, out);
+	e.run();
+	out.encoding = BUFR;
+}
+
+
+} // bufrex namespace
 
 /* vim:set ts=4 sw=4: */

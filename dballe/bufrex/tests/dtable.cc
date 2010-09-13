@@ -22,12 +22,15 @@
 #include <test-utils-bufrex.h>
 #include <dballe/bufrex/dtable.h>
 
+using namespace dballe;
+using namespace bufrex;
+using namespace std;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct dtable_shar
 {
-	TestBufrexEnv testenv;
+	bufrex::tests::TestBufrexEnv testenv;
 
 	dtable_shar()
 	{
@@ -44,128 +47,111 @@ template<> template<>
 void to::test<1>()
 {
 	const char* testdatadir = getenv("DBA_TESTDATA");
-	LocalEnv le("DBA_TABLES", testdatadir ? testdatadir : ".");
+	dballe::tests::LocalEnv le("DBA_TABLES", testdatadir ? testdatadir : ".");
 
-	bufrex_dtable table;
-	bufrex_opcode chain;
-	bufrex_opcode cur;
-
-	CHECKED(bufrex_dtable_create("test-crex-d-table", &table));
+	const DTable* table = DTable::get("test-crex-d-table");
 
 	/* Try querying a nonexisting item */
-	gen_ensure_equals(bufrex_dtable_query(table, DBA_VAR(3, 0, 9), &chain), DBA_ERROR);
-	chain = NULL;
+	try {
+		table->query(DBA_VAR(3, 0, 9));
+	} catch (error_notfound& e) {
+		ensure_contains(e.what(), "300009");
+	}
+
+	/* Query the first item */
+	Opcodes chain = table->query(DBA_VAR(3, 0, 2));
+	ensure_equals(chain.size(), 2u);
+	ensure_equals(chain.head(), DBA_VAR(0, 0, 2));
+	chain = chain.next();
+	ensure_equals(chain.head(), DBA_VAR(0, 0, 3));
+	chain = chain.next();
+	ensure_equals(chain.head(), 0);
+	ensure_equals(chain.size(), 0);
 
 	/* Now query an existing item */
-	CHECKED(bufrex_dtable_query(table, DBA_VAR(3, 35, 6), &chain));
-	gen_ensure(chain != NULL);
-	cur = chain;
+	chain = table->query(DBA_VAR(3, 35, 6));
+	ensure_equals(chain.size(), 7u);
 
-	/*fprintf(stderr, "VAL: %d %02d %03d\n", DBA_VAR_F(cur->val), DBA_VAR_X(cur->val), DBA_VAR_Y(cur->val));*/
-	gen_ensure_equals(cur->val, DBA_VAR(0, 8, 21));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 4, 4));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 8, 21));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 4, 4));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 35, 0));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 1, 3));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 35, 11));
-
-	bufrex_opcode_delete(&chain);
-	gen_ensure_equals(chain, (bufrex_opcode)0);
+	ensure_equals(chain.head(), DBA_VAR(0, 8, 21));
+	chain = chain.next();
+	ensure_equals(chain.head(), DBA_VAR(0, 4, 4));
+	chain = chain.next();
+	ensure_equals(chain.head(), DBA_VAR(0, 8, 21));
+	chain = chain.next();
+	ensure_equals(chain.head(), DBA_VAR(0, 4, 4));
+	chain = chain.next();
+	ensure_equals(chain.head(), DBA_VAR(0, 35, 0));
+	chain = chain.next();
+	ensure_equals(chain.head(), DBA_VAR(0, 1, 3));
+	chain = chain.next();
+	ensure_equals(chain.head(), DBA_VAR(0, 35, 11));
+	chain = chain.next();
+	ensure_equals(chain.head(), 0);
+	chain = chain.next();
+	ensure_equals(chain.head(), 0);
+	ensure_equals(chain.size(), 0);
 
 	/* Then query the last item */
-	CHECKED(bufrex_dtable_query(table, DBA_VAR(3, 35, 10), &chain));
-	gen_ensure(chain != NULL);
-	cur = chain;
+	chain = table->query(DBA_VAR(3, 35, 10));
+	ensure_equals(chain.size(), 3u);
 
-	gen_ensure_equals(cur->val, DBA_VAR(3, 35, 2));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(3, 35, 3));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(3, 35, 7));
-
-	bufrex_opcode_delete(&chain);
-	gen_ensure_equals(chain, (bufrex_opcode)0);
+	ensure_equals(chain.head(), DBA_VAR(3, 35, 2));
+	chain = chain.next();
+	ensure_equals(chain.head(), DBA_VAR(3, 35, 3));
+	chain = chain.next();
+	ensure_equals(chain.head(), DBA_VAR(3, 35, 7));
+	chain = chain.next();
+	ensure_equals(chain.head(), 0);
+	ensure_equals(chain.size(), 0);
 }
 
 // Try reading a BUFR edition 4 table
 template<> template<>
 void to::test<2>()
 {
-	bufrex_dtable table;
-	bufrex_opcode chain;
-	bufrex_opcode cur;
-
-	CHECKED(bufrex_dtable_create("D0000000000098013102", &table));
+	const DTable* table = DTable::get("D0000000000098013102");
 
 	/* Try querying a nonexisting item */
-	gen_ensure_equals(bufrex_dtable_query(table, DBA_VAR(3, 0, 9), &chain), DBA_ERROR);
-	chain = NULL;
+	try {
+		table->query(DBA_VAR(3, 0, 9));
+	} catch (error_notfound& e) {
+		ensure_contains(e.what(), "300009");
+	}
 
 	/* Now query an existing item */
-	CHECKED(bufrex_dtable_query(table, DBA_VAR(3, 1, 24), &chain));
-	gen_ensure(chain != NULL);
-	cur = chain;
+	Opcodes chain = table->query(DBA_VAR(3, 1, 24));
 
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 5, 2)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 6, 2)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 7, 1)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), 0); chain = chain.next();
+	ensure_varcode_equals(chain.head(), 0);
+	ensure_equals(chain.size(), 0);
 	/*fprintf(stderr, "VAL: %d %02d %03d\n", DBA_VAR_F(cur->val), DBA_VAR_X(cur->val), DBA_VAR_Y(cur->val));*/
-	gen_ensure_equals(cur->val, DBA_VAR(0, 5, 2));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 6, 2));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 7, 1));
-
-	bufrex_opcode_delete(&chain);
-	gen_ensure_equals(chain, (bufrex_opcode)0);
 
 	/* Then query the last item */
-	CHECKED(bufrex_dtable_query(table, DBA_VAR(3, 21, 28), &chain));
-	gen_ensure(chain != NULL);
-	cur = chain;
-
-	gen_ensure_equals(cur->val, DBA_VAR(0, 21, 118));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(2,  2, 129));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(2,  1, 132));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0,  2, 112));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(2,  1,   0));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(2,  1, 131));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0,  2, 111));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(2,  1,   0));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(2,  2,   0));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0,  2, 104));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 21, 123));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 21, 106));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 21, 107));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 21, 114));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 21, 115));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 21, 116));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0,  8,  18));
-	cur = cur->next; gen_ensure(cur != NULL);
-	gen_ensure_equals(cur->val, DBA_VAR(0, 21, 117));
-
-	bufrex_opcode_delete(&chain);
-	gen_ensure_equals(chain, (bufrex_opcode)0);
+	chain = table->query(DBA_VAR(3, 21, 28));
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 21, 118)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(2,  2, 129)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(2,  1, 132)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0,  2, 112)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(2,  1,   0)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(2,  1, 131)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0,  2, 111)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(2,  1,   0)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(2,  2,   0)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0,  2, 104)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 21, 123)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 21, 106)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 21, 107)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 21, 114)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 21, 115)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 21, 116)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0,  8,  18)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), DBA_VAR(0, 21, 117)); chain = chain.next();
+	ensure_varcode_equals(chain.head(), 0); chain = chain.next();
+	ensure_varcode_equals(chain.head(), 0);
+	ensure_equals(chain.size(), 0);
 }
 }
 

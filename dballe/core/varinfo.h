@@ -22,6 +22,8 @@
 #ifndef DBA_VARINFO_H
 #define DBA_VARINFO_H
 
+#include <stdint.h>
+
 namespace dballe {
 
 /** @file
@@ -244,6 +246,17 @@ struct _Varinfo
 	 *   The decoded double value
 	 */
 	double decode_int(int val) const throw ();
+
+	/**
+	 * Decode a double value from integer value using Varinfo encoding
+	 * informations for BUFR
+	 *
+	 * @param val
+	 *   Value to decode
+	 * @returns
+	 *   The decoded double value
+	 */
+	double bufr_decode_int(uint32_t val) const throw ();
 
 	/**
 	 * Set all fields to 0, except the reference count

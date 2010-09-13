@@ -437,7 +437,7 @@ unsigned Var::diff(const Var& var, FILE* out) const
 	{
 		if (strcmp(m_value, var.m_value) != 0)
 		{
-			fprintf(out, "[%d%02d%03d %s] values differ: first is %s, second is %s\n",
+			fprintf(out, "[%d%02d%03d %s] values differ: first is \"%s\", second is \"%s\"\n",
 				DBA_VAR_F(code()), DBA_VAR_X(code()), DBA_VAR_Y(code()), m_info->desc,
 				m_value, var.m_value);
 			return 1;

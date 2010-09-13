@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +19,15 @@
 
 #include <test-utils-bufrex.h>
 
+using namespace dballe;
+using namespace bufrex;
+using namespace std;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct bufr_decoder_shar
 {
-	TestBufrexEnv testenv;
+	bufrex::tests::TestBufrexEnv testenv;
 
 	bufr_decoder_shar()
 	{
@@ -38,6 +39,7 @@ struct bufr_decoder_shar
 };
 TESTGRP(bufr_decoder);
 
+#if 0
 #define ensure_has_33007(msg, subset, var, val) _ensure_has_33007(__FILE__, __LINE__, msg, subset, var, val)
 void _ensure_has_33007(const char* file, int line, bufrex_msg msg, int subset, int var, int val)
 {
@@ -49,63 +51,70 @@ void _ensure_has_33007(const char* file, int line, bufrex_msg msg, int subset, i
 	INNER_CHECKED(dba_var_enqi(attr, &ival));
 	inner_ensure_equals(ival, val);
 }
+#endif
 
+typedef bufrex::tests::MsgTester<BufrMsg> MsgTester;
 
 template<> template<>
 void to::test<1>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 21;
-	test.subsets = 1;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 21);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msgr = read_test_msg_raw("bufr/bufr1", BUFR);
-	ensureBufrexRawEquals(test, msgr);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 35u);
 
-	test.subset(0).vars = 35;
-	test.subset(0).set(DBA_VAR(0, 5, 2), 68.27);
-	test.subset(0).set(DBA_VAR(0, 6, 2),  9.68);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 5, 2));
+			ensure_equals(s[9].enqd(), 68.27);
+			ensure_varcode_equals(s[10].code(), DBA_VAR(0, 6, 2));
+			ensure_equals(s[10].enqd(),  9.68);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/bufr1", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
-
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
-	bufrex_msg_delete(msgr);
+	test.run("bufr/bufr1");
 }
 
 template<> template<>
 void to::test<2>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 21;
-	test.subsets = 1;
-	test.subset(0).vars = 35;
-	test.subset(0).set(DBA_VAR(0, 5, 2),  43.02);
-	test.subset(0).set(DBA_VAR(0, 6, 2), -12.45);
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 21);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/bufr2", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 35u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 5, 2));
+			ensure_equals(s[9].enqd(), 43.02);
+			ensure_varcode_equals(s[10].code(), DBA_VAR(0, 6, 2));
+			ensure_equals(s[10].enqd(), -12.45);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
+
+	test.run("bufr/bufr2");
 }
 
 template<> template<>
@@ -136,488 +145,504 @@ void to::test<3>()
 template<> template<>
 void to::test<4>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 0;
-	test.subcat = 255;
-	test.localsubcat = 1;
-	test.subsets = 1;
-	test.subset(0).vars = 52;
-	test.subset(0).set(DBA_VAR(0, 20, 13), 250.0);
-	test.subset(0).set(DBA_VAR(0, 20, 13), 320.0);
-	test.subset(0).set(DBA_VAR(0, 20, 13), 620.0);
-	test.subset(0).set(DBA_VAR(0, 20, 13), 920.0);
-	test.subset(0).setUndef(DBA_VAR(0, 20, 13));
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 1);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs0-1.22.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 52u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure_varcode_equals(s[27].code(), DBA_VAR(0, 20, 13));
+			ensure_equals(s[27].enqd(), 250.0);
+			ensure_varcode_equals(s[34].code(), DBA_VAR(0, 20, 13));
+			ensure_equals(s[34].enqd(), 320.0);
+			ensure_varcode_equals(s[38].code(), DBA_VAR(0, 20, 13));
+			ensure_equals(s[38].enqd(), 620.0);
+			ensure_varcode_equals(s[42].code(), DBA_VAR(0, 20, 13));
+			ensure_equals(s[42].enqd(), 920.0);
+			ensure_varcode_equals(s[46].code(), DBA_VAR(0, 20, 13));
+			ensure(s[46].value() == NULL);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
+
+	test.run("bufr/obs0-1.22.bufr");
 }
 
 template<> template<>
 void to::test<5>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 0;
-	test.subcat = 255;
-	test.localsubcat = 3;
-	test.subsets = 1;
-	test.subset(0).vars = 52;
-	test.subset(0).set(DBA_VAR(0, 20, 12), 37.0);
-	test.subset(0).set(DBA_VAR(0, 20, 12), 22.0);
-	test.subset(0).set(DBA_VAR(0, 20, 12), 60.0);
-	test.subset(0).set(DBA_VAR(0, 20, 12), 7.0);
-	test.subset(0).set(DBA_VAR(0, 20, 12), 5.0);
-	test.subset(0).setUndef(DBA_VAR(0, 20, 12));
-	test.subset(0).setUndef(DBA_VAR(0, 20, 12));
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 3);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs0-3.504.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 52u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure_varcode_equals(s[28].code(), DBA_VAR(0, 20, 12));
+			ensure_equals(s[28].enqd(), 37.0);
+			ensure_varcode_equals(s[29].code(), DBA_VAR(0, 20, 12));
+			ensure_equals(s[29].enqd(), 22.0);
+			ensure_varcode_equals(s[30].code(), DBA_VAR(0, 20, 12));
+			ensure_equals(s[30].enqd(), 60.0);
+			ensure_varcode_equals(s[33].code(), DBA_VAR(0, 20, 12));
+			ensure_equals(s[33].enqd(),  7.0);
+			ensure_varcode_equals(s[37].code(), DBA_VAR(0, 20, 12));
+			ensure_equals(s[37].enqd(),  5.0);
+			ensure_varcode_equals(s[41].code(), DBA_VAR(0, 20, 12));
+			ensure(s[41].value() == NULL);
+			ensure_varcode_equals(s[45].code(), DBA_VAR(0, 20, 12));
+			ensure(s[45].value() == NULL);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
+
+	test.run("bufr/obs0-3.504.bufr");
 }
 
 template<> template<>
 void to::test<6>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 9;
-	test.subsets = 1;
-	test.subset(0).vars = 37;
-	test.subset(0).set(DBA_VAR(0,  1,  11), "DFPC");
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 9);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs1-9.2.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 37u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure_varcode_equals(s[0].code(), DBA_VAR(0, 1, 11));
+			ensure_equals(string(s[0].enqc()), "DFPC");
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
+
+	test.run("bufr/obs1-9.2.bufr");
 }
 
 template<> template<>
 void to::test<7>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 11;
-	test.subsets = 1;
-	test.subset(0).vars = 37;
-	test.subset(0).set(DBA_VAR(0, 10, 197), 46.0);
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 11);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs1-11.16.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 37u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure_varcode_equals(s[33].code(), DBA_VAR(0, 10, 197));
+			ensure_equals(s[33].enqd(), 46.0);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
+
+	test.run("bufr/obs1-11.16.bufr");
 }
 
 template<> template<>
 void to::test<8>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 13;
-	test.subsets = 1;
-	test.subset(0).vars = 37;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 13);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs1-13.36.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 37u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/obs1-13.36.bufr");
 }
 
 template<> template<>
 void to::test<9>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 19;
-	test.subsets = 1;
-	test.subset(0).vars = 37;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 19);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs1-19.3.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 37u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/obs1-19.3.bufr");
 }
 
 template<> template<>
 void to::test<10>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 21;
-	test.subsets = 1;
-	test.subset(0).vars = 35;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 21);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/synop-old-buoy.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 35u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/synop-old-buoy.bufr");
 }
 
 template<> template<>
 void to::test<11>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 2;
-	test.subcat = 255;
-	test.localsubcat = 101;
-	test.subsets = 1;
-	test.subset(0).vars = 619;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 2);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 101);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs2-101.16.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 619u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[1].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[1].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/obs2-101.16.bufr");
 }
 
 template<> template<>
 void to::test<12>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 2;
-	test.subcat = 255;
-	test.localsubcat = 102;
-	test.subsets = 1;
-	test.subset(0).vars = 403;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 2);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 102);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs2-102.1.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 403u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 5, 70);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/obs2-102.1.bufr");
 }
 
 template<> template<>
 void to::test<13>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 2;
-	test.subcat = 255;
-	test.localsubcat = 91;
-	test.subsets = 1;
-	test.subset(0).vars = 127;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 2);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 91);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs2-91.2.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 127u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/obs2-91.2.bufr");
 }
 
 template<> template<>
 void to::test<14>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 4;
-	test.subcat = 255;
-	test.localsubcat = 142;
-	test.subsets = 1;
-	test.subset(0).vars = 21;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 4);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 142);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/airep-old-4-142.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 21u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/airep-old-4-142.bufr");
 }
 
 template<> template<>
 void to::test<15>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 4;
-	test.subcat = 255;
-	test.localsubcat = 144;
-	test.subsets = 1;
-	test.subset(0).vars = 21;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 4);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 144);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs4-144.4.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 21u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/obs4-144.4.bufr");
 }
 
 template<> template<>
 void to::test<16>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 4;
-	test.subcat = 255;
-	test.localsubcat = 145;
-	test.subsets = 1;
-	test.subset(0).vars = 31;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 4);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 145);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs4-145.4.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 31u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/obs4-145.4.bufr");
 }
 
 template<> template<>
 void to::test<17>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 3;
-	test.subcat = 255;
-	test.localsubcat = 3;
-	test.subsets = 180;
-	test.subset(0).vars = 127;
-	test.subset(1).vars = 127;
-	test.subset(2).vars = 127;
-	test.subset(179).vars = 127;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 3);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 3);
+			ensure_equals(msg.subsets.size(), 180);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs3-3.1.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			ensure_equals(msg.subset(0).size(), 127u);
+			ensure_equals(msg.subset(1).size(), 127u);
+			ensure_equals(msg.subset(2).size(), 127u);
+			ensure_equals(msg.subset(179).size(), 127u);
+		}
+	} test;
 
-#if 0
-	Still cannot encode satellite info
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
-#endif
-
-	bufrex_msg_delete(msg);
-#if 0
-	bufrex_msg_delete(msg1);
-#endif
+	// FIXME: recoding might not work
+	test.run("bufr/obs3-3.1.bufr");
 }
 
 template<> template<>
 void to::test<18>()
 {
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 3;
-	test.subcat = 255;
-	test.localsubcat = 56;
-	test.subsets = 35;
-	test.subset(0).vars = 225;
-	test.subset(1).vars = 225;
-	test.subset(2).vars = 225;
-	test.subset(34).vars = 225;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 3);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 56);
+			ensure_equals(msg.subsets.size(), 35u);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/obs3-56.2.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
+			ensure_equals(msg.subset(0).size(), 225u);
+			ensure_equals(msg.subset(1).size(), 225u);
+			ensure_equals(msg.subset(2).size(), 225u);
+			ensure_equals(msg.subset(34).size(), 225u);
 
-#if 0
-	Still cannot encode satellite info
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
-#endif
+			const Subset& s = msg.subset(0);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-#if 0
-	bufrex_msg_delete(msg1);
-#endif
+	// FIXME: recoding might not work
+	test.run("bufr/obs3-56.2.bufr");
 }
 
 template<> template<>
 void to::test<19>()
 {
-	TestBufrexMsg test;
-	test.edition = 4;
-	test.cat = 8;
-	test.subcat = 255;
-	test.localsubcat = 171;
-	test.subsets = 128;
+	//bufrex_msg msgr = read_test_msg_header_raw("bufr/ed4.bufr", BUFR);
+	//ensureBufrexRawEquals(test, msgr);
 
-	bufrex_msg msgr = read_test_msg_header_raw("bufr/ed4.bufr", BUFR);
-	ensureBufrexRawEquals(test, msgr);
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 4);
+			ensure_equals(msg.type, 8);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 171);
+			ensure_equals(msg.subsets.size(), 128u);
 
-	test.subset(0).vars = 26;
-	test.subset(1).vars = 26;
-	test.subset(2).vars = 26;
-	test.subset(128).vars = 26;
+			ensure_equals(msg.subset(0).size(), 26u);
+			ensure_equals(msg.subset(1).size(), 26u);
+			ensure_equals(msg.subset(2).size(), 26u);
+			ensure_equals(msg.subset(127).size(), 26u);
+		}
+	} test;
 
-	bufrex_msg msg = read_test_msg_raw("bufr/ed4.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
-
-#if 0
-	Still cannot encode satellite info
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
-#endif
-
-	bufrex_msg_delete(msgr);
-	bufrex_msg_delete(msg);
-#if 0
-	bufrex_msg_delete(msg1);
-#endif
+	// FIXME: recoding might not work
+	test.run("bufr/ed4.bufr");
 }
 
 template<> template<>
 void to::test<20>()
 {
-	TestBufrexMsg test;
-	test.edition = 4;
-	test.cat = 8;
-	test.subcat = 255;
-	test.localsubcat = 171;
-	test.subsets = 128;
+	//bufrex_msg msgr = read_test_msg_header_raw("bufr/ed4date.bufr", BUFR);
+	//ensureBufrexRawEquals(test, msgr);
 
-	bufrex_msg msgr = read_test_msg_header_raw("bufr/ed4date.bufr", BUFR);
-	ensureBufrexRawEquals(test, msgr);
-	ensure_equals(msgr->rep_year, 2000);
-	ensure_equals(msgr->rep_month, 1);
-	ensure_equals(msgr->rep_day, 2);
-	ensure_equals(msgr->rep_hour, 7);
-	ensure_equals(msgr->rep_minute, 0);
-	ensure_equals(msgr->rep_second, 0);
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 4);
+			ensure_equals(msg.type, 8);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 171);
+			ensure_equals(msg.subsets.size(), 128u);
 
-	test.subset(0).vars = 26;
-	test.subset(1).vars = 26;
-	test.subset(2).vars = 26;
-	test.subset(128).vars = 26;
+			ensure_equals(msg.rep_year, 2000);
+			ensure_equals(msg.rep_month, 1);
+			ensure_equals(msg.rep_day, 2);
+			ensure_equals(msg.rep_hour, 7);
+			ensure_equals(msg.rep_minute, 0);
+			ensure_equals(msg.rep_second, 0);
 
-	bufrex_msg msg = read_test_msg_raw("bufr/ed4date.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
-	ensure_equals(msgr->rep_year, 2000);
-	ensure_equals(msgr->rep_month, 1);
-	ensure_equals(msgr->rep_day, 2);
-	ensure_equals(msgr->rep_hour, 7);
-	ensure_equals(msgr->rep_minute, 0);
-	ensure_equals(msgr->rep_second, 0);
+			ensure_equals(msg.subset(0).size(), 26u);
+			ensure_equals(msg.subset(1).size(), 26u);
+			ensure_equals(msg.subset(2).size(), 26u);
+			ensure_equals(msg.subset(127).size(), 26u);
+		}
+	} test;
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
-
-	bufrex_msg_delete(msgr);
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("bufr/ed4date.bufr");
 }
 
 template<> template<>
 void to::test<21>()
 {
-	TestBufrexMsg test;
-	test.edition = 2;
-	test.cat = 6;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 2);
+			ensure_equals(msg.type, 6);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1u);
 
-	test.subset(0).vars = 4606;
+			ensure_equals(msg.rep_year, 2007);
+			ensure_equals(msg.rep_month, 8);
+			ensure_equals(msg.rep_day, 13);
+			ensure_equals(msg.rep_hour, 18);
+			ensure_equals(msg.rep_minute, 30);
+			ensure_equals(msg.rep_second, 0);
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/ed2radar.bufr", BUFR);
-	ensureBufrexRawEquals(test, msg);
-	ensure_equals(msg->rep_year, 2007);
-	ensure_equals(msg->rep_month, 8);
-	ensure_equals(msg->rep_day, 13);
-	ensure_equals(msg->rep_hour, 18);
-	ensure_equals(msg->rep_minute, 30);
-	ensure_equals(msg->rep_second, 0);
+			ensure_equals(msg.subset(0).size(), 4606u);
+		}
+	} test;
 
-	//bufrex_msg msg1 = reencode_test(msg);
-	//ensureBufrexRawEquals(test, msg1);
-
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+	// FIXME: recoding might not work
+	test.run("bufr/ed2radar.bufr");
 }
 
 /*
@@ -638,7 +663,7 @@ void to::test<22>()
 	test.subsets = 1;
 	*/
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/crex-has-few-digits.bufr", BUFR);
+	//bufrex_msg msg = read_test_msg_header_raw("bufr/crex-has-few-digits.bufr", BUFR);
 	/*
 	ensureBufrexRawEquals(test, msg);
 	ensure_equals(msg->rep_year, 2007);
@@ -654,8 +679,39 @@ void to::test<22>()
 	//bufrex_msg msg1 = reencode_test(msg);
 	//ensureBufrexRawEquals(test, msg1);
 
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			/*
+			ensure_equals(msg.edition, 2);
+			ensure_equals(msg.type, 6);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1u);
+
+			ensure_equals(msg.rep_year, 2007);
+			ensure_equals(msg.rep_month, 8);
+			ensure_equals(msg.rep_day, 13);
+			ensure_equals(msg.rep_hour, 18);
+			ensure_equals(msg.rep_minute, 30);
+			ensure_equals(msg.rep_second, 0);
+
+			ensure_equals(msg.subset(0).size(), 4606u);
+
+			const Subset& s = msg.subset(0);
+
+			// FIXME Does it have this?
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+			*/
+		}
+	} test;
+
+	// FIXME: recoding might not work
+	test.run("bufr/crex-has-few-digits.bufr");
 }
 
 // Buoy who could not look up a D table
@@ -671,7 +727,7 @@ void to::test<23>()
 	test.subsets = 1;
 	*/
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/test-buoy1.bufr", BUFR);
+	//bufrex_msg msg = read_test_msg_header_raw("bufr/test-buoy1.bufr", BUFR);
 	/*
 	ensureBufrexRawEquals(test, msg);
 	ensure_equals(msg->rep_year, 2007);
@@ -687,8 +743,39 @@ void to::test<23>()
 	//bufrex_msg msg1 = reencode_test(msg);
 	//ensureBufrexRawEquals(test, msg1);
 
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			/*
+			ensure_equals(msg.edition, 2);
+			ensure_equals(msg.type, 6);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1u);
+
+			ensure_equals(msg.rep_year, 2007);
+			ensure_equals(msg.rep_month, 8);
+			ensure_equals(msg.rep_day, 13);
+			ensure_equals(msg.rep_hour, 18);
+			ensure_equals(msg.rep_minute, 30);
+			ensure_equals(msg.rep_second, 0);
+
+			ensure_equals(msg.subset(0).size(), 4606u);
+
+			const Subset& s = msg.subset(0);
+
+			// FIXME Does it have this?
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+			*/
+		}
+	} test;
+
+	// FIXME: recoding might not work
+	test.run("bufr/test-buoy1.bufr");
 }
 
 // Soil temperature message
@@ -704,7 +791,7 @@ void to::test<24>()
 	test.subsets = 1;
 	*/
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/test-soil1.bufr", BUFR);
+	//bufrex_msg msg = read_test_msg_header_raw("bufr/test-soil1.bufr", BUFR);
 	/*
 	ensureBufrexRawEquals(test, msg);
 	ensure_equals(msg->rep_year, 2007);
@@ -720,220 +807,316 @@ void to::test<24>()
 	//bufrex_msg msg1 = reencode_test(msg);
 	//ensureBufrexRawEquals(test, msg1);
 
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			/*
+			ensure_equals(msg.edition, 2);
+			ensure_equals(msg.type, 6);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1u);
+
+			ensure_equals(msg.rep_year, 2007);
+			ensure_equals(msg.rep_month, 8);
+			ensure_equals(msg.rep_day, 13);
+			ensure_equals(msg.rep_hour, 18);
+			ensure_equals(msg.rep_minute, 30);
+			ensure_equals(msg.rep_second, 0);
+
+			ensure_equals(msg.subset(0).size(), 4606u);
+
+			const Subset& s = msg.subset(0);
+
+			// FIXME Does it have this?
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+			*/
+		}
+	} test;
+
+	// FIXME: recoding might not work
+	test.run("bufr/test-soil1.bufr");
 }
 
 // BUFR4 with compressed strings
 template<> template<>
 void to::test<25>()
 {
-	TestBufrexMsg test;
-	test.edition = 4;
-	test.cat = 0;
-	test.subcat = 2;
-	test.localsubcat = 0;
-	test.subsets = 5;
-	test.subset(0).vars = 115;
-	test.subset(1).vars = 115;
-	test.subset(2).vars = 115;
-	test.subset(3).vars = 115;
-	test.subset(4).vars = 115;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 4);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 2);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 5u);
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/ed4-compr-string.bufr", BUFR);
+			ensure_equals(msg.rep_year, 2009);
+			ensure_equals(msg.rep_month, 12);
+			ensure_equals(msg.rep_day, 3);
+			ensure_equals(msg.rep_hour, 3);
+			ensure_equals(msg.rep_minute, 0);
+			ensure_equals(msg.rep_second, 0);
 
-	ensureBufrexRawEquals(test, msg);
-	ensure_equals(msg->rep_year, 2009);
-	ensure_equals(msg->rep_month, 12);
-	ensure_equals(msg->rep_day, 3);
-	ensure_equals(msg->rep_hour, 3);
-	ensure_equals(msg->rep_minute, 0);
-	ensure_equals(msg->rep_second, 0);
+			ensure_equals(msg.subset(0).size(), 115u);
+			ensure_equals(msg.subset(1).size(), 115u);
+			ensure_equals(msg.subset(2).size(), 115u);
+			ensure_equals(msg.subset(3).size(), 115u);
+			ensure_equals(msg.subset(4).size(), 115u);
 
-	// test.subset(0).vars = 4606;
+			const Subset& s = msg.subset(0);
 
-	//bufrex_msg msg1 = reencode_test(msg);
-	//ensureBufrexRawEquals(test, msg1);
+			/*
+			// FIXME Does it have this?
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+			*/
+		}
+	} test;
+
+	// FIXME: recoding might not work
+	test.run("bufr/ed4-compr-string.bufr");
+
 }
 
 // BUFR4 which gives a parse error
 template<> template<>
 void to::test<26>()
 {
-	TestBufrexMsg test;
-	test.edition = 4;
-	test.cat = 0;
-	test.subcat = 1;
-	test.localsubcat = 255;
-	test.subsets = 5;
-	test.subset(0).vars = 107;
-	test.subset(1).vars = 107;
-	test.subset(2).vars = 107;
-	test.subset(3).vars = 107;
-	test.subset(4).vars = 107;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 4);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 1);
+			ensure_equals(msg.localsubtype, 255);
+			ensure_equals(msg.subsets.size(), 5u);
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/ed4-parseerror1.bufr", BUFR);
+			ensure_equals(msg.rep_year, 2009);
+			ensure_equals(msg.rep_month, 12);
+			ensure_equals(msg.rep_day, 3);
+			ensure_equals(msg.rep_hour, 3);
+			ensure_equals(msg.rep_minute, 0);
+			ensure_equals(msg.rep_second, 0);
 
-	ensureBufrexRawEquals(test, msg);
-	ensure_equals(msg->rep_year, 2009);
-	ensure_equals(msg->rep_month, 12);
-	ensure_equals(msg->rep_day, 3);
-	ensure_equals(msg->rep_hour, 3);
-	ensure_equals(msg->rep_minute, 0);
-	ensure_equals(msg->rep_second, 0);
+			ensure_equals(msg.subset(0).size(), 107u);
+			ensure_equals(msg.subset(1).size(), 107u);
+			ensure_equals(msg.subset(2).size(), 107u);
+			ensure_equals(msg.subset(3).size(), 107u);
+			ensure_equals(msg.subset(4).size(), 107u);
 
-	// test.subset(0).vars = 4606;
+			const Subset& s = msg.subset(0);
 
-	//bufrex_msg msg1 = reencode_test(msg);
-	//ensureBufrexRawEquals(test, msg1);
+			/*
+			// FIXME Does it have this?
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+			*/
+		}
+	} test;
+
+	// FIXME: recoding might not work
+	test.run("bufr/ed4-parseerror1.bufr");
 }
 
 // BUFR4 which does not give a parse error but looks empty
 template<> template<>
 void to::test<27>()
 {
-	TestBufrexMsg test;
-	test.edition = 4;
-	test.cat = 0;
-	test.subcat = 1;
-	test.localsubcat = 0;
-	test.subsets = 7;
-	test.subset(0).vars = 120;
-	test.subset(1).vars = 120;
-	test.subset(2).vars = 120;
-	test.subset(3).vars = 120;
-	test.subset(4).vars = 120;
-	test.subset(5).vars = 120;
-	test.subset(6).vars = 120;
-	test.subset(7).vars = 120;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 4);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 1);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 7u);
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/ed4-empty.bufr", BUFR);
+			ensure_equals(msg.rep_year, 2009);
+			ensure_equals(msg.rep_month, 12);
+			ensure_equals(msg.rep_day, 3);
+			ensure_equals(msg.rep_hour, 3);
+			ensure_equals(msg.rep_minute, 0);
+			ensure_equals(msg.rep_second, 0);
 
-	ensureBufrexRawEquals(test, msg);
-	ensure_equals(msg->rep_year, 2009);
-	ensure_equals(msg->rep_month, 12);
-	ensure_equals(msg->rep_day, 3);
-	ensure_equals(msg->rep_hour, 3);
-	ensure_equals(msg->rep_minute, 0);
-	ensure_equals(msg->rep_second, 0);
+			ensure_equals(msg.subset(0).size(), 120u);
+			ensure_equals(msg.subset(1).size(), 120u);
+			ensure_equals(msg.subset(2).size(), 120u);
+			ensure_equals(msg.subset(3).size(), 120u);
+			ensure_equals(msg.subset(4).size(), 120u);
+			ensure_equals(msg.subset(5).size(), 120u);
+			ensure_equals(msg.subset(6).size(), 120u);
 
-	// test.subset(0).vars = 4606;
+			const Subset& s = msg.subset(0);
 
-	//bufrex_msg msg1 = reencode_test(msg);
-	//ensureBufrexRawEquals(test, msg1);
+			/*
+			// FIXME Does it have this?
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+			*/
+		}
+	} test;
+
+	// FIXME: recoding might not work
+	test.run("bufr/ed4-empty.bufr");
 }
 
 // GTS temp message
 template<> template<>
 void to::test<28>()
 {
-	/*
-	TestBufrexMsg test;
-	test.edition = 2;
-	test.cat = 6;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	*/
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			/*
+			ensure_equals(msg.edition, 4);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 1);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 7u);
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/C05060.bufr", BUFR);
-	/*
-	ensureBufrexRawEquals(test, msg);
-	ensure_equals(msg->rep_year, 2007);
-	ensure_equals(msg->rep_month, 8);
-	ensure_equals(msg->rep_day, 13);
-	ensure_equals(msg->rep_hour, 18);
-	ensure_equals(msg->rep_minute, 30);
-	ensure_equals(msg->rep_second, 0);
+			ensure_equals(msg.rep_year, 2009);
+			ensure_equals(msg.rep_month, 12);
+			ensure_equals(msg.rep_day, 3);
+			ensure_equals(msg.rep_hour, 3);
+			ensure_equals(msg.rep_minute, 0);
+			ensure_equals(msg.rep_second, 0);
 
-	test.subset(0).vars = 4606;
-	*/
+			ensure_equals(msg.subset(0).size(), 120u);
+			ensure_equals(msg.subset(1).size(), 120u);
+			ensure_equals(msg.subset(2).size(), 120u);
+			ensure_equals(msg.subset(3).size(), 120u);
+			ensure_equals(msg.subset(4).size(), 120u);
+			ensure_equals(msg.subset(5).size(), 120u);
+			ensure_equals(msg.subset(6).size(), 120u);
+			ensure_equals(msg.subset(7).size(), 120u);
 
-	//bufrex_msg msg1 = reencode_test(msg);
-	//ensureBufrexRawEquals(test, msg1);
+			const Subset& s = msg.subset(0);
+			*/
 
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+			/*
+			// FIXME Does it have this?
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+			*/
+		}
+	} test;
+
+	// FIXME: recoding might not work
+	test.run("bufr/C05060.bufr");
 }
 
 // Custom ARPA temp forecast message saved as ARPA generic
 template<> template<>
 void to::test<29>()
 {
-	/*
-	TestBufrexMsg test;
-	test.edition = 2;
-	test.cat = 6;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	*/
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			/*
+			ensure_equals(msg.edition, 4);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 1);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 7u);
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/tempforecast.bufr", BUFR);
-	/*
-	ensureBufrexRawEquals(test, msg);
-	ensure_equals(msg->rep_year, 2007);
-	ensure_equals(msg->rep_month, 8);
-	ensure_equals(msg->rep_day, 13);
-	ensure_equals(msg->rep_hour, 18);
-	ensure_equals(msg->rep_minute, 30);
-	ensure_equals(msg->rep_second, 0);
+			ensure_equals(msg.rep_year, 2009);
+			ensure_equals(msg.rep_month, 12);
+			ensure_equals(msg.rep_day, 3);
+			ensure_equals(msg.rep_hour, 3);
+			ensure_equals(msg.rep_minute, 0);
+			ensure_equals(msg.rep_second, 0);
 
-	test.subset(0).vars = 4606;
-	*/
+			ensure_equals(msg.subset(0).size(), 120u);
+			ensure_equals(msg.subset(1).size(), 120u);
+			ensure_equals(msg.subset(2).size(), 120u);
+			ensure_equals(msg.subset(3).size(), 120u);
+			ensure_equals(msg.subset(4).size(), 120u);
+			ensure_equals(msg.subset(5).size(), 120u);
+			ensure_equals(msg.subset(6).size(), 120u);
+			ensure_equals(msg.subset(7).size(), 120u);
 
-	//bufrex_msg msg1 = reencode_test(msg);
-	//ensureBufrexRawEquals(test, msg1);
+			const Subset& s = msg.subset(0);
+			*/
 
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+			/*
+			// FIXME Does it have this?
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+			*/
+		}
+	} test;
+
+	// FIXME: recoding might not work
+	test.run("bufr/tempforecast.bufr");
 }
 
 // C23000 modifier
 template<> template<>
 void to::test<30>()
 {
-	/*
-	TestBufrexMsg test;
-	test.edition = 2;
-	test.cat = 6;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	*/
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			/*
+			ensure_equals(msg.edition, 4);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 1);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 7u);
 
-	bufrex_msg msg = read_test_msg_header_raw("bufr/C23000.bufr", BUFR);
-	/*
-	ensureBufrexRawEquals(test, msg);
-	ensure_equals(msg->rep_year, 2007);
-	ensure_equals(msg->rep_month, 8);
-	ensure_equals(msg->rep_day, 13);
-	ensure_equals(msg->rep_hour, 18);
-	ensure_equals(msg->rep_minute, 30);
-	ensure_equals(msg->rep_second, 0);
+			ensure_equals(msg.rep_year, 2009);
+			ensure_equals(msg.rep_month, 12);
+			ensure_equals(msg.rep_day, 3);
+			ensure_equals(msg.rep_hour, 3);
+			ensure_equals(msg.rep_minute, 0);
+			ensure_equals(msg.rep_second, 0);
 
-	test.subset(0).vars = 4606;
-	*/
+			ensure_equals(msg.subset(0).size(), 120u);
+			ensure_equals(msg.subset(1).size(), 120u);
+			ensure_equals(msg.subset(2).size(), 120u);
+			ensure_equals(msg.subset(3).size(), 120u);
+			ensure_equals(msg.subset(4).size(), 120u);
+			ensure_equals(msg.subset(5).size(), 120u);
+			ensure_equals(msg.subset(6).size(), 120u);
+			ensure_equals(msg.subset(7).size(), 120u);
 
-	ensure_has_33007(msg, 0, 0, 70);
-	ensure_has_33007(msg, 0, 1, 70);
+			const Subset& s = msg.subset(0);
+			*/
 
-	//bufrex_msg msg1 = reencode_test(msg);
-	//ensureBufrexRawEquals(test, msg1);
+			/*
+			// FIXME Does it have this?
+			ensure(s[0].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[0].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
 
-	bufrex_msg_delete(msg);
-	//bufrex_msg_delete(msg1);
+			ensure(s[5].enqa(DBA_VAR(0, 33, 7)) != NULL);
+			ensure_equals(s[5].enqa(DBA_VAR(0, 33, 7))->enqi(), 70);
+			*/
+		}
+	} test;
+
+	// FIXME: recoding might not work
+	test.run("bufr/C23000.bufr");
 }
-
 
 }
 

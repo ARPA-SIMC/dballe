@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,12 +20,15 @@
 #include <test-utils-bufrex.h>
 #include <string.h>
 
+using namespace dballe;
+using namespace bufrex;
+using namespace std;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct bufr_encoder_shar
 {
-	TestBufrexEnv testenv;
+	bufrex::tests::TestBufrexEnv testenv;
 
 	bufr_encoder_shar()
 	{
@@ -39,206 +40,215 @@ struct bufr_encoder_shar
 };
 TESTGRP(bufr_encoder);
 
-bool memfind(dba_rawmsg rmsg, const char* str, size_t len)
+bool memfind(const Rawmsg& rmsg, const char* str, size_t len)
 {
 	for (size_t i = 0; true; ++i)
 	{
-		if (i + len >= rmsg->len) return false;
-		if (memcmp(rmsg->buf + i, str, len) == 0)
+		if (i + len >= rmsg.size()) return false;
+		if (memcmp((const char*)rmsg.data() + i, str, len) == 0)
 			return true;
 	}
 }
 
+typedef bufrex::tests::MsgTester<BufrMsg> MsgTester;
+
 template<> template<>
 void to::test<1>()
 {
-	bufrex_msg msg;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	CHECKED(bufrex_msg_create(BUFREX_BUFR, &msg));
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 1u);
+
+			ensure_varcode_equals(s[0].code(), DBA_VAR(0, 0, 13));
+			ensure_equals(string(s[0].enqc()), "abcdefg");
+
+			/* Ensure that the decoded strings are zero-padded */
+			ensure(memcmp(s[0].value(), "abcdefg\0\0\0\0\0\0\0", 7+7) == 0);
+		}
+	} test;
+
+	BufrMsg msg;
 
 	/* Initialise common message bits */
-	msg->edition = 3;            // BUFR ed.4
-	msg->type = 0;               // Template 8.255.171
-	msg->subtype = 255;
-	msg->localsubtype = 0;
-	msg->opt.bufr.centre = 98;
-	msg->opt.bufr.subcentre = 0;
-	msg->opt.bufr.master_table = 12;
-	msg->opt.bufr.local_table = 1;
-	msg->opt.bufr.compression = 1;
-	msg->rep_year = 2008;
-	msg->rep_month = 5;
-	msg->rep_day = 3;
-	msg->rep_hour = 12;
-	msg->rep_minute = 30;
-	msg->rep_second = 0;
+	msg.edition = 3;            // BUFR ed.4
+	msg.type = 0;               // Template 8.255.171
+	msg.subtype = 255;
+	msg.localsubtype = 0;
+	msg.centre = 98;
+	msg.subcentre = 0;
+	msg.master_table = 12;
+	msg.local_table = 1;
+	msg.compression = 1;
+	msg.rep_year = 2008;
+	msg.rep_month = 5;
+	msg.rep_day = 3;
+	msg.rep_hour = 12;
+	msg.rep_minute = 30;
+	msg.rep_second = 0;
 
-	/* Load encoding tables */
-	CHECKED(bufrex_msg_load_tables(msg));
+	// Load encoding tables
+	msg.load_tables();
 
-	/* Fill up the data descriptor section */
-	CHECKED(bufrex_msg_append_datadesc(msg, DBA_VAR(0,  0,  13)));
+	// Fill up the data descriptor section
+	msg.datadesc.push_back(DBA_VAR(0,  0,  13));
 
-	/* Get the working subset */
-	bufrex_subset s;
-	CHECKED(bufrex_msg_get_subset(msg, 0, &s));
+	// Get the working subset
+	Subset& s = msg.obtain_subset(0);
 
-	/* Set a text variable */
-	CHECKED(bufrex_subset_store_variable_c(s, DBA_VAR(0, 0, 13), "12345678901234567890"));
+	// Set a text variable
+	s.store_variable_c(DBA_VAR(0, 0, 13), "12345678901234567890");
 
-	/* Set it to a shorter text, to see if the encoder encodes the trailing garbage */
-	CHECKED(dba_var_setc(s->vars[0], "abcdefg"));
+	// Set it to a shorter text, to see if the encoder encodes the trailing garbage
+	s[0].setc("abcdefg");
 
-	/* Encode */
-	dba_rawmsg rmsg = NULL;
-	CHECKED(bufrex_msg_encode(msg, &rmsg));
+	// Run tests on the original
+	test.run("orig", msg);
+
+	// Encode
+	Rawmsg rmsg;
+	msg.encode(rmsg);
 
 	// Ensure that the encoded strings are space-padded
-	gen_ensure(memfind(rmsg, "abcdefg       ", 14));
+	ensure(memfind(rmsg, "abcdefg       ", 14));
 
-	// Decode the message
-	bufrex_msg msg1;
-	CHECKED(bufrex_msg_create(BUFREX_BUFR, &msg1));
-	CHECKED(bufrex_msg_decode(msg1, rmsg));
-
-	dba_rawmsg_delete(rmsg);
-
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 0;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	test.subset(0).vars = 1;
-	test.subset(0).set(DBA_VAR(0, 0, 13), "abcdefg");
-	ensureBufrexRawEquals(test, msg);
-	ensureBufrexRawEquals(test, msg1);
-
-	/* Ensure that the decoded strings are zero-padded */
-	gen_ensure_equals(memcmp(dba_var_value(msg1->subsets[0]->vars[0]), "abcdefg\0\0\0\0\0\0\0", 7+7), 0);
-
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	// Decode the message and retest
+	BufrMsg msg1;
+	msg1.decode(rmsg);
+	test.run("reencoded", msg1);
 }
 
 // Encode a BUFR with an optional section
 template<> template<>
 void to::test<2>()
 {
-	bufrex_msg msg;
+	struct Tester : public MsgTester {
+		void test(const BufrMsg& msg)
+		{
+			ensure_equals(msg.edition, 3);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	CHECKED(bufrex_msg_create(BUFREX_BUFR, &msg));
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 1u);
 
-	/* Initialise common message bits */
-	msg->edition = 3;            // BUFR ed.4
-	msg->type = 0;               // Template 8.255.171
-	msg->subtype = 255;
-	msg->localsubtype = 0;
-	msg->opt.bufr.centre = 98;
-	msg->opt.bufr.subcentre = 0;
-	msg->opt.bufr.master_table = 12;
-	msg->opt.bufr.local_table = 1;
-	msg->opt.bufr.compression = 1;
-	msg->opt.bufr.optional_section_length = 5;
-	msg->opt.bufr.optional_section = strdup("Ciao");
-	msg->rep_year = 2008;
-	msg->rep_month = 5;
-	msg->rep_day = 3;
-	msg->rep_hour = 12;
-	msg->rep_minute = 30;
-	msg->rep_second = 0;
+			ensure_varcode_equals(s[0].code(), DBA_VAR(0, 0, 13));
+			ensure_equals(string(s[0].enqc()), "abcdefg");
 
-	/* Load encoding tables */
-	CHECKED(bufrex_msg_load_tables(msg));
+			/* Ensure that the decoded strings are zero-padded */
+			ensure(memcmp(s[0].value(), "abcdefg\0\0\0\0\0\0\0", 7+7) == 0);
+		}
+	} test;
 
-	/* Fill up the data descriptor section */
-	CHECKED(bufrex_msg_append_datadesc(msg, DBA_VAR(0,  0,  13)));
+	BufrMsg msg;
 
-	/* Get the working subset */
-	bufrex_subset s;
-	CHECKED(bufrex_msg_get_subset(msg, 0, &s));
+	// Initialise common message bits
+	msg.edition = 3;            // BUFR ed.4
+	msg.type = 0;               // Template 8.255.171
+	msg.subtype = 255;
+	msg.localsubtype = 0;
+	msg.centre = 98;
+	msg.subcentre = 0;
+	msg.master_table = 12;
+	msg.local_table = 1;
+	msg.compression = 1;
+	msg.optional_section_length = 5;
+	msg.optional_section = new char[5];
+	strcpy(msg.optional_section, "Ciao");
+	msg.rep_year = 2008;
+	msg.rep_month = 5;
+	msg.rep_day = 3;
+	msg.rep_hour = 12;
+	msg.rep_minute = 30;
+	msg.rep_second = 0;
 
-	/* Set a text variable */
-	CHECKED(bufrex_subset_store_variable_c(s, DBA_VAR(0, 0, 13), "12345678901234567890"));
+	// Load encoding tables
+	msg.load_tables();
 
-	/* Set it to a shorter text, to see if the encoder encodes the trailing garbage */
-	CHECKED(dba_var_setc(s->vars[0], "abcdefg"));
+	// Fill up the data descriptor section
+	msg.datadesc.push_back(DBA_VAR(0, 0, 13));
 
-	/* Encode */
-	dba_rawmsg rmsg = NULL;
-	CHECKED(bufrex_msg_encode(msg, &rmsg));
+	// Get the working subset
+	Subset& s = msg.obtain_subset(0);
+
+	// Set a text variable
+	s.store_variable_c(DBA_VAR(0, 0, 13), "12345678901234567890");
+
+	// Set it to a shorter text, to see if the encoder encodes the trailing garbage
+	s[0].setc("abcdefg");
+
+	// Run tests on the original
+	test.run("orig", msg);
+
+	// Encode
+	Rawmsg rmsg;
+	msg.encode(rmsg);
 
 	// Ensure that the encoded strings are space-padded
-	gen_ensure(memfind(rmsg, "abcdefg       ", 14));
+	ensure(memfind(rmsg, "abcdefg       ", 14));
 
-	// Decode the message
-	bufrex_msg msg1;
-	CHECKED(bufrex_msg_create(BUFREX_BUFR, &msg1));
-	CHECKED(bufrex_msg_decode(msg1, rmsg));
+	// Decode the message and retest
+	BufrMsg msg1;
+	msg1.decode(rmsg);
 
-	dba_rawmsg_delete(rmsg);
+	// Check that the optional section has been padded
+	ensure_equals(msg1.optional_section_length, 6);
+	ensure_equals(memcmp(msg1.optional_section, "Ciao\0", 6), 0);
 
-	gen_ensure_equals(msg1->opt.bufr.optional_section_length, 6); // Has been padded
-	gen_ensure_equals(memcmp(msg1->opt.bufr.optional_section, "Ciao\0", 6), 0);
-
-	TestBufrexMsg test;
-	test.edition = 3;
-	test.cat = 0;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	test.subset(0).vars = 1;
-	test.subset(0).set(DBA_VAR(0, 0, 13), "abcdefg");
-	ensureBufrexRawEquals(test, msg);
-	ensureBufrexRawEquals(test, msg1);
-
-	/* Ensure that the decoded strings are zero-padded */
-	gen_ensure_equals(memcmp(dba_var_value(msg1->subsets[0]->vars[0]), "abcdefg\0\0\0\0\0\0\0", 7+7), 0);
-
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("reencoded", msg1);
 }
 
 // Test variable ranges during encoding
 template<> template<>
 void to::test<3>()
 {
-	bufrex_msg msg;
+	BufrMsg msg;
 
-	CHECKED(bufrex_msg_create(BUFREX_BUFR, &msg));
+	// Initialise common message bits
+	msg.edition = 3;            // BUFR ed.4
+	msg.type = 0;               // Template 8.255.171
+	msg.subtype = 255;
+	msg.localsubtype = 0;
+	msg.centre = 98;
+	msg.subcentre = 0;
+	msg.master_table = 12;
+	msg.local_table = 1;
+	msg.compression = 0;
+	msg.rep_year = 2008;
+	msg.rep_month = 5;
+	msg.rep_day = 3;
+	msg.rep_hour = 12;
+	msg.rep_minute = 30;
+	msg.rep_second = 0;
 
-	/* Initialise common message bits */
-	msg->edition = 3;            // BUFR ed.4
-	msg->type = 0;               // Template 8.255.171
-	msg->subtype = 255;
-	msg->localsubtype = 0;
-	msg->opt.bufr.centre = 98;
-	msg->opt.bufr.subcentre = 0;
-	msg->opt.bufr.master_table = 12;
-	msg->opt.bufr.local_table = 1;
-	msg->opt.bufr.compression = 0;
-	msg->rep_year = 2008;
-	msg->rep_month = 5;
-	msg->rep_day = 3;
-	msg->rep_hour = 12;
-	msg->rep_minute = 30;
-	msg->rep_second = 0;
+	// Load encoding tables
+	msg.load_tables();
 
-	/* Load encoding tables */
-	CHECKED(bufrex_msg_load_tables(msg));
-
-	/* Fill up the data descriptor section */
-	CHECKED(bufrex_msg_append_datadesc(msg, DBA_VAR(0, 1, 1)));
+	// Fill up the data descriptor section
+	msg.datadesc.push_back(DBA_VAR(0, 1, 1));
 
 	/* Get the working subset */
-	bufrex_subset s;
-	CHECKED(bufrex_msg_get_subset(msg, 0, &s));
+	Subset& s = msg.obtain_subset(0);
 
 	/* Set the test variable */
 	//CHECKED(bufrex_subset_store_variable_d(s, DBA_VAR(0, 1, 1), -1.0));
 	/* Now it errors here, because the range check is appropriately strict */
-	dba_err err = bufrex_subset_store_variable_d(s, DBA_VAR(0, 1, 1), -1.0);
-	ensure(err == DBA_ERROR);
+	try {
+		s.store_variable_d(DBA_VAR(0, 1, 1), -1.0);
+		ensure(false);
+	} catch (error_domain& e) {
+		ensure_contains(e.what(), "B01001");
+
+	}
 
 #if 0
 	/* Encode gives error because of overflow */

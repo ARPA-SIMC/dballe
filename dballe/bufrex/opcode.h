@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +20,107 @@
 #ifndef BUFREX_OPCODE_H
 #define BUFREX_OPCODE_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup bufrex
  * Implementation of opcode chains, that are used to drive the encoding and
  * decoding process.
  */
 
-#include <dballe/core/vartable.h>
+#include <dballe/core/varinfo.h>
+#include <vector>
+
+namespace bufrex {
+
+struct Opcodes
+{
+	const std::vector<dballe::Varcode>& vals;
+	unsigned begin;
+	unsigned end;
+
+	Opcodes(const std::vector<dballe::Varcode>& vals) : vals(vals), begin(0), end(vals.size()) {}
+	Opcodes(const std::vector<dballe::Varcode>& vals, unsigned begin, unsigned end)
+		: vals(vals), begin(begin), end(end) {}
+	Opcodes(const Opcodes& o) : vals(o.vals), begin(o.begin), end(o.end) {}
+
+	/**
+	 * Assignment only works if the Opcodes share the same vector.
+	 *
+	 * @warning: for efficiency reasons, we do not check for it
+	 */
+	Opcodes& operator=(const Opcodes& o)
+	{
+		begin = o.begin;
+		end = o.end;
+		return *this;
+	}
+
+	/// Return the i-th varcode in the chain
+	dballe::Varcode operator[](unsigned i) const
+	{
+		if (begin + i > end)
+			return 0;
+		else
+			return vals[begin + i];
+	}
+
+	/// Number of items in this opcode list
+	unsigned size() const { return end - begin; }
+
+	/// True if there are no opcodes
+	bool empty() const { return begin == end; }
+
+	/// First opcode in the list (0 if the list is empty)
+	dballe::Varcode head() const
+	{
+		if (begin == end)
+			return 0;
+		return vals[begin];
+	}
+
+	/**
+	 * List of all opcodes after the first one
+	 *
+	 * If the list is empty, return the empty list
+	 */
+	Opcodes next() const
+	{
+		if (begin == end)
+			return *this;
+		else
+			return Opcodes(vals, begin+1, end);
+	}
+
+	Opcodes sub(unsigned skip) const
+	{
+		if (begin + skip > end)
+			return Opcodes(vals, end, end);
+		else
+			return Opcodes(vals, begin + skip, end);
+	}
+
+	Opcodes sub(unsigned skip, unsigned len) const
+	{
+		if (begin + skip > end)
+			return Opcodes(vals, end, end);
+		else if (begin + skip + len > end)
+			return Opcodes(vals, begin + skip, end);
+		else
+			return Opcodes(vals, begin + skip, begin + skip + len);
+	}
+
+	/**
+	 * Print the contents of this opcode list
+	 *
+	 * This function is used mainly for debugging purposes.
+	 *
+	 * @param outstream
+	 *   The output stream (a FILE* variable) to print to.  void* is used to avoid
+	 *   including stdio.h just for this debugging function.
+	 */
+	void print(void* outstream) const;
+};
+
+#if 0
 
 /**
  * List node containing an entry of a BUFR or CREX data descriptor section.
@@ -40,7 +128,7 @@ extern "C" {
 struct _bufrex_opcode
 {
 	/** Data descriptor as a B, C or D table entry.  See @ref vartable.h */
-	dba_varcode val;
+	dballe::Varcode val;
 	/** Next data descriptor in the list */
 	struct _bufrex_opcode* next;
 };
@@ -65,7 +153,7 @@ void bufrex_opcode_delete(bufrex_opcode* entry);
  * @return
  *   The error indicator for the function
  */
-dba_err bufrex_opcode_append(bufrex_opcode* entry, dba_varcode value);
+dba_err bufrex_opcode_append(bufrex_opcode* entry, dballe::Varcode value);
 
 /**
  * Duplicate an opcode chain and insert it before an existing bufrex_opcode
@@ -135,19 +223,6 @@ dba_err bufrex_opcode_pop(bufrex_opcode* chain, bufrex_opcode* head);
  */
 dba_err bufrex_opcode_pop_n(bufrex_opcode* chain, bufrex_opcode* head, int length);
 
-/**
- * Print the contents of the given chain to the given output stream.
- *
- * This function is used mainly for debugging purposes.
- *
- * @param chain
- *   The bufrex_opcode chain to print
- * @param outstream
- *   The output stream (a FILE* variable) to print to.  void* is used to avoid
- *   including stdio.h just for this debugging function.
- */
-void bufrex_opcode_print(bufrex_opcode chain, void* outstream);
-
 #if 0
 /**
  * Return the next opcode in an opcode chain
@@ -178,8 +253,8 @@ bufrex_opcode bufrex_opcode_copy_n(bufrex_opcode entry, int length);
 /* void bufrex_opcode_print(bufrex_opcode entry, FILE* out); */
 #endif
 
-#ifdef  __cplusplus
-}
 #endif
+
+}
 
 #endif

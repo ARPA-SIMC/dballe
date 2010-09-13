@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +24,12 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <iostream>
 
-namespace tut_dballe {
+namespace bufrex {
+namespace tests {
+
 using namespace std;
 using namespace tut;
 
@@ -36,6 +39,7 @@ struct TestBufrexEnv
 	~TestBufrexEnv();
 };
 
+#if 0
 struct TestBufrexMsg
 {
 	struct TestBufrexSubset
@@ -246,16 +250,57 @@ public:
 	}
 };
 #define ensureBufrexRawEquals(tr, br) tr.ensureEquals(__FILE__, __LINE__, br)
+#endif
 
-bufrex_msg _read_test_msg_header_raw(const char* file, int line, const char* filename, dba_encoding type);
-#define read_test_msg_header_raw(filename, type) _read_test_msg_raw(__FILE__, __LINE__, filename, type)
+std::auto_ptr<bufrex::Msg> _read_test_msg_header_raw(const wibble::tests::Location& loc, const char* filename, dballe::Encoding type);
+#define read_test_msg_header_raw(filename, type) bufrex::tests::_read_test_msg_raw(wibble::tests::Location(__FILE__, __LINE__, "read header " #type " " #filename), filename, type)
+#define inner_read_test_msg_header_raw(filename, type) bufrex::tests::_read_test_msg_raw(wibble::tests::Location(loc, __FILE__, __LINE__, "read header " #type " " #filename), filename, type)
 
-bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type);
-#define read_test_msg_raw(filename, type) _read_test_msg_raw(__FILE__, __LINE__, filename, type)
+std::auto_ptr<bufrex::Msg> _read_test_msg_raw(const wibble::tests::Location& loc, const char* filename, dballe::Encoding type);
+#define read_test_msg_raw(filename, type) bufrex::tests::_read_test_msg_raw(wibble::tests::Location(__FILE__, __LINE__, "read " #type " " #filename), filename, type)
+#define inner_read_test_msg_raw(filename, type) bufrex::tests::_read_test_msg_raw(wibble::tests::Location(loc, __FILE__, __LINE__, "read " #type " " #filename), filename, type)
 
-bufrex_msg _reencode_test(const char* file, int line, bufrex_msg msg);
-#define reencode_test(filename) _reencode_test(__FILE__, __LINE__, msg)
+std::auto_ptr<bufrex::Msg> _reencode_test(const wibble::tests::Location& loc, const bufrex::Msg& msg);
+#define reencode_test(filename) bufrex::tests::_reencode_test(wibble::tests::Location(__FILE__, __LINE__, "reencode " #filename), (filename))
+#define inner_reencode_test(filename) bufrex::tests::_reencode_test(wibble::tests::Location(loc, __FILE__, __LINE__, "reencode " #filename), (filename))
 
+template<typename MSG>
+struct MsgTester
+{
+	virtual ~MsgTester() {}
+	virtual void test(const MSG& msg) = 0;
+	void operator()(const std::string& name, const MSG& msg)
+	{
+		try {
+			test(msg);
+		} catch (tut::failure& f) {
+			throw tut::failure("[" + name + "]" + f.what());
+		}
+	}
+
+	void run(const char* name)
+	{
+		auto_ptr<Msg> rmsg = read_test_msg_raw(name, MSG::class_encoding());
+		const MSG* msg = dynamic_cast<const MSG*>(rmsg.get());
+		ensure(msg != 0);
+		(*this)("orig", *msg);
+
+		auto_ptr<Msg> rmsg1 = reencode_test(*rmsg);
+		const MSG* msg1 = dynamic_cast<const MSG*>(rmsg1.get());
+		ensure(msg1 != 0);
+		(*this)("reencoded", *msg1);
+
+		ensure_equals(msg->diff(*msg1, stderr), 0);
+	}
+
+	void run(const char* tag, const Msg& msg)
+	{
+		const MSG* bmsg = dynamic_cast<const MSG*>(&msg);
+		ensure(bmsg != 0);
+		(*this)(tag, *bmsg);
+	}
+};
+#if 0
 /* Message reading functions */
 
 class bufrex_vector : public dba_raw_consumer, public std::vector<bufrex_msg>
@@ -293,7 +338,9 @@ public:
 		return err;
 	}
 };
+#endif
 
+}
 }
 
 // vim:set ts=4 sw=4:

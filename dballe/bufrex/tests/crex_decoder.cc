@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,14 +18,16 @@
  */
 
 #include <test-utils-bufrex.h>
-#include <string.h> /* strdup */
+
+using namespace dballe;
+using namespace bufrex;
+using namespace std;
 
 namespace tut {
-using namespace tut_dballe;
 
 struct crex_decoder_shar
 {
-	TestBufrexEnv testenv;
+	bufrex::tests::TestBufrexEnv testenv;
 
 	crex_decoder_shar()
 	{
@@ -39,206 +39,210 @@ struct crex_decoder_shar
 };
 TESTGRP(crex_decoder);
 
+typedef bufrex::tests::MsgTester<CrexMsg> MsgTester;
+
 template<> template<>
 void to::test<1>()
 {
-	TestBufrexMsg test;
-	test.edition = 1;
-	test.cat = 0;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
+	struct Tester : public MsgTester {
+		void test(const CrexMsg& msg)
+		{
+			ensure_equals(msg.edition, 1);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msgr = read_test_msg_header_raw("crex/test-synop0.crex", CREX);
-	ensureBufrexRawEquals(test, msgr);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 49u);
 
-	test.subset(0).vars = 49;
-	test.subset(0).set(DBA_VAR(0,  5, 1), 48.22);
-	test.subset(0).set(DBA_VAR(0,  6, 1),  9.92);
-	test.subset(0).set(DBA_VAR(0, 12, 4),  3.0);
-	test.subset(0).set(DBA_VAR(0, 12, 6),  0.7);
+			ensure_varcode_equals(s[8].code(), DBA_VAR(0, 5, 1));
+			ensure_equals(s[8].enqd(), 48.22);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 6, 1));
+			ensure_equals(s[9].enqd(), 9.92);
+			ensure_varcode_equals(s[17].code(), DBA_VAR(0, 12, 4));
+			ensure_equals(s[17].enqd(), 3.0);
+			ensure_varcode_equals(s[18].code(), DBA_VAR(0, 12, 6));
+			ensure_equals(s[18].enqd(), 0.7);
+		}
+	} test;
 
-	bufrex_msg msg = read_test_msg_raw("crex/test-synop0.crex", CREX);
-	ensureBufrexRawEquals(test, msg);
-
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
-
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msgr);
-	bufrex_msg_delete(msg1);
+	test.run("crex/test-synop0.crex");
 }
 
 template<> template<>
 void to::test<2>()
 {
-	TestBufrexMsg test;
-	test.edition = 1;
-	test.cat = 0;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	test.subset(0).vars = 21;
-	test.subset(0).set(DBA_VAR(0, 5, 1), 53.55);
-	test.subset(0).set(DBA_VAR(0, 6, 1), 13.20);
+	struct Tester : public MsgTester {
+		void test(const CrexMsg& msg)
+		{
+			ensure_equals(msg.edition, 1);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("crex/test-synop1.crex", CREX);
-	/* {
-		dba_var* vars;
-		int count;
-		CHECKED(bufrex_msg_get_vars(msg, &vars, &count));
-		for (int i = 0; i < count; i++)
-			dba_var_print(vars[i], stderr);
-	} */
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 21u);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	/*
-	bufrex_msg_print(msg, stderr);
-	bufrex_msg_print(msg1, stderr);
-	*/
-	ensureBufrexRawEquals(test, msg1);
+			ensure_varcode_equals(s[8].code(), DBA_VAR(0, 5, 1));
+			ensure_equals(s[8].enqd(), 53.55);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 6, 1));
+			ensure_equals(s[9].enqd(), 13.20);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("crex/test-synop1.crex");
 }
 
 template<> template<>
 void to::test<3>()
 {
-	TestBufrexMsg test;
-	test.edition = 1;
-	test.cat = 0;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	test.subset(0).vars = 49;
-	test.subset(0).set(DBA_VAR(0, 5, 1), 47.83);
-	test.subset(0).set(DBA_VAR(0, 6, 1), 10.87);
+	struct Tester : public MsgTester {
+		void test(const CrexMsg& msg)
+		{
+			ensure_equals(msg.edition, 1);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("crex/test-synop2.crex", CREX);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 49u);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure_varcode_equals(s[8].code(), DBA_VAR(0, 5, 1));
+			ensure_equals(s[8].enqd(), 47.83);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 6, 1));
+			ensure_equals(s[9].enqd(), 10.87);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("crex/test-synop2.crex");
 }
 
 template<> template<>
 void to::test<4>()
 {
-	TestBufrexMsg test;
-	test.edition = 1;
-	test.cat = 0;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	test.subset(0).vars = 27;
-	test.subset(0).set(DBA_VAR(0, 5, 1), 61.85);
-	test.subset(0).set(DBA_VAR(0, 6, 1), 24.80);
+	struct Tester : public MsgTester {
+		void test(const CrexMsg& msg)
+		{
+			ensure_equals(msg.edition, 1);
+			ensure_equals(msg.type, 0);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("crex/test-synop3.crex", CREX);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 27u);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure_varcode_equals(s[8].code(), DBA_VAR(0, 5, 1));
+			ensure_equals(s[8].enqd(), 61.85);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 6, 1));
+			ensure_equals(s[9].enqd(), 24.80);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("crex/test-synop3.crex");
 }
 
 template<> template<>
 void to::test<5>()
 {
-	TestBufrexMsg test;
-	test.edition = 1;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	test.subset(0).vars = 32;
-	test.subset(0).set(DBA_VAR(0, 5, 2), 68.27);
-	test.subset(0).set(DBA_VAR(0, 6, 2),  9.68);
+	struct Tester : public MsgTester {
+		void test(const CrexMsg& msg)
+		{
+			ensure_equals(msg.edition, 1);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("crex/test-mare0.crex", CREX);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 32u);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 5, 2));
+			ensure_equals(s[9].enqd(), 68.27);
+			ensure_varcode_equals(s[10].code(), DBA_VAR(0, 6, 2));
+			ensure_equals(s[10].enqd(),  9.68);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("crex/test-mare0.crex");
 }
 
 template<> template<>
 void to::test<6>()
 {
-	TestBufrexMsg test;
-	test.edition = 1;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	test.subset(0).vars = 32;
-	test.subset(0).set(DBA_VAR(0, 5, 2),  43.02);
-	test.subset(0).set(DBA_VAR(0, 6, 2), -12.45);
+	struct Tester : public MsgTester {
+		void test(const CrexMsg& msg)
+		{
+			ensure_equals(msg.edition, 1);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("crex/test-mare1.crex", CREX);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 32u);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 5, 2));
+			ensure_equals(s[9].enqd(),  43.02);
+			ensure_varcode_equals(s[10].code(), DBA_VAR(0, 6, 2));
+			ensure_equals(s[10].enqd(), -12.45);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("crex/test-mare1.crex");
 }
 
 template<> template<>
 void to::test<7>()
 {
-	TestBufrexMsg test;
-	test.edition = 1;
-	test.cat = 1;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	test.subset(0).vars = 39;
-	test.subset(0).set(DBA_VAR(0, 5, 2), 33.90);
-	test.subset(0).set(DBA_VAR(0, 6, 2), 29.00);
+	struct Tester : public MsgTester {
+		void test(const CrexMsg& msg)
+		{
+			ensure_equals(msg.edition, 1);
+			ensure_equals(msg.type, 1);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("crex/test-mare2.crex", CREX);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 39u);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 5, 2));
+			ensure_equals(s[9].enqd(), 33.90);
+			ensure_varcode_equals(s[10].code(), DBA_VAR(0, 6, 2));
+			ensure_equals(s[10].enqd(), 29.00);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("crex/test-mare2.crex");
 }
 
 template<> template<>
 void to::test<8>()
 {
-	TestBufrexMsg test;
-	test.edition = 1;
-	test.cat = 2;
-	test.subcat = 255;
-	test.localsubcat = 0;
-	test.subsets = 1;
-	test.subset(0).vars = 550;
-	test.subset(0).set(DBA_VAR(0, 5, 1), 55.75);
-	test.subset(0).set(DBA_VAR(0, 6, 1), 12.52);
+	struct Tester : public MsgTester {
+		void test(const CrexMsg& msg)
+		{
+			ensure_equals(msg.edition, 1);
+			ensure_equals(msg.type, 2);
+			ensure_equals(msg.subtype, 255);
+			ensure_equals(msg.localsubtype, 0);
+			ensure_equals(msg.subsets.size(), 1);
 
-	bufrex_msg msg = read_test_msg_raw("crex/test-temp0.crex", CREX);
-	ensureBufrexRawEquals(test, msg);
+			const Subset& s = msg.subset(0);
+			ensure_equals(s.size(), 550u);
 
-	bufrex_msg msg1 = reencode_test(msg);
-	ensureBufrexRawEquals(test, msg1);
+			ensure_varcode_equals(s[9].code(), DBA_VAR(0, 5, 1));
+			ensure_equals(s[9].enqd(), 55.75);
+			ensure_varcode_equals(s[10].code(), DBA_VAR(0, 6, 1));
+			ensure_equals(s[10].enqd(), 12.52);
+		}
+	} test;
 
-	bufrex_msg_delete(msg);
-	bufrex_msg_delete(msg1);
+	test.run("crex/test-temp0.crex");
 }
 
 }

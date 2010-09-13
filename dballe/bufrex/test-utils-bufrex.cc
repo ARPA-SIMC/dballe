@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,82 +19,68 @@
 
 #include "test-utils-bufrex.h"
 
-#include <dballe/msg/aof_codec.h>
+#include <dballe/bufrex/codec.h>
 
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 
-extern "C" {
-void bufrex_codec_init(void);
-void bufrex_codec_shutdown(void);
-}
+using namespace dballe;
 
-namespace tut_dballe {
+namespace bufrex {
+namespace tests {
 
 TestBufrexEnv::TestBufrexEnv()
 {
-	bufrex_codec_init();
+	bufrex::codec_init();
 }
 TestBufrexEnv::~TestBufrexEnv()
 {
-	bufrex_codec_shutdown();
+	bufrex::codec_shutdown();
 }
 
-bufrex_msg _read_test_msg_header_raw(const char* file, int line, const char* filename, dba_encoding type)
+std::auto_ptr<bufrex::Msg> _read_test_msg_header_raw(const wibble::tests::Location& loc, const char* filename, Encoding type)
 {
 	inner_ensure(type == BUFR || type == CREX);
 
-	dba_rawmsg rawmsg = _read_rawmsg(file, line, filename, type);
+	std::auto_ptr<Rawmsg> rmsg = inner_read_rawmsg(filename, type);
 
 	// Decode the sample message
-	bufrex_msg bufrex;
+	std::auto_ptr<bufrex::Msg> res;
 	switch (type)
 	{
-		case BUFR: INNER_CHECKED(bufrex_msg_create(BUFREX_BUFR, &bufrex)); break;
-		case CREX: INNER_CHECKED(bufrex_msg_create(BUFREX_CREX, &bufrex)); break;
+		case BUFR: res.reset(new BufrMsg); break;
+		case CREX: res.reset(new CrexMsg); break;
 		default: inner_ensure(false); break;
 	}
-	INNER_CHECKED(bufrex_msg_decode_header(bufrex, rawmsg));
-	
-	dba_rawmsg_delete(rawmsg);
-	return bufrex;
+	res->decode_header(*rmsg);
+
+	return res;
 }
 
-bufrex_msg _read_test_msg_raw(const char* file, int line, const char* filename, dba_encoding type)
+std::auto_ptr<bufrex::Msg> _read_test_msg_raw(const wibble::tests::Location& loc, const char* filename, Encoding type)
 {
 	inner_ensure(type == BUFR || type == CREX);
 
-	dba_rawmsg rawmsg = _read_rawmsg(file, line, filename, type);
+	std::auto_ptr<Rawmsg> rmsg = inner_read_rawmsg(filename, type);
 
 	// Decode the sample message
-	bufrex_msg bufrex;
-	switch (type)
-	{
-		case BUFR: INNER_CHECKED(bufrex_msg_create(BUFREX_BUFR, &bufrex)); break;
-		case CREX: INNER_CHECKED(bufrex_msg_create(BUFREX_CREX, &bufrex)); break;
-		default: inner_ensure(false); break;
-	}
-	INNER_CHECKED(bufrex_msg_decode(bufrex, rawmsg));
-	
-	dba_rawmsg_delete(rawmsg);
-	return bufrex;
+	std::auto_ptr<bufrex::Msg> res = Msg::create(type);
+	res->decode(*rmsg);
+	return res;
 }
 
-bufrex_msg _reencode_test(const char* file, int line, bufrex_msg msg)
+std::auto_ptr<bufrex::Msg> _reencode_test(const wibble::tests::Location& loc, const bufrex::Msg& msg)
 {
-	dba_rawmsg raw;
-	INNER_CHECKED(bufrex_msg_encode(msg, &raw));
+	Rawmsg raw;
+	msg.encode(raw);
 
-	bufrex_msg bufrex;
-	INNER_CHECKED(bufrex_msg_create(msg->encoding_type, &bufrex));
-	INNER_CHECKED(bufrex_msg_decode(bufrex, raw));
-
-	dba_rawmsg_delete(raw);
-
-	return bufrex;
+	std::auto_ptr<bufrex::Msg> res = Msg::create(raw.encoding);
+	res->decode(raw);
+	return res;
 }
 
+}
 }
 
 // vim:set ts=4 sw=4:

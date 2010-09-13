@@ -192,6 +192,14 @@ double _Varinfo::decode_int(int val) const throw ()
 		return val - ref;
 }
 
+double _Varinfo::bufr_decode_int(uint32_t ival) const throw ()
+{
+       if (bufr_scale >= 0)
+               return ((double)ival + bit_ref) / scales[bufr_scale];
+       else
+               return ((double)ival + bit_ref) * scales[-bufr_scale];
+}
+
 /* Encode a double value from its integer representation and Varinfo encoding
  * informations */
 int _Varinfo::encode_int(double fval) const throw ()

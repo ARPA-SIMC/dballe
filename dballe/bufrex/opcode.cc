@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +24,23 @@
 #include <stdlib.h>	/* malloc */
 #include <string.h>	/* memcpy */
 #include <assert.h>
+#include <stdio.h>
+
+using namespace dballe;
+using namespace std;
+
+namespace bufrex {
+
+void Opcodes::print(void* outstream) const
+{
+	FILE* out = (FILE*)outstream;
+
+	if (begin == end)
+		fprintf(out, "(empty)");
+	else
+		for (unsigned i = begin; i < end; ++i)
+			fprintf(out, "%d%02d%03d ", DBA_VAR_F(vals[i]), DBA_VAR_X(vals[i]), DBA_VAR_Y(vals[i]));
+}
 
 /*
 struct _bufrex_opcode
@@ -34,6 +49,8 @@ struct _bufrex_opcode
 	struct _bufrex_opcode* next;
 };
 */
+
+#if 0
 
 void bufrex_opcode_delete(bufrex_opcode* entry)
 {
@@ -50,7 +67,7 @@ void bufrex_opcode_delete(bufrex_opcode* entry)
 	*entry = 0;
 }
 
-dba_err bufrex_opcode_append(bufrex_opcode* entry, dba_varcode value)
+dba_err bufrex_opcode_append(bufrex_opcode* entry, Varcode value)
 {
 	if (*entry == NULL)
 	{
@@ -117,6 +134,7 @@ dba_err bufrex_opcode_pop_n(bufrex_opcode* chain, bufrex_opcode* head, int lengt
 	return bufrex_opcode_pop_n(chain, &((*head)->next), length - 1);
 }
 
+#endif
 
 #if 0
 
@@ -145,23 +163,6 @@ bufrex_opcode bufrex_opcode_copy_n(bufrex_opcode entry, int length)
 
 #endif
 
-#include <stdio.h>
-void bufrex_opcode_print(bufrex_opcode entry, void* outstream)
-{
-	FILE* out = (FILE*)outstream;
-
-	if (entry == NULL)
-	{
-		fprintf(out, "(null)");
-		return;
-	}
-	fprintf(out, "%d%02d%03d ",
-			DBA_VAR_F(entry->val),
-			DBA_VAR_X(entry->val),
-			DBA_VAR_Y(entry->val));
-
-	if (entry->next != NULL)
-		bufrex_opcode_print(entry->next, out);
 }
 
 /* vim:set ts=4 sw=4: */

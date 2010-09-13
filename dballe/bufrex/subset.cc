@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,142 +27,50 @@
 #include <stdlib.h>
 #include <string.h>
 
-dba_err bufrex_subset_create(dba_vartable btable, bufrex_subset* subset)
+using namespace dballe;
+using namespace std;
+
+namespace bufrex {
+
+Subset::Subset(const dballe::Vartable* btable) : btable(btable) {}
+Subset::~Subset() {}
+
+void Subset::store_variable(const Var& var)
 {
-	*subset = (bufrex_subset)calloc(1, sizeof(struct _bufrex_subset));
-	if (*subset == NULL)
-		return dba_error_alloc("allocating new storage for a subsection of decoded BUFR/CREX data");
-	(*subset)->btable = btable;
-	return dba_error_ok();
+	push_back(var);
 }
 
-void bufrex_subset_delete(bufrex_subset subset)
+void Subset::store_variable(dballe::Varcode code, const dballe::Var& var)
 {
-	bufrex_subset_reset(subset);
-
-	if (subset->vars)
-	{
-		free(subset->vars);
-		subset->vars = NULL;
-		subset->vars_alloclen = 0;
-	}
-
-	free(subset);
+	Varinfo info = btable->query(code);
+	push_back(Var(info, var));
 }
 
-void bufrex_subset_reset(bufrex_subset subset)
+void Subset::store_variable_i(dballe::Varcode code, int val)
 {
-	int i;
-
-	/* Preserve vars and vars_alloclen so that allocated memory can be reused */
-	for (i = 0; i < subset->vars_count; i++)
-		dba_var_delete(subset->vars[i]);
-	subset->vars_count = 0;
+	Varinfo info = btable->query(code);
+	push_back(Var(info, val));
 }
 
-void bufrex_subset_truncate(bufrex_subset subset, size_t size)
+void Subset::store_variable_d(dballe::Varcode code, double val)
 {
-	int i;
-	/* Preserve vars and vars_alloclen so that allocated memory can be reused */
-	for (i = size; i < subset->vars_count; ++i)
-		dba_var_delete(subset->vars[i]);
-	subset->vars_count = size;
+	Varinfo info = btable->query(code);
+	push_back(Var(info, val));
 }
 
-dba_err bufrex_subset_store_variable(bufrex_subset subset, dba_var var)
+void Subset::store_variable_c(dballe::Varcode code, const char* val)
 {
-	/* Check if we need to enlarge the buffer size */
-	if (subset->vars_count == subset->vars_alloclen)
-	{
-		/* Enlarge the buffer size */
-		if (subset->vars == NULL)
-		{
-			subset->vars_alloclen = 32;
-			if ((subset->vars = (dba_var*)malloc(subset->vars_alloclen * sizeof(dba_var))) == NULL)
-				return dba_error_alloc("allocating memory for decoded message variables");
-		} else {
-			dba_var* newbuf;
-
-			/* Grow by doubling the allocated space */
-			subset->vars_alloclen <<= 1;
-
-			if ((newbuf = (dba_var*)realloc(subset->vars, subset->vars_alloclen * sizeof(dba_var))) == NULL)
-				return dba_error_alloc("allocating more memory for message data");
-			subset->vars = newbuf;
-		}
-	}
-
-	subset->vars[subset->vars_count++] = var;
-	return dba_error_ok();
+	Varinfo info = btable->query(code);
+	push_back(Var(info, val));
 }
 
-dba_err bufrex_subset_store_variable_var(bufrex_subset subset, dba_varcode code, dba_var val)
+void Subset::store_variable_undef(dballe::Varcode code)
 {
-	dba_var var;
-	dba_varinfo info;
-	DBA_RUN_OR_RETURN(dba_vartable_query(subset->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_create(info, &var));
-	if (val != NULL)
-		DBA_RUN_OR_RETURN(dba_var_copy_val(var, val));
-	return bufrex_subset_store_variable(subset, var);
+	Varinfo info = btable->query(code);
+	push_back(Var(info));
 }
 
-dba_err bufrex_subset_store_variable_i(bufrex_subset subset, dba_varcode code, int val)
-{
-	dba_var var;
-	dba_varinfo info;
-	DBA_RUN_OR_RETURN(dba_vartable_query(subset->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_createi(info, val, &var));
-	return bufrex_subset_store_variable(subset, var);
-}
-
-dba_err bufrex_subset_store_variable_d(bufrex_subset subset, dba_varcode code, double val)
-{
-	dba_var var;
-	dba_varinfo info;
-	DBA_RUN_OR_RETURN(dba_vartable_query(subset->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_created(info, val, &var));
-	return bufrex_subset_store_variable(subset, var);
-}
-
-dba_err bufrex_subset_store_variable_c(bufrex_subset subset, dba_varcode code, const char* val)
-{
-	if (val == NULL || val[0] == 0)
-	{
-		return bufrex_subset_store_variable_undef(subset, code);
-	} else {
-		dba_var var;
-		dba_varinfo info;
-		DBA_RUN_OR_RETURN(dba_vartable_query(subset->btable, code, &info));
-		DBA_RUN_OR_RETURN(dba_var_createc(info, val, &var));
-		return bufrex_subset_store_variable(subset, var);
-	}
-}
-
-dba_err bufrex_subset_store_variable_undef(bufrex_subset subset, dba_varcode code)
-{
-	dba_var var;
-	dba_varinfo info;
-	DBA_RUN_OR_RETURN(dba_vartable_query(subset->btable, code, &info));
-	DBA_RUN_OR_RETURN(dba_var_create(info, &var));
-	return bufrex_subset_store_variable(subset, var);
-}
-
-
-dba_err bufrex_subset_add_attr(bufrex_subset subset, dba_var attr)
-{
-	if (subset->vars_count == 0)
-		return dba_error_consistency("checking that some variable was previously appended");
-	return dba_var_seta(subset->vars[subset->vars_count - 1], attr);
-}
-
-dba_err bufrex_subset_add_attrs(bufrex_subset subset, dba_var var)
-{
-	if (subset->vars_count == 0)
-		return dba_error_consistency("checking that some variable was previously appended");
-	return dba_var_copy_attrs(subset->vars[subset->vars_count - 1], var);
-}
-
+#if 0
 static dba_err bufrex_subset_append_c_with_dpb(bufrex_subset subset, dba_varcode ccode, int count, const char* bitmap)
 {
 	dba_err err = DBA_OK;
@@ -294,21 +202,33 @@ dba_err bufrex_subset_append_attrs(bufrex_subset subset, int size, dba_varcode a
 
 	return dba_error_ok();
 }
+#endif
 
-void bufrex_subset_diff(bufrex_subset s1, bufrex_subset s2, int* diffs, FILE* out)
+unsigned Subset::diff(const Subset& s2, FILE* out) const
 {
-	// TODO: btable;
+	// Compare btables
+	if (btable->id() != s2.btable->id())
+	{
+		fprintf(out, "B tables differ (first is %s, second is %s)\n",
+				btable->id().c_str(), s2.btable->id().c_str());
+		return 1;
+	}
 
-	if (s1->vars_count != s2->vars_count)
+	// Compare vars
+	if (size() != s2.size())
 	{
 		fprintf(out, "Number of variables differ (first is %zd, second is %zd)\n",
-				s1->vars_count, s2->vars_count);
-		++*diffs;
-	} else {
-		int i;
-		for (i = 0; i < s1->vars_count; ++i)
-			dba_var_diff(s1->vars[i], s2->vars[i], diffs, out);
+				size(), s2.size());
+		return 1;
 	}
+	for (size_t i = 0; i < size(); ++i)
+	{
+		unsigned diff = (*this)[i].diff(s2[i], out);
+		if (diff > 0) return diff;
+	}
+	return 0;
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

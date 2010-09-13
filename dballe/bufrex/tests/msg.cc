@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +20,15 @@
 #include <test-utils-bufrex.h>
 #include <dballe/bufrex/msg.h>
 
+using namespace dballe;
+using namespace bufrex;
+using namespace std;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct bufrex_msg_shar
 {
-	TestBufrexEnv testenv;
+	bufrex::tests::TestBufrexEnv testenv;
 
 	bufrex_msg_shar()
 	{
@@ -44,25 +45,25 @@ void to::test<1>()
 {
 	int c, sc, lc;
 
-	CHECKED(bufrex_msg_parse_template("1.2.3", &c, &sc, &lc));
-	gen_ensure_equals(c, 1);
-	gen_ensure_equals(sc, 2);
-	gen_ensure_equals(lc, 3);
+	parse_template("1.2.3", &c, &sc, &lc);
+	ensure_equals(c, 1);
+	ensure_equals(sc, 2);
+	ensure_equals(lc, 3);
 
-	CHECKED(bufrex_msg_parse_template("generic", &c, &sc, &lc));
-	gen_ensure_equals(c, 255);
-	gen_ensure_equals(sc, 255);
-	gen_ensure_equals(lc, 0);
+	parse_template("generic", &c, &sc, &lc);
+	ensure_equals(c, 255);
+	ensure_equals(sc, 255);
+	ensure_equals(lc, 0);
 
-	CHECKED(bufrex_msg_parse_template("synop", &c, &sc, &lc));
-	gen_ensure_equals(c, 0);
-	gen_ensure_equals(sc, 255);
-	gen_ensure_equals(lc, 1);
+	parse_template("synop", &c, &sc, &lc);
+	ensure_equals(c, 0);
+	ensure_equals(sc, 255);
+	ensure_equals(lc, 1);
 
-	CHECKED(bufrex_msg_parse_template("temp", &c, &sc, &lc));
-	gen_ensure_equals(c, 2);
-	gen_ensure_equals(sc, 255);
-	gen_ensure_equals(lc, 101);
+	parse_template("temp", &c, &sc, &lc);
+	ensure_equals(c, 2);
+	ensure_equals(sc, 255);
+	ensure_equals(lc, 101);
 }
 
 }

@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,6 @@
 #ifndef DBALLE_BUFREX_MSG_H
 #define DBALLE_BUFREX_MSG_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup bufrex
  * Intermediate representation of parsed values, ordered according to a BUFR or
@@ -34,76 +30,21 @@ extern "C" {
 
 #include <dballe/core/var.h>
 #include <dballe/core/rawmsg.h>
-#include <dballe/bufrex/dtable.h>
 #include <dballe/bufrex/subset.h>
+#include <vector>
+#include <memory>
 
-/**
- * Encoding type (BUFR or CREX)
- */
-enum _bufrex_type {
-	/** WMO BUFR */
-	BUFREX_BUFR,
-	/** WMO CREX */
-	BUFREX_CREX
-};
-/** @copydoc _bufrex_type */
-typedef enum _bufrex_type bufrex_type;
+namespace bufrex {
 
-struct _bufrex_opcode;
-
-/** BUFR-specific encoding options */
-struct _bufrex_bufr_info {
-	/** Common Code table C-1 identifying the originating centre */
-	int centre;
-	/** Centre-specific subcentre code */
-	int subcentre;
-	/** Version number of master tables used */
-	int master_table;
-	/** Version number of local tables used to augment the master table */
-	int local_table;
-
-	/** 1 if the BUFR message uses compression, else 0 */
-	int compression;
-	/** Update sequence number from octet 7 in section 1*/
-	int update_sequence_number;
-	/** 0 if the BUFR message does not contain an optional section, else
-	 *  its length in bytes */
-	int optional_section_length;
-	/** Raw contents of the optional section */
-	char* optional_section;
-	/** Number of subsets present in the message */
-	int subsets;
-};
-/** CREX-specific encoding options */
-struct _bufrex_crex_info {
-	/** Master table (00 for standard WMO FM95 CREX tables) */
-	int master_table;
-	/** Table version number */
-	int table;
-	/** True if the CREX message uses the check digit feature */
-	int has_check_digit;
-};
+struct DTable;
 
 /**
  * Storage for the decoded data of a BUFR or CREX message.
  */
-struct _bufrex_msg
+struct Msg
 {
-	/**
-	 * Reference count
-	 *
-	 * This is not used by C, but it is used by the C++ bindings
-	 */
-	int _refcount;
-
-	/** Type of source/target encoding data */
-	bufrex_type encoding_type;
-
-	/** Encoding-specific information */
-	union {
-		struct _bufrex_crex_info crex;
-		struct _bufrex_bufr_info bufr;
-	} opt;
+	/// Reference count
+	int _ref;
 
 	/** Message category */
 	int type;
@@ -126,77 +67,149 @@ struct _bufrex_msg
 	/** @} */
 
 	/** dba_vartable used to lookup B table codes */
-	dba_vartable btable;
+	const dballe::Vartable* btable;
 	/** bufrex_dtable used to lookup D table codes */
-	bufrex_dtable dtable;
+	const DTable* dtable;
+
+	/** Parsed data descriptor section */
+	std::vector<dballe::Varcode> datadesc;
 
 	/** Decoded variables */
-	bufrex_subset* subsets;
-	/** Number of decoded variables */
-	size_t subsets_count;
-	/** Size (in dba_var*) of the buffer allocated for vars */
-	size_t subsets_alloclen;
+	std::vector<Subset> subsets;
 
-	/** Parsed CREX data descriptor section */
-	bufrex_opcode datadesc;
+	Msg();
+	virtual ~Msg();
+
+	virtual void clear();
+
+	/** Type of source/target encoding data */
+	virtual const dballe::Encoding encoding() const throw () = 0;
+
 	/**
-	 * Pointer to end of the datadesc chain, used to point to the insertion
-	 * point for appends; it always points to a NULL pointer
+	 * Get a Subset from the message.
+	 *
+	 * The subset will be created if it does not exist, and it will be
+	 * memory managed by the Msg.
+	 *
+	 * @param subsection
+	 *   The subsection index (starting from 0)
 	 */
-	bufrex_opcode* datadesc_last;
+	Subset& obtain_subset(unsigned subsection);
+
+	/**
+	 * Get a Subset from the message.
+	 *
+	 * An exception will be thrown if the subset does not exist
+	 *
+	 * @param subsection
+	 *   The subsection index (starting from 0)
+	 */
+	const Subset& subset(unsigned subsection) const;
+
+	/// Load a new set of tables to use for encoding this message
+	virtual void load_tables() = 0;
+
+	/**
+	 * Parse only the header of an encoded message
+	 */
+	virtual void decode_header(const dballe::Rawmsg& raw) = 0;
+
+	/**
+	 * Parse an encoded message
+	 */
+	virtual void decode(const dballe::Rawmsg& raw) = 0;
+
+	/**
+	 * Encode the message
+	 */
+	virtual void encode(dballe::Rawmsg& raw) const = 0;
+
+	/**
+	 * Dump the contents of this bufrex_msg
+	 */
+	void print(FILE* out) const;
+
+	/// Print format-specific details
+	virtual void print_details(FILE* out) const;
+
+	/**
+	 * Compute the differences between two bufrex_msg
+	 */
+	virtual unsigned diff(const Msg& msg, FILE* out) const;
+
+	/// Diff format-specific details
+	virtual unsigned diff_details(const Msg& msg, FILE* out) const;
+
+	/**
+	 * Create a Msg for the given encoding
+	 */
+	static std::auto_ptr<Msg> create(dballe::Encoding encoding);
 };
-/** @copydoc _bufrex_msg */
-typedef struct _bufrex_msg* bufrex_msg;
 
-/**
- * Create a bufrex_msg
- *
- * @param type
- *   Message type (BUFR or CREX)
- * @retval msg
- *   Newly created bufrex_msg
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err bufrex_msg_create(bufrex_type type, bufrex_msg* msg);
+struct BufrMsg : public Msg
+{
+	/** BUFR-specific encoding options */
 
-/**
- * Delete a bufrex_msg
- *
- * @param msg
- *   The bufrex_msg to delete
- */
-void bufrex_msg_delete(bufrex_msg msg);
+	/** Common Code table C-1 identifying the originating centre */
+	int centre;
+	/** Centre-specific subcentre code */
+	int subcentre;
+	/** Version number of master tables used */
+	int master_table;
+	/** Version number of local tables used to augment the master table */
+	int local_table;
 
-/**
- * Delete all the contents of a bufrex_msg.
- *
- * This can be used to reuse the structure to encode/decode more than one
- * message.
- *
- * @param msg
- *   The bufrex_msg to reset
- */
-void bufrex_msg_reset(bufrex_msg msg);
+	/** 1 if the BUFR message uses compression, else 0 */
+	int compression;
+	/** Update sequence number from octet 7 in section 1*/
+	int update_sequence_number;
+	/** 0 if the BUFR message does not contain an optional section, else
+	 *  its length in bytes */
+	int optional_section_length;
+	/** Raw contents of the optional section */
+	char* optional_section;
 
-/**
- * Get a dba_subset item from the message.
- *
- * The subset will be created if it does not exist.
- *
- * @param msg
- *   The bufrex_msg to query
- * @param subsection
- *   The subsection index (starting from 0)
- * @retval vars
- *   The subsection requested.  It can be newly created if the message did not
- *   contain such a subsection before, but memory management is handled by the
- *   bufrex_msg structure.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err bufrex_msg_get_subset(bufrex_msg msg, int subsection, bufrex_subset* vars);
+	BufrMsg();
+	virtual ~BufrMsg();
 
+	void clear();
+	const dballe::Encoding encoding() const throw () { return dballe::BUFR; }
+	virtual void load_tables();
+	virtual void decode_header(const dballe::Rawmsg& raw);
+	virtual void decode(const dballe::Rawmsg& raw);
+	virtual void encode(dballe::Rawmsg& raw) const;
+	virtual void print_details(FILE* out) const;
+	virtual unsigned diff_details(const Msg& msg, FILE* out) const;
+
+	// Get encoding for class, to use in templates
+	static dballe::Encoding class_encoding() { return dballe::BUFR; }
+};
+
+struct CrexMsg : public Msg
+{
+	/** CREX-specific encoding options */
+
+	/** Master table (00 for standard WMO FM95 CREX tables) */
+	int master_table;
+	/** Table version number */
+	int table;
+	/** True if the CREX message uses the check digit feature */
+	int has_check_digit;
+
+	void clear();
+	const dballe::Encoding encoding() const throw () { return dballe::CREX; }
+	virtual void load_tables();
+	virtual void decode_header(const dballe::Rawmsg& raw);
+	virtual void decode(const dballe::Rawmsg& raw);
+	virtual void encode(dballe::Rawmsg& raw) const;
+	virtual void print_details(FILE* out) const;
+	virtual unsigned diff_details(const Msg& msg, FILE* out) const;
+
+	// Get encoding for class, to use in templates
+	static dballe::Encoding class_encoding() { return dballe::CREX; }
+};
+
+#if 0
 /**
  * Get the ID of the table used by this bufrex_msg
  *
@@ -207,85 +220,6 @@ dba_err bufrex_msg_get_subset(bufrex_msg msg, int subsection, bufrex_subset* var
  *   The error indicator for the function (See @ref error.h)
  */
 dba_err bufrex_msg_get_table_id(bufrex_msg msg, const char** id);
-
-/**
- * Load a new set of tables to use for encoding this message
- */
-dba_err bufrex_msg_load_tables(bufrex_msg msg);
-
-/**
- * Query the WMO B table used for this BUFR/CREX data
- *
- * @param msg
- *   ::bufrex_msg to query
- * @param code
- *   code of the variable to query.  See @ref vartable.h
- * @retval info
- *   the ::dba_varinfo structure with the results of the query.  The returned
- *   ::dba_varinfo needs to be deallocated using dba_varinfo_delete()
- * @return
- *   The error status (See @ref error.h)
- */
-dba_err bufrex_msg_query_btable(bufrex_msg msg, dba_varcode code, dba_varinfo* info);
-
-/**
- * Query the WMO D table used for this BUFR/CREX data
- * 
- * @param msg
- *   ::bufrex_msg to query
- * @param code
- *   code of the entry to query.  See @ref vartable.h
- * @param res
- *   the bufrex_opcode chain that contains the expansion elements
- *   (must be deallocated by the caller using bufrex_opcode_delete)
- * @return
- *   The error status (See @ref error.h)
- */
-dba_err bufrex_msg_query_dtable(bufrex_msg msg, dba_varcode code, struct _bufrex_opcode** res);
-
-/**
- * Reset the data descriptor section for the message
- *
- * @param msg
- *   The message to act on
- */
-void bufrex_msg_reset_datadesc(bufrex_msg msg);
-
-/**
- * Remove all sections from the message.
- *
- * This can be used to start a new message keeping the previous data section
- *
- * @param msg
- *   The message to act on
- */
-void bufrex_msg_reset_sections(bufrex_msg msg);
-
-/**
- * Get the data descriptor section of this ::bufrex_msg
- *
- * @param msg
- *   The message to act on
- * @retval res
- *   A copy of the internal list of data descriptors for the data descriptor
- *   section.  It must be deallocated by the caller using
- *   bufrex_opcode_delete()
- * @returns
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_msg_get_datadesc(bufrex_msg msg, struct _bufrex_opcode** res);
-
-/**
- * Append one ::dba_varcode to the data descriptor section of the message
- *
- * @param msg
- *   The message to act on
- * @param varcode
- *   The ::dba_varcode to append.  See @ref vartable.h
- * @returns
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_msg_append_datadesc(bufrex_msg msg, dba_varcode varcode);
 
 /**
  * Try to generate a data description section by scanning the variable codes of
@@ -385,16 +319,7 @@ dba_err crex_decoder_decode(dba_rawmsg in, bufrex_msg out);
  *   The error indicator for the function.  See @ref error.h
  */
 dba_err crex_decoder_decode_header(dba_rawmsg in, bufrex_msg out);
-
-/**
- * Dump the contents of this bufrex_msg
- */
-void bufrex_msg_print(bufrex_msg msg, FILE* out);
-
-/**
- * Compute the differences between two bufrex_msg
- */
-void bufrex_msg_diff(bufrex_msg msg1, bufrex_msg msg2, int* diffs, FILE* out);
+#endif
 
 /**
  * Parse a string containing a bufr/crex template selector.
@@ -413,11 +338,9 @@ void bufrex_msg_diff(bufrex_msg msg1, bufrex_msg msg2, int* diffs, FILE* out);
  * @return
  *   The error indicator for the function.  See @ref error.h
  */
-dba_err bufrex_msg_parse_template(const char* str, int* cat, int* subcat, int* localsubcat);
+void parse_template(const char* str, int* cat, int* subcat, int* localsubcat);
 
-#ifdef  __cplusplus
 }
-#endif
 
 /* vim:set ts=4 sw=4: */
 #endif

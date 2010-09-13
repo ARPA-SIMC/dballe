@@ -155,7 +155,7 @@ struct keyword_infos
 	}
 };
 
-static struct keyword_infos infos;
+static struct keyword_infos* infos = NULL;
 
 }
 
@@ -217,7 +217,8 @@ const char* Record::keyword_name(dba_keyword key)
 
 Varinfo Record::keyword_info(dba_keyword keyword)
 {
-	return &(infos.infos[keyword]);
+	if (infos == NULL) infos = new keyword_infos;
+	return &(infos->infos[keyword]);
 }
 
 dba_keyword Record::keyword_byname(const char* tag)

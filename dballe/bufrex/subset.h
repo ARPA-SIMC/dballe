@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,180 +22,94 @@
 #ifndef DBALLE_BUFREX_SUBSET_H
 #define DBALLE_BUFREX_SUBSET_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup bufrex
  * Handling of a BUFR/CREX data subset as a list of decoded variables.
  */
 
 #include <dballe/core/var.h>
+#include <dballe/core/vartable.h>
 #include <dballe/bufrex/dtable.h>
+#include <vector>
+
+namespace bufrex {
 
 /**
  * Represent a BUFR/CREX data subset as a list of decoded variables
  */
-struct _bufrex_subset {
-	/** dba_vartable used to lookup B table codes (reference to the one in
-	 * bufrex_raw: memory management is done by bufrex_raw) */
-	dba_vartable btable;
+struct Subset : public std::vector<dballe::Var> {
+	/// dba_vartable used to lookup B table codes
+	const dballe::Vartable* btable;
 
-	/** Decoded variables */
-	dba_var* vars;
-	/** Number of decoded variables */
-	size_t vars_count;
-	/** Size (in dba_var*) of the buffer allocated for vars */
-	size_t vars_alloclen;
+	/// Decoded variables
+	std::vector<dballe::Var> vars;
 
+	/**
+	 * Create a new BUFR/CREX subset.
+	 *
+	 * @param btable
+	 *   Reference to the B table to use to create variables.
+	 */
+	Subset(const dballe::Vartable* btable);
+	~Subset();
+
+	/// Store a decoded variable in the message, to be encoded later.
+	void store_variable(const dballe::Var& var);
+
+	/**
+	 * Store a new variable in the message, copying it from an already existing
+	 * variable.
+	 *
+	 * @param code
+	 *   The dballe::Varcode of the variable to add.  See @ref varinfo.h
+	 * @param var
+	 *   The variable holding the value for the variable to add.
+	 */
+	void store_variable(dballe::Varcode code, const dballe::Var& var);
+
+	/**
+	 * Store a new variable in the message, providing its value as an int
+	 *
+	 * @param code
+	 *   The ::dba_varcode of the variable to add.  See @ref vartable.h
+	 * @param val
+	 *   The value for the variable
+	 */
+	void store_variable_i(dballe::Varcode code, int val);
+
+	/**
+	 * Store a new variable in the message, providing its value as a double
+	 *
+	 * @param code
+	 *   The ::dba_varcode of the variable to add.  See @ref vartable.h
+	 * @param val
+	 *   The value for the variable
+	 */
+	void store_variable_d(dballe::Varcode code, double val);
+
+	/**
+	 * Store a new variable in the message, providing its value as a string
+	 *
+	 * @param code
+	 *   The ::dba_varcode of the variable to add.  See @ref vartable.h
+	 * @param val
+	 *   The value for the variable
+	 */
+	void store_variable_c(dballe::Varcode code, const char* val);
+
+	/**
+	 * Store a new, undefined variable in the message
+	 *
+	 * @param code
+	 *   The ::dba_varcode of the variable to add.  See @ref vartable.h
+	 */
+	void store_variable_undef(dballe::Varcode code);
+
+	/// Compute the differences between two bufrex_subsets
+	unsigned diff(const Subset& s2, FILE* out) const;
 };
-/** @copydoc _bufrex_subset */
-typedef struct _bufrex_subset* bufrex_subset;
 
-/**
- * Create a new BUFR/CREX subset.
- *
- * @param btable
- *   Reference to the B table to use to create variables.
- * @retval subset
- *   The newly created ::bufrex_subset.
- * @return
- *   The error indicator for the function.  See @ref dba_err.
- */
-dba_err bufrex_subset_create(dba_vartable btable, bufrex_subset* subset);
-
-/**
- * Deallocate a bufrex_subset.
- */
-void bufrex_subset_delete(bufrex_subset subset);
-
-/**
- * Clear the subset, removing all the variables from it.
- */
-void bufrex_subset_reset(bufrex_subset subset);
-
-/**
- * Truncate the subset at the given position.  All variables beyond the given
- * size will be deleted.
- */
-void bufrex_subset_truncate(bufrex_subset subset, size_t size);
-
-/**
- * Store a decoded variable in the message, to be encoded later.
- *
- * The function will take ownership of the dba_var, and when the message is
- * destroyed or reset, ::dba_var_delete() will be called on it.
- *
- * \param subset
- *   The message that will hold the variable
- * \param var
- *   The variable to store in the message.  The message will take ownership of
- *   memory management for the variable, which will be deallocated when the
- *   message is deleted or reset.
- * \return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_store_variable(bufrex_subset subset, dba_var var);
-
-/**
- * Store a new variable in the message, copying it from an already existing
- * variable.
- *
- * @param subset
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add.  See @ref vartable.h
- * @param var
- *   The variable holding the value for the variable to add.  If it is NULL,
- *   the call is equivalent to bufrex_subset_store_variable_undef.
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_store_variable_var(bufrex_subset subset, dba_varcode code, dba_var var);
-
-/**
- * Store a new variable in the message, providing its value as an int
- *
- * @param subset
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add.  See @ref vartable.h
- * @param val
- *   The value for the variable
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_store_variable_i(bufrex_subset subset, dba_varcode code, int val);
-
-/**
- * Store a new variable in the message, providing its value as a double
- *
- * @param subset
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add.  See @ref vartable.h
- * @param val
- *   The value for the variable
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_store_variable_d(bufrex_subset subset, dba_varcode code, double val);
-
-/**
- * Store a new variable in the message, providing its value as a string
- *
- * @param subset
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add.  See @ref vartable.h
- * @param val
- *   The value for the variable
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_store_variable_c(bufrex_subset subset, dba_varcode code, const char* val);
-
-/**
- * Store a new, undefined variable in the message
- *
- * @param subset
- *   The message that will hold the variable
- * @param code
- *   The ::dba_varcode of the variable to add.  See @ref vartable.h
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_store_variable_undef(bufrex_subset subset, dba_varcode code);
-
-/**
- * Add the attribute 'addr' to the last variable that was previously stored.
- *
- * The attribute is copied into the variable, so memory management of it will
- * still belong to the caller.
- *
- * @param subset
- *   The message to operate on
- * @param attr
- *   The attribute to copy in the last variable
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_add_attr(bufrex_subset subset, dba_var attr); 
-
-/**
- * Copy all the attributes from 'var' into the last variable that was
- * previously stored.
- *
- * @param subset
- *   The message to operate on
- * @param var
- *   The variable with the attributes to copy
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err bufrex_subset_add_attrs(bufrex_subset subset, dba_var var); 
-
+#if 0
 /**
  * Compute and append a data present bitmap
  *
@@ -244,16 +158,10 @@ dba_err bufrex_subset_append_fixed_dpb(bufrex_subset subset, dba_varcode ccode, 
  *   The error indicator for the function.  See @ref error.h
  */
 dba_err bufrex_subset_append_attrs(bufrex_subset subset, int size, dba_varcode attr);
-
-/**
- * Compute the differences between two bufrex_subsets
- */
-void bufrex_subset_diff(bufrex_subset s1, bufrex_subset s2, int* diffs, FILE* out);
-
-
-#ifdef  __cplusplus
-}
 #endif
+
+
+}
 
 /* vim:set ts=4 sw=4: */
 #endif

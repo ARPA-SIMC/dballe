@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,54 +20,73 @@
 #ifndef BUFREX_DTABLE_H
 #define BUFREX_DTABLE_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+#include <dballe/bufrex/opcode.h>
+#include <string>
+#include <vector>
+
+namespace bufrex {
 
 /** @file
  * @ingroup bufrex
  * Implement fast access to information about WMO expansion tables D.
  */
 
-#include <dballe/core/vartable.h>
-#include <dballe/bufrex/opcode.h>
+namespace dtable {
+struct Entry
+{
+	dballe::Varcode code;
+	unsigned begin;
+	unsigned end;
 
-/**
- * Opaque structure representing a bufrex_dtable object
- */
-typedef struct _bufrex_dtable* bufrex_dtable;
-
-/**
- * Create a new bufrex_dtable structure
- *
- * @retval table
- *   The bufrex_dtable structure that can be used to access the table.  It is a
- *   pointer to a local shared cache that is guaranteed to live until the end
- *   of the program, and it does not need to be deallocated.
- *
- * @return
- *   The error status (See @ref error.h)
- */
-dba_err bufrex_dtable_create(const char* id, bufrex_dtable* table);
-
-/**
- * Query the bufrex_dtable
- *
- * @param table
- *   bufrex_dtable to query
- * @param var
- *   entry code (i.e. DXXYYY as a ::dba_varcode DBA_VAR(3, xx, yyy).
- * @param res
- *   the bufrex_opcode chain that contains the expansion elements
- *   (must be deallocated by the caller using bufrex_opcode_delete)
- * @return
- *   The error status (See @ref error.h)
- */
-dba_err bufrex_dtable_query(bufrex_dtable table, dba_varcode var, bufrex_opcode* res);
-
-#ifdef  __cplusplus
+	Entry(dballe::Varcode code, unsigned begin, unsigned end)
+		: code(code), begin(begin), end(end) {}
+};
 }
-#endif
+
+struct DTable
+{
+protected:
+	std::string m_id;
+
+public:
+	std::vector<dballe::Varcode> varcodes;
+	std::vector<dtable::Entry> entries;
+
+	DTable();
+	~DTable();
+
+	const std::string& id() const throw () { return m_id; }
+
+	bool loaded() const throw () { return !m_id.empty(); }
+	void load(const std::string& id);
+
+	/**
+	 * Query the DTable
+	 *
+	 * @param var
+	 *   entry code (i.e. DXXYYY as a ::dba_varcode DBA_VAR(3, xx, yyy).
+	 * @return
+	 *   the bufrex_opcode chain that contains the expansion elements
+	 *   (must be deallocated by the caller using bufrex_opcode_delete)
+	 */
+	Opcodes query(dballe::Varcode var) const;
+
+	/**
+	 * Return a DTable by id, loading it if necessary
+	 *
+	 * Once loaded, the table will be cached in memory for reuse, and
+	 * further calls to get() will return the cached version.
+	 *
+	 * The cached tables are never deallocated, so the returned pointer is
+	 * valid through the whole lifetime of the program.
+	 *
+	 * @param id
+	 *   ID of the DTable data to access
+	 */
+	static const DTable* get(const char* id);
+};
+
+}
 
 #endif
 /* vim:set ts=4 sw=4: */

@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-/* For %z in printf */
-#define _ISOC99_SOURCE
-
 #include <config.h>
+
+#include <dballe/core/error.h>
 
 #include "opcode.h"
 #include "msg.h"
@@ -31,210 +28,444 @@
 #include <stdlib.h>
 #include <string.h>
 
+using namespace dballe;
+using namespace std;
 
-dba_err bufrex_msg_create(bufrex_type type, bufrex_msg* msg)
+namespace bufrex {
+
+Msg::Msg() {}
+Msg::~Msg() {}
+
+void Msg::clear()
 {
-	*msg = (bufrex_msg)calloc(1, sizeof(struct _bufrex_msg));
-	if (*msg == NULL)
-		return dba_error_alloc("allocating new storage for decoded BUFR/CREX data");
-	(*msg)->datadesc_last = &((*msg)->datadesc);
-	(*msg)->encoding_type = type;
-	return dba_error_ok();
+	datadesc.clear();
+	subsets.clear();
+	type = subtype = localsubtype = edition = 0;
+	rep_year = rep_month = rep_day = rep_hour = rep_minute = rep_second = 0;
+	btable = 0;
+	dtable = 0;
 }
 
-void bufrex_msg_reset_datadesc(bufrex_msg msg)
+Subset& Msg::obtain_subset(unsigned subsection)
 {
-	if (msg->datadesc != NULL)
-	{
-		bufrex_opcode_delete(&(msg->datadesc));
-		msg->datadesc_last = &(msg->datadesc);
-	}
+	while (subsection >= subsets.size())
+		subsets.push_back(Subset(btable));
+	return subsets[subsection];
 }
 
-void bufrex_msg_reset_sections(bufrex_msg msg)
+const Subset& Msg::subset(unsigned subsection) const
 {
-	int i;
-
-	/* Preserve vars and vars_alloclen so that allocated memory can be reused */
-	for (i = 0; i < msg->subsets_count; i++)
-		bufrex_subset_delete(msg->subsets[i]);
-	msg->subsets_count = 0;
-}
-
-void bufrex_msg_reset(bufrex_msg msg)
-{
-	bufrex_msg_reset_sections(msg);
-	bufrex_msg_reset_datadesc(msg);
-
-	msg->type = 0;
-	msg->subtype = 0;
-	if (msg->encoding_type == BUFREX_BUFR && msg->opt.bufr.optional_section)
-	{
-		free(msg->opt.bufr.optional_section);
-		msg->opt.bufr.optional_section = NULL;
-	}
-}
-
-void bufrex_msg_delete(bufrex_msg msg)
-{
-	bufrex_msg_reset(msg);
-
-	if (msg->subsets)
-	{
-		free(msg->subsets);
-		msg->subsets = NULL;
-		msg->subsets_alloclen = 0;
-	}
-
-	free(msg);
-}
-
-dba_err bufrex_msg_get_subset(bufrex_msg msg, int subsection, bufrex_subset* vars)
-{
-	/* First ensure we have the allocated space we need */
-	if (subsection >= msg->subsets_alloclen)
-	{
-		if (msg->subsets == NULL)
-		{
-			msg->subsets_alloclen = 1;
-			if ((msg->subsets = (bufrex_subset*)malloc(msg->subsets_alloclen * sizeof(bufrex_subset))) == NULL)
-				return dba_error_alloc("allocating memory for message subsets");
-		} else {
-			bufrex_subset* newbuf;
-
-			while (subsection >= msg->subsets_alloclen)
-				/* Grow by doubling the allocated space */
-				msg->subsets_alloclen <<= 1;
-
-			if ((newbuf = (bufrex_subset*)realloc(
-					msg->subsets, msg->subsets_alloclen * sizeof(bufrex_subset))) == NULL)
-				return dba_error_alloc("allocating more memory for message subsets");
-			msg->subsets = newbuf;
-		}
-	}
-
-	/* Then see if we need to initialize more of the allocated subsets */
-	while (msg->subsets_count <= subsection)
-	{
-		DBA_RUN_OR_RETURN(bufrex_subset_create(msg->btable, &(msg->subsets[msg->subsets_count])));
-		++msg->subsets_count;
-	}
-
-	/* Finally, return the subsection requested */
-	*vars = msg->subsets[subsection];
-
-	return dba_error_ok();
+	if (subsection >= subsets.size())
+		error_notfound::throwf("Requested subset %u but there are only %zd available",
+				subsection, subsets.size());
+	return subsets[subsection];
 }
 
 
-dba_err bufrex_msg_get_table_id(bufrex_msg msg, const char** id)
+BufrMsg::BufrMsg()
+	: optional_section_length(0), optional_section(0)
 {
-	if (msg->btable == NULL)
-		*id = NULL;
-	else
-		*id = dba_vartable_id(msg->btable);
-	return dba_error_ok();
 }
 
-dba_err bufrex_msg_load_tables(bufrex_msg msg)
+BufrMsg::~BufrMsg()
+{
+	if (optional_section) delete[] optional_section;
+}
+
+void BufrMsg::clear()
+{
+	Msg::clear();
+	centre = subcentre = master_table = local_table = 0;
+	compression = update_sequence_number = optional_section_length = 0;
+	if (optional_section) delete[] optional_section;
+	optional_section = 0;
+}
+
+void BufrMsg::load_tables()
 {
 	char id[30];
-	int ce = msg->opt.bufr.centre;
-	int sc = msg->opt.bufr.subcentre;
-	int mt = msg->opt.bufr.master_table;
-	int lt = msg->opt.bufr.local_table;
+	int ce = centre;
+	int sc = subcentre;
+	int mt = master_table;
+	int lt = local_table;
 
 /* fprintf(stderr, "ce %d sc %d mt %d lt %d\n", ce, sc, mt, lt); */
 
-	switch (msg->encoding_type)
+	int found = 0;
+	int i;
+	for (i = 0; !found && i < 3; ++i)
 	{
-		case BUFREX_BUFR: {
-			int found = 0;
-			int i;
-			for (i = 0; !found && i < 3; ++i)
-			{
-				if (i == 1)
-				{
-					// Default to WMO tables if the first
-					// attempt with local tables failed
-					/* fprintf(stderr, "FALLBACK from %d %d %d %d to 0 %d 0 0\n", sc, ce, mt, lt, mt); */
-					ce = sc = lt = 0;
-				} else if (i == 2 && mt < 14) {
-					// Default to the latest WMO table that
-					// we have if the previous attempt has
-					// failed
-					/* fprintf(stderr, "FALLBACK from %d %d %d %d to 0 14 0 0\n", sc, ce, mt, lt); */
-					mt = 14;
-				}
-				switch (msg->edition)
-				{
-					case 2:
-						sprintf(id, "B%05d%02d%02d", ce, mt, lt);
-						if ((found = dba_vartable_exists(id)))
-							break;
-					case 3:
-						sprintf(id, "B00000%03d%03d%02d%02d",
-								0, ce, mt, lt);
-						/* Some tables used by BUFR3 are
-						 * distributed using BUFR4 names
-						 */
-						if ((found = dba_vartable_exists(id)))
-							break;
-						else
-							sc = 0;
-					case 4:
-						sprintf(id, "B00%03d%04d%04d%03d%03d",
-								0, sc, ce, mt, lt);
-						found = dba_vartable_exists(id);
-						break;
-					default:
-						return dba_error_consistency("BUFR edition number is %d but I can only load tables for 3 or 4", msg->edition);
-				}
-			}
-			break;
+		if (i == 1)
+		{
+			// Default to WMO tables if the first
+			// attempt with local tables failed
+			/* fprintf(stderr, "FALLBACK from %d %d %d %d to 0 %d 0 0\n", sc, ce, mt, lt, mt); */
+			ce = sc = lt = 0;
+		} else if (i == 2 && mt < 14) {
+			// Default to the latest WMO table that
+			// we have if the previous attempt has
+			// failed
+			/* fprintf(stderr, "FALLBACK from %d %d %d %d to 0 14 0 0\n", sc, ce, mt, lt); */
+			mt = 14;
 		}
-		case BUFREX_CREX:
-			sprintf(id, "B%02d%02d%02d",
-					msg->opt.crex.master_table,
-					msg->edition,
-					msg->opt.crex.table);
-			break;
+		switch (edition)
+		{
+			case 2:
+				sprintf(id, "B%05d%02d%02d", ce, mt, lt);
+				if ((found = Vartable::exists(id)))
+					break;
+			case 3:
+				sprintf(id, "B00000%03d%03d%02d%02d",
+						0, ce, mt, lt);
+				/* Some tables used by BUFR3 are
+				 * distributed using BUFR4 names
+				 */
+				if ((found = Vartable::exists(id)))
+					break;
+				else
+					sc = 0;
+			case 4:
+				sprintf(id, "B00%03d%04d%04d%03d%03d",
+						0, sc, ce, mt, lt);
+				found = Vartable::exists(id);
+				break;
+			default:
+				error_consistency::throwf("BUFR edition number is %d but I can only load tables for 3 or 4", edition);
+		}
 	}
 
-	DBA_RUN_OR_RETURN(dba_vartable_create(id, &(msg->btable)));
+	btable = Vartable::get(id);
 	/* TRACE(" -> loaded B table %s\n", id); */
 
 	id[0] = 'D';
-	DBA_RUN_OR_RETURN(bufrex_dtable_create(id, &(msg->dtable)));
+	dtable = DTable::get(id);
 	/* TRACE(" -> loaded D table %s\n", id); */
-
-	return dba_error_ok();
 }
 
-dba_err bufrex_msg_query_btable(bufrex_msg msg, dba_varcode code, dba_varinfo* info)
+/*
+implemented in bufr_decoder.cc
+void BufrMsg::decode_header(const Rawmsg& raw)
 {
-	return dba_vartable_query(msg->btable, code, info);
 }
 
-dba_err bufrex_msg_query_dtable(bufrex_msg msg, dba_varcode code, struct _bufrex_opcode** res)
+void BufrMsg::decode(const Rawmsg& raw)
 {
-	return bufrex_dtable_query(msg->dtable, code, res);
 }
 
-
-dba_err bufrex_msg_get_datadesc(bufrex_msg msg, bufrex_opcode* res)
+implemented in bufr_encoder.cc
+void BufrMsg::encode(Rawmsg& raw) const
 {
-	*res = NULL;
-	return bufrex_opcode_prepend(res, msg->datadesc);
 }
+*/
 
-dba_err bufrex_msg_append_datadesc(bufrex_msg msg, dba_varcode varcode)
+void CrexMsg::clear()
 {
-	DBA_RUN_OR_RETURN(bufrex_opcode_append(msg->datadesc_last, varcode));
-	msg->datadesc_last = &((*(msg->datadesc_last))->next);
-	return dba_error_ok();
+	Msg::clear();
+	master_table = table = has_check_digit = 0;
 }
 
+void CrexMsg::load_tables()
+{
+	char id[30];
+/* fprintf(stderr, "ce %d sc %d mt %d lt %d\n", ce, sc, mt, lt); */
+
+	sprintf(id, "B%02d%02d%02d", master_table, edition, table);
+
+	btable = Vartable::get(id);
+	/* TRACE(" -> loaded B table %s\n", id); */
+
+	id[0] = 'D';
+	dtable = DTable::get(id);
+	/* TRACE(" -> loaded D table %s\n", id); */
+}
+
+/*
+implemented in crex_decoder.cc
+void CrexMsg::decode_header(const Rawmsg& raw)
+{
+}
+
+void CrexMsg::decode(const Rawmsg& raw)
+{
+}
+
+implemented in crex_encoder.cc
+void CrexMsg::encode(Rawmsg& raw) const
+{
+}
+*/
+
+void Msg::print(FILE* out) const
+{
+	fprintf(out, "%s ed%d %d:%d:%d %04d-%02d-%02d %02d:%02d:%02d %d subsets\n",
+		encoding_name(encoding()), edition,
+		type, subtype, localsubtype,
+		rep_year, rep_month, rep_day, rep_hour, rep_minute, rep_second,
+		subsets.size());
+	fprintf(out, " Tables: %s %s\n",
+		btable ? btable->id().c_str() : "(not loaded)",
+		dtable ? dtable->id().c_str() : "(not loaded)");
+	fprintf(out, " Data descriptors:\n");
+	for (vector<Varcode>::const_iterator i = datadesc.begin(); i != datadesc.end(); ++i)
+		fprintf(out, "  %d%02d%03d\n", DBA_VAR_F(*i), DBA_VAR_X(*i), DBA_VAR_Y(*i));
+	print_details(out);
+	fprintf(out, " Variables:\n");
+	for (unsigned i = 0; i < subsets.size(); ++i)
+	{
+		const Subset& s = subset(i);
+		for (unsigned j = 0; j < s.size(); ++j)
+		{
+			fprintf(out, "  [%d][%d] ", i, j);
+			s[j].print(out);
+		}
+	}
+}
+
+void Msg::print_details(FILE* out) const {}
+
+void BufrMsg::print_details(FILE* out) const
+{
+	fprintf(out, " BUFR details: c%d/%d mt%d lt%d co%d usn%d osl%d\n",
+			centre, subcentre, master_table, local_table,
+			compression, update_sequence_number, optional_section_length);
+}
+
+void CrexMsg::print_details(FILE* out) const
+{
+	fprintf(out, " CREX details: T00%02d%02d cd%d\n", master_table, table, has_check_digit);
+}
+
+unsigned Msg::diff(const Msg& msg, FILE* out) const
+{
+	unsigned diffs = 0;
+	if (encoding() != msg.encoding())
+	{
+		fprintf(out, "Encoding types differ (first is %d, second is %d)\n",
+				encoding(), msg.encoding());
+		++diffs;
+	} else
+		diffs += diff_details(msg, out);
+	if (type != msg.type)
+	{
+		fprintf(out, "Template types differ (first is %d, second is %d)\n",
+				type, msg.type);
+		++diffs;
+	}
+	if (subtype != msg.subtype)
+	{
+		fprintf(out, "Template subtypes differ (first is %d, second is %d)\n",
+				subtype, msg.subtype);
+		++diffs;
+	}
+	if (localsubtype != msg.localsubtype)
+	{
+		fprintf(out, "Template local subtypes differ (first is %d, second is %d)\n",
+				localsubtype, msg.localsubtype);
+		++diffs;
+	}
+	if (edition != msg.edition)
+	{
+		fprintf(out, "Edition numbers differ (first is %d, second is %d)\n",
+				edition, msg.edition);
+		++diffs;
+	}
+	if (rep_year != msg.rep_year)
+	{
+		fprintf(out, "Reference years differ (first is %d, second is %d)\n",
+				rep_year, msg.rep_year);
+		++diffs;
+	}
+	if (rep_month != msg.rep_month)
+	{
+		fprintf(out, "Reference months differ (first is %d, second is %d)\n",
+				rep_month, msg.rep_month);
+		++diffs;
+	}
+	if (rep_day != msg.rep_day)
+	{
+		fprintf(out, "Reference days differ (first is %d, second is %d)\n",
+				rep_day, msg.rep_day);
+		++diffs;
+	}
+	if (rep_hour != msg.rep_hour)
+	{
+		fprintf(out, "Reference hours differ (first is %d, second is %d)\n",
+				rep_hour, msg.rep_hour);
+		++diffs;
+	}
+	if (rep_minute != msg.rep_minute)
+	{
+		fprintf(out, "Reference minutes differ (first is %d, second is %d)\n",
+				rep_minute, msg.rep_minute);
+		++diffs;
+	}
+	if (rep_second != msg.rep_second)
+	{
+		fprintf(out, "Reference seconds differ (first is %d, second is %d)\n",
+				rep_second, msg.rep_second);
+		++diffs;
+	}
+	if (btable == NULL && msg.btable != NULL)
+	{
+		fprintf(out, "First message did not load B btables, second message has %s\n",
+				msg.btable->id().c_str());
+		++diffs;
+	} else if (btable != NULL && msg.btable == NULL) {
+		fprintf(out, "Second message did not load B btables, first message has %s\n",
+				btable->id().c_str());
+		++diffs;
+	} else if (btable != NULL && msg.btable != NULL && btable->id() != msg.btable->id()) {
+		fprintf(out, "B tables differ (first has %s, second has %s)\n",
+				btable->id().c_str(), msg.btable->id().c_str());
+		++diffs;
+	}
+	if (dtable == NULL && msg.dtable != NULL)
+	{
+		fprintf(out, "First message did not load B dtable, second message has %s\n",
+				msg.dtable->id().c_str());
+		++diffs;
+	} else if (dtable != NULL && msg.dtable == NULL) {
+		fprintf(out, "Second message did not load B dtable, first message has %s\n",
+				dtable->id().c_str());
+		++diffs;
+	} else if (dtable != NULL && msg.dtable != NULL && dtable->id() != msg.dtable->id()) {
+		fprintf(out, "D tables differ (first has %s, second has %s)\n",
+				dtable->id().c_str(), msg.dtable->id().c_str());
+		++diffs;
+	}
+
+	if (datadesc.size() != msg.datadesc.size())
+	{
+		fprintf(out, "Data descriptor sections differ (first has %zd elements, second has %zd)\n",
+				datadesc.size(), msg.datadesc.size());
+		++diffs;
+	} else {
+		for (unsigned i = 0; i < datadesc.size(); ++i)
+			if (datadesc[i] != msg.datadesc[i])
+			{
+				fprintf(out, "Data descriptors differ at element %u (first has %01d%02d%03d, second has %01d%02d%03d)\n",
+						i, DBA_VAR_F(datadesc[i]), DBA_VAR_X(datadesc[i]), DBA_VAR_Y(datadesc[i]),
+						DBA_VAR_F(msg.datadesc[i]), DBA_VAR_X(msg.datadesc[i]), DBA_VAR_Y(msg.datadesc[i]));
+				++diffs;
+			}
+	}
+
+	if (subsets.size() != msg.subsets.size())
+	{
+		fprintf(out, "Number of subsets differ (first is %zd, second is %zd)\n",
+				subsets.size(), msg.subsets.size());
+		++diffs;
+	} else
+		for (unsigned i = 0; i < subsets.size(); ++i)
+			diffs += subsets[i].diff(msg.subsets[i], out);
+	return diffs;
+}
+
+unsigned Msg::diff_details(const Msg& msg, FILE* out) const { return 0; }
+
+unsigned BufrMsg::diff_details(const Msg& msg, FILE* out) const
+{
+	unsigned diffs = Msg::diff_details(msg, out);
+	const BufrMsg* m = dynamic_cast<const BufrMsg*>(&msg);
+	if (!m) throw error_consistency("BufrMsg::diff_details called with a non-BufrMsg argument");
+
+	if (centre != m->centre)
+	{
+		fprintf(out, "BUFR centres differ (first is %d, second is %d)\n",
+				centre, m->centre);
+		++diffs;
+	}
+	if (subcentre != m->subcentre)
+	{
+		fprintf(out, "BUFR subcentres differ (first is %d, second is %d)\n",
+				subcentre, m->subcentre);
+		++diffs;
+	}
+	if (master_table != m->master_table)
+	{
+		fprintf(out, "BUFR master tables differ (first is %d, second is %d)\n",
+				master_table, m->master_table);
+		++diffs;
+	}
+	if (local_table != m->local_table)
+	{
+		fprintf(out, "BUFR local tables differ (first is %d, second is %d)\n",
+				local_table, m->local_table);
+		++diffs;
+	}
+	/*
+// TODO: uncomment when we implement encoding BUFR with compression
+	if (compression != m->compression)
+	{
+		fprintf(out, "BUFR compression differs (first is %d, second is %d)\n",
+				compression, m->compression);
+		++diffs;
+	}
+	*/
+	if (update_sequence_number != m->update_sequence_number)
+	{
+		fprintf(out, "BUFR update sequence numbers differ (first is %d, second is %d)\n",
+				update_sequence_number, m->update_sequence_number);
+		++diffs;
+	}
+	if (optional_section_length != m->optional_section_length)
+	{
+		fprintf(out, "BUFR optional section lenght (first is %d, second is %d)\n",
+				optional_section_length, m->optional_section_length);
+		++diffs;
+	}
+	if (optional_section_length != 0)
+	{
+		if (memcmp(optional_section, m->optional_section, optional_section_length) != 0)
+		{
+			fprintf(out, "BUFR optional section contents differ\n");
+			++diffs;
+		}
+	}
+	return diffs;
+}
+
+unsigned CrexMsg::diff_details(const Msg& msg, FILE* out) const
+{
+	unsigned diffs = Msg::diff_details(msg, out);
+	const CrexMsg* m = dynamic_cast<const CrexMsg*>(&msg);
+	if (!m) throw error_consistency("CrexMsg::diff_details called with a non-CrexMsg argument");
+
+	if (master_table != m->master_table)
+	{
+		fprintf(out, "CREX master tables differ (first is %d, second is %d)\n",
+				master_table, m->master_table);
+		++diffs;
+	}
+	if (table != m->table)
+	{
+		fprintf(out, "CREX local tables differ (first is %d, second is %d)\n",
+				table, m->table);
+		++diffs;
+	}
+	if (has_check_digit != m->has_check_digit)
+	{
+		fprintf(out, "CREX has_check_digit differ (first is %d, second is %d)\n",
+				has_check_digit, m->has_check_digit);
+		++diffs;
+	}
+	return diffs;
+}
+
+std::auto_ptr<Msg> Msg::create(dballe::Encoding encoding)
+{
+	std::auto_ptr<bufrex::Msg> res;
+	switch (encoding)
+	{
+		case BUFR: res.reset(new BufrMsg); break;
+		case CREX: res.reset(new CrexMsg); break;
+		default: error_consistency::throwf("the bufrex library does not support encoding %s (only BUFR and CREX are supported)",
+					 encoding_name(encoding));
+	}
+	return res;
+}
+
+#if 0
 dba_err bufrex_msg_generate_datadesc(bufrex_msg msg)
 {
 	bufrex_subset subset;
@@ -296,147 +527,7 @@ fail:
 		dba_rawmsg_delete(*raw);
 	return err;
 }
-
-void bufrex_msg_print(bufrex_msg msg, FILE* out)
-{
-	bufrex_opcode cur;
-	int i, j;
-	switch (msg->encoding_type)
-	{
-		case BUFREX_BUFR: fprintf(out, "BUFR c%d/%d m%d l%d", msg->opt.bufr.centre, msg->opt.bufr.subcentre, msg->opt.bufr.master_table, msg->opt.bufr.local_table); break;
-		case BUFREX_CREX: fprintf(out, "CREX T00%02d%02d", msg->opt.crex.master_table, msg->opt.crex.table); break;
-	}
-	fprintf(out, " type %d subtype %d edition %d table %s alloc %zd, %zd subsets.\n",
-			msg->type, msg->subtype, msg->edition, msg->btable == NULL ? NULL : dba_vartable_id(msg->btable),
-			msg->subsets_alloclen, msg->subsets_count);
-	fprintf(out, "Data descriptors:");
-	for (cur = msg->datadesc; cur != NULL; cur = cur->next)
-		fprintf(out, " %d%02d%03d", DBA_VAR_F(cur->val), DBA_VAR_X(cur->val), DBA_VAR_Y(cur->val));
-	putc('\n', out);
-	for (i = 0; i < msg->subsets_count; i++)
-	{
-		fprintf(out, "Variables in section %d:\n", i);
-		for (j = 0; j < msg->subsets[i]->vars_count; ++j)
-			dba_var_print(msg->subsets[i]->vars[j], out);
-	}
-}
-
-void bufrex_msg_diff(bufrex_msg msg1, bufrex_msg msg2, int* diffs, FILE* out)
-{
-	if (msg1->encoding_type != msg2->encoding_type)
-	{
-		fprintf(out, "Encoding types differ (first is %d, second is %d)\n",
-				msg1->encoding_type, msg2->encoding_type);
-		++*diffs;
-	} else {
-		switch (msg1->encoding_type)
-		{
-			case BUFR:
-				if (msg1->opt.bufr.centre != msg2->opt.bufr.centre)
-				{
-					fprintf(out, "BUFR centres differ (first is %d, second is %d)\n",
-							msg1->opt.bufr.centre, msg2->opt.bufr.centre);
-					++*diffs;
-				}
-				if (msg1->opt.bufr.subcentre != msg2->opt.bufr.subcentre)
-				{
-					fprintf(out, "BUFR subcentres differ (first is %d, second is %d)\n",
-							msg1->opt.bufr.subcentre, msg2->opt.bufr.subcentre);
-					++*diffs;
-				}
-				if (msg1->opt.bufr.master_table != msg2->opt.bufr.master_table)
-				{
-					fprintf(out, "BUFR master tables differ (first is %d, second is %d)\n",
-							msg1->opt.bufr.master_table, msg2->opt.bufr.master_table);
-					++*diffs;
-				}
-				if (msg1->opt.bufr.local_table != msg2->opt.bufr.local_table)
-				{
-					fprintf(out, "BUFR local tables differ (first is %d, second is %d)\n",
-							msg1->opt.bufr.local_table, msg2->opt.bufr.local_table);
-					++*diffs;
-				}
-				break;
-			case CREX:
-				if (msg1->opt.crex.master_table != msg2->opt.crex.master_table)
-				{
-					fprintf(out, "CREX master tables differ (first is %d, second is %d)\n",
-							msg1->opt.crex.master_table, msg2->opt.crex.master_table);
-					++*diffs;
-				}
-				if (msg1->opt.crex.table != msg2->opt.crex.table)
-				{
-					fprintf(out, "CREX local tables differ (first is %d, second is %d)\n",
-							msg1->opt.crex.table, msg2->opt.crex.table);
-					++*diffs;
-				}
-				break;
-		}
-	}
-	if (msg1->type != msg2->type)
-	{
-		fprintf(out, "Template types differ (first is %d, second is %d)\n",
-				msg1->type, msg2->type);
-		++*diffs;
-	}
-	if (msg1->subtype != msg2->subtype)
-	{
-		fprintf(out, "Template subtypes differ (first is %d, second is %d)\n",
-				msg1->subtype, msg2->subtype);
-		++*diffs;
-	}
-	if (msg1->edition != msg2->edition)
-	{
-		fprintf(out, "Table editions differ (first is %d, second is %d)\n",
-				msg1->edition, msg2->edition);
-		++*diffs;
-	}
-	if (msg1->rep_year != msg2->rep_year)
-	{
-		fprintf(out, "Reference years differ (first is %d, second is %d)\n",
-				msg1->rep_year, msg2->rep_year);
-		++*diffs;
-	}
-	if (msg1->rep_month != msg2->rep_month)
-	{
-		fprintf(out, "Reference months differ (first is %d, second is %d)\n",
-				msg1->rep_month, msg2->rep_month);
-		++*diffs;
-	}
-	if (msg1->rep_day != msg2->rep_day)
-	{
-		fprintf(out, "Reference days differ (first is %d, second is %d)\n",
-				msg1->rep_day, msg2->rep_day);
-		++*diffs;
-	}
-	if (msg1->rep_hour != msg2->rep_hour)
-	{
-		fprintf(out, "Reference hours differ (first is %d, second is %d)\n",
-				msg1->rep_hour, msg2->rep_hour);
-		++*diffs;
-	}
-	if (msg1->rep_minute != msg2->rep_minute)
-	{
-		fprintf(out, "Reference minutes differ (first is %d, second is %d)\n",
-				msg1->rep_minute, msg2->rep_minute);
-		++*diffs;
-	}
-
-	// TODO: btable
-	// TODO: dtable
-	// TODO: datadesc
-
-	if (msg1->subsets_count != msg2->subsets_count)
-	{
-		fprintf(out, "Number of subsets differ (first is %zd, second is %zd)\n",
-				msg1->subsets_count, msg2->subsets_count);
-		++*diffs;
-	} else {
-		int i;
-		for (i = 0; i < msg1->subsets_count; ++i)
-			bufrex_subset_diff(msg1->subsets[i], msg2->subsets[i], diffs, out);
-	}
-}
+#endif
 
 #if 0
 #include <dballe/dba_check.h>
@@ -490,5 +581,7 @@ void test_bufrex_msg()
 
 #endif
 #endif
+
+}
 
 /* vim:set ts=4 sw=4: */

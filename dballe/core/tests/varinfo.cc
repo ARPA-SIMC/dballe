@@ -94,7 +94,6 @@ template<> template<>
 void to::test<4>()
 {
 	MutableVarinfo info = MutableVarinfo::create_singleuse(DBA_VAR(0, 15, 194));
-	void set(Varcode var, const char* desc, const char* unit, int scale = 0, int ref = 0, int len = 0, int bit_ref = 0, int bit_len = 0, int flags = 0, const char* bufr_unit = 0, int bufr_scale = 0);
 	info->set(DBA_VAR(0, 15, 194),		// Var
 		  "[SIM] O3 Concentration",	// Desc
 		  "KG/M**3",			// Unit
@@ -103,6 +102,24 @@ void to::test<4>()
 	ensure_equals(info->dmin, 0);
 	ensure_equals(info->dmax, 9.9998e-06);
 	ensure(!info->is_string());
+}
+
+/* Test encoding doubles to ints */
+template<> template<>
+void to::test<5>()
+{
+	MutableVarinfo info = MutableVarinfo::create_singleuse(DBA_VAR(0, 6, 2));
+	info->set(DBA_VAR(0, 6, 2),		// Var
+		  "LONGITUDE (COARSE ACCURACY)",// Desc
+		  "DEGREE",			// Unit
+		  2, 0, 5, -18000, 16);		// Scale, ref, len, bit_ref, bit_len
+	info->bufr_scale = 2;
+	info->compute_range();
+	ensure_equals(info->dmin, -180);
+	ensure_equals(info->dmax, 475.34);
+	ensure(!info->is_string());
+	// ensure_equals(info->decode_int(16755), -12.45);
+	ensure_equals(info->bufr_decode_int(16755), -12.45);
 }
 
 }

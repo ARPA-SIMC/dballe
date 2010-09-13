@@ -6,6 +6,13 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_MACRO_DIR([m4])
 
+dnl Use libtool
+dnl AM_ENABLE_STATIC
+dnl AM_DISABLE_SHARED
+LT_INIT()
+LT_LANG([C++])
+AM_PROG_LIBTOOL
+
 AC_ARG_ENABLE([dballe-bufrex],
     [AS_HELP_STRING(
         [--enable-dballe-bufrex],
@@ -75,11 +82,6 @@ AC_HEADER_STDC
 
 dnl Needed by subdir-objects
 AM_PROG_CC_C_O
-
-dnl Use libtool
-dnl AM_ENABLE_STATIC
-dnl AM_DISABLE_SHARED
-AM_PROG_LIBTOOL
 
 AC_CHECK_PROG(have_gperf, gperf, true)
 if test x$have_gperf != xtrue

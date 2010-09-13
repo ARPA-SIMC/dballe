@@ -31,24 +31,33 @@ namespace dballe {
 
 namespace {
 
-struct CreateFunStore
+struct FunStore
 {
 	File::CreateFun* funs[ENCODING_COUNT];
-	CreateFunStore()
+	FunStore()
 	{
 		for (int i = 0; i < ENCODING_COUNT; ++i)
 			funs[i] = 0;
 	}
+	static FunStore* get();
 };
 
-static CreateFunStore createFunStore;
+static FunStore* funStore = NULL;
+
+FunStore* FunStore::get()
+{
+	if (funStore == NULL)
+		funStore = new FunStore;
+	return funStore;
+}
 
 }
 
 File::CreateFun* File::register_type(Encoding type, CreateFun* fun)
 {
-	CreateFun* res = createFunStore.funs[type];
-	createFunStore.funs[type] = fun;
+	FunStore* fs = FunStore::get();
+	CreateFun* res = fs->funs[type];
+	fs->funs[type] = fun;
 	return res;
 }
 
@@ -121,7 +130,8 @@ File* File::create(Encoding type, const std::string& name, const char* mode)
 	}
 
 	/* Call the appropriate constructor */
-	CreateFun* fun = createFunStore.funs[type];
+	FunStore* fs = FunStore::get();
+	CreateFun* fun = fs->funs[type];
 	if (fun == NULL)
 		error_unimplemented::throwf("%s support is not available", encoding_name(type));
 	return fun(name, type, fdt.release(), fdt.close_on_exit);
