@@ -20,6 +20,8 @@
  */
 
 #include <test-utils-msg.h>
+#include <dballe/msg/msgs.h>
+#include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
 
 /*
@@ -28,12 +30,14 @@ extern "C" {
 };
 */
 
+using namespace dballe;
+using namespace std;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct msg_shar
 {
-	TestMsgEnv testenv;
+    tests::TestMsgEnv testenv;
 
 	msg_shar()
 	{
@@ -45,221 +49,72 @@ struct msg_shar
 };
 TESTGRP(msg);
 
-// Ensure that the datum vector inside the context is in strict ascending order
-void _ensure_context_is_sorted(const char* file, int line, dba_msg_context ctx)
-{
-	if (ctx->data_count < 2)
-		return;
-	for (int i = 0; i < ctx->data_count - 1; i++)
-		inner_ensure(dba_var_code(ctx->data[i]) < dba_var_code(ctx->data[i + 1]));
-}
-#define gen_ensure_context_is_sorted(x) _ensure_context_is_sorted(__FILE__, __LINE__, (x))
-
 // Ensure that the context vector inside the message is in strict ascending order
-void _ensure_msg_is_sorted(const char* file, int line, dba_msg msg)
+void _ensure_msg_is_sorted(const wibble::tests::Location& loc, const Msg& msg)
 {
-	if (msg->data_count < 2)
+	if (msg.data.size() < 2)
 		return;
-	for (int i = 0; i < msg->data_count - 1; i++)
-		inner_ensure(dba_msg_context_compare(msg->data[i], msg->data[i + 1]) < 0);
+	for (int i = 0; i < msg.data.size() - 1; ++i)
+		inner_ensure(msg.data[i]->compare(*msg.data[i + 1]) < 0);
 }
-#define gen_ensure_msg_is_sorted(x) _ensure_msg_is_sorted(__FILE__, __LINE__, (x))
-
-
-/* Test dba_msg_context */
-template<> template<>
-void to::test<1>()
-{
-	dba_msg_context d1, d2;
-	dba_var v1, v2;
-
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v1));
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v2));
-
-	CHECKED(dba_msg_context_create(9, 8, 7, 6, 1, 2, 3, &d1));
-	CHECKED(dba_msg_context_create(9, 8, 7, 6, 1, 3, 2, &d2));
-
-	gen_ensure_equals(d1->data_count, 0);
-	gen_ensure_equals(d1->ltype1, 9);
-	gen_ensure_equals(d1->l1, 8);
-	gen_ensure_equals(d1->ltype2, 7);
-	gen_ensure_equals(d1->l2, 6);
-	gen_ensure_equals(d1->pind, 1);
-	gen_ensure_equals(d1->p1, 2);
-	gen_ensure_equals(d1->p2, 3);
-	gen_ensure_equals(d2->data_count, 0);
-	gen_ensure_equals(d2->ltype1, 9);
-	gen_ensure_equals(d2->l1, 8);
-	gen_ensure_equals(d2->ltype2, 7);
-	gen_ensure_equals(d2->l2, 6);
-	gen_ensure_equals(d2->pind, 1);
-	gen_ensure_equals(d2->p1, 3);
-	gen_ensure_equals(d2->p2, 2);
-
-	CHECKED(dba_msg_context_set_nocopy(d1, v1));
-	CHECKED(dba_msg_context_set_nocopy(d2, v2));
-
-	gen_ensure(dba_msg_context_compare(d1, d2) < 0);
-	gen_ensure(dba_msg_context_compare(d2, d1) > 0);
-	gen_ensure_equals(dba_msg_context_compare(d1, d1), 0);
-	gen_ensure_equals(dba_msg_context_compare(d2, d2), 0);
-
-	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 2, 4) < 0);
-	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 2, 2) > 0);
-	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 3, 3) < 0);
-	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 1, 3) > 0);
-	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 2, 2, 3) < 0);
-	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 6, 0, 2, 3) > 0);
-	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 7, 1, 2, 3) < 0);
-	gen_ensure(dba_msg_context_compare2(d1, 9, 8, 7, 5, 1, 2, 3) > 0);
-	gen_ensure_equals(dba_msg_context_compare2(d1, 9, 8, 7, 6, 1, 2, 3), 0);
-
-	/* No need to delete v1 and v2, since dba_msg_datum takes ownership of the
-	 * variables */
-	dba_msg_context_delete(d1);
-	dba_msg_context_delete(d2);
-}
-
-/* Test dba_msg_context external ordering */
-template<> template<>
-void to::test<2>()
-{
-	dba_msg_context lev1, lev2;
-
-	CHECKED(dba_msg_context_create(1, 2, 3, 4, 1, 2, 3, &lev1));
-	CHECKED(dba_msg_context_create(2, 1, 4, 3, 1, 2, 3, &lev2));
-
-	gen_ensure_equals(lev1->data_count, 0);
-	gen_ensure_equals(lev1->ltype1, 1);
-	gen_ensure_equals(lev1->l1, 2);
-	gen_ensure_equals(lev1->ltype2, 3);
-	gen_ensure_equals(lev1->l2, 4);
-	gen_ensure_equals(lev2->data_count, 0);
-	gen_ensure_equals(lev2->ltype1, 2);
-	gen_ensure_equals(lev2->l1, 1);
-	gen_ensure_equals(lev2->ltype2, 4);
-	gen_ensure_equals(lev2->l2, 3);
-
-	gen_ensure(dba_msg_context_compare(lev1, lev2) < 0);
-	gen_ensure(dba_msg_context_compare(lev2, lev1) > 0);
-	gen_ensure_equals(dba_msg_context_compare(lev1, lev1), 0);
-	gen_ensure_equals(dba_msg_context_compare(lev2, lev2), 0);
-
-	gen_ensure(dba_msg_context_compare2(lev1, 1, 2, 4, 4, 1, 2, 3) < 0);
-	gen_ensure(dba_msg_context_compare2(lev1, 1, 2, 2, 4, 1, 2, 3) > 0);
-	gen_ensure(dba_msg_context_compare2(lev1, 1, 3, 3, 4, 1, 2, 3) < 0);
-	gen_ensure(dba_msg_context_compare2(lev1, 1, 1, 3, 4, 1, 2, 3) > 0);
-	gen_ensure(dba_msg_context_compare2(lev1, 2, 2, 3, 4, 1, 2, 3) < 0);
-	gen_ensure(dba_msg_context_compare2(lev1, 0, 2, 3, 4, 1, 2, 3) > 0);
-	gen_ensure_equals(dba_msg_context_compare2(lev1, 1, 2, 3, 4, 1, 2, 3), 0);
-
-	dba_msg_context_delete(lev1);
-	dba_msg_context_delete(lev2);
-}
-
-/* Test dba_msg_context internal ordering */
-template<> template<>
-void to::test<3>()
-{
-	dba_msg_context lev;
-
-	CHECKED(dba_msg_context_create(1, 2, 3, 4, 1, 2, 3, &lev));
-
-	dba_var v1, v2, v3, v4;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v1));
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &v2));
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 7), &v3));
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v4));
-
-	CHECKED(dba_msg_context_set_nocopy(lev, v1));
-	gen_ensure_equals(lev->data_count, 1);
-	CHECKED(dba_msg_context_set_nocopy(lev, v2));
-	gen_ensure_equals(lev->data_count, 2);
-	CHECKED(dba_msg_context_set_nocopy(lev, v3));
-	gen_ensure_equals(lev->data_count, 3);
-	// Variables with same code must get substituded and not added
-	CHECKED(dba_msg_context_set_nocopy(lev, v4));
-	gen_ensure_equals(lev->data_count, 3);
-
-	gen_ensure_context_is_sorted(lev);
-
-	gen_ensure(dba_msg_context_find(lev, DBA_VAR(0, 1, 1)) != NULL);
-	gen_ensure_equals(dba_msg_context_find(lev, DBA_VAR(0, 1, 1)), v4);
-
-	gen_ensure(dba_msg_context_find(lev, DBA_VAR(0, 1, 2)) != NULL);
-	gen_ensure_equals(dba_msg_context_find(lev, DBA_VAR(0, 1, 2)), v2);
-
-	gen_ensure(dba_msg_context_find(lev, DBA_VAR(0, 1, 7)) != NULL);
-	gen_ensure_equals(dba_msg_context_find(lev, DBA_VAR(0, 1, 7)), v3);
-
-	gen_ensure_equals(dba_msg_context_find(lev, DBA_VAR(0, 1, 8)), (dba_var)0);
-}
+#define ensure_msg_is_sorted(x) _ensure_msg_is_sorted(wibble::tests::Location(__FILE__, __LINE__, "msg is sorted in " #x), (x))
 
 /* Test dba_msg internal ordering */
 template<> template<>
-void to::test<4>()
+void to::test<1>()
 {
-	dba_msg msg;
+	Msg msg;
+    Var* v1 = 0;
+    Var* v2 = 0;
+    Var* v3 = 0;
+    Var* v4 = 0;
 
-	CHECKED(dba_msg_create(&msg));
+	msg.set(auto_ptr<Var>(v1 = new Var(DBA_VAR(0, 1, 1))), 2, 2, 2, 2, 1, 1, 1); ensure_equals(msg.data.size(), 1);
+	msg.set(auto_ptr<Var>(v2 = new Var(DBA_VAR(0, 1, 1))), 2, 2, 2, 2, 1, 1, 1); ensure_equals(msg.data.size(), 1);
+	msg.set(auto_ptr<Var>(v3 = new Var(DBA_VAR(0, 1, 1))), 1, 1, 1, 1, 1, 1, 1); ensure_equals(msg.data.size(), 2);
+    msg.set(auto_ptr<Var>(v4 = new Var(DBA_VAR(0, 1, 1))), 1, 1, 1, 1, 2, 2, 2); ensure_equals(msg.data.size(), 3);
 
-	dba_var v1, v2, v3, v4;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v1));
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v2));
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v3));
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 1), &v4));
+	ensure_msg_is_sorted(msg);
 
-	CHECKED(dba_msg_set_nocopy(msg, v4, 2, 2, 2, 2, 1, 1, 1));
-	gen_ensure_equals(msg->data_count, 1);
-	CHECKED(dba_msg_set_nocopy(msg, v3, 2, 2, 2, 2, 1, 1, 1));
-	gen_ensure_equals(msg->data_count, 1);
-	CHECKED(dba_msg_set_nocopy(msg, v1, 1, 1, 1, 1, 1, 1, 1));
-	gen_ensure_equals(msg->data_count, 2);
-	CHECKED(dba_msg_set_nocopy(msg, v2, 1, 1, 1, 1, 2, 2, 2));
-	gen_ensure_equals(msg->data_count, 3);
+	ensure(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1) != NULL);
+	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1), v3);
 
-	gen_ensure_msg_is_sorted(msg);
+	ensure(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2) != NULL);
+	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2), v4);
 
-	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1) != NULL);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1), v1);
+	ensure(msg.find(DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1) != NULL);
+	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1), v2);
 
-	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2) != NULL);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2), v2);
-
-	gen_ensure(dba_msg_find(msg, DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1) != NULL);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1), v3);
-
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 2), 1, 1, 1, 1, 2, 2, 2), (dba_var)0);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 0, 0, 0, 0, 1, 1, 1), (dba_var)0);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 3, 3, 3, 3, 1, 1, 1), (dba_var)0);
-	gen_ensure_equals(dba_msg_find(msg, DBA_VAR(0, 1, 1), 1, 1, 1, 1, 3, 3, 3), (dba_var)0);
+	ensure_equals(msg.find(DBA_VAR(0, 1, 2), 1, 1, 1, 1, 2, 2, 2), (Var*)0);
+	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 0, 0, 0, 0, 1, 1, 1), (Var*)0);
+	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 3, 3, 3, 3, 1, 1, 1), (Var*)0);
+	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 3, 3, 3), (Var*)0);
 }
 
 /* Try to write a generic message from scratch */
 template<> template<>
-void to::test<5>()
+void to::test<2>()
 {
-	dba_msg msg;
-
-	CHECKED(dba_msg_create(&msg));
-	msg->type = MSG_GENERIC;
+	Msg msg;
+	msg.type = MSG_GENERIC;
 	//msg->type = MSG_SYNOP;
 
 	// Fill in the dba_msg
-	CHECKED(dba_msg_seti(msg, DBA_VAR(0, 4, 1), 2008,   -1, 257, 0, 0, 0, 0, 0, 0));
-	CHECKED(dba_msg_seti(msg, DBA_VAR(0, 4, 2),    5,   -1, 257, 0, 0, 0, 0, 0, 0));
-	CHECKED(dba_msg_seti(msg, DBA_VAR(0, 4, 3),    7,   -1, 257, 0, 0, 0, 0, 0, 0));
+	msg.seti(DBA_VAR(0, 4, 1), 2008,   -1, MSG_LEVANA, MSG_TRANA);
+	msg.seti(DBA_VAR(0, 4, 2),    5,   -1, MSG_LEVANA, MSG_TRANA);
+	msg.seti(DBA_VAR(0, 4, 3),    7,   -1, MSG_LEVANA, MSG_TRANA);
 	// ...
-	CHECKED(dba_msg_setd(msg, DBA_VAR(0, 5, 1),   45.0, -1, 257, 0, 0, 0, 0, 0, 0));
-	CHECKED(dba_msg_setd(msg, DBA_VAR(0, 6, 1),   11.0, -1, 257, 0, 0, 0, 0, 0, 0));
+	msg.setd(DBA_VAR(0, 5, 1),   45.0, -1, MSG_LEVANA, MSG_TRANA);
+	msg.setd(DBA_VAR(0, 6, 1),   11.0, -1, MSG_LEVANA, MSG_TRANA);
 	// ...
-	CHECKED(dba_msg_setd(msg, DBA_VAR(0,12, 101),  273.0, 75, 102, 2000, 0, 0, 254, 0, 0));
+	msg.setd(DBA_VAR(0,12, 101),  273.0, 75, MSG_LEV1(102, 2000), MSG_TR0(254));
 
 	// Append the dba_msg to a dba_msgs
-	dba_msgs msgs;
-	CHECKED(dba_msgs_create(&msgs));
-	CHECKED(dba_msgs_append_acquire(msgs, msg));
+	Msgs msgs;
+    msgs.acquire(msg);
 
+#if 0
+    TODO TODO TODO
 	// Encode to BUFR
 	dba_rawmsg rmsg;
 	CHECKED(dba_marshal_encode(msgs, BUFR, &rmsg));
@@ -269,9 +124,7 @@ void to::test<5>()
 	//CHECKED(dba_file_create(BUFR, "/tmp/prova", "wb", &file));
 	//CHECKED(dba_file_write(file, rmsg));
 	//dba_file_delete(file);
-
-	dba_rawmsg_delete(rmsg);
-	dba_msgs_delete(msgs);
+#endif
 }
 
 #if 0
@@ -388,50 +241,39 @@ void to::test<5>()
 
 /* Test repmemo handling */
 template<> template<>
-void to::test<6>()
+void to::test<3>()
 {
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_SYNOP)), MSG_SYNOP);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_METAR)), MSG_METAR);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_SHIP)), MSG_SHIP);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_BUOY)), MSG_BUOY);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_AIREP)), MSG_AIREP);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_AMDAR)), MSG_AMDAR);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_ACARS)), MSG_ACARS);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_PILOT)), MSG_PILOT);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_TEMP)), MSG_TEMP);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_TEMP_SHIP)), MSG_TEMP_SHIP);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_SAT)), MSG_SAT);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_POLLUTION)), MSG_POLLUTION);
-	gen_ensure_equals(dba_msg_type_from_repmemo(dba_msg_repmemo_from_type(MSG_GENERIC)), MSG_GENERIC);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_SYNOP)), MSG_SYNOP);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_METAR)), MSG_METAR);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_SHIP)), MSG_SHIP);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_BUOY)), MSG_BUOY);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_AIREP)), MSG_AIREP);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_AMDAR)), MSG_AMDAR);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_ACARS)), MSG_ACARS);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_PILOT)), MSG_PILOT);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_TEMP)), MSG_TEMP);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_TEMP_SHIP)), MSG_TEMP_SHIP);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_SAT)), MSG_SAT);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_POLLUTION)), MSG_POLLUTION);
+	ensure_equals(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_GENERIC)), MSG_GENERIC);
 
-	gen_ensure_equals(dba_msg_type_from_repmemo("synop"), MSG_SYNOP);
-	gen_ensure_equals(dba_msg_type_from_repmemo("SYNOP"), MSG_SYNOP); // Case insensitive
-	gen_ensure_equals(dba_msg_type_from_repmemo("metar"), MSG_METAR);
-	gen_ensure_equals(dba_msg_type_from_repmemo("ship"), MSG_SHIP);
-	gen_ensure_equals(dba_msg_type_from_repmemo("buoy"), MSG_BUOY);
-	gen_ensure_equals(dba_msg_type_from_repmemo("airep"), MSG_AIREP);
-	gen_ensure_equals(dba_msg_type_from_repmemo("amdar"), MSG_AMDAR);
-	gen_ensure_equals(dba_msg_type_from_repmemo("acars"), MSG_ACARS);
-	gen_ensure_equals(dba_msg_type_from_repmemo("pilot"), MSG_PILOT);
-	gen_ensure_equals(dba_msg_type_from_repmemo("temp"), MSG_TEMP);
-	gen_ensure_equals(dba_msg_type_from_repmemo("tempship"), MSG_TEMP_SHIP);
-	gen_ensure_equals(dba_msg_type_from_repmemo("satellite"), MSG_SAT);
-	gen_ensure_equals(dba_msg_type_from_repmemo("pollution"), MSG_POLLUTION);
-	gen_ensure_equals(dba_msg_type_from_repmemo("generic"), MSG_GENERIC);
-	gen_ensure_equals(dba_msg_type_from_repmemo("antani"), MSG_GENERIC);
-	gen_ensure_equals(dba_msg_type_from_repmemo(""), MSG_GENERIC);
-	gen_ensure_equals(dba_msg_type_from_repmemo(NULL), MSG_GENERIC);
-}
-
-/* Test variable alias resolution */
-template<> template<>
-void to::test<7>()
-{
-	gen_ensure_equals(dba_msg_resolve_var("tot_prec1"), DBA_MSG_TOT_PREC1);
-	gen_ensure_equals(dba_msg_resolve_var("cloud_h4"), DBA_MSG_CLOUD_H4);
-	gen_ensure_equals(dba_msg_resolve_var("st_type"), DBA_MSG_ST_TYPE);
-	gen_ensure_equals(dba_msg_resolve_var("tot_snow"), DBA_MSG_TOT_SNOW);
-	gen_ensure_equals(dba_msg_resolve_var("block"), DBA_MSG_BLOCK);
+	ensure_equals(Msg::type_from_repmemo("synop"), MSG_SYNOP);
+	ensure_equals(Msg::type_from_repmemo("SYNOP"), MSG_SYNOP); // Case insensitive
+	ensure_equals(Msg::type_from_repmemo("metar"), MSG_METAR);
+	ensure_equals(Msg::type_from_repmemo("ship"), MSG_SHIP);
+	ensure_equals(Msg::type_from_repmemo("buoy"), MSG_BUOY);
+	ensure_equals(Msg::type_from_repmemo("airep"), MSG_AIREP);
+	ensure_equals(Msg::type_from_repmemo("amdar"), MSG_AMDAR);
+	ensure_equals(Msg::type_from_repmemo("acars"), MSG_ACARS);
+	ensure_equals(Msg::type_from_repmemo("pilot"), MSG_PILOT);
+	ensure_equals(Msg::type_from_repmemo("temp"), MSG_TEMP);
+	ensure_equals(Msg::type_from_repmemo("tempship"), MSG_TEMP_SHIP);
+	ensure_equals(Msg::type_from_repmemo("satellite"), MSG_SAT);
+	ensure_equals(Msg::type_from_repmemo("pollution"), MSG_POLLUTION);
+	ensure_equals(Msg::type_from_repmemo("generic"), MSG_GENERIC);
+	ensure_equals(Msg::type_from_repmemo("antani"), MSG_GENERIC);
+	ensure_equals(Msg::type_from_repmemo(""), MSG_GENERIC);
+	ensure_equals(Msg::type_from_repmemo(NULL), MSG_GENERIC);
 }
 
 }

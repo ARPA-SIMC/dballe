@@ -31,6 +31,7 @@
 #include <dballe/core/error.h>
 #include <dballe/core/varinfo.h>
 #include <stdio.h>
+#include <memory>
 
 struct lua_State;
 
@@ -168,7 +169,7 @@ public:
 	 *   The attribute to add.  It will be used directly, and var will take care of
 	 *   its memory management.
 	 */
-	void seta_nocopy(Var* attr);
+	void seta(std::auto_ptr<Var> attr);
 
 	/// Remove the attribute with the given code
 	void unseta(Varcode code);

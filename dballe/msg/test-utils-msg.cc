@@ -21,28 +21,32 @@
 
 #include "test-utils-msg.h"
 
-#include <dballe/msg/aof_codec.h>
+//#include <dballe/msg/aof_codec.h>
 
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 
+#if 0
 extern "C" {
 void aof_codec_init(void);
 void aof_codec_shutdown(void);
 }
+#endif
 
-namespace tut_dballe {
+namespace dballe {
+namespace tests {
 
 TestMsgEnv::TestMsgEnv()
 {
-	aof_codec_init();
+	//aof_codec_init();
 }
 TestMsgEnv::~TestMsgEnv()
 {
-	aof_codec_shutdown();
+	//aof_codec_shutdown();
 }
 
+#if 0
 dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type)
 {
 	if (type == AOF)
@@ -223,7 +227,9 @@ void my_ensure_msg_undef(const char* file, int line, dba_msg msg, int id, const 
 		throw failure(__ensure_errmsg(file, line, ss.str()));
 	}
 }
+#endif
 
+}
 }
 
 // vim:set ts=4 sw=4:

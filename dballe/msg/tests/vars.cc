@@ -20,7 +20,7 @@
  */
 
 #include <test-utils-msg.h>
-#include <dballe/msg/formatter.h>
+#include <dballe/msg/vars.h>
 #include <dballe/msg/defs.h>
 
 using namespace dballe;
@@ -28,40 +28,26 @@ using namespace std;
 
 namespace tut {
 
-struct formatter_shar
+struct msg_vars_shar
 {
 };
-TESTGRP(formatter);
+TESTGRP(msg_vars);
 
-// Try to get descriptions for all the layers
+// Test variable alias resolution
 template<> template<>
 void to::test<1>()
 {
-	for (int i = 0; i < 261; ++i)
-	{
-		describe_level(i, 0);
-		describe_level_or_layer(i, 0, i, 0);
-	}
-}
+    // First
+    ensure_equals(resolve_var("block"), DBA_MSG_BLOCK);
+    ensure_equals(resolve_var_substring("blocks", 5), DBA_MSG_BLOCK);
 
-// Try to get descriptions for all the time ranges
-template<> template<>
-void to::test<2>()
-{
-	for (int i = 0; i < 256; ++i)
-		describe_trange(i, 0, 0);
-}
+    // Last
+	ensure_equals(resolve_var("tot_prec1"), DBA_MSG_TOT_PREC1);
 
-// Verify some well-known descriptions
-template<> template<>
-void to::test<3>()
-{
-	ensure_equals(describe_level(MISSING_INT, MISSING_INT), "-");
-	ensure_equals(describe_level_or_layer(103, 2000, INT_MAX, INT_MAX), "2.000m above ground");
-	ensure_equals(describe_level_or_layer(103, 2000, 103, 4000),
-			"Layer from [2.000m above ground] to [4.000m above ground]");
-	ensure_equals(describe_trange(254, 86400, MISSING_INT),
-			"Instantaneous value, forecast time 1d");
+    // Inbetween
+	ensure_equals(resolve_var("cloud_h4"), DBA_MSG_CLOUD_H4);
+	ensure_equals(resolve_var("st_type"), DBA_MSG_ST_TYPE);
+	ensure_equals(resolve_var("tot_snow"), DBA_MSG_TOT_SNOW);
 }
 
 }

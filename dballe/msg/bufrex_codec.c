@@ -34,7 +34,7 @@ extern dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_msg raw, bufrex_subset 
 extern dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 extern dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 
-dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msgs* msgs)
+dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msg_codec_options opts, dba_msgs* msgs)
 {
 	dba_err err = DBA_OK;
 	bufrex_msg rmsg = NULL;
@@ -46,7 +46,7 @@ dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msgs* msgs)
 		dba_verbose(DBA_VERB_BUFREX_MSG, "Decoded BUFR data:\n");
 		bufrex_msg_print(rmsg, DBA_VERBOSE_STREAM);
 	}
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_dba_msgs(rmsg, msgs));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_dba_msgs(rmsg, opts, msgs));
 
 cleanup:
 	if (rmsg != NULL)
@@ -54,7 +54,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msgs* msgs)
+dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msg_codec_options opts, dba_msgs* msgs)
 {
 	dba_err err = DBA_OK;
 	bufrex_msg rmsg = NULL;
@@ -66,7 +66,7 @@ dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msgs* msgs)
 		dba_verbose(DBA_VERB_BUFREX_MSG, "Decoded CREX data:\n");
 		bufrex_msg_print(rmsg, DBA_VERBOSE_STREAM);
 	}
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_dba_msgs(rmsg, msgs));
+	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_to_dba_msgs(rmsg, opts, msgs));
 
 cleanup:
 	if (rmsg != NULL)
@@ -209,7 +209,7 @@ cleanup:
 	return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs)
+dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msg_codec_options opts, dba_msgs* msgs)
 {
 	dba_err err = DBA_OK;
 	dba_msgs res = NULL;

@@ -19,17 +19,17 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "filter.h"
+#include "msg.h"
 #include "context.h"
 
 /*
  * 1: the message matches
  * 0: the message does not match
  */
-static int match_message(dba_msg m, dba_record filter)
+static bool match_message(const Msg& m, const Record& filter)
 {
 #warning to be implemented
-	return 1;
+	return true;
 };
 
 /*

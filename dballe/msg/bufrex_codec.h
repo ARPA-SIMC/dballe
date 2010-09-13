@@ -33,6 +33,7 @@ extern "C" {
 
 #include <dballe/core/rawmsg.h>
 #include <dballe/msg/msgs.h>
+#include <dballe/msg/codec.h>
 #include <dballe/bufrex/msg.h>
 
 /**
@@ -40,24 +41,28 @@ extern "C" {
  *
  * @param raw
  *   The message to decode
+ * @param opts
+ *   Codec options
  * @retval msgs
  *   The decoded message
  * @return
  *   The error status (See @ref error.h)
  */
-dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msgs* msgs);
+dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msg_codec_options opts, dba_msgs* msgs);
 
 /**
  * Decode a CREX message into a dba_msg
  *
  * @param raw
  *   The message to decode
+ * @param opts
+ *   Codec options
  * @retval msgs
  *   The decoded message
  * @return
  *   The error status (See @ref error.h)
  */
-dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msgs* msgs);
+dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msg_codec_options opts, dba_msgs* msgs);
 
 /**
  * Encode a dba_msg into a BUFR message
@@ -121,12 +126,14 @@ dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs);
  *
  * @param raw
  *   The bufrex message with the data to interpret
+ * @param opts
+ *   Codec options
  * @retval msgs
  *   The dba_msgs with the interpreted data
  * @return
  *   The error indicator for the function (See @ref error.h)
  */
-dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msgs* msgs);
+dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msg_codec_options opts, dba_msgs* msgs);
 
 
 /**

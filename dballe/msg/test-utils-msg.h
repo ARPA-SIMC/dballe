@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
  */
 
 #include <dballe/bufrex/test-utils-bufrex.h>
+#if 0
 #include <dballe/msg/bufrex_codec.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/file.h>
@@ -28,19 +29,20 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#endif
 
-namespace tut_dballe {
-using namespace std;
-using namespace tut;
+namespace dballe {
+namespace tests {
 
 struct TestMsgEnv
 {
-	TestBufrexEnv bufrexenv;
+	bufrex::tests::TestBufrexEnv bufrexenv;
 
 	TestMsgEnv();
 	~TestMsgEnv();
 };
 
+#if 0
 dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type);
 #define read_test_msg(filename, type) _read_test_msg(__FILE__, __LINE__, filename, type)
 
@@ -97,7 +99,9 @@ void my_ensure_msg_equals(const char* file, int line, dba_msg msg, int id, const
 }
 #define gen_ensure_msg_equals(msg, id, value) my_ensure_msg_equals(__FILE__, __LINE__, (msg), (id), #id, (value))
 #define inner_ensure_msg_equals(msg, id, value) my_ensure_msg_equals(file, line, (msg), (id), #id, (value))
+#endif
 
+}
 }
 
 // vim:set ts=4 sw=4:

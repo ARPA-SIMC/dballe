@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006,2007  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,35 +19,18 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBA_MSG_FILTER_H
-#define DBA_MSG_FILTER_H
+#include "repinfo.h"
+#include "config.h"
+#include <stdlib.h>
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+namespace dballe {
 
-/** @file
- * @ingroup msg
- *
- * Filtering functions for dba_msg objects.
- */
-
-#include <dballe/msg/msg.h>
-#include <dballe/core/record.h>
-
-/**
- * Create a new dba_msg
- *
- * @retval msg
- *   The newly created dba_msg.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_msg_filter_copy(dba_msg src, dba_msg* dst, dba_record filter);
-
-#ifdef  __cplusplus
+const char* repinfo_default_filename()
+{
+	const char* deffile = getenv("DBA_REPINFO");
+	if (deffile == 0 || deffile[0] == 0)
+		return TABLE_DIR "/repinfo.csv";
+    return deffile;
 }
-#endif
 
-// vim:set ts=4 sw=4:
-#endif
+} // namespace dballe

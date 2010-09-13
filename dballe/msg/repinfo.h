@@ -22,34 +22,24 @@
 #ifndef DBA_MSG_REPINFO_H
 #define DBA_MSG_REPINFO_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup msg
  *
  * rep_cod/rep_memo handling functions
  */
 
-#include <dballe/core/error.h>
+namespace dballe {
 
 /**
- * Create a new dba_msg
- *
  * Return the file name for the default repinfo.csv
  *
- * @retval fname
+ * @returns
  *   The file name (which either points to the environment or to a static
  *   string, and does not need to be deallocated)
- * @return
- *   The error indicator for the function (See @ref error.h)
  */
-dba_err dba_repinfo_default_filename(const char** fname);
+const char* repinfo_default_filename();
 
-#ifdef  __cplusplus
 }
-#endif
 
 // vim:set ts=4 sw=4:
 #endif

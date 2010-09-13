@@ -22,10 +22,6 @@
 #ifndef DBA_MSG_H
 #define DBA_MSG_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup msg
  *
@@ -68,14 +64,33 @@ extern "C" {
  * the values that are used more commonly.
  */
 
-#include <dballe/core/error.h>
 #include <dballe/core/var.h>
+#include <dballe/msg/defs.h>
+#include <dballe/msg/vars.h>
 #include <stdio.h>
+#include <vector>
+#include <memory>
+
+namespace dballe {
+
+struct Record;
+
+namespace msg {
+struct Context;
+}
+
+// Convenience macros to avoid long argument lists
+#define MSG_LEVANA 257, MISSING_INT, MISSING_INT, MISSING_INT
+#define MSG_LEV0(ltype) (ltype), MISSING_INT, MISSING_INT, MISSING_INT
+#define MSG_LEV1(ltype, l1) (ltype), (l1), MISSING_INT, MISSING_INT
+#define MSG_TRANA MISSING_INT, MISSING_INT, MISSING_INT
+#define MSG_TR0(pind) (pind), MISSING_INT, MISSING_INT
+#define MSG_TR1(pind, p1) (pind), (p1), MISSING_INT
 
 /**
  * Source of the data
  */
-enum _dba_msg_type {
+enum MsgType {
 	MSG_GENERIC,	/**< Data from unspecified source */
 	MSG_SYNOP,		/**< Synop measured data */
 	MSG_PILOT,		/**< Pilot sounding data */
@@ -90,37 +105,6 @@ enum _dba_msg_type {
 	MSG_SAT,		/**< Satellite data */
 	MSG_POLLUTION	/**< Pollution data */
 };
-/** @copydoc _dba_msg_type */
-typedef enum _dba_msg_type dba_msg_type;
-
-struct _dba_msg_context;
-/** @copydoc _dba_msg_context */
-typedef struct _dba_msg_context* dba_msg_context;
-
-/**
- * Storage for related physical data
- */
-struct _dba_msg
-{
- 	/** Source of the data */
-	dba_msg_type type;
-
-	/** Number of levels in this message */
-	int data_count;
-
-	/**
-	 * Number of levels allocated (must always be greater than or equal to
-	 * data_count
-	 */
-	int data_alloc;
-
-	/**
-	 * The array with the data, reallocated as needed
-	 */
-	dba_msg_context* data;
-};
-/** @copydoc _dba_msg */
-typedef struct _dba_msg* dba_msg;
 
 /**
  * Return a string with the name of a dba_msg_type
@@ -130,107 +114,287 @@ typedef struct _dba_msg* dba_msg;
  * @return
  *   The name, as a const string.  This function is thread safe.
  */
-const char* dba_msg_type_name(dba_msg_type type);
-
-
-/**
- * Create a new dba_msg
- *
- * @retval msg
- *   The newly created dba_msg.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_msg_create(dba_msg* msg);
+const char* msg_type_name(MsgType type);
 
 /**
- * Dump all the contents of the message to the given stream
- *
- * @param msg
- *   The dba_msg to dump
- * @param out
- *   The stream to dump the contents of the dba_msg to.
+ * Storage for related physical data
  */
-void dba_msg_print(dba_msg msg, FILE* out);
+class Msg
+{
+protected:
+    /**
+     * Return the index of the given context, or -1 if it was not found
+     */
+    int find_index(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const;
 
-/**
- * Print the differences between two dba_msg to a stream
- *
- * @param msg1
- *   First dba_msg to compare
- * @param msg2
- *   Second dba_msg to compare
- * @retval diffs
- *   Integer variable that will be incremented by the number of differences
- *   found.
- * @param out
- *   The stream to dump a description of the differences to.
- */
-void dba_msg_diff(dba_msg msg1, dba_msg msg2, int* diffs, FILE* out);
+    /**
+     * Add a missing context, taking care of its memory management
+     *
+     * Note: the caller must ensure that the context does not already exist,
+     * otherwise the Msg will end up with duplicated contexts
+     */
+    void add_context(std::auto_ptr<msg::Context> ctx);
 
-/**
- * Delete a dba_msg
- *
- * @param msg
- *   The dba_msg to delete.
- */
-void dba_msg_delete(dba_msg msg);
+public:
+ 	/** Source of the data */
+	MsgType type;
+
+	/** Context in the message */
+	std::vector<msg::Context*> data;
+
+    /**
+     * Create a new dba_msg
+     *
+     * By default, type is MSG_GENERIC
+     */
+    Msg();
+    ~Msg();
+
+    Msg(const Msg& m);
+    Msg& operator=(const Msg& m);
+
+    /**
+     * Find a msg::Context given its description
+     *
+     * @param ltype
+     *   Type of the level.  See @ref level_table.
+     * @param l1
+     *   L1 value of the level.  See @ref level_table.
+     * @param l2
+     *   L2 value of the level.  See @ref level_table.
+     * @param pind
+     *   Time range type indicator.  See @ref trange_table.
+     * @param p1
+     *   Time range P1 indicator.  See @ref trange_table.
+     * @param p2
+     *   Time range P2 indicator.  See @ref trange_table.
+     * @return
+     *   The context found, or NULL if it was not found.
+     */
+    const msg::Context* find_context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const;
+
+    /**
+     * Find a msg::Context given its description, creating it if it does not
+     * exist
+     *
+     * @param ltype
+     *   Type of the level.  See @ref level_table.
+     * @param l1
+     *   L1 value of the level.  See @ref level_table.
+     * @param l2
+     *   L2 value of the level.  See @ref level_table.
+     * @param pind
+     *   Time range type indicator.  See @ref trange_table.
+     * @param p1
+     *   Time range P1 indicator.  See @ref trange_table.
+     * @param p2
+     *   Time range P2 indicator.  See @ref trange_table.
+     * @return
+     *   The context found
+     */
+    msg::Context& obtain_context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+
+    /**
+     * Find a variable given its description
+     *
+     * @param msg
+     *   The dba_msg to query
+     * @param code
+     *   The ::dba_varcode of the variable to query. See @ref vartable.h
+     * @param ltype
+     *   Type of the level.  See @ref level_table.
+     * @param l1
+     *   L1 value of the level.  See @ref level_table.
+     * @param l2
+     *   L2 value of the level.  See @ref level_table.
+     * @return
+     *   The variable found, or NULL if it was not found.
+     */
+    const Var* find(Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const;
+
+    /** 
+     * Find a datum given its shortcut ID
+     *
+     * @param msg
+     *   The message to query
+     * @param id
+     *   Shortcut ID of the value to set (see @ref vars.h)
+     * @return
+     *   The value found, or NULL if it was not found.
+     */
+    const Var* find_by_id(int id) const;
+
+    /**
+     * Add or replace a value
+     *
+     * @param var
+     *   The Var with the value to set
+     * @param code
+     *   The dba_varcode of the destination value.  If it is different than the
+     *   varcode of var, a conversion will be attempted.
+     * @param ltype1
+     *   Type of the first level.  See @ref level_table.
+     * @param l1
+     *   L1 value of the level.  See @ref level_table.
+     * @param ltype2
+     *   Type of the second level.  See @ref level_table.
+     * @param l2
+     *   L2 value of the level.  See @ref level_table.
+     * @param pind
+     *   Time range type indicator.  See @ref trange_table.
+     * @param p1
+     *   Time range P1 indicator.  See @ref trange_table.
+     * @param p2
+     *   Time range P2 indicator.  See @ref trange_table.
+     */
+    void set(const Var& var, Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+
+    /**
+     * Add or replace a value, taking ownership of the source variable without
+     * copying it.
+     *
+     * @param msg
+     *   The Var with the value to set.  This Msg will take ownership of memory
+     *   management.
+     * @param ltype
+     *   Type of the level.  See @ref level_table.
+     * @param l1
+     *   L1 value of the level.  See @ref level_table.
+     * @param l2
+     *   L2 value of the level.  See @ref level_table.
+     * @param pind
+     *   Time range type indicator.  See @ref trange_table.
+     * @param p1
+     *   Time range P1 indicator.  See @ref trange_table.
+     * @param p2
+     *   Time range P2 indicator.  See @ref trange_table.
+     */
+    void set(std::auto_ptr<Var> var, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+
+    /**
+     * Add or replace an integer value in the dba_msg
+     *
+     * @param code
+     *   The dba_varcode of the destination value..  See @ref vartable.h
+     * @param val
+     *   The integer value of the data
+     * @param conf
+     *   The confidence interval of the data, as the value of a B33007 WMO B (per
+     *   cent confidence) table entry, that is, a number between 0 and 100
+     *   inclusive.  -1 means no confidence interval attribute.
+     * @param ltype
+     *   Type of the level.  See @ref level_table.
+     * @param l1
+     *   L1 value of the level.  See @ref level_table.
+     * @param l2
+     *   L2 value of the level.  See @ref level_table.
+     * @param pind
+     *   Time range type indicator.  See @ref trange_table.
+     * @param p1
+     *   Time range P1 indicator.  See @ref trange_table.
+     * @param p2
+     *   Time range P2 indicator.  See @ref trange_table.
+     */
+    void seti(Varcode code, int val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+
+    /**
+     * Add or replace a double value in the dba_msg
+     *
+     * @param code
+     *   The dba_varcode of the destination value.  See @ref vartable.h
+     * @param val
+     *   The double value of the data
+     * @param conf
+     *   The confidence interval of the data, as the value of a B33007 WMO B (per
+     *   cent confidence) table entry, that is, a number between 0 and 100
+     *   inclusive.  -1 means no confidence interval attribute.
+     * @param ltype
+     *   Type of the level.  See @ref level_table.
+     * @param l1
+     *   L1 value of the level.  See @ref level_table.
+     * @param l2
+     *   L2 value of the level.  See @ref level_table.
+     * @param pind
+     *   Time range type indicator.  See @ref trange_table.
+     * @param p1
+     *   Time range P1 indicator.  See @ref trange_table.
+     * @param p2
+     *   Time range P2 indicator.  See @ref trange_table.
+     */
+    void setd(Varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+
+    /**
+     * Add or replace a string value in the dba_msg
+     *
+     * @param code
+     *   The dba_varcode of the destination value.  See @ref vartable.h
+     * @param val
+     *   The string value of the data
+     * @param conf
+     *   The confidence interval of the data, as the value of a B33007 WMO B (per
+     *   cent confidence) table entry, that is, a number between 0 and 100
+     *   inclusive.  -1 means no confidence interval attribute.
+     * @param ltype
+     *   Type of the level.  See @ref level_table.
+     * @param l1
+     *   L1 value of the level.  See @ref level_table.
+     * @param l2
+     *   L2 value of the level.  See @ref level_table.
+     * @param pind
+     *   Time range type indicator.  See @ref trange_table.
+     * @param p1
+     *   Time range P1 indicator.  See @ref trange_table.
+     * @param p2
+     *   Time range P2 indicator.  See @ref trange_table.
+     */
+    void setc(Varcode code, const char* val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+
+    /**
+     * Copy to dest all the variable in this message that match \a filter
+     * TODO: to be implemented
+     */
+    //void filter(const Record& filter, Msg& dest) const;
+
+    /**
+     * Dump all the contents of the message to the given stream
+     *
+     * @param out
+     *   The stream to dump the contents of the dba_msg to.
+     */
+    void print(FILE* out) const;
+
+    /**
+     * Print the differences between two Msg to a stream
+     *
+     * @param msg
+     *   Message to compare this one to
+     * @param out
+     *   The stream to dump a description of the differences to.
+     * @return
+     *   Number of differences found.
+     */
+    unsigned diff(const Msg& msg, FILE* out) const;
+
+    /**
+     * Get the message source type corresponding to the given report code
+     */
+    static MsgType type_from_repmemo(const char* repmemo);
+
+    /**
+     * Get the report code corresponding to the given message source type
+     */
+    static const char* repmemo_from_type(MsgType type);
+
+#include <dballe/msg/msg-extravars.h>
+};
 
 
-/**
- * Add or replace a value in the dba_msg
- *
- * @param msg
- *   The message to operate on
- * @param var
- *   The dba_var with the value to set, that will be copied into the dba_msg.
- * @param code
- *   The dba_varcode of the destination value.  If it is different than the
- *   varcode of var, a conversion will be attempted.
- * @param ltype1
- *   Type of the first level.  See @ref level_table.
- * @param l1
- *   L1 value of the level.  See @ref level_table.
- * @param ltype2
- *   Type of the second level.  See @ref level_table.
- * @param l2
- *   L2 value of the level.  See @ref level_table.
- * @param pind
- *   Time range type indicator.  See @ref trange_table.
- * @param p1
- *   Time range P1 indicator.  See @ref trange_table.
- * @param p2
- *   Time range P2 indicator.  See @ref trange_table.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_msg_set(dba_msg msg, dba_var var, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+#if 0
 
-/**
- * Add or replace a value in the dba_msg, taking ownership of the source
- * variable witout copying it.
- *
- * @param msg
- *   The message to operate on
- * @param var
- *   The dba_var with the value to set.  This dba_msg will take ownership of
- *   memory management.
- * @param ltype
- *   Type of the level.  See @ref level_table.
- * @param l1
- *   L1 value of the level.  See @ref level_table.
- * @param l2
- *   L2 value of the level.  See @ref level_table.
- * @param pind
- *   Time range type indicator.  See @ref trange_table.
- * @param p1
- *   Time range P1 indicator.  See @ref trange_table.
- * @param p2
- *   Time range P2 indicator.  See @ref trange_table.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_msg_set_nocopy(dba_msg msg, dba_var var, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+
+
+
+
 
 /**
  * Add or replace a value in the dba_msg
@@ -262,148 +426,9 @@ dba_err dba_msg_set_by_id(dba_msg msg, dba_var var, int id);
  */
 dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
 
-/**
- * Add or replace an integer value in the dba_msg
- *
- * @param msg
- *   The message to operate on
- * @param code
- *   The dba_varcode of the destination value..  See @ref vartable.h
- * @param val
- *   The integer value of the data
- * @param conf
- *   The confidence interval of the data, as the value of a B33007 WMO B (per
- *   cent confidence) table entry, that is, a number between 0 and 100
- *   inclusive.  -1 means no confidence interval attribute.
- * @param ltype
- *   Type of the level.  See @ref level_table.
- * @param l1
- *   L1 value of the level.  See @ref level_table.
- * @param l2
- *   L2 value of the level.  See @ref level_table.
- * @param pind
- *   Time range type indicator.  See @ref trange_table.
- * @param p1
- *   Time range P1 indicator.  See @ref trange_table.
- * @param p2
- *   Time range P2 indicator.  See @ref trange_table.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_msg_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
-
-/**
- * Add or replace a double value in the dba_msg
- *
- * @param msg
- *   The message to operate on
- * @param code
- *   The dba_varcode of the destination value.  See @ref vartable.h
- * @param val
- *   The double value of the data
- * @param conf
- *   The confidence interval of the data, as the value of a B33007 WMO B (per
- *   cent confidence) table entry, that is, a number between 0 and 100
- *   inclusive.  -1 means no confidence interval attribute.
- * @param ltype
- *   Type of the level.  See @ref level_table.
- * @param l1
- *   L1 value of the level.  See @ref level_table.
- * @param l2
- *   L2 value of the level.  See @ref level_table.
- * @param pind
- *   Time range type indicator.  See @ref trange_table.
- * @param p1
- *   Time range P1 indicator.  See @ref trange_table.
- * @param p2
- *   Time range P2 indicator.  See @ref trange_table.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_msg_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
-
-/**
- * Add or replace a string value in the dba_msg
- *
- * @param msg
- *   The message to operate on
- * @param code
- *   The dba_varcode of the destination value.  See @ref vartable.h
- * @param val
- *   The string value of the data
- * @param conf
- *   The confidence interval of the data, as the value of a B33007 WMO B (per
- *   cent confidence) table entry, that is, a number between 0 and 100
- *   inclusive.  -1 means no confidence interval attribute.
- * @param ltype
- *   Type of the level.  See @ref level_table.
- * @param l1
- *   L1 value of the level.  See @ref level_table.
- * @param l2
- *   L2 value of the level.  See @ref level_table.
- * @param pind
- *   Time range type indicator.  See @ref trange_table.
- * @param p1
- *   Time range P1 indicator.  See @ref trange_table.
- * @param p2
- *   Time range P2 indicator.  See @ref trange_table.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_msg_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
 
-/**
- * Find a level given its description
- *
- * @param msg
- *   The dba_msg to query
- * @param ltype
- *   Type of the level.  See @ref level_table.
- * @param l1
- *   L1 value of the level.  See @ref level_table.
- * @param l2
- *   L2 value of the level.  See @ref level_table.
- * @param pind
- *   Time range type indicator.  See @ref trange_table.
- * @param p1
- *   Time range P1 indicator.  See @ref trange_table.
- * @param p2
- *   Time range P2 indicator.  See @ref trange_table.
- * @return
- *   The context found, or NULL if it was not found.
- */
-dba_msg_context dba_msg_find_context(dba_msg msg, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
-/**
- * Find a variable given its description
- *
- * @param msg
- *   The dba_msg to query
- * @param code
- *   The ::dba_varcode of the variable to query. See @ref vartable.h
- * @param ltype
- *   Type of the level.  See @ref level_table.
- * @param l1
- *   L1 value of the level.  See @ref level_table.
- * @param l2
- *   L2 value of the level.  See @ref level_table.
- * @return
- *   The variable found, or NULL if it was not found.
- */
-dba_var dba_msg_find(dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
-
-/** 
- * Find a datum given its shortcut ID
- *
- * @param msg
- *   The message to query
- * @param id
- *   Shortcut ID of the value to set (see @ref vars.h)
- * @return
- *   The value found, or NULL if it was not found.
- */
-dba_var dba_msg_find_by_id(dba_msg msg, int id);
 
 
 /**
@@ -417,15 +442,6 @@ dba_var dba_msg_find_by_id(dba_msg msg, int id);
 dba_msg_type dba_msg_get_type(dba_msg msg);
 
 
-/**
- * Get the message source type corresponding to the given report code
- */
-dba_msg_type dba_msg_type_from_repmemo(const char* repmemo);
-
-/**
- * Get the report code corresponding to the given message source type
- */
-const char* dba_msg_repmemo_from_type(dba_msg_type type);
 
 
 /**
@@ -467,9 +483,9 @@ dba_msg dba_msg_lua_check(struct lua_State* L, int idx);
 
 #include <dballe/msg/vars.h>
 
-#ifdef  __cplusplus
-}
 #endif
+
+}
 
 // vim:set ts=4 sw=4:
 #endif

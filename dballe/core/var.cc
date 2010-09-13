@@ -33,6 +33,8 @@
 #include "fast.h"
 #include "conv.h"
 
+using namespace std;
+
 namespace dballe {
 
 Var::Var(Varcode code)
@@ -308,10 +310,10 @@ const Var* Var::enqa(Varcode code) const
 
 void Var::seta(const Var& attr)
 {
-	seta_nocopy(new Var(attr));
+	seta(auto_ptr<Var>(new Var(attr)));
 }
 
-void Var::seta_nocopy(Var* attr)
+void Var::seta(auto_ptr<Var> attr)
 {
 	// Ensure that the attribute does not have attributes of its own
 	attr->clear_attrs();
@@ -320,20 +322,20 @@ void Var::seta_nocopy(Var* attr)
 	{
 		// Append / insert
 		attr->m_attrs = m_attrs;
-		m_attrs = attr;
+		m_attrs = attr.release();
 	}
 	else if (m_attrs->code() == attr->code())
 	{
 		// Replace existing
 		attr->m_attrs = m_attrs->m_attrs;
 		Var* old_attrs = m_attrs;
-		m_attrs = attr;
+		m_attrs = attr.release();
 		old_attrs->m_attrs = NULL;
 		delete old_attrs;
 	}
 	else
 		// Recursively proceed along the chain
-		m_attrs->seta_nocopy(attr);
+		m_attrs->seta(attr);
 }
 
 void Var::unseta(Varcode code)

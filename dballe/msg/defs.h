@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * msg/defs - Common definitions
  *
  * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -19,15 +19,25 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "repinfo.h"
-#include "config.h"
-#include <stdlib.h>
+#ifndef DBA_MSG_DEFS_H
+#define DBA_MSG_DEFS_H
 
-dba_err dba_repinfo_default_filename(const char** fname)
-{
-	const char* deffile = getenv("DBA_REPINFO");
-	if (deffile == 0 || deffile[0] == 0)
-		deffile = TABLE_DIR "/repinfo.csv";
-	*fname = deffile;
-	return dba_error_ok();
+/** @file
+ * @ingroup msg
+ *
+ * Common definitions
+ */
+
+#include <limits.h>
+
+namespace dballe {
+
+/**
+ * Value to use for missing levels and time range components
+ */
+static const int MISSING_INT = INT_MAX;
+
 }
+
+// vim:set ts=4 sw=4:
+#endif

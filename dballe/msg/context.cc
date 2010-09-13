@@ -25,25 +25,39 @@
 #include <stdlib.h>
 #include <string.h>
 
+using namespace std;
+
 namespace dballe {
 namespace msg {
 
-context::context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
+Context::Context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 	: ltype1(ltype1), l1(l1), ltype2(ltype2), l2(l2), pind(pind), p1(p1), p2(p2)
 {
 }
 
-context::~context()
+Context::Context(const Context& c)
+	: ltype1(c.ltype1), l1(c.l1), ltype2(c.ltype2), l2(c.l2), pind(c.pind), p1(c.p1), p2(c.p2)
 {
-	for (vector<dba_var>::iterator i = data.begin();
-			i != data.end(); ++i)
-		dba_var_delete(*i);
+	// Reserve space for the new vars
+	data.reserve(c.data.size());
+	
+	// Copy the variables
+	for (vector<Var*>::const_iterator i = c.data.begin();
+			i != c.data.end(); ++i)
+        data.push_back(new Var(**i));
 }
 
-context& context::operator=(const context& src)
+Context::~Context()
 {
-	dba_err err = DBA_OK;
-	dba_var v = NULL;
+	for (vector<Var*>::iterator i = data.begin();
+			i != data.end(); ++i)
+		delete *i;
+}
+
+Context& Context::operator=(const Context& src)
+{
+    // Manage a = a
+    if (this == &src) return *this;
 
 	ltype1 = src.ltype1;
 	l1 = src.l1;
@@ -54,78 +68,85 @@ context& context::operator=(const context& src)
 	p2 = src.p2;
 
 	// Delete existing vars
-	for (vector<dba_var>::iterator i = data.begin();
+	for (vector<Var*>::iterator i = data.begin();
 			i != data.end(); ++i)
-		dba_var_delete(*i);
+		delete *i;
 	data.clear();
 
 	// Reserve space for the new vars
 	data.reserve(src.data.size());
 	
 	// Copy the variables
-	for (vector<dba_var>::const_iterator i = src.data.begin();
+	for (vector<Var*>::const_iterator i = src.data.begin();
 			i != src.data.end(); ++i)
-	{
-		DBA_RUN_OR_GOTO(fail, dba_var_copy(src->data[i], &v));
-		data.push_back(v);
-		v = NULL;
-	}
-
-	return dba_error_ok();
-
-fail:
-	if (v != NULL)
-		dba_var_delete(v);
-	return err;
+        data.push_back(new Var(**i));
 }
 
-void dba_msg_context_delete(dba_msg_context l)
-{
-	if (l->data_alloc)
-	{
-		int i;
-		for (i = 0; i < l->data_count; i++)
-			dba_var_delete(l->data[i]);
-		free(l->data);
-	}
-	free(l);
-}
-
-int dba_msg_context_compare(const dba_msg_context l1, const dba_msg_context l2)
+int Context::compare(const Context& ctx) const
 {
 	int res;
-	if ((res = l1->ltype1 - l2->ltype1)) return res;
-	if ((res = l1->l1 - l2->l1)) return res;
-	if ((res = l1->ltype2 - l2->ltype2)) return res;
-	if ((res = l1->l2 - l2->l2)) return res;
-	if ((res = l1->pind - l2->pind)) return res;
-	if ((res = l1->p1 - l2->p1)) return res;
-	return l1->p2 - l2->p2;
+	if ((res = ltype1 - ctx.ltype1)) return res;
+	if ((res = l1 - ctx.l1)) return res;
+	if ((res = ltype2 - ctx.ltype2)) return res;
+	if ((res = l2 - ctx.l2)) return res;
+	if ((res = pind - ctx.pind)) return res;
+	if ((res = p1 - ctx.p1)) return res;
+	return p2 - ctx.p2;
 }
 
-int dba_msg_context_compare2(const dba_msg_context l, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
+int Context::compare(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const
 {
 	int res;
-	if ((res = l->ltype1 - ltype1)) return res;
-	if ((res = l->l1 - l1)) return res;
-	if ((res = l->ltype2 - ltype2)) return res;
-	if ((res = l->l2 - l2)) return res;
-	if ((res = l->pind - pind)) return res;
-	if ((res = l->p1 - p1)) return res;
-	return l->p2 - p2;
+	if ((res = this->ltype1 - ltype1)) return res;
+	if ((res = this->l1 - l1)) return res;
+	if ((res = this->ltype2 - ltype2)) return res;
+	if ((res = this->l2 - l2)) return res;
+	if ((res = this->pind - pind)) return res;
+	if ((res = this->p1 - p1)) return res;
+	return this->p2 - p2;
 }
 
-/*
- * Return the index of the var `code' in l, or -1 if it was not found
- */
-static int dba_msg_context_find_index(dba_msg_context l, dba_varcode code)
+void Context::set(const Var& var)
+{
+    set(auto_ptr<Var>(new Var(var)));
+}
+
+void Context::set(auto_ptr<Var> var)
+{
+	Varcode code = var->code();
+	int idx = find_index(code);
+
+	if (idx != -1)
+	{
+		/* Replace the variable */
+        delete data[idx];
+	}
+	else
+	{
+		/* Add the value */
+
+		/* Enlarge the buffer */
+        data.resize(data.size() + 1);
+
+		/* Insertionsort.  Crude, but our datasets should be too small for an
+		 * RB-Tree to be worth */
+		for (idx = data.size() - 1; idx > 0; --idx)
+			if (data[idx - 1]->code() > code)
+				data[idx] = data[idx - 1];
+			else
+				break;
+	}
+    data[idx] = var.release();
+}
+
+int Context::find_index(Varcode code) const
 {
 	/* Binary search */
-	int low = 0, high = l->data_count - 1;
+	int low = 0, high = data.size() - 1;
 	while (low <= high)
 	{
 		int middle = low + (high - low)/2;
-		int cmp = (int)code - (int)dba_var_code(l->data[middle]);
+		int cmp = (int)code - (int)data[middle]->code();
 		if (cmp < 0)
 			high = middle - 1;
 		else if (cmp > 0)
@@ -137,151 +158,113 @@ static int dba_msg_context_find_index(dba_msg_context l, dba_varcode code)
 	return -1;
 }
 
-dba_var dba_msg_context_find_vsig(dba_msg_context ctx)
+const Var* Context::find(Varcode code) const
 {
-	dba_var res = NULL;
-
-	// Check if we have the right context information
-	if ((ctx->ltype1 != 100 && ctx->ltype1 != 102) || ctx->pind != 254 || ctx->p1 != 0 || ctx->p2 != 0)
-		return NULL;
-
-	// Look for VSS variable
-	res = dba_msg_context_find(ctx, DBA_VAR(0, 8, 1));
-	if (res == NULL) return NULL;
-
-	// Ensure it is not undefined
-	if (dba_var_value(res) == NULL) return NULL;
-
-	// Finally return it
-	return res;
+	int idx = find_index(code);
+	return (idx == -1) ? NULL : data[idx];
 }
 
-dba_err dba_msg_context_set_nocopy(dba_msg_context l, dba_var var)
+const Var* Context::find_by_id(int id) const
 {
-	dba_varcode code = dba_var_code(var);
-	int idx = dba_msg_context_find_index(l, code);
+	return find(shortcutTable[id].code);
+}
 
-	if (idx != -1)
+void Context::print(FILE* out) const
+{
+	fprintf(out, "Level %d,%d, %d,%d  tr %d,%d,%d ", ltype1, l1, ltype2, l2, pind, p1, p2);
+
+	if (data.size() > 0)
 	{
-		/* Replace the variable */
-		dba_var_delete(l->data[idx]);
-		l->data[idx] = var;
-	}
-	else
-	{
-		/* Add the value */
-
-		/* Enlarge the buffer if needed */
-		if (l->data_count == l->data_alloc)
-			DBA_RUN_OR_RETURN(dba_msg_context_enlarge(l));
-
-		/* Insertionsort.  Crude, but our datasets should be too small for an
-		 * RB-Tree to be worth */
-		for (idx = l->data_count; idx > 0; idx--)
-			if (dba_var_code(l->data[idx - 1]) > code)
-				l->data[idx] = l->data[idx - 1];
-			else
-				break;
-		l->data[idx] = var;
-
-		l->data_count++;
-	}
-
-	return dba_error_ok();
-}
-
-dba_var dba_msg_context_find(dba_msg_context l, dba_varcode code)
-{
-	int idx = dba_msg_context_find_index(l, code);
-	return (idx == -1) ? NULL : l->data[idx];
-}
-
-dba_var dba_msg_context_find_by_id(dba_msg_context l, int id)
-{
-	return dba_msg_context_find(l, dba_msg_vartable[id].code);
-}
-
-void dba_msg_context_print(dba_msg_context l, FILE* out)
-{
-	fprintf(out, "Level %d,%d, %d,%d  tr %d,%d,%d ", l->ltype1, l->l1, l->ltype2, l->l2, l->pind, l->p1, l->p2);
-
-	if (l->data_count > 0)
-	{
-		int i;
-		fprintf(out, " %d vars:\n", l->data_count);
-		for (i = 0; i < l->data_count; i++)
-			dba_var_print(l->data[i], out);
+		fprintf(out, " %d vars:\n", data.size());
+		for (vector<Var*>::const_iterator i = data.begin(); i != data.end(); ++i)
+            (*i)->print(out);
 	} else
 		fprintf(out, "exists but is empty.\n");
 }
 
-static void var_summary(dba_var var, FILE* out)
+static void var_summary(const Var& var, FILE* out)
 {
-	if (var == NULL)
-	{
-		fprintf(out, "(null var)");
-		return;
-	}
-	dba_varcode v = dba_var_code(var);
-	dba_varinfo info = dba_var_info(var);
+	Varcode v = var.code();
 	fprintf(out, "%d%02d%03d[%s]",
 			DBA_VAR_F(v), DBA_VAR_X(v), DBA_VAR_Y(v),
-			info->desc);
+			var.info()->desc);
 }
 
-void dba_msg_context_diff(dba_msg_context l1, dba_msg_context l2, int* diffs, FILE* out)
+unsigned Context::diff(const Context& ctx, FILE* out) const
 {
-	int i1 = 0, i2 = 0;
-	if (l1->ltype1 != l2->ltype1 || l1->l1 != l2->l1
-	 || l1->ltype2 != l2->ltype2 || l1->l2 != l2->l2
-	 || l1->pind != l2->pind || l1->p1 != l2->p1 || l1->p2 != l2->p2)
+	if (ltype1 != ctx.ltype1 || l1 != ctx.l1
+	 || ltype2 != ctx.ltype2 || l2 != ctx.l2
+	 || pind != ctx.pind || p1 != ctx.p1 || p2 != ctx.p2)
 	{
 		fprintf(out, "the contexts are different (first is %d,%d, %d,%d, %d,%d,%d second is %d,%d, %d,%d, %d,%d,%d)\n",
-				l1->ltype1, l1->l1, l1->ltype2, l1->l2, l1->pind, l1->p1, l1->p2,
-				l2->ltype1, l2->l1, l2->ltype2, l2->l2, l2->pind, l2->p1, l2->p2);
-		(*diffs)++;
-		return;
+				ltype1, l1, ltype2, l2, pind, p1, p2,
+				ctx.ltype1, ctx.l1, ctx.ltype2, ctx.l2, ctx.pind, ctx.p1, ctx.p2);
+		return 1;
 	}
 	
-	while (i1 < l1->data_count || i2 < l2->data_count)
+	int i1 = 0, i2 = 0;
+    unsigned diffs = 0;
+	while (i1 < data.size() || i2 < ctx.data.size())
 	{
-		if (i1 == l1->data_count)
+		if (i1 == data.size())
 		{
-			fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", l2->ltype1, l2->l1, l2->ltype2, l2->l2, l2->pind, l2->p1, l2->p2); var_summary(l2->data[i2], out);
+			fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", ctx.ltype1, ctx.l1, ctx.ltype2, ctx.l2, ctx.pind, ctx.p1, ctx.p2);
+            var_summary(*ctx.data[i2], out);
 			fprintf(out, " exists only in the second message\n");
 			++i2;
-			++*diffs;
-		} else if (i2 == l2->data_count) {
-			fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", l1->ltype1, l1->l1, l1->ltype2, l1->l2, l1->pind, l1->p1, l1->p2); var_summary(l2->data[i2], out);
+			++diffs;
+		} else if (i2 == ctx.data.size()) {
+			fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", ltype1, l1, ltype2, l2, pind, p1, p2);
+            var_summary(*data[i1], out);
 			fprintf(out, " exists only in the first message\n");
 			++i1;
-			++*diffs;
+			++diffs;
 		} else {
-			int cmp = (int)dba_var_code(l1->data[i1]) - (int)dba_var_code(l2->data[i2]);
+			int cmp = (int)data[i1]->code() - (int)data[i2]->code();
 			if (cmp == 0)
 			{
-				dba_var_diff(l1->data[i1], l2->data[i2], diffs, out);
+				diffs += data[i1]->diff(*data[i2], out);
 				++i1;
 				++i2;
 			} else if (cmp < 0) {
-				if (dba_var_value(l1->data[i1]) != NULL)
+				if (data[i1]->value() != NULL)
 				{
-					fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", l1->ltype1, l1->l1, l1->ltype2, l1->l2, l1->pind, l1->p1, l1->p2); var_summary(l1->data[i1], out);
+					fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", ltype1, l1, ltype2, l2, pind, p1, p2);
+                    var_summary(*data[i1], out);
 					fprintf(out, " exists only in the first message\n");
-					++*diffs;
+					++diffs;
 				}
 				++i1;
 			} else {
-				if (dba_var_value(l2->data[i2]) != NULL)
+				if (ctx.data[i2]->value() != NULL)
 				{
-					fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", l2->ltype1, l2->l1, l2->ltype2, l2->l2, l2->pind, l2->p1, l2->p2); var_summary(l2->data[i2], out);
+					fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", ctx.ltype1, ctx.l1, ctx.ltype2, ctx.l2, ctx.pind, ctx.p1, ctx.p2);
+                    var_summary(*ctx.data[i2], out);
 					fprintf(out, " exists only in the second message\n");
-					++*diffs;
+					++diffs;
 				}
 				++i2;
 			}
 		}
 	}
+    return diffs;
+}
+
+const Var* Context::find_vsig() const
+{
+	// Check if we have the right context information
+	if ((ltype1 != 100 && ltype1 != 102) || pind != 254 || p1 != 0 || p2 != 0)
+		return NULL;
+
+	// Look for VSS variable
+	const Var* res = find(DBA_VAR(0, 8, 1));
+	if (res == NULL) return NULL;
+
+	// Ensure it is not undefined
+	if (res->value() == NULL) return NULL;
+
+	// Finally return it
+	return res;
 }
 
 }

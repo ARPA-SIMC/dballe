@@ -31,8 +31,9 @@ dballe/core/record_keyword.cc
 dballe/core/uniconv.cc
 dballe/bufrex/template-aliases.cc
 dballe/msg/vars.gperf
-dballe/msg/vars.c
+dballe/msg/vars.cc
 dballe/msg/vars.h
+dballe/msg/msg-extravars.h
 libdballe.pc
 libdballef.pc
 libdballepp.pc

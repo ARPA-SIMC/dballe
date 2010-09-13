@@ -40,8 +40,8 @@ class VC:
 class Var:
     def __init__(self, line):
         def cleanint(x):
-           if x == '-': return 0
-           return int(x)
+           if x == '-': return "MISSING_INT"
+           return str(int(x))
 
         vals = re.split(r"\s*,\s*", line[:-1].strip())
 
@@ -57,8 +57,14 @@ class Var:
                         self.desc])
 
     def __cmp__(self, o):
+        def cmpval(a, b):
+            if a == "MISSING_INT" and b == "MISSING_INT":
+                return 0
+            if a == "MISSING_INT": return -1;
+            if b == "MISSING_INT": return 1;
+            return int(b) - int(a)
         for i in range(len(self.letr)):
-            c = self.letr[i].__cmp__(o.letr[i])
+            c = cmpval(self.letr[i], o.letr[i])
             if c != 0: return c
         return self.b.__cmp__(o.b)
 
@@ -68,10 +74,6 @@ vars.sort()
 fh = open("vars.h", "w")
 print >>fh, """#ifndef DBA_MSG_VARS_H
 #define DBA_MSG_VARS_H
-
-#ifdef  __cplusplus
-extern "C" {
-#endif
 
 /** @file
  * @ingroup msg
@@ -84,14 +86,16 @@ extern "C" {
  * getters and setters for every named value.
  */
 
-#include <dballe/msg/msg.h>
+#include <dballe/core/varinfo.h>
+
+namespace dballe {
 
 /**
  * Full data corresponding to a shortcut ID
  */
-struct _dba_msg_var {
+struct MsgVarShortcut {
     /** Variable description code */
-    dba_varcode code;
+    Varcode code;
     /** Type of the first level.  See @ref level_table. */
     int ltype1;
     /** L1 value of the level.  See @ref level_table. */
@@ -107,19 +111,17 @@ struct _dba_msg_var {
     /** Time range P2 indicator.  See @ref trange_table. */
     int p2;
 };
-/** @copydoc _dba_msg_var */
-typedef struct _dba_msg_var* dba_msg_var;
 
 /** Array with all the full expansions of the shortcut IDs, indexed by shortcut
   * ID
   */
-extern struct _dba_msg_var dba_msg_vartable[];
+extern struct MsgVarShortcut shortcutTable[];
 
 /** Resolve a var name to a var ID */
-int dba_msg_resolve_var(const char* name);
+int resolve_var(const char* name);
 
 /** Resolve a var name to a var ID, avoiding to compute the length of name */
-int dba_msg_resolve_var_substring(const char* name, int len);
+int resolve_var_substring(const char* name, int len);
 """
 
 for i, v in enumerate(vars):
@@ -127,48 +129,52 @@ for i, v in enumerate(vars):
     print >>fh, "#define DBA_MSG_%s %d" % (v.name, i)
 print >>fh, "/** Number of items in dba_msg_vartable */";
 print >>fh, "#define DBA_MSG_VARTABLE_SIZE %d" % i;
-
-types = dict(int = 'int', num = 'double', str = 'const char*')
-ftypes = dict(int = 'i', num = 'd', str = 'c')
-for v in vars:
-    print >>fh, "/** Set the value of \"%s\" from a variable of type %s */" % (v.desc, types[v.type])
-    print >>fh, "inline static dba_err dba_msg_set_%s(dba_msg msg, %s val, int conf) " % (v.name.lower(), types[v.type]),
-    #print >>sys.stderr, v
-    #print >>sys.stderr, "--", [ftypes[v.type], v.b.x, v.b.y] + v.letr;
-    print >>fh, "{ return dba_msg_set%s(msg, DBA_VAR(0, %d, %d), val, conf, %d, %d, %d, %d, %d, %d, %d); }" % \
-        tuple([ftypes[v.type], v.b.x, v.b.y] + v.letr);
-
-    print >>fh, "/** Set the value of \"%s\" from a ::dba_var */" % v.desc;
-    print >>fh, "inline static dba_err dba_msg_set_%s_var(dba_msg msg, dba_var val) " % v.name.lower(),
-    print >>fh, "{ return dba_msg_set(msg, val, DBA_VAR(0, %d, %d), %d, %d, %d, %d, %d, %d, %d); }" % \
-            tuple([v.b.x, v.b.y] + v.letr)
-
-    print >>fh, "/** Get the \"%s\" physical value stored in the message */" % v.desc;
-    print >>fh, "inline static dba_var dba_msg_get_%s_var(dba_msg msg) " % v.name.lower();
-    print >>fh, "{ return dba_msg_find_by_id(msg, DBA_MSG_%s); }" % \
-        v.name;
-
 print >>fh, """
-#ifdef  __cplusplus
 }
-#endif
 
 #endif
 """
 fh.close()
 
+fh = open("msg-extravars.h", "w")
+types = dict(int = 'int', num = 'double', str = 'const char*')
+ftypes = dict(int = 'i', num = 'd', str = 'c')
+for v in vars:
+    print >>fh, "/** Set the value of \"%s\" from a variable of type %s */" % (v.desc, types[v.type])
+    print >>fh, "inline void set_%s(%s val, int conf) " % (v.name.lower(), types[v.type]),
+    #print >>sys.stderr, v
+    #print >>sys.stderr, "--", [ftypes[v.type], v.b.x, v.b.y] + v.letr;
+    print >>fh, "{ set%s(DBA_VAR(0, %d, %d), val, conf, %s, %s, %s, %s, %s, %s, %s); }" % \
+        tuple([ftypes[v.type], v.b.x, v.b.y] + v.letr);
+
+    print >>fh, "/** Set the value of \"%s\" from a ::dba_var */" % v.desc;
+    print >>fh, "inline void set_%s_var(const Var& val) " % v.name.lower(),
+    print >>fh, "{ set(val, DBA_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s); }" % \
+            tuple([v.b.x, v.b.y] + v.letr)
+
+    print >>fh, "/** Get the \"%s\" physical value stored in the message */" % v.desc;
+    print >>fh, "inline const Var* get_%s_var() " % v.name.lower();
+    print >>fh, "{ return find_by_id(DBA_MSG_%s); }" % \
+        v.name;
+fh.close()
+
 fc = open("vars.gperf", "w")
 print >>fc, """
 %define slot-name name
-%define lookup-function-name dba_msg_resolve_var_in_word_set
+%define class-name MsgVarLookup
+%define lookup-function-name find
 %struct-type
+%language=C++
 %global-table
 %compare-strncmp
 /* Using %switch may be faster (remember to check when doing optimizations) */
 
 %{
+#include <dballe/msg/defs.h>
 #include <dballe/msg/vars.h>
 #include <string.h>
+
+namespace dballe {
 %}
 
 struct msgvardef { const char* name; int var; };
@@ -177,29 +183,32 @@ for v in vars:
     print >>fc, "%s, DBA_MSG_%s" % (v.name.lower(), v.name)
 print >>fc, """%%
 
-int dba_msg_resolve_var(const char* name)
+int resolve_var(const char* name)
 {
-	struct msgvardef* res = dba_msg_resolve_var_in_word_set(name, strlen(name));
+    struct msgvardef* res = MsgVarLookup::find(name, strlen(name));
 	if (res == NULL)
 		return -1;
 	else
 		return res->var;
 }
 
-int dba_msg_resolve_var_substring(const char* name, int len)
+int resolve_var_substring(const char* name, int len)
 {
-	struct msgvardef* res = dba_msg_resolve_var_in_word_set(name, len);
+    struct msgvardef* res = MsgVarLookup::find(name, len);
 	if (res == NULL)
 		return -1;
 	else
 		return res->var;
 }
+
 """
 
-print >>fc, "struct _dba_msg_var dba_msg_vartable[] = {"
+print >>fc, "struct MsgVarShortcut shortcutTable[] = {"
 for v in vars:
-    print >>fc, " { DBA_VAR(0, %d, %d), %d, %d, %d, %d, %d, %d, %d }," % tuple([v.b.x, v.b.y] + v.letr)
+    print >>fc, " { DBA_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple([v.b.x, v.b.y] + v.letr)
 print >>fc, "};"
+
+print >>fc, "} // namespace dballe"
 
 fc.close()
 

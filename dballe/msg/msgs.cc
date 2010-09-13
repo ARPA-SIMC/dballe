@@ -24,68 +24,54 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-dba_err dba_msgs_create(dba_msgs* msgs)
+using namespace std;
+
+namespace dballe {
+
+Msgs::Msgs()
 {
-	*msgs = (dba_msgs)calloc(1, sizeof(struct _dba_msgs));
-	if (*msgs == NULL)
-		return dba_error_alloc("allocating new dba_msgs");
-	return dba_error_ok();
 }
 
-void dba_msgs_delete(dba_msgs msgs)
+Msgs::~Msgs()
 {
-	int i;
-	for (i = 0; i < msgs->len; ++i)
-		if (msgs->msgs[i] != NULL)
-			dba_msg_delete(msgs->msgs[i]);
-	free(msgs);
+	for (iterator i = begin(); i != end(); ++i)
+        delete *i;
 }
 
-dba_err dba_msgs_append_acquire(dba_msgs msgs, dba_msg msg)
+void Msgs::acquire(const Msg& msg)
 {
-	if (msgs->len == msgs->alloclen)
-	{
-		if (msgs->alloclen == 0)
-		{
-			msgs->alloclen = 4;
-			if ((msgs->msgs = (dba_msg*)malloc(msgs->alloclen * sizeof(dba_msg))) == NULL)
-				return dba_error_alloc("allocating memory for data in dba_msgs");
-		} else {
-			dba_msg* newarr;
-			/* Double the size of the msgs buffer */
-			msgs->alloclen <<= 1;
-			if ((newarr = (dba_msg*)realloc(msgs->msgs, msgs->alloclen * sizeof(dba_msg))) == NULL)
-				return dba_error_alloc("allocating memory for expanding data in dba_msgs");
-			msgs->msgs = newarr;
-		}
-	}
-	msgs->msgs[msgs->len++] = msg;
-	return dba_error_ok();
+    push_back(new Msg(msg));
 }
 
-void dba_msgs_print(dba_msgs msgs, FILE* out)
+void Msgs::acquire(auto_ptr<Msg> msg)
 {
-	int i;
-	for (i = 0; i < msgs->len; ++i)
+    push_back(msg.release());
+}
+
+void Msgs::print(FILE* out) const
+{
+	for (unsigned i = 0; i < size(); ++i)
 	{
 		fprintf(out, "Subset %d:\n", i);
-		dba_msg_print(msgs->msgs[i], out);
+		(*this)[i]->print(out);
 	}
 }
 
-void dba_msgs_diff(dba_msgs msgs1, dba_msgs msgs2, int* diffs, FILE* out)
+unsigned Msgs::diff(const Msgs& msgs, FILE* out) const
 {
-	int i, count;
-	if (msgs1->len != msgs2->len)
+    unsigned diffs = 0;
+	if (size() != msgs.size())
 	{
-		fprintf(out, "the message groups contain a different number of messages (first is %d, second is %d)\n",
-				msgs1->len, msgs2->len);
-		(*diffs)++;
+		fprintf(out, "the message groups contain a different number of messages (first is %zd, second is %zd)\n",
+				size(), msgs.size());
+		++diffs;
 	}
-	count = msgs1->len;
-	if (msgs2->len < count) count = msgs2->len;
-	for (i = 0; i < count; ++i)
-		dba_msg_diff(msgs1->msgs[i], msgs2->msgs[i], diffs, out);
+	unsigned count = size() < msgs.size() ? size() : msgs.size();
+	for (unsigned i = 0; i < count; ++i)
+		diffs += (*this)[i]->diff(*msgs[i], out);
+    return diffs;
 }
+
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
