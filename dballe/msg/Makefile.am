@@ -36,20 +36,20 @@ libdballe_msg_la_SOURCES = \
 		msg.cc \
 		msgs.cc
 ##		codec-opts.cc \
-##		aof_codec.c \
-##		aof_importers/common.c \
-##		aof_importers/synop.c \
-##		aof_importers/dribu.c \
-##		aof_importers/flight.c \
-##		aof_importers/temp.c \
-##		aof_importers/pilot.c \
+##		aof_codec.cc \
+##		aof_importers/common.cc \
+##		aof_importers/synop.cc \
+##		aof_importers/dribu.cc \
+##		aof_importers/flight.cc \
+##		aof_importers/temp.cc \
+##		aof_importers/pilot.cc \
 ##		codec.cc
 
 ##		filter.c  (todo)
 
 #if DO_DBALLE_BUFREX
 #libdballe_msg_la_SOURCES += \
-#		bufrex_codec.c \
+#		bufrex_codec.cc \
 #		bufrex_importers/generic.c \
 #		bufrex_importers/synop.c \
 #		bufrex_importers/metar.c \
