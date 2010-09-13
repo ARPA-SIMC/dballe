@@ -22,16 +22,14 @@
 #ifndef DBA_CONV
 #define DBA_CONV
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+#include <dballe/core/error.h>
 
 /** @file
  * @ingroup conv
  * Unit conversion functions.
  */
 
-#include <dballe/core/error.h>
+namespace dballe {
 
 /**
  * Convert between different units
@@ -47,7 +45,13 @@ extern "C" {
  * @returns
  *   The error indicator for the function (See @ref ::dba_err)
  */
-dba_err dba_convert_units(const char* from, const char* to, double val, double* res);
+double convert_units(const char* from, const char* to, double val);
+
+}
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
 /**
  * Get the multiplier used in the given conversion

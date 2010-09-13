@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +20,9 @@
 #include <test-utils-core.h>
 #include <dballe/core/aliases.h>
 
+using namespace dballe;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct aliases_shar
 {
@@ -42,12 +41,12 @@ TESTGRP(aliases);
 template<> template<>
 void to::test<1>()
 {
-	gen_ensure_equals(dba_varcode_alias_resolve("block"), DBA_VAR(0, 1, 1));
-	gen_ensure_equals(dba_varcode_alias_resolve("station"), DBA_VAR(0, 1,  2));
-	gen_ensure_equals(dba_varcode_alias_resolve("height"), DBA_VAR(0, 7,  1));
-	gen_ensure_equals(dba_varcode_alias_resolve("heightbaro"), DBA_VAR(0, 7, 31));
-	gen_ensure_equals(dba_varcode_alias_resolve("name"), DBA_VAR(0, 1, 19));
-	gen_ensure_equals(dba_varcode_alias_resolve("cippolippo"), 0);
+	ensure_equals(varcode_alias_resolve("block"), DBA_VAR(0, 1, 1));
+	ensure_equals(varcode_alias_resolve("station"), DBA_VAR(0, 1,  2));
+	ensure_equals(varcode_alias_resolve("height"), DBA_VAR(0, 7,  1));
+	ensure_equals(varcode_alias_resolve("heightbaro"), DBA_VAR(0, 7, 31));
+	ensure_equals(varcode_alias_resolve("name"), DBA_VAR(0, 1, 19));
+	ensure_equals(varcode_alias_resolve("cippolippo"), 0);
 }
 	
 }

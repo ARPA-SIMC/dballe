@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
 
 #ifndef DBA_ERROR_H
 #define DBA_ERROR_H
+
+#include <stdexcept>
+#include <string>
 
 #ifdef  __cplusplus
 extern "C" {
@@ -164,7 +167,9 @@ typedef enum {
 	/** Regular expression error */
 	DBA_ERR_REGEX			= 11,
 	/** Feature not implemented */
-	DBA_ERR_UNIMPLEMENTED	= 12
+	DBA_ERR_UNIMPLEMENTED		= 12,
+	/** Value outside acceptable domain */
+	DBA_ERR_DOMAIN			= 13
 } dba_err_code;
 
 /**
@@ -529,6 +534,204 @@ void dba_error_print_to_stderr();
 #ifdef  __cplusplus
 }
 #endif
+
+namespace dballe {
+
+#define THROWF_ATTRS(a, b) __attribute__ ((noreturn, format(printf, a, b)))
+
+/// Base class for DB-All.e exceptions
+struct error : public std::exception
+{
+	virtual dba_err_code code() const throw () = 0;
+};
+
+/// Reports that a search-like function could not find what was requested.
+struct error_notfound : public error
+{
+	std::string msg;
+
+	error_notfound(const std::string& msg) : msg(msg) {}
+	~error_notfound() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_NOTFOUND; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+
+	static void throwf(const char* fmt, ...) THROWF_ATTRS(1, 2);
+};
+
+/**
+ * For functions handling data with multiple types, reports a mismatch
+ * between the type requested and the type found.
+ */
+struct error_type : public error
+{
+	std::string msg;
+
+	error_type(const std::string& msg) : msg(msg) {}
+	~error_type() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_TYPE; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+
+	static void throwf(const char* fmt, ...) THROWF_ATTRS(1, 2);
+};
+
+/// Reports that memory allocation has failed.
+struct error_alloc : public error
+{
+	const char* msg;
+
+	error_alloc(const char* msg) : msg(msg) {}
+	~error_alloc() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_ALLOC; }
+
+	virtual const char* what() const throw () { return msg; }
+};
+
+/**
+ * For functions working with handles, reports a problem with handling handles,
+ * such as impossibility to allocate a new one, or an invalid handle being
+ * passed to the function.
+ */
+struct error_handles : public error
+{
+	std::string msg;
+
+	error_handles(const std::string& msg) : msg(msg) {}
+	~error_handles() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_HANDLES; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+
+	static void throwf(const char* fmt, ...) THROWF_ATTRS(1, 2);
+};
+
+/// Report an error with a buffer being to short for the data it needs to fit.
+struct error_toolong : public error
+{
+	std::string msg;
+
+	error_toolong(const std::string& msg) : msg(msg) {}
+	~error_toolong() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_TOOLONG; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+
+	static void throwf(const char* fmt, ...) THROWF_ATTRS(1, 2);
+};
+
+/**
+ * Report a system error message.  The message description will be looked up
+ * using the current value of errno.
+ */
+struct error_system : public error
+{
+	std::string msg;
+
+	error_system(const std::string& msg);
+	error_system(const std::string& msg, int errno_val);
+	~error_system() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_SYSTEM; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+
+	static void throwf(const char* fmt, ...) THROWF_ATTRS(1, 2);
+};
+
+/// Report an error when a consistency check failed.
+struct error_consistency : public error
+{
+	std::string msg;
+
+	error_consistency(const std::string& msg) : msg(msg) {};
+	~error_consistency() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_CONSISTENCY; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+
+	static void throwf(const char* fmt, ...) THROWF_ATTRS(1, 2);
+};
+
+/// Report an error when parsing informations.
+struct error_parse : public error
+{
+	std::string msg;
+
+	/**
+	 * @param file
+	 *   The file that is being parsed
+	 * @param line
+	 *   The line of the file where the problem has been found
+	 */
+	error_parse(const std::string& msg) : msg(msg) {}
+	error_parse(const char* file, int line, const std::string& msg);
+	~error_parse() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_PARSE; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+
+	static void throwf(const char* file, int line, const char* fmt, ...) THROWF_ATTRS(3, 4);
+};
+
+/// Report an error while handling regular expressions
+struct error_regexp : public error
+{
+	std::string msg;
+
+	/**
+	 * @param code
+	 *   The error code returned by the regular expression functions.
+	 * @param re
+	 *   The pointer to the regex_t structure that was being used when the error
+	 *   occurred.
+	 */
+	error_regexp(int code, void* re, const std::string& msg);
+	~error_regexp() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_REGEX; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+};
+
+/// Reports that a feature is still not implemented.
+struct error_unimplemented : public error
+{
+	std::string msg;
+
+	error_unimplemented(const std::string& msg) : msg(msg) {};
+	~error_unimplemented() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_UNIMPLEMENTED; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+
+	static void throwf(const char* fmt, ...) THROWF_ATTRS(1, 2);
+};
+
+/// Report an error with a buffer being to short for the data it needs to fit.
+struct error_domain : public error
+{
+	std::string msg;
+
+	error_domain(const std::string& msg) : msg(msg) {}
+	~error_domain() throw () {}
+
+	dba_err_code code() const throw () { return DBA_ERR_DOMAIN; }
+
+	virtual const char* what() const throw () { return msg.c_str(); }
+
+	static void throwf(const char* fmt, ...) THROWF_ATTRS(1, 2);
+};
+
+}
 
 /* vim:set ts=4 sw=4: */
 #endif

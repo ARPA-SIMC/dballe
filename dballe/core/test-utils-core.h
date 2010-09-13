@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,69 +24,61 @@
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/file.h>
 
-#include <dballe/tut/tut.h>
+#include <wibble/tests.h>
 
 #include <cstdlib>
 #include <climits>
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 
-#define TESTGRP(name) \
-typedef test_group<name ## _shar> tg; \
-typedef tg::object to; \
-tg name ## _tg (#name);
-
-namespace tut_dballe {
-using namespace std;
-using namespace tut;
-
-class DBAException : public std::exception
-{
-protected:
-	std::string m_what;
-public:
-	DBAException(const char* file, int line);
-	virtual ~DBAException() throw () {}
-
-	virtual const char* what() const throw () { return m_what.c_str(); }
-};
+namespace dballe {
+namespace tests {
 
 // Set and unset an extra string marker to be printed in error messages
 void test_tag(const std::string& tag);
 void test_untag();
 
-#define CHECKED(...) if (__VA_ARGS__ != DBA_OK) throw DBAException(__FILE__, __LINE__)
-#define INNER_CHECKED(...) if (__VA_ARGS__ != DBA_OK) throw DBAException(file, line)
+#define ensure_varcode_equals(x, y) dballe::tests::_ensure_varcode_equals(wibble::tests::Location(__FILE__, __LINE__, #x " == " #y), (x), (y))
+#define inner_ensure_varcode_equals(x, y) dballe::tests::_ensure_varcode_equals(wibble::tests::Location(loc, __FILE__, __LINE__, #x " == " #y), (x), (y))
+void _ensure_varcode_equals(const wibble::tests::Location& loc, dballe::Varcode actual, dballe::Varcode expected);
 
-std::string __ensure_errmsg(std::string f, int l, std::string msg);
-#define gen_ensure(x) ensure (__ensure_errmsg(__FILE__, __LINE__, #x).c_str(), (x))
-#define inner_ensure(x) ensure (__ensure_errmsg(file, line, #x).c_str(), (x))
+#define ensure_var_equals(x, y) dballe::tests::_ensure_var_equals(wibble::tests::Location(__FILE__, __LINE__, #x " == " #y), (x), (y))
+#define inner_ensure_var_equals(x, y) dballe::tests::_ensure_var_equals(wibble::tests::Location(loc, __FILE__, __LINE__, #x " == " #y), (x), (y))
+void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, int val);
+void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, double val);
+void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, const std::string& val);
 
-template <class T,class Q>
-void my_ensure_equals(const char* file, int line, const Q& actual, const T& expected, const std::string& desc = std::string())
+#define ensure_var_undef(x) dballe::tests::_ensure_var_undef(wibble::tests::Location(__FILE__, __LINE__, #x " is undef"), (x))
+#define inner_ensure_var_undef(x) dballe::tests::_ensure_var_undef(wibble::tests::Location(loc, __FILE__, __LINE__, #x " is undef"), (x))
+void _ensure_var_undef(const wibble::tests::Location& loc, const Var& var);
+
+#define ensure_contains(x, y) dballe::tests::impl_ensure_contains(wibble::tests::Location(__FILE__, __LINE__, #x " == " #y), (x), (y))
+#define inner_ensure_contains(x, y) dballe::tests::impl_ensure_contains(wibble::tests::Location(loc, __FILE__, __LINE__, #x " == " #y), (x), (y))
+
+static inline void impl_ensure_contains(const wibble::tests::Location& loc, const std::string& haystack, const std::string& needle)
 {
-	if( expected != actual )
+	if( haystack.find(needle) == std::string::npos )
 	{
 		std::stringstream ss;
-		if (!desc.empty())
-			ss << " [" << desc << "]";
-		ss << "expected " << expected << " actual " << actual;
-		throw failure(__ensure_errmsg(file, line, ss.str()));
+		ss << "'" << haystack << "' does not contain '" << needle << "'";
+		throw tut::failure(loc.msg(ss.str()));
 	}
 }
-#define gen_ensure_equals(x, y, ...) my_ensure_equals(__FILE__, __LINE__, (x), (y), ##__VA_ARGS__)
-#define inner_ensure_equals(x, y, ...) my_ensure_equals(file, line, (x), (y), ##__VA_ARGS__)
 
-void _ensure_var_undef(const char* file, int line, dba_var var);
-void _ensure_var_equals(const char* file, int line, dba_var var, int val);
-void _ensure_var_equals(const char* file, int line, dba_var var, double val);
-void _ensure_var_equals(const char* file, int line, dba_var var, const string& val);
+#define ensure_not_contains(x, y) arki::tests::impl_ensure_not_contains(wibble::tests::Location(__FILE__, __LINE__, #x " == " #y), (x), (y))
+#define inner_ensure_not_contains(x, y) arki::tests::impl_ensure_not_contains(wibble::tests::Location(loc, __FILE__, __LINE__, #x " == " #y), (x), (y))
 
-#define gen_ensure_var_equals(x, y) _ensure_var_equals(__FILE__, __LINE__, (x), (y))
-#define inner_ensure_var_equals(x, y) _ensure_var_equals(file, line, (x), (y))
-#define gen_ensure_var_undef(x) _ensure_var_undef(__FILE__, __LINE__, (x))
-#define inner_ensure_var_undef(x) _ensure_var_undef(file, line, (x))
+static inline void impl_ensure_not_contains(const wibble::tests::Location& loc, const std::string& haystack, const std::string& needle)
+{
+	if( haystack.find(needle) != std::string::npos )
+	{
+		std::stringstream ss;
+		ss << "'" << haystack << "' must not contain '" << needle << "'";
+		throw tut::failure(loc.msg(ss.str()));
+	}
+}
 
 /*
 static void _ensureRecordHas(const char* file, int line, dba_record rec, const char* key, int val)
@@ -109,6 +101,8 @@ static void _ensureRecordHas(const char* file, int line, dba_record rec, const c
 }
 #define ensureRecordHas(...) _ensureRecordHas(__FILE__, __LINE__, __VA_ARGS__)
 */
+
+#if 0
 
 class TestRecord
 {
@@ -264,6 +258,7 @@ public:
 	}
 };
 #define ensureTestRecEquals(rec, tr) tr.ensureEquals(__FILE__, __LINE__, rec)
+#endif
 
 /* Some utility random generator functions */
 
@@ -291,6 +286,7 @@ static inline bool rnd(double prob)
 	return (rnd(0, 100) < prob*100) ? true : false;
 }
 
+#if 0
 /* Random message generation functions */
 
 class generator
@@ -306,9 +302,14 @@ public:
 	dba_err fill_context(dba_record rec);
 	dba_err fill_record(dba_record rec);
 };
+#endif
 
 /* Message reading functions */
 
+/// Return the pathname of a test file
+std::string datafile(const std::string& fname);
+
+#if 0
 class dba_raw_consumer
 {
 public:
@@ -318,15 +319,15 @@ public:
 };
 
 dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons);
+#endif
 
-dba_file _open_test_data(const char* file, int line, const char* filename, dba_encoding type);
-#define open_test_data(filename, type) _open_test_data(__FILE__, __LINE__, filename, type)
+std::auto_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* filename, Encoding type);
+#define open_test_data(filename, type) _open_test_data(wibble::tests::Location(__FILE__, __LINE__, "open " #filename " " #type), filename, type)
 
-dba_rawmsg _read_rawmsg(const char* file, int line, const char* filename, dba_encoding type);
-#define read_rawmsg(filename, type) _read_rawmsg(__FILE__, __LINE__, filename, type)
+std::auto_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* filename, Encoding type);
+#define read_rawmsg(filename, type) _read_rawmsg(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), filename, type)
 
 /* Test environment */
-
 class LocalEnv
 {
 	std::string key;
@@ -355,14 +356,14 @@ public:
  */
 class DbaFileSlurpOnly
 {
-	void* oldBufr;
-	void* oldCrex;
-	void* oldAof;
+	std::vector<File::CreateFun*> oldFuns;
+
 public:
 	DbaFileSlurpOnly();
 	~DbaFileSlurpOnly();
 };
 
+}
 }
 
 // vim:set ts=4 sw=4:

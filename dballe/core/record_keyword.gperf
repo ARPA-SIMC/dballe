@@ -20,8 +20,10 @@
  */
 
 %define slot-name tag
-%define lookup-function-name dba_record_keyword_in_word_set
+%define class-name RecordKeywords
+%define lookup-function-name find
 %struct-type
+%language=C++
 %global-table
 %compare-strncmp
 /* Using %switch may be faster (remember to check when doing optimizations) */
@@ -31,6 +33,8 @@
 #include <limits.h>
 #include "var.h"
 #include "record.h"
+
+namespace dballe {
 %}
 
 struct tagdef { const char* tag; dba_keyword index; };
@@ -85,62 +89,75 @@ limit,		 DBA_KEY_LIMIT
 var_related, DBA_KEY_VAR_RELATED
 %%
 
-#define DEF_STRING(len) 0, 0, len, 0, 0, 1, 0, 0, 0.0, 0.0
-#define DEF_MAXINT 0, 0, 10, 0, 0, 0, INT_MIN, INT_MAX, (double)INT_MIN, (double)INT_MAX
-#define LIM_8_5 -99999999, 99999999, -999.99999, 999.99999
-#define LIM_4_0 -9999, 9999, -9999.0, 9999.0
-#define LIM_2_0 -99, 99, -99.0, 99.0
+#define DEF_STRING(len) 0, 0, len
+#define DEF_MAXINT 0, 0, 10
 
-static struct _dba_varinfo infos[] = {
-	{ 0, "Priority of this type of report",          "NUMBER", DEF_MAXINT },
-	{ 0, "Maximum priority of reports queried",      "NUMBER", DEF_MAXINT },
-	{ 0, "Minimum priority of reports queried",      "NUMBER", DEF_MAXINT },
-	{ 0, "Type of report",                           "NUMBER", DEF_MAXINT },
-	{ 0, "Mnemonic alias for type of report",     "CHARACTER", DEF_STRING(20) },
-	{ 0, "Pseudoana database ID",                   "NUMERIC", DEF_MAXINT },
-	{ 0, "Station is mobile",                       "NUMERIC", DEF_MAXINT },
-	{ 0, "Identifier of flight or ship",          "CHARACTER", DEF_STRING(64) },
-	{ 0, "Latitude",                                 "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
-	{ 0, "Longitude",                                "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
-	{ 0, "Maximum latitude queried",                 "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
-	{ 0, "Minimum latitude queried",                 "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
-	{ 0, "Maximum longitude queried",                "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
-	{ 0, "Minimum longitude queried",                "DEGREE", 5, 0,   8, 0, 0, 0, LIM_8_5 },
-	{ 0, "Year",                                       "YEAR", 0, 0,   4, 0, 0, 0, LIM_4_0 },
-	{ 0, "Month",                                     "MONTH", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Day",                                         "DAY", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Hour",                                       "HOUR", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Minutes",                                  "MINUTE", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Seconds",                                  "SECOND", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Maximum year queried",                       "YEAR", 0, 0,   4, 0, 0, 0, LIM_4_0 },
-	{ 0, "Year or minimum year queried",               "YEAR", 0, 0,   4, 0, 0, 0, LIM_4_0 },
-	{ 0, "Maximum month queried",                     "MONTH", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Minimum month queried",                     "MONTH", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Maximum day queried",                         "DAY", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Minimum day queried",                         "DAY", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Maximum hour queried",                       "HOUR", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Minumum hour queried",                       "HOUR", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Maxminum minutes queried",                 "MINUTE", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Minimum minutes queried",                  "MINUTE", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Maxminum seconds queried",                 "SECOND", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Minimum seconds queried",                  "SECOND", 0, 0,   2, 0, 0, 0, LIM_2_0 },
-	{ 0, "Type of first level",                      "NUMBER", DEF_MAXINT },
-	{ 0, "Level layer L1",                           "NUMBER", DEF_MAXINT },
-	{ 0, "Type of second level",                     "NUMBER", DEF_MAXINT },
-	{ 0, "Level layer L2",                           "NUMBER", DEF_MAXINT },
-	{ 0, "P indicator for time range",               "NUMBER", DEF_MAXINT },
-	{ 0, "Time range P1",                            "SECOND", DEF_MAXINT },
-	{ 0, "Time range P2",                            "SECOND", DEF_MAXINT },
-	{ 0, "Variable queried",                      "CHARACTER", DEF_STRING(7) },
-	{ 0, "List of variables to query",            "CHARACTER", DEF_STRING(255) },
-	{ 0, "Context ID of the variable",              "NUMERIC", DEF_MAXINT },
-	{ 0, "Query behaviour modifier",              "CHARACTER", DEF_STRING(255) },
-	{ 0, "Filter on anagraphical data",           "CHARACTER", DEF_STRING(255) },
-	{ 0, "Filter on data", 			              "CHARACTER", DEF_STRING(255) },
-	{ 0, "Filter on data attributes",             "CHARACTER", DEF_STRING(255) },
-	{ 0, "Maximum number of results to return",      "NUMBER", DEF_MAXINT },
-	{ 0, "Variable related to attribute queried", "CHARACTER", DEF_STRING(6) },
+namespace {
+
+struct keyword_infos
+{
+	struct _Varinfo infos[DBA_KEY_COUNT];
+
+	keyword_infos()
+	{
+		infos[DBA_KEY_PRIORITY	 ].set(0, "Priority of this type of report",          "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_PRIOMAX	 ].set(0, "Maximum priority of reports queried",      "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_PRIOMIN	 ].set(0, "Minimum priority of reports queried",      "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_REP_COD	 ].set(0, "Type of report",                           "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_REP_MEMO	 ].set(0, "Mnemonic alias for type of report",     "CHARACTER", DEF_STRING(20));
+		infos[DBA_KEY_ANA_ID	 ].set(0, "Pseudoana database ID",                   "NUMERIC", DEF_MAXINT);
+		infos[DBA_KEY_MOBILE	 ].set(0, "Station is mobile",                       "NUMERIC", DEF_MAXINT);
+		infos[DBA_KEY_IDENT	 ].set(0, "Identifier of flight or ship",          "CHARACTER", DEF_STRING(64));
+		infos[DBA_KEY_LAT	 ].set(0, "Latitude",                                 "DEGREE", 5, 0,   8);
+		infos[DBA_KEY_LON	 ].set(0, "Longitude",                                "DEGREE", 5, 0,   8);
+		infos[DBA_KEY_LATMAX	 ].set(0, "Maximum latitude queried",                 "DEGREE", 5, 0,   8);
+		infos[DBA_KEY_LATMIN	 ].set(0, "Minimum latitude queried",                 "DEGREE", 5, 0,   8);
+		infos[DBA_KEY_LONMAX	 ].set(0, "Maximum longitude queried",                "DEGREE", 5, 0,   8);
+		infos[DBA_KEY_LONMIN	 ].set(0, "Minimum longitude queried",                "DEGREE", 5, 0,   8);
+		infos[DBA_KEY_YEAR	 ].set(0, "Year",                                       "YEAR", 0, 0,   4);
+		infos[DBA_KEY_MONTH	 ].set(0, "Month",                                     "MONTH", 0, 0,   2);
+		infos[DBA_KEY_DAY	 ].set(0, "Day",                                         "DAY", 0, 0,   2);
+		infos[DBA_KEY_HOUR	 ].set(0, "Hour",                                       "HOUR", 0, 0,   2);
+		infos[DBA_KEY_MIN	 ].set(0, "Minutes",                                  "MINUTE", 0, 0,   2);
+		infos[DBA_KEY_SEC	 ].set(0, "Seconds",                                  "SECOND", 0, 0,   2);
+		infos[DBA_KEY_YEARMAX	 ].set(0, "Maximum year queried",                       "YEAR", 0, 0,   4);
+		infos[DBA_KEY_YEARMIN	 ].set(0, "Year or minimum year queried",               "YEAR", 0, 0,   4);
+		infos[DBA_KEY_MONTHMAX	 ].set(0, "Maximum month queried",                     "MONTH", 0, 0,   2);
+		infos[DBA_KEY_MONTHMIN	 ].set(0, "Minimum month queried",                     "MONTH", 0, 0,   2);
+		infos[DBA_KEY_DAYMAX	 ].set(0, "Maximum day queried",                         "DAY", 0, 0,   2);
+		infos[DBA_KEY_DAYMIN	 ].set(0, "Minimum day queried",                         "DAY", 0, 0,   2);
+		infos[DBA_KEY_HOURMAX	 ].set(0, "Maximum hour queried",                       "HOUR", 0, 0,   2);
+		infos[DBA_KEY_HOURMIN	 ].set(0, "Minumum hour queried",                       "HOUR", 0, 0,   2);
+		infos[DBA_KEY_MINUMAX	 ].set(0, "Maxminum minutes queried",                 "MINUTE", 0, 0,   2);
+		infos[DBA_KEY_MINUMIN	 ].set(0, "Minimum minutes queried",                  "MINUTE", 0, 0,   2);
+		infos[DBA_KEY_SECMAX	 ].set(0, "Maxminum seconds queried",                 "SECOND", 0, 0,   2);
+		infos[DBA_KEY_SECMIN	 ].set(0, "Minimum seconds queried",                  "SECOND", 0, 0,   2);
+		infos[DBA_KEY_LEVELTYPE1 ].set(0, "Type of first level",                      "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_L1	 ].set(0, "Level layer L1",                           "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_LEVELTYPE2 ].set(0, "Type of second level",                     "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_L2	 ].set(0, "Level layer L2",                           "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_PINDICATOR ].set(0, "P indicator for time range",               "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_P1	 ].set(0, "Time range P1",                            "SECOND", DEF_MAXINT);
+		infos[DBA_KEY_P2	 ].set(0, "Time range P2",                            "SECOND", DEF_MAXINT);
+		infos[DBA_KEY_VAR	 ].set(0, "Variable queried",                      "CHARACTER", DEF_STRING(7));
+		infos[DBA_KEY_VARLIST	 ].set(0, "List of variables to query",            "CHARACTER", DEF_STRING(255));
+		infos[DBA_KEY_CONTEXT_ID ].set(0, "Context ID of the variable",              "NUMERIC", DEF_MAXINT);
+		infos[DBA_KEY_QUERY	 ].set(0, "Query behaviour modifier",              "CHARACTER", DEF_STRING(255));
+		infos[DBA_KEY_ANA_FILTER ].set(0, "Filter on anagraphical data",           "CHARACTER", DEF_STRING(255));
+		infos[DBA_KEY_DATA_FILTER].set(0, "Filter on data", 		          "CHARACTER", DEF_STRING(255));
+		infos[DBA_KEY_ATTR_FILTER].set(0, "Filter on data attributes",             "CHARACTER", DEF_STRING(255));
+		infos[DBA_KEY_LIMIT	 ].set(0, "Maximum number of results to return",      "NUMBER", DEF_MAXINT);
+		infos[DBA_KEY_VAR_RELATED].set(0, "Variable related to attribute queried", "CHARACTER", DEF_STRING(6));
+
+		// Increment refcounts
+		for (int i = 0; i < DBA_KEY_COUNT; ++i)
+			infos[i].do_ref();
+	}
 };
+
+static struct keyword_infos infos;
+
+}
 
 static const char* keyword_names[] = {
 	"priority",
@@ -193,46 +210,32 @@ static const char* keyword_names[] = {
 	"var_related",
 };
 
-dba_varinfo dba_record_keyword_byindex(int index)
+const char* Record::keyword_name(dba_keyword key)
 {
-	return &(infos[index]);
-}
-
-const char* dba_record_keyword_name(dba_keyword key)
-{
-	if (key < 0 || key >= DBA_KEY_COUNT)
-		return NULL;
 	return keyword_names[key];
 }
 
-dba_keyword dba_record_keyword_byname(const char* tag)
+Varinfo Record::keyword_info(dba_keyword keyword)
 {
-	struct tagdef* res = dba_record_keyword_in_word_set(tag, strlen(tag));
+	return &(infos.infos[keyword]);
+}
+
+dba_keyword Record::keyword_byname(const char* tag)
+{
+	struct tagdef* res = RecordKeywords::find(tag, strlen(tag));
 	if (res == NULL)
 		return DBA_KEY_ERROR;
 	else
 		return res->index;
 }
 
-dba_keyword dba_record_keyword_byname_len(const char* tag, int len)
+dba_keyword Record::keyword_byname_len(const char* tag, int len)
 {
-	struct tagdef* res = dba_record_keyword_in_word_set(tag, len);
+	struct tagdef* res = RecordKeywords::find(tag, len);
 	if (res == NULL)
 		return DBA_KEY_ERROR;
 	else
 		return res->index;
-}
-
-dba_varinfo dba_record_keyword(const char* tag, int* index)
-{
-	struct tagdef* res = dba_record_keyword_in_word_set(tag, strlen(tag));
-	if (res == NULL)
-		return NULL;
-	else
-	{
-		*index = res->index;
-		return dba_record_keyword_byindex(*index);
-	}
 }
 
 /*
@@ -252,5 +255,7 @@ dba_err dba_record_keyword_selftest()
 	return dba_error_ok();
 }
 */
+
+}
 
 /* vim:set ts=4 sw=4: */

@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,43 +19,40 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-core.h>
-#include <dballe/core/rawmsg.h>
+#include "rawmsg.h"
 
-using namespace std;
-using namespace dballe;
+#include <stdlib.h> /* malloc */
+#include <string.h> /* memcpy */
 
-namespace tut {
+namespace dballe {
 
-struct rawmsg_shar
+const char* encoding_name(Encoding enc)
 {
-	rawmsg_shar()
+	switch (enc)
 	{
+		case BUFR: return "BUFR";
+		case CREX: return "CREX";
+		case AOF: return "AOF";
+		default: return "(unknown)";
 	}
+}
 
-	~rawmsg_shar()
-	{
-	}
-};
-TESTGRP(rawmsg);
-
-// Basic generic tests
-template<> template<>
-void to::test<1>()
+Rawmsg::Rawmsg()
+	: file(0), offset(0), index(0), encoding(BUFR)
 {
-	Rawmsg msg;
+}
 
-	ensure(msg.file == 0);
-	ensure_equals(msg.offset, 0);
-	ensure_equals(msg.index, 0);
-	ensure_equals(msg.size(), 0u);
+Rawmsg::~Rawmsg()
+{
+}
 
-	/* Resetting an empty message should do anything special */
-	msg.clear();
-	ensure(msg.file == 0);
-	ensure_equals(msg.offset, 0);
-	ensure_equals(msg.index, 0);
-	ensure_equals(msg.size(), 0u);
+void Rawmsg::clear() throw ()
+{
+	file = 0;
+	offset = 0;
+	index = 0;
+	encoding = BUFR;
+	std::string::clear();
 }
 
 }

@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,6 @@
 #ifndef DBA_CORE_FILE_H
 #define DBA_CORE_FILE_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup core
  * File I/O for files containing meterorological messages.
@@ -39,90 +35,97 @@ extern "C" {
  */
 
 #include <dballe/core/rawmsg.h>
+#include <stdio.h>
 
-struct _dba_file;
-/**
- * Opaque structure representing a file with meteorological data
- */
-typedef struct _dba_file* dba_file;
+namespace dballe {
 
-/**
- * Create a dba_file structure.
- *
- * @param type
- *   The type of data contained in the file.  If -1 is passed, then
- *   dba_file_create will attempt to autodetect the file type from its first
- *   byte.
- * @param name
- *   The name of the file to access.  "(stdin)", "(stdout)" and "(stderr)" are
- *   special file names, that will use the corresponding stream instead of open
- *   a file.
- * @param mode
- *   The opening mode of the file, as used by fopen.
- * @retval file
- *   The new file, to be deallocated with dba_file_delete()
- * @returns
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err dba_file_create(dba_encoding type, const char* name, const char* mode, dba_file* file);
+class File
+{
+protected:
+	/** Name of the file */
+	std::string m_name;
+	/** FILE structure used to read or write to the file */
+	FILE* fd;
+	/** Set to true if fd should be closed when dba_file_delete() is called */
+	bool close_on_exit;
+	/** Index of the last message read from the file or written to the file */
+	int idx;
 
-/**
- * Delete a dba_file.
- *
- * @param file
- *   The file to delete.
- */
-void dba_file_delete(dba_file file);
+public:
+	File(const std::string& name, FILE* fd, bool close_on_exit=true);
+	virtual ~File();
 
-/**
- * Get the type of the dba_file
- *
- * @param file
- *   The dba_file to query.
- * @return 
- *   The file encoding.
- */
-dba_encoding dba_file_type(dba_file file);
+	/**
+	 * Get the type of the dba_file
+	 *
+	 * @return 
+	 *   The file encoding.
+	 */
+	const std::string& name() const throw () { return m_name; }
 
-/**
- * Get the name of the dba_file
- *
- * @param file
- *   The dba_file to query.
- * @return 
- *   The file name.
- */
-const char* dba_file_name(dba_file file);
+	/**
+	 * Get the name of the dba_file
+	 *
+	 * @return 
+	 *   The file name.
+	 */
+	virtual Encoding type() const throw () = 0;
 
-/**
- * Read a message from the file.
- *
- * @param file
- *   ::dba_file to read from
- * @param msg
- *   The dba_rawmsg that will hold the data.
- * @retval found
- *   Will be set to true if a message has been found in the file, else to false.
- * @return
- *   The error indicator for the function. See @ref error.h
- */
-dba_err dba_file_read(dba_file file, dba_rawmsg msg, int* found);
+	/**
+	 * Read a message from the file.
+	 *
+	 * @param msg
+	 *   The dba_rawmsg that will hold the data.
+	 * @return
+	 *   true if a message has been found in the file, else false.
+	 */
+	virtual bool read(Rawmsg& msg) = 0;
 
-/**
- * Write the encoded message data to the file
- *
- * @param file
- *   The ::dba_file to write to
- * @param msg
- *   The ::dba_rawmsg with the encoded data to write
- * @return
- *   The error indicator for the function. See @ref error.h
- */
-dba_err dba_file_write(dba_file file, dba_rawmsg msg);
+	/**
+	 * Write the encoded message data to the file
+	 *
+	 * @param msg
+	 *   The ::dba_rawmsg with the encoded data to write
+	 */
+	virtual void write(const Rawmsg& msg);
 
-#ifdef  __cplusplus
+	/**
+	 * Seek until a given signature is found.
+	 *
+	 * @returns true if the signature is found, false if end of file is reached
+	 */
+	bool seek_past_signature(const char* sig, unsigned sig_len);
+
+	/**
+	 * Create a dba_file structure.
+	 *
+	 * @param type
+	 *   The type of data contained in the file.  If -1 is passed, then
+	 *   create will attempt to autodetect the file type from its first
+	 *   byte.
+	 * @param name
+	 *   The name of the file to access.  "(stdin)", "(stdout)" and "(stderr)" are
+	 *   special file names, that will use the corresponding stream instead of open
+	 *   a file.
+	 * @param mode
+	 *   The opening mode of the file, as used by fopen.
+	 * @returns
+	 *   The newly allocated File, that needs to be deleted by the caller.
+	 */
+	static File* create(Encoding type, const std::string& name, const char* mode);
+
+	// Type-specific create functions to be initialised by type-specific code
+
+	typedef File* CreateFun(const std::string&, Encoding, FILE*, bool);
+
+	/**
+	 * Register a create function for a given type. The old function is
+	 * returned (which can be NULL).
+	 */
+	static CreateFun* register_type(Encoding type, CreateFun* fun);
+};
+
 }
-#endif
 
 /* vim:set ts=4 sw=4: */
 #endif

@@ -15,42 +15,43 @@ coreinclude_HEADERS = \
 	fast.h \
 	rawmsg.h \
 	file.h \
-	file_internals.h \
 	csv.h \
 	aliases.h \
 	record.h \
+	varinfo.h \
 	vartable.h \
 	var.h
 
 noinst_LTLIBRARIES = libdballe-core.la
 libdballe_core_la_SOURCES = \
-	error.c \
-	uniconv.c \
-	conv.c \
-	verbose.c \
-	rawmsg.c \
-	file.c \
-	csv.c \
-	aliases.c \
-	record_keyword.c \
-	record.c \
-	vartable.c \
-	var.c
+	error.cc \
+	uniconv.cc \
+	conv.cc \
+	verbose.cc \
+	rawmsg.cc \
+	file.cc \
+	csv.cc \
+	varinfo.cc \
+	aliases.cc \
+	vartable.cc \
+	var.cc \
+	record_keyword.cc \
+	record.cc
 
 if LUA
-libdballe_core_la_SOURCES += var-lua.c
+libdballe_core_la_SOURCES += var-lua.cc
 endif
 
 libdballe_core_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(LUA_LIBS)
 
 
-uniconv.c: uniconv.gperf
+uniconv.cc: uniconv.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
-record_keyword.c: record_keyword.gperf
+record_keyword.cc: record_keyword.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
-aliases.c: aliases.gperf
+aliases.cc: aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
 
@@ -67,20 +68,22 @@ CXXFLAGS += -O0
 noinst_HEADERS = test-utils-core.h
 
 tut_test_SOURCES = \
-	tests/aliases.cc \
-	tests/conv.cc \
 	tests/error.cc \
+	tests/conv.cc \
 	tests/fast.cc \
-	tests/file.cc \
 	tests/rawmsg.cc \
-	tests/record.cc \
-	tests/var.cc \
+	tests/file.cc \
+	tests/varinfo.cc \
+	tests/aliases.cc \
 	tests/vartable.cc \
+	tests/var.cc \
+	tests/record.cc \
 	test-utils-core.cc \
-	../tut/tut-main.cc
+	tests/tut-main.cpp
 tut_test_LDADD = \
 	libdballe-core.la \
-	$(LUA_LIBS)
+	$(LUA_LIBS) \
+	$(WIBBLE_LIBS)
 
 if LUA
 noinst_HEADERS += test-utils-lua.h
@@ -117,5 +120,5 @@ btable.dox: $(top_srcdir)/tables/dballe.txt $(top_srcdir)/tables/mkbdoc
 distclean-local:
 	rm -f record_keyword.dox record_keyword.tex aliases.dox aliases.tex btable.dox
 
-BUILT_SOURCES = record_keyword.c aliases.c uniconv.c
+BUILT_SOURCES = record_keyword.cc aliases.cc uniconv.cc
 EXTRA_DIST = record_keyword.gperf mkkeydoc aliases.gperf mkaliasdoc uniconv.gperf

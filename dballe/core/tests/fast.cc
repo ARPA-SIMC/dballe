@@ -22,8 +22,10 @@
 #include <test-utils-core.h>
 #include <dballe/core/fast.h>
 
+using namespace dballe;
+using namespace std;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct fast_shar
 {
@@ -42,18 +44,18 @@ TESTGRP(fast);
 template<> template<>
 void to::test<1>()
 {
-	gen_ensure_equals(string(itoa(0, 3)), string("0"));
-	gen_ensure_equals(string(itoa(1, 3)), string("1"));
-	gen_ensure_equals(string(itoa(100, 3)), string("100"));
-	gen_ensure_equals(string(itoa(1000, 3)), string("000"));
-	gen_ensure_equals(string(itoa(1234567890, 10)), string("1234567890"));
-	gen_ensure_equals(string(itoa(45, 2)), string("45"));
-	gen_ensure_equals(string(itoa(-1, 2)), string("-1"));
-	gen_ensure_equals(string(itoa(-10800, 10)), string("-10800"));
-	gen_ensure_equals(string(itoa(-11000000, 7)), string("1000000"));
-	gen_ensure_equals(string(itoa(-11000000, 8)), string("-11000000"));
-	gen_ensure_equals(string(itoa(-2147483647, 11)), string("-2147483647"));
-	gen_ensure_equals(string(itoa(-2147483648l, 11)), string("-2147483648"));
+	ensure_equals(string(itoa(0, 3)), string("0"));
+	ensure_equals(string(itoa(1, 3)), string("1"));
+	ensure_equals(string(itoa(100, 3)), string("100"));
+	ensure_equals(string(itoa(1000, 3)), string("000"));
+	ensure_equals(string(itoa(1234567890, 10)), string("1234567890"));
+	ensure_equals(string(itoa(45, 2)), string("45"));
+	ensure_equals(string(itoa(-1, 2)), string("-1"));
+	ensure_equals(string(itoa(-10800, 10)), string("-10800"));
+	ensure_equals(string(itoa(-11000000, 7)), string("1000000"));
+	ensure_equals(string(itoa(-11000000, 8)), string("-11000000"));
+	ensure_equals(string(itoa(-2147483647, 11)), string("-2147483647"));
+	ensure_equals(string(itoa(-2147483648l, 11)), string("-2147483648"));
 }
 	
 }

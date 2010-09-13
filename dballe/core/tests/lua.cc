@@ -23,8 +23,9 @@
 #include <test-utils-lua.h>
 #include <dballe/core/var.h>
 
+using namespace dballe;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct lua_shar
 {
@@ -43,11 +44,9 @@ TESTGRP(lua);
 template<> template<>
 void to::test<1>()
 {
-	dba_var var;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 12, 101), &var));
-	CHECKED(dba_var_setd(var, 12.3));
+	Var var(DBA_VAR(0, 12, 101), 12.3);
 
-	Lua test(
+	tests::Lua test(
 		"function test() \n"
 		"  if var:code() ~= 'B12101' then return 'code is '..var:code()..' instead of B12101' end \n"
 		"  if var:enqi() ~= 1230 then return 'enqi is '..var:enqi()..' instead of 1230' end \n"
@@ -57,16 +56,16 @@ void to::test<1>()
 	);
 
 	// Push the variable as a global
-	dba_var_lua_push(var, test.L);
+	var.lua_push(test.L);
 	lua_setglobal(test.L, "var");
 
 	// Check that we can retrieve it
 	lua_getglobal(test.L, "var");
-	dba_var var1 = dba_var_lua_check(test.L, 1);
+	Var* pvar = Var::lua_check(test.L, 1);
 	lua_pop(test.L, 1);
-	gen_ensure(var == var1);
+	ensure(&var == pvar);
 	
-	gen_ensure_equals(test.run(), "");
+	ensure_equals(test.run(), "");
 }	
 
 }

@@ -26,9 +26,9 @@ ltmain.sh
 missing
 py-compile
 run-check.conf
-dballe/core/aliases.c
-dballe/core/record_keyword.c
-dballe/core/uniconv.c
+dballe/core/aliases.cc
+dballe/core/record_keyword.cc
+dballe/core/uniconv.cc
 dballe/bufrex/template-aliases.c
 dballe/msg/vars.gperf
 dballe/msg/vars.c

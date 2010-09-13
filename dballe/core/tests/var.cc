@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,10 +19,12 @@
 
 #include <test-utils-core.h>
 #include <dballe/core/var.h>
+#include <dballe/core/vartable.h>
 #include <math.h>
 
+using namespace dballe;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct var_shar
 {
@@ -43,51 +43,48 @@ TESTGRP(var);
 template<> template<>
 void to::test<1>()
 {
-	dba_var var;
-	dba_varinfo info;
+	Varinfo info = Vartable::query_local(DBA_VAR(0, 6, 1));
 
-	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 6, 1), &info));
+	{
+		Var var(info);
+		ensure_equals(var.code(), DBA_VAR(0, 6, 1));
+		ensure_equals(var.info()->var, DBA_VAR(0, 6, 1));
+		ensure_equals(var.value(), (const char*)0);
+	}
 
-	CHECKED(dba_var_create(info, &var));
-	gen_ensure(var != NULL);
-	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 6, 1));
-	gen_ensure_equals(dba_var_info(var), info);
-	gen_ensure_equals(dba_var_value(var), (const char*)0);
-	dba_var_delete(var);
+	{
+		Var var(info, 123);
+		ensure_equals(var.code(), DBA_VAR(0, 6, 1));
+		ensure_equals(var.info()->var, DBA_VAR(0, 6, 1));
+		ensure(var.value() != 0);
+		ensure_var_equals(var, 123);
+		var.seti(-123);
+		ensure_var_equals(var, -123);
+	}
 
-	CHECKED(dba_var_createi(info, 123, &var));
-	gen_ensure(var != NULL);
-	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 6, 1));
-	gen_ensure_equals(dba_var_info(var), info);
-	gen_ensure(dba_var_value(var) != 0);
-	gen_ensure_var_equals(var, 123);
-	CHECKED(dba_var_seti(var, -123));
-	gen_ensure_var_equals(var, -123);
-	dba_var_delete(var);
+	{
+		Var var(info, 123.456);
+		ensure_equals(var.code(), DBA_VAR(0, 6, 1));
+		ensure_equals(var.info()->var, DBA_VAR(0, 6, 1));
+		ensure(var.value() != 0);
+		ensure_var_equals(var, 123.456);
+		var.setd(-123.456);
+		ensure_var_equals(var, -123.456);
+	}
 
-	CHECKED(dba_var_created(info, 123.456, &var));
-	gen_ensure(var != NULL);
-	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 6, 1));
-	gen_ensure_equals(dba_var_info(var), info);
-	gen_ensure(dba_var_value(var) != 0);
-	gen_ensure_var_equals(var, 123.456);
-	CHECKED(dba_var_setd(var, -123.456));
-	gen_ensure_var_equals(var, -123.456);
-	dba_var_delete(var);
+	{
+		Var var(info, "123");
+		ensure_equals(var.code(), DBA_VAR(0, 6, 1));
+		ensure_equals(var.info()->var, DBA_VAR(0, 6, 1));
+		ensure(var.value() != 0);
+		ensure_var_equals(var, "123");
+	}
 
-	CHECKED(dba_var_createc(info, "123", &var));
-	gen_ensure(var != NULL);
-	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 6, 1));
-	gen_ensure_equals(dba_var_info(var), info);
-	gen_ensure(dba_var_value(var) != 0);
-	gen_ensure_var_equals(var, "123");
-	dba_var_delete(var);
-
-	CHECKED(dba_var_create_local(DBA_VAR(0, 6, 1), &var));
-	gen_ensure(var != NULL);
-	gen_ensure_equals(dba_var_code(var), DBA_VAR(0, 6, 1));
-	gen_ensure_equals(dba_var_value(var), (const char*)0);
-	dba_var_delete(var);
+	{
+		Var var(DBA_VAR(0, 6, 1));
+		ensure_equals(var.code(), DBA_VAR(0, 6, 1));
+		ensure_equals(var.value(), (const char*)0);
+	}
 }	
 
 // Get and set values
@@ -101,136 +98,91 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-	dba_var var = NULL, var1 = NULL, attr = NULL;
+	Var var(DBA_VAR(0, 6, 1));
+	var.seti(234);
 	
-	CHECKED(dba_var_create_local(DBA_VAR(0, 6, 1), &var));
-	gen_ensure(var != NULL);
-	CHECKED(dba_var_seti(var, 234));
+	var.seta_nocopy(new Var(DBA_VAR(0, 33,  7), 75));
+	var.seta_nocopy(new Var(DBA_VAR(0, 33, 15), 45));
 
-	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 7), &attr));
-	gen_ensure(var != NULL);
-	CHECKED(dba_var_seti(attr, 75));
-	CHECKED(dba_var_seta_nocopy(var, attr));
+	ensure(var.enqa(DBA_VAR(0, 33, 7)) != NULL);
+	ensure_var_equals(*var.enqa(DBA_VAR(0, 33, 7)), 75);
 
-	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 15), &attr));
-	gen_ensure(var != NULL);
-	CHECKED(dba_var_seti(attr, 45));
-	CHECKED(dba_var_seta_nocopy(var, attr));
-
-	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 7), &attr));
-	gen_ensure(attr != NULL);
-	gen_ensure_var_equals(attr, 75);
-
-	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 15), &attr));
-	gen_ensure(attr != NULL);
-	gen_ensure_var_equals(attr, 45);
+	ensure(var.enqa(DBA_VAR(0, 33, 15)) != NULL);
+	ensure_var_equals(*var.enqa(DBA_VAR(0, 33, 15)), 45);
 
 
-	CHECKED(dba_var_copy(var, &var1));
-	gen_ensure(var1 != NULL);
-	gen_ensure_var_equals(var1, 234);
+	Var var1 = var;
+	ensure_var_equals(var1, 234);
+	ensure(var == var1);
+	ensure(var1 == var);
 
-	// Also check dba_var_equals
-	gen_ensure(dba_var_equals(var, var1));
-	gen_ensure(dba_var_equals(var1, var));
+	ensure(var1.enqa(DBA_VAR(0, 33, 7)) != NULL);
+	ensure_var_equals(*var1.enqa(DBA_VAR(0, 33, 7)), 75);
 
-	CHECKED(dba_var_enqa(var1, DBA_VAR(0, 33, 7), &attr));
-	gen_ensure(attr != NULL);
-	gen_ensure_var_equals(attr, 75);
-
-	CHECKED(dba_var_enqa(var1, DBA_VAR(0, 33, 15), &attr));
-	gen_ensure(attr != NULL);
-	gen_ensure_var_equals(attr, 45);
+	ensure(var1.enqa(DBA_VAR(0, 33, 15)) != NULL);
+	ensure_var_equals(*var1.enqa(DBA_VAR(0, 33, 15)), 45);
 
 	// Fiddle with the attribute and make sure dba_var_equals notices
-	CHECKED(dba_var_seti(attr, 10));
-	gen_ensure(!dba_var_equals(var, var1));
-	gen_ensure(!dba_var_equals(var1, var));
-
-
-	dba_var_delete(var);
-	dba_var_delete(var1);
+	var.seta_nocopy(new Var(DBA_VAR(0, 33,  7), 10));
+	ensure(var != var1);
+	ensure(var1 != var);
 }
 
 // Test missing checks
 template<> template<>
 void to::test<4>()
 {
-	dba_var var;
-	dba_varinfo info;
-	dba_err err;
+	Var var(DBA_VAR(0, 12, 103));
 
-	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 12, 103), &info));
-	CHECKED(dba_var_create(info, &var));
+	try {
+		var.setd(logf(0));
+		ensure(false);
+	} catch (error_domain& e) {
+		ensure(var.value() == NULL);
+	}
 
-	err = dba_var_setd(var, logf(0));
-	gen_ensure_equals(err, DBA_ERROR);
-	gen_ensure_equals(dba_error_get_code(), 6);
-	gen_ensure(dba_var_value(var) == NULL);
-
-	err = dba_var_setd(var, logf(0)/logf(0));
-	gen_ensure_equals(err, DBA_ERROR);
-	gen_ensure_equals(dba_error_get_code(), 6);
-	gen_ensure(dba_var_value(var) == NULL);
-
-	dba_var_delete(var);
+	try {
+		var.setd(logf(0)/logf(0));
+		ensure(false);
+	} catch (error_domain& e) {
+		ensure(var.value() == NULL);
+	}
 }
 
 // Test ranges
 template<> template<>
 void to::test<5>()
 {
-	dba_var var;
-	dba_varinfo info;
-	dba_err err;
+	Var var(DBA_VAR(0, 33, 198));
 
-	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 33, 198), &info));
-	CHECKED(dba_var_create(info, &var));
+	var.setd(1.0);
+	ensure_equals(var.enqd(), 1.0);
 
-	double val;
-	CHECKED(dba_var_setd(var, 1));
-	CHECKED(dba_var_enqd(var, &val));
-	gen_ensure_equals(val, 1);
-
-	CHECKED(dba_var_setd(var, -1));
-	CHECKED(dba_var_enqd(var, &val));
-	gen_ensure_equals(val, -1);
-
-	dba_var_delete(var);
+	var.setd(-1.0);
+	ensure_equals(var.enqd(), -1.0);
 }
 
 // Test attributes
 template<> template<>
 void to::test<6>()
 {
-	dba_var var;
-	dba_varinfo info;
-
-	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 33, 198), &info));
-	CHECKED(dba_var_create(info, &var));
+	Var var(DBA_VAR(0, 33, 198));
 
 	// No attrs at the beginning
-	dba_var attr;
-	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 7), &attr));
-	gen_ensure(attr == NULL);
+	ensure(var.enqa(DBA_VAR(0, 33, 7)) == NULL);
 
 	// Set an attr
-	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 7), &attr));
-	CHECKED(dba_var_seti(attr, 42));
-	CHECKED(dba_var_seta_nocopy(var, attr));
+	var.seta_nocopy(new Var(DBA_VAR(0, 33, 7), 42));
 
 	// Query it back
-	attr = NULL;
-	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 7), &attr));
-	gen_ensure(attr != NULL);
-	gen_ensure_equals(string(dba_var_value(attr)), string("42"));
+	ensure(var.enqa(DBA_VAR(0, 33, 7)) != NULL);
+	ensure_var_equals(*var.enqa(DBA_VAR(0, 33, 7)), 42);
 
 	// Unset it
-	CHECKED(dba_var_unseta(var, DBA_VAR(0, 33, 7)));
+	var.unseta(DBA_VAR(0, 33, 7));
 
 	// Query it back: it should be NULL
-	CHECKED(dba_var_enqa(var, DBA_VAR(0, 33, 7), &attr));
-	gen_ensure(attr == NULL);
+	ensure(var.enqa(DBA_VAR(0, 33, 7)) == NULL);
 }
 
 }

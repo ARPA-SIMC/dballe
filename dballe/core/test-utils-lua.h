@@ -28,7 +28,8 @@ extern "C" {
 #include <string>
 #include <iosfwd>
 
-namespace tut_dballe {
+namespace dballe {
+namespace tests {
 
 struct Lua
 {
@@ -55,6 +56,7 @@ struct Lua
 	std::string run();
 };
 
+}
 }
 
 #endif

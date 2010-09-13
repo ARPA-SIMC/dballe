@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,14 +20,18 @@
  */
 
 %define slot-name tag
+%define class-name Uniconv
 %define lookup-function-name get_uniconv
 %struct-type
+%language=C++
 /* Using %switch may be faster (remember to check when doing optimizations) */
 
 %{
 #include <stdio.h>
 #include <string.h>
 #include "dballe/core/conv.h"
+
+namespace dballe {
 %}
 
 /* Note: the _ref member of info is always set to 1 to avoid the structure
@@ -136,34 +140,27 @@ int dba_convert_units_allowed(const char* from, const char* to)
 	} else {
 		char query[50];
 		int len = snprintf(query, 48, "%s->%s", from, to);
-		struct uniconv* info = get_uniconv(query, len);
+		struct uniconv* info = Uniconv::get_uniconv(query, len);
 		return info != NULL;
 	}
 }
 
-dba_err dba_convert_units(const char* from, const char* to, double val, double* res)
+double convert_units(const char* from, const char* to, double val)
 {
 	if (strcmp(from, to) == 0
 	    || strncmp(from, "CODE TABLE", 10) == 0
 		|| strncmp(to, "CODE TABLE", 10) == 0
 	    || strncmp(from, "FLAG TABLE", 10) == 0
 		|| strncmp(to, "FLAG TABLE", 10) == 0)
-	{
-		*res = val;
-		return dba_error_ok();
+		return val;
 
-	} else {
-		char query[50];
-		int len = snprintf(query, 48, "%s->%s", from, to);
-		struct uniconv* info = get_uniconv(query, len);
-		if (info == NULL)
-			return dba_error_notfound("looking for conversion from \"%s\" to \"%s\"", from, to);
-		else
-		{
-			*res = val * info->mul + info->add;
-			return dba_error_ok();
-		}
-	}
+	char query[50];
+	int len = snprintf(query, 48, "%s->%s", from, to);
+	struct uniconv* info = Uniconv::get_uniconv(query, len);
+	if (info == NULL)
+		error_notfound::throwf("looking for conversion from \"%s\" to \"%s\"", from, to);
+	else
+		return val * info->mul + info->add;
 }
 
 dba_err dba_convert_units_get_mul(const char* from, const char* to, double* mul)
@@ -179,7 +176,7 @@ dba_err dba_convert_units_get_mul(const char* from, const char* to, double* mul)
 	} else {
 		char query[50];
 		int len = snprintf(query, 48, "%s->%s", from, to);
-		struct uniconv* info = get_uniconv(query, len);
+		struct uniconv* info = Uniconv::get_uniconv(query, len);
 		if (info == NULL)
 			return dba_error_notfound("looking for conversion from \"%s\" to \"%s\"", from, to);
 		else
@@ -190,4 +187,5 @@ dba_err dba_convert_units_get_mul(const char* from, const char* to, double* mul)
 	}
 }
 
+}
 /* vim:set ts=4 sw=4: */

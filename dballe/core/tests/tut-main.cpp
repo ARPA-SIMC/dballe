@@ -1,38 +1,17 @@
-/*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
-#include "tut.h"
-#include "tut_reporter.h"
+#include <wibble/tests.h>
 #include <signal.h>
 #include <cstring>
 #include <cstdlib>
 
-namespace tut
-{
+namespace tut {
   test_runner_singleton runner;
 }
 
+using namespace wibble;
+
 void signal_to_exception(int)          
 {
-	  throw std::runtime_error("killing signal catched");
+  throw std::runtime_error("killing signal catched");
 }
 
 int main(int argc,const char* argv[])
@@ -88,8 +67,5 @@ int main(int argc,const char* argv[])
     std::cerr << "tut raised exception: " << ex.what() << std::endl;
   }
 
-  int count_failed = visi.exceptions_count + visi.failures_count +
-	  visi.terminations_count + visi.warnings_count;
-
-  return count_failed == 0 ? 0 : 1;
+  return 0;
 }

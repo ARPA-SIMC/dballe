@@ -22,17 +22,15 @@
 #ifndef DBA_RECORD_H
 #define DBA_RECORD_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup core
  * Implement a storage object for a group of related observation data
  */
 
-#include <dballe/core/error.h>
 #include <dballe/core/var.h>
+#include <vector>
+
+namespace dballe {
 
 /**
  * Keyword used to quickly access context and query information from a record.
@@ -103,20 +101,155 @@ typedef enum _dba_keyword dba_keyword;
 #define DBA_VAR_DATA_ID		DBA_VAR(0, 33, 195)
 #endif
 
-struct _dba_record;
-struct _dba_item;
-
-/** Opaque structure representing a DBALLE record.
+/** DB-All.E record.
  *
- * A DBALLE record is a container for one observation of meteorological value,
- * that includes anagraphical informations, physical location of the
- * observation in time and space, and all the observed variables.
- *
- * This object is created with dba_record_create() and deleted with
- * dba_record_delete().
+ * A Record is a container for one observation of meteorological values, that
+ * includes anagraphical informations, physical location of the observation in
+ * time and space, and all the observed variables.
  */
-typedef struct _dba_record* dba_record;
+class Record
+{
+protected:
+	/* The storage for the core keyword data */
+	Var* keydata[DBA_KEY_COUNT];
 
+	/* The variables */
+	std::vector<Var*> vars;
+
+	/// Find an item by Varcode, returning -1 if not found
+	int find_item(Varcode code) const throw ();
+
+	/// Find an item by Varcode, raising an exception if not found
+	Var& get_item(Varcode code);
+
+	/// Find an item by Varcode, raising an exception if not found
+	const Var& get_item(Varcode code) const;
+
+	/// Remove an item by Varcode
+	void remove_item(Varcode code);
+
+public:
+	Record();
+	Record(const Record& rec);
+	~Record();
+
+	Record& operator=(const Record& rec);
+
+	bool operator==(const Record& rec) const;
+
+	/// Remove all data from the record
+	void clear();
+
+	/// Remove all variables from the record, leaving the keywords intact
+	void clear_vars();
+
+	/**
+	 * Copy all data from the record source into dest.  At the end of the function,
+	 * dest will contain its previous values, plus the values in source.  If a
+	 * value is present both in source and in dest, the one in dest will be
+	 * overwritten.
+	 *
+	 * @param source
+	 *   The record to copy data from.
+	 */
+	void add(const Record& source);
+
+	/**
+	 * Set the record to contain only those fields that change source1 into source2.
+	 *
+	 * If a field has been deleted from source1 to source2, it will not be copied
+	 * in dest.
+	 *
+	 * @param source1
+	 *   The original record to compute the changes from.
+	 * @param source2
+	 *   The new record that has changes over source1.
+	 */
+	void set_to_difference(const Record& source1, const Record& source2);
+
+	/**
+	 * Look at the value of a parameter
+	 *
+	 * @return
+	 *   A const pointer to the internal variable, or NULL if the variable has not
+	 *   been found.
+	 */
+	const Var* key_peek(dba_keyword parameter) const throw ();
+
+	/**
+	 * Look at the value of a variable
+	 *
+	 * @return
+	 *   A const pointer to the internal variable, or NULL if the variable has not
+	 *   been found.
+	 */
+	const Var* var_peek(Varcode code) const throw ();
+
+	/**
+	 * Look at the raw value of a keyword in the record, without raising errors.
+	 *
+	 * @param parameter
+	 *   The keyword to get the value for.
+	 * @return
+	 *   The raw string value, or NULL if the keyword has no value.
+	 */
+	const char* key_peek_value(dba_keyword parameter) const throw ();
+
+	/**
+	 * Look at the raw value of a variable in the record, without raising errors.
+	 *
+	 * @param code
+	 *   The variable to get the value for.  See @ref vartable.h
+	 * @return
+	 *   The raw string value, or NULL if the variable has no value.
+	 */
+	const char* var_peek_value(Varcode code) const throw ();
+
+
+
+
+
+
+	/**
+	 * Return the name of a dba_keyword
+	 *
+	 * @return
+	 *   The keyword name, or NULL if keyword is not a valid keyword
+	 */
+	static const char* keyword_name(dba_keyword keyword);
+
+	/**
+	 * Return informations about a keyword
+	 *
+	 * @return
+	 *   The dballe::Varinfo structure with the informations.
+	 */
+	static Varinfo keyword_info(dba_keyword keyword);
+
+	/**
+	 * Get the dba_keyword corresponding to the given name
+	 *
+	 * @returns
+	 *   The corresponding dba_keyword, or DBA_KEY_ERROR if tag does not match a
+	 *   valid keyword.
+	 */
+	static dba_keyword keyword_byname(const char* tag);
+
+	/**
+	 * Get the dba_keyword corresponding to the given name
+	 *
+	 * @param tag
+	 *   The name to query.
+	 * @param len
+	 *   The length of the name in tag.
+	 * @returns
+	 *   The corresponding dba_keyword, or DBA_KEY_ERROR if tag does not match a
+	 *   valid keyword.
+	 */
+	static dba_keyword keyword_byname_len(const char* tag, int len);
+};
+
+#if 0
 /**
  * Opaque structure representing a cursor used to iterate a dba_record.
  *
@@ -125,203 +258,9 @@ typedef struct _dba_record* dba_record;
  */
 typedef struct _dba_item* dba_record_cursor;
 
-/**
- * Return the name of a dba_keyword
- *
- * @param keyword
- *   The keyword to get the name for
- * @return
- *   The keyword name, or NULL if keyword is not a valid keyword
- */
-const char* dba_record_keyword_name(dba_keyword keyword);
 
-/**
- * Return informations about a keyword
- *
- * @param keyword
- *   The keyword to look for informations about
- * @retval info
- *   The ::dba_varinfo structure with the informations.
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err dba_record_keyword_info(dba_keyword keyword, dba_varinfo* info);
 
-/**
- * Get the dba_keyword corresponding to the given name
- *
- * @param tag
- *   The name to query.
- * @returns
- *   The corresponding dba_keyword, or DBA_KEY_ERROR if tag does not match a
- *   valid keyword.
- */
-dba_keyword dba_record_keyword_byname(const char* tag);
 
-/**
- * Get the dba_keyword corresponding to the given name
- *
- * @param tag
- *   The name to query.
- * @param len
- *   The length of the name in tag.
- * @returns
- *   The corresponding dba_keyword, or DBA_KEY_ERROR if tag does not match a
- *   valid keyword.
- */
-dba_keyword dba_record_keyword_byname_len(const char* tag, int len);
-
-/**
- * Create a new record
- *
- * @retval rec
- *   The record variable to initialize.
- * 
- * @return
- *   The error indicator for the function.
- */
-dba_err dba_record_create(dba_record* rec);
-
-/**
- * Delete an existing record, freeing all the resources used by it
- *
- * @param rec
- *   The record to delete.
- */
-void dba_record_delete(dba_record rec);
-
-/**
- * Remove all data from the record
- *
- * @param rec
- *   The record to empty.
- */
-void dba_record_clear(dba_record rec);
-
-/**
- * Remove all variables from the record, leaving the keywords intact.
- *
- * @param rec
- *   The record to operate on.
- */
-void dba_record_clear_vars(dba_record rec);
-
-/**
- * Copy all data from the record source into dest.  At the end of the function,
- * dest will contain the same data as source.
- *
- * @param dest
- *   The record to copy data into.
- * @param source
- *   The record to copy data from.
- * @return
- *   The error indicator for the function.
- */
-dba_err dba_record_copy(dba_record dest, dba_record source);
-
-/**
- * Copy all data from the record source into dest.  At the end of the function,
- * dest will contain its previous values, plus the values in source.  If a
- * value is present both in source and in dest, the one in dest will be
- * overwritten.
- *
- * @param dest
- *   The record to copy data into.
- * @param source
- *   The record to copy data from.
- * @return
- *   The error indicator for the function.
- */
-dba_err dba_record_add(dba_record dest, dba_record source);
-
-/**
- * Copy in dest only those fields that change source1 into source2.
- *
- * If a field has been deleted from source1 to source2, it will not be copied
- * in dest.
- *
- * @param dest
- *   The record to copy data into.
- * @param source1
- *   The original record to compute the changes from.
- * @param source2
- *   The new record that has changes over source1.
- * @return
- *   The error indicator for the function.
- */
-dba_err dba_record_difference(dba_record dest, dba_record source1, dba_record source2);
-
-/**
- * Check if two records have the same content.
- *
- * @param rec1
- *   The first record to compare
- * @param rec2
- *   The second record to compare
- * @return
- *   1 if the two records have the same contents, else 0
- */
-int dba_record_equals(dba_record rec1, dba_record rec2);
-
-/**
- * Look at the value of a parameter, as dba_var.
- *
- * @param rec
- *   The record to get the value from.
- * @param parameter
- *   The parameter to get the value for.
- * @return
- *   A const pointer to the internal variable, or NULL if the variable has not
- *   been found.
- */
-dba_var dba_record_key_peek(dba_record rec, dba_keyword parameter);
-
-/**
- * Look at the value of a parameter, as dba_var.
- *
- * @param rec
- *   The record to get the value from.
- * @param code
- *   The variable to get the value for.  See @ref vartable.h
- * @return
- *   A const pointer to the internal variable, or NULL if the variable has not
- *   been found.
- */
-dba_var dba_record_var_peek(dba_record rec, dba_varcode code);
-
-/**
- * Look at the raw value of a keyword in the record, without raising errors.
- *
- * @deprecated This function is not to be considered a stable part of the API,
- * but it is used by higher level to have a value lookup function that does not
- * trigger error callbacks if nothing is found.
- *
- * @param rec
- *   The record to get the value from.
- *
- * @param parameter
- *   The keyword to get the value for.
- *
- * @return
- *   The raw string value, or NULL if the keyword has no value.
- */
-const char* dba_record_key_peek_value(dba_record rec, dba_keyword parameter);
-
-/**
- * Look at the raw value of a variable in the record, without raising errors.
- *
- * @deprecated This function is not to be considered a stable part of the API,
- * but it is used by higher level to have a value lookup function that does not
- * trigger error callbacks if nothing is found.
- *
- * @param rec
- *   The record to get the value from.
- * @param code
- *   The variable to get the value for.  See @ref vartable.h
- * @return
- *   The raw string value, or NULL if the variable has no value.
- */
-const char* dba_record_var_peek_value(dba_record rec, dba_varcode code);
 
 /**
  * Check if a keyword or value is set
@@ -849,9 +788,9 @@ dba_var dba_record_cursor_variable(dba_record_cursor cur);
  */
 dba_err dba_record_parse_date_extremes(dba_record rec, int* minvalues, int* maxvalues);
 
-#ifdef  __cplusplus
-}
 #endif
+
+}
 
 /* vim:set ts=4 sw=4: */
 #endif

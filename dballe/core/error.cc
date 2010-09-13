@@ -19,7 +19,6 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#define _GNU_SOURCE
 #include "error.h"
 
 #include <config.h>
@@ -33,6 +32,8 @@
 #include <assert.h>
 
 #include <execinfo.h>
+
+#include <sstream>
 
 static const char* dba_err_desc[] = {
 /*  0 */	"no error",
@@ -359,6 +360,75 @@ void dba_error_print_to_stderr()
 	if (backtrace == NULL)
 		fprintf(stderr, "Stack trace:\n%s\n", backtrace);
 	*/
+}
+
+namespace dballe {
+
+#define MAKE_THROWF(errorname) \
+	void errorname::throwf(const char* fmt, ...) { \
+		/* Format the arguments */ \
+		va_list ap; \
+		va_start(ap, fmt); \
+		char* cmsg; \
+		vasprintf(&cmsg, fmt, ap); \
+		va_end(ap); \
+		/* Convert to string */ \
+		std::string msg(cmsg); \
+		free(cmsg); \
+		throw errorname(msg); \
+	}
+
+MAKE_THROWF(error_notfound)
+MAKE_THROWF(error_type)
+MAKE_THROWF(error_handles)
+MAKE_THROWF(error_toolong)
+
+error_system::error_system(const std::string& msg)
+{
+	this->msg = msg + ": " + strerror(errno);
+}
+
+error_system::error_system(const std::string& msg, int errno_val)
+{
+	this->msg = msg + ": " + strerror(errno_val);
+}
+
+MAKE_THROWF(error_system)
+
+MAKE_THROWF(error_consistency)
+
+error_parse::error_parse(const char* file, int line, const std::string& msg)
+{
+	std::stringstream str;
+	str << file << ":" << line << ": " << msg;
+	this->msg = str.str();
+}
+
+void error_parse::throwf(const char* file, int line, const char* fmt, ...)
+{
+	// Format the arguments
+	va_list ap;
+	va_start(ap, fmt);
+	char* cmsg;
+	vasprintf(&cmsg, fmt, ap);
+	va_end(ap);
+
+	// Convert to string
+	std::string msg(cmsg);
+	free(cmsg);
+	throw error_parse(file, line, msg);
+}
+
+error_regexp::error_regexp(int code, void* re, const std::string& msg)
+{
+	char details[512];
+	regerror(code, (regex_t*)re, details, 512);
+	this->msg = msg + ": " + details;
+}
+
+MAKE_THROWF(error_unimplemented)
+MAKE_THROWF(error_domain)
+
 }
 
 /* vim:set ts=4 sw=4: */

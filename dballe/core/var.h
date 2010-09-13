@@ -22,10 +22,6 @@
 #ifndef DBA_VAR_H
 #define DBA_VAR_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup core
  * Implement ::dba_var, an encapsulation of a measured variable.
@@ -33,454 +29,213 @@ extern "C" {
 
 
 #include <dballe/core/error.h>
-#include <dballe/core/vartable.h>
+#include <dballe/core/varinfo.h>
 #include <stdio.h>
-
-struct _dba_var;
-/**
- * Holds a DBALLE variable
- *
- * A ::dba_var contains:
- * \li a ::dba_varcode identifying what is measured.  See @ref vartable.h
- * \li a measured value, that can be an integer, double or string depending on
- *     the ::dba_varcode
- * \li zero or more attributes, in turn represented by ::dba_var structures
- */
-typedef struct _dba_var* dba_var;
-
-struct _dba_var_attr;
-/**
- * Cursor for iterating through the attributes of a dba_var
- */
-typedef struct _dba_var_attr* dba_var_attr_iterator;
-
-
-/**
- * Create a new dba_var
- *
- * @param info
- *   The dba_varinfo that describes the variable
- * @retval var
- *   The variable created.  It will need to be deallocated using
- *   dba_var_delete().
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_create(dba_varinfo info, dba_var* var);
-
-/**
- * Create a new dba_var, setting it to an integer value
- *
- * @param info
- *   The dba_varinfo that describes the variable
- * @param val
- *   The initial value for the variable
- * @retval var
- *   The variable created.  It will need to be deallocated using
- *   dba_var_delete().
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_createi(dba_varinfo info, int val, dba_var* var);
-
-/**
- * Create a new dba_var, setting it to a double value
- *
- * @param info
- *   The dba_varinfo that describes the variable
- * @param val
- *   The initial value for the variable
- * @retval var
- *   The variable created.  It will need to be deallocated using
- *   dba_var_delete().
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_created(dba_varinfo info, double val, dba_var* var);
-
-/**
- * Create a new dba_var, setting it to a character value
- *
- * @param info
- *   The dba_varinfo that describes the variable
- * @param val
- *   The initial value for the variable
- * @retval var
- *   The variable created.  It will need to be deallocated using
- *   dba_var_delete().
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_createc(dba_varinfo info, const char* val, dba_var* var);
-
-/**
- * Create a variable with informations from the local table
- *
- * @param code
- *   The dba_varcode that identifies the variable in the local B table.  See @ref vartable.h
- * @retval var
- *   The variable created.  It will need to be deallocated using
- *   dba_var_delete().
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_create_local(dba_varcode code, dba_var* var);
-
-/**
- * Make an exact copy of a dba_var
- *
- * @param source
- *   The variable to copy
- * @retval dest
- *   The new copy of source.  It will need to be deallocated using
- *   dba_var_delete().
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_copy(dba_var source, dba_var* dest);
-
-/**
- * Delete a dba_var.
- *
- * If the variable was created using a singleuse varinfo, the varinfo will also
- * be deallocated.
- *
- * @param var
- *   The variable to delete
- */
-void dba_var_delete(dba_var var);
-
-/**
- * Check if two variables contains the same data
- *
- * @param var1
- *   First variable to compare
- * @param var2
- *   Second variable to compare
- * @returns
- *   1 if the two variables have the same data, 0 otherwise
- */
-int dba_var_equals(const dba_var var1, const dba_var var2);
-
-/**
- * Get the value of a dba_var, as an integer
- *
- * @param var
- *   The variable to query
- * @retval val
- *   The resulting value
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_enqi(dba_var var, int* val);
-
-/**
- * Get the value of a dba_var, as a double
- *
- * @param var
- *   The variable to query
- * @retval val
- *   The resulting value
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_enqd(dba_var var, double* val);
-
-/**
- * Get the value of a dba_var, as a string
- *
- * @param var
- *   The variable to query
- * @retval val
- *   The resulting value
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_enqc(dba_var var, const char** val);
-
-/**
- * Set the value of a dba_var, from an integer value
- *
- * @param var
- *   The variable to set
- * @param val
- *   The value to set
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_seti(dba_var var, int val);
-
-/**
- * Set the value of a dba_var, from a double value
- *
- * @param var
- *   The variable to set
- * @param val
- *   The value to set
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_setd(dba_var var, double val);
-
-/**
- * Set the value of a dba_var, from a string value
- *
- * @param var
- *   The variable to set
- * @param val
- *   The value to set
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_setc(dba_var var, const char* val);
-
-/**
- * Unset the value of a dba_var
- *
- * @param var
- *   The variable to unset
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_unset(dba_var var);
-
-/**
- * Query variable attributes
- *
- * @param var
- *   The variable to query
- * @param code
- *   The dba_varcode of the attribute requested.  See @ref vartable.h
- * @retval attr
- *   A pointer to the attribute if it exists, else NULL.  The pointer points to
- *   the internal representation and must not be deallocated by the caller.
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_enqa(dba_var var, dba_varcode code, dba_var* attr);
-
-/**
- * Set an attribute of the variable.  An existing attribute with the same
- * ::dba_varcode will be replaced.
- *
- * @param var
- *   The variable to work on
- * @param attr
- *   The attribute to add.  It will be copied inside var, and memory management
- *   will still be in charge of the caller.
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_seta(dba_var var, dba_var attr);
-
-/**
- * Set an attribute of the variable.  An existing attribute with the same
- * ::dba_varcode will be replaced.
- *
- * @param var
- *   The variable to work on
- * @param attr
- *   The attribute to add.  It will be used directly, and var will take care of
- *   its memory management.
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_seta_nocopy(dba_var var, dba_var attr);
-
-/**
- * Remove the attribute with the given code
- * 
- * @param var
- *   The variable to work on
- * @param code
- *   The dba_varcode of the attribute to remove.  See @ref vartable.h
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_unseta(dba_var var, dba_varcode code);
-
-/**
- * Remove all attributes from the variable
- * @param var
- *   The variable to work on
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-void dba_var_clear_attrs(dba_var var);
-
-/**
- * Retrieve the dba_varcode for a variable.  This function cannot fail, as
- * dba_var always have a varcode value.
- *
- * @param var
- *   Variable to query
- * @returns
- *   The dba_varcode for the variable.  See @ref vartable.h
- */
-dba_varcode dba_var_code(dba_var var);
-
-/**
- * Get informations about the variable
- * 
- * @param var
- *   The variable to query informations for
- * @returns info
- *   The dba_varinfo for the variable
- */
-dba_varinfo dba_var_info(dba_var var);
-
-/**
- * Retrieve the internal string representation of the value for a variable.
- *
- * @param var
- *   Variable to query
- * @returns
- *   A const pointer to the internal string representation, or NULL if the
- *   variable is not defined.
- */
-const char* dba_var_value(dba_var var);
-
-/**
- * Start iterating through all the attributes of a variable
- *
- * @param var
- *   The variable to work on
- * @returns
- *   The ::dba_var_attr_iterator to use to iterate the attributes
- */
-dba_var_attr_iterator dba_var_attr_iterate(dba_var var);
-
-/**
- * Advance a ::dba_var_attr_iterator to point to the next attribute
- *
- * @param iter
- *   The iterator to work on
- * @returns
- *   The iterator to the next attribute, or NULL if there are no more
- *   attributes
- */
-dba_var_attr_iterator dba_var_attr_iterator_next(dba_var_attr_iterator iter);
-
-/**
- * Get the attribute pointed by a ::dba_var_attr_iterator
- *
- * @param iter
- *   The iterator to work on
- * @returns
- *   The attribute currently pointed by the iterator
- */
-dba_var dba_var_attr_iterator_attr(dba_var_attr_iterator iter);
-
-
-/**
- * Copy a value from a variable to another, performing conversions if needed
- *
- * @param dest
- *   The variable to write the value to
- * @param orig
- *   The variable to read the value from
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_copy_val(dba_var dest, dba_var orig);
-
-/**
- * Copy all the attributes from one variable to another.
- *
- * @param dest
- *   The variable that will hold the attributes.
- * @param src
- *   The variable with the attributes to copy.
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_copy_attrs(dba_var dest, dba_var src);
-
-/**
- * Convert a variable to an equivalent variable using different informations
- *
- * @param orig
- *   The variable to convert
- * @param info
- *   The ::dba_varinfo describing the target of the conversion
- * @retval conv
- *   The converted variable.  It needs to be deallocated using
- *   dba_var_delete().
- * @returns
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_var_convert(dba_var orig, dba_varinfo info, dba_var* conv);
-
-/**
- * Encode a double value into an integer value using varinfo encoding
- * informations
- *
- * @param fval
- *   Value to encode
- * @param info
- *   dba_varinfo structure to use for the encoding informations
- * @returns
- *   The double value encoded as an integer
- */
-int dba_var_encode_int(double fval, dba_varinfo info);
-
-/**
- * Decode a double value from integer value using varinfo encoding
- * informations
- *
- * @param val
- *   Value to decode
- * @param info
- *   dba_varinfo structure to use for the encoding informations
- * @returns
- *   The decoded double value
- */
-double dba_var_decode_int(int val, dba_varinfo info);
-
-/**
- * Print the variable to an output stream
- *
- * @param var
- *   The variable to print
- * @param out
- *   The output stream to use for printing
- */
-void dba_var_print(dba_var var, FILE* out);
-
-/**
- * Print the difference between two variables to an output stream.
- * If there is no difference, it does not print anything.
- *
- * @param var1
- *   The first variable to compare
- * @param var2
- *   The second variable to compare
- * @retval diffs
- *   Incremented by 1 if the variables differ
- * @param out
- *   The output stream to use for printing
- */
-void dba_var_diff(dba_var var1, dba_var var2, int* diffs, FILE* out);
-
 
 struct lua_State;
 
-/**
- * Push the variable as an object in the lua stack
- */
-dba_err dba_var_lua_push(dba_var var, struct lua_State* L);
+namespace dballe {
 
 /**
- * Check that the element at \a idx is a dba_var
+ * Holds a DBALLE variable
  *
- * @return the dba_var element, or NULL if the check failed
+ * A dballe::Var contains:
+ * \li a dballe::Varcode identifying what is measured.  See @ref vartable.h
+ * \li a measured value, that can be an integer, double or string depending on
+ *     the dballe::Varcode
+ * \li zero or more attributes, in turn represented by ::dba_var structures
  */
-dba_var dba_var_lua_check(struct lua_State* L, int idx);
+class Var
+{
+protected:
+	/// Metadata about the variable
+	Varinfo m_info;
+
+	/// Value of the variable
+	char* m_value;
+
+	/// Attribute list (ordered by Varcode)
+	Var* m_attrs;
+
+public:
+	/// Create a new Var, from the local B table, with undefined value
+	Var(Varcode code);
+
+	/// Create a new Var, from the local B table, with integer value
+	Var(Varcode code, int val);
+
+	/// Create a new Var, from the local B table, with double value
+	Var(Varcode code, double val);
+
+	/// Create a new Var, from the local B table, with string value
+	Var(Varcode code, const char* val);
+
+	/// Create a new Var, with undefined value
+	Var(Varinfo info);
+
+	/// Create a new Var, with integer value
+	Var(Varinfo info, int val);
+
+	/// Create a new Var, with double value
+	Var(Varinfo info, double val);
+
+	/// Create a new Var, with character value
+	Var(Varinfo info, const char* val);
+
+	/// Copy constructor
+	Var(const Var& var);
+
+	/**
+	 * Create a new Var with the value from another one
+	 *
+	 * Conversions are applied if necessary
+	 *
+	 * @param info
+	 *   The dballe::Varinfo describing the variable to create
+	 * @param orig
+	 *   The variable with the value to use
+	 */
+	Var(Varinfo info, const Var& var);
+
+	~Var();
+	
+	/// Assignment
+	Var& operator=(const Var& var);
+
+	/// Equality
+	bool operator==(const Var& var) const;
+	bool operator!=(const Var& var) const { return !operator==(var); }
+
+	/// Retrieve the Varcode for a variable
+	Varcode code() const throw ();
+
+	/// Get informations about the variable
+	Varinfo info() const throw ();
+
+	/// Retrieve the internal string representation of the value for a variable.
+	const char* value() const throw ();
+
+	/// Get the value as an integer
+	int enqi() const;
+
+	/// Get the value as a double
+	double enqd() const;
+
+	/// Get the value as a string
+	const char* enqc() const;
+
+	/// Set the value from an integer value
+	void seti(int val);
+
+	/// Set the value from a double value
+	void setd(double val);
+
+	/// Set the value from a string value
+	void setc(const char* val);
+
+	/// Unset the value of a dba_var
+	void unset();
+
+	/// Remove all attributes
+	void clear_attrs();
+
+	/**
+	 * Query variable attributes
+	 *
+	 * @param code
+	 *   The dballe::Varcode of the attribute requested.  See @ref vartable.h
+	 * @returns attr
+	 *   A pointer to the attribute if it exists, else NULL.  The pointer points to
+	 *   the internal representation and must not be deallocated by the caller.
+	 */
+	const Var* enqa(Varcode code) const;
+
+	/**
+	 * Set an attribute of the variable.  An existing attribute with the same
+	 * dballe::Varcode will be replaced.
+	 *
+	 * @param attr
+	 *   The attribute to add.  It will be copied inside var, and memory management
+	 *   will still be in charge of the caller.
+	 */
+	void seta(const Var& attr);
+
+	/**
+	 * Set an attribute of the variable.  An existing attribute with the same
+	 * dballe::Varcode will be replaced.
+	 *
+	 * @param attr
+	 *   The attribute to add.  It will be used directly, and var will take care of
+	 *   its memory management.
+	 */
+	void seta_nocopy(Var* attr);
+
+	/// Remove the attribute with the given code
+	void unseta(Varcode code);
+
+	/**
+	 * Get the next attribute in the attribute list
+	 *
+	 * Example attribute iteration:
+	 *
+	 * for (const Var* a = var.next_attr(); a != NULL; a = a->next_attr())
+	 * 	// Do something with a
+	 */
+	const Var* next_attr() const;
+
+	/**
+	 * Set the value from another variable, performing conversions if
+	 * needed.
+	 *
+	 * The attributes of \a src will also be copied
+	 */
+	void copy_val(const Var& src);
+
+	/**
+	 * Copy all the attributes from another variable
+	 *
+	 * @param src
+	 *   The variable with the attributes to copy.
+	 */
+	void copy_attrs(const Var& src);
 
 
-#ifdef  __cplusplus
+	/**
+	 * Print the variable to an output stream
+	 *
+	 * @param out
+	 *   The output stream to use for printing
+	 */
+	void print(FILE* out) const;
+
+	/**
+	 * Print the difference between two variables to an output stream.
+	 * If there is no difference, it does not print anything.
+	 *
+	 * @param var
+	 *   The variable to compare with this one
+	 * @param out
+	 *   The output stream to use for printing
+	 * @returns
+	 *   The number of differences found and reported
+	 */
+	unsigned diff(const Var& var, FILE* out) const;
+
+
+	/**
+	 * Push the variable as an object in the lua stack
+	 */
+	void lua_push(struct lua_State* L);
+
+	/**
+	 * Check that the element at \a idx is a Var
+	 *
+	 * @return the Var element, or NULL if the check failed
+	 */
+	static Var* lua_check(struct lua_State* L, int idx);
+};
+
 }
-#endif
 
 #endif
 /* vim:set ts=4 sw=4: */

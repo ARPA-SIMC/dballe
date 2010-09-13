@@ -23,88 +23,97 @@
 #include "var.h"
 
 #ifdef HAVE_LUA
+extern "C" {
 #include <lauxlib.h>
 #include <lualib.h>
-
-dba_var dba_var_lua_check(lua_State* L, int idx)
-{
-        dba_var* v = (dba_var*)luaL_checkudata(L, idx, "dballe.var");
-	return (v != NULL) ? *v : NULL;
 }
 
-static void dbalua_checked(lua_State* L, dba_err err)
+namespace dballe {
+
+Var* Var::lua_check(lua_State* L, int idx)
 {
-	if (err != DBA_OK)
-	{
-		lua_pushstring(L, dba_error_get_message());
-		lua_error(L);
-	}
+        Var** v = (Var**)luaL_checkudata(L, idx, "dballe.var");
+	return (v != NULL) ? *v : NULL;
 }
 
 static int dbalua_var_enqi(lua_State *L)
 {
-	dba_var var = dba_var_lua_check(L, 1);
-	if (dba_var_value(var) != NULL)
-	{
-		int res;
-		dbalua_checked(L, dba_var_enqi(var, &res));
-		lua_pushinteger(L, res);
-	} else
-		lua_pushnil(L);
+	Var* var = Var::lua_check(L, 1);
+	try {
+		if (var->value() != NULL)
+			lua_pushinteger(L, var->enqi());
+		else
+			lua_pushnil(L);
+	} catch (std::exception& e) {
+		lua_pushstring(L, e.what());
+		lua_error(L);
+	}
 	return 1;
 }
 
 static int dbalua_var_enqd(lua_State *L)
 {
-	dba_var var = dba_var_lua_check(L, 1);
-	if (dba_var_value(var) != NULL)
-	{
-		double res;
-		dbalua_checked(L, dba_var_enqd(var, &res));
-		lua_pushnumber(L, res);
-	} else
-		lua_pushnil(L);
+	Var* var = Var::lua_check(L, 1);
+	try {
+		if (var->value() != NULL)
+			lua_pushnumber(L, var->enqd());
+		else
+			lua_pushnil(L);
+	} catch (std::exception& e) {
+		lua_pushstring(L, e.what());
+		lua_error(L);
+	}
 	return 1;
 }
 
 static int dbalua_var_enqc(lua_State *L)
 {
-	dba_var var = dba_var_lua_check(L, 1);
-	const char* res = dba_var_value(var);
-	if (res != NULL)
-		lua_pushstring(L, res);
-	else
-		lua_pushnil(L);
+	Var* var = Var::lua_check(L, 1);
+	try {
+		const char* res = var->value();
+		if (res != NULL)
+			lua_pushstring(L, res);
+		else
+			lua_pushnil(L);
+	} catch (std::exception& e) {
+		lua_pushstring(L, e.what());
+		lua_error(L);
+	}
 	return 1;
 }
 
 static int dbalua_var_code(lua_State *L)
 {
-	dba_var var = dba_var_lua_check(L, 1);
+	static char fcodes[] = "BRCD";
+	Var* var = Var::lua_check(L, 1);
 	char buf[10];
-	snprintf(buf, 10, "B%02d%03d", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
+	snprintf(buf, 10, "%c%02d%03d", fcodes[DBA_VAR_F(var->code())], DBA_VAR_X(var->code()), DBA_VAR_Y(var->code()));
 	lua_pushstring(L, buf);
 	return 1;
 }
 
 static int dbalua_var_tostring(lua_State *L)
 {
-	dba_var var = dba_var_lua_check(L, 1);
-	const char* res = dba_var_value(var);
-	if (res == NULL)
-		lua_pushstring(L, "(undef)");
-	else {
-		dba_varinfo info = dba_var_info(var);
-		if (VARINFO_IS_STRING(info) || info->scale == 0)
-			lua_pushstring(L, res);
-		else
-		{
-			double val;
-			char buf[25];
-			dbalua_checked(L, dba_var_enqd(var, &val));
-			snprintf(buf, 25, "%.*f", info->scale > 0 ? info->scale : 0, val);
-			lua_pushstring(L, buf);
+	Var* var = Var::lua_check(L, 1);
+	try {
+		const char* res = var->value();
+		if (res == NULL)
+			lua_pushstring(L, "(undef)");
+		else {
+			Varinfo info = var->info();
+			if (info->is_string() || info->scale == 0)
+				lua_pushstring(L, res);
+			else
+			{
+				double val = var->enqd();
+				char buf[25];
+				snprintf(buf, 25, "%.*f", info->scale > 0 ? info->scale : 0, val);
+				lua_pushstring(L, buf);
+			}
 		}
+	} catch (std::exception& e) {
+		lua_pushstring(L, e.what());
+		lua_error(L);
 	}
 	return 1;
 }
@@ -119,14 +128,14 @@ static const struct luaL_reg dbalua_var_lib [] = {
         {NULL, NULL}
 };
 
-dba_err dba_var_lua_push(dba_var var, lua_State* L)
+void Var::lua_push(lua_State* L)
 {
-        // The 'grib' object is a userdata that holds a pointer to this Grib structure
-        dba_var* s = (dba_var*)lua_newuserdata(L, sizeof(dba_var));
-        *s = var;
+        // The 'Var' object is a userdata that holds a pointer to this Var structure
+        Var** s = (Var**)lua_newuserdata(L, sizeof(Var*));
+        *s = this;
 
         // Set the metatable for the userdata
-        if (luaL_newmetatable(L, "dballe.var"));
+        if (luaL_newmetatable(L, "dballe.var"))
         {
                 // If the metatable wasn't previously created, create it now
                 lua_pushstring(L, "__index");
@@ -138,17 +147,17 @@ dba_err dba_var_lua_push(dba_var var, lua_State* L)
         }
 
         lua_setmetatable(L, -2);
-
-	return dba_error_ok();
 }
 
 #else
-dba_err dba_var_lua_push(dba_var var, lua_State* L)
+void Var::lua_push(lua_State* L)
 {
-	return dba_error_unimplemented("DB-All.e compiled without Lua support");
+	try error_unimplemented("DB-All.e compiled without Lua support");
 }
-dba_var dba_var_lua_check(lua_State* L, int idx) const
+Var* Var::lua_check(lua_State* L, int idx)
 {
-	return dba_error_unimplemented("DB-All.e compiled without Lua support");
+	try error_unimplemented("DB-All.e compiled without Lua support");
 }
 #endif
+
+}

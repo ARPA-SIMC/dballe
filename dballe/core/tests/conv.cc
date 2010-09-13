@@ -22,8 +22,9 @@
 #include <test-utils-core.h>
 #include <dballe/core/conv.h>
 
+using namespace dballe;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct conv_shar
 {
@@ -38,15 +39,10 @@ struct conv_shar
 TESTGRP(conv);
 
 
-// Test variable creation
 template<> template<>
 void to::test<1>()
 {
-	double res;
-	CHECKED(dba_convert_units("C", "K", 0.7, &res));
-
-	/* fprintf(stderr, "RES %.20f\n", res); */
-	gen_ensure_equals(res, 273.85);
+	ensure_similar(convert_units("C", "K", 0.7), 273.85, 0.0001);
 }
 	
 }

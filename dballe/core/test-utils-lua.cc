@@ -4,7 +4,8 @@
 
 using namespace std;
 
-namespace tut_dballe {
+namespace dballe {
+namespace tests {
 
 Lua::Lua(const std::string& src) : L(NULL)
 {
@@ -144,4 +145,6 @@ std::string Lua::run()
 }
 
 }
+}
+
 // vim:set ts=4 sw=4:

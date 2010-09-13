@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,22 @@
  */
 
 %define slot-name alias
-%define lookup-function-name dba_varcode_alias_in_word_set
+%define class-name VarcodeAliases
+%define lookup-function-name find
 %struct-type
+%language=C++
 %global-table
 %compare-strncmp
 /* Using %switch may be faster (remember to check when doing optimizations) */
 
 %{
 #include <string.h>
-#include "var.h"
+#include "varinfo.h"
+
+namespace dballe {
 %}
 
-struct aliasdef { const char* alias; dba_varcode var; };
+struct aliasdef { const char* alias; Varcode var; };
 %%
 block,			DBA_VAR(0,  1,   1)
 station,		DBA_VAR(0,  1,   2)
@@ -62,22 +66,24 @@ o3,			DBA_VAR(0, 15, 194)
 pm10,			DBA_VAR(0, 15, 195)
 %%
 
-dba_varcode dba_varcode_alias_resolve(const char* alias)
+Varcode varcode_alias_resolve(const char* alias)
 {
-	struct aliasdef* res = dba_varcode_alias_in_word_set(alias, strlen(alias));
+	struct aliasdef* res = VarcodeAliases::find(alias, strlen(alias));
 	if (res == NULL)
 		return 0;
 	else
 		return res->var;
 }
 
-dba_varcode dba_varcode_alias_resolve_substring(const char* alias, int len)
+Varcode varcode_alias_resolve_substring(const char* alias, int len)
 {
-	struct aliasdef* res = dba_varcode_alias_in_word_set(alias, len);
+	struct aliasdef* res = VarcodeAliases::find(alias, len);
 	if (res == NULL)
 		return 0;
 	else
 		return res->var;
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

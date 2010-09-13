@@ -28,21 +28,21 @@ extern "C" {
 };
 */
 
+using namespace dballe;
+using namespace std;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct record_shar
 {
-	dba_record rec;
+	Record rec;
 
 	record_shar()
 	{
-		CHECKED(dba_record_create(&rec));
 	}
 
 	~record_shar()
 	{
-		dba_record_delete(rec);
 	}
 };
 TESTGRP(record);
@@ -60,7 +60,7 @@ TESTGRP(record);
 void fail_unless_chain_hasnt(dba_item chain, dba_varcode param)
 {
 	dba_item item = NULL;
-	gen_ensure(dba_item_get(chain, param, &item) == DBA_ERROR);
+	ensure(dba_item_get(chain, param, &item) == DBA_ERROR);
 }
 
 void fail_unless_is_it(dba_record rec, dba_varcode param)
@@ -95,23 +95,23 @@ void fail_unless_hasnt(dba_record rec, dba_varcode param)
 		int found; \
 		int val; \
 		CHECKED(dba_record_##keyvar##_enqi(rec, param, &val, &found)); \
-		gen_ensure_equals(found, 1); \
-		gen_ensure_equals(val, value); \
+		ensure_equals(found, 1); \
+		ensure_equals(val, value); \
 	} while (0)
 
 #define fail_unless_double_is(keyvar, param, value) do { \
 		int found; \
 		double val; \
 		CHECKED(dba_record_##keyvar##_enqd(rec, param, &val, &found)); \
-		gen_ensure_equals(found, 1); \
-		gen_ensure_equals(val, value); \
+		ensure_equals(found, 1); \
+		ensure_equals(val, value); \
 	} while (0)
 
 #define fail_unless_char_is(keyvar, param, value) do { \
 		const char* val; \
 		CHECKED(dba_record_##keyvar##_enqc(rec, param, &val)); \
-		gen_ensure(val != NULL); \
-		gen_ensure_equals(string(val), string(value)); \
+		ensure(val != NULL); \
+		ensure_equals(string(val), string(value)); \
 	} while (0)
 
 
@@ -119,38 +119,25 @@ void fail_unless_hasnt(dba_record rec, dba_varcode param)
 template<> template<>
 void to::test<1>()
 {
-	dba_varinfo info1, info2;
+	// Keyword name resolution
+	ensure(Record::keyword_byname("cippo") == DBA_KEY_ERROR);
+	ensure(Record::keyword_byname("zzzip") == DBA_KEY_ERROR);
 
-	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 1, 1), &info1));
+	ensure(Record::keyword_byname("ana_id") == DBA_KEY_ANA_ID);
+	ensure(Record::keyword_byname_len("ana_idi", 6) == DBA_KEY_ANA_ID);
+	ensure_equals(string(Record::keyword_info(DBA_KEY_ANA_ID)->desc), "Pseudoana database ID");
 
-	/* Keyword info handling */
-	dba_varinfo info;
+	ensure(Record::keyword_byname("yearmin") == DBA_KEY_YEARMIN);
+	ensure_equals(string(Record::keyword_info(DBA_KEY_YEARMIN)->desc), "Year or minimum year queried");
 
-	gen_ensure(dba_record_keyword_byname("cippo") == DBA_KEY_ERROR);
-	gen_ensure(dba_record_keyword_byname("zzzip") == DBA_KEY_ERROR);
+	ensure(Record::keyword_byname("lat") == DBA_KEY_LAT);
+	ensure_equals(string(Record::keyword_info(DBA_KEY_LAT)->desc), "Latitude");
 
-	gen_ensure_equals(dba_record_keyword_byname("ana_id"), DBA_KEY_ANA_ID);
-	CHECKED(dba_record_keyword_info(DBA_KEY_ANA_ID, &info));
-	gen_ensure_equals(string(info->desc), string("Pseudoana database ID"));
-
-	gen_ensure_equals(dba_record_keyword_byname_len("ana_idi", 6), DBA_KEY_ANA_ID);
-	CHECKED(dba_record_keyword_info(DBA_KEY_ANA_ID, &info));
-	gen_ensure_equals(string(info->desc), string("Pseudoana database ID"));
-
-	gen_ensure_equals(dba_record_keyword_byname("yearmin"), DBA_KEY_YEARMIN);
-	CHECKED(dba_record_keyword_info(DBA_KEY_YEARMIN, &info));
-	gen_ensure_equals(string(info->desc), string("Year or minimum year queried"));
-
-	gen_ensure_equals(dba_record_keyword_byname("lat"), DBA_KEY_LAT);
-	CHECKED(dba_record_keyword_info(DBA_KEY_LAT, &info));
-	gen_ensure_equals(string(info->desc), string("Latitude"));
-
-	gen_ensure_equals(dba_record_keyword_byname("lon"), DBA_KEY_LON);
-	CHECKED(dba_record_keyword_info(DBA_KEY_LON, &info));
-	gen_ensure_equals(string(info->desc), string("Longitude"));
-	CHECKED(dba_varinfo_query_local(DBA_VAR(0, 1, 2), &info2));
+	ensure(Record::keyword_byname("lon") == DBA_KEY_LON);
+	ensure_equals(string(Record::keyword_info(DBA_KEY_LON)->desc), "Longitude");
 }
 
+#if 0
 // Test type consistency checks
 template<> template<>
 void to::test<2>()
@@ -158,12 +145,12 @@ void to::test<2>()
 	dba_err err;
 
 	err = dba_record_key_seti(rec, DBA_KEY_VAR, 1);
-	gen_ensure(err == DBA_ERROR);
-	gen_ensure(dba_error_get_code() == DBA_ERR_TYPE);
+	ensure(err == DBA_ERROR);
+	ensure(dba_error_get_code() == DBA_ERR_TYPE);
 
 	err = dba_record_var_seti(rec, DBA_VAR(0, 1, 19), 1);
-	gen_ensure(err == DBA_ERROR);
-	gen_ensure(dba_error_get_code() == DBA_ERR_TYPE);
+	ensure(err == DBA_ERROR);
+	ensure(dba_error_get_code() == DBA_ERR_TYPE);
 }
 
 // Test get and set methods
@@ -175,24 +162,24 @@ void to::test<3>()
 
 	// Check that things don't exist at the beginning
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_ANA_ID, &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_key_enqi(rec, DBA_KEY_ANA_ID, &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_key_enqi(rec, DBA_KEY_LAT, &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 
 	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 1), &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 
 	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 3), &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 
 	// Set various things
 	CHECKED(dba_record_key_seti(rec, DBA_KEY_ANA_ID, -10));
@@ -204,13 +191,13 @@ void to::test<3>()
 
 	// Check that they now exist
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_ANA_ID, &ival));
-	gen_ensure_equals(ival, 1);
+	ensure_equals(ival, 1);
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	gen_ensure_equals(ival, 1);
+	ensure_equals(ival, 1);
 	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
-	gen_ensure_equals(ival, 1);
+	ensure_equals(ival, 1);
 	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
-	gen_ensure_equals(ival, 1);
+	ensure_equals(ival, 1);
 
 	// Check that they have the right value
 	fail_unless_int_is(key, DBA_KEY_ANA_ID, -10);
@@ -240,16 +227,16 @@ void to::test<3>()
 	// See if unset works for keywords
 	CHECKED(dba_record_key_unset(rec, DBA_KEY_LAT));
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_key_enqi(rec, DBA_KEY_LAT, &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 
 	// See if unset works for variables
 	CHECKED(dba_record_var_unset(rec, DBA_VAR(0, 20, 1)));
 	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 1), &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 
 	/* fprintf(stderr, "IVAL: %d\n", ival); */
 	/* fprintf(stderr, "DVAL: %f\n", fval); */
@@ -265,26 +252,26 @@ void to::test<3>()
 	dba_record_clear(rec);
 	
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_key_enqi(rec, DBA_KEY_LAT, &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 
 	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 3), &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 
 	dba_record_clear(rec);
 
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_key_enqi(rec, DBA_KEY_LAT, &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 
 	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
-	gen_ensure_equals(ival, 0);
+	ensure_equals(ival, 0);
 	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 3), &ival, &found));
-	gen_ensure_equals(found, 0);
+	ensure_equals(found, 0);
 }
 
 
@@ -316,20 +303,20 @@ void to::test<3>()
 		CHECKED(dba_item_obtain(&chain, 2, &item));
 		CHECKED(dba_var_createc(info2, &(item->var), "2"));
 
-		gen_ensure(item != chain);
+		ensure(item != chain);
 		
 		fail_unless_chain_is(chain, 1, chain);
 		fail_unless_chain_is(chain, 2, item);
 
 		dba_item_remove(&chain, 1);
-		gen_ensure(item == chain);
+		ensure(item == chain);
 		
 		fail_unless_chain_hasnt(chain, 1);
 		fail_unless_chain_is(chain, 2, item);
 
 		dba_item_remove(&chain, 2);
 
-		gen_ensure(chain == NULL);
+		ensure(chain == NULL);
 
 		dba_item_delete(chain);
 	}
@@ -342,18 +329,18 @@ void to::test<3>()
 		dba_item item = NULL;
 
 		CHECKED(dba_record_create(&rec));
-		gen_ensure(rec != NULL);
+		ensure(rec != NULL);
 
 		fail_unless_hasnt(rec, 1);
 		CHECKED(dba_record_obtain_item(rec, 1, &item));
 		CHECKED(dba_var_createc(info1, &(item->var), "1"));
-		gen_ensure(item != NULL);
+		ensure(item != NULL);
 		fail_unless_has(rec, 1);
 
 		fail_unless_hasnt(rec, 2);
 		CHECKED(dba_record_obtain_item(rec, 2, &item));
 		CHECKED(dba_var_createc(info2, &(item->var), "2"));
-		gen_ensure(item != NULL);
+		ensure(item != NULL);
 		fail_unless_has(rec, 1);
 		fail_unless_has(rec, 2);
 
@@ -417,32 +404,32 @@ void to::test<5>()
 	dba_record rec1;
 	CHECKED(dba_record_create(&rec1));
 	CHECKED(dba_record_copy(rec1, rec));
-	gen_ensure(dba_record_equals(rec, rec1));
-	gen_ensure(dba_record_equals(rec1, rec));
+	ensure(dba_record_equals(rec, rec1));
+	ensure(dba_record_equals(rec1, rec));
 	CHECKED(dba_record_key_setc(rec1, DBA_KEY_YEARMIN, "1975"));
-	gen_ensure(!dba_record_equals(rec, rec1));
-	gen_ensure(!dba_record_equals(rec1, rec));
+	ensure(!dba_record_equals(rec, rec1));
+	ensure(!dba_record_equals(rec1, rec));
 
 	CHECKED(dba_record_copy(rec1, rec));
-	gen_ensure(dba_record_equals(rec, rec1));
-	gen_ensure(dba_record_equals(rec1, rec));
+	ensure(dba_record_equals(rec, rec1));
+	ensure(dba_record_equals(rec1, rec));
 	CHECKED(dba_record_key_unset(rec1, DBA_KEY_YEARMIN));
-	gen_ensure(!dba_record_equals(rec, rec1));
-	gen_ensure(!dba_record_equals(rec1, rec));
+	ensure(!dba_record_equals(rec, rec1));
+	ensure(!dba_record_equals(rec1, rec));
 
 	CHECKED(dba_record_copy(rec1, rec));
-	gen_ensure(dba_record_equals(rec, rec1));
-	gen_ensure(dba_record_equals(rec1, rec));
+	ensure(dba_record_equals(rec, rec1));
+	ensure(dba_record_equals(rec1, rec));
 	CHECKED(dba_record_var_setc(rec1, DBA_VAR(0, 20, 1), "45"));
-	gen_ensure(!dba_record_equals(rec, rec1));
-	gen_ensure(!dba_record_equals(rec1, rec));
+	ensure(!dba_record_equals(rec, rec1));
+	ensure(!dba_record_equals(rec1, rec));
 
 	CHECKED(dba_record_copy(rec1, rec));
-	gen_ensure(dba_record_equals(rec, rec1));
-	gen_ensure(dba_record_equals(rec1, rec));
+	ensure(dba_record_equals(rec, rec1));
+	ensure(dba_record_equals(rec1, rec));
 	CHECKED(dba_record_var_unset(rec1, DBA_VAR(0, 20, 1)));
-	gen_ensure(!dba_record_equals(rec, rec1));
-	gen_ensure(!dba_record_equals(rec1, rec));
+	ensure(!dba_record_equals(rec, rec1));
+	ensure(!dba_record_equals(rec1, rec));
 }
 
 // Test dba_record_equals
@@ -461,32 +448,32 @@ void to::test<6>()
 	CHECKED(dba_record_set_from_string(rec, "height=654"));
 
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_ANA_ID, &ival));
-	gen_ensure_equals(ival, 1);
+	ensure_equals(ival, 1);
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	gen_ensure_equals(ival, 1);
+	ensure_equals(ival, 1);
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_LON, &ival));
-	gen_ensure_equals(ival, 1);
+	ensure_equals(ival, 1);
 	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
-	gen_ensure_equals(ival, 1);
+	ensure_equals(ival, 1);
 	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 7, 1), &ival));
-	gen_ensure_equals(ival, 1);
+	ensure_equals(ival, 1);
 
 	CHECKED(dba_record_key_enqi(rec, DBA_KEY_ANA_ID, &ival, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(ival, 10);
+	ensure_equals(found, 1);
+	ensure_equals(ival, 10);
 	CHECKED(dba_record_key_enqd(rec, DBA_KEY_LAT, &dval, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(dval, -10.0);
+	ensure_equals(found, 1);
+	ensure_equals(dval, -10.0);
 	CHECKED(dba_record_key_enqd(rec, DBA_KEY_LON, &dval, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(dval, -10.45);
+	ensure_equals(found, 1);
+	ensure_equals(dval, -10.45);
 
 	CHECKED(dba_record_var_enqd(rec, DBA_VAR(0, 20, 1), &dval, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(dval, 4560.0);
+	ensure_equals(found, 1);
+	ensure_equals(dval, 4560.0);
 	CHECKED(dba_record_var_enqd(rec, DBA_VAR(0, 7, 1), &dval, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(dval, 654.0);
+	ensure_equals(found, 1);
+	ensure_equals(dval, 654.0);
 }
 
 // Test get and set methods using strings
@@ -503,44 +490,44 @@ void to::test<7>()
 
 	CHECKED(dba_record_key_seti(rec, DBA_KEY_ANA_ID, 3));
 	CHECKED(dba_record_enqi(rec, "ana_id", &ival, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(ival, 3);
+	ensure_equals(found, 1);
+	ensure_equals(ival, 3);
 
 	CHECKED(dba_record_key_setd(rec, DBA_KEY_LAT, 15.2));
 	CHECKED(dba_record_enqd(rec, "lat", &dval, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(dval, 15.2);
+	ensure_equals(found, 1);
+	ensure_equals(dval, 15.2);
 
 	CHECKED(dba_record_key_setc(rec, DBA_KEY_IDENT, "ciao"));
 	CHECKED(dba_record_enqc(rec, "ident", &cval));
-	gen_ensure(cval != NULL);
-	gen_ensure_equals(string(cval), "ciao");
+	ensure(cval != NULL);
+	ensure_equals(string(cval), "ciao");
 
 	// Values
 
 	CHECKED(dba_record_var_seti(rec, DBA_VAR(0, 1, 1), 5));
 	CHECKED(dba_record_enqi(rec, "block", &ival, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(ival, 5);
+	ensure_equals(found, 1);
+	ensure_equals(ival, 5);
 	CHECKED(dba_record_enqi(rec, "B01001", &ival, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(ival, 5);
+	ensure_equals(found, 1);
+	ensure_equals(ival, 5);
 
 	CHECKED(dba_record_var_setd(rec, DBA_VAR(0, 12, 101), 12.5));
 	CHECKED(dba_record_enqd(rec, "t", &dval, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(dval, 12.5);
+	ensure_equals(found, 1);
+	ensure_equals(dval, 12.5);
 	CHECKED(dba_record_enqd(rec, "B12101", &dval, &found));
-	gen_ensure_equals(found, 1);
-	gen_ensure_equals(dval, 12.5);
+	ensure_equals(found, 1);
+	ensure_equals(dval, 12.5);
 
 	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 1, 19), "oaic"));
 	CHECKED(dba_record_enqc(rec, "name", &cval));
-	gen_ensure(cval != NULL);
-	gen_ensure_equals(string(cval), "oaic");
+	ensure(cval != NULL);
+	ensure_equals(string(cval), "oaic");
 	CHECKED(dba_record_enqc(rec, "B01019", &cval));
-	gen_ensure(cval != NULL);
-	gen_ensure_equals(string(cval), "oaic");
+	ensure(cval != NULL);
+	ensure_equals(string(cval), "oaic");
 }
 
 // Test getters and setters of various elements
@@ -550,6 +537,7 @@ void to::test<8>()
 	// Start from cases that failed in the past only
 	CHECKED(dba_record_key_seti(rec, DBA_KEY_P2, 2));
 }
+#endif
 
 }
 

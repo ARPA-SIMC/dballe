@@ -21,10 +21,11 @@
 
 #include <test-utils-core.h>
 #include <dballe/core/file.h>
-#include <dballe/core/file_internals.h>
+
+using namespace dballe;
+using namespace std;
 
 namespace tut {
-using namespace tut_dballe;
 
 struct file_shar
 {
@@ -38,17 +39,15 @@ struct file_shar
 };
 TESTGRP(file);
 
-// Trivial create test
+// Read test
 template<> template<>
 void to::test<1>()
 {
-	DbaFileSlurpOnly slurp;
-	dba_file file;
-
-	/* Create the file reader */
-	CHECKED(dba_file_create(BUFR, "(stdin)", "r", &file));
-
-	dba_file_delete(file);
+	tests::DbaFileSlurpOnly slurp;
+	auto_ptr<File> f(File::create(BUFR, tests::datafile("bufr/bufr1"), "r"));
+	Rawmsg msg;
+	ensure(f->read(msg));
+	ensure_equals(msg.size(), 185u);
 }
 
 #if 0

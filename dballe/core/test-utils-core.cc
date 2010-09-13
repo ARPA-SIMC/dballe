@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,15 @@
  */
 
 #include "test-utils-core.h"
-#include "dballe/core/file_internals.h"
 
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 
-namespace tut_dballe {
+using namespace std;
+
+namespace dballe {
+namespace tests {
 
 static std::string tag;
 
@@ -40,24 +42,6 @@ void test_untag()
 	tag = string();
 }
 
-DBAException::DBAException(const char* file, int line)
-{
-	std::stringstream ss;
-	ss << file << ":" << line << ": ";
-	if (!tag.empty())
-		ss << "[" << tag << "] ";
-	ss << "Error " << dba_error_get_code();
-	ss << " (" << dba_error_get_message() << ") while " << dba_error_get_context();
-
-	const char* details = dba_error_get_details();
-	if (details == NULL)
-		ss << endl;
-	else
-		ss << ".  Details:" << endl << details << endl;
-
-	m_what = ss.str();
-}
-
 std::string __ensure_errmsg(std::string file, int line, std::string msg)
 {
 	std::stringstream ss;
@@ -68,27 +52,33 @@ std::string __ensure_errmsg(std::string file, int line, std::string msg)
 	return ss.str();
 }
 
-void _ensure_var_undef(const char* file, int line, dba_var var)
+void _ensure_varcode_equals(const wibble::tests::Location& loc, dballe::Varcode actual, dballe::Varcode expected)
 {
-	inner_ensure_equals(dba_var_value(var), (const char*)0);
+	if( expected != actual )
+	{
+		char buf[40];
+		snprintf(buf, 40, "expected %01d%02d%03d actual %01d%02d%03d",
+				DBA_VAR_F(expected), DBA_VAR_X(expected), DBA_VAR_Y(expected),
+				DBA_VAR_F(actual), DBA_VAR_X(actual), DBA_VAR_Y(actual));
+		throw tut::failure(loc.msg(buf));
+	}
 }
-void _ensure_var_equals(const char* file, int line, dba_var var, int val)
+
+void _ensure_var_undef(const wibble::tests::Location& loc, const Var& var)
 {
-	int v;
-	INNER_CHECKED(dba_var_enqi(var, &v));
-	inner_ensure_equals(v, val);
+	inner_ensure_equals(var.value(), (const char*)0);
 }
-void _ensure_var_equals(const char* file, int line, dba_var var, double val)
+void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, int val)
 {
-	double v;
-	INNER_CHECKED(dba_var_enqd(var, &v));
-	inner_ensure_equals(v, val);
+	inner_ensure_equals(var.enqi(), val);
 }
-void _ensure_var_equals(const char* file, int line, dba_var var, const string& val)
+void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, double val)
 {
-	const char* v;
-	INNER_CHECKED(dba_var_enqc(var, &v));
-	inner_ensure_equals(string(v), val);
+	inner_ensure_equals(var.enqd(), val);
+}
+void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, const string& val)
+{
+	inner_ensure_equals(string(var.enqc()), val);
 }
 
 /*
@@ -113,7 +103,7 @@ static void _ensureRecordHas(const char* file, int line, dba_record rec, const c
 #define ensureRecordHas(...) _ensureRecordHas(__FILE__, __LINE__, __VA_ARGS__)
 */
 
-const static dba_varcode generator_varcodes[] = {
+const static Varcode generator_varcodes[] = {
 	DBA_VAR(0,  1,   1),
 	DBA_VAR(0,  1,   2),
 	DBA_VAR(0,  1,   8),
@@ -154,6 +144,7 @@ const static dba_varcode generator_varcodes[] = {
 	DBA_VAR(0, 11,   4),
 };
 
+#if 0
 generator::~generator()
 {
 	for (std::vector<dba_record>::iterator i = reused_pseudoana_fixed.begin();
@@ -238,6 +229,9 @@ dba_err generator::fill_record(dba_record rec)
 	return dba_error_ok();
 }
 
+#endif
+
+#if 0
 dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons)
 {
 	dba_err err = DBA_OK;
@@ -259,91 +253,89 @@ cleanup:
 	if (raw) dba_rawmsg_delete(raw);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
+#endif
 
-dba_file _open_test_data(const char* file, int line, const char* filename, dba_encoding type)
+std::string datafile(const std::string& fname)
 {
 	const char* testdatadirenv = getenv("DBA_TESTDATA");
 	std::string testdatadir = testdatadirenv ? testdatadirenv : ".";
-	dba_file res;
-
-	INNER_CHECKED(dba_file_create(type, (testdatadir + "/" + filename).c_str(), "r", &res));
-
-	return res;
+	return testdatadir + "/" + fname;
 }
 
-dba_rawmsg _read_rawmsg(const char* file, int line, const char* filename, dba_encoding type)
+auto_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* filename, Encoding type)
 {
-	dba_file input = _open_test_data(file, line, filename, type);
-	dba_rawmsg rawmsg;
-	int found;
-
-	// Read the sample message
-	INNER_CHECKED(dba_rawmsg_create(&rawmsg));
-	INNER_CHECKED(dba_file_read(input, rawmsg, &found));
-	inner_ensure_equals(found, 1);
-
-	rawmsg->file = NULL;
-	dba_file_delete(input);
-
-	return rawmsg;
-}
-
-static dba_err slurp_file_read(dba_file file, dba_rawmsg msg, int* found)
-{
-	FILE* in = file->fd;
-
-	/* Reset bufr_message data in case this message has been used before */
-	dba_rawmsg_reset(msg);
-	msg->offset = ftell(in);
-
-	/* Read the entire file contents */
-	while (!feof(in))
-	{
-		unsigned char c;
-		if (fread(&c, 1, 1, in) == 1)
-		{
-			if (msg->len >= msg->alloclen)
-				DBA_RUN_OR_RETURN(dba_rawmsg_expand_buffer(msg));
-			msg->buf[msg->len++] = c;
-		}
+	try {
+		return auto_ptr<File>(File::create(type, datafile(filename), "r"));
+	} catch (dballe::error& e) {
+		throw tut::failure(loc.msg(e.what()));
 	}
-	
-	msg->encoding = BUFR;
-	msg->file = file;
-	*found = msg->len != 0;
-	return dba_error_ok();
 }
-static void slurp_file_delete(dba_file file)
+
+auto_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* filename, Encoding type)
 {
-	free(file);
+	try {
+		auto_ptr<File> f = _open_test_data(loc, filename, type);
+		auto_ptr<Rawmsg> res(new Rawmsg);
+
+		inner_ensure(f->read(*res));
+		res->file = NULL;
+
+		return res;
+	} catch (dballe::error& e) {
+		throw tut::failure(loc.msg(e.what()));
+	}
 }
-static dba_err slurp_file_create(dba_encoding type, FILE* fd, const char* mode, dba_file* file)
+
+struct FileSlurp : public File
 {
-	*file = (dba_file)calloc(1, sizeof(struct _dba_file));
-	if (*file == NULL)
-		return dba_error_alloc("allocating new _dba_file");
-	(*file)->fun_delete = slurp_file_delete;
-	(*file)->fun_read = slurp_file_read;
-	(*file)->fun_write = dba_file_default_write_impl;
-	return dba_error_ok();
+	Encoding m_type;
+
+	FileSlurp(const std::string& name, Encoding type, FILE* fd, bool close_on_exit=true)
+		: File(name, fd, close_on_exit), m_type(type) {}
+
+	virtual Encoding type() const throw () { return m_type; }
+
+	virtual bool read(Rawmsg& msg)
+	{
+		/* Reset bufr_message data in case this message has been used before */
+		msg.clear();
+		msg.offset = ftell(fd);
+
+		/* Read the entire file contents */
+		while (!feof(fd))
+		{
+			char c;
+			if (fread(&c, 1, 1, fd) == 1)
+				msg += c;
+		}
+
+		msg.encoding = BUFR;
+		msg.file = this;
+		return !msg.empty();
+	}
+	virtual void write(const Rawmsg& msg)
+	{
+		throw error_unimplemented("writing to slurp-mode test files");
+	}
+};
+
+static File* slurp_file_create(const std::string& name, Encoding type, FILE* fd, bool close_on_exit)
+{
+	return new FileSlurp(name, type, fd, close_on_exit);
 }
 
 DbaFileSlurpOnly::DbaFileSlurpOnly()
 {
-	oldBufr = (void*)dba_file_aof_create;
-	oldCrex = (void*)dba_file_bufr_create;
-	oldAof = (void*)dba_file_crex_create;
-	dba_file_aof_create = slurp_file_create;
-	dba_file_bufr_create = slurp_file_create;
-	dba_file_crex_create = slurp_file_create;
+	for (int i = 0; i < ENCODING_COUNT; ++i)
+		oldFuns.push_back(File::register_type((Encoding)i, slurp_file_create));
 }
 DbaFileSlurpOnly::~DbaFileSlurpOnly()
 {
-	dba_file_aof_create = (dba_file_create_fun)oldBufr;
-	dba_file_bufr_create = (dba_file_create_fun)oldCrex;
-	dba_file_crex_create = (dba_file_create_fun)oldAof;
+	for (int i = 0; i < ENCODING_COUNT; ++i)
+		File::register_type((Encoding)i, oldFuns[i]);
 }
 
+}
 }
 
 // vim:set ts=4 sw=4:

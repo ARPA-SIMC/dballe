@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, 4.0.19, [enrico@enricozini.org])
+AC_INIT(dballe, 5.0, [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
@@ -62,7 +62,7 @@ AC_CHECK_PROG(have_swig, swig, yes, no)
 dnl To use subdirs
 AC_PROG_MAKE_SET
 
-AC_LANG([C])
+AC_LANG([C++])
 
 AC_ISC_POSIX
 AC_PROG_CC
@@ -152,6 +152,11 @@ then
         AC_DEFINE([HAVE_LUA], 1, [lua is available])
 fi
 AM_CONDITIONAL([LUA], [test x"$have_lua" = x"yes"])
+
+dnl Check for wibble
+PKG_CHECK_MODULES(WIBBLE,libwibble)
+AC_SUBST(WIBBLE_CFLAGS)
+AC_SUBST(WIBBLE_LIBS)
 
 dnl Check for popt
 AC_CHECK_HEADER(popt.h, AC_DEFINE(HAVE_POPT_H, 1, popt.h has been found),
