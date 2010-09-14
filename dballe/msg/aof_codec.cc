@@ -35,6 +35,7 @@
 #include <time.h>
 #include <errno.h>
 
+using namespace wreport;
 using namespace std;
 
 namespace dballe {

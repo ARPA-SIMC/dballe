@@ -105,6 +105,29 @@ public:
 	}
 };
 
+class AofFile : public dballe::File
+{
+public:
+	AofFile(const std::string& name, FILE* fd, bool close_on_exit=true)
+		: File(name, fd, close_on_exit) {}
+
+	virtual Encoding type() const throw () { return AOF; }
+
+	bool read(Rawmsg& msg)
+	{
+		msg.file = this;
+		msg.offset = ftell(fd);
+		msg.encoding = AOF;
+
+		// TODO return CrexBulletin::read(fd, msg, m_name.c_str());
+	}
+
+	void write(const Rawmsg& msg)
+	{
+		// TODO CrexBulletin::write(msg, fd, m_name.c_str());
+	}
+};
+
 } // anonymous namespace
 
 File* File::create(Encoding type, const std::string& name, const char* mode)
@@ -151,7 +174,7 @@ File* File::create(Encoding type, const std::string& name, const char* mode)
 	{
 		case BUFR: return new BufrFile(name, fdt.release(), fdt.close_on_exit);
 		case CREX: return new CrexFile(name, fdt.release(), fdt.close_on_exit);
-		//case AOF: return new AofFile(name, fdt.release(), fdt.close_on_exit);
+		case AOF: return new AofFile(name, fdt.release(), fdt.close_on_exit);
 	}
 }
 

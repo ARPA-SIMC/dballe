@@ -56,6 +56,11 @@ public:
 	virtual ~File();
 
 	/**
+	 * Get the file stream
+	 */
+	FILE* stream() const throw () { return fd; }
+
+	/**
 	 * Get the type of the dba_file
 	 *
 	 * @return 

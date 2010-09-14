@@ -14,6 +14,7 @@ coreinclude_HEADERS = \
 	rawmsg.h \
 	file.h \
 	csv.h \
+	fusb.h \
 	record.h
 
 noinst_LTLIBRARIES = libdballe-core.la
@@ -23,6 +24,7 @@ libdballe_core_la_SOURCES = \
 	rawmsg.cc \
 	file.cc \
 	csv.cc \
+	fusb.cc \
 	record_keyword.cc \
 	record.cc
 
