@@ -61,12 +61,8 @@ uninstall-local:
 	done || true
 
 mainpages = ../dballe/main-core.dox 
-if DO_DBALLE_BUFREX
-mainpages += ../dballe/main-bufrex.dox 
-endif
-if DO_DBALLE_MSG
+#mainpages += ../dballe/main-bufrex.dox 
 mainpages += ../dballe/main-msg.dox 
-endif
 if DO_DBALLE_DB
 mainpages += ../dballe/main-db.dox 
 endif

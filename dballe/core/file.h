@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/file - File I/O
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -90,13 +90,6 @@ public:
 	virtual void write(const Rawmsg& msg);
 
 	/**
-	 * Seek until a given signature is found.
-	 *
-	 * @returns true if the signature is found, false if end of file is reached
-	 */
-	bool seek_past_signature(const char* sig, unsigned sig_len);
-
-	/**
 	 * Create a dba_file structure.
 	 *
 	 * @param type
@@ -113,16 +106,6 @@ public:
 	 *   The newly allocated File, that needs to be deleted by the caller.
 	 */
 	static File* create(Encoding type, const std::string& name, const char* mode);
-
-	// Type-specific create functions to be initialised by type-specific code
-
-	typedef File* CreateFun(const std::string&, Encoding, FILE*, bool);
-
-	/**
-	 * Register a create function for a given type. The old function is
-	 * returned (which can be NULL).
-	 */
-	static CreateFun* register_type(Encoding type, CreateFun* fun);
 };
 
 }

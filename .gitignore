@@ -39,14 +39,7 @@ stamp-h1
 /dbadb.1
 /dbamsg.1
 /dbatbl.1
-/wreport/aliases.cc
-/wreport/aliases.dox
-/wreport/aliases.tex
-/wreport/btable.dox
-/wreport/uniconv.cc
-/wreport/template-aliases.cc
-/wreport/template-aliases.tex
-/wreport/tut_test
+/dballe/core/btable.dox
 /dballe++/tut_test
 /dballe/bench/benchmark
 /dballe/core/record_keyword.dox

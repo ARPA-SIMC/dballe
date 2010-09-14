@@ -19,13 +19,9 @@ dbinclude_HEADERS = \
 		data.h \
 		attr.h \
 		cursor.h \
-		db.h
-
-if DO_DBALLE_MSG
-dbinclude_HEADERS += \
+		db.h \
 		import.h \
 		export.h
-endif
 
 noinst_LTLIBRARIES = libdballe-db.la
 libdballe_db_la_SOURCES = \
@@ -37,13 +33,9 @@ libdballe_db_la_SOURCES = \
 		data.c \
 		attr.c \
 		cursor.c \
-		db.c
-
-if DO_DBALLE_MSG
-libdballe_db_la_SOURCES += \
+		db.c \
 		import.c \
 		export.c
-endif
 
 libdballe_db_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 

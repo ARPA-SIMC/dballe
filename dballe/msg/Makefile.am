@@ -22,10 +22,10 @@ messageinclude_HEADERS = \
 		repinfo.h \
 		aof_codec.h
 
-if DO_DBALLE_BUFREX
-messageinclude_HEADERS += \
-		bufrex_codec.h
-endif
+#if DO_DBALLE_BUFREX
+#messageinclude_HEADERS += \
+#		bufrex_codec.h
+#endif
 
 noinst_LTLIBRARIES = libdballe-msg.la
 libdballe_msg_la_SOURCES = \

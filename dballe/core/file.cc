@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/file - File I/O
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -20,47 +20,16 @@
  */
 
 #include "file.h"
-#include "error.h"
+#include <wreport/bulletin.h>
 
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
+using namespace wreport;
+
 namespace dballe {
-
-namespace {
-
-struct FunStore
-{
-	File::CreateFun* funs[ENCODING_COUNT];
-	FunStore()
-	{
-		for (int i = 0; i < ENCODING_COUNT; ++i)
-			funs[i] = 0;
-	}
-	static FunStore* get();
-};
-
-static FunStore* funStore = NULL;
-
-FunStore* FunStore::get()
-{
-	if (funStore == NULL)
-		funStore = new FunStore;
-	return funStore;
-}
-
-}
-
-File::CreateFun* File::register_type(Encoding type, CreateFun* fun)
-{
-	FunStore* fs = FunStore::get();
-	CreateFun* res = fs->funs[type];
-	fs->funs[type] = fun;
-	return res;
-}
-
 
 File::File(const std::string& name, FILE* fd, bool close_on_exit)
 	: m_name(name), fd(fd), close_on_exit(close_on_exit), idx(0)
@@ -68,6 +37,7 @@ File::File(const std::string& name, FILE* fd, bool close_on_exit)
 }
 
 namespace {
+
 struct fd_tracker
 {
 	FILE* fd;
@@ -87,7 +57,55 @@ struct fd_tracker
 		return res;
 	}
 };
-}
+
+class BufrFile : public dballe::File
+{
+public:
+	BufrFile(const std::string& name, FILE* fd, bool close_on_exit=true)
+		: File(name, fd, close_on_exit) {}
+
+	virtual Encoding type() const throw () { return BUFR; }
+
+	bool read(Rawmsg& msg)
+	{
+		msg.file = this;
+		msg.offset = ftell(fd);
+		msg.encoding = BUFR;
+
+		return BufrBulletin::read(fd, msg, m_name.c_str());
+	}
+
+	void write(const Rawmsg& msg)
+	{
+		BufrBulletin::write(msg, fd, m_name.c_str());
+	}
+
+};
+
+class CrexFile : public dballe::File
+{
+public:
+	CrexFile(const std::string& name, FILE* fd, bool close_on_exit=true)
+		: File(name, fd, close_on_exit) {}
+
+	virtual Encoding type() const throw () { return CREX; }
+
+	bool read(Rawmsg& msg)
+	{
+		msg.file = this;
+		msg.offset = ftell(fd);
+		msg.encoding = CREX;
+
+		return CrexBulletin::read(fd, msg, m_name.c_str());
+	}
+
+	void write(const Rawmsg& msg)
+	{
+		CrexBulletin::write(msg, fd, m_name.c_str());
+	}
+};
+
+} // anonymous namespace
 
 File* File::create(Encoding type, const std::string& name, const char* mode)
 {
@@ -129,12 +147,12 @@ File* File::create(Encoding type, const std::string& name, const char* mode)
 		}
 	}
 
-	/* Call the appropriate constructor */
-	FunStore* fs = FunStore::get();
-	CreateFun* fun = fs->funs[type];
-	if (fun == NULL)
-		error_unimplemented::throwf("%s support is not available", encoding_name(type));
-	return fun(name, type, fdt.release(), fdt.close_on_exit);
+	switch (type)
+	{
+		case BUFR: return new BufrFile(name, fdt.release(), fdt.close_on_exit);
+		case CREX: return new CrexFile(name, fdt.release(), fdt.close_on_exit);
+		//case AOF: return new AofFile(name, fdt.release(), fdt.close_on_exit);
+	}
 }
 
 File::~File()
@@ -147,32 +165,6 @@ void File::write(const Rawmsg& msg)
 {
 	if (fwrite(msg.data(), msg.size(), 1, fd) != 1)
 		error_system::throwf("writing message data (%d bytes) on output", msg.size());
-}
-
-bool File::seek_past_signature(const char* sig, unsigned sig_len)
-{
-	int got = 0;
-	int c;
-
-	errno = 0;
-
-	while (got < sig_len && (c = getc(fd)) != EOF)
-	{
-		if (c == sig[got])
-			got++;
-		else
-			got = 0;
-	}
-
-	if (errno != 0)
-		error_system::throwf("when looking for start of %s data in %s", encoding_name(type()), name().c_str());
-	
-	if (got != sig_len)
-	{
-		/* End of file: return accordingly */
-		return false;
-	}
-	return true;
 }
 
 #if 0

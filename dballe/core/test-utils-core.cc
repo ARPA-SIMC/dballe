@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 
+using namespace wreport;
 using namespace std;
 
 namespace dballe {
@@ -56,44 +57,44 @@ static void _ensureRecordHas(const char* file, int line, dba_record rec, const c
 */
 
 const static Varcode generator_varcodes[] = {
-	DBA_VAR(0,  1,   1),
-	DBA_VAR(0,  1,   2),
-	DBA_VAR(0,  1,   8),
-	DBA_VAR(0,  1,  11),
-	DBA_VAR(0,  1,  12),
-	DBA_VAR(0,  1,  13),
-	DBA_VAR(0,  2,   1),
-	DBA_VAR(0,  2,   2),
-	DBA_VAR(0,  2,   5),
-	DBA_VAR(0,  2,  11),
-	DBA_VAR(0,  2,  12),
-	DBA_VAR(0,  2,  61),
-	DBA_VAR(0,  2,  62),
-	DBA_VAR(0,  2,  63),
-	DBA_VAR(0,  2,  70),
-	DBA_VAR(0,  4,   1),
-	DBA_VAR(0,  4,   2),
-	DBA_VAR(0,  4,   3),
-	DBA_VAR(0,  4,   4),
-	DBA_VAR(0,  4,   5),
-	DBA_VAR(0,  5,   1),
-	DBA_VAR(0,  6,   1),
-	DBA_VAR(0,  7,   1),
-	DBA_VAR(0,  7,   2),
-	DBA_VAR(0,  7,  31),
-	DBA_VAR(0,  8,   1),
-	DBA_VAR(0,  8,   4),
-	DBA_VAR(0,  8,  21),
-	DBA_VAR(0, 10,   3),
-	DBA_VAR(0, 10,   4),
-	DBA_VAR(0, 10,  51),
-	DBA_VAR(0, 10,  61),
-	DBA_VAR(0, 10,  63),
-	DBA_VAR(0, 10, 197),
-	DBA_VAR(0, 11,   1),
-	DBA_VAR(0, 11,   2),
-	DBA_VAR(0, 11,   3),
-	DBA_VAR(0, 11,   4),
+	WR_VAR(0,  1,   1),
+	WR_VAR(0,  1,   2),
+	WR_VAR(0,  1,   8),
+	WR_VAR(0,  1,  11),
+	WR_VAR(0,  1,  12),
+	WR_VAR(0,  1,  13),
+	WR_VAR(0,  2,   1),
+	WR_VAR(0,  2,   2),
+	WR_VAR(0,  2,   5),
+	WR_VAR(0,  2,  11),
+	WR_VAR(0,  2,  12),
+	WR_VAR(0,  2,  61),
+	WR_VAR(0,  2,  62),
+	WR_VAR(0,  2,  63),
+	WR_VAR(0,  2,  70),
+	WR_VAR(0,  4,   1),
+	WR_VAR(0,  4,   2),
+	WR_VAR(0,  4,   3),
+	WR_VAR(0,  4,   4),
+	WR_VAR(0,  4,   5),
+	WR_VAR(0,  5,   1),
+	WR_VAR(0,  6,   1),
+	WR_VAR(0,  7,   1),
+	WR_VAR(0,  7,   2),
+	WR_VAR(0,  7,  31),
+	WR_VAR(0,  8,   1),
+	WR_VAR(0,  8,   4),
+	WR_VAR(0,  8,  21),
+	WR_VAR(0, 10,   3),
+	WR_VAR(0, 10,   4),
+	WR_VAR(0, 10,  51),
+	WR_VAR(0, 10,  61),
+	WR_VAR(0, 10,  63),
+	WR_VAR(0, 10, 197),
+	WR_VAR(0, 11,   1),
+	WR_VAR(0, 11,   2),
+	WR_VAR(0, 11,   3),
+	WR_VAR(0, 11,   4),
 };
 
 #if 0
@@ -218,7 +219,7 @@ auto_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* f
 {
 	try {
 		return auto_ptr<File>(File::create(type, datafile(filename), "r"));
-	} catch (dballe::error& e) {
+	} catch (wreport::error& e) {
 		throw tut::failure(loc.msg(e.what()));
 	}
 }
@@ -233,58 +234,9 @@ auto_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* fi
 		res->file = NULL;
 
 		return res;
-	} catch (dballe::error& e) {
+	} catch (wreport::error& e) {
 		throw tut::failure(loc.msg(e.what()));
 	}
-}
-
-struct FileSlurp : public File
-{
-	Encoding m_type;
-
-	FileSlurp(const std::string& name, Encoding type, FILE* fd, bool close_on_exit=true)
-		: File(name, fd, close_on_exit), m_type(type) {}
-
-	virtual Encoding type() const throw () { return m_type; }
-
-	virtual bool read(Rawmsg& msg)
-	{
-		/* Reset bufr_message data in case this message has been used before */
-		msg.clear();
-		msg.offset = ftell(fd);
-
-		/* Read the entire file contents */
-		while (!feof(fd))
-		{
-			char c;
-			if (fread(&c, 1, 1, fd) == 1)
-				msg += c;
-		}
-
-		msg.encoding = BUFR;
-		msg.file = this;
-		return !msg.empty();
-	}
-	virtual void write(const Rawmsg& msg)
-	{
-		throw error_unimplemented("writing to slurp-mode test files");
-	}
-};
-
-static File* slurp_file_create(const std::string& name, Encoding type, FILE* fd, bool close_on_exit)
-{
-	return new FileSlurp(name, type, fd, close_on_exit);
-}
-
-DbaFileSlurpOnly::DbaFileSlurpOnly()
-{
-	for (int i = 0; i < ENCODING_COUNT; ++i)
-		oldFuns.push_back(File::register_type((Encoding)i, slurp_file_create));
-}
-DbaFileSlurpOnly::~DbaFileSlurpOnly()
-{
-	for (int i = 0; i < ENCODING_COUNT; ++i)
-		File::register_type((Encoding)i, oldFuns[i]);
 }
 
 }

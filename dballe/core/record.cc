@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/record - groups of related variables
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <math.h>
 
+using namespace wreport;
 using namespace std;
 
 namespace dballe {
@@ -170,7 +171,7 @@ Var& Record::get_item(Varcode code)
 	int pos = find_item(code);
 	if (pos == -1)
 		error_notfound::throwf("looking for parameter \"B%02d%03d\"",
-			DBA_VAR_X(code), DBA_VAR_Y(code));
+			WR_VAR_X(code), WR_VAR_Y(code));
 	return *vars[pos];
 }
 
@@ -179,7 +180,7 @@ const Var& Record::get_item(Varcode code) const
 	int pos = find_item(code);
 	if (pos == -1)
 		error_notfound::throwf("looking for parameter \"B%02d%03d\"",
-			DBA_VAR_X(code), DBA_VAR_Y(code));
+			WR_VAR_X(code), WR_VAR_Y(code));
 	return *vars[pos];
 }
 
@@ -899,7 +900,7 @@ void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out)
 		if (!dba_record_has_item(rec2, code))
 		{
 			fprintf(out, "Variable %d%02d%03d only exists in first record\n",
-					DBA_VAR_F(code), DBA_VAR_X(code), DBA_VAR_Y(code));
+					WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
 			(*diffs)++;
 		}
 		{
@@ -920,7 +921,7 @@ void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out)
 		if (!dba_record_has_item(rec1, code))
 		{
 			fprintf(out, "Variable %d%02d%03d only exists in second record\n",
-					DBA_VAR_F(code), DBA_VAR_X(code), DBA_VAR_Y(code));
+					WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
 			(*diffs)++;
 		}
 	}

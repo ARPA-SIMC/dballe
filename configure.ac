@@ -13,33 +13,12 @@ LT_INIT()
 LT_LANG([C++])
 AM_PROG_LIBTOOL
 
-AC_ARG_ENABLE([dballe-bufrex],
-    [AS_HELP_STRING(
-        [--enable-dballe-bufrex],
-        [build BUFR and CREX support])],
-    [],
-    [enable_dballe_bufrex="yes"])
-
-AC_ARG_ENABLE([dballe-msg],
-    [AS_HELP_STRING(
-        [--enable-dballe-msg],
-        [build AOF, BUFR and CREX sensemaking support])],
-    [],
-    [enable_dballe_msg="yes"])
-
 AC_ARG_ENABLE([dballe-db],
     [AS_HELP_STRING(
         [--enable-dballe-db],
         [build DB-All.e database support])],
     [],
     [enable_dballe_db="yes"])
-
-AC_ARG_ENABLE([dballepp],
-    [AS_HELP_STRING(
-        [--enable-dballepp],
-        [build DB-All.e C++ bindings])],
-    [],
-    [enable_dballepp="yes"])
 
 AC_ARG_ENABLE([dballef],
     [AS_HELP_STRING(
@@ -78,7 +57,6 @@ AC_PROG_FC([gfortran pgf90 ifort g95 xlf90 f90])
 F77=$FC
 
 AM_PROG_CC_STDC
-AC_HEADER_STDC
 
 dnl Needed by subdir-objects
 AM_PROG_CC_C_O
@@ -119,6 +97,9 @@ else
 	enable_dballe_python=no
 fi
 
+dnl Check for wreport
+PKG_CHECK_MODULES(WREPORT,libwreport)
+
 dnl Check for unixodbc
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
         AC_MSG_WARN([*** sql.h not found. Check 'config.log' for more details.])
@@ -156,9 +137,15 @@ fi
 AM_CONDITIONAL([LUA], [test x"$have_lua" = x"yes"])
 
 dnl Check for wibble
-PKG_CHECK_MODULES(WIBBLE,libwibble)
-AC_SUBST(WIBBLE_CFLAGS)
-AC_SUBST(WIBBLE_LIBS)
+PKG_CHECK_EXISTS([libwibble], [have_wibble=yes], [have_wibble=no])
+if test x$have_wibble = xyes
+then
+	PKG_CHECK_MODULES(WIBBLE,libwibble)
+	enable_tests=yes
+else
+	AC_MSG_WARN([libwibble not found, tests will be disabled])
+	enable_tests=no
+fi
 
 dnl Check for popt
 AC_CHECK_HEADER(popt.h, AC_DEFINE(HAVE_POPT_H, 1, popt.h has been found),
@@ -173,7 +160,7 @@ LIBS="$LIBS -lm"
 confdir='$(sysconfdir)'"/$PACKAGE"
 AC_SUBST(confdir)
 
-tabledir='$(pkgdatadir)'
+tabledir='$(datadir)/wreport'
 AC_SUBST(tabledir)
 dnl def_tabledir=`echo "${sharedstatedir}/lib/$PACKAGE/tables"`
 dnl AC_DEFINE_UNQUOTED(TABLE_DIR, "$def_tabledir", "Default location for table files")
@@ -189,12 +176,6 @@ then
 	enable_dballe_python=no
 fi
 
-if test x"$enable_dballe_bufrex"=x"yes"; then
-	AC_DEFINE(HAVE_DBALLE_BUFREX,[],[Have BUFREX module])
-fi
-if test x"$enable_dballe_msg"=x"yes"; then
-	AC_DEFINE(HAVE_DBALLE_MSG,[],[Have MSG module])
-fi
 if test x"$enable_dballe_db"=x"yes"; then
 	AC_DEFINE(HAVE_DBALLE_DB,[],[Have DB module])
 fi
@@ -208,20 +189,18 @@ if test x"$enable_dballe_python"=x"yes"; then
 	AC_DEFINE(HAVE_DBALLE_PYTHON,[],[Have Python bindings])
 fi
 
-AM_CONDITIONAL([DO_DBALLE_BUFREX], [test x"$enable_dballe_bufrex" = x"yes"])
-AM_CONDITIONAL([DO_DBALLE_MSG], [test x"$enable_dballe_msg" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_DB], [test x"$enable_dballe_db" = x"yes"])
 AM_CONDITIONAL([DO_DBALLEPP], [test x"$enable_dballepp" = x"yes"])
 AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
 AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
+AM_CONDITIONAL([DO_TESTS], [test x"$enable_tests" = x"yes"])
 
 AM_CONDITIONAL([HAVE_LATEX2HTML], [test x$have_latex2html = xyes])
 AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
 
 AC_CONFIG_FILES([
 Makefile
-wreport/Makefile
 dballe/Makefile
 dballe/core/Makefile
 dballe/msg/Makefile
@@ -251,13 +230,12 @@ dnl doc/Makefile
 AC_MSG_NOTICE([
 ===================================================
 $PACKAGE_NAME-$PACKAGE_VERSION configuration:
-AS_HELP_STRING([bufrex:], [$enable_dballe_bufrex])
-AS_HELP_STRING([msg:], [$enable_dballe_msg])
 AS_HELP_STRING([db:], [$enable_dballe_db])
 AS_HELP_STRING([C++:], [$enable_dballepp])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])
+AS_HELP_STRING([tests:], [$enable_tests])
 AS_HELP_STRING([latex2html:], [$have_latex2html])
 AS_HELP_STRING([rst2html:], [$have_rst2html])
 ===================================================])

@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(LUA_CFLAGS)
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
 
 #
 # Shared library
@@ -10,6 +10,7 @@ coreincludedir = $(includedir)/dballe/core
 
 coreinclude_HEADERS = \
 	verbose.h \
+	var.h \
 	rawmsg.h \
 	file.h \
 	csv.h \
@@ -18,17 +19,14 @@ coreinclude_HEADERS = \
 noinst_LTLIBRARIES = libdballe-core.la
 libdballe_core_la_SOURCES = \
 	verbose.cc \
+	var.cc \
 	rawmsg.cc \
 	file.cc \
 	csv.cc \
 	record_keyword.cc \
 	record.cc
 
-if LUA
-libdballe_core_la_SOURCES += var-lua.cc
-endif
-
-libdballe_core_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(LUA_LIBS)
+libdballe_core_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
 
 
 record_keyword.cc: record_keyword.gperf
@@ -54,16 +52,9 @@ tut_test_SOURCES = \
 	tests/tut-main.cpp
 tut_test_LDADD = \
 	libdballe-core.la \
+	$(WREPORT_LIBS) \
 	$(LUA_LIBS) \
 	$(WIBBLE_LIBS)
-
-if LUA
-noinst_HEADERS += test-utils-lua.h
-tut_test_SOURCES += \
-	tests/lua.cc \
-	test-utils-lua.cc
-endif
-
 
 #
 # Documentation bits

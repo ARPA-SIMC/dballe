@@ -1,10 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = core
+SUBDIRS = core msg
 
-if DO_DBALLE_MSG
-SUBDIRS += msg
-endif
 if DO_DBALLE_DB
 SUBDIRS += db
 endif

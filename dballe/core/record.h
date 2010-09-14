@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/record - groups of related variables
  *
- * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -116,17 +116,17 @@ protected:
 	/* The variables */
 	std::vector<Var*> vars;
 
-	/// Find an item by Varcode, returning -1 if not found
-	int find_item(Varcode code) const throw ();
+	/// Find an item by wreport::Varcode, returning -1 if not found
+	int find_item(wreport::Varcode code) const throw ();
 
-	/// Find an item by Varcode, raising an exception if not found
-	Var& get_item(Varcode code);
+	/// Find an item by wreport::Varcode, raising an exception if not found
+	Var& get_item(wreport::Varcode code);
 
-	/// Find an item by Varcode, raising an exception if not found
-	const Var& get_item(Varcode code) const;
+	/// Find an item by wreport::Varcode, raising an exception if not found
+	const Var& get_item(wreport::Varcode code) const;
 
-	/// Remove an item by Varcode
-	void remove_item(Varcode code);
+	/// Remove an item by wreport::Varcode
+	void remove_item(wreport::Varcode code);
 
 public:
 	Record();
@@ -183,7 +183,7 @@ public:
 	 *   A const pointer to the internal variable, or NULL if the variable has not
 	 *   been found.
 	 */
-	const Var* var_peek(Varcode code) const throw ();
+	const Var* var_peek(wreport::Varcode code) const throw ();
 
 	/**
 	 * Look at the raw value of a keyword in the record, without raising errors.
@@ -203,7 +203,7 @@ public:
 	 * @return
 	 *   The raw string value, or NULL if the variable has no value.
 	 */
-	const char* var_peek_value(Varcode code) const throw ();
+	const char* var_peek_value(wreport::Varcode code) const throw ();
 
 
 
@@ -222,9 +222,9 @@ public:
 	 * Return informations about a keyword
 	 *
 	 * @return
-	 *   The dballe::Varinfo structure with the informations.
+	 *   The wreport::Varinfo structure with the informations.
 	 */
-	static Varinfo keyword_info(dba_keyword keyword);
+	static wreport::Varinfo keyword_info(dba_keyword keyword);
 
 	/**
 	 * Get the dba_keyword corresponding to the given name

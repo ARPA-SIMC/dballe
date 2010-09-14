@@ -11,18 +11,14 @@ dballeinclude_HEADERS = \
 		init.h \
 		error.h \
 		var.h \
-		record.h
-
-if DO_DBALLE_BUFREX
-dballeinclude_HEADERS += \
-		bufrex.h
-endif
-
-if DO_DBALLE_MSG
-dballeinclude_HEADERS += \
+		record.h \
 		msg.h \
 		format.h
-endif
+
+#if DO_DBALLE_BUFREX
+#dballeinclude_HEADERS += \
+#		bufrex.h
+#endif
 
 if DO_DBALLE_DB
 dballeinclude_HEADERS += \
@@ -34,18 +30,14 @@ libdballepp_la_SOURCES = \
 		init.cc \
 		error.cc \
 		var.cc \
-		record.cc
-
-if DO_DBALLE_BUFREX
-libdballepp_la_SOURCES += \
-		bufrex.cc
-endif
-
-if DO_DBALLE_MSG
-libdballepp_la_SOURCES += \
+		record.cc \
 		msg.cc \
 		format.cc
-endif
+
+#if DO_DBALLE_BUFREX
+#libdballepp_la_SOURCES += \
+#		bufrex.cc
+#endif
 
 if DO_DBALLE_DB
 libdballepp_la_SOURCES += \
@@ -72,20 +64,16 @@ tut_test_SOURCES = \
 	tests/var.cc \
 	tests/record.cc \
 	../dballe/core/test-utils-core.cc \
-	../dballe/tut/tut-main.cc
-
-if DO_DBALLE_BUFREX
-tut_test_SOURCES += \
-	tests/bufrex.cc \
-	../dballe/bufrex/test-utils-bufrex.cc
-endif
-
-if DO_DBALLE_MSG
-tut_test_SOURCES += \
+	../dballe/tut/tut-main.cc \
 	tests/format.cc \
 	tests/msg.cc \
 	../dballe/msg/test-utils-msg.cc
-endif
+
+#if DO_DBALLE_BUFREX
+#tut_test_SOURCES += \
+#	tests/bufrex.cc \
+#	../dballe/bufrex/test-utils-bufrex.cc
+#endif
 
 if DO_DBALLE_DB
 tut_test_SOURCES += \

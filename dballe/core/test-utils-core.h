@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * core/test-utils-core - Test utility functions for the core module
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -19,12 +19,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/error.h>
+#include <wreport/tests.h>
+
 #include <dballe/core/record.h>
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/file.h>
-
-#include <wibble/tests.h>
 
 #include <cstdlib>
 #include <climits>
@@ -284,23 +283,6 @@ std::auto_ptr<File> _open_test_data(const wibble::tests::Location& loc, const ch
 std::auto_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* filename, Encoding type);
 #define read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
-
-/**
- * Setup the dba_file system so that reading from any file type results in a
- * dba_rawmsg containing the whole file, and writing writes with the default
- * write implementation.
- *
- * The class is a RAII-style class, so it restores everything to its previous
- * state when it goes out of scope.
- */
-class DbaFileSlurpOnly
-{
-	std::vector<File::CreateFun*> oldFuns;
-
-public:
-	DbaFileSlurpOnly();
-	~DbaFileSlurpOnly();
-};
 
 }
 }

@@ -43,11 +43,10 @@ TESTGRP(file);
 template<> template<>
 void to::test<1>()
 {
-	tests::DbaFileSlurpOnly slurp;
 	auto_ptr<File> f(File::create(BUFR, tests::datafile("bufr/bufr1"), "r"));
 	Rawmsg msg;
 	ensure(f->read(msg));
-	ensure_equals(msg.size(), 185u);
+	ensure_equals(msg.size(), 182u);
 }
 
 #if 0

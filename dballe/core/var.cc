@@ -1,7 +1,7 @@
 /*
- * dballe/rawmsg - annotated raw buffer
+ * dballe/var - DB-All.e specialisation of wreport variable
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005,2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,48 +19,33 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "rawmsg.h"
-#include "file.h"
+#include "var.h"
+#include <wreport/vartable.h>
 
-#include <stdlib.h> /* malloc */
-#include <string.h> /* memcpy */
+using namespace wreport;
+using namespace std;
 
 namespace dballe {
 
-const char* encoding_name(Encoding enc)
+const Vartable* local = NULL;
+static Varinfo query_local(Varcode code)
 {
-	switch (enc)
-	{
-		case BUFR: return "BUFR";
-		case CREX: return "CREX";
-		case AOF: return "AOF";
-		default: return "(unknown)";
-	}
+	if (local == NULL)
+		local = Vartable::get("dballe");
+	return local->query(code);
 }
 
-Rawmsg::Rawmsg()
-	: file(0), offset(0), index(0), encoding(BUFR)
-{
-}
+Var::Var(Varcode code)
+	: wreport::Var(query_local(code)) {}
 
-Rawmsg::~Rawmsg()
-{
-}
+Var::Var(Varcode code, int val)
+	: wreport::Var(query_local(code), val) {}
 
-std::string Rawmsg::filename() const throw ()
-{
-	if (!file) return "(memory)";
-	return file->name();
-}
+Var::Var(Varcode code, double val)
+	: wreport::Var(query_local(code), val) {}
 
-void Rawmsg::clear() throw ()
-{
-	file = 0;
-	offset = 0;
-	index = 0;
-	encoding = BUFR;
-	std::string::clear();
-}
+Var::Var(Varcode code, const char* val)
+	: wreport::Var(query_local(code), val) {}
 
 }
 
