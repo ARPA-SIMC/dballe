@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * msg/context - Hold variables with the same physical context
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+using namespace wreport;
 using namespace std;
 
 namespace dballe {
@@ -186,7 +187,7 @@ static void var_summary(const Var& var, FILE* out)
 {
 	Varcode v = var.code();
 	fprintf(out, "%d%02d%03d[%s]",
-			DBA_VAR_F(v), DBA_VAR_X(v), DBA_VAR_Y(v),
+			WR_VAR_F(v), WR_VAR_X(v), WR_VAR_Y(v),
 			var.info()->desc);
 }
 
@@ -257,7 +258,7 @@ const Var* Context::find_vsig() const
 		return NULL;
 
 	// Look for VSS variable
-	const Var* res = find(DBA_VAR(0, 8, 1));
+	const Var* res = find(WR_VAR(0, 8, 1));
 	if (res == NULL) return NULL;
 
 	// Ensure it is not undefined

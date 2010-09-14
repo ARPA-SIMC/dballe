@@ -86,7 +86,7 @@ print >>fh, """#ifndef DBA_MSG_VARS_H
  * getters and setters for every named value.
  */
 
-#include <dballe/core/varinfo.h>
+#include <wreport/varinfo.h>
 
 namespace dballe {
 
@@ -95,7 +95,7 @@ namespace dballe {
  */
 struct MsgVarShortcut {
     /** Variable description code */
-    Varcode code;
+    wreport::Varcode code;
     /** Type of the first level.  See @ref level_table. */
     int ltype1;
     /** L1 value of the level.  See @ref level_table. */
@@ -144,16 +144,16 @@ for v in vars:
     print >>fh, "inline void set_%s(%s val, int conf) " % (v.name.lower(), types[v.type]),
     #print >>sys.stderr, v
     #print >>sys.stderr, "--", [ftypes[v.type], v.b.x, v.b.y] + v.letr;
-    print >>fh, "{ set%s(DBA_VAR(0, %d, %d), val, conf, %s, %s, %s, %s, %s, %s, %s); }" % \
+    print >>fh, "{ set%s(WR_VAR(0, %d, %d), val, conf, %s, %s, %s, %s, %s, %s, %s); }" % \
         tuple([ftypes[v.type], v.b.x, v.b.y] + v.letr);
 
     print >>fh, "/** Set the value of \"%s\" from a ::dba_var */" % v.desc;
-    print >>fh, "inline void set_%s_var(const Var& val) " % v.name.lower(),
-    print >>fh, "{ set(val, DBA_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s); }" % \
+    print >>fh, "inline void set_%s_var(const wreport::Var& val) " % v.name.lower(),
+    print >>fh, "{ set(val, WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s); }" % \
             tuple([v.b.x, v.b.y] + v.letr)
 
     print >>fh, "/** Get the \"%s\" physical value stored in the message */" % v.desc;
-    print >>fh, "inline const Var* get_%s_var() " % v.name.lower();
+    print >>fh, "inline const wreport::Var* get_%s_var() " % v.name.lower();
     print >>fh, "{ return find_by_id(DBA_MSG_%s); }" % \
         v.name;
 fh.close()
@@ -205,7 +205,7 @@ int resolve_var_substring(const char* name, int len)
 
 print >>fc, "struct MsgVarShortcut shortcutTable[] = {"
 for v in vars:
-    print >>fc, " { DBA_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple([v.b.x, v.b.y] + v.letr)
+    print >>fc, " { WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple([v.b.x, v.b.y] + v.letr)
 print >>fc, "};"
 
 print >>fc, "} // namespace dballe"

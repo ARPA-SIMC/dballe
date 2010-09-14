@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * msg/context - Hold variables with the same physical context
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -46,7 +46,7 @@ protected:
     /**
      * Return the index of the var `code' in l, or -1 if it was not found
      */
-    int find_index(Varcode code) const;
+    int find_index(wreport::Varcode code) const;
 
 public:
 	/** Type of the first level.  See @ref level_table. */
@@ -67,7 +67,7 @@ public:
 	/**
 	 * The variables in this context
 	 */
-	std::vector<Var*> data;
+	std::vector<wreport::Var*> data;
 
 	Context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
     Context(const Context& c);
@@ -114,7 +114,7 @@ public:
      * @param var
      *   The variable to add or replace.
      */
-    void set(const Var& var);
+    void set(const wreport::Var& var);
 
     /**
      * Add a Var to the level
@@ -126,17 +126,17 @@ public:
      * @param var
      *   The variable to add or replace.
      */
-    void set(std::auto_ptr<Var> var);
+    void set(std::auto_ptr<wreport::Var> var);
 
     /**
      * Find a variable given its varcode
      *
      * @param code
-     *   The dballe::Varcode of the variable to query.  See @ref vartable.h
+     *   The wreport::Varcode of the variable to query.  See @ref vartable.h
      * @return
      *   The variable found, or NULL if it was not found.
      */
-    const Var* find(Varcode code) const;
+    const wreport::Var* find(wreport::Varcode code) const;
 
     /** 
      * Find a variable given its shortcut ID
@@ -146,14 +146,14 @@ public:
      * @return
      *   The variable found, or NULL if it was not found.
      */
-    const Var* find_by_id(int id) const;
+    const wreport::Var* find_by_id(int id) const;
 
     /**
      * If this context is the right context for a vertical sounding significance
      * and contains a vertical sounding significance variable, return it. Else,
      * return NULL.
      */
-    const Var* find_vsig() const;
+    const wreport::Var* find_vsig() const;
 
     /**
      * Dump all the contents of the context to the given stream

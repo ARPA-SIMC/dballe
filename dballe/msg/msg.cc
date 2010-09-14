@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/msg - Hold an interpreted weather bulletin
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -27,6 +27,7 @@
 #include <string.h>
 #include <ctype.h>
 
+using namespace wreport;
 using namespace std;
 
 namespace dballe {
@@ -286,7 +287,7 @@ unsigned Msg::diff(const Msg& msg, FILE* out) const
 
 void Msg::set(const Var& var, Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
-    auto_ptr<Var> copy(new Var(code));
+    auto_ptr<Var> copy(newvar(code));
     *copy = var; // Assignment performs conversion if needed
 	set(copy, ltype1, l1, ltype2, l2, pind, p1, p2);
 }
@@ -299,25 +300,25 @@ void Msg::set(std::auto_ptr<Var> var, int ltype1, int l1, int ltype2, int l2, in
 
 void Msg::seti(Varcode code, int val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
-    auto_ptr<Var> var(new Var(code, val));
+    auto_ptr<Var> var(newvar(code, val));
 	if (conf != -1)
-        var->seta(auto_ptr<Var>(new Var(DBA_VAR(0, 33, 7), conf)));
+        var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
     set(var, ltype1, l1, ltype2, l2, pind, p1, p2);
 }
 
 void Msg::setd(Varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
-    auto_ptr<Var> var(new Var(code, val));
+    auto_ptr<Var> var(newvar(code, val));
 	if (conf != -1)
-        var->seta(auto_ptr<Var>(new Var(DBA_VAR(0, 33, 7), conf)));
+        var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
     set(var, ltype1, l1, ltype2, l2, pind, p1, p2);
 }
 
 void Msg::setc(Varcode code, const char* val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
 {
-    auto_ptr<Var> var(new Var(code, val));
+    auto_ptr<Var> var(newvar(code, val));
 	if (conf != -1)
-        var->seta(auto_ptr<Var>(new Var(DBA_VAR(0, 33, 7), conf)));
+        var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
     set(var, ltype1, l1, ltype2, l2, pind, p1, p2);
 }
 

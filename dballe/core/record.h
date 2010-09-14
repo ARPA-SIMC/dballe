@@ -111,19 +111,19 @@ class Record
 {
 protected:
 	/* The storage for the core keyword data */
-	Var* keydata[DBA_KEY_COUNT];
+	wreport::Var* keydata[DBA_KEY_COUNT];
 
 	/* The variables */
-	std::vector<Var*> vars;
+	std::vector<wreport::Var*> vars;
 
 	/// Find an item by wreport::Varcode, returning -1 if not found
 	int find_item(wreport::Varcode code) const throw ();
 
 	/// Find an item by wreport::Varcode, raising an exception if not found
-	Var& get_item(wreport::Varcode code);
+	wreport::Var& get_item(wreport::Varcode code);
 
 	/// Find an item by wreport::Varcode, raising an exception if not found
-	const Var& get_item(wreport::Varcode code) const;
+	const wreport::Var& get_item(wreport::Varcode code) const;
 
 	/// Remove an item by wreport::Varcode
 	void remove_item(wreport::Varcode code);
@@ -174,7 +174,7 @@ public:
 	 *   A const pointer to the internal variable, or NULL if the variable has not
 	 *   been found.
 	 */
-	const Var* key_peek(dba_keyword parameter) const throw ();
+	const wreport::Var* key_peek(dba_keyword parameter) const throw ();
 
 	/**
 	 * Look at the value of a variable
@@ -183,7 +183,7 @@ public:
 	 *   A const pointer to the internal variable, or NULL if the variable has not
 	 *   been found.
 	 */
-	const Var* var_peek(wreport::Varcode code) const throw ();
+	const wreport::Var* var_peek(wreport::Varcode code) const throw ();
 
 	/**
 	 * Look at the raw value of a keyword in the record, without raising errors.

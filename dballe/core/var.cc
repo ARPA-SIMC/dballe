@@ -28,24 +28,13 @@ using namespace std;
 namespace dballe {
 
 const Vartable* local = NULL;
-static Varinfo query_local(Varcode code)
+
+wreport::Varinfo varinfo(wreport::Varcode code)
 {
 	if (local == NULL)
 		local = Vartable::get("dballe");
 	return local->query(code);
 }
-
-Var::Var(Varcode code)
-	: wreport::Var(query_local(code)) {}
-
-Var::Var(Varcode code, int val)
-	: wreport::Var(query_local(code), val) {}
-
-Var::Var(Varcode code, double val)
-	: wreport::Var(query_local(code), val) {}
-
-Var::Var(Varcode code, const char* val)
-	: wreport::Var(query_local(code), val) {}
 
 }
 

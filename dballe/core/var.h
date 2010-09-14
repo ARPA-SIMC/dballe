@@ -29,54 +29,38 @@
 
 
 #include <wreport/var.h>
+#include <memory>
 
 namespace dballe {
 
 /**
- * wreport variable with extra constructors using the local B table
+ * Convenience functions to quickly create variables from the local B table
  */
-class Var : public wreport::Var
+
+/// Return a Varinfo entry from the local B table
+wreport::Varinfo varinfo(wreport::Varcode code);
+
+
+/// Create a new Var, from the local B table, with undefined value
+static inline wreport::Var var(wreport::Varcode code) { return wreport::Var(varinfo(code)); }
+
+/// Create a new Var, from the local B table, with value
+template<typename T>
+wreport::Var var(wreport::Varcode code, const T& val) { return wreport::Var(varinfo(code), val); }
+
+
+/// Create a new Var, from the local B table, with undefined value
+static inline std::auto_ptr<wreport::Var> newvar(wreport::Varcode code)
 {
-public:
-	/// Create a new Var, from the local B table, with undefined value
-	Var(wreport::Varcode code);
+	return std::auto_ptr<wreport::Var>(new wreport::Var(varinfo(code)));
+}
 
-	/// Create a new Var, from the local B table, with integer value
-	Var(wreport::Varcode code, int val);
-
-	/// Create a new Var, from the local B table, with double value
-	Var(wreport::Varcode code, double val);
-
-	/// Create a new Var, from the local B table, with string value
-	Var(wreport::Varcode code, const char* val);
-
-	/// Create a new Var, with undefined value
-	Var(wreport::Varinfo info) : wreport::Var(info) {}
-
-	/// Create a new Var, with integer value
-	Var(wreport::Varinfo info, int val) : wreport::Var(info, val) {}
-
-	/// Create a new Var, with double value
-	Var(wreport::Varinfo info, double val) : wreport::Var(info, val) {}
-
-	/// Create a new Var, with character value
-	Var(wreport::Varinfo info, const char* val) : wreport::Var(info, val) {}
-
-	/// Copy constructor
-	Var(const Var& var) : wreport::Var(var) {}
-
-	/**
-	 * Create a new Var with the value from another one
-	 *
-	 * Conversions are applied if necessary
-	 *
-	 * @param info
-	 *   The wreport::Varinfo describing the variable to create
-	 * @param orig
-	 *   The variable with the value to use
-	 */
-	Var(wreport::Varinfo info, const Var& var) : wreport::Var(info, var) {}
-};
+/// Create a new Var, from the local B table, with value
+template<typename T>
+std::auto_ptr<wreport::Var> newvar(wreport::Varcode code, const T& val)
+{
+	return std::auto_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
+}
 
 }
 

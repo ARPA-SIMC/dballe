@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/msg - Hold an interpreted weather bulletin
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -210,7 +210,7 @@ public:
      * @return
      *   The variable found, or NULL if it was not found.
      */
-    const Var* find(Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const;
+    const wreport::Var* find(wreport::Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const;
 
     /** 
      * Find a datum given its shortcut ID
@@ -222,7 +222,7 @@ public:
      * @return
      *   The value found, or NULL if it was not found.
      */
-    const Var* find_by_id(int id) const;
+    const wreport::Var* find_by_id(int id) const;
 
     /**
      * Add or replace a value
@@ -247,7 +247,7 @@ public:
      * @param p2
      *   Time range P2 indicator.  See @ref trange_table.
      */
-    void set(const Var& var, Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void set(const wreport::Var& var, wreport::Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
     /**
      * Add or replace a value, taking ownership of the source variable without
@@ -269,7 +269,7 @@ public:
      * @param p2
      *   Time range P2 indicator.  See @ref trange_table.
      */
-    void set(std::auto_ptr<Var> var, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void set(std::auto_ptr<wreport::Var> var, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
     /**
      * Add or replace an integer value in the dba_msg
@@ -295,7 +295,7 @@ public:
      * @param p2
      *   Time range P2 indicator.  See @ref trange_table.
      */
-    void seti(Varcode code, int val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void seti(wreport::Varcode code, int val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
     /**
      * Add or replace a double value in the dba_msg
@@ -321,7 +321,7 @@ public:
      * @param p2
      *   Time range P2 indicator.  See @ref trange_table.
      */
-    void setd(Varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void setd(wreport::Varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
     /**
      * Add or replace a string value in the dba_msg
@@ -347,7 +347,7 @@ public:
      * @param p2
      *   Time range P2 indicator.  See @ref trange_table.
      */
-    void setc(Varcode code, const char* val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void setc(wreport::Varcode code, const char* val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
 
     /**
      * Copy to dest all the variable in this message that match \a filter
