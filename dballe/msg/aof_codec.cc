@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * DB-ALLe - Archive for point-based meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,11 @@
 #include <config.h>
 
 #include "aof_codec.h"
+#include "aof_importers/common.h"
 #include "msg.h"
 #include <dballe/core/file.h>
-#include <dballe/core/file_internals.h>
+#include <dballe/msg/msgs.h>
+//#include <dballe/core/file_internals.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -33,73 +35,28 @@
 #include <time.h>
 #include <errno.h>
 
-// #define TRACE_DECODER
+using namespace std;
 
-#ifdef TRACE_DECODER
-#define TRACE(...) fprintf(stderr, __VA_ARGS__)
-#define IFTRACE if (1)
-#else
-#define TRACE(...) do { } while (0)
-#define IFTRACE if (0)
-#endif
+namespace dballe {
+namespace msg {
 
-#define AOF_UNDEF 0x7fffffff
+AOFImporter::AOFImporter(const import::Options& opts)
+    : Importer(opts) {}
+AOFImporter::~AOFImporter() {}
 
-extern dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg);
-extern dba_err aof_read_flight(const uint32_t* obs, int obs_len, dba_msg msg);
-extern dba_err aof_read_satob(const uint32_t* obs, int obs_len, dba_msg msg);
-extern dba_err aof_read_dribu(const uint32_t* obs, int obs_len, dba_msg msg);
-extern dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg);
-extern dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg);
-extern dba_err aof_read_satem(const uint32_t* obs, int obs_len, dba_msg msg);
-
-dba_err aof_codec_get_category(dba_rawmsg msg, int* category, int* subcategory)
-{
-	const unsigned char* buf;
-	const uint32_t* obs;
-	int obs_len;
-
-	/* Access the raw data in a more comfortable form */
-	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(msg, &buf, &obs_len));
-	obs = (const uint32_t*)buf;
-	obs_len /= sizeof(uint32_t);
-
-	if (obs_len < 7)
-		return dba_error_parse(dba_file_name(msg->file), msg->offset,
-				"the buffer is too short to contain an AOF message");
-
-	*category = obs[5];
-	*subcategory = obs[6];
-
-	return dba_error_ok();
-}
-
-#define OBS(n) (obs[n-1])
-
-dba_err aof_codec_decode(dba_rawmsg msg, dba_msgs* msgs)
+void AOFImporter::import(const Rawmsg& msg, Msgs& msgs) const
 {
 	/* char id[10]; */
-	dba_err err = DBA_OK;
-	const unsigned char* buf;
-	const uint32_t* obs;
-	int obs_len;
-	dba_msgs outs = NULL;
-	dba_msg out = NULL;
-
-	assert(msgs != NULL);
-
 	TRACE("aof_message_decode\n");
 
 	/* Access the raw data in a more comfortable form */
-	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(msg, &buf, &obs_len));
-	obs = (const uint32_t*)buf;
-	obs_len /= sizeof(uint32_t);
+	const uint32_t* obs = (const uint32_t*)msg.data();
+	int obs_len = msg.size() / sizeof(uint32_t);
 
 	TRACE("05 grid box number: %d\n", OBS(5));
 	TRACE("obs type: %d, %d\n", OBS(6), OBS(7));
 
-	DBA_RUN_OR_RETURN(dba_msgs_create(&outs));
-	DBA_RUN_OR_RETURN(dba_msg_create(&out));
+    auto_ptr<Msg> out(new Msg);
 
 #if 0
 	/* 13 Station ID (1:4) */
@@ -116,46 +73,48 @@ dba_err aof_codec_decode(dba_rawmsg msg, dba_msgs* msgs)
 	/* 07 Code type */
 	switch (OBS(6))
 	{
-		case 1: DBA_RUN_OR_GOTO(cleanup, aof_read_synop(obs, obs_len, out)); break;
-		case 2: DBA_RUN_OR_GOTO(cleanup, aof_read_flight(obs, obs_len, out)); break;
-		case 3: DBA_RUN_OR_GOTO(cleanup, aof_read_satob(obs, obs_len, out)); break;
-		case 4: DBA_RUN_OR_GOTO(cleanup, aof_read_dribu(obs, obs_len, out)); break;
-		case 5: DBA_RUN_OR_GOTO(cleanup, aof_read_temp(obs, obs_len, out)); break;
-		case 6: DBA_RUN_OR_GOTO(cleanup, aof_read_pilot(obs, obs_len, out)); break;
-		case 7: DBA_RUN_OR_GOTO(cleanup, aof_read_satem(obs, obs_len, out)); break;
+		case 1: read_synop(obs, obs_len, *out); break;
+		case 2: read_flight(obs, obs_len, *out); break;
+		case 3: read_satob(obs, obs_len, *out); break;
+		case 4: read_dribu(obs, obs_len, *out); break;
+		case 5: read_temp(obs, obs_len, *out); break;
+		case 6: read_pilot(obs, obs_len, *out); break;
+		case 7: read_satem(obs, obs_len, *out); break;
 		default:
-			return dba_error_parse(dba_file_name(msg->file), msg->offset,
+                error_parse::throwf(msg.filename().c_str(), msg.offset,
 					"cannot handle AOF observation type %d subtype %d",
 					OBS(5), OBS(6));
 	}
 
-	DBA_RUN_OR_GOTO(cleanup, dba_msgs_append_acquire(outs, out));
-	out = NULL;
-	*msgs = outs;
-	outs = NULL;
-
-cleanup:
-	if (out) dba_msg_delete(out);
-	if (outs) dba_msgs_delete(outs);
-	return err == DBA_OK ? dba_error_ok() : err;
+    msgs.acquire(out);
 }
 
-void aof_codec_dump(dba_rawmsg msg, FILE* out)
+void AOFImporter::import(const bufrex::Msg& msg, Msgs& msgs) const
 {
-	/* char id[10]; */
-	const uint32_t* obs;
-	int obs_len;
-	int i;
+    throw error_unimplemented("AOF importer cannot import from bufrex::Msg");
+}
 
-	assert(msg != NULL);
-
-	TRACE("aof_message_decode\n");
-
+void AOFImporter::get_category(const Rawmsg& msg, int* category, int* subcategory)
+{
 	/* Access the raw data in a more comfortable form */
-	obs = (const uint32_t*)msg->buf;
-	obs_len = msg->len / sizeof(uint32_t);
+	const uint32_t* obs = (const uint32_t*)msg.data();
+	int obs_len = msg.size() / sizeof(uint32_t);
 
-	for (i = 0; i < obs_len; i++)
+	if (obs_len < 7)
+		throw error_parse(msg.filename().c_str(), msg.offset,
+				"the buffer is too short to contain an AOF message");
+
+	*category = obs[5];
+	*subcategory = obs[6];
+}
+
+void AOFImporter::dump(const Rawmsg& msg, FILE* out)
+{
+	/* Access the raw data in a more comfortable form */
+	const uint32_t* obs = (const uint32_t*)msg.data();
+	int obs_len = msg.size() / sizeof(uint32_t);
+
+	for (int i = 0; i < obs_len; i++)
 		if (obs[i] == 0x7fffffff)
 			fprintf(out, "%2d %10s\n", i+1, "missing");
 		else
@@ -174,20 +133,19 @@ void aof_codec_dump(dba_rawmsg msg, FILE* out)
 		}
 }
 
-dba_err aof_read_satob(const uint32_t* obs, int obs_len, dba_msg msg)
+
+void AOFImporter::read_satob(const uint32_t* obs, int obs_len, Msg& msg)
 {
-	return dba_error_unimplemented("parsing AOF SATOB observations");
-//	*out = NULL;
-//	return dba_error_ok();
+	throw error_unimplemented("parsing AOF SATOB observations");
 }
 
-dba_err aof_read_satem(const uint32_t* obs, int obs_len, dba_msg msg)
+void AOFImporter::read_satem(const uint32_t* obs, int obs_len, Msg& msg)
 {
-	return dba_error_unimplemented("parsing AOF SATEM observations");
-//	*out = NULL;
-//	return dba_error_ok();
+	throw error_unimplemented("parsing AOF SATEM observations");
 }
 
+
+#if 0
 
 /*
  * AOF I/O utilities
@@ -639,5 +597,9 @@ void aof_codec_shutdown(void)
 	dba_file_aof_create = old_aof_create_fun;
 }
 
+#endif
+
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

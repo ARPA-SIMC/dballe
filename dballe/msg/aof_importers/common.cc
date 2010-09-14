@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,10 @@
 #include <stdlib.h>		/* strtol */
 #include <ctype.h>		/* isspace */
 
+namespace dballe {
+namespace msg {
+
+#if 0
 void dba_aof_dump_word(const char* prefix, uint32_t x)
 {
 	int i;
@@ -280,5 +284,9 @@ uint32_t dba_aof_get_extra_conf(const uint32_t* obs, int idx)
 	return (w >> ((idx % 4) * 6)) & 0x3f;
 
 }
+#endif
+
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

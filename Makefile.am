@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = dballe
+SUBDIRS = wreport dballe
 if DO_DBALLEPP
 SUBDIRS += dballe++
 endif

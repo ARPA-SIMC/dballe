@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * DB-ALLe - Archive for point-based meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,6 @@
 
 #ifndef DBALLE_AOF_CODEC_H
 #define DBALLE_AOF_CODEC_H
-
-#ifdef  __cplusplus
-extern "C" {
-#endif
 
 /** @file
  * @ingroup aof
@@ -49,37 +45,72 @@ extern "C" {
  * host endianness.
  */
 
-#include <dballe/core/rawmsg.h>
-#include <dballe/core/file.h>
-#include <dballe/msg/msgs.h>
+#include <dballe/msg/codec.h>
 #include <stdint.h>
 
-/**
- * Decode an AOF message
- *
- * @param msg
- *   The aof_message with the data to decode
- * @retval msgs
- *   The decoded message
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err aof_codec_decode(dba_rawmsg msg, dba_msgs* msgs);
+namespace dballe {
+struct Msg;
 
-/**
- * Get category and subcategory of an AOF message
- *
- * @param msg
- *   The message to scan
- * @retval category
- *   The AOF category of the message
- * @retval subcategory
- *   The AOF subcategory of the message
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err aof_codec_get_category(dba_rawmsg msg, int* category, int* subcategory);
+namespace msg {
 
+class AOFImporter : public Importer
+{
+public:
+	AOFImporter(const import::Options& opts);
+    virtual ~AOFImporter();
+
+	/**
+	 * Decode a message from its raw encoded representation
+	 *
+	 * @param rmsg
+	 *   Encoded message
+	 * @retval msgs
+	 *   The resulting ::dba_msg
+	 * @return
+	 *   The error indicator for the function. See @ref error.h
+	 */
+	virtual void import(const Rawmsg& msg, Msgs& msgs) const;
+
+    /**
+     * Import a decoded BUFR/CREX message
+     */
+	virtual void import(const bufrex::Msg& msg, Msgs& msgs) const;
+
+    /**
+     * Get category and subcategory of an AOF message
+     *
+     * @param msg
+     *   The message to scan
+     * @retval category
+     *   The AOF category of the message
+     * @retval subcategory
+     *   The AOF subcategory of the message
+     */
+    static void get_category(const Rawmsg& msg, int* category, int* subcategory);
+
+    /**
+     * Print the contents of the AOF message
+     *
+     * @param msg
+     *   The encoded message to dump
+     * @param out
+     *   The stream to use to print the message
+     */
+    static void dump(const Rawmsg& msg, FILE* out);
+
+    // Message-specific code
+    static void read_synop(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_flight(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_satob(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_dribu(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_temp(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_pilot(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_satem(const uint32_t* obs, int obs_len, Msg& msg);
+
+    static void parse_st_block_station(const uint32_t* obs, Msg& msg);
+};
+
+#if 0
 /**
  * Encode an AOF message
  *
@@ -93,16 +124,6 @@ dba_err aof_codec_get_category(dba_rawmsg msg, int* category, int* subcategory);
 /*
 dba_err aof_message_encode(aof_message msg, dba_msg in);
 */
-
-/**
- * Print the contents of the AOF message
- *
- * @param msg
- *   The encoded message to dump
- * @param out
- *   The stream to use to print the message
- */
-void aof_codec_dump(dba_rawmsg msg, FILE* out);
 
 /**
  * Read a fortran "unformatted sequential" record with an array of 32-bit words.
@@ -182,11 +203,10 @@ dba_err aof_codec_write_dummy_header(dba_file file);
  *   The error indicator for the function. See @ref dba_err.
  */
 dba_err aof_codec_fix_header(dba_file file);
-	
+#endif	
 
-#ifdef  __cplusplus
 }
-#endif
+}
 
 /* vim:set ts=4 sw=4: */
 #endif

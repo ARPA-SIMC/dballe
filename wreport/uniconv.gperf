@@ -1,0 +1,195 @@
+/*
+ * wreport/uniconv - Unit conversion for weather reports
+ *
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ *
+ * Author: Enrico Zini <enrico@enricozini.com>
+ */
+
+%define slot-name tag
+%define class-name Uniconv
+%define lookup-function-name find
+%struct-type
+%language=C++
+/* Using %switch may be faster (remember to check when doing optimizations) */
+
+%{
+#include <stdio.h>
+#include <string.h>
+#include "error.h"
+
+namespace wreport {
+%}
+
+/* Note: the _ref member of info is always set to 1 to avoid the structure
+ * being deallocated from dba_varinfo_delete */
+struct uniconv { const char* tag; double mul; double add; };
+%%
+"K->C",				1,	-273.15001f
+"C->K",				1,	273.15001f
+"K->C/10",			10,	-2731.5001f
+"C/10->K",			0.1,	273.15001f
+"C->C/10",			10,	0
+"C/10->C",			0.1,	0
+"YEARS->YEAR",			1,	0
+"YEAR->YEARS",			1,	0
+"MONTHS->MONTH",		1,	0
+"MONTH->MONTHS",		1,	0
+"DAYS->DAY",			1,	0
+"DAY->DAYS",			1,	0
+"HOURS->HOUR",			1,	0
+"HOUR->HOURS",			1,	0
+"MINUTES->MINUTE",		1,	0
+"MINUTE->MINUTES",		1,	0
+"SECONDS->SECOND",		1,	0
+"SECOND->SECONDS",		1,	0
+"SECOND->S",			1,	0
+"S->SECOND",			1,	0
+"sec->S",			1,	0
+"S->sec",			1,	0
+"G/G->KG/KG",			1,	0
+"KG/KG->G/G",			1,	0
+"G/M**3->KG/M**3",		0.001,	0
+"KG/M**3->G/M**3",		1000,	0
+"PA->KPA",			0.001,	0
+"KPA->PA",			1000,	0
+"m**(2/3)/S->M**(2/3)/S",	1,	0
+"M**(2/3)/S->m**(2/3)/S",	1,	0
+"M->MM",			1000,	0
+"MM->M",			0.001,	0
+"M->cm",			100,	0
+"cm->M",			0.01,	0
+"%->PERCENT",			1,	0
+"PERCENT->%",			1,	0
+"M->FT",			3.2808,	0
+"FT->M",			0.3048,	0
+"DEGREE**2->DEGREE2",		1,	0
+"DEGREE2->DEGREE**2",		1,	0
+"KG/M**2->KGM-2",		1,	0
+"KGM-2->KG/M**2",		1,	0
+"J/M**2->JM-2",			1,	0
+"JM-2->J/M**2",			1,	0
+"cal/cm**2->J/M**2",		41868,	0
+"J/M**2->cal/cm**2",		0.000023885,	0
+"Bq/L->BQ L-1",			1,		0
+"BQ L-1->Bq/L",			1,		0
+"DOBSON->DU",			1,		0
+"DU->DOBSON",			1,		0
+"PA->NBAR",			0.0001,		0		
+"NBAR->PA",			10000,		0
+"LOG(1/M**2)->LOG (M-2)",	1,		0
+"LOG (M-2)->LOG(1/M**2)",	1,		0
+"DEGREE TRUE->gsess",		1,		0
+"gsess->DEGREE TRUE",		1,		0
+"m/sec->M/S",  			1,		0
+"m/s/10->M/S",			0.1,		0
+"M/S->m/s/10",			10,		0
+"nodi->M/S",			0.51444,	0
+"M/S->nodi",			1.94384,	0
+"PA->mBar",			0.01,		0
+"mBar->PA",			100,		0
+"PA->hPa",			0.01,		0
+"hPa->PA",			100,		0
+"PA->Bar",			0.00001,	0
+"Bar->PA",			100000,		0
+"m->M",				1,		0
+"M->m",				1,		0
+"hm->M",			100,		0
+"M->hm",			0.01,		0
+"mm->M",			0.001,		0
+"M->mm",			1000,		0
+"1/8->%",			12.5,		0
+"%->1/8",			0.08,		0
+"mm->KG/M**2",			1,		0
+"mm/10->KG/M**2",		0.1,		0
+"KG/M**2->mm",			1,		0
+"degree true->DEGREE TRUE",	1,		0
+"DEGREE TRUE->degree true",	1,		0
+"GPM->MGP",			1,		0
+"MGP->GPM",			1,		0
+"GPM->m**2/s**2",		9.80665,	0
+"MGP->m**2/s**2",		9.80665,	0
+"m**2/s**2->GPM",		0.101971621,	0
+"m**2/s**2->MGP",		0.101971621,	0
+"cal/s/cm**2->W/M**2",		41868,		0
+"cal/h/cm**2->W/M**2",		11.63,		0
+%%
+
+#if 0
+int convert_units_allowed(const char* from, const char* to)
+{
+	if (strcmp(from, to) == 0
+	    || strncmp(from, "CODE TABLE", 10) == 0
+		|| strncmp(to, "CODE TABLE", 10) == 0
+	    || strncmp(from, "FLAG TABLE", 10) == 0
+		|| strncmp(to, "FLAG TABLE", 10) == 0)
+	{
+		return 1;
+	} else {
+		char query[50];
+		int len = snprintf(query, 48, "%s->%s", from, to);
+		struct uniconv* info = Uniconv::find(query, len);
+		return info != NULL;
+	}
+}
+#endif
+
+double convert_units(const char* from, const char* to, double val)
+{
+	if (strcmp(from, to) == 0
+	    || strncmp(from, "CODE TABLE", 10) == 0
+		|| strncmp(to, "CODE TABLE", 10) == 0
+	    || strncmp(from, "FLAG TABLE", 10) == 0
+		|| strncmp(to, "FLAG TABLE", 10) == 0)
+		return val;
+
+	char query[50];
+	int len = snprintf(query, 48, "%s->%s", from, to);
+	struct uniconv* info = Uniconv::find(query, len);
+	if (info == NULL)
+		error_notfound::throwf("looking for conversion from \"%s\" to \"%s\"", from, to);
+	else
+		return val * info->mul + info->add;
+}
+
+#if 0
+dba_err dba_convert_units_get_mul(const char* from, const char* to, double* mul)
+{
+	if (strcmp(from, to) == 0
+	    || strncmp(from, "CODE TABLE", 10) == 0
+		|| strncmp(to, "CODE TABLE", 10) == 0
+	    || strncmp(from, "FLAG TABLE", 10) == 0
+		|| strncmp(to, "FLAG TABLE", 10) == 0)
+	{
+		*mul = 1;
+		return dba_error_ok();
+	} else {
+		char query[50];
+		int len = snprintf(query, 48, "%s->%s", from, to);
+		struct uniconv* info = Uniconv::find(query, len);
+		if (info == NULL)
+			return dba_error_notfound("looking for conversion from \"%s\" to \"%s\"", from, to);
+		else
+		{
+			*mul = info->mul;
+			return dba_error_ok();
+		}
+	}
+}
+#endif
+
+}
+/* vim:set ts=4 sw=4: */

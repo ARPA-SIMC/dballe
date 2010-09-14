@@ -76,6 +76,9 @@ struct Rawmsg : public std::string
 	Rawmsg();
 	~Rawmsg();
 
+	// Return the file name from which this message was read
+	std::string filename() const throw ();
+
 	// Clear all the contents of this dballe::Rawmsg
 	void clear() throw ();
 };

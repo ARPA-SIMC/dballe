@@ -32,54 +32,6 @@ namespace tests {
 
 static std::string tag;
 
-void test_tag(const std::string& ttag)
-{
-	tag = ttag;
-}
-
-void test_untag()
-{
-	tag = string();
-}
-
-std::string __ensure_errmsg(std::string file, int line, std::string msg)
-{
-	std::stringstream ss;
-	ss << file << ":" << line << ": ";
-	if (!tag.empty())
-		ss << "[" << tag << "] ";
-	ss << "'" << msg << "'";
-	return ss.str();
-}
-
-void _ensure_varcode_equals(const wibble::tests::Location& loc, dballe::Varcode actual, dballe::Varcode expected)
-{
-	if( expected != actual )
-	{
-		char buf[40];
-		snprintf(buf, 40, "expected %01d%02d%03d actual %01d%02d%03d",
-				DBA_VAR_F(expected), DBA_VAR_X(expected), DBA_VAR_Y(expected),
-				DBA_VAR_F(actual), DBA_VAR_X(actual), DBA_VAR_Y(actual));
-		throw tut::failure(loc.msg(buf));
-	}
-}
-
-void _ensure_var_undef(const wibble::tests::Location& loc, const Var& var)
-{
-	inner_ensure_equals(var.value(), (const char*)0);
-}
-void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, int val)
-{
-	inner_ensure_equals(var.enqi(), val);
-}
-void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, double val)
-{
-	inner_ensure_equals(var.enqd(), val);
-}
-void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, const string& val)
-{
-	inner_ensure_equals(string(var.enqc()), val);
-}
 
 /*
 static void _ensureRecordHas(const char* file, int line, dba_record rec, const char* key, int val)

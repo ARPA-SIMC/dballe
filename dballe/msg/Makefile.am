@@ -34,17 +34,17 @@ libdballe_msg_la_SOURCES = \
 		vars.cc \
 		context.cc \
 		msg.cc \
-		msgs.cc
-##		codec-opts.cc \
-##		aof_codec.cc \
-##		aof_importers/common.cc \
-##		aof_importers/synop.cc \
+		msgs.cc \
+		codec.cc \
+		aof_codec.cc \
+		aof_importers/common.cc \
+		aof_importers/synop.cc
 ##		aof_importers/dribu.cc \
 ##		aof_importers/flight.cc \
 ##		aof_importers/temp.cc \
-##		aof_importers/pilot.cc \
-##		codec.cc
+##		aof_importers/pilot.cc
 
+##		codec-opts.cc
 ##		filter.c  (todo)
 
 #if DO_DBALLE_BUFREX

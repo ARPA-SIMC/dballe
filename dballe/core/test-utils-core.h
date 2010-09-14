@@ -36,50 +36,6 @@
 namespace dballe {
 namespace tests {
 
-// Set and unset an extra string marker to be printed in error messages
-void test_tag(const std::string& tag);
-void test_untag();
-
-#define ensure_varcode_equals(x, y) dballe::tests::_ensure_varcode_equals(wibble::tests::Location(__FILE__, __LINE__, #x " == " #y), (x), (y))
-#define inner_ensure_varcode_equals(x, y) dballe::tests::_ensure_varcode_equals(wibble::tests::Location(loc, __FILE__, __LINE__, #x " == " #y), (x), (y))
-void _ensure_varcode_equals(const wibble::tests::Location& loc, dballe::Varcode actual, dballe::Varcode expected);
-
-#define ensure_var_equals(x, y) dballe::tests::_ensure_var_equals(wibble::tests::Location(__FILE__, __LINE__, #x " == " #y), (x), (y))
-#define inner_ensure_var_equals(x, y) dballe::tests::_ensure_var_equals(wibble::tests::Location(loc, __FILE__, __LINE__, #x " == " #y), (x), (y))
-void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, int val);
-void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, double val);
-void _ensure_var_equals(const wibble::tests::Location& loc, const Var& var, const std::string& val);
-
-#define ensure_var_undef(x) dballe::tests::_ensure_var_undef(wibble::tests::Location(__FILE__, __LINE__, #x " is undef"), (x))
-#define inner_ensure_var_undef(x) dballe::tests::_ensure_var_undef(wibble::tests::Location(loc, __FILE__, __LINE__, #x " is undef"), (x))
-void _ensure_var_undef(const wibble::tests::Location& loc, const Var& var);
-
-#define ensure_contains(x, y) dballe::tests::impl_ensure_contains(wibble::tests::Location(__FILE__, __LINE__, #x " == " #y), (x), (y))
-#define inner_ensure_contains(x, y) dballe::tests::impl_ensure_contains(wibble::tests::Location(loc, __FILE__, __LINE__, #x " == " #y), (x), (y))
-
-static inline void impl_ensure_contains(const wibble::tests::Location& loc, const std::string& haystack, const std::string& needle)
-{
-	if( haystack.find(needle) == std::string::npos )
-	{
-		std::stringstream ss;
-		ss << "'" << haystack << "' does not contain '" << needle << "'";
-		throw tut::failure(loc.msg(ss.str()));
-	}
-}
-
-#define ensure_not_contains(x, y) arki::tests::impl_ensure_not_contains(wibble::tests::Location(__FILE__, __LINE__, #x " == " #y), (x), (y))
-#define inner_ensure_not_contains(x, y) arki::tests::impl_ensure_not_contains(wibble::tests::Location(loc, __FILE__, __LINE__, #x " == " #y), (x), (y))
-
-static inline void impl_ensure_not_contains(const wibble::tests::Location& loc, const std::string& haystack, const std::string& needle)
-{
-	if( haystack.find(needle) != std::string::npos )
-	{
-		std::stringstream ss;
-		ss << "'" << haystack << "' must not contain '" << needle << "'";
-		throw tut::failure(loc.msg(ss.str()));
-	}
-}
-
 /*
 static void _ensureRecordHas(const char* file, int line, dba_record rec, const char* key, int val)
 {
@@ -328,25 +284,6 @@ std::auto_ptr<File> _open_test_data(const wibble::tests::Location& loc, const ch
 std::auto_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* filename, Encoding type);
 #define read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
-
-/* Test environment */
-class LocalEnv
-{
-	std::string key;
-	std::string oldVal;
-public:
-	LocalEnv(const std::string& key, const std::string& val)
-		: key(key)
-	{
-		const char* v = getenv(key.c_str());
-		oldVal = v == NULL ? "" : v;
-		setenv(key.c_str(), val.c_str(), 1);
-	}
-	~LocalEnv()
-	{
-		setenv(key.c_str(), oldVal.c_str(), 1);
-	}
-};
 
 /**
  * Setup the dba_file system so that reading from any file type results in a

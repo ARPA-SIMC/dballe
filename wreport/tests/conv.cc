@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,48 +17,32 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "rawmsg.h"
+#include <test-utils-wreport.h>
+#include <wreport/conv.h>
 
-#include <stdlib.h> /* malloc */
-#include <string.h> /* memcpy */
+using namespace wreport;
 
-namespace dballe {
+namespace tut {
 
-const char* encoding_name(Encoding enc)
+struct conv_shar
 {
-	switch (enc)
+	conv_shar()
 	{
-		case BUFR: return "BUFR";
-		case CREX: return "CREX";
-		case AOF: return "AOF";
-		default: return "(unknown)";
 	}
-}
 
-Rawmsg::Rawmsg()
-	: file(0), offset(0), index(0), encoding(BUFR)
+	~conv_shar()
+	{
+	}
+};
+TESTGRP(conv);
+
+
+template<> template<>
+void to::test<1>()
 {
+	ensure_similar(convert_units("C", "K", 0.7), 273.85, 0.0001);
 }
-
-Rawmsg::~Rawmsg()
-{
-}
-
-std::string Rawmsg::filename() const throw ()
-{
-	if (!file) return "(memory)";
-	return file->name();
-}
-
-void Rawmsg::clear() throw ()
-{
-	file = 0;
-	offset = 0;
-	index = 0;
-	encoding = BUFR;
-	std::string::clear();
-}
-
+	
 }
 
 /* vim:set ts=4 sw=4: */

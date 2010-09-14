@@ -221,9 +221,9 @@ AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
 
 AC_CONFIG_FILES([
 Makefile
+wreport/Makefile
 dballe/Makefile
 dballe/core/Makefile
-dballe/bufrex/Makefile
 dballe/msg/Makefile
 dballe/db/Makefile
 dballe/bench/Makefile

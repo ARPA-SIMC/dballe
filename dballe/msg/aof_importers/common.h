@@ -22,15 +22,13 @@
 #ifndef DBA_AOF_IMPORTERS_COMMON_H
 #define DBA_AOF_IMPORTERS_COMMON_H
 
-/* For round() */
-#define _ISOC99_SOURCE
-
 /*
  * Common functions for all AOF decoders.
  */
 
 #include <dballe/core/conv.h>
 #include <dballe/msg/msg.h>
+#include <dballe/msg/aof_codec.h>
 
 #include <stdio.h>
 #include <stdint.h>		/* uint32_t */
@@ -50,6 +48,8 @@
 
 #define OBS(n) (obs[n-1])
 
+namespace dballe {
+namespace msg {
 
 /* Parse a 2 bit confidence interval into a percent confidence interval */
 static inline int get_conf2(uint32_t conf)
@@ -73,6 +73,7 @@ static inline int get_conf6(uint32_t conf)
 /* Convert Kelvin from AOF to Kelvins */
 static inline double totemp(double k) { return k / 10.0; }
 
+#if 0
 /* Dump a word */
 void dba_aof_dump_word(const char* prefix, uint32_t x);
 
@@ -127,6 +128,10 @@ static inline int count_bits(uint32_t v)
 
 	return c;
 }
+#endif
+
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
 #endif

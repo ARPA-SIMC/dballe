@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,10 @@
 
 #include "common.h"
 
-dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
+namespace dballe {
+namespace msg {
+
+void AOFImporter::read_synop(const uint32_t* obs, int obs_len, Msg& msg)
 {
 	int prcode;
 	int i;
@@ -29,7 +32,7 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 	/* 07 Code type */
 	if (OBS(7) < 20)
 	{
-		msg->type = MSG_SYNOP;
+		msg.type = MSG_SYNOP;
 
 		/* 13,14 station ID */
 		DBA_RUN_OR_RETURN(dba_aof_parse_st_block_station(msg, obs));
@@ -141,9 +144,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
 		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 1, -1, 256, 0, 259, 1, 254, 0, 0));
 
-		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n1(msg, n, get_conf2((conf >> 4) & 0x3)));
-		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c1(msg, c, get_conf2((conf >> 2) & 0x3)));
-		if (h != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_h1(msg, h, get_conf2(conf & 0x3)));
+		if (n != AOF_UNDEF) msg.set_cloud_n1(n, get_conf2((conf >> 4) & 0x3));
+		if (c != AOF_UNDEF) msg.set_cloud_c1(c, get_conf2((conf >> 2) & 0x3));
+		if (h != AOF_UNDEF) msg.set_cloud_h1(h, get_conf2(conf & 0x3));
 		++i;
 	}
 	if (OBS(32) & 0x2)	/* 2nd cloud group */
@@ -153,9 +156,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
 		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 2, -1, 256, 0, 259, 2, 254, 0, 0));
 
-		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n2(msg, n, get_conf2(conf & 0x3)));
-		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c2(msg, c, get_conf2((conf >> 2) & 0x3)));
-		if (h != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_h2(msg, h, get_conf2((conf >> 4) & 0x3)));
+		if (n != AOF_UNDEF) msg.set_cloud_n2(n, get_conf2(conf & 0x3));
+		if (c != AOF_UNDEF) msg.set_cloud_c2(c, get_conf2((conf >> 2) & 0x3));
+		if (h != AOF_UNDEF) msg.set_cloud_h2(h, get_conf2((conf >> 4) & 0x3));
 		++i;
 	}
 	if (OBS(32) & 0x4)  /* 3rd cloud group */
@@ -165,9 +168,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
 		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 3, -1, 256, 0, 259, 3, 254, 0, 0));
 
-		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n3(msg, n, get_conf2(conf & 0x3)));
-		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c3(msg, c, get_conf2((conf >> 2) & 0x3)));
-		if (h != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_h3(msg, h, get_conf2((conf >> 4) & 0x3)));
+		if (n != AOF_UNDEF) msg.set_cloud_n3(n, get_conf2(conf & 0x3));
+		if (c != AOF_UNDEF) msg.set_cloud_c3(c, get_conf2((conf >> 2) & 0x3));
+		if (h != AOF_UNDEF) msg.set_cloud_h3(h, get_conf2((conf >> 4) & 0x3));
 		++i;
 	}
 	if (OBS(32) & 0x8)  /* 4th cloud group */
@@ -177,9 +180,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		DBA_RUN_OR_RETURN(dba_aof_parse_cloud_group(OBS(i), &n, &c, &h));
 		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 2), 4, -1, 256, 0, 259, 4, 254, 0, 0));
 
-		if (n != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_n4(msg, n, get_conf2(conf & 0x3)));
-		if (c != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_c4(msg, c, get_conf2((conf >> 2) & 0x3)));
-		if (h != AOF_UNDEF) DBA_RUN_OR_RETURN(dba_msg_set_cloud_h4(msg, h, get_conf2((conf >> 4) & 0x3)));
+		if (n != AOF_UNDEF) msg.set_cloud_n4(n, get_conf2(conf & 0x3));
+		if (c != AOF_UNDEF) msg.set_cloud_c4(c, get_conf2((conf >> 2) & 0x3));
+		if (h != AOF_UNDEF) msg.set_cloud_h4(h, get_conf2((conf >> 4) & 0x3));
 		++i;
 	}
 	if (OBS(32) & 0x10) /* Ground group */
@@ -216,9 +219,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 		/* dump_word("Ship group: ", OBS(i)); fprintf(stderr, "\n"); */
 
 		if (dir != 0x3ff)
-			DBA_RUN_OR_RETURN(dba_msg_set_st_dir(msg, dir, get_conf2((conf >> 2) & 0x3)));
+			msg.set_st_dir(dir, get_conf2((conf >> 2) & 0x3));
 		if (speed != 0xff)
-			DBA_RUN_OR_RETURN(dba_msg_set_st_speed(msg, speed, get_conf2(conf & 0x3)));
+			msg.set_st_speed(speed, get_conf2(conf & 0x3));
 
 		i++;
 	}
@@ -244,8 +247,9 @@ dba_err aof_read_synop(const uint32_t* obs, int obs_len, dba_msg msg)
 	//DBA_RUN_OR_RETURN(dba_var_copy_val(synop->var_ident, vars[8]));
 	DBA_RUN_OR_RETURN(dba_var_copy_val(synop->var_press, vars[9]));
 #endif
-
-	return dba_error_ok();
 }
+
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

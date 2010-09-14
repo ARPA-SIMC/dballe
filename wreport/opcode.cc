@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,46 +17,28 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "rawmsg.h"
+#include "config.h"
 
-#include <stdlib.h> /* malloc */
-#include <string.h> /* memcpy */
+#include "opcode.h"
 
-namespace dballe {
+#include <stdlib.h>	/* malloc */
+#include <string.h>	/* memcpy */
+#include <assert.h>
+#include <stdio.h>
 
-const char* encoding_name(Encoding enc)
+using namespace std;
+
+namespace wreport {
+
+void Opcodes::print(void* outstream) const
 {
-	switch (enc)
-	{
-		case BUFR: return "BUFR";
-		case CREX: return "CREX";
-		case AOF: return "AOF";
-		default: return "(unknown)";
-	}
-}
+	FILE* out = (FILE*)outstream;
 
-Rawmsg::Rawmsg()
-	: file(0), offset(0), index(0), encoding(BUFR)
-{
-}
-
-Rawmsg::~Rawmsg()
-{
-}
-
-std::string Rawmsg::filename() const throw ()
-{
-	if (!file) return "(memory)";
-	return file->name();
-}
-
-void Rawmsg::clear() throw ()
-{
-	file = 0;
-	offset = 0;
-	index = 0;
-	encoding = BUFR;
-	std::string::clear();
+	if (begin == end)
+		fprintf(out, "(empty)");
+	else
+		for (unsigned i = begin; i < end; ++i)
+			fprintf(out, "%d%02d%03d ", WR_VAR_F(vals[i]), WR_VAR_X(vals[i]), WR_VAR_Y(vals[i]));
 }
 
 }
