@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,16 +18,17 @@
  */
 
 #include <test-utils-msg.h>
-#include <dballe/core/test-utils-lua.h>
+#include <test-utils-lua.h>
 #include <dballe/msg/msg.h>
 
+using namespace dballe;
+using namespace wreport;
+using namespace std;
+
 namespace tut {
-using namespace tut_dballe;
 
 struct lua_shar
 {
-	TestMsgEnv testenv;
-
 	lua_shar()
 	{
 	}
@@ -46,11 +45,11 @@ template<> template<>
 void to::test<1>()
 {
 	// Get a test message
-	dba_msgs msgs = read_test_msg("bufr/obs0-1.22.bufr", BUFR);
-	gen_ensure_equals(msgs->len, 1u);
-	dba_msg msg = msgs->msgs[0];
+	auto_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+	ensure_equals(msgs->size(), 1u);
+	Msg& msg = *(*msgs)[0];
 
-	Lua test(
+    dballe::tests::Lua test(
 		"function test() \n"
 		"  if msg:type() ~= 'synop' then return 'type is '..msg:type()..' instead of synop' end \n"
 		"  if msg:size() ~= 17 then return 'size is '..msg:size()..' instead of 17' end \n"
@@ -88,16 +87,16 @@ void to::test<1>()
 	);
 
 	// Push the variable as a global
-	dba_msg_lua_push(msg, test.L);
+	msg.lua_push(test.L);
 	lua_setglobal(test.L, "msg");
 
 	// Check that we can retrieve it
 	lua_getglobal(test.L, "msg");
-	dba_msg msg1 = dba_msg_lua_check(test.L, 1);
+	Msg* msg1 = Msg::lua_check(test.L, 1);
 	lua_pop(test.L, 1);
-	gen_ensure(msg == msg1);
+	ensure(&msg == msg1);
 	
-	gen_ensure_equals(test.run(), "");
+	ensure_equals(test.run(), "");
 }	
 
 }

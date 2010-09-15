@@ -71,6 +71,8 @@
 #include <vector>
 #include <memory>
 
+struct lua_State;
+
 namespace dballe {
 
 struct Record;
@@ -364,6 +366,19 @@ public:
     static const char* repmemo_from_type(MsgType type);
 
 #include <dballe/msg/msg-extravars.h>
+
+
+    /**
+     * Push the variable as an object in the lua stack
+     */
+    void lua_push(struct lua_State* L);
+
+    /**
+     * Check that the element at \a idx is a dba_msg
+     *
+     * @return the dba_msg element, or NULL if the check failed
+     */
+    static Msg* lua_check(struct lua_State* L, int idx);
 };
 
 
@@ -442,25 +457,6 @@ dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst);
  * significance, to simplify encoding.
  */
 dba_err dba_msg_sounding_unpack_levels(dba_msg msg, dba_msg* dst);
-
-
-struct lua_State;
-
-/**
- * Push the variable as an object in the lua stack
- */
-dba_err dba_msg_lua_push(dba_msg var, struct lua_State* L);
-
-/**
- * Check that the element at \a idx is a dba_msg
- *
- * @return the dba_msg element, or NULL if the check failed
- */
-dba_msg dba_msg_lua_check(struct lua_State* L, int idx);
-
-
-#include <dballe/msg/vars.h>
-
 #endif
 
 }

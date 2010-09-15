@@ -36,6 +36,7 @@ libdballe_msg_la_SOURCES = \
 		context.cc \
 		msg.cc \
 		msgs.cc \
+		msg-lua.cc \
 		codec.cc \
 		aof_codec.cc \
 		aof_importers/common.cc \
@@ -70,9 +71,6 @@ libdballe_msg_la_SOURCES = \
 #		bufrex_exporters/flight.c \
 #		bufrex_exporters/pollution.c
 #endif
-#if LUA
-#libdballe_msg_la_SOURCES += msg-lua.c
-#endif
 libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
 
 vars.h vars.gperf msg-extravars.h: vars.csv mkvars
@@ -91,7 +89,7 @@ TESTS = $(check_PROGRAMS)
 
 CXXFLAGS += -O0
 
-noinst_HEADERS = test-utils-msg.h
+noinst_HEADERS = test-utils-msg.h test-utils-lua.h
 
 tut_test_SOURCES = \
 	../core/test-utils-core.cc \
@@ -110,10 +108,10 @@ tut_test_LDADD = \
 #	tests/bufrex_codec.cc \
 #	tests/bufrex_codec_generic.cc
 
-#if LUA
-#tut_test_SOURCES += tests/lua.cc \
-#	../core/test-utils-lua.cc
-#endif
+if LUA
+tut_test_SOURCES += tests/lua.cc \
+	test-utils-lua.cc
+endif
 
 
 #
