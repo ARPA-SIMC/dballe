@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +18,14 @@
  */
 
 #include "common.h"
+#include <wreport/conv.h>
 
-dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
+using namespace wreport;
+
+namespace dballe {
+namespace msg {
+
+void AOFImporter::read_temp(const uint32_t* obs, int obs_len, Msg& msg)
 {
 	int nlev = (obs_len - 20) / 8;
 	int i;
@@ -32,17 +36,17 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 	switch (OBS(7))
 	{
 		case 35:
-			msg->type = MSG_TEMP;
-			DBA_RUN_OR_RETURN(dba_aof_parse_st_block_station(msg, obs));
-			DBA_RUN_OR_RETURN(dba_aof_parse_altitude(msg, obs));
+			msg.type = MSG_TEMP;
+			parse_st_block_station(obs, msg);
+			parse_altitude(obs, msg);
 			break;
 		case 36:
-			msg->type = MSG_TEMP_SHIP;
-			DBA_RUN_OR_RETURN(dba_aof_parse_st_ident(msg, obs));
+			msg.type = MSG_TEMP_SHIP;
+			parse_st_ident(obs, msg);
 			break;
 		default:
-			msg->type = MSG_GENERIC;
-			DBA_RUN_OR_RETURN(dba_aof_parse_st_ident(msg, obs));
+			msg.type = MSG_GENERIC;
+			parse_st_ident(obs, msg);
 			break;
 	}
 
@@ -54,7 +58,7 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 	/* 09 Longitude */
 	/* 10 Observation date */
 	/* 12 Exact time of observation */
-	DBA_RUN_OR_RETURN(dba_aof_parse_lat_lon_datetime(msg, obs));
+	parse_lat_lon_datetime(obs, msg);
 
 	for (i = 0; i < nlev; i++)
 	{
@@ -64,36 +68,36 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 		int vss = (OBS(os + 6) >> 12) & 0x1ff;
 
 		if (OBS(os + 0) == AOF_UNDEF)
-			return dba_error_consistency("pressure indication not found for level %d", i);
+			error_consistency::throwf("pressure indication not found for level %d", i);
 		else
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 4),
+			msg.setd(WR_VAR(0, 10, 4),
 						OBS(os + 0) * 10, get_conf6(OBS(os + 6) & 0x3f),
-						100, press, 0, 0, 254, 0, 0));
+						Level(100, press), Trange::instant());
 					
 		// Vertical sounding significance
-		DBA_RUN_OR_RETURN(dba_convert_AOFVSS_to_BUFR08001(vss, &vss));
-		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 1), vss, -1, 100, press, 0, 0, 254, 0, 0));
+		vss = convert_AOFVSS_to_BUFR08001(vss);
+		msg.seti(WR_VAR(0, 8, 1), vss, -1, Level(100, press), Trange::instant());
 
 		// Wind direction
 		if (OBS(os + 1) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 1),
+			msg.setd(WR_VAR(0, 11, 1),
 						OBS(os + 1), get_conf6((OBS(os + 6) >> 6) & 0x3f),
-						100, press, 0, 0, 254, 0, 0));
+						Level(100, press), Trange::instant());
 		// Wind speed
 		if (OBS(os + 2) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 2),
+			msg.setd(WR_VAR(0, 11, 2),
 						OBS(os + 2), get_conf6(OBS(os + 7) & 0x3f),
-						100, press, 0, 0, 254, 0, 0));
+						Level(100, press), Trange::instant());
 		// Air temperature
 		if (OBS(os + 3) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 101),
+			msg.setd(WR_VAR(0, 12, 101),
 						totemp(OBS(os + 3)), get_conf6((OBS(os + 7) >> 6) & 0x3f),
-						100, press, 0, 0, 254, 0, 0));
+                        Level(100, press), Trange::instant());
 		// Dew point temperature
 		if (OBS(os + 4) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 103),
+			msg.setd(WR_VAR(0, 12, 103),
 						totemp(OBS(os + 4)), get_conf6((OBS(os + 7) >> 12) & 0x3f),
-						100, press, 0, 0, 254, 0, 0));
+                        Level(100, press), Trange::instant());
 		// Height + 1000
 		if (OBS(os + 5) != AOF_UNDEF)
 		{
@@ -105,11 +109,11 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 #endif
 			// Rounding the converted height->geopotential to preserve the
 			// correct amount of significant digits
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 8),
+			msg.setd(WR_VAR(0, 10, 8),
 						round(((double)OBS(os + 5) - 1000)*9.80665/10)*10, get_conf6((OBS(os + 7) >> 18) & 0x3f),
-						100, press, 0, 0, 254, 0, 0));
+                        Level(100, press), Trange::instant());
 #if 0
-			d = dba_msg_find(msg, DBA_VAR(0, 10, 3), 100, press, 0, 0, 0, 0);
+			d = dba_msg_find(msg, WR_VAR(0, 10, 3), 100, press, 0, 0, 0, 0);
 			if (d == NULL)
 				fprintf(stderr, "NO, QUESTO NO!\n");
 			DBA_RUN_OR_RETURN(dba_var_enqd(d->var, &dval));
@@ -117,8 +121,9 @@ dba_err aof_read_temp(const uint32_t* obs, int obs_len, dba_msg msg)
 #endif
 		}
 	}
-
-	return dba_error_ok();
 }
+
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

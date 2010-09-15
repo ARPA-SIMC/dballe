@@ -79,14 +79,6 @@ namespace msg {
 struct Context;
 }
 
-// Convenience macros to avoid long argument lists
-#define MSG_LEVANA 257, MISSING_INT, MISSING_INT, MISSING_INT
-#define MSG_LEV0(ltype) (ltype), MISSING_INT, MISSING_INT, MISSING_INT
-#define MSG_LEV1(ltype, l1) (ltype), (l1), MISSING_INT, MISSING_INT
-#define MSG_TRANA MISSING_INT, MISSING_INT, MISSING_INT
-#define MSG_TR0(pind) (pind), MISSING_INT, MISSING_INT
-#define MSG_TR1(pind, p1) (pind), (p1), MISSING_INT
-
 /**
  * Source of the data
  */
@@ -125,7 +117,7 @@ protected:
     /**
      * Return the index of the given context, or -1 if it was not found
      */
-    int find_index(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const;
+    int find_index(const Level& lev, const Trange& tr) const;
 
     /**
      * Add a missing context, taking care of its memory management
@@ -156,61 +148,67 @@ public:
     /**
      * Find a msg::Context given its description
      *
-     * @param ltype
-     *   Type of the level.  See @ref level_table.
-     * @param l1
-     *   L1 value of the level.  See @ref level_table.
-     * @param l2
-     *   L2 value of the level.  See @ref level_table.
-     * @param pind
-     *   Time range type indicator.  See @ref trange_table.
-     * @param p1
-     *   Time range P1 indicator.  See @ref trange_table.
-     * @param p2
-     *   Time range P2 indicator.  See @ref trange_table.
+     * @param lev
+     *   The Level to query
+     * @param tr
+     *   The Trange to query
      * @return
      *   The context found, or NULL if it was not found.
      */
-    const msg::Context* find_context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const;
+    const msg::Context* find_context(const Level& lev, const Trange& tr) const;
+
+    /**
+     * Find a msg::Context given its description
+     *
+     * @param lev
+     *   The Level to query
+     * @param tr
+     *   The Trange to query
+     * @return
+     *   The context found, or NULL if it was not found.
+     */
+    msg::Context* edit_context(const Level& lev, const Trange& tr);
 
     /**
      * Find a msg::Context given its description, creating it if it does not
      * exist
      *
-     * @param ltype
-     *   Type of the level.  See @ref level_table.
-     * @param l1
-     *   L1 value of the level.  See @ref level_table.
-     * @param l2
-     *   L2 value of the level.  See @ref level_table.
-     * @param pind
-     *   Time range type indicator.  See @ref trange_table.
-     * @param p1
-     *   Time range P1 indicator.  See @ref trange_table.
-     * @param p2
-     *   Time range P2 indicator.  See @ref trange_table.
+     * @param lev
+     *   The Level to query
+     * @param tr
+     *   The Trange to query
      * @return
      *   The context found
      */
-    msg::Context& obtain_context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    msg::Context& obtain_context(const Level& lev, const Trange& tr);
 
     /**
      * Find a variable given its description
      *
-     * @param msg
-     *   The dba_msg to query
      * @param code
      *   The ::dba_varcode of the variable to query. See @ref vartable.h
-     * @param ltype
-     *   Type of the level.  See @ref level_table.
-     * @param l1
-     *   L1 value of the level.  See @ref level_table.
-     * @param l2
-     *   L2 value of the level.  See @ref level_table.
+     * @param lev
+     *   The Level to query
+     * @param tr
+     *   The Trange to query
      * @return
      *   The variable found, or NULL if it was not found.
      */
-    const wreport::Var* find(wreport::Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const;
+    const wreport::Var* find(wreport::Varcode code, const Level& lev, const Trange& tr) const;
+
+    /**
+     * Find a variable given its description
+     *
+     * @param code
+     *   The ::dba_varcode of the variable to query. See @ref vartable.h
+     * @param lev
+     *   The Level to query
+     * @param tr
+     *   The Trange to query
+     * @return
+     *   The variable found, or NULL if it was not found.
+     */
+    wreport::Var* edit(wreport::Varcode code, const Level& lev, const Trange& tr);
 
     /** 
      * Find a datum given its shortcut ID
@@ -224,6 +222,18 @@ public:
      */
     const wreport::Var* find_by_id(int id) const;
 
+    /** 
+     * Find a datum given its shortcut ID
+     *
+     * @param msg
+     *   The message to query
+     * @param id
+     *   Shortcut ID of the value to set (see @ref vars.h)
+     * @return
+     *   The value found, or NULL if it was not found.
+     */
+    wreport::Var* edit_by_id(int id);
+
     /**
      * Add or replace a value
      *
@@ -232,22 +242,22 @@ public:
      * @param code
      *   The dba_varcode of the destination value.  If it is different than the
      *   varcode of var, a conversion will be attempted.
-     * @param ltype1
-     *   Type of the first level.  See @ref level_table.
-     * @param l1
-     *   L1 value of the level.  See @ref level_table.
-     * @param ltype2
-     *   Type of the second level.  See @ref level_table.
-     * @param l2
-     *   L2 value of the level.  See @ref level_table.
-     * @param pind
-     *   Time range type indicator.  See @ref trange_table.
-     * @param p1
-     *   Time range P1 indicator.  See @ref trange_table.
-     * @param p2
-     *   Time range P2 indicator.  See @ref trange_table.
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
      */
-    void set(const wreport::Var& var, wreport::Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void set(const wreport::Var& var, wreport::Varcode code, const Level& lev, const Trange& tr);
+
+    /**
+     * Add or replace a value
+     *
+     * @param var
+     *   The Var with the value to set
+     * @param shortcut
+     *   Shortcut ID of the value to set
+     */
+    void set_by_id(const wreport::Var& var, int shortcut);
 
     /**
      * Add or replace a value, taking ownership of the source variable without
@@ -256,20 +266,12 @@ public:
      * @param msg
      *   The Var with the value to set.  This Msg will take ownership of memory
      *   management.
-     * @param ltype
-     *   Type of the level.  See @ref level_table.
-     * @param l1
-     *   L1 value of the level.  See @ref level_table.
-     * @param l2
-     *   L2 value of the level.  See @ref level_table.
-     * @param pind
-     *   Time range type indicator.  See @ref trange_table.
-     * @param p1
-     *   Time range P1 indicator.  See @ref trange_table.
-     * @param p2
-     *   Time range P2 indicator.  See @ref trange_table.
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
      */
-    void set(std::auto_ptr<wreport::Var> var, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void set(std::auto_ptr<wreport::Var> var, const Level& lev, const Trange& tr);
 
     /**
      * Add or replace an integer value in the dba_msg
@@ -282,20 +284,12 @@ public:
      *   The confidence interval of the data, as the value of a B33007 WMO B (per
      *   cent confidence) table entry, that is, a number between 0 and 100
      *   inclusive.  -1 means no confidence interval attribute.
-     * @param ltype
-     *   Type of the level.  See @ref level_table.
-     * @param l1
-     *   L1 value of the level.  See @ref level_table.
-     * @param l2
-     *   L2 value of the level.  See @ref level_table.
-     * @param pind
-     *   Time range type indicator.  See @ref trange_table.
-     * @param p1
-     *   Time range P1 indicator.  See @ref trange_table.
-     * @param p2
-     *   Time range P2 indicator.  See @ref trange_table.
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
      */
-    void seti(wreport::Varcode code, int val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void seti(wreport::Varcode code, int val, int conf, const Level& lev, const Trange& tr);
 
     /**
      * Add or replace a double value in the dba_msg
@@ -308,20 +302,12 @@ public:
      *   The confidence interval of the data, as the value of a B33007 WMO B (per
      *   cent confidence) table entry, that is, a number between 0 and 100
      *   inclusive.  -1 means no confidence interval attribute.
-     * @param ltype
-     *   Type of the level.  See @ref level_table.
-     * @param l1
-     *   L1 value of the level.  See @ref level_table.
-     * @param l2
-     *   L2 value of the level.  See @ref level_table.
-     * @param pind
-     *   Time range type indicator.  See @ref trange_table.
-     * @param p1
-     *   Time range P1 indicator.  See @ref trange_table.
-     * @param p2
-     *   Time range P2 indicator.  See @ref trange_table.
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
      */
-    void setd(wreport::Varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void setd(wreport::Varcode code, double val, int conf, const Level& lev, const Trange& tr);
 
     /**
      * Add or replace a string value in the dba_msg
@@ -334,20 +320,12 @@ public:
      *   The confidence interval of the data, as the value of a B33007 WMO B (per
      *   cent confidence) table entry, that is, a number between 0 and 100
      *   inclusive.  -1 means no confidence interval attribute.
-     * @param ltype
-     *   Type of the level.  See @ref level_table.
-     * @param l1
-     *   L1 value of the level.  See @ref level_table.
-     * @param l2
-     *   L2 value of the level.  See @ref level_table.
-     * @param pind
-     *   Time range type indicator.  See @ref trange_table.
-     * @param p1
-     *   Time range P1 indicator.  See @ref trange_table.
-     * @param p2
-     *   Time range P2 indicator.  See @ref trange_table.
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
      */
-    void setc(wreport::Varcode code, const char* val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+    void setc(wreport::Varcode code, const char* val, int conf, const Level& lev, const Trange& tr);
 
     /**
      * Copy to dest all the variable in this message that match \a filter

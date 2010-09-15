@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(LUA_CFLAGS)
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
 
 #
 # Shared library
@@ -29,6 +29,7 @@ messageinclude_HEADERS = \
 
 noinst_LTLIBRARIES = libdballe-msg.la
 libdballe_msg_la_SOURCES = \
+		defs.cc \
 		repinfo.cc \
 		formatter.cc \
 		vars.cc \
@@ -38,11 +39,11 @@ libdballe_msg_la_SOURCES = \
 		codec.cc \
 		aof_codec.cc \
 		aof_importers/common.cc \
-		aof_importers/synop.cc
-##		aof_importers/dribu.cc \
-##		aof_importers/flight.cc \
-##		aof_importers/temp.cc \
-##		aof_importers/pilot.cc
+		aof_importers/synop.cc \
+		aof_importers/dribu.cc \
+		aof_importers/flight.cc \
+		aof_importers/temp.cc \
+		aof_importers/pilot.cc
 
 ##		codec-opts.cc
 ##		filter.c  (todo)
@@ -72,7 +73,7 @@ libdballe_msg_la_SOURCES = \
 #if LUA
 #libdballe_msg_la_SOURCES += msg-lua.c
 #endif
-libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(LUA_LIBS)
+libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
 
 vars.h vars.gperf msg-extravars.h: vars.csv mkvars
 	$(srcdir)/mkvars < $<
@@ -94,20 +95,18 @@ noinst_HEADERS = test-utils-msg.h
 
 tut_test_SOURCES = \
 	../core/test-utils-core.cc \
-	../bufrex/test-utils-bufrex.cc \
 	test-utils-msg.cc \
 	tests/formatter.cc \
 	tests/vars.cc \
 	tests/context.cc \
 	tests/msg.cc \
+	tests/aof_codec.cc \
 	../core/tests/tut-main.cpp
 tut_test_LDADD = \
 	libdballe-msg.la \
-	../bufrex/libdballe-bufrex.la \
 	../core/libdballe-core.la \
-	$(LUA_LIBS) $(WIBBLE_LIBS)
+	$(WREPORT_LIBS) $(LUA_LIBS) $(WIBBLE_LIBS)
 
-#	tests/aof_codec.cc \
 #	tests/bufrex_codec.cc \
 #	tests/bufrex_codec_generic.cc
 

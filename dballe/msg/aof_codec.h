@@ -55,8 +55,34 @@ namespace msg {
 
 class AOFImporter : public Importer
 {
+protected:
+    // Message-specific code
+    static void read_synop(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_flight(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_satob(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_dribu(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_temp(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_pilot(const uint32_t* obs, int obs_len, Msg& msg);
+    static void read_satem(const uint32_t* obs, int obs_len, Msg& msg);
+
+    /// Parse WMO block and station numbers in the Observation Header
+    static void parse_st_block_station(const uint32_t* obs, Msg& msg);
+    /// Parse station altitude the Observation Header
+    static void parse_altitude(const uint32_t* obs, Msg& msg);
+    /// Parse string ident in the Observation Header
+    static void parse_st_ident(const uint32_t* obs, Msg& msg);
+    /// Parse latitude, longitude, date and time in the Observation Header
+    static void parse_lat_lon_datetime(const uint32_t* obs, Msg& msg);
+    /// Parse 27 Weather group in Synop observations
+    static void parse_weather_group(const uint32_t* obs, Msg& msg);
+    /// Parse 28 General cloud group in Synop observations
+    static void parse_general_cloud_group(const uint32_t* obs, Msg& msg);
+    /// Parse a bit-packed cloud group in Synop observations
+    static void parse_cloud_group(uint32_t val, int* ns, int* c, int* h);
+
+
 public:
-	AOFImporter(const import::Options& opts);
+	AOFImporter(const import::Options& opts=import::Options());
     virtual ~AOFImporter();
 
 	/**
@@ -74,7 +100,7 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-	virtual void import(const bufrex::Msg& msg, Msgs& msgs) const;
+	virtual void import(const wreport::Bulletin& msg, Msgs& msgs) const;
 
     /**
      * Get category and subcategory of an AOF message
@@ -97,113 +123,7 @@ public:
      *   The stream to use to print the message
      */
     static void dump(const Rawmsg& msg, FILE* out);
-
-    // Message-specific code
-    static void read_synop(const uint32_t* obs, int obs_len, Msg& msg);
-    static void read_flight(const uint32_t* obs, int obs_len, Msg& msg);
-    static void read_satob(const uint32_t* obs, int obs_len, Msg& msg);
-    static void read_dribu(const uint32_t* obs, int obs_len, Msg& msg);
-    static void read_temp(const uint32_t* obs, int obs_len, Msg& msg);
-    static void read_pilot(const uint32_t* obs, int obs_len, Msg& msg);
-    static void read_satem(const uint32_t* obs, int obs_len, Msg& msg);
-
-    static void parse_st_block_station(const uint32_t* obs, Msg& msg);
 };
-
-#if 0
-/**
- * Encode an AOF message
- *
- * @param msg
- *   The aof_message with the data to encode
- * @param in
- *   The message to encode
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-/*
-dba_err aof_message_encode(aof_message msg, dba_msg in);
-*/
-
-/**
- * Read a fortran "unformatted sequential" record with an array of 32-bit words.
- *
- * @param file
- *   The file to read from.
- * @retval rec
- *   The contents of the "unformatted sequential" record read.  It will need to
- *   be deallocated by the caller.
- * @retval len
- *   The length of the returned rec record.
- * @return
- *   The error indicator for the function. See @ref dba_err.
- */
-dba_err aof_codec_read_record(dba_file file, uint32_t** rec, int* len);
-
-/**
- * Write a fortran "unformatted sequential" record contained in an array of
- * 32-bit words.
- *
- * @param file
- *   The file to write to.
- * @param rec
- *   The data to write.
- * @param len
- *   The number of elements in the rec array.
- * @return
- *   The error indicator for the function. See @ref dba_err.
- */
-dba_err aof_codec_write_record(dba_file file, const uint32_t* rec, int len);
-
-/**
- * Read the header of an aof file.
- *
- * @param file
- *   The file to read from.
- * @retval fdr
- *   The contents of the First Data Record.  It will need to be deallocated by
- *   the caller.
- * @retval fdr_len
- *   The length of the fdr array.
- * @retval ddr
- *   The contents of the Data Description Record.  It will need to be
- *   deallocated by the caller.
- * @retval ddr_len
- *   The length of the ddr array.
- * @return
- *   The error indicator for the function. See @ref dba_err.
- */
-dba_err aof_codec_read_header(dba_file file, uint32_t** fdr, int* fdr_len, uint32_t** ddr, int* ddr_len);
-
-/**
- * Writes a dummy header to the AOF file.
- *
- * This function is used to write a file header before having any information
- * on the data that will be written afterwards.  The dummy header can be
- * completed later using aof_codec_fix_header().
- *
- * @param file
- *   The file to write the header to.
- * @return
- *   The error indicator for the function. See @ref dba_err.
- */
-dba_err aof_codec_write_dummy_header(dba_file file);
-
-/**
- * Fix the header of an AOF file.
- *
- * Currently it just recomputes the start and end of the observation period by
- * looking at the observation headers for all the observations found in the
- * file.
- *
- * @param file
- *   The file to operate on.  It must be open in read-write mode and be a
- *   seekable file.
- * @return
- *   The error indicator for the function. See @ref dba_err.
- */
-dba_err aof_codec_fix_header(dba_file file);
-#endif	
 
 }
 }

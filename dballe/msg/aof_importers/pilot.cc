@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,8 +18,14 @@
  */
 
 #include "common.h"
+#include <wreport/conv.h>
 
-dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
+using namespace wreport;
+
+namespace dballe {
+namespace msg {
+
+void AOFImporter::read_pilot(const uint32_t* obs, int obs_len, Msg& msg)
 {
 	int nlev = (obs_len - 20) / 7;
 	int i;
@@ -32,17 +36,17 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
 	switch (OBS(7))
 	{
 		case 32:
-			msg->type = MSG_PILOT;
-			DBA_RUN_OR_RETURN(dba_aof_parse_st_block_station(msg, obs));
-			DBA_RUN_OR_RETURN(dba_aof_parse_altitude(msg, obs));
+			msg.type = MSG_PILOT;
+			parse_st_block_station(obs, msg);
+			parse_altitude(obs, msg);
 			break;
 		case 33:
-			msg->type = MSG_TEMP_SHIP;
-			DBA_RUN_OR_RETURN(dba_aof_parse_st_ident(msg, obs));
+			msg.type = MSG_TEMP_SHIP;
+			parse_st_ident(obs, msg);
 			break;
 		default:
-			msg->type = MSG_GENERIC;
-			DBA_RUN_OR_RETURN(dba_aof_parse_st_ident(msg, obs));
+			msg.type = MSG_GENERIC;
+			parse_st_ident(obs, msg);
 			break;
 	}
 
@@ -54,14 +58,14 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
 	/* 09 Longitude */
 	/* 10 Observation date */
 	/* 12 Exact time of observation */
-	DBA_RUN_OR_RETURN(dba_aof_parse_lat_lon_datetime(msg, obs));
+	parse_lat_lon_datetime(obs, msg);
 	
 	for (i = 0; i < nlev; i++)
 	{
 		int os = 20 + i*7;
 		int vss = (OBS(os + 5) >> 12) & 0x1ff;
 		int ltype = -1, l1 = -1;
-		DBA_RUN_OR_RETURN(dba_convert_AOFVSS_to_BUFR08001(vss, &vss));
+		vss = convert_AOFVSS_to_BUFR08001(vss);
 
 		/* Use the pressure if defined, else use the geopotential */
 		if (OBS(os + 0) != AOF_UNDEF)
@@ -69,9 +73,9 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
 			ltype = 100;
 			l1 = OBS(os + 0) * 10;
 			/* Pressure */
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 4),
+			msg.setd(WR_VAR(0, 10, 4),
 						((double)OBS(os + 0) * 10), get_conf6(OBS(os+5) & 0x3f),
-						ltype, l1, 0, 0, 254, 0, 0));
+						Level(ltype, l1), Trange::instant());
 		}
 		if (OBS(os + 4) != AOF_UNDEF) {
 			if (ltype == -1)
@@ -83,7 +87,7 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
 				 * doesn't work (BUFR will reload with pressure levels instead
 				 * of height levels */
 				DBA_RUN_OR_RETURN(dba_convert_icao_to_press(l1, &press));
-				DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 4),
+				DBA_RUN_OR_RETURN(dba_msg_setd(msg, WR_VAR(0, 10, 4),
 							press, get_conf6(OBS(os+5) & 0x3f),
 							ltype, l1, 0, 0, 0, 0));
 #endif
@@ -92,35 +96,36 @@ dba_err aof_read_pilot(const uint32_t* obs, int obs_len, dba_msg msg)
 			/* Geopotential */
 			// Rounding the converted height->geopotential to preserve the
 			// correct amount of significant digits
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 10, 8),
+			msg.setd(WR_VAR(0, 10, 8),
 						round(((double)OBS(os + 4) - 1000.0) * 9.80665 / 10) * 10, get_conf6((OBS(os+6) >> 12) & 0x3f),
-						ltype, l1, 0, 0, 254, 0, 0));
+						Level(ltype, l1), Trange::instant());
 		}
 
 		if (ltype == -1)
-			return dba_error_notfound("looking for pressure or height in an AOF PILOT message");
+			throw error_notfound("looking for pressure or height in an AOF PILOT message");
 
-		DBA_RUN_OR_RETURN(dba_msg_seti(msg, DBA_VAR(0, 8, 1), vss, -1, ltype, l1, 0, 0, 254, 0, 0));
+		msg.seti(WR_VAR(0, 8, 1), vss, -1, Level(ltype, l1), Trange::instant());
 		/* DBA_RUN_OR_RETURN(dba_var_setd(msg->obs[i].var_press, (double)OBS(os + 0) * 10)); */
 
 		/* Wind direction */
 		if (OBS(os + 1) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 1),
+			msg.setd(WR_VAR(0, 11, 1),
 						OBS(os + 1), get_conf6((OBS(os+5) >> 6) & 0x3f),
-						ltype, l1, 0, 0, 254, 0, 0));
+						Level(ltype, l1), Trange::instant());
 		/* Wind speed */
 		if (OBS(os + 2) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 11, 2),
+			msg.setd(WR_VAR(0, 11, 2),
 						OBS(os + 2), get_conf6(OBS(os+6) & 0x3f),
-						ltype, l1, 0, 0, 254, 0, 0));
+						Level(ltype, l1), Trange::instant());
 		/* Air temperature */
 		if (OBS(os + 3) != AOF_UNDEF)
-			DBA_RUN_OR_RETURN(dba_msg_setd(msg, DBA_VAR(0, 12, 101),
+			msg.setd(WR_VAR(0, 12, 101),
 						totemp(OBS(os + 3)), get_conf6((OBS(os+6) >> 6) & 0x3f),
-						ltype, l1, 0, 0, 254, 0, 0));
+						Level(ltype, l1), Trange::instant());
 	}
-
-	return dba_error_ok();
 }
+
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

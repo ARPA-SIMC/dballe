@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify

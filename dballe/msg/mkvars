@@ -144,16 +144,16 @@ for v in vars:
     print >>fh, "inline void set_%s(%s val, int conf) " % (v.name.lower(), types[v.type]),
     #print >>sys.stderr, v
     #print >>sys.stderr, "--", [ftypes[v.type], v.b.x, v.b.y] + v.letr;
-    print >>fh, "{ set%s(WR_VAR(0, %d, %d), val, conf, %s, %s, %s, %s, %s, %s, %s); }" % \
+    print >>fh, "{ set%s(WR_VAR(0, %d, %d), val, conf, Level(%s, %s, %s, %s), Trange(%s, %s, %s)); }" % \
         tuple([ftypes[v.type], v.b.x, v.b.y] + v.letr);
 
     print >>fh, "/** Set the value of \"%s\" from a ::dba_var */" % v.desc;
     print >>fh, "inline void set_%s_var(const wreport::Var& val) " % v.name.lower(),
-    print >>fh, "{ set(val, WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s); }" % \
+    print >>fh, "{ set(val, WR_VAR(0, %d, %d), Level(%s, %s, %s, %s), Trange(%s, %s, %s)); }" % \
             tuple([v.b.x, v.b.y] + v.letr)
 
     print >>fh, "/** Get the \"%s\" physical value stored in the message */" % v.desc;
-    print >>fh, "inline const wreport::Var* get_%s_var() " % v.name.lower();
+    print >>fh, "inline const wreport::Var* get_%s_var() const" % v.name.lower();
     print >>fh, "{ return find_by_id(DBA_MSG_%s); }" % \
         v.name;
 fh.close()

@@ -31,13 +31,13 @@ using namespace std;
 namespace dballe {
 namespace msg {
 
-Context::Context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
-	: ltype1(ltype1), l1(l1), ltype2(ltype2), l2(l2), pind(pind), p1(p1), p2(p2)
+Context::Context(const Level& lev, const Trange& tr)
+	: level(lev), trange(tr)
 {
 }
 
 Context::Context(const Context& c)
-	: ltype1(c.ltype1), l1(c.l1), ltype2(c.ltype2), l2(c.l2), pind(c.pind), p1(c.p1), p2(c.p2)
+	: level(c.level), trange(c.trange)
 {
 	// Reserve space for the new vars
 	data.reserve(c.data.size());
@@ -60,13 +60,8 @@ Context& Context::operator=(const Context& src)
     // Manage a = a
     if (this == &src) return *this;
 
-	ltype1 = src.ltype1;
-	l1 = src.l1;
-	ltype2 = src.ltype2;
-	l2 = src.l2;
-	pind = src.pind;
-	p1 = src.p1;
-	p2 = src.p2;
+    level = src.level;
+    trange = src.trange;
 
 	// Delete existing vars
 	for (vector<Var*>::iterator i = data.begin();
@@ -86,25 +81,15 @@ Context& Context::operator=(const Context& src)
 int Context::compare(const Context& ctx) const
 {
 	int res;
-	if ((res = ltype1 - ctx.ltype1)) return res;
-	if ((res = l1 - ctx.l1)) return res;
-	if ((res = ltype2 - ctx.ltype2)) return res;
-	if ((res = l2 - ctx.l2)) return res;
-	if ((res = pind - ctx.pind)) return res;
-	if ((res = p1 - ctx.p1)) return res;
-	return p2 - ctx.p2;
+	if (res = level.compare(ctx.level)) return res;
+    return trange.compare(ctx.trange);
 }
 
-int Context::compare(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const
+int Context::compare(const Level& lev, const Trange& tr) const
 {
 	int res;
-	if ((res = this->ltype1 - ltype1)) return res;
-	if ((res = this->l1 - l1)) return res;
-	if ((res = this->ltype2 - ltype2)) return res;
-	if ((res = this->l2 - l2)) return res;
-	if ((res = this->pind - pind)) return res;
-	if ((res = this->p1 - p1)) return res;
-	return this->p2 - p2;
+	if (res = level.compare(lev)) return res;
+    return trange.compare(tr);
 }
 
 void Context::set(const Var& var)
@@ -165,6 +150,12 @@ const Var* Context::find(Varcode code) const
 	return (idx == -1) ? NULL : data[idx];
 }
 
+Var* Context::edit(Varcode code)
+{
+	int idx = find_index(code);
+	return (idx == -1) ? NULL : data[idx];
+}
+
 const Var* Context::find_by_id(int id) const
 {
 	return find(shortcutTable[id].code);
@@ -172,7 +163,9 @@ const Var* Context::find_by_id(int id) const
 
 void Context::print(FILE* out) const
 {
-	fprintf(out, "Level %d,%d, %d,%d  tr %d,%d,%d ", ltype1, l1, ltype2, l2, pind, p1, p2);
+	fprintf(out, "Level %d,%d, %d,%d  tr %d,%d,%d ",
+            level.ltype1, level.l1, level.ltype2, level.l2,
+            trange.pind, trange.p1, trange.p2);
 
 	if (data.size() > 0)
 	{
@@ -193,13 +186,13 @@ static void var_summary(const Var& var, FILE* out)
 
 unsigned Context::diff(const Context& ctx, FILE* out) const
 {
-	if (ltype1 != ctx.ltype1 || l1 != ctx.l1
-	 || ltype2 != ctx.ltype2 || l2 != ctx.l2
-	 || pind != ctx.pind || p1 != ctx.p1 || p2 != ctx.p2)
+	if (level != ctx.level || trange != ctx.trange)
 	{
 		fprintf(out, "the contexts are different (first is %d,%d, %d,%d, %d,%d,%d second is %d,%d, %d,%d, %d,%d,%d)\n",
-				ltype1, l1, ltype2, l2, pind, p1, p2,
-				ctx.ltype1, ctx.l1, ctx.ltype2, ctx.l2, ctx.pind, ctx.p1, ctx.p2);
+				level.ltype1, level.l1, level.ltype2, level.l2,
+                trange.pind, trange.p1, trange.p2,
+				ctx.level.ltype1, ctx.level.l1, ctx.level.ltype2, ctx.level.l2,
+                ctx.trange.pind, ctx.trange.p1, ctx.trange.p2);
 		return 1;
 	}
 	
@@ -209,13 +202,17 @@ unsigned Context::diff(const Context& ctx, FILE* out) const
 	{
 		if (i1 == data.size())
 		{
-			fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", ctx.ltype1, ctx.l1, ctx.ltype2, ctx.l2, ctx.pind, ctx.p1, ctx.p2);
+			fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ",
+                    ctx.level.ltype1, ctx.level.l1, ctx.level.ltype2, ctx.level.l2,
+                    ctx.trange.pind, ctx.trange.p1, ctx.trange.p2);
             var_summary(*ctx.data[i2], out);
 			fprintf(out, " exists only in the second message\n");
 			++i2;
 			++diffs;
 		} else if (i2 == ctx.data.size()) {
-			fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", ltype1, l1, ltype2, l2, pind, p1, p2);
+			fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ",
+                    level.ltype1, level.l1, level.ltype2, level.l2,
+                    trange.pind, trange.p1, trange.p2);
             var_summary(*data[i1], out);
 			fprintf(out, " exists only in the first message\n");
 			++i1;
@@ -230,7 +227,9 @@ unsigned Context::diff(const Context& ctx, FILE* out) const
 			} else if (cmp < 0) {
 				if (data[i1]->value() != NULL)
 				{
-					fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", ltype1, l1, ltype2, l2, pind, p1, p2);
+					fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ",
+                            level.ltype1, level.l1, level.ltype2, level.l2,
+                            trange.pind, trange.p1, trange.p2);
                     var_summary(*data[i1], out);
 					fprintf(out, " exists only in the first message\n");
 					++diffs;
@@ -239,7 +238,9 @@ unsigned Context::diff(const Context& ctx, FILE* out) const
 			} else {
 				if (ctx.data[i2]->value() != NULL)
 				{
-					fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ", ctx.ltype1, ctx.l1, ctx.ltype2, ctx.l2, ctx.pind, ctx.p1, ctx.p2);
+					fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ",
+                            ctx.level.ltype1, ctx.level.l1, ctx.level.ltype2, ctx.level.l2,
+                            ctx.trange.pind, ctx.trange.p1, ctx.trange.p2);
                     var_summary(*ctx.data[i2], out);
 					fprintf(out, " exists only in the second message\n");
 					++diffs;
@@ -254,7 +255,7 @@ unsigned Context::diff(const Context& ctx, FILE* out) const
 const Var* Context::find_vsig() const
 {
 	// Check if we have the right context information
-	if ((ltype1 != 100 && ltype1 != 102) || pind != 254 || p1 != 0 || p2 != 0)
+	if ((level.ltype1 != 100 && level.ltype1 != 102) || trange != Trange(254))
 		return NULL;
 
 	// Look for VSS variable

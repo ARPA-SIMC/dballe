@@ -98,7 +98,7 @@ Msg& Msg::operator=(const Msg& m)
         data.push_back(new msg::Context(**i));
 }
 
-int Msg::find_index(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const
+int Msg::find_index(const Level& lev, const Trange& tr) const
 {
 	/* Binary search */
 	int low = 0, high = data.size() - 1;
@@ -106,7 +106,7 @@ int Msg::find_index(int ltype1, int l1, int ltype2, int l2, int pind, int p1, in
 	{
 		int middle = low + (high - low)/2;
 //fprintf(stderr, "DMFC lo %d hi %d mid %d\n", low, high, middle);
-		int cmp = -data[middle]->compare(ltype1, l1, ltype2, l2, pind, p1, p2);
+		int cmp = -data[middle]->compare(lev, tr);
 		if (cmp < 0)
 			high = middle - 1;
 		else if (cmp > 0)
@@ -117,20 +117,28 @@ int Msg::find_index(int ltype1, int l1, int ltype2, int l2, int pind, int p1, in
 	return -1;
 }
 
-const msg::Context* Msg::find_context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const
+const msg::Context* Msg::find_context(const Level& lev, const Trange& tr) const
 {
-    int pos = find_index(ltype1, l1, ltype2, l2, pind, p1, p2);
+    int pos = find_index(lev, tr);
     if (pos == -1)
         return NULL;
     return data[pos];
 }
 
-msg::Context& Msg::obtain_context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
+msg::Context* Msg::edit_context(const Level& lev, const Trange& tr)
 {
-    int pos = find_index(ltype1, l1, ltype2, l2, pind, p1, p2);
+    int pos = find_index(lev, tr);
+    if (pos == -1)
+        return NULL;
+    return data[pos];
+}
+
+msg::Context& Msg::obtain_context(const Level& lev, const Trange& tr)
+{
+    int pos = find_index(lev, tr);
     if (pos == -1)
     {
-        auto_ptr<msg::Context> c(new msg::Context(ltype1, l1, ltype2, l2, pind, p1, p2));
+        auto_ptr<msg::Context> c(new msg::Context(lev, tr));
         msg::Context* res = c.get();
         add_context(c);
         return *res;
@@ -154,17 +162,30 @@ void Msg::add_context(auto_ptr<msg::Context> ctx)
 	data[pos] = ctx.release();
 }
 
-const Var* Msg::find(Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const
+const Var* Msg::find(Varcode code, const Level& lev, const Trange& tr) const
 {
-	const msg::Context* ctx = find_context(ltype1, l1, ltype2, l2, pind, p1, p2);
+	const msg::Context* ctx = find_context(lev, tr);
 	if (ctx == NULL) return NULL;
 	return ctx->find(code);
+}
+
+wreport::Var* Msg::edit(wreport::Varcode code, const Level& lev, const Trange& tr)
+{
+	msg::Context* ctx = edit_context(lev, tr);
+	if (ctx == NULL) return NULL;
+	return ctx->edit(code);
 }
 
 const Var* Msg::find_by_id(int id) const
 {
 	const MsgVarShortcut& v = shortcutTable[id];
-	return find(v.code, v.ltype1, v.l1, v.ltype2, v.l2, v.pind, v.p1, v.p2);
+	return find(v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+}
+
+Var* Msg::edit_by_id(int id)
+{
+	const MsgVarShortcut& v = shortcutTable[id];
+	return edit(v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
 }
 
 void Msg::print(FILE* out) const
@@ -229,7 +250,9 @@ void Msg::print(FILE* out) const
 
 static void context_summary(const msg::Context& c, FILE* out)
 {
-	fprintf(out, "c(%d,%d, %d,%d, %d,%d,%d)", c.ltype1, c.l1, c.ltype2, c.l2, c.pind, c.p1, c.p2);
+	fprintf(out, "c(%d,%d, %d,%d, %d,%d,%d)",
+            c.level.ltype1, c.level.l1, c.level.ltype2, c.level.l2,
+            c.trange.pind, c.trange.p1, c.trange.p2);
 }
 
 unsigned Msg::diff(const Msg& msg, FILE* out) const
@@ -285,41 +308,47 @@ unsigned Msg::diff(const Msg& msg, FILE* out) const
     return diffs;
 }
 
-void Msg::set(const Var& var, Varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
+void Msg::set_by_id(const wreport::Var& var, int shortcut)
+{
+	const MsgVarShortcut& v = shortcutTable[shortcut];
+	return set(var, v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+}
+
+void Msg::set(const Var& var, Varcode code, const Level& lev, const Trange& tr)
 {
     auto_ptr<Var> copy(newvar(code));
     *copy = var; // Assignment performs conversion if needed
-	set(copy, ltype1, l1, ltype2, l2, pind, p1, p2);
+	set(copy, lev, tr);
 }
 
-void Msg::set(std::auto_ptr<Var> var, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
+void Msg::set(std::auto_ptr<Var> var, const Level& lev, const Trange& tr)
 {
-    msg::Context& ctx = obtain_context(ltype1, l1, ltype2, l2, pind, p1, p2);
+    msg::Context& ctx = obtain_context(lev, tr);
     ctx.set(var);
 }
 
-void Msg::seti(Varcode code, int val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
+void Msg::seti(Varcode code, int val, int conf, const Level& lev, const Trange& tr)
 {
     auto_ptr<Var> var(newvar(code, val));
 	if (conf != -1)
         var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
-    set(var, ltype1, l1, ltype2, l2, pind, p1, p2);
+    set(var, lev, tr);
 }
 
-void Msg::setd(Varcode code, double val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
+void Msg::setd(Varcode code, double val, int conf, const Level& lev, const Trange& tr)
 {
     auto_ptr<Var> var(newvar(code, val));
 	if (conf != -1)
         var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
-    set(var, ltype1, l1, ltype2, l2, pind, p1, p2);
+    set(var, lev, tr);
 }
 
-void Msg::setc(Varcode code, const char* val, int conf, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
+void Msg::setc(Varcode code, const char* val, int conf, const Level& lev, const Trange& tr)
 {
     auto_ptr<Var> var(newvar(code, val));
 	if (conf != -1)
         var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
-    set(var, ltype1, l1, ltype2, l2, pind, p1, p2);
+    set(var, lev, tr);
 }
 
 MsgType Msg::type_from_repmemo(const char* repmemo)

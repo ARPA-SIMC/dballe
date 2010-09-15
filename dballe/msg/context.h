@@ -29,6 +29,7 @@
  */
 
 #include <dballe/core/var.h>
+#include <dballe/msg/defs.h>
 #include <vector>
 #include <memory>
 
@@ -49,27 +50,15 @@ protected:
     int find_index(wreport::Varcode code) const;
 
 public:
-	/** Type of the first level.  See @ref level_table. */
-	int ltype1;
-	/** L1 value of the level.  See @ref level_table. */
-	int l1;
-	/** Type of the second level.  See @ref level_table. */
-	int ltype2;
-	/** L2 value of the level.  See @ref level_table. */
-	int l2;
-	/** Time range type indicator.  See @ref trange_table. */
-	int pind;
-	/** Time range P1 indicator.  See @ref trange_table. */
-	int p1;
-	/** Time range P2 indicator.  See @ref trange_table. */
-	int p2;
+    Level level;
+    Trange trange;
 
 	/**
 	 * The variables in this context
 	 */
 	std::vector<wreport::Var*> data;
 
-	Context(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
+	Context(const Level& lev, const Trange& tr);
     Context(const Context& c);
 	~Context();
 
@@ -86,25 +75,13 @@ public:
     int compare(const Context& ctx) const;
 
     /**
-     * Compare a Context struture with some level information, for use in
-     * sorting.
+     * Compare a Context struture with level and time range information, for
+     * use in sorting.
      *
-     * @param ltype
-     *   Type of the level.  See @ref level_table.
-     * @param l1
-     *   L1 value of the level.  See @ref level_table.
-     * @param l2
-     *   L2 value of the level.  See @ref level_table.
-     * @param pind
-     *   Time range type indicator.  See @ref trange_table.
-     * @param p1
-     *   Time range P1 indicator.  See @ref trange_table.
-     * @param p2
-     *   Time range P2 indicator.  See @ref trange_table.
      * @return
      *   -1 if l < ltype,l1,l2; 0 if l == ltype,l1,l2; 1 if l > ltype,l1,l2
      */
-    int compare(int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2) const;
+    int compare(const Level& lev, const Trange& tr) const;
 
     /**
      * Add a Var to the level
@@ -137,6 +114,16 @@ public:
      *   The variable found, or NULL if it was not found.
      */
     const wreport::Var* find(wreport::Varcode code) const;
+
+    /**
+     * Find a variable given its varcode
+     *
+     * @param code
+     *   The wreport::Varcode of the variable to query.  See @ref vartable.h
+     * @return
+     *   The variable found, or NULL if it was not found.
+     */
+    wreport::Var* edit(wreport::Varcode code);
 
     /** 
      * Find a variable given its shortcut ID

@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,14 +29,13 @@ extern "C" {
 */
 
 using namespace dballe;
+using namespace wreport;
 using namespace std;
 
 namespace tut {
 
 struct msg_shar
 {
-    tests::TestMsgEnv testenv;
-
 	msg_shar()
 	{
 	}
@@ -64,31 +61,39 @@ template<> template<>
 void to::test<1>()
 {
 	Msg msg;
-    Var* v1 = 0;
-    Var* v2 = 0;
-    Var* v3 = 0;
-    Var* v4 = 0;
+    Level lev1(1, 1, 1, 1);
+    Level lev2(2, 2, 2, 2);
+    Trange tr1(1, 1, 1);
+    Trange tr2(2, 2, 2);
+    auto_ptr<Var> av1 = newvar(WR_VAR(0, 1, 1));
+    auto_ptr<Var> av2 = newvar(WR_VAR(0, 1, 1));
+    auto_ptr<Var> av3 = newvar(WR_VAR(0, 1, 1));
+    auto_ptr<Var> av4 = newvar(WR_VAR(0, 1, 1));
+    Var* v1 = av1.get();
+    Var* v2 = av2.get();
+    Var* v3 = av3.get();
+    Var* v4 = av4.get();
 
-	msg.set(auto_ptr<Var>(v1 = new Var(DBA_VAR(0, 1, 1))), 2, 2, 2, 2, 1, 1, 1); ensure_equals(msg.data.size(), 1);
-	msg.set(auto_ptr<Var>(v2 = new Var(DBA_VAR(0, 1, 1))), 2, 2, 2, 2, 1, 1, 1); ensure_equals(msg.data.size(), 1);
-	msg.set(auto_ptr<Var>(v3 = new Var(DBA_VAR(0, 1, 1))), 1, 1, 1, 1, 1, 1, 1); ensure_equals(msg.data.size(), 2);
-    msg.set(auto_ptr<Var>(v4 = new Var(DBA_VAR(0, 1, 1))), 1, 1, 1, 1, 2, 2, 2); ensure_equals(msg.data.size(), 3);
+	msg.set(av1, lev2, tr1); ensure_equals(msg.data.size(), 1);
+	msg.set(av2, lev2, tr1); ensure_equals(msg.data.size(), 1);
+	msg.set(av3, lev1, tr1); ensure_equals(msg.data.size(), 2);
+    msg.set(av4, lev1, tr2); ensure_equals(msg.data.size(), 3);
 
 	ensure_msg_is_sorted(msg);
 
-	ensure(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1) != NULL);
-	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 1, 1, 1), v3);
+	ensure(msg.find(WR_VAR(0, 1, 1), lev1, tr1) != NULL);
+	ensure_equals(msg.find(WR_VAR(0, 1, 1), lev1, tr1), v3);
 
-	ensure(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2) != NULL);
-	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 2, 2, 2), v4);
+	ensure(msg.find(WR_VAR(0, 1, 1), lev1, tr2) != NULL);
+	ensure_equals(msg.find(WR_VAR(0, 1, 1), lev1, tr2), v4);
 
-	ensure(msg.find(DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1) != NULL);
-	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 2, 2, 2, 2, 1, 1, 1), v2);
+	ensure(msg.find(WR_VAR(0, 1, 1), lev2, tr1) != NULL);
+	ensure_equals(msg.find(WR_VAR(0, 1, 1), lev2, tr1), v2);
 
-	ensure_equals(msg.find(DBA_VAR(0, 1, 2), 1, 1, 1, 1, 2, 2, 2), (Var*)0);
-	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 0, 0, 0, 0, 1, 1, 1), (Var*)0);
-	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 3, 3, 3, 3, 1, 1, 1), (Var*)0);
-	ensure_equals(msg.find(DBA_VAR(0, 1, 1), 1, 1, 1, 1, 3, 3, 3), (Var*)0);
+	ensure_equals(msg.find(WR_VAR(0, 1, 2), lev1, tr2), (Var*)0);
+	ensure_equals(msg.find(WR_VAR(0, 1, 1), Level(0, 0, 0, 0), tr1), (Var*)0);
+	ensure_equals(msg.find(WR_VAR(0, 1, 1), Level(3, 3, 3, 3), tr1), (Var*)0);
+	ensure_equals(msg.find(WR_VAR(0, 1, 1), lev1, Trange(3, 3, 3)), (Var*)0);
 }
 
 /* Try to write a generic message from scratch */
@@ -100,14 +105,14 @@ void to::test<2>()
 	//msg->type = MSG_SYNOP;
 
 	// Fill in the dba_msg
-	msg.seti(DBA_VAR(0, 4, 1), 2008,   -1, MSG_LEVANA, MSG_TRANA);
-	msg.seti(DBA_VAR(0, 4, 2),    5,   -1, MSG_LEVANA, MSG_TRANA);
-	msg.seti(DBA_VAR(0, 4, 3),    7,   -1, MSG_LEVANA, MSG_TRANA);
+	msg.seti(WR_VAR(0, 4, 1), 2008,   -1, Level::ana(), Trange::ana());
+	msg.seti(WR_VAR(0, 4, 2),    5,   -1, Level::ana(), Trange::ana());
+	msg.seti(WR_VAR(0, 4, 3),    7,   -1, Level::ana(), Trange::ana());
 	// ...
-	msg.setd(DBA_VAR(0, 5, 1),   45.0, -1, MSG_LEVANA, MSG_TRANA);
-	msg.setd(DBA_VAR(0, 6, 1),   11.0, -1, MSG_LEVANA, MSG_TRANA);
+	msg.setd(WR_VAR(0, 5, 1),   45.0, -1, Level::ana(), Trange::ana());
+	msg.setd(WR_VAR(0, 6, 1),   11.0, -1, Level::ana(), Trange::ana());
 	// ...
-	msg.setd(DBA_VAR(0,12, 101),  273.0, 75, MSG_LEV1(102, 2000), MSG_TR0(254));
+	msg.setd(WR_VAR(0,12, 101),  273.0, 75, Level(102, 2000), Trange::instant());
 
 	// Append the dba_msg to a dba_msgs
 	Msgs msgs;
@@ -185,7 +190,7 @@ void to::test<2>()
 		CHECKED(dba_record_key_seti(rec, DBA_KEY_LAT, 1234567));
 		CHECKED(dba_record_key_setd(rec, DBA_KEY_LON, 76.54321));
 		CHECKED(dba_record_key_setc(rec, DBA_KEY_YEARMIN, "1976"));
-		CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 2, 121), "456"));
+		CHECKED(dba_record_var_setc(rec, WR_VAR(0, 2, 121), "456"));
 
 		fail_unless_int_is(key, DBA_KEY_ANA_ID, -10);
 		fail_unless_double_is(key, DBA_KEY_ANA_ID, -10.0);
@@ -201,10 +206,10 @@ void to::test<2>()
 		fail_unless_double_is(key, DBA_KEY_YEARMIN, 1976);
 		fail_unless_char_is(key, DBA_KEY_YEARMIN, "1976");
 
-		fail_unless_int_is(var, DBA_VAR(0, 2, 121), 456);
+		fail_unless_int_is(var, WR_VAR(0, 2, 121), 456);
 		/*fail_unless_float_is(rec, "B02121", 45600000000.0)*/;
-		fail_unless_double_is(var, DBA_VAR(0, 2, 121), 45600000000.0);
-		fail_unless_char_is(var, DBA_VAR(0, 2, 121), "456");
+		fail_unless_double_is(var, WR_VAR(0, 2, 121), 45600000000.0);
+		fail_unless_char_is(var, WR_VAR(0, 2, 121), "456");
 
 		CHECKED(dba_record_key_unset(rec, DBA_KEY_LAT));
 

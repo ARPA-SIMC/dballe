@@ -19,10 +19,10 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/bufrex/test-utils-bufrex.h>
+#include <dballe/core/test-utils-core.h>
+#include <dballe/msg/msgs.h>
 #if 0
 #include <dballe/msg/bufrex_codec.h>
-#include <dballe/msg/msg.h>
 #include <dballe/msg/file.h>
 #include <dballe/msg/marshal.h>
 
@@ -34,17 +34,14 @@
 namespace dballe {
 namespace tests {
 
-struct TestMsgEnv
-{
-	bufrex::tests::TestBufrexEnv bufrexenv;
+std::auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type);
+#define read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
+#define inner_read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 
-	TestMsgEnv();
-	~TestMsgEnv();
-};
+void track_different_msgs(const Msg& msg1, const Msg& msg2, const std::string& prefix);
+void track_different_msgs(const Msgs& msgs1, const Msgs& msgs2, const std::string& prefix);
 
 #if 0
-dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type);
-#define read_test_msg(filename, type) _read_test_msg(__FILE__, __LINE__, filename, type)
 
 /* Random message generation functions */
 
@@ -77,9 +74,6 @@ public:
 	}
 };
 	
-void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix);
-void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& prefix);
-
 dba_var my_want_var(const char* file, int line, dba_msg msg, int id, const char* idname);
 #define want_var(msg, id) my_want_var(__FILE__, __LINE__, (msg), (id), #id)
 

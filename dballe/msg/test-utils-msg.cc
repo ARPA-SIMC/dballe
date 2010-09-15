@@ -20,58 +20,53 @@
  */
 
 #include "test-utils-msg.h"
-
-//#include <dballe/msg/aof_codec.h>
+#include "codec.h"
 
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 
-#if 0
-extern "C" {
-void aof_codec_init(void);
-void aof_codec_shutdown(void);
-}
-#endif
+using namespace std;
 
 namespace dballe {
 namespace tests {
 
-TestMsgEnv::TestMsgEnv()
+auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type)
 {
-	//aof_codec_init();
+    std::auto_ptr<Rawmsg> raw = read_rawmsg(filename, type);
+    std::auto_ptr<msg::Importer> importer = msg::Importer::create(type);
+    std::auto_ptr<Msgs> msgs(new Msgs);
+    importer->import(*raw, *msgs);
+    return msgs;
 }
-TestMsgEnv::~TestMsgEnv()
+
+void track_different_msgs(const Msg& msg1, const Msg& msg2, const std::string& prefix)
 {
-	//aof_codec_shutdown();
+	string fname1 = "/tmp/test-" + prefix + "1.bufr";
+	string fname2 = "/tmp/test-" + prefix + "2.bufr";
+	FILE* out1 = fopen(fname1.c_str(), "w");
+	FILE* out2 = fopen(fname2.c_str(), "w");
+	msg1.print(out1);
+	msg2.print(out2);
+	fclose(out1);
+	fclose(out2);
+	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
+}
+
+void track_different_msgs(const Msgs& msgs1, const Msgs& msgs2, const std::string& prefix)
+{
+	string fname1 = "/tmp/test-" + prefix + "1.bufr";
+	string fname2 = "/tmp/test-" + prefix + "2.bufr";
+	FILE* out1 = fopen(fname1.c_str(), "w");
+	FILE* out2 = fopen(fname2.c_str(), "w");
+	msgs1.print(out1);
+	msgs2.print(out2);
+	fclose(out1);
+	fclose(out2);
+	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
 }
 
 #if 0
-dba_msgs _read_test_msg(const char* file, int line, const char* filename, dba_encoding type)
-{
-	if (type == AOF)
-	{
-		// Read the sample message
-		dba_rawmsg rawmsg = _read_rawmsg(file, line, filename, type);
-
-		// Decode the sample message
-		dba_msgs msgs;
-		INNER_CHECKED(aof_codec_decode(rawmsg, &msgs));
-
-		dba_rawmsg_delete(rawmsg);
-		return msgs;
-	} else {
-		bufrex_msg bufrex = _read_test_msg_raw(file, line, filename, type);
-
-		// Parse the decoded message into a synop
-		dba_msgs msgs;
-		INNER_CHECKED(bufrex_msg_to_dba_msgs(bufrex, &msgs));
-
-		bufrex_msg_delete(bufrex);
-		return msgs;
-	}
-}
-
 const static dba_varcode generator_varcodes[] = {
 	DBA_VAR(0,  1,   1),
 	DBA_VAR(0,  1,   2),
@@ -161,31 +156,6 @@ dba_err msg_generator::fill_message(dba_msg msg, bool mobile)
 	return dba_error_ok();
 }
 
-void track_different_msgs(dba_msg msg1, dba_msg msg2, const std::string& prefix)
-{
-	string fname1 = "/tmp/test-" + prefix + "1.bufr";
-	string fname2 = "/tmp/test-" + prefix + "2.bufr";
-	FILE* out1 = fopen(fname1.c_str(), "w");
-	FILE* out2 = fopen(fname2.c_str(), "w");
-	dba_msg_print(msg1, out1);
-	dba_msg_print(msg2, out2);
-	fclose(out1);
-	fclose(out2);
-	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
-}
-
-void track_different_msgs(dba_msgs msgs1, dba_msgs msgs2, const std::string& prefix)
-{
-	string fname1 = "/tmp/test-" + prefix + "1.bufr";
-	string fname2 = "/tmp/test-" + prefix + "2.bufr";
-	FILE* out1 = fopen(fname1.c_str(), "w");
-	FILE* out2 = fopen(fname2.c_str(), "w");
-	dba_msgs_print(msgs1, out1);
-	dba_msgs_print(msgs2, out2);
-	fclose(out1);
-	fclose(out2);
-	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
-}
 
 dba_var my_want_var(const char* file, int line, dba_msg msg, int id, const char* idname)
 {
