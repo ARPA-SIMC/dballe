@@ -72,34 +72,6 @@ public:
 #include <dballe/bufrex/msg.h>
 
 /**
- * Decode a BUFR message into a dba_msg
- *
- * @param raw
- *   The message to decode
- * @param opts
- *   Codec options
- * @retval msgs
- *   The decoded message
- * @return
- *   The error status (See @ref error.h)
- */
-dba_err bufrex_decode_bufr(dba_rawmsg raw, dba_msg_codec_options opts, dba_msgs* msgs);
-
-/**
- * Decode a CREX message into a dba_msg
- *
- * @param raw
- *   The message to decode
- * @param opts
- *   Codec options
- * @retval msgs
- *   The decoded message
- * @return
- *   The error status (See @ref error.h)
- */
-dba_err bufrex_decode_crex(dba_rawmsg raw, dba_msg_codec_options opts, dba_msgs* msgs);
-
-/**
  * Encode a dba_msg into a BUFR message
  *
  * @param msgs
