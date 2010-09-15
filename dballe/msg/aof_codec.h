@@ -82,25 +82,25 @@ protected:
 
 
 public:
-	AOFImporter(const import::Options& opts=import::Options());
+    AOFImporter(const import::Options& opts=import::Options());
     virtual ~AOFImporter();
 
-	/**
-	 * Decode a message from its raw encoded representation
-	 *
-	 * @param rmsg
-	 *   Encoded message
-	 * @retval msgs
-	 *   The resulting ::dba_msg
-	 * @return
-	 *   The error indicator for the function. See @ref error.h
-	 */
-	virtual void import(const Rawmsg& msg, Msgs& msgs) const;
+    /**
+     * Decode a message from its raw encoded representation
+     *
+     * @param rmsg
+     *   Encoded message
+     * @retval msgs
+     *   The resulting ::dba_msg
+     * @return
+     *   The error indicator for the function. See @ref error.h
+     */
+    virtual void import(const Rawmsg& msg, Msgs& msgs) const;
 
     /**
      * Import a decoded BUFR/CREX message
      */
-	virtual void import(const wreport::Bulletin& msg, Msgs& msgs) const;
+    virtual void import(const wreport::Bulletin& msg, Msgs& msgs) const;
 
     /**
      * Get category and subcategory of an AOF message
