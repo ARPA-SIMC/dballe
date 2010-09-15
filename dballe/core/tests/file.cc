@@ -39,7 +39,7 @@ struct file_shar
 };
 TESTGRP(file);
 
-// Read test
+// BUFR Read test
 template<> template<>
 void to::test<1>()
 {
@@ -48,6 +48,28 @@ void to::test<1>()
 	ensure(f->read(msg));
 	ensure_equals(msg.size(), 182u);
 }
+
+// CREX Read test
+template<> template<>
+void to::test<2>()
+{
+	auto_ptr<File> f(File::create(CREX, tests::datafile("crex/test-synop0.crex"), "r"));
+	Rawmsg msg;
+	ensure(f->read(msg));
+	ensure_equals(msg.size(), 251u);
+}
+
+// AOF Read test
+template<> template<>
+void to::test<3>()
+{
+	auto_ptr<File> f(File::create(AOF, tests::datafile("aof/obs1-11.0.aof"), "r"));
+	Rawmsg msg;
+	ensure(f->read(msg));
+	ensure_equals(msg.size(), 140u);
+}
+
+
 
 #if 0
 static void test_parse(const char* src, int line, const char* fname, struct bufr_match* m)

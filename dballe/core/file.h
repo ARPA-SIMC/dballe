@@ -113,7 +113,7 @@ public:
 	static File* create(Encoding type, const std::string& name, const char* mode);
 };
 
-}
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
 #endif

@@ -13,8 +13,8 @@ coreinclude_HEADERS = \
 	var.h \
 	rawmsg.h \
 	file.h \
+	aoffile.h \
 	csv.h \
-	fusb.h \
 	record.h
 
 noinst_LTLIBRARIES = libdballe-core.la
@@ -23,8 +23,8 @@ libdballe_core_la_SOURCES = \
 	var.cc \
 	rawmsg.cc \
 	file.cc \
+	aoffile.cc \
 	csv.cc \
-	fusb.cc \
 	record_keyword.cc \
 	record.cc
 

@@ -20,6 +20,7 @@
  */
 
 #include "file.h"
+#include "aoffile.h"
 #include <wreport/bulletin.h>
 
 #include <netinet/in.h>
@@ -102,29 +103,6 @@ public:
 	void write(const Rawmsg& msg)
 	{
 		CrexBulletin::write(msg, fd, m_name.c_str());
-	}
-};
-
-class AofFile : public dballe::File
-{
-public:
-	AofFile(const std::string& name, FILE* fd, bool close_on_exit=true)
-		: File(name, fd, close_on_exit) {}
-
-	virtual Encoding type() const throw () { return AOF; }
-
-	bool read(Rawmsg& msg)
-	{
-		msg.file = this;
-		msg.offset = ftell(fd);
-		msg.encoding = AOF;
-
-		// TODO return CrexBulletin::read(fd, msg, m_name.c_str());
-	}
-
-	void write(const Rawmsg& msg)
-	{
-		// TODO CrexBulletin::write(msg, fd, m_name.c_str());
 	}
 };
 
