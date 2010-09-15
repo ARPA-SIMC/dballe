@@ -44,14 +44,14 @@ libdballe_msg_la_SOURCES = \
 		aof_importers/dribu.cc \
 		aof_importers/flight.cc \
 		aof_importers/temp.cc \
-		aof_importers/pilot.cc
+		aof_importers/pilot.cc \
+		bufrex_codec.cc
 
 ##		codec-opts.cc
 ##		filter.c  (todo)
 
 #if DO_DBALLE_BUFREX
 #libdballe_msg_la_SOURCES += \
-#		bufrex_codec.cc \
 #		bufrex_importers/generic.c \
 #		bufrex_importers/synop.c \
 #		bufrex_importers/metar.c \

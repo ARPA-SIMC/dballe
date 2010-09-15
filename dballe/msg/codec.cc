@@ -21,16 +21,11 @@
 
 #include "codec.h"
 #include "aof_codec.h"
+#include "bufrex_codec.h"
 #include <dballe/core/rawmsg.h>
 #include <wreport/error.h>
 
 #include "config.h"
-#if 0
-#ifdef HAVE_DBALLE_BUFREX
-#include "bufrex_codec.h"
-#endif
-#include "aof_codec.h"
-#endif
 
 using namespace wreport;
 using namespace std;
@@ -63,9 +58,9 @@ std::auto_ptr<Importer> Importer::create(Encoding type, const import::Options& o
     switch (type)
     {
         case BUFR:
-            throw error_unimplemented("BUFR importer is not implemented yet");
+            return auto_ptr<Importer>(new BufrImporter(opts));
         case CREX:
-            throw error_unimplemented("CREX importer is not implemented yet");
+            return auto_ptr<Importer>(new CrexImporter(opts));
         case AOF:
             return auto_ptr<Importer>(new AOFImporter(opts));
         default:

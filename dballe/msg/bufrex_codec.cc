@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/bufrex_codec - BUFR/CREX import and export
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -20,11 +20,37 @@
  */
 
 #include "bufrex_codec.h"
-#include <dballe/bufrex/msg.h>
-#include <dballe/bufrex/subset.h>
-#include "bufrex_exporters/exporters.h"
-#include <dballe/core/verbose.h>
+#include <wreport/bulletin.h>
+//#include <dballe/bufrex/subset.h>
+//#include "bufrex_exporters/exporters.h"
+//#include <dballe/core/verbose.h>
 
+using namespace wreport;
+using namespace std;
+
+namespace dballe {
+namespace msg {
+
+void BufrImporter::import(const Rawmsg& msg, Msgs& msgs) const
+{
+	BufrBulletin bulletin;
+	bulletin.decode(msg);
+	import_bulletin(bulletin, msgs);
+}
+
+void CrexImporter::import(const Rawmsg& msg, Msgs& msgs) const
+{
+	CrexBulletin bulletin;
+	bulletin.decode(msg);
+	import_bulletin(bulletin, msgs);
+}
+
+void BufrCrexImporter::import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
+{
+	throw error_unimplemented("TODO BULLETIN IMPORT");
+}
+
+#if 0
 extern dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 extern dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 extern dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
@@ -334,5 +360,10 @@ dba_err bufrex_msg_from_dba_msgs(bufrex_msg raw, dba_msgs msgs)
 	
 	return dba_error_ok();
 }
+
+#endif
+
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for point-based meteorological data
+ * dballe/aof_codec - AOF import
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -100,7 +100,7 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual void import(const wreport::Bulletin& msg, Msgs& msgs) const;
+    virtual void import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
 
     /**
      * Get category and subcategory of an AOF message
@@ -125,8 +125,8 @@ public:
     static void dump(const Rawmsg& msg, FILE* out);
 };
 
-}
-}
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
 #endif

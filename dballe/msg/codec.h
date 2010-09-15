@@ -94,7 +94,7 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual void import(const wreport::Bulletin& msg, Msgs& msgs) const = 0;
+    virtual void import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const = 0;
 
 
     /// Instantiate the right importer for the given type

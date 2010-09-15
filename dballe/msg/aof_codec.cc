@@ -1,4 +1,6 @@
 /*
+ * dballe/aof_codec - AOF import
+ *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -89,7 +91,7 @@ void AOFImporter::import(const Rawmsg& msg, Msgs& msgs) const
     msgs.acquire(out);
 }
 
-void AOFImporter::import(const wreport::Bulletin& msg, Msgs& msgs) const
+void AOFImporter::import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
 {
     throw error_unimplemented("AOF importer cannot import from wreport::Bulletin");
 }

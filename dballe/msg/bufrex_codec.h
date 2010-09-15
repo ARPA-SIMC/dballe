@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/bufrex_codec - BUFR/CREX import and export
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,44 @@
 #ifndef DBALLE_BUFREX_H
 #define DBALLE_BUFREX_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+#include <dballe/msg/codec.h>
+#include <stdint.h>
+
+namespace dballe {
+struct Msg;
+
+namespace msg {
+
+class BufrCrexImporter : public Importer
+{
+public:
+    BufrCrexImporter(const import::Options& opts);
+
+    /**
+     * Import a decoded BUFR/CREX message
+     */
+    virtual void import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
+};
+
+class BufrImporter : public BufrCrexImporter
+{
+public:
+    BufrImporter(const import::Options& opts=import::Options());
+    virtual ~BufrImporter();
+
+    virtual void import(const Rawmsg& msg, Msgs& msgs) const;
+};
+
+class CrexImporter : public BufrCrexImporter
+{
+public:
+    CrexImporter(const import::Options& opts=import::Options());
+    virtual ~CrexImporter();
+
+    virtual void import(const Rawmsg& msg, Msgs& msgs) const;
+};
+
+#if 0
 
 /** @file
  * @ingroup bufrex
@@ -151,9 +186,10 @@ dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msg_codec_options opts, dba_m
 dba_err bufrex_infer_type_subtype(dba_msg msg, int* type, int* subtype, int* localsubtype);
 	
 
-#ifdef  __cplusplus
-}
 #endif
+
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
 #endif
