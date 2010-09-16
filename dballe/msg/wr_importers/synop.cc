@@ -160,7 +160,12 @@ public:
         }
     }
 };
-    
+
+std::auto_ptr<Importer> Importer::createSynop(const import::Options& opts)
+{
+    return auto_ptr<Importer>(new SynopImporter(opts));
+}
+
 void SynopImporter::peek_var(const Var& var)
 {
     switch (var.code())
@@ -236,7 +241,7 @@ void SynopImporter::import_var_undef(const Var& var)
             time_sig = MISSING_TIME_SIG;
             break;
         default:
-            import_var_undef(var);
+	    //WMOImporter::import_var_undef(var);
             break;
     }
 }

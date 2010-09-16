@@ -6,7 +6,7 @@ CMD=`pwd`/"$1"
 
 ## Set up the test environment
 
-export WREPORT_TABLES=$TOP_SRCDIR/tables
+export WREPORT_EXTRA_TABLES=$TOP_SRCDIR/tables
 export WREPORT_TESTDATA=$TOP_SRCDIR/extra
 export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
 export DBA_TABLES=$TOP_SRCDIR/tables

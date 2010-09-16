@@ -103,13 +103,13 @@ tut_test_SOURCES = \
 	tests/context.cc \
 	tests/msg.cc \
 	tests/aof_codec.cc \
+	tests/wr_codec.cc \
 	../core/tests/tut-main.cpp
 tut_test_LDADD = \
 	libdballe-msg.la \
 	../core/libdballe-core.la \
 	$(WREPORT_LIBS) $(LUA_LIBS) $(WIBBLE_LIBS)
 
-#	tests/bufrex_codec.cc \
 #	tests/bufrex_codec_generic.cc
 
 if LUA

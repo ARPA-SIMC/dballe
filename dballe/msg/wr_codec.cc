@@ -66,25 +66,27 @@ void WBImporter::import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
 		case 0:
 		case 1:
 			if (msg.localsubtype == 140)
-				importer = wr::Importer::createMetar();
+				importer = wr::Importer::createMetar(opts);
 			else
-				importer = wr::Importer::createSynop();
+				importer = wr::Importer::createSynop(opts);
 			break;
 		case 2:
 			if (msg.localsubtype == 91 || msg.localsubtype == 92)
-				importer = wr::Importer::createPilot();
+				importer = wr::Importer::createPilot(opts);
 			else
-				importer = wr::Importer::createTemp();
+				importer = wr::Importer::createTemp(opts);
 			break;
-		case 3: importer = wr::Importer::createSat(); break;
-		case 4: importer = wr::Importer::createFlight(); break;
-		case 8: importer = wr::Importer::createPollution(); break;
-		default: importer = wr::Importer::createGeneric(); break;
+		case 3: importer = wr::Importer::createSat(opts); break;
+		case 4: importer = wr::Importer::createFlight(opts); break;
+		case 8: importer = wr::Importer::createPollution(opts); break;
+		default: importer = wr::Importer::createGeneric(opts); break;
 	}
 
+	MsgType type = importer->scanType(msg);
 	for (unsigned i = 0; i < msg.subsets.size(); ++i)
 	{
 		std::auto_ptr<Msg> newmsg(new Msg);
+		newmsg->type = type;
 		importer->import(msg.subsets[i], *newmsg);
 		msgs.acquire(newmsg);
 	}

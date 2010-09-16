@@ -60,14 +60,14 @@ public:
 	    run();
     }
 
-    static std::auto_ptr<Importer> createSynop();
-    static std::auto_ptr<Importer> createMetar();
-    static std::auto_ptr<Importer> createTemp();
-    static std::auto_ptr<Importer> createPilot();
-    static std::auto_ptr<Importer> createFlight();
-    static std::auto_ptr<Importer> createSat();
-    static std::auto_ptr<Importer> createPollution();
-    static std::auto_ptr<Importer> createGeneric();
+    static std::auto_ptr<Importer> createSynop(const import::Options&);
+    static std::auto_ptr<Importer> createMetar(const import::Options&);
+    static std::auto_ptr<Importer> createTemp(const import::Options&);
+    static std::auto_ptr<Importer> createPilot(const import::Options&);
+    static std::auto_ptr<Importer> createFlight(const import::Options&);
+    static std::auto_ptr<Importer> createSat(const import::Options&);
+    static std::auto_ptr<Importer> createPollution(const import::Options&);
+    static std::auto_ptr<Importer> createGeneric(const import::Options&);
 };
 
 class WMOImporter : public Importer
