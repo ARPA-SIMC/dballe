@@ -103,6 +103,34 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
+    msg::import::Options opts;
+    opts.simplified = true;
+    auto_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_SYNOP);
+
+    msg.print(stderr);
+
+    IS(block, 11); IS(station, 406); IS(st_type, 1);
+    IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
+    IS(latitude, 50.07361); IS(longitude, 12.40333);
+    IS(height, 483.0); IS(height_baro, 490.0);
+    IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
+    IS(wind_dir, 0.0); IS(wind_speed, 1.0);
+    IS(temp_2m, 273.05); IS(dewpoint_2m, 271.35); IS(humidity, 88.0);
+    IS(visibility, 14000.0); IS(pres_wtr, 508); IS(past_wtr1, 10); IS(past_wtr2, 10);
+    IS(cloud_n, 38); IS(cloud_nh, 0); IS(cloud_hh, 6000.0);
+    IS(cloud_cl, 30); IS(cloud_cm, 20); IS(cloud_ch, 12);
+    IS(cloud_n1, 3); IS(cloud_c1, 0); IS(cloud_h1, 6000.0);
+    UN(cloud_n2); UN(cloud_c2); UN(cloud_h2);
+    UN(cloud_n3); UN(cloud_c3); UN(cloud_h3);
+    UN(cloud_n4); UN(cloud_c4); UN(cloud_h4);
+    UN(tot_prec24); UN(tot_snow);
+}
+
+template<> template<>
+void to::test<4>()
+{
     auto_ptr<Msgs> msgs = read_msgs("bufr/synop-cloudbelow.bufr", BUFR);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);

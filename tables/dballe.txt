@@ -56,6 +56,7 @@
  007024 SATELLITE ZENITH ANGLE                                           DEGREE                     2        -9000  15 DEGREE                    2          5
  007025 SOLAR ZENITH ANGLE                                               DEGREE                     2        -9000  15 DEGREE                    2          5
  007031 HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL (SEE NOTE 4)            M                          1       - 4000  17 M                         1          5
+ 007032 HEIGHT OF SENSOR ABOVE LOCAL GROUND (OR DECK OF MARINE PLATFORM) M                          2            0  16 M                         2          5
  007192 [SIM] First level type                                           NUMERIC                    0            0  10 NUMERIC                   0          4
  007193 [SIM] Level L1                                                   NUMERIC                    0   -536870912  31 NUMERIC                   0         10
  007194 [SIM] Level L2                                                   NUMERIC                    0   -536870912  31 NUMERIC                   0         10

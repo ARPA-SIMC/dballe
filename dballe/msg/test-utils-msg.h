@@ -21,6 +21,7 @@
 
 #include <dballe/core/test-utils-core.h>
 #include <dballe/msg/msgs.h>
+#include <dballe/msg/codec.h>
 #if 0
 #include <dballe/msg/bufrex_codec.h>
 #include <dballe/msg/file.h>
@@ -34,9 +35,11 @@
 namespace dballe {
 namespace tests {
 
-std::auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type);
+std::auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const dballe::msg::import::Options& opts=dballe::msg::import::Options());
 #define read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
+#define read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
+#define inner_read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
 
 void track_different_msgs(const Msg& msg1, const Msg& msg2, const std::string& prefix);
 void track_different_msgs(const Msgs& msgs1, const Msgs& msgs2, const std::string& prefix);
