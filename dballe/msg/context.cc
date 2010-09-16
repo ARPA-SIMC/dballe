@@ -21,7 +21,7 @@
 
 #include <dballe/msg/context.h>
 #include <dballe/msg/vars.h>
-
+#include <sstream>
 #include <stdlib.h>
 #include <string.h>
 
@@ -163,9 +163,9 @@ const Var* Context::find_by_id(int id) const
 
 void Context::print(FILE* out) const
 {
-    fprintf(out, "Level %d,%d, %d,%d  tr %d,%d,%d ",
-            level.ltype1, level.l1, level.ltype2, level.l2,
-            trange.pind, trange.p1, trange.p2);
+    stringstream header;
+    header << "Level " << level << "  tr " << trange;
+    fprintf(out, "%s ", header.str().c_str());
 
     if (data.size() > 0)
     {

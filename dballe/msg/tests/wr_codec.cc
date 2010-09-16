@@ -42,14 +42,14 @@ struct wr_codec_shar
 TESTGRP(wr_codec);
 
 #define IS(field, val) do { \
-		dba_var var = dba_msg_get_##field##_var(msg); \
-		gen_ensure(var != 0); \
-		gen_ensure_var_equals(var, val); \
+		const Var* var = msg.get_##field##_var(); \
+		ensure(var != 0); \
+		ensure_var_equals(*var, val); \
 	} while (0)
 #define UN(field) do { \
-		dba_var var = dba_msg_get_##field##_var(msg); \
+		const Var* var = msg.get_##field##_var(); \
 		if (var != 0) \
-			gen_ensure_var_undef(var); \
+			ensure_var_undef(*var); \
 	} while (0)
 
 template<> template<>
@@ -59,7 +59,6 @@ void to::test<1>()
 	const Msg& msg = *(*msgs)[0];
 	ensure_equals(msg.type, MSG_SYNOP);
 
-#if 0
 	IS(block, 10);
 	IS(station, 837);
 	IS(st_type, 1);
@@ -106,9 +105,6 @@ void to::test<1>()
 	UN(cloud_h4);
 	UN(tot_prec24);
 	UN(tot_snow);
-
-	dba_msg_delete(msg);
-#endif
 }
 
 #if 0

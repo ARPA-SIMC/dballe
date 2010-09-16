@@ -318,7 +318,7 @@ void Msg::set_by_id(const wreport::Var& var, int shortcut)
 void Msg::set(const Var& var, Varcode code, const Level& lev, const Trange& tr)
 {
     auto_ptr<Var> copy(newvar(code));
-    *copy = var; // Assignment performs conversion if needed
+    copy->copy_val(var); // Copy value performing conversions
     set(copy, lev, tr);
 }
 

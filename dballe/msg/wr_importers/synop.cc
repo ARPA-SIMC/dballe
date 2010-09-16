@@ -182,7 +182,7 @@ void SynopImporter::peek_var(const Var& var)
             {
                 /* Cloud Data */
                 cloudlevel.ltype2 = 258;
-                cloudlevel.l1 = 0;
+                cloudlevel.l2 = 0;
             } else if (next == WR_VAR(0, 20, 11)) {
                 /* Individual cloud group and clouds with bases below */
                 if (cloudlevel.ltype2 != 259)
