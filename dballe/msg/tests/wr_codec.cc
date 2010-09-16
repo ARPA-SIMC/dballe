@@ -43,7 +43,7 @@ TESTGRP(wr_codec);
 
 #define IS(field, val) do { \
         const Var* var = msg.get_##field##_var(); \
-        ensure(var != 0); \
+        ensure((#field, var != 0)); \
         ensure_var_equals(*var, val); \
     } while (0)
 #define UN(field) do { \
@@ -59,53 +59,73 @@ void to::test<1>()
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
-    IS(block, 10);
-    IS(station, 837);
-    IS(st_type, 1);
-    IS(year, 2004);
-    IS(month, 11);
-    IS(day, 30);
-    IS(hour, 12);
-    IS(minute, 0);
-    IS(year, 2004);
-    IS(latitude, 48.22);
-    IS(longitude, 9.92);
-    IS(height, 550.0);
-    UN(height_baro);
-    IS(press, 94340.0);
-    IS(press_msl, 100940.0);
-    //TESTD(var_press_tend, -170);
-    IS(press_tend, 7.0);
-    IS(wind_dir, 80.0);
-    IS(wind_speed, 6.0);
-    IS(temp_2m, 276.15);
-    IS(dewpoint_2m, 273.85);
-    UN(humidity);
-    IS(visibility, 5000.0);
-    IS(pres_wtr, 10);
-    IS(past_wtr1, 2);
-    IS(past_wtr2, 2);
-    IS(cloud_n, 100);
-    IS(cloud_nh, 8);
-    IS(cloud_hh, 450.0);
-    IS(cloud_cl, 35);
-    IS(cloud_cm, 61);
-    IS(cloud_ch, 60);
-    IS(cloud_n1, 8);
-    IS(cloud_c1, 6);
-    IS(cloud_h1, 350.0);
-    UN(cloud_n2);
-    UN(cloud_c2);
-    UN(cloud_h2);
-    UN(cloud_n3);
-    UN(cloud_c3);
-    UN(cloud_h3);
-    UN(cloud_n4);
-    UN(cloud_c4);
-    UN(cloud_h4);
-    UN(tot_prec24);
-    UN(tot_snow);
+    IS(block, 10); IS(station, 837); IS(st_type, 1);
+    IS(year, 2004); IS(month, 11); IS(day, 30); IS(hour, 12); IS(minute, 0);
+    IS(latitude, 48.22); IS(longitude, 9.92);
+    IS(height, 550.0); UN(height_baro);
+    IS(press, 94340.0); IS(press_msl, 100940.0); IS(press_tend, 7.0);
+    IS(wind_dir, 80.0); IS(wind_speed, 6.0);
+    IS(temp_2m, 276.15); IS(dewpoint_2m, 273.85); UN(humidity);
+    IS(visibility, 5000.0); IS(pres_wtr, 10); IS(past_wtr1, 2); IS(past_wtr2, 2);
+    IS(cloud_n, 100); IS(cloud_nh, 8); IS(cloud_hh, 450.0);
+    IS(cloud_cl, 35); IS(cloud_cm, 61); IS(cloud_ch, 60);
+    IS(cloud_n1, 8); IS(cloud_c1, 6); IS(cloud_h1, 350.0);
+    UN(cloud_n2); UN(cloud_c2); UN(cloud_h2);
+    UN(cloud_n3); UN(cloud_c3); UN(cloud_h3);
+    UN(cloud_n4); UN(cloud_c4); UN(cloud_h4);
+    UN(tot_prec24); UN(tot_snow);
 }
+
+template<> template<>
+void to::test<2>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_SYNOP);
+
+    IS(block, 60); IS(station, 150); IS(st_type, 1);
+    IS(year, 2004); IS(month, 11); IS(day, 30); IS(hour, 12); IS(minute, 0);
+    IS(latitude, 33.88); IS(longitude, -5.53);
+    IS(height, 560.0); UN(height_baro);
+    IS(press, 94190.0); IS(press_msl, 100540.0); IS(press_3h, -180.0); IS(press_tend, 8.0);
+    IS(wind_dir, 80.0); IS(wind_speed, 4.0);
+    IS(temp_2m, 289.2); IS(dewpoint_2m, 285.7); UN(humidity);
+    IS(visibility, 8000.0); IS(pres_wtr, 2); IS(past_wtr1, 6); IS(past_wtr2, 2);
+    IS(cloud_n, 100); IS(cloud_nh, 8); IS(cloud_hh, 250.0);
+    IS(cloud_cl, 39); IS(cloud_cm, 61); IS(cloud_ch, 60);
+    IS(cloud_n1, 2); IS(cloud_c1, 8); IS(cloud_h1, 320.0);
+    IS(cloud_n2, 5); IS(cloud_c2, 8); IS(cloud_h2, 620.0);
+    IS(cloud_n3, 2); IS(cloud_c3, 9); IS(cloud_h3, 920.0);
+    UN(cloud_n4); UN(cloud_c4); UN(cloud_h4);
+    IS(tot_prec12, 0.5); UN(tot_snow);
+}
+
+template<> template<>
+void to::test<3>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/synop-cloudbelow.bufr", BUFR);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_SYNOP);
+
+    msg.print(stderr);
+
+    IS(block, 11); IS(station, 406); IS(st_type, 1);
+    IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
+    IS(latitude, 50.07361); IS(longitude, 12.40333);
+    IS(height, 483.0); IS(height_baro, 490.0);
+    IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
+    IS(wind_dir, 0.0); IS(wind_speed, 1.0);
+    IS(temp_2m, 273.05); IS(dewpoint_2m, 271.35); IS(humidity, 88.0);
+    IS(visibility, 14000.0); IS(pres_wtr, 508); IS(past_wtr1, 10); IS(past_wtr2, 10);
+    IS(cloud_n, 38); IS(cloud_nh, 0); IS(cloud_hh, 6000.0);
+    IS(cloud_cl, 30); IS(cloud_cm, 20); IS(cloud_ch, 12);
+    IS(cloud_n1, 3); IS(cloud_c1, 0); IS(cloud_h1, 6000.0);
+    UN(cloud_n2); UN(cloud_c2); UN(cloud_h2);
+    UN(cloud_n3); UN(cloud_c3); UN(cloud_h3);
+    UN(cloud_n4); UN(cloud_c4); UN(cloud_h4);
+    UN(tot_prec24); UN(tot_snow);
+}
+
 
 #if 0
 static void relax_bufrex_msg(bufrex_msg b)
