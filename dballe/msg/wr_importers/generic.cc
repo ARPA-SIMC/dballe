@@ -39,21 +39,21 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 		{
 			/* Also skip attributes if there are some following */
 			for ( ; i + 1 < sset->vars_count &&
-					DBA_VAR_X(dba_var_code(sset->vars[i + 1])) == 33; i++)
+					WR_VAR_X(dba_var_code(sset->vars[i + 1])) == 33; i++)
 				;
 			continue;
 		}
 
 		switch (dba_var_code(var))
 		{
-			case DBA_VAR(0, 4, 192): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &pind)); break;
-			case DBA_VAR(0, 4, 193): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &p1)); break;
-			case DBA_VAR(0, 4, 194): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &p2)); break;
-			case DBA_VAR(0, 7, 192): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype1)); break;
-			case DBA_VAR(0, 7, 193): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l1)); break;
-			case DBA_VAR(0, 7, 194): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l2)); break;
-			case DBA_VAR(0, 7, 195): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype2)); break;
-			case DBA_VAR(0, 1, 194):
+			case WR_VAR(0, 4, 192): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &pind)); break;
+			case WR_VAR(0, 4, 193): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &p1)); break;
+			case WR_VAR(0, 4, 194): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &p2)); break;
+			case WR_VAR(0, 7, 192): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype1)); break;
+			case WR_VAR(0, 7, 193): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l1)); break;
+			case WR_VAR(0, 7, 194): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l2)); break;
+			case WR_VAR(0, 7, 195): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype2)); break;
+			case WR_VAR(0, 1, 194):
 			{
 				// Set the rep memo if we found it
 				const char* val = dba_var_value(var);
@@ -69,15 +69,15 @@ dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 					DBA_FAIL_GOTO(cleanup, dba_error_consistency(
 							"Incomplete context informations l(%d,%d, %d,%d),p(%d,%d,%d) for variable %d%02d%03d",
 							ltype1, l1, ltype2, l2, pind, p1, p2,
-							DBA_VAR_F(dba_var_code(var)),
-							DBA_VAR_X(dba_var_code(var)),
-							DBA_VAR_Y(dba_var_code(var))));
+							WR_VAR_F(dba_var_code(var)),
+							WR_VAR_X(dba_var_code(var)),
+							WR_VAR_Y(dba_var_code(var))));
 
 				DBA_RUN_OR_GOTO(cleanup, dba_var_copy(var, &copy));
 
 				/* Add attributes if there are some following */
 				for ( ; i + 1 < sset->vars_count &&
-						DBA_VAR_X(dba_var_code(sset->vars[i + 1])) == 33; i++)
+						WR_VAR_X(dba_var_code(sset->vars[i + 1])) == 33; i++)
 					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, sset->vars[i + 1]));
 				
 				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, copy, ltype1, l1, ltype2, l2, pind, p1, p2));

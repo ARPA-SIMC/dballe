@@ -1,5 +1,5 @@
 /*
- * dballe/bufrex_codec - BUFR/CREX import and export
+ * dballe/wr_codec - BUFR/CREX import and export
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -19,21 +19,26 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_BUFREX_H
-#define DBALLE_BUFREX_H
+#ifndef DBALLE_MSG_WR_CODEC_H
+#define DBALLE_MSG_WR_CODEC_H
 
 #include <dballe/msg/codec.h>
+#include <dballe/msg/msg.h>
 #include <stdint.h>
+
+namespace wreport {
+struct Bulletin;
+}
 
 namespace dballe {
 struct Msg;
 
 namespace msg {
 
-class BufrCrexImporter : public Importer
+class WBImporter : public Importer
 {
 public:
-    BufrCrexImporter(const import::Options& opts);
+    WBImporter(const import::Options& opts);
 
     /**
      * Import a decoded BUFR/CREX message
@@ -41,7 +46,7 @@ public:
     virtual void import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
 };
 
-class BufrImporter : public BufrCrexImporter
+class BufrImporter : public WBImporter
 {
 public:
     BufrImporter(const import::Options& opts=import::Options());
@@ -50,7 +55,7 @@ public:
     virtual void import(const Rawmsg& msg, Msgs& msgs) const;
 };
 
-class CrexImporter : public BufrCrexImporter
+class CrexImporter : public WBImporter
 {
 public:
     CrexImporter(const import::Options& opts=import::Options());

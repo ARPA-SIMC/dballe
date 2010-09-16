@@ -21,7 +21,7 @@
 
 #include "codec.h"
 #include "aof_codec.h"
-#include "bufrex_codec.h"
+#include "wr_codec.h"
 #include <dballe/core/rawmsg.h>
 #include <wreport/error.h>
 

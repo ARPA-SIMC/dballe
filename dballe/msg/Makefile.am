@@ -1,6 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
+EXTRA_DIST =
 
 #
 # Shared library
@@ -45,31 +46,34 @@ libdballe_msg_la_SOURCES = \
 		aof_importers/flight.cc \
 		aof_importers/temp.cc \
 		aof_importers/pilot.cc \
-		bufrex_codec.cc
+		wr_codec.cc \
+		wr_importers/base.cc \
+		wr_importers/synop.cc
 
 ##		codec-opts.cc
 ##		filter.c  (todo)
 
+EXTRA_DIST += wr_importers/base.h
+
 #if DO_DBALLE_BUFREX
 #libdballe_msg_la_SOURCES += \
-#		bufrex_importers/generic.c \
-#		bufrex_importers/synop.c \
-#		bufrex_importers/metar.c \
-#		bufrex_importers/pilot.c \
-#		bufrex_importers/temp.c \
-#		bufrex_importers/flight.c \
-#		bufrex_importers/sat.c \
-#		bufrex_importers/pollution.c \
-#		bufrex_exporters/exporters.c \
-#		bufrex_exporters/generic.c \
-#		bufrex_exporters/synop.c \
-#		bufrex_exporters/metar.c \
-#		bufrex_exporters/ship.c \
-#		bufrex_exporters/buoy.c \
-#		bufrex_exporters/pilot.c \
-#		bufrex_exporters/temp.c \
-#		bufrex_exporters/flight.c \
-#		bufrex_exporters/pollution.c
+#		wr_importers/generic.cc \
+#		wr_importers/metar.cc \
+#		wr_importers/pilot.cc \
+#		wr_importers/temp.cc \
+#		wr_importers/flight.cc \
+#		wr_importers/sat.cc \
+#		wr_importers/pollution.cc \
+#		bufrex_exporters/exporters.cc \
+#		bufrex_exporters/generic.cc \
+#		bufrex_exporters/synop.cc \
+#		bufrex_exporters/metar.cc \
+#		bufrex_exporters/ship.cc \
+#		bufrex_exporters/buoy.cc \
+#		bufrex_exporters/pilot.cc \
+#		bufrex_exporters/temp.cc \
+#		bufrex_exporters/flight.cc \
+#		bufrex_exporters/pollution.cc
 #endif
 libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
 
@@ -136,4 +140,4 @@ distclean-local:
 	rm -f ltypes.dox ltypes.tex tranges.dox tranges.tex
 
 BUILT_SOURCES = vars.h vars.cc vars.gperf msg-extravars.h
-EXTRA_DIST = mkvars vars.csv vars.h vars.gperf vars.cc msg-extravars.h aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mklevels mktranges
+EXTRA_DIST += mkvars vars.csv vars.h vars.gperf vars.cc msg-extravars.h aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mklevels mktranges

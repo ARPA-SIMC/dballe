@@ -1,5 +1,5 @@
 /*
- * dballe/bufrex_codec - BUFR/CREX import and export
+ * dballe/wr_codec - BUFR/CREX import and export
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -19,10 +19,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "bufrex_codec.h"
+#include "wr_codec.h"
+#include "msgs.h"
 #include <wreport/bulletin.h>
-//#include <dballe/bufrex/subset.h>
-//#include "bufrex_exporters/exporters.h"
+#include "wr_importers/base.h"
+//#include "wr_exporters/exporters.h"
 //#include <dballe/core/verbose.h>
 
 using namespace wreport;
@@ -31,11 +32,11 @@ using namespace std;
 namespace dballe {
 namespace msg {
 
-BufrCrexImporter::BufrCrexImporter(const import::Options& opts)
+WBImporter::WBImporter(const import::Options& opts)
 	: Importer(opts) {}
 
 BufrImporter::BufrImporter(const import::Options& opts)
-	: BufrCrexImporter(opts) {}
+	: WBImporter(opts) {}
 BufrImporter::~BufrImporter() {}
 
 void BufrImporter::import(const Rawmsg& msg, Msgs& msgs) const
@@ -46,7 +47,7 @@ void BufrImporter::import(const Rawmsg& msg, Msgs& msgs) const
 }
 
 CrexImporter::CrexImporter(const import::Options& opts)
-	: BufrCrexImporter(opts) {}
+	: WBImporter(opts) {}
 CrexImporter::~CrexImporter() {}
 
 void CrexImporter::import(const Rawmsg& msg, Msgs& msgs) const
@@ -56,61 +57,40 @@ void CrexImporter::import(const Rawmsg& msg, Msgs& msgs) const
 	import_bulletin(bulletin, msgs);
 }
 
-void BufrCrexImporter::import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
+void WBImporter::import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
 {
-	throw error_unimplemented("TODO BULLETIN IMPORT");
+	// Infer the right importer
+	std::auto_ptr<wr::Importer> importer;
+	switch (msg.type)
+	{
+		case 0:
+		case 1:
+			if (msg.localsubtype == 140)
+				importer = wr::Importer::createMetar();
+			else
+				importer = wr::Importer::createSynop();
+			break;
+		case 2:
+			if (msg.localsubtype == 91 || msg.localsubtype == 92)
+				importer = wr::Importer::createPilot();
+			else
+				importer = wr::Importer::createTemp();
+			break;
+		case 3: importer = wr::Importer::createSat(); break;
+		case 4: importer = wr::Importer::createFlight(); break;
+		case 8: importer = wr::Importer::createPollution(); break;
+		default: importer = wr::Importer::createGeneric(); break;
+	}
 
+	for (unsigned i = 0; i < msg.subsets.size(); ++i)
+	{
+		std::auto_ptr<Msg> newmsg(new Msg);
+		importer->import(msg.subsets[i], *newmsg);
+		msgs.acquire(newmsg);
+	}
 }
 
 #if 0
-dba_err bufrex_msg_to_dba_msgs(bufrex_msg raw, dba_msg_codec_options opts, dba_msgs* msgs)
-{
-	dba_err err = DBA_OK;
-	dba_msgs res = NULL;
-	dba_msg msg = NULL;
-	int i;
-
-	DBA_RUN_OR_GOTO(cleanup, dba_msgs_create(&res));
-
-	for (i = 0; i < raw->subsets_count; ++i)
-	{
-		DBA_RUN_OR_GOTO(cleanup, dba_msg_create(&msg));
-
-		switch (raw->type)
-		{
-			case 0:
-			case 1:
-				if (raw->localsubtype == 140)
-					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_metar(msg, raw, raw->subsets[i]));
-				else
-					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_synop(msg, raw, raw->subsets[i]));
-				break;
-			case 2:
-				if (raw->localsubtype == 91 || raw->localsubtype == 92)
-					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_pilot(msg, raw, raw->subsets[i]));
-				else
-					DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_temp(msg, raw, raw->subsets[i]));
-				break;
-			case 3: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_sat(msg, raw, raw->subsets[i])); break;
-			case 4: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_flight(msg, raw, raw->subsets[i])); break;
-			case 8: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_pollution(msg, raw, raw->subsets[i])); break;
-			default: DBA_RUN_OR_GOTO(cleanup, bufrex_copy_to_generic(msg, raw, raw->subsets[i])); break;
-		}
-
-		DBA_RUN_OR_GOTO(cleanup, dba_msgs_append_acquire(res, msg));
-		msg = NULL;
-	}
-
-	*msgs = res;
-	res = NULL;
-
-cleanup:
-	if (msg != NULL)
-		dba_msg_delete(msg);
-	if (res != NULL)
-		dba_msgs_delete(res);
-	return err == DBA_OK ? dba_error_ok() : err;
-}
 extern dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 extern dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
 extern dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_msg raw, bufrex_subset sset);

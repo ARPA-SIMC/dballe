@@ -59,7 +59,7 @@ dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 	if (GET(11, "B06001")) DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var));
 	if (GET(12, "B07001")) DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var));
 
-	for (i = 14; i < sset->vars_count && dba_var_code(sset->vars[i-1]) == DBA_VAR(0, 7, 4); i += 5)
+	for (i = 14; i < sset->vars_count && dba_var_code(sset->vars[i-1]) == WR_VAR(0, 7, 4); i += 5)
 	{
 		long int ltype = -1, l1 = -1;
 
@@ -69,7 +69,7 @@ dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 			DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
 			ltype = 100;
 			l1 = press;
-			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 4), ltype, l1, 0, 0, 254, 0, 0));
+			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0, 10, 4), ltype, l1, 0, 0, 254, 0, 0));
 		}
 		if (GET(i + 2, "B10003"))
 		{
@@ -80,14 +80,14 @@ dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
 				ltype = 102;
 				l1 = lround((double)geopot / 9.80665);
 			}
-			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 10, 8), ltype, l1, 0, 0, 254, 0, 0));
+			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0, 10, 8), ltype, l1, 0, 0, 254, 0, 0));
 		}
 		if (ltype == -1)
 			return dba_error_notfound("looking for pressure or height in a BUFR/CREX PILOT message");
 
-		if (GET(i+1, "B08001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0,  8, 1), ltype, l1, 0, 0, 254, 0, 0));
-		if (GET(i+3, "B11001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 1), ltype, l1, 0, 0, 254, 0, 0));
-		if (GET(i+4, "B11002")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, DBA_VAR(0, 11, 2), ltype, l1, 0, 0, 254, 0, 0));
+		if (GET(i+1, "B08001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0,  8, 1), ltype, l1, 0, 0, 254, 0, 0));
+		if (GET(i+3, "B11001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0, 11, 1), ltype, l1, 0, 0, 254, 0, 0));
+		if (GET(i+4, "B11002")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0, 11, 2), ltype, l1, 0, 0, 254, 0, 0));
 	}
 
 	return dba_error_ok();

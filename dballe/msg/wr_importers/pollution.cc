@@ -54,15 +54,15 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 		{
 			/* For this parameter you can give up to 32 characters as a station
 			 * name. */
-			case DBA_VAR(0,  1,  19): DBA_RUN_OR_RETURN(dba_msg_set_st_name_var(msg, var)); break;
+			case WR_VAR(0,  1,  19): DBA_RUN_OR_RETURN(dba_msg_set_st_name_var(msg, var)); break;
 			/* Airbase local code -- Up to 7 characters reflecting the local
 			 * station code supplied with the observations. If not given then
 			 * leave blank. */
-			case DBA_VAR(0,  1, 212): DBA_RUN_OR_RETURN(dba_msg_set_poll_lcode_var(msg, var)); break;
+			case WR_VAR(0,  1, 212): DBA_RUN_OR_RETURN(dba_msg_set_poll_lcode_var(msg, var)); break;
 			/* Airbase station code -- 7 character code supplied with AirBase
 			 * observations (see Ref 1, II.1.4, page 23). If not supplied then
 			 * leave blank.*/
-			case DBA_VAR(0,  1, 213): DBA_RUN_OR_RETURN(dba_msg_set_poll_scode_var(msg, var)); break;
+			case WR_VAR(0,  1, 213): DBA_RUN_OR_RETURN(dba_msg_set_poll_scode_var(msg, var)); break;
 			/* GEMS code -- 6 character code suggested at RAQ Paris meeting,
 			 * December 2006. First 2 characters to be country code (using
 			 * ISO 3166-1-alpha-2 code), next 4 characters to be unique station
@@ -70,7 +70,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * be defined and maintained by each GEMS RAQ partner responsible
 			 * for collecting observations within each national boundar
 			 * invovled)*/
-			case DBA_VAR(0,  1, 214): DBA_RUN_OR_RETURN(dba_msg_set_poll_gemscode_var(msg, var)); break;
+			case WR_VAR(0,  1, 214): DBA_RUN_OR_RETURN(dba_msg_set_poll_gemscode_var(msg, var)); break;
 			/*
 			 * Dominant emission source influencing the air pollution
 			 * concentrations at the station (based on Ref 1, II.2.2,  page 28)
@@ -81,7 +81,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * 3-6   reserved (do not use)
 			 * 7     missing (or unknown)
 			 */
-			case DBA_VAR(0,  1, 215): DBA_RUN_OR_RETURN(dba_msg_set_poll_source_var(msg, var)); break;
+			case WR_VAR(0,  1, 215): DBA_RUN_OR_RETURN(dba_msg_set_poll_source_var(msg, var)); break;
 			/*
 			 * Type of area in which station is located (based on Ref 1, II.2.1, page 27)
 			 * Possible values are:
@@ -91,7 +91,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * 3-6   reserved (do not use)
 			 * 7     missing (or unknown)
 			 */
-			case DBA_VAR(0,  1, 216): DBA_RUN_OR_RETURN(dba_msg_set_poll_atype_var(msg, var)); break;
+			case WR_VAR(0,  1, 216): DBA_RUN_OR_RETURN(dba_msg_set_poll_atype_var(msg, var)); break;
 			/*
 			 * Type of terrain in which the station is located (based on table in Ref 1, II.1.12, page 26)
 			 * Possible values are:
@@ -104,32 +104,32 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * 6-14  reserved (do not use)
 			 * 15    missing (or unknown)
 			 */
-			case DBA_VAR(0,  1, 217): DBA_RUN_OR_RETURN(dba_msg_set_poll_ttype_var(msg, var)); break;
+			case WR_VAR(0,  1, 217): DBA_RUN_OR_RETURN(dba_msg_set_poll_ttype_var(msg, var)); break;
 			/*
 			 * Date and time of observation in UTC. Should be the time of the
 			 * observation, i.e. time at the end of the averaging
 			 * period. Minute and second can be set to zero if that level of
 			 * precision is not required.
 			 */
-			case DBA_VAR(0,  4,   1): DBA_RUN_OR_RETURN(dba_msg_set_year_var(msg, var)); break;
-			case DBA_VAR(0,  4,   2): DBA_RUN_OR_RETURN(dba_msg_set_month_var(msg, var)); break;
-			case DBA_VAR(0,  4,   3): DBA_RUN_OR_RETURN(dba_msg_set_day_var(msg, var)); break;
-			case DBA_VAR(0,  4,   4): DBA_RUN_OR_RETURN(dba_msg_set_hour_var(msg, var)); break;
-			case DBA_VAR(0,  4,   5): DBA_RUN_OR_RETURN(dba_msg_set_minute_var(msg, var)); break;
-			case DBA_VAR(0,  4,   6): DBA_RUN_OR_RETURN(dba_msg_set_second_var(msg, var)); break;
+			case WR_VAR(0,  4,   1): DBA_RUN_OR_RETURN(dba_msg_set_year_var(msg, var)); break;
+			case WR_VAR(0,  4,   2): DBA_RUN_OR_RETURN(dba_msg_set_month_var(msg, var)); break;
+			case WR_VAR(0,  4,   3): DBA_RUN_OR_RETURN(dba_msg_set_day_var(msg, var)); break;
+			case WR_VAR(0,  4,   4): DBA_RUN_OR_RETURN(dba_msg_set_hour_var(msg, var)); break;
+			case WR_VAR(0,  4,   5): DBA_RUN_OR_RETURN(dba_msg_set_minute_var(msg, var)); break;
+			case WR_VAR(0,  4,   6): DBA_RUN_OR_RETURN(dba_msg_set_second_var(msg, var)); break;
 			/* Latitude of station (-90.0 to 90.0, up to 5 decimal place precision) */
-			case DBA_VAR(0,  5,   1):
-			case DBA_VAR(0,  5,   2): DBA_RUN_OR_RETURN(dba_msg_set_latitude_var(msg, var)); break;
+			case WR_VAR(0,  5,   1):
+			case WR_VAR(0,  5,   2): DBA_RUN_OR_RETURN(dba_msg_set_latitude_var(msg, var)); break;
 			/* Longitude of station (-180.0 to 180.0, up to 5 decimal place precision) */
-			case DBA_VAR(0,  6,   1):
-			case DBA_VAR(0,  6,   2): DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var)); break;
+			case WR_VAR(0,  6,   1):
+			case WR_VAR(0,  6,   2): DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var)); break;
 			/*
 			 * Height of station above mean sea level and height of sensing
 			 * instrument above local ground. Both in metres. If not known than
 			 * can be coded as missing value.
 			 */
-			case DBA_VAR(0,  7,  30): DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var)); break;
-			case DBA_VAR(0,  7,  31):
+			case WR_VAR(0,  7,  30): DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var)); break;
+			case WR_VAR(0,  7,  31):
 				if (dba_var_value(var) == NULL)
 				{
 					/* Default to 3 metres above ground */
@@ -139,7 +139,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 				}
 				break;
 			/* Signifies that observation is an average over a certain time period. Value set to 2. */
-			case DBA_VAR(0,  8,  21): {
+			case WR_VAR(0,  8,  21): {
 				if (dba_var_value(var) == NULL)
 					/* Since this is supposed to always be 2, if it is missing
 					 * we just use the default */
@@ -155,7 +155,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * e.g. -60 for average over the previous hour.  The period is
 			 * relative to the date/time of the observation.
 			 */
-			case DBA_VAR(0,  4,  25):
+			case WR_VAR(0,  4,  25):
 				if (dba_var_value(var) == NULL)
 					/* Leave it to the default */
 					break;
@@ -201,19 +201,19 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 *  015194 [SIM] O3 Concentration     0
 			 *  015195 [SIM] PM10 Concentration   27
 			 */
-			case DBA_VAR(0,  8,  43): {
+			case WR_VAR(0,  8,  43): {
 				if (dba_var_value(var) == NULL)
 					return dba_error_consistency("message cannot be imported because the constituent type is missing");
 				int val;
 				DBA_RUN_OR_RETURN(dba_var_enqi(var, &val));
 				switch (val)
 				{
-					case  0: valtype = DBA_VAR(0, 15, 194); break;
-					case  4: valtype = DBA_VAR(0, 15, 196); break;
-					case  5: valtype = DBA_VAR(0, 15, 193); break;
-					case  8: valtype = DBA_VAR(0, 15, 197); break;
-					case 26: valtype = DBA_VAR(0, 15, 198); break;
-					case 27: valtype = DBA_VAR(0, 15, 195); break;
+					case  0: valtype = WR_VAR(0, 15, 194); break;
+					case  4: valtype = WR_VAR(0, 15, 196); break;
+					case  5: valtype = WR_VAR(0, 15, 193); break;
+					case  8: valtype = WR_VAR(0, 15, 197); break;
+					case 26: valtype = WR_VAR(0, 15, 198); break;
+					case 27: valtype = WR_VAR(0, 15, 195); break;
 					default:
 						return dba_error_consistency("cannot import constituent %d as there is no mapping for it", val);
 				}
@@ -224,7 +224,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * if applicable. This parameter is optional and can be coded as a
 			 * blank character string.
 			 */
-			case DBA_VAR(0,  8,  44): if (dba_var_value(var) != NULL) attr_cas = var; break;
+			case WR_VAR(0,  8,  44): if (dba_var_value(var) != NULL) attr_cas = var; break;
 			/*
 			 * If parameter 008043 is coded as 25, 26 or 27, then this
 			 * parameter can be used to further categorise the nature of the
@@ -244,7 +244,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * 201-254  reserved for local use
 			 * 255      missing
 			 */
-			case DBA_VAR(0,  8,  45): if (dba_var_value(var) != NULL) attr_pmc = var; break;
+			case WR_VAR(0,  8,  45): if (dba_var_value(var) != NULL) attr_pmc = var; break;
 			/*
 			 * A recent feature (still pre-operational at WMO) is the
 			 * introduction of scaled quanities specifically to deal with
@@ -255,7 +255,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * example_airbase2bufr.f90 code gives an example of a method to
 			 * calculate the decimal scaling factor.
 			 */
-			case DBA_VAR(0,  8,  90):
+			case WR_VAR(0,  8,  90):
 				/* Someone seemed to have thought that C fields in BUFR data
 				 * section were not crazy enough, and went on reimplementing
 				 * them using B fields.  So we have to reimplement the same
@@ -285,7 +285,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * calculation, concentration (kg/m**3)  = scaled mass density *
 			 * 10**(decimal scaling factor)
 			 */
-			case DBA_VAR(0, 15,  23):
+			case WR_VAR(0, 15,  23):
 				if (dba_var_value(var) == NULL)
 					return dba_error_consistency("message cannot be imported because the constituent type is missing");
 				DBA_RUN_OR_RETURN(dba_var_enqd(var, &value));
@@ -304,7 +304,7 @@ dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset
 			 * 4-6  Reserved
 			 * 7    Quality information not given
 			 */
-			case DBA_VAR(0, 33,   3): if (dba_var_value(var) != NULL) attr_conf = var; break;
+			case WR_VAR(0, 33,   3): if (dba_var_value(var) != NULL) attr_conf = var; break;
 		}
 	}
 
