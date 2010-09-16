@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <sstream>
 
 using namespace wreport;
 using namespace std;
@@ -250,9 +251,9 @@ void Msg::print(FILE* out) const
 
 static void context_summary(const msg::Context& c, FILE* out)
 {
-	fprintf(out, "c(%d,%d, %d,%d, %d,%d,%d)",
-            c.level.ltype1, c.level.l1, c.level.ltype2, c.level.l2,
-            c.trange.pind, c.trange.p1, c.trange.p2);
+	stringstream str;
+	str << c.level << ", " << c.trange;
+	fprintf(out, "c(%s)", str.str().c_str());
 }
 
 unsigned Msg::diff(const Msg& msg, FILE* out) const

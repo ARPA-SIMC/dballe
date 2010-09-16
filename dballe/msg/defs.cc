@@ -29,12 +29,24 @@ namespace dballe {
 
 std::ostream& operator<<(std::ostream& out, const Level& l)
 {
-    return out << l.ltype1 << "," << l.l1 << ", " << l.ltype2 << "," << l.l2;
+    if (l.ltype1 == MISSING_INT) out << "-"; else out << l.ltype1;
+    out << ",";
+    if (l.l1 == MISSING_INT) out << "-"; else out << l.l1;
+    out << ",";
+    if (l.ltype2 == MISSING_INT) out << "-"; else out << l.ltype2;
+    out << ",";
+    if (l.l2 == MISSING_INT) out << "-"; else out << l.l2;
+    return out;
 }
 
 std::ostream& operator<<(std::ostream& out, const Trange& l)
 {
-    return out << l.pind << "," << l.p1 << "," << l.p2;
+    if (l.pind == MISSING_INT) out << "-"; else out << l.pind;
+    out << ",";
+    if (l.p1 == MISSING_INT) out << "-"; else out << l.p1;
+    out << ",";
+    if (l.p2 == MISSING_INT) out << "-"; else out << l.p2;
+    return out;
 }
 
 } // namespace dballe
