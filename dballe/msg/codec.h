@@ -47,36 +47,33 @@ struct Msgs;
 
 namespace msg {
 
-namespace import {
-
-struct Options
-{
-    bool simplified;
-
-    /// Create new Options initialised with default values
-    Options()
-        : simplified(false) {}
-
-    /// Print a summary of the options to \a out
-    void print(FILE* out);
-};
-
-} // namespace import
-
 /**
  * Message importer
  *
  * This class is designed like a configurable virtual functor.
  *
  * Importers of various kinds can provide their implementations.
- */ 
+ */
 class Importer
 {
+public:
+    struct Options
+    {
+        bool simplified;
+
+        /// Create new Options initialised with default values
+        Options()
+            : simplified(false) {}
+
+        /// Print a summary of the options to \a out
+        void print(FILE* out);
+    };
+
 protected:
-    import::Options opts;
+    Options opts;
 
 public:
-    Importer(const import::Options& opts);
+    Importer(const Options& opts);
     virtual ~Importer();
 
     /**
@@ -86,88 +83,64 @@ public:
      *   Encoded message
      * @retval msgs
      *   The resulting ::dba_msg
-     * @return
-     *   The error indicator for the function. See @ref error.h
      */
-    virtual void import(const Rawmsg& msg, Msgs& msgs) const = 0;
+    virtual void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const = 0;
 
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual void import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const = 0;
+    virtual void from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const = 0;
 
 
     /// Instantiate the right importer for the given type
-    static std::auto_ptr<Importer> create(Encoding type, const import::Options& opts=import::Options());
-
-#if 0
-	/**
-	 * Read and parse a message from the file.
-	 *
-	 * @param file
-	 *   ::dba_file to read from
-	 * @retval msgs
-	 *   The resulting ::dba_msgs
-	 * @retval found
-	 *   Will be set to true if a message has been found in the file, else to false.
-	 * @return
-	 *   The error indicator for the function. See @ref error.h
-	 */
-	dba_err read(dba_file file, dba_msgs* msgs, int* found);
-#endif
-
-#if 0
-	/**
-	 * Dump all the decoder options to a stream
-	 *
-	 * @param out
-	 *   The stream to dump to.
-	 */
-	void print(FILE* out);
-#endif
+    static std::auto_ptr<Importer> create(Encoding type, const Options& opts=Options());
 };
 
-#if 0
-
-class Encoder
+/**
+ * Message exporter
+ *
+ * This class is designed like a configurable virtual functor.
+ *
+ * Exporters of various kinds can provide their implementations.
+ */
+class Exporter
 {
 public:
-	Encoder();
+    struct Options
+    {
+        /// Create new Options initialised with default values
+        Options() {}
 
-	/**
-	 * Encode a message into its raw encoded representation
-	 *
-	 * @param msgs
-	 *   Message to encode
-	 * @param type
-	 *   Format to use for encoding
-	 * @retval rmsg
-	 *   The resulting ::dba_rawmsg
-	 * @return
-	 *   The error indicator for the function. See @ref error.h
-	 */
-	dba_err encode(dba_msgs msgs, dba_encoding type, dba_rawmsg *rmsg);
+        /// Print a summary of the options to \a out
+        void print(FILE* out);
+    };
 
-	/**
-	 * Write a message to the file.
-	 *
-	 * @param file
-	 *   ::dba_file to write to
-	 * @param msgs
-	 *   The ::dba_msgs to encode and write.
-	 * @param cat
-	 *   The BUFR of CREX message category to use for encoding (0 for auto detect)
-	 * @param subcat
-	 *   The BUFR of CREX message subcategory to use for encoding (0 for auto detect)
-	 * @param localsubcat
-	 *   The BUFR of CREX message subcategory (defined by local centres) to use for encoding (0 for auto detect)
-	 * @return
-	 *   The error indicator for the function. See @ref error.h
-	 */
-	dba_err write(dba_file file, dba_msgs msgs, int cat, int subcat, int localsubcat);
+protected:
+    Options opts;
+
+public:
+    Exporter(const Options& opts);
+    virtual ~Exporter();
+
+    /**
+     * Encode a message
+     *
+     * @param msgs
+     *   Message to encode
+     * @retval rmsg
+     *   The resulting Rawmsg
+     */
+    virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const = 0;
+
+    /**
+     * Export to a Bulletin
+     */
+    virtual void to_bulletin(const Msgs& msgs, wreport::Bulletin& msg) const = 0;
+
+
+    /// Instantiate the right importer for the given type
+    static std::auto_ptr<Exporter> create(Encoding type, const Options& opts=Options());
 };
-
-#endif
 
 } // namespace msg
 } // namespace dballe

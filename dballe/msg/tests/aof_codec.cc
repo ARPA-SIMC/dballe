@@ -77,7 +77,7 @@ void to::test<1>()
 
             /* Parse it */
             Msgs msgs;
-            importer.import(*raw, msgs);
+            importer.from_rawmsg(*raw, msgs);
             ensure(!msgs.empty());
         } catch (std::exception& e) {
             throw tut::failure(string("[") + files[i] + "] " + e.what());
@@ -351,46 +351,28 @@ void to::test<3>()
 		NULL,
 	};
 
+    std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(BUFR));
+    std::auto_ptr<msg::Importer> importer(msg::Importer::create(AOF));
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
+            // Read
             auto_ptr<Msgs> amsgs = read_msgs(files[i], AOF);
 
-#if 0
-//            TODO TODO TODO
-		dba_rawmsg raw;
-		CHECKED(dba_marshal_encode(amsgs, BUFR, &raw));
+            // Reencode to BUFR
+            Rawmsg raw;
+            exporter->to_rawmsg(*amsgs, raw);
 
-		dba_msgs bmsgs;
-		CHECKED(dba_marshal_decode(raw, &bmsgs));
+            // Decode again to AOF
+            Msgs bmsgs;
+            importer->from_rawmsg(raw, bmsgs);
 
-		normalise_encoding_quirks(amsgs, bmsgs);
-
-		// Compare the two dba_msg
-		int diffs = 0;
-		dba_msgs_diff(amsgs, bmsgs, &diffs, stderr);
-		if (diffs) tests::track_different_msgs(amsgs, bmsgs, "aof-bufr");
-		gen_ensure_equals(diffs, 0);
-
-		dba_msgs_delete(amsgs);
-		dba_msgs_delete(bmsgs);
-		dba_rawmsg_delete(raw);
-
-
-
-
-
-
-
-
-            auto_ptr<Msgs> bmsgs = read_msgs((files[i] + ".bufr").c_str(), BUFR);
-            normalise_encoding_quirks(*amsgs, *bmsgs);
+            normalise_encoding_quirks(*amsgs, bmsgs);
 
             // Compare the two dba_msg
-            int diffs = amsgs->diff(*bmsgs, stderr);
-            if (diffs) dballe::tests::track_different_msgs(*amsgs, *bmsgs, "aof");
+            int diffs = amsgs->diff(bmsgs, stderr);
+            if (diffs) dballe::tests::track_different_msgs(*amsgs, bmsgs, "aof-bufr");
             ensure_equals(diffs, 0);
-#endif
         } catch (std::exception& e) {
             throw tut::failure(string(files[i]) + ": " + e.what());
         }

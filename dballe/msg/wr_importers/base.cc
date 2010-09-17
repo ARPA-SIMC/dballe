@@ -30,13 +30,13 @@ namespace dballe {
 namespace msg {
 namespace wr {
 
-std::auto_ptr<Importer> Importer::createMetar(const import::Options&) { throw error_unimplemented("WB Importers"); }
-std::auto_ptr<Importer> Importer::createTemp(const import::Options&) { throw error_unimplemented("WB Importers"); }
-std::auto_ptr<Importer> Importer::createPilot(const import::Options&) { throw error_unimplemented("WB Importers"); }
-std::auto_ptr<Importer> Importer::createFlight(const import::Options&) { throw error_unimplemented("WB Importers"); }
-std::auto_ptr<Importer> Importer::createSat(const import::Options&) { throw error_unimplemented("WB Importers"); }
-std::auto_ptr<Importer> Importer::createPollution(const import::Options&) { throw error_unimplemented("WB Importers"); }
-std::auto_ptr<Importer> Importer::createGeneric(const import::Options&) { throw error_unimplemented("WB Importers"); }
+std::auto_ptr<Importer> Importer::createMetar(const msg::Importer::Options&) { throw error_unimplemented("WB Importers"); }
+std::auto_ptr<Importer> Importer::createTemp(const msg::Importer::Options&) { throw error_unimplemented("WB Importers"); }
+std::auto_ptr<Importer> Importer::createPilot(const msg::Importer::Options&) { throw error_unimplemented("WB Importers"); }
+std::auto_ptr<Importer> Importer::createFlight(const msg::Importer::Options&) { throw error_unimplemented("WB Importers"); }
+std::auto_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB Importers"); }
+std::auto_ptr<Importer> Importer::createPollution(const msg::Importer::Options&) { throw error_unimplemented("WB Importers"); }
+std::auto_ptr<Importer> Importer::createGeneric(const msg::Importer::Options&) { throw error_unimplemented("WB Importers"); }
 
 void WMOImporter::import_var(const Var& var)
 {

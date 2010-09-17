@@ -31,12 +31,12 @@ using namespace std;
 namespace dballe {
 namespace tests {
 
-auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const msg::import::Options& opts)
+auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const msg::Importer::Options& opts)
 {
     std::auto_ptr<Rawmsg> raw = read_rawmsg(filename, type);
     std::auto_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
     std::auto_ptr<Msgs> msgs(new Msgs);
-    importer->import(*raw, *msgs);
+    importer->from_rawmsg(*raw, *msgs);
     return msgs;
 }
 

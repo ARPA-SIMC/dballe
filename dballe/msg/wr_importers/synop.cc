@@ -104,7 +104,7 @@ protected:
     }
 
 public:
-    SynopImporter(const import::Options& opts) : WMOImporter(opts) {}
+    SynopImporter(const msg::Importer::Options& opts) : WMOImporter(opts) {}
     virtual ~SynopImporter() {}
 
     virtual void init()
@@ -161,7 +161,7 @@ public:
     }
 };
 
-std::auto_ptr<Importer> Importer::createSynop(const import::Options& opts)
+std::auto_ptr<Importer> Importer::createSynop(const msg::Importer::Options& opts)
 {
     return auto_ptr<Importer>(new SynopImporter(opts));
 }

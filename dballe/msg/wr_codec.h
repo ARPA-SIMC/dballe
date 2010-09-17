@@ -35,33 +35,63 @@ struct Msg;
 
 namespace msg {
 
-class WBImporter : public Importer
+class WRImporter : public Importer
 {
 public:
-    WBImporter(const import::Options& opts);
+    WRImporter(const Options& opts);
 
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual void import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
+    virtual void from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
 };
 
-class BufrImporter : public WBImporter
+class BufrImporter : public WRImporter
 {
 public:
-    BufrImporter(const import::Options& opts=import::Options());
+    BufrImporter(const Options& opts=Options());
     virtual ~BufrImporter();
 
-    virtual void import(const Rawmsg& msg, Msgs& msgs) const;
+    virtual void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const;
 };
 
-class CrexImporter : public WBImporter
+class CrexImporter : public WRImporter
 {
 public:
-    CrexImporter(const import::Options& opts=import::Options());
+    CrexImporter(const Options& opts=Options());
     virtual ~CrexImporter();
 
-    virtual void import(const Rawmsg& msg, Msgs& msgs) const;
+    virtual void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const;
+};
+
+
+class WRExporter : public Exporter
+{
+public:
+    WRExporter(const Options& opts);
+
+    /**
+     * Import a decoded BUFR/CREX message
+     */
+    virtual void to_bulletin(const Msgs& msgs, wreport::Bulletin& msg) const;
+};
+
+class BufrExporter : public WRExporter
+{
+public:
+    BufrExporter(const Options& opts=Options());
+    virtual ~BufrExporter();
+
+    virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const;
+};
+
+class CrexExporter : public WRExporter
+{
+public:
+    CrexExporter(const Options& opts=Options());
+    virtual ~CrexExporter();
+
+    virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const;
 };
 
 #if 0

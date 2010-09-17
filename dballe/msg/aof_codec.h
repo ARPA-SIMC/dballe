@@ -82,7 +82,7 @@ protected:
 
 
 public:
-    AOFImporter(const import::Options& opts=import::Options());
+    AOFImporter(const Options& opts=Options());
     virtual ~AOFImporter();
 
     /**
@@ -95,12 +95,12 @@ public:
      * @return
      *   The error indicator for the function. See @ref error.h
      */
-    virtual void import(const Rawmsg& msg, Msgs& msgs) const;
+    virtual void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const;
 
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual void import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
+    virtual void from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
 
     /**
      * Get category and subcategory of an AOF message

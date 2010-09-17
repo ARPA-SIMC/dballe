@@ -32,32 +32,32 @@ using namespace std;
 namespace dballe {
 namespace msg {
 
-WBImporter::WBImporter(const import::Options& opts)
+WRImporter::WRImporter(const Options& opts)
 	: Importer(opts) {}
 
-BufrImporter::BufrImporter(const import::Options& opts)
-	: WBImporter(opts) {}
+BufrImporter::BufrImporter(const Options& opts)
+	: WRImporter(opts) {}
 BufrImporter::~BufrImporter() {}
 
-void BufrImporter::import(const Rawmsg& msg, Msgs& msgs) const
+void BufrImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
 {
 	BufrBulletin bulletin;
 	bulletin.decode(msg);
-	import_bulletin(bulletin, msgs);
+	from_bulletin(bulletin, msgs);
 }
 
-CrexImporter::CrexImporter(const import::Options& opts)
-	: WBImporter(opts) {}
+CrexImporter::CrexImporter(const Options& opts)
+	: WRImporter(opts) {}
 CrexImporter::~CrexImporter() {}
 
-void CrexImporter::import(const Rawmsg& msg, Msgs& msgs) const
+void CrexImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
 {
 	CrexBulletin bulletin;
 	bulletin.decode(msg);
-	import_bulletin(bulletin, msgs);
+	from_bulletin(bulletin, msgs);
 }
 
-void WBImporter::import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
+void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
 {
 	// Infer the right importer
 	std::auto_ptr<wr::Importer> importer;
@@ -90,6 +90,37 @@ void WBImporter::import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
 		importer->import(msg.subsets[i], *newmsg);
 		msgs.acquire(newmsg);
 	}
+}
+
+
+WRExporter::WRExporter(const Options& opts)
+	: Exporter(opts) {}
+
+BufrExporter::BufrExporter(const Options& opts)
+	: WRExporter(opts) {}
+BufrExporter::~BufrExporter() {}
+
+void BufrExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
+{
+	BufrBulletin bulletin;
+	to_bulletin(msgs, bulletin);
+	bulletin.encode(msg);
+}
+
+CrexExporter::CrexExporter(const Options& opts)
+	: WRExporter(opts) {}
+CrexExporter::~CrexExporter() {}
+
+void CrexExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
+{
+	CrexBulletin bulletin;
+	to_bulletin(msgs, bulletin);
+	bulletin.encode(msg);
+}
+
+void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& msg) const
+{
+	throw error_unimplemented("TO_BULLETIN");
 }
 
 #if 0

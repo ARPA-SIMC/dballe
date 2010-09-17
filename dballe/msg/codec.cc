@@ -33,18 +33,14 @@ using namespace std;
 namespace dballe {
 namespace msg {
 
-namespace import {
-
-void Options::print(FILE* out)
+void Importer::Options::print(FILE* out)
 {
-	putc('[', out);
-	fputs(simplified ? "simplified" : "accurate", out);
-	putc(']', out);
+    putc('[', out);
+    fputs(simplified ? "simplified" : "accurate", out);
+    putc(']', out);
 }
 
-}
-
-Importer::Importer(const import::Options& opts)
+Importer::Importer(const Options& opts)
     : opts(opts)
 {
 }
@@ -53,7 +49,7 @@ Importer::~Importer()
 {
 }
 
-std::auto_ptr<Importer> Importer::create(Encoding type, const import::Options& opts)
+std::auto_ptr<Importer> Importer::create(Encoding type, const Options& opts)
 {
     switch (type)
     {
@@ -65,6 +61,38 @@ std::auto_ptr<Importer> Importer::create(Encoding type, const import::Options& o
             return auto_ptr<Importer>(new AOFImporter(opts));
         default:
             error_unimplemented::throwf("%s importer is not implemented yet", encoding_name(type));
+    }
+}
+
+
+void Exporter::Options::print(FILE* out)
+{
+    putc('[', out);
+    //fputs(simplified ? "simplified" : "accurate", out);
+    putc(']', out);
+}
+
+Exporter::Exporter(const Options& opts)
+    : opts(opts)
+{
+}
+
+Exporter::~Exporter()
+{
+}
+
+std::auto_ptr<Exporter> Exporter::create(Encoding type, const Options& opts)
+{
+    switch (type)
+    {
+        case BUFR:
+            return auto_ptr<Exporter>(new BufrExporter(opts));
+        case CREX:
+            return auto_ptr<Exporter>(new CrexExporter(opts));
+        case AOF:
+            //return auto_ptr<Exporter>(new AOFExporter(opts));
+        default:
+            error_unimplemented::throwf("%s exporter is not implemented yet", encoding_name(type));
     }
 }
 

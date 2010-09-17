@@ -42,11 +42,11 @@ using namespace std;
 namespace dballe {
 namespace msg {
 
-AOFImporter::AOFImporter(const import::Options& opts)
+AOFImporter::AOFImporter(const Options& opts)
     : Importer(opts) {}
 AOFImporter::~AOFImporter() {}
 
-void AOFImporter::import(const Rawmsg& msg, Msgs& msgs) const
+void AOFImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
 {
     /* char id[10]; */
     TRACE("aof_message_decode\n");
@@ -91,7 +91,7 @@ void AOFImporter::import(const Rawmsg& msg, Msgs& msgs) const
     msgs.acquire(out);
 }
 
-void AOFImporter::import_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
+void AOFImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
 {
     throw error_unimplemented("AOF importer cannot import from wreport::Bulletin");
 }

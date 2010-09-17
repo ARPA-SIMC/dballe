@@ -103,13 +103,13 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-    msg::import::Options opts;
+    msg::Importer::Options opts;
     opts.simplified = true;
     auto_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
-    msg.print(stderr);
+    //msg.print(stderr);
 
     IS(block, 11); IS(station, 406); IS(st_type, 1);
     IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
@@ -135,7 +135,7 @@ void to::test<4>()
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
-    msg.print(stderr);
+    //msg.print(stderr);
 
     IS(block, 11); IS(station, 406); IS(st_type, 1);
     IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);

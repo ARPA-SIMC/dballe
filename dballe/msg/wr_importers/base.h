@@ -39,7 +39,7 @@ namespace wr {
 class Importer
 {
 protected:
-    const import::Options& opts;
+    const msg::Importer::Options& opts;
     const wreport::Subset* subset;
     Msg* msg;
 
@@ -47,7 +47,7 @@ protected:
     virtual void run() = 0;
 
 public:
-    Importer(const import::Options& opts) : opts(opts) {}
+    Importer(const msg::Importer::Options& opts) : opts(opts) {}
     virtual ~Importer() {}
 
     virtual MsgType scanType(const wreport::Bulletin& bulletin) const = 0;
@@ -60,14 +60,14 @@ public:
 	    run();
     }
 
-    static std::auto_ptr<Importer> createSynop(const import::Options&);
-    static std::auto_ptr<Importer> createMetar(const import::Options&);
-    static std::auto_ptr<Importer> createTemp(const import::Options&);
-    static std::auto_ptr<Importer> createPilot(const import::Options&);
-    static std::auto_ptr<Importer> createFlight(const import::Options&);
-    static std::auto_ptr<Importer> createSat(const import::Options&);
-    static std::auto_ptr<Importer> createPollution(const import::Options&);
-    static std::auto_ptr<Importer> createGeneric(const import::Options&);
+    static std::auto_ptr<Importer> createSynop(const msg::Importer::Options&);
+    static std::auto_ptr<Importer> createMetar(const msg::Importer::Options&);
+    static std::auto_ptr<Importer> createTemp(const msg::Importer::Options&);
+    static std::auto_ptr<Importer> createPilot(const msg::Importer::Options&);
+    static std::auto_ptr<Importer> createFlight(const msg::Importer::Options&);
+    static std::auto_ptr<Importer> createSat(const msg::Importer::Options&);
+    static std::auto_ptr<Importer> createPollution(const msg::Importer::Options&);
+    static std::auto_ptr<Importer> createGeneric(const msg::Importer::Options&);
 };
 
 class WMOImporter : public Importer
@@ -84,7 +84,7 @@ protected:
     }
 
 public:
-    WMOImporter(const import::Options& opts) : Importer(opts) {}
+    WMOImporter(const msg::Importer::Options& opts) : Importer(opts) {}
     virtual ~WMOImporter() {}
 };
 
