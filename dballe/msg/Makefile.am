@@ -48,12 +48,13 @@ libdballe_msg_la_SOURCES = \
 		aof_importers/pilot.cc \
 		wr_codec.cc \
 		wr_importers/base.cc \
-		wr_importers/synop.cc
+		wr_importers/synop.cc \
+		wr_exporters/base.cc
 
 ##		codec-opts.cc
 ##		filter.c  (todo)
 
-EXTRA_DIST += wr_importers/base.h
+EXTRA_DIST += wr_importers/base.h wr_exporters/base.h aof_importers/common.h
 
 #if DO_DBALLE_BUFREX
 #libdballe_msg_la_SOURCES += \
@@ -140,4 +141,4 @@ distclean-local:
 	rm -f ltypes.dox ltypes.tex tranges.dox tranges.tex
 
 BUILT_SOURCES = vars.h vars.cc vars.gperf msg-extravars.h
-EXTRA_DIST += mkvars vars.csv vars.h vars.gperf vars.cc msg-extravars.h aof_importers/common.h bufrex_exporters/exporters.h bufrex_exporters/exporters.dox ltypes.txt mklevels mktranges
+EXTRA_DIST += mkvars vars.csv vars.h vars.gperf vars.cc msg-extravars.h bufrex_exporters/exporters.dox ltypes.txt mklevels mktranges

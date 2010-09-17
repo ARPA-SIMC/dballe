@@ -108,6 +108,8 @@ class Exporter
 public:
     struct Options
     {
+        std::string template_name;
+
         /// Create new Options initialised with default values
         Options() {}
 

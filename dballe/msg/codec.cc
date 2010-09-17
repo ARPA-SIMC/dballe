@@ -68,7 +68,8 @@ std::auto_ptr<Importer> Importer::create(Encoding type, const Options& opts)
 void Exporter::Options::print(FILE* out)
 {
     putc('[', out);
-    //fputs(simplified ? "simplified" : "accurate", out);
+    if (!template_name.empty())
+        fputs(template_name.c_str(), out);
     putc(']', out);
 }
 
