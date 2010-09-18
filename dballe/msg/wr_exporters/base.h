@@ -43,15 +43,17 @@ struct TemplateRegistry;
 class Template
 {
 protected:
-    virtual void setupBulletin(const Msgs& msgs, wreport::Bulletin& bulletin);
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset) const = 0;
+    virtual void setupBulletin(wreport::Bulletin& bulletin);
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset);
 
 public:
     const Exporter::Options& opts;
     const Msgs& msgs;
+    const Msg* msg;     // Msg being read
+    wreport::Subset* subset; // Subset being written
 
     Template(const Exporter::Options& opts, const Msgs& msgs)
-        : opts(opts), msgs(msgs) {}
+        : opts(opts), msgs(msgs), msg(0), subset(0) {}
     virtual ~Template() {}
 
     virtual const char* name() const = 0;

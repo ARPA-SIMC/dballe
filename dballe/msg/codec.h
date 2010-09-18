@@ -109,9 +109,12 @@ public:
     struct Options
     {
         std::string template_name;
+        int centre;
+        int subcentre;
 
         /// Create new Options initialised with default values
-        Options() {}
+        Options()
+            : centre(255), subcentre(0) {}
 
         /// Print a summary of the options to \a out
         void print(FILE* out);
