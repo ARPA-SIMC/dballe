@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,77 +17,97 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "dballe/msg/msg.h"
-#include "dballe/bufrex/msg.h"
+#include "base.h"
+#include <wreport/bulletin.h>
+#include <wreport/subset.h>
+#include <cmath>
 
-dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
+using namespace wreport;
+using namespace std;
+
+namespace dballe {
+namespace msg {
+namespace wr {
+
+class GenericImporter : public Importer
 {
-	dba_err err = DBA_OK;
-	dba_var copy = NULL;
-	int i;
-	int ltype1 = -1, ltype2 = -1, l1 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
+protected:
+    Level lev;
+    Trange tr;
 
-	msg->type = MSG_GENERIC;
+    void import_var(const Var& var);
 
-	for (i = 0; i < sset->vars_count; i++)
-	{
-		dba_var var = sset->vars[i];
+public:
+    GenericImporter(const msg::Importer::Options& opts) : Importer(opts) {}
+    virtual ~GenericImporter() {}
 
-		if (dba_var_value(var) == NULL)
-		{
-			/* Also skip attributes if there are some following */
-			for ( ; i + 1 < sset->vars_count &&
-					WR_VAR_X(dba_var_code(sset->vars[i + 1])) == 33; i++)
-				;
-			continue;
-		}
+    virtual void init()
+    {
+        Importer::init();
+        lev = Level();
+        tr = Trange();
+    }
 
-		switch (dba_var_code(var))
-		{
-			case WR_VAR(0, 4, 192): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &pind)); break;
-			case WR_VAR(0, 4, 193): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &p1)); break;
-			case WR_VAR(0, 4, 194): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &p2)); break;
-			case WR_VAR(0, 7, 192): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype1)); break;
-			case WR_VAR(0, 7, 193): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l1)); break;
-			case WR_VAR(0, 7, 194): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &l2)); break;
-			case WR_VAR(0, 7, 195): DBA_RUN_OR_GOTO(cleanup, dba_var_enqi(var, &ltype2)); break;
-			case WR_VAR(0, 1, 194):
-			{
-				// Set the rep memo if we found it
-				const char* val = dba_var_value(var);
-				if (val)
-				{
-					msg->type = dba_msg_type_from_repmemo(val);
-					DBA_RUN_OR_GOTO(cleanup, dba_msg_set_rep_memo(msg, val, -1));
-				}
-				break;
-			}
-			default:
-				if (ltype1 == -1 || l1 == -1 || ltype2 == -1 || l2 == -1 || pind == -1 || p1 == -1 || p2 == -1)
-					DBA_FAIL_GOTO(cleanup, dba_error_consistency(
-							"Incomplete context informations l(%d,%d, %d,%d),p(%d,%d,%d) for variable %d%02d%03d",
-							ltype1, l1, ltype2, l2, pind, p1, p2,
-							WR_VAR_F(dba_var_code(var)),
-							WR_VAR_X(dba_var_code(var)),
-							WR_VAR_Y(dba_var_code(var))));
+    virtual void run()
+    {
+        for (int pos = 0; pos < subset->size(); ++pos)
+        {
+                const Var& var = (*subset)[pos];
+                if (WR_VAR_F(var.code()) != 0) continue;
+                if (var.value() == NULL)
+                {
+                    /* Also skip attributes if there are some following */
+                    for ( ; pos + 1 < subset->size() &&
+                            WR_VAR_X((*subset)[pos + 1].code()) == 33; ++pos)
+                        ;
+                    continue;
+                }
+                if (pos + 1 < subset->size() &&
+                        WR_VAR_X((*subset)[pos + 1].code()) == 33)
+                {
+                    Var copy(var);
+                    for ( ; pos + 1 < subset->size() &&
+                            WR_VAR_X((*subset)[pos + 1].code()) == 33; ++pos)
+                        copy.seta((*subset)[pos + 1]);
+                    import_var(copy);
+                } else
+                    import_var(var);
+        }
+    }
 
-				DBA_RUN_OR_GOTO(cleanup, dba_var_copy(var, &copy));
+    MsgType scanType(const Bulletin& bulletin) const
+    {
+        return MSG_GENERIC;
+    }
+};
 
-				/* Add attributes if there are some following */
-				for ( ; i + 1 < sset->vars_count &&
-						WR_VAR_X(dba_var_code(sset->vars[i + 1])) == 33; i++)
-					DBA_RUN_OR_GOTO(cleanup, dba_var_seta(copy, sset->vars[i + 1]));
-				
-				DBA_RUN_OR_GOTO(cleanup, dba_msg_set_nocopy(msg, copy, ltype1, l1, ltype2, l2, pind, p1, p2));
-				copy = NULL;
-				break;
-		}
-	}
-
-cleanup:
-	if (copy != NULL)
-		dba_var_delete(copy);
-	return err == DBA_OK ? dba_error_ok() : err;
+std::auto_ptr<Importer> Importer::createGeneric(const msg::Importer::Options& opts)
+{
+    return auto_ptr<Importer>(new GenericImporter(opts));
 }
+
+void GenericImporter::import_var(const Var& var)
+{
+    switch (var.code())
+    {
+        case WR_VAR(0, 4, 192): tr.pind = var.enqi(); break;
+        case WR_VAR(0, 4, 193): tr.p1 = var.enqi(); break;
+        case WR_VAR(0, 4, 194): tr.p2 = var.enqi(); break;
+        case WR_VAR(0, 7, 192): lev.ltype1 = var.enqi(); break;
+        case WR_VAR(0, 7, 193): lev.l1 = var.enqi(); break;
+        case WR_VAR(0, 7, 194): lev.l2 = var.enqi(); break;
+        case WR_VAR(0, 7, 195): lev.ltype2 = var.enqi(); break;
+        case WR_VAR(0, 1, 194):
+            // Set the rep memo if we found it
+            msg->type = Msg::type_from_repmemo(var.value());
+            msg->set_rep_memo(var.value(), -1);
+            break;
+        default: msg->set(var, var.code(), lev, tr); break;
+    }
+}
+
+} // namespace wbimporter
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

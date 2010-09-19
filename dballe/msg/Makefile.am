@@ -51,6 +51,8 @@ libdballe_msg_la_SOURCES = \
 		wr_importers/temp.cc \
 		wr_importers/pilot.cc \
 		wr_importers/metar.cc \
+		wr_importers/flight.cc \
+		wr_importers/generic.cc \
 		wr_exporters/base.cc \
 		wr_exporters/synop.cc
 
@@ -60,8 +62,6 @@ EXTRA_DIST += wr_importers/base.h wr_exporters/base.h aof_importers/common.h
 
 #if DO_DBALLE_BUFREX
 #libdballe_msg_la_SOURCES += \
-#		wr_importers/generic.cc \
-#		wr_importers/flight.cc \
 #		wr_importers/sat.cc \
 #		wr_importers/pollution.cc \
 #		bufrex_exporters/exporters.cc \
