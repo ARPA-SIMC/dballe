@@ -126,7 +126,13 @@ void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) cons
 	// Select initial template name
 	string tpl = opts.template_name;
 	if (tpl.empty())
-		tpl = msg_type_name(msgs[0]->type);
+    {
+        switch (msgs[0]->type)
+        {
+            case MSG_TEMP_SHIP: tpl = "temp-ship"; break;
+            default: tpl = msg_type_name(msgs[0]->type); break;
+        }
+    }
 
 	// Get template factory
 	const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);

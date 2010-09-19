@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,28 +33,28 @@ struct _bufrex_exporter bufrex_exporter_pilot_2_91 = {
 	MSG_PILOT,
 	/* Data descriptor section */
 	(dba_varcode[]){
-		DBA_VAR(3,  1,  1),
-		DBA_VAR(0,  2, 11),
-		DBA_VAR(0,  2, 12),
-		DBA_VAR(3,  1, 11),
-		DBA_VAR(3,  1, 12),
-		DBA_VAR(3,  1, 22),
-		DBA_VAR(1,  5,  0),
-		DBA_VAR(0, 31,  1),
-		DBA_VAR(0,  7,  4),
-		DBA_VAR(0,  8,  1),
-		DBA_VAR(0, 10,  3),
-		DBA_VAR(0, 11,  1),
-		DBA_VAR(0, 11,  2),
-		DBA_VAR(2, 22,  0),
-		DBA_VAR(1,  1,  0),
-		DBA_VAR(0, 31,  2),
-		DBA_VAR(0, 31, 31),
-		DBA_VAR(0,  1, 31),
-		DBA_VAR(0,  1, 32),
-		DBA_VAR(1,  1,  0),
-		DBA_VAR(0, 31,  2),
-		DBA_VAR(0, 33,  7),
+		WR_VAR(3,  1,  1),
+		WR_VAR(0,  2, 11),
+		WR_VAR(0,  2, 12),
+		WR_VAR(3,  1, 11),
+		WR_VAR(3,  1, 12),
+		WR_VAR(3,  1, 22),
+		WR_VAR(1,  5,  0),
+		WR_VAR(0, 31,  1),
+		WR_VAR(0,  7,  4),
+		WR_VAR(0,  8,  1),
+		WR_VAR(0, 10,  3),
+		WR_VAR(0, 11,  1),
+		WR_VAR(0, 11,  2),
+		WR_VAR(2, 22,  0),
+		WR_VAR(1,  1,  0),
+		WR_VAR(0, 31,  2),
+		WR_VAR(0, 31, 31),
+		WR_VAR(0,  1, 31),
+		WR_VAR(0,  1, 32),
+		WR_VAR(1,  1,  0),
+		WR_VAR(0, 31,  2),
+		WR_VAR(0, 33,  7),
 		0,
 	},
 	/* Datadesc function */
@@ -79,7 +77,7 @@ static dba_err run_template(dba_msg msg, bufrex_subset dst, struct template* tpl
 		if (tpl[i].var < 0)
 		{
 			/* Special handling for vertical sounding significance */
-			if (tpl[i].code == DBA_VAR(0, 8, 2))
+			if (tpl[i].code == WR_VAR(0, 8, 2))
 				DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, -tpl[i].var));
 		}
 		else
@@ -95,18 +93,18 @@ static dba_err run_template(dba_msg msg, bufrex_subset dst, struct template* tpl
 }
 
 static struct template tpl91[] = {
-/*  0 */ { DBA_VAR(0,  1,  1), DBA_MSG_BLOCK,		 },
-/*  1 */ { DBA_VAR(0,  1,  2), DBA_MSG_STATION,		 },
-/*  2 */ { DBA_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE,	 },
-/*  3 */ { DBA_VAR(0,  2, 12), DBA_MSG_SONDE_METHOD, },
-/*  4 */ { DBA_VAR(0,  4,  1), DBA_MSG_YEAR,		 },
-/*  5 */ { DBA_VAR(0,  4,  2), DBA_MSG_MONTH,		 },
-/*  6 */ { DBA_VAR(0,  4,  3), DBA_MSG_DAY,			 },
-/*  7 */ { DBA_VAR(0,  4,  4), DBA_MSG_HOUR,		 },
-/*  8 */ { DBA_VAR(0,  4,  5), DBA_MSG_MINUTE,		 },
-/*  9 */ { DBA_VAR(0,  5,  1), DBA_MSG_LATITUDE,	 },
-/* 10 */ { DBA_VAR(0,  6,  1), DBA_MSG_LONGITUDE,	 },
-/* 11 */ { DBA_VAR(0,  7,  1), DBA_MSG_HEIGHT,		 },
+/*  0 */ { WR_VAR(0,  1,  1), DBA_MSG_BLOCK,		 },
+/*  1 */ { WR_VAR(0,  1,  2), DBA_MSG_STATION,		 },
+/*  2 */ { WR_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE,	 },
+/*  3 */ { WR_VAR(0,  2, 12), DBA_MSG_SONDE_METHOD, },
+/*  4 */ { WR_VAR(0,  4,  1), DBA_MSG_YEAR,		 },
+/*  5 */ { WR_VAR(0,  4,  2), DBA_MSG_MONTH,		 },
+/*  6 */ { WR_VAR(0,  4,  3), DBA_MSG_DAY,			 },
+/*  7 */ { WR_VAR(0,  4,  4), DBA_MSG_HOUR,		 },
+/*  8 */ { WR_VAR(0,  4,  5), DBA_MSG_MINUTE,		 },
+/*  9 */ { WR_VAR(0,  5,  1), DBA_MSG_LATITUDE,	 },
+/* 10 */ { WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE,	 },
+/* 11 */ { WR_VAR(0,  7,  1), DBA_MSG_HEIGHT,		 },
 };
 static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int type)
 {
@@ -117,7 +115,7 @@ static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int t
 
 	/* Fill up the message */
 	DBA_RUN_OR_RETURN(run_template(msg, dst, tpl91, tplsize));
-	DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 31,  1)));
+	DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, WR_VAR(0, 31,  1)));
 	var_levcount = dst->vars[dst->vars_count - 1];
 
 	/* Iterate backwards as we need to add levels in decreasing pressure order */
@@ -131,35 +129,35 @@ static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int t
 		if (vss == NULL) continue;
 
 		/* Add pressure */
-		if ((var = dba_msg_context_find(ctx, DBA_VAR(0, 10, 4))) != NULL)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 7, 4), var));
+		if ((var = dba_msg_context_find(ctx, WR_VAR(0, 10, 4))) != NULL)
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, WR_VAR(0, 7, 4), var));
 		else if (ctx->ltype1 == 100)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, DBA_VAR(0, 7, 4), ctx->l1));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, WR_VAR(0, 7, 4), ctx->l1));
 		else
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 7, 4)));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, WR_VAR(0, 7, 4)));
 
 		/* Add vertical sounding significance */
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 8, 1), vss));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, WR_VAR(0, 8, 1), vss));
 
 		/* Add geopotential */
-		if ((var = dba_msg_context_find(ctx, DBA_VAR(0, 10, 3))) != NULL)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 10, 3), var));
+		if ((var = dba_msg_context_find(ctx, WR_VAR(0, 10, 3))) != NULL)
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, WR_VAR(0, 10, 3), var));
 		else if (ctx->ltype1 == 102)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, DBA_VAR(0, 10, 3), (double)ctx->l1 * 9.80665));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_d(dst, WR_VAR(0, 10, 3), (double)ctx->l1 * 9.80665));
 		else
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 10, 3)));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, WR_VAR(0, 10, 3)));
 
 		/* Add wind direction */
-		if ((var = dba_msg_context_find(ctx, DBA_VAR(0, 11, 1))) != NULL)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 11, 1), var));
+		if ((var = dba_msg_context_find(ctx, WR_VAR(0, 11, 1))) != NULL)
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, WR_VAR(0, 11, 1), var));
 		else
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 11, 1)));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, WR_VAR(0, 11, 1)));
 
 		/* Add wind speed */
-		if ((var = dba_msg_context_find(ctx, DBA_VAR(0, 11, 2))) != NULL)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, DBA_VAR(0, 11, 2), var));
+		if ((var = dba_msg_context_find(ctx, WR_VAR(0, 11, 2))) != NULL)
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, WR_VAR(0, 11, 2), var));
 		else
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 11, 2)));
+			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, WR_VAR(0, 11, 2)));
 
 		lev_no++;
 	}
@@ -169,10 +167,10 @@ static dba_err exporter91(dba_msg msg, bufrex_msg bmsg, bufrex_subset dst, int t
 	if (type == 0)
 	{
 		int count;
-		DBA_RUN_OR_RETURN(bufrex_subset_append_dpb(dst, DBA_VAR(2, 22, 0), tplsize + 1 + lev_no * 5, DBA_VAR(0, 33, 7), &count));
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 31)));
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, DBA_VAR(0, 1, 32)));
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 31, 2), count));
+		DBA_RUN_OR_RETURN(bufrex_subset_append_dpb(dst, WR_VAR(2, 22, 0), tplsize + 1 + lev_no * 5, WR_VAR(0, 33, 7), &count));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, WR_VAR(0, 1, 31)));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, WR_VAR(0, 1, 32)));
+		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, WR_VAR(0, 31, 2), count));
 	}
 
 	return dba_error_ok();

@@ -27,13 +27,13 @@ using namespace std;
 #define SHIP_NAME "ship"
 #define SHIP_DESC "Synop ship"
 
-#define SHIP_ABBR_NAME "shipabbr"
+#define SHIP_ABBR_NAME "ship-abbr"
 #define SHIP_ABBR_DESC "Synop ship abbreviated"
 
-#define SHIP_AUTO_NAME "shipauto"
+#define SHIP_AUTO_NAME "ship-auto"
 #define SHIP_AUTO_DESC "Synop ship auto"
 
-#define SHIP_REDUCED_NAME "shipreduced"
+#define SHIP_REDUCED_NAME "ship-reduced"
 #define SHIP_REDUCED_DESC "Synop ship reduced"
 
 namespace dballe {

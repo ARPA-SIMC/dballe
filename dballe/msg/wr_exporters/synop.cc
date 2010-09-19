@@ -27,14 +27,14 @@ using namespace std;
 #define SYNOP_NAME "synop"
 #define SYNOP_DESC "Synop"
 
-#define SYNOP_LAND_NAME "synop"
-#define SYNOP_LAND_DESC "Synop"
+#define SYNOP_LAND_NAME "synop-land"
+#define SYNOP_LAND_DESC "Synop land"
 
-#define SYNOP_LAND_HIGH_NAME "synop"
-#define SYNOP_LAND_HIGH_DESC "Synop"
+#define SYNOP_LAND_HIGH_NAME "synop-land-high"
+#define SYNOP_LAND_HIGH_DESC "Synop land high level station"
 
-#define SYNOP_AUTO_NAME "synop"
-#define SYNOP_AUTO_DESC "Synop"
+#define SYNOP_AUTO_NAME "synop-auto"
+#define SYNOP_AUTO_DESC "Synop land auto"
 
 namespace dballe {
 namespace msg {
