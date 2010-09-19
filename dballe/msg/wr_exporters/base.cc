@@ -32,6 +32,8 @@ namespace msg {
 namespace wr {
 
 extern void register_synop(TemplateRegistry&);
+extern void register_ship(TemplateRegistry&);
+extern void register_buoy(TemplateRegistry&);
 
 static TemplateRegistry* registry = NULL;
 const TemplateRegistry& TemplateRegistry::get()
@@ -42,6 +44,8 @@ const TemplateRegistry& TemplateRegistry::get()
         
         // Populate it
         register_synop(*registry);
+        register_ship(*registry);
+        register_buoy(*registry);
 
         // registry->insert("synop", ...)
         // registry->insert("synop-high", ...)

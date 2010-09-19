@@ -55,7 +55,9 @@ libdballe_msg_la_SOURCES = \
 		wr_importers/generic.cc \
 		wr_importers/pollution.cc \
 		wr_exporters/base.cc \
-		wr_exporters/synop.cc
+		wr_exporters/synop.cc \
+		wr_exporters/ship.cc \
+		wr_exporters/buoy.cc
 
 ##		filter.c  (todo)
 
@@ -67,8 +69,6 @@ EXTRA_DIST += wr_importers/base.h wr_exporters/base.h aof_importers/common.h
 #		bufrex_exporters/exporters.cc \
 #		bufrex_exporters/generic.cc \
 #		bufrex_exporters/metar.cc \
-#		bufrex_exporters/ship.cc \
-#		bufrex_exporters/buoy.cc \
 #		bufrex_exporters/pilot.cc \
 #		bufrex_exporters/temp.cc \
 #		bufrex_exporters/flight.cc \

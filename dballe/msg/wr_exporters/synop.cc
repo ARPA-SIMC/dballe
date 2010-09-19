@@ -119,6 +119,18 @@ struct Synop : public Template
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Template::to_subset(msg, subset);
+        /*  0 */ add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
+        /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
+        /*  2 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
+        /*  3 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
+        /*  4 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
+        /*  5 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
+        /*  6 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
+        /*  7 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        /*  8 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
+        /*  9 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT);
+        /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
     }
 };
 
@@ -156,18 +168,6 @@ struct SynopLand : public Synop
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Synop::to_subset(msg, subset);
-        /*  0 */ add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
-        /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
-        /*  2 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
-        /*  3 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  4 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  5 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  6 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  7 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
-        /*  8 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        /*  9 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT);
-        /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
         /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
         /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
         /* 14 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
@@ -255,18 +255,6 @@ struct SynopLandHigh : public Synop
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Synop::to_subset(msg, subset);
-        /*  0 */ add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
-        /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
-        /*  2 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
-        /*  3 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  4 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  5 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  6 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  7 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
-        /*  8 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        /*  9 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT);
-        /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
         /* 12 */ add(WR_VAR(0,  7,  4), DBA_MSG_ISOBARIC_SURFACE);
         /* 13 */ add(WR_VAR(0, 10,  3), DBA_MSG_GEOPOTENTIAL);
         /* 14 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
