@@ -22,13 +22,8 @@
 #ifndef DBA_MSG_CODEC_H
 #define DBA_MSG_CODEC_H
 
-#if 0
-#include <dballe/core/file.h>
 #include <dballe/core/rawmsg.h>
-#include <dballe/msg/msgs.h>
-#endif
-
-#include <dballe/core/rawmsg.h>
+#include <dballe/msg/defs.h>
 #include <memory>
 #include <stdio.h>
 
@@ -119,7 +114,7 @@ public:
 
         /// Create new Options initialised with default values
         Options()
-            : centre(255), subcentre(255), application(255) {}
+            : centre(MISSING_INT), subcentre(MISSING_INT), application(MISSING_INT) {}
 
         /// Print a summary of the options to \a out
         void print(FILE* out);

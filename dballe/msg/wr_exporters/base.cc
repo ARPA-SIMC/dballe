@@ -126,8 +126,8 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
     if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
     {
         // Take from opts
-        b->centre = opts.centre;
-        b->subcentre = opts.subcentre;
+        b->centre = opts.centre != MISSING_INT ? opts.centre : 255;
+        b->subcentre = opts.subcentre != MISSING_INT ? opts.subcentre : 255;
         b->master_table = 14;
         b->local_table = 0;
         b->compression = 0;

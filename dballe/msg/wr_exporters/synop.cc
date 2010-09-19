@@ -46,29 +46,13 @@ namespace {
 struct Synop : public Template
 {
     bool is_crex;
+    Varcode prec_code;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_NAME; }
     virtual const char* description() const { return SYNOP_DESC; }
-
-    Varcode prec_code() const
-    {
-        const Msg& msg = *msgs[0];
-		// Use the best kind of precipitation found in the message to encode
-        if (msg.get_tot_prec24_var() != NULL)
-            return WR_VAR(0, 13, 23);
-        if (msg.get_tot_prec12_var() != NULL)
-            return WR_VAR(0, 13, 22);
-        if (msg.get_tot_prec6_var() != NULL)
-            return WR_VAR(0, 13, 21);
-        if (msg.get_tot_prec3_var() != NULL)
-            return WR_VAR(0, 13, 20);
-        if (msg.get_tot_prec1_var() != NULL)
-            return WR_VAR(0, 13, 19);
-        return WR_VAR(0, 13, 23);
-    }
 
     void add(Varcode code, int shortcut)
     {
@@ -88,10 +72,10 @@ struct Synop : public Template
             subset->store_variable_undef(code);
     }
 
-    void add_prec(Varcode code)
+    void add_prec()
     {
         const Var* var = NULL;
-        switch (code)
+        switch (prec_code)
         {
             case WR_VAR(0, 13, 23): var = msg->get_tot_prec24_var(); break;
             case WR_VAR(0, 13, 22): var = msg->get_tot_prec12_var(); break;
@@ -100,9 +84,9 @@ struct Synop : public Template
             case WR_VAR(0, 13, 19): var = msg->get_tot_prec1_var(); break;
         }
         if (var)
-            subset->store_variable(code, *var);
+            subset->store_variable(prec_code, *var);
         else
-            subset->store_variable_undef(code);
+            subset->store_variable_undef(prec_code);
     }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
@@ -110,6 +94,22 @@ struct Synop : public Template
         Template::setupBulletin(bulletin);
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
+
+        const Msg& msg = *msgs[0];
+
+        // Use the best kind of precipitation found in the message to encode
+        if (msg.get_tot_prec24_var() != NULL)
+            prec_code = WR_VAR(0, 13, 23);
+        else if (msg.get_tot_prec12_var() != NULL)
+            prec_code = WR_VAR(0, 13, 22);
+        else if (msg.get_tot_prec6_var() != NULL)
+            prec_code = WR_VAR(0, 13, 21);
+        else if (msg.get_tot_prec3_var() != NULL)
+            prec_code = WR_VAR(0, 13, 20);
+        else if (msg.get_tot_prec1_var() != NULL)
+            prec_code = WR_VAR(0, 13, 19);
+        else
+            prec_code = WR_VAR(0, 13, 23);
 
         bulletin.type = 0;
         bulletin.subtype = 255;
@@ -137,7 +137,7 @@ struct SynopLand : public Synop
         // Data descriptor section
         bulletin.datadesc.clear();
         bulletin.datadesc.push_back(WR_VAR(3,  7,  5));
-        bulletin.datadesc.push_back(prec_code());
+        bulletin.datadesc.push_back(prec_code);
         bulletin.datadesc.push_back(WR_VAR(0, 13, 13));
         if (!is_crex)
         {
@@ -203,14 +203,20 @@ struct SynopLand : public Synop
         /* 44 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_N4);
         /* 45 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_C4);
         /* 46 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_H4);
-        /* 47 */ add_prec(WR_VAR(0, 13, 22) /* DBA_MSG_TOT_PREC12 */);
+        /* 47 */ add_prec();
         /* 48 */ add(WR_VAR(0, 13, 13), DBA_MSG_TOT_SNOW);
 
         if (!is_crex)
         {
             subset.append_fixed_dpb(WR_VAR(2, 22, 0), 49);
-            subset.store_variable_i(WR_VAR(0, 1, 31), opts.centre);
-            subset.store_variable_i(WR_VAR(0, 1, 32), opts.application);
+            if (opts.centre != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 31), opts.centre);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 31));
+            if (opts.application != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 32), opts.application);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 32));
         }
     }
 };
@@ -230,7 +236,7 @@ struct SynopLandHigh : public Synop
         // Data descriptor section
         bulletin.datadesc.clear();
         bulletin.datadesc.push_back(WR_VAR(3,  7,  7));
-        bulletin.datadesc.push_back(prec_code());
+        bulletin.datadesc.push_back(prec_code);
         bulletin.datadesc.push_back(WR_VAR(0, 13, 13));
         if (!is_crex)
         {
@@ -281,14 +287,20 @@ struct SynopLandHigh : public Synop
         /* 29 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
         /* 30 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
         /* 31 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
-        /* 32 */ add_prec(WR_VAR(0, 13, 22) /* DBA_MSG_TOT_PREC12 */);
+        /* 32 */ add_prec();
         /* 33 */ add(WR_VAR(0, 13, 13), DBA_MSG_TOT_SNOW);
 
         if (!is_crex)
         {
             subset.append_fixed_dpb(WR_VAR(2, 22, 0), 34);
-            subset.store_variable_i(WR_VAR(0, 1, 31), opts.centre);
-            subset.store_variable_i(WR_VAR(0, 1, 32), opts.application);
+            if (opts.centre != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 31), opts.centre);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 31));
+            if (opts.application != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 32), opts.application);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 32));
         }
     }
 };
