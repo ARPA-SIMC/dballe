@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,77 +17,97 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-/* For round() */
-#define _ISOC99_SOURCE
+#include "base.h"
+#include <wreport/bulletin.h>
+#include <wreport/subset.h>
+#include <cmath>
 
-#include "dballe/msg/msg.h"
-#include "dballe/bufrex/msg.h"
-#include <math.h>
+using namespace wreport;
+using namespace std;
 
-static inline dba_var get(bufrex_subset sset, int idx, dba_varcode code)
+namespace dballe {
+namespace msg {
+namespace wr {
+
+#define MISSING_PRESS -1.0
+static inline int to_h(double val)
 {
-	dba_var res = sset->vars[idx];
-	if (dba_var_code(res) != code)
-		return NULL;
-	if (dba_var_value(res) == NULL)
-		return NULL;
-	return res;
+	return lround(val / 9.80665);
 }
 
-#define GET(idx1, code) \
-	(var = get(sset, idx1 - 1, DBA_STRING_TO_VAR(code + 1))) != NULL
-
-dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
+class PilotImporter : public WMOImporter
 {
-	int i;
-	dba_var var;
+protected:
+    Level lev;
 
-	msg->type = MSG_PILOT;
+    void import_var(const Var& var);
 
-	if (GET( 1, "B01001")) DBA_RUN_OR_RETURN(dba_msg_set_block_var(msg, var));
-	if (GET( 2, "B01002")) DBA_RUN_OR_RETURN(dba_msg_set_station_var(msg, var));
-	if (GET( 3, "B02011")) DBA_RUN_OR_RETURN(dba_msg_set_sonde_type_var(msg, var));
-	if (GET( 4, "B02012")) DBA_RUN_OR_RETURN(dba_msg_set_sonde_method_var(msg, var));
-	if (GET( 5, "B04001")) DBA_RUN_OR_RETURN(dba_msg_set_year_var(msg, var));
-	if (GET( 6, "B04002")) DBA_RUN_OR_RETURN(dba_msg_set_month_var(msg, var));
-	if (GET( 7, "B04003")) DBA_RUN_OR_RETURN(dba_msg_set_day_var(msg, var));
-	if (GET( 8, "B04004")) DBA_RUN_OR_RETURN(dba_msg_set_hour_var(msg, var));
-	if (GET( 9, "B04005")) DBA_RUN_OR_RETURN(dba_msg_set_minute_var(msg, var));
-	if (GET(10, "B05001")) DBA_RUN_OR_RETURN(dba_msg_set_latitude_var(msg, var));
-	if (GET(11, "B06001")) DBA_RUN_OR_RETURN(dba_msg_set_longitude_var(msg, var));
-	if (GET(12, "B07001")) DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var));
+public:
+    PilotImporter(const msg::Importer::Options& opts) : WMOImporter(opts) {}
+    virtual ~PilotImporter() {}
 
-	for (i = 14; i < sset->vars_count && dba_var_code(sset->vars[i-1]) == WR_VAR(0, 7, 4); i += 5)
+    virtual void init()
+    {
+        WMOImporter::init();
+        lev = Level();
+    }
+
+    virtual void run()
+    {
+        for (pos = 0; pos < subset->size(); ++pos)
+        {
+                const Var& var = (*subset)[pos];
+                if (WR_VAR_F(var.code()) != 0) continue;
+                if (var.value() != NULL)
+                        import_var(var);
+        }
+    }
+
+    MsgType scanType(const Bulletin& bulletin) const { return MSG_PILOT; }
+};
+
+std::auto_ptr<Importer> Importer::createPilot(const msg::Importer::Options& opts)
+{
+    return auto_ptr<Importer>(new PilotImporter(opts));
+}
+
+void PilotImporter::import_var(const Var& var)
+{
+	switch (var.code())
 	{
-		long int ltype = -1, l1 = -1;
-
-		if (GET(i, "B07004"))
-		{
-			double press;
-			DBA_RUN_OR_RETURN(dba_var_enqd(var, &press));
-			ltype = 100;
-			l1 = press;
-			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0, 10, 4), ltype, l1, 0, 0, 254, 0, 0));
-		}
-		if (GET(i + 2, "B10003"))
-		{
-			double geopot;
-			DBA_RUN_OR_RETURN(dba_var_enqd(var, &geopot));
-			if (ltype == -1)
+		case WR_VAR(0, 2, 11): msg->set_sonde_type_var(var); break;
+		case WR_VAR(0, 2, 12): msg->set_sonde_method_var(var); break;
+		case WR_VAR(0, 7,  1): msg->set_height_var(var); break;
+		case WR_VAR(0, 7,  4):
+			lev.ltype1 = 100;
+			lev.l1 = var.enqd();
+			msg->set(var, WR_VAR(0, 10, 4), lev, Trange::instant());
+			break;
+		case WR_VAR(0, 8,  1):
+			if (pos > 0 && pos < subset->size() - 1
+			 && (*subset)[pos - 1].value() == NULL
+			 && (*subset)[pos + 1].value() != NULL)
 			{
-				ltype = 102;
-				l1 = lround((double)geopot / 9.80665);
+				lev.ltype1 = 102;
+				lev.l1 = to_h((*subset)[pos + 1].enqd());
 			}
-			DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0, 10, 8), ltype, l1, 0, 0, 254, 0, 0));
-		}
-		if (ltype == -1)
-			return dba_error_notfound("looking for pressure or height in a BUFR/CREX PILOT message");
-
-		if (GET(i+1, "B08001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0,  8, 1), ltype, l1, 0, 0, 254, 0, 0));
-		if (GET(i+3, "B11001")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0, 11, 1), ltype, l1, 0, 0, 254, 0, 0));
-		if (GET(i+4, "B11002")) DBA_RUN_OR_RETURN(dba_msg_set(msg, var, WR_VAR(0, 11, 2), ltype, l1, 0, 0, 254, 0, 0));
+			msg->set(var, WR_VAR(0,  8, 1), lev, Trange::instant());
+			break;
+		case WR_VAR(0, 10, 3):
+			lev.ltype1 = 102;
+			lev.l1 = to_h(var.enqd());
+			msg->set(var, WR_VAR(0, 10, 8), lev, Trange::instant());
+			break;
+		case WR_VAR(0, 11, 1): msg->set(var, WR_VAR(0, 11, 1), lev, Trange::instant()); break;
+		case WR_VAR(0, 11, 2): msg->set(var, WR_VAR(0, 11, 2), lev, Trange::instant()); break;
+		default:
+			WMOImporter::import_var(var);
+			break;
 	}
-
-	return dba_error_ok();
 }
+
+} // namespace wbimporter
+} // namespace msg
+} // namespace dballe
+
 /* vim:set ts=4 sw=4: */

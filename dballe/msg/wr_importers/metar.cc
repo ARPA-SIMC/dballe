@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,59 +17,114 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "dballe/msg/msg.h"
-#include "dballe/bufrex/msg.h"
+#include "base.h"
+#include <wreport/bulletin.h>
+#include <wreport/subset.h>
+#include <cmath>
 
-dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_msg raw, bufrex_subset sset)
+using namespace wreport;
+using namespace std;
+
+namespace dballe {
+namespace msg {
+namespace wr {
+
+#define MISSING_SENSOR_H -10000
+
+class MetarImporter : public WMOImporter
 {
-	int i;
-	int height_above_count = 0;
-	int height = -1;
+protected:
+    double height_sensor;
 
-	msg->type = MSG_METAR;
-	
-	for (i = 0; i < sset->vars_count; i++)
-	{
-		dba_var var = sset->vars[i];
+    void peek_var(const Var& var);
+    void import_var(const Var& var);
 
-		if (dba_var_value(var) == NULL)
-		{
-			switch (dba_var_code(var))
-			{
-				case WR_VAR(0,  7,  6): height_above_count++; break;
-			}
-			continue;
-		}
-		switch (dba_var_code(var))
-		{
-			case WR_VAR(0,  7,  1): DBA_RUN_OR_RETURN(dba_msg_set_height_var(msg, var)); break;
-			case WR_VAR(0,  7,  6):
-				switch (height_above_count++)
-				{
-					case 0:
-						DBA_RUN_OR_RETURN(dba_var_enqi(var, &height));
-						if (height != 10)
-							return dba_error_consistency("checking that wind level is 10M");
-						break;
-					case 1:
-						DBA_RUN_OR_RETURN(dba_var_enqi(var, &height));
-						if (height != 2)
-							return dba_error_consistency("checking that temperature level is 2M");
-						break;
-				}
-				break;
-			case WR_VAR(0, 11,  1): DBA_RUN_OR_RETURN(dba_msg_set_wind_dir_var(msg, var)); break;
-			case WR_VAR(0, 11, 16): DBA_RUN_OR_RETURN(dba_msg_set_ex_ccw_wind_var(msg, var)); break;
-			case WR_VAR(0, 11, 17): DBA_RUN_OR_RETURN(dba_msg_set_ex_cw_wind_var(msg, var)); break;
-			case WR_VAR(0, 11,  2): DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, var)); break;
-			case WR_VAR(0, 11, 41): DBA_RUN_OR_RETURN(dba_msg_set_wind_speed_var(msg, var)); break;
-			case WR_VAR(0, 12,  1): DBA_RUN_OR_RETURN(dba_msg_set_temp_2m_var(msg, var)); break;
-			case WR_VAR(0, 12,  3): DBA_RUN_OR_RETURN(dba_msg_set_dewpoint_2m_var(msg, var)); break;
-			case WR_VAR(0, 10, 52): DBA_RUN_OR_RETURN(dba_msg_set_qnh_var(msg, var)); break;
-			case WR_VAR(0, 20,  9): DBA_RUN_OR_RETURN(dba_msg_set_metar_wtr_var(msg, var)); break;
-		}
-	}
-	return dba_error_ok();
+    void set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
+    {
+        if (height_sensor == MISSING_SENSOR_H || defaultLevel == Level(103, height_sensor * 1000))
+            msg->set(var, code, defaultLevel, trange);
+        else if (opts.simplified)
+        {
+            Var var1(var);
+            var1.seta(newvar(WR_VAR(0, 7, 32), height_sensor));
+            msg->set(var1, code, defaultLevel, trange);
+        } else
+            msg->set(var, code, Level(103, height_sensor * 1000), trange);
+    }
+
+    void set_gen_sensor(const Var& var, int shortcut)
+    {
+        const MsgVarShortcut& v = shortcutTable[shortcut];
+        set_gen_sensor(var, v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+    }
+
+public:
+    MetarImporter(const msg::Importer::Options& opts) : WMOImporter(opts) {}
+    virtual ~MetarImporter() {}
+
+    virtual void init()
+    {
+        WMOImporter::init();
+        height_sensor = MISSING_SENSOR_H;
+    }
+
+    virtual void run()
+    {
+        for (pos = 0; pos < subset->size(); ++pos)
+        {
+            const Var& var = (*subset)[pos];
+            if (WR_VAR_F(var.code()) != 0) continue;
+            if (WR_VAR_X(var.code()) < 10)
+                peek_var(var);
+            if (var.value() != NULL)
+                import_var(var);
+        }
+    }
+
+    MsgType scanType(const Bulletin& bulletin) const { return MSG_METAR; }
+};
+
+std::auto_ptr<Importer> Importer::createMetar(const msg::Importer::Options& opts)
+{
+    return auto_ptr<Importer>(new MetarImporter(opts));
 }
+
+void MetarImporter::peek_var(const Var& var)
+{
+    switch (var.code())
+    {
+/* Context items */
+        case WR_VAR(0,  7,  6):
+            if (var.value() == NULL)
+                height_sensor = MISSING_SENSOR_H;
+            else
+                height_sensor = var.enqi();
+            break;
+    }
+}
+
+void MetarImporter::import_var(const Var& var)
+{
+    switch (var.code())
+    {
+        case WR_VAR(0,  7,  1): msg->set_height_var(var); break;
+        case WR_VAR(0, 11,  1): set_gen_sensor(var, DBA_MSG_WIND_DIR); break;
+        case WR_VAR(0, 11, 16): set_gen_sensor(var, DBA_MSG_EX_CCW_WIND); break;
+        case WR_VAR(0, 11, 17): set_gen_sensor(var, DBA_MSG_EX_CW_WIND); break;
+        case WR_VAR(0, 11,  2): set_gen_sensor(var, DBA_MSG_WIND_SPEED); break;
+        case WR_VAR(0, 11, 41): set_gen_sensor(var, DBA_MSG_WIND_SPEED); break;
+        case WR_VAR(0, 12,  1): set_gen_sensor(var, DBA_MSG_TEMP_2M); break;
+        case WR_VAR(0, 12,  3): set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
+        case WR_VAR(0, 10, 52): set_gen_sensor(var, DBA_MSG_QNH); break;
+        case WR_VAR(0, 20,  9): set_gen_sensor(var, DBA_MSG_METAR_WTR); break;
+        default:
+            WMOImporter::import_var(var);
+            break;
+    }
+}
+
+} // namespace wbimporter
+} // namespace msg
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
