@@ -31,7 +31,6 @@ namespace msg {
 namespace wr {
 
 std::auto_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB sat Importers"); }
-std::auto_ptr<Importer> Importer::createPollution(const msg::Importer::Options&) { throw error_unimplemented("WB pollution Importers"); }
 
 void WMOImporter::import_var(const Var& var)
 {

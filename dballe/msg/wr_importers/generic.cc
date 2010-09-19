@@ -86,6 +86,17 @@ std::auto_ptr<Importer> Importer::createGeneric(const msg::Importer::Options& op
     return auto_ptr<Importer>(new GenericImporter(opts));
 }
 
+static Varcode update_code(Varcode code)
+{
+    switch (code)
+    {
+        case WR_VAR(0, 12,  1): return WR_VAR(0, 12, 101);
+        case WR_VAR(0, 12,  3): return WR_VAR(0, 12, 103);
+        case WR_VAR(0, 10, 61): return WR_VAR(0, 10,  60);
+        case WR_VAR(0, 10,  3): return WR_VAR(0, 10,   8);
+    }
+}
+
 void GenericImporter::import_var(const Var& var)
 {
     switch (var.code())
@@ -102,7 +113,7 @@ void GenericImporter::import_var(const Var& var)
             msg->type = Msg::type_from_repmemo(var.value());
             msg->set_rep_memo(var.value(), -1);
             break;
-        default: msg->set(var, var.code(), lev, tr); break;
+        default: msg->set(var, update_code(var.code()), lev, tr); break;
     }
 }
 

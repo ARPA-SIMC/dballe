@@ -21,6 +21,7 @@
 #include <dballe/msg/wr_codec.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
+#include <wreport/bulletin.h>
 #include <cstring>
 
 using namespace dballe;
@@ -69,6 +70,15 @@ void to::test<1>()
             auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
             ensure(msgs->size() > 0);
         } catch (std::exception& e) {
+            cerr << "Failing bulletin:";
+            try {
+                std::auto_ptr<Rawmsg> raw = read_rawmsg(files[i], BUFR);
+                BufrBulletin bulletin;
+                bulletin.decode(*raw);
+                bulletin.print(stderr);
+            } catch (std::exception& e1) {
+                cerr << "Cannot display failing bulletin: " << e1.what() << endl;
+            }
             throw tut::failure(string("[") + files[i] + "] " + e.what());
         }
     }
@@ -86,6 +96,15 @@ void to::test<2>()
             auto_ptr<Msgs> msgs = read_msgs(files[i], CREX);
             ensure(msgs->size() > 0);
         } catch (std::exception& e) {
+            cerr << "Failing bulletin:";
+            try {
+                std::auto_ptr<Rawmsg> raw = read_rawmsg(files[i], CREX);
+                CrexBulletin bulletin;
+                bulletin.decode(*raw);
+                bulletin.print(stderr);
+            } catch (std::exception& e1) {
+                cerr << "Cannot display failing bulletin: " << e1.what() << endl;
+            }
             throw tut::failure(string("[") + files[i] + "] " + e.what());
         }
     }
