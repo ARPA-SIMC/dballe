@@ -174,5 +174,4 @@ static const TemplateFactory* buoy = NULL;
 }
 }
 
-
 /* vim:set ts=4 sw=4: */

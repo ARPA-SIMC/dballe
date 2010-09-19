@@ -36,6 +36,7 @@ extern void register_ship(TemplateRegistry&);
 extern void register_buoy(TemplateRegistry&);
 extern void register_metar(TemplateRegistry&);
 extern void register_temp(TemplateRegistry&);
+extern void register_pilot(TemplateRegistry&);
 
 static TemplateRegistry* registry = NULL;
 const TemplateRegistry& TemplateRegistry::get()
@@ -50,6 +51,7 @@ const TemplateRegistry& TemplateRegistry::get()
         register_buoy(*registry);
         register_metar(*registry);
         register_temp(*registry);
+        register_pilot(*registry);
 
         // registry->insert("synop", ...)
         // registry->insert("synop-high", ...)
