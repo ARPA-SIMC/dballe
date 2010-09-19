@@ -31,13 +31,18 @@ namespace dballe {
 namespace msg {
 namespace wr {
 
+extern void register_synop(TemplateRegistry&);
+
 static TemplateRegistry* registry = NULL;
 const TemplateRegistry& TemplateRegistry::get()
 {
     if (!registry)
     {
         registry = new TemplateRegistry;
-        // TODO: populate it
+        
+        // Populate it
+        register_synop(*registry);
+
         // registry->insert("synop", ...)
         // registry->insert("synop-high", ...)
         // registry->insert("wmo-synop", ...)
@@ -48,7 +53,7 @@ const TemplateRegistry& TemplateRegistry::get()
     return *registry;
 }
 
-TemplateFactory TemplateRegistry::get(const std::string& name)
+const TemplateFactory& TemplateRegistry::get(const std::string& name)
 {
     const TemplateRegistry& tr = get();
     TemplateRegistry::const_iterator i = tr.find(name);
@@ -57,6 +62,10 @@ TemplateFactory TemplateRegistry::get(const std::string& name)
     return *(i->second);
 }
 
+void TemplateRegistry::register_factory(const TemplateFactory* fac)
+{
+    insert(make_pair(fac->name, fac));
+}
 
 void Template::to_bulletin(wreport::Bulletin& bulletin)
 {

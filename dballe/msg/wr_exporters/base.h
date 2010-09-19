@@ -61,12 +61,21 @@ public:
     virtual void to_bulletin(wreport::Bulletin& bulletin);
 };
 
-typedef std::auto_ptr<Template> (*TemplateFactory)(const Exporter::Options& opts, const Msgs& msgs);
+struct TemplateFactory
+{
+    std::string name;
+    std::string description;
 
-struct TemplateRegistry : public std::map<std::string, TemplateFactory>
+    virtual ~TemplateFactory() {}
+    virtual std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const = 0;
+};
+
+struct TemplateRegistry : public std::map<std::string, const TemplateFactory*>
 {
     static const TemplateRegistry& get();
-    static TemplateFactory get(const std::string& name);
+    static const TemplateFactory& get(const std::string& name);
+
+    void register_factory(const TemplateFactory* fac);
 };
 
 } // namespace wr

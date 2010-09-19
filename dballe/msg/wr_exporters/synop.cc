@@ -19,33 +19,28 @@
 
 #include "base.h"
 #include <wreport/bulletin.h>
+#include "msgs.h"
 
 using namespace wreport;
+using namespace std;
+
+#define SYNOP_NAME "synop"
+#define SYNOP_DESC "Synop"
+
+#define SYNOP_LAND_NAME "synop"
+#define SYNOP_LAND_DESC "Synop"
+
+#define SYNOP_LAND_HIGH_NAME "synop"
+#define SYNOP_LAND_HIGH_DESC "Synop"
+
+#define SYNOP_AUTO_NAME "synop"
+#define SYNOP_AUTO_DESC "Synop"
 
 namespace dballe {
 namespace msg {
 namespace wr {
 
 namespace {
-
-struct Fetcher
-{
-    virtual ~Fetcher() {}
-
-    virtual const Var* fetch(const Msg& msg) const = 0;
-};
-
-struct ShortcutFetcher : public Fetcher
-{
-    int id;
-
-    ShortcutFetcher(int id) : id(id) {}
-
-    const Var* fetch(const Msg& msg) const
-    {
-        return msg.find_by_id(id);
-    }
-};
 
 // Base template for synops
 struct Synop : public Template
@@ -55,21 +50,22 @@ struct Synop : public Template
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { "synop"; }
-    virtual const char* description() const { "Synop"; }
+    virtual const char* name() const { return SYNOP_NAME; }
+    virtual const char* description() const { return SYNOP_DESC; }
 
     Varcode prec_code() const
     {
+        const Msg& msg = *msgs[0];
 		// Use the best kind of precipitation found in the message to encode
-        if (msg->get_tot_prec24_var() != NULL)
+        if (msg.get_tot_prec24_var() != NULL)
             return WR_VAR(0, 13, 23);
-        if (msg->get_tot_prec12_var() != NULL)
+        if (msg.get_tot_prec12_var() != NULL)
             return WR_VAR(0, 13, 22);
-        if (msg->get_tot_prec6_var() != NULL)
+        if (msg.get_tot_prec6_var() != NULL)
             return WR_VAR(0, 13, 21);
-        if (msg->get_tot_prec3_var() != NULL)
+        if (msg.get_tot_prec3_var() != NULL)
             return WR_VAR(0, 13, 20);
-        if (msg->get_tot_prec1_var() != NULL)
+        if (msg.get_tot_prec1_var() != NULL)
             return WR_VAR(0, 13, 19);
         return WR_VAR(0, 13, 23);
     }
@@ -314,7 +310,74 @@ struct SynopAuto : public SynopLandHigh
 	}
 };
 
+struct SynopFactory : public TemplateFactory
+{
+    SynopFactory() { name = SYNOP_NAME; description = SYNOP_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        // Scan msgs and pick the right one
+        const Msg& msg = *msgs[0];
+        const Var* var = msg.get_st_type_var();
+        if (var != NULL && var->enqi() == 1)
+            return auto_ptr<Template>(new SynopAuto(opts, msgs));
+        else if ((var = msg.get_geopotential_var()) != NULL)
+            return auto_ptr<Template>(new SynopLandHigh(opts, msgs));
+        else
+            return auto_ptr<Template>(new SynopLand(opts, msgs));
+    }
+};
+
+struct SynopLandFactory : public TemplateFactory
+{
+    SynopLandFactory() { name = SYNOP_LAND_NAME; description = SYNOP_LAND_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new SynopLand(opts, msgs));
+    }
+};
+
+struct SynopLandHighFactory : public TemplateFactory
+{
+    SynopLandHighFactory() { name = SYNOP_LAND_HIGH_NAME; description = SYNOP_LAND_HIGH_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new SynopLandHigh(opts, msgs));
+    }
+};
+
+struct SynopAutoFactory : public TemplateFactory
+{
+    SynopAutoFactory() { name = SYNOP_AUTO_NAME; description = SYNOP_AUTO_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new SynopAuto(opts, msgs));
+    }
+};
+
+
 } // anonymous namespace
+
+void register_synop(TemplateRegistry& r)
+{
+static const TemplateFactory* synop = NULL;
+static const TemplateFactory* synopland = NULL;
+static const TemplateFactory* synoplandhigh = NULL;
+static const TemplateFactory* synopauto = NULL;
+
+    if (!synop) synop = new SynopFactory;
+    if (!synopland) synopland = new SynopLandFactory;
+    if (!synoplandhigh) synoplandhigh = new SynopLandHighFactory;
+    if (!synopauto) synopauto = new SynopAutoFactory;
+ 
+    r.register_factory(synop);
+    r.register_factory(synopland);
+    r.register_factory(synoplandhigh);
+    r.register_factory(synopauto);
+}
 
 }
 }

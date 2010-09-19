@@ -129,11 +129,8 @@ void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) cons
 		tpl = msg_type_name(msgs[0]->type);
 
 	// Get template factory
-	wr::TemplateFactory fac = wr::TemplateRegistry::get(tpl);
-	if (fac == NULL)
-		error_notfound::throwf("template not found for \"%s\"", tpl.c_str());
-
-	std::auto_ptr<wr::Template> encoder = fac(opts, msgs);
+	const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
+	std::auto_ptr<wr::Template> encoder = fac.make(opts, msgs);
 	encoder->to_bulletin(bulletin);
 }
 
@@ -178,38 +175,6 @@ std::string WRExporter::infer_template(const Msgs& msgs) const
 	*subtype = exp->subtype;
 	*localsubtype = exp->localsubtype;
 	return dba_error_ok();
-}
-dba_err bufrex_get_exporter(dba_msg src, int type, int subtype, int localsubtype, bufrex_exporter* exp)
-{
-	int i;
-	for (i = 0; exporters[i] != NULL; i++)
-	{
-		/* fprintf(stderr, "TRY %d %d %d for %d %d %d\n", exporters[i]->type, exporters[i]->subtype, exporters[i]->localsubtype, type, subtype, localsubtype); */
-		if (exporters[i]->type        == type &&
-			exporters[i]->subtype     == subtype &&
-			exporters[i]->localsubtype     == localsubtype)
-		{
-			if (type == 0 && localsubtype == 1)
-				// Template ambiguity workaround: if we are handling a synop
-				// that has geopotential in the ana level, then it's a
-				// high-level station and we need to fetch the alternate output
-				// template for the same type and subtype.
-				if (dba_msg_get_geopotential_var(src) != NULL)
-					*exp = &bufrex_exporter_synop_0_1high;
-				else
-					*exp = exporters[i];
-			else
-				*exp = exporters[i];
-			/*return exporters[i]->exporter(src, dst);*/
-			return dba_error_ok();
-		}
-	}
-	*exp = &bufrex_exporter_generic;
-	return dba_error_ok();
-	/*
-	return dba_error_notfound("Exporter for %s messages to BUFREX type %d subtype %d", 
-					dba_msg_type_name(src->type), type, subtype);
-	*/
 }
 #endif
 

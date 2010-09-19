@@ -138,9 +138,9 @@ void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
 								val = 26;
 							else
 								val = 0;
-                            Var attr1(*attr);
-                            attr1.seti(val);
-                            var.seta(attr1);
+                            // Cast away const. This whole function is a hack,
+                            // therefore we can. HARRR!
+                            ((Var*)attr)->seti(val);
 						}
 					}
 				}
