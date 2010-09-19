@@ -44,6 +44,9 @@ std::auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* f
 void track_different_msgs(const Msg& msg1, const Msg& msg2, const std::string& prefix);
 void track_different_msgs(const Msgs& msgs1, const Msgs& msgs2, const std::string& prefix);
 
+extern const char* bufr_files[];
+extern const char* crex_files[];
+
 #if 0
 
 /* Random message generation functions */

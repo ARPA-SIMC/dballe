@@ -104,6 +104,8 @@ tut_test_SOURCES = \
 	tests/context.cc \
 	tests/msg.cc \
 	tests/aof_codec.cc \
+	tests/wr_import.cc \
+	tests/wr_export.cc \
 	tests/wr_codec.cc \
 	../core/tests/tut-main.cpp
 tut_test_LDADD = \

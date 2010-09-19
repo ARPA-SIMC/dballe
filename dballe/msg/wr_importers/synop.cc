@@ -147,12 +147,16 @@ public:
                     case 11:
                     case 13:
                     case 19: return MSG_SHIP;
-                    case 0:
+                    case 0: {
                         /* Guess looking at the variables */
-                        if (subset->size() > 1 && (*subset)[0].code() == WR_VAR(0, 1, 5))
+			if (bulletin.subsets.empty())
+				throw error_consistency("trying to import a SYNOP message with no data subset");
+			const Subset& subset = bulletin.subsets[0];
+                        if (subset.size() > 1 && subset[0].code() == WR_VAR(0, 1, 5))
                             return MSG_BUOY;
                         else
                             return MSG_SHIP;
+		    }
                     default: return MSG_GENERIC;
                 }
                 break;

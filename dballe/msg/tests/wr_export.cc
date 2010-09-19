@@ -21,6 +21,7 @@
 #include <dballe/msg/wr_codec.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
+#include <wreport/bulletin.h>
 #include <cstring>
 
 using namespace dballe;
@@ -29,19 +30,179 @@ using namespace std;
 
 namespace tut {
 
-struct wr_codec_shar
+struct wr_export_shar
 {
-    wr_codec_shar()
+    wr_export_shar()
     {
     }
 
-    ~wr_codec_shar()
+    ~wr_export_shar()
     {
     }
 };
-TESTGRP(wr_codec);
+TESTGRP(wr_export);
+
+// Test plain re-export of all our BUFR test files
+template<> template<>
+void to::test<1>()
+{
+    // note: These were blacklisted:
+    //      "bufr/obs3-3.1.bufr",
+    //      "bufr/obs3-56.2.bufr",
+    //      "bufr/test-buoy1.bufr", 
+    //      "bufr/test-soil1.bufr", 
+    const char** files = dballe::tests::bufr_files;
+
+    for (int i = 0; files[i] != NULL; i++)
+    {
+        try {
+            auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
+            ensure(msgs->size() > 0);
+
+            std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
+            wreport::BufrBulletin bulletin;
+            exporter->to_bulletin(*msgs, bulletin);
+        } catch (std::exception& e) {
+            throw tut::failure(string("[") + files[i] + "] " + e.what());
+        }
+    }
+}
+
+// Test plain re-export of all our CREX test files
+template<> template<>
+void to::test<2>()
+{
+    const char* files[] = {
+        "crex/test-mare0.crex",
+        "crex/test-mare1.crex",
+        "crex/test-mare2.crex",
+        "crex/test-synop0.crex",
+        "crex/test-synop1.crex",
+        "crex/test-synop2.crex",
+        "crex/test-synop3.crex",
+        "crex/test-temp0.crex",
+        NULL
+    };
+
+    for (int i = 0; files[i] != NULL; i++)
+    {
+        try {
+            auto_ptr<Msgs> msgs = read_msgs(files[i], CREX);
+            ensure(msgs->size() > 0);
+
+            std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
+            wreport::CrexBulletin bulletin;
+            exporter->to_bulletin(*msgs, bulletin);
+        } catch (std::exception& e) {
+            throw tut::failure(string("[") + files[i] + "] " + e.what());
+        }
+    }
+}
+
 
 #if 0
+template<> template<>
+void to::test<1>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("crex/test-synop0.crex", CREX);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_SYNOP);
+
+    IS(block, 10); IS(station, 837); IS(st_type, 1);
+    IS(year, 2004); IS(month, 11); IS(day, 30); IS(hour, 12); IS(minute, 0);
+    IS(latitude, 48.22); IS(longitude, 9.92);
+    IS(height, 550.0); UN(height_baro);
+    IS(press, 94340.0); IS(press_msl, 100940.0); IS(press_tend, 7.0);
+    IS(wind_dir, 80.0); IS(wind_speed, 6.0);
+    IS(temp_2m, 276.15); IS(dewpoint_2m, 273.85); UN(humidity);
+    IS(visibility, 5000.0); IS(pres_wtr, 10); IS(past_wtr1, 2); IS(past_wtr2, 2);
+    IS(cloud_n, 100); IS(cloud_nh, 8); IS(cloud_hh, 450.0);
+    IS(cloud_cl, 35); IS(cloud_cm, 61); IS(cloud_ch, 60);
+    IS(cloud_n1, 8); IS(cloud_c1, 6); IS(cloud_h1, 350.0);
+    UN(cloud_n2); UN(cloud_c2); UN(cloud_h2);
+    UN(cloud_n3); UN(cloud_c3); UN(cloud_h3);
+    UN(cloud_n4); UN(cloud_c4); UN(cloud_h4);
+    UN(tot_prec24); UN(tot_snow);
+}
+
+template<> template<>
+void to::test<2>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_SYNOP);
+
+    IS(block, 60); IS(station, 150); IS(st_type, 1);
+    IS(year, 2004); IS(month, 11); IS(day, 30); IS(hour, 12); IS(minute, 0);
+    IS(latitude, 33.88); IS(longitude, -5.53);
+    IS(height, 560.0); UN(height_baro);
+    IS(press, 94190.0); IS(press_msl, 100540.0); IS(press_3h, -180.0); IS(press_tend, 8.0);
+    IS(wind_dir, 80.0); IS(wind_speed, 4.0);
+    IS(temp_2m, 289.2); IS(dewpoint_2m, 285.7); UN(humidity);
+    IS(visibility, 8000.0); IS(pres_wtr, 2); IS(past_wtr1, 6); IS(past_wtr2, 2);
+    IS(cloud_n, 100); IS(cloud_nh, 8); IS(cloud_hh, 250.0);
+    IS(cloud_cl, 39); IS(cloud_cm, 61); IS(cloud_ch, 60);
+    IS(cloud_n1, 2); IS(cloud_c1, 8); IS(cloud_h1, 320.0);
+    IS(cloud_n2, 5); IS(cloud_c2, 8); IS(cloud_h2, 620.0);
+    IS(cloud_n3, 2); IS(cloud_c3, 9); IS(cloud_h3, 920.0);
+    UN(cloud_n4); UN(cloud_c4); UN(cloud_h4);
+    IS(tot_prec12, 0.5); UN(tot_snow);
+}
+
+template<> template<>
+void to::test<3>()
+{
+    msg::Importer::Options opts;
+    opts.simplified = true;
+    auto_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_SYNOP);
+
+    //msg.print(stderr);
+
+    IS(block, 11); IS(station, 406); IS(st_type, 1);
+    IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
+    IS(latitude, 50.07361); IS(longitude, 12.40333);
+    IS(height, 483.0); IS(height_baro, 490.0);
+    IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
+    IS(wind_dir, 0.0); IS(wind_speed, 1.0);
+    IS(temp_2m, 273.05); IS(dewpoint_2m, 271.35); IS(humidity, 88.0);
+    IS(visibility, 14000.0); IS(pres_wtr, 508); IS(past_wtr1, 10); IS(past_wtr2, 10);
+    IS(cloud_n, 38); IS(cloud_nh, 0); IS(cloud_hh, 6000.0);
+    IS(cloud_cl, 30); IS(cloud_cm, 20); IS(cloud_ch, 12);
+    IS(cloud_n1, 3); IS(cloud_c1, 0); IS(cloud_h1, 6000.0);
+    UN(cloud_n2); UN(cloud_c2); UN(cloud_h2);
+    UN(cloud_n3); UN(cloud_c3); UN(cloud_h3);
+    UN(cloud_n4); UN(cloud_c4); UN(cloud_h4);
+    UN(tot_prec24); UN(tot_snow);
+}
+
+template<> template<>
+void to::test<4>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/synop-cloudbelow.bufr", BUFR);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_SYNOP);
+
+    //msg.print(stderr);
+
+    IS(block, 11); IS(station, 406); IS(st_type, 1);
+    IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
+    IS(latitude, 50.07361); IS(longitude, 12.40333);
+    IS(height, 483.0); IS(height_baro, 490.0);
+    IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
+    IS(wind_dir, 0.0); IS(wind_speed, 1.0);
+    IS(temp_2m, 273.05); IS(dewpoint_2m, 271.35); IS(humidity, 88.0);
+    IS(visibility, 14000.0); IS(pres_wtr, 508); IS(past_wtr1, 10); IS(past_wtr2, 10);
+    IS(cloud_n, 38); IS(cloud_nh, 0); IS(cloud_hh, 6000.0);
+    IS(cloud_cl, 30); IS(cloud_cm, 20); IS(cloud_ch, 12);
+    IS(cloud_n1, 3); IS(cloud_c1, 0); IS(cloud_h1, 6000.0);
+    UN(cloud_n2); UN(cloud_c2); UN(cloud_h2);
+    UN(cloud_n3); UN(cloud_c3); UN(cloud_h3);
+    UN(cloud_n4); UN(cloud_c4); UN(cloud_h4);
+    UN(tot_prec24); UN(tot_snow);
+}
+
 static void relax_bufrex_msg(bufrex_msg b)
 {
     int sounding_workarounds = 

@@ -108,13 +108,18 @@ class Exporter
 public:
     struct Options
     {
+        /// Name of template to use for output (leave empty to autodetect)
         std::string template_name;
+        /// Originating centre
         int centre;
+        /// Originating subcentre
         int subcentre;
+        /// Originating application ID
+        int application;
 
         /// Create new Options initialised with default values
         Options()
-            : centre(255), subcentre(0) {}
+            : centre(255), subcentre(255), application(255) {}
 
         /// Print a summary of the options to \a out
         void print(FILE* out);

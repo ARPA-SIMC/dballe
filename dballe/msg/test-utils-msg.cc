@@ -31,6 +31,53 @@ using namespace std;
 namespace dballe {
 namespace tests {
 
+const char* bufr_files[] = {
+    "bufr/obs0-1.22.bufr", 
+    "bufr/obs0-1.11188.bufr",
+    "bufr/obs0-3.504.bufr", 
+    "bufr/obs1-9.2.bufr", 
+    "bufr/obs1-11.16.bufr", 
+    "bufr/obs1-13.36.bufr", 
+    "bufr/obs1-19.3.bufr", 
+    "bufr/synop-old-buoy.bufr", 
+    "bufr/obs1-140.454.bufr", 
+    "bufr/obs2-101.16.bufr", 
+    "bufr/obs2-102.1.bufr", 
+    "bufr/obs2-91.2.bufr", 
+//      "bufr/obs3-3.1.bufr",
+//      "bufr/obs3-56.2.bufr",
+    "bufr/airep-old-4-142.bufr", 
+    "bufr/obs4-142.1.bufr", 
+    "bufr/obs4-144.4.bufr", 
+    "bufr/obs4-145.4.bufr", 
+    "bufr/obs255-255.0.bufr", 
+    "bufr/synop3new.bufr", 
+    "bufr/test-airep1.bufr",
+    "bufr/test-temp1.bufr", 
+//      "bufr/test-buoy1.bufr", 
+//      "bufr/test-soil1.bufr", 
+    "bufr/ed4.bufr", 
+    "bufr/ed4-compr-string.bufr",
+    "bufr/ed4-parseerror1.bufr",
+    "bufr/ed4-empty.bufr",
+    "bufr/C05060.bufr",
+    "bufr/tempforecast.bufr",
+    NULL
+};
+
+const char* crex_files[] = {
+    "crex/test-mare0.crex",
+    "crex/test-mare1.crex",
+    "crex/test-mare2.crex",
+    "crex/test-synop0.crex",
+    "crex/test-synop1.crex",
+    "crex/test-synop2.crex",
+    "crex/test-synop3.crex",
+    "crex/test-temp0.crex",
+    NULL
+};
+
+
 auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const msg::Importer::Options& opts)
 {
     std::auto_ptr<Rawmsg> raw = read_rawmsg(filename, type);
