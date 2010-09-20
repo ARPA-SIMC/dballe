@@ -62,7 +62,8 @@ libdballe_msg_la_SOURCES = \
 		wr_exporters/temp.cc \
 		wr_exporters/pilot.cc \
 		wr_exporters/flight.cc \
-		wr_exporters/generic.cc
+		wr_exporters/generic.cc \
+		wr_exporters/pollution.cc
 
 ##		filter.c  (todo)
 
@@ -70,9 +71,7 @@ EXTRA_DIST += wr_importers/base.h wr_exporters/base.h aof_importers/common.h
 
 #if DO_DBALLE_BUFREX
 #libdballe_msg_la_SOURCES += \
-#		wr_importers/sat.cc \
-#		bufrex_exporters/exporters.cc \
-#		bufrex_exporters/pollution.cc
+#		wr_importers/sat.cc
 #endif
 libdballe_msg_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
 

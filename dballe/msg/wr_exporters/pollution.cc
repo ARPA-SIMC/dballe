@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,205 +17,241 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#define _GNU_SOURCE
-#include "exporters.h"
-#include "dballe/msg/context.h"
-#include <math.h>
+#include "base.h"
+#include <wreport/bulletin.h>
+#include "msgs.h"
+#include "context.h"
+#include <cstdlib>
+#include <cmath>
 
-static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
+using namespace wreport;
+using namespace std;
 
-struct _bufrex_exporter bufrex_exporter_pollution_8_102 = {
-	/* Category */
-	8,
-	/* Subcategory */
-	255,
-	/* Local subcategory */
-	171,
-	/* dba_msg type it can convert from */
-	MSG_POLLUTION,
-	/* Data descriptor section */
-	(dba_varcode[]){
-		DBA_VAR(0,  1,  19),
-		DBA_VAR(0,  1, 212),
-		DBA_VAR(0,  1, 213),
-		DBA_VAR(0,  1, 214),
-		DBA_VAR(0,  1, 215),
-		DBA_VAR(0,  1, 216),
-		DBA_VAR(0,  1, 217),
-		DBA_VAR(3,  1,  11),
-		DBA_VAR(3,  1,  13),
-		DBA_VAR(3,  1,  21),
-		DBA_VAR(0,  7,  30),
-		DBA_VAR(0,  7,  32),
-		DBA_VAR(0,  8,  21),
-		DBA_VAR(0,  4,  25),
-		DBA_VAR(0,  8,  43),
-		DBA_VAR(0,  8,  44),
-		DBA_VAR(0,  8,  45),
-		DBA_VAR(0,  8,  90),
-		DBA_VAR(0, 15,  23),
-		DBA_VAR(0,  8,  90),
-		DBA_VAR(0, 33,   3),
-		0
-	},
-	/* Datadesc function */
-	bufrex_standard_datadesc_func,
-	/* Exporter function */
-	(bufrex_exporter_func)exporter,
-};
+#define POLLUTION_NAME "pollution"
+#define POLLUTION_DESC "Pollution"
 
-struct template {
-	dba_varcode code;
-	int var;
-};
+namespace dballe {
+namespace msg {
+namespace wr {
 
-static struct template tpl[] = {
-/*  0 */ { DBA_VAR(0,  1,  19), DBA_MSG_ST_NAME },
-/*  1 */ { DBA_VAR(0,  1, 212), DBA_MSG_POLL_LCODE },
-/*  2 */ { DBA_VAR(0,  1, 213), DBA_MSG_POLL_SCODE },
-/*  3 */ { DBA_VAR(0,  1, 214), DBA_MSG_POLL_GEMSCODE },
-/*  4 */ { DBA_VAR(0,  1, 215), DBA_MSG_POLL_SOURCE },
-/*  5 */ { DBA_VAR(0,  1, 216), DBA_MSG_POLL_ATYPE },
-/*  6 */ { DBA_VAR(0,  1, 217), DBA_MSG_POLL_TTYPE },
-/*  7 */ { DBA_VAR(0,  4,  1), DBA_MSG_YEAR },
-/*  8 */ { DBA_VAR(0,  4,  2), DBA_MSG_MONTH },
-/*  9 */ { DBA_VAR(0,  4,  3), DBA_MSG_DAY },
-/* 10 */ { DBA_VAR(0,  4,  4), DBA_MSG_HOUR },
-/* 11 */ { DBA_VAR(0,  4,  5), DBA_MSG_MINUTE },
-/* 12 */ { DBA_VAR(0,  4,  6), DBA_MSG_SECOND },
-/* 13 */ { DBA_VAR(0,  5,  1), DBA_MSG_LATITUDE },
-/* 14 */ { DBA_VAR(0,  6,  1), DBA_MSG_LONGITUDE },
-/* 15 */ { DBA_VAR(0,  7, 30), DBA_MSG_HEIGHT },
-/* 16 */ { DBA_VAR(0,  7, 32), -1 },
-/* 17 */ { DBA_VAR(0,  8, 21), -1 },
-/* 18 */ { DBA_VAR(0,  4, 25), -1 },
-/* 19 */ { DBA_VAR(0,  8, 43), -1 },
-/* 20 */ { DBA_VAR(0,  8, 44), -1 },
-/* 21 */ { DBA_VAR(0,  8, 45), -1 },
-/* 22 */ { DBA_VAR(0,  8, 90), -1 },
-/* 23 */ { DBA_VAR(0, 15, 23), -1 },
-/* 24 */ { DBA_VAR(0,  8, 90), -1 },
-/* 25 */ { DBA_VAR(0, 33,  3), -1 },
-};
+namespace {
 
-
-static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
+struct Pollution : public Template
 {
-	int i, li, di;
-	dba_var var = NULL;
-	dba_var attr_conf = NULL;
-	dba_var attr_cas = NULL;
-	dba_var attr_pmc = NULL;
-	int l1 = -1, p1 = -1;
-	int constituent = -1;
-	int decscale = 0;
-	double value;
-	int scaled = 0;
+    bool is_crex;
 
-	//dba_msg_print(src, stderr);
+    Pollution(const Exporter::Options& opts, const Msgs& msgs)
+        : Template(opts, msgs) {}
 
-	// Get the variable out of msg
-	for (li = 0; li < src->data_count; ++li)
-	{
-		dba_msg_context ctx = src->data[li];
-		if (ctx->ltype1 != 103) continue;
-		for (di = 0; di < ctx->data_count; ++di)
-		{
-			dba_var nvar = ctx->data[di];
-			if (ctx->pind != 0) continue;
-			dba_varcode code = dba_var_code(nvar);
-			if (code < DBA_VAR(0, 15, 193) || code > DBA_VAR(0, 15, 198)) continue;
-			if (var != NULL)
-				return dba_error_consistency("found more than one variable to export in one template");
-			var = nvar;
-			l1 = ctx->l1 / 1000;
-			p1 = ctx->p1;
-		}
-	}
+    virtual const char* name() const { POLLUTION_NAME; }
+    virtual const char* description() const { POLLUTION_DESC; }
 
-	if (var == NULL)
-		return dba_error_consistency("found no variable to export");
+    void add(Varcode code, int shortcut)
+    {
+        const Var* var = msg->find_by_id(shortcut);
+        if (var)
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
 
-	// Extract the various attributes
-	DBA_RUN_OR_RETURN(dba_var_enqa(var, DBA_VAR(0, 33,   3), &attr_conf));
-	DBA_RUN_OR_RETURN(dba_var_enqa(var, DBA_VAR(0,  8,  44), &attr_cas));
-	DBA_RUN_OR_RETURN(dba_var_enqa(var, DBA_VAR(0,  8,  45), &attr_pmc));
+    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
+    {
+        const Var* var = msg->find(srccode, level, trange);
+        if (var)
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
 
-	// Compute the constituent type
-	switch (dba_var_code(var))
-	{
-		case DBA_VAR(0, 15, 193): constituent =  5; break;
-		case DBA_VAR(0, 15, 194): constituent =  0; break;
-		case DBA_VAR(0, 15, 195): constituent = 27; break;
-		case DBA_VAR(0, 15, 196): constituent =  4; break;
-		case DBA_VAR(0, 15, 197): constituent =  8; break;
-		case DBA_VAR(0, 15, 198): constituent = 26; break;
-		default:
-			return dba_error_consistency("found unknown variable type when getting constituent type");
-	}
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        Template::setupBulletin(bulletin);
 
-	// Compute the decimal scaling factor
-	DBA_RUN_OR_RETURN(dba_var_enqd(var, &value));
+        is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-	if (value < 0)
-		// Negative values are meaningless
-		scaled = 0;
+        bulletin.type = 8;
+        bulletin.subtype = 255;
+        bulletin.localsubtype = 171;
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        bulletin.datadesc.push_back(WR_VAR(3,  7,  11));
+		bulletin.datadesc.push_back(WR_VAR(0,  1,  19));
+		bulletin.datadesc.push_back(WR_VAR(0,  1, 212));
+		bulletin.datadesc.push_back(WR_VAR(0,  1, 213));
+		bulletin.datadesc.push_back(WR_VAR(0,  1, 214));
+		bulletin.datadesc.push_back(WR_VAR(0,  1, 215));
+		bulletin.datadesc.push_back(WR_VAR(0,  1, 216));
+		bulletin.datadesc.push_back(WR_VAR(0,  1, 217));
+		bulletin.datadesc.push_back(WR_VAR(3,  1,  11));
+		bulletin.datadesc.push_back(WR_VAR(3,  1,  13));
+		bulletin.datadesc.push_back(WR_VAR(3,  1,  21));
+		bulletin.datadesc.push_back(WR_VAR(0,  7,  30));
+		bulletin.datadesc.push_back(WR_VAR(0,  7,  32));
+		bulletin.datadesc.push_back(WR_VAR(0,  8,  21));
+		bulletin.datadesc.push_back(WR_VAR(0,  4,  25));
+		bulletin.datadesc.push_back(WR_VAR(0,  8,  43));
+		bulletin.datadesc.push_back(WR_VAR(0,  8,  44));
+		bulletin.datadesc.push_back(WR_VAR(0,  8,  45));
+		bulletin.datadesc.push_back(WR_VAR(0,  8,  90));
+		bulletin.datadesc.push_back(WR_VAR(0, 15,  23));
+		bulletin.datadesc.push_back(WR_VAR(0,  8,  90));
+		bulletin.datadesc.push_back(WR_VAR(0, 33,   3));
+
+        bulletin.load_tables();
+    }
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        Template::to_subset(msg, subset);
+
+        // Get the variable out of msg
+        const Var* mainvar = NULL;
+        int l1 = -1, p1 = -1;
+        for (int i = 0; i < msg.data.size(); ++i)
+        {
+            const msg::Context& ctx = *msg.data[i];
+            if (ctx.level.ltype1 != 103) continue;
+            if (ctx.trange.pind != 0) continue;
+            for (int j = 0; j < ctx.data.size(); ++j)
+            {
+                const Var& var = *ctx.data[j];
+                if (var.code() < WR_VAR(0, 15, 193) || var.code() > WR_VAR(0, 15, 198)) continue;
+                if (mainvar != NULL)
+                    error_consistency::throwf("found more than one variable to export in one template: B%02d%03d and B%02d%03d",
+                            WR_VAR_X(mainvar->code()), WR_VAR_Y(mainvar->code()),
+                            WR_VAR_X(var.code()), WR_VAR_Y(var.code()));
+                mainvar = &var;
+                l1 = ctx.level.l1 / 1000;
+                p1 = ctx.trange.p1;
+            }
+        }
+
+        if (mainvar == NULL)
+            throw error_consistency("found no pollution value to export");
+
+        // Extract the various attributes
+        const Var* attr_conf = mainvar->enqa(WR_VAR(0, 33,   3));
+        const Var* attr_cas = mainvar->enqa(WR_VAR(0,  8,  44));
+        const Var* attr_pmc = mainvar->enqa(WR_VAR(0,  8,  45));
+
+        // Compute the constituent type
+        int constituent;
+        switch (mainvar->code())
+        {
+            case WR_VAR(0, 15, 193): constituent =  5; break;
+            case WR_VAR(0, 15, 194): constituent =  0; break;
+            case WR_VAR(0, 15, 195): constituent = 27; break;
+            case WR_VAR(0, 15, 196): constituent =  4; break;
+            case WR_VAR(0, 15, 197): constituent =  8; break;
+            case WR_VAR(0, 15, 198): constituent = 26; break;
+            default: error_consistency::throwf("found unknown variable type B%02d%03d when getting constituent type",
+                             WR_VAR_X(mainvar->code()), WR_VAR_Y(mainvar->code()));
+        }
+
+        // Compute the decimal scaling factor
+        double value = mainvar->enqd();
+        int scaled = 0;
+        int decscale = 0;
+
+        if (value < 0)
+            // Negative values are meaningless
+            scaled = 0;
 #if 0
-	else if (value < dSMALLNUM)
-	{
-		// Prevent divide by zero
-		scaled = 0;
-	}
+        else if (value < dSMALLNUM)
+        {
+            // Prevent divide by zero
+            scaled = 0;
+        }
 #endif
-	else
-	{
-		//static const int bits = 24;
-		static const int maxscale = 126, minscale = -127;
-		static const double numerator = (double)((1 << 24 /* aka, bits */) - 2);
-		int factor = (int)floor(log10(numerator/value));
+        else
+        {
+            //static const int bits = 24;
+            static const int maxscale = 126, minscale = -127;
+            static const double numerator = (double)((1 << 24 /* aka, bits */) - 2);
+            int factor = (int)floor(log10(numerator/value));
 
-		if (factor > maxscale)
-	    	// Factor is too big: collapse to 0
-			scaled = 0;
-		else if (factor < minscale)
-			// Factor is too small
-			return dba_error_consistency("scale factor is too small (%d): cannot encode because value would not fit in", factor);
-		else
-		{
-			decscale = -factor;
-			//fprintf(stderr, "scale: %d, unscaled: %e, scaled: %f\n", decscale, value, rint(value * exp10(factor)));
-			scaled = (int)rint(value * exp10(factor));
-		}
+            if (factor > maxscale)
+                // Factor is too big: collapse to 0
+                scaled = 0;
+            else if (factor < minscale)
+                // Factor is too small
+                error_consistency::throwf("scale factor is too small (%d): cannot encode because value would not fit in", factor);
+            else
+            {
+                decscale = -factor;
+                //fprintf(stderr, "scale: %d, unscaled: %e, scaled: %f\n", decscale, value, rint(value * exp10(factor)));
+                scaled = (int)rint(value * exp10(factor));
+            }
+        }
+
+        // Add the variables to the subset
+
+        /*  0 */ add(WR_VAR(0,  1,  19), DBA_MSG_ST_NAME);
+        /*  1 */ add(WR_VAR(0,  1, 212), DBA_MSG_POLL_LCODE);
+        /*  2 */ add(WR_VAR(0,  1, 213), DBA_MSG_POLL_SCODE);
+        /*  3 */ add(WR_VAR(0,  1, 214), DBA_MSG_POLL_GEMSCODE);
+        /*  4 */ add(WR_VAR(0,  1, 215), DBA_MSG_POLL_SOURCE);
+        /*  5 */ add(WR_VAR(0,  1, 216), DBA_MSG_POLL_ATYPE);
+        /*  6 */ add(WR_VAR(0,  1, 217), DBA_MSG_POLL_TTYPE);
+        /*  7 */ add(WR_VAR(0,  4,   1), DBA_MSG_YEAR);
+        /*  8 */ add(WR_VAR(0,  4,   2), DBA_MSG_MONTH);
+        /*  9 */ add(WR_VAR(0,  4,   3), DBA_MSG_DAY);
+        /* 10 */ add(WR_VAR(0,  4,   4), DBA_MSG_HOUR);
+        /* 11 */ add(WR_VAR(0,  4,   5), DBA_MSG_MINUTE);
+        /* 12 */ add(WR_VAR(0,  4,   6), DBA_MSG_SECOND);
+        /* 13 */ add(WR_VAR(0,  5,   1), DBA_MSG_LATITUDE);
+        /* 14 */ add(WR_VAR(0,  6,   1), DBA_MSG_LONGITUDE);
+        /* 15 */ add(WR_VAR(0,  7,  30), DBA_MSG_HEIGHT);
+
+
+        /* 16 */ subset.store_variable_i(WR_VAR(0,  7, 32), l1);
+        /* 17 */ subset.store_variable_i(WR_VAR(0,  8, 21), 2);
+        /* 18 */ subset.store_variable_i(WR_VAR(0,  4, 25), p1/60);
+        /* 19 */ subset.store_variable_i(WR_VAR(0,  8, 43), constituent);
+        if (attr_cas)
+            /* 20 */ subset.store_variable(WR_VAR(0,  8, 44), *attr_cas);
+        else
+            /* 20 */ subset.store_variable_undef(WR_VAR(0,  8, 44));
+        if (attr_pmc)
+            /* 21 */ subset.store_variable(WR_VAR(0,  8, 45), *attr_pmc);
+        else
+            /* 21 */ subset.store_variable_undef(WR_VAR(0,  8, 45));
+        /* 22 */ subset.store_variable_i(WR_VAR(0,  8, 90), decscale);
+        /* 23 */ subset.store_variable_i(WR_VAR(0, 15, 23), scaled);
+        /* Here it should have been bufrex_subset_store_variable_undef, but
+         * instead someone decided that we have to store the integer value -127 instead */
+        /* 24 */ subset.store_variable_i(WR_VAR(0,  8, 90), -127);
+        if (attr_conf)
+            /* 25 */ subset.store_variable(WR_VAR(0, 33,  3), *attr_conf);
+        else
+            /* 25 */ subset.store_variable_undef(WR_VAR(0, 33,  3));
 	}
+};
 
-	for (i = 0; i < sizeof(tpl)/sizeof(struct template); i++)
-	{
-		switch (i)
-		{
-			case 16: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, l1)); break;
-			case 17: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, 2)); break;
-			case 18: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, p1/60)); break;
-			case 19: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, constituent)); break;
-			case 20: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_cas)); break;
-			case 21: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_pmc)); break;
-			case 22: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, decscale)); break;
-			case 23: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, scaled)); break;
-			/* Here it should have been bufrex_subset_store_variable_undef, but
-			 * instead someone decided that we have to store the integer value -127 instead */
-			case 24: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, tpl[i].code, -127)); break;
-			case 25: DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, attr_conf)); break;
-			default: {
-				dba_var var = dba_msg_find_by_id(src, tpl[i].var);
-				if (var != NULL)
-					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
-				else
-					DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
-				break;
-			}
-		}
-	}
+struct PollutionFactory : public TemplateFactory
+{
+    PollutionFactory() { name = POLLUTION_NAME; description = POLLUTION_DESC; }
 
-	return dba_error_ok();
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Pollution(opts, msgs));
+    }
+};
+
+} // anonymous namespace
+
+void register_pollution(TemplateRegistry& r)
+{
+static const TemplateFactory* pollution = NULL;
+
+    if (!pollution) pollution = new PollutionFactory;
+ 
+    r.register_factory(pollution);
+}
+
+}
+}
 }
 
 /* vim:set ts=4 sw=4: */

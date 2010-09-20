@@ -39,6 +39,7 @@ extern void register_temp(TemplateRegistry&);
 extern void register_pilot(TemplateRegistry&);
 extern void register_flight(TemplateRegistry&);
 extern void register_generic(TemplateRegistry&);
+extern void register_pollution(TemplateRegistry&);
 
 static TemplateRegistry* registry = NULL;
 const TemplateRegistry& TemplateRegistry::get()
@@ -56,6 +57,7 @@ const TemplateRegistry& TemplateRegistry::get()
         register_pilot(*registry);
         register_flight(*registry);
         register_generic(*registry);
+        register_pollution(*registry);
 
         // registry->insert("synop", ...)
         // registry->insert("synop-high", ...)
