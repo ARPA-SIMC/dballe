@@ -38,8 +38,6 @@ namespace {
 
 struct Pollution : public Template
 {
-    bool is_crex;
-
     Pollution(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
@@ -68,11 +66,17 @@ struct Pollution : public Template
     {
         Template::setupBulletin(bulletin);
 
-        is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
-
         bulletin.type = 8;
         bulletin.subtype = 255;
         bulletin.localsubtype = 171;
+
+        if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
+        {
+            b->centre = 98;
+            b->subcentre = 0;
+            b->master_table = 13;
+            b->local_table = 102;
+        }
 
         // Data descriptor section
         bulletin.datadesc.clear();

@@ -23,6 +23,7 @@
 #include <dballe/msg/context.h>
 #include <wreport/bulletin.h>
 #include <wibble/string.h>
+#include <set>
 #include <cstring>
 
 using namespace dballe;
@@ -53,8 +54,12 @@ void to::test<1>()
     //      "bufr/obs3-56.2.bufr",
     //      "bufr/test-buoy1.bufr", 
     //      "bufr/test-soil1.bufr", 
-    const char** files = dballe::tests::bufr_files;
+    set<string> bl_crex;
+    // CREX tables do not contain the entries needed to encode pollution
+    // messages
+    bl_crex.insert("bufr/ed4.bufr");
 
+    const char** files = dballe::tests::bufr_files;
     vector<string> fails;
     int i;
     for (i = 0; files[i] != NULL; i++)
@@ -63,13 +68,18 @@ void to::test<1>()
             auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
             ensure(msgs->size() > 0);
 
-            std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
+            std::auto_ptr<msg::Exporter> exporter;
+
+            exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
             wreport::BufrBulletin bbulletin;
             exporter->to_bulletin(*msgs, bbulletin);
 
-            exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
-            wreport::CrexBulletin cbulletin;
-            exporter->to_bulletin(*msgs, cbulletin);
+            if (bl_crex.find(files[i]) == bl_crex.end())
+            {
+                exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
+                wreport::CrexBulletin cbulletin;
+                exporter->to_bulletin(*msgs, cbulletin);
+            }
         } catch (std::exception& e) {
             fails.push_back(string(files[i]) + ": " + e.what());
         }
