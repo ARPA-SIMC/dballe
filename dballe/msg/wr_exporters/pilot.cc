@@ -72,7 +72,6 @@ struct Pilot : public Template
         bulletin.type = 2;
         bulletin.subtype = 255;
         bulletin.localsubtype = 91;
-        bulletin.edition = 3;
 
         // Data descriptor section
         bulletin.datadesc.clear();

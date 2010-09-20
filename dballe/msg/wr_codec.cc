@@ -141,59 +141,6 @@ void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) cons
 }
 
 #if 0
-std::string WRExporter::infer_template(const Msgs& msgs) const
-{
-	switch (msg.type)
-	{
-		case MSG_GENERIC: return "generic"; break;
-		case MSG_SYNOP: {
-			dba_var var = dba_msg_get_st_type_var(msg);
-			if (var == NULL)
-				exp = &bufrex_exporter_synop_0_1;
-			else if (dba_var_value(var)[0] == '1')
-				exp = &bufrex_exporter_synop_0_1;
-			else
-				exp = &bufrex_exporter_synop_0_3;
-			break;
-		}
-		case MSG_PILOT:	return "pilot"; break;
-		case MSG_TEMP:	return "temp"; break;
-		case MSG_TEMP_SHIP: return "temp-ship"; break;
-		case MSG_AIREP:	return "airep"; break;
-		case MSG_AMDAR: return "amdar"; break;
-		case MSG_ACARS:	return "acars"; break;
-		case MSG_SHIP: {
-			dba_var var = dba_msg_get_st_type_var(msg);
-			if (var == NULL)
-				exp = &bufrex_exporter_sea_1_11;
-			else if (dba_var_value(var)[0] == '1')
-				exp = &bufrex_exporter_sea_1_11;
-			else
-				exp = &bufrex_exporter_sea_1_13;
-			break;
-		}
-		case MSG_BUOY:		exp = &bufrex_exporter_sea_1_21;		break;
-		case MSG_METAR:		exp = &bufrex_exporter_metar_0_140;		break;
-		case MSG_POLLUTION:	exp = &bufrex_exporter_pollution_8_102;	break;
-		case MSG_SAT:	exp = &bufrex_exporter_generic;			break;
-	}
-	*type = exp->type;
-	*subtype = exp->subtype;
-	*localsubtype = exp->localsubtype;
-	return dba_error_ok();
-}
-#endif
-
-#if 0
-extern dba_err bufrex_copy_to_generic(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
-extern dba_err bufrex_copy_to_synop(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
-extern dba_err bufrex_copy_to_metar(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
-extern dba_err bufrex_copy_to_temp(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
-extern dba_err bufrex_copy_to_pilot(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
-extern dba_err bufrex_copy_to_flight(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
-extern dba_err bufrex_copy_to_sat(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
-extern dba_err bufrex_copy_to_pollution(dba_msg msg, bufrex_msg raw, bufrex_subset sset);
-
 dba_err bufrex_encode_bufr(dba_msgs msgs, int type, int subtype, int localsubtype, dba_rawmsg* raw)
 {
 	dba_err err = DBA_OK;

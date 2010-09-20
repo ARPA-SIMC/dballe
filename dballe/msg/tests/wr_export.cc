@@ -22,10 +22,12 @@
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
 #include <wreport/bulletin.h>
+#include <wibble/string.h>
 #include <cstring>
 
 using namespace dballe;
 using namespace wreport;
+using namespace wibble;
 using namespace std;
 
 namespace tut {
@@ -53,50 +55,56 @@ void to::test<1>()
     //      "bufr/test-soil1.bufr", 
     const char** files = dballe::tests::bufr_files;
 
-    for (int i = 0; files[i] != NULL; i++)
+    vector<string> fails;
+    int i;
+    for (i = 0; files[i] != NULL; i++)
     {
         try {
             auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
             ensure(msgs->size() > 0);
 
             std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
-            wreport::BufrBulletin bulletin;
-            exporter->to_bulletin(*msgs, bulletin);
+            wreport::BufrBulletin bbulletin;
+            exporter->to_bulletin(*msgs, bbulletin);
+
+            exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
+            wreport::CrexBulletin cbulletin;
+            exporter->to_bulletin(*msgs, cbulletin);
         } catch (std::exception& e) {
-            throw tut::failure(string("[") + files[i] + "] " + e.what());
+            fails.push_back(string(files[i]) + ": " + e.what());
         }
     }
+    if (!fails.empty())
+        throw tut::failure(str::fmtf("%zd/%d errors:\n", fails.size(), i) + str::join(fails.begin(), fails.end(), "\n"));
 }
 
 // Test plain re-export of all our CREX test files
 template<> template<>
 void to::test<2>()
 {
-    const char* files[] = {
-        "crex/test-mare0.crex",
-        "crex/test-mare1.crex",
-        "crex/test-mare2.crex",
-        "crex/test-synop0.crex",
-        "crex/test-synop1.crex",
-        "crex/test-synop2.crex",
-        "crex/test-synop3.crex",
-        "crex/test-temp0.crex",
-        NULL
-    };
+    const char** files = dballe::tests::crex_files;
 
-    for (int i = 0; files[i] != NULL; i++)
+    vector<string> fails;
+    int i;
+    for (i = 0; files[i] != NULL; i++)
     {
         try {
             auto_ptr<Msgs> msgs = read_msgs(files[i], CREX);
             ensure(msgs->size() > 0);
 
-            std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
-            wreport::CrexBulletin bulletin;
-            exporter->to_bulletin(*msgs, bulletin);
+            std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
+            wreport::BufrBulletin bbulletin;
+            exporter->to_bulletin(*msgs, bbulletin);
+
+            exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
+            wreport::CrexBulletin cbulletin;
+            exporter->to_bulletin(*msgs, cbulletin);
         } catch (std::exception& e) {
-            throw tut::failure(string("[") + files[i] + "] " + e.what());
+            fails.push_back(string(files[i]) + ": " + e.what());
         }
     }
+    if (!fails.empty())
+        throw tut::failure(str::fmtf("%zd/%d errors:\n", fails.size(), i) + str::join(fails.begin(), fails.end(), "\n"));
 }
 
 

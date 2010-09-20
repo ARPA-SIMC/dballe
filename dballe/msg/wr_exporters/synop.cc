@@ -114,7 +114,6 @@ struct Synop : public Template
         bulletin.type = 0;
         bulletin.subtype = 255;
         bulletin.localsubtype = 1;
-	    bulletin.edition = 3;
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {

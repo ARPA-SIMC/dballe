@@ -71,7 +71,6 @@ struct Buoy : public Template
         bulletin.type = 1;
         bulletin.subtype = 255;
         bulletin.localsubtype = 21;
-	bulletin.edition = 3;
 
         // Data descriptor section
         bulletin.datadesc.clear();

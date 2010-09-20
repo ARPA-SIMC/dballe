@@ -67,10 +67,22 @@ struct Generic : public Template
     {
         Template::setupBulletin(bulletin);
 
-        bulletin.edition = 3;
         bulletin.type = 255;
         bulletin.subtype = 255;
         bulletin.localsubtype = 0;
+
+        if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
+        {
+            b->centre = 200;
+            b->subcentre = 0;
+            b->master_table = 14;
+            b->local_table = 1;
+        }
+        if (CrexBulletin* b = dynamic_cast<CrexBulletin*>(&bulletin))
+        {
+            b->master_table = 99;
+            b->table = 3;
+        }
 
         // The data descriptor section will be generated later, as it depends
         // on the contents of the message

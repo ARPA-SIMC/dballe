@@ -71,7 +71,6 @@ struct Metar : public Template
         bulletin.type = 0;
         bulletin.subtype = 255;
         bulletin.localsubtype = 140;
-	bulletin.edition = 3;
 
         // Data descriptor section
         bulletin.datadesc.clear();

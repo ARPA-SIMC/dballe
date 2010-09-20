@@ -352,7 +352,7 @@ void to::test<3>()
 	};
 
     std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(BUFR));
-    std::auto_ptr<msg::Importer> importer(msg::Importer::create(AOF));
+    std::auto_ptr<msg::Importer> importer(msg::Importer::create(BUFR));
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
@@ -363,7 +363,7 @@ void to::test<3>()
             Rawmsg raw;
             exporter->to_rawmsg(*amsgs, raw);
 
-            // Decode again to AOF
+            // Decode again
             Msgs bmsgs;
             importer->from_rawmsg(raw, bmsgs);
 

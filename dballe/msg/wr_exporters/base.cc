@@ -102,7 +102,6 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
         bulletin.rep_year = v->enqi();
     else
         has_date = false;
-
     if (const Var* v = msg.get_month_var())
         bulletin.rep_month = v->enqi();
     else
@@ -146,12 +145,14 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
         b->local_table = 0;
         b->compression = 0;
         b->update_sequence_number = 0;
+	b->edition = 4;
     }
     if (CrexBulletin* b = dynamic_cast<CrexBulletin*>(&bulletin))
     {
         b->master_table = 0;
         b->table = 3;
         b->has_check_digit = 0;
+	b->edition = 2;
     }
 }
 
@@ -160,16 +161,6 @@ void Template::to_subset(const Msg& msg, wreport::Subset& subset)
     this->msg = &msg;
     this->subset = &subset;
 }
-
-/*
-std::auto_ptr<Exporter> Exporter::createMetar(const msg::Exporter::Options&) { throw error_unimplemented("WB Exporters"); }
-std::auto_ptr<Exporter> Exporter::createTemp(const msg::Exporter::Options&) { throw error_unimplemented("WB Exporters"); }
-std::auto_ptr<Exporter> Exporter::createPilot(const msg::Exporter::Options&) { throw error_unimplemented("WB Exporters"); }
-std::auto_ptr<Exporter> Exporter::createFlight(const msg::Exporter::Options&) { throw error_unimplemented("WB Exporters"); }
-std::auto_ptr<Exporter> Exporter::createSat(const msg::Exporter::Options&) { throw error_unimplemented("WB Exporters"); }
-std::auto_ptr<Exporter> Exporter::createPollution(const msg::Exporter::Options&) { throw error_unimplemented("WB Exporters"); }
-std::auto_ptr<Exporter> Exporter::createGeneric(const msg::Exporter::Options&) { throw error_unimplemented("WB Exporters"); }
-*/
 
 } // namespace wr
 } // namespace msg

@@ -27,14 +27,17 @@ using namespace std;
 #define SHIP_NAME "ship"
 #define SHIP_DESC "Synop ship"
 
+#define SHIP_PLAIN_NAME "ship-plain"
+#define SHIP_PLAIN_DESC "Synop ship (normal)"
+
 #define SHIP_ABBR_NAME "ship-abbr"
-#define SHIP_ABBR_DESC "Synop ship abbreviated"
+#define SHIP_ABBR_DESC "Synop ship (abbreviated)"
 
 #define SHIP_AUTO_NAME "ship-auto"
-#define SHIP_AUTO_DESC "Synop ship auto"
+#define SHIP_AUTO_DESC "Synop ship (auto)"
 
 #define SHIP_REDUCED_NAME "ship-reduced"
-#define SHIP_REDUCED_DESC "Synop ship reduced"
+#define SHIP_REDUCED_DESC "Synop ship (reduced)"
 
 namespace dballe {
 namespace msg {
@@ -76,7 +79,6 @@ struct ShipBase : public Template
 
         bulletin.type = 1;
         bulletin.subtype = 255;
-	bulletin.edition = 3;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -164,13 +166,13 @@ struct ShipAbbr : public ShipBase
     }
 };
 
-struct Ship : public ShipBase
+struct ShipPlain : public ShipBase
 {
-    Ship(const Exporter::Options& opts, const Msgs& msgs)
+    ShipPlain(const Exporter::Options& opts, const Msgs& msgs)
         : ShipBase(opts, msgs) {}
 
-    virtual const char* name() const { SHIP_NAME; }
-    virtual const char* description() const { SHIP_DESC; }
+    virtual const char* name() const { SHIP_PLAIN_NAME; }
+    virtual const char* description() const { SHIP_PLAIN_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -222,7 +224,23 @@ struct ShipFactory : public TemplateFactory
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Ship(opts, msgs));
+        // Scan msgs and pick the right one
+        const Msg& msg = *msgs[0];
+        const Var* var = msg.get_st_type_var();
+	if (var == NULL || var->enqi() == 1)
+            return auto_ptr<Template>(new ShipPlain(opts, msgs));
+	else
+            return auto_ptr<Template>(new ShipAuto(opts, msgs));
+    }
+};
+
+struct ShipPlainFactory : public TemplateFactory
+{
+    ShipPlainFactory() { name = SHIP_PLAIN_NAME; description = SHIP_PLAIN_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new ShipPlain(opts, msgs));
     }
 };
 struct ShipAbbrFactory : public TemplateFactory
@@ -258,16 +276,19 @@ struct ShipReducedFactory : public TemplateFactory
 void register_ship(TemplateRegistry& r)
 {
 static const TemplateFactory* ship = NULL;
+static const TemplateFactory* shipplain = NULL;
 static const TemplateFactory* shipabbr = NULL;
 static const TemplateFactory* shipauto = NULL;
 static const TemplateFactory* shipreduced = NULL;
 
     if (!ship) ship = new ShipFactory;
+    if (!shipplain) shipplain = new ShipPlainFactory;
     if (!shipabbr) shipabbr = new ShipAbbrFactory;
     if (!shipauto) shipauto = new ShipAutoFactory;
     if (!shipreduced) shipreduced = new ShipReducedFactory;
  
     r.register_factory(ship);
+    r.register_factory(shipplain);
     r.register_factory(shipabbr);
     r.register_factory(shipauto);
     r.register_factory(shipreduced);

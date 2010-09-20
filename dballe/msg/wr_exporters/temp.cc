@@ -129,7 +129,6 @@ struct TempBase : public Template
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        bulletin.edition = 3;
         bulletin.type = 2;
         bulletin.subtype = 255;
     }
