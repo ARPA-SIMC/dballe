@@ -47,6 +47,11 @@ TESTGRP(wr_import);
         ensure((#field, var != 0)); \
         ensure_var_equals(*var, val); \
     } while (0)
+#define IS2(code, lev, tr, val) do { \
+        const Var* var = msg.find(code, lev, tr); \
+        ensure((#code #lev #tr, var != 0)); \
+        ensure_var_equals(*var, val); \
+    } while (0)
 #define UN(field) do { \
         const Var* var = msg.get_##field##_var(); \
         if (var != 0) \
@@ -167,16 +172,19 @@ void to::test<5>()
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
-    //msg.print(stderr);
+    // msg.print(stderr);
 
     IS(block, 11); IS(station, 406); IS(st_type, 1);
     IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
     IS(latitude, 50.07361); IS(longitude, 12.40333);
     IS(height, 483.0); IS(height_baro, 490.0);
     IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
-    IS(wind_dir, 0.0); IS(wind_speed, 1.0);
+    IS2(WR_VAR(0, 11, 1), Level(103, 10000), Trange(0, -600, 600), 0.0); // wind_dir
+    IS2(WR_VAR(0, 11, 2), Level(103, 10000), Trange(0, -600, 600), 1.0); // wind_speed
     IS(temp_2m, 273.05); IS(dewpoint_2m, 271.35); IS(humidity, 88.0);
-    IS(visibility, 14000.0); IS(pres_wtr, 508); IS(past_wtr1, 10); IS(past_wtr2, 10);
+    IS(visibility, 14000.0); IS(pres_wtr, 508);
+    IS2(WR_VAR(0, 20, 4), Level(1), Trange(205, 0, -10800), 10); // past_wtr1
+    IS2(WR_VAR(0, 20, 5), Level(1), Trange(205, 0, -10800), 10); // past_wtr2
     IS(cloud_n, 38); IS(cloud_nh, 0); IS(cloud_hh, 6000.0);
     IS(cloud_cl, 30); IS(cloud_cm, 20); IS(cloud_ch, 12);
     IS(cloud_n1, 3); IS(cloud_c1, 0); IS(cloud_h1, 6000.0);
@@ -193,16 +201,25 @@ void to::test<6>()
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
-    //msg.print(stderr);
+    // msg.print(stderr);
 
     IS(block, 11); IS(station, 406); IS(st_type, 1);
     IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
     IS(latitude, 50.07361); IS(longitude, 12.40333);
     IS(height, 483.0); IS(height_baro, 490.0);
-    IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
-    IS(wind_dir, 0.0); IS(wind_speed, 1.0);
-    IS(temp_2m, 273.05); IS(dewpoint_2m, 271.35); IS(humidity, 88.0);
-    IS(visibility, 14000.0); IS(pres_wtr, 508); IS(past_wtr1, 10); IS(past_wtr2, 10);
+    IS2(WR_VAR(0, 10,  4), Level(102, 490000), Trange::instant(), 95090.0); // press
+    IS2(WR_VAR(0, 10, 51), Level(102, 490000), Trange::instant(), 101060.0); // press_msl
+    IS2(WR_VAR(0, 10, 63), Level(102, 490000), Trange(205, 0,10800), 6.0); // press_tend
+    IS2(WR_VAR(0, 10, 60), Level(102, 490000), Trange(4, 0, 10800), -110.0); // press_3h
+    IS2(WR_VAR(0, 11, 1), Level(103, 10000), Trange(0, -600, 600), 0.0); // wind_dir
+    IS2(WR_VAR(0, 11, 2), Level(103, 10000), Trange(0, -600, 600), 1.0); // wind_speed
+    IS2(WR_VAR(0, 12, 101), Level(103, 2050), Trange::instant(), 273.05); // temp_2m
+    IS2(WR_VAR(0, 12, 103), Level(103, 2050), Trange::instant(), 271.35); // dewpoint_2m
+    IS2(WR_VAR(0, 13,   3), Level(103, 2050), Trange::instant(), 88.0); // humidity
+    IS2(WR_VAR(0, 20, 1), Level(103, 8000), Trange::instant(), 14000.0); // visibility
+    IS(pres_wtr, 508);
+    IS2(WR_VAR(0, 20, 4), Level(1), Trange(205, 0, -10800), 10); // past_wtr1
+    IS2(WR_VAR(0, 20, 5), Level(1), Trange(205, 0, -10800), 10); // past_wtr2
     IS(cloud_n, 38); IS(cloud_nh, 0); IS(cloud_hh, 6000.0);
     IS(cloud_cl, 30); IS(cloud_cm, 20); IS(cloud_ch, 12);
     IS(cloud_n1, 3); IS(cloud_c1, 0); IS(cloud_h1, 6000.0);
