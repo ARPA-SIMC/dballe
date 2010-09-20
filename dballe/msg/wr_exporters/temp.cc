@@ -110,14 +110,11 @@ struct TempBase : public Template
             subset->store_variable(WR_VAR(0,  8,  1), *vss);
 
             /* Add the rest */
-            for (int j = 0; j < count; ++j)
-            {
-                add(WR_VAR(0, 10, 3), WR_VAR(0, 10,   8), c);
-                add(WR_VAR(0, 12, 1), WR_VAR(0, 12, 101), c);
-                add(WR_VAR(0, 12, 3), WR_VAR(0, 12, 103), c);
-                add(WR_VAR(0, 11, 1), WR_VAR(0, 11,   1), c);
-                add(WR_VAR(0, 11, 2), WR_VAR(0, 11,   2), c);
-            }
+            add(WR_VAR(0, 10, 3), WR_VAR(0, 10,   8), c);
+            add(WR_VAR(0, 12, 1), WR_VAR(0, 12, 101), c);
+            add(WR_VAR(0, 12, 3), WR_VAR(0, 12, 103), c);
+            add(WR_VAR(0, 11, 1), WR_VAR(0, 11,   1), c);
+            add(WR_VAR(0, 11, 2), WR_VAR(0, 11,   2), c);
         }
 
         return count;
@@ -230,7 +227,6 @@ struct TempShip : public TempBase
          * the expanded version here.  The code needs to be changed when newer CREX
          * D tables are available */
         /* WR_VAR(3,  9, 196), Replaced with expansion: */
-                bulletin.datadesc.push_back(WR_VAR(3,  9,  7));
                 bulletin.datadesc.push_back(WR_VAR(3, 1,  3));
                 bulletin.datadesc.push_back(WR_VAR(0, 2, 11));
                 bulletin.datadesc.push_back(WR_VAR(0, 2, 12));
