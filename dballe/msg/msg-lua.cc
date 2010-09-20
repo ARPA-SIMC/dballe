@@ -95,14 +95,16 @@ static int dbalua_msg_find(lua_State *L)
 	} else {
 		// By all details
 		Varcode code = dbalua_to_varcode(L, 2);
-		int ltype1 = lua_tointeger(L, 3);
-		int l1 = lua_tointeger(L, 4);
-		int ltype2 = lua_tointeger(L, 5);
-		int l2 = lua_tointeger(L, 6);
-		int ptype = lua_tointeger(L, 7);
-		int p1 = lua_tointeger(L, 8);
-		int p2 = lua_tointeger(L, 9);
-		res = msg->edit(code, Level(ltype1, l1, ltype2, l2), Trange(ptype, p1, p2));
+        Level level;
+        level.ltype1 = lua_isnil(L, 3) ? MISSING_INT : lua_tointeger(L, 3);
+		level.l1 = lua_isnil(L, 4) ? MISSING_INT : lua_tointeger(L, 4);
+		level.ltype2 = lua_isnil(L, 5) ? MISSING_INT : lua_tointeger(L, 5);
+		level.l2 = lua_isnil(L, 6) ? MISSING_INT : lua_tointeger(L, 6);
+        Trange trange;
+		trange.pind = lua_isnil(L, 7) ? MISSING_INT : lua_tointeger(L, 7);
+		trange.p1 = lua_isnil(L, 8) ? MISSING_INT : lua_tointeger(L, 8);
+		trange.p2 = lua_isnil(L, 9) ? MISSING_INT : lua_tointeger(L, 9);
+		res = msg->edit(code, level, trange);
 	}
 	if (res == NULL)
 		lua_pushnil(L);
