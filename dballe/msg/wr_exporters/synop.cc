@@ -138,8 +138,8 @@ struct SynopLand : public Synop
     SynopLand(const Exporter::Options& opts, const Msgs& msgs)
         : Synop(opts, msgs) {}
 
-    virtual const char* name() const { "synopland"; }
-    virtual const char* description() const { "Synop Land"; }
+    virtual const char* name() const { return SYNOP_LAND_NAME; }
+    virtual const char* description() const { return SYNOP_LAND_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -225,8 +225,8 @@ struct SynopLandHigh : public Synop
     SynopLandHigh(const Exporter::Options& opts, const Msgs& msgs)
         : Synop(opts, msgs) {}
 
-    virtual const char* name() const { "synoplandhigh"; }
-    virtual const char* description() const { "Synop land high level station"; }
+    virtual const char* name() const { return SYNOP_LAND_HIGH_NAME; }
+    virtual const char* description() const { return SYNOP_LAND_HIGH_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -298,15 +298,15 @@ struct SynopAuto : public SynopLandHigh
     SynopAuto(const Exporter::Options& opts, const Msgs& msgs)
         : SynopLandHigh(opts, msgs) {}
 
-    virtual const char* name() const { "synoplandauto"; }
-    virtual const char* description() const { "Synop land automatic station"; }
+    virtual const char* name() const { return SYNOP_AUTO_NAME; }
+    virtual const char* description() const { return SYNOP_AUTO_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         SynopLandHigh::setupBulletin(bulletin);
 
         bulletin.localsubtype = 3;
-	}
+    }
 };
 
 struct SynopFactory : public TemplateFactory
@@ -318,7 +318,7 @@ struct SynopFactory : public TemplateFactory
         // Scan msgs and pick the right one
         const Msg& msg = *msgs[0];
         const Var* var = msg.get_st_type_var();
-        if (var != NULL && var->enqi() == 1)
+        if (var != NULL && var->enqi() == 0)
             return auto_ptr<Template>(new SynopAuto(opts, msgs));
         else if ((var = msg.get_geopotential_var()) != NULL)
             return auto_ptr<Template>(new SynopLandHigh(opts, msgs));
