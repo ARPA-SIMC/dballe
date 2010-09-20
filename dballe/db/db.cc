@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/db - Archive for point-based meteorological data
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -21,6 +21,12 @@
 
 #include "db.h"
 #include "internals.h"
+
+#include <limits.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
+#if 0
 #include "repinfo.h"
 #include "pseudoana.h"
 #include "context.h"
@@ -36,26 +42,23 @@
 #include <sqlext.h>
 #include <sqltypes.h>
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
-#include <limits.h>
 #include <unistd.h>
 
 #include <assert.h>
+#endif
+
+using namespace std;
+using namespace wreport;
+
+namespace dballe {
 
 /*
- * Define to true to enable the use of transactions during writes
+ * Database init queries
  */
-#define DBA_USE_TRANSACTIONS
-
-/* Define this to enable referential integrity */
-#undef USE_REF_INT
-
-static SQLHENV dba_od_env;
-static int dba_od_env_initialized = 0;
 
 static const char* init_tables[] = {
 	"attr", "data", "context", "pseudoana", "repinfo"
@@ -66,6 +69,7 @@ static const char* init_sequences[] = {
 static const char* init_functions[] = {
 /*	"identity (val anyelement, val1 anyelement)", */
 };
+
 
 #ifdef DBA_USE_TRANSACTIONS
 #define TABLETYPE "TYPE=InnoDB;"
@@ -351,319 +355,33 @@ static const char* init_queries_oracle[] = {
 };
 
 
-/**
- * Get the report id from this record.
- *
- * If rep_memo is specified instead, the corresponding report id is queried in
- * the database and set as "rep_cod" in the record.
+/*
+ * DB implementation
  */
-static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
-{
-	const char* rep;
-	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
-	if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
-		DBA_RUN_OR_RETURN(dba_db_repinfo_get_id(db->repinfo, rep, id));
-	else if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_COD)) != NULL)
-	{
-		int exists;
-		*id = strtol(rep, 0, 10);
-		DBA_RUN_OR_RETURN(dba_db_repinfo_has_id(db->repinfo, *id, &exists));
-		if (!exists)
-			return dba_error_notfound("rep_cod %d does not exist in the database", *id);
-	}
-	else
-		return dba_error_notfound("looking for report type in rep_cod or rep_memo");
-	return dba_error_ok();
-}		
+
 
 // First part of initialising a dba_db
-static dba_err dba_db_preinit(dba_db* db)
+DB::DB()
+	: conn(0),
+	  stm_last_insert_id(0),
+	  seq_pseudoana(0), seq_context(0)
 {
-	dba_err err = DBA_OK;
-	int sqlres;
-
-	if (dba_od_env_initialized == 0)
-	{
-		// Allocate ODBC environment handle and register version 
-		int res = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &dba_od_env);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-			return dba_db_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Allocating main environment handle");
-
-		res = SQLSetEnvAttr(dba_od_env, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0); 
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			dba_err res = dba_db_error_odbc(SQL_HANDLE_ENV, dba_od_env, "Asking for ODBC version 3");
-			SQLFreeHandle(SQL_HANDLE_ENV, dba_od_env);
-			return res;
-		}
-		dba_od_env_initialized = 1;
-
-		// One could close the main handle with this:
-		// SQLFreeHandle(SQL_HANDLE_ENV, dba_od_env);
-		// but there does not seem to be a big need of it.
-	}
-
-
-	/* Allocate a new handle */
-	if ((*db = (dba_db)calloc(1, sizeof(struct _dba_db))) == NULL)
-		return dba_error_alloc("trying to allocate a new dba_db object");
-
 	/* Allocate the ODBC connection handle */
-	sqlres = SQLAllocHandle(SQL_HANDLE_DBC, dba_od_env, &((*db)->od_conn));
-	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
-				"Allocating new connection handle");
-		goto fail;
-	}
+	conn = new db::Connection;
 
 	/* Set the connection timeout */
 	/* SQLSetConnectAttr(pc.od_conn, SQL_LOGIN_TIMEOUT, (SQLPOINTER *)5, 0); */
-
-	return dba_error_ok();
-
-fail:
-	dba_db_delete(*db);
-	*db = 0;
-	return err;
 }
 
-static dba_err dba_db_postinit(dba_db* db)
+DB::~DB()
 {
-	dba_err err = DBA_OK;
-	char drivername[50];
-	int sqlres;
-	SQLSMALLINT len;
+	if (seq_context) delete seq_context;
+	if (seq_pseudoana) delete seq_pseudoana;
+	if (stm_last_insert_id) delete stm_last_insert_id;
+	if (conn) delete conn;
+}
 
-	/* Find out what kind of database we are working with */
-	sqlres = SQLGetInfo((*db)->od_conn, SQL_DRIVER_NAME, (SQLPOINTER)drivername, 50, &len);
-	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn, "Getting ODBC driver name");
-		goto fail;
-	}
-	if ((len >= 9 && (strncmp(drivername, "libmyodbc", 9) == 0))
-	 || (len >= 6 && (strncmp(drivername, "myodbc", 6) == 0)))
-		(*db)->server_type = MYSQL;
-	else if (len >= 6 && strncmp(drivername, "sqlite", 6) == 0)
-		(*db)->server_type = SQLITE;
-	else if (len >= 5 && strncmp(drivername, "SQORA", 5) == 0)
-		(*db)->server_type = ORACLE;
-	else if (len >= 11 && strncmp(drivername, "libpsqlodbc", 11) == 0)
-		(*db)->server_type = POSTGRES;
-	else
-	{
-		fprintf(stderr, "ODBC driver %.*s is unsupported: assuming it's MySQL", len, drivername);
-		(*db)->server_type = MYSQL;
-	}
-
-#ifdef DBA_USE_TRANSACTIONS
-	/* Set manual commit */
-	if ((*db)->server_type != SQLITE)
-	{
-		sqlres = SQLSetConnectAttr((*db)->od_conn, SQL_ATTR_AUTOCOMMIT, SQL_AUTOCOMMIT_OFF, 0);
-		if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn, "Disabling ODBC autocommit");
-			goto fail;
-		}
-	} else {
-		DBA_RUN_OR_GOTO(fail, dba_db_run_sql(*db, "PRAGMA journal_mode = MEMORY"));
-		DBA_RUN_OR_GOTO(fail, dba_db_run_sql(*db, "PRAGMA legacy_file_format = 0"));
-	}
-
-    /* TODO: no need to precompile all these queries anymore */
-	(*db)->stm_begin = NULL;
 #if 0
-	if ((*db)->server_type == ORACLE)
-		/* Oracle does not want a begin and starts transactions automatically */
-		(*db)->stm_begin = NULL;
-	else {
-		DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_begin)));
-		sqlres = SQLPrepare((*db)->stm_begin, (unsigned char*)"BEGIN", SQL_NTS);
-		if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_begin, "compiling query for beginning a transaction");
-			goto fail;
-		}
-	}
-#endif
-
-	DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_commit)));
-	sqlres = SQLPrepare((*db)->stm_commit, (unsigned char*)"COMMIT", SQL_NTS);
-	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_commit, "compiling query for committing a transaction");
-		goto fail;
-	}
-
-	DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_rollback)));
-	sqlres = SQLPrepare((*db)->stm_rollback, (unsigned char*)"ROLLBACK", SQL_NTS);
-	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_rollback, "compiling query for rolling back a transaction");
-		goto fail;
-	}
-#endif
-
-	switch ((*db)->server_type)
-	{
-		case ORACLE:
-		case POSTGRES:
-			DBA_RUN_OR_GOTO(fail, dba_db_seq_create((*db), "seq_pseudoana", &((*db)->seq_pseudoana)));
-			DBA_RUN_OR_GOTO(fail, dba_db_seq_create((*db), "seq_context", &((*db)->seq_context)));
-			break;
-		case MYSQL:
-			DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_last_insert_id)));
-			SQLBindCol((*db)->stm_last_insert_id, 1, DBALLE_SQL_C_SINT, &((*db)->last_insert_id), sizeof((*db)->last_insert_id), 0);
-			sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ID()", SQL_NTS);
-			if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_last_insert_id, "compiling query for querying the last insert id");
-				goto fail;
-			}
-			break;
-		case SQLITE:
-			DBA_RUN_OR_GOTO(fail, dba_db_statement_create(*db, &((*db)->stm_last_insert_id)));
-			SQLBindCol((*db)->stm_last_insert_id, 1, DBALLE_SQL_C_SINT, &((*db)->last_insert_id), sizeof((*db)->last_insert_id), 0);
-			sqlres = SQLPrepare((*db)->stm_last_insert_id, (unsigned char*)"SELECT LAST_INSERT_ROWID()", SQL_NTS);
-			if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, (*db)->stm_last_insert_id, "compiling query for querying the last insert id");
-				goto fail;
-			}
-			break;
-	}
-
-	return dba_error_ok();
-	
-fail:
-	dba_db_delete(*db);
-	*db = 0;
-	return err;
-}
-
-dba_err dba_db_create(const char* dsn, const char* user, const char* password, dba_db* db)
-{
-	dba_err err = DBA_OK;
-	int sqlres;
-	*db = NULL;
-
-	DBA_RUN_OR_GOTO(fail, dba_db_preinit(db));
-
-	/* Connect to the DSN */
-	sqlres = SQLConnect((*db)->od_conn,
-						(SQLCHAR*)dsn, SQL_NTS,
-						(SQLCHAR*)user, SQL_NTS,
-						(SQLCHAR*)(password == NULL ? "" : password), SQL_NTS);
-	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
-				"Connecting to DSN %s as user %s", dsn, user);
-		goto fail;
-	}
-	(*db)->connected = 1;
-
-	DBA_RUN_OR_GOTO(fail, dba_db_postinit(db));
-
-	return dba_error_ok();
-	
-fail:
-	if (*db != NULL) dba_db_delete(*db);
-	*db = 0;
-	return err;
-}
-
-dba_err dba_db_create_generic(const char* config, dba_db* db)
-{
-	dba_err err = DBA_OK;
-	char sdcout[1024];
-	int sqlres;
-	SQLSMALLINT outlen;
-	*db = NULL;
-
-	DBA_RUN_OR_GOTO(fail, dba_db_preinit(db));
-
-	/* Connect to the DSN */
-	sqlres = SQLDriverConnect((*db)->od_conn, NULL,
-					(SQLCHAR*)config, SQL_NTS,
-					(SQLCHAR*)sdcout, 1024, &outlen,
-					SQL_DRIVER_NOPROMPT);
-
-	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_DBC, (*db)->od_conn,
-				"Connecting to DB using configuration %s", config);
-		goto fail;
-	}
-	(*db)->connected = 1;
-
-	DBA_RUN_OR_GOTO(fail, dba_db_postinit(db));
-
-	return dba_error_ok();
-	
-fail:
-	if (*db != NULL) dba_db_delete(*db);
-	*db = 0;
-	return err;
-}
-
-dba_err dba_db_create_from_file(const char* pathname, dba_db* db)
-{
-	// Access sqlite file directly
-	char buf[PATH_MAX];
-	if (pathname[0] != '/')
-	{
-		char cwd[PATH_MAX];
-		snprintf(buf, PATH_MAX, "Driver=SQLite3;Database=%s/%s;", getcwd(cwd, PATH_MAX), pathname);
-	}
-	else
-		snprintf(buf, PATH_MAX, "Driver=SQLite3;Database=%s;", pathname);
-	return dba_db_create_generic(buf, db);
-}
-
-dba_err dba_db_create_test(dba_db* db)
-{
-	const char* envurl = getenv("DBA_DB");
-	if (envurl != NULL)
-		return dba_db_create_from_url(envurl, db);
-	else
-		return dba_db_create_from_file("test.sqlite", db);
-}
-
-dba_err dba_db_create_from_url(const char* url, dba_db* db)
-{
-	if (strncmp(url, "sqlite://", 9) == 0)
-		return dba_db_create_from_file(url + 9, db);
-	if (strncmp(url, "sqlite:", 7) == 0)
-		return dba_db_create_from_file(url + 7, db);
-	if (strncmp(url, "odbc://", 7) == 0)
-	{
-		char buf[PATH_MAX];
-		strncpy(buf, url + 7, PATH_MAX - 1);
-		buf[PATH_MAX - 1] = 0;
-		char* dsn = strchr(buf, '@');
-		if (dsn == NULL) return dba_db_create(buf, "", "", db); // odbc://dsn
-		// Split the string at '@'
-		*dsn = 0; ++dsn;
-		char* pwd = strchr(buf, ':');
-		if (pwd == NULL) return dba_db_create(dsn, buf, "", db); // odbc://user@dsn
-		*pwd = 0; ++pwd;
-		return dba_db_create(dsn, buf, pwd, db); // odbc://user:pass@dsn
-	}
-	if (strncmp(url, "test:", 5) == 0)
-		return dba_db_create_test(db);
-	return dba_error_consistency("unknown url \"%s\"", url);
-}
-
-int dba_db_is_url(const char* str)
-{
-	if (strncmp(str, "sqlite:", 7) == 0) return 1;
-	if (strncmp(str, "odbc://", 7) == 0) return 1;
-	if (strncmp(str, "test:", 5) == 0) return 1;
-	return 0;
-}
-
 void dba_db_delete(dba_db db)
 {
 	assert(db);
@@ -678,76 +396,218 @@ void dba_db_delete(dba_db db)
 		dba_db_pseudoana_delete(db->pseudoana);
 	if (db->repinfo != NULL)
 		dba_db_repinfo_delete(db->repinfo);
-	if (db->od_conn != NULL)
+}
+#endif
+
+void DB::connect(const char* dsn, const char* user, const char* password)
+{
+	/* Connect to the DSN */
+	conn->connect(dsn, user, password);
+
+	init_after_connect();
+}
+
+void DB::connect_generic(const char* config)
+{
+	conn->driver_connect(config);
+
+	init_after_connect();
+}
+
+void DB::connect_from_file(const char* pathname)
+{
+	// Access sqlite file directly
+	string buf;
+	if (pathname[0] != '/')
 	{
-		if (db->connected)
-		{
-			SQLEndTran(SQL_HANDLE_DBC, db->od_conn, SQL_COMMIT);
-			SQLDisconnect(db->od_conn);
-		}
-		SQLFreeHandle(SQL_HANDLE_DBC, db->od_conn);
+		char cwd[PATH_MAX];
+		buf = "Driver=SQLite3;Database=";
+		buf += getcwd(cwd, PATH_MAX);
+		buf += "/";
+		buf += pathname;
+		buf += ";";
 	}
-	if (db->stm_last_insert_id != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, db->stm_last_insert_id);
-	if (db->seq_pseudoana != NULL)
-		dba_db_seq_delete(db->seq_pseudoana);
-	if (db->seq_context != NULL)
-		dba_db_seq_delete(db->seq_context);
-	free(db);
+	else
+	{
+		buf = "Driver=SQLite3;Database=";
+		buf += pathname;
+		buf += ";";
+	}
+	connect_generic(buf.c_str());
+}
+
+void DB::connect_test()
+{
+	const char* envurl = getenv("DBA_DB");
+	if (envurl != NULL)
+		connect_from_url(envurl);
+	else
+		connect_from_file("test.sqlite");
+}
+
+void DB::connect_from_url(const char* url)
+{
+	if (strncmp(url, "sqlite://", 9) == 0)
+	{
+		connect_from_file(url + 9);
+		return;
+	}
+	if (strncmp(url, "sqlite:", 7) == 0)
+	{
+		connect_from_file(url + 7);
+		return;
+	}
+	if (strncmp(url, "odbc://", 7) == 0)
+	{
+		string buf(url + 7);
+		size_t pos = buf.find('@');
+		if (pos == string::npos)
+		{
+			connect(buf.c_str(), "", ""); // odbc://dsn
+			return;
+		}
+		// Split the string at '@'
+		string userpass = buf.substr(0, pos);
+		string dsn = buf.substr(pos + 1);
+
+		pos = userpass.find(':');
+		if (pos == string::npos)
+		{
+			connect(dsn.c_str(), userpass.c_str(), ""); // odbc://user@dsn
+			return;
+		}
+
+		string user = userpass.substr(0, pos);
+		string pass = userpass.substr(pos + 1);
+
+		connect(dsn.c_str(), user.c_str(), pass.c_str()); // odbc://user:pass@dsn
+		return;
+	}
+	if (strncmp(url, "test:", 5) == 0)
+	{
+		connect_test();
+		return;
+	}
+	error_consistency::throwf("unknown url \"%s\"", url);
+}
+
+bool DB::is_url(const char* str)
+{
+	if (strncmp(str, "sqlite:", 7) == 0) return true;
+	if (strncmp(str, "odbc://", 7) == 0) return true;
+	if (strncmp(str, "test:", 5) == 0) return true;
+	return false;
+}
+
+void DB::init_after_connect()
+{
+#ifdef DBA_USE_TRANSACTIONS
+	/* Set manual commit */
+	if (conn->server_type == db::SQLITE)
+	{
+		run_sql("PRAGMA journal_mode = MEMORY");
+		run_sql("PRAGMA legacy_file_format = 0");
+	} else
+		conn->set_autocommit(false);
+#endif
+
+	switch (conn->server_type)
+	{
+		case db::ORACLE:
+		case db::POSTGRES:
+			seq_pseudoana = new db::Sequence(*conn, "seq_pseudoana");
+			seq_context = new db::Sequence(*conn, "seq_context");
+			break;
+		case db::MYSQL:
+			stm_last_insert_id = new db::Statement(*conn);
+			stm_last_insert_id->bind(1, last_insert_id);
+			stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
+			break;
+		case db::SQLITE:
+			stm_last_insert_id = new db::Statement(*conn);
+			stm_last_insert_id->bind(1, last_insert_id);
+			stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
+			break;
+	}
+}
+
+void DB::run_sql(const char* query)
+{
+	db::Statement stm(*conn);
+	stm.exec_direct(query);
+}
+
+#define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
+#define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
+#define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
+#define DBA_ODBC_MISSING_TABLE_ORACLE "42S02"
+
+void DB::drop_table_if_exists(const char* name)
+{
+	db::Statement stm(*conn);
+	char buf[100];
+	int len;
+
+	if (conn->server_type == db::MYSQL)
+	{
+		len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", name);
+		stm.exec_direct(buf, len);
+	} else {
+		switch (conn->server_type)
+		{
+			case db::MYSQL: stm.ignore_error = DBA_ODBC_MISSING_TABLE_MYSQL; break;
+			case db::SQLITE: stm.ignore_error = DBA_ODBC_MISSING_TABLE_SQLITE; break;
+			case db::ORACLE: stm.ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE; break;
+			case db::POSTGRES: stm.ignore_error = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
+			default: stm.ignore_error = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
+		}
+
+		len = snprintf(buf, 100, "DROP TABLE %s", name);
+		stm.exec_direct(buf, len);
+	}
+	conn->commit();
 }
 
 #define DBA_ODBC_MISSING_SEQUENCE_ORACLE "HY000"
 #define DBA_ODBC_MISSING_SEQUENCE_POSTGRES "42P01"
+void DB::drop_sequence_if_exists(const char* name)
+{
+	const char* ignore_code;
+
+	switch (conn->server_type)
+	{
+		case db::ORACLE: ignore_code = DBA_ODBC_MISSING_SEQUENCE_ORACLE; break;
+		case db::POSTGRES: ignore_code = DBA_ODBC_MISSING_SEQUENCE_POSTGRES; break;
+		default:
+			// No sequences in MySQL, SQLite or unknown databases
+			return;
+	}
+
+	db::Statement stm(*conn);
+	stm.ignore_error = ignore_code;
+
+	char buf[100];
+	int len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
+	stm.exec_direct(buf, len);
+
+	conn->commit();
+
+}
 #define DBA_ODBC_MISSING_FUNCTION_POSTGRES "42883"
 
-dba_err dba_db_delete_tables(dba_db db)
+void DB::delete_tables()
 {
-	dba_err err = DBA_OK;
-	SQLHSTMT stm = NULL;
-	int i, res;
-
 	/* Drop existing tables */
-	for (i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); i++)
-		DBA_RUN_OR_GOTO(cleanup, dba_db_drop_table_if_exists(db, init_tables[i]));
-
-	/* Allocate statement handle */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
+	for (int i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); ++i)
+		drop_table_if_exists(init_tables[i]);
 
 	/* Drop existing sequences */
-	for (i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); i++)
-	{
-		char buf[100];
-		int len;
+	for (int i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); i++)
+		drop_sequence_if_exists(init_tables[i]);
 
-		switch (db->server_type)
-		{
-			case MYSQL:
-			case SQLITE:
-				/* No sequences in MySQL and SQLite*/
-				break;
-			case ORACLE:
-			case POSTGRES: {
-				const char* ecode =
-					db->server_type == ORACLE ?
-						DBA_ODBC_MISSING_SEQUENCE_ORACLE :
-						DBA_ODBC_MISSING_SEQUENCE_POSTGRES;
-				len = snprintf(buf, 100, "DROP SEQUENCE %s", init_sequences[i]);
-				res = SQLExecDirect(stm, (unsigned char*)buf, len);
-				if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-				{
-					err = dba_db_error_odbc_except(ecode, SQL_HANDLE_STMT, stm,
-							"Removing old sequence %s", init_sequences[i]);
-					if (err != DBA_OK)
-						goto cleanup;
-				}
-				DBA_RUN_OR_GOTO(cleanup, dba_db_commit(db));
-				break;
-		    }
-			default:
-				/* No sequences in unknown databases */
-				break;
-		}
-	}
+#if 0
+	/* Allocate statement handle */
+	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
 
 	/* Drop existing functions */
 	for (i = 0; i < sizeof(init_functions) / sizeof(init_functions[0]); i++)
@@ -779,63 +639,53 @@ dba_err dba_db_delete_tables(dba_db db)
 				break;
 		}
 	}
-
-
-cleanup:
-	if (stm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err == DBA_OK ? dba_error_ok() : err;
+#endif
 }
 
-dba_err dba_db_reset(dba_db db, const char* deffile)
+
+void DB::reset(const char* repinfo_file)
 {
-	dba_err err = DBA_OK;
-	SQLHSTMT stm = NULL;
-	int res;
-	int i;
-	const char** queries = NULL;
-	int query_count = 0;
-
-	assert(db);
-
-	if (deffile == 0)
+	// Use a default for repinfo_file if not specified
+	if (repinfo_file == 0)
 	{
-		deffile = getenv("DBA_REPINFO");
-		if (deffile == 0 || deffile[0] == 0)
-			deffile = TABLE_DIR "/repinfo.csv";
+		repinfo_file = getenv("DBA_REPINFO");
+		if (repinfo_file == 0 || repinfo_file[0] == 0)
+			repinfo_file = TABLE_DIR "/repinfo.csv";
 	}
 
-	/* fprintf(stderr, "Reset with %s\n", deffile); */
+	// fprintf(stderr, "Reset with %s\n", repinfo_file);
 
 	/* Open the input CSV file */
 	/*
-	FILE* in = fopen(deffile, "r");
+	FILE* in = fopen(repinfo_file, "r");
 	if (in == NULL)
-		return dba_error_system("opening file %s", deffile);
+		return dba_error_system("opening file %s", repinfo_file);
 	*/
 
 	/* Drop existing tables */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_delete_tables(db));
+	delete_tables();
 
 	/* Invalidate the repinfo cache if we have a repinfo structure active */
 	if (db->repinfo != NULL)
 		dba_db_repinfo_invalidate_cache(db->repinfo);
 
 	/* Allocate statement handle */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
+	db::Statement stm(*conn);
 
-	switch (db->server_type)
+	const char** queries = NULL;
+	int query_count = 0;
+	switch (conn->server_type)
 	{
-		case MYSQL:
+		case db::MYSQL:
 			queries = init_queries_mysql;
 			query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
-		case SQLITE:
+		case db::SQLITE:
 			queries = init_queries_sqlite;
 			query_count = sizeof(init_queries_sqlite) / sizeof(init_queries_sqlite[0]); break;
-		case ORACLE:
+		case db::ORACLE:
 			queries = init_queries_oracle;
 			query_count = sizeof(init_queries_oracle) / sizeof(init_queries_oracle[0]); break;
-		case POSTGRES:
+		case db::POSTGRES:
 			queries = init_queries_postgres;
 			query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
 		default:
@@ -843,23 +693,14 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 			query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
 	}
 	/* Create tables */
-	for (i = 0; i < query_count; i++)
-	{
-		/* Casting out 'const' because ODBC API is not const-conscious */
-		res = SQLExecDirect(stm, (unsigned char*)queries[i], SQL_NTS);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm,
-					"Executing database-initialization query %s", queries[i]);
-			goto cleanup;
-		}
-	}
+	for (int i = 0; i < query_count; i++)
+		stm.exec_direct(queries[i]);
 
 	/* Populate the tables with values */
 	{
 		int added, deleted, updated;
 		DBA_RUN_OR_GOTO(cleanup, dba_db_need_repinfo(db));
-		DBA_RUN_OR_GOTO(cleanup, dba_db_repinfo_update(db->repinfo, deffile, &added, &deleted, &updated));
+		DBA_RUN_OR_GOTO(cleanup, dba_db_repinfo_update(db->repinfo, repinfo_file, &added, &deleted, &updated));
 		/* fprintf(stderr, "%d added, %d deleted, %d updated\n", added, deleted, updated); */
 		/*
 		DBALLE_SQL_C_UINT_TYPE id;
@@ -892,7 +733,7 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 		{
 			if (i != 6)
 			{
-				err = dba_error_parse(deffile, line, "Expected 6 columns, got %d", i);
+				err = dba_error_parse(repinfo_file, line, "Expected 6 columns, got %d", i);
 				goto cleanup;
 			}
 				
@@ -915,15 +756,35 @@ dba_err dba_db_reset(dba_db db, const char* deffile)
 		}
 		*/
 	}
-
-cleanup:
-	if (stm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, stm);
-
-	/* fclose(in); */
-
-	return err == DBA_OK ? dba_error_ok() : err;
 }
+
+
+#if 0
+
+/**
+ * Get the report id from this record.
+ *
+ * If rep_memo is specified instead, the corresponding report id is queried in
+ * the database and set as "rep_cod" in the record.
+ */
+static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
+{
+	const char* rep;
+	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
+	if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
+		DBA_RUN_OR_RETURN(dba_db_repinfo_get_id(db->repinfo, rep, id));
+	else if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_COD)) != NULL)
+	{
+		int exists;
+		*id = strtol(rep, 0, 10);
+		DBA_RUN_OR_RETURN(dba_db_repinfo_has_id(db->repinfo, *id, &exists));
+		if (!exists)
+			return dba_error_notfound("rep_cod %d does not exist in the database", *id);
+	}
+	else
+		return dba_error_notfound("looking for report type in rep_cod or rep_memo");
+	return dba_error_ok();
+}		
 
 dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file, int* added, int* deleted, int* updated)
 {
@@ -1758,5 +1619,9 @@ dba_qc_delete_failed:
 		printf("Result: %d\n", i);
 	}
 #endif
+
+#endif
+
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

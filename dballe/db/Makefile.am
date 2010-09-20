@@ -25,17 +25,19 @@ dbinclude_HEADERS = \
 
 noinst_LTLIBRARIES = libdballe-db.la
 libdballe_db_la_SOURCES = \
-		querybuf.c \
-		internals.c \
-		repinfo.c \
-		pseudoana.c \
-		context.c \
-		data.c \
-		attr.c \
-		cursor.c \
-		db.c \
-		import.c \
-		export.c
+		querybuf.cc \
+		internals.cc \
+		db.cc
+
+#		repinfo.cc
+#		pseudoana.cc
+#		context.cc
+#		data.cc
+#		attr.cc
+#		cursor.cc
+
+#		import.cc \
+#		export.cc
 
 libdballe_db_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
 

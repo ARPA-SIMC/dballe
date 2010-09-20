@@ -141,53 +141,6 @@ void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) cons
 	encoder->to_bulletin(bulletin);
 }
 
-#if 0
-	/* Setup encoding parameters */
-	if (braw->type == 255 && braw->subtype == 255 && braw->localsubtype == 0)
-	{
-		braw->opt.bufr.centre = 200;
-		braw->opt.bufr.subcentre = 0;
-		braw->opt.bufr.master_table = 14;
-		braw->opt.bufr.local_table = 0;
-	} else if (braw->type == 8 && braw->subtype == 255 && braw->localsubtype == 171) {
-		braw->opt.bufr.centre = 98;
-		braw->opt.bufr.subcentre = 0;
-		braw->opt.bufr.master_table = 13;
-		braw->opt.bufr.local_table = 102;
-	} else {
-		braw->opt.bufr.centre = 98;
-		braw->opt.bufr.subcentre = 0;
-		braw->opt.bufr.master_table = 6;
-		braw->opt.bufr.local_table = 1;
-	}
-
-	/* Load appropriate tables for the target message */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_load_tables(braw));
-
-	/* Fill in with the vales from msg */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_from_dba_msgs(braw, msgs));
-
-	if (dba_verbose_is_allowed(DBA_VERB_BUFREX_MSG))
-	{
-		dba_verbose(DBA_VERB_BUFREX_MSG, "BUFR data before encoding:\n");
-		bufrex_msg_print(braw, DBA_VERBOSE_STREAM);
-	}
-
-	/* Encode */
-	DBA_RUN_OR_GOTO(cleanup, bufrex_msg_encode(braw, raw));
-
-cleanup:
-	if (braw != NULL)
-		bufrex_msg_delete(braw);
-	if (err != DBA_OK && *raw != NULL)
-	{
-		dba_rawmsg_delete(*raw);
-		*raw = 0;
-	}
-	return err == DBA_OK ? dba_error_ok() : err;
-}
-#endif
-
 } // namespace msg
 } // namespace dballe
 

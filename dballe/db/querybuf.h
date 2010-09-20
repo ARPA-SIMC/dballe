@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * db/querybuf - Buffer used to build SQL queries
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,144 +22,73 @@
 #ifndef DBA_DB_QUERYBUF_H
 #define DBA_DB_QUERYBUF_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup db
  * Implementation of an efficient string buffer for composing database queries
  */
 
-#include <dballe/core/error.h>
+#include <string>
 
-struct _dba_querybuf;
+namespace dballe {
 
-/**
- * Efficient string buffer for composing database queries
- */
-typedef struct _dba_querybuf* dba_querybuf;
-	
-/**
- * Create a query buffer
- *
- * @param maxsize
- *   The maximum size of the query string.  Since dba_querybuf does not do
- *   dynamic resize of the buffer, it needs the maximum size specified upfront
- * @retval buf
- *   The query buffer
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_querybuf_create(int maxsize, dba_querybuf* buf);
+/// String buffer for composing database queries
+struct Querybuf : public std::string
+{
+	bool list_first;
+	char list_sep[10];
 
-/**
- * Delete a dba_querybuf
- *
- * @param buf
- *   The querybuf to delete
- */
-void dba_querybuf_delete(dba_querybuf buf);
+	/**
+	 * @param reserve
+	 *   Initial preallocated size for the buffer. If this is chosen
+	 *   wisely, there is no need to reallocate space while composing the
+	 *   query.
+	 */
+	Querybuf(size_t reserve = 512);
+	~Querybuf();
 
-/**
- * Reset the querybuf to contain the empty string
- *
- * @param buf
- *   The buffer to operate on
- */
-void dba_querybuf_reset(dba_querybuf buf);
+	/// Reset the querybuf to contain the empty string
+	void clear();
 
-/**
- * Get the string created so far
- *
- * @param buf
- *   The buffer to operate on
- * @return
- *   A pointer to the string created so far with the querybuf
- */
-const char* dba_querybuf_get(dba_querybuf buf);
+	/**
+	 * Begin a list of items separated by the given separator.  Items are added
+	 * using append_list().
+	 *
+	 * @param sep
+	 *   The separator to add between every list item
+	 */
+	void start_list(const char* sep);
 
-/**
- * Get the size of the string created so far
- *
- * @param buf
- *   The buffer to operate on
- * @return
- *   The length of the string created so far with the querybuf, not including
- *   the trailing null character
- */
-int dba_querybuf_size(dba_querybuf buf);
+	/**
+	 * Append a formatted string to the querybuf
+	 *
+	 * @param fmt
+	 *   The string to append, which will be formatted in printf style
+	 */
+	void appendf(const char* fmt, ...) __attribute__((format(printf, 2, 3)));
 
-/**
- * Begin a list of items separated by the given separator.  Items are added
- * using dba_querybuf_append_list().
- *
- * @param buf
- *   The buffer to operate on
- * @param sep
- *   The separator to add between every list item
- * @return 
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_querybuf_start_list(dba_querybuf buf, const char* sep);
+	/**
+	 * Append a string to the querybuf, as part of a list.
+	 *
+	 * This function will prepend str with the current list separator, unless it is
+	 * the first item added to the list.
+	 *
+	 * @param str
+	 *   The string to append
+	 */
+	void append_list(const char* str);
 
-/**
- * Append a string to the querybuf
- *
- * @param buf
- *   The buffer to operate on
- * @param str
- *   The string to append
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_querybuf_append(dba_querybuf buf, const char* str);
+	/**
+	 * Append a formatted string to the querybuf, as part of a list.
+	 *
+	 * This function will prepend str with the current list separator, unless it is
+	 * the first item added to the list.
+	 *
+	 * @param str
+	 *   The string to append
+	 */
+	void append_listf(const char* fmt, ...) __attribute__((format(printf, 2, 3)));
+};
 
-/**
- * Append a formatted string to the querybuf
- *
- * @param buf
- *   The buffer to operate on
- * @param fmt
- *   The string to append, which will be formatted in printf style
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_querybuf_appendf(dba_querybuf buf, const char* fmt, ...);
-
-/**
- * Append a string to the querybuf, as part of a list.
- *
- * This function will prepend str with the current list separator, unless it is
- * the first item added to the list.
- *
- * @param buf
- *   The buffer to operate on
- * @param str
- *   The string to append
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_querybuf_append_list(dba_querybuf buf, const char* str);
-
-/**
- * Append a formatted string to the querybuf, as part of a list.
- *
- * This function will prepend str with the current list separator, unless it is
- * the first item added to the list.
- *
- * @param buf
- *   The buffer to operate on
- * @param str
- *   The string to append
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_querybuf_append_listf(dba_querybuf buf, const char* fmt, ...);
-
-
-#ifdef  __cplusplus
-}
-#endif
+} // namespace dballe
 
 #endif
