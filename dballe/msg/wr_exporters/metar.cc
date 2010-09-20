@@ -41,8 +41,8 @@ struct Metar : public Template
     Metar(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { METAR_NAME; }
-    virtual const char* description() const { METAR_DESC; }
+    virtual const char* name() const { return METAR_NAME; }
+    virtual const char* description() const { return METAR_DESC; }
 
     void add(Varcode code, int shortcut)
     {

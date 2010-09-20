@@ -114,8 +114,8 @@ struct Airep : public FlightBase
     Airep(const Exporter::Options& opts, const Msgs& msgs)
         : FlightBase(opts, msgs) {}
 
-    virtual const char* name() const { AIREP_NAME; }
-    virtual const char* description() const { AIREP_DESC; }
+    virtual const char* name() const { return AIREP_NAME; }
+    virtual const char* description() const { return AIREP_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -182,8 +182,8 @@ struct Amdar : public Airep
     Amdar(const Exporter::Options& opts, const Msgs& msgs)
         : Airep(opts, msgs) {}
 
-    virtual const char* name() const { AMDAR_NAME; }
-    virtual const char* description() const { AMDAR_DESC; }
+    virtual const char* name() const { return AMDAR_NAME; }
+    virtual const char* description() const { return AMDAR_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -197,8 +197,8 @@ struct Acars : public FlightBase
     Acars(const Exporter::Options& opts, const Msgs& msgs)
         : FlightBase(opts, msgs) {}
 
-    virtual const char* name() const { ACARS_NAME; }
-    virtual const char* description() const { ACARS_DESC; }
+    virtual const char* name() const { return ACARS_NAME; }
+    virtual const char* description() const { return ACARS_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {

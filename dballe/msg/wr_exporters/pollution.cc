@@ -41,8 +41,8 @@ struct Pollution : public Template
     Pollution(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { POLLUTION_NAME; }
-    virtual const char* description() const { POLLUTION_DESC; }
+    virtual const char* name() const { return POLLUTION_NAME; }
+    virtual const char* description() const { return POLLUTION_DESC; }
 
     void add(Varcode code, int shortcut)
     {

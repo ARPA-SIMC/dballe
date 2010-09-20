@@ -154,8 +154,8 @@ struct ShipAbbr : public ShipBase
     ShipAbbr(const Exporter::Options& opts, const Msgs& msgs)
         : ShipBase(opts, msgs) {}
 
-    virtual const char* name() const { SHIP_ABBR_NAME; }
-    virtual const char* description() const { SHIP_ABBR_DESC; }
+    virtual const char* name() const { return SHIP_ABBR_NAME; }
+    virtual const char* description() const { return SHIP_ABBR_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -171,8 +171,8 @@ struct ShipPlain : public ShipBase
     ShipPlain(const Exporter::Options& opts, const Msgs& msgs)
         : ShipBase(opts, msgs) {}
 
-    virtual const char* name() const { SHIP_PLAIN_NAME; }
-    virtual const char* description() const { SHIP_PLAIN_DESC; }
+    virtual const char* name() const { return SHIP_PLAIN_NAME; }
+    virtual const char* description() const { return SHIP_PLAIN_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -188,8 +188,8 @@ struct ShipAuto : public ShipBase
     ShipAuto(const Exporter::Options& opts, const Msgs& msgs)
         : ShipBase(opts, msgs) {}
 
-    virtual const char* name() const { SHIP_AUTO_NAME; }
-    virtual const char* description() const { SHIP_AUTO_DESC; }
+    virtual const char* name() const { return SHIP_AUTO_NAME; }
+    virtual const char* description() const { return SHIP_AUTO_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -205,8 +205,8 @@ struct ShipReduced : public ShipBase
     ShipReduced(const Exporter::Options& opts, const Msgs& msgs)
         : ShipBase(opts, msgs) {}
 
-    virtual const char* name() const { SHIP_REDUCED_NAME; }
-    virtual const char* description() const { SHIP_REDUCED_DESC; }
+    virtual const char* name() const { return SHIP_REDUCED_NAME; }
+    virtual const char* description() const { return SHIP_REDUCED_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {

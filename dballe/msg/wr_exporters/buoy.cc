@@ -41,8 +41,8 @@ struct Buoy : public Template
     Buoy(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { BUOY_NAME; }
-    virtual const char* description() const { BUOY_DESC; }
+    virtual const char* name() const { return BUOY_NAME; }
+    virtual const char* description() const { return BUOY_DESC; }
 
     void add(Varcode code, int shortcut)
     {

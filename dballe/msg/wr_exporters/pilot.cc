@@ -42,8 +42,8 @@ struct Pilot : public Template
     Pilot(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { PILOT_NAME; }
-    virtual const char* description() const { PILOT_DESC; }
+    virtual const char* name() const { return PILOT_NAME; }
+    virtual const char* description() const { return PILOT_DESC; }
 
     void add(Varcode code, int shortcut)
     {

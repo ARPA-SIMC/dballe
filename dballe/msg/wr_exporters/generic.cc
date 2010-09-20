@@ -42,8 +42,8 @@ struct Generic : public Template
     Generic(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { GENERIC_NAME; }
-    virtual const char* description() const { GENERIC_DESC; }
+    virtual const char* name() const { return GENERIC_NAME; }
+    virtual const char* description() const { return GENERIC_DESC; }
 
     void add(Varcode code, int shortcut)
     {

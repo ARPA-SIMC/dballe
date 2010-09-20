@@ -137,6 +137,7 @@ void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) cons
 	// Get template factory
 	const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
 	std::auto_ptr<wr::Template> encoder = fac.make(opts, msgs);
+    // fprintf(stderr, "Encoding with template %s\n", encoder->name());
 	encoder->to_bulletin(bulletin);
 }
 

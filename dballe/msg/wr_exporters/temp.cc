@@ -144,8 +144,8 @@ struct Temp : public TempBase
     Temp(const Exporter::Options& opts, const Msgs& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { TEMP_NAME; }
-    virtual const char* description() const { TEMP_DESC; }
+    virtual const char* name() const { return TEMP_NAME; }
+    virtual const char* description() const { return TEMP_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -215,8 +215,8 @@ struct TempShip : public TempBase
     TempShip(const Exporter::Options& opts, const Msgs& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { TEMP_SHIP_NAME; }
-    virtual const char* description() const { TEMP_SHIP_DESC; }
+    virtual const char* name() const { return TEMP_SHIP_NAME; }
+    virtual const char* description() const { return TEMP_SHIP_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
