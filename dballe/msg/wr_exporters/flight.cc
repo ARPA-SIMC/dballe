@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,281 +17,331 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "exporters.h"
-#include "dballe/msg/context.h"
+#include "base.h"
+#include <wreport/bulletin.h>
+#include "msgs.h"
+#include "context.h"
 
-static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
-static dba_err exporter_acars(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
+using namespace wreport;
+using namespace std;
 
-struct _bufrex_exporter bufrex_exporter_flight_4_142 = {
-	/* Category */
-	4,
-	/* Subcategory */
-	255,
-	/* Local subcategory */
-	142,
-	/* dba_msg type it can convert from */
-	MSG_AIREP,
-	/* Data descriptor section */
-	(dba_varcode[]){
-		DBA_VAR(3, 11,  1),
-		DBA_VAR(2, 22,  0),
-		DBA_VAR(1,  1, 18),
-		DBA_VAR(0, 31, 31),
-		DBA_VAR(0,  1, 31),
-		DBA_VAR(0,  1, 32),
-		DBA_VAR(1,  1, 18),
-		DBA_VAR(0, 33,  7),
-		0
-	},
-	/* Datadesc function */
-	bufrex_standard_datadesc_func,
-	/* Exporter function */
-	(bufrex_exporter_func)exporter,
-};
+#define AIREP_NAME "airep"
+#define AIREP_DESC "AIREP"
 
-struct _bufrex_exporter bufrex_exporter_flight_4_144 = {
-	/* Category */
-	4,
-	/* Subcategory */
-	255,
-	/* Local subcategory */
-	144,
-	/* dba_msg type it can convert from */
-	MSG_AMDAR,
-	/* Data descriptor section */
-	(dba_varcode[]){
-		DBA_VAR(3, 11,  1),
-		DBA_VAR(2, 22,  0),
-		DBA_VAR(1,  1, 18),
-		DBA_VAR(0, 31, 31),
-		DBA_VAR(0,  1, 31),
-		DBA_VAR(0,  1, 32),
-		DBA_VAR(1,  1, 18),
-		DBA_VAR(0, 33,  7),
-		0
-	},
-	/* Datadesc function */
-	bufrex_standard_datadesc_func,
-	/* Exporter function */
-	(bufrex_exporter_func)exporter,
-};
+#define AMDAR_NAME "amdar"
+#define AMDAR_DESC "AMDAR"
 
-struct _bufrex_exporter bufrex_exporter_acars_4_145 = {
-	/* Category */
-	4,
-	/* Subcategory */
-	255,
-	/* Local subcategory */
-	145,
-	/* dba_msg type it can convert from */
-	MSG_ACARS,
-	/* Data descriptor section */
-	(dba_varcode[]){
-		DBA_VAR(0,  1,  6),
-		DBA_VAR(0,  1,  8),
-		DBA_VAR(0,  2, 61),
-		DBA_VAR(0,  2, 62),
-		DBA_VAR(0,  2,  2),
-		DBA_VAR(0,  2,  5),
-		DBA_VAR(0,  2, 70),
-		DBA_VAR(0,  2, 63),
-		DBA_VAR(0,  2,  1),
-		DBA_VAR(0,  4,  1),
-		DBA_VAR(0,  4,  2),
-		DBA_VAR(0,  4,  3),
-		DBA_VAR(0,  4,  4),
-		DBA_VAR(0,  4,  5),
-		DBA_VAR(0,  5,  2),
-		DBA_VAR(0,  6,  2),
-		DBA_VAR(0,  8,  4),
-		DBA_VAR(0,  7,  4),
-		DBA_VAR(0,  8, 21),
-		DBA_VAR(0, 11,  1),
-		DBA_VAR(0, 11,  2),
-		DBA_VAR(0, 11, 31),
-		DBA_VAR(0, 11, 34),
-		DBA_VAR(0, 11, 35),
-		DBA_VAR(0, 12,  1),
-		DBA_VAR(0, 12,  3),
-		DBA_VAR(0, 13,  3),
-		DBA_VAR(0, 20, 41),
-		DBA_VAR(2, 22,  0),
-		DBA_VAR(1,  1, 28),
-		DBA_VAR(0, 31, 31),
-		DBA_VAR(0,  1, 31),
-		DBA_VAR(0,  1, 201),
-		DBA_VAR(1,  1, 28),
-		DBA_VAR(0, 33,  7),
-		0
-	},
-	/* Datadesc function */
-	bufrex_standard_datadesc_func,
-	/* Exporter function */
-	(bufrex_exporter_func)exporter_acars,
-};
+#define ACARS_NAME "acars"
+#define ACARS_DESC "ACARS"
 
+namespace dballe {
+namespace msg {
+namespace wr {
 
+namespace {
 
-struct template {
-	dba_varcode code;
-	int var;
-	dba_varcode msgcode;
-};
-
-static struct template tpl_gen[] = {
-/*  0 */ { DBA_VAR(0,  1,  6), DBA_MSG_IDENT,			0 },
-/*  1 */ { DBA_VAR(0,  2, 61), DBA_MSG_NAVSYS,			0 },
-/*  2 */ { DBA_VAR(0,  4,  1), DBA_MSG_YEAR,			0 },
-/*  3 */ { DBA_VAR(0,  4,  2), DBA_MSG_MONTH,			0 },
-/*  4 */ { DBA_VAR(0,  4,  3), DBA_MSG_DAY,			0 },
-/*  5 */ { DBA_VAR(0,  4,  4), DBA_MSG_HOUR,			0 },
-/*  6 */ { DBA_VAR(0,  4,  5), DBA_MSG_MINUTE,			0 },
-/*  7 */ { DBA_VAR(0,  5,  1), DBA_MSG_LATITUDE,		0 },
-/*  8 */ { DBA_VAR(0,  6,  1), DBA_MSG_LONGITUDE,		0 },
-/*  9 */ { DBA_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE,            0 },
-/* 10 */ { DBA_VAR(0,  7,  2), -1,	DBA_VAR(0,  7,   1) },	/* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
-/* 11 */ { DBA_VAR(0, 12,  1), -1,	DBA_VAR(0, 12, 101) },	/* TEMPERATURE/DRY-BULB TEMPERATURE */
-/* 12 */ { DBA_VAR(0, 11,  1), -1,	DBA_VAR(0, 11,   1) },	/* WIND DIRECTION */
-/* 13 */ { DBA_VAR(0, 11,  2), -1,	DBA_VAR(0, 11,   2) },	/* WIND SPEED */
-/* 14 */ { DBA_VAR(0, 11, 31), -1,	DBA_VAR(0, 11,  31) },	/* DEGREE OF TURBULENCE */
-/* 15 */ { DBA_VAR(0, 11, 32), -1,	DBA_VAR(0, 11,  32) },	/* HEIGHT OF BASE OF TURBULENCE */
-/* 16 */ { DBA_VAR(0, 11, 33), -1,	DBA_VAR(0, 11,  33) },	/* HEIGHT OF TOP OF TURBULENCE */
-/* 17 */ { DBA_VAR(0, 20, 41), -1,	DBA_VAR(0, 20,  41) },	/* AIRFRAME ICING */
-};
-
-static dba_err export_common(dba_msg src, struct template* tpl, int tpl_count, bufrex_subset dst, int type)
+// Base template for flights
+struct FlightBase : public Template
 {
-	int ltype = -1, l1 = -1;
-	int i;
-	
-	for (i = 0; i < src->data_count; ++i)
-	{
-		dba_msg_context ctx = src->data[i];
-		int use = 0;
-		if (ctx->pind != 254 || ctx->p1 != 0 || ctx->p2 != 0) continue;
+    bool is_crex;
+    Level lev;
 
-		switch (ctx->ltype1)
-		{
-			case 100: {
-				use = dba_msg_context_find(ctx, DBA_VAR(0, 10, 4)) != NULL;
-				break;
-			}
-			case 102: {
-				use = dba_msg_context_find(ctx, DBA_VAR(0,  7, 1)) != NULL;
-				break;
-			}
-		}
-		if (use)
-		{
-			if (ltype != -1 && ltype != ctx->ltype1)
-				return dba_error_consistency("contradicting height indication found (both %d and %d)", ltype, ctx->ltype1);
-			ltype = ctx->ltype1;
-			l1 = ctx->l1;
-		}
-	}
+    FlightBase(const Exporter::Options& opts, const Msgs& msgs)
+        : Template(opts, msgs) {}
 
-#if 0
-	/* Get the pressure to identify the level layer where the airplane is */
-	if ((d = dba_msg_find_by_id(src, DBA_MSG_FLIGHT_PRESS)) != NULL)
-	{
-		double press;
-		DBA_RUN_OR_RETURN(dba_var_enqd(d->var, &press));
-		if (dba_msg_find_level(src, 100, press, 0, 0) != NULL)
-		{
-			ltype = 100;
-			l1 = press;
-			/* fprintf(stderr, "BUFR Press float: %f int: %d encoded: %s\n", press, l1, dba_var_value(d->var)); */
-		}
-	}
-	if ((d = dba_msg_find_by_id(src, DBA_MSG_HEIGHT)) != NULL && ltype == -1)
-	{
-		double height;
-		DBA_RUN_OR_RETURN(dba_var_enqd(d->var, &height));
-		ltype = 102;
-		l1 = height;
-	}
-#endif
+    void add(Varcode code, int shortcut)
+    {
+        const Var* var = msg->find_by_id(shortcut);
+        if (var)
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
 
-	if (ltype == -1)
-		return dba_error_notfound("looking for airplane pressure or height in flight message");
+    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
+    {
+        const Var* var = msg->find(srccode, level, trange);
+        if (var)
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
 
-	/* Fill up the message */
-	for (i = 0; i < tpl_count; i++)
-	{
-		dba_var var;
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        Template::setupBulletin(bulletin);
 
-		if (tpl[i].var != -1)
-			var = dba_msg_find_by_id(src, tpl[i].var);
-		else
-			var = dba_msg_find(src, tpl[i].msgcode, ltype, l1, 0, 0, 254, 0, 0);
+        is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-		if (var != NULL)
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_var(dst, tpl[i].code, var));
-		else
-			DBA_RUN_OR_RETURN(bufrex_subset_store_variable_undef(dst, tpl[i].code));
-	}
+        bulletin.edition = 3;
+        bulletin.type = 4;
+        bulletin.subtype = 255;
+    }
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        Template::to_subset(msg, subset);
 
-	return dba_error_ok();
+        // Find what is the level where the airplane is
+        lev = Level();
+
+        for (int i = 0; i < msg.data.size(); ++i)
+        {
+            const msg::Context& ctx = *msg.data[i];
+            if (ctx.trange != Trange::instant()) continue;
+
+            int use = 0;
+            switch (ctx.level.ltype1)
+            {
+                case 100: use = ctx.find(WR_VAR(0, 10, 4)) != NULL; break;
+                case 102: use = ctx.find(WR_VAR(0,  7, 1)) != NULL; break;
+            }
+            if (use)
+            {
+                if (lev.ltype1 != MISSING_INT && lev.ltype1 != ctx.level.ltype1)
+                    error_consistency::throwf("contradicting height indication found (both %d and %d)",
+                            lev.ltype1, ctx.level.ltype1);
+                lev.ltype1 = ctx.level.ltype1;
+                lev.l1 = ctx.level.l1;
+            }
+        }
+
+        if (lev.ltype1 == MISSING_INT)
+            throw error_notfound("no airplane pressure or height found in flight message");
+    }
+};
+
+struct Airep : public FlightBase
+{
+    Airep(const Exporter::Options& opts, const Msgs& msgs)
+        : FlightBase(opts, msgs) {}
+
+    virtual const char* name() const { AIREP_NAME; }
+    virtual const char* description() const { AIREP_DESC; }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        FlightBase::setupBulletin(bulletin);
+        bulletin.localsubtype = 142;
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        bulletin.datadesc.push_back(WR_VAR(3, 11,   1));
+        if (!is_crex)
+        {
+            bulletin.datadesc.push_back(WR_VAR(2, 22,   0));
+            bulletin.datadesc.push_back(WR_VAR(1,  1,  18));
+            bulletin.datadesc.push_back(WR_VAR(0, 31,  31));
+            bulletin.datadesc.push_back(WR_VAR(0,  1,  31));
+            bulletin.datadesc.push_back(WR_VAR(0,  1,  32));
+            bulletin.datadesc.push_back(WR_VAR(1,  1,  18));
+            bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
+        }
+
+        bulletin.load_tables();
+    }
+
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        FlightBase::to_subset(msg, subset);
+
+        /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
+        /*  1 */ add(WR_VAR(0,  2, 61), DBA_MSG_NAVSYS);
+        /*  2 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
+        /*  3 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
+        /*  4 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
+        /*  5 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
+        /*  6 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        /*  7 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
+        /*  8 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        /*  9 */ add(WR_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE);
+        /* 10 */ add(WR_VAR(0,  7,  2), WR_VAR(0,  7,   1), lev, Trange::instant()); /* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
+        /* 11 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101), lev, Trange::instant()); /* TEMPERATURE/DRY-BULB TEMPERATURE */
+        /* 12 */ add(WR_VAR(0, 11,  1), WR_VAR(0, 11,   1), lev, Trange::instant()); /* WIND DIRECTION */
+        /* 13 */ add(WR_VAR(0, 11,  2), WR_VAR(0, 11,   2), lev, Trange::instant()); /* WIND SPEED */
+        /* 14 */ add(WR_VAR(0, 11, 31), WR_VAR(0, 11,  31), lev, Trange::instant()); /* DEGREE OF TURBULENCE */
+        /* 15 */ add(WR_VAR(0, 11, 32), WR_VAR(0, 11,  32), lev, Trange::instant()); /* HEIGHT OF BASE OF TURBULENCE */
+        /* 16 */ add(WR_VAR(0, 11, 33), WR_VAR(0, 11,  33), lev, Trange::instant()); /* HEIGHT OF TOP OF TURBULENCE */
+        /* 17 */ add(WR_VAR(0, 20, 41), WR_VAR(0, 20,  41), lev, Trange::instant()); /* AIRFRAME ICING */
+
+        if (!is_crex)
+        {
+            subset.append_fixed_dpb(WR_VAR(2, 22, 0), 18);
+            if (opts.centre != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 31), opts.centre);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 31));
+            if (opts.application != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 32), opts.application);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 32));
+        }
+    }
+};
+
+struct Amdar : public Airep
+{
+    Amdar(const Exporter::Options& opts, const Msgs& msgs)
+        : Airep(opts, msgs) {}
+
+    virtual const char* name() const { AMDAR_NAME; }
+    virtual const char* description() const { AMDAR_DESC; }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        Airep::setupBulletin(bulletin);
+        bulletin.localsubtype = 144;
+    }
+};
+
+struct Acars : public FlightBase
+{
+    Acars(const Exporter::Options& opts, const Msgs& msgs)
+        : FlightBase(opts, msgs) {}
+
+    virtual const char* name() const { ACARS_NAME; }
+    virtual const char* description() const { ACARS_DESC; }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        FlightBase::setupBulletin(bulletin);
+
+        bulletin.localsubtype = 145;
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        bulletin.datadesc.push_back(WR_VAR(0,  1,  6));
+        bulletin.datadesc.push_back(WR_VAR(0,  1,  8));
+        bulletin.datadesc.push_back(WR_VAR(0,  2, 61));
+        bulletin.datadesc.push_back(WR_VAR(0,  2, 62));
+        bulletin.datadesc.push_back(WR_VAR(0,  2,  2));
+        bulletin.datadesc.push_back(WR_VAR(0,  2,  5));
+        bulletin.datadesc.push_back(WR_VAR(0,  2, 70));
+        bulletin.datadesc.push_back(WR_VAR(0,  2, 63));
+        bulletin.datadesc.push_back(WR_VAR(0,  2,  1));
+        bulletin.datadesc.push_back(WR_VAR(3,  1, 11));
+        bulletin.datadesc.push_back(WR_VAR(3,  1, 12));
+        bulletin.datadesc.push_back(WR_VAR(3,  1, 23));
+        bulletin.datadesc.push_back(WR_VAR(0,  8,  4));
+        bulletin.datadesc.push_back(WR_VAR(0,  7,  4));
+        bulletin.datadesc.push_back(WR_VAR(0,  8, 21));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,  1));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,  2));
+        bulletin.datadesc.push_back(WR_VAR(0, 11, 31));
+        bulletin.datadesc.push_back(WR_VAR(0, 11, 34));
+        bulletin.datadesc.push_back(WR_VAR(0, 11, 35));
+        bulletin.datadesc.push_back(WR_VAR(0, 12,  1));
+        bulletin.datadesc.push_back(WR_VAR(0, 12,  3));
+        bulletin.datadesc.push_back(WR_VAR(0, 13,  3));
+        bulletin.datadesc.push_back(WR_VAR(0, 20, 41));
+        if (!is_crex)
+        {
+            bulletin.datadesc.push_back(WR_VAR(2, 22,   0));
+            bulletin.datadesc.push_back(WR_VAR(1,  1,  28));
+            bulletin.datadesc.push_back(WR_VAR(0, 31,  31));
+            bulletin.datadesc.push_back(WR_VAR(0,  1,  31));
+            bulletin.datadesc.push_back(WR_VAR(0,  1, 201));
+            bulletin.datadesc.push_back(WR_VAR(1,  1,  28));
+            bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
+        }
+
+        bulletin.load_tables();
+    }
+
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        FlightBase::to_subset(msg, subset);
+        /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
+        /*  1 */ add(WR_VAR(0,  1,  8), DBA_MSG_FLIGHT_REG_NO);
+        /*  2 */ add(WR_VAR(0,  2, 61), DBA_MSG_NAVSYS);
+        /*  3 */ add(WR_VAR(0,  2, 62), DBA_MSG_DATA_RELAY);
+        /*  4 */ add(WR_VAR(0,  2,  2), DBA_MSG_WIND_INST);
+        /*  5 */ add(WR_VAR(0,  2,  5), DBA_MSG_TEMP_PRECISION);
+        /*  6 */ add(WR_VAR(0,  2, 70), DBA_MSG_LATLON_SPEC);
+        /*  7 */ add(WR_VAR(0,  2, 63), DBA_MSG_FLIGHT_ROLL);
+        /*  8 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
+        /*  9 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
+        /* 10 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
+        /* 11 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
+        /* 12 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
+        /* 13 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        /* 14 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
+        /* 15 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
+        /* 16 */ add(WR_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE);
+        /* 17 */ add(WR_VAR(0,  7,  4), WR_VAR(0, 10,   4), lev, Trange::instant());
+        /* 18 */ add(WR_VAR(0,  8, 21), DBA_MSG_TIMESIG);
+        /* 19 */ add(WR_VAR(0, 11,  1), WR_VAR(0, 11,   1), lev, Trange::instant()); /* WIND DIRECTION */
+        /* 20 */ add(WR_VAR(0, 11,  2), WR_VAR(0, 11,   2), lev, Trange::instant()); /* WIND SPEED */
+        /* 21 */ add(WR_VAR(0, 11, 31), WR_VAR(0, 11,  31), lev, Trange::instant()); /* DEGREE OF TURBULENCE */
+        /* 22 */ add(WR_VAR(0, 11, 34), WR_VAR(0, 11,  34), lev, Trange::instant()); /* VERTICAL GUST VELOCITY */
+        /* 23 */ add(WR_VAR(0, 11, 35), WR_VAR(0, 11,  35), lev, Trange::instant()); /* VERTICAL GUST ACCELERATION */
+        /* 24 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101), lev, Trange::instant()); /* TEMPERATURE/DRY-BULB TEMPERATURE */
+        /* 25 */ add(WR_VAR(0, 12,  3), WR_VAR(0, 12, 103), lev, Trange::instant()); /* DEW-POINT TEMPERATURE */
+        /* 26 */ add(WR_VAR(0, 13,  3), WR_VAR(0, 13,   3), lev, Trange::instant()); /* RELATIVE HUMIDITY */
+        /* 27 */ add(WR_VAR(0, 20, 41), WR_VAR(0, 20,  41), lev, Trange::instant()); /* AIRFRAME ICING */
+
+        if (!is_crex)
+        {
+            subset.append_fixed_dpb(WR_VAR(2, 22, 0), 28);
+            if (opts.centre != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 31), opts.centre);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 31));
+            if (opts.application != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 201), opts.application);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 201));
+        }
+    }
+};
+
+
+struct AirepFactory : public TemplateFactory
+{
+    AirepFactory() { name = AIREP_NAME; description = AIREP_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Airep(opts, msgs));
+    }
+};
+struct AmdarFactory : public TemplateFactory
+{
+    AmdarFactory() { name = AMDAR_NAME; description = AMDAR_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Amdar(opts, msgs));
+    }
+};
+struct AcarsFactory : public TemplateFactory
+{
+    AcarsFactory() { name = ACARS_NAME; description = ACARS_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Acars(opts, msgs));
+    }
+};
+
+} // anonymous namespace
+
+void register_flight(TemplateRegistry& r)
+{
+static const TemplateFactory* airep = NULL;
+static const TemplateFactory* amdar = NULL;
+static const TemplateFactory* acars = NULL;
+
+    if (!airep) airep = new AirepFactory;
+    if (!amdar) amdar = new AmdarFactory;
+    if (!acars) acars = new AcarsFactory;
+
+    r.register_factory(airep);
+    r.register_factory(amdar);
+    r.register_factory(acars);
 }
 
-static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
-{
-	DBA_RUN_OR_RETURN(export_common(src, tpl_gen, sizeof(tpl_gen)/sizeof(struct template), dst, type));
-
-	if (type == 0)
-	{
-		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_dpb(dst, DBA_VAR(2, 22, 0), 18));
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 31), ORIG_CENTRE_ID));
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 32), ORIG_APP_ID));
-	}
-
-	return dba_error_ok();
 }
-
-static struct template tpl_acars[] = {
-/*  0 */ { DBA_VAR(0,  1,  6), DBA_MSG_IDENT,			0 },
-/*  1 */ { DBA_VAR(0,  1,  8), DBA_MSG_FLIGHT_REG_NO,	0 },
-/*  2 */ { DBA_VAR(0,  2, 61), DBA_MSG_NAVSYS,			0 },
-/*  3 */ { DBA_VAR(0,  2, 62), DBA_MSG_DATA_RELAY,		0 },
-/*  4 */ { DBA_VAR(0,  2,  2), DBA_MSG_WIND_INST,		0 },
-/*  5 */ { DBA_VAR(0,  2,  5), DBA_MSG_TEMP_PRECISION,	0 },
-/*  6 */ { DBA_VAR(0,  2, 70), DBA_MSG_LATLON_SPEC,		0 },
-/*  7 */ { DBA_VAR(0,  2, 63), DBA_MSG_FLIGHT_ROLL,		0 },
-/*  8 */ { DBA_VAR(0,  2,  1), DBA_MSG_ST_TYPE,			0 },
-/*  9 */ { DBA_VAR(0,  4,  1), DBA_MSG_YEAR,			0 },
-/* 10 */ { DBA_VAR(0,  4,  2), DBA_MSG_MONTH,			0 },
-/* 11 */ { DBA_VAR(0,  4,  3), DBA_MSG_DAY,				0 },
-/* 12 */ { DBA_VAR(0,  4,  4), DBA_MSG_HOUR,			0 },
-/* 13 */ { DBA_VAR(0,  4,  5), DBA_MSG_MINUTE,			0 },
-/* 14 */ { DBA_VAR(0,  5,  2), DBA_MSG_LATITUDE,		0 },
-/* 15 */ { DBA_VAR(0,  6,  2), DBA_MSG_LONGITUDE,		0 },
-/* 16 */ { DBA_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE,	0 },
-/* 17 */ { DBA_VAR(0,  7,  4), -1,			DBA_VAR(0, 10,   4) },
-/* 18 */ { DBA_VAR(0,  8, 21), DBA_MSG_TIMESIG,			0 },
-/* 19 */ { DBA_VAR(0, 11,  1), -1,			DBA_VAR(0, 11,   1) },	/* WIND DIRECTION */
-/* 20 */ { DBA_VAR(0, 11,  2), -1,			DBA_VAR(0, 11,   2) },	/* WIND SPEED */
-/* 21 */ { DBA_VAR(0, 11, 31), -1,			DBA_VAR(0, 11,  31) },	/* DEGREE OF TURBULENCE */
-/* 22 */ { DBA_VAR(0, 11, 34), -1,			DBA_VAR(0, 11,  34) },	/* VERTICAL GUST VELOCITY */
-/* 23 */ { DBA_VAR(0, 11, 35), -1,			DBA_VAR(0, 11,  35) },	/* VERTICAL GUST ACCELERATION */
-/* 24 */ { DBA_VAR(0, 12,  1), -1,			DBA_VAR(0, 12, 101) },	/* TEMPERATURE/DRY-BULB TEMPERATURE */
-/* 25 */ { DBA_VAR(0, 12,  3), -1,			DBA_VAR(0, 12, 103) },	/* DEW-POINT TEMPERATURE */
-/* 26 */ { DBA_VAR(0, 13,  3), -1,			DBA_VAR(0, 13,   3) },	/* RELATIVE HUMIDITY */
-/* 27 */ { DBA_VAR(0, 20, 41), -1,			DBA_VAR(0, 20,  41) },	/* AIRFRAME ICING */
-};
-
-static dba_err exporter_acars(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
-{
-	DBA_RUN_OR_RETURN(export_common(src, tpl_acars, sizeof(tpl_acars)/sizeof(struct template), dst, type));
-
-	if (type == 0)
-	{
-		DBA_RUN_OR_RETURN(bufrex_subset_append_fixed_dpb(dst, DBA_VAR(2, 22, 0), 28));
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 31), ORIG_CENTRE_ID));
-		DBA_RUN_OR_RETURN(bufrex_subset_store_variable_i(dst, DBA_VAR(0, 1, 201), ORIG_APP_ID));
-	}
-
-	return dba_error_ok();
+}
 }
 
 /* vim:set ts=4 sw=4: */

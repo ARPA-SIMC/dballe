@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,112 +17,173 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "exporters.h"
-#include "dballe/msg/context.h"
+#include "base.h"
+#include <wreport/bulletin.h>
+#include "msgs.h"
+#include "context.h"
+#include <cstdlib>
 
-static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type);
+using namespace wreport;
+using namespace std;
 
-struct _bufrex_exporter bufrex_exporter_generic = {
-	/* Category */
-	255,
-	/* Subcategory */
-	255,
-	/* Local subcategory */
-	0,
-	/* dba_msg type it can convert from */
-	MSG_GENERIC,
-	/* Data descriptor section */
-	(dba_varcode[]){ 0 },
-	/* Datadesc function */
-	bufrex_standard_datadesc_func,
-	/* Exporter function */
-	(bufrex_exporter_func)exporter,
+#define GENERIC_NAME "generic"
+#define GENERIC_DESC "Generic"
+
+namespace dballe {
+namespace msg {
+namespace wr {
+
+namespace {
+
+struct Generic : public Template
+{
+    Bulletin* bulletin;
+
+    Generic(const Exporter::Options& opts, const Msgs& msgs)
+        : Template(opts, msgs) {}
+
+    virtual const char* name() const { GENERIC_NAME; }
+    virtual const char* description() const { GENERIC_DESC; }
+
+    void add(Varcode code, int shortcut)
+    {
+        const Var* var = msg->find_by_id(shortcut);
+        if (var)
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
+
+    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
+    {
+        const Var* var = msg->find(srccode, level, trange);
+        if (var)
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        Template::setupBulletin(bulletin);
+
+        bulletin.edition = 3;
+        bulletin.type = 255;
+        bulletin.subtype = 255;
+        bulletin.localsubtype = 0;
+
+        // The data descriptor section will be generated later, as it depends
+        // on the contents of the message
+
+        bulletin.load_tables();
+
+        // Store a pointer to it because we modify it later
+        this->bulletin = &bulletin;
+    }
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        Template::to_subset(msg, subset);
+
+        const Var* repmemo = msg.get_rep_memo_var();
+        Level lev;
+        Trange tr;
+
+        if (repmemo)
+            subset.store_variable(repmemo->code(), *repmemo);
+        else if (msg.type != MSG_GENERIC)
+            subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
+
+        for (int i = 0; i < msg.data.size(); ++i)
+        {
+            const msg::Context& ctx = *msg.data[i];
+
+            for (int j = 0; j < ctx.data.size(); ++j)
+            {
+                const Var& var = *ctx.data[j];
+                if (var.value() == NULL) continue; // Don't add undef vars
+                if (&var == repmemo) continue; // Don't add rep_memo again
+
+                /* Update the context in the message, if needed */
+                if (lev.ltype1 != ctx.level.ltype1)
+                {
+                    subset.store_variable_i(WR_VAR(0, 7, 192), ctx.level.ltype1);
+                    lev.ltype1 = ctx.level.ltype1;
+                }
+                if (lev.l1 != ctx.level.l1)
+                {
+                    subset.store_variable_i(WR_VAR(0, 7, 193), ctx.level.l1);
+                    lev.l1 = ctx.level.l1;
+                }
+                if (lev.ltype2 != ctx.level.ltype2)
+                {
+                    subset.store_variable_i(WR_VAR(0, 7, 195), ctx.level.ltype2);
+                    lev.ltype2 = ctx.level.ltype2;
+                }
+                if (lev.l2 != ctx.level.l2)
+                {
+                    subset.store_variable_i(WR_VAR(0, 7, 194), ctx.level.l2);
+                    lev.l2 = ctx.level.l2;
+                }
+                if (tr.pind != ctx.trange.pind)
+                {
+                    subset.store_variable_i(WR_VAR(0, 4, 192), ctx.trange.pind);
+                    tr.pind = ctx.trange.pind;
+                }
+                if (tr.p1 != ctx.trange.p1)
+                {
+                    subset.store_variable_i(WR_VAR(0, 4, 193), ctx.trange.p1);
+                    tr.p1 = ctx.trange.p1;
+                }
+                if (tr.p2 != ctx.trange.p2)
+                {
+                    subset.store_variable_i(WR_VAR(0, 4, 194), ctx.trange.p2);
+                    tr.p2 = ctx.trange.p2;
+                }
+
+                // Store the variable
+                subset.store_variable(var.code(), var);
+
+                // Store the attributes
+                for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
+                {
+                    if (WR_VAR_X(attr->code()) != 33)
+                        error_consistency::throwf("attempt to encode attribute B%02d%03d which is not B33YYY",
+                                WR_VAR_X(attr->code()), WR_VAR_Y(attr->code()));
+                    subset.store_variable(attr->code(), *attr);
+                }
+            }
+        }
+
+        // Generate data descriptor section
+        bulletin->datadesc.clear();
+        for (int i = 0; i < subset.size(); ++i)
+            bulletin->datadesc.push_back(subset[i].code());
+    }
 };
 
-static dba_err exporter(dba_msg src, bufrex_msg bmsg, bufrex_subset dst, int type)
+struct GenericFactory : public TemplateFactory
 {
-	dba_err err = DBA_OK;
-	int i, j;
-	int ltype1 = -1, l1 = -1, ltype2 = -1, l2 = -1, pind = -1, p1 = -1, p2 = -1;
-	dba_var repmemo = dba_msg_get_rep_memo_var(src);
+    GenericFactory() { name = GENERIC_NAME; description = GENERIC_DESC; }
 
-	if (repmemo)
-		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(repmemo), repmemo));
-	else if (src->type != MSG_GENERIC)
-		DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_c(dst, DBA_VAR(0, 1, 194), dba_msg_repmemo_from_type(src->type)));
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Generic(opts, msgs));
+    }
+};
 
-	for (i = 0; i < src->data_count; i++)
-	{
-		dba_msg_context ctx = src->data[i];
+} // anonymous namespace
 
-		for (j = 0; j < ctx->data_count; j++)
-		{
-			dba_var_attr_iterator iter;
-			dba_var var = ctx->data[j];
-			if (dba_var_value(var) == NULL)
-				continue;
-			// Don't add rep_memo again
-			if (var == repmemo)
-				continue;
+void register_generic(TemplateRegistry& r)
+{
+static const TemplateFactory* generic = NULL;
 
-			/* Update the context in the message, if needed */
-			if (ltype1 != ctx->ltype1)
-			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 192), ctx->ltype1));
-				ltype1 = ctx->ltype1;
-			}
-			if (l1 != ctx->l1)
-			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 193), ctx->l1));
-				l1 = ctx->l1;
-			}
-			if (ltype2 != ctx->ltype2)
-			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 195), ctx->ltype2));
-				ltype2 = ctx->ltype2;
-			}
-			if (l2 != ctx->l2)
-			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 7, 194), ctx->l2));
-				l2 = ctx->l2;
-			}
-			if (pind != ctx->pind)
-			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 192), ctx->pind));
-				pind = ctx->pind;
-			}
-			if (p1 != ctx->p1)
-			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 193), ctx->p1));
-				p1 = ctx->p1;
-			}
-			if (p2 != ctx->p2)
-			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_i(dst, DBA_VAR(0, 4, 194), ctx->p2));
-				p2 = ctx->p2;
-			}
+    if (!generic) generic = new GenericFactory;
 
-			/* Store the variable */
-			DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(var), var));
+    r.register_factory(generic);
+}
 
-			/* Store the attributes */
-			for (iter = dba_var_attr_iterate(var);
-					iter != NULL;
-					iter = dba_var_attr_iterator_next(iter))
-			{
-				dba_var attr = dba_var_attr_iterator_attr(iter);
-				if (DBA_VAR_X(dba_var_code(attr)) != 33)
-				{
-					err = dba_error_consistency("attempt to encode attribute B%02d%03d which is not B33YYY", DBA_VAR_X(dba_var_code(attr)), DBA_VAR_Y(dba_var_code(attr)));
-					goto cleanup;
-				}
-				DBA_RUN_OR_GOTO(cleanup, bufrex_subset_store_variable_var(dst, dba_var_code(attr), attr));
-			}
-		}
-	}
-
-cleanup:
-	return err == DBA_OK ? dba_error_ok() : err;
+}
+}
 }
 
 /* vim:set ts=4 sw=4: */
