@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * db/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,18 +22,46 @@
 #ifndef DBALLE_DB_REPINFO_H
 #define DBALLE_DB_REPINFO_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup db
  *
  * Repinfo table management used by the db module.
  */
 
-#include <dballe/db/internals.h>
+// #include <dballe/db/internals.h>
 
+namespace dballe {
+namespace db {
+
+struct Repinfo
+{
+
+	/**
+	 * Invalidate the repinfo cache.  To be called if the repinfo table is modified
+	 * externally; for example, when the table is recreated on database reset.
+	 */
+	void invalidate_cache();
+
+	/**
+	 * Update the report type information in the database using the data from the
+	 * given file.
+	 *
+	 * @param ri
+	 *   dba_db_repinfo used to update the database
+	 * @param deffile
+	 *   Pathname of the file to use for the update.  The NULL value is accepted
+	 *   and means to use the default configure repinfo.csv file.
+	 * @retval added
+	 *   Number of entries that have been added during the update.
+	 * @retval deleted
+	 *   Number of entries that have been deleted during the update.
+	 * @retval updated
+	 *   Number of entries that have been updated during the update.
+	 */
+	void update(const char* deffile, int* added, int* deleted, int* updated);
+};
+
+#if 0
 struct _dba_db;
 
 /** repinfo cache entry */
@@ -118,15 +146,6 @@ dba_err dba_db_repinfo_create(dba_db db, dba_db_repinfo* ins);
 void dba_db_repinfo_delete(dba_db_repinfo ins);
 
 /**
- * Invalidate the repinfo cache.  To be called if the repinfo table is modified
- * externally; for example, when the table is recreated on database reset.
- *
- * @param ins
- *   The dba_db_repinfo whose cache is to be invalidated.
- */
-void dba_db_repinfo_invalidate_cache(dba_db_repinfo ins);
-
-/**
  * Get the id of a repinfo entry given its name
  *
  * @param ri
@@ -179,24 +198,6 @@ dba_db_repinfo_cache dba_db_repinfo_get_by_id(dba_db_repinfo ri, int id);
  */
 dba_db_repinfo_cache dba_db_repinfo_get_by_memo(dba_db_repinfo ri, const char* memo);
 
-/**
- * Update the report type information in the database using the data from the
- * given file.
- *
- * @param ri
- *   dba_db_repinfo used to update the database
- * @param deffile
- *   Pathname of the file to use for the update.  The NULL value is accepted
- *   and means to use the default configure repinfo.csv file.
- * @retval added
- *   Number of entries that have been added during the update.
- * @retval deleted
- *   Number of entries that have been deleted during the update.
- * @retval updated
- *   Number of entries that have been updated during the update.
- */
-dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added, int* deleted, int* updated);
-
 #if 0
 void dba_db_repinfo_set_ident(dba_db_repinfo ins, const char* ident);
 dba_err dba_db_repinfo_get_id(dba_db_repinfo ins, int *id);
@@ -204,10 +205,10 @@ dba_err dba_db_repinfo_insert(dba_db_repinfo ins, int *id);
 dba_err dba_db_repinfo_update(dba_db_repinfo ins);
 #endif
 
-
-#ifdef  __cplusplus
-}
 #endif
+
+} // namespace db
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
 #endif

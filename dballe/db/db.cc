@@ -21,13 +21,13 @@
 
 #include "db.h"
 #include "internals.h"
+#include "repinfo.h"
 
 #include <limits.h>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
 #if 0
-#include "repinfo.h"
 #include "pseudoana.h"
 #include "context.h"
 #include "data.h"
@@ -499,6 +499,13 @@ bool DB::is_url(const char* str)
 	return false;
 }
 
+db::Repinfo& DB::repinfo()
+{
+	if (m_repinfo == NULL)
+		m_repinfo = new db::Repinfo;
+	return *m_repinfo;
+}
+
 void DB::init_after_connect()
 {
 #ifdef DBA_USE_TRANSACTIONS
@@ -666,8 +673,7 @@ void DB::reset(const char* repinfo_file)
 	delete_tables();
 
 	/* Invalidate the repinfo cache if we have a repinfo structure active */
-	if (db->repinfo != NULL)
-		dba_db_repinfo_invalidate_cache(db->repinfo);
+	repinfo().invalidate_cache();
 
 	/* Allocate statement handle */
 	db::Statement stm(*conn);
@@ -699,8 +705,7 @@ void DB::reset(const char* repinfo_file)
 	/* Populate the tables with values */
 	{
 		int added, deleted, updated;
-		DBA_RUN_OR_GOTO(cleanup, dba_db_need_repinfo(db));
-		DBA_RUN_OR_GOTO(cleanup, dba_db_repinfo_update(db->repinfo, repinfo_file, &added, &deleted, &updated));
+		repinfo().update(repinfo_file, &added, &deleted, &updated);
 		/* fprintf(stderr, "%d added, %d deleted, %d updated\n", added, deleted, updated); */
 		/*
 		DBALLE_SQL_C_UINT_TYPE id;

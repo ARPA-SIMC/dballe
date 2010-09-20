@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * db/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#if 0
 #define _GNU_SOURCE
 #include <dballe/db/repinfo.h>
 #include <dballe/db/internals.h>
@@ -36,6 +37,13 @@
 #include <ctype.h>
 
 #include <assert.h>
+#endif
+
+namespace dballe {
+namespace db {
+
+
+#if 0
 
 /*
  * Define to true to enable the use of transactions during writes
@@ -657,5 +665,10 @@ cleanup:
 	}
 	return err == DBA_OK ? dba_error_ok() : err;
 }
+
+#endif
+
+} // namespace db
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

@@ -43,6 +43,7 @@ namespace db {
 struct Connection;
 struct Statement;
 struct Sequence;
+struct Repinfo;
 }
 
 /**
@@ -54,7 +55,6 @@ protected:
 	/** ODBC database connection */
 	db::Connection* conn;
 
-#if 0
 	/**
 	 * Accessors for the various parts of the database.
 	 *
@@ -63,7 +63,8 @@ protected:
 	 * @{
 	 */
 	/** Report information */
-	struct _dba_db_repinfo* repinfo;
+	struct db::Repinfo* m_repinfo;
+#if 0
 	/** Pseudoana station information */
 	struct _dba_db_pseudoana* pseudoana;
 	/** Variable context */
@@ -179,6 +180,9 @@ public:
 	 *   true if it looks like a URL, else false
 	 */
 	static bool is_url(const char* str);
+
+	/// Access the repinfo table
+	db::Repinfo& repinfo();
 
 	/**
 	 * Reset the database, removing all existing DBALLE tables and re-creating them

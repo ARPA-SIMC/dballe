@@ -27,9 +27,9 @@ noinst_LTLIBRARIES = libdballe-db.la
 libdballe_db_la_SOURCES = \
 		querybuf.cc \
 		internals.cc \
+		repinfo.cc \
 		db.cc
 
-#		repinfo.cc
 #		pseudoana.cc
 #		context.cc
 #		data.cc
