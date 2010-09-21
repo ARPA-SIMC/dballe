@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -125,7 +123,7 @@ void to::test<1>()
 
 	ensure(Record::keyword_byname("ana_id") == DBA_KEY_ANA_ID);
 	ensure(Record::keyword_byname_len("ana_idi", 6) == DBA_KEY_ANA_ID);
-	ensure_equals(string(Record::keyword_info(DBA_KEY_ANA_ID)->desc), "Pseudoana database ID");
+	ensure_equals(string(Record::keyword_info(DBA_KEY_ANA_ID)->desc), "Station database ID");
 
 	ensure(Record::keyword_byname("yearmin") == DBA_KEY_YEARMIN);
 	ensure_equals(string(Record::keyword_info(DBA_KEY_YEARMIN)->desc), "Year or minimum year queried");
@@ -137,106 +135,48 @@ void to::test<1>()
 	ensure_equals(string(Record::keyword_info(DBA_KEY_LON)->desc), "Longitude");
 }
 
-#if 0
-// Test type consistency checks
+// Test get and set methods
 template<> template<>
 void to::test<2>()
 {
-	dba_err err;
-
-	err = dba_record_key_seti(rec, DBA_KEY_VAR, 1);
-	ensure(err == DBA_ERROR);
-	ensure(dba_error_get_code() == DBA_ERR_TYPE);
-
-	err = dba_record_var_seti(rec, DBA_VAR(0, 1, 19), 1);
-	ensure(err == DBA_ERROR);
-	ensure(dba_error_get_code() == DBA_ERR_TYPE);
-}
-
-// Test get and set methods
-template<> template<>
-void to::test<3>()
-{
-	/* Record gets and sets */
-	int ival, found;
-
 	// Check that things don't exist at the beginning
-	CHECKED(dba_record_contains_key(rec, DBA_KEY_ANA_ID, &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_key_enqi(rec, DBA_KEY_ANA_ID, &ival, &found));
-	ensure_equals(found, 0);
-
-	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_key_enqi(rec, DBA_KEY_LAT, &ival, &found));
-	ensure_equals(found, 0);
-
-	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 1), &ival, &found));
-	ensure_equals(found, 0);
-
-	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 3), &ival, &found));
-	ensure_equals(found, 0);
+	ensure(rec.key_peek(DBA_KEY_ANA_ID) == NULL);
+	ensure(rec.key_peek(DBA_KEY_LAT) == NULL);
+	ensure(rec.var_peek(WR_VAR(0, 20, 1)) == NULL);
+	ensure(rec.var_peek(WR_VAR(0, 20, 3)) == NULL);
 
 	// Set various things
-	CHECKED(dba_record_key_seti(rec, DBA_KEY_ANA_ID, -10));
-	CHECKED(dba_record_key_seti(rec, DBA_KEY_LAT, 1234567));
-	CHECKED(dba_record_key_setd(rec, DBA_KEY_LON, 76.54321));
-	CHECKED(dba_record_key_setc(rec, DBA_KEY_YEARMIN, "1976"));
-	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 1), "456"));
-	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 3), "456"));
+	rec.key(DBA_KEY_ANA_ID).seti(-10);
+	rec.key(DBA_KEY_LAT).seti(1234567);
+	rec.key(DBA_KEY_LON).setd(76.54321);
+	rec.key(DBA_KEY_YEARMIN).setc("1976");
+	rec.var(WR_VAR(0, 20, 1)).setc("456");
+	rec.var(WR_VAR(0, 20, 3)).setc("456");
 
 	// Check that they now exist
-	CHECKED(dba_record_contains_key(rec, DBA_KEY_ANA_ID, &ival));
-	ensure_equals(ival, 1);
-	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	ensure_equals(ival, 1);
-	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
-	ensure_equals(ival, 1);
-	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
-	ensure_equals(ival, 1);
+	ensure(rec.key_peek(DBA_KEY_ANA_ID) != NULL);
+	ensure(rec.key_peek(DBA_KEY_LAT) != NULL);
+	ensure(rec.var_peek(WR_VAR(0, 20, 1)) != NULL);
+	ensure(rec.var_peek(WR_VAR(0, 20, 3)) != NULL);
 
 	// Check that they have the right value
-	fail_unless_int_is(key, DBA_KEY_ANA_ID, -10);
-	fail_unless_double_is(key, DBA_KEY_ANA_ID, -10.0);
-	fail_unless_int_is(key, DBA_KEY_LON, 7654321);
-	fail_unless_double_is(key, DBA_KEY_LON, 76.54321);
-	fail_unless_char_is(key, DBA_KEY_LON, "7654321");
-
-	fail_unless_int_is(key, DBA_KEY_LAT, 1234567);
-	fail_unless_double_is(key, DBA_KEY_LAT, 12.34567);
-	fail_unless_char_is(key, DBA_KEY_LAT, "1234567");
-
-	fail_unless_int_is(key, DBA_KEY_YEARMIN, 1976);
-	fail_unless_double_is(key, DBA_KEY_YEARMIN, 1976);
-	fail_unless_char_is(key, DBA_KEY_YEARMIN, "1976");
-
-	fail_unless_int_is(var, DBA_VAR(0, 20, 1), 456);
-	/*fail_unless_float_is(rec, "B02121", 45600000000.0)*/;
-	fail_unless_double_is(var, DBA_VAR(0, 20, 1), 4560);
-	fail_unless_char_is(var, DBA_VAR(0, 20, 1), "456");
-
-	fail_unless_int_is(var, DBA_VAR(0, 20, 3), 456);
-	/*fail_unless_float_is(rec, "B02121", 45600000000.0)*/;
-	fail_unless_double_is(var, DBA_VAR(0, 20, 3), 456);
-	fail_unless_char_is(var, DBA_VAR(0, 20, 3), "456");
+	ensure_equals(rec.key_peek(DBA_KEY_ANA_ID)->enqi(), -10);
+	ensure_equals(rec.key_peek(DBA_KEY_ANA_ID)->enqd(), -10.0);
+	ensure_equals(rec.key_peek(DBA_KEY_LON)->enqi(), 7654321);
+	ensure_equals(rec.key_peek(DBA_KEY_LON)->enqd(), 76.54321);
+	ensure_equals(string(rec.key_peek(DBA_KEY_LON)->enqc()), "7654321");
+	ensure_equals(rec.key_peek(DBA_KEY_LAT)->enqd(), 12.34567);
+	ensure_equals(rec.key_peek(DBA_KEY_YEARMIN)->enqd(), 1976.0);
+	ensure_equals(rec.var_peek(WR_VAR(0, 20, 1))->enqd(), 4560.0);
+	ensure_equals(rec.var_peek(WR_VAR(0, 20, 3))->enqd(), 456);
 
 	// See if unset works for keywords
-	CHECKED(dba_record_key_unset(rec, DBA_KEY_LAT));
-	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_key_enqi(rec, DBA_KEY_LAT, &ival, &found));
-	ensure_equals(found, 0);
+	rec.key_unset(DBA_KEY_LAT);
+	ensure(rec.key_peek(DBA_KEY_LAT) == NULL);
 
 	// See if unset works for variables
-	CHECKED(dba_record_var_unset(rec, DBA_VAR(0, 20, 1)));
-	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 1), &ival, &found));
-	ensure_equals(found, 0);
+	rec.var_unset(WR_VAR(0, 20, 1));
+	ensure(rec.var_peek(WR_VAR(0, 20, 1)) == NULL);
 
 	/* fprintf(stderr, "IVAL: %d\n", ival); */
 	/* fprintf(stderr, "DVAL: %f\n", fval); */
@@ -248,30 +188,14 @@ void to::test<3>()
 	}
 	*/
 
-	/* See if clear clears */
-	dba_record_clear(rec);
-	
-	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_key_enqi(rec, DBA_KEY_LAT, &ival, &found));
-	ensure_equals(found, 0);
+	// See if clear clears
+	rec.clear();
+	ensure(rec.key_peek(DBA_KEY_LAT) == NULL);
+	ensure(rec.var_peek(WR_VAR(0, 20, 3)) == NULL);
 
-	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 3), &ival, &found));
-	ensure_equals(found, 0);
-
-	dba_record_clear(rec);
-
-	CHECKED(dba_record_contains_key(rec, DBA_KEY_LAT, &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_key_enqi(rec, DBA_KEY_LAT, &ival, &found));
-	ensure_equals(found, 0);
-
-	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 3), &ival));
-	ensure_equals(ival, 0);
-	CHECKED(dba_record_var_enqi(rec, DBA_VAR(0, 20, 3), &ival, &found));
-	ensure_equals(found, 0);
+	rec.clear();
+	ensure(rec.key_peek(DBA_KEY_LAT) == NULL);
+	ensure(rec.var_peek(WR_VAR(0, 20, 3)) == NULL);
 }
 
 
@@ -371,6 +295,7 @@ void to::test<3>()
 	}
 #endif
 
+#if 0
 // This created a segfault
 template<> template<>
 void to::test<4>()
@@ -398,8 +323,8 @@ void to::test<5>()
 	CHECKED(dba_record_key_seti(rec, DBA_KEY_LAT, 1234567));
 	CHECKED(dba_record_key_setd(rec, DBA_KEY_LON, 76.54321));
 	CHECKED(dba_record_key_setc(rec, DBA_KEY_YEARMIN, "1976"));
-	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 1), "456"));
-	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 20, 3), "456"));
+	CHECKED(dba_record_var_setc(rec, WR_VAR(0, 20, 1), "456"));
+	CHECKED(dba_record_var_setc(rec, WR_VAR(0, 20, 3), "456"));
 
 	dba_record rec1;
 	CHECKED(dba_record_create(&rec1));
@@ -420,14 +345,14 @@ void to::test<5>()
 	CHECKED(dba_record_copy(rec1, rec));
 	ensure(dba_record_equals(rec, rec1));
 	ensure(dba_record_equals(rec1, rec));
-	CHECKED(dba_record_var_setc(rec1, DBA_VAR(0, 20, 1), "45"));
+	CHECKED(dba_record_var_setc(rec1, WR_VAR(0, 20, 1), "45"));
 	ensure(!dba_record_equals(rec, rec1));
 	ensure(!dba_record_equals(rec1, rec));
 
 	CHECKED(dba_record_copy(rec1, rec));
 	ensure(dba_record_equals(rec, rec1));
 	ensure(dba_record_equals(rec1, rec));
-	CHECKED(dba_record_var_unset(rec1, DBA_VAR(0, 20, 1)));
+	CHECKED(dba_record_var_unset(rec1, WR_VAR(0, 20, 1)));
 	ensure(!dba_record_equals(rec, rec1));
 	ensure(!dba_record_equals(rec1, rec));
 }
@@ -453,9 +378,9 @@ void to::test<6>()
 	ensure_equals(ival, 1);
 	CHECKED(dba_record_contains_key(rec, DBA_KEY_LON, &ival));
 	ensure_equals(ival, 1);
-	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 20, 1), &ival));
+	CHECKED(dba_record_contains_var(rec, WR_VAR(0, 20, 1), &ival));
 	ensure_equals(ival, 1);
-	CHECKED(dba_record_contains_var(rec, DBA_VAR(0, 7, 1), &ival));
+	CHECKED(dba_record_contains_var(rec, WR_VAR(0, 7, 1), &ival));
 	ensure_equals(ival, 1);
 
 	CHECKED(dba_record_key_enqi(rec, DBA_KEY_ANA_ID, &ival, &found));
@@ -468,10 +393,10 @@ void to::test<6>()
 	ensure_equals(found, 1);
 	ensure_equals(dval, -10.45);
 
-	CHECKED(dba_record_var_enqd(rec, DBA_VAR(0, 20, 1), &dval, &found));
+	CHECKED(dba_record_var_enqd(rec, WR_VAR(0, 20, 1), &dval, &found));
 	ensure_equals(found, 1);
 	ensure_equals(dval, 4560.0);
-	CHECKED(dba_record_var_enqd(rec, DBA_VAR(0, 7, 1), &dval, &found));
+	CHECKED(dba_record_var_enqd(rec, WR_VAR(0, 7, 1), &dval, &found));
 	ensure_equals(found, 1);
 	ensure_equals(dval, 654.0);
 }
@@ -505,7 +430,7 @@ void to::test<7>()
 
 	// Values
 
-	CHECKED(dba_record_var_seti(rec, DBA_VAR(0, 1, 1), 5));
+	CHECKED(dba_record_var_seti(rec, WR_VAR(0, 1, 1), 5));
 	CHECKED(dba_record_enqi(rec, "block", &ival, &found));
 	ensure_equals(found, 1);
 	ensure_equals(ival, 5);
@@ -513,7 +438,7 @@ void to::test<7>()
 	ensure_equals(found, 1);
 	ensure_equals(ival, 5);
 
-	CHECKED(dba_record_var_setd(rec, DBA_VAR(0, 12, 101), 12.5));
+	CHECKED(dba_record_var_setd(rec, WR_VAR(0, 12, 101), 12.5));
 	CHECKED(dba_record_enqd(rec, "t", &dval, &found));
 	ensure_equals(found, 1);
 	ensure_equals(dval, 12.5);
@@ -521,7 +446,7 @@ void to::test<7>()
 	ensure_equals(found, 1);
 	ensure_equals(dval, 12.5);
 
-	CHECKED(dba_record_var_setc(rec, DBA_VAR(0, 1, 19), "oaic"));
+	CHECKED(dba_record_var_setc(rec, WR_VAR(0, 1, 19), "oaic"));
 	CHECKED(dba_record_enqc(rec, "name", &cval));
 	ensure(cval != NULL);
 	ensure_equals(string(cval), "oaic");

@@ -304,6 +304,54 @@ const char* Record::var_peek_value(Varcode code) const throw ()
 	return res ? res->value() : NULL;
 }
 
+Var& Record::key(dba_keyword parameter)
+{
+	if (keydata[parameter] == NULL)
+		keydata[parameter] = new Var(keyword_info(parameter));
+	return *keydata[parameter];
+}
+
+Var& Record::var(wreport::Varcode code)
+{
+	int pos = find_item(code);
+	if (pos == -1)
+	{
+		// Insertion sort the new variable
+
+		// Enlarge the buffer
+		vars.resize(vars.size() + 1);
+
+		/* Insertionsort.  Crude, but our datasets should be too small for an
+		 * RB-Tree to be worth it */
+		for (pos = vars.size() - 1; pos > 0; --pos)
+		    if (vars[pos - 1]->code() > code)
+			vars[pos] = vars[pos - 1];
+		    else
+			break;
+		vars[pos] = newvar(code).release();
+	}
+	return *vars[pos];
+}
+
+void Record::key_unset(dba_keyword parameter)
+{
+	if (keydata[parameter] != NULL)
+	{
+		delete keydata[parameter];
+		keydata[parameter] = NULL;
+	}
+}
+void Record::var_unset(wreport::Varcode code)
+{
+	int pos = find_item(code);
+	if (pos != -1)
+	{
+		delete vars[pos];
+		vars.erase(vars.begin() + pos);
+	}
+}
+
+
 #if 0
 
 dba_err dba_record_set_from_string(dba_record rec, const char* str)

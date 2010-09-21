@@ -91,8 +91,9 @@ limit,		 DBA_KEY_LIMIT
 var_related, DBA_KEY_VAR_RELATED
 %%
 
-#define DEF_STRING(len) 0, 0, len
-#define DEF_MAXINT 0, 0, 10
+#define DEF_STRING(len) 0, 0, len, 0, len*8
+#define DEF_MAXINT 0, 0, 10, 0, 31
+#define DEF_INT(digits) 0, 0, digits, 0, digits*8
 
 namespace {
 
@@ -107,33 +108,33 @@ struct keyword_infos
 		infos[DBA_KEY_PRIOMIN	 ].set(0, "Minimum priority of reports queried",      "NUMBER", DEF_MAXINT);
 		infos[DBA_KEY_REP_COD	 ].set(0, "Type of report",                           "NUMBER", DEF_MAXINT);
 		infos[DBA_KEY_REP_MEMO	 ].set(0, "Mnemonic alias for type of report",     "CHARACTER", DEF_STRING(20));
-		infos[DBA_KEY_ANA_ID	 ].set(0, "Pseudoana database ID",                   "NUMERIC", DEF_MAXINT);
+		infos[DBA_KEY_ANA_ID	 ].set(0, "Station database ID",                     "NUMERIC", DEF_MAXINT);
 		infos[DBA_KEY_MOBILE	 ].set(0, "Station is mobile",                       "NUMERIC", DEF_MAXINT);
 		infos[DBA_KEY_IDENT	 ].set(0, "Identifier of flight or ship",          "CHARACTER", DEF_STRING(64));
-		infos[DBA_KEY_LAT	 ].set(0, "Latitude",                                 "DEGREE", 5, 0,   8);
-		infos[DBA_KEY_LON	 ].set(0, "Longitude",                                "DEGREE", 5, 0,   8);
-		infos[DBA_KEY_LATMAX	 ].set(0, "Maximum latitude queried",                 "DEGREE", 5, 0,   8);
-		infos[DBA_KEY_LATMIN	 ].set(0, "Minimum latitude queried",                 "DEGREE", 5, 0,   8);
-		infos[DBA_KEY_LONMAX	 ].set(0, "Maximum longitude queried",                "DEGREE", 5, 0,   8);
-		infos[DBA_KEY_LONMIN	 ].set(0, "Minimum longitude queried",                "DEGREE", 5, 0,   8);
-		infos[DBA_KEY_YEAR	 ].set(0, "Year",                                       "YEAR", 0, 0,   4);
-		infos[DBA_KEY_MONTH	 ].set(0, "Month",                                     "MONTH", 0, 0,   2);
-		infos[DBA_KEY_DAY	 ].set(0, "Day",                                         "DAY", 0, 0,   2);
-		infos[DBA_KEY_HOUR	 ].set(0, "Hour",                                       "HOUR", 0, 0,   2);
-		infos[DBA_KEY_MIN	 ].set(0, "Minutes",                                  "MINUTE", 0, 0,   2);
-		infos[DBA_KEY_SEC	 ].set(0, "Seconds",                                  "SECOND", 0, 0,   2);
-		infos[DBA_KEY_YEARMAX	 ].set(0, "Maximum year queried",                       "YEAR", 0, 0,   4);
-		infos[DBA_KEY_YEARMIN	 ].set(0, "Year or minimum year queried",               "YEAR", 0, 0,   4);
-		infos[DBA_KEY_MONTHMAX	 ].set(0, "Maximum month queried",                     "MONTH", 0, 0,   2);
-		infos[DBA_KEY_MONTHMIN	 ].set(0, "Minimum month queried",                     "MONTH", 0, 0,   2);
-		infos[DBA_KEY_DAYMAX	 ].set(0, "Maximum day queried",                         "DAY", 0, 0,   2);
-		infos[DBA_KEY_DAYMIN	 ].set(0, "Minimum day queried",                         "DAY", 0, 0,   2);
-		infos[DBA_KEY_HOURMAX	 ].set(0, "Maximum hour queried",                       "HOUR", 0, 0,   2);
-		infos[DBA_KEY_HOURMIN	 ].set(0, "Minumum hour queried",                       "HOUR", 0, 0,   2);
-		infos[DBA_KEY_MINUMAX	 ].set(0, "Maxminum minutes queried",                 "MINUTE", 0, 0,   2);
-		infos[DBA_KEY_MINUMIN	 ].set(0, "Minimum minutes queried",                  "MINUTE", 0, 0,   2);
-		infos[DBA_KEY_SECMAX	 ].set(0, "Maxminum seconds queried",                 "SECOND", 0, 0,   2);
-		infos[DBA_KEY_SECMIN	 ].set(0, "Minimum seconds queried",                  "SECOND", 0, 0,   2);
+		infos[DBA_KEY_LAT	 ].set(0, "Latitude",                                 "DEGREE", 5, 0,   7,  -9000000, 25);
+		infos[DBA_KEY_LON	 ].set(0, "Longitude",                                "DEGREE", 5, 0,   8, -18000000, 26);
+		infos[DBA_KEY_LATMAX	 ].set(0, "Maximum latitude queried",                 "DEGREE", 5, 0,   7,  -9000000, 25);
+		infos[DBA_KEY_LATMIN	 ].set(0, "Minimum latitude queried",                 "DEGREE", 5, 0,   7,  -9000000, 25);
+		infos[DBA_KEY_LONMAX	 ].set(0, "Maximum longitude queried",                "DEGREE", 5, 0,   8, -18000000, 26);
+		infos[DBA_KEY_LONMIN	 ].set(0, "Minimum longitude queried",                "DEGREE", 5, 0,   8, -18000000, 26);
+		infos[DBA_KEY_YEAR	 ].set(0, "Year",                                       "YEAR", DEF_INT(4));
+		infos[DBA_KEY_MONTH	 ].set(0, "Month",                                     "MONTH", DEF_INT(2));
+		infos[DBA_KEY_DAY	 ].set(0, "Day",                                         "DAY", DEF_INT(2));
+		infos[DBA_KEY_HOUR	 ].set(0, "Hour",                                       "HOUR", DEF_INT(2));
+		infos[DBA_KEY_MIN	 ].set(0, "Minutes",                                  "MINUTE", DEF_INT(2));
+		infos[DBA_KEY_SEC	 ].set(0, "Seconds",                                  "SECOND", DEF_INT(2));
+		infos[DBA_KEY_YEARMAX	 ].set(0, "Maximum year queried",                       "YEAR", DEF_INT(4));
+		infos[DBA_KEY_YEARMIN	 ].set(0, "Year or minimum year queried",               "YEAR", DEF_INT(4));
+		infos[DBA_KEY_MONTHMAX	 ].set(0, "Maximum month queried",                     "MONTH", DEF_INT(2));
+		infos[DBA_KEY_MONTHMIN	 ].set(0, "Minimum month queried",                     "MONTH", DEF_INT(2));
+		infos[DBA_KEY_DAYMAX	 ].set(0, "Maximum day queried",                         "DAY", DEF_INT(2));
+		infos[DBA_KEY_DAYMIN	 ].set(0, "Minimum day queried",                         "DAY", DEF_INT(2));
+		infos[DBA_KEY_HOURMAX	 ].set(0, "Maximum hour queried",                       "HOUR", DEF_INT(2));
+		infos[DBA_KEY_HOURMIN	 ].set(0, "Minumum hour queried",                       "HOUR", DEF_INT(2));
+		infos[DBA_KEY_MINUMAX	 ].set(0, "Maxminum minutes queried",                 "MINUTE", DEF_INT(2));
+		infos[DBA_KEY_MINUMIN	 ].set(0, "Minimum minutes queried",                  "MINUTE", DEF_INT(2));
+		infos[DBA_KEY_SECMAX	 ].set(0, "Maxminum seconds queried",                 "SECOND", DEF_INT(2));
+		infos[DBA_KEY_SECMIN	 ].set(0, "Minimum seconds queried",                  "SECOND", DEF_INT(2));
 		infos[DBA_KEY_LEVELTYPE1 ].set(0, "Type of first level",                      "NUMBER", DEF_MAXINT);
 		infos[DBA_KEY_L1	 ].set(0, "Level layer L1",                           "NUMBER", DEF_MAXINT);
 		infos[DBA_KEY_LEVELTYPE2 ].set(0, "Type of second level",                     "NUMBER", DEF_MAXINT);

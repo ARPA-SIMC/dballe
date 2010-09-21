@@ -205,10 +205,31 @@ public:
 	 */
 	const char* var_peek_value(wreport::Varcode code) const throw ();
 
+	/**
+	 * Return the Var for a key, creating it if it missing
+	 */
+	wreport::Var& key(dba_keyword parameter);
 
+	/**
+	 * Return the Var for a variable, creating it if it missing
+	 */
+	wreport::Var& var(wreport::Varcode code);
 
+	/**
+	 * Remove a parameter from the record.
+	 *
+	 * @param parameter
+	 *   The parameter to remove.
+	 */
+	void key_unset(dba_keyword parameter);
 
-
+	/**
+	 * Remove a parameter from the record.
+	 *
+	 * @param code
+	 *   The variable to remove.  See @ref vartable.h
+	 */
+	void var_unset(wreport::Varcode code);
 
 	/**
 	 * Return the name of a dba_keyword
@@ -679,30 +700,6 @@ dba_err dba_record_var_setc(dba_record rec, dba_varcode code, const char* value)
  *   The error indicator for the function.
  */
 dba_err dba_record_set_from_string(dba_record rec, const char* str);
-
-/**
- * Remove a parameter from the record.
- *
- * @param rec
- *   The record where the value is to be set.
- * @param parameter
- *   The parameter to remove.
- * @return
- *   The error indicator for the function.
- */
-dba_err dba_record_key_unset(dba_record rec, dba_keyword parameter);
-
-/**
- * Remove a parameter from the record.
- *
- * @param rec
- *   The record where the value is to be set.
- * @param code
- *   The variable to remove.  See @ref vartable.h
- * @return
- *   The error indicator for the function.
- */
-dba_err dba_record_var_unset(dba_record rec, dba_varcode code);
 
 /**
  * Print the contents of this record to the given file descriptor
