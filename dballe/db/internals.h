@@ -145,6 +145,19 @@ private:
 	Connection& operator=(const Connection&);
 };
 
+/// RAII transaction
+struct Transaction
+{
+	Connection& conn;
+	bool fired;
+
+	Transaction(Connection& conn) : conn(conn), fired(false) {}
+	~Transaction() { if (!fired) rollback(); }
+
+	void commit() { conn.commit(); fired = true; }
+	void rollback() { conn.rollback(); fired = true; }
+};
+
 /// ODBC statement
 struct Statement
 {
@@ -160,6 +173,7 @@ struct Statement
 	void bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val, const SQLLEN& ind);
 	void bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val);
 	void bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val, const SQLLEN& ind);
+	void bind_in(int idx, const unsigned short& val);
 	void bind_in(int idx, const char* val);
 	void bind_in(int idx, const char* val, const SQLLEN& ind);
 	void bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val);
@@ -178,9 +192,11 @@ struct Statement
 	void exec_direct(const char* query);
 	void exec_direct(const char* query, int qlen);
 
-	void execute();
+	/// @return SQLExecute's result
+	int execute();
 	bool fetch();
 	void close_cursor();
+	size_t rowcount();
 
 protected:
 	bool error_is_ignored();

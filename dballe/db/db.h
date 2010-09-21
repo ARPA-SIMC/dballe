@@ -48,6 +48,7 @@ struct Sequence;
 struct Repinfo;
 struct Station;
 struct Context;
+struct Data;
 }
 
 /**
@@ -73,9 +74,9 @@ protected:
 	struct db::Station* m_station;
 	/** Variable context */
 	struct db::Context* m_context;
+	/** Variable data */
+	struct db::Data* m_data;
 #if 0
-	/** Variable values */
-	struct _dba_db_data* data;
 	/** Variable attributes */
 	struct _dba_db_attr* attr;
 	/** @} */
@@ -192,8 +193,11 @@ public:
 	/// Access the station table
 	db::Station& station();
 
-	/// Access the station table
+	/// Access the context table
 	db::Context& context();
+
+	/// Access the data table
+	db::Data& data();
 
 	/**
 	 * Reset the database, removing all existing DBALLE tables and re-creating them
@@ -298,6 +302,24 @@ public:
 	 *   The context ID
 	 */
 	int obtain_context(Record& rec);
+
+	/**
+	 * Insert a record into the database
+	 *
+	 * In a record with the same phisical situation already exists, the function
+	 * fails.
+	 *
+	 * ana_id and context_id will be set in the record at the end of this function.
+	 *
+	 * @param rec
+	 *   The record to insert.
+	 * @param can_replace
+	 *   If true, then existing data can be rewritten, else data can only be added.
+	 * @param station_can_add
+	 *   If true, then it is allowed to add new station records to the database.
+	 *   Otherwise, data can be added only by reusing existing ones.
+	 */
+	void insert(Record& rec, bool can_replace, bool station_can_add);
 };
 
 #if 0
@@ -320,32 +342,6 @@ public:
  *   The error indicator for the function (See @ref error.h)
  */
 dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count);
-
-/**
- * Insert a record into the database
- *
- * In a record with the same phisical situation already exists, the function
- * fails.
- *
- * @param db
- *   The dballe session id.
- * @param rec
- *   The record to insert.
- * @param can_replace
- *   If true, then existing data can be rewritten, else data can only be added.
- * @param station_can_add
- *   If true, then it is allowed to add new station records to the database.
- *   Otherwise, data can be added only by reusing existing ones.
- * @retval ana_id
- *   ID of the station record for the entry just inserted.  NULL can be used
- *   if the caller is not interested in this value.
- * @retval context_id
- *   ID of the context record for the entry just inserted.  NULL can be used
- *   if the caller is not interested in this value.
- * @return
- *   The error indicator for the function (See @ref error.h).
- */
-dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int station_can_add, int* ana_id, int* context_id);
 
 /**
  * Query the database.

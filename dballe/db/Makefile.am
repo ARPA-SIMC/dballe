@@ -30,9 +30,9 @@ libdballe_db_la_SOURCES = \
 		repinfo.cc \
 		station.cc \
 		context.cc \
+		data.cc \
 		db.cc
 
-#		data.cc
 #		attr.cc
 #		cursor.cc
 
@@ -65,6 +65,7 @@ tut_test_SOURCES = \
 	tests/repinfo.cc \
 	tests/station.cc \
 	tests/context.cc \
+	tests/data.cc \
 	tests/db.cc \
 	../core/tests/tut-main.cpp
 tut_test_LDADD = \
@@ -73,7 +74,6 @@ tut_test_LDADD = \
 	../core/libdballe-core.la \
 	$(WREPORT_LIBS) $(LUA_LIBS) $(WIBBLE_LIBS)
 
-#	tests/data.cc \
 #	tests/attr.cc \
 #	tests/db_import.cc \
 #	tests/db_export.cc

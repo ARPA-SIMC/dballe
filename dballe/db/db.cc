@@ -24,6 +24,7 @@
 #include "repinfo.h"
 #include "station.h"
 #include "context.h"
+#include "data.h"
 
 #include <dballe/core/record.h>
 #include <dballe/msg/defs.h>
@@ -369,7 +370,7 @@ static const char* init_queries_oracle[] = {
 // First part of initialising a dba_db
 DB::DB()
     : conn(0),
-      m_repinfo(0), m_station(0), m_context(0),
+      m_repinfo(0), m_station(0), m_context(0), m_data(0),
       stm_last_insert_id(0),
       seq_station(0), seq_context(0)
 {
@@ -526,6 +527,13 @@ db::Context& DB::context()
     return *m_context;
 }
 
+db::Data& DB::data()
+{
+    if (m_data == NULL)
+        m_data = new db::Data(*conn);
+    return *m_data;
+}
+
 void DB::init_after_connect()
 {
 #ifdef DBA_USE_TRANSACTIONS
@@ -625,11 +633,11 @@ void DB::drop_sequence_if_exists(const char* name)
 void DB::delete_tables()
 {
     /* Drop existing tables */
-    for (int i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); ++i)
+    for (size_t i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); ++i)
         drop_table_if_exists(init_tables[i]);
 
     /* Drop existing sequences */
-    for (int i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); i++)
+    for (size_t i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); i++)
         drop_sequence_if_exists(init_tables[i]);
 
 #if 0
@@ -927,10 +935,12 @@ int DB::obtain_station(Record& rec, bool can_add)
     s.ident_ind = SQL_NULL_DATA;
     if (const Var* var = rec.key_peek(DBA_KEY_MOBILE))
         if (var->enqi())
+        {
             if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
                 s.set_ident(val);
             else
                 throw error_notfound("no mobile station identifier in record when trying to insert a mobile station in the database");
+        }
 
     // Check for an existing station with these data
     int id = s.get_id();
@@ -1026,69 +1036,39 @@ int DB::obtain_context(Record& rec)
     return id;
 }
 
-
-#if 0
-/*
- * If can_replace, then existing data can be rewritten, else it can only add new data
- *
- * If update_station, then the station informations are overwritten using
- * information from `rec'; else data from `rec' is written into station only
- * if there is no suitable anagraphical data for it.
- */
-dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int station_can_add, int* ana_id, int* context_id)
+void DB::insert(Record& rec, bool can_replace, bool station_can_add)
 {
-    dba_err err = DBA_OK;
-    dba_db_data d;
-    dba_record_cursor item;
-    int id_station, val;
-    const char* s_year;
-    
-    assert(db);
-    DBA_RUN_OR_RETURN(dba_db_need_data(db));
-    d = db->data;
+    db::Data& d = data();
 
     /* Check for the existance of non-context data, otherwise it's all
      * useless.  Not inserting data is fine in case of setcontextana */
-    if (!(((s_year = dba_record_key_peek_value(rec, DBA_KEY_YEAR)) != NULL) && strcmp(s_year, "1000") == 0)
-        && dba_record_iterate_first(rec) == NULL)
-        return dba_error_consistency("looking for data to insert");
+    const char* s_year;
+    if (rec.vars().empty() && !(((s_year = rec.key_peek_value(DBA_KEY_YEAR)) != NULL) && strcmp(s_year, "1000") == 0))
+        throw error_notfound("no variables found in input record");
 
-    /* Begin the transaction */
-    DBA_RUN_OR_RETURN(dba_db_begin(db));
+    db::Transaction t(*conn);
 
-    /* Insert the station data, and get the ID */
-    DBA_RUN_OR_GOTO(fail, dba_insert_station(db, rec, station_can_add, &id_station));
+    // Insert the station data, and get the ID
+    int id_station = obtain_station(rec, station_can_add);
 
-    /* Insert the context data, and get the ID */
-    DBA_RUN_OR_GOTO(fail, dba_insert_context(db, rec, id_station, &val));
-    d->id_context = val;
+    // Insert the context data, and get the ID
+    d.id_context = obtain_context(rec);
 
-    /* Insert all found variables */
-    for (item = dba_record_iterate_first(rec); item != NULL;
-            item = dba_record_iterate_next(rec, item))
+    // Insert all the variables we find
+    for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
     {
         /* Datum to be inserted, linked to id_station and all the other IDs */
-        dba_db_data_set(d, dba_record_cursor_variable(item));
+        d.set(**i);
         if (can_replace)
-            DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_overwrite(d));
+            d.insert_or_overwrite();
         else
-            DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_fail(d));
+            d.insert_or_fail();
     }
 
-    if (ana_id != NULL)
-        *ana_id = id_station;
-    if (context_id != NULL)
-        *context_id = d->id_context;
-
-    DBA_RUN_OR_GOTO(fail, dba_db_commit(db));
-
-    return dba_error_ok();
-
-    /* Exits with cleanup after error */
-fail:
-    dba_db_rollback(db);
-    return err;
+    t.commit();
 }
+
+#if 0
 
 dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count)
 {

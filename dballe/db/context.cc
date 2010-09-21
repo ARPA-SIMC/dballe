@@ -141,7 +141,7 @@ void Context::get_data(int qid)
 	id = qid;
 	sdstm->execute();
 	if (!sdstm->fetch())
-		error_notfound::throwf("no data found for context id %d", id);
+		error_notfound::throwf("no data found for context id %d", qid);
         sdstm->close_cursor();
 }
 

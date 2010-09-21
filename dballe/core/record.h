@@ -114,7 +114,7 @@ protected:
 	wreport::Var* keydata[DBA_KEY_COUNT];
 
 	/* The variables */
-	std::vector<wreport::Var*> vars;
+	std::vector<wreport::Var*> m_vars;
 
 	/// Find an item by wreport::Varcode, returning -1 if not found
 	int find_item(wreport::Varcode code) const throw ();
@@ -214,6 +214,11 @@ public:
 	 * Return the Var for a variable, creating it if it missing
 	 */
 	wreport::Var& var(wreport::Varcode code);
+
+	/**
+	 * Return the vector with the variables
+	 */
+	const std::vector<wreport::Var*>& vars() const;
 
 	/**
 	 * Remove a parameter from the record.

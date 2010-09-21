@@ -245,7 +245,10 @@ bool Statement::error_is_ignored()
 
 bool Statement::is_error(int sqlres)
 {
-	return (sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO) && !error_is_ignored();
+	return (sqlres != SQL_SUCCESS)
+            && (sqlres != SQL_SUCCESS_WITH_INFO)
+            && (sqlres != SQL_NO_DATA)
+	    && !error_is_ignored();
 }
 
 void Statement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val)
@@ -268,6 +271,12 @@ void Statement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val, const SQLLEN
 {
 	// cast away const because the ODBC API is not const-aware
 	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_UINT_TYPE*)&val, 0, (SQLLEN*)&ind);
+}
+
+void Statement::bind_in(int idx, const unsigned short& val)
+{
+	// cast away const because the ODBC API is not const-aware
+	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, (unsigned short*)&val, 0, 0);
 }
 
 void Statement::bind_in(int idx, const char* val)
@@ -323,11 +332,12 @@ void Statement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val)
 	SQLBindCol(stm, idx, SQL_C_TYPE_TIMESTAMP, &val, sizeof(val), 0);
 }
 
-void Statement::execute()
+int Statement::execute()
 {
 	int sqlres = SQLExecute(stm);
 	if (is_error(sqlres))
 		throw error_odbc(SQL_HANDLE_STMT, stm, "executing precompiled query");
+	return sqlres;
 }
 
 bool Statement::fetch()
@@ -338,6 +348,15 @@ bool Statement::fetch()
 	if (is_error(sqlres))
 		throw error_odbc(SQL_HANDLE_STMT, stm, "fetching data");
 	return true;
+}
+
+size_t Statement::rowcount()
+{
+	SQLLEN res;
+        int sqlres = SQLRowCount(stm, &res);
+	if (is_error(sqlres))
+		throw error_odbc(SQL_HANDLE_STMT, stm, "reading row count");
+	return res;
 }
 
 void Statement::close_cursor()

@@ -63,9 +63,9 @@ Record::Record(const Record& rec)
 	}
 
 	// Copy the variable list
-	for (vector<Var*>::const_iterator i = rec.vars.begin();
-			i != rec.vars.end(); ++i)
-		vars.push_back(new Var(**i));
+	for (vector<Var*>::const_iterator i = rec.m_vars.begin();
+			i != rec.m_vars.end(); ++i)
+		m_vars.push_back(new Var(**i));
 }
 
 Record::~Record()
@@ -96,9 +96,9 @@ Record& Record::operator=(const Record& rec)
 
 	// Copy the variable list
 	clear_vars();
-	for (vector<Var*>::const_iterator i = rec.vars.begin();
-			i != rec.vars.end(); ++i)
-		vars.push_back(new Var(**i));
+	for (vector<Var*>::const_iterator i = rec.m_vars.begin();
+			i != rec.m_vars.end(); ++i)
+		m_vars.push_back(new Var(**i));
 
 	return *this;
 }
@@ -119,11 +119,11 @@ bool Record::operator==(const Record& rec) const
 	}
 
 	// Compare the variables
-	vector<Var*>::const_iterator i1 = vars.begin();
-	vector<Var*>::const_iterator i2 = rec.vars.begin();
-	for ( ; i1 != vars.end() && i2 != rec.vars.end(); ++i1, ++i2)
+	vector<Var*>::const_iterator i1 = m_vars.begin();
+	vector<Var*>::const_iterator i2 = rec.m_vars.begin();
+	for ( ; i1 != m_vars.end() && i2 != rec.m_vars.end(); ++i1, ++i2)
 		if (**i1 != **i2) return false;
-	if (i1 != vars.end() || i2 != rec.vars.end())
+	if (i1 != m_vars.end() || i2 != rec.m_vars.end())
 		return false;
 
 	return true;
@@ -131,10 +131,10 @@ bool Record::operator==(const Record& rec) const
 
 void Record::clear_vars()
 {
-	for (vector<Var*>::iterator i = vars.begin();
-			i != vars.end(); ++i)
+	for (vector<Var*>::iterator i = m_vars.begin();
+			i != m_vars.end(); ++i)
 		delete *i;
-	vars.clear();
+	m_vars.clear();
 }
 
 void Record::clear()
@@ -151,11 +151,11 @@ void Record::clear()
 int Record::find_item(Varcode code) const throw ()
 {
 	/* Binary search */
-	int low = 0, high = vars.size() - 1;
+	int low = 0, high = m_vars.size() - 1;
 	while (low <= high)
 	{
 		int middle = low + (high - low)/2;
-		int cmp = (int)code - (int)vars[middle]->code();
+		int cmp = (int)code - (int)m_vars[middle]->code();
 		if (cmp < 0)
 			high = middle - 1;
 		else if (cmp > 0)
@@ -172,7 +172,7 @@ Var& Record::get_item(Varcode code)
 	if (pos == -1)
 		error_notfound::throwf("looking for parameter \"B%02d%03d\"",
 			WR_VAR_X(code), WR_VAR_Y(code));
-	return *vars[pos];
+	return *m_vars[pos];
 }
 
 const Var& Record::get_item(Varcode code) const
@@ -181,15 +181,15 @@ const Var& Record::get_item(Varcode code) const
 	if (pos == -1)
 		error_notfound::throwf("looking for parameter \"B%02d%03d\"",
 			WR_VAR_X(code), WR_VAR_Y(code));
-	return *vars[pos];
+	return *m_vars[pos];
 }
 
 void Record::remove_item(Varcode code)
 {
 	int pos = find_item(code);
 	if (pos == -1) return;
-	delete vars[pos];
-	vars.erase(vars.begin() + pos);
+	delete m_vars[pos];
+	m_vars.erase(m_vars.begin() + pos);
 }
 
 void Record::add(const Record& source)
@@ -207,18 +207,18 @@ void Record::add(const Record& source)
 	}
 
 	// Add the variables list
-	vector<Var*>::const_iterator src = source.vars.begin();
-	int dst = 0;
-	while (src != source.vars.end() && dst < vars.size())
+	vector<Var*>::const_iterator src = source.m_vars.begin();
+	size_t dst = 0;
+	while (src != source.m_vars.end() && dst < m_vars.size())
 	{
-		if ((*src)->code() < vars[dst]->code())
+		if ((*src)->code() < m_vars[dst]->code())
 		{
 			// Insert
-			vars.insert(vars.begin() + dst, new Var(**src));
+			m_vars.insert(m_vars.begin() + dst, new Var(**src));
 			++src;
-		} else if ((*src)->code() == vars[dst]->code()) {
+		} else if ((*src)->code() == m_vars[dst]->code()) {
 			// Overwrite
-			*vars[dst] = **src;
+			*m_vars[dst] = **src;
 			++dst;
 			++src;
 		} else {
@@ -226,8 +226,8 @@ void Record::add(const Record& source)
 		}
 	}
 	// Append the remaining source vars
-	for ( ; src != source.vars.end(); ++src)
-		vars.push_back(new Var(**src));
+	for ( ; src != source.m_vars.end(); ++src)
+		m_vars.push_back(new Var(**src));
 }
 
 void Record::set_to_difference(const Record& source1, const Record& source2)
@@ -257,27 +257,27 @@ void Record::set_to_difference(const Record& source1, const Record& source2)
 	// Copy the variables list
 	clear_vars();
 
-	vector<Var*>::const_iterator s1 = source1.vars.begin();
-	vector<Var*>::const_iterator s2 = source2.vars.begin();
-	while (s1 != source1.vars.end() && s2 != source2.vars.end())
+	vector<Var*>::const_iterator s1 = source1.m_vars.begin();
+	vector<Var*>::const_iterator s2 = source2.m_vars.begin();
+	while (s1 != source1.m_vars.end() && s2 != source2.m_vars.end())
 	{
 		if ((*s1)->code() < (*s2)->code())
 			++s1;
 		else if ((*s1)->code() == (*s2)->code())
 		{
 			if (**s1 != **s2)
-				vars.push_back(new Var(**s2));
+				m_vars.push_back(new Var(**s2));
 			++s1;
 			++s2;
 		}
 		else if ((*s2)->code() < (*s1)->code())
 		{
-			vars.push_back(new Var(**s2));
+			m_vars.push_back(new Var(**s2));
 			++s2;
 		}
 	}
-	for ( ; s2 != source2.vars.end(); ++s2)
-		vars.push_back(new Var(**s2));
+	for ( ; s2 != source2.m_vars.end(); ++s2)
+		m_vars.push_back(new Var(**s2));
 }
 
 const Var* Record::key_peek(dba_keyword parameter) const throw ()
@@ -289,7 +289,7 @@ const Var* Record::var_peek(Varcode code) const throw ()
 {
 	int pos = find_item(code);
 	if (pos == -1) return NULL;
-	return vars[pos];
+	return m_vars[pos];
 }
 
 const char* Record::key_peek_value(dba_keyword parameter) const throw ()
@@ -319,18 +319,18 @@ Var& Record::var(wreport::Varcode code)
 		// Insertion sort the new variable
 
 		// Enlarge the buffer
-		vars.resize(vars.size() + 1);
+		m_vars.resize(m_vars.size() + 1);
 
 		/* Insertionsort.  Crude, but our datasets should be too small for an
 		 * RB-Tree to be worth it */
-		for (pos = vars.size() - 1; pos > 0; --pos)
-		    if (vars[pos - 1]->code() > code)
-			vars[pos] = vars[pos - 1];
+		for (pos = m_vars.size() - 1; pos > 0; --pos)
+		    if (m_vars[pos - 1]->code() > code)
+			m_vars[pos] = m_vars[pos - 1];
 		    else
 			break;
-		vars[pos] = newvar(code).release();
+		m_vars[pos] = newvar(code).release();
 	}
-	return *vars[pos];
+	return *m_vars[pos];
 }
 
 void Record::key_unset(dba_keyword parameter)
@@ -346,9 +346,14 @@ void Record::var_unset(wreport::Varcode code)
 	int pos = find_item(code);
 	if (pos != -1)
 	{
-		delete vars[pos];
-		vars.erase(vars.begin() + pos);
+		delete m_vars[pos];
+		m_vars.erase(m_vars.begin() + pos);
 	}
+}
+
+const std::vector<wreport::Var*>& Record::vars() const
+{
+	return m_vars;
 }
 
 
