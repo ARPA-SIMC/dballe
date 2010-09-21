@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,25 +24,23 @@
 #include <sys/types.h>
 #include <pwd.h>
 
-namespace tut_dballe {
+namespace dballe {
+namespace tests {
 
 db_test::db_test() : db(NULL)
 {
-	CHECKED(dba_db_create_test(&db));
-	CHECKED(dba_db_reset(db, NULL));
+	db = new DB;
+	db->connect_test();
+	db->reset();
 }
 db_test::~db_test()
 {
-	if (db != NULL)
-	{
-		CHECKED(dba_db_commit(db));
-		dba_db_delete(db);
-	}
+	if (db != NULL) delete db;
 }
 void db_test::use_db()
 {
-	if (db == NULL)
-		throw tut::no_such_test();
+	if (db == NULL) throw tut::no_such_test();
 }
 
-}
+} // namespace tests
+} // namespace dballe

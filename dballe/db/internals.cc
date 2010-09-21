@@ -248,9 +248,61 @@ bool Statement::is_error(int sqlres)
 	return (sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO) && !error_is_ignored();
 }
 
-void Statement::bind(int idx, DBALLE_SQL_C_SINT_TYPE& val)
+void Statement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val)
 {
-	SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), 0);
+	// cast away const because the ODBC API is not const-aware
+	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_SINT_TYPE*)&val, 0, 0);
+}
+
+void Statement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val)
+{
+	// cast away const because the ODBC API is not const-aware
+	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_UINT_TYPE*)&val, 0, 0);
+}
+
+void Statement::bind_in(int idx, const char* val)
+{
+	// cast away const because the ODBC API is not const-aware
+	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, 0);
+}
+
+void Statement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val, SQLLEN* ind)
+{
+	SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), ind);
+}
+
+void Statement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val, SQLLEN* ind)
+{
+	SQLBindCol(stm, idx, DBALLE_SQL_C_UINT, &val, sizeof(val), ind);
+}
+
+void Statement::bind_out(int idx, char* val, SQLLEN buflen, SQLLEN* ind)
+{
+	SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, ind);
+}
+
+void Statement::execute()
+{
+	int sqlres = SQLExecute(stm);
+	if (is_error(sqlres))
+		throw error_odbc(SQL_HANDLE_STMT, stm, "checking if a repinfo entry is in use");
+}
+
+bool Statement::fetch()
+{
+	int sqlres = SQLFetch(stm);
+	if (sqlres == SQL_NO_DATA)
+		return false;
+	if (is_error(sqlres))
+		throw error_odbc(SQL_HANDLE_STMT, stm, "fetching data");
+	return true;
+}
+
+void Statement::close_cursor()
+{
+	int sqlres = SQLCloseCursor(stm);
+	if (is_error(sqlres))
+		throw error_odbc(SQL_HANDLE_STMT, stm, "closing cursor");
 }
 
 void Statement::prepare(const char* query)
@@ -287,7 +339,7 @@ Sequence::Sequence(Connection& conn, const char* name)
 	char qbuf[100];
 	int qlen;
 
-	bind(1, out);
+	bind_out(1, out);
 	if (conn.server_type == ORACLE)
 		qlen = snprintf(qbuf, 100, "SELECT %s.CurrVal FROM dual", name);	
 	else
@@ -307,6 +359,14 @@ const DBALLE_SQL_C_SINT_TYPE& Sequence::read()
 	if (is_error(SQLCloseCursor(stm)))
 		throw error_odbc(SQL_HANDLE_STMT, stm, "closing sequence read cursor");
 	return out;
+}
+
+const char* default_repinfo_file()
+{
+	const char* repinfo_file = getenv("DBA_REPINFO");
+	if (repinfo_file == 0 || repinfo_file[0] == 0)
+		repinfo_file = TABLE_DIR "/repinfo.csv";
+	return repinfo_file;
 }
 
 #if 0
@@ -339,12 +399,6 @@ dba_err dba_db_last_insert_id(dba_db db, int* id)
 
 
 
-dba_err dba_db_need_repinfo(dba_db db)
-{
-	if (db->repinfo == NULL)
-		return dba_db_repinfo_create(db, &(db->repinfo));
-	return dba_error_ok();
-}
 dba_err dba_db_need_pseudoana(dba_db db)
 {
 	if (db->pseudoana == NULL)

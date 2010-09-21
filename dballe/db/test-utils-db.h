@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,23 +21,22 @@
 #include <dballe/db/db.h>
 #include <sqltypes.h>
 
-namespace tut_dballe {
-using namespace std;
-using namespace tut;
+namespace dballe {
+namespace tests {
 
 struct db_test
 {
-    // DB handle
-    dba_db db;
+	// DB handle
+	DB* db;
 
 	bool has_db() const { return db != NULL; }
 	void use_db();
 
-    db_test();
+	db_test();
 	~db_test();
 };
 
-
+#if 0
 static inline SQL_TIMESTAMP_STRUCT mkts(int year, int month, int day, int hour, int minute, int second)
 {
 	SQL_TIMESTAMP_STRUCT res;
@@ -65,8 +62,9 @@ static inline ostream& operator<<(ostream& o, const SQL_TIMESTAMP_STRUCT& t)
 	o << buf;
 	return o;
 }
+#endif
 
-
-}
+} // namespace tests
+} // namespace dballe
 
 // vim:set ts=4 sw=4:

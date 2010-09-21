@@ -201,32 +201,28 @@ public:
 	 * Delete all the DB-ALLe tables from the database.
 	 */
 	void delete_tables();
+
+	/**
+	 * Update the repinfo table in the database, with the data found in the given
+	 * file.
+	 *
+	 * @param repinfo_file
+	 *   The name of the CSV file with the report type information data to load.
+	 *   The file is in CSV format with 6 columns: report code, mnemonic id,
+	 *   description, priority, descriptor, table A category.
+	 *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
+	 *   used.
+	 * @retval added
+	 *   The number of repinfo entryes that have been added
+	 * @retval deleted
+	 *   The number of repinfo entryes that have been deleted
+	 * @retval updated
+	 *   The number of repinfo entryes that have been updated
+	 */
+	void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated);
 };
 
 #if 0
-
-/**
- * Update the repinfo table in the database, with the data found in the given
- * file.
- *
- * @param db
- *   The dballe session id
- * @param repinfo_file
- *   The name of the CSV file with the report type information data to load.
- *   The file is in CSV format with 6 columns: report code, mnemonic id,
- *   description, priority, descriptor, table A category.
- *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
- *   used.
- * @retval added
- *   The number of repinfo entryes that have been added
- * @retval deleted
- *   The number of repinfo entryes that have been deleted
- * @retval updated
- *   The number of repinfo entryes that have been updated
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file, int* added, int* deleted, int* updated);
 
 /**
  * Get the report code from a report mnemonic

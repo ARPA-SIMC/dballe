@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir)
+INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(WREPORT_CFLAGS)
 
 #
 # Shared library
@@ -39,7 +39,7 @@ libdballe_db_la_SOURCES = \
 #		import.cc \
 #		export.cc
 
-libdballe_db_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
+libdballe_db_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS)
 
 #
 # Unit testing
@@ -58,21 +58,21 @@ CXXFLAGS += -O0
 noinst_HEADERS = test-utils-db.h
 
 tut_test_SOURCES = \
-	tests/repinfo.cc \
-	tests/pseudoana.cc \
-	tests/context.cc \
-	tests/data.cc \
-	tests/attr.cc \
-	tests/dba_db_dballe.cc \
-	tests/db_import.cc \
-	tests/db_export.cc \
 	../core/test-utils-core.cc \
-	../bufrex/test-utils-bufrex.cc \
 	../msg/test-utils-msg.cc \
 	test-utils-db.cc \
-	../tut/tut-main.cc
+	tests/repinfo.cc \
+	../core/tests/tut-main.cpp
 tut_test_LDADD = \
 	libdballe-db.la \
 	../msg/libdballe-msg.la \
-	../bufrex/libdballe-bufrex.la \
-	../core/libdballe-core.la
+	../core/libdballe-core.la \
+	$(WREPORT_LIBS) $(LUA_LIBS) $(WIBBLE_LIBS)
+
+#	tests/pseudoana.cc \
+#	tests/context.cc \
+#	tests/data.cc \
+#	tests/attr.cc \
+#	tests/dba_db_dballe.cc \
+#	tests/db_import.cc \
+#	tests/db_export.cc

@@ -364,7 +364,8 @@ static const char* init_queries_oracle[] = {
 DB::DB()
 	: conn(0),
 	  stm_last_insert_id(0),
-	  seq_pseudoana(0), seq_context(0)
+	  seq_pseudoana(0), seq_context(0),
+	  m_repinfo(0)
 {
 	/* Allocate the ODBC connection handle */
 	conn = new db::Connection;
@@ -375,6 +376,7 @@ DB::DB()
 
 DB::~DB()
 {
+	if (m_repinfo) delete m_repinfo;
 	if (seq_context) delete seq_context;
 	if (seq_pseudoana) delete seq_pseudoana;
 	if (stm_last_insert_id) delete stm_last_insert_id;
@@ -394,8 +396,6 @@ void dba_db_delete(dba_db db)
 		dba_db_context_delete(db->context);
 	if (db->pseudoana != NULL)
 		dba_db_pseudoana_delete(db->pseudoana);
-	if (db->repinfo != NULL)
-		dba_db_repinfo_delete(db->repinfo);
 }
 #endif
 
@@ -502,7 +502,7 @@ bool DB::is_url(const char* str)
 db::Repinfo& DB::repinfo()
 {
 	if (m_repinfo == NULL)
-		m_repinfo = new db::Repinfo;
+		m_repinfo = new db::Repinfo(conn);
 	return *m_repinfo;
 }
 
@@ -527,12 +527,12 @@ void DB::init_after_connect()
 			break;
 		case db::MYSQL:
 			stm_last_insert_id = new db::Statement(*conn);
-			stm_last_insert_id->bind(1, last_insert_id);
+			stm_last_insert_id->bind_out(1, last_insert_id);
 			stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
 			break;
 		case db::SQLITE:
 			stm_last_insert_id = new db::Statement(*conn);
-			stm_last_insert_id->bind(1, last_insert_id);
+			stm_last_insert_id->bind_out(1, last_insert_id);
 			stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
 			break;
 	}
@@ -652,16 +652,6 @@ void DB::delete_tables()
 
 void DB::reset(const char* repinfo_file)
 {
-	// Use a default for repinfo_file if not specified
-	if (repinfo_file == 0)
-	{
-		repinfo_file = getenv("DBA_REPINFO");
-		if (repinfo_file == 0 || repinfo_file[0] == 0)
-			repinfo_file = TABLE_DIR "/repinfo.csv";
-	}
-
-	// fprintf(stderr, "Reset with %s\n", repinfo_file);
-
 	/* Open the input CSV file */
 	/*
 	FILE* in = fopen(repinfo_file, "r");
@@ -673,7 +663,8 @@ void DB::reset(const char* repinfo_file)
 	delete_tables();
 
 	/* Invalidate the repinfo cache if we have a repinfo structure active */
-	repinfo().invalidate_cache();
+	if (m_repinfo)
+		m_repinfo->invalidate_cache();
 
 	/* Allocate statement handle */
 	db::Statement stm(*conn);
@@ -761,6 +752,12 @@ void DB::reset(const char* repinfo_file)
 		}
 		*/
 	}
+	conn->commit();
+}
+
+void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
+{
+	repinfo().update(repinfo_file, added, deleted, updated);
 }
 
 
@@ -790,12 +787,6 @@ static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
 		return dba_error_notfound("looking for report type in rep_cod or rep_memo");
 	return dba_error_ok();
 }		
-
-dba_err dba_db_update_repinfo(dba_db db, const char* repinfo_file, int* added, int* deleted, int* updated)
-{
-	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
-	return dba_db_repinfo_update(db->repinfo, repinfo_file, added, deleted, updated);
-}
 
 dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)
 {

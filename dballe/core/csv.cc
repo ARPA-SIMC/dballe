@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/csv - CSV reading functions
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,20 +32,22 @@
 #include <stdio.h>
 #include <string.h>
 
-int dba_csv_read_next(FILE* in, char** cols, int col_max)
+namespace dballe {
+
+bool csv_read_next(FILE* in, std::vector<std::string>& cols)
 {
 	char line[2000];
 	char* tok;
 	char* stringp;
-	int i;
 
 	if (fgets(line, 2000, in) == NULL)
-		return 0;
+		return false;
 
-	for (i = 0, stringp = line; i < col_max - 1 && (tok = strsep(&stringp, ",")) != NULL; i++)
-		cols[i] = strdup(tok);
+	cols.clear();
+	for (stringp = line; (tok = strsep(&stringp, ",")) != NULL; )
+		cols.push_back(tok);
 
-	return i;
+	return true;
 }
 
 #if 0
@@ -255,5 +257,7 @@ void test_dba_csv()
 
 #endif
 #endif
+
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

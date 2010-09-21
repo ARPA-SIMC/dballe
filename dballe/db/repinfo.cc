@@ -19,116 +19,192 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#if 0
-#define _GNU_SOURCE
-#include <dballe/db/repinfo.h>
-#include <dballe/db/internals.h>
-#include <dballe/core/verbose.h>
+#include "repinfo.h"
+#include "internals.h"
+
 #include <dballe/core/csv.h>
-#include <dballe/msg/repinfo.h>
 
-#include <sql.h>
-#include <sqlext.h>
+#include <algorithm>
+#include <cctype>
+#include <cstdio>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
-
-#include <assert.h>
-#endif
+using namespace wreport;
+using namespace std;
 
 namespace dballe {
 namespace db {
 
+namespace repinfo {
 
-#if 0
-
-/*
- * Define to true to enable the use of transactions during writes
- */
-/*
-*/
-
-static void clear_memo_index(dba_db_repinfo ri)
+Cache::Cache(int id, const std::string& memo, const std::string& desc, int prio, const std::string& descriptor, int tablea)
+	: id(id), memo(memo), desc(desc), prio(prio), descriptor(descriptor), tablea(tablea),
+	  new_prio(0), new_tablea(0)
 {
-	free(ri->memo_idx);
-	ri->memo_idx = NULL;
 }
 
-static dba_err cache_append(dba_db_repinfo ri, int id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea)
+void Cache::make_new()
+{
+	new_memo = memo;
+	new_desc = desc;
+	new_prio = prio;
+	new_descriptor = descriptor;
+	new_tablea = tablea;
+}
+
+bool Memoidx::operator<(const Memoidx& val) const
+{
+	return memo < val.memo;
+}
+
+}
+
+Repinfo::Repinfo(Connection* conn)
+	: conn(conn)
+{
+	read_cache();
+}
+
+Repinfo::~Repinfo()
+{
+}
+
+void Repinfo::read_cache()
+{
+	db::Statement stm(*conn);
+
+	DBALLE_SQL_C_UINT_TYPE id;
+	char memo[20]; SQLLEN memo_ind;
+	char description[255]; SQLLEN description_ind;
+	DBALLE_SQL_C_UINT_TYPE prio; SQLLEN prio_ind;
+	char descriptor[6]; SQLLEN descriptor_ind;
+	DBALLE_SQL_C_UINT_TYPE tablea; SQLLEN tablea_ind;
+
+	invalidate_cache();
+
+	stm.bind_out(1, id);
+	stm.bind_out(2, memo, sizeof(memo), &memo_ind);
+	stm.bind_out(3, description, sizeof(description), &description_ind);
+	stm.bind_out(4, prio);
+	stm.bind_out(5, descriptor, sizeof(descriptor), &descriptor_ind);
+	stm.bind_out(6, tablea);
+
+	stm.exec_direct("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
+
+	/* Get the results and save them in the record */
+	while (stm.fetch())
+		cache_append(id, memo, description, prio, descriptor, tablea);
+
+	/* Rebuild the memo index as well */
+	rebuild_memo_idx();
+}
+
+void Repinfo::cache_append(int id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea)
 {
 	/* Ensure that we are adding things in order */
-	if (ri->cache_size > 0 && ri->cache[ri->cache_size - 1].id >= id)
-		return dba_error_consistency(
+	if (!cache.empty() && cache.back().id >= id)
+		error_consistency::throwf(
 				"checking that value to append to repinfo cache (%d) "
-				"is greather than the last value in che cache (%d)", id, ri->cache[ri->cache_size - 1].id);
+				"is greather than the last value in che cache (%d)", id, cache.back().id);
 
-	clear_memo_index(ri);
+	memo_idx.clear();
 
 	/* Enlarge buffer if needed */
-	if (ri->cache_size == ri->cache_alloc_size)
-	{
-		dba_db_repinfo_cache new = (dba_db_repinfo_cache)realloc(
-				ri->cache, ri->cache_alloc_size * 2 * sizeof(struct _dba_db_repinfo_cache));
-		if (new == NULL)
-			return dba_error_alloc("enlarging the dba_db_repinfo-cache");
-		ri->cache = new;
-		ri->cache_alloc_size *= 2;
-	}
-
-	ri->cache[ri->cache_size].id = id;
-	ri->cache[ri->cache_size].memo = strdup(memo);
-	ri->cache[ri->cache_size].desc = strdup(desc);
-	ri->cache[ri->cache_size].prio = prio;
-	ri->cache[ri->cache_size].descriptor = strdup(descriptor);
-	ri->cache[ri->cache_size].tablea = tablea;
-	ri->cache[ri->cache_size].new_memo = NULL;
-	ri->cache[ri->cache_size].new_desc = NULL;
-	ri->cache[ri->cache_size].new_prio = 0;
-	ri->cache[ri->cache_size].new_descriptor = NULL;
-	ri->cache[ri->cache_size].new_tablea = 0;
-	++ri->cache_size;
-
-	return dba_error_ok();
+	cache.push_back(repinfo::Cache(id, memo, desc, prio, descriptor, tablea));
 }
 
-static void clear_cache_item(struct _dba_db_repinfo_cache* item)
+void Repinfo::invalidate_cache()
 {
-	if (item->memo != NULL)
-	{
-		free(item->memo);
-		item->memo = NULL;
-	}
-	if (item->desc != NULL)
-	{
-		free(item->desc);
-		item->desc = NULL;
-	}
-	if (item->descriptor != NULL)
-	{
-		free(item->descriptor);
-		item->descriptor = NULL;
-	}
-
-	if (item->new_memo != NULL)
-	{
-		free(item->new_memo);
-		item->new_memo = NULL;
-	}
-	if (item->new_desc != NULL)
-	{
-		free(item->new_desc);
-		item->new_desc = NULL;
-	}
-	if (item->new_descriptor != NULL)
-	{
-		free(item->new_descriptor);
-		item->new_descriptor = NULL;
-	}
+	cache.clear();
+	memo_idx.clear();
 }
 
+void Repinfo::rebuild_memo_idx() const
+{
+	memo_idx.clear();
+	memo_idx.resize(cache.size());
+	for (int i = 0; i < cache.size(); ++i)
+	{
+		memo_idx[i].memo = cache[i].memo;
+		memo_idx[i].id = cache[i].id;
+	}
+	std::sort(memo_idx.begin(), memo_idx.end());
+}
+
+int Repinfo::get_id(const char* memo) const
+{
+	char lc_memo[20];
+	int i;
+	for (i = 0; i < 19 && memo[i]; ++i)
+		lc_memo[i] = tolower(memo[i]);
+	lc_memo[i] = 0;
+
+	if (memo_idx.empty()) rebuild_memo_idx();
+
+	int pos = cache_find_by_memo(lc_memo);
+	if (pos == -1)
+		error_notfound::throwf("looking for repinfo corresponding to '%s'", memo);
+	return memo_idx[pos].id;
+}
+
+int Repinfo::cache_find_by_memo(const char* memo) const
+{
+	/* Binary search the memo index */
+	int begin, end;
+
+	begin = -1, end = cache.size();
+	while (end - begin > 1)
+	{
+		int cur = (end + begin) / 2;
+		if (memo_idx[cur].memo > memo)
+			end = cur;
+		else
+			begin = cur;
+	}
+	if (begin == -1 || memo_idx[begin].memo != memo)
+		return -1;
+	else
+		return begin;
+}
+
+bool Repinfo::has_id(int id) const
+{
+	return cache_find_by_id(id) != -1;
+}
+
+int Repinfo::cache_find_by_id(int id) const
+{
+	/* Binary search the ID */
+	int begin, end;
+
+	begin = -1, end = cache.size();
+	while (end - begin > 1)
+	{
+		int cur = (end + begin) / 2;
+		if (cache[cur].id > id)
+			end = cur;
+		else
+			begin = cur;
+	}
+	if (begin == -1 || cache[begin].id != id)
+		return -1;
+	else
+		return begin;
+}
+
+const repinfo::Cache* Repinfo::get_by_id(int id) const
+{
+	int pos = cache_find_by_id(id);
+	return pos == -1 ? NULL : &(cache[pos]);
+}
+
+const repinfo::Cache* Repinfo::get_by_memo(const char* memo) const
+{
+	int pos = cache_find_by_memo(memo);
+	if (pos == -1) return NULL;
+	return get_by_id(memo_idx[pos].id);
+}
+
+#if 0
 /*
 static void commit_cache_item(struct _dba_db_repinfo_cache* item)
 {
@@ -148,525 +224,215 @@ static void commit_cache_item(struct _dba_db_repinfo_cache* item)
 	item->new_descriptor = NULL;
 }
 */
+#endif
 
 
-void dba_db_repinfo_invalidate_cache(dba_db_repinfo ri)
+static inline void inplace_tolower(std::string& buf)
 {
-	int i;
-	for (i = 0; i < ri->cache_size; ++i)
-		clear_cache_item(&(ri->cache[i]));
-	clear_memo_index(ri);
-	ri->cache_size = 0;
+	for (string::iterator i = buf.begin(); i != buf.end(); ++i)
+		*i = tolower(*i);
 }
 
-static int cache_find_by_id(dba_db_repinfo ri, int id)
+namespace {
+struct fd_closer
 {
-	/* Binary search the ID */
-	int begin, end;
-
-	begin = -1, end = ri->cache_size;
-	while (end - begin > 1)
-	{
-		int cur = (end + begin) / 2;
-		if (ri->cache[cur].id > id)
-			end = cur;
-		else
-			begin = cur;
-	}
-	if (begin == -1 || ri->cache[begin].id != id)
-		return -1;
-	else
-		return begin;
-}
-
-static int cache_find_by_memo(dba_db_repinfo ri, const char* memo)
-{
-	/* Binary search the memo index */
-	int begin, end;
-
-	begin = -1, end = ri->cache_size;
-	while (end - begin > 1)
-	{
-		int cur = (end + begin) / 2;
-		if (strcmp(ri->memo_idx[cur].memo, memo) > 0)
-			end = cur;
-		else
-			begin = cur;
-	}
-	if (begin == -1 || strcmp(ri->memo_idx[begin].memo, memo) != 0)
-		return -1;
-	else
-		return begin;
-}
-
-static int memoidx_cmp(const void* a, const void* b)
-{
-	return strcmp(((const dba_db_repinfo_memoidx)a)->memo, ((const dba_db_repinfo_memoidx)b)->memo);
-}
-
-static dba_err rebuild_memo_idx(dba_db_repinfo ri)
-{
-	int i;
-	clear_memo_index(ri);
-	if ((ri->memo_idx = (dba_db_repinfo_memoidx)malloc(ri->cache_size * sizeof(struct _dba_db_repinfo_memoidx))) == NULL)
-		return dba_error_alloc("allocating new repinfo memo index");
-	for (i = 0; i < ri->cache_size; ++i)
-	{
-		strncpy(ri->memo_idx[i].memo, ri->cache[i].memo, 20);
-		ri->memo_idx[i].memo[19] = 0;
-		ri->memo_idx[i].id = ri->cache[i].id;
-	}
-	qsort(ri->memo_idx, ri->cache_size, sizeof(struct _dba_db_repinfo_memoidx), memoidx_cmp);
-	return dba_error_ok();
-}
-
-static dba_err dba_db_repinfo_read_cache(dba_db_repinfo ri)
-{
-	dba_err err = DBA_OK;
-	SQLHSTMT stm;
-
-	DBALLE_SQL_C_UINT_TYPE id;
-	char memo[20];
-	SQLLEN memo_ind;
-	char description[255];
-	SQLLEN description_ind;
-	DBALLE_SQL_C_UINT_TYPE prio;
-	SQLLEN prio_ind;
-	char descriptor[6];
-	SQLLEN descriptor_ind;
-	DBALLE_SQL_C_UINT_TYPE tablea;
-	SQLLEN tablea_ind;
-
-	int res;
-
-	dba_db_repinfo_invalidate_cache(ri);
-
-	DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
-
-	SQLBindCol(stm, 1, DBALLE_SQL_C_UINT, &id, sizeof(id), 0);
-	SQLBindCol(stm, 2, SQL_C_CHAR, &memo, sizeof(memo), &memo_ind);
-	SQLBindCol(stm, 3, SQL_C_CHAR, &description, sizeof(description), &description_ind);
-	SQLBindCol(stm, 4, DBALLE_SQL_C_UINT, &prio, sizeof(prio), &prio_ind);
-	SQLBindCol(stm, 5, SQL_C_CHAR, &descriptor, sizeof(descriptor), &descriptor_ind);
-	SQLBindCol(stm, 6, DBALLE_SQL_C_UINT, &tablea, sizeof(tablea), &tablea_ind);
-
-	res = SQLExecDirect(stm, (unsigned char*)
-			"SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id", SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to read data from 'repinfo'");
-		goto cleanup;
-	}
-
-	/* Get the results and save them in the record */
-	while (SQLFetch(stm) != SQL_NO_DATA)
-		DBA_RUN_OR_GOTO(cleanup, cache_append(ri, id, memo, description, prio, descriptor, tablea));
-
-	/* Rebuild the memo index as well */
-	DBA_RUN_OR_GOTO(cleanup, rebuild_memo_idx(ri));
-
-cleanup:
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	return err == DBA_OK ? dba_error_ok() : err;
-}
-
-dba_err dba_db_repinfo_create(dba_db db, dba_db_repinfo* ins)
-{
-	dba_err err = DBA_OK;
-	dba_db_repinfo res = NULL;
-
-	if ((res = (dba_db_repinfo)malloc(sizeof(struct _dba_db_repinfo))) == NULL)
-		return dba_error_alloc("creating a new dba_db_repinfo");
-	res->db = db;
-	res->memo_idx = NULL;
-
-	/* Create and read the repinfo cache */
-	if ((res->cache = (dba_db_repinfo_cache)malloc(16 * sizeof(struct _dba_db_repinfo_cache))) == NULL)
-		return dba_error_alloc("creating 16 elements of dba_db_repinfo_cache");
-	res->cache_size = 0;
-	res->cache_alloc_size = 16;
-	DBA_RUN_OR_GOTO(cleanup, dba_db_repinfo_read_cache(res));
-
-	*ins = res;
-	res = NULL;
-	
-cleanup:
-	if (res != NULL)
-		dba_db_repinfo_delete(res);
-	return err == DBA_OK ? dba_error_ok() : err;
+	FILE* fd;
+	fd_closer(FILE* fd) : fd(fd) {}
+	~fd_closer() { fclose(fd); }
 };
-
-void dba_db_repinfo_delete(dba_db_repinfo ins)
-{
-	if (ins->cache != NULL)
-	{
-		dba_db_repinfo_invalidate_cache(ins);
-		free(ins->cache);
-	}
-	free(ins);
 }
 
-dba_err dba_db_repinfo_get_id(dba_db_repinfo ri, const char* memo, int* id)
+std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 {
-	char lc_memo[20];
-	int i;
-	for (i = 0; i < 19 && memo[i]; ++i)
-		lc_memo[i] = tolower(memo[i]);
-	lc_memo[i] = 0;
-
-	if (ri->memo_idx == NULL)
-		DBA_RUN_OR_RETURN(rebuild_memo_idx(ri));
-	int pos = cache_find_by_memo(ri, lc_memo);
-	if (pos == -1)
-		return dba_error_notfound("looking for repinfo corresponding to '%s'", memo);
-	*id = ri->memo_idx[pos].id;
-	return dba_error_ok();
-}
-
-dba_err dba_db_repinfo_has_id(dba_db_repinfo ri, int id, int* exists)
-{
-	*exists = (cache_find_by_id(ri, id) != -1);
-	return dba_error_ok();
-}
-
-dba_db_repinfo_cache dba_db_repinfo_get_by_id(dba_db_repinfo ri, int id)
-{
-	int pos = cache_find_by_id(ri, id);
-	return pos == -1 ? NULL : &(ri->cache[pos]);
-}
-
-dba_db_repinfo_cache dba_db_repinfo_get_by_memo(dba_db_repinfo ri, const char* memo)
-{
-	int pos = cache_find_by_memo(ri, memo);
-	if (pos == -1)
-		return NULL;
-	return dba_db_repinfo_get_by_id(ri, ri->memo_idx[pos].id);
-}
-
-struct _newitem
-{
-	struct _dba_db_repinfo_cache item;
-	struct _newitem* next;
-};
-typedef struct _newitem* newitem;
-
-static inline void inplace_tolower(char* buf)
-{
-	for ( ; *buf; ++buf)
-		*buf = tolower(*buf);
-}
-
-static dba_err read_repinfo_file(dba_db_repinfo ri, const char* deffile, newitem* newitems)
-{
-	dba_err err = DBA_OK;
-	FILE* in;
-
 	if (deffile == 0)
-		DBA_RUN_OR_RETURN(dba_repinfo_default_filename(&deffile));
+		deffile = default_repinfo_file();
 
 	/* Open the input CSV file */
-	in = fopen(deffile, "r");
+	FILE* in = fopen(deffile, "r");
 	if (in == NULL)
-		return dba_error_system("opening file %s", deffile);
+		error_system::throwf("opening file %s", deffile);
+	fd_closer closer(in);
 
 	/* Read the CSV file */
+	vector<repinfo::Cache> newitems;
+
+	vector<string> columns;
+	for (int line = 1; csv_read_next(in, columns); ++line)
 	{
-		char* columns[7];
-		int line;
-		int i;
+		int id, pos;
 
-		for (line = 0; (i = dba_csv_read_next(in, columns, 7)) != 0; line++)
+		if (columns.size() != 6)
+			error_parse::throwf(deffile, line, "Expected 6 columns, got %zd", columns.size());
+
+		// Lowercase all rep_memos
+		inplace_tolower(columns[1]);
+
+		id = strtol(columns[0].c_str(), 0, 10);
+		pos = cache_find_by_id(id);
+		if (pos == -1)
 		{
-			int id, pos;
-
-			if (i != 6)
-			{
-				err = dba_error_parse(deffile, line, "Expected 6 columns, got %d", i);
-				goto cleanup;
-			}
-
-			// Lowercase all rep_memos
-			inplace_tolower(columns[1]);
-
-			id = strtol(columns[0], 0, 10);
-			pos = cache_find_by_id(ri, id);
-			if (pos == -1)
-			{
-				/* New entry */
-				newitem new = (newitem)calloc(1, sizeof(struct _newitem));
-				if (new == NULL)
-				{
-					err = dba_error_alloc("allocating memory to store a new repinfo item");
-					goto cleanup;
-				}
-				new->item.id = id;
-				new->item.new_memo = columns[1];
-				new->item.new_desc = columns[2];
-				new->item.new_prio = strtol(columns[3], 0, 10);
-				new->item.new_descriptor = columns[4];
-				new->item.new_tablea = strtol(columns[5], 0, 10);
-				new->next = *newitems;
-				*newitems = new;
-			} else {
-				/* Possible update on an existing entry */
-				ri->cache[pos].new_memo = columns[1];
-				ri->cache[pos].new_desc = columns[2];
-				ri->cache[pos].new_prio = strtol(columns[3], 0, 10);
-				ri->cache[pos].new_descriptor = columns[4];
-				ri->cache[pos].new_tablea = strtol(columns[5], 0, 10);
-			}
-
-			free(columns[0]);
-			free(columns[3]);
-			free(columns[5]);
+			/* New entry */
+			newitems.push_back(repinfo::Cache(id, columns[1], columns[2], strtol(columns[3].c_str(), 0, 10), columns[4], strtol(columns[5].c_str(), 0, 10)));
+			newitems.back().make_new();
+		} else {
+			/* Possible update on an existing entry */
+			cache[pos].new_memo = columns[1];
+			cache[pos].new_desc = columns[2];
+			cache[pos].new_prio = strtol(columns[3].c_str(), 0, 10);
+			cache[pos].new_descriptor = columns[4];
+			cache[pos].new_tablea = strtol(columns[5].c_str(), 0, 10);
 		}
 	}
 
+	/* Verify conflicts */
+	for (int i = 0; i < cache.size(); ++i)
 	{
-		int i, j;
-		newitem cur;
-
-		/* Verify conflicts */
-		for (i = 0; i < ri->cache_size; ++i)
+		/* Skip empty items or items that will be deleted */
+		if (cache[i].memo.empty() || cache[i].new_memo.empty())
+			continue;
+		for (int j = i + 1; j < cache.size(); ++j)
 		{
 			/* Skip empty items or items that will be deleted */
-			if (ri->cache[i].memo == NULL || ri->cache[i].new_memo == NULL)
+			if (cache[j].memo.empty() || cache[j].new_memo.empty())
 				continue;
-			for (j = i + 1; j < ri->cache_size; ++j)
-			{
-				/* Skip empty items or items that will be deleted */
-				if (ri->cache[j].memo == NULL || ri->cache[j].new_memo == NULL)
-					continue;
-				if (ri->cache[j].new_prio == ri->cache[i].new_prio)
-				{
-					err = dba_error_consistency("%s has the same priority (%d) as %s",
-							ri->cache[j].new_memo, ri->cache[j].new_prio, ri->cache[i].new_memo);
-					goto cleanup;
-				}
-			}
-			for (cur = *newitems; cur; cur = cur->next)
-			{
-				if (cur->item.new_prio == ri->cache[i].new_prio)
-				{
-					err = dba_error_consistency("%s has the same priority (%d) as %s",
-							cur->item.new_memo, cur->item.new_prio, ri->cache[i].new_memo);
-					goto cleanup;
-				}
-			}
+			if (cache[j].new_prio == cache[i].new_prio)
+				error_consistency::throwf("%s has the same priority (%d) as %s",
+						cache[j].new_memo.c_str(),
+						cache[j].new_prio,
+						cache[i].new_memo.c_str());
 		}
-		for (cur = *newitems; cur; cur = cur->next)
+		for (vector<repinfo::Cache>::const_iterator j = newitems.begin();
+				j != newitems.end(); ++j)
 		{
-			newitem cur1;
-			/*fprintf(stderr, "prio %d\n", cur->item.new_prio);*/
-			for (cur1 = cur->next; cur1; cur1 = cur1->next)
-			{
-				if (cur->item.new_prio == cur1->item.new_prio)
-				{
-					err = dba_error_consistency("%s has the same priority (%d) as %s",
-							cur1->item.new_memo, cur1->item.new_prio, cur->item.new_memo);
-					goto cleanup;
-				}
-			}
+			if (j->new_prio == cache[i].new_prio)
+				error_consistency::throwf("%s has the same priority (%d) as %s",
+						j->new_memo.c_str(),
+						j->new_prio,
+						cache[i].new_memo.c_str());
+		}
+	}
+	for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
+			i != newitems.end(); ++i)
+	{
+		/*fprintf(stderr, "prio %d\n", cur->item.new_prio);*/
+		for (vector<repinfo::Cache>::const_iterator j = i + 1;
+				j != newitems.end(); ++j)
+		{
+			if (i->new_prio == j->new_prio)
+				error_consistency::throwf("%s has the same priority (%d) as %s",
+						i->new_memo.c_str(), i->new_prio, j->new_memo.c_str());
 		}
 	}
 
-cleanup:
-	fclose(in);
-	return err == DBA_OK ? dba_error_ok() : err;
+	return newitems;
 }
 
-dba_err dba_db_repinfo_update(dba_db_repinfo ri, const char* deffile, int* added, int* deleted, int* updated)
+void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated)
 {
-	dba_err err = DBA_OK;
-	newitem newitems = NULL;
-	SQLHSTMT stm = NULL;
-	int res;
-	DBALLE_SQL_C_UINT_TYPE id;
-	DBALLE_SQL_C_UINT_TYPE count;
-	int i;
-
 	*added = *deleted = *updated = 0;
 
-	/* Read the new repinfo data from file */
-	DBA_RUN_OR_RETURN(read_repinfo_file(ri, deffile, &newitems));
+	// Read the new repinfo data from file
+	vector<repinfo::Cache> newitems = read_repinfo_file(deffile);
 
-	/* Verify that the update is possible */
-	DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
-	res = SQLPrepare(stm, (unsigned char*)"SELECT COUNT(1) FROM context WHERE id_report = ?", SQL_NTS);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	// Verify that we are not trying to delete a repinfo entry that is
+	// used in some data context
 	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to check if a repinfo item is in use");
-		goto cleanup;
-	}
-	SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &id, 0, 0);
-	SQLBindCol(stm, 1, DBALLE_SQL_C_UINT, &count, sizeof(count), 0);
+		DBALLE_SQL_C_UINT_TYPE id;
+		DBALLE_SQL_C_UINT_TYPE count;
+		db::Statement stm(*conn);
+		stm.prepare("SELECT COUNT(1) FROM context WHERE id_report = ?");
+		stm.bind_in(1, id);
+		stm.bind_out(1, count);
 
-	for (i = 0; i < ri->cache_size; ++i)
-	{
-		/* Ensure that we are not deleting a repinfo entry that is already in use */
-		if (ri->cache[i].memo != NULL && ri->cache[i].new_memo == NULL)
+		for (int i = 0; i < cache.size(); ++i)
 		{
-			id = ri->cache[i].id;
-
-			res = SQLExecute(stm);
-			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+			/* Ensure that we are not deleting a repinfo entry that is already in use */
+			if (!cache[i].memo.empty() && cache[i].new_memo.empty())
 			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "checking if a repinfo entry is in use");
-				goto cleanup;
-			}
+				id = cache[i].id;
+				stm.execute();
+				if (!stm.fetch())
+					error_consistency::throwf("%s is in cache but not in the database (database externally modified?)",
+							cache[i].memo.c_str());
+				if (count > 0)
+					error_consistency::throwf(
+							"trying to delete repinfo entry %d,%s which is currently in use",
+							cache[i].id, cache[i].memo.c_str());
 
-			if (SQLFetch(stm) == SQL_NO_DATA)
-			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "fetching count of repinfo entries in use");
-				goto cleanup;
-			}
-
-			if (count > 0)
-			{
-				err = dba_error_consistency(
-						"trying to delete repinfo entry %d,%s which is currently in use",
-						ri->cache[i].id, ri->cache[i].memo);
-				goto cleanup;
-			}
-
-			res = SQLCloseCursor(stm);
-			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_remove_orphans cursor");
-				goto cleanup;
+				stm.close_cursor();
 			}
 		}
 	}
-
-	SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	stm = NULL;
 
 	/* Perform the changes */
 
 	/* Delete the items that were deleted */
-	for (i = 0; i < ri->cache_size; ++i)
-		if (ri->cache[i].memo != NULL && ri->cache[i].new_memo == NULL)
-		{
-			DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
-
-			SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &(ri->cache[i].id), 0, 0);
-
-			res = SQLExecDirect(stm, (unsigned char*)"DELETE FROM repinfo WHERE id=?", SQL_NTS);
-			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		db::Statement stm(*conn);
+		stm.prepare("DELETE FROM repinfo WHERE id=?");
+		for (int i = 0; i < cache.size(); ++i)
+			if (!cache[i].memo.empty() && cache[i].new_memo.empty())
 			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "deleting item %d from 'repinfo'");
-				goto cleanup;
+				stm.bind_in(1, cache[i].id);
+				stm.execute();
+				stm.close_cursor();
+
+				/* clear_cache_item(&(ri->cache[i])); */
+				++*deleted;
 			}
-
-			SQLFreeHandle(SQL_HANDLE_STMT, stm);
-			stm = NULL;
-
-			/* clear_cache_item(&(ri->cache[i])); */
-			++*deleted;
-		}
+	}
 
 	/* Update the items that were modified */
-	for (i = 0; i < ri->cache_size; ++i)
-		if (ri->cache[i].memo != NULL && ri->cache[i].new_memo != NULL)
-		{
-			DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
-
-			SQLBindParameter(stm, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, ri->cache[i].new_memo, 0, 0);
-			SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, ri->cache[i].new_desc, 0, 0);
-			SQLBindParameter(stm, 3, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(ri->cache[i].new_prio), 0, 0);
-			SQLBindParameter(stm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, ri->cache[i].new_descriptor, 0, 0);
-			SQLBindParameter(stm, 5, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &(ri->cache[i].new_tablea), 0, 0);
-			SQLBindParameter(stm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &(ri->cache[i].id), 0, 0);
-
-			res = SQLExecDirect(stm, (unsigned char*)
-					"UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
-					"  WHERE id=?", SQL_NTS);
-			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+	{
+		db::Statement stm(*conn);
+		stm.prepare("UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
+			    "  WHERE id=?");
+		for (int i = 0; i < cache.size(); ++i)
+			if (!cache[i].memo.empty() && !cache[i].new_memo.empty())
 			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "updating data in 'repinfo'");
-				goto cleanup;
+				stm.bind_in(1, cache[i].new_memo.c_str());
+				stm.bind_in(2, cache[i].new_desc.c_str());
+				stm.bind_in(3, cache[i].new_prio);
+				stm.bind_in(4, cache[i].new_descriptor.c_str());
+				stm.bind_in(5, cache[i].new_tablea);
+				stm.bind_in(6, cache[i].id);
+
+				stm.execute();
+
+				/* commit_cache_item(&(ri->cache[i])); */
+				++*updated;
 			}
-
-			SQLFreeHandle(SQL_HANDLE_STMT, stm);
-			stm = NULL;
-
-			/* commit_cache_item(&(ri->cache[i])); */
-			++*updated;
-		}
+	}
 
 	/* Insert the new items */
-	if (newitems != NULL)
+	if (!newitems.empty())
 	{
-		newitem cur;
-		char memo[20];
-		char description[255];
-		DBALLE_SQL_C_SINT_TYPE prio;
-		char descriptor[6];
-		DBALLE_SQL_C_UINT_TYPE tablea;
+		Statement stm(*conn);
+		stm.prepare("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
+			    "     VALUES (?, ?, ?, ?, ?, ?)");
 
-		DBA_RUN_OR_RETURN(dba_db_statement_create(ri->db, &stm));
-
-		res = SQLPrepare(stm, (unsigned char*)
-				"INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
-				"     VALUES (?, ?, ?, ?, ?, ?)", SQL_NTS);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
+		for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
+				i != newitems.end(); ++i)
 		{
-			err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'repinfo'");
-			goto cleanup;
-		}
+			stm.bind_in(1, i->id);
+			stm.bind_in(2, i->new_memo.c_str());
+			stm.bind_in(3, i->new_desc.c_str());
+			stm.bind_in(4, i->new_prio);
+			stm.bind_in(5, i->new_descriptor.c_str());
+			stm.bind_in(6, i->new_tablea);
 
-		SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &id, 0, 0);
-		SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, memo, 0, 0);
-		SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, description, 0, 0);
-		SQLBindParameter(stm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &prio, 0, 0);
-		SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, descriptor, 0, 0);
-		SQLBindParameter(stm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, &tablea, 0, 0);
-
-		for (cur = newitems; cur != NULL; cur = cur->next)
-		{
-			id = cur->item.id;
-			strncpy(memo, cur->item.new_memo, 20); memo[19] = 0;
-			strncpy(description, cur->item.new_desc, 255); description[254] = 0;
-			prio = cur->item.new_prio;
-			strncpy(descriptor, cur->item.new_descriptor, 6); descriptor[5] = 0;
-			tablea = cur->item.new_tablea;
-
-			res = SQLExecute(stm);
-			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-			{
-				err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'repinfo'");
-				goto cleanup;
-			}
+			stm.execute();
 
 			/* DBA_RUN_OR_GOTO(cleanup, cache_append(ri, id, memo, description, prio, descriptor, tablea)); */
 			++*added;
 		}
-
-		SQLFreeHandle(SQL_HANDLE_STMT, stm);
-		stm = NULL;
 	}
 
-	DBA_RUN_OR_GOTO(cleanup, dba_db_commit(ri->db));
+	conn->commit();
 
 	/* Reread the cache */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_repinfo_read_cache(ri));
-
-cleanup:
-	if (stm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, stm);
-	while (newitems != NULL)
-	{
-		newitem next = newitems->next;
-		free(newitems->item.new_memo);
-		free(newitems->item.new_desc);
-		free(newitems->item.new_descriptor);
-		free(newitems);
-		newitems = next;
-	}
-	return err == DBA_OK ? dba_error_ok() : err;
+	read_cache();
 }
-
-#endif
 
 } // namespace db
 } // namespace dballe

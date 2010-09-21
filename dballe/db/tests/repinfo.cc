@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,27 +18,21 @@
  */
 
 #include <test-utils-db.h>
-#include <dballe/db/querybuf.h>
-#include <dballe/db/db.h>
-#include <dballe/db/internals.h>
 #include <dballe/db/repinfo.h>
 
+using namespace dballe;
+using namespace std;
 
 namespace tut {
-using namespace tut_dballe;
 
-struct repinfo_shar : public db_test
+struct repinfo_shar : public dballe::tests::db_test
 {
-	TestMsgEnv testenv;
-
-	dba_db_repinfo ri;
+	db::Repinfo* ri;
 
 	repinfo_shar()
 	{
 		if (!has_db()) return;
-
-		CHECKED(dba_db_need_repinfo(db));
-		ri = db->repinfo;
+		ri = &db->repinfo();
 	}
 };
 TESTGRP(repinfo);
@@ -51,19 +43,10 @@ void to::test<1>()
 {
 	use_db();
 
-	int id, i;
-
-	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
-	gen_ensure_equals(id, 1);
-
-	CHECKED(dba_db_repinfo_get_id(ri, "generic", &id));
-	gen_ensure_equals(id, 255);
-
-	CHECKED(dba_db_repinfo_has_id(ri, 1, &i));
-	gen_ensure_equals((bool)i, true);
-
-	CHECKED(dba_db_repinfo_has_id(ri, 199, &i));
-	gen_ensure_equals((bool)i, false);
+	ensure_equals(ri->get_id("synop"), 1);
+	ensure_equals(ri->get_id("generic"), 255);
+	ensure_equals(ri->has_id(1), true);
+	ensure_equals(ri->has_id(199), false);
 }
 
 /* Test update */
@@ -72,19 +55,16 @@ void to::test<2>()
 {
 	use_db();
 
-	int id, added, deleted, updated;
+	ensure_equals(ri->get_id("synop"), 1);
 
-	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
-	gen_ensure_equals(id, 1);
+	int added, deleted, updated;
+	ri->update(NULL, &added, &deleted, &updated);
 
-	CHECKED(dba_db_repinfo_update(ri, NULL, &added, &deleted, &updated));
+	ensure_equals(added, 0);
+	ensure_equals(deleted, 0);
+	ensure_equals(updated, 13);
 
-	gen_ensure_equals(added, 0);
-	gen_ensure_equals(deleted, 0);
-	gen_ensure_equals(updated, 13);
-
-	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
-	gen_ensure_equals(id, 1);
+	ensure_equals(ri->get_id("synop"), 1);
 }
 
 /* Test update from a file that was known to fail */
@@ -93,21 +73,17 @@ void to::test<3>()
 {
 	use_db();
 
-	int id, added, deleted, updated;
+	ensure_equals(ri->get_id("synop"), 1);
 
-	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
-	gen_ensure_equals(id, 1);
+	int added, deleted, updated;
+	ri->update((string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated);
 
-	CHECKED(dba_db_repinfo_update(ri, (string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated));
+	ensure_equals(added, 2);
+	ensure_equals(deleted, 10);
+	ensure_equals(updated, 3);
 
-	gen_ensure_equals(added, 2);
-	gen_ensure_equals(deleted, 10);
-	gen_ensure_equals(updated, 3);
-
-	CHECKED(dba_db_repinfo_get_id(ri, "synop", &id));
-	gen_ensure_equals(id, 1);
-	CHECKED(dba_db_repinfo_get_id(ri, "FIXspnpo", &id));
-	gen_ensure_equals(id, 200);
+	ensure_equals(ri->get_id("synop"), 1);
+	ensure_equals(ri->get_id("FIXspnpo"), 200);
 }
 
 }

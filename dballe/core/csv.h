@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dballe/csv - CSV reading functions
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,16 +22,17 @@
 #ifndef DBA_CSV_H
 #define DBA_CSV_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup core
  * Routines to parse data in CSV format
  */
 
+#include <vector>
+#include <string>
 #include <stdio.h>
+
+namespace dballe
+{
 
 /**
  * Parse a CSV line.
@@ -39,19 +40,13 @@ extern "C" {
  * @param in
  *   The file where to read from
  * @param cols
- *   The array of char* that will hold the parsed columns.  If the line has
- *   more than `cols' columns, the exceeding ones will be ignored.
- *   Please note that you have to deallocate all the lines returned in cols.
- * @param col_max
- *   The size of cols
+ *   The parsed columns.
  * @return
- *   The number of columns found, or 0 if we hit the end of the file
+ *   true if a new line was found, else false
  */
-int dba_csv_read_next(FILE* in, char** cols, int col_max);
+bool csv_read_next(FILE* in, std::vector<std::string>& cols);
 
-#ifdef  __cplusplus
 }
-#endif
 
 /* vim:set ts=4 sw=4: */
 #endif

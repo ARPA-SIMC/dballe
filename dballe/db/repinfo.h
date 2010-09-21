@@ -28,13 +28,80 @@
  * Repinfo table management used by the db module.
  */
 
-// #include <dballe/db/internals.h>
+#include <dballe/db/odbcworkarounds.h>
+#include <vector>
+#include <string>
 
 namespace dballe {
 namespace db {
+struct Connection;
 
+namespace repinfo {
+
+/** repinfo cache entry */
+struct Cache
+{
+	/** Report code */
+	DBALLE_SQL_C_UINT_TYPE id;
+
+	/** Report name */
+	std::string memo;
+	/** Report description */
+	std::string desc;
+	/** Report priority */
+	DBALLE_SQL_C_UINT_TYPE prio;
+	/** Report descriptor (currently unused) */
+	std::string descriptor;
+	/** Report A table value (currently unused) */
+	DBALLE_SQL_C_UINT_TYPE tablea;
+
+	/** New report name used when updating the repinfo table */
+	std::string new_memo;
+	/** New report description used when updating the repinfo table */
+	std::string new_desc;
+	/** New report priority used when updating the repinfo table */
+	DBALLE_SQL_C_UINT_TYPE new_prio;
+	/** New report descriptor used when updating the repinfo table */
+	std::string new_descriptor;
+	/** New report A table value used when updating the repinfo table */
+	DBALLE_SQL_C_UINT_TYPE new_tablea;
+
+	Cache(int id, const std::string& memo, const std::string& desc, int prio, const std::string& descriptor, int tablea);
+	void make_new();
+};
+
+/** reverse rep_memo -> rep_cod cache entry */
+struct Memoidx
+{
+	/** Report name */
+	std::string memo;
+	/** Report code */
+	int id;
+
+	bool operator<(const Memoidx& memo) const;
+};
+
+}
+
+/**
+ * Fast cached access to the repinfo table
+ */
 struct Repinfo
 {
+	/** Cache of table entries */
+	std::vector<repinfo::Cache> cache;
+
+	/** rep_memo -> rep_cod reverse index */
+	mutable std::vector<repinfo::Memoidx> memo_idx;
+
+
+	/**
+	 * DB connection. Memory managed is handled elsewhere
+	 */
+	Connection* conn;
+
+	Repinfo(Connection* conn);
+	~Repinfo();
 
 	/**
 	 * Invalidate the repinfo cache.  To be called if the repinfo table is modified
@@ -59,153 +126,56 @@ struct Repinfo
 	 *   Number of entries that have been updated during the update.
 	 */
 	void update(const char* deffile, int* added, int* deleted, int* updated);
+
+	/**
+	 * Get the id of a repinfo entry given its name
+	 *
+	 * @param memo
+	 *   The name to query
+	 * @return
+	 *   The resulting id.  It will always be a valid one, because the functions
+	 *   fails if memo is not found.
+	 */
+	int get_id(const char* memo) const;
+
+	/**
+	 * Check if the database contains the given rep_cod id
+	 *
+	 * @param id
+	 *   id to check
+	 * @return
+	 *   true if id exists, else false.
+	 */
+	bool has_id(int id) const;
+
+	/**
+	 * Get a repinfo cache entry by id.
+	 *
+	 * @param id
+	 *   id to query
+	 * @return
+	 *   The Cache structure found, or NULL if none was found.
+	 */
+	const repinfo::Cache* get_by_id(int id) const;
+
+	/**
+	 * Get a repinfo cache entry by name.
+	 *
+	 * @param memo
+	 *   name to query
+	 * @return
+	 *   The Cache structure found, or NULL if none was found.
+	 */
+	const repinfo::Cache* get_by_memo(const char* memo) const;
+
+protected:
+	void read_cache();
+	void cache_append(int id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea);
+	void rebuild_memo_idx() const;
+	int cache_find_by_memo(const char* memo) const;
+	int cache_find_by_id(int id) const;
+	std::vector<repinfo::Cache> read_repinfo_file(const char* deffile);
 };
-
-#if 0
-struct _dba_db;
-
-/** repinfo cache entry */
-struct _dba_db_repinfo_cache {
-	/** Report code */
-	DBALLE_SQL_C_UINT_TYPE id;
-
-	/** Report name */
-	char* memo;
-	/** Report description */
-	char* desc;
-	/** Report priority */
-	DBALLE_SQL_C_UINT_TYPE prio;
-	/** Report descriptor (currently unused) */
-	char* descriptor;
-	/** Report A table value (currently unused) */
-	DBALLE_SQL_C_UINT_TYPE tablea;
-
-	/** New report name used when updating the repinfo table */
-	char* new_memo;
-	/** New report description used when updating the repinfo table */
-	char* new_desc;
-	/** New report priority used when updating the repinfo table */
-	DBALLE_SQL_C_UINT_TYPE new_prio;
-	/** New report descriptor used when updating the repinfo table */
-	char* new_descriptor;
-	/** New report A table value used when updating the repinfo table */
-	DBALLE_SQL_C_UINT_TYPE new_tablea;
-};
-/** @copydoc _dba_db_repinfo_cache */
-typedef struct _dba_db_repinfo_cache* dba_db_repinfo_cache;
-
-/** reverse rep_memo -> rep_cod cache entry */
-struct _dba_db_repinfo_memoidx {
-	/** Report name */
-	char memo[20];
-	/** Report code */
-	int id;
-};
-/** @copydoc _dba_db_repinfo_memoidx */
-typedef struct _dba_db_repinfo_memoidx* dba_db_repinfo_memoidx;
-
-/**
- * Fast cached access to the repinfo table
- */
-struct _dba_db_repinfo
-{
-	/** dba_db this dba_db_repinfo is part of */
-	struct _dba_db* db;
-
-	/** Cache of dba_db_repinfo entries */
-	dba_db_repinfo_cache cache;
-	/** Number of items present in the cache */
-	int cache_size;
-	/** Cache allocation size as number of items */
-	int cache_alloc_size;
-
-	/** rep_memo -> rep_cod reverse index */
-	dba_db_repinfo_memoidx memo_idx;
-};
-/** @copydoc _dba_db_repinfo */
-typedef struct _dba_db_repinfo* dba_db_repinfo;
-
-/**
- * Create a new dba_db_repinfo
- *
- * @param db
- *   The database accessed by this dba_db_repinfo.
- * @retval ins
- *   The resulting dba_db_repinfo structure.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_repinfo_create(dba_db db, dba_db_repinfo* ins);
-
-/**
- * Delete a dba_db_repinfo
- *
- * @param ins
- *   The dba_db_repinfo to delete.
- */
-void dba_db_repinfo_delete(dba_db_repinfo ins);
-
-/**
- * Get the id of a repinfo entry given its name
- *
- * @param ri
- *   dba_db_repinfo used for the query
- * @param memo
- *   The name to query
- * @retval id
- *   The resulting id.  It will always be a valid one, because the functions
- *   fails if memo is not found.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_repinfo_get_id(dba_db_repinfo ri, const char* memo, int* id);
-
-/**
- * Check if the database contains the given rep_cod id
- *
- * @param ri
- *   dba_db_repinfo used for the query
- * @param id
- *   id to check
- * @retval exists
- *   Set to true if id exists, else false.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_repinfo_has_id(dba_db_repinfo ri, int id, int* exists);
-
-/**
- * Get a repinfo cache entry by id.
- *
- * @param ri
- *   dba_db_repinfo used for the query
- * @param id
- *   id to query
- * @return
- *   The dba_db_repinfo_cache structure found, or NULL if none was found.
- */
-dba_db_repinfo_cache dba_db_repinfo_get_by_id(dba_db_repinfo ri, int id);
-
-/**
- * Get a repinfo cache entry by name.
- *
- * @param ri
- *   dba_db_repinfo used for the query
- * @param memo
- *   name to query
- * @return
- *   The dba_db_repinfo_cache structure found, or NULL if none was found.
- */
-dba_db_repinfo_cache dba_db_repinfo_get_by_memo(dba_db_repinfo ri, const char* memo);
-
-#if 0
-void dba_db_repinfo_set_ident(dba_db_repinfo ins, const char* ident);
-dba_err dba_db_repinfo_get_id(dba_db_repinfo ins, int *id);
-dba_err dba_db_repinfo_insert(dba_db_repinfo ins, int *id);
-dba_err dba_db_repinfo_update(dba_db_repinfo ins);
-#endif
-
-#endif
 
 } // namespace db
 } // namespace dballe
