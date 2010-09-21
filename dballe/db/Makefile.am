@@ -14,7 +14,7 @@ dbinclude_HEADERS = \
 		querybuf.h \
 		internals.h \
 		repinfo.h \
-		pseudoana.h \
+		station.h \
 		context.h \
 		data.h \
 		attr.h \
@@ -28,9 +28,9 @@ libdballe_db_la_SOURCES = \
 		querybuf.cc \
 		internals.cc \
 		repinfo.cc \
+		station.cc \
 		db.cc
 
-#		pseudoana.cc
 #		context.cc
 #		data.cc
 #		attr.cc
@@ -63,6 +63,7 @@ tut_test_SOURCES = \
 	test-utils-db.cc \
 	tests/querybuf.cc \
 	tests/repinfo.cc \
+	tests/station.cc \
 	tests/db.cc \
 	../core/tests/tut-main.cpp
 tut_test_LDADD = \
@@ -71,7 +72,6 @@ tut_test_LDADD = \
 	../core/libdballe-core.la \
 	$(WREPORT_LIBS) $(LUA_LIBS) $(WIBBLE_LIBS)
 
-#	tests/pseudoana.cc \
 #	tests/context.cc \
 #	tests/data.cc \
 #	tests/attr.cc \

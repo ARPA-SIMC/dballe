@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * db/station - station table management
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,20 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#define _GNU_SOURCE
-#include <dballe/db/pseudoana.h>
-#include <dballe/db/internals.h>
+#include "station.h"
+#include "internals.h"
+#include "db.h"
+
+#include <wreport/error.h>
+
+#include <cstring>
+#include <sql.h>
+
+#if 0
 #include <dballe/core/verbose.h>
 
 #include <config.h>
 
-#include <sql.h>
 #include <sqlext.h>
 
 #include <stdlib.h>
@@ -35,241 +41,152 @@
 #include <string.h>
 
 #include <assert.h>
+#endif
 
-/*
- * Define to true to enable the use of transactions during writes
- */
-/*
-*/
+using namespace wreport;
 
-dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins)
+namespace dballe {
+namespace db {
+
+Station::Station(DB& db)
+        : db(db), sfstm(0), smstm(0), sstm(0), istm(0), ustm(0), dstm(0)
 {
 	const char* select_fixed_query =
-		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident IS NULL";
+		"SELECT id FROM station WHERE lat=? AND lon=? AND ident IS NULL";
 	const char* select_mobile_query =
-		"SELECT id FROM pseudoana WHERE lat=? AND lon=? AND ident=?";
+		"SELECT id FROM station WHERE lat=? AND lon=? AND ident=?";
 	const char* select_query =
-		"SELECT lat, lon, ident FROM pseudoana WHERE id=?";
+		"SELECT lat, lon, ident FROM station WHERE id=?";
 	const char* insert_query =
-		"INSERT INTO pseudoana (lat, lon, ident)"
+		"INSERT INTO station (lat, lon, ident)"
 		" VALUES (?, ?, ?);";
 	const char* update_query =
-		"UPDATE pseudoana SET lat=?, lon=?, ident=? WHERE id=?";
+		"UPDATE station SET lat=?, lon=?, ident=? WHERE id=?";
 	const char* remove_query =
-		"DELETE FROM pseudoana WHERE id=?";
-	dba_err err = DBA_OK;
-	dba_db_pseudoana res = NULL;
-	int r;
+		"DELETE FROM station WHERE id=?";
 
-	switch (db->server_type)
+        /* Override queries for some databases */
+	switch (db.conn->server_type)
 	{
 		case ORACLE:
-			/* Override queries for Oracle */
-			insert_query = "INSERT INTO pseudoana (id, lat, lon, ident) VALUES (seq_pseudoana.NextVal, ?, ?, ?)";
+			insert_query = "INSERT INTO station (id, lat, lon, ident) VALUES (seq_station.NextVal, ?, ?, ?)";
 			break;
 		case POSTGRES:
-			insert_query = "INSERT INTO pseudoana (id, lat, lon, ident) VALUES (nextval('seq_pseudoana'), ?, ?, ?)";
+			insert_query = "INSERT INTO station (id, lat, lon, ident) VALUES (nextval('seq_station'), ?, ?, ?)";
 			break;
-		case MYSQL:
-		case SQLITE:
-			break;
+                default: break;
 	}
-
-	if ((res = (dba_db_pseudoana)malloc(sizeof(struct _dba_db_pseudoana))) == NULL)
-		return dba_error_alloc("creating a new dba_db_pseudoana");
-	res->db = db;
-	res->sfstm = NULL;
-	res->smstm = NULL;
-	res->sstm = NULL;
-	res->istm = NULL;
-	res->ustm = NULL;
-	res->dstm = NULL;
 
 	/* Create the statement for select fixed */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sfstm)));
-	SQLBindParameter(res->sfstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->lat), 0, 0);
-	SQLBindParameter(res->sfstm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->lon), 0, 0);
-	SQLBindCol(res->sfstm, 1, DBALLE_SQL_C_SINT, &(res->id), sizeof(res->id), 0);
-	r = SQLPrepare(res->sfstm, (unsigned char*)select_fixed_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->sfstm, "compiling query to look for fixed pseudoana IDs");
-		goto cleanup;
-	}
+        sfstm = new Statement(*db.conn);
+	sfstm->bind_in(1, lat);
+	sfstm->bind_in(2, lon);
+	sfstm->bind_out(1, id);
+        sfstm->prepare(select_fixed_query);
 
 	/* Create the statement for select mobile */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->smstm)));
-	SQLBindParameter(res->smstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->lat), 0, 0);
-	SQLBindParameter(res->smstm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->lon), 0, 0);
-	SQLBindParameter(res->smstm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, res->ident, 0, &(res->ident_ind));
-	SQLBindCol(res->smstm, 1, DBALLE_SQL_C_SINT, &(res->id), sizeof(res->id), 0);
-	r = SQLPrepare(res->smstm, (unsigned char*)select_mobile_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->smstm, "compiling query to look for mobile pseudoana IDs");
-		goto cleanup;
-	}
+	smstm = new Statement(*db.conn);
+	smstm->bind_in(1, lat);
+	smstm->bind_in(2, lon);
+	smstm->bind_in(3, ident, ident_ind);
+	smstm->bind_out(1, id);
+	smstm->prepare(select_mobile_query);
 
 	/* Create the statement for select station data */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sstm)));
-	SQLBindParameter(res->sstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
-	SQLBindCol(res->sstm, 1, DBALLE_SQL_C_SINT, &(res->lat), sizeof(res->lat), 0);
-	SQLBindCol(res->sstm, 2, DBALLE_SQL_C_SINT, &(res->lon), sizeof(res->lon), 0);
-	SQLBindCol(res->sstm, 3, SQL_C_CHAR, &(res->ident), sizeof(res->ident), &(res->ident_ind));
-	r = SQLPrepare(res->sstm, (unsigned char*)select_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->sstm, "compiling query to look for pseudoana data by ID");
-		goto cleanup;
-	}
+        sstm = new Statement(*db.conn);
+	sstm->bind_in(1, id);
+	sstm->bind_out(1, lat);
+	sstm->bind_out(2, lon);
+	sstm->bind_out(3, ident, sizeof(ident), ident_ind);
+        sstm->prepare(select_query);
 
 	/* Create the statement for insert */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->istm)));
-	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->lat), 0, 0);
-	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->lon), 0, 0);
-	SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, res->ident, 0, &(res->ident_ind));
-	r = SQLPrepare(res->istm, (unsigned char*)insert_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->istm, "compiling query to insert into 'pseudoana'");
-		goto cleanup;
-	}
+        istm = new Statement(*db.conn);
+	istm->bind_in(1, lat);
+	istm->bind_in(2, lon);
+	istm->bind_in(3, ident, ident_ind);
+	istm->prepare(insert_query);
 
 	/* Create the statement for update */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->ustm)));
-	SQLBindParameter(res->ustm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->lat), 0, 0);
-	SQLBindParameter(res->ustm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->lon), 0, 0);
-	SQLBindParameter(res->ustm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, res->ident, 0, &(res->ident_ind));
-	SQLBindParameter(res->ustm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
-	r = SQLPrepare(res->ustm, (unsigned char*)update_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->ustm, "compiling query to update pseudoana");
-		goto cleanup;
-	}
+        ustm = new Statement(*db.conn);
+	ustm->bind_in(1, lat);
+	ustm->bind_in(2, lon);
+	ustm->bind_in(3, ident, ident_ind);
+	ustm->bind_in(4, id);
+        ustm->prepare(update_query);
 
 	/* Create the statement for remove */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->dstm)));
-	SQLBindParameter(res->dstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
-	r = SQLPrepare(res->dstm, (unsigned char*)remove_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->dstm, "compiling query to remove from pseudoana");
-		goto cleanup;
-	}
-
-	*ins = res;
-	res = NULL;
-	
-cleanup:
-	if (res != NULL)
-		dba_db_pseudoana_delete(res);
-	return err == DBA_OK ? dba_error_ok() : err;
-};
-
-void dba_db_pseudoana_delete(dba_db_pseudoana ins)
-{
-	if (ins->sfstm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->sfstm);
-	if (ins->smstm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->smstm);
-	if (ins->sstm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->sstm);
-	if (ins->istm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->istm);
-	if (ins->ustm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->ustm);
-	free(ins);
+        dstm = new Statement(*db.conn);
+	dstm->bind_in(1, id);
+        dstm->prepare(remove_query);
 }
 
-void dba_db_pseudoana_set_ident(dba_db_pseudoana ins, const char* ident)
+Station::~Station()
 {
-	if (ident == NULL)
+        if (sfstm) delete sfstm;
+        if (smstm) delete smstm;
+        if (sstm) delete sstm;
+        if (istm) delete istm;
+        if (ustm) delete ustm;
+        if (dstm) delete dstm;
+}
+
+void Station::set_ident(const char* val)
+{
+	if (val)
 	{
-		ins->ident[0] = 0;
-		ins->ident_ind = SQL_NULL_DATA; 
-	} else {
-		int len = strlen(ident);
+		int len = strlen(val);
 		if (len > 64) len = 64;
-		memcpy(ins->ident, ident, len);
-		ins->ident[len] = 0;
-		ins->ident_ind = len; 
+		memcpy(ident, val, len);
+		ident[len] = 0;
+		ident_ind = len; 
+	} else {
+		ident[0] = 0;
+		ident_ind = SQL_NULL_DATA; 
 	}
 }
 
-dba_err dba_db_pseudoana_get_id(dba_db_pseudoana ins, int *id)
+int Station::get_id()
 {
-	SQLHSTMT stm = ins->ident_ind == SQL_NULL_DATA ? ins->sfstm : ins->smstm;
-
-	int res = SQLExecute(stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "looking for pseudoana IDs");
-
-	/* Get the result */
-	if (SQLFetch(stm) != SQL_NO_DATA)
-		*id = ins->id;
+        db::Statement* stm = ident_ind == SQL_NULL_DATA ? sfstm : smstm;
+        stm->execute();
+        int res;
+        if (stm->fetch())
+		res = id;
 	else
-		*id = -1;
-
-	res = SQLCloseCursor(stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_pseudoana_get_id cursor");
-
-	return dba_error_ok();
+		res = -1;
+        stm->close_cursor();
+        return res;
 }
 
-dba_err dba_db_pseudoana_get_data(dba_db_pseudoana ins, int id)
+void Station::get_data(int qid)
 {
-	int res;
-	ins->id = id;
-	res = SQLExecute(ins->sstm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "looking for pseudoana information");
-	/* Get the result */
-	if (SQLFetch(ins->sstm) == SQL_NO_DATA)
-		return dba_error_notfound("looking for information for ana_id %d", id);
-	res = SQLCloseCursor(ins->sstm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "closing dba_db_pseudoana_get_data cursor");
-	if (ins->ident_ind == SQL_NULL_DATA)
-		ins->ident[0] = 0;
-	return dba_error_ok();
+        id = qid;
+        sstm->execute();
+	if (!sstm->fetch())
+		error_notfound::throwf("looking for information for station id %d", qid);
+        sstm->close_cursor();
+	if (ident_ind == SQL_NULL_DATA)
+		ident[0] = 0;
 }
 
-dba_err dba_db_pseudoana_insert(dba_db_pseudoana ins, int *id)
+int Station::insert()
 {
-	int res = SQLExecute(ins->istm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->istm, "inserting new data into pseudoana");
-
-	switch (ins->db->server_type)
-	{
-		case ORACLE:
-		case POSTGRES:
-			DBA_RUN_OR_RETURN(dba_db_seq_read(ins->db->seq_pseudoana));
-			*id = ins->db->seq_pseudoana->out;
-			return dba_error_ok();
-		default:
-			return dba_db_last_insert_id(ins->db, id);
-	}
+        istm->execute();
+        return db.last_station_insert_id();
 }
 
-dba_err dba_db_pseudoana_update(dba_db_pseudoana ins)
+void Station::update()
 {
-	int res = SQLExecute(ins->ustm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->ustm, "updating pseudoana");
-
-	return dba_error_ok();
+        ustm->execute();
 }
 
-dba_err dba_db_pseudoana_remove(dba_db_pseudoana ins)
+void Station::remove()
 {
-	int res = SQLExecute(ins->dstm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->dstm, "removing a pseudoana record");
-
-	return dba_error_ok();
+        dstm->execute();
 }
+
+} // namespace db
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

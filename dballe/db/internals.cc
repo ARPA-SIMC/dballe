@@ -253,11 +253,21 @@ void Statement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val)
 	// cast away const because the ODBC API is not const-aware
 	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_SINT_TYPE*)&val, 0, 0);
 }
+void Statement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val, const SQLLEN& ind)
+{
+	// cast away const because the ODBC API is not const-aware
+	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_SINT_TYPE*)&val, 0, (SQLLEN*)&ind);
+}
 
 void Statement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val)
 {
 	// cast away const because the ODBC API is not const-aware
 	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_UINT_TYPE*)&val, 0, 0);
+}
+void Statement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val, const SQLLEN& ind)
+{
+	// cast away const because the ODBC API is not const-aware
+	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_UINT_TYPE*)&val, 0, (SQLLEN*)&ind);
 }
 
 void Statement::bind_in(int idx, const char* val)
@@ -265,20 +275,37 @@ void Statement::bind_in(int idx, const char* val)
 	// cast away const because the ODBC API is not const-aware
 	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, 0);
 }
-
-void Statement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val, SQLLEN* ind)
+void Statement::bind_in(int idx, const char* val, const SQLLEN& ind)
 {
-	SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), ind);
+	// cast away const because the ODBC API is not const-aware
+	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, (SQLLEN*)&ind);
 }
 
-void Statement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val, SQLLEN* ind)
+void Statement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val)
 {
-	SQLBindCol(stm, idx, DBALLE_SQL_C_UINT, &val, sizeof(val), ind);
+	SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), 0);
+}
+void Statement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val, SQLLEN& ind)
+{
+	SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), &ind);
 }
 
-void Statement::bind_out(int idx, char* val, SQLLEN buflen, SQLLEN* ind)
+void Statement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val)
 {
-	SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, ind);
+	SQLBindCol(stm, idx, DBALLE_SQL_C_UINT, &val, sizeof(val), 0);
+}
+void Statement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val, SQLLEN& ind)
+{
+	SQLBindCol(stm, idx, DBALLE_SQL_C_UINT, &val, sizeof(val), &ind);
+}
+
+void Statement::bind_out(int idx, char* val, SQLLEN buflen)
+{
+	SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, 0);
+}
+void Statement::bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind)
+{
+	SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, &ind);
 }
 
 void Statement::execute()
@@ -376,35 +403,6 @@ const char* default_repinfo_file()
 #define DBA_USE_TRANSACTIONS
 
 
-dba_err dba_db_last_insert_id(dba_db db, int* id)
-{
-	int res;
-	*id = -1;
-
-	res = SQLExecute(db->stm_last_insert_id);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_last_insert_id, "querying last inserted ID");
-
-	if (SQLFetch(db->stm_last_insert_id) == SQL_NO_DATA)
-		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_last_insert_id, "retrieving results of query for last inserted ID");
-
-	res = SQLCloseCursor(db->stm_last_insert_id);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, db->stm_last_insert_id, "closing dba_db_last_insert_id cursor");
-
-	*id = db->last_insert_id;
-
-	return dba_error_ok();
-}
-
-
-
-dba_err dba_db_need_pseudoana(dba_db db)
-{
-	if (db->pseudoana == NULL)
-		return dba_db_pseudoana_create(db, &(db->pseudoana));
-	return dba_error_ok();
-}
 dba_err dba_db_need_context(dba_db db)
 {
 	if (db->context == NULL)

@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * db/station - station table management
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,42 +19,48 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_PSEUDOANA_H
-#define DBALLE_DB_PSEUDOANA_H
-
-#ifdef  __cplusplus
-extern "C" {
-#endif
+#ifndef DBALLE_DB_STATION_H
+#define DBALLE_DB_STATION_H
 
 /** @file
  * @ingroup db
  *
- * Pseudoana table management used by the db module.
+ * Station table management used by the db module.
  */
 
-#include <dballe/db/internals.h>
+#include <dballe/db/odbcworkarounds.h>
+#include <sqltypes.h>
 
-struct _dba_db;
-	
+namespace dballe {
+struct DB;
+
+namespace db {
+struct Connection;
+struct Statement;
+
 /**
- * Precompiled query to manipulate the pseudoana table
+ * Precompiled queries to manipulate the station table
  */
-struct _dba_db_pseudoana
+struct Station
 {
-	/** dba_db this dba_db_pseudoana is part of */
-	struct _dba_db* db;
+	/**
+	 * DB connection. The pointer is assumed always valid during the
+	 * lifetime of the object
+	 */
+	DB& db;
+
 	/** Precompiled select fixed station query */
-	SQLHSTMT sfstm;
+        db::Statement* sfstm;
 	/** Precompiled select mobile station query */
-	SQLHSTMT smstm;
+        db::Statement* smstm;
 	/** Precompiled select data by station id query */
-	SQLHSTMT sstm;
+        db::Statement* sstm;
 	/** Precompiled insert query */
-	SQLHSTMT istm;
+        db::Statement* istm;
 	/** Precompiled update query */
-	SQLHSTMT ustm;
+        db::Statement* ustm;
 	/** Precompiled delete query */
-	SQLHSTMT dstm;
+        db::Statement* dstm;
 
 	/** Station ID SQL parameter */
 	DBALLE_SQL_C_SINT_TYPE id;
@@ -66,100 +72,64 @@ struct _dba_db_pseudoana
 	char ident[64];
 	/** Mobile station identifier indicator */
 	SQLLEN ident_ind;
+
+	Station(DB& conn);
+	~Station();
+
+        /**
+         * Set the mobile station identifier input value for this ::dba_db_station
+         *
+         * @param ident
+         *   Value to use for ident.  NULL can be used to unset ident.
+         */
+        void set_ident(const char* ident);
+
+        /**
+         * Get the station ID given latitude, longitude and mobile identifier
+         *
+         * @return
+         *   Resulting ID of the station
+         */
+        int get_id();
+
+        /**
+         * Get station information given a station ID
+         *
+         * @param id
+         *   ID of the station to query
+         */
+        void get_data(int id);
+
+        /**
+         * Insert a new station entry
+         *
+         * @retval id
+         *   ID of the newly inserted station
+         */
+        int insert();
+
+        /**
+         * Update the information about a station entry
+         */
+        void update();
+
+        /**
+         * Remove a station record
+         */
+        void remove();
 };
-/** @copydoc _dba_db_pseudoana */
-typedef struct _dba_db_pseudoana* dba_db_pseudoana;
 
-/**
- * Create a new dba_db_pseudoana
- * 
- * @param db
- *   The ::dba_db this ::dba_db_pseudoana will access
- * @retval ins
- *   The newly created ::dba_db_pseudoana (it will need to be deallocated wth dba_db_pseudoana_delete())
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_pseudoana_create(dba_db db, dba_db_pseudoana* ins);
+#if 0
 
-/**
- * Deletes a dba_db_pseudoana
- *
- * @param ins
- *   The ::dba_db_pseudoana to delete
- */
-void dba_db_pseudoana_delete(dba_db_pseudoana ins);
-
-/**
- * Set the mobile station identifier input value for this ::dba_db_pseudoana
- *
- * @param ins
- *   ::dba_db_pseudoana structure to fill in
- * @param ident
- *   Value to copy into ins.  NULL can be used to unset ident.
- */
-void dba_db_pseudoana_set_ident(dba_db_pseudoana ins, const char* ident);
-
-/**
- * Get the pseudoana ID given latitude, longitude and mobile identifier
- *
- * @param ins
- *   ::dba_db_pseudoana to query
- * @retval id
- *   Resulting ID of the station
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_pseudoana_get_id(dba_db_pseudoana ins, int *id);
-
-/**
- * Get pseudoana information given a pseudoana ID
- *
- * @param ins
- *   ::dba_db_pseudoana to query
- * @param id
- *   ID of the station to query
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_pseudoana_get_data(dba_db_pseudoana ins, int id);
-
-/**
- * Insert a new pseudoana entry
- *
- * @param ins
- *   ::dba_db_pseudoana with all the input values filled in
- * @retval id
- *   ID of the newly inserted station
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_pseudoana_insert(dba_db_pseudoana ins, int *id);
-
-/**
- * Update the information about a pseudoana entry
- *
- * @param ins
- *   ::dba_db_pseudoana with all the input values filled in
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_pseudoana_update(dba_db_pseudoana ins);
-
-/**
- * Remove a pseudoana record
- *
- * @param ins
- *   The dba_db_pseudoana structure, with id filled with the id of the pseudoana to
- *   remove.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_pseudoana_remove(dba_db_pseudoana ins);
 
 #ifdef  __cplusplus
 }
 #endif
+
+#endif
+
+} // namespace db
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
 #endif

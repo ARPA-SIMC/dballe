@@ -22,13 +22,17 @@
 #include "db.h"
 #include "internals.h"
 #include "repinfo.h"
+#include "station.h"
+
+#include <dballe/core/record.h>
 
 #include <limits.h>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+
+#include <sql.h>
 #if 0
-#include "pseudoana.h"
 #include "context.h"
 #include "data.h"
 #include "attr.h"
@@ -61,10 +65,10 @@ namespace dballe {
  */
 
 static const char* init_tables[] = {
-	"attr", "data", "context", "pseudoana", "repinfo"
+	"attr", "data", "context", "station", "repinfo"
 };
 static const char* init_sequences[] = {
-	"seq_context", "seq_pseudoana"
+	"seq_context", "seq_station"
 };
 static const char* init_functions[] = {
 /*	"identity (val anyelement, val1 anyelement)", */
@@ -87,7 +91,7 @@ static const char* init_queries_mysql[] = {
 	"   UNIQUE INDEX (prio),"
 	"   UNIQUE INDEX (memo)"
 	") " TABLETYPE,
-	"CREATE TABLE pseudoana ("
+	"CREATE TABLE station ("
 	"   id         INTEGER auto_increment PRIMARY KEY,"
 	"   lat        INTEGER NOT NULL,"
 	"   lon        INTEGER NOT NULL,"
@@ -114,7 +118,7 @@ static const char* init_queries_mysql[] = {
 	"   INDEX (ltype1, l1, ltype2, l2),"
 	"   INDEX (ptype, p1, p2)"
 #ifdef USE_REF_INT
-	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
+	"   , FOREIGN KEY (id_ana) REFERENCES station (id) ON DELETE CASCADE,"
 	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
 #endif
 	") " TABLETYPE,
@@ -152,15 +156,15 @@ static const char* init_queries_postgres[] = {
 	") ",
 	"CREATE UNIQUE INDEX ri_memo_uniq ON repinfo(memo)",
 	"CREATE UNIQUE INDEX ri_prio_uniq ON repinfo(prio)",
-	"CREATE SEQUENCE seq_pseudoana",
-	"CREATE TABLE pseudoana ("
+	"CREATE SEQUENCE seq_station",
+	"CREATE TABLE station ("
 	"   id         INTEGER PRIMARY KEY,"
 	"   lat        INTEGER NOT NULL,"
 	"   lon        INTEGER NOT NULL,"
 	"   ident      VARCHAR(64)"
 	") ",
-	"CREATE UNIQUE INDEX pa_uniq ON pseudoana(lat, lon, ident)",
-	"CREATE INDEX pa_lon ON pseudoana(lon)",
+	"CREATE UNIQUE INDEX pa_uniq ON station(lat, lon, ident)",
+	"CREATE INDEX pa_lon ON station(lon)",
 	"CREATE SEQUENCE seq_context",
 	"CREATE TABLE context ("
 	"   id			SERIAL PRIMARY KEY,"
@@ -175,7 +179,7 @@ static const char* init_queries_postgres[] = {
 	"	p1			INTEGER NOT NULL,"
 	"	p2			INTEGER NOT NULL"
 #ifdef USE_REF_INT
-	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
+	"   , FOREIGN KEY (id_ana) REFERENCES station (id) ON DELETE CASCADE,"
 	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
 #endif
 	") ",
@@ -233,14 +237,14 @@ static const char* init_queries_sqlite[] = {
 	"   UNIQUE (prio),"
 	"   UNIQUE (memo)"
 	") ",
-	"CREATE TABLE pseudoana ("
+	"CREATE TABLE station ("
 	"   id         INTEGER PRIMARY KEY,"
 	"   lat        INTEGER NOT NULL,"
 	"   lon        INTEGER NOT NULL,"
 	"   ident      CHAR(64),"
 	"   UNIQUE (lat, lon, ident)"
 	") ",
-	"CREATE INDEX pa_lon ON pseudoana(lon)",
+	"CREATE INDEX pa_lon ON station(lon)",
 	"CREATE TABLE context ("
 	"   id			INTEGER PRIMARY KEY,"
 	"   id_ana		INTEGER NOT NULL,"
@@ -255,7 +259,7 @@ static const char* init_queries_sqlite[] = {
 	"	p2			INTEGER NOT NULL,"
 	"   UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)"
 #ifdef USE_REF_INT
-	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
+	"   , FOREIGN KEY (id_ana) REFERENCES station (id) ON DELETE CASCADE,"
 	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
 #endif
 	") ",
@@ -298,15 +302,15 @@ static const char* init_queries_oracle[] = {
 	"   UNIQUE (prio),"
 	"   UNIQUE (memo)"
 	") ",
-	"CREATE TABLE pseudoana ("
+	"CREATE TABLE station ("
 	"   id         INTEGER PRIMARY KEY,"
 	"   lat        INTEGER NOT NULL,"
 	"   lon        INTEGER NOT NULL,"
 	"   ident      VARCHAR2(64),"
 	"   UNIQUE (lat, lon, ident)"
 	") ",
-	"CREATE INDEX pa_lon ON pseudoana(lon)",
-	"CREATE SEQUENCE seq_pseudoana",
+	"CREATE INDEX pa_lon ON station(lon)",
+	"CREATE SEQUENCE seq_station",
 	"CREATE TABLE context ("
 	"   id			INTEGER PRIMARY KEY,"
 	"   id_ana		INTEGER NOT NULL,"
@@ -321,7 +325,7 @@ static const char* init_queries_oracle[] = {
 	"	p2			INTEGER NOT NULL,"
 	"   UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)"
 #ifdef USE_REF_INT
-	"   , FOREIGN KEY (id_ana) REFERENCES pseudoana (id) ON DELETE CASCADE,"
+	"   , FOREIGN KEY (id_ana) REFERENCES station (id) ON DELETE CASCADE,"
 	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
 #endif
 	") ",
@@ -364,8 +368,8 @@ static const char* init_queries_oracle[] = {
 DB::DB()
 	: conn(0),
 	  stm_last_insert_id(0),
-	  seq_pseudoana(0), seq_context(0),
-	  m_repinfo(0)
+	  seq_station(0), seq_context(0),
+	  m_repinfo(0), m_station(0)
 {
 	/* Allocate the ODBC connection handle */
 	conn = new db::Connection;
@@ -378,7 +382,7 @@ DB::~DB()
 {
 	if (m_repinfo) delete m_repinfo;
 	if (seq_context) delete seq_context;
-	if (seq_pseudoana) delete seq_pseudoana;
+	if (seq_station) delete seq_station;
 	if (stm_last_insert_id) delete stm_last_insert_id;
 	if (conn) delete conn;
 }
@@ -394,8 +398,8 @@ void dba_db_delete(dba_db db)
 		dba_db_data_delete(db->data);
 	if (db->context != NULL)
 		dba_db_context_delete(db->context);
-	if (db->pseudoana != NULL)
-		dba_db_pseudoana_delete(db->pseudoana);
+	if (db->station != NULL)
+		dba_db_station_delete(db->station);
 }
 #endif
 
@@ -506,6 +510,13 @@ db::Repinfo& DB::repinfo()
 	return *m_repinfo;
 }
 
+db::Station& DB::station()
+{
+	if (m_station == NULL)
+		m_station = new db::Station(*this);
+	return *m_station;
+}
+
 void DB::init_after_connect()
 {
 #ifdef DBA_USE_TRANSACTIONS
@@ -522,17 +533,17 @@ void DB::init_after_connect()
 	{
 		case db::ORACLE:
 		case db::POSTGRES:
-			seq_pseudoana = new db::Sequence(*conn, "seq_pseudoana");
+			seq_station = new db::Sequence(*conn, "seq_station");
 			seq_context = new db::Sequence(*conn, "seq_context");
 			break;
 		case db::MYSQL:
 			stm_last_insert_id = new db::Statement(*conn);
-			stm_last_insert_id->bind_out(1, last_insert_id);
+			stm_last_insert_id->bind_out(1, m_last_insert_id);
 			stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
 			break;
 		case db::SQLITE:
 			stm_last_insert_id = new db::Statement(*conn);
-			stm_last_insert_id->bind_out(1, last_insert_id);
+			stm_last_insert_id->bind_out(1, m_last_insert_id);
 			stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
 			break;
 	}
@@ -805,7 +816,7 @@ bool DB::check_rep_cod(int rep_cod)
 }
 
 #if 0
-static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana)
+static dba_err update_station_extra_info(dba_db db, dba_record rec, int id_ana)
 {
 	dba_var var;
 	
@@ -858,7 +869,33 @@ static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana
 }
 #endif
 
-#if 0
+int DB::last_station_insert_id()
+{
+	if (seq_station)
+		return seq_station->read();
+	else
+	{
+		stm_last_insert_id->execute();
+		if (!stm_last_insert_id->fetch())
+			throw error_consistency("no last insert ID value returned from database");
+		stm_last_insert_id->close_cursor();
+		return m_last_insert_id;
+	}
+}
+
+int DB::last_context_insert_id()
+{
+	if (seq_context)
+		return seq_context->read();
+	else
+	{
+		stm_last_insert_id->execute();
+		if (!stm_last_insert_id->fetch())
+			throw error_consistency("no last insert ID value returned from database");
+		stm_last_insert_id->close_cursor();
+		return m_last_insert_id;
+	}
+}
 
 // Normalise longitude values to the [-180..180[ interval
 static inline int normalon(int lon)
@@ -866,82 +903,52 @@ static inline int normalon(int lon)
 	return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-/*
- * Insert or replace data in pseudoana taking the values from rec.
- * If rec did not contain ana_id, it will be set by this function.
- */
-static dba_err dba_insert_pseudoana(dba_db db, dba_record rec, int can_add, int* id)
+int DB::obtain_station(Record& rec, bool can_add)
 {
-	dba_err err = DBA_OK;
-	int found, mobile, lat, lon;
-	const char* val;
-	dba_db_pseudoana a;
+	// Look if the record already knows the ID
+	if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
+		return strtol(val, 0, 10);
 
-	assert(db);
-	DBA_RUN_OR_RETURN(dba_db_need_pseudoana(db));
-	a = db->pseudoana;
+	db::Station& s = station();
 
-	/* Look for an existing ID if provided */
-	if ((val = dba_record_key_peek_value(rec, DBA_KEY_ANA_ID)) != NULL)
-		*id = strtol(val, 0, 10);
+	// Look for the key data in the record
+	if (const Var* var = rec.key_peek(DBA_KEY_LAT))
+		s.lat = var->enqi();
 	else
-		*id = -1;
+		throw error_notfound("no latitude in record when trying to insert a station in the database");
 
-	/* If we don't need to rewrite, we are done */
-	if (*id != -1)
-		return dba_error_ok();
+	if (const Var* var = rec.key_peek(DBA_KEY_LON))
+		s.lon = normalon(var->enqi());
+	else
+		throw error_notfound("no longitude in record when trying to insert a station in the database");
 
-	/* Look for the key data in the record */
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LAT, &lat, &found));
-	if (!found)
-	{
-		err = dba_error_notfound("looking for latitude when trying to insert a station in the database");
-		goto cleanup;
-	}
-	a->lat = lat;
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_LON, &lon, &found));
-	if (!found)
-	{
-		err = dba_error_notfound("looking for longitude when trying to insert a station in the database");
-		goto cleanup;
-	}
-	a->lon = normalon(lon);
-	DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqi(rec, DBA_KEY_MOBILE, &mobile, &found));
-	if (found && mobile)
-	{
-		DBA_RUN_OR_GOTO(cleanup, dba_record_key_enqc(rec, DBA_KEY_IDENT, &val));
-		if (val == NULL)
-		{
-			err = dba_error_notfound("looking for mobile station identifier when trying to insert a mobile station in the database");
-			goto cleanup;
-		}
-		dba_db_pseudoana_set_ident(a, val);
-	} else {
-		a->ident_ind = SQL_NULL_DATA;
-	}
-
-	/* Check for an existing pseudoana with these data */
-	if (*id == -1)
-	{
-		DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_get_id(a, id));
-
-		/* If not found, insert a new one */
-		if (*id == -1)
-		{
-			if (can_add)
-				DBA_RUN_OR_GOTO(cleanup, dba_db_pseudoana_insert(a, id));
+	s.ident_ind = SQL_NULL_DATA;
+	if (const Var* var = rec.key_peek(DBA_KEY_MOBILE))
+		if (var->enqi())
+			if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
+				s.set_ident(val);
 			else
-			{
-				err = dba_error_consistency(
-						"trying to insert a pseudoana entry when it is forbidden");
-				goto cleanup;
-			}
-		}
+				throw error_notfound("no mobile station identifier in record when trying to insert a mobile station in the database");
+
+	// Check for an existing station with these data
+	int id = s.get_id();
+
+	/* If not found, insert a new one */
+	if (id == -1)
+	{
+		if (can_add)
+			id = s.insert();
+		else
+			throw error_consistency("trying to insert a station entry when it is forbidden");
 	}
 
-cleanup:
-	return err == DBA_OK ? dba_error_ok() : err;
+	// Set the new ana_id in the record
+	rec.key(DBA_KEY_ANA_ID).seti(id);
+
+	return id;
 }
+
+#if 0
 
 static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id)
 {
@@ -1014,16 +1021,16 @@ static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id
 /*
  * If can_replace, then existing data can be rewritten, else it can only add new data
  *
- * If update_pseudoana, then the pseudoana informations are overwritten using
- * information from `rec'; else data from `rec' is written into pseudoana only
+ * If update_station, then the station informations are overwritten using
+ * information from `rec'; else data from `rec' is written into station only
  * if there is no suitable anagraphical data for it.
  */
-dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_can_add, int* ana_id, int* context_id)
+dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int station_can_add, int* ana_id, int* context_id)
 {
 	dba_err err = DBA_OK;
 	dba_db_data d;
 	dba_record_cursor item;
-	int id_pseudoana, val;
+	int id_station, val;
 	const char* s_year;
 	
 	assert(db);
@@ -1039,18 +1046,18 @@ dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_
 	/* Begin the transaction */
 	DBA_RUN_OR_RETURN(dba_db_begin(db));
 
-	/* Insert the pseudoana data, and get the ID */
-	DBA_RUN_OR_GOTO(fail, dba_insert_pseudoana(db, rec, pseudoana_can_add, &id_pseudoana));
+	/* Insert the station data, and get the ID */
+	DBA_RUN_OR_GOTO(fail, dba_insert_station(db, rec, station_can_add, &id_station));
 
 	/* Insert the context data, and get the ID */
-	DBA_RUN_OR_GOTO(fail, dba_insert_context(db, rec, id_pseudoana, &val));
+	DBA_RUN_OR_GOTO(fail, dba_insert_context(db, rec, id_station, &val));
 	d->id_context = val;
 
 	/* Insert all found variables */
 	for (item = dba_record_iterate_first(rec); item != NULL;
 			item = dba_record_iterate_next(rec, item))
 	{
-		/* Datum to be inserted, linked to id_pseudoana and all the other IDs */
+		/* Datum to be inserted, linked to id_station and all the other IDs */
 		dba_db_data_set(d, dba_record_cursor_variable(item));
 		if (can_replace)
 			DBA_RUN_OR_GOTO(fail, dba_db_data_insert_or_overwrite(d));
@@ -1059,7 +1066,7 @@ dba_err dba_db_insert(dba_db db, dba_record rec, int can_replace, int pseudoana_
 	}
 
 	if (ana_id != NULL)
-		*ana_id = id_pseudoana;
+		*ana_id = id_station;
 	if (context_id != NULL)
 		*context_id = d->id_context;
 
@@ -1080,7 +1087,7 @@ dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* c
 	/* Allocate a new cursor */
 	DBA_RUN_OR_RETURN(dba_db_cursor_create(db, cur));
 
-	/* Perform the query, limited to pseudoana values */
+	/* Perform the query, limited to station values */
 	DBA_RUN_OR_GOTO(failed, dba_db_cursor_query(*cur, query,
 				DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
 				DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT));
@@ -1136,9 +1143,9 @@ failed:
 dba_err dba_db_remove_orphans(dba_db db)
 {
 	static const char* cclean_mysql = "delete c from context c left join data d on d.id_context = c.id where d.id_context is NULL";
-	static const char* pclean_mysql = "delete p from pseudoana p left join context c on c.id_ana = p.id where c.id is NULL";
+	static const char* pclean_mysql = "delete p from station p left join context c on c.id_ana = p.id where c.id is NULL";
 	static const char* cclean_sqlite = "delete from context where id in (select c.id from context c left join data d on d.id_context = c.id where d.id_context is NULL)";
-	static const char* pclean_sqlite = "delete from pseudoana where id in (select p.id from pseudoana p left join context c on c.id_ana = p.id where c.id is NULL)";
+	static const char* pclean_sqlite = "delete from station where id in (select p.id from station p left join context c on c.id_ana = p.id where c.id is NULL)";
 	static const char* cclean = NULL;
 	static const char* pclean = NULL;
 	dba_err err = DBA_OK;
@@ -1171,7 +1178,7 @@ dba_err dba_db_remove_orphans(dba_db db)
 		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_remove_orphans cursor");
 #endif
 
-	/* Delete orphan pseudoanas */
+	/* Delete orphan stations */
 	res = SQLExecDirect(stm, (unsigned char*)pclean, SQL_NTS);
 	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO) && (res != SQL_NO_DATA))
 	{
@@ -1269,7 +1276,7 @@ dba_err dba_db_remove(dba_db db, dba_record rec)
 {
 	const char* query =
 		"DELETE FROM d, a"
-		" USING pseudoana AS pa, context AS c, repinfo AS ri, data AS d"
+		" USING station AS pa, context AS c, repinfo AS ri, data AS d"
 		"  LEFT JOIN attr AS a ON a.id_context = d.id_context AND a.id_var = d.id_var"
 		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err;
@@ -1313,7 +1320,7 @@ dba_delete_failed:
 dba_err dba_db_remove(dba_db db, dba_record rec)
 {
 	const char* query =
-		"SELECT d.id FROM pseudoana AS pa, context AS c, data AS d, repinfo AS ri"
+		"SELECT d.id FROM station AS pa, context AS c, data AS d, repinfo AS ri"
 		" WHERE d.id_context = c.id AND c.id_ana = pa.id AND c.id_report = ri.id";
 	dba_err err = DBA_OK;
 	SQLHSTMT stm;

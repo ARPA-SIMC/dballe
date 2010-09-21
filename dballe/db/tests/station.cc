@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,28 +18,27 @@
  */
 
 #include <test-utils-db.h>
-#include <dballe/db/db.h>
-#include <dballe/db/pseudoana.h>
+#include <dballe/db/station.h>
+#include <sql.h>
+
+using namespace dballe;
+using namespace std;
 
 namespace tut {
-using namespace tut_dballe;
 
-struct pseudoana_shar : public db_test
+struct station_shar : public dballe::tests::db_test
 {
-	TestMsgEnv testenv;
+        db::Station* st;
 
-	dba_db_pseudoana pa;
-
-	pseudoana_shar()
+	station_shar()
 	{
 		if (!has_db()) return;
 
-		CHECKED(dba_db_need_pseudoana(db));
-		pa = db->pseudoana;
-		gen_ensure(pa != NULL);
+		if (!has_db()) return;
+		st = &db->station();
 	}
 };
-TESTGRP(pseudoana);
+TESTGRP(station);
 
 /* Test dba_db_pseudoana_set_ident */
 template<> template<>
@@ -50,13 +47,14 @@ void to::test<1>()
 	use_db();
 
 	// Set to a valid value
-	dba_db_pseudoana_set_ident(pa, "ciao");
-	gen_ensure_equals(pa->ident, string("ciao"));
-	gen_ensure_equals(pa->ident_ind, 4);
+	st->set_ident("ciao");
+	ensure_equals(st->ident, string("ciao"));
+	ensure_equals(st->ident_ind, 4);
 
 	// Set to NULL
-	dba_db_pseudoana_set_ident(pa, NULL);
-	gen_ensure_equals(pa->ident[0], 0);
+	st->set_ident(NULL);
+	ensure_equals(st->ident[0], 0);
+	ensure_equals(st->ident_ind, SQL_NULL_DATA);
 }
 
 /* Insert some values and try to read them again */
@@ -65,68 +63,63 @@ void to::test<2>()
 {
 	use_db();
 
-	// Insert a fixed station
-	int id;
-	pa->lat = 4500000;
-	pa->lon = 1100000;
-	dba_db_pseudoana_set_ident(pa, "ciao");
-	CHECKED(dba_db_pseudoana_insert(pa, &id));
-	gen_ensure_equals(id, 1);
-
 	// Insert a mobile station
-	pa->lat = 4600000;
-	pa->lon = 1200000;
-	dba_db_pseudoana_set_ident(pa, NULL);
-	CHECKED(dba_db_pseudoana_insert(pa, &id));
-	gen_ensure_equals(id, 2);
+	st->lat = 4500000;
+	st->lon = 1100000;
+        st->set_ident("ciao");
+        ensure_equals(st->insert(), 1);
+
+	// Insert a fixed station
+	st->lat = 4600000;
+	st->lon = 1200000;
+	st->set_ident(NULL);
+	ensure_equals(st->insert(), 2);
 
 	// Get the ID of the first station
-	pa->id = 0;
-	pa->lat = 4500000;
-	pa->lon = 1100000;
-	dba_db_pseudoana_set_ident(pa, "ciao");
-	CHECKED(dba_db_pseudoana_get_id(pa, &id));
-	gen_ensure_equals(id, 1);
+	st->id = 0;
+	st->lat = 4500000;
+	st->lon = 1100000;
+	st->set_ident("ciao");
+	ensure_equals(st->get_id(), 1);
 
 	// Get the ID of the second station
-	pa->id = 0;
-	pa->lat = 4600000;
-	pa->lon = 1200000;
-	dba_db_pseudoana_set_ident(pa, NULL);
-	CHECKED(dba_db_pseudoana_get_id(pa, &id));
-	gen_ensure_equals(id, 2);
+	st->id = 0;
+	st->lat = 4600000;
+	st->lon = 1200000;
+	st->set_ident(NULL);
+	ensure_equals(st->get_id(), 2);
 
 	// Get info on the first station
-	CHECKED(dba_db_pseudoana_get_data(pa, 1));
-	gen_ensure_equals(pa->lat, 4500000);
-	gen_ensure_equals(pa->lon, 1100000);
-	gen_ensure_equals(pa->ident, string("ciao"));
-	gen_ensure_equals(pa->ident_ind, 4);
+	st->get_data(1);
+	ensure_equals(st->lat, 4500000);
+	ensure_equals(st->lon, 1100000);
+	ensure_equals(st->ident, string("ciao"));
+	ensure_equals(st->ident_ind, 4);
 
 	// Get info on the second station
-	CHECKED(dba_db_pseudoana_get_data(pa, 2));
-	gen_ensure_equals(pa->lat, 4600000);
-	gen_ensure_equals(pa->lon, 1200000);
-	gen_ensure_equals(pa->ident[0], 0);
+	st->get_data(2);
+	ensure_equals(st->lat, 4600000);
+	ensure_equals(st->lon, 1200000);
+	ensure_equals(st->ident[0], 0);
 
 	// Update the second station
-	pa->id = 2;
-	pa->lat = 4700000;
-	pa->lon = 1300000;
-	CHECKED(dba_db_pseudoana_update(pa));
+	st->id = 2;
+	st->lat = 4700000;
+	st->lon = 1300000;
+	st->update();
 
 	// Get info on the first station: it should be unchanged
-	CHECKED(dba_db_pseudoana_get_data(pa, 1));
-	gen_ensure_equals(pa->lat, 4500000);
-	gen_ensure_equals(pa->lon, 1100000);
-	gen_ensure_equals(pa->ident, string("ciao"));
-	gen_ensure_equals(pa->ident_ind, 4);
+	st->get_data(1);
+	ensure_equals(st->lat, 4500000);
+	ensure_equals(st->lon, 1100000);
+	ensure_equals(st->ident, string("ciao"));
+	ensure_equals(st->ident_ind, 4);
 
 	// Get info on the second station: it should be updated
-	CHECKED(dba_db_pseudoana_get_data(pa, 2));
-	gen_ensure_equals(pa->lat, 4700000);
-	gen_ensure_equals(pa->lon, 1300000);
-	gen_ensure_equals(pa->ident[0], 0);
+	st->get_data(2);
+	ensure_equals(st->lat, 4700000);
+	ensure_equals(st->lon, 1300000);
+	ensure_equals(st->ident[0], 0);
 }
 
 }

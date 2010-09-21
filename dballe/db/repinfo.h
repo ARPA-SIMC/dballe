@@ -96,7 +96,8 @@ struct Repinfo
 
 
 	/**
-	 * DB connection. Memory managed is handled elsewhere
+	 * DB connection. The pointer is assumed always valid during the
+	 * lifetime of the object
 	 */
 	Connection* conn;
 

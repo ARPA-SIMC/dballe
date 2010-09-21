@@ -82,10 +82,10 @@ void Repinfo::read_cache()
 	invalidate_cache();
 
 	stm.bind_out(1, id);
-	stm.bind_out(2, memo, sizeof(memo), &memo_ind);
-	stm.bind_out(3, description, sizeof(description), &description_ind);
+	stm.bind_out(2, memo, sizeof(memo), memo_ind);
+	stm.bind_out(3, description, sizeof(description), description_ind);
 	stm.bind_out(4, prio);
-	stm.bind_out(5, descriptor, sizeof(descriptor), &descriptor_ind);
+	stm.bind_out(5, descriptor, sizeof(descriptor), descriptor_ind);
 	stm.bind_out(6, tablea);
 
 	stm.exec_direct("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
