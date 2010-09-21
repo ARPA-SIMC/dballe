@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * db/context - context table management
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,30 +19,23 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#define _GNU_SOURCE
-#include <dballe/db/context.h>
-#include <dballe/db/internals.h>
-#include <dballe/core/verbose.h>
+#include "context.h"
+#include "internals.h"
+#include "db.h"
+#include <dballe/msg/defs.h>
 
+#include <sstream>
+#include <cstring>
 #include <sql.h>
-#include <sqlext.h>
 
-#include <config.h>
+using namespace wreport;
+using namespace std;
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+namespace dballe {
+namespace db {
 
-#include <assert.h>
-
-/*
- * Define to true to enable the use of transactions during writes
- */
-/*
-*/
-
-dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
+Context::Context(DB& db)
+        : db(db), sstm(0), sdstm(0), istm(0), dstm(0)
 {
 	const char* select_query =
 		"SELECT id FROM context WHERE id_ana=? AND id_report=? AND datetime=?"
@@ -54,11 +47,9 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 		"INSERT INTO context VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	const char* remove_query =
 		"DELETE FROM context WHERE id=?";
-	dba_err err = DBA_OK;
-	dba_db_context res = NULL;
-	int r;
 
-	switch (db->server_type)
+        /* Override queries for some databases */
+	switch (db.conn->server_type)
 	{
 		case ORACLE:
 			insert_query = "INSERT INTO context VALUES (seq_context.NextVal, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -66,201 +57,176 @@ dba_err dba_db_context_create(dba_db db, dba_db_context* ins)
 		case POSTGRES:
 			insert_query = "INSERT INTO context VALUES (nextval('seq_context'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			break;
-		case MYSQL:
-		case SQLITE:
-			break;
+                default: break;
 	}
 
-	if ((res = (dba_db_context)malloc(sizeof(struct _dba_db_context))) == NULL)
-		return dba_error_alloc("creating a new dba_db_context");
-	res->db = db;
-	res->sstm = NULL;
-	res->sdstm = NULL;
-	res->istm = NULL;
-	res->dstm = NULL;
-	res->date.fraction = 0;
+	date.fraction = 0;
 
 	/* Create the statement for select fixed */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sstm)));
-	SQLBindParameter(res->sstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_ana), 0, 0);
-	SQLBindParameter(res->sstm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_report), 0, 0);
-	if (db->server_type == POSTGRES || db->server_type == SQLITE)
-		SQLBindParameter(res->sstm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(res->date), 0, 0);
-	else
-		SQLBindParameter(res->sstm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &(res->date), 0, 0);
-	SQLBindParameter(res->sstm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype1), 0, 0);
-	SQLBindParameter(res->sstm, 5, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
-	SQLBindParameter(res->sstm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype2), 0, 0);
-	SQLBindParameter(res->sstm, 7, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
-	SQLBindParameter(res->sstm, 8, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
-	SQLBindParameter(res->sstm, 9, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
-	SQLBindParameter(res->sstm, 10, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
-
-	SQLBindCol(res->sstm, 1, DBALLE_SQL_C_SINT, &(res->id), sizeof(res->id), 0);
-	r = SQLPrepare(res->sstm, (unsigned char*)select_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->sstm, "compiling query to look for context IDs");
-		goto cleanup;
-	}
+        sstm = new Statement(*db.conn);
+	sstm->bind_in(1, id_station);
+	sstm->bind_in(2, id_report);
+	sstm->bind_in(3, date);
+	sstm->bind_in(4, ltype1);
+	sstm->bind_in(5, l1);
+	sstm->bind_in(6, ltype2);
+	sstm->bind_in(7, l2);
+	sstm->bind_in(8, pind);
+	sstm->bind_in(9, p1);
+	sstm->bind_in(10, p2);
+        sstm->bind_out(1, id);
+	sstm->prepare(select_query);
 
 	/* Create the statement for select data */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sdstm)));
-	SQLBindParameter(res->sdstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
-	SQLBindCol(res->sdstm, 1, DBALLE_SQL_C_SINT, &(res->id_ana),	  sizeof(res->id_ana),	0);
-	SQLBindCol(res->sdstm, 2, DBALLE_SQL_C_SINT, &(res->id_report), sizeof(res->id_report),	0);
-	SQLBindCol(res->sdstm, 3, SQL_C_TYPE_TIMESTAMP,  &(res->date),	  sizeof(res->date), 0);
-	SQLBindCol(res->sdstm, 4, DBALLE_SQL_C_SINT, &(res->ltype1),	  sizeof(res->ltype1),	    0);
-	SQLBindCol(res->sdstm, 5, DBALLE_SQL_C_SINT, &(res->l1),		  sizeof(res->l1),		    0);
-	SQLBindCol(res->sdstm, 6, DBALLE_SQL_C_SINT, &(res->ltype2),	  sizeof(res->ltype2),	    0);
-	SQLBindCol(res->sdstm, 7, DBALLE_SQL_C_SINT, &(res->l2),		  sizeof(res->l2),		    0);
-	SQLBindCol(res->sdstm, 8, DBALLE_SQL_C_SINT, &(res->pind),	  sizeof(res->pind),	    0);
-	SQLBindCol(res->sdstm, 9, DBALLE_SQL_C_SINT, &(res->p1),		  sizeof(res->p1),		    0);
-	SQLBindCol(res->sdstm, 10, DBALLE_SQL_C_SINT, &(res->p2),		  sizeof(res->p2),		    0);
-	r = SQLPrepare(res->sdstm, (unsigned char*)select_data_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->sdstm, "compiling query to retrieve context data");
-		goto cleanup;
-	}
+	sdstm = new Statement(*db.conn);
+	sdstm->bind_in(1, id);
+	sdstm->bind_out(1, id_station);
+	sdstm->bind_out(2, id_report);
+	sdstm->bind_out(3, date);
+	sdstm->bind_out(4, ltype1);
+	sdstm->bind_out(5, l1);
+	sdstm->bind_out(6, ltype2);
+	sdstm->bind_out(7, l2);
+	sdstm->bind_out(8, pind);
+	sdstm->bind_out(9, p1);
+	sdstm->bind_out(10, p2);
+        sdstm->prepare(select_data_query);
 
 	/* Create the statement for insert */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->istm)));
-	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_ana), 0, 0);
-	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_report), 0, 0);
-	if (db->server_type == POSTGRES || db->server_type == SQLITE)
-		SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, &(res->date), 0, 0);
-	else
-		SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, &(res->date), 0, 0);
-	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype1), 0, 0);
-	SQLBindParameter(res->istm, 5, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l1), 0, 0);
-	SQLBindParameter(res->istm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->ltype2), 0, 0);
-	SQLBindParameter(res->istm, 7, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->l2), 0, 0);
-	SQLBindParameter(res->istm, 8, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->pind), 0, 0);
-	SQLBindParameter(res->istm, 9, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p1), 0, 0);
-	SQLBindParameter(res->istm, 10, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->p2), 0, 0);
-	r = SQLPrepare(res->istm, (unsigned char*)insert_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->istm, "compiling query to insert into 'context'");
-		goto cleanup;
-	}
+        istm = new Statement(*db.conn);
+	istm->bind_in(1, id_station);
+	istm->bind_in(2, id_report);
+        istm->bind_in(3, date);
+        istm->bind_in(4, ltype1);
+        istm->bind_in(5, l1);
+        istm->bind_in(6, ltype2);
+        istm->bind_in(7, l2);
+        istm->bind_in(8, pind);
+        istm->bind_in(9, p1);
+        istm->bind_in(10, p2);
+        istm->prepare(insert_query);
 
 	/* Create the statement for remove */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->dstm)));
-	SQLBindParameter(res->dstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id), 0, 0);
-	r = SQLPrepare(res->dstm, (unsigned char*)remove_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->dstm, "compiling query to remove from 'context'");
-		goto cleanup;
-	}
-
-	*ins = res;
-	res = NULL;
-	
-cleanup:
-	if (res != NULL)
-		dba_db_context_delete(res);
-	return err == DBA_OK ? dba_error_ok() : err;
-};
-
-void dba_db_context_delete(dba_db_context ins)
-{
-	if (ins->sstm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->sstm);
-	if (ins->sdstm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->sdstm);
-	if (ins->istm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->istm);
-	if (ins->dstm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->dstm);
-	free(ins);
+        dstm = new Statement(*db.conn);
+        dstm->bind_in(1, id);
+	dstm->prepare(remove_query);
 }
 
-dba_err dba_db_context_get_id(dba_db_context ins, int *id)
+Context::~Context()
 {
-	SQLHSTMT stm = ins->sstm;
+	if (sstm) delete sstm;
+	if (sdstm) delete sdstm;
+	if (istm) delete istm;
+	if (dstm) delete dstm;
+}
 
-	int res = SQLExecute(stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "looking for context IDs");
+int Context::get_id()
+{
+        sstm->execute();
 
 	/* Get the result */
-	if (SQLFetch(stm) != SQL_NO_DATA)
-		*id = ins->id;
+        int res;
+	if (sstm->fetch())
+		res = id;
 	else
-		*id = -1;
+		res = -1;
 
-	res = SQLCloseCursor(stm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_context_get_id cursor");
+        sstm->close_cursor();
 
-	return dba_error_ok();
+        return res;
 }
 
-dba_err dba_db_context_get_data(dba_db_context ins, int id)
+void Context::get_data(int qid)
 {
-	int res;
-	ins->id = id;
-	res = SQLExecute(ins->sdstm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sdstm, "looking for context information");
-	/* Get the result */
-	if (SQLFetch(ins->sdstm) == SQL_NO_DATA)
-		return dba_error_notfound("looking for information for context_id %d", id);
-	res = SQLCloseCursor(ins->sdstm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sdstm, "closing dba_db_context_get_data cursor");
-	return dba_error_ok();
+	id = qid;
+	sdstm->execute();
+	if (!sdstm->fetch())
+		error_notfound::throwf("no data found for context id %d", id);
+        sdstm->close_cursor();
 }
 
-dba_err dba_db_context_obtain_ana(dba_db_context ins, int *id)
+int Context::obtain_station_info()
 {
 	/* Fill up the query parameters with the data for the anagraphical context */
-	ins->date.year = 1000;
-	ins->date.month = 1;
-	ins->date.day = 1;
-	ins->date.hour = ins->date.minute = ins->date.second = 0;
-	ins->ltype1 = 257;
-	ins->l1 = ins->ltype2 = ins->l2 = 0;
-	ins->pind = ins->p1 = ins->p2 = 0;
+	date.year = 1000;
+	date.month = 1;
+	date.day = 1;
+	date.hour = date.minute = date.second = 0;
+	ltype1 = 257;
+	l1 = ltype2 = l2 = MISSING_INT;
+	pind = p1 = p2 = MISSING_INT;
 
 	/* See if the context entry already exists */
-	DBA_RUN_OR_RETURN(dba_db_context_get_id(ins, id));
+        int res = get_id();
 
 	/* If it doesn't exist yet, we create it */
-	if (*id == -1)
-		DBA_RUN_OR_RETURN(dba_db_context_insert(ins, id));
+	if (res == -1)
+                res = insert();
 
-	return dba_error_ok();
+        return res;
 }
 
-dba_err dba_db_context_insert(dba_db_context ins, int *id)
+int Context::insert()
 {
-	int res = SQLExecute(ins->istm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->istm, "inserting new data into context");
-
-	switch (ins->db->server_type)
-	{
-		case ORACLE:
-		case POSTGRES:
-			DBA_RUN_OR_RETURN(dba_db_seq_read(ins->db->seq_context));
-			*id = ins->db->seq_context->out;
-			return dba_error_ok();
-		default:
-			return dba_db_last_insert_id(ins->db, id);
-	}
+        istm->execute();
+        return db.last_context_insert_id();
 }
 
-dba_err dba_db_context_remove(dba_db_context ins)
+void Context::remove()
 {
-	int res = SQLExecute(ins->dstm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->dstm, "removing a context record");
-
-	return dba_error_ok();
+        dstm->execute();
 }
+
+void Context::dump(FILE* out)
+{
+	DBALLE_SQL_C_SINT_TYPE id;
+	DBALLE_SQL_C_SINT_TYPE id_station;
+	DBALLE_SQL_C_SINT_TYPE id_report;
+	SQL_TIMESTAMP_STRUCT date;
+	DBALLE_SQL_C_SINT_TYPE ltype1;
+	DBALLE_SQL_C_SINT_TYPE l1;
+	DBALLE_SQL_C_SINT_TYPE ltype2;
+	DBALLE_SQL_C_SINT_TYPE l2;
+	DBALLE_SQL_C_SINT_TYPE pind;
+	DBALLE_SQL_C_SINT_TYPE p1;
+	DBALLE_SQL_C_SINT_TYPE p2;
+
+        Statement stm(*db.conn);
+	stm.bind_out(1, id);
+	stm.bind_out(2, id_station);
+	stm.bind_out(3, id_report);
+	stm.bind_out(4, date);
+	stm.bind_out(5, ltype1);
+	stm.bind_out(6, l1);
+	stm.bind_out(7, ltype2);
+	stm.bind_out(8, l2);
+	stm.bind_out(9, pind);
+	stm.bind_out(10, p1);
+	stm.bind_out(11, p2);
+	stm.exec_direct("SELECT id, id_ana, id_report, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM context ORDER BY id");
+        int count;
+        fprintf(out, "   id   st  rep date                lev                  tr\n");
+        for (count = 0; stm.fetch(); ++count)
+        {
+                fprintf(out, " %4d %4d %4d %04d-%02d-%02d %02d:%02d:%02d ",
+                        (int)id, (int)id_station, (int)id_report,
+                        (int)date.year, (int)date.month, (int)date.day,
+                        (int)date.hour, (int)date.minute, (int)date.second);
+                {
+                        stringstream str;
+                        str << Level(ltype1, l1, ltype2, l2);
+                        fprintf(out, "%-20s ", str.str().c_str());
+                }
+                {
+                        stringstream str;
+                        str << Trange(pind, p1, p2);
+                        fprintf(out, "%-10s\n", str.str().c_str());
+                }
+        }
+        fprintf(out, "%d element%s in table context\n", count, count != 1 ? "s" : "");
+}
+
+} // namespace db
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

@@ -29,9 +29,9 @@ libdballe_db_la_SOURCES = \
 		internals.cc \
 		repinfo.cc \
 		station.cc \
+		context.cc \
 		db.cc
 
-#		context.cc
 #		data.cc
 #		attr.cc
 #		cursor.cc
@@ -64,6 +64,7 @@ tut_test_SOURCES = \
 	tests/querybuf.cc \
 	tests/repinfo.cc \
 	tests/station.cc \
+	tests/context.cc \
 	tests/db.cc \
 	../core/tests/tut-main.cpp
 tut_test_LDADD = \
@@ -72,7 +73,6 @@ tut_test_LDADD = \
 	../core/libdballe-core.la \
 	$(WREPORT_LIBS) $(LUA_LIBS) $(WIBBLE_LIBS)
 
-#	tests/context.cc \
 #	tests/data.cc \
 #	tests/attr.cc \
 #	tests/db_import.cc \

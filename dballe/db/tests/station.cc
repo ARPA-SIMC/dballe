@@ -33,8 +33,6 @@ struct station_shar : public dballe::tests::db_test
 	station_shar()
 	{
 		if (!has_db()) return;
-
-		if (!has_db()) return;
 		st = &db->station();
 	}
 };

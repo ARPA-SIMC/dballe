@@ -169,6 +169,7 @@ LIBDBALLE_VERSION_INFO=`echo $VERSION | awk -F. '{ printf "%d:%d:%d", $1+$2, $3,
 AC_SUBST(LIBDBALLE_VERSION_INFO)
 
 CFLAGS="-Wall $CFLAGS"
+CXXFLAGS="-Wall $CXXFLAGS"
 
 # Enforce dependencies
 if ! test x"$enable_dballepp"=x"yes"

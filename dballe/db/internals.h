@@ -105,6 +105,11 @@ struct Environment
 	~Environment();
 
 	static Environment& get();
+
+private:
+	// disallow copy
+	Environment(const Environment&);
+	Environment& operator=(const Environment&);
 };
 
 /// Database connection
@@ -133,11 +138,17 @@ struct Connection
 
 protected:
 	void init_after_connect();
+
+private:
+	// disallow copy
+	Connection(const Connection&);
+	Connection& operator=(const Connection&);
 };
 
 /// ODBC statement
 struct Statement
 {
+	//Connection& conn;
 	SQLHSTMT stm;
 	/// If non-NULL, ignore all errors with this code
 	const char* ignore_error;
@@ -151,6 +162,7 @@ struct Statement
 	void bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val, const SQLLEN& ind);
 	void bind_in(int idx, const char* val);
 	void bind_in(int idx, const char* val, const SQLLEN& ind);
+	void bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val);
 
 	void bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val);
 	void bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val, SQLLEN& ind);
@@ -158,6 +170,7 @@ struct Statement
 	void bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val, SQLLEN& ind);
 	void bind_out(int idx, char* val, SQLLEN buflen);
 	void bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind);
+	void bind_out(int idx, SQL_TIMESTAMP_STRUCT& val);
 
 	void prepare(const char* query);
 	void prepare(const char* query, int qlen);
@@ -172,6 +185,11 @@ struct Statement
 protected:
 	bool error_is_ignored();
 	bool is_error(int sqlres);
+
+private:
+	// disallow copy
+	Statement(const Statement&);
+	Statement& operator=(const Statement&);
 };
 
 /// ODBC statement to read a sequence
@@ -184,6 +202,11 @@ struct Sequence : public Statement
 
 	/// Read the current value of the sequence
 	const DBALLE_SQL_C_SINT_TYPE& read();
+
+private:
+	// disallow copy
+	Sequence(const Sequence&);
+	Sequence& operator=(const Sequence&);
 };
 
 /// Return the default repinfo file pathname

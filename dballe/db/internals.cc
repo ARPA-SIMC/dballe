@@ -217,7 +217,7 @@ void Connection::rollback() {}
 #endif
 
 Statement::Statement(Connection& conn)
-	: stm(NULL), ignore_error(NULL)
+	: /*conn(conn),*/ stm(NULL), ignore_error(NULL)
 {
 	int sqlres = SQLAllocHandle(SQL_HANDLE_STMT, conn.od_conn, &stm);
 	if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
@@ -281,6 +281,16 @@ void Statement::bind_in(int idx, const char* val, const SQLLEN& ind)
 	SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, (SQLLEN*)&ind);
 }
 
+void Statement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)
+{
+	// cast away const because the ODBC API is not const-aware
+	//if (conn.server_type == POSTGRES || conn.server_type == SQLITE)
+		SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, (SQL_TIMESTAMP_STRUCT*)&val, 0, 0);
+	//else
+		//SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, (SQL_TIMESTAMP_STRUCT*)&val, 0, 0);
+}
+
+
 void Statement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val)
 {
 	SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), 0);
@@ -308,11 +318,16 @@ void Statement::bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind)
 	SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, &ind);
 }
 
+void Statement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val)
+{
+	SQLBindCol(stm, idx, SQL_C_TYPE_TIMESTAMP, &val, sizeof(val), 0);
+}
+
 void Statement::execute()
 {
 	int sqlres = SQLExecute(stm);
 	if (is_error(sqlres))
-		throw error_odbc(SQL_HANDLE_STMT, stm, "checking if a repinfo entry is in use");
+		throw error_odbc(SQL_HANDLE_STMT, stm, "executing precompiled query");
 }
 
 bool Statement::fetch()

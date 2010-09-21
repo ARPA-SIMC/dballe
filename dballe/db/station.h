@@ -30,6 +30,7 @@
 
 #include <dballe/db/odbcworkarounds.h>
 #include <sqltypes.h>
+#include <cstdio>
 
 namespace dballe {
 struct DB;
@@ -44,8 +45,7 @@ struct Statement;
 struct Station
 {
 	/**
-	 * DB connection. The pointer is assumed always valid during the
-	 * lifetime of the object
+	 * DB connection.
 	 */
 	DB& db;
 
@@ -117,6 +117,16 @@ struct Station
          * Remove a station record
          */
         void remove();
+
+        /**
+         * Dump the entire contents of the table to an output stream
+         */
+        void dump(FILE* out);
+
+private:
+	// disallow copy
+	Station(const Station&);
+	Station& operator=(const Station&);
 };
 
 #if 0

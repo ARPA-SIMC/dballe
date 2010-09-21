@@ -176,6 +176,11 @@ protected:
 	int cache_find_by_memo(const char* memo) const;
 	int cache_find_by_id(int id) const;
 	std::vector<repinfo::Cache> read_repinfo_file(const char* deffile);
+
+private:
+	// disallow copy
+	Repinfo(const Repinfo&);
+	Repinfo& operator=(const Repinfo&);
 };
 
 } // namespace db

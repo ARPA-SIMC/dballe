@@ -23,25 +23,8 @@
 #include "internals.h"
 #include "db.h"
 
-#include <wreport/error.h>
-
 #include <cstring>
 #include <sql.h>
-
-#if 0
-#include <dballe/core/verbose.h>
-
-#include <config.h>
-
-#include <sqlext.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-
-#include <assert.h>
-#endif
 
 using namespace wreport;
 
@@ -184,6 +167,30 @@ void Station::update()
 void Station::remove()
 {
         dstm->execute();
+}
+
+void Station::dump(FILE* out)
+{
+	DBALLE_SQL_C_SINT_TYPE id;
+	DBALLE_SQL_C_SINT_TYPE lat;
+	DBALLE_SQL_C_SINT_TYPE lon;
+	char ident[64];
+	SQLLEN ident_ind;
+
+        Statement stm(*db.conn);
+        stm.bind_out(1, id);
+        stm.bind_out(2, lat);
+        stm.bind_out(3, lon);
+        stm.bind_out(4, ident, 64, ident_ind);
+        stm.exec_direct("SELECT id, lat, lon, ident FROM station");
+        int count;
+        fprintf(out, "dump of table station:\n");
+        for (count = 0; stm.fetch(); ++count)
+                if (ident_ind == SQL_NTS)
+                        fprintf(out, " %d, %.5f, %.5f\n", (int)id, lat/10000.0, lon/10000.0);
+                else
+                        fprintf(out, " %d, %.5f, %.5f, %.*s\n", (int)id, lat/10000.0, lon/10000.0, (int)ident_ind, ident);
+        fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
 }
 
 } // namespace db

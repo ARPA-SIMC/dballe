@@ -23,8 +23,10 @@
 #include "internals.h"
 #include "repinfo.h"
 #include "station.h"
+#include "context.h"
 
 #include <dballe/core/record.h>
+#include <dballe/msg/defs.h>
 
 #include <limits.h>
 #include <cstring>
@@ -102,15 +104,15 @@ static const char* init_queries_mysql[] = {
 	"CREATE TABLE context ("
 	"   id			INTEGER auto_increment PRIMARY KEY,"
 	"   id_ana		INTEGER NOT NULL,"
-	"	id_report	SMALLINT NOT NULL,"
+	"   id_report	SMALLINT NOT NULL,"
 	"   datetime	DATETIME NOT NULL,"
-	"	ltype1		SMALLINT NOT NULL,"
-	"	l1			INTEGER NOT NULL,"
-	"	ltype2		SMALLINT NOT NULL,"
-	"	l2			INTEGER NOT NULL,"
-	"	ptype		SMALLINT NOT NULL,"
-	"	p1			INTEGER NOT NULL,"
-	"	p2			INTEGER NOT NULL,"
+	"   ltype1		INTEGER NOT NULL,"
+	"   l1			INTEGER NOT NULL,"
+	"   ltype2		INTEGER NOT NULL,"
+	"   l2			INTEGER NOT NULL,"
+	"   ptype		INTEGER NOT NULL,"
+	"   p1			INTEGER NOT NULL,"
+	"   p2			INTEGER NOT NULL,"
 	"   UNIQUE INDEX (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report),"
 	"   INDEX (id_ana),"
 	"   INDEX (id_report),"
@@ -169,15 +171,15 @@ static const char* init_queries_postgres[] = {
 	"CREATE TABLE context ("
 	"   id			SERIAL PRIMARY KEY,"
 	"   id_ana		INTEGER NOT NULL,"
-	"	id_report	INTEGER NOT NULL,"
+	"   id_report	INTEGER NOT NULL,"
 	"   datetime	TIMESTAMP NOT NULL,"
-	"	ltype1		INTEGER NOT NULL,"
-	"	l1			INTEGER NOT NULL,"
-	"	ltype2		INTEGER NOT NULL,"
-	"	l2			INTEGER NOT NULL,"
-	"	ptype		INTEGER NOT NULL,"
-	"	p1			INTEGER NOT NULL,"
-	"	p2			INTEGER NOT NULL"
+	"   ltype1		INTEGER NOT NULL,"
+	"   l1			INTEGER NOT NULL,"
+	"   ltype2		INTEGER NOT NULL,"
+	"   l2			INTEGER NOT NULL,"
+	"   ptype		INTEGER NOT NULL,"
+	"   p1			INTEGER NOT NULL,"
+	"   p2			INTEGER NOT NULL"
 #ifdef USE_REF_INT
 	"   , FOREIGN KEY (id_ana) REFERENCES station (id) ON DELETE CASCADE,"
 	"   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
@@ -248,15 +250,15 @@ static const char* init_queries_sqlite[] = {
 	"CREATE TABLE context ("
 	"   id			INTEGER PRIMARY KEY,"
 	"   id_ana		INTEGER NOT NULL,"
-	"	id_report	INTEGER NOT NULL,"
+	"   id_report	INTEGER NOT NULL,"
 	"   datetime	TEXT NOT NULL,"
-	"	ltype1		INTEGER NOT NULL,"
-	"	l1			INTEGER NOT NULL,"
-	"	ltype2		INTEGER NOT NULL,"
-	"	l2			INTEGER NOT NULL,"
-	"	ptype		INTEGER NOT NULL,"
-	"	p1			INTEGER NOT NULL,"
-	"	p2			INTEGER NOT NULL,"
+	"   ltype1		INTEGER NOT NULL,"
+	"   l1			INTEGER NOT NULL,"
+	"   ltype2		INTEGER NOT NULL,"
+	"   l2			INTEGER NOT NULL,"
+	"   ptype		INTEGER NOT NULL,"
+	"   p1			INTEGER NOT NULL,"
+	"   p2			INTEGER NOT NULL,"
 	"   UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)"
 #ifdef USE_REF_INT
 	"   , FOREIGN KEY (id_ana) REFERENCES station (id) ON DELETE CASCADE,"
@@ -314,15 +316,15 @@ static const char* init_queries_oracle[] = {
 	"CREATE TABLE context ("
 	"   id			INTEGER PRIMARY KEY,"
 	"   id_ana		INTEGER NOT NULL,"
-	"	id_report	INTEGER NOT NULL,"
+	"   id_report	INTEGER NOT NULL,"
 	"   datetime	DATE NOT NULL,"
-	"	ltype1		INTEGER NOT NULL,"
-	"	l1			INTEGER NOT NULL,"
-	"	ltype2		INTEGER NOT NULL,"
-	"	l2			INTEGER NOT NULL,"
-	"	ptype		INTEGER NOT NULL,"
-	"	p1			INTEGER NOT NULL,"
-	"	p2			INTEGER NOT NULL,"
+	"   ltype1		INTEGER NOT NULL,"
+	"   l1			INTEGER NOT NULL,"
+	"   ltype2		INTEGER NOT NULL,"
+	"   l2			INTEGER NOT NULL,"
+	"   ptype		INTEGER NOT NULL,"
+	"   p1			INTEGER NOT NULL,"
+	"   p2			INTEGER NOT NULL,"
 	"   UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)"
 #ifdef USE_REF_INT
 	"   , FOREIGN KEY (id_ana) REFERENCES station (id) ON DELETE CASCADE,"
@@ -367,9 +369,9 @@ static const char* init_queries_oracle[] = {
 // First part of initialising a dba_db
 DB::DB()
 	: conn(0),
+	  m_repinfo(0), m_station(0), m_context(0),
 	  stm_last_insert_id(0),
-	  seq_station(0), seq_context(0),
-	  m_repinfo(0), m_station(0)
+	  seq_station(0), seq_context(0)
 {
 	/* Allocate the ODBC connection handle */
 	conn = new db::Connection;
@@ -515,6 +517,13 @@ db::Station& DB::station()
 	if (m_station == NULL)
 		m_station = new db::Station(*this);
 	return *m_station;
+}
+
+db::Context& DB::context()
+{
+	if (m_context == NULL)
+		m_context = new db::Context(*this);
+	return *m_context;
 }
 
 void DB::init_after_connect()
@@ -771,32 +780,25 @@ void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int*
 	repinfo().update(repinfo_file, added, deleted, updated);
 }
 
-#if 0
-/**
- * Get the report id from this record.
- *
- * If rep_memo is specified instead, the corresponding report id is queried in
- * the database and set as "rep_cod" in the record.
- */
-static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
+int DB::get_rep_cod(Record& rec)
 {
-	const char* rep;
-	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
-	if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_MEMO)) != NULL)
-		DBA_RUN_OR_RETURN(dba_db_repinfo_get_id(db->repinfo, rep, id));
-	else if ((rep = dba_record_key_peek_value(rec, DBA_KEY_REP_COD)) != NULL)
+	db::Repinfo& ri = repinfo();
+	if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
 	{
-		int exists;
-		*id = strtol(rep, 0, 10);
-		DBA_RUN_OR_RETURN(dba_db_repinfo_has_id(db->repinfo, *id, &exists));
-		if (!exists)
-			return dba_error_notfound("rep_cod %d does not exist in the database", *id);
+		int id = ri.get_id(memo);
+		rec.key(DBA_KEY_REP_COD).seti(id);
+		return id;
+	}
+	else if (const Var* var = rec.key_peek(DBA_KEY_REP_COD))
+	{
+		int id = var->enqi();
+		if (!ri.has_id(id))
+			error_notfound::throwf("rep_cod %d does not exist in the database", id);
+		return id;
 	}
 	else
-		return dba_error_notfound("looking for report type in rep_cod or rep_memo");
-	return dba_error_ok();
-}		
-#endif
+		throw error_notfound("input record has neither rep_cod nor rep_memo");
+}
 
 int DB::rep_cod_from_memo(const char* memo)
 {
@@ -948,76 +950,84 @@ int DB::obtain_station(Record& rec, bool can_add)
 	return id;
 }
 
-#if 0
-
-static dba_err dba_insert_context(dba_db db, dba_record rec, int id_ana, int* id)
+int DB::obtain_context(Record& rec)
 {
-	const char *year, *month, *day, *hour, *min, *sec;
-	int found, val;
-	dba_db_context c;
-	assert(db);
-	DBA_RUN_OR_RETURN(dba_db_need_context(db));
-	c = db->context;
+	// Look if the record already knows the ID
+	if (const char* val = rec.key_peek_value(DBA_KEY_CONTEXT_ID))
+		return strtol(val, 0, 10);
+
+	db::Context& c = context();
 
 	/* Retrieve data */
-
-	c->id_ana = id_ana;
+	c.id_station = obtain_station(rec, false);
 
 	/* Get the ID of the report */
-	DBA_RUN_OR_RETURN(dba_db_get_rep_cod(db, rec, &val));
-	c->id_report = val;
+	c.id_report = get_rep_cod(rec);
 
 	/* Also input the seconds, defaulting to 0 if not found */
-	sec = dba_record_key_peek_value(rec, DBA_KEY_SEC);
+	const Var* year = rec.key_peek(DBA_KEY_YEAR);
+	const Var* month = rec.key_peek(DBA_KEY_MONTH);
+	const Var* day = rec.key_peek(DBA_KEY_DAY);
+	const Var* hour = rec.key_peek(DBA_KEY_HOUR);
+	const Var* min = rec.key_peek(DBA_KEY_MIN);
+	const Var* sec = rec.key_peek(DBA_KEY_SEC);
 	/* Datetime needs to be computed */
-	if ((year  = dba_record_key_peek_value(rec, DBA_KEY_YEAR)) != NULL &&
-		(month = dba_record_key_peek_value(rec, DBA_KEY_MONTH)) != NULL &&
-		(day   = dba_record_key_peek_value(rec, DBA_KEY_DAY)) != NULL &&
-		(hour  = dba_record_key_peek_value(rec, DBA_KEY_HOUR)) != NULL &&
-		(min   = dba_record_key_peek_value(rec, DBA_KEY_MIN)) != NULL)
+	if (year && month && day && hour && min)
 	{
-		c->date.year = strtol(year, 0, 10);
-		c->date.month = strtol(month, 0, 10);
-		c->date.day = strtol(day, 0, 10);
-		c->date.hour = strtol(hour, 0, 10);
-		c->date.minute = strtol(min, 0, 10);
-		c->date.second = sec != NULL ? strtol(sec, 0, 10) : 0;
+		c.date.year = year->enqi();
+		c.date.month = month->enqi();
+		c.date.day = day->enqi();
+		c.date.hour = hour->enqi();
+		c.date.minute = min->enqi();
+		c.date.second = sec ? sec->enqi() : 0;
 	}
 	else
-		return dba_error_notfound("looking for datetime informations");
+		throw error_notfound("datetime informations not found among context information");
 
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE1,	&val, &found));
-	if (!found) return dba_error_notfound("looking for first level type");
-	c->ltype1 = val;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L1,			&val, &found));
-	if (!found) return dba_error_notfound("looking for l1");
-	c->l1 = val;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_LEVELTYPE2,	&val, &found));
-	c->ltype2 = found ? val : 0;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_L2,			&val, &found));
-	c->l2 = found ? val : 0;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_PINDICATOR,	&val, &found));
-	if (!found) return dba_error_notfound("looking for time range indicator");
-	c->pind = val;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P1,			&val, &found));
-	if (!found) return dba_error_notfound("looking for p1");
-	c->p1 = val;
-	DBA_RUN_OR_RETURN(dba_record_key_enqi(rec, DBA_KEY_P2,			&val, &found));
-	if (!found) return dba_error_notfound("looking for p2");
-	c->p2 = val;
+	if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
+		c.ltype1 = var->enqi();
+	else
+		c.ltype1 = MISSING_INT;
+	if (const Var* var = rec.key_peek(DBA_KEY_L1))
+		c.l1 = var->enqi();
+	else
+		c.l1 = MISSING_INT;
+	if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE2))
+		c.ltype2 = var->enqi();
+	else
+		c.ltype2 = MISSING_INT;
+	if (const Var* var = rec.key_peek(DBA_KEY_L2))
+		c.l2 = var->enqi();
+	else
+		c.l2 = MISSING_INT;
+	if (const Var* var = rec.key_peek(DBA_KEY_PINDICATOR))
+		c.pind = var->enqi();
+	else
+		c.pind = MISSING_INT;
+	if (const Var* var = rec.key_peek(DBA_KEY_P1))
+		c.p1 = var->enqi();
+	else
+		c.p1 = MISSING_INT;
+	if (const Var* var = rec.key_peek(DBA_KEY_P2))
+		c.p2 = var->enqi();
+	else
+		c.p2 = MISSING_INT;
 
-	/* Check for an existing context with these data */
-	DBA_RUN_OR_RETURN(dba_db_context_get_id(c, id));
+	// Check for an existing context with these data
+	int id = c.get_id();
 
 	/* If there is an existing record, use its ID and don't do an INSERT */
-	if (*id != -1)
-		return dba_error_ok();
+	if (id == -1)
+		id = c.insert();
 
-	/* Else, insert a new record */
-	return dba_db_context_insert(c, id);
+	// Set the new context id in the record
+	rec.key(DBA_KEY_CONTEXT_ID).seti(id);
+
+	return id;
 }
 
 
+#if 0
 /*
  * If can_replace, then existing data can be rewritten, else it can only add new data
  *

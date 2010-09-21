@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,45 +18,38 @@
  */
 
 #include <test-utils-db.h>
-#include <dballe/db/db.h>
-#include <dballe/db/pseudoana.h>
 #include <dballe/db/context.h>
+#include <dballe/db/station.h>
+
+using namespace dballe;
+using namespace std;
 
 namespace tut {
-using namespace tut_dballe;
 
-struct context_shar : public db_test
+struct context_shar : public dballe::tests::db_test
 {
-	TestMsgEnv testenv;
-
-	dba_db_context co;
+        db::Context* co;
 
 	context_shar()
 	{
 		if (!has_db()) return;
+		co = &db->context();
 
-		CHECKED(dba_db_need_context(db));
-		co = db->context;
-		gen_ensure(co != NULL);
-
-		CHECKED(dba_db_need_pseudoana(db));
-		dba_db_pseudoana pa = db->pseudoana;
-		gen_ensure(pa != NULL);
-
-		// Insert a fixed station
-		int id;
-		pa->lat = 4500000;
-		pa->lon = 1100000;
-		dba_db_pseudoana_set_ident(pa, "ciao");
-		CHECKED(dba_db_pseudoana_insert(pa, &id));
-		gen_ensure_equals(id, 1);
+                db::Station& st = db->station();
 
 		// Insert a mobile station
-		pa->lat = 4600000;
-		pa->lon = 1200000;
-		dba_db_pseudoana_set_ident(pa, NULL);
-		CHECKED(dba_db_pseudoana_insert(pa, &id));
-		gen_ensure_equals(id, 2);
+		st.lat = 4500000;
+		st.lon = 1100000;
+                st.set_ident("ciao");
+		int id = st.insert();
+		ensure_equals(id, 1);
+
+		// Insert a fixed station
+		st.lat = 4600000;
+		st.lon = 1200000;
+		st.set_ident(NULL);
+                id = st.insert();
+		ensure_equals(id, 2);
 	}
 };
 TESTGRP(context);
@@ -70,10 +61,9 @@ void to::test<1>()
 	use_db();
 
 	// Insert a context
-	int id;
-	co->id_ana = 1;
+	co->id_station = 1;
 	co->id_report = 1;
-	co->date = mkts(2001, 2, 3, 4, 5, 6);
+	co->date = dballe::tests::mkts(2001, 2, 3, 4, 5, 6);
 	co->ltype1 = 1;
 	co->l1 = 2;
 	co->ltype2 = 0;
@@ -81,13 +71,12 @@ void to::test<1>()
 	co->pind = 4;
 	co->p1 = 5;
 	co->p2 = 6;
-	CHECKED(dba_db_context_insert(co, &id));
-	gen_ensure_equals(id, 1);
+	ensure_equals(co->insert(), 1);
 
 	// Insert another context
-	co->id_ana = 2;
+	co->id_station = 2;
 	co->id_report = 2;
-	co->date = mkts(2002, 3, 4, 5, 6, 7);
+	co->date = dballe::tests::mkts(2002, 3, 4, 5, 6, 7);
 	co->ltype1 = 2;
 	co->l1 = 3;
 	co->ltype2 = 1;
@@ -95,14 +84,13 @@ void to::test<1>()
 	co->pind = 5;
 	co->p1 = 6;
 	co->p2 = 7;
-	CHECKED(dba_db_context_insert(co, &id));
-	gen_ensure_equals(id, 2);
+	ensure_equals(co->insert(), 2);
 
 	// Get the ID of the first context
 	co->id = 0;
-	co->id_ana = 1;
+	co->id_station = 1;
 	co->id_report = 1;
-	co->date = mkts(2001, 2, 3, 4, 5, 6);
+	co->date = dballe::tests::mkts(2001, 2, 3, 4, 5, 6);
 	co->ltype1 = 1;
 	co->l1 = 2;
 	co->ltype2 = 0;
@@ -110,14 +98,13 @@ void to::test<1>()
 	co->pind = 4;
 	co->p1 = 5;
 	co->p2 = 6;
-	CHECKED(dba_db_context_get_id(co, &id));
-	gen_ensure_equals(id, 1);
+	ensure_equals(co->get_id(), 1);
 
 	// Get the ID of the second context
 	co->id = 0;
-	co->id_ana = 2;
+	co->id_station = 2;
 	co->id_report = 2;
-	co->date = mkts(2002, 3, 4, 5, 6, 7);
+	co->date = dballe::tests::mkts(2002, 3, 4, 5, 6, 7);
 	co->ltype1 = 2;
 	co->l1 = 3;
 	co->ltype2 = 1;
@@ -125,41 +112,40 @@ void to::test<1>()
 	co->pind = 5;
 	co->p1 = 6;
 	co->p2 = 7;
-	CHECKED(dba_db_context_get_id(co, &id));
-	gen_ensure_equals(id, 2);
+	ensure_equals(co->get_id(), 2);
 
 	// Get info on the first context
-	CHECKED(dba_db_context_get_data(co, 1));
-	gen_ensure_equals(co->id_ana, 1);
-	gen_ensure_equals(co->id_report, 1);
-	gen_ensure_equals(co->date, mkts(2001, 2, 3, 4, 5, 6));
-	//gen_ensure_equals(co->date_ind, 19);
-	gen_ensure_equals(co->ltype1, 1);
-	gen_ensure_equals(co->l1, 2);
-	gen_ensure_equals(co->ltype2, 0);
-	gen_ensure_equals(co->l2, 3);
-	gen_ensure_equals(co->pind, 4);
-	gen_ensure_equals(co->p1, 5);
-	gen_ensure_equals(co->p2, 6);
+	co->get_data(1);
+	ensure_equals(co->id_station, 1);
+	ensure_equals(co->id_report, 1);
+	ensure_equals(co->date, dballe::tests::mkts(2001, 2, 3, 4, 5, 6));
+	//ensure_equals(co->date_ind, 19);
+	ensure_equals(co->ltype1, 1);
+	ensure_equals(co->l1, 2);
+	ensure_equals(co->ltype2, 0);
+	ensure_equals(co->l2, 3);
+	ensure_equals(co->pind, 4);
+	ensure_equals(co->p1, 5);
+	ensure_equals(co->p2, 6);
 
 	// Get info on the second context
-	CHECKED(dba_db_context_get_data(co, 2));
-	gen_ensure_equals(co->id_ana, 2);
-	gen_ensure_equals(co->id_report, 2);
-	gen_ensure_equals(co->date, mkts(2002, 3, 4, 5, 6, 7));
-	//gen_ensure_equals(co->date_ind, 19);
-	gen_ensure_equals(co->ltype1, 2);
-	gen_ensure_equals(co->l1, 3);
-	gen_ensure_equals(co->ltype2, 1);
-	gen_ensure_equals(co->l2, 4);
-	gen_ensure_equals(co->pind, 5);
-	gen_ensure_equals(co->p1, 6);
-	gen_ensure_equals(co->p2, 7);
+	co->get_data(2);
+	ensure_equals(co->id_station, 2);
+	ensure_equals(co->id_report, 2);
+	ensure_equals(co->date, dballe::tests::mkts(2002, 3, 4, 5, 6, 7));
+	//ensure_equals(co->date_ind, 19);
+	ensure_equals(co->ltype1, 2);
+	ensure_equals(co->l1, 3);
+	ensure_equals(co->ltype2, 1);
+	ensure_equals(co->l2, 4);
+	ensure_equals(co->pind, 5);
+	ensure_equals(co->p1, 6);
+	ensure_equals(co->p2, 7);
 
 #if 0
 	// Update the second context
 	co->id = 2;
-	co->id_ana = 2;
+	co->id_station = 2;
 	co->id_report = 2;
 	co->date_ind = snprintf(co->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2003, 4, 5, 6, 7, 8);
 	co->ltype = 3;
@@ -172,41 +158,36 @@ void to::test<1>()
 
 	// Get info on the first station: it should be unchanged
 	CHECKED(dba_db_context_get_data(pa, 1));
-	gen_ensure_equals(pa->lat, 4500000);
-	gen_ensure_equals(pa->lon, 1100000);
-	gen_ensure_equals(pa->ident, string("ciao"));
-	gen_ensure_equals(pa->ident_ind, 4);
+	ensure_equals(pa->lat, 4500000);
+	ensure_equals(pa->lon, 1100000);
+	ensure_equals(pa->ident, string("ciao"));
+	ensure_equals(pa->ident_ind, 4);
 
 	// Get info on the second station: it should be updated
 	CHECKED(dba_db_context_get_data(pa, 2));
-	gen_ensure_equals(pa->lat, 4700000);
-	gen_ensure_equals(pa->lon, 1300000);
-	gen_ensure_equals(pa->ident[0], 0);
+	ensure_equals(pa->lat, 4700000);
+	ensure_equals(pa->lon, 1300000);
+	ensure_equals(pa->ident[0], 0);
 #endif
-
-	// Get a pseudoana context entry for the first station
-	co->id_ana = 1;
+	// Get a station metadata context entry for the first station
+	co->id_station = 1;
 	co->id_report = -1;
-	CHECKED(dba_db_context_obtain_ana(co, &id));
-	gen_ensure_equals(id, 3);
+	ensure_equals(co->obtain_station_info(), 3);
 
 	// Get a pseudoana context entry for the second station
-	co->id_ana = 2;
+	co->id_station = 2;
 	co->id_report = -1;
-	CHECKED(dba_db_context_obtain_ana(co, &id));
-	gen_ensure_equals(id, 4);
+	ensure_equals(co->obtain_station_info(), 4);
 
 	// Get a pseudoana context entry for the first station again, to see that only one is created
-	co->id_ana = 1;
+	co->id_station = 1;
 	co->id_report = -1;
-	CHECKED(dba_db_context_obtain_ana(co, &id));
-	gen_ensure_equals(id, 3);
+	ensure_equals(co->obtain_station_info(), 3);
 
 	// Get a pseudoana context entry for the second station again, to see that only one is created
-	co->id_ana = 2;
+	co->id_station = 2;
 	co->id_report = -1;
-	CHECKED(dba_db_context_obtain_ana(co, &id));
-	gen_ensure_equals(id, 4);
+	ensure_equals(co->obtain_station_info(), 4);
 }
 
 }

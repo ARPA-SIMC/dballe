@@ -47,6 +47,7 @@ struct Statement;
 struct Sequence;
 struct Repinfo;
 struct Station;
+struct Context;
 }
 
 /**
@@ -68,11 +69,11 @@ protected:
 	 */
 	/** Report information */
 	struct db::Repinfo* m_repinfo;
-	/** Station station information */
+	/** Station information */
 	struct db::Station* m_station;
-#if 0
 	/** Variable context */
-	struct _dba_db_context* context;
+	struct db::Context* m_context;
+#if 0
 	/** Variable values */
 	struct _dba_db_data* data;
 	/** Variable attributes */
@@ -191,6 +192,9 @@ public:
 	/// Access the station table
 	db::Station& station();
 
+	/// Access the station table
+	db::Context& context();
+
 	/**
 	 * Reset the database, removing all existing DBALLE tables and re-creating them
 	 * empty.
@@ -258,6 +262,14 @@ public:
 	 */
 	int last_context_insert_id();
 
+	/**
+	 * Get the report id from this record.
+	 *
+	 * If rep_memo is specified instead, the corresponding report id is queried in
+	 * the database and set as "rep_cod" in the record.
+	 */
+	int get_rep_cod(Record& rec);
+
 	/*
 	 * Lookup, insert or replace data in station taking the values from
 	 * rec.
@@ -273,6 +285,19 @@ public:
 	 *   The station ID
 	 */
 	int obtain_station(Record& rec, bool can_add=true);
+
+	/*
+	 * Lookup, insert or replace data in station taking the values from
+	 * rec.
+	 *
+	 * If rec did not contain context_id, it will be set by this function.
+	 *
+	 * @param rec
+	 *   The record with the context information
+	 * @returns
+	 *   The context ID
+	 */
+	int obtain_context(Record& rec);
 };
 
 #if 0
