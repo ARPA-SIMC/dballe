@@ -554,15 +554,251 @@ void to::test<7>()
         ensure(!cursor.next());
 }
 
-#if 0
+/* Test datetime queries */
 template<> template<>
 void to::test<8>()
 {
         use_db();
-        populate_database();
 
-	/* Test working with QC data */
-	reset_database();
+        /* Prepare test data */
+        Record base, a, b;
+
+        base.set(DBA_KEY_LAT, 12.0);
+        base.set(DBA_KEY_LON, 48.0);
+        base.set(DBA_KEY_MOBILE, 0);
+
+        /*
+        base.set(DBA_KEY_HEIGHT, 42);
+        base.set(DBA_KEY_HEIGHTBARO, 234);
+        base.set(DBA_KEY_BLOCK, 1);
+        base.set(DBA_KEY_STATION, 52);
+        base.set(DBA_KEY_NAME, "Cippo Lippo");
+        */
+
+        base.set(DBA_KEY_LEVELTYPE1, 1);
+        base.set(DBA_KEY_L1, 0);
+        base.set(DBA_KEY_LEVELTYPE2, 1);
+        base.set(DBA_KEY_L2, 0);
+        base.set(DBA_KEY_PINDICATOR, 1);
+        base.set(DBA_KEY_P1, 0);
+        base.set(DBA_KEY_P2, 0);
+
+        base.set(DBA_KEY_REP_COD, 1);
+        base.set(DBA_KEY_PRIORITY, 101);
+
+        base.set(WR_VAR(0, 1, 12), 500);
+
+        base.set(DBA_KEY_YEAR, 2006);
+        base.set(DBA_KEY_MONTH, 5);
+        base.set(DBA_KEY_DAY, 15);
+        base.set(DBA_KEY_HOUR, 12);
+        base.set(DBA_KEY_MIN, 30);
+        base.set(DBA_KEY_SEC, 0);
+
+#define WANTRESULT(ab) do { \
+        db::Cursor cursor(*db); \
+        ensure_equals(cursor.query_data(query), 1); \
+        ensure(cursor.next()); \
+        cursor.to_record(result); \
+        ensure_equals(cursor.count, 0); \
+        ensure_varcode_equals(cursor.out_idvar, WR_VAR(0, 1, 12)); \
+        ensure(result.contains(ab)); \
+} while(0)
+
+        /* Year */
+        db->reset();
+
+        insert.clear();
+        a = base;
+        a.set(DBA_KEY_YEAR, 2005);
+        insert.add(a);
+        db->insert(insert, false, true);
+
+        insert.clear();
+        b = base;
+        b.set(DBA_KEY_YEAR, 2006);
+        insert.add(b);
+        db->insert(insert, false, false);
+
+        query.clear();
+        query.set(DBA_KEY_YEARMIN, 2006);
+        WANTRESULT(b);
+
+        query.clear();
+        query.set(DBA_KEY_YEARMAX, 2005);
+        WANTRESULT(a);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        WANTRESULT(b);
+
+
+        /* Month */
+        db->reset();
+
+        insert.clear();
+        a = base;
+        a.set(DBA_KEY_YEAR, 2006);
+        a.set(DBA_KEY_MONTH, 4);
+        insert.add(a);
+        db->insert(insert, false, true);
+
+        insert.clear();
+        b = base;
+        b.set(DBA_KEY_YEAR, 2006);
+        b.set(DBA_KEY_MONTH, 5);
+        insert.add(b);
+        db->insert(insert, false, false);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTHMIN, 5);
+        WANTRESULT(b);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTHMAX, 4);
+        WANTRESULT(a);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        WANTRESULT(b);
+
+        /* Day */
+        db->reset();
+
+        insert.clear();
+        a = base;
+        a.set(DBA_KEY_YEAR, 2006);
+        a.set(DBA_KEY_MONTH, 5);
+        a.set(DBA_KEY_DAY, 2);
+        insert.add(a);
+        db->insert(insert, false, true);
+
+        insert.clear();
+        b = base;
+        b.set(DBA_KEY_YEAR, 2006);
+        b.set(DBA_KEY_MONTH, 5);
+        b.set(DBA_KEY_DAY, 3);
+        insert.add(b);
+        db->insert(insert, false, false);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        query.set(DBA_KEY_DAYMIN, 3);
+        WANTRESULT(b);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        query.set(DBA_KEY_DAYMAX, 2);
+        WANTRESULT(a);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        query.set(DBA_KEY_DAY, 3);
+        WANTRESULT(b);
+
+        /* Hour */
+        db->reset();
+
+        insert.clear();
+        a = base;
+        a.set(DBA_KEY_YEAR, 2006);
+        a.set(DBA_KEY_MONTH, 5);
+        a.set(DBA_KEY_DAY, 3);
+        a.set(DBA_KEY_HOUR, 12);
+        insert.add(a);
+        db->insert(insert, false, true);
+
+        insert.clear();
+        b = base;
+        b.set(DBA_KEY_YEAR, 2006);
+        b.set(DBA_KEY_MONTH, 5);
+        b.set(DBA_KEY_DAY, 3);
+        b.set(DBA_KEY_HOUR, 13);
+        insert.add(b);
+        db->insert(insert, false, false);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        query.set(DBA_KEY_DAY, 3);
+        query.set(DBA_KEY_HOURMIN, 13);
+        WANTRESULT(b);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        query.set(DBA_KEY_DAY, 3);
+        query.set(DBA_KEY_HOURMAX, 12);
+        WANTRESULT(a);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        query.set(DBA_KEY_DAY, 3);
+        query.set(DBA_KEY_HOUR, 13);
+        WANTRESULT(b);
+
+        /* Minute */
+        db->reset();
+
+        insert.clear();
+        a = base;
+        a.set(DBA_KEY_YEAR, 2006);
+        a.set(DBA_KEY_MONTH, 5);
+        a.set(DBA_KEY_DAY, 3);
+        a.set(DBA_KEY_HOUR, 12);
+        a.set(DBA_KEY_MIN, 29);
+        insert.add(a);
+        db->insert(insert, false, true);
+
+        insert.clear();
+        b = base;
+        b.set(DBA_KEY_YEAR, 2006);
+        b.set(DBA_KEY_MONTH, 5);
+        b.set(DBA_KEY_DAY, 3);
+        b.set(DBA_KEY_HOUR, 12);
+        b.set(DBA_KEY_MIN, 30);
+        insert.add(b);
+        db->insert(insert, false, false);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        query.set(DBA_KEY_DAY, 3);
+        query.set(DBA_KEY_HOUR, 12);
+        query.set(DBA_KEY_MINUMIN, 30);
+        WANTRESULT(b);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        query.set(DBA_KEY_DAY, 3);
+        query.set(DBA_KEY_HOUR, 12);
+        query.set(DBA_KEY_MINUMAX, 29);
+        WANTRESULT(a);
+
+        query.clear();
+        query.set(DBA_KEY_YEAR, 2006);
+        query.set(DBA_KEY_MONTH, 5);
+        query.set(DBA_KEY_DAY, 3);
+        query.set(DBA_KEY_HOUR, 12);
+        query.set(DBA_KEY_MIN, 30);
+        WANTRESULT(b);
+}
+
+#if 0
+// Test working with QC data
+template<> template<>
+void to::test<9>()
+{
+        use_db();
+        populate_database();
 
 	{
 		int count, has_data;
@@ -634,443 +870,6 @@ void to::test<8>()
 	}
 
 	/*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
-}
-
-/* Test datetime queries */
-template<> template<>
-void to::test<9>()
-{
-	use_db();
-
-	/* Prepare test data */
-	TestRecord base, a, b;
-
-	base.set(DBA_KEY_LAT, 12.0);
-	base.set(DBA_KEY_LON, 48.0);
-	base.set(DBA_KEY_MOBILE, 0);
-
-	/*
-	base.set(DBA_KEY_HEIGHT, 42);
-	base.set(DBA_KEY_HEIGHTBARO, 234);
-	base.set(DBA_KEY_BLOCK, 1);
-	base.set(DBA_KEY_STATION, 52);
-	base.set(DBA_KEY_NAME, "Cippo Lippo");
-	*/
-
-	base.set(DBA_KEY_LEVELTYPE1, 1);
-	base.set(DBA_KEY_L1, 0);
-	base.set(DBA_KEY_LEVELTYPE2, 1);
-	base.set(DBA_KEY_L2, 0);
-	base.set(DBA_KEY_PINDICATOR, 1);
-	base.set(DBA_KEY_P1, 0);
-	base.set(DBA_KEY_P2, 0);
-
-	base.set(DBA_KEY_REP_COD, 1);
-	base.set(DBA_KEY_PRIORITY, 101);
-
-	base.set(WR_VAR(0, 1, 12), 500);
-
-	base.set(DBA_KEY_YEAR, 2006);
-	base.set(DBA_KEY_MONTH, 5);
-	base.set(DBA_KEY_DAY, 15);
-	base.set(DBA_KEY_HOUR, 12);
-	base.set(DBA_KEY_MIN, 30);
-	base.set(DBA_KEY_SEC, 0);
-
-	/* Year */
-
-	CHECKED(dba_db_reset(db, 0));
-
-	dba_record_clear(insert);
-	a = base;
-	a.set(DBA_KEY_YEAR, 2005);
-	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
-
-	dba_record_clear(insert);
-	b = base;
-	b.set(DBA_KEY_YEAR, 2006);
-	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEARMIN, 2006));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEARMAX, 2005));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, a);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
-
-
-	/* Month */
-
-	CHECKED(dba_db_reset(db, 0));
-
-	dba_record_clear(insert);
-	a = base;
-	a.set(DBA_KEY_YEAR, 2006);
-	a.set(DBA_KEY_MONTH, 4);
-	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
-
-	dba_record_clear(insert);
-	b = base;
-	b.set(DBA_KEY_YEAR, 2006);
-	b.set(DBA_KEY_MONTH, 5);
-	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTHMIN, 5));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTHMAX, 4));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, a);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
-
-
-	/* Day */
-
-	CHECKED(dba_db_reset(db, 0));
-
-	dba_record_clear(insert);
-	a = base;
-	a.set(DBA_KEY_YEAR, 2006);
-	a.set(DBA_KEY_MONTH, 5);
-	a.set(DBA_KEY_DAY, 2);
-	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
-
-	dba_record_clear(insert);
-	b = base;
-	b.set(DBA_KEY_YEAR, 2006);
-	b.set(DBA_KEY_MONTH, 5);
-	b.set(DBA_KEY_DAY, 3);
-	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_DAYMIN, 3));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-/*
-		dba_record_print(result, stderr); cerr << "---" << endl;
-		dba_record_clear(query);
-		b.copyTestDataToRecord(query);
-		dba_record_print(query, stderr); cerr << "---" << endl;
-*/
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_DAYMAX, 2));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, a);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
-
-
-	/* Hour */
-
-	CHECKED(dba_db_reset(db, 0));
-
-	dba_record_clear(insert);
-	a = base;
-	a.set(DBA_KEY_YEAR, 2006);
-	a.set(DBA_KEY_MONTH, 5);
-	a.set(DBA_KEY_DAY, 3);
-	a.set(DBA_KEY_HOUR, 12);
-	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
-
-	dba_record_clear(insert);
-	b = base;
-	b.set(DBA_KEY_YEAR, 2006);
-	b.set(DBA_KEY_MONTH, 5);
-	b.set(DBA_KEY_DAY, 3);
-	b.set(DBA_KEY_HOUR, 13);
-	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_HOURMIN, 13));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_HOURMAX, 12));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, a);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 13));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
-
-
-	/* Minute */
-
-	CHECKED(dba_db_reset(db, 0));
-
-	dba_record_clear(insert);
-	a = base;
-	a.set(DBA_KEY_YEAR, 2006);
-	a.set(DBA_KEY_MONTH, 5);
-	a.set(DBA_KEY_DAY, 3);
-	a.set(DBA_KEY_HOUR, 12);
-	a.set(DBA_KEY_MIN, 29);
-	a.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 1, NULL, NULL));
-
-	dba_record_clear(insert);
-	b = base;
-	b.set(DBA_KEY_YEAR, 2006);
-	b.set(DBA_KEY_MONTH, 5);
-	b.set(DBA_KEY_DAY, 3);
-	b.set(DBA_KEY_HOUR, 12);
-	b.set(DBA_KEY_MIN, 30);
-	b.copyTestDataToRecord(insert);
-	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 12));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MINUMIN, 30));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 12));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MINUMAX, 29));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, a);
-		dba_db_cursor_delete(cursor);
-	}
-
-	{
-		int count, has_data;
-		dba_db_cursor cursor;
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2006));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 5));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 3));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 12));
-		CHECKED(dba_record_key_seti(query, DBA_KEY_MIN, 30));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		gen_ensure_equals(count, 1);
-
-		CHECKED(dba_db_cursor_next(cursor, &has_data));
-		gen_ensure(has_data);
-		CHECKED(dba_db_cursor_to_record(cursor, result));
-		gen_ensure_equals(cursor->count, 0);
-		gen_ensure_equals(cursor->out_idvar, WR_VAR(0, 1, 12));
-		ensureTestRecEquals(result, b);
-		dba_db_cursor_delete(cursor);
-	}
 }
 
 /* Test ana queries */
