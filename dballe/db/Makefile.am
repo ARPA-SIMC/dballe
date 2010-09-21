@@ -61,6 +61,7 @@ tut_test_SOURCES = \
 	../core/test-utils-core.cc \
 	../msg/test-utils-msg.cc \
 	test-utils-db.cc \
+	tests/querybuf.cc \
 	tests/repinfo.cc \
 	../core/tests/tut-main.cpp
 tut_test_LDADD = \
