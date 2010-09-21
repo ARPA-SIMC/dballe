@@ -295,69 +295,66 @@ void to::test<2>()
 	}
 #endif
 
-#if 0
-// This created a segfault
+// This used to cause a segfault
 template<> template<>
 void to::test<4>()
 {
-	dba_record rec;
-	CHECKED(dba_record_create(&rec));
-	CHECKED(dba_record_key_setc(rec, DBA_KEY_IDENT, "nosort"));
+	Record rec;
+	rec.key(DBA_KEY_IDENT).setc("nosort");
 
-	dba_record rec1;
-	CHECKED(dba_record_create(&rec1));
-	CHECKED(dba_record_copy(rec1, rec));
-	CHECKED(dba_record_key_setc(rec1, DBA_KEY_IDENT, "nosort"));
-
-	dba_record_delete(rec);
-	dba_record_delete(rec1);
+	Record rec1;
+	rec = rec;
+	rec.key(DBA_KEY_IDENT).setc("nosort");
 }
 
 // Test dba_record_equals
 template<> template<>
 void to::test<5>()
 {
-	dba_record rec;
-	CHECKED(dba_record_create(&rec));
-	CHECKED(dba_record_key_seti(rec, DBA_KEY_ANA_ID, -10));
-	CHECKED(dba_record_key_seti(rec, DBA_KEY_LAT, 1234567));
-	CHECKED(dba_record_key_setd(rec, DBA_KEY_LON, 76.54321));
-	CHECKED(dba_record_key_setc(rec, DBA_KEY_YEARMIN, "1976"));
-	CHECKED(dba_record_var_setc(rec, WR_VAR(0, 20, 1), "456"));
-	CHECKED(dba_record_var_setc(rec, WR_VAR(0, 20, 3), "456"));
+	Record rec;
+	rec.key(DBA_KEY_ANA_ID).seti(-10);
+	rec.key(DBA_KEY_LAT).seti(1234567);
+	rec.key(DBA_KEY_LON).setd(76.54321);
+	rec.key(DBA_KEY_YEARMIN).setc("1976");
+	rec.var(WR_VAR(0, 20, 1)).setc("456");
+	rec.var(WR_VAR(0, 20, 3)).setc("456");
 
-	dba_record rec1;
-	CHECKED(dba_record_create(&rec1));
-	CHECKED(dba_record_copy(rec1, rec));
-	ensure(dba_record_equals(rec, rec1));
-	ensure(dba_record_equals(rec1, rec));
-	CHECKED(dba_record_key_setc(rec1, DBA_KEY_YEARMIN, "1975"));
-	ensure(!dba_record_equals(rec, rec1));
-	ensure(!dba_record_equals(rec1, rec));
+	Record rec1;
+	rec1 = rec;
+	ensure(rec == rec1);
+	ensure(rec1 == rec);
+	ensure(!(rec != rec1));
+	ensure(!(rec1 != rec));
+	rec1.key(DBA_KEY_YEARMIN).seti(1975);
+	ensure(rec != rec1);
+	ensure(rec1 != rec);
+	ensure(!(rec == rec1));
+	ensure(!(rec1 == rec));
 
-	CHECKED(dba_record_copy(rec1, rec));
-	ensure(dba_record_equals(rec, rec1));
-	ensure(dba_record_equals(rec1, rec));
-	CHECKED(dba_record_key_unset(rec1, DBA_KEY_YEARMIN));
-	ensure(!dba_record_equals(rec, rec1));
-	ensure(!dba_record_equals(rec1, rec));
+	rec1 = rec;
+	ensure(rec == rec1);
+	ensure(rec1 == rec);
+	rec1.key_unset(DBA_KEY_YEARMIN);
+	ensure(rec != rec1);
+	ensure(rec1 != rec);
 
-	CHECKED(dba_record_copy(rec1, rec));
-	ensure(dba_record_equals(rec, rec1));
-	ensure(dba_record_equals(rec1, rec));
-	CHECKED(dba_record_var_setc(rec1, WR_VAR(0, 20, 1), "45"));
-	ensure(!dba_record_equals(rec, rec1));
-	ensure(!dba_record_equals(rec1, rec));
+	rec1 = rec;
+	ensure(rec == rec1);
+	ensure(rec1 == rec);
+	rec1.var(WR_VAR(0, 20, 1)).setc("45");
+	ensure(rec != rec1);
+	ensure(rec1 != rec);
 
-	CHECKED(dba_record_copy(rec1, rec));
-	ensure(dba_record_equals(rec, rec1));
-	ensure(dba_record_equals(rec1, rec));
-	CHECKED(dba_record_var_unset(rec1, WR_VAR(0, 20, 1)));
-	ensure(!dba_record_equals(rec, rec1));
-	ensure(!dba_record_equals(rec1, rec));
+	rec1 = rec;
+	ensure(rec == rec1);
+	ensure(rec1 == rec);
+	rec1.var_unset(WR_VAR(0, 20, 1));
+	ensure(rec != rec1);
+	ensure(rec1 != rec);
 }
 
-// Test dba_record_equals
+#if 0
+// Test set_from_string
 template<> template<>
 void to::test<6>()
 {

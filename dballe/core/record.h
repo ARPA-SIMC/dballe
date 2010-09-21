@@ -136,6 +136,7 @@ public:
 	Record& operator=(const Record& rec);
 
 	bool operator==(const Record& rec) const;
+	bool operator!=(const Record& rec) const { return !operator==(rec); }
 
 	/// Remove all data from the record
 	void clear();
