@@ -31,10 +31,10 @@ libdballe_db_la_SOURCES = \
 		station.cc \
 		context.cc \
 		data.cc \
+		cursor.cc \
 		db.cc
 
 #		attr.cc
-#		cursor.cc
 
 #		import.cc \
 #		export.cc

@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * db/cursor - manage select queries
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,12 +28,17 @@
 #ifndef DBA_DB_CURSOR_H
 #define DBA_DB_CURSOR_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
-#include <dballe/core/record.h>
+#include <dballe/db/odbcworkarounds.h>
 #include <dballe/db/querybuf.h>
+#include <dballe/core/record.h>
+#include <sqltypes.h>
+
+namespace dballe {
+struct DB;
+struct Record;
+
+namespace db {
+struct Statement;
 
 /**
  * Constants used to define what values we should retrieve from a query
@@ -111,100 +116,193 @@ extern "C" {
 /** Sort by rep_cod after ana_id, to ease reconstructing messages on export */
 #define DBA_DB_MODIFIER_SORT_FOR_EXPORT	(1 << 7)
 
-#ifndef DBA_DB_DEFINED
-#define DBA_DB_DEFINED
-struct _dba_db;
-/** @copydoc _dba_db */
-typedef struct _dba_db* dba_db;
+/**
+ * Structure used to build and execute a query, and to iterate through the
+ * results
+ */
+struct Cursor
+{
+    /** Database to operate on */
+    DB& db;
+    /** ODBC statement to use for the query */
+    db::Statement* stm;
+
+    /** Dynamically generated SQL query */
+    Querybuf sql_query;
+
+    /** WHERE subquery */
+    Querybuf sql_where;
+
+    /** What values are wanted from the query */
+    unsigned int wanted;
+
+    /** Modifier flags to enable special query behaviours */
+    unsigned int modifiers;
+
+    /** What is needed from the SELECT part of the query */
+    unsigned int select_wanted;
+
+    /** What is needed from the FROM part of the query */
+    unsigned int from_wanted;
+
+    /** Sequence number to use to bind ODBC input parameters */
+    unsigned int input_seq;
+
+    /** Sequence number to use to bind ODBC output parameters */
+    unsigned int output_seq;
+
+    /** True if we also accept results from the anagraphical context */
+    int accept_from_ana_context;
+
+    /// true if we have already appended the "ORDER BY" clause to the query
+    bool has_orderby;
+
+    /** Selection parameters (input) for the query
+     * @{
+     */
+    SQL_TIMESTAMP_STRUCT	sel_dtmin;
+    SQL_TIMESTAMP_STRUCT	sel_dtmax;
+    DBALLE_SQL_C_SINT_TYPE	sel_latmin;
+    DBALLE_SQL_C_SINT_TYPE	sel_latmax;
+    DBALLE_SQL_C_SINT_TYPE	sel_lonmin;
+    DBALLE_SQL_C_SINT_TYPE	sel_lonmax;
+    char	sel_ident[64];
+    DBALLE_SQL_C_SINT_TYPE	sel_ltype1;
+    DBALLE_SQL_C_SINT_TYPE	sel_l1;
+    DBALLE_SQL_C_SINT_TYPE	sel_ltype2;
+    DBALLE_SQL_C_SINT_TYPE	sel_l2;
+    DBALLE_SQL_C_SINT_TYPE	sel_pind;
+    DBALLE_SQL_C_SINT_TYPE	sel_p1;
+    DBALLE_SQL_C_SINT_TYPE	sel_p2;
+    DBALLE_SQL_C_SINT_TYPE	sel_b;
+    DBALLE_SQL_C_SINT_TYPE	sel_rep_cod;
+    DBALLE_SQL_C_SINT_TYPE	sel_ana_id;
+    DBALLE_SQL_C_SINT_TYPE	sel_context_id;
+    /** @} */
+
+    /** Query results
+     * @{
+     */
+    DBALLE_SQL_C_SINT_TYPE	out_lat;
+    DBALLE_SQL_C_SINT_TYPE	out_lon;
+    char	out_ident[64];		SQLLEN out_ident_ind;
+    DBALLE_SQL_C_SINT_TYPE	out_ltype1;
+    DBALLE_SQL_C_SINT_TYPE	out_l1;
+    DBALLE_SQL_C_SINT_TYPE	out_ltype2;
+    DBALLE_SQL_C_SINT_TYPE	out_l2;
+    DBALLE_SQL_C_SINT_TYPE	out_pind;
+    DBALLE_SQL_C_SINT_TYPE	out_p1;
+    DBALLE_SQL_C_SINT_TYPE	out_p2;
+    DBALLE_SQL_C_SINT_TYPE	out_idvar;
+    SQL_TIMESTAMP_STRUCT	out_datetime;
+    char	out_value[255];
+    DBALLE_SQL_C_SINT_TYPE	out_rep_cod;
+    DBALLE_SQL_C_SINT_TYPE	out_ana_id;
+    DBALLE_SQL_C_SINT_TYPE	out_context_id;
+    DBALLE_SQL_C_SINT_TYPE	out_priority;
+    /** @} */
+
+    /** Number of results still to be fetched */
+    DBALLE_SQL_C_SINT_TYPE count;
+
+    Cursor(DB& db);
+    ~Cursor();
+
+    /**
+     * Create and execute a database query.
+     *
+     * The results are retrieved by iterating the cursor.
+     *
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input"
+     * @param wanted
+     *   The values wanted in output
+     * @param modifiers
+     *   Optional modifiers to ask for special query behaviours
+     */
+    void query(const Record& query, unsigned int wanted, unsigned int modifiers);
+
+    /**
+     * Get the number of rows still to be fetched
+     *
+     * @return
+     *   The number of rows still to be queried.  The value is undefined if no
+     *   query has been successfully peformed yet using this cursor.
+     */
+    int remaining() const;
+
+    /**
+     * Get a new item from the results of a query
+     *
+     * @returns
+     *   true if a new record has been read, false if there is no more data to read
+     */
+    bool next();
+
+    /**
+     * Fill in a record with the contents of a dba_db_cursor
+     *
+     * @param rec
+     *   The record where to store the values
+     */
+    void to_record(Record& rec);
+
+protected:
+    /// Reset the cursor at the beginning of a query
+    void reset();
+
+    /// Query extra station info and add it to \a rec
+    void add_station_info(Record& rec);
+
+    /// Initialise query modifiers from the 'query' parameter in \a rec
+    void init_modifiers(const Record& rec);
+
+    /**
+     * Add one or more fields to the ORDER BY part of sql_query.
+     */
+    void add_to_orderby(const char* fields);
+
+    /**
+     * Add extra JOIN clauses to sql_query according to what is wanted.
+     *
+     * @param base
+     *   The first table mentioned in the query, to which the other tables are
+     *   joined
+     */
+    void add_other_froms(unsigned int base);
+
+    /// Resolve table/field dependencies adding the missing bits to from_wanted
+    void resolve_dependencies();
+
+    /// Prepare SELECT Part and see what needs to be available in the FROM part
+    void make_select();
+
+    /**
+     * Return the number of results for a query.
+     *
+     * This is the same as Cursor::query, but it does a SELECT COUNT(*) only.
+     *
+     * @warning: do not use it except to get an approximate row count:
+     * insert/delete/update queries run between the count and the select will
+     * change the size of the result set.
+     */
+    int getcount(const Record& query, unsigned int wanted, unsigned int modifiers);
+
+    /// Add an int field to the WHERE part of the query, binding it as an input parameter
+    void add_int(const Record& rec, DBALLE_SQL_C_SINT_TYPE& in, dba_keyword key, const char* sql, int needed_from);
+
+    /// Build the WHERE part of the query, and bind the input parameters
+    void make_where(const Record& rec);
+
+    /// Add repinfo-related WHERE clauses on column \a colname to \a buf from \a query
+    void add_repinfo_where(Querybuf& buf, const Record& query, const char* colname);
+};
+
+#if 0
+
+
 #endif
-
-struct _dba_db_cursor;
-/** @copydoc _dba_db_cursor */
-typedef struct _dba_db_cursor* dba_db_cursor;
-
-/**
- * Create a new dba_cursor
- *
- * @param db
- *   Database that will be queried
- * @retval cur
- *   The newly created cursor.
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_cursor_create(dba_db db, dba_db_cursor* cur);
-
-/**
- * Delete a dba_db_cursor
- *
- * @param cur
- *   The cursor to delete
- */
-void dba_db_cursor_delete(dba_db_cursor cur);
-
-/**
- * Create and execute a database query.
- *
- * The results are retrieved by iterating the cursor.
- *
- * @param cur
- *   The dballe cursor to use for the query
- * @param query
- *   The record with the query data (see technical specifications, par. 1.6.4
- *   "parameter output/input"
- * @param wanted
- *   The values wanted in output
- * @param modifiers
- *   Optional modifiers to ask for special query behaviours
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_cursor_query(dba_db_cursor cur, dba_record query, unsigned int wanted, unsigned int modifiers);
-
-/**
- * Get the number of rows still to be fetched
- *
- * @param cur
- *   The dballe cursor to query.
- * @return
- *   The number of rows still to be queried.  The value is undefined if no
- *   query has been successfully peformed yet using this cursor.
- */
-int dba_db_cursor_remaining(dba_db_cursor cur);
-
-/**
- * Get a new item from the results of a query
- *
- * @param cur
- *   The cursor to use to iterate the results
- * @retval has_data
- *   True if a new record has been read, false if there is no more data to read
- * @return
- *   The error indicator for the function.  The error code DBA_ERR_NOTFOUND is
- *   used when there are no more results to get.
- *
- * @note
- *   Do not forget to call dba_db_cursor_delete after you have finished retrieving
- *   the query data.
- */
-dba_err dba_db_cursor_next(dba_db_cursor cur, int* has_data);
-
-/**
- * Fill in a record with the contents of a dba_db_cursor
- *
- * @param cur
- *   The cursor to use to iterate the results
- * @param rec
- *   The record where to store the values
- * @return
- *   The error indicator for the function.  The error code DBA_ERR_NOTFOUND is
- *   used when there are no more results to get.
- *
- * @note
- *   Do not forget to call dba_db_cursor_delete after you have finished retrieving
- *   the query data.
- */
-dba_err dba_db_cursor_to_record(dba_db_cursor cur, dba_record rec);
 
 
 #if 0
@@ -253,9 +351,8 @@ dba_err dba_db_ana_cursor_next(dba_db_cursor cur, dba_record rec, int* is_last);
 dba_err dba_db_cursor_next(dba_db_cursor cur, dba_record rec, dba_varcode* var, int* context_id, int* is_last);
 #endif
 
-#ifdef  __cplusplus
-}
-#endif
+} // namespace db
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
 #endif

@@ -61,24 +61,20 @@ struct db_shar : public dballe::tests::db_test
 	TestRecord sample1;
 	TestRecord sample10;
 	TestRecord sample11;
+#endif
 
 	// Work records
-	dba_record insert;
-	dba_record query;
-	dba_record result;
-	dba_record qc;
-#endif
+	Record insert;
+	Record query;
+	Record result;
+	Record qc;
+
 	db_shar()
 //		: insert(NULL), query(NULL), result(NULL), qc(NULL)
 	{
 		if (!has_db()) return;
 
 #if 0
-		CHECKED(dba_record_create(&insert));
-		CHECKED(dba_record_create(&query));
-		CHECKED(dba_record_create(&result));
-		CHECKED(dba_record_create(&qc));
-
 		// Common data (ana)
 		sampleAna.set(DBA_KEY_LAT, 12.34560);
 		sampleAna.set(DBA_KEY_LON, 76.54320);
@@ -131,12 +127,6 @@ static struct test_data tdata3_patch[] = {
 
 	~db_shar()
 	{
-#if 0
-		if (insert != NULL) dba_record_delete(insert);
-		if (query != NULL) dba_record_delete(query);
-		if (result != NULL) dba_record_delete(result);
-		if (qc != NULL) dba_record_delete(qc);
-#endif
 	}
 #if 0
 	void reset_database();

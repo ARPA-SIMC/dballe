@@ -318,6 +318,11 @@ void Statement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val, SQLLEN& ind)
 	SQLBindCol(stm, idx, DBALLE_SQL_C_UINT, &val, sizeof(val), &ind);
 }
 
+void Statement::bind_out(int idx, unsigned short& val)
+{
+	SQLBindCol(stm, idx, SQL_C_USHORT, &val, sizeof(val), 0);
+}
+
 void Statement::bind_out(int idx, char* val, SQLLEN buflen)
 {
 	SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, 0);
@@ -357,6 +362,14 @@ size_t Statement::rowcount()
 	if (is_error(sqlres))
 		throw error_odbc(SQL_HANDLE_STMT, stm, "reading row count");
 	return res;
+}
+
+void Statement::set_cursor_forward_only()
+{
+        int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE, 
+                (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY, SQL_IS_INTEGER);
+	if (is_error(sqlres))
+		throw error_odbc(SQL_HANDLE_STMT, stm, "setting SQL_CURSOR_FORWARD_ONLY");
 }
 
 void Statement::close_cursor()
@@ -429,34 +442,6 @@ const char* default_repinfo_file()
 		repinfo_file = TABLE_DIR "/repinfo.csv";
 	return repinfo_file;
 }
-
-#if 0
-/*
- * Define to true to enable the use of transactions during writes
- */
-#define DBA_USE_TRANSACTIONS
-
-
-dba_err dba_db_need_context(dba_db db)
-{
-	if (db->context == NULL)
-		return dba_db_context_create(db, &(db->context));
-	return dba_error_ok();
-}
-dba_err dba_db_need_data(dba_db db)
-{
-	if (db->data == NULL)
-		return dba_db_data_create(db, &(db->data));
-	return dba_error_ok();
-}
-dba_err dba_db_need_attr(dba_db db)
-{
-	if (db->attr == NULL)
-		return dba_db_attr_create(db, &(db->attr));
-	return dba_error_ok();
-}
-
-#endif
 
 } // namespace db
 } // namespace dballe
