@@ -206,6 +206,16 @@ public:
 	const char* var_peek_value(wreport::Varcode code) const throw ();
 
 	/**
+	 * Return the Var for a key, throwing an error it if it missing
+	 */
+	const wreport::Var& key(dba_keyword parameter) const;
+
+	/**
+	 * Return the Var for a variable, throwing an error it if it missing
+	 */
+	const wreport::Var& var(wreport::Varcode code) const;
+
+	/**
 	 * Return the Var for a key, creating it if it missing
 	 */
 	wreport::Var& key(dba_keyword parameter);
@@ -235,6 +245,23 @@ public:
 	 *   The variable to remove.  See @ref vartable.h
 	 */
 	void var_unset(wreport::Varcode code);
+
+	/**
+	 * Parse the date extremes set in the dba_record.
+	 *
+	 * This function will examine the values yearmin, monthmin, daymin, hourmin,
+	 * minumin, secmin, yearmax, monthmax, daymax, hourmax, minumax, secmax, year,
+	 * month, day, hour, min and sec, and will compute the two datetime extremes
+	 * that bound the interval they represent.
+	 *
+	 * @retval minvalues
+	 *   An array of 6 integers that will be filled with the minimum year, month,
+	 *   day, hour, minute and seconds.
+	 * @retval maxvalues
+	 *   An array of 6 integers that will be filled with the maximum year, month,
+	 *   day, hour, minute and seconds.
+	 */
+	void parse_date_extremes(int* minvalues, int* maxvalues) const;
 
 	/**
 	 * Return the name of a dba_keyword
@@ -276,18 +303,6 @@ public:
 };
 
 #if 0
-/**
- * Opaque structure representing a cursor used to iterate a dba_record.
- *
- * This object is a pointer to internal structures that does not need to be
- * explicitly created or deallocated.
- */
-typedef struct _dba_item* dba_record_cursor;
-
-
-
-
-
 /**
  * Check if a keyword or value is set
  *
@@ -730,66 +745,6 @@ void dba_record_print(dba_record rec, FILE* out);
  *   The output stream to use for printing
  */
 void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out);
-
-/**
- * Start iterating through the values in a record
- *
- * @param rec
- *   The record to iterate on.
- * 
- * @return
- *   The cursor pointing to the first item in the record,
- *   or NULL if the record is empty.
- */
-dba_record_cursor dba_record_iterate_first(dba_record rec);
-
-/**
- * Continue iterating through the values in a record
- *
- * @param rec
- *   The record to iterate on.
- * 
- * @param cur
- *   The cursor returned by dba_record_iterate_first or dba_record_iterate_next
- * 
- * @return
- *   The cursor pointing to the next item in the record,
- *   or NULL if there are no more items.
- */
-dba_record_cursor dba_record_iterate_next(dba_record rec, dba_record_cursor cur);
-
-/**
- * Get the variable pointed by a dba_record_cursor
- * 
- * @param cur
- *   The cursor returned by dba_record_iterate_first or dba_record_iterate_next
- *
- * @return
- *   The variable pointed by the cursor
- */
-dba_var dba_record_cursor_variable(dba_record_cursor cur);
-
-/**
- * Parse the date extremes set in the dba_record.
- *
- * This function will examine the values yearmin, monthmin, daymin, hourmin,
- * minumin, secmin, yearmax, monthmax, daymax, hourmax, minumax, secmax, year,
- * month, day, hour, min and sec, and will compute the two datetime extremes
- * that bound the interval they represent.
- *
- * @param rec
- *   The record that holds the datetime specifications
- * @retval minvalues
- *   An array of 6 integers that will be filled with the minimum year, month,
- *   day, hour, minute and seconds.
- * @retval maxvalues
- *   An array of 6 integers that will be filled with the maximum year, month,
- *   day, hour, minute and seconds.
- * @return
- *   The error indicator for the function.  See @ref error.h
- */
-dba_err dba_record_parse_date_extremes(dba_record rec, int* minvalues, int* maxvalues);
-
 #endif
 
 }

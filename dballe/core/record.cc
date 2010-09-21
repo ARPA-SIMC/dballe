@@ -304,6 +304,23 @@ const char* Record::var_peek_value(Varcode code) const throw ()
 	return res ? res->value() : NULL;
 }
 
+const wreport::Var& Record::key(dba_keyword parameter) const
+{
+	const Var* res = key_peek(parameter);
+	if (!res)
+		error_notfound::throwf("Parameter %s not found in record", keyword_name(parameter));
+	return *res;
+}
+
+const wreport::Var& Record::var(wreport::Varcode code) const
+{
+	const Var* res = var_peek(code);
+	if (!res)
+		error_notfound::throwf("Variable %01d%02d%03d not found in record",
+				WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
+	return *res;
+}
+
 Var& Record::key(dba_keyword parameter)
 {
 	if (keydata[parameter] == NULL)
@@ -355,7 +372,6 @@ const std::vector<wreport::Var*>& Record::vars() const
 {
 	return m_vars;
 }
-
 
 #if 0
 
@@ -980,36 +996,11 @@ void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out)
 	}
 }
 
-dba_record_cursor dba_record_iterate_first(dba_record rec)
+#endif
+
+static inline int peek_int(const Record& rec, dba_keyword key)
 {
-	assert_is_dba_record(rec);
-
-	if (rec->vars != NULL)
-		return rec->vars;
-
-	return NULL;
-}
-
-dba_record_cursor dba_record_iterate_next(dba_record rec, dba_record_cursor cur)
-{
-	assert_is_dba_record(rec);
-
-	/* Try first to see if there's something else in the chain */
-	if (cur->next != NULL)
-		return cur->next;
-
-	return NULL;
-}
-
-dba_var dba_record_cursor_variable(dba_record_cursor cur)
-{
-	return cur->var;
-}
-
-
-static inline int peek_int(dba_record rec, dba_keyword key)
-{
-	const char* s = dba_record_key_peek_value(rec, key);
+	const char* s = rec.key_peek_value(key);
 	return s != NULL ? strtol(s, 0, 10) : -1;
 }
 
@@ -1041,7 +1032,7 @@ static inline int max_days(int y, int m)
 }
 
 /* Buf must be at least 25 bytes long; values must be at least 6 ints long */
-dba_err dba_record_parse_date_extremes(dba_record rec, int* minvalues, int* maxvalues)
+void Record::parse_date_extremes(int* minvalues, int* maxvalues) const
 {
 	dba_keyword names[] = { DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY, DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC };
 	dba_keyword min_names[] = { DBA_KEY_YEARMIN, DBA_KEY_MONTHMIN, DBA_KEY_DAYMIN, DBA_KEY_HOURMIN, DBA_KEY_MINUMIN, DBA_KEY_SECMIN };
@@ -1052,21 +1043,21 @@ dba_err dba_record_parse_date_extremes(dba_record rec, int* minvalues, int* maxv
 
 	for (i = 0; i < 6; i++)
 	{
-		int val = peek_int(rec, names[i]);
-		int min = peek_int(rec, min_names[i]);
-		int max = peek_int(rec, max_names[i]);
+		int val = peek_int(*this, names[i]);
+		int min = peek_int(*this, min_names[i]);
+		int max = peek_int(*this, max_names[i]);
 
 		minvalues[i] = max_with_undef(val, min);
 		maxvalues[i] = min_with_undef(val, max);
 
 		if (i > 0 &&
-				((minvalues[i-1] == -1 && minvalues[i] != -1) ||
-				 (maxvalues[i-1] == -1 && maxvalues[i] != -1)))
+		  ((minvalues[i-1] == -1 && minvalues[i] != -1) ||
+		   (maxvalues[i-1] == -1 && maxvalues[i] != -1)))
 		{
-			dba_varinfo key1 = dba_record_keyword_byindex(names[i - 1]);
-			dba_varinfo key2 = dba_record_keyword_byindex(names[i]);
+			Varinfo key1 = keyword_info(names[i - 1]);
+			Varinfo key2 = keyword_info(names[i]);
 
-			return dba_error_consistency("%s extremes are unset but %s extremes are set",
+			error_consistency::throwf("%s extremes are unset but %s extremes are set",
 					key1->desc, key2->desc);
 		}
 	}
@@ -1092,11 +1083,7 @@ dba_err dba_record_parse_date_extremes(dba_record rec, int* minvalues, int* maxv
 		maxvalues[4] = maxvalues[4] != -1 ? maxvalues[4] : 59;
 		maxvalues[5] = maxvalues[5] != -1 ? maxvalues[5] : 59;
 	}
-
-	return dba_error_ok();
 }
-
-#endif
 
 }
 
