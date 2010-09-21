@@ -760,9 +760,7 @@ void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int*
 	repinfo().update(repinfo_file, added, deleted, updated);
 }
 
-
 #if 0
-
 /**
  * Get the report id from this record.
  *
@@ -787,26 +785,23 @@ static dba_err dba_db_get_rep_cod(dba_db db, dba_record rec, int* id)
 		return dba_error_notfound("looking for report type in rep_cod or rep_memo");
 	return dba_error_ok();
 }		
+#endif
 
-dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod)
+int DB::rep_cod_from_memo(const char* memo)
 {
-	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
-	return dba_db_repinfo_get_id(db->repinfo, memo, rep_cod);
+	return repinfo().get_id(memo);
 }
 
-dba_err dba_db_rep_memo_from_cod(dba_db db, int rep_cod, const char** memo)
+const std::string& DB::rep_memo_from_cod(int rep_cod)
 {
-	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
-	dba_db_repinfo_cache c = dba_db_repinfo_get_by_id(db->repinfo, rep_cod);
-	if (c == NULL) return dba_error_notfound("looking for rep_memo corresponding to rep_cod '%d'", rep_cod);
-	*memo = c->memo;
-	return dba_error_ok();
+	const db::repinfo::Cache* c = repinfo().get_by_id(rep_cod);
+	if (c == NULL) error_notfound::throwf("looking for rep_memo corresponding to rep_cod '%d'", rep_cod);
+	return c->memo;
 }
 
-dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid)
+bool DB::check_rep_cod(int rep_cod)
 {
-	DBA_RUN_OR_RETURN(dba_db_need_repinfo(db));
-	return dba_db_repinfo_has_id(db->repinfo, rep_cod, valid);
+	return repinfo().has_id(rep_cod);
 }
 
 #if 0
@@ -862,6 +857,8 @@ static dba_err update_pseudoana_extra_info(dba_db db, dba_record rec, int id_ana
 	return dba_error_ok();
 }
 #endif
+
+#if 0
 
 // Normalise longitude values to the [-180..180[ interval
 static inline int normalon(int lon)

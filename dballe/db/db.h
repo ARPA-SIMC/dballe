@@ -30,6 +30,7 @@
 #endif
 
 #include <dballe/db/odbcworkarounds.h>
+#include <string>
 
 /** @file
  * @ingroup db
@@ -220,33 +221,30 @@ public:
 	 *   The number of repinfo entryes that have been updated
 	 */
 	void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated);
+
+	/**
+	 * Get the report code from a report mnemonic
+	 */
+	int rep_cod_from_memo(const char* memo);
+
+	/**
+	 * Get the report mnemonic from a report code
+	 */
+	const std::string& rep_memo_from_cod(int rep_cod);
+
+	/**
+	 * Verify that a rep_cod is supported by the database
+	 *
+	 * @param rep_cod
+	 *   The report code to verify
+	 * @returns
+	 *   true if the report code is supported, false if not
+	 */
+	bool check_rep_cod(int rep_cod);
+
 };
 
 #if 0
-
-/**
- * Get the report code from a report mnemonic
- */
-dba_err dba_db_rep_cod_from_memo(dba_db db, const char* memo, int* rep_cod);
-
-/**
- * Get the report mnemonic from a report code
- */
-dba_err dba_db_rep_memo_from_cod(dba_db db, int rep_cod, const char** memo);
-
-/**
- * Verify that a rep_cod is supported by the database
- *
- * @param db
- *   The dballe database
- * @param rep_cod
- *   The report code to verify
- * @retval valid
- *   Set to 1 if the report code is supported, 0 if not
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_check_rep_cod(dba_db db, int rep_cod, int* valid);
 
 /**
  * Start a query on the anagraphic archive
