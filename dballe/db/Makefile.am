@@ -63,6 +63,7 @@ tut_test_SOURCES = \
 	test-utils-db.cc \
 	tests/querybuf.cc \
 	tests/repinfo.cc \
+	tests/db.cc \
 	../core/tests/tut-main.cpp
 tut_test_LDADD = \
 	libdballe-db.la \
@@ -74,6 +75,5 @@ tut_test_LDADD = \
 #	tests/context.cc \
 #	tests/data.cc \
 #	tests/attr.cc \
-#	tests/dba_db_dballe.cc \
 #	tests/db_import.cc \
 #	tests/db_export.cc

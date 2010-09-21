@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +22,12 @@
 #include <dballe/db/db.h>
 #include <dballe/db/internals.h>
 
-namespace tut {
-using namespace tut_dballe;
+using namespace dballe;
+using namespace std;
 
+namespace tut {
+
+#if 0
 static void print_results(dba_db_cursor cur)
 {
 	dba_record result;
@@ -44,12 +45,12 @@ static void print_results(dba_db_cursor cur)
 	}
 	dba_record_delete(result);
 }
+#endif
 
 
-struct dba_db_dballe_shar : public db_test
+struct db_shar : public dballe::tests::db_test
 {
-	TestMsgEnv testenv;
-
+#if 0
 	// Records with test data
 	TestRecord sampleAna;
 	TestRecord extraAna;
@@ -66,12 +67,13 @@ struct dba_db_dballe_shar : public db_test
 	dba_record query;
 	dba_record result;
 	dba_record qc;
-
-	dba_db_dballe_shar()
-		: insert(NULL), query(NULL), result(NULL), qc(NULL)
+#endif
+	db_shar()
+//		: insert(NULL), query(NULL), result(NULL), qc(NULL)
 	{
 		if (!has_db()) return;
 
+#if 0
 		CHECKED(dba_record_create(&insert));
 		CHECKED(dba_record_create(&query));
 		CHECKED(dba_record_create(&result));
@@ -124,21 +126,25 @@ static struct test_data tdata3_patch[] = {
 	{ "ident", "Cippo" },
 };
 		*/
-
+#endif
 	}
 
-	~dba_db_dballe_shar()
+	~db_shar()
 	{
+#if 0
 		if (insert != NULL) dba_record_delete(insert);
 		if (query != NULL) dba_record_delete(query);
 		if (result != NULL) dba_record_delete(result);
 		if (qc != NULL) dba_record_delete(qc);
+#endif
 	}
-
+#if 0
 	void reset_database();
+#endif
 };
-TESTGRP(dba_db_dballe);
+TESTGRP(db);
 
+#if 0
 void dba_db_dballe_shar::reset_database()
 {
 	/* Start with an empty database */
@@ -183,65 +189,21 @@ void dba_db_dballe_shar::reset_database()
 	/* Check again if duplicate updates are trapped */
 	gen_ensure(dba_db_insert(db, insert, 0, 0, NULL, NULL) == DBA_ERROR);
 }
-
-/* Test querybuf */
-template<> template<>
-void to::test<1>()
-{
-	dba_querybuf buf = NULL;
-
-	CHECKED(dba_querybuf_create(10, &buf));
-	gen_ensure(buf != NULL);
-	
-	/* A new querybuf contains the empty string */
-	gen_ensure_equals(string(dba_querybuf_get(buf)), string());
-	gen_ensure_equals(dba_querybuf_size(buf), 0);
-
-	dba_querybuf_reset(buf);
-	gen_ensure_equals(string(dba_querybuf_get(buf)), string());
-	gen_ensure_equals(dba_querybuf_size(buf), 0);
-
-	CHECKED(dba_querybuf_append(buf, "ciao"));
-	gen_ensure_equals(string(dba_querybuf_get(buf)), string("ciao"));
-	gen_ensure_equals(dba_querybuf_size(buf), 4);
-
-	CHECKED(dba_querybuf_appendf(buf, "%d %s", 42, "--"));
-	gen_ensure_equals(string(dba_querybuf_get(buf)), string("ciao42 --"));
-	gen_ensure_equals(dba_querybuf_size(buf), 9);
-	
-	dba_querybuf_reset(buf);
-	gen_ensure_equals(string(dba_querybuf_get(buf)), string());
-	gen_ensure_equals(dba_querybuf_size(buf), 0);
-
-	CHECKED(dba_querybuf_append(buf, "123456789"));
-	gen_ensure_equals(string(dba_querybuf_get(buf)), string("123456789"));
-	gen_ensure_equals(dba_querybuf_size(buf), 9);
-
-	dba_querybuf_reset(buf);
-	gen_ensure_equals(string(dba_querybuf_get(buf)), string());
-	gen_ensure_equals(dba_querybuf_size(buf), 0);
-	CHECKED(dba_querybuf_start_list(buf, ", "));
-	CHECKED(dba_querybuf_append_list(buf, "1"));
-	CHECKED(dba_querybuf_append_list(buf, "2"));
-	CHECKED(dba_querybuf_append_list(buf, "3"));
-	gen_ensure_equals(string(dba_querybuf_get(buf)), string("1, 2, 3"));
-	gen_ensure_equals(dba_querybuf_size(buf), 7);
-
-	dba_querybuf_delete(buf);
-}
+#endif
 
 // Ensure that reset will work on an empty database
 template<> template<>
-void to::test<2>()
+void to::test<1>()
 {
 	use_db();
 
-	CHECKED(dba_db_delete_tables(db));
-	CHECKED(dba_db_reset(db, 0));
+	db->delete_tables();
+	db->reset();
 	// Run twice to see if it is idempotent
-	CHECKED(dba_db_reset(db, 0));
+	db->reset();
 }
 
+#if 0
 template<> template<>
 void to::test<3>()
 {
@@ -1561,6 +1523,7 @@ void to::test<18>()
 
 	dba_db_cursor_delete(cur);
 }
+#endif
 
 }
 
