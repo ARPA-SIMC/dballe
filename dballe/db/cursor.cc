@@ -71,7 +71,27 @@ void Cursor::reset()
     has_orderby = false;
 }
 
-void Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifiers)
+int Cursor::query_stations(const Record& rec)
+{
+    /* Perform the query, limited to station values */
+    return query(rec,
+            DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
+            DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT);
+}
+
+int Cursor::query_data(const Record& rec)
+{
+    /* Perform the query */
+    return query(rec,
+                DBA_DB_WANT_ANA_ID | DBA_DB_WANT_CONTEXT_ID |
+                DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT | DBA_DB_WANT_LEVEL |
+                DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
+                DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
+                DBA_DB_WANT_REPCOD,
+                0);
+}
+
+int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifiers)
 {
     if (db.conn->server_type == ORACLE && !(modifiers & DBA_DB_MODIFIER_STREAM))
     {
@@ -223,6 +243,7 @@ void Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifi
         count = stm->rowcount();
 
     /* Retrieve results will happen in dba_db_cursor_next() */
+    return count;
 }
 
 int Cursor::getcount(const Record& rec, unsigned int qwanted, unsigned int qmodifiers)
@@ -300,6 +321,7 @@ int Cursor::getcount(const Record& rec, unsigned int qwanted, unsigned int qmodi
         throw error_consistency("no results when trying to get the row count");
 
     stm->close_cursor();
+    return count;
 }
 
 int Cursor::remaining() const

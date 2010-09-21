@@ -220,8 +220,34 @@ struct Cursor
      *   The values wanted in output
      * @param modifiers
      *   Optional modifiers to ask for special query behaviours
+     * @return
+     *   The count of items in the results
      */
-    void query(const Record& query, unsigned int wanted, unsigned int modifiers);
+    int query(const Record& query, unsigned int wanted, unsigned int modifiers);
+
+    /**
+     * Start a query on the station archive
+     *
+     * @param query
+     *   The record with the query data (see @ref dba_record_keywords)
+     * @return
+     *   The count of items in the station archive
+     */
+    int query_stations(const Record& query);
+
+    /**
+     * Query the database.
+     *
+     * When multiple values per variable are present, the results will be presented
+     * in increasing order of priority.
+     *
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input")
+     * @return
+     *   The number of values returned by the query
+     */
+    int query_data(const Record& rec);
 
     /**
      * Get the number of rows still to be fetched

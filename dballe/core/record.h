@@ -156,6 +156,12 @@ public:
 	void add(const Record& source);
 
 	/**
+	 * Return true if all elements of \a subset are present in this record,
+	 * with the same value
+	 */
+	bool contains(const Record& subset) const;
+
+	/**
 	 * Set the record to contain only those fields that change source1 into source2.
 	 *
 	 * If a field has been deleted from source1 to source2, it will not be copied
@@ -226,6 +232,27 @@ public:
 	 */
 	wreport::Var& var(wreport::Varcode code);
 
+	/// Shortcuts
+	// @{
+	const wreport::Var& get(dba_keyword parameter) const { return key(parameter); }
+	const wreport::Var& get(wreport::Varcode code) const { return var(code); }
+	wreport::Var& get(dba_keyword parameter) { return key(parameter); }
+	wreport::Var& get(wreport::Varcode code) { return var(code); }
+	const wreport::Var& operator[](dba_keyword parameter) const { return key(parameter); }
+	const wreport::Var& operator[](wreport::Varcode code) const { return var(code); }
+	wreport::Var& operator[](dba_keyword parameter) { return key(parameter); }
+	wreport::Var& operator[](wreport::Varcode code) { return var(code); }
+	template<typename P, typename V>
+	void set(const P& field, const V& val) { get(field).set(val); }
+	void unset(dba_keyword parameter) { key_unset(parameter); }
+	void unset(wreport::Varcode code) { var_unset(code); }
+	// @}
+
+	/**
+	 * Set the date, level and timerange values to match the anagraphical context.
+	 */
+	void set_ana_context();
+
 	/**
 	 * Return the vector with the variables
 	 */
@@ -263,6 +290,14 @@ public:
 	 *   day, hour, minute and seconds.
 	 */
 	void parse_date_extremes(int* minvalues, int* maxvalues) const;
+
+	/**
+	 * Print the contents of this record to the given file descriptor
+	 *
+	 * @param out
+	 *   The output file descriptor
+	 */
+	void print(FILE* out) const;
 
 	/**
 	 * Return the name of a dba_keyword
@@ -604,16 +639,6 @@ dba_err dba_record_var_set(dba_record rec, dba_varcode code, dba_var var);
 dba_err dba_record_var_set_direct(dba_record rec, dba_var var);
 
 /**
- * Set the date, level and timerange values to match the anagraphical context.
- *
- * @param rec
- *   The record where the value is to be set.
- * @return
- *   The error indicator for the function (See @ref error.h).
- */
-dba_err dba_record_set_ana_context(dba_record rec);
-
-/**
  * Set the value of a parameter.
  *
  * The function will fail if the keyword is a string instead of a number.
@@ -721,16 +746,6 @@ dba_err dba_record_var_setc(dba_record rec, dba_varcode code, const char* value)
  *   The error indicator for the function.
  */
 dba_err dba_record_set_from_string(dba_record rec, const char* str);
-
-/**
- * Print the contents of this record to the given file descriptor
- *
- * @param rec
- *   The record to print
- * @param out
- *   The output file descriptor
- */
-void dba_record_print(dba_record rec, FILE* out);
 
 /**
  * Print the difference between two records to an output stream.

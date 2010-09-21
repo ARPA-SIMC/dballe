@@ -25,6 +25,7 @@
 #include "station.h"
 #include "context.h"
 #include "data.h"
+#include "cursor.h"
 
 #include <dballe/core/record.h>
 #include <dballe/msg/defs.h>
@@ -1068,68 +1069,37 @@ void DB::insert(Record& rec, bool can_replace, bool station_can_add)
     t.commit();
 }
 
+void DB::remove(const Record& rec)
+{
+    db::Cursor c(*this);
+
+    // Compile the DELETE query for the data
+    db::Statement stmd(*conn);
+    stmd.bind_in(1, c.out_context_id);
+    stmd.bind_in(2, c.out_idvar);
+    stmd.prepare("DELETE FROM data WHERE id_context=? AND id_var=?");
+
+    // Compile the DELETE query for the attributes
+    db::Statement stma(*conn);
+    stma.bind_in(1, c.out_context_id);
+    stma.bind_in(2, c.out_idvar);
+    stma.prepare("DELETE FROM attr WHERE id_context=? AND id_var=?");
+
+    // Get the list of data to delete
+    c.query(rec,
+            DBA_DB_WANT_CONTEXT_ID | DBA_DB_WANT_VAR_NAME,
+            DBA_DB_MODIFIER_UNSORTED | DBA_DB_MODIFIER_STREAM);
+
+    /* Iterate all the results, deleting them */
+    while (c.next())
+    {
+        stmd.execute();
+        stma.execute();
+    }
+    conn->commit();
+}
+
 #if 0
-
-dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count)
-{
-    dba_err err;
-
-    /* Allocate a new cursor */
-    DBA_RUN_OR_RETURN(dba_db_cursor_create(db, cur));
-
-    /* Perform the query, limited to station values */
-    DBA_RUN_OR_GOTO(failed, dba_db_cursor_query(*cur, query,
-                DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
-                DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT));
-
-    /* Get the number of results */
-    *count = dba_db_cursor_remaining(*cur);
-
-    /* Retrieve results will happen in dba_db_cursor_next() */
-
-    /* Done.  No need to deallocate the statement, it will be done by
-     * dba_db_cursor_delete */
-    return dba_error_ok();
-
-    /* Exit point with cleanup after error */
-failed:
-    dba_db_cursor_delete(*cur);
-    *cur = 0;
-    return err;
-}
-
-dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count)
-{
-    dba_err err;
-
-    /* Allocate a new cursor */
-    DBA_RUN_OR_RETURN(dba_db_cursor_create(db, cur));
-
-    /* Perform the query */
-    DBA_RUN_OR_GOTO(failed, dba_db_cursor_query(*cur, rec,
-                DBA_DB_WANT_ANA_ID | DBA_DB_WANT_CONTEXT_ID |
-                DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT | DBA_DB_WANT_LEVEL |
-                DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
-                DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
-                DBA_DB_WANT_REPCOD,
-                0));
-
-    /* Get the number of results */
-    *count = dba_db_cursor_remaining(*cur);
-
-    /* Retrieve results will happen in dba_db_cursor_next() */
-
-    /* Done.  No need to deallocate the statement, it will be done by
-     * dba_db_cursor_delete */
-    return dba_error_ok();
-
-    /* Exit point with cleanup after error */
-failed:
-    dba_db_cursor_delete(*cur);
-    *cur = 0;
-    return err;
-}
-
 dba_err dba_db_remove_orphans(dba_db db)
 {
     static const char* cclean_mysql = "delete c from context c left join data d on d.id_context = c.id where d.id_context is NULL";
@@ -1184,82 +1154,6 @@ cleanup:
     return err == DBA_OK ? dba_error_ok() : err;
 }
 
-dba_err dba_db_remove(dba_db db, dba_record rec)
-{
-    dba_err err = DBA_OK;
-    dba_db_cursor cur = NULL;
-    SQLHSTMT stmd = NULL;
-    SQLHSTMT stma = NULL;
-    int res;
-
-    /* Allocate statement handle */
-    DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stmd));
-    DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stma));
-
-    /* Compile the DELETE query for the data */
-    res = SQLPrepare(stmd, (unsigned char*)"DELETE FROM data WHERE id_context=? AND id_var=?", SQL_NTS);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-    {
-        err = dba_db_error_odbc(SQL_HANDLE_STMT, stmd, "compiling query to delete data entries");
-        goto cleanup;
-    }
-    /* Compile the DELETE query for the attributes */
-    res = SQLPrepare(stma, (unsigned char*)"DELETE FROM attr WHERE id_context=? AND id_var=?", SQL_NTS);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-    {
-        err = dba_db_error_odbc(SQL_HANDLE_STMT, stma, "compiling query to delete attribute entries");
-        goto cleanup;
-    }
-
-    /* Allocate a new cursor */
-    DBA_RUN_OR_RETURN(dba_db_cursor_create(db, &cur));
-
-    /* Bind parameters */
-    SQLBindParameter(stmd, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(cur->out_context_id), 0, 0);
-    SQLBindParameter(stmd, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(cur->out_idvar), 0, 0);
-    SQLBindParameter(stma, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(cur->out_context_id), 0, 0);
-    SQLBindParameter(stma, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(cur->out_idvar), 0, 0);
-
-    /* Get the list of data to delete */
-    DBA_RUN_OR_GOTO(cleanup, dba_db_cursor_query(cur, rec,
-                DBA_DB_WANT_CONTEXT_ID | DBA_DB_WANT_VAR_NAME,
-                DBA_DB_MODIFIER_UNSORTED | DBA_DB_MODIFIER_STREAM));
-
-    /* Iterate all the results, deleting them */
-    while (1)
-    {
-        int has_data;
-        DBA_RUN_OR_RETURN(dba_db_cursor_next(cur, &has_data));
-        if (!has_data)
-            break;
-
-        res = SQLExecute(stmd);
-        if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO) && (res != SQL_NO_DATA))
-        {
-            err = dba_db_error_odbc(SQL_HANDLE_STMT, stmd, "deleting data entry %d/B%02d%03d",
-                    cur->out_context_id, DBA_VAR_X(cur->out_idvar), DBA_VAR_Y(cur->out_idvar));
-            goto cleanup;
-        }
-
-        res = SQLExecute(stma);
-        if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO) && (res != SQL_NO_DATA))
-        {
-            err = dba_db_error_odbc(SQL_HANDLE_STMT, stma, "deleting attribute entries for %d/B%02d%03d",
-                    cur->out_context_id, DBA_VAR_X(cur->out_idvar), DBA_VAR_Y(cur->out_idvar));
-            goto cleanup;
-        }
-    }
-    DBA_RUN_OR_GOTO(cleanup, dba_db_commit(db));
-
-cleanup:
-    if (stmd != NULL)
-        SQLFreeHandle(SQL_HANDLE_STMT, stmd);
-    if (stma != NULL)
-        SQLFreeHandle(SQL_HANDLE_STMT, stma);
-    if (cur != NULL)
-        dba_db_cursor_delete(cur);
-    return err == DBA_OK ? dba_error_ok() : err;
-}
 #if 0
 #ifdef DBA_USE_DELETE_USING
 dba_err dba_db_remove(dba_db db, dba_record rec)

@@ -280,6 +280,43 @@ void Record::set_to_difference(const Record& source1, const Record& source2)
 		m_vars.push_back(new Var(**s2));
 }
 
+bool Record::contains(const Record& subset) const
+{
+	// Compare the keyword tables
+	for (int i = 0; i < KEYWORD_TABLE_SIZE; ++i)
+	{
+		if (subset.keydata[i] != NULL && keydata[i] == NULL)
+			return false;
+		if (subset.keydata[i] != NULL && keydata[i] != NULL
+		 && *subset.keydata[i] != *keydata[i])
+			return false;
+	}
+
+	// Compare the values
+	vector<Var*>::const_iterator s1 = m_vars.begin();
+	vector<Var*>::const_iterator s2 = subset.m_vars.begin();
+	while (s1 != m_vars.end() && s2 != subset.m_vars.end())
+	{
+		if ((*s1)->code() < (*s2)->code())
+			// s1 has a value not in s2
+			++s1;
+		else if ((*s1)->code() == (*s2)->code())
+		{
+			// they both have the same values
+			if (**s1 != **s2)
+				return false;
+			++s1;
+			++s2;
+		}
+		else if ((*s2)->code() < (*s1)->code())
+		{
+			// s2 has a value not in s1
+			return false;
+		}
+	}
+	return true;
+}
+
 const Var* Record::key_peek(dba_keyword parameter) const throw ()
 {
 	return keydata[parameter];
@@ -372,6 +409,35 @@ const std::vector<wreport::Var*>& Record::vars() const
 {
 	return m_vars;
 }
+
+void Record::set_ana_context()
+{
+	key(DBA_KEY_YEAR).seti(1000);
+	key(DBA_KEY_MONTH).seti(1);
+	key(DBA_KEY_DAY).seti(1);
+	key(DBA_KEY_HOUR).seti(0);
+	key(DBA_KEY_MIN).seti(0);
+	key(DBA_KEY_SEC).seti(0);
+	key(DBA_KEY_LEVELTYPE1).seti(257);
+	key(DBA_KEY_L1).seti(0);
+	key(DBA_KEY_LEVELTYPE2).seti(0);
+	key(DBA_KEY_L2).seti(0);
+	key(DBA_KEY_PINDICATOR).seti(0);
+	key(DBA_KEY_P1).seti(0);
+	key(DBA_KEY_P2).seti(0);
+	/* DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, 254)); */
+}
+
+void Record::print(FILE* out) const
+{
+	for (int i = 0; i < KEYWORD_TABLE_SIZE; ++i)
+		if (keydata[i] != NULL)
+			keydata[i]->print(out);
+
+	for (vector<Var*>::const_iterator i = m_vars.begin(); i != m_vars.end(); ++i)
+		(*i)->print(out);
+}
+
 
 #if 0
 
@@ -770,25 +836,6 @@ dba_err dba_record_var_set_direct(dba_record rec, dba_var var)
 	return dba_error_ok();
 }
 
-dba_err dba_record_set_ana_context(dba_record rec)
-{
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_YEAR, 1000));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MONTH, 1));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_DAY, 1));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_HOUR, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_MIN, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_SEC, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE1, 257));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L1, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE2, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_L2, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P1, 0));
-	DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_P2, 0));
-	/* DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, 254)); */
-	return dba_error_ok();
-}
-
 dba_err dba_record_key_seti(dba_record rec, dba_keyword parameter, int value)
 {
 	assert_is_dba_record(rec);
@@ -934,18 +981,6 @@ dba_err dba_record_var_unset(dba_record rec, dba_varcode code)
 	dba_record_remove_item(rec, code);
 
 	return dba_error_ok();
-}
-
-void dba_record_print(dba_record rec, FILE* out)
-{
-	int i;
-	dba_record_cursor cur;
-	for (i = 0; i < KEYWORD_TABLE_SIZE; i++)
-		if (rec->keydata[i] != NULL)
-			dba_var_print(rec->keydata[i], out);
-
-	for (cur = dba_record_iterate_first(rec); cur != NULL; cur = dba_record_iterate_next(rec, cur))
-		dba_var_print(dba_record_cursor_variable(cur), out);
 }
 
 void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out)

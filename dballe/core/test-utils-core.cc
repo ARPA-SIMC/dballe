@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * core/test-utils-core - Test utility functions for the core module
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *

@@ -320,64 +320,18 @@ public:
 	 *   Otherwise, data can be added only by reusing existing ones.
 	 */
 	void insert(Record& rec, bool can_replace, bool station_can_add);
+
+	/**
+	 * Remove data from the database
+	 *
+	 * @param rec
+	 *   The record with the query data (see technical specifications, par. 1.6.4
+	 *   "parameter output/input") to select the items to be deleted
+	 */
+	void remove(const Record& rec);
 };
 
 #if 0
-
-/**
- * Start a query on the anagraphic archive
- *
- * @param db
- *   The dballe session id
- * @param query
- *   The record with the query data (see @ref dba_record_keywords)
- * @retval cur
- *   The dba_db_cursor variable that will hold the resulting dba_db_cursor that can
- *   be used to get the result values (See @ref dba_db_cursor_next).
- *   dba_db_ana_query() will create the cursor, and it is up to the caller to
- *   delete it using dba_db_cursor_delete().
- * @param count
- *   The count of items in the anagraphic archive, returned by the function
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_ana_query(dba_db db, dba_record query, dba_db_cursor* cur, int* count);
-
-/**
- * Query the database.
- *
- * When multiple values per variable are present, the results will be presented
- * in increasing order of priority.
- *
- * @param db
- *   The dballe session id
- * @param rec
- *   The record with the query data (see technical specifications, par. 1.6.4
- *   "parameter output/input")
- * @retval cur
- *   The dba_db_cursor variable that will hold the resulting dba_db_cursor that can
- *   be used to get the result values (See @ref dba_db_cursor_next)
- *   dba_db_query will create the cursor, and it is up to the caller to delete
- *   it using dba_db_cursor_delete.
- * @retval count
- *   The number of values returned by the query
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_query(dba_db db, dba_record rec, dba_db_cursor* cur, int* count);
-
-/**
- * Remove data from the database
- *
- * @param db
- *   The dballe session id
- * @param rec
- *   The record with the query data (see technical specifications, par. 1.6.4
- *   "parameter output/input") to select the items to be deleted
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_db_remove(dba_db db, dba_record rec);
 
 /**
  * Remove orphan values from the database.
