@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,249 +18,175 @@
  */
 
 #include <test-utils-db.h>
-#include <dballe/db/import.h>
-#include <dballe/db/export.h>
+#include <dballe/db/db.h>
+#include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
+#include <dballe/core/record.h>
+
+using namespace dballe;
+using namespace wreport;
+using namespace std;
 
 namespace tut {
-using namespace tut_dballe;
 
-struct db_import_shar : public db_test
+struct db_import_shar : public dballe::tests::db_test
 {
-	TestMsgEnv testenv;
+	Record query;
 
 	db_import_shar()
 	{
+		if (!has_db()) return;
 	}
 
 	~db_import_shar()
 	{
-		test_untag();
 	}
 };
 TESTGRP(db_import);
 
-static const char* rep_memo_from_msg(dba_msg msg)
+struct MsgCollector : public vector<Msg*>, public MsgConsumer
 {
-	return dba_msg_repmemo_from_type(msg->type);
-}
+    ~MsgCollector()
+    {
+        for (iterator i = begin(); i != end(); ++i)
+            delete *i;
+    }
+    void operator()(auto_ptr<Msg> msg)
+    {
+        push_back(msg.release());
+    }
+};
 
-
-static dba_err msg_collector(dba_msgs msgs, void* data)
-{
-//	cerr << "MSG COLLECTOR";
-	vector<dba_msg>* vec = static_cast<vector<dba_msg>*>(data);
-	for (int i = 0; i < msgs->len; ++i)
-	{
-//		cerr << " got " << i << "/" << msgs->len << ":" << (int)msgs->msgs[i];
-		(*vec).push_back(msgs->msgs[i]);
-		// Detach the message from the msgs
-		msgs->msgs[i] = NULL;
-	}
-//	cerr << endl;
-	dba_msgs_delete(msgs);
-	return dba_error_ok();
-}
-
-static dba_err msgs_collector(dba_msgs msgs, void* data)
-{
-//	cerr << "MSG COLLECTOR";
-	msg_vector* vec = static_cast<msg_vector*>(data);
-	vec->push_back(msgs);
-	return dba_error_ok();
-}
-
+// Test import/export with all CREX samples
 template<> template<>
 void to::test<1>()
 {
 	use_db();
 
-	const char* files[] = {
-		"crex/test-mare0.crex",
-		"crex/test-mare1.crex",
-		"crex/test-synop0.crex",
-		"crex/test-synop2.crex",
-		"crex/test-temp0.crex",
-		NULL
-	};
-
-	/* Create the records we use to work */
-	dba_record query;
-	CHECKED(dba_record_create(&query));
-
-	for (int i = 0; files[i] != NULL; i++)
+	const char** files = dballe::tests::crex_files;
+	for (int i = 0; files[i] != NULL; ++i)
 	{
-		test_tag(files[i]);
-		dba_msgs inmsgs = read_test_msg(files[i], CREX);
-		dba_msg msg = inmsgs->msgs[0];
+        try {
+            std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], CREX);
+            Msg& msg = *(*inmsgs)[0];
 
-		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
-		// Explicitly set rep_memo so that the messages later match
-		CHECKED(dba_msg_set_rep_memo(msg, rep_memo_from_msg(msg), -1));
+            db->reset();
+            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+            // Explicitly set rep_memo so that the messages later match
+            // TODO: still needed? 
+            // msg.set_rep_memo(Msg::rep_memo_from_type(msg.type));
 
-		vector<dba_msg> msgs;
-		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg)));
-		CHECKED(dba_db_export(db, query, msg_collector, &msgs));
-		gen_ensure_equals(msgs.size(), 1u);
-		gen_ensure(msgs[0] != NULL);
+            query.clear();
+            query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
 
-		/*
-		if (string(files[i]).find("temp0") != string::npos)
-		{
-			dba_msg_print(msg, stderr);
-			dba_msg_print(msgs[0], stderr);
-		}
-		*/
+            MsgCollector msgs;
+            db->export_msgs(query, msgs);
+            ensure_equals(msgs.size(), 1u);
+            ensure(msgs[0] != NULL);
 
-		int diffs = 0;
-		dba_msg_diff(msg, msgs[0], &diffs, stderr);
-		if (diffs != 0) track_different_msgs(msg, msgs[0], "crex-old");
-		gen_ensure_equals(diffs, 0);
+            /*
+            if (string(files[i]).find("temp0") != string::npos)
+            {
+                dba_msg_print(msg, stderr);
+                dba_msg_print(msgs[0], stderr);
+            }
+            */
 
-		dba_msgs_delete(inmsgs);
-		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
-			dba_msg_delete(*i);
+            int diffs = msg.diff(*msgs[0], stderr);
+            if (diffs) dballe::tests::track_different_msgs(msg, *msgs[0], "crex");
+            ensure_equals(diffs, 0);
+        } catch (std::exception& e) {
+            throw tut::failure(string("[") + files[i] + "] " + e.what());
+        }
 	}
-
-	dba_record_delete(query);
-	test_untag();
 }
 
+// Test import/export with all BUFR samples
 template<> template<>
 void to::test<2>()
 {
 	use_db();
 
-	const char* files[] = {
-		"bufr/obs0-1.22.bufr", 
-		"bufr/obs0-1.11188.bufr", 
-		"bufr/obs0-3.504.bufr", 
-		"bufr/obs1-9.2.bufr", 
-		"bufr/obs1-11.16.bufr", 
-		"bufr/obs1-13.36.bufr", 
-		"bufr/obs1-19.3.bufr", 
-		"bufr/synop-old-buoy.bufr", 
-		"bufr/obs1-140.454.bufr", 
-		"bufr/obs2-101.16.bufr", 
-		"bufr/obs2-102.1.bufr", 
-		"bufr/obs2-91.2.bufr", 
-		"bufr/obs3-3.1.bufr",
-//		"bufr/obs3-56.2.bufr",
-		"bufr/airep-old-4-142.bufr", 
-		"bufr/obs4-142.1.bufr", 
-		"bufr/obs4-144.4.bufr", 
-		"bufr/obs4-145.4.bufr", 
-		"bufr/obs255-255.0.bufr", 
-		"bufr/test-airep1.bufr",
-		"bufr/test-temp1.bufr", 
-		"bufr/ed4.bufr",
-		NULL
-	};
-
-	dba_record query;
-	CHECKED(dba_record_create(&query));
-
+	const char** files = dballe::tests::bufr_files;
 	for (int i = 0; files[i] != NULL; i++)
 	{
-		test_tag(files[i]);
-		dba_msgs inmsgs = read_test_msg(files[i], BUFR);
-		dba_msg msg = inmsgs->msgs[0];
+        try {
+            std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
+            Msg& msg = *(*inmsgs)[0];
 
-		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
-		// Explicitly set rep_memo so that the messages later match
-		CHECKED(dba_msg_set_rep_memo(msg, rep_memo_from_msg(msg), -1));
+            db->reset();
+            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+            // Explicitly set rep_memo so that the messages later match
+            // TODO: still needed? 
+            // msg.set_rep_memo(Msg::rep_memo_from_type(msg.type));
 
-		vector<dba_msg> msgs;
-		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg)));
-		CHECKED(dba_db_export(db, query, msg_collector, &msgs));
-		gen_ensure_equals(msgs.size(), 1u);
-		gen_ensure(msgs[0] != NULL);
+            query.clear();
+            query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
 
-		/*
-		if (string(files[i]).find("synop-old-buoy") != string::npos)
-		{
-			dba_msg_print(msg, stderr);
-			dba_msg_print(msgs[0], stderr);
-		}
-		*/
+            MsgCollector msgs;
+            db->export_msgs(query, msgs);
+            ensure_equals(msgs.size(), 1u);
+            ensure(msgs[0] != NULL);
 
-		// Compare the two dba_msg
-		int diffs = 0;
-		dba_msg_diff(msg, msgs[0], &diffs, stderr);
-		if (diffs != 0) track_different_msgs(msg, msgs[0], "bufr-old");
-		gen_ensure_equals(diffs, 0);
+            /*
+            if (string(files[i]).find("temp0") != string::npos)
+            {
+                dba_msg_print(msg, stderr);
+                dba_msg_print(msgs[0], stderr);
+            }
+            */
 
-		dba_msgs_delete(inmsgs);
-		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
-			dba_msg_delete(*i);
+            int diffs = msg.diff(*msgs[0], stderr);
+            if (diffs) dballe::tests::track_different_msgs(msg, *msgs[0], "bufr");
+            ensure_equals(diffs, 0);
+        } catch (std::exception& e) {
+            throw tut::failure(string("[") + files[i] + "] " + e.what());
+        }
 	}
-
-	dba_record_delete(query);
-	test_untag();
 }
 
+// Test import/export with all AOF samples
 template<> template<>
 void to::test<3>()
 {
 	use_db();
 
-	const char* files[] = {
-		"aof/obs1-14.63.aof",
-		"aof/obs1-21.1.aof",
-		"aof/obs1-24.2104.aof",
-		"aof/obs1-24.34.aof",
-		"aof/obs2-144.2198.aof",
-		"aof/obs4-165.2027.aof",
-		"aof/obs5-35.61.aof",
-		"aof/obs5-36.30.aof",
-		"aof/obs6-32.1573.aof",
-		NULL
-	};
-	/*	"aof/test-01.aof", */
-
-	dba_record query;
-	CHECKED(dba_record_create(&query));
-
+	const char** files = dballe::tests::aof_files;
 	for (int i = 0; files[i] != NULL; i++)
 	{
-		test_tag(files[i]);
-		dba_msgs inmsgs = read_test_msg(files[i], AOF);
-		dba_msg msg = inmsgs->msgs[0];
+        try {
+            std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], AOF);
+            Msg& msg = *(*inmsgs)[0];
 
-		CHECKED(dba_db_reset(db, NULL));
-		CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
-		// Explicitly set rep_memo so that the messages later match
-		CHECKED(dba_msg_set_rep_memo(msg, rep_memo_from_msg(msg), -1));
+            db->reset();
+            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+            // Explicitly set rep_memo so that the messages later match
+            // TODO: still needed? 
+            // msg.set_rep_memo(Msg::rep_memo_from_type(msg.type));
 
-		vector<dba_msg> msgs;
-		CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg)));
-		CHECKED(dba_db_export(db, query, msg_collector, &msgs));
-		gen_ensure_equals(msgs.size(), 1u);
-		gen_ensure(msgs[0] != NULL);
+            query.clear();
+            query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
 
-		/*
-		if (string(files[i]).find("synop-old-buoy") != string::npos)
-		{
-			dba_msg_print(msg, stderr);
-			dba_msg_print(msgs[0], stderr);
-		}
-		*/
+            MsgCollector msgs;
+            db->export_msgs(query, msgs);
+            ensure_equals(msgs.size(), 1u);
+            ensure(msgs[0] != NULL);
 
-		// Compare the two dba_msg
-		int diffs = 0;
-		dba_msg_diff(msg, msgs[0], &diffs, stderr);
-		if (diffs != 0) track_different_msgs(msg, msgs[0], "aof-old");
-		gen_ensure_equals(diffs, 0);
+            /*
+            if (string(files[i]).find("temp0") != string::npos)
+            {
+                dba_msg_print(msg, stderr);
+                dba_msg_print(msgs[0], stderr);
+            }
+            */
 
-		dba_msgs_delete(inmsgs);
-		for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
-			dba_msg_delete(*i);
+            int diffs = msg.diff(*msgs[0], stderr);
+            if (diffs) dballe::tests::track_different_msgs(msg, *msgs[0], "bufr");
+            ensure_equals(diffs, 0);
+        } catch (std::exception& e) {
+            throw tut::failure(string("[") + files[i] + "] " + e.what());
+        }
 	}
-
-	dba_record_delete(query);
-	test_untag();
 }
 
 // Check that multiple messages are correctly identified during export
@@ -273,51 +197,41 @@ void to::test<4>()
 
 	// msg1 has latitude 33.88
 	// msg2 has latitude 46.22
-	dba_msgs msgs1 = read_test_msg("bufr/obs0-1.22.bufr", BUFR);
-	dba_msgs msgs2 = read_test_msg("bufr/obs0-3.504.bufr", BUFR);
-	dba_msg msg1 = msgs1->msgs[0];
-	dba_msg msg2 = msgs2->msgs[0];
+    std::auto_ptr<Msgs> msgs1 = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+    std::auto_ptr<Msgs> msgs2 = read_msgs("bufr/obs0-3.504.bufr", BUFR);
+    const Msg& msg1 = *(*msgs1)[0];
+    const Msg& msg2 = *(*msgs2)[0];
 
-	CHECKED(dba_db_reset(db, NULL));
-	CHECKED(dba_import_msg(db, msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
-	CHECKED(dba_import_msg(db, msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+    db->reset();
+    db->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+    db->import_msg(msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
 	// Explicitly set rep_memo so that the messages later match
-	CHECKED(dba_msg_set_rep_memo(msg1, rep_memo_from_msg(msg1), -1));
-	CHECKED(dba_msg_set_rep_memo(msg2, rep_memo_from_msg(msg2), -1));
+	//CHECKED(dba_msg_set_rep_memo(msg1, rep_memo_from_msg(msg1), -1));
+	//CHECKED(dba_msg_set_rep_memo(msg2, rep_memo_from_msg(msg2), -1));
 
-	dba_record query;
-	CHECKED(dba_record_create(&query));
-	CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, rep_memo_from_msg(msg1)));
+    query.clear();
+    query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg1.type));
 
 	// fprintf(stderr, "Queried: %d\n", rep_cod_from_msg(msg1));
 
-	// Export with the old algorithm
-	vector<dba_msg> msgs;
-	CHECKED(dba_db_export(db, query, msg_collector, &msgs));
-	// Warning: this test fails on Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
-	gen_ensure_equals(msgs.size(), 2u);
-	gen_ensure(msgs[0] != NULL);
-	gen_ensure(msgs[1] != NULL);
+	// Warning: this test used to fail on Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
+    MsgCollector msgs;
+    db->export_msgs(query, msgs);
+    ensure_equals(msgs.size(), 2u);
+    ensure(msgs[0] != NULL);
+    ensure(msgs[1] != NULL);
 
 	// Compare the two dba_msg
-	int diffs = 0;
-	dba_msg_diff(msg1, msgs[0], &diffs, stderr);
-	if (diffs != 0) track_different_msgs(msg1, msgs[0], "synop1-old");
-	gen_ensure_equals(diffs, 0);
+    int diffs = msg1.diff(*msgs[0], stderr);
+    if (diffs) dballe::tests::track_different_msgs(msg1, *msgs[0], "synop1");
+    ensure_equals(diffs, 0);
 
-	diffs = 0;
-	dba_msg_diff(msg2, msgs[1], &diffs, stderr);
-	if (diffs != 0) track_different_msgs(msg2, msgs[1], "synop2-old");
-	gen_ensure_equals(diffs, 0);
-
-	dba_msgs_delete(msgs1);
-	dba_msgs_delete(msgs2);
-	for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); i++)
-		dba_msg_delete(*i);
-
-	dba_record_delete(query);
+    diffs = msg2.diff(*msgs[1], stderr);
+    if (diffs) dballe::tests::track_different_msgs(msg2, *msgs[1], "synop2");
+    ensure_equals(diffs, 0);
 }
 
+#if 0
 // Check that all imported messages are found on export
 template<> template<>
 void to::test<5>()
@@ -621,6 +535,7 @@ void to::test<8>()
 	}
 	#endif
 }
+#endif
 
 }
 

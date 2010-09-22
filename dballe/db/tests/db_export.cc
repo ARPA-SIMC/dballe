@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,88 +18,85 @@
  */
 
 #include <test-utils-db.h>
-#include <dballe/db/export.h>
+#include <dballe/db/db.h>
+#include <dballe/core/record.h>
+
+using namespace dballe;
+using namespace wreport;
+using namespace std;
 
 namespace tut {
-using namespace tut_dballe;
 
-struct db_export_shar : public db_test
+struct db_export_shar : public dballe::tests::db_test
 {
-	TestMsgEnv testenv;
-
 	db_export_shar()
 	{
 		if (!has_db()) return;
 
-		dba_record rec;
-		CHECKED(dba_record_create(&rec));
-
 		// Insert some data
-		CHECKED(dba_record_key_setd(rec, DBA_KEY_LAT, 12.34560));
-		CHECKED(dba_record_key_setd(rec, DBA_KEY_LON, 76.54321));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_MOBILE, 0));
+        Record rec;
+		rec.set(DBA_KEY_LAT, 12.34560);
+		rec.set(DBA_KEY_LON, 76.54321);
+		rec.set(DBA_KEY_MOBILE, 0);
 
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_YEAR, 1945));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_MONTH, 4));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_DAY, 25));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_HOUR, 8));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_MIN, 0));
+		rec.set(DBA_KEY_YEAR, 1945);
+		rec.set(DBA_KEY_MONTH, 4);
+		rec.set(DBA_KEY_DAY, 25);
+		rec.set(DBA_KEY_HOUR, 8);
+		rec.set(DBA_KEY_MIN, 0);
 
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE1, 1));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_L1, 2));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_LEVELTYPE2, 0));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_L2, 3));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_PINDICATOR, 4));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_P1, 5));
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_P2, 6));
+		rec.set(DBA_KEY_LEVELTYPE1, 1);
+		rec.set(DBA_KEY_L1, 2);
+		rec.set(DBA_KEY_LEVELTYPE2, 0);
+		rec.set(DBA_KEY_L2, 3);
+		rec.set(DBA_KEY_PINDICATOR, 4);
+		rec.set(DBA_KEY_P1, 5);
+		rec.set(DBA_KEY_P2, 6);
 
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_REP_COD, 1));
+		rec.set(DBA_KEY_REP_COD, 1);
 
-		CHECKED(dba_record_var_seti(rec, DBA_VAR(0, 1, 12), 500));
+		rec.set(WR_VAR(0, 1, 12), 500);
 
-		CHECKED(dba_db_insert(db, rec, 0, 1, NULL, NULL));
+        db->insert(rec, false, true);
 
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_DAY, 26));
-		CHECKED(dba_record_var_seti(rec, DBA_VAR(0, 1, 12), 400));
+        rec.unset(DBA_KEY_ANA_ID);
+        rec.unset(DBA_KEY_CONTEXT_ID);
+		rec.set(DBA_KEY_DAY, 26);
+		rec.set(WR_VAR(0, 1, 12), 400);
+        db->insert(rec, false, true);
 
-		CHECKED(dba_db_insert(db, rec, 0, 1, NULL, NULL));
+        rec.unset(DBA_KEY_ANA_ID);
+        rec.unset(DBA_KEY_CONTEXT_ID);
+		rec.set(DBA_KEY_MOBILE, 1);
+		rec.set(DBA_KEY_IDENT, "ciao");
+		rec.set(WR_VAR(0, 1, 12), 300);
+        db->insert(rec, false, true);
 
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_MOBILE, 1));
-		CHECKED(dba_record_key_setc(rec, DBA_KEY_IDENT, "ciao"));
-		CHECKED(dba_record_var_seti(rec, DBA_VAR(0, 1, 12), 300));
-
-		CHECKED(dba_db_insert(db, rec, 0, 1, NULL, NULL));
-
-		CHECKED(dba_record_key_seti(rec, DBA_KEY_REP_COD, 2));
-		CHECKED(dba_record_var_seti(rec, DBA_VAR(0, 1, 12), 200));
-
-		CHECKED(dba_db_insert(db, rec, 0, 1, NULL, NULL));
-
-		dba_record_delete(rec);
+        rec.unset(DBA_KEY_ANA_ID);
+        rec.unset(DBA_KEY_CONTEXT_ID);
+		rec.set(DBA_KEY_REP_COD, 2);
+		rec.set(WR_VAR(0, 1, 12), 200);
+        db->insert(rec, false, true);
 	}
 
 	~db_export_shar()
 	{
-		test_untag();
 	}
 };
 TESTGRP(db_export);
 
-static dba_err msg_collector(dba_msgs msgs, void* data)
+struct MsgCollector : public vector<Msg*>, public MsgConsumer
 {
-//	cerr << "MSG COLLECTOR";
-	vector<dba_msg>* vec = static_cast<vector<dba_msg>*>(data);
-	for (int i = 0; i < msgs->len; ++i)
-	{
-//		cerr << " got " << i << "/" << msgs->len << ":" << (int)msgs->msgs[i];
-		(*vec).push_back(msgs->msgs[i]);
-		// Detach the message from the msgs
-		msgs->msgs[i] = NULL;
-	}
-//	cerr << endl;
-	dba_msgs_delete(msgs);
-	return dba_error_ok();
-}
+    ~MsgCollector()
+    {
+        for (iterator i = begin(); i != end(); ++i)
+            delete *i;
+    }
+    void operator()(auto_ptr<Msg> msg)
+    {
+        push_back(msg.release());
+    }
+};
 
 // Put some data in the database and check that it gets exported properly
 template<> template<>
@@ -110,71 +105,63 @@ void to::test<1>()
 	use_db();
 
 	// Query back the data
-	dba_record query;
-	CHECKED(dba_record_create(&query));
+    Record query;
 
-	vector<dba_msg> msgs;
-	CHECKED(dba_db_export(db, query, msg_collector, &msgs));
-
-	gen_ensure_equals(msgs.size(), 4u);
+	MsgCollector msgs;
+    db->export_msgs(query, msgs);
+	ensure_equals(msgs.size(), 4u);
 
 	if (msgs[2]->type == MSG_METAR)
 	{
 		// Since the order here is not determined, enforce one
-		dba_msg tmp = msgs[2];
+		Msg* tmp = msgs[2];
 		msgs[2] = msgs[3];
 		msgs[3] = tmp;
 	}
 
-	gen_ensure_equals(msgs[0]->type, MSG_SYNOP);
-	gen_ensure_msg_equals(msgs[0], DBA_MSG_LATITUDE, 12.34560);
-	gen_ensure_msg_equals(msgs[0], DBA_MSG_LONGITUDE, 76.54321);
-	gen_ensure_msg_undef(msgs[0], DBA_MSG_IDENT);
-	gen_ensure_msg_equals(msgs[0], DBA_MSG_YEAR, 1945);
-	gen_ensure_msg_equals(msgs[0], DBA_MSG_MONTH, 4);
-	gen_ensure_msg_equals(msgs[0], DBA_MSG_DAY, 25);
-	gen_ensure_msg_equals(msgs[0], DBA_MSG_HOUR, 8);
-	gen_ensure_msg_equals(msgs[0], DBA_MSG_MINUTE, 0);
-	dba_var var = want_var_at(msgs[0], DBA_VAR(0, 1, 12), 1, 2, 0, 3, 4, 5, 6);
-	gen_ensure_var_equals(var, 500);
+	ensure_equals(msgs[0]->type, MSG_SYNOP);
+	ensure_var_equals(want_var(*msgs[0], DBA_MSG_LATITUDE), 12.34560);
+	ensure_var_equals(want_var(*msgs[0], DBA_MSG_LONGITUDE), 76.54321);
+	ensure_msg_undef(*msgs[0], DBA_MSG_IDENT);
+	ensure_var_equals(want_var(*msgs[0], DBA_MSG_YEAR), 1945);
+	ensure_var_equals(want_var(*msgs[0], DBA_MSG_MONTH), 4);
+	ensure_var_equals(want_var(*msgs[0], DBA_MSG_DAY), 25);
+	ensure_var_equals(want_var(*msgs[0], DBA_MSG_HOUR), 8);
+	ensure_var_equals(want_var(*msgs[0], DBA_MSG_MINUTE), 0);
+	ensure_var_equals(want_var(*msgs[0], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 500);
 
-	gen_ensure_equals(msgs[1]->type, MSG_SYNOP);
-	gen_ensure_msg_equals(msgs[1], DBA_MSG_LATITUDE, 12.34560);
-	gen_ensure_msg_equals(msgs[1], DBA_MSG_LONGITUDE, 76.54321);
-	gen_ensure_msg_undef(msgs[1], DBA_MSG_IDENT);
-	gen_ensure_msg_equals(msgs[1], DBA_MSG_YEAR, 1945);
-	gen_ensure_msg_equals(msgs[1], DBA_MSG_MONTH, 4);
-	gen_ensure_msg_equals(msgs[1], DBA_MSG_DAY, 26);
-	gen_ensure_msg_equals(msgs[1], DBA_MSG_HOUR, 8);
-	gen_ensure_msg_equals(msgs[1], DBA_MSG_MINUTE, 0);
-	var = want_var_at(msgs[1], DBA_VAR(0, 1, 12), 1, 2, 0, 3, 4, 5, 6);
-	gen_ensure_var_equals(var, 400);
+	ensure_equals(msgs[1]->type, MSG_SYNOP);
+	ensure_var_equals(want_var(*msgs[1], DBA_MSG_LATITUDE), 12.34560);
+	ensure_var_equals(want_var(*msgs[1], DBA_MSG_LONGITUDE), 76.54321);
+	ensure_msg_undef(*msgs[1], DBA_MSG_IDENT);
+	ensure_var_equals(want_var(*msgs[1], DBA_MSG_YEAR), 1945);
+	ensure_var_equals(want_var(*msgs[1], DBA_MSG_MONTH), 4);
+	ensure_var_equals(want_var(*msgs[1], DBA_MSG_DAY), 26);
+	ensure_var_equals(want_var(*msgs[1], DBA_MSG_HOUR), 8);
+	ensure_var_equals(want_var(*msgs[1], DBA_MSG_MINUTE), 0);
+	ensure_var_equals(want_var(*msgs[1], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 400);
 
-	gen_ensure_equals(msgs[2]->type, MSG_SYNOP);
-	gen_ensure_msg_equals(msgs[2], DBA_MSG_LATITUDE, 12.34560);
-	gen_ensure_msg_equals(msgs[2], DBA_MSG_LONGITUDE, 76.54321);
-	gen_ensure_msg_equals(msgs[2], DBA_MSG_IDENT, "ciao");
-	gen_ensure_msg_equals(msgs[2], DBA_MSG_YEAR, 1945);
-	gen_ensure_msg_equals(msgs[2], DBA_MSG_MONTH, 4);
-	gen_ensure_msg_equals(msgs[2], DBA_MSG_DAY, 26);
-	gen_ensure_msg_equals(msgs[2], DBA_MSG_HOUR, 8);
-	gen_ensure_msg_equals(msgs[2], DBA_MSG_MINUTE, 0);
-	var = want_var_at(msgs[2], DBA_VAR(0, 1, 12), 1, 2, 0, 3, 4, 5, 6);
-	gen_ensure_var_equals(var, 300);
+	ensure_equals(msgs[2]->type, MSG_SYNOP);
+	ensure_var_equals(want_var(*msgs[2], DBA_MSG_LATITUDE), 12.34560);
+	ensure_var_equals(want_var(*msgs[2], DBA_MSG_LONGITUDE), 76.54321);
+	ensure_var_equals(want_var(*msgs[2], DBA_MSG_IDENT), "ciao");
+	ensure_var_equals(want_var(*msgs[2], DBA_MSG_YEAR), 1945);
+	ensure_var_equals(want_var(*msgs[2], DBA_MSG_MONTH), 4);
+	ensure_var_equals(want_var(*msgs[2], DBA_MSG_DAY), 26);
+	ensure_var_equals(want_var(*msgs[2], DBA_MSG_HOUR), 8);
+	ensure_var_equals(want_var(*msgs[2], DBA_MSG_MINUTE), 0);
+	ensure_var_equals(want_var(*msgs[2], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 300);
 
-	gen_ensure_equals(msgs[3]->type, MSG_METAR);
-	gen_ensure_msg_equals(msgs[3], DBA_MSG_LATITUDE, 12.34560);
-	gen_ensure_msg_equals(msgs[3], DBA_MSG_LONGITUDE, 76.54321);
-	gen_ensure_msg_equals(msgs[3], DBA_MSG_IDENT, "ciao");
-	gen_ensure_msg_equals(msgs[3], DBA_MSG_YEAR, 1945);
-	gen_ensure_msg_equals(msgs[3], DBA_MSG_MONTH, 4);
-	gen_ensure_msg_equals(msgs[3], DBA_MSG_DAY, 26);
-	gen_ensure_msg_equals(msgs[3], DBA_MSG_HOUR, 8);
-	gen_ensure_msg_equals(msgs[3], DBA_MSG_MINUTE, 0);
-	var = want_var_at(msgs[3], DBA_VAR(0, 1, 12), 1, 2, 0, 3, 4, 5, 6);
-	gen_ensure_var_equals(var, 200);
-
-	dba_record_delete(query);
+	ensure_equals(msgs[3]->type, MSG_METAR);
+	ensure_var_equals(want_var(*msgs[3], DBA_MSG_LATITUDE), 12.34560);
+	ensure_var_equals(want_var(*msgs[3], DBA_MSG_LONGITUDE), 76.54321);
+	ensure_var_equals(want_var(*msgs[3], DBA_MSG_IDENT), "ciao");
+	ensure_var_equals(want_var(*msgs[3], DBA_MSG_YEAR), 1945);
+	ensure_var_equals(want_var(*msgs[3], DBA_MSG_MONTH), 4);
+	ensure_var_equals(want_var(*msgs[3], DBA_MSG_DAY), 26);
+	ensure_var_equals(want_var(*msgs[3], DBA_MSG_HOUR), 8);
+	ensure_var_equals(want_var(*msgs[3], DBA_MSG_MINUTE), 0);
+	ensure_var_equals(want_var(*msgs[3], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 200);
 }
 
 }

@@ -33,8 +33,30 @@
  * Functions used to connect to DB-All.e and insert, query and delete data.
  */
 
+/**
+ * Flags controlling message import
+ * @{
+ */
+/* Import the attributes. */
+#define DBA_IMPORT_ATTRS		1
+/* Attempt to merge pseudoana extra information into the existing ones. */
+#define DBA_IMPORT_FULL_PSEUDOANA	2
+/* Import datetime information as data to preserve their attributes. */
+#define DBA_IMPORT_DATETIME_ATTRS	4
+/* Message data will overwrite existing values; otherwise, trying to insert
+ * existing data will cause an error. */
+#define DBA_IMPORT_OVERWRITE		8
+/* Perform the import outside of the transaction.  This will make the function
+ * faster but not atomic: if interrupted, for example in case of error, then
+ * the data inserted before the interruption will stay in the database. */
+#define DBA_IMPORT_NO_TRANSACTIONS	16
+/// @}
+
 namespace dballe {
 struct Record;
+struct Msg;
+struct Msgs;
+struct MsgConsumer;
 
 namespace db {
 struct Connection;
@@ -109,6 +131,12 @@ protected:
 	 * Delete a sequence in the database if it exists, otherwise do nothing.
 	 */
 	void drop_sequence_if_exists(const char* name);
+
+	/**
+	 * Fill a message station info layer with information from the given
+	 * station and report IDs
+	 */
+	void fill_ana_layer(Msg& msg, int id_station, int id_report);
 
 public:
 	DB();
@@ -410,6 +438,48 @@ public:
 	 */
 	void attr_remove(int id_context, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs);
 
+	/**
+	 * Import a Msg message into the DB-All.e database
+	 *
+	 * @param db
+	 *   The DB-All.e database to write the data into
+	 * @param msg
+	 *   The Msg containing the data to import
+	 * @param repmemo
+	 *   Report mnemonic to which imported data belong.  If NULL is passed, then it
+	 *   will be chosen automatically based on the message type.
+	 * @param flags
+	 *   Customise different aspects of the import process.  It is a bitmask of the
+	 *   various DBA_IMPORT_* macros.
+	 */
+	void import_msg(const Msg& msg, const char* repmemo, int flags);
+
+	/**
+	 * Import Msgs messages into the DB-All.e database
+	 *
+	 * @param db
+	 *   The DB-All.e database to write the data into
+	 * @param msgs
+	 *   The Msgs containing the data to import
+	 * @param repmemo
+	 *   Report mnemonic to which imported data belong.  If NULL is passed, then it
+	 *   will be chosen automatically based on the message type.
+	 * @param flags
+	 *   Customise different aspects of the import process.  It is a bitmask of the
+	 *   various DBA_IMPORT_* macros.
+	 */
+	void import_msgs(const Msgs& msgs, const char* repmemo, int flags);
+
+	/**
+	 * Perform the query in `query', and return the results as a NULL-terminated
+	 * array of dba_msg.
+	 *
+	 * @param query
+	 *   The query to perform
+	 * @param cons
+	 *   The MsgsConsumer that will handle the resulting messages
+	 */
+	void export_msgs(const Record& query, MsgConsumer& cons);
 };
 
 } // namespace dballe

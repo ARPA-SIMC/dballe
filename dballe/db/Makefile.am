@@ -19,9 +19,7 @@ dbinclude_HEADERS = \
 		data.h \
 		attr.h \
 		cursor.h \
-		db.h \
-		import.h \
-		export.h
+		db.h
 
 noinst_LTLIBRARIES = libdballe-db.la
 libdballe_db_la_SOURCES = \
@@ -33,11 +31,9 @@ libdballe_db_la_SOURCES = \
 		data.cc \
 		attr.cc \
 		cursor.cc \
-		db.cc
-
-
-#		import.cc \
-#		export.cc
+		db.cc \
+		import.cc \
+		export.cc
 
 libdballe_db_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS)
 
@@ -68,12 +64,11 @@ tut_test_SOURCES = \
 	tests/data.cc \
 	tests/attr.cc \
 	tests/db.cc \
+	tests/db_import.cc \
+	tests/db_export.cc \
 	../core/tests/tut-main.cpp
 tut_test_LDADD = \
 	libdballe-db.la \
 	../msg/libdballe-msg.la \
 	../core/libdballe-core.la \
 	$(WREPORT_LIBS) $(LUA_LIBS) $(WIBBLE_LIBS)
-
-#	tests/db_import.cc \
-#	tests/db_export.cc
