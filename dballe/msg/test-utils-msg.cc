@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,6 +24,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 
+using namespace wreport;
 using namespace std;
 
 namespace dballe {
@@ -77,6 +76,28 @@ const char* crex_files[] = {
     NULL
 };
 
+const char* aof_files[] = {
+	"aof/obs1-11.0.aof",
+	"aof/obs1-14.63.aof",
+	"aof/obs1-21.1.aof",
+	"aof/obs1-24.2104.aof",
+	"aof/obs1-24.34.aof",
+	"aof/obs2-144.2198.aof",
+	"aof/obs2-244.0.aof",
+	"aof/obs2-244.1.aof",
+	"aof/obs4-165.2027.aof",
+	"aof/obs5-35.61.aof",
+	"aof/obs5-36.30.aof",
+	"aof/obs6-32.1573.aof",
+	"aof/obs6-32.0.aof",
+	"aof/aof_27-2-144.aof",
+	"aof/aof_28-2-144.aof",
+	"aof/aof_27-2-244.aof",
+	"aof/aof_28-2-244.aof",
+	"aof/missing-cloud-h.aof",
+	"aof/brokenamdar.aof",
+	NULL,
+};
 
 auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const msg::Importer::Options& opts)
 {
@@ -111,6 +132,37 @@ void track_different_msgs(const Msgs& msgs1, const Msgs& msgs2, const std::strin
 	fclose(out1);
 	fclose(out2);
 	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
+}
+
+void _ensure_msg_undef(const wibble::tests::Location& loc, const Msg& msg, int shortcut)
+{
+	const Var* var = msg.find_by_id(shortcut);
+	if (var && var->value())
+	{
+		std::stringstream ss;
+		ss << "value is " << var->value() << " instead of being undefined";
+		throw tut::failure(loc.msg(ss.str()));
+	}
+}
+
+const Var& _want_var(const Location& loc, const Msg& msg, int shortcut)
+{
+	const Var* var = msg.find_by_id(shortcut);
+	if (!var)
+		throw tut::failure(loc.msg("value is missing"));
+	if (!var->value())
+		throw tut::failure(loc.msg("value is present but undefined"));
+	return *var;
+}
+
+const Var& _want_var(const Location& loc, const Msg& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr)
+{
+	const Var* var = msg.find(code, lev, tr);
+	if (!var)
+		throw tut::failure(loc.msg("value is missing"));
+	if (!var->value())
+		throw tut::failure(loc.msg("value is present but undefined"));
+	return *var;
 }
 
 #if 0
@@ -204,46 +256,7 @@ dba_err msg_generator::fill_message(dba_msg msg, bool mobile)
 }
 
 
-dba_var my_want_var(const char* file, int line, dba_msg msg, int id, const char* idname)
-{
-	dba_var var = dba_msg_find_by_id(msg, id);
-	if (var == NULL)
-	{
-		std::stringstream ss;
-		ss << "message does not contain the value " << idname;
-		throw failure(__ensure_errmsg(file, line, ss.str()));
-	}
-	return var;
-}
 
-dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2)
-{
-	dba_var var = dba_msg_find(msg, code, ltype1, l1, ltype2, l2, pind, p1, p2);
-
-	if (var == NULL)
-	{
-		char varname[10];
-		snprintf(varname, 10, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
-		std::stringstream ss;
-		ss << "message does not contain the value " << varname << " at "
-		   << "lev(" << ltype1 << "," << l1 << "," << ltype2 << "," << l2 << ")"
-		   << "tr(" << pind << "," << p1 << "," << p2 << ")";
-		throw failure(__ensure_errmsg(file, line, ss.str()));
-	}
-	return var;
-}
-
-
-void my_ensure_msg_undef(const char* file, int line, dba_msg msg, int id, const char* idname)
-{
-	dba_var var = dba_msg_find_by_id(msg, id);
-	if (var != NULL && dba_var_value(var) != NULL)
-	{
-		std::stringstream ss;
-		ss << "message has " << idname << " set to " << dba_var_value(var) << " instead of being undefined";
-		throw failure(__ensure_errmsg(file, line, ss.str()));
-	}
-}
 #endif
 
 }

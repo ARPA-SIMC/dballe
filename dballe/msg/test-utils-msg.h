@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,7 +33,9 @@
 namespace dballe {
 namespace tests {
 
-std::auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
+typedef wibble::tests::Location Location;
+
+std::auto_ptr<Msgs> _read_msgs(const Location& loc, const char* filename, Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
 #define read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
@@ -46,6 +46,16 @@ void track_different_msgs(const Msgs& msgs1, const Msgs& msgs2, const std::strin
 
 extern const char* bufr_files[];
 extern const char* crex_files[];
+extern const char* aof_files[];
+
+void _ensure_msg_undef(const Location& loc, const Msg& msg, int shortcut);
+#define ensure_msg_undef(msg, id) dballe::tests::_ensure_msg_undef(wibble::tests::Location(__FILE__, __LINE__, #msg " has undefined " #id), (msg), (id))
+#define inner_ensure_msg_undef(msg, id) dballe::tests::_ensure_msg_undef(wibble::tests::Location(loc, __FILE__, __LINE__, #msg " has undefined " #id), (msg), (id))
+
+const wreport::Var& _want_var(const Location& loc, const Msg& msg, int shortcut);
+const wreport::Var& _want_var(const Location& loc, const Msg& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);
+#define want_var(msg, ...) dballe::tests::_want_var(wibble::tests::Location(__FILE__, __LINE__, #msg " needs to have var " #__VA_ARGS__), (msg), __VA_ARGS__)
+
 
 #if 0
 
@@ -79,17 +89,6 @@ public:
 		return dba_error_ok();
 	}
 };
-	
-dba_var my_want_var(const char* file, int line, dba_msg msg, int id, const char* idname);
-#define want_var(msg, id) my_want_var(__FILE__, __LINE__, (msg), (id), #id)
-
-dba_var my_want_var_at(const char* file, int line, dba_msg msg, dba_varcode code, int ltype1, int l1, int ltype2, int l2, int pind, int p1, int p2);
-#define want_var_at(msg, code, ltype1, l1, ltype2, l2, pind, p1, p2) my_want_var_at(__FILE__, __LINE__, (msg), (code), (ltype1), (l1), (ltype2), (l2), (pind), (p1), (p2))
-
-
-void my_ensure_msg_undef(const char* file, int line, dba_msg msg, int id, const char* idname);
-#define gen_ensure_msg_undef(msg, id) my_ensure_msg_undef(__FILE__, __LINE__, (msg), (id), #id)
-#define inner_ensure_msg_undef(msg, id) my_ensure_msg_undef(file, line, (msg), (id), #id)
 
 template <typename T>
 void my_ensure_msg_equals(const char* file, int line, dba_msg msg, int id, const char* idname, const T& value)
