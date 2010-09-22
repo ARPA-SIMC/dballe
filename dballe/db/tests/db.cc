@@ -792,7 +792,6 @@ void to::test<8>()
         WANTRESULT(b);
 }
 
-#if 0
 // Test working with QC data
 template<> template<>
 void to::test<9>()
@@ -800,78 +799,75 @@ void to::test<9>()
         use_db();
         populate_database();
 
-	{
-		int count, has_data;
-		int context;
-		dba_db_cursor cursor;
-		int val;
-		int qc_count;
-		int found;
+        db::Cursor cursor(*db);
+        query.clear();
+        query.set(DBA_KEY_LATMIN, 1000000);
+        cursor.query_data(query);
 
-		dba_record_clear(query);
-		CHECKED(dba_record_key_seti(query, DBA_KEY_LATMIN, 1000000));
-		CHECKED(dba_db_query(db, query, &cursor, &count));
-		do {
-			CHECKED(dba_db_cursor_next(cursor, &has_data));
-			gen_ensure(has_data);
-			/* fprintf(stderr, "%d B%02d%03d\n", count, WR_VAR_X(var), WR_VAR_Y(var)); */
-		} while (cursor->count && cursor->out_idvar != WR_VAR(0, 1, 11));
-		gen_ensure(cursor->out_idvar == WR_VAR(0, 1, 11));
-		context = cursor->out_context_id;
-		dba_db_cursor_delete(cursor);
+        // Move the cursor to B01011
+        bool found = false;
+        while (cursor.next())
+                if (cursor.out_idvar == WR_VAR(0, 1, 11))
+                {
+                        found = true;
+                        break;
+                }
+        ensure(found);
 
-		/* Insert new QC data about this report */
-		dba_record_clear(qc);
-		CHECKED(dba_record_var_seti(qc, WR_VAR(0, 33, 2), 2));
-		CHECKED(dba_record_var_seti(qc, WR_VAR(0, 33, 3), 5));
-		CHECKED(dba_record_var_seti(qc, WR_VAR(0, 33, 5), 33));
-		CHECKED(dba_db_qc_insert(db, context, WR_VAR(0, 1, 11), qc));
+        int context_id = cursor.out_context_id;
 
-		/* Query back the data */
-		dba_record_clear(qc);
-		CHECKED(dba_db_qc_query(db, context, WR_VAR(0, 1, 11), NULL, 0, qc, &qc_count));
+        // Insert new attributes about this report
+        qc.clear();
+        qc.set(WR_VAR(0, 33, 2), 2);
+        qc.set(WR_VAR(0, 33, 3), 5);
+        qc.set(WR_VAR(0, 33, 5), 33);
+        db->attr_insert(context_id, WR_VAR(0, 1, 11), qc);
 
-		CHECKED(dba_record_var_enqi(qc, WR_VAR(0, 33, 2), &val, &found));
-		gen_ensure_equals(found, 1);
-		gen_ensure_equals(val, 2);
-		CHECKED(dba_record_var_enqi(qc, WR_VAR(0, 33, 3), &val, &found));
-		gen_ensure_equals(found, 1);
-		gen_ensure_equals(val, 5);
-		CHECKED(dba_record_var_enqi(qc, WR_VAR(0, 33, 5), &val, &found));
-		gen_ensure_equals(found, 1);
-		gen_ensure_equals(val, 33);
+        // Query back the data
+        qc.clear();
+        vector<Varcode> codes;
+        ensure_equals(db->query_attrs(context_id, WR_VAR(0, 1, 11), codes, qc), 3);
 
-		/* Delete a couple of items */
-		{
-			dba_varcode todel[] = {WR_VAR(0, 33, 2), WR_VAR(0, 33, 5)};
-			CHECKED(dba_db_qc_remove(db, context, WR_VAR(0, 1, 11), todel, 2));
-		}
-		/* Deleting non-existing items should not fail.  Also try creating a
-		 * query with just on item */
-		{
-			dba_varcode todel[] = {WR_VAR(0, 33, 2)};
-			CHECKED(dba_db_qc_remove(db, context, WR_VAR(0, 1, 11), todel, 1));
-		}
+        const Var* attr = qc.var_peek(WR_VAR(0, 33, 2));
+        ensure(attr != NULL);
+        ensure_equals(attr->enqi(), 2);
 
-		/* Query back the data */
-		dba_record_clear(qc);
-		{
-			dba_varcode toget[] = { WR_VAR(0, 33, 2), WR_VAR(0, 33, 3), WR_VAR(0, 33, 5) };
-			CHECKED(dba_db_qc_query(db, context, WR_VAR(0, 1, 11), toget, 3, qc, &qc_count));
-		}
+        attr = qc.var_peek(WR_VAR(0, 33, 3));
+        ensure(attr != NULL);
+        ensure_equals(attr->enqi(), 5);
 
-		CHECKED(dba_record_var_enqi(qc, WR_VAR(0, 33, 2), &val, &found));
-		gen_ensure_equals(found, 0);
-		CHECKED(dba_record_var_enqi(qc, WR_VAR(0, 33, 3), &val, &found));
-		gen_ensure_equals(found, 1);
-		gen_ensure(val == 5);
-		CHECKED(dba_record_var_enqi(qc, WR_VAR(0, 33, 5), &val, &found));
-		gen_ensure_equals(found, 0);
-	}
+        attr = qc.var_peek(WR_VAR(0, 33, 5));
+        ensure(attr != NULL);
+        ensure_equals(attr->enqi(), 33);
 
-	/*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
+        // Delete a couple of items
+        codes.push_back(WR_VAR(0, 33, 2));
+        codes.push_back(WR_VAR(0, 33, 5));
+        db->attr_remove(context_id, WR_VAR(0, 1, 11), codes);
+
+        // Deleting non-existing items should not fail.  Also try creating a
+        // query with just one item
+        codes.clear();
+        codes.push_back(WR_VAR(0, 33, 2));
+        db->attr_remove(context_id, WR_VAR(0, 1, 11), codes);
+
+        /* Query back the data */
+        qc.clear();
+        codes.clear();
+        codes.push_back(WR_VAR(0, 33, 2));
+        codes.push_back(WR_VAR(0, 33, 3));
+        codes.push_back(WR_VAR(0, 33, 5));
+        ensure_equals(db->query_attrs(context_id, WR_VAR(0, 1, 11), codes, qc), 1);
+
+        ensure(qc.var_peek(WR_VAR(0, 33, 2)) == NULL);
+        ensure(qc.var_peek(WR_VAR(0, 33, 5)) == NULL);
+        attr = qc.var_peek(WR_VAR(0, 33, 3));
+        ensure(attr != NULL);
+        ensure_equals(attr->enqi(), 5);
+        /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
 }
 
+#if 0
 /* Test ana queries */
 template<> template<>
 void to::test<10>()
@@ -888,11 +884,11 @@ void to::test<10>()
 	CHECKED(dba_db_ana_query(db, query, &cursor, &count));
 	//cerr << dba_querybuf_get(cursor->query) << endl;
 
-	gen_ensure_equals(count, 1);
+	ensure_equals(count, 1);
 	CHECKED(dba_db_cursor_next(cursor, &has_data));
-	gen_ensure(has_data);
+	ensure(has_data);
 	CHECKED(dba_db_cursor_next(cursor, &has_data));
-	gen_ensure(!has_data);
+	ensure(!has_data);
 	dba_db_cursor_delete(cursor);
 }
 
@@ -926,8 +922,8 @@ void to::test<12>()
 	int anaid, contextid;
 	CHECKED(dba_db_insert(db, insert, 0, 1, &anaid, &contextid));
 
-	gen_ensure_equals(anaid, 1);
-	gen_ensure_equals(contextid, 1);
+	ensure_equals(anaid, 1);
+	ensure_equals(contextid, 1);
 
 	dba_record_clear(qc);
 	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  1,  7),  1));
@@ -962,7 +958,7 @@ void to::test<12>()
 	values.insert(make_pair(WR_VAR(0,  5, 22), std::string("10")));
 
 	// Check that all the attributes come out
-	gen_ensure_equals(count, (int)values.size());
+	ensure_equals(count, (int)values.size());
 	for (dba_record_cursor cur = dba_record_iterate_first(qc);
 			cur != NULL; cur = dba_record_iterate_next(qc, cur))
 	{
@@ -977,7 +973,7 @@ void to::test<12>()
 					WR_VAR_Y(dba_var_code(var)));
 			ensure(false, buf);
 		} else {
-			gen_ensure_equals(string(dba_var_value(var)), v->second);
+			ensure_equals(string(dba_var_value(var)), v->second);
 			values.erase(v);
 		}
 	}
@@ -1004,8 +1000,8 @@ void to::test<13>()
 	int anaid, contextid;
 	CHECKED(dba_db_insert(db, insert, 0, 1, &anaid, &contextid));
 
-	gen_ensure_equals(anaid, 1);
-	gen_ensure_equals(contextid, 1);
+	ensure_equals(anaid, 1);
+	ensure_equals(contextid, 1);
 
 	dba_record_clear(query);
 	CHECKED(dba_record_key_setd(query, DBA_KEY_LATMIN, 10.0));
@@ -1016,7 +1012,7 @@ void to::test<13>()
 	int count;
 	dba_db_cursor cursor;
 	CHECKED(dba_db_query(db, query, &cursor, &count));
-	gen_ensure_equals(count, 2);
+	ensure_equals(count, 2);
 }
 
 /* This query caused problems */
@@ -1039,13 +1035,13 @@ void to::test<14>()
 	/* Perform the query, limited to level values */
 	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_ANA_ID, 0));
 
-	gen_ensure_equals(dba_db_cursor_remaining(cur), 2);
+	ensure_equals(dba_db_cursor_remaining(cur), 2);
 	CHECKED(dba_db_cursor_next(cur, &has_data));
-	gen_ensure(has_data);
+	ensure(has_data);
 	CHECKED(dba_db_cursor_next(cur, &has_data));
-	gen_ensure(has_data);
+	ensure(has_data);
 	CHECKED(dba_db_cursor_next(cur, &has_data));
-	gen_ensure(!has_data);
+	ensure(!has_data);
 	dba_db_cursor_delete(cur);
 }
 
@@ -1085,7 +1081,7 @@ void to::test<15>()
 	/* Perform the query, limited to level values */
 	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE | DBA_DB_WANT_LEVEL, 0));
 
-	gen_ensure_equals(dba_db_cursor_remaining(cur), 1);
+	ensure_equals(dba_db_cursor_remaining(cur), 1);
 	CHECKED(dba_db_cursor_next(cur, &has_data));
 
 	dba_record_clear(result);
@@ -1093,21 +1089,21 @@ void to::test<15>()
 
 	int val, found;
 	CHECKED(dba_record_key_enqi(result, DBA_KEY_LEVELTYPE1, &val, &found));
-	gen_ensure(found);
-	gen_ensure_equals(val, 44);
+	ensure(found);
+	ensure_equals(val, 44);
 	CHECKED(dba_record_key_enqi(result, DBA_KEY_L1, &val, &found));
-	gen_ensure(found);
-	gen_ensure_equals(val, 55);
+	ensure(found);
+	ensure_equals(val, 55);
 	CHECKED(dba_record_key_enqi(result, DBA_KEY_LEVELTYPE2, &val, &found));
-	gen_ensure(found);
-	gen_ensure_equals(val, 0);
+	ensure(found);
+	ensure_equals(val, 0);
 	CHECKED(dba_record_key_enqi(result, DBA_KEY_L2, &val, &found));
-	gen_ensure(found);
-	gen_ensure_equals(val, 0);
+	ensure(found);
+	ensure_equals(val, 0);
 
-	gen_ensure(has_data);
+	ensure(has_data);
 	CHECKED(dba_db_cursor_next(cur, &has_data));
-	gen_ensure(!has_data);
+	ensure(!has_data);
 	dba_db_cursor_delete(cur);
 }
 
@@ -1131,7 +1127,7 @@ void to::test<16>()
 	/* Perform the query, limited to level values */
 	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE, 0));
 
-	gen_ensure_equals(dba_db_cursor_remaining(cur), 4);
+	ensure_equals(dba_db_cursor_remaining(cur), 4);
 	dba_db_cursor_delete(cur);
 }
 
@@ -1152,7 +1148,7 @@ void to::test<17>()
 	CHECKED(dba_db_cursor_create(db, &cur));
 
 	/* Perform the query, limited to level values */
-	gen_ensure(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE, 0) != 0);
+	ensure(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE, 0) != 0);
 	dba_error_ok();
 
 	dba_db_cursor_delete(cur);
@@ -1225,17 +1221,17 @@ void to::test<18>()
 	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12101"));
 	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
 
-	gen_ensure_equals(dba_db_cursor_remaining(cur), 1);
+	ensure_equals(dba_db_cursor_remaining(cur), 1);
 
 	CHECKED(dba_db_cursor_next(cur, &has_data));
-	gen_ensure(has_data);
+	ensure(has_data);
 
 	dba_record_clear(result);
 	CHECKED(dba_db_cursor_to_record(cur, result));
 
 	CHECKED(dba_record_key_enqi(result, DBA_KEY_REP_COD, &repcod, &found));
-	gen_ensure(found);
-	gen_ensure_equals(repcod, 255);
+	ensure(found);
+	ensure_equals(repcod, 255);
 
 	dba_db_cursor_delete(cur);
 
@@ -1254,17 +1250,17 @@ void to::test<18>()
 	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12101"));
 	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
 
-	gen_ensure_equals(dba_db_cursor_remaining(cur), 1);
+	ensure_equals(dba_db_cursor_remaining(cur), 1);
 
 	CHECKED(dba_db_cursor_next(cur, &has_data));
-	gen_ensure(has_data);
+	ensure(has_data);
 
 	dba_record_clear(result);
 	CHECKED(dba_db_cursor_to_record(cur, result));
 
 	CHECKED(dba_record_key_enqi(result, DBA_KEY_REP_COD, &repcod, &found));
-	gen_ensure(found);
-	gen_ensure_equals(repcod, 11);
+	ensure(found);
+	ensure_equals(repcod, 11);
 
 	dba_db_cursor_delete(cur);
 }
