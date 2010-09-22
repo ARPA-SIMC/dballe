@@ -105,11 +105,11 @@ struct Generic : public Template
         else if (msg.type != MSG_GENERIC)
             subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
 
-        for (int i = 0; i < msg.data.size(); ++i)
+        for (size_t i = 0; i < msg.data.size(); ++i)
         {
             const msg::Context& ctx = *msg.data[i];
 
-            for (int j = 0; j < ctx.data.size(); ++j)
+            for (size_t j = 0; j < ctx.data.size(); ++j)
             {
                 const Var& var = *ctx.data[j];
                 if (var.value() == NULL) continue; // Don't add undef vars
@@ -118,37 +118,58 @@ struct Generic : public Template
                 /* Update the context in the message, if needed */
                 if (lev.ltype1 != ctx.level.ltype1)
                 {
-                    subset.store_variable_i(WR_VAR(0, 7, 192), ctx.level.ltype1);
+                    if (ctx.level.ltype1 == MISSING_INT)
+                        subset.store_variable_undef(WR_VAR(0, 7, 192));
+                    else
+                        subset.store_variable_i(WR_VAR(0, 7, 192), ctx.level.ltype1);
                     lev.ltype1 = ctx.level.ltype1;
                 }
                 if (lev.l1 != ctx.level.l1)
                 {
-                    subset.store_variable_i(WR_VAR(0, 7, 193), ctx.level.l1);
+                    if (ctx.level.l1 == MISSING_INT)
+                        subset.store_variable_undef(WR_VAR(0, 7, 193));
+                    else
+                        subset.store_variable_i(WR_VAR(0, 7, 193), ctx.level.l1);
                     lev.l1 = ctx.level.l1;
                 }
                 if (lev.ltype2 != ctx.level.ltype2)
                 {
-                    subset.store_variable_i(WR_VAR(0, 7, 195), ctx.level.ltype2);
+                    if (ctx.level.ltype2 == MISSING_INT)
+                        subset.store_variable_undef(WR_VAR(0, 7, 195));
+                    else
+                        subset.store_variable_i(WR_VAR(0, 7, 195), ctx.level.ltype2);
                     lev.ltype2 = ctx.level.ltype2;
                 }
                 if (lev.l2 != ctx.level.l2)
                 {
-                    subset.store_variable_i(WR_VAR(0, 7, 194), ctx.level.l2);
+                    if (ctx.level.l2 == MISSING_INT)
+                        subset.store_variable_undef(WR_VAR(0, 7, 194));
+                    else
+                        subset.store_variable_i(WR_VAR(0, 7, 194), ctx.level.l2);
                     lev.l2 = ctx.level.l2;
                 }
                 if (tr.pind != ctx.trange.pind)
                 {
-                    subset.store_variable_i(WR_VAR(0, 4, 192), ctx.trange.pind);
+                    if (ctx.trange.pind == MISSING_INT)
+                        subset.store_variable_undef(WR_VAR(0, 4, 192));
+                    else
+                        subset.store_variable_i(WR_VAR(0, 4, 192), ctx.trange.pind);
                     tr.pind = ctx.trange.pind;
                 }
                 if (tr.p1 != ctx.trange.p1)
                 {
-                    subset.store_variable_i(WR_VAR(0, 4, 193), ctx.trange.p1);
+                    if (ctx.trange.p1 == MISSING_INT)
+                        subset.store_variable_undef(WR_VAR(0, 4, 193));
+                    else
+                        subset.store_variable_i(WR_VAR(0, 4, 193), ctx.trange.p1);
                     tr.p1 = ctx.trange.p1;
                 }
                 if (tr.p2 != ctx.trange.p2)
                 {
-                    subset.store_variable_i(WR_VAR(0, 4, 194), ctx.trange.p2);
+                    if (ctx.trange.p2 == MISSING_INT)
+                        subset.store_variable_undef(WR_VAR(0, 4, 194));
+                    else
+                        subset.store_variable_i(WR_VAR(0, 4, 194), ctx.trange.p2);
                     tr.p2 = ctx.trange.p2;
                 }
 
@@ -168,7 +189,7 @@ struct Generic : public Template
 
         // Generate data descriptor section
         bulletin->datadesc.clear();
-        for (int i = 0; i < subset.size(); ++i)
+        for (size_t i = 0; i < subset.size(); ++i)
             bulletin->datadesc.push_back(subset[i].code());
     }
 };
