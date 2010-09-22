@@ -867,404 +867,305 @@ void to::test<9>()
         /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
 }
 
-#if 0
-/* Test ana queries */
+// Test ana queries
 template<> template<>
 void to::test<10>()
 {
-	use_db();
+        use_db();
+        populate_database();
 
-	reset_database();
+        query.clear();
+        query.set(DBA_KEY_REP_COD, 1);
 
-	int count, has_data;
-	dba_db_cursor cursor;
+        db::Cursor cursor(*db);
+        ensure_equals(cursor.query_stations(query), 1);
 
-	dba_record_clear(query);
-	CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, 1));
-	CHECKED(dba_db_ana_query(db, query, &cursor, &count));
-	//cerr << dba_querybuf_get(cursor->query) << endl;
-
-	ensure_equals(count, 1);
-	CHECKED(dba_db_cursor_next(cursor, &has_data));
-	ensure(has_data);
-	CHECKED(dba_db_cursor_next(cursor, &has_data));
-	ensure(!has_data);
-	dba_db_cursor_delete(cursor);
+        ensure(cursor.next());
+        ensure(!cursor.next());
 }
 
-/* Run a search for orphan elements */
+// Run a search for orphan elements
 template<> template<>
 void to::test<11>()
 {
-	use_db();
+        use_db();
 
-	CHECKED(dba_db_remove_orphans(db));
+        db->remove_orphans();
 }
 
-/* Insert some attributes and try to read them again */
+// Insert some attributes and try to read them again
 template<> template<>
 void to::test<12>()
 {
-	use_db();
+        use_db();
+        // Start with an empty database
+        db->reset();
 
-	/* Start with an empty database */
-	CHECKED(dba_db_reset(db, 0));
+        // Insert a data record
+        insert.clear();
+        insert.add(sampleAna);
+        insert.add(sampleBase);
+        insert.add(sample0);
+        insert.add(sample00);
+        insert.add(sample01);
+        db->insert(insert, false, true);
 
-	/* Fill in data for the first record */
-	dba_record_clear(insert);
-	sampleAna.copyTestDataToRecord(insert);
-	sampleBase.copyTestDataToRecord(insert);
-	sample0.copyTestDataToRecord(insert);
-	sample00.copyTestDataToRecord(insert);
-	sample01.copyTestDataToRecord(insert);
+        ensure_equals(insert[DBA_KEY_ANA_ID].enqi(), 1);
+        ensure_equals(insert[DBA_KEY_CONTEXT_ID].enqi(), 1);
 
-	/* Insert the record */
-	int anaid, contextid;
-	CHECKED(dba_db_insert(db, insert, 0, 1, &anaid, &contextid));
+        qc.clear();
+        qc.set(WR_VAR(0,  1,  7),  1);
+        qc.set(WR_VAR(0,  2, 48),  2);
+        qc.set(WR_VAR(0,  5, 40),  3);
+        qc.set(WR_VAR(0,  5, 41),  4);
+        qc.set(WR_VAR(0,  5, 43),  5);
+        qc.set(WR_VAR(0, 33, 32),  6);
+        qc.set(WR_VAR(0,  7, 24),  7);
+        qc.set(WR_VAR(0,  5, 21),  8);
+        qc.set(WR_VAR(0,  7, 25),  9);
+        qc.set(WR_VAR(0,  5, 22), 10);
 
-	ensure_equals(anaid, 1);
-	ensure_equals(contextid, 1);
+        db->attr_insert_new(1, WR_VAR(0, 1, 11), qc);
 
-	dba_record_clear(qc);
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  1,  7),  1));
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  2, 48),  2));
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  5, 40),  3));
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  5, 41),  4));
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  5, 43),  5));
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0, 33, 32),  6));
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  7, 24),  7));
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  5, 21),  8));
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  7, 25),  9));
-	CHECKED(dba_record_var_seti(qc, WR_VAR(0,  5, 22), 10));
+        qc.clear();
+        vector<Varcode> codes;
+        int count = db->query_attrs(1, WR_VAR(0, 1, 11), codes, qc);
+        ensure_equals(count, 10);
 
-	CHECKED(dba_db_qc_insert_new(db, contextid, WR_VAR(0, 1, 11), qc));
-
-	dba_record_clear(qc);
-	int count;
-	CHECKED(dba_db_qc_query(db, contextid, WR_VAR(0, 1, 11), NULL, 0, qc, &count));
-
-	std::map<dba_varcode, std::string> values;
-	values.insert(make_pair(WR_VAR(0, 1, 7), std::string("1")));
-	values.insert(make_pair(WR_VAR(0, 2, 48), std::string("2")));
-	values.insert(make_pair(WR_VAR(0,  1,  7), std::string("1")));
-	values.insert(make_pair(WR_VAR(0,  2, 48), std::string("2")));
-	values.insert(make_pair(WR_VAR(0,  5, 40), std::string("3")));
-	values.insert(make_pair(WR_VAR(0,  5, 41), std::string("4")));
-	values.insert(make_pair(WR_VAR(0,  5, 43), std::string("5")));
-	values.insert(make_pair(WR_VAR(0, 33, 32), std::string("6")));
-	values.insert(make_pair(WR_VAR(0,  7, 24), std::string("7")));
-	values.insert(make_pair(WR_VAR(0,  5, 21), std::string("8")));
-	values.insert(make_pair(WR_VAR(0,  7, 25), std::string("9")));
-	values.insert(make_pair(WR_VAR(0,  5, 22), std::string("10")));
-
-	// Check that all the attributes come out
-	ensure_equals(count, (int)values.size());
-	for (dba_record_cursor cur = dba_record_iterate_first(qc);
-			cur != NULL; cur = dba_record_iterate_next(qc, cur))
-	{
-		dba_var var = dba_record_cursor_variable(cur);
-		std::map<dba_varcode, std::string>::iterator v
-			= values.find(dba_var_code(var));
-		if (v == values.end())
-		{
-			char buf[20];
-			snprintf(buf, 20, "Attr B%02d%03d not found",
-					WR_VAR_X(dba_var_code(var)),
-					WR_VAR_Y(dba_var_code(var)));
-			ensure(false, buf);
-		} else {
-			ensure_equals(string(dba_var_value(var)), v->second);
-			values.erase(v);
-		}
-	}
+        // Check that all the attributes come out
+        const vector<Var*> vars = qc.vars();
+        ensure_equals(vars.size(), 10);
+        ensure_varcode_equals(vars[0]->code(), WR_VAR(0,   1,  7)); ensure_var_equals(*vars[0],  1);
+        ensure_varcode_equals(vars[1]->code(), WR_VAR(0,   2, 48)); ensure_var_equals(*vars[1],  2);
+        ensure_varcode_equals(vars[2]->code(), WR_VAR(0,   5, 21)); ensure_var_equals(*vars[2],  8);
+        ensure_varcode_equals(vars[3]->code(), WR_VAR(0,   5, 22)); ensure_var_equals(*vars[3], 10);
+        ensure_varcode_equals(vars[4]->code(), WR_VAR(0,   5, 40)); ensure_var_equals(*vars[4],  3);
+        ensure_varcode_equals(vars[5]->code(), WR_VAR(0,   5, 41)); ensure_var_equals(*vars[5],  4);
+        ensure_varcode_equals(vars[6]->code(), WR_VAR(0,   5, 43)); ensure_var_equals(*vars[6],  5);
+        ensure_varcode_equals(vars[7]->code(), WR_VAR(0,   7, 24)); ensure_var_equals(*vars[7],  7);
+        ensure_varcode_equals(vars[8]->code(), WR_VAR(0,   7, 25)); ensure_var_equals(*vars[8],  9);
+        ensure_varcode_equals(vars[9]->code(), WR_VAR(0,  33, 32)); ensure_var_equals(*vars[9],  6);
 }
 
 /* Query using lonmin > latmax */
 template<> template<>
 void to::test<13>()
 {
-	use_db();
+        use_db();
 
-	/* Start with an empty database */
-	CHECKED(dba_db_reset(db, 0));
+        // Start with an empty database
+        db->reset();
 
-	/* Fill in data for the first record */
-	dba_record_clear(insert);
-	sampleAna.copyTestDataToRecord(insert);
-	sampleBase.copyTestDataToRecord(insert);
-	sample0.copyTestDataToRecord(insert);
-	sample00.copyTestDataToRecord(insert);
-	sample01.copyTestDataToRecord(insert);
+        // Insert a data record
+        insert.clear();
+        insert.add(sampleAna);
+        insert.add(sampleBase);
+        insert.add(sample0);
+        insert.add(sample00);
+        insert.add(sample01);
+        db->insert(insert, false, true);
 
-	/* Insert the record */
-	int anaid, contextid;
-	CHECKED(dba_db_insert(db, insert, 0, 1, &anaid, &contextid));
+        query.clear();
+        query.set(DBA_KEY_LATMIN, 10.0);
+        query.set(DBA_KEY_LATMAX, 15.0);
+        query.set(DBA_KEY_LONMIN, 70.0);
+        query.set(DBA_KEY_LONMAX, -160.0);
 
-	ensure_equals(anaid, 1);
-	ensure_equals(contextid, 1);
-
-	dba_record_clear(query);
-	CHECKED(dba_record_key_setd(query, DBA_KEY_LATMIN, 10.0));
-	CHECKED(dba_record_key_setd(query, DBA_KEY_LATMAX, 15.0));
-	CHECKED(dba_record_key_setd(query, DBA_KEY_LONMIN, 70.0));
-	CHECKED(dba_record_key_setd(query, DBA_KEY_LONMAX, -160.0));
-
-	int count;
-	dba_db_cursor cursor;
-	CHECKED(dba_db_query(db, query, &cursor, &count));
-	ensure_equals(count, 2);
+        db::Cursor cur(*db);
+        ensure_equals(cur.query_data(query), 2);
 }
 
-/* This query caused problems */
+// This query caused problems
 template<> template<>
 void to::test<14>()
 {
-	use_db();
+        use_db();
+        populate_database();
 
-	reset_database();
+        query.clear();
+        query.set(DBA_KEY_ANA_FILTER, "B07001>1");
 
-	dba_record_clear(query);
-	CHECKED(dba_record_key_setc(query, DBA_KEY_ANA_FILTER, "B07001>1"));
+        // Perform the query, limited to level values
+        db::Cursor cur(*db);
+        ensure_equals(cur.query(query, DBA_DB_WANT_ANA_ID, 0), 2);
 
-	int has_data;
-	dba_db_cursor cur;
-
-	/* Allocate a new cursor */
-	CHECKED(dba_db_cursor_create(db, &cur));
-
-	/* Perform the query, limited to level values */
-	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_ANA_ID, 0));
-
-	ensure_equals(dba_db_cursor_remaining(cur), 2);
-	CHECKED(dba_db_cursor_next(cur, &has_data));
-	ensure(has_data);
-	CHECKED(dba_db_cursor_next(cur, &has_data));
-	ensure(has_data);
-	CHECKED(dba_db_cursor_next(cur, &has_data));
-	ensure(!has_data);
-	dba_db_cursor_delete(cur);
+        ensure(cur.next());
+        ensure(cur.next());
+        ensure(!cur.next());
 }
 
-/* Insert with undef leveltype2 and l2 */
+// Insert with undef leveltype2 and l2
 template<> template<>
 void to::test<15>()
 {
-	use_db();
+        use_db();
+        populate_database();
 
-	reset_database();
+        insert.clear();
+        insert.add(sampleAna);
+        insert.add(sampleBase);
+        insert.add(sample0);
+        insert.add(sample01);
 
-	dba_record_clear(insert);
+        insert.set(DBA_KEY_LEVELTYPE1, 44);
+        insert.set(DBA_KEY_L1, 55);
+        insert.unset(DBA_KEY_LEVELTYPE2);
+        insert.unset(DBA_KEY_L2);
 
-	sampleAna.copyTestDataToRecord(insert);
-	sampleBase.copyTestDataToRecord(insert);
-	sample0.copyTestDataToRecord(insert);
-	sample01.copyTestDataToRecord(insert);
+        db->insert(insert, false, false);
 
-	dba_record_key_seti(insert, DBA_KEY_LEVELTYPE1, 44);
-	dba_record_key_seti(insert, DBA_KEY_L1, 55);
-	dba_record_key_unset(insert, DBA_KEY_LEVELTYPE2);
-	dba_record_key_unset(insert, DBA_KEY_L2);
+        // Query it back
+        query.clear();
+        query.set(DBA_KEY_LEVELTYPE1, 44);
+        query.set(DBA_KEY_L1, 55);
 
-	/* Insert the record */
-	CHECKED(dba_db_insert(db, insert, 0, 0, NULL, NULL));
+        db::Cursor cur(*db);
+        ensure_equals(cur.query(query, DBA_DB_WANT_VAR_VALUE | DBA_DB_WANT_LEVEL, 0), 1);
 
-	dba_record_clear(query);
-	CHECKED(dba_record_key_seti(query, DBA_KEY_LEVELTYPE1, 44));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_L1, 55));
+        ensure(cur.next());
+        result.clear();
+        cur.to_record(result);
 
-	int has_data;
-	dba_db_cursor cur;
+        ensure(result.key_peek(DBA_KEY_LEVELTYPE1) != NULL);
+        ensure_equals(result[DBA_KEY_LEVELTYPE1].enqi(), 44);
+        ensure(result.key_peek(DBA_KEY_L1) != NULL);
+        ensure_equals(result[DBA_KEY_L1].enqi(), 55);
+        ensure(result.key_peek(DBA_KEY_LEVELTYPE2) != NULL);
+        ensure_equals(result[DBA_KEY_LEVELTYPE2].enqi(), MISSING_INT);
+        ensure(result.key_peek(DBA_KEY_L2) != NULL);
+        ensure_equals(result[DBA_KEY_L2].enqi(), MISSING_INT);
 
-	/* Allocate a new cursor */
-	CHECKED(dba_db_cursor_create(db, &cur));
-
-	/* Perform the query, limited to level values */
-	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE | DBA_DB_WANT_LEVEL, 0));
-
-	ensure_equals(dba_db_cursor_remaining(cur), 1);
-	CHECKED(dba_db_cursor_next(cur, &has_data));
-
-	dba_record_clear(result);
-	CHECKED(dba_db_cursor_to_record(cur, result));
-
-	int val, found;
-	CHECKED(dba_record_key_enqi(result, DBA_KEY_LEVELTYPE1, &val, &found));
-	ensure(found);
-	ensure_equals(val, 44);
-	CHECKED(dba_record_key_enqi(result, DBA_KEY_L1, &val, &found));
-	ensure(found);
-	ensure_equals(val, 55);
-	CHECKED(dba_record_key_enqi(result, DBA_KEY_LEVELTYPE2, &val, &found));
-	ensure(found);
-	ensure_equals(val, 0);
-	CHECKED(dba_record_key_enqi(result, DBA_KEY_L2, &val, &found));
-	ensure(found);
-	ensure_equals(val, 0);
-
-	ensure(has_data);
-	CHECKED(dba_db_cursor_next(cur, &has_data));
-	ensure(!has_data);
-	dba_db_cursor_delete(cur);
+        ensure(!cur.next());
 }
 
-/* Query with undef leveltype2 and l2 */
+// Query with undef leveltype2 and l2
 template<> template<>
 void to::test<16>()
 {
-	use_db();
+        use_db();
+        populate_database();
 
-	reset_database();
+        query.clear();
+        query.set(DBA_KEY_LEVELTYPE1, 10);
+        query.set(DBA_KEY_L1, 11);
 
-	dba_record_clear(query);
-	CHECKED(dba_record_key_seti(query, DBA_KEY_LEVELTYPE1, 10));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_L1, 11));
-
-	dba_db_cursor cur;
-
-	/* Allocate a new cursor */
-	CHECKED(dba_db_cursor_create(db, &cur));
-
-	/* Perform the query, limited to level values */
-	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE, 0));
-
-	ensure_equals(dba_db_cursor_remaining(cur), 4);
-	dba_db_cursor_delete(cur);
+        db::Cursor cur(*db);
+        ensure_equals(cur.query(query, DBA_DB_WANT_VAR_VALUE, 0), 4);
 }
 
-/* Query with an incorrect attr_filter */
+// Query with an incorrect attr_filter
 template<> template<>
 void to::test<17>()
 {
-	use_db();
+        use_db();
+        populate_database();
 
-	reset_database();
+        query.clear();
+        query.set(DBA_KEY_ATTR_FILTER, "B12001");
 
-	dba_record_clear(query);
-	CHECKED(dba_record_key_setc(query, DBA_KEY_ATTR_FILTER, "B12001"));
+        db::Cursor cur(*db);
 
-	dba_db_cursor cur;
-
-	/* Allocate a new cursor */
-	CHECKED(dba_db_cursor_create(db, &cur));
-
-	/* Perform the query, limited to level values */
-	ensure(dba_db_cursor_query(cur, query, DBA_DB_WANT_VAR_VALUE, 0) != 0);
-	dba_error_ok();
-
-	dba_db_cursor_delete(cur);
+        try {
+                cur.query(query, DBA_DB_WANT_VAR_VALUE, 0);
+        } catch (error_consistency& e) {
+                ensure_contains(e.what(), "B12001 is not a valid filter");
+        }
 }
 
 /* Test querying priomax together with query=best */
 template<> template<>
 void to::test<18>()
 {
-	use_db();
+        use_db();
+        // Start with an empty database
+        db->reset();
 
-	/* Start with an empty database */
-	CHECKED(dba_db_reset(db, 0));
+        // Prepare the common parts of some data
+        insert.clear();
+        insert.set(DBA_KEY_LAT, 1);
+        insert.set(DBA_KEY_LON, 1);
+        insert.set(DBA_KEY_LEVELTYPE1, 1);
+        insert.set(DBA_KEY_L1, 0);
+        insert.set(DBA_KEY_PINDICATOR, 254);
+        insert.set(DBA_KEY_P1, 0);
+        insert.set(DBA_KEY_P2, 0);
+        insert.set(DBA_KEY_YEAR, 2009);
+        insert.set(DBA_KEY_MONTH, 11);
+        insert.set(DBA_KEY_DAY, 11);
+        insert.set(DBA_KEY_HOUR, 0);
+        insert.set(DBA_KEY_MIN, 0);
+        insert.set(DBA_KEY_SEC, 0);
 
-	/* Prepare the common parts of some data */
-	dba_record_clear(insert);
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_LAT, 1));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_LON, 1));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_LEVELTYPE1, 1));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_L1, 0));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_PINDICATOR, 254));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_P1, 0));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_P2, 0));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_YEAR, 2009));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_MONTH, 11));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_DAY, 11));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_HOUR, 0));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_MIN, 0));
-	CHECKED(dba_record_key_seti(insert, DBA_KEY_SEC, 0));
+        //  1,synop,synop,101,oss,0
+        //  2,metar,metar,81,oss,0
+        //  3,temp,sounding,98,oss,2
+        //  4,pilot,wind profile,80,oss,2
+        //  9,buoy,buoy,50,oss,31
+        // 10,ship,synop ship,99,oss,1
+        // 11,tempship,temp ship,100,oss,2
+        // 12,airep,airep,82,oss,4
+        // 13,amdar,amdar,97,oss,4
+        // 14,acars,acars,96,oss,4
+        // 42,pollution,pollution,199,oss,8
+        // 200,satellite,NOAA satellites,41,oss,255
+        // 255,generic,generic data,1000,?,255
+        static int rep_cods[] = { 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 42, 200, 255, -1 };
 
-	//  1,synop,synop,101,oss,0
-	//  2,metar,metar,81,oss,0
-	//  3,temp,sounding,98,oss,2
-	//  4,pilot,wind profile,80,oss,2
-	//  9,buoy,buoy,50,oss,31
-	// 10,ship,synop ship,99,oss,1
-	// 11,tempship,temp ship,100,oss,2
-	// 12,airep,airep,82,oss,4
-	// 13,amdar,amdar,97,oss,4
-	// 14,acars,acars,96,oss,4
-	// 42,pollution,pollution,199,oss,8
-	// 200,satellite,NOAA satellites,41,oss,255
-	// 255,generic,generic data,1000,?,255
+        for (int* i = rep_cods; *i != -1; ++i)
+        {
+                insert.set(DBA_KEY_REP_COD, *i);
+                insert.set(WR_VAR(0, 12, 101), *i);
+                db->insert(insert, false, true);
+                insert.unset(DBA_KEY_CONTEXT_ID);
+        }
 
-	static int rep_cods[] = { 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 42, 200, 255, -1 };
+        // Query with querybest only
+        {
+                db::Cursor cur(*db);
 
-	for (int* i = rep_cods; *i != -1; ++i)
-	{
-		CHECKED(dba_record_key_seti(insert, DBA_KEY_REP_COD, *i));
-		CHECKED(dba_record_var_seti(insert, WR_VAR(0, 12, 101), *i));
-		int paid;
-		CHECKED(dba_db_insert(db, insert, 0, 1, &paid, NULL));
-	}
+                query.clear();
+                query.set(DBA_KEY_QUERY, "best");
+                query.set(DBA_KEY_YEAR, 2009);
+                query.set(DBA_KEY_MONTH, 11);
+                query.set(DBA_KEY_DAY, 11);
+                query.set(DBA_KEY_HOUR, 0);
+                query.set(DBA_KEY_MIN, 0);
+                query.set(DBA_KEY_SEC, 0);
+                query.set(DBA_KEY_VAR, "B12101");
+                ensure_equals(cur.query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0), 1);
 
-	int count, has_data;
-	dba_db_cursor cur;
-	int repcod, found;
+                ensure(cur.next());
+                result.clear();
+                cur.to_record(result);
 
-	// Query with querybest only
-	CHECKED(dba_db_cursor_create(db, &cur));
+                ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
+                ensure_equals(result[DBA_KEY_REP_COD].enqi(), 255);
+        }
 
-	dba_record_clear(query);
-	CHECKED(dba_record_key_setc(query, DBA_KEY_QUERY, "best"));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2009));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 11));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 11));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 0));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_MIN, 0));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_SEC, 0));
-	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12101"));
-	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
+        // Query with querybest and priomax
+        {
+                db::Cursor cur(*db);
 
-	ensure_equals(dba_db_cursor_remaining(cur), 1);
+                query.clear();
+                query.set(DBA_KEY_PRIOMAX, 100);
+                query.set(DBA_KEY_QUERY, "best");
+                query.set(DBA_KEY_YEAR, 2009);
+                query.set(DBA_KEY_MONTH, 11);
+                query.set(DBA_KEY_DAY, 11);
+                query.set(DBA_KEY_HOUR, 0);
+                query.set(DBA_KEY_MIN, 0);
+                query.set(DBA_KEY_SEC, 0);
+                query.set(DBA_KEY_VAR, "B12101");
+                ensure_equals(cur.query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0), 1);
 
-	CHECKED(dba_db_cursor_next(cur, &has_data));
-	ensure(has_data);
+                ensure(cur.next());
+                result.clear();
+                cur.to_record(result);
 
-	dba_record_clear(result);
-	CHECKED(dba_db_cursor_to_record(cur, result));
-
-	CHECKED(dba_record_key_enqi(result, DBA_KEY_REP_COD, &repcod, &found));
-	ensure(found);
-	ensure_equals(repcod, 255);
-
-	dba_db_cursor_delete(cur);
-
-	// Query with querybest and priomax
-	CHECKED(dba_db_cursor_create(db, &cur));
-
-	dba_record_clear(query);
-	CHECKED(dba_record_key_seti(query, DBA_KEY_PRIOMAX, 100));
-	CHECKED(dba_record_key_setc(query, DBA_KEY_QUERY, "best"));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_YEAR, 2009));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_MONTH, 11));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_DAY, 11));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_HOUR, 0));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_MIN, 0));
-	CHECKED(dba_record_key_seti(query, DBA_KEY_SEC, 0));
-	CHECKED(dba_record_key_setc(query, DBA_KEY_VAR, "B12101"));
-	CHECKED(dba_db_cursor_query(cur, query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
-
-	ensure_equals(dba_db_cursor_remaining(cur), 1);
-
-	CHECKED(dba_db_cursor_next(cur, &has_data));
-	ensure(has_data);
-
-	dba_record_clear(result);
-	CHECKED(dba_db_cursor_to_record(cur, result));
-
-	CHECKED(dba_record_key_enqi(result, DBA_KEY_REP_COD, &repcod, &found));
-	ensure(found);
-	ensure_equals(repcod, 11);
-
-	dba_db_cursor_delete(cur);
+                ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
+                ensure_equals(result[DBA_KEY_REP_COD].enqi(), 11);
+        }
 }
-#endif
 
 }
 
