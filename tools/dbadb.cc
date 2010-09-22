@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,25 +17,36 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include <extra/processor.h>
+#include <extra/cmdline.h>
+#include <wreport/error.h>
+#include <dballe/core/record.h>
+#include <dballe/core/file.h>
+#include <dballe/msg/msg.h>
+#include <dballe/msg/msgs.h>
+#include <dballe/msg/codec.h>
+#include <dballe/db/db.h>
+#include <dballe/db/cursor.h>
+
+#include <cstdlib>
+
+#if 0
 #include <dballe/init.h>
 #include <dballe/bufrex/msg.h>
-#include <dballe/msg/msg.h>
 #include <dballe/msg/file.h>
 #include <dballe/msg/bufrex_codec.h>
-#include <dballe/db/db.h>
-#include <dballe/db/import.h>
-#include <dballe/db/export.h>
-#include <extra/cmdline.h>
-#include <extra/processor.h>
 
 #include <string.h>
-#include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#endif
 
-struct grep_t grepdata = { -1, -1, -1, 0, 0, "" };
+using namespace dballe;
+using namespace wreport;
+
+struct proc::grep_t grepdata = { -1, -1, -1, 0, 0, "" };
 struct poptOption grepTable[] = {
 	{ "category", 0, POPT_ARG_INT, &grepdata.category, 0,
 		"match messages with the given data category", "num" },
@@ -54,13 +63,13 @@ struct poptOption grepTable[] = {
 	POPT_TABLEEND
 };
 
-static char* op_dsn = "";
-static char* op_user = "";
-static char* op_pass = "";
-static char* op_input_type = "auto";
-static char* op_report = "";
-static char* op_output_type = "bufr";
-static char* op_output_template = "";
+static const char* op_dsn = "";
+static const char* op_user = "";
+static const char* op_pass = "";
+static const char* op_input_type = "auto";
+static const char* op_report = "";
+static const char* op_output_type = "bufr";
+static const char* op_output_template = "";
 static int op_overwrite = 0;
 static int op_fast = 0;
 static int op_no_attrs = 0;
@@ -78,7 +87,7 @@ struct poptOption dbTable[] = {
 	POPT_TABLEEND
 };
 
-static dba_err create_dba_db(dba_db* db)
+static void connect(DB& db)
 {
 	const char* chosen_dsn;
 
@@ -87,200 +96,154 @@ static dba_err create_dba_db(dba_db* db)
 	{
 		chosen_dsn = getenv("DBA_DB");
 		if (chosen_dsn == NULL)
-			return dba_error_consistency("no database specified");
+			throw error_consistency("no database specified");
 	} else
 		chosen_dsn = op_dsn;
 
 	/* If dsn looks like a url, treat it accordingly */
-	if (dba_db_is_url(chosen_dsn))
-		return dba_db_create_from_url(chosen_dsn, db);
+	if (DB::is_url(chosen_dsn))
+		return db.connect_from_url(chosen_dsn);
 	else
-		return dba_db_create(chosen_dsn, op_user, op_pass, db);
+		return db.connect(chosen_dsn, op_user, op_pass);
 }
 
-struct import_data
+struct Importer : public proc::Action
 {
-	dba_db db;
-	int overwrite;
+	DB& db;
+	bool overwrite;
 	const char* forced_repmemo;
+
+	Importer(DB& db) : db(db), overwrite(false), forced_repmemo(0) {}
+
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	{
+		int import_flags = 0;;
+		if (msgs == NULL)
+		{
+			fprintf(stderr, "Message #%d cannot be parsed: ignored\n", rmsg.index);
+			return;
+		}
+		if (overwrite)
+			import_flags |= DBA_IMPORT_OVERWRITE;
+		if (op_fast)
+			import_flags |= DBA_IMPORT_NO_TRANSACTIONS;
+		if (!op_no_attrs)
+			import_flags |= DBA_IMPORT_ATTRS;
+		if (op_full_pseudoana)
+			import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
+
+		for (size_t i = 0; i < msgs->size(); ++i)
+		{
+			Msg& msg = *(*msgs)[i];
+			if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
+				/* Put generic messages in the generic rep_cod by default */
+				db.import_msg(msg, NULL, import_flags);
+			else
+				db.import_msg(msg, forced_repmemo, import_flags);
+		}
+	}
 };
 
-static dba_err import_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
-{
-	struct import_data* d = (struct import_data*)data;
-	int i, import_flags = 0;;
-	if (msgs == NULL)
-	{
-		fprintf(stderr, "Message #%d cannot be parsed: ignored\n",
-				rmsg->index);
-		return dba_error_ok();
-	}
-	if (d->overwrite)
-		import_flags |= DBA_IMPORT_OVERWRITE;
-	if (op_fast)
-		import_flags |= DBA_IMPORT_NO_TRANSACTIONS;
-	if (!op_no_attrs)
-		import_flags |= DBA_IMPORT_ATTRS;
-	if (op_full_pseudoana)
-		import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
-
-	for (i = 0; i < msgs->len; ++i)
-	{
-		dba_msg msg = msgs->msgs[i];
-		if (d->forced_repmemo == NULL && msg->type == MSG_GENERIC)
-		{
-			/* Put generic messages in the generic rep_cod by default */
-			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, NULL, import_flags));
-		}
-		else
-		{
-			DBA_RUN_OR_RETURN(dba_import_msg(d->db, msg, d->forced_repmemo, import_flags));
-		}
-	}
-	return dba_error_ok();
-}
-
-dba_err do_dump(poptContext optCon)
+int do_dump(poptContext optCon)
 {
 	const char* action;
-	int count, i;
-	dba_record query, result;
-	dba_db_cursor cursor;
-	dba_db db;
+	DB db;
 
 	/* Throw away the command name */
 	action = poptGetArg(optCon);
 
 	/* Create the query */
-	DBA_RUN_OR_RETURN(dba_record_create(&query));
-	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
+	Record query;
+	dba_cmdline_get_query(optCon, query);
 
-	DBA_RUN_OR_RETURN(create_dba_db(&db));
-	DBA_RUN_OR_RETURN(dba_db_query(db, query, &cursor, &count));
-	DBA_RUN_OR_RETURN(dba_record_create(&result));
+	connect(db);
+	db::Cursor cursor(db);
+	cursor.query_data(query);
 
-	for (i = 0; ; ++i)
+	Record res;
+	for (int i = 0; cursor.next(); ++i)
 	{
-		int has_data;
-		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, &has_data));
-		if (!has_data)
-			break;
-		dba_record_clear(result);
-		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(cursor, result));
+		cursor.to_record(res);
 		printf("#%d: -----------------------\n", i);
-		dba_record_print(result, stdout);
+		res.print(stdout);
 	}
 
-	//fprintf(stdout, "***\n");
-	//dba_record_print(query, stdout);
-
-	dba_db_delete(db);
-
-	dba_record_delete(result);
-	dba_record_delete(query);
-
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_stations(poptContext optCon)
+int do_stations(poptContext optCon)
 {
-	const char* action;
-	int count, i;
-	dba_record query, result;
-	dba_db_cursor cursor;
-	dba_db db;
-
 	/* Throw away the command name */
-	action = poptGetArg(optCon);
+	poptGetArg(optCon);
 
 	/* Create the query */
-	DBA_RUN_OR_RETURN(dba_record_create(&query));
-	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
+	Record query;
+	dba_cmdline_get_query(optCon, query);
 
-	DBA_RUN_OR_RETURN(create_dba_db(&db));
-	DBA_RUN_OR_RETURN(dba_db_ana_query(db, query, &cursor, &count));
-	DBA_RUN_OR_RETURN(dba_record_create(&result));
+	DB db;
+	connect(db);
 
-	for (i = 0; ; ++i)
+	db::Cursor cursor(db);
+	cursor.query_stations(query);
+
+	Record result;
+	for (size_t i = 0; cursor.next(); ++i)
 	{
-		int has_data;
-		DBA_RUN_OR_RETURN(dba_db_cursor_next(cursor, &has_data));
-		if (!has_data)
-			break;
-		dba_record_clear(result);
-		DBA_RUN_OR_RETURN(dba_db_cursor_to_record(cursor, result));
-		printf("#%d: -----------------------\n", i);
-		dba_record_print(result, stdout);
+		// result.clear();
+		cursor.to_record(result);
+		printf("#%zd: -----------------------\n", i);
+		result.print(stdout);
 	}
 
-	dba_db_delete(db);
-
-	dba_record_delete(result);
-	dba_record_delete(query);
-
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_wipe(poptContext optCon)
+int do_wipe(poptContext optCon)
 {
-	const char* action;
-	const char* table;
-	dba_db db;
-
 	/* Throw away the command name */
-	action = poptGetArg(optCon);
+	poptGetArg(optCon);
 
 	/* Get the optional name of the repinfo file */
-	table = poptGetArg(optCon);
+	const char* table = poptGetArg(optCon);
 
-	DBA_RUN_OR_RETURN(create_dba_db(&db));
-	DBA_RUN_OR_RETURN(dba_db_reset(db, table));
-	dba_db_delete(db);
+	DB db;
+	connect(db);
+	db.reset(table);
 
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_cleanup(poptContext optCon)
+int do_cleanup(poptContext optCon)
 {
-	const char* action;
-	const char* table;
-	dba_db db;
-
 	/* Throw away the command name */
-	action = poptGetArg(optCon);
+	poptGetArg(optCon);
 
-	/* Get the optional name of the repinfo file */
-	table = poptGetArg(optCon);
+	DB db;
+	connect(db);
+	db.remove_orphans();
 
-	DBA_RUN_OR_RETURN(create_dba_db(&db));
-	DBA_RUN_OR_RETURN(dba_db_remove_orphans(db));
-	dba_db_delete(db);
-
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_repinfo(poptContext optCon)
+int do_repinfo(poptContext optCon)
 {
-	int added, deleted, updated;
-	const char* action;
-	const char* table;
-	dba_db db;
-
 	/* Throw away the command name */
-	action = poptGetArg(optCon);
+	poptGetArg(optCon);
 
 	/* Get the optional name of the repinfo file.  If missing, the default will be used */
-	table = poptGetArg(optCon);
+	const char* table = poptGetArg(optCon);
 
-	DBA_RUN_OR_RETURN(create_dba_db(&db));
-	DBA_RUN_OR_RETURN(dba_db_update_repinfo(db, table, &added, &deleted, &updated));
+	int added, deleted, updated;
+
+	DB db;
+	connect(db);
+	db.update_repinfo(table, &added, &deleted, &updated);
 	printf("Update completed: %d added, %d deleted, %d updated.\n", added, deleted, updated);
-	dba_db_delete(db);
 
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err parse_op_report(dba_db db, const char** res)
+const char* parse_op_report(DB& db)
 {
 	if (op_report[0] != 0)
 	{
@@ -291,141 +254,125 @@ dba_err parse_op_report(dba_db db, const char** res)
 				is_cod = 0;
 		
 		if (is_cod)
-			return dba_db_rep_memo_from_cod(db, strtoul(op_report, NULL, 0), res);
+			return db.rep_memo_from_cod(strtoul(op_report, NULL, 0)).c_str();
 		else
-		{
-			*res = op_report;
-			return dba_error_ok();
-		}
-	} else {
-		*res = NULL;
-		return dba_error_ok();
-	}
+			return op_report;
+	} else
+		return NULL;
 }
 
-dba_err do_import(poptContext optCon)
+int do_import(poptContext optCon)
 {
-	dba_encoding type;
-	struct import_data data;
-
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
-	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
+	Encoding type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 
-	DBA_RUN_OR_RETURN(create_dba_db(&data.db));
-	data.overwrite = op_overwrite;
-	DBA_RUN_OR_RETURN(parse_op_report(data.db, &(data.forced_repmemo)));
+	DB db;
+	connect(db);
 
-	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, import_message, (void*)&data));
+	Importer importer(db);
+	importer.overwrite = op_overwrite;
+	importer.forced_repmemo = parse_op_report(db);
 
-	dba_db_delete(data.db);
+	process_all(optCon, type, &grepdata, importer);
 
-	return dba_error_ok();
+	return 0;
 }
 
-struct export_data
+struct MsgWriter : public MsgConsumer
 {
-	dba_file file;
-	int cat;
-	int subcat;
-	int localsubcat;
+	File* file;
+	msg::Exporter* exporter;
 	const char* forced_rep_memo;
+
+	MsgWriter() : file(0), exporter(0), forced_rep_memo(0) {}
+	~MsgWriter()
+	{
+		if (file) delete file;
+		if (exporter) delete exporter;
+	}
+
+	virtual void operator()(std::auto_ptr<Msg> msg)
+	{
+		/* Override the message type if the user asks for it */
+		if (forced_rep_memo != NULL)
+			msg->type = Msg::type_from_repmemo(forced_rep_memo);
+		Rawmsg raw;
+		Msgs msgs;
+		msgs.acquire(msg);
+		exporter->to_rawmsg(msgs, raw);
+		file->write(raw);
+	}
 };
 
-static dba_err msg_writer(dba_msgs msgs, void* data)
+struct MsgDumper : public MsgConsumer
 {
-	struct export_data* d = (struct export_data*)data;
-	/* Override the message type if the user asks for it */
-	if (d->forced_rep_memo != NULL)
+	FILE* out;
+	MsgDumper() : out(stdout) {}
+
+	virtual void operator()(std::auto_ptr<Msg> msg)
 	{
-		int i;
-		for (i = 0; i < msgs->len; ++i)
-			msgs->msgs[i]->type = dba_msg_type_from_repmemo(d->forced_rep_memo);
+		msg->print(out);
 	}
-	DBA_RUN_OR_RETURN(dba_file_write_msgs(d->file, msgs, d->cat, d->subcat, d->localsubcat));
-	dba_msgs_delete(msgs);
-	return dba_error_ok();
-}
+};
 
-static dba_err msg_dumper(dba_msgs msgs, void* data)
+int do_export(poptContext optCon)
 {
-	FILE* out = (FILE*)data;
-	dba_msgs_print(msgs, out);
-	dba_msgs_delete(msgs);
-	return dba_error_ok();
-}
-
-dba_err do_export(poptContext optCon)
-{
-	struct export_data d = { NULL, 0, 0, 0, NULL };
-	dba_encoding type;
-	dba_record query;
-	dba_db db;
-
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
-	if (op_output_template[0] != 0)
-		DBA_RUN_OR_RETURN(bufrex_msg_parse_template(op_output_template, &d.cat, &d.subcat, &d.localsubcat));
-
 	/* Connect to the database */
-	DBA_RUN_OR_RETURN(create_dba_db(&db));
+	DB db;
+	connect(db);
 
 	/* Create the query */
-	DBA_RUN_OR_RETURN(dba_record_create(&query));
+	Record query;
 
 	/* Add the query data from commandline */
-	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
+	dba_cmdline_get_query(optCon, query);
 
 	if (op_dump)
 	{
-		DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_dumper, stdout));
+		MsgDumper dumper;
+		db.export_msgs(query, dumper);
 	} else {
-		DBA_RUN_OR_RETURN(parse_op_report(db, &(d.forced_rep_memo)));
+		msg::Exporter::Options opts;
+		Encoding type = dba_cmdline_stringToMsgType(op_output_type, optCon);
+		if (op_output_template[0] != 0)
+			opts.template_name = op_output_template;
 
-		type = dba_cmdline_stringToMsgType(op_output_type, optCon);
-		DBA_RUN_OR_RETURN(dba_file_create(type, "(stdout)", "w", &d.file));
+		MsgWriter writer;
+		writer.forced_rep_memo = parse_op_report(db);
+		writer.file = File::create(type, "(stdout)", "w");
+		writer.exporter = msg::Exporter::create(type, opts).release();
 
-		DBA_RUN_OR_RETURN(dba_db_export(db, query, msg_writer, &d));
-		dba_file_delete(d.file);
+		db.export_msgs(query, writer);
 	}
 
-	dba_db_delete(db);
-
-	dba_record_delete(query);
-
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_delete(poptContext optCon)
+int do_delete(poptContext optCon)
 {
-	dba_record query;
-	dba_db db;
-
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
 	if (poptPeekArg(optCon) == NULL)
 		dba_cmdline_error(optCon, "you need to specify some query parameters");
 
-	/* Connect to the database */
-	DBA_RUN_OR_RETURN(create_dba_db(&db));
-
-	/* Create the query */
-	DBA_RUN_OR_RETURN(dba_record_create(&query));
+	DB db;
+	connect(db);
 
 	/* Add the query data from commandline */
-	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
+	Record query;
+	dba_cmdline_get_query(optCon, query);
 
 	// TODO: check that there is something
 
-	DBA_RUN_OR_RETURN(dba_db_remove(db, query));
+	db.remove(query);
 
-	dba_db_delete(db);
-	dba_record_delete(query);
-
-	return dba_error_ok();
+	return 0;
 }
 
 static struct tool_desc dbadb;
@@ -614,10 +561,8 @@ static struct program_info proginfo = {
 int main (int argc, const char* argv[])
 {
 	int res;
-	dba_init();
 	init();
 	res = dba_cmdline_dispatch_main(&proginfo, &dbadb, argc, argv);
-	dba_shutdown();
 	return res;
 }
 

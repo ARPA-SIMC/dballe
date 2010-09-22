@@ -512,7 +512,7 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
 	return 1;
 }
 
-void dba_cmdline_get_query(poptContext optCon, Record query)
+void dba_cmdline_get_query(poptContext optCon, Record& query)
 {
 	const char* queryparm;
 	while ((queryparm = poptPeekArg(optCon)) != NULL)

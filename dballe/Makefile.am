@@ -18,11 +18,8 @@ INCLUDES = -I$(top_srcdir)
 
 dballeincludedir = $(includedir)/dballe
 
-dballeinclude_HEADERS = \
-	init.h
-
 lib_LTLIBRARIES = libdballe.la
-libdballe_la_SOURCES = init.c
+libdballe_la_SOURCES = 
 libdballe_la_LIBADD = \
 		core/libdballe-core.la \
 		msg/libdballe-msg.la \
