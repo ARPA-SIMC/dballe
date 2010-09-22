@@ -292,6 +292,21 @@ public:
 	void parse_date_extremes(int* minvalues, int* maxvalues) const;
 
 	/**
+	 * Set a value in the record according to an assignment encoded in a string.
+	 *
+	 * String can use keywords, aliases and varcodes.  Examples: ana_id=3,
+	 * name=Bologna, B12012=32.4
+	 *
+	 * @param rec
+	 *   The record where the value is to be set.
+	 * @param str
+	 *   The string containing the assignment.
+	 * @return
+	 *   The error indicator for the function.
+	 */
+	void set_from_string(const char* str);
+
+	/**
 	 * Print the contents of this record to the given file descriptor
 	 *
 	 * @param out
@@ -731,21 +746,6 @@ dba_err dba_record_key_setc(dba_record rec, dba_keyword parameter, const char* v
  *   The error indicator for the function.
  */
 dba_err dba_record_var_setc(dba_record rec, dba_varcode code, const char* value);
-
-/**
- * Set a value in the record according to an assignment encoded in a string.
- *
- * String can use keywords, aliases and varcodes.  Examples: ana_id=3,
- * name=Bologna, B12012=32.4
- *
- * @param rec
- *   The record where the value is to be set.
- * @param str
- *   The string containing the assignment.
- * @return
- *   The error indicator for the function.
- */
-dba_err dba_record_set_from_string(dba_record rec, const char* str);
 
 /**
  * Print the difference between two records to an output stream.
