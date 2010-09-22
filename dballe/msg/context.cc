@@ -176,6 +176,13 @@ void Context::print(FILE* out) const
         fprintf(out, "exists but is empty.\n");
 }
 
+static void context_summary(const msg::Context& c, FILE* out)
+{
+    stringstream str;
+    str << c.level << ", " << c.trange;
+    fprintf(out, "c(%s)", str.str().c_str());
+}
+
 static void var_summary(const Var& var, FILE* out)
 {
     Varcode v = var.code();
@@ -188,49 +195,45 @@ unsigned Context::diff(const Context& ctx, FILE* out) const
 {
     if (level != ctx.level || trange != ctx.trange)
     {
-        fprintf(out, "the contexts are different (first is %d,%d, %d,%d, %d,%d,%d second is %d,%d, %d,%d, %d,%d,%d)\n",
-                level.ltype1, level.l1, level.ltype2, level.l2,
-                trange.pind, trange.p1, trange.p2,
-                ctx.level.ltype1, ctx.level.l1, ctx.level.ltype2, ctx.level.l2,
-                ctx.trange.pind, ctx.trange.p1, ctx.trange.p2);
+        stringstream msg;
+        msg << "the contexts are different (first is "
+            << level << ", " << trange
+            << " second is "
+            << ctx.level << ", " << ctx.trange
+            << ")" << endl;
+        fputs(msg.str().c_str(), out);
         return 1;
     }
-    
-    int i1 = 0, i2 = 0;
+
+    size_t i1 = 0, i2 = 0;
     unsigned diffs = 0;
     while (i1 < data.size() || i2 < ctx.data.size())
     {
         if (i1 == data.size())
         {
-            fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ",
-                    ctx.level.ltype1, ctx.level.l1, ctx.level.ltype2, ctx.level.l2,
-                    ctx.trange.pind, ctx.trange.p1, ctx.trange.p2);
-            var_summary(*ctx.data[i2], out);
+            fputs("Variable ", out); context_summary(ctx, out);
+            fputs(" ", out); var_summary(*ctx.data[i2], out);
             fprintf(out, " exists only in the second message\n");
             ++i2;
             ++diffs;
         } else if (i2 == ctx.data.size()) {
-            fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ",
-                    level.ltype1, level.l1, level.ltype2, level.l2,
-                    trange.pind, trange.p1, trange.p2);
-            var_summary(*data[i1], out);
+            fputs("Variable ", out); context_summary(*this, out);
+            fputs(" ", out); var_summary(*data[i1], out);
             fprintf(out, " exists only in the first message\n");
             ++i1;
             ++diffs;
         } else {
-            int cmp = (int)data[i1]->code() - (int)data[i2]->code();
+            int cmp = (int)data[i1]->code() - (int)ctx.data[i2]->code();
             if (cmp == 0)
             {
-                diffs += data[i1]->diff(*data[i2], out);
+                diffs += data[i1]->diff(*ctx.data[i2], out);
                 ++i1;
                 ++i2;
             } else if (cmp < 0) {
                 if (data[i1]->value() != NULL)
                 {
-                    fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ",
-                            level.ltype1, level.l1, level.ltype2, level.l2,
-                            trange.pind, trange.p1, trange.p2);
-                    var_summary(*data[i1], out);
+                    fputs("Variable ", out); context_summary(*this, out);
+                    fputs(" ", out); var_summary(*data[i1], out);
                     fprintf(out, " exists only in the first message\n");
                     ++diffs;
                 }
@@ -238,10 +241,8 @@ unsigned Context::diff(const Context& ctx, FILE* out) const
             } else {
                 if (ctx.data[i2]->value() != NULL)
                 {
-                    fprintf(out, "Variable l(%d,%d, %d,%d, %d,%d,%d) ",
-                            ctx.level.ltype1, ctx.level.l1, ctx.level.ltype2, ctx.level.l2,
-                            ctx.trange.pind, ctx.trange.p1, ctx.trange.p2);
-                    var_summary(*ctx.data[i2], out);
+                    fputs("Variable ", out); context_summary(ctx, out);
+                    fputs(" ", out); var_summary(*ctx.data[i2], out);
                     fprintf(out, " exists only in the second message\n");
                     ++diffs;
                 }
