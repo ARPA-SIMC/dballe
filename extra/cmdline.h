@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,23 +20,20 @@
 #ifndef DBA_CMDLINE_H
 #define DBA_CMDLINE_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @file
  * @ingroup dballe
  * Common functions for commandline tools
  */
 
-#include <dballe/core/error.h>
-#include <dballe/core/record.h>
-#include <dballe/msg/file.h>
+#include <dballe/core/rawmsg.h>
 #include <popt.h>
+
+namespace dballe {
+struct Record;
 
 struct op_dispatch_table
 {
-	dba_err (*func)(poptContext);
+	int (*func)(poptContext);
 	const char* aliases[3];
 	const char* usage;
 	const char* desc;
@@ -77,7 +72,7 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__ (
 /**
  * Return the ::dba_encoding that corresponds to the name in the string
  */
-dba_encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon);
+Encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon);
 
 /**
  * Process commandline arguments and perform the action requested
@@ -87,11 +82,9 @@ int dba_cmdline_dispatch_main(const struct program_info* pinfo, const struct too
 /**
  * Get a DB-ALLe query from commandline parameters in the form key=value
  */
-dba_err dba_cmdline_get_query(poptContext optCon, dba_record query);
+void dba_cmdline_get_query(poptContext optCon, Record& query);
 
-#ifdef  __cplusplus
-}
-#endif
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
 #endif

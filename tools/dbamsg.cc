@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,9 +22,13 @@
 
 #include <dballe/init.h>
 #include <dballe/msg/msg.h>
+#include <dballe/msg/msgs.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/core/record.h>
 #include <dballe/core/file.h>
+#include <dballe/core/aoffile.h>
+#include <wreport/bulletin.h>
+#include <wreport/subset.h>
 #include <extra/cmdline.h>
 #include <extra/processor.h>
 #include <extra/conversion.h>
@@ -41,16 +43,20 @@
 #include <unistd.h>
 #include <signal.h>
 
+using namespace wreport;
+using namespace dballe;
+using namespace std;
+
 static int op_dump_interpreted = 0;
 static int op_dump_text = 0;
-static char* op_input_type = "auto";
-static char* op_output_type = "bufr";
-static char* op_output_template = "";
-static char* op_report = "";
-static char* op_bisect_cmd = NULL;
+static const char* op_input_type = "auto";
+static const char* op_output_type = "bufr";
+static const char* op_output_template = "";
+static const char* op_report = "";
+static const char* op_bisect_cmd = NULL;
 int op_verbose = 0;
 
-struct grep_t grepdata = { -1, -1, -1, 0, 0, "" };
+struct proc::grep_t grepdata = { -1, -1, -1, 0, 0, "" };
 struct poptOption grepTable[] = {
 	{ "category", 0, POPT_ARG_INT, &grepdata.category, 0,
 		"match messages with the given data category", "num" },
@@ -75,113 +81,74 @@ void stop_bisect(int sig)
 	signal(sig, stop_bisect);
 }
 
-static int count_nonnulls(bufrex_subset raw)
+static int count_nonnulls(const Subset& raw)
 {
-	int i, count = 0;
-	for (i = 0; i < raw->vars_count; i++)
-		if (dba_var_value(raw->vars[i]) != NULL)
+	unsigned i, count = 0;
+	for (i = 0; i < raw.size(); i++)
+		if (raw[i].value() != NULL)
 			count++;
 	return count;
 }
 
-static dba_err dump_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
+static void dump_bufr_header(const Rawmsg& rmsg, const BufrBulletin& braw)
 {
-	int size;
-	const char *table_id;
-	const unsigned char *buf;
-
-	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
-	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
-
-	printf("Message %d\n", rmsg->index);
-	printf("Size: %d\n", size);
-	printf("Edition: %d\n", braw->edition);
-	printf("Centre: %d:%d\n", braw->opt.bufr.centre, braw->opt.bufr.subcentre);
-	printf("Category: %d:%d:%d\n", braw->type, braw->subtype, braw->localsubtype);
+	printf("Message %d\n", rmsg.index);
+	printf("Size: %zd\n", rmsg.size());
+	printf("Edition: %d\n", braw.edition);
+	printf("Centre: %d:%d\n", braw.centre, braw.subcentre);
+	printf("Category: %d:%d:%d\n", braw.type, braw.subtype, braw.localsubtype);
 	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
-			braw->rep_year, braw->rep_month, braw->rep_day,
-			braw->rep_hour, braw->rep_minute, braw->rep_second);
-	printf("Tables: %d:%d\n", braw->opt.bufr.master_table, braw->opt.bufr.local_table);
-	printf("Table: %s\n", table_id);
-	printf("Compression: %s\n", braw->opt.bufr.compression ? "yes" : "no");
-	printf("Update sequence number: %d\n", braw->opt.bufr.update_sequence_number);
-	printf("Optional section length: %d\n", braw->opt.bufr.optional_section_length);
-	printf("Subsets: %d (decoded %zd)\n\n", braw->opt.bufr.subsets, braw->subsets_count);
+			braw.rep_year, braw.rep_month, braw.rep_day,
+			braw.rep_hour, braw.rep_minute, braw.rep_second);
+	printf("Tables: %d:%d\n", braw.master_table, braw.local_table);
+	printf("Table: %s\n", braw.btable ? braw.btable->id().c_str() : "(none)");
+	printf("Compression: %s\n", braw.compression ? "yes" : "no");
+	printf("Update sequence number: %d\n", braw.update_sequence_number);
+	printf("Optional section length: %d\n", braw.optional_section_length);
+	printf("Subsets: %zd\n\n", braw.subsets.size());
 
 	// Copy data descriptor section
 	//for (bufrex_opcode i = orig->datadesc; i != NULL; i = i->next)
 		//DBA_RUN_OR_GOTO(cleanup, bufrex_msg_append_datadesc(msg, i->val));
-
-	return dba_error_ok();
 }
 
-static dba_err dump_crex_header(dba_rawmsg rmsg, bufrex_msg braw)
+static void dump_crex_header(const Rawmsg& rmsg, const CrexBulletin& braw)
 {
-	int size/*, checkdigit*/;
-	const char *table_id;
-	const unsigned char *buf;
-
-	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
-	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
-
-	printf("Message %d\n", rmsg->index);
-	printf("Size: %d\n", size);
-	printf("Edition: %d\n", braw->edition);
-	printf("Category: %d:%d:%d\n", braw->type, braw->subtype, braw->localsubtype);
+	printf("Message %d\n", rmsg.index);
+	printf("Size: %zd\n", rmsg.size());
+	printf("Edition: %d\n", braw.edition);
+	printf("Category: %d:%d:%d\n", braw.type, braw.subtype, braw.localsubtype);
 	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
-			braw->rep_year, braw->rep_month, braw->rep_day,
-			braw->rep_hour, braw->rep_minute, braw->rep_second);
-	printf("Tables: %d:%d\n", braw->opt.crex.master_table, braw->opt.crex.table);
-	printf("Table: %s\n", table_id);
-	printf("Check digit: %s\n\n", braw->opt.crex.has_check_digit ? "yes" : "no");
-
-	return dba_error_ok();
+			braw.rep_year, braw.rep_month, braw.rep_day,
+			braw.rep_hour, braw.rep_minute, braw.rep_second);
+	printf("Tables: %d:%d\n", braw.master_table, braw.table);
+	printf("Table: %s\n", braw.btable ? braw.btable->id().c_str() : "(none)");
+	printf("Check digit: %s\n\n", braw.has_check_digit ? "yes" : "no");
 }
 
-static dba_err dump_aof_header(dba_rawmsg rmsg)
+static void dump_aof_header(const Rawmsg& rmsg)
 {
-	int size, category, subcategory;
-	const unsigned char *buf;
-
-	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
-	DBA_RUN_OR_RETURN(aof_codec_get_category(rmsg, &category, &subcategory));
+	int category, subcategory;
+	msg::AOFImporter::get_category(rmsg, &category, &subcategory);
 	/* DBA_RUN_OR_RETURN(bufrex_message_get_vars(msg, &vars, &count)); */
 
-	printf("Message %d\n", rmsg->index);
-	printf("Size: %d\n", size);
+	printf("Message %d\n", rmsg.index);
+	printf("Size: %zd\n", rmsg.size());
 	printf("Category: %d:%d\n\n", category, subcategory);
-
-	return dba_error_ok();
 }
 
-static dba_err print_bufr_header(dba_rawmsg rmsg, bufrex_msg braw)
+static void print_bufr_header(const Rawmsg& rmsg, const BufrBulletin& braw)
 {
-	int size;
-	const char *table_id;
-	const unsigned char *buf;
-	int i;
-
-	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
-	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
-
-	printf("#%d BUFR message: %d bytes, category %d:%d:%d, table %s, subsets %zd, values:",
-			rmsg->index, size, braw->type, braw->subtype, braw->localsubtype, table_id, braw->subsets_count);
-	for (i = 0; i < braw->subsets_count; ++i)
-		printf( "%d/%zd", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);
-
-	return dba_error_ok();
+	printf("#%d BUFR message: %zd bytes, category %d:%d:%d, table %s, subsets %zd, values:",
+			rmsg.index, rmsg.size(), braw.type, braw.subtype, braw.localsubtype,
+			braw.btable ? braw.btable->id().c_str() : "(none)",
+			braw.subsets.size());
+	for (size_t i = 0; i < braw.subsets.size(); ++i)
+		printf(" %d/%zd", count_nonnulls(braw.subsets[i]), braw.subsets[i].size());
 }
 
-static dba_err print_crex_header(dba_rawmsg rmsg, bufrex_msg braw)
+static void print_crex_header(const Rawmsg& rmsg, const CrexBulletin& braw)
 {
-	int size/*, checkdigit*/;
-	const char *table_id;
-	const unsigned char *buf;
-	int i;
-
-	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
-	DBA_RUN_OR_RETURN(bufrex_msg_get_table_id(braw, &table_id));
-
 	/* DBA_RUN_OR_RETURN(crex_message_has_check_digit(msg, &checkdigit)); */
 
 #if 0
@@ -189,298 +156,268 @@ static dba_err print_crex_header(dba_rawmsg rmsg, bufrex_msg braw)
 			rmsg->index, size, braw->type, braw->subtype, table_id, /*checkdigit ? "" : "no "*/"? ", count_nonnulls(braw), braw->vars_count);
 #endif
 
-	printf("#%d CREX message: %d bytes, category %d, subcategory %d, table %s, subsets %zd, values:",
-			rmsg->index, size, braw->type, braw->subtype, table_id, braw->subsets_count);
-	for (i = 0; i < braw->subsets_count; ++i)
-		printf( "%d/%zd", count_nonnulls(braw->subsets[i]), braw->subsets[i]->vars_count);
-
-	return dba_error_ok();
+	printf("#%d CREX message: %zd bytes, category %d, subcategory %d, table %s, subsets %zd, values:",
+			rmsg.index, rmsg.size(), braw.type, braw.subtype,
+			braw.btable ? braw.btable->id().c_str() : "(none)",
+			braw.subsets.size());
+	for (size_t i = 0; i < braw.subsets.size(); ++i)
+		printf(" %d/%zd", count_nonnulls(braw.subsets[i]), braw.subsets[i].size());
 }
 
-static dba_err print_aof_header(dba_rawmsg rmsg)
+static void print_aof_header(const Rawmsg& rmsg)
 {
-	int size, category, subcategory;
-	const unsigned char *buf;
-
-	DBA_RUN_OR_RETURN(dba_rawmsg_get_raw(rmsg, &buf, &size));
-	DBA_RUN_OR_RETURN(aof_codec_get_category(rmsg, &category, &subcategory));
+	int category, subcategory;
+	msg::AOFImporter::get_category(rmsg, &category, &subcategory);
 	/* DBA_RUN_OR_RETURN(bufrex_message_get_vars(msg, &vars, &count)); */
 
-	printf("#%d AOF message: %d bytes, category %d, subcategory %d",
-			rmsg->index, size, category, subcategory);
-
-	return dba_error_ok();
+	printf("#%d AOF message: %zd bytes, category %d, subcategory %d",
+			rmsg.index, rmsg.size(), category, subcategory);
 }
 
-static dba_err summarise_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
+struct Summarise : public proc::Action
 {
-	switch (rmsg->encoding)
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
 	{
-		case BUFR:
-			if (braw == NULL) return dba_error_ok();
-			DBA_RUN_OR_RETURN(print_bufr_header(rmsg, braw)); puts(".");
-			break;
-		case CREX:
-			if (braw == NULL) return dba_error_ok();
-			DBA_RUN_OR_RETURN(print_crex_header(rmsg, braw)); puts(".");
-			break;
-		case AOF:
-			DBA_RUN_OR_RETURN(print_aof_header(rmsg)); puts(".");
-			break;
-	}
-	return dba_error_ok();
-}
-
-static dba_err head_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
-{
-	switch (rmsg->encoding)
-	{
-		case BUFR:
-			if (braw == NULL) return dba_error_ok();
-			DBA_RUN_OR_RETURN(dump_bufr_header(rmsg, braw));
-			break;
-		case CREX:
-			if (braw == NULL) return dba_error_ok();
-			DBA_RUN_OR_RETURN(dump_crex_header(rmsg, braw));
-			break;
-		case AOF:
-			DBA_RUN_OR_RETURN(dump_aof_header(rmsg));
-			break;
-	}
-	return dba_error_ok();
-}
-
-static dba_err dump_dba_vars(bufrex_subset msg)
-{
-	int i;
-
-	for (i = 0; i < msg->vars_count; i++)
-		dba_var_print(msg->vars[i], stdout);
-
-	return dba_error_ok();
-}
-
-static dba_err dump_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
-{
-	int i;
-	switch (rmsg->encoding)
-	{
-		case BUFR:
-			if (braw == NULL) return dba_error_ok();
-			DBA_RUN_OR_RETURN(print_bufr_header(rmsg, braw)); puts(":");
-			printf(" Edition %d, origin %d/%d, master table %d, local table %d\n",
-					braw->edition, braw->opt.bufr.centre, braw->opt.bufr.subcentre, braw->opt.bufr.master_table, braw->opt.bufr.local_table);
-			for (i = 0; i < braw->subsets_count; ++i)
-			{
-				printf("Subset %d:\n", i);
-				DBA_RUN_OR_RETURN(dump_dba_vars(braw->subsets[i]));
-			}
-			break;
-		case CREX:
-			if (braw == NULL) return dba_error_ok();
-			DBA_RUN_OR_RETURN(print_crex_header(rmsg, braw)); puts(":");
-			printf(" Edition %d, master table %d, table %d\n",
-					braw->edition, braw->opt.crex.master_table, braw->opt.crex.table);
-			for (i = 0; i < braw->subsets_count; ++i)
-			{
-				printf("Subset %d:\n", i);
-				DBA_RUN_OR_RETURN(dump_dba_vars(braw->subsets[i]));
-			}
-			break;
-		case AOF:
-			DBA_RUN_OR_RETURN(print_aof_header(rmsg)); puts(":");
-			aof_codec_dump(rmsg, stdout);
-			break;
-	}
-	return dba_error_ok();
-}
-
-static dba_err dump_cooked_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
-{
-	int i;
-	if (msgs == NULL) return dba_error_ok();
-	for (i = 0; i < msgs->len; ++i)
-	{
-		printf("#%d[%d] ", rmsg->index, i);
-		dba_msg_print(msgs->msgs[i], stdout);
-	}
-	return dba_error_ok();
-}
-
-static dba_err print_var(dba_var var)
-{
-	printf("B%02d%03d", DBA_VAR_X(dba_var_code(var)), DBA_VAR_Y(dba_var_code(var)));
-	if (dba_var_value(var) != NULL)
-	{
-		if (VARINFO_IS_STRING(dba_var_info(var)))
+		switch (rmsg.encoding)
 		{
-			printf(" %s\n", dba_var_value(var));
+			case BUFR:
+				if (braw == NULL) return;
+				print_bufr_header(rmsg, *dynamic_cast<const BufrBulletin*>(braw)); puts(".");
+				break;
+			case CREX:
+				if (braw == NULL) return;
+				print_crex_header(rmsg, *dynamic_cast<const CrexBulletin*>(braw)); puts(".");
+				break;
+			case AOF:
+				print_aof_header(rmsg); puts(".");
+				break;
+		}
+	}
+};
+
+struct Head : public proc::Action
+{
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	{
+		switch (rmsg.encoding)
+		{
+			case BUFR:
+				if (braw == NULL) return;
+				dump_bufr_header(rmsg, *dynamic_cast<const BufrBulletin*>(braw)); puts(".");
+				break;
+			case CREX:
+				if (braw == NULL) return;
+				dump_crex_header(rmsg, *dynamic_cast<const CrexBulletin*>(braw)); puts(".");
+				break;
+			case AOF:
+				dump_aof_header(rmsg);
+				break;
+		}
+	}
+};
+
+static void dump_dba_vars(const Subset& msg)
+{
+	for (size_t i = 0; i < msg.size(); ++i)
+		msg[i].print(stdout);
+}
+
+struct DumpMessage : public proc::Action
+{
+	void print_subsets(const Bulletin& braw)
+	{
+		for (size_t i = 0; i < braw.subsets.size(); ++i)
+		{
+			printf("Subset %zd:\n", i);
+			dump_dba_vars(braw.subsets[i]);
+		}
+	}
+
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	{
+		switch (rmsg.encoding)
+		{
+			case BUFR:
+			{
+				if (braw == NULL) return;
+				const BufrBulletin& b = *dynamic_cast<const BufrBulletin*>(braw);
+				print_bufr_header(rmsg, b); puts(":");
+				printf(" Edition %d, origin %d/%d, master table %d, local table %d\n",
+						b.edition, b.centre, b.subcentre, b.master_table, b.local_table);
+				print_subsets(*braw);
+				break;
+			}
+			case CREX:
+			{
+				if (braw == NULL) return;
+				const CrexBulletin& b = *dynamic_cast<const CrexBulletin*>(braw);
+				print_crex_header(rmsg, b); puts(":");
+				printf(" Edition %d, master table %d, table %d\n",
+						b.edition, b.master_table, b.table);
+				print_subsets(*braw);
+				break;
+			}
+			case AOF:
+				print_aof_header(rmsg); puts(":");
+				msg::AOFImporter::dump(rmsg, stdout);
+				break;
+		}
+	}
+};
+
+struct DumpCooked : public proc::Action
+{
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	{
+		if (msgs == NULL) return;
+		for (size_t i = 0; i < msgs->size(); ++i)
+		{
+			printf("#%d[%zd] ", rmsg.index, i);
+			(*msgs)[i]->print(stdout);
+		}
+	}
+};
+
+static void print_var(const Var& var)
+{
+	printf("B%02d%03d", WR_VAR_X(var.code()), WR_VAR_Y(var.code()));
+	if (var.value() != NULL)
+	{
+		if (var.info()->is_string())
+		{
+			printf(" %s\n", var.value());
 		} else {
-			double value;
-			DBA_RUN_OR_RETURN(dba_var_enqd(var, &value));
-			printf(" %.*f\n", dba_var_info(var)->scale > 0 ? dba_var_info(var)->scale : 0, value);
+			double value = var.enqd();;
+			printf(" %.*f\n", var.info()->scale > 0 ? var.info()->scale : 0, value);
 		}
 	} else
 		printf("\n");
-	return dba_error_ok();
 }
 
-static dba_err dump_text(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
+struct DumpText : public proc::Action
 {
-	int i;
-	struct _bufrex_opcode* opcode;
-	if (braw == NULL)
-		return dba_error_consistency("source is not a BUFR or CREX message");
-	if (braw->encoding_type != BUFREX_BUFR)
-		return dba_error_consistency("source is not BUFR");
-	printf("Edition: %d\n", braw->edition);
-	printf("Type: %d\n", braw->type);
-	printf("Subtype: %d\n", braw->subtype);
-	printf("Localsubtype: %d\n", braw->localsubtype);
-	printf("Centre: %d\n", braw->opt.bufr.centre);
-	printf("Subcentre: %d\n", braw->opt.bufr.subcentre);
-	printf("Mastertable: %d\n", braw->opt.bufr.master_table);
-	printf("Localtable: %d\n", braw->opt.bufr.local_table);
-	printf("Compression: %d\n", braw->opt.bufr.compression);
-	printf("Reftime: %04d-%02d-%02d %02d:%02d:%02d\n",
-			braw->rep_year, braw->rep_month, braw->rep_day,
-			braw->rep_hour, braw->rep_minute, braw->rep_second);
-	printf("Descriptors:");
-	DBA_RUN_OR_RETURN(bufrex_msg_get_datadesc(braw, &opcode));
-	for ( ; opcode != NULL; opcode = opcode->next)
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
 	{
-		char type;
-		switch (DBA_VAR_F(opcode->val))
+		if (braw == NULL)
+			throw error_consistency("source is not a BUFR or CREX message");
+		const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(braw);
+		if (!b) throw error_consistency("source is not BUFR");
+		printf("Edition: %d\n", b->edition);
+		printf("Type: %d\n", b->type);
+		printf("Subtype: %d\n", b->subtype);
+		printf("Localsubtype: %d\n", b->localsubtype);
+		printf("Centre: %d\n", b->centre);
+		printf("Subcentre: %d\n", b->subcentre);
+		printf("Mastertable: %d\n", b->master_table);
+		printf("Localtable: %d\n", b->local_table);
+		printf("Compression: %d\n", b->compression);
+		printf("Reftime: %04d-%02d-%02d %02d:%02d:%02d\n",
+				b->rep_year, b->rep_month, b->rep_day,
+				b->rep_hour, b->rep_minute, b->rep_second);
+		printf("Descriptors:");
+		for (vector<Varcode>::const_iterator i = b->datadesc.begin();
+				i != b->datadesc.end(); ++i)
 		{
-			case 0: type = 'B'; break;
-			case 1: type = 'R'; break;
-			case 2: type = 'C'; break;
-			case 3: type = 'D'; break;
-			default: type = '?'; break;
-		}
-			
-		printf(" %c%02d%03d", type, DBA_VAR_X(opcode->val), DBA_VAR_Y(opcode->val));
-	}
-	printf("\n");
-	for (i = 0; i < braw->subsets_count; ++i)
-	{
-		bufrex_subset subset = braw->subsets[i];
-		int j;
-		printf("Data:\n");
-		for (j = 0; j < subset->vars_count; ++j)
-		{
-			dba_var_attr_iterator ai;
-			dba_var var = subset->vars[j];
-			printf(" ");
-			DBA_RUN_OR_RETURN(print_var(var));
-			for (ai = dba_var_attr_iterate(var); ai; ai = dba_var_attr_iterator_next(ai))
+			char type;
+			switch (WR_VAR_F(*i))
 			{
-				printf(" *");
-				DBA_RUN_OR_RETURN(print_var(dba_var_attr_iterator_attr(ai)));
+				case 0: type = 'B'; break;
+				case 1: type = 'R'; break;
+				case 2: type = 'C'; break;
+				case 3: type = 'D'; break;
+				default: type = '?'; break;
+			}
+			printf(" %c%02d%03d", type, WR_VAR_X(*i), WR_VAR_Y(*i));
+		}
+		printf("\n");
+		for (size_t i = 0; i < b->subsets.size(); ++i)
+		{
+			const Subset& subset = b->subsets[i];
+			printf("Data:\n");
+			for (size_t j = 0; j < subset.size(); ++j)
+			{
+				const Var& var = subset[i];
+				printf(" ");
+				print_var(var);
+				for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
+				{
+					printf(" *");
+					print_var(*attr);
+				}
 			}
 		}
 	}
-	return dba_error_ok();
-}
+};
 
-dba_err write_raw_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
+struct WriteRaw : public proc::Action
 {
-	dba_file* file = (dba_file*)data;
-	if (*file == NULL)
-		DBA_RUN_OR_RETURN(dba_file_create(rmsg->encoding, "(stdout)", "w", file));
-	DBA_RUN_OR_RETURN(dba_file_write(*file, rmsg));
-	return dba_error_ok();
-}
+	File* file;
+	WriteRaw() : file(0) {}
+	~WriteRaw() { if (file) delete file; }
 
-dba_err do_scan(poptContext optCon)
-{
-	/* Throw away the command name */
-	poptGetArg(optCon);
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	{
+		if (!file) file = File::create(rmsg.encoding, "(stdout)", "w");
+		file->write(rmsg);
+	}
+};
 
-	DBA_RUN_OR_RETURN(process_all(optCon, 
-				dba_cmdline_stringToMsgType(op_input_type, optCon),
-				&grepdata, summarise_message, 0));
-
-	return dba_error_ok();
-}
-
-dba_err do_head(poptContext optCon)
+int do_scan(poptContext optCon)
 {
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
-	DBA_RUN_OR_RETURN(process_all(optCon, 
-				dba_cmdline_stringToMsgType(op_input_type, optCon),
-				&grepdata, head_message, 0));
-
-	return dba_error_ok();
+	Summarise s;
+	process_all(optCon, dba_cmdline_stringToMsgType(op_input_type, optCon), &grepdata, s);
+	return 0;
 }
 
-dba_err do_dump(poptContext optCon)
+int do_head(poptContext optCon)
 {
-	action action = op_dump_interpreted ? dump_cooked_message :
-					op_dump_text ? dump_text : dump_message;
-
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
-	DBA_RUN_OR_RETURN(process_all(optCon, 
-				dba_cmdline_stringToMsgType(op_input_type, optCon),
-				&grepdata, action, 0));
-
-	return dba_error_ok();
+	Head head;
+	process_all(optCon, dba_cmdline_stringToMsgType(op_input_type, optCon), &grepdata, head);
+	return 0;
 }
 
-dba_err do_cat(poptContext optCon)
+int do_dump(poptContext optCon)
+{
+	auto_ptr<proc::Action> action;
+	if (op_dump_interpreted)
+		action.reset(new DumpCooked);
+	else if (op_dump_text)
+		action.reset(new DumpText);
+	else
+		action.reset(new DumpMessage);
+
+	/* Throw away the command name */
+	poptGetArg(optCon);
+	process_all(optCon, dba_cmdline_stringToMsgType(op_input_type, optCon), &grepdata, *action);
+	return 0;
+}
+
+int do_cat(poptContext optCon)
 {
 	/* Throw away the command name */
-	dba_file file = NULL;
-
 	poptGetArg(optCon);
 
 	/*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
-	DBA_RUN_OR_RETURN(process_all(optCon, 
-				dba_cmdline_stringToMsgType(op_input_type, optCon),
-				&grepdata, write_raw_message, &file));
-	if (file != NULL)
-		dba_file_delete(file);
-
-	return dba_error_ok();
+	WriteRaw wraw;
+	process_all(optCon, dba_cmdline_stringToMsgType(op_input_type, optCon), &grepdata, wraw);
+	return 0;
 }
 
-struct message_vector
+struct StoreMessages : public proc::Action, public vector<Rawmsg>
 {
-	dba_rawmsg* messages;
-	size_t len;
-	size_t alloclen;
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	{
+		push_back(rmsg);
+	}
 };
 
-static dba_err store_messages(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
-{
-	struct message_vector* vec = (struct message_vector*)data;
-	if (vec->alloclen == 0)
-	{
-		vec->messages = (dba_rawmsg*)malloc(500 * sizeof(dba_rawmsg));
-		if (vec->messages == NULL)
-			return dba_error_alloc("allocating 500 dba_rawmsg pointers");
-		vec->alloclen = 500;
-	}
-	if (vec->alloclen == vec->len)
-	{
-		/* Double the size of the array */
-		dba_rawmsg* newarr;
-		vec->alloclen <<= 1;
-		if ((newarr = (dba_rawmsg*)realloc(vec->messages, vec->alloclen * sizeof(dba_rawmsg))) == NULL)
-			return dba_error_alloc("allocating memory for expanding data in message vector");
-		vec->messages = newarr;
-	}
-	DBA_RUN_OR_RETURN(dba_rawmsg_copy(&(vec->messages[vec->len]), rmsg));
-	/* Set the file pointer to null, since the dba_file we have now is temporary */
-	vec->messages[vec->len]->file = NULL;
-	++(vec->len);
-	return dba_error_ok();
-}
-
+#if 0
 static dba_err bisect_test(struct message_vector* vec, size_t first, size_t last, int* fails)
 {
 	FILE* out = popen(op_bisect_cmd, "w");
@@ -538,9 +475,11 @@ static dba_err bisect(
 
 	return dba_error_ok();
 }
+#endif
 
-dba_err do_bisect(poptContext optCon)
+int do_bisect(poptContext optCon)
 {
+#if 0
 	struct message_vector vec = { 0, 0, 0 };
 	struct bisect_candidate candidate;
 	int old_op_verbose = op_verbose;
@@ -587,101 +526,91 @@ dba_err do_bisect(poptContext optCon)
 	free(vec.messages);
 
 	return dba_error_ok();
+#endif
+	throw error_unimplemented("bisect is currently not implemented");
 }
 
-dba_err do_convert(poptContext optCon)
+int do_convert(poptContext optCon)
 {
-	dba_file file;
-	dba_encoding intype, outtype;
-	struct conversion_info convinfo;
+	msg::Exporter::Options opts;
+	proc::Converter conv;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
-	intype = dba_cmdline_stringToMsgType(op_input_type, optCon);
-	outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
+	Encoding intype = dba_cmdline_stringToMsgType(op_input_type, optCon);
+	Encoding outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
 
 	if (op_report[0] != 0)
-		convinfo.dest_rep_memo = op_report;
+		conv.dest_rep_memo = op_report;
 	else
-		convinfo.dest_rep_memo = NULL;
+		conv.dest_rep_memo = NULL;
 
 	if (op_output_template[0] != 0)
-		DBA_RUN_OR_RETURN(bufrex_msg_parse_template(op_output_template,
-					&convinfo.dest_type, &convinfo.dest_subtype, &convinfo.dest_localsubtype));
-	else {
-		convinfo.dest_type = 0;
-		convinfo.dest_subtype = 0;
-		convinfo.dest_localsubtype = 0;
+	{
+		conv.dest_template = op_output_template;
+		opts.template_name = op_output_template;
 	}
 
-	DBA_RUN_OR_RETURN(dba_file_create(outtype, "(stdout)", "w", &file));
-	/* DBA_RUN_OR_RETURN(dba_file_write_header(file, 0, 0)); */
+	conv.file = File::create(outtype, "(stdout)", "w");
+	conv.importer = msg::Importer::create(intype).release();
+	conv.exporter = msg::Exporter::create(outtype, opts).release();
 
-	convinfo.file = file;
+	process_all(optCon, intype, &grepdata, conv);
 
-	DBA_RUN_OR_RETURN(process_all(optCon, intype, &grepdata, convert_message, (void*)&convinfo));
-
-	dba_file_delete(file);
-
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_compare(poptContext optCon)
+int do_compare(poptContext optCon)
 {
-	dba_file file1;
-	dba_file file2;
-	const char* file1_name;
-	const char* file2_name;
-	dba_msgs msg1;
-	dba_msgs msg2;
-	int found1 = 1, found2 = 1;
-	int idx = 0;
-
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
 	/* Read the file names */
-	file1_name = poptGetArg(optCon);
+	const char* file1_name = poptGetArg(optCon);
 	if (file1_name == NULL)
 		dba_cmdline_error(optCon, "input file needs to be specified");
 
-	file2_name = poptGetArg(optCon);
+	const char* file2_name = poptGetArg(optCon);
 	if (file2_name == NULL)
 		file2_name = "(stdin)";
 
-	DBA_RUN_OR_RETURN(dba_file_create(dba_cmdline_stringToMsgType(op_input_type, optCon), file1_name, "r", &file1));
-	DBA_RUN_OR_RETURN(dba_file_create(dba_cmdline_stringToMsgType(op_output_type, optCon), file2_name, "r", &file2));
-
-	while (found1 && found2)
+	Encoding in_type = dba_cmdline_stringToMsgType(op_input_type, optCon);
+	Encoding out_type = dba_cmdline_stringToMsgType(op_output_type, optCon);
+	File* file1 = File::create(in_type, file1_name, "r");
+	File* file2 = File::create(out_type, file2_name, "r");
+	std::auto_ptr<msg::Importer> importer = msg::Importer::create(in_type);
+	std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(out_type);
+	size_t idx = 0;
+	for ( ; ; ++idx)
 	{
-		int diffs = 0;
-		idx++;
-		DBA_RUN_OR_RETURN(dba_file_read_msgs(file1, &msg1, &found1));
-		DBA_RUN_OR_RETURN(dba_file_read_msgs(file2, &msg2, &found2));
+		++idx;
+
+		Rawmsg msg1;
+		Rawmsg msg2;
+		bool found1 = file1->read(msg1);
+		bool found2 = file2->read(msg2);
 
 		if (found1 != found2)
-			return dba_error_consistency("The files contain a different number of messages");
+			throw error_consistency("The files contain a different number of messages");
+		if (!found1 && !found2)
+			break;
 
-		if (found1 && found2)
-		{
-			dba_msgs_diff(msg1, msg2, &diffs, stderr);
-			if (diffs > 0)
-				return dba_error_consistency("Messages #%d contain %d differences", idx, diffs);
-		}
-		if (msg1) dba_msgs_delete(msg1);
-		if (msg2) dba_msgs_delete(msg2);
+		Msgs msgs1;
+		Msgs msgs2;
+		importer->from_rawmsg(msg1, msgs1);
+		importer->from_rawmsg(msg2, msgs2);
+
+		int diffs = msgs1.diff(msgs2, stderr);
+		if (diffs > 0)
+			error_consistency::throwf("Messages #%zd contain %d differences", idx, diffs);
 	}
-
 	if (idx == 0)
-		return dba_error_consistency("The files do not contain messages");
-
-	dba_file_delete(file1);
-	dba_file_delete(file2);
-
-	return dba_error_ok();
+		throw error_consistency("The files do not contain messages");
+	return 0;
 }
 
+#if 0
 struct filter_data
 {
 	dba_file output;
@@ -710,7 +639,6 @@ inline static double get_lat_value(dba_msg msg, int value)
 	dba_var_enqd(var, &res);
 	return res;
 }
-
 
 dba_err filter_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
 {
@@ -812,9 +740,12 @@ inline static double get_input_lat_value(dba_record rec, dba_keyword key)
 	dba_var_enqd(var, &res);
 	return res;
 }
+#endif
 
-dba_err do_filter(poptContext optCon)
+int do_filter(poptContext optCon)
 {
+	throw error_unimplemented("filter not implemented");
+#if 0
 	dba_encoding type;
 	dba_encoding otype;
 	struct filter_data fdata;
@@ -851,36 +782,30 @@ dba_err do_filter(poptContext optCon)
 	dba_file_delete(fdata.output);
 
 	return dba_error_ok();
+#endif
 }
 
-dba_err do_fixaof(poptContext optCon)
+int do_fixaof(poptContext optCon)
 {
-	dba_err err = DBA_OK;
-	const char* filename;
-	dba_file file = NULL;
-	int count = 0;
-
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
-	while ((filename = poptGetArg(optCon)) != NULL)
+	int count = 0;
+	while (const char* filename = poptGetArg(optCon))
 	{
-		DBA_RUN_OR_GOTO(cleanup, dba_file_create(AOF, filename, "rb+", &file));
-		DBA_RUN_OR_GOTO(cleanup, aof_codec_fix_header(file));
-		dba_file_delete(file);
-		file = NULL;
-		count++;
+		auto_ptr<File> file(File::create(AOF, filename, "rb+"));
+		AofFile* aoffile = dynamic_cast<AofFile*>(file.get());
+		aoffile->fix_header();
+		++count;
 	}
 
 	if (count == 0)
 		dba_cmdline_error(optCon, "at least one input file needs to be specified");
 
-cleanup:
-	if (file != NULL)
-		dba_file_delete(file);
-	return err == DBA_OK ? dba_error_ok() : err;
+	return 0;
 }
 
+#if 0
 static dba_err readfield(FILE* in, char** name, char** value)
 {
 	static char line[1000];
@@ -922,7 +847,9 @@ static dba_err readfield(FILE* in, char** name, char** value)
 
 	return dba_error_ok();
 }
+#endif
 
+#if 0
 static dba_err parsetextgrib(FILE* in, bufrex_msg msg, int* found)
 {
 	dba_err err = DBA_OK;
@@ -1035,9 +962,12 @@ cleanup:
 		dba_var_delete(var);
 	return err == DBA_OK ? dba_error_ok() : err;
 }
+#endif
 
-dba_err do_makebufr(poptContext optCon)
+int do_makebufr(poptContext optCon)
 {
+	throw error_unimplemented("makebufr not implemented");
+#if 0
 	dba_err err = DBA_OK;
 	bufrex_msg msg = NULL;
 	dba_rawmsg rmsg = NULL;
@@ -1089,6 +1019,8 @@ cleanup:
 	if (outfile)
 		dba_file_delete(outfile);
 	return err == DBA_OK ? dba_error_ok() : err;
+#endif
+	return 0;
 }
 
 static struct tool_desc dbamsg;

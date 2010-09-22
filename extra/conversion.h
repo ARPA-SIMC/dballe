@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,26 +20,49 @@
 #ifndef CONVERSION_H
 #define CONVERSION_H
 
+#if 0
 #include <dballe/core/file.h>
 #include <dballe/core/rawmsg.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/bufrex/msg.h>
+#endif
+#include <extra/processor.h>
 
+namespace wreport {
+struct Bulletin;
+}
 
-struct conversion_info
+namespace dballe {
+namespace msg {
+struct Importer;
+struct Exporter;
+}
+
+namespace proc {
+
+struct Converter : public Action
 {
-	dba_file file;
-	int dest_type;
-	int dest_subtype;
-	int dest_localsubtype;
+	File* file;
 	const char* dest_rep_memo;
+	const char* dest_template;
+
+	msg::Importer* importer;
+	msg::Exporter* exporter;
 #if 0
 	dba_encoding outType;
 	void* outAction;
 	void* outActionData;
 #endif
+	Converter() : file(0), dest_rep_memo(0), dest_template(0), importer(0), exporter(0) {}
+	~Converter();
+
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs);
+
+	void process_bufrex_msg(const wreport::Bulletin& msg);
+	void process_dba_msg(const Msgs& msgs);
 };
 
-dba_err convert_message(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void* data);
+}
+}
 
 #endif

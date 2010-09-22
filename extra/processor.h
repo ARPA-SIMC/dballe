@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,10 +21,17 @@
 #define PROCESSOR_H
 
 #include <dballe/core/rawmsg.h>
-#include <dballe/bufrex/msg.h>
-#include <dballe/msg/file.h>
-#include <dballe/msg/msgs.h>
 #include <popt.h>
+
+namespace wreport {
+struct Bulletin;
+}
+
+namespace dballe {
+struct Rawmsg;
+struct Msgs;
+
+namespace proc {
 
 struct grep_t
 {
@@ -38,13 +43,18 @@ struct grep_t
 	const char* index;
 };
 
-typedef dba_err (*action)(dba_rawmsg msg, bufrex_msg braw, dba_msgs decoded, void* data);
+struct Action
+{
+	virtual ~Action() {}
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* bulletin, const Msgs* msgs) = 0;
+};
 
-dba_err process_all(
-		poptContext optCon,
-		dba_encoding type,
-		struct grep_t* grepdata,
-		action action, void* data);
+void process_all(poptContext optCon,
+		 Encoding type,
+		 struct grep_t* grepdata,
+		 Action& action);
 
+}
+}
 
 #endif

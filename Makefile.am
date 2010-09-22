@@ -2,14 +2,13 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = tables dballe
+SUBDIRS = tables dballe extra tools
 if DO_DBALLEPP
 SUBDIRS += dballe++
 endif
 if DO_DBALLEF
 SUBDIRS += fortran
 endif
-SUBDIRS += extra tools
 if DO_DOCS
 SUBDIRS += doc
 endif

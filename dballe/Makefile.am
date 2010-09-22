@@ -6,7 +6,7 @@ if DO_DBALLE_DB
 SUBDIRS += db
 endif
 
-SUBDIRS += . bench
+# SUBDIRS += . bench
 
 EXTRA_DIST = mainpage.dox dballe.dox \
 	main-bufrex.dox \

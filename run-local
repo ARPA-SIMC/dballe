@@ -1,6 +1,7 @@
 #!/bin/bash
 
 TOP_SRCDIR=$(cd $(dirname $0) && pwd)
+export WREPORT_EXTRA_TABLES=$TOP_SRCDIR/tables
 export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
 export DBA_TABLES=$TOP_SRCDIR/tables/
 export PYTHONPATH=$TOP_SRCDIR/swig

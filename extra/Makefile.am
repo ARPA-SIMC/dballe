@@ -6,9 +6,9 @@ dist_noinst_HEADERS = \
 noinst_LTLIBRARIES = libextra.la
 
 libextra_la_SOURCES = \
-	cmdline.c \
-	conversion.c \
-	processor.c
+	cmdline.cc \
+	conversion.cc \
+	processor.cc
 
 EXTRA_DIST = \
 	aof bufr crex \

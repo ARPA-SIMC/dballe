@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * dbatbl - commandline table management tool
  *
- * Copyright (C) 2005,2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,26 +19,29 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#define _GNU_SOURCE  /* Needed for strcasestr */
-
 #include <extra/cmdline.h>
 #include <dballe/init.h>
-#include <dballe/bufrex/dtable.h>
-#include <dballe/core/conv.h>
+#include <wreport/vartable.h>
+#include <wreport/dtable.h>
+#include <wreport/conv.h>
 #include <dballe/msg/formatter.h>
+#include <dballe/core/var.h>
 
 #include <stdlib.h>
 #include <string.h>
 
-dba_vartable btable;
-bufrex_dtable dtable;
+using namespace dballe;
+using namespace wreport;
+using namespace std;
+
+const Vartable* btable = NULL;
+const DTable* dtable = NULL;
 static int op_csv;
 int op_verbose = 0;
 
-void unit_check(dba_varinfo info, void* data)
+void unit_check(const Varinfo& info, void* data)
 {
-	dba_varcode varcode = info->var;
-	dba_varinfo local;
+	Varcode varcode = info->var;
 	int* is_ok = (int*)data;
 
 	/*
@@ -46,21 +49,14 @@ void unit_check(dba_varinfo info, void* data)
 		fprintf(stderr, "Testing %s %d\n", ids[i], var);
 	*/
 
-	if (varcode != 0 && !VARINFO_IS_STRING(info))
+	if (varcode != 0 && !info->is_string())
 	{
-		double dval;
-		if (dba_varinfo_query_local(varcode, &local) != DBA_OK)
-		{
-			fprintf(stderr, "Checking conversion for var B%02d%03d: ",
-					DBA_VAR_X(varcode), DBA_VAR_Y(varcode));
-			dba_error_print_to_stderr();
-			*is_ok = 0;
-		}
-		else if (dba_convert_units(info->unit, local->unit, 1.0, &dval) != DBA_OK)
-		{
-			fprintf(stderr, "Checking conversion for var B%02d%03d: ",
-					DBA_VAR_X(varcode), DBA_VAR_Y(varcode));
-			dba_error_print_to_stderr();
+		try {
+			Varinfo local = varinfo(varcode);
+			convert_units(info->unit, local->unit, 1.0);
+		} catch (std::exception& e) {
+			fprintf(stderr, "Checking conversion for var B%02d%03d: %s",
+					WR_VAR_X(varcode), WR_VAR_Y(varcode), e.what());
 			*is_ok = 0;
 		}
 	}
@@ -70,18 +66,17 @@ void unit_check(dba_varinfo info, void* data)
 /* Check that all unit conversions are allowed by dba_uniconv */
 static dba_err check_unit_conversions(const char* id, int* is_ok)
 {
-	dba_vartable othertable;
-	DBA_RUN_OR_RETURN(dba_vartable_create(id, &othertable));
-
+	const Vartable* othertable = Vartable::get(id);
 	*is_ok = 1;
-	return dba_vartable_iterate(othertable, unit_check, is_ok);
+	throw error_unimplemented("TODO: check_unit_conversions has yet to be reimplemented");
+	//return dba_vartable_iterate(othertable, unit_check, is_ok);
 }
 
-static void print_varinfo(dba_varinfo info)
+static void print_varinfo(const Varinfo& info)
 {
 	char fmtdesc[100];
 
-	if (VARINFO_IS_STRING(info))
+	if (info->is_string())
 		snprintf(fmtdesc, 99, "%d characters", info->len);
 	else if (info->scale == 0)
 		snprintf(fmtdesc, 99, "%d digits", info->len);
@@ -107,19 +102,19 @@ static void print_varinfo(dba_varinfo info)
 
 #if 0
 	if (VARINFO_IS_STRING(info))
-		printf("%d%02d%03d %s [%s, %s]\n", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
+		printf("%d%02d%03d %s [%s, %s]\n", WR_VAR_F(info->var), WR_VAR_X(info->var), WR_VAR_Y(info->var),
 				info->desc,
 				info->unit,
 				fmtdesc);
 	else
-		printf("%d%02d%03d %s [%s, %s] %f<=x<=%f\n", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
+		printf("%d%02d%03d %s [%s, %s] %f<=x<=%f\n", WR_VAR_F(info->var), WR_VAR_X(info->var), WR_VAR_Y(info->var),
 				info->desc,
 				info->unit,
 				fmtdesc,
 				info->dmin,
 				info->dmax);
 #else
-	printf("%d%02d%03d %s [%s, %s] range (%g -- %g)\n", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var),
+	printf("%d%02d%03d %s [%s, %s] range (%g -- %g)\n", WR_VAR_F(info->var), WR_VAR_X(info->var), WR_VAR_Y(info->var),
 			info->desc,
 			info->unit,
 			fmtdesc,
@@ -127,12 +122,12 @@ static void print_varinfo(dba_varinfo info)
 #endif
 }
 
-static void print_varinfo_csv(dba_varinfo info)
+static void print_varinfo_csv(const Varinfo& info)
 {
 	char fmtdesc[100];
 	const char* s;
 
-	if (VARINFO_IS_STRING(info))
+	if (info->is_string())
 		snprintf(fmtdesc, 99, "%d characters", info->len);
 	else if (info->scale == 0)
 		snprintf(fmtdesc, 99, "%d digits", info->len);
@@ -156,51 +151,43 @@ static void print_varinfo_csv(dba_varinfo info)
 		fmtdesc[i] = 0;
 	}
 
-	printf("%d%02d%03d,", DBA_VAR_F(info->var), DBA_VAR_X(info->var), DBA_VAR_Y(info->var));
+	printf("%d%02d%03d,", WR_VAR_F(info->var), WR_VAR_X(info->var), WR_VAR_Y(info->var));
 	for (s = info->desc; *s != 0; ++s)
 		if (*s != ',' && *s != '"')
 			putc(*s, stdout);
 	printf(",%s,%s\n", info->unit, fmtdesc);
 }
 
-static dba_err expand_table_entry(dba_varcode val, int level)
+static void expand_table_entry(Varcode val, int level)
 {
 	int i;
 	for (i = 0; i < level; i++)
 		printf("\t");
 
-	switch (DBA_VAR_F(val))
+	switch (WR_VAR_F(val))
 	{
 		case 0:
 		{
-			dba_varinfo info;
-			DBA_RUN_OR_RETURN(dba_vartable_query(btable, val, &info));
+			Varinfo info = btable->query(val);
 			print_varinfo(info);
 			break;
 		}
 		case 3:
 		{
-			bufrex_opcode exp;
-			bufrex_opcode cur;
-			DBA_RUN_OR_RETURN(bufrex_dtable_query(dtable, val, &exp));
+			Opcodes ops = ::dtable->query(val);
 
-			printf("%d%02d%03d\n", DBA_VAR_F(val), DBA_VAR_X(val), DBA_VAR_Y(val));
+			printf("%d%02d%03d\n", WR_VAR_F(val), WR_VAR_X(val), WR_VAR_Y(val));
 
-			for (cur = exp; cur != NULL; cur = cur->next)
-				expand_table_entry(cur->val, level+1);
-
-			bufrex_opcode_delete(&exp);
-
+			for (size_t i = 0; i < ops.size(); ++i)
+				expand_table_entry(ops[i], level+1);
 			break;
 		}
 		default:
-			printf("%d%02d%03d\n", DBA_VAR_F(val), DBA_VAR_X(val), DBA_VAR_Y(val));
+			printf("%d%02d%03d\n", WR_VAR_F(val), WR_VAR_X(val), WR_VAR_Y(val));
 	}
-
-	return dba_error_ok();
 }
 
-static void print_varinfo_adapter(dba_varinfo info, void* data)
+static void print_varinfo_adapter(const Varinfo& info, void* data)
 {
 	if (op_csv)
 		print_varinfo_csv(info);
@@ -208,7 +195,7 @@ static void print_varinfo_adapter(dba_varinfo info, void* data)
 		print_varinfo(info);
 }
 
-static void print_varinfo_grepping_adapter(dba_varinfo info, void* data)
+static void print_varinfo_grepping_adapter(const Varinfo& info, void* data)
 {
 	const char* pattern = (const char*)data;
 
@@ -221,7 +208,7 @@ static void print_varinfo_grepping_adapter(dba_varinfo info, void* data)
 	}
 }
 
-dba_err do_cat(poptContext optCon)
+int do_cat(poptContext optCon)
 {
 	const char* item;
 
@@ -235,19 +222,19 @@ dba_err do_cat(poptContext optCon)
 
 	while (item != NULL)
 	{
-		dba_vartable table;
-		DBA_RUN_OR_RETURN(dba_vartable_create(item, &table));
-		DBA_RUN_OR_RETURN(dba_vartable_iterate(table, print_varinfo_adapter, NULL));
+		const Vartable* table = Vartable::get(item);
+		throw error_unimplemented("still cannot do vartable iteration");
+		// TODO DBA_RUN_OR_RETURN(dba_vartable_iterate(table, print_varinfo_adapter, NULL));
 
 		item = poptGetArg(optCon);
 	}
 	
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_grep(poptContext optCon)
+int do_grep(poptContext optCon)
 {
-	dba_vartable table;
+	const Vartable* table;
 	const char* pattern;
 
 	/* Throw away the command name */
@@ -257,32 +244,33 @@ dba_err do_grep(poptContext optCon)
 		dba_cmdline_error(optCon, "there should be at least one B or D item to expand.  Examples are: B01002 or D03001");
 	pattern = poptGetArg(optCon);
 
-	DBA_RUN_OR_RETURN(dba_vartable_create("dballe", &table));
-	DBA_RUN_OR_RETURN(dba_vartable_iterate(table, print_varinfo_grepping_adapter, (void*)pattern));
+	table = Vartable::get("dballe");
+	throw error_unimplemented("still cannot do vartable iteration");
+	// TODO DBA_RUN_OR_RETURN(dba_vartable_iterate(table, print_varinfo_grepping_adapter, (void*)pattern));
 	
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_expand(poptContext optCon)
+int do_expand(poptContext optCon)
 {
 	const char* item;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
-	DBA_RUN_OR_RETURN(dba_vartable_create("dballe", &btable));
-	DBA_RUN_OR_RETURN(bufrex_dtable_create("D000203", &dtable));
+	btable = Vartable::get("dballe");
+	::dtable = DTable::get("D000203");
 
 	if (poptPeekArg(optCon) == NULL)
 		dba_cmdline_error(optCon, "there should be at least one B or D item to expand.  Examples are: B01002 or D03001");
 
 	while ((item = poptGetArg(optCon)) != NULL)
-		DBA_RUN_OR_RETURN(expand_table_entry(dba_descriptor_code(item), 0));
+		expand_table_entry(descriptor_code(item), 0);
 	
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_expandcode(poptContext optCon)
+int do_expandcode(poptContext optCon)
 {
 	const char* item;
 
@@ -292,22 +280,22 @@ dba_err do_expandcode(poptContext optCon)
 	{
 		int code = strtol(item, NULL, 10);
 		char c = 'B';
-		switch (DBA_VAR_F(code))
+		switch (WR_VAR_F(code))
 		{
 			case 0: c = 'B'; break;
 			case 1: c = 'R'; break;
 			case 2: c = 'C'; break;
 			case 3: c = 'D'; break;
 		}
-		printf("%s: %c%02d%03d\n", item, c, DBA_VAR_X(code), DBA_VAR_Y(code));
+		printf("%s: %c%02d%03d\n", item, c, WR_VAR_X(code), WR_VAR_Y(code));
 	}
 	
-	return dba_error_ok();
+	return 0;
 }
 
-static char* table_type = "b";
+static const char* table_type = "b";
 
-dba_err do_index(poptContext optCon)
+int do_index(poptContext optCon)
 {
 	const char* file;
 	const char* id;
@@ -342,10 +330,10 @@ dba_err do_index(poptContext optCon)
 	else
 		dba_cmdline_error(optCon, "'%s' is not a valid table type", table_type);
 
-	return dba_error_ok();
+	return 0;
 }
 
-dba_err do_describe(poptContext optCon)
+int do_describe(poptContext optCon)
 {
 	const char* what;
 
@@ -360,35 +348,29 @@ dba_err do_describe(poptContext optCon)
 		const char* sl1 = poptGetArg(optCon);
 		const char* sltype2 = poptGetArg(optCon);
 		const char* sl2 = poptGetArg(optCon);
-		char* formatted;
 		if (sltype1 == NULL)
 			dba_cmdline_error(optCon, "you need provide 1, 2, 3 or 4 numbers that identify the level or layer");
-		DBA_RUN_OR_RETURN(dba_formatter_describe_level_or_layer(
+		string formatted = describe_level_or_layer(
 				strtoul(sltype1, NULL, 10),
 				sl1 == NULL ? 0 : strtoul(sl1, NULL, 10),
 				sltype2 == NULL ? 0 : strtoul(sltype2, NULL, 10),
-				sl2 == NULL ? 0 : strtoul(sl2, NULL, 10),
-				&formatted));
-		puts(formatted);
-		free(formatted);
+				sl2 == NULL ? 0 : strtoul(sl2, NULL, 10));
+		puts(formatted.c_str());
 	} else if (strcmp(what, "trange") == 0) {
 		const char* sptype = poptGetArg(optCon);
 		const char* sp1 = poptGetArg(optCon);
 		const char* sp2 = poptGetArg(optCon);
-		char* formatted;
 		if (sptype == NULL)
 			dba_cmdline_error(optCon, "you need provide 1, 2 or 3 numbers that identify the time range");
-		DBA_RUN_OR_RETURN(dba_formatter_describe_trange(
+		string formatted = describe_trange(
 				strtoul(sptype, NULL, 10),
 				sp1 == NULL ? 0 : strtoul(sp1, NULL, 10),
-				sp2 == NULL ? 0 : strtoul(sp2, NULL, 10),
-				&formatted));
-		puts(formatted);
-		free(formatted);
+				sp2 == NULL ? 0 : strtoul(sp2, NULL, 10));
+		puts(formatted.c_str());
 	} else
 		dba_cmdline_error(optCon, "cannot handle %s.  Available options are: 'level' and 'trange'.", what);
 	
-	return dba_error_ok();
+	return 0;
 }
 
 

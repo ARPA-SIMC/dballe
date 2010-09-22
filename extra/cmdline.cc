@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#define _GNU_SOURCE
-/* _GNU_SOURCE is defined only to have strndup */
-
 #include "cmdline.h"
-#include <dballe/core/aliases.h>
-#include <dballe/core/verbose.h>
+#include <dballe/core/record.h>
+//#include <dballe/core/verbose.h>
 
 #include <popt.h>
 #include <string.h>
@@ -33,13 +28,17 @@
 #include <ctype.h>
 #include <time.h>
 
+namespace dballe {
+
 static const struct op_dispatch_table* op_table_lookup(const struct tool_desc* desc, const char* name);
 static void usage(const struct tool_desc* desc, const char* selfpath, FILE* out);
 
+#if 0
 void dba_cmdline_print_dba_error()
 {
 	dba_error_print_to_stderr();
 }
+#endif
 
 void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
 {
@@ -59,7 +58,7 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
 	exit(1);
 }
 
-dba_encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon)
+Encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon)
 {
 	if (strcmp(type, "bufr") == 0 || strcmp(type, "b") == 0)
 	{
@@ -75,7 +74,7 @@ dba_encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon)
 	}
 	else if (strcmp(type, "auto") == 0)
 	{
-		return (dba_encoding)-1;
+		return (Encoding)-1;
 	}
 	else
 		dba_cmdline_error(optCon, "'%s' is not a valid format type", type);
@@ -319,7 +318,7 @@ static void manpage(const struct program_info* pinfo, const struct tool_desc* de
 							is_seen = 1;
 					if (!is_seen && j < 20)
 					{
-						seen[j] = op_table[op].optable[i].arg;
+						seen[j] = (struct poptOption*)op_table[op].optable[i].arg;
 						seen[j+1] = NULL;
 
 						manpage_print_options(
@@ -409,7 +408,7 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
 {
 	int i;
 
-	dba_verbose_init();
+	// TODO dba_verbose_init();
 
 	/* Dispatch execution to the handler for the various commands */
 	for (i = 1; i < argc; i++)
@@ -475,7 +474,6 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
 			poptContext optCon = poptGetContext(NULL, argc, argv, action->optable, 0);
 			char help[1024];
 			int nextOp;
-			dba_err err;
 
 			/* Build the help information for this entry */
 			strcpy(help, action->usage);
@@ -503,15 +501,9 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
 				}
 			}
 
-			err = action->func(optCon);
+			int res = action->func(optCon);
 			poptFreeContext(optCon);
-
-			if (err == DBA_OK)
-				return 0;
-			else {
-				dba_cmdline_print_dba_error();
-				return dba_error_get_code();
-			}
+			return res;
 		}
 	}
 
@@ -520,21 +512,22 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
 	return 1;
 }
 
-dba_err dba_cmdline_get_query(poptContext optCon, dba_record query)
+void dba_cmdline_get_query(poptContext optCon, Record query)
 {
 	const char* queryparm;
 	while ((queryparm = poptPeekArg(optCon)) != NULL)
 	{
 		/* Split the input as name=val */
 		if (strchr(queryparm, '=') == NULL)
-			return dba_error_ok();
+			return;
 
 		/* Mark as processed */
 		poptGetArg(optCon);
 
-		DBA_RUN_OR_RETURN(dba_record_set_from_string(query, queryparm));
+		query.set_from_string(queryparm);
 	}
-	return dba_error_ok();
 }
+
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */
