@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * db/attr - attr table management
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,30 +19,21 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#define _GNU_SOURCE
-#include <dballe/db/attr.h>
-#include <dballe/db/internals.h>
-#include <dballe/core/verbose.h>
+#include "attr.h"
+#include "internals.h"
+#include <dballe/core/var.h>
 
 #include <sql.h>
-#include <sqlext.h>
+#include <cstring>
 
-#include <config.h>
+using namespace wreport;
+using namespace std;
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+namespace dballe {
+namespace db {
 
-#include <assert.h>
-
-/*
- * Define to true to enable the use of transactions during writes
- */
-/*
-*/
-
-dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
+Attr::Attr(Connection& conn)
+    : conn(conn), sstm(0), istm(0), rstm(0)
 {
 	const char* select_query =
 		"SELECT type, value FROM attr WHERE id_context=? and id_var=?";
@@ -64,183 +55,133 @@ dba_err dba_db_attr_create(dba_db db, dba_db_attr* ins)
 		"  INSERT (id_context, id_var, type, value) VALUES (cnt, var, t, val)";
 	const char* replace_query_postgres =
 		"UPDATE attr SET value=? WHERE id_context=? AND id_var=? AND type=?";
-	dba_err err = DBA_OK;
-	dba_db_attr res = NULL;
-	int r;
 
-	if ((res = (dba_db_attr)malloc(sizeof(struct _dba_db_attr))) == NULL)
-		return dba_error_alloc("creating a new dba_db_attr");
-	res->db = db;
-	res->sstm = NULL;
-	res->istm = NULL;
-	res->rstm = NULL;
+	// Create the statement for select
+    sstm = new db::Statement(conn);
+	sstm->bind_in(1, id_context);
+    sstm->bind_in(2, id_var);
+    sstm->bind_out(1, type);
+    sstm->bind_out(2, value, sizeof(value));
+    sstm->prepare(select_query);
 
-	/* Create the statement for select */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->sstm)));
-	SQLBindParameter(res->sstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
-	SQLBindParameter(res->sstm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
-	SQLBindCol(res->sstm, 1, SQL_C_USHORT, &(res->type), sizeof(res->type), NULL);
-	SQLBindCol(res->sstm, 2, SQL_C_CHAR, &(res->value), sizeof(res->value), NULL);
-	r = SQLPrepare(res->sstm, (unsigned char*)select_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
+	// Create the statement for insert
+    istm = new db::Statement(conn);
+	istm->bind_in(1, id_context);
+	istm->bind_in(2, id_var);
+	istm->bind_in(3, type);
+	istm->bind_in(4, value, value_ind);
+	istm->prepare(insert_query);
+
+	// Create the statement for replace
+    rstm = new db::Statement(conn);
+	if (conn.server_type == POSTGRES)
 	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->sstm, "compiling query to get data from 'attr'");
-		goto cleanup;
-	}
-
-	/* Create the statement for insert */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->istm)));
-	SQLBindParameter(res->istm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
-	SQLBindParameter(res->istm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
-	SQLBindParameter(res->istm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
-	SQLBindParameter(res->istm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
-	r = SQLPrepare(res->istm, (unsigned char*)insert_query, SQL_NTS);
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->istm, "compiling query to insert into 'attr'");
-		goto cleanup;
-	}
-
-	/* Create the statement for replace */
-	DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &(res->rstm)));
-	if (db->server_type == POSTGRES)
-	{
-		SQLBindParameter(res->rstm, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
-		SQLBindParameter(res->rstm, 2, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
-		SQLBindParameter(res->rstm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
-		SQLBindParameter(res->rstm, 4, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
+		rstm->bind_in(1, value, value_ind);
+		rstm->bind_in(2, id_context);
+		rstm->bind_in(3, id_var);
+		rstm->bind_in(4, type);
 	} else {
-		SQLBindParameter(res->rstm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &(res->id_context), 0, 0);
-		SQLBindParameter(res->rstm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->id_var), 0, 0);
-		SQLBindParameter(res->rstm, 3, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &(res->type), 0, 0);
-		SQLBindParameter(res->rstm, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &(res->value), 0, &(res->value_ind));
+		rstm->bind_in(1, id_context);
+		rstm->bind_in(2, id_var);
+		rstm->bind_in(3, type);
+		rstm->bind_in(4, value, value_ind);
 	}
-	switch (db->server_type)
+	switch (conn.server_type)
 	{
-		case MYSQL:
-			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_mysql, SQL_NTS);
-			break;
-		case SQLITE:
-			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_sqlite, SQL_NTS);
-			break;
-		case ORACLE:
-			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_oracle, SQL_NTS);
-			break;
-		case POSTGRES:
-			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_postgres, SQL_NTS);
-			break;
-		default:
-			r = SQLPrepare(res->rstm, (unsigned char*)replace_query_mysql, SQL_NTS);
-			break;
+		case MYSQL: rstm->prepare(replace_query_mysql); break;
+		case SQLITE: rstm->prepare(replace_query_sqlite); break;
+		case ORACLE: rstm->prepare(replace_query_oracle); break;
+		case POSTGRES: rstm->prepare(replace_query_postgres); break;
+		default: rstm->prepare(replace_query_mysql); break;
 	}
-	if ((r != SQL_SUCCESS) && (r != SQL_SUCCESS_WITH_INFO))
-	{
-		err = dba_db_error_odbc(SQL_HANDLE_STMT, res->rstm, "compiling query to replace in 'attr'");
-		goto cleanup;
-	}
-
-	*ins = res;
-	res = NULL;
-	
-cleanup:
-	if (res != NULL)
-		dba_db_attr_delete(res);
-	return err == DBA_OK ? dba_error_ok() : err;
-};
-
-void dba_db_attr_delete(dba_db_attr ins)
-{
-	if (ins->sstm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->sstm);
-	if (ins->istm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->istm);
-	if (ins->rstm != NULL)
-		SQLFreeHandle(SQL_HANDLE_STMT, ins->rstm);
-	free(ins);
 }
 
-void dba_db_attr_set(dba_db_attr ins, dba_var var)
+Attr::~Attr()
 {
-	ins->type = dba_var_code(var);
-	dba_db_attr_set_value(ins, dba_var_value(var));
+	if (sstm) delete sstm;
+	if (istm) delete istm;
+	if (rstm) delete rstm;
 }
 
-void dba_db_attr_set_value(dba_db_attr ins, const char* value)
+void Attr::set(const wreport::Var& var)
 {
-	int len = strlen(value);
-	if (len > 255) len = 255;
-	memcpy(ins->value, value, len);
-	ins->value[len] = 0;
-	ins->value_ind = len;
+	type = var.code();
+	set_value(var.value());
 }
 
-dba_err dba_db_attr_insert(dba_db_attr ins, int replace)
+void Attr::set_value(const char* qvalue)
 {
-	if (ins->db->server_type == POSTGRES && replace)
-	{
-		/* TODO for postgres: do the insert or replace with:
-		 * 1. lock table (or do this somehow atomically)
-		 * 2. update
-		 * 3. if it says not found, then insert
-		 * 4. unlock table
-		 */
-		SQLHSTMT stm = ins->rstm;
-		SQLLEN rowcount;
-		int res = SQLExecute(stm);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO) && (res != SQL_NO_DATA))
-			return dba_db_error_odbc(SQL_HANDLE_STMT, stm, 
-						"updating data into table 'attr'");
-        res = SQLRowCount(stm, &rowcount);
-        if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-            return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "getting row count");
-		if (rowcount == 0)
-		{
-			/* Update failed, the element did not exist.  Create it */
-			stm = ins->istm;
-			int res = SQLExecute(stm);
-			if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-				return dba_db_error_odbc(SQL_HANDLE_STMT, stm, 
-							  "inserting data into table 'attr'");
-		}
-	} else {
-		SQLHSTMT stm = replace ? ins->rstm : ins->istm;
-		int res = SQLExecute(stm);
-		if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-			return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting data into attr");
-	}
-	return dba_error_ok();
+    if (qvalue == NULL)
+    {
+        value[0] = 0;
+        value_ind = SQL_NULL_DATA;
+    } else {
+        int len = strlen(qvalue);
+        if (len > 255) len = 255;
+        memcpy(value, qvalue, len);
+        value[len] = 0;
+        value_ind = len;
+    }
 }
 
-dba_err dba_db_attr_load(dba_db_attr ins, dba_var var)
+void Attr::insert(bool replace)
 {
-	dba_err err = DBA_OK;
-	dba_var attr = NULL;
-
-	ins->id_var = dba_var_code(var);
-
-	int res = SQLExecute(ins->sstm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "looking for attributes");
-
-	/* Make attribues from the result, and add them to var */
-	while (SQLFetch(ins->sstm) != SQL_NO_DATA)
-	{
-		DBA_RUN_OR_GOTO(fail, dba_var_create_local(ins->type, &attr));
-		DBA_RUN_OR_GOTO(fail, dba_var_setc(attr, ins->value));
-		DBA_RUN_OR_GOTO(fail, dba_var_seta(var, attr));
-		attr = NULL;
-	}
-
-	res = SQLCloseCursor(ins->sstm);
-	if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-		return dba_db_error_odbc(SQL_HANDLE_STMT, ins->sstm, "closing dba_db_attr_load cursor");
-	return dba_error_ok();
-
-fail:
-	res = SQLCloseCursor(ins->sstm);
-	if (attr != NULL)
-		dba_var_delete(attr);
-	return err;
+    if (replace)
+    {
+        if (conn.server_type == POSTGRES)
+        {
+            if (rstm->execute() == SQL_NO_DATA)
+                istm->execute();
+        } else
+            rstm->execute();
+    } else
+        istm->execute();
 }
+
+void Attr::load(wreport::Var& var)
+{
+    // Query all attributes for this var in the current context
+	id_var = var.code();
+    sstm->execute();
+
+	// Make attribues from the result, and add them to var
+	while (sstm->fetch())
+        var.seta(newvar(type, value));
+
+    sstm->close_cursor();
+}
+
+void Attr::dump(FILE* out)
+{
+	DBALLE_SQL_C_SINT_TYPE id_context;
+    wreport::Varcode id_var;
+    wreport::Varcode type;
+	char value[255];
+	SQLLEN value_ind;
+
+    db::Statement stm(conn);
+    stm.bind_out(1, id_context);
+    stm.bind_out(2, id_var);
+    stm.bind_out(3, type);
+    stm.bind_out(4, value, 255, value_ind);
+    stm.exec_direct("SELECT id_context, id_var, type, value FROM attr");
+    int count;
+    fprintf(out, "dump of table attr:\n");
+    for (count = 0; stm.fetch(); ++count)
+    {
+        fprintf(out, " %4d, %01d%02d%03d, %01d%02d%03d",
+                (int)id_context,
+                WR_VAR_F(id_var), WR_VAR_X(id_var), WR_VAR_Y(id_var),
+                WR_VAR_F(type), WR_VAR_X(type), WR_VAR_Y(type));
+        if (value_ind == SQL_NTS)
+                fprintf(out, "\n");
+        else
+                fprintf(out, " %.*s\n", (int)value_ind, value);
+    }
+    fprintf(out, "%d element%s in table attr\n", count, count != 1 ? "s" : "");
+}
+
+} // namespace db
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,94 +18,80 @@
  */
 
 #include <test-utils-db.h>
-#include <dballe/db/db.h>
-#include <dballe/db/pseudoana.h>
-#include <dballe/db/context.h>
-#include <dballe/db/data.h>
 #include <dballe/db/attr.h>
+#include <dballe/db/data.h>
+#include <dballe/db/context.h>
+#include <dballe/db/station.h>
+#include <dballe/db/internals.h>
+
+using namespace dballe;
+using namespace wreport;
+using namespace std;
 
 namespace tut {
-using namespace tut_dballe;
 
-struct attr_shar : public db_test
+struct attr_shar : public dballe::tests::db_test
 {
-	TestMsgEnv testenv;
-	dba_db_attr at;
+    db::Attr* at;
 
 	attr_shar()
 	{
 		if (!has_db()) return;
+        at = &db->attr();
 
-		CHECKED(dba_db_need_attr(db));
-		at = db->attr;
-		gen_ensure(at != NULL);
-
-		CHECKED(dba_db_need_pseudoana(db));
-		dba_db_pseudoana pa = db->pseudoana;
-		gen_ensure(pa != NULL);
-
-		CHECKED(dba_db_need_context(db));
-		dba_db_context co = db->context;
-		gen_ensure(co != NULL);
-
-		CHECKED(dba_db_need_data(db));
-		dba_db_data da = db->data;
-		gen_ensure(da != NULL);
-
-		// Insert a fixed station
-		int id;
-		pa->lat = 4500000;
-		pa->lon = 1100000;
-		dba_db_pseudoana_set_ident(pa, "ciao");
-		CHECKED(dba_db_pseudoana_insert(pa, &id));
-		gen_ensure_equals(id, 1);
+        db::Station& st = db->station();
+        db::Context& co = db->context();
+        db::Data& da = db->data();
 
 		// Insert a mobile station
-		pa->lat = 4600000;
-		pa->lon = 1200000;
-		dba_db_pseudoana_set_ident(pa, NULL);
-		CHECKED(dba_db_pseudoana_insert(pa, &id));
-		gen_ensure_equals(id, 2);
+		st.lat = 4500000;
+		st.lon = 1100000;
+		st.set_ident("ciao");
+        ensure_equals(st.insert(), 1);
+
+		// Insert a fixed station
+		st.lat = 4600000;
+		st.lon = 1200000;
+		st.set_ident(NULL);
+		ensure_equals(st.insert(), 2);
 
 		// Insert a context
-		co->id_ana = 1;
-		co->id_report = 1;
-		co->date = mkts(2001, 2, 3, 4, 5, 6);
-		co->ltype1 = 1;
-		co->l1 = 2;
-		co->ltype2 = 0;
-		co->l2 = 3;
-		co->pind = 4;
-		co->p1 = 5;
-		co->p2 = 6;
-		CHECKED(dba_db_context_insert(co, &id));
-		gen_ensure_equals(id, 1);
+		co.id_station = 1;
+		co.id_report = 1;
+		co.date = dballe::tests::mkts(2001, 2, 3, 4, 5, 6);
+		co.ltype1 = 1;
+		co.l1 = 2;
+		co.ltype2 = 0;
+		co.l2 = 3;
+		co.pind = 4;
+		co.p1 = 5;
+		co.p2 = 6;
+		ensure_equals(co.insert(), 1);
 
 		// Insert another context
-		co->id_ana = 2;
-		co->id_report = 2;
-		co->date = mkts(2002, 3, 4, 5, 6, 7);
-		co->ltype1 = 2;
-		co->l1 = 3;
-		co->ltype2 = 1;
-		co->l2 = 4;
-		co->pind = 5;
-		co->p1 = 6;
-		co->p2 = 7;
-		CHECKED(dba_db_context_insert(co, &id));
-		gen_ensure_equals(id, 2);
+		co.id_station = 2;
+		co.id_report = 2;
+		co.date = dballe::tests::mkts(2002, 3, 4, 5, 6, 7);
+		co.ltype1 = 2;
+		co.l1 = 3;
+		co.ltype2 = 1;
+		co.l2 = 4;
+		co.pind = 5;
+		co.p1 = 6;
+		co.p2 = 7;
+		ensure_equals(co.insert(), 2);
 
 		// Insert a datum
-		da->id_context = 1;
-		da->id_var = DBA_VAR(0, 1, 2);
-		dba_db_data_set_value(da, "123");
-		CHECKED(dba_db_data_insert_or_fail(da));
+		da.id_context = 1;
+		da.id_var = WR_VAR(0, 1, 2);
+		da.set_value("123");
+        da.insert_or_fail();
 
 		// Insert another datum
-		da->id_context = 2;
-		da->id_var = DBA_VAR(0, 1, 2);
-		dba_db_data_set_value(da, "234");
-		CHECKED(dba_db_data_insert_or_fail(da));
+		da.id_context = 2;
+		da.id_var = WR_VAR(0, 1, 2);
+		da.set_value("234");
+        da.insert_or_fail();
 	}
 };
 TESTGRP(attr);
@@ -119,18 +103,14 @@ void to::test<1>()
 	use_db();
 
 	// Test dba_db_attr_set
-	dba_var var;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &var));
-	CHECKED(dba_var_seti(var, 123));
-	dba_db_attr_set(at, var);
-	gen_ensure_equals(at->value, string("123"));
-	gen_ensure_equals(at->value_ind, 3);
-	dba_var_delete(var);
+	at->set(var(WR_VAR(0, 1, 2), 123));
+	ensure_equals(at->value, string("123"));
+	ensure_equals(at->value_ind, 3);
 	
 	// Test dba_db_attr_set_value
-	dba_db_attr_set_value(at, "32");
-	gen_ensure_equals(at->value, string("32"));
-	gen_ensure_equals(at->value_ind, 2);
+    at->set_value("32");
+	ensure_equals(at->value, string("32"));
+	ensure_equals(at->value_ind, 2);
 }
 
 
@@ -142,78 +122,79 @@ void to::test<2>()
 
 	// Insert a datum
 	at->id_context = 1;
-	at->id_var = DBA_VAR(0, 1, 2);
-	at->type = DBA_VAR(0, 33, 7);
-	dba_db_attr_set_value(at, "50");
-	CHECKED(dba_db_attr_insert(at, 0));
-	CHECKED(dba_db_commit(db));
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("50");
+    at->insert(false);
 
 	// Insert another datum
 	at->id_context = 2;
-	at->id_var = DBA_VAR(0, 1, 2);
-	at->type = DBA_VAR(0, 33, 7);
-	dba_db_attr_set_value(at, "75");
-	CHECKED(dba_db_attr_insert(at, 0));
-	CHECKED(dba_db_commit(db));
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("75");
+    at->insert(false);
 
 	// Reinsert a datum: it should fail
 	at->id_context = 1;
-	at->id_var = DBA_VAR(0, 1, 2);
-	at->type = DBA_VAR(0, 33, 7);
-	dba_db_attr_set_value(at, "50");
-	gen_ensure_equals(dba_db_attr_insert(at, 0), DBA_ERROR);
-	CHECKED(dba_db_commit(db));
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("50");
+    try {
+        at->insert(false);
+        ensure(false);
+	} catch (db::error_odbc& e) {
+		ensure_contains(e.what(), "uplicate");
+    }
 
 	// Reinsert the other datum: it should fail
 	at->id_context = 2;
-	at->id_var = DBA_VAR(0, 1, 2);
-	at->type = DBA_VAR(0, 33, 7);
-	dba_db_attr_set_value(at, "75");
-	gen_ensure_equals(dba_db_attr_insert(at, 0), DBA_ERROR);
-	CHECKED(dba_db_commit(db));
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("75");
+    try {
+        at->insert(false);
+        ensure(false);
+	} catch (db::error_odbc& e) {
+		ensure_contains(e.what(), "uplicate");
+    }
 
 	// Reinsert a datum with overwrite: it should work
 	at->id_context = 1;
-	at->id_var = DBA_VAR(0, 1, 2);
-	at->type = DBA_VAR(0, 33, 7);
-	dba_db_attr_set_value(at, "50");
-	CHECKED(dba_db_attr_insert(at, 1));
-	CHECKED(dba_db_commit(db));
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("50");
+    at->insert(true);
 
 	// Reinsert the other datum with overwrite: it should work
 	at->id_context = 2;
-	at->id_var = DBA_VAR(0, 1, 2);
-	at->type = DBA_VAR(0, 33, 7);
-	dba_db_attr_set_value(at, "75");
-	CHECKED(dba_db_attr_insert(at, 1));
-	CHECKED(dba_db_commit(db));
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("75");
+    at->insert(true);
 
 	// Load the attributes for the first variable
-	at->id_context = 1;
-	dba_var var;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &var));
-	CHECKED(dba_db_attr_load(at, var));
-	dba_var_attr_iterator ai = dba_var_attr_iterate(var);
-	gen_ensure(ai != NULL);
-	dba_var attr = dba_var_attr_iterator_attr(ai);
-	gen_ensure(attr != NULL);
-	gen_ensure_equals(dba_var_value(attr), string("50"));
-	gen_ensure_equals(dba_var_attr_iterator_next(ai), (dba_var_attr_iterator)NULL);
-	dba_var_delete(var);
-	CHECKED(dba_db_commit(db));
+    {
+        Var var(varinfo(WR_VAR(0, 1, 2)));
+        at->id_context = 1;
+        ensure(var.next_attr() == 0);
+        at->load(var);
+        ensure(var.next_attr() != 0);
+        const Var* attr = var.next_attr();
+        ensure_equals(string(attr->value()), "50");
+        ensure(attr->next_attr() == NULL);
+    }
 
 	// Load the attributes for the second variable
-	at->id_context = 2;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 1, 2), &var));
-	CHECKED(dba_db_attr_load(at, var));
-	ai = dba_var_attr_iterate(var);
-	gen_ensure(ai != NULL);
-	attr = dba_var_attr_iterator_attr(ai);
-	gen_ensure(attr != NULL);
-	gen_ensure_equals(dba_var_value(attr), string("75"));
-	gen_ensure_equals(dba_var_attr_iterator_next(ai), (dba_var_attr_iterator)NULL);
-	dba_var_delete(var);
-	CHECKED(dba_db_commit(db));
+    {
+        Var var(varinfo(WR_VAR(0, 1, 2)));
+        at->id_context = 2;
+        ensure(var.next_attr() == 0);
+        at->load(var);
+        ensure(var.next_attr() != 0);
+        const Var* attr = var.next_attr();
+        ensure_equals(string(attr->value()), "75");
+        ensure(attr->next_attr() == NULL);
+    }
 
 #if 0
 	// Get the ID of the first data
@@ -228,7 +209,7 @@ void to::test<2>()
 	co->p1 = 5;
 	co->p2 = 6;
 	CHECKED(dba_db_data_get_id(co, &id));
-	gen_ensure_equals(id, 1);
+	ensure_equals(id, 1);
 
 	// Get the ID of the second data
 	co->id = 0;
@@ -242,33 +223,33 @@ void to::test<2>()
 	co->p1 = 6;
 	co->p2 = 7;
 	CHECKED(dba_db_data_get_id(co, &id));
-	gen_ensure_equals(id, 2);
+	ensure_equals(id, 2);
 
 	// Get info on the first data
 	CHECKED(dba_db_data_get_data(co, 1));
-	gen_ensure_equals(co->id_ana, 1);
-	gen_ensure_equals(co->id_report, 1);
-	gen_ensure_equals(co->date, string("2001-02-03 04:05:06"));
-	gen_ensure_equals(co->date_ind, 19);
-	gen_ensure_equals(co->ltype, 1);
-	gen_ensure_equals(co->l1, 2);
-	gen_ensure_equals(co->l2, 3);
-	gen_ensure_equals(co->pind, 4);
-	gen_ensure_equals(co->p1, 5);
-	gen_ensure_equals(co->p2, 6);
+	ensure_equals(co->id_ana, 1);
+	ensure_equals(co->id_report, 1);
+	ensure_equals(co->date, string("2001-02-03 04:05:06"));
+	ensure_equals(co->date_ind, 19);
+	ensure_equals(co->ltype, 1);
+	ensure_equals(co->l1, 2);
+	ensure_equals(co->l2, 3);
+	ensure_equals(co->pind, 4);
+	ensure_equals(co->p1, 5);
+	ensure_equals(co->p2, 6);
 
 	// Get info on the second data
 	CHECKED(dba_db_data_get_data(co, 2));
-	gen_ensure_equals(co->id_ana, 2);
-	gen_ensure_equals(co->id_report, 2);
-	gen_ensure_equals(co->date, string("2002-03-04 05:06:07"));
-	gen_ensure_equals(co->date_ind, 19);
-	gen_ensure_equals(co->ltype, 2);
-	gen_ensure_equals(co->l1, 3);
-	gen_ensure_equals(co->l2, 4);
-	gen_ensure_equals(co->pind, 5);
-	gen_ensure_equals(co->p1, 6);
-	gen_ensure_equals(co->p2, 7);
+	ensure_equals(co->id_ana, 2);
+	ensure_equals(co->id_report, 2);
+	ensure_equals(co->date, string("2002-03-04 05:06:07"));
+	ensure_equals(co->date_ind, 19);
+	ensure_equals(co->ltype, 2);
+	ensure_equals(co->l1, 3);
+	ensure_equals(co->l2, 4);
+	ensure_equals(co->pind, 5);
+	ensure_equals(co->p1, 6);
+	ensure_equals(co->p2, 7);
 #endif
 
 #if 0
@@ -287,16 +268,16 @@ void to::test<2>()
 
 	// Get info on the first station: it should be unchanged
 	CHECKED(dba_db_data_get_data(pa, 1));
-	gen_ensure_equals(pa->lat, 4500000);
-	gen_ensure_equals(pa->lon, 1100000);
-	gen_ensure_equals(pa->ident, string("ciao"));
-	gen_ensure_equals(pa->ident_ind, 4);
+	ensure_equals(pa->lat, 4500000);
+	ensure_equals(pa->lon, 1100000);
+	ensure_equals(pa->ident, string("ciao"));
+	ensure_equals(pa->ident_ind, 4);
 
 	// Get info on the second station: it should be updated
 	CHECKED(dba_db_data_get_data(pa, 2));
-	gen_ensure_equals(pa->lat, 4700000);
-	gen_ensure_equals(pa->lon, 1300000);
-	gen_ensure_equals(pa->ident[0], 0);
+	ensure_equals(pa->lat, 4700000);
+	ensure_equals(pa->lon, 1300000);
+	ensure_equals(pa->ident[0], 0);
 #endif
 }
 

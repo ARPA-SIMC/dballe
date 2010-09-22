@@ -26,6 +26,7 @@
 #include "context.h"
 #include "data.h"
 #include "cursor.h"
+#include "attr.h"
 
 #include <dballe/core/record.h>
 #include <dballe/msg/defs.h>
@@ -37,10 +38,7 @@
 
 #include <sql.h>
 #if 0
-#include "context.h"
-#include "data.h"
 #include "attr.h"
-#include <dballe/core/csv.h>
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>
 
@@ -371,7 +369,7 @@ static const char* init_queries_oracle[] = {
 // First part of initialising a dba_db
 DB::DB()
     : conn(0),
-      m_repinfo(0), m_station(0), m_context(0), m_data(0),
+      m_repinfo(0), m_station(0), m_context(0), m_data(0), m_attr(0),
       stm_last_insert_id(0),
       seq_station(0), seq_context(0)
 {
@@ -384,6 +382,10 @@ DB::DB()
 
 DB::~DB()
 {
+    if (m_attr) delete m_attr;
+    if (m_data) delete m_data;
+    if (m_context) delete m_context;
+    if (m_station) delete m_station;
     if (m_repinfo) delete m_repinfo;
     if (seq_context) delete seq_context;
     if (seq_station) delete seq_station;
@@ -533,6 +535,13 @@ db::Data& DB::data()
     if (m_data == NULL)
         m_data = new db::Data(*conn);
     return *m_data;
+}
+
+db::Attr& DB::attr()
+{
+    if (m_attr == NULL)
+        m_attr = new db::Attr(*conn);
+    return *m_attr;
 }
 
 void DB::init_after_connect()
@@ -1071,6 +1080,7 @@ void DB::insert(Record& rec, bool can_replace, bool station_can_add)
 
 void DB::remove(const Record& rec)
 {
+    db::Transaction t(*conn);
     db::Cursor c(*this);
 
     // Compile the DELETE query for the data
@@ -1096,11 +1106,10 @@ void DB::remove(const Record& rec)
         stmd.execute();
         stma.execute();
     }
-    conn->commit();
+    t.commit();
 }
 
-#if 0
-dba_err dba_db_remove_orphans(dba_db db)
+void DB::remove_orphans()
 {
     static const char* cclean_mysql = "delete c from context c left join data d on d.id_context = c.id where d.id_context is NULL";
     static const char* pclean_mysql = "delete p from station p left join context c on c.id_ana = p.id where c.id is NULL";
@@ -1108,28 +1117,21 @@ dba_err dba_db_remove_orphans(dba_db db)
     static const char* pclean_sqlite = "delete from station where id in (select p.id from station p left join context c on c.id_ana = p.id where c.id is NULL)";
     static const char* cclean = NULL;
     static const char* pclean = NULL;
-    dba_err err = DBA_OK;
-    SQLHSTMT stm = NULL;
-    int res;
 
-    switch (db->server_type)
+    switch (conn->server_type)
     {
-        case MYSQL: cclean = cclean_mysql; pclean = pclean_mysql; break;
-        case SQLITE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case ORACLE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case POSTGRES: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+        case db::MYSQL: cclean = cclean_mysql; pclean = pclean_mysql; break;
+        case db::SQLITE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+        case db::ORACLE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+        case db::POSTGRES: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
         default: cclean = cclean_mysql; pclean = pclean_mysql; break;
     }
 
-    DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
+    db::Transaction t(*conn);
 
-    /* Delete orphan contexts */
-    res = SQLExecDirect(stm, (unsigned char*)cclean, SQL_NTS);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO) && (res != SQL_NO_DATA))
-    {
-        err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", cclean);
-        goto cleanup;
-    }
+    // Delete orphan contexts
+    db::Statement stm(*conn);
+    stm.exec_direct(cclean);
 
 #if 0
     /* Done with context */
@@ -1138,20 +1140,10 @@ dba_err dba_db_remove_orphans(dba_db db)
         return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_remove_orphans cursor");
 #endif
 
-    /* Delete orphan stations */
-    res = SQLExecDirect(stm, (unsigned char*)pclean, SQL_NTS);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO) && (res != SQL_NO_DATA))
-    {
-        err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", pclean);
-        goto cleanup;
-    }
+    // Delete orphan stations
+    stm.exec_direct(pclean);
 
-    DBA_RUN_OR_GOTO(cleanup, dba_db_commit(db));
-
-cleanup:
-    if (stm != NULL)
-        SQLFreeHandle(SQL_HANDLE_STMT, stm);
-    return err == DBA_OK ? dba_error_ok() : err;
+    t.commit();
 }
 
 #if 0
@@ -1303,183 +1295,105 @@ cleanup:
 #endif
 #endif
 
-dba_err dba_db_qc_query(dba_db db, int id_context, dba_varcode id_var, const dba_varcode* qcs, size_t qcs_size, dba_record qc, int* count)
+int DB::query_attrs(int id_context, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {
-    dba_querybuf query = NULL;
-    SQLHSTMT stm = NULL;
-    dba_err err = DBA_OK;
-    int res;
-    DBALLE_SQL_C_SINT_TYPE in_id_context = id_context;
-    unsigned short out_type;
-    const char out_value[255];
-
-    assert(db);
-
-    DBA_RUN_OR_GOTO(cleanup, dba_querybuf_create(200, &query));
-
-    /* Create the query */
-    if (qcs == NULL || qcs_size == 0)
+    // Create the query
+    Querybuf query(200);
+    if (qcs.empty())
         /* If qcs is null, query all QC data */
-        DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(query,
+        query.append(
                 "SELECT type, value"
                 "  FROM attr"
-                " WHERE id_context = ? AND id_var = ?"));
+                " WHERE id_context = ? AND id_var = ?");
     else {
-        size_t i;
-        if (qcs_size > 100)
-            return dba_error_consistency("checking bound of 100 QC values to retrieve per query");
-        DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(query,
+        query.append(
                 "SELECT type, value"
                 "  FROM attr"
-                " WHERE id_context = ? AND id_var = ? AND type IN ("));
-        DBA_RUN_OR_GOTO(cleanup, dba_querybuf_start_list(query, ", "));
-        for (i = 0; i < qcs_size; i++)
-        {
-            char buf[10];
-            snprintf(buf, 7, "%hd", qcs[i]);
-            DBA_RUN_OR_RETURN(dba_querybuf_append_list(query, buf));
-        }
-        DBA_RUN_OR_GOTO(cleanup, dba_querybuf_append(query, ")"));
+                " WHERE id_context = ? AND id_var = ? AND type IN (");
+        query.start_list(", ");
+        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
+            query.append_listf("%hd", *i);
+        query.append(")");
     }
 
-    /* Allocate statement handle */
-    DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
+    // Perform the query
+    DBALLE_SQL_C_SINT_TYPE in_id_context = id_context;
+    Varcode out_type;
+    char out_value[255];
 
-    /* Bind input parameters */
-    SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &in_id_context, 0, 0);
-    SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
+    db::Statement stm(*conn);
+    stm.bind_in(1, in_id_context);
+    stm.bind_in(2, id_var);
+    stm.bind_out(1, out_type);
+    stm.bind_out(2, out_value, 255);
 
-    /* Bind output fields */
-    SQLBindCol(stm, 1, SQL_C_USHORT, &out_type, sizeof(out_type), 0);
-    SQLBindCol(stm, 2, SQL_C_CHAR, &out_value, sizeof(out_value), 0);
-    
-    TRACE("QC read query: %s with ctx %d var %d\n", dba_querybuf_get(query), in_id_context, id_var);
+    TRACE("attr read query: %s with ctx %d var %d\n", query.c_str(), in_id_context, id_var);
 
-    /* Perform the query */
-    res = SQLExecDirect(stm, (unsigned char*)dba_querybuf_get(query), SQL_NTS);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-    {
-        err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "performing DBALLE query \"%s\"", query);
-        goto cleanup;
-    }
+    stm.exec_direct(query.c_str());
 
-    /* Retrieve results */
-    dba_record_clear(qc);
+    // Retrieve results
+    attrs.clear();
 
-    /* Fetch new data */
-    *count = 0;
-    while (SQLFetch(stm) != SQL_NO_DATA)
-    {
-        dba_record_var_setc(qc, out_type, out_value);       
-        (*count)++;
-    }
+    // Fetch the results
+    int count;
+    for (count = 0; stm.fetch(); ++count)
+        attrs.var(out_type).setc(out_value);
 
-cleanup:
-    if (query != NULL)
-        dba_querybuf_delete(query);
-    if (stm != NULL)
-        SQLFreeHandle(SQL_HANDLE_STMT, stm);
-    return err == DBA_OK ? dba_error_ok() : err;
+    return count;
 }
 
-dba_err dba_db_qc_insert_or_replace(dba_db db, int id_context, dba_varcode id_var, dba_record qc, int can_replace)
+void DB::attr_insert_or_replace(int id_context, wreport::Varcode id_var, const Record& attrs, bool can_replace)
 {
-    dba_err err;
-    dba_record_cursor item;
-    dba_db_attr a;
-    
-    assert(db);
+    db::Attr& a = attr();
 
-    DBA_RUN_OR_RETURN(dba_db_need_attr(db));
-    a = db->attr;
+    a.id_context = id_context;
+    a.id_var = id_var;
 
-    a->id_context = id_context;
-    a->id_var = id_var;
-
-    /* Begin the transaction */
-    DBA_RUN_OR_GOTO(fail, dba_db_begin(db));
+    // Begin the transaction
+    db::Transaction t(*conn);
 
     /* Insert all found variables */
-    for (item = dba_record_iterate_first(qc); item != NULL;
-            item = dba_record_iterate_next(qc, item))
+    for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
     {
-        dba_db_attr_set(a, dba_record_cursor_variable(item));
-        DBA_RUN_OR_GOTO(fail, dba_db_attr_insert(a, can_replace));
+        a.set(**i);
+        a.insert(can_replace);
     }
-            
-    DBA_RUN_OR_GOTO(fail, dba_db_commit(db));
-    return dba_error_ok();
 
-    /* Exits with cleanup after error */
-fail:
-    dba_db_rollback(db);
-    return err;
+    t.commit();
 }
 
-dba_err dba_db_qc_insert(dba_db db, int id_context, dba_varcode id_var, dba_record qc)
+void DB::attr_insert(int id_context, wreport::Varcode id_var, const Record& attrs)
 {
-    return dba_db_qc_insert_or_replace(db, id_context, id_var, qc, 1);
+    return attr_insert_or_replace(id_context, id_var, attrs, true);
 }
 
-dba_err dba_db_qc_insert_new(dba_db db, int id_context, dba_varcode id_var, dba_record qc)
+void DB::attr_insert_new(int id_context, wreport::Varcode id_var, const Record& attrs)
 {
-    return dba_db_qc_insert_or_replace(db, id_context, id_var, qc, 0);
+    return attr_insert_or_replace(id_context, id_var, attrs, false);
 }
 
-dba_err dba_db_qc_remove(dba_db db, int id_context, dba_varcode id_var, dba_varcode* qcs, int qcs_size)
+void DB::attr_remove(int id_context, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
 {
-    char query[60 + 100*6];
-    SQLHSTMT stm;
-    dba_err err;
-    DBALLE_SQL_C_SINT_TYPE in_id_context = id_context;
-    int res;
-
-    assert(db);
-
     // Create the query
-    if (qcs == NULL)
-        strcpy(query, "DELETE FROM attr WHERE id_context = ? AND id_var = ?");
+    Querybuf query(500);
+    if (qcs.empty())
+        query.append("DELETE FROM attr WHERE id_context = ? AND id_var = ?");
     else {
-        int i, qs;
-        char* q;
-        if (qcs_size > 100)
-            return dba_error_consistency("checking bound of 100 QC values to delete per query");
-        strcpy(query, "DELETE FROM attr WHERE id_context = ? AND id_var = ? AND type IN (");
-        qs = strlen(query);
-        q = query + qs;
-        for (i = 0; i < qcs_size; i++)
-            if (q == query + qs)
-                q += snprintf(q, 7, "%hd", qcs[i]);
-            else
-                q += snprintf(q, 8, ",%hd", qcs[i]);
-        strcpy(q, ")");
+        query.append("DELETE FROM attr WHERE id_context = ? AND id_var = ? AND type IN (");
+        query.start_list(", ");
+        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
+            query.append_listf("%hd", *i);
+        query.append(")");
     }
 
-    /* Allocate statement handle */
-    DBA_RUN_OR_RETURN(dba_db_statement_create(db, &stm));
+    // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_context, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 
-    /* Bind parameters */
-    SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &in_id_context, 0, 0);
-    SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, &id_var, 0, 0);
+    DBALLE_SQL_C_SINT_TYPE in_id_context = id_context;
 
-    dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_context, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
-    
-    /* Execute the DELETE SQL query */
-    /* Casting to char* because ODBC is unaware of const */
-    res = SQLExecDirect(stm, (unsigned char*)query, SQL_NTS);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO) && (res != SQL_NO_DATA))
-    {
-        err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "deleting data from 'attr'");
-        goto dba_qc_delete_failed;
-    }
-            
-    SQLFreeHandle(SQL_HANDLE_STMT, stm);
-    return dba_error_ok();
-
-    /* Exits with cleanup after error */
-dba_qc_delete_failed:
-    SQLFreeHandle(SQL_HANDLE_STMT, stm);
-    return err;
+    db::Statement stm(*conn);
+    stm.bind_in(1, in_id_context);
+    stm.bind_in(2, id_var);
+    stm.exec_direct(query.c_str());
 }
 
 
@@ -1502,8 +1416,6 @@ dba_qc_delete_failed:
     {
         printf("Result: %d\n", i);
     }
-#endif
-
 #endif
 
 } // namespace dballe
