@@ -174,6 +174,33 @@ void Data::insert_or_overwrite()
         ustm->execute();
 }
 
+void Data::dump(FILE* out)
+{
+	DBALLE_SQL_C_SINT_TYPE id_context;
+    wreport::Varcode id_var;
+	char value[255];
+	SQLLEN value_ind;
+
+    db::Statement stm(conn);
+    stm.bind_out(1, id_context);
+    stm.bind_out(2, id_var);
+    stm.bind_out(3, value, 255, value_ind);
+    stm.exec_direct("SELECT id_context, id_var, value FROM data");
+    int count;
+    fprintf(out, "dump of table data:\n");
+    for (count = 0; stm.fetch(); ++count)
+    {
+        fprintf(out, " %4d, %01d%02d%03d",
+                (int)id_context,
+                WR_VAR_F(id_var), WR_VAR_X(id_var), WR_VAR_Y(id_var));
+        if (value_ind == SQL_NTS)
+                fprintf(out, "\n");
+        else
+                fprintf(out, " %.*s\n", (int)value_ind, value);
+    }
+    fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
+}
+
 } // namespace db
 } // namespace dballe
 

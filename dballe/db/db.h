@@ -480,6 +480,11 @@ public:
 	 *   The MsgsConsumer that will handle the resulting messages
 	 */
 	void export_msgs(const Record& query, MsgConsumer& cons);
+
+        /**
+         * Dump the entire contents of the database to an output stream
+         */
+	void dump(FILE* out);
 };
 
 } // namespace dballe

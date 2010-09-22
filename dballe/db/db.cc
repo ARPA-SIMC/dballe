@@ -1397,6 +1397,13 @@ void DB::attr_remove(int id_context, wreport::Varcode id_var, const std::vector<
     stm.exec_direct(query.c_str());
 }
 
+void DB::dump(FILE* out)
+{
+    station().dump(out);
+    context().dump(out);
+    data().dump(out);
+    attr().dump(out);
+}
 
 #if 0
     {

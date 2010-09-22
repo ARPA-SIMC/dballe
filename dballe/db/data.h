@@ -101,6 +101,11 @@ struct Data
      */
     void insert_or_overwrite();
 
+    /**
+     * Dump the entire contents of the table to an output stream
+     */
+    void dump(FILE* out);
+
 private:
 	// disallow copy
 	Data(const Data&);

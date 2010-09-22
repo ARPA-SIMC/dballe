@@ -48,8 +48,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 		"  FROM context c, data d"
 		"  LEFT JOIN attr a ON a.id_context = d.id_context AND a.id_var = d.id_var"
 		" WHERE d.id_context = c.id AND c.id_ana = ? AND c.id_report = ?"
-		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'} AND c.ltype1 = 257 AND c.l1 = 0"
-		"   AND c.ltype2 = 0 AND c.l2 = 0 AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
+		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'} AND c.ltype1 = 257"
 		" ORDER BY d.id_var, a.type";
 
     db::Statement stm(*conn);
@@ -72,7 +71,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 	char out_attr_value[255];	SQLLEN out_attr_value_ind;
 	stm.bind_out(4, out_attr_value, sizeof(out_attr_value), out_attr_value_ind);
 
-	TRACE("fill_ana_layer Performing query: %s\n", query);
+	TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
     stm.exec_direct(query);
 
 	// Retrieve results

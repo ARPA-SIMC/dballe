@@ -121,14 +121,6 @@ protected:
      */
     int find_index(const Level& lev, const Trange& tr) const;
 
-    /**
-     * Add a missing context, taking care of its memory management
-     *
-     * Note: the caller must ensure that the context does not already exist,
-     * otherwise the Msg will end up with duplicated contexts
-     */
-    void add_context(std::auto_ptr<msg::Context> ctx);
-
 public:
     /** Source of the data */
     MsgType type;
@@ -149,6 +141,20 @@ public:
 
     /// Remove all information from Msg
     void clear();
+
+    /**
+     * Add a missing context, taking care of its memory management
+     *
+     * Note: if the context already exists, an exception is thrown
+     */
+    void add_context(std::auto_ptr<msg::Context> ctx);
+
+    /**
+     * Remove a context from the message
+     *
+     * @return true if the context was removed, false if it did not exist
+     */
+    bool remove_context(const Level& lev, const Trange& tr);
 
     /**
      * Find a msg::Context given its description

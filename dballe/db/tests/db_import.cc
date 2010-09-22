@@ -22,6 +22,7 @@
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
 #include <dballe/core/record.h>
+#include <set>
 
 using namespace dballe;
 using namespace wreport;
@@ -72,9 +73,9 @@ void to::test<1>()
 
             db->reset();
             db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
-            // Explicitly set rep_memo so that the messages later match
-            // TODO: still needed? 
-            // msg.set_rep_memo(Msg::rep_memo_from_type(msg.type));
+ 
+            // Explicitly set the rep_memo variable that is added during export
+            msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
 
             query.clear();
             query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
@@ -107,6 +108,10 @@ void to::test<2>()
 {
 	use_db();
 
+    set<string> legacy_generics;
+    legacy_generics.insert("bufr/obs255-255.0.bufr");
+    legacy_generics.insert("bufr/tempforecast.bufr");
+
 	const char** files = dballe::tests::bufr_files;
 	for (int i = 0; files[i] != NULL; i++)
 	{
@@ -116,9 +121,6 @@ void to::test<2>()
 
             db->reset();
             db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
-            // Explicitly set rep_memo so that the messages later match
-            // TODO: still needed? 
-            // msg.set_rep_memo(Msg::rep_memo_from_type(msg.type));
 
             query.clear();
             query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
@@ -127,6 +129,9 @@ void to::test<2>()
             db->export_msgs(query, msgs);
             ensure_equals(msgs.size(), 1u);
             ensure(msgs[0] != NULL);
+
+            // Explicitly set the rep_memo variable that is added during export
+            msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
 
             /*
             if (string(files[i]).find("temp0") != string::npos)
@@ -160,9 +165,11 @@ void to::test<3>()
 
             db->reset();
             db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
-            // Explicitly set rep_memo so that the messages later match
-            // TODO: still needed? 
-            // msg.set_rep_memo(Msg::rep_memo_from_type(msg.type));
+
+            // Explicitly set the rep_memo variable that is added during export
+            msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
+
+            // db->dump(stderr);
 
             query.clear();
             query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
@@ -199,15 +206,16 @@ void to::test<4>()
 	// msg2 has latitude 46.22
     std::auto_ptr<Msgs> msgs1 = read_msgs("bufr/obs0-1.22.bufr", BUFR);
     std::auto_ptr<Msgs> msgs2 = read_msgs("bufr/obs0-3.504.bufr", BUFR);
-    const Msg& msg1 = *(*msgs1)[0];
-    const Msg& msg2 = *(*msgs2)[0];
+    Msg& msg1 = *(*msgs1)[0];
+    Msg& msg2 = *(*msgs2)[0];
 
     db->reset();
     db->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
     db->import_msg(msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
-	// Explicitly set rep_memo so that the messages later match
-	//CHECKED(dba_msg_set_rep_memo(msg1, rep_memo_from_msg(msg1), -1));
-	//CHECKED(dba_msg_set_rep_memo(msg2, rep_memo_from_msg(msg2), -1));
+
+    // Explicitly set the rep_memo variable that is added during export
+    msg1.set_rep_memo(Msg::repmemo_from_type(msg1.type));
+    msg2.set_rep_memo(Msg::repmemo_from_type(msg2.type));
 
     query.clear();
     query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg1.type));

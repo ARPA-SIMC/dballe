@@ -47,29 +47,7 @@ TESTGRP(aof_codec);
 template<> template<>
 void to::test<1>()
 {
-	const char* files[] = {
-		"aof/obs1-11.0.aof",
-		"aof/obs1-14.63.aof",
-		"aof/obs1-21.1.aof",
-		"aof/obs1-24.2104.aof",
-		"aof/obs1-24.34.aof",
-		"aof/obs2-144.2198.aof",
-		"aof/obs2-244.0.aof",
-		"aof/obs2-244.1.aof",
-		"aof/obs4-165.2027.aof",
-		"aof/obs5-35.61.aof",
-		"aof/obs5-36.30.aof",
-		"aof/obs6-32.1573.aof",
-		"aof/obs6-32.0.aof",
-		"aof/aof_27-2-144.aof",
-		"aof/aof_28-2-144.aof",
-		"aof/aof_27-2-244.aof",
-		"aof/aof_28-2-244.aof",
-		"aof/missing-cloud-h.aof",
-		"aof/brokenamdar.aof",
-		NULL,
-	};
-
+	const char** files = dballe::tests::aof_files;
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
@@ -102,17 +80,17 @@ void propagate_if_missing(int varid, const Msg& src, Msg& dst)
 
 void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
 {
-	int len = amsgs.size();
+	size_t len = amsgs.size();
 	if (len > bmsgs.size()) len = bmsgs.size();
-	for (int msgidx = 0; msgidx < len; ++msgidx)
+	for (size_t msgidx = 0; msgidx < len; ++msgidx)
 	{
 		Msg& amsg = *amsgs[msgidx];
 		Msg& bmsg = *bmsgs[msgidx];
 
-		for (int i = 0; i < bmsg.data.size(); ++i)
+		for (size_t i = 0; i < bmsg.data.size(); ++i)
 		{
             msg::Context& ctx = *bmsg.data[i];
-			for (int j = 0; j < ctx.data.size(); ++j)
+			for (size_t j = 0; j < ctx.data.size(); ++j)
 			{
 				int qc_is_undef = 0;
 				Var& var = *ctx.data[j];
@@ -197,7 +175,7 @@ void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
 		if (amsg.type == MSG_AMDAR)
 		{
 			// dba_var p = dba_msg_get_flight_press_var(amsg);
-			for (int i = 0; i < amsg.data.size(); ++i)
+			for (size_t i = 0; i < amsg.data.size(); ++i)
 			{
                 msg::Context& c = *amsg.data[i];
 				if (c.level.ltype1 == 100 && c.trange == Trange::instant())
@@ -256,13 +234,13 @@ void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
 			//  - However, if we go back to heights, the precision should be
 			//    preserved
 			//    251710 / 9.80664 becomes 25667 as it was
-			for (int i = 0; i < amsg.data.size(); ++i)
+			for (size_t i = 0; i < amsg.data.size(); ++i)
 			{
                 msg::Context& c = *amsg.data[i];
                 if (Var* var = c.edit(WR_VAR(0, 10, 3)))
                     var->setd(var->enqd() / 9.80665);
 			}
-			for (int i = 0; i < bmsg.data.size(); ++i)
+			for (size_t i = 0; i < bmsg.data.size(); ++i)
 			{
                 msg::Context& c = *bmsg.data[i];
                 if (Var* var = c.edit(WR_VAR(0, 10, 3)))
@@ -281,7 +259,7 @@ void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
 		}
 
 		// Remove attributes from all vertical sounding significances
-        for (int i = 0; i < bmsg.data.size(); ++i)
+        for (size_t i = 0; i < bmsg.data.size(); ++i)
         {
             msg::Context& c = *bmsg.data[i];
             if (Var* var = c.edit(WR_VAR(0, 8, 1)))
@@ -330,29 +308,10 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-	const char* files[] = {
-		"aof/obs1-11.0.aof",
-		"aof/obs1-14.63.aof",
-		"aof/obs1-21.1.aof",
-		"aof/obs1-24.2104.aof",
-		"aof/obs1-24.34.aof",
-		"aof/obs2-144.2198.aof",
-		"aof/obs2-244.0.aof",
-		"aof/obs2-244.1.aof",
-		"aof/obs4-165.2027.aof",
-		"aof/obs5-35.61.aof",
-		"aof/obs5-36.30.aof",
-		"aof/obs6-32.1573.aof",
-		"aof/obs6-32.0.aof",
-		"aof/aof_27-2-144.aof",
-		"aof/aof_28-2-144.aof",
-		"aof/aof_27-2-244.aof",
-		"aof/aof_28-2-244.aof",
-		NULL,
-	};
-
     std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(BUFR));
     std::auto_ptr<msg::Importer> importer(msg::Importer::create(BUFR));
+	const char** files = dballe::tests::aof_files;
+	// Note: missingclouds and brokenamdar were not in the original file list before it got unified
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
@@ -384,14 +343,13 @@ void to::test<3>()
  * preserve more than that */
 static void roundtemps(Msgs& msgs)
 {
-	double val;
-	for (int m = 0; m < msgs.size(); ++m)
+	for (size_t m = 0; m < msgs.size(); ++m)
 	{
 		Msg& msg = *msgs[m];
-		for (int c = 0; c < msg.data.size(); ++c)
+		for (size_t c = 0; c < msg.data.size(); ++c)
 		{
             msg::Context& ctx = *msg.data[c];
-			for (int v = 0; v < ctx.data.size(); ++v)
+			for (size_t v = 0; v < ctx.data.size(); ++v)
 			{
 				Var* var = ctx.data[v];
 				switch (var->code())

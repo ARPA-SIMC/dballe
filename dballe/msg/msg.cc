@@ -165,11 +165,29 @@ void Msg::add_context(auto_ptr<msg::Context> ctx)
      * RB-Tree to be worth */
     int pos;
     for (pos = data.size() - 1; pos > 0; --pos)
-        if (data[pos - 1]->compare(*ctx) > 0)
+    {
+        int cmp = data[pos - 1]->compare(*ctx);
+        if (cmp > 0)
             data[pos] = data[pos - 1];
+        else if (cmp == 0)
+        {
+            data.erase(data.begin() + pos);
+            throw error_consistency("attempting to add a context that already exists in the message");
+        }
         else
             break;
+    }
     data[pos] = ctx.release();
+}
+
+bool Msg::remove_context(const Level& lev, const Trange& tr)
+{
+    int pos = find_index(lev, tr);
+    if (pos == -1)
+        return false;
+    delete data[pos];
+    data.erase(data.begin() + pos);
+    return true;
 }
 
 const Var* Msg::find(Varcode code, const Level& lev, const Trange& tr) const
