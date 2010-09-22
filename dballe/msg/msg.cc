@@ -92,11 +92,20 @@ Msg& Msg::operator=(const Msg& m)
 
     // Reserve space for the new contexts
     data.reserve(m.data.size());
-    
+
     // Copy the contexts
     for (vector<msg::Context*>::const_iterator i = m.data.begin();
             i != m.data.end(); ++i)
         data.push_back(new msg::Context(**i));
+    return *this;
+}
+
+void Msg::clear()
+{
+    type = MSG_GENERIC;
+    for (vector<msg::Context*>::iterator i = data.begin(); i != data.end(); ++i)
+        delete *i;
+    data.clear();
 }
 
 int Msg::find_index(const Level& lev, const Trange& tr) const
@@ -220,7 +229,7 @@ void Msg::print(FILE* out) const
                     const int VSIG_SIGWIND = 2;
                     const int VSIG_MISSING = 1;
 
-                    fprintf(out, "Sounding #%d (level %d -", (i - data.begin()) + 1, vs);
+                    fprintf(out, "Sounding #%zd (level %d -", (i - data.begin()) + 1, vs);
                     if (vs & VSIG_EXTRA)
                         fprintf(out, " extra");
                     if (vs & VSIG_SURFACE)
@@ -266,7 +275,7 @@ unsigned Msg::diff(const Msg& msg, FILE* out) const
         ++diffs;
     }
     
-    int i1 = 0, i2 = 0;
+    size_t i1 = 0, i2 = 0;
     while (i1 < data.size() || i2 < msg.data.size())
     {
         if (i1 == data.size())
@@ -405,6 +414,111 @@ const char* Msg::repmemo_from_type(MsgType type)
         default:            return "generic";
     }
 }
+
+void Msg::sounding_pack_levels(Msg& dst) const
+{
+    dst.clear();
+    dst.type = type;
+
+    for (size_t i = 0; i < data.size(); ++i)
+    {
+        const msg::Context& ctx = *data[i];
+
+        // If it is not a sounding level, just copy it
+        if (ctx.find_vsig() == NULL)
+        {
+            auto_ptr<msg::Context> newctx(new msg::Context(ctx));
+            dst.add_context(newctx);
+            continue;
+        }
+
+        // FIXME: shouldn't this also set significance bits in the output level?
+        for (size_t j = 0; j < ctx.data.size(); ++j)
+        {
+            auto_ptr<Var> copy(new Var(*ctx.data[j]));
+            dst.set(copy, Level(ctx.level.ltype1, ctx.level.l1), ctx.trange);
+        }
+    }
+}
+
+void Msg::sounding_unpack_levels(Msg& dst) const
+{
+    const int VSIG_MISSING = 1;
+    const int VSIG_SIGWIND = 2;     /* 6 */
+    const int VSIG_SIGTEMP = 4;     /* 5 */
+    const int VSIG_MAXWIND = 8;     /* 4 */
+    const int VSIG_TROPOPAUSE = 16; /* 3 */
+    const int VSIG_STANDARD = 32;   /* 2 */
+    const int VSIG_SURFACE = 64;    /* 1 */
+
+    dst.clear();
+    dst.type = type;
+
+    for (size_t i = 0; i < data.size(); ++i)
+    {
+        const msg::Context& ctx = *data[i];
+
+        const Var* vsig_var = ctx.find_vsig();
+        if (!vsig_var)
+        {
+            auto_ptr<msg::Context> newctx(new msg::Context(ctx));
+            dst.add_context(newctx);
+            continue;
+        }
+
+        int vsig = vsig_var->enqi();
+        if (vsig & VSIG_MISSING)
+        {
+            // If there is no vsig, then we consider it a normal level
+            auto_ptr<msg::Context> newctx(new msg::Context(ctx));
+            dst.add_context(newctx);
+            continue;
+        }
+
+        /* DBA_RUN_OR_GOTO(fail, dba_var_enqi(msg->data[i].var_press, &press)); */
+
+        /* TODO: delete the dba_msg_datum that do not belong in that level */
+
+        if (vsig & VSIG_SIGWIND)
+        {
+            auto_ptr<msg::Context> copy(new msg::Context(ctx));
+            copy->level.l2 = 6;
+            dst.add_context(copy);
+        }
+        if (vsig & VSIG_SIGTEMP)
+        {
+            auto_ptr<msg::Context> copy(new msg::Context(ctx));
+            copy->level.l2 = 5;
+            dst.add_context(copy);
+        }
+        if (vsig & VSIG_MAXWIND)
+        {
+            auto_ptr<msg::Context> copy(new msg::Context(ctx));
+            copy->level.l2 = 4;
+            dst.add_context(copy);
+        }
+        if (vsig & VSIG_TROPOPAUSE)
+        {
+            auto_ptr<msg::Context> copy(new msg::Context(ctx));
+            copy->level.l2 = 3;
+            dst.add_context(copy);
+        }
+        if (vsig & VSIG_STANDARD)
+        {
+            auto_ptr<msg::Context> copy(new msg::Context(ctx));
+            copy->level.l2 = 2;
+            dst.add_context(copy);
+        }
+        if (vsig & VSIG_SURFACE)
+        {
+            auto_ptr<msg::Context> copy(new msg::Context(ctx));
+            copy->level.l2 = 1;
+            dst.add_context(copy);
+        }
+    }
+}
+
+
 #if 0
 
 static dba_err dba_msg_add_context(dba_msg msg, dba_msg_context ctx)
@@ -455,137 +569,6 @@ dba_msg_type dba_msg_get_type(dba_msg msg)
     return msg->type;
 }
 
-
-
-dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst)
-{
-    dba_err err;
-    dba_msg res = NULL;
-    int i;
-
-    DBA_RUN_OR_RETURN(dba_msg_create(&res));
-    res->type = msg->type;
-
-    for (i = 0; i < msg->data_count; i++)
-    {
-        dba_msg_context ctx = msg->data[i];
-        int j;
-
-        if (dba_msg_context_find_vsig(ctx) == NULL)
-        {
-            DBA_RUN_OR_GOTO(fail, dba_msg_add_context(res, msg->data[i]));
-            continue;
-        }
-
-        for (j = 0; j < ctx->data_count; j++)
-        {
-            dba_var copy;
-            DBA_RUN_OR_GOTO(fail, dba_var_copy(ctx->data[j], &copy));
-            DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(res, copy, ctx->ltype1, ctx->l1, 0, 0, ctx->pind, ctx->p1, ctx->p2));
-        }
-    }
-
-    *dst = res;
-
-    return dba_error_ok();
-
-fail:
-    *dst = 0;
-    if (res != NULL)
-        dba_msg_delete(res);
-    return err;
-}
-
-dba_err dba_msg_sounding_unpack_levels(dba_msg msg, dba_msg* dst)
-{
-    const int VSIG_MISSING = 1;
-    const int VSIG_SIGWIND = 2;     /* 6 */
-    const int VSIG_SIGTEMP = 4;     /* 5 */
-    const int VSIG_MAXWIND = 8;     /* 4 */
-    const int VSIG_TROPOPAUSE = 16; /* 3 */
-    const int VSIG_STANDARD = 32;   /* 2 */
-    const int VSIG_SURFACE = 64;    /* 1 */
-
-    dba_err err;
-    dba_msg res = NULL;
-    int i;
-
-    DBA_RUN_OR_RETURN(dba_msg_create(&res));
-    res->type = msg->type;
-
-    for (i = 0; i < msg->data_count; i++)
-    {
-        dba_msg_context ctx = msg->data[i];
-        dba_msg_context copy;
-        dba_var vsig_var = dba_msg_context_find_vsig(ctx);
-        int vsig;
-
-        if (vsig_var == NULL)
-        {
-            DBA_RUN_OR_GOTO(fail, dba_msg_add_context(res, msg->data[i]));
-            continue;
-        }
-
-        DBA_RUN_OR_GOTO(fail, dba_var_enqi(vsig_var, &vsig));
-        if (vsig & VSIG_MISSING)
-        {
-            /* If there is no vsig, then we consider it a normal level */
-            DBA_RUN_OR_GOTO(fail, dba_msg_add_context(res, msg->data[i]));
-            continue;
-        }
-
-        /* DBA_RUN_OR_GOTO(fail, dba_var_enqi(msg->data[i].var_press, &press)); */
-
-        /* TODO: delete the dba_msg_datum that do not belong in that level */
-
-        if (vsig & VSIG_SIGWIND)
-        {
-            DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
-            copy->l2 = 6;
-            DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
-        }
-        if (vsig & VSIG_SIGTEMP)
-        {
-            DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
-            copy->l2 = 5;
-            DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
-        }
-        if (vsig & VSIG_MAXWIND)
-        {
-            DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
-            copy->l2 = 4;
-            DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
-        }
-        if (vsig & VSIG_TROPOPAUSE)
-        {
-            DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
-            copy->l2 = 3;
-            DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
-        }
-        if (vsig & VSIG_STANDARD)
-        {
-            DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
-            copy->l2 = 2;
-            DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
-        }
-        if (vsig & VSIG_SURFACE)
-        {
-            DBA_RUN_OR_GOTO(fail, dba_msg_context_copy(ctx, &copy));
-            copy->l2 = 1;
-            DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(res, copy));
-        }
-    }
-
-    *dst = res;
-
-    return dba_error_ok();
-
-fail:
-    *dst = 0;
-    if (res != NULL)
-        dba_msg_delete(res);
-    return err;
-}
 
 
 #endif

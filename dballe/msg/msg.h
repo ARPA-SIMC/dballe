@@ -85,19 +85,19 @@ struct Context;
  * Source of the data
  */
 enum MsgType {
-	MSG_GENERIC,	/**< Data from unspecified source */
-	MSG_SYNOP,		/**< Synop measured data */
-	MSG_PILOT,		/**< Pilot sounding data */
-	MSG_TEMP,		/**< Temp sounding data */
-	MSG_TEMP_SHIP,	/**< Temp ship sounding data */
-	MSG_AIREP,		/**< Airep airplane data */
-	MSG_AMDAR,		/**< Amdar airplane data */
-	MSG_ACARS,		/**< Acars airplane data */
-	MSG_SHIP,		/**< Ship measured data */
-	MSG_BUOY,		/**< Buoy measured data */
-	MSG_METAR,		/**< Metar data */
-	MSG_SAT,		/**< Satellite data */
-	MSG_POLLUTION	/**< Pollution data */
+    MSG_GENERIC,    /**< Data from unspecified source */
+    MSG_SYNOP,      /**< Synop measured data */
+    MSG_PILOT,      /**< Pilot sounding data */
+    MSG_TEMP,       /**< Temp sounding data */
+    MSG_TEMP_SHIP,  /**< Temp ship sounding data */
+    MSG_AIREP,      /**< Airep airplane data */
+    MSG_AMDAR,      /**< Amdar airplane data */
+    MSG_ACARS,      /**< Acars airplane data */
+    MSG_SHIP,       /**< Ship measured data */
+    MSG_BUOY,       /**< Buoy measured data */
+    MSG_METAR,      /**< Metar data */
+    MSG_SAT,        /**< Satellite data */
+    MSG_POLLUTION   /**< Pollution data */
 };
 
 /**
@@ -130,11 +130,11 @@ protected:
     void add_context(std::auto_ptr<msg::Context> ctx);
 
 public:
- 	/** Source of the data */
-	MsgType type;
+    /** Source of the data */
+    MsgType type;
 
-	/** Context in the message */
-	std::vector<msg::Context*> data;
+    /** Context in the message */
+    std::vector<msg::Context*> data;
 
     /**
      * Create a new dba_msg
@@ -146,6 +146,9 @@ public:
 
     Msg(const Msg& m);
     Msg& operator=(const Msg& m);
+
+    /// Remove all information from Msg
+    void clear();
 
     /**
      * Find a msg::Context given its description
@@ -336,6 +339,27 @@ public:
     //void filter(const Record& filter, Msg& dest) const;
 
     /**
+     * Copy a Msg, removing the sounding significance from the level
+     * descriptions and packing together the data at the same pressure level.
+     *
+     * This is used to postprocess data after decoding, where the l2 field of the
+     * level description is temporarily used to store the vertical sounding
+     * significance, to simplify decoding.
+     */
+    void sounding_pack_levels(Msg& dst) const;
+
+    /**
+     * Copy a Msg, adding the sounding significance from the level descriptions
+     * and moving the data at the same pressure level to the resulting
+     * pseudolevels.
+     *
+     * This is used to preprocess data before encoding, where the l2 field of the
+     * level description is temporarily used to store the vertical sounding
+     * significance, to simplify encoding.
+     */
+    void sounding_unpack_levels(Msg& dst) const;
+
+    /**
      * Dump all the contents of the message to the given stream
      *
      * @param out
@@ -379,6 +403,15 @@ public:
      * @return the dba_msg element, or NULL if the check failed
      */
     static Msg* lua_check(struct lua_State* L, int idx);
+};
+
+/**
+ * Consumer interface used to stream messages as they are produced
+ */
+struct MsgConsumer
+{
+    virtual ~MsgConsumer() {}
+    virtual void operator()(std::auto_ptr<Msg>) = 0;
 };
 
 
@@ -436,27 +469,6 @@ dba_msg_type dba_msg_get_type(dba_msg msg);
 
 
 
-
-/**
- * Copy a dba_msg, removing the sounding significance from the level
- * descriptions and packing together the data at the same pressure level.
- *
- * This is used to postprocess data after decoding, where the l2 field of the
- * level description is temporarily used to store the vertical sounding
- * significance, to simplify decoding.
- */
-dba_err dba_msg_sounding_pack_levels(dba_msg msg, dba_msg* dst);
-
-/**
- * Copy a dba_msg, adding the sounding significance from the level
- * descriptions and moving the data at the same pressure level to the resulting
- * pseudolevels.
- *
- * This is used to preprocess data before encoding, where the l2 field of the
- * level description is temporarily used to store the vertical sounding
- * significance, to simplify encoding.
- */
-dba_err dba_msg_sounding_unpack_levels(dba_msg msg, dba_msg* dst);
 #endif
 
 }
