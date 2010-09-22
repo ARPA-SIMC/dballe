@@ -116,7 +116,7 @@ void to::test<2>()
 
 	// Append the dba_msg to a dba_msgs
 	Msgs msgs;
-    msgs.acquire(msg);
+	msgs.acquire(msg);
 
 #if 0
     TODO TODO TODO
