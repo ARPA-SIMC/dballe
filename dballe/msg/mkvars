@@ -141,7 +141,7 @@ types = dict(int = 'int', num = 'double', str = 'const char*')
 ftypes = dict(int = 'i', num = 'd', str = 'c')
 for v in vars:
     print >>fh, "/** Set the value of \"%s\" from a variable of type %s */" % (v.desc, types[v.type])
-    print >>fh, "inline void set_%s(%s val, int conf) " % (v.name.lower(), types[v.type]),
+    print >>fh, "inline void set_%s(%s val, int conf=-1) " % (v.name.lower(), types[v.type]),
     #print >>sys.stderr, v
     #print >>sys.stderr, "--", [ftypes[v.type], v.b.x, v.b.y] + v.letr;
     print >>fh, "{ set%s(WR_VAR(0, %d, %d), val, conf, Level(%s, %s, %s, %s), Trange(%s, %s, %s)); }" % \
