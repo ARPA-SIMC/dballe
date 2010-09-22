@@ -113,7 +113,13 @@ void GenericImporter::import_var(const Var& var)
             msg->type = Msg::type_from_repmemo(var.value());
             msg->set_rep_memo(var.value(), -1);
             break;
-        default: msg->set(var, update_code(var.code()), lev, tr); break;
+        default:
+	    // Adjust station info level for pre-dballe-5.0 generics
+	    if (lev == Level(257, 0, 0, 0) && tr == Trange(0, 0, 0))
+		    msg->set(var, update_code(var.code()), Level(257), Trange());
+	    else
+		    msg->set(var, update_code(var.code()), lev, tr);
+	    break;
     }
 }
 
