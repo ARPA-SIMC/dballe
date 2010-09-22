@@ -311,7 +311,7 @@ int Cursor::getcount(const Record& rec, unsigned int qwanted, unsigned int qmodi
             "sc.id_ana=c.id_ana AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) ");
     }
 
-    TRACE("Performing query: %s\n", sql_quer.c_str());
+    TRACE("Performing query: %s\n", sql_query.c_str());
     /* fprintf(stderr, "Performing query: %s\n", dba_querybuf_get(sql_query)); */
 
     /* Perform the query */
@@ -1129,7 +1129,7 @@ void Cursor::make_where(const Record& rec)
         int src_val = db.repinfo().get_id(val);
         sel_rep_cod = src_val;
         sql_where.append_list("c.id_report=?");
-        TRACE("found rep_memo %s: adding AND c.id_report = ?. val is %d\n", val, cur->sel_rep_cod);
+        TRACE("found rep_memo %s: adding AND c.id_report = ?. val is %d\n", val, (int)sel_rep_cod);
         stm->bind_in(input_seq++, sel_rep_cod);
         from_wanted |= DBA_DB_FROM_C;
     } else
@@ -1140,7 +1140,7 @@ void Cursor::make_where(const Record& rec)
     {
         sel_b = descriptor_code(val);
         sql_where.append_list("d.id_var=?");
-        TRACE("found b: adding AND d.id_var = ?. val is %d %s\n", sel_b, val);
+        TRACE("found b: adding AND d.id_var = ?. val is %d %s\n", (int)sel_b, val);
         stm->bind_in(input_seq++, sel_b);
         from_wanted |= DBA_DB_FROM_D;
     }

@@ -1327,7 +1327,8 @@ int DB::query_attrs(int id_context, wreport::Varcode id_var, const std::vector<w
     stm.bind_out(1, out_type);
     stm.bind_out(2, out_value, 255);
 
-    TRACE("attr read query: %s with ctx %d var %d\n", query.c_str(), in_id_context, id_var);
+    TRACE("attr read query: %s with ctx %d var %01d%02d%03d\n", query.c_str(), (int)in_id_context,
+            WR_VAR_F(id_var), WR_VAR_X(id_var), WR_VAR_Y(id_var));
 
     stm.exec_direct(query.c_str());
 

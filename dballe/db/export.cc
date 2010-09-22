@@ -80,7 +80,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
     auto_ptr<Var> var;
 	while (stm.fetch())
 	{
-		TRACE("fill_ana_layer Got B%02ld%03ld %s\n", DBA_VAR_X(out_varcode), DBA_VAR_Y(out_varcode), out_value);
+		TRACE("fill_ana_layer Got B%02ld%03ld %s\n", WR_VAR_X(out_varcode), WR_VAR_Y(out_varcode), out_value);
 
 		// First process the variable, possibly inserting the old one in the message
 		if (last_varcode != out_varcode)
@@ -88,7 +88,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 			TRACE("fill_ana_layer new var\n");
 			if (var.get())
 			{
-				TRACE("fill_ana_layer inserting old var B%02d%03d\n", DBA_VAR_X(var->code()), DBA_VAR_Y(var->code()));
+				TRACE("fill_ana_layer inserting old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
                 msg.set(var, Level(257), Trange());
 			}
             var = newvar(out_varcode, out_value);
@@ -104,7 +104,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 
 	if (var.get())
 	{
-		TRACE("fill_ana_layer inserting leftover old var B%02d%03d\n", DBA_VAR_X(var->code()), DBA_VAR_Y(var->code()));
+		TRACE("fill_ana_layer inserting leftover old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
         msg.set(var, Level(257), Trange());
 	}
 }
@@ -147,7 +147,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 	while (cur.next())
 	{
 		TRACE("Got B%02ld%03ld %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
-				DBA_VAR_X(cur.out_idvar), DBA_VAR_Y(cur.out_idvar),
+				WR_VAR_X(cur.out_idvar), WR_VAR_Y(cur.out_idvar),
 				cur.out_ltype1, cur.out_l1, cur.out_ltype2, cur.out_l2, cur.out_pind, cur.out_p1, cur.out_p2,
 				cur.out_value);
 
@@ -219,7 +219,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 			last_rep_cod = cur.out_rep_cod;
 		}
 
-		TRACE("Inserting var B%02d%03d (%s)\n", DBA_VAR_X(var.code()), DBA_VAR_Y(var.code()), var.value());
+		TRACE("Inserting var B%02d%03d (%s)\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()), var->value());
         msg->set(var,
                 Level(cur.out_ltype1, cur.out_l1, cur.out_ltype2, cur.out_l2),
                 Trange(cur.out_pind, cur.out_p1, cur.out_p2));
