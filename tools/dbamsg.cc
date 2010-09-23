@@ -1074,7 +1074,7 @@ struct poptOption dbamsg_convert_options[] = {
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
 	{ "template", 0, POPT_ARG_STRING, &op_output_template, 0,
-		"template of the data in output (autoselect if not specified)", "type.sub.local" },
+		"template of the data in output (autoselect if not specified, 'list' gives a list)", "name" },
 	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
 		"force output data to be of this type of report", "rep_memo" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,

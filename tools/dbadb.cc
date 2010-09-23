@@ -430,7 +430,7 @@ struct poptOption dbadb_export_options[] = {
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
 	{ "template", 't', POPT_ARG_STRING, &op_output_template, 0,
-		"template of the data in output (autoselect if not specified)", "type.sub.local" },
+		"template of the data in output (autoselect if not specified, 'list' gives a list)", "name" },
 	{ "dump", 0, POPT_ARG_NONE, &op_dump, 0,
 		"dump data to be encoded instead of encoding it" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
