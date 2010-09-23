@@ -25,9 +25,12 @@
 #include <dballe/msg/codec.h>
 #include <dballe/msg/msg.h>
 #include <stdint.h>
+#include <map>
+#include <string>
 
 namespace wreport {
 struct Bulletin;
+struct Subset;
 }
 
 namespace dballe {
@@ -98,6 +101,51 @@ public:
 
     virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const;
 };
+
+namespace wr {
+
+struct TemplateRegistry;
+
+class Template
+{
+protected:
+    virtual void setupBulletin(wreport::Bulletin& bulletin);
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset);
+
+public:
+    const Exporter::Options& opts;
+    const Msgs& msgs;
+    const Msg* msg;     // Msg being read
+    wreport::Subset* subset; // Subset being written
+
+    Template(const Exporter::Options& opts, const Msgs& msgs)
+        : opts(opts), msgs(msgs), msg(0), subset(0) {}
+    virtual ~Template() {}
+
+    virtual const char* name() const = 0;
+    virtual const char* description() const = 0;
+    virtual void to_bulletin(wreport::Bulletin& bulletin);
+};
+
+struct TemplateFactory
+{
+    std::string name;
+    std::string description;
+
+    virtual ~TemplateFactory() {}
+    virtual std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const = 0;
+};
+
+struct TemplateRegistry : public std::map<std::string, const TemplateFactory*>
+{
+    static const TemplateRegistry& get();
+    static const TemplateFactory& get(const std::string& name);
+
+    void register_factory(const TemplateFactory* fac);
+};
+
+} // namespace wr
+
 
 #if 0
 

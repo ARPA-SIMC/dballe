@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-DBALLELIBS = ../extra/libextra.la  ../dballe/libdballe.la
+DBALLELIBS =  ../dballe/libdballe.la
 
 INCLUDES = -I$(top_srcdir)
 

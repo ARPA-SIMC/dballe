@@ -30,10 +30,10 @@
 using namespace wreport;
 using namespace std;
 
-extern int op_verbose;
+// extern int op_verbose;
 
 namespace dballe {
-namespace proc {
+namespace cmdline {
 
 static int match_index(int idx, const char* expr)
 {
@@ -232,8 +232,8 @@ void process_all(poptContext optCon,
 		{
 			++index;
 
-			if (op_verbose)
-				fprintf(stderr, "Reading message #%d...\n", index);
+//			if (op_verbose)
+//				fprintf(stderr, "Reading message #%d...\n", index);
 
 			if (grepdata->index[0] == 0 || match_index(index, grepdata->index))
 			{
@@ -244,7 +244,7 @@ void process_all(poptContext optCon,
 	} while ((name = poptGetArg(optCon)) != NULL);
 }
 
-}
-}
+} // namespace cmdline
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

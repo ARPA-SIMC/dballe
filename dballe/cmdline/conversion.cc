@@ -30,7 +30,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
-namespace proc {
+namespace cmdline {
 
 Converter::~Converter()
 {

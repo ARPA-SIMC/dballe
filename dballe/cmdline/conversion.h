@@ -26,7 +26,7 @@
 #include <dballe/msg/msgs.h>
 #include <dballe/bufrex/msg.h>
 #endif
-#include <extra/processor.h>
+#include <dballe/cmdline/processor.h>
 
 namespace wreport {
 struct Bulletin;
@@ -38,7 +38,7 @@ struct Importer;
 struct Exporter;
 }
 
-namespace proc {
+namespace cmdline {
 
 struct Converter : public Action
 {

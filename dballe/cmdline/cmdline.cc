@@ -19,6 +19,7 @@
 
 #include "cmdline.h"
 #include <dballe/core/record.h>
+#include <dballe/msg/wr_codec.h>
 //#include <dballe/core/verbose.h>
 
 #include <popt.h>
@@ -29,6 +30,7 @@
 #include <time.h>
 
 namespace dballe {
+namespace cmdline {
 
 static const struct op_dispatch_table* op_table_lookup(const struct tool_desc* desc, const char* name);
 static void usage(const struct tool_desc* desc, const char* selfpath, FILE* out);
@@ -528,6 +530,15 @@ void dba_cmdline_get_query(poptContext optCon, Record& query)
 	}
 }
 
+void list_templates()
+{
+	const msg::wr::TemplateRegistry& reg = msg::wr::TemplateRegistry::get();
+	for (msg::wr::TemplateRegistry::const_iterator i = reg.begin(); i != reg.end(); ++i)
+		fprintf(stderr, "%s - %s\n",
+				i->second->name.c_str(), i->second->description.c_str());
+}
+
+} // namespace cmdline
 } // namespace dballe
 
 /* vim:set ts=4 sw=4: */

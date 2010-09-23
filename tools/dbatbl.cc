@@ -19,8 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/cmdline.h>
-#include <dballe/init.h>
+#include <dballe/cmdline/cmdline.h>
 #include <wreport/vartable.h>
 #include <wreport/dtable.h>
 #include <wreport/conv.h>
@@ -31,6 +30,7 @@
 #include <string.h>
 
 using namespace dballe;
+using namespace dballe::cmdline;
 using namespace wreport;
 using namespace std;
 
@@ -64,7 +64,7 @@ void unit_check(const Varinfo& info, void* data)
 
 
 /* Check that all unit conversions are allowed by dba_uniconv */
-static dba_err check_unit_conversions(const char* id, int* is_ok)
+static void check_unit_conversions(const char* id, int* is_ok)
 {
 	const Vartable* othertable = Vartable::get(id);
 	*is_ok = 1;
@@ -316,7 +316,7 @@ int do_index(poptContext optCon)
 			/* If it's an external table, check unit conversions to DBALLE
 			 * correspondents */
 			int is_ok;
-			DBA_RUN_OR_RETURN(check_unit_conversions(id, &is_ok));
+			check_unit_conversions(id, &is_ok);
 			if (!is_ok)
 				fprintf(stderr, "Warning: some variables cannot be converted from %s to dballe\n", id);
 		}

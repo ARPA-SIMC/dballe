@@ -206,6 +206,7 @@ dballe/Makefile
 dballe/core/Makefile
 dballe/msg/Makefile
 dballe/db/Makefile
+dballe/cmdline/Makefile
 dballe/bench/Makefile
 dballe++/Makefile
 fortran/Makefile

@@ -31,7 +31,7 @@ namespace dballe {
 struct Rawmsg;
 struct Msgs;
 
-namespace proc {
+namespace cmdline {
 
 struct grep_t
 {
@@ -54,7 +54,7 @@ void process_all(poptContext optCon,
 		 struct grep_t* grepdata,
 		 Action& action);
 
-}
-}
+} // namespace cmdline
+} // namespace dballe
 
 #endif

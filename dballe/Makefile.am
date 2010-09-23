@@ -6,6 +6,8 @@ if DO_DBALLE_DB
 SUBDIRS += db
 endif
 
+SUBDIRS += cmdline
+
 # SUBDIRS += . bench
 
 EXTRA_DIST = mainpage.dox dballe.dox \
@@ -23,5 +25,6 @@ libdballe_la_SOURCES =
 libdballe_la_LIBADD = \
 		core/libdballe-core.la \
 		msg/libdballe-msg.la \
-		db/libdballe-db.la
+		db/libdballe-db.la \
+		cmdline/libdballe-cmdline.la
 libdballe_la_LDFLAGS = -lstdc++ -version-info @LIBDBALLE_VERSION_INFO@

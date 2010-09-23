@@ -31,6 +31,8 @@
 namespace dballe {
 struct Record;
 
+namespace cmdline {
+
 struct op_dispatch_table
 {
 	int (*func)(poptContext);
@@ -84,6 +86,12 @@ int dba_cmdline_dispatch_main(const struct program_info* pinfo, const struct too
  */
 void dba_cmdline_get_query(poptContext optCon, Record& query);
 
+/**
+ * List available output templates
+ */
+void list_templates();
+
+} // namespace cmdline
 } // namespace dballe
 
 /* vim:set ts=4 sw=4: */

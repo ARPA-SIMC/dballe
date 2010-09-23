@@ -17,9 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <extra/processor.h>
-#include <extra/cmdline.h>
-#include <wreport/error.h>
+#include <dballe/cmdline/processor.h>
+#include <dballe/cmdline/cmdline.h>
 #include <dballe/core/record.h>
 #include <dballe/core/file.h>
 #include <dballe/msg/msg.h>
@@ -27,8 +26,10 @@
 #include <dballe/msg/codec.h>
 #include <dballe/db/db.h>
 #include <dballe/db/cursor.h>
+#include <wreport/error.h>
 
 #include <cstdlib>
+#include <cstring>
 
 #if 0
 #include <dballe/init.h>
@@ -36,7 +37,6 @@
 #include <dballe/msg/file.h>
 #include <dballe/msg/bufrex_codec.h>
 
-#include <string.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -44,9 +44,10 @@
 #endif
 
 using namespace dballe;
+using namespace dballe::cmdline;
 using namespace wreport;
 
-struct proc::grep_t grepdata = { -1, -1, -1, 0, 0, "" };
+struct cmdline::grep_t grepdata = { -1, -1, -1, 0, 0, "" };
 struct poptOption grepTable[] = {
 	{ "category", 0, POPT_ARG_INT, &grepdata.category, 0,
 		"match messages with the given data category", "num" },
@@ -107,7 +108,7 @@ static void connect(DB& db)
 		return db.connect(chosen_dsn, op_user, op_pass);
 }
 
-struct Importer : public proc::Action
+struct Importer : public cmdline::Action
 {
 	DB& db;
 	bool overwrite;
@@ -321,6 +322,12 @@ int do_export(poptContext optCon)
 {
 	/* Throw away the command name */
 	poptGetArg(optCon);
+
+	if (strcmp(op_output_template, "list") == 0)
+	{
+		list_templates();
+		return 0;
+	}
 
 	/* Connect to the database */
 	DB db;

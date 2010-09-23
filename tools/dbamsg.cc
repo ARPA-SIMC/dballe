@@ -29,9 +29,9 @@
 #include <dballe/core/aoffile.h>
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
-#include <extra/cmdline.h>
-#include <extra/processor.h>
-#include <extra/conversion.h>
+#include <dballe/cmdline/cmdline.h>
+#include <dballe/cmdline/processor.h>
+#include <dballe/cmdline/conversion.h>
 
 #include <stdlib.h>
 
@@ -45,6 +45,7 @@
 
 using namespace wreport;
 using namespace dballe;
+using namespace dballe::cmdline;
 using namespace std;
 
 static int op_dump_interpreted = 0;
@@ -56,7 +57,7 @@ static const char* op_report = "";
 static const char* op_bisect_cmd = NULL;
 int op_verbose = 0;
 
-struct proc::grep_t grepdata = { -1, -1, -1, 0, 0, "" };
+struct cmdline::grep_t grepdata = { -1, -1, -1, 0, 0, "" };
 struct poptOption grepTable[] = {
 	{ "category", 0, POPT_ARG_INT, &grepdata.category, 0,
 		"match messages with the given data category", "num" },
@@ -174,7 +175,7 @@ static void print_aof_header(const Rawmsg& rmsg)
 			rmsg.index, rmsg.size(), category, subcategory);
 }
 
-struct Summarise : public proc::Action
+struct Summarise : public cmdline::Action
 {
 	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
 	{
@@ -195,7 +196,7 @@ struct Summarise : public proc::Action
 	}
 };
 
-struct Head : public proc::Action
+struct Head : public cmdline::Action
 {
 	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
 	{
@@ -222,7 +223,7 @@ static void dump_dba_vars(const Subset& msg)
 		msg[i].print(stdout);
 }
 
-struct DumpMessage : public proc::Action
+struct DumpMessage : public cmdline::Action
 {
 	void print_subsets(const Bulletin& braw)
 	{
@@ -265,7 +266,7 @@ struct DumpMessage : public proc::Action
 	}
 };
 
-struct DumpCooked : public proc::Action
+struct DumpCooked : public cmdline::Action
 {
 	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
 	{
@@ -294,7 +295,7 @@ static void print_var(const Var& var)
 		printf("\n");
 }
 
-struct DumpText : public proc::Action
+struct DumpText : public cmdline::Action
 {
 	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
 	{
@@ -349,7 +350,7 @@ struct DumpText : public proc::Action
 	}
 };
 
-struct WriteRaw : public proc::Action
+struct WriteRaw : public cmdline::Action
 {
 	File* file;
 	WriteRaw() : file(0) {}
@@ -384,7 +385,7 @@ int do_head(poptContext optCon)
 
 int do_dump(poptContext optCon)
 {
-	auto_ptr<proc::Action> action;
+	auto_ptr<cmdline::Action> action;
 	if (op_dump_interpreted)
 		action.reset(new DumpCooked);
 	else if (op_dump_text)
@@ -409,7 +410,7 @@ int do_cat(poptContext optCon)
 	return 0;
 }
 
-struct StoreMessages : public proc::Action, public vector<Rawmsg>
+struct StoreMessages : public cmdline::Action, public vector<Rawmsg>
 {
 	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
 	{
@@ -533,10 +534,16 @@ int do_bisect(poptContext optCon)
 int do_convert(poptContext optCon)
 {
 	msg::Exporter::Options opts;
-	proc::Converter conv;
+	cmdline::Converter conv;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
+
+	if (strcmp(op_output_template, "list") == 0)
+	{
+		list_templates();
+		return 0;
+	}
 
 	Encoding intype = dba_cmdline_stringToMsgType(op_input_type, optCon);
 	Encoding outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
