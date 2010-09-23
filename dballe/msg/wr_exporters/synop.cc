@@ -25,7 +25,7 @@ using namespace wreport;
 using namespace std;
 
 #define SYNOP_NAME "synop"
-#define SYNOP_DESC "Synop"
+#define SYNOP_DESC "Synop (autodetect)"
 
 #define SYNOP_LAND_NAME "synop-land"
 #define SYNOP_LAND_DESC "Synop land"

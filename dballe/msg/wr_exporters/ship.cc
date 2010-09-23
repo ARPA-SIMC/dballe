@@ -25,7 +25,7 @@ using namespace wreport;
 using namespace std;
 
 #define SHIP_NAME "ship"
-#define SHIP_DESC "Synop ship"
+#define SHIP_DESC "Synop ship (autodetect)"
 
 #define SHIP_PLAIN_NAME "ship-plain"
 #define SHIP_PLAIN_DESC "Synop ship (normal)"
