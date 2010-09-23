@@ -2,8 +2,6 @@
 #define FDBA_MSGAPI_H
 
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,11 +21,22 @@
  */
 
 #include "commonapi.h"
-#include <dballe/core/file.h>
-#include <dballe/msg/msgs.h>
 
-namespace dballef
-{
+namespace wreport {
+struct Var;
+}
+
+namespace dballe {
+struct File;
+struct Msgs;
+struct Msg;
+
+namespace msg {
+struct Importer;
+struct Exporter;
+}
+
+namespace fortran {
 
 class MsgAPI : public CommonAPIImplementation
 {
@@ -37,18 +46,24 @@ protected:
 		STATE_VOGLIOQUESTO = 2,
 		STATE_EOF = 4,
 	};
-	dba_file file;
+	File* file;
 	/**
 	 * State flag to track what actions have been performed in order to decide
 	 * what to do next
 	 */
 	unsigned int state;
-	dba_msgs msgs;
+	/// Importer (NULL if we export)
+	msg::Importer* importer;
+	/// Exporter (NULL if we import)
+	msg::Exporter* exporter;
+	/// Template selected for exporter (empty if auto detect)
+	std::string exporter_template;
+	Msgs* msgs;
 	/// Message being written
-	dba_msg wmsg;
+	Msg* wmsg;
 	/// Pointer to the last variable written, to set attributes
-	dba_var wvar;
-	int curmsgidx;
+	wreport::Var* wvar;
+	size_t curmsgidx;
 	int iter_ctx;
 	int iter_var;
 	/// Category set for the message that we are writing
@@ -76,7 +91,7 @@ protected:
 	/**
 	 * Get a pointer to the current message being read or written
 	 */
-	dba_msg curmsg();
+	Msg* curmsg();
 
 	void flushSubset();
 	void flushMessage();
@@ -111,6 +126,7 @@ public:
 	virtual void scusa();
 };
 
+}
 }
 
 /* vim:set ts=4 sw=4: */

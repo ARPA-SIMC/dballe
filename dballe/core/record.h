@@ -193,6 +193,14 @@ public:
 	const wreport::Var* var_peek(wreport::Varcode code) const throw ();
 
 	/**
+	 * Get the variable for an item
+	 *
+	 * @param name
+	 *   The name of the item to get the value for
+	 */
+	const wreport::Var* peek(const char* name) const;
+
+	/**
 	 * Look at the raw value of a keyword in the record, without raising errors.
 	 *
 	 * @param parameter
@@ -211,6 +219,14 @@ public:
 	 *   The raw string value, or NULL if the variable has no value.
 	 */
 	const char* var_peek_value(wreport::Varcode code) const throw ();
+
+	/**
+	 * Get the string value for an item
+	 *
+	 * @param name
+	 *   The name of the item to get the value for
+	 */
+	const char* peek_value(const char* name) const;
 
 	/**
 	 * Return the Var for a key, throwing an error it if it missing
@@ -236,16 +252,22 @@ public:
 	// @{
 	const wreport::Var& get(dba_keyword parameter) const { return key(parameter); }
 	const wreport::Var& get(wreport::Varcode code) const { return var(code); }
+	const wreport::Var& get(const char* name) const;
 	wreport::Var& get(dba_keyword parameter) { return key(parameter); }
 	wreport::Var& get(wreport::Varcode code) { return var(code); }
+	wreport::Var& get(const char* name);
 	const wreport::Var& operator[](dba_keyword parameter) const { return key(parameter); }
 	const wreport::Var& operator[](wreport::Varcode code) const { return var(code); }
+	const wreport::Var& operator[](const char* name) const { return get(name); }
 	wreport::Var& operator[](dba_keyword parameter) { return key(parameter); }
 	wreport::Var& operator[](wreport::Varcode code) { return var(code); }
+	wreport::Var& operator[](const char* name) { return get(name); }
 	template<typename P, typename V>
 	void set(const P& field, const V& val) { get(field).set(val); }
+	void set(const wreport::Var& var) { get(var.code()).set(var); }
 	void unset(dba_keyword parameter) { key_unset(parameter); }
 	void unset(wreport::Varcode code) { var_unset(code); }
+	void unset(const char* name);
 	// @}
 
 	/**

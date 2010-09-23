@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +20,16 @@
 #ifndef FDBA_HANDLES_H
 #define FDBA_HANDLES_H
 
-#include <dballe/core/record.h>
-#include <dballe/db/db.h>
-#include "simple.h"
-#include <assert.h>
+#include <wreport/error.h>
+#include <cassert>
 
-extern "C" {
+namespace dballe {
+struct DB;
 
-#define FDBA_HANDLE_START_DECL(name) \
-	struct fdba_handle_##name { \
-		int used;
+namespace fortran {
+struct API;
 
+#if 0
 #define FDBA_HANDLE_END_DECL(name) }; \
 	extern struct fdba_handle_##name _##name[]; \
 	void fdba_handle_init_##name(); \
@@ -77,24 +74,68 @@ extern "C" {
 	}
 
 #define FDBA_HANDLE(name, hnd) (_##name[hnd])
+#endif
 
-FDBA_HANDLE_START_DECL(session)
-	dba_db session;
-FDBA_HANDLE_END_DECL(session)
+struct HBase
+{
+	bool used;
 
-FDBA_HANDLE_START_DECL(simple)
-	int session;
-	dballef::API* api;
-FDBA_HANDLE_END_DECL(simple)
+	HBase() : used(false) {}
 
-typedef void (*fdba_error_callback)(INTEGER(data));
+	void start() { used = true; }
+	void stop() { used = false; }
+};
 
-FDBA_HANDLE_START_DECL(errcb)
-	int error;
-	fdba_error_callback cb;
-	int data;
-FDBA_HANDLE_END_DECL(errcb)
+template<typename T, int MAX>
+struct Handler
+{
+	T* records;
+	int next;
+	const char* name;
+	const char* def;
+	size_t in_use;
 
+	void init(const char* name, const char* def)
+	{
+		records = new T[MAX];
+		next = 0;
+		in_use = 0;
+	}
+
+	T& get(int id)
+	{
+		assert(records[id].used);
+		return records[id];
+	}
+
+	int request()
+	{
+		for (int i = 0; i < MAX && (records[next].used); ++i)
+			next = (next + 1) % MAX;
+		if (records[next].used)
+			wreport::error_handles::throwf("No more handles for %s. The maximum limit is %d: to increase it, recompile DB-All.e setting %s to a higher value", name, MAX, def);
+		/* Setup the new handle */
+		records[next].start();
+		++in_use;
+		return next;
+	}
+
+	void release(int h)
+	{
+		assert(in_use);
+		assert(records[h].used);
+		if (records[h].used)
+		{
+			records[h].stop();
+			--in_use;
+		}
+	}
+};
+
+/// Initialise error handlers
+void error_init();
+
+}
 }
 
 #endif

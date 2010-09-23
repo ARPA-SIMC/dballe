@@ -329,6 +329,22 @@ const Var* Record::var_peek(Varcode code) const throw ()
 	return m_vars[pos];
 }
 
+const wreport::Var* Record::peek(const char* name) const
+{
+	Varcode code = 0;
+	if (name[0] != 'B' && (code = varcode_alias_resolve(name)) == 0)
+	{
+		dba_keyword param = keyword_byname(name);
+		if (param == DBA_KEY_ERROR)
+			error_notfound::throwf("looking for misspelled parameter \"%s\"", name);
+		return key_peek(param);
+	} else {
+		if (code == 0)
+			code = WR_STRING_TO_VAR(name + 1);
+		return var_peek(code);
+	}
+}
+
 const char* Record::key_peek_value(dba_keyword parameter) const throw ()
 {
 	const Var* res = key_peek(parameter);
@@ -339,6 +355,13 @@ const char* Record::var_peek_value(Varcode code) const throw ()
 {
 	const Var* res = var_peek(code);
 	return res ? res->value() : NULL;
+}
+
+const char* Record::peek_value(const char* name) const
+{
+	const Var* var = peek(name);
+	if (var == NULL) return NULL;
+	return var->value();
 }
 
 const wreport::Var& Record::key(dba_keyword parameter) const
@@ -387,6 +410,30 @@ Var& Record::var(wreport::Varcode code)
 	return *m_vars[pos];
 }
 
+const wreport::Var& Record::get(const char* name) const
+{
+	const Var* var = peek(name);
+	if (var == NULL)
+		error_notfound::throwf("\"%s\" not found in record", name);
+	return *var;
+}
+
+wreport::Var& Record::get(const char* name)
+{
+	Varcode code = 0;
+	if (name[0] != 'B' && (code = varcode_alias_resolve(name)) == 0)
+	{
+		dba_keyword param = keyword_byname(name);
+		if (param == DBA_KEY_ERROR)
+			error_notfound::throwf("looking for misspelled parameter \"%s\"", name);
+		return key(param);
+	} else {
+		if (code == 0)
+			code = WR_STRING_TO_VAR(name + 1);
+		return var(code);
+	}
+}
+
 void Record::key_unset(dba_keyword parameter)
 {
 	if (keydata[parameter] != NULL)
@@ -402,6 +449,22 @@ void Record::var_unset(wreport::Varcode code)
 	{
 		delete m_vars[pos];
 		m_vars.erase(m_vars.begin() + pos);
+	}
+}
+
+void Record::unset(const char* name)
+{
+	Varcode code = 0;
+	if (name[0] != 'B' && (code = varcode_alias_resolve(name)) == 0)
+	{
+		dba_keyword param = keyword_byname(name);
+		if (param == DBA_KEY_ERROR)
+			error_notfound::throwf("looking for misspelled parameter \"%s\"", name);
+		return key_unset(param);
+	} else {
+		if (code == 0)
+			code = WR_STRING_TO_VAR(name + 1);
+		return var_unset(code);
 	}
 }
 
@@ -457,7 +520,7 @@ void Record::set_from_string(const char* str)
 		/* Else handle a normal keyword */
 		dba_keyword param = keyword_byname_len(str, s - str);
 		if (param == DBA_KEY_ERROR)
-			error_notfound::throwf("keyword \"%.*s\" does not exist", s - str, str);
+			error_notfound::throwf("keyword \"%.*s\" does not exist", (int)(s - str), str);
 
 		/* Query informations about the parameter */
 		Varinfo info = keyword_info(param);

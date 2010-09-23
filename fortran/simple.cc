@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * fortran/simple - Interface for Fortran API implementations
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,13 +25,15 @@
 
 using namespace std;
 
-namespace dballef {
+namespace dballe {
+namespace fortran {
 
 const signed char API::missing_byte = numeric_limits<signed char>::min();
 const int API::missing_int = numeric_limits<int>::min();
 const float API::missing_float = numeric_limits<float>::max();
 const double API::missing_double = numeric_limits<double>::max();
 
+}
 }
 
 /* vim:set ts=4 sw=4: */

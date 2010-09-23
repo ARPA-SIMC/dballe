@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,25 +19,26 @@
 
 #include "dbapi.h"
 #include "msgapi.h"
+#include <dballe/db/db.h>
+#if 0
 #include <dballe/core/verbose.h>
 #include <dballe/core/aliases.h>
-#include <dballe/db/db.h>
 #include <dballe/db/cursor.h>
 #include <dballe/db/internals.h>
 #include <dballe/msg/formatter.h>
 #include <dballe/init.h>
+#include <stdio.h>	// snprintf
+//#include <math.h>
+#endif
+#include <cstring>	// memset
+#include <limits.h>
+#include <float.h>
+#include "handles.h"
+#include "error.h"
 
 extern "C" {
 #include <f77.h>
 }
-#include <float.h>
-#include <limits.h>
-
-#include <stdio.h>	// snprintf
-#include <string.h>	// memset
-//#include <math.h>
-
-#include "handles.h"
 
 //#define TRACEMISSING(type) fprintf(stderr, "SET TO MISSING (" type ")\n")
 #define TRACEMISSING(type) do {} while(0)
@@ -64,16 +63,17 @@ extern "C" {
 //#define MISSING_DOUBLE   (1.79769313486E+308)
 //#define MISSING_DOUBLE ((double)0x7FEFFFFFFFFFFFFF)
 
-using namespace dballef;
+using namespace dballe;
+using namespace wreport;
 
 static inline void tofortran(int& val)
 {
-	if (val == API::missing_int)
+	if (val == fortran::API::missing_int)
 		val = MISSING_INT;
 }
 static inline int fromfortran(int val)
 {
-	return val == MISSING_INT ? API::missing_int : val;
+	return val == MISSING_INT ? fortran::API::missing_int : val;
 }
 
 /** @defgroup fortransimple Simplified interface for Dballe
@@ -190,11 +190,48 @@ static inline int fromfortran(int val)
 #define MAX_SIMPLE 50
 #define MAX_SESSION 10
 
-FDBA_HANDLE_BODY(simple, MAX_SIMPLE, "Dballe simple sessions")
-FDBA_HANDLE_BODY(session, MAX_SESSION, "Dballe sessions")
+struct HSession : public fortran::HBase
+{
+	DB* db;
 
-#define STATE (FDBA_HANDLE(simple, *handle))
-#define SESSION (FDBA_HANDLE(session, FDBA_HANDLE(simple, *handle).session).session)
+	void start()
+	{
+		fortran::HBase::start();
+		db = new dballe::DB;
+	}
+
+	void stop()
+	{
+		delete db;
+		fortran::HBase::stop();
+	}
+};
+
+struct HSimple : public fortran::HBase
+{
+	fortran::API* api;
+
+	void start()
+	{
+		fortran::HBase::start();
+		api = 0;
+	}
+	void stop()
+	{
+		if (api) delete api;
+		fortran::HBase::stop();
+	}
+};
+
+struct fortran::Handler<HSession, MAX_SESSION> hsess;
+struct fortran::Handler<HSimple, MAX_SIMPLE> hsimp;
+
+// FDBA_HANDLE_BODY(simple, MAX_SIMPLE, "Dballe simple sessions")
+// FDBA_HANDLE_BODY(session, MAX_SESSION, "Dballe sessions")
+
+//#define STATE (simples.get(*handle))
+//#define SESSION (sessions.get(simples.get(*handle).session))
+//FDBA_HANDLE(session, FDBA_HANDLE(simple, *handle).session).session)
 
 static int usage_refcount = 0;
 
@@ -203,9 +240,9 @@ static void lib_init()
 	if (usage_refcount > 0)
 		return;
 
-	dba_init();
-	fdba_handle_init_session();
-	fdba_handle_init_simple();
+	fortran::error_init();
+	hsess.init("DB-All.e database sessions", "MAX_CALLBACKS");
+	hsimp.init("DB-All.e work sessions", "MAX_SIMPLE");
 
 	++usage_refcount;
 }
@@ -262,42 +299,41 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	char s_dsn[50];
 	char s_user[20];
 	char s_password[20];
-	dba_err err;
 
-	/* Import input string parameters */
-	cnfImpn(dsn, dsn_length, 49, s_dsn); s_dsn[49] = 0;
-	cnfImpn(user, user_length, 19, s_user); s_user[19] = 0;
-	cnfImpn(password, password_length, 19, s_password); s_password[19] = 0;
+	try {
+		/* Import input string parameters */
+		cnfImpn(dsn, dsn_length, 49, s_dsn); s_dsn[49] = 0;
+		cnfImpn(user, user_length, 19, s_user); s_user[19] = 0;
+		cnfImpn(password, password_length, 19, s_password); s_password[19] = 0;
 
-	/* Initialize the library if needed */
-	lib_init();
+		/* Initialize the library if needed */
+		lib_init();
 
-	/* Allocate and initialize a new handle */
-	DBA_RUN_OR_RETURN(fdba_handle_alloc_session(dbahandle));
+		/* Allocate and initialize a new handle */
+		*dbahandle = hsess.request();
+		HSession& hs = hsess.get(*dbahandle);
 
-	/* Open the DBALLE session */
+		/* Open the DBALLE session */
 
-	/* If dsn is missing, look in the environment */
-	if (s_dsn[0] == 0)
-	{
-		chosen_dsn = getenv("DBA_DB");
-		if (chosen_dsn == NULL) chosen_dsn = "";
-	} else
-		chosen_dsn = s_dsn;
+		/* If dsn is missing, look in the environment */
+		if (s_dsn[0] == 0)
+		{
+			chosen_dsn = getenv("DBA_DB");
+			if (chosen_dsn == NULL) chosen_dsn = "";
+		} else
+			chosen_dsn = s_dsn;
 
-	/* If dsn looks like a url, treat it accordingly */
-	if (dba_db_is_url(chosen_dsn))
-		DBA_RUN_OR_GOTO(fail, dba_db_create_from_url(chosen_dsn,
-					&(FDBA_HANDLE(session, *dbahandle).session)));
-	else
-		DBA_RUN_OR_GOTO(fail, dba_db_create(chosen_dsn, s_user, s_password,
-					&(FDBA_HANDLE(session, *dbahandle).session)));
+		/* If dsn looks like a url, treat it accordingly */
+		if (DB::is_url(chosen_dsn))
+			hs.db->connect_from_url(chosen_dsn);
+		else
+			hs.db->connect(chosen_dsn, s_user, s_password);
 
-	/* Open the database session */
-	return dba_error_ok();
-
-fail:
-	return err;
+		/* Open the database session */
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
+	}
 }
 
 /**
@@ -310,18 +346,22 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 {
 	GENPTR_INTEGER(dbahandle)
 
-	dba_db_delete(FDBA_HANDLE(session, *dbahandle).session);
-	FDBA_HANDLE(session, *dbahandle).session = NULL;
-	fdba_handle_release_session(*dbahandle);
+	// try {
+		hsess.release(*dbahandle);
 
-	/*
-	dba_shutdown does not exist anymore, but I keep this code commented out
-	here as a placeholder if in the future we'll need to hook actions when the
-	usage refcount goes to 0
+		/*
+		dba_shutdown does not exist anymore, but I keep this code commented out
+		here as a placeholder if in the future we'll need to hook actions when the
+		usage refcount goes to 0
 
-	if (--usage_refcount == 0)
-		dba_shutdown();
-	*/
+		if (--usage_refcount == 0)
+			dba_shutdown();
+		*/
+
+	// 	return fortran::success();
+	// } catch (error& e) {
+	// 	return fortran::error(e);
+	// }
 }
 
 /**
@@ -380,46 +420,32 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 	GENPTR_CHARACTER(anaflag)
 	GENPTR_CHARACTER(dataflag)
 	GENPTR_CHARACTER(attrflag)
-	dba_err err;
 	char c_anaflag[10];
 	char c_dataflag[10];
 	char c_attrflag[10];
-
 	cnfImpn(anaflag, anaflag_length,  10, c_anaflag);
 	cnfImpn(dataflag, dataflag_length,  10, c_dataflag);
 	cnfImpn(attrflag, attrflag_length,  10, c_attrflag);
 
-	/* Check here to warn users of the introduction of idba_presentati */
-	/*
-	if (session == NULL)
-		return dba_error_consistency("idba_presentati should be called before idba_preparati");
-	*/
-
-	/* Allocate and initialize a new handle */
-	DBA_RUN_OR_RETURN(fdba_handle_alloc_simple(handle));
-
-	STATE.session = *dbahandle;
 	try {
-		STATE.api = new DbAPI(FDBA_HANDLE(session, *dbahandle).session, c_anaflag, c_dataflag, c_attrflag);
-	} catch (APIException& e) {
-		err = e.err;
-		goto fail;
+		/* Check here to warn users of the introduction of idba_presentati */
+		/*
+		if (session == NULL)
+			return dba_error_consistency("idba_presentati should be called before idba_preparati");
+		*/
+
+		/* Allocate and initialize a new handle */
+		*handle = hsimp.request();
+		HSession& hs = hsess.get(*dbahandle);
+		HSimple& h = hsimp.get(*handle);
+
+		h.api = new fortran::DbAPI(*hs.db, c_anaflag, c_dataflag, c_attrflag);
+
+		return fortran::success();
+	} catch (error& e) {
+		hsimp.release(*handle);
+		return fortran::error(e);
 	}
-	if (!STATE.api)
-	{
-		err = dba_error_alloc("Allocating a new DbAPI");
-		goto fail;
-	}
-
-	return dba_error_ok();
-
-fail:
-	if (STATE.api != NULL)
-		delete STATE.api;
-
-	fdba_handle_release_simple(*handle);
-
-	return err;
 }
 
 /**
@@ -459,7 +485,6 @@ F77_INTEGER_FUNCTION(idba_messaggi)(
 	GENPTR_CHARACTER(filename)
 	GENPTR_CHARACTER(mode)
 	GENPTR_CHARACTER(type)
-	dba_err err;
 	char c_filename[512];
 	char c_mode[10];
 	char c_type[10];
@@ -468,33 +493,20 @@ F77_INTEGER_FUNCTION(idba_messaggi)(
 	cnfImpn(mode, mode_length,  10, c_mode);
 	cnfImpn(type, type_length,  10, c_type);
 
-	lib_init();
-
-	/* Allocate and initialize a new handle */
-	DBA_RUN_OR_RETURN(fdba_handle_alloc_simple(handle));
-
-	STATE.session = 0;
 	try {
-		STATE.api = new MsgAPI(c_filename, c_mode, c_type);
-	} catch (APIException& e) {
-		err = e.err;
-		goto fail;
+		lib_init();
+
+		*handle = hsimp.request();
+		//HSession& hs = hsess.get(*dbahandle);
+		HSimple& h = hsimp.get(*handle);
+
+		h.api = new fortran::MsgAPI(c_filename, c_mode, c_type);
+
+		return fortran::success();
+	} catch (error& e) {
+		hsimp.release(*handle);
+		return fortran::error(e);
 	}
-	if (!STATE.api)
-	{
-		err = dba_error_alloc("Allocating a new MsgAPI");
-		goto fail;
-	}
-
-	return dba_error_ok();
-
-fail:
-	if (STATE.api != NULL)
-		delete STATE.api;
-
-	fdba_handle_release_simple(*handle);
-
-	return err;
 }
 
 
@@ -508,10 +520,12 @@ F77_INTEGER_FUNCTION(idba_fatto)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
 
-	delete STATE.api;
-	fdba_handle_release_simple(*handle);
-
-	return dba_error_ok();
+	try {
+		hsimp.release(*handle);
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
+	}
 }
 
 /**
@@ -536,14 +550,15 @@ F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(r
 	cnfImpn(repinfofile, repinfofile_length,  PATH_MAX, fname); fname[PATH_MAX - 1] = 0;
 
 	try {
+		HSimple& h = hsimp.get(*handle);
 		if (fname[0] == 0)
-			STATE.api->scopa(0);
+			h.api->scopa(0);
 		else
-			STATE.api->scopa(fname);
+			h.api->scopa(fname);
 
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -581,11 +596,12 @@ F77_INTEGER_FUNCTION(idba_enqi)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
-		*value = STATE.api->enqi(parm);
+		HSimple& h = hsimp.get(*handle);
+		*value = h.api->enqi(parm);
 		tofortran(*value);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -617,12 +633,13 @@ F77_INTEGER_FUNCTION(idba_enqb)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
-		*value = STATE.api->enqb(parm);
-		if (*value == API::missing_byte)
+		HSimple& h = hsimp.get(*handle);
+		*value = h.api->enqb(parm);
+		if (*value == fortran::API::missing_byte)
 			*value = MISSING_BYTE;
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -655,12 +672,13 @@ F77_INTEGER_FUNCTION(idba_enqr)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
-		*value = STATE.api->enqr(parm);
-		if (*value == API::missing_float)
+		HSimple& h = hsimp.get(*handle);
+		*value = h.api->enqr(parm);
+		if (*value == fortran::API::missing_float)
 			*value = MISSING_REAL;
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -692,12 +710,13 @@ F77_INTEGER_FUNCTION(idba_enqd)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
-		*value = STATE.api->enqd(parm);
-		if (*value == API::missing_double)
+		HSimple& h = hsimp.get(*handle);
+		*value = h.api->enqd(parm);
+		if (*value == fortran::API::missing_double)
 			*value = MISSING_DOUBLE;
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -730,7 +749,8 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
-		const char* v = STATE.api->enqc(parm);
+		HSimple& h = hsimp.get(*handle);
+		const char* v = h.api->enqc(parm);
 		if (!v)
 		{
 			if (value_length > 0)
@@ -742,9 +762,9 @@ F77_INTEGER_FUNCTION(idba_enqc)(
 			}
 		} else
 			cnfExprt(v, value, value_length);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -783,16 +803,17 @@ F77_INTEGER_FUNCTION(idba_seti)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
+		HSimple& h = hsimp.get(*handle);
 		if (*value == MISSING_INT)
 		{
 			TRACEMISSING("int");
-			STATE.api->unset(parm);
+			h.api->unset(parm);
 		}
 		else
-			STATE.api->seti(parm, *value);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+			h.api->seti(parm, *value);
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -824,16 +845,17 @@ F77_INTEGER_FUNCTION(idba_setb)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
+		HSimple& h = hsimp.get(*handle);
 		if (*value == MISSING_BYTE)
 		{
 			TRACEMISSING("byte");
-			STATE.api->unset(parm);
+			h.api->unset(parm);
 		}
 		else
-			STATE.api->setb(parm, *value);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+			h.api->setb(parm, *value);
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -866,16 +888,17 @@ F77_INTEGER_FUNCTION(idba_setr)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
+		HSimple& h = hsimp.get(*handle);
 		if (*value == MISSING_REAL)
 		{
 			TRACEMISSING("real");
-			STATE.api->unset(parm);
+			h.api->unset(parm);
 		}
 		else
-			STATE.api->setr(parm, *value);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+			h.api->setr(parm, *value);
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -907,16 +930,17 @@ F77_INTEGER_FUNCTION(idba_setd)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
+		HSimple& h = hsimp.get(*handle);
 		if (*value == MISSING_DOUBLE)
 		{
 			TRACEMISSING("double");
-			STATE.api->unset(parm);
+			h.api->unset(parm);
 		}
 		else
-			STATE.api->setd(parm, *value);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+			h.api->setd(parm, *value);
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -951,16 +975,18 @@ F77_INTEGER_FUNCTION(idba_setc)(
 	cnfImpn(value, value_length, 254, val); val[254] = 0;
 
 	try {
+		HSimple& h = hsimp.get(*handle);
 		if (val[0] == 0)
 		{
 			TRACEMISSING("char");
-			STATE.api->unset(parm);
+			h.api->unset(parm);
 		}
 		else
-			STATE.api->setc(parm, val);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+			h.api->setc(parm, val);
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -977,10 +1003,12 @@ F77_INTEGER_FUNCTION(idba_setcontextana)(
 {
 	GENPTR_INTEGER(handle)
 	try {
-		STATE.api->setcontextana();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		h.api->setcontextana();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1011,12 +1039,14 @@ F77_INTEGER_FUNCTION(idba_enqlevel)(
 	GENPTR_INTEGER(ltype2)
 	GENPTR_INTEGER(l2)
 	try {
-		STATE.api->enqlevel(*ltype1, *l1, *ltype2, *l2);
+		HSimple& h = hsimp.get(*handle);
+		h.api->enqlevel(*ltype1, *l1, *ltype2, *l2);
 		tofortran(*ltype1); tofortran(*l1);
 		tofortran(*ltype2); tofortran(*l2);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1047,12 +1077,14 @@ F77_INTEGER_FUNCTION(idba_setlevel)(
 	GENPTR_INTEGER(ltype2)
 	GENPTR_INTEGER(l2)
 	try {
-		STATE.api->setlevel(
+		HSimple& h = hsimp.get(*handle);
+		h.api->setlevel(
 			fromfortran(*ltype1), fromfortran(*l1),
 			fromfortran(*ltype2), fromfortran(*l2));
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1081,11 +1113,13 @@ F77_INTEGER_FUNCTION(idba_enqtimerange)(
 	GENPTR_INTEGER(p1)
 	GENPTR_INTEGER(p2)
 	try {
-		STATE.api->enqtimerange(*ptype, *p1, *p2);
+		HSimple& h = hsimp.get(*handle);
+		h.api->enqtimerange(*ptype, *p1, *p2);
 		tofortran(*ptype); tofortran(*p1); tofortran(*p2);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1114,11 +1148,13 @@ F77_INTEGER_FUNCTION(idba_settimerange)(
 	GENPTR_INTEGER(p1)
 	GENPTR_INTEGER(p2)
 	try {
-		STATE.api->settimerange(
+		HSimple& h = hsimp.get(*handle);
+		h.api->settimerange(
 			fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2));
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1159,12 +1195,14 @@ F77_INTEGER_FUNCTION(idba_enqdate)(
 	GENPTR_INTEGER(min)
 	GENPTR_INTEGER(sec)
 	try {
-		STATE.api->enqdate(*year, *month, *day, *hour, *min, *sec);
+		HSimple& h = hsimp.get(*handle);
+		h.api->enqdate(*year, *month, *day, *hour, *min, *sec);
 		tofortran(*year), tofortran(*month), tofortran(*day);
 		tofortran(*hour), tofortran(*min), tofortran(*sec);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1205,12 +1243,14 @@ F77_INTEGER_FUNCTION(idba_setdate)(
 	GENPTR_INTEGER(min)
 	GENPTR_INTEGER(sec)
 	try {
-		STATE.api->setdate(
+		HSimple& h = hsimp.get(*handle);
+		h.api->setdate(
 			fromfortran(*year), fromfortran(*month), fromfortran(*day),
 			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1251,12 +1291,14 @@ F77_INTEGER_FUNCTION(idba_setdatemin)(
 	GENPTR_INTEGER(min)
 	GENPTR_INTEGER(sec)
 	try {
-		STATE.api->setdatemin(
+		HSimple& h = hsimp.get(*handle);
+		h.api->setdatemin(
 			fromfortran(*year), fromfortran(*month), fromfortran(*day),
 			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1297,12 +1339,14 @@ F77_INTEGER_FUNCTION(idba_setdatemax)(
 	GENPTR_INTEGER(min)
 	GENPTR_INTEGER(sec)
 	try {
-		STATE.api->setdatemax(
+		HSimple& h = hsimp.get(*handle);
+		h.api->setdatemax(
 			fromfortran(*year), fromfortran(*month), fromfortran(*day),
 			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1333,10 +1377,12 @@ F77_INTEGER_FUNCTION(idba_unset)(
 	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
 	try {
-		STATE.api->unset(parm);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		h.api->unset(parm);
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1351,7 +1397,8 @@ F77_SUBROUTINE(idba_unsetall)(
 {
 	GENPTR_INTEGER(handle)
 
-	STATE.api->unsetall();
+	HSimple& h = hsimp.get(*handle);
+	h.api->unsetall();
 }
 
 /**
@@ -1375,10 +1422,12 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 	GENPTR_INTEGER(count)
 
 	try {
-		*count = STATE.api->quantesono();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		*count = h.api->quantesono();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1399,10 +1448,12 @@ F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 	GENPTR_INTEGER(handle)
 
 	try {
-		STATE.api->elencamele();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		h.api->elencamele();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1426,10 +1477,12 @@ F77_INTEGER_FUNCTION(idba_voglioquesto)(
 	GENPTR_INTEGER(count)
 
 	try {
-		*count = STATE.api->voglioquesto();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		*count = h.api->voglioquesto();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1455,14 +1508,16 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 	GENPTR_CHARACTER(parameter)
 
 	try {
-		const char* res = STATE.api->dammelo();
+		HSimple& h = hsimp.get(*handle);
+		const char* res = h.api->dammelo();
 		if (!res)
 			cnfExprt("", parameter, parameter_length);
 		else
 			cnfExprt(res, parameter, parameter_length);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1489,10 +1544,12 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 {
 	GENPTR_INTEGER(handle)
 	try {
-		STATE.api->prendilo();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		h.api->prendilo();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1511,10 +1568,12 @@ F77_INTEGER_FUNCTION(idba_dimenticami)(
 {
 	GENPTR_INTEGER(handle)
 	try {
-		STATE.api->dimenticami();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		h.api->dimenticami();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1533,10 +1592,12 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 	GENPTR_INTEGER(handle)
 	GENPTR_INTEGER(count)
 	try {
-		*count = STATE.api->voglioancora();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		*count = h.api->voglioancora();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1559,14 +1620,16 @@ F77_INTEGER_FUNCTION(idba_ancora)(
 	GENPTR_CHARACTER(parameter)
 
 	try {
-		const char* res = STATE.api->ancora();
+		HSimple& h = hsimp.get(*handle);
+		const char* res = h.api->ancora();
 		if (!res)
 			cnfExprt("", parameter, parameter_length);
 		else
 			cnfExprt(res, parameter, parameter_length);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1602,10 +1665,12 @@ F77_INTEGER_FUNCTION(idba_critica)(
 	GENPTR_INTEGER(handle)
 
 	try {
-		STATE.api->critica();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		h.api->critica();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1633,10 +1698,12 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 	GENPTR_INTEGER(handle)
 
 	try {
-		STATE.api->scusa();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		h.api->scusa();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1657,11 +1724,13 @@ F77_INTEGER_FUNCTION(idba_spiegal)(
 	GENPTR_CHARACTER(result)
 
 	try {
-		char* res = STATE.api->spiegal(*ltype1, *l1, *ltype2, *l2);
+		HSimple& h = hsimp.get(*handle);
+		const char* res = h.api->spiegal(*ltype1, *l1, *ltype2, *l2);
 		cnfExprt(res, result, result_length);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1680,11 +1749,13 @@ F77_INTEGER_FUNCTION(idba_spiegat)(
 	GENPTR_CHARACTER(result)
 
 	try {
-		char* res = STATE.api->spiegat(*ptype, *p1, *p2);
+		HSimple& h = hsimp.get(*handle);
+		const char* res = h.api->spiegat(*ptype, *p1, *p2);
 		cnfExprt(res, result, result_length);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1707,11 +1778,13 @@ F77_INTEGER_FUNCTION(idba_spiegab)(
 	cnfImpn(value, value_length, 299, s_value); s_value[299] = 0;
 
 	try {
-		char* res = STATE.api->spiegab(s_varcode, s_value);
+		HSimple& h = hsimp.get(*handle);
+		const char* res = h.api->spiegab(s_varcode, s_value);
 		cnfExprt(res, result, result_length);
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 
@@ -1721,10 +1794,12 @@ F77_INTEGER_FUNCTION(idba_test_input_to_output)(
 	GENPTR_INTEGER(handle)
 
 	try {
-		STATE.api->test_input_to_output();
-		return dba_error_ok();
-	} catch (APIException& e) {
-		return e.err;
+		HSimple& h = hsimp.get(*handle);
+		h.api->test_input_to_output();
+
+		return fortran::success();
+	} catch (error& e) {
+		return fortran::error(e);
 	}
 }
 

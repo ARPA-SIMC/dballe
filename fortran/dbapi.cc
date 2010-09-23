@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +18,12 @@
  */
 
 #include "dbapi.h"
-#include <dballe/core/aliases.h>
-#include <dballe/core/verbose.h>
-#include <dballe/db/internals.h>
-#include <cstdlib>
+#include <dballe/db/db.h>
+#include <dballe/db/cursor.h>
+//#include <dballe/core/aliases.h>
+//#include <dballe/core/verbose.h>
+//#include <dballe/db/internals.h>
+//#include <cstdlib>
 
 /*
 #include <f77.h>
@@ -35,12 +35,14 @@
 #include <math.h>
 */
 
+using namespace wreport;
 using namespace std;
 
-namespace dballef {
+namespace dballe {
+namespace fortran {
 
 
-DbAPI::DbAPI(dba_db& db, const char* anaflag, const char* dataflag, const char* attrflag)
+DbAPI::DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag)
 	: db(db), ana_cur(0), query_cur(0)
 {
 	set_permissions(anaflag, dataflag, attrflag);
@@ -48,116 +50,109 @@ DbAPI::DbAPI(dba_db& db, const char* anaflag, const char* dataflag, const char* 
 
 DbAPI::~DbAPI()
 {
-	if (ana_cur)
-		dba_db_cursor_delete(ana_cur);
-	if (query_cur)
-		dba_db_cursor_delete(query_cur);
+	if (ana_cur) delete ana_cur;
+	if (query_cur) delete query_cur;
 }
 
 void DbAPI::scopa(const char* repinfofile)
 {
 	if (!(perms & PERM_DATA_WRITE))
-		checked(dba_error_consistency(
-			"scopa must be run with the database open in data write mode"));
-
-	checked(dba_db_reset(db, repinfofile));
+		error_consistency::throwf(
+			"scopa must be run with the database open in data write mode");
+	db.reset(repinfofile);
 }
 
 int DbAPI::quantesono()
 {
 	if (ana_cur != NULL)
 	{
-		dba_db_cursor_delete(ana_cur);
-		ana_cur = NULL;
+		delete ana_cur;
+		ana_cur = 0;
 	}
+	ana_cur = new db::Cursor(db);
 
+#if 0
 	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
 	{
 		dba_verbose(DBA_VERB_DB_INPUT,
 				"invoking dba_db_ana_query(db, <input>).  <input> is:\n");
 		dba_record_print(input, DBA_VERBOSE_STREAM);
 	}
+#endif
 
-	int count;
-	checked(dba_db_ana_query(db, input, &ana_cur, &count));
-	return count;
+	return ana_cur->query_stations(input);
 }
 
 void DbAPI::elencamele()
 {
 	if (ana_cur == NULL)
-		checked(dba_error_consistency("elencamele called without a previous quantesono"));
+		throw error_consistency("elencamele called without a previous quantesono");
 
-	int has_data;
-	checked(dba_db_cursor_next(ana_cur, &has_data));
-
-	dba_record_clear(output);
-	if (!has_data)
+	output.clear();
+	if (ana_cur->next())
+		ana_cur->to_record(output);
+	else
 	{
-		dba_db_cursor_delete(ana_cur);
+		delete ana_cur;
 		ana_cur = NULL;
-	} else
-		checked(dba_db_cursor_to_record(ana_cur, output));
+	}
 }
 
 int DbAPI::voglioquesto()
 {
 	if (query_cur != NULL)
 	{
-		dba_db_cursor_delete(query_cur);
+		delete query_cur;
 		query_cur = NULL;
 	}
+	query_cur = new db::Cursor(db);
 
+#if 0
 	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
 	{
 		dba_verbose(DBA_VERB_DB_INPUT,
 				"invoking dba_query(db, <input>).  <input> is:\n");
 		dba_record_print(input, DBA_VERBOSE_STREAM);
 	}
+#endif
 
-	int count;
-	checked(dba_db_query(db, input, &query_cur, &count));
-	return count;
+	return query_cur->query_data(input);
 }
 
 const char* DbAPI::dammelo()
 {
 	if (query_cur == NULL)
-		checked(dba_error_consistency("dammelo called without a previous voglioquesto"));
+		throw error_consistency("dammelo called without a previous voglioquesto");
 
 	/* Reset qc record iterator, so that ancora will not return
 	 * leftover QC values from a previous query */
-	qc_iter = 0;
+	qc_iter = -1;
 
-	int has_data;
-	checked(dba_db_cursor_next(query_cur, &has_data));
-	if (!has_data)
+	output.clear();
+	if (query_cur->next())
 	{
-		dba_db_cursor_delete(query_cur);
-		query_cur = NULL;
-		dba_record_clear(output);
-		return 0;
-	} else {
-		dba_record_clear(output);
-		checked(dba_db_cursor_to_record(query_cur, output));
-		const char* varstr;
-		checked(dba_record_key_enqc(output, DBA_KEY_VAR, &varstr));
+		query_cur->to_record(output);
 
 		/* Set context id and variable name on qcinput so that
 		 * attribute functions will refer to the last variable read */
-		checked(dba_record_key_seti(qcinput, DBA_KEY_CONTEXT_ID,
-							query_cur->out_context_id));
-		checked(dba_record_key_setc(qcinput, DBA_KEY_VAR_RELATED, varstr));
+		const char* varstr = output.key_peek_value(DBA_KEY_VAR);
+		qcinput.set(DBA_KEY_CONTEXT_ID, (int)query_cur->out_context_id);
+		qcinput.set(DBA_KEY_VAR_RELATED, varstr);
 		return varstr;
+	} else {
+		delete query_cur;
+		query_cur = NULL;
+		return 0;
 	}
 }
 
 void DbAPI::prendilo()
 {
 	if (perms & PERM_DATA_RO)
-		checked(dba_error_consistency(
-			"idba_prendilo cannot be called with the database open in data readonly mode"));
+		throw error_consistency(
+			"idba_prendilo cannot be called with the database open in data readonly mode");
 
+#if 0
 	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
 	{
 		dba_verbose(DBA_VERB_DB_INPUT,
@@ -166,98 +161,78 @@ void DbAPI::prendilo()
 				perms & PERM_ANA_WRITE ? 1 : 0);
 		dba_record_print(input, DBA_VERBOSE_STREAM);
 	}
+#endif
 
-	int ana_id, context_id;
-	checked(dba_db_insert(
-				db, input,
-				perms & PERM_DATA_WRITE ? 1 : 0,
-				perms & PERM_ANA_WRITE ? 1 : 0,
-				&ana_id, &context_id));
+	db.insert(input, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+	int ana_id = input.key_peek(DBA_KEY_ANA_ID)->enqi();
+	int context_id = input.key_peek(DBA_KEY_CONTEXT_ID)->enqi();
+	// Uncache to prevent confusion on the next insert
+	input.unset(DBA_KEY_ANA_ID);
+	input.unset(DBA_KEY_CONTEXT_ID);
 
 	/* Set the values in the output */
-	checked(dba_record_key_seti(output, DBA_KEY_ANA_ID, ana_id));
-	checked(dba_record_key_seti(output, DBA_KEY_CONTEXT_ID, context_id));
+	output.set(DBA_KEY_ANA_ID, ana_id);
+	output.set(DBA_KEY_CONTEXT_ID, context_id);
 
 	/* Set context id and variable name on qcinput so that
 	 * attribute functions will refer to what has been written */
-	checked(dba_record_key_seti(qcinput, DBA_KEY_CONTEXT_ID, context_id));
+	qcinput.set(DBA_KEY_CONTEXT_ID, context_id);
 
 	/* If there was only one variable in the input, we can pass it on as a
 	 * default for attribute handling routines; otherwise we unset to mark
 	 * the ambiguity */
-	dba_record_cursor cur;
-	dba_var var = NULL;
-	if ((cur = dba_record_iterate_first(input)) != NULL &&
-			dba_record_iterate_next(input, cur) == NULL)
-		var = dba_record_cursor_variable(cur);
-	
-	if (var != NULL)
+	const vector<Var*> vars = input.vars();
+	if (vars.size() == 1)
 	{
-		dba_varcode code = dba_var_code(var);
+		Varcode code = vars[0]->code();
 		char varname[8];
-		snprintf(varname, 7, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
-		checked(dba_record_key_setc(qcinput, DBA_KEY_VAR_RELATED, varname));
+		snprintf(varname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
+		qcinput.set(DBA_KEY_VAR_RELATED, varname);
 	}
 	else
-		checked(dba_record_key_unset(qcinput, DBA_KEY_VAR_RELATED));
+		qcinput.unset(DBA_KEY_VAR_RELATED);
 }
 
 void DbAPI::dimenticami()
 {
 	if (! (perms & PERM_DATA_WRITE))
-		checked(dba_error_consistency(
-			"dimenticami must be called with the database open in data write mode"));
+		throw error_consistency("dimenticami must be called with the database open in data write mode");
 
-	checked(dba_db_remove(db, input));
+	db.remove(input);
 }
 
 int DbAPI::voglioancora()
 {
 	int id_context;
-	dba_varcode id_var;
+	Varcode id_var;
 
 	/* Retrieve the ID of the data to query */
 	get_referred_data_id(&id_context, &id_var);
 
-	dba_varcode* arr = NULL;
-	size_t arr_len = 0;
+	/* Retrieve the varcodes of the wanted QC values */
+	std::vector<wreport::Varcode> arr;
+	read_qc_list(arr);
 
-	try {
-		/* Retrieve the varcodes of the wanted QC values */
-		read_qc_list(&arr, &arr_len);
+	/* Do QC query */
+	int qc_count = db.query_attrs(id_context, id_var, arr, qcoutput);
+	qc_iter = 0;
 
-		/* Do QC query */
-		int qc_count;
-		checked(dba_db_qc_query(db, id_context, id_var, 
-					arr == NULL ? NULL : arr,
-					arr == NULL ? 0 : arr_len,
-					qcoutput, &qc_count));
-		qc_iter = dba_record_iterate_first(qcoutput);
+	clear_qcinput();
 
-		clear_qcinput();
-		free(arr);
-
-		return qc_count;
-	} catch (...) {
-		if (arr != NULL)
-			free(arr);
-		throw;
-	}
+	return qc_count;
 }
 
 void DbAPI::critica()
 {
 	if (perms & PERM_ATTR_RO)
-		checked(dba_error_consistency(
-			"critica cannot be called with the database open in attribute readonly mode"));
+		throw error_consistency(
+			"critica cannot be called with the database open in attribute readonly mode");
 
 	int id_context;
-	dba_varcode id_var;
+	Varcode id_var;
 	get_referred_data_id(&id_context, &id_var);
 
-	checked(dba_db_qc_insert_or_replace(
-				db, id_context, id_var, qcinput,
-				perms & PERM_ATTR_WRITE ? 1 : 0));
+	db.attr_insert_or_replace(id_context, id_var, qcinput, (perms & PERM_ATTR_WRITE) != 0);
 
 	clear_qcinput();
 }
@@ -265,34 +240,24 @@ void DbAPI::critica()
 void DbAPI::scusa()
 {
 	if (! (perms & PERM_ATTR_WRITE))
-		checked(dba_error_consistency(
-			"scusa must be called with the database open in attribute write mode"));
+		throw error_consistency(
+			"scusa must be called with the database open in attribute write mode");
 
 	int id_context;
-	dba_varcode id_var;
+	Varcode id_var;
 	get_referred_data_id(&id_context, &id_var);
 
-	dba_varcode* arr = NULL;
-	size_t arr_len = 0;
-	try {
-		/* Retrieve the varcodes of the wanted QC values */
-		read_qc_list(&arr, &arr_len);
+	/* Retrieve the varcodes of the wanted QC values */
+	std::vector<wreport::Varcode> arr;
+	read_qc_list(arr);
 
-		// If arr is still 0, then dba_qc_delete deletes all QC values
-		checked(dba_db_qc_remove(
-					db, id_context, id_var,
-					arr == NULL ? NULL : arr,
-					arr == NULL ? 0 : arr_len));
+	// If arr is still 0, then dba_qc_delete deletes all QC values
+	db.attr_remove(id_context, id_var, arr);
 
-		clear_qcinput();
-		free(arr);
-	} catch (...) {
-		if (arr != NULL)
-			free(arr);
-		throw;
-	}
+	clear_qcinput();
 }
 
+}
 }
 
 /* vim:set ts=4 sw=4: */

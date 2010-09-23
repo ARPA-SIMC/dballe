@@ -1,6 +1,4 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,24 +18,32 @@
  */
 
 #include "msgapi.h"
+#include <wreport/var.h>
+#include <dballe/core/file.h>
+#include <dballe/msg/msgs.h>
+#include <dballe/msg/msg.h>
+#include <dballe/msg/context.h>
+#include <dballe/msg/codec.h>
+#include <cstring>
+#if 0
 #include <dballe/core/aliases.h>
 #include <dballe/core/verbose.h>
-#include <dballe/bufrex/msg.h>
-#include <dballe/msg/file.h>
 #include <dballe/msg/context.h>
 #include <cstdlib>
-#include <cstring>
 #include <cctype>
 #include <strings.h>
+#endif
 
 
+using namespace wreport;
 using namespace std;
 
-namespace dballef {
+namespace dballe {
+namespace fortran {
 
 
 MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
-	: file(0), state(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
+	: file(0), state(0), importer(0), exporter(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
 		cached_cat(0), cached_subcat(0), cached_lcat(0)
 {
 	if (strchr(mode, 'r') != NULL)
@@ -46,7 +52,7 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 	} else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL) {
 		set_permissions("write", "add", "add");
 	}
-	dba_encoding etype = (dba_encoding)-1;
+	Encoding etype = (Encoding)-1;
 	if (strcasecmp(type, "BUFR") == 0)
 		etype = BUFR;
 	else if (strcasecmp(type, "CREX") == 0)
@@ -54,38 +60,38 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 	else if (strcasecmp(type, "AOF") == 0)
 		etype = AOF;
 	else if (strcasecmp(type, "AUTO") == 0)
-		etype = (dba_encoding)-1;
+		etype = (Encoding)-1;
 	else
-		checked(dba_error_consistency("\"%s\" is not one of the supported message types", type));
+		error_consistency::throwf("\"%s\" is not one of the supported message types", type);
 
-	checked(dba_file_create(etype, fname, mode, &file));
+	file = File::create(etype, fname, mode);
 
 	if (strchr(mode, 'r') != NULL)
+	{
+		importer = msg::Importer::create(etype).release();
 		readNextMessage();
+	}
 }
 
 MsgAPI::~MsgAPI()
 {
 	if (perms & (PERM_DATA_WRITE | PERM_DATA_ADD))
 	{
-		if (wmsg)
-			flushSubset();
-		if (msgs)
-			flushMessage();
+		if (wmsg) flushSubset();
+		if (msgs) flushMessage();
 	} else {
-		if (wmsg)
-			dba_msg_delete(wmsg);
-		if (msgs)
-			dba_msgs_delete(msgs);
+		if (wmsg) delete wmsg;
+		if (msgs) delete msgs;
 	}
-	if (file)
-		dba_file_delete(file);
+	if (file) delete file;
+	if (importer) delete importer;
+	if (exporter) delete exporter;
 }
 
-dba_msg MsgAPI::curmsg()
+Msg* MsgAPI::curmsg()
 {
-	if (msgs && curmsgidx < msgs->len)
-		return msgs->msgs[curmsgidx];
+	if (msgs && curmsgidx < msgs->size())
+		return (*msgs)[curmsgidx];
 	else
 		return NULL;
 }
@@ -95,17 +101,20 @@ bool MsgAPI::readNextMessage()
 	if (state & STATE_EOF)
 		return false;
 
-	int found;
 	state = 0;
 	curmsgidx = 0;
 	if (msgs)
 	{
-		dba_msgs_delete(msgs);
+		delete msgs;
 		msgs = 0;
 	}
-	checked(dba_file_read_msgs(file, &msgs, &found));
-	if (found)
+	Rawmsg raw;
+	if (file->read(raw))
+	{
+		msgs = new Msgs;	
+		importer->from_rawmsg(raw, *msgs);
 		return true;
+	}
 
 	state |= STATE_EOF;
 	return false;
@@ -114,8 +123,8 @@ bool MsgAPI::readNextMessage()
 void MsgAPI::scopa(const char* repinfofile)
 {
 	if (!(perms & PERM_DATA_WRITE))
-		checked(dba_error_consistency(
-			"scopa must be run with the database open in data write mode"));
+		throw error_consistency(
+			"scopa must be run with the database open in data write mode");
 
 	// FIXME: In theory, nothing to do
 	// FIXME: In practice, we could reset all buffered data and ftruncate the file
@@ -135,54 +144,52 @@ int MsgAPI::quantesono()
 void MsgAPI::elencamele()
 {
 	if ((state & STATE_QUANTESONO) == 0)
-		checked(dba_error_consistency("elencamele called without a previous quantesono"));
+		throw error_consistency("elencamele called without a previous quantesono");
 
-	dba_record_clear(output);
+	output.clear();
 
-	dba_msg msg = curmsg();
+	Msg* msg = curmsg();
 	if (!msg) return;
 
-	dba_msg_context ctx = dba_msg_find_context(msg, 257, 0, 0, 0, 0, 0, 0);
+	const msg::Context* ctx = msg->find_context(Level(257), Trange());
 	if (!ctx) return;
 
-	checked(dba_record_set_ana_context(output));
-	checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 0));
-	checked(dba_record_key_setc(output, DBA_KEY_REP_MEMO, dba_msg_repmemo_from_type(msg->type)));
+	output.set_ana_context();
+	output.set(DBA_KEY_MOBILE, 0);
+	output.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg->type));
 
-	for (int l = 0; l < ctx->data_count; ++l)
+	for (size_t l = 0; l < ctx->data.size(); ++l)
 	{
-		dba_var var = ctx->data[l];
-		if (!var) continue;
-		switch (dba_var_code(var))
+		const Var& var = *(ctx->data[l]);
+		switch (var.code())
 		{
-			case DBA_VAR(0, 5,   1): checked(dba_record_key_set(output, DBA_KEY_LAT, var)); break;
-			case DBA_VAR(0, 6,   1): checked(dba_record_key_set(output, DBA_KEY_LON, var)); break;
-			case DBA_VAR(0, 1,  11):
-				checked(dba_record_key_set(output, DBA_KEY_IDENT, var));
-				checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 1));
+			case WR_VAR(0, 5,   1): output.set(DBA_KEY_LAT, var); break;
+			case WR_VAR(0, 6,   1): output.set(DBA_KEY_LON, var); break;
+			case WR_VAR(0, 1,  11):
+				output.set(DBA_KEY_IDENT, var);
+				output.set(DBA_KEY_MOBILE, 1);
 				break;
-			case DBA_VAR(0, 1, 192): checked(dba_record_key_set(output, DBA_KEY_ANA_ID, var)); break;
-			case DBA_VAR(0, 1, 194): checked(dba_record_key_set(output, DBA_KEY_REP_MEMO, var)); break;
-			default:
-				checked(dba_record_var_set_direct(output, var));
+			case WR_VAR(0, 1, 192): output.set(DBA_KEY_ANA_ID, var); break;
+			case WR_VAR(0, 1, 194): output.set(DBA_KEY_REP_MEMO, var); break;
+			default: output.set(var); break;
 		}
 	}
 }
 
 bool MsgAPI::incrementMsgIters()
 {
-	if (iter_ctx == -1)
+	if (iter_ctx < 0)
 	{
 		iter_ctx = 0;
 		iter_var = -1;
 	}
 
-	dba_msg msg = curmsg();
-	if (iter_ctx >= msg->data_count)
+	Msg* msg = curmsg();
+	if ((unsigned)iter_ctx >= msg->data.size())
 		return false;
 
-	dba_msg_context ctx = msg->data[iter_ctx];
-	if (iter_var < ctx->data_count - 1)
+	const msg::Context* ctx = msg->data[iter_ctx];
+	if (iter_var < (int)ctx->data.size() - 1)
 	{
 		++iter_var;
 	} else {
@@ -195,7 +202,7 @@ bool MsgAPI::incrementMsgIters()
 	// 	++iter_l;
 	// 	iter_d = 0;
 	// }
-	if (iter_ctx >= msg->data_count)
+	if ((unsigned)iter_ctx >= msg->data.size())
 		return false;
 
 	return true;
@@ -211,15 +218,15 @@ int MsgAPI::voglioquesto()
 		
 	iter_ctx = iter_var = -1;
 
-	dba_msg msg = curmsg();
+	Msg* msg = curmsg();
 	if (!msg) return 0;
 
 	int count = 0;
-	for (int l = 0; l < msg->data_count; ++l)
+	for (size_t l = 0; l < msg->data.size(); ++l)
 	{
-		dba_msg_context ctx = msg->data[l];
+		const msg::Context* ctx = msg->data[l];
 		//if (level->ltype1 == 257) continue;
-		count += ctx->data_count;
+		count += ctx->data.size();
 	}
 	return count;
 }
@@ -227,77 +234,75 @@ int MsgAPI::voglioquesto()
 const char* MsgAPI::dammelo()
 {
 	if ((state & STATE_VOGLIOQUESTO) == 0)
-		checked(dba_error_consistency("dammelo called without a previous voglioquesto"));
+		throw error_consistency("dammelo called without a previous voglioquesto");
 
-	dba_record_clear(output);
+	output.clear();
 
-	dba_msg msg = curmsg();
+	Msg* msg = curmsg();
 	if (!msg) return 0;
 
 	if (!incrementMsgIters())
 		return 0;
 
 	// Set metainfo from msg ana layer
-	if (dba_msg_context ctx = dba_msg_find_context(msg, 257, 0, 0, 0, 0, 0, 0))
+	if (const msg::Context* ctx = msg->find_context(Level(257), Trange()))
 	{
-		checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 0));
-		checked(dba_record_key_setc(output, DBA_KEY_REP_MEMO, dba_msg_repmemo_from_type(msg->type)));
+		output.set(DBA_KEY_MOBILE, 0);
+		output.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg->type));
 
-		for (int l = 0; l < ctx->data_count; ++l)
+		for (size_t l = 0; l < ctx->data.size(); ++l)
 		{
-			dba_var var = ctx->data[l];
-			if (!var) continue;
-			switch (dba_var_code(var))
+			const Var& var = *(ctx->data[l]);
+			switch (var.code())
 			{
-				case DBA_VAR(0, 5,   1): checked(dba_record_key_set(output, DBA_KEY_LAT, var)); break;
-				case DBA_VAR(0, 6,   1): checked(dba_record_key_set(output, DBA_KEY_LON, var)); break;
-				case DBA_VAR(0, 4,   1): checked(dba_record_key_set(output, DBA_KEY_YEAR, var)); break;
-				case DBA_VAR(0, 4,   2): checked(dba_record_key_set(output, DBA_KEY_MONTH, var)); break;
-				case DBA_VAR(0, 4,   3): checked(dba_record_key_set(output, DBA_KEY_DAY, var)); break;
-				case DBA_VAR(0, 4,   4): checked(dba_record_key_set(output, DBA_KEY_HOUR, var)); break;
-				case DBA_VAR(0, 4,   5): checked(dba_record_key_set(output, DBA_KEY_MIN, var)); break;
-				case DBA_VAR(0, 4,   6): checked(dba_record_key_set(output, DBA_KEY_SEC, var)); break;
-				case DBA_VAR(0, 1,  11):
-					checked(dba_record_key_set(output, DBA_KEY_IDENT, var));
-					checked(dba_record_key_seti(output, DBA_KEY_MOBILE, 1));
+				case WR_VAR(0, 5,   1): output.set(DBA_KEY_LAT, var); break;
+				case WR_VAR(0, 6,   1): output.set(DBA_KEY_LON, var); break;
+				case WR_VAR(0, 4,   1): output.set(DBA_KEY_YEAR, var); break;
+				case WR_VAR(0, 4,   2): output.set(DBA_KEY_MONTH, var); break;
+				case WR_VAR(0, 4,   3): output.set(DBA_KEY_DAY, var); break;
+				case WR_VAR(0, 4,   4): output.set(DBA_KEY_HOUR, var); break;
+				case WR_VAR(0, 4,   5): output.set(DBA_KEY_MIN, var); break;
+				case WR_VAR(0, 4,   6): output.set(DBA_KEY_SEC, var); break;
+				case WR_VAR(0, 1,  11):
+					output.set(DBA_KEY_IDENT, var);
+					output.set(DBA_KEY_MOBILE, 1);
 					break;
-				case DBA_VAR(0, 1, 192): checked(dba_record_key_set(output, DBA_KEY_ANA_ID, var)); break;
-				case DBA_VAR(0, 1, 194): checked(dba_record_key_set(output, DBA_KEY_REP_MEMO, var)); break;
-				default:
-					checked(dba_record_var_set_direct(output, var));
+				case WR_VAR(0, 1, 192): output.set(DBA_KEY_ANA_ID, var); break;
+				case WR_VAR(0, 1, 194): output.set(DBA_KEY_REP_MEMO, var); break;
+				default: output.set(var); break;
 			}
 		}
 	}
 
-	dba_msg_context ctx = msg->data[iter_ctx];
-	checked(dba_record_key_seti(output, DBA_KEY_LEVELTYPE1, ctx->ltype1));
-	checked(dba_record_key_seti(output, DBA_KEY_L1, ctx->l1));
-	checked(dba_record_key_seti(output, DBA_KEY_LEVELTYPE2, ctx->ltype2));
-	checked(dba_record_key_seti(output, DBA_KEY_L2, ctx->l2));
-	checked(dba_record_key_seti(output, DBA_KEY_PINDICATOR, ctx->pind));
-	checked(dba_record_key_seti(output, DBA_KEY_P1, ctx->p1));
-	checked(dba_record_key_seti(output, DBA_KEY_P2, ctx->p2));
+	msg::Context* ctx = msg->data[iter_ctx];
+	output.set(DBA_KEY_LEVELTYPE1, ctx->level.ltype1);
+	output.set(DBA_KEY_L1, ctx->level.l1);
+	output.set(DBA_KEY_LEVELTYPE2, ctx->level.ltype2);
+	output.set(DBA_KEY_L2, ctx->level.l2);
+	output.set(DBA_KEY_PINDICATOR, ctx->trange.pind);
+	output.set(DBA_KEY_P1, ctx->trange.p1);
+	output.set(DBA_KEY_P2, ctx->trange.p2);
 
-	dba_var var = ctx->data[iter_var];
+	const Var& var = *ctx->data[iter_var];
 
 	char vname[10];
-	dba_varcode code = dba_var_code(var);
-	snprintf(vname, 10, "B%02d%03d", DBA_VAR_X(code), DBA_VAR_Y(code));
-	checked(dba_record_key_setc(output, DBA_KEY_VAR, vname));
-	const char* res;
-	checked(dba_record_key_enqc(output, DBA_KEY_VAR, &res));
+	Varcode code = var.code();
+	snprintf(vname, 10, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
+	output.set(DBA_KEY_VAR, vname);
+	output.set(var);
 
-	checked(dba_record_var_set_direct(output, var));
-
-	return res;
+	// Return the pointer to the copy inside the output record. We cannot
+	// return vname as it is in the local stack
+	return output.key_peek_value(DBA_KEY_VAR);
 }
 
 void MsgAPI::flushSubset()
 {
 	if (wmsg)
 	{
-		checked(dba_msgs_append_acquire(msgs, wmsg));
+		auto_ptr<Msg> awmsg(wmsg);
 		wmsg = 0;
+		msgs->acquire(awmsg);
 		wvar = 0;
 	}
 }
@@ -307,8 +312,16 @@ void MsgAPI::flushMessage()
 	if (msgs)
 	{
 		flushSubset();
-		checked(dba_file_write_msgs(file, msgs, cached_cat, cached_subcat, cached_lcat));
-		dba_msgs_delete(msgs);
+		Rawmsg raw;
+		if (exporter == 0)
+		{
+			msg::Exporter::Options opts;
+			opts.template_name = exporter_template;
+			exporter = msg::Exporter::create(file->type(), opts).release();
+		}
+		exporter->to_rawmsg(*msgs, raw);
+		file->write(raw);
+		delete msgs;
 		msgs = 0;
 	}
 }
@@ -316,82 +329,61 @@ void MsgAPI::flushMessage()
 void MsgAPI::prendilo()
 {
 	if (perms & PERM_DATA_RO)
-		checked(dba_error_consistency(
-			"prendilo cannot be called with the file open in read mode"));
+		error_consistency("prendilo cannot be called with the file open in read mode");
 
-	if (!msgs)
-		checked(dba_msgs_create(&msgs));
-	if (!wmsg)
-		checked(dba_msg_create(&wmsg));
+	if (!msgs) msgs = new Msgs;
+	if (!wmsg) wmsg = new Msg;
 
 	// Store record metainfo
-	const char* sval;
-	int ival, found;
-	double dval;
-	checked(dba_record_key_enqc(input, DBA_KEY_REP_MEMO, &sval));
-	if (sval) 
+	if (const char* sval = input.key_peek_value(DBA_KEY_REP_MEMO))
 	{
-		checked(dba_msg_set_rep_memo(wmsg, sval, -1));
-		wmsg->type = dba_msg_type_from_repmemo(sval);
+		wmsg->set_rep_memo(sval);
+		wmsg->type = Msg::type_from_repmemo(sval);
 	}
-	checked(dba_record_key_enqi(input, DBA_KEY_ANA_ID, &ival, &found));
-	if (found) checked(dba_msg_seti(wmsg, DBA_VAR(0, 1, 192), ival, -1, 257, 0, 0, 0, 0, 0, 0));
-	checked(dba_record_key_enqc(input, DBA_KEY_IDENT, &sval));
-	if (sval) checked(dba_msg_set_ident(wmsg, sval, -1));
-	checked(dba_record_key_enqd(input, DBA_KEY_LAT, &dval, &found));
-	if (found) checked(dba_msg_set_latitude(wmsg, dval, -1));
-	checked(dba_record_key_enqd(input, DBA_KEY_LON, &dval, &found));
-	if (found) checked(dba_msg_set_longitude(wmsg, dval, -1));
-	checked(dba_record_key_enqi(input, DBA_KEY_YEAR, &ival, &found));
-	if (found) checked(dba_msg_set_year(wmsg, ival, -1));
-	checked(dba_record_key_enqi(input, DBA_KEY_MONTH, &ival, &found));
-	if (found) checked(dba_msg_set_month(wmsg, ival, -1));
-	checked(dba_record_key_enqi(input, DBA_KEY_DAY, &ival, &found));
-	if (found) checked(dba_msg_set_day(wmsg, ival, -1));
-	checked(dba_record_key_enqi(input, DBA_KEY_HOUR, &ival, &found));
-	if (found) checked(dba_msg_set_hour(wmsg, ival, -1));
-	checked(dba_record_key_enqi(input, DBA_KEY_MIN, &ival, &found));
-	if (found) checked(dba_msg_set_minute(wmsg, ival, -1));
-	checked(dba_record_key_enqi(input, DBA_KEY_SEC, &ival, &found));
-	if (found) checked(dba_msg_set_second(wmsg, ival, -1));
+	if (const Var* var = input.key_peek(DBA_KEY_ANA_ID))
+		wmsg->seti(WR_VAR(0, 1, 192), var->enqi(), -1, Level(257), Trange());
+	if (const Var* var = input.key_peek(DBA_KEY_IDENT))
+		wmsg->set_ident(var->enqc());
+	if (const Var* var = input.key_peek(DBA_KEY_LAT))
+		wmsg->set_latitude(var->enqd());
+	if (const Var* var = input.key_peek(DBA_KEY_LON))
+		wmsg->set_longitude(var->enqd());
+	if (const Var* var = input.key_peek(DBA_KEY_YEAR))
+		wmsg->set_year(var->enqi());
+	if (const Var* var = input.key_peek(DBA_KEY_MONTH))
+		wmsg->set_month(var->enqi());
+	if (const Var* var = input.key_peek(DBA_KEY_DAY))
+		wmsg->set_day(var->enqi());
+	if (const Var* var = input.key_peek(DBA_KEY_HOUR))
+		wmsg->set_hour(var->enqi());
+	if (const Var* var = input.key_peek(DBA_KEY_MIN))
+		wmsg->set_minute(var->enqi());
+	if (const Var* var = input.key_peek(DBA_KEY_SEC))
+		wmsg->set_second(var->enqi());
 
-	if (dba_record_cursor c = dba_record_iterate_first(input))
+	const vector<Var*>& vars = input.vars();
+	if (!vars.empty())
 	{
-		int ltype1, l1, ltype2, l2, pind, p1, p2;
-		checked(dba_record_key_enqi(input, DBA_KEY_LEVELTYPE1, &ltype1, &found));
-		if (!found) checked(dba_error_consistency("leveltype1 is not set"));
-		checked(dba_record_key_enqi(input, DBA_KEY_L1, &l1, &found));
-		if (!found) checked(dba_error_consistency("l1 is not set"));
-		checked(dba_record_key_enqi(input, DBA_KEY_LEVELTYPE2, &ltype2, &found));
-		if (!found) ltype2 = 0;
-		checked(dba_record_key_enqi(input, DBA_KEY_L2, &l2, &found));
-		if (!found) l2 = 0;
-		checked(dba_record_key_enqi(input, DBA_KEY_PINDICATOR, &pind, &found));
-		if (!found) checked(dba_error_consistency("pindicator is not set"));
-		checked(dba_record_key_enqi(input, DBA_KEY_P1, &p1, &found));
-		if (!found) checked(dba_error_consistency("p1 is not set"));
-		checked(dba_record_key_enqi(input, DBA_KEY_P2, &p2, &found));
-		if (!found) checked(dba_error_consistency("p2 is not set"));
+		Level lev;
+		Trange tr;
+
+		if (const Var* var = input.key_peek(DBA_KEY_LEVELTYPE1)) lev.ltype1 = var->enqi();
+		if (const Var* var = input.key_peek(DBA_KEY_L1)) lev.l1 = var->enqi();
+		if (const Var* var = input.key_peek(DBA_KEY_LEVELTYPE2)) lev.ltype2 = var->enqi();
+		if (const Var* var = input.key_peek(DBA_KEY_L2)) lev.l2 = var->enqi();
+		if (const Var* var = input.key_peek(DBA_KEY_PINDICATOR)) tr.pind = var->enqi();
+		if (const Var* var = input.key_peek(DBA_KEY_P1)) tr.p1 = var->enqi();
+		if (const Var* var = input.key_peek(DBA_KEY_P2)) tr.p2 = var->enqi();
 		
-		for ( ; c; c = dba_record_iterate_next(input, c))
+		for (vector<Var*>::const_iterator v = vars.begin(); v != vars.end(); ++v)
 		{
-			dba_var v;
-			checked(dba_var_copy(dba_record_cursor_variable(c), &v));
-			// FIXME: if the next one throws, we leak v
-			checked(dba_msg_set_nocopy(wmsg, v, ltype1, l1, ltype2, l2, pind, p1, p2));
-			if (last_set_code != 0)
-			{
-				if (dba_var_code(v) == last_set_code)
-					wvar = v;
-			}
-			else
-				wvar = v;
+			wmsg->set(**v, (*v)->code(), lev, tr);
+			if (last_set_code == 0 || (*v)->code() == last_set_code)
+				wvar = *v;
 		}
 	}
 
-	const char* query;
-	checked(dba_record_key_enqc(input, DBA_KEY_QUERY, &query));
-	if (query != NULL)
+	if (const char* query = input.key_peek_value(DBA_KEY_QUERY))
 	{
 		if (strcasecmp(query, "subset") == 0)
 		{
@@ -400,56 +392,56 @@ void MsgAPI::prendilo()
 			// Check that message is followed by spaces or end of string
 			const char* s = query + 7;
 			if (*s != 0 && !isblank(*s))
-				checked(dba_error_consistency("Query type \"%s\" is not among the supported values", query));
+				error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
 			// Skip the spaces after message
 			while (*s != 0 && isblank(*s))
 				++s;
 
-			if (*s)
-				// If a template is specified, open a new message with that template
-				checked(bufrex_msg_parse_template(s, &cached_cat, &cached_subcat, &cached_lcat));
-			else
-				// Else, open a new message with template guessing
-				cached_cat = cached_subcat = cached_lcat = 0;
+			// Set or reset the exporter template
+			if (exporter_template != s)
+			{
+				// If it has changed, we need to recreate the exporter
+				delete exporter;
+				exporter = 0;
+				exporter_template = s;
+			}
 
 			flushMessage();
 		} else
-			checked(dba_error_consistency("Query type \"%s\" is not among the supported values", query));
+			error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
 
 		// Uset query after using it: it needs to be explicitly set every time
-		checked(dba_record_key_unset(input, DBA_KEY_QUERY));
+		input.unset(DBA_KEY_QUERY);
 	}
 }
 
 void MsgAPI::dimenticami()
 {
-	checked(dba_error_consistency(
-		"dimenticami does not make sense when writing messages"));
+	throw error_consistency("dimenticami does not make sense when writing messages");
 }
 
 int MsgAPI::voglioancora()
 {
-	dba_msg msg = curmsg();
-	if (msg == 0 || iter_ctx == -1 || iter_var == -1)
-		checked(dba_error_consistency("voglioancora called before dammelo"));
+	Msg* msg = curmsg();
+	if (msg == 0 || iter_ctx < 0 || iter_var < 0)
+		throw error_consistency("voglioancora called before dammelo");
 
-	if (iter_ctx >= msg->data_count) return 0;
-	dba_msg_context ctx = msg->data[iter_ctx];
+	if ((unsigned)iter_ctx >= msg->data.size()) return 0;
+	const msg::Context& ctx = *(msg->data[iter_ctx]);
 
-	if (iter_var >= ctx->data_count) return 0;
-	dba_var var = ctx->data[iter_var];
-	if (!var) return 0;
+	if ((unsigned)iter_var >= ctx.data.size()) return 0;
+	const Var& var = *(ctx.data[iter_var]);
 
-	dba_record_clear(qcoutput);
+	qcoutput.clear();
 
 	int count = 0;
-	for (dba_var_attr_iterator i = dba_var_attr_iterate(var); i; i = dba_var_attr_iterator_next(i))
+	for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
 	{
-		dba_record_var_set_direct(qcoutput, dba_var_attr_iterator_attr(i));
+		qcoutput.set(*attr);
 		++count;
 	}
 
-	qc_iter = dba_record_iterate_first(qcoutput);
+	qc_iter = 0;
 
 	return count;
 }
@@ -457,25 +449,24 @@ int MsgAPI::voglioancora()
 void MsgAPI::critica()
 {
 	if (perms & PERM_ATTR_RO)
-		checked(dba_error_consistency(
-			"critica cannot be called with the database open in attribute readonly mode"));
+		throw error_consistency(
+			"critica cannot be called with the database open in attribute readonly mode");
 	if (wvar == 0)
-		checked(dba_error_consistency(
-			"critica has been called without a previous prendilo"));
+		throw error_consistency("critica has been called without a previous prendilo");
 
-	for (dba_record_cursor c = dba_record_iterate_first(qcinput);
-			c; c = dba_record_iterate_next(qcinput, c))
-		checked(dba_var_seta(wvar, dba_record_cursor_variable(c)));
+	const vector<Var*>& vars = qcinput.vars();
+	for (vector<Var*>::const_iterator i = vars.begin(); i != vars.end(); ++i)
+		wvar->seta(**i);
 
-	dba_record_clear(qcinput);
+	qcinput.clear();
 }
 
 void MsgAPI::scusa()
 {
-	checked(dba_error_consistency(
-		"scusa does not make sense when writing messages"));
+	throw error_consistency("scusa does not make sense when writing messages");
 }
 
+}
 }
 
 /* vim:set ts=4 sw=4: */

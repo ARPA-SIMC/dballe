@@ -1,9 +1,7 @@
-#ifndef FDBA_COMMONAPI_H
-#define FDBA_COMMONAPI_H
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * fortran/commonapi - Common parts of all Fortran API implementations
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,32 +19,14 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#ifndef FDBA_COMMONAPI_H
+#define FDBA_COMMONAPI_H
+
 #include "simple.h"
 #include <dballe/core/record.h>
-#include <dballe/core/error.h>
 
-namespace dballef
-{
-
-/**
- * Simplified way to convey a DB-All.e error status as an exception
- */
-struct APIException
-{
-	dba_err err;
-	APIException(dba_err err) : err(err) {}
-};
-
-/**
- * Turn DB-All.e error codes into exceptions
- */
-inline void checked(dba_err err)
-{
-	if (err != DBA_OK)
-		throw APIException(err);
-}
-
-
+namespace dballe {
+namespace fortran {
 
 /**
  * Common implementation of the set* and enq* machinery using input and output
@@ -67,16 +47,17 @@ protected:
 	};
 
 	int perms;
-	dba_record input;
-	dba_record output;
-	dba_record qcinput;
-	dba_record qcoutput;
-	dba_record_cursor qc_iter;
+	Record input;
+	Record output;
+	Record qcinput;
+	Record qcoutput;
+	int qc_iter;
 	int qc_count;
-	dba_varcode last_set_code;
+	// Varcode of the last variable set with set* functions
+	wreport::Varcode last_set_code;
 	// Last string returned by one of the spiega* functions, held here so
 	// that we can deallocate it when needed.
-	char* cached_spiega;
+	std::string cached_spiega;
 
 	/**
 	 * Set the permission bits, parsing the flags and doing consistency checks
@@ -87,22 +68,22 @@ protected:
 	 * Choose the input record to use for param.  Also, adjust param to remove
 	 * a leading '*' if present.
 	 */
-	dba_record choose_input_record(const char*& param);
+	Record& choose_input_record(const char*& param);
 
 	/**
 	 * Choose the output record to use for param.  Also, adjust param to remove
 	 * a leading '*' if present.
 	 */
-	dba_record choose_output_record(const char*& param);
+	Record& choose_output_record(const char*& param);
 
 	/**
 	 * Look for the ID of the data which a critica or scusa operation are
 	 * supposed to operate on.
 	 */
-	void get_referred_data_id(int* id_context, dba_varcode* id_var) const;
+	void get_referred_data_id(int* id_context, wreport::Varcode* id_var) const;
 
 	/// Reads the list of QC values to operate on, for dba_voglioancora and dba_scusa
-	void read_qc_list(dba_varcode** res_arr, size_t* res_len) const;
+	void read_qc_list(std::vector<wreport::Varcode>& res_arr) const;
 
 	/**
 	 * Clear the qcinput record preserving DBA_KEY_CONTEXT_ID and
@@ -145,14 +126,15 @@ public:
 	virtual void unset(const char* param);
 	virtual void unsetall();
 
-	virtual char* spiegal(int ltype1, int l1, int ltype2, int l2);
-	virtual char* spiegat(int ptype, int p1, int p2);
-	virtual char* spiegab(const char* varcode, const char* value);
+	virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2);
+	virtual const char* spiegat(int ptype, int p1, int p2);
+	virtual const char* spiegab(const char* varcode, const char* value);
 
 
 	virtual const char* ancora();
 };
 
+}
 }
 
 /* vim:set ts=4 sw=4: */

@@ -1,6 +1,3 @@
-#ifndef FDBA_DBAPI_H
-#define FDBA_DBAPI_H
-
 /*
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -20,47 +17,27 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "commonapi.h"
+#ifndef FDBA_ERROR_H
+#define FDBA_ERROR_H
+
+#include <wreport/error.h>
 
 namespace dballe {
 struct DB;
 
-namespace db {
-struct Cursor;
-}
-
 namespace fortran {
+struct API;
 
-class DbAPI : public CommonAPIImplementation
-{
-protected:
-	DB& db;
-	db::Cursor* ana_cur;
-	db::Cursor* query_cur;
+/// Initialise error handlers
+void error_init();
 
-public:
-	DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag);
-	virtual ~DbAPI();
+/// Digest an exception turning it into a fortran API result code
+int error(wreport::error& e);
 
-	virtual void scopa(const char* repinfofile = 0);
-
-	virtual int quantesono();
-	virtual void elencamele();
-
-	virtual int voglioquesto();
-	virtual const char* dammelo();
-
-	virtual void prendilo();
-	virtual void dimenticami();
-
-	virtual int voglioancora();
-
-	virtual void critica();
-	virtual void scusa();
-};
+/// Return a success code, updating the error information accordingly
+int success();
 
 }
 }
 
-/* vim:set ts=4 sw=4: */
 #endif

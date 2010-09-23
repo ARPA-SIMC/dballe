@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +17,6 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/error.h>
-
-extern "C" {
-#include <f77.h>
-}
-
-#include <stdint.h>
-
-#include "handles.h"
-
-extern "C" {
-
 /** @file
  * @ingroup fortranfull
  * Error inspection functions for Dballe.
@@ -38,9 +24,85 @@ extern "C" {
  * These funtions closely wrap the Dballe functions in dba_error.h
  */
 
+#include "handles.h"
+#include <wreport/error.h>
+#include <stdint.h>
+#include <cstring>
+#include <cstdio>
+
+extern "C" {
+#include <f77.h>
+}
+
 #define MAX_CALLBACKS 50
 
-FDBA_HANDLE_BODY(errcb, MAX_CALLBACKS, "Error handling callbacks")
+using namespace wreport;
+
+namespace {
+typedef void (*fdba_error_callback)(INTEGER(data));
+
+struct HErrcb : public dballe::fortran::HBase
+{
+	ErrorCode error;
+	fdba_error_callback cb;
+	int data;
+
+	void start() {}
+	void stop() {}
+
+	// Check if this callback should be triggered by this error code
+	// If it should, invoke the callback
+	void check_invoke(ErrorCode code)
+	{
+		if (error == 0 || error == code)
+			cb(&data);
+	}
+};
+
+struct dballe::fortran::Handler<HErrcb, MAX_CALLBACKS> herr;
+
+static ErrorCode last_err_code = WR_ERR_NONE;
+static char last_err_msg[1024];
+
+}
+
+namespace dballe {
+namespace fortran {
+
+void error_init()
+{
+	herr.init("Error Handling", "MAX_CALLBACKS");
+}
+
+int error(wreport::error& e)
+{
+	last_err_code = e.code();
+	strncpy(last_err_msg, e.what(), 1024);
+	size_t todo = herr.in_use;
+	for (int i = 0; todo && i < MAX_CALLBACKS; ++i)
+		if (herr.records[i].used)
+		{
+			herr.records[i].check_invoke(last_err_code);
+			--todo;
+		}
+	return 1;
+}
+
+int success()
+{
+	last_err_code = WR_ERR_NONE;
+	last_err_msg[0] = 0;
+	return 0;
+}
+
+}
+}
+
+using namespace dballe;
+
+extern "C" {
+
+// FDBA_HANDLE_BODY(errcb, MAX_CALLBACKS, "Error handling callbacks")
 
 
 /**
@@ -54,7 +116,7 @@ FDBA_HANDLE_BODY(errcb, MAX_CALLBACKS, "Error handling callbacks")
  */
 F77_INTEGER_FUNCTION(idba_error_code)()
 {
-	return dba_error_get_code();
+	return last_err_code;
 }
 
 /**
@@ -73,9 +135,7 @@ F77_INTEGER_FUNCTION(idba_error_code)()
 F77_SUBROUTINE(idba_error_message)(CHARACTER(message) TRAIL(message))
 {
 	GENPTR_CHARACTER(message)
-	const char* msg = dba_error_get_message();
-
-	cnfExprt(msg, message, message_length);
+	cnfExprt(last_err_msg, message, message_length);
 }
 
 /**
@@ -92,9 +152,7 @@ F77_SUBROUTINE(idba_error_message)(CHARACTER(message) TRAIL(message))
 F77_SUBROUTINE(idba_error_context)(CHARACTER(message) TRAIL(message))
 {
 	GENPTR_CHARACTER(message)
-	const char* msg = dba_error_get_context();
-
-	cnfExprt(msg, message, message_length);
+	cnfExprt("", message, message_length);
 }
 
 /**
@@ -113,21 +171,7 @@ F77_SUBROUTINE(idba_error_context)(CHARACTER(message) TRAIL(message))
 F77_SUBROUTINE(idba_error_details)(CHARACTER(message) TRAIL(message))
 {
 	GENPTR_CHARACTER(message)
-	const char* msg = dba_error_get_details();
-
-	if (msg != NULL)
-		cnfExprt(msg, message, message_length);
-	else
-		cnfExprt("", message, message_length);
-}
-
-#define CBDATA (FDBA_HANDLE(errcb, *handle))
-
-void fdba_error_callback_invoker(void* data)
-{
-	int ihandle = (int)(uintptr_t)data;
-	int* handle = &ihandle;
-	CBDATA.cb(INTEGER_ARG(&(CBDATA.data)));
+	cnfExprt("", message, message_length);
 }
 
 /**
@@ -158,13 +202,12 @@ F77_INTEGER_FUNCTION(idba_error_set_callback)(
 	GENPTR_INTEGER(data)
 	GENPTR_INTEGER(handle)
 
-	DBA_RUN_OR_RETURN(fdba_handle_alloc_errcb(handle));
-	CBDATA.error = *code;
-	CBDATA.cb = (fdba_error_callback)func;
-	CBDATA.data = *data;
-
-	dba_error_set_callback((dba_err_code)*code, fdba_error_callback_invoker, (void*)(uintptr_t)*handle);
-	return dba_error_ok();
+	*handle = herr.request();
+	HErrcb& h = herr.get(*handle);
+	h.error = (ErrorCode)*code;
+	h.cb = (fdba_error_callback)func;
+	h.data = *data;
+	return fortran::success();
 }
 
 /**
@@ -178,9 +221,9 @@ F77_INTEGER_FUNCTION(idba_error_set_callback)(
 F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
 {
 	GENPTR_INTEGER(handle)
-	dba_error_remove_callback((dba_err_code)CBDATA.error, fdba_error_callback_invoker, (void*)(uintptr_t)CBDATA.data);
-	fdba_handle_release_errcb(*handle);
-	return dba_error_ok();
+	
+	herr.release(*handle);
+	return fortran::success();
 }
 
 /**
@@ -192,14 +235,14 @@ F77_INTEGER_FUNCTION(idba_default_error_handler)(INTEGER(debug))
 {
 	GENPTR_INTEGER(debug)
 	if (*debug)
-		dba_error_print_to_stderr();
+		fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
 	exit(1);
 }
 F77_INTEGER_FUNCTION(idba_default_error_handle)(INTEGER(debug))
 {
 	GENPTR_INTEGER(debug)
 	if (*debug)
-		dba_error_print_to_stderr();
+		fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
 	exit(1);
 }
 /**
@@ -210,15 +253,12 @@ F77_INTEGER_FUNCTION(idba_default_error_handle)(INTEGER(debug))
 F77_INTEGER_FUNCTION(idba_error_handle_tolerating_overflows)(INTEGER(debug))
 {
 	GENPTR_INTEGER(debug)
-	int is_fatal = (dba_error_get_code() != DBA_ERR_NOTFOUND);
-	if (*debug)
+	if (last_err_code != WR_ERR_NOTFOUND);
 	{
-		if (!is_fatal)
-			fprintf(stderr, "Warning: ");
-		dba_error_print_to_stderr();
-	}
-	if (is_fatal)
+		if (*debug)
+			fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
 		exit(1);
+	}
 	return 0;
 }
 

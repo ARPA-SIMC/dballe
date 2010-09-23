@@ -2,9 +2,9 @@
 #define FDBA_SIMPLE_H
 
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * fortran/simple - Interface for Fortran API implementations
  *
- * Copyright (C) 2005--2008  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-namespace dballef
-{
+namespace dballe {
+namespace fortran {
 
 struct API
 {
@@ -585,16 +585,17 @@ struct API
 
 	/*@}*/
 
-	virtual char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
+	virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
 
-	virtual char* spiegat(int ptype, int p1, int p2) = 0;
+	virtual const char* spiegat(int ptype, int p1, int p2) = 0;
 
-	virtual char* spiegab(const char* varcode, const char* value) = 0;
+	virtual const char* spiegab(const char* varcode, const char* value) = 0;
 
 	// Function used for test purposes only
 	virtual void test_input_to_output() = 0;
 };
 
+}
 }
 
 /* vim:set ts=4 sw=4: */

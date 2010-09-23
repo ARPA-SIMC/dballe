@@ -471,10 +471,8 @@ static struct program_info proginfo = {
 int main (int argc, const char* argv[])
 {
 	int res;
-	dba_init();
 	init();
 	res = dba_cmdline_dispatch_main(&proginfo, &dbatbl, argc, argv);
-	dba_shutdown();
 	return res;
 }
 
