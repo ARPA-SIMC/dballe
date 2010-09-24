@@ -4,31 +4,131 @@
 %include "stl.i"
 %include "typemaps.i"
 %include "exception.i"
-%include "../doc/dballe-doc.i"
+%include "std_string.i"
+%include "std_vector.i"
+// %include "../doc/dballe-doc.i"
 
 %exception {
-	try { $action }
-	catch (std::exception& e)
+        try { $action }
+        catch (std::exception& e)
         {
                 SWIG_exception(SWIG_RuntimeError, e.what());
         }
 }
 
 %{
-#include <dballe++/db.h>
-#include <dballe++/format.h>
-#include <dballe++/init.h>
-#include <dballe++/bufrex.h>
-#include <dballe++/msg.h>
 #include <dballe/core/aliases.h>
-#include <iostream>
+#include <wreport/vartable.h>
+#include <wreport/var.h>
+#include <dballe/core/var.h>
 
+// #include <dballe/db/db.h>
+// #include <dballe++/db.h>
+// #include <dballe++/format.h>
+// #include <dballe++/init.h>
+// #include <dballe++/bufrex.h>
+// #include <dballe++/msg.h>
+// #include <iostream>
+
+using namespace wreport;
 using namespace dballe;
-
-DballeInit dballeInit;
-
 %}
 
+namespace std {
+        %template(VartableBase) vector<wreport::_Varinfo>;
+};
+
+%typemap(in) wreport::Varcode {
+        const char* tmp = PyString_AsString($input);
+        if (($1 = varcode_alias_resolve(tmp)) == 0)
+                $1 = descriptor_code(tmp);
+}
+
+%typemap(out) wreport::Varcode {
+        char buf[10];
+        snprintf(buf, 10, "B%02d%03d", WR_VAR_X($1), WR_VAR_Y($1));
+        $result = PyString_FromString(buf);
+}
+
+%typemap(typecheck,precedence=SWIG_TYPECHECK_STRING) wreport::Varcode {
+        $1 = PyString_Check($input) ? 1 : 0;
+}
+
+
+namespace dballe {
+        wreport::Var var(wreport::Varcode code, int val) { return wreport::Var(varinfo(code), val); }
+        wreport::Var var(wreport::Varcode code, double val) { return wreport::Var(varinfo(code), val); }
+        wreport::Var var(wreport::Varcode code, const char* val) { return wreport::Var(varinfo(code), val); }
+};
+
+%extend wreport::Varinfo {
+        %ignore _ref;
+
+#ifdef SWIGPYTHON
+        %typemap(out) char[64] {
+                $result = PyString_FromString($1);
+        }
+        %typemap(out) char[24] {
+                $result = PyString_FromString($1);
+        }
+
+        %pythoncode %{
+                def __str__(self):
+                        return "%s %s" % (self.var, self.desc)
+                def __repr__(self):
+                        return "<Varinfo %s,%s,%s,scale %d,len %d,string %s,irange %d..%d,frange: %f..%f>" % (
+                                self.var, self.unit, self.desc, self.scale, self.len,
+                                str(self.is_string()), self.imin, self.imax, self.dmin, self.dmax)
+        %}
+#endif
+}
+
+%extend wreport::Var {
+#ifdef SWIGPYTHON
+        %rename(equals) operator==;
+
+        %pythoncode %{
+                def __eq__(self, var):                                          
+                        if var is None:
+                                return False
+                        elif not issubclass(var.__class__, Var):
+                                return self.enq() == var
+                        else:   
+                                return self.equals(var)
+
+                def __cmp__(self, other):
+                        if other == None:
+                                return 1
+                        codea = self.code()
+                        codeb = self.code()
+                        if codea != codeb:
+                                return cmp(codea, codeb)
+                        isstra = self.info().is_string()
+                        isstrb = other.info().is_string()
+                        if isstra and isstrb:
+                                return cmp(self.enqc(), other.enqc())
+                        elif isstra and not isstrb:
+                                return 1
+                        elif not isstra and isstrb:
+                                return -1
+                        else:
+                                return cmp(self.enqi(), other.enqi())
+                def __str__(self):
+                        return self.format("None")
+                def __repr__(self):
+                        return "<Var %s, %s>" % (self.code(), self.format("None"))
+                def enq(self):
+                        if self.info().is_string():
+                                return self.enqc()
+                        elif self.info().scale == 0:
+                                return self.enqi()
+                        else:
+                                return self.enqd()
+        %}
+#endif
+}
+
+/*
 #ifdef SWIGPYTHON
 
 %pythoncode %{
@@ -77,58 +177,11 @@ class TimeRange(tuple):
         def __repr__(self):
                 return "TimeRange"+tuple.__repr__(self)
 %}
+*/
 
-%extend dballe::Var {
-        %ignore operator==;
-        %pythoncode %{
-                def __cmp__(self, other):
-                        if other == None:
-                                return 1
-                        codea = self.code()
-                        codeb = self.code()
-                        if codea != codeb:
-                                return cmp(codea, codeb)
-                        isstra = self.info().is_string()
-                        isstrb = other.info().is_string()
-                        if isstra and isstrb:
-                                return cmp(self.enqc(), other.enqc())
-                        elif isstra and not isstrb:
-                                return 1
-                        elif not isstra and isstrb:
-                                return -1
-                        else:
-                                return cmp(self.enqi(), other.enqi())
-                def __str__(self):
-                        return self.format("None")
-                def __repr__(self):
-                        return "Var(%s, %s)" % (self.code(), self.format("None"))
-                def __eq__(self, var):
-                        if var is None:
-                                return False
-                        elif not issubclass(var.__class__, Var):
-                                return self.enq() == var
-                        else:
-                                return self.equals(var)
-                def enq(self):
-                        if self.info().is_string():
-                                return self.enqc()
-                        elif self.info().scale() == 0:
-                                return self.enqi()
-                        else:
-                                return self.enqd()
-        %}
-}
-
-%extend dballe::Varinfo {
-        %pythoncode %{
-                def __str__(self):
-                        return "%s (%s,%s)" % (self.var(), self.unit(), self.desc())
-                def __repr__(self):
-                        return "Varinfo(%s,%s,%s,scale %d,len %d,string %s,irange %d..%d,frange: %f..%f)" % \
-                            (self.var(), self.unit(), self.desc(), self.scale(), self.len(), \
-                             str(self.is_string()), self.imin(), self.imax(), self.dmin(), self.dmax())
-        %}
-}
+%ignore dballe::newvar;
+%ignore wreport::Var::seta(std::auto_ptr<Var> attr);
+/*
 
 %extend dballe::Cursor {
         %rename attributes attributes_orig;
@@ -491,22 +544,6 @@ class TimeRange(tuple):
                 throw std::runtime_error(std::string("Unknown encoding '") + tmp + "'");
 }
 
-%typemap(in) dba_varcode {
-	const char* tmp = PyString_AsString($input);
-        if (($1 = dba_varcode_alias_resolve(tmp)) == 0)
-                $1 = dba_descriptor_code(tmp);
-}
-
-%typemap(out) dba_varcode {
-	char buf[10];
-	snprintf(buf, 10, "B%02d%03d", DBA_VAR_X($1), DBA_VAR_Y($1));
-	$result = PyString_FromString(buf);
-}
-
-%typemap(typecheck,precedence=SWIG_TYPECHECK_STRING) dba_varcode {
-        $1 = PyString_Check($input) ? 1 : 0;
-}
-
 %typemap(in, numinputs=0) dba_varcode *varcode (dba_varcode temp) {
 	$1 = &temp;
 }
@@ -521,10 +558,25 @@ class TimeRange(tuple):
 %apply int *OUTPUT { int *anaid };
 
 #endif
+*/
 
-%include <dballe++/var.h>
-%include <dballe++/record.h>
-%include <dballe++/bufrex.h>
-%include <dballe++/msg.h>
-%include <dballe++/db.h>
-%include <dballe++/format.h>
+//#include <wreport/bulletin.h>
+//#include <dballe/db/db.h>
+//%include <dballe++/var.h>
+//%include <dballe++/record.h>
+//%include <dballe++/bufrex.h>
+//%include <dballe++/msg.h>
+//%include <dballe++/db.h>
+//%include <dballe++/format.h>
+
+%include <wreport/varinfo.h>
+%include <wreport/vartable.h>
+%include <wreport/var.h>
+%include <dballe/core/var.h>
+
+/*
+Varinfo varinfo(Varcode code)
+{
+        return Vartable::get("dballe")->query(code);
+}
+*/

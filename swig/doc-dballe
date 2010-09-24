@@ -8,8 +8,9 @@ try:
 	rpy_options.set_options(VERBOSE=False)
 except ImportError:
 	pass
-import dballe, dballe.volnd, dballe.rconvert
 import sys, re
+sys.exit(0)
+import dballe, dballe.volnd, dballe.rconvert
 import inspect
 
 def print_indented (spaces, string):
