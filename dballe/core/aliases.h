@@ -29,7 +29,7 @@
 
 #include <wreport/varinfo.h>
 
-namespace wreport {
+namespace dballe {
 
 /**
  * Resolve a variable alias.
@@ -40,7 +40,7 @@ namespace wreport {
  *   The varcode corresponding to the aliase, or 0 if no variable has the given
  *   alias.  See @ref vartable.h
  */
-Varcode varcode_alias_resolve(const char* alias);
+wreport::Varcode varcode_alias_resolve(const char* alias);
 
 /**
  * Resolve a variable alias.
@@ -53,7 +53,14 @@ Varcode varcode_alias_resolve(const char* alias);
  *   The varcode corresponding to the aliase, or 0 if no variable has the given
  *   alias.  See @ref vartable.h
  */
-Varcode varcode_alias_resolve_substring(const char* alias, int len);
+wreport::Varcode varcode_alias_resolve_substring(const char* alias, int len);
+
+/**
+ * Look for the aliase for a Varcode.
+ *
+ * @returns The alias string, or NULL if the varcode has no alias
+ */
+const char* varcode_alias_resolve_reverse(wreport::Varcode code);
 
 }
 

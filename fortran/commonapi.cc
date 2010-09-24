@@ -23,7 +23,7 @@
 /* _GNU_SOURCE is defined to have asprintf */
 
 #include "commonapi.h"
-#include <wreport/aliases.h>
+#include <dballe/core/aliases.h>
 #include <dballe/msg/formatter.h>
 #include <stdio.h>	// snprintf
 #include <limits>

@@ -1333,8 +1333,8 @@ databases:
       subset.  If you set it to {\tt message}, you will start a new message.
 
       After ``message'' you can specify a template for the message, using one
-      of the names defined in \ref{tbl-templates}, for example: ``{\tt message
-      generic}''.  If you do not specify a template, an appropriate template
+      of the names listed by {\tt dbadb export -t list}, for example: ``{\tt message
+      generic}''.  If you do not specify a template name, an appropriate template
       will automatically be chosen for you.
 \item You cannot use {\tt rep\_memo}: only {\tt rep\_cod} works.  Setting {\tt
       rep\_cod} you can influence the output template of messages: if you set it to a
@@ -1564,16 +1564,6 @@ When the attribute B33197 is not present, then no substitution happened.
 
 \label{aliastable}
 \input{../dballe/core/aliases.tex}
-
-\chapter{Message template aliases}
-
-These are the names that can be used to specify a BUFR or CREX message template:
-
-\label{tbl-templates}
-\input{../dballe/bufrex/template-aliases.tex}
-
-Alternatively, a template can be specified as {\em category}, {\em subcategory}
-and {\em local category}, separated by dots.  For example: ``{\tt 0.255.0}''.
 
 \chapter{Database connection methods}
 

@@ -22,7 +22,6 @@ while (<STDIN>)
 	my ($name, $val) = split(/,\s*/, $_, 2);
 
 	$val =~ s/WR_VAR\(0,\s*([0-9]+),\s*([0-9]+)\)/sprintf("B%02d%03d", $1, $2)/e;
-	$name =~ s/_/\\_/g;
 
 	push @data, [$name, $val];
 }
@@ -72,7 +71,9 @@ elsif ($op eq 'tex')
 
 	for my $d (@data)
 	{
-		print join(' & ', @$d), "\\\\\n";
+		($alias, $var) = @$d;
+		$alias =~ s/_/\\_/g;
+		print join(' & ', $alias, $var), "\\\\\n";
 	}
 	
 	print q#\hline
@@ -80,6 +81,30 @@ elsif ($op eq 'tex')
 \end{scriptsize}
 }
 #;
+}
+elsif ($op eq 'revsolver')
+{
+	print qq|
+#include <wreport/varinfo.h>
+using namespace wreport;
+namespace dballe {
+const char* varcode_alias_resolve_reverse(Varcode code)
+{
+	switch (code)
+	{
+|;
+	for my $d (@data)
+	{
+		($alias, $var) = @$d;
+		$var =~ s/B(\d{2})(\d{3})/sprintf("WR_VAR(0, %d, %d)", $1, $2)/e;
+		print "\t\tcase $var: return \"$alias\";\n"
+	}
+	print qq|
+		default: return 0;
+	}
+}
+} // namespace dballe
+|;
 }
 else
 {

@@ -25,7 +25,7 @@
 #include "repinfo.h"
 
 #include <wreport/var.h>
-#include <wreport/aliases.h>
+#include <dballe/core/aliases.h>
 
 #include <sql.h>
 #include <cstring>

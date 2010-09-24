@@ -38,7 +38,6 @@ typedef enum {
 	BUFR = 0,
 	CREX = 1,
 	AOF = 2,
-	ENCODING_COUNT = 3
 } Encoding;
 
 /**

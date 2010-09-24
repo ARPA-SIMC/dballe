@@ -22,6 +22,7 @@ noinst_LTLIBRARIES = libdballe-core.la
 libdballe_core_la_SOURCES = \
 	verbose.cc \
 	aliases.cc \
+	aliases-reverse.cc \
 	var.cc \
 	rawmsg.cc \
 	file.cc \
@@ -79,6 +80,9 @@ record_keyword.tex: record_keyword.gperf mkkeydoc
 aliases.cc: aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
+aliases-reverse.cc: aliases.gperf mkaliasdoc
+	$(srcdir)/mkaliasdoc revsolver < $< > $@
+
 aliases.dox: aliases.gperf mkaliasdoc
 	$(srcdir)/mkaliasdoc dox < $< > $@
 
@@ -88,5 +92,5 @@ aliases.tex: aliases.gperf mkaliasdoc
 distclean-local:
 	rm -f record_keyword.dox record_keyword.tex
 
-BUILT_SOURCES = record_keyword.cc aliases.cc
+BUILT_SOURCES = record_keyword.cc aliases.cc aliases-reverse.cc
 EXTRA_DIST = aliases.gperf mkaliasdoc record_keyword.gperf mkkeydoc

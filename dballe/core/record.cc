@@ -21,7 +21,7 @@
 
 #include "record.h"
 #include "var.h"
-#include <wreport/aliases.h>
+#include "aliases.h"
 
 #include "config.h"
 

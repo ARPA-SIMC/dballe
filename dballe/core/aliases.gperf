@@ -30,9 +30,11 @@
 
 %{
 #include <string.h>
-#include "varinfo.h"
+#include <wreport/varinfo.h>
 
-namespace wreport {
+using namespace wreport;
+
+namespace dballe {
 %}
 
 struct aliasdef { const char* alias; Varcode var; };

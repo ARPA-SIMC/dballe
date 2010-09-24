@@ -42,6 +42,7 @@ Makefile
 /dballe/core/record_keyword.tex
 /dballe/core/record_keyword.cc
 /dballe/core/aliases.cc
+/dballe/core/aliases-reverse.cc
 /dballe/core/aliases.dox
 /dballe/core/aliases.tex
 /dballe/core/tut_test
