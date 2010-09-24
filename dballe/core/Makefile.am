@@ -9,6 +9,7 @@ INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_C
 coreincludedir = $(includedir)/dballe/core
 
 coreinclude_HEADERS = \
+	aliases.h
 	verbose.h \
 	var.h \
 	rawmsg.h \
@@ -20,6 +21,7 @@ coreinclude_HEADERS = \
 noinst_LTLIBRARIES = libdballe-core.la
 libdballe_core_la_SOURCES = \
 	verbose.cc \
+	aliases.cc \
 	var.cc \
 	rawmsg.cc \
 	file.cc \
@@ -47,6 +49,7 @@ CXXFLAGS += -O0
 noinst_HEADERS = test-utils-core.h
 
 tut_test_SOURCES = \
+	tests/aliases.cc \
 	tests/rawmsg.cc \
 	tests/file.cc \
 	tests/record.cc \
@@ -62,7 +65,7 @@ tut_test_LDADD = \
 # Documentation bits
 #
 
-noinst_DATA = record_keyword.dox record_keyword.rst record_keyword.tex
+noinst_DATA = record_keyword.dox record_keyword.rst record_keyword.tex aliases.dox aliases.tex
 
 record_keyword.rst: record_keyword.gperf mkkeydoc
 	cpp -P -C -I$(top_srcdir) $< | $(srcdir)/mkkeydoc rst > $@
@@ -73,8 +76,17 @@ record_keyword.dox: record_keyword.gperf mkkeydoc
 record_keyword.tex: record_keyword.gperf mkkeydoc
 	cpp -P -C -I$(top_srcdir) $< | $(srcdir)/mkkeydoc tex > $@
 
+aliases.cc: aliases.gperf
+	if ! gperf < $< > $@; then rm $@; /bin/false; fi
+
+aliases.dox: aliases.gperf mkaliasdoc
+	$(srcdir)/mkaliasdoc dox < $< > $@
+
+aliases.tex: aliases.gperf mkaliasdoc
+	$(srcdir)/mkaliasdoc tex < $< > $@
+
 distclean-local:
 	rm -f record_keyword.dox record_keyword.tex
 
-BUILT_SOURCES = record_keyword.cc
-EXTRA_DIST = record_keyword.gperf mkkeydoc
+BUILT_SOURCES = record_keyword.cc aliases.cc
+EXTRA_DIST = aliases.gperf mkaliasdoc record_keyword.gperf mkkeydoc

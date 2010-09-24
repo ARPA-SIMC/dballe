@@ -1,13 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 
 guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib db.dia db.eps
-fapisources = fapi.tex ../dballe/core/aliases.tex ../dballe/core/record_keyword.tex ../dballe/msg/ltypes.tex ../dballe/msg/tranges.tex
+fapisources = fapi.tex ../dballe/core/record_keyword.tex ../dballe/msg/ltypes.tex ../dballe/msg/tranges.tex
 
 cdoxdeps = libdballe.dox \
 	  ../dballe/libdballe.la \
-	  ../dballe/core/aliases.dox \
-	  ../dballe/core/btable.dox \
-	  ../dballe/core/record_keyword.dox \
 	  ../dballe/msg/ltypes.dox \
 	  ../dballe/msg/tranges.dox
 

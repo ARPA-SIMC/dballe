@@ -1,0 +1,89 @@
+/*
+ * wreport/aliases - Aliases for commonly used variable codes
+ *
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ *
+ * Author: Enrico Zini <enrico@enricozini.com>
+ */
+
+%define slot-name alias
+%define class-name VarcodeAliases
+%define lookup-function-name find
+%struct-type
+%language=C++
+%global-table
+%compare-strncmp
+/* Using %switch may be faster (remember to check when doing optimizations) */
+
+%{
+#include <string.h>
+#include "varinfo.h"
+
+namespace wreport {
+%}
+
+struct aliasdef { const char* alias; Varcode var; };
+%%
+block,			WR_VAR(0,  1,   1)
+station,		WR_VAR(0,  1,   2)
+height,			WR_VAR(0,  7,   1)
+heightbaro,		WR_VAR(0,  7,  31)
+name,			WR_VAR(0,  1,  19)
+z,			WR_VAR(0, 10,   3)
+p,			WR_VAR(0, 10,   4)
+mslp,			WR_VAR(0, 10,  51)
+u,			WR_VAR(0, 11,   3)
+v,			WR_VAR(0, 11,   4)
+t,			WR_VAR(0, 12, 101)
+td,			WR_VAR(0, 12, 103)
+tmax,			WR_VAR(0, 12,  11)
+tmin,			WR_VAR(0, 12,  12)
+q,			WR_VAR(0, 13,   1)
+rh,			WR_VAR(0, 13,   3)
+tp,			WR_VAR(0, 13,  11)
+mwd,			WR_VAR(0, 22,   1)
+swh,			WR_VAR(0, 22,  70)
+pp1d,			WR_VAR(0, 22,  71)
+mwp,			WR_VAR(0, 22,  74)
+conf,			WR_VAR(0, 33,   7)
+data_id,		WR_VAR(0, 33, 195)
+no,			WR_VAR(0, 15, 192)
+no2,			WR_VAR(0, 15, 193)
+o3,			WR_VAR(0, 15, 194)
+pm10,			WR_VAR(0, 15, 195)
+%%
+
+Varcode varcode_alias_resolve(const char* alias)
+{
+	struct aliasdef* res = VarcodeAliases::find(alias, strlen(alias));
+	if (res == NULL)
+		return 0;
+	else
+		return res->var;
+}
+
+Varcode varcode_alias_resolve_substring(const char* alias, int len)
+{
+	struct aliasdef* res = VarcodeAliases::find(alias, len);
+	if (res == NULL)
+		return 0;
+	else
+		return res->var;
+}
+
+}
+
+/* vim:set ts=4 sw=4: */
