@@ -2,7 +2,7 @@
 
 import dballe
 #from dballe import *
-#from datetime import *
+import datetime as dt
 import unittest
 
 class VartableTest(unittest.TestCase):
@@ -113,88 +113,88 @@ class VarTest(unittest.TestCase):
         self.assertNotEqual(dballe.var("B01001"), None)
 
 
-#class RecordTest(unittest.TestCase):
-#        def setUp(self):
-#                self.r = Record()
-#                self.r.set("block", 1)
-#                self.r.set("station", 123)
-#                self.r.set("lat", 45.12345)
-#                self.r.set("lon", 11.54321)
-#                self.r.setdate(datetime(2007, 2, 1, 1, 2, 3))
-#                self.r.setlevel(Level(105, 2, 0, 0))
-#                self.r.settimerange(TimeRange(2, 3, 4))
-#                self.r.set("B12101", 285.0)
-#                self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype1", "l1", "leveltype2", "l2", "pindicator", "p1", "p2", "B12101", "B01002", "B01001"]
-#                self.known = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 0, 2, 3, 4, 285.0, 123, 1]
-#        def testAlias(self):
-#                r = self.r.copy()
-#                r.set("t", 282.3)
-#                self.assertEqual(r["B12101"], 282.3)
-#                r["t"] = 283.2
-#                self.assertEqual(r["B12101"], 283.2)
-#        def testReadDictOperators(self):
-#                r = self.r
-#                self.assertEqual(r["block"], 1)
-#                self.assertEqual(r["station"], 123)
-#                self.assertEqual(r["lat"], 45.12345)
-#                self.assertEqual(r["lon"], 11.54321)
-#                self.assertEqual(r["date"], datetime(2007, 2, 1, 1, 2, 3))
-#                self.assertEqual(r["level"], Level(105, 2, 0, 0))
-#                self.assertEqual(r["timerange"], TimeRange(2, 3, 4))
-#                self.assertEqual(r["B12101"], 285.0)
-#        def testWriteDictOperators(self):
-#                r = self.r.copy()
-#                r["block"] = 2
-#                r["station"] = 321
-#                r["lat"] = 45.54321
-#                r["lon"] = 11.12345
-#                r["date"] = datetime(2006, 1, 2, 0, 1, 2)
-#                r["level"] = Level(104, 1, 105, 2)
-#                r["timerange"] = TimeRange(1, 2, 3)
-#                r["B12101"] = 294.5
-#                self.assertEqual(r["block"], 2)
-#                self.assertEqual(r["station"], 321)
-#                self.assertEqual(r["lat"], 45.54321)
-#                self.assertEqual(r["lon"], 11.12345)
-#                self.assertEqual(r["date"], datetime(2006, 1, 2, 0, 1, 2))
-#                self.assertEqual(r["level"], Level(104, 1, 105, 2))
-#                self.assertEqual(r["timerange"], TimeRange(1, 2, 3))
-#                self.assertEqual(r["B12101"], 294.5)
-#        def testSpecials(self):
-#                r = self.r.copy()
-#                r.set("datemin", datetime(2005, 3, 4, 5, 6, 7))
-#                r.set("datemax", datetime(2004, 4, 5, 6, 7, 8))
-#                self.assertEqual(r["date"], datetime(2007, 2, 1, 1, 2, 3))
-#                self.assertEqual(r["datemin"], datetime(2005, 3, 4, 5, 6, 7))
-#                self.assertEqual(r["datemax"], datetime(2004, 4, 5, 6, 7, 8))
-#                self.assertEqual(r["level"], Level(105, 2, 0, 0))
-#                self.assertEqual(r["timerange"], TimeRange(2, 3, 4))
-#                self.assertEqual(r.enq("date"), datetime(2007, 2, 1, 1, 2, 3))
-#                self.assertEqual(r.enq("datemin"), datetime(2005, 3, 4, 5, 6, 7))
-#                self.assertEqual(r.enq("datemax"), datetime(2004, 4, 5, 6, 7, 8))
-#                self.assertEqual(r.enq("level"), Level(105, 2, 0, 0))
-#                self.assertEqual(r.enq("timerange"), TimeRange(2, 3, 4))
-#                self.assertEqual("date" in r, True)
-#                self.assertEqual("datemin" in r, True)
-#                self.assertEqual("datemax" in r, True)
-#                self.assertEqual("level" in r, True)
-#                self.assertEqual("timerange" in r, True)
-#                del(r["date"])
-#                del(r["datemin"])
-#                del(r["datemax"])
-#                del(r["level"])
-#                del(r["timerange"])
-#                self.assertEqual(r["date"], None)
-#                self.assertEqual(r["datemin"], None)
-#                self.assertEqual(r["datemax"], None)
-#                self.assertEqual(r["level"], None)
-#                self.assertEqual(r["timerange"], None)
-#                self.assertEqual("date" not in r, True)
-#                self.assertEqual("datemin" not in r, True)
-#                self.assertEqual("datemax" not in r, True)
-#                self.assertEqual("level" not in r, True)
-#                self.assertEqual("timerange" not in r, True)
-#
+class RecordTest(unittest.TestCase):
+    def setUp(self):
+        self.r = dballe.Record()
+        self.r["block"] = 1
+        self.r["station"] = 123
+        self.r["lat"] = 45.12345
+        self.r["lon"] = 11.54321
+        self.r["date"] = dt.datetime(2007, 2, 1, 1, 2, 3)
+        self.r["level"] = 105, 2
+        self.r["timerange"] = 2, 3, 4
+        self.r["B12101"] = 285.0
+        self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype1", "l1", "leveltype2", "l2", "pindicator", "p1", "p2", "B12101", "B01002", "B01001"]
+        self.known = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 0, 2, 3, 4, 285.0, 123, 1]
+    def testMulti(self):
+        self.assertEqual(self.r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
+        self.assertEqual(self.r["level"], (105, 2, None, None))
+        self.assertEqual(self.r["timerange"], (2, 3, 4))
+        self.assertEqual(self.r["trange"], (2, 3, 4))
+    def testAlias(self):
+        r = self.r.copy()
+        r["t"] = 283.2
+        self.assertEqual(r["B12101"], 283.2)
+        self.assertEqual(r["t"], 283.2)
+
+    def testReadDictOperators(self):
+        r = self.r
+        self.assertEqual(r["block"], 1)
+        self.assertEqual(r["station"], 123)
+        self.assertEqual(r["lat"], 45.12345)
+        self.assertEqual(r["lon"], 11.54321)
+        self.assertEqual(r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
+        self.assertEqual(r["level"], (105, 2, None, None))
+        self.assertEqual(r["timerange"], (2, 3, 4))
+        self.assertEqual(r["B12101"], 285.0)
+    def testWriteDictOperators(self):
+        r = self.r.copy()
+        r["block"] = 2
+        r["station"] = 321
+        r["lat"] = 45.54321
+        r["lon"] = 11.12345
+        r["date"] = dt.datetime(2006, 1, 2, 0, 1, 2)
+        r["level"] = (104, 1, 105, 2)
+        r["timerange"] = (1, 2, 3)
+        r["B12101"] = 294.5
+        self.assertEqual(r["block"], 2)
+        self.assertEqual(r["station"], 321)
+        self.assertEqual(r["lat"], 45.54321)
+        self.assertEqual(r["lon"], 11.12345)
+        self.assertEqual(r["date"], dt.datetime(2006, 1, 2, 0, 1, 2))
+        self.assertEqual(r["level"], (104, 1, 105, 2))
+        self.assertEqual(r["timerange"], (1, 2, 3))
+        self.assertEqual(r["B12101"], 294.5)
+    def testSpecials(self):
+        r = self.r.copy()
+        r["datemin"] = dt.datetime(2005, 3, 4, 5, 6, 7)
+        r["datemax"] = dt.datetime(2004, 4, 5, 6, 7, 8)
+        self.assertEqual(r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
+        self.assertEqual(r["datemin"], dt.datetime(2005, 3, 4, 5, 6, 7))
+        self.assertEqual(r["datemax"], dt.datetime(2004, 4, 5, 6, 7, 8))
+        self.assertEqual(r["level"], (105, 2, None, None))
+        self.assertEqual(r["timerange"], (2, 3, 4))
+        self.assertEqual("date" in r, True)
+        self.assertEqual("datemin" in r, True)
+        self.assertEqual("datemax" in r, True)
+        self.assertEqual("level" in r, True)
+        self.assertEqual("timerange" in r, True)
+        del(r["date"])
+        del(r["datemin"])
+        del(r["datemax"])
+        del(r["level"])
+        del(r["timerange"])
+        self.assertEqual(r["date"], None)
+        self.assertEqual(r["datemin"], None)
+        self.assertEqual(r["datemax"], None)
+        self.assertEqual(r["level"], (None, None, None, None))
+        self.assertEqual(r["timerange"], (None, None, None))
+        self.assertEqual("date" not in r, True)
+        self.assertEqual("datemin" not in r, True)
+        self.assertEqual("datemax" not in r, True)
+        self.assertEqual("level" not in r, False)
+        self.assertEqual("timerange" not in r, False)
+
 #        def testIterEmpty(self):
 #                r = Record()
 #                self.assertEqual([x for x in r], [])

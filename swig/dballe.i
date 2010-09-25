@@ -21,6 +21,7 @@
 #include <wreport/vartable.h>
 #include <wreport/var.h>
 #include <dballe/core/var.h>
+#include <dballe/core/record.h>
 
 // #include <dballe/db/db.h>
 // #include <dballe++/db.h>
@@ -54,6 +55,16 @@ namespace std {
         $1 = PyString_Check($input) ? 1 : 0;
 }
 
+%typemap(in) dba_keyword {
+        $1 = record_keyword_byname(PyString_AsString($input));
+}
+
+%typemap(typecheck,precedence=SWIG_TYPECHECK_STRING) dba_keyword {
+        $1 = PyString_Check($input) ? 1 : 0;
+}
+
+
+%ignore dballe::newvar;
 
 namespace dballe {
         wreport::Var var(wreport::Varcode code, int val) { return wreport::Var(varinfo(code), val); }
@@ -86,14 +97,15 @@ namespace dballe {
 %extend wreport::Var {
 #ifdef SWIGPYTHON
         %rename(equals) operator==;
+        %ignore seta(std::auto_ptr<Var> attr);
 
         %pythoncode %{
-                def __eq__(self, var):                                          
+                def __eq__(self, var):
                         if var is None:
                                 return False
-                        elif not issubclass(var.__class__, Var):
+                        elif not isinstance(var, Var):
                                 return self.enq() == var
-                        else:   
+                        else:
                                 return self.equals(var)
 
                 def __cmp__(self, other):
@@ -128,130 +140,168 @@ namespace dballe {
 #endif
 }
 
-/*
-#ifdef SWIGPYTHON
-
-%pythoncode %{
-import datetime
-
-class Level(tuple):
-	"""
-	Represents a level value as a 4-tuple
-	"""
-	def __new__(self, leveltype1=0, l1=0, leveltype2=0, l2=0):
-		return tuple.__new__(self, (leveltype1, l1, leveltype2, l2))
-	def type1(self):
-		"Return the type of the first level"
-		return self[0]
-	def l1(self):
-		"Return l1"
-		return self[1]
-	def type2(self):
-		"Return the type of the second level"
-		return self[2]
-	def l2(self):
-		"Return l2"
-		return self[3]
-        def __str__(self):
-                return describeLevel(*self)
-        def __repr__(self):
-                return "Level"+tuple.__repr__(self)
-
-class TimeRange(tuple):
-	"""
-	Represents a time range value as a 3-tuple
-	"""
-	def __new__(self, pindicator, p1=0, p2=0):
-		return tuple.__new__(self, (pindicator, p1, p2))
-	def type(self):
-		"Return the time range type"
-		return self[0]
-	def p1(self):
-		"Return p1"
-		return self[1]
-	def p2(self):
-		"Return p2"
-		return self[2]
-        def __str__(self):
-                return describeTrange(*self)
-        def __repr__(self):
-                return "TimeRange"+tuple.__repr__(self)
-%}
-*/
-
-%ignore dballe::newvar;
-%ignore wreport::Var::seta(std::auto_ptr<Var> attr);
-/*
-
-%extend dballe::Cursor {
-        %rename attributes attributes_orig;
-        %pythoncode %{
-                def __iter__(self):
-                        record = Record()
-                        while self.next(record):
-                                yield record
-                def attributes(self, *args):
-                        """
-                        Read the attributes for the variable pointed by this record.
-
-                        If a rec argument is provided, it will write the
-                        attributes in that record and return the number of
-                        attributes read.  If rec is None, it will return a
-                        tuple (Record, count) with a newly created Record.
-                        """
-                        if len(args) == 0:
-                                # attributes()
-                                rec = Record()
-                                count = self.attributes_orig(rec)
-                                return rec, count
-                        elif len(args) == 1:
-                                if isinstance(args[0], Record):
-                                        # attributes(rec)
-                                        return self.attributes_orig(args[0])
-                                else:
-                                        # attributes(seq)
-                                        rec = Record()
-                                        count = self.attributes_orig(args[0], rec)
-                                        return rec, count
-                        elif len(args) == 2:
-                                # attributes(seq, rec)
-                                return self.attributes_orig(args[0], args[1])
-
-        %}
-}
-
 // Rewrite Record methods to make use of the None value, and add convenience
 // methods and iteration
 %extend dballe::Record {
-        %ignore contains(dba_varcode) const;
-        %ignore contains(dba_keyword) const;
-        %ignore enq(dba_varcode) const;
-        %ignore enq(dba_keyword) const;
+        %rename(equals) operator==;
+        %pythoncode %{
+                def __eq__(self, rec):
+                        if rec is None:
+                                return False
+                        elif not isinstance(rec, Record):
+                                return False
+                        else:
+                                return self.equals(record)
+        %}
+
+        %ignore key;
+        %ignore var;
+        %ignore key_peek;
+        %ignore var_peek;
+        %ignore key_peek_value;
+        %ignore var_peek_value;
+        %ignore key_unset;
+        %ignore var_unset;
+        %ignore get(dba_keyword parameter) const;
+        %ignore get(wreport::Varcode code) const;
+        %ignore get(dba_keyword parameter);
+        %ignore get(wreport::Varcode code);
+        %ignore operator[];
+        %ignore unset(dba_keyword parameter);
+        %ignore unset(wreport::Varcode code);
+        %ignore parse_date_extremes;
+
+        %pythoncode %{
+                def copy(self):
+                        return Record(self)
+        %}
+
+        // Getters and setters
+        %ignore set;
+        %pythoncode %{
+                def _get_iter(self, *args):
+                        for x in args:
+                                if x in self:
+                                        yield self.get(x).enq()
+                                else:
+                                        yield None
+                def _get_dt(self, *args):
+                        res = []
+                        for idx, x in enumerate(args):
+                                if x in self:
+                                        res.append(self.get(x).enq())
+                                elif idx < 3:
+                                        return None
+                                else:
+                                        res.append(0)
+                        import datetime
+                        return datetime.datetime(*res)
+
+                KEYS_DATE = ("year", "month", "day", "hour", "min", "sec")
+                KEYS_DATEMIN = ("yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin")
+                KEYS_DATEMAX = ("yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax")
+                KEYS_LEVEL = ("leveltype1", "l1", "leveltype2", "l2")
+                KEYS_TRANGE = ("pindicator", "p1", "p2")
+
+                def _macro_get_date(self):
+                        return self._get_dt(*self.KEYS_DATE)
+                def _macro_get_datemin(self):
+                        return self._get_dt(*self.KEYS_DATEMIN)
+                def _macro_get_datemax(self):
+                        return self._get_dt(*self.KEYS_DATEMAX)
+                def _macro_get_level(self):
+                        return tuple(self._get_iter(*self.KEYS_LEVEL))
+                def _macro_get_trange(self):
+                        return tuple(self._get_iter(*self.KEYS_TRANGE))
+                _macro_get_timerange = _macro_get_trange
+
+                def __getitem__(self, key):
+                        "Query one value by name"
+                        macro = getattr(self, "_macro_get_" + key, None)
+                        if macro:
+                                return macro()
+                        else:
+                                return self.get(key).enq()
+
+                def _macro_set_date(self, dt):
+                        for kd, kr in zip(("year", "month", "day", "hour", "minute", "second"), self.KEYS_DATE):
+                                self.get(kr).set(getattr(dt, kd))
+                def _macro_set_datemin(self, dt):
+                        for kd, kr in zip(("year", "month", "day", "hour", "minute", "second"), self.KEYS_DATEMIN):
+                                self.get(kr).set(getattr(dt, kd))
+                def _macro_set_datemax(self, dt):
+                        for kd, kr in zip(("year", "month", "day", "hour", "minute", "second"), self.KEYS_DATEMAX):
+                                self.get(kr).set(getattr(dt, kd))
+                def _macro_set_level(self, tu):
+                        for idx, key in enumerate(self.KEYS_LEVEL):
+                                if idx >= len(tu) or tu[idx] is None:
+                                        self.unset(key)
+                                else:
+                                        self.get(key).set(tu[idx])
+                def _macro_set_trange(self, tu):
+                        for idx, key in enumerate(self.KEYS_TRANGE):
+                                if idx >= len(tu) or tu[idx] is None:
+                                        self.unset(key)
+                                else:
+                                        self.get(key).set(tu[idx])
+                _macro_set_timerange = _macro_set_trange
+
+                def __setitem__(self, key, val):
+                        "Set one value by name"
+                        macro = getattr(self, "_macro_set_" + key, None)
+                        if macro:
+                                return macro(val)
+                        else:
+                                self.get(key).set(val)
+
+                def _macro_del_date(self):
+                        for k in self.KEYS_DATE:
+                                self.unset(k)
+                def _macro_del_datemin(self):
+                        for k in self.KEYS_DATEMIN:
+                                self.unset(k)
+                def _macro_del_datemax(self):
+                        for k in self.KEYS_DATEMAX:
+                                self.unset(k)
+                def _macro_del_level(self):
+                        for k in self.KEYS_LEVEL:
+                                self.unset(k)
+                def _macro_del_trange(self):
+                        for k in self.KEYS_TRANGE:
+                                self.unset(k)
+                _macro_del_timerange = _macro_del_trange
+
+                def __delitem__(self, key):
+                        "Unset one value by name"
+                        macro = getattr(self, "_macro_del_" + key, None)
+                        if macro:
+                                return macro()
+                        else:
+                                self.unset(key)
+
+                def _macro_has_date(self):
+                        return all([self.peek_value(k) != None for k in self.KEYS_DATE[:3]])
+                def _macro_has_datemin(self):
+                        return all([self.peek_value(k) != None for k in self.KEYS_DATEMIN[:3]])
+                def _macro_has_datemax(self):
+                        return all([self.peek_value(k) != None for k in self.KEYS_DATEMAX[:3]])
+                def _macro_has_level(self):
+                        return True
+                def _macro_has_trange(self):
+                        return True
+                _macro_has_timerange = _macro_has_trange
+
+                def __contains__(self, key):
+                        "Check if a value is set"
+                        macro = getattr(self, "_macro_has_" + key, None)
+                        if macro:
+                                return macro()
+                        else:
+                                return self.peek_value(key) != None
+        %}
+
+/*
         %rename enq enqvar;
-        %ignore enqi;
-        %ignore enqd;
-        %ignore enqs;
-        %ignore enqc;
-        %ignore enqi_ifset(dba_varcode, bool&) const;
-        %ignore enqi_ifset(dba_keyword, bool&) const;
-        %ignore enqd_ifset(dba_varcode, bool&) const;
-        %ignore enqd_ifset(dba_keyword, bool&) const;
-        %ignore enqc_ifset(dba_varcode) const;
-        %ignore enqc_ifset(dba_keyword) const;
-        %ignore enqs_ifset(dba_varcode, bool&) const;
-        %ignore enqs_ifset(dba_keyword, bool&) const;
-        %ignore keySet;
-        %ignore keySeti;
-        %ignore keySetd;
-        %ignore keySetc;
-        %ignore keySets;
-        %ignore varSet;
-        %ignore varSeti;
-        %ignore varSetd;
-        %ignore varSetc;
-        %ignore varSets;
-        %ignore keyUnset;
-        %ignore varUnset;
         %rename seti seti_orig;
         %rename setd setd_orig;
         %rename sets sets_orig;
@@ -444,22 +494,6 @@ class TimeRange(tuple):
                         else:
                                 self.unset_orig(name)
 
-                def __getitem__(self, key):
-                        return self.enq(key)
-                def __setitem__(self, key, val):
-                        self.set(key, val)
-                def __delitem__(self, key):
-                        return self.unset(key)
-                def __contains__(self, key):
-                        if key in self._specialunsets:
-                                has = True
-                                for i in self._specialunsets[key]:
-                                        if not self.contains(i):
-                                                has = False
-                                                break
-                                return has
-                        else:
-                                self.contains(key)
                 def __iter__(self):
                         "Iterate all the contents of the record"
                         i = self.begin()
@@ -502,7 +536,98 @@ class TimeRange(tuple):
                 def __repr__(self):
                         return self.__str__();
         %}
+*/
 }
+
+/*
+#ifdef SWIGPYTHON
+
+%pythoncode %{
+import datetime
+
+class Level(tuple):
+	"""
+	Represents a level value as a 4-tuple
+	"""
+	def __new__(self, leveltype1=0, l1=0, leveltype2=0, l2=0):
+		return tuple.__new__(self, (leveltype1, l1, leveltype2, l2))
+	def type1(self):
+		"Return the type of the first level"
+		return self[0]
+	def l1(self):
+		"Return l1"
+		return self[1]
+	def type2(self):
+		"Return the type of the second level"
+		return self[2]
+	def l2(self):
+		"Return l2"
+		return self[3]
+        def __str__(self):
+                return describeLevel(*self)
+        def __repr__(self):
+                return "Level"+tuple.__repr__(self)
+
+class TimeRange(tuple):
+	"""
+	Represents a time range value as a 3-tuple
+	"""
+	def __new__(self, pindicator, p1=0, p2=0):
+		return tuple.__new__(self, (pindicator, p1, p2))
+	def type(self):
+		"Return the time range type"
+		return self[0]
+	def p1(self):
+		"Return p1"
+		return self[1]
+	def p2(self):
+		"Return p2"
+		return self[2]
+        def __str__(self):
+                return describeTrange(*self)
+        def __repr__(self):
+                return "TimeRange"+tuple.__repr__(self)
+%}
+*/
+/*
+
+%extend dballe::Cursor {
+        %rename attributes attributes_orig;
+        %pythoncode %{
+                def __iter__(self):
+                        record = Record()
+                        while self.next(record):
+                                yield record
+                def attributes(self, *args):
+                        """
+                        Read the attributes for the variable pointed by this record.
+
+                        If a rec argument is provided, it will write the
+                        attributes in that record and return the number of
+                        attributes read.  If rec is None, it will return a
+                        tuple (Record, count) with a newly created Record.
+                        """
+                        if len(args) == 0:
+                                # attributes()
+                                rec = Record()
+                                count = self.attributes_orig(rec)
+                                return rec, count
+                        elif len(args) == 1:
+                                if isinstance(args[0], Record):
+                                        # attributes(rec)
+                                        return self.attributes_orig(args[0])
+                                else:
+                                        # attributes(seq)
+                                        rec = Record()
+                                        count = self.attributes_orig(args[0], rec)
+                                        return rec, count
+                        elif len(args) == 2:
+                                # attributes(seq, rec)
+                                return self.attributes_orig(args[0], args[1])
+
+        %}
+}
+
 
 %typemap(in) const std::vector<dba_varcode>& (std::vector<dba_varcode> vec) {
         if (!PySequence_Check($input))
@@ -522,14 +647,6 @@ class TimeRange(tuple):
 }
 %typemap(typecheck) const std::vector<dba_varcode>& {
         $1 = PySequence_Check($input) ? 1 : 0;
-}
-
-%typemap(in) dba_keyword {
-	$1 = dba_record_keyword_byname(PyString_AsString($input));
-}
-
-%typemap(typecheck,precedence=SWIG_TYPECHECK_STRING) dba_keyword {
-        $1 = PyString_Check($input) ? 1 : 0;
 }
 
 %typemap(in) dba_encoding {
@@ -573,6 +690,7 @@ class TimeRange(tuple):
 %include <wreport/vartable.h>
 %include <wreport/var.h>
 %include <dballe/core/var.h>
+%include <dballe/core/record.h>
 
 /*
 Varinfo varinfo(Varcode code)
