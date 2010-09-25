@@ -124,8 +124,10 @@ class RecordTest(unittest.TestCase):
         self.r["level"] = 105, 2
         self.r["timerange"] = 2, 3, 4
         self.r["B12101"] = 285.0
-        self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype1", "l1", "leveltype2", "l2", "pindicator", "p1", "p2", "B12101", "B01002", "B01001"]
-        self.known = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 0, 2, 3, 4, 285.0, 123, 1]
+        self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype1", "l1", "leveltype2", "l2", "pindicator", "p1", "p2"]
+        self.knownvars = ["B12101", "B01002", "B01001"]
+        self.knownkeyvals = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 0, 2, 3, 4]
+        self.knownvarvals = [285.0, 123, 1]
     def testMulti(self):
         self.assertEqual(self.r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
         self.assertEqual(self.r["level"], (105, 2, None, None))
@@ -195,148 +197,149 @@ class RecordTest(unittest.TestCase):
         self.assertEqual("level" not in r, False)
         self.assertEqual("timerange" not in r, False)
 
-#        def testIterEmpty(self):
-#                r = Record()
-#                self.assertEqual([x for x in r], [])
-#                self.assertEqual([x for x in r.iterkeys()], [])
-#                self.assertEqual([x for x in r.itervalues()], [])
-#                self.assertEqual([x for x in r.iteritems()], [])
-#                self.assertEqual([x for x in r.itervars()], [])
-#        def testIterOne(self):
-#                # Used to throw the wrong exception to stop iteration
-#                r = Record()
-#                r.seti("B33036", 75)
-#                self.assertEqual([x for x in r.iteritems()], [("B33036", 75)])
-#        def testIter(self):
-#                res = [n.enq() for n in self.r]
-#                self.assertEqual(len(res), len(self.known))
-#                self.assertEqual(res, self.known)
-#                res = []
-#                for n in self.r.itervalues():
-#                        res += [n.enq()]
-#                self.assertEqual(len(res), len(self.known))
-#                self.assertEqual(res, self.known)
-#        def testIterkeys(self):
-#                res = []
-#                for n in self.r.iterkeys():
-#                        res += [n]
-#                self.assertEqual(len(res), len(self.knownkeys))
-#                self.assertEqual(res, self.knownkeys)
-#        def testIteritems(self):
-#                known = zip(self.knownkeys, self.known)
-#                res = []
-#                for key, val in self.r.iteritems():
-#                        res += [(key, val.enq())]
-#                self.assertEqual(len(res), len(known))
-#                self.assertEqual(res, known)
-#        def testSetDict(self):
-#                r = Record()
-#                r.set({"ana_id": 1, "lat": 12.34567, "ident": "ciao"})
-#                self.assertEqual([x for x in r.iteritems()], [("ana_id", 1), ("ident", "ciao"), ("lat", 12.34567)])
-#
-#
-#        def testRecord(self):
-#                # Check basic set/get and variable iteration
-#                rec = Record()
-#
-#                self.assertEqual(rec.contains("ana_id"), False)
-#                rec.set("ana_id", 3)
-#                self.assertEqual(rec.contains("ana_id"), True)
-#                self.assertEqual(rec.enqi("ana_id"), 3)
-#
-#                self.assertEqual(rec.contains("B04001"), False)
-#                rec.set("B04001", 2001)
-#                self.assertEqual(rec.contains("B04001"), True)
-#                self.assertEqual(rec.enqi("B04001"), 2001)
-#
-#                count = 0
-#                for var in rec.itervars():
-#                        self.assertEqual(var.code(), "B04001")
-#                        count = count + 1
-#                self.assertEqual(count, 1)
-#
-#                rec.unset("block")
-#                self.assertEqual(rec.contains("block"), False)
-#                rec.unset("B04001")
-#                self.assertEqual(rec.contains("B04001"), False)
-#
-#                rec.set("B01001", 1)
-#                var = rec.enqvar("B01001")
-#                var.set(4)
-#                rec.set(var)
-#                self.assertEqual(rec.enqi("B01001"), 4)
-#
-#                dt = datetime(2001, 2, 3, 4, 5, 6)
-#                rec.setdate(dt)
-#                self.assertEqual(rec.enqdate(), dt)
-#                self.assertEqual(rec.enqi("year"), 2001)
-#                self.assertEqual(rec.enqi("month"), 2)
-#                self.assertEqual(rec.enqi("day"), 3)
-#                self.assertEqual(rec.enqi("hour"), 4)
-#                self.assertEqual(rec.enqi("min"), 5)
-#                self.assertEqual(rec.enqi("sec"), 6)
-#
-#                l = Level(1, 2, 1, 3)
-#                rec.setlevel(l)
-#                self.assertEqual(rec.enqlevel(), l)
-#                self.assertEqual(rec.enqi("leveltype1"), 1)
-#                self.assertEqual(rec.enqi("l1"), 2)
-#                self.assertEqual(rec.enqi("leveltype2"), 1)
-#                self.assertEqual(rec.enqi("l2"), 3)
-#
-#                t = TimeRange(4, 5, 6)
-#                rec.settimerange(t)
-#                self.assertEqual(rec.enqtimerange(), t)
-#                self.assertEqual(rec.enqi("pindicator"), 4)
-#                self.assertEqual(rec.enqi("p1"), 5)
-#                self.assertEqual(rec.enqi("p2"), 6)
-#
-#
-#        def testRecordCopying(self):
-#                # Try out all copying functions
-#
-#                master = Record()
-#                master.set("block", 4)
-#                master.set("latmin", 4.1234)
-#                master.set("B01001", 4)
-#
-#                if True:
-#                        r1 = master;
-#                        self.assertEqual(r1.enqi("block"), 4)
-#                        self.assertEqual(r1.enqd("latmin"), 4.1234)
-#                        self.assertEqual(r1.enqi("B01001"), 4)
-#
-#                r2 = master.copy()
-#                self.assertEqual(r2.enqi("block"), 4)
-#                self.assertEqual(r2.enqd("latmin"), 4.1234)
-#                self.assertEqual(r2.enqi("B01001"), 4)
-#
-#                r3 = r2.copy()
-#                self.assertEqual(r3.enqi("block"), 4)
-#                self.assertEqual(r3.enqd("latmin"), 4.1234)
-#                self.assertEqual(r3.enqi("B01001"), 4)
-#                r2.unset("latmin")
-#                self.assertEqual(r3.enqd("latmin"), 4.1234)
-#                r3.setd("latmin", 4.3214)
-#                self.assertEqual(r3.enqd("latmin"), 4.3214)
-#
-#                r3 = r3
-#                self.assertEqual(r3.enqi("block"), 4)
-#                self.assertEqual(r3.enqd("latmin"), 4.3214)
-#                self.assertEqual(r3.enqi("B01001"), 4)
-#
-#                master = r3
-#                self.assertEqual(master.enqi("block"), 4)
-#                self.assertEqual(master.enqd("latmin"), 4.3214)
-#                self.assertEqual(master.enqi("B01001"), 4)
-#
-#        def testRecordCopying1(self):
-#                # This caused a repeatable segfault
-#                rec = Record()
-#                rec.setc("query", "nosort")
-#                rec1 = rec.copy()
-#                rec1.setc("query", "nosort")
-#
+    def testIterEmpty(self):
+        r = dballe.Record()
+        self.assertEqual([x for x in r], [])
+        self.assertEqual([x for x in r.iterkeys()], [])
+        self.assertEqual([x for x in r.itervalues()], [])
+        self.assertEqual([x for x in r.iteritems()], [])
+    def testIterOne(self):
+        # Used to throw the wrong exception to stop iteration
+        r = dballe.Record()
+        r["B33036"] = 75
+        self.assertEqual([x for x in r.iteritems()], [("B33036", 75)])
+    def testIter(self):
+        res = [n.enq() for n in self.r]
+        self.assertEqual(len(res), len(self.knownvars))
+        self.assertEqual(set(res), set(self.knownvarvals))
+        res = []
+        for n in self.r:
+                res += [n.enq()]
+        self.assertEqual(len(res), len(self.knownvars))
+        self.assertEqual(set(res), set(self.knownvarvals))
+    def testIterkeys(self):
+        res = []
+        for n in self.r.iterkeys():
+                res += [n]
+        self.assertEqual(len(res), len(self.knownvars))
+        self.assertEqual(sorted(res), sorted(self.knownvars))
+    def testIteritems(self):
+        known = zip(self.knownvars, self.knownvarvals)
+        res = self.r.items()
+        self.assertEqual(len(res), len(known))
+        self.assertEqual(set(res), set(known))
+    def testSetDict(self):
+        r = dballe.Record()
+        r.update({"ana_id": 1, "lat": 12.34567, "ident": "ciao"})
+        #self.assertEqual([x for x in r.iteritems()], [("ana_id", 1), ("ident", "ciao"), ("lat", 12.34567)])
+        self.assertEqual([x for x in r.iteritems()], [])
+        r.update({"t": 290.0})
+        self.assertEqual([x for x in r.iteritems()], [("B12101", 290.0)])
+
+
+    def testRecord(self):
+        # Check basic set/get and variable iteration
+        rec = dballe.Record()
+
+        self.assertEqual("ana_id" in rec, False)
+        rec["ana_id"] = 3
+        self.assertEqual("ana_id" in rec, True)
+        self.assertEqual(rec["ana_id"], 3)
+
+        self.assertEqual("B04001" in rec, False)
+        rec["B04001"] = 2001
+        self.assertEqual("B04001" in rec, True)
+        self.assertEqual(rec["B04001"], 2001)
+
+        count = 0
+        for var in rec:
+                self.assertEqual(var.code(), "B04001")
+                count = count + 1
+        self.assertEqual(count, 1)
+
+        del rec["block"]
+        self.assertEqual("block" in rec, False)
+        del rec["B04001"]
+        self.assertEqual("B04001" in rec, False)
+
+        rec["B01001"] = 1
+        var = rec.get("B01001")
+        var.set(4)
+        rec.update(var)
+        self.assertEqual(rec["B01001"], 4)
+
+        d = dt.datetime(2001, 2, 3, 4, 5, 6)
+        rec["date"] = d
+        self.assertEqual(rec["date"], d)
+        self.assertEqual(rec["year"], 2001)
+        self.assertEqual(rec["month"], 2)
+        self.assertEqual(rec["day"], 3)
+        self.assertEqual(rec["hour"], 4)
+        self.assertEqual(rec["min"], 5)
+        self.assertEqual(rec["sec"], 6)
+
+        l = (1, 2, 1, 3)
+        rec["level"] = l
+        self.assertEqual(rec["level"], l)
+        self.assertEqual(rec["leveltype1"], 1)
+        self.assertEqual(rec["l1"], 2)
+        self.assertEqual(rec["leveltype2"], 1)
+        self.assertEqual(rec["l2"], 3)
+
+        t = (4, 5, 6)
+        rec["timerange"] = t
+        self.assertEqual(rec["timerange"], t)
+        self.assertEqual(rec["trange"], t)
+        self.assertEqual(rec["pindicator"], 4)
+        self.assertEqual(rec["p1"], 5)
+        self.assertEqual(rec["p2"], 6)
+
+
+    def testRecordCopying(self):
+        # Try out all copying functions
+
+        master = dballe.Record()
+        master["block"] = 4
+        master["latmin"] = 4.1234
+        master["B01001"] = 4
+
+        if True:
+                r1 = master;
+                self.assertEqual(r1["block"], 4)
+                self.assertEqual(r1["latmin"], 4.1234)
+                self.assertEqual(r1["B01001"], 4)
+
+        r2 = master.copy()
+        self.assertEqual(r2["block"], 4)
+        self.assertEqual(r2["latmin"], 4.1234)
+        self.assertEqual(r2["B01001"], 4)
+
+        r3 = r2.copy()
+        self.assertEqual(r3["block"], 4)
+        self.assertEqual(r3["latmin"], 4.1234)
+        self.assertEqual(r3["B01001"], 4)
+        del r2["latmin"]
+        self.assertEqual(r3["latmin"], 4.1234)
+        r3["latmin"] = 4.3214
+        self.assertEqual(r3["latmin"], 4.3214)
+
+        r3 = r3
+        self.assertEqual(r3["block"], 4)
+        self.assertEqual(r3["latmin"], 4.3214)
+        self.assertEqual(r3["B01001"], 4)
+
+        master = r3
+        self.assertEqual(master["block"], 4)
+        self.assertEqual(master["latmin"], 4.3214)
+        self.assertEqual(master["B01001"], 4)
+
+    def testRecordCopying1(self):
+        # This caused a repeatable segfault
+        rec = dballe.Record()
+        rec["query"] = "nosort"
+        rec1 = rec.copy()
+        rec1["query"] = "nosort"
+
 #class BufrexTest(unittest.TestCase):
 #    def testBUFRCreation(self):
 #        # Generate a synop message

@@ -37,6 +37,7 @@ using namespace dballe;
 
 namespace std {
         %template(VartableBase) vector<wreport::_Varinfo>;
+        %template(VarVector) vector<wreport::Var*>;
 };
 
 %typemap(in) wreport::Varcode {
@@ -179,6 +180,15 @@ namespace dballe {
         // Getters and setters
         %ignore set;
         %pythoncode %{
+                def update(self, pairs):
+                        if isinstance(pairs, dict):
+                                for k, v in pairs.iteritems():
+                                        self[k] = v
+                        elif isinstance(pairs, Var):
+                                self[pairs.code()] = pairs.enq()
+                        else:
+                                for k, v in pairs:
+                                        self[k] = v
                 def _get_iter(self, *args):
                         for x in args:
                                 if x in self:
@@ -298,245 +308,37 @@ namespace dballe {
                                 return macro()
                         else:
                                 return self.peek_value(key) != None
-        %}
-
-/*
-        %rename enq enqvar;
-        %rename seti seti_orig;
-        %rename setd setd_orig;
-        %rename sets sets_orig;
-        %rename setc setc_orig;
-        %rename set set_orig;
-        %rename unset unset_orig;
-        %pythoncode %{
-                _enqdate_parms = ("year", "month", "day", "hour", "min", "sec")
-                _enqdatemin_parms = ("yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin")
-                _enqdatemax_parms = ("yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax")
-                _enqlevel_parms = ("leveltype1", "l1", "leveltype2", "l2")
-                _enqtimerange_parms = ("pindicator", "p1", "p2")
-                def _enqmany(self, names):
-                        # If there is an unset value among ours, return None
-                        parms = []
-                        for p in names:
-                                v = self.enqi(p)
-                                if v == None:
-                                        return None
-                                parms.append(v)
-                        return parms
-                def enqdate(self):
-                        parms = self._enqmany(self._enqdate_parms)
-                        if parms == None: return None
-                        return datetime.datetime(*parms)
-                def enqdatemin(self):
-                        parms = self._enqmany(self._enqdatemin_parms)
-                        if parms == None: return None
-                        return datetime.datetime(*parms)
-                def enqdatemax(self):
-                        parms = self._enqmany(self._enqdatemax_parms)
-                        if parms == None: return None
-                        return datetime.datetime(*parms)
-                def enqlevel(self):
-                        parms = self._enqmany(self._enqlevel_parms)
-                        if parms == None: return None
-                        return Level(*parms)
-                def enqtimerange(self):
-                        parms = self._enqmany(self._enqtimerange_parms)
-                        if parms == None: return None
-                        return TimeRange(*parms)
-                def setdate(self, dt):
-                        if dt == None:
-                                self.seti("year", None)
-                                self.seti("year", None)
-                                self.seti("month", None)
-                                self.seti("day", None)
-                                self.seti("hour", None)
-                                self.seti("min", None)
-                                self.seti("sec", None)
-                        else:
-                                self.seti("year", dt.year)
-                                self.seti("month", dt.month)
-                                self.seti("day", dt.day)
-                                self.seti("hour", dt.hour)
-                                self.seti("min", dt.minute)
-                                self.seti("sec", dt.second)
-                def setdatemin(self, dt):
-                        if dt == None:
-                                self.seti("yearmin", None)
-                                self.seti("monthmin", None)
-                                self.seti("daymin", None)
-                                self.seti("hourmin", None)
-                                self.seti("minumin", None)
-                                self.seti("secmin", None)
-                        else:
-                                self.seti("yearmin", dt.year)
-                                self.seti("monthmin", dt.month)
-                                self.seti("daymin", dt.day)
-                                self.seti("hourmin", dt.hour)
-                                self.seti("minumin", dt.minute)
-                                self.seti("secmin", dt.second)
-                def setdatemax(self, dt):
-                        if dt == None:
-                                self.seti("yearmax", None)
-                                self.seti("monthmax", None)
-                                self.seti("daymax", None)
-                                self.seti("hourmax", None)
-                                self.seti("minumax", None)
-                                self.seti("secmax", None)
-                        else:
-                                self.seti("yearmax", dt.year)
-                                self.seti("monthmax", dt.month)
-                                self.seti("daymax", dt.day)
-                                self.seti("hourmax", dt.hour)
-                                self.seti("minumax", dt.minute)
-                                self.seti("secmax", dt.second)
-                def setlevel(self, level):
-                        if level == None:
-                                self.seti("leveltype1", None)
-                                self.seti("l1", None)
-                                self.seti("leveltype2", None)
-                                self.seti("l2", None)
-                        else:
-                                self.seti("leveltype1", level[0])
-                                self.seti("l1", level[1])
-                                self.seti("leveltype2", level[2])
-                                self.seti("l2", level[3])
-                def settimerange(self, trange):
-                        if trange == None:
-                                self.seti("pindicator", None)
-                                self.seti("p1", None)
-                                self.seti("p2", None)
-                        else:
-                                self.seti("pindicator", trange[0])
-                                self.seti("p1", trange[1])
-                                self.seti("p2", trange[2])
-
-                _specialenqs = {
-                        'date': enqdate,
-                        'datemin': enqdatemin,
-                        'datemax': enqdatemax,
-                        'level': enqlevel,
-                        'timerange': enqtimerange
-                }
-                _specialsets = {
-                        'date': setdate,
-                        'datemin': setdatemin,
-                        'datemax': setdatemax,
-                        'level': setlevel,
-                        'timerange': settimerange
-                }
-                _specialunsets = {
-                        'date': _enqdate_parms,
-                        'datemin': _enqdatemin_parms,
-                        'datemax': _enqdatemax_parms,
-                        'level': _enqlevel_parms,
-                        'timerange': _enqtimerange_parms,
-                }
-
-                def enq(self, name):
-                       if name in self._specialenqs:
-                                return self._specialenqs[name](self)
-                       else:
-                                return self.enqvar(name).enq()
-                def enqi(self, name):
-                       val, found = self.enqi_ifset(name)
-                       if found: return val
-                       return None
-                def enqd(self, name):
-                       val, found = self.enqd_ifset(name)
-                       if found: return val
-                       return None
-                def enqs(self, name):
-                       val, found = self.enqs_ifset(name)
-                       if found: return val
-                       return None
-                def enqc(self, name):
-                       val, found = self.enqs_ifset(name)
-                       if found: return val
-                       return None
-
-                def set(self, *args):
-                       if len(args) == 2:
-                                if args[0] in self._specialsets:
-                                        return self._specialsets[args[0]](self, args[1])
-                                else:
-                                        self.set_orig(*args)
-                       elif len(args) == 1:
-                                if 'iteritems' in args[0].__class__.__dict__:
-                                        for key, val in args[0].iteritems():
-                                                self.set_orig(key, val)
-                                else:
-                                        self.set_orig(args[0])
-                       else:
-                                raise ValueError, "Set wants 1 or 2 values ("+str(len(args))+" provided)"
-
-                def seti(self, name, value):
-                       if value == None:
-                                self.unset(name)
-                       else:
-                                self.seti_orig(name, value)
-                def setd(self, name, value):
-                       if value == None:
-                                self.unset(name)
-                       else:
-                                self.setd_orig(name, value)
-                def sets(self, name, value):
-                       if value == None:
-                                self.unset(name)
-                       else:
-                                self.sets_orig(name, value)
-                def setc(self, name, value):
-                       return self.sets(name, value)
-
-                def unset(self, name):
-                        if name in self._specialunsets:
-                                for i in self._specialunsets[name]:
-                                        self.unset(i)
-                        else:
-                                self.unset_orig(name)
 
                 def __iter__(self):
-                        "Iterate all the contents of the record"
-                        i = self.begin()
-                        while i.valid():
-                                yield i.var()
-                                i.next()
+                        "Iterate all the variables of the record"
+                        for v in self.vars():
+                                yield v
+                def __len__(self):
+                        "Number of variables in the record"
+                        return len(self.vars())
+                def keys(self):
+                        "List of names of variables in the record"
+                        return [x.code() for x in self.vars()]
                 def iterkeys(self):
-                        "Iterate all the keyword and variable names in the record"
-                        i = self.begin()
-                        while i.valid():
-                                if i.isKeyword():
-                                        yield i.keywordName()
-                                else:
-                                        yield i.var().code()
-                                i.next()
+                        "List of names of variables in the record"
+                        return (x.code() for x in self.vars())
+                def values(self):
+                        "List of names of variables in the record"
+                        return [x.enq() for x in self.vars()]
                 def itervalues(self):
-                        "Iterate all the values in the record"
-                        return self.__iter__()
+                        "List of names of variables in the record"
+                        return (x.enq() for x in self.vars())
+                def items(self):
+                        "List of names of variables in the record"
+                        return [(x.code(), x.enq()) for x in self.vars()]
                 def iteritems(self):
-                        """
-                        Iterate all the keyword and variable names in the
-                        record, generating (name, value) tuples
-                        """
-                        i = self.begin()
-                        while i.valid():
-                                v = i.var()
-                                if i.isKeyword():
-                                        yield (i.keywordName(), v)
-                                else:
-                                        yield (v.code(), v)
-                                i.next()
-                def itervars(self):
-                        "Iterate all the variables in the record"
-                        i = self.varbegin()
-                        while i.valid():
-                                yield i.var()
-                                i.next()
+                        "List of names of variables in the record"
+                        return ((x.code(), x.enq()) for x in self.vars())
                 def __str__(self):
-                        return "Record{"+",".join([str(key)+": "+str(val) for key, val in self.iteritems()])+"}"
+                        return "{" + ", ".join(("%s: %s" % (a, b) for a, b in self.iteritems())) + "}"
                 def __repr__(self):
-                        return self.__str__();
+                        return "<Record %s>" % self.__str__()
         %}
-*/
 }
 
 /*
