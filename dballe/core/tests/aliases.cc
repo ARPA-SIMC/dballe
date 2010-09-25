@@ -17,10 +17,10 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-wreport.h>
-#include <wreport/aliases.h>
+#include <test-utils-core.h>
+#include "aliases.h"
 
-using namespace wreport;
+using namespace dballe;
 
 namespace tut {
 

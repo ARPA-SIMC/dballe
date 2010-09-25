@@ -64,7 +64,7 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 	else
 		error_consistency::throwf("\"%s\" is not one of the supported message types", type);
 
-	file = File::create(etype, fname, mode);
+	file = File::create(etype, fname, mode).release();
 
 	if (strchr(mode, 'r') != NULL)
 	{

@@ -35,7 +35,8 @@
  */
 
 #include <dballe/core/rawmsg.h>
-#include <stdio.h>
+#include <memory>
+#include <cstdio>
 
 namespace dballe {
 
@@ -110,7 +111,7 @@ public:
 	 * @returns
 	 *   The newly allocated File, that needs to be deleted by the caller.
 	 */
-	static File* create(Encoding type, const std::string& name, const char* mode);
+	static std::auto_ptr<File> create(Encoding type, const std::string& name, const char* mode);
 };
 
 } // namespace dballe

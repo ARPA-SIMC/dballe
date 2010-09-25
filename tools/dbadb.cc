@@ -351,7 +351,7 @@ int do_export(poptContext optCon)
 
 		MsgWriter writer;
 		writer.forced_rep_memo = parse_op_report(db);
-		writer.file = File::create(type, "(stdout)", "w");
+		writer.file = File::create(type, "(stdout)", "w").release();
 		writer.exporter = msg::Exporter::create(type, opts).release();
 
 		db.export_msgs(query, writer);

@@ -358,7 +358,7 @@ struct WriteRaw : public cmdline::Action
 
 	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
 	{
-		if (!file) file = File::create(rmsg.encoding, "(stdout)", "w");
+		if (!file) file = File::create(rmsg.encoding, "(stdout)", "w").release();
 		file->write(rmsg);
 	}
 };
@@ -559,7 +559,7 @@ int do_convert(poptContext optCon)
 		opts.template_name = op_output_template;
 	}
 
-	conv.file = File::create(outtype, "(stdout)", "w");
+	conv.file = File::create(outtype, "(stdout)", "w").release();
 	conv.importer = msg::Importer::create(intype).release();
 	conv.exporter = msg::Exporter::create(outtype, opts).release();
 
@@ -584,8 +584,8 @@ int do_compare(poptContext optCon)
 
 	Encoding in_type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 	Encoding out_type = dba_cmdline_stringToMsgType(op_output_type, optCon);
-	File* file1 = File::create(in_type, file1_name, "r");
-	File* file2 = File::create(out_type, file2_name, "r");
+	File* file1 = File::create(in_type, file1_name, "r").release();
+	File* file2 = File::create(out_type, file2_name, "r").release();
 	std::auto_ptr<msg::Importer> importer = msg::Importer::create(in_type);
 	std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(out_type);
 	size_t idx = 0;
@@ -800,7 +800,7 @@ int do_fixaof(poptContext optCon)
 	int count = 0;
 	while (const char* filename = poptGetArg(optCon))
 	{
-		auto_ptr<File> file(File::create(AOF, filename, "rb+"));
+		auto_ptr<File> file = File::create(AOF, filename, "rb+");
 		AofFile* aoffile = dynamic_cast<AofFile*>(file.get());
 		aoffile->fix_header();
 		++count;

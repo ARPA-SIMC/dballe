@@ -29,6 +29,7 @@
 #include <errno.h>
 
 using namespace wreport;
+using namespace std;
 
 namespace dballe {
 
@@ -108,7 +109,7 @@ public:
 
 } // anonymous namespace
 
-File* File::create(Encoding type, const std::string& name, const char* mode)
+auto_ptr<File> File::create(Encoding type, const std::string& name, const char* mode)
 {
 	fd_tracker fdt;
 
@@ -150,9 +151,9 @@ File* File::create(Encoding type, const std::string& name, const char* mode)
 
 	switch (type)
 	{
-		case BUFR: return new BufrFile(name, fdt.release(), fdt.close_on_exit);
-		case CREX: return new CrexFile(name, fdt.release(), fdt.close_on_exit);
-		case AOF: return new AofFile(name, fdt.release(), fdt.close_on_exit);
+		case BUFR: return auto_ptr<File>(new BufrFile(name, fdt.release(), fdt.close_on_exit));
+		case CREX: return auto_ptr<File>(new CrexFile(name, fdt.release(), fdt.close_on_exit));
+		case AOF: return auto_ptr<File>(new AofFile(name, fdt.release(), fdt.close_on_exit));
 	}
 }
 
