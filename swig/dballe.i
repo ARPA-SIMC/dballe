@@ -16,29 +16,28 @@
         }
 }
 
+%apply std::string {dballe::Rawmsg};
+
 %{
 #include <dballe/core/aliases.h>
 #include <wreport/vartable.h>
 #include <wreport/var.h>
+#include <wreport/subset.h>
+#include <wreport/bulletin.h>
 #include <dballe/core/var.h>
 #include <dballe/core/record.h>
+#include <dballe/core/rawmsg.h>
 
 // #include <dballe/db/db.h>
 // #include <dballe++/db.h>
 // #include <dballe++/format.h>
 // #include <dballe++/init.h>
-// #include <dballe++/bufrex.h>
 // #include <dballe++/msg.h>
 // #include <iostream>
 
 using namespace wreport;
 using namespace dballe;
 %}
-
-namespace std {
-        %template(VartableBase) vector<wreport::_Varinfo>;
-        %template(VarVector) vector<wreport::Var*>;
-};
 
 %typemap(in) wreport::Varcode {
         const char* tmp = PyString_AsString($input);
@@ -64,6 +63,13 @@ namespace std {
         $1 = PyString_Check($input) ? 1 : 0;
 }
 
+namespace std {
+        %template(VartableBase) vector<wreport::_Varinfo>;
+        %template(VarpVector) vector<wreport::Var*>;
+//        %template(VarVector) vector<wreport::Var>;
+        %template(VarcodeVector) vector<wreport::Varcode>;
+//        %template(SubsetVector) vector<wreport::Subset>;
+};
 
 %ignore dballe::newvar;
 
@@ -341,6 +347,54 @@ namespace dballe {
         %}
 }
 
+%extend wreport::Bulletin {
+        void datadesc_append(Varcode code)
+        {
+                $self->datadesc.push_back(code);
+        }
+        std::string encode()
+        {
+                std::string res;
+                $self->encode(res);
+                return res;
+        }
+        void subsets_clear() { $self->subsets.clear(); }
+        size_t subsets_size() { return $self->subsets.size(); }
+}
+%extend wreport::BufrBulletin {
+        std::string encode()
+        {
+                std::string res;
+                $self->encode(res);
+                return res;
+        }
+        void subsets_clear() { $self->subsets.clear(); }
+        size_t subsets_size() { return $self->subsets.size(); }
+}
+%extend wreport::CrexBulletin {
+        std::string encode()
+        {
+                std::string res;
+                $self->encode(res);
+                return res;
+        }
+        void subsets_clear() { $self->subsets.clear(); }
+        size_t subsets_size() { return $self->subsets.size(); }
+}
+
+/*
+%extend dballe::Rawmsg {
+        size_t size() const
+        {
+                return $self->size();
+        }
+        %pythoncode %{
+                def __len__(self):
+                        return self.size()
+        %}
+}
+*/
+
 /*
 #ifdef SWIGPYTHON
 
@@ -479,10 +533,7 @@ class TimeRange(tuple):
 #endif
 */
 
-//#include <wreport/bulletin.h>
 //#include <dballe/db/db.h>
-//%include <dballe++/var.h>
-//%include <dballe++/record.h>
 //%include <dballe++/bufrex.h>
 //%include <dballe++/msg.h>
 //%include <dballe++/db.h>
@@ -493,6 +544,9 @@ class TimeRange(tuple):
 %include <wreport/var.h>
 %include <dballe/core/var.h>
 %include <dballe/core/record.h>
+%include <dballe/core/rawmsg.h>
+%include <wreport/subset.h>
+%include <wreport/bulletin.h>
 
 /*
 Varinfo varinfo(Varcode code)

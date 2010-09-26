@@ -340,75 +340,87 @@ class RecordTest(unittest.TestCase):
         rec1 = rec.copy()
         rec1["query"] = "nosort"
 
-#class BufrexTest(unittest.TestCase):
-#    def testBUFRCreation(self):
-#        # Generate a synop message
-#        msg = Bufrex.createBUFR(98, 0, 6, 1)
-#        msg.appendDatadesc("D07005")
-#        msg.appendDatadesc("B13011")
-#        msg.appendDatadesc("B13013")
-#        subset = msg.append()
-#        self.assertEqual(msg.size(), 1)
-#        subset.appendi("B01001", 60)
-#        subset.appendi("B01002", 150)
-#        subset.appendi("B02001", 1)
-#        subset.appendi("B04001", 2004)
-#        subset.appendi("B04002", 11)
-#        subset.appendi("B04003", 30)
-#        subset.appendi("B04004", 12)
-#        subset.appendi("B04005", 0)
-#        subset.appendd("B05001", 33.88000)
-#        subset.appendd("B06001", -5.53000)
-#        subset.appendd("B07001", 560)
-#        subset.appendd("B10004", 94190)
-#        subset.appendd("B10051", 100540)
-#        subset.appendd("B10061", -180)
-#        subset.appendi("B10063", 8)
-#        subset.appendd("B11011", 80)
-#        subset.appendd("B11012", 4.0)
-#        subset.appendd("B12004", 289.2)
-#        subset.appendd("B12006", 285.7)
-#        subset.appendu("B13003")
-#        subset.appendd("B20001", 8000)
-#        subset.appendi("B20003", 2)
-#        subset.appendi("B20004", 6)
-#        subset.appendi("B20005", 2)
-#        subset.appendd("B20010", 100)
-#        subset.appendi("B08002", 1)
-#        subset.appendd("B20011", 8)
-#        subset.appendd("B20013", 250)
-#        subset.appendi("B20012", 39)
-#        subset.appendi("B20012", 61)
-#        subset.appendi("B20012", 60)
-#        subset.appendi("B08002", 1)
-#        subset.appendi("B20011", 2)
-#        subset.appendi("B20012", 8)
-#        subset.appendd("B20013", 320)
-#        subset.appendi("B08002", 2)
-#        subset.appendi("B20011", 5)
-#        subset.appendi("B20012", 8)
-#        subset.appendd("B20013", 620)
-#        subset.appendi("B08002", 3)
-#        subset.appendi("B20011", 2)
-#        subset.appendi("B20012", 9)
-#        subset.appendd("B20013", 920)
-#        subset.appendu("B08002")
-#        subset.appendu("B20011")
-#        subset.appendu("B20012")
-#        subset.appendu("B20013")
-#        subset.appendd("B13011", 0.5)
-#        subset.appendu("B13013")
-#        msg.setTemplate(0, 255, 1)
-#        msg.setEdition(3)
-#        msg.setTime(2004, 11, 30, 12, 0, 0)
-#        buf = msg.encode()
-#        assert len(buf) > 8
-#        self.assertEqual(buf[:4], "BUFR")
-#        self.assertEqual(buf[-4:], "7777")
-#
-#        msg.resetSections()
-#        self.assertEqual(msg.size(), 0)
-#
+class BulletinTest(unittest.TestCase):
+    def testBUFRCreation(self):
+        # Generate a synop message
+        msg = dballe.BufrBulletin()
+        msg.entre = 98
+        msg.subcentre = 0
+        msg.master_table = 14
+        msg.local_table = 0
+        msg.type = 0
+        msg.subtype = 255
+        msg.localsubtype = 1
+        msg.edition = 4
+        msg.rep_year = 2004
+        msg.rep_month = 11
+        msg.rep_day = 30
+        msg.rep_hour = 12
+        msg.rep_minute = 0
+        msg.rep_second = 0
+        msg.datadesc_append("D07005")
+        msg.datadesc_append("B13011")
+        msg.datadesc_append("B13013")
+        self.assertRaises(Exception, msg.obtain_subset, 0)
+        msg.load_tables()
+        subset = msg.obtain_subset(0)
+        subset.store_variable_i("B01001", 60)
+        subset.store_variable_i("B01002", 150)
+        subset.store_variable_i("B02001", 1)
+        subset.store_variable_i("B04001", 2004)
+        subset.store_variable_i("B04002", 11)
+        subset.store_variable_i("B04003", 30)
+        subset.store_variable_i("B04004", 12)
+        subset.store_variable_i("B04005", 0)
+        subset.store_variable_d("B05001", 33.88000)
+        subset.store_variable_d("B06001", -5.53000)
+        subset.store_variable_d("B07001", 560)
+        subset.store_variable_d("B10004", 94190)
+        subset.store_variable_d("B10051", 100540)
+        subset.store_variable_d("B10061", -180)
+        subset.store_variable_i("B10063", 8)
+        subset.store_variable_d("B11011", 80)
+        subset.store_variable_d("B11012", 4.0)
+        subset.store_variable_d("B12004", 289.2)
+        subset.store_variable_d("B12006", 285.7)
+        subset.store_variable_undef("B13003")
+        subset.store_variable_d("B20001", 8000)
+        subset.store_variable_i("B20003", 2)
+        subset.store_variable_i("B20004", 6)
+        subset.store_variable_i("B20005", 2)
+        subset.store_variable_d("B20010", 100)
+        subset.store_variable_i("B08002", 1)
+        subset.store_variable_d("B20011", 8)
+        subset.store_variable_d("B20013", 250)
+        subset.store_variable_i("B20012", 39)
+        subset.store_variable_i("B20012", 61)
+        subset.store_variable_i("B20012", 60)
+        subset.store_variable_i("B08002", 1)
+        subset.store_variable_i("B20011", 2)
+        subset.store_variable_i("B20012", 8)
+        subset.store_variable_d("B20013", 320)
+        subset.store_variable_i("B08002", 2)
+        subset.store_variable_i("B20011", 5)
+        subset.store_variable_i("B20012", 8)
+        subset.store_variable_d("B20013", 620)
+        subset.store_variable_i("B08002", 3)
+        subset.store_variable_i("B20011", 2)
+        subset.store_variable_i("B20012", 9)
+        subset.store_variable_d("B20013", 920)
+        subset.store_variable_undef("B08002")
+        subset.store_variable_undef("B20011")
+        subset.store_variable_undef("B20012")
+        subset.store_variable_undef("B20013")
+        subset.store_variable_d("B13011", 0.5)
+        subset.store_variable_undef("B13013")
+        buf = msg.encode()
+        assert len(buf) > 8
+        self.assertEqual(buf[:4], "BUFR")
+        self.assertEqual(buf[-4:], "7777")
+
+        msg.subsets_clear()
+        self.assertEqual(msg.subsets_size(), 0)
+
 #class MsgTest(unittest.TestCase):
 #    def testBUFRCreation(self):
 #        msg = Msg()
