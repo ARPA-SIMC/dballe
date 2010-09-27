@@ -15,7 +15,7 @@ class Parser(OptionParser):
         self.print_help(sys.stderr)
         sys.exit(2)
 
-parser = Parser(usage="usage: %prog [options] command [args...]",
+parser = Parser(usage="usage: %prog [options] key=val [key=val ...]",
                 version="%prog "+ VERSION,
                 description="perform common operations on a DB-ALLe database")
 parser.add_option("--dsn", default="test", help="DSN to use to connect to the database (default: %default)")
@@ -34,11 +34,12 @@ import dballe, dballe.dbacsv
 # Parse the query
 query = dballe.Record()
 for q in args:
-    query.setFromString(q)
+    query.set_from_string(q)
 
-query.dumpToStderr()
+print >>sys.stderr, query
 
-db = dballe.DB(options.dsn, options.user, options.password)
+db = dballe.DB()
+db.connect(options.dsn, options.user, options.password)
 
 exporter = dballe.dbacsv.export(db, query, sys.stdout)
 

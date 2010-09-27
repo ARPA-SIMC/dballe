@@ -7,6 +7,12 @@ Export data from DB-All.e into CSV format
 import dballe
 import csv
 
+def intormiss(x):
+    if x == dballe.MISSING_INT:
+        return "-"
+    else:
+        return "%d" % x
+
 class Exporter:
     def __init__(self, db):
         self.db = db
@@ -16,7 +22,7 @@ class Exporter:
         self.attrData = {}
 
     def getpaval (self, x, var):
-        id = x.enqi("ana_id")
+        id = x["ana_id"]
         data = self.anaData[id]
         #print "***********", id, av, data
         if data.has_key(var):
@@ -25,9 +31,9 @@ class Exporter:
             return ""
 
     def getattrval (self, x, v):
-        data = self.attrData["%d,%s"%(x.enqi("context_id"),x.enqc("var"))]
-        if data.contains(v):
-            return data.enqvar(v).format()
+        data = self.attrData["%d,%s"%(x["context_id"],x["var"])]
+        if v in data:
+            return data.getvar(v).format()
         else:
             return ""
 
@@ -46,23 +52,23 @@ class Exporter:
         tranges = set()
         vars = set()
         attrs = {}
-        for d in self.db.query(filter):
+        for d in self.db.query_data(filter):
             # Add columns about the station
-            id = d.enqi("ana_id")
-            stations[id] = [d.enqd("lat"), d.enqd("lon"), d.enqc("ident")]
-            idents.add(d.enqc("ident"))
+            id = d["ana_id"]
+            stations[id] = [d["lat"], d["lon"], d.get("ident", None)]
+            idents.add(d.get("ident", None))
 
             # Get info about the pseudoana extra data
-            if not self.anaData.has_key(id):
+            if id not in self.anaData:
                 query = dballe.Record()
-                query.seti("ana_id", id)
-                query.setAnaContext()
+                query["ana_id"] = id
+                query.set_ana_context()
                 items = {}
-                for record in self.db.query(query):
-                    v = record.enqc("var")
-                    items[v] = record.enqvar(v).copy()
-                    val = record.enqvar(v).format("");
-                    if anaVars.has_key(v):
+                for record in self.db.query_data(query):
+                    v = record["var"]
+                    items[v] = dballe.Var(record.getvar(v))
+                    val = record.getvar(v).format("");
+                    if v in anaVars:
                         if anaVars[v] != val:
                             anaVars[v] = None
                     else:
@@ -73,30 +79,30 @@ class Exporter:
             # Add columns about the context
 
             # Repcod
-            reps.add(d.enqi("rep_cod"))
-            rcod[d.enqi("rep_cod")] = d.enqc("rep_memo")
+            reps.add(d["rep_cod"])
+            rcod[d["rep_cod"]] = d["rep_memo"]
 
             # Date
-            dates.add(d.enqdate())
+            dates.add(d["date"])
 
             # Level layer
-            levels.add("%d,%d,%d,%d" % (d.enqi("leveltype1"), d.enqi("l1"), d.enqi("leveltype2"), d.enqi("l2")))
+            levels.add(",".join([intormiss(x) for x in d["level"]]))
 
             # Time range
-            tranges.add("%d,%d,%d" % (d.enqi("pindicator"), d.enqi("p1"), d.enqi("p2")))
+            tranges.add(",".join([intormiss(x) for x in d["trange"]]))
 
             # Variables
-            vars.add(d.enqc("var"))
+            vars.add(d["var"])
 
             # Attributes
             attributes = dballe.Record()
-            self.db.attrQuery(d.enqi("context_id"), d.enqc("var"), attributes)
-            self.attrData["%d,%s"%(d.enqi("context_id"), d.enqc("var"))] = attributes
+            self.db.query_attrs(d["context_id"], d["var"], [], attributes)
+            self.attrData["%d,%s"%(d["context_id"], d["var"])] = attributes
             for v in attributes:
                 #attrs.add(v.code())
                 code = v.code()
                 val = v.format("");
-                if attrs.has_key(code):
+                if code in attrs:
                     if attrs[code] != val:
                         attrs[code] = None
                 else:
@@ -114,44 +120,44 @@ class Exporter:
             else:
                 title = title + "Mobile station %s, lat %f, lon %f. " % (data[2], data[0], data[1])
         else:
-            cols.append(["Station", lambda x: x.enqi("ana_id")])
-            cols.append(["Latitude", lambda x: x.enqd("lat")])
-            cols.append(["Longitude", lambda x: x.enqd("lon")])
+            cols.append(["Station", lambda x: x["ana_id"]])
+            cols.append(["Latitude", lambda x: x["lat"]])
+            cols.append(["Longitude", lambda x: x["lon"]])
             if len(idents) > 1:
-                cols.append(["Ident", lambda x: x.enqc("ident") or ""])
+                cols.append(["Ident", lambda x: x.get("ident", None) or ""])
 
         # Repcod
         if len(reps) == 1:
             title = title + "Report: %s." % rcod[reps.pop()]
         elif len(reps) > 1:
-            cols.append(["Report", lambda x: x.enqc("rep_memo")])
+            cols.append(["Report", lambda x: x["rep_memo"]])
 
         # Date
         if len(dates) == 1:
             title = title + "Date: %s." % (dates.pop())
         elif len(dates) > 1:
-            cols.append(["Date", lambda x: x.enqdate()])
+            cols.append(["Date", lambda x: x["date"]])
 
         # Level layer
         if len(levels) == 1:
             title = title + "Level: %s." % (levels.pop())
         elif len(levels) > 1:
-            cols.append(["Level1", lambda x: x.enqi("leveltype1")])
-            cols.append(["L1", lambda x: x.enqi("l1")])
-            cols.append(["Level2", lambda x: x.enqi("leveltype2")])
-            cols.append(["L2", lambda x: x.enqi("l2")])
+            cols.append(["Level1", lambda x: intormiss(x["leveltype1"])])
+            cols.append(["L1", lambda x: intormiss(x["l1"])])
+            cols.append(["Level2", lambda x: intormiss(x["leveltype2"])])
+            cols.append(["L2", lambda x: intormiss(x["l2"])])
 
         # Time range
         if len(tranges) == 1:
             title = title + "Time range: %s." % (tranges.pop())
         elif len(tranges) > 1:
-            cols.append(["Time range", lambda x: x.enqi("pindicator")])
-            cols.append(["P1", lambda x: x.enqi("p1")])
-            cols.append(["P2", lambda x: x.enqi("p2")])
+            cols.append(["Time range", lambda x: intormiss(x["pindicator"])])
+            cols.append(["P1", lambda x: intormiss(x["p1"])])
+            cols.append(["P2", lambda x: intormiss(x["p2"])])
 
         # Variables
         for v in sorted(vars):
-            cols.append([v, lambda x, v=v: x.enqvar(v).format("")])
+            cols.append([v, lambda x, v=v: x.getvar(v).format("")])
 
         # Column for special station ana data
         for av in sorted(anaVars.keys()):
@@ -198,7 +204,7 @@ class Exporter:
         # Print the column titles
         writer.writerow([x[0] for x in self.cols])
 
-        for result in self.db.query(filter):
+        for result in self.db.query_data(filter):
             fields = []
             for c in self.cols:
                 fields.append(c[1](result))
