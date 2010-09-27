@@ -9,7 +9,7 @@ class QueryTextCtrl(wx.TextCtrl, ModelListener):
 		# tag to identify the model filter changes to which we react
 		self.filterTag = filterTag
 		self.updateFunc = updateFunc
-		if isValid == None:
+		if isValid is None:
 			self.isValid = lambda x: True
 		else:
 			self.isValid = isValid
@@ -48,14 +48,14 @@ class QueryTextCtrl(wx.TextCtrl, ModelListener):
 
 	def activated(self, event):
 		#print "Activated", self.GetValue()
-		if self.updateFunc != None:
+		if self.updateFunc is not None:
 			self.updateFunc(self.readValue())
 
 	def filterChanged(self, what):
 		if what == self.filterTag:
 			self.updating = True
 			text = self.model.filter.enqc(self.filterTag)
-			if text != None:
+			if text is not None:
 				self.SetValue(text)
 			else:
 				self.SetValue("")

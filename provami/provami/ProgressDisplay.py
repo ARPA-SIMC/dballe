@@ -11,11 +11,11 @@ class ProgressDisplay(ProgressListener):
 	def progress(self, perc, text):
 		print "%d%%: %s" % (perc, text)
 		if perc == 100:
-			if self.dlg != None:
+			if self.dlg is not None:
 				self.dlg.Destroy()
 				self.dlg = None
 		else:
-			if self.dlg == None:
+			if self.dlg is None:
 				self.dlg = wx.ProgressDialog("Updating data",
 						text,
 						maximum = 100,

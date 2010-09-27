@@ -26,11 +26,11 @@ class ResultTable(wx.grid.PyGridTableBase):
 
 	def appendColumn(self, title, renderer = None, sorter = None, editable = False):
 		self.colNames.append(title)
-		if renderer != None:
+		if renderer is not None:
 			self.renderer.append(renderer)
 		else:
 			self.renderer.append(lambda x: str(x))
-		if sorter != None:
+		if sorter is not None:
 			self.sorter.append(sorter)
 		else:
 			self.sorter.append(lambda x, y: cmp(x, y))
@@ -82,7 +82,7 @@ class ResultTable(wx.grid.PyGridTableBase):
 		"""
 		attr = wx.grid.GridCellAttr()
 		provider = self.GetAttrProvider()
-		if provider != None:
+		if provider is not None:
 			defattr = provider.GetAttr(row, col, kind)
 			if defattr is not None:
 				attr.MergeWith(defattr)
@@ -112,7 +112,7 @@ class ResultTable(wx.grid.PyGridTableBase):
 
 		# This triggers a redraw
 		view = self.GetView()
-		if view != None:
+		if view is not None:
 			view.ProcessTableMessage(
 				wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
 		self.GetView().Refresh()
@@ -120,7 +120,7 @@ class ResultTable(wx.grid.PyGridTableBase):
 	def sort(self):
 		"Resort using the current sorting column"
 
-		if self.sortColumn != None:
+		if self.sortColumn is not None:
 			if self.sortDescending:
 				self.items.sort(lambda a, b: self.sorter[self.sortColumn](b, a))
 			else:
@@ -128,7 +128,7 @@ class ResultTable(wx.grid.PyGridTableBase):
 
 		# This triggers a redraw
 		view = self.GetView()
-		if view != None:
+		if view is not None:
 			view.ProcessTableMessage(
 				wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
 
@@ -136,7 +136,7 @@ class ResultTable(wx.grid.PyGridTableBase):
 		count = len(self.items)
 		self.items = []
 		view = self.GetView()
-		if view != None:
+		if view is not None:
 			view.ProcessTableMessage(
 				wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, count))
 			# FIXME: wxwidgets bug workaround to have the
@@ -257,8 +257,8 @@ class ResultGrid(wx.grid.Grid):
 
 	def onCellRightClicked(self, event):
 		"Handle popping up a menu at right click"
-		if self.popupMenu != None:
-			if getattr(self.popupMenu, "configureCell", None) != None:
+		if self.popupMenu is not None:
+			if getattr(self.popupMenu, "configureCell", None) is not None:
 				# If the menu has a configureCell method, call
 				# it to give a chance to offer a different,
 				# per-cell menu
@@ -316,10 +316,10 @@ class ResultGrid(wx.grid.Grid):
 		return (data, self.currentCol)
 
 	def restoreCurrent(self, current):
-		if current == None: return
+		if current is None: return
 		data, col = current
 		row = self.GetTable().getRow(data) or 0
-		if col == None: col = 0
+		if col is None: col = 0
 		self.SetGridCursor(row, col)
 
 		# Scroll to the cell if it went out of view

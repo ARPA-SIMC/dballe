@@ -59,8 +59,8 @@ class MapChoice(wx.Panel):
 		self.largeButton.Enable()
 		self.smallButton.Enable()
 
-		if self.model.filter.enqd("latmin") == None and self.model.filter.enqd("lonmin") == None and \
-		   self.model.filter.enqd("latmax") == None and self.model.filter.enqd("lonmax") == None:
+		if self.model.filter["latmin"] is None and self.model.filter["lonmin"] is None and \
+		   self.model.filter["latmax"] is None and self.model.filter["lonmax"] is None:
 			self.resetButton.Disable()
 		else:
 			self.resetButton.Enable()
@@ -75,16 +75,16 @@ class MapChoice(wx.Panel):
 		self.lonmax = -1000.0
 		self.points = []
 		for s in self.model.stations():
-			lat = s.enqd("lat")
+			lat = s["lat"]
 			if lat < self.latmin: self.latmin = lat
 			if lat > self.latmax: self.latmax = lat
-			lon = s.enqd("lon")
+			lon = s["lon"]
 			if lon < self.lonmin: self.lonmin = lon
 			if lon > self.lonmax: self.lonmax = lon
 			p = FloatCanvas.Point((lon, lat), Color = "RED", Diameter = 3)
 			self.points.append(p)
 			self.canvas.AddObject(p)
-			#self.canvas.AddPoint((s.enqd("lon"), s.enqd("lat")), Color = "RED", Diameter = 3)
+			#self.canvas.AddPoint((s["lon"], s["lat"]), Color = "RED", Diameter = 3)
 
 		if self.lonmax - self.lonmin < 12:
 			self.lonmax = self.lonmax + 6

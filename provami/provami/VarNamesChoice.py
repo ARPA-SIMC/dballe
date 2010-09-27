@@ -8,14 +8,14 @@ class VarNamesChoice(QueryChoice):
 		self.hasData("vartypes")
 
 	def readFilterFromRecord(self, record):
-		return record.enqc("var")
+		return record.get("var", None)
 
 	def readOptions(self):
 		res = []
 		res.append(("All variables", None))
 		for v in self.model.variableTypes():
-			info = dballe.Varinfo.create(v)
-			res.append(("%s: %s (%s)" % (v, info.desc().lower(), info.unit()), v))
+			info = dballe.varinfo(v)
+			res.append(("%s: %s (%s)" % (v, info.desc.lower(), info.unit), v))
 		return res
 
 	def selected(self, event):

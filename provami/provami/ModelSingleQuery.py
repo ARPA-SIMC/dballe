@@ -33,15 +33,15 @@ class Model:
 		count = 0
 		for record in dcur:
 			self.results.append(record.copy())
-			self.cache_stations[record.enqi("ana_id")] = [ \
-			        	record.enqd("lat"), \
-			        	record.enqd("lon"), \
-			        	record.enqd("ident") ]
+			self.cache_stations[record["ana_id"]] = [ \
+			        	record["lat"], \
+			        	record["lon"], \
+			        	record["ident"] ]
 			self.cache_levels[",".join(map(lambda x: record.enqc(x), ["leveltype1", "l1", "leveltype2", "l2"]))] = 1
 			self.cache_tranges[",".join(map(lambda x: record.enqc(x), ["pindicator", "p1", "p2"]))] = 1
 			self.cache_vtypes[dcur.varcode()] = 1
-			self.cache_idents[record.enqc("ident")] = 1
-			self.cache_reports[record.enqi("rep_cod")] = record.enqc("rep_memo")
+			self.cache_idents[record["ident"]] = 1
+			self.cache_reports[record["rep_cod"]] = record["rep_memo"]
 			count = count + 1
 			if count % 10000 == 0:
 				print count
@@ -113,17 +113,17 @@ class Model:
 
 	def setAreaFilter(self, latmin, latmax, lonmin, lonmax):
 		updated = False
-		if latmin != self.filter.enqd("latmin"):
-			self.filter.setd("latmin", latmin)
+		if latmin != self.filter.get("latmin", None):
+			self.filter["latmin"] = latmin
 			updated = True
-		if latmin != self.filter.enqd("latmax"):
-			self.filter.setd("latmax", latmax)
+		if latmin != self.filter.get("latmax", None):
+			self.filter["latmax"] = latmax
 			updated = True
-		if latmin != self.filter.enqd("lonmin"):
-			self.filter.setd("lonmin", lonmin)
+		if latmin != self.filter.get("lonmin", None):
+			self.filter["lonmin"] = lonmin
 			updated = True
-		if latmin != self.filter.enqd("lonmax"):
-			self.filter.setd("lonmax", lonmax)
+		if latmin != self.filter.get("lonmax", None):
+			self.filter["lonmax"] = lonmax
 			updated = True
 		if updated:
 			self.update()
@@ -131,17 +131,17 @@ class Model:
 	def setLevelFilter(self, ltype1, l1, ltype2, l2):
 		# If the value has changed, perform the update
 		updated = False
-		if ltype1 != self.filter.enqi("leveltype1"):
-			self.filter.seti("leveltype1", ltype1)
+		if ltype1 != self.filter.get("leveltype1", None):
+			self.filter["leveltype1"] = ltype1
 			updated = True
-		if l1 != self.filter.enqi("l1"):
-			self.filter.seti("l1", l1)
+		if l1 != self.filter.get("l1", None):
+			self.filter["l1"] = l1
 			updated = True
-		if ltype2 != self.filter.enqi("leveltype2"):
-			self.filter.seti("leveltype2", ltype2)
+		if ltype2 != self.filter.get("leveltype2", None):
+			self.filter["leveltype2"] = ltype2
 			updated = True
-		if l2 != self.filter.enqi("l2"):
-			self.filter.seti("l2", l2)
+		if l2 != self.filter.get("l2", None):
+			self.filter["l2"] = l2
 			updated = True
 		if updated:
 			self.update()
@@ -149,32 +149,32 @@ class Model:
 	def setTimeRangeFilter(self, pind, p1, p2):
 		# If the value has changed, perform the update
 		updated = False
-		if pind != self.filter.enqi("pindicator"):
-			self.filter.seti("pindicator", pind)
+		if pind != self.filter.get("pindicator", None):
+			self.filter["pindicator"] = pind
 			updated = True
-		if p1 != self.filter.enqi("p1"):
-			self.filter.seti("p1", p1)
+		if p1 != self.filter.get("p1", None):
+			self.filter["p1"] = p1
 			updated = True
-		if p2 != self.filter.enqi("p2"):
-			self.filter.seti("p2", p2)
+		if p2 != self.filter.get("p2", None):
+			self.filter["p2"] = p2
 			updated = True
 		if updated:
 			self.update()
 
 	def setIdentFilter(self, mobile, ident):
 		updated = False
-		if mobile != self.filter.enqc("mobile"):
-			self.filter.setc("mobile", mobile)
+		if mobile != self.filter.get("mobile", None):
+			self.filter["mobile"] = mobile
 			updated = True
-		if ident != self.filter.enqc("ident"):
-			self.filter.setc("ident", ident)
+		if ident != self.filter.get("ident", None):
+			self.filter["ident"] = ident
 			updated = True
 		if updated:
 			self.update()
 
 	def setResultLimit(self, limit):
 		updated = False
-		if limit == None and self.truncateResults:
+		if limit is None and self.truncateResults:
 			self.truncateResults = False;
 			updated = True;
 		else:

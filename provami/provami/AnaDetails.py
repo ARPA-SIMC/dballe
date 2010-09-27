@@ -6,8 +6,8 @@ from provami.ResultGrid import ResultTable, ResultGrid
 from provami.DataMenu import DataMenu
 
 def val_compare(a, b):
-    vara = a.enqvar(a.enqc("var"))
-    varb = b.enqvar(b.enqc("var"))
+    vara = a.getvar(a["var"])
+    varb = b.getvar(b["var"])
     isstra = vara.info().is_string()
     isstrb = varb.info().is_string()
     if isstra and isstrb:
@@ -26,24 +26,24 @@ class AnaTable(ResultTable):
         self.model = model
         
         self.appendColumn("Network", \
-                  renderer = lambda x: x.enqc("rep_memo"), \
-                  sorter = lambda x, y: cmp(x.enqc("rep_memo"), y.enqc("rep_memo")))
+                  renderer = lambda x: x["rep_memo"], \
+                  sorter = lambda x, y: cmp(x["rep_memo"], y["rep_memo"]))
 
         self.appendColumn("Variable", \
-                  renderer = lambda x: x.enqc("var"), \
-                  sorter = lambda x, y: cmp(x.enqc("var"), y.enqc("var")))
+                  renderer = lambda x: x["var"], \
+                  sorter = lambda x, y: cmp(x["var"], y["var"]))
 
         self.appendColumn("Value", \
-                  renderer = lambda x: x.enqvar(x.enqc("var")).format(), \
+                  renderer = lambda x: x.getvar(x["var"]).format(), \
                   sorter = val_compare,
                   editable = True)
 
         self.appendColumn("Unit", \
-                  renderer = lambda x: x.enqvar(x.enqc("var")).info().unit(), \
+                  renderer = lambda x: x.getvar(x["var"]).info().unit, \
                   sorter = val_compare)
 
         self.appendColumn("Description", \
-                  renderer = lambda x: x.enqvar(x.enqc("var")).info().desc(), \
+                  renderer = lambda x: x.getvar(x["var"]).info().desc, \
                   sorter = val_compare)
 
     def SetValue(self, row, col, value):
@@ -52,12 +52,12 @@ class AnaTable(ResultTable):
 
         try :
             record = self.items[row]
-            varcode = record.enqc("var")
-            var = record.enqvar(varcode)
+            varcode = record["var"]
+            var = record.getvar(varcode)
             if var.info().is_string():
-                record.setc(varcode, str(value))
+                record[varcode] = str(value)
             else:
-                record.setd(varcode, float(value))
+                record[varcode] = float(value)
             self.model.writeRecord(record)
         except ValueError:
             pass
@@ -66,18 +66,18 @@ class AnaTable(ResultTable):
         count = len(self.items)
         self.items = []
 
-        if id != None:
+        if id is not None:
             query = dballe.Record()
-            query.seti("ana_id", id)
-            query.setAnaContext()
-            query.unset("rep_cod")
-            for record in self.model.db.query(query):
+            query["ana_id"] = id
+            query.set_ana_context()
+            del query["rep_cod"]
+            for record in self.model.db.query_data(query):
                 self.items.append(record.copy())
 
             self.sort()
 
         view = self.GetView()
-        if view != None:
+        if view is not None:
             view.ProcessTableMessage(
                 wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, count))
             view.ProcessTableMessage(
@@ -88,11 +88,11 @@ class AnaTable(ResultTable):
             view.FitInside()
 
     def getRow(self, data):
-        if data == None: return None
-        ana_id = data.enqi("ana_id")
-        rep_cod = data.enqi("rep_cod")
+        if data is None: return None
+        ana_id = data["ana_id"]
+        rep_cod = data["rep_cod"]
         for row, d in enumerate(self.items):
-            if d.enqi("ana_id") == ana_id and d.enqi("rep_cod")  == rep_cod:
+            if d["ana_id"] == ana_id and d["rep_cod"]  == rep_cod:
                 return row
         return None
 
@@ -149,8 +149,8 @@ class AnaResults(wx.Frame, ModelListener):
 
     def filterChanged(self, what):
         if what == "station":
-            id = self.model.filter.enq("ana_id")
-            if id != None:
+            id = self.model.filter.get("ana_id", None)
+            if id is not None:
                 self.displayID(id);
 
     def hasData (self, what):
@@ -166,14 +166,14 @@ class AnaResults(wx.Frame, ModelListener):
     def onFlyOver(self, event):
         row, col = event.GetCell()
         record = event.GetData()
-        if record != None:
-            info = record.enqvar(record.enqc("var")).info()
-            info = "%s (%s)" % (info.desc(), info.unit())
+        if record is not None:
+            info = record.getvar(record["var"]).info()
+            info = "%s (%s)" % (info.desc, info.unit)
             self.statusBar.SetStatusText(info, 0)
 
     def displayID(self, id):
         current = self.data.saveCurrent()
-        if id == None:
+        if id is None:
             self.data.GetTable().display(None)
             self.st_lat.SetLabel("")
             self.st_lon.SetLabel("")
@@ -183,7 +183,7 @@ class AnaResults(wx.Frame, ModelListener):
             id, lat, lon, ident = self.model.stationByID(id)
             self.st_lat.SetLabel(str(lat))
             self.st_lon.SetLabel(str(lon))
-            if ident == None:
+            if ident is None:
                 self.st_type.SetLabel("fixed station")
             else:
                 self.st_type.SetLabel("mobile station " + ident)
@@ -192,19 +192,19 @@ class AnaResults(wx.Frame, ModelListener):
 
     def displayRecord(self, record):
         current = self.data.saveCurrent()
-        if record == None:
+        if record is None:
             self.data.GetTable().display(None)
             self.st_lat.SetLabel("")
             self.st_lon.SetLabel("")
             self.st_type.SetLabel("")
             self.currentID = None
         else:
-            self.currentID = record.enqi("ana_id")
+            self.currentID = record["ana_id"]
             self.data.GetTable().display(self.currentID)
-            self.st_lat.SetLabel(str(record.enqd("lat")))
-            self.st_lon.SetLabel(str(record.enqd("lon")))
-            ident = record.enqc("ident")
-            if ident == None:
+            self.st_lat.SetLabel(str(record["lat"]))
+            self.st_lon.SetLabel(str(record["lon"]))
+            ident = record.get("ident", None)
+            if ident is None:
                 self.st_type.SetLabel("fixed station")
             else:
                 self.st_type.SetLabel("mobile station " + ident)
@@ -221,20 +221,20 @@ class AnaResults(wx.Frame, ModelListener):
     def onDataMenu(self, event):
         if event.GetId() == DataMenu.ACTION_SELECT_SAME_ANA_ID:
             record = self.dataMenu.getData()
-            self.model.setStationFilter(record.enqi("ana_id"))
+            self.model.setStationFilter(record["ana_id"])
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_IDENT:
             record = self.dataMenu.getData()
-            ident = record.enqc("ident")
-            self.model.setIdentFilter(ident != None, ident)
+            ident = record["ident"]
+            self.model.setIdentFilter(ident is not None, ident)
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_REPCOD:
             record = self.dataMenu.getData()
-            self.model.setReportFilter(record.enqi("rep_cod"))
+            self.model.setReportFilter(record["rep_cod"])
         elif event.GetId() == DataMenu.ACTION_DELETE_CURRENT:
             record = self.dataMenu.getData()
-            context, id = record.enqi("context_id"), record.enqc("var")
+            context, id = record["context_id"], record["var"]
             self.model.deleteValues(((context, id),))
         elif event.GetId() == DataMenu.ACTION_DELETE_SELECTED:
             grid = self.dataMenu.getGrid()
-            self.model.deleteValues([(r.enqi("context_id"), r.enqc("var")) for r in grid.getSelectedData()])
+            self.model.deleteValues([(r["context_id"], r["var"]) for r in grid.getSelectedData()])
         else:
             event.Skip()

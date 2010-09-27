@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import wx
 import wx.grid
-from dballe import Level, TimeRange
+import dballe
 from provami.Model import ModelListener, DateUtils, datetimeFromRecord
 from provami.ResultGrid import ResultTable, ResultGrid
 from provami.DataMenu import DataMenu
@@ -13,8 +13,8 @@ from provami.DataMenu import DataMenu
 # http://wiki.wxpython.org/index.cgi/wxGrid
 
 def val_compare(a, b):
-    vara = a.enqvar(a.enqc("var"))
-    varb = b.enqvar(b.enqc("var"))
+    vara = a.getvar(a["var"])
+    varb = b.getvar(b["var"])
     isstra = vara.info().is_string()
     isstrb = varb.info().is_string()
     if isstra and isstrb:
@@ -26,37 +26,43 @@ def val_compare(a, b):
     else:
         return cmp(vara.enqd(), varb.enqd())
 
+def intormiss(x):
+    if x == dballe.MISSING_INT:
+        return "-"
+    else:
+        return "%d" % x
+
 class DataTable(ResultTable):
     def __init__(self, model):
         ResultTable.__init__(self)
         self.model = model
         
         self.appendColumn("Ana", \
-                  renderer = lambda x: x.enqc("ana_id"), 
-                  sorter = lambda x, y: cmp(x.enqi("ana_id"), y.enqi("ana_id")))
+                  renderer = lambda x: x["ana_id"], 
+                  sorter = lambda x, y: cmp(x["ana_id"], y["ana_id"]))
 
         self.appendColumn("Network", \
-                  renderer = lambda x: x.enqc("rep_memo"), \
-                  sorter = lambda x, y: cmp(x.enqc("rep_memo"), y.enqc("rep_memo")))
+                  renderer = lambda x: x["rep_memo"], \
+                  sorter = lambda x, y: cmp(x["rep_memo"], y["rep_memo"]))
 
         self.appendColumn("Date", \
-                  renderer = lambda x: x.enqdate(), \
-                  sorter = lambda x, y: cmp(x.enqdate(), y.enqdate()))
+                  renderer = lambda x: x["date"], \
+                  sorter = lambda x, y: cmp(x["date"], y["date"]))
 
         self.appendColumn("Level", \
-                  renderer = lambda x: "%d,%d,%d,%d" % x.enqlevel(), \
-                  sorter = lambda x, y: cmp(x.enqlevel(), y.enqlevel()))
+                  renderer = lambda x: ",".join([intormiss(y) for y in x["level"]]), \
+                  sorter = lambda x, y: cmp(x["level"], y["level"]))
 
         self.appendColumn("Time range", \
-                  renderer = lambda x: "%d,%d,%d" % x.enqtimerange(), \
-                  sorter = lambda x, y: cmp(x.enqtimerange(), y.enqtimerange()))
+                  renderer = lambda x: ",".join([intormiss(y) for y in x["trange"]]), \
+                  sorter = lambda x, y: cmp(x["trange"], y["trange"]))
 
         self.appendColumn("Variable", \
-                  renderer = lambda x: x.enqc("var"), \
-                  sorter = lambda x, y: cmp(x.enqc("var"), y.enqc("var")))
+                  renderer = lambda x: x["var"], \
+                  sorter = lambda x, y: cmp(x["var"], y["var"]))
 
         self.appendColumn("Value", \
-                  renderer = lambda x: x.enqvar(x.enqc("var")).format(), \
+                  renderer = lambda x: x.getvar(x["var"]).format(), \
                   sorter = val_compare,
                   editable = True)
 
@@ -66,12 +72,12 @@ class DataTable(ResultTable):
 
         try:
             record = self.items[row]
-            varcode = record.enqc("var")
-            var = record.enqvar(varcode)
+            varcode = record["var"]
+            var = record.getvar(varcode)
             if var.info().is_string():
-                record.setc(varcode, str(value))
+                record[varcode] = str(value)
             else:
-                record.setd(varcode, float(value))
+                record[varcode] = float(value)
             self.model.writeRecord(record)
         except ValueError:
             pass
@@ -79,16 +85,16 @@ class DataTable(ResultTable):
     def rowByContextAndVar(self, context, var):
         "Return the row number of a result given its context id and varcode"
         for idx, i in enumerate(self.items):
-            if i.enqi("context_id") == context and i.enqc("var") == var:
+            if i["context_id"] == context and i["var"] == var:
                 return idx
         return None
 
     def getRow(self, data):
-        if data == None: return None
-        context_id = data.enqi("context_id")
-        var = data.enqc("var")
+        if data is None: return None
+        context_id = data["context_id"]
+        var = data["var"]
         for row, d in enumerate(self.items):
-            if d.enqi("context_id") == context_id and d.enqc("var") == var:
+            if d["context_id"] == context_id and d["var"] == var:
                 return row
         return None
 
@@ -97,7 +103,7 @@ class DataTable(ResultTable):
             self.items.append(record.copy())
         self.sort()
         view = self.GetView()
-        if view != None:
+        if view is not None:
             view.ProcessTableMessage(
                 wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.items)))
             # FIXME: wxwidgets bug workaround to have the
@@ -146,44 +152,44 @@ class DataPanel(wx.Panel, ModelListener):
     def onFlyOver(self, event):
         row, col = event.GetCell()
         record = event.GetData()
-        if record != None:
+        if record is not None:
             if col == 0:
-                ident = record.enqc("ident")
-                if ident == None:
+                ident = record.get("ident", None)
+                if ident is None:
                     info = "Fixed station"
                 else:
                     info = "Mobile station " + ident
-                info = info + ", lat %f, lon %f" % (record.enqd("lat"), record.enqd("lon"))
+                info = info + ", lat %f, lon %f" % (record["lat"], record["lon"])
             elif col == 3:
-                info = str(record.enqlevel())
+                info = dballe.Level(*record["level"]).describe()
             elif col == 4:
-                info = str(record.enqtimerange())
+                info = dballe.Trange(*record["trange"]).describe()
             else:
-                info = record.enqvar(record.enqc("var")).info()
-                info = "%s (%s)" % (info.desc(), info.unit())
+                info = record.getvar(record["var"]).info()
+                info = "%s (%s)" % (info.desc, info.unit)
 
             self.statusBar.SetStatusText(info, 0)
 
     def onDataMenu(self, event):
         if event.GetId() == DataMenu.ACTION_SELECT_SAME_ANA_ID:
             record = self.dataMenu.getData()
-            self.model.setStationFilter(record.enqi("ana_id"))
+            self.model.setStationFilter(record["ana_id"])
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_IDENT:
             record = self.dataMenu.getData()
-            ident = record.enqc("ident")
-            self.model.setIdentFilter(ident != None, ident)
+            ident = record["ident"]
+            self.model.setIdentFilter(ident is not None, ident)
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_LEVEL:
             record = self.dataMenu.getData()
-            self.model.setLevelFilter(record.enqlevel())
+            self.model.setLevelFilter(record["level"])
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_TRANGE:
             record = self.dataMenu.getData()
-            self.model.setTimeRangeFilter(record.enqtimerange())
+            self.model.setTimeRangeFilter(record["trange"])
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_VAR:
             record = self.dataMenu.getData()
-            self.model.setVarFilter(record.enqc("var"))
+            self.model.setVarFilter(record["var"])
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_REPCOD:
             record = self.dataMenu.getData()
-            self.model.setReportFilter(record.enqi("rep_cod"))
+            self.model.setReportFilter(record["rep_cod"])
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_DATEMIN:
             dt = datetimeFromRecord(self.dataMenu.getData(), DateUtils.EXACT)
             self.model.setDateTimeFilter(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, DateUtils.MIN)
@@ -192,11 +198,11 @@ class DataPanel(wx.Panel, ModelListener):
             self.model.setDateTimeFilter(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, DateUtils.MAX)
         elif event.GetId() == DataMenu.ACTION_DELETE_CURRENT:
             record = self.dataMenu.getData()
-            context, id = record.enqi("context_id"), record.enqc("var")
+            context, id = record["context_id"], record["var"]
             self.model.deleteValues(((context, id),))
         elif event.GetId() == DataMenu.ACTION_DELETE_SELECTED:
             grid = self.dataMenu.getGrid()
-            self.model.deleteValues([(r.enqi("context_id"), r.enqc("var")) for r in grid.getSelectedData()])
+            self.model.deleteValues([(r["context_id"], r["var"]) for r in grid.getSelectedData()])
         else:
             event.Skip()
 

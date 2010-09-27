@@ -27,7 +27,7 @@ class DateCanvas(wx.Window, ModelListener):
 
 	def dateToOffset (self, date):
 		"Map a date to the corresponding offset in the widget"
-		if date == None: return None
+		if date is None: return None
 		width, height = self.GetClientSizeTuple()
 		mintime, maxtime = self.model.daterange()
 		mindate = mintime.date()
@@ -43,7 +43,7 @@ class DateCanvas(wx.Window, ModelListener):
 
 	def offsetToDate (self, offset):
 		"Map an offset in the widget to the corresponding date"
-		if offset == None: return None
+		if offset is None: return None
 		width, height = self.GetClientSizeTuple()
 		mintime, maxtime = self.model.daterange()
 		mindate = mintime.date()
@@ -88,7 +88,7 @@ class DateCanvas(wx.Window, ModelListener):
 		self.Refresh()
 
 	def OnPaint (self, event):
-		if self.backgroundImage == None:
+		if self.backgroundImage is None:
 			self.renderBackgroundImage()
 		wx.BufferedPaintDC(self, self.backgroundImage, wx.BUFFER_VIRTUAL_AREA)
 
@@ -125,9 +125,9 @@ class DateCanvas(wx.Window, ModelListener):
 		minsel = self.dateToOffset(sel_mindate)
 		maxsel = self.dateToOffset(sel_maxdate)
 		# If there is a partial selection, make it open ended
-		if minsel != None or maxsel != None:
-			if minsel == None: minsel = 0
-			if maxsel == None: maxsel = width - 1
+		if minsel is not None or maxsel is not None:
+			if minsel is None: minsel = 0
+			if maxsel is None: maxsel = width - 1
 		else:
 			minsel = width
 			maxsel = -1

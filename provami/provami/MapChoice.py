@@ -156,39 +156,39 @@ class MapChoice(wx.Frame, ModelListener, MapCanvasListener):
 			# Temporarily disable the changed events from the spins
 			self.updating = True
 
-			sel_latmin = self.model.filter.enqd("latmin")
-			sel_latmax = self.model.filter.enqd("latmax")
-			sel_lonmin = self.model.filter.enqd("lonmin")
-			sel_lonmax = self.model.filter.enqd("lonmax")
-			sel_id = self.model.filter.enqi("ana_id")
+			sel_latmin = self.model.filter.get("latmin", None)
+			sel_latmax = self.model.filter.get("latmax", None)
+			sel_lonmin = self.model.filter.get("lonmin", None)
+			sel_lonmax = self.model.filter.get("lonmax", None)
+			sel_id = self.model.filter.get("ana_id", None)
 
-			if sel_latmin == None:
+			if sel_latmin is None:
 				self.latminSpin.SetValue('')
 			elif self.latminSpin.GetValue() != str(sel_latmin):
 				self.latminSpin.SetValue(str(sel_latmin))
 
-			if sel_latmax == None:
+			if sel_latmax is None:
 				self.latmaxSpin.SetValue('')
 			elif self.latmaxSpin.GetValue() != str(sel_latmax):
 				self.latmaxSpin.SetValue(str(sel_latmax))
 
-			if sel_lonmin == None:
+			if sel_lonmin is None:
 				self.lonminSpin.SetValue('')
 			elif self.lonminSpin.GetValue() != str(sel_lonmin):
 				self.lonminSpin.SetValue(str(sel_lonmin))
 
-			if sel_lonmax == None:
+			if sel_lonmax is None:
 				self.lonmaxSpin.SetValue('')
 			elif self.lonmaxSpin.GetValue() != str(sel_lonmax):
 				self.lonmaxSpin.SetValue(str(sel_lonmax))
 
-			if sel_id == None:
+			if sel_id is None:
 				self.idField.SetValue('')
 			elif self.idField.GetValue() != str(sel_id):
 				self.idField.SetValue(str(sel_id))
 
-			if sel_latmin == None and sel_lonmin == None and \
-			   sel_latmax == None and sel_lonmax == None and sel_id == None:
+			if sel_latmin is None and sel_lonmin is None and \
+			   sel_latmax is None and sel_lonmax is None and sel_id is None:
 				self.resetButton.Disable()
 			else:
 				self.resetButton.Enable()
@@ -260,7 +260,7 @@ class MapChoice(wx.Frame, ModelListener, MapCanvasListener):
 		else:
 			self.fieldUpdated = "area"
 
-		if self.timedUpdater == None:
+		if self.timedUpdater is None:
 			self.timedUpdater = wx.FutureCall(300, self.updateFromSpins)
 		else:
 			self.timedUpdater.Restart(300)

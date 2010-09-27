@@ -17,7 +17,7 @@ class MapCanvas(wx.Window, ModelListener):
 		def SetModeChange(self, oldmode, newmode):
 			self.modeChange = (oldmode, newmode)
 		def GetModeChange(self):
-			if self.modeChange == None:
+			if self.modeChange is None:
 				return None, None
 			else:
 				return self.modeChange
@@ -156,16 +156,16 @@ class MapCanvas(wx.Window, ModelListener):
 
 	def zoomToFitSelection (self):
 		"Zoom the image to fit all the stations"
-		sel_id = self.model.filter.enqi("ana_id")
-		latmin = self.model.filter.enqd("latmin")
-		latmax = self.model.filter.enqd("latmax")
-		lonmin = self.model.filter.enqd("lonmin")
-		lonmax = self.model.filter.enqd("lonmax")
+		sel_id = self.model.filter.get("ana_id", None)
+		latmin = self.model.filter.get("latmin", None)
+		latmax = self.model.filter.get("latmax", None)
+		lonmin = self.model.filter.get("lonmin", None)
+		lonmax = self.model.filter.get("lonmax", None)
 
-		if sel_id != None:
+		if sel_id is not None:
 			id, lat, lon, ident = self.model.stationByID(sel_id)
-			if id != None: self.showArea(lon - 2, lat - 2, lon + 2, lat + 2)
-		elif latmin != None and lonmin != None and latmax != None and lonmax != None:
+			if id is not None: self.showArea(lon - 2, lat - 2, lon + 2, lat + 2)
+		elif latmin is not None and lonmin is not None and latmax is not None and lonmax is not None:
 			self.showArea(lonmin, latmin, lonmax, latmax)
 
 	def recentre (self, lon, lat):
@@ -177,16 +177,16 @@ class MapCanvas(wx.Window, ModelListener):
 		self.Refresh()
 
 	def centreOnSelection (self):
-		sel_id = self.model.filter.enqi("ana_id")
-		sel_latmin = self.model.filter.enqd("latmin")
-		sel_latmax = self.model.filter.enqd("latmax")
-		sel_lonmin = self.model.filter.enqd("lonmin")
-		sel_lonmax = self.model.filter.enqd("lonmax")
+		sel_id = self.model.filter.get("ana_id", None)
+		sel_latmin = self.model.filter.get("latmin", None)
+		sel_latmax = self.model.filter.get("latmax", None)
+		sel_lonmin = self.model.filter.get("lonmin", None)
+		sel_lonmax = self.model.filter.get("lonmax", None)
 
-		if sel_id != None:
+		if sel_id is not None:
 			id, lat, lon, ident = self.model.stationByID(sel_id)
-			if id != None: self.recentre(lon, lat)
-		elif sel_latmin != None and sel_lonmin != None and sel_latmax != None and sel_lonmax != None:
+			if id is not None: self.recentre(lon, lat)
+		elif sel_latmin is not None and sel_lonmin is not None and sel_latmax is not None and sel_lonmax is not None:
 			self.recentre((sel_lonmax + sel_lonmin) /2, (sel_latmax + sel_latmin) / 2)
 		else:
 			lonmin, latmin, lonmax, latmax = self.stationBoundingBox()
@@ -294,7 +294,7 @@ class MapCanvas(wx.Window, ModelListener):
 		self.SetFocus()
 
 	def OnLeaveWindow (self, event):
-		if self.previousFocus != None:
+		if self.previousFocus is not None:
 			self.previousFocus.SetFocus()
 			self.previousFocus = None
 
@@ -372,7 +372,7 @@ class MapCanvas(wx.Window, ModelListener):
 		elif self.mode == MapCanvas.MODE_SELECT_IDENT:
 			lon, lat = self.coordsToWorld(event.GetPosition())
 			id, lat, lon, ident = self.nearestPoint(lon, lat)
-			self.model.setIdentFilter(ident != None, ident)
+			self.model.setIdentFilter(ident is not None, ident)
 
 	def OnMouseUp (self, event):
 		self.mouseDown = False
@@ -390,11 +390,11 @@ class MapCanvas(wx.Window, ModelListener):
 		elif self.mode == MapCanvas.MODE_SELECT_STATION:
 			lon, lat = self.coordsToWorld(event.GetPosition())
 			id, lat, lon, ident = self.selectNearest(lon, lat)
-			if id != None: self.recentre(lon, lat)
+			if id is not None: self.recentre(lon, lat)
 		elif self.mode == MapCanvas.MODE_SELECT_IDENT:
 			lon, lat = self.coordsToWorld(event.GetPosition())
 			id, lat, lon, ident = self.nearestPoint(lon, lat)
-			self.model.setIdentFilter(ident != None, ident)
+			self.model.setIdentFilter(ident is not None, ident)
 
 	def OnMouseMoved (self, event):
 		#print "Move: ", event.GetPosition()
@@ -416,7 +416,7 @@ class MapCanvas(wx.Window, ModelListener):
 			elif self.mode == MapCanvas.MODE_SELECT_IDENT:
 				lon, lat = self.coordsToWorld(event.GetPosition())
 				id, lat, lon, ident = self.nearestPoint(lon, lat)
-				self.model.setIdentFilter(ident != None, ident)
+				self.model.setIdentFilter(ident is not None, ident)
 
 	def OnResize (self, event):
 		self.resize()
@@ -441,7 +441,7 @@ class MapCanvas(wx.Window, ModelListener):
 		self.stationsImage = None
 
 	def OnPaint (self, event):
-		if self.stationsImage == None:
+		if self.stationsImage is None:
 			self.renderStations()
 		wx.BufferedPaintDC(self, self.stationsImage, wx.BUFFER_VIRTUAL_AREA)
 
@@ -464,20 +464,20 @@ class MapCanvas(wx.Window, ModelListener):
 
 	def renderStations (self):
 		tracer = TTracer("regenerate station map")
-		if self.shoreLinesImage == None:
+		if self.shoreLinesImage is None:
 			self.renderShoreLines()
 
-		sel_id = self.model.filter.enqi("ana_id")
-		sel_mobile = self.model.filter.enqc("mobile")
-		sel_ident = self.model.filter.enqc("ident")
-		sel_latmin = self.model.filter.enqd("latmin")
-		sel_latmax = self.model.filter.enqd("latmax")
-		sel_lonmin = self.model.filter.enqd("lonmin")
-		sel_lonmax = self.model.filter.enqd("lonmax")
+		sel_id = self.model.filter.get("ana_id", None)
+		sel_mobile = self.model.filter.get("mobile", None)
+		sel_ident = self.model.filter.get("ident", None)
+		sel_latmin = self.model.filter.get("latmin", None)
+		sel_latmax = self.model.filter.get("latmax", None)
+		sel_lonmin = self.model.filter.get("lonmin", None)
+		sel_lonmax = self.model.filter.get("lonmax", None)
 
-		has_id = sel_id != None
-		has_area = sel_latmin != None and sel_latmax != None and \
-			     sel_lonmin != None and sel_lonmax != None
+		has_id = sel_id is not None
+		has_area = sel_latmin is not None and sel_latmax is not None and \
+			     sel_lonmin is not None and sel_lonmax is not None
 
 		(width, height) = self.GetClientSizeTuple()
 		self.stationsImage = wx.EmptyBitmap(width, height)
@@ -503,21 +503,21 @@ class MapCanvas(wx.Window, ModelListener):
 			if has_id and id == sel_id:
 				# Try selecting by ID
 				selected = True
-			elif sel_latmin != None and sel_latmax != None and \
-			     sel_lonmin != None and sel_lonmax != None:
+			elif sel_latmin is not None and sel_latmax is not None and \
+			     sel_lonmin is not None and sel_lonmax is not None:
 				# Try selecting by area, intersected with ident
 				if sel_lonmin <= sel_lonmax:
 					if sel_latmin <= lat <= sel_latmax and \
 					   sel_lonmin <= lon <= sel_lonmax:
-						selected = sel_mobile == None or sel_ident == ident
+						selected = sel_mobile is None or sel_ident == ident
 				else:
 					if sel_latmin <= lat <= sel_latmax and \
 					   (-180 <= lon <= sel_lonmax or \
 					    sel_lonmin <= lon <= 180):
-						selected = sel_mobile == None or sel_ident == ident
+						selected = sel_mobile is None or sel_ident == ident
 			else:
 				# Try selecting by ident
-				selected = not has_area and sel_mobile != None and sel_ident == ident
+				selected = not has_area and sel_mobile is not None and sel_ident == ident
 
 			# Set the brush according to selection state
 			if selected:
@@ -530,7 +530,7 @@ class MapCanvas(wx.Window, ModelListener):
 				dc.SetBrush(normalBrush)
 
 			x, y = self.coordsToPixels((lon, lat))
-			if ident == None:
+			if ident is None:
 				dc.DrawCircle(x, y, 2)
 			else:
 				# Draw a triangle
@@ -539,7 +539,7 @@ class MapCanvas(wx.Window, ModelListener):
 				#dc.DrawLine(x-1, y, x+1, y)
 				#dc.DrawLine(x, y-1, x, y+1)
 
-		if sel_latmin != None and sel_lonmin != None and sel_latmax != None and sel_lonmax != None:
+		if sel_latmin is not None and sel_lonmin is not None and sel_latmax is not None and sel_lonmax is not None:
 			dc.SetPen(wx.Pen("BLACK"))
 			dc.SetBrush(wx.Brush("WHITE", wx.TRANSPARENT))
 			ly = min(sel_latmin, sel_latmax)

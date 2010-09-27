@@ -48,7 +48,7 @@ def completeDate(fields, how = DateUtils.EXACT):
     """
     year, month, day, hour, minute, second = tuple(fields)
 
-    if year == None: return None
+    if year is None: return None
 
     if how == DateUtils.MIN or how == DateUtils.EXACT:
         return datetime.datetime(year, \
@@ -58,14 +58,14 @@ def completeDate(fields, how = DateUtils.EXACT):
                 minute or 0,
                 second or 0)
     else:
-        if hour == None: hour = 23
-        if minute == None: minute = 59
-        if second == None: second = 59
+        if hour is None: hour = 23
+        if minute is None: minute = 59
+        if second is None: second = 59
 
         time = datetime.time(hour, minute, second)
 
         month = month or 12
-        if day == None:
+        if day is None:
             # To get the day as the last day of the month,
             # get the date as "the day before the first day of the next"
             if month == 12:
@@ -117,7 +117,8 @@ class Model:
     HAS_VOLND = HAS_VOLND
     def __init__(self, dsn, user, password):
         # Init DB-ALLe and connect to the database
-        self.db = dballe.DB(dsn, user, password)
+        self.db = dballe.DB()
+        self.db.connect(dsn, user, password)
 
         self.truncateResults = True
         self.lowerTruncateThreshold = 250
@@ -146,10 +147,10 @@ class Model:
         #self.update()
 
     # Set the filter as dirty and notify listeners of the change
-    def filterChanged(self, what = None):
+    def filterChanged(self, what=None):
         # If we are changing anything except the limits, reset the
         # limits
-        if what != None and what != 'limit':
+        if what is not None and what != 'limit':
             self.resetResultLimit()
 
         # See if the filter has been changed
@@ -157,7 +158,7 @@ class Model:
         if self.filterDirty != dirty:
             for l in self.updateListeners: l.filterDirty(dirty)
             self.filterDirty = dirty
-        if what != None:
+        if what is not None:
             for l in self.updateListeners: l.filterChanged(what)
 
     def hasStation(self, s_id):
@@ -181,15 +182,15 @@ class Model:
         # Not found in cache, query through elencamele so we can give basic
         # details of stations not in the result set, or stations with no data
         filter = dballe.Record()
-        filter.seti("ana_id", station_id)
-        for result in self.db.queryAna(filter):
-            return result.enqi("ana_id"), result.enqd("lat"), result.enqd("lon"), result.enqc("ident")
+        filter["ana_id"] = station_id
+        for result in self.db.query_stations(filter):
+            return result["ana_id"], result["lat"], result["lon"], result.get("ident", None)
         return None, None, None, None
 
     def recordByContextAndVar(self, context, var):
         "Return a result record by context ID and variable type"
         for r in self.cached_results:
-            if r.enqi("context_id") == context and r.enqc("var") == var:
+            if r["context_id"] == context and r["var"] == var:
                 return r
         return None
 
@@ -202,7 +203,7 @@ class Model:
     def hasVariable(self, context, var):
         "Returns true if the given context,var is in the current result set"
         for result in self.cached_results:
-            if context == result.enqi("context_id") and var == result.enqc("var"):
+            if context == result["context_id"] and var == result["var"]:
                 return True
         return False
 
@@ -253,7 +254,7 @@ class Model:
     def attributes(self):
         tracer = TTracer("model.attributes")
         result = dballe.Record()
-        self.db.attrQuery(self.currentContext, self.currentVarcode, result)
+        self.db.query_attrs(self.currentContext, self.currentVarcode, [], result)
         for var in result:
             yield var
 
@@ -278,80 +279,74 @@ class Model:
 
     def queryStations(self):
         filter = self.filter.copy()
-        filter.setc("query", "nosort")
+        filter["query"] = "nosort"
         for i in ("latmin", "latmax", "lonmin", "lonmax", "ana_id", "ident", "mobile"):
-            filter.unset(i)
-        return self.db.queryAnaSummary(filter)
+            del filter[i]
+        return self.db.query_station_summary(filter)
 
     def queryDateTimes(self):
         filter = self.filter.copy()
-        filter.setc("query", "nosort")
+        filter["query"] = "nosort"
         for i in ("yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin",
               "yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax",
               "year", "month", "day", "hour", "min", "sec"):
-            filter.unset(i)
-        return self.db.queryDateTimes(filter)
+            del filter[i]
+        return self.db.query_datetimes(filter)
 
     def queryVariableTypes(self):
         filter = self.filter.copy()
-        filter.setc("query", "nosort")
-        filter.unset("var")
-        return self.db.queryVariableTypes(filter)
+        filter["query"] = "nosort"
+        del filter["var"]
+        return self.db.query_variable_types(filter)
 
     def queryReportTypes(self):
         filter = self.filter.copy()
-        filter.setc("query", "nosort")
-        filter.unset("rep_cod")
-        filter.unset("rep_memo")
-        return self.db.queryReports(filter)
+        filter["query"] = "nosort"
+        del filter["rep_cod"]
+        del filter["rep_memo"]
+        return self.db.query_reports(filter)
 
     def queryLevels(self):
         filter = self.filter.copy()
-        filter.setc("query", "nosort")
-        filter.unset("leveltype1")
-        filter.unset("l1")
-        filter.unset("leveltype2")
-        filter.unset("l2")
-        return self.db.queryLevels(filter)
+        filter["query"] = "nosort"
+        del filter["level"]
+        return self.db.query_levels(filter)
 
     def queryTimeRanges(self):
         filter = self.filter.copy()
-        filter.setc("query", "nosort")
-        filter.unset("pindicator")
-        filter.unset("p1")
-        filter.unset("p2")
-        return self.db.queryTimeRanges(filter)
+        filter["query"] = "nosort"
+        del filter["trange"]
+        return self.db.query_tranges(filter)
 
     def writeRecord(self, record):
         (context, ana) = self.db.insert(record, True, False)
 
     def updateAttribute(self, context, varcode, var):
         attrs = dballe.Record()
-        self.db.attrQuery(context, varcode, attrs)
+        self.db.query_attrs(context, varcode, [], attrs)
         attrs.set(var)
-        self.db.attrInsert(context, varcode, attrs)
+        self.db.attr_insert(context, varcode, attrs)
 
     def deleteValues(self, values):
         for context, var in values:
             print "Removing", context, var
             filter = dballe.Record()
-            filter.seti("context_id", context)
-            filter.setc("var", var)
+            filter["context_id"] = context
+            filter["var"] = var
             self.db.remove(filter)
         self.update()
 
     def deleteAllAttrs(self, context, varcode):
-        self.db.attrRemoveAll(context, varcode)
+        self.db.attr_remove(context, varcode, [])
         self.update()
 
     def deleteAttrs(self, context, varcode, attrs):
-        for attr in attrs:
-            self.db.attrRemove(context, varcode, attr)
+        self.db.attr_remove(context, varcode, attrs)
         self.update()
 
     def deleteCurrent(self):
         filter = self.activeFilter.copy()
-        filter.unset("limit")
+        del filter["limit"]
         self.db.remove(filter)
         self.update()
 
@@ -361,7 +356,7 @@ class Model:
 
     def exportToFile(self, file, encoding):
         filter = self.activeFilter.copy()
-        filter.unset("limit")
+        del filter["limit"]
         if encoding == "CSV":
             exporter = dballe.dbacsv.export(self.db, filter, open(file, "w"))
         elif encoding == "R" and HAS_VOLND and HAS_RPY:
@@ -370,7 +365,7 @@ class Model:
                    dballe.volnd.LevelIndex(), \
                    dballe.volnd.TimeRangeIndex(), \
                    dballe.volnd.NetworkIndex())
-            vars = dballe.volnd.read(self.db.query(filter), idx)
+            vars = dballe.volnd.read(self.db.query_data(filter), idx)
             dballe.rconvert.volnd_save_to_r(vars, file)
         #elif encoding == "VOLND":
         #   import dballe.volnd, cPickle
@@ -379,7 +374,7 @@ class Model:
         #          dballe.volnd.LevelIndex(), \
         #          dballe.volnd.TimeRangeIndex(), \
         #          dballe.volnd.NetworkIndex())
-        #   vars = dballe.volnd.read(self.db.query(filter), idx)
+        #   vars = dballe.volnd.read(self.db.query_data(filter), idx)
         #   cPickle.dump(vars, open(file, "w"))
         elif encoding == "gBUFR":
             self.db.exportResultsAsGeneric(filter, "BUFR", file)
@@ -394,7 +389,7 @@ class Model:
             self.updating = True
             self.updateCanceled = False
 
-            self.filter.dumpToStderr()
+            print >>sys.stderr, self.filter
 
             self.notifyProgress(0, "Beginning update.")
             #for i in 'latmin', 'latmax', 'lonmin', 'lonmax', 'ana_id':
@@ -445,11 +440,11 @@ class Model:
             idents = {}
             for result in self.queryStations():
                 self.cached_stations.append((
-                    result.enqi("ana_id"),
-                    result.enqd("lat"),
-                    result.enqd("lon"),
-                    result.enqc("ident")))
-                idents[result.enqc("ident")] = 1
+                    result["ana_id"],
+                    result["lat"],
+                    result["lon"],
+                    result.get("ident", None)))
+                idents[result.get("ident", None)] = 1
             self.cached_idents = idents.keys()
             self.cached_idents.sort()
             t.partial("got station (%d items) and ident (%d items) data" % (len(self.cached_stations), len(self.cached_idents)))
@@ -463,10 +458,7 @@ class Model:
             # Query datetimes
             self.notifyProgress(18, "Querying date and time data...")
             for result in self.queryDateTimes():
-                self.cached_dtimes.append(
-                    datetime.datetime(result.enqi('year'), result.enqi('month'),
-                         result.enqi('day'), result.enqi('hour'),
-                         result.enqi('min'), result.enqi('sec')))
+                self.cached_dtimes.append(result["date"])
             self.cached_dtimes.sort()
             t.partial("got date and time data (%d items)" % (len(self.cached_dtimes)))
             self.notifyProgress(30, "Notifying date and time data...")
@@ -478,11 +470,11 @@ class Model:
             if self.truncateResults:
                 # We ask for 1 more than the upper bound, to detect the
                 # case where the result set has been truncated
-                self.filter.seti("limit", self.resultsMax + 1)
+                self.filter["limit"] = self.resultsMax + 1
             else:
-                self.filter.seti("limit", None)
-            self.filter.setc("query", "nosort")
-            for result in self.db.query(self.filter):
+                del self.filter["limit"]
+            self.filter["query"] = "nosort"
+            for result in self.db.query_data(self.filter):
                 self.cached_results.append(result.copy())
                 self.resultsCount = self.resultsCount + 1
                 # Bound to the real upper bound.
@@ -494,13 +486,13 @@ class Model:
             self.notifyProgress(52, "Notifying result data...")
             for l in self.updateListeners: l.hasData("data")
             t.partial("notified variable data");
-            self.filter.seti("limit", None)
+            del self.filter["limit"]
 
             # Query levels
             self.notifyProgress(55, "Querying level data...")
             levels = {}
             for results in self.queryLevels():
-                levels[results.enqlevel()] = 1
+                levels[results["level"]] = 1
             self.cached_levels = levels.keys()
             self.cached_levels.sort()
             t.partial("got level data (%d items)" % (len(self.cached_levels)));
@@ -512,7 +504,7 @@ class Model:
             self.notifyProgress(62, "Querying time range data...")
             tranges = {}
             for results in self.queryTimeRanges():
-                tranges[results.enqtimerange()] = 1
+                tranges[results["trange"]] = 1
             self.cached_tranges = tranges.keys()
             self.cached_tranges.sort()
             t.partial("got time range data (%d items)" % (len(self.cached_tranges)));
@@ -523,7 +515,7 @@ class Model:
             # Query variable types
             self.notifyProgress(70, "Querying variable types...")
             for results in self.queryVariableTypes():
-                self.cached_vartypes.append(results.enqc("var"))
+                self.cached_vartypes.append(results["var"])
             t.partial("got variable type data (%d items)" % (len(self.cached_vartypes)));
             self.notifyProgress(82, "Notifying variable types...")
             for l in self.updateListeners: l.hasData("vartypes")
@@ -532,13 +524,13 @@ class Model:
             # Query available reports
             self.notifyProgress(85, "Querying report types...")
             for results in self.queryReportTypes():
-                self.cached_repinfo.append((results.enqi("rep_cod"), results.enqc("rep_memo")))
+                self.cached_repinfo.append((results["rep_cod"], results["rep_memo"]))
             t.partial("got repinfo data (%d items)" % (len(self.cached_repinfo)));
             self.notifyProgress(95, "Notifying report types...")
             for l in self.updateListeners: l.hasData("repinfo")
             t.partial("notified repinfo data");
 
-            self.filter.setc("query", None)
+            del self.filter["query"]
 
             # Notify that all data in the model are up to date
             self.notifyProgress(98, "Notifying completion...")
@@ -598,8 +590,12 @@ class Model:
 
         Returns True if the value has been changed, else False
         """
-        if value != self.filter.enqi(name):
-            self.filter.seti(name, value)
+        value = int(value) if value else None
+        if value != self.filter.get(name, None):
+            if value is None:
+                del self.filter[name]
+            else:
+                self.filter[name] = value
             return True
         return False
 
@@ -609,8 +605,12 @@ class Model:
 
         Returns True if the value has been changed, else False
         """
-        if value != self.filter.enqd(name):
-            self.filter.setd(name, value)
+        value = float(value) if value else None
+        if value != self.filter.get(name, None):
+            if value is None:
+                del self.filter[name]
+            else:
+                self.filter[name] = value
             return True
         return False
 
@@ -620,8 +620,12 @@ class Model:
 
         Returns True if the value has been changed, else False
         """
-        if value != self.filter.enqc(name):
-            self.filter.setc(name, value)
+        value = str(value) if value else None
+        if value != self.filter.get(name, None):
+            if value is None:
+                del self.filter[name]
+            else:
+                self.filter[name] = value
             return True
         return False
 
@@ -736,8 +740,8 @@ class Model:
             return True
         return False
 
-    def getLevelFilter(self, record = None):
-        return (record or self.filter).enqlevel()
+    def getLevelFilter(self, record=None):
+        return (record or self.filter)["level"]
 
     def setLevelFilter(self, level):
         """
@@ -745,14 +749,14 @@ class Model:
 
         Returns True if the filter has been changed, else False
         """
-        if level != self.filter.enqlevel():
-            self.filter.setlevel(level)
+        if level != self.filter.get("level", None):
+            self.filter["level"] = level
             self.filterChanged("level")
             return True
         return False
 
-    def getTimeRangeFilter(self, record = None):
-        return (record or self.filter).enqtimerange()
+    def getTimeRangeFilter(self, record=None):
+        return (record or self.filter).get("trange", None)
 
     def setTimeRangeFilter(self, tr):
         """
@@ -760,16 +764,16 @@ class Model:
 
         Returns True if the filter has been changed, else False
         """
-        if tr != self.filter.enqtimerange():
-            self.filter.settimerange(tr)
+        if tr != self.filter.get("trange", None):
+            self.filter["trange"] = tr
             self.filterChanged("trange")
             return True
         return False
 
     def getDateTimeFilter(self, filter = DateUtils.EXACT):
-        return (self.filter.enqi(i) for i in DateUtils.fields[filter])
+        return (self.filter.get(i, None) for i in DateUtils.fields[filter])
 
-    def setDateTimeFilter(self, year, month = None, day = None, hour = None, min = None, sec = None, filter = DateUtils.EXACT):
+    def setDateTimeFilter(self, year, month=None, day=None, hour=None, min=None, sec=None, filter=DateUtils.EXACT):
         """
         Set the filter to match a given minimum, maximum or exact date.
 
@@ -809,7 +813,7 @@ class Model:
         Returns True if the filter has been changed, else False
         """
         changed = False
-        if limit == None and self.truncateResults:
+        if limit is None and self.truncateResults:
             self.truncateResults = False;
             changed = True
         else:

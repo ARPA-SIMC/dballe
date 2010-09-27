@@ -46,7 +46,7 @@ class AttrMenu(wx.Menu):
         hasVoices = False
         self.clearMenu()
 
-        if data != None:
+        if data is not None:
             self.Append(AttrMenu.ACTION_DELETE_CURRENT, "Delete value")
             hasVoices = True
 
@@ -78,11 +78,11 @@ class AttributeTable(ResultTable):
                   editable = True)
 
         self.appendColumn("Unit", \
-                  renderer = lambda x: x.info().unit(), \
+                  renderer = lambda x: x.info().unit, \
                   sorter = val_compare)
 
         self.appendColumn("Description", \
-                  renderer = lambda x: x.info().desc(), \
+                  renderer = lambda x: x.info().desc, \
                   sorter = val_compare)
     
         self.context = None
@@ -108,9 +108,9 @@ class AttributeTable(ResultTable):
         self.context = context
         self.varcode = var
 
-        if context != None:
+        if context is not None:
             attrs = dballe.Record()
-            self.model.db.attrQuery(context, var, attrs)
+            self.model.db.query_attrs(context, var, [], attrs)
 
             for var in attrs:
                 self.items.append(var)
@@ -118,7 +118,7 @@ class AttributeTable(ResultTable):
             self.sort()
 
         view = self.GetView()
-        if view != None:
+        if view is not None:
             view.ProcessTableMessage(
                 wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, count))
             view.ProcessTableMessage(
@@ -129,7 +129,7 @@ class AttributeTable(ResultTable):
             view.FitInside()
 
     def getRow(self, data):
-        if data == None: return None
+        if data is None: return None
         var = data.code()
         for row, d in enumerate(self.items):
             if d.code() == var:
@@ -186,7 +186,7 @@ class AttrResults(wx.Frame, ModelListener):
         #print "DISPLAY ID", context, var
         #traceback.print_stack()
         current = self.data.saveCurrent()
-        if context == None or var == None:
+        if context is None or var is None:
             self.details.SetLabel("No variable is currently selected")
         else:
             self.details.SetLabel("Variable %s in context %d" % (var, context))
@@ -195,18 +195,18 @@ class AttrResults(wx.Frame, ModelListener):
         self.data.restoreCurrent(current)
 
     def display(self, record):
-        #print "ATTR Got record", record.enqi("context_id"), record.enqc("var")
-        if record != None:
-            self.displayID(record.enqi("context_id"), record.enqc("var"))
+        #print "ATTR Got record", record["context_id"], record["var"]
+        if record is not None:
+            self.displayID(record["context_id"], record["var"])
         else:
             self.displayID(None, None)
 
     def onFlyOver(self, event):
         row, col = event.GetCell()
         var = event.GetData()
-        if var != None:
+        if var is not None:
             info = var.info()
-            info = "%s (%s)" % (info.desc(), info.unit())
+            info = "%s (%s)" % (info.desc, info.unit)
             self.statusBar.SetStatusText(info, 0)
 
     def onClose(self, event):

@@ -69,24 +69,24 @@ class DateChoice(wx.TextCtrl):
 		m = None
 		for matcher in self.dateMatch:
 			m = matcher.match(str)
-			if m != None:
+			if m is not None:
 				break
 
 		# If none succeeds, return false
-		if m == None: return False, None
+		if m is None: return False, None
 
 		# Get the values out of the group
 		values = [m.group(x) and int(m.group(x)) for x in ('year', 'month', 'day', 'hour', 'min', 'sec')]
 
 		# If the year is empty, we can return a valid, empty date
-		if values[0] == None: return True, None
+		if values[0] is None: return True, None
 
 		# If there is a partial date matching bits of minimum and maximum values, use those for completion
-		if self.min == None or self.max == None:
+		if self.min is None or self.max is None:
 			vmin = [0, 0, 0, 0, 0, 0]
 		else:
 			vmin = [self.min.year, self.min.month, self.min.day, self.min.hour, self.min.minute, self.min.second]
-		if self.max == None:
+		if self.max is None:
 			vmax = [9999, 12, 31, 24, 59, 59]
 		else:
 			vmax = [self.max.year, self.max.month, self.max.day, self.max.hour, self.max.minute, self.max.second]
@@ -94,26 +94,26 @@ class DateChoice(wx.TextCtrl):
 		if self.type == DateUtils.MAX:
 			for i in range(1,6):
 				if vvalues[i - 1] != vmax[i - 1]: break
-				if vvalues[i] == None: vvalues[i] = vmax[i]
+				if vvalues[i] is None: vvalues[i] = vmax[i]
 			for i in range(1,6):
 				if vvalues[i - 1] != vmin[i - 1]: break
-				if vvalues[i] == None: vvalues[i] = vmin[i]
+				if vvalues[i] is None: vvalues[i] = vmin[i]
 		else:
 			for i in range(1,6):
 				if vvalues[i - 1] != vmin[i - 1]: break
-				if vvalues[i] == None: vvalues[i] = vmin[i]
+				if vvalues[i] is None: vvalues[i] = vmin[i]
 			for i in range(1,6):
 				if vvalues[i - 1] != vmax[i - 1]: break
-				if vvalues[i] == None: vvalues[i] = vmax[i]
+				if vvalues[i] is None: vvalues[i] = vmax[i]
 
 		try:
 			dt = completeDate(vvalues, self.type)
 		except ValueError:
 			return False, None
 
-		if dt == None:
+		if dt is None:
 			return True, None
-		if (self.min == None or dt >= self.min) and (self.max == None or dt <= self.max):
+		if (self.min is None or dt >= self.min) and (self.max is None or dt <= self.max):
 			return True, values
 		return False, values
 
@@ -123,7 +123,7 @@ class DateChoice(wx.TextCtrl):
 		self.updating = True
 		if valid:
 			self.SetBackgroundColour(self.defaultBackground)
-			if values != None:
+			if values is not None:
 				self.model.setDateTimeFilter(values[0], values[1], values[2], values[3], values[4], values[5], filter = self.type)
 			else:
 				self.model.setDateTimeFilter(None)
@@ -137,17 +137,17 @@ class DateChoice(wx.TextCtrl):
 		if what == "datetime":
 			self.updating = True
 			year, month, day, hour, min, sec = self.model.getDateTimeFilter(self.type)
-			if year == None:
+			if year is None:
 				self.SetValue('')
-			elif month == None:
+			elif month is None:
 				self.SetValue("%04d" % (year))
-			elif day == None:
+			elif day is None:
 				self.SetValue("%04d-%02d" % (year, month))
-			elif hour == None:
+			elif hour is None:
 				self.SetValue("%04d-%02d-%02d" % (year, month, day))
-			elif min == None:
+			elif min is None:
 				self.SetValue("%04d-%02d-%02d %02d" % (year, month, day, hour))
-			elif sec == None:
+			elif sec is None:
 				self.SetValue("%04d-%02d-%02d %02d:%02d" % (year, month, day, hour, min))
 			else:
 				self.SetValue("%04d-%02d-%02d %02d:%02d:%02d" % (year, month, day, hour, min, sec))
@@ -207,7 +207,7 @@ class MaxDateChoice(DateChoice, ModelListener):
 #		self.filterChanged("datetime")
 #
 #	def fromDateTime(self, dt, enable = False):
-#		if dt == None:
+#		if dt is None:
 #			self.activate.SetValue(False)
 #			self.date.Enable(False)
 #			self.time.Enable(False)

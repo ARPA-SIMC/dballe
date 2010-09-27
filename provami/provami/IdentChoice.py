@@ -7,11 +7,11 @@ class IdentChoice(QueryChoice):
 		self.hasData("idents")
 
 	def readFilterFromRecord(self, rec):
-		mobile = rec.enqi("mobile")
-		ident = rec.enqc("ident")
-		if mobile == None:
+		mobile = rec.get("mobile", None)
+		ident = rec.get("ident", None)
+		if mobile is None:
 			return None
-		if ident == None:
+		if ident is None:
 			return "__fixed__"
 		return ident
 
@@ -19,7 +19,7 @@ class IdentChoice(QueryChoice):
 		res = []
 		res.append(("All stations", None))
 		for v in self.model.idents():
-			if v == None:
+			if v is None:
 				res.append(("Only fixed stations", "__fixed__"))
 			else:
 				res.append((v, v))
@@ -29,7 +29,7 @@ class IdentChoice(QueryChoice):
 	def selected(self, event):
 		if self.updating: return
 		sel = self.GetClientData(self.GetSelection())
-		if sel == None:
+		if sel is None:
 			self.model.setIdentFilter(None, None)
 		elif sel == "__fixed__":
 			self.model.setIdentFilter(False, None)

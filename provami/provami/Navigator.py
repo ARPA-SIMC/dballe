@@ -140,25 +140,25 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
         if what != "all": return
 #           record = self.dataPanel.results.getFirstRow()
 #
-#       if self.last_context_id == None or self.last_var == None:
+#       if self.last_context_id is None or self.last_var is None:
 #           # Position on the first row
 #           record = self.dataPanel.results.getFirstRow()
 #       else:
 #           # Try to get the previously selected item
 #           record = self.model.recordByContextAndVar(self.last_context_id, self.last_var)
-#           if record == None:
+#           if record is None:
 #               # If it's not in the results anymore, then go
 #               # on the first row
 #               record = self.dataPanel.results.getFirstRow()
 #
-#       if record != None:
-#           context, var = record.enqi("context_id"), record.enqc("var")
+#       if record is not None:
+#           context, var = record["context_id"], record["var"]
 #           print "HDR", context, var
 #           row = self.dataPanel.results.GetTable().rowByContextAndVar(context, var)
 #           self.anaWindow.displayRecord(record)
 #           self.attrWindow.display(record)
-#           self.last_context_id = record.enqi("context_id")
-#           self.last_var = record.enqc("var")
+#           self.last_context_id = record["context_id"]
+#           self.last_var = record["var"]
 #       else:
 #           print "HDR none"
 #           self.last_context_id = None
@@ -268,7 +268,7 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
 #                   cnf.Destroy()
             dlg.Destroy()
 
-            if path != None:
+            if path is not None:
                 # Determine file type by its extension, defaulting to bufr
                 encoding = "BUFR"
                 # According to file extension

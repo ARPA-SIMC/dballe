@@ -38,22 +38,22 @@ class DataMenu(wx.Menu):
 		hasVoices = False
 		self.clearMenu()
 
-		if data != None:
-			isAnaContext = data.enqi("year") == 1000
+		if data is not None:
+			isAnaContext = data["year"] == 1000
 
 			self.Append(DataMenu.ACTION_SELECT_SAME_ANA_ID, "Select station %d (lat %f lon %f)" %
-					(data.enqi("ana_id"), data.enqd("lat"), data.enqd("lon")))
-			ident = data.enqc("ident")
-			if ident != None:
+					(data["ana_id"], data["lat"], data["lon"]))
+			ident = data["ident"]
+			if ident is not None:
 				self.Append(DataMenu.ACTION_SELECT_SAME_IDENT, "Select all stations " + ident)
 			else:
 				self.Append(DataMenu.ACTION_SELECT_SAME_IDENT, "Select all fixed stations")
 
 			if not isAnaContext:
-				self.Append(DataMenu.ACTION_SELECT_SAME_LEVEL, "Select level " + str(data.enqlevel()))
-				self.Append(DataMenu.ACTION_SELECT_SAME_TRANGE, "Select time range " + str(data.enqtimerange()))
-				self.Append(DataMenu.ACTION_SELECT_SAME_VAR, "Select variable type " + data.enqc("var"))
-			self.Append(DataMenu.ACTION_SELECT_SAME_REPCOD, "Select report type " + data.enqc("rep_memo"))
+				self.Append(DataMenu.ACTION_SELECT_SAME_LEVEL, "Select level " + str(data["level"]))
+				self.Append(DataMenu.ACTION_SELECT_SAME_TRANGE, "Select time range " + str(data["trange"]))
+				self.Append(DataMenu.ACTION_SELECT_SAME_VAR, "Select variable type " + data["var"])
+			self.Append(DataMenu.ACTION_SELECT_SAME_REPCOD, "Select report type " + data["rep_memo"])
 
 			if not isAnaContext:
 				mindate = datetimeFromRecord(data, DateUtils.EXACT)

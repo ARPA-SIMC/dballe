@@ -7,7 +7,7 @@ class ReportChoice(QueryChoice):
 		self.hasData("repinfo")
 
 	def readFilterFromRecord(self, record):
-		return record.enqi("rep_cod")
+		return record.get("rep_cod", None)
 
 	def readOptions(self):
 		res = []
