@@ -1,5 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * msg/defs - Common definitions
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -19,13 +19,13 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "formatter.h"
 #include "defs.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>     /* strtoul, getenv */
-#include <stdarg.h>
+#include <iostream>
+#include <cstdio>
+#include <cstdarg>
+#include <cstdlib>
+#include <cstring>
 
 using namespace std;
 
@@ -44,7 +44,7 @@ std::string fmtf( const char* f, ... )
 }
 }
 
-std::string describe_level(int ltype, int l1)
+static std::string describe_level(int ltype, int l1)
 {
 	switch (ltype)
 	{
@@ -128,9 +128,9 @@ std::string describe_level(int ltype, int l1)
 	}
 }
 
-std::string describe_level_or_layer(int ltype1, int l1, int ltype2, int l2)
+std::string Level::describe() const
 {
-	if (ltype2 == MISSING_INT || ltype2 == MISSING_INT)
+	if (ltype2 == MISSING_INT || l2 == MISSING_INT)
 		return describe_level(ltype1, l1);
 
 	string lev1 = describe_level(ltype1, l1);
@@ -138,6 +138,28 @@ std::string describe_level_or_layer(int ltype1, int l1, int ltype2, int l2)
 	return "Layer from [" + lev1 + "] to [" + lev2 + "]";
 }
 
+
+std::ostream& operator<<(std::ostream& out, const Level& l)
+{
+    if (l.ltype1 == MISSING_INT) out << "-"; else out << l.ltype1;
+    out << ",";
+    if (l.l1 == MISSING_INT) out << "-"; else out << l.l1;
+    out << ",";
+    if (l.ltype2 == MISSING_INT) out << "-"; else out << l.ltype2;
+    out << ",";
+    if (l.l2 == MISSING_INT) out << "-"; else out << l.l2;
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const Trange& l)
+{
+    if (l.pind == MISSING_INT) out << "-"; else out << l.pind;
+    out << ",";
+    if (l.p1 == MISSING_INT) out << "-"; else out << l.p1;
+    out << ",";
+    if (l.p2 == MISSING_INT) out << "-"; else out << l.p2;
+    return out;
+}
 
 static std::string format_seconds(int val)
 {
@@ -171,7 +193,7 @@ static std::string format_seconds(int val)
 	return buf;
 }
 
-std::string describe_trange(int ptype, int p1, int p2)
+std::string Trange::describe() const
 {
 	string duration;
 	string offset;
@@ -184,7 +206,7 @@ std::string describe_trange(int ptype, int p1, int p2)
 	else
 		offset = " over " + format_seconds(p1);
 
-	switch (ptype)
+	switch (pind)
 	{
 		case 0:   return "Average" + duration + offset;
 		case 1:   return "Accumulation" + duration + offset;
@@ -204,10 +226,11 @@ std::string describe_trange(int ptype, int p1, int p2)
 		case 204: return "Vectorial minimum" + duration + offset;
 		case 205: return "Product with a valid time ranging" + duration + offset;
 		case 254: return "Instantaneous value" + offset;
-		default:  return fmtf("%d %d %d", ptype, p1, p2);
+		default:  return fmtf("%d %d %d", pind, p1, p2);
 	}
 }
 
-}
+
+} // namespace dballe
 
 /* vim:set ts=4 sw=4: */

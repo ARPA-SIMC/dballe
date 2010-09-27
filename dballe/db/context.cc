@@ -22,7 +22,7 @@
 #include "context.h"
 #include "internals.h"
 #include "db.h"
-#include <dballe/msg/defs.h>
+#include <dballe/core/defs.h>
 
 #include <sstream>
 #include <cstring>

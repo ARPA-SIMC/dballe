@@ -29,7 +29,7 @@
 #include "attr.h"
 
 #include <dballe/core/record.h>
-#include <dballe/msg/defs.h>
+#include <dballe/core/defs.h>
 
 #include <limits.h>
 #include <cstring>
@@ -1086,13 +1086,13 @@ void DB::remove(const Record& rec)
     // Compile the DELETE query for the data
     db::Statement stmd(*conn);
     stmd.bind_in(1, c.out_context_id);
-    stmd.bind_in(2, c.out_idvar);
+    stmd.bind_in(2, c.out_varcode);
     stmd.prepare("DELETE FROM data WHERE id_context=? AND id_var=?");
 
     // Compile the DELETE query for the attributes
     db::Statement stma(*conn);
     stma.bind_in(1, c.out_context_id);
-    stma.bind_in(2, c.out_idvar);
+    stma.bind_in(2, c.out_varcode);
     stma.prepare("DELETE FROM attr WHERE id_context=? AND id_var=?");
 
     // Get the list of data to delete
@@ -1295,7 +1295,35 @@ cleanup:
 #endif
 #endif
 
-int DB::query_attrs(int id_context, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
+std::auto_ptr<db::Cursor> DB::query(const Record& query, unsigned int wanted, unsigned int modifiers)
+{
+    auto_ptr<db::Cursor> res(new db::Cursor(*this));
+    res->query(query, wanted, modifiers);
+    return res;
+}
+
+std::auto_ptr<db::Cursor> DB::query_stations(const Record& rec)
+{
+    /* Perform the query, limited to station values */
+    return query(rec,
+            DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
+            DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT);
+}
+
+std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
+{
+    /* Perform the query */
+    return query(rec,
+                DBA_DB_WANT_ANA_ID | DBA_DB_WANT_CONTEXT_ID |
+                DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT | DBA_DB_WANT_LEVEL |
+                DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
+                DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
+                DBA_DB_WANT_REPCOD,
+                0);
+}
+
+
+unsigned DB::query_attrs(int id_context, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {
     // Create the query
     Querybuf query(200);

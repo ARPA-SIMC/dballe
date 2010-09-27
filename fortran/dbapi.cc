@@ -69,7 +69,7 @@ int DbAPI::quantesono()
 		delete ana_cur;
 		ana_cur = 0;
 	}
-	ana_cur = new db::Cursor(db);
+	ana_cur = db.query_stations(input).release();
 
 #if 0
 	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
@@ -80,7 +80,7 @@ int DbAPI::quantesono()
 	}
 #endif
 
-	return ana_cur->query_stations(input);
+	return ana_cur->remaining();
 }
 
 void DbAPI::elencamele()
@@ -105,7 +105,7 @@ int DbAPI::voglioquesto()
 		delete query_cur;
 		query_cur = NULL;
 	}
-	query_cur = new db::Cursor(db);
+	query_cur = db.query_data(input).release();
 
 #if 0
 	if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
@@ -116,7 +116,7 @@ int DbAPI::voglioquesto()
 	}
 #endif
 
-	return query_cur->query_data(input);
+	return query_cur->remaining();
 }
 
 const char* DbAPI::dammelo()

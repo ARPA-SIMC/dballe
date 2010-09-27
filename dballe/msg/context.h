@@ -29,7 +29,7 @@
  */
 
 #include <dballe/core/var.h>
-#include <dballe/msg/defs.h>
+#include <dballe/core/defs.h>
 #include <vector>
 #include <memory>
 

@@ -11,8 +11,6 @@ messageincludedir = $(includedir)/dballe/msg
 
 # Include the .cc files that contain template definitions
 messageinclude_HEADERS = \
-		defs.h \
-		formatter.h \
 		codec.h \
 		context.h \
 		vars.h \
@@ -29,9 +27,7 @@ messageinclude_HEADERS = \
 
 noinst_LTLIBRARIES = libdballe-msg.la
 libdballe_msg_la_SOURCES = \
-		defs.cc \
 		repinfo.cc \
-		formatter.cc \
 		vars.cc \
 		context.cc \
 		msg.cc \
@@ -95,7 +91,6 @@ noinst_HEADERS = test-utils-msg.h test-utils-lua.h
 tut_test_SOURCES = \
 	../core/test-utils-core.cc \
 	test-utils-msg.cc \
-	tests/formatter.cc \
 	tests/vars.cc \
 	tests/context.cc \
 	tests/msg.cc \

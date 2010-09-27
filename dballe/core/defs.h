@@ -79,6 +79,11 @@ struct Level
         return l2 - l.l2;
     }
 
+    /**
+     * Return a string description of this level
+     */
+    std::string describe() const;
+
     static inline Level cloud(int ltype2, int l2=MISSING_INT) { return Level(256, MISSING_INT, ltype2, l2); }
     static inline Level ana() { return Level(257); }
 };
@@ -120,6 +125,11 @@ struct Trange
         if ((res = p1 - t.p1)) return res;
         return p2 - t.p2;
     }
+
+    /**
+     * Return a string description of this time range
+     */
+    std::string describe() const;
 
     static inline Trange instant() { return Trange(254); }
     static inline Trange ana() { return Trange(); }

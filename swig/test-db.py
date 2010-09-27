@@ -1,199 +1,175 @@
 #!/usr/bin/python
 
-from dballe import *
+import dballe
+import datetime as dt
 import unittest
 
-db = None
-
 class DballeTest(unittest.TestCase):
-        def setUp(self):
-		self.db = db
-		self.db.reset()
+    def setUp(self):
+        self.db = dballe.DB()
+        self.db.connect_test();
+        self.db.reset()
 
-		data = Record()
-		data.setd("lat", 12.34560)
-		data.setd("lon", 76.54320)
-		data.seti("mobile", 0)
-		data.seti("year", 1945)
-		data.seti("month", 4)
-		data.seti("day", 25)
-		data.seti("hour", 8)
-		data.seti("min", 0)
-		data.seti("leveltype1", 10)
-		data.seti("l1", 11)
-		data.seti("leveltype2", 15)
-		data.seti("l2", 22)
-		data.seti("pindicator", 20)
-		data.seti("p1", 111)
-		data.seti("p2", 222)
-		data.seti("rep_cod", 1)
-		data.setc("B01011", "Hey Hey!!")
-		data.seti("B01012", 500)
+        data = dballe.Record()
+        data.update(dict(
+                lat=12.34560, lon=76.54320,
+                mobile=0,
+                date=dt.datetime(1945, 4, 25, 8, 0, 0),
+                level=(10, 11, 15, 22),
+                trange=(20,111,222),
+                rep_cod=1,
+                B01011="Hey Hey!!",
+                B01012=500))
 
-		self.context, self.ana = self.db.insert(data, False, True)
+        self.db.insert(data, False, True)
+        self.context_id = data["context_id"]
 
-		data.clear()
-		data.set("B33007", 50)
-		data.set("B33036", 75)
-		self.db.attrInsert(self.context, "B01011", data)
+        data.clear()
+        data["B33007"] = 50
+        data["B33036"] = 75
+        self.db.attr_insert(self.context_id, "B01011", data)
 
-#	def tearDown(self):
+#       def tearDown(self):
 #               if self.db.valid():
 #               self.db.disconnect()
-			
-	def testQueryAna(self):
-		query = Record()
-		cur = self.db.queryAna(query)
-		self.assertEqual(cur.remaining(), 1)
-		count = 0
-		for result in cur:
-			self.assertEqual(result.enqd("lat"), 12.34560)
-			self.assertEqual(result.enqd("lon"), 76.54320)
-			self.assertEqual(result.contains("B01011"), False)
-			count = count + 1
-		self.assertEqual(count, 1)
-	def testQueryData(self):
-		expected = {}
-		expected["B01011"] = "Hey Hey!!";
-		expected["B01012"] = "500";
 
-                query = Record()
-		query.setd("latmin", 10.0)
-		cur = self.db.query(query)
-		self.assertEqual(cur.remaining(), 2)
-		count = 0
-		for result in cur:
-			self.assertEqual(cur.remaining(), 2-count-1)
-			assert expected.has_key(cur.varcode())
-			self.assertEqual(result.enqc(cur.varcode()), expected[cur.varcode()])
-			del expected[cur.varcode()]
-			count = count + 1
-        def testQueryAttrs(self):
-		data = Record()
-		count = self.db.attrQuery(self.context, "B01011", data)
-		self.assertEqual(count, 2)
+    def testQueryAna(self):
+        query = dballe.Record()
+        cur = self.db.query_stations(query)
+        self.assertEqual(cur.remaining(), 1)
+        count = 0
+        for result in cur:
+                self.assertEqual(result["lat"], 12.34560)
+                self.assertEqual(result["lon"], 76.54320)
+                self.assert_("B01011" not in result)
+                count = count + 1
+        self.assertEqual(count, 1)
+    def testQueryData(self):
+        expected = {}
+        expected["B01011"] = "Hey Hey!!";
+        expected["B01012"] = 500;
 
-		expected = {}
-		expected["B33007"] = 50
-		expected["B33036"] = 75
+        query = dballe.Record()
+        query["latmin"] = 10.0
+        cur = self.db.query_data(query)
+        self.assertEqual(cur.remaining(), 2)
+        count = 0
+        for result in cur:
+                self.assertEqual(cur.remaining(), 2-count-1)
+                assert cur.out_varcode in expected
+                self.assertEqual(result[cur.out_varcode], expected[cur.out_varcode])
+                del expected[cur.out_varcode]
+                count = count + 1
+    def testQueryAttrs(self):
+        data = dballe.Record()
+        count = self.db.query_attrs(self.context_id, "B01011", [], data)
+        self.assertEqual(count, 2)
 
-		count = 0
-		for var in data.itervars():
-			assert expected.has_key(var.code())
-			self.assertEqual(var.enqi(), expected[var.code()])
-			del expected[var.code()]
-			count = count + 1
-		self.assertEqual(count, 2)
+        expected = {}
+        expected["B33007"] = 50
+        expected["B33036"] = 75
 
-        def testQuerySomeAttrs(self):
-		# Try limiting the set of wanted attributes
-		data = Record()
-		count = self.db.attrQuery(self.context, "B01011", ("B33036",), data)
-		self.assertEqual(count, 1)
-		self.assertEqual([(k, v.enq()) for k, v in data.iteritems()], [("B33036", 75)])
+        count = 0
+        for var in data:
+                self.assert_(var.code() in expected)
+                self.assertEqual(var.enq(), expected[var.code()])
+                del expected[var.code()]
+                count = count + 1
+        self.assertEqual(count, 2)
 
-        def testQueryCursorAttrs(self):
-                query = Record()
-                query.set("var", "B01011")
-                cur = self.db.query(query);
+    def testQuerySomeAttrs(self):
+        # Try limiting the set of wanted attributes
+        data = dballe.Record()
+        count = self.db.query_attrs(self.context_id, "B01011", ("B33036",), data)
+        self.assertEqual(count, 1)
+        self.assertEqual(data.items(), [("B33036", 75)])
 
-                tmp = Record()
-                self.failUnless(cur.next(tmp))
+    def testQueryCursorAttrs(self):
+        query = dballe.Record()
+        query["var"] = "B01011"
+        cur = self.db.query_data(query);
 
-		data, count = cur.attributes()
-		self.assertEqual(count, 2)
+        self.failUnless(cur.next())
 
-		expected = {}
-		expected["B33007"] = 50
-		expected["B33036"] = 75
+        data = dballe.Record()
+        count = cur.query_attrs([], data)
+        self.assertEqual(count, 2)
 
-		count = 0
-		for var in data:
-			assert expected.has_key(var.code())
-			self.assertEqual(var.enqi(), expected[var.code()])
-			del expected[var.code()]
-			count = count + 1
-		self.assertEqual(count, 2)
+        expected = {}
+        expected["B33007"] = 50
+        expected["B33036"] = 75
 
-		# Try limiting the set of wanted attributes
-		data, count = cur.attributes( ("B33036",) )
-		self.assertEqual(count, 1)
-		self.assertEqual([(k, v.enq()) for k, v in data.iteritems()], [("B33036", 75)])
-        def testQueryLevels(self):
-		query = Record()
-		cur = self.db.queryLevels(query)
-		self.assertEqual(cur.remaining(), 1)
-		for result in cur:
-			self.assertEqual(result.enqi("leveltype1"), 10)
-			self.assertEqual(result.enqi("l1"), 11)
-			self.assertEqual(result.enqi("leveltype2"), 15)
-			self.assertEqual(result.enqi("l2"), 22)
-        def testQueryTimeRanges(self):
-		query = Record()
-		cur = self.db.queryTimeRanges(query)
-		self.assertEqual(cur.remaining(), 1)
-		for result in cur:
-			self.assertEqual(result.enqi("pindicator"), 20)
-			self.assertEqual(result.enqi("p1"), 111)
-			self.assertEqual(result.enqi("p2"), 222)
-        def testQueryLevelsAndTimeRanges(self):
-		query = Record()
-		cur = self.db.queryLevelsAndTimeRanges(query)
-		self.assertEqual(cur.remaining(), 1)
-		for result in cur:
-			self.assertEqual(result.enqi("leveltype1"), 10)
-			self.assertEqual(result.enqi("l1"), 11)
-			self.assertEqual(result.enqi("leveltype2"), 15)
-			self.assertEqual(result.enqi("l2"), 22)
-			self.assertEqual(result.enqi("pindicator"), 20)
-			self.assertEqual(result.enqi("p1"), 111)
-			self.assertEqual(result.enqi("p2"), 222)
-        def testQueryVariableTypes(self):
-		query = Record()
-		cur = self.db.queryVariableTypes(query)
-		self.assertEqual(cur.remaining(), 2)
-		expected = {}
-		expected["B01011"] = 1
-		expected["B01012"] = 1
-		count = 0
-		for result in cur:
-			assert expected.has_key(cur.varcode())
-			del expected[cur.varcode()]
-			count = count + 1
-		self.assertEqual(count, 2)
-        def testQueryIdents(self):
-		query = Record()
-		cur = self.db.queryIdents(query)
-		self.assertEqual(cur.remaining(), 1)
-		for result in cur:
-			assert not result.contains("ident")
-        def testQueryReports(self):
-		query = Record()
-		cur = self.db.queryReports(query)
-		self.assertEqual(cur.remaining(), 1)
-		for result in cur:
-			self.assertEqual(result.enqi("rep_cod"), 1)
-			self.assertEqual(result.enqc("rep_memo"), "synop")
-        def testQueryDateTimes(self):
-		query = Record()
-		cur = self.db.queryDateTimes(query)
-		self.assertEqual(cur.remaining(), 1)
-		for result in cur:
-			self.assertEqual(result.enqi("year"), 1945)
-			self.assertEqual(result.enqi("month"), 4)
-			self.assertEqual(result.enqi("day"), 25)
-			self.assertEqual(result.enqi("hour"), 8)
-			self.assertEqual(result.enqi("min"), 0)
-			self.assertEqual(result.enqi("sec"), 0)
-        def testQueryExport(self):
-		query = Record()
-		self.db.exportResults(query, "BUFR", "/dev/null")
-		self.db.exportResults(query, "CREX", "/dev/null")
-        def testAttrRemove(self):
-		#db.attrRemove(1, "B01011", [ "B33007" ])
-		self.db.attrRemove(1, "B01011", "B33007")
+        count = 0
+        for var in data:
+                assert var.code() in expected
+                self.assertEqual(var.enq(), expected[var.code()])
+                del expected[var.code()]
+                count = count + 1
+        self.assertEqual(count, 2)
+
+        # Try limiting the set of wanted attributes
+        data.clear()
+        count = cur.query_attrs(["B33036"], data)
+        self.assertEqual(count, 1)
+        self.assertEqual(data.items(), [("B33036", 75)])
+    def testQueryLevels(self):
+        query = dballe.Record()
+        cur = self.db.query_levels(query)
+        self.assertEqual(cur.remaining(), 1)
+        for result in cur:
+            self.assertEqual(result["level"], (10, 11, 15, 22))
+    def testQueryTimeRanges(self):
+        query = dballe.Record()
+        cur = self.db.query_tranges(query)
+        self.assertEqual(cur.remaining(), 1)
+        for result in cur:
+            self.assertEqual(result["trange"], (20, 111, 222))
+    def testQueryLevelsAndTimeRanges(self):
+        query = dballe.Record()
+        cur = self.db.query_levels_tranges(query)
+        self.assertEqual(cur.remaining(), 1)
+        for result in cur:
+            self.assertEqual(result["level"], (10, 11, 15, 22))
+            self.assertEqual(result["trange"], (20, 111, 222))
+    def testQueryVariableTypes(self):
+        query = dballe.Record()
+        cur = self.db.query_variable_types(query)
+        self.assertEqual(cur.remaining(), 2)
+        expected = {}
+        expected["B01011"] = 1
+        expected["B01012"] = 1
+        count = 0
+        for result in cur:
+                self.assert_(cur.out_varcode in expected)
+                del expected[cur.out_varcode]
+                count = count + 1
+        self.assertEqual(count, 2)
+    def testQueryIdents(self):
+        query = dballe.Record()
+        cur = self.db.query_idents(query)
+        self.assertEqual(cur.remaining(), 1)
+        for result in cur:
+            self.assert_("ident" not in result)
+    def testQueryReports(self):
+        query = dballe.Record()
+        cur = self.db.query_reports(query)
+        self.assertEqual(cur.remaining(), 1)
+        for result in cur:
+            self.assertEqual(result["rep_cod"], 1)
+            self.assertEqual(result["rep_memo"], "synop")
+    def testQueryDateTimes(self):
+        query = dballe.Record()
+        cur = self.db.query_datetimes(query)
+        self.assertEqual(cur.remaining(), 1)
+        for result in cur:
+            self.assertEqual(result["date"], dt.datetime(1945, 4, 25, 8, 0, 0))
+    def testQueryExport(self):
+        query = dballe.Record()
+        self.db.exportResults(query, "BUFR", "/dev/null")
+        self.db.exportResults(query, "CREX", "/dev/null")
+    def testAttrRemove(self):
+        #db.attrRemove(1, "B01011", [ "B33007" ])
+        self.db.attr_remove(1, "B01011", ("B33007",))
 
 if __name__ == "__main__":
-        db = TestDB()
-        if db.valid():
-            unittest.main()
+        unittest.main()

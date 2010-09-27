@@ -46,6 +46,7 @@
 using namespace dballe;
 using namespace dballe::cmdline;
 using namespace wreport;
+using namespace std;
 
 struct cmdline::grep_t grepdata = { -1, -1, -1, 0, 0, "" };
 struct poptOption grepTable[] = {
@@ -158,13 +159,12 @@ int do_dump(poptContext optCon)
 	dba_cmdline_get_query(optCon, query);
 
 	connect(db);
-	db::Cursor cursor(db);
-	cursor.query_data(query);
+	auto_ptr<db::Cursor> cursor = db.query_data(query);
 
 	Record res;
-	for (int i = 0; cursor.next(); ++i)
+	for (int i = 0; cursor->next(); ++i)
 	{
-		cursor.to_record(res);
+		cursor->to_record(res);
 		printf("#%d: -----------------------\n", i);
 		res.print(stdout);
 	}
@@ -184,14 +184,13 @@ int do_stations(poptContext optCon)
 	DB db;
 	connect(db);
 
-	db::Cursor cursor(db);
-	cursor.query_stations(query);
+	auto_ptr<db::Cursor> cursor = db.query_stations(query);
 
 	Record result;
-	for (size_t i = 0; cursor.next(); ++i)
+	for (size_t i = 0; cursor->next(); ++i)
 	{
 		// result.clear();
-		cursor.to_record(result);
+		cursor->to_record(result);
 		printf("#%zd: -----------------------\n", i);
 		result.print(stdout);
 	}

@@ -16,7 +16,7 @@
         }
 }
 
-%apply std::string {dballe::Rawmsg};
+// %apply std::string {dballe::Rawmsg};
 
 %{
 #include <dballe/core/aliases.h>
@@ -27,8 +27,10 @@
 #include <dballe/core/var.h>
 #include <dballe/core/record.h>
 #include <dballe/core/rawmsg.h>
+#include <dballe/core/defs.h>
+#include <dballe/db/db.h>
+#include <dballe/db/cursor.h>
 
-// #include <dballe/db/db.h>
 // #include <dballe++/db.h>
 // #include <dballe++/format.h>
 // #include <dballe++/init.h>
@@ -38,6 +40,19 @@
 using namespace wreport;
 using namespace dballe;
 %}
+
+/*
+%typemap(in) int {
+        if ($input == Py_None)
+                $1 = MISSING_INT;
+        else
+                $1 = PyInt_AsLong($input);
+}
+
+%typemap(typecheck,precedence=SWIG_TYPECHECK_INTEGER) int {
+           $1 = ($input == Py_None || PyInt_Check($input)) ? 1 : 0;
+}
+*/
 
 %typemap(in) wreport::Varcode {
         const char* tmp = PyString_AsString($input);
@@ -63,11 +78,31 @@ using namespace dballe;
         $1 = PyString_Check($input) ? 1 : 0;
 }
 
+%typemap(in) const std::vector<wreport::Varcode>& (std::vector<wreport::Varcode> vec) {
+        if (!PySequence_Check($input))
+                PyErr_SetString(PyExc_NotImplementedError,"A sequence is needed for the varcode list");
+        int len = PyObject_Length($input);
+        for (int i = 0; i < len; ++i)
+        {
+                PyObject* o = PySequence_GetItem($input, i);
+                if (o == NULL) break;
+                const char* str = PyString_AsString(o);
+                wreport::Varcode vc = 0;
+                if ((vc = varcode_alias_resolve(str)) == 0)
+                        vc = descriptor_code(str);
+                vec.push_back(vc);
+        }
+        $1 = &vec;
+}
+%typemap(typecheck) const std::vector<wreport::Varcode>& {
+        $1 = PySequence_Check($input) ? 1 : 0;
+}
+
 namespace std {
         %template(VartableBase) vector<wreport::_Varinfo>;
         %template(VarpVector) vector<wreport::Var*>;
 //        %template(VarVector) vector<wreport::Var>;
-        %template(VarcodeVector) vector<wreport::Varcode>;
+//        %template(VarcodeVector) vector<wreport::Varcode>;
 //        %template(SubsetVector) vector<wreport::Subset>;
 };
 
@@ -382,18 +417,105 @@ namespace dballe {
         size_t subsets_size() { return $self->subsets.size(); }
 }
 
-/*
-%extend dballe::Rawmsg {
-        size_t size() const
+%extend dballe::DB {
+        %ignore query;
+        %ignore query_stations;
+        %ignore query_data;
+        dballe::db::Cursor* _query(const dballe::Record& rec, unsigned int wanted, unsigned int modifiers)
         {
-                return $self->size();
+                std::auto_ptr<db::Cursor> res = $self->query(rec, wanted, modifiers);
+                return res.release();
+        }
+        dballe::db::Cursor* _query_stations(const dballe::Record& rec)
+        {
+                std::auto_ptr<db::Cursor> res = $self->query_stations(rec);
+                return res.release();
+        }
+        dballe::db::Cursor* _query_data(const dballe::Record& rec)
+        {
+                std::auto_ptr<db::Cursor> res = $self->query_data(rec);
+                return res.release();
         }
         %pythoncode %{
-                def __len__(self):
-                        return self.size()
+                def query(self, *args): return self._query(*args)
+                def query_stations(self, *args): return self._query_stations(*args)
+                def query_data(self, *args): return self._query_data(*args)
+        %}
+        dballe::db::Cursor* query_station_summary(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
+                                DBA_DB_MODIFIER_DISTINCT).release();
+
+        }
+        dballe::db::Cursor* query_levels(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_LEVEL, DBA_DB_MODIFIER_DISTINCT).release();
+        }
+        dballe::db::Cursor* query_tranges(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_TIMERANGE, DBA_DB_MODIFIER_DISTINCT).release();
+        }
+        dballe::db::Cursor* query_levels_tranges(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_LEVEL | DBA_DB_WANT_TIMERANGE, DBA_DB_MODIFIER_DISTINCT).release();
+        }
+        dballe::db::Cursor* query_datetimes(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_DATETIME, DBA_DB_MODIFIER_DISTINCT).release();
+        }
+        dballe::db::Cursor* query_reports(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_REPCOD, DBA_DB_MODIFIER_DISTINCT).release();
+        }
+        dballe::db::Cursor* query_idents(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_IDENT, DBA_DB_MODIFIER_DISTINCT).release();
+        }
+        dballe::db::Cursor* query_variable_types(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_VAR_NAME, DBA_DB_MODIFIER_DISTINCT | DBA_DB_MODIFIER_NOANAEXTRA ).release();
+        }
+}
+
+%extend dballe::db::Cursor {
+//        %rename attributes attributes_orig;
+        %pythoncode %{
+                def __iter__(self):
+                        record = Record()
+                        while self.next():
+                                self.to_record(record)
+                                yield record
+/*
+                def attributes(self, *args):
+                        """
+                        Read the attributes for the variable pointed by this record.
+
+                        If a rec argument is provided, it will write the
+                        attributes in that record and return the number of
+                        attributes read.  If rec is None, it will return a
+                        tuple (Record, count) with a newly created Record.
+                        """
+                        if len(args) == 0:
+                                # attributes()
+                                rec = Record()
+                                count = self.attributes_orig(rec)
+                                return rec, count
+                        elif len(args) == 1:
+                                if isinstance(args[0], Record):
+                                        # attributes(rec)
+                                        return self.attributes_orig(args[0])
+                                else:
+                                        # attributes(seq)
+                                        rec = Record()
+                                        count = self.attributes_orig(args[0], rec)
+                                        return rec, count
+                        elif len(args) == 2:
+                                # attributes(seq, rec)
+                                return self.attributes_orig(args[0], args[1])
+*/
         %}
 }
-*/
+
 
 /*
 #ifdef SWIGPYTHON
@@ -447,63 +569,7 @@ class TimeRange(tuple):
 */
 /*
 
-%extend dballe::Cursor {
-        %rename attributes attributes_orig;
-        %pythoncode %{
-                def __iter__(self):
-                        record = Record()
-                        while self.next(record):
-                                yield record
-                def attributes(self, *args):
-                        """
-                        Read the attributes for the variable pointed by this record.
 
-                        If a rec argument is provided, it will write the
-                        attributes in that record and return the number of
-                        attributes read.  If rec is None, it will return a
-                        tuple (Record, count) with a newly created Record.
-                        """
-                        if len(args) == 0:
-                                # attributes()
-                                rec = Record()
-                                count = self.attributes_orig(rec)
-                                return rec, count
-                        elif len(args) == 1:
-                                if isinstance(args[0], Record):
-                                        # attributes(rec)
-                                        return self.attributes_orig(args[0])
-                                else:
-                                        # attributes(seq)
-                                        rec = Record()
-                                        count = self.attributes_orig(args[0], rec)
-                                        return rec, count
-                        elif len(args) == 2:
-                                # attributes(seq, rec)
-                                return self.attributes_orig(args[0], args[1])
-
-        %}
-}
-
-
-%typemap(in) const std::vector<dba_varcode>& (std::vector<dba_varcode> vec) {
-        if (!PySequence_Check($input))
-                PyErr_SetString(PyExc_NotImplementedError,"A sequence is needed for the varcode list");
-        int len = PyObject_Length($input);
-        for (int i = 0; i < len; ++i)
-        {
-                PyObject* o = PySequence_GetItem($input, i);
-                if (o == NULL) break;
-                const char* str = PyString_AsString(o);
-                dba_varcode vc = 0;
-                if ((vc = dba_varcode_alias_resolve(str)) == 0)
-                        vc = dba_descriptor_code(str);
-                vec.push_back(vc);
-        }
-        $1 = &vec;
-}
-%typemap(typecheck) const std::vector<dba_varcode>& {
-        $1 = PySequence_Check($input) ? 1 : 0;
-}
 
 %typemap(in) dba_encoding {
 	const char* tmp = PyString_AsString($input);
@@ -533,7 +599,6 @@ class TimeRange(tuple):
 #endif
 */
 
-//#include <dballe/db/db.h>
 //%include <dballe++/bufrex.h>
 //%include <dballe++/msg.h>
 //%include <dballe++/db.h>
@@ -545,8 +610,11 @@ class TimeRange(tuple):
 %include <dballe/core/var.h>
 %include <dballe/core/record.h>
 %include <dballe/core/rawmsg.h>
+%include <dballe/core/defs.h>
 %include <wreport/subset.h>
 %include <wreport/bulletin.h>
+%include <dballe/db/db.h>
+%include <dballe/db/cursor.h>
 
 /*
 Varinfo varinfo(Varcode code)

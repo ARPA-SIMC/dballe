@@ -24,7 +24,7 @@
 
 #include "commonapi.h"
 #include <dballe/core/aliases.h>
-#include <dballe/msg/formatter.h>
+#include <dballe/core/defs.h>
 #include <stdio.h>	// snprintf
 #include <limits>
 #include <cstdlib>
@@ -359,13 +359,13 @@ void CommonAPIImplementation::unsetall()
 
 const char* CommonAPIImplementation::spiegal(int ltype1, int l1, int ltype2, int l2)
 {
-	cached_spiega = describe_level_or_layer(ltype1, l1, ltype2, l2);
+	cached_spiega = Level(ltype1, l1, ltype2, l2).describe();
 	return cached_spiega.c_str();
 }
 
 const char* CommonAPIImplementation::spiegat(int ptype, int p1, int p2)
 {
-	cached_spiega = describe_trange(ptype, p1, p2);
+	cached_spiega = Trange(ptype, p1, p2).describe();
 	return cached_spiega.c_str();
 }
 

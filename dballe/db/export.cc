@@ -145,8 +145,8 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 	// Retrieve results
 	while (cur.next())
 	{
-		TRACE("Got B%02ld%03ld %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
-				WR_VAR_X(cur.out_idvar), WR_VAR_Y(cur.out_idvar),
+		TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
+				WR_VAR_X(cur.out_varcode), WR_VAR_Y(cur.out_varcode),
 				cur.out_ltype1, cur.out_l1, cur.out_ltype2, cur.out_l2, cur.out_pind, cur.out_p1, cur.out_p2,
 				cur.out_value);
 
@@ -157,7 +157,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 			ident_differs = last_ident[0] != 0;
 
 		/* Create the variable that we got on this iteration */
-        auto_ptr<Var> var(newvar(cur.out_idvar, cur.out_value));
+        auto_ptr<Var> var(newvar(cur.out_varcode, cur.out_value));
 
 		/* Load the attributes from the database */
         at.id_context = cur.out_context_id;

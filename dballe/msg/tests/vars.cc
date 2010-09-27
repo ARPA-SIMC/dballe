@@ -20,8 +20,8 @@
  */
 
 #include <test-utils-msg.h>
+#include <dballe/core/defs.h>
 #include <dballe/msg/vars.h>
-#include <dballe/msg/defs.h>
 
 using namespace dballe;
 using namespace std;

@@ -65,7 +65,7 @@
  */
 
 #include <dballe/core/var.h>
-#include <dballe/msg/defs.h>
+#include <dballe/core/defs.h>
 #include <dballe/msg/vars.h>
 #include <stdio.h>
 #include <vector>

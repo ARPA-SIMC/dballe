@@ -11,6 +11,7 @@ coreincludedir = $(includedir)/dballe/core
 coreinclude_HEADERS = \
 	aliases.h
 	verbose.h \
+	defs.h \
 	var.h \
 	rawmsg.h \
 	file.h \
@@ -23,6 +24,7 @@ libdballe_core_la_SOURCES = \
 	verbose.cc \
 	aliases.cc \
 	aliases-reverse.cc \
+	defs.cc \
 	var.cc \
 	rawmsg.cc \
 	file.cc \
@@ -51,6 +53,7 @@ noinst_HEADERS = test-utils-core.h
 
 tut_test_SOURCES = \
 	tests/aliases.cc \
+	tests/defs.cc \
 	tests/rawmsg.cc \
 	tests/file.cc \
 	tests/record.cc \

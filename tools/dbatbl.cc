@@ -23,7 +23,7 @@
 #include <wreport/vartable.h>
 #include <wreport/dtable.h>
 #include <wreport/conv.h>
-#include <dballe/msg/formatter.h>
+#include <dballe/core/defs.h>
 #include <dballe/core/var.h>
 
 #include <stdlib.h>
@@ -39,37 +39,38 @@ const DTable* dtable = NULL;
 static int op_csv;
 int op_verbose = 0;
 
-void unit_check(const Varinfo& info, void* data)
-{
-	Varcode varcode = info->var;
-	int* is_ok = (int*)data;
-
-	/*
-	if (var % 1000 == 0)
-		fprintf(stderr, "Testing %s %d\n", ids[i], var);
-	*/
-
-	if (varcode != 0 && !info->is_string())
-	{
-		try {
-			Varinfo local = varinfo(varcode);
-			convert_units(info->unit, local->unit, 1.0);
-		} catch (std::exception& e) {
-			fprintf(stderr, "Checking conversion for var B%02d%03d: %s",
-					WR_VAR_X(varcode), WR_VAR_Y(varcode), e.what());
-			*is_ok = 0;
-		}
-	}
-}
-
-
-/* Check that all unit conversions are allowed by dba_uniconv */
-static void check_unit_conversions(const char* id, int* is_ok)
+/**
+ * Check that all unit conversions are allowed by dba_uniconv
+ *
+ * @returns true if all conversions worked, false if some exceptions were thrown
+ */
+static bool check_unit_conversions(const char* id)
 {
 	const Vartable* othertable = Vartable::get(id);
-	*is_ok = 1;
-	throw error_unimplemented("TODO: check_unit_conversions has yet to be reimplemented");
-	//return dba_vartable_iterate(othertable, unit_check, is_ok);
+	bool res = true;
+	for (Vartable::const_iterator info = othertable->begin();
+			info != othertable->end(); ++info)
+	{
+		Varcode varcode = info->var;
+
+		/*
+		if (var % 1000 == 0)
+			fprintf(stderr, "Testing %s %d\n", ids[i], var);
+		*/
+
+		if (varcode != 0 && !info->is_string())
+		{
+			try {
+				Varinfo local = varinfo(varcode);
+				convert_units(info->unit, local->unit, 1.0);
+			} catch (std::exception& e) {
+				fprintf(stderr, "Checking conversion for var B%02d%03d: %s",
+						WR_VAR_X(varcode), WR_VAR_Y(varcode), e.what());
+				res = false;
+			}
+		}
+	}
+	return res;
 }
 
 static void print_varinfo(const Varinfo& info)
@@ -82,20 +83,20 @@ static void print_varinfo(const Varinfo& info)
 		snprintf(fmtdesc, 99, "%d digits", info->len);
 	else if (info->scale > 0)
 	{
-		int i, j;
+		unsigned i;
 		for (i = 0; i < info->len - info->scale && i < 99; i++)
 			fmtdesc[i] = '#';
 		fmtdesc[i++] = '.';
-		for (j = 0; j < info->scale && i < 99; i++, j++)
+		for (int j = 0; j < info->scale && i < 99; i++, j++)
 			fmtdesc[i] = '#';
 		fmtdesc[i] = 0;
 	}
 	else if (info->scale < 0)
 	{
-		int i, j;
+		unsigned i;
 		for (i = 0; i < info->len && i < 99; i++)
 			fmtdesc[i] = '#';
-		for (j = 0; j < -info->scale && i < 99; i++, j++)
+		for (int j = 0; j < -info->scale && i < 99; i++, j++)
 			fmtdesc[i] = '0';
 		fmtdesc[i] = 0;
 	}
@@ -133,20 +134,20 @@ static void print_varinfo_csv(const Varinfo& info)
 		snprintf(fmtdesc, 99, "%d digits", info->len);
 	else if (info->scale > 0)
 	{
-		int i, j;
+		unsigned i;
 		for (i = 0; i < info->len - info->scale && i < 99; i++)
 			fmtdesc[i] = '#';
 		fmtdesc[i++] = '.';
-		for (j = 0; j < info->scale && i < 99; i++, j++)
+		for (int j = 0; j < info->scale && i < 99; i++, j++)
 			fmtdesc[i] = '#';
 		fmtdesc[i] = 0;
 	}
 	else if (info->scale < 0)
 	{
-		int i, j;
+		unsigned i;
 		for (i = 0; i < info->len && i < 99; i++)
 			fmtdesc[i] = '#';
-		for (j = 0; j < -info->scale && i < 99; i++, j++)
+		for (int j = 0; j < -info->scale && i < 99; i++, j++)
 			fmtdesc[i] = '0';
 		fmtdesc[i] = 0;
 	}
@@ -187,27 +188,6 @@ static void expand_table_entry(Varcode val, int level)
 	}
 }
 
-static void print_varinfo_adapter(const Varinfo& info, void* data)
-{
-	if (op_csv)
-		print_varinfo_csv(info);
-	else
-		print_varinfo(info);
-}
-
-static void print_varinfo_grepping_adapter(const Varinfo& info, void* data)
-{
-	const char* pattern = (const char*)data;
-
-	if (strcasestr(info->desc, pattern) != NULL)
-	{
-		if (op_csv)
-			print_varinfo_csv(info);
-		else
-			print_varinfo(info);
-	}
-}
-
 int do_cat(poptContext optCon)
 {
 	const char* item;
@@ -223,9 +203,14 @@ int do_cat(poptContext optCon)
 	while (item != NULL)
 	{
 		const Vartable* table = Vartable::get(item);
-		throw error_unimplemented("still cannot do vartable iteration");
-		// TODO DBA_RUN_OR_RETURN(dba_vartable_iterate(table, print_varinfo_adapter, NULL));
-
+		for (Vartable::const_iterator info = table->begin();
+				info != table->end(); ++info)
+		{
+			if (op_csv)
+				print_varinfo_csv(*info);
+			else
+				print_varinfo(*info);
+		}
 		item = poptGetArg(optCon);
 	}
 	
@@ -245,9 +230,18 @@ int do_grep(poptContext optCon)
 	pattern = poptGetArg(optCon);
 
 	table = Vartable::get("dballe");
-	throw error_unimplemented("still cannot do vartable iteration");
-	// TODO DBA_RUN_OR_RETURN(dba_vartable_iterate(table, print_varinfo_grepping_adapter, (void*)pattern));
-	
+	for (Vartable::const_iterator info = table->begin();
+			info != table->end(); ++info)
+	{
+		if (strcasestr(info->desc, pattern) != NULL)
+		{
+			if (op_csv)
+				print_varinfo_csv(*info);
+			else
+				print_varinfo(*info);
+		}
+	}
+
 	return 0;
 }
 
@@ -315,9 +309,7 @@ int do_index(poptContext optCon)
 		{
 			/* If it's an external table, check unit conversions to DBALLE
 			 * correspondents */
-			int is_ok;
-			check_unit_conversions(id, &is_ok);
-			if (!is_ok)
+			if (!check_unit_conversions(id))
 				fprintf(stderr, "Warning: some variables cannot be converted from %s to dballe\n", id);
 		}
 	}
@@ -350,11 +342,11 @@ int do_describe(poptContext optCon)
 		const char* sl2 = poptGetArg(optCon);
 		if (sltype1 == NULL)
 			dba_cmdline_error(optCon, "you need provide 1, 2, 3 or 4 numbers that identify the level or layer");
-		string formatted = describe_level_or_layer(
+		string formatted = Level(
 				strtoul(sltype1, NULL, 10),
 				sl1 == NULL ? 0 : strtoul(sl1, NULL, 10),
 				sltype2 == NULL ? 0 : strtoul(sltype2, NULL, 10),
-				sl2 == NULL ? 0 : strtoul(sl2, NULL, 10));
+				sl2 == NULL ? 0 : strtoul(sl2, NULL, 10)).describe();
 		puts(formatted.c_str());
 	} else if (strcmp(what, "trange") == 0) {
 		const char* sptype = poptGetArg(optCon);
@@ -362,10 +354,10 @@ int do_describe(poptContext optCon)
 		const char* sp2 = poptGetArg(optCon);
 		if (sptype == NULL)
 			dba_cmdline_error(optCon, "you need provide 1, 2 or 3 numbers that identify the time range");
-		string formatted = describe_trange(
+		string formatted = Trange(
 				strtoul(sptype, NULL, 10),
 				sp1 == NULL ? 0 : strtoul(sp1, NULL, 10),
-				sp2 == NULL ? 0 : strtoul(sp2, NULL, 10));
+				sp2 == NULL ? 0 : strtoul(sp2, NULL, 10)).describe();
 		puts(formatted.c_str());
 	} else
 		dba_cmdline_error(optCon, "cannot handle %s.  Available options are: 'level' and 'trange'.", what);

@@ -429,14 +429,14 @@ class BulletinTest(unittest.TestCase):
 #        assert len(buf) > 8
 #        self.assertEqual(buf[:4], "BUFR")
 #        self.assertEqual(buf[-4:], "7777")
-#
-#class FormatterTest(unittest.TestCase):
-#    def testFormatter(self):
-#        for i in range(258):
-#            describeLevel(i, 0, 0, 0)
-#            describeLevel(i, 0, 1, 0)
-#        for i in range(256):
-#            describeTrange(i, 0, 0)
+
+class FormatterTest(unittest.TestCase):
+    def testFormatter(self):
+        for i in range(258):
+            dballe.Level(i, dballe.MISSING_INT).describe()
+            dballe.Level(i, dballe.MISSING_INT, i, dballe.MISSING_INT).describe()
+        for i in range(256):
+            dballe.Trange(i, dballe.MISSING_INT, dballe.MISSING_INT).describe()
 
 if __name__ == "__main__":
         unittest.main()

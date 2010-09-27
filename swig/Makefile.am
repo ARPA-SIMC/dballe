@@ -6,9 +6,10 @@ export PYTHONPATH=.
 
 TESTS = test.py
 # test-csv.py
-#if DO_DBALLE_DB
-#TESTS += test-db.py test-volnd.py
-#endif
+if DO_DBALLE_DB
+TESTS += test-db.py
+# test-volnd.py
+endif
 
 doc_DATA = python-dballe.rst
 

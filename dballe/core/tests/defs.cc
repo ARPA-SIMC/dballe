@@ -17,19 +17,18 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-msg.h>
-#include <dballe/msg/formatter.h>
-#include <dballe/msg/defs.h>
+#include <test-utils-core.h>
+#include <dballe/core/defs.h>
 
 using namespace dballe;
 using namespace std;
 
 namespace tut {
 
-struct formatter_shar
+struct defs_shar
 {
 };
-TESTGRP(formatter);
+TESTGRP(defs);
 
 // Try to get descriptions for all the layers
 template<> template<>
@@ -37,8 +36,10 @@ void to::test<1>()
 {
 	for (int i = 0; i < 261; ++i)
 	{
-		describe_level(i, 0);
-		describe_level_or_layer(i, 0, i, 0);
+		Level(i).describe();
+		Level(i, 0).describe();
+		Level(i, MISSING_INT, i, MISSING_INT).describe();
+		Level(i, 0, i, 0).describe();
 	}
 }
 
@@ -47,18 +48,22 @@ template<> template<>
 void to::test<2>()
 {
 	for (int i = 0; i < 256; ++i)
-		describe_trange(i, 0, 0);
+	{
+		Trange(i).describe();
+		Trange(i, 0).describe();
+		Trange(i, 0, 0).describe();
+	}
 }
 
 // Verify some well-known descriptions
 template<> template<>
 void to::test<3>()
 {
-	ensure_equals(describe_level(MISSING_INT, MISSING_INT), "-");
-	ensure_equals(describe_level_or_layer(103, 2000, INT_MAX, INT_MAX), "2.000m above ground");
-	ensure_equals(describe_level_or_layer(103, 2000, 103, 4000),
+	ensure_equals(Level().describe(), "-");
+	ensure_equals(Level(103, 2000).describe(), "2.000m above ground");
+	ensure_equals(Level(103, 2000, 103, 4000).describe(),
 			"Layer from [2.000m above ground] to [4.000m above ground]");
-	ensure_equals(describe_trange(254, 86400, MISSING_INT),
+	ensure_equals(Trange(254, 86400).describe(),
 			"Instantaneous value, forecast time 1d");
 }
 

@@ -23,7 +23,7 @@
 #define DBA_MSG_CODEC_H
 
 #include <dballe/core/rawmsg.h>
-#include <dballe/msg/defs.h>
+#include <dballe/core/defs.h>
 #include <memory>
 #include <stdio.h>
 

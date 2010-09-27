@@ -33,7 +33,7 @@ namespace tut {
 static int print_results(db::Cursor& cur)
 {
         Record result;
-        fprintf(stderr, "Query: %s\n%d results:\n", cur.sql_query.c_str(), (int)cur.count);
+        fprintf(stderr, "%d results:\n", (int)cur.count);
         int i;
         for (i = 0; cur.next(); ++i)
         {
@@ -221,8 +221,6 @@ void to::test<3>()
 
         populate_database();
 
-        db::Cursor cursor(*db);
-
         /*
         CHECKED(dba_ana_count(db, &count));
         fail_unless(count == 1);
@@ -230,20 +228,21 @@ void to::test<3>()
         query.clear();
 
         /* Iterate the anagraphic database */
-        ensure_equals(cursor.query_stations(query), 1);
+        auto_ptr<db::Cursor> cur = db->query_stations(query);
+        ensure_equals(cur->remaining(), 1);
 
         /* There should be an item */
-        ensure(cursor.next());
-        cursor.to_record(result);
+        ensure(cur->next());
+        cur->to_record(result);
 
         /* Check that the result matches */
         ensure(result.contains(sampleAna));
         //ensureTestRecEquals(result, extraAna);
 
         /* There should be only one item */
-        ensure_equals(cursor.remaining(), 0);
+        ensure_equals(cur->remaining(), 0);
 
-        ensure(!cursor.next());
+        ensure(!cur->next());
 }
 
 // Try many possible queries
@@ -257,25 +256,25 @@ void to::test<4>()
 /* Try a query using a KEY query parameter */
 #define TRY_QUERY(param, value, expected_count) do {\
         query.clear(); \
-        db::Cursor cursor(*db); \
         query.set(param, value); \
-        ensure_equals(cursor.query_data(query), expected_count); \
+        auto_ptr<db::Cursor> cur = db->query_data(query); \
+        ensure_equals(cur->remaining(), expected_count); \
         int count; \
-        if (0) count = print_results(cursor); \
-        else for (count = 0; cursor.next(); ++count) ; \
+        if (0) count = print_results(*cur); \
+        else for (count = 0; cur->next(); ++count) ; \
         ensure_equals(count, expected_count); \
 } while (0)
 
 /* Try a query using a longitude range */
 #define TRY_QUERY2(lonmin, lonmax, expected_count) do {\
         query.clear(); \
-        db::Cursor cursor(*db); \
         query.key(DBA_KEY_LONMIN).setd(lonmin); \
         query.key(DBA_KEY_LONMAX).setd(lonmax); \
-        ensure_equals(cursor.query_data(query), expected_count); \
+        auto_ptr<db::Cursor> cur = db->query_data(query); \
+        ensure_equals(cur->remaining(), expected_count); \
         int count; \
-        if (0) count = print_results(cursor); \
-        else for (count = 0; cursor.next(); ++count) ; \
+        if (0) count = print_results(*cur); \
+        else for (count = 0; cur->next(); ++count) ; \
         ensure_equals(count, expected_count); \
 } while (0)
 
@@ -395,19 +394,19 @@ void to::test<5>()
         use_db();
         populate_database();
 
-        db::Cursor cursor(*db);
-
         // Prepare a query
         query.clear();
         query.set(DBA_KEY_LATMIN, 10.0);
 
         // Make the query
-        ensure_equals(cursor.query_data(query), 4);
+        auto_ptr<db::Cursor> cur = db->query_data(query);
+
+        ensure_equals(cur->remaining(), 4);
 
         // There should be at least one item
-        ensure(cursor.next());
-        ensure_equals(cursor.remaining(), 3);
-        cursor.to_record(result);
+        ensure(cur->next());
+        ensure_equals(cur->remaining(), 3);
+        cur->to_record(result);
 
         /* Check that the results match */
         ensure(result.contains(sampleAna));
@@ -417,53 +416,53 @@ void to::test<5>()
         // result.print(stderr);
         // exit(0);
 
-        ensure(cursor.out_idvar == WR_VAR(0, 1, 11) || cursor.out_idvar == WR_VAR(0, 1, 12));
-        if (cursor.out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
+        if (cur->out_idvar == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample00));
-        if (cursor.out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_idvar == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample01));
 
         // The item should have two data in it
-        ensure(cursor.next());
-        ensure_equals(cursor.remaining(), 2);
-        cursor.to_record(result);
+        ensure(cur->next());
+        ensure_equals(cur->remaining(), 2);
+        cur->to_record(result);
 
-        ensure(cursor.out_idvar == WR_VAR(0, 1, 11) || cursor.out_idvar == WR_VAR(0, 1, 12));
-        if (cursor.out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
+        if (cur->out_idvar == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample00));
-        if (cursor.out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_idvar == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample01));
 
         // There should be also another item
-        ensure(cursor.next());
-        ensure_equals(cursor.remaining(), 1);
-        cursor.to_record(result);
+        ensure(cur->next());
+        ensure_equals(cur->remaining(), 1);
+        cur->to_record(result);
 
         // Check that the results matches
         ensure(result.contains(sampleAna));
         ensure(result.contains(sampleBase));
         ensure(result.contains(sample1));
 
-        ensure(cursor.out_idvar == WR_VAR(0, 1, 11) || cursor.out_idvar == WR_VAR(0, 1, 12));
-        if (cursor.out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
+        if (cur->out_idvar == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample10));
-        if (cursor.out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_idvar == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample11));
 
         // And finally the last item
-        ensure(cursor.next());
-        ensure_equals(cursor.remaining(), 0);
-        cursor.to_record(result);
+        ensure(cur->next());
+        ensure_equals(cur->remaining(), 0);
+        cur->to_record(result);
 
-        ensure(cursor.out_idvar == WR_VAR(0, 1, 11) || cursor.out_idvar == WR_VAR(0, 1, 12));
-        if (cursor.out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
+        if (cur->out_idvar == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample10));
-        if (cursor.out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_idvar == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample11));
 
         // Now there should not be anything anymore
-        ensure_equals(cursor.remaining(), 0);
-        ensure(!cursor.next());
+        ensure_equals(cur->remaining(), 0);
+        ensure(!cur->next());
 }
 
 // Try a query for best value
@@ -476,29 +475,28 @@ void to::test<6>()
         //if (db->server_type == ORACLE || db->server_type == POSTGRES)
         //      return;
 
-        db::Cursor cursor(*db);
-
-
         // Prepare a query
         query.clear();
         query.set(DBA_KEY_LATMIN, 1000000);
         query.set(DBA_KEY_QUERY, "best");
 
         // Make the query
-        ensure_equals(cursor.query_data(query), 4);
+        auto_ptr<db::Cursor> cur = db->query_data(query);
+
+        ensure_equals(cur->remaining(), 4);
 
         // There should be four items
-        ensure(cursor.next());
-        ensure_equals(cursor.remaining(), 3);
-        ensure(cursor.next());
-        ensure_equals(cursor.remaining(), 2);
-        ensure(cursor.next());
-        ensure_equals(cursor.remaining(), 1);
-        ensure(cursor.next());
-        ensure_equals(cursor.remaining(), 0);
+        ensure(cur->next());
+        ensure_equals(cur->remaining(), 3);
+        ensure(cur->next());
+        ensure_equals(cur->remaining(), 2);
+        ensure(cur->next());
+        ensure_equals(cur->remaining(), 1);
+        ensure(cur->next());
+        ensure_equals(cur->remaining(), 0);
 
         // Now there should not be anything anymore
-        ensure(!cursor.next());
+        ensure(!cur->next());
 }
 
 // Check if deletion works
@@ -508,11 +506,10 @@ void to::test<7>()
         use_db();
         populate_database();
 
-        db::Cursor cursor(*db);
-
         // 4 items to begin with
         query.clear();
-        ensure_equals(cursor.query_data(query), 4);
+        auto_ptr<db::Cursor> cur = db->query_data(query);
+        ensure_equals(cur->remaining(), 4);
 
         query.clear();
         query.set(DBA_KEY_YEARMIN, 1945);
@@ -524,34 +521,36 @@ void to::test<7>()
 
         // 2 remaining after remove
         query.clear();
-        ensure_equals(cursor.query_data(query), 2);
+        cur = db->query_data(query);
+        ensure_equals(cur->remaining(), 2);
 
         // Did it remove the right ones?
         query.clear();
         query.set(DBA_KEY_LATMIN, 1000000);
-        ensure_equals(cursor.query_data(query), 2);
-        ensure(cursor.next());
-        cursor.to_record(result);
+        cur = db->query_data(query);
+        ensure_equals(cur->remaining(), 2);
+        ensure(cur->next());
+        cur->to_record(result);
         ensure(result.contains(sampleAna));
         ensure(result.contains(sampleBase));
 
-        ensure(cursor.out_idvar == WR_VAR(0, 1, 11) || cursor.out_idvar == WR_VAR(0, 1, 12));
-        if (cursor.out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
+        if (cur->out_idvar == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample00));
-        if (cursor.out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_idvar == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample01));
 
         /* The item should have two data in it */
-        ensure(cursor.next());
-        cursor.to_record(result);
+        ensure(cur->next());
+        cur->to_record(result);
 
-        ensure(cursor.out_idvar == WR_VAR(0, 1, 11) || cursor.out_idvar == WR_VAR(0, 1, 12));
-        if (cursor.out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
+        if (cur->out_idvar == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample00));
-        if (cursor.out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_idvar == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample01));
 
-        ensure(!cursor.next());
+        ensure(!cur->next());
 }
 
 /* Test datetime queries */
@@ -596,12 +595,12 @@ void to::test<8>()
         base.set(DBA_KEY_SEC, 0);
 
 #define WANTRESULT(ab) do { \
-        db::Cursor cursor(*db); \
-        ensure_equals(cursor.query_data(query), 1); \
-        ensure(cursor.next()); \
-        cursor.to_record(result); \
-        ensure_equals(cursor.count, 0); \
-        ensure_varcode_equals(cursor.out_idvar, WR_VAR(0, 1, 12)); \
+        auto_ptr<db::Cursor> cur = db->query_data(query); \
+        ensure_equals(cur->remaining(), 1); \
+        ensure(cur->next()); \
+        cur->to_record(result); \
+        ensure_equals(cur->count, 0); \
+        ensure_varcode_equals(cur->out_idvar, WR_VAR(0, 1, 12)); \
         ensure(result.contains(ab)); \
 } while(0)
 
@@ -799,22 +798,21 @@ void to::test<9>()
         use_db();
         populate_database();
 
-        db::Cursor cursor(*db);
         query.clear();
         query.set(DBA_KEY_LATMIN, 1000000);
-        cursor.query_data(query);
+        auto_ptr<db::Cursor> cur = db->query_data(query);
 
         // Move the cursor to B01011
         bool found = false;
-        while (cursor.next())
-                if (cursor.out_idvar == WR_VAR(0, 1, 11))
+        while (cur->next())
+                if (cur->out_idvar == WR_VAR(0, 1, 11))
                 {
                         found = true;
                         break;
                 }
         ensure(found);
 
-        int context_id = cursor.out_context_id;
+        int context_id = cur->out_context_id;
 
         // Insert new attributes about this report
         qc.clear();
@@ -877,11 +875,11 @@ void to::test<10>()
         query.clear();
         query.set(DBA_KEY_REP_COD, 1);
 
-        db::Cursor cursor(*db);
-        ensure_equals(cursor.query_stations(query), 1);
+        auto_ptr<db::Cursor> cur = db->query_stations(query);
+        ensure_equals(cur->remaining(), 1);
 
-        ensure(cursor.next());
-        ensure(!cursor.next());
+        ensure(cur->next());
+        ensure(!cur->next());
 }
 
 // Run a search for orphan elements
@@ -971,8 +969,8 @@ void to::test<13>()
         query.set(DBA_KEY_LONMIN, 70.0);
         query.set(DBA_KEY_LONMAX, -160.0);
 
-        db::Cursor cur(*db);
-        ensure_equals(cur.query_data(query), 2);
+        auto_ptr<db::Cursor> cur = db->query_data(query);
+        ensure_equals(cur->remaining(), 2);
 }
 
 // This query caused problems
