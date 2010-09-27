@@ -25,7 +25,7 @@ class QueryTextCtrl(wx.TextCtrl, ModelListener):
 	def updateColour(self):
 		if not self.isValid(self.GetValue()):
 			self.SetBackgroundColour(self.invalidBackground)
-		elif self.readValue() != self.model.filter.enqc(self.filterTag):
+		elif self.readValue() != self.model.filter.get(self.filterTag, None):
 			self.SetBackgroundColour(self.dirtyBackground)
 		else:
 			self.SetBackgroundColour(self.defaultBackground)
@@ -54,7 +54,7 @@ class QueryTextCtrl(wx.TextCtrl, ModelListener):
 	def filterChanged(self, what):
 		if what == self.filterTag:
 			self.updating = True
-			text = self.model.filter.enqc(self.filterTag)
+			text = self.model.filter.get(self.filterTag, None)
 			if text is not None:
 				self.SetValue(text)
 			else:

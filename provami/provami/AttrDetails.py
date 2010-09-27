@@ -113,7 +113,7 @@ class AttributeTable(ResultTable):
             self.model.db.query_attrs(context, var, [], attrs)
 
             for var in attrs:
-                self.items.append(var)
+                self.items.append(dballe.Var(var))
 
             self.sort()
 

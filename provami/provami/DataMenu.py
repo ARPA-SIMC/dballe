@@ -43,7 +43,7 @@ class DataMenu(wx.Menu):
 
 			self.Append(DataMenu.ACTION_SELECT_SAME_ANA_ID, "Select station %d (lat %f lon %f)" %
 					(data["ana_id"], data["lat"], data["lon"]))
-			ident = data["ident"]
+			ident = data.get("ident", None)
 			if ident is not None:
 				self.Append(DataMenu.ACTION_SELECT_SAME_IDENT, "Select all stations " + ident)
 			else:

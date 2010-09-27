@@ -81,7 +81,7 @@ def completeDate(fields, how = DateUtils.EXACT):
 
 def datetimeFromRecord(rec, fieldset = DateUtils.MIN):
     fn = DateUtils.fields[fieldset]
-    return completeDate([rec.enqi(fn[x]) for x in range(6)], fieldset)
+    return completeDate([rec.get(fn[x], None) for x in range(6)], fieldset)
 
 class TTracer:
     def __init__(self, name):
@@ -319,7 +319,9 @@ class Model:
         return self.db.query_tranges(filter)
 
     def writeRecord(self, record):
-        (context, ana) = self.db.insert(record, True, False)
+        self.db.insert(record, True, False)
+        #context = record.pop("context_id")
+        #ana = record.pop("ana_id")
 
     def updateAttribute(self, context, varcode, var):
         attrs = dballe.Record()
