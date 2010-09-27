@@ -28,14 +28,11 @@
 #include <dballe/core/record.h>
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/file.h>
 #include <dballe/db/db.h>
 #include <dballe/db/cursor.h>
-
-// #include <dballe++/db.h>
-// #include <dballe++/format.h>
-// #include <dballe++/init.h>
-// #include <dballe++/msg.h>
-// #include <iostream>
+#include <dballe/msg/msgs.h>
+#include <dballe/msg/codec.h>
 
 using namespace wreport;
 using namespace dballe;
@@ -69,6 +66,15 @@ using namespace dballe;
 %typemap(typecheck,precedence=SWIG_TYPECHECK_STRING) wreport::Varcode {
         $1 = PyString_Check($input) ? 1 : 0;
 }
+
+%ignore dballe::newvar;
+
+namespace dballe {
+        wreport::Var var(wreport::Varcode code) { return wreport::Var(varinfo(code)); }
+        wreport::Var var(wreport::Varcode code, int val) { return wreport::Var(varinfo(code), val); }
+        wreport::Var var(wreport::Varcode code, double val) { return wreport::Var(varinfo(code), val); }
+        wreport::Var var(wreport::Varcode code, const char* val) { return wreport::Var(varinfo(code), val); }
+};
 
 %typemap(in) DBALLE_SQL_C_SINT_TYPE {
         $1 = PyInt_AsLong($input);
@@ -110,20 +116,24 @@ using namespace dballe;
         $1 = PySequence_Check($input) ? 1 : 0;
 }
 
+%typemap(in) dballe::Encoding {
+        const char* tmp = PyString_AsString($input);
+        if (strcmp(tmp, "BUFR") == 0)
+                $1 = BUFR;
+        else if (strcmp(tmp, "CREX") == 0)
+                $1 = CREX;
+        else if (strcmp(tmp, "AOF") == 0)
+                $1 = AOF;
+        else
+                throw std::runtime_error(std::string("Unknown encoding '") + tmp + "'");
+}
+
 namespace std {
         %template(VartableBase) vector<wreport::_Varinfo>;
         %template(VarpVector) vector<wreport::Var*>;
 //        %template(VarVector) vector<wreport::Var>;
 //        %template(VarcodeVector) vector<wreport::Varcode>;
 //        %template(SubsetVector) vector<wreport::Subset>;
-};
-
-%ignore dballe::newvar;
-
-namespace dballe {
-        wreport::Var var(wreport::Varcode code, int val) { return wreport::Var(varinfo(code), val); }
-        wreport::Var var(wreport::Varcode code, double val) { return wreport::Var(varinfo(code), val); }
-        wreport::Var var(wreport::Varcode code, const char* val) { return wreport::Var(varinfo(code), val); }
 };
 
 %extend wreport::Varinfo {
@@ -524,6 +534,62 @@ namespace dballe {
         {
                 return $self->query(rec, DBA_DB_WANT_VAR_NAME, DBA_DB_MODIFIER_DISTINCT | DBA_DB_MODIFIER_NOANAEXTRA ).release();
         }
+        void export_results(const dballe::Record& query, Encoding encoding, const std::string& file)
+        {
+                std::auto_ptr<dballe::File> out = dballe::File::create(encoding, file.c_str(), "wb");
+                struct Consumer : public MsgConsumer {
+                        dballe::File& out;
+                        dballe::msg::Exporter* exporter;
+                        Consumer(dballe::File& out)
+                                : out(out), exporter(0)
+                        {
+                                exporter = msg::Exporter::create(out.type()).release();
+                        }
+                        ~Consumer()
+                        {
+                                if (exporter) delete exporter;
+                        }
+                        void operator()(std::auto_ptr<Msg> msg)
+                        {
+                                Rawmsg raw;
+                                Msgs msgs;
+                                msgs.acquire(msg);
+                                exporter->to_rawmsg(msgs, raw);
+                                out.write(raw);
+                        }
+                } msg_writer(*out);
+                $self->export_msgs(query, msg_writer);
+        }
+
+        void export_results_as_generic(const dballe::Record& query, Encoding encoding, const std::string& file)
+        {
+                std::auto_ptr<dballe::File> out = dballe::File::create(encoding, file.c_str(), "wb");
+                struct Consumer : public MsgConsumer {
+                        dballe::File& out;
+                        dballe::msg::Exporter* exporter;
+                        Consumer(dballe::File& out)
+                                : out(out), exporter(0)
+                        {
+                                msg::Exporter::Options opts;
+                                opts.template_name = "generic";
+                                exporter = msg::Exporter::create(out.type(), opts).release();
+                        }
+                        ~Consumer()
+                        {
+                                if (exporter) delete exporter;
+                        }
+                        void operator()(std::auto_ptr<Msg> msg)
+                        {
+                                Rawmsg raw;
+                                Msgs msgs;
+                                msgs.acquire(msg);
+                                exporter->to_rawmsg(msgs, raw);
+                                out.write(raw);
+                        }
+                } msg_writer(*out);
+                $self->export_msgs(query, msg_writer);
+        }
+
 }
 
 %extend dballe::db::Cursor {
@@ -620,17 +686,6 @@ class TimeRange(tuple):
 
 
 
-%typemap(in) dba_encoding {
-	const char* tmp = PyString_AsString($input);
-        if (strcmp(tmp, "BUFR") == 0)
-                $1 = BUFR;
-        else if (strcmp(tmp, "CREX") == 0)
-                $1 = CREX;
-        else if (strcmp(tmp, "AOF") == 0)
-                $1 = AOF;
-        else
-                throw std::runtime_error(std::string("Unknown encoding '") + tmp + "'");
-}
 
 %typemap(in, numinputs=0) dba_varcode *varcode (dba_varcode temp) {
 	$1 = &temp;

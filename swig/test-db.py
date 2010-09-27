@@ -165,8 +165,8 @@ class DballeTest(unittest.TestCase):
             self.assertEqual(result["date"], dt.datetime(1945, 4, 25, 8, 0, 0))
     def testQueryExport(self):
         query = dballe.Record()
-        self.db.exportResults(query, "BUFR", "/dev/null")
-        self.db.exportResults(query, "CREX", "/dev/null")
+        self.db.export_results(query, "BUFR", "/dev/null")
+        self.db.export_results(query, "CREX", "/dev/null")
     def testAttrRemove(self):
         #db.attrRemove(1, "B01011", [ "B33007" ])
         self.db.attr_remove(1, "B01011", ("B33007",))

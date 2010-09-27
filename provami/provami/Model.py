@@ -379,9 +379,9 @@ class Model:
         #   vars = dballe.volnd.read(self.db.query_data(filter), idx)
         #   cPickle.dump(vars, open(file, "w"))
         elif encoding == "gBUFR":
-            self.db.exportResultsAsGeneric(filter, "BUFR", file)
+            self.db.export_results_as_generic(filter, "BUFR", file)
         else:
-            self.db.exportResults(filter, encoding, file)
+            self.db.export_results(filter, encoding, file)
 
     def update(self):
         try:
