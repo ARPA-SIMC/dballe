@@ -353,6 +353,14 @@ void to::test<5>()
 	ensure(rec1 != rec);
 }
 
+// Test keyword metadata
+template<> template<>
+void to::test<6>()
+{
+	wreport::Varinfo info = Record::keyword_info(DBA_KEY_REP_MEMO);
+	ensure(info->is_string());
+}
+
 #if 0
 // Test set_from_string
 template<> template<>

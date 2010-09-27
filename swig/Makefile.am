@@ -4,11 +4,11 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 export PYTHONPATH=.
 
-TESTS = test.py
-# test-csv.py
+TESTS =
+#test.py test-csv.py
 if DO_DBALLE_DB
-TESTS += test-db.py
-# test-volnd.py
+TESTS += test-volnd.py
+#test-db.py test-volnd.py
 endif
 
 doc_DATA = python-dballe.rst

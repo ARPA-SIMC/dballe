@@ -70,6 +70,18 @@ using namespace dballe;
         $1 = PyString_Check($input) ? 1 : 0;
 }
 
+%typemap(in) DBALLE_SQL_C_SINT_TYPE {
+        $1 = PyInt_AsLong($input);
+}
+
+%typemap(out) DBALLE_SQL_C_SINT_TYPE {
+        $result = PyInt_FromLong($1);
+}
+
+%typemap(typecheck,precedence=SWIG_TYPECHECK_INTEGER) wreport::Varcode {
+        $1 = PyInt_Check($input) ? 1 : 0;
+}
+
 %typemap(in) dba_keyword {
         $1 = record_keyword_byname(PyString_AsString($input));
 }
@@ -196,6 +208,21 @@ namespace dballe {
                                 return self.equals(record)
         %}
 
+        std::string _format_keys()
+        {
+                std::string res;
+                for (int i = 0; i < DBA_KEY_COUNT; ++i)
+                        if (const wreport::Var* var = $self->key_peek((dba_keyword)i))
+                        {
+                                if (!res.empty())
+                                        res += ", ";
+                                res += dballe::Record::keyword_name((dba_keyword)i);
+                                res += ": ";
+                                res += var->format();
+                        }
+                return res;
+        }
+
         %ignore key;
         %ignore var;
         %ignore key_peek;
@@ -212,6 +239,7 @@ namespace dballe {
         %ignore unset(dba_keyword parameter);
         %ignore unset(wreport::Varcode code);
         %ignore parse_date_extremes;
+        %rename (getvar) get;
 
         %pythoncode %{
                 def copy(self):
@@ -233,14 +261,14 @@ namespace dballe {
                 def _get_iter(self, *args):
                         for x in args:
                                 if x in self:
-                                        yield self.get(x).enq()
+                                        yield self.getvar(x).enq()
                                 else:
                                         yield None
                 def _get_dt(self, *args):
                         res = []
                         for idx, x in enumerate(args):
                                 if x in self:
-                                        res.append(self.get(x).enq())
+                                        res.append(self.getvar(x).enq())
                                 elif idx < 3:
                                         return None
                                 else:
@@ -272,29 +300,29 @@ namespace dballe {
                         if macro:
                                 return macro()
                         else:
-                                return self.get(key).enq()
+                                return self.getvar(key).enq()
 
                 def _macro_set_date(self, dt):
                         for kd, kr in zip(("year", "month", "day", "hour", "minute", "second"), self.KEYS_DATE):
-                                self.get(kr).set(getattr(dt, kd))
+                                self.getvar(kr).set(getattr(dt, kd))
                 def _macro_set_datemin(self, dt):
                         for kd, kr in zip(("year", "month", "day", "hour", "minute", "second"), self.KEYS_DATEMIN):
-                                self.get(kr).set(getattr(dt, kd))
+                                self.getvar(kr).set(getattr(dt, kd))
                 def _macro_set_datemax(self, dt):
                         for kd, kr in zip(("year", "month", "day", "hour", "minute", "second"), self.KEYS_DATEMAX):
-                                self.get(kr).set(getattr(dt, kd))
+                                self.getvar(kr).set(getattr(dt, kd))
                 def _macro_set_level(self, tu):
                         for idx, key in enumerate(self.KEYS_LEVEL):
                                 if idx >= len(tu) or tu[idx] is None:
                                         self.unset(key)
                                 else:
-                                        self.get(key).set(tu[idx])
+                                        self.getvar(key).set(tu[idx])
                 def _macro_set_trange(self, tu):
                         for idx, key in enumerate(self.KEYS_TRANGE):
                                 if idx >= len(tu) or tu[idx] is None:
                                         self.unset(key)
                                 else:
-                                        self.get(key).set(tu[idx])
+                                        self.getvar(key).set(tu[idx])
                 _macro_set_timerange = _macro_set_trange
 
                 def __setitem__(self, key, val):
@@ -303,7 +331,7 @@ namespace dballe {
                         if macro:
                                 return macro(val)
                         else:
-                                self.get(key).set(val)
+                                self.getvar(key).set(val)
 
                 def _macro_del_date(self):
                         for k in self.KEYS_DATE:
@@ -375,10 +403,31 @@ namespace dballe {
                 def iteritems(self):
                         "List of names of variables in the record"
                         return ((x.code(), x.enq()) for x in self.vars())
+                def itervars(self):
+                        "Iterate all the variables in the record"
+                        return (x for x in self.vars())
                 def __str__(self):
-                        return "{" + ", ".join(("%s: %s" % (a, b) for a, b in self.iteritems())) + "}"
+                        keys = self._format_keys()
+                        items = ", ".join(("%s: %s" % (a, b) for a, b in self.iteritems()))
+                        return "{" + ", ".join((keys, items)) + "}"
                 def __repr__(self):
                         return "<Record %s>" % self.__str__()
+                def get(self, key, *args):
+                        if key in self:
+                                return self[key]
+                        elif args:
+                                return args[0]
+                        else:
+                                raise KeyError, key
+                def pop(self, key, *args):
+                        if key in self:
+                                res = self[key]
+                                del self[key]
+                                return res
+                        elif args:
+                                return args[0]
+                        else:
+                                raise KeyError, key
         %}
 }
 

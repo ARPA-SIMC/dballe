@@ -263,7 +263,7 @@ class RecordTest(unittest.TestCase):
         self.assertEqual("B04001" in rec, False)
 
         rec["B01001"] = 1
-        var = rec.get("B01001")
+        var = rec.getvar("B01001")
         var.set(4)
         rec.update(var)
         self.assertEqual(rec["B01001"], 4)

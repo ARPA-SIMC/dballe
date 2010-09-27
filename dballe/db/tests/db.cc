@@ -416,10 +416,10 @@ void to::test<5>()
         // result.print(stderr);
         // exit(0);
 
-        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
-        if (cur->out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
+        if (cur->out_varcode == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample00));
-        if (cur->out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_varcode == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample01));
 
         // The item should have two data in it
@@ -427,10 +427,10 @@ void to::test<5>()
         ensure_equals(cur->remaining(), 2);
         cur->to_record(result);
 
-        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
-        if (cur->out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
+        if (cur->out_varcode == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample00));
-        if (cur->out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_varcode == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample01));
 
         // There should be also another item
@@ -443,10 +443,10 @@ void to::test<5>()
         ensure(result.contains(sampleBase));
         ensure(result.contains(sample1));
 
-        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
-        if (cur->out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
+        if (cur->out_varcode == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample10));
-        if (cur->out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_varcode == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample11));
 
         // And finally the last item
@@ -454,10 +454,10 @@ void to::test<5>()
         ensure_equals(cur->remaining(), 0);
         cur->to_record(result);
 
-        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
-        if (cur->out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
+        if (cur->out_varcode == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample10));
-        if (cur->out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_varcode == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample11));
 
         // Now there should not be anything anymore
@@ -534,20 +534,20 @@ void to::test<7>()
         ensure(result.contains(sampleAna));
         ensure(result.contains(sampleBase));
 
-        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
-        if (cur->out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
+        if (cur->out_varcode == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample00));
-        if (cur->out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_varcode == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample01));
 
         /* The item should have two data in it */
         ensure(cur->next());
         cur->to_record(result);
 
-        ensure(cur->out_idvar == WR_VAR(0, 1, 11) || cur->out_idvar == WR_VAR(0, 1, 12));
-        if (cur->out_idvar == WR_VAR(0, 1, 11))
+        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
+        if (cur->out_varcode == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample00));
-        if (cur->out_idvar == WR_VAR(0, 1, 12))
+        if (cur->out_varcode == WR_VAR(0, 1, 12))
                 ensure(result.contains(sample01));
 
         ensure(!cur->next());
@@ -600,7 +600,7 @@ void to::test<8>()
         ensure(cur->next()); \
         cur->to_record(result); \
         ensure_equals(cur->count, 0); \
-        ensure_varcode_equals(cur->out_idvar, WR_VAR(0, 1, 12)); \
+        ensure_varcode_equals(cur->out_varcode, WR_VAR(0, 1, 12)); \
         ensure(result.contains(ab)); \
 } while(0)
 
@@ -805,7 +805,7 @@ void to::test<9>()
         // Move the cursor to B01011
         bool found = false;
         while (cur->next())
-                if (cur->out_idvar == WR_VAR(0, 1, 11))
+                if (cur->out_varcode == WR_VAR(0, 1, 11))
                 {
                         found = true;
                         break;
@@ -1162,6 +1162,23 @@ void to::test<18>()
 
                 ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
                 ensure_equals(result[DBA_KEY_REP_COD].enqi(), 11);
+        }
+}
+
+/* Test querying priomax together with query=best */
+template<> template<>
+void to::test<19>()
+{
+        use_db();
+        populate_database();
+
+        Record res;
+        Record rec;
+        auto_ptr<db::Cursor> cur = db->query(rec, DBA_DB_WANT_REPCOD, DBA_DB_MODIFIER_DISTINCT);
+        while (cur->next())
+        {
+            cur->to_record(res);
+            ensure(res.key_peek_value(DBA_KEY_REP_MEMO) != 0);
         }
 }
 
