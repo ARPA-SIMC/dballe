@@ -1,0 +1,36 @@
+#!/usr/bin/python
+
+import sys, re, subprocess
+
+SPLIT=re.compile(r"\s*,\s*")
+
+# Read the aliases
+templates = []
+proc = subprocess.Popen(["./run-local", "dbamsg", "convert", "--template=list"], stdout=subprocess.PIPE)
+out, err = proc.communicate()
+for line in out.split("\n"):
+    if not line: continue
+    name, desc = line.split(" - ")
+    templates.append(dict(name=name, desc=desc))
+templates.sort(key=lambda x: x["name"])
+
+for line in sys.stdin:
+    if line.startswith(".SH AUTHOR"):
+        print r"""
+.SH TEMPLATE NAMES
+This is a list of possible template names for the
+\fB\-\-template\fP switch:
+.P
+"""
+
+        for a in templates:
+            print ".TP"
+            print r"\fB%s\fP" % a["name"]
+            print ".br"
+            print a["desc"]
+
+        print r"""
+.P
+\-\-template=list will also print the list.
+"""
+    print line,

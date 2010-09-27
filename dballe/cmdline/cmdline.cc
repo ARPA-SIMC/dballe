@@ -534,7 +534,7 @@ void list_templates()
 {
 	const msg::wr::TemplateRegistry& reg = msg::wr::TemplateRegistry::get();
 	for (msg::wr::TemplateRegistry::const_iterator i = reg.begin(); i != reg.end(); ++i)
-		fprintf(stderr, "%s - %s\n",
+		fprintf(stdout, "%s - %s\n",
 				i->second->name.c_str(), i->second->description.c_str());
 }
 
