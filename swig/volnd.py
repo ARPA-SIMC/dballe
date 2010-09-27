@@ -235,7 +235,6 @@ class LevelIndex(ListIndex):
         as they come out of the database.
         """
         def _indexKey(self, rec):
-                print "IK", rec["level"]
                 return rec["level"]
         def _indexData(self, rec):
                 return rec["level"]
