@@ -28,14 +28,12 @@ Makefile
 /run-check.conf
 /libdballe.pc
 /libdballef.pc
-/libdballepp.pc
 /libtool
 /stamp-h1
 /dbadb.1
 /dbamsg.1
 /dbatbl.1
 /dballe/core/btable.dox
-/dballe++/tut_test
 /dballe/bench/benchmark
 /dballe/core/record_keyword.dox
 /dballe/core/record_keyword.rst

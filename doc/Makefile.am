@@ -59,17 +59,14 @@ endif
 
 TEXINPUTS="$(srcdir)"
 
-libdballe.doxytags c_api/index.html: $(cdoxdeps) $(mainpages)
+libdballe.doxytags c_api/index.html xml/index.xml: $(cdoxdeps) $(mainpages)
 	doxygen $<
-
-# libdballepp.doxytags c++_api/index.html c++_xml/index.xml: $(cppdoxdeps)
-#	doxygen $<
 
 libdballef.doxytags fortran_api/index.html: $(fortrandoxdeps)
 	doxygen $<
 
-#dballe-doc.i: c++_xml/index.xml doxy2swig.py
-#	$(srcdir)/doxy2swig.py $< $@
+dballe-doc.i: xml/index.xml doxy2swig.py
+	$(srcdir)/doxy2swig.py $< $@
 
 fapi_html/index.html: $(fapisources)
 	$(LATEX2HTML) -dir fapi_html -mkdir $<
@@ -109,6 +106,6 @@ CLEANFILES = libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg
 
 clean-local:
 	rm -rf {c,fortran}_api
-	echo rm -rf c++_xml
+	rm -rf xml
 	rm -rf guide_html
 	rm -rf fapi_html

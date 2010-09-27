@@ -10,7 +10,7 @@ Homepage: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe4 (= ${binary:Version}), ${misc:Depends}
+Depends: libdballe5 (= ${binary:Version}), ${misc:Depends}
 Recommends: pkg-config
 Conflicts: libdballe-core-dev, libdballe-bufrex-dev, libdballe-msg-dev, libdballe-db-dev
 Description: DB-All.e C development library for weather research
@@ -49,7 +49,7 @@ Description: documentation for the DB-ALL.e C library for weather research
  .
  This is the documentation for the DB_All.e development the library.
 
-Package: libdballe4
+Package: libdballe5
 Section: libs
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}
@@ -62,7 +62,7 @@ Description: DB-ALL.e C shared library for weather research
 Package: libdballef-dev
 Section: libdevel
 Architecture: any
-Depends: libdballef4 (=${binary:Version}), ${misc:Depends}
+Depends: libdballef5 (=${binary:Version}), ${misc:Depends}
 Recommends: pkg-config
 Description: DB-All.e Fortran development library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -71,7 +71,7 @@ Description: DB-All.e Fortran development library for weather research
  This is the DB-All.e Fortran API, designed to make it easy to use the DB-All.e
  database as a smart working area for meteorological software.
 
-Package: libdballef4
+Package: libdballef5
 Section: libs
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}
@@ -80,28 +80,6 @@ Description: DB-ALL.e Fortran shared library for weather research
  forecast data can be stored, searched, retrieved and updated.
  .
  This is the shared library for Fortran programs.
-
-Package: libdballepp-dev
-Section: libdevel
-Architecture: any
-Depends: libdballepp4 (=${binary:Version}), libdballe-dev (=${binary:Version}), libdballe4 (= ${binary:Version}), ${misc:Depends}
-Recommends: pkg-config
-Description: DB-All.e C++ development library for weather research
- DB-All.e is a fast on-disk database where meteorological observed and
- forecast data can be stored, searched, retrieved and updated.
- .
- This is the DB-All.e C++ API, a thin wrapper around the C API that takes
- advantage of C++ features.  See libdballe-dev for a list of features.
-
-Package: libdballepp4
-Section: libs
-Architecture: any
-Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}
-Description: DB-ALL.e C++ shared library for weather research
- DB-All.e is a fast on-disk database where meteorological observed and
- forecast data can be stored, searched, retrieved and updated.
- .
- This is the shared library for C++ programs.
 
 Package: python-dballe
 Section: python

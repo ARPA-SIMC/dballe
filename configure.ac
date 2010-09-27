@@ -172,16 +172,8 @@ CFLAGS="-Wall $CFLAGS"
 CXXFLAGS="-Wall $CXXFLAGS"
 
 # Enforce dependencies
-if ! test x"$enable_dballepp"=x"yes"
-then
-	enable_dballe_python=no
-fi
-
 if test x"$enable_dballe_db"=x"yes"; then
 	AC_DEFINE(HAVE_DBALLE_DB,[],[Have DB module])
-fi
-if test x"$enable_dballepp"=x"yes"; then
-	AC_DEFINE(HAVE_DBALLEPP,[],[Have C++ bindings])
 fi
 if test x"$enable_dballef"=x"yes"; then
 	AC_DEFINE(HAVE_DBALLEF,[],[Have Fortran bindings])
@@ -191,7 +183,6 @@ if test x"$enable_dballe_python"=x"yes"; then
 fi
 
 AM_CONDITIONAL([DO_DBALLE_DB], [test x"$enable_dballe_db" = x"yes"])
-AM_CONDITIONAL([DO_DBALLEPP], [test x"$enable_dballepp" = x"yes"])
 AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
 AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
@@ -208,7 +199,6 @@ dballe/msg/Makefile
 dballe/db/Makefile
 dballe/cmdline/Makefile
 dballe/bench/Makefile
-dballe++/Makefile
 fortran/Makefile
 tools/Makefile
 tables/Makefile
@@ -216,12 +206,10 @@ extra/Makefile
 swig/Makefile
 doc/Makefile
 doc/libdballe.dox
-doc/libdballepp.dox
 doc/libdballef.dox
 provami/Makefile
 libdballe.pc
 libdballef.pc
-libdballepp.pc
 ])
 AC_OUTPUT
 #examples/Makefile
@@ -233,7 +221,6 @@ AC_MSG_NOTICE([
 ===================================================
 $PACKAGE_NAME-$PACKAGE_VERSION configuration:
 AS_HELP_STRING([db:], [$enable_dballe_db])
-AS_HELP_STRING([C++:], [$enable_dballepp])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])

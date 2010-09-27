@@ -1,6 +1,0 @@
-usr/include/dballe++
-usr/lib/libdballepp*.a
-usr/lib/pkgconfig/libdballepp*
-usr/lib/libdballepp*.la
-usr/lib/libdballepp*.so
-usr/share/aclocal/libdballepp.m4
