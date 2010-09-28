@@ -73,6 +73,6 @@ genattr_FCFLAGS = -g
 
 INCLUDES = -I$(top_srcdir)
 
-EXTRA_DIST = fortran.dox check-utils.h
+EXTRA_DIST = fortran.dox check-utils.h error.h
 
 endif

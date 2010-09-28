@@ -18,7 +18,8 @@ messageinclude_HEADERS = \
 		msg-extravars.h \
 		msgs.h \
 		repinfo.h \
-		aof_codec.h
+		aof_codec.h \
+		wr_codec.h
 
 #if DO_DBALLE_BUFREX
 #messageinclude_HEADERS += \
@@ -134,4 +135,4 @@ distclean-local:
 	rm -f ltypes.dox ltypes.tex tranges.dox tranges.tex
 
 BUILT_SOURCES = vars.h vars.cc vars.gperf msg-extravars.h
-EXTRA_DIST += mkvars vars.csv vars.h vars.gperf vars.cc msg-extravars.h bufrex_exporters/exporters.dox ltypes.txt mklevels mktranges
+EXTRA_DIST += mkvars vars.csv vars.h vars.gperf vars.cc msg-extravars.h wr_exporters/exporters.dox ltypes.txt mklevels mktranges
