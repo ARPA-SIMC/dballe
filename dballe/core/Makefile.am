@@ -9,7 +9,7 @@ INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_C
 coreincludedir = $(includedir)/dballe/core
 
 coreinclude_HEADERS = \
-	aliases.h
+	aliases.h \
 	verbose.h \
 	defs.h \
 	var.h \
