@@ -1,10 +1,9 @@
 usr/include/dballe/core
-usr/include/dballe/bufrex
 usr/include/dballe/msg
 usr/include/dballe/db
-usr/include/dballe/init.h
+usr/include/dballe/cmdline
 usr/lib/libdballe.a
-usr/lib/pkgconfig/libdballe.pc
 usr/lib/libdballe.la
 usr/lib/libdballe.so
+usr/lib/pkgconfig/libdballe.pc
 usr/share/aclocal/libdballe.m4
