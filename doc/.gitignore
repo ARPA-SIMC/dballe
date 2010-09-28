@@ -5,11 +5,9 @@
 *.toc
 *.aux
 *.blg
-c++_api/
-c++_xml/
 c_api/
 fortran_api/
+xml/
 dballe-doc.i
 libdballe.dox
-libdballepp.dox
 libdballef.dox
