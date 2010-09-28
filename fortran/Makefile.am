@@ -20,7 +20,7 @@ libdballef_la_SOURCES = \
 	msgapi.cc \
 	binding.cc
 libdballef_la_LIBADD = ../dballe/libdballe.la -lcnf
-libdballef_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@
+libdballef_la_LDFLAGS = -version-info @LIBDBALLEF_VERSION_INFO@
 
 
 # Tests

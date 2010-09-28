@@ -61,6 +61,9 @@ AM_PROG_CC_STDC
 dnl Needed by subdir-objects
 AM_PROG_CC_C_O
 
+dnl We want to invoke pkg-config directly
+PKG_PROG_PKG_CONFIG
+
 AC_CHECK_PROG(have_gperf, gperf, true)
 if test x$have_gperf != xtrue
 then
@@ -157,16 +160,50 @@ AC_CHECK_LIB(popt, poptGetContext, LIBS="$LIBS -lpopt",
 
 LIBS="$LIBS -lm"
 
-confdir='$(sysconfdir)'"/$PACKAGE"
+confdir='${sysconfdir}'"/$PACKAGE"
 AC_SUBST(confdir)
 
-tabledir='$(datadir)/wreport'
+# tabledir="`$PKG_CONFIG --variable=tabledir libwreport`"
+tabledir='${datadir}/wreport'
 AC_SUBST(tabledir)
 dnl def_tabledir=`echo "${sharedstatedir}/lib/$PACKAGE/tables"`
 dnl AC_DEFINE_UNQUOTED(TABLE_DIR, "$def_tabledir", "Default location for table files")
 
-LIBDBALLE_VERSION_INFO=`echo $VERSION | awk -F. '{ printf "%d:%d:%d", $1+$2, $3, $2 }'`
+dnl From libtool's documentation:
+dnl
+dnl This flag accepts an argument of the form `CURRENT[:REVISION[:AGE]]'.
+dnl
+dnl CURRENT
+dnl      The most recent interface number that this library implements.
+dnl 
+dnl REVISION
+dnl      The implementation number of the CURRENT interface.
+dnl 
+dnl AGE
+dnl      The difference between the newest and oldest interfaces that this
+dnl      library implements.  In other words, the library implements all the
+dnl      interface numbers in the range from number `CURRENT - AGE' to
+dnl      `CURRENT'.
+dnl
+dnl If two libraries have identical CURRENT and AGE numbers, then the
+dnl dynamic linker chooses the library with the greater REVISION number.
+dnl
+dnl  3. If the library source code has changed at all since the last
+dnl     update, then increment REVISION (`C:R:A' becomes `C:r+1:A').
+dnl
+dnl  4. If any interfaces have been added, removed, or changed since the
+dnl     last update, increment CURRENT, and set REVISION to 0.
+dnl
+dnl  5. If any interfaces have been added since the last public release,
+dnl     then increment AGE.
+dnl
+dnl  6. If any interfaces have been removed since the last public release,
+dnl     then set AGE to 0.
+
+LIBDBALLE_VERSION_INFO="5:0:0"
+LIBDBALLEF_VERSION_INFO="4:19:0"
 AC_SUBST(LIBDBALLE_VERSION_INFO)
+AC_SUBST(LIBDBALLEF_VERSION_INFO)
 
 CFLAGS="-Wall $CFLAGS"
 CXXFLAGS="-Wall $CXXFLAGS"

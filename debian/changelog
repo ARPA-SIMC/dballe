@@ -1,3 +1,14 @@
+dballe (5.0-1) unstable; urgency=low
+
+  * New upstream version
+     - Rewritten in C++
+     - The dballe++ module has been removed (now everything is in C++)
+     - BUFR/CREX functions have been split into a separate wreport library
+     - Bumped libdballe soname as ABI is now obviously different
+     - Fortran ABI is unchanged, so we still have libdballef4
+
+ -- Enrico Zini <enrico@debian.org>  Mon, 27 Sep 2010 20:12:28 +0100
+
 dballe (4.0.19-1) unstable; urgency=low
 
   * Smarter lookup of tables, with fallback on standard WMO tables

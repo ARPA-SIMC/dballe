@@ -18,4 +18,4 @@ libdballe_cmdline_la_SOURCES = \
 	cmdline.cc \
 	processor.cc \
 	conversion.cc
-libdballe_core_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
+libdballe_cmdline_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
