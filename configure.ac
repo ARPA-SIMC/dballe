@@ -235,7 +235,6 @@ dballe/core/Makefile
 dballe/msg/Makefile
 dballe/db/Makefile
 dballe/cmdline/Makefile
-dballe/bench/Makefile
 fortran/Makefile
 tools/Makefile
 tables/Makefile
@@ -249,6 +248,7 @@ libdballe.pc
 libdballef.pc
 ])
 AC_OUTPUT
+#dballe/bench/Makefile
 #examples/Makefile
 
 dnl tests/Makefile
