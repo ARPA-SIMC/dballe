@@ -20,7 +20,6 @@
 /* For %zd */
 #define _ISOC99_SOURCE
 
-#include <dballe/init.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/aof_codec.h>
@@ -33,12 +32,10 @@
 #include <dballe/cmdline/processor.h>
 #include <dballe/cmdline/conversion.h>
 
-#include <stdlib.h>
-
-#include <dballe/bufrex/opcode.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <strings.h>
-#include <ctype.h>
+#include <cctype>
 #include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>

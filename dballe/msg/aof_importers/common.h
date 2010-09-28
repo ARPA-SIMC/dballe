@@ -26,7 +26,6 @@
  * Common functions for all AOF decoders.
  */
 
-#include <dballe/core/conv.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/aof_codec.h>
 

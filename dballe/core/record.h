@@ -200,6 +200,12 @@ public:
 	 */
 	const wreport::Var* peek(const char* name) const;
 
+	/// Shortcut for key_peek
+	const wreport::Var* peek(dba_keyword parameter) const throw () { return key_peek(parameter); }
+
+	/// Shortcut for var_peek
+	const wreport::Var* peek(wreport::Varcode code) const throw () { return var_peek(code); }
+
 	/**
 	 * Look at the raw value of a keyword in the record, without raising errors.
 	 *
