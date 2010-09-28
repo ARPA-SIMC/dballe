@@ -234,6 +234,12 @@ public:
 	 */
 	const char* peek_value(const char* name) const;
 
+	/// Shortcut for key_peek_value
+	const char* peek_value(dba_keyword parameter) const throw () { return key_peek_value(parameter); }
+
+	/// Shortcut for var_peek_value
+	const char* peek_value(wreport::Varcode code) const throw () { return var_peek_value(code); }
+
 	/**
 	 * Return the Var for a key, throwing an error it if it missing
 	 */
