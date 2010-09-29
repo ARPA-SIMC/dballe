@@ -36,6 +36,7 @@ protected:
     Trange tr;
 
     void import_var(const Var& var);
+    void import_var_undef(const Var& var);
 
 public:
     GenericImporter(const msg::Importer::Options& opts) : Importer(opts) {}
@@ -60,6 +61,7 @@ public:
                     for ( ; pos + 1 < subset->size() &&
                             WR_VAR_X((*subset)[pos + 1].code()) == 33; ++pos)
                         ;
+                    import_var_undef(var);
                     continue;
                 }
                 if (pos + 1 < subset->size() &&
@@ -96,6 +98,11 @@ static Varcode update_code(Varcode code)
         case WR_VAR(0, 10,  3): return WR_VAR(0, 10,   8);
         default: return code;
     }
+}
+
+void GenericImporter::import_var_undef(const Var& var)
+{
+    // TODO
 }
 
 void GenericImporter::import_var(const Var& var)

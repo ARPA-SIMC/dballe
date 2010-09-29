@@ -1,7 +1,5 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
- *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,166 +18,139 @@
  */
 
 #include <test-utils-msg.h>
-#include <dballe/msg/file.h>
-#include <dballe/msg/bufrex_codec.h>
-#include <dballe/msg/msg.h>
+#include <dballe/msg/wr_codec.h>
+
+using namespace dballe;
+using namespace wreport;
+using namespace std;
 
 namespace tut {
-using namespace tut_dballe;
 
-struct bufrex_codec_generic_shar
+struct wr_codec_generic_shar
 {
-	TestMsgEnv testenv;
-
-	bufrex_codec_generic_shar()
-	{
-	}
-
-	~bufrex_codec_generic_shar()
-	{
-		test_untag();
-	}
 };
-TESTGRP(bufrex_codec_generic);
+TESTGRP(wr_codec_generic);
 
 // Try encoding and decoding an empty generic message
 template<> template<>
 void to::test<1>()
 {
-	dba_msgs msgs;
-	CHECKED(dba_msgs_create(&msgs));
+    auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+    auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
 
-	dba_msg msg;
-	CHECKED(dba_msg_create(&msg));
-
-	CHECKED(dba_msgs_append_acquire(msgs, msg));
+	Msgs msgs;
+    msgs.acquire(auto_ptr<Msg>(new Msg));
 
 	/* Export msg as a generic message */
-	dba_rawmsg raw;
-	CHECKED(bufrex_encode_bufr(msgs, 0, 0, 0, &raw));
+	Rawmsg raw;
+    exporter->to_rawmsg(msgs, raw);
 
 	/* Parse it back */
-	dba_msgs msgs1;
-	CHECKED(bufrex_decode_bufr(raw, &msgs1));
+	Msgs msgs1;
+    importer->from_rawmsg(raw, msgs1);
 
 	/* Check that the data are the same */
-	int diffs = 0;
-	dba_msgs_diff(msgs, msgs1, &diffs, stderr);
-	if (diffs != 0) track_different_msgs(msgs, msgs1, "generic0");
-	gen_ensure_equals(diffs, 0);
-
-	dba_rawmsg_delete(raw);
-	dba_msgs_delete(msgs);
-	dba_msgs_delete(msgs1);
+	int diffs = msgs.diff(msgs1, stderr);
+	if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericempty");
+	ensure_equals(diffs, 0);
 }
 
 // Try encoding and decoding a generic message
 template<> template<>
 void to::test<2>()
 {
-	dba_msg msg;
-	CHECKED(dba_msg_create(&msg));
+    auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+    auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+
+    auto_ptr<Msg> msg(new Msg);
 
 	/* Fill up msg */
-	CHECKED(dba_msg_set_press(			msg, 15,	45));
-	CHECKED(dba_msg_set_height_anem(	msg, 15,	45));
-	CHECKED(dba_msg_set_tot_snow(		msg, 15,	45));
-	CHECKED(dba_msg_set_visibility(		msg, 15,	45));
-	CHECKED(dba_msg_set_pres_wtr(		msg,  5,	45));
-	CHECKED(dba_msg_set_metar_wtr(		msg,  5,	45));
-	CHECKED(dba_msg_set_water_temp(		msg, 15,	45));
-	CHECKED(dba_msg_set_past_wtr1(		msg,  2,	45));
-	CHECKED(dba_msg_set_past_wtr2(		msg,  2,	45));
-	CHECKED(dba_msg_set_press_tend(		msg,  5,	45));
-	CHECKED(dba_msg_set_tot_prec24(		msg, 15,	45));
-	CHECKED(dba_msg_set_press_3h(		msg, 15,	45));
-	CHECKED(dba_msg_set_press_msl(		msg, 15,	45));
-	CHECKED(dba_msg_set_qnh(			msg, 15,	45));
-	CHECKED(dba_msg_set_temp_2m(		msg, 15,	45));
-	CHECKED(dba_msg_set_wet_temp_2m(	msg, 15,	45));
-	CHECKED(dba_msg_set_dewpoint_2m(	msg, 15,	45));
-	CHECKED(dba_msg_set_humidity(		msg, 15,	45));
-	CHECKED(dba_msg_set_wind_dir(		msg, 15,	45));
-	CHECKED(dba_msg_set_wind_speed(		msg, 15,	45));
-	CHECKED(dba_msg_set_ex_ccw_wind(	msg, 15,	45));
-	CHECKED(dba_msg_set_ex_cw_wind(		msg, 15,	45));
-	CHECKED(dba_msg_set_wind_max(		msg, 15,	45));
-	CHECKED(dba_msg_set_cloud_n(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_nh(		msg, 10,	45));
-	CHECKED(dba_msg_set_cloud_hh(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_cl(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_cm(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_ch(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_n1(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_c1(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_h1(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_n2(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_c2(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_h2(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_n3(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_c3(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_h3(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_n4(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_c4(		msg, 3,		45));
-	CHECKED(dba_msg_set_cloud_h4(		msg, 3,		45));
-	CHECKED(dba_msg_set_block(			msg, 3,		45));
-	CHECKED(dba_msg_set_station(		msg, 3,		45));
-	CHECKED(dba_msg_set_flight_reg_no(	msg, "pippo", 45));
-	CHECKED(dba_msg_set_ident(			msg, "cippo", 45));
-	CHECKED(dba_msg_set_st_dir(			msg, 3,		45));
-	CHECKED(dba_msg_set_st_speed(		msg, 3,		45));
-	CHECKED(dba_msg_set_st_name(		msg, "ciop", 45));
-	CHECKED(dba_msg_set_st_name_icao(	msg, "cip", 45));
-	CHECKED(dba_msg_set_st_type(		msg, 1,		45));
-	CHECKED(dba_msg_set_wind_inst(		msg, 3,		45));
-	CHECKED(dba_msg_set_temp_precision(	msg, 1.23,	45));
-	CHECKED(dba_msg_set_sonde_type(		msg, 3,		45));
-	CHECKED(dba_msg_set_sonde_method(	msg, 3,		45));
-	CHECKED(dba_msg_set_navsys(			msg, 3,		45));
-	CHECKED(dba_msg_set_data_relay(		msg, 3,		45));
-	CHECKED(dba_msg_set_flight_roll(	msg, 3,		45));
-	CHECKED(dba_msg_set_latlon_spec(	msg, 3,		45));
-	CHECKED(dba_msg_set_year(			msg, 3,		45));
-	CHECKED(dba_msg_set_month(			msg, 3,		45));
-	CHECKED(dba_msg_set_day(			msg, 3,		45));
-	CHECKED(dba_msg_set_hour(			msg, 3,		45));
-	CHECKED(dba_msg_set_minute(			msg, 3,		45));
-	CHECKED(dba_msg_set_latitude(		msg, 3,		45));
-	CHECKED(dba_msg_set_longitude(		msg, 3,		45));
-	CHECKED(dba_msg_set_height(			msg, 3,		45));
-	CHECKED(dba_msg_set_height_baro(	msg, 3,		45));
-	CHECKED(dba_msg_set_flight_phase(	msg, 3,		45));
-	CHECKED(dba_msg_set_timesig(		msg, 3,		45));
+	msg->set_press(			15,	45);
+	msg->set_height_anem(	15,	45);
+	msg->set_tot_snow(		15,	45);
+	msg->set_visibility(		15,	45);
+	msg->set_pres_wtr(		 5,	45);
+	msg->set_metar_wtr(		 5,	45);
+	msg->set_water_temp(		15,	45);
+	msg->set_past_wtr1(		 2,	45);
+	msg->set_past_wtr2(		 2,	45);
+	msg->set_press_tend(		 5,	45);
+	msg->set_tot_prec24(		15,	45);
+	msg->set_press_3h(		15,	45);
+	msg->set_press_msl(		15,	45);
+	msg->set_qnh(			15,	45);
+	msg->set_temp_2m(		15,	45);
+	msg->set_wet_temp_2m(	15,	45);
+	msg->set_dewpoint_2m(	15,	45);
+	msg->set_humidity(		15,	45);
+	msg->set_wind_dir(		15,	45);
+	msg->set_wind_speed(		15,	45);
+	msg->set_ex_ccw_wind(	15,	45);
+	msg->set_ex_cw_wind(		15,	45);
+	msg->set_wind_max(		15,	45);
+	msg->set_cloud_n(		3,		45);
+	msg->set_cloud_nh(		10,	45);
+	msg->set_cloud_hh(		3,		45);
+	msg->set_cloud_cl(		3,		45);
+	msg->set_cloud_cm(		3,		45);
+	msg->set_cloud_ch(		3,		45);
+	msg->set_cloud_n1(		3,		45);
+	msg->set_cloud_c1(		3,		45);
+	msg->set_cloud_h1(		3,		45);
+	msg->set_cloud_n2(		3,		45);
+	msg->set_cloud_c2(		3,		45);
+	msg->set_cloud_h2(		3,		45);
+	msg->set_cloud_n3(		3,		45);
+	msg->set_cloud_c3(		3,		45);
+	msg->set_cloud_h3(		3,		45);
+	msg->set_cloud_n4(		3,		45);
+	msg->set_cloud_c4(		3,		45);
+	msg->set_cloud_h4(		3,		45);
+	msg->set_block(			3,		45);
+	msg->set_station(		3,		45);
+	msg->set_flight_reg_no(	"pippo", 45);
+	msg->set_ident(			"cippo", 45);
+	msg->set_st_dir(			3,		45);
+	msg->set_st_speed(		3,		45);
+	msg->set_st_name(		"ciop", 45);
+	msg->set_st_name_icao(	"cip", 45);
+	msg->set_st_type(		1,		45);
+	msg->set_wind_inst(		3,		45);
+	msg->set_temp_precision(	1.23,	45);
+	msg->set_sonde_type(		3,		45);
+	msg->set_sonde_method(	3,		45);
+	msg->set_navsys(			3,		45);
+	msg->set_data_relay(		3,		45);
+	msg->set_flight_roll(	3,		45);
+	msg->set_latlon_spec(	3,		45);
+	msg->set_year(			3,		45);
+	msg->set_month(			3,		45);
+	msg->set_day(			3,		45);
+	msg->set_hour(			3,		45);
+	msg->set_minute(			3,		45);
+	msg->set_latitude(		3,		45);
+	msg->set_longitude(		3,		45);
+	msg->set_height(			3,		45);
+	msg->set_height_baro(	3,		45);
+	msg->set_flight_phase(	3,		45);
+	msg->set_timesig(		3,		45);
 	//CHECKED(dba_msg_set_flight_press(	msg, 3,		45));
 
-	dba_msgs msgs;
-	CHECKED(dba_msgs_create(&msgs));
-	CHECKED(dba_msgs_append_acquire(msgs, msg));
+	Msgs msgs;
+    msgs.acquire(msg);
 
 	/* Export msg as a generic message */
-	dba_rawmsg raw;
-	CHECKED(bufrex_encode_bufr(msgs, 0, 0, 0, &raw));
+	Rawmsg raw;
+    exporter->to_rawmsg(msgs, raw);
 
 	/* Parse it back */
-	dba_msgs msgs1;
-	CHECKED(bufrex_decode_bufr(raw, &msgs1));
+    Msgs msgs1;
+    importer->from_rawmsg(raw, msgs1);
 
 	/* Check that the data are the same */
-	int diffs = 0;
-	dba_msgs_diff(msgs, msgs1, &diffs, stderr);
-	if (diffs != 0)
-	{
-		dba_file out;
-		CHECKED(dba_file_create(BUFR, "/tmp/generic0.bufr", "w", &out));
-		CHECKED(dba_file_write(out, raw));
-		dba_file_delete(out);
-		track_different_msgs(msgs, msgs1, "generic0");
-	}
-	gen_ensure_equals(diffs, 0);
-
-	dba_rawmsg_delete(raw);
-	dba_msgs_delete(msgs);
-	dba_msgs_delete(msgs1);
+	int diffs = msgs.diff(msgs1, stderr);
+	if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "generic2");
+	ensure_equals(diffs, 0);
 }
 
 /*
@@ -201,10 +172,10 @@ void to::test<3>()
 
 	CHECKED(dba_file_read_msgs(file_gen, &gen, &gfound));
 	CHECKED(dba_file_read_msgs(file_synop, &synop, &bfound));
-	gen_ensure_equals(gfound, bfound);
+	ensure_equals(gfound, bfound);
 	do {
 		count++;
-		gen_ensure_equals(gen->msgs[0]->type, MSG_GENERIC);
+		ensure_equals(gen->msgs[0]->type, MSG_GENERIC);
 
 		/* Export gen as a synop message */
 		/* TODO: use the same template as the other synop message */
@@ -241,14 +212,14 @@ void to::test<3>()
 			track_different_msgs(synop, synop1, "generic");
 		}
 
-		gen_ensure_equals(diffs, 0);
+		ensure_equals(diffs, 0);
 
 		dba_msgs_delete(gen);
 		dba_msgs_delete(synop);
 		dba_msgs_delete(synop1);
 		CHECKED(dba_file_read_msgs(file_gen, &gen, &gfound));
 		CHECKED(dba_file_read_msgs(file_synop, &synop, &bfound));
-		gen_ensure_equals(gfound, bfound);
+		ensure_equals(gfound, bfound);
 	} while (gfound);
 
 	dba_file_delete(file_gen);
@@ -262,80 +233,58 @@ void to::test<3>()
 template<> template<>
 void to::test<4>()
 {
-	dba_msg msg;
+    auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+    auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
 
 	/* Create a new message */
-	CHECKED(dba_msg_create(&msg));
+    auto_ptr<Msg> msg(new Msg);
 	msg->type = MSG_GENERIC;
 
 	/* Set some metadata */
-	CHECKED(dba_msg_set_year(msg, 2006, -1));
-	CHECKED(dba_msg_set_month(msg, 1, -1));
-	CHECKED(dba_msg_set_day(msg, 19, -1));
-	CHECKED(dba_msg_set_hour(msg, 14, -1));
-	CHECKED(dba_msg_set_minute(msg, 50, -1));
-	CHECKED(dba_msg_set_latitude(msg, 50.0, -1));
-	CHECKED(dba_msg_set_longitude(msg, 12.0, -1));
+	msg->set_year(2006);
+	msg->set_month(1);
+	msg->set_day(19);
+	msg->set_hour(14);
+	msg->set_minute(50);
+	msg->set_latitude(50.0);
+	msg->set_longitude(12.0);
 
 	/* Create a variable to add to the message */
-	dba_var var;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 12, 101), &var));
-	CHECKED(dba_var_setd(var, 270.15));
+	auto_ptr<Var> var = newvar(WR_VAR(0, 12, 101), 270.15);
 
 	/* Add some attributes to the variable */
-	dba_var attr;
-	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 2), &attr));
-	CHECKED(dba_var_seti(attr, 1));
-	CHECKED(dba_var_seta_nocopy(var, attr));
-
-	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 3), &attr));
-	CHECKED(dba_var_seti(attr, 2));
-	CHECKED(dba_var_seta_nocopy(var, attr));
-
-	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 5), &attr));
-	CHECKED(dba_var_seti(attr, 3));
-	CHECKED(dba_var_seta_nocopy(var, attr));
+	var->seta(newvar(WR_VAR(0, 33, 2), 1));
+	var->seta(newvar(WR_VAR(0, 33, 3), 2));
+	var->seta(newvar(WR_VAR(0, 33, 5), 3));
 
 	/* Add the variable to the message */
-	CHECKED(dba_msg_set_nocopy(msg, var, 1, 0, 0, 0, 0, 0, 0));
+    msg->set(var, Level(1), Trange::instant());
 
 	/* Create a second variable to add to the message */
-	CHECKED(dba_var_create_local(DBA_VAR(0, 12, 2), &var));
-	CHECKED(dba_var_setd(var, 272));
+    var = newvar(WR_VAR(0, 12, 2), 272.0);
 
 	/* Add some attributes to the variable */
-	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 3), &attr));
-	CHECKED(dba_var_seti(attr, 1));
-	CHECKED(dba_var_seta_nocopy(var, attr));
-
-	CHECKED(dba_var_create_local(DBA_VAR(0, 33, 5), &attr));
-	CHECKED(dba_var_seti(attr, 2));
-	CHECKED(dba_var_seta_nocopy(var, attr));
+	var->seta(newvar(WR_VAR(0, 33, 3), 1));
+	var->seta(newvar(WR_VAR(0, 33, 5), 2));
 
 	/* Add the variable to the message */
-	CHECKED(dba_msg_set_nocopy(msg, var, 1, 0, 0, 0, 0, 0, 0));
+    msg->set(var, Level(1), Trange::instant());
 
-
-	dba_msgs msgs;
-	CHECKED(dba_msgs_create(&msgs));
-	CHECKED(dba_msgs_append_acquire(msgs, msg));
+	Msgs msgs;
+    msgs.acquire(msg);
 
 	/* Encode the message */
-	dba_rawmsg raw;
-	CHECKED(bufrex_encode_bufr(msgs, 0, 0, 0, &raw));
+	Rawmsg raw;
+    exporter->to_rawmsg(msgs, raw);
 
 	/* Decode the message */
-	dba_msgs msgs1;
-	CHECKED(bufrex_decode_bufr(raw, &msgs1));
-	dba_rawmsg_delete(raw);
+    Msgs msgs1;
+    importer->from_rawmsg(raw, msgs1);
 
-	/* Check that everything is still there */
-	int diffs = 0;
-	dba_msgs_diff(msgs, msgs1, &diffs, stderr);
-	gen_ensure_equals(diffs, 0);
-
-	dba_msgs_delete(msgs);
-	dba_msgs_delete(msgs1);
+	/* Check that the data are the same */
+	int diffs = msgs.diff(msgs1, stderr);
+	if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericattr");
+	ensure_equals(diffs, 0);
 }
 
 }
