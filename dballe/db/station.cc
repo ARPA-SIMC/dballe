@@ -186,7 +186,7 @@ void Station::dump(FILE* out)
         int count;
         fprintf(out, "dump of table station:\n");
         for (count = 0; stm.fetch(); ++count)
-                if (ident_ind == SQL_NTS)
+                if (ident_ind == SQL_NULL_DATA)
                         fprintf(out, " %d, %.5f, %.5f\n", (int)id, lat/100000.0, lon/100000.0);
                 else
                         fprintf(out, " %d, %.5f, %.5f, %.*s\n", (int)id, lat/10000.0, lon/10000.0, (int)ident_ind, ident);

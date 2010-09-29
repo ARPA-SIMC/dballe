@@ -25,6 +25,7 @@
 #include "repinfo.h"
 
 #include <wreport/var.h>
+#include <dballe/core/defs.h>
 #include <dballe/core/aliases.h>
 #include <dballe/core/record.h>
 #include <dballe/db/querybuf.h>
@@ -229,7 +230,7 @@ int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifie
 
     from_wanted = qb.from_wanted;
 
-    TRACE("Performing query: %s\n", sql_query.c_str());
+    TRACE("Performing query: %s\n", qb.sql_query.c_str());
 
     if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ORACLE)
         stm->set_cursor_forward_only();
@@ -264,7 +265,10 @@ int Cursor::getcount(const Record& rec, unsigned int qwanted, unsigned int qmodi
 
     QueryBuilder qb(db, *stm, *this, qwanted, qmodifiers);
 
-    TRACE("Performing query: %s\n", sql_query.c_str());
+    qb.init_modifiers(rec);
+    qb.build_query(rec);
+
+    TRACE("Performing query: %s\n", qb.sql_query.c_str());
     /* fprintf(stderr, "Performing query: %s\n", dba_querybuf_get(sql_query)); */
 
     /* Perform the query */
@@ -421,8 +425,7 @@ void Cursor::add_station_info(Record& rec)
         "  FROM context c, data d, repinfo ri" \
         " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?" \
         "   AND c.datetime = {ts '1000-01-01 00:00:00.0'}" \
-        "   AND c.ltype1 = 257 AND c.l1 = 0 AND c.ltype2 = 0 AND c.l2 = 0" \
-        "   AND c.ptype = 0 AND c.p1 = 0 AND c.p2 = 0"
+        "   AND c.ltype1 = 257"
 
     const char* query;
     switch (db.conn->server_type)
@@ -718,8 +721,7 @@ void QueryBuilder::add_other_froms(unsigned int base)
                             " JOIN context cbs ON c.id_ana=cbs.id_ana"
                             " AND cbs.id_report=c.id_report"
                             " AND cbs.datetime={ts '1000-01-01 00:00:00.0'}"
-                            " AND cbs.ltype1=257 AND cbs.l1=0 AND cbs.ltype2=0 AND cbs.l2=0"
-                            " AND cbs.ptype=0 AND cbs.p1=0 AND cbs.p2=0 ");
+                            " AND cbs.ltype1=257 ");
                 break;
             default:
                 error_consistency::throwf("requested to add a JOIN on station info context on the unsupported base %d", base);

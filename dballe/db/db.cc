@@ -942,7 +942,7 @@ int DB::obtain_station(Record& rec, bool can_add)
     else
         throw error_notfound("no longitude in record when trying to insert a station in the database");
 
-    s.ident_ind = SQL_NULL_DATA;
+    s.set_ident(NULL);
     if (const Var* var = rec.key_peek(DBA_KEY_MOBILE))
         if (var->enqi())
         {

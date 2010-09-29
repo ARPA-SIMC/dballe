@@ -482,12 +482,12 @@ void Record::set_ana_context()
 	key(DBA_KEY_MIN).seti(0);
 	key(DBA_KEY_SEC).seti(0);
 	key(DBA_KEY_LEVELTYPE1).seti(257);
-	key(DBA_KEY_L1).seti(0);
-	key(DBA_KEY_LEVELTYPE2).seti(0);
-	key(DBA_KEY_L2).seti(0);
-	key(DBA_KEY_PINDICATOR).seti(0);
-	key(DBA_KEY_P1).seti(0);
-	key(DBA_KEY_P2).seti(0);
+	unset(DBA_KEY_L1);
+	unset(DBA_KEY_LEVELTYPE2);
+	unset(DBA_KEY_L2);
+	unset(DBA_KEY_PINDICATOR);
+	unset(DBA_KEY_P1);
+	unset(DBA_KEY_P2);
 	/* DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, 254)); */
 }
 
