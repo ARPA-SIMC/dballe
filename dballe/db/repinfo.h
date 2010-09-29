@@ -147,7 +147,7 @@ struct Repinfo
 	 * @return
 	 *   true if id exists, else false.
 	 */
-	bool has_id(int id) const;
+	bool has_id(unsigned id) const;
 
 	/**
 	 * Get a repinfo cache entry by id.
@@ -157,7 +157,7 @@ struct Repinfo
 	 * @return
 	 *   The Cache structure found, or NULL if none was found.
 	 */
-	const repinfo::Cache* get_by_id(int id) const;
+	const repinfo::Cache* get_by_id(unsigned id) const;
 
 	/**
 	 * Get a repinfo cache entry by name.
@@ -171,10 +171,10 @@ struct Repinfo
 
 protected:
 	void read_cache();
-	void cache_append(int id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea);
+	void cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea);
 	void rebuild_memo_idx() const;
 	int cache_find_by_memo(const char* memo) const;
-	int cache_find_by_id(int id) const;
+	int cache_find_by_id(unsigned id) const;
 	std::vector<repinfo::Cache> read_repinfo_file(const char* deffile);
 
 private:

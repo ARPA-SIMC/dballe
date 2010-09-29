@@ -83,7 +83,7 @@ void AOFImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
         case 6: read_pilot(obs, obs_len, *out); break;
         case 7: read_satem(obs, obs_len, *out); break;
         default:
-            error_parse::throwf(msg.filename().c_str(), msg.offset,
+            error_parse::throwf(msg.file.c_str(), msg.offset,
                     "cannot handle AOF observation type %d subtype %d",
                     OBS(5), OBS(6));
     }
@@ -91,7 +91,7 @@ void AOFImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
     msgs.acquire(out);
 }
 
-void AOFImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
+void AOFImporter::from_bulletin(const wreport::Bulletin&, Msgs&) const
 {
     throw error_unimplemented("AOF importer cannot import from wreport::Bulletin");
 }
@@ -103,7 +103,7 @@ void AOFImporter::get_category(const Rawmsg& msg, int* category, int* subcategor
     int obs_len = msg.size() / sizeof(uint32_t);
 
     if (obs_len < 7)
-        throw error_parse(msg.filename().c_str(), msg.offset,
+        throw error_parse(msg.file.c_str(), msg.offset,
                 "the buffer is too short to contain an AOF message");
 
     *category = obs[5];
@@ -136,12 +136,12 @@ void AOFImporter::dump(const Rawmsg& msg, FILE* out)
 }
 
 
-void AOFImporter::read_satob(const uint32_t* obs, int obs_len, Msg& msg)
+void AOFImporter::read_satob(const uint32_t*, int, Msg&)
 {
     throw error_unimplemented("parsing AOF SATOB observations");
 }
 
-void AOFImporter::read_satem(const uint32_t* obs, int obs_len, Msg& msg)
+void AOFImporter::read_satem(const uint32_t*, int, Msg&)
 {
     throw error_unimplemented("parsing AOF SATEM observations");
 }

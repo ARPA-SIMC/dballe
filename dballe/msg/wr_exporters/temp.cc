@@ -76,7 +76,7 @@ struct TempBase : public Template
     int count_levels() const
     {
         int lev_no = 0;
-        for (int i = 0; i < msg->data.size(); ++i)
+        for (size_t i = 0; i < msg->data.size(); ++i)
             if (msg->data[i]->find_vsig() != NULL)
                 ++lev_no;
         return lev_no;

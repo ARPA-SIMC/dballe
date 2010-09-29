@@ -76,19 +76,20 @@ Context& Context::operator=(const Context& src)
     for (vector<Var*>::const_iterator i = src.data.begin();
             i != src.data.end(); ++i)
         data.push_back(new Var(**i));
+    return *this;
 }
 
 int Context::compare(const Context& ctx) const
 {
     int res;
-    if (res = level.compare(ctx.level)) return res;
+    if ((res = level.compare(ctx.level))) return res;
     return trange.compare(ctx.trange);
 }
 
 int Context::compare(const Level& lev, const Trange& tr) const
 {
     int res;
-    if (res = level.compare(lev)) return res;
+    if ((res = level.compare(lev))) return res;
     return trange.compare(tr);
 }
 
@@ -169,7 +170,7 @@ void Context::print(FILE* out) const
 
     if (data.size() > 0)
     {
-        fprintf(out, " %d vars:\n", data.size());
+        fprintf(out, " %zd vars:\n", data.size());
         for (vector<Var*>::const_iterator i = data.begin(); i != data.end(); ++i)
             (*i)->print(out);
     } else

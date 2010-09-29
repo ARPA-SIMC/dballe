@@ -50,7 +50,7 @@ public:
 
     virtual void run()
     {
-        for (int pos = 0; pos < subset->size(); ++pos)
+        for (size_t pos = 0; pos < subset->size(); ++pos)
         {
                 const Var& var = (*subset)[pos];
                 if (WR_VAR_F(var.code()) != 0) continue;
@@ -75,7 +75,7 @@ public:
         }
     }
 
-    MsgType scanType(const Bulletin& bulletin) const
+    MsgType scanType(const Bulletin&) const
     {
         return MSG_GENERIC;
     }
@@ -94,6 +94,7 @@ static Varcode update_code(Varcode code)
         case WR_VAR(0, 12,  3): return WR_VAR(0, 12, 103);
         case WR_VAR(0, 10, 61): return WR_VAR(0, 10,  60);
         case WR_VAR(0, 10,  3): return WR_VAR(0, 10,   8);
+	default: return code;
     }
 }
 

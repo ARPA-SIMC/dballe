@@ -20,6 +20,7 @@
  */
 
 #include "aoffile.h"
+#include "rawmsg.h"
 #include <wreport/error.h>
 #include <cstdlib>
 #include <cstring>
@@ -39,13 +40,14 @@ AofFile::~AofFile() {}
 bool AofFile::read(Rawmsg& msg)
 {
 	msg.clear();
-	msg.file = this;
-	msg.offset = ftell(fd);
+	msg.file = m_name;
 	msg.encoding = AOF;
 
 	/* If we are at the beginning of the file, then skip the file header */
 	if (ftell(fd) == 0)
 		read_header();
+
+	msg.offset = ftell(fd);
 
 	/* Read the Observation Header */
 	read_record(msg);
@@ -57,6 +59,7 @@ bool AofFile::read(Rawmsg& msg)
 		error_parse::throwf(name().c_str(), ftell(fd),
 				"value '01 length of preliminary record' should be 4, either big or little endian (it is %d (%08x) instead)", rec[1], rec[1]);
 
+	return true;
 }
 
 void AofFile::write(const Rawmsg& msg)
@@ -118,8 +121,7 @@ bool AofFile::read_record(std::string& res)
 	// Swap words if needed
 	if (swapwords)
 	{
-		int i;
-		for (i = 0; i < len_word / 4; i++)
+		for (unsigned i = 0; i < len_word / 4; i++)
 			buf[i] = bswap_32(buf[i]);
 		len_word1 = bswap_32(len_word1);
 	}
@@ -168,6 +170,7 @@ void AofFile::write_word(uint32_t word)
 		case END_BE: oword = htonl(word); break;
 #endif
 #endif
+		case INVALID: throw error_consistency("trying to write a word without knowing its endianness");
 	}
 	if (fwrite(&oword, sizeof(uint32_t), 1, fd) != 1)
 		error_system::throwf("writing 4 bytes on %s", name().c_str());
@@ -185,7 +188,7 @@ void AofFile::write_record(const uint32_t* words, size_t wordcount)
 
 	/* Write the leading length of record word */
 	write_word(wordcount * sizeof(uint32_t));
-	for (int i = 0; i < wordcount; ++i)
+	for (unsigned i = 0; i < wordcount; ++i)
 		write_word(words[i]);
 	/* Write the trailing length of record word */
 	write_word(wordcount * sizeof(uint32_t));
@@ -223,7 +226,7 @@ void AofFile::read_header()
 		error_parse::throwf(name().c_str(), ftell(fd),
 				"DDR contains %zd octets instead of 17", buf.size());
 
-	uint32_t* ddr = (uint32_t*)buf.data();
+	// uint32_t* ddr = (uint32_t*)buf.data();
 
 #if 0
 	reader->start.tm_hour = ddr[10] % 100;
@@ -309,7 +312,7 @@ void AofFile::fix_header()
 	while (read_record(buf))
 	{
 		if (buf.size() < 11)
-			error_parse::throwf(name().c_str(), pos, "observation record is too short (%d bytes)", buf.size());
+			error_parse::throwf(name().c_str(), pos, "observation record is too short (%zd bytes)", buf.size());
 
 		const uint32_t* rec = (const uint32_t*)buf.data();
 

@@ -253,7 +253,7 @@ F77_INTEGER_FUNCTION(idba_default_error_handle)(INTEGER(debug))
 F77_INTEGER_FUNCTION(idba_error_handle_tolerating_overflows)(INTEGER(debug))
 {
 	GENPTR_INTEGER(debug)
-	if (last_err_code != WR_ERR_NOTFOUND);
+	if (last_err_code != WR_ERR_NOTFOUND)
 	{
 		if (*debug)
 			fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);

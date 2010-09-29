@@ -34,11 +34,14 @@
  * register them with ::dba_file.
  */
 
-#include <dballe/core/rawmsg.h>
+#include <dballe/core/defs.h>
 #include <memory>
+#include <string>
 #include <cstdio>
 
 namespace dballe {
+struct Rawmsg;
+
 
 class File
 {
@@ -81,7 +84,7 @@ public:
 	 * Read a message from the file.
 	 *
 	 * @param msg
-	 *   The dba_rawmsg that will hold the data.
+	 *   The Rawmsg that will hold the data.
 	 * @return
 	 *   true if a message has been found in the file, else false.
 	 */

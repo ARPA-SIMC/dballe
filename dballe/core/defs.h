@@ -34,6 +34,17 @@
 namespace dballe {
 
 /**
+ * Supported encodings
+ */
+typedef enum {
+	BUFR = 0,
+	CREX = 1,
+	AOF = 2,
+} Encoding;
+
+const char* encoding_name(Encoding enc);
+
+/**
  * Value to use for missing levels and time range components
  */
 static const int MISSING_INT = INT_MAX;

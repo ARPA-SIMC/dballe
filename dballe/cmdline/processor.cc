@@ -134,7 +134,7 @@ bool match_aof(const Rawmsg& rmsg, const Msgs* msgs, struct grep_t* grepdata)
 
 static void print_parse_error(const Rawmsg& msg, error& e)
 {
-	fprintf(stderr, "Cannot parse %s message #%d: %s at offset %d.\n",
+	fprintf(stderr, "Cannot parse %s message #%d: %s at offset %ld.\n",
 			encoding_name(msg.encoding), msg.index, e.what(), msg.offset);
 }
 
@@ -150,7 +150,7 @@ static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdat
 		case BUFR:
 			br.reset(new BufrBulletin);
 			try {
-				br->decode(rmsg, rmsg.filename().c_str(), rmsg.offset);
+				br->decode(rmsg, rmsg.file.c_str(), rmsg.offset);
 			} catch (error& e) {
 				if (print_errors) print_parse_error(rmsg, e);
 				br.release();
@@ -173,7 +173,7 @@ static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdat
 		case CREX:
 			br.reset(new CrexBulletin);
 			try {
-				br->decode(rmsg, rmsg.filename().c_str(), rmsg.offset);
+				br->decode(rmsg, rmsg.file.c_str(), rmsg.offset);
 			} catch (error& e) {
 				if (print_errors) print_parse_error(rmsg, e);
 				br.release();

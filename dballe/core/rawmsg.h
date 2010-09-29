@@ -1,5 +1,5 @@
 /*
- * wreport/rawmsg - annotated raw buffer
+ * dballe/rawmsg - annotated raw buffer
  *
  * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -22,9 +22,10 @@
 #ifndef WREPORT_RAWMSG_H
 #define WREPORT_RAWMSG_H
 
+#include <dballe/core/defs.h>
 #include <string>
 
-namespace wreport {
+namespace dballe {
 
 /** @file
  * @ingroup io
@@ -43,9 +44,11 @@ struct Rawmsg : public std::string
 	 */
 	std::string file;
 	/** Start offset of this message inside the file where it is found */
-	int offset;
+	long offset;
 	/** Index of the message within the source */
 	int index;
+	/** Format of the raw data */
+	Encoding encoding;
 
 	Rawmsg() : offset(0), index(0) {}
 

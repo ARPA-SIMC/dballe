@@ -21,6 +21,7 @@
 
 #include "file.h"
 #include "aoffile.h"
+#include "rawmsg.h"
 #include <wreport/bulletin.h>
 
 #include <netinet/in.h>
@@ -70,11 +71,9 @@ public:
 
 	bool read(Rawmsg& msg)
 	{
-		msg.file = this;
-		msg.offset = ftell(fd);
+		msg.file = m_name;
 		msg.encoding = BUFR;
-
-		return BufrBulletin::read(fd, msg, m_name.c_str());
+		return BufrBulletin::read(fd, msg, m_name.c_str(), &msg.offset);
 	}
 
 	void write(const Rawmsg& msg)
@@ -94,11 +93,9 @@ public:
 
 	bool read(Rawmsg& msg)
 	{
-		msg.file = this;
-		msg.offset = ftell(fd);
+		msg.file = m_name;
 		msg.encoding = CREX;
-
-		return CrexBulletin::read(fd, msg, m_name.c_str());
+		return CrexBulletin::read(fd, msg, m_name.c_str(), &msg.offset);
 	}
 
 	void write(const Rawmsg& msg)
@@ -155,6 +152,7 @@ auto_ptr<File> File::create(Encoding type, const std::string& name, const char* 
 		case CREX: return auto_ptr<File>(new CrexFile(name, fdt.release(), fdt.close_on_exit));
 		case AOF: return auto_ptr<File>(new AofFile(name, fdt.release(), fdt.close_on_exit));
 	}
+	error_consistency::throwf("requested unknown %d file type", (int)type);
 }
 
 File::~File()
@@ -166,7 +164,7 @@ File::~File()
 void File::write(const Rawmsg& msg) 
 {
 	if (fwrite(msg.data(), msg.size(), 1, fd) != 1)
-		error_system::throwf("writing message data (%d bytes) on output", msg.size());
+		error_system::throwf("writing message data (%zd bytes) on output", msg.size());
 }
 
 #if 0

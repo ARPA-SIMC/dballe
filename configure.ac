@@ -205,8 +205,9 @@ LIBDBALLEF_VERSION_INFO="4:19:0"
 AC_SUBST(LIBDBALLE_VERSION_INFO)
 AC_SUBST(LIBDBALLEF_VERSION_INFO)
 
-CFLAGS="-Wall $CFLAGS"
-CXXFLAGS="-Wall $CXXFLAGS"
+warnings="-Wall -Wextra -Werror=return-type -Werror=empty-body"
+CFLAGS="$warnings $CFLAGS"
+CXXFLAGS="$warnings $CXXFLAGS"
 
 # Enforce dependencies
 if test x"$enable_dballe_db"=x"yes"; then

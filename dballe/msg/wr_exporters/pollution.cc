@@ -112,12 +112,12 @@ struct Pollution : public Template
         // Get the variable out of msg
         const Var* mainvar = NULL;
         int l1 = -1, p1 = -1;
-        for (int i = 0; i < msg.data.size(); ++i)
+        for (size_t i = 0; i < msg.data.size(); ++i)
         {
             const msg::Context& ctx = *msg.data[i];
             if (ctx.level.ltype1 != 103) continue;
             if (ctx.trange.pind != 0) continue;
-            for (int j = 0; j < ctx.data.size(); ++j)
+            for (size_t j = 0; j < ctx.data.size(); ++j)
             {
                 const Var& var = *ctx.data[j];
                 if (var.code() < WR_VAR(0, 15, 193) || var.code() > WR_VAR(0, 15, 198)) continue;

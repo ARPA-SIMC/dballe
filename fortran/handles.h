@@ -97,6 +97,8 @@ struct Handler
 
 	void init(const char* name, const char* def)
 	{
+		this->name = name;
+		this->def = def;
 		records = new T[MAX];
 		next = 0;
 		in_use = 0;

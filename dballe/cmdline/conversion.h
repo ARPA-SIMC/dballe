@@ -33,6 +33,8 @@ struct Bulletin;
 }
 
 namespace dballe {
+struct File;
+
 namespace msg {
 struct Importer;
 struct Exporter;

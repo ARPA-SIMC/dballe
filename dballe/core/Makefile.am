@@ -26,7 +26,6 @@ libdballe_core_la_SOURCES = \
 	aliases-reverse.cc \
 	defs.cc \
 	var.cc \
-	rawmsg.cc \
 	file.cc \
 	aoffile.cc \
 	csv.cc \

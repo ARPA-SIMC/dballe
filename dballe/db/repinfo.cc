@@ -98,13 +98,13 @@ void Repinfo::read_cache()
 	rebuild_memo_idx();
 }
 
-void Repinfo::cache_append(int id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea)
+void Repinfo::cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea)
 {
 	/* Ensure that we are adding things in order */
 	if (!cache.empty() && cache.back().id >= id)
 		error_consistency::throwf(
-				"checking that value to append to repinfo cache (%d) "
-				"is greather than the last value in che cache (%d)", id, cache.back().id);
+				"checking that value to append to repinfo cache (%u) "
+				"is greather than the last value in che cache (%u)", id, (unsigned)cache.back().id);
 
 	memo_idx.clear();
 
@@ -122,7 +122,7 @@ void Repinfo::rebuild_memo_idx() const
 {
 	memo_idx.clear();
 	memo_idx.resize(cache.size());
-	for (int i = 0; i < cache.size(); ++i)
+	for (size_t i = 0; i < cache.size(); ++i)
 	{
 		memo_idx[i].memo = cache[i].memo;
 		memo_idx[i].id = cache[i].id;
@@ -166,12 +166,12 @@ int Repinfo::cache_find_by_memo(const char* memo) const
 		return begin;
 }
 
-bool Repinfo::has_id(int id) const
+bool Repinfo::has_id(unsigned id) const
 {
 	return cache_find_by_id(id) != -1;
 }
 
-int Repinfo::cache_find_by_id(int id) const
+int Repinfo::cache_find_by_id(unsigned id) const
 {
 	/* Binary search the ID */
 	int begin, end;
@@ -191,7 +191,7 @@ int Repinfo::cache_find_by_id(int id) const
 		return begin;
 }
 
-const repinfo::Cache* Repinfo::get_by_id(int id) const
+const repinfo::Cache* Repinfo::get_by_id(unsigned id) const
 {
 	int pos = cache_find_by_id(id);
 	return pos == -1 ? NULL : &(cache[pos]);
@@ -285,12 +285,12 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 	}
 
 	/* Verify conflicts */
-	for (int i = 0; i < cache.size(); ++i)
+	for (size_t i = 0; i < cache.size(); ++i)
 	{
 		/* Skip empty items or items that will be deleted */
 		if (cache[i].memo.empty() || cache[i].new_memo.empty())
 			continue;
-		for (int j = i + 1; j < cache.size(); ++j)
+		for (size_t j = i + 1; j < cache.size(); ++j)
 		{
 			/* Skip empty items or items that will be deleted */
 			if (cache[j].memo.empty() || cache[j].new_memo.empty())
@@ -298,7 +298,7 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 			if (cache[j].new_prio == cache[i].new_prio)
 				error_consistency::throwf("%s has the same priority (%d) as %s",
 						cache[j].new_memo.c_str(),
-						cache[j].new_prio,
+						(int)cache[j].new_prio,
 						cache[i].new_memo.c_str());
 		}
 		for (vector<repinfo::Cache>::const_iterator j = newitems.begin();
@@ -307,7 +307,7 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 			if (j->new_prio == cache[i].new_prio)
 				error_consistency::throwf("%s has the same priority (%d) as %s",
 						j->new_memo.c_str(),
-						j->new_prio,
+						(int)j->new_prio,
 						cache[i].new_memo.c_str());
 		}
 	}
@@ -320,7 +320,7 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 		{
 			if (i->new_prio == j->new_prio)
 				error_consistency::throwf("%s has the same priority (%d) as %s",
-						i->new_memo.c_str(), i->new_prio, j->new_memo.c_str());
+						i->new_memo.c_str(), (int)i->new_prio, j->new_memo.c_str());
 		}
 	}
 
@@ -344,7 +344,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 		stm.bind_in(1, id);
 		stm.bind_out(1, count);
 
-		for (int i = 0; i < cache.size(); ++i)
+		for (size_t i = 0; i < cache.size(); ++i)
 		{
 			/* Ensure that we are not deleting a repinfo entry that is already in use */
 			if (!cache[i].memo.empty() && cache[i].new_memo.empty())
@@ -356,8 +356,8 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 							cache[i].memo.c_str());
 				if (count > 0)
 					error_consistency::throwf(
-							"trying to delete repinfo entry %d,%s which is currently in use",
-							cache[i].id, cache[i].memo.c_str());
+							"trying to delete repinfo entry %u,%s which is currently in use",
+							(unsigned)cache[i].id, cache[i].memo.c_str());
 
 				stm.close_cursor();
 			}
@@ -370,7 +370,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 	{
 		db::Statement stm(*conn);
 		stm.prepare("DELETE FROM repinfo WHERE id=?");
-		for (int i = 0; i < cache.size(); ++i)
+		for (size_t i = 0; i < cache.size(); ++i)
 			if (!cache[i].memo.empty() && cache[i].new_memo.empty())
 			{
 				stm.bind_in(1, cache[i].id);
@@ -387,7 +387,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 		db::Statement stm(*conn);
 		stm.prepare("UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
 			    "  WHERE id=?");
-		for (int i = 0; i < cache.size(); ++i)
+		for (size_t i = 0; i < cache.size(); ++i)
 			if (!cache[i].memo.empty() && !cache[i].new_memo.empty())
 			{
 				stm.bind_in(1, cache[i].new_memo.c_str());

@@ -31,6 +31,17 @@ using namespace std;
 
 namespace dballe {
 
+const char* encoding_name(Encoding enc)
+{
+	switch (enc)
+	{
+		case BUFR: return "BUFR";
+		case CREX: return "CREX";
+		case AOF: return "AOF";
+		default: return "(unknown)";
+	}
+}
+
 namespace {
 std::string fmtf( const char* f, ... )
 {

@@ -70,7 +70,7 @@ static int dbalua_msg_size(lua_State *L)
 static int dbalua_msg_foreach(lua_State *L)
 {
 	Msg* msg = Msg::lua_check(L, 1);
-	for (int i = 0; i < msg->data.size(); ++i)
+	for (size_t i = 0; i < msg->data.size(); ++i)
 	{
 		lua_pushvalue(L, -1);
 		msg->data[i]->lua_push(L);
@@ -95,8 +95,8 @@ static int dbalua_msg_find(lua_State *L)
 	} else {
 		// By all details
 		Varcode code = dbalua_to_varcode(L, 2);
-        Level level;
-        level.ltype1 = lua_isnil(L, 3) ? MISSING_INT : lua_tointeger(L, 3);
+		Level level;
+		level.ltype1 = lua_isnil(L, 3) ? MISSING_INT : lua_tointeger(L, 3);
 		level.l1 = lua_isnil(L, 4) ? MISSING_INT : lua_tointeger(L, 4);
 		level.ltype2 = lua_isnil(L, 5) ? MISSING_INT : lua_tointeger(L, 5);
 		level.l2 = lua_isnil(L, 6) ? MISSING_INT : lua_tointeger(L, 6);
@@ -117,7 +117,7 @@ static int dbalua_msg_tostring(lua_State *L)
 {
 	Msg* msg = Msg::lua_check(L, 1);
 	int varcount = 0;
-	for (int i = 0; i < msg->data.size(); ++i)
+	for (size_t i = 0; i < msg->data.size(); ++i)
 		varcount += msg->data[i]->data.size();
 	lua_pushfstring(L, "dba_msg(%s, %d ctx, %d vars)", 
 		msg_type_name(msg->type), msg->data.size(), varcount);
@@ -140,7 +140,7 @@ void Msg::lua_push(struct lua_State* L)
     *s = this;
 
     // Set the metatable for the userdata
-    if (luaL_newmetatable(L, "dballe.msg"));
+    if (luaL_newmetatable(L, "dballe.msg"))
     {
             // If the metatable wasn't previously created, create it now
             lua_pushstring(L, "__index");
@@ -157,21 +157,21 @@ void Msg::lua_push(struct lua_State* L)
 Msg* Msg::lua_check(struct lua_State* L, int idx)
 {
     Msg** v = (Msg**)luaL_checkudata(L, idx, "dballe.msg");
-	return (v != NULL) ? *v : NULL;
+    return (v != NULL) ? *v : NULL;
 }
 
 
 static int dbalua_msg_context_size(lua_State *L)
 {
-    msg::Context* ctx = msg::Context::lua_check(L, 1);
+	msg::Context* ctx = msg::Context::lua_check(L, 1);
 	lua_pushinteger(L, ctx->data.size());
 	return 1;
 }
 
 static int dbalua_msg_context_foreach(lua_State *L)
 {
-    msg::Context* ctx = msg::Context::lua_check(L, 1);
-	for (int i = 0; i < ctx->data.size(); ++i)
+	msg::Context* ctx = msg::Context::lua_check(L, 1);
+	for (size_t i = 0; i < ctx->data.size(); ++i)
 	{
 		lua_pushvalue(L, -1);
 		ctx->data[i]->lua_push(L);
@@ -184,7 +184,7 @@ static int dbalua_msg_context_foreach(lua_State *L)
 
 static int dbalua_msg_context_tostring(lua_State *L)
 {
-    msg::Context* ctx = msg::Context::lua_check(L, 1);
+	msg::Context* ctx = msg::Context::lua_check(L, 1);
 	lua_pushfstring(L, "dba_msg_context(%d vars)", ctx->data.size());
 	return 1;
 }
@@ -225,7 +225,7 @@ void msg::Context::lua_push(struct lua_State* L)
     *s = this;
 
     // Set the metatable for the userdata
-    if (luaL_newmetatable(L, "dballe.msg.context"));
+    if (luaL_newmetatable(L, "dballe.msg.context"))
     {
             // If the metatable wasn't previously created, create it now
             lua_pushstring(L, "__index");
