@@ -102,7 +102,16 @@ static Varcode update_code(Varcode code)
 
 void GenericImporter::import_var_undef(const Var& var)
 {
-    // TODO
+    switch (var.code())
+    {
+        case WR_VAR(0, 4, 192): tr.pind = MISSING_INT; break;
+        case WR_VAR(0, 4, 193): tr.p1 = MISSING_INT; break;
+        case WR_VAR(0, 4, 194): tr.p2 = MISSING_INT; break;
+        case WR_VAR(0, 7, 192): lev.ltype1 = MISSING_INT; break;
+        case WR_VAR(0, 7, 193): lev.l1 = MISSING_INT; break;
+        case WR_VAR(0, 7, 194): lev.l2 = MISSING_INT; break;
+        case WR_VAR(0, 7, 195): lev.ltype2 = MISSING_INT; break;
+    }
 }
 
 void GenericImporter::import_var(const Var& var)
