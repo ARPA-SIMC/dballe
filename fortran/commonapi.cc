@@ -38,7 +38,7 @@ namespace dballe {
 namespace fortran {
 
 CommonAPIImplementation::CommonAPIImplementation()
-	: perms(0), qc_iter(-1), qc_count(0), last_set_code(0)
+	: perms(0), qc_iter(-1), qc_count(0)
 {
 }
 
@@ -198,7 +198,6 @@ void CommonAPIImplementation::seti(const char* param, int value)
 	if (code)
 	{
 		rec.var(code).seti(value);
-		last_set_code = code;
 	} else {
 		dba_keyword key = prepare_key_change(rec, param);
 		rec.key(key).seti(value);
@@ -222,7 +221,6 @@ void CommonAPIImplementation::setd(const char* param, double value)
 
 	if (code)
 	{
-		last_set_code = code;
 		rec.var(code).setd(value);
 	} else {
 		dba_keyword key = prepare_key_change(rec, param);
@@ -237,7 +235,6 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
 
 	if (code)
 	{
-		last_set_code = code;
 		rec.var(code).setc(value);
 	} else {
 		dba_keyword key = prepare_key_change(rec, param);

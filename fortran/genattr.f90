@@ -42,7 +42,7 @@ call idba_setlevel (handle,100,50000,0,0)
 
 var(1)="B11003"
 var(2)="B11004"
-var(3)="B12001"
+var(3)="B12101"
 var(4)="B13003"
 var(5)="B07004"
   
@@ -59,7 +59,7 @@ obsinc(4)=5.
 obsinc(5)=100.
 
 call idba_set(handle,"B08001",1)
-!call idba_prendilo(handle)
+call idba_prendilo(handle)
 !call idba_unset(handle,"B08001")
 
 print *,"-------------------"

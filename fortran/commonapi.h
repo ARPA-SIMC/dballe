@@ -53,8 +53,6 @@ protected:
 	Record qcoutput;
 	int qc_iter;
 	int qc_count;
-	// Varcode of the last variable set with set* functions
-	wreport::Varcode last_set_code;
 	// Last string returned by one of the spiega* functions, held here so
 	// that we can deallocate it when needed.
 	std::string cached_spiega;

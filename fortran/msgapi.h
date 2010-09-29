@@ -21,6 +21,7 @@
  */
 
 #include "commonapi.h"
+#include <dballe/core/defs.h>
 
 namespace wreport {
 struct Var;
@@ -58,11 +59,16 @@ protected:
 	msg::Exporter* exporter;
 	/// Template selected for exporter (empty if auto detect)
 	std::string exporter_template;
-	Msgs* msgs;
 	/// Message being written
+	Msgs* msgs;
+	/// Message subset being written
 	Msg* wmsg;
-	/// Pointer to the last variable written, to set attributes
-	wreport::Var* wvar;
+	/// Last variables written with prendilo
+	std::vector<wreport::Var*> vars;
+	/// Level for vars
+	Level vars_level;
+	/// Time range for vars
+	Trange vars_trange;
 	size_t curmsgidx;
 	int iter_ctx;
 	int iter_var;
@@ -93,6 +99,7 @@ protected:
 	 */
 	Msg* curmsg();
 
+	void flushVars();
 	void flushSubset();
 	void flushMessage();
 

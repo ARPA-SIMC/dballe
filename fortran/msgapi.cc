@@ -25,15 +25,7 @@
 #include <dballe/msg/context.h>
 #include <dballe/msg/codec.h>
 #include <cstring>
-#if 0
-#include <dballe/core/aliases.h>
-#include <dballe/core/verbose.h>
-#include <dballe/msg/context.h>
-#include <cstdlib>
-#include <cctype>
-#include <strings.h>
-#endif
-
+#include <cassert>
 
 using namespace wreport;
 using namespace std;
@@ -43,7 +35,7 @@ namespace fortran {
 
 
 MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
-	: file(0), state(0), importer(0), exporter(0), msgs(0), wmsg(0), wvar(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
+	: file(0), state(0), importer(0), exporter(0), msgs(0), wmsg(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
 		cached_cat(0), cached_subcat(0), cached_lcat(0)
 {
 	if (strchr(mode, 'r') != NULL)
@@ -86,6 +78,8 @@ MsgAPI::~MsgAPI()
 	if (file) delete file;
 	if (importer) delete importer;
 	if (exporter) delete exporter;
+	for (vector<Var*>::iterator i = vars.begin(); i != vars.end(); ++i)
+		delete *i;
 }
 
 Msg* MsgAPI::curmsg()
@@ -296,14 +290,28 @@ const char* MsgAPI::dammelo()
 	return output.key_peek_value(DBA_KEY_VAR);
 }
 
+void MsgAPI::flushVars()
+{
+	// Acquire the variables still around from the last prendilo
+	while (!vars.empty())
+	{
+		// Pop a variable from the vector and take ownership of
+		// its memory management
+		auto_ptr<Var> var(vars.back());
+		vars.pop_back();
+
+		wmsg->set(var, vars_level, vars_trange);
+	}
+}
+
 void MsgAPI::flushSubset()
 {
 	if (wmsg)
 	{
+		flushVars();
 		auto_ptr<Msg> awmsg(wmsg);
 		wmsg = 0;
 		msgs->acquire(awmsg);
-		wvar = 0;
 	}
 }
 
@@ -361,27 +369,21 @@ void MsgAPI::prendilo()
 	if (const Var* var = input.key_peek(DBA_KEY_SEC))
 		wmsg->set_second(var->enqi());
 
-	const vector<Var*>& vars = input.vars();
-	if (!vars.empty())
-	{
-		Level lev;
-		Trange tr;
+	const vector<Var*>& in_vars = input.vars();
+	flushVars();
+	assert(vars.empty());
 
-		if (const Var* var = input.key_peek(DBA_KEY_LEVELTYPE1)) lev.ltype1 = var->enqi();
-		if (const Var* var = input.key_peek(DBA_KEY_L1)) lev.l1 = var->enqi();
-		if (const Var* var = input.key_peek(DBA_KEY_LEVELTYPE2)) lev.ltype2 = var->enqi();
-		if (const Var* var = input.key_peek(DBA_KEY_L2)) lev.l2 = var->enqi();
-		if (const Var* var = input.key_peek(DBA_KEY_PINDICATOR)) tr.pind = var->enqi();
-		if (const Var* var = input.key_peek(DBA_KEY_P1)) tr.p1 = var->enqi();
-		if (const Var* var = input.key_peek(DBA_KEY_P2)) tr.p2 = var->enqi();
-		
-		for (vector<Var*>::const_iterator v = vars.begin(); v != vars.end(); ++v)
-		{
-			wmsg->set(**v, (*v)->code(), lev, tr);
-			if (last_set_code == 0 || (*v)->code() == last_set_code)
-				wvar = *v;
-		}
-	}
+	if (const Var* var = input.key_peek(DBA_KEY_LEVELTYPE1)) vars_level.ltype1 = var->enqi();
+	if (const Var* var = input.key_peek(DBA_KEY_L1))	 vars_level.l1 = var->enqi();
+	if (const Var* var = input.key_peek(DBA_KEY_LEVELTYPE2)) vars_level.ltype2 = var->enqi();
+	if (const Var* var = input.key_peek(DBA_KEY_L2))	 vars_level.l2 = var->enqi();
+	if (const Var* var = input.key_peek(DBA_KEY_PINDICATOR)) vars_trange.pind = var->enqi();
+	if (const Var* var = input.key_peek(DBA_KEY_P1))	 vars_trange.p1 = var->enqi();
+	if (const Var* var = input.key_peek(DBA_KEY_P2))	 vars_trange.p2 = var->enqi();
+	
+	for (vector<Var*>::const_iterator v = in_vars.begin(); v != in_vars.end(); ++v)
+		vars.push_back(new Var(**v));
+	input.clear_vars();
 
 	if (const char* query = input.key_peek_value(DBA_KEY_QUERY))
 	{
@@ -451,13 +453,14 @@ void MsgAPI::critica()
 	if (perms & PERM_ATTR_RO)
 		throw error_consistency(
 			"critica cannot be called with the database open in attribute readonly mode");
-	if (wvar == 0)
+	if (vars.empty())
 		throw error_consistency("critica has been called without a previous prendilo");
+	if (vars.size() > 1)
+		throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
 
-	const vector<Var*>& vars = qcinput.vars();
-	for (vector<Var*>::const_iterator i = vars.begin(); i != vars.end(); ++i)
-		wvar->seta(**i);
-
+	const vector<Var*>& avars = qcinput.vars();
+	for (vector<Var*>::const_iterator i = avars.begin(); i != avars.end(); ++i)
+		vars[0]->seta(**i);
 	qcinput.clear();
 }
 
