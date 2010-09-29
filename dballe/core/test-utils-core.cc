@@ -231,7 +231,6 @@ auto_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* fi
 		auto_ptr<Rawmsg> res(new Rawmsg);
 
 		inner_ensure(f->read(*res));
-		res->file = NULL;
 
 		return res;
 	} catch (wreport::error& e) {

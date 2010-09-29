@@ -11,8 +11,8 @@ program check_range
       integer :: handle,idbhandle,handle_err, errcode
       real :: rval
       !data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
-      !integer debug
-      !data debug/1/
+      integer debug
+      data debug/1/
       
       !call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
   
@@ -26,9 +26,9 @@ program check_range
 !     Check that NaN values are trapped
       rval = 0.
       rval = log(rval) / log(rval)
-      call idba_set(handle, "B12003", log(rval))
+      call idba_set(handle, "B12103", log(rval))
       errcode = idba_error_code()
-      call ensure("set to NaN", errcode == 6)
+      call ensure("set to NaN", errcode == 13)
 
 !     Check that negative reals can be read
       call idba_set(handle, "lon", -12.3456)

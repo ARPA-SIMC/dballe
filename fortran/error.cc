@@ -47,8 +47,8 @@ struct HErrcb : public dballe::fortran::HBase
 	fdba_error_callback cb;
 	int data;
 
-	void start() {}
-	void stop() {}
+	void start() { dballe::fortran::HBase::start(); }
+	void stop() { dballe::fortran::HBase::stop(); }
 
 	// Check if this callback should be triggered by this error code
 	// If it should, invoke the callback
@@ -69,9 +69,13 @@ static char last_err_msg[1024];
 namespace dballe {
 namespace fortran {
 
+static int usage_refcount = 0;
 void error_init()
 {
+	if (usage_refcount > 0)
+		return;
 	herr.init("Error Handling", "MAX_CALLBACKS");
+	++usage_refcount;
 }
 
 int error(wreport::error& e)
@@ -201,6 +205,9 @@ F77_INTEGER_FUNCTION(idba_error_set_callback)(
 	GENPTR_SUBROUTINE(func)
 	GENPTR_INTEGER(data)
 	GENPTR_INTEGER(handle)
+
+	// Initialise the error library in case it has not been done yet
+	fortran::error_init();
 
 	*handle = herr.request();
 	HErrcb& h = herr.get(*handle);

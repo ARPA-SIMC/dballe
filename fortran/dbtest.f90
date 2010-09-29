@@ -15,7 +15,7 @@
         call idba_presentati(dbahandle, dsn, char(0), char(0))
         call ensure_no_error("presentati")
 
-        call idba_preparati(dbahandle, handle, "read", "read", "read")
+        call idba_preparati(dbahandle, handle, "write", "write", "write")
         call idba_scopa(handle, char(0))
         call idba_fatto(handle)
       endsubroutine dbinit
