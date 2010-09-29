@@ -96,6 +96,7 @@ const char* aof_files[] = {
 	"aof/aof_28-2-244.aof",
 	"aof/missing-cloud-h.aof",
 	"aof/brokenamdar.aof",
+	"aof/aof-undersealevel.aof",
 	NULL,
 };
 
