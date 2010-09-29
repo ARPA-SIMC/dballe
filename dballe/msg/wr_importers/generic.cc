@@ -94,7 +94,7 @@ static Varcode update_code(Varcode code)
         case WR_VAR(0, 12,  3): return WR_VAR(0, 12, 103);
         case WR_VAR(0, 10, 61): return WR_VAR(0, 10,  60);
         case WR_VAR(0, 10,  3): return WR_VAR(0, 10,   8);
-	default: return code;
+        default: return code;
     }
 }
 
@@ -115,11 +115,11 @@ void GenericImporter::import_var(const Var& var)
             msg->set_rep_memo(var.value(), -1);
             break;
         default:
-	    // Adjust station info level for pre-dballe-5.0 generics
-	    if (lev == Level(257, 0, 0, 0) && tr == Trange(0, 0, 0))
-		    msg->set(var, update_code(var.code()), Level(257), Trange());
-	    else
-		    msg->set(var, update_code(var.code()), lev, tr);
+            // Adjust station info level for pre-dballe-5.0 generics
+            if (lev == Level(257, 0, 0, 0) && tr == Trange(0, 0, 0))
+                msg->set(var, update_code(var.code()), Level(257), Trange());
+            else
+                msg->set(var, update_code(var.code()), lev, tr);
 	    break;
     }
 }

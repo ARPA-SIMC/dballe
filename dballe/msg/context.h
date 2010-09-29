@@ -64,6 +64,9 @@ public:
 
     Context& operator=(const Context& src);
 
+    /// @return true if this is the station context, else false
+    bool is_station() const;
+
     /**
      * Compare two dba_msg_context strutures, for use in sorting.
      *

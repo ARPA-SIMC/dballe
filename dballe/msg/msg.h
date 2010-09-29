@@ -169,6 +169,14 @@ public:
     const msg::Context* find_context(const Level& lev, const Trange& tr) const;
 
     /**
+     * Find the station info context
+     *
+     * @return
+     *   The context found, or NULL if it was not found.
+     */
+    const msg::Context* find_station_context() const;
+
+    /**
      * Find a msg::Context given its description
      *
      * @param lev

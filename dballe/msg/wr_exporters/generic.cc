@@ -100,14 +100,35 @@ struct Generic : public Template
         Level lev;
         Trange tr;
 
+	// Do the station context first
+	subset.store_variable_i(WR_VAR(0, 7, 192), 257);
         if (repmemo)
             subset.store_variable(repmemo->code(), *repmemo);
         else if (msg.type != MSG_GENERIC)
             subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
+	if (const msg::Context* ctx = msg.find_station_context())
+            for (size_t j = 0; j < ctx->data.size(); ++j)
+            {
+                const Var& var = *(ctx->data[j]);
 
+                // Store the variable
+                subset.store_variable(var.code(), var);
+
+                // Store the attributes
+                for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
+                {
+                    if (WR_VAR_X(attr->code()) != 33)
+                        error_consistency::throwf("attempt to encode attribute B%02d%03d which is not B33YYY",
+                                WR_VAR_X(attr->code()), WR_VAR_Y(attr->code()));
+                    subset.store_variable(attr->code(), *attr);
+                }
+	    }
+
+	// Then do the other contexts
         for (size_t i = 0; i < msg.data.size(); ++i)
         {
             const msg::Context& ctx = *msg.data[i];
+	    if (ctx.is_station()) continue;
 
             for (size_t j = 0; j < ctx.data.size(); ++j)
             {
