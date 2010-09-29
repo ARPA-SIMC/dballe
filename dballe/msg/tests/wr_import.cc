@@ -44,12 +44,12 @@ TESTGRP(wr_import);
 
 #define IS(field, val) do { \
         const Var* var = msg.get_##field##_var(); \
-        ensure((#field, var != 0)); \
+        ensure(((void)#field, var != 0)); \
         ensure_var_equals(*var, val); \
     } while (0)
 #define IS2(code, lev, tr, val) do { \
         const Var* var = msg.find(code, lev, tr); \
-        ensure((#code #lev #tr, var != 0)); \
+        ensure(((void)#code #lev #tr, var != 0)); \
         ensure_var_equals(*var, val); \
     } while (0)
 #define UN(field) do { \
