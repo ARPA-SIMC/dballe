@@ -647,8 +647,8 @@ void DB::delete_tables()
         drop_table_if_exists(init_tables[i]);
 
     /* Drop existing sequences */
-    for (size_t i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); i++)
-        drop_sequence_if_exists(init_tables[i]);
+    for (size_t i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); ++i)
+        drop_sequence_if_exists(init_sequences[i]);
 
 #if 0
     /* Allocate statement handle */
