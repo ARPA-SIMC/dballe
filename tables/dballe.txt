@@ -182,5 +182,5 @@
  033204 [SIM] Kalman coefficient, s.v. error covariance matrix(1,2)      NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
  033205 [SIM] Kalman coefficient, s.v. error covariance matrix(2,1)      NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
  033206 [SIM] Kalman coefficient, s.v. error covariance matrix(2,2)      NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
- 033207 [SIM] Kalman observation sequential counting                     NUMERIC                    0         -127   8 DAY                       0          3
- 033208 [SIM] Kalman forecast confidence                                 NUMERIC                    0         -127   8 DAY                       0          3
+ 033207 [SIM] Kalman observation sequential counter                      NUMERIC                    0         -127   8 NUMERIC                   0          3
+ 033208 [SIM] Kalman osservation missing counter                         NUMERIC                    0         -127   8 NUMERIC                   0          3
