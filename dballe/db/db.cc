@@ -67,10 +67,12 @@ namespace dballe {
  */
 
 static const char* init_tables[] = {
-    "attr", "data", "context", "station", "repinfo"
+    // Delete 'pseudoana' to clean up pre-5.0 databases
+    "attr", "data", "context", "station", "repinfo", "pseudoana"
 };
 static const char* init_sequences[] = {
-    "seq_context", "seq_station"
+    // Delete 'seq_pseudoana' to clean up pre-5.0 databases
+    "seq_context", "seq_station", "seq_pseudoana"
 };
 static const char* init_functions[] = {
 /*  "identity (val anyelement, val1 anyelement)", */
