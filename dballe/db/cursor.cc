@@ -209,12 +209,12 @@ void Cursor::reset()
 
 int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifiers)
 {
-    if (db.conn->server_type == ORACLE && !(modifiers & DBA_DB_MODIFIER_STREAM))
+    if (db.conn->server_type == ORACLE && !(qmodifiers & DBA_DB_MODIFIER_STREAM))
     {
         /* FIXME: this is a temporary solution giving an approximate row count only:
          * insert/delete/update queries run between the count and the select will
          * change the size of the result set */
-        count = getcount(rec, wanted, modifiers);
+        count = getcount(rec, qwanted, qmodifiers);
     }
 
     reset();
@@ -261,12 +261,10 @@ int Cursor::getcount(const Record& rec, unsigned int qwanted, unsigned int qmodi
     reset();
 
     /* Scan query modifiers */
-    modifiers = qmodifiers;
-
     QueryBuilder qb(db, *stm, *this, qwanted, qmodifiers);
 
     qb.init_modifiers(rec);
-    qb.build_query(rec);
+    qb.build_count_query(rec);
 
     TRACE("Performing query: %s\n", qb.sql_query.c_str());
     /* fprintf(stderr, "Performing query: %s\n", dba_querybuf_get(sql_query)); */
