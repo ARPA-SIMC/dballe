@@ -375,7 +375,8 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 			{
 				stm.bind_in(1, cache[i].id);
 				stm.execute();
-				stm.close_cursor();
+				// This causes an error on Oracle
+				// stm.close_cursor();
 
 				/* clear_cache_item(&(ri->cache[i])); */
 				++*deleted;
