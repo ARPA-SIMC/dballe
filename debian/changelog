@@ -1,3 +1,10 @@
+dballe (5.1-1) unstable; urgency=low
+
+  * New upstream version
+     - Handle negative priorities
+
+ -- Enrico Zini <enrico@debian.org>  Mon, 25 Oct 2010 15:34:01 +0200
+
 dballe (5.0-1) unstable; urgency=low
 
   * New upstream version
