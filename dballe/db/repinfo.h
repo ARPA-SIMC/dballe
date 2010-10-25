@@ -49,7 +49,7 @@ struct Cache
 	/** Report description */
 	std::string desc;
 	/** Report priority */
-	DBALLE_SQL_C_UINT_TYPE prio;
+	DBALLE_SQL_C_SINT_TYPE prio;
 	/** Report descriptor (currently unused) */
 	std::string descriptor;
 	/** Report A table value (currently unused) */
@@ -60,7 +60,7 @@ struct Cache
 	/** New report description used when updating the repinfo table */
 	std::string new_desc;
 	/** New report priority used when updating the repinfo table */
-	DBALLE_SQL_C_UINT_TYPE new_prio;
+	DBALLE_SQL_C_SINT_TYPE new_prio;
 	/** New report descriptor used when updating the repinfo table */
 	std::string new_descriptor;
 	/** New report A table value used when updating the repinfo table */

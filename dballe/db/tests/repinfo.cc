@@ -86,6 +86,24 @@ void to::test<3>()
 	ensure_equals(ri->get_id("FIXspnpo"), 200);
 }
 
+/* Test update from a file with a negative priority */
+template<> template<>
+void to::test<4>()
+{
+	use_db();
+
+	ensure_equals(ri->get_by_memo("generic")->prio, 1000);
+
+	int added, deleted, updated;
+	ri->update((string(getenv("DBA_TESTDATA")) + "/test-repinfo2.csv").c_str(), &added, &deleted, &updated);
+
+	ensure_equals(added, 2);
+	ensure_equals(deleted, 10);
+	ensure_equals(updated, 3);
+
+	ensure_equals(ri->get_by_memo("generic")->prio, -5);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

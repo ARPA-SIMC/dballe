@@ -75,7 +75,7 @@ void Repinfo::read_cache()
 	DBALLE_SQL_C_UINT_TYPE id;
 	char memo[20]; SQLLEN memo_ind;
 	char description[255]; SQLLEN description_ind;
-	DBALLE_SQL_C_UINT_TYPE prio; SQLLEN prio_ind;
+	DBALLE_SQL_C_SINT_TYPE prio; SQLLEN prio_ind;
 	char descriptor[6]; SQLLEN descriptor_ind;
 	DBALLE_SQL_C_UINT_TYPE tablea; SQLLEN tablea_ind;
 
