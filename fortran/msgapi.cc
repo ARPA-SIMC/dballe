@@ -95,6 +95,12 @@ bool MsgAPI::readNextMessage()
 	if (state & STATE_EOF)
 		return false;
 
+	if (msgs && curmsgidx < msgs->size())
+	{
+		++curmsgidx;
+		return true;
+	}
+
 	state = 0;
 	curmsgidx = 0;
 	if (msgs)
@@ -102,6 +108,7 @@ bool MsgAPI::readNextMessage()
 		delete msgs;
 		msgs = 0;
 	}
+
 	Rawmsg raw;
 	if (file->read(raw))
 	{
