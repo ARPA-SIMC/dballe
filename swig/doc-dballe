@@ -4,150 +4,150 @@ import os
 os.environ["DBALLE_BUILDING_DOCS"]="true"
 
 try:
-	import rpy_options
-	rpy_options.set_options(VERBOSE=False)
+    import rpy_options
+    rpy_options.set_options(VERBOSE=False)
 except ImportError:
-	pass
+    pass
 import sys, re
 sys.exit(0)
 import dballe, dballe.volnd, dballe.rconvert
 import inspect
 
 def print_indented (spaces, string):
-	"Print a string, indented by the given number of spaces"
-	for line in string.split("\n"):
-		for i in range(1,spaces):
-			sys.stdout.write(" ")
-		sys.stdout.write(line)
-		sys.stdout.write("\n")
+    "Print a string, indented by the given number of spaces"
+    for line in string.split("\n"):
+        for i in range(1,spaces):
+            sys.stdout.write(" ")
+        sys.stdout.write(line)
+        sys.stdout.write("\n")
 
 # Convert C++ types to Python types
 doctypemap = {
-	'dba_varcode': 'variable code',
-	'double': 'float',
-	'Varinfo': 'dballe.Varinfo',
-	'Var': 'dballe.Var',
-	'const Var &': 'dballe.Var',
-	'const Record &': 'dballe.Record',
-	'std::string': 'str',
-	'const string &': 'str',
-	'const char*': 'str',
-	'const char *': 'str',
+    'dba_varcode': 'variable code',
+    'double': 'float',
+    'Varinfo': 'dballe.Varinfo',
+    'Var': 'dballe.Var',
+    'const Var &': 'dballe.Var',
+    'const Record &': 'dballe.Record',
+    'std::string': 'str',
+    'const string &': 'str',
+    'const char*': 'str',
+    'const char *': 'str',
 }
 
 methodoverrides = {
-	'enqi_ifset(code, found)': ('int, bool', 'enqi_ifset(code)', [('code', 'variable code')]),
-	'enqd_ifset(code, found)': ('float, bool', 'enqd_ifset(code)', [('code', 'variable code')]),
-	'enqs_ifset(code, found)': ('str, bool', 'enqs_ifset(code)', [('code', 'variable code')]),
+    'enqi_ifset(code, found)': ('int, bool', 'enqi_ifset(code)', [('code', 'variable code')]),
+    'enqd_ifset(code, found)': ('float, bool', 'enqd_ifset(code)', [('code', 'variable code')]),
+    'enqs_ifset(code, found)': ('str, bool', 'enqs_ifset(code)', [('code', 'variable code')]),
 }
 
 def fmtarg(str):
-	"""
-	Format an item in an argument list, returning a tuple (name, type) or
-	(name, None) when the type could not be understood
-	"""
-	#print >>sys.stderr, "split of", str,
-	mo = re.match(r'^\s*(.+?)\s*(\w+)\s*(=\s*.+?)?\s*$', str)
-	if mo:
-		if mo.group(3):
-			#print >>sys.stderr, "gives triple"
-			if mo.group(3) == '=string()':
-				return mo.group(2) + '=""', None
-			elif mo.group(3) == '=NULL':
-				return mo.group(2) + '=None', None
-			else:
-				return mo.group(2) + mo.group(3), None
-		else:
-			#print >>sys.stderr, "gives couple"
-			type = mo.group(1)
-			type = doctypemap.get(type, type)
-			return mo.group(2), type
-	else:
-		#print >>sys.stderr, "gives single"
-		return str, None
+    """
+    Format an item in an argument list, returning a tuple (name, type) or
+    (name, None) when the type could not be understood
+    """
+    #print >>sys.stderr, "split of", str,
+    mo = re.match(r'^\s*(.+?)\s*(\w+)\s*(=\s*.+?)?\s*$', str)
+    if mo:
+        if mo.group(3):
+            #print >>sys.stderr, "gives triple"
+            if mo.group(3) == '=string()':
+                return mo.group(2) + '=""', None
+            elif mo.group(3) == '=NULL':
+                return mo.group(2) + '=None', None
+            else:
+                return mo.group(2) + mo.group(3), None
+        else:
+            #print >>sys.stderr, "gives couple"
+            type = mo.group(1)
+            type = doctypemap.get(type, type)
+            return mo.group(2), type
+    else:
+        #print >>sys.stderr, "gives single"
+        return str, None
 
 def printSwigDoc(doc):
-	if len(doc) == 2:
-		return
-	retval = doc.pop(0)
-	# Join the 'formatted' longer argument lists
-	while len(doc) > 1 and doc[0].find(')') == -1:
-		doc[0:2] = [' '.join(doc[0:2])]
-	method = doc.pop(0)
-	# Remove final const from methods
-	if method[-6:] == ' const':
-		method = method[:-6]
-	if len(doc) > 0 and doc[0] == 'const':
-		del doc[0]
-	# Remove namespaces from method names
-	method = re.sub(r"(\w+::)+", "", method)
-	# Reformat the argument list
-	mo = re.match(r'(\w+)\((.+)\)', method)
-	args = []
-	if mo:
-		method = mo.group(1)
-		args = mo.group(2)
-		args = map(fmtarg, args.split(','))
-		method = method + "(" + ", ".join(map(lambda x: x[0], args)) + ")"
-	# Override known fancy methods
-	if method in methodoverrides:
-		retval, method, args = methodoverrides[method]
+    if len(doc) == 2:
+        return
+    retval = doc.pop(0)
+    # Join the 'formatted' longer argument lists
+    while len(doc) > 1 and doc[0].find(')') == -1:
+        doc[0:2] = [' '.join(doc[0:2])]
+    method = doc.pop(0)
+    # Remove final const from methods
+    if method[-6:] == ' const':
+        method = method[:-6]
+    if len(doc) > 0 and doc[0] == 'const':
+        del doc[0]
+    # Remove namespaces from method names
+    method = re.sub(r"(\w+::)+", "", method)
+    # Reformat the argument list
+    mo = re.match(r'(\w+)\((.+)\)', method)
+    args = []
+    if mo:
+        method = mo.group(1)
+        args = mo.group(2)
+        args = map(fmtarg, args.split(','))
+        method = method + "(" + ", ".join(map(lambda x: x[0], args)) + ")"
+    # Override known fancy methods
+    if method in methodoverrides:
+        retval, method, args = methodoverrides[method]
 
-	# Print the method definition
-	if retval != 'void':
-		rtype = doctypemap.get(retval, retval)
-		rtype = re.sub("[ .]", "_", rtype.lower())
-		print_indented(2, '``'+rtype+" = "+method+'``')
-	else:
-		print_indented(2, '``'+method+'``')
+    # Print the method definition
+    if retval != 'void':
+        rtype = doctypemap.get(retval, retval)
+        rtype = re.sub("[ .]", "_", rtype.lower())
+        print_indented(2, '``'+rtype+" = "+method+'``')
+    else:
+        print_indented(2, '``'+method+'``')
 
-	needFiller = True
+    needFiller = True
 
-	# Print details about the arguments
-	for name, type in args:
-		if type != None:
-			print_indented(4, name + " is a " + type + "\n")
-			needFiller = False
+    # Print details about the arguments
+    for name, type in args:
+        if type != None:
+            print_indented(4, name + " is a " + type + "\n")
+            needFiller = False
 
-	# Print the rest of the documentation
-	if len(doc) > 0:
-		print_indented(4, "\n".join(filter(lambda x: x!="",doc)))
-	elif needFiller:
-		print_indented(4, "*documentation is missing*\n")
+    # Print the rest of the documentation
+    if len(doc) > 0:
+        print_indented(4, "\n".join(filter(lambda x: x!="",doc)))
+    elif needFiller:
+        print_indented(4, "*documentation is missing*\n")
 
 def document (obj, swig=False):
-	if obj.__doc__ != None:
-		if inspect.ismodule(obj):
-			print_indented(0, inspect.getdoc(obj))
-			print
-		elif inspect.isroutine(obj):
-			if swig:
-				doc = inspect.getdoc(obj)
-				doc = doc.split("\n")
-				if doc[0].find('::') != -1 and len(doc) == 1:
-					return
-				if doc[0].find('::') != -1 and doc[0].find(' ') != -1:
-					r, d = doc[0].split(' ', 2)
-					doc[0:1] = [r, d]
-				if len(doc) > 1 and doc[1].find('::') != -1:
-					printSwigDoc(doc)
-				else:
-					#print >>sys.stderr, "NOTSWIG", doc
-					print_indented(2, '``'+obj.__name__ + inspect.formatargspec(*inspect.getargspec(obj))+"``")
-					print_indented(4, inspect.getdoc(obj))
-			else:
-				print_indented(2, '``'+obj.__name__ + inspect.formatargspec(*inspect.getargspec(obj))+"``")
-				print_indented(4, inspect.getdoc(obj))
-		else:
-			print_indented(2, obj.__name__)
-			print_indented(4, inspect.getdoc(obj))
-			print
+    if obj.__doc__ != None:
+        if inspect.ismodule(obj):
+            print_indented(0, inspect.getdoc(obj))
+            print
+        elif inspect.isroutine(obj):
+            if swig:
+                doc = inspect.getdoc(obj)
+                doc = doc.split("\n")
+                if doc[0].find('::') != -1 and len(doc) == 1:
+                    return
+                if doc[0].find('::') != -1 and doc[0].find(' ') != -1:
+                    r, d = doc[0].split(' ', 2)
+                    doc[0:1] = [r, d]
+                if len(doc) > 1 and doc[1].find('::') != -1:
+                    printSwigDoc(doc)
+                else:
+                    #print >>sys.stderr, "NOTSWIG", doc
+                    print_indented(2, '``'+obj.__name__ + inspect.formatargspec(*inspect.getargspec(obj))+"``")
+                    print_indented(4, inspect.getdoc(obj))
+            else:
+                print_indented(2, '``'+obj.__name__ + inspect.formatargspec(*inspect.getargspec(obj))+"``")
+                print_indented(4, inspect.getdoc(obj))
+        else:
+            print_indented(2, obj.__name__)
+            print_indented(4, inspect.getdoc(obj))
+            print
 
 def documentMethods (cls):
-	swig = hasattr(cls, "__swig_destroy__")
-	for m in dir(cls):
-		if m[0] != '_' and callable(getattr(cls, m)):
-			document(getattr(cls, m), swig=swig)
+    swig = hasattr(cls, "__swig_destroy__")
+    for m in dir(cls):
+        if m[0] != '_' and callable(getattr(cls, m)):
+            document(getattr(cls, m), swig=swig)
 
 
 print """===================================
@@ -230,24 +230,24 @@ print """
 dballe.Cursor is iterable and so it's rarely used outside of iteration.  The
 normal way of getting data out of the database is::
 
-	db = dballe.DB("dbname", "user", "passwd")
-	query = dballe.Record()
-	query.seti("latmin", 10.)
-	query.seti("latmax", 60.)
-	query.seti("lonmin", -10.)
-	query.seti("lonmax", 40.)
-	query.seti("var", "B12001")
-	for record in db.query(query):
-		print "Temperature:", record.enqvar("B12001")
-	
+    db = dballe.DB("dbname", "user", "passwd")
+    query = dballe.Record()
+    query.seti("latmin", 10.)
+    query.seti("latmax", 60.)
+    query.seti("lonmin", -10.)
+    query.seti("lonmax", 40.)
+    query.seti("var", "B12001")
+    for record in db.query(query):
+        print "Temperature:", record.enqvar("B12001")
+    
 Sometimes it is useful to access a cursor in order to access variable
 attributes::
 
-	cursor = db.query(query): 
-	for record in cursor:
-		print "Temperature:", record.enqvar("B12001")
-		attrs = cursor.attributes()
-		print "  Confidence interval:", attrs.enqvar("B33007")
+    cursor = db.query(query): 
+    for record in cursor:
+        print "Temperature:", record.enqvar("B12001")
+        attrs = cursor.attributes()
+        print "  Confidence interval:", attrs.enqvar("B33007")
 """
 
 print """
