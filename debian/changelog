@@ -5,8 +5,9 @@ dballe (5.2-1) unstable; urgency=low
      - Reenabled generation if Python API docs
      - Handle all 2:x:x as TEMPs
      - Command line tools now properly turn exceptions into errors
+     - Ported rconvert to rpy2 
 
- -- Enrico Zini <enrico@debian.org>  Fri, 05 Nov 2010 16:47:22 +0000
+ -- Enrico Zini <enrico@debian.org>  Fri, 05 Nov 2010 18:32:06 +0000
 
 dballe (5.1-1) unstable; urgency=low
 

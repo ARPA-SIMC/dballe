@@ -86,7 +86,7 @@ Section: python
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Recommends: python-numpy
-Suggests: python-rpy
+Suggests: python-rpy2
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
 Description: DB-ALL.e Python library for weather research
@@ -153,7 +153,7 @@ Package: provami
 Section: misc
 Architecture: all
 Depends: python-dballe, python-wxgtk2.6, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
-Suggests: python-rpy
+Suggests: python-rpy2
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
 Description: Graphical interface to DB-All.e databases
