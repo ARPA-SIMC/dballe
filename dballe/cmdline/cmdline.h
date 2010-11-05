@@ -35,29 +35,29 @@ namespace cmdline {
 
 struct op_dispatch_table
 {
-	int (*func)(poptContext);
-	const char* aliases[3];
-	const char* usage;
-	const char* desc;
-	const char* longdesc;
-	struct poptOption* optable;
+    int (*func)(poptContext);
+    const char* aliases[3];
+    const char* usage;
+    const char* desc;
+    const char* longdesc;
+    struct poptOption* optable;
 };
 
 #define ODT_END { NULL, NULL, NULL, NULL, NULL, NULL }
 
 struct tool_desc
 {
-	const char* desc;
-	const char* longdesc;
-	struct op_dispatch_table* ops;	
+    const char* desc;
+    const char* longdesc;
+    struct op_dispatch_table* ops;  
 };
 
 struct program_info
 {
-	const char* name;
-	const char* manpage_examples_section;
-	const char* manpage_files_section;
-	const char* manpage_seealso_section;
+    const char* name;
+    const char* manpage_examples_section;
+    const char* manpage_files_section;
+    const char* manpage_seealso_section;
 };
 
 /**
