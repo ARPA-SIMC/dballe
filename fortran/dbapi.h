@@ -34,29 +34,29 @@ namespace fortran {
 class DbAPI : public CommonAPIImplementation
 {
 protected:
-	DB& db;
-	db::Cursor* ana_cur;
-	db::Cursor* query_cur;
+    DB& db;
+    db::Cursor* ana_cur;
+    db::Cursor* query_cur;
 
 public:
-	DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag);
-	virtual ~DbAPI();
+    DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag);
+    virtual ~DbAPI();
 
-	virtual void scopa(const char* repinfofile = 0);
+    virtual void scopa(const char* repinfofile = 0);
 
-	virtual int quantesono();
-	virtual void elencamele();
+    virtual int quantesono();
+    virtual void elencamele();
 
-	virtual int voglioquesto();
-	virtual const char* dammelo();
+    virtual int voglioquesto();
+    virtual const char* dammelo();
 
-	virtual void prendilo();
-	virtual void dimenticami();
+    virtual void prendilo();
+    virtual void dimenticami();
 
-	virtual int voglioancora();
+    virtual int voglioancora();
 
-	virtual void critica();
-	virtual void scusa();
+    virtual void critica();
+    virtual void scusa();
 };
 
 }
