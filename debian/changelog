@@ -4,8 +4,9 @@ dballe (5.2-1) unstable; urgency=low
      - No transactions are left open (at least in the test suite)
      - Reenabled generation if Python API docs
      - Handle all 2:x:x as TEMPs
+     - Command line tools now properly turn exceptions into errors
 
- -- Enrico Zini <enrico@debian.org>  Fri, 05 Nov 2010 16:24:21 +0000
+ -- Enrico Zini <enrico@debian.org>  Fri, 05 Nov 2010 16:47:22 +0000
 
 dballe (5.1-1) unstable; urgency=low
 

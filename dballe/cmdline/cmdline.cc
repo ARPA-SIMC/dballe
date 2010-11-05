@@ -503,7 +503,13 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
                 }
             }
 
-            int res = action->func(optCon);
+            int res = 0;
+            try {
+                res = action->func(optCon);
+            } catch (std::exception& e) {
+                fprintf(stderr, "%s\n", e.what());
+                res = 1;
+            }
             poptFreeContext(optCon);
             return res;
         }
