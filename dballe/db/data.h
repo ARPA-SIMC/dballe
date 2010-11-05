@@ -45,24 +45,24 @@ struct Statement;
  */
 struct Data
 {
-	/** DB connection. */
+    /** DB connection. */
     db::Connection& conn;
 
-	/** Precompiled insert statement */
+    /** Precompiled insert statement */
     db::Statement* istm;
-	/** Precompiled update statement */
+    /** Precompiled update statement */
     db::Statement* ustm;
-	/** Precompiled insert or ignore statement */
+    /** Precompiled insert or ignore statement */
     db::Statement* iistm;
 
-	/** Context ID SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE id_context;
-	/** Variable type SQL parameter */
+    /** Context ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id_context;
+    /** Variable type SQL parameter */
     wreport::Varcode id_var;
-	/** Variable value SQL parameter */
-	char value[255];
-	/** Variable value indicator */
-	SQLLEN value_ind;
+    /** Variable value SQL parameter */
+    char value[255];
+    /** Variable value indicator */
+    SQLLEN value_ind;
 
     Data(Connection& conn);
     ~Data();
@@ -107,9 +107,9 @@ struct Data
     void dump(FILE* out);
 
 private:
-	// disallow copy
-	Data(const Data&);
-	Data& operator=(const Data&);
+    // disallow copy
+    Data(const Data&);
+    Data& operator=(const Data&);
 };
 
 } // namespace db
