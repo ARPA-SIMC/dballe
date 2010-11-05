@@ -44,89 +44,89 @@ struct Statement;
  */
 struct Station
 {
-	/**
-	 * DB connection.
-	 */
-	DB& db;
+    /**
+     * DB connection.
+     */
+    DB& db;
 
-	/** Precompiled select fixed station query */
-        db::Statement* sfstm;
-	/** Precompiled select mobile station query */
-        db::Statement* smstm;
-	/** Precompiled select data by station id query */
-        db::Statement* sstm;
-	/** Precompiled insert query */
-        db::Statement* istm;
-	/** Precompiled update query */
-        db::Statement* ustm;
-	/** Precompiled delete query */
-        db::Statement* dstm;
+    /** Precompiled select fixed station query */
+    db::Statement* sfstm;
+    /** Precompiled select mobile station query */
+    db::Statement* smstm;
+    /** Precompiled select data by station id query */
+    db::Statement* sstm;
+    /** Precompiled insert query */
+    db::Statement* istm;
+    /** Precompiled update query */
+    db::Statement* ustm;
+    /** Precompiled delete query */
+    db::Statement* dstm;
 
-	/** Station ID SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE id;
-	/** Station latitude SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE lat;
-	/** Station longitude SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE lon;
-	/** Mobile station identifier SQL parameter */
-	char ident[64];
-	/** Mobile station identifier indicator */
-	SQLLEN ident_ind;
+    /** Station ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id;
+    /** Station latitude SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE lat;
+    /** Station longitude SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE lon;
+    /** Mobile station identifier SQL parameter */
+    char ident[64];
+    /** Mobile station identifier indicator */
+    SQLLEN ident_ind;
 
-	Station(DB& conn);
-	~Station();
+    Station(DB& conn);
+    ~Station();
 
-        /**
-         * Set the mobile station identifier input value for this ::dba_db_station
-         *
-         * @param ident
-         *   Value to use for ident.  NULL can be used to unset ident.
-         */
-        void set_ident(const char* ident);
+    /**
+     * Set the mobile station identifier input value for this ::dba_db_station
+     *
+     * @param ident
+     *   Value to use for ident.  NULL can be used to unset ident.
+     */
+    void set_ident(const char* ident);
 
-        /**
-         * Get the station ID given latitude, longitude and mobile identifier
-         *
-         * @return
-         *   Resulting ID of the station
-         */
-        int get_id();
+    /**
+     * Get the station ID given latitude, longitude and mobile identifier
+     *
+     * @return
+     *   Resulting ID of the station
+     */
+    int get_id();
 
-        /**
-         * Get station information given a station ID
-         *
-         * @param id
-         *   ID of the station to query
-         */
-        void get_data(int id);
+    /**
+     * Get station information given a station ID
+     *
+     * @param id
+     *   ID of the station to query
+     */
+    void get_data(int id);
 
-        /**
-         * Insert a new station entry
-         *
-         * @retval id
-         *   ID of the newly inserted station
-         */
-        int insert();
+    /**
+     * Insert a new station entry
+     *
+     * @retval id
+     *   ID of the newly inserted station
+     */
+    int insert();
 
-        /**
-         * Update the information about a station entry
-         */
-        void update();
+    /**
+     * Update the information about a station entry
+     */
+    void update();
 
-        /**
-         * Remove a station record
-         */
-        void remove();
+    /**
+     * Remove a station record
+     */
+    void remove();
 
-        /**
-         * Dump the entire contents of the table to an output stream
-         */
-        void dump(FILE* out);
+    /**
+     * Dump the entire contents of the table to an output stream
+     */
+    void dump(FILE* out);
 
 private:
-	// disallow copy
-	Station(const Station&);
-	Station& operator=(const Station&);
+    // disallow copy
+    Station(const Station&);
+    Station& operator=(const Station&);
 };
 
 #if 0
