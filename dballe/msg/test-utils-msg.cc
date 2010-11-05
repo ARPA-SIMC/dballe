@@ -61,6 +61,7 @@ const char* bufr_files[] = {
     "bufr/ed4-empty.bufr",
     "bufr/C05060.bufr",
     "bufr/tempforecast.bufr",
+    "bufr/temp-2-255.bufr",
     NULL
 };
 

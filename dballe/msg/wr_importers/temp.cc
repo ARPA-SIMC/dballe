@@ -118,7 +118,7 @@ public:
                     case 102: return MSG_TEMP_SHIP;
                 }
         }
-        return MSG_GENERIC;
+        return MSG_TEMP;
     }
 };
 

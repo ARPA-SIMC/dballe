@@ -3,8 +3,9 @@ dballe (5.2-1) unstable; urgency=low
   * New upstream version
      - No transactions are left open (at least in the test suite)
      - Reenabled generation if Python API docs
+     - Handle all 2:x:x as TEMPs
 
- -- Enrico Zini <enrico@debian.org>  Fri, 05 Nov 2010 15:32:44 +0000
+ -- Enrico Zini <enrico@debian.org>  Fri, 05 Nov 2010 16:24:21 +0000
 
 dballe (5.1-1) unstable; urgency=low
 

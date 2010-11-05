@@ -229,6 +229,13 @@ void to::test<6>()
     UN(tot_prec24); UN(tot_snow);
 }
 
+template<> template<>
+void to::test<7>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-2-255.bufr", BUFR);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_TEMP);
+}
 
 #if 0
 /* Check that a BUFR from a synop high-level station correctly reports isobaric
