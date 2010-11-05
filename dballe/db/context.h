@@ -44,95 +44,95 @@ struct Statement;
  */
 struct Context
 {
-	/**
-	 * DB connection.
-	 */
-	DB& db;
+    /**
+     * DB connection.
+     */
+    DB& db;
 
-	/** Precompiled select statement */
-        db::Statement* sstm;
-	/** Precompiled select data statement */
-        db::Statement* sdstm;
-	/** Precompiled insert statement */
-        db::Statement* istm;
-	/** Precompiled delete statement */
-        db::Statement* dstm;
+    /** Precompiled select statement */
+    db::Statement* sstm;
+    /** Precompiled select data statement */
+    db::Statement* sdstm;
+    /** Precompiled insert statement */
+    db::Statement* istm;
+    /** Precompiled delete statement */
+    db::Statement* dstm;
 
-	/** Context ID SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE id;
+    /** Context ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id;
 
-	/** Station ID SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE id_station;
-	/** Report ID SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE id_report;
-	/** Date SQL parameter */
-	SQL_TIMESTAMP_STRUCT date;
-	/** First level type SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE ltype1;
-	/** Level L1 SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE l1;
-	/** Second level type SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE ltype2;
-	/** Level L2 SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE l2;
-	/** Time range type SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE pind;
-	/** Time range P1 SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE p1;
-	/** Time range P2 SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE p2;
+    /** Station ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id_station;
+    /** Report ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id_report;
+    /** Date SQL parameter */
+    SQL_TIMESTAMP_STRUCT date;
+    /** First level type SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE ltype1;
+    /** Level L1 SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE l1;
+    /** Second level type SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE ltype2;
+    /** Level L2 SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE l2;
+    /** Time range type SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE pind;
+    /** Time range P1 SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE p1;
+    /** Time range P2 SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE p2;
 
-        Context(DB& db);
-        ~Context();
+    Context(DB& db);
+    ~Context();
 
-        /**
-         * Get the context id for the current context data.
-         *
-         * @return
-         *   The database ID, or -1 if no existing context entry matches the given values
-         */
-        int get_id();
+    /**
+     * Get the context id for the current context data.
+     *
+     * @return
+     *   The database ID, or -1 if no existing context entry matches the given values
+     */
+    int get_id();
 
-        /**
-         * Get context information given a context ID
-         *
-         * @param id
-         *   ID of the context to query
-         */
-        void get_data(int id);
+    /**
+     * Get context information given a context ID
+     *
+     * @param id
+     *   ID of the context to query
+     */
+    void get_data(int id);
 
-        /**
-         * Get the context id for a station info context.
-         *
-         * id_station and id_report must be filled in for the query.
-         *
-         * @return
-         *   The database ID
-         */
-        int obtain_station_info();
+    /**
+     * Get the context id for a station info context.
+     *
+     * id_station and id_report must be filled in for the query.
+     *
+     * @return
+     *   The database ID
+     */
+    int obtain_station_info();
 
-        /**
-         * Insert a new context in the database
-         *
-         * @return
-         *   The ID of the newly inserted context
-         */
-        int insert();
+    /**
+     * Insert a new context in the database
+     *
+     * @return
+     *   The ID of the newly inserted context
+     */
+    int insert();
 
-        /**
-         * Remove a context record
-         */
-        void remove();
+    /**
+     * Remove a context record
+     */
+    void remove();
 
-        /**
-         * Dump the entire contents of the table to an output stream
-         */
-        void dump(FILE* out);
+    /**
+     * Dump the entire contents of the table to an output stream
+     */
+    void dump(FILE* out);
 
 private:
-	// disallow copy
-	Context(const Context&);
-	Context& operator=(const Context&);
+    // disallow copy
+    Context(const Context&);
+    Context& operator=(const Context&);
 };
 
 } // namespace db
