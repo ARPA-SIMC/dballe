@@ -35,78 +35,78 @@ namespace db {
 Attr::Attr(Connection& conn)
     : conn(conn), sstm(0), istm(0), rstm(0)
 {
-	const char* select_query =
-		"SELECT type, value FROM attr WHERE id_context=? and id_var=?";
-	const char* insert_query =
-		"INSERT INTO attr (id_context, id_var, type, value)"
-		" VALUES(?, ?, ?, ?)";
-	const char* replace_query_mysql =
-		"INSERT INTO attr (id_context, id_var, type, value)"
-		" VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
-	const char* replace_query_sqlite =
-		"INSERT OR REPLACE INTO attr (id_context, id_var, type, value)"
-		" VALUES(?, ?, ?, ?)";
-	const char* replace_query_oracle =
-		"MERGE INTO attr USING"
-		" (SELECT ? as cnt, ? as var, ? as t, ? as val FROM dual)"
-		" ON (id_context=cnt AND id_var=var AND type=t)"
-		" WHEN MATCHED THEN UPDATE SET value=val"
-		" WHEN NOT MATCHED THEN"
-		"  INSERT (id_context, id_var, type, value) VALUES (cnt, var, t, val)";
-	const char* replace_query_postgres =
-		"UPDATE attr SET value=? WHERE id_context=? AND id_var=? AND type=?";
+    const char* select_query =
+        "SELECT type, value FROM attr WHERE id_context=? and id_var=?";
+    const char* insert_query =
+        "INSERT INTO attr (id_context, id_var, type, value)"
+        " VALUES(?, ?, ?, ?)";
+    const char* replace_query_mysql =
+        "INSERT INTO attr (id_context, id_var, type, value)"
+        " VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
+    const char* replace_query_sqlite =
+        "INSERT OR REPLACE INTO attr (id_context, id_var, type, value)"
+        " VALUES(?, ?, ?, ?)";
+    const char* replace_query_oracle =
+        "MERGE INTO attr USING"
+        " (SELECT ? as cnt, ? as var, ? as t, ? as val FROM dual)"
+        " ON (id_context=cnt AND id_var=var AND type=t)"
+        " WHEN MATCHED THEN UPDATE SET value=val"
+        " WHEN NOT MATCHED THEN"
+        "  INSERT (id_context, id_var, type, value) VALUES (cnt, var, t, val)";
+    const char* replace_query_postgres =
+        "UPDATE attr SET value=? WHERE id_context=? AND id_var=? AND type=?";
 
-	// Create the statement for select
+    // Create the statement for select
     sstm = new db::Statement(conn);
-	sstm->bind_in(1, id_context);
+    sstm->bind_in(1, id_context);
     sstm->bind_in(2, id_var);
     sstm->bind_out(1, type);
     sstm->bind_out(2, value, sizeof(value));
     sstm->prepare(select_query);
 
-	// Create the statement for insert
+    // Create the statement for insert
     istm = new db::Statement(conn);
-	istm->bind_in(1, id_context);
-	istm->bind_in(2, id_var);
-	istm->bind_in(3, type);
-	istm->bind_in(4, value, value_ind);
-	istm->prepare(insert_query);
+    istm->bind_in(1, id_context);
+    istm->bind_in(2, id_var);
+    istm->bind_in(3, type);
+    istm->bind_in(4, value, value_ind);
+    istm->prepare(insert_query);
 
-	// Create the statement for replace
+    // Create the statement for replace
     rstm = new db::Statement(conn);
-	if (conn.server_type == POSTGRES)
-	{
-		rstm->bind_in(1, value, value_ind);
-		rstm->bind_in(2, id_context);
-		rstm->bind_in(3, id_var);
-		rstm->bind_in(4, type);
-	} else {
-		rstm->bind_in(1, id_context);
-		rstm->bind_in(2, id_var);
-		rstm->bind_in(3, type);
-		rstm->bind_in(4, value, value_ind);
-	}
-	switch (conn.server_type)
-	{
-		case MYSQL: rstm->prepare(replace_query_mysql); break;
-		case SQLITE: rstm->prepare(replace_query_sqlite); break;
-		case ORACLE: rstm->prepare(replace_query_oracle); break;
-		case POSTGRES: rstm->prepare(replace_query_postgres); break;
-		default: rstm->prepare(replace_query_mysql); break;
-	}
+    if (conn.server_type == POSTGRES)
+    {
+        rstm->bind_in(1, value, value_ind);
+        rstm->bind_in(2, id_context);
+        rstm->bind_in(3, id_var);
+        rstm->bind_in(4, type);
+    } else {
+        rstm->bind_in(1, id_context);
+        rstm->bind_in(2, id_var);
+        rstm->bind_in(3, type);
+        rstm->bind_in(4, value, value_ind);
+    }
+    switch (conn.server_type)
+    {
+        case MYSQL: rstm->prepare(replace_query_mysql); break;
+        case SQLITE: rstm->prepare(replace_query_sqlite); break;
+        case ORACLE: rstm->prepare(replace_query_oracle); break;
+        case POSTGRES: rstm->prepare(replace_query_postgres); break;
+        default: rstm->prepare(replace_query_mysql); break;
+    }
 }
 
 Attr::~Attr()
 {
-	if (sstm) delete sstm;
-	if (istm) delete istm;
-	if (rstm) delete rstm;
+    if (sstm) delete sstm;
+    if (istm) delete istm;
+    if (rstm) delete rstm;
 }
 
 void Attr::set(const wreport::Var& var)
 {
-	type = var.code();
-	set_value(var.value());
+    type = var.code();
+    set_value(var.value());
 }
 
 void Attr::set_value(const char* qvalue)
@@ -141,11 +141,11 @@ void Attr::insert(bool replace)
 void Attr::load(wreport::Var& var)
 {
     // Query all attributes for this var in the current context
-	id_var = var.code();
+    id_var = var.code();
     sstm->execute();
 
-	// Make attribues from the result, and add them to var
-	while (sstm->fetch())
+    // Make attribues from the result, and add them to var
+    while (sstm->fetch())
         var.seta(newvar(type, value));
 
     sstm->close_cursor();
@@ -153,11 +153,11 @@ void Attr::load(wreport::Var& var)
 
 void Attr::dump(FILE* out)
 {
-	DBALLE_SQL_C_SINT_TYPE id_context;
+    DBALLE_SQL_C_SINT_TYPE id_context;
     wreport::Varcode id_var;
     wreport::Varcode type;
-	char value[255];
-	SQLLEN value_ind;
+    char value[255];
+    SQLLEN value_ind;
 
     db::Statement stm(conn);
     stm.bind_out(1, id_context);

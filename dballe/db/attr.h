@@ -45,26 +45,26 @@ struct Statement;
  */
 struct Attr
 {
-	/** DB connection. */
+    /** DB connection. */
     db::Connection& conn;
 
-	/** Precompiled select statement */
+    /** Precompiled select statement */
     db::Statement* sstm;
-	/** Precompiled insert statement */
+    /** Precompiled insert statement */
     db::Statement* istm;
-	/** Precompiled replace statement */
+    /** Precompiled replace statement */
     db::Statement* rstm;
 
-	/** context id SQL parameter */
-	DBALLE_SQL_C_SINT_TYPE id_context;
-	/** variable id SQL parameter */
+    /** context id SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id_context;
+    /** variable id SQL parameter */
     wreport::Varcode id_var;
-	/** attribute id SQL parameter */
+    /** attribute id SQL parameter */
     wreport::Varcode type;
-	/** attribute value SQL parameter */
-	char value[255];
-	/** attribute value indicator */
-	SQLLEN value_ind;
+    /** attribute value SQL parameter */
+    char value[255];
+    /** attribute value indicator */
+    SQLLEN value_ind;
 
     Attr(Connection& conn);
     ~Attr();
@@ -111,9 +111,9 @@ struct Attr
     void dump(FILE* out);
 
 private:
-	// disallow copy
-	Attr(const Attr&);
-	Attr& operator=(const Attr&);
+    // disallow copy
+    Attr(const Attr&);
+    Attr& operator=(const Attr&);
 };
 
 } // namespace db
