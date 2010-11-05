@@ -9,7 +9,6 @@ try:
 except ImportError:
     pass
 import sys, re
-sys.exit(0)
 import dballe, dballe.volnd, dballe.rconvert
 import inspect
 

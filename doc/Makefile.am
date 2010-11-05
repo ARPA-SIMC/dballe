@@ -24,7 +24,7 @@ doc_DATA += fapi.ps libdballef.doxytags
 noinst_DATA += fortran_api/index.html
 endif
 if DO_DBALLE_PYTHON
-#noinst_DATA += dballe-doc.i
+noinst_DATA += dballe-doc.i
 endif
 if HAVE_LATEX2HTML
 noinst_DATA += \
@@ -58,6 +58,9 @@ mainpages += ../dballe/main-db.dox
 endif
 
 TEXINPUTS="$(srcdir)"
+
+libwreport.doxytags: /usr/share/doc/libwreport-dev/libwreport.doxytags.gz
+	zcat $< > $@
 
 libdballe.doxytags c_api/index.html xml/index.xml: $(cdoxdeps) $(mainpages)
 	doxygen $<
@@ -109,3 +112,4 @@ clean-local:
 	rm -rf xml
 	rm -rf guide_html
 	rm -rf fapi_html
+	rm -f libwreport.doxytags

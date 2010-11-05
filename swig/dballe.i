@@ -6,7 +6,7 @@
 %include "exception.i"
 %include "std_string.i"
 %include "std_vector.i"
-// %include "../doc/dballe-doc.i"
+%include "../doc/dballe-doc.i"
 
 %exception {
         try { $action }
@@ -631,82 +631,6 @@ namespace std {
         %}
 }
 
-
-/*
-#ifdef SWIGPYTHON
-
-%pythoncode %{
-import datetime
-
-class Level(tuple):
-	"""
-	Represents a level value as a 4-tuple
-	"""
-	def __new__(self, leveltype1=0, l1=0, leveltype2=0, l2=0):
-		return tuple.__new__(self, (leveltype1, l1, leveltype2, l2))
-	def type1(self):
-		"Return the type of the first level"
-		return self[0]
-	def l1(self):
-		"Return l1"
-		return self[1]
-	def type2(self):
-		"Return the type of the second level"
-		return self[2]
-	def l2(self):
-		"Return l2"
-		return self[3]
-        def __str__(self):
-                return describeLevel(*self)
-        def __repr__(self):
-                return "Level"+tuple.__repr__(self)
-
-class TimeRange(tuple):
-	"""
-	Represents a time range value as a 3-tuple
-	"""
-	def __new__(self, pindicator, p1=0, p2=0):
-		return tuple.__new__(self, (pindicator, p1, p2))
-	def type(self):
-		"Return the time range type"
-		return self[0]
-	def p1(self):
-		"Return p1"
-		return self[1]
-	def p2(self):
-		"Return p2"
-		return self[2]
-        def __str__(self):
-                return describeTrange(*self)
-        def __repr__(self):
-                return "TimeRange"+tuple.__repr__(self)
-%}
-*/
-/*
-
-
-
-
-%typemap(in, numinputs=0) dba_varcode *varcode (dba_varcode temp) {
-	$1 = &temp;
-}
-%typemap(argout) dba_varcode *varcode {
-	char buf[10];
-	snprintf(buf, 10, "B%02d%03d", DBA_VAR_X(*$1), DBA_VAR_Y(*$1));
-	$result = SWIG_Python_AppendOutput($result, SWIG_FromCharPtr(buf));
-}
-%apply bool& OUTPUT { bool& found };
-%apply int *OUTPUT { int *count };
-%apply int *OUTPUT { int *contextid };
-%apply int *OUTPUT { int *anaid };
-
-#endif
-*/
-
-//%include <dballe++/bufrex.h>
-//%include <dballe++/msg.h>
-//%include <dballe++/db.h>
-//%include <dballe++/format.h>
 
 %include <wreport/varinfo.h>
 %include <wreport/vartable.h>

@@ -27,8 +27,7 @@ nodist__dballe_la_SOURCES = dballe_wrap_python.cc
 _dballe_la_LDFLAGS = -module
 _dballe_la_LIBADD = ../dballe/libdballe.la
 
-# ../doc/dballe-doc.i
-dballe_wrap_python.cc Dballe.py: dballe.i
+dballe_wrap_python.cc Dballe.py: dballe.i ../doc/dballe-doc.i
 	swig -python -c++ -I$(top_srcdir) -I/usr/include -o $@ $<
 
 python-dballe.rst: doc-dballe $(pkgpython_PYTHON) dballe dballe.i _dballe.so
