@@ -37,25 +37,6 @@
 #include <cstdio>
 
 #include <sql.h>
-#if 0
-#include "attr.h"
-#include <dballe/core/verbose.h>
-#include <dballe/core/aliases.h>
-
-#include <config.h>
-
-#include <sql.h>
-#include <sqlext.h>
-#include <sqltypes.h>
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
-
-#include <assert.h>
-#endif
 
 using namespace std;
 using namespace wreport;
@@ -598,7 +579,7 @@ void DB::drop_table_if_exists(const char* name)
     if (conn->server_type == db::MYSQL)
     {
         len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", name);
-        stm.exec_direct(buf, len);
+        stm.exec_direct_and_close(buf, len);
     } else {
         switch (conn->server_type)
         {
@@ -610,7 +591,7 @@ void DB::drop_table_if_exists(const char* name)
         }
 
         len = snprintf(buf, 100, "DROP TABLE %s", name);
-        stm.exec_direct(buf, len);
+        stm.exec_direct_and_close(buf, len);
     }
     conn->commit();
 }
@@ -731,7 +712,7 @@ void DB::reset(const char* repinfo_file)
     }
     /* Create tables */
     for (int i = 0; i < query_count; i++)
-        stm.exec_direct(queries[i]);
+        stm.exec_direct_and_close(queries[i]);
 
     /* Populate the tables with values */
     {
@@ -898,9 +879,8 @@ int DB::last_station_insert_id()
     else
     {
         stm_last_insert_id->execute();
-        if (!stm_last_insert_id->fetch())
+        if (!stm_last_insert_id->fetch_expecting_one())
             throw error_consistency("no last insert ID value returned from database");
-        stm_last_insert_id->close_cursor();
         return m_last_insert_id;
     }
 }
@@ -912,9 +892,8 @@ int DB::last_context_insert_id()
     else
     {
         stm_last_insert_id->execute();
-        if (!stm_last_insert_id->fetch())
+        if (!stm_last_insert_id->fetch_expecting_one())
             throw error_consistency("no last insert ID value returned from database");
-        stm_last_insert_id->close_cursor();
         return m_last_insert_id;
     }
 }
@@ -1105,8 +1084,8 @@ void DB::remove(const Record& rec)
     /* Iterate all the results, deleting them */
     while (c.next())
     {
-        stmd.execute();
-        stma.execute();
+        stmd.execute_and_close();
+        stma.execute_and_close();
     }
     t.commit();
 }
@@ -1133,7 +1112,7 @@ void DB::remove_orphans()
 
     // Delete orphan contexts
     db::Statement stm(*conn);
-    stm.exec_direct(cclean);
+    stm.exec_direct_and_close(cclean);
 
 #if 0
     /* Done with context */
@@ -1143,7 +1122,7 @@ void DB::remove_orphans()
 #endif
 
     // Delete orphan stations
-    stm.exec_direct(pclean);
+    stm.exec_direct_and_close(pclean);
 
     t.commit();
 }
@@ -1424,7 +1403,7 @@ void DB::attr_remove(int id_context, wreport::Varcode id_var, const std::vector<
     db::Statement stm(*conn);
     stm.bind_in(1, in_id_context);
     stm.bind_in(2, id_var);
-    stm.exec_direct(query.c_str());
+    stm.exec_direct_and_close(query.c_str());
 }
 
 void DB::dump(FILE* out)

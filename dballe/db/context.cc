@@ -126,12 +126,10 @@ int Context::get_id()
 
     /* Get the result */
     int res;
-    if (sstm->fetch())
+    if (sstm->fetch_expecting_one())
         res = id;
     else
         res = -1;
-
-    sstm->close_cursor();
 
     return res;
 }
@@ -140,9 +138,8 @@ void Context::get_data(int qid)
 {
     id = qid;
     sdstm->execute();
-    if (!sdstm->fetch())
+    if (!sdstm->fetch_expecting_one())
         error_notfound::throwf("no data found for context id %d", qid);
-    sdstm->close_cursor();
 }
 
 int Context::obtain_station_info()
@@ -168,13 +165,13 @@ int Context::obtain_station_info()
 
 int Context::insert()
 {
-    istm->execute();
+    istm->execute_and_close();
     return db.last_context_insert_id();
 }
 
 void Context::remove()
 {
-    dstm->execute();
+    dstm->execute_and_close();
 }
 
 void Context::dump(FILE* out)

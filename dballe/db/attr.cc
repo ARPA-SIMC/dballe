@@ -130,12 +130,12 @@ void Attr::insert(bool replace)
     {
         if (conn.server_type == POSTGRES)
         {
-            if (rstm->execute() == SQL_NO_DATA)
-                istm->execute();
+            if (rstm->execute_and_close() == SQL_NO_DATA)
+                istm->execute_and_close();
         } else
-            rstm->execute();
+            rstm->execute_and_close();
     } else
-        istm->execute();
+        istm->execute_and_close();
 }
 
 void Attr::load(wreport::Var& var)
@@ -179,6 +179,7 @@ void Attr::dump(FILE* out)
                 fprintf(out, " %.*s\n", (int)value_ind, value);
     }
     fprintf(out, "%d element%s in table attr\n", count, count != 1 ? "s" : "");
+    stm.close_cursor();
 }
 
 } // namespace db

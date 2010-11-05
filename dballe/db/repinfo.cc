@@ -351,15 +351,13 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 			{
 				id = cache[i].id;
 				stm.execute();
-				if (!stm.fetch())
+				if (!stm.fetch_expecting_one())
 					error_consistency::throwf("%s is in cache but not in the database (database externally modified?)",
 							cache[i].memo.c_str());
 				if (count > 0)
 					error_consistency::throwf(
 							"trying to delete repinfo entry %u,%s which is currently in use",
 							(unsigned)cache[i].id, cache[i].memo.c_str());
-
-				stm.close_cursor();
 			}
 		}
 	}
@@ -374,9 +372,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 			if (!cache[i].memo.empty() && cache[i].new_memo.empty())
 			{
 				stm.bind_in(1, cache[i].id);
-				stm.execute();
-				// This causes an error on Oracle
-				// stm.close_cursor();
+				stm.execute_and_close();
 
 				/* clear_cache_item(&(ri->cache[i])); */
 				++*deleted;
@@ -398,7 +394,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 				stm.bind_in(5, cache[i].new_tablea);
 				stm.bind_in(6, cache[i].id);
 
-				stm.execute();
+				stm.execute_and_close();
 
 				/* commit_cache_item(&(ri->cache[i])); */
 				++*updated;
@@ -422,7 +418,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 			stm.bind_in(5, i->new_descriptor.c_str());
 			stm.bind_in(6, i->new_tablea);
 
-			stm.execute();
+			stm.execute_and_close();
 
 			/* DBA_RUN_OR_GOTO(cleanup, cache_append(ri, id, memo, description, prio, descriptor, tablea)); */
 			++*added;

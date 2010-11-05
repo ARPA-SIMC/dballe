@@ -123,6 +123,9 @@ struct Cursor
      */
     bool next();
 
+    /// Discard the results that have not been read yet
+    void discard_rest();
+
     /**
      * Fill in a record with the contents of a dba_db_cursor
      *

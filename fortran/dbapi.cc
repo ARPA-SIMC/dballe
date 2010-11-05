@@ -50,8 +50,16 @@ DbAPI::DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attr
 
 DbAPI::~DbAPI()
 {
-    if (ana_cur) delete ana_cur;
-    if (query_cur) delete query_cur;
+    if (ana_cur)
+    {
+        ana_cur->discard_rest();
+        delete ana_cur;
+    }
+    if (query_cur)
+    {
+        query_cur->discard_rest();
+        delete query_cur;
+    }
 }
 
 void DbAPI::scopa(const char* repinfofile)
@@ -66,6 +74,7 @@ int DbAPI::quantesono()
 {
     if (ana_cur != NULL)
     {
+        ana_cur->discard_rest();
         delete ana_cur;
         ana_cur = 0;
     }
@@ -102,6 +111,7 @@ int DbAPI::voglioquesto()
 {
     if (query_cur != NULL)
     {
+        query_cur->discard_rest();
         delete query_cur;
         query_cur = NULL;
     }

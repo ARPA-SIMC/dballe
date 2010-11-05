@@ -290,7 +290,14 @@ bool Cursor::next()
     bool res = stm->fetch();
     if (count != -1)
         --count;
+    if (!res)
+        stm->close_cursor();
     return res;
+}
+
+void Cursor::discard_rest()
+{
+    stm->close_cursor();
 }
 
 void Cursor::to_record(Record& rec)

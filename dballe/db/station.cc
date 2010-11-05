@@ -134,11 +134,10 @@ int Station::get_id()
     db::Statement* stm = ident_ind == SQL_NULL_DATA ? sfstm : smstm;
     stm->execute();
     int res;
-    if (stm->fetch())
+    if (stm->fetch_expecting_one())
         res = id;
     else
         res = -1;
-    stm->close_cursor();
     return res;
 }
 
@@ -146,27 +145,26 @@ void Station::get_data(int qid)
 {
     id = qid;
     sstm->execute();
-    if (!sstm->fetch())
+    if (!sstm->fetch_expecting_one())
         error_notfound::throwf("looking for information for station id %d", qid);
-    sstm->close_cursor();
     if (ident_ind == SQL_NULL_DATA)
         ident[0] = 0;
 }
 
 int Station::insert()
 {
-    istm->execute();
+    istm->execute_and_close();
     return db.last_station_insert_id();
 }
 
 void Station::update()
 {
-    ustm->execute();
+    ustm->execute_and_close();
 }
 
 void Station::remove()
 {
-    dstm->execute();
+    dstm->execute_and_close();
 }
 
 void Station::dump(FILE* out)
@@ -191,6 +189,7 @@ void Station::dump(FILE* out)
         else
             fprintf(out, " %d, %.5f, %.5f, %.*s\n", (int)id, lat/10000.0, lon/10000.0, (int)ident_ind, ident);
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
+    stm.close_cursor();
 }
 
 } // namespace db

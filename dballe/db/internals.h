@@ -64,6 +64,10 @@ namespace db {
 
 /** @} */
 
+// Define this to get warnings when a Statement is closed but its data have not
+// all been read yet
+// #define DEBUG_WARN_OPEN_TRANSACTIONS
+
 /**
  * Report an ODBC error, using informations from the ODBC diagnostic record
  */
@@ -165,6 +169,11 @@ struct Statement
     SQLHSTMT stm;
     /// If non-NULL, ignore all errors with this code
     const char* ignore_error;
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    /// Debugging aids: dump query to stderr if destructor is called before fetch returned SQL_NO_DATA
+    std::string debug_query;
+    bool debug_reached_completion;
+#endif
 
     Statement(Connection& conn);
     ~Statement();
@@ -190,12 +199,22 @@ struct Statement
     void prepare(const char* query);
     void prepare(const char* query, int qlen);
 
-    void exec_direct(const char* query);
-    void exec_direct(const char* query, int qlen);
-
     /// @return SQLExecute's result
     int execute();
+    /// @return SQLExecute's result
+    int exec_direct(const char* query);
+    /// @return SQLExecute's result
+    int exec_direct(const char* query, int qlen);
+
+    /// @return SQLExecute's result
+    int execute_and_close();
+    /// @return SQLExecute's result
+    int exec_direct_and_close(const char* query);
+    /// @return SQLExecute's result
+    int exec_direct_and_close(const char* query, int qlen);
+
     bool fetch();
+    bool fetch_expecting_one();
     void close_cursor();
     size_t rowcount();
 

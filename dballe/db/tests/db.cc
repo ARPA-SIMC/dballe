@@ -510,6 +510,7 @@ void to::test<7>()
         query.clear();
         auto_ptr<db::Cursor> cur = db->query_data(query);
         ensure_equals(cur->remaining(), 4);
+        cur->discard_rest();
 
         query.clear();
         query.set(DBA_KEY_YEARMIN, 1945);
@@ -523,6 +524,7 @@ void to::test<7>()
         query.clear();
         cur = db->query_data(query);
         ensure_equals(cur->remaining(), 2);
+        cur->discard_rest();
 
         // Did it remove the right ones?
         query.clear();
@@ -602,6 +604,7 @@ void to::test<8>()
         ensure_equals(cur->count, 0); \
         ensure_varcode_equals(cur->out_varcode, WR_VAR(0, 1, 12)); \
         ensure(result.contains(ab)); \
+        cur->discard_rest(); \
 } while(0)
 
         /* Year */
@@ -807,6 +810,7 @@ void to::test<9>()
         while (cur->next())
                 if (cur->out_varcode == WR_VAR(0, 1, 11))
                 {
+                        cur->discard_rest();
                         found = true;
                         break;
                 }
@@ -971,6 +975,7 @@ void to::test<13>()
 
         auto_ptr<db::Cursor> cur = db->query_data(query);
         ensure_equals(cur->remaining(), 2);
+        cur->discard_rest();
 }
 
 // This query caused problems
@@ -1049,6 +1054,7 @@ void to::test<16>()
 
         db::Cursor cur(*db);
         ensure_equals(cur.query(query, DBA_DB_WANT_VAR_VALUE, 0), 4);
+        cur.discard_rest();
 }
 
 // Query with an incorrect attr_filter
@@ -1138,6 +1144,8 @@ void to::test<18>()
 
                 ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
                 ensure_equals(result[DBA_KEY_REP_COD].enqi(), 255);
+
+                cur.discard_rest();
         }
 
         // Query with querybest and priomax
@@ -1162,6 +1170,8 @@ void to::test<18>()
 
                 ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
                 ensure_equals(result[DBA_KEY_REP_COD].enqi(), 11);
+
+                cur.discard_rest();
         }
 }
 

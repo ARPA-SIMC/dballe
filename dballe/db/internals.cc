@@ -29,19 +29,9 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <iostream>
 #if 0
-
-#define _GNU_SOURCE
-#include <dballe/db/repinfo.h>
-#include <dballe/db/pseudoana.h>
-#include <dballe/db/context.h>
-#include <dballe/db/data.h>
-#include <dballe/db/attr.h>
-#include <dballe/core/verbose.h>
-
 #include <config.h>
-
-#include <assert.h>
 #endif
 
 using namespace std;
@@ -218,6 +208,9 @@ void Connection::rollback() {}
 
 Statement::Statement(Connection& conn)
     : /*conn(conn),*/ stm(NULL), ignore_error(NULL)
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+      , debug_reached_completion(true)
+#endif
 {
     int sqlres = SQLAllocHandle(SQL_HANDLE_STMT, conn.od_conn, &stm);
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
@@ -226,6 +219,14 @@ Statement::Statement(Connection& conn)
 
 Statement::~Statement()
 {
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    if (!debug_reached_completion)
+    {
+        throw error_consistency("Statement " + debug_query + " destroyed before reaching completion");
+        close_cursor();
+        SQLCloseCursor(stm);
+    }
+#endif
     SQLFreeHandle(SQL_HANDLE_STMT, stm);
 }
 
@@ -337,21 +338,27 @@ void Statement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val)
     SQLBindCol(stm, idx, SQL_C_TYPE_TIMESTAMP, &val, sizeof(val), 0);
 }
 
-int Statement::execute()
-{
-    int sqlres = SQLExecute(stm);
-    if (is_error(sqlres))
-        throw error_odbc(SQL_HANDLE_STMT, stm, "executing precompiled query");
-    return sqlres;
-}
-
 bool Statement::fetch()
 {
     int sqlres = SQLFetch(stm);
     if (sqlres == SQL_NO_DATA)
+    {
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+        debug_reached_completion = true;
+#endif
         return false;
+    }
     if (is_error(sqlres))
         throw error_odbc(SQL_HANDLE_STMT, stm, "fetching data");
+    return true;
+}
+
+bool Statement::fetch_expecting_one()
+{
+    if (!fetch()) return false;
+    if (fetch())
+        throw error_consistency("expecting only one result from statement");
+    close_cursor();
     return true;
 }
 
@@ -377,10 +384,16 @@ void Statement::close_cursor()
     int sqlres = SQLCloseCursor(stm);
     if (is_error(sqlres))
         throw error_odbc(SQL_HANDLE_STMT, stm, "closing cursor");
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_reached_completion = true;
+#endif
 }
 
 void Statement::prepare(const char* query)
 {
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_query = query;
+#endif
     // Casting out 'const' because ODBC API is not const-conscious
     if (is_error(SQLPrepare(stm, (unsigned char*)query, SQL_NTS)))
         error_odbc::throwf(SQL_HANDLE_STMT, stm, "compiling query \"%s\"", query);
@@ -388,24 +401,105 @@ void Statement::prepare(const char* query)
 
 void Statement::prepare(const char* query, int qlen)
 {
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_query = string(query, qlen);
+#endif
     // Casting out 'const' because ODBC API is not const-conscious
     if (is_error(SQLPrepare(stm, (unsigned char*)query, qlen)))
         error_odbc::throwf(SQL_HANDLE_STMT, stm, "compiling query \"%.*s\"", qlen, query);
 }
 
-void Statement::exec_direct(const char* query)
+int Statement::execute()
 {
-    // Casting out 'const' because ODBC API is not const-conscious
-    if (is_error(SQLExecDirect(stm, (SQLCHAR*)query, SQL_NTS)))
-        error_odbc::throwf(SQL_HANDLE_STMT, stm, "executing query \"%s\"", query);
+    int sqlres = SQLExecute(stm);
+    if (is_error(sqlres))
+        throw error_odbc(SQL_HANDLE_STMT, stm, "executing precompiled query");
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_reached_completion = false;
+#endif
+    return sqlres;
 }
 
-void Statement::exec_direct(const char* query, int qlen)
+int Statement::exec_direct(const char* query)
 {
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_query = query;
+#endif
     // Casting out 'const' because ODBC API is not const-conscious
-    if (is_error(SQLExecDirect(stm, (SQLCHAR*)query, qlen)))
-        error_odbc::throwf(SQL_HANDLE_STMT, stm, "executing query \"%.*s\"", qlen, query);
+    int sqlres = SQLExecDirect(stm, (SQLCHAR*)query, SQL_NTS);
+    if (is_error(sqlres))
+        error_odbc::throwf(SQL_HANDLE_STMT, stm, "executing query \"%s\"", query);
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_reached_completion = false;
+#endif
+    return sqlres;
 }
+
+int Statement::exec_direct(const char* query, int qlen)
+{
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_query = string(query, qlen);
+#endif
+    // Casting out 'const' because ODBC API is not const-conscious
+    int sqlres = SQLExecDirect(stm, (SQLCHAR*)query, qlen);
+    if (is_error(sqlres))
+        error_odbc::throwf(SQL_HANDLE_STMT, stm, "executing query \"%.*s\"", qlen, query);
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_reached_completion = false;
+#endif
+    return sqlres;
+}
+
+int Statement::execute_and_close()
+{
+    int sqlres = SQLExecute(stm);
+    if (is_error(sqlres))
+        throw error_odbc(SQL_HANDLE_STMT, stm, "executing precompiled query");
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_reached_completion = false;
+#endif
+    close_cursor();
+    // This causes an error on Oracle?
+    // stm.close_cursor();
+    return sqlres;
+}
+
+int Statement::exec_direct_and_close(const char* query)
+{
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_query = query;
+#endif
+    // Casting out 'const' because ODBC API is not const-conscious
+    int sqlres = SQLExecDirect(stm, (SQLCHAR*)query, SQL_NTS);
+    if (is_error(sqlres))
+        error_odbc::throwf(SQL_HANDLE_STMT, stm, "executing query \"%s\"", query);
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_reached_completion = false;
+#endif
+    close_cursor();
+    // This causes an error on Oracle?
+    // stm.close_cursor();
+    return sqlres;
+}
+
+int Statement::exec_direct_and_close(const char* query, int qlen)
+{
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_query = string(query, qlen);
+#endif
+    // Casting out 'const' because ODBC API is not const-conscious
+    int sqlres = SQLExecDirect(stm, (SQLCHAR*)query, qlen);
+    if (is_error(sqlres))
+        error_odbc::throwf(SQL_HANDLE_STMT, stm, "executing query \"%.*s\"", qlen, query);
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_reached_completion = false;
+#endif
+    close_cursor();
+    // This causes an error on Oracle?
+    // stm.close_cursor();
+    return sqlres;
+}
+
 
 Sequence::Sequence(Connection& conn, const char* name)
     : Statement(conn)

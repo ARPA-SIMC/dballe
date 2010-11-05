@@ -140,26 +140,29 @@ void Data::set_value(const char* qvalue)
 
 void Data::insert_or_fail()
 {
-    istm->execute();
+    istm->execute_and_close();
 }
 
 bool Data::insert_or_ignore()
 {
     int sqlres = iistm->execute();
+    bool res;
     if (conn.server_type == POSTGRES || conn.server_type == ORACLE)
-        return ((sqlres == SQL_SUCCESS) || (sqlres == SQL_SUCCESS_WITH_INFO));
+        res = ((sqlres == SQL_SUCCESS) || (sqlres == SQL_SUCCESS_WITH_INFO));
     else
-        return iistm->rowcount() != 0;
+        res = iistm->rowcount() != 0;
+    iistm->close_cursor();
+    return res;
 }
 
 void Data::insert_or_overwrite()
 {
     if (conn.server_type == POSTGRES)
     {
-        if (ustm->execute() == SQL_NO_DATA)
-            istm->execute();
+        if (ustm->execute_and_close() == SQL_NO_DATA)
+            istm->execute_and_close();
     } else
-        ustm->execute();
+        ustm->execute_and_close();
 }
 
 void Data::dump(FILE* out)
@@ -187,6 +190,7 @@ void Data::dump(FILE* out)
                 fprintf(out, " %.*s\n", (int)value_ind, value);
     }
     fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
+    stm.close_cursor();
 }
 
 } // namespace db
