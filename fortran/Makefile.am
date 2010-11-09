@@ -23,13 +23,26 @@ libdballef_la_LIBADD = ../dballe/libdballe.la -lcnf
 libdballef_la_LDFLAGS = -version-info @LIBDBALLEF_VERSION_INFO@
 
 
-# Tests
+#
+# Unit testing
+#
 
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
-check_PROGRAMS = check_fdballe check_attrs check_missing check_real0 check_range
+check_PROGRAMS = check_fdballe check_attrs check_missing check_real0 check_range tut_test
 TESTS = $(check_PROGRAMS)
 testlib = dbtest.f90
+
+CXXFLAGS += -O0
+
+tut_test_SOURCES = \
+	msgapi-tut.cc \
+	../dballe/core/test-utils-core.cc \
+	../dballe/core/tests/tut-main.cpp
+tut_test_LDADD = \
+	libdballef.la \
+	$(WREPORT_LIBS) \
+	$(WIBBLE_LIBS)
 
 check_fdballe_SOURCES = $(testlib) check_fdballe.f90
 check_fdballe_LDADD = ./libdballef.la -lcnf -lpopt
