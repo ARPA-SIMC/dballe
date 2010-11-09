@@ -31,7 +31,7 @@ my @descs = (
 my @notes = (
 	q{Validity time is defined as the time at which the data are measured or at which forecast is valid; for statistical processing data, the validity time is the end of the time interval.},
 
-	q{The reference time is defined as the nominal time for report or model output (start of forecast time).}
+	q{The reference time is defined as the nominal time for report or model output (start of forecast time).},
 
 	q{For instantaneous values: the date and time in DB-All.e are the validity date and time of a value; P1 and P2 are 0.},
 
