@@ -334,7 +334,7 @@ struct DumpText : public cmdline::Action
 			printf("Data:\n");
 			for (size_t j = 0; j < subset.size(); ++j)
 			{
-				const Var& var = subset[i];
+				const Var& var = subset[j];
 				printf(" ");
 				print_var(var);
 				for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
