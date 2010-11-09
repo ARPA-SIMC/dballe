@@ -458,9 +458,10 @@ int Statement::execute_and_close()
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_reached_completion = false;
 #endif
-    close_cursor();
-    // This causes an error on Oracle?
-    // stm.close_cursor();
+    // If the query raised an error that we are ignoring, closing the cursor
+    // would raise invalid cursor state
+    if (sqlres != SQL_ERROR && columns_count() > 0)
+        close_cursor();
     return sqlres;
 }
 
@@ -476,9 +477,10 @@ int Statement::exec_direct_and_close(const char* query)
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_reached_completion = false;
 #endif
-    close_cursor();
-    // This causes an error on Oracle?
-    // stm.close_cursor();
+    // If the query raised an error that we are ignoring, closing the cursor
+    // would raise invalid cursor state
+    if (sqlres != SQL_ERROR && columns_count() > 0)
+        close_cursor();
     return sqlres;
 }
 
@@ -494,12 +496,21 @@ int Statement::exec_direct_and_close(const char* query, int qlen)
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_reached_completion = false;
 #endif
-    close_cursor();
-    // This causes an error on Oracle?
-    // stm.close_cursor();
+    // If the query raised an error that we are ignoring, closing the cursor
+    // would raise invalid cursor state
+    if (sqlres != SQL_ERROR && columns_count() > 0)
+        close_cursor();
     return sqlres;
 }
 
+int Statement::columns_count()
+{
+    SQLSMALLINT res;
+    int sqlres = SQLNumResultCols(stm, &res);
+    if (is_error(sqlres))
+        throw error_odbc(SQL_HANDLE_STMT, stm, "querying number of columns in the result set");
+    return res;
+}
 
 Sequence::Sequence(Connection& conn, const char* name)
     : Statement(conn)

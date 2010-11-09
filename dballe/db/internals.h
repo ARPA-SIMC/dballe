@@ -213,6 +213,11 @@ struct Statement
     /// @return SQLExecute's result
     int exec_direct_and_close(const char* query, int qlen);
 
+    /**
+     * @return the number of columns in the result set (or 0 if the statement
+     * did not return columns)
+     */
+    int columns_count();
     bool fetch();
     bool fetch_expecting_one();
     void close_cursor();

@@ -151,7 +151,8 @@ bool Data::insert_or_ignore()
         res = ((sqlres == SQL_SUCCESS) || (sqlres == SQL_SUCCESS_WITH_INFO));
     else
         res = iistm->rowcount() != 0;
-    iistm->close_cursor();
+    if (res && iistm->columns_count() > 0)
+        iistm->close_cursor();
     return res;
 }
 
