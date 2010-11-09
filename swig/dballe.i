@@ -323,13 +323,13 @@ namespace std {
                                 self.getvar(kr).set(getattr(dt, kd))
                 def _macro_set_level(self, tu):
                         for idx, key in enumerate(self.KEYS_LEVEL):
-                                if idx >= len(tu) or tu[idx] is None:
+                                if tu is None or idx >= len(tu) or tu[idx] is None:
                                         self.unset(key)
                                 else:
                                         self.getvar(key).set(tu[idx])
                 def _macro_set_trange(self, tu):
                         for idx, key in enumerate(self.KEYS_TRANGE):
-                                if idx >= len(tu) or tu[idx] is None:
+                                if tu is None or idx >= len(tu) or tu[idx] is None:
                                         self.unset(key)
                                 else:
                                         self.getvar(key).set(tu[idx])
