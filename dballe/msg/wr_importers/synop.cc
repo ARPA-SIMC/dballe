@@ -414,7 +414,7 @@ void SynopImporter::import_var(const Var& var)
             if (time_period == MISSING_INT)
                 set_gen_sensor(var, WR_VAR(0, 11, 1), Level(103, 10*1000), Trange::instant());
             else
-                set_gen_sensor(var, WR_VAR(0, 11, 1), Level(103, 10*1000), Trange(0, time_period, -time_period));
+                set_gen_sensor(var, WR_VAR(0, 11, 1), Level(103, 10*1000), Trange(0, 0, -time_period));
             break;
         case WR_VAR(0, 11,  2):
             if (time_sig != MISSING_TIME_SIG && time_sig != 2)
@@ -422,19 +422,19 @@ void SynopImporter::import_var(const Var& var)
             if (time_period == MISSING_INT)
                 set_gen_sensor(var, WR_VAR(0, 11, 2), Level(103, 10*1000), Trange::instant());
             else
-                set_gen_sensor(var, WR_VAR(0, 11, 2), Level(103, 10*1000), Trange(0, time_period, -time_period));
+                set_gen_sensor(var, WR_VAR(0, 11, 2), Level(103, 10*1000), Trange(0, 0, -time_period));
             break;
         case WR_VAR(0, 11, 43):
             if (time_period == MISSING_INT)
                 set_gen_sensor(var, WR_VAR(0, 11, 43), Level(103, 10*1000), Trange(205));
             else
-                set_gen_sensor(var, WR_VAR(0, 11, 43), Level(103, 10*1000), Trange(205, time_period, -time_period));
+                set_gen_sensor(var, WR_VAR(0, 11, 43), Level(103, 10*1000), Trange(205, 0, -time_period));
             break;
         case WR_VAR(0, 11, 41):
             if (time_period == MISSING_INT)
                 set_gen_sensor(var, WR_VAR(0, 11, 41), Level(103, 10*1000), Trange(205));
             else
-                set_gen_sensor(var, WR_VAR(0, 11, 41), Level(103, 10*1000), Trange(205, time_period, -time_period));
+                set_gen_sensor(var, WR_VAR(0, 11, 41), Level(103, 10*1000), Trange(205, 0, -time_period));
             break;
         case WR_VAR(0, 11, 11): msg->set_wind_dir_var(var); break;
         case WR_VAR(0, 11, 12): msg->set_wind_speed_var(var); break;
@@ -445,7 +445,7 @@ void SynopImporter::import_var(const Var& var)
             if (time_period == MISSING_INT)
                 msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1));
             else
-                msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, time_period, -time_period));
+                msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
             break;
 
 /* Radiation data */

@@ -179,8 +179,8 @@ void to::test<5>()
     IS(latitude, 50.07361); IS(longitude, 12.40333);
     IS(height, 483.0); IS(height_baro, 490.0);
     IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
-    IS2(WR_VAR(0, 11, 1), Level(103, 10000), Trange(0, -600, 600), 0.0); // wind_dir
-    IS2(WR_VAR(0, 11, 2), Level(103, 10000), Trange(0, -600, 600), 1.0); // wind_speed
+    IS2(WR_VAR(0, 11, 1), Level(103, 10000), Trange(0, 0, 600), 0.0); // wind_dir
+    IS2(WR_VAR(0, 11, 2), Level(103, 10000), Trange(0, 0, 600), 1.0); // wind_speed
     IS(temp_2m, 273.05); IS(dewpoint_2m, 271.35); IS(humidity, 88.0);
     IS(visibility, 14000.0); IS(pres_wtr, 508);
     IS2(WR_VAR(0, 20, 4), Level(1), Trange(205, 0, -10800), 10); // past_wtr1
@@ -211,8 +211,8 @@ void to::test<6>()
     IS2(WR_VAR(0, 10, 51), Level(102, 490000), Trange::instant(), 101060.0); // press_msl
     IS2(WR_VAR(0, 10, 63), Level(102, 490000), Trange(205, 0,10800), 6.0); // press_tend
     IS2(WR_VAR(0, 10, 60), Level(102, 490000), Trange(4, 0, 10800), -110.0); // press_3h
-    IS2(WR_VAR(0, 11, 1), Level(103, 10000), Trange(0, -600, 600), 0.0); // wind_dir
-    IS2(WR_VAR(0, 11, 2), Level(103, 10000), Trange(0, -600, 600), 1.0); // wind_speed
+    IS2(WR_VAR(0, 11, 1), Level(103, 10000), Trange(0, 0, 600), 0.0); // wind_dir
+    IS2(WR_VAR(0, 11, 2), Level(103, 10000), Trange(0, 0, 600), 1.0); // wind_speed
     IS2(WR_VAR(0, 12, 101), Level(103, 2050), Trange::instant(), 273.05); // temp_2m
     IS2(WR_VAR(0, 12, 103), Level(103, 2050), Trange::instant(), 271.35); // dewpoint_2m
     IS2(WR_VAR(0, 13,   3), Level(103, 2050), Trange::instant(), 88.0); // humidity
@@ -341,11 +341,11 @@ void to::test<9>()
     gen_ensure_equals(msg->type, MSG_SYNOP);
 
     // Check the context information for the wind data
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 1), 103, 10000, 0, 0, 0, -600, 600)) != NULL);
+    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 1), 103, 10000, 0, 0, 0, 0, 600)) != NULL);
     CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 140);
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 205, -600, 600)) != NULL);
+    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 205, 0, 600)) != NULL);
     CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 15.4);
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 205, -10800, 10800)) != NULL);
+    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 205, 0, 10800)) != NULL);
     CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 15.4);
 
     dba_msgs_delete(msgs);
