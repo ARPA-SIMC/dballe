@@ -177,6 +177,8 @@ static std::string format_seconds(int val)
 	static const int bufsize = 128;
 	char buf[bufsize];
 
+	if (val == MISSING_INT) return "-";
+
 	int i = 0;
 	if (val / (3600*24) != 0)
 	{
@@ -198,45 +200,53 @@ static std::string format_seconds(int val)
 	if (i > 0)
 		--i;
 	else
+	{
 		strncpy(buf, "0", bufsize);
+		i = 1;
+	}
 	buf[i] = 0;
 
 	return buf;
 }
 
+static std::string mkdesc(const std::string& root, int p1, int p2)
+{
+	if (p1 == MISSING_INT && p2 == MISSING_INT)
+		return root;
+
+	string res = root;
+	if (p2 != MISSING_INT)
+		res += " over " + format_seconds(p2);
+
+	if (p1 == MISSING_INT)
+		return res;
+	if (p1 < 0)
+		return res + format_seconds(-p1) + " before reference time";
+	return res + " at forecast time " + format_seconds(p1);
+}
+
 std::string Trange::describe() const
 {
-	string duration;
-	string offset;
-
-	if (p1 != MISSING_INT)
-		offset = ", forecast time " + format_seconds(p1);
-
-	if (p2 == MISSING_INT)
-		duration = " (instant)";
-	else
-		offset = " over " + format_seconds(p1);
-
 	switch (pind)
 	{
-		case 0:   return "Average" + duration + offset;
-		case 1:   return "Accumulation" + duration + offset;
-		case 2:   return "Maximum over" + duration + offset;
-		case 3:   return "Minimum over" + duration + offset;
-		case 4:   return "Difference (end minus beginning)" + duration + offset;
-		case 5:   return "Root Mean Square" + duration + offset;
-		case 6:   return "Standard Deviation" + duration + offset;
-		case 7:   return "Covariance (temporal variance)" + duration + offset;
-		case 8:   return "Difference (beginning minus end)" + duration + offset;
-		case 9:   return "Ratio" + duration + offset;
-		case 51:  return "Climatological Mean Value" + duration + offset;
-		case 200: return "Vectorial mean" + duration + offset;
-		case 201: return "Mode" + duration + offset;
-		case 202: return "Standard deviation vectorial mean" + duration + offset;
-		case 203: return "Vectorial maximum" + duration + offset;
-		case 204: return "Vectorial minimum" + duration + offset;
-		case 205: return "Product with a valid time ranging" + duration + offset;
-		case 254: return "Instantaneous value" + offset;
+		case 0:   return mkdesc("Average", p1, p2);
+		case 1:   return mkdesc("Accumulation", p1, p2);
+		case 2:   return mkdesc("Maximum", p1, p2);
+		case 3:   return mkdesc("Minimum", p1, p2);
+		case 4:   return mkdesc("Difference (end minus beginning)", p1, p2);
+		case 5:   return mkdesc("Root Mean Square", p1, p2);
+		case 6:   return mkdesc("Standard Deviation", p1, p2);
+		case 7:   return mkdesc("Covariance (temporal variance)", p1, p2);
+		case 8:   return mkdesc("Difference (beginning minus end)", p1, p2);
+		case 9:   return mkdesc("Ratio", p1, p2);
+		case 51:  return mkdesc("Climatological Mean Value", p1, p2);
+		case 200: return mkdesc("Vectorial mean", p1, p2);
+		case 201: return mkdesc("Mode", p1, p2);
+		case 202: return mkdesc("Standard deviation vectorial mean", p1, p2);
+		case 203: return mkdesc("Vectorial maximum", p1, p2);
+		case 204: return mkdesc("Vectorial minimum", p1, p2);
+		case 205: return mkdesc("Product with a valid time ranging", p1, p2);
+		case 254: return mkdesc("Instantaneous value", p1, p2);
 		default:  return fmtf("%d %d %d", pind, p1, p2);
 	}
 }
