@@ -51,7 +51,7 @@ check_range_SOURCES = $(testlib) check_range.f90
 check_range_LDADD = ./libdballef.la -lcnf -lpopt
 check_range_FCFLAGS = -g
 
-noinst_PROGRAMS = dump_dballe dumpmsg_dballe mkmsg genattr
+noinst_PROGRAMS = dump_dballe dumpmsg_dballe mkmsg mkmsg-sca genattr
 
 dump_dballe_SOURCES = dump_dballe.f90
 dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
@@ -64,6 +64,10 @@ dumpmsg_dballe_FCFLAGS = -g
 mkmsg_SOURCES = mkmsg.f90
 mkmsg_LDADD = ../fortran/libdballef.la -lcnf -lpopt
 mkmsg_FCFLAGS = -g 
+
+mkmsg_sca_SOURCES = mkmsg-sca.f90
+mkmsg_sca_LDADD = ../fortran/libdballef.la -lcnf -lpopt
+mkmsg_sca_FCFLAGS = -g 
 
 genattr_SOURCES = genattr.f90
 genattr_LDADD = ../fortran/libdballef.la -lcnf -lpopt

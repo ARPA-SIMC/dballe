@@ -268,6 +268,14 @@ public:
 	wreport::Var& get(dba_keyword parameter) { return key(parameter); }
 	wreport::Var& get(wreport::Varcode code) { return var(code); }
 	wreport::Var& get(const char* name);
+	template<typename K, typename T>
+	T get(K name, T default_value) const
+	{
+		if (const wreport::Var* v = peek(name))
+			return v->enq(default_value);
+		else
+			return default_value;
+	}
 	const wreport::Var& operator[](dba_keyword parameter) const { return key(parameter); }
 	const wreport::Var& operator[](wreport::Varcode code) const { return var(code); }
 	const wreport::Var& operator[](const char* name) const { return get(name); }

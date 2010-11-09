@@ -380,13 +380,13 @@ void MsgAPI::prendilo()
 	flushVars();
 	assert(vars.empty());
 
-	if (const Var* var = input.key_peek(DBA_KEY_LEVELTYPE1)) vars_level.ltype1 = var->enqi();
-	if (const Var* var = input.key_peek(DBA_KEY_L1))	 vars_level.l1 = var->enqi();
-	if (const Var* var = input.key_peek(DBA_KEY_LEVELTYPE2)) vars_level.ltype2 = var->enqi();
-	if (const Var* var = input.key_peek(DBA_KEY_L2))	 vars_level.l2 = var->enqi();
-	if (const Var* var = input.key_peek(DBA_KEY_PINDICATOR)) vars_trange.pind = var->enqi();
-	if (const Var* var = input.key_peek(DBA_KEY_P1))	 vars_trange.p1 = var->enqi();
-	if (const Var* var = input.key_peek(DBA_KEY_P2))	 vars_trange.p2 = var->enqi();
+	vars_level.ltype1 = input.get(DBA_KEY_LEVELTYPE1, MISSING_INT);
+	vars_level.l1 = input.get(DBA_KEY_L1, MISSING_INT);
+	vars_level.ltype2 = input.get(DBA_KEY_LEVELTYPE2, MISSING_INT);
+	vars_level.l2 = input.get(DBA_KEY_L2, MISSING_INT);
+	vars_trange.pind = input.get(DBA_KEY_PINDICATOR, MISSING_INT);
+	vars_trange.p1 = input.get(DBA_KEY_P1, MISSING_INT);
+	vars_trange.p2 = input.get(DBA_KEY_P2, MISSING_INT);
 	
 	for (vector<Var*>::const_iterator v = in_vars.begin(); v != in_vars.end(); ++v)
 		vars.push_back(new Var(**v));

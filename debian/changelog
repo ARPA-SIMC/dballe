@@ -7,8 +7,10 @@ dballe (5.2-1) unstable; urgency=low
      - Command line tools now properly turn exceptions into errors
      - Ported rconvert to rpy2 
      - Fixed timeranges when importing synops
+     - In fortran message API, treat levels and time ranges that are not set
+       as "missing" instead of "leave as they were before"
 
- -- Enrico Zini <enrico@debian.org>  Tue, 09 Nov 2010 11:37:02 +0000
+ -- Enrico Zini <enrico@debian.org>  Tue, 09 Nov 2010 15:08:24 +0000
 
 dballe (5.1-1) unstable; urgency=low
 
