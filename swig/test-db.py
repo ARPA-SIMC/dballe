@@ -29,9 +29,8 @@ class DballeTest(unittest.TestCase):
         data["B33036"] = 75
         self.db.attr_insert(self.context_id, "B01011", data)
 
-#       def tearDown(self):
-#               if self.db.valid():
-#               self.db.disconnect()
+    def tearDown(self):
+        self.db = None
 
     def testQueryAna(self):
         query = dballe.Record()
