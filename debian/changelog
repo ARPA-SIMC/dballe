@@ -9,8 +9,10 @@ dballe (5.2-1) unstable; urgency=low
      - Fixed timeranges when importing synops
      - In fortran message API, treat levels and time ranges that are not set
        as "missing" instead of "leave as they were before"
+     - In fortran message API, fixed bug whereby it would fail to advance from
+       the last subset to the next message
 
- -- Enrico Zini <enrico@debian.org>  Tue, 09 Nov 2010 15:08:24 +0000
+ -- Enrico Zini <enrico@debian.org>  Tue, 09 Nov 2010 15:35:25 +0000
 
 dballe (5.1-1) unstable; urgency=low
 

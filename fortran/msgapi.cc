@@ -95,7 +95,7 @@ bool MsgAPI::readNextMessage()
 	if (state & STATE_EOF)
 		return false;
 
-	if (msgs && curmsgidx < msgs->size())
+	if (msgs && curmsgidx < msgs->size() - 1)
 	{
 		++curmsgidx;
 		return true;
@@ -112,7 +112,7 @@ bool MsgAPI::readNextMessage()
 	Rawmsg raw;
 	if (file->read(raw))
 	{
-		msgs = new Msgs;	
+		msgs = new Msgs;
 		importer->from_rawmsg(raw, *msgs);
 		return true;
 	}
