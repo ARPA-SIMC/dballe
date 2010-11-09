@@ -29,11 +29,15 @@ my @descs = (
 );
 
 my @notes = (
+	q{Validity time is defined as the time at which the data are measured or at which forecast is valid; for statistical processing data, the validity time is the end of the time interval.},
+
+	q{The reference time is defined as the nominal time for report or model output (start of forecast time).}
+
 	q{For instantaneous values: the date and time in DB-All.e are the validity date and time of a value; P1 and P2 are 0.},
 
 	q{For statistically processed values (for example average, accumulation, extreme values): the date and time in DB-All.e are the date and time of end of the time interval.},
 	
-	q{P1 is defined as the difference in seconds between the time in DB-All.e ( validity date and time or end of the time interval ) and the reference time. It can be negative only when the time in DB-All.e is earlier than the reference time. In other words, Note that, for observed values, the reference time is the same as the time in DB-All.e, therefore for observed values P1 is always zero.},
+	q{P1 is defined as the difference in seconds from validity time and the reference time. For standard forecast it is the positive forecast time. Note that, for observed values, the reference time is the same as the validity time, therefore for observed values P1 is always zero.  P1 < 0 is a valid case for report containing data in the past with respect to the nominal report time},
 
 	q{P2 is defined as the duration of the period over which statistical processing, and is always positive. Note that, for non statistical values, P2 is always zero.},
 
