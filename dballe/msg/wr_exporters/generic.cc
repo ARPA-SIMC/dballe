@@ -100,13 +100,13 @@ struct Generic : public Template
         Level lev;
         Trange tr;
 
-	// Do the station context first
-	subset.store_variable_i(WR_VAR(0, 7, 192), 257);
+        // Do the station context first
+        subset.store_variable_i(WR_VAR(0, 7, 192), 257);
         if (repmemo)
             subset.store_variable(repmemo->code(), *repmemo);
         else if (msg.type != MSG_GENERIC)
             subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
-	if (const msg::Context* ctx = msg.find_station_context())
+        if (const msg::Context* ctx = msg.find_station_context())
             for (size_t j = 0; j < ctx->data.size(); ++j)
             {
                 const Var& var = *(ctx->data[j]);
@@ -122,13 +122,13 @@ struct Generic : public Template
                                 WR_VAR_X(attr->code()), WR_VAR_Y(attr->code()));
                     subset.store_variable(attr->code(), *attr);
                 }
-	    }
+            }
 
-	// Then do the other contexts
+        // Then do the other contexts
         for (size_t i = 0; i < msg.data.size(); ++i)
         {
             const msg::Context& ctx = *msg.data[i];
-	    if (ctx.is_station()) continue;
+            if (ctx.is_station()) continue;
 
             for (size_t j = 0; j < ctx.data.size(); ++j)
             {

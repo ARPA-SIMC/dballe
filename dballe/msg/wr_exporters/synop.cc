@@ -162,7 +162,7 @@ struct SynopLand : public Synop
         }
 
         bulletin.load_tables();
-	}
+    }
 
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
@@ -249,7 +249,7 @@ struct SynopLandHigh : public Synop
         }
 
         bulletin.load_tables();
-	}
+    }
 
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {

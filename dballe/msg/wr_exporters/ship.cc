@@ -82,57 +82,57 @@ struct ShipBase : public Template
 
         // Data descriptor section
         bulletin.datadesc.clear();
-	bulletin.datadesc.push_back(WR_VAR(3,  8,   4));
-	bulletin.datadesc.push_back(WR_VAR(0, 12,   5));
-	bulletin.datadesc.push_back(WR_VAR(0, 10, 197));
+        bulletin.datadesc.push_back(WR_VAR(3,  8,   4));
+        bulletin.datadesc.push_back(WR_VAR(0, 12,   5));
+        bulletin.datadesc.push_back(WR_VAR(0, 10, 197));
         if (!is_crex)
-	{
-		bulletin.datadesc.push_back(WR_VAR(2, 22,   0));
-		bulletin.datadesc.push_back(WR_VAR(1,  1,  34));
-		bulletin.datadesc.push_back(WR_VAR(0, 31,  31));
-		bulletin.datadesc.push_back(WR_VAR(0,  1,  31));
-		bulletin.datadesc.push_back(WR_VAR(0,  1,  32));
-		bulletin.datadesc.push_back(WR_VAR(1,  1,  34));
-		bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
-	}
+        {
+                bulletin.datadesc.push_back(WR_VAR(2, 22,   0));
+                bulletin.datadesc.push_back(WR_VAR(1,  1,  34));
+                bulletin.datadesc.push_back(WR_VAR(0, 31,  31));
+                bulletin.datadesc.push_back(WR_VAR(0,  1,  31));
+                bulletin.datadesc.push_back(WR_VAR(0,  1,  32));
+                bulletin.datadesc.push_back(WR_VAR(1,  1,  34));
+                bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
+        }
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Template::to_subset(msg, subset);
-	/*  0 */ add(WR_VAR(0,  1, 11), DBA_MSG_IDENT);
-	/*  1 */ add(WR_VAR(0,  1, 12), DBA_MSG_ST_DIR);
-	/*  2 */ add(WR_VAR(0,  1, 13), DBA_MSG_ST_SPEED);
-	/*  3 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
-	/*  4 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-	/*  5 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-	/*  6 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-	/*  7 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-	/*  8 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
-	/*  9 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
-	/* 10 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
-	/* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
-	/* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
-	/* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
-	/* 14 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
-	/* 15 */ add(WR_VAR(0, 11, 11), DBA_MSG_WIND_DIR);
-	/* 16 */ add(WR_VAR(0, 11, 12), DBA_MSG_WIND_SPEED);
-	/* 17 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
-	/* 18 */ add(WR_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M);
-	/* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
-	/* 20 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
-	/* 21 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-	/* 22 */ add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1);
-	/* 23 */ add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2);
-	/* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
+        /*  0 */ add(WR_VAR(0,  1, 11), DBA_MSG_IDENT);
+        /*  1 */ add(WR_VAR(0,  1, 12), DBA_MSG_ST_DIR);
+        /*  2 */ add(WR_VAR(0,  1, 13), DBA_MSG_ST_SPEED);
+        /*  3 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
+        /*  4 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
+        /*  5 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
+        /*  6 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
+        /*  7 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
+        /*  8 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        /*  9 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
+        /* 10 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
+        /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
+        /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
+        /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
+        /* 14 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
+        /* 15 */ add(WR_VAR(0, 11, 11), DBA_MSG_WIND_DIR);
+        /* 16 */ add(WR_VAR(0, 11, 12), DBA_MSG_WIND_SPEED);
+        /* 17 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
+        /* 18 */ add(WR_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M);
+        /* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
+        /* 20 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
+        /* 21 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
+        /* 22 */ add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1);
+        /* 23 */ add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2);
+        /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-	/* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-	/* 27 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-	/* 28 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-	/* 29 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-	/* 30 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
-	/* 31 */ add(WR_VAR(0, 22, 42), DBA_MSG_WATER_TEMP);
-	/* 32 */ add(WR_VAR(0, 12,  5), DBA_MSG_WET_TEMP_2M);
-	/* 33 */ add(WR_VAR(0, 10,197), DBA_MSG_HEIGHT_ANEM);
+        /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
+        /* 27 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
+        /* 28 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
+        /* 29 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
+        /* 30 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+        /* 31 */ add(WR_VAR(0, 22, 42), DBA_MSG_WATER_TEMP);
+        /* 32 */ add(WR_VAR(0, 12,  5), DBA_MSG_WET_TEMP_2M);
+        /* 33 */ add(WR_VAR(0, 10,197), DBA_MSG_HEIGHT_ANEM);
 
         if (!is_crex)
         {
@@ -227,9 +227,9 @@ struct ShipFactory : public TemplateFactory
         // Scan msgs and pick the right one
         const Msg& msg = *msgs[0];
         const Var* var = msg.get_st_type_var();
-	if (var == NULL || var->enqi() == 1)
+        if (var == NULL || var->enqi() == 1)
             return auto_ptr<Template>(new ShipPlain(opts, msgs));
-	else
+        else
             return auto_ptr<Template>(new ShipAuto(opts, msgs));
     }
 };

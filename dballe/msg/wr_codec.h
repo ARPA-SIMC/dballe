@@ -77,7 +77,7 @@ public:
      * Import a decoded BUFR/CREX message
      */
     virtual void to_bulletin(const Msgs& msgs, wreport::Bulletin& msg) const;
-    
+
     /**
      * Infer a template name from the message contents
      */

@@ -81,27 +81,27 @@ struct Pollution : public Template
         // Data descriptor section
         bulletin.datadesc.clear();
         bulletin.datadesc.push_back(WR_VAR(3,  7,  11));
-		bulletin.datadesc.push_back(WR_VAR(0,  1,  19));
-		bulletin.datadesc.push_back(WR_VAR(0,  1, 212));
-		bulletin.datadesc.push_back(WR_VAR(0,  1, 213));
-		bulletin.datadesc.push_back(WR_VAR(0,  1, 214));
-		bulletin.datadesc.push_back(WR_VAR(0,  1, 215));
-		bulletin.datadesc.push_back(WR_VAR(0,  1, 216));
-		bulletin.datadesc.push_back(WR_VAR(0,  1, 217));
-		bulletin.datadesc.push_back(WR_VAR(3,  1,  11));
-		bulletin.datadesc.push_back(WR_VAR(3,  1,  13));
-		bulletin.datadesc.push_back(WR_VAR(3,  1,  21));
-		bulletin.datadesc.push_back(WR_VAR(0,  7,  30));
-		bulletin.datadesc.push_back(WR_VAR(0,  7,  32));
-		bulletin.datadesc.push_back(WR_VAR(0,  8,  21));
-		bulletin.datadesc.push_back(WR_VAR(0,  4,  25));
-		bulletin.datadesc.push_back(WR_VAR(0,  8,  43));
-		bulletin.datadesc.push_back(WR_VAR(0,  8,  44));
-		bulletin.datadesc.push_back(WR_VAR(0,  8,  45));
-		bulletin.datadesc.push_back(WR_VAR(0,  8,  90));
-		bulletin.datadesc.push_back(WR_VAR(0, 15,  23));
-		bulletin.datadesc.push_back(WR_VAR(0,  8,  90));
-		bulletin.datadesc.push_back(WR_VAR(0, 33,   3));
+        bulletin.datadesc.push_back(WR_VAR(0,  1,  19));
+        bulletin.datadesc.push_back(WR_VAR(0,  1, 212));
+        bulletin.datadesc.push_back(WR_VAR(0,  1, 213));
+        bulletin.datadesc.push_back(WR_VAR(0,  1, 214));
+        bulletin.datadesc.push_back(WR_VAR(0,  1, 215));
+        bulletin.datadesc.push_back(WR_VAR(0,  1, 216));
+        bulletin.datadesc.push_back(WR_VAR(0,  1, 217));
+        bulletin.datadesc.push_back(WR_VAR(3,  1,  11));
+        bulletin.datadesc.push_back(WR_VAR(3,  1,  13));
+        bulletin.datadesc.push_back(WR_VAR(3,  1,  21));
+        bulletin.datadesc.push_back(WR_VAR(0,  7,  30));
+        bulletin.datadesc.push_back(WR_VAR(0,  7,  32));
+        bulletin.datadesc.push_back(WR_VAR(0,  8,  21));
+        bulletin.datadesc.push_back(WR_VAR(0,  4,  25));
+        bulletin.datadesc.push_back(WR_VAR(0,  8,  43));
+        bulletin.datadesc.push_back(WR_VAR(0,  8,  44));
+        bulletin.datadesc.push_back(WR_VAR(0,  8,  45));
+        bulletin.datadesc.push_back(WR_VAR(0,  8,  90));
+        bulletin.datadesc.push_back(WR_VAR(0, 15,  23));
+        bulletin.datadesc.push_back(WR_VAR(0,  8,  90));
+        bulletin.datadesc.push_back(WR_VAR(0, 33,   3));
 
         bulletin.load_tables();
     }
@@ -230,7 +230,7 @@ struct Pollution : public Template
             /* 25 */ subset.store_variable(WR_VAR(0, 33,  3), *attr_conf);
         else
             /* 25 */ subset.store_variable_undef(WR_VAR(0, 33,  3));
-	}
+    }
 };
 
 struct PollutionFactory : public TemplateFactory
