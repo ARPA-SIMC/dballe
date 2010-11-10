@@ -1,7 +1,7 @@
 # Name,         Type,   B local,    Level (ltype1, l1, ltype2, l2), Timerange (pind, p1, p2)
 ST_TYPE,        int,    B02001,     257,     -, -, -,    -,      -,     -, Type of station
-ST_DIR,         int,    B01012,       1,     -, -, -,  254,      -,     -, Direction of motion of moving observing platform
-ST_SPEED,       int,    B01013,       1,     -, -, -,  254,      -,     -, Speed of motion of moving observing platform
+ST_DIR,         int,    B01012,       1,     -, -, -,  254,      0,     0, Direction of motion of moving observing platform
+ST_SPEED,       int,    B01013,       1,     -, -, -,  254,      0,     0, Speed of motion of moving observing platform
 ST_NAME,        str,    B01019,     257,     -, -, -,    -,      -,     -, Station or site name
 ST_NAME_ICAO,   str,    B01063,     257,     -, -, -,    -,      -,     -, ICAO location indicator
 REP_MEMO,       str,    B01194,     257,     -, -, -,    -,      -,     -, Report mnemonic
@@ -20,11 +20,11 @@ WIND_INST,      int,    B02002,     257,     -, -, -,    -,      -,     -, Type 
 TEMP_PRECISION, num,    B02005,     257,     -, -, -,    -,      -,     -, Precision of temperature observation
 LATLON_SPEC,    int,    B02070,     257,     -, -, -,    -,      -,     -, Original specification of latitude/longitude
 TIMESIG,        int,    B08021,     257,     -, -, -,    -,      -,     -, Time significance
-MEAS_EQUIP_TYPE, int,   B02003,       1,     -, -, -,  254,      -,     -, Type of measuring equipment used
-SONDE_TYPE,     int,    B02011,       1,     -, -, -,  254,      -,     -, Radiosonde type
-SONDE_METHOD,   int,    B02012,       1,     -, -, -,  254,      -,     -, Radiosonde computational method
-SONDE_CORRECTION, int,  B02013,       1,     -, -, -,  254,      -,     -, Solar and infrared radiation correction
-SONDE_TRACKING, int,    B02014,       1,     -, -, -,  254,      -,     -, Tracking technique/status of system used
+MEAS_EQUIP_TYPE, int,   B02003,       1,     -, -, -,  254,      0,     0, Type of measuring equipment used
+SONDE_TYPE,     int,    B02011,       1,     -, -, -,  254,      0,     0, Radiosonde type
+SONDE_METHOD,   int,    B02012,       1,     -, -, -,  254,      0,     0, Radiosonde computational method
+SONDE_CORRECTION, int,  B02013,       1,     -, -, -,  254,      0,     0, Solar and infrared radiation correction
+SONDE_TRACKING, int,    B02014,       1,     -, -, -,  254,      0,     0, Tracking technique/status of system used
 BLOCK,          int,    B01001,     257,     -, -, -,    -,      -,     -, WMO block number
 STATION,        int,    B01002,     257,     -, -, -,    -,      -,     -, WMO station number
 IDENT,          str,    B01011,     257,     -, -, -,    -,      -,     -, Mobile station identifier
@@ -41,57 +41,57 @@ HEIGHT_BARO,    num,    B07031,     257,     -, -, -,    -,      -,     -, Heigh
 HEIGHT_RELEASE, num,    B07007,     257,     -, -, -,    -,      -,     -, Height of release of sonde above msl
 STATION_HEIGHT_QUALITY, int, B33024, 257,    -, -, -,    -,      -,     -, Station elevation quality mark (for mobile stations)
 ISOBARIC_SURFACE, num,  B07004,     257,     -, -, -,    -,      -,     -, Isobaric surface
-GEOPOTENTIAL,   num,    B10008,       1,     -, -, -,  254,      -,     -, Geopotential
-PRESS,          num,    B10004,       1,     -, -, -,  254,      -,     -, Pressure at ground level
+GEOPOTENTIAL,   num,    B10008,       1,     -, -, -,  254,      0,     0, Geopotential
+PRESS,          num,    B10004,       1,     -, -, -,  254,      0,     0, Pressure at ground level
 PRESS_3H,       num,    B10060,       1,     -, -, -,    4,      0, 10800, 3 hour pressure change at ground level
 PRESS_24H,      num,    B10060,       1,     -, -, -,    4,      0, 86400, 24 hour pressure change at ground level
-PRESS_MSL,      num,    B10051,     101,     -, -, -,  254,      -,     -, Pressure reduced to mean sea level
-QNH,            num,    B10052,     103,  2000, -, -,  254,      -,     -, Altimeter setting (QNH)
-WIND_DIR,       num,    B11001,     103, 10000, -, -,  254,      -,     -, Wind direction at 10 metres above ground
-WIND_SPEED,     num,    B11002,     103, 10000, -, -,  254,      -,     -, Wind speed at 10 metres above ground
-WIND_MAX,       num,    B11041,     103, 10000, -, -,  254,      -,     -, Maximum wind gust speed at 10 metres above ground
-EX_CCW_WIND,    num,    B11016,     103, 10000, -, -,  254,      -,     -, Extreme counterclockwise wind direction of a variable wind at 10 metres above ground
-EX_CW_WIND,     num,    B11017,     103, 10000, -, -,  254,      -,     -, Extreme clockwise wind direction of a variable wind at 10 metres above ground
-TEMP_2M,        num,    B12101,     103,  2000, -, -,  254,      -,     -, Temperature at 2 metres above ground
-WET_TEMP_2M,    num,    B12002,     103,  2000, -, -,  254,      -,     -, Wet bulb temperature at 2 metres above ground
-DEWPOINT_2M,    num,    B12103,     103,  2000, -, -,  254,      -,     -, Dew point at 2 metres above ground
-HUMIDITY,       num,    B13003,     103,  2000, -, -,  254,      -,     -, Humidity at 2 metres above ground
-WATER_TEMP,     num,    B22042,       1,     -, -, -,  254,      -,     -, Sea/water surface temperature
-HEIGHT_ANEM,    num,    B10197,       1,     -, -, -,  254,      -,     -, Anemometer height
+PRESS_MSL,      num,    B10051,     101,     -, -, -,  254,      0,     0, Pressure reduced to mean sea level
+QNH,            num,    B10052,     103,  2000, -, -,  254,      0,     0, Altimeter setting (QNH)
+WIND_DIR,       num,    B11001,     103, 10000, -, -,  254,      0,     0, Wind direction at 10 metres above ground
+WIND_SPEED,     num,    B11002,     103, 10000, -, -,  254,      0,     0, Wind speed at 10 metres above ground
+WIND_MAX,       num,    B11041,     103, 10000, -, -,  254,      0,     0, Maximum wind gust speed at 10 metres above ground
+EX_CCW_WIND,    num,    B11016,     103, 10000, -, -,  254,      0,     0, Extreme counterclockwise wind direction of a variable wind at 10 metres above ground
+EX_CW_WIND,     num,    B11017,     103, 10000, -, -,  254,      0,     0, Extreme clockwise wind direction of a variable wind at 10 metres above ground
+TEMP_2M,        num,    B12101,     103,  2000, -, -,  254,      0,     0, Temperature at 2 metres above ground
+WET_TEMP_2M,    num,    B12002,     103,  2000, -, -,  254,      0,     0, Wet bulb temperature at 2 metres above ground
+DEWPOINT_2M,    num,    B12103,     103,  2000, -, -,  254,      0,     0, Dew point at 2 metres above ground
+HUMIDITY,       num,    B13003,     103,  2000, -, -,  254,      0,     0, Humidity at 2 metres above ground
+WATER_TEMP,     num,    B22042,       1,     -, -, -,  254,      0,     0, Sea/water surface temperature
+HEIGHT_ANEM,    num,    B10197,       1,     -, -, -,  254,      0,     0, Anemometer height
 PRESS_TEND,     num,    B10063,       1,     -, -, -,  205,      0, 10800, Characteristic of pressure tendency
-VISIBILITY,     num,    B20001,       1,     -, -, -,  254,      -,     -, Visibility
-PRES_WTR,       int,    B20003,       1,     -, -, -,  254,      -,     -, Present weather
+VISIBILITY,     num,    B20001,       1,     -, -, -,  254,      0,     0, Visibility
+PRES_WTR,       int,    B20003,       1,     -, -, -,  254,      0,     0, Present weather
 PAST_WTR1,      int,    B20004,       1,     -, -, -,  205,      0, 21600, Past weather (1)
 PAST_WTR2,      int,    B20005,       1,     -, -, -,  205,      0, 21600, Past weather (2)
-METAR_WTR,      int,    B20009,       1,     -, -, -,  254,      -,     -, General weather indicator (TAF/METAR)
-CLOUD_N ,       int,    B20010,     256,     -, -, -,  254,      -,     -, Total cloud cover (N)
-CLOUD_NH,       int,    B20011,     256,   -, 258, 0,  254,      -,     -, Cloud amount (NH)
-CLOUD_HH,       num,    B20013,     256,   -, 258, 0,  254,      -,     -, Height of base of cloud (HH)
-CLOUD_CL,       int,    B20012,     256,   -, 258, 1,  254,      -,     -, Cloud type (CL)
-CLOUD_CM,       int,    B20012,     256,   -, 258, 2,  254,      -,     -, Cloud type (CM)
-CLOUD_CH,       int,    B20012,     256,   -, 258, 3,  254,      -,     -, Cloud type (CH)
+METAR_WTR,      int,    B20009,       1,     -, -, -,  254,      0,     0, General weather indicator (TAF/METAR)
+CLOUD_N ,       int,    B20010,     256,     -, -, -,  254,      0,     0, Total cloud cover (N)
+CLOUD_NH,       int,    B20011,     256,   -, 258, 0,  254,      0,     0, Cloud amount (NH)
+CLOUD_HH,       num,    B20013,     256,   -, 258, 0,  254,      0,     0, Height of base of cloud (HH)
+CLOUD_CL,       int,    B20012,     256,   -, 258, 1,  254,      0,     0, Cloud type (CL)
+CLOUD_CM,       int,    B20012,     256,   -, 258, 2,  254,      0,     0, Cloud type (CM)
+CLOUD_CH,       int,    B20012,     256,   -, 258, 3,  254,      0,     0, Cloud type (CH)
 
-CLOUD_N1,       int,    B20011,     256,   -, 259, 1,  254,      -,     -, Cloud amount (N1)
-CLOUD_C1,       int,    B20012,     256,   -, 259, 1,  254,      -,     -, Cloud amount (C1)
-CLOUD_H1,       num,    B20013,     256,   -, 259, 1,  254,      -,     -, Height of base of cloud (H1)
+CLOUD_N1,       int,    B20011,     256,   -, 259, 1,  254,      0,     0, Cloud amount (N1)
+CLOUD_C1,       int,    B20012,     256,   -, 259, 1,  254,      0,     0, Cloud amount (C1)
+CLOUD_H1,       num,    B20013,     256,   -, 259, 1,  254,      0,     0, Height of base of cloud (H1)
 
-CLOUD_N2,       int,    B20011,     256,   -, 259, 2,  254,      -,     -, Cloud amount (N2)
-CLOUD_C2,       int,    B20012,     256,   -, 259, 2,  254,      -,     -, Cloud amount (C2)
-CLOUD_H2,       num,    B20013,     256,   -, 259, 2,  254,      -,     -, Height of base of cloud (H2)
+CLOUD_N2,       int,    B20011,     256,   -, 259, 2,  254,      0,     0, Cloud amount (N2)
+CLOUD_C2,       int,    B20012,     256,   -, 259, 2,  254,      0,     0, Cloud amount (C2)
+CLOUD_H2,       num,    B20013,     256,   -, 259, 2,  254,      0,     0, Height of base of cloud (H2)
 
-CLOUD_N3,       int,    B20011,     256,   -, 259, 3,  254,      -,     -, Cloud amount (N3)
-CLOUD_C3,       int,    B20012,     256,   -, 259, 3,  254,      -,     -, Cloud amount (C3)
-CLOUD_H3,       num,    B20013,     256,   -, 259, 3,  254,      -,     -, Height of base of cloud (H3)
+CLOUD_N3,       int,    B20011,     256,   -, 259, 3,  254,      0,     0, Cloud amount (N3)
+CLOUD_C3,       int,    B20012,     256,   -, 259, 3,  254,      0,     0, Cloud amount (C3)
+CLOUD_H3,       num,    B20013,     256,   -, 259, 3,  254,      0,     0, Height of base of cloud (H3)
 
-CLOUD_N4,       int,    B20011,     256,   -, 259, 4,  254,      -,     -, Cloud amount (N4)
-CLOUD_C4,       int,    B20012,     256,   -, 259, 4,  254,      -,     -, Cloud amount (C4)
-CLOUD_H4,       num,    B20013,     256,   -, 259, 4,  254,      -,     -, Height of base of cloud (H4)
+CLOUD_N4,       int,    B20011,     256,   -, 259, 4,  254,      0,     0, Cloud amount (N4)
+CLOUD_C4,       int,    B20012,     256,   -, 259, 4,  254,      0,     0, Cloud amount (C4)
+CLOUD_H4,       num,    B20013,     256,   -, 259, 4,  254,      0,     0, Height of base of cloud (H4)
 
 TOT_PREC1,      num,    B13011,       1,     -, -, -,    1,      0,  3600, Total precipitation in the last hour
 TOT_PREC3,      num,    B13011,       1,     -, -, -,    1,      0, 10800, Total precipitation in the last 3 hours
 TOT_PREC6,      num,    B13011,       1,     -, -, -,    1,      0, 21600, Total precipitation in the last 6 hours
 TOT_PREC12,     num,    B13011,       1,     -, -, -,    1,      0, 43200, Total precipitation in the last 12 hours
 TOT_PREC24,     num,    B13011,       1,     -, -, -,    1,      0, 86400, Total precipitation in the last 24 hours
-TOT_SNOW,       num,    B13013,       1,     -, -, -,  254,      -,     -, Total show depth
+TOT_SNOW,       num,    B13013,       1,     -, -, -,  254,      0,     0, Total show depth
 
-STATE_GROUND,	num,	B20062,	      1,     -, -, -,  254,      -,     -, State of ground (with or without snow)
+STATE_GROUND,	num,	B20062,	      1,     -, -, -,  254,      0,     0, State of ground (with or without snow)
