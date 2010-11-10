@@ -13,8 +13,9 @@ dballe (5.2-1) unstable; urgency=low
        the last subset to the next message
      - Fixed formatting of time ranges
      - Fixed dbamsg dump --text
+     - Instant time range is now 254,0,0
 
- -- Enrico Zini <enrico@debian.org>  Tue, 09 Nov 2010 17:57:59 +0000
+ -- Enrico Zini <enrico@debian.org>  Wed, 10 Nov 2010 17:19:26 +0000
 
 dballe (5.1-1) unstable; urgency=low
 

@@ -246,7 +246,7 @@ std::string Trange::describe() const
 		case 203: return mkdesc("Vectorial maximum", p1, p2);
 		case 204: return mkdesc("Vectorial minimum", p1, p2);
 		case 205: return mkdesc("Product with a valid time ranging", p1, p2);
-		case 254: return mkdesc("Instantaneous value", p1, p2);
+		case 254: return "Instantaneous value";
 		default:  return fmtf("%d %d %d", pind, p1, p2);
 	}
 }

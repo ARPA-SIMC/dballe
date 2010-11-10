@@ -142,7 +142,7 @@ struct Trange
      */
     std::string describe() const;
 
-    static inline Trange instant() { return Trange(254); }
+    static inline Trange instant() { return Trange(254, 0, 0); }
     static inline Trange ana() { return Trange(); }
 };
 
