@@ -124,6 +124,12 @@ struct TempBase : public Template
     {
         Template::setupBulletin(bulletin);
 
+        // Use old table for old templates
+        if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
+        {
+            b->master_table = 13;
+        }
+
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
         bulletin.type = 2;
