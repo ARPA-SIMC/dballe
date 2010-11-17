@@ -710,6 +710,61 @@ void Record::parse_date(int* values) const
     }
 }
 
+MatchedRecord::MatchedRecord(const Record& r)
+    : r(r)
+{
+}
+
+MatchedRecord::~MatchedRecord()
+{
+}
+
+matcher::Result MatchedRecord::match_var_id(int val) const
+{
+    if (const wreport::Var* var = r.var_peek(WR_VAR(0, 33, 195)))
+    {
+        return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
+    } else
+        return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedRecord::match_station_id(int val) const
+{
+    if (const wreport::Var* var = r.key_peek(DBA_KEY_ANA_ID))
+    {
+        return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
+    } else
+        return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedRecord::match_station_wmo(int block, int station) const
+{
+    if (const wreport::Var* var = r.var_peek(WR_VAR(0, 1, 1)))
+    {
+        // Match block
+        if (var->enqi() != block) return matcher::MATCH_NO;
+
+        // If station was not requested, we are done
+        if (station == -1) return matcher::MATCH_YES;
+
+        // Match station
+        if (const wreport::Var* var = r.var_peek(WR_VAR(0, 1, 2)))
+        {
+            if (var->enqi() != station) return matcher::MATCH_NO;
+            return matcher::MATCH_YES;
+        }
+    }
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedRecord::match_date(const int* min, const int* max) const
+{
+    int date[6];
+    r.parse_date(date);
+    if (date[0] == -1) return matcher::MATCH_NA;
+    return Matched::date_in_range(date, min, max);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

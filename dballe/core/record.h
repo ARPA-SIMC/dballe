@@ -28,6 +28,7 @@
  */
 
 #include <dballe/core/var.h>
+#include <dballe/core/matcher.h>
 #include <vector>
 
 namespace dballe {
@@ -423,6 +424,19 @@ public:
  */
 void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out);
 #endif
+
+struct MatchedRecord : public Matched
+{
+    const Record& r;
+
+    MatchedRecord(const Record& r);
+    ~MatchedRecord();
+
+    virtual matcher::Result match_var_id(int val) const;
+    virtual matcher::Result match_station_id(int val) const;
+    virtual matcher::Result match_station_wmo(int block, int station=-1) const;
+    virtual matcher::Result match_date(const int* min, const int* max) const;
+};
 
 }
 

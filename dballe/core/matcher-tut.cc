@@ -20,6 +20,7 @@
 
 #include "test-utils-core.h"
 #include "matcher.h"
+#include "record.h"
 
 #include <sstream>
 #include <iostream>
@@ -33,10 +34,93 @@ struct matcher_shar {
 };
 TESTGRP(matcher);
 
+// Test var_id matcher
 template<> template<>
 void to::test<1>()
 {
+    Record matcher;
+    matcher.set("data_id", 1);
+    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+    Record matched;
+    ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+    matched.set("data_id", 2);
+    ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+    matched.set("data_id", 1);
+    ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
 }
+
+// Test station_id matcher
+template<> template<>
+void to::test<2>()
+{
+    Record matcher;
+    matcher.set("ana_id", 1);
+    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+    Record matched;
+    ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+    matched.set("ana_id", 2);
+    ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+    matched.set("ana_id", 1);
+    ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+}
+
+// Test station WMO matcher
+template<> template<>
+void to::test<3>()
+{
+    {
+        Record matcher;
+        matcher.set("block", 11);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("block", 1);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("block", 11);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+
+        matched.set("station", 222);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+    }
+
+    {
+        Record matcher;
+        matcher.set("block", 11);
+        matcher.set("station", 222);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("block", 1);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("block", 11);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("station", 22);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("station", 222);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+
+        matched.set("block", 1);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.unset("block");
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+    }
+}
+
 
 }
 

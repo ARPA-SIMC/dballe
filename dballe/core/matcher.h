@@ -28,6 +28,16 @@
 namespace dballe {
 struct Record;
 
+namespace matcher {
+
+enum Result {
+    MATCH_YES,  // Item matches
+    MATCH_NO,   // Item does not match
+    MATCH_NA    // Match not applicable to this item
+};
+
+}
+
 /**
  * Common interface for things that are matched.
  *
@@ -40,36 +50,35 @@ struct Matched
     virtual ~Matched() {}
 
     /**
-     * Database variable ID, or MISSING_INT if not applicable
+     * Match variable ID
      *
      * This corresponds to B33195
      */
-    virtual int get_var_id() const;
+    virtual matcher::Result match_var_id(int val) const;
 
     /**
-     * Get the station ID, or MISSING_INT if not applicable
+     * Match station ID
      *
      * This corresponds to DBA_KEY_ANA_ID
      */
-    virtual int get_station_id() const;
+    virtual matcher::Result match_station_id(int val) const;
 
     /**
-     * Get station WMO code as a 5 character string.
+     * Match station WMO code
      *
-     * buf must be long enough to store 6 characters (the 5 digits of the WMO
-     * code and the trailing \0)
-     *
-     * Set buf[0] = 0 if not applicable
+     * If station is -1, only match the block.
      */
-    virtual void get_station_wmo(char* buf) const;
+    virtual matcher::Result match_station_wmo(int block, int station=-1) const;
 
     /**
-     * Get the date as an array of 6 values
+     * Match date
      *
-     * If not applicable, set values[0] to -1
+     * min and max are arrays of 6 ints (from year to second), and either of
+     * them can have -1 as the first element to indicate an open bound.
      */
-    virtual void get_date(int* values) const;
+    virtual matcher::Result match_date(const int* min, const int* max) const;
 
+#if 0
     /**
      * Get coordinates in 1/10000 of degree
      *
@@ -83,19 +92,22 @@ struct Matched
      * Return NULL if not applicable
      */
     virtual const char* get_rep_memo() const;
+#endif
+
+    /**
+     * Match if min <= date <= max
+     *
+     * It correctly deals with min and max having the first element set to -1
+     * to signify an open bound.
+     */
+    static matcher::Result date_in_range(const int* date, const int* min, const int* max);
 };
 
 struct Matcher
 {
-    enum Result {
-        MATCH_YES,  // Item matches
-        MATCH_NO,   // Item does not match
-        MATCH_NA    // Match not applicable to this item
-    };
-
     virtual ~Matcher() {}
 
-    virtual Result match(const Matched& item) const = 0;
+    virtual matcher::Result match(const Matched& item) const = 0;
     virtual void to_record(dballe::Record& query) const = 0;
 
     static std::auto_ptr<Matcher> create(const dballe::Record& query);

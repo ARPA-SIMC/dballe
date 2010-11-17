@@ -30,14 +30,23 @@ using namespace wreport;
 
 namespace dballe {
 
-int Matched::get_var_id() const { return MISSING_INT; }
-int Matched::get_station_id() const { return MISSING_INT; }
-void Matched::get_station_wmo(char* buf) const { buf[0] = 0; }
-void Matched::get_date(int* values) const
+matcher::Result Matched::match_var_id(int) const
 {
-    for (int i = 0; i < 6; ++i)
-        values[i] = -1;
+    return matcher::MATCH_NA;
 }
+matcher::Result Matched::match_station_id(int) const
+{
+    return matcher::MATCH_NA;
+}
+matcher::Result Matched::match_station_wmo(int, int) const
+{
+    return matcher::MATCH_NA;
+}
+matcher::Result Matched::match_date(const int*, const int*) const
+{
+    return matcher::MATCH_NA;
+}
+#if 0
 void Matched::get_coords(int* lat, int* lon) const
 {
     *lat = MISSING_INT;
@@ -46,6 +55,27 @@ void Matched::get_coords(int* lat, int* lon) const
 const char* Matched::get_rep_memo() const
 {
     return NULL;
+}
+#endif
+
+/// Return true if v1 < v2
+static bool lt(const int* v1, const int* v2)
+{
+    for (int i = 0; i < 5; ++i)
+    {
+        if (v1[i] < v2[i])
+            return true;
+        if (v1[i] > v2[i])
+            return false;
+    }
+    return v1[5] < v2[5];
+}
+
+matcher::Result Matched::date_in_range(const int* date, const int* min, const int* max)
+{
+        if (min[0] != -1 && lt(date, min)) return matcher::MATCH_NO;
+        if (max[1] != -1 && lt(max, date)) return matcher::MATCH_NO;
+        return matcher::MATCH_YES;
 }
 
 namespace matcher {
@@ -103,12 +133,11 @@ struct VarIDMatcher : public Matcher
 
     virtual Result match(const Matched& v) const
     {
-        int matched_id = v.get_var_id();
-        return var_id == matched_id ? MATCH_YES : MATCH_NO;
+        return v.match_var_id(var_id) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
     virtual void to_record(Record& query) const
     {
-        query.set("data_id", var_id);
+        query.set(WR_VAR(0, 33, 195), var_id);
     }
 };
 
@@ -121,14 +150,33 @@ struct AnaIDMatcher : public Matcher
 
     virtual Result match(const Matched& v) const
     {
-        int matched_id = v.get_station_id();
-        return ana_id == matched_id ? MATCH_YES : MATCH_NO;
+        return v.match_station_id(ana_id) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
     virtual void to_record(Record& query) const
     {
         query.set(DBA_KEY_ANA_ID, ana_id);
     }
 };
+
+struct WMOMatcher : public Matcher
+{
+    int block;
+    int station;
+
+    WMOMatcher(int block, int station=-1) : block(block), station(station) {}
+
+    virtual Result match(const Matched& v) const
+    {
+        return v.match_station_wmo(block, station) == MATCH_YES ? MATCH_YES : MATCH_NO;
+    }
+    virtual void to_record(Record& query) const
+    {
+        query.set(WR_VAR(0, 1, 1), block);
+        if (station != -1)
+            query.set(WR_VAR(0, 1, 2), station);
+    }
+};
+
 
 struct DateMatcher : public Matcher
 {
@@ -144,19 +192,6 @@ struct DateMatcher : public Matcher
         }
     }
 
-    /// Return true if v1 < v2
-    bool lt(const int* v1, const int* v2) const
-    {
-        for (int i = 0; i < 5; ++i)
-        {
-            if (v1[i] < v2[i])
-                return true;
-            if (v1[i] > v2[i])
-                return false;
-        }
-        return v1[5] < v2[5];
-    }
-
     /// Return true if v1 == v2
     bool eq(const int* v1, const int* v2) const
     {
@@ -166,14 +201,9 @@ struct DateMatcher : public Matcher
         return true;
     }
 
-    virtual Result match(const Matched& vm) const
+    virtual Result match(const Matched& v) const
     {
-        int matched[6];
-        vm.get_date(matched);
-        if (matched[0] == -1) return MATCH_NO;
-        if (datemin[0] != -1 && lt(matched, datemin)) return MATCH_NO;
-        if (datemax[1] != -1 && lt(datemax, matched)) return MATCH_NO;
-        return MATCH_YES;
+        return v.match_date(datemin, datemax) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
     virtual void to_record(Record& query) const
@@ -207,6 +237,7 @@ struct DateMatcher : public Matcher
     }
 };
 
+#if 0
 struct CoordMatcher : public Matcher
 {
     int latmin, latmax;
@@ -273,42 +304,10 @@ struct ReteMatcher : public Matcher
         query.set(DBA_KEY_REP_MEMO, rete.c_str());
     }
 };
-
-struct WMOMatcher : public Matcher
-{
-    // BBSSS to match block and station
-    // BB to match block only
-    string code;
-
-    WMOMatcher(const std::string& code) : code(code) {}
-
-    virtual Result match(const Matched& v) const
-    {
-        if (code.empty()) return MATCH_NA;
-
-        char buf[6];
-        v.get_station_wmo(buf);
-        if (buf[0] == 0) return MATCH_NO;
-
-        // Match block
-        if (buf[0] != code[0] || buf[1] != code[1]) return MATCH_NO;
-
-        // If we don't need ot match station, we are satisfied
-        if (code.size() == 2) return MATCH_YES;
-
-        // Match station
-        if (buf[2] != code[2] || buf[3] != code[3] || buf[4] != code[4]) return MATCH_NO;
-        return MATCH_YES;
-    }
-    virtual void to_record(Record& query) const
-    {
-        query.set(WR_VAR(0, 1, 1), code.substr(0, 2).c_str());
-        if (code.size() > 2)
-            query.set(WR_VAR(0, 1, 2), code.substr(2).c_str());
-    }
-};
-
+#endif
 }
+
+#if 0
 
 static inline int int_or_missing(const Record& query, dba_keyword key)
 {
@@ -348,6 +347,7 @@ static bool parse_lat_extremes(const Record& query, int* rlatmin, int* rlatmax, 
 
     return true;
 }
+#endif
 
 std::auto_ptr<Matcher> Matcher::create(const Record& query)
 {
@@ -361,27 +361,27 @@ std::auto_ptr<Matcher> Matcher::create(const Record& query)
     if (const Var* var = query.key_peek(DBA_KEY_ANA_ID))
         res->exprs.push_back(new AnaIDMatcher(var->enqi()));
 
+    if (const Var* block = query.var_peek(WR_VAR(0, 1, 1)))
+    {
+        if (const Var* station = query.var_peek(WR_VAR(0, 1, 2)))
+            res->exprs.push_back(new WMOMatcher(block->enqi(), station->enqi()));
+        else
+            res->exprs.push_back(new WMOMatcher(block->enqi()));
+    }
+
     int minvalues[6], maxvalues[6];
     query.parse_date_extremes(minvalues, maxvalues);
     if (minvalues[0] != -1 || maxvalues[0] != -1)
         res->exprs.push_back(new DateMatcher(minvalues, maxvalues));
 
+#if 0
     int latmin = 0, latmax = 0, lonmin = 0, lonmax = 0;
     if (parse_lat_extremes(query, &latmin, &latmax, &lonmin, &lonmax))
         res->exprs.push_back(new CoordMatcher(latmin, latmax, lonmin, lonmax));
 
     if (const char* rete = query.key_peek_value(DBA_KEY_REP_MEMO))
         res->exprs.push_back(new ReteMatcher(rete));
-
-    if (const Var* block = query.var_peek(WR_VAR(0, 1, 1)))
-    {
-        char buf[8];
-        if (const Var* station = query.var_peek(WR_VAR(0, 1, 2)))
-            snprintf(buf, 7, "%2d%03d", block->enqi(), station->enqi());
-        else
-            snprintf(buf, 7, "%2d", block->enqi());
-        res->exprs.push_back(new WMOMatcher(buf));
-    }
+#endif
 
     return auto_ptr<Matcher>(res.release());
 }
