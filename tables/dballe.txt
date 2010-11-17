@@ -173,7 +173,7 @@
  033193 [SIM] Time consistency                                           %                          0            0   7 PERCENT                   0          3
  033194 [SIM] Space consistency                                          %                          0            0   7 PERCENT                   0          3
  033195 [SIM] MeteoDB variable ID                                        NUMERIC                    0            0  24 NUMERIC                   0          8
- 033196 [SIM] Data has been invalidated                                  CODE TABLE 33196           0            0   1 CODE TABLE 33196          0          1
+ 033196 [SIM] Data has been invalidated                                  CODE TABLE 33196           0            0   2 CODE TABLE 33196          0          1
  033197 [SIM] Manual replacement in substitution                         CODE TABLE 33197           0            0   2 CODE TABLE 33197          0          1
  033198 [SIM] Observation increment                                      NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
  033201 [SIM] Kalman coefficient, state vector (s.v.) x1                 NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
