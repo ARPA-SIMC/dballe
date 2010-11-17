@@ -787,6 +787,15 @@ matcher::Result MatchedRecord::match_coords(int latmin, int latmax, int lonmin, 
     return matcher::MATCH_NA;
 }
 
+matcher::Result MatchedRecord::match_rep_memo(const char* memo) const
+{
+    if (const char* var = r.key_peek_value(DBA_KEY_REP_MEMO))
+    {
+        return strcmp(memo, var) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
+    } else
+        return matcher::MATCH_NA;
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

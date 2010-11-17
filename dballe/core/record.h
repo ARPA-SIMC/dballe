@@ -437,6 +437,7 @@ struct MatchedRecord : public Matched
     virtual matcher::Result match_station_wmo(int block, int station=-1) const;
     virtual matcher::Result match_date(const int* min, const int* max) const;
     virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
+    virtual matcher::Result match_rep_memo(const char* memo) const;
 };
 
 }

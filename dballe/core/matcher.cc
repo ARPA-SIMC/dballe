@@ -50,17 +50,10 @@ matcher::Result Matched::match_coords(int, int, int, int) const
 {
     return matcher::MATCH_NA;
 }
-#if 0
-void Matched::get_coords(int* lat, int* lon) const
+matcher::Result Matched::match_rep_memo(const char* memo) const
 {
-    *lat = MISSING_INT;
-    *lon = MISSING_INT;
+    return matcher::MATCH_NA;
 }
-const char* Matched::get_rep_memo() const
-{
-    return NULL;
-}
-#endif
 
 /// Return true if v1 < v2
 static bool lt(const int* v1, const int* v2)
@@ -270,7 +263,6 @@ struct CoordMatcher : public Matcher
     }
 };
 
-#if 0
 static string tolower(const std::string& s)
 {
     string res(s);
@@ -287,18 +279,14 @@ struct ReteMatcher : public Matcher
 
     virtual Result match(const Matched& v) const
     {
-        if (rete.empty()) return MATCH_NA;
-        const char* matched = v.get_rep_memo();
-        if (matched == NULL) return MATCH_NO;
-        if (rete != tolower(matched)) return MATCH_NO;
-        return MATCH_YES;
+        return v.match_rep_memo(rete.c_str()) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
     virtual void to_record(Record& query) const
     {
         query.set(DBA_KEY_REP_MEMO, rete.c_str());
     }
 };
-#endif
+
 }
 
 static inline int int_or_missing(const Record& query, dba_keyword key)
@@ -369,10 +357,8 @@ std::auto_ptr<Matcher> Matcher::create(const Record& query)
     if (parse_lat_extremes(query, &latmin, &latmax, &lonmin, &lonmax))
         res->exprs.push_back(new CoordMatcher(latmin, latmax, lonmin, lonmax));
 
-#if 0
     if (const char* rete = query.key_peek_value(DBA_KEY_REP_MEMO))
         res->exprs.push_back(new ReteMatcher(rete));
-#endif
 
     return auto_ptr<Matcher>(res.release());
 }

@@ -269,6 +269,24 @@ void to::test<5>()
     }
 }
 
+// Test rep_memo matcher
+template<> template<>
+void to::test<6>()
+{
+    Record matcher;
+    matcher.set(DBA_KEY_REP_MEMO, "synop");
+    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+    Record matched;
+    ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+    matched.set(DBA_KEY_REP_MEMO, "temp");
+    ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+    matched.set(DBA_KEY_REP_MEMO, "synop");
+    ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+}
+
 }
 
 // vim:set ts=4 sw=4:

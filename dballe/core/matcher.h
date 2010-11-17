@@ -86,14 +86,12 @@ struct Matched
      */
     virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
 
-#if 0
     /**
-     * Get rep_memo.
+     * Match rep_memo
      *
-     * Return NULL if not applicable
+     * the memo value that is passed is always lowercase
      */
-    virtual const char* get_rep_memo() const;
-#endif
+    virtual matcher::Result match_rep_memo(const char* memo) const;
 
     /**
      * Match if min <= date <= max
