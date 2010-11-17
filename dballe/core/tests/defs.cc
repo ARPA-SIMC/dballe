@@ -64,7 +64,7 @@ void to::test<3>()
 	ensure_equals(Level(103, 2000, 103, 4000).describe(),
 			"Layer from [2.000m above ground] to [4.000m above ground]");
 	ensure_equals(Trange(254, 86400).describe(),
-			"Instantaneous value at forecast time 1d");
+			"Instantaneous value");
 	ensure_equals(Trange(2, 0, 43200).describe(), "Maximum over 12h at forecast time 0");
 	ensure_equals(Trange(3, 194400, 43200).describe(), "Minimum over 12h at forecast time 2d 6h");
 }
