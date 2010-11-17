@@ -679,6 +679,37 @@ void Record::parse_date_extremes(int* minvalues, int* maxvalues) const
 	}
 }
 
+void Record::parse_date(int* values) const
+{
+    dba_keyword names[] = { DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY, DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC };
+    for (int i = 0; i < 6; i++)
+    {
+        values[i] = peek_int(*this, names[i]);
+
+        if (i > 0 && (values[i-1] == -1 && values[i] != -1))
+        {
+            Varinfo key1 = keyword_info(names[i - 1]);
+            Varinfo key2 = keyword_info(names[i]);
+
+            error_consistency::throwf("%s is unset but %s is set",
+                    key1->desc, key2->desc);
+        }
+    }
+
+    /* Now values is either 6 times -1, 6 values, or X values followed by 6-X times -1 */
+
+    /* If one of the extremes has been selected, fill in the blanks */
+
+    if (values[0] != -1)
+    {
+        values[1] = values[1] != -1 ? values[1] : 1;
+        values[2] = values[2] != -1 ? values[2] : 1;
+        values[3] = values[3] != -1 ? values[3] : 0;
+        values[4] = values[4] != -1 ? values[4] : 0;
+        values[5] = values[5] != -1 ? values[5] : 0;
+    }
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

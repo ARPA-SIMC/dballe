@@ -17,7 +17,8 @@ coreinclude_HEADERS = \
 	file.h \
 	aoffile.h \
 	csv.h \
-	record.h
+	record.h \
+	matcher.h
 
 noinst_LTLIBRARIES = libdballe-core.la
 libdballe_core_la_SOURCES = \
@@ -30,7 +31,8 @@ libdballe_core_la_SOURCES = \
 	aoffile.cc \
 	csv.cc \
 	record_keyword.cc \
-	record.cc
+	record.cc \
+	matcher.cc
 
 libdballe_core_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
 
@@ -56,6 +58,7 @@ tut_test_SOURCES = \
 	tests/rawmsg.cc \
 	tests/file.cc \
 	tests/record.cc \
+	matcher-tut.cc \
 	test-utils-core.cc \
 	tests/tut-main.cpp
 tut_test_LDADD = \

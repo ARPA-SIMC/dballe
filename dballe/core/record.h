@@ -317,7 +317,7 @@ public:
 	void var_unset(wreport::Varcode code);
 
 	/**
-	 * Parse the date extremes set in the dba_record.
+	 * Parse the date extremes set in Record.
 	 *
 	 * This function will examine the values yearmin, monthmin, daymin, hourmin,
 	 * minumin, secmin, yearmax, monthmax, daymax, hourmax, minumax, secmax, year,
@@ -332,6 +332,18 @@ public:
 	 *   day, hour, minute and seconds.
 	 */
 	void parse_date_extremes(int* minvalues, int* maxvalues) const;
+
+	/**
+	 * Parse the date set in the Record.
+	 *
+     * This function will examine the values year, month, day, hour, min and
+     * sec, and will compute the lower bound of the datetime they represent.
+	 *
+	 * @retval values
+	 *   An array of 6 integers that will be filled with the minimum year, month,
+	 *   day, hour, minute and seconds.
+	 */
+	void parse_date(int* values) const;
 
 	/**
 	 * Set a value in the record according to an assignment encoded in a string.
