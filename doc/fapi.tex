@@ -1535,12 +1535,11 @@ consequence of quality checks.
 \hline
 {\em Value} & {\em Description}               \\
 \hline
-          0 & data has been invalidated       \\
+          0 & data has been checked and not invalidated  \\
+          1 & data has been not invalidated              \\
+    missing & data has not beek checked
 \hline
 \end{tabular}
-
-When the attribute B33196 is not present, then the data has not been
-invalidated.
 
 \subsection{Code table 33197 \emph{Manual replacement in substitution}}
 
@@ -1552,12 +1551,12 @@ substituted it.
 \hline
 {\em Value} & {\em Description}               \\
 \hline
-          0 & a substitution happened, and this is the original value    \\
-          1 & a substitution happened, and this is the substituted value \\
+          0 & no substitution happened                                 \\
+          1 & substitution happened, and this is the original value    \\
+          2 & substitution happened, and this is the substituted value \\
+    missing & no substitution information                              \\
 \hline
 \end{tabular}
-
-When the attribute B33197 is not present, then no substitution happened.
 
 
 \chapter{Variable aliases}
