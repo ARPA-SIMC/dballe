@@ -46,6 +46,10 @@ matcher::Result Matched::match_date(const int*, const int*) const
 {
     return matcher::MATCH_NA;
 }
+matcher::Result Matched::match_coords(int, int, int, int) const
+{
+    return matcher::MATCH_NA;
+}
 #if 0
 void Matched::get_coords(int* lat, int* lon) const
 {
@@ -73,9 +77,16 @@ static bool lt(const int* v1, const int* v2)
 
 matcher::Result Matched::date_in_range(const int* date, const int* min, const int* max)
 {
-        if (min[0] != -1 && lt(date, min)) return matcher::MATCH_NO;
-        if (max[1] != -1 && lt(max, date)) return matcher::MATCH_NO;
-        return matcher::MATCH_YES;
+    if (min[0] != -1 && lt(date, min)) return matcher::MATCH_NO;
+    if (max[1] != -1 && lt(max, date)) return matcher::MATCH_NO;
+    return matcher::MATCH_YES;
+}
+
+matcher::Result Matched::int_in_range(int val, int min, int max)
+{
+    if (min != MISSING_INT && val < min) return matcher::MATCH_NO;
+    if (max != MISSING_INT && max < val) return matcher::MATCH_NO;
+    return matcher::MATCH_YES;
 }
 
 namespace matcher {
@@ -237,7 +248,6 @@ struct DateMatcher : public Matcher
     }
 };
 
-#if 0
 struct CoordMatcher : public Matcher
 {
     int latmin, latmax;
@@ -246,26 +256,9 @@ struct CoordMatcher : public Matcher
     CoordMatcher(int latmin, int latmax, int lonmin, int lonmax)
         : latmin(latmin), latmax(latmax), lonmin(lonmin), lonmax(lonmax) {}
 
-    inline Result match_extremes(int val, int min, int max) const
-    {
-        if (min == MISSING_INT && max == MISSING_INT) return MATCH_NA;
-        if (val == MISSING_INT) return MATCH_NO;
-        if (min != MISSING_INT && val < min) return MATCH_NO;
-        if (max != MISSING_INT && val > max) return MATCH_NO;
-        return MATCH_YES;
-    }
-
     virtual Result match(const Matched& v) const
     {
-        // Convert to scaled ints to have precise matches
-        int lat, lon;
-        v.get_coords(&lat, &lon);
-
-        Result res1 = match_extremes(lat, latmin, latmax);
-        Result res2 = match_extremes(lon, lonmin, lonmax);
-        if (res1 == MATCH_NO || res2 == MATCH_NO) return MATCH_NO;
-        if (res1 == MATCH_YES || res2 == MATCH_YES) return MATCH_YES;
-        return MATCH_NA;
+        return v.match_coords(latmin, latmax, lonmin, lonmax) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
     virtual void to_record(Record& query) const
@@ -277,6 +270,7 @@ struct CoordMatcher : public Matcher
     }
 };
 
+#if 0
 static string tolower(const std::string& s)
 {
     string res(s);
@@ -306,8 +300,6 @@ struct ReteMatcher : public Matcher
 };
 #endif
 }
-
-#if 0
 
 static inline int int_or_missing(const Record& query, dba_keyword key)
 {
@@ -347,7 +339,6 @@ static bool parse_lat_extremes(const Record& query, int* rlatmin, int* rlatmax, 
 
     return true;
 }
-#endif
 
 std::auto_ptr<Matcher> Matcher::create(const Record& query)
 {
@@ -374,11 +365,11 @@ std::auto_ptr<Matcher> Matcher::create(const Record& query)
     if (minvalues[0] != -1 || maxvalues[0] != -1)
         res->exprs.push_back(new DateMatcher(minvalues, maxvalues));
 
-#if 0
     int latmin = 0, latmax = 0, lonmin = 0, lonmax = 0;
     if (parse_lat_extremes(query, &latmin, &latmax, &lonmin, &lonmax))
         res->exprs.push_back(new CoordMatcher(latmin, latmax, lonmin, lonmax));
 
+#if 0
     if (const char* rete = query.key_peek_value(DBA_KEY_REP_MEMO))
         res->exprs.push_back(new ReteMatcher(rete));
 #endif

@@ -179,6 +179,96 @@ void to::test<4>()
     }
 }
 
+// Test coordinates matcher
+template<> template<>
+void to::test<5>()
+{
+    {
+        Record matcher;
+        matcher.set("latmin", 450000);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set(DBA_KEY_LAT, 430000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set(DBA_KEY_LAT, 450000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+        matched.set(DBA_KEY_LAT, 450000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("latmax", 450000);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("lat", 460000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("lat", 450000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+        matched.set("lat", 440000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("lonmin", 450000);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("lon", 430000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("lon", 450000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+        matched.set("lon", 450000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("lonmax", 450000);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("lon", 460000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("lon", 450000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+        matched.set("lon", 440000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("latmin", 450000);
+        matcher.set("latmax", 460000);
+        matcher.set("lonmin", 100000);
+        matcher.set("lonmax", 120000);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("lat", 455000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("lon", 130000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("lon", 110000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+    }
+}
+
 }
 
 // vim:set ts=4 sw=4:

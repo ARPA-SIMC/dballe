@@ -78,14 +78,15 @@ struct Matched
      */
     virtual matcher::Result match_date(const int* min, const int* max) const;
 
-#if 0
     /**
-     * Get coordinates in 1/10000 of degree
+     * Match coordinates, with bounds in 1/10000 of degree
      *
-     * Either value can be set to MISSING_INT if not applicable.
+     * Any value can be set to MISSING_INT if not applicable or to represent an
+     * open bound
      */
-    virtual void get_coords(int* lat, int* lon) const;
+    virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
 
+#if 0
     /**
      * Get rep_memo.
      *
@@ -101,6 +102,14 @@ struct Matched
      * to signify an open bound.
      */
     static matcher::Result date_in_range(const int* date, const int* min, const int* max);
+
+    /**
+     * Match if min <= val <= max
+     *
+     * It correctly deals with min and max being set to MISSING_INT to signify an open
+     * bound.
+     */
+    static matcher::Result int_in_range(int val, int min, int max);
 };
 
 struct Matcher

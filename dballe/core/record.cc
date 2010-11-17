@@ -22,6 +22,7 @@
 #include "record.h"
 #include "var.h"
 #include "aliases.h"
+#include "defs.h"
 
 #include "config.h"
 
@@ -763,6 +764,27 @@ matcher::Result MatchedRecord::match_date(const int* min, const int* max) const
     r.parse_date(date);
     if (date[0] == -1) return matcher::MATCH_NA;
     return Matched::date_in_range(date, min, max);
+}
+
+matcher::Result MatchedRecord::match_coords(int latmin, int latmax, int lonmin, int lonmax) const
+{
+    matcher::Result r1 = matcher::MATCH_NA;
+    if (const wreport::Var* var = r.key_peek(DBA_KEY_LAT))
+        r1 = Matched::int_in_range(var->enqi(), latmin, latmax);
+    else if (latmin == MISSING_INT && latmax == MISSING_INT)
+        r1 = matcher::MATCH_YES;
+
+    matcher::Result r2 = matcher::MATCH_NA;
+    if (const wreport::Var* var = r.key_peek(DBA_KEY_LON))
+        r2 = Matched::int_in_range(var->enqi(), lonmin, lonmax);
+    else if (lonmin == MISSING_INT && lonmax == MISSING_INT)
+        r2 = matcher::MATCH_YES;
+
+    if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
+        return matcher::MATCH_YES;
+    if (r1 == matcher::MATCH_NO || r2 == matcher::MATCH_NO)
+        return matcher::MATCH_NO;
+    return matcher::MATCH_NA;
 }
 
 }
