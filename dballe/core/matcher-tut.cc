@@ -121,6 +121,63 @@ void to::test<3>()
     }
 }
 
+// Test date matcher
+template<> template<>
+void to::test<4>()
+{
+    {
+        Record matcher;
+        matcher.set("yearmin", 2000);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("year", 1999);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("year", 2000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("yearmax", 2000);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("year", 2001);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("year", 2000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("yearmin", 2000);
+        matcher.set("yearmax", 2010);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Record matched;
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("year", 1999);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("year", 2011);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
+
+        matched.set("year", 2000);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+
+        matched.set("year", 2005);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+
+        matched.set("year", 2010);
+        ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
+    }
+}
 
 }
 
