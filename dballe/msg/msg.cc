@@ -541,6 +541,141 @@ void Msg::sounding_unpack_levels(Msg& dst) const
     }
 }
 
+void Msg::parse_date(int* values) const
+{
+    const msg::Context* c = find_station_context();
+    if (!c)
+    {
+        for (int i = 0; i < 6; ++i)
+            values[i] = -1;
+        return;
+    }
+
+    int macros[] = { DBA_MSG_YEAR, DBA_MSG_MONTH, DBA_MSG_DAY, DBA_MSG_HOUR, DBA_MSG_MINUTE, DBA_MSG_SECOND };
+    const char* names[] = { "year", "month", "day", "hour", "minute", "second" };
+
+    for (int i = 0; i < 6; i++)
+    {
+        const wreport::Var* v = c->find_by_id(macros[i]);
+        if (v)
+            values[i] = v->enq(-1);
+        else
+            values[i] = -1;
+
+        if (i > 0 && (values[i-1] == -1 && values[i] != -1))
+            error_consistency::throwf("%s is unset but %s is set",
+                    names[i-1], names[i]);
+    }
+
+    /* Now values is either 6 times -1, 6 values, or X values followed by 6-X times -1 */
+
+    /* If one of the extremes has been selected, fill in the blanks */
+
+    if (values[0] != -1)
+    {
+        values[1] = values[1] != -1 ? values[1] : 1;
+        values[2] = values[2] != -1 ? values[2] : 1;
+        values[3] = values[3] != -1 ? values[3] : 0;
+        values[4] = values[4] != -1 ? values[4] : 0;
+        values[5] = values[5] != -1 ? values[5] : 0;
+    }
+}
+
+MatchedMsg::MatchedMsg(const Msg& m)
+    : m(m)
+{
+}
+
+MatchedMsg::~MatchedMsg()
+{
+}
+
+matcher::Result MatchedMsg::match_var_id(int val) const
+{
+    for (std::vector<msg::Context*>::const_iterator ci = m.data.begin();
+            ci != m.data.end(); ++ci)
+        for (std::vector<wreport::Var*>::const_iterator vi = (*ci)->data.begin();
+                vi != (*ci)->data.end(); ++vi)
+            if (const Var* a = (*vi)->enqa(WR_VAR(0, 33, 195)))
+                if (a->enqi() == val)
+                    return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMsg::match_station_id(int val) const
+{
+    if (const wreport::Var* var = m.find(WR_VAR(0, 1, 192), Level::ana(), Trange::ana()))
+    {
+        return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
+    } else
+        return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMsg::match_station_wmo(int block, int station) const
+{
+    const msg::Context* c = m.find_station_context();
+    if (!c) return matcher::MATCH_NA;
+
+    if (const wreport::Var* var = c->find_by_id(DBA_MSG_BLOCK))
+    {
+        // Match block
+        if (var->enqi() != block) return matcher::MATCH_NO;
+
+        // If station was not requested, we are done
+        if (station == -1) return matcher::MATCH_YES;
+
+        // Match station
+        if (const wreport::Var* var = c->find_by_id(DBA_MSG_STATION))
+        {
+            if (var->enqi() != station) return matcher::MATCH_NO;
+            return matcher::MATCH_YES;
+        }
+    }
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMsg::match_date(const int* min, const int* max) const
+{
+    int date[6];
+    m.parse_date(date);
+    if (date[0] == -1) return matcher::MATCH_NA;
+    return Matched::date_in_range(date, min, max);
+}
+
+matcher::Result MatchedMsg::match_coords(int latmin, int latmax, int lonmin, int lonmax) const
+{
+    const msg::Context* c = m.find_station_context();
+    if (!c) return matcher::MATCH_NA;
+
+    matcher::Result r1 = matcher::MATCH_NA;
+    if (const wreport::Var* var = c->find_by_id(DBA_MSG_LATITUDE))
+        r1 = Matched::int_in_range(var->enqi(), latmin, latmax);
+    else if (latmin == MISSING_INT && latmax == MISSING_INT)
+        r1 = matcher::MATCH_YES;
+
+    matcher::Result r2 = matcher::MATCH_NA;
+    if (const wreport::Var* var = c->find_by_id(DBA_MSG_LONGITUDE))
+        r2 = Matched::int_in_range(var->enqi(), lonmin, lonmax);
+    else if (lonmin == MISSING_INT && lonmax == MISSING_INT)
+        r2 = matcher::MATCH_YES;
+
+    if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
+        return matcher::MATCH_YES;
+    if (r1 == matcher::MATCH_NO || r2 == matcher::MATCH_NO)
+        return matcher::MATCH_NO;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMsg::match_rep_memo(const char* memo) const
+{
+    if (const Var* var = m.get_rep_memo_var())
+    {
+        const char* val = var->value();
+        if (!val) return matcher::MATCH_NA;
+        return strcmp(memo, val) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
+    } else
+        return matcher::MATCH_NA;
+}
 
 #if 0
 

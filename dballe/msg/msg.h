@@ -66,6 +66,7 @@
 
 #include <dballe/core/var.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/matcher.h>
 #include <dballe/msg/vars.h>
 #include <stdio.h>
 #include <vector>
@@ -374,6 +375,18 @@ public:
     void sounding_unpack_levels(Msg& dst) const;
 
     /**
+     * Parse the date set in the Msg.
+     *
+     * This function will examine the values year, month, day, hour, min and
+     * sec, and will compute the lower bound of the datetime they represent.
+     *
+     * @retval values
+     *   An array of 6 integers that will be filled with the minimum year, month,
+     *   day, hour, minute and seconds.
+     */
+    void parse_date(int* values) const;
+
+    /**
      * Dump all the contents of the message to the given stream
      *
      * @param out
@@ -428,6 +441,23 @@ struct MsgConsumer
     virtual void operator()(std::auto_ptr<Msg>) = 0;
 };
 
+/**
+ * Match adapter for Mst
+ */
+struct MatchedMsg : public Matched
+{
+    const Msg& m;
+
+    MatchedMsg(const Msg& r);
+    ~MatchedMsg();
+
+    virtual matcher::Result match_var_id(int val) const;
+    virtual matcher::Result match_station_id(int val) const;
+    virtual matcher::Result match_station_wmo(int block, int station=-1) const;
+    virtual matcher::Result match_date(const int* min, const int* max) const;
+    virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
+    virtual matcher::Result match_rep_memo(const char* memo) const;
+};
 
 #if 0
 

@@ -94,7 +94,7 @@ tut_test_SOURCES = \
 	test-utils-msg.cc \
 	tests/vars.cc \
 	tests/context.cc \
-	tests/msg.cc \
+	msg-tut.cc \
 	tests/aof_codec.cc \
 	tests/wr_import.cc \
 	tests/wr_export.cc \

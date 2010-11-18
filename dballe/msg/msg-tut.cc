@@ -51,7 +51,7 @@ void _ensure_msg_is_sorted(const wibble::tests::Location& loc, const Msg& msg)
 {
 	if (msg.data.size() < 2)
 		return;
-	for (int i = 0; i < msg.data.size() - 1; ++i)
+	for (unsigned i = 0; i < msg.data.size() - 1; ++i)
 		inner_ensure(msg.data[i]->compare(*msg.data[i + 1]) < 0);
 }
 #define ensure_msg_is_sorted(x) _ensure_msg_is_sorted(wibble::tests::Location(__FILE__, __LINE__, "msg is sorted in " #x), (x))
@@ -279,6 +279,269 @@ void to::test<3>()
 	ensure_equals(Msg::type_from_repmemo("antani"), MSG_GENERIC);
 	ensure_equals(Msg::type_from_repmemo(""), MSG_GENERIC);
 	ensure_equals(Msg::type_from_repmemo(NULL), MSG_GENERIC);
+}
+
+// Test var_id matcher
+template<> template<>
+void to::test<4>()
+{
+    Record matcher;
+    matcher.set("data_id", 1);
+    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+    Msg matched;
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+    matched.set(newvar(WR_VAR(0, 12, 101), 21.5), Level(1), Trange(254));
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+    std::auto_ptr<wreport::Var> var = newvar(WR_VAR(0, 12, 103), 18.5);
+    var->seta(newvar(WR_VAR(0, 33, 195), 1));
+    matched.set(var, Level(1), Trange(254));
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+}
+
+// Test station_id matcher
+template<> template<>
+void to::test<5>()
+{
+    Record matcher;
+    matcher.set("ana_id", 1);
+    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+    Msg matched;
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+    matched.seti(WR_VAR(0, 1, 192), 2, -1, Level::ana(), Trange::ana());
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+    matched.seti(WR_VAR(0, 1, 192), 1, -1, Level::ana(), Trange::ana());
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+}
+
+// Test station WMO matcher
+template<> template<>
+void to::test<6>()
+{
+    {
+        Record matcher;
+        matcher.set("block", 11);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_block(1);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_block(11);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+
+        matched.set_station(222);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+    }
+
+    {
+        Record matcher;
+        matcher.set("block", 11);
+        matcher.set("station", 222);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_block(1);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_block(11);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_station(22);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_station(222);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+
+        matched.set_block(1);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+    }
+}
+
+// Test date matcher
+template<> template<>
+void to::test<7>()
+{
+    {
+        Record matcher;
+        matcher.set("yearmin", 2000);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_year(1999);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_year(2000);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("yearmax", 2000);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_year(2001);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_year(2000);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("yearmin", 2000);
+        matcher.set("yearmax", 2010);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_year(1999);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_year(2011);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_year(2000);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+
+        matched.set_year(2005);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+
+        matched.set_year(2010);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+    }
+}
+
+// Test coordinates matcher
+template<> template<>
+void to::test<8>()
+{
+    {
+        Record matcher;
+        matcher.set("latmin", 45.0);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_latitude(43.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_latitude(45.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+        matched.set_latitude(46.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("latmax", 45.0);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_latitude(46.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_latitude(45.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+        matched.set_latitude(44.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("lonmin", 45.0);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_longitude(43.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_longitude(45.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+        matched.set_longitude(45.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("lonmax", 45.0);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_longitude(46.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_longitude(45.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+        matched.set_longitude(44.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+    }
+    {
+        Record matcher;
+        matcher.set("latmin", 45.0);
+        matcher.set("latmax", 46.0);
+        matcher.set("lonmin", 10.0);
+        matcher.set("lonmax", 12.0);
+        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+        Msg matched;
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_latitude(45.5);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_longitude(13.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+        matched.set_longitude(11.0);
+        ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+    }
+}
+
+// Test rep_memo matcher
+template<> template<>
+void to::test<9>()
+{
+    Record matcher;
+    matcher.set(DBA_KEY_REP_MEMO, "synop");
+    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+    Msg matched;
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+    matched.set_rep_memo("temp");
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
+
+    matched.set_rep_memo("synop");
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+}
+
+// Test empty matcher
+template<> template<>
+void to::test<10>()
+{
+    Record matcher;
+    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+
+    Msg matched;
+    ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
 }
 
 }
