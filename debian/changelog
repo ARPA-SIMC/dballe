@@ -15,8 +15,9 @@ dballe (5.2-1) unstable; urgency=low
      - Fixed dbamsg dump --text
      - Instant time range is now 254,0,0
      - Messages with ECMWF templates are created with old version of tables
+     - Implemented message filters for all commands where it makes sense
 
- -- Enrico Zini <enrico@debian.org>  Wed, 10 Nov 2010 17:26:07 +0000
+ -- Enrico Zini <enrico@debian.org>  Thu, 18 Nov 2010 14:13:13 +0000
 
 dballe (5.1-1) unstable; urgency=low
 
