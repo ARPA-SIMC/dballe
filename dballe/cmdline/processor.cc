@@ -21,8 +21,11 @@
 
 #include <wreport/bulletin.h>
 #include <dballe/core/file.h>
+#include <dballe/core/record.h>
+#include <dballe/core/match-wreport.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/msg/msgs.h>
+#include <dballe/cmdline/cmdline.h>
 
 #include <cstring>
 #include <cstdlib>
@@ -35,69 +38,107 @@ using namespace std;
 namespace dballe {
 namespace cmdline {
 
-static int match_index(int idx, const char* expr)
+grep_t::grep_t()
+    : category(-1), subcategory(-1), checkdigit(-1), unparsable(0), parsable(0),
+      index(0), matcher(0)
 {
+}
+
+grep_t::~grep_t()
+{
+    if (matcher) delete matcher;
+}
+
+void grep_t::matcher_from_args(poptContext optCon)
+{
+    if (matcher)
+    {
+        delete matcher;
+        matcher = 0;
+    }
+    Record query;
+    if (dba_cmdline_get_query(optCon, query) > 0)
+        matcher = Matcher::create(query).release();
+}
+
+bool grep_t::match_index(int idx) const
+{
+    if (index == 0 || index[0] == 0)
+        return true;
+
 	size_t pos;
 	size_t len;
-	for (pos = 0; (len = strcspn(expr + pos, ",")) > 0; pos += len + 1)
+	for (pos = 0; (len = strcspn(index + pos, ",")) > 0; pos += len + 1)
 	{
 		int start, end;
-		int found = sscanf(expr + pos, "%d-%d", &start, &end);
+		int found = sscanf(index + pos, "%d-%d", &start, &end);
 		switch (found)
 		{
 			case 1:
 				if (start == idx)
-					return 1;
+					return true;
 				break;
 			case 2: 
 				if (start <= idx && idx <= end)
-					return 1;
+					return true;
 				break;
 			default:
-				fprintf(stderr, "Cannot parse index string %s\n", expr);
-				return 0;
+				fprintf(stderr, "Cannot parse index string %s\n", index);
+				return false;
 		}
 	}
-	return 0;
+	return false;
 }
 
-bool match_common(const Rawmsg& rmsg, const Msgs* msgs, struct grep_t* grepdata)
+bool grep_t::match_common(const Rawmsg& rmsg, const Msgs* msgs) const
 {
-	if (msgs == NULL && grepdata->parsable)
-		return false;
-	if (msgs != NULL && grepdata->unparsable)
-		return false;
-	return true;
+    if (msgs == NULL && parsable)
+        return false;
+    if (msgs != NULL && unparsable)
+        return false;
+    return true;
 }
 
-bool match_bufrex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs, struct grep_t* grepdata)
+bool grep_t::match_bufrex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
 {
-	if (!match_common(rmsg, msgs, grepdata))
-		return false;
+    if (!match_common(rmsg, msgs))
+        return false;
 
-	if (grepdata->category != -1)
-		if (grepdata->category != rm->type)
-			return false;
+    if (category != -1)
+        if (category != rm->type)
+            return false;
 
-	if (grepdata->subcategory != -1)
-		if (grepdata->subcategory != rm->subtype)
-			return false;
+    if (subcategory != -1)
+        if (subcategory != rm->subtype)
+            return false;
 
-	return true;
+    if (matcher)
+    {
+        if (msgs)
+        {
+            if (matcher->match(MatchedMsgs(*msgs)) != matcher::MATCH_YES)
+                return false;
+        } else if (rm) {
+            if (matcher->match(MatchedBulletin(*rm)) != matcher::MATCH_YES)
+                return false;
+        }
+    }
+
+    return true;
 }
 
-bool match_bufr(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs, struct grep_t* grepdata)
+bool grep_t::match_bufr(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
 {
-	if (!match_bufrex(rmsg, rm, msgs, grepdata))
-		return false;
-	return true;
+    if (!match_bufrex(rmsg, rm, msgs))
+        return false;
+    return true;
 }
 
-bool match_crex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs, struct grep_t* grepdata)
+bool grep_t::match_crex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
 {
-	if (!match_bufrex(rmsg, rm, msgs, grepdata))
-		return false;
-	return true;
+    if (!match_bufrex(rmsg, rm, msgs))
+        return false;
+    return true;
 
 #if 0
 	if (grepdata->checkdigit != -1)
@@ -113,23 +154,27 @@ bool match_crex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs, struct
 #endif
 }
 
-bool match_aof(const Rawmsg& rmsg, const Msgs* msgs, struct grep_t* grepdata)
+bool grep_t::match_aof(const Rawmsg& rmsg, const Msgs* msgs) const
 {
-	int category, subcategory;
-	msg::AOFImporter::get_category(rmsg, &category, &subcategory);
+    int category, subcategory;
+    msg::AOFImporter::get_category(rmsg, &category, &subcategory);
 
-	if (!match_common(rmsg, msgs, grepdata))
-		return false;
+    if (!match_common(rmsg, msgs))
+        return false;
 
-	if (grepdata->category != -1)
-		if (grepdata->category != category)
-			return false;
+    if (category != -1)
+        if (category != category)
+            return false;
 
-	if (grepdata->subcategory != -1)
-		if (grepdata->subcategory != subcategory)
-			return false;
+    if (subcategory != -1)
+        if (subcategory != subcategory)
+            return false;
 
-	return true;
+    if (matcher && msgs)
+        if (matcher->match(MatchedMsgs(*msgs)) != matcher::MATCH_YES)
+            return false;
+
+    return true;
 }
 
 static void print_parse_error(const Rawmsg& msg, error& e)
@@ -168,7 +213,7 @@ static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdat
 				}
 			}
 			if (grepdata != NULL)
-				match = match_bufr(rmsg, br.get(), parsed.get(), grepdata);
+				match = grepdata->match_bufr(rmsg, br.get(), parsed.get());
 			break;
 		case CREX:
 			br.reset(new CrexBulletin);
@@ -191,7 +236,7 @@ static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdat
 				}
 			}
 			if (grepdata != NULL)
-				match = match_crex(rmsg, br.get(), parsed.get(), grepdata);
+				match = grepdata->match_crex(rmsg, br.get(), parsed.get());
 			break;
 		case AOF: {
 			std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding);
@@ -202,7 +247,7 @@ static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdat
 				parsed.release();
 			}
 			if (grepdata != NULL)
-				match = match_aof(rmsg, parsed.get(), grepdata);
+				match = grepdata->match_aof(rmsg, parsed.get());
 			break;
 		}
 	}
@@ -235,7 +280,7 @@ void process_all(poptContext optCon,
 //			if (op_verbose)
 //				fprintf(stderr, "Reading message #%d...\n", index);
 
-			if (grepdata->index[0] == 0 || match_index(index, grepdata->index))
+			if (grepdata && grepdata->match_index(index))
 			{
 				rmsg.index = index;
 				process_input(*file, rmsg, grepdata, action);

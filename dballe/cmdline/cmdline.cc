@@ -520,20 +520,22 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
     return 1;
 }
 
-void dba_cmdline_get_query(poptContext optCon, Record& query)
+unsigned dba_cmdline_get_query(poptContext optCon, Record& query)
 {
+    unsigned res;
     const char* queryparm;
-    while ((queryparm = poptPeekArg(optCon)) != NULL)
+    for (res = 0; (queryparm = poptPeekArg(optCon)) != NULL; ++res)
     {
         /* Split the input as name=val */
         if (strchr(queryparm, '=') == NULL)
-            return;
+            break;
 
         /* Mark as processed */
         poptGetArg(optCon);
 
         query.set_from_string(queryparm);
     }
+    return res;
 }
 
 void list_templates()

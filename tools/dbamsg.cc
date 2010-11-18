@@ -26,6 +26,7 @@
 #include <dballe/core/record.h>
 #include <dballe/core/file.h>
 #include <dballe/core/aoffile.h>
+#include <dballe/core/matcher.h>
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <dballe/cmdline/cmdline.h>
@@ -54,7 +55,7 @@ static const char* op_report = "";
 static const char* op_bisect_cmd = NULL;
 int op_verbose = 0;
 
-struct cmdline::grep_t grepdata = { -1, -1, -1, 0, 0, "" };
+struct cmdline::grep_t grepdata;
 struct poptOption grepTable[] = {
 	{ "category", 0, POPT_ARG_INT, &grepdata.category, 0,
 		"match messages with the given data category", "num" },
@@ -63,9 +64,9 @@ struct poptOption grepTable[] = {
 	{ "check-digit", 0, POPT_ARG_INT, &grepdata.checkdigit, 0,
 		"match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
 	{ "unparsable", 0, 0, &grepdata.unparsable, 0,
-		"match only messages that cannot be parsed" },
+		"match only messages that cannot be parsed", 0 },
 	{ "parsable", 0, 0, &grepdata.parsable, 0,
-		"match only messages that can be parsed" },
+		"match only messages that can be parsed", 0 },
 	{ "index", 0, POPT_ARG_STRING, &grepdata.index, 0,
 		"match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
 	POPT_TABLEEND
@@ -365,6 +366,7 @@ int do_scan(poptContext optCon)
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
+    grepdata.matcher_from_args(optCon);
 	Summarise s;
 	process_all(optCon, dba_cmdline_stringToMsgType(op_input_type, optCon), &grepdata, s);
 	return 0;
@@ -375,6 +377,7 @@ int do_head(poptContext optCon)
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
+    grepdata.matcher_from_args(optCon);
 	Head head;
 	process_all(optCon, dba_cmdline_stringToMsgType(op_input_type, optCon), &grepdata, head);
 	return 0;
@@ -392,6 +395,7 @@ int do_dump(poptContext optCon)
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
+    grepdata.matcher_from_args(optCon);
 	process_all(optCon, dba_cmdline_stringToMsgType(op_input_type, optCon), &grepdata, *action);
 	return 0;
 }
@@ -401,6 +405,7 @@ int do_cat(poptContext optCon)
 	/* Throw away the command name */
 	poptGetArg(optCon);
 
+    grepdata.matcher_from_args(optCon);
 	/*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
 	WriteRaw wraw;
 	process_all(optCon, dba_cmdline_stringToMsgType(op_input_type, optCon), &grepdata, wraw);
@@ -542,6 +547,8 @@ int do_convert(poptContext optCon)
 		return 0;
 	}
 
+    grepdata.matcher_from_args(optCon);
+
 	Encoding intype = dba_cmdline_stringToMsgType(op_input_type, optCon);
 	Encoding outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
 
@@ -612,181 +619,6 @@ int do_compare(poptContext optCon)
 	if (idx == 0)
 		throw error_consistency("The files do not contain messages");
 	return 0;
-}
-
-#if 0
-struct filter_data
-{
-	dba_file output;
-	int mindate[6];
-	int maxdate[6];
-	double latmin, latmax, lonmin, lonmax;
-	dba_var varfilter[20];
-};
-
-inline static int get_date_value(dba_msg msg, int value)
-{
-	dba_var var = dba_msg_find_by_id(msg, value);
-	const char* val = var == NULL ? NULL : dba_var_value(var);
-	if (val == NULL)
-		return -1;
-	else
-		return strtoul(val, 0, 10);
-}
-
-inline static double get_lat_value(dba_msg msg, int value)
-{
-	double res;
-	dba_var var = dba_msg_find_by_id(msg, value);
-	if (var == NULL || dba_var_value(var) == NULL)
-		return -1000000;
-	dba_var_enqd(var, &res);
-	return res;
-}
-
-dba_err filter_message(dba_rawmsg rmsg, bufrex_msg braw, dba_msgs msgs, void* data)
-{
-	struct filter_data* fdata = (struct filter_data*)data;
-	double dval;
-	int msgs_reject;
-	int i, j, k;
-
-	if (msgs == NULL) return dba_error_ok();
-
-	for (i = 0; i < 20 && fdata->varfilter[i] != NULL; ++i)
-	{
-		dba_var test = fdata->varfilter[i];
-		int found = 0;
-		for (j = 0; !found && j < braw->subsets_count; ++j)
-		{
-			for (k = 0; !found && k < braw->subsets[j]->vars_count; ++k)
-			{
-				dba_var t = braw->subsets[j]->vars[k];
-				if (dba_var_code(test) == dba_var_code(t)
-				 && strcmp(dba_var_value(test), dba_var_value(t)) == 0)
-					found = 1;
-			}
-		}
-		if (!found)
-			return dba_error_ok();
-	}
-
-	msgs_reject = 1;
-	for (i = 0; i < msgs->len; ++i)
-	{
-		dba_msg msg = msgs->msgs[i];
-		int msg_reject = 0;
-
-		if (fdata->mindate[0] != -1 || fdata->maxdate[0] != -1)
-		{
-			int i, date[6];
-			date[0] = get_date_value(msg, DBA_MSG_YEAR);
-			date[1] = get_date_value(msg, DBA_MSG_MONTH);
-			date[2] = get_date_value(msg, DBA_MSG_DAY);
-			date[3] = get_date_value(msg, DBA_MSG_HOUR);
-			date[4] = get_date_value(msg, DBA_MSG_MINUTE);
-			date[5] = 0;
-
-			/* Check that the message contains proper datetime indications */
-			for (i = 0; i < 6; i++)
-				if (date[i] == -1)
-					msg_reject = 1;
-
-			/* Compare with the two extremes */
-
-			if (fdata->mindate[0] != -1)
-				for (i = 0; !msg_reject && i < 6; i++)
-					if (fdata->mindate[i] > date[i])
-						msg_reject = 1;
-
-			if (fdata->maxdate[0] != -1)
-				for (i = 0; !msg_reject && i < 6; i++)
-					if (fdata->maxdate[i] < date[i])
-						msg_reject = 1;
-		}
-
-		/* Latitude and longitude must exist */
-		if (!msg_reject && (dval = get_lat_value(msg, DBA_MSG_LATITUDE)) == -1000000)
-			msg_reject = 1;
-		if (!msg_reject && fdata->latmin != -1000000 && fdata->latmin > dval)
-			msg_reject = 1;
-		if (!msg_reject && fdata->latmax != -1000000 && fdata->latmax < dval)
-			msg_reject = 1;
-
-		if (!msg_reject && (dval = get_lat_value(msg, DBA_MSG_LONGITUDE)) == -1000000)
-			msg_reject = 1;
-		if (!msg_reject && fdata->lonmin != -1000000 && fdata->lonmin > dval)
-			msg_reject = 1;
-		if (!msg_reject && fdata->lonmax != -1000000 && fdata->lonmax < dval)
-			msg_reject = 1;
-
-		if (!msg_reject)
-		{
-			msgs_reject = 0;
-			break;
-		}
-	}
-
-	if (!msgs_reject)
-		DBA_RUN_OR_RETURN(dba_file_write(fdata->output, rmsg));
-
-	return dba_error_ok();
-}
-
-inline static double get_input_lat_value(dba_record rec, dba_keyword key)
-{
-	dba_var var = dba_record_key_peek(rec, key); 
-	double res;
-	if (var == NULL)
-		return -1000000;
-	if (dba_var_value(var) == NULL)
-		return -1000000;
-	dba_var_enqd(var, &res);
-	return res;
-}
-#endif
-
-int do_filter(poptContext optCon)
-{
-	throw error_unimplemented("filter not implemented");
-#if 0
-	dba_encoding type;
-	dba_encoding otype;
-	struct filter_data fdata;
-	dba_record query;
-	memset(&fdata, 0, sizeof(fdata));
-	fdata.varfilter[0] = NULL;
-	dba_record_cursor c;
-	int i;
-
-	/* Throw away the command name */
-	poptGetArg(optCon);
-
-	/* Create the query */
-	DBA_RUN_OR_RETURN(dba_record_create(&query));
-	DBA_RUN_OR_RETURN(dba_cmdline_get_query(optCon, query));
-
-	/* Digest the query in good values for filter_data */
-	DBA_RUN_OR_RETURN(dba_record_parse_date_extremes(query, fdata.mindate, fdata.maxdate));
-	fdata.latmin = get_input_lat_value(query, DBA_KEY_LATMIN);
-	fdata.latmax = get_input_lat_value(query, DBA_KEY_LATMAX);
-	fdata.lonmin = get_input_lat_value(query, DBA_KEY_LONMIN);
-	fdata.lonmax = get_input_lat_value(query, DBA_KEY_LONMAX);
-
-	for (i = 0, c = dba_record_iterate_first(query);
-			c != NULL && i < 20; c = dba_record_iterate_next(query, c), ++i)
-		fdata.varfilter[i] = dba_record_cursor_variable(c);
-
-	type = dba_cmdline_stringToMsgType(op_input_type, optCon);
-	otype = dba_cmdline_stringToMsgType(op_output_type, optCon);
-
-	DBA_RUN_OR_RETURN(dba_file_create(otype, "(stdout)", "w", &fdata.output));
-	DBA_RUN_OR_RETURN(process_all(optCon, type, &grepdata, filter_message, &fdata));
-	/*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
-	dba_file_delete(fdata.output);
-
-	return dba_error_ok();
-#endif
 }
 
 int do_fixaof(poptContext optCon)
@@ -1030,42 +862,42 @@ cleanup:
 static struct tool_desc dbamsg;
 
 struct poptOption dbamsg_scan_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message" },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	{ "help", '?', 0, 0, 1, "print an help message", 0 },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages" },
+		"Options used to filter messages", 0 },
 	POPT_TABLEEND
 };
 
 struct poptOption dbamsg_dump_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message" },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	{ "help", '?', 0, 0, 1, "print an help message", 0 },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the unput data ('bufr', 'crex', 'aof')", "type" },
 	{ "interpreted", 0, 0, &op_dump_interpreted, 0,
-		"dump the message as understood by the importer" },
+		"dump the message as understood by the importer", 0 },
 	{ "text", 0, 0, &op_dump_text, 0,
-		"dump as text that can be processed by dbamsg makebufr" },
+		"dump as text that can be processed by dbamsg makebufr", 0 },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages" },
+		"Options used to filter messages", 0 },
 	POPT_TABLEEND
 };
 
 struct poptOption dbamsg_cat_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message" },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	{ "help", '?', 0, 0, 1, "print an help message", 0 },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages" },
+		"Options used to filter messages", 0 },
 	POPT_TABLEEND
 };
 
 struct poptOption dbamsg_convert_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message" },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	{ "help", '?', 0, 0, 1, "print an help message", 0 },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
@@ -1075,55 +907,55 @@ struct poptOption dbamsg_convert_options[] = {
 	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
 		"force output data to be of this type of report", "rep_memo" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages" },
+		"Options used to filter messages", 0 },
 	POPT_TABLEEND
 };
 
 struct poptOption dbamsg_compare_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message" },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	{ "help", '?', 0, 0, 1, "print an help message", 0 },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	{ "type1", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the first file to compare ('bufr', 'crex', 'aof')", "type" },
 	{ "type2", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the second file to compare ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages" },
+		"Options used to filter messages", 0 },
 	POPT_TABLEEND
 };
 
 struct poptOption dbamsg_filter_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message" },
+	{ "help", '?', 0, 0, 1, "print an help message", 0 },
 	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages" },
+		"Options used to filter messages", 0 },
 	POPT_TABLEEND
 };
 
 struct poptOption dbamsg_fixaof_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message" },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	{ "help", '?', 0, 0, 1, "print an help message", 0 },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	POPT_TABLEEND
 };
 
 struct poptOption dbamsg_makebufr_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message" },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	{ "help", '?', 0, 0, 1, "print an help message", 0 },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	POPT_TABLEEND
 };
 
 struct poptOption dbamsg_bisect_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message" },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
+	{ "help", '?', 0, 0, 1, "print an help message", 0 },
+	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	{ "test", 0, POPT_ARG_STRING, &op_bisect_cmd, 0,
 		"command to run to test a message group", "cmd" },
 	{ "type", 't', POPT_ARG_STRING, &op_input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages" },
+		"Options used to filter messages", 0 },
 	POPT_TABLEEND
 };
 
@@ -1137,21 +969,21 @@ static void init()
 
 	dbamsg.ops[0].func = do_scan;
 	dbamsg.ops[0].aliases[0] = "scan";
-	dbamsg.ops[0].usage = "scan [options] filename [filename [...]]";
+	dbamsg.ops[0].usage = "scan [options] [filter] filename [filename [...]]";
 	dbamsg.ops[0].desc = "Summarise the contents of a file with meteorological data";
 	dbamsg.ops[0].longdesc = NULL;
 	dbamsg.ops[0].optable = dbamsg_scan_options;
 
 	dbamsg.ops[1].func = do_dump;
 	dbamsg.ops[1].aliases[0] = "dump";
-	dbamsg.ops[1].usage = "dump [options] filename [filename [...]]";
+	dbamsg.ops[1].usage = "dump [options] [filter] filename [filename [...]]";
 	dbamsg.ops[1].desc = "Dump the contents of a file with meteorological data";
 	dbamsg.ops[1].longdesc = NULL;
 	dbamsg.ops[1].optable = dbamsg_dump_options;
 
 	dbamsg.ops[2].func = do_cat;
 	dbamsg.ops[2].aliases[0] = "cat";
-	dbamsg.ops[2].usage = "cat [options] filename [filename [...]]";
+	dbamsg.ops[2].usage = "cat [options] [filter] filename [filename [...]]";
 	dbamsg.ops[2].desc = "Dump the raw data of a file with meteorological data";
 	dbamsg.ops[2].longdesc = NULL;
 	dbamsg.ops[2].optable = dbamsg_cat_options;
@@ -1159,7 +991,7 @@ static void init()
 	dbamsg.ops[3].func = do_convert;
 	dbamsg.ops[3].aliases[0] = "convert";
 	dbamsg.ops[3].aliases[1] = "conv";
-	dbamsg.ops[3].usage = "convert [options] filename [filename [...]]";
+	dbamsg.ops[3].usage = "convert [options] [filter] filename [filename [...]]";
 	dbamsg.ops[3].desc = "Convert meteorological data between different formats";
 	dbamsg.ops[3].longdesc = NULL;
 	dbamsg.ops[3].optable = dbamsg_convert_options;
@@ -1172,47 +1004,40 @@ static void init()
 	dbamsg.ops[4].longdesc = NULL;
 	dbamsg.ops[4].optable = dbamsg_compare_options;
 
-	dbamsg.ops[5].func = do_filter;
-	dbamsg.ops[5].aliases[0] = "filter";
-	dbamsg.ops[5].usage = "filter [options] [queryparm1=val1 [queryparm2=val2 [...]]] filename1 [filename2...] ";
-	dbamsg.ops[5].desc = "Copy only those messages whose contents match the given query parameters";
-	dbamsg.ops[5].longdesc = "The query can be done using the same parameters as dbadb or the Fortran DB-ALLe API.  Only the parameters starting with lat, lon, year, month, day, hour, minu, sec are actually used for filtering.";
-	dbamsg.ops[5].optable = dbamsg_filter_options;
+	dbamsg.ops[5].func = do_fixaof;
+	dbamsg.ops[5].aliases[0] = "fixaof";
+	dbamsg.ops[5].usage = "fixaof [options] filename [filename1 [...]]]";
+	dbamsg.ops[5].desc = "Recomputes the start and end of observation period in the headers of the given AOF files";
+	dbamsg.ops[5].longdesc = NULL;
+	dbamsg.ops[5].optable = dbamsg_fixaof_options;
 
-	dbamsg.ops[6].func = do_fixaof;
-	dbamsg.ops[6].aliases[0] = "fixaof";
-	dbamsg.ops[6].usage = "fixaof [options] filename [filename1 [...]]]";
-	dbamsg.ops[6].desc = "Recomputes the start and end of observation period in the headers of the given AOF files";
-	dbamsg.ops[6].longdesc = NULL;
-	dbamsg.ops[6].optable = dbamsg_fixaof_options;
+	dbamsg.ops[6].func = do_makebufr;
+	dbamsg.ops[6].aliases[0] = "makebufr";
+	dbamsg.ops[6].aliases[1] = "mkbufr";
+	dbamsg.ops[6].usage = "makebufr [options] filename [filename1 [...]]]";
+	dbamsg.ops[6].desc = "Read a simple description of a BUFR file and output the BUFR file.";
+	dbamsg.ops[6].longdesc = "Read a simple description of a BUFR file and output the BUFR file.  This only works for simple BUFR messages without attributes encoded with data present bitmaps";
+	dbamsg.ops[6].optable = dbamsg_makebufr_options;
 
-	dbamsg.ops[7].func = do_makebufr;
-	dbamsg.ops[7].aliases[0] = "makebufr";
-	dbamsg.ops[7].aliases[1] = "mkbufr";
-	dbamsg.ops[7].usage = "makebufr [options] filename [filename1 [...]]]";
-	dbamsg.ops[7].desc = "Read a simple description of a BUFR file and output the BUFR file.";
-	dbamsg.ops[7].longdesc = "Read a simple description of a BUFR file and output the BUFR file.  This only works for simple BUFR messages without attributes encoded with data present bitmaps";
-	dbamsg.ops[7].optable = dbamsg_makebufr_options;
+	dbamsg.ops[7].func = do_bisect;
+	dbamsg.ops[7].aliases[0] = "bisect";
+	dbamsg.ops[7].usage = "bisect [options] --test=testscript filename";
+	dbamsg.ops[7].desc = "Bisect filename and output the minimum subsequence found for which testscript fails.";
+	dbamsg.ops[7].longdesc = "Run testscript passing parts of filename on its stdin and checking the return code.  Then divide the input in half and try on each half.  Keep going until testscript does not fail in any portion of the file.  Output to stdout the smallest portion for which testscript fails.  This is useful to isolate the few messages in a file that cause problems";
+	dbamsg.ops[7].optable = dbamsg_bisect_options;
 
-	dbamsg.ops[8].func = do_bisect;
-	dbamsg.ops[8].aliases[0] = "bisect";
-	dbamsg.ops[8].usage = "bisect [options] --test=testscript filename";
-	dbamsg.ops[8].desc = "Bisect filename and output the minimum subsequence found for which testscript fails.";
-	dbamsg.ops[8].longdesc = "Run testscript passing parts of filename on its stdin and checking the return code.  Then divide the input in half and try on each half.  Keep going until testscript does not fail in any portion of the file.  Output to stdout the smallest portion for which testscript fails.  This is useful to isolate the few messages in a file that cause problems";
-	dbamsg.ops[8].optable = dbamsg_bisect_options;
+	dbamsg.ops[8].func = do_head;
+	dbamsg.ops[8].aliases[0] = "head";
+	dbamsg.ops[8].usage = "head [options] [filter] filename [filename [...]]";
+	dbamsg.ops[8].desc = "Dump the contents of the header of a file with meteorological data";
+	dbamsg.ops[8].longdesc = NULL;
+	dbamsg.ops[8].optable = dbamsg_scan_options;
 
-	dbamsg.ops[9].func = do_head;
-	dbamsg.ops[9].aliases[0] = "head";
-	dbamsg.ops[9].usage = "head [options] filename [filename [...]]";
-	dbamsg.ops[9].desc = "Dump the contents of the header of a file with meteorological data";
+	dbamsg.ops[9].func = NULL;
+	dbamsg.ops[9].usage = NULL;
+	dbamsg.ops[9].desc = NULL;
 	dbamsg.ops[9].longdesc = NULL;
-	dbamsg.ops[9].optable = dbamsg_scan_options;
-
-	dbamsg.ops[10].func = NULL;
-	dbamsg.ops[10].usage = NULL;
-	dbamsg.ops[10].desc = NULL;
-	dbamsg.ops[10].longdesc = NULL;
-	dbamsg.ops[10].optable = NULL;
+	dbamsg.ops[9].optable = NULL;
 };
 
 static struct program_info proginfo = {
@@ -1225,6 +1050,9 @@ static struct program_info proginfo = {
 	"\n"
 	"  # Convert a BUFR message to CREX\n"
 	"  dbamsg convert file.bufr -d crex > file.crex\n"
+	"\n"
+	"  # Convert BUFR messages to CREX, but skip all those not in january 2010\n"
+	"  dbamsg convert year=2010 month=1 file.bufr -d crex > file.crex\n"
 	"\n"
 	"  # Dump the content of a message, as they are in the message\n"
 	"  dbamsg dump file.bufr\n"

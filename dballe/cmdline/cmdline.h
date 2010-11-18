@@ -83,8 +83,10 @@ int dba_cmdline_dispatch_main(const struct program_info* pinfo, const struct too
 
 /**
  * Get a DB-ALLe query from commandline parameters in the form key=value
+ *
+ * @return the number of key=value pairs found
  */
-void dba_cmdline_get_query(poptContext optCon, Record& query);
+unsigned dba_cmdline_get_query(poptContext optCon, Record& query);
 
 /**
  * List available output templates

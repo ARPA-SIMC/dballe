@@ -30,17 +30,32 @@ struct Bulletin;
 namespace dballe {
 struct Rawmsg;
 struct Msgs;
+struct Matcher;
 
 namespace cmdline {
 
 struct grep_t
 {
-	int category;
-	int subcategory;
-	int checkdigit;
-	int unparsable;
-	int parsable;
-	const char* index;
+    int category;
+    int subcategory;
+    int checkdigit;
+    int unparsable;
+    int parsable;
+    const char* index;
+    Matcher* matcher;
+
+    grep_t();
+    ~grep_t();
+
+    /// Initialise the matcher eating key=val arguments
+    void matcher_from_args(poptContext optCon);
+
+    bool match_index(int idx) const;
+    bool match_common(const Rawmsg& rmsg, const Msgs* msgs) const;
+    bool match_bufrex(const Rawmsg& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
+    bool match_bufr(const Rawmsg& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
+    bool match_crex(const Rawmsg& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
+    bool match_aof(const Rawmsg& rmsg, const Msgs* msgs) const;
 };
 
 struct Action
