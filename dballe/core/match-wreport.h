@@ -32,6 +32,7 @@
 namespace wreport {
 struct Var;
 struct Subset;
+struct Bulletin;
 }
 
 namespace dballe {
@@ -62,6 +63,27 @@ protected:
     const wreport::Var* var_block;
     const wreport::Var* var_station;
     const wreport::Var* var_rep_memo;
+};
+
+/**
+ * Match all subsets in turn, returning true if at least one subset matches
+ */
+struct MatchedBulletin : public Matched
+{
+    const wreport::Bulletin& r;
+
+    MatchedBulletin(const wreport::Bulletin& r);
+    ~MatchedBulletin();
+
+    virtual matcher::Result match_var_id(int val) const;
+    virtual matcher::Result match_station_id(int val) const;
+    virtual matcher::Result match_station_wmo(int block, int station=-1) const;
+    virtual matcher::Result match_date(const int* min, const int* max) const;
+    virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
+    virtual matcher::Result match_rep_memo(const char* memo) const;
+
+protected:
+    const MatchedSubset** subsets;
 };
 
 }

@@ -22,6 +22,7 @@
 #include <dballe/core/match-wreport.h>
 #include <dballe/core/defs.h>
 #include <wreport/subset.h>
+#include <wreport/bulletin.h>
 #include <cmath>
 #include <cstring>
 
@@ -139,6 +140,68 @@ matcher::Result MatchedSubset::match_rep_memo(const char* memo) const
         return strcmp(memo, var) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
     } else
         return matcher::MATCH_NA;
+}
+
+MatchedBulletin::MatchedBulletin(const wreport::Bulletin& r)
+    : r(r)
+{
+    subsets = new const MatchedSubset*[r.subsets.size()];
+    for (unsigned i = 0; i < r.subsets.size(); ++i)
+        subsets[i] = new MatchedSubset(r.subsets[i]);
+}
+MatchedBulletin::~MatchedBulletin()
+{
+    for (unsigned i = 0; i < r.subsets.size(); ++i)
+        delete subsets[i];
+    delete[] subsets;
+}
+
+matcher::Result MatchedBulletin::match_var_id(int val) const
+{
+    for (unsigned i = 0; i < r.subsets.size(); ++i)
+        if (subsets[i]->match_var_id(val) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedBulletin::match_station_id(int val) const
+{
+    for (unsigned i = 0; i < r.subsets.size(); ++i)
+        if (subsets[i]->match_station_id(val) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedBulletin::match_station_wmo(int block, int station) const
+{
+    for (unsigned i = 0; i < r.subsets.size(); ++i)
+        if (subsets[i]->match_station_wmo(block, station) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedBulletin::match_date(const int* min, const int* max) const
+{
+    for (unsigned i = 0; i < r.subsets.size(); ++i)
+        if (subsets[i]->match_date(min, max) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedBulletin::match_coords(int latmin, int latmax, int lonmin, int lonmax) const
+{
+    for (unsigned i = 0; i < r.subsets.size(); ++i)
+        if (subsets[i]->match_coords(latmin, latmax, lonmin, lonmax) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedBulletin::match_rep_memo(const char* memo) const
+{
+    for (unsigned i = 0; i < r.subsets.size(); ++i)
+        if (subsets[i]->match_rep_memo(memo) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
 }
 
 }
