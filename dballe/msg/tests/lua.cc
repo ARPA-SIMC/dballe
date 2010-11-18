@@ -80,7 +80,7 @@ void to::test<1>()
 		"  if var == nil then return 'temp_2m is nil' end\n"
 		"  if var:enqd() ~= 289.2 then return 'temp_2m is '..var:enqd()..' instead of 289.2' end\n"
 
-		"  var = msg:find('B12101', 103, 2000, nil, nil, 254, nil, nil)\n"
+		"  var = msg:find('B12101', 103, 2000, nil, nil, 254, 0, 0)\n"
 		"  if var == nil then return 'B12101 is nil' end\n"
 		"  if var:enqd() ~= 289.2 then return 'B12101 is '..var:enqd()..' instead of 289.2' end\n"
 		"end \n"
