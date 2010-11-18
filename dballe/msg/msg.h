@@ -442,7 +442,7 @@ struct MsgConsumer
 };
 
 /**
- * Match adapter for Mst
+ * Match adapter for Msg
  */
 struct MatchedMsg : public Matched
 {
@@ -460,12 +460,6 @@ struct MatchedMsg : public Matched
 };
 
 #if 0
-
-
-
-
-
-
 /**
  * Add or replace a value in the dba_msg
  *
@@ -496,11 +490,6 @@ dba_err dba_msg_set_by_id(dba_msg msg, dba_var var, int id);
  */
 dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
 
-
-
-
-
-
 /**
  * Get the source of the data
  *
@@ -510,9 +499,6 @@ dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
  *   The query source type
  */
 dba_msg_type dba_msg_get_type(dba_msg msg);
-
-
-
 #endif
 
 }

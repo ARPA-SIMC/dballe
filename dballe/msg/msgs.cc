@@ -1,7 +1,7 @@
 /*
  * DB-ALLe - Archive for punctual meteorological data
  *
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,6 +70,63 @@ unsigned Msgs::diff(const Msgs& msgs, FILE* out) const
 	for (unsigned i = 0; i < count; ++i)
 		diffs += (*this)[i]->diff(*msgs[i], out);
     return diffs;
+}
+
+
+MatchedMsgs::MatchedMsgs(const Msgs& m)
+    : m(m)
+{
+}
+MatchedMsgs::~MatchedMsgs()
+{
+}
+
+matcher::Result MatchedMsgs::match_var_id(int val) const
+{
+    for (Msgs::const_iterator i = m.begin(); i != m.end(); ++i)
+        if (MatchedMsg(**i).match_var_id(val) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMsgs::match_station_id(int val) const
+{
+    for (Msgs::const_iterator i = m.begin(); i != m.end(); ++i)
+        if (MatchedMsg(**i).match_station_id(val) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMsgs::match_station_wmo(int block, int station) const
+{
+    for (Msgs::const_iterator i = m.begin(); i != m.end(); ++i)
+        if (MatchedMsg(**i).match_station_wmo(block, station) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMsgs::match_date(const int* min, const int* max) const
+{
+    for (Msgs::const_iterator i = m.begin(); i != m.end(); ++i)
+        if (MatchedMsg(**i).match_date(min, max) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMsgs::match_coords(int latmin, int latmax, int lonmin, int lonmax) const
+{
+    for (Msgs::const_iterator i = m.begin(); i != m.end(); ++i)
+        if (MatchedMsg(**i).match_coords(latmin, latmax, lonmin, lonmax) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMsgs::match_rep_memo(const char* memo) const
+{
+    for (Msgs::const_iterator i = m.begin(); i != m.end(); ++i)
+        if (MatchedMsg(**i).match_rep_memo(memo) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
 }
 
 } // namespace dballe
