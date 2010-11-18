@@ -79,7 +79,7 @@ struct Matched
     virtual matcher::Result match_date(const int* min, const int* max) const;
 
     /**
-     * Match coordinates, with bounds in 1/10000 of degree
+     * Match coordinates, with bounds in 1/100000 of degree
      *
      * Any value can be set to MISSING_INT if not applicable or to represent an
      * open bound

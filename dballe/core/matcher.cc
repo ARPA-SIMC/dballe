@@ -101,6 +101,8 @@ struct And : public Matcher
 
     Result match(const Matched& item) const
     {
+        if (exprs.empty()) return MATCH_YES;
+
         Result res = MATCH_NA;
         for (std::vector<const Matcher*>::const_iterator i = exprs.begin();
                 i != exprs.end() && res != MATCH_NO; ++i)
