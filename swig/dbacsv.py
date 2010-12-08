@@ -176,7 +176,7 @@ class Exporter:
                 cols.append(["Attr "+v, lambda a, v=v: self.getattrval(a, v)])
             else:
                 title = title + "Attr %s: %s. " % (v, attrs[v])
-             
+
         self.title = title
         self.cols = cols
 

@@ -115,11 +115,9 @@ class UpdateInterrupted:
 class Model:
     HAS_RPY = HAS_RPY
     HAS_VOLND = HAS_VOLND
-    def __init__(self, dsn, user, password):
+    def __init__(self, db):
         # Init DB-ALLe and connect to the database
-        self.db = dballe.DB()
-        self.db.connect(dsn, user, password)
-
+        self.db = db
         self.truncateResults = True
         self.lowerTruncateThreshold = 250
         self.resultsMax = 500
