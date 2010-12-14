@@ -48,6 +48,7 @@ using namespace std;
 
 static int op_dump_interpreted = 0;
 static int op_dump_text = 0;
+static int op_precise_import = 0;
 static const char* op_input_type = "auto";
 static const char* op_output_type = "bufr";
 static const char* op_output_template = "";
@@ -395,6 +396,7 @@ int do_dump(poptContext optCon)
 
 	/* Throw away the command name */
 	poptGetArg(optCon);
+    if (op_precise_import) grepdata.import_opts.simplified = false;
     grepdata.matcher_from_args(optCon);
 	process_all(optCon, dba_cmdline_stringToMsgType(op_input_type, optCon), &grepdata, *action);
 	return 0;
@@ -548,6 +550,7 @@ int do_convert(poptContext optCon)
 	}
 
     grepdata.matcher_from_args(optCon);
+    if (op_precise_import) grepdata.import_opts.simplified = false;
 
 	Encoding intype = dba_cmdline_stringToMsgType(op_input_type, optCon);
 	Encoding outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
@@ -878,6 +881,8 @@ struct poptOption dbamsg_dump_options[] = {
 		"format of the unput data ('bufr', 'crex', 'aof')", "type" },
 	{ "interpreted", 0, 0, &op_dump_interpreted, 0,
 		"dump the message as understood by the importer", 0 },
+	{ "precise", 0, 0, &op_precise_import, 0,
+		"import messages using precise contexts instead of standard ones", 0 },
 	{ "text", 0, 0, &op_dump_text, 0,
 		"dump as text that can be processed by dbamsg makebufr", 0 },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -906,6 +911,8 @@ struct poptOption dbamsg_convert_options[] = {
 		"template of the data in output (autoselect if not specified, 'list' gives a list)", "name" },
 	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
 		"force output data to be of this type of report", "rep_memo" },
+	{ "precise", 0, 0, &op_precise_import, 0,
+		"import messages using precise contexts instead of standard ones", 0 },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
 	POPT_TABLEEND
@@ -930,6 +937,8 @@ struct poptOption dbamsg_filter_options[] = {
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
+	{ "precise", 0, 0, &op_precise_import, 0,
+		"import messages using precise contexts instead of standard ones", 0 },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
 	POPT_TABLEEND

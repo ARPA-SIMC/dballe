@@ -203,7 +203,7 @@ static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdat
 			}
 			if (br.get())
 			{
-				std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding);
+				std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding, grepdata->import_opts);
 				try {
 					imp->from_bulletin(*br, *parsed);
 				} catch (error& e) {
@@ -226,7 +226,7 @@ static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdat
 			}
 			if (br.get())
 			{
-				std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding);
+				std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding, grepdata->import_opts);
 				try {
 					imp->from_bulletin(*br, *parsed);
 				} catch (error& e) {
@@ -239,7 +239,7 @@ static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdat
 				match = grepdata->match_crex(rmsg, br.get(), parsed.get());
 			break;
 		case AOF: {
-			std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding);
+			std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding, grepdata->import_opts);
 			try {
 				imp->from_rawmsg(rmsg, *parsed);
 			} catch (error& e) {

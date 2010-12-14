@@ -21,6 +21,7 @@
 #define PROCESSOR_H
 
 #include <dballe/core/rawmsg.h>
+#include <dballe/msg/codec.h>
 #include <popt.h>
 
 namespace wreport {
@@ -36,6 +37,8 @@ namespace cmdline {
 
 struct grep_t
 {
+    msg::Importer::Options import_opts;
+    msg::Exporter::Options export_opts;
     int category;
     int subcategory;
     int checkdigit;

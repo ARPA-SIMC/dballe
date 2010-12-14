@@ -58,7 +58,7 @@ public:
 
         /// Create new Options initialised with default values
         Options()
-            : simplified(false) {}
+            : simplified(true) {}
 
         /// Print a summary of the options to \a out
         void print(FILE* out);

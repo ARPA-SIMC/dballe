@@ -77,6 +77,7 @@ static int op_fast = 0;
 static int op_no_attrs = 0;
 static int op_full_pseudoana = 0;
 static int op_dump = 0;
+static int op_precise_import = 0;
 int op_verbose = 0;
 
 struct poptOption dbTable[] = {
@@ -416,6 +417,8 @@ struct poptOption dbadb_import_options[] = {
         "do not import data attributes", 0 },
     { "full-pseudoana", 0, POPT_ARG_NONE, &op_full_pseudoana, 0,
         "merge pseudoana extra values with the ones already existing in the database", 0 },
+    { "precise", 0, 0, &op_precise_import, 0,
+        "import messages using precise contexts instead of standard ones", 0 },
     { NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
         "Options used to connect to the database", 0 },
     { NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
