@@ -197,7 +197,9 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/synop-cloudbelow.bufr", BUFR);
+    msg::Importer::Options opts;
+    opts.simplified = false;
+    auto_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
