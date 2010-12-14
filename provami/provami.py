@@ -22,11 +22,9 @@ if __name__ == "__main__":
     parser = Parser(usage="usage: %prog [options]",
             version="%prog "+ VERSION,
             description="Navigate a DB-ALLe database")
-    parser.add_option("--dsn", help="DSN to use to connect to the database (default: use DBA_DB from environment or 'test')")
+    parser.add_option("--dsn", default=os.environ.get("DBA_DB", "test"), help="DSN, or URL-like database definition, to use for connecting to the DB-All.e database (default: %default, can be set in the environment as DBA_DB)"),
     parser.add_option("--user", default=os.environ['USER'], help="User name to use to connect to the database (default: %default)")
     parser.add_option("--pass", default="", dest="password", help="Password to use to connect to the database (default: none)")
-    parser.add_option("--url", dest="url", help="Connect to a DB-All.e URL (default: none)")
-    parser.add_option("--file", dest="file", help="Use a SQLite file for DB-All.e database (default: none)")
 
     (opts, args) = parser.parse_args()
 
@@ -47,18 +45,10 @@ if __name__ == "__main__":
 
     app = wx.PySimpleApp()
     db = dballe.DB()
-    if opts.dsn:
-        db.connect(opts.dsn, opts.user, opts.password)
-    elif opts.url:
-        db.connect_from_url(opts.url)
-    elif opts.file:
-        db.connect_from_file(opts.file)
+    if dballe.DB.is_url(opts.dsn):
+        db.connect_from_url(opts.dsn)
     else:
-        dsn = os.environ.get("DBA_DB", "test")
-        if dballe.DB.is_url(dsn):
-            db.connect_from_url(opts.url)
-        else:
-            db.connect(dsn, opts.user, opts.password)
+        db.connect(opts.dsn, opts.user, opts.password)
     model = Model(db)
 
 
