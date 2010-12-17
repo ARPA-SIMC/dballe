@@ -48,6 +48,7 @@ using namespace std;
 
 static int op_dump_interpreted = 0;
 static int op_dump_text = 0;
+static int op_dump_csv = 0;
 static int op_precise_import = 0;
 static const char* op_input_type = "auto";
 static const char* op_output_type = "bufr";
@@ -222,6 +223,97 @@ static void dump_dba_vars(const Subset& msg)
 		msg[i].print(stdout);
 }
 
+/**
+ * Print a bulletin in CSV format
+ */
+struct CSVBulletin : public cmdline::Action
+{
+    bool first;
+
+    CSVBulletin() : first(true) {}
+
+    void print_var(const Var& var, const char* pfx="")
+    {
+        char type;
+        switch (WR_VAR_F(var.code()))
+        {
+            case 0: type = 'B'; break;
+            case 1: type = 'R'; break;
+            case 2: type = 'C'; break;
+            case 3: type = 'D'; break;
+            default: type = '?'; break;
+        }
+
+        char bcode[10];
+        snprintf(bcode, 10, "%c%02d%03d", type, WR_VAR_X(var.code()), WR_VAR_Y(var.code()));
+
+        // TODO: print value as proper CSV string if it is a string, with
+        //       quotes and escapes
+        string val = var.format("");
+
+        printf("%s%s,%s\n", pfx, bcode, val.c_str());
+    }
+
+    void print_subsets(const Bulletin& braw)
+    {
+        for (size_t i = 0; i < braw.subsets.size(); ++i)
+        {
+            const Subset& s = braw.subsets[i];
+            printf("subset,%zd\n", i + 1);
+            for (size_t i = 0; i < s.size(); ++i)
+            {
+                print_var(s[i]);
+                for (const Var* a = s[i].next_attr(); a != NULL; a = a->next_attr())
+                    print_var(*a, "+");
+            }
+        }
+    }
+
+    virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+    {
+        if (first)
+        {
+            // Column titles
+            printf("Field,Value\n");
+            first = false;
+        }
+        switch (rmsg.encoding)
+        {
+            case BUFR:
+            case CREX:
+            {
+                if (braw == NULL) return;
+                printf("edition,%d\n", braw->edition);
+                printf("type,%d\n", braw->type);
+                printf("subtype,%d\n", braw->subtype);
+                printf("localsubtype,%d\n", braw->localsubtype);
+                printf("date,%04d-%02d-%02d %02d:%02d:%02d\n",
+                        braw->rep_year, braw->rep_month, braw->rep_day,
+                        braw->rep_hour, braw->rep_minute, braw->rep_second);
+                if (const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(braw))
+                {
+                    printf("centre,%d\n", b->centre);
+                    printf("subcentre,%d\n", b->subcentre);
+                    printf("master_table,%d\n", b->master_table);
+                    printf("local_table,%d\n", b->local_table);
+                    printf("compression,%d\n", b->compression);
+                    printf("update_sequence_number,%d\n", b->update_sequence_number);
+                    printf("optional_section_length,%d\n", b->optional_section_length);
+                    // TODO: how to encode optional section? base64?
+                } else if (const CrexBulletin* b = dynamic_cast<const CrexBulletin*>(braw)) {
+                    printf("master_table,%d\n", b->master_table);
+                    printf("table,%d\n", b->table);
+                    printf("has_check_digit,%d\n", b->has_check_digit);
+                }
+                print_subsets(*braw);
+                break;
+            }
+            default:
+                throw error_consistency("encoding not supported for CSV dump");
+        }
+    }
+};
+
 struct DumpMessage : public cmdline::Action
 {
 	void print_subsets(const Bulletin& braw)
@@ -387,7 +479,14 @@ int do_head(poptContext optCon)
 int do_dump(poptContext optCon)
 {
 	auto_ptr<cmdline::Action> action;
-	if (op_dump_interpreted)
+    if (op_dump_csv)
+    {
+        if (op_dump_interpreted)
+            throw error_consistency("--csv --interpreted not yet implemented");
+        else
+            action.reset(new CSVBulletin);
+    }
+    else if (op_dump_interpreted)
 		action.reset(new DumpCooked);
 	else if (op_dump_text)
 		action.reset(new DumpText);
@@ -885,6 +984,8 @@ struct poptOption dbamsg_dump_options[] = {
 		"import messages using precise contexts instead of standard ones", 0 },
 	{ "text", 0, 0, &op_dump_text, 0,
 		"dump as text that can be processed by dbamsg makebufr", 0 },
+	{ "csv", 0, 0, &op_dump_csv, 0,
+		"dump in machine readable CSV format", 0 },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
 	POPT_TABLEEND
