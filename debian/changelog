@@ -2,8 +2,9 @@ dballe (5.3-1) unstable; urgency=low
 
   * New upsteam version
      - Implemented dbamsg dump --csv
+     - Implemented dbamsg dump --csv --interpreted
 
- -- Enrico Zini <enrico@debian.org>  Fri, 17 Dec 2010 23:42:06 +0100
+ -- Enrico Zini <enrico@debian.org>  Sat, 18 Dec 2010 00:14:29 +0100
 
 dballe (5.2-1) unstable; urgency=low
 

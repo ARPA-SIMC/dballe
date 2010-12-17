@@ -22,6 +22,7 @@
 
 #include <dballe/msg/msg.h>
 #include <dballe/msg/msgs.h>
+#include <dballe/msg/context.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/core/record.h>
 #include <dballe/core/file.h>
@@ -33,6 +34,8 @@
 #include <dballe/cmdline/processor.h>
 #include <dballe/cmdline/conversion.h>
 
+#include <iostream>
+#include <iomanip>
 #include <cstdlib>
 #include <cstring>
 #include <strings.h>
@@ -314,6 +317,162 @@ struct CSVBulletin : public cmdline::Action
     }
 };
 
+/**
+ * Print a Msgs in CSV format
+ */
+struct CSVMsgs : public cmdline::Action
+{
+    bool first;
+
+    CSVMsgs() : first(true) {}
+
+    void print_var(const Var& var, const char* pfx="")
+    {
+        char type;
+        switch (WR_VAR_F(var.code()))
+        {
+            case 0: type = 'B'; break;
+            case 1: type = 'R'; break;
+            case 2: type = 'C'; break;
+            case 3: type = 'D'; break;
+            default: type = '?'; break;
+        }
+
+        char bcode[10];
+        snprintf(bcode, 10, "%c%02d%03d", type, WR_VAR_X(var.code()), WR_VAR_Y(var.code()));
+
+        // TODO: print value as proper CSV string if it is a string, with
+        //       quotes and escapes
+        string val = var.format("");
+
+        printf("%s%s,%s\n", pfx, bcode, val.c_str());
+    }
+
+    void print_subsets(const Bulletin& braw)
+    {
+        for (size_t i = 0; i < braw.subsets.size(); ++i)
+        {
+            const Subset& s = braw.subsets[i];
+            printf("subset,%zd\n", i + 1);
+            for (size_t i = 0; i < s.size(); ++i)
+            {
+                print_var(s[i]);
+                for (const Var* a = s[i].next_attr(); a != NULL; a = a->next_attr())
+                    print_var(*a, "+");
+            }
+        }
+    }
+
+    virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+    {
+        if (first)
+        {
+            // Column titles
+            cout << "Date,Time range,P1,P2,Longitude,Latitude,Level1,L1,Level2,L2,Report" << endl;
+            // TODO: add attribute columns if requested
+            first = false;
+        }
+        if (!msgs) return;
+
+        for (Msgs::const_iterator mi = msgs->begin(); mi != msgs->end(); ++mi)
+        {
+            Msg& m = **mi;
+
+            // Extract datetime, lat, lon
+            const Var* lat = m.get_latitude_var();
+            const Var* lon = m.get_longitude_var();
+            const Var* year = m.get_year_var();
+            const Var* month = m.get_month_var();
+            const Var* day = m.get_day_var();
+            const Var* hour = m.get_hour_var();
+            const Var* minute = m.get_minute_var();
+            const Var* second = m.get_second_var();
+            const Var* memo = m.get_rep_memo_var();
+            const char* rep_memo;
+            if (memo)
+                rep_memo = memo->enqc();
+            else
+                rep_memo = Msg::repmemo_from_type(m.type);
+
+            for (std::vector<msg::Context*>::const_iterator ci = m.data.begin();
+                    ci != m.data.end(); ++ci)
+            {
+                msg::Context& c = **ci;
+                for (std::vector<wreport::Var*>::const_iterator vi = c.data.begin();
+                        vi != c.data.end(); ++vi)
+                {
+                    Var& v = **vi;
+
+                    // Format variable code
+                    char type;
+                    switch (WR_VAR_F(v.code()))
+                    {
+                        case 0: type = 'B'; break;
+                        case 1: type = 'R'; break;
+                        case 2: type = 'C'; break;
+                        case 3: type = 'D'; break;
+                        default: type = '?'; break;
+                    }
+                    char bcode[10];
+                    snprintf(bcode, 10, "%c%02d%03d", type, WR_VAR_X(v.code()), WR_VAR_Y(v.code()));
+
+                    // TODO: print value as proper CSV string if it is a string, with
+                    //       quotes and escapes
+                    string val = v.format("");
+
+                    // Datetime
+                    if (year)
+                        cout << setfill('0') << setw(4) << year->enqi() << "-";
+                    else
+                        cout << "-----";
+                    if (month)
+                        cout << setfill('0') << setw(2) << month->enqi() << "-";
+                    else
+                        cout << "---";
+                    if (day)
+                        cout << setfill('0') << setw(2) << day->enqi() << " ";
+                    else
+                        cout << "-- ";
+                    if (hour)
+                        cout << setfill('0') << setw(2) << hour->enqi() << ":";
+                    else
+                        cout << "--:";
+                    if (minute)
+                        cout << setfill('0') << setw(2) << minute->enqi() << ":";
+                    else
+                        cout << "--:";
+                    if (second)
+                        cout << setfill('0') << setw(2) << second->enqi() << ",";
+                    else
+                        cout << "--,";
+
+                    cout << c.trange << ","; // Time range
+
+                    // Longitude
+                    if (lon)
+                        cout << setprecision(5) << lon->enqd() << ",";
+                    else
+                        cout << "-,";
+
+                    // latitude
+                    if (lat)
+                        cout << setprecision(5) << lat->enqd() << ",";
+                    else
+                        cout << "-,";
+
+                    cout << c.level << "," // Level
+                         << rep_memo << "," // Report type
+                         << bcode << "," // B code
+                         << val; // Value
+                    // TODO: add attribute columns if requested
+                    cout << endl;
+                }
+            }
+        }
+    }
+};
+
+
 struct DumpMessage : public cmdline::Action
 {
 	void print_subsets(const Bulletin& braw)
@@ -482,7 +641,7 @@ int do_dump(poptContext optCon)
     if (op_dump_csv)
     {
         if (op_dump_interpreted)
-            throw error_consistency("--csv --interpreted not yet implemented");
+            action.reset(new CSVMsgs);
         else
             action.reset(new CSVBulletin);
     }
