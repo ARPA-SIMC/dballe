@@ -149,26 +149,35 @@ std::string Level::describe() const
 	return "Layer from [" + lev1 + "] to [" + lev2 + "]";
 }
 
+void Level::format(std::ostream& out, const char* undef) const
+{
+    if (ltype1 == MISSING_INT) out << undef; else out << ltype1;
+    out << ",";
+    if (l1 == MISSING_INT) out << undef; else out << l1;
+    out << ",";
+    if (ltype2 == MISSING_INT) out << undef; else out << ltype2;
+    out << ",";
+    if (l2 == MISSING_INT) out << undef; else out << l2;
+}
 
 std::ostream& operator<<(std::ostream& out, const Level& l)
 {
-    if (l.ltype1 == MISSING_INT) out << "-"; else out << l.ltype1;
-    out << ",";
-    if (l.l1 == MISSING_INT) out << "-"; else out << l.l1;
-    out << ",";
-    if (l.ltype2 == MISSING_INT) out << "-"; else out << l.ltype2;
-    out << ",";
-    if (l.l2 == MISSING_INT) out << "-"; else out << l.l2;
+    l.format(out);
     return out;
+}
+
+void Trange::format(std::ostream& out, const char* undef) const
+{
+    if (pind == MISSING_INT) out << undef; else out << pind;
+    out << ",";
+    if (p1 == MISSING_INT) out << undef; else out << p1;
+    out << ",";
+    if (p2 == MISSING_INT) out << undef; else out << p2;
 }
 
 std::ostream& operator<<(std::ostream& out, const Trange& l)
 {
-    if (l.pind == MISSING_INT) out << "-"; else out << l.pind;
-    out << ",";
-    if (l.p1 == MISSING_INT) out << "-"; else out << l.p1;
-    out << ",";
-    if (l.p2 == MISSING_INT) out << "-"; else out << l.p2;
+    l.format(out);
     return out;
 }
 

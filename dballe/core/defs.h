@@ -95,6 +95,8 @@ struct Level
      */
     std::string describe() const;
 
+    void format(std::ostream& out, const char* undef="-") const;
+
     static inline Level cloud(int ltype2, int l2=MISSING_INT) { return Level(256, MISSING_INT, ltype2, l2); }
     static inline Level ana() { return Level(257); }
 };
@@ -141,6 +143,8 @@ struct Trange
      * Return a string description of this time range
      */
     std::string describe() const;
+
+    void format(std::ostream& out, const char* undef="-") const;
 
     static inline Trange instant() { return Trange(254, 0, 0); }
     static inline Trange ana() { return Trange(); }

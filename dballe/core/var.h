@@ -30,6 +30,7 @@
 
 #include <wreport/var.h>
 #include <memory>
+#include <string>
 
 namespace dballe {
 
@@ -61,6 +62,16 @@ std::auto_ptr<wreport::Var> newvar(wreport::Varcode code, const T& val)
 {
 	return std::auto_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
 }
+
+/**
+ * Format the code to its string representation
+ *
+ * The string will be written to buf, which must be at least 7 bytes long
+ */
+void format_code(wreport::Varcode code, char* buf);
+
+/// Format the code to its string representation
+std::string format_code(wreport::Varcode code);
 
 }
 

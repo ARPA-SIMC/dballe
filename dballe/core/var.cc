@@ -36,6 +36,28 @@ wreport::Varinfo varinfo(wreport::Varcode code)
 	return local->query(code);
 }
 
+void format_code(wreport::Varcode code, char* buf)
+{
+    // Format variable code
+    char type;
+    switch (WR_VAR_F(code))
+    {
+        case 0: type = 'B'; break;
+        case 1: type = 'R'; break;
+        case 2: type = 'C'; break;
+        case 3: type = 'D'; break;
+        default: type = '?'; break;
+    }
+    snprintf(buf, 7, "%c%02d%03d", type, WR_VAR_X(code), WR_VAR_Y(code));
+}
+
+std::string format_code(wreport::Varcode code)
+{
+    char buf[8];
+    format_code(code, buf);
+    return buf;
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

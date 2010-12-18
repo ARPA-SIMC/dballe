@@ -237,18 +237,8 @@ struct CSVBulletin : public cmdline::Action
 
     void print_var(const Var& var, const char* pfx="")
     {
-        char type;
-        switch (WR_VAR_F(var.code()))
-        {
-            case 0: type = 'B'; break;
-            case 1: type = 'R'; break;
-            case 2: type = 'C'; break;
-            case 3: type = 'D'; break;
-            default: type = '?'; break;
-        }
-
         char bcode[10];
-        snprintf(bcode, 10, "%c%02d%03d", type, WR_VAR_X(var.code()), WR_VAR_Y(var.code()));
+        format_code(var.code(), bcode);
 
         // TODO: print value as proper CSV string if it is a string, with
         //       quotes and escapes
@@ -326,49 +316,13 @@ struct CSVMsgs : public cmdline::Action
 
     CSVMsgs() : first(true) {}
 
-    void print_var(const Var& var, const char* pfx="")
-    {
-        char type;
-        switch (WR_VAR_F(var.code()))
-        {
-            case 0: type = 'B'; break;
-            case 1: type = 'R'; break;
-            case 2: type = 'C'; break;
-            case 3: type = 'D'; break;
-            default: type = '?'; break;
-        }
-
-        char bcode[10];
-        snprintf(bcode, 10, "%c%02d%03d", type, WR_VAR_X(var.code()), WR_VAR_Y(var.code()));
-
-        // TODO: print value as proper CSV string if it is a string, with
-        //       quotes and escapes
-        string val = var.format("");
-
-        printf("%s%s,%s\n", pfx, bcode, val.c_str());
-    }
-
-    void print_subsets(const Bulletin& braw)
-    {
-        for (size_t i = 0; i < braw.subsets.size(); ++i)
-        {
-            const Subset& s = braw.subsets[i];
-            printf("subset,%zd\n", i + 1);
-            for (size_t i = 0; i < s.size(); ++i)
-            {
-                print_var(s[i]);
-                for (const Var* a = s[i].next_attr(); a != NULL; a = a->next_attr())
-                    print_var(*a, "+");
-            }
-        }
-    }
-
     virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
     {
         if (first)
         {
             // Column titles
-            cout << "Date,Time range,P1,P2,Longitude,Latitude,Level1,L1,Level2,L2,Report" << endl;
+            cout << "Dump of message contents" << endl;
+            cout << "Date,Time range,P1,P2,Longitude,Latitude,Level1,L1,Level2,L2,Report,Varcode,Value" << endl;
             // TODO: add attribute columns if requested
             first = false;
         }
@@ -403,19 +357,6 @@ struct CSVMsgs : public cmdline::Action
                 {
                     Var& v = **vi;
 
-                    // Format variable code
-                    char type;
-                    switch (WR_VAR_F(v.code()))
-                    {
-                        case 0: type = 'B'; break;
-                        case 1: type = 'R'; break;
-                        case 2: type = 'C'; break;
-                        case 3: type = 'D'; break;
-                        default: type = '?'; break;
-                    }
-                    char bcode[10];
-                    snprintf(bcode, 10, "%c%02d%03d", type, WR_VAR_X(v.code()), WR_VAR_Y(v.code()));
-
                     // TODO: print value as proper CSV string if it is a string, with
                     //       quotes and escapes
                     string val = v.format("");
@@ -446,23 +387,26 @@ struct CSVMsgs : public cmdline::Action
                     else
                         cout << "--,";
 
-                    cout << c.trange << ","; // Time range
+                    c.trange.format(cout, "");
+                    cout << ","; // Time range
 
                     // Longitude
                     if (lon)
                         cout << setprecision(5) << lon->enqd() << ",";
                     else
-                        cout << "-,";
+                        cout << ",";
 
                     // latitude
                     if (lat)
                         cout << setprecision(5) << lat->enqd() << ",";
                     else
-                        cout << "-,";
+                        cout << ",";
 
-                    cout << c.level << "," // Level
-                         << rep_memo << "," // Report type
-                         << bcode << "," // B code
+                    c.level.format(cout, ""); // Level
+                    cout << ",";
+
+                    cout << rep_memo << "," // Report type
+                         << format_code(v.code()) << "," // B code
                          << val; // Value
                     // TODO: add attribute columns if requested
                     cout << endl;
