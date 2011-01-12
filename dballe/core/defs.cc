@@ -141,12 +141,19 @@ static std::string describe_level(int ltype, int l1)
 
 std::string Level::describe() const
 {
-	if (ltype2 == MISSING_INT || l2 == MISSING_INT)
-		return describe_level(ltype1, l1);
+    if (ltype2 == MISSING_INT || l2 == MISSING_INT)
+        return describe_level(ltype1, l1);
 
-	string lev1 = describe_level(ltype1, l1);
-	string lev2 = describe_level(ltype2, l2);
-	return "Layer from [" + lev1 + "] to [" + lev2 + "]";
+    if (ltype1 == 256)
+    {
+        string lev1 = describe_level(ltype1, l1);
+        string lev2 = describe_level(ltype2, l2);
+        return lev1 + ", " + lev2;
+    } else {
+        string lev1 = describe_level(ltype1, l1);
+        string lev2 = describe_level(ltype2, l2);
+        return "Layer from [" + lev1 + "] to [" + lev2 + "]";
+    }
 }
 
 void Level::format(std::ostream& out, const char* undef) const
