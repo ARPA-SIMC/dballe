@@ -379,7 +379,7 @@ struct CSVMsgs : public cmdline::Action
                 c.trange.format(cout, "");
                 out << ",";
             } else
-                out << ",,,";
+                out << ",,,,,,,,";
         }
     };
 
