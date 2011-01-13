@@ -312,6 +312,77 @@ struct CSVBulletin : public cmdline::Action
  */
 struct CSVMsgs : public cmdline::Action
 {
+    struct VarContext
+    {
+        // Extract datetime, lat, lon
+        const Var* lat;
+        const Var* lon;
+        const Var* year;
+        const Var* month;
+        const Var* day;
+        const Var* hour;
+        const Var* minute;
+        const Var* second;
+        const Var* memo;
+        const char* rep_memo;
+
+        VarContext(const Msg& m)
+        {
+            // Extract datetime, lat, lon
+            lat = m.get_latitude_var();
+            lon = m.get_longitude_var();
+            year = m.get_year_var();
+            month = m.get_month_var();
+            day = m.get_day_var();
+            hour = m.get_hour_var();
+            minute = m.get_minute_var();
+            second = m.get_second_var();
+            memo = m.get_rep_memo_var();
+            if (memo)
+                rep_memo = memo->enqc();
+            else
+                rep_memo = Msg::repmemo_from_type(m.type);
+        }
+
+        void print(ostream& out, msg::Context& c)
+        {
+            // latitude
+            if (lat)
+                out << setprecision(5) << lat->enqd() << ",";
+            else
+                out << ",";
+
+            // Longitude
+            if (lon)
+                out << setprecision(5) << lon->enqd() << ",";
+            else
+                out << ",";
+
+            // Report type
+            out << rep_memo << ",";
+
+            if (c.level.ltype1 != 257)
+            {
+                // Datetime
+                out << setfill('0') << setw(4) << (year ? year->enq(0) : 0) << "-";
+                out << setfill('0') << setw(2) << (month ? month->enq(0) : 0) << "-";
+                out << setfill('0') << setw(2) << (day ? day->enq(0) : 0) << " ";
+                out << setfill('0') << setw(2) << (hour ? hour->enq(0) : 0) << ":";
+                out << setfill('0') << setw(2) << (minute ? minute->enq(0) : 0) << ":";
+                out << setfill('0') << setw(2) << (second ? second->enq(0) : 0) << ",";
+
+                // Level
+                c.level.format(cout, "");
+                out << ",";
+
+                // Time range
+                c.trange.format(cout, "");
+                out << ",";
+            } else
+                out << ",,,";
+        }
+    };
+
     CSVMsgs() {}
 
     virtual void operator()(const Rawmsg&, const wreport::Bulletin*, const Msgs* msgs)
@@ -321,22 +392,7 @@ struct CSVMsgs : public cmdline::Action
         for (Msgs::const_iterator mi = msgs->begin(); mi != msgs->end(); ++mi)
         {
             Msg& m = **mi;
-
-            // Extract datetime, lat, lon
-            const Var* lat = m.get_latitude_var();
-            const Var* lon = m.get_longitude_var();
-            const Var* year = m.get_year_var();
-            const Var* month = m.get_month_var();
-            const Var* day = m.get_day_var();
-            const Var* hour = m.get_hour_var();
-            const Var* minute = m.get_minute_var();
-            const Var* second = m.get_second_var();
-            const Var* memo = m.get_rep_memo_var();
-            const char* rep_memo;
-            if (memo)
-                rep_memo = memo->enqc();
-            else
-                rep_memo = Msg::repmemo_from_type(m.type);
+            VarContext vc(m);
 
             for (std::vector<msg::Context*>::const_iterator ci = m.data.begin();
                     ci != m.data.end(); ++ci)
@@ -347,41 +403,27 @@ struct CSVMsgs : public cmdline::Action
                 {
                     Var& v = **vi;
 
+                    vc.print(cout, c);
+
                     // TODO: print value as proper CSV string if it is a string, with
                     //       quotes and escapes
                     string val = v.format("");
 
-                    // Datetime
-                    cout << setfill('0') << setw(4) << (year ? year->enq(0) : 0) << "-";
-                    cout << setfill('0') << setw(2) << (month ? month->enq(0) : 0) << "-";
-                    cout << setfill('0') << setw(2) << (day ? day->enq(0) : 0) << " ";
-                    cout << setfill('0') << setw(2) << (hour ? hour->enq(0) : 0) << ":";
-                    cout << setfill('0') << setw(2) << (minute ? minute->enq(0) : 0) << ":";
-                    cout << setfill('0') << setw(2) << (second ? second->enq(0) : 0) << ",";
-
-                    c.trange.format(cout, "");
-                    cout << ","; // Time range
-
-                    // Longitude
-                    if (lon)
-                        cout << setprecision(5) << lon->enqd() << ",";
-                    else
-                        cout << ",";
-
-                    // latitude
-                    if (lat)
-                        cout << setprecision(5) << lat->enqd() << ",";
-                    else
-                        cout << ",";
-
-                    c.level.format(cout, ""); // Level
-                    cout << ",";
-
-                    cout << rep_memo << "," // Report type
-                         << format_code(v.code()) << "," // B code
+                    cout << format_code(v.code()) << "," // B code
                          << val; // Value
-                    // TODO: add attribute columns if requested
                     cout << endl;
+
+                    // Add attribute columns
+                    for (const Var* a = v.next_attr(); a != NULL; a = a->next_attr())
+                    {
+                        vc.print(cout, c);
+                        // TODO: print value as proper CSV string if it is a string, with
+                        //       quotes and escapes
+                        string val = a->format("");
+                        cout << format_code(v.code()) << "." << format_code(a->code()) << "," // B code
+                             << val; // Value
+                        cout << endl;
+                    }
                 }
             }
         }
