@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -180,7 +180,7 @@ static void print_aof_header(const Rawmsg& rmsg)
 
 struct Summarise : public cmdline::Action
 {
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs*)
 	{
 		switch (rmsg.encoding)
 		{
@@ -201,7 +201,7 @@ struct Summarise : public cmdline::Action
 
 struct Head : public cmdline::Action
 {
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs*)
 	{
 		switch (rmsg.encoding)
 		{
@@ -262,7 +262,7 @@ struct CSVBulletin : public cmdline::Action
         }
     }
 
-    virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+    virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs*)
     {
         if (first)
         {
@@ -428,7 +428,7 @@ struct DumpMessage : public cmdline::Action
 		}
 	}
 
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs*)
 	{
 		switch (rmsg.encoding)
 		{
@@ -462,7 +462,7 @@ struct DumpMessage : public cmdline::Action
 
 struct DumpCooked : public cmdline::Action
 {
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin*, const Msgs* msgs)
 	{
 		if (msgs == NULL) return;
 		for (size_t i = 0; i < msgs->size(); ++i)
@@ -491,7 +491,7 @@ static void print_var(const Var& var)
 
 struct DumpText : public cmdline::Action
 {
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	virtual void operator()(const Rawmsg&, const wreport::Bulletin* braw, const Msgs*)
 	{
 		if (braw == NULL)
 			throw error_consistency("source is not a BUFR or CREX message");
@@ -550,7 +550,7 @@ struct WriteRaw : public cmdline::Action
 	WriteRaw() : file(0) {}
 	~WriteRaw() { if (file) delete file; }
 
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin*, const Msgs*)
 	{
 		if (!file) file = File::create(rmsg.encoding, "(stdout)", "w").release();
 		file->write(rmsg);
@@ -618,7 +618,7 @@ int do_cat(poptContext optCon)
 
 struct StoreMessages : public cmdline::Action, public vector<Rawmsg>
 {
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin*, const Msgs*)
 	{
 		push_back(rmsg);
 	}
