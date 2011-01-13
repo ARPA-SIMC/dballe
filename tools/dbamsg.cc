@@ -312,20 +312,10 @@ struct CSVBulletin : public cmdline::Action
  */
 struct CSVMsgs : public cmdline::Action
 {
-    bool first;
+    CSVMsgs() {}
 
-    CSVMsgs() : first(true) {}
-
-    virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+    virtual void operator()(const Rawmsg&, const wreport::Bulletin*, const Msgs* msgs)
     {
-        if (first)
-        {
-            // Column titles
-            cout << "Dump of message contents" << endl;
-            cout << "Date,Time range,P1,P2,Longitude,Latitude,Level1,L1,Level2,L2,Report,Varcode,Value" << endl;
-            // TODO: add attribute columns if requested
-            first = false;
-        }
         if (!msgs) return;
 
         for (Msgs::const_iterator mi = msgs->begin(); mi != msgs->end(); ++mi)
@@ -362,30 +352,12 @@ struct CSVMsgs : public cmdline::Action
                     string val = v.format("");
 
                     // Datetime
-                    if (year)
-                        cout << setfill('0') << setw(4) << year->enqi() << "-";
-                    else
-                        cout << "-----";
-                    if (month)
-                        cout << setfill('0') << setw(2) << month->enqi() << "-";
-                    else
-                        cout << "---";
-                    if (day)
-                        cout << setfill('0') << setw(2) << day->enqi() << " ";
-                    else
-                        cout << "-- ";
-                    if (hour)
-                        cout << setfill('0') << setw(2) << hour->enqi() << ":";
-                    else
-                        cout << "--:";
-                    if (minute)
-                        cout << setfill('0') << setw(2) << minute->enqi() << ":";
-                    else
-                        cout << "--:";
-                    if (second)
-                        cout << setfill('0') << setw(2) << second->enqi() << ",";
-                    else
-                        cout << "--,";
+                    cout << setfill('0') << setw(4) << (year ? year->enq(0) : 0) << "-";
+                    cout << setfill('0') << setw(2) << (month ? month->enq(0) : 0) << "-";
+                    cout << setfill('0') << setw(2) << (day ? day->enq(0) : 0) << " ";
+                    cout << setfill('0') << setw(2) << (hour ? hour->enq(0) : 0) << ":";
+                    cout << setfill('0') << setw(2) << (minute ? minute->enq(0) : 0) << ":";
+                    cout << setfill('0') << setw(2) << (second ? second->enq(0) : 0) << ",";
 
                     c.trange.format(cout, "");
                     cout << ","; // Time range
