@@ -369,15 +369,15 @@ struct CSVMsgs : public cmdline::Action
 
         void print(ostream& out, msg::Context& c)
         {
-            // Latitude
-            if (lat)
-                out << setprecision(5) << lat->enqd() << ",";
-            else
-                out << ",";
-
             // Longitude
             if (lon)
                 out << setprecision(5) << lon->enqd() << ",";
+            else
+                out << ",";
+
+            // Latitude
+            if (lat)
+                out << setprecision(5) << lat->enqd() << ",";
             else
                 out << ",";
 
@@ -416,7 +416,7 @@ struct CSVMsgs : public cmdline::Action
 
         if (first)
         {
-            cout << "Latitude,Longitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
+            cout << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
             first = false;
         }
 
