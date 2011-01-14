@@ -226,6 +226,22 @@ static void dump_dba_vars(const Subset& msg)
 		msg[i].print(stdout);
 }
 
+void output_quoted_csv_string(ostream& out, const std::string& str)
+{
+    if (str.find_first_of("\",") != string::npos)
+    {
+        out << "\"";
+        for (string::const_iterator i = str.begin(); i != str.end(); ++i)
+        {
+            if (*i == '"')
+                out << '"';
+            out << *i;
+        }
+        out << "\"";
+    } else
+        out << str;
+}
+
 /**
  * Print a bulletin in CSV format
  */
@@ -235,16 +251,18 @@ struct CSVBulletin : public cmdline::Action
 
     CSVBulletin() : first(true) {}
 
-    void print_var(const Var& var, const char* pfx="")
+    void print_var(const Var& var, const Var* parent=0)
     {
         char bcode[10];
+        if (parent)
+        {
+            format_code(parent->code(), bcode);
+            cout << bcode << ".";
+        }
         format_code(var.code(), bcode);
-
-        // TODO: print value as proper CSV string if it is a string, with
-        //       quotes and escapes
-        string val = var.format("");
-
-        printf("%s%s,%s\n", pfx, bcode, val.c_str());
+        cout << bcode << ",";
+        output_quoted_csv_string(cout, var.format(""));
+        cout << endl;
     }
 
     void print_subsets(const Bulletin& braw)
@@ -252,12 +270,12 @@ struct CSVBulletin : public cmdline::Action
         for (size_t i = 0; i < braw.subsets.size(); ++i)
         {
             const Subset& s = braw.subsets[i];
-            printf("subset,%zd\n", i + 1);
+            cout << "subset," << i + 1 << endl;
             for (size_t i = 0; i < s.size(); ++i)
             {
                 print_var(s[i]);
                 for (const Var* a = s[i].next_attr(); a != NULL; a = a->next_attr())
-                    print_var(*a, "+");
+                    print_var(*a, &(s[i]));
             }
         }
     }
@@ -267,7 +285,7 @@ struct CSVBulletin : public cmdline::Action
         if (first)
         {
             // Column titles
-            printf("Field,Value\n");
+            cout << "Field,Value" << endl;
             first = false;
         }
         switch (rmsg.encoding)
@@ -276,27 +294,32 @@ struct CSVBulletin : public cmdline::Action
             case CREX:
             {
                 if (braw == NULL) return;
-                printf("edition,%d\n", braw->edition);
-                printf("type,%d\n", braw->type);
-                printf("subtype,%d\n", braw->subtype);
-                printf("localsubtype,%d\n", braw->localsubtype);
-                printf("date,%04d-%02d-%02d %02d:%02d:%02d\n",
-                        braw->rep_year, braw->rep_month, braw->rep_day,
-                        braw->rep_hour, braw->rep_minute, braw->rep_second);
+                cout << "edition," << braw->edition << endl;
+                cout << "type," << braw->type << endl;
+                cout << "subtype," << braw->subtype << endl;
+                cout << "localsubtype," << braw->localsubtype << endl;
+                cout << "date,"
+                     << setfill('0') << setw(4) << braw->rep_year << "-"
+                     << setfill('0') << setw(2) << braw->rep_month << "-"
+                     << setfill('0') << setw(2) << braw->rep_day << " "
+                     << setfill('0') << setw(2) << braw->rep_hour << ":"
+                     << setfill('0') << setw(2) << braw->rep_minute << ":"
+                     << setfill('0') << setw(2) << braw->rep_second << ","
+                     << endl;
                 if (const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(braw))
                 {
-                    printf("centre,%d\n", b->centre);
-                    printf("subcentre,%d\n", b->subcentre);
-                    printf("master_table,%d\n", b->master_table);
-                    printf("local_table,%d\n", b->local_table);
-                    printf("compression,%d\n", b->compression);
-                    printf("update_sequence_number,%d\n", b->update_sequence_number);
-                    printf("optional_section_length,%d\n", b->optional_section_length);
+                    cout << "centre," << b->centre << endl;
+                    cout << "subcentre," << b->subcentre << endl;
+                    cout << "master_table," << b->master_table << endl;
+                    cout << "local_table," << b->local_table << endl;
+                    cout << "compression," << b->compression << endl;
+                    cout << "update_sequence_number," << b->update_sequence_number << endl;
+                    cout << "optional_section_length," << b->optional_section_length << endl;
                     // TODO: how to encode optional section? base64?
                 } else if (const CrexBulletin* b = dynamic_cast<const CrexBulletin*>(braw)) {
-                    printf("master_table,%d\n", b->master_table);
-                    printf("table,%d\n", b->table);
-                    printf("has_check_digit,%d\n", b->has_check_digit);
+                    cout << "master_table," << b->master_table << endl;
+                    cout << "table," << b->table << endl;
+                    cout << "has_check_digit," << b->has_check_digit << endl;
                 }
                 print_subsets(*braw);
                 break;
@@ -346,7 +369,7 @@ struct CSVMsgs : public cmdline::Action
 
         void print(ostream& out, msg::Context& c)
         {
-            // latitude
+            // Latitude
             if (lat)
                 out << setprecision(5) << lat->enqd() << ",";
             else
@@ -383,11 +406,19 @@ struct CSVMsgs : public cmdline::Action
         }
     };
 
-    CSVMsgs() {}
+    bool first;
+
+    CSVMsgs() : first(true) {}
 
     virtual void operator()(const Rawmsg&, const wreport::Bulletin*, const Msgs* msgs)
     {
         if (!msgs) return;
+
+        if (first)
+        {
+            cout << "Latitude,Longitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
+            first = false;
+        }
 
         for (Msgs::const_iterator mi = msgs->begin(); mi != msgs->end(); ++mi)
         {
@@ -405,23 +436,16 @@ struct CSVMsgs : public cmdline::Action
 
                     vc.print(cout, c);
 
-                    // TODO: print value as proper CSV string if it is a string, with
-                    //       quotes and escapes
-                    string val = v.format("");
-
-                    cout << format_code(v.code()) << "," // B code
-                         << val; // Value
+                    cout << format_code(v.code()) << ","; // B code
+                    output_quoted_csv_string(cout, v.format(""));
                     cout << endl;
 
                     // Add attribute columns
                     for (const Var* a = v.next_attr(); a != NULL; a = a->next_attr())
                     {
                         vc.print(cout, c);
-                        // TODO: print value as proper CSV string if it is a string, with
-                        //       quotes and escapes
-                        string val = a->format("");
-                        cout << format_code(v.code()) << "." << format_code(a->code()) << "," // B code
-                             << val; // Value
+                        cout << format_code(v.code()) << "." << format_code(a->code()) << ","; // B code
+                        output_quoted_csv_string(cout, a->format(""));
                         cout << endl;
                     }
                 }
