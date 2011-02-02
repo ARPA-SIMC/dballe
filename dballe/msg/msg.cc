@@ -22,11 +22,14 @@
 #include "msg.h"
 #include "context.h"
 #include "vars.h"
+#include <dballe/core/csv.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <sstream>
+#include <iomanip>
+#include <iostream>
 
 using namespace wreport;
 using namespace std;
@@ -219,6 +222,117 @@ Var* Msg::edit_by_id(int id)
 {
     const MsgVarShortcut& v = shortcutTable[id];
     return edit(v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+}
+
+namespace {
+
+struct VarContext
+{
+    // Extract datetime, lat, lon
+    const Var* lat;
+    const Var* lon;
+    const Var* year;
+    const Var* month;
+    const Var* day;
+    const Var* hour;
+    const Var* minute;
+    const Var* second;
+    const Var* memo;
+    const char* rep_memo;
+
+    VarContext(const Msg& m)
+    {
+        // Extract datetime, lat, lon
+        lat = m.get_latitude_var();
+        lon = m.get_longitude_var();
+        year = m.get_year_var();
+        month = m.get_month_var();
+        day = m.get_day_var();
+        hour = m.get_hour_var();
+        minute = m.get_minute_var();
+        second = m.get_second_var();
+        memo = m.get_rep_memo_var();
+        if (memo)
+            rep_memo = memo->enqc();
+        else
+            rep_memo = Msg::repmemo_from_type(m.type);
+    }
+
+    void print(ostream& out, msg::Context& c)
+    {
+        // Longitude
+        if (lon)
+            out << setprecision(5) << lon->enqd() << ",";
+        else
+            out << ",";
+
+        // Latitude
+        if (lat)
+            out << setprecision(5) << lat->enqd() << ",";
+        else
+            out << ",";
+
+        // Report type
+        out << rep_memo << ",";
+
+        if (c.level.ltype1 != 257)
+        {
+            // Datetime
+            out << setfill('0') << setw(4) << (year ? year->enq(0) : 0) << "-";
+            out << setfill('0') << setw(2) << (month ? month->enq(0) : 0) << "-";
+            out << setfill('0') << setw(2) << (day ? day->enq(0) : 0) << " ";
+            out << setfill('0') << setw(2) << (hour ? hour->enq(0) : 0) << ":";
+            out << setfill('0') << setw(2) << (minute ? minute->enq(0) : 0) << ":";
+            out << setfill('0') << setw(2) << (second ? second->enq(0) : 0) << ",";
+
+            // Level
+            c.level.format(cout, "");
+            out << ",";
+
+            // Time range
+            c.trange.format(cout, "");
+            out << ",";
+        } else
+            out << ",,,,,,,,";
+    }
+};
+
+}
+
+void Msg::to_csv(std::ostream& out) const
+{
+    VarContext vc(*this);
+
+    for (std::vector<msg::Context*>::const_iterator ci = data.begin();
+            ci != data.end(); ++ci)
+    {
+        msg::Context& c = **ci;
+        for (std::vector<wreport::Var*>::const_iterator vi = c.data.begin();
+                vi != c.data.end(); ++vi)
+        {
+            Var& v = **vi;
+
+            vc.print(out, c);
+
+            out << format_code(v.code()) << ","; // B code
+            csv_output_quoted_string(out, v.format(""));
+            out << endl;
+
+            // Add attribute columns
+            for (const Var* a = v.next_attr(); a != NULL; a = a->next_attr())
+            {
+                vc.print(out, c);
+                out << format_code(v.code()) << "." << format_code(a->code()) << ","; // B code
+                csv_output_quoted_string(out, a->format(""));
+                out << endl;
+            }
+        }
+    }
+}
+
+void Msg::csv_header(std::ostream& out)
+{
+    out << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
 }
 
 void Msg::print(FILE* out) const

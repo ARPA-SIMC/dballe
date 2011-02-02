@@ -1,7 +1,7 @@
 /*
- * dballe/csv - CSV reading functions
+ * dballe/csv - CSV utility functions
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 
 #include <vector>
 #include <string>
+#include <iosfwd>
 #include <stdio.h>
 
 namespace dballe
@@ -45,6 +46,11 @@ namespace dballe
  *   true if a new line was found, else false
  */
 bool csv_read_next(FILE* in, std::vector<std::string>& cols);
+
+/**
+ * Output a string value, quoted if needed according to CSV rules
+ */
+void csv_output_quoted_string(std::ostream& out, const std::string& str);
 
 }
 

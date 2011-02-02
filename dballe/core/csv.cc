@@ -1,7 +1,7 @@
 /*
- * dballe/csv - CSV reading functions
+ * dballe/csv - CSV utility functions
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,16 +21,11 @@
 
 #include <dballe/core/csv.h>
 
-/*
-#include "config.h"
-
-#include <stdlib.h>
-#include <assert.h>
-#include <math.h>
-*/
-
+#include <iostream>
 #include <stdio.h>
 #include <string.h>
+
+using namespace std;
 
 namespace dballe {
 
@@ -49,6 +44,23 @@ bool csv_read_next(FILE* in, std::vector<std::string>& cols)
 
 	return true;
 }
+
+void csv_output_quoted_string(ostream& out, const std::string& str)
+{
+    if (str.find_first_of("\",") != string::npos)
+    {
+        out << "\"";
+        for (string::const_iterator i = str.begin(); i != str.end(); ++i)
+        {
+            if (*i == '"')
+                out << '"';
+            out << *i;
+        }
+        out << "\"";
+    } else
+        out << str;
+}
+
 
 #if 0
 #ifdef HAVE_CHECK

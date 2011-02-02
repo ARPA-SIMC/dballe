@@ -71,6 +71,7 @@
 #include <stdio.h>
 #include <vector>
 #include <memory>
+#include <iosfwd>
 
 struct lua_State;
 
@@ -385,6 +386,14 @@ public:
      *   day, hour, minute and seconds.
      */
     void parse_date(int* values) const;
+
+    /**
+     * Output in CSV format
+     */
+    void to_csv(std::ostream& out) const;
+
+    /// Output the CSV header
+    static void csv_header(std::ostream& out);
 
     /**
      * Dump all the contents of the message to the given stream

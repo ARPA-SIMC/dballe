@@ -28,6 +28,7 @@
 #include <dballe/core/file.h>
 #include <dballe/core/aoffile.h>
 #include <dballe/core/matcher.h>
+#include <dballe/core/csv.h>
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <dballe/cmdline/cmdline.h>
@@ -226,22 +227,6 @@ static void dump_dba_vars(const Subset& msg)
 		msg[i].print(stdout);
 }
 
-void output_quoted_csv_string(ostream& out, const std::string& str)
-{
-    if (str.find_first_of("\",") != string::npos)
-    {
-        out << "\"";
-        for (string::const_iterator i = str.begin(); i != str.end(); ++i)
-        {
-            if (*i == '"')
-                out << '"';
-            out << *i;
-        }
-        out << "\"";
-    } else
-        out << str;
-}
-
 /**
  * Print a bulletin in CSV format
  */
@@ -261,7 +246,7 @@ struct CSVBulletin : public cmdline::Action
         }
         format_code(var.code(), bcode);
         cout << bcode << ",";
-        output_quoted_csv_string(cout, var.format(""));
+        csv_output_quoted_string(cout, var.format(""));
         cout << endl;
     }
 
@@ -335,77 +320,6 @@ struct CSVBulletin : public cmdline::Action
  */
 struct CSVMsgs : public cmdline::Action
 {
-    struct VarContext
-    {
-        // Extract datetime, lat, lon
-        const Var* lat;
-        const Var* lon;
-        const Var* year;
-        const Var* month;
-        const Var* day;
-        const Var* hour;
-        const Var* minute;
-        const Var* second;
-        const Var* memo;
-        const char* rep_memo;
-
-        VarContext(const Msg& m)
-        {
-            // Extract datetime, lat, lon
-            lat = m.get_latitude_var();
-            lon = m.get_longitude_var();
-            year = m.get_year_var();
-            month = m.get_month_var();
-            day = m.get_day_var();
-            hour = m.get_hour_var();
-            minute = m.get_minute_var();
-            second = m.get_second_var();
-            memo = m.get_rep_memo_var();
-            if (memo)
-                rep_memo = memo->enqc();
-            else
-                rep_memo = Msg::repmemo_from_type(m.type);
-        }
-
-        void print(ostream& out, msg::Context& c)
-        {
-            // Longitude
-            if (lon)
-                out << setprecision(5) << lon->enqd() << ",";
-            else
-                out << ",";
-
-            // Latitude
-            if (lat)
-                out << setprecision(5) << lat->enqd() << ",";
-            else
-                out << ",";
-
-            // Report type
-            out << rep_memo << ",";
-
-            if (c.level.ltype1 != 257)
-            {
-                // Datetime
-                out << setfill('0') << setw(4) << (year ? year->enq(0) : 0) << "-";
-                out << setfill('0') << setw(2) << (month ? month->enq(0) : 0) << "-";
-                out << setfill('0') << setw(2) << (day ? day->enq(0) : 0) << " ";
-                out << setfill('0') << setw(2) << (hour ? hour->enq(0) : 0) << ":";
-                out << setfill('0') << setw(2) << (minute ? minute->enq(0) : 0) << ":";
-                out << setfill('0') << setw(2) << (second ? second->enq(0) : 0) << ",";
-
-                // Level
-                c.level.format(cout, "");
-                out << ",";
-
-                // Time range
-                c.trange.format(cout, "");
-                out << ",";
-            } else
-                out << ",,,,,,,,";
-        }
-    };
-
     bool first;
 
     CSVMsgs() : first(true) {}
@@ -416,40 +330,13 @@ struct CSVMsgs : public cmdline::Action
 
         if (first)
         {
-            cout << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
+            Msg::csv_header(cout);
             first = false;
         }
 
         for (Msgs::const_iterator mi = msgs->begin(); mi != msgs->end(); ++mi)
         {
-            Msg& m = **mi;
-            VarContext vc(m);
-
-            for (std::vector<msg::Context*>::const_iterator ci = m.data.begin();
-                    ci != m.data.end(); ++ci)
-            {
-                msg::Context& c = **ci;
-                for (std::vector<wreport::Var*>::const_iterator vi = c.data.begin();
-                        vi != c.data.end(); ++vi)
-                {
-                    Var& v = **vi;
-
-                    vc.print(cout, c);
-
-                    cout << format_code(v.code()) << ","; // B code
-                    output_quoted_csv_string(cout, v.format(""));
-                    cout << endl;
-
-                    // Add attribute columns
-                    for (const Var* a = v.next_attr(); a != NULL; a = a->next_attr())
-                    {
-                        vc.print(cout, c);
-                        cout << format_code(v.code()) << "." << format_code(a->code()) << ","; // B code
-                        output_quoted_csv_string(cout, a->format(""));
-                        cout << endl;
-                    }
-                }
-            }
+            (*mi)->to_csv(cout);
         }
     }
 };
