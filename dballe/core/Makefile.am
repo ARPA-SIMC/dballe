@@ -60,6 +60,7 @@ tut_test_SOURCES = \
 	tests/rawmsg.cc \
 	tests/file.cc \
 	tests/record.cc \
+	csv-tut.cc \
 	matcher-tut.cc \
 	match-wreport-tut.cc \
 	test-utils-core.cc \

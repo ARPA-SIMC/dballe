@@ -47,6 +47,43 @@ namespace dballe
  */
 bool csv_read_next(FILE* in, std::vector<std::string>& cols);
 
+class CSVReader
+{
+protected:
+    std::string line;
+
+    /// Read one line from the input source, returning false if EOF is reached
+    virtual bool nextline() = 0;
+
+public:
+    /// Last CSV line read
+    std::vector<std::string> cols;
+
+    virtual ~CSVReader();
+
+    /// Read the next CSV line, returning false if EOF is reached
+    bool next();
+
+    static std::string unescape(const std::string& csvstr);
+};
+
+class IstreamCSVReader : public CSVReader
+{
+protected:
+    virtual bool nextline();
+
+public:
+    std::istream& in;
+
+    IstreamCSVReader(std::istream& in) : in(in) {}
+};
+
+// TODO: CSV readers allowing to peek on the next line without consuming it, to
+// allow the Msg parser to stop at msg boundary after peeking at a line
+// also, stripping newlines at end of lines
+// also, reading from istream
+// also, de-escaping strings (if they start with quote)
+
 /**
  * Output a string value, quoted if needed according to CSV rules
  */

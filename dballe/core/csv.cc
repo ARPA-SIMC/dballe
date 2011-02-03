@@ -20,14 +20,71 @@
  */
 
 #include <dballe/core/csv.h>
+#include <wreport/error.h>
 
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
 
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
+
+CSVReader::~CSVReader() {}
+
+std::string CSVReader::unescape(const std::string& csvstr)
+{
+    if (csvstr.empty()) return csvstr;
+    if (csvstr[0] != '"') return csvstr;
+    string res;
+    bool escape = false;
+    for (string::const_iterator i = csvstr.begin() + 1; i != csvstr.end() - 1; ++i)
+    {
+        if (*i == '"')
+        {
+            if (!escape)
+                escape = true;
+            else {
+                res += *i;
+                escape = false;
+            }
+        } else
+            res += *i;
+    }
+    return res;
+}
+
+bool CSVReader::next()
+{
+    if (!nextline()) return false;
+
+    cols.clear();
+
+    // Tokenize the input line
+    size_t beg = 0;
+    while (true)
+    {
+        size_t end = line.find(',', beg);
+        if (end == string::npos)
+        {
+            cols.push_back(unescape(line.substr(beg)));
+        } else {
+            cols.push_back(unescape(line.substr(beg, end-beg)));
+            beg = end + 1;
+        }
+    }
+
+    return true;
+}
+
+bool IstreamCSVReader::nextline()
+{
+    getline(in, line);
+    if (in.good()) return true;
+    if (in.eof()) return false;
+    throw error_system("reading line from CSV input");
+}
 
 bool csv_read_next(FILE* in, std::vector<std::string>& cols)
 {
