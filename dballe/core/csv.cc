@@ -37,9 +37,10 @@ std::string CSVReader::unescape(const std::string& csvstr)
 {
     if (csvstr.empty()) return csvstr;
     if (csvstr[0] != '"') return csvstr;
+    if (csvstr.size() == 1) return csvstr;
     string res;
     bool escape = false;
-    for (string::const_iterator i = csvstr.begin() + 1; i != csvstr.end() - 1; ++i)
+    for (string::const_iterator i = csvstr.begin() + 1; i != csvstr.end(); ++i)
     {
         if (*i == '"')
         {
@@ -62,28 +63,87 @@ bool CSVReader::next()
     cols.clear();
 
     // Tokenize the input line
-    size_t beg = 0;
-    while (true)
+    enum State { BEG, COL, QCOL, EQCOL } state = BEG;
+    string col;
+    for (string::const_iterator i = line.begin(); i != line.end(); ++i)
     {
-        size_t end = line.find(',', beg);
-        if (end == string::npos)
+        switch (state)
         {
-            cols.push_back(unescape(line.substr(beg)));
-        } else {
-            cols.push_back(unescape(line.substr(beg, end-beg)));
-            beg = end + 1;
+            case BEG:
+                switch (*i)
+                {
+                    case '"':
+                        state = QCOL;
+                        break;
+                    case ',':
+                    case '\n':
+                        state = BEG;
+                        cols.push_back(col);
+                        break;
+                    default:
+                        state = COL;
+                        col += *i; break;
+                }
+                break;
+            case COL:
+                switch (*i)
+                {
+                    case ',':
+                    case '\n':
+                        state = BEG;
+                        cols.push_back(col);
+                        col.clear();
+                        break;
+                    default:
+                        col += *i;
+                        break;
+                }
+                break;
+            case QCOL:
+                switch (*i)
+                {
+                    case '\"':
+                        state = EQCOL;
+                        break;
+                    case '\n':
+                        state = BEG;
+                        cols.push_back(col);
+                        col.clear();
+                        break;
+                    default:
+                        col += *i;
+                        break;
+                }
+                break;
+            case EQCOL:
+                switch (*i)
+                {
+                    case ',':
+                    case '\n':
+                        state = BEG;
+                        cols.push_back(col);
+                        col.clear();
+                        break;
+                    default:
+                        col += *i;
+                        break;
+                }
+                break;
         }
     }
+    if (!col.empty())
+        cols.push_back(col);
 
     return true;
 }
 
 bool IstreamCSVReader::nextline()
 {
-    getline(in, line);
-    if (in.good()) return true;
     if (in.eof()) return false;
-    throw error_system("reading line from CSV input");
+    getline(in, line);
+    if (in.bad()) throw error_system("reading line from CSV input");
+    if (in.eof() && line.empty()) return false;
+    return true;
 }
 
 bool csv_read_next(FILE* in, std::vector<std::string>& cols)

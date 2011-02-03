@@ -43,6 +43,16 @@ void to::test<1>()
     ensure_equals(CSVReader::unescape(s.str()), "");
 
     s.str(std::string());
+    csv_output_quoted_string(s, "1");
+    ensure_equals(s.str(), "1");
+    ensure_equals(CSVReader::unescape(s.str()), "1");
+
+    s.str(std::string());
+    csv_output_quoted_string(s, "12");
+    ensure_equals(s.str(), "12");
+    ensure_equals(CSVReader::unescape(s.str()), "12");
+
+    s.str(std::string());
     csv_output_quoted_string(s, "123");
     ensure_equals(s.str(), "123");
     ensure_equals(CSVReader::unescape(s.str()), "123");
@@ -71,6 +81,81 @@ void to::test<1>()
     csv_output_quoted_string(s, "\",\"");
     ensure_equals(s.str(), "\"\"\",\"\"\"");
     ensure_equals(CSVReader::unescape(s.str()), "\",\"");
+
+    ensure_equals(CSVReader::unescape("\""), "\"");
+    ensure_equals(CSVReader::unescape("\"\""), "");
+    ensure_equals(CSVReader::unescape("\"\"\""), "\"");
+    ensure_equals(CSVReader::unescape("\"\"\"\""), "\"");
+    ensure_equals(CSVReader::unescape("\"\"\"\"\""), "\"\"");
+    ensure_equals(CSVReader::unescape("a\"b"), "a\"b");
+}
+
+// Test CSV reader
+template<> template<>
+void to::test<2>()
+{
+    {
+        stringstream in("");
+        IstreamCSVReader reader(in);
+        ensure(!reader.next());
+    }
+
+    {
+        stringstream in("\n");
+        IstreamCSVReader reader(in);
+        ensure(reader.next());
+        ensure(reader.cols.empty());
+        ensure(!reader.next());
+    }
+
+    {
+        stringstream in("1,2\n");
+        IstreamCSVReader reader(in);
+        ensure(reader.next());
+        ensure_equals(reader.cols.size(), 2u);
+        ensure_equals(reader.cols[0], "1");
+        ensure_equals(reader.cols[1], "2");
+        ensure(!reader.next());
+    }
+
+    {
+        stringstream in(
+                "1,\",\",2\n"
+                "antani,,blinda\n"
+                ",\n"
+        );
+        IstreamCSVReader reader(in);
+
+        ensure(reader.next());
+        ensure_equals(reader.cols.size(), 3u);
+        ensure_equals(reader.cols[0], "1");
+        ensure_equals(reader.cols[1], ",");
+        ensure_equals(reader.cols[2], "2");
+
+        ensure(reader.next());
+        ensure_equals(reader.cols.size(), 3u);
+        ensure_equals(reader.cols[0], "antani");
+        ensure_equals(reader.cols[1], "");
+        ensure_equals(reader.cols[2], "blinda");
+
+        ensure(reader.next());
+        ensure_equals(reader.cols.size(), 1u);
+        ensure_equals(reader.cols[0], "");
+
+        ensure(!reader.next());
+    }
+
+    {
+        stringstream in("1,2");
+        IstreamCSVReader reader(in);
+
+        ensure(reader.next());
+        ensure_equals(reader.cols.size(), 2u);
+        ensure_equals(reader.cols[0], "1");
+        ensure_equals(reader.cols[1], "2");
+
+        ensure(!reader.next());
+    }
 }
 
 }
