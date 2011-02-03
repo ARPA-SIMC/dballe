@@ -19,10 +19,12 @@
 
 #include "test-utils-msg.h"
 #include "codec.h"
+#include <dballe/core/csv.h>
 
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <fstream>
 
 using namespace wreport;
 using namespace std;
@@ -107,6 +109,22 @@ auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filena
     std::auto_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
     std::auto_ptr<Msgs> msgs(new Msgs);
     importer->from_rawmsg(*raw, *msgs);
+    return msgs;
+}
+
+std::auto_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename)
+{
+    std::string fname = datafile(filename);
+    ifstream in(fname.c_str());
+    IstreamCSVReader reader(in);
+
+    auto_ptr<Msgs> msgs(new Msgs);
+    if (!msgs->from_csv(reader))
+    {
+        std::stringstream ss;
+        ss << "cannot find the start of CSV message in " << fname;
+        throw tut::failure(loc.msg(ss.str()));
+    }
     return msgs;
 }
 

@@ -57,6 +57,10 @@ bool Msgs::from_csv(CSVReader& in)
     bool first = true;
     while (true)
     {
+        // Seek to beginning, skipping empty lines
+        if (!in.move_to_data())
+            return !first;
+
         if (in.cols.size() != 13)
             error_consistency::throwf("cannot parse CSV line has %zd fields instead of 13", in.cols.size());
         if (first)
@@ -66,14 +70,15 @@ bool Msgs::from_csv(CSVReader& in)
             first = false;
         } else if (old_rep != in.cols[2])
             // If Report changes, we are done
-            return true;
+            break;
 
         auto_ptr<Msg> msg(new Msg);
         bool has_next = msg->from_csv(in);
         acquire(msg);
         if (!has_next)
-            return false;
+            break;
     }
+    return true;
 }
 
 void Msgs::to_csv(std::ostream& out) const

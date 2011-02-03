@@ -62,6 +62,18 @@ public:
 
     virtual ~CSVReader();
 
+    /**
+     * Find the first line where the given column exists and starts with a
+     * number.
+     *
+     * This can be used to skip titles and empty lines, moving to the start of
+     * the real data. Real data is identified by using a column that starts
+     * with text in the headers and number in the data.
+     *
+     * @returns true if a data line has been found, false if we reached EOF
+     */
+    bool move_to_data(unsigned number_col=0);
+
     /// Read the next CSV line, returning false if EOF is reached
     bool next();
 

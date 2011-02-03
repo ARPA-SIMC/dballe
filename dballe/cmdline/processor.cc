@@ -303,100 +303,6 @@ bool Filter::match_item(const Item& item) const
         return false;
 }
 
-#if 0
-static void process_input(File& file, const Rawmsg& rmsg, struct Filter* grepdata, Action& action)
-{
-	int print_errors = (grepdata == NULL || !grepdata->unparsable);
-	auto_ptr<Msgs> parsed(new Msgs);
-	auto_ptr<Bulletin> br;
-	bool match = true;
-
-	switch (rmsg.encoding)
-	{
-		case BUFR:
-			br.reset(new BufrBulletin);
-			try {
-				br->decode(rmsg, rmsg.file.c_str(), rmsg.offset);
-			} catch (error& e) {
-				if (print_errors) print_parse_error(rmsg, e);
-				br.release();
-				parsed.release();
-			}
-			if (br.get())
-			{
-				std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding, grepdata->import_opts);
-				try {
-					imp->from_bulletin(*br, *parsed);
-				} catch (error& e) {
-					if (print_errors) print_parse_error(rmsg, e);
-					br.release();
-					parsed.release();
-				}
-			}
-			if (grepdata != NULL)
-				match = grepdata->match_bufr(rmsg, br.get(), parsed.get());
-			break;
-		case CREX:
-			br.reset(new CrexBulletin);
-			try {
-				br->decode(rmsg, rmsg.file.c_str(), rmsg.offset);
-			} catch (error& e) {
-				if (print_errors) print_parse_error(rmsg, e);
-				br.release();
-				parsed.release();
-			}
-			if (br.get())
-			{
-				std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding, grepdata->import_opts);
-				try {
-					imp->from_bulletin(*br, *parsed);
-				} catch (error& e) {
-					if (print_errors) print_parse_error(rmsg, e);
-					br.release();
-					parsed.release();
-				}
-			}
-			if (grepdata != NULL)
-				match = grepdata->match_crex(rmsg, br.get(), parsed.get());
-			break;
-		case AOF: {
-			std::auto_ptr<msg::Importer> imp = msg::Importer::create(rmsg.encoding, grepdata->import_opts);
-			try {
-				imp->from_rawmsg(rmsg, *parsed);
-			} catch (error& e) {
-				if (print_errors) print_parse_error(rmsg, e);
-				parsed.release();
-			}
-			if (grepdata != NULL)
-				match = grepdata->match_aof(rmsg, parsed.get());
-			break;
-		}
-	}
-
-	if (!match) return;
-
-	action(rmsg.index, &rmsg, br.get(), parsed.get());
-}
-#endif
-
-/**
- * Given a fresh csv reader, seek to start of data
- *
- * @returns true if there is data to read, false if we reached EOF
- */
-static bool seek_to_start(CSVReader& in)
-{
-    while (true)
-    {
-        if (!in.next()) return false;
-        if (in.cols.empty()) continue;
-        if (in.cols[0].empty())
-            error_consistency::throwf("The first column in line \"%s\" is empty", in.line.c_str());
-        // First valid line should have a latitude
-        if (isdigit(in.cols[0][0])) return true;
-    }
-}
-
 Reader::Reader()
     : input_type("auto")
 {
@@ -419,8 +325,6 @@ void Reader::read_csv(poptContext optCon, Action& action)
             name = "(stdin)";
             csvin.reset(new IstreamCSVReader(cin));
         }
-
-        if (!seek_to_start(*csvin)) continue;
 
         while (true)
         {

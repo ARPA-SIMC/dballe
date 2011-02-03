@@ -22,6 +22,7 @@
 #include <dballe/core/csv.h>
 #include <wreport/error.h>
 
+#include <cctype>
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
@@ -56,11 +57,24 @@ std::string CSVReader::unescape(const std::string& csvstr)
     return res;
 }
 
+bool CSVReader::move_to_data(unsigned number_col)
+{
+    while (true)
+    {
+        if (number_col < cols.size()
+         && (cols[number_col].empty() || isdigit(cols[number_col][0]) || cols[number_col][0] == '-'))
+            break;
+        if (!next())
+            return false;
+    }
+    return true;
+}
+
 bool CSVReader::next()
 {
-    if (!nextline()) return false;
-
     cols.clear();
+
+    if (!nextline()) return false;
 
     // Tokenize the input line
     enum State { BEG, COL, QCOL, EQCOL } state = BEG;

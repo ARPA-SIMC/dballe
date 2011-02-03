@@ -62,7 +62,7 @@ struct Msgs : public std::vector<Msg*>
      *
      * Reading stops when Report changes.
      *
-     * @return true if there is more data to read in \a in, false on EOF
+     * @return true if some CSV data has been read, false on EOF
      */
     bool from_csv(CSVReader& in);
 

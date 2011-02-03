@@ -117,6 +117,39 @@ void to::test<2>()
         throw tut::failure(str::fmtf("%zd/%d errors:\n", fails.size(), i) + str::join(fails.begin(), fails.end(), "\n"));
 }
 
+// Export a well known TEMP which used to fail
+template<> template<>
+void to::test<3>()
+{
+    auto_ptr<Msgs> msgs = read_msgs_csv("csv/temp1.csv");
+    ensure(msgs->size() > 0);
+
+    // Export to BUFR
+    std::auto_ptr<msg::Exporter> bufr_exporter(msg::Exporter::create(BUFR/*, const Options& opts=Options()*/));
+    wreport::BufrBulletin bbulletin;
+    bufr_exporter->to_bulletin(*msgs, bbulletin);
+
+    // Import and check the differences
+    {
+        std::auto_ptr<msg::Importer> bufr_importer(msg::Importer::create(BUFR/*, const Options& opts=Options()*/));
+        Msgs msgs1;
+        bufr_importer->from_bulletin(bbulletin, msgs1);
+        ensure_equals(msgs->diff(msgs1, stderr), 0);
+    }
+
+    // Export to CREX
+    std::auto_ptr<msg::Exporter> crex_exporter(msg::Exporter::create(CREX/*, const Options& opts=Options()*/));
+    wreport::CrexBulletin cbulletin;
+    crex_exporter->to_bulletin(*msgs, cbulletin);
+
+    // Import and check the differences
+    {
+        std::auto_ptr<msg::Importer> crex_importer(msg::Importer::create(CREX/*, const Options& opts=Options()*/));
+        Msgs msgs1;
+        crex_importer->from_bulletin(cbulletin, msgs1);
+        ensure_equals(msgs->diff(msgs1, stderr), 0);
+    }
+}
 
 #if 0
 template<> template<>

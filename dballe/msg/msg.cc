@@ -338,9 +338,8 @@ void Msg::csv_header(std::ostream& out)
 bool Msg::from_csv(CSVReader& in)
 {
     // Seek to beginning, skipping empty lines
-    while (in.cols.empty())
-        if (!in.next())
-            return false;
+    if (!in.move_to_data())
+        return false;
 
     string old_lat, old_lon, old_rep, old_date;
     bool first = true;
