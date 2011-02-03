@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,8 +77,10 @@ struct TempBase : public Template
     {
         int lev_no = 0;
         for (size_t i = 0; i < msg->data.size(); ++i)
+        {
             if (msg->data[i]->find_vsig() != NULL)
                 ++lev_no;
+        }
         return lev_no;
     }
 

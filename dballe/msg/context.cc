@@ -262,9 +262,8 @@ unsigned Context::diff(const Context& ctx, FILE* out) const
 const Var* Context::find_vsig() const
 {
     // Check if we have the right context information
-    if ((level.ltype1 != 100 && level.ltype1 != 102) || trange != Trange(254))
+    if ((level.ltype1 != 100 && level.ltype1 != 102) || trange != Trange::instant())
         return NULL;
-
     // Look for VSS variable
     const Var* res = find(WR_VAR(0, 8, 1));
     if (res == NULL) return NULL;

@@ -124,6 +124,15 @@ void to::test<3>()
     auto_ptr<Msgs> msgs = read_msgs_csv("csv/temp1.csv");
     ensure(msgs->size() > 0);
 
+    // Replace with packed levels because comparison later happens against
+    // packed levels
+    {
+        auto_ptr<Msg> msg(new Msg);
+        msg->sounding_pack_levels(*(*msgs)[0]);
+        msgs.reset(new Msgs);
+        msgs->acquire(msg);
+    }
+
     // Export to BUFR
     std::auto_ptr<msg::Exporter> bufr_exporter(msg::Exporter::create(BUFR/*, const Options& opts=Options()*/));
     wreport::BufrBulletin bbulletin;

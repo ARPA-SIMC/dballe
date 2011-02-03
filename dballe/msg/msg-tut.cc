@@ -293,12 +293,12 @@ void to::test<4>()
     Msg matched;
     ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-    matched.set(newvar(WR_VAR(0, 12, 101), 21.5), Level(1), Trange(254));
+    matched.set(newvar(WR_VAR(0, 12, 101), 21.5), Level(1), Trange::instant());
     ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
     std::auto_ptr<wreport::Var> var = newvar(WR_VAR(0, 12, 103), 18.5);
     var->seta(newvar(WR_VAR(0, 33, 195), 1));
-    matched.set(var, Level(1), Trange(254));
+    matched.set(var, Level(1), Trange::instant());
     ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
 }
 
