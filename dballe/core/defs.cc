@@ -44,7 +44,7 @@ const char* encoding_name(Encoding enc)
 
 static int str_to_val(const char* str)
 {
-    if (str == NULL || str[0] == 0 || str[0] == '-')
+    if (str == NULL || str[0] == 0 || strcmp(str, "-") == 0)
         return MISSING_INT;
     else
         return strtol(str, NULL, 10);

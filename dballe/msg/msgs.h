@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * msg/msgs - Hold a group of similar Msg
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include <memory>
 
 namespace dballe {
+struct CSVReader;
 
 /** Dynamic array of dba_msg */
 struct Msgs : public std::vector<Msg*>
@@ -55,6 +56,20 @@ struct Msgs : public std::vector<Msg*>
      *   management for it.
      */
     void acquire(std::auto_ptr<Msg> msg);
+
+    /**
+     * Read data from a CSV input.
+     *
+     * Reading stops when Report changes.
+     *
+     * @return true if there is more data to read in \a in, false on EOF
+     */
+    bool from_csv(CSVReader& in);
+
+    /**
+     * Output in CSV format
+     */
+    void to_csv(std::ostream& out) const;
 
     /**
      * Dump all the contents of the message to the given stream

@@ -1,7 +1,7 @@
 /*
- * DB-ALLe - Archive for punctual meteorological data
+ * msg/msgs - Hold a group of similar Msg
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,14 @@
  */
 
 #include "msgs.h"
+#include <dballe/core/csv.h>
+#include <wreport/error.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
 
@@ -46,6 +49,37 @@ void Msgs::acquire(const Msg& msg)
 void Msgs::acquire(auto_ptr<Msg> msg)
 {
     push_back(msg.release());
+}
+
+bool Msgs::from_csv(CSVReader& in)
+{
+    string old_rep;
+    bool first = true;
+    while (true)
+    {
+        if (in.cols.size() != 13)
+            error_consistency::throwf("cannot parse CSV line has %zd fields instead of 13", in.cols.size());
+        if (first)
+        {
+            // If we are the first run, initialse old_* markers with the contents of this line
+            old_rep = in.cols[2];
+            first = false;
+        } else if (old_rep != in.cols[2])
+            // If Report changes, we are done
+            return true;
+
+        auto_ptr<Msg> msg(new Msg);
+        bool has_next = msg->from_csv(in);
+        acquire(msg);
+        if (!has_next)
+            return false;
+    }
+}
+
+void Msgs::to_csv(std::ostream& out) const
+{
+    for (const_iterator i = begin(); i != end(); ++i)
+        (*i)->to_csv(out);
 }
 
 void Msgs::print(FILE* out) const

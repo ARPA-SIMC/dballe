@@ -492,7 +492,7 @@ unsigned Msg::diff(const Msg& msg, FILE* out) const
                 msg_type_name(type), type, msg_type_name(msg.type), msg.type);
         ++diffs;
     }
-    
+
     size_t i1 = 0, i2 = 0;
     while (i1 < data.size() || i2 < msg.data.size())
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2010--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 
 #include <test-utils-msg.h>
+#include <dballe/core/csv.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
@@ -307,6 +308,34 @@ void to::test<7>()
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
+}
+
+// Test CSV encoding/decoding
+template<> template<>
+void to::test<8>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/synop-evapo.bufr", BUFR);
+
+    // Serialise to CSV
+    stringstream str;
+    msgs->to_csv(str);
+
+    // Read back
+    Msgs msgs1;
+    str.seekg(0);
+    IstreamCSVReader in(str);
+    ensure(in.next());
+    msgs1.from_csv(in);
+
+    // Normalise before compare
+    for (Msgs::iterator i = msgs->begin(); i != msgs->end(); ++i)
+    {
+        Msg& m = **i;
+        m.set_rep_memo("synop");
+        m.set_second(0);
+    }
+
+    ensure_equals(msgs->diff(msgs1, stderr), 0u);
 }
 
 }
