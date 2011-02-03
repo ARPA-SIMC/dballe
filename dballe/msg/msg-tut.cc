@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 
 #include <test-utils-msg.h>
+#include <dballe/core/csv.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
@@ -542,6 +543,40 @@ void to::test<10>()
 
     Msg matched;
     ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
+}
+
+// Test CSV encoding/decoding
+template<> template<>
+void to::test<11>()
+{
+    Msg msg;
+    msg.type = MSG_TEMP;
+    //msg->type = MSG_SYNOP;
+
+    // Fill in the dba_msg
+    msg.set_year(2011);
+    msg.set_month(5);
+    msg.set_day(3);
+    msg.set_hour(12);
+    msg.set_minute(30);
+    msg.set_second(45);
+    msg.set_latitude(45.0);
+    msg.set_longitude(11.0);
+    msg.set_temp_2m(273.0, 75);
+    msg.set_height(1230);
+    msg.set_st_name("antani");
+    msg.set_rep_memo("temp");
+
+    stringstream str;
+    msg.to_csv(str);
+
+    Msg msg1;
+    str.seekg(0);
+    IstreamCSVReader in(str);
+    ensure(in.next());
+    msg1.from_csv(in);
+
+    ensure_equals(msg.diff(msg1, stderr), 0u);
 }
 
 }

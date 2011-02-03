@@ -1,7 +1,7 @@
 /*
  * msg/defs - Common definitions
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,25 @@ const char* encoding_name(Encoding enc)
 		default: return "(unknown)";
 	}
 }
+
+static int str_to_val(const char* str)
+{
+    if (str == NULL || str[0] == 0 || str[0] == '-')
+        return MISSING_INT;
+    else
+        return strtol(str, NULL, 10);
+}
+
+Level::Level(const char* ltype1, const char* l1, const char* ltype2, const char* l2)
+    : ltype1(str_to_val(ltype1)), l1(str_to_val(l1)), ltype2(str_to_val(ltype2)), l2(str_to_val(l2))
+{
+}
+
+Trange::Trange(const char* pind, const char* p1, const char* p2)
+    : pind(str_to_val(pind)), p1(str_to_val(p1)), p2(str_to_val(p2))
+{
+}
+
 
 namespace {
 std::string fmtf( const char* f, ... )

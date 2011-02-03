@@ -1,7 +1,7 @@
 /*
  * msg/defs - Common definitions
  *
- * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2010--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
  */
 
 #include <limits.h>
+#include <string>
 #include <iosfwd>
 
 namespace dballe {
@@ -62,6 +63,7 @@ struct Level
 
     Level(int ltype1=MISSING_INT, int l1=MISSING_INT, int ltype2=MISSING_INT, int l2=MISSING_INT)
         : ltype1(ltype1), l1(l1), ltype2(ltype2), l2(l2) {}
+    Level(const char* ltype1, const char* l1=NULL, const char* ltype2=NULL, const char* l2=NULL);
 
     bool operator==(const Level& l) const
     {
@@ -114,6 +116,7 @@ struct Trange
 
     Trange(int pind=MISSING_INT, int p1=MISSING_INT, int p2=MISSING_INT)
         : pind(pind), p1(p1), p2(p2) {}
+    Trange(const char* pind, const char* p1=NULL, const char* p2=NULL);
 
     bool operator==(const Trange& tr) const
     {

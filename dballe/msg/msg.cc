@@ -1,7 +1,7 @@
 /*
  * dballe/msg - Hold an interpreted weather bulletin
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -286,11 +286,11 @@ struct VarContext
             out << setfill('0') << setw(2) << (second ? second->enq(0) : 0) << ",";
 
             // Level
-            c.level.format(cout, "");
+            c.level.format(out, "");
             out << ",";
 
             // Time range
-            c.trange.format(cout, "");
+            c.trange.format(out, "");
             out << ",";
         } else
             out << ",,,,,,,,";
@@ -333,6 +333,87 @@ void Msg::to_csv(std::ostream& out) const
 void Msg::csv_header(std::ostream& out)
 {
     out << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
+}
+
+bool Msg::from_csv(CSVReader& in)
+{
+    string old_lat, old_lon, old_rep, old_date;
+    bool first = true;
+    while (true)
+    {
+        if (in.cols.size() != 13)
+            error_consistency::throwf("cannot parse CSV line has %zd fields instead of 13", in.cols.size());
+        if (first)
+        {
+            // If we are the first run, initialse old_* markers with the contents of this line
+            old_lon = in.cols[0];
+            old_lat = in.cols[1];
+            old_rep = in.cols[2];
+            old_date = in.cols[3];
+            set_latitude(strtod(old_lat.c_str(), NULL));
+            set_longitude(strtod(old_lon.c_str(), NULL));
+            set_rep_memo(old_rep.c_str());
+            if (!old_date.empty())
+                set_date(old_date.c_str());
+            type = type_from_repmemo(old_rep.c_str());
+            first = false;
+        } else if (old_lon != in.cols[0] || old_lat != in.cols[1] || old_rep != in.cols[2]) {
+            // If Longitude, Latitude or Report change, we are done
+            return true;
+        } else if (old_date != in.cols[3]) {
+            // In case of Date differences, we need to deal with station
+            // information for which the date is left empty
+            if (old_date.empty())
+            {
+                // previous lines were station information, next line is data
+                old_date = in.cols[3];
+                set_date(old_date.c_str());
+            }
+            else if (in.cols[3].empty())
+                // previous lines were data, next line is station information
+                ; // Keep the old date
+            else
+                // The date has changed, we are done.
+                return true;
+        }
+
+        //         0         1        2      3    4      5  6      7  8          9  10 11      12
+        // out << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
+
+        // Acquire the data
+        Level lev(in.cols[4].c_str(), in.cols[5].c_str(), in.cols[6].c_str(), in.cols[7].c_str());
+        if (in.cols[3].empty())
+            // If we have station info, set level accordingly
+            lev = Level::ana();
+        Trange tr(in.cols[8].c_str(), in.cols[9].c_str(), in.cols[10].c_str());
+
+        // Parse variable code
+        if (in.cols[11].size() == 13)
+        {
+            // Bxxyyy.Bxxyyy: attribute
+            Varcode vcode = descriptor_code(in.cols[11].substr(0, 6).c_str());
+            // Find master variable
+            wreport::Var* var = edit(vcode, lev, tr);
+            if (var == NULL)
+                error_consistency::throwf("cannot find corresponding variable for attribute %s", in.cols[11].c_str());
+
+            Varcode acode = descriptor_code(in.cols[11].substr(7).c_str());
+            auto_ptr<Var> attr = newvar(acode);
+            Varinfo info = attr->info();
+            attr->set_from_formatted(in.cols[12].c_str());
+            var->seta(attr);
+        } else if (in.cols[11].size() == 6) {
+            // Bxxyyy: variable
+            Varcode vcode = descriptor_code(in.cols[11].c_str());
+            auto_ptr<Var> var = newvar(vcode);
+            var->set_from_formatted(in.cols[12].c_str());
+            set(var, lev, tr);
+        } else
+            error_consistency::throwf("cannot parse variable code %s", in.cols[11].c_str());
+
+        if (!in.next())
+            return false;
+    }
 }
 
 void Msg::print(FILE* out) const
@@ -496,6 +577,19 @@ void Msg::setc(Varcode code, const char* val, int conf, const Level& lev, const 
     if (conf != -1)
         var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
     set(var, lev, tr);
+}
+
+void Msg::set_date(const char* date)
+{
+    int ye, mo, da, ho, mi, se;
+    if (sscanf(date, "%04d-%02d-%02d %02d:%02d:%02d", &ye, &mo, &da, &ho, &mi, &se) != 6)
+        error_consistency::throwf("cannot parse date/time string \"%s\"", date);
+    set_year(ye);
+    set_month(mo);
+    set_day(da);
+    set_hour(ho);
+    set_minute(mi);
+    set_second(se);
 }
 
 MsgType Msg::type_from_repmemo(const char* repmemo)

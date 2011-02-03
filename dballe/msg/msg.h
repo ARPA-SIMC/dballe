@@ -1,7 +1,7 @@
 /*
  * dballe/msg - Hold an interpreted weather bulletin
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,6 +78,7 @@ struct lua_State;
 namespace dballe {
 
 struct Record;
+struct CSVReader;
 
 namespace msg {
 struct Context;
@@ -348,6 +349,9 @@ public:
      */
     void setc(wreport::Varcode code, const char* val, int conf, const Level& lev, const Trange& tr);
 
+    /// Set the date from a string in the format "YYYY-MM-DD HH:MM:SS"
+    void set_date(const char* date);
+
     /**
      * Copy to dest all the variable in this message that match \a filter
      * TODO: to be implemented
@@ -386,6 +390,15 @@ public:
      *   day, hour, minute and seconds.
      */
     void parse_date(int* values) const;
+
+    /**
+     * Read data from a CSV input.
+     *
+     * Reading stops when one of Longitude, Latitude, Report or Date changes.
+     *
+     * @return true if there is more data to read in \a in, false on EOF
+     */
+    bool from_csv(CSVReader& in);
 
     /**
      * Output in CSV format
