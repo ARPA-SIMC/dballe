@@ -48,15 +48,9 @@ struct Converter : public Action
 	const char* dest_rep_memo;
 	const char* dest_template;
 
-	msg::Importer* importer;
-	msg::Exporter* exporter;
-#if 0
-	dba_encoding outType;
-	void* outAction;
-	void* outActionData;
-#endif
-	Converter() : file(0), dest_rep_memo(0), dest_template(0), importer(0), exporter(0) {}
-	~Converter();
+    msg::Exporter* exporter;
+    Converter() : file(0), dest_rep_memo(0), dest_template(0), exporter(0) {}
+    ~Converter();
 
 	virtual void operator()(const cmdline::Item& item);
 

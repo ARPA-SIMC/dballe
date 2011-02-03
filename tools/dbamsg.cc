@@ -716,7 +716,6 @@ int do_convert(poptContext optCon)
     reader.filter.matcher_from_args(optCon);
     if (op_precise_import) reader.import_opts.simplified = false;
 
-	Encoding intype = dba_cmdline_stringToMsgType(reader.input_type, optCon);
 	Encoding outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
 
 	if (op_report[0] != 0)
@@ -730,9 +729,8 @@ int do_convert(poptContext optCon)
 		opts.template_name = op_output_template;
 	}
 
-	conv.file = File::create(outtype, "(stdout)", "w").release();
-	conv.importer = msg::Importer::create(intype).release();
-	conv.exporter = msg::Exporter::create(outtype, opts).release();
+    conv.file = File::create(outtype, "(stdout)", "w").release();
+    conv.exporter = msg::Exporter::create(outtype, opts).release();
 
     reader.read(optCon, conv);
 

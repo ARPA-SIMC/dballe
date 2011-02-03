@@ -34,9 +34,8 @@ namespace cmdline {
 
 Converter::~Converter()
 {
-	if (file) delete file;
-	if (importer) delete importer;
-	if (exporter) delete exporter;
+    if (file) delete file;
+    if (exporter) delete exporter;
 }
 
 void Converter::process_bufrex_msg(const Bulletin& msg)
