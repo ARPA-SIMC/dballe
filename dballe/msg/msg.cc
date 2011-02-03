@@ -337,10 +337,18 @@ void Msg::csv_header(std::ostream& out)
 
 bool Msg::from_csv(CSVReader& in)
 {
+    // Seek to beginning, skipping empty lines
+    while (in.cols.empty())
+        if (!in.next())
+            return false;
+
     string old_lat, old_lon, old_rep, old_date;
     bool first = true;
     while (true)
     {
+        // If there are empty lines, use them as separators
+        if (in.cols.empty())
+            break;
         if (in.cols.size() != 13)
             error_consistency::throwf("cannot parse CSV line has %zd fields instead of 13", in.cols.size());
         if (first)
@@ -359,7 +367,7 @@ bool Msg::from_csv(CSVReader& in)
             first = false;
         } else if (old_lon != in.cols[0] || old_lat != in.cols[1] || old_rep != in.cols[2]) {
             // If Longitude, Latitude or Report change, we are done
-            return true;
+            break;
         } else if (old_date != in.cols[3]) {
             // In case of Date differences, we need to deal with station
             // information for which the date is left empty
@@ -374,7 +382,7 @@ bool Msg::from_csv(CSVReader& in)
                 ; // Keep the old date
             else
                 // The date has changed, we are done.
-                return true;
+                break;
         }
 
         //         0         1        2      3    4      5  6      7  8          9  10 11      12
@@ -412,8 +420,9 @@ bool Msg::from_csv(CSVReader& in)
             error_consistency::throwf("cannot parse variable code %s", in.cols[11].c_str());
 
         if (!in.next())
-            return false;
+            break;
     }
+    return true;
 }
 
 void Msg::print(FILE* out) const

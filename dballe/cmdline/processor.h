@@ -47,6 +47,9 @@ struct Item
 
     /// Decode all that can be decoded
     void decode(msg::Importer& imp, bool print_errors=false);
+
+    /// Set the value of msgs, possibly replacing the previous one
+    void set_msgs(Msgs* new_msgs);
 };
 
 struct Action
@@ -82,8 +85,13 @@ struct Filter
     bool match_item(const Item& item) const;
 };
 
-struct Reader
+class Reader
 {
+protected:
+    void read_csv(poptContext optCon, Action& action);
+    void read_file(poptContext optCon, Action& action);
+
+public:
     const char* input_type;
     msg::Importer::Options import_opts;
     Filter filter;

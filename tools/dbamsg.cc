@@ -142,17 +142,17 @@ static void dump_aof_header(const Rawmsg& rmsg)
 	printf("Category: %d:%d\n\n", category, subcategory);
 }
 
-static void print_bufr_header(const Rawmsg& rmsg, const BufrBulletin& braw)
+static void print_bufr_header(const BufrBulletin& braw)
 {
-	printf("#%d BUFR message: %zd bytes, category %d:%d:%d, table %s, subsets %zd, values:",
-			rmsg.index, rmsg.size(), braw.type, braw.subtype, braw.localsubtype,
+	printf(", category %d:%d:%d, table %s, subsets %zd, values:",
+			braw.type, braw.subtype, braw.localsubtype,
 			braw.btable ? braw.btable->id().c_str() : "(none)",
 			braw.subsets.size());
 	for (size_t i = 0; i < braw.subsets.size(); ++i)
 		printf(" %d/%zd", count_nonnulls(braw.subsets[i]), braw.subsets[i].size());
 }
 
-static void print_crex_header(const Rawmsg& rmsg, const CrexBulletin& braw)
+static void print_crex_header(const CrexBulletin& braw)
 {
 	/* DBA_RUN_OR_RETURN(crex_message_has_check_digit(msg, &checkdigit)); */
 
@@ -161,8 +161,8 @@ static void print_crex_header(const Rawmsg& rmsg, const CrexBulletin& braw)
 			rmsg->index, size, braw->type, braw->subtype, table_id, /*checkdigit ? "" : "no "*/"? ", count_nonnulls(braw), braw->vars_count);
 #endif
 
-	printf("#%d CREX message: %zd bytes, category %d, subcategory %d, table %s, subsets %zd, values:",
-			rmsg.index, rmsg.size(), braw.type, braw.subtype,
+	printf(", category %d, subcategory %d, table %s, subsets %zd, values:",
+			braw.type, braw.subtype,
 			braw.btable ? braw.btable->id().c_str() : "(none)",
 			braw.subsets.size());
 	for (size_t i = 0; i < braw.subsets.size(); ++i)
@@ -171,33 +171,62 @@ static void print_crex_header(const Rawmsg& rmsg, const CrexBulletin& braw)
 
 static void print_aof_header(const Rawmsg& rmsg)
 {
-	int category, subcategory;
-	msg::AOFImporter::get_category(rmsg, &category, &subcategory);
-	/* DBA_RUN_OR_RETURN(bufrex_message_get_vars(msg, &vars, &count)); */
+    int category, subcategory;
+    msg::AOFImporter::get_category(rmsg, &category, &subcategory);
+    printf(", category %d, subcategory %d", category, subcategory);
+}
 
-	printf("#%d AOF message: %zd bytes, category %d, subcategory %d",
-			rmsg.index, rmsg.size(), category, subcategory);
+static void print_item_header(const Item& item)
+{
+    printf("#%d", item.idx);
+
+    if (item.rmsg)
+    {
+        printf(" %s message: %zd bytes", encoding_name(item.rmsg->encoding), item.rmsg->size());
+
+        switch (item.rmsg->encoding)
+        {
+            case BUFR:
+                if (item.bulletin != NULL)
+                    print_bufr_header(*dynamic_cast<const BufrBulletin*>(item.bulletin));
+                break;
+            case CREX:
+                if (item.bulletin != NULL)
+                    print_crex_header(*dynamic_cast<const CrexBulletin*>(item.bulletin));
+                break;
+            case AOF:
+                print_aof_header(*item.rmsg);
+                break;
+        }
+    } else if (item.msgs) {
+        printf(" message: %zd subsets:", item.msgs->size());
+        string old_type;
+        unsigned count = 0;
+        for (Msgs::const_iterator i = item.msgs->begin(); i != item.msgs->end(); ++i)
+        {
+            Msg& m = **i;
+            string new_type = msg_type_name(m.type);
+            if (old_type.empty())
+            {
+                old_type = new_type;
+                count = 1;
+            } else if (old_type != new_type) {
+                printf(" %u %s", count, old_type.c_str());
+                old_type = new_type;
+                count = 1;
+            } else
+                ++count;
+        }
+        printf(" %u %s", count, old_type.c_str());
+    }
 }
 
 struct Summarise : public cmdline::Action
 {
     virtual void operator()(const cmdline::Item& item)
     {
-        if (!item.rmsg) return;
-        switch (item.rmsg->encoding)
-        {
-            case BUFR:
-                if (item.bulletin == NULL) return;
-                print_bufr_header(*item.rmsg, *dynamic_cast<const BufrBulletin*>(item.bulletin)); puts(".");
-                break;
-            case CREX:
-                if (item.bulletin == NULL) return;
-                print_crex_header(*item.rmsg, *dynamic_cast<const CrexBulletin*>(item.bulletin)); puts(".");
-                break;
-            case AOF:
-                print_aof_header(*item.rmsg); puts(".");
-                break;
-        }
+        print_item_header(item);
+        puts(".");
     }
 };
 
@@ -358,14 +387,19 @@ struct DumpMessage : public cmdline::Action
 
     virtual void operator()(const cmdline::Item& item)
     {
-        if (!item.rmsg) return;
+        print_item_header(item);
+        if (!item.rmsg)
+        {
+            puts(": no low-level information available");
+            return;
+        }
+        puts(":");
         switch (item.rmsg->encoding)
         {
             case BUFR:
                 {
                     if (item.bulletin == NULL) return;
                     const BufrBulletin& b = *dynamic_cast<const BufrBulletin*>(item.bulletin);
-                    print_bufr_header(*item.rmsg, b); puts(":");
                     printf(" Edition %d, origin %d/%d, master table %d, local table %d\n",
                             b.edition, b.centre, b.subcentre, b.master_table, b.local_table);
                     print_subsets(*item.bulletin);
@@ -375,14 +409,12 @@ struct DumpMessage : public cmdline::Action
                 {
                     if (item.bulletin == NULL) return;
                     const CrexBulletin& b = *dynamic_cast<const CrexBulletin*>(item.bulletin);
-                    print_crex_header(*item.rmsg, b); puts(":");
                     printf(" Edition %d, master table %d, table %d\n",
                             b.edition, b.master_table, b.table);
                     print_subsets(*item.bulletin);
                     break;
                 }
             case AOF:
-                print_aof_header(*item.rmsg); puts(":");
                 msg::AOFImporter::dump(*item.rmsg, stdout);
                 break;
         }

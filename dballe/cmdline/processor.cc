@@ -60,6 +60,12 @@ Item::~Item()
     if (rmsg) delete rmsg;
 }
 
+void Item::set_msgs(Msgs* new_msgs)
+{
+    if (msgs) delete msgs;
+    msgs = new_msgs;
+}
+
 void Item::decode(msg::Importer& imp, bool print_errors)
 {
     if (!rmsg) return;
@@ -373,7 +379,6 @@ static void process_input(File& file, const Rawmsg& rmsg, struct Filter* grepdat
 }
 #endif
 
-#if 0
 /**
  * Given a fresh csv reader, seek to start of data
  *
@@ -391,16 +396,16 @@ static bool seek_to_start(CSVReader& in)
         if (isdigit(in.cols[0][0])) return true;
     }
 }
-#endif
 
-#if 0
-void process_csv(poptContext optCon,
-        struct Filter* grepdata,
-        Action& action)
+Reader::Reader()
+    : input_type("auto")
+{
+}
+
+void Reader::read_csv(poptContext optCon, Action& action)
 {
     const char* name = poptGetArg(optCon);
-    Rawmsg rmsg;
-    int index = 0;
+    Item item;
     auto_ptr<istream> in;
     auto_ptr<CSVReader> csvin;
 
@@ -410,42 +415,39 @@ void process_csv(poptContext optCon,
         {
             in.reset(new ifstream(name));
             csvin.reset(new IstreamCSVReader(*in));
-        } else
+        } else {
+            name = "(stdin)";
             csvin.reset(new IstreamCSVReader(cin));
+        }
 
         if (!seek_to_start(*csvin)) continue;
 
         while (true)
         {
-            Msgs msgs;
+            // Read input message
             auto_ptr<Msg> msg(new Msg);
             if (!msg->from_csv(*csvin))
                 break;
-            msgs.acquire(msg);
-            ++index;
 
-            bool match = true;
-            if (grepdata)
-            {
-                if (!grepdata->match_index(index))
-                    match = false;
-                else
-                    match = grepdata->match_msgs(msgs);
-            }
+            // Match against index matcher
+            ++item.idx;
+            if (!filter.match_index(item.idx))
+                continue;
 
-            if (match)
-                action(rmsg, NULL, *msgs);
+            // We want it: move it to the item
+            auto_ptr<Msgs> msgs(new Msgs);
+            msgs->acquire(msg);
+            item.set_msgs(msgs.release());
+
+            if (!filter.match_item(item))
+                continue;
+
+            action(item);
         }
     } while ((name = poptGetArg(optCon)) != NULL);
 }
-#endif
 
-Reader::Reader()
-    : input_type("auto")
-{
-}
-
-void Reader::read(poptContext optCon, Action& action)
+void Reader::read_file(poptContext optCon, Action& action)
 {
     const char* name = poptGetArg(optCon);
     Item item;
@@ -482,6 +484,14 @@ void Reader::read(poptContext optCon, Action& action)
             action(item);
         }
     } while ((name = poptGetArg(optCon)) != NULL);
+}
+
+void Reader::read(poptContext optCon, Action& action)
+{
+    if (strcmp(input_type, "csv") == 0)
+        read_csv(optCon, action);
+    else
+        read_file(optCon, action);
 }
 
 } // namespace cmdline

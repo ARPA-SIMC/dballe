@@ -396,7 +396,7 @@ public:
      *
      * Reading stops when one of Longitude, Latitude, Report or Date changes.
      *
-     * @return true if there is more data to read in \a in, false on EOF
+     * @return true if some CSV data has been found, false on EOF
      */
     bool from_csv(CSVReader& in);
 
