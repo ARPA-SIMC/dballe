@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 #include <wreport/bulletin.h>
 #include <dballe/core/file.h>
+#include <dballe/core/csv.h>
 #include <dballe/core/record.h>
 #include <dballe/core/match-wreport.h>
 #include <dballe/msg/aof_codec.h>
@@ -29,6 +30,8 @@
 
 #include <cstring>
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
 
 using namespace wreport;
 using namespace std;
@@ -38,18 +41,112 @@ using namespace std;
 namespace dballe {
 namespace cmdline {
 
-grep_t::grep_t()
+static void print_parse_error(const Rawmsg& msg, error& e)
+{
+    fprintf(stderr, "Cannot parse %s message #%d: %s at offset %ld.\n",
+            encoding_name(msg.encoding), msg.index, e.what(), msg.offset);
+}
+
+
+Item::Item()
+    : idx(0), rmsg(0), bulletin(0), msgs(0)
+{
+}
+
+Item::~Item()
+{
+    if (msgs) delete msgs;
+    if (bulletin) delete bulletin;
+    if (rmsg) delete rmsg;
+}
+
+void Item::decode(msg::Importer& imp, bool print_errors)
+{
+    if (!rmsg) return;
+
+    if (bulletin)
+    {
+        delete bulletin;
+        bulletin = 0;
+    }
+
+    if (msgs)
+    {
+        delete msgs;
+        msgs = 0;
+    }
+
+    // First step: decode raw message to bulletin
+    switch (rmsg->encoding)
+    {
+        case BUFR:
+            bulletin = new BufrBulletin;
+            try {
+                bulletin->decode(*rmsg, rmsg->file.c_str(), rmsg->offset);
+            } catch (error& e) {
+                if (print_errors) print_parse_error(*rmsg, e);
+                delete bulletin;
+                bulletin = 0;
+            }
+            break;
+        case CREX:
+            bulletin = new CrexBulletin;
+            try {
+                bulletin->decode(*rmsg, rmsg->file.c_str(), rmsg->offset);
+            } catch (error& e) {
+                if (print_errors) print_parse_error(*rmsg, e);
+                delete bulletin;
+                bulletin = 0;
+            }
+            break;
+        case AOF:
+            // Nothing to do for AOF
+            break;
+    }
+
+    // Second step: decode to msgs
+    switch (rmsg->encoding)
+    {
+        case BUFR:
+        case CREX:
+            if (bulletin)
+            {
+                msgs = new Msgs;
+                try {
+                    imp.from_bulletin(*bulletin, *msgs);
+                } catch (error& e) {
+                    if (print_errors) print_parse_error(*rmsg, e);
+                    delete msgs;
+                    msgs = 0;
+                }
+            }
+            break;
+        case AOF:
+            msgs = new Msgs;
+            try {
+                imp.from_rawmsg(*rmsg, *msgs);
+            } catch (error& e) {
+                if (print_errors) print_parse_error(*rmsg, e);
+                delete msgs;
+                msgs = 0;
+            }
+            break;
+    }
+}
+
+
+Filter::Filter()
     : category(-1), subcategory(-1), checkdigit(-1), unparsable(0), parsable(0),
       index(0), matcher(0)
 {
 }
 
-grep_t::~grep_t()
+Filter::~Filter()
 {
     if (matcher) delete matcher;
 }
 
-void grep_t::matcher_from_args(poptContext optCon)
+void Filter::matcher_from_args(poptContext optCon)
 {
     if (matcher)
     {
@@ -61,7 +158,7 @@ void grep_t::matcher_from_args(poptContext optCon)
         matcher = Matcher::create(query).release();
 }
 
-bool grep_t::match_index(int idx) const
+bool Filter::match_index(int idx) const
 {
     if (index == 0 || index[0] == 0)
         return true;
@@ -90,7 +187,7 @@ bool grep_t::match_index(int idx) const
 	return false;
 }
 
-bool grep_t::match_common(const Rawmsg& rmsg, const Msgs* msgs) const
+bool Filter::match_common(const Rawmsg&, const Msgs* msgs) const
 {
     if (msgs == NULL && parsable)
         return false;
@@ -99,7 +196,7 @@ bool grep_t::match_common(const Rawmsg& rmsg, const Msgs* msgs) const
     return true;
 }
 
-bool grep_t::match_bufrex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
+bool Filter::match_bufrex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
 {
     if (!match_common(rmsg, msgs))
         return false;
@@ -116,7 +213,7 @@ bool grep_t::match_bufrex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* ms
     {
         if (msgs)
         {
-            if (matcher->match(MatchedMsgs(*msgs)) != matcher::MATCH_YES)
+            if (!match_msgs(*msgs))
                 return false;
         } else if (rm) {
             if (matcher->match(MatchedBulletin(*rm)) != matcher::MATCH_YES)
@@ -127,14 +224,14 @@ bool grep_t::match_bufrex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* ms
     return true;
 }
 
-bool grep_t::match_bufr(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
+bool Filter::match_bufr(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
     return true;
 }
 
-bool grep_t::match_crex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
+bool Filter::match_crex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
@@ -154,7 +251,7 @@ bool grep_t::match_crex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs
 #endif
 }
 
-bool grep_t::match_aof(const Rawmsg& rmsg, const Msgs* msgs) const
+bool Filter::match_aof(const Rawmsg& rmsg, const Msgs* msgs) const
 {
     int category, subcategory;
     msg::AOFImporter::get_category(rmsg, &category, &subcategory);
@@ -170,20 +267,38 @@ bool grep_t::match_aof(const Rawmsg& rmsg, const Msgs* msgs) const
         if (subcategory != subcategory)
             return false;
 
-    if (matcher && msgs)
-        if (matcher->match(MatchedMsgs(*msgs)) != matcher::MATCH_YES)
-            return false;
+    if (msgs) return match_msgs(*msgs);
 
     return true;
 }
 
-static void print_parse_error(const Rawmsg& msg, error& e)
+bool Filter::match_msgs(const Msgs& msgs) const
 {
-	fprintf(stderr, "Cannot parse %s message #%d: %s at offset %ld.\n",
-			encoding_name(msg.encoding), msg.index, e.what(), msg.offset);
+    if (matcher && matcher->match(MatchedMsgs(msgs)) != matcher::MATCH_YES)
+        return false;
+
+    return true;
 }
 
-static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdata, Action& action)
+bool Filter::match_item(const Item& item) const
+{
+    if (item.rmsg)
+    {
+        switch (item.rmsg->encoding)
+        {
+            case BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
+            case CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
+            case AOF: return match_aof(*item.rmsg, item.msgs);
+            default: return false;
+        }
+    } else if (item.msgs)
+        return match_msgs(*item.msgs);
+    else
+        return false;
+}
+
+#if 0
+static void process_input(File& file, const Rawmsg& rmsg, struct Filter* grepdata, Action& action)
 {
 	int print_errors = (grepdata == NULL || !grepdata->unparsable);
 	auto_ptr<Msgs> parsed(new Msgs);
@@ -254,39 +369,119 @@ static void process_input(File& file, const Rawmsg& rmsg, struct grep_t* grepdat
 
 	if (!match) return;
 
-	action(rmsg, br.get(), parsed.get());
+	action(rmsg.index, &rmsg, br.get(), parsed.get());
+}
+#endif
+
+#if 0
+/**
+ * Given a fresh csv reader, seek to start of data
+ *
+ * @returns true if there is data to read, false if we reached EOF
+ */
+static bool seek_to_start(CSVReader& in)
+{
+    while (true)
+    {
+        if (!in.next()) return false;
+        if (in.cols.empty()) continue;
+        if (in.cols[0].empty())
+            error_consistency::throwf("The first column in line \"%s\" is empty", in.line.c_str());
+        // First valid line should have a latitude
+        if (isdigit(in.cols[0][0])) return true;
+    }
+}
+#endif
+
+#if 0
+void process_csv(poptContext optCon,
+        struct Filter* grepdata,
+        Action& action)
+{
+    const char* name = poptGetArg(optCon);
+    Rawmsg rmsg;
+    int index = 0;
+    auto_ptr<istream> in;
+    auto_ptr<CSVReader> csvin;
+
+    do
+    {
+        if (name != NULL)
+        {
+            in.reset(new ifstream(name));
+            csvin.reset(new IstreamCSVReader(*in));
+        } else
+            csvin.reset(new IstreamCSVReader(cin));
+
+        if (!seek_to_start(*csvin)) continue;
+
+        while (true)
+        {
+            Msgs msgs;
+            auto_ptr<Msg> msg(new Msg);
+            if (!msg->from_csv(*csvin))
+                break;
+            msgs.acquire(msg);
+            ++index;
+
+            bool match = true;
+            if (grepdata)
+            {
+                if (!grepdata->match_index(index))
+                    match = false;
+                else
+                    match = grepdata->match_msgs(msgs);
+            }
+
+            if (match)
+                action(rmsg, NULL, *msgs);
+        }
+    } while ((name = poptGetArg(optCon)) != NULL);
+}
+#endif
+
+Reader::Reader()
+    : input_type("auto")
+{
 }
 
-void process_all(poptContext optCon,
-		 Encoding type,
-		 struct grep_t* grepdata,
-		 Action& action)
+void Reader::read(poptContext optCon, Action& action)
 {
-	const char* name = poptGetArg(optCon);
-	Rawmsg rmsg;
-	int index = 0;
+    const char* name = poptGetArg(optCon);
+    Item item;
+    item.rmsg = new Rawmsg;
 
-	if (name == NULL)
-		name = "(stdin)";
+    if (name == NULL)
+        name = "(stdin)";
 
-	do
-	{
-		auto_ptr<File> file(File::create(type, name, "r"));
+    bool print_errors = !filter.unparsable;
+    Encoding intype = dba_cmdline_stringToMsgType(input_type, optCon);
 
-		while (file->read(rmsg))
-		{
-			++index;
+    do
+    {
+        auto_ptr<File> file(File::create(intype, name, "r"));
+        std::auto_ptr<msg::Importer> imp = msg::Importer::create(file->type(), import_opts);
 
-//			if (op_verbose)
-//				fprintf(stderr, "Reading message #%d...\n", index);
+        while (file->read(*item.rmsg))
+        {
+            ++item.idx;
 
-			if (grepdata && grepdata->match_index(index))
-			{
-				rmsg.index = index;
-				process_input(*file, rmsg, grepdata, action);
-			}
-		}
-	} while ((name = poptGetArg(optCon)) != NULL);
+//          if (op_verbose)
+//              fprintf(stderr, "Reading message #%d...\n", item.index);
+
+            if (!filter.match_index(item.idx))
+                continue;
+
+            item.rmsg->index = item.idx;
+            item.decode(*imp, print_errors);
+            //process_input(*file, rmsg, grepdata, action);
+
+            if (!filter.match_item(item))
+                continue;
+
+            action(item);
+        }
+    } while ((name = poptGetArg(optCon)) != NULL);
 }
 
 } // namespace cmdline

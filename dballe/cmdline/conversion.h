@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ struct Converter : public Action
 	Converter() : file(0), dest_rep_memo(0), dest_template(0), importer(0), exporter(0) {}
 	~Converter();
 
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs);
+	virtual void operator()(const cmdline::Item& item);
 
 	void process_bufrex_msg(const wreport::Bulletin& msg);
 	void process_dba_msg(const Msgs& msgs);

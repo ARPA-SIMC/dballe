@@ -50,13 +50,14 @@ bool csv_read_next(FILE* in, std::vector<std::string>& cols);
 class CSVReader
 {
 protected:
-    std::string line;
-
     /// Read one line from the input source, returning false if EOF is reached
     virtual bool nextline() = 0;
 
 public:
-    /// Last CSV line read
+    /// Last line read
+    std::string line;
+
+    /// Parsed CSV columns for the last line read
     std::vector<std::string> cols;
 
     virtual ~CSVReader();

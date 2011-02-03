@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,28 @@ struct Matcher;
 
 namespace cmdline {
 
-struct grep_t
+struct Item
 {
-    msg::Importer::Options import_opts;
+    unsigned idx;
+    Rawmsg* rmsg;
+    wreport::Bulletin* bulletin;
+    Msgs* msgs;
+
+    Item();
+    ~Item();
+
+    /// Decode all that can be decoded
+    void decode(msg::Importer& imp, bool print_errors=false);
+};
+
+struct Action
+{
+    virtual ~Action() {}
+    virtual void operator()(const Item& item) = 0;
+};
+
+struct Filter
+{
     msg::Exporter::Options export_opts;
     int category;
     int subcategory;
@@ -47,30 +66,45 @@ struct grep_t
     const char* index;
     Matcher* matcher;
 
-    grep_t();
-    ~grep_t();
+    Filter();
+    ~Filter();
 
     /// Initialise the matcher eating key=val arguments
     void matcher_from_args(poptContext optCon);
 
     bool match_index(int idx) const;
     bool match_common(const Rawmsg& rmsg, const Msgs* msgs) const;
+    bool match_msgs(const Msgs& msgs) const;
     bool match_bufrex(const Rawmsg& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
     bool match_bufr(const Rawmsg& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
     bool match_crex(const Rawmsg& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
     bool match_aof(const Rawmsg& rmsg, const Msgs* msgs) const;
+    bool match_item(const Item& item) const;
 };
 
-struct Action
+struct Reader
 {
-	virtual ~Action() {}
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* bulletin, const Msgs* msgs) = 0;
+    const char* input_type;
+    msg::Importer::Options import_opts;
+    Filter filter;
+
+    Reader();
+
+    void read(poptContext optCon, Action& action);
 };
 
+#if 0
 void process_all(poptContext optCon,
 		 Encoding type,
-		 struct grep_t* grepdata,
+		 struct Filter* grepdata,
 		 Action& action);
+#endif
+
+#if 0
+void process_csv(poptContext optCon,
+        struct Filter* grepdata,
+        Action& action);
+#endif
 
 } // namespace cmdline
 } // namespace dballe

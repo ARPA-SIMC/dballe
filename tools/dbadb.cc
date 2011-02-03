@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,19 +48,20 @@ using namespace dballe::cmdline;
 using namespace wreport;
 using namespace std;
 
-struct cmdline::grep_t grepdata;
+struct cmdline::Reader reader;
+
 struct poptOption grepTable[] = {
-    { "category", 0, POPT_ARG_INT, &grepdata.category, 0,
+    { "category", 0, POPT_ARG_INT, &reader.filter.category, 0,
         "match messages with the given data category", "num" },
-    { "subcategory", 0, POPT_ARG_INT, &grepdata.subcategory, 0,
+    { "subcategory", 0, POPT_ARG_INT, &reader.filter.subcategory, 0,
         "match BUFR messages with the given data subcategory", "num" },
-    { "check-digit", 0, POPT_ARG_INT, &grepdata.checkdigit, 0,
+    { "check-digit", 0, POPT_ARG_INT, &reader.filter.checkdigit, 0,
         "match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
-    { "unparsable", 0, 0, &grepdata.unparsable, 0,
+    { "unparsable", 0, 0, &reader.filter.unparsable, 0,
         "match only messages that cannot be parsed", 0 },
-    { "parsable", 0, 0, &grepdata.parsable, 0,
+    { "parsable", 0, 0, &reader.filter.parsable, 0,
         "match only messages that can be parsed", 0 },
-    { "index", 0, POPT_ARG_STRING, &grepdata.index, 0,
+    { "index", 0, POPT_ARG_STRING, &reader.filter.index, 0,
         "match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
     POPT_TABLEEND
 };
@@ -118,12 +119,12 @@ struct Importer : public cmdline::Action
 
     Importer(DB& db) : db(db), overwrite(false), forced_repmemo(0) {}
 
-    virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+    virtual void operator()(const cmdline::Item& item)
     {
         int import_flags = 0;;
-        if (msgs == NULL)
+        if (item.msgs == NULL)
         {
-            fprintf(stderr, "Message #%d cannot be parsed: ignored\n", rmsg.index);
+            fprintf(stderr, "Message #%d cannot be parsed: ignored\n", item.idx);
             return;
         }
         if (overwrite)
@@ -135,9 +136,9 @@ struct Importer : public cmdline::Action
         if (op_full_pseudoana)
             import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
 
-        for (size_t i = 0; i < msgs->size(); ++i)
+        for (size_t i = 0; i < item.msgs->size(); ++i)
         {
-            Msg& msg = *(*msgs)[i];
+            Msg& msg = *(*item.msgs)[i];
             if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
                 /* Put generic messages in the generic rep_cod by default */
                 db.import_msg(msg, NULL, import_flags);
@@ -253,7 +254,7 @@ const char* parse_op_report(DB& db)
         for (s = op_report; *s && is_cod; s++)
             if (!isdigit(*s))
                 is_cod = 0;
-        
+
         if (is_cod)
             return db.rep_memo_from_cod(strtoul(op_report, NULL, 0)).c_str();
         else
@@ -267,7 +268,7 @@ int do_import(poptContext optCon)
     /* Throw away the command name */
     poptGetArg(optCon);
 
-    grepdata.matcher_from_args(optCon);
+    reader.filter.matcher_from_args(optCon);
 
     Encoding type = dba_cmdline_stringToMsgType(op_input_type, optCon);
 
@@ -278,7 +279,7 @@ int do_import(poptContext optCon)
     importer.overwrite = op_overwrite;
     importer.forced_repmemo = parse_op_report(db);
 
-    process_all(optCon, type, &grepdata, importer);
+    reader.read(optCon, importer);
 
     return 0;
 }

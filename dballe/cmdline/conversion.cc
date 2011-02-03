@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,19 +53,19 @@ void Converter::process_dba_msg(const Msgs& msgs)
 	file->write(raw);
 }
 
-void Converter::operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, const Msgs* msgs)
+void Converter::operator()(const cmdline::Item& item)
 {
-	if (msgs == NULL || msgs->size() == 0)
-	{
-		fprintf(stderr, "No interpreted information available: is a recoding enough?\n");
-		// See if we can just recode the raw data
+    if (item.msgs == NULL || item.msgs->size() == 0)
+    {
+        fprintf(stderr, "No interpreted information available: is a recoding enough?\n");
+        // See if we can just recode the raw data
 
-		// We want bufrex raw data
-		if (braw == NULL)
-		{
-			fprintf(stderr, "No BUFREX raw data to attempt low-level bufrex recoding\n");
-			return;
-		}
+        // We want bufrex raw data
+        if (item.bulletin == NULL)
+        {
+            fprintf(stderr, "No BUFREX raw data to attempt low-level bufrex recoding\n");
+            return;
+        }
 
 		// No report override
 		if (dest_rep_memo != NULL)
@@ -81,29 +81,29 @@ void Converter::operator()(const Rawmsg& rmsg, const wreport::Bulletin* braw, co
 			return;
 		}
 
-		// Same encoding
-		if ((file->type() == BUFR && string(braw->encoding_name()) == "CREX")
-		     || (file->type() == CREX && string(braw->encoding_name()) == "BUFR"))
-		{
-			fprintf(stderr, "encoding change not yet supported for low-level bufrex recoding\n");
-			return;
-		}
+        // Same encoding
+        if ((file->type() == BUFR && string(item.bulletin->encoding_name()) == "CREX")
+                || (file->type() == CREX && string(item.bulletin->encoding_name()) == "BUFR"))
+        {
+            fprintf(stderr, "encoding change not yet supported for low-level bufrex recoding\n");
+            return;
+        }
 
-		// We can just recode the raw braw
-		fprintf(stderr, "we can do a low-level bufrex recoding\n");
-		process_bufrex_msg(*braw);
-		return;
-	}
+        // We can just recode the raw braw
+        fprintf(stderr, "we can do a low-level bufrex recoding\n");
+        process_bufrex_msg(*item.bulletin);
+        return;
+    }
 
-	if (dest_rep_memo != NULL)
-	{
-		// Force message type (will also influence choice of template later)
-		MsgType type = Msg::type_from_repmemo(dest_rep_memo);
-		for (size_t i = 0; i < msgs->size(); ++i)
-			(*msgs)[i]->type = type;
-	}
+    if (dest_rep_memo != NULL)
+    {
+        // Force message type (will also influence choice of template later)
+        MsgType type = Msg::type_from_repmemo(dest_rep_memo);
+        for (size_t i = 0; i < item.msgs->size(); ++i)
+            (*item.msgs)[i]->type = type;
+    }
 
-	process_dba_msg(*msgs);
+    process_dba_msg(*item.msgs);
 }
 
 }
