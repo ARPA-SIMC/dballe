@@ -194,6 +194,8 @@ void to::test<2>()
     in.set(DBA_KEY_LEVELTYPE1, 103);
     in.set(DBA_KEY_L1, 2000);
     in.set(DBA_KEY_PINDICATOR, 254);
+    in.set(DBA_KEY_P1, 0);
+    in.set(DBA_KEY_P2, 0);
     in.set(WR_VAR(0, 12, 101), 290.0);
     db->insert(in, false, true);
 
