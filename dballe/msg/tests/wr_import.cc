@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -237,6 +237,9 @@ void to::test<7>()
     auto_ptr<Msgs> msgs = read_msgs("bufr/temp-2-255.bufr", BUFR);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
+
+    // No negative pressure layers please
+    ensure(msg.find_context(Level(100, -1), Trange::instant()) == 0);
 }
 
 #if 0

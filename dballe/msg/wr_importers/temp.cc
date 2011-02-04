@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,12 @@ protected:
 
     void import_var(const Var& var);
 
+    /**
+     * If we identify sounding groups, this function can perform more accurate
+     * sounding group import
+     */
+    void import_group(unsigned start, unsigned length);
+
 public:
     TempImporter(const msg::Importer::Options& opts) : WMOImporter(opts) {}
     virtual ~TempImporter() {}
@@ -55,14 +61,79 @@ public:
         surface_press_var = NULL;
     }
 
+    /// Return true if \a code can be found at the start of a sounding group
+    bool is_possible_start_of_sounding(Varcode code)
+    {
+        return true;
+        // switch (code)
+        // {
+        //     default: return false;
+        // }
+    }
+
+    /// If the next variables in the current subset look like \a group_count
+    /// sounding groups, scan them and return true; otherwise return false.
+    bool try_soundings(unsigned group_count)
+    {
+        // Check if the following var is a likely start of a sounding group
+        if (pos + 1 == subset->size())
+            return false;
+        const Var& start_var = (*subset)[pos + 1];
+        if (not is_possible_start_of_sounding(start_var.code()))
+            return false;
+
+        // start_var marks the start of a sounding group
+
+        // Seek forward to compute the group length, catching the repetition
+        // of the start var
+        unsigned group_length = 0;
+        unsigned start = pos + 1;
+        unsigned cur = start + 1;
+        for ( ; cur < subset->size(); ++cur)
+        {
+            if ((*subset)[cur].code() == start_var.code())
+            {
+                group_length = cur - start;
+                if (start + group_count * group_length > subset->size())
+                    return false;
+                break;
+            }
+        }
+
+        // Validate group_length checking that all groups start with start_var
+        for (unsigned i = 0; i < group_count; ++i)
+            if ((*subset)[pos + 1 + i * group_length].code() != start_var.code())
+                return false;
+
+        // Foreach subset in delayed repetition count, iterate a group scan
+        for (unsigned i = 0; i < group_count; ++i)
+            import_group(pos + 1 + i * group_length, group_length);
+
+        pos += 1 + group_count * group_length;
+        return true;
+    }
+
     virtual void run()
     {
-        for (pos = 0; pos < subset->size(); ++pos)
+        bool found_subsets = false;
+        for (pos = 0; pos < subset->size(); )
         {
-                const Var& var = (*subset)[pos];
-                if (WR_VAR_F(var.code()) != 0) continue;
-                if (var.value() != NULL)
-                        import_var(var);
+            const Var& var = (*subset)[pos];
+            if (WR_VAR_F(var.code()) != 0 || var.value() == NULL)
+            {
+                // Ignore non-B variables and unset variables
+                ++pos;
+            } else if (var.code() == WR_VAR(0, 31, 2) && !found_subsets) {
+                if (try_soundings(var.enqi()))
+                    found_subsets = true;
+                else
+                    // If it does not look like a sounding, ignore delayed
+                    // repetition count and proceed normally
+                    ++pos;
+            } else {
+                import_var(var);
+                ++pos;
+            }
         }
 
         /* Extract surface data from the surface level */
@@ -219,6 +290,49 @@ void TempImporter::import_var(const Var& var)
         default:
                 WMOImporter::import_var(var);
                 break;
+    }
+}
+
+void TempImporter::import_group(unsigned start, unsigned length)
+{
+    // Compute vertical level information
+    Level lev;
+    for (unsigned i = 0; i < length; ++i)
+    {
+        const Var& var = (*subset)[start + i];
+        switch (var.code())
+        {
+            // Height level
+            case WR_VAR(0, 7, 2):
+                lev = Level(103, var.enqd());
+                break;
+            // Pressure level
+            case WR_VAR(0, 7, 4):
+                lev = Level(100, var.enqd());
+                break;
+        }
+    }
+
+    if (lev.ltype1 == MISSING_INT)
+        throw error_consistency("neither B07002 nor B07004 found in sounding group");
+
+    // Import all values
+    for (unsigned i = 0; i < length; ++i)
+    {
+        const Var& var = (*subset)[start + i];
+        switch (var.code())
+        {
+            // Geopotential
+            case WR_VAR(0,  5,  2): msg->set(var, WR_VAR(0,  5,   1), lev, Trange::instant()); break;
+            case WR_VAR(0,  6,  2): msg->set(var, WR_VAR(0,  6,   1), lev, Trange::instant()); break;
+            case WR_VAR(0,  4, 16): msg->set(var, WR_VAR(0,  4,  86), lev, Trange::instant()); break;
+            case WR_VAR(0, 10,  3): msg->set(var, WR_VAR(0, 10,   8), lev, Trange::instant()); break;
+            case WR_VAR(0, 12,  1): msg->set(var, WR_VAR(0, 12, 101), lev, Trange::instant()); break;
+            case WR_VAR(0, 12,  3): msg->set(var, WR_VAR(0, 12, 103), lev, Trange::instant()); break;
+            default:
+                msg->set(var, var.code(), lev, Trange::instant());
+                break;
+        }
     }
 }
 
