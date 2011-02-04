@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -152,6 +152,8 @@ struct Pilot : public Template
 
             /* Add geopotential */
             if (const Var* var = c.find(WR_VAR(0, 10, 3)))
+                subset.store_variable(WR_VAR(0, 10, 3), *var);
+            else if (const Var* var = c.find(WR_VAR(0, 10, 8)))
                 subset.store_variable(WR_VAR(0, 10, 3), *var);
             else if (c.level.ltype1 == 102)
                 subset.store_variable_d(WR_VAR(0, 10, 3), (double)c.level.l1 * 9.80665);
