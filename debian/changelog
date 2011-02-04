@@ -3,8 +3,9 @@ dballe (5.3-1) unstable; urgency=low
   * New upsteam version
      - Implemented dbamsg dump --csv
      - Implemented dbamsg dump --csv --interpreted
+     - New local B variable: 013002 MIXING RATIO
 
- -- Enrico Zini <enrico@debian.org>  Sat, 18 Dec 2010 00:14:29 +0100
+ -- Enrico Zini <enrico@debian.org>  Fri, 04 Feb 2011 15:30:10 +0000
 
 dballe (5.2-1) unstable; urgency=low
 
