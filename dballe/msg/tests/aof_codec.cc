@@ -322,6 +322,12 @@ void to::test<3>()
             Rawmsg raw;
             exporter->to_rawmsg(*amsgs, raw);
 
+// FIXME: currently fails because AOF contains Synop Auto information with 4
+// cloud groups, while the default Synop Auto export template only allows one
+// cloud group.
+// TODO: autoselect all synop templates to use 4 cloud groups if the data is
+// available.
+
             // Decode again
             Msgs bmsgs;
             importer->from_rawmsg(raw, bmsgs);
