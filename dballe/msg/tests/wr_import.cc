@@ -242,6 +242,20 @@ void to::test<7>()
     ensure(msg.find_context(Level(100, -1), Trange::instant()) == 0);
 }
 
+template<> template<>
+void to::test<8>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/synop-longname.bufr", BUFR);
+    ensure_equals(msgs->size(), 7u);
+    const Msg& msg = *(*msgs)[2];
+    ensure_equals(msg.type, MSG_SYNOP);
+
+    // Check that the long station name has been correctly truncated on import
+    const Var* var = msg.get_st_name_var();
+    ensure(var != NULL);
+    ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru>");
+}
+
 #if 0
 /* Check that a BUFR from a synop high-level station correctly reports isobaric
  * surface and geopotential */
