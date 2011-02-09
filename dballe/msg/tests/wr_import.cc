@@ -256,6 +256,34 @@ void to::test<8>()
     ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru>");
 }
 
+template<> template<>
+void to::test<9>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-bad1.bufr", BUFR);
+    ensure_equals(msgs->size(), 7u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_TEMP);
+
+    // Check that the long station name has been correctly truncated on import
+    //const Var* var = msg.get_st_name_var();
+    //ensure(var != NULL);
+    //ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru>");
+}
+
+template<> template<>
+void to::test<10>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-bad2.bufr", BUFR);
+    ensure_equals(msgs->size(), 7u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_TEMP);
+
+    // Check that the long station name has been correctly truncated on import
+    //const Var* var = msg.get_st_name_var();
+    //ensure(var != NULL);
+    //ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru>");
+}
+
 #if 0
 /* Check that a BUFR from a synop high-level station correctly reports isobaric
  * surface and geopotential */
