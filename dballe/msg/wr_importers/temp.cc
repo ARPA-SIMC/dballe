@@ -22,6 +22,15 @@
 #include <wreport/subset.h>
 #include <dballe/msg/context.h>
 
+// Define to debug the sounding group matching algorithm
+//#define DEBUG_GROUPS
+
+#ifdef DEBUG_GROUPS
+#define debug_groups(...) fprintf(stderr, "grpmatch:" __VA_ARGS__)
+#else
+#define debug_groups(...) do {} while(0)
+#endif
+
 using namespace wreport;
 using namespace std;
 
@@ -64,7 +73,7 @@ public:
     /// Return true if \a code can be found at the start of a sounding group
     bool is_possible_start_of_sounding(Varcode code)
     {
-        return true;
+        return WR_VAR_F(code) == 0;
         // switch (code)
         // {
         //     default: return false;
@@ -83,6 +92,10 @@ public:
             return false;
 
         // start_var marks the start of a sounding group
+        debug_groups("Candidate start var: %d (%01d%02d%03d)", pos + 1,
+                WR_VAR_F(start_var.code()),
+                WR_VAR_X(start_var.code()),
+                WR_VAR_Y(start_var.code()));
 
         // Seek forward to compute the group length, catching the repetition
         // of the start var
@@ -105,6 +118,8 @@ public:
             if ((*subset)[pos + 1 + i * group_length].code() != start_var.code())
                 return false;
 
+        debug_groups("Validated first group: %d+%d", start, group_length);
+
         // Foreach subset in delayed repetition count, iterate a group scan
         for (unsigned i = 0; i < group_count; ++i)
             import_group(pos + 1 + i * group_length, group_length);
@@ -123,7 +138,7 @@ public:
             {
                 // Ignore non-B variables and unset variables
                 ++pos;
-            } else if (var.code() == WR_VAR(0, 31, 2) && !found_subsets) {
+            } else if ((var.code() == WR_VAR(0, 31, 1) || var.code() == WR_VAR(0, 31, 2)) && !found_subsets) {
                 if (try_soundings(var.enqi()))
                     found_subsets = true;
                 else
@@ -297,7 +312,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
 {
     // Compute vertical level information
     Level lev;
-    for (unsigned i = 0; i < length; ++i)
+    for (unsigned i = 0; i < length && lev.ltype1 == MISSING_INT; ++i)
     {
         const Var& var = (*subset)[start + i];
         switch (var.code())

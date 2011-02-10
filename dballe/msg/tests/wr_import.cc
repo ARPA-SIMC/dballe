@@ -260,7 +260,7 @@ template<> template<>
 void to::test<9>()
 {
     auto_ptr<Msgs> msgs = read_msgs("bufr/temp-bad1.bufr", BUFR);
-    ensure_equals(msgs->size(), 7u);
+    ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
 
@@ -274,7 +274,7 @@ template<> template<>
 void to::test<10>()
 {
     auto_ptr<Msgs> msgs = read_msgs("bufr/temp-bad2.bufr", BUFR);
-    ensure_equals(msgs->size(), 7u);
+    ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
 
