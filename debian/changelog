@@ -1,3 +1,11 @@
+dballe (5.3-2) unstable; urgency=low
+
+  * New upstream version
+     - Improved TEMP sounding group identification
+     - Show template numbers in bulletin exporter list
+
+ -- Enrico Zini <enrico@debian.org>  Fri, 11 Feb 2011 13:56:34 +0000
+
 dballe (5.3-1) unstable; urgency=low
 
   * New upsteam version

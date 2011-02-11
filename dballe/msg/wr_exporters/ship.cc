@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,16 +28,16 @@ using namespace std;
 #define SHIP_DESC "Synop ship (autodetect)"
 
 #define SHIP_PLAIN_NAME "ship-plain"
-#define SHIP_PLAIN_DESC "Synop ship (normal)"
+#define SHIP_PLAIN_DESC "Synop ship (normal) (1.11)"
 
 #define SHIP_ABBR_NAME "ship-abbr"
-#define SHIP_ABBR_DESC "Synop ship (abbreviated)"
+#define SHIP_ABBR_DESC "Synop ship (abbreviated) (1.9)"
 
 #define SHIP_AUTO_NAME "ship-auto"
-#define SHIP_AUTO_DESC "Synop ship (auto)"
+#define SHIP_AUTO_DESC "Synop ship (auto) (1.13)"
 
 #define SHIP_REDUCED_NAME "ship-reduced"
-#define SHIP_REDUCED_DESC "Synop ship (reduced)"
+#define SHIP_REDUCED_DESC "Synop ship (reduced) (1.19)"
 
 namespace dballe {
 namespace msg {

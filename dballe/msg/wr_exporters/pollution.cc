@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ using namespace wreport;
 using namespace std;
 
 #define POLLUTION_NAME "pollution"
-#define POLLUTION_DESC "Pollution"
+#define POLLUTION_DESC "Pollution (8.171)"
 
 namespace dballe {
 namespace msg {

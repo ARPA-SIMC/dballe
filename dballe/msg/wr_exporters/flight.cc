@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,13 @@ using namespace wreport;
 using namespace std;
 
 #define AIREP_NAME "airep"
-#define AIREP_DESC "AIREP"
+#define AIREP_DESC "AIREP (4.142)"
 
 #define AMDAR_NAME "amdar"
-#define AMDAR_DESC "AMDAR"
+#define AMDAR_DESC "AMDAR (4.144)"
 
 #define ACARS_NAME "acars"
-#define ACARS_DESC "ACARS"
+#define ACARS_DESC "ACARS (4.145)"
 
 namespace dballe {
 namespace msg {

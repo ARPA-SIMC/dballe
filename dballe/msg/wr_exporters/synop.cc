@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,13 +28,13 @@ using namespace std;
 #define SYNOP_DESC "Synop (autodetect)"
 
 #define SYNOP_LAND_NAME "synop-land"
-#define SYNOP_LAND_DESC "Synop land"
+#define SYNOP_LAND_DESC "Synop land (0.1)"
 
 #define SYNOP_LAND_HIGH_NAME "synop-land-high"
-#define SYNOP_LAND_HIGH_DESC "Synop land high level station"
+#define SYNOP_LAND_HIGH_DESC "Synop land high level station (0.1)"
 
 #define SYNOP_AUTO_NAME "synop-auto"
-#define SYNOP_AUTO_DESC "Synop land auto"
+#define SYNOP_AUTO_DESC "Synop land auto (0.3)"
 
 namespace dballe {
 namespace msg {
@@ -377,7 +377,7 @@ static const TemplateFactory* synopauto = NULL;
     if (!synopland) synopland = new SynopLandFactory;
     if (!synoplandhigh) synoplandhigh = new SynopLandHighFactory;
     if (!synopauto) synopauto = new SynopAutoFactory;
- 
+
     r.register_factory(synop);
     r.register_factory(synopland);
     r.register_factory(synoplandhigh);

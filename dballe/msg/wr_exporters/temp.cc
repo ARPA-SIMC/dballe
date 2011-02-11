@@ -26,10 +26,10 @@ using namespace wreport;
 using namespace std;
 
 #define TEMP_NAME "temp"
-#define TEMP_DESC "Temp"
+#define TEMP_DESC "Temp (2.101)"
 
 #define TEMP_SHIP_NAME "temp-ship"
-#define TEMP_SHIP_DESC "Temp ship"
+#define TEMP_SHIP_DESC "Temp ship (2.102)"
 
 namespace dballe {
 namespace msg {

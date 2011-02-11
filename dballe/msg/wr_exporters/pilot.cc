@@ -27,7 +27,7 @@ using namespace wreport;
 using namespace std;
 
 #define PILOT_NAME "pilot"
-#define PILOT_DESC "Pilot"
+#define PILOT_DESC "Pilot (2.91)"
 
 namespace dballe {
 namespace msg {
@@ -210,7 +210,7 @@ void register_pilot(TemplateRegistry& r)
 static const TemplateFactory* pilot = NULL;
 
     if (!pilot) pilot = new PilotFactory;
- 
+
     r.register_factory(pilot);
 }
 
