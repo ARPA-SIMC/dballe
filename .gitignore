@@ -57,6 +57,7 @@ Makefile
 /fortran/check_attrs
 /fortran/check_fdballe
 /fortran/check_missing
+/fortran/check_missing_msg
 /fortran/check_range
 /fortran/check_real0
 /fortran/dbtest.mod
