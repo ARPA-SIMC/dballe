@@ -8,18 +8,18 @@
 
       include "dballef.h"
 
-      integer handle, ival
+      integer handle, ival, ndata, n, i
       integer (kind=dba_int_b):: bval
       real rval
       real*8 dval
-      character cval*255
+      character cval*255, btable*8
       character(len=1024) :: fname
       external testcb
 
 !      call fdba_error_set_callback(0, testcb, 2, i)
 
       call getenv('DBA_TESTDATA', fname)
-      fname = trim(fname) // "/bufr/obs0-1.22.bufr"
+      fname = trim(fname) // "/bufr/temp-bad5.bufr"
 
 !     Open a session
       call idba_messaggi(handle, fname, "r", "BUFR")
@@ -86,6 +86,22 @@
       call ensure_no_error("unset var real")
       call idba_setd(handle, "B12001", DBA_MVD)
       call ensure_no_error("unset var double")
+
+      call idba_unsetall(handle)
+      call ensure_no_error("unsetall")
+
+      n = 1
+      do while ( n > 0 )
+        call idba_voglioquesto (handle,n)
+        call ensure_no_error("voglioquesto")
+      
+        do i = 1, n
+          call idba_dammelo (handle,btable)
+          call ensure_no_error("dammelo")
+          call idba_enq (handle,"B11001",dval)
+          call ensure_no_error("enqd from msg")
+        end do
+      end do
 
       call idba_fatto(handle)
       call ensure_no_error("fatto")
