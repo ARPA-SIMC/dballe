@@ -98,8 +98,15 @@
         do i = 1, n
           call idba_dammelo (handle,btable)
           call ensure_no_error("dammelo")
-          call idba_enq (handle,"B11001",dval)
+          call idba_enqd (handle,"B11001",dval)
           call ensure_no_error("enqd from msg")
+          call idba_enqr (handle,"B11001",rval)
+          call ensure_no_error("enqr from msg")
+          call idba_enqi (handle,"B11001",ival)
+          call ensure_no_error("enqi from msg")
+          ! Value does not fit in a byte
+          !call idba_enqb (handle,"B11001",bval)
+          !call ensure_no_error("enqb from msg")
         end do
       end do
 

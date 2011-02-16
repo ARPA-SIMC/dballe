@@ -1,4 +1,11 @@
-dballe (5.3-2) unstable; urgency=low
+dballe (5.5-1) unstable; urgency=low
+
+  * New upstream version
+     - Fixed an issue with present but undefined values in the Fortran API
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 16 Feb 2011 09:20:02 +0000
+
+dballe (5.4-1) unstable; urgency=low
 
   * New upstream version
      - Improved TEMP sounding group identification

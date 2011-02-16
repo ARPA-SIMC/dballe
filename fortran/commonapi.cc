@@ -109,51 +109,58 @@ void CommonAPIImplementation::test_input_to_output()
 
 int CommonAPIImplementation::enqi(const char* param)
 {
-	Record& rec = choose_output_record(param);
-	if (const Var* var = rec.peek(param))
-		return var->enqi();
-	else
-		return missing_int;
+    Record& rec = choose_output_record(param);
+    if (const Var* var = rec.peek(param))
+    {
+        if (!var->isset()) return missing_int;
+        return var->enqi();
+    }
+    else
+        return missing_int;
 }
 
 signed char CommonAPIImplementation::enqb(const char* param)
 {
-	Record& rec = choose_output_record(param);
-	if (const Var* var = rec.peek(param))
-	{
-		int value = var->enqi();
-		if (value < numeric_limits<signed char>::min()
-		 || value > numeric_limits<signed char>::max())
-			error_consistency::throwf("value queried (%d) does not fit in a byte", value);
-		return value;
-	}
-	else
-		return missing_byte;
+    Record& rec = choose_output_record(param);
+    if (const Var* var = rec.peek(param))
+    {
+        if (!var->isset()) return missing_byte;
+        int value = var->enqi();
+        if (value < numeric_limits<signed char>::min()
+                || value > numeric_limits<signed char>::max())
+            error_consistency::throwf("value queried (%d) does not fit in a byte", value);
+        return value;
+    }
+    else
+        return missing_byte;
 
 }
 
 float CommonAPIImplementation::enqr(const char* param)
 {
-	Record& rec = choose_output_record(param);
-	if (const Var* var = rec.peek(param))
-	{
-		double value = var->enqd();
+    Record& rec = choose_output_record(param);
+    if (const Var* var = rec.peek(param))
+    {
+        if (!var->isset()) return missing_float;
+        double value = var->enqd();
 
-		if (value < -numeric_limits<float>::max()
-		 || value > numeric_limits<float>::max())
-			error_consistency::throwf("value queried (%f) does not fit in a real", value);
-		return value;
-	} else
-		return missing_float;
+        if (value < -numeric_limits<float>::max()
+                || value > numeric_limits<float>::max())
+            error_consistency::throwf("value queried (%f) does not fit in a real", value);
+        return value;
+    } else
+        return missing_float;
 }
 
 double CommonAPIImplementation::enqd(const char* param)
 {
-	Record& rec = choose_output_record(param);
-	if (const Var* var = rec.peek(param))
-		return var->enqd();
-	else
-		return missing_double;
+    Record& rec = choose_output_record(param);
+    if (const Var* var = rec.peek(param))
+    {
+        if (!var->isset()) return missing_double;
+        return var->enqd();
+    } else
+        return missing_double;
 }
 
 const char* CommonAPIImplementation::enqc(const char* param)
