@@ -160,6 +160,131 @@ void to::test<3>()
     }
 }
 
+// Common machinery for import -> export -> reimport tests
+struct ReimportTest
+{
+    string fname;
+    Encoding type;
+    auto_ptr<Msgs> msgs1;
+    auto_ptr<Msgs> msgs2;
+    msg::Importer::Options input_opts;
+    msg::Exporter::Options output_opts;
+
+    ReimportTest(const std::string& fname, Encoding type=BUFR)
+        : fname(fname), type(type)
+    {
+    }
+
+    virtual void clean_first_hook() {}
+    virtual void clean_second_hook() {}
+
+    void do_test(const dballe::tests::Location& loc)
+    {
+        std::auto_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
+        std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
+
+        // Import
+        msgs1 = inner_read_msgs_opts(fname.c_str(), type, input_opts);
+        inner_ensure(msgs1->size() > 0);
+
+        clean_first_hook();
+
+        // Export
+        Rawmsg rawmsg;
+        exporter->to_rawmsg(*msgs1, rawmsg);
+
+        // Import again
+        msgs2.reset(new Msgs);
+        importer->from_rawmsg(rawmsg, *msgs2);
+
+        clean_second_hook();
+
+        // Compare
+        int diffs = msgs1->diff(*msgs2, stdout);
+        if (diffs)
+        {
+            FILE* out1 = fopen("/tmp/msg1.txt", "w");
+            FILE* out2 = fopen("/tmp/msg2.txt", "w");
+            msgs1->print(out1);
+            msgs2->print(out2);
+            fclose(out1);
+            fclose(out2);
+        }
+        inner_ensure_equals(diffs, 0);
+    }
+};
+#define run_test(obj, name) obj.do_test(wibble::tests::Location(__FILE__, __LINE__, (obj.fname + " " + name).c_str()))
+
+// Re-export test for old style synops
+template<> template<>
+void to::test<5>()
+{
+    {
+        ReimportTest test("bufr/obs0-1.22.bufr");
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-old";
+        run_test(test, "old");
+    }
+    {
+        ReimportTest test("bufr/obs0-1.11188.bufr");
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-old";
+        run_test(test, "old");
+    }
+    {
+        ReimportTest test("bufr/obs0-3.504.bufr");
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-old";
+        run_test(test, "old");
+    }
+}
+
+// Re-export to BUFR and see the differences
+template<> template<>
+void to::test<6>()
+{
+    const char** files = dballe::tests::bufr_files;
+    vector<string> fails;
+    int i;
+    std::auto_ptr<msg::Exporter> exporter;
+    exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
+    std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR/*, opts*/);
+
+    for (i = 0; files[i] != NULL; i++)
+    {
+        try {
+            // Import
+            auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
+            ensure(msgs->size() > 0);
+
+            // Export
+            wreport::BufrBulletin bbulletin;
+            exporter->to_bulletin(*msgs, bbulletin);
+
+            // Import again
+            Msgs msgs1;
+            importer->from_bulletin(bbulletin, msgs1);
+
+            // Compare
+            int diffs = msgs->diff(msgs1, stdout);
+            if (diffs)
+            {
+                FILE* out1 = fopen("/tmp/msg1.txt", "w");
+                FILE* out2 = fopen("/tmp/msg2.txt", "w");
+                msgs->print(out1);
+                msgs1.print(out2);
+                fclose(out1);
+                fclose(out2);
+            }
+            ensure_equals(diffs, 0);
+        } catch (std::exception& e) {
+            fails.push_back(string(files[i]) + ": " + e.what());
+        }
+    }
+    if (!fails.empty())
+        throw tut::failure(str::fmtf("%zd/%d errors:\n", fails.size(), i) + str::join(fails.begin(), fails.end(), "\n"));
+}
+
 #if 0
 template<> template<>
 void to::test<1>()

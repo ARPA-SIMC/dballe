@@ -20,12 +20,19 @@
 #include "wr_codec.h"
 #include <wreport/bulletin.h>
 #include "msgs.h"
+#include "context.h"
 
 using namespace wreport;
 using namespace std;
 
 #define SYNOP_NAME "synop"
 #define SYNOP_DESC "Synop (autodetect)"
+
+#define SYNOP_OLD_NAME "synop-old"
+#define SYNOP_OLD_DESC "Synop old ECMWF (autodetect) (0.1)"
+
+#define SYNOP_GTS_NAME "synop-gts"
+#define SYNOP_GTS_DESC "Synop GTS (0.1)"
 
 #define SYNOP_LAND_NAME "synop-land"
 #define SYNOP_LAND_DESC "Synop land (0.1)"
@@ -315,6 +322,260 @@ struct SynopAuto : public SynopLandHigh
     }
 };
 
+struct SynopGTS : public Template
+{
+    bool is_crex;
+
+    SynopGTS(const Exporter::Options& opts, const Msgs& msgs)
+        : Template(opts, msgs) {}
+
+    virtual const char* name() const { return SYNOP_GTS_NAME; }
+    virtual const char* description() const { return SYNOP_GTS_DESC; }
+
+    void add(Varcode code, int shortcut)
+    {
+        const Var* var = msg->find_by_id(shortcut);
+        if (var)
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
+
+    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
+    {
+        const Var* var = msg->find(srccode, level, trange);
+        if (var)
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        Template::setupBulletin(bulletin);
+
+        is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
+
+        bulletin.type = 0;
+        bulletin.subtype = 255;
+        bulletin.localsubtype = 1;
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        // TODO: definitive one when we are complete bulletin.datadesc.push_back(WR_VAR(3, 7, 80));
+        bulletin.datadesc.push_back(WR_VAR(3, 1, 90));
+        bulletin.datadesc.push_back(WR_VAR(3, 2, 31));
+        bulletin.load_tables();
+    }
+
+    // D02031  Pressure data
+    void do_D02031(const Msg& msg, wreport::Subset& subset)
+    {
+        add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
+        add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
+        add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
+        add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
+        add(WR_VAR(0, 10, 62), DBA_MSG_PRESS_24H);
+
+        // Find pressure level of geopotential
+        bool found = false;
+        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                i != msg.data.end(); ++i)
+        {
+            const msg::Context& c = **i;
+            if (c.level.ltype1 != 100) continue;
+            if (const wreport::Var* var = c.find(WR_VAR(0, 10, 9)))
+            {
+                subset.store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
+                subset.store_variable(*var);
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            subset.store_variable_undef(WR_VAR(0,  7, 4));
+            subset.store_variable_undef(WR_VAR(0, 10, 9));
+        }
+    }
+
+#if 0
+    // D02035  Basis synoptic "instantaneous" data
+    void do_D02035(const Msg& msg, wreport::Subset& subset)
+    {
+        //   Temperature and humidity data
+        subset->store_variable_undef(WR_VAR(0,  7,  32)); // TODO
+        subset->store_variable_undef(WR_VAR(0, 12, 101)); // TODO
+        subset->store_variable_undef(WR_VAR(0, 12, 103)); // TODO
+        subset->store_variable_undef(WR_VAR(0, 13,   3)); // TODO
+        //   Visibility data
+        add(WR_VAR(0,  7,  32), TODO);
+        add(WR_VAR(0, 20,   1), TODO);
+        //   Precipitation past 24 hours
+        add(WR_VAR(0,  7,  32), TODO);
+        add(WR_VAR(0, 13,  23), TODO);
+        add(WR_VAR(0,  7,  32), MISSING);
+        //   Cloud data
+        add(WR_VAR(0, 20,  10), DBA_MSG_CLOUD_N);
+        add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
+        add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
+        add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
+        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
+        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
+        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+        //   Individual cloud layers or masses
+        add(WR_VAR(0, 31,  1), TODO); // Number of individual cloud layers or masses
+        for (int i = 0; i < TODO; ++i)
+        {
+            add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, TODO), Trange::instant());
+            add(WR_VAR(0, 20, 11), TODO DBA_MSG_CLOUD_N1);
+            add(WR_VAR(0, 20, 12), TODO DBA_MSG_CLOUD_C1);
+            add(WR_VAR(0, 20, 13), TODO DBA_MSG_CLOUD_H1);
+        }
+    }
+
+    // D02036  Clouds with bases below station level
+    void do_D02036(const Msg& msg, wreport::Subset& subset)
+    {
+        add(WR_VAR(0, 31,  1), TODO); // Clouds with base below station level
+        for (int i = 0; i < TODO; ++i)
+        {
+            add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, TODO), Trange::instant());
+            add(WR_VAR(0, 20, 11), TODO);
+            add(WR_VAR(0, 20, 12), TODO);
+            add(WR_VAR(0, 20, 14), TODO);
+            add(WR_VAR(0, 20, 17), TODO);
+        }
+    }
+#endif
+
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        Template::to_subset(msg, subset);
+
+        // D01090  Fixed surface identification, time, horizontal and vertical coordinates
+        add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
+        add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
+        // Set station name, truncating it if it's too long
+        if (const wreport::Var* var = msg.get_st_name_var())
+        {
+            Varinfo info = subset.btable->query(WR_VAR(0,  1, 15));
+            Var name(info);
+            if (var->value())
+                name.setc_truncate(var->value());
+            subset.store_variable(name);
+        }
+        else
+            subset.store_variable_undef(WR_VAR(0,  1, 15));
+        add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
+        add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
+        add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
+        add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
+        add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
+        add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
+        add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        add(WR_VAR(0,  7, 30), DBA_MSG_HEIGHT);
+        add(WR_VAR(0,  7, 31), DBA_MSG_HEIGHT_BARO);
+        // D02031  Pressure data
+        do_D02031(msg, subset);
+#warning TODO
+#if 0
+        // D02035  Basis synoptic "instantaneous" data
+        do_D02035(msg, subset);
+        // D02036  Clouds with bases below station level
+        do_D02036(msg, subset);
+        // D02047  Direction of cloud drift
+        add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, TODO), Trange::instant());
+        add(WR_VAR(0, 20, 54), TODO);
+        add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, TODO), Trange::instant());
+        add(WR_VAR(0, 20, 54), TODO);
+        add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, TODO), Trange::instant());
+        add(WR_VAR(0, 20, 54), TODO);
+        // B08002
+        add(WR_VAR(0,  8,  2), MISSING);
+        // D02048  Direction and elevation of cloud
+        add(WR_VAR(0,  5, 21), TODO);
+        add(WR_VAR(0,  7, 21), TODO);
+        add(WR_VAR(0, 20, 12), TODO);
+        add(WR_VAR(0,  5, 21), MISSING);
+        add(WR_VAR(0,  7, 21), MISSING);
+        // D02037  State of ground, snow depth, ground minimum temperature
+        add(WR_VAR(0, 20,  62), TODO);
+        add(WR_VAR(0, 13,  13), TODO);
+        add(WR_VAR(0, 12, 113), TODO);
+        // D02043  Basic synoptic "period" data
+        //   Present and past weather
+        add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1);
+        add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2);
+        //   Sunshine data (form 1 hour and 24 hour period)
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0, 14, 31), TODO);
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0, 14, 31), TODO);
+        //   Precipitation measurement
+        add(WR_VAR(0,  7, 32), TODO);
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0, 13, 11), TODO);
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0, 13, 11), TODO);
+        //   Extreme temperature data
+        add(WR_VAR(0,  7,  32), TODO);
+        add(WR_VAR(0,  4,  24), TODO);
+        add(WR_VAR(0,  4,  24), TODO);
+        add(WR_VAR(0, 12, 111), TODO);
+        add(WR_VAR(0,  4,  24), TODO);
+        add(WR_VAR(0,  4,  24), TODO);
+        add(WR_VAR(0, 12, 112), TODO);
+        //   Wind data
+        add(WR_VAR(0,  7, 32), TODO);
+        add(WR_VAR(0,  2,  2), TODO);
+        add(WR_VAR(0,  8, 21), TODO);
+        add(WR_VAR(0,  4, 25), TODO);
+        add(WR_VAR(0, 11,  1), TODO);
+        add(WR_VAR(0, 11,  2), TODO);
+        add(WR_VAR(0,  8, 21), TODO);
+        add(WR_VAR(0,  4, 25), TODO);
+        add(WR_VAR(0, 11, 43), TODO);
+        add(WR_VAR(0, 11, 41), TODO);
+        add(WR_VAR(0,  4, 25), TODO);
+        add(WR_VAR(0, 11, 43), TODO);
+        add(WR_VAR(0, 11, 41), TODO);
+        add(WR_VAR(0,  4, 25), TODO);
+        add(WR_VAR(0, 11, 43), TODO);
+        add(WR_VAR(0, 11, 41), TODO);
+        add(WR_VAR(0,  7, 32), MISSING);
+        // D02044  Evaporation data
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0,  2,  4), TODO);
+        add(WR_VAR(0, 13, 33), TODO);
+        // D02045  Radiation data (1 hour period)
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0, 14,  2), TODO);
+        add(WR_VAR(0, 14,  4), TODO);
+        add(WR_VAR(0, 14, 16), TODO);
+        add(WR_VAR(0, 14, 28), TODO);
+        add(WR_VAR(0, 14, 29), TODO);
+        add(WR_VAR(0, 14, 30), TODO);
+        // D02045  Radiation data (24 hour period)
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0, 14,  2), TODO);
+        add(WR_VAR(0, 14,  4), TODO);
+        add(WR_VAR(0, 14, 16), TODO);
+        add(WR_VAR(0, 14, 28), TODO);
+        add(WR_VAR(0, 14, 29), TODO);
+        add(WR_VAR(0, 14, 30), TODO);
+        // D02046  Temperature change
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0,  4, 24), TODO);
+        add(WR_VAR(0, 12, 49), TODO);
+#endif
+    }
+};
+
+
 struct SynopFactory : public TemplateFactory
 {
     SynopFactory() { name = SYNOP_NAME; description = SYNOP_DESC; }
@@ -322,6 +583,27 @@ struct SynopFactory : public TemplateFactory
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         // Scan msgs and pick the right one
+        return auto_ptr<Template>(new SynopGTS(opts, msgs));
+    }
+};
+
+struct SynopGTSFactory : public TemplateFactory
+{
+    SynopGTSFactory() { name = SYNOP_GTS_NAME; description = SYNOP_GTS_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        // Scan msgs and pick the right one
+        return auto_ptr<Template>(new SynopGTS(opts, msgs));
+    }
+};
+
+struct SynopOldFactory : public TemplateFactory
+{
+    SynopOldFactory() { name = SYNOP_OLD_NAME; description = SYNOP_OLD_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
         const Msg& msg = *msgs[0];
         const Var* var = msg.get_st_type_var();
         if (var != NULL && var->enqi() == 0)
@@ -332,6 +614,7 @@ struct SynopFactory : public TemplateFactory
             return auto_ptr<Template>(new SynopLand(opts, msgs));
     }
 };
+
 
 struct SynopLandFactory : public TemplateFactory
 {
@@ -369,16 +652,22 @@ struct SynopAutoFactory : public TemplateFactory
 void register_synop(TemplateRegistry& r)
 {
 static const TemplateFactory* synop = NULL;
+static const TemplateFactory* synopgts = NULL;
+static const TemplateFactory* synopold = NULL;
 static const TemplateFactory* synopland = NULL;
 static const TemplateFactory* synoplandhigh = NULL;
 static const TemplateFactory* synopauto = NULL;
 
     if (!synop) synop = new SynopFactory;
+    if (!synopgts) synopgts = new SynopGTSFactory;
+    if (!synopold) synopold = new SynopOldFactory;
     if (!synopland) synopland = new SynopLandFactory;
     if (!synoplandhigh) synoplandhigh = new SynopLandHighFactory;
     if (!synopauto) synopauto = new SynopAutoFactory;
 
     r.register_factory(synop);
+    r.register_factory(synopgts);
+    r.register_factory(synopold);
     r.register_factory(synopland);
     r.register_factory(synoplandhigh);
     r.register_factory(synopauto);
