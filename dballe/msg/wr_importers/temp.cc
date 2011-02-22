@@ -92,10 +92,10 @@ public:
             return false;
 
         // start_var marks the start of a sounding group
-        debug_groups("Candidate start var: %d (%01d%02d%03d)", pos + 1,
+        debug_groups("Candidate start var: %d (%01d%02d%03d) with group count %u\n", pos + 1,
                 WR_VAR_F(start_var.code()),
                 WR_VAR_X(start_var.code()),
-                WR_VAR_Y(start_var.code()));
+                WR_VAR_Y(start_var.code()), group_count);
 
         // Seek forward to compute the group length, catching the repetition
         // of the start var
@@ -104,7 +104,8 @@ public:
         unsigned cur = start + 1;
         for ( ; cur < subset->size(); ++cur)
         {
-            if ((*subset)[cur].code() == start_var.code())
+            const Var& next = (*subset)[cur];
+            if (next.code() == start_var.code() || next.code() == WR_VAR(2, 22, 0))
             {
                 group_length = cur - start;
                 if (start + group_count * group_length > subset->size())
@@ -115,10 +116,13 @@ public:
 
         // Validate group_length checking that all groups start with start_var
         for (unsigned i = 0; i < group_count; ++i)
-            if ((*subset)[pos + 1 + i * group_length].code() != start_var.code())
+        {
+            const Var& next = (*subset)[pos + 1 + i * group_length];
+            if (next.code() != start_var.code() && next.code() != WR_VAR(2, 22, 0))
                 return false;
+        }
 
-        debug_groups("Validated first group: %d+%d", start, group_length);
+        debug_groups("Validated first group: %d+%d\n", start, group_length);
 
         // Foreach subset in delayed repetition count, iterate a group scan
         for (unsigned i = 0; i < group_count; ++i)
@@ -319,10 +323,12 @@ void TempImporter::import_group(unsigned start, unsigned length)
         {
             // Height level
             case WR_VAR(0, 7, 2):
+                if (!var.isset()) return; // Skip group if level info not set
                 lev = Level(103, var.enqd());
                 break;
             // Pressure level
             case WR_VAR(0, 7, 4):
+                if (!var.isset()) return; // Skip group if level info not set
                 lev = Level(100, var.enqd());
                 break;
         }
