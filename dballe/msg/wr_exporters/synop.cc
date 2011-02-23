@@ -22,6 +22,9 @@
 #include "msgs.h"
 #include "context.h"
 
+#warning remove when done with debugging
+#include <iostream>
+
 using namespace wreport;
 using namespace std;
 
@@ -327,6 +330,11 @@ struct SynopGTS : public Template
     bool is_crex;
     const msg::Context* c_sunshine1;
     const msg::Context* c_sunshine2;
+    const msg::Context* c_prec1;
+    const msg::Context* c_prec2;
+    const msg::Context* c_wind;
+    const msg::Context* c_gust1;
+    const msg::Context* c_gust2;
 
     SynopGTS(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -701,13 +709,41 @@ struct SynopGTS : public Template
         }
 
         //   Precipitation measurement
-        subset.store_variable_undef(WR_VAR(0,  7, 32)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 13, 11)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 13, 11)); // TODO
+        if (c_prec1)
+        {
+            double h = c_prec1->level.ltype1 == 1 ? 0.0 : c_prec1->level.l1 / 1000.0;
+            if (c_prec1->level.ltype1 == 1)
+                if (const Var* var = c_prec1->find(WR_VAR(0, 13, 11)))
+                    if (const Var* a = var->enqa(WR_VAR(0, 13, 11)))
+                        h = a->enqd();
+            subset.store_variable_d(WR_VAR(0,  7, 32), h);
+
+            subset.store_variable_d(WR_VAR(0,  4, 24), c_prec1->trange.p2 / 3600);
+            if (const Var* var = c_prec1->find(WR_VAR(0, 13, 11)))
+                subset.store_variable(*var);
+            else
+                subset.store_variable_undef(WR_VAR(0, 13, 11));
+            if (c_prec2)
+            {
+                subset.store_variable_d(WR_VAR(0,  4, 24), c_prec2->trange.p2 / 3600);
+                if (const Var* var = c_prec2->find(WR_VAR(0, 13, 11)))
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(WR_VAR(0, 13, 11));
+            } else {
+                subset.store_variable_undef(WR_VAR(0,  4, 24));
+                subset.store_variable_undef(WR_VAR(0, 13, 11));
+            }
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  7, 32));
+            subset.store_variable_undef(WR_VAR(0,  4, 24));
+            subset.store_variable_undef(WR_VAR(0, 13, 11));
+            subset.store_variable_undef(WR_VAR(0,  4, 24));
+            subset.store_variable_undef(WR_VAR(0, 13, 11));
+        }
 
         //   Extreme temperature data
+#warning TODO
         subset.store_variable_undef(WR_VAR(0,  7, 32)); // TODO
         subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
         subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
@@ -717,18 +753,96 @@ struct SynopGTS : public Template
         subset.store_variable_undef(WR_VAR(0, 12, 112)); // TODO
 
         //   Wind data
-        subset.store_variable_undef(WR_VAR(0,  7, 32)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  2,  2)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  8, 21)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  4, 25)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 11,  1)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 11,  2)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  8, 21)); // TODO
-        for (int i = 1; i <= 2; ++i)
+        if (c_wind || c_gust1 || c_gust2)
         {
-            subset.store_variable_undef(WR_VAR(0,  4, 25)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 11, 43)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 11, 41)); // TODO
+            const msg::Context* c_first = c_wind ? c_wind : c_gust1 ? c_gust1 : c_gust2;
+            if (c_first->level.l1 == 10 * 1000)
+            {
+#warning TODO
+                // TODO: override h based on attributes of B11001, B11002, B11043 or B11041 in c_first
+            }
+            subset.store_variable_d(WR_VAR(0,  7, 32), c_first->level.l1 / 1000.0);
+
+            if (const Var* var = msg.find(WR_VAR(0,  2,  2), c_first->level, Trange::instant()))
+                subset.store_variable(*var);
+            else
+                subset.store_variable_undef(WR_VAR(0,  2,  2));
+
+            subset.store_variable_i(WR_VAR(0,  8, 21), 2);
+
+            if (c_wind)
+            {
+                if (c_wind->trange.pind == 0)
+                    subset.store_variable_d(WR_VAR(0,  4, 25), -c_wind->trange.p2 / 60.0);
+                else
+                    subset.store_variable_undef(WR_VAR(0,  4, 25));
+                if (const Var* var = c_wind->find(WR_VAR(0, 11, 1)))
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(WR_VAR(0, 11,  1));
+                if (const Var* var = c_wind->find(WR_VAR(0, 11, 2)))
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(WR_VAR(0, 11,  2));
+            } else {
+                subset.store_variable_undef(WR_VAR(0,  4, 25));
+                subset.store_variable_undef(WR_VAR(0, 11,  1));
+                subset.store_variable_undef(WR_VAR(0, 11,  2));
+            }
+            subset.store_variable_undef(WR_VAR(0,  8, 21));
+
+            if (c_gust1)
+            {
+                if (c_gust1->trange.pind == 0)
+                    subset.store_variable_d(WR_VAR(0,  4, 25), -c_gust1->trange.p2 / 60.0);
+                else
+                    subset.store_variable_undef(WR_VAR(0,  4, 25));
+                if (const Var* var = c_gust1->find(WR_VAR(0, 11, 43)))
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(WR_VAR(0, 11,  43));
+                if (const Var* var = c_gust1->find(WR_VAR(0, 11, 41)))
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(WR_VAR(0, 11, 41));
+            } else {
+                subset.store_variable_undef(WR_VAR(0,  4, 25));
+                subset.store_variable_undef(WR_VAR(0, 11, 43));
+                subset.store_variable_undef(WR_VAR(0, 11, 41));
+            }
+            if (c_gust2)
+            {
+                if (c_gust2->trange.pind == 0)
+                    subset.store_variable_d(WR_VAR(0,  4, 25), -c_gust2->trange.p2 / 60.0);
+                else
+                    subset.store_variable_undef(WR_VAR(0,  4, 25));
+                if (const Var* var = c_gust2->find(WR_VAR(0, 11, 43)))
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(WR_VAR(0, 11,  43));
+                if (const Var* var = c_gust2->find(WR_VAR(0, 11, 41)))
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(WR_VAR(0, 11, 41));
+            } else {
+                subset.store_variable_undef(WR_VAR(0,  4, 25));
+                subset.store_variable_undef(WR_VAR(0, 11, 43));
+                subset.store_variable_undef(WR_VAR(0, 11, 41));
+            }
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  7, 32));
+            subset.store_variable_undef(WR_VAR(0,  2,  2));
+            subset.store_variable_i(WR_VAR(0,  8, 21), 2);
+            subset.store_variable_undef(WR_VAR(0,  4, 25));
+            subset.store_variable_undef(WR_VAR(0, 11,  1));
+            subset.store_variable_undef(WR_VAR(0, 11,  2));
+            subset.store_variable_undef(WR_VAR(0,  8, 21));
+            for (int i = 1; i <= 2; ++i)
+            {
+                subset.store_variable_undef(WR_VAR(0,  4, 25));
+                subset.store_variable_undef(WR_VAR(0, 11, 43));
+                subset.store_variable_undef(WR_VAR(0, 11, 41));
+            }
         }
         subset.store_variable_undef(WR_VAR(0,  7, 32));
     }
@@ -739,21 +853,60 @@ struct SynopGTS : public Template
 
         c_sunshine1 = NULL;
         c_sunshine2 = NULL;
+        c_prec1 = NULL;
+        c_prec2 = NULL;
+        c_wind = NULL;
+        c_gust1 = NULL;
+        c_gust2 = NULL;
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
                 i != msg.data.end(); ++i)
         {
             const msg::Context* c = *i;
-            if (c->level == Level(1) && c->trange.pind == 1 && c->trange.p1 == 0)
+            if (c->level == Level(1))
             {
-                // msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period));
-                if (c->find(WR_VAR(0, 14, 31)))
+                if (c->trange.pind == 1 && c->trange.p1 == 0)
                 {
-                    if (!c_sunshine1)
-                        c_sunshine1 = c;
-                    else if (!c_sunshine2)
-                        c_sunshine2 = c;
+                    // msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period));
+                    if (c->find(WR_VAR(0, 14, 31)))
+                    {
+                        if (!c_sunshine1)
+                            c_sunshine1 = c;
+                        else if (!c_sunshine2)
+                            c_sunshine2 = c;
+                    }
+
+                    // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
+                    if (c->find(WR_VAR(0, 13, 11)))
+                    {
+                        if (!c_prec1)
+                            c_prec1 = c;
+                        else if (!c_prec2)
+                            c_prec2 = c;
+                    }
+                }
+            } else if (c->level.ltype1 == 103) {
+                if (c->trange.pind == 1 && c->trange.p1 == 0)
+                {
+                    // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
+                    if (c->find(WR_VAR(0, 13, 11)))
+                    {
+                        if (!c_prec1)
+                            c_prec1 = c;
+                        else if (!c_prec2)
+                            c_prec2 = c;
+                    }
+                }
+                if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
+                    if (!c_wind)
+                        c_wind = c;
+                if (c->find(WR_VAR(0, 11, 41)) || c->find(WR_VAR(0, 11, 43)))
+                {
+                    if (!c_gust1)
+                        c_gust1 = c;
+                    else if (!c_gust2)
+                        c_gust2 = c;
                 }
             }
         }
