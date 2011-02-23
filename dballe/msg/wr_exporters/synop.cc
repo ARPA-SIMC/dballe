@@ -371,16 +371,7 @@ struct SynopGTS : public Template
 
         // Data descriptor section
         bulletin.datadesc.clear();
-        // TODO: definitive one when we are complete bulletin.datadesc.push_back(WR_VAR(3, 7, 80));
-        bulletin.datadesc.push_back(WR_VAR(3, 1, 90));
-        bulletin.datadesc.push_back(WR_VAR(3, 2, 31));
-        bulletin.datadesc.push_back(WR_VAR(3, 2, 35));
-        bulletin.datadesc.push_back(WR_VAR(3, 2, 36));
-        bulletin.datadesc.push_back(WR_VAR(3, 2, 47));
-        bulletin.datadesc.push_back(WR_VAR(0, 8,  2));
-        bulletin.datadesc.push_back(WR_VAR(3, 2, 48));
-        bulletin.datadesc.push_back(WR_VAR(3, 2, 37));
-        bulletin.datadesc.push_back(WR_VAR(3, 2, 43));
+        bulletin.datadesc.push_back(WR_VAR(3, 7, 80));
         bulletin.load_tables();
     }
 
@@ -768,32 +759,30 @@ struct SynopGTS : public Template
         // D02043  Basic synoptic "period" data
         do_D02043(msg, subset);
 #warning TODO
-#if 0
         // D02044  Evaporation data
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0,  2,  4), TODO);
-        add(WR_VAR(0, 13, 33), TODO);
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  2,  4)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 13, 33)); // TODO
         // D02045  Radiation data (1 hour period)
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0, 14,  2), TODO);
-        add(WR_VAR(0, 14,  4), TODO);
-        add(WR_VAR(0, 14, 16), TODO);
-        add(WR_VAR(0, 14, 28), TODO);
-        add(WR_VAR(0, 14, 29), TODO);
-        add(WR_VAR(0, 14, 30), TODO);
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14,  4)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 16)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 28)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 29)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 30)); // TODO
         // D02045  Radiation data (24 hour period)
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0, 14,  2), TODO);
-        add(WR_VAR(0, 14,  4), TODO);
-        add(WR_VAR(0, 14, 16), TODO);
-        add(WR_VAR(0, 14, 28), TODO);
-        add(WR_VAR(0, 14, 29), TODO);
-        add(WR_VAR(0, 14, 30), TODO);
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14,  4)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 16)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 28)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 29)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 30)); // TODO
         // D02046  Temperature change
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0, 12, 49), TODO);
-#endif
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 12, 49)); // TODO
     }
 };
 
