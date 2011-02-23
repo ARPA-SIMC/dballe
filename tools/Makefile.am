@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-DBALLELIBS =  ../dballe/libdballe.la
+DBALLELIBS =  ../dballe/libdballe.la $(WREPORT_LIBS)
 
 INCLUDES = -I$(top_srcdir)
 
