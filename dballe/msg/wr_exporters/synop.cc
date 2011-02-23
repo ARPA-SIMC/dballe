@@ -722,17 +722,6 @@ struct SynopGTS : public Template
 };
 
 
-struct SynopFactory : public TemplateFactory
-{
-    SynopFactory() { name = SYNOP_NAME; description = SYNOP_DESC; }
-
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
-    {
-        // Scan msgs and pick the right one
-        return auto_ptr<Template>(new SynopGTS(opts, msgs));
-    }
-};
-
 struct SynopGTSFactory : public TemplateFactory
 {
     SynopGTSFactory() { name = SYNOP_GTS_NAME; description = SYNOP_GTS_DESC; }
@@ -761,6 +750,10 @@ struct SynopOldFactory : public TemplateFactory
     }
 };
 
+struct SynopFactory : public SynopOldFactory
+{
+    SynopFactory() { name = SYNOP_NAME; description = SYNOP_DESC; }
+};
 
 struct SynopLandFactory : public TemplateFactory
 {
