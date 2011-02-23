@@ -325,6 +325,8 @@ struct SynopAuto : public SynopLandHigh
 struct SynopGTS : public Template
 {
     bool is_crex;
+    const msg::Context* c_sunshine1;
+    const msg::Context* c_sunshine2;
 
     SynopGTS(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -675,11 +677,28 @@ struct SynopGTS : public Template
         finder.vars[1].add(subset, WR_VAR(0, 20, 5));
 
         //   Sunshine data (form 1 hour and 24 hour period)
-        // case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period)); break;
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 31)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 31)); // TODO
+        if (c_sunshine1)
+        {
+            subset.store_variable_d(WR_VAR(0,  4, 24), c_sunshine1->trange.p2);
+            if (const Var* var = c_sunshine1->find(WR_VAR(0, 14, 31)))
+                subset.store_variable(*var);
+            else
+                subset.store_variable_undef(WR_VAR(0, 14, 31));
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  4, 24));
+            subset.store_variable_undef(WR_VAR(0, 14, 31));
+        }
+        if (c_sunshine2)
+        {
+            subset.store_variable_d(WR_VAR(0,  4, 24), c_sunshine2->trange.p2);
+            if (const Var* var = c_sunshine2->find(WR_VAR(0, 14, 31)))
+                subset.store_variable(*var);
+            else
+                subset.store_variable_undef(WR_VAR(0, 14, 31));
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  4, 24));
+            subset.store_variable_undef(WR_VAR(0, 14, 31));
+        }
 
         //   Precipitation measurement
         subset.store_variable_undef(WR_VAR(0,  7, 32)); // TODO
@@ -717,6 +736,27 @@ struct SynopGTS : public Template
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Template::to_subset(msg, subset);
+
+        c_sunshine1 = NULL;
+        c_sunshine2 = NULL;
+
+        // Scan message finding context for the data that follow
+        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                i != msg.data.end(); ++i)
+        {
+            const msg::Context* c = *i;
+            if (c->level == Level(1) && c->trange.pind == 1 && c->trange.p1 == 0)
+            {
+                // msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period));
+                if (c->find(WR_VAR(0, 14, 31)))
+                {
+                    if (!c_sunshine1)
+                        c_sunshine1 = c;
+                    else if (!c_sunshine2)
+                        c_sunshine2 = c;
+                }
+            }
+        }
 
         // D01090  Fixed surface identification, time, horizontal and vertical coordinates
         add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
@@ -759,6 +799,7 @@ struct SynopGTS : public Template
         // D02043  Basic synoptic "period" data
         do_D02043(msg, subset);
 #warning TODO
+
         // D02044  Evaporation data
         subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
         subset.store_variable_undef(WR_VAR(0,  2,  4)); // TODO
