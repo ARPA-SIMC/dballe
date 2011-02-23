@@ -716,7 +716,10 @@ struct SynopGTS : public Template
                 if (const Var* var = c_prec1->find(WR_VAR(0, 13, 11)))
                     if (const Var* a = var->enqa(WR_VAR(0, 13, 11)))
                         h = a->enqd();
-            subset.store_variable_d(WR_VAR(0,  7, 32), h);
+            if (h == 0.0)
+                subset.store_variable_undef(WR_VAR(0,  7, 32));
+            else
+                subset.store_variable_d(WR_VAR(0,  7, 32), h);
 
             subset.store_variable_d(WR_VAR(0,  4, 24), c_prec1->trange.p2 / 3600);
             if (const Var* var = c_prec1->find(WR_VAR(0, 13, 11)))
