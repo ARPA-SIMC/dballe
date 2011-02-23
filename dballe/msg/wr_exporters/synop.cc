@@ -375,6 +375,12 @@ struct SynopGTS : public Template
         bulletin.datadesc.push_back(WR_VAR(3, 1, 90));
         bulletin.datadesc.push_back(WR_VAR(3, 2, 31));
         bulletin.datadesc.push_back(WR_VAR(3, 2, 35));
+        bulletin.datadesc.push_back(WR_VAR(3, 2, 36));
+        bulletin.datadesc.push_back(WR_VAR(3, 2, 47));
+        bulletin.datadesc.push_back(WR_VAR(0, 8,  2));
+        bulletin.datadesc.push_back(WR_VAR(3, 2, 48));
+        bulletin.datadesc.push_back(WR_VAR(3, 2, 37));
+        bulletin.datadesc.push_back(WR_VAR(3, 2, 43));
         bulletin.load_tables();
     }
 
@@ -554,12 +560,15 @@ struct SynopGTS : public Template
             int max_cloud_group = 0;
             for (int i = 1; ; ++i)
             {
-                if (msg.find_context(Level::cloud(259, i), Trange::instant()))
+                if (const msg::Context* c = msg.find_context(Level::cloud(259, i), Trange::instant()))
                 {
+                    if (c->find(WR_VAR(0, 20, 17)))
+                        break;
                     max_cloud_group = i;
                 } else if (i > 3)
                     break;
             }
+
             // Number of individual cloud layers or masses
             subset.store_variable_i(WR_VAR(0, 1, 31), max_cloud_group);
             for (int i = 1; i <= max_cloud_group; ++i)
@@ -579,21 +588,140 @@ struct SynopGTS : public Template
         }
     }
 
-#if 0
     // D02036  Clouds with bases below station level
     void do_D02036(const Msg& msg, wreport::Subset& subset)
     {
-        add(WR_VAR(0, 31,  1), TODO); // Clouds with base below station level
-        for (int i = 0; i < TODO; ++i)
+#warning TODO
+        subset.store_variable_i(WR_VAR(0, 1, 31), 0);
+        for (int i = 0; i < 0 /* TODO */; ++i)
         {
+            /*
             add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, TODO), Trange::instant());
             add(WR_VAR(0, 20, 11), TODO);
             add(WR_VAR(0, 20, 12), TODO);
             add(WR_VAR(0, 20, 14), TODO);
             add(WR_VAR(0, 20, 17), TODO);
+            */
         }
     }
-#endif
+
+    // D02047  Direction of cloud drift
+    void do_D02047(const Msg& msg, wreport::Subset& subset)
+    {
+        // D02047  Direction of cloud drift
+        for (int i = 1; i <= 3; ++i)
+        {
+            if (const msg::Context* c = msg.find_context(Level::cloud(260, i), Trange::instant()))
+            {
+                if (const Var* var = c->find(WR_VAR(0,  8,  2)))
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(WR_VAR(0,  8,  2));
+
+                if (const Var* var = c->find(WR_VAR(0, 20, 54)))
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(WR_VAR(0, 20, 54));
+            } else {
+                subset.store_variable_undef(WR_VAR(0,  8,  2));
+                subset.store_variable_undef(WR_VAR(0, 20, 54));
+            }
+        }
+    }
+
+    // D02048  Direction and elevation of cloud
+    void do_D02048(const Msg& msg, wreport::Subset& subset)
+    {
+        if (const msg::Context* c = msg.find_context(Level::cloud(262, 0), Trange::instant()))
+        {
+            if (const Var* var = c->find(WR_VAR(0,  5, 21)))
+                subset.store_variable(*var);
+            else
+                subset.store_variable_undef(WR_VAR(0,  5, 21));
+
+            if (const Var* var = c->find(WR_VAR(0,  7, 21)))
+                subset.store_variable(*var);
+            else
+                subset.store_variable_undef(WR_VAR(0,  7, 21));
+
+            if (const Var* var = c->find(WR_VAR(0, 20, 12)))
+                subset.store_variable(*var);
+            else
+                subset.store_variable_undef(WR_VAR(0, 20, 12));
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  5, 21));
+            subset.store_variable_undef(WR_VAR(0,  7, 21));
+            subset.store_variable_undef(WR_VAR(0, 20, 12));
+        }
+        subset.store_variable_undef(WR_VAR(0,  5, 21));
+        subset.store_variable_undef(WR_VAR(0,  7, 21));
+    }
+
+    // D02037  State of ground, snow depth, ground minimum temperature
+    void do_D02037(const Msg& msg, wreport::Subset& subset)
+    {
+        add(WR_VAR(0, 20,  62), DBA_MSG_STATE_GROUND);
+        add(WR_VAR(0, 13,  13), DBA_MSG_TOT_SNOW);
+        if (const Var* var = msg.find(WR_VAR(0, 12, 121), Level(1), Trange(3, 0, 43200)))
+            subset.store_variable(WR_VAR(0, 12, 113), *var);
+        else
+            subset.store_variable_undef(WR_VAR(0, 12, 113));
+    }
+
+    // D02043  Basic synoptic "period" data
+    void do_D02043(const Msg& msg, wreport::Subset& subset)
+    {
+        //   Present and past weather
+        add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
+        ContextFinder finder(msg);
+        finder.add_var(DBA_MSG_PAST_WTR1);
+        finder.add_var(DBA_MSG_PAST_WTR2);
+        if (finder.find_in_level(1))
+            subset.store_variable_d(WR_VAR(0, 4, 24), finder.ctx->trange.p2);
+        else
+            subset.store_variable_undef(WR_VAR(0, 4, 24));
+        finder.vars[0].add(subset, WR_VAR(0, 20, 4));
+        finder.vars[1].add(subset, WR_VAR(0, 20, 5));
+
+        //   Sunshine data (form 1 hour and 24 hour period)
+        // case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period)); break;
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 31)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 14, 31)); // TODO
+
+        //   Precipitation measurement
+        subset.store_variable_undef(WR_VAR(0,  7, 32)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 13, 11)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 13, 11)); // TODO
+
+        //   Extreme temperature data
+        subset.store_variable_undef(WR_VAR(0,  7, 32)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 12, 111)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 12, 112)); // TODO
+
+        //   Wind data
+        subset.store_variable_undef(WR_VAR(0,  7, 32)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  2,  2)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  8, 21)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  4, 25)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 11,  1)); // TODO
+        subset.store_variable_undef(WR_VAR(0, 11,  2)); // TODO
+        subset.store_variable_undef(WR_VAR(0,  8, 21)); // TODO
+        for (int i = 1; i <= 2; ++i)
+        {
+            subset.store_variable_undef(WR_VAR(0,  4, 25)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 11, 43)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 11, 41)); // TODO
+        }
+        subset.store_variable_undef(WR_VAR(0,  7, 32));
+    }
 
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
@@ -627,72 +755,20 @@ struct SynopGTS : public Template
         do_D02031(msg, subset);
         // D02035  Basis synoptic "instantaneous" data
         do_D02035(msg, subset);
-#warning TODO
-#if 0
         // D02036  Clouds with bases below station level
         do_D02036(msg, subset);
         // D02047  Direction of cloud drift
-        add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, TODO), Trange::instant());
-        add(WR_VAR(0, 20, 54), TODO);
-        add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, TODO), Trange::instant());
-        add(WR_VAR(0, 20, 54), TODO);
-        add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, TODO), Trange::instant());
-        add(WR_VAR(0, 20, 54), TODO);
+        do_D02047(msg, subset);
         // B08002
-        add(WR_VAR(0,  8,  2), MISSING);
+        subset.store_variable_undef(WR_VAR(0, 8, 2));
         // D02048  Direction and elevation of cloud
-        add(WR_VAR(0,  5, 21), TODO);
-        add(WR_VAR(0,  7, 21), TODO);
-        add(WR_VAR(0, 20, 12), TODO);
-        add(WR_VAR(0,  5, 21), MISSING);
-        add(WR_VAR(0,  7, 21), MISSING);
+        do_D02048(msg, subset);
         // D02037  State of ground, snow depth, ground minimum temperature
-        add(WR_VAR(0, 20,  62), TODO);
-        add(WR_VAR(0, 13,  13), TODO);
-        add(WR_VAR(0, 12, 113), TODO);
+        do_D02037(msg, subset);
         // D02043  Basic synoptic "period" data
-        //   Present and past weather
-        add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1);
-        add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2);
-        //   Sunshine data (form 1 hour and 24 hour period)
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0, 14, 31), TODO);
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0, 14, 31), TODO);
-        //   Precipitation measurement
-        add(WR_VAR(0,  7, 32), TODO);
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0, 13, 11), TODO);
-        add(WR_VAR(0,  4, 24), TODO);
-        add(WR_VAR(0, 13, 11), TODO);
-        //   Extreme temperature data
-        add(WR_VAR(0,  7,  32), TODO);
-        add(WR_VAR(0,  4,  24), TODO);
-        add(WR_VAR(0,  4,  24), TODO);
-        add(WR_VAR(0, 12, 111), TODO);
-        add(WR_VAR(0,  4,  24), TODO);
-        add(WR_VAR(0,  4,  24), TODO);
-        add(WR_VAR(0, 12, 112), TODO);
-        //   Wind data
-        add(WR_VAR(0,  7, 32), TODO);
-        add(WR_VAR(0,  2,  2), TODO);
-        add(WR_VAR(0,  8, 21), TODO);
-        add(WR_VAR(0,  4, 25), TODO);
-        add(WR_VAR(0, 11,  1), TODO);
-        add(WR_VAR(0, 11,  2), TODO);
-        add(WR_VAR(0,  8, 21), TODO);
-        add(WR_VAR(0,  4, 25), TODO);
-        add(WR_VAR(0, 11, 43), TODO);
-        add(WR_VAR(0, 11, 41), TODO);
-        add(WR_VAR(0,  4, 25), TODO);
-        add(WR_VAR(0, 11, 43), TODO);
-        add(WR_VAR(0, 11, 41), TODO);
-        add(WR_VAR(0,  4, 25), TODO);
-        add(WR_VAR(0, 11, 43), TODO);
-        add(WR_VAR(0, 11, 41), TODO);
-        add(WR_VAR(0,  7, 32), MISSING);
+        do_D02043(msg, subset);
+#warning TODO
+#if 0
         // D02044  Evaporation data
         add(WR_VAR(0,  4, 24), TODO);
         add(WR_VAR(0,  2,  4), TODO);
