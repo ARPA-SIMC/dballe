@@ -759,12 +759,31 @@ struct SynopGTS : public Template
         if (c_wind || c_gust1 || c_gust2)
         {
             const msg::Context* c_first = c_wind ? c_wind : c_gust1 ? c_gust1 : c_gust2;
+            bool has_h = false;
             if (c_first->level.l1 == 10 * 1000)
             {
-#warning TODO
-                // TODO: override h based on attributes of B11001, B11002, B11043 or B11041 in c_first
+                // override h based on attributes of B11001, B11002, B11043 or B11041 in c_first
+                for (std::vector<wreport::Var*>::const_iterator i = c_first->data.begin();
+                        i != c_first->data.end(); ++i)
+                {
+                    const Var& var = **i;
+                    switch (var.code())
+                    {
+                        case WR_VAR(0, 11, 1):
+                        case WR_VAR(0, 11, 2):
+                        case WR_VAR(0, 11, 41):
+                        case WR_VAR(0, 11, 43):
+                            if (const Var* a = var.enqa(WR_VAR(0, 7, 32)))
+                            {
+                                subset.store_variable(*a);
+                                has_h = true;
+                            }
+                            break;
+                    }
+                }
             }
-            subset.store_variable_d(WR_VAR(0,  7, 32), c_first->level.l1 / 1000.0);
+            if (!has_h)
+                subset.store_variable_d(WR_VAR(0,  7, 32), c_first->level.l1 / 1000.0);
 
             if (const Var* var = msg.find(WR_VAR(0,  2,  2), c_first->level, Trange::instant()))
                 subset.store_variable(*var);
