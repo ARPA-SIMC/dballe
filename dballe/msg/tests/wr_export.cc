@@ -137,11 +137,18 @@ struct ReimportTest
         if (diffs)
         {
             FILE* out1 = fopen("/tmp/msg1.txt", "w");
-            FILE* out2 = fopen("/tmp/msg2.txt", "w");
             msgs1->print(out1);
-            msgs2->print(out2);
             fclose(out1);
+
+            FILE* out2 = fopen("/tmp/msg2.txt", "w");
+            msgs2->print(out2);
             fclose(out2);
+
+            FILE* out3 = fopen("/tmp/msg2raw", "w");
+            fwrite(rawmsg.data(), rawmsg.size(), 1, out3);
+            fclose(out3);
+
+            cerr << "Output saved to /tmp/msg1.txt /tmp/msg2.txt and /tmp/msg2raw" << endl;
         }
         inner_ensure_equals(diffs, 0);
     }

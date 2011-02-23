@@ -341,6 +341,15 @@ struct SynopGTS : public Template
             subset->store_variable_undef(code);
     }
 
+    void add(Varcode code, const msg::Context& ctx, int shortcut)
+    {
+        const Var* var = ctx.find_by_id(shortcut);
+        if (var)
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
+
     void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
     {
         const Var* var = msg->find(srccode, level, trange);
@@ -365,8 +374,117 @@ struct SynopGTS : public Template
         // TODO: definitive one when we are complete bulletin.datadesc.push_back(WR_VAR(3, 7, 80));
         bulletin.datadesc.push_back(WR_VAR(3, 1, 90));
         bulletin.datadesc.push_back(WR_VAR(3, 2, 31));
+        bulletin.datadesc.push_back(WR_VAR(3, 2, 35));
         bulletin.load_tables();
     }
+
+    struct ContextFinder
+    {
+        struct Entry
+        {
+            Varcode code;
+            const Var* var;
+            Entry(Varcode code) : code(code), var(0) {}
+            void add(Subset& subset)
+            {
+                if (var)
+                    subset.store_variable(*var);
+                else
+                    subset.store_variable_undef(code);
+            }
+            void add(Subset& subset, Varcode as_code)
+            {
+                if (var)
+                    subset.store_variable(as_code, *var);
+                else
+                    subset.store_variable_undef(as_code);
+            }
+        };
+
+        const Msg& msg;
+        const msg::Context* ctx;
+        vector<Entry> vars;
+
+        ContextFinder(const Msg& msg) : msg(msg), ctx(0)
+        {
+        }
+
+        void add_var(Varcode code)
+        {
+            vars.push_back(Entry(code));
+        }
+        void add_var(int shortcut)
+        {
+            add_var(shortcutTable[shortcut].code);
+        }
+
+        bool scan_vars_in_context(const msg::Context& c)
+        {
+            bool found = false;
+            for (vector<Entry>::iterator i = vars.begin();
+                    i != vars.end(); ++i)
+            {
+                if (const Var* var = c.find(i->code))
+                {
+                    found = true;
+                    i->var = var;
+                }
+            }
+            return found;
+        }
+
+        bool find_in_level(int ltype1, int or_shortcut=-1)
+        {
+            bool found = false;
+            if (or_shortcut != -1)
+            {
+                if (const msg::Context* c = msg.find_context_by_id(or_shortcut))
+                    found = scan_vars_in_context(*c);
+            }
+            for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                    !found && i != msg.data.end(); ++i)
+            {
+                const msg::Context* c = *i;
+                if (c->level.ltype1 != ltype1) continue;
+                found = scan_vars_in_context(*c);
+            }
+            return NULL;
+        }
+
+        const Var* find_first_attr(Varcode code) const
+        {
+            for (vector<Entry>::const_iterator i = vars.begin();
+                    i != vars.end(); ++i)
+            {
+                if (!i->var) continue;
+                if (const Var* a = i->var->enqa(code))
+                    return a;
+            }
+            return NULL;
+        }
+
+        void add_found_sensor_height(Subset& subset)
+        {
+            if (!ctx)
+            {
+                subset.store_variable_undef(WR_VAR(0, 7, 32));
+                return;
+            }
+
+            // Check the attributes to see if we're exporting a message
+            // imported with the 'simplified' method
+            if (const Var* a = find_first_attr(WR_VAR(0, 7, 32)))
+                subset.store_variable_d(WR_VAR(0, 7, 32), a->enqd());
+            else if (ctx->level.ltype1 == 1)
+                // Ground level
+                subset.store_variable_d(WR_VAR(0, 7, 32), 0);
+            else if (ctx->level.ltype1 == 103)
+                // Height above ground level
+                subset.store_variable_d(WR_VAR(0, 7, 32), double(ctx->level.l1) / 1000.0);
+            else
+                error_consistency::throwf("Cannot add sensor height from unsupported level type %d", ctx->level.ltype1);
+        }
+    };
 
     // D02031  Pressure data
     void do_D02031(const Msg& msg, wreport::Subset& subset)
@@ -378,62 +496,90 @@ struct SynopGTS : public Template
         add(WR_VAR(0, 10, 62), DBA_MSG_PRESS_24H);
 
         // Find pressure level of geopotential
-        bool found = false;
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
-        {
-            const msg::Context& c = **i;
-            if (c.level.ltype1 != 100) continue;
-            if (const wreport::Var* var = c.find(WR_VAR(0, 10, 9)))
-            {
-                subset.store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
-                subset.store_variable(*var);
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-        {
+        ContextFinder finder(msg);
+        finder.add_var(WR_VAR(0, 10, 9));
+        if (finder.find_in_level(100))
+            subset.store_variable_d(WR_VAR(0, 7, 4), finder.ctx->level.l1);
+        else
             subset.store_variable_undef(WR_VAR(0,  7, 4));
-            subset.store_variable_undef(WR_VAR(0, 10, 9));
-        }
+        finder.vars[0].add(subset);
     }
 
-#if 0
     // D02035  Basis synoptic "instantaneous" data
     void do_D02035(const Msg& msg, wreport::Subset& subset)
     {
         //   Temperature and humidity data
-        subset->store_variable_undef(WR_VAR(0,  7,  32)); // TODO
-        subset->store_variable_undef(WR_VAR(0, 12, 101)); // TODO
-        subset->store_variable_undef(WR_VAR(0, 12, 103)); // TODO
-        subset->store_variable_undef(WR_VAR(0, 13,   3)); // TODO
-        //   Visibility data
-        add(WR_VAR(0,  7,  32), TODO);
-        add(WR_VAR(0, 20,   1), TODO);
-        //   Precipitation past 24 hours
-        add(WR_VAR(0,  7,  32), TODO);
-        add(WR_VAR(0, 13,  23), TODO);
-        add(WR_VAR(0,  7,  32), MISSING);
-        //   Cloud data
-        add(WR_VAR(0, 20,  10), DBA_MSG_CLOUD_N);
-        add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-        add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-        add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
-        //   Individual cloud layers or masses
-        add(WR_VAR(0, 31,  1), TODO); // Number of individual cloud layers or masses
-        for (int i = 0; i < TODO; ++i)
         {
-            add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, TODO), Trange::instant());
-            add(WR_VAR(0, 20, 11), TODO DBA_MSG_CLOUD_N1);
-            add(WR_VAR(0, 20, 12), TODO DBA_MSG_CLOUD_C1);
-            add(WR_VAR(0, 20, 13), TODO DBA_MSG_CLOUD_H1);
+            ContextFinder finder(msg);
+            finder.add_var(DBA_MSG_TEMP_2M);
+            finder.add_var(DBA_MSG_DEWPOINT_2M);
+            finder.add_var(DBA_MSG_HUMIDITY);
+            finder.find_in_level(103);
+            finder.add_found_sensor_height(subset);
+            finder.vars[0].add(subset, WR_VAR(0, 12, 101));
+            finder.vars[1].add(subset, WR_VAR(0, 12, 103));
+            finder.vars[2].add(subset, WR_VAR(0, 13,   3));
+        }
+
+        //   Visibility data
+        {
+            ContextFinder finder(msg);
+            finder.add_var(DBA_MSG_VISIBILITY);
+            finder.find_in_level(103, DBA_MSG_VISIBILITY);
+            finder.add_found_sensor_height(subset);
+            finder.vars[0].add(subset, WR_VAR(0, 20, 1));
+        }
+
+        //   Precipitation past 24 hours
+        {
+            ContextFinder finder(msg);
+            finder.add_var(DBA_MSG_TOT_PREC24);
+            finder.find_in_level(103, DBA_MSG_TOT_PREC24);
+            finder.add_found_sensor_height(subset);
+            finder.vars[0].add(subset, WR_VAR(0, 13, 23));
+            subset.store_variable_undef(WR_VAR(0, 7, 32));
+        }
+
+        //   Cloud data
+        {
+            add(WR_VAR(0, 20,  10), DBA_MSG_CLOUD_N);
+            add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
+            add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
+            add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
+            add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
+            add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
+            add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+
+            //   Individual cloud layers or masses
+            int max_cloud_group = 0;
+            for (int i = 1; ; ++i)
+            {
+                if (msg.find_context(Level::cloud(259, i), Trange::instant()))
+                {
+                    max_cloud_group = i;
+                } else if (i > 3)
+                    break;
+            }
+            // Number of individual cloud layers or masses
+            subset.store_variable_i(WR_VAR(0, 1, 31), max_cloud_group);
+            for (int i = 1; i <= max_cloud_group; ++i)
+            {
+                add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, i), Trange::instant());
+                if (const msg::Context* c = msg.find_context(Level::cloud(259, i), Trange::instant()))
+                {
+                    add(WR_VAR(0, 20, 11), *c, DBA_MSG_CLOUD_N1);
+                    add(WR_VAR(0, 20, 12), *c, DBA_MSG_CLOUD_C1);
+                    add(WR_VAR(0, 20, 13), *c, DBA_MSG_CLOUD_H1);
+                } else {
+                    subset.store_variable_undef(WR_VAR(0, 20, 11));
+                    subset.store_variable_undef(WR_VAR(0, 20, 12));
+                    subset.store_variable_undef(WR_VAR(0, 20, 13));
+                }
+            }
         }
     }
 
+#if 0
     // D02036  Clouds with bases below station level
     void do_D02036(const Msg& msg, wreport::Subset& subset)
     {
@@ -479,10 +625,10 @@ struct SynopGTS : public Template
         add(WR_VAR(0,  7, 31), DBA_MSG_HEIGHT_BARO);
         // D02031  Pressure data
         do_D02031(msg, subset);
-#warning TODO
-#if 0
         // D02035  Basis synoptic "instantaneous" data
         do_D02035(msg, subset);
+#warning TODO
+#if 0
         // D02036  Clouds with bases below station level
         do_D02036(msg, subset);
         // D02047  Direction of cloud drift

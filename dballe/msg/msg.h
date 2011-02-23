@@ -245,6 +245,18 @@ public:
     const wreport::Var* find_by_id(int id) const;
 
     /** 
+     * Find a contexts given level and timerange found in a shortcut ID
+     *
+     * @param msg
+     *   The message to query
+     * @param id
+     *   Shortcut ID with the level information to use
+     * @return
+     *   The context found, or NULL if it was not found.
+     */
+    const msg::Context* find_context_by_id(int id) const;
+
+    /** 
      * Find a datum given its shortcut ID
      *
      * @param msg

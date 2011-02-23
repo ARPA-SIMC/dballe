@@ -218,6 +218,12 @@ const Var* Msg::find_by_id(int id) const
     return find(v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
 }
 
+const msg::Context* Msg::find_context_by_id(int id) const
+{
+    const MsgVarShortcut& v = shortcutTable[id];
+    return find_context(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+}
+
 Var* Msg::edit_by_id(int id)
 {
     const MsgVarShortcut& v = shortcutTable[id];
