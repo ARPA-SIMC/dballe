@@ -45,6 +45,110 @@ struct wr_export_shar
 };
 TESTGRP(wr_export);
 
+// Common machinery for import -> export -> reimport tests
+struct ReimportTest
+{
+    struct Hook
+    {
+        virtual ~Hook() {}
+        virtual void clean_first(Msgs&) {};
+        virtual void clean_second(Msgs&) {};
+    };
+
+    // Strip attributes from all variables in a Msgs
+    struct StripAttrsHook : public Hook
+    {
+        bool first, second;
+        StripAttrsHook(bool first=true, bool second=true)
+            : first(first), second(second) {}
+        void do_strip(Msgs& msgs)
+        {
+            for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+            {
+                Msg& m = **mi;
+                for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+                {
+                    msg::Context& c = **ci;
+                    for (vector<wreport::Var*>::iterator vi = c.data.begin(); vi != c.data.end(); ++vi)
+                    {
+                        Var& v = **vi;
+                        while (const Var* a = v.next_attr())
+                            v.unseta(a->code());
+                    }
+                }
+            }
+        }
+        virtual void clean_first(Msgs& msgs) { if (first) do_strip(msgs); };
+        virtual void clean_second(Msgs& msgs) { if (second) do_strip(msgs); };
+    };
+
+    string fname;
+    Encoding type;
+    auto_ptr<Msgs> msgs1;
+    auto_ptr<Msgs> msgs2;
+    msg::Importer::Options input_opts;
+    msg::Exporter::Options output_opts;
+    vector<Hook*> hooks;
+
+    void clear_hooks()
+    {
+        for (vector<Hook*>::iterator i = hooks.begin();
+                i != hooks.end(); ++i)
+            delete *i;
+        hooks.clear();
+    }
+
+    ReimportTest(const std::string& fname, Encoding type=BUFR)
+        : fname(fname), type(type)
+    {
+    }
+    ~ReimportTest()
+    {
+        clear_hooks();
+    }
+
+    void do_test(const dballe::tests::Location& loc)
+    {
+        std::auto_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
+        std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
+
+        // Import
+        msgs1 = inner_read_msgs_opts(fname.c_str(), type, input_opts);
+        inner_ensure(msgs1->size() > 0);
+
+        // Run hooks
+        for (vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
+            (*i)->clean_first(*msgs1);
+
+        // Export
+        Rawmsg rawmsg;
+        exporter->to_rawmsg(*msgs1, rawmsg);
+
+        // Import again
+        msgs2.reset(new Msgs);
+        importer->from_rawmsg(rawmsg, *msgs2);
+
+        // Run hooks
+        for (vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
+            (*i)->clean_second(*msgs2);
+
+        // Compare
+        int diffs = msgs1->diff(*msgs2, stdout);
+        if (diffs)
+        {
+            FILE* out1 = fopen("/tmp/msg1.txt", "w");
+            FILE* out2 = fopen("/tmp/msg2.txt", "w");
+            msgs1->print(out1);
+            msgs2->print(out2);
+            fclose(out1);
+            fclose(out2);
+        }
+        inner_ensure_equals(diffs, 0);
+    }
+};
+#define run_test(obj, name) obj.do_test(wibble::tests::Location(__FILE__, __LINE__, (obj.fname + " " + name).c_str()))
+
+
 // Test plain re-export of all our BUFR test files
 template<> template<>
 void to::test<1>()
@@ -160,69 +264,16 @@ void to::test<3>()
     }
 }
 
-// Common machinery for import -> export -> reimport tests
-struct ReimportTest
-{
-    string fname;
-    Encoding type;
-    auto_ptr<Msgs> msgs1;
-    auto_ptr<Msgs> msgs2;
-    msg::Importer::Options input_opts;
-    msg::Exporter::Options output_opts;
-
-    ReimportTest(const std::string& fname, Encoding type=BUFR)
-        : fname(fname), type(type)
-    {
-    }
-
-    virtual void clean_first_hook() {}
-    virtual void clean_second_hook() {}
-
-    void do_test(const dballe::tests::Location& loc)
-    {
-        std::auto_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
-        std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
-
-        // Import
-        msgs1 = inner_read_msgs_opts(fname.c_str(), type, input_opts);
-        inner_ensure(msgs1->size() > 0);
-
-        clean_first_hook();
-
-        // Export
-        Rawmsg rawmsg;
-        exporter->to_rawmsg(*msgs1, rawmsg);
-
-        // Import again
-        msgs2.reset(new Msgs);
-        importer->from_rawmsg(rawmsg, *msgs2);
-
-        clean_second_hook();
-
-        // Compare
-        int diffs = msgs1->diff(*msgs2, stdout);
-        if (diffs)
-        {
-            FILE* out1 = fopen("/tmp/msg1.txt", "w");
-            FILE* out2 = fopen("/tmp/msg2.txt", "w");
-            msgs1->print(out1);
-            msgs2->print(out2);
-            fclose(out1);
-            fclose(out2);
-        }
-        inner_ensure_equals(diffs, 0);
-    }
-};
-#define run_test(obj, name) obj.do_test(wibble::tests::Location(__FILE__, __LINE__, (obj.fname + " " + name).c_str()))
-
 // Re-export test for old style synops
 template<> template<>
 void to::test<5>()
 {
     {
         ReimportTest test("bufr/obs0-1.22.bufr");
+        test.hooks.push_back(new ReimportTest::StripAttrsHook(true, false));
         run_test(test, "auto");
         test.output_opts.template_name = "synop-old";
+        test.clear_hooks();
         run_test(test, "old");
     }
     {
