@@ -41,6 +41,7 @@ tut_test_SOURCES = \
 	../dballe/core/tests/tut-main.cpp
 tut_test_LDADD = \
 	libdballef.la \
+	../dballe/libdballe.la \
 	$(WREPORT_LIBS) \
 	$(WIBBLE_LIBS)
 
