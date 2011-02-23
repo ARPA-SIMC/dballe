@@ -202,6 +202,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 		for (size_t j = 0; j < ctx.data.size(); ++j)
 		{
             const Var& var = *ctx.data[j];
+            if (not var.isset()) continue;
 
 			// Only import dates from ana level, and only if requested
 			if (is_ana_level)
