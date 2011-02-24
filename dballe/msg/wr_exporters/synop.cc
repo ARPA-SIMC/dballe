@@ -487,6 +487,22 @@ struct SynopWMO : public Template
             subset->store_variable_undef(code);
     }
 
+    void add(Varcode code, const msg::Context& ctx, Varcode wanted_code)
+    {
+        if (const Var* var = ctx.find(wanted_code))
+            subset->store_variable(code, *var);
+        else
+            subset->store_variable_undef(code);
+    }
+
+    void add(Varcode code, const msg::Context& ctx)
+    {
+        if (const Var* var = ctx.find(code))
+            subset->store_variable(*var);
+        else
+            subset->store_variable_undef(code);
+    }
+
     void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
     {
         const Var* var = msg->find(srccode, level, trange);
@@ -582,10 +598,8 @@ struct SynopWMO : public Template
             {
                 if (const msg::Context* c = msg.find_context(Level::cloud(259, i), Trange::instant()))
                 {
-                    if (c->find(WR_VAR(0, 20, 17)))
-                        break;
                     max_cloud_group = i;
-                } else if (i > 3)
+                } else if (i > 4)
                     break;
             }
 
@@ -611,17 +625,32 @@ struct SynopWMO : public Template
     // D02036  Clouds with bases below station level
     void do_D02036(const Msg& msg, wreport::Subset& subset)
     {
-#warning TODO
-        subset.store_variable_i(WR_VAR(0, 1, 31), 0);
-        for (int i = 0; i < 0 /* TODO */; ++i)
+        // Number of individual cloud layers or masses
+        int max_cloud_group = 0;
+        for (int i = 1; ; ++i)
         {
-            /*
-            add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, TODO), Trange::instant());
-            add(WR_VAR(0, 20, 11), TODO);
-            add(WR_VAR(0, 20, 12), TODO);
-            add(WR_VAR(0, 20, 14), TODO);
-            add(WR_VAR(0, 20, 17), TODO);
-            */
+            if (const msg::Context* c = msg.find_context(Level::cloud(263, i), Trange::instant()))
+            {
+                max_cloud_group = i;
+            } else if (i > 4)
+                break;
+        }
+        subset.store_variable_i(WR_VAR(0, 1, 31), max_cloud_group);
+        for (int i = 1; i <= max_cloud_group; ++i)
+        {
+            add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(263, i), Trange::instant());
+            if (const msg::Context* c = msg.find_context(Level::cloud(263, i), Trange::instant()))
+            {
+                add(WR_VAR(0, 20, 11), *c);
+                add(WR_VAR(0, 20, 12), *c);
+                add(WR_VAR(0, 20, 14), *c);
+                add(WR_VAR(0, 20, 17), *c);
+            } else {
+                subset.store_variable_undef(WR_VAR(0, 20, 11));
+                subset.store_variable_undef(WR_VAR(0, 20, 12));
+                subset.store_variable_undef(WR_VAR(0, 20, 14));
+                subset.store_variable_undef(WR_VAR(0, 20, 17));
+            }
         }
     }
 

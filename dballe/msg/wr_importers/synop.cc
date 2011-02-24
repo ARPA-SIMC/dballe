@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -192,13 +192,28 @@ void SynopImporter::peek_var(const Var& var)
                 cloudlevel.ltype2 = 258;
                 cloudlevel.l2 = 0;
             } else if (next == WR_VAR(0, 20, 11)) {
-                /* Individual cloud group and clouds with bases below */
-                if (cloudlevel.ltype2 != 259)
+                if (pos >= subset->size() - 3)
+                    throw error_consistency("B08002 followed by B20011 found less than 3 places before end of message");
+                Varcode next2 = (*subset)[pos + 3].code();
+                if (next2 == WR_VAR(0, 20, 14))
                 {
-                    cloudlevel.ltype2 = 259;
-                    cloudlevel.l2 = 1;
+                    /* Clouds with bases below */
+                    if (cloudlevel.ltype2 != 263)
+                    {
+                        cloudlevel.ltype2 = 259;
+                        cloudlevel.l2 = 1;
+                    } else {
+                        ++cloudlevel.l2;
+                    }
                 } else {
-                    ++cloudlevel.l2;
+                    /* Individual cloud groups */
+                    if (cloudlevel.ltype2 != 259)
+                    {
+                        cloudlevel.ltype2 = 259;
+                        cloudlevel.l2 = 1;
+                    } else {
+                        ++cloudlevel.l2;
+                    }
                 }
             } else if (next == WR_VAR(0, 20, 54)) {
                 /* Direction of cloud drift */

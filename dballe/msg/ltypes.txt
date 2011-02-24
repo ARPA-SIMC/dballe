@@ -69,3 +69,4 @@
 260	(use when ltype1=256) Cloud drift, L1 = group number
 261	(use when ltype1=256) Cloud elevation, L1 = group number
 262	(use when ltype1=256) Direction and elevation of clouds, L1 is ignored
+263	(use when ltype1=256) Cloud groups with bases below station level, L1 = group number
