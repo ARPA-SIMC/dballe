@@ -52,6 +52,123 @@ namespace wr {
 
 namespace {
 
+struct ContextFinder
+{
+    struct Entry
+    {
+        Varcode code;
+        const Var* var;
+        Entry(Varcode code) : code(code), var(0) {}
+        void add(Subset& subset)
+        {
+            if (var)
+                subset.store_variable(*var);
+            else
+                subset.store_variable_undef(code);
+        }
+        void add(Subset& subset, Varcode as_code)
+        {
+            if (var)
+                subset.store_variable(as_code, *var);
+            else
+                subset.store_variable_undef(as_code);
+        }
+    };
+
+    const Msg& msg;
+    const msg::Context* ctx;
+    vector<Entry> vars;
+
+    ContextFinder(const Msg& msg) : msg(msg), ctx(0)
+    {
+    }
+
+    void add_var(Varcode code)
+    {
+        vars.push_back(Entry(code));
+    }
+    void add_var(int shortcut)
+    {
+        add_var(shortcutTable[shortcut].code);
+    }
+
+    bool scan_vars_in_context(const msg::Context& c)
+    {
+        bool found = false;
+        for (vector<Entry>::iterator i = vars.begin();
+                i != vars.end(); ++i)
+        {
+            if (const Var* var = c.find(i->code))
+            {
+                found = true;
+                i->var = var;
+            }
+        }
+        return found;
+    }
+
+    bool find_in_level(int ltype1, int or_shortcut=-1)
+    {
+        bool found = false;
+        if (or_shortcut != -1)
+        {
+            if (const msg::Context* c = msg.find_context_by_id(or_shortcut))
+                if (scan_vars_in_context(*c))
+                {
+                    ctx = c;
+                    found = true;
+                }
+        }
+        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                !found && i != msg.data.end(); ++i)
+        {
+            const msg::Context* c = *i;
+            if (c->level.ltype1 != ltype1) continue;
+            if (scan_vars_in_context(*c))
+            {
+                ctx = c;
+                found = true;
+            }
+        }
+        return found;
+    }
+
+    const Var* find_first_attr(Varcode code) const
+    {
+        for (vector<Entry>::const_iterator i = vars.begin();
+                i != vars.end(); ++i)
+        {
+            if (!i->var) continue;
+            if (const Var* a = i->var->enqa(code))
+                return a;
+        }
+        return NULL;
+    }
+
+    void add_found_sensor_height(Subset& subset)
+    {
+        if (!ctx)
+        {
+            subset.store_variable_undef(WR_VAR(0, 7, 32));
+            return;
+        }
+
+        // Check the attributes to see if we're exporting a message
+        // imported with the 'simplified' method
+        if (const Var* a = find_first_attr(WR_VAR(0, 7, 32)))
+            subset.store_variable_d(WR_VAR(0, 7, 32), a->enqd());
+        else if (ctx->level.ltype1 == 1)
+            // Ground level
+            subset.store_variable_d(WR_VAR(0, 7, 32), 0);
+        else if (ctx->level.ltype1 == 103)
+            // Height above ground level
+            subset.store_variable_d(WR_VAR(0, 7, 32), double(ctx->level.l1) / 1000.0);
+        else
+            error_consistency::throwf("Cannot add sensor height from unsupported level type %d", ctx->level.ltype1);
+    }
+};
+
+
 // Base template for synops
 struct Synop : public Template
 {
@@ -384,114 +501,6 @@ struct SynopGTS : public Template
         bulletin.datadesc.push_back(WR_VAR(3, 7, 80));
         bulletin.load_tables();
     }
-
-    struct ContextFinder
-    {
-        struct Entry
-        {
-            Varcode code;
-            const Var* var;
-            Entry(Varcode code) : code(code), var(0) {}
-            void add(Subset& subset)
-            {
-                if (var)
-                    subset.store_variable(*var);
-                else
-                    subset.store_variable_undef(code);
-            }
-            void add(Subset& subset, Varcode as_code)
-            {
-                if (var)
-                    subset.store_variable(as_code, *var);
-                else
-                    subset.store_variable_undef(as_code);
-            }
-        };
-
-        const Msg& msg;
-        const msg::Context* ctx;
-        vector<Entry> vars;
-
-        ContextFinder(const Msg& msg) : msg(msg), ctx(0)
-        {
-        }
-
-        void add_var(Varcode code)
-        {
-            vars.push_back(Entry(code));
-        }
-        void add_var(int shortcut)
-        {
-            add_var(shortcutTable[shortcut].code);
-        }
-
-        bool scan_vars_in_context(const msg::Context& c)
-        {
-            bool found = false;
-            for (vector<Entry>::iterator i = vars.begin();
-                    i != vars.end(); ++i)
-            {
-                if (const Var* var = c.find(i->code))
-                {
-                    found = true;
-                    i->var = var;
-                }
-            }
-            return found;
-        }
-
-        bool find_in_level(int ltype1, int or_shortcut=-1)
-        {
-            bool found = false;
-            if (or_shortcut != -1)
-            {
-                if (const msg::Context* c = msg.find_context_by_id(or_shortcut))
-                    found = scan_vars_in_context(*c);
-            }
-            for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                    !found && i != msg.data.end(); ++i)
-            {
-                const msg::Context* c = *i;
-                if (c->level.ltype1 != ltype1) continue;
-                found = scan_vars_in_context(*c);
-            }
-            return NULL;
-        }
-
-        const Var* find_first_attr(Varcode code) const
-        {
-            for (vector<Entry>::const_iterator i = vars.begin();
-                    i != vars.end(); ++i)
-            {
-                if (!i->var) continue;
-                if (const Var* a = i->var->enqa(code))
-                    return a;
-            }
-            return NULL;
-        }
-
-        void add_found_sensor_height(Subset& subset)
-        {
-            if (!ctx)
-            {
-                subset.store_variable_undef(WR_VAR(0, 7, 32));
-                return;
-            }
-
-            // Check the attributes to see if we're exporting a message
-            // imported with the 'simplified' method
-            if (const Var* a = find_first_attr(WR_VAR(0, 7, 32)))
-                subset.store_variable_d(WR_VAR(0, 7, 32), a->enqd());
-            else if (ctx->level.ltype1 == 1)
-                // Ground level
-                subset.store_variable_d(WR_VAR(0, 7, 32), 0);
-            else if (ctx->level.ltype1 == 103)
-                // Height above ground level
-                subset.store_variable_d(WR_VAR(0, 7, 32), double(ctx->level.l1) / 1000.0);
-            else
-                error_consistency::throwf("Cannot add sensor height from unsupported level type %d", ctx->level.ltype1);
-        }
-    };
 
     // D02031  Pressure data
     void do_D02031(const Msg& msg, wreport::Subset& subset)
