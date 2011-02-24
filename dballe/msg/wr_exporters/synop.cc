@@ -436,17 +436,17 @@ struct SynopECMWFLandHigh : public Synop
 };
 
 // Same as SynopECMWFLandHigh but just with a different local subtype
-struct SynopECMWFAuto : public SynopECMWFLandHigh
+struct SynopECMWFAuto : public SynopECMWFLand
 {
     SynopECMWFAuto(const Exporter::Options& opts, const Msgs& msgs)
-        : SynopECMWFLandHigh(opts, msgs) {}
+        : SynopECMWFLand(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_AUTO_NAME; }
     virtual const char* description() const { return SYNOP_ECMWF_AUTO_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        SynopECMWFLandHigh::setupBulletin(bulletin);
+        SynopECMWFLand::setupBulletin(bulletin);
 
         bulletin.localsubtype = 3;
     }
