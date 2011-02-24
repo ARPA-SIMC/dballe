@@ -41,7 +41,6 @@ HEIGHT_BARO,    num,    B07031,     257,     -, -, -,    -,      -,     -, Heigh
 HEIGHT_RELEASE, num,    B07007,     257,     -, -, -,    -,      -,     -, Height of release of sonde above msl
 STATION_HEIGHT_QUALITY, int, B33024, 257,    -, -, -,    -,      -,     -, Station elevation quality mark (for mobile stations)
 ISOBARIC_SURFACE, num,  B07004,     257,     -, -, -,    -,      -,     -, Isobaric surface
-GEOPOTENTIAL,   num,    B10008,       1,     -, -, -,  254,      0,     0, Geopotential
 PRESS,          num,    B10004,       1,     -, -, -,  254,      0,     0, Pressure at ground level
 PRESS_3H,       num,    B10060,       1,     -, -, -,    4,      0, 10800, 3 hour pressure change at ground level
 PRESS_24H,      num,    B10060,       1,     -, -, -,    4,      0, 86400, 24 hour pressure change at ground level

@@ -387,8 +387,18 @@ struct SynopLandHigh : public Synop
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Synop::to_subset(msg, subset);
-        /* 12 */ add(WR_VAR(0,  7,  4), DBA_MSG_ISOBARIC_SURFACE);
-        /* 13 */ add(WR_VAR(0, 10,  3), DBA_MSG_GEOPOTENTIAL);
+
+        ///* 12 */ add(WR_VAR(0,  7,  4), DBA_MSG_ISOBARIC_SURFACE);
+        ///* 13 */ add(WR_VAR(0, 10,  3), DBA_MSG_GEOPOTENTIAL);
+        // Find pressure level of geopotential
+        ContextFinder finder(msg);
+        finder.add_var(WR_VAR(0, 10, 9));
+        if (finder.find_in_level(100))
+            subset.store_variable_d(WR_VAR(0, 7, 4), finder.ctx->level.l1);
+        else
+            subset.store_variable_undef(WR_VAR(0,  7, 4));
+        finder.vars[0].add(subset, WR_VAR(0, 10, 3));
+
         /* 14 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
         /* 15 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
         /* 16 */ add(WR_VAR(0, 11, 11), DBA_MSG_WIND_DIR);
@@ -518,7 +528,7 @@ struct SynopGTS : public Template
             subset.store_variable_d(WR_VAR(0, 7, 4), finder.ctx->level.l1);
         else
             subset.store_variable_undef(WR_VAR(0,  7, 4));
-        finder.vars[0].add(subset);
+        finder.vars[0].add(subset, WR_VAR(0, 10, 9));
     }
 
     // D02035  Basis synoptic "instantaneous" data
@@ -687,7 +697,7 @@ struct SynopGTS : public Template
         finder.add_var(DBA_MSG_PAST_WTR1);
         finder.add_var(DBA_MSG_PAST_WTR2);
         if (finder.find_in_level(1))
-            subset.store_variable_d(WR_VAR(0, 4, 24), finder.ctx->trange.p2);
+            subset.store_variable_d(WR_VAR(0, 4, 24), finder.ctx->trange.p2 / 3600);
         else
             subset.store_variable_undef(WR_VAR(0, 4, 24));
         finder.vars[0].add(subset, WR_VAR(0, 20, 4));
@@ -696,7 +706,7 @@ struct SynopGTS : public Template
         //   Sunshine data (form 1 hour and 24 hour period)
         if (c_sunshine1)
         {
-            subset.store_variable_d(WR_VAR(0,  4, 24), c_sunshine1->trange.p2);
+            subset.store_variable_d(WR_VAR(0,  4, 24), c_sunshine1->trange.p2 / 3600);
             if (const Var* var = c_sunshine1->find(WR_VAR(0, 14, 31)))
                 subset.store_variable(*var);
             else
@@ -707,7 +717,7 @@ struct SynopGTS : public Template
         }
         if (c_sunshine2)
         {
-            subset.store_variable_d(WR_VAR(0,  4, 24), c_sunshine2->trange.p2);
+            subset.store_variable_d(WR_VAR(0,  4, 24), c_sunshine2->trange.p2 / 3600);
             if (const Var* var = c_sunshine2->find(WR_VAR(0, 14, 31)))
                 subset.store_variable(*var);
             else
@@ -1033,10 +1043,13 @@ struct SynopOldFactory : public TemplateFactory
         const Var* var = msg.get_st_type_var();
         if (var != NULL && var->enqi() == 0)
             return auto_ptr<Template>(new SynopAuto(opts, msgs));
-        else if ((var = msg.get_geopotential_var()) != NULL)
+
+        ContextFinder finder(msg);
+        finder.add_var(WR_VAR(0, 10, 9));
+        if (finder.find_in_level(100))
             return auto_ptr<Template>(new SynopLandHigh(opts, msgs));
-        else
-            return auto_ptr<Template>(new SynopLand(opts, msgs));
+
+        return auto_ptr<Template>(new SynopLand(opts, msgs));
     }
 };
 

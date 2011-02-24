@@ -21,6 +21,9 @@
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 
+#warning remove when done debugging
+#include <iostream>
+
 using namespace wreport;
 using namespace std;
 
@@ -305,14 +308,13 @@ void SynopImporter::import_var(const Var& var)
             /* DBA_RUN_OR_RETURN(dba_msg_set_height_baro_var(msg, var)); */
             break;
         case WR_VAR(0, 10,  9):
+        case WR_VAR(0, 10,  3):
             if (press_std == MISSING_PRESS_STD)
                 throw error_consistency("B10009 given without pressure of standard level");
             msg->set(var, WR_VAR(0, 10,  9), Level(100, press_std), Trange::instant());
             break;
 
         /* Legacy bits */
-        case WR_VAR(0, 10,  3): msg->set_geopotential_var(var); break;
-
 /* Basic synoptic "instantaneous" data */
 
 /* Temperature and humidity data (complete) */

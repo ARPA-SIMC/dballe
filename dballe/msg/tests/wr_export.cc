@@ -98,6 +98,23 @@ struct ReimportTest
         hooks.clear();
     }
 
+    void dump(const std::string& tag, const Msgs& msgs, const std::string& desc="message")
+    {
+        string fname = "/tmp/" + tag + ".txt";
+        FILE* out = fopen(fname.c_str(), "w");
+        msgs.print(out);
+        fclose(out);
+        cerr << desc << " saved in " << fname << endl;
+    }
+    void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc="message")
+    {
+        string fname = "/tmp/" + tag + ".raw";
+        FILE* out = fopen(fname.c_str(), "w");
+        fwrite(msg.data(), msg.size(), 1, out);
+        fclose(out);
+        cerr << desc << " saved in " << fname << endl;
+    }
+
     ReimportTest(const std::string& fname, Encoding type=BUFR)
         : fname(fname), type(type)
     {
@@ -126,7 +143,13 @@ struct ReimportTest
 
         // Import again
         msgs2.reset(new Msgs);
-        importer->from_rawmsg(rawmsg, *msgs2);
+        try {
+            importer->from_rawmsg(rawmsg, *msgs2);
+        } catch (std::exception& e) {
+            dump("msg1", *msgs1);
+            dump("msg", rawmsg);
+            throw tut::failure(loc.msg(e.what()));
+        }
 
         // Run hooks
         for (vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
@@ -136,19 +159,9 @@ struct ReimportTest
         int diffs = msgs1->diff(*msgs2, stdout);
         if (diffs)
         {
-            FILE* out1 = fopen("/tmp/msg1.txt", "w");
-            msgs1->print(out1);
-            fclose(out1);
-
-            FILE* out2 = fopen("/tmp/msg2.txt", "w");
-            msgs2->print(out2);
-            fclose(out2);
-
-            FILE* out3 = fopen("/tmp/msg2raw", "w");
-            fwrite(rawmsg.data(), rawmsg.size(), 1, out3);
-            fclose(out3);
-
-            cerr << "Output saved to /tmp/msg1.txt /tmp/msg2.txt and /tmp/msg2raw" << endl;
+            dump("msg1", *msgs1);
+            dump("msg2", *msgs2);
+            dump("msg", rawmsg);
         }
         inner_ensure_equals(diffs, 0);
     }
