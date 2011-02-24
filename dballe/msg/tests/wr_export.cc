@@ -291,27 +291,27 @@ void to::test<5>()
     {
         ReimportTest test("bufr/obs0-1.22.bufr");
         test.hooks.push_back(new ReimportTest::StripAttrsHook(true, false));
-        test.output_opts.template_name = "synop-gts";
+        test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
-        test.output_opts.template_name = "synop-old";
+        test.output_opts.template_name = "synop-ecmwf";
         test.clear_hooks();
         run_test(test, "old");
     }
     {
         ReimportTest test("bufr/obs0-1.11188.bufr");
         test.hooks.push_back(new ReimportTest::StripAttrsHook(true, false));
-        test.output_opts.template_name = "synop-gts";
+        test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
-        test.output_opts.template_name = "synop-old";
+        test.output_opts.template_name = "synop-ecmwf";
         test.clear_hooks();
         run_test(test, "old");
     }
     {
         ReimportTest test("bufr/obs0-3.504.bufr");
         test.hooks.push_back(new ReimportTest::StripAttrsHook(true, false));
-        test.output_opts.template_name = "synop-gts";
+        test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
-        test.output_opts.template_name = "synop-old";
+        test.output_opts.template_name = "synop-ecmwf";
         test.clear_hooks();
         run_test(test, "old");
     }

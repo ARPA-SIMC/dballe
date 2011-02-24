@@ -31,20 +31,20 @@ using namespace std;
 #define SYNOP_NAME "synop"
 #define SYNOP_DESC "Synop (autodetect)"
 
-#define SYNOP_OLD_NAME "synop-old"
-#define SYNOP_OLD_DESC "Synop old ECMWF (autodetect) (0.1)"
+#define SYNOP_ECMWF_NAME "synop-ecmwf"
+#define SYNOP_ECMWF_DESC "Synop ECMWF (autodetect) (0.1)"
 
-#define SYNOP_GTS_NAME "synop-gts"
-#define SYNOP_GTS_DESC "Synop GTS (0.1)"
+#define SYNOP_WMO_NAME "synop-wmo"
+#define SYNOP_WMO_DESC "Synop WMO (0.1)"
 
-#define SYNOP_LAND_NAME "synop-land"
-#define SYNOP_LAND_DESC "Synop land (0.1)"
+#define SYNOP_ECMWF_LAND_NAME "synop-ecmwf-land"
+#define SYNOP_ECMWF_LAND_DESC "Synop ECMWF land (0.1)"
 
-#define SYNOP_LAND_HIGH_NAME "synop-land-high"
-#define SYNOP_LAND_HIGH_DESC "Synop land high level station (0.1)"
+#define SYNOP_ECMWF_LAND_HIGH_NAME "synop-ecmwf-land-high"
+#define SYNOP_ECMWF_LAND_HIGH_DESC "Synop ECMWF land high level station (0.1)"
 
-#define SYNOP_AUTO_NAME "synop-auto"
-#define SYNOP_AUTO_DESC "Synop land auto (0.3)"
+#define SYNOP_ECMWF_AUTO_NAME "synop-ecmwf-auto"
+#define SYNOP_ECMWF_AUTO_DESC "Synop ECMWF land auto (0.3)"
 
 namespace dballe {
 namespace msg {
@@ -266,13 +266,13 @@ struct Synop : public Template
     }
 };
 
-struct SynopLand : public Synop
+struct SynopECMWFLand : public Synop
 {
-    SynopLand(const Exporter::Options& opts, const Msgs& msgs)
+    SynopECMWFLand(const Exporter::Options& opts, const Msgs& msgs)
         : Synop(opts, msgs) {}
 
-    virtual const char* name() const { return SYNOP_LAND_NAME; }
-    virtual const char* description() const { return SYNOP_LAND_DESC; }
+    virtual const char* name() const { return SYNOP_ECMWF_LAND_NAME; }
+    virtual const char* description() const { return SYNOP_ECMWF_LAND_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -353,13 +353,13 @@ struct SynopLand : public Synop
     }
 };
 
-struct SynopLandHigh : public Synop
+struct SynopECMWFLandHigh : public Synop
 {
-    SynopLandHigh(const Exporter::Options& opts, const Msgs& msgs)
+    SynopECMWFLandHigh(const Exporter::Options& opts, const Msgs& msgs)
         : Synop(opts, msgs) {}
 
-    virtual const char* name() const { return SYNOP_LAND_HIGH_NAME; }
-    virtual const char* description() const { return SYNOP_LAND_HIGH_DESC; }
+    virtual const char* name() const { return SYNOP_ECMWF_LAND_HIGH_NAME; }
+    virtual const char* description() const { return SYNOP_ECMWF_LAND_HIGH_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -435,24 +435,24 @@ struct SynopLandHigh : public Synop
     }
 };
 
-// Same as SynopLandHigh but just with a different local subtype
-struct SynopAuto : public SynopLandHigh
+// Same as SynopECMWFLandHigh but just with a different local subtype
+struct SynopECMWFAuto : public SynopECMWFLandHigh
 {
-    SynopAuto(const Exporter::Options& opts, const Msgs& msgs)
-        : SynopLandHigh(opts, msgs) {}
+    SynopECMWFAuto(const Exporter::Options& opts, const Msgs& msgs)
+        : SynopECMWFLandHigh(opts, msgs) {}
 
-    virtual const char* name() const { return SYNOP_AUTO_NAME; }
-    virtual const char* description() const { return SYNOP_AUTO_DESC; }
+    virtual const char* name() const { return SYNOP_ECMWF_AUTO_NAME; }
+    virtual const char* description() const { return SYNOP_ECMWF_AUTO_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        SynopLandHigh::setupBulletin(bulletin);
+        SynopECMWFLandHigh::setupBulletin(bulletin);
 
         bulletin.localsubtype = 3;
     }
 };
 
-struct SynopGTS : public Template
+struct SynopWMO : public Template
 {
     bool is_crex;
     const msg::Context* c_sunshine1;
@@ -463,11 +463,11 @@ struct SynopGTS : public Template
     const msg::Context* c_gust1;
     const msg::Context* c_gust2;
 
-    SynopGTS(const Exporter::Options& opts, const Msgs& msgs)
+    SynopWMO(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { return SYNOP_GTS_NAME; }
-    virtual const char* description() const { return SYNOP_GTS_DESC; }
+    virtual const char* name() const { return SYNOP_WMO_NAME; }
+    virtual const char* description() const { return SYNOP_WMO_DESC; }
 
     void add(Varcode code, int shortcut)
     {
@@ -1022,69 +1022,69 @@ struct SynopGTS : public Template
 };
 
 
-struct SynopGTSFactory : public TemplateFactory
+struct SynopWMOFactory : public TemplateFactory
 {
-    SynopGTSFactory() { name = SYNOP_GTS_NAME; description = SYNOP_GTS_DESC; }
+    SynopWMOFactory() { name = SYNOP_WMO_NAME; description = SYNOP_WMO_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         // Scan msgs and pick the right one
-        return auto_ptr<Template>(new SynopGTS(opts, msgs));
+        return auto_ptr<Template>(new SynopWMO(opts, msgs));
     }
 };
 
-struct SynopOldFactory : public TemplateFactory
+struct SynopECMWFFactory : public TemplateFactory
 {
-    SynopOldFactory() { name = SYNOP_OLD_NAME; description = SYNOP_OLD_DESC; }
+    SynopECMWFFactory() { name = SYNOP_ECMWF_NAME; description = SYNOP_ECMWF_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         const Msg& msg = *msgs[0];
         const Var* var = msg.get_st_type_var();
         if (var != NULL && var->enqi() == 0)
-            return auto_ptr<Template>(new SynopAuto(opts, msgs));
+            return auto_ptr<Template>(new SynopECMWFAuto(opts, msgs));
 
         ContextFinder finder(msg);
         finder.add_var(WR_VAR(0, 10, 9));
         if (finder.find_in_level(100))
-            return auto_ptr<Template>(new SynopLandHigh(opts, msgs));
+            return auto_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
 
-        return auto_ptr<Template>(new SynopLand(opts, msgs));
+        return auto_ptr<Template>(new SynopECMWFLand(opts, msgs));
     }
 };
 
-struct SynopFactory : public SynopOldFactory
+struct SynopFactory : public SynopECMWFFactory
 {
     SynopFactory() { name = SYNOP_NAME; description = SYNOP_DESC; }
 };
 
-struct SynopLandFactory : public TemplateFactory
+struct SynopECMWFLandFactory : public TemplateFactory
 {
-    SynopLandFactory() { name = SYNOP_LAND_NAME; description = SYNOP_LAND_DESC; }
+    SynopECMWFLandFactory() { name = SYNOP_ECMWF_LAND_NAME; description = SYNOP_ECMWF_LAND_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new SynopLand(opts, msgs));
+        return auto_ptr<Template>(new SynopECMWFLand(opts, msgs));
     }
 };
 
-struct SynopLandHighFactory : public TemplateFactory
+struct SynopECMWFLandHighFactory : public TemplateFactory
 {
-    SynopLandHighFactory() { name = SYNOP_LAND_HIGH_NAME; description = SYNOP_LAND_HIGH_DESC; }
+    SynopECMWFLandHighFactory() { name = SYNOP_ECMWF_LAND_HIGH_NAME; description = SYNOP_ECMWF_LAND_HIGH_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new SynopLandHigh(opts, msgs));
+        return auto_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
     }
 };
 
-struct SynopAutoFactory : public TemplateFactory
+struct SynopECMWFAutoFactory : public TemplateFactory
 {
-    SynopAutoFactory() { name = SYNOP_AUTO_NAME; description = SYNOP_AUTO_DESC; }
+    SynopECMWFAutoFactory() { name = SYNOP_ECMWF_AUTO_NAME; description = SYNOP_ECMWF_AUTO_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new SynopAuto(opts, msgs));
+        return auto_ptr<Template>(new SynopECMWFAuto(opts, msgs));
     }
 };
 
@@ -1094,25 +1094,25 @@ struct SynopAutoFactory : public TemplateFactory
 void register_synop(TemplateRegistry& r)
 {
 static const TemplateFactory* synop = NULL;
-static const TemplateFactory* synopgts = NULL;
-static const TemplateFactory* synopold = NULL;
-static const TemplateFactory* synopland = NULL;
-static const TemplateFactory* synoplandhigh = NULL;
-static const TemplateFactory* synopauto = NULL;
+static const TemplateFactory* synopwmo = NULL;
+static const TemplateFactory* synopecmwf = NULL;
+static const TemplateFactory* synopecmwfland = NULL;
+static const TemplateFactory* synopecmwflandhigh = NULL;
+static const TemplateFactory* synopecmwfauto = NULL;
 
     if (!synop) synop = new SynopFactory;
-    if (!synopgts) synopgts = new SynopGTSFactory;
-    if (!synopold) synopold = new SynopOldFactory;
-    if (!synopland) synopland = new SynopLandFactory;
-    if (!synoplandhigh) synoplandhigh = new SynopLandHighFactory;
-    if (!synopauto) synopauto = new SynopAutoFactory;
+    if (!synopwmo) synopwmo = new SynopWMOFactory;
+    if (!synopecmwf) synopecmwf = new SynopECMWFFactory;
+    if (!synopecmwfland) synopecmwfland = new SynopECMWFLandFactory;
+    if (!synopecmwflandhigh) synopecmwflandhigh = new SynopECMWFLandHighFactory;
+    if (!synopecmwfauto) synopecmwfauto = new SynopECMWFAutoFactory;
 
     r.register_factory(synop);
-    r.register_factory(synopgts);
-    r.register_factory(synopold);
-    r.register_factory(synopland);
-    r.register_factory(synoplandhigh);
-    r.register_factory(synopauto);
+    r.register_factory(synopwmo);
+    r.register_factory(synopecmwf);
+    r.register_factory(synopecmwfland);
+    r.register_factory(synopecmwflandhigh);
+    r.register_factory(synopecmwfauto);
 }
 
 }
