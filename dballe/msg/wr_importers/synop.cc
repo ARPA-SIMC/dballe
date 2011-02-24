@@ -51,7 +51,8 @@ protected:
 
     void set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
     {
-        if (height_sensor == MISSING_SENSOR_H || defaultLevel == Level(103, height_sensor * 1000))
+        if (height_sensor == MISSING_SENSOR_H || defaultLevel == Level(103, height_sensor * 1000)
+                || (defaultLevel.ltype1 == 1 && height_sensor == 0))
             msg->set(var, code, defaultLevel, trange);
         else if (opts.simplified)
         {
