@@ -46,6 +46,7 @@ struct wr_export_shar
 TESTGRP(wr_export);
 
 // Common machinery for import -> export -> reimport tests
+template<class B>
 struct ReimportTest
 {
     struct Hook
@@ -92,7 +93,7 @@ struct ReimportTest
 
     void clear_hooks()
     {
-        for (vector<Hook*>::iterator i = hooks.begin();
+        for (typename vector<Hook*>::iterator i = hooks.begin();
                 i != hooks.end(); ++i)
             delete *i;
         hooks.clear();
@@ -103,6 +104,14 @@ struct ReimportTest
         string fname = "/tmp/" + tag + ".txt";
         FILE* out = fopen(fname.c_str(), "w");
         msgs.print(out);
+        fclose(out);
+        cerr << desc << " saved in " << fname << endl;
+    }
+    void dump(const std::string& tag, const Bulletin& bul, const std::string& desc="message")
+    {
+        string fname = "/tmp/" + tag + ".txt";
+        FILE* out = fopen(fname.c_str(), "w");
+        bul.print(out);
         fclose(out);
         cerr << desc << " saved in " << fname << endl;
     }
@@ -134,12 +143,22 @@ struct ReimportTest
         inner_ensure(msgs1->size() > 0);
 
         // Run hooks
-        for (vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
+        for (typename vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
             (*i)->clean_first(*msgs1);
 
         // Export
+        B bulletin;
+        exporter->to_bulletin(*msgs1, bulletin);
+
         Rawmsg rawmsg;
-        exporter->to_rawmsg(*msgs1, rawmsg);
+        try {
+            bulletin.encode(rawmsg);
+            //exporter->to_rawmsg(*msgs1, rawmsg);
+        } catch (std::exception& e) {
+            dump("bul1", bulletin);
+            dump("msg1", *msgs1);
+            throw tut::failure(loc.msg(e.what()));
+        }
 
         // Import again
         msgs2.reset(new Msgs);
@@ -152,7 +171,7 @@ struct ReimportTest
         }
 
         // Run hooks
-        for (vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
+        for (typename vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
             (*i)->clean_second(*msgs2);
 
         // Compare
@@ -166,7 +185,10 @@ struct ReimportTest
         inner_ensure_equals(diffs, 0);
     }
 };
+typedef ReimportTest<BufrBulletin> BufrReimportTest;
+typedef ReimportTest<CrexBulletin> CrexReimportTest;
 #define run_test(obj, name) obj.do_test(wibble::tests::Location(__FILE__, __LINE__, (obj.fname + " " + name).c_str()))
+
 
 
 // Test plain re-export of all our BUFR test files
@@ -289,8 +311,8 @@ template<> template<>
 void to::test<5>()
 {
     {
-        ReimportTest test("bufr/obs0-1.22.bufr");
-        test.hooks.push_back(new ReimportTest::StripAttrsHook(true, false));
+        BufrReimportTest test("bufr/obs0-1.22.bufr");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
         test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
         test.output_opts.template_name = "synop-ecmwf";
@@ -298,8 +320,8 @@ void to::test<5>()
         run_test(test, "old");
     }
     {
-        ReimportTest test("bufr/obs0-1.11188.bufr");
-        test.hooks.push_back(new ReimportTest::StripAttrsHook(true, false));
+        BufrReimportTest test("bufr/obs0-1.11188.bufr");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
         test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
         test.output_opts.template_name = "synop-ecmwf";
@@ -307,8 +329,86 @@ void to::test<5>()
         run_test(test, "old");
     }
     {
-        ReimportTest test("bufr/obs0-3.504.bufr");
-        test.hooks.push_back(new ReimportTest::StripAttrsHook(true, false));
+        BufrReimportTest test("bufr/obs0-3.504.bufr");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
+        test.output_opts.template_name = "synop-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+}
+
+// Re-export test for new style synops
+template<> template<>
+void to::test<6>()
+{
+    {
+        BufrReimportTest test("bufr/synop-cloudbelow.bufr");
+        test.output_opts.template_name = "synop-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/synop-evapo.bufr");
+        test.output_opts.template_name = "synop-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/synop-groundtemp.bufr");
+        test.output_opts.template_name = "synop-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/synop-longname.bufr");
+        test.output_opts.template_name = "synop-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/synop-oddgust.bufr");
+        test.output_opts.template_name = "synop-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/synop-oddprec.bufr");
+        test.output_opts.template_name = "synop-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/synop-old-buoy.bufr");
+        test.output_opts.template_name = "synop-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/synop-strayvs.bufr");
+        test.output_opts.template_name = "synop-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "synop-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/synop-sunshine.bufr");
         test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
         test.output_opts.template_name = "synop-ecmwf";
@@ -319,7 +419,7 @@ void to::test<5>()
 
 // Re-export to BUFR and see the differences
 template<> template<>
-void to::test<6>()
+void to::test<7>()
 {
     const char** files = dballe::tests::bufr_files;
     vector<string> fails;
