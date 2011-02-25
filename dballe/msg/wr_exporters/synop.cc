@@ -762,7 +762,7 @@ struct SynopWMO : public Template
             double h = c_prec1->level.ltype1 == 1 ? 0.0 : c_prec1->level.l1 / 1000.0;
             if (c_prec1->level.ltype1 == 1)
                 if (const Var* var = c_prec1->find(WR_VAR(0, 13, 11)))
-                    if (const Var* a = var->enqa(WR_VAR(0, 13, 11)))
+                    if (const Var* a = var->enqa(WR_VAR(0, 7, 32)))
                         h = a->enqd();
             if (h == 0.0)
                 subset.store_variable_undef(WR_VAR(0,  7, 32));
@@ -812,7 +812,7 @@ struct SynopWMO : public Template
             {
                 // override h based on attributes of B11001, B11002, B11043 or B11041 in c_first
                 for (std::vector<wreport::Var*>::const_iterator i = c_first->data.begin();
-                        i != c_first->data.end(); ++i)
+                        !has_h && i != c_first->data.end(); ++i)
                 {
                     const Var& var = **i;
                     switch (var.code())
@@ -863,7 +863,7 @@ struct SynopWMO : public Template
 
             if (c_gust1)
             {
-                if (c_gust1->trange.pind == 0)
+                if (c_gust1->trange.pind == 205)
                     subset.store_variable_d(WR_VAR(0,  4, 25), -c_gust1->trange.p2 / 60.0);
                 else
                     subset.store_variable_undef(WR_VAR(0,  4, 25));
@@ -882,7 +882,7 @@ struct SynopWMO : public Template
             }
             if (c_gust2)
             {
-                if (c_gust2->trange.pind == 0)
+                if (c_gust2->trange.pind == 205)
                     subset.store_variable_d(WR_VAR(0,  4, 25), -c_gust2->trange.p2 / 60.0);
                 else
                     subset.store_variable_undef(WR_VAR(0,  4, 25));

@@ -253,7 +253,7 @@ void to::test<8>()
     // Check that the long station name has been correctly truncated on import
     const Var* var = msg.get_st_name_var();
     ensure(var != NULL);
-    ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru>");
+    ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulter>");
 }
 
 template<> template<>
@@ -263,11 +263,6 @@ void to::test<9>()
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
-
-    // Check that the long station name has been correctly truncated on import
-    //const Var* var = msg.get_st_name_var();
-    //ensure(var != NULL);
-    //ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru>");
 }
 
 template<> template<>
@@ -277,11 +272,6 @@ void to::test<10>()
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
-
-    // Check that the long station name has been correctly truncated on import
-    //const Var* var = msg.get_st_name_var();
-    //ensure(var != NULL);
-    //ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru>");
 }
 
 template<> template<>
@@ -291,11 +281,6 @@ void to::test<11>()
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
-
-    // Check that the long station name has been correctly truncated on import
-    //const Var* var = msg.get_st_name_var();
-    //ensure(var != NULL);
-    //ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru>");
 }
 
 template<> template<>
@@ -305,11 +290,6 @@ void to::test<12>()
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
-
-    // Check that the long station name has been correctly truncated on import
-    //const Var* var = msg.get_st_name_var();
-    //ensure(var != NULL);
-    //ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru>");
 }
 
 

@@ -200,7 +200,7 @@ void SynopImporter::peek_var(const Var& var)
                     /* Clouds with bases below */
                     if (cloudlevel.ltype2 != 263)
                     {
-                        cloudlevel.ltype2 = 259;
+                        cloudlevel.ltype2 = 263;
                         cloudlevel.l2 = 1;
                     } else {
                         ++cloudlevel.l2;

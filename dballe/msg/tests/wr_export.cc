@@ -113,7 +113,12 @@ struct ReimportTest
         FILE* out = fopen(fname.c_str(), "w");
         bul.print(out);
         fclose(out);
-        cerr << desc << " saved in " << fname << endl;
+
+        string fname1 = "/tmp/" + tag + "-st.txt";
+        out = fopen(fname1.c_str(), "w");
+        bul.print_structured(out);
+        fclose(out);
+        cerr << desc << " saved in " << fname << " and " << fname1 << endl;
     }
     void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc="message")
     {
@@ -347,9 +352,10 @@ void to::test<6>()
         BufrReimportTest test("bufr/synop-cloudbelow.bufr");
         test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
-        test.output_opts.template_name = "synop-ecmwf";
-        test.clear_hooks();
-        run_test(test, "old");
+        //test.output_opts.template_name = "synop-ecmwf";
+        //test.clear_hooks();
+        //test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        //run_test(test, "old");
     }
     {
         BufrReimportTest test("bufr/synop-evapo.bufr");
