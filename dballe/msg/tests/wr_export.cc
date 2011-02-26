@@ -83,6 +83,29 @@ struct ReimportTest
         virtual void clean_second(Msgs& msgs) { if (second) do_strip(msgs); };
     };
 
+    // Truncate station name to its canonical length
+    struct TruncStName : public Hook
+    {
+        TruncStName() {}
+        void do_trunc(Msgs& msgs)
+        {
+            for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+            {
+                Msg& m = **mi;
+                if (msg::Context* c = m.edit_context(Level::ana(), Trange::ana()))
+                    if (const Var* orig = c->find(WR_VAR(0, 1, 19)))
+                        if (const char* val = orig->value())
+                        {
+                            char buf[20];
+                            strncpy(buf, val, 20);
+                            c->set(Var(orig->info(), buf));
+                        }
+            }
+        }
+        virtual void clean_first(Msgs& msgs) { do_trunc(msgs); };
+        virtual void clean_second(Msgs& msgs) { do_trunc(msgs); };
+    };
+
     string fname;
     Encoding type;
     auto_ptr<Msgs> msgs1;
@@ -103,7 +126,11 @@ struct ReimportTest
     {
         string fname = "/tmp/" + tag + ".txt";
         FILE* out = fopen(fname.c_str(), "w");
-        msgs.print(out);
+        try {
+            msgs.print(out);
+        } catch (std::exception& e) {
+            fprintf(out, "Dump interrupted: %s\n", e.what());
+        }
         fclose(out);
         cerr << desc << " saved in " << fname << endl;
     }
@@ -111,12 +138,20 @@ struct ReimportTest
     {
         string fname = "/tmp/" + tag + ".txt";
         FILE* out = fopen(fname.c_str(), "w");
-        bul.print(out);
+        try {
+            bul.print(out);
+        } catch (std::exception& e) {
+            fprintf(out, "Dump interrupted: %s\n", e.what());
+        }
         fclose(out);
 
         string fname1 = "/tmp/" + tag + "-st.txt";
         out = fopen(fname1.c_str(), "w");
-        bul.print_structured(out);
+        try {
+            bul.print_structured(out);
+        } catch (std::exception& e) {
+            fprintf(out, "Dump interrupted: %s\n", e.what());
+        }
         fclose(out);
         cerr << desc << " saved in " << fname << " and " << fname1 << endl;
     }
@@ -153,7 +188,13 @@ struct ReimportTest
 
         // Export
         B bulletin;
-        exporter->to_bulletin(*msgs1, bulletin);
+        try {
+            exporter->to_bulletin(*msgs1, bulletin);
+        } catch (std::exception& e) {
+            dump("bul1", bulletin);
+            dump("msg1", *msgs1);
+            throw tut::failure(loc.msg(e.what()));
+        }
 
         Rawmsg rawmsg;
         try {
@@ -375,19 +416,20 @@ void to::test<6>()
     }
     {
         BufrReimportTest test("bufr/synop-longname.bufr");
+        test.hooks.push_back(new BufrReimportTest::TruncStName());
         test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
-        test.output_opts.template_name = "synop-ecmwf";
-        test.clear_hooks();
-        run_test(test, "old");
+        //test.output_opts.template_name = "synop-ecmwf";
+        //test.clear_hooks();
+        //run_test(test, "old");
     }
     {
         BufrReimportTest test("bufr/synop-oddgust.bufr");
         test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
-        test.output_opts.template_name = "synop-ecmwf";
-        test.clear_hooks();
-        run_test(test, "old");
+        //test.output_opts.template_name = "synop-ecmwf";
+        //test.clear_hooks();
+        //run_test(test, "old");
     }
     {
         BufrReimportTest test("bufr/synop-oddprec.bufr");
