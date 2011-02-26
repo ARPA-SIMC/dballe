@@ -864,7 +864,7 @@ struct SynopWMO : public Template
 
             if (c_gust1)
             {
-                if (c_gust1->trange.pind == 205)
+                if (c_gust1->trange.pind == 205 && c_gust1->trange.p2 != MISSING_INT)
                     subset.store_variable_d(WR_VAR(0,  4, 25), -c_gust1->trange.p2 / 60.0);
                 else
                     subset.store_variable_undef(WR_VAR(0,  4, 25));
@@ -883,7 +883,7 @@ struct SynopWMO : public Template
             }
             if (c_gust2)
             {
-                if (c_gust2->trange.pind == 205)
+                if (c_gust2->trange.pind == 205 && c_gust2->trange.p2 != MISSING_INT)
                     subset.store_variable_d(WR_VAR(0,  4, 25), -c_gust2->trange.p2 / 60.0);
                 else
                     subset.store_variable_undef(WR_VAR(0,  4, 25));

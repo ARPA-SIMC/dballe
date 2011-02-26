@@ -444,13 +444,13 @@ void SynopImporter::import_var(const Var& var)
             break;
         case WR_VAR(0, 11, 43):
             if (time_period == MISSING_INT)
-                set_gen_sensor(var, WR_VAR(0, 11, 43), Level(103, 10*1000), Trange(205));
+                set_gen_sensor(var, WR_VAR(0, 11, 43), Level(103, 10*1000), Trange(205, 0));
             else
                 set_gen_sensor(var, WR_VAR(0, 11, 43), Level(103, 10*1000), Trange(205, 0, -time_period));
             break;
         case WR_VAR(0, 11, 41):
             if (time_period == MISSING_INT)
-                set_gen_sensor(var, WR_VAR(0, 11, 41), Level(103, 10*1000), Trange(205));
+                set_gen_sensor(var, WR_VAR(0, 11, 41), Level(103, 10*1000), Trange(205, 0));
             else
                 set_gen_sensor(var, WR_VAR(0, 11, 41), Level(103, 10*1000), Trange(205, 0, -time_period));
             break;
