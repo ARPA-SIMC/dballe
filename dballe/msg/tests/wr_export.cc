@@ -361,17 +361,17 @@ void to::test<6>()
         BufrReimportTest test("bufr/synop-evapo.bufr");
         test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
-        test.output_opts.template_name = "synop-ecmwf";
-        test.clear_hooks();
-        run_test(test, "old");
+        //test.output_opts.template_name = "synop-ecmwf";
+        //test.clear_hooks();
+        //run_test(test, "old");
     }
     {
         BufrReimportTest test("bufr/synop-groundtemp.bufr");
         test.output_opts.template_name = "synop-wmo";
         run_test(test, "auto");
-        test.output_opts.template_name = "synop-ecmwf";
-        test.clear_hooks();
-        run_test(test, "old");
+        //test.output_opts.template_name = "synop-ecmwf";
+        //test.clear_hooks();
+        //run_test(test, "old");
     }
     {
         BufrReimportTest test("bufr/synop-longname.bufr");

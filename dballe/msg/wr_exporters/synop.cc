@@ -462,6 +462,7 @@ struct SynopWMO : public Template
     const msg::Context* c_wind;
     const msg::Context* c_gust1;
     const msg::Context* c_gust2;
+    const msg::Context* c_evapo;
 
     SynopWMO(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -928,6 +929,7 @@ struct SynopWMO : public Template
         c_wind = NULL;
         c_gust1 = NULL;
         c_gust2 = NULL;
+        c_evapo = NULL;
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
@@ -955,6 +957,14 @@ struct SynopWMO : public Template
                         else if (!c_prec2)
                             c_prec2 = c;
                     }
+
+                    // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
+                    if (c->find(WR_VAR(0, 13, 33)))
+                        c_evapo = c;
+                } else if (c->trange == Trange(1)) {
+                    // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1));
+                    if (c->find(WR_VAR(0, 13, 33)))
+                        c_evapo = c;
                 }
             } else if (c->level.ltype1 == 103) {
                 if (c->trange.pind == 1 && c->trange.p1 == 0)
@@ -1024,9 +1034,20 @@ struct SynopWMO : public Template
 #warning TODO
 
         // D02044  Evaporation data
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  2,  4)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 13, 33)); // TODO
+        if (c_evapo)
+        {
+            if (c_evapo->trange.p1 == 0)
+                subset.store_variable_d(WR_VAR(0,  4, 24), -c_evapo->trange.p2/3600);
+            else
+                subset.store_variable_undef(WR_VAR(0,  4, 24));
+            add(WR_VAR(0,  2,  4), WR_VAR(0,  2,  4), Level(1), Trange::instant());
+            add(WR_VAR(0, 13, 33), *c_evapo);
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  4, 24));
+            add(WR_VAR(0,  2,  4), WR_VAR(0,  2,  4), Level(1), Trange::instant());
+            subset.store_variable_undef(WR_VAR(0, 13, 33));
+        }
+
         // D02045  Radiation data (1 hour period)
         subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
         subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
