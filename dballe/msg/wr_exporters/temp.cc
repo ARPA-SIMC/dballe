@@ -199,8 +199,7 @@ struct TempWMO : public TempBase
         add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
         add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
         subset.store_variable_undef(WR_VAR(0, 8, 2));
-#warning TODO
-        subset.store_variable_undef(WR_VAR(0, 22, 43)); // TODO
+        add(WR_VAR(0, 22, 43), c_gnd_instant, DBA_MSG_WATER_TEMP);
 
         // Undef for now, we fill it later
         size_t rep_count_pos = subset.size();
