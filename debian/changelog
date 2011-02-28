@@ -3,7 +3,9 @@ dballe (5.5-1) unstable; urgency=low
   * New upstream version
      - Fixed an issue with present but undefined values in the Fortran API
      - Local B table change: B22042->B22043 
-     - Local B table cahnge: removed B08001 (replaced with B08042)
+     - Local B table change: removed B08001 (replaced with B08042)
+       B08001 found in old generic BUFR messages will transparently be
+       converted to B08042 on import.
 
  -- Enrico Zini <enrico@debian.org>  Mon, 28 Feb 2011 21:30:49 +0000
 
