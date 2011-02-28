@@ -115,6 +115,8 @@ public:
                 break;
             }
         }
+        if (cur == subset->size())
+            group_length = cur-start;
 
         // Validate group_length checking that all groups start with start_var
         for (unsigned i = 0; i < group_count; ++i)
