@@ -101,7 +101,7 @@ else
 fi
 
 dnl Check for wreport
-PKG_CHECK_MODULES(WREPORT,libwreport)
+PKG_CHECK_MODULES(WREPORT,libwreport >= 1.7)
 
 dnl Check for unixodbc
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
