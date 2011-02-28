@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include "base.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
+#include <wreport/conv.h>
 #include <cmath>
 
 using namespace wreport;
@@ -130,6 +131,13 @@ void GenericImporter::import_var(const Var& var)
             msg->type = Msg::type_from_repmemo(var.value());
             msg->set_rep_memo(var.value(), -1);
             break;
+        // Legacy variable conversions
+        case WR_VAR(0, 8, 1): {
+            auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), convert_BUFR08001_to_BUFR08042(var.enqi())));
+            nvar->copy_attrs(var);
+            msg->set(nvar, lev, tr);
+            break;
+        }
         default:
             // Adjust station info level for pre-dballe-5.0 generics
             if (lev == Level(257, 0, 0, 0) && tr == Trange(0, 0, 0))

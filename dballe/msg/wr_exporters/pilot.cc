@@ -19,6 +19,7 @@
 
 #include "wr_codec.h"
 #include <wreport/bulletin.h>
+#include <wreport/conv.h>
 #include "msgs.h"
 #include "context.h"
 #include <cstdlib>
@@ -148,7 +149,11 @@ struct Pilot : public Template
                 subset.store_variable_undef(WR_VAR(0, 7, 4));
 
             /* Add vertical sounding significance */
-            subset.store_variable(WR_VAR(0, 8, 1), *vss);
+            {
+                Var nvar(dballe::var(WR_VAR(0, 8, 1), convert_BUFR08042_to_BUFR08001(vss->enqi())));
+                nvar.copy_attrs(*vss);
+                subset.store_variable(WR_VAR(0, 8, 1), nvar);
+            }
 
             /* Add geopotential */
             if (const Var* var = c.find(WR_VAR(0, 10, 3)))

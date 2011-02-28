@@ -20,6 +20,8 @@
 #include "base.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
+#include <wreport/conv.h>
+#include <wreport/codetables.h>
 #include <dballe/msg/context.h>
 
 // Define to debug the sounding group matching algorithm
@@ -274,13 +276,22 @@ void TempImporter::import_var(const Var& var)
                 break;
         // Vertical sounding significance
         case WR_VAR(0,  8,  1):
-                msg->set(var, WR_VAR(0,  8, 1), Level(100, press), Trange::instant());
-                if (var.enqi() & 64)
+            {
+                // This account for weird data that has '1' for VSS
+                int val = convert_BUFR08001_to_BUFR08042(var.enqi());
+                if (val != BUFR08042::ALL_MISSING)
                 {
-                        surface_press = press;
-                        surface_press_var = press_var;
+                    auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), val));
+                    nvar->copy_attrs(var);
+                    msg->set(nvar, Level(100, press), Trange::instant());
                 }
-                break;
+            }
+            if (var.enqi() & BUFR08001::SURFACE)
+            {
+                surface_press = press;
+                surface_press_var = press_var;
+            }
+            break;
         // Geopotential
         case WR_VAR(0, 10,  3): msg->set(var, WR_VAR(0, 10, 8), Level(100, press), Trange::instant()); break;
         case WR_VAR(0, 10,  8): msg->set(var, WR_VAR(0, 10, 8), Level(100, press), Trange::instant()); break;
@@ -344,6 +355,19 @@ void TempImporter::import_group(unsigned start, unsigned length)
             case WR_VAR(0,  5,  2): msg->set(var, WR_VAR(0,  5,   1), lev, Trange::instant()); break;
             case WR_VAR(0,  6,  2): msg->set(var, WR_VAR(0,  6,   1), lev, Trange::instant()); break;
             case WR_VAR(0,  4, 86): msg->set(var, WR_VAR(0,  4,  86), lev, Trange::instant()); break;
+            case WR_VAR(0,  8,  1):
+                {
+                    // This account for weird data that has '1' for VSS
+                    int val = convert_BUFR08001_to_BUFR08042(var.enqi());
+                    if (val != BUFR08042::ALL_MISSING)
+                    {
+                        auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), val));
+                        nvar->copy_attrs(var);
+                        msg->set(nvar, lev, Trange::instant());
+                    }
+                }
+                break;
+            case WR_VAR(0,  8, 42): msg->set(var, WR_VAR(0,  8,  42), lev, Trange::instant()); break;
             case WR_VAR(0, 10,  3): msg->set(var, WR_VAR(0, 10,   8), lev, Trange::instant()); break;
             case WR_VAR(0, 12,  1): msg->set(var, WR_VAR(0, 12, 101), lev, Trange::instant()); break;
             case WR_VAR(0, 12,  3): msg->set(var, WR_VAR(0, 12, 103), lev, Trange::instant()); break;

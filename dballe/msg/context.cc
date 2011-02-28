@@ -265,7 +265,7 @@ const Var* Context::find_vsig() const
     if ((level.ltype1 != 100 && level.ltype1 != 102) || trange != Trange::instant())
         return NULL;
     // Look for VSS variable
-    const Var* res = find(WR_VAR(0, 8, 1));
+    const Var* res = find(WR_VAR(0, 8, 42));
     if (res == NULL) return NULL;
 
     // Ensure it is not undefined

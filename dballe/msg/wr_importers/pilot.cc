@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include "base.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
+#include <wreport/conv.h>
 #include <cmath>
 
 using namespace wreport;
@@ -91,7 +92,11 @@ void PilotImporter::import_var(const Var& var)
 				lev.ltype1 = 102;
 				lev.l1 = to_h((*subset)[pos + 1].enqd());
 			}
-			msg->set(var, WR_VAR(0,  8, 1), lev, Trange::instant());
+            {
+                auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), convert_BUFR08001_to_BUFR08042(var.enqi())));
+                nvar->copy_attrs(var);
+                msg->set(nvar, lev, Trange::instant());
+            }
 			break;
 		case WR_VAR(0, 10, 3):
 			lev.ltype1 = 102;
