@@ -380,6 +380,7 @@ public:
      */
     void sounding_pack_levels(Msg& dst) const;
 
+#if 0
     /**
      * Copy a Msg, adding the sounding significance from the level descriptions
      * and moving the data at the same pressure level to the resulting
@@ -390,6 +391,7 @@ public:
      * significance, to simplify encoding.
      */
     void sounding_unpack_levels(Msg& dst) const;
+#endif
 
     /**
      * Parse the date set in the Msg.

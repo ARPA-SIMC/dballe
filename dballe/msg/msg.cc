@@ -686,16 +686,9 @@ void Msg::sounding_pack_levels(Msg& dst) const
     }
 }
 
+#if 0
 void Msg::sounding_unpack_levels(Msg& dst) const
 {
-    const int VSIG_MISSING = 1;
-    const int VSIG_SIGWIND = 2;     /* 6 */
-    const int VSIG_SIGTEMP = 4;     /* 5 */
-    const int VSIG_MAXWIND = 8;     /* 4 */
-    const int VSIG_TROPOPAUSE = 16; /* 3 */
-    const int VSIG_STANDARD = 32;   /* 2 */
-    const int VSIG_SURFACE = 64;    /* 1 */
-
     dst.clear();
     dst.type = type;
 
@@ -762,6 +755,7 @@ void Msg::sounding_unpack_levels(Msg& dst) const
         }
     }
 }
+#endif
 
 void Msg::parse_date(int* values) const
 {
