@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,8 +75,8 @@ void AOFImporter::read_temp(const uint32_t* obs, int obs_len, Msg& msg)
 						Level(100, press), Trange::instant());
 					
 		// Vertical sounding significance
-		vss = convert_AOFVSS_to_BUFR08001(vss);
-		msg.seti(WR_VAR(0, 8, 1), vss, -1, Level(100, press), Trange::instant());
+		vss = convert_AOFVSS_to_BUFR08042(vss);
+		msg.seti(WR_VAR(0, 8, 42), vss, -1, Level(100, press), Trange::instant());
 
 		// Wind direction
 		if (OBS(os + 1) != AOF_UNDEF)

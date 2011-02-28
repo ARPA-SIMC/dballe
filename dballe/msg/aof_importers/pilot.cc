@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ void AOFImporter::read_pilot(const uint32_t* obs, int obs_len, Msg& msg)
 		int os = 20 + i*7;
 		int vss = (OBS(os + 5) >> 12) & 0x1ff;
 		int ltype = -1, l1 = -1;
-		vss = convert_AOFVSS_to_BUFR08001(vss);
+		vss = convert_AOFVSS_to_BUFR08042(vss);
 
 		/* Use the pressure if defined, else use the geopotential */
 		if (OBS(os + 0) != AOF_UNDEF)
@@ -104,7 +104,7 @@ void AOFImporter::read_pilot(const uint32_t* obs, int obs_len, Msg& msg)
 		if (ltype == -1)
 			throw error_notfound("looking for pressure or height in an AOF PILOT message");
 
-		msg.seti(WR_VAR(0, 8, 1), vss, -1, Level(ltype, l1), Trange::instant());
+		msg.seti(WR_VAR(0, 8, 42), vss, -1, Level(ltype, l1), Trange::instant());
 		/* DBA_RUN_OR_RETURN(dba_var_setd(msg->obs[i].var_press, (double)OBS(os + 0) * 10)); */
 
 		/* Wind direction */
