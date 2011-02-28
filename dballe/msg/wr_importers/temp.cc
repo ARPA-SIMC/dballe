@@ -71,9 +71,9 @@ public:
     }
 
     /// Return true if \a code can be found at the start of a sounding group
-    bool is_possible_start_of_sounding(Varcode code)
+    bool is_possible_group_var(Varcode code)
     {
-        return WR_VAR_F(code) == 0;
+        return WR_VAR_F(code) == 0 && WR_VAR_X(code) != 33 && WR_VAR_X(code) != 1;
         // switch (code)
         // {
         //     default: return false;
@@ -88,7 +88,7 @@ public:
         if (pos + 1 == subset->size())
             return false;
         const Var& start_var = (*subset)[pos + 1];
-        if (not is_possible_start_of_sounding(start_var.code()))
+        if (not is_possible_group_var(start_var.code()))
             return false;
 
         // start_var marks the start of a sounding group
@@ -105,7 +105,7 @@ public:
         for ( ; cur < subset->size(); ++cur)
         {
             const Var& next = (*subset)[cur];
-            if (next.code() == start_var.code() || next.code() == WR_VAR(2, 22, 0))
+            if (next.code() == start_var.code() || !is_possible_group_var(next.code()))
             {
                 group_length = cur - start;
                 if (start + group_count * group_length > subset->size())
@@ -118,7 +118,7 @@ public:
         for (unsigned i = 0; i < group_count; ++i)
         {
             const Var& next = (*subset)[pos + 1 + i * group_length];
-            if (next.code() != start_var.code() && next.code() != WR_VAR(2, 22, 0))
+            if (next.code() != start_var.code() && !is_possible_group_var(next.code()))
                 return false;
         }
 
@@ -134,7 +134,6 @@ public:
 
     virtual void run()
     {
-        bool found_subsets = false;
         for (pos = 0; pos < subset->size(); )
         {
             const Var& var = (*subset)[pos];
@@ -142,10 +141,8 @@ public:
             {
                 // Ignore non-B variables and unset variables
                 ++pos;
-            } else if ((var.code() == WR_VAR(0, 31, 1) || var.code() == WR_VAR(0, 31, 2)) && !found_subsets) {
-                if (try_soundings(var.enqi()))
-                    found_subsets = true;
-                else
+            } else if ((var.code() == WR_VAR(0, 31, 1) || var.code() == WR_VAR(0, 31, 2))) {
+                if (!try_soundings(var.enqi()))
                     // If it does not look like a sounding, ignore delayed
                     // repetition count and proceed normally
                     ++pos;
