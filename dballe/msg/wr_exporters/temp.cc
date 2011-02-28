@@ -29,6 +29,9 @@ using namespace std;
 #define TEMP_NAME "temp"
 #define TEMP_DESC "Temp (autodetect)"
 
+#define TEMP_SHIP_NAME "temp-ship"
+#define TEMP_SHIP_DESC "Temp ship (autodetect)"
+
 #define TEMP_WMO_NAME "temp-wmo"
 #define TEMP_WMO_DESC "Temp WMO (2.101)"
 
@@ -406,6 +409,15 @@ struct TempFactory : public TemplateFactory
         return auto_ptr<Template>(new TempEcmwf(opts, msgs));
     }
 };
+struct TempShipFactory : public TemplateFactory
+{
+    TempShipFactory() { name = TEMP_SHIP_NAME; description = TEMP_SHIP_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
+    }
+};
 struct TempWMOFactory : public TemplateFactory
 {
     TempWMOFactory() { name = TEMP_WMO_NAME; description = TEMP_WMO_DESC; }
@@ -439,16 +451,19 @@ struct TempEcmwfShipFactory : public TemplateFactory
 void register_temp(TemplateRegistry& r)
 {
 static const TemplateFactory* temp = NULL;
+static const TemplateFactory* tempship = NULL;
 static const TemplateFactory* tempwmo = NULL;
 static const TemplateFactory* tempecmwf = NULL;
 static const TemplateFactory* tempecmwfship = NULL;
 
     if (!temp) temp = new TempFactory;
+    if (!tempship) tempship = new TempShipFactory;
     if (!tempwmo) tempwmo = new TempWMOFactory;
     if (!tempecmwf) tempecmwf = new TempEcmwfFactory;
     if (!tempecmwfship) tempecmwfship = new TempEcmwfShipFactory;
 
     r.register_factory(temp);
+    r.register_factory(tempship);
     r.register_factory(tempwmo);
     r.register_factory(tempecmwf);
     r.register_factory(tempecmwfship);
