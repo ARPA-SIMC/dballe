@@ -55,7 +55,7 @@ TEMP_2M,        num,    B12101,     103,  2000, -, -,  254,      0,     0, Tempe
 WET_TEMP_2M,    num,    B12002,     103,  2000, -, -,  254,      0,     0, Wet bulb temperature at 2 metres above ground
 DEWPOINT_2M,    num,    B12103,     103,  2000, -, -,  254,      0,     0, Dew point at 2 metres above ground
 HUMIDITY,       num,    B13003,     103,  2000, -, -,  254,      0,     0, Humidity at 2 metres above ground
-WATER_TEMP,     num,    B22042,       1,     -, -, -,  254,      0,     0, Sea/water surface temperature
+WATER_TEMP,     num,    B22043,       1,     -, -, -,  254,      0,     0, Sea/water surface temperature
 HEIGHT_ANEM,    num,    B10197,       1,     -, -, -,  254,      0,     0, Anemometer height
 PRESS_TEND,     num,    B10063,       1,     -, -, -,  205,      0, 10800, Characteristic of pressure tendency
 VISIBILITY,     num,    B20001,       1,     -, -, -,  254,      0,     0, Visibility
