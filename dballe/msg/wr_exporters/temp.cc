@@ -22,14 +22,23 @@
 #include "msgs.h"
 #include "context.h"
 
+#warning TODO
+#include <iostream>
+
 using namespace wreport;
 using namespace std;
 
 #define TEMP_NAME "temp"
-#define TEMP_DESC "Temp (2.101)"
+#define TEMP_DESC "Temp (autodetect)"
 
-#define TEMP_SHIP_NAME "temp-ship"
-#define TEMP_SHIP_DESC "Temp ship (2.102)"
+#define TEMP_WMO_NAME "temp-wmo"
+#define TEMP_WMO_DESC "Temp WMO (2.101)"
+
+#define TEMP_ECMWF_NAME "temp-ecmwf"
+#define TEMP_ECMWF_DESC "Temp ECMWF (2.101)"
+
+#define TEMP_ECMWF_SHIP_NAME "temp-ecmwf-ship"
+#define TEMP_ECMWF_SHIP_DESC "Temp ECMWF ship (2.102)"
 
 namespace dballe {
 namespace msg {
@@ -44,33 +53,6 @@ struct TempBase : public Template
 
     TempBase(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
-
-    void add(Varcode code, int shortcut)
-    {
-        const Var* var = msg->find_by_id(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
-    {
-        const Var* var = msg->find(srccode, level, trange);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, Varcode srccode, const msg::Context& ctx)
-    {
-        const Var* var = ctx.find(srccode);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
 
     /// Count the number of sounding levels
     int count_levels() const
@@ -112,11 +94,11 @@ struct TempBase : public Template
             subset->store_variable(WR_VAR(0,  8,  1), *vss);
 
             /* Add the rest */
-            add(WR_VAR(0, 10, 3), WR_VAR(0, 10,   8), c);
-            add(WR_VAR(0, 12, 1), WR_VAR(0, 12, 101), c);
-            add(WR_VAR(0, 12, 3), WR_VAR(0, 12, 103), c);
-            add(WR_VAR(0, 11, 1), WR_VAR(0, 11,   1), c);
-            add(WR_VAR(0, 11, 2), WR_VAR(0, 11,   2), c);
+            add(WR_VAR(0, 10, 3), c, WR_VAR(0, 10,   8));
+            add(WR_VAR(0, 12, 1), c, WR_VAR(0, 12, 101));
+            add(WR_VAR(0, 12, 3), c, WR_VAR(0, 12, 103));
+            add(WR_VAR(0, 11, 1), c, WR_VAR(0, 11,   1));
+            add(WR_VAR(0, 11, 2), c, WR_VAR(0, 11,   2));
         }
 
         return count;
@@ -144,13 +126,127 @@ struct TempBase : public Template
     }
 };
 
-struct Temp : public TempBase
+struct TempWMO : public TempBase
 {
-    Temp(const Exporter::Options& opts, const Msgs& msgs)
+    TempWMO(const Exporter::Options& opts, const Msgs& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return TEMP_NAME; }
-    virtual const char* description() const { return TEMP_DESC; }
+    virtual const char* name() const { return TEMP_WMO_NAME; }
+    virtual const char* description() const { return TEMP_WMO_DESC; }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        TempBase::setupBulletin(bulletin);
+        bulletin.localsubtype = 101;
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        bulletin.datadesc.push_back(WR_VAR(3, 9, 52));
+        bulletin.load_tables();
+    }
+
+    void do_D03054(const msg::Context& c)
+    {
+        subset->store_variable_undef(WR_VAR(0, 4, 86)); // TODO
+        subset->store_variable_undef(WR_VAR(0, 8, 42)); // TODO
+        subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
+        add(WR_VAR(0, 10, 9), c, WR_VAR(0, 10, 8));
+        subset->store_variable_undef(WR_VAR(0, 5, 15)); // TODO
+        subset->store_variable_undef(WR_VAR(0, 6, 15)); // TODO
+        add(WR_VAR(0, 12, 101), c);
+        add(WR_VAR(0, 12, 103), c);
+        add(WR_VAR(0, 11,   1), c);
+        add(WR_VAR(0, 11,   2), c);
+    }
+
+    bool do_D03051(const msg::Context& c)
+    {
+        subset->store_variable_undef(WR_VAR(0, 4, 86)); // TODO
+        subset->store_variable_undef(WR_VAR(0, 8, 42)); // TODO
+        subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
+        subset->store_variable_undef(WR_VAR(0, 5, 15)); // TODO
+        subset->store_variable_undef(WR_VAR(0, 6, 15)); // TODO
+        add(WR_VAR(0, 11, 61), c);
+        add(WR_VAR(0, 11, 62), c);
+        return true;
+    }
+
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        TempBase::to_subset(msg, subset);
+        if (!c_gnd_instant)
+            throw error_consistency("exporting synop: ground instant context not found");
+        do_D01001(); // station id
+        add(WR_VAR(0,  1, 11), *c_station, DBA_MSG_IDENT);
+        add(WR_VAR(0,  2, 11), *c_gnd_instant, DBA_MSG_SONDE_TYPE);
+        add(WR_VAR(0,  2, 13), *c_gnd_instant, DBA_MSG_SONDE_CORRECTION);
+        add(WR_VAR(0,  2, 14), *c_gnd_instant, DBA_MSG_SONDE_TRACKING);
+        add(WR_VAR(0,  2,  3), *c_gnd_instant, DBA_MSG_MEAS_EQUIP_TYPE);
+        subset.store_variable_i(WR_VAR(0, 8, 21), 18);
+        do_D01011(); // date
+        do_D01013(); // time
+        do_D01021(); // coordinates
+        add(WR_VAR(0,  7, 30), *c_gnd_instant, DBA_MSG_HEIGHT);
+        add(WR_VAR(0,  7, 31), *c_gnd_instant, DBA_MSG_HEIGHT_BARO);
+        add(WR_VAR(0,  7,  7), *c_gnd_instant, DBA_MSG_HEIGHT_RELEASE);
+        add(WR_VAR(0, 33, 24), *c_gnd_instant, DBA_MSG_STATION_HEIGHT_QUALITY);
+
+        // Cloud information reported with vertical soundings
+        add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
+        add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
+        add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
+        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
+        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
+        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+        subset.store_variable_undef(WR_VAR(0, 8, 2));
+#warning TODO
+        subset.store_variable_undef(WR_VAR(0, 22, 43)); // TODO
+
+        // Undef for now, we fill it later
+        size_t rep_count_pos = subset.size();
+        subset.store_variable_undef(WR_VAR(0, 31, 2));
+
+        // Temperature, dew-point and wind data at pressure levels
+        int group_count = 0;
+        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
+                i != msg.data.rend(); ++i)
+        {
+            // Iterate backwards to get pressure levels sorted from the higher
+            // to the lower pressure
+            const msg::Context* c = *i;
+            // Skip non-presure levels
+            if (c->level.ltype1 != 100) continue;
+            do_D03054(*c);
+            ++group_count;
+        }
+        subset[rep_count_pos].seti(group_count);
+
+        // Wind shear data
+        rep_count_pos = subset.size();
+        subset.store_variable_undef(WR_VAR(0, 31, 1));
+        group_count = 0;
+        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
+                i != msg.data.rend(); ++i)
+        {
+            // Iterate backwards to get pressure levels sorted from the higher
+            // to the lower pressure
+            const msg::Context* c = *i;
+            // Skip non-presure levels
+            if (c->level.ltype1 != 100) continue;
+            if (do_D03051(*c))
+                ++group_count;
+        }
+        subset[rep_count_pos].seti(group_count);
+    }
+};
+
+struct TempEcmwf : public TempBase
+{
+    TempEcmwf(const Exporter::Options& opts, const Msgs& msgs)
+        : TempBase(opts, msgs) {}
+
+    virtual const char* name() const { return TEMP_ECMWF_NAME; }
+    virtual const char* description() const { return TEMP_ECMWF_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -215,13 +311,13 @@ struct Temp : public TempBase
     }
 };
 
-struct TempShip : public TempBase
+struct TempEcmwfShip : public TempBase
 {
-    TempShip(const Exporter::Options& opts, const Msgs& msgs)
+    TempEcmwfShip(const Exporter::Options& opts, const Msgs& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return TEMP_SHIP_NAME; }
-    virtual const char* description() const { return TEMP_SHIP_DESC; }
+    virtual const char* name() const { return TEMP_ECMWF_SHIP_NAME; }
+    virtual const char* description() const { return TEMP_ECMWF_SHIP_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -308,16 +404,34 @@ struct TempFactory : public TemplateFactory
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Temp(opts, msgs));
+        return auto_ptr<Template>(new TempWMO(opts, msgs));
     }
 };
-struct TempShipFactory : public TemplateFactory
+struct TempWMOFactory : public TemplateFactory
 {
-    TempShipFactory() { name = TEMP_SHIP_NAME; description = TEMP_SHIP_DESC; }
+    TempWMOFactory() { name = TEMP_WMO_NAME; description = TEMP_WMO_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new TempShip(opts, msgs));
+        return auto_ptr<Template>(new TempWMO(opts, msgs));
+    }
+};
+struct TempEcmwfFactory : public TemplateFactory
+{
+    TempEcmwfFactory() { name = TEMP_ECMWF_NAME; description = TEMP_ECMWF_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new TempEcmwf(opts, msgs));
+    }
+};
+struct TempEcmwfShipFactory : public TemplateFactory
+{
+    TempEcmwfShipFactory() { name = TEMP_ECMWF_SHIP_NAME; description = TEMP_ECMWF_SHIP_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
 };
 
@@ -326,13 +440,19 @@ struct TempShipFactory : public TemplateFactory
 void register_temp(TemplateRegistry& r)
 {
 static const TemplateFactory* temp = NULL;
-static const TemplateFactory* tempship = NULL;
+static const TemplateFactory* tempwmo = NULL;
+static const TemplateFactory* tempecmwf = NULL;
+static const TemplateFactory* tempecmwfship = NULL;
 
     if (!temp) temp = new TempFactory;
-    if (!tempship) tempship = new TempShipFactory;
+    if (!tempwmo) tempwmo = new TempWMOFactory;
+    if (!tempecmwf) tempecmwf = new TempEcmwfFactory;
+    if (!tempecmwfship) tempecmwfship = new TempEcmwfShipFactory;
 
     r.register_factory(temp);
-    r.register_factory(tempship);
+    r.register_factory(tempwmo);
+    r.register_factory(tempecmwf);
+    r.register_factory(tempecmwfship);
 }
 
 }

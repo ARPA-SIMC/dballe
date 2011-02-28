@@ -22,9 +22,6 @@
 #include "msgs.h"
 #include "context.h"
 
-#warning remove when done with debugging
-#include <iostream>
-
 using namespace wreport;
 using namespace std;
 
@@ -470,52 +467,11 @@ struct SynopWMO : public Template
     virtual const char* name() const { return SYNOP_WMO_NAME; }
     virtual const char* description() const { return SYNOP_WMO_DESC; }
 
-    void add(Varcode code, int shortcut)
-    {
-        const Var* var = msg->find_by_id(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, const msg::Context& ctx, int shortcut)
-    {
-        const Var* var = ctx.find_by_id(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, const msg::Context& ctx, Varcode wanted_code)
-    {
-        if (const Var* var = ctx.find(wanted_code))
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, const msg::Context& ctx)
-    {
-        if (const Var* var = ctx.find(code))
-            subset->store_variable(*var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
-    {
-        const Var* var = msg->find(srccode, level, trange);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         Template::setupBulletin(bulletin);
+        if (!c_gnd_instant)
+            throw error_consistency("exporting synop: ground instant context not found");
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
@@ -998,27 +954,10 @@ struct SynopWMO : public Template
         }
 
         // D01090  Fixed surface identification, time, horizontal and vertical coordinates
-        add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
-        add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
-        // Set station name, truncating it if it's too long
-        if (const wreport::Var* var = msg.get_st_name_var())
-        {
-            Varinfo info = subset.btable->query(WR_VAR(0,  1, 15));
-            Var name(info);
-            if (var->value())
-                name.setc_truncate(var->value());
-            subset.store_variable(name);
-        }
-        else
-            subset.store_variable_undef(WR_VAR(0,  1, 15));
-        add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
-        add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
-        add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        do_D01004(); // station id
+        do_D01011(); // date
+        do_D01012(); // time
+        do_D01021(); // coordinates
         add(WR_VAR(0,  7, 30), DBA_MSG_HEIGHT);
         add(WR_VAR(0,  7, 31), DBA_MSG_HEIGHT_BARO);
         // D02031  Pressure data

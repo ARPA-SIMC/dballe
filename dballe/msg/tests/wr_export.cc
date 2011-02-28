@@ -466,9 +466,130 @@ void to::test<6>()
     }
 }
 
-// Re-export to BUFR and see the differences
+// Re-export test for old style temps
 template<> template<>
 void to::test<7>()
+{
+    {
+        BufrReimportTest test("bufr/obs2-101.16.bufr");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/obs2-102.1.bufr");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/obs2-91.2.bufr");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+}
+
+// Re-export test for new style temps
+template<> template<>
+void to::test<8>()
+{
+    {
+        BufrReimportTest test("bufr/temp-gts1.bufr");
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/temp-gts2.bufr");
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/temp-gts3.bufr");
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        //test.output_opts.template_name = "temp-ecmwf";
+        //test.clear_hooks();
+        //run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/temp-2-255.bufr");
+        test.hooks.push_back(new BufrReimportTest::TruncStName());
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/temp-bad1.bufr");
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/temp-bad2.bufr");
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/temp-bad3.bufr");
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/temp-bad4.bufr");
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/temp-bad5.bufr");
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+    {
+        BufrReimportTest test("bufr/tempforecast.bufr");
+        test.output_opts.template_name = "temp-wmo";
+        run_test(test, "auto");
+        test.output_opts.template_name = "temp-ecmwf";
+        test.clear_hooks();
+        run_test(test, "old");
+    }
+}
+
+// Re-export to BUFR and see the differences
+template<> template<>
+void to::test<9>()
 {
     const char** files = dballe::tests::bufr_files;
     vector<string> fails;
