@@ -238,7 +238,7 @@ void TempImporter::import_var(const Var& var)
         case WR_VAR(0,  7,  7): msg->set_height_release_var(var); break;
         case WR_VAR(0, 33, 24): msg->set_station_height_quality_var(var); break;
 /* Cloud information reported with vertical soundings */
-        case WR_VAR(0,  8,  2): msg->set(var, WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
+        case WR_VAR(0,  8,  2): msg->set(var, WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant()); break;
         case WR_VAR(0, 20, 10): msg->set_cloud_n_var(var); break;
         case WR_VAR(0, 20, 11): msg->set_cloud_nh_var(var); break;
         case WR_VAR(0, 20, 13): msg->set_cloud_hh_var(var); break;
@@ -253,8 +253,10 @@ void TempImporter::import_var(const Var& var)
             msg->set(var, WR_VAR(0, 20, 12), Level::cloud(258, l2), Trange::instant());
             break;
         }
+        case WR_VAR(0, 22, 43): msg->set_water_temp_var(var); break;
 /* Temperature, dew-point and wind data at pressure levels */
         // Long time period or displacement (since launch time)
+        case WR_VAR(0,  4, 16):
         case WR_VAR(0,  4, 86): msg->set(var, WR_VAR(0, 4, 86), Level(100, press), Trange::instant()); break;
         // Extended vertical sounding significance
         case WR_VAR(0,  8, 42): {
@@ -295,6 +297,7 @@ void TempImporter::import_var(const Var& var)
         // Geopotential
         case WR_VAR(0, 10,  3): msg->set(var, WR_VAR(0, 10, 8), Level(100, press), Trange::instant()); break;
         case WR_VAR(0, 10,  8): msg->set(var, WR_VAR(0, 10, 8), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0, 10,  9): msg->set(var, WR_VAR(0, 10, 8), Level(100, press), Trange::instant()); break;
         // Latitude displacement
         case WR_VAR(0,  5, 15): msg->set(var, WR_VAR(0, 5, 15), Level(100, press), Trange::instant()); break;
         // Longitude displacement
@@ -351,10 +354,12 @@ void TempImporter::import_group(unsigned start, unsigned length)
         const Var& var = (*subset)[start + i];
         switch (var.code())
         {
-            // Geopotential
-            case WR_VAR(0,  5,  2): msg->set(var, WR_VAR(0,  5,   1), lev, Trange::instant()); break;
-            case WR_VAR(0,  6,  2): msg->set(var, WR_VAR(0,  6,   1), lev, Trange::instant()); break;
+            case WR_VAR(0,  4, 16):
             case WR_VAR(0,  4, 86): msg->set(var, WR_VAR(0,  4,  86), lev, Trange::instant()); break;
+            case WR_VAR(0,  5,  2): msg->set(var, WR_VAR(0,  5,   1), lev, Trange::instant()); break;
+            case WR_VAR(0,  5, 15): msg->set(var, WR_VAR(0,  5,  15), lev, Trange::instant()); break;
+            case WR_VAR(0,  6,  2): msg->set(var, WR_VAR(0,  6,   1), lev, Trange::instant()); break;
+            case WR_VAR(0,  6, 15): msg->set(var, WR_VAR(0,  6,  15), lev, Trange::instant()); break;
             case WR_VAR(0,  8,  1):
                 {
                     // This account for weird data that has '1' for VSS
@@ -369,6 +374,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
                 break;
             case WR_VAR(0,  8, 42): msg->set(var, WR_VAR(0,  8,  42), lev, Trange::instant()); break;
             case WR_VAR(0, 10,  3): msg->set(var, WR_VAR(0, 10,   8), lev, Trange::instant()); break;
+            case WR_VAR(0, 10,  9): msg->set(var, WR_VAR(0, 10,   8), lev, Trange::instant()); break;
             case WR_VAR(0, 12,  1): msg->set(var, WR_VAR(0, 12, 101), lev, Trange::instant()); break;
             case WR_VAR(0, 12,  3): msg->set(var, WR_VAR(0, 12, 103), lev, Trange::instant()); break;
             default:

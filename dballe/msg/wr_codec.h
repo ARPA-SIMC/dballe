@@ -113,13 +113,13 @@ protected:
     virtual void setupBulletin(wreport::Bulletin& bulletin);
     virtual void to_subset(const Msg& msg, wreport::Subset& subset);
 
-    void add(wreport::Varcode code, const msg::Context& ctx, int shortcut) const;
-    void add(wreport::Varcode code, const msg::Context& ctx, wreport::Varcode srccode) const;
-    void add(wreport::Varcode code, const msg::Context& ctx) const;
+    void add(wreport::Varcode code, const msg::Context* ctx, int shortcut) const;
+    void add(wreport::Varcode code, const msg::Context* ctx, wreport::Varcode srccode) const;
+    void add(wreport::Varcode code, const msg::Context* ctx) const;
     void add(wreport::Varcode code, int shortcut) const;
     void add(wreport::Varcode code, wreport::Varcode srccode, const Level& level, const Trange& trange) const;
     // Set station name, truncating it if it's too long
-    void add_st_name(wreport::Varcode dstcode, const msg::Context& ctx) const;
+    void add_st_name(wreport::Varcode dstcode, const msg::Context* ctx) const;
 
     void do_D01001() const;
     void do_D01004() const;

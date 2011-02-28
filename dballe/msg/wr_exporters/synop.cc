@@ -470,8 +470,6 @@ struct SynopWMO : public Template
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         Template::setupBulletin(bulletin);
-        if (!c_gnd_instant)
-            throw error_consistency("exporting synop: ground instant context not found");
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
@@ -567,9 +565,9 @@ struct SynopWMO : public Template
                 add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, i), Trange::instant());
                 if (const msg::Context* c = msg.find_context(Level::cloud(259, i), Trange::instant()))
                 {
-                    add(WR_VAR(0, 20, 11), *c, DBA_MSG_CLOUD_N1);
-                    add(WR_VAR(0, 20, 12), *c, DBA_MSG_CLOUD_C1);
-                    add(WR_VAR(0, 20, 13), *c, DBA_MSG_CLOUD_H1);
+                    add(WR_VAR(0, 20, 11), c, DBA_MSG_CLOUD_N1);
+                    add(WR_VAR(0, 20, 12), c, DBA_MSG_CLOUD_C1);
+                    add(WR_VAR(0, 20, 13), c, DBA_MSG_CLOUD_H1);
                 } else {
                     subset.store_variable_undef(WR_VAR(0, 20, 11));
                     subset.store_variable_undef(WR_VAR(0, 20, 12));
@@ -596,18 +594,11 @@ struct SynopWMO : public Template
         for (int i = 1; i <= max_cloud_group; ++i)
         {
             add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(263, i), Trange::instant());
-            if (const msg::Context* c = msg.find_context(Level::cloud(263, i), Trange::instant()))
-            {
-                add(WR_VAR(0, 20, 11), *c);
-                add(WR_VAR(0, 20, 12), *c);
-                add(WR_VAR(0, 20, 14), *c);
-                add(WR_VAR(0, 20, 17), *c);
-            } else {
-                subset.store_variable_undef(WR_VAR(0, 20, 11));
-                subset.store_variable_undef(WR_VAR(0, 20, 12));
-                subset.store_variable_undef(WR_VAR(0, 20, 14));
-                subset.store_variable_undef(WR_VAR(0, 20, 17));
-            }
+            const msg::Context* c = msg.find_context(Level::cloud(263, i), Trange::instant());
+            add(WR_VAR(0, 20, 11), c);
+            add(WR_VAR(0, 20, 12), c);
+            add(WR_VAR(0, 20, 14), c);
+            add(WR_VAR(0, 20, 17), c);
         }
     }
 
@@ -986,12 +977,11 @@ struct SynopWMO : public Template
             else
                 subset.store_variable_undef(WR_VAR(0,  4, 24));
             add(WR_VAR(0,  2,  4), WR_VAR(0,  2,  4), Level(1), Trange::instant());
-            add(WR_VAR(0, 13, 33), *c_evapo);
         } else {
             subset.store_variable_undef(WR_VAR(0,  4, 24));
             add(WR_VAR(0,  2,  4), WR_VAR(0,  2,  4), Level(1), Trange::instant());
-            subset.store_variable_undef(WR_VAR(0, 13, 33));
         }
+        add(WR_VAR(0, 13, 33), c_evapo);
 
         // D02045  Radiation data (1 hour period)
         subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO

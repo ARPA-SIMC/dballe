@@ -19,11 +19,9 @@
 
 #include "wr_codec.h"
 #include <wreport/bulletin.h>
+#include <wreport/conv.h>
 #include "msgs.h"
 #include "context.h"
-
-#warning TODO
-#include <iostream>
 
 using namespace wreport;
 using namespace std;
@@ -91,14 +89,18 @@ struct TempBase : public Template
                 subset->store_variable_d(WR_VAR(0,  7,  4), press);
 
             /* Add vertical sounding significance */
-            subset->store_variable(WR_VAR(0,  8,  1), *vss);
+            {
+                Var nvar(subset->btable->query(WR_VAR(0, 8, 1)), convert_BUFR08042_to_BUFR08001(vss->enqi()));
+                nvar.copy_attrs(*vss);
+                subset->store_variable(WR_VAR(0, 8, 1), nvar);
+            }
 
             /* Add the rest */
-            add(WR_VAR(0, 10, 3), c, WR_VAR(0, 10,   8));
-            add(WR_VAR(0, 12, 1), c, WR_VAR(0, 12, 101));
-            add(WR_VAR(0, 12, 3), c, WR_VAR(0, 12, 103));
-            add(WR_VAR(0, 11, 1), c, WR_VAR(0, 11,   1));
-            add(WR_VAR(0, 11, 2), c, WR_VAR(0, 11,   2));
+            add(WR_VAR(0, 10, 3), &c, WR_VAR(0, 10,   8));
+            add(WR_VAR(0, 12, 1), &c, WR_VAR(0, 12, 101));
+            add(WR_VAR(0, 12, 3), &c, WR_VAR(0, 12, 103));
+            add(WR_VAR(0, 11, 1), &c, WR_VAR(0, 11,   1));
+            add(WR_VAR(0, 11, 2), &c, WR_VAR(0, 11,   2));
         }
 
         return count;
@@ -147,49 +149,47 @@ struct TempWMO : public TempBase
 
     void do_D03054(const msg::Context& c)
     {
-        subset->store_variable_undef(WR_VAR(0, 4, 86)); // TODO
-        subset->store_variable_undef(WR_VAR(0, 8, 42)); // TODO
+        add(WR_VAR(0,  4,  86), &c);
+        add(WR_VAR(0,  8,  42), &c);
         subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
-        add(WR_VAR(0, 10, 9), c, WR_VAR(0, 10, 8));
-        subset->store_variable_undef(WR_VAR(0, 5, 15)); // TODO
-        subset->store_variable_undef(WR_VAR(0, 6, 15)); // TODO
-        add(WR_VAR(0, 12, 101), c);
-        add(WR_VAR(0, 12, 103), c);
-        add(WR_VAR(0, 11,   1), c);
-        add(WR_VAR(0, 11,   2), c);
+        add(WR_VAR(0, 10,   9), &c, WR_VAR(0, 10, 8));
+        add(WR_VAR(0,  5,  15), &c);
+        add(WR_VAR(0,  6,  15), &c);
+        add(WR_VAR(0, 12, 101), &c);
+        add(WR_VAR(0, 12, 103), &c);
+        add(WR_VAR(0, 11,   1), &c);
+        add(WR_VAR(0, 11,   2), &c);
     }
 
     bool do_D03051(const msg::Context& c)
     {
-        subset->store_variable_undef(WR_VAR(0, 4, 86)); // TODO
-        subset->store_variable_undef(WR_VAR(0, 8, 42)); // TODO
+        add(WR_VAR(0,  4, 86), &c);
+        add(WR_VAR(0,  8, 42), &c);
         subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
-        subset->store_variable_undef(WR_VAR(0, 5, 15)); // TODO
-        subset->store_variable_undef(WR_VAR(0, 6, 15)); // TODO
-        add(WR_VAR(0, 11, 61), c);
-        add(WR_VAR(0, 11, 62), c);
+        add(WR_VAR(0,  5, 15), &c);
+        add(WR_VAR(0,  6, 15), &c);
+        add(WR_VAR(0, 11, 61), &c);
+        add(WR_VAR(0, 11, 62), &c);
         return true;
     }
 
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         TempBase::to_subset(msg, subset);
-        if (!c_gnd_instant)
-            throw error_consistency("exporting synop: ground instant context not found");
         do_D01001(); // station id
-        add(WR_VAR(0,  1, 11), *c_station, DBA_MSG_IDENT);
-        add(WR_VAR(0,  2, 11), *c_gnd_instant, DBA_MSG_SONDE_TYPE);
-        add(WR_VAR(0,  2, 13), *c_gnd_instant, DBA_MSG_SONDE_CORRECTION);
-        add(WR_VAR(0,  2, 14), *c_gnd_instant, DBA_MSG_SONDE_TRACKING);
-        add(WR_VAR(0,  2,  3), *c_gnd_instant, DBA_MSG_MEAS_EQUIP_TYPE);
+        add(WR_VAR(0,  1, 11), c_station, DBA_MSG_IDENT);
+        add(WR_VAR(0,  2, 11), c_gnd_instant, DBA_MSG_SONDE_TYPE);
+        add(WR_VAR(0,  2, 13), c_gnd_instant, DBA_MSG_SONDE_CORRECTION);
+        add(WR_VAR(0,  2, 14), c_gnd_instant, DBA_MSG_SONDE_TRACKING);
+        add(WR_VAR(0,  2,  3), c_gnd_instant, DBA_MSG_MEAS_EQUIP_TYPE);
         subset.store_variable_i(WR_VAR(0, 8, 21), 18);
         do_D01011(); // date
         do_D01013(); // time
         do_D01021(); // coordinates
-        add(WR_VAR(0,  7, 30), *c_gnd_instant, DBA_MSG_HEIGHT);
-        add(WR_VAR(0,  7, 31), *c_gnd_instant, DBA_MSG_HEIGHT_BARO);
-        add(WR_VAR(0,  7,  7), *c_gnd_instant, DBA_MSG_HEIGHT_RELEASE);
-        add(WR_VAR(0, 33, 24), *c_gnd_instant, DBA_MSG_STATION_HEIGHT_QUALITY);
+        add(WR_VAR(0,  7, 30), c_station, DBA_MSG_HEIGHT);
+        add(WR_VAR(0,  7, 31), c_station, DBA_MSG_HEIGHT_BARO);
+        add(WR_VAR(0,  7,  7), c_station, DBA_MSG_HEIGHT_RELEASE);
+        add(WR_VAR(0, 33, 24), c_station, DBA_MSG_STATION_HEIGHT_QUALITY);
 
         // Cloud information reported with vertical soundings
         add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
@@ -404,7 +404,7 @@ struct TempFactory : public TemplateFactory
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new TempWMO(opts, msgs));
+        return auto_ptr<Template>(new TempEcmwf(opts, msgs));
     }
 };
 struct TempWMOFactory : public TemplateFactory

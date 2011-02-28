@@ -278,26 +278,31 @@ void Template::to_subset(const Msg& msg, wreport::Subset& subset)
     this->c_gnd_instant = msg.find_context(Level(1), Trange::instant());
 }
 
-void Template::add(Varcode code, const msg::Context& ctx, int shortcut) const
+void Template::add(Varcode code, const msg::Context* ctx, int shortcut) const
 {
-    const Var* var = ctx.find_by_id(shortcut);
-    if (var)
+    if (!ctx)
+        subset->store_variable_undef(code);
+    else if (const Var* var = ctx->find_by_id(shortcut))
         subset->store_variable(code, *var);
     else
         subset->store_variable_undef(code);
 }
 
-void Template::add(Varcode code, const msg::Context& ctx, Varcode srccode) const
+void Template::add(Varcode code, const msg::Context* ctx, Varcode srccode) const
 {
-    if (const Var* var = ctx.find(srccode))
+    if (!ctx)
+        subset->store_variable_undef(code);
+    else if (const Var* var = ctx->find(srccode))
         subset->store_variable(code, *var);
     else
         subset->store_variable_undef(code);
 }
 
-void Template::add(Varcode code, const msg::Context& ctx) const
+void Template::add(Varcode code, const msg::Context* ctx) const
 {
-    if (const Var* var = ctx.find(code))
+    if (!ctx)
+        subset->store_variable_undef(code);
+    else if (const Var* var = ctx->find(code))
         subset->store_variable(*var);
     else
         subset->store_variable_undef(code);
@@ -305,8 +310,7 @@ void Template::add(Varcode code, const msg::Context& ctx) const
 
 void Template::add(Varcode code, int shortcut) const
 {
-    const Var* var = msg->find_by_id(shortcut);
-    if (var)
+    if (const Var* var = msg->find_by_id(shortcut))
         subset->store_variable(code, *var);
     else
         subset->store_variable_undef(code);
@@ -321,9 +325,11 @@ void Template::add(Varcode code, Varcode srccode, const Level& level, const Tran
         subset->store_variable_undef(code);
 }
 
-void Template::add_st_name(wreport::Varcode dstcode, const msg::Context& ctx) const
+void Template::add_st_name(wreport::Varcode dstcode, const msg::Context* ctx) const
 {
-    if (const wreport::Var* var = msg->get_st_name_var())
+    if (!ctx)
+        subset->store_variable_undef(dstcode);
+    else if (const wreport::Var* var = ctx->find_by_id(DBA_MSG_ST_NAME))
     {
         Varinfo info = subset->btable->query(dstcode);
         Var name(info);
@@ -337,40 +343,40 @@ void Template::add_st_name(wreport::Varcode dstcode, const msg::Context& ctx) co
 
 void Template::do_D01001() const
 {
-    add(WR_VAR(0,  1,  1), *c_station, DBA_MSG_BLOCK);
-    add(WR_VAR(0,  1,  2), *c_station, DBA_MSG_STATION);
+    add(WR_VAR(0,  1,  1), c_station, DBA_MSG_BLOCK);
+    add(WR_VAR(0,  1,  2), c_station, DBA_MSG_STATION);
 }
 
 void Template::do_D01004() const
 {
     do_D01001();
-    add_st_name(WR_VAR(0, 1, 15), *c_station);
-    add(WR_VAR(0,  2,  1), *c_station, DBA_MSG_ST_TYPE);
+    add_st_name(WR_VAR(0, 1, 15), c_station);
+    add(WR_VAR(0,  2,  1), c_station, DBA_MSG_ST_TYPE);
 }
 
 void Template::do_D01011() const
 {
-    add(WR_VAR(0,  4,  1), *c_station, DBA_MSG_YEAR);
-    add(WR_VAR(0,  4,  2), *c_station, DBA_MSG_MONTH);
-    add(WR_VAR(0,  4,  3), *c_station, DBA_MSG_DAY);
+    add(WR_VAR(0,  4,  1), c_station, DBA_MSG_YEAR);
+    add(WR_VAR(0,  4,  2), c_station, DBA_MSG_MONTH);
+    add(WR_VAR(0,  4,  3), c_station, DBA_MSG_DAY);
 }
 
 void Template::do_D01012() const
 {
-    add(WR_VAR(0,  4,  4), *c_station, DBA_MSG_HOUR);
-    add(WR_VAR(0,  4,  5), *c_station, DBA_MSG_MINUTE);
+    add(WR_VAR(0,  4,  4), c_station, DBA_MSG_HOUR);
+    add(WR_VAR(0,  4,  5), c_station, DBA_MSG_MINUTE);
 }
 
 void Template::do_D01013() const
 {
     do_D01012();
-    add(WR_VAR(0,  4,  6), *c_station, DBA_MSG_SECOND);
+    add(WR_VAR(0,  4,  6), c_station, DBA_MSG_SECOND);
 }
 
 void Template::do_D01021() const
 {
-    add(WR_VAR(0,  5,  1), *c_station, DBA_MSG_LATITUDE);
-    add(WR_VAR(0,  6,  1), *c_station, DBA_MSG_LONGITUDE);
+    add(WR_VAR(0,  5,  1), c_station, DBA_MSG_LATITUDE);
+    add(WR_VAR(0,  6,  1), c_station, DBA_MSG_LONGITUDE);
 }
 
 } // namespace wr
