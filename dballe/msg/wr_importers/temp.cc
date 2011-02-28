@@ -282,10 +282,10 @@ void TempImporter::import_var(const Var& var)
         case WR_VAR(0,  8,  1):
             {
                 // This account for weird data that has '1' for VSS
-                int val = convert_BUFR08001_to_BUFR08042(var.enqi());
+                unsigned val = convert_BUFR08001_to_BUFR08042(var.enqi());
                 if (val != BUFR08042::ALL_MISSING)
                 {
-                    auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), val));
+                    auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
                     nvar->copy_attrs(var);
                     msg->set(nvar, Level(100, press), Trange::instant());
                 }
@@ -365,10 +365,10 @@ void TempImporter::import_group(unsigned start, unsigned length)
             case WR_VAR(0,  8,  1):
                 {
                     // This account for weird data that has '1' for VSS
-                    int val = convert_BUFR08001_to_BUFR08042(var.enqi());
+                    unsigned val = convert_BUFR08001_to_BUFR08042(var.enqi());
                     if (val != BUFR08042::ALL_MISSING)
                     {
-                        auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), val));
+                        auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
                         nvar->copy_attrs(var);
                         msg->set(nvar, lev, Trange::instant());
                     }
