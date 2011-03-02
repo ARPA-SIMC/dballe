@@ -293,7 +293,7 @@ struct ReimportTest
 
         // Run hooks
         for (typename vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
-            (*i)->clean_second(*msgs2);
+            (*i)->clean_second(*msgs3);
 
         // Compare
         int diffs = msgs1->diff(*msgs3, stdout);
