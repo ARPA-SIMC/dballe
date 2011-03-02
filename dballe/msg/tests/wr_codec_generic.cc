@@ -87,7 +87,7 @@ void to::test<2>()
 	msg->set_wind_speed(		15,	45);
 	msg->set_ex_ccw_wind(	15,	45);
 	msg->set_ex_cw_wind(		15,	45);
-	msg->set_wind_max(		15,	45);
+	msg->set_wind_max_speed(	15,	45);
 	msg->set_cloud_n(		3,		45);
 	msg->set_cloud_nh(		10,	45);
 	msg->set_cloud_hh(		3,		45);
