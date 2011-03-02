@@ -200,9 +200,11 @@ struct Generic : public Template
                 // Store the attributes
                 for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
                 {
+                    // Skip non-B33yyy attributes, as they won't be decoded properly
                     if (WR_VAR_X(attr->code()) != 33)
-                        error_consistency::throwf("attempt to encode attribute B%02d%03d which is not B33YYY",
-                                WR_VAR_X(attr->code()), WR_VAR_Y(attr->code()));
+                        continue;
+                        //error_consistency::throwf("attempt to encode attribute B%02d%03d which is not B33YYY",
+                        //        WR_VAR_X(attr->code()), WR_VAR_Y(attr->code()));
                     subset.store_variable(attr->code(), *attr);
                 }
             }
