@@ -787,12 +787,8 @@ struct SynopWMO : public Template
             if (!has_h)
                 subset.store_variable_d(WR_VAR(0,  7, 32), c_first->level.l1 / 1000.0);
 
-            if (const Var* var = msg.find(WR_VAR(0,  2,  2), c_first->level, Trange::instant()))
-                subset.store_variable(*var);
-            else
-                subset.store_variable_undef(WR_VAR(0,  2,  2));
-
-            subset.store_variable_i(WR_VAR(0,  8, 21), 2);
+            add(WR_VAR(0, 2, 2), DBA_MSG_WIND_INST);
+            subset.store_variable_i(WR_VAR(0, 8, 21), 2);
 
             if (c_wind)
             {

@@ -472,7 +472,7 @@ void SynopImporter::import_var(const Var& var)
             throw error_unimplemented("wow, a synop with extreme temperature info, please give it to Enrico");
 
 /* Wind data (complete) */
-        case WR_VAR(0, 2, 2): set_gen_sensor(var, DBA_MSG_WIND_INST, lev_std_wind, Trange::instant()); break;
+        case WR_VAR(0, 2, 2): msg->set_wind_inst_var(var); break;
 
         /* Note B/C 1.10.5.3.2 Calm shall be reported by
          * setting wind direction to 0 and wind speed to 0.
