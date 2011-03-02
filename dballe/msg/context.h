@@ -136,7 +136,7 @@ public:
      * @return
      *   The variable removed, or NULL if it was not found.
      */
-    wreport::Var* remove(wreport::Varcode code);
+    bool remove(wreport::Varcode code);
 
     /** 
      * Find a variable given its shortcut ID
