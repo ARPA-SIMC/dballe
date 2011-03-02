@@ -128,6 +128,16 @@ public:
      */
     wreport::Var* edit(wreport::Varcode code);
 
+    /**
+     * Remove a variable given its varcode
+     *
+     * @param code
+     *   The wreport::Varcode of the variable to query.  See @ref vartable.h
+     * @return
+     *   The variable removed, or NULL if it was not found.
+     */
+    wreport::Var* remove(wreport::Varcode code);
+
     /** 
      * Find a variable given its shortcut ID
      *

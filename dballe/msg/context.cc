@@ -162,6 +162,15 @@ Var* Context::edit(Varcode code)
     return (idx == -1) ? NULL : data[idx];
 }
 
+Var* Context::remove(Varcode code)
+{
+    int idx = find_index(code);
+    if (idx == -1) return NULL;
+    Var* res = data[idx];
+    data.erase(data.begin() + idx);
+    return res;
+}
+
 const Var* Context::find_by_id(int id) const
 {
     return find(shortcutTable[id].code);
