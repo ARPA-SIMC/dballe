@@ -83,6 +83,41 @@ struct ReimportTest
         virtual void clean_second(Msgs& msgs) { if (second) do_strip(msgs); };
     };
 
+    // Round variables to account for a passage through legacy vars
+    struct RoundLegacyVarsHook : public Hook
+    {
+        const Vartable* table;
+        bool first, second;
+        RoundLegacyVarsHook(bool first=true, bool second=true)
+            : table(NULL), first(first), second(second)
+        {
+            table = Vartable::get("B0000000000000014000");
+        }
+        void do_round(Msgs& msgs)
+        {
+            for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+            {
+                Msg& m = **mi;
+                for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+                {
+                    msg::Context& c = **ci;
+                    if (Var* var = c.edit(WR_VAR(0, 12, 101)))
+                    {
+                        Var var1(table->query(WR_VAR(0, 12, 1)), *var);
+                        var->set(var1);
+                    }
+                    if (Var* var = c.edit(WR_VAR(0, 12, 103)))
+                    {
+                        Var var1(table->query(WR_VAR(0, 12, 3)), *var);
+                        var->set(var1);
+                    }
+                }
+            }
+        }
+        virtual void clean_first(Msgs& msgs) { if (first) do_round(msgs); };
+        virtual void clean_second(Msgs& msgs) { if (second) do_round(msgs); };
+    };
+
     // Truncate station name to its canonical length
     struct TruncStName : public Hook
     {
@@ -173,10 +208,9 @@ struct ReimportTest
         clear_hooks();
     }
 
-    void do_test(const dballe::tests::Location& loc)
+    void do_test(const dballe::tests::Location& loc, const char* tname1, const char* tname2=NULL)
     {
         std::auto_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
-        std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
 
         // Import
         msgs1 = inner_read_msgs_opts(fname.c_str(), type, input_opts);
@@ -189,6 +223,8 @@ struct ReimportTest
         // Export
         B bulletin;
         try {
+            output_opts.template_name = tname1;
+            std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
             exporter->to_bulletin(*msgs1, bulletin);
         } catch (std::exception& e) {
             dump("bul1", bulletin);
@@ -196,6 +232,7 @@ struct ReimportTest
             throw tut::failure(loc.msg(e.what()));
         }
 
+        // Encode
         Rawmsg rawmsg;
         try {
             bulletin.encode(rawmsg);
@@ -216,6 +253,42 @@ struct ReimportTest
             throw tut::failure(loc.msg(e.what()));
         }
 
+        if (tname2)
+        {
+            // Export
+            B bulletin;
+            try {
+                output_opts.template_name = tname2;
+                std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
+                exporter->to_bulletin(*msgs2, bulletin);
+            } catch (std::exception& e) {
+                dump("bul2", bulletin);
+                dump("msg2", *msgs1);
+                throw tut::failure(loc.msg(e.what()));
+            }
+
+            // Encode
+            Rawmsg rawmsg;
+            try {
+                bulletin.encode(rawmsg);
+                //exporter->to_rawmsg(*msgs1, rawmsg);
+            } catch (std::exception& e) {
+                dump("bul2", bulletin);
+                dump("msg2", *msgs1);
+                throw tut::failure(loc.msg(e.what()));
+            }
+
+            // Import again
+            msgs2.reset(new Msgs);
+            try {
+                importer->from_rawmsg(rawmsg, *msgs2);
+            } catch (std::exception& e) {
+                dump("msg2", *msgs1);
+                dump("raw2", rawmsg);
+                throw tut::failure(loc.msg(e.what()));
+            }
+        }
+
         // Run hooks
         for (typename vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
             (*i)->clean_second(*msgs2);
@@ -233,7 +306,7 @@ struct ReimportTest
 };
 typedef ReimportTest<BufrBulletin> BufrReimportTest;
 typedef ReimportTest<CrexBulletin> CrexReimportTest;
-#define run_test(obj, name) obj.do_test(wibble::tests::Location(__FILE__, __LINE__, (obj.fname + " " + name).c_str()))
+#define run_test(obj, ...) obj.do_test(wibble::tests::Location(__FILE__, __LINE__, (obj.fname + " " #__VA_ARGS__).c_str()), __VA_ARGS__)
 
 
 
@@ -359,29 +432,23 @@ void to::test<5>()
     {
         BufrReimportTest test("bufr/obs0-1.22.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "synop-ecmwf";
+        run_test(test, "synop-wmo");
         test.clear_hooks();
-        run_test(test, "old");
+        run_test(test, "synop-ecmwf");
     }
     {
         BufrReimportTest test("bufr/obs0-1.11188.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "synop-ecmwf";
+        run_test(test, "synop-wmo");
         test.clear_hooks();
-        run_test(test, "old");
+        run_test(test, "synop-ecmwf");
     }
     {
         BufrReimportTest test("bufr/obs0-3.504.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "synop-ecmwf";
+        run_test(test, "synop-wmo");
         test.clear_hooks();
-        run_test(test, "old");
+        run_test(test, "synop-ecmwf");
     }
 //    {
 //        BufrReimportTest test("bufr/synop-old-buoy.bufr");
@@ -400,69 +467,60 @@ void to::test<6>()
 {
     {
         BufrReimportTest test("bufr/synop-cloudbelow.bufr");
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "synop-ecmwf";
-        //test.clear_hooks();
-        //test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
-        //run_test(test, "old");
+        run_test(test, "synop-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
         BufrReimportTest test("bufr/synop-evapo.bufr");
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "synop-ecmwf";
-        //test.clear_hooks();
-        //run_test(test, "old");
+        run_test(test, "synop-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
         BufrReimportTest test("bufr/synop-groundtemp.bufr");
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "synop-ecmwf";
-        //test.clear_hooks();
-        //run_test(test, "old");
+        run_test(test, "synop-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
         BufrReimportTest test("bufr/synop-longname.bufr");
-        test.hooks.push_back(new BufrReimportTest::TruncStName());
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "synop-ecmwf";
-        //test.clear_hooks();
-        //run_test(test, "old");
+        run_test(test, "synop-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
         BufrReimportTest test("bufr/synop-oddgust.bufr");
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "synop-ecmwf";
-        //test.clear_hooks();
-        //run_test(test, "old");
+        run_test(test, "synop-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
         BufrReimportTest test("bufr/synop-oddprec.bufr");
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "synop-ecmwf";
-        //test.clear_hooks();
-        //run_test(test, "old");
+        run_test(test, "synop-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
         BufrReimportTest test("bufr/synop-strayvs.bufr");
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "synop-ecmwf";
-        //test.clear_hooks();
-        //run_test(test, "old");
+        run_test(test, "synop-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
         BufrReimportTest test("bufr/synop-sunshine.bufr");
-        test.output_opts.template_name = "synop-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "synop-ecmwf";
-        //test.clear_hooks();
-        //run_test(test, "old");
+        run_test(test, "synop-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "synop-ecmwf", "synop-wmo");
     }
 }
 
@@ -473,29 +531,23 @@ void to::test<7>()
     {
         BufrReimportTest test("bufr/obs2-101.16.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "temp-ecmwf";
+        run_test(test, "temp-wmo", "temp-ecmwf");
         test.clear_hooks();
-        run_test(test, "old");
+        run_test(test, "temp-ecmwf");
     }
     {
         BufrReimportTest test("bufr/obs2-102.1.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "temp-ecmwf";
+        run_test(test, "temp-wmo", "temp-ecmwf");
         test.clear_hooks();
-        run_test(test, "old");
+        run_test(test, "temp-ecmwf");
     }
     {
         BufrReimportTest test("bufr/obs2-91.2.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "temp-ecmwf";
+        run_test(test, "temp-wmo", "temp-ecmwf");
         test.clear_hooks();
-        run_test(test, "old");
+        run_test(test, "temp-ecmwf");
     }
 }
 
@@ -505,28 +557,24 @@ void to::test<8>()
 {
     {
         BufrReimportTest test("bufr/temp-gts1.bufr");
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "temp-ecmwf";
-        //test.clear_hooks();
-        //test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
-        //run_test(test, "old");
+        run_test(test, "temp-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "temp-ecmwf", "temp-wmo");
     }
     {
         BufrReimportTest test("bufr/temp-gts2.bufr");
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "temp-ecmwf";
-        //test.clear_hooks();
-        //run_test(test, "old");
+        run_test(test, "temp-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "temp-ecmwf", "temp-wmo");
     }
     {
         BufrReimportTest test("bufr/temp-gts3.bufr");
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        //test.output_opts.template_name = "temp-ecmwf";
-        //test.clear_hooks();
-        //run_test(test, "old");
+        run_test(test, "temp-wmo");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "temp-ecmwf", "temp-wmo");
     }
     //{
     //    BufrReimportTest test("bufr/temp-2-255.bufr");
@@ -558,35 +606,31 @@ void to::test<8>()
     {
         BufrReimportTest test("bufr/temp-bad3.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "temp-ecmwf";
+        run_test(test, "temp-wmo");
         test.clear_hooks();
-        run_test(test, "old");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "temp-ecmwf", "temp-wmo");
     }
     {
         BufrReimportTest test("bufr/temp-bad4.bufr");
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "temp-ecmwf";
+        run_test(test, "temp-wmo");
         test.clear_hooks();
-        run_test(test, "old");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "temp-ecmwf", "temp-wmo");
     }
     {
         BufrReimportTest test("bufr/temp-bad5.bufr");
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "temp-ecmwf";
+        run_test(test, "temp-wmo");
         test.clear_hooks();
-        run_test(test, "old");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "temp-ecmwf", "temp-wmo");
     }
     {
         BufrReimportTest test("bufr/tempforecast.bufr");
-        test.output_opts.template_name = "temp-wmo";
-        run_test(test, "auto");
-        test.output_opts.template_name = "temp-ecmwf";
+        run_test(test, "temp-wmo");
         test.clear_hooks();
-        run_test(test, "old");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "temp-ecmwf", "temp-wmo");
     }
 }
 
