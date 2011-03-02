@@ -39,9 +39,12 @@ namespace wr {
 
 namespace {
 
+static const Level lev_ground(1);
 static const Level lev_std_wind(103, 10*1000);
 static const Trange tr_std_wind(200, 0, 600);
 static const Trange tr_std_wind_max10m(205, 0, 600);
+static const Trange tr_std_past_wtr3(205, 0, 10800);
+static const Trange tr_std_past_wtr6(205, 0, 21600);
 
 class SynopImporter : public WMOImporter
 {
@@ -53,10 +56,128 @@ protected:
     int vs;
     int time_period;
     int time_sig;
+    int hour;
+
+    // Import builder parts
+    const MsgVarShortcut* v;
+    Var* temp_var;
+    Level chosen_lev;
+    Trange chosen_tr;
+    const Var* chosen_var;
 
     void peek_var(const Var& var);
     void import_var_undef(const Var& var);
     void import_var(const Var& var);
+
+    void ib_start(int shortcut, const Var& var)
+    {
+        v = &shortcutTable[shortcut];
+        chosen_var = &var;
+        if (temp_var)
+        {
+            delete temp_var;
+            temp_var = 0;
+        }
+    }
+
+    Level lev_real() const
+    {
+        return height_sensor == MISSING_SENSOR_H ?
+            Level(103) :
+            Level(103, height_sensor * 1000);
+    }
+
+    Trange tr_real(const Trange& standard) const
+    {
+        return time_period == MISSING_INT ?
+            Trange(standard.pind, 0) :
+            Trange(standard.pind, 0, -time_period);
+    }
+
+    Level lev_shortcut() const { return Level(v->ltype1, v->l1, v->ltype2, v->l2); }
+    Trange tr_shortcut() const { return Trange(v->pind, v->p1, v->p2); }
+
+    void ib_use_temp_var()
+    {
+        if (!temp_var)
+        {
+            temp_var = new Var(*chosen_var);
+            chosen_var = temp_var;
+        }
+    }
+    void ib_annotate_level()
+    {
+        if (height_sensor == MISSING_SENSOR_H) return;
+        ib_use_temp_var();
+        temp_var->seta(newvar(WR_VAR(0, 7, 32), height_sensor));
+    }
+    void ib_annotate_trange()
+    {
+        if (time_period == MISSING_INT) return;
+        ib_use_temp_var();
+        temp_var->seta(newvar(WR_VAR(0, 4, 194), -time_period));
+    }
+
+    void ib_level_use_real() { chosen_lev = lev_real(); }
+    void ib_trange_use_real(const Trange& standard) { chosen_tr = tr_real(standard); }
+
+    void ib_level_use_shorcut_and_discard_rest() { chosen_lev = lev_shortcut(); }
+    void ib_trange_use_shortcut_and_discard_rest() { chosen_tr = tr_shortcut(); }
+
+    void ib_level_use_shorcut_and_preserve_rest(const Level& standard)
+    {
+        chosen_lev = lev_shortcut();
+        Level real = lev_real();
+        if (real != chosen_lev && real != standard)
+            ib_annotate_level();
+    }
+
+    void ib_trange_use_shorcut_and_preserve_rest(const Trange& standard)
+    {
+        chosen_tr = tr_shortcut();
+        Trange real = tr_real(standard);
+        if (real != chosen_tr && real != standard)
+            ib_annotate_trange();
+    }
+
+    void ib_level_use_standard_and_preserve_rest(const Level& standard)
+    {
+        chosen_lev = standard;
+        if (chosen_lev != lev_real())
+            ib_annotate_level();
+    }
+
+    void ib_trange_use_standard_and_preserve_rest(const Trange& standard)
+    {
+        chosen_tr = standard;
+        if (chosen_tr != tr_real(standard))
+            ib_annotate_trange();
+    }
+
+    void ib_level_use_shorcut_if_standard_else_real(const Level& standard)
+    {
+        Level shortcut = lev_shortcut();
+        Level real = lev_real();
+        if (real == shortcut || real == standard)
+            chosen_lev = shortcut;
+        else
+            chosen_lev = real;
+    }
+
+    void ib_trange_use_shorcut_if_standard_else_real(const Trange& standard)
+    {
+        Trange shortcut = tr_shortcut();
+        Trange real = tr_real(standard);
+        if (real == shortcut || real == standard)
+            chosen_tr = shortcut;
+        else
+            chosen_tr = real;
+    }
+
+    void ib_set()
+    {
+        msg->set(*chosen_var, v->code, chosen_lev, chosen_tr);
+    }
 
     void set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
     {
@@ -78,57 +199,38 @@ protected:
         set_gen_sensor(var, v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
     }
 
+    void set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful=false)
+    {
+        ib_start(shortcut, var);
+        ib_level_use_shorcut_and_discard_rest();
+        if (!opts.simplified)
+            ib_trange_use_real(tr_std);
+        else if (tr_careful)
+            ib_trange_use_shorcut_if_standard_else_real(tr_std);
+        else
+            ib_trange_use_shorcut_and_preserve_rest(tr_std);
+        ib_set();
+    }
+
     void set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful=false, bool tr_careful=false)
     {
-        const MsgVarShortcut& v = shortcutTable[shortcut];
-        Level candlev = height_sensor == MISSING_SENSOR_H ? Level(103) : Level(103, height_sensor * 1000);
-        Trange candtr = time_period == MISSING_INT ? Trange(tr_std.pind, 0) : Trange(tr_std.pind, 0, -time_period);
-
+        ib_start(shortcut, var);
         if (!opts.simplified)
-            msg->set(var, v.code, candlev, candtr);
+        {
+            ib_level_use_real();
+            ib_trange_use_real(tr_std);
+        }
+        else if (tr_careful)
+        {
+            ib_level_use_shorcut_if_standard_else_real(lev_std);
+            ib_trange_use_shorcut_if_standard_else_real(tr_std);
+        }
         else
         {
-            Level simplev = Level(v.ltype1, v.l1, v.ltype2, v.l2);
-            bool level_differs = (candlev != simplev && candlev != lev_std);
-
-            Trange simptr = Trange(v.pind, v.p1, v.p2);
-            bool trange_differs = (candtr != simptr && candtr != tr_std);
-
-            const Level* lev = &simplev;
-            bool annotate_lev = false;
-            if (level_differs)
-            {
-                if (lev_careful)
-                    lev = &candlev;
-                else if (height_sensor != MISSING_SENSOR_H)
-                    annotate_lev = true;
-            }
-
-            const Trange* tr = &simptr;
-            bool annotate_tr = false;
-            if (trange_differs)
-            {
-                if (tr_careful)
-                    tr = &candtr;
-                else if (time_period != MISSING_INT)
-                    annotate_tr = true;
-            }
-
-            const Var* chosen_var = &var;
-            auto_ptr<Var> temp_var;
-            if (annotate_lev || annotate_tr)
-            {
-                temp_var.reset(new Var(var));
-                chosen_var = temp_var.get();
-
-                if (annotate_lev)
-                    temp_var->seta(newvar(WR_VAR(0, 7, 32), height_sensor));
-                if (annotate_tr)
-                    temp_var->seta(newvar(WR_VAR(0, 4, 194), -time_period));
-            }
-
-            msg->set(*chosen_var, v.code, *lev, *tr);
+            ib_level_use_shorcut_and_preserve_rest(lev_std);
+            ib_trange_use_shorcut_and_preserve_rest(tr_std);
         }
+        ib_set();
     }
 
 #if 0
@@ -167,8 +269,12 @@ protected:
     }
 
 public:
-    SynopImporter(const msg::Importer::Options& opts) : WMOImporter(opts) {}
-    virtual ~SynopImporter() {}
+    SynopImporter(const msg::Importer::Options& opts)
+        : WMOImporter(opts), v(0), temp_var(0), chosen_var(0) {}
+    virtual ~SynopImporter()
+    {
+        if (temp_var) delete temp_var;
+    }
 
     virtual void init()
     {
@@ -180,6 +286,7 @@ public:
         vs = MISSING_VSS;
         time_period = MISSING_INT;
         time_sig = MISSING_TIME_SIG;
+        hour = MISSING_INT;
     }
 
     virtual void run()
@@ -233,6 +340,7 @@ void SynopImporter::peek_var(const Var& var)
     switch (var.code())
     {
 /* Context items */
+        case WR_VAR(0,  4,  4): hour = var.enq(MISSING_INT); break;
         case WR_VAR(0,  8,  2): {
             /* Vertical significance */
             if (pos == 0) throw error_consistency("B08002 found at beginning of message");
@@ -298,6 +406,9 @@ void SynopImporter::import_var_undef(const Var& var)
 {
     switch (var.code())
     {
+        case WR_VAR(0,  4,  4):
+            hour = MISSING_INT;
+            break;
         case WR_VAR(0,  7, 32):
             /* Height to use later as level for what needs it */
             height_sensor = MISSING_SENSOR_H;
@@ -447,18 +558,17 @@ void SynopImporter::import_var(const Var& var)
 
 /* Present and past weather (complete) */
         case WR_VAR(0, 20,  3): msg->set_pres_wtr_var(var); break;
-
         case WR_VAR(0, 20,  4):
-            if (time_period == MISSING_INT)
-                msg->set_past_wtr1_var(var);
-            else
-                msg->set(var, WR_VAR(0, 20, 4), Level(1), Trange(205, 0, time_period));
+            ib_start(DBA_MSG_PAST_WTR1, var);
+            ib_level_use_shorcut_and_discard_rest();
+            ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+            ib_set();
             break;
         case WR_VAR(0, 20,  5):
-            if (time_period == MISSING_INT)
-                msg->set_past_wtr2_var(var);
-            else
-                msg->set(var, WR_VAR(0, 20, 5), Level(1), Trange(205, 0, time_period));
+            ib_start(DBA_MSG_PAST_WTR2, var);
+            ib_level_use_shorcut_and_discard_rest();
+            ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+            ib_set();
             break;
 
 /* Sunshine data (complete) */

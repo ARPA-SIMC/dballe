@@ -118,6 +118,30 @@ struct ReimportTest
         virtual void clean_second(Msgs& msgs) { if (second) do_round(msgs); };
     };
 
+    // Round variables to account for a passage through legacy vars
+    struct RemoveSynopWMOOnlyVarsHook : public Hook
+    {
+        bool first, second;
+        RemoveSynopWMOOnlyVarsHook(bool first=true, bool second=true)
+            : first(first), second(second) {}
+        void do_remove(Msgs& msgs)
+        {
+            for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+            {
+                Msg& m = **mi;
+                for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+                {
+                    msg::Context& c = **ci;
+                    c.remove(WR_VAR(0, 7, 31));
+                    c.remove(WR_VAR(0, 2,  2));
+                    c.remove(WR_VAR(0, 1, 19));
+                }
+            }
+        }
+        virtual void clean_first(Msgs& msgs) { if (first) do_remove(msgs); };
+        virtual void clean_second(Msgs& msgs) { if (second) do_remove(msgs); };
+    };
+
     // Truncate station name to its canonical length
     struct TruncStName : public Hook
     {
@@ -475,6 +499,7 @@ void to::test<6>()
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
         test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveSynopWMOOnlyVarsHook(true, true));
         run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
