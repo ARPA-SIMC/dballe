@@ -161,13 +161,11 @@ struct Pollution : public Template
         if (value < 0)
             // Negative values are meaningless
             scaled = 0;
-#if 0
-        else if (value < dSMALLNUM)
+        else if (value == 0)
         {
             // Prevent divide by zero
             scaled = 0;
         }
-#endif
         else
         {
             //static const int bits = 24;
