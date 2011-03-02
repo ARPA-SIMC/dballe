@@ -48,8 +48,8 @@ PRESS_MSL,      num,    B10051,     101,     -, -, -,  254,      0,     0, Press
 QNH,            num,    B10052,     103,  2000, -, -,  254,      0,     0, Altimeter setting (QNH)
 WIND_DIR,       num,    B11001,     103, 10000, -, -,  254,      0,     0, Wind direction at 10 metres above ground
 WIND_SPEED,     num,    B11002,     103, 10000, -, -,  254,      0,     0, Wind speed at 10 metres above ground
-WIND_MAX_SPEED, num,    B11041,     103, 10000, -, -,  254,      0,     0, Maximum wind gust speed at 10 metres above ground
-WIND_MAX_DIR,   num,    B11043,     103, 10000, -, -,  254,      0,     0, Maximum wind gust direction at 10 metres above ground
+WIND_GUST_MAX_SPEED, num,    B11041,     103, 10000, -, -,  254,      0,     0, Maximum wind gust speed at 10 metres above ground
+WIND_GUST_MAX_DIR,   num,    B11043,     103, 10000, -, -,  254,      0,     0, Maximum wind gust direction at 10 metres above ground
 EX_CCW_WIND,    num,    B11016,     103, 10000, -, -,  254,      0,     0, Extreme counterclockwise wind direction of a variable wind at 10 metres above ground
 EX_CW_WIND,     num,    B11017,     103, 10000, -, -,  254,      0,     0, Extreme clockwise wind direction of a variable wind at 10 metres above ground
 TEMP_2M,        num,    B12101,     103,  2000, -, -,  254,      0,     0, Temperature at 2 metres above ground

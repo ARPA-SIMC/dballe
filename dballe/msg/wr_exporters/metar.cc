@@ -113,7 +113,7 @@ struct Metar : public Template
         /* 12 */ add(WR_VAR(0, 11, 16), DBA_MSG_EX_CCW_WIND);
         /* 13 */ add(WR_VAR(0, 11, 17), DBA_MSG_EX_CW_WIND);
         /* 14 */ add(WR_VAR(0, 11,  2), DBA_MSG_WIND_SPEED);
-        /* 15 */ add(WR_VAR(0, 11, 41), DBA_MSG_WIND_MAX_SPEED);
+        /* 15 */ add(WR_VAR(0, 11, 41), DBA_MSG_WIND_GUST_MAX_SPEED);
         /* 16 */ subset.store_variable_i(WR_VAR(0,  7,  6), 2);
         /* 15 */ add(WR_VAR(0, 12,  1), DBA_MSG_TEMP_2M);
         /* 16 */ add(WR_VAR(0, 12,  3), DBA_MSG_DEWPOINT_2M);
