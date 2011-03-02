@@ -37,6 +37,12 @@ namespace wr {
 #define MISSING_VSS 63
 #define MISSING_TIME_SIG -10000
 
+namespace {
+
+static const Level lev_std_wind(103, 10*1000);
+static const Trange tr_std_wind(200, 0, 600);
+static const Trange tr_std_wind_max10m(205, 0, 600);
+
 class SynopImporter : public WMOImporter
 {
 protected:
@@ -70,6 +76,59 @@ protected:
     {
         const MsgVarShortcut& v = shortcutTable[shortcut];
         set_gen_sensor(var, v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+    }
+
+    void set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful=false, bool tr_careful=false)
+    {
+        const MsgVarShortcut& v = shortcutTable[shortcut];
+        Level candlev = height_sensor == MISSING_SENSOR_H ? Level(103) : Level(103, height_sensor * 1000);
+        Trange candtr = time_period == MISSING_INT ? Trange(tr_std.pind, 0) : Trange(tr_std.pind, 0, -time_period);
+
+        if (!opts.simplified)
+            msg->set(var, v.code, candlev, candtr);
+        else
+        {
+            Level simplev = Level(v.ltype1, v.l1, v.ltype2, v.l2);
+            bool level_differs = (candlev != simplev && candlev != lev_std);
+
+            Trange simptr = Trange(v.pind, v.p1, v.p2);
+            bool trange_differs = (candtr != simptr && candtr != tr_std);
+
+            const Level* lev = &simplev;
+            bool annotate_lev = false;
+            if (level_differs)
+            {
+                if (lev_careful)
+                    lev = &candlev;
+                else if (height_sensor != MISSING_SENSOR_H)
+                    annotate_lev = true;
+            }
+
+            const Trange* tr = &simptr;
+            bool annotate_tr = false;
+            if (trange_differs)
+            {
+                if (tr_careful)
+                    tr = &candtr;
+                else if (time_period != MISSING_INT)
+                    annotate_tr = true;
+            }
+
+            const Var* chosen_var = &var;
+            auto_ptr<Var> temp_var;
+            if (annotate_lev || annotate_tr)
+            {
+                temp_var.reset(new Var(var));
+                chosen_var = temp_var.get();
+
+                if (annotate_lev)
+                    temp_var->seta(newvar(WR_VAR(0, 7, 32), height_sensor));
+                if (annotate_tr)
+                    temp_var->seta(newvar(WR_VAR(0, 4, 194), -time_period));
+            }
+
+            msg->set(*chosen_var, v.code, *lev, *tr);
+        }
     }
 
 #if 0
@@ -168,11 +227,6 @@ public:
         }
     }
 };
-
-std::auto_ptr<Importer> Importer::createSynop(const msg::Importer::Options& opts)
-{
-    return auto_ptr<Importer>(new SynopImporter(opts));
-}
 
 void SynopImporter::peek_var(const Var& var)
 {
@@ -418,7 +472,7 @@ void SynopImporter::import_var(const Var& var)
             throw error_unimplemented("wow, a synop with extreme temperature info, please give it to Enrico");
 
 /* Wind data (complete) */
-        case WR_VAR(0, 2, 2): set_gen_sensor(var, WR_VAR(0, 2, 2), Level(103, 10*1000), Trange::instant()); break;
+        case WR_VAR(0, 2, 2): set_gen_sensor(var, DBA_MSG_WIND_INST, lev_std_wind, Trange::instant()); break;
 
         /* Note B/C 1.10.5.3.2 Calm shall be reported by
          * setting wind direction to 0 and wind speed to 0.
@@ -427,35 +481,19 @@ void SynopImporter::import_var(const Var& var)
          * missing value indicator.
          */
         case WR_VAR(0, 11,  1):
+        case WR_VAR(0, 11, 11):
             if (time_sig != MISSING_TIME_SIG && time_sig != 2)
                     error_consistency::throwf("Found unsupported time significance %d for wind direction", time_sig);
-            if (time_period == MISSING_INT)
-                set_gen_sensor(var, WR_VAR(0, 11, 1), Level(103, 10*1000), Trange::instant());
-            else
-                set_gen_sensor(var, WR_VAR(0, 11, 1), Level(103, 10*1000), Trange(0, 0, -time_period));
+            set_gen_sensor(var, DBA_MSG_WIND_DIR, lev_std_wind, tr_std_wind);
             break;
         case WR_VAR(0, 11,  2):
+        case WR_VAR(0, 11, 12):
             if (time_sig != MISSING_TIME_SIG && time_sig != 2)
                 error_consistency::throwf("Found unsupported time significance %d for wind speed", time_sig);
-            if (time_period == MISSING_INT)
-                set_gen_sensor(var, WR_VAR(0, 11, 2), Level(103, 10*1000), Trange::instant());
-            else
-                set_gen_sensor(var, WR_VAR(0, 11, 2), Level(103, 10*1000), Trange(0, 0, -time_period));
+            set_gen_sensor(var, DBA_MSG_WIND_SPEED, lev_std_wind, tr_std_wind);
             break;
-        case WR_VAR(0, 11, 43):
-            if (time_period == MISSING_INT)
-                set_gen_sensor(var, WR_VAR(0, 11, 43), Level(103, 10*1000), Trange(205, 0));
-            else
-                set_gen_sensor(var, WR_VAR(0, 11, 43), Level(103, 10*1000), Trange(205, 0, -time_period));
-            break;
-        case WR_VAR(0, 11, 41):
-            if (time_period == MISSING_INT)
-                set_gen_sensor(var, WR_VAR(0, 11, 41), Level(103, 10*1000), Trange(205, 0));
-            else
-                set_gen_sensor(var, WR_VAR(0, 11, 41), Level(103, 10*1000), Trange(205, 0, -time_period));
-            break;
-        case WR_VAR(0, 11, 11): msg->set_wind_dir_var(var); break;
-        case WR_VAR(0, 11, 12): msg->set_wind_speed_var(var); break;
+        case WR_VAR(0, 11, 43): set_gen_sensor(var, DBA_MSG_WIND_GUST_MAX_DIR, lev_std_wind, tr_std_wind_max10m, false, true); break;
+        case WR_VAR(0, 11, 41): set_gen_sensor(var, DBA_MSG_WIND_GUST_MAX_SPEED, lev_std_wind, tr_std_wind_max10m, false, true); break;
 
 /* Evaporation data */
         case WR_VAR(0, 2, 4): msg->set(var, WR_VAR(0, 2, 4), Level(1), Trange::instant()); break;
@@ -483,6 +521,14 @@ void SynopImporter::import_var(const Var& var)
                 break;
     }
 }
+
+} // anonynmous namespace
+
+std::auto_ptr<Importer> Importer::createSynop(const msg::Importer::Options& opts)
+{
+    return auto_ptr<Importer>(new SynopImporter(opts));
+}
+
 
 } // namespace wbimporter
 } // namespace msg
