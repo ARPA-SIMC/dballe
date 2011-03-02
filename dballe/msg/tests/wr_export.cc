@@ -129,6 +129,9 @@ struct ReimportTest
             for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
             {
                 Msg& m = **mi;
+                // Remove all 'cloud below' levels
+                for (int i = 1; m.remove_context(Level::cloud(263, i), Trange::instant()); ++i)
+                    ;
                 for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
                 {
                     msg::Context& c = **ci;
