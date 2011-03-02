@@ -253,6 +253,7 @@ struct ReimportTest
             throw tut::failure(loc.msg(e.what()));
         }
 
+        auto_ptr<Msgs> msgs3;
         if (tname2)
         {
             // Export
@@ -279,26 +280,29 @@ struct ReimportTest
             }
 
             // Import again
-            msgs2.reset(new Msgs);
+            msgs3.reset(new Msgs);
             try {
-                importer->from_rawmsg(rawmsg, *msgs2);
+                importer->from_rawmsg(rawmsg, *msgs3);
             } catch (std::exception& e) {
-                dump("msg2", *msgs1);
+                dump("msg2", *msgs2);
                 dump("raw2", rawmsg);
                 throw tut::failure(loc.msg(e.what()));
             }
-        }
+        } else
+            msgs3 = msgs2;
 
         // Run hooks
         for (typename vector<Hook*>::iterator i = hooks.begin(); i != hooks.end(); ++i)
             (*i)->clean_second(*msgs2);
 
         // Compare
-        int diffs = msgs1->diff(*msgs2, stdout);
+        int diffs = msgs1->diff(*msgs3, stdout);
         if (diffs)
         {
             dump("msg1", *msgs1);
-            dump("msg2", *msgs2);
+            if (msgs2.get())
+                dump("msg2", *msgs2);
+            dump("msg3", *msgs3);
             dump("msg", rawmsg);
         }
         inner_ensure_equals(diffs, 0);
