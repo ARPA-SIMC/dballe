@@ -572,10 +572,10 @@ void SynopImporter::import_var(const Var& var)
             break;
 
 /* Sunshine data (complete) */
-        case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period)); break;
+        case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, -time_period)); break;
 
 /* Precipitation measurement (complete) */
-        case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period)); break;
+        case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, -time_period)); break;
 
 /* Extreme temperature data */
         case WR_VAR(0, 2, 111):

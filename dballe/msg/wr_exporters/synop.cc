@@ -165,36 +165,114 @@ struct ContextFinder
     }
 };
 
-
-// Base template for synops
 struct Synop : public Template
 {
-    bool is_crex;
-    Varcode prec_code;
+    const msg::Context* c_sunshine1;
+    const msg::Context* c_sunshine2;
+    const msg::Context* c_prec1;
+    const msg::Context* c_prec2;
+    const msg::Context* c_wind;
+    const msg::Context* c_gust1;
+    const msg::Context* c_gust2;
+    const msg::Context* c_evapo;
+    const msg::Context* c_past_wtr;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { return SYNOP_NAME; }
-    virtual const char* description() const { return SYNOP_DESC; }
-
-    void add(Varcode code, int shortcut)
+    void scan_levels()
     {
-        const Var* var = msg->find_by_id(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
+        c_sunshine1 = NULL;
+        c_sunshine2 = NULL;
+        c_prec1 = NULL;
+        c_prec2 = NULL;
+        c_wind = NULL;
+        c_gust1 = NULL;
+        c_gust2 = NULL;
+        c_evapo = NULL;
+        c_past_wtr = NULL;
+
+        // Scan message finding context for the data that follow
+        for (std::vector<msg::Context*>::const_iterator i = msg->data.begin();
+                i != msg->data.end(); ++i)
+        {
+            const msg::Context* c = *i;
+            if (c->level == Level(1))
+            {
+                switch (c->trange.pind)
+                {
+                    case 1:
+                        // msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period));
+                        if (c->find(WR_VAR(0, 14, 31)))
+                        {
+                            if (!c_sunshine1)
+                                c_sunshine1 = c;
+                            else if (!c_sunshine2)
+                                c_sunshine2 = c;
+                        }
+
+                        // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
+                        if (c->find(WR_VAR(0, 13, 11)))
+                        {
+                            if (!c_prec1)
+                                c_prec1 = c;
+                            else if (!c_prec2)
+                                c_prec2 = c;
+                        }
+
+                        // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
+                        if (c->find(WR_VAR(0, 13, 33)))
+                            c_evapo = c;
+                        break;
+                    case 205:
+                        if (c->find(WR_VAR(0, 20, 4)) || c->find(WR_VAR(0, 20, 5)))
+                            c_past_wtr = c;
+                        break;
+                }
+            } else if (c->level.ltype1 == 103) {
+                if (c->trange.pind == 1 && c->trange.p1 == 0)
+                {
+                    // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
+                    if (c->find(WR_VAR(0, 13, 11)))
+                    {
+                        if (!c_prec1)
+                            c_prec1 = c;
+                        else if (!c_prec2)
+                            c_prec2 = c;
+                    }
+                }
+                if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
+                    if (!c_wind)
+                        c_wind = c;
+                if (c->find(WR_VAR(0, 11, 41)) || c->find(WR_VAR(0, 11, 43)))
+                {
+                    if (!c_gust1)
+                        c_gust1 = c;
+                    else if (!c_gust2)
+                        c_gust2 = c;
+                }
+            }
+        }
     }
 
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
-        const Var* var = msg->find(srccode, level, trange);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
+        Template::to_subset(msg, subset);
+        scan_levels();
     }
+};
+
+// Base template for synops
+struct SynopECMWF : public Synop
+{
+    bool is_crex;
+    Varcode prec_code;
+
+    SynopECMWF(const Exporter::Options& opts, const Msgs& msgs)
+        : Synop(opts, msgs) {}
+
+    virtual const char* name() const { return SYNOP_ECMWF_NAME; }
+    virtual const char* description() const { return SYNOP_ECMWF_DESC; }
 
     void add_prec()
     {
@@ -215,7 +293,7 @@ struct Synop : public Template
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        Template::setupBulletin(bulletin);
+        Synop::setupBulletin(bulletin);
 
         // Use old table for old templates
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
@@ -247,7 +325,7 @@ struct Synop : public Template
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
-        Template::to_subset(msg, subset);
+        Synop::to_subset(msg, subset);
         /*  0 */ add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
         /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
         /*  2 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
@@ -263,17 +341,17 @@ struct Synop : public Template
     }
 };
 
-struct SynopECMWFLand : public Synop
+struct SynopECMWFLand : public SynopECMWF
 {
     SynopECMWFLand(const Exporter::Options& opts, const Msgs& msgs)
-        : Synop(opts, msgs) {}
+        : SynopECMWF(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_LAND_NAME; }
     virtual const char* description() const { return SYNOP_ECMWF_LAND_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        Synop::setupBulletin(bulletin);
+        SynopECMWF::setupBulletin(bulletin);
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -296,7 +374,7 @@ struct SynopECMWFLand : public Synop
 
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
-        Synop::to_subset(msg, subset);
+        SynopECMWF::to_subset(msg, subset);
         /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
         /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
         /* 14 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
@@ -307,8 +385,9 @@ struct SynopECMWFLand : public Synop
         /* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
         /* 20 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
         /* 21 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        /* 22 */ add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1);
-        /* 23 */ add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2);
+        // TODO: check that the time range matches what we want
+        /* 22 */ add(WR_VAR(0, 20,  4), c_past_wtr, DBA_MSG_PAST_WTR1);
+        /* 23 */ add(WR_VAR(0, 20,  5), c_past_wtr, DBA_MSG_PAST_WTR2);
         /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
         /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
@@ -350,17 +429,17 @@ struct SynopECMWFLand : public Synop
     }
 };
 
-struct SynopECMWFLandHigh : public Synop
+struct SynopECMWFLandHigh : public SynopECMWF
 {
     SynopECMWFLandHigh(const Exporter::Options& opts, const Msgs& msgs)
-        : Synop(opts, msgs) {}
+        : SynopECMWF(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_LAND_HIGH_NAME; }
     virtual const char* description() const { return SYNOP_ECMWF_LAND_HIGH_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        Synop::setupBulletin(bulletin);
+        SynopECMWF::setupBulletin(bulletin);
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -383,7 +462,7 @@ struct SynopECMWFLandHigh : public Synop
 
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
-        Synop::to_subset(msg, subset);
+        SynopECMWF::to_subset(msg, subset);
 
         ///* 12 */ add(WR_VAR(0,  7,  4), DBA_MSG_ISOBARIC_SURFACE);
         ///* 13 */ add(WR_VAR(0, 10,  3), DBA_MSG_GEOPOTENTIAL);
@@ -405,8 +484,9 @@ struct SynopECMWFLandHigh : public Synop
         /* 20 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
         /* 21 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
         /* 22 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        /* 23 */ add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1);
-        /* 24 */ add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2);
+        // TODO: check that the time range matches what we want
+        /* 23 */ add(WR_VAR(0, 20,  4), c_past_wtr, DBA_MSG_PAST_WTR1);
+        /* 24 */ add(WR_VAR(0, 20,  5), c_past_wtr, DBA_MSG_PAST_WTR2);
         /* 25 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 26 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
         /* 27 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
@@ -449,27 +529,19 @@ struct SynopECMWFAuto : public SynopECMWFLand
     }
 };
 
-struct SynopWMO : public Template
+struct SynopWMO : public Synop
 {
     bool is_crex;
-    const msg::Context* c_sunshine1;
-    const msg::Context* c_sunshine2;
-    const msg::Context* c_prec1;
-    const msg::Context* c_prec2;
-    const msg::Context* c_wind;
-    const msg::Context* c_gust1;
-    const msg::Context* c_gust2;
-    const msg::Context* c_evapo;
 
     SynopWMO(const Exporter::Options& opts, const Msgs& msgs)
-        : Template(opts, msgs) {}
+        : Synop(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_WMO_NAME; }
     virtual const char* description() const { return SYNOP_WMO_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        Template::setupBulletin(bulletin);
+        Synop::setupBulletin(bulletin);
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
@@ -670,15 +742,22 @@ struct SynopWMO : public Template
     {
         //   Present and past weather
         add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        ContextFinder finder(msg);
-        finder.add_var(DBA_MSG_PAST_WTR1);
-        finder.add_var(DBA_MSG_PAST_WTR2);
-        if (finder.find_in_level(1))
-            subset.store_variable_d(WR_VAR(0, 4, 24), finder.ctx->trange.p2 / 3600);
-        else
+        if (c_past_wtr)
+        {
+            int p2 = c_past_wtr->trange.p2;
+
+            // Look for a p2 override in the attributes
+            const Var* v = c_past_wtr->find(WR_VAR(0, 20, 4));
+            if (!v) v = c_past_wtr->find(WR_VAR(0, 20, 5));
+            if (v)
+                if (const Var* a = v->enqa(WR_VAR(0, 4, 194)))
+                    p2 = a->enqi();
+
+            subset.store_variable_d(WR_VAR(0, 4, 24), -p2 / 3600);
+        } else
             subset.store_variable_undef(WR_VAR(0, 4, 24));
-        finder.vars[0].add(subset, WR_VAR(0, 20, 4));
-        finder.vars[1].add(subset, WR_VAR(0, 20, 5));
+        add(WR_VAR(0, 20, 4), c_past_wtr, DBA_MSG_PAST_WTR1);
+        add(WR_VAR(0, 20, 5), c_past_wtr, DBA_MSG_PAST_WTR2);
 
         //   Sunshine data (form 1 hour and 24 hour period)
         if (c_sunshine1)
@@ -718,7 +797,7 @@ struct SynopWMO : public Template
                 subset.store_variable_d(WR_VAR(0,  7, 32), h);
 
             if (c_prec1->trange.p2 != MISSING_INT)
-                subset.store_variable_d(WR_VAR(0,  4, 24), c_prec1->trange.p2 / 3600);
+                subset.store_variable_d(WR_VAR(0,  4, 24), -c_prec1->trange.p2 / 3600);
             else
                 subset.store_variable_undef(WR_VAR(0,  4, 24));
             if (const Var* var = c_prec1->find(WR_VAR(0, 13, 11)))
@@ -728,7 +807,7 @@ struct SynopWMO : public Template
             if (c_prec2)
             {
                 if (c_prec2->trange.p2 != MISSING_INT)
-                    subset.store_variable_d(WR_VAR(0,  4, 24), c_prec2->trange.p2 / 3600);
+                    subset.store_variable_d(WR_VAR(0,  4, 24), -c_prec2->trange.p2 / 3600);
                 else
                     subset.store_variable_undef(WR_VAR(0,  4, 24));
                 if (const Var* var = c_prec2->find(WR_VAR(0, 13, 11)))
@@ -869,76 +948,7 @@ struct SynopWMO : public Template
 
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
-        Template::to_subset(msg, subset);
-
-        c_sunshine1 = NULL;
-        c_sunshine2 = NULL;
-        c_prec1 = NULL;
-        c_prec2 = NULL;
-        c_wind = NULL;
-        c_gust1 = NULL;
-        c_gust2 = NULL;
-        c_evapo = NULL;
-
-        // Scan message finding context for the data that follow
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
-        {
-            const msg::Context* c = *i;
-            if (c->level == Level(1))
-            {
-                if (c->trange.pind == 1 && c->trange.p1 == 0)
-                {
-                    // msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period));
-                    if (c->find(WR_VAR(0, 14, 31)))
-                    {
-                        if (!c_sunshine1)
-                            c_sunshine1 = c;
-                        else if (!c_sunshine2)
-                            c_sunshine2 = c;
-                    }
-
-                    // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
-                    if (c->find(WR_VAR(0, 13, 11)))
-                    {
-                        if (!c_prec1)
-                            c_prec1 = c;
-                        else if (!c_prec2)
-                            c_prec2 = c;
-                    }
-
-                    // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
-                    if (c->find(WR_VAR(0, 13, 33)))
-                        c_evapo = c;
-                } else if (c->trange == Trange(1)) {
-                    // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1));
-                    if (c->find(WR_VAR(0, 13, 33)))
-                        c_evapo = c;
-                }
-            } else if (c->level.ltype1 == 103) {
-                if (c->trange.pind == 1 && c->trange.p1 == 0)
-                {
-                    // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
-                    if (c->find(WR_VAR(0, 13, 11)))
-                    {
-                        if (!c_prec1)
-                            c_prec1 = c;
-                        else if (!c_prec2)
-                            c_prec2 = c;
-                    }
-                }
-                if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
-                    if (!c_wind)
-                        c_wind = c;
-                if (c->find(WR_VAR(0, 11, 41)) || c->find(WR_VAR(0, 11, 43)))
-                {
-                    if (!c_gust1)
-                        c_gust1 = c;
-                    else if (!c_gust2)
-                        c_gust2 = c;
-                }
-            }
-        }
+        Synop::to_subset(msg, subset);
 
         // D01090  Fixed surface identification, time, horizontal and vertical coordinates
         do_D01004(); // station id
