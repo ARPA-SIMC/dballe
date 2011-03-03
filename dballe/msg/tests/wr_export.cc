@@ -126,6 +126,7 @@ struct ReimportTest
             : first(first), second(second) {}
         void do_remove(Msgs& msgs)
         {
+            int seen_tprec_trange = MISSING_INT;
             for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
             {
                 Msg& m = **mi;
@@ -141,7 +142,6 @@ struct ReimportTest
                 // Remove all 'cloud below' levels
                 for (int i = 1; m.remove_context(Level::cloud(263, i), Trange::instant()); ++i)
                     ;
-                bool seen_tprec = false;
                 for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
                 {
                     msg::Context& c = **ci;
@@ -149,24 +149,48 @@ struct ReimportTest
                     c.remove(WR_VAR(0, 14, 31)); // Total sunshine
                     c.remove(WR_VAR(0, 13, 33)); // Evaporation/evapotranspiration
                     c.remove(WR_VAR(0, 12,121)); // Ground minimum temperature
+                    c.remove(WR_VAR(0, 11, 43)); // Maximum wind gust
                     c.remove(WR_VAR(0, 11, 41)); // Maximum wind gust
                     c.remove(WR_VAR(0, 10,  8)); // Geopotential
                     c.remove(WR_VAR(0,  7, 31)); // Height of barometer
                     c.remove(WR_VAR(0,  2,  4)); // Type of instrumentation for evaporation measurement
                     c.remove(WR_VAR(0,  2,  2)); // Type of instrumentation for wind measurement
                     c.remove(WR_VAR(0,  1, 19)); // Long station or site name
-                    if (c.find(WR_VAR(0, 13, 11))) // Keep only one total precipitation measurement
+                    if (c.find(WR_VAR(0, 13, 11)))
                     {
-                        if (!seen_tprec)
-                            seen_tprec = true;
-                        else
+                        // Keep only one total precipitation measurement common
+                        // to all subsets
+                        if (seen_tprec_trange == MISSING_INT)
+                            seen_tprec_trange = c.trange.p2;
+                        else if (c.trange.p2 != seen_tprec_trange)
                             c.remove(WR_VAR(0, 13, 11));
                     }
+                    if (c.trange == Trange(4, 0, 86400))
+                        c.remove(WR_VAR(0, 10, 60)); /// 24h pressure change
                     if (c.data.empty())
                         ci = m.data.erase(ci);
                     else
                         ++ci;
                 }
+            }
+        }
+        virtual void clean_first(Msgs& msgs) { if (first) do_remove(msgs); };
+        virtual void clean_second(Msgs& msgs) { if (second) do_remove(msgs); };
+    };
+
+    // Remove ground level with missing length of statistical processing, that
+    // cannot be encoded in ECMWF templates
+    struct RemoveSynopWMOOddprecHook : public Hook
+    {
+        bool first, second;
+        RemoveSynopWMOOddprecHook(bool first=true, bool second=true)
+            : first(first), second(second) {}
+        void do_remove(Msgs& msgs)
+        {
+            for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+            {
+                Msg& m = **mi;
+                m.remove_context(Level(1), Trange(1, 0));
             }
         }
         virtual void clean_first(Msgs& msgs) { if (first) do_remove(msgs); };
@@ -547,13 +571,19 @@ void to::test<6>()
         run_test(test, "synop-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveSynopWMOOnlyVarsHook(true, true));
         run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
         BufrReimportTest test("bufr/synop-longname.bufr");
+        test.hooks.push_back(new BufrReimportTest::TruncStName());
         run_test(test, "synop-wmo");
         test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::TruncStName());
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveSynopWMOOnlyVarsHook(true, true));
         run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
@@ -561,6 +591,8 @@ void to::test<6>()
         run_test(test, "synop-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveSynopWMOOnlyVarsHook(true, true));
         run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
@@ -568,6 +600,9 @@ void to::test<6>()
         run_test(test, "synop-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveSynopWMOOnlyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveSynopWMOOddprecHook(true, true));
         run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
@@ -575,6 +610,8 @@ void to::test<6>()
         run_test(test, "synop-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveSynopWMOOnlyVarsHook(true, true));
         run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {
@@ -582,6 +619,8 @@ void to::test<6>()
         run_test(test, "synop-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveSynopWMOOnlyVarsHook(true, true));
         run_test(test, "synop-ecmwf", "synop-wmo");
     }
 }
