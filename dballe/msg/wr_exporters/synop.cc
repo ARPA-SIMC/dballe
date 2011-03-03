@@ -309,20 +309,23 @@ struct SynopECMWF : public Synop
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        const Msg& msg = *msgs[0];
-
         // Use the best kind of precipitation found in the message to encode
-        if (msg.get_tot_prec24_var() != NULL)
-            prec_code = WR_VAR(0, 13, 23);
-        else if (msg.get_tot_prec12_var() != NULL)
-            prec_code = WR_VAR(0, 13, 22);
-        else if (msg.get_tot_prec6_var() != NULL)
-            prec_code = WR_VAR(0, 13, 21);
-        else if (msg.get_tot_prec3_var() != NULL)
-            prec_code = WR_VAR(0, 13, 20);
-        else if (msg.get_tot_prec1_var() != NULL)
-            prec_code = WR_VAR(0, 13, 19);
-        else
+        prec_code = 0;
+        for (Msgs::const_iterator mi = msgs.begin(); prec_code == 0 && mi != msgs.end(); ++mi)
+        {
+            const Msg& msg = **mi;
+            if (msg.get_tot_prec24_var() != NULL)
+                prec_code = WR_VAR(0, 13, 23);
+            else if (msg.get_tot_prec12_var() != NULL)
+                prec_code = WR_VAR(0, 13, 22);
+            else if (msg.get_tot_prec6_var() != NULL)
+                prec_code = WR_VAR(0, 13, 21);
+            else if (msg.get_tot_prec3_var() != NULL)
+                prec_code = WR_VAR(0, 13, 20);
+            else if (msg.get_tot_prec1_var() != NULL)
+                prec_code = WR_VAR(0, 13, 19);
+        }
+        if (prec_code == 0)
             prec_code = WR_VAR(0, 13, 23);
 
         bulletin.type = 0;
