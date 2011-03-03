@@ -487,11 +487,12 @@ void SynopImporter::import_var(const Var& var)
             press_std = var.enqd();
             /* DBA_RUN_OR_RETURN(dba_msg_set_height_baro_var(msg, var)); */
             break;
-        case WR_VAR(0, 10,  9):
         case WR_VAR(0, 10,  3):
+        case WR_VAR(0, 10,  8):
+        case WR_VAR(0, 10,  9):
             if (press_std == MISSING_PRESS_STD)
                 throw error_consistency("B10009 given without pressure of standard level");
-            msg->set(var, WR_VAR(0, 10,  9), Level(100, press_std), Trange::instant());
+            msg->set(var, WR_VAR(0, 10,  8), Level(100, press_std), Trange::instant());
             break;
 
         /* Legacy bits */

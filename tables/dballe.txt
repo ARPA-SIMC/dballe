@@ -69,7 +69,6 @@
  010004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
  010007 HEIGHT                                                           M                          0        -1000  17 M                         0          6
  010008 GEOPOTENTIAL                                                     M**2/S**2                  0       -10000  20 M**2/S**2                 0          7
- 010009 GEOPOTENTIAL HEIGHT                                              GPM                        0        -1000  17 GPM                       0          5
  010051 PRESSURE REDUCED TO MEAN SEA LEVEL                               PA                        -1            0  14 PA                       -1          5
  010052 ALTIMETER SETTING (QNH)                                          PA                        -1            0  14 PA                       -1          5
  010060 PRESSURE CHANGE                                                  PA                        -1        -1024  11 PA                       -1          4              

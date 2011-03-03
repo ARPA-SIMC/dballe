@@ -468,7 +468,7 @@ struct SynopECMWFLandHigh : public SynopECMWF
         ///* 13 */ add(WR_VAR(0, 10,  3), DBA_MSG_GEOPOTENTIAL);
         // Find pressure level of geopotential
         ContextFinder finder(msg);
-        finder.add_var(WR_VAR(0, 10, 9));
+        finder.add_var(WR_VAR(0, 10, 8));
         if (finder.find_in_level(100))
             subset.store_variable_d(WR_VAR(0, 7, 4), finder.ctx->level.l1);
         else
@@ -566,7 +566,7 @@ struct SynopWMO : public Synop
 
         // Find pressure level of geopotential
         ContextFinder finder(msg);
-        finder.add_var(WR_VAR(0, 10, 9));
+        finder.add_var(WR_VAR(0, 10, 8));
         if (finder.find_in_level(100))
             subset.store_variable_d(WR_VAR(0, 7, 4), finder.ctx->level.l1);
         else
