@@ -36,7 +36,10 @@ using namespace std;
 #define TEMP_WMO_DESC "Temp WMO (2.101)"
 
 #define TEMP_ECMWF_NAME "temp-ecmwf"
-#define TEMP_ECMWF_DESC "Temp ECMWF (2.101)"
+#define TEMP_ECMWF_DESC "Temp ECMWF (autodetect)"
+
+#define TEMP_ECMWF_LAND_NAME "temp-ecmwf-land"
+#define TEMP_ECMWF_LAND_DESC "Temp ECMWF land (2.101)"
 
 #define TEMP_ECMWF_SHIP_NAME "temp-ecmwf-ship"
 #define TEMP_ECMWF_SHIP_DESC "Temp ECMWF ship (2.102)"
@@ -142,7 +145,24 @@ struct TempWMO : public TempBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         TempBase::setupBulletin(bulletin);
-        bulletin.localsubtype = 101;
+
+        // Scan to see if we are dealing with ships
+        bool is_ship = false;
+        for (Msgs::const_iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+        {
+            const Msg& msg = **mi;
+            if (msg.get_ident_var())
+            {
+                is_ship = true;
+                break;
+            } else if (msg.get_block_var()) {
+                break;
+            }
+        }
+        if (is_ship)
+            bulletin.localsubtype = 102;
+        else
+            bulletin.localsubtype = 101;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -242,13 +262,13 @@ struct TempWMO : public TempBase
     }
 };
 
-struct TempEcmwf : public TempBase
+struct TempEcmwfLand : public TempBase
 {
-    TempEcmwf(const Exporter::Options& opts, const Msgs& msgs)
+    TempEcmwfLand(const Exporter::Options& opts, const Msgs& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return TEMP_ECMWF_NAME; }
-    virtual const char* description() const { return TEMP_ECMWF_DESC; }
+    virtual const char* name() const { return TEMP_ECMWF_LAND_NAME; }
+    virtual const char* description() const { return TEMP_ECMWF_LAND_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -400,24 +420,6 @@ struct TempEcmwfShip : public TempBase
     }
 };
 
-struct TempFactory : public TemplateFactory
-{
-    TempFactory() { name = TEMP_NAME; description = TEMP_DESC; }
-
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
-    {
-        return auto_ptr<Template>(new TempEcmwf(opts, msgs));
-    }
-};
-struct TempShipFactory : public TemplateFactory
-{
-    TempShipFactory() { name = TEMP_SHIP_NAME; description = TEMP_SHIP_DESC; }
-
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
-    {
-        return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
-    }
-};
 struct TempWMOFactory : public TemplateFactory
 {
     TempWMOFactory() { name = TEMP_WMO_NAME; description = TEMP_WMO_DESC; }
@@ -427,13 +429,13 @@ struct TempWMOFactory : public TemplateFactory
         return auto_ptr<Template>(new TempWMO(opts, msgs));
     }
 };
-struct TempEcmwfFactory : public TemplateFactory
+struct TempEcmwfLandFactory : public TemplateFactory
 {
-    TempEcmwfFactory() { name = TEMP_ECMWF_NAME; description = TEMP_ECMWF_DESC; }
+    TempEcmwfLandFactory() { name = TEMP_ECMWF_LAND_NAME; description = TEMP_ECMWF_LAND_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new TempEcmwf(opts, msgs));
+        return auto_ptr<Template>(new TempEcmwfLand(opts, msgs));
     }
 };
 struct TempEcmwfShipFactory : public TemplateFactory
@@ -445,6 +447,31 @@ struct TempEcmwfShipFactory : public TemplateFactory
         return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
 };
+struct TempEcmwfFactory : public TemplateFactory
+{
+    TempEcmwfFactory() { name = TEMP_ECMWF_NAME; description = TEMP_ECMWF_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        if (msgs.empty() || msgs[0]->type != MSG_TEMP_SHIP)
+            return auto_ptr<Template>(new TempEcmwfLand(opts, msgs));
+        else
+            return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
+    }
+};
+struct TempShipFactory : public TemplateFactory
+{
+    TempShipFactory() { name = TEMP_SHIP_NAME; description = TEMP_SHIP_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
+    }
+};
+struct TempFactory : public TempEcmwfFactory
+{
+    TempFactory() { name = TEMP_NAME; description = TEMP_DESC; }
+};
 
 } // anonymous namespace
 
@@ -454,18 +481,21 @@ static const TemplateFactory* temp = NULL;
 static const TemplateFactory* tempship = NULL;
 static const TemplateFactory* tempwmo = NULL;
 static const TemplateFactory* tempecmwf = NULL;
+static const TemplateFactory* tempecmwfland = NULL;
 static const TemplateFactory* tempecmwfship = NULL;
 
     if (!temp) temp = new TempFactory;
     if (!tempship) tempship = new TempShipFactory;
     if (!tempwmo) tempwmo = new TempWMOFactory;
     if (!tempecmwf) tempecmwf = new TempEcmwfFactory;
+    if (!tempecmwfland) tempecmwfland = new TempEcmwfLandFactory;
     if (!tempecmwfship) tempecmwfship = new TempEcmwfShipFactory;
 
     r.register_factory(temp);
     r.register_factory(tempship);
     r.register_factory(tempwmo);
     r.register_factory(tempecmwf);
+    r.register_factory(tempecmwfland);
     r.register_factory(tempecmwfship);
 }
 
