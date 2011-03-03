@@ -871,6 +871,9 @@ template<> template<>
 void to::test<9>()
 {
     const char** files = dballe::tests::bufr_files;
+    set<string> blacklist;
+    blacklist.insert("bufr/temp-2-255.bufr");
+
     vector<string> fails;
     int i;
     std::auto_ptr<msg::Exporter> exporter;
@@ -879,6 +882,7 @@ void to::test<9>()
 
     for (i = 0; files[i] != NULL; i++)
     {
+        if (blacklist.find(files[i]) != blacklist.end()) continue;
         try {
             // Import
             auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
