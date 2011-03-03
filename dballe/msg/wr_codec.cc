@@ -310,15 +310,16 @@ void Template::add(Varcode code, const msg::Context* ctx) const
 
 void Template::add(Varcode code, int shortcut) const
 {
-    if (const Var* var = msg->find_by_id(shortcut))
-        subset->store_variable(code, *var);
-    else
-        subset->store_variable_undef(code);
+    add(code, msg->find_by_id(shortcut));
 }
 
 void Template::add(Varcode code, Varcode srccode, const Level& level, const Trange& trange) const
 {
-    const Var* var = msg->find(srccode, level, trange);
+    add(code, msg->find(srccode, level, trange));
+}
+
+void Template::add(wreport::Varcode code, const wreport::Var* var) const
+{
     if (var)
         subset->store_variable(code, *var);
     else

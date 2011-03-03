@@ -118,6 +118,7 @@ protected:
     void add(wreport::Varcode code, const msg::Context* ctx) const;
     void add(wreport::Varcode code, int shortcut) const;
     void add(wreport::Varcode code, wreport::Varcode srccode, const Level& level, const Trange& trange) const;
+    void add(wreport::Varcode code, const wreport::Var* var) const;
     // Set station name, truncating it if it's too long
     void add_st_name(wreport::Varcode dstcode, const msg::Context* ctx) const;
 
