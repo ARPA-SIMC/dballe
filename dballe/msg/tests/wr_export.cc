@@ -220,6 +220,36 @@ struct ReimportTest
         virtual void clean_second(Msgs& msgs) { do_trunc(msgs); };
     };
 
+    // Preround geopotential with a B10003->B10008->B10009->B10008->B10003 round trip
+    struct PreroundGeopotentialHook : public Hook
+    {
+        PreroundGeopotentialHook() {}
+        void do_preround(Msgs& msgs)
+        {
+            const Vartable* table = Vartable::get("B0000000000000014000");
+            for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+            {
+                Msg& m = **mi;
+                for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+                {
+                    msg::Context& c = **ci;
+                    if (Var* orig = c.edit(WR_VAR(0, 10, 8)))
+                    {
+                        // Convert to B10009 (new GTS TEMP templates)
+                        Var var2(table->query(WR_VAR(0, 10, 9)), *orig);
+                        // Convert to B10008 (used for geopotential by DB-All.e)
+                        Var var3(table->query(WR_VAR(0, 10, 8)), var2);
+                        // Convert back to B10003
+                        Var var4(table->query(WR_VAR(0, 10, 3)), var3);
+                        orig->set(var4);
+                    }
+                }
+            }
+        }
+        virtual void clean_first(Msgs& msgs) { do_preround(msgs); };
+        virtual void clean_second(Msgs& msgs) { do_preround(msgs); };
+    };
+
     string fname;
     Encoding type;
     auto_ptr<Msgs> msgs1;
@@ -522,6 +552,7 @@ void to::test<5>()
     {
         BufrReimportTest test("bufr/obs0-1.11188.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
+        test.hooks.push_back(new BufrReimportTest::PreroundGeopotentialHook());
         run_test(test, "synop-wmo");
         test.clear_hooks();
         run_test(test, "synop-ecmwf");
