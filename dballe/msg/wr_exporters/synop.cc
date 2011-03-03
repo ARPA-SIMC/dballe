@@ -49,6 +49,16 @@ namespace wr {
 
 namespace {
 
+// If var is not NULL and has a B04194 attribute, return its value
+// otherwise, return orig
+static int override_trange(const Var* var, int orig)
+{
+    if (var)
+        if (const Var* a = var->enqa(WR_VAR(0, 4, 194)))
+            return a->enq(orig);
+    return orig;
+}
+
 struct ContextFinder
 {
     struct Entry
@@ -763,6 +773,33 @@ struct SynopWMO : public Synop
             subset.store_variable_undef(WR_VAR(0, 12, 113));
     }
 
+    void do_wind_gust(const msg::Context* c)
+    {
+        if (c)
+        {
+            // Compute time range from level and attrs
+            const Var* var_dir = c->find(WR_VAR(0, 11, 43));
+            const Var* var_speed = c->find(WR_VAR(0, 11, 41));
+            int tr = MISSING_INT;
+            if (c->trange.pind == 205)
+                tr = c->trange.p2;
+            else if (c->trange.pind == 254)
+                tr = 600;
+            tr = override_trange(var_dir, override_trange(var_speed, tr));
+            if (tr == MISSING_INT)
+                subset->store_variable_undef(WR_VAR(0,  4, 25));
+            else
+                subset->store_variable_d(WR_VAR(0,  4, 25), -tr / 60.0);
+
+            add(WR_VAR(0, 11, 43), var_dir);
+            add(WR_VAR(0, 11, 41), var_speed);
+        } else {
+            subset->store_variable_undef(WR_VAR(0,  4, 25));
+            subset->store_variable_undef(WR_VAR(0, 11, 43));
+            subset->store_variable_undef(WR_VAR(0, 11, 41));
+        }
+    }
+
     // D02043  Basic synoptic "period" data
     void do_D02043(const Msg& msg, wreport::Subset& subset)
     {
@@ -865,6 +902,7 @@ struct SynopWMO : public Synop
         //   Wind data
         if (c_wind || c_gust1 || c_gust2)
         {
+            // Look for the sensor height in the context of any of the found levels
             const msg::Context* c_first = c_wind ? c_wind : c_gust1 ? c_gust1 : c_gust2;
             bool has_h = false;
             if (c_first->level.l1 == 10 * 1000)
@@ -889,6 +927,7 @@ struct SynopWMO : public Synop
                     }
                 }
             }
+            // If not found in the attributes, use the context height
             if (!has_h)
                 subset.store_variable_d(WR_VAR(0,  7, 32), c_first->level.l1 / 1000.0);
 
@@ -897,18 +936,20 @@ struct SynopWMO : public Synop
 
             if (c_wind)
             {
-                if (c_wind->trange.pind == 0)
-                    subset.store_variable_d(WR_VAR(0,  4, 25), -c_wind->trange.p2 / 60.0);
-                else
+                // Compute time range from level and attrs
+                const Var* var_dir = c_wind->find(WR_VAR(0, 11, 1));
+                const Var* var_speed = c_wind->find(WR_VAR(0, 11, 2));
+                int tr = MISSING_INT;
+                if (c_wind->trange.pind == 200)
+                    tr = c_wind->trange.p2;
+                tr = override_trange(var_dir, override_trange(var_speed, tr));
+                if (tr == MISSING_INT)
                     subset.store_variable_undef(WR_VAR(0,  4, 25));
-                if (const Var* var = c_wind->find(WR_VAR(0, 11, 1)))
-                    subset.store_variable(*var);
                 else
-                    subset.store_variable_undef(WR_VAR(0, 11,  1));
-                if (const Var* var = c_wind->find(WR_VAR(0, 11, 2)))
-                    subset.store_variable(*var);
-                else
-                    subset.store_variable_undef(WR_VAR(0, 11,  2));
+                    subset.store_variable_d(WR_VAR(0,  4, 25), -tr / 60.0);
+
+                add(WR_VAR(0, 11,  1), var_dir);
+                add(WR_VAR(0, 11,  2), var_speed);
             } else {
                 subset.store_variable_undef(WR_VAR(0,  4, 25));
                 subset.store_variable_undef(WR_VAR(0, 11,  1));
@@ -916,44 +957,8 @@ struct SynopWMO : public Synop
             }
             subset.store_variable_undef(WR_VAR(0,  8, 21));
 
-            if (c_gust1)
-            {
-                if (c_gust1->trange.pind == 205 && c_gust1->trange.p2 != MISSING_INT)
-                    subset.store_variable_d(WR_VAR(0,  4, 25), -c_gust1->trange.p2 / 60.0);
-                else
-                    subset.store_variable_undef(WR_VAR(0,  4, 25));
-                if (const Var* var = c_gust1->find(WR_VAR(0, 11, 43)))
-                    subset.store_variable(*var);
-                else
-                    subset.store_variable_undef(WR_VAR(0, 11,  43));
-                if (const Var* var = c_gust1->find(WR_VAR(0, 11, 41)))
-                    subset.store_variable(*var);
-                else
-                    subset.store_variable_undef(WR_VAR(0, 11, 41));
-            } else {
-                subset.store_variable_undef(WR_VAR(0,  4, 25));
-                subset.store_variable_undef(WR_VAR(0, 11, 43));
-                subset.store_variable_undef(WR_VAR(0, 11, 41));
-            }
-            if (c_gust2)
-            {
-                if (c_gust2->trange.pind == 205 && c_gust2->trange.p2 != MISSING_INT)
-                    subset.store_variable_d(WR_VAR(0,  4, 25), -c_gust2->trange.p2 / 60.0);
-                else
-                    subset.store_variable_undef(WR_VAR(0,  4, 25));
-                if (const Var* var = c_gust2->find(WR_VAR(0, 11, 43)))
-                    subset.store_variable(*var);
-                else
-                    subset.store_variable_undef(WR_VAR(0, 11,  43));
-                if (const Var* var = c_gust2->find(WR_VAR(0, 11, 41)))
-                    subset.store_variable(*var);
-                else
-                    subset.store_variable_undef(WR_VAR(0, 11, 41));
-            } else {
-                subset.store_variable_undef(WR_VAR(0,  4, 25));
-                subset.store_variable_undef(WR_VAR(0, 11, 43));
-                subset.store_variable_undef(WR_VAR(0, 11, 41));
-            }
+            do_wind_gust(c_gust1);
+            do_wind_gust(c_gust2);
         } else {
             subset.store_variable_undef(WR_VAR(0,  7, 32));
             subset.store_variable_undef(WR_VAR(0,  2,  2));
