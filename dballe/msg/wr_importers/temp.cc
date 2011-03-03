@@ -380,6 +380,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
             case WR_VAR(0, 10,  9): msg->set(var, WR_VAR(0, 10,   8), lev, Trange::instant()); break;
             case WR_VAR(0, 12,  1): msg->set(var, WR_VAR(0, 12, 101), lev, Trange::instant()); break;
             case WR_VAR(0, 12,  3): msg->set(var, WR_VAR(0, 12, 103), lev, Trange::instant()); break;
+            case WR_VAR(0,  7,  4): msg->set(var, WR_VAR(0, 10,   4), lev, Trange::instant()); break;
             default:
                 msg->set(var, var.code(), lev, Trange::instant());
                 break;
