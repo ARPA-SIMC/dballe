@@ -178,6 +178,33 @@ struct ReimportTest
         virtual void clean_second(Msgs& msgs) { if (second) do_remove(msgs); };
     };
 
+    // Round variables to account for a passage through legacy vars
+    struct RemoveTempWMOOnlyVarsHook : public Hook
+    {
+        bool first, second;
+        RemoveTempWMOOnlyVarsHook(bool first=true, bool second=true)
+            : first(first), second(second) {}
+        void do_remove(Msgs& msgs)
+        {
+            for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+            {
+                Msg& m = **mi;
+                for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
+                {
+                    msg::Context& c = **ci;
+                    c.remove(WR_VAR(0, 2, 12)); // Radiosonde computational method
+
+                    if (c.data.empty())
+                        ci = m.data.erase(ci);
+                    else
+                        ++ci;
+                }
+            }
+        }
+        virtual void clean_first(Msgs& msgs) { if (first) do_remove(msgs); };
+        virtual void clean_second(Msgs& msgs) { if (second) do_remove(msgs); };
+    };
+
     // Remove ground level with missing length of statistical processing, that
     // cannot be encoded in ECMWF templates
     struct RemoveSynopWMOOddprecHook : public Hook
@@ -248,6 +275,23 @@ struct ReimportTest
         }
         virtual void clean_first(Msgs& msgs) { do_preround(msgs); };
         virtual void clean_second(Msgs& msgs) { do_preround(msgs); };
+    };
+
+    // Override message type
+    struct OverrideTypeHook : public Hook
+    {
+        MsgType type;
+        OverrideTypeHook(MsgType type) : type(type) {}
+        void do_override(Msgs& msgs)
+        {
+            for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+            {
+                Msg& m = **mi;
+                m.type = type;
+            }
+        }
+        virtual void clean_first(Msgs& msgs) { do_override(msgs); };
+        virtual void clean_second(Msgs& msgs) { do_override(msgs); };
     };
 
     string fname;
@@ -378,7 +422,7 @@ struct ReimportTest
             }
 
             // Encode
-            Rawmsg rawmsg;
+            rawmsg.clear();
             try {
                 bulletin.encode(rawmsg);
                 //exporter->to_rawmsg(*msgs1, rawmsg);
@@ -663,6 +707,8 @@ void to::test<7>()
     {
         BufrReimportTest test("bufr/obs2-101.16.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
+        test.hooks.push_back(new BufrReimportTest::PreroundGeopotentialHook());
+        test.hooks.push_back(new BufrReimportTest::RemoveTempWMOOnlyVarsHook());
         run_test(test, "temp-wmo", "temp-ecmwf");
         test.clear_hooks();
         run_test(test, "temp-ecmwf");
@@ -670,6 +716,8 @@ void to::test<7>()
     {
         BufrReimportTest test("bufr/obs2-102.1.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
+        test.hooks.push_back(new BufrReimportTest::PreroundGeopotentialHook());
+        test.hooks.push_back(new BufrReimportTest::RemoveTempWMOOnlyVarsHook());
         run_test(test, "temp-wmo", "temp-ecmwf");
         test.clear_hooks();
         run_test(test, "temp-ecmwf");
@@ -677,8 +725,10 @@ void to::test<7>()
     {
         BufrReimportTest test("bufr/obs2-91.2.bufr");
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, false));
+        test.hooks.push_back(new BufrReimportTest::OverrideTypeHook(MSG_PILOT));
         run_test(test, "temp-wmo", "temp-ecmwf");
         test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::OverrideTypeHook(MSG_PILOT));
         run_test(test, "temp-ecmwf");
     }
 }
