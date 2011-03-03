@@ -20,6 +20,7 @@
 #include "base.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
+#include <cstdlib>
 
 #warning remove when done debugging
 #include <iostream>
@@ -91,7 +92,7 @@ protected:
     {
         return time_period == MISSING_INT ?
             Trange(standard.pind, 0) :
-            Trange(standard.pind, 0, -time_period);
+            Trange(standard.pind, 0, abs(time_period));
     }
 
     Level lev_shortcut() const { return Level(v->ltype1, v->l1, v->ltype2, v->l2); }
@@ -115,7 +116,7 @@ protected:
     {
         if (time_period == MISSING_INT) return;
         ib_use_temp_var();
-        temp_var->seta(newvar(WR_VAR(0, 4, 194), -time_period));
+        temp_var->seta(newvar(WR_VAR(0, 4, 194), abs(time_period)));
     }
 
     void ib_level_use_real() { chosen_lev = lev_real(); }
@@ -196,7 +197,7 @@ protected:
     void set_gen_sensor(const Var& var, int shortcut)
     {
         const MsgVarShortcut& v = shortcutTable[shortcut];
-        set_gen_sensor(var, v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+        set_gen_sensor(var, shortcut, Trange(v.pind, v.p1, v.p2));
     }
 
     void set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful=false)
@@ -220,15 +221,16 @@ protected:
             ib_level_use_real();
             ib_trange_use_real(tr_std);
         }
-        else if (tr_careful)
-        {
-            ib_level_use_shorcut_if_standard_else_real(lev_std);
-            ib_trange_use_shorcut_if_standard_else_real(tr_std);
-        }
         else
         {
-            ib_level_use_shorcut_and_preserve_rest(lev_std);
-            ib_trange_use_shorcut_and_preserve_rest(tr_std);
+            if (lev_careful)
+                ib_level_use_shorcut_if_standard_else_real(lev_std);
+            else
+                ib_level_use_shorcut_and_preserve_rest(lev_std);
+            if (tr_careful)
+                ib_trange_use_shorcut_if_standard_else_real(tr_std);
+            else
+                ib_trange_use_shorcut_and_preserve_rest(tr_std);
         }
         ib_set();
     }
@@ -562,21 +564,27 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0, 20,  4):
             ib_start(DBA_MSG_PAST_WTR1, var);
             ib_level_use_shorcut_and_discard_rest();
-            ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+            if (opts.simplified)
+                ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+            else
+                ib_trange_use_real((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
             ib_set();
             break;
         case WR_VAR(0, 20,  5):
             ib_start(DBA_MSG_PAST_WTR2, var);
             ib_level_use_shorcut_and_discard_rest();
-            ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+            if (opts.simplified)
+                ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+            else
+                ib_trange_use_real((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
             ib_set();
             break;
 
 /* Sunshine data (complete) */
-        case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, -time_period)); break;
+        case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, abs(time_period))); break;
 
 /* Precipitation measurement (complete) */
-        case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, -time_period)); break;
+        case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(time_period))); break;
 
 /* Extreme temperature data */
         case WR_VAR(0, 2, 111):
@@ -612,7 +620,7 @@ void SynopImporter::import_var(const Var& var)
             if (time_period == MISSING_INT)
                 msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1));
             else
-                msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
+                msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, abs(time_period)));
             break;
 
 /* Radiation data */

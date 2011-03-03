@@ -129,15 +129,43 @@ struct ReimportTest
             for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
             {
                 Msg& m = **mi;
+                // Remove all 'cloud drift' levels
+                for (int i = 1; m.remove_context(Level::cloud(260, i), Trange::instant()); ++i)
+                    ;
+                // Remove all 'cloud elevation' levels
+                for (int i = 1; m.remove_context(Level::cloud(261, i), Trange::instant()); ++i)
+                    ;
+                // Remove all 'cloud direction and elevation' levels
+                for (int i = 1; m.remove_context(Level::cloud(262, i), Trange::instant()); ++i)
+                    ;
                 // Remove all 'cloud below' levels
                 for (int i = 1; m.remove_context(Level::cloud(263, i), Trange::instant()); ++i)
                     ;
-                for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+                bool seen_tprec = false;
+                for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
                 {
                     msg::Context& c = **ci;
-                    c.remove(WR_VAR(0, 7, 31));
-                    c.remove(WR_VAR(0, 2,  2));
-                    c.remove(WR_VAR(0, 1, 19));
+                    c.remove(WR_VAR(0, 20, 62)); // State of the ground (with/without snow)
+                    c.remove(WR_VAR(0, 14, 31)); // Total sunshine
+                    c.remove(WR_VAR(0, 13, 33)); // Evaporation/evapotranspiration
+                    c.remove(WR_VAR(0, 12,121)); // Ground minimum temperature
+                    c.remove(WR_VAR(0, 11, 41)); // Maximum wind gust
+                    c.remove(WR_VAR(0, 10,  8)); // Geopotential
+                    c.remove(WR_VAR(0,  7, 31)); // Height of barometer
+                    c.remove(WR_VAR(0,  2,  4)); // Type of instrumentation for evaporation measurement
+                    c.remove(WR_VAR(0,  2,  2)); // Type of instrumentation for wind measurement
+                    c.remove(WR_VAR(0,  1, 19)); // Long station or site name
+                    if (c.find(WR_VAR(0, 13, 11))) // Keep only one total precipitation measurement
+                    {
+                        if (!seen_tprec)
+                            seen_tprec = true;
+                        else
+                            c.remove(WR_VAR(0, 13, 11));
+                    }
+                    if (c.data.empty())
+                        ci = m.data.erase(ci);
+                    else
+                        ++ci;
                 }
             }
         }
@@ -510,6 +538,8 @@ void to::test<6>()
         run_test(test, "synop-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveSynopWMOOnlyVarsHook(true, true));
         run_test(test, "synop-ecmwf", "synop-wmo");
     }
     {

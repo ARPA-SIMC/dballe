@@ -171,6 +171,7 @@ struct Synop : public Template
     const msg::Context* c_sunshine2;
     const msg::Context* c_prec1;
     const msg::Context* c_prec2;
+    const msg::Context* c_prec24;
     const msg::Context* c_wind;
     const msg::Context* c_gust1;
     const msg::Context* c_gust2;
@@ -186,6 +187,7 @@ struct Synop : public Template
         c_sunshine2 = NULL;
         c_prec1 = NULL;
         c_prec2 = NULL;
+        c_prec24 = NULL;
         c_wind = NULL;
         c_gust1 = NULL;
         c_gust2 = NULL;
@@ -218,6 +220,8 @@ struct Synop : public Template
                                 c_prec1 = c;
                             else if (!c_prec2)
                                 c_prec2 = c;
+                            if (c->trange.p2 == 86400)
+                                c_prec24 = c;
                         }
 
                         // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
@@ -239,6 +243,8 @@ struct Synop : public Template
                             c_prec1 = c;
                         else if (!c_prec2)
                             c_prec2 = c;
+                        if (c->trange.p2 == 86400)
+                            c_prec24 = c;
                     }
                 }
                 if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
@@ -600,14 +606,31 @@ struct SynopWMO : public Synop
         }
 
         //   Precipitation past 24 hours
+        if (c_prec24)
         {
-            ContextFinder finder(msg);
-            finder.add_var(DBA_MSG_TOT_PREC24);
-            finder.find_in_level(103, DBA_MSG_TOT_PREC24);
-            finder.add_found_sensor_height(subset);
-            finder.vars[0].add(subset, WR_VAR(0, 13, 23));
-            subset.store_variable_undef(WR_VAR(0, 7, 32));
+            bool stored = false;
+            if (const Var* var = c_prec24->find(WR_VAR(0, 13, 11)))
+                if (const Var* a = var->enqa(WR_VAR(0, 7, 32)))
+                {
+                    subset.store_variable_d(WR_VAR(0, 7, 32), a->enqd());
+                    stored = true;
+                }
+
+            if (!stored && c_prec24->level.ltype1 == 103)
+            {
+                subset.store_variable_d(WR_VAR(0, 7, 32), double(c_prec24->level.l1) / 1000.0);
+                stored = true;
+            }
+
+            if (!stored)
+                subset.store_variable_undef(WR_VAR(0,  7, 32));
+
+            add(WR_VAR(0, 13, 23), c_prec24, DBA_MSG_TOT_PREC24);
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  7, 32));
+            subset.store_variable_undef(WR_VAR(0, 13, 23));
         }
+        subset.store_variable_undef(WR_VAR(0, 7, 32));
 
         //   Cloud data
         {
@@ -762,7 +785,7 @@ struct SynopWMO : public Synop
         //   Sunshine data (form 1 hour and 24 hour period)
         if (c_sunshine1)
         {
-            subset.store_variable_d(WR_VAR(0,  4, 24), c_sunshine1->trange.p2 / 3600);
+            subset.store_variable_d(WR_VAR(0,  4, 24), -c_sunshine1->trange.p2 / 3600);
             if (const Var* var = c_sunshine1->find(WR_VAR(0, 14, 31)))
                 subset.store_variable(*var);
             else
@@ -773,7 +796,7 @@ struct SynopWMO : public Synop
         }
         if (c_sunshine2)
         {
-            subset.store_variable_d(WR_VAR(0,  4, 24), c_sunshine2->trange.p2 / 3600);
+            subset.store_variable_d(WR_VAR(0,  4, 24), -c_sunshine2->trange.p2 / 3600);
             if (const Var* var = c_sunshine2->find(WR_VAR(0, 14, 31)))
                 subset.store_variable(*var);
             else
