@@ -354,6 +354,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
     for (unsigned i = 0; i < length; ++i)
     {
         const Var& var = (*subset)[start + i];
+        if (!var.isset()) continue;
         switch (var.code())
         {
             case WR_VAR(0,  4, 16):
