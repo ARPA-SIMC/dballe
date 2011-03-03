@@ -423,7 +423,7 @@ struct TempEcmwfShip : public TempBase
     }
 };
 
-struct TempWMOFactory : public TemplateFactory
+struct TempWMOFactory : public virtual TemplateFactory
 {
     TempWMOFactory() { name = TEMP_WMO_NAME; description = TEMP_WMO_DESC; }
 
@@ -432,7 +432,7 @@ struct TempWMOFactory : public TemplateFactory
         return auto_ptr<Template>(new TempWMO(opts, msgs));
     }
 };
-struct TempEcmwfLandFactory : public TemplateFactory
+struct TempEcmwfLandFactory : public virtual TemplateFactory
 {
     TempEcmwfLandFactory() { name = TEMP_ECMWF_LAND_NAME; description = TEMP_ECMWF_LAND_DESC; }
 
@@ -441,7 +441,7 @@ struct TempEcmwfLandFactory : public TemplateFactory
         return auto_ptr<Template>(new TempEcmwfLand(opts, msgs));
     }
 };
-struct TempEcmwfShipFactory : public TemplateFactory
+struct TempEcmwfShipFactory : public virtual TemplateFactory
 {
     TempEcmwfShipFactory() { name = TEMP_ECMWF_SHIP_NAME; description = TEMP_ECMWF_SHIP_DESC; }
 
@@ -450,7 +450,7 @@ struct TempEcmwfShipFactory : public TemplateFactory
         return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
 };
-struct TempEcmwfFactory : public TemplateFactory
+struct TempEcmwfFactory : public virtual TemplateFactory
 {
     TempEcmwfFactory() { name = TEMP_ECMWF_NAME; description = TEMP_ECMWF_DESC; }
 
@@ -462,7 +462,7 @@ struct TempEcmwfFactory : public TemplateFactory
             return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
 };
-struct TempShipFactory : public TemplateFactory
+struct TempShipFactory : public virtual TemplateFactory
 {
     TempShipFactory() { name = TEMP_SHIP_NAME; description = TEMP_SHIP_DESC; }
 
@@ -471,9 +471,19 @@ struct TempShipFactory : public TemplateFactory
         return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
 };
-struct TempFactory : public TempEcmwfFactory
+struct TempFactory : public virtual TempEcmwfFactory, TempWMOFactory
 {
     TempFactory() { name = TEMP_NAME; description = TEMP_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        const Msg& msg = *msgs[0];
+        const Var* var = msg.get_sonde_tracking_var();
+        if (var)
+            return TempWMOFactory::make(opts, msgs);
+        else
+            return TempEcmwfFactory::make(opts, msgs);
+    }
 };
 
 } // anonymous namespace

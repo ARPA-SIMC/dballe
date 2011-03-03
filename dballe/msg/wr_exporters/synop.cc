@@ -1044,7 +1044,7 @@ struct SynopWMO : public Synop
 };
 
 
-struct SynopWMOFactory : public TemplateFactory
+struct SynopWMOFactory : public virtual TemplateFactory
 {
     SynopWMOFactory() { name = SYNOP_WMO_NAME; description = SYNOP_WMO_DESC; }
 
@@ -1055,7 +1055,37 @@ struct SynopWMOFactory : public TemplateFactory
     }
 };
 
-struct SynopECMWFFactory : public TemplateFactory
+struct SynopECMWFLandFactory : public virtual TemplateFactory
+{
+    SynopECMWFLandFactory() { name = SYNOP_ECMWF_LAND_NAME; description = SYNOP_ECMWF_LAND_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new SynopECMWFLand(opts, msgs));
+    }
+};
+
+struct SynopECMWFLandHighFactory : public virtual TemplateFactory
+{
+    SynopECMWFLandHighFactory() { name = SYNOP_ECMWF_LAND_HIGH_NAME; description = SYNOP_ECMWF_LAND_HIGH_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
+    }
+};
+
+struct SynopECMWFAutoFactory : public virtual TemplateFactory
+{
+    SynopECMWFAutoFactory() { name = SYNOP_ECMWF_AUTO_NAME; description = SYNOP_ECMWF_AUTO_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new SynopECMWFAuto(opts, msgs));
+    }
+};
+
+struct SynopECMWFFactory : public virtual TemplateFactory
 {
     SynopECMWFFactory() { name = SYNOP_ECMWF_NAME; description = SYNOP_ECMWF_DESC; }
 
@@ -1075,38 +1105,18 @@ struct SynopECMWFFactory : public TemplateFactory
     }
 };
 
-struct SynopFactory : public SynopECMWFFactory
+struct SynopFactory : public SynopECMWFFactory, SynopWMOFactory
 {
     SynopFactory() { name = SYNOP_NAME; description = SYNOP_DESC; }
-};
-
-struct SynopECMWFLandFactory : public TemplateFactory
-{
-    SynopECMWFLandFactory() { name = SYNOP_ECMWF_LAND_NAME; description = SYNOP_ECMWF_LAND_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new SynopECMWFLand(opts, msgs));
-    }
-};
-
-struct SynopECMWFLandHighFactory : public TemplateFactory
-{
-    SynopECMWFLandHighFactory() { name = SYNOP_ECMWF_LAND_HIGH_NAME; description = SYNOP_ECMWF_LAND_HIGH_DESC; }
-
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
-    {
-        return auto_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
-    }
-};
-
-struct SynopECMWFAutoFactory : public TemplateFactory
-{
-    SynopECMWFAutoFactory() { name = SYNOP_ECMWF_AUTO_NAME; description = SYNOP_ECMWF_AUTO_DESC; }
-
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
-    {
-        return auto_ptr<Template>(new SynopECMWFAuto(opts, msgs));
+        const Msg& msg = *msgs[0];
+        const Var* var = msg.get_st_name_var();
+        if (var)
+            return SynopWMOFactory::make(opts, msgs);
+        else
+            return SynopECMWFFactory::make(opts, msgs);
     }
 };
 
