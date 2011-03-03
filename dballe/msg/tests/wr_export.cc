@@ -872,7 +872,8 @@ void to::test<9>()
 {
     const char** files = dballe::tests::bufr_files;
     set<string> blacklist;
-    blacklist.insert("bufr/temp-2-255.bufr");
+    blacklist.insert("bufr/tempforecast.bufr");
+    blacklist.insert("bufr/obs255-255.0.bufr");
 
     vector<string> fails;
     int i;
