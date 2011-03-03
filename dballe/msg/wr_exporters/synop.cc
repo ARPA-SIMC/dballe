@@ -1067,7 +1067,7 @@ struct SynopECMWFFactory : public TemplateFactory
             return auto_ptr<Template>(new SynopECMWFAuto(opts, msgs));
 
         ContextFinder finder(msg);
-        finder.add_var(WR_VAR(0, 10, 9));
+        finder.add_var(WR_VAR(0, 10, 8));
         if (finder.find_in_level(100))
             return auto_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
 
