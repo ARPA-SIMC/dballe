@@ -22,6 +22,7 @@
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
 #include <wreport/bulletin.h>
+#include <wreport/conv.h>
 #include <wibble/string.h>
 #include <set>
 #include <cstring>
@@ -111,6 +112,11 @@ struct ReimportTest
                         Var var1(table->query(WR_VAR(0, 12, 3)), *var);
                         var->set(var1);
                     }
+                    if (Var* var = c.edit(WR_VAR(0,  7,  30)))
+                    {
+                        Var var1(table->query(WR_VAR(0, 7, 1)), *var);
+                        var->set(var1);
+                    }
                 }
             }
         }
@@ -192,7 +198,19 @@ struct ReimportTest
                 for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
                 {
                     msg::Context& c = **ci;
-                    c.remove(WR_VAR(0, 2, 12)); // Radiosonde computational method
+                    c.remove(WR_VAR(0, 22, 43)); // Sea/water temperature
+                    c.remove(WR_VAR(0, 11, 62)); // Absolute wind shear layer above
+                    c.remove(WR_VAR(0, 11, 61)); // Absolute wind shear layer below
+                    c.remove(WR_VAR(0,  7, 31)); // Height of barometer above MSL
+                    c.remove(WR_VAR(0,  7,  7)); // Height (of release above MSL)
+                    c.remove(WR_VAR(0,  6, 15)); // Longitude displacement
+                    c.remove(WR_VAR(0,  5, 15)); // Latitude displacement
+                    c.remove(WR_VAR(0,  4, 86)); // Long time period or displacement
+                    c.remove(WR_VAR(0,  4,  6)); // Second
+                    c.remove(WR_VAR(0,  2, 14)); // Tracking technique / status of system
+                    c.remove(WR_VAR(0,  2, 13)); // Solar and infrared radiation correction
+                    c.remove(WR_VAR(0,  2, 12)); // Radiosonde computational method
+                    c.remove(WR_VAR(0,  2,  3)); // Type of measuring equipment
 
                     if (c.data.empty())
                         ci = m.data.erase(ci);
@@ -270,6 +288,27 @@ struct ReimportTest
                         Var var4(table->query(WR_VAR(0, 10, 3)), var3);
                         orig->set(var4);
                     }
+                }
+            }
+        }
+        virtual void clean_first(Msgs& msgs) { do_preround(msgs); };
+        virtual void clean_second(Msgs& msgs) { do_preround(msgs); };
+    };
+
+    // Preround vertical sounding significance with a B08042->B08001->B08042 round trip
+    struct PreroundVSSHook : public Hook
+    {
+        PreroundVSSHook() {}
+        void do_preround(Msgs& msgs)
+        {
+            for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+            {
+                Msg& m = **mi;
+                for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+                {
+                    msg::Context& c = **ci;
+                    if (Var* orig = c.edit(WR_VAR(0, 8, 42)))
+                        orig->seti(convert_BUFR08001_to_BUFR08042(convert_BUFR08042_to_BUFR08001(orig->enqi())));
                 }
             }
         }
@@ -731,6 +770,22 @@ void to::test<7>()
         test.hooks.push_back(new BufrReimportTest::OverrideTypeHook(MSG_PILOT));
         run_test(test, "temp-ecmwf");
     }
+    {
+        BufrReimportTest test("bufr/temp-bad3.bufr");
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveTempWMOOnlyVarsHook());
+        run_test(test, "temp-wmo", "temp-ecmwf");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "temp-ecmwf");
+    }
+    {
+        BufrReimportTest test("bufr/temp-bad5.bufr");
+        run_test(test, "temp-wmo", "temp-ecmwf");
+        test.clear_hooks();
+        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        run_test(test, "temp-ecmwf", "temp-wmo");
+    }
 }
 
 // Re-export test for new style temps
@@ -742,6 +797,10 @@ void to::test<8>()
         run_test(test, "temp-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveTempWMOOnlyVarsHook());
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::PreroundGeopotentialHook());
+        test.hooks.push_back(new BufrReimportTest::PreroundVSSHook());
         run_test(test, "temp-ecmwf", "temp-wmo");
     }
     {
@@ -749,6 +808,8 @@ void to::test<8>()
         run_test(test, "temp-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveTempWMOOnlyVarsHook());
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
         run_test(test, "temp-ecmwf", "temp-wmo");
     }
     {
@@ -756,6 +817,8 @@ void to::test<8>()
         run_test(test, "temp-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveTempWMOOnlyVarsHook());
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
         run_test(test, "temp-ecmwf", "temp-wmo");
     }
     //{
@@ -786,34 +849,21 @@ void to::test<8>()
     //    run_test(test, "old");
     //}
     {
-        BufrReimportTest test("bufr/temp-bad3.bufr");
-        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
-        run_test(test, "temp-wmo");
-        test.clear_hooks();
-        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
-        run_test(test, "temp-ecmwf", "temp-wmo");
-    }
-    {
         BufrReimportTest test("bufr/temp-bad4.bufr");
         run_test(test, "temp-wmo");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::RemoveTempWMOOnlyVarsHook());
+        test.hooks.push_back(new BufrReimportTest::RoundLegacyVarsHook(true, true));
         run_test(test, "temp-ecmwf", "temp-wmo");
     }
-    {
-        BufrReimportTest test("bufr/temp-bad5.bufr");
-        run_test(test, "temp-wmo");
-        test.clear_hooks();
-        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
-        run_test(test, "temp-ecmwf", "temp-wmo");
-    }
-    {
-        BufrReimportTest test("bufr/tempforecast.bufr");
-        run_test(test, "temp-wmo");
-        test.clear_hooks();
-        test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
-        run_test(test, "temp-ecmwf", "temp-wmo");
-    }
+    //{
+    //    BufrReimportTest test("bufr/tempforecast.bufr");
+    //    run_test(test, "temp-wmo");
+    //    test.clear_hooks();
+    //    test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+    //    run_test(test, "temp-ecmwf", "temp-wmo");
+    //}
 }
 
 // Re-export to BUFR and see the differences
