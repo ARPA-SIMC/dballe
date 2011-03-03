@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ void FlightImporter::import_var(const Var& var)
         case WR_VAR(0,  8, 21): msg->set_timesig_var(var); break;
         case WR_VAR(0,  7,  2):
             lev = Level(102, var.enqd());
-            msg->set(var, WR_VAR(0,  7,  1), lev, Trange::instant());
+            msg->set(var, WR_VAR(0,  7, 30), lev, Trange::instant());
             break;
         case WR_VAR(0,  7,  4):
             lev = Level(100, var.enqd());

@@ -355,7 +355,7 @@ struct SynopECMWF : public Synop
         /*  7 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /*  8 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /*  9 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT);
+        /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
         /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
     }
 };
@@ -986,7 +986,7 @@ struct SynopWMO : public Synop
         do_D01011(); // date
         do_D01012(); // time
         do_D01021(); // coordinates
-        add(WR_VAR(0,  7, 30), DBA_MSG_HEIGHT);
+        add(WR_VAR(0,  7, 30), DBA_MSG_HEIGHT_STATION);
         add(WR_VAR(0,  7, 31), DBA_MSG_HEIGHT_BARO);
         // D02031  Pressure data
         do_D02031(msg, subset);

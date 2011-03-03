@@ -204,7 +204,7 @@ struct Pollution : public Template
         /* 12 */ add(WR_VAR(0,  4,   6), DBA_MSG_SECOND);
         /* 13 */ add(WR_VAR(0,  5,   1), DBA_MSG_LATITUDE);
         /* 14 */ add(WR_VAR(0,  6,   1), DBA_MSG_LONGITUDE);
-        /* 15 */ add(WR_VAR(0,  7,  30), DBA_MSG_HEIGHT);
+        /* 15 */ add(WR_VAR(0,  7,  30), DBA_MSG_HEIGHT_STATION);
 
 
         /* 16 */ subset.store_variable_i(WR_VAR(0,  7, 32), l1);

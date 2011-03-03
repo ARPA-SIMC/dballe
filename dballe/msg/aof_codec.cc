@@ -177,7 +177,7 @@ void AOFImporter::parse_altitude(const uint32_t* obs, Msg& msg)
 {
     /* 16 station altitude */
     if (OBS(16) != AOF_UNDEF)
-        msg.set_height((int)OBS(16) - 1000, get_conf6((OBS(19) >> 24) & 0x3f));
+        msg.set_height_station((int)OBS(16) - 1000, get_conf6((OBS(19) >> 24) & 0x3f));
 }
 
 void AOFImporter::parse_st_ident(const uint32_t* obs, Msg& msg)

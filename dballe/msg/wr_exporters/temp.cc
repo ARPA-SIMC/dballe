@@ -212,7 +212,7 @@ struct TempWMO : public TempBase
         do_D01011(); // date
         do_D01013(); // time
         do_D01021(); // coordinates
-        add(WR_VAR(0,  7, 30), c_station, DBA_MSG_HEIGHT);
+        add(WR_VAR(0,  7, 30), c_station, DBA_MSG_HEIGHT_STATION);
         add(WR_VAR(0,  7, 31), c_station, DBA_MSG_HEIGHT_BARO);
         add(WR_VAR(0,  7,  7), c_station, DBA_MSG_HEIGHT_RELEASE);
         add(WR_VAR(0, 33, 24), c_station, DBA_MSG_STATION_HEIGHT_QUALITY);
@@ -311,7 +311,7 @@ struct TempEcmwfLand : public TempBase
         /*  8 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /*  9 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /* 10 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /* 11 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT);
+        /* 11 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
         /* 12 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 13 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
         /* 14 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
@@ -398,7 +398,7 @@ struct TempEcmwfShip : public TempBase
         /*  9 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /* 10 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
         /* 11 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
-        /* 12 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT);
+        /* 12 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
         /* 13 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 14 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
         /* 15 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);

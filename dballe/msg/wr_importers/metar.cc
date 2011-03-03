@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ void MetarImporter::import_var(const Var& var)
 {
     switch (var.code())
     {
-        case WR_VAR(0,  7,  1): msg->set_height_var(var); break;
+        case WR_VAR(0,  7,  1): msg->set_height_station_var(var); break;
         case WR_VAR(0, 11,  1): set_gen_sensor(var, DBA_MSG_WIND_DIR); break;
         case WR_VAR(0, 11, 16): set_gen_sensor(var, DBA_MSG_EX_CCW_WIND); break;
         case WR_VAR(0, 11, 17): set_gen_sensor(var, DBA_MSG_EX_CW_WIND); break;

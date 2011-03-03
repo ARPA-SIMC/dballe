@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -191,7 +191,7 @@ void PollutionImporter::import_var(const Var& var)
          * instrument above local ground. Both in metres. If not known than
          * can be coded as missing value.
          */
-        case WR_VAR(0,  7,  30): msg->set_height_var(var); break;
+        case WR_VAR(0,  7,  30): msg->set_height_station_var(var); break;
         case WR_VAR(0,  7,  31): lev.l1 = var.enqi(); break;
         /* Signifies that observation is an average over a certain time period. Value set to 2. */
         case WR_VAR(0,  8,  21):

@@ -234,8 +234,8 @@ void TempImporter::import_var(const Var& var)
                     error_consistency::throwf("TEMP time significance is %d instead of 18", var.enqi());
             break;
 /* Horizontal and vertical coordinates of launch site */
-        case WR_VAR(0,  7,  1): msg->set_height_var(var); break;
-        case WR_VAR(0,  7, 30): msg->set_height_var(var); break;
+        case WR_VAR(0,  7,  1):
+        case WR_VAR(0,  7, 30): msg->set_height_station_var(var); break;
         case WR_VAR(0,  7, 31): msg->set_height_baro_var(var); break;
         case WR_VAR(0,  7,  7): msg->set_height_release_var(var); break;
         case WR_VAR(0, 33, 24): msg->set_station_height_quality_var(var); break;

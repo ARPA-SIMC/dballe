@@ -107,7 +107,7 @@ struct Metar : public Template
         /*  6 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /*  7 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
         /*  8 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
-        /*  9 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT);
+        /*  9 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
         /* 10 */ subset.store_variable_i(WR_VAR(0,  7,  6), 10);
         /* 11 */ add(WR_VAR(0, 11,  1), DBA_MSG_WIND_DIR);
         /* 12 */ add(WR_VAR(0, 11, 16), DBA_MSG_EX_CCW_WIND);

@@ -125,7 +125,7 @@ struct Pilot : public Template
         /*  8 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /*  9 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /* 10 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /* 11 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT);
+        /* 11 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
 
         int var_levcount = subset.size();
         subset.store_variable_undef(WR_VAR(0, 31,  1));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,10 +84,10 @@ void AOFImporter::read_flight(const uint32_t* obs, int obs_len, Msg& msg)
 			// makeaof encodes negative numbers with whatever is used in the
 			// local machine.  We hope it is two's complement.
 			uint32_t absheight = ~OBS(24) + 1;
-			msg.setd(WR_VAR(0,  7,  1), -(double)absheight, get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
+			msg.setd(WR_VAR(0,  7, 30), -(double)absheight, get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
 				Level(102, OBS(24)), Trange::instant());
 		} else {
-			msg.setd(WR_VAR(0,  7,  1), (double)OBS(24), get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
+			msg.setd(WR_VAR(0,  7, 30), (double)OBS(24), get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
 				Level(102, OBS(24)), Trange::instant());
 		}
 		if (ltype == -1)

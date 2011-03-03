@@ -1,7 +1,7 @@
 /*
  * core/test-utils-core - Test utility functions for the core module
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ const static Varcode generator_varcodes[] = {
 	WR_VAR(0,  4,   5),
 	WR_VAR(0,  5,   1),
 	WR_VAR(0,  6,   1),
-	WR_VAR(0,  7,   1),
+	WR_VAR(0,  7,  30),
 	WR_VAR(0,  7,   2),
 	WR_VAR(0,  7,  31),
 	WR_VAR(0,  8,   1),

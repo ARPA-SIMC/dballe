@@ -563,7 +563,7 @@ void to::test<11>()
     msg.set_latitude(45.0);
     msg.set_longitude(11.0);
     msg.set_temp_2m(273.0, 75);
-    msg.set_height(1230);
+    msg.set_height_station(1230.0);
     msg.set_st_name("antani");
     msg.set_rep_memo("temp");
 

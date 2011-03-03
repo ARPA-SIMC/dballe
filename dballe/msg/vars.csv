@@ -36,7 +36,7 @@ MINUTE,         int,    B04005,     257,     -, -, -,    -,      -,     -, Minut
 SECOND,         int,    B04006,     257,     -, -, -,    -,      -,     -, Second of the observation
 LATITUDE,       num,    B05001,     257,     -, -, -,    -,      -,     -, Latitude of the station
 LONGITUDE,      num,    B06001,     257,     -, -, -,    -,      -,     -, Longiture of the station
-HEIGHT,         num,    B07001,     257,     -, -, -,    -,      -,     -, Height of station
+HEIGHT_STATION, num,    B07030,     257,     -, -, -,    -,      -,     -, Height of station
 HEIGHT_BARO,    num,    B07031,     257,     -, -, -,    -,      -,     -, Height of barometer above mean sea level
 HEIGHT_RELEASE, num,    B07007,     257,     -, -, -,    -,      -,     -, Height of release of sonde above msl
 STATION_HEIGHT_QUALITY, int, B33024, 257,    -, -, -,    -,      -,     -, Station elevation quality mark (for mobile stations)

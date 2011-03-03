@@ -97,8 +97,8 @@ struct FlightBase : public Template
             int use = 0;
             switch (ctx.level.ltype1)
             {
-                case 100: use = ctx.find(WR_VAR(0, 10, 4)) != NULL; break;
-                case 102: use = ctx.find(WR_VAR(0,  7, 1)) != NULL; break;
+                case 100: use = ctx.find_by_id(DBA_MSG_PRESS) != NULL; break;
+                case 102: use = ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL; break;
             }
             if (use)
             {
@@ -159,7 +159,7 @@ struct Airep : public FlightBase
         /*  7 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /*  8 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
         /*  9 */ add(WR_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE);
-        /* 10 */ add(WR_VAR(0,  7,  2), WR_VAR(0,  7,   1), lev, Trange::instant()); /* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
+        /* 10 */ add(WR_VAR(0,  7,  2), WR_VAR(0,  7,  30), lev, Trange::instant()); /* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
         /* 11 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101), lev, Trange::instant()); /* TEMPERATURE/DRY-BULB TEMPERATURE */
         /* 12 */ add(WR_VAR(0, 11,  1), WR_VAR(0, 11,   1), lev, Trange::instant()); /* WIND DIRECTION */
         /* 13 */ add(WR_VAR(0, 11,  2), WR_VAR(0, 11,   2), lev, Trange::instant()); /* WIND SPEED */

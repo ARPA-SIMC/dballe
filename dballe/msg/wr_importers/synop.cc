@@ -22,9 +22,6 @@
 #include <wreport/subset.h>
 #include <cstdlib>
 
-#warning remove when done debugging
-#include <iostream>
-
 using namespace wreport;
 using namespace std;
 
@@ -467,7 +464,7 @@ void SynopImporter::import_var(const Var& var)
 /* Fixed surface station identification, time, horizontal and vertical
  * coordinates (complete) */
         case WR_VAR(0,  7,  1):
-        case WR_VAR(0,  7, 30): msg->set_height_var(var); break;
+        case WR_VAR(0,  7, 30): msg->set_height_station_var(var); break;
         /* case WR_VAR(0,  7,  4): DBA_RUN_OR_RETURN(dba_msg_set_isobaric_surface_var(msg, var)); break; */
         case WR_VAR(0,  7, 31):
             /* Remember the height to use later as layer for pressure */

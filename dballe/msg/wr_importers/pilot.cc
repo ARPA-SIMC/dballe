@@ -78,7 +78,7 @@ void PilotImporter::import_var(const Var& var)
 	{
 		case WR_VAR(0, 2, 11): msg->set_sonde_type_var(var); break;
 		case WR_VAR(0, 2, 12): msg->set_sonde_method_var(var); break;
-		case WR_VAR(0, 7,  1): msg->set_height_var(var); break;
+		case WR_VAR(0, 7,  1): msg->set_height_station_var(var); break;
 		case WR_VAR(0, 7,  4):
 			lev.ltype1 = 100;
 			lev.l1 = var.enqd();

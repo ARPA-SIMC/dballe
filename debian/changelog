@@ -10,8 +10,9 @@ dballe (5.5-1) unstable; urgency=low
        (redundant, since we already have B10008)
      - Lots of testing and fixes in WMO SYNOP templates import/export
      - TEMP templates: all pressure imports now use B10004 
+     - Local B table change: B07001->B07030
 
- -- Enrico Zini <enrico@debian.org>  Thu, 03 Mar 2011 16:17:40 +0000
+ -- Enrico Zini <enrico@debian.org>  Thu, 03 Mar 2011 17:20:07 +0000
 
 dballe (5.4-1) unstable; urgency=low
 

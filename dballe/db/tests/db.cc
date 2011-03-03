@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ struct db_shar : public dballe::tests::db_test
 		sampleAna.set(DBA_KEY_MOBILE, 0);
 
 		// Extra ana info
-		extraAna.set(WR_VAR(0, 7,  1), 42);		// Height
+		extraAna.set(WR_VAR(0, 7, 30), 42);		// Height
 		extraAna.set(WR_VAR(0, 7, 31), 234);		// Heightbaro
 		extraAna.set(WR_VAR(0, 1,  1), 1);			// Block
 		extraAna.set(WR_VAR(0, 1,  2), 52);		// Station
@@ -986,7 +986,7 @@ void to::test<14>()
         populate_database();
 
         query.clear();
-        query.set(DBA_KEY_ANA_FILTER, "B07001>1");
+        query.set(DBA_KEY_ANA_FILTER, "B07030>1");
 
         // Perform the query, limited to level values
         db::Cursor cur(*db);

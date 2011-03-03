@@ -130,7 +130,7 @@ void to::test<2>()
 	msg->set_minute(			3,		45);
 	msg->set_latitude(		3,		45);
 	msg->set_longitude(		3,		45);
-	msg->set_height(			3,		45);
+	msg->set_height_station(3,		45);
 	msg->set_height_baro(	3,		45);
 	msg->set_flight_phase(	3,		45);
 	msg->set_timesig(		3,		45);

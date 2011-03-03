@@ -125,7 +125,7 @@ void to::test<3>()
     IS(block, 10); IS(station, 837); IS(st_type, 1);
     IS(year, 2004); IS(month, 11); IS(day, 30); IS(hour, 12); IS(minute, 0);
     IS(latitude, 48.22); IS(longitude, 9.92);
-    IS(height, 550.0); UN(height_baro);
+    IS(height_station, 550.0); UN(height_baro);
     IS(press, 94340.0); IS(press_msl, 100940.0); IS(press_tend, 7.0);
     IS(wind_dir, 80.0); IS(wind_speed, 6.0);
     IS(temp_2m, 276.15); IS(dewpoint_2m, 273.85); UN(humidity);
@@ -149,7 +149,7 @@ void to::test<4>()
     IS(block, 60); IS(station, 150); IS(st_type, 1);
     IS(year, 2004); IS(month, 11); IS(day, 30); IS(hour, 12); IS(minute, 0);
     IS(latitude, 33.88); IS(longitude, -5.53);
-    IS(height, 560.0); UN(height_baro);
+    IS(height_station, 560.0); UN(height_baro);
     IS(press, 94190.0); IS(press_msl, 100540.0); IS(press_3h, -180.0); IS(press_tend, 8.0);
     IS(wind_dir, 80.0); IS(wind_speed, 4.0);
     IS(temp_2m, 289.2); IS(dewpoint_2m, 285.7); UN(humidity);
@@ -177,7 +177,7 @@ void to::test<5>()
     IS(block, 11); IS(station, 406); IS(st_type, 1);
     IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
     IS(latitude, 50.07361); IS(longitude, 12.40333);
-    IS(height, 483.0); IS(height_baro, 490.0);
+    IS(height_station, 483.0); IS(height_baro, 490.0);
     IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
     IS2(WR_VAR(0, 11, 1), Level(103, 10000), Trange(0, 0, 600), 0.0); // wind_dir
     IS2(WR_VAR(0, 11, 2), Level(103, 10000), Trange(0, 0, 600), 1.0); // wind_speed
@@ -208,7 +208,7 @@ void to::test<6>()
     IS(block, 11); IS(station, 406); IS(st_type, 1);
     IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
     IS(latitude, 50.07361); IS(longitude, 12.40333);
-    IS(height, 483.0); IS(height_baro, 490.0);
+    IS(height_station, 483.0); IS(height_baro, 490.0);
     IS2(WR_VAR(0, 10,  4), Level(102, 490000), Trange::instant(), 95090.0); // press
     IS2(WR_VAR(0, 10, 51), Level(102, 490000), Trange::instant(), 101060.0); // press_msl
     IS2(WR_VAR(0, 10, 63), Level(102, 490000), Trange(205, 0,10800), 6.0); // press_tend
