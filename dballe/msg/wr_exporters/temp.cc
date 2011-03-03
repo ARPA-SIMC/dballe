@@ -316,7 +316,7 @@ struct TempEcmwfLand : public TempBase
         /* 16 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
         /* 17 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
         /* 18 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
-        int lev_no = add_sounding_levels();
+        add_sounding_levels();
         if (!is_crex)
         {
             int count = subset.append_dpb(WR_VAR(2, 22, 0), subset.size(), WR_VAR(0, 33, 7));
@@ -403,7 +403,7 @@ struct TempEcmwfShip : public TempBase
         /* 17 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
         /* 18 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
         /* 19 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
-        int lev_no = add_sounding_levels();
+        add_sounding_levels();
         if (!is_crex)
         {
             int count = subset.append_dpb(WR_VAR(2, 22, 0), subset.size(), WR_VAR(0, 33, 7));
