@@ -89,10 +89,13 @@ struct TempBase : public Template
             double press = c.level.l1;
 
             /* Add pressure */
-            if (const Var* var = c.find(WR_VAR(0, 10, 4)))
-                subset->store_variable(WR_VAR(0,  7,  4), *var);
+            const Var* press_var = c.find(WR_VAR(0, 10, 4));
+            if (!press_var)
+                press_var = c.find(WR_VAR(0, 7, 4));
+            if (press_var)
+                subset->store_variable(WR_VAR(0, 7, 4), *press_var);
             else
-                subset->store_variable_d(WR_VAR(0,  7,  4), press);
+                subset->store_variable_d(WR_VAR(0, 7, 4), press);
 
             /* Add vertical sounding significance */
             {
