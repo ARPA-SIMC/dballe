@@ -91,17 +91,6 @@ enum _dba_keyword {
 /** @copydoc ::_dba_keyword */
 typedef enum _dba_keyword dba_keyword;
 
-/* TODO: should be deleted after checking if dbavm uses them */
-#if 0
-/* Shortcuts for commonly used variables */
-#define DBA_VAR_BLOCK		DBA_VAR(0,  1,   1)
-#define DBA_VAR_STATION		DBA_VAR(0,  1,   2)
-#define DBA_VAR_NAME		DBA_VAR(0,  1,  19)
-#define DBA_VAR_HEIGHT		DBA_VAR(0,  7,   1)
-#define DBA_VAR_HEIGHTBARO	DBA_VAR(0,  7,  31)
-#define DBA_VAR_DATA_ID		DBA_VAR(0, 33, 195)
-#endif
-
 /** DB-All.E record.
  *
  * A Record is a container for one observation of meteorological values, that
