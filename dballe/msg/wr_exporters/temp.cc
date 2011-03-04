@@ -20,6 +20,7 @@
 #include "wr_codec.h"
 #include <wreport/bulletin.h>
 #include <wreport/conv.h>
+#include <wreport/codetables.h>
 #include "msgs.h"
 #include "context.h"
 
@@ -99,9 +100,16 @@ struct TempBase : public Template
 
             /* Add vertical sounding significance */
             {
-                Var nvar(subset->btable->query(WR_VAR(0, 8, 1)), convert_BUFR08042_to_BUFR08001(vss->enqi()));
-                nvar.copy_attrs(*vss);
-                subset->store_variable(WR_VAR(0, 8, 1), nvar);
+                int vssval = convert_BUFR08042_to_BUFR08001(vss->enqi());
+                if (vssval & BUFR08042::MISSING)
+                {
+                    // Deal with 'missing VSS' group markers
+                    subset->store_variable_undef(WR_VAR(0, 8, 1));
+                } else {
+                    Var nvar(subset->btable->query(WR_VAR(0, 8, 1)), vssval);
+                    nvar.copy_attrs(*vss);
+                    subset->store_variable(WR_VAR(0, 8, 1), nvar);
+                }
             }
 
             /* Add the rest */
@@ -176,7 +184,16 @@ struct TempWMO : public TempBase
     void do_D03054(const msg::Context& c)
     {
         add(WR_VAR(0,  4,  86), &c);
-        add(WR_VAR(0,  8,  42), &c);
+        if (const Var* vss = c.find(WR_VAR(0, 8, 42)))
+        {
+            // Deal with 'missing VSS' group markers
+            if (vss->enq((int)BUFR08042::MISSING) & BUFR08042::MISSING)
+                subset->store_variable_undef(WR_VAR(0, 8, 42));
+            else
+                subset->store_variable(*vss);
+        }
+        else
+            subset->store_variable_undef(WR_VAR(0, 8, 42));
         subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
         add(WR_VAR(0, 10,   9), &c, WR_VAR(0, 10, 8));
         add(WR_VAR(0,  5,  15), &c);

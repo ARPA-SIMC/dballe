@@ -738,10 +738,12 @@ void to::test<7>()
         run_test(test, "temp-ecmwf");
     }
     {
+        // This has some sounding groups with undefined VSS
         BufrReimportTest test("bufr/temp-bad5.bufr");
         run_test(test, "temp-wmo", "temp-ecmwf");
         test.clear_hooks();
         test.hooks.push_back(new BufrReimportTest::StripAttrsHook(true, true));
+        test.hooks.push_back(new BufrReimportTest::PreroundGeopotentialHook());
         run_test(test, "temp-ecmwf", "temp-wmo");
     }
 }

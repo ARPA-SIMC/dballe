@@ -25,7 +25,7 @@
 #include <dballe/msg/context.h>
 
 // Define to debug the sounding group matching algorithm
-//#define DEBUG_GROUPS
+// #define DEBUG_GROUPS
 
 #ifdef DEBUG_GROUPS
 #define debug_groups(...) fprintf(stderr, "grpmatch:" __VA_ARGS__)
@@ -354,7 +354,19 @@ void TempImporter::import_group(unsigned start, unsigned length)
     for (unsigned i = 0; i < length; ++i)
     {
         const Var& var = (*subset)[start + i];
-        if (!var.isset()) continue;
+        if (!var.isset())
+        {
+            switch (var.code())
+            {
+                case WR_VAR(0,  8,  1):
+                case WR_VAR(0,  8, 42):
+                    // Preserve missing VSS with only the one missing bit set,
+                    // to act as a sounding context marker
+                    msg->seti(WR_VAR(0,  8,  42), BUFR08042::MISSING, -1, lev, Trange::instant());
+                    break;
+            }
+            continue;
+        }
         switch (var.code())
         {
             case WR_VAR(0,  4, 16):
@@ -367,7 +379,9 @@ void TempImporter::import_group(unsigned start, unsigned length)
                 {
                     // This account for weird data that has '1' for VSS
                     unsigned val = convert_BUFR08001_to_BUFR08042(var.enqi());
-                    if (val != BUFR08042::ALL_MISSING)
+                    if (val == BUFR08042::ALL_MISSING)
+                        msg->seti(WR_VAR(0,  8,  42), BUFR08042::MISSING, -1, lev, Trange::instant());
+                    else
                     {
                         auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
                         nvar->copy_attrs(var);
