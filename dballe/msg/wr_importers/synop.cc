@@ -80,6 +80,7 @@ protected:
 
     Level lev_real() const
     {
+        if (height_sensor == 0) return Level(1);
         return height_sensor == MISSING_SENSOR_H ?
             Level(103) :
             Level(103, height_sensor * 1000);
@@ -87,8 +88,7 @@ protected:
 
     Trange tr_real(const Trange& standard) const
     {
-        if (standard.pind == 254)
-            return Trange::instant();
+        if (standard.pind == 254) return Trange::instant();
         return time_period == MISSING_INT ?
             Trange(standard.pind, 0) :
             Trange(standard.pind, 0, abs(time_period));
