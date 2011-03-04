@@ -655,7 +655,7 @@ struct SynopWMO : public Synop
             int max_cloud_group = 0;
             for (int i = 1; ; ++i)
             {
-                if (const msg::Context* c = msg.find_context(Level::cloud(259, i), Trange::instant()))
+                if (msg.find_context(Level::cloud(259, i), Trange::instant()))
                 {
                     max_cloud_group = i;
                 } else if (i > 4)
@@ -688,7 +688,7 @@ struct SynopWMO : public Synop
         int max_cloud_group = 0;
         for (int i = 1; ; ++i)
         {
-            if (const msg::Context* c = msg.find_context(Level::cloud(263, i), Trange::instant()))
+            if (msg.find_context(Level::cloud(263, i), Trange::instant()))
             {
                 max_cloud_group = i;
             } else if (i > 4)
@@ -797,7 +797,7 @@ struct SynopWMO : public Synop
     }
 
     // D02043  Basic synoptic "period" data
-    void do_D02043(const Msg& msg, wreport::Subset& subset)
+    void do_D02043()
     {
         //   Present and past weather
         add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
@@ -812,34 +812,34 @@ struct SynopWMO : public Synop
                 if (const Var* a = v->enqa(WR_VAR(0, 4, 194)))
                     p2 = a->enqi();
 
-            subset.store_variable_d(WR_VAR(0, 4, 24), -p2 / 3600);
+            subset->store_variable_d(WR_VAR(0, 4, 24), -p2 / 3600);
         } else
-            subset.store_variable_undef(WR_VAR(0, 4, 24));
-        add(WR_VAR(0, 20, 4), c_past_wtr, DBA_MSG_PAST_WTR1);
-        add(WR_VAR(0, 20, 5), c_past_wtr, DBA_MSG_PAST_WTR2);
+            subset->store_variable_undef(WR_VAR(0, 4, 24));
+        add(WR_VAR(0, 20, 4), c_past_wtr, DBA_MSG_PAST_WTR1_6H);
+        add(WR_VAR(0, 20, 5), c_past_wtr, DBA_MSG_PAST_WTR2_6H);
 
         //   Sunshine data (form 1 hour and 24 hour period)
         if (c_sunshine1)
         {
-            subset.store_variable_d(WR_VAR(0,  4, 24), -c_sunshine1->trange.p2 / 3600);
+            subset->store_variable_d(WR_VAR(0,  4, 24), -c_sunshine1->trange.p2 / 3600);
             if (const Var* var = c_sunshine1->find(WR_VAR(0, 14, 31)))
-                subset.store_variable(*var);
+                subset->store_variable(*var);
             else
-                subset.store_variable_undef(WR_VAR(0, 14, 31));
+                subset->store_variable_undef(WR_VAR(0, 14, 31));
         } else {
-            subset.store_variable_undef(WR_VAR(0,  4, 24));
-            subset.store_variable_undef(WR_VAR(0, 14, 31));
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+            subset->store_variable_undef(WR_VAR(0, 14, 31));
         }
         if (c_sunshine2)
         {
-            subset.store_variable_d(WR_VAR(0,  4, 24), -c_sunshine2->trange.p2 / 3600);
+            subset->store_variable_d(WR_VAR(0,  4, 24), -c_sunshine2->trange.p2 / 3600);
             if (const Var* var = c_sunshine2->find(WR_VAR(0, 14, 31)))
-                subset.store_variable(*var);
+                subset->store_variable(*var);
             else
-                subset.store_variable_undef(WR_VAR(0, 14, 31));
+                subset->store_variable_undef(WR_VAR(0, 14, 31));
         } else {
-            subset.store_variable_undef(WR_VAR(0,  4, 24));
-            subset.store_variable_undef(WR_VAR(0, 14, 31));
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+            subset->store_variable_undef(WR_VAR(0, 14, 31));
         }
 
         //   Precipitation measurement
@@ -851,49 +851,49 @@ struct SynopWMO : public Synop
                     if (const Var* a = var->enqa(WR_VAR(0, 7, 32)))
                         h = a->enqd();
             if (h == 0.0)
-                subset.store_variable_undef(WR_VAR(0,  7, 32));
+                subset->store_variable_undef(WR_VAR(0,  7, 32));
             else
-                subset.store_variable_d(WR_VAR(0,  7, 32), h);
+                subset->store_variable_d(WR_VAR(0,  7, 32), h);
 
             if (c_prec1->trange.p2 != MISSING_INT)
-                subset.store_variable_d(WR_VAR(0,  4, 24), -c_prec1->trange.p2 / 3600);
+                subset->store_variable_d(WR_VAR(0,  4, 24), -c_prec1->trange.p2 / 3600);
             else
-                subset.store_variable_undef(WR_VAR(0,  4, 24));
+                subset->store_variable_undef(WR_VAR(0,  4, 24));
             if (const Var* var = c_prec1->find(WR_VAR(0, 13, 11)))
-                subset.store_variable(*var);
+                subset->store_variable(*var);
             else
-                subset.store_variable_undef(WR_VAR(0, 13, 11));
+                subset->store_variable_undef(WR_VAR(0, 13, 11));
             if (c_prec2)
             {
                 if (c_prec2->trange.p2 != MISSING_INT)
-                    subset.store_variable_d(WR_VAR(0,  4, 24), -c_prec2->trange.p2 / 3600);
+                    subset->store_variable_d(WR_VAR(0,  4, 24), -c_prec2->trange.p2 / 3600);
                 else
-                    subset.store_variable_undef(WR_VAR(0,  4, 24));
+                    subset->store_variable_undef(WR_VAR(0,  4, 24));
                 if (const Var* var = c_prec2->find(WR_VAR(0, 13, 11)))
-                    subset.store_variable(*var);
+                    subset->store_variable(*var);
                 else
-                    subset.store_variable_undef(WR_VAR(0, 13, 11));
+                    subset->store_variable_undef(WR_VAR(0, 13, 11));
             } else {
-                subset.store_variable_undef(WR_VAR(0,  4, 24));
-                subset.store_variable_undef(WR_VAR(0, 13, 11));
+                subset->store_variable_undef(WR_VAR(0,  4, 24));
+                subset->store_variable_undef(WR_VAR(0, 13, 11));
             }
         } else {
-            subset.store_variable_undef(WR_VAR(0,  7, 32));
-            subset.store_variable_undef(WR_VAR(0,  4, 24));
-            subset.store_variable_undef(WR_VAR(0, 13, 11));
-            subset.store_variable_undef(WR_VAR(0,  4, 24));
-            subset.store_variable_undef(WR_VAR(0, 13, 11));
+            subset->store_variable_undef(WR_VAR(0,  7, 32));
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+            subset->store_variable_undef(WR_VAR(0, 13, 11));
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+            subset->store_variable_undef(WR_VAR(0, 13, 11));
         }
 
         //   Extreme temperature data
 #warning TODO
-        subset.store_variable_undef(WR_VAR(0,  7, 32)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 12, 111)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 12, 112)); // TODO
+        subset->store_variable_undef(WR_VAR(0,  7, 32)); // TODO
+        subset->store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset->store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset->store_variable_undef(WR_VAR(0, 12, 111)); // TODO
+        subset->store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset->store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+        subset->store_variable_undef(WR_VAR(0, 12, 112)); // TODO
 
         //   Wind data
         if (c_wind || c_gust1 || c_gust2)
@@ -916,7 +916,7 @@ struct SynopWMO : public Synop
                         case WR_VAR(0, 11, 43):
                             if (const Var* a = var.enqa(WR_VAR(0, 7, 32)))
                             {
-                                subset.store_variable(*a);
+                                subset->store_variable(*a);
                                 has_h = true;
                             }
                             break;
@@ -925,10 +925,10 @@ struct SynopWMO : public Synop
             }
             // If not found in the attributes, use the context height
             if (!has_h)
-                subset.store_variable_d(WR_VAR(0,  7, 32), c_first->level.l1 / 1000.0);
+                subset->store_variable_d(WR_VAR(0,  7, 32), c_first->level.l1 / 1000.0);
 
             add(WR_VAR(0, 2, 2), DBA_MSG_WIND_INST);
-            subset.store_variable_i(WR_VAR(0, 8, 21), 2);
+            subset->store_variable_i(WR_VAR(0, 8, 21), 2);
 
             if (c_wind)
             {
@@ -940,37 +940,37 @@ struct SynopWMO : public Synop
                     tr = c_wind->trange.p2;
                 tr = override_trange(var_dir, override_trange(var_speed, tr));
                 if (tr == MISSING_INT)
-                    subset.store_variable_undef(WR_VAR(0,  4, 25));
+                    subset->store_variable_undef(WR_VAR(0,  4, 25));
                 else
-                    subset.store_variable_d(WR_VAR(0,  4, 25), -tr / 60.0);
+                    subset->store_variable_d(WR_VAR(0,  4, 25), -tr / 60.0);
 
                 add(WR_VAR(0, 11,  1), var_dir);
                 add(WR_VAR(0, 11,  2), var_speed);
             } else {
-                subset.store_variable_undef(WR_VAR(0,  4, 25));
-                subset.store_variable_undef(WR_VAR(0, 11,  1));
-                subset.store_variable_undef(WR_VAR(0, 11,  2));
+                subset->store_variable_undef(WR_VAR(0,  4, 25));
+                subset->store_variable_undef(WR_VAR(0, 11,  1));
+                subset->store_variable_undef(WR_VAR(0, 11,  2));
             }
-            subset.store_variable_undef(WR_VAR(0,  8, 21));
+            subset->store_variable_undef(WR_VAR(0,  8, 21));
 
             do_wind_gust(c_gust1);
             do_wind_gust(c_gust2);
         } else {
-            subset.store_variable_undef(WR_VAR(0,  7, 32));
-            subset.store_variable_undef(WR_VAR(0,  2,  2));
-            subset.store_variable_i(WR_VAR(0,  8, 21), 2);
-            subset.store_variable_undef(WR_VAR(0,  4, 25));
-            subset.store_variable_undef(WR_VAR(0, 11,  1));
-            subset.store_variable_undef(WR_VAR(0, 11,  2));
-            subset.store_variable_undef(WR_VAR(0,  8, 21));
+            subset->store_variable_undef(WR_VAR(0,  7, 32));
+            subset->store_variable_undef(WR_VAR(0,  2,  2));
+            subset->store_variable_i(WR_VAR(0,  8, 21), 2);
+            subset->store_variable_undef(WR_VAR(0,  4, 25));
+            subset->store_variable_undef(WR_VAR(0, 11,  1));
+            subset->store_variable_undef(WR_VAR(0, 11,  2));
+            subset->store_variable_undef(WR_VAR(0,  8, 21));
             for (int i = 1; i <= 2; ++i)
             {
-                subset.store_variable_undef(WR_VAR(0,  4, 25));
-                subset.store_variable_undef(WR_VAR(0, 11, 43));
-                subset.store_variable_undef(WR_VAR(0, 11, 41));
+                subset->store_variable_undef(WR_VAR(0,  4, 25));
+                subset->store_variable_undef(WR_VAR(0, 11, 43));
+                subset->store_variable_undef(WR_VAR(0, 11, 41));
             }
         }
-        subset.store_variable_undef(WR_VAR(0,  7, 32));
+        subset->store_variable_undef(WR_VAR(0,  7, 32));
     }
 
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
@@ -999,8 +999,7 @@ struct SynopWMO : public Synop
         // D02037  State of ground, snow depth, ground minimum temperature
         do_D02037(msg, subset);
         // D02043  Basic synoptic "period" data
-        do_D02043(msg, subset);
-#warning TODO
+        do_D02043();
 
         // D02044  Evaporation data
         if (c_evapo)
@@ -1016,6 +1015,7 @@ struct SynopWMO : public Synop
         }
         add(WR_VAR(0, 13, 33), c_evapo);
 
+#warning TODO
         // D02045  Radiation data (1 hour period)
         subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
         subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
