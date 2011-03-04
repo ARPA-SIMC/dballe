@@ -95,7 +95,10 @@ struct ReimportTest
         // Export
         B bulletin;
         try {
-            if (tname1 != NULL) output_opts.template_name = tname1;
+            if (tname1 != NULL)
+                output_opts.template_name = tname1;
+            else
+                output_opts.template_name.clear();
             std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
             exporter->to_bulletin(*msgs1, bulletin);
         } catch (std::exception& e) {

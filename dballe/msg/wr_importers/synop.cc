@@ -53,6 +53,7 @@ protected:
     double height_sensor;
     int vs;
     int time_period;
+    bool time_period_seen;
     int time_sig;
     int hour;
 
@@ -89,6 +90,7 @@ protected:
     Trange tr_real(const Trange& standard) const
     {
         if (standard.pind == 254) return Trange::instant();
+        if (!time_period_seen) return standard;
         return time_period == MISSING_INT ?
             Trange(standard.pind, 0) :
             Trange(standard.pind, 0, abs(time_period));
@@ -286,6 +288,7 @@ public:
         height_sensor = MISSING_SENSOR_H;
         vs = MISSING_VSS;
         time_period = MISSING_INT;
+        time_period_seen = false;
         time_sig = MISSING_TIME_SIG;
         hour = MISSING_INT;
     }
@@ -420,10 +423,12 @@ void SynopImporter::import_var_undef(const Var& var)
         case WR_VAR(0,  4, 24):
             /* Time period in hours */
             time_period = MISSING_INT;
+            time_period_seen = true;
             break;
         case WR_VAR(0,  4, 25):
             /* Time period in minutes */
             time_period = MISSING_INT;
+            time_period_seen = true;
             break;
         case WR_VAR(0,  8, 21):
             /* Time significance */
@@ -453,10 +458,12 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0,  4, 24):
             /* Time period in hours */
             time_period = var.enqd() * 3600;
+            time_period_seen = true;
             break;
         case WR_VAR(0,  4, 25):
             /* Time period in minutes */
             time_period = var.enqd() * 60;
+            time_period_seen = true;
             break;
         case WR_VAR(0,  8, 21):
             /* Time significance */
