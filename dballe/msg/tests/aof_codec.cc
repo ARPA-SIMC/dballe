@@ -262,7 +262,7 @@ void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
         for (size_t i = 0; i < bmsg.data.size(); ++i)
         {
             msg::Context& c = *bmsg.data[i];
-            if (Var* var = c.edit(WR_VAR(0, 8, 1)))
+            if (Var* var = c.edit(WR_VAR(0, 8, 42)))
                 var->clear_attrs();
         }
 	}
