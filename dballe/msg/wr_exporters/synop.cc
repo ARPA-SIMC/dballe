@@ -22,6 +22,9 @@
 #include "msgs.h"
 #include "context.h"
 
+#warning TODO: remove when done
+#include <iostream>
+
 using namespace wreport;
 using namespace std;
 
@@ -48,6 +51,9 @@ namespace msg {
 namespace wr {
 
 namespace {
+
+static const Trange tr_std_past_wtr3(205, 0, 10800);
+static const Trange tr_std_past_wtr6(205, 0, 21600);
 
 // If var is not NULL and has a B04194 attribute, return its value
 // otherwise, return orig
@@ -187,6 +193,8 @@ struct Synop : public Template
     const msg::Context* c_gust2;
     const msg::Context* c_evapo;
     const msg::Context* c_past_wtr;
+    const msg::Context* c_thermo;
+    const msg::Context* c_visib;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -203,6 +211,8 @@ struct Synop : public Template
         c_gust2 = NULL;
         c_evapo = NULL;
         c_past_wtr = NULL;
+        c_thermo = NULL;
+        c_visib = NULL;
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg->data.begin();
@@ -242,6 +252,10 @@ struct Synop : public Template
                         if (c->find(WR_VAR(0, 20, 4)) || c->find(WR_VAR(0, 20, 5)))
                             c_past_wtr = c;
                         break;
+                    case 254:
+                        if (c->find_by_id(DBA_MSG_VISIBILITY))
+                            c_visib = c;
+                        break;
                 }
             } else if (c->level.ltype1 == 103) {
                 if (c->trange.pind == 1 && c->trange.p1 == 0)
@@ -267,6 +281,10 @@ struct Synop : public Template
                     else if (!c_gust2)
                         c_gust2 = c;
                 }
+                if (c->find_by_id(DBA_MSG_TEMP_2M) || c->find_by_id(DBA_MSG_DEWPOINT_2M) || c->find_by_id(DBA_MSG_HUMIDITY))
+                    c_thermo = c;
+                if (c->find_by_id(DBA_MSG_VISIBILITY))
+                    c_visib = c;
             }
         }
     }
@@ -589,29 +607,61 @@ struct SynopWMO : public Synop
         finder.vars[0].add(subset, WR_VAR(0, 10, 9));
     }
 
+    void add_sensor_height(const msg::Context& c, const Var* sample_var=NULL)
+    {
+        // Try with attributes first
+        if (sample_var)
+        {
+            if (const Var* a = sample_var->enqa(WR_VAR(0, 7, 32)))
+            {
+                subset->store_variable_d(WR_VAR(0, 7, 32), a->enqd());
+                return;
+            }
+        }
+
+        // Use level
+        if (c.level.ltype1 == 1)
+            // Ground level
+            subset->store_variable_d(WR_VAR(0, 7, 32), 0);
+        else if (c.level.ltype1 == 103)
+        {
+            // Height above ground level
+            if (c.level.l1 == MISSING_INT)
+                subset->store_variable_undef(WR_VAR(0, 7, 32));
+            else
+                subset->store_variable_d(WR_VAR(0, 7, 32), double(c.level.l1) / 1000.0);
+        }
+        else
+            error_consistency::throwf("Cannot add sensor height from unsupported level type %d", c.level.ltype1);
+    }
+
     // D02035  Basis synoptic "instantaneous" data
     void do_D02035(const Msg& msg, wreport::Subset& subset)
     {
         //   Temperature and humidity data
         {
-            ContextFinder finder(msg);
-            finder.add_var(DBA_MSG_TEMP_2M);
-            finder.add_var(DBA_MSG_DEWPOINT_2M);
-            finder.add_var(DBA_MSG_HUMIDITY);
-            finder.find_in_level(103);
-            finder.add_found_sensor_height(subset);
-            finder.vars[0].add(subset, WR_VAR(0, 12, 101));
-            finder.vars[1].add(subset, WR_VAR(0, 12, 103));
-            finder.vars[2].add(subset, WR_VAR(0, 13,   3));
+            if (c_thermo)
+            {
+                const Var* var = c_thermo->find_by_id(DBA_MSG_TEMP_2M);
+                if (!var) var = c_thermo->find_by_id(DBA_MSG_DEWPOINT_2M);
+                if (!var) var = c_thermo->find_by_id(DBA_MSG_HUMIDITY);
+                add_sensor_height(*c_thermo, var);
+            } else
+                subset.store_variable_undef(WR_VAR(0, 7, 32));
+            add(WR_VAR(0, 12, 101), c_thermo, DBA_MSG_TEMP_2M);
+            add(WR_VAR(0, 12, 103), c_thermo, DBA_MSG_DEWPOINT_2M);
+            add(WR_VAR(0, 13,   3), c_thermo, DBA_MSG_HUMIDITY);
         }
 
         //   Visibility data
         {
-            ContextFinder finder(msg);
-            finder.add_var(DBA_MSG_VISIBILITY);
-            finder.find_in_level(103, DBA_MSG_VISIBILITY);
-            finder.add_found_sensor_height(subset);
-            finder.vars[0].add(subset, WR_VAR(0, 20, 1));
+            if (c_visib)
+            {
+                const Var* var = c_visib->find_by_id(DBA_MSG_VISIBILITY);
+                add_sensor_height(*c_visib, var);
+            } else
+                subset.store_variable_undef(WR_VAR(0, 7, 32));
+            add(WR_VAR(0, 20, 1), c_visib, DBA_MSG_VISIBILITY);
         }
 
         //   Precipitation past 24 hours
@@ -796,23 +846,45 @@ struct SynopWMO : public Synop
         }
     }
 
+    void add_time_period(Varcode code, const msg::Context& c, const Var* sample_var, const Trange& tr_std)
+    {
+        int p2;
+        if (c.trange.pind == 254)
+            p2 = tr_std.p2;
+        else
+            p2 = c.trange.p2;
+
+        // Look for a p2 override in the attributes
+        if (sample_var)
+            if (const Var* a = sample_var->enqa(WR_VAR(0, 4, 194)))
+                p2 = a->enqi();
+
+        if (p2 == MISSING_INT)
+        {
+            subset->store_variable_undef(WR_VAR(0, 4, 24));
+            return;
+        }
+
+        double res = -p2;
+        switch (code)
+        {
+            case WR_VAR(0, 4, 24): res /= 3600.0; break;
+            case WR_VAR(0, 4, 25): res /= 60.0; break;
+        }
+        subset->store_variable_d(code, res);
+    }
+
     // D02043  Basic synoptic "period" data
-    void do_D02043()
+    void do_D02043(int hour)
     {
         //   Present and past weather
         add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
         if (c_past_wtr)
         {
-            int p2 = c_past_wtr->trange.p2;
-
             // Look for a p2 override in the attributes
             const Var* v = c_past_wtr->find(WR_VAR(0, 20, 4));
             if (!v) v = c_past_wtr->find(WR_VAR(0, 20, 5));
-            if (v)
-                if (const Var* a = v->enqa(WR_VAR(0, 4, 194)))
-                    p2 = a->enqi();
-
-            subset->store_variable_d(WR_VAR(0, 4, 24), -p2 / 3600);
+            add_time_period(WR_VAR(0, 4, 24), *c_past_wtr, v, hour % 6 == 0 ? tr_std_past_wtr6 : tr_std_past_wtr3);
         } else
             subset->store_variable_undef(WR_VAR(0, 4, 24));
         add(WR_VAR(0, 20, 4), c_past_wtr, DBA_MSG_PAST_WTR1_6H);
@@ -845,15 +917,8 @@ struct SynopWMO : public Synop
         //   Precipitation measurement
         if (c_prec1)
         {
-            double h = c_prec1->level.ltype1 == 1 ? 0.0 : c_prec1->level.l1 / 1000.0;
-            if (c_prec1->level.ltype1 == 1)
-                if (const Var* var = c_prec1->find(WR_VAR(0, 13, 11)))
-                    if (const Var* a = var->enqa(WR_VAR(0, 7, 32)))
-                        h = a->enqd();
-            if (h == 0.0)
-                subset->store_variable_undef(WR_VAR(0,  7, 32));
-            else
-                subset->store_variable_d(WR_VAR(0,  7, 32), h);
+            const Var* prec_var = c_prec1->find(WR_VAR(0, 13, 11));
+            add_sensor_height(*c_prec1, prec_var);
 
             if (c_prec1->trange.p2 != MISSING_INT)
                 subset->store_variable_d(WR_VAR(0,  4, 24), -c_prec1->trange.p2 / 3600);
@@ -900,32 +965,11 @@ struct SynopWMO : public Synop
         {
             // Look for the sensor height in the context of any of the found levels
             const msg::Context* c_first = c_wind ? c_wind : c_gust1 ? c_gust1 : c_gust2;
-            bool has_h = false;
-            if (c_first->level.l1 == 10 * 1000)
-            {
-                // override h based on attributes of B11001, B11002, B11043 or B11041 in c_first
-                for (std::vector<wreport::Var*>::const_iterator i = c_first->data.begin();
-                        !has_h && i != c_first->data.end(); ++i)
-                {
-                    const Var& var = **i;
-                    switch (var.code())
-                    {
-                        case WR_VAR(0, 11, 1):
-                        case WR_VAR(0, 11, 2):
-                        case WR_VAR(0, 11, 41):
-                        case WR_VAR(0, 11, 43):
-                            if (const Var* a = var.enqa(WR_VAR(0, 7, 32)))
-                            {
-                                subset->store_variable(*a);
-                                has_h = true;
-                            }
-                            break;
-                    }
-                }
-            }
-            // If not found in the attributes, use the context height
-            if (!has_h)
-                subset->store_variable_d(WR_VAR(0,  7, 32), c_first->level.l1 / 1000.0);
+            const Var* sample_var = c_first->find(WR_VAR(0, 11, 1));
+            if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 2));
+            if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 41));
+            if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 43));
+            add_sensor_height(*c_first, sample_var);
 
             add(WR_VAR(0, 2, 2), DBA_MSG_WIND_INST);
             subset->store_variable_i(WR_VAR(0, 8, 21), 2);
@@ -980,7 +1024,7 @@ struct SynopWMO : public Synop
         // D01090  Fixed surface identification, time, horizontal and vertical coordinates
         do_D01004(); // station id
         do_D01011(); // date
-        do_D01012(); // time
+        int hour = do_D01012(); // time
         do_D01021(); // coordinates
         add(WR_VAR(0,  7, 30), DBA_MSG_HEIGHT_STATION);
         add(WR_VAR(0,  7, 31), DBA_MSG_HEIGHT_BARO);
@@ -999,7 +1043,7 @@ struct SynopWMO : public Synop
         // D02037  State of ground, snow depth, ground minimum temperature
         do_D02037(msg, subset);
         // D02043  Basic synoptic "period" data
-        do_D02043();
+        do_D02043(hour);
 
         // D02044  Evaporation data
         if (c_evapo)

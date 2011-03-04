@@ -377,10 +377,12 @@ void Template::do_D01011() const
     add(WR_VAR(0,  4,  3), c_station, DBA_MSG_DAY);
 }
 
-void Template::do_D01012() const
+int Template::do_D01012() const
 {
-    add(WR_VAR(0,  4,  4), c_station, DBA_MSG_HOUR);
+    const Var* v_hour = c_station ? c_station->find_by_id(DBA_MSG_HOUR) : NULL;
+    add(WR_VAR(0,  4,  4), v_hour);
     add(WR_VAR(0,  4,  5), c_station, DBA_MSG_MINUTE);
+    return v_hour ? v_hour->enqi() : MISSING_INT;
 }
 
 void Template::do_D01013() const

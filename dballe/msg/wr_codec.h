@@ -126,7 +126,7 @@ protected:
     void do_D01001() const;
     void do_D01004() const;
     void do_D01011() const;
-    void do_D01012() const;
+    int do_D01012() const;  // Return the number of hours
     void do_D01013() const;
     void do_D01021() const;
 
