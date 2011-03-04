@@ -415,12 +415,12 @@ struct SynopECMWFLand : public SynopECMWF
         /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
         /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
         /* 14 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
-        /* 15 */ add(WR_VAR(0, 11, 11), DBA_MSG_WIND_DIR);
-        /* 16 */ add(WR_VAR(0, 11, 12), DBA_MSG_WIND_SPEED);
-        /* 17 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
-        /* 18 */ add(WR_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M);
-        /* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
-        /* 20 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
+        /* 15 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
+        /* 16 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
+        /* 17 */ add(WR_VAR(0, 12,  4), c_thermo, DBA_MSG_TEMP_2M);
+        /* 18 */ add(WR_VAR(0, 12,  6), c_thermo, DBA_MSG_DEWPOINT_2M);
+        /* 19 */ add(WR_VAR(0, 13,  3), c_thermo, DBA_MSG_HUMIDITY);
+        /* 20 */ add(WR_VAR(0, 20,  1), c_visib, DBA_MSG_VISIBILITY);
         /* 21 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
         do_ecmwf_past_wtr();
         /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
@@ -512,12 +512,12 @@ struct SynopECMWFLandHigh : public SynopECMWF
 
         /* 14 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
         /* 15 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
-        /* 16 */ add(WR_VAR(0, 11, 11), DBA_MSG_WIND_DIR);
-        /* 17 */ add(WR_VAR(0, 11, 12), DBA_MSG_WIND_SPEED);
-        /* 18 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
-        /* 19 */ add(WR_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M);
-        /* 20 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
-        /* 21 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
+        /* 16 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
+        /* 17 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
+        /* 18 */ add(WR_VAR(0, 12,  4), c_thermo, DBA_MSG_TEMP_2M);
+        /* 19 */ add(WR_VAR(0, 12,  6), c_thermo, DBA_MSG_DEWPOINT_2M);
+        /* 20 */ add(WR_VAR(0, 13,  3), c_thermo, DBA_MSG_HUMIDITY);
+        /* 21 */ add(WR_VAR(0, 20,  1), c_visib, DBA_MSG_VISIBILITY);
         /* 22 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
         do_ecmwf_past_wtr();
         /* 25 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
