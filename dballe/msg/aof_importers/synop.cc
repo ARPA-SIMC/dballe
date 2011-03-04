@@ -64,7 +64,7 @@ void AOFImporter::read_synop(const uint32_t* obs, int obs_len, Msg& msg)
 	/* 09 Longitude */
 	/* 10 Observation date */
 	/* 12 Exact time of observation */
-	parse_lat_lon_datetime(obs, msg);
+	int hour = parse_lat_lon_datetime(obs, msg);
 
 	/* 20 Pressure [1/10 hPa] or geopotential [m] depending on field #29
 	 *
@@ -117,7 +117,7 @@ void AOFImporter::read_synop(const uint32_t* obs, int obs_len, Msg& msg)
 		msg.set_water_temp((double)OBS(26) / 10.0, get_conf6((OBS(31) >> 6) & 0x3f));
 
 	/* 27 Weather group word */
-	parse_weather_group(obs, msg);
+	parse_weather_group(obs, msg, hour);
 
 	/* 28 General cloud group */
 	parse_general_cloud_group(obs, msg);

@@ -129,7 +129,7 @@ void to::test<3>()
     IS(press, 94340.0); IS(press_msl, 100940.0); IS(press_tend, 7.0);
     IS(wind_dir, 80.0); IS(wind_speed, 6.0);
     IS(temp_2m, 276.15); IS(dewpoint_2m, 273.85); UN(humidity);
-    IS(visibility, 5000.0); IS(pres_wtr, 10); IS(past_wtr1, 2); IS(past_wtr2, 2);
+    IS(visibility, 5000.0); IS(pres_wtr, 10); IS(past_wtr1_6h, 2); IS(past_wtr2_6h, 2);
     IS(cloud_n, 100); IS(cloud_nh, 8); IS(cloud_hh, 450.0);
     IS(cloud_cl, 35); IS(cloud_cm, 61); IS(cloud_ch, 60);
     IS(cloud_n1, 8); IS(cloud_c1, 6); IS(cloud_h1, 350.0);
@@ -153,7 +153,7 @@ void to::test<4>()
     IS(press, 94190.0); IS(press_msl, 100540.0); IS(press_3h, -180.0); IS(press_tend, 8.0);
     IS(wind_dir, 80.0); IS(wind_speed, 4.0);
     IS(temp_2m, 289.2); IS(dewpoint_2m, 285.7); UN(humidity);
-    IS(visibility, 8000.0); IS(pres_wtr, 2); IS(past_wtr1, 6); IS(past_wtr2, 2);
+    IS(visibility, 8000.0); IS(pres_wtr, 2); IS(past_wtr1_6h, 6); IS(past_wtr2_6h, 2);
     IS(cloud_n, 100); IS(cloud_nh, 8); IS(cloud_hh, 250.0);
     IS(cloud_cl, 39); IS(cloud_cm, 61); IS(cloud_ch, 60);
     IS(cloud_n1, 2); IS(cloud_c1, 8); IS(cloud_h1, 320.0);

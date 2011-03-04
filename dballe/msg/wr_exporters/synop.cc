@@ -404,9 +404,7 @@ struct SynopECMWFLand : public SynopECMWF
         /* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
         /* 20 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
         /* 21 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        // TODO: check that the time range matches what we want
-        /* 22 */ add(WR_VAR(0, 20,  4), c_past_wtr, DBA_MSG_PAST_WTR1);
-        /* 23 */ add(WR_VAR(0, 20,  5), c_past_wtr, DBA_MSG_PAST_WTR2);
+        do_ecmwf_past_wtr();
         /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
         /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
@@ -503,9 +501,7 @@ struct SynopECMWFLandHigh : public SynopECMWF
         /* 20 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
         /* 21 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
         /* 22 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        // TODO: check that the time range matches what we want
-        /* 23 */ add(WR_VAR(0, 20,  4), c_past_wtr, DBA_MSG_PAST_WTR1);
-        /* 24 */ add(WR_VAR(0, 20,  5), c_past_wtr, DBA_MSG_PAST_WTR2);
+        do_ecmwf_past_wtr();
         /* 25 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 26 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
         /* 27 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);

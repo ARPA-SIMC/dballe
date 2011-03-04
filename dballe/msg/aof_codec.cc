@@ -207,7 +207,7 @@ static inline void parse_obs_datetime(const uint32_t* obs, struct tm* t)
     t->tm_min = obs[11] % 100;
 }
 
-void AOFImporter::parse_lat_lon_datetime(const uint32_t* obs, Msg& msg)
+int AOFImporter::parse_lat_lon_datetime(const uint32_t* obs, Msg& msg)
 {
     struct tm datetime;
 
@@ -226,10 +226,12 @@ void AOFImporter::parse_lat_lon_datetime(const uint32_t* obs, Msg& msg)
     msg.set_day(datetime.tm_mday, get_conf6((OBS(19) >> 12) & 0x3f));
     msg.set_hour(datetime.tm_hour, get_conf6((OBS(19) >> 18) & 0x3f));
     msg.set_minute(datetime.tm_min, get_conf6((OBS(19) >> 18) & 0x3f));
+
+    return datetime.tm_hour;
 }
 
 /* 27 Weather group word */
-void AOFImporter::parse_weather_group(const uint32_t* obs, Msg& msg)
+void AOFImporter::parse_weather_group(const uint32_t* obs, Msg& msg, int hour)
 {
     int _pastw = OBS(27) & 0x7f;
     int _presw = (OBS(27) >> 7) & 0x7f;
@@ -252,7 +254,10 @@ void AOFImporter::parse_weather_group(const uint32_t* obs, Msg& msg)
     if (_pastw != 0x7f)
     {
         int val = convert_WMO4561_to_BUFR20004(_pastw);
-        msg.set_past_wtr1(val, get_conf2(OBS(31) >> 12));
+        if (hour % 6 == 0)
+            msg.set_past_wtr1_6h(val, get_conf2(OBS(31) >> 12));
+        else
+            msg.set_past_wtr1_3h(val, get_conf2(OBS(31) >> 12));
     }
 }
 

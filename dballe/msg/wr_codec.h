@@ -122,6 +122,7 @@ protected:
     // Set station name, truncating it if it's too long
     void add_st_name(wreport::Varcode dstcode, const msg::Context* ctx) const;
 
+    void do_ecmwf_past_wtr() const;
     void do_D01001() const;
     void do_D01004() const;
     void do_D01011() const;

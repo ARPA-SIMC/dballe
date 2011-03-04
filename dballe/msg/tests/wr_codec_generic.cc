@@ -72,8 +72,8 @@ void to::test<2>()
 	msg->set_pres_wtr(		 5,	45);
 	msg->set_metar_wtr(		 5,	45);
 	msg->set_water_temp(		15,	45);
-	msg->set_past_wtr1(		 2,	45);
-	msg->set_past_wtr2(		 2,	45);
+	msg->set_past_wtr1_3h(	 2,	45);
+	msg->set_past_wtr2_3h(	 2,	45);
 	msg->set_press_tend(		 5,	45);
 	msg->set_tot_prec24(		15,	45);
 	msg->set_press_3h(		15,	45);

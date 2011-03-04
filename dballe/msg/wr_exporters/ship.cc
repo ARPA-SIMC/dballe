@@ -127,8 +127,7 @@ struct ShipBase : public Template
         /* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
         /* 20 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
         /* 21 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        /* 22 */ add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1);
-        /* 23 */ add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2);
+        do_ecmwf_past_wtr();
         /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
         /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);

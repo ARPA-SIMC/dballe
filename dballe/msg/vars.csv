@@ -61,8 +61,10 @@ HEIGHT_ANEM,    num,    B10197,       1,     -, -, -,  254,      0,     0, Anemo
 PRESS_TEND,     num,    B10063,       1,     -, -, -,  205,      0, 10800, Characteristic of pressure tendency
 VISIBILITY,     num,    B20001,       1,     -, -, -,  254,      0,     0, Visibility
 PRES_WTR,       int,    B20003,       1,     -, -, -,  254,      0,     0, Present weather
-PAST_WTR1,      int,    B20004,       1,     -, -, -,  205,      0, 21600, Past weather (1)
-PAST_WTR2,      int,    B20005,       1,     -, -, -,  205,      0, 21600, Past weather (2)
+PAST_WTR1_3H,   int,    B20004,       1,     -, -, -,  205,      0, 10800, Past weather (1 - 3h)
+PAST_WTR1_6H,   int,    B20004,       1,     -, -, -,  205,      0, 21600, Past weather (1 - 6h)
+PAST_WTR2_3H,   int,    B20005,       1,     -, -, -,  205,      0, 10800, Past weather (2 - 3h)
+PAST_WTR2_6H,   int,    B20005,       1,     -, -, -,  205,      0, 21600, Past weather (2 - 6h)
 METAR_WTR,      int,    B20009,       1,     -, -, -,  254,      0,     0, General weather indicator (TAF/METAR)
 CLOUD_N ,       int,    B20010,     256,     -, -, -,  254,      0,     0, Total cloud cover (N)
 CLOUD_NH,       int,    B20011,     256,   -, 258, 0,  254,      0,     0, Cloud amount (NH)

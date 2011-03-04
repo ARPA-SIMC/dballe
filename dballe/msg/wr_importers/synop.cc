@@ -561,7 +561,7 @@ void SynopImporter::import_var(const Var& var)
 /* Present and past weather (complete) */
         case WR_VAR(0, 20,  3): msg->set_pres_wtr_var(var); break;
         case WR_VAR(0, 20,  4):
-            ib_start(DBA_MSG_PAST_WTR1, var);
+            ib_start(DBA_MSG_PAST_WTR1_6H, var);
             ib_level_use_shorcut_and_discard_rest();
             if (opts.simplified)
                 ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
@@ -570,7 +570,7 @@ void SynopImporter::import_var(const Var& var)
             ib_set();
             break;
         case WR_VAR(0, 20,  5):
-            ib_start(DBA_MSG_PAST_WTR2, var);
+            ib_start(DBA_MSG_PAST_WTR2_6H, var);
             ib_level_use_shorcut_and_discard_rest();
             if (opts.simplified)
                 ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);

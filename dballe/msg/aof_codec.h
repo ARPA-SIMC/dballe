@@ -71,10 +71,14 @@ protected:
     static void parse_altitude(const uint32_t* obs, Msg& msg);
     /// Parse string ident in the Observation Header
     static void parse_st_ident(const uint32_t* obs, Msg& msg);
-    /// Parse latitude, longitude, date and time in the Observation Header
-    static void parse_lat_lon_datetime(const uint32_t* obs, Msg& msg);
+    /**
+     * Parse latitude, longitude, date and time in the Observation Header
+     *
+     * @returns the hour, which can be used to take decisions later
+     */
+    static int parse_lat_lon_datetime(const uint32_t* obs, Msg& msg);
     /// Parse 27 Weather group in Synop observations
-    static void parse_weather_group(const uint32_t* obs, Msg& msg);
+    static void parse_weather_group(const uint32_t* obs, Msg& msg, int hour);
     /// Parse 28 General cloud group in Synop observations
     static void parse_general_cloud_group(const uint32_t* obs, Msg& msg);
     /// Parse a bit-packed cloud group in Synop observations

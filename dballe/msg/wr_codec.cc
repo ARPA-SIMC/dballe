@@ -342,6 +342,21 @@ void Template::add_st_name(wreport::Varcode dstcode, const msg::Context* ctx) co
         subset->store_variable_undef(dstcode);
 }
 
+void Template::do_ecmwf_past_wtr() const
+{
+    int hour = 0;
+    if (const Var* var = msg->get_hour_var())
+        hour = var->enqi();
+    if (hour % 6 == 0)
+    {
+        add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1_6H);
+        add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2_6H);
+    } else {
+        add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1_3H);
+        add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2_3H);
+    }
+}
+
 void Template::do_D01001() const
 {
     add(WR_VAR(0,  1,  1), c_station, DBA_MSG_BLOCK);
