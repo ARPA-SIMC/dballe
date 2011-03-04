@@ -31,7 +31,7 @@ namespace wr {
 
 #define MISSING_BARO -10000
 #define MISSING_PRESS_STD 0.0
-#define MISSING_SENSOR_H -10000
+#define MISSING_SENSOR_H -10000.0
 #define MISSING_VSS 63
 #define MISSING_TIME_SIG -10000
 
@@ -87,6 +87,8 @@ protected:
 
     Trange tr_real(const Trange& standard) const
     {
+        if (standard.pind == 254)
+            return Trange::instant();
         return time_period == MISSING_INT ?
             Trange(standard.pind, 0) :
             Trange(standard.pind, 0, abs(time_period));
@@ -194,7 +196,7 @@ protected:
     void set_gen_sensor(const Var& var, int shortcut)
     {
         const MsgVarShortcut& v = shortcutTable[shortcut];
-        set_gen_sensor(var, shortcut, Trange(v.pind, v.p1, v.p2));
+        set_gen_sensor(var, shortcut, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
     }
 
     void set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful=false)

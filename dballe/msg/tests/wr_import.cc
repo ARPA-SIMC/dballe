@@ -219,8 +219,8 @@ void to::test<6>()
     IS2(WR_VAR(0, 13,   3), Level(103, 2050), Trange::instant(), 88.0); // humidity
     IS2(WR_VAR(0, 20, 1), Level(103, 8000), Trange::instant(), 14000.0); // visibility
     IS(pres_wtr, 508);
-    IS2(WR_VAR(0, 20, 4), Level(1), Trange(205, 0, -10800), 10); // past_wtr1
-    IS2(WR_VAR(0, 20, 5), Level(1), Trange(205, 0, -10800), 10); // past_wtr2
+    IS2(WR_VAR(0, 20, 4), Level(1), Trange(205, 0, 10800), 10); // past_wtr1
+    IS2(WR_VAR(0, 20, 5), Level(1), Trange(205, 0, 10800), 10); // past_wtr2
     IS(cloud_n, 38); IS(cloud_nh, 0); IS(cloud_hh, 6000.0);
     IS(cloud_cl, 30); IS(cloud_cm, 20); IS(cloud_ch, 12);
     IS(cloud_n1, 3); IS(cloud_c1, 0); IS(cloud_h1, 6000.0);
