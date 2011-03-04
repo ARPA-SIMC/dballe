@@ -21,6 +21,7 @@
 #include <dballe/msg/aof_codec.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
+#include <wreport/codetables.h>
 #include <math.h>
 
 using namespace dballe;
@@ -263,7 +264,13 @@ void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
         {
             msg::Context& c = *bmsg.data[i];
             if (Var* var = c.edit(WR_VAR(0, 8, 42)))
+            {
                 var->clear_attrs();
+                // Remove SIGHUM that is added by ECMWF template conversions
+                int val = var->enqi();
+                val &= ~BUFR08042::SIGHUM;
+                var->seti(val);
+            }
         }
 	}
 }
@@ -321,12 +328,6 @@ void to::test<3>()
             // Reencode to BUFR
             Rawmsg raw;
             exporter->to_rawmsg(*amsgs, raw);
-
-// FIXME: currently fails because AOF contains Synop Auto information with 4
-// cloud groups, while the default Synop Auto export template only allows one
-// cloud group.
-// TODO: autoselect all synop templates to use 4 cloud groups if the data is
-// available.
 
             // Decode again
             Msgs bmsgs;
