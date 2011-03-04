@@ -51,6 +51,7 @@ protected:
     double height_baro;
     double press_std;
     double height_sensor;
+    bool height_sensor_seen;
     int vs;
     int time_period;
     bool time_period_seen;
@@ -79,9 +80,10 @@ protected:
         }
     }
 
-    Level lev_real() const
+    Level lev_real(const Level& standard) const
     {
         if (height_sensor == 0) return Level(1);
+        if (!height_sensor_seen) return standard;
         return height_sensor == MISSING_SENSOR_H ?
             Level(103) :
             Level(103, height_sensor * 1000);
@@ -120,7 +122,7 @@ protected:
         temp_var->seta(newvar(WR_VAR(0, 4, 194), abs(time_period)));
     }
 
-    void ib_level_use_real() { chosen_lev = lev_real(); }
+    void ib_level_use_real(const Level& standard) { chosen_lev = lev_real(standard); }
     void ib_trange_use_real(const Trange& standard) { chosen_tr = tr_real(standard); }
 
     void ib_level_use_shorcut_and_discard_rest() { chosen_lev = lev_shortcut(); }
@@ -129,7 +131,7 @@ protected:
     void ib_level_use_shorcut_and_preserve_rest(const Level& standard)
     {
         chosen_lev = lev_shortcut();
-        Level real = lev_real();
+        Level real = lev_real(standard);
         if (real != chosen_lev && real != standard)
             ib_annotate_level();
     }
@@ -145,7 +147,7 @@ protected:
     void ib_level_use_standard_and_preserve_rest(const Level& standard)
     {
         chosen_lev = standard;
-        if (chosen_lev != lev_real())
+        if (chosen_lev != lev_real(standard))
             ib_annotate_level();
     }
 
@@ -159,7 +161,7 @@ protected:
     void ib_level_use_shorcut_if_standard_else_real(const Level& standard)
     {
         Level shortcut = lev_shortcut();
-        Level real = lev_real();
+        Level real = lev_real(standard);
         if (real == shortcut || real == standard)
             chosen_lev = shortcut;
         else
@@ -219,7 +221,7 @@ protected:
         ib_start(shortcut, var);
         if (!opts.simplified)
         {
-            ib_level_use_real();
+            ib_level_use_real(lev_std);
             ib_trange_use_real(tr_std);
         }
         else
@@ -286,6 +288,7 @@ public:
         height_baro = MISSING_BARO;
         press_std = MISSING_PRESS_STD;
         height_sensor = MISSING_SENSOR_H;
+        height_sensor_seen = false;
         vs = MISSING_VSS;
         time_period = MISSING_INT;
         time_period_seen = false;
@@ -416,6 +419,7 @@ void SynopImporter::import_var_undef(const Var& var)
         case WR_VAR(0,  7, 32):
             /* Height to use later as level for what needs it */
             height_sensor = MISSING_SENSOR_H;
+            height_sensor_seen = true;
             break;
         case WR_VAR(0,  8,  2):
             vs = MISSING_VSS;
@@ -448,6 +452,7 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0,  7, 32):
             /* Height to use later as level for what needs it */
             height_sensor = var.enqd();
+            height_sensor_seen = true;
             break;
         case WR_VAR(0,  8,  2):
             /* Vertical significance */
