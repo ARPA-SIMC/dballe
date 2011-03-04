@@ -20,6 +20,7 @@
 #include "test-utils-msg.h"
 #include "codec.h"
 #include <dballe/core/csv.h>
+#include <wreport/bulletin.h>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -123,11 +124,15 @@ const char* aof_files[] = {
 
 auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const msg::Importer::Options& opts)
 {
-    std::auto_ptr<Rawmsg> raw = read_rawmsg(filename, type);
-    std::auto_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
-    std::auto_ptr<Msgs> msgs(new Msgs);
-    importer->from_rawmsg(*raw, *msgs);
-    return msgs;
+    try {
+        std::auto_ptr<Rawmsg> raw = read_rawmsg(filename, type);
+        std::auto_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
+        std::auto_ptr<Msgs> msgs(new Msgs);
+        importer->from_rawmsg(*raw, *msgs);
+        return msgs;
+    } catch (std::exception& e) {
+        throw tut::failure(loc.msg(string("cannot read ") + filename + ": " + e.what()));
+    }
 }
 
 std::auto_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename)
@@ -161,15 +166,8 @@ void track_different_msgs(const Msg& msg1, const Msg& msg2, const std::string& p
 
 void track_different_msgs(const Msgs& msgs1, const Msgs& msgs2, const std::string& prefix)
 {
-	string fname1 = "/tmp/test-" + prefix + "1.bufr";
-	string fname2 = "/tmp/test-" + prefix + "2.bufr";
-	FILE* out1 = fopen(fname1.c_str(), "w");
-	FILE* out2 = fopen(fname2.c_str(), "w");
-	msgs1.print(out1);
-	msgs2.print(out2);
-	fclose(out1);
-	fclose(out2);
-	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
+    dump(prefix + "1", msgs1, "first message");
+    dump(prefix + "2", msgs2, "second message");
 }
 
 void _ensure_msg_undef(const wibble::tests::Location& loc, const Msg& msg, int shortcut)
@@ -201,6 +199,63 @@ const Var& _want_var(const Location& loc, const Msg& msg, wreport::Varcode code,
 	if (!var->value())
 		throw tut::failure(loc.msg("value is present but undefined"));
 	return *var;
+}
+
+void dump(const std::string& tag, const Msg& msg, const std::string& desc)
+{
+    string fname = "/tmp/" + tag + ".txt";
+    FILE* out = fopen(fname.c_str(), "w");
+    try {
+        msg.print(out);
+    } catch (std::exception& e) {
+        fprintf(out, "Dump interrupted: %s\n", e.what());
+    }
+    fclose(out);
+    cerr << desc << " saved in " << fname << endl;
+}
+
+void dump(const std::string& tag, const Msgs& msgs, const std::string& desc)
+{
+    string fname = "/tmp/" + tag + ".txt";
+    FILE* out = fopen(fname.c_str(), "w");
+    try {
+        msgs.print(out);
+    } catch (std::exception& e) {
+        fprintf(out, "Dump interrupted: %s\n", e.what());
+    }
+    fclose(out);
+    cerr << desc << " saved in " << fname << endl;
+}
+
+void dump(const std::string& tag, const Bulletin& bul, const std::string& desc)
+{
+    string fname = "/tmp/" + tag + ".txt";
+    FILE* out = fopen(fname.c_str(), "w");
+    try {
+        bul.print(out);
+    } catch (std::exception& e) {
+        fprintf(out, "Dump interrupted: %s\n", e.what());
+    }
+    fclose(out);
+
+    string fname1 = "/tmp/" + tag + "-st.txt";
+    out = fopen(fname1.c_str(), "w");
+    try {
+        bul.print_structured(out);
+    } catch (std::exception& e) {
+        fprintf(out, "Dump interrupted: %s\n", e.what());
+    }
+    fclose(out);
+    cerr << desc << " saved in " << fname << " and " << fname1 << endl;
+}
+
+void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc)
+{
+    string fname = "/tmp/" + tag + ".raw";
+    FILE* out = fopen(fname.c_str(), "w");
+    fwrite(msg.data(), msg.size(), 1, out);
+    fclose(out);
+    cerr << desc << " saved in " << fname << endl;
 }
 
 }

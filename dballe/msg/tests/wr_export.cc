@@ -349,48 +349,6 @@ struct ReimportTest
         hooks.clear();
     }
 
-    void dump(const std::string& tag, const Msgs& msgs, const std::string& desc="message")
-    {
-        string fname = "/tmp/" + tag + ".txt";
-        FILE* out = fopen(fname.c_str(), "w");
-        try {
-            msgs.print(out);
-        } catch (std::exception& e) {
-            fprintf(out, "Dump interrupted: %s\n", e.what());
-        }
-        fclose(out);
-        cerr << desc << " saved in " << fname << endl;
-    }
-    void dump(const std::string& tag, const Bulletin& bul, const std::string& desc="message")
-    {
-        string fname = "/tmp/" + tag + ".txt";
-        FILE* out = fopen(fname.c_str(), "w");
-        try {
-            bul.print(out);
-        } catch (std::exception& e) {
-            fprintf(out, "Dump interrupted: %s\n", e.what());
-        }
-        fclose(out);
-
-        string fname1 = "/tmp/" + tag + "-st.txt";
-        out = fopen(fname1.c_str(), "w");
-        try {
-            bul.print_structured(out);
-        } catch (std::exception& e) {
-            fprintf(out, "Dump interrupted: %s\n", e.what());
-        }
-        fclose(out);
-        cerr << desc << " saved in " << fname << " and " << fname1 << endl;
-    }
-    void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc="message")
-    {
-        string fname = "/tmp/" + tag + ".raw";
-        FILE* out = fopen(fname.c_str(), "w");
-        fwrite(msg.data(), msg.size(), 1, out);
-        fclose(out);
-        cerr << desc << " saved in " << fname << endl;
-    }
-
     ReimportTest(const std::string& fname, Encoding type=BUFR)
         : fname(fname), type(type)
     {
@@ -419,8 +377,8 @@ struct ReimportTest
             std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
             exporter->to_bulletin(*msgs1, bulletin);
         } catch (std::exception& e) {
-            dump("bul1", bulletin);
-            dump("msg1", *msgs1);
+            dballe::tests::dump("bul1", bulletin);
+            dballe::tests::dump("msg1", *msgs1);
             throw tut::failure(loc.msg(e.what()));
         }
 
@@ -430,8 +388,8 @@ struct ReimportTest
             bulletin.encode(rawmsg);
             //exporter->to_rawmsg(*msgs1, rawmsg);
         } catch (std::exception& e) {
-            dump("bul1", bulletin);
-            dump("msg1", *msgs1);
+            dballe::tests::dump("bul1", bulletin);
+            dballe::tests::dump("msg1", *msgs1);
             throw tut::failure(loc.msg(e.what()));
         }
 
@@ -440,8 +398,8 @@ struct ReimportTest
         try {
             importer->from_rawmsg(rawmsg, *msgs2);
         } catch (std::exception& e) {
-            dump("msg1", *msgs1);
-            dump("msg", rawmsg);
+            dballe::tests::dump("msg1", *msgs1);
+            dballe::tests::dump("msg", rawmsg);
             throw tut::failure(loc.msg(e.what()));
         }
 
@@ -455,8 +413,8 @@ struct ReimportTest
                 std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
                 exporter->to_bulletin(*msgs2, bulletin);
             } catch (std::exception& e) {
-                dump("bul2", bulletin);
-                dump("msg2", *msgs1);
+                dballe::tests::dump("bul2", bulletin);
+                dballe::tests::dump("msg2", *msgs1);
                 throw tut::failure(loc.msg(e.what()));
             }
 
@@ -466,8 +424,8 @@ struct ReimportTest
                 bulletin.encode(rawmsg);
                 //exporter->to_rawmsg(*msgs1, rawmsg);
             } catch (std::exception& e) {
-                dump("bul2", bulletin);
-                dump("msg2", *msgs1);
+                dballe::tests::dump("bul2", bulletin);
+                dballe::tests::dump("msg2", *msgs1);
                 throw tut::failure(loc.msg(e.what()));
             }
 
@@ -476,8 +434,8 @@ struct ReimportTest
             try {
                 importer->from_rawmsg(rawmsg, *msgs3);
             } catch (std::exception& e) {
-                dump("msg2", *msgs2);
-                dump("raw2", rawmsg);
+                dballe::tests::dump("msg2", *msgs2);
+                dballe::tests::dump("raw2", rawmsg);
                 throw tut::failure(loc.msg(e.what()));
             }
         } else
@@ -491,11 +449,11 @@ struct ReimportTest
         int diffs = msgs1->diff(*msgs3, stdout);
         if (diffs)
         {
-            dump("msg1", *msgs1);
+            dballe::tests::dump("msg1", *msgs1);
             if (msgs2.get())
-                dump("msg2", *msgs2);
-            dump("msg3", *msgs3);
-            dump("msg", rawmsg);
+                dballe::tests::dump("msg2", *msgs2);
+            dballe::tests::dump("msg3", *msgs3);
+            dballe::tests::dump("msg", rawmsg);
         }
         inner_ensure_equals(diffs, 0);
     }

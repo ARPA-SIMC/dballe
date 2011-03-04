@@ -60,6 +60,11 @@ const wreport::Var& _want_var(const Location& loc, const Msg& msg, int shortcut)
 const wreport::Var& _want_var(const Location& loc, const Msg& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);
 #define want_var(msg, ...) dballe::tests::_want_var(wibble::tests::Location(__FILE__, __LINE__, #msg " needs to have var " #__VA_ARGS__), (msg), __VA_ARGS__)
 
+void dump(const std::string& tag, const Msg& msg, const std::string& desc="message");
+void dump(const std::string& tag, const Msgs& msgs, const std::string& desc="message");
+void dump(const std::string& tag, const wreport::Bulletin& bul, const std::string& desc="message");
+void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc="message");
+
 
 #if 0
 
