@@ -30,6 +30,10 @@
 #include <iostream>
 #endif
 
+namespace wreport {
+struct Vartable;
+}
+
 namespace dballe {
 namespace tests {
 
@@ -65,6 +69,83 @@ void dump(const std::string& tag, const Msgs& msgs, const std::string& desc="mes
 void dump(const std::string& tag, const wreport::Bulletin& bul, const std::string& desc="message");
 void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc="message");
 
+struct MessageTweaker
+{
+    virtual ~MessageTweaker() {}
+    virtual void tweak(Msgs&) {}
+};
+
+namespace tweaks {
+
+// Strip attributes from all variables in a Msgs
+struct StripQCAttrs : public MessageTweaker
+{
+    void tweak(Msgs& msgs);
+};
+
+// Round variables to account for a passage through legacy vars
+struct RoundLegacyVars : public MessageTweaker
+{
+    const wreport::Vartable* table;
+    RoundLegacyVars();
+    void tweak(Msgs& msgs);
+};
+
+// Remove synop vars present in WMO templates but not in ECMWF templates
+struct RemoveSynopWMOOnlyVars : public MessageTweaker
+{
+    void tweak(Msgs& msgs);
+};
+
+// Remove temp vars present in WMO templates but not in ECMWF templates
+struct RemoveTempWMOOnlyVars : public MessageTweaker
+{
+    void tweak(Msgs& msgs);
+};
+
+// Remove temp vars present only in an odd temp template for which we have
+// messages in the test suite
+struct RemoveOddTempTemplateOnlyVars : public MessageTweaker
+{
+    void tweak(Msgs& msgs);
+};
+
+// Remove ground level with missing length of statistical processing, that
+// cannot be encoded in ECMWF templates
+struct RemoveSynopWMOOddprec : public MessageTweaker
+{
+    void tweak(Msgs& msgs);
+};
+
+// Truncate station name to its canonical length
+struct TruncStName : public MessageTweaker
+{
+    void tweak(Msgs& msgs);
+};
+
+// Preround geopotential with a B10003->B10008->B10009->B10008->B10003 round trip
+struct PreroundGeopotential : public MessageTweaker
+{
+    const wreport::Vartable* table;
+    PreroundGeopotential();
+    void tweak(Msgs& msgs);
+};
+
+// Preround vertical sounding significance with a B08042->B08001->B08042 round trip
+struct PreroundVSS : public MessageTweaker
+{
+    void tweak(Msgs& msgs);
+};
+
+// Override message type
+struct OverrideType : public MessageTweaker
+{
+    MsgType type;
+    OverrideType(MsgType type) : type(type) {}
+    void tweak(Msgs& msgs);
+};
+
+}
 
 #if 0
 
