@@ -23,6 +23,7 @@
 #include "context.h"
 #include "vars.h"
 #include <dballe/core/csv.h>
+#include <wreport/codetables.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -452,32 +453,26 @@ void Msg::print(FILE* out) const
                 if (vsig != NULL)
                 {
                     int vs = vsig->enqi();
-                    const int VSIG_EXTRA = 128;
-                    const int VSIG_SURFACE = 64;
-                    const int VSIG_STANDARD = 32;
-                    const int VSIG_TROPOPAUSE = 16;
-                    const int VSIG_MAXWIND = 8;
-                    const int VSIG_SIGTEMP = 4;
-                    const int VSIG_SIGWIND = 2;
-                    const int VSIG_MISSING = 1;
 
                     fprintf(out, "Sounding #%zd (level %d -", (i - data.begin()) + 1, vs);
-                    if (vs & VSIG_EXTRA)
-                        fprintf(out, " extra");
-                    if (vs & VSIG_SURFACE)
-                        fprintf(out, " surface");
-                    if (vs & VSIG_STANDARD)
-                        fprintf(out, " standard");
-                    if (vs & VSIG_TROPOPAUSE)
-                        fprintf(out, " tropopause");
-                    if (vs & VSIG_MAXWIND)
-                        fprintf(out, " maxwind");
-                    if (vs & VSIG_SIGTEMP)
-                        fprintf(out, " sigtemp");
-                    if (vs & VSIG_SIGWIND)
-                        fprintf(out, " sigwind");
-                    if (vs & VSIG_MISSING)
-                        fprintf(out, " missing");
+                    if (vs & BUFR08042::MISSING) fprintf(out, " missing");
+                    if (vs & BUFR08042::H2PRESS) fprintf(out, " h2press");
+                    if (vs & BUFR08042::RESERVED) fprintf(out, " reserved");
+                    if (vs & BUFR08042::REGIONAL) fprintf(out, " regional");
+                    if (vs & BUFR08042::TOPWIND) fprintf(out, " topwind");
+                    if (vs & BUFR08042::ENDMISSW) fprintf(out, " endmissw");
+                    if (vs & BUFR08042::BEGMISSW) fprintf(out, " begmissw");
+                    if (vs & BUFR08042::ENDMISSH) fprintf(out, " endmissh");
+                    if (vs & BUFR08042::BEGMISSH) fprintf(out, " begmissh");
+                    if (vs & BUFR08042::ENDMISST) fprintf(out, " endmisst");
+                    if (vs & BUFR08042::BEGMISST) fprintf(out, " begmisst");
+                    if (vs & BUFR08042::SIGWIND) fprintf(out, " sigwind");
+                    if (vs & BUFR08042::SIGHUM) fprintf(out, " sighum");
+                    if (vs & BUFR08042::SIGTEMP) fprintf(out, " sigtemp");
+                    if (vs & BUFR08042::MAXWIND) fprintf(out, " maxwind");
+                    if (vs & BUFR08042::TROPO) fprintf(out, " tropo");
+                    if (vs & BUFR08042::STD) fprintf(out, " std");
+                    if (vs & BUFR08042::SURFACE) fprintf(out, " surface");
                     fprintf(out, ") ");
                 }
                 (*i)->print(out);
