@@ -554,7 +554,8 @@ void Msg::set_by_id(const wreport::Var& var, int shortcut)
 void Msg::set(const Var& var, Varcode code, const Level& lev, const Trange& tr)
 {
     auto_ptr<Var> copy(newvar(code));
-    copy->copy_val(var); // Copy value performing conversions
+    copy->copy_val_only(var); // Copy value performing conversions
+    copy->copy_attrs_if_defined(var);
     set(copy, lev, tr);
 }
 
