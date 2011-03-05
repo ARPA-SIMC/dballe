@@ -15,8 +15,9 @@ dballe (5.5-1) unstable; urgency=low
      - Imported past weather time range now is 3h or 6h depending on the
        reference time hour
      - Precise import of ECMWF templates use standard SYNOP levels
+     - Do not import undef attrs into Msg
 
- -- Enrico Zini <enrico@debian.org>  Fri, 04 Mar 2011 18:25:55 +0000
+ -- Enrico Zini <enrico@debian.org>  Sat, 05 Mar 2011 23:16:31 +0000
 
 dballe (5.4-1) unstable; urgency=low
 
