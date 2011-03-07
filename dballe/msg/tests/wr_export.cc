@@ -498,14 +498,13 @@ template<> template<>
 void to::test<18>()
 {
     BufrReimportTest test("bufr/obs2-91.2.bufr");
-    //test.tweaks.push_back(new OverrideType(MSG_PILOT));
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
 void to::test<19>()
 {
     BufrReimportTest test("bufr/temp-bad3.bufr");
-    test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
+    test.ecmwf_tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
@@ -520,36 +519,25 @@ void to::test<21>()
 {
     // This has some sounding groups with undefined VSS, and an unusual template
     BufrReimportTest test("bufr/test-temp1.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
-    run_test(test, do_test, "temp-wmo");
-    test.clear_tweaks();
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
-    test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
-    run_test(test, do_test, "temp-wmo", "temp-ecmwf");
-    test.clear_tweaks();
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
-    run_test(test, do_test, "temp-ecmwf", "temp-wmo");
+    test.ecmwf_tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
+    run_test(test, do_ecmwf, "temp");
+    //test.wmo_tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
+    //test.tweaks.push_back(new StripQCAttrs());
+    //run_test(test, do_wmo, "temp");
 }
 template<> template<>
 void to::test<22>()
 {
     // This has an unusual template
     BufrReimportTest test("bufr/C23000.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
-    run_test(test, do_test, "temp-wmo");
-    test.clear_tweaks();
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
-    test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
-    run_test(test, do_test, "temp-wmo", "temp-ecmwf");
-    test.clear_tweaks();
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
-    run_test(test, do_test, "temp-ecmwf", "temp-wmo");
+    StripQCAttrs* sqa;
+    test.tweaks.push_back(sqa = new StripQCAttrs());
+    sqa->codes.push_back(WR_VAR(0, 10, 3));
+
+    test.ecmwf_tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
+    run_test(test, do_ecmwf, "temp");
+    //test.wmo_tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
+    //run_test(test, do_wmo, "temp");
 }
 
 // Re-export test for new style temps
@@ -557,77 +545,65 @@ template<> template<>
 void to::test<23>()
 {
     BufrReimportTest test("bufr/temp-gts1.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
-    test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new RoundVSS());
+    test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RoundVSS());
     run_test(test, do_wmo, "temp");
 }
 template<> template<>
 void to::test<24>()
 {
     BufrReimportTest test("bufr/temp-gts2.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
-    test.tweaks.push_back(new RoundLegacyVars());
+    test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_wmo, "temp");
 }
 template<> template<>
 void to::test<25>()
 {
     BufrReimportTest test("bufr/temp-gts3.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
-    test.tweaks.push_back(new RoundLegacyVars());
+    test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_wmo, "temp");
 }
 template<> template<>
 void to::test<26>()
 {
+    // Another weird template
     BufrReimportTest test("bufr/temp-2-255.bufr");
-    test.tweaks.push_back(new TruncStName());
-    test.output_opts.template_name = "temp-wmo";
-    run_test(test, do_test, "auto");
-    test.output_opts.template_name = "temp-ecmwf";
-    test.clear_tweaks();
-    run_test(test, do_test, "old");
+    run_test(test, do_wmo, "temp");
+    //test.output_opts.template_name = "temp-wmo";
+    //run_test(test, do_test, "auto");
+    //test.output_opts.template_name = "temp-ecmwf";
+    //test.clear_tweaks();
+    //run_test(test, do_test, "old");
 }
 template<> template<>
 void to::test<27>()
-{ // Geopotential gets changed during conversions
+{
     BufrReimportTest test("bufr/temp-bad1.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.output_opts.template_name = "temp-wmo";
-    run_test(test, do_test, "auto");
-    test.output_opts.template_name = "temp-ecmwf";
-    test.clear_tweaks();
-    run_test(test, do_test, "old");
+    StripQCAttrs* sqa;
+    test.tweaks.push_back(sqa = new StripQCAttrs());
+    sqa->codes.push_back(WR_VAR(0, 10, 3));
+    run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
 void to::test<28>()
-{ // Geopotential gets changed during conversions
+{
     BufrReimportTest test("bufr/temp-bad2.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.output_opts.template_name = "temp-wmo";
-    run_test(test, do_test, "auto");
-    test.output_opts.template_name = "temp-ecmwf";
-    test.clear_tweaks();
-    run_test(test, do_test, "old");
+    StripQCAttrs* sqa;
+    test.tweaks.push_back(sqa = new StripQCAttrs());
+    sqa->codes.push_back(WR_VAR(0, 10, 3));
+    test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
+    run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
 void to::test<29>()
 {
     BufrReimportTest test("bufr/temp-bad4.bufr");
     run_test(test, do_test, "temp-wmo");
-    test.clear_tweaks();
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
-    test.tweaks.push_back(new RoundLegacyVars());
-    run_test(test, do_test, "temp-ecmwf", "temp-wmo");
 }
 template<> template<>
 void to::test<30>()
 {
+    // generic temp with forecast info and hybrid levels (?)
     BufrReimportTest test("bufr/tempforecast.bufr");
     run_test(test, do_test, "temp-wmo");
     test.clear_tweaks();
@@ -639,16 +615,20 @@ void to::test<30>()
 template<> template<>
 void to::test<31>()
 {
-    //const char** files = dballe::tests::bufr_files;
+    const char** files = dballe::tests::bufr_files;
     // Uncomment to single out one failing file
-    const char* files[] = { "bufr/temp-2-255.bufr", NULL };
+    //const char* files[] = { "bufr/temp-2-255.bufr", NULL };
     set<string> blacklist;
+    // Generics, would need a template override to avoid the per-rete
+    // autodetected export
     blacklist.insert("bufr/tempforecast.bufr");
     blacklist.insert("bufr/obs255-255.0.bufr");
-    // They use nonstandard templates that don't fit in any of the ones supported
-    // by DB-All.e: tested separately
+    // Nonstandard messages that need tweaks, tested individually above
     blacklist.insert("bufr/test-temp1.bufr");
     blacklist.insert("bufr/C23000.bufr");
+    blacklist.insert("bufr/temp-2-255.bufr");
+    blacklist.insert("bufr/synop-longname.bufr");
+    blacklist.insert("bufr/temp-bad4.bufr");
 
     vector<string> fails;
     int i;
@@ -697,13 +677,19 @@ template<> template<>
 void to::test<32>()
 {
     const char** files = dballe::tests::bufr_files;
+    // Uncomment to single out one failing file
+    //const char* files[] = { "bufr/temp-2-255.bufr", NULL };
     set<string> blacklist;
+    // Generics, would need a template override to avoid the per-rete
+    // autodetected export
     blacklist.insert("bufr/tempforecast.bufr");
     blacklist.insert("bufr/obs255-255.0.bufr");
-    // They use nonstandard templates that don't fit in any of the ones supported
-    // by DB-All.e: tested separately
+    // Nonstandard messages that need tweaks, tested individually above
     blacklist.insert("bufr/test-temp1.bufr");
     blacklist.insert("bufr/C23000.bufr");
+    blacklist.insert("bufr/temp-2-255.bufr");
+    blacklist.insert("bufr/synop-longname.bufr");
+    blacklist.insert("bufr/temp-bad4.bufr");
 
     vector<string> fails;
     int i;

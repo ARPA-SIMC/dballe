@@ -78,15 +78,23 @@ struct MessageTweaker
 namespace tweaks {
 
 // Strip attributes from all variables in a Msgs
-struct StripQCAttrs : public MessageTweaker
+struct StripAttrs : public MessageTweaker
 {
+    std::vector<wreport::Varcode> codes;
+
     void tweak(Msgs& msgs);
 };
 
-// Strip context attributes from all variables in a Msgs
-struct StripContextAttrs : public MessageTweaker
+// Strip attributes from all variables in a Msgs
+struct StripQCAttrs : public StripAttrs
 {
-    void tweak(Msgs& msgs);
+    StripQCAttrs();
+};
+
+// Strip context attributes from all variables in a Msgs
+struct StripContextAttrs : public StripAttrs
+{
+    StripContextAttrs();
 };
 
 // Strip a user-defined list of vars from all levels
@@ -119,9 +127,9 @@ struct RemoveTempWMOOnlyVars : public MessageTweaker
 
 // Remove temp vars present only in an odd temp template for which we have
 // messages in the test suite
-struct RemoveOddTempTemplateOnlyVars : public MessageTweaker
+struct RemoveOddTempTemplateOnlyVars : public StripVars
 {
-    void tweak(Msgs& msgs);
+    RemoveOddTempTemplateOnlyVars();
 };
 
 // Remove ground level with missing length of statistical processing, that
@@ -148,14 +156,6 @@ struct RoundGeopotential : public MessageTweaker
 // Round vertical sounding significance with a B08042->B08001->B08042 round trip
 struct RoundVSS : public MessageTweaker
 {
-    void tweak(Msgs& msgs);
-};
-
-// Override message type
-struct OverrideType : public MessageTweaker
-{
-    MsgType type;
-    OverrideType(MsgType type) : type(type) {}
     void tweak(Msgs& msgs);
 };
 

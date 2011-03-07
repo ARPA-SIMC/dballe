@@ -263,7 +263,7 @@ void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc)
 
 namespace tweaks {
 
-void StripQCAttrs::tweak(Msgs& msgs)
+void StripAttrs::tweak(Msgs& msgs)
 {
     for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
     {
@@ -274,29 +274,24 @@ void StripQCAttrs::tweak(Msgs& msgs)
             for (vector<wreport::Var*>::iterator vi = c.data.begin(); vi != c.data.end(); ++vi)
             {
                 Var& v = **vi;
-                v.unseta(WR_VAR(0, 33, 7));
+                for (vector<wreport::Varcode>::const_iterator i = codes.begin();
+                        i != codes.end(); ++i)
+                    v.unseta(*i);
             }
         }
     }
 }
 
-void StripContextAttrs::tweak(Msgs& msgs)
+StripQCAttrs::StripQCAttrs()
 {
-    for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
-    {
-        Msg& m = **mi;
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
-        {
-            msg::Context& c = **ci;
-            for (vector<wreport::Var*>::iterator vi = c.data.begin(); vi != c.data.end(); ++vi)
-            {
-                Var& v = **vi;
-                v.unseta(WR_VAR(0, 7,  31));
-                v.unseta(WR_VAR(0, 7,  32));
-                v.unseta(WR_VAR(0, 4, 194));
-            }
-        }
-    }
+    codes.push_back(WR_VAR(0, 33, 7));
+}
+
+StripContextAttrs::StripContextAttrs()
+{
+    codes.push_back(WR_VAR(0, 7,  31));
+    codes.push_back(WR_VAR(0, 7,  32));
+    codes.push_back(WR_VAR(0, 4, 194));
 }
 
 void StripVars::tweak(Msgs& msgs)
@@ -433,21 +428,9 @@ void RemoveTempWMOOnlyVars::tweak(Msgs& msgs)
     }
 }
 
-void RemoveOddTempTemplateOnlyVars::tweak(Msgs& msgs)
+RemoveOddTempTemplateOnlyVars::RemoveOddTempTemplateOnlyVars()
 {
-    for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
-    {
-        Msg& m = **mi;
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
-        {
-            msg::Context& c = **ci;
-            c.remove(WR_VAR(0, 2, 12)); // Radiosonde computational method
-            if (c.data.empty())
-                ci = m.data.erase(ci);
-            else
-                ++ci;
-        }
-    }
+    codes.push_back(WR_VAR(0, 2, 12)); // Radiosonde computational method
 }
 
 void RemoveSynopWMOOddprec::tweak(Msgs& msgs)
@@ -513,15 +496,6 @@ void RoundVSS::tweak(Msgs& msgs)
             if (Var* orig = c.edit(WR_VAR(0, 8, 42)))
                 orig->seti(convert_BUFR08001_to_BUFR08042(convert_BUFR08042_to_BUFR08001(orig->enqi())));
         }
-    }
-}
-
-void OverrideType::tweak(Msgs& msgs)
-{
-    for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
-    {
-        Msg& m = **mi;
-        m.type = type;
     }
 }
 
