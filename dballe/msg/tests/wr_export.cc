@@ -61,6 +61,7 @@ struct ReimportTest
     msg::Exporter::Options output_opts;
     vector<Tweaker*> tweaks;
     bool do_tweaks;
+    bool do_ignore_context_attrs;
 
     void clear_tweaks()
     {
@@ -71,7 +72,7 @@ struct ReimportTest
     }
 
     ReimportTest(const std::string& fname, Encoding type=BUFR)
-        : fname(fname), type(type), do_tweaks(true)
+        : fname(fname), type(type), do_tweaks(true), do_ignore_context_attrs(false)
     {
     }
     ~ReimportTest()
@@ -171,6 +172,11 @@ struct ReimportTest
         for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
             (*i)->clean_second(*msgs3);
 #endif
+        if (do_ignore_context_attrs)
+        {
+            StripContextAttrs sca;
+            sca.tweak(*msgs1);
+        }
 
         // Compare
         int diffs = msgs1->diff(*msgs3, stdout);
@@ -221,7 +227,9 @@ struct ReimportTest
         inner_do_test("simp-wmo-through-wmo", wmo_template_name.c_str());
 
         do_tweaks = true;
+        do_ignore_context_attrs = true;
         inner_do_test("simp-wmo-through-ecmwf", ecmwf_template_name.c_str());
+        do_ignore_context_attrs = false;
 
         input_opts.simplified = false;
 

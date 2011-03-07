@@ -83,6 +83,12 @@ struct StripQCAttrs : public MessageTweaker
     void tweak(Msgs& msgs);
 };
 
+// Strip context attributes from all variables in a Msgs
+struct StripContextAttrs : public MessageTweaker
+{
+    void tweak(Msgs& msgs);
+};
+
 // Round variables to account for a passage through legacy vars
 struct RoundLegacyVars : public MessageTweaker
 {

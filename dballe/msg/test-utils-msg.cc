@@ -280,6 +280,25 @@ void StripQCAttrs::tweak(Msgs& msgs)
     }
 }
 
+void StripContextAttrs::tweak(Msgs& msgs)
+{
+    for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+    {
+        Msg& m = **mi;
+        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+        {
+            msg::Context& c = **ci;
+            for (vector<wreport::Var*>::iterator vi = c.data.begin(); vi != c.data.end(); ++vi)
+            {
+                Var& v = **vi;
+                v.unseta(WR_VAR(0, 7,  31));
+                v.unseta(WR_VAR(0, 7,  32));
+                v.unseta(WR_VAR(0, 4, 194));
+            }
+        }
+    }
+}
+
 RoundLegacyVars::RoundLegacyVars() : table(NULL)
 {
     table = Vartable::get("B0000000000000014000");
