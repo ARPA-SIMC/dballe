@@ -288,12 +288,12 @@ struct Synop : public Template
                             // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
                             if (c->find(WR_VAR(0, 13, 11)))
                             {
-                                if (!c_prec1)
+                                if (c->trange.p2 == 86400)
+                                    c_prec24 = c;
+                                else if (!c_prec1)
                                     c_prec1 = c;
                                 else if (!c_prec2)
                                     c_prec2 = c;
-                                if (c->trange.p2 == 86400)
-                                    c_prec24 = c;
                             }
 
                             // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
@@ -323,12 +323,12 @@ struct Synop : public Template
                         // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
                         if (c->find(WR_VAR(0, 13, 11)))
                         {
-                            if (!c_prec1)
+                            if (c->trange.p2 == 86400)
+                                c_prec24 = c;
+                            else if (!c_prec1)
                                 c_prec1 = c;
                             else if (!c_prec2)
                                 c_prec2 = c;
-                            if (c->trange.p2 == 86400)
-                                c_prec24 = c;
                         }
                     }
                     if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
