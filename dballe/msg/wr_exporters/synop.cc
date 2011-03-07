@@ -181,6 +181,55 @@ struct ContextFinder
     }
 };
 
+struct PressureInfo
+{
+    const Var* v_press;
+    const Var* v_pressmsl;
+    const Var* v_pchange3;
+    const Var* v_pchange24;
+    const Var* v_ptend;
+
+    void reset()
+    {
+        v_press = 0;
+        v_pressmsl = 0;
+        v_pchange3 = 0;
+        v_pchange24 = 0;
+        v_ptend = 0;
+    }
+
+    void scan_context4(const msg::Context& c)
+    {
+        if (const Var* v = c.find_by_id(DBA_MSG_PRESS_3H))
+            switch (c.trange.p2)
+            {
+                case  3*3600: v_pchange3 = v; break;
+                case 24*3600: v_pchange24 = v; break;
+            }
+    }
+    void scan_context205(const msg::Context& c)
+    {
+        if (const Var* v = c.find_by_id(DBA_MSG_PRESS_TEND))
+            v_ptend = v;
+    }
+    void scan_context254(const msg::Context& c)
+    {
+        if (const Var* v = c.find_by_id(DBA_MSG_PRESS))
+            v_press = v;
+        if (const Var* v = c.find_by_id(DBA_MSG_PRESS_MSL))
+            v_pressmsl = v;
+    }
+    void scan_context(const msg::Context& c)
+    {
+        switch (c.trange.pind)
+        {
+            case 4: scan_context4(c); break;
+            case 205: scan_context205(c); break;
+            case 254: scan_context254(c); break;
+        }
+    }
+};
+
 struct Synop : public Template
 {
     const msg::Context* c_sunshine1;
@@ -195,6 +244,7 @@ struct Synop : public Template
     const msg::Context* c_past_wtr;
     const msg::Context* c_thermo;
     const msg::Context* c_visib;
+    PressureInfo i_press;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -213,26 +263,63 @@ struct Synop : public Template
         c_past_wtr = NULL;
         c_thermo = NULL;
         c_visib = NULL;
+        i_press.reset();
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg->data.begin();
                 i != msg->data.end(); ++i)
         {
             const msg::Context* c = *i;
-            if (c->level == Level(1))
+            switch (c->level.ltype1)
             {
-                switch (c->trange.pind)
-                {
-                    case 1:
-                        // msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period));
-                        if (c->find(WR_VAR(0, 14, 31)))
-                        {
-                            if (!c_sunshine1)
-                                c_sunshine1 = c;
-                            else if (!c_sunshine2)
-                                c_sunshine2 = c;
-                        }
+                case 1:
+                    switch (c->trange.pind)
+                    {
+                        case 1:
+                            // msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period));
+                            if (c->find(WR_VAR(0, 14, 31)))
+                            {
+                                if (!c_sunshine1)
+                                    c_sunshine1 = c;
+                                else if (!c_sunshine2)
+                                    c_sunshine2 = c;
+                            }
 
+                            // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
+                            if (c->find(WR_VAR(0, 13, 11)))
+                            {
+                                if (!c_prec1)
+                                    c_prec1 = c;
+                                else if (!c_prec2)
+                                    c_prec2 = c;
+                                if (c->trange.p2 == 86400)
+                                    c_prec24 = c;
+                            }
+
+                            // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
+                            if (c->find(WR_VAR(0, 13, 33)))
+                                c_evapo = c;
+                            break;
+                        case 4: i_press.scan_context4(*c); break;
+                        case 205:
+                            if (c->find(WR_VAR(0, 20, 4)) || c->find(WR_VAR(0, 20, 5)))
+                                c_past_wtr = c;
+                            i_press.scan_context205(*c);
+                            break;
+                        case 254:
+                            if (c->find_by_id(DBA_MSG_VISIBILITY))
+                                c_visib = c;
+                            i_press.scan_context254(*c);
+                            break;
+                    }
+                    break;
+                case 101:
+                case 102:
+                    i_press.scan_context(*c);
+                    break;
+                case 103:
+                    if (c->trange.pind == 1 && c->trange.p1 == 0)
+                    {
                         // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
                         if (c->find(WR_VAR(0, 13, 11)))
                         {
@@ -243,48 +330,22 @@ struct Synop : public Template
                             if (c->trange.p2 == 86400)
                                 c_prec24 = c;
                         }
-
-                        // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
-                        if (c->find(WR_VAR(0, 13, 33)))
-                            c_evapo = c;
-                        break;
-                    case 205:
-                        if (c->find(WR_VAR(0, 20, 4)) || c->find(WR_VAR(0, 20, 5)))
-                            c_past_wtr = c;
-                        break;
-                    case 254:
-                        if (c->find_by_id(DBA_MSG_VISIBILITY))
-                            c_visib = c;
-                        break;
-                }
-            } else if (c->level.ltype1 == 103) {
-                if (c->trange.pind == 1 && c->trange.p1 == 0)
-                {
-                    // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
-                    if (c->find(WR_VAR(0, 13, 11)))
-                    {
-                        if (!c_prec1)
-                            c_prec1 = c;
-                        else if (!c_prec2)
-                            c_prec2 = c;
-                        if (c->trange.p2 == 86400)
-                            c_prec24 = c;
                     }
-                }
-                if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
-                    if (!c_wind)
-                        c_wind = c;
-                if (c->find(WR_VAR(0, 11, 41)) || c->find(WR_VAR(0, 11, 43)))
-                {
-                    if (!c_gust1)
-                        c_gust1 = c;
-                    else if (!c_gust2)
-                        c_gust2 = c;
-                }
-                if (c->find_by_id(DBA_MSG_TEMP_2M) || c->find_by_id(DBA_MSG_DEWPOINT_2M) || c->find_by_id(DBA_MSG_HUMIDITY))
-                    c_thermo = c;
-                if (c->find_by_id(DBA_MSG_VISIBILITY))
-                    c_visib = c;
+                    if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
+                        if (!c_wind)
+                            c_wind = c;
+                    if (c->find(WR_VAR(0, 11, 41)) || c->find(WR_VAR(0, 11, 43)))
+                    {
+                        if (!c_gust1)
+                            c_gust1 = c;
+                        else if (!c_gust2)
+                            c_gust2 = c;
+                    }
+                    if (c->find_by_id(DBA_MSG_TEMP_2M) || c->find_by_id(DBA_MSG_DEWPOINT_2M) || c->find_by_id(DBA_MSG_HUMIDITY))
+                        c_thermo = c;
+                    if (c->find_by_id(DBA_MSG_VISIBILITY))
+                        c_visib = c;
+                    break;
             }
         }
     }
@@ -374,7 +435,7 @@ struct SynopECMWF : public Synop
         /*  8 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /*  9 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
         /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
-        /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
+        /* 11 */ add(WR_VAR(0, 10,  4), i_press.v_press);
     }
 };
 
@@ -412,9 +473,9 @@ struct SynopECMWFLand : public SynopECMWF
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         SynopECMWF::to_subset(msg, subset);
-        /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
-        /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
-        /* 14 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
+        /* 12 */ add(WR_VAR(0, 10, 51), i_press.v_pressmsl);
+        /* 13 */ add(WR_VAR(0, 10, 61), i_press.v_pchange3);
+        /* 14 */ add(WR_VAR(0, 10, 63), i_press.v_ptend);
         /* 15 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
         /* 16 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
         /* 17 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
@@ -510,8 +571,8 @@ struct SynopECMWFLandHigh : public SynopECMWF
             subset.store_variable_undef(WR_VAR(0,  7, 4));
         finder.vars[0].add(subset, WR_VAR(0, 10, 3));
 
-        /* 14 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
-        /* 15 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
+        /* 14 */ add(WR_VAR(0, 10, 61), i_press.v_pchange3);
+        /* 15 */ add(WR_VAR(0, 10, 63), i_press.v_ptend);
         /* 16 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
         /* 17 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
         /* 18 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
@@ -591,11 +652,11 @@ struct SynopWMO : public Synop
     // D02031  Pressure data
     void do_D02031(const Msg& msg, wreport::Subset& subset)
     {
-        add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
-        add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
-        add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
-        add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
-        add(WR_VAR(0, 10, 62), DBA_MSG_PRESS_24H);
+        add(WR_VAR(0, 10,  4), i_press.v_press);
+        add(WR_VAR(0, 10, 51), i_press.v_pressmsl);
+        add(WR_VAR(0, 10, 61), i_press.v_pchange3);
+        add(WR_VAR(0, 10, 63), i_press.v_ptend);
+        add(WR_VAR(0, 10, 62), i_press.v_pchange24);
 
         // Find pressure level of geopotential
         ContextFinder finder(msg);
