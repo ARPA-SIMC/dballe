@@ -70,12 +70,7 @@ void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
             else
                 importer = wr::Importer::createSynop(opts);
             break;
-        case 2:
-            if (msg.localsubtype == 91 || msg.localsubtype == 92)
-                importer = wr::Importer::createPilot(opts);
-            else
-                importer = wr::Importer::createTemp(opts);
-            break;
+        case 2: importer = wr::Importer::createTemp(opts); break;
         case 3: importer = wr::Importer::createSat(opts); break;
         case 4: importer = wr::Importer::createFlight(opts); break;
         case 8: importer = wr::Importer::createPollution(opts); break;
@@ -148,7 +143,6 @@ extern void register_ship(TemplateRegistry&);
 extern void register_buoy(TemplateRegistry&);
 extern void register_metar(TemplateRegistry&);
 extern void register_temp(TemplateRegistry&);
-extern void register_pilot(TemplateRegistry&);
 extern void register_flight(TemplateRegistry&);
 extern void register_generic(TemplateRegistry&);
 extern void register_pollution(TemplateRegistry&);
@@ -166,7 +160,6 @@ const TemplateRegistry& TemplateRegistry::get()
         register_buoy(*registry);
         register_metar(*registry);
         register_temp(*registry);
-        register_pilot(*registry);
         register_flight(*registry);
         register_generic(*registry);
         register_pollution(*registry);

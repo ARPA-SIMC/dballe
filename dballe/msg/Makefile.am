@@ -46,7 +46,6 @@ libdballe_msg_la_SOURCES = \
 		wr_importers/base.cc \
 		wr_importers/synop.cc \
 		wr_importers/temp.cc \
-		wr_importers/pilot.cc \
 		wr_importers/metar.cc \
 		wr_importers/flight.cc \
 		wr_importers/generic.cc \
@@ -56,7 +55,6 @@ libdballe_msg_la_SOURCES = \
 		wr_exporters/buoy.cc \
 		wr_exporters/metar.cc \
 		wr_exporters/temp.cc \
-		wr_exporters/pilot.cc \
 		wr_exporters/flight.cc \
 		wr_exporters/generic.cc \
 		wr_exporters/pollution.cc

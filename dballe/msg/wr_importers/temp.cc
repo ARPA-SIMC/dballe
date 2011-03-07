@@ -23,6 +23,7 @@
 #include <wreport/conv.h>
 #include <wreport/codetables.h>
 #include <dballe/msg/context.h>
+#include <cmath>
 
 // Define to debug the sounding group matching algorithm
 // #define DEBUG_GROUPS
@@ -205,8 +206,9 @@ public:
                             return MSG_TEMP;
                     }
                     case 101: return MSG_TEMP;
-                    case 92:
                     case 102: return MSG_TEMP_SHIP;
+                    case 91:
+                    case 92: return MSG_PILOT;
                 }
         }
         return MSG_TEMP;
@@ -336,19 +338,25 @@ void TempImporter::import_group(unsigned start, unsigned length)
         {
             // Height level
             case WR_VAR(0, 7, 2):
-                if (!var.isset()) return; // Skip group if level info not set
-                lev = Level(103, var.enqd());
+                if (var.isset())
+                    lev = Level(103, var.enqd());
                 break;
             // Pressure level
             case WR_VAR(0, 7, 4):
-                if (!var.isset()) return; // Skip group if level info not set
-                lev = Level(100, var.enqd());
+                if (var.isset())
+                    lev = Level(100, var.enqd());
+                break;
+            case WR_VAR(0, 10, 3):
+                // Convert geopotential to height
+                if (var.isset())
+                    lev = Level(102, lround(var.enqd() / 9.80665));
                 break;
         }
     }
 
     if (lev.ltype1 == MISSING_INT)
-        throw error_consistency("neither B07002 nor B07004 found in sounding group");
+        return;
+        //throw error_consistency("neither B07002 nor B07004 nor B10003 found in sounding group");
 
     // Import all values
     for (unsigned i = 0; i < length; ++i)

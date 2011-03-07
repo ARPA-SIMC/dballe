@@ -299,6 +299,25 @@ void StripContextAttrs::tweak(Msgs& msgs)
     }
 }
 
+void StripVars::tweak(Msgs& msgs)
+{
+    for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+    {
+        Msg& m = **mi;
+        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
+        {
+            msg::Context& c = **ci;
+            for (vector<wreport::Varcode>::const_iterator i = codes.begin();
+                    i != codes.end(); ++i)
+                c.remove(*i);
+            if (c.data.empty())
+                ci = m.data.erase(ci);
+            else
+                ++ci;
+        }
+    }
+}
+
 RoundLegacyVars::RoundLegacyVars() : table(NULL)
 {
     table = Vartable::get("B0000000000000014000");

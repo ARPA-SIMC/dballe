@@ -81,7 +81,20 @@ void propagate_if_missing(int varid, const Msg& src, Msg& dst)
 
 void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
 {
-	size_t len = amsgs.size();
+    size_t len = amsgs.size();
+    if (len == 0) return;
+    if (bmsgs.size() == 0) return;
+
+    // Message-wide tweaks
+    if (amsgs[0]->type == MSG_PILOT)
+    {
+        dballe::tests::tweaks::StripVars stripper;
+        stripper.codes.push_back(WR_VAR(0, 11, 61));
+        stripper.codes.push_back(WR_VAR(0, 11, 62));
+        stripper.tweak(amsgs);
+        stripper.tweak(bmsgs);
+    }
+
 	if (len > bmsgs.size()) len = bmsgs.size();
 	for (size_t msgidx = 0; msgidx < len; ++msgidx)
 	{
@@ -337,7 +350,11 @@ void to::test<3>()
 
             // Compare the two dba_msg
             int diffs = amsgs->diff(bmsgs, stderr);
-            if (diffs) dballe::tests::track_different_msgs(*amsgs, bmsgs, "aof-bufr");
+            if (diffs) 
+            {
+                dballe::tests::track_different_msgs(*amsgs, bmsgs, "aof-bufr");
+                dballe::tests::dump("aof-bufr", raw, "AOF reencoded to BUFR");
+            }
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {
             throw tut::failure(string(files[i]) + ": " + e.what());

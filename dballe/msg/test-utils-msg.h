@@ -26,9 +26,9 @@
 #include <dballe/msg/marshal.h>
 
 #include <string>
-#include <vector>
 #include <iostream>
 #endif
+#include <vector>
 
 namespace wreport {
 struct Vartable;
@@ -86,6 +86,14 @@ struct StripQCAttrs : public MessageTweaker
 // Strip context attributes from all variables in a Msgs
 struct StripContextAttrs : public MessageTweaker
 {
+    void tweak(Msgs& msgs);
+};
+
+// Strip a user-defined list of vars from all levels
+struct StripVars : public MessageTweaker
+{
+    std::vector<wreport::Varcode> codes;
+
     void tweak(Msgs& msgs);
 };
 
