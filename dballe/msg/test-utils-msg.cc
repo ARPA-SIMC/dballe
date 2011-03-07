@@ -457,11 +457,11 @@ void TruncStName::tweak(Msgs& msgs)
     }
 }
 
-PreroundGeopotential::PreroundGeopotential()
+RoundGeopotential::RoundGeopotential()
 {
     table = Vartable::get("B0000000000000014000");
 }
-void PreroundGeopotential::tweak(Msgs& msgs)
+void RoundGeopotential::tweak(Msgs& msgs)
 {
     for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
     {
@@ -483,7 +483,7 @@ void PreroundGeopotential::tweak(Msgs& msgs)
     }
 }
 
-void PreroundVSS::tweak(Msgs& msgs)
+void RoundVSS::tweak(Msgs& msgs)
 {
     for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
     {

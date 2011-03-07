@@ -129,16 +129,16 @@ struct TruncStName : public MessageTweaker
     void tweak(Msgs& msgs);
 };
 
-// Preround geopotential with a B10003->B10008->B10009->B10008->B10003 round trip
-struct PreroundGeopotential : public MessageTweaker
+// Round geopotential with a B10003->B10008->B10009->B10008->B10003 round trip
+struct RoundGeopotential : public MessageTweaker
 {
     const wreport::Vartable* table;
-    PreroundGeopotential();
+    RoundGeopotential();
     void tweak(Msgs& msgs);
 };
 
-// Preround vertical sounding significance with a B08042->B08001->B08042 round trip
-struct PreroundVSS : public MessageTweaker
+// Round vertical sounding significance with a B08042->B08001->B08042 round trip
+struct RoundVSS : public MessageTweaker
 {
     void tweak(Msgs& msgs);
 };

@@ -60,8 +60,12 @@ struct ReimportTest
     msg::Importer::Options input_opts;
     msg::Exporter::Options output_opts;
     vector<Tweaker*> tweaks;
-    bool do_tweaks;
+    vector<Tweaker*> ecmwf_tweaks;
+    vector<Tweaker*> wmo_tweaks;
+    bool do_ecmwf_tweaks;
+    bool do_wmo_tweaks;
     bool do_ignore_context_attrs;
+    bool do_round_geopotential;
 
     void clear_tweaks()
     {
@@ -69,11 +73,22 @@ struct ReimportTest
                 i != tweaks.end(); ++i)
             delete *i;
         tweaks.clear();
+        for (typename vector<Tweaker*>::iterator i = ecmwf_tweaks.begin();
+                i != ecmwf_tweaks.end(); ++i)
+            delete *i;
+        ecmwf_tweaks.clear();
+        for (typename vector<Tweaker*>::iterator i = wmo_tweaks.begin();
+                i != wmo_tweaks.end(); ++i)
+            delete *i;
+        wmo_tweaks.clear();
     }
 
     ReimportTest(const std::string& fname, Encoding type=BUFR)
-        : fname(fname), type(type), do_tweaks(true), do_ignore_context_attrs(false)
+        : fname(fname), type(type), do_ecmwf_tweaks(false), do_wmo_tweaks(false),
+          do_ignore_context_attrs(false), do_round_geopotential(false)
     {
+        ecmwf_tweaks.push_back(new StripQCAttrs());
+        wmo_tweaks.push_back(new RoundLegacyVars());
     }
     ~ReimportTest()
     {
@@ -89,8 +104,13 @@ struct ReimportTest
         inner_ensure(msgs1->size() > 0);
 
         // Run tweaks
-        if (do_tweaks)
-            for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
+        for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
+            (*i)->tweak(*msgs1);
+        if (do_ecmwf_tweaks)
+            for (typename vector<Tweaker*>::iterator i = ecmwf_tweaks.begin(); i != ecmwf_tweaks.end(); ++i)
+                (*i)->tweak(*msgs1);
+        if (do_wmo_tweaks)
+            for (typename vector<Tweaker*>::iterator i = wmo_tweaks.begin(); i != wmo_tweaks.end(); ++i)
                 (*i)->tweak(*msgs1);
 
         // Export
@@ -177,6 +197,12 @@ struct ReimportTest
             StripContextAttrs sca;
             sca.tweak(*msgs1);
         }
+        if (do_round_geopotential)
+        {
+            RoundGeopotential rg;
+            rg.tweak(*msgs1);
+            rg.tweak(*msgs3);
+        }
 
         // Compare
         int diffs = msgs1->diff(*msgs3, stdout);
@@ -196,44 +222,53 @@ struct ReimportTest
     {
         string ecmwf_template_name = string(template_type) + "-ecmwf";
         string wmo_template_name = string(template_type) + "-wmo";
+        do_wmo_tweaks = false;
 
         input_opts.simplified = true;
+        do_round_geopotential = false;
 
-        do_tweaks = false;
+        do_ecmwf_tweaks = false;
         inner_do_test("simp-ecmwf-through-auto", NULL);
         inner_do_test("simp-ecmwf-through-ecmwf", ecmwf_template_name.c_str());
 
-        do_tweaks = true;
+        do_ecmwf_tweaks = true;
+        do_round_geopotential = true;
         inner_do_test("simp-ecmwf-through-wmo", wmo_template_name.c_str());
 
         input_opts.simplified = false;
+        do_round_geopotential = false;
 
-        do_tweaks = false;
+        do_ecmwf_tweaks = false;
         inner_do_test("real-ecmwf-through-auto", NULL);
         inner_do_test("real-ecmwf-through-ecmwf", ecmwf_template_name.c_str());
 
-        do_tweaks = true;
+        do_ecmwf_tweaks = true;
+        do_round_geopotential = true;
         inner_do_test("real-ecmwf-through-wmo", wmo_template_name.c_str());
     }
     void do_wmo(const dballe::tests::Location& loc, const char* template_type="synop")
     {
         string ecmwf_template_name = string(template_type) + "-ecmwf";
         string wmo_template_name = string(template_type) + "-wmo";
+        do_ecmwf_tweaks = false;
 
         input_opts.simplified = true;
+        do_round_geopotential = false;
 
-        do_tweaks = false;
+        do_wmo_tweaks = false;
         inner_do_test("simp-wmo-through-auto", NULL);
         inner_do_test("simp-wmo-through-wmo", wmo_template_name.c_str());
 
-        do_tweaks = true;
+        do_wmo_tweaks = true;
         do_ignore_context_attrs = true;
+        do_round_geopotential = true;
         inner_do_test("simp-wmo-through-ecmwf", ecmwf_template_name.c_str());
         do_ignore_context_attrs = false;
 
         input_opts.simplified = false;
+        do_round_geopotential = false;
 
-        do_tweaks = false;
+        do_wmo_tweaks = false;
         inner_do_test("real-wmo-through-auto", NULL);
         inner_do_test("real-wmo-through-wmo", wmo_template_name.c_str());
 
@@ -369,22 +404,18 @@ template<> template<>
 void to::test<5>()
 {
     BufrReimportTest test("bufr/obs0-1.22.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
     run_test(test, do_ecmwf, "synop");
 }
 template<> template<>
 void to::test<6>()
 {
     BufrReimportTest test("bufr/obs0-1.11188.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
     run_test(test, do_ecmwf, "synop");
 }
 template<> template<>
 void to::test<7>()
 {
     BufrReimportTest test("bufr/obs0-3.504.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
     run_test(test, do_ecmwf, "synop");
 }
 
@@ -393,24 +424,21 @@ template<> template<>
 void to::test<8>()
 {
     BufrReimportTest test("bufr/synop-cloudbelow.bufr");
-    test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
 }
 template<> template<>
 void to::test<9>()
 {
     BufrReimportTest test("bufr/synop-evapo.bufr");
-    test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
 }
 template<> template<>
 void to::test<10>()
 {
     BufrReimportTest test("bufr/synop-groundtemp.bufr");
-    test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
 }
 template<> template<>
@@ -418,41 +446,36 @@ void to::test<11>()
 {
     BufrReimportTest test("bufr/synop-longname.bufr");
     test.tweaks.push_back(new TruncStName());
-    test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
 }
 template<> template<>
 void to::test<12>()
 {
     BufrReimportTest test("bufr/synop-oddgust.bufr");
-    test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
 }
 template<> template<>
 void to::test<13>()
 {
     BufrReimportTest test("bufr/synop-oddprec.bufr");
-    test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
-    test.tweaks.push_back(new RemoveSynopWMOOddprec());
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOddprec());
     run_test(test, do_wmo, "synop");
 }
 template<> template<>
 void to::test<14>()
 {
     BufrReimportTest test("bufr/synop-strayvs.bufr");
-    test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
 }
 template<> template<>
 void to::test<15>()
 {
     BufrReimportTest test("bufr/synop-sunshine.bufr");
-    test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
 }
 
@@ -461,34 +484,28 @@ template<> template<>
 void to::test<16>()
 {
     BufrReimportTest test("bufr/obs2-101.16.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
+    test.ecmwf_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
 void to::test<17>()
 {
     BufrReimportTest test("bufr/obs2-102.1.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
+    test.ecmwf_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
 void to::test<18>()
 {
     BufrReimportTest test("bufr/obs2-91.2.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new OverrideType(MSG_PILOT));
+    //test.tweaks.push_back(new OverrideType(MSG_PILOT));
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
 void to::test<19>()
 {
     BufrReimportTest test("bufr/temp-bad3.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new RemoveTempWMOOnlyVars());
+    test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
@@ -496,8 +513,6 @@ void to::test<20>()
 {
     // This has some sounding groups with undefined VSS
     BufrReimportTest test("bufr/temp-bad5.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
@@ -506,18 +521,15 @@ void to::test<21>()
     // This has some sounding groups with undefined VSS, and an unusual template
     BufrReimportTest test("bufr/test-temp1.bufr");
     test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
     test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
     run_test(test, do_test, "temp-wmo");
     test.clear_tweaks();
     test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
     test.tweaks.push_back(new RemoveTempWMOOnlyVars());
     test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
     run_test(test, do_test, "temp-wmo", "temp-ecmwf");
     test.clear_tweaks();
     test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
     test.tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_test, "temp-ecmwf", "temp-wmo");
 }
@@ -527,18 +539,15 @@ void to::test<22>()
     // This has an unusual template
     BufrReimportTest test("bufr/C23000.bufr");
     test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
     test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
     run_test(test, do_test, "temp-wmo");
     test.clear_tweaks();
     test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
     test.tweaks.push_back(new RemoveTempWMOOnlyVars());
     test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
     run_test(test, do_test, "temp-wmo", "temp-ecmwf");
     test.clear_tweaks();
     test.tweaks.push_back(new StripQCAttrs());
-    test.tweaks.push_back(new PreroundGeopotential());
     test.tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_test, "temp-ecmwf", "temp-wmo");
 }
@@ -551,8 +560,7 @@ void to::test<23>()
     test.tweaks.push_back(new StripQCAttrs());
     test.tweaks.push_back(new RemoveTempWMOOnlyVars());
     test.tweaks.push_back(new RoundLegacyVars());
-    test.tweaks.push_back(new PreroundGeopotential());
-    test.tweaks.push_back(new PreroundVSS());
+    test.tweaks.push_back(new RoundVSS());
     run_test(test, do_wmo, "temp");
 }
 template<> template<>
