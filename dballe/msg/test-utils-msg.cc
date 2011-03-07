@@ -373,7 +373,9 @@ void RemoveSynopWMOOnlyVars::tweak(Msgs& msgs)
                     c.remove(WR_VAR(0, 13, 11));
             }
             if (c.trange == Trange(4, 0, 86400))
-                c.remove(WR_VAR(0, 10, 60)); /// 24h pressure change
+                c.remove(WR_VAR(0, 10, 60)); // 24h pressure change
+            if (c.trange.pind == 2 || c.trange.pind == 3)
+                c.remove(WR_VAR(0, 12, 101)); // min and max temperature
             if (c.data.empty())
                 ci = m.data.erase(ci);
             else

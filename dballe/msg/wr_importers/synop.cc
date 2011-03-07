@@ -54,6 +54,7 @@ protected:
     bool height_sensor_seen;
     int vs;
     int time_period;
+    int time_period_offset;
     bool time_period_seen;
     int time_sig;
     int hour;
@@ -291,6 +292,7 @@ public:
         height_sensor_seen = false;
         vs = MISSING_VSS;
         time_period = MISSING_INT;
+        time_period_offset = 0;
         time_period_seen = false;
         time_sig = MISSING_TIME_SIG;
         hour = MISSING_INT;
@@ -427,11 +429,13 @@ void SynopImporter::import_var_undef(const Var& var)
         case WR_VAR(0,  4, 24):
             /* Time period in hours */
             time_period = MISSING_INT;
+            time_period_offset = 0;
             time_period_seen = true;
             break;
         case WR_VAR(0,  4, 25):
             /* Time period in minutes */
             time_period = MISSING_INT;
+            time_period_offset = 0;
             time_period_seen = true;
             break;
         case WR_VAR(0,  8, 21):
@@ -462,13 +466,27 @@ void SynopImporter::import_var(const Var& var)
             break;
         case WR_VAR(0,  4, 24):
             /* Time period in hours */
-            time_period = var.enqd() * 3600;
-            time_period_seen = true;
+            if (pos > 0 && (*subset)[pos-1].code() == WR_VAR(0, 4, 24) && var.enqi() != 0)
+            {
+                // Cope with the weird idea of using B04024 twice to indicate
+                // beginning and end of a period not ending with the SYNOP
+                // reference time
+                if (time_period != MISSING_INT)
+                {
+                    time_period -= var.enqd() * 3600;
+                    time_period_offset = var.enqd() * 3600;
+                }
+            } else {
+                time_period = var.enqd() * 3600;
+                time_period_seen = true;
+                time_period_offset = 0;
+            }
             break;
         case WR_VAR(0,  4, 25):
             /* Time period in minutes */
             time_period = var.enqd() * 60;
             time_period_seen = true;
+            time_period_offset = 0;
             break;
         case WR_VAR(0,  8, 21):
             /* Time significance */
@@ -599,9 +617,11 @@ void SynopImporter::import_var(const Var& var)
 
 /* Extreme temperature data */
         case WR_VAR(0, 12, 111):
-            throw error_unimplemented("wow, a synop with extreme temperature info, please give it to Enrico");
+            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(2, -abs(time_period_offset), abs(time_period)));
+            break;
         case WR_VAR(0, 12, 112):
-            throw error_unimplemented("wow, a synop with extreme temperature info, please give it to Enrico");
+            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(3, -abs(time_period_offset), abs(time_period)));
+            break;
 
 /* Wind data (complete) */
         case WR_VAR(0, 2, 2): msg->set_wind_inst_var(var); break;

@@ -268,6 +268,8 @@ struct Synop : public Template
     const msg::Context* c_past_wtr;
     const msg::Context* c_thermo;
     const msg::Context* c_visib;
+    const msg::Context* c_tmax;
+    const msg::Context* c_tmin;
     PressureInfo i_press;
     PrecInfo i_prec;
 
@@ -285,6 +287,8 @@ struct Synop : public Template
         c_past_wtr = NULL;
         c_thermo = NULL;
         c_visib = NULL;
+        c_tmax = NULL;
+        c_tmin = NULL;
         i_press.reset();
         i_prec.reset();
 
@@ -314,6 +318,12 @@ struct Synop : public Template
                             if (c->find(WR_VAR(0, 13, 33)))
                                 c_evapo = c;
                             break;
+                        case 2:
+                            if (c->find(WR_VAR(0, 12, 101))) c_tmax = c;
+                            break;
+                        case 3:
+                            if (c->find(WR_VAR(0, 12, 101))) c_tmin = c;
+                            break;
                         case 4: i_press.scan_context4(*c); break;
                         case 205:
                             if (c->find(WR_VAR(0, 20, 4)) || c->find(WR_VAR(0, 20, 5)))
@@ -332,8 +342,16 @@ struct Synop : public Template
                     i_press.scan_context(*c);
                     break;
                 case 103:
-                    if (c->trange.pind == 1 && c->trange.p1 == 0)
-                        i_prec.scan_context1(*c);
+                    switch (c->trange.pind)
+                    {
+                        case 1: i_prec.scan_context1(*c); break;
+                        case 2:
+                            if (c->find(WR_VAR(0, 12, 101))) c_tmax = c;
+                            break;
+                        case 3:
+                            if (c->find(WR_VAR(0, 12, 101))) c_tmin = c;
+                            break;
+                    }
                     if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
                         if (!c_wind)
                             c_wind = c;
@@ -941,6 +959,32 @@ struct SynopWMO : public Synop
         }
     }
 
+    void do_xtemp_group(Varcode code, const msg::Context* c)
+    {
+        if (c)
+        {
+            // Duration of statistical processing
+            if (c->trange.p2 != MISSING_INT)
+                subset->store_variable_d(WR_VAR(0,  4, 24), -c->trange.p2 / 3600);
+            else
+                subset->store_variable_undef(WR_VAR(0,  4, 24));
+
+            // Offset from end of interval to synop reference time
+            if (c->trange.p1 != 0 && c->trange.p1 != MISSING_INT)
+                subset->store_variable_d(WR_VAR(0,  4, 24), c->trange.p1 / 3600);
+            else if (c->trange.p1 == MISSING_INT || c->trange.p2 == MISSING_INT)
+                subset->store_variable_undef(WR_VAR(0,  4, 24));
+            else
+                subset->store_variable_d(WR_VAR(0,  4, 24), 0);
+
+            add(code, c, WR_VAR(0, 12, 101));
+        } else {
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+            subset->store_variable_undef(code);
+        }
+    }
+
     // D02043  Basic synoptic "period" data
     void do_D02043(int hour)
     {
@@ -993,14 +1037,15 @@ struct SynopWMO : public Synop
         do_prec_group(i_prec.c_prec2);
 
         //   Extreme temperature data
-#warning TODO
-        subset->store_variable_undef(WR_VAR(0,  7, 32)); // TODO
-        subset->store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset->store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset->store_variable_undef(WR_VAR(0, 12, 111)); // TODO
-        subset->store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset->store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset->store_variable_undef(WR_VAR(0, 12, 112)); // TODO
+        if (c_tmax || c_tmin)
+        {
+            const msg::Context* c_first = c_tmax ? c_tmax : c_tmin;
+            add_sensor_height(*c_first, c_first->find(WR_VAR(0, 12, 101)));
+        }
+        else
+            subset->store_variable_undef(WR_VAR(0,  7, 32));
+        do_xtemp_group(WR_VAR(0, 12, 111), c_tmax);
+        do_xtemp_group(WR_VAR(0, 12, 112), c_tmin);
 
         //   Wind data
         if (c_wind || c_gust1 || c_gust2)
