@@ -230,13 +230,37 @@ struct PressureInfo
     }
 };
 
+struct PrecInfo
+{
+    const msg::Context* c_prec1;
+    const msg::Context* c_prec2;
+    const msg::Context* c_prec24;
+
+    void reset()
+    {
+        c_prec1 = NULL;
+        c_prec2 = NULL;
+        c_prec24 = NULL;
+    }
+
+    void scan_context1(const msg::Context& c)
+    {
+        if (c.find(WR_VAR(0, 13, 11)))
+        {
+            if (c.trange.p2 == 86400)
+                c_prec24 = &c;
+            else if (!c_prec1)
+                c_prec1 = &c;
+            else if (!c_prec2)
+                c_prec2 = &c;
+        }
+    }
+};
+
 struct Synop : public Template
 {
     const msg::Context* c_sunshine1;
     const msg::Context* c_sunshine2;
-    const msg::Context* c_prec1;
-    const msg::Context* c_prec2;
-    const msg::Context* c_prec24;
     const msg::Context* c_wind;
     const msg::Context* c_gust1;
     const msg::Context* c_gust2;
@@ -245,6 +269,7 @@ struct Synop : public Template
     const msg::Context* c_thermo;
     const msg::Context* c_visib;
     PressureInfo i_press;
+    PrecInfo i_prec;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -253,9 +278,6 @@ struct Synop : public Template
     {
         c_sunshine1 = NULL;
         c_sunshine2 = NULL;
-        c_prec1 = NULL;
-        c_prec2 = NULL;
-        c_prec24 = NULL;
         c_wind = NULL;
         c_gust1 = NULL;
         c_gust2 = NULL;
@@ -264,6 +286,7 @@ struct Synop : public Template
         c_thermo = NULL;
         c_visib = NULL;
         i_press.reset();
+        i_prec.reset();
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg->data.begin();
@@ -285,16 +308,7 @@ struct Synop : public Template
                                     c_sunshine2 = c;
                             }
 
-                            // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
-                            if (c->find(WR_VAR(0, 13, 11)))
-                            {
-                                if (c->trange.p2 == 86400)
-                                    c_prec24 = c;
-                                else if (!c_prec1)
-                                    c_prec1 = c;
-                                else if (!c_prec2)
-                                    c_prec2 = c;
-                            }
+                            i_prec.scan_context1(*c);
 
                             // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
                             if (c->find(WR_VAR(0, 13, 33)))
@@ -319,18 +333,7 @@ struct Synop : public Template
                     break;
                 case 103:
                     if (c->trange.pind == 1 && c->trange.p1 == 0)
-                    {
-                        // set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, time_period));
-                        if (c->find(WR_VAR(0, 13, 11)))
-                        {
-                            if (c->trange.p2 == 86400)
-                                c_prec24 = c;
-                            else if (!c_prec1)
-                                c_prec1 = c;
-                            else if (!c_prec2)
-                                c_prec2 = c;
-                        }
-                    }
+                        i_prec.scan_context1(*c);
                     if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
                         if (!c_wind)
                             c_wind = c;
@@ -726,11 +729,11 @@ struct SynopWMO : public Synop
         }
 
         //   Precipitation past 24 hours
-        if (c_prec24)
+        if (i_prec.c_prec24)
         {
-            const Var* var = c_prec24->find(WR_VAR(0, 13, 11));
-            add_sensor_height(*c_prec24, var);
-            add(WR_VAR(0, 13, 23), c_prec24, DBA_MSG_TOT_PREC24);
+            const Var* var = i_prec.c_prec24->find(WR_VAR(0, 13, 11));
+            add_sensor_height(*i_prec.c_prec24, var);
+            add(WR_VAR(0, 13, 23), i_prec.c_prec24, DBA_MSG_TOT_PREC24);
         } else {
             subset.store_variable_undef(WR_VAR(0,  7, 32));
             subset.store_variable_undef(WR_VAR(0, 13, 23));
@@ -920,6 +923,24 @@ struct SynopWMO : public Synop
         subset->store_variable_d(code, res);
     }
 
+    void do_prec_group(const msg::Context* c)
+    {
+        if (c)
+        {
+            if (c->trange.p2 != MISSING_INT)
+                subset->store_variable_d(WR_VAR(0,  4, 24), -c->trange.p2 / 3600);
+            else
+                subset->store_variable_undef(WR_VAR(0,  4, 24));
+            if (const Var* var = c->find(WR_VAR(0, 13, 11)))
+                subset->store_variable(*var);
+            else
+                subset->store_variable_undef(WR_VAR(0, 13, 11));
+        } else {
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+            subset->store_variable_undef(WR_VAR(0, 13, 11));
+        }
+    }
+
     // D02043  Basic synoptic "period" data
     void do_D02043(int hour)
     {
@@ -961,40 +982,15 @@ struct SynopWMO : public Synop
         }
 
         //   Precipitation measurement
-        if (c_prec1)
+        if (i_prec.c_prec1)
         {
-            const Var* prec_var = c_prec1->find(WR_VAR(0, 13, 11));
-            add_sensor_height(*c_prec1, prec_var);
-
-            if (c_prec1->trange.p2 != MISSING_INT)
-                subset->store_variable_d(WR_VAR(0,  4, 24), -c_prec1->trange.p2 / 3600);
-            else
-                subset->store_variable_undef(WR_VAR(0,  4, 24));
-            if (const Var* var = c_prec1->find(WR_VAR(0, 13, 11)))
-                subset->store_variable(*var);
-            else
-                subset->store_variable_undef(WR_VAR(0, 13, 11));
-            if (c_prec2)
-            {
-                if (c_prec2->trange.p2 != MISSING_INT)
-                    subset->store_variable_d(WR_VAR(0,  4, 24), -c_prec2->trange.p2 / 3600);
-                else
-                    subset->store_variable_undef(WR_VAR(0,  4, 24));
-                if (const Var* var = c_prec2->find(WR_VAR(0, 13, 11)))
-                    subset->store_variable(*var);
-                else
-                    subset->store_variable_undef(WR_VAR(0, 13, 11));
-            } else {
-                subset->store_variable_undef(WR_VAR(0,  4, 24));
-                subset->store_variable_undef(WR_VAR(0, 13, 11));
-            }
+            const Var* prec_var = i_prec.c_prec1->find(WR_VAR(0, 13, 11));
+            add_sensor_height(*i_prec.c_prec1, prec_var);
         } else {
             subset->store_variable_undef(WR_VAR(0,  7, 32));
-            subset->store_variable_undef(WR_VAR(0,  4, 24));
-            subset->store_variable_undef(WR_VAR(0, 13, 11));
-            subset->store_variable_undef(WR_VAR(0,  4, 24));
-            subset->store_variable_undef(WR_VAR(0, 13, 11));
         }
+        do_prec_group(i_prec.c_prec1);
+        do_prec_group(i_prec.c_prec2);
 
         //   Extreme temperature data
 #warning TODO
