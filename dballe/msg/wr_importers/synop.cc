@@ -600,6 +600,8 @@ void SynopImporter::import_var(const Var& var)
 /* Extreme temperature data */
         case WR_VAR(0, 2, 111):
             throw error_unimplemented("wow, a synop with extreme temperature info, please give it to Enrico");
+        case WR_VAR(0, 2, 112):
+            throw error_unimplemented("wow, a synop with extreme temperature info, please give it to Enrico");
 
 /* Wind data (complete) */
         case WR_VAR(0, 2, 2): msg->set_wind_inst_var(var); break;
