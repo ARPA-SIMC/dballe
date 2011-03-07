@@ -417,7 +417,6 @@ void to::test<11>()
 {
     BufrReimportTest test("bufr/synop-longname.bufr");
     test.tweaks.push_back(new TruncStName());
-    test.tweaks.push_back(new StripQCAttrs());
     test.tweaks.push_back(new RoundLegacyVars());
     test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
