@@ -449,8 +449,9 @@ void TruncStName::tweak(Msgs& msgs)
             if (const Var* orig = c->find(WR_VAR(0, 1, 19)))
                 if (const char* val = orig->value())
                 {
-                    char buf[20];
+                    char buf[21];
                     strncpy(buf, val, 20);
+                    buf[20] = 0;
                     c->set(Var(orig->info(), buf));
                 }
     }
