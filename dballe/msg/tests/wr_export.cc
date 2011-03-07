@@ -237,8 +237,9 @@ struct ReimportTest
         inner_do_test("real-wmo-through-auto", NULL);
         inner_do_test("real-wmo-through-wmo", wmo_template_name.c_str());
 
-        do_tweaks = true;
-        inner_do_test("real-wmo-through-ecmwf", ecmwf_template_name.c_str());
+        // There doesn't seem much sense testing this at the moment
+        //do_tweaks = true;
+        //inner_do_test("real-wmo-through-ecmwf", ecmwf_template_name.c_str());
     }
 #undef inner_do_test
 };
