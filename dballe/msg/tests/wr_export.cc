@@ -392,7 +392,6 @@ template<> template<>
 void to::test<8>()
 {
     BufrReimportTest test("bufr/synop-cloudbelow.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
     test.tweaks.push_back(new RoundLegacyVars());
     test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
@@ -401,7 +400,6 @@ template<> template<>
 void to::test<9>()
 {
     BufrReimportTest test("bufr/synop-evapo.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
     test.tweaks.push_back(new RoundLegacyVars());
     test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
@@ -410,7 +408,6 @@ template<> template<>
 void to::test<10>()
 {
     BufrReimportTest test("bufr/synop-groundtemp.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
     test.tweaks.push_back(new RoundLegacyVars());
     test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
@@ -429,7 +426,6 @@ template<> template<>
 void to::test<12>()
 {
     BufrReimportTest test("bufr/synop-oddgust.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
     test.tweaks.push_back(new RoundLegacyVars());
     test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
@@ -438,7 +434,6 @@ template<> template<>
 void to::test<13>()
 {
     BufrReimportTest test("bufr/synop-oddprec.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
     test.tweaks.push_back(new RoundLegacyVars());
     test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
     test.tweaks.push_back(new RemoveSynopWMOOddprec());
@@ -448,7 +443,6 @@ template<> template<>
 void to::test<14>()
 {
     BufrReimportTest test("bufr/synop-strayvs.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
     test.tweaks.push_back(new RoundLegacyVars());
     test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
@@ -457,7 +451,6 @@ template<> template<>
 void to::test<15>()
 {
     BufrReimportTest test("bufr/synop-sunshine.bufr");
-    test.tweaks.push_back(new StripQCAttrs());
     test.tweaks.push_back(new RoundLegacyVars());
     test.tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
