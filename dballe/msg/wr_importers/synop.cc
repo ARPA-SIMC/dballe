@@ -598,9 +598,9 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(time_period))); break;
 
 /* Extreme temperature data */
-        case WR_VAR(0, 2, 111):
+        case WR_VAR(0, 12, 111):
             throw error_unimplemented("wow, a synop with extreme temperature info, please give it to Enrico");
-        case WR_VAR(0, 2, 112):
+        case WR_VAR(0, 12, 112):
             throw error_unimplemented("wow, a synop with extreme temperature info, please give it to Enrico");
 
 /* Wind data (complete) */
