@@ -728,23 +728,8 @@ struct SynopWMO : public Synop
         //   Precipitation past 24 hours
         if (c_prec24)
         {
-            bool stored = false;
-            if (const Var* var = c_prec24->find(WR_VAR(0, 13, 11)))
-                if (const Var* a = var->enqa(WR_VAR(0, 7, 32)))
-                {
-                    subset.store_variable_d(WR_VAR(0, 7, 32), a->enqd());
-                    stored = true;
-                }
-
-            if (!stored && c_prec24->level.ltype1 == 103)
-            {
-                subset.store_variable_d(WR_VAR(0, 7, 32), double(c_prec24->level.l1) / 1000.0);
-                stored = true;
-            }
-
-            if (!stored)
-                subset.store_variable_undef(WR_VAR(0,  7, 32));
-
+            const Var* var = c_prec24->find(WR_VAR(0, 13, 11));
+            add_sensor_height(*c_prec24, var);
             add(WR_VAR(0, 13, 23), c_prec24, DBA_MSG_TOT_PREC24);
         } else {
             subset.store_variable_undef(WR_VAR(0,  7, 32));
