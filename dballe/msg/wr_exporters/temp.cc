@@ -141,6 +141,23 @@ struct TempBase : public Template
 
         bulletin.type = 2;
         bulletin.subtype = 255;
+
+        // Scan to see what we are dealing with
+        bulletin.localsubtype = 101;
+        for (Msgs::const_iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+        {
+            const Msg& msg = **mi;
+            if (msg.type == MSG_PILOT)
+            {
+                bulletin.localsubtype = 91;
+                break;
+            } else if (msg.get_ident_var()) {
+                bulletin.localsubtype = 102;
+                break;
+            } else if (msg.get_block_var()) {
+                break;
+            }
+        }
     }
 
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
@@ -160,23 +177,6 @@ struct TempWMO : public TempBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         TempBase::setupBulletin(bulletin);
-
-        // Scan to see if we are dealing with ships
-        bulletin.localsubtype = 101;
-        for (Msgs::const_iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
-        {
-            const Msg& msg = **mi;
-            if (msg.type == MSG_PILOT)
-            {
-                bulletin.localsubtype = 91;
-                break;
-            } else if (msg.get_ident_var()) {
-                bulletin.localsubtype = 102;
-                break;
-            } else if (msg.get_block_var()) {
-                break;
-            }
-        }
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -296,7 +296,6 @@ struct TempEcmwfLand : public TempBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         TempBase::setupBulletin(bulletin);
-        bulletin.localsubtype = 101;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -367,7 +366,6 @@ struct TempEcmwfShip : public TempBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         TempBase::setupBulletin(bulletin);
-        bulletin.localsubtype = 102;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -443,31 +441,17 @@ struct TempEcmwfShip : public TempBase
     }
 };
 
-struct Pilot : public Template
+struct Pilot : public TempBase
 {
-    bool is_crex;
-
     Pilot(const Exporter::Options& opts, const Msgs& msgs)
-        : Template(opts, msgs) {}
+        : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return PILOT_NAME; }
     virtual const char* description() const { return PILOT_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        Template::setupBulletin(bulletin);
-
-        // Use old table for old templates
-        if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
-        {
-            b->master_table = 13;
-        }
-
-        is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
-
-        bulletin.type = 2;
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 91;
+        TempBase::setupBulletin(bulletin);
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -501,7 +485,7 @@ struct Pilot : public Template
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
-        Template::to_subset(msg, subset);
+        TempBase::to_subset(msg, subset);
 
         /*  0 */ add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
         /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
