@@ -20,6 +20,7 @@
 #include "wr_codec.h"
 #include <wreport/bulletin.h>
 #include "msgs.h"
+#include "context.h"
 #include <cstdlib>
 
 using namespace wreport;
@@ -43,24 +44,6 @@ struct Metar : public Template
 
     virtual const char* name() const { return METAR_NAME; }
     virtual const char* description() const { return METAR_DESC; }
-
-    void add(Varcode code, int shortcut)
-    {
-        const Var* var = msg->find_by_id(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
-    {
-        const Var* var = msg->find(srccode, level, trange);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -98,6 +81,16 @@ struct Metar : public Template
     {
         Template::to_subset(msg, subset);
 
+        // Look for significant levels
+        const msg::Context* c_wtr = NULL;
+        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                i != msg.data.end(); ++i)
+        {
+            const msg::Context* c = *i;
+            if (c->find(WR_VAR(0, 20, 9)))
+                c_wtr = c;
+        }
+
         /*  0 */ add(WR_VAR(0,  1, 63), DBA_MSG_ST_NAME_ICAO);
         /*  1 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
         /*  2 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
@@ -118,7 +111,7 @@ struct Metar : public Template
         /* 15 */ add(WR_VAR(0, 12,  1), DBA_MSG_TEMP_2M);
         /* 16 */ add(WR_VAR(0, 12,  3), DBA_MSG_DEWPOINT_2M);
         /* 17 */ add(WR_VAR(0, 10, 52), DBA_MSG_QNH);
-        /* 18 */ add(WR_VAR(0, 20,  9), DBA_MSG_METAR_WTR);
+        /* 18 */ add(WR_VAR(0, 20,  9), c_wtr, DBA_MSG_METAR_WTR);
 
         if (!is_crex)
         {
