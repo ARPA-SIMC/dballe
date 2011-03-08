@@ -711,7 +711,7 @@ void to::test<32>()
         if (blacklist.find(files[i]) != blacklist.end()) continue;
         try {
             // Import
-            auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
+            auto_ptr<Msgs> msgs = read_msgs_opts(files[i], BUFR, import_opts);
             ensure(msgs->size() > 0);
 
             // Export
