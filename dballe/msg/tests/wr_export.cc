@@ -206,7 +206,8 @@ struct ReimportTest
         }
 
         // Compare
-        notes::Collect c(cerr);
+        stringstream str;
+        notes::Collect c(str);
         int diffs = msgs1->diff(*msgs3);
         if (diffs)
         {
@@ -215,6 +216,7 @@ struct ReimportTest
                 dballe::tests::dump("msg2", *msgs2);
             dballe::tests::dump("msg3", *msgs3);
             dballe::tests::dump("msg", rawmsg);
+            dballe::tests::dump("diffs", str.str(), "details of differences");
             throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
         }
     }
