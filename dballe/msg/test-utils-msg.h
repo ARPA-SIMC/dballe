@@ -68,6 +68,7 @@ void dump(const std::string& tag, const Msg& msg, const std::string& desc="messa
 void dump(const std::string& tag, const Msgs& msgs, const std::string& desc="message");
 void dump(const std::string& tag, const wreport::Bulletin& bul, const std::string& desc="message");
 void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc="message");
+void dump(const std::string& tag, const std::string& str, const std::string& desc="message");
 
 struct MessageTweaker
 {

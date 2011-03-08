@@ -318,7 +318,10 @@ void to::test<2>()
             // Compare the two dba_msg
             notes::Collect c(cerr);
             int diffs = amsgs->diff(*bmsgs);
-            if (diffs) dballe::tests::track_different_msgs(*amsgs, *bmsgs, "aof");
+            if (diffs)
+            {
+                dballe::tests::track_different_msgs(*amsgs, *bmsgs, "aof");
+            }
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {
             throw tut::failure(string(files[i]) + ": " + e.what());

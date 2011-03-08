@@ -721,16 +721,16 @@ void to::test<32>()
             importer->from_bulletin(bbulletin, msgs1);
 
             // Compare
-            notes::Collect c(cerr);
+            stringstream str;
+            notes::Collect c(str);
             int diffs = msgs->diff(msgs1);
             if (diffs)
             {
-                FILE* out1 = fopen("/tmp/msg1.txt", "w");
-                FILE* out2 = fopen("/tmp/msg2.txt", "w");
-                msgs->print(out1);
-                msgs1.print(out2);
-                fclose(out1);
-                fclose(out2);
+                string tag = str::basename(files[i]);
+                dballe::tests::dump("dballe-orig-" + tag, *msgs, "original message");
+                dballe::tests::dump("dballe-reenc-" + tag, bbulletin, "reencoded message");
+                dballe::tests::dump("dballe-reenc-" + tag, msgs1, "decoded reencoded message");
+                dballe::tests::dump("dballe-diffs-" + tag, str.str(), "differences");
             }
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {

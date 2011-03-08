@@ -261,6 +261,15 @@ void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc)
     cerr << desc << " saved in " << fname << endl;
 }
 
+void dump(const std::string& tag, const std::string& msg, const std::string& desc)
+{
+    string fname = "/tmp/" + tag + ".txt";
+    FILE* out = fopen(fname.c_str(), "w");
+    fwrite(msg.data(), msg.size(), 1, out);
+    fclose(out);
+    cerr << desc << " saved in " << fname << endl;
+}
+
 namespace tweaks {
 
 void StripAttrs::tweak(Msgs& msgs)
