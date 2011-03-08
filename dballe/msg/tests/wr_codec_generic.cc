@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 #include <test-utils-msg.h>
 #include <dballe/msg/wr_codec.h>
+#include <wreport/notes.h>
 
 using namespace dballe;
 using namespace wreport;
@@ -49,10 +50,11 @@ void to::test<1>()
 	Msgs msgs1;
     importer->from_rawmsg(raw, msgs1);
 
-	/* Check that the data are the same */
-	int diffs = msgs.diff(msgs1, stderr);
-	if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericempty");
-	ensure_equals(diffs, 0);
+    /* Check that the data are the same */
+    notes::Collect c(cerr);
+    int diffs = msgs.diff(msgs1);
+    if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericempty");
+    ensure_equals(diffs, 0);
 }
 
 // Try encoding and decoding a generic message
@@ -147,10 +149,11 @@ void to::test<2>()
     Msgs msgs1;
     importer->from_rawmsg(raw, msgs1);
 
-	/* Check that the data are the same */
-	int diffs = msgs.diff(msgs1, stderr);
-	if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "generic2");
-	ensure_equals(diffs, 0);
+    /* Check that the data are the same */
+    notes::Collect c(cerr);
+    int diffs = msgs.diff(msgs1);
+    if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "generic2");
+    ensure_equals(diffs, 0);
 }
 
 /*
@@ -281,10 +284,11 @@ void to::test<4>()
     Msgs msgs1;
     importer->from_rawmsg(raw, msgs1);
 
-	/* Check that the data are the same */
-	int diffs = msgs.diff(msgs1, stderr);
-	if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericattr");
-	ensure_equals(diffs, 0);
+    /* Check that the data are the same */
+    notes::Collect c(cerr);
+    int diffs = msgs.diff(msgs1);
+    if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericattr");
+    ensure_equals(diffs, 0);
 }
 
 }

@@ -1,7 +1,7 @@
 /*
  * msg/context - Hold variables with the same physical context
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 #include <dballe/msg/context.h>
 #include <dballe/msg/vars.h>
+#include <wreport/notes.h>
 #include <sstream>
 #include <stdlib.h>
 #include <string.h>
@@ -192,32 +193,33 @@ void Context::print(FILE* out) const
         fprintf(out, "exists but is empty.\n");
 }
 
-static void context_summary(const msg::Context& c, FILE* out)
+static void context_summary(const msg::Context& c, ostream& out)
 {
-    stringstream str;
-    str << c.level << ", " << c.trange;
-    fprintf(out, "c(%s)", str.str().c_str());
+    out << "c(" << c.level << ", " << c.trange << ")";
 }
 
-static void var_summary(const Var& var, FILE* out)
+static void var_summary(const Var& var, ostream& out)
 {
-    Varcode v = var.code();
-    fprintf(out, "%d%02d%03d[%s]",
-            WR_VAR_F(v), WR_VAR_X(v), WR_VAR_Y(v),
-            var.info()->desc);
+    out << varcode_format(var.code()) << "[" << var.info()->desc << "]";
 }
 
-unsigned Context::diff(const Context& ctx, FILE* out) const
+static void context_var_summary(const msg::Context& c, const Var& var, ostream& out)
+{
+    out << "Variable ";
+    context_summary(c, out);
+    out << " ";
+    var_summary(var, out);
+}
+
+unsigned Context::diff(const Context& ctx) const
 {
     if (level != ctx.level || trange != ctx.trange)
     {
-        stringstream msg;
-        msg << "the contexts are different (first is "
+        notes::log() << "the contexts are different (first is "
             << level << ", " << trange
             << " second is "
             << ctx.level << ", " << ctx.trange
             << ")" << endl;
-        fputs(msg.str().c_str(), out);
         return 1;
     }
 
@@ -227,39 +229,35 @@ unsigned Context::diff(const Context& ctx, FILE* out) const
     {
         if (i1 == data.size())
         {
-            fputs("Variable ", out); context_summary(ctx, out);
-            fputs(" ", out); var_summary(*ctx.data[i2], out);
-            fprintf(out, " exists only in the second message\n");
+            context_var_summary(ctx, *ctx.data[i2], notes::log());
+            notes::log() << " exists only in the second message" << endl;
             ++i2;
             ++diffs;
         } else if (i2 == ctx.data.size()) {
-            fputs("Variable ", out); context_summary(*this, out);
-            fputs(" ", out); var_summary(*data[i1], out);
-            fprintf(out, " exists only in the first message\n");
+            context_var_summary(*this, *data[i1], notes::log());
+            notes::log() << " exists only in the first message" << endl;
             ++i1;
             ++diffs;
         } else {
             int cmp = (int)data[i1]->code() - (int)ctx.data[i2]->code();
             if (cmp == 0)
             {
-                diffs += data[i1]->diff(*ctx.data[i2], out);
+                diffs += data[i1]->diff(*ctx.data[i2]);
                 ++i1;
                 ++i2;
             } else if (cmp < 0) {
                 if (data[i1]->value() != NULL)
                 {
-                    fputs("Variable ", out); context_summary(*this, out);
-                    fputs(" ", out); var_summary(*data[i1], out);
-                    fprintf(out, " exists only in the first message\n");
+                    context_var_summary(*this, *data[i1], notes::log());
+                    notes::log() << " exists only in the first message" << endl;
                     ++diffs;
                 }
                 ++i1;
             } else {
                 if (ctx.data[i2]->value() != NULL)
                 {
-                    fputs("Variable ", out); context_summary(ctx, out);
-                    fputs(" ", out); var_summary(*ctx.data[i2], out);
-                    fprintf(out, " exists only in the second message\n");
+                    context_var_summary(ctx, *ctx.data[i2], notes::log());
+                    notes::log() << " exists only in the second message" << endl;
                     ++diffs;
                 }
                 ++i2;

@@ -22,6 +22,7 @@
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
 #include <wreport/codetables.h>
+#include <wreport/notes.h>
 #include <math.h>
 
 using namespace dballe;
@@ -315,7 +316,8 @@ void to::test<2>()
             normalise_encoding_quirks(*amsgs, *bmsgs);
 
             // Compare the two dba_msg
-            int diffs = amsgs->diff(*bmsgs, stderr);
+            notes::Collect c(cerr);
+            int diffs = amsgs->diff(*bmsgs);
             if (diffs) dballe::tests::track_different_msgs(*amsgs, *bmsgs, "aof");
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {
@@ -349,7 +351,8 @@ void to::test<3>()
             normalise_encoding_quirks(*amsgs, bmsgs);
 
             // Compare the two dba_msg
-            int diffs = amsgs->diff(bmsgs, stderr);
+            notes::Collect c(cerr);
+            int diffs = amsgs->diff(bmsgs);
             if (diffs) 
             {
                 dballe::tests::track_different_msgs(*amsgs, bmsgs, "aof-bufr");
@@ -360,31 +363,6 @@ void to::test<3>()
             throw tut::failure(string(files[i]) + ": " + e.what());
         }
 
-	}
-}
-
-/* Round temperatures to 1 decimal digit, as transition from CREX does not
- * preserve more than that */
-static void roundtemps(Msgs& msgs)
-{
-	for (size_t m = 0; m < msgs.size(); ++m)
-	{
-		Msg& msg = *msgs[m];
-		for (size_t c = 0; c < msg.data.size(); ++c)
-		{
-            msg::Context& ctx = *msg.data[c];
-			for (size_t v = 0; v < ctx.data.size(); ++v)
-			{
-				Var* var = ctx.data[v];
-				switch (var->code())
-				{
-					case WR_VAR(0, 12, 101):
-					case WR_VAR(0, 12, 103):
-						var->setd(round(var->enqd()*10.0)/10.0);
-						break;
-				}
-			}
-		}
 	}
 }
 
@@ -464,7 +442,8 @@ void to::test<5>()
             auto_ptr<Msgs> amsgs2 = read_msgs(string(prefix + "28" + files[i]).c_str(), AOF);
 
             // Compare the two dba_msg
-            int diffs = amsgs1->diff(*amsgs2, stderr);
+            notes::Collect c(cerr);
+            int diffs = amsgs1->diff(*amsgs2);
             if (diffs) dballe::tests::track_different_msgs(*amsgs1, *amsgs2, "aof-2728");
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {

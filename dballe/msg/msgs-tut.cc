@@ -22,6 +22,7 @@
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
+#include <wreport/notes.h>
 
 using namespace dballe;
 using namespace wreport;
@@ -335,7 +336,8 @@ void to::test<8>()
         m.set_second(0);
     }
 
-    ensure_equals(msgs->diff(msgs1, stderr), 0u);
+    notes::Collect c(cerr);
+    ensure_equals(msgs->diff(msgs1), 0u);
 }
 
 }

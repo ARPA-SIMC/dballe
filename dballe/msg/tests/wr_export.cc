@@ -23,6 +23,7 @@
 #include <dballe/msg/context.h>
 #include <wreport/bulletin.h>
 #include <wreport/conv.h>
+#include <wreport/notes.h>
 #include <wibble/string.h>
 #include <set>
 #include <cstring>
@@ -205,7 +206,8 @@ struct ReimportTest
         }
 
         // Compare
-        int diffs = msgs1->diff(*msgs3, stdout);
+        notes::Collect c(cerr);
+        int diffs = msgs1->diff(*msgs3);
         if (diffs)
         {
             dballe::tests::dump("msg1", *msgs1);
@@ -382,7 +384,8 @@ void to::test<3>()
         std::auto_ptr<msg::Importer> bufr_importer(msg::Importer::create(BUFR/*, const Options& opts=Options()*/));
         Msgs msgs1;
         bufr_importer->from_bulletin(bbulletin, msgs1);
-        ensure_equals(msgs->diff(msgs1, stderr), 0);
+        notes::Collect c(cerr);
+        ensure_equals(msgs->diff(msgs1), 0);
     }
 
     // Export to CREX
@@ -395,7 +398,8 @@ void to::test<3>()
         std::auto_ptr<msg::Importer> crex_importer(msg::Importer::create(CREX/*, const Options& opts=Options()*/));
         Msgs msgs1;
         crex_importer->from_bulletin(cbulletin, msgs1);
-        ensure_equals(msgs->diff(msgs1, stderr), 0);
+        notes::Collect c(cerr);
+        ensure_equals(msgs->diff(msgs1), 0);
     }
 }
 
@@ -653,7 +657,8 @@ void to::test<31>()
             importer->from_bulletin(bbulletin, msgs1);
 
             // Compare
-            int diffs = msgs->diff(msgs1, stdout);
+            notes::Collect c(cerr);
+            int diffs = msgs->diff(msgs1);
             if (diffs)
             {
                 FILE* out1 = fopen("/tmp/msg1.txt", "w");
@@ -716,7 +721,8 @@ void to::test<32>()
             importer->from_bulletin(bbulletin, msgs1);
 
             // Compare
-            int diffs = msgs->diff(msgs1, stdout);
+            notes::Collect c(cerr);
+            int diffs = msgs->diff(msgs1);
             if (diffs)
             {
                 FILE* out1 = fopen("/tmp/msg1.txt", "w");

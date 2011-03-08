@@ -22,6 +22,7 @@
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
 #include <dballe/core/record.h>
+#include <wreport/notes.h>
 #include <set>
 
 using namespace dballe;
@@ -93,7 +94,8 @@ void to::test<1>()
             }
             */
 
-            int diffs = msg.diff(*msgs[0], stderr);
+            notes::Collect c(cerr);
+            int diffs = msg.diff(*msgs[0]);
             if (diffs) dballe::tests::track_different_msgs(msg, *msgs[0], "crex");
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {
@@ -141,7 +143,8 @@ void to::test<2>()
             }
             */
 
-            int diffs = msg.diff(*msgs[0], stderr);
+            notes::Collect c(cerr);
+            int diffs = msg.diff(*msgs[0]);
             if (diffs) dballe::tests::track_different_msgs(msg, *msgs[0], "bufr");
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {
@@ -187,7 +190,8 @@ void to::test<3>()
             }
             */
 
-            int diffs = msg.diff(*msgs[0], stderr);
+            notes::Collect c(cerr);
+            int diffs = msg.diff(*msgs[0]);
             if (diffs) dballe::tests::track_different_msgs(msg, *msgs[0], "bufr");
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {
@@ -229,12 +233,13 @@ void to::test<4>()
     ensure(msgs[0] != NULL);
     ensure(msgs[1] != NULL);
 
-	// Compare the two dba_msg
-    int diffs = msg1.diff(*msgs[0], stderr);
+    // Compare the two dba_msg
+    notes::Collect c(cerr);
+    int diffs = msg1.diff(*msgs[0]);
     if (diffs) dballe::tests::track_different_msgs(msg1, *msgs[0], "synop1");
     ensure_equals(diffs, 0);
 
-    diffs = msg2.diff(*msgs[1], stderr);
+    diffs = msg2.diff(*msgs[1]);
     if (diffs) dballe::tests::track_different_msgs(msg2, *msgs[1], "synop2");
     ensure_equals(diffs, 0);
 }

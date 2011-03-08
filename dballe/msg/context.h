@@ -1,7 +1,7 @@
 /*
  * msg/context - Hold variables with the same physical context
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -164,16 +164,17 @@ public:
     void print(FILE* out) const;
 
     /**
-     * Print the differences between two Context to a stream
+     * Compute the differences between two contexts
+     *
+     * Details of the differences found will be formatted using the notes
+     * system (@see notes.h).
      *
      * @param ctx
      *   Context to compare with this one
-     * @param out
-     *   The stream to dump a description of the differences to.
-     * @return
-     *   Number of differences found.
+     * @returns
+     *   The number of differences found
      */
-    unsigned diff(const Context& ctx, FILE* out) const;
+    unsigned diff(const Context& ctx) const;
 
     /**
      * Push the variable as an object in the lua stack

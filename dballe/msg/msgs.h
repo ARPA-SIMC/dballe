@@ -80,16 +80,17 @@ struct Msgs : public std::vector<Msg*>
     void print(FILE* out) const;
 
     /**
-     * Print the differences between two dba_msgs to a stream
+     * Compute the differences between two Msgs
+     *
+     * Details of the differences found will be formatted using the notes
+     * system (@see notes.h).
      *
      * @param msgs
      *   Msgs to compare to
-     * @param out
-     *   The stream to dump a description of the differences to.
      * @returns
-     *   The number of differences found.
+     *   The number of differences found
      */
-    unsigned diff(const Msgs& msgs, FILE* out) const;
+    unsigned diff(const Msgs& msgs) const;
 };
 
 /**

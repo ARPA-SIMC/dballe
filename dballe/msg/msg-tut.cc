@@ -22,12 +22,7 @@
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
-
-/*
-extern "C" {
-	dba_err dba_record_keyword_selftest();
-};
-*/
+#include <wreport/notes.h>
 
 using namespace dballe;
 using namespace wreport;
@@ -576,7 +571,8 @@ void to::test<11>()
     ensure(in.next());
     msg1.from_csv(in);
 
-    ensure_equals(msg.diff(msg1, stderr), 0u);
+    notes::Collect c(cerr);
+    ensure_equals(msg.diff(msg1), 0u);
 }
 
 }

@@ -24,6 +24,7 @@
 #include "vars.h"
 #include <dballe/core/csv.h>
 #include <wreport/codetables.h>
+#include <wreport/notes.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -485,19 +486,17 @@ void Msg::print(FILE* out) const
     }
 }
 
-static void context_summary(const msg::Context& c, FILE* out)
+static void context_summary(const msg::Context& c, ostream& out)
 {
-    stringstream str;
-    str << c.level << ", " << c.trange;
-    fprintf(out, "c(%s)", str.str().c_str());
+    out << "c(" << c.level << ", " << c.trange << ")";
 }
 
-unsigned Msg::diff(const Msg& msg, FILE* out) const
+unsigned Msg::diff(const Msg& msg) const
 {
     unsigned diffs = 0;
     if (type != msg.type)
     {
-        fprintf(out, "the messages have different type (first is %s (%d), second is %s (%d))\n",
+        notes::logf("the messages have different type (first is %s (%d), second is %s (%d))\n",
                 msg_type_name(type), type, msg_type_name(msg.type), msg.type);
         ++diffs;
     }
@@ -507,35 +506,39 @@ unsigned Msg::diff(const Msg& msg, FILE* out) const
     {
         if (i1 == data.size())
         {
-            fprintf(out, "Context "); context_summary(*msg.data[i2], out);
-            fprintf(out, " exists only in the second message\n");
+            notes::log() << "Context ";
+            context_summary(*msg.data[i2], notes::log());
+            notes::log() << " exists only in the second message" << endl;
             ++i2;
             ++diffs;
         } else if (i2 == msg.data.size()) {
-            fprintf(out, "Context "); context_summary(*data[i1], out);
-            fprintf(out, " exists only in the first message\n");
+            notes::log() << "Context ";
+            context_summary(*data[i1], notes::log());
+            notes::log() << " exists only in the first message" << endl;
             ++i1;
             ++diffs;
         } else {
             int cmp = data[i1]->compare(*msg.data[i2]);
             if (cmp == 0)
             {
-                diffs += data[i1]->diff(*msg.data[i2], out);
+                diffs += data[i1]->diff(*msg.data[i2]);
                 ++i1;
                 ++i2;
             } else if (cmp < 0) {
                 if (data[i1]->data.size() != 0)
                 {
-                    fprintf(out, "Context "); context_summary(*data[i1], out);
-                    fprintf(out, " exists only in the first message\n");
+                    notes::log() << "Context ";
+                    context_summary(*data[i1], notes::log());
+                    notes::log() << " exists only in the first message" << endl;
                     ++diffs;
                 }
                 ++i1;
             } else {
                 if (msg.data[i2]->data.size() != 0)
                 {
-                    fprintf(out, "Context "); context_summary(*msg.data[i2], out);
-                    fprintf(out, " exists only in the second message\n");
+                    notes::log() << "Context ";
+                    context_summary(*msg.data[i2], notes::log());
+                    notes::log() << " exists only in the second message" << endl;
                     ++diffs;
                 }
                 ++i2;

@@ -22,6 +22,7 @@
 #include "msgs.h"
 #include <dballe/core/csv.h>
 #include <wreport/error.h>
+#include <wreport/notes.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -96,18 +97,18 @@ void Msgs::print(FILE* out) const
 	}
 }
 
-unsigned Msgs::diff(const Msgs& msgs, FILE* out) const
+unsigned Msgs::diff(const Msgs& msgs) const
 {
     unsigned diffs = 0;
-	if (size() != msgs.size())
-	{
-		fprintf(out, "the message groups contain a different number of messages (first is %zd, second is %zd)\n",
-				size(), msgs.size());
-		++diffs;
-	}
-	unsigned count = size() < msgs.size() ? size() : msgs.size();
-	for (unsigned i = 0; i < count; ++i)
-		diffs += (*this)[i]->diff(*msgs[i], out);
+    if (size() != msgs.size())
+    {
+        notes::logf("the message groups contain a different number of messages (first is %zd, second is %zd)\n",
+                size(), msgs.size());
+        ++diffs;
+    }
+    unsigned count = size() < msgs.size() ? size() : msgs.size();
+    for (unsigned i = 0; i < count; ++i)
+        diffs += (*this)[i]->diff(*msgs[i]);
     return diffs;
 }
 

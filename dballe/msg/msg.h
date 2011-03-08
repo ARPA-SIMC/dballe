@@ -431,16 +431,17 @@ public:
     void print(FILE* out) const;
 
     /**
-     * Print the differences between two Msg to a stream
+     * Compute the differences between two Msg
+     *
+     * Details of the differences found will be formatted using the notes
+     * system (@see notes.h).
      *
      * @param msg
      *   Message to compare this one to
-     * @param out
-     *   The stream to dump a description of the differences to.
-     * @return
-     *   Number of differences found.
+     * @returns
+     *   The number of differences found
      */
-    unsigned diff(const Msg& msg, FILE* out) const;
+    unsigned diff(const Msg& msg) const;
 
     /**
      * Get the message source type corresponding to the given report code

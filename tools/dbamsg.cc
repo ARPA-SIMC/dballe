@@ -31,6 +31,7 @@
 #include <dballe/core/csv.h>
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
+#include <wreport/notes.h>
 #include <dballe/cmdline/cmdline.h>
 #include <dballe/cmdline/processor.h>
 #include <dballe/cmdline/conversion.h>
@@ -777,9 +778,10 @@ int do_compare(poptContext optCon)
 		importer->from_rawmsg(msg1, msgs1);
 		importer->from_rawmsg(msg2, msgs2);
 
-		int diffs = msgs1.diff(msgs2, stderr);
-		if (diffs > 0)
-			error_consistency::throwf("Messages #%zd contain %d differences", idx, diffs);
+        notes::Collect c(cerr);
+        int diffs = msgs1.diff(msgs2);
+        if (diffs > 0)
+            error_consistency::throwf("Messages #%zd contain %d differences", idx, diffs);
 	}
 	if (idx == 0)
 		throw error_consistency("The files do not contain messages");
