@@ -108,15 +108,11 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
-	use_db();
+    use_db();
 
-    set<string> legacy_generics;
-    legacy_generics.insert("bufr/obs255-255.0.bufr");
-    legacy_generics.insert("bufr/tempforecast.bufr");
-
-	const char** files = dballe::tests::bufr_files;
-	for (int i = 0; files[i] != NULL; i++)
-	{
+    const char** files = dballe::tests::bufr_files;
+    for (int i = 0; files[i] != NULL; i++)
+    {
         try {
             std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
             Msg& msg = *(*inmsgs)[0];
@@ -150,7 +146,7 @@ void to::test<2>()
         } catch (std::exception& e) {
             throw tut::failure(string("[") + files[i] + "] " + e.what());
         }
-	}
+    }
 }
 
 // Test import/export with all AOF samples
