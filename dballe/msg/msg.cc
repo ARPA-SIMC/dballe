@@ -558,7 +558,15 @@ void Msg::set(const Var& var, Varcode code, const Level& lev, const Trange& tr)
 {
     auto_ptr<Var> copy(newvar(code));
     copy->copy_val_only(var); // Copy value performing conversions
-    copy->copy_attrs_if_defined(var);
+
+    for (const Var* a = var.next_attr(); a; a = a->next_attr())
+    {
+        if (!a->isset()) continue;
+        auto_ptr<Var> acopy(newvar(map_code_to_dballe(a->code())));
+        acopy->copy_val_only(*a);
+        copy->seta(acopy);
+    }
+
     set(copy, lev, tr);
 }
 

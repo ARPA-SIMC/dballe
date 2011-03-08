@@ -73,6 +73,9 @@ void format_code(wreport::Varcode code, char* buf);
 /// Format the code to its string representation
 std::string format_code(wreport::Varcode code);
 
+/// Return \a code, or its DB-All.e equivalent
+wreport::Varcode map_code_to_dballe(wreport::Varcode code);
+
 }
 
 #endif

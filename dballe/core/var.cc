@@ -58,6 +58,19 @@ std::string format_code(wreport::Varcode code)
     return buf;
 }
 
+wreport::Varcode map_code_to_dballe(wreport::Varcode code)
+{
+    switch (code)
+    {
+        case WR_VAR(0,  7,  1): return WR_VAR(0,  7,  30);
+        case WR_VAR(0, 10,  3): return WR_VAR(0, 10,   8);
+        case WR_VAR(0, 10, 61): return WR_VAR(0, 10,  60);
+        case WR_VAR(0, 12,  1): return WR_VAR(0, 12, 101);
+        case WR_VAR(0, 12,  3): return WR_VAR(0, 12, 103);
+        default: return code;
+    }
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

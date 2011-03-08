@@ -18,6 +18,7 @@
  */
 
 #include "base.h"
+#include <dballe/core/var.h>
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <wreport/conv.h>
@@ -89,18 +90,6 @@ std::auto_ptr<Importer> Importer::createGeneric(const msg::Importer::Options& op
     return auto_ptr<Importer>(new GenericImporter(opts));
 }
 
-static Varcode update_code(Varcode code)
-{
-    switch (code)
-    {
-        case WR_VAR(0, 12,  1): return WR_VAR(0, 12, 101);
-        case WR_VAR(0, 12,  3): return WR_VAR(0, 12, 103);
-        case WR_VAR(0, 10, 61): return WR_VAR(0, 10,  60);
-        case WR_VAR(0, 10,  3): return WR_VAR(0, 10,   8);
-        default: return code;
-    }
-}
-
 void GenericImporter::import_var_undef(const Var& var)
 {
     switch (var.code())
@@ -132,7 +121,6 @@ void GenericImporter::import_var(const Var& var)
             msg->set_rep_memo(var.value(), -1);
             break;
         // Legacy variable conversions
-        case WR_VAR(0, 7, 1): msg->set(var, WR_VAR(0, 7, 30), lev, tr); break;
         case WR_VAR(0, 8, 1): {
             auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), convert_BUFR08001_to_BUFR08042(var.enqi())));
             nvar->copy_attrs(var);
@@ -142,10 +130,10 @@ void GenericImporter::import_var(const Var& var)
         default:
             // Adjust station info level for pre-dballe-5.0 generics
             if (lev == Level(257, 0, 0, 0) && tr == Trange(0, 0, 0))
-                msg->set(var, update_code(var.code()), Level(257), Trange());
+                msg->set(var, map_code_to_dballe(var.code()), Level(257), Trange());
             else
-                msg->set(var, update_code(var.code()), lev, tr);
-	    break;
+                msg->set(var, map_code_to_dballe(var.code()), lev, tr);
+            break;
     }
 }
 
