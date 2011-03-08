@@ -197,8 +197,24 @@ struct TempWMO : public TempBase
         }
         else
             subset->store_variable_undef(WR_VAR(0, 8, 42));
-        subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
-        add(WR_VAR(0, 10,   9), &c, WR_VAR(0, 10, 8));
+        switch (c.level.ltype1)
+        {
+            case 100:
+                subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
+                add(WR_VAR(0, 10, 9), &c, WR_VAR(0, 10, 8));
+                break;
+            case 102:
+                add(WR_VAR(0, 7, 4), &c, WR_VAR(0, 10, 4));
+                if (const Var* var = c.find(WR_VAR(0, 10, 8)))
+                    add(WR_VAR(0, 10, 9), var);
+                else
+                    subset->store_variable_d(WR_VAR(0, 10, 9), (double)c.level.l1 * 9.80665);
+                break;
+            case 103:
+                add(WR_VAR(0, 7, 4), &c, WR_VAR(0, 10, 4));
+                add(WR_VAR(0, 10, 9), &c, WR_VAR(0, 10, 8));
+                break;
+        }
         add(WR_VAR(0,  5,  15), &c);
         add(WR_VAR(0,  6,  15), &c);
         add(WR_VAR(0, 12, 101), &c);
@@ -260,7 +276,7 @@ struct TempWMO : public TempBase
             // to the lower pressure
             const msg::Context* c = *i;
             // Skip non-presure levels
-            if (c->level.ltype1 != 100) continue;
+            if (!c->find_vsig()) continue;
             do_D03054(*c);
             ++group_count;
         }
@@ -626,6 +642,9 @@ struct TempFactory : public virtual TempEcmwfFactory, TempWMOFactory
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         const Msg& msg = *msgs[0];
+        // ECMWF temps use normal replication which cannot do more than 256 levels
+        if (msg.data.size() > 260)
+            return TempWMOFactory::make(opts, msgs);
         const Var* var = msg.get_sonde_tracking_var();
         if (var)
             return TempWMOFactory::make(opts, msgs);

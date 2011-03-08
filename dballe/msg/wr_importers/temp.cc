@@ -379,8 +379,10 @@ void TempImporter::import_group(unsigned start, unsigned length)
         {
             case WR_VAR(0,  4, 16):
             case WR_VAR(0,  4, 86): msg->set(var, WR_VAR(0,  4,  86), lev, Trange::instant()); break;
+            case WR_VAR(0,  5,  1):
             case WR_VAR(0,  5,  2): msg->set(var, WR_VAR(0,  5,   1), lev, Trange::instant()); break;
             case WR_VAR(0,  5, 15): msg->set(var, WR_VAR(0,  5,  15), lev, Trange::instant()); break;
+            case WR_VAR(0,  6,  1):
             case WR_VAR(0,  6,  2): msg->set(var, WR_VAR(0,  6,   1), lev, Trange::instant()); break;
             case WR_VAR(0,  6, 15): msg->set(var, WR_VAR(0,  6,  15), lev, Trange::instant()); break;
             case WR_VAR(0,  8,  1):
@@ -400,10 +402,10 @@ void TempImporter::import_group(unsigned start, unsigned length)
             case WR_VAR(0,  8, 42): msg->set(var, WR_VAR(0,  8,  42), lev, Trange::instant()); break;
             case WR_VAR(0, 10,  3): msg->set(var, WR_VAR(0, 10,   8), lev, Trange::instant()); break;
             case WR_VAR(0, 10,  9): msg->set(var, WR_VAR(0, 10,   8), lev, Trange::instant()); break;
-            case WR_VAR(0, 12, 101):
-            case WR_VAR(0, 12,  1): msg->set(var, WR_VAR(0, 12, 101), lev, Trange::instant()); break;
-            case WR_VAR(0, 12, 103):
-            case WR_VAR(0, 12,  3): msg->set(var, WR_VAR(0, 12, 103), lev, Trange::instant()); break;
+            case WR_VAR(0, 12,  1):
+            case WR_VAR(0, 12, 101): msg->set(var, WR_VAR(0, 12, 101), lev, Trange::instant()); break;
+            case WR_VAR(0, 12,  3):
+            case WR_VAR(0, 12, 103): msg->set(var, WR_VAR(0, 12, 103), lev, Trange::instant()); break;
             case WR_VAR(0,  7,  4): msg->set(var, WR_VAR(0, 10,   4), lev, Trange::instant()); break;
             case WR_VAR(0, 11,  1):
             case WR_VAR(0, 11,  2):
