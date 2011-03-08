@@ -20,6 +20,7 @@
 #include "wr_codec.h"
 #include <wreport/bulletin.h>
 #include "msgs.h"
+#include "context.h"
 
 using namespace wreport;
 using namespace std;
@@ -52,24 +53,6 @@ struct ShipBase : public Template
 
     ShipBase(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
-
-    void add(Varcode code, int shortcut)
-    {
-        const Var* var = msg->find_by_id(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
-    {
-        const Var* var = msg->find(srccode, level, trange);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -105,6 +88,17 @@ struct ShipBase : public Template
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Template::to_subset(msg, subset);
+
+        // Look for significant levels
+        const msg::Context* c_wind = NULL;
+        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                i != msg.data.end(); ++i)
+        {
+            const msg::Context* c = *i;
+            if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
+                c_wind = c;
+        }
+
         /*  0 */ add(WR_VAR(0,  1, 11), DBA_MSG_IDENT);
         /*  1 */ add(WR_VAR(0,  1, 12), DBA_MSG_ST_DIR);
         /*  2 */ add(WR_VAR(0,  1, 13), DBA_MSG_ST_SPEED);
@@ -120,8 +114,8 @@ struct ShipBase : public Template
         /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
         /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
         /* 14 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
-        /* 15 */ add(WR_VAR(0, 11, 11), DBA_MSG_WIND_DIR);
-        /* 16 */ add(WR_VAR(0, 11, 12), DBA_MSG_WIND_SPEED);
+        /* 15 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
+        /* 16 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
         /* 17 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
         /* 18 */ add(WR_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M);
         /* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
