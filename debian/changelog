@@ -1,3 +1,10 @@
+dballe (5.6-1) unstable; urgency=low
+
+  * New upstream version
+     - provami: fixed disappearing 00:00:00 time in date fields
+
+ -- Enrico Zini <enrico@debian.org>  Tue, 19 Apr 2011 18:35:46 +0200
+
 dballe (5.5-1) unstable; urgency=low
 
   * New upstream version
