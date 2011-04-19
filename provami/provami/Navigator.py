@@ -39,7 +39,7 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
         icon = wx.EmptyIcon()
         icon.CopyFromBitmap(wx.ArtProvider.GetBitmap(Navigator.ICON_PROVAMI, wx.ART_TOOLBAR, (16, 16)))
         self.SetIcon(icon)
-        self.SetSizeHints(500, 500)
+        self.SetSizeHints(700, 500)
 
 
         # Create progress display manager

@@ -590,7 +590,8 @@ class Model:
 
         Returns True if the value has been changed, else False
         """
-        value = int(value) if value else None
+        if value is not None:
+            value = int(value)
         if value != self.filter.get(name, None):
             if value is None:
                 del self.filter[name]
@@ -770,7 +771,7 @@ class Model:
             return True
         return False
 
-    def getDateTimeFilter(self, filter = DateUtils.EXACT):
+    def getDateTimeFilter(self, filter=DateUtils.EXACT):
         return (self.filter.get(i, None) for i in DateUtils.fields[filter])
 
     def setDateTimeFilter(self, year, month=None, day=None, hour=None, min=None, sec=None, filter=DateUtils.EXACT):

@@ -16,8 +16,14 @@ from provami.Model import *
 #	print year, month, day, hour, min, sec
 #	return datetime.datetime(year, month, day, hour, min, sec)
 
+def int_or_none(x):
+    try:
+        return int(x)
+    except:
+        return None
+
 class DateChoice(wx.TextCtrl):
-	def __init__(self, parent, model):
+	def __init__(self, parent, model, type=DateUtils.EXACT):
 		wx.TextCtrl.__init__(self, parent)
 
 		self.model = model
@@ -34,7 +40,7 @@ class DateChoice(wx.TextCtrl):
 		self.SetToolTip(self.tip)
 
 		# Time value to use 
-		self.type = DateUtils.EXACT
+		self.type = type
 
 		# Matchers for all the allowed date formats
 		self.emptyMatch = re.compile(r'^\s*$')
@@ -76,7 +82,7 @@ class DateChoice(wx.TextCtrl):
 		if m is None: return False, None
 
 		# Get the values out of the group
-		values = [m.group(x) and int(m.group(x)) for x in ('year', 'month', 'day', 'hour', 'min', 'sec')]
+		values = [int_or_none(m.group(x)) for x in ('year', 'month', 'day', 'hour', 'min', 'sec')]
 
 		# If the year is empty, we can return a valid, empty date
 		if values[0] is None: return True, None
@@ -124,7 +130,7 @@ class DateChoice(wx.TextCtrl):
 		if valid:
 			self.SetBackgroundColour(self.defaultBackground)
 			if values is not None:
-				self.model.setDateTimeFilter(values[0], values[1], values[2], values[3], values[4], values[5], filter = self.type)
+				self.model.setDateTimeFilter(values[0], values[1], values[2], values[3], values[4], values[5], filter=self.type)
 			else:
 				self.model.setDateTimeFilter(None)
 		else:
@@ -162,13 +168,11 @@ class DateChoice(wx.TextCtrl):
 
 class MinDateChoice(DateChoice, ModelListener):
 	def __init__(self, parent, model):
-		DateChoice.__init__(self, parent, model)
-		self.type = DateUtils.MIN
+		DateChoice.__init__(self, parent, model, type=DateUtils.MIN)
 
 class MaxDateChoice(DateChoice, ModelListener):
 	def __init__(self, parent, model):
-		DateChoice.__init__(self, parent, model)
-		self.type = DateUtils.MAX
+		DateChoice.__init__(self, parent, model, type=DateUtils.MAX)
 
 #class DateChoice(wx.Panel):
 #	def __init__(self, parent, model, id=-1):
