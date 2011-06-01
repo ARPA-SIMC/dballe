@@ -80,8 +80,7 @@ struct Generic : public Template
         }
         if (CrexBulletin* b = dynamic_cast<CrexBulletin*>(&bulletin))
         {
-            b->master_table = 99;
-            b->table = 4;
+            b->table = 99;
         }
 
         // The data descriptor section will be generated later, as it depends

@@ -229,6 +229,7 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
         bulletin.rep_second = v->enqi();
     else
         bulletin.rep_second = 0;
+    bulletin.master_table_number = 0;
     if (!has_date)
     {
         // use today
@@ -256,7 +257,6 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
     }
     if (CrexBulletin* b = dynamic_cast<CrexBulletin*>(&bulletin))
     {
-        b->master_table = 0;
         b->table = 3;
         b->has_check_digit = 0;
         b->edition = 2;

@@ -1,3 +1,10 @@
+dballe (5.7-1) unstable; urgency=low
+
+  * New upstream version
+     - ported to new wreport
+
+ -- Enrico Zini <enrico@debian.org>  Tue, 31 May 2011 10:25:05 +0200
+
 dballe (5.6-1) unstable; urgency=low
 
   * New upstream version

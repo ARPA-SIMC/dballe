@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, 5.6, [enrico@enricozini.org])
+AC_INIT(dballe, 5.7, [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
@@ -101,7 +101,7 @@ else
 fi
 
 dnl Check for wreport
-PKG_CHECK_MODULES(WREPORT,libwreport >= 1.7)
+PKG_CHECK_MODULES(WREPORT,libwreport >= 1.8)
 
 dnl Check for unixodbc
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),

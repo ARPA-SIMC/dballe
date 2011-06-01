@@ -101,6 +101,7 @@ static void dump_bufr_header(const Rawmsg& rmsg, const BufrBulletin& braw)
 	printf("Message %d\n", rmsg.index);
 	printf("Size: %zd\n", rmsg.size());
 	printf("Edition: %d\n", braw.edition);
+	printf("Master table number: %d\n", braw.master_table_number);
 	printf("Centre: %d:%d\n", braw.centre, braw.subcentre);
 	printf("Category: %d:%d:%d\n", braw.type, braw.subtype, braw.localsubtype);
 	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
@@ -123,11 +124,12 @@ static void dump_crex_header(const Rawmsg& rmsg, const CrexBulletin& braw)
 	printf("Message %d\n", rmsg.index);
 	printf("Size: %zd\n", rmsg.size());
 	printf("Edition: %d\n", braw.edition);
+	printf("Master table number: %d\n", braw.master_table_number);
 	printf("Category: %d:%d:%d\n", braw.type, braw.subtype, braw.localsubtype);
 	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
 			braw.rep_year, braw.rep_month, braw.rep_day,
 			braw.rep_hour, braw.rep_minute, braw.rep_second);
-	printf("Tables: %d:%d\n", braw.master_table, braw.table);
+	printf("Table version: %d\n", braw.table);
 	printf("Table: %s\n", braw.btable ? braw.btable->id().c_str() : "(none)");
 	printf("Check digit: %s\n\n", braw.has_check_digit ? "yes" : "no");
 }
@@ -313,6 +315,7 @@ struct CSVBulletin : public cmdline::Action
             {
                 if (item.bulletin == NULL) return;
                 cout << "edition," << item.bulletin->edition << endl;
+                cout << "master_table_number," << item.bulletin->master_table_number << endl;
                 cout << "type," << item.bulletin->type << endl;
                 cout << "subtype," << item.bulletin->subtype << endl;
                 cout << "localsubtype," << item.bulletin->localsubtype << endl;
@@ -335,7 +338,6 @@ struct CSVBulletin : public cmdline::Action
                     cout << "optional_section_length," << b->optional_section_length << endl;
                     // TODO: how to encode optional section? base64?
                 } else if (const CrexBulletin* b = dynamic_cast<const CrexBulletin*>(item.bulletin)) {
-                    cout << "master_table," << b->master_table << endl;
                     cout << "table," << b->table << endl;
                     cout << "has_check_digit," << b->has_check_digit << endl;
                 }
@@ -401,8 +403,8 @@ struct DumpMessage : public cmdline::Action
                 {
                     if (item.bulletin == NULL) return;
                     const BufrBulletin& b = *dynamic_cast<const BufrBulletin*>(item.bulletin);
-                    printf(" Edition %d, origin %d/%d, master table %d, local table %d\n",
-                            b.edition, b.centre, b.subcentre, b.master_table, b.local_table);
+                    printf(" Edition %d, mtn %d, origin %d/%d, master table %d, local table %d\n",
+                            b.edition, b.master_table_number, b.centre, b.subcentre, b.master_table, b.local_table);
                     print_subsets(*item.bulletin);
                     break;
                 }
@@ -410,8 +412,8 @@ struct DumpMessage : public cmdline::Action
                 {
                     if (item.bulletin == NULL) return;
                     const CrexBulletin& b = *dynamic_cast<const CrexBulletin*>(item.bulletin);
-                    printf(" Edition %d, master table %d, table %d\n",
-                            b.edition, b.master_table, b.table);
+                    printf(" Edition %d, mtn %d, table %d\n",
+                            b.edition, b.master_table_number, b.table);
                     print_subsets(*item.bulletin);
                     break;
                 }
