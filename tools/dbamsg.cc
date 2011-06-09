@@ -54,6 +54,8 @@ using namespace std;
 static int op_dump_interpreted = 0;
 static int op_dump_text = 0;
 static int op_dump_csv = 0;
+static int op_dump_dds = 0;
+static int op_dump_structured = 0;
 static int op_precise_import = 0;
 static const char* op_output_type = "bufr";
 static const char* op_output_template = "";
@@ -508,6 +510,46 @@ struct DumpText : public cmdline::Action
 	}
 };
 
+struct DumpStructured : public cmdline::Action
+{
+    virtual void operator()(const cmdline::Item& item)
+    {
+        print_item_header(item);
+        if (!item.rmsg)
+        {
+            puts(": no low-level information available");
+            return;
+        }
+        if (!item.bulletin)
+        {
+            puts(": no bulletin information available");
+            return;
+        }
+        puts(":");
+        item.bulletin->print_structured(stdout);
+    }
+};
+
+struct DumpDDS : public cmdline::Action
+{
+    virtual void operator()(const cmdline::Item& item)
+    {
+        print_item_header(item);
+        if (!item.rmsg)
+        {
+            puts(": no low-level information available");
+            return;
+        }
+        if (!item.bulletin)
+        {
+            puts(": no bulletin information available");
+            return;
+        }
+        puts(":");
+        item.bulletin->print_datadesc(stdout);
+    }
+};
+
 struct WriteRaw : public cmdline::Action
 {
     File* file;
@@ -558,7 +600,11 @@ int do_dump(poptContext optCon)
         action.reset(new DumpCooked);
     else if (op_dump_text)
         action.reset(new DumpText);
-    else
+    else if (op_dump_structured)
+        action.reset(new DumpStructured);
+    else if (op_dump_dds)
+        action.reset(new DumpDDS);
+    else 
         action.reset(new DumpMessage);
 
     /* Throw away the command name */
@@ -1053,6 +1099,10 @@ struct poptOption dbamsg_dump_options[] = {
 		"dump as text that can be processed by dbamsg makebufr", 0 },
 	{ "csv", 0, 0, &op_dump_csv, 0,
 		"dump in machine readable CSV format", 0 },
+	{ "dds", 0, 0, &op_dump_dds, 0,
+		"dump structure of data description section", 0 },
+	{ "structured", 0, 0, &op_dump_structured, 0,
+		"structured dump of the message contents", 0 },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
 	POPT_TABLEEND
