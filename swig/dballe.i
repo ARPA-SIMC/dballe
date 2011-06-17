@@ -456,6 +456,11 @@ namespace std {
         size_t subsets_size() { return $self->subsets.size(); }
 }
 %extend wreport::BufrBulletin {
+        %ignore create;
+        BufrBulletin()
+        {
+                return wreport::BufrBulletin::create().release();
+        }
         std::string encode()
         {
                 std::string res;
@@ -466,6 +471,11 @@ namespace std {
         size_t subsets_size() { return $self->subsets.size(); }
 }
 %extend wreport::CrexBulletin {
+        %ignore create;
+        CrexBulletin()
+        {
+                return wreport::CrexBulletin::create().release();
+        }
         std::string encode()
         {
                 std::string res;
@@ -474,6 +484,13 @@ namespace std {
         }
         void subsets_clear() { $self->subsets.clear(); }
         size_t subsets_size() { return $self->subsets.size(); }
+}
+%extend wreport::BufrCodecOptions {
+        %ignore create;
+        BufrCodecOptions()
+        {
+                return wreport::BufrCodecOptions::create().release();
+        }
 }
 
 %extend dballe::DB {

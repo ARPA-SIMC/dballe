@@ -86,7 +86,7 @@ void Item::decode(msg::Importer& imp, bool print_errors)
     switch (rmsg->encoding)
     {
         case BUFR:
-            bulletin = new BufrBulletin;
+            bulletin = BufrBulletin::create().release();
             try {
                 bulletin->decode(*rmsg, rmsg->file.c_str(), rmsg->offset);
             } catch (error& e) {
@@ -96,7 +96,7 @@ void Item::decode(msg::Importer& imp, bool print_errors)
             }
             break;
         case CREX:
-            bulletin = new CrexBulletin;
+            bulletin = CrexBulletin::create().release();
             try {
                 bulletin->decode(*rmsg, rmsg->file.c_str(), rmsg->offset);
             } catch (error& e) {

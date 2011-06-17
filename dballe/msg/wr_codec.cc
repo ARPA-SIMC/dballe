@@ -41,9 +41,9 @@ BufrImporter::~BufrImporter() {}
 
 void BufrImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
 {
-    BufrBulletin bulletin;
-    bulletin.decode(msg);
-    from_bulletin(bulletin, msgs);
+    auto_ptr<BufrBulletin> bulletin(BufrBulletin::create());
+    bulletin->decode(msg);
+    from_bulletin(*bulletin, msgs);
 }
 
 CrexImporter::CrexImporter(const Options& opts)
@@ -52,9 +52,9 @@ CrexImporter::~CrexImporter() {}
 
 void CrexImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
 {
-    CrexBulletin bulletin;
-    bulletin.decode(msg);
-    from_bulletin(bulletin, msgs);
+    auto_ptr<CrexBulletin> bulletin(CrexBulletin::create());
+    bulletin->decode(msg);
+    from_bulletin(*bulletin, msgs);
 }
 
 void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
@@ -97,9 +97,9 @@ BufrExporter::~BufrExporter() {}
 
 void BufrExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
 {
-    BufrBulletin bulletin;
-    to_bulletin(msgs, bulletin);
-    bulletin.encode(msg);
+    auto_ptr<BufrBulletin> bulletin(BufrBulletin::create());
+    to_bulletin(msgs, *bulletin);
+    bulletin->encode(msg);
 }
 
 CrexExporter::CrexExporter(const Options& opts)
@@ -108,9 +108,9 @@ CrexExporter::~CrexExporter() {}
 
 void CrexExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
 {
-    CrexBulletin bulletin;
-    to_bulletin(msgs, bulletin);
-    bulletin.encode(msg);
+    auto_ptr<CrexBulletin> bulletin(CrexBulletin::create());
+    to_bulletin(msgs, *bulletin);
+    bulletin->encode(msg);
 }
 
 void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) const

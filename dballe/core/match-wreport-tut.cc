@@ -33,14 +33,28 @@ using namespace wreport;
 namespace tut {
 
 struct match_wreport_shar {
-    void init(BufrBulletin& b)
+    BufrBulletin* bulletin;
+
+    match_wreport_shar()
+        : bulletin(0)
     {
+    }
+    ~match_wreport_shar()
+    {
+        if (bulletin) delete bulletin;
+    }
+    BufrBulletin& init()
+    {
+        if (bulletin) delete bulletin;
+        bulletin = BufrBulletin::create().release();
+        BufrBulletin& b = *bulletin;
         b.edition = 4;
         b.centre = 200;
         b.subcentre = 0;
         b.master_table = 14;
         b.local_table = 0;
         b.load_tables();
+        return b;
     }
 };
 TESTGRP(match_wreport);
@@ -317,7 +331,7 @@ void to::test<8>()
     matcher.set("data_id", 1);
     std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-    BufrBulletin b; init(b);
+    BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
     b.obtain_subset(1).store_variable_i(WR_VAR(0, 1, 1), 1);
@@ -335,7 +349,7 @@ void to::test<9>()
     matcher.set("ana_id", 1);
     std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-    BufrBulletin b; init(b);
+    BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
     b.obtain_subset(1).store_variable_i(WR_VAR(0, 1, 1), 1);
@@ -354,7 +368,7 @@ void to::test<10>()
         matcher.set("block", 11);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(1).store_variable_i(WR_VAR(0, 1, 1), 1);
@@ -373,7 +387,7 @@ void to::test<10>()
         matcher.set("station", 222);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(0).store_variable_i(WR_VAR(0, 1, 1), 1);
@@ -402,7 +416,7 @@ void to::test<10>()
         matcher.set("station", 222);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(0).store_variable_i(WR_VAR(0, 1, 1), 11);
@@ -423,7 +437,7 @@ void to::test<11>()
         matcher.set("yearmin", 2000);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(0).store_variable_i(WR_VAR(0, 4, 1), 1999);
@@ -437,7 +451,7 @@ void to::test<11>()
         matcher.set("yearmax", 2000);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(0).store_variable_i(WR_VAR(0, 4, 1), 2001);
@@ -452,7 +466,7 @@ void to::test<11>()
         matcher.set("yearmax", 2010);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(0).store_variable_i(WR_VAR(0, 4, 1), 1999);
@@ -481,7 +495,7 @@ void to::test<12>()
         matcher.set("latmin", 4500000);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(1).store_variable_d(WR_VAR(0, 5, 1), 43.0);
@@ -497,7 +511,7 @@ void to::test<12>()
         matcher.set("latmax", 4500000);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(1).store_variable_d(WR_VAR(0, 5, 1), 46.0);
@@ -513,7 +527,7 @@ void to::test<12>()
         matcher.set("lonmin", 1100000);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(0).store_variable_d(WR_VAR(0, 6, 1), 10.0);
@@ -529,7 +543,7 @@ void to::test<12>()
         matcher.set("lonmax", 1100000);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(0).store_variable_d(WR_VAR(0, 6, 1), 12.0);
@@ -548,7 +562,7 @@ void to::test<12>()
         matcher.set("lonmax", 1200000);
         std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-        BufrBulletin b; init(b);
+        BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
         b.obtain_subset(0).store_variable_d(WR_VAR(0, 5, 1), 45.5);
@@ -570,7 +584,7 @@ void to::test<13>()
     matcher.set(DBA_KEY_REP_MEMO, "synop");
     std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-    BufrBulletin b; init(b);
+    BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
     b.obtain_subset(0).store_variable_c(WR_VAR(0, 1, 194), "temp");
@@ -587,7 +601,7 @@ void to::test<14>()
     Record matcher;
     std::auto_ptr<Matcher> m = Matcher::create(matcher);
 
-    BufrBulletin b; init(b);
+    BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
 }
 

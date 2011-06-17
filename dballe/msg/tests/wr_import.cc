@@ -78,9 +78,9 @@ void to::test<1>()
             cerr << "Failing bulletin:";
             try {
                 std::auto_ptr<Rawmsg> raw = read_rawmsg(files[i], BUFR);
-                BufrBulletin bulletin;
-                bulletin.decode(*raw);
-                bulletin.print(stderr);
+                auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+                bulletin->decode(*raw);
+                bulletin->print(stderr);
             } catch (std::exception& e1) {
                 cerr << "Cannot display failing bulletin: " << e1.what() << endl;
             }
@@ -104,9 +104,9 @@ void to::test<2>()
             cerr << "Failing bulletin:";
             try {
                 std::auto_ptr<Rawmsg> raw = read_rawmsg(files[i], CREX);
-                CrexBulletin bulletin;
-                bulletin.decode(*raw);
-                bulletin.print(stderr);
+                auto_ptr<Bulletin> bulletin(CrexBulletin::create());
+                bulletin->decode(*raw);
+                bulletin->print(stderr);
             } catch (std::exception& e1) {
                 cerr << "Cannot display failing bulletin: " << e1.what() << endl;
             }

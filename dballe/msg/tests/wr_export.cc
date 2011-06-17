@@ -115,16 +115,16 @@ struct ReimportTest
                 (*i)->tweak(*msgs1);
 
         // Export
-        B bulletin;
+        auto_ptr<Bulletin> bulletin(B::create());
         try {
             if (tname1 != NULL)
                 output_opts.template_name = tname1;
             else
                 output_opts.template_name.clear();
             std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
-            exporter->to_bulletin(*msgs1, bulletin);
+            exporter->to_bulletin(*msgs1, *bulletin);
         } catch (std::exception& e) {
-            dballe::tests::dump("bul1", bulletin);
+            dballe::tests::dump("bul1", *bulletin);
             dballe::tests::dump("msg1", *msgs1);
             throw tut::failure(loc.msg(string("exporting to bulletin (first template): ") + e.what()));
         }
@@ -132,10 +132,10 @@ struct ReimportTest
         // Encode
         Rawmsg rawmsg;
         try {
-            bulletin.encode(rawmsg);
+            bulletin->encode(rawmsg);
             //exporter->to_rawmsg(*msgs1, rawmsg);
         } catch (std::exception& e) {
-            dballe::tests::dump("bul1", bulletin);
+            dballe::tests::dump("bul1", *bulletin);
             dballe::tests::dump("msg1", *msgs1);
             throw tut::failure(loc.msg(string("encoding to rawmsg (first template): ") + e.what()));
         }
@@ -154,13 +154,13 @@ struct ReimportTest
         if (tname2)
         {
             // Export
-            B bulletin;
+            auto_ptr<Bulletin> bulletin(B::create());
             try {
                 output_opts.template_name = tname2;
                 std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
-                exporter->to_bulletin(*msgs2, bulletin);
+                exporter->to_bulletin(*msgs2, *bulletin);
             } catch (std::exception& e) {
-                dballe::tests::dump("bul2", bulletin);
+                dballe::tests::dump("bul2", *bulletin);
                 dballe::tests::dump("msg2", *msgs1);
                 throw tut::failure(loc.msg(string("exporting to bulletin (second template): ") + e.what()));
             }
@@ -168,10 +168,10 @@ struct ReimportTest
             // Encode
             rawmsg.clear();
             try {
-                bulletin.encode(rawmsg);
+                bulletin->encode(rawmsg);
                 //exporter->to_rawmsg(*msgs1, rawmsg);
             } catch (std::exception& e) {
-                dballe::tests::dump("bul2", bulletin);
+                dballe::tests::dump("bul2", *bulletin);
                 dballe::tests::dump("msg2", *msgs1);
                 throw tut::failure(loc.msg(string("encoding to rawmsg (second template): ") + e.what()));
             }
@@ -314,14 +314,14 @@ void to::test<1>()
             std::auto_ptr<msg::Exporter> exporter;
 
             exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
-            wreport::BufrBulletin bbulletin;
-            exporter->to_bulletin(*msgs, bbulletin);
+            auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+            exporter->to_bulletin(*msgs, *bbulletin);
 
             if (bl_crex.find(files[i]) == bl_crex.end())
             {
                 exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
-                wreport::CrexBulletin cbulletin;
-                exporter->to_bulletin(*msgs, cbulletin);
+                auto_ptr<Bulletin> cbulletin(CrexBulletin::create());
+                exporter->to_bulletin(*msgs, *cbulletin);
             }
         } catch (std::exception& e) {
             fails.push_back(string(files[i]) + ": " + e.what());
@@ -346,12 +346,12 @@ void to::test<2>()
             ensure(msgs->size() > 0);
 
             std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
-            wreport::BufrBulletin bbulletin;
-            exporter->to_bulletin(*msgs, bbulletin);
+            auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+            exporter->to_bulletin(*msgs, *bbulletin);
 
             exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
-            wreport::CrexBulletin cbulletin;
-            exporter->to_bulletin(*msgs, cbulletin);
+            auto_ptr<Bulletin> cbulletin(CrexBulletin::create());
+            exporter->to_bulletin(*msgs, *cbulletin);
         } catch (std::exception& e) {
             fails.push_back(string(files[i]) + ": " + e.what());
         }
@@ -378,28 +378,28 @@ void to::test<3>()
 
     // Export to BUFR
     std::auto_ptr<msg::Exporter> bufr_exporter(msg::Exporter::create(BUFR/*, const Options& opts=Options()*/));
-    wreport::BufrBulletin bbulletin;
-    bufr_exporter->to_bulletin(*msgs, bbulletin);
+    auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+    bufr_exporter->to_bulletin(*msgs, *bbulletin);
 
     // Import and check the differences
     {
         std::auto_ptr<msg::Importer> bufr_importer(msg::Importer::create(BUFR/*, const Options& opts=Options()*/));
         Msgs msgs1;
-        bufr_importer->from_bulletin(bbulletin, msgs1);
+        bufr_importer->from_bulletin(*bbulletin, msgs1);
         notes::Collect c(cerr);
         ensure_equals(msgs->diff(msgs1), 0);
     }
 
     // Export to CREX
     std::auto_ptr<msg::Exporter> crex_exporter(msg::Exporter::create(CREX/*, const Options& opts=Options()*/));
-    wreport::CrexBulletin cbulletin;
-    crex_exporter->to_bulletin(*msgs, cbulletin);
+    auto_ptr<Bulletin> cbulletin(CrexBulletin::create());
+    crex_exporter->to_bulletin(*msgs, *cbulletin);
 
     // Import and check the differences
     {
         std::auto_ptr<msg::Importer> crex_importer(msg::Importer::create(CREX/*, const Options& opts=Options()*/));
         Msgs msgs1;
-        crex_importer->from_bulletin(cbulletin, msgs1);
+        crex_importer->from_bulletin(*cbulletin, msgs1);
         notes::Collect c(cerr);
         ensure_equals(msgs->diff(msgs1), 0);
     }
@@ -657,12 +657,12 @@ void to::test<31>()
             ensure(msgs->size() > 0);
 
             // Export
-            wreport::BufrBulletin bbulletin;
-            exporter->to_bulletin(*msgs, bbulletin);
+            auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+            exporter->to_bulletin(*msgs, *bbulletin);
 
             // Import again
             Msgs msgs1;
-            importer->from_bulletin(bbulletin, msgs1);
+            importer->from_bulletin(*bbulletin, msgs1);
 
             // Compare
             notes::Collect c(cerr);
@@ -721,12 +721,12 @@ void to::test<32>()
             ensure(msgs->size() > 0);
 
             // Export
-            wreport::BufrBulletin bbulletin;
-            exporter->to_bulletin(*msgs, bbulletin);
+            auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+            exporter->to_bulletin(*msgs, *bbulletin);
 
             // Import again
             Msgs msgs1;
-            importer->from_bulletin(bbulletin, msgs1);
+            importer->from_bulletin(*bbulletin, msgs1);
 
             // Compare
             stringstream str;
@@ -736,7 +736,7 @@ void to::test<32>()
             {
                 string tag = str::basename(files[i]);
                 dballe::tests::dump("dballe-orig-" + tag, *msgs, "original message");
-                dballe::tests::dump("dballe-reenc-" + tag, bbulletin, "reencoded message");
+                dballe::tests::dump("dballe-reenc-" + tag, *bbulletin, "reencoded message");
                 dballe::tests::dump("dballe-reenc-" + tag, msgs1, "decoded reencoded message");
                 dballe::tests::dump("dballe-diffs-" + tag, str.str(), "differences");
             }
