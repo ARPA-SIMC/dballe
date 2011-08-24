@@ -1,3 +1,10 @@
+dballe (5.8-1) unstable; urgency=low
+
+  * New upstream release
+     - revert height->heightstatin change in variable aliases
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 24 Aug 2011 11:35:43 +0200
+
 dballe (5.7-1) unstable; urgency=low
 
   * New upstream version

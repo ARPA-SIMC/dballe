@@ -41,7 +41,7 @@ struct aliasdef { const char* alias; Varcode var; };
 %%
 block,			WR_VAR(0,  1,   1)
 station,		WR_VAR(0,  1,   2)
-heightstation,	WR_VAR(0,  7,  30)
+height,			WR_VAR(0,  7,  30)
 heightbaro,		WR_VAR(0,  7,  31)
 name,			WR_VAR(0,  1,  19)
 z,			WR_VAR(0, 10,   3)
