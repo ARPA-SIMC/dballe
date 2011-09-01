@@ -4,8 +4,9 @@ dballe (5.9-1) unstable; urgency=low
      - Preserve message type, subtype and localsubtype during template
        conversions
      - Added 'wmo' autodetection template
+     - Deal with TEMPs with missing pressure in levels
 
- -- Enrico Zini <enrico@debian.org>  Thu, 01 Sep 2011 15:51:41 +0100
+ -- Enrico Zini <enrico@debian.org>  Thu, 01 Sep 2011 16:09:40 +0100
 
 dballe (5.8-1) unstable; urgency=low
 
