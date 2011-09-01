@@ -572,6 +572,13 @@ void to::test<25>()
 template<> template<>
 void to::test<26>()
 {
+    BufrReimportTest test("bufr/temp-gtscosmo.bufr");
+    test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
+    run_test(test, do_wmo, "temp");
+}
+template<> template<>
+void to::test<27>()
+{
 #warning This is importer with height above ground levels, but exported with pressure levels
 #if 0
     // Another weird template
@@ -585,7 +592,7 @@ void to::test<26>()
 #endif
 }
 template<> template<>
-void to::test<27>()
+void to::test<28>()
 {
     BufrReimportTest test("bufr/temp-bad1.bufr");
     StripQCAttrs* sqa;
@@ -594,7 +601,7 @@ void to::test<27>()
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
-void to::test<28>()
+void to::test<29>()
 {
     BufrReimportTest test("bufr/temp-bad2.bufr");
     StripQCAttrs* sqa;
@@ -604,13 +611,13 @@ void to::test<28>()
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
-void to::test<29>()
+void to::test<30>()
 {
     BufrReimportTest test("bufr/temp-bad4.bufr");
     run_test(test, do_test, "temp-wmo");
 }
 template<> template<>
-void to::test<30>()
+void to::test<31>()
 {
 #warning There is no template that can export these forecast TEMPs except generic
 #if 0
@@ -625,7 +632,7 @@ void to::test<30>()
 
 // Re-export to BUFR (simplified, full template autodetect) and see the differences
 template<> template<>
-void to::test<31>()
+void to::test<32>()
 {
     const char** files = dballe::tests::bufr_files;
     // Uncomment to single out one failing file
@@ -687,7 +694,7 @@ void to::test<31>()
 
 // Re-export to BUFR (not simplified, full template autodetect) and see the differences
 template<> template<>
-void to::test<32>()
+void to::test<33>()
 {
     const char** files = dballe::tests::bufr_files;
     // Uncomment to single out one failing file

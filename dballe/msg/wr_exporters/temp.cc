@@ -99,6 +99,8 @@ struct TempBase : public Template
                 press_var = c.find(WR_VAR(0, 7, 4));
             if (press_var)
                 subset->store_variable(WR_VAR(0, 7, 4), *press_var);
+            else if (press == MISSING_INT)
+                subset->store_variable_undef(WR_VAR(0, 7, 4));
             else
                 subset->store_variable_d(WR_VAR(0, 7, 4), press);
 
@@ -200,7 +202,10 @@ struct TempWMO : public TempBase
         switch (c.level.ltype1)
         {
             case 100:
-                subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
+                if (c.level.l1 == MISSING_INT)
+                    subset->store_variable_undef(WR_VAR(0, 7, 4));
+                else
+                    subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
                 add(WR_VAR(0, 10, 9), &c, WR_VAR(0, 10, 8));
                 break;
             case 102:
@@ -227,7 +232,10 @@ struct TempWMO : public TempBase
     {
         add(WR_VAR(0,  4, 86), &c);
         add(WR_VAR(0,  8, 42), &c);
-        subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
+        if (c.level.l1 == MISSING_INT)
+            subset->store_variable_undef(WR_VAR(0, 7, 4));
+        else
+            subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
         add(WR_VAR(0,  5, 15), &c);
         add(WR_VAR(0,  6, 15), &c);
         add(WR_VAR(0, 11, 61), &c);

@@ -269,7 +269,10 @@ void TempImporter::import_var(const Var& var)
                 {
                     // Pressure is reported later, we need to look ahead to compute the right level
                     press_var = &((*subset)[pos + 1]);
-                    press = press_var->enqd();
+                    if (press_var->isset())
+                        press = press_var->enqd();
+                    else
+                        press = MISSING_INT;
                 }
                 msg->set(var, WR_VAR(0, 8, 42), Level(100, press), Trange::instant());
                 break;
