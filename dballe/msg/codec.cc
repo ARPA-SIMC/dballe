@@ -82,6 +82,11 @@ Exporter::~Exporter()
 {
 }
 
+std::auto_ptr<wreport::Bulletin> Exporter::make_bulletin() const
+{
+    return std::auto_ptr<wreport::Bulletin>(0);
+}
+
 std::auto_ptr<Exporter> Exporter::create(Encoding type, const Options& opts)
 {
     switch (type)

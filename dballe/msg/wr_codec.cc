@@ -95,6 +95,11 @@ BufrExporter::BufrExporter(const Options& opts)
     : WRExporter(opts) {}
 BufrExporter::~BufrExporter() {}
 
+std::auto_ptr<wreport::Bulletin> BufrExporter::make_bulletin() const
+{
+    return std::auto_ptr<wreport::Bulletin>(BufrBulletin::create().release());
+}
+
 void BufrExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
 {
     auto_ptr<BufrBulletin> bulletin(BufrBulletin::create());
@@ -105,6 +110,11 @@ void BufrExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
 CrexExporter::CrexExporter(const Options& opts)
     : WRExporter(opts) {}
 CrexExporter::~CrexExporter() {}
+
+std::auto_ptr<wreport::Bulletin> CrexExporter::make_bulletin() const
+{
+    return std::auto_ptr<wreport::Bulletin>(CrexBulletin::create().release());
+}
 
 void CrexExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
 {

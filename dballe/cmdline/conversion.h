@@ -56,6 +56,7 @@ struct Converter : public Action
 
 	void process_bufrex_msg(const wreport::Bulletin& msg);
 	void process_dba_msg(const Msgs& msgs);
+	void process_dba_msg_from_bulletin(const wreport::Bulletin& bulletin, const Msgs& msgs);
 };
 
 }

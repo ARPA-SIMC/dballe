@@ -142,6 +142,14 @@ public:
      */
     virtual void to_bulletin(const Msgs& msgs, wreport::Bulletin& msg) const = 0;
 
+    /**
+     * Create a bulletin that works with this exporter.
+     *
+     * @returns the bulletin, or NULL of this is an exporter for a format not
+     * covered by Bulletin
+     */
+    virtual std::auto_ptr<wreport::Bulletin> make_bulletin() const;
+
 
     /// Instantiate the right importer for the given type
     static std::auto_ptr<Exporter> create(Encoding type, const Options& opts=Options());

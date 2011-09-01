@@ -92,6 +92,7 @@ public:
     virtual ~BufrExporter();
 
     virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const;
+    virtual std::auto_ptr<wreport::Bulletin> make_bulletin() const;
 };
 
 class CrexExporter : public WRExporter
@@ -101,6 +102,7 @@ public:
     virtual ~CrexExporter();
 
     virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const;
+    virtual std::auto_ptr<wreport::Bulletin> make_bulletin() const;
 };
 
 namespace wr {

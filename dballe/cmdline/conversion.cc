@@ -52,6 +52,19 @@ void Converter::process_dba_msg(const Msgs& msgs)
 	file->write(raw);
 }
 
+void Converter::process_dba_msg_from_bulletin(const Bulletin& bulletin, const Msgs& msgs)
+{
+    auto_ptr<Bulletin> b1(exporter->make_bulletin());
+    exporter->to_bulletin(msgs, *b1);
+    b1->type = bulletin.type;
+    b1->subtype = bulletin.subtype;
+    b1->localsubtype = bulletin.localsubtype;
+
+    Rawmsg raw;
+    b1->encode(raw);
+    file->write(raw);
+}
+
 void Converter::operator()(const cmdline::Item& item)
 {
     if (item.msgs == NULL || item.msgs->size() == 0)
@@ -102,7 +115,10 @@ void Converter::operator()(const cmdline::Item& item)
             (*item.msgs)[i]->type = type;
     }
 
-    process_dba_msg(*item.msgs);
+    if (item.bulletin and dest_rep_memo == NULL)
+        process_dba_msg_from_bulletin(*item.bulletin, *item.msgs);
+    else
+        process_dba_msg(*item.msgs);
 }
 
 }
