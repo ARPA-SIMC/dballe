@@ -8,8 +8,9 @@ dballe (5.9-1) unstable; urgency=low
      - Deal with missing sensor height in total precipitation when doing
        precise imports
      - Record keyword documentation is back
+     - Fixed to fapi documentation
 
- -- Enrico Zini <enrico@debian.org>  Thu, 01 Sep 2011 17:18:50 +0100
+ -- Enrico Zini <enrico@debian.org>  Thu, 01 Sep 2011 17:24:27 +0100
 
 dballe (5.8-1) unstable; urgency=low
 

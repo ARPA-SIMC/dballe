@@ -1325,6 +1325,11 @@ databases:
       {\tt idba\_fatto}
 \item When reading, performing {\tt idba\_quantesono} or {\tt
       idba\_voglioquesto} a second time advances to the next message in the file.
+\item Query parameters set before an {\tt idba\_voglioquesto} have no effect:
+      filtering data is not implemented for files. Since it may be implemented
+      in the future, it is suggested to avoid setting query parameters before
+      an {\tt idba\_voglioquesto} to avoid unexpected changes of behaviour with
+      future versions of \dballe{}.
 \item When reading, you will see that there are no more messages because {\tt
       idba\_quantesono} or {\tt idba\_voglioquesto} will return 0.
 \item When writing, you can use the {\tt query} input parameter to {\tt
@@ -1709,7 +1714,7 @@ These routines are used to begin and end working sessions with \dballe{}.
 \hline
 {\tt \small idba\_presentati(dbh,dsn,user,pwd)} & Connect to the database & \ref{fun-idba_presentati} \\
 {\tt \small idba\_preparati(dbh,h,mana,mdata,mattr)} & Open a new session & \ref{fun-idba_preparati} \\
-{\tt \small idba\_messaggi(h,filename,mode,type,forced\_repcod)} & Work with a message file & \ref{fun-idba_messaggi} \\
+{\tt \small idba\_messaggi(h,filename,mode,type)}  & Work with a message file & \ref{fun-idba_messaggi} \\
 {\tt \small idba\_fatto(h)}                        & Close a session              & \ref{fun-idba_fatto} \\
 {\tt \small idba\_arrivederci(dbh)}                & Disconnect from the database & \ref{fun-idba_arrivederci} \\
 \hline
