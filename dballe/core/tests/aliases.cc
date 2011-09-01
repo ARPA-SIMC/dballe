@@ -43,7 +43,7 @@ void to::test<1>()
 {
 	ensure_equals(varcode_alias_resolve("block"), WR_VAR(0, 1, 1));
 	ensure_equals(varcode_alias_resolve("station"), WR_VAR(0, 1,  2));
-	ensure_equals(varcode_alias_resolve("heightstation"), WR_VAR(0, 7, 30));
+	ensure_equals(varcode_alias_resolve("height"), WR_VAR(0, 7, 30));
 	ensure_equals(varcode_alias_resolve("heightbaro"), WR_VAR(0, 7, 31));
 	ensure_equals(varcode_alias_resolve("name"), WR_VAR(0, 1, 19));
 	ensure_equals(varcode_alias_resolve("cippolippo"), 0);
