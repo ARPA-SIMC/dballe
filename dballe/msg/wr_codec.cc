@@ -157,12 +157,40 @@ extern void register_flight(TemplateRegistry&);
 extern void register_generic(TemplateRegistry&);
 extern void register_pollution(TemplateRegistry&);
 
+namespace {
+struct WMOFactory : public TemplateFactory
+{
+    WMOFactory() { name = "wmo"; description = "WMO style templates (autodetect)"; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        const Msg& msg = *msgs[0];
+        string tpl;
+        switch (msg.type)
+        {
+            case MSG_TEMP_SHIP: tpl = "temp-wmo"; break;
+            default:
+                tpl = msg_type_name(msg.type);
+                tpl += "-wmo";
+                break;
+        }
+        const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
+        return fac.make(opts, msgs);
+    }
+};
+}
+
 static TemplateRegistry* registry = NULL;
 const TemplateRegistry& TemplateRegistry::get()
 {
+static const TemplateFactory* wmo = NULL;
+
     if (!registry)
     {
         registry = new TemplateRegistry;
+
+        if (!wmo) wmo = new WMOFactory;
+        registry->register_factory(wmo);
 
         // Populate it
         register_synop(*registry);
