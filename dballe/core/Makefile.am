@@ -42,6 +42,15 @@ libdballe_core_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIB
 record_keyword.cc: record_keyword.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
+noinst_PROGRAMS = dump-core-info
+
+dump_core_info_SOURCES = dump-core-info.cc
+dump_core_info_LDADD = \
+	libdballe-core.la \
+	$(WREPORT_LIBS) \
+	$(LUA_LIBS) \
+	$(WIBBLE_LIBS)
+
 #
 # Unit testing
 #
@@ -77,14 +86,14 @@ tut_test_LDADD = \
 
 noinst_DATA = record_keyword.dox record_keyword.rst record_keyword.tex aliases.dox aliases.tex
 
-record_keyword.rst: record_keyword.gperf mkkeydoc
-	cpp -P -C -I$(top_srcdir) $< | $(srcdir)/mkkeydoc rst > $@
+record_keyword.rst: record_keyword.gperf mkkeydoc dump-core-info
+	$(srcdir)/dump-core-info keywords | $(srcdir)/mkkeydoc rst > $@
 
-record_keyword.dox: record_keyword.gperf mkkeydoc
-	cpp -P -C -I$(top_srcdir) $< | $(srcdir)/mkkeydoc dox > $@
+record_keyword.dox: record_keyword.gperf mkkeydoc dump-core-info
+	$(srcdir)/dump-core-info keywords | $(srcdir)/mkkeydoc dox > $@
 
-record_keyword.tex: record_keyword.gperf mkkeydoc
-	cpp -P -C -I$(top_srcdir) $< | $(srcdir)/mkkeydoc tex > $@
+record_keyword.tex: record_keyword.gperf mkkeydoc dump-core-info
+	$(srcdir)/dump-core-info keywords | $(srcdir)/mkkeydoc tex > $@
 
 aliases.cc: aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi

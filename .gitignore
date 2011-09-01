@@ -35,6 +35,7 @@ Makefile
 /dbatbl.1
 /dballe/core/btable.dox
 /dballe/bench/benchmark
+/dballe/core/dump-core-info
 /dballe/core/record_keyword.dox
 /dballe/core/record_keyword.rst
 /dballe/core/record_keyword.tex

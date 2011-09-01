@@ -97,47 +97,16 @@ our %comments = (
 
 my $op = $ARGV[0];
 
-# Skip the declaration section
-while (<STDIN>)
-{
-	last if $_ eq "%%\n";
-}
-
-#   /** The variable code.  See @ref DBA_VAR, DBA_VAR_X, DBA_VAR_Y. */
-# 0 dba_var var;
-#   /** The variable description. */
-# 1 char desc[64];
-#   /** The measurement unit of the variable. */
-# 2 char unit[24];
-#   /** The scale of the variable.  When the variable is represented as an
-#    * integer, it is multiplied by 10**scale */
-# 3 int scale;
-#   /** The reference value for the variable.  When the variable is represented
-#    * as an integer, and after scaling, it is added this value */
-# 4 int ref;
-#   /** The length in digits of the integer representation of this variable
-#    * (after scaling and changing reference value) */
-# 5 int len;
-#   /** True if the variable is a string; false if it is a numeric value */
-# 6 int is_string;
-
 # Read the data
-my @names;
 my @data;
-my $pos = 0;
 while (<STDIN>)
 {
-	chop();
-	last if $_ eq '/* End of table definitions */';
+    chop();
 
-	if (/^([0-9a-z_]+),\s*DBA_KEY_[0-9A-Z_]+\s*$/)
-	{
-		push @names, $1;
-	} elsif (/^\s*{\s*(.+)\s*},\s*$/) {
-		my $name = $names[$pos++];
-		push(@data, [$name, map { $_ =~ s/(^"|"$)//g; $_ } split(/,\s*/, $1)]);
-		#print "ZZ: ", join(", ", @{$data{$data[0]}}), "\n";
-	}
+    if (/^([^,]+),([^,]+),(\d+),(\d+),(.+?)\s*$/)
+    {
+        push @data, [$1, $2, $3, $4, $5];
+    }
 }
 
 our ($tag, $unit, $format, $desc, $ins, $que, $res, $com);
@@ -200,7 +169,7 @@ if ($op eq 'dox')
 	for my $d (@data)
 	{
 		my ($len, $dec);
-		($tag, $unit, $len, $dec, $desc) = ($d->[0], $d->[3], $d->[6], $d->[4], $d->[2]);
+		($tag, $unit, $len, $dec, $desc) = @$d;
 		$com = ($comments{$tag} or '');
 		$format = mkformat($unit, $len, $dec);
 		write STDOUT;	
@@ -215,7 +184,7 @@ elsif ($op eq 'rst')
 	for my $d (@data)
 	{
 		my ($len, $dec);
-		($tag, $unit, $len, $dec, $desc) = ($d->[0], $d->[3], $d->[6], $d->[4], $d->[2]);
+		($tag, $unit, $len, $dec, $desc) = @$d;
 		$ins = ($comments{$tag}[0] or '');
 		$que = ($comments{$tag}[1] or '');
 		$res = ($comments{$tag}[2] or '');
@@ -246,7 +215,7 @@ elsif ($op eq 'tex')
 	for my $d (@data)
 	{
 		my ($len, $dec);
-		($tag, $unit, $len, $dec, $desc) = ($d->[0], $d->[3], $d->[6], $d->[4], $d->[2]);
+		($tag, $unit, $len, $dec, $desc) = @$d;
 		$ins = ($comments{$tag}[0] or '');
 		$que = ($comments{$tag}[1] or '');
 		$res = ($comments{$tag}[2] or '');
