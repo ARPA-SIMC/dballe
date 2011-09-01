@@ -186,9 +186,20 @@ protected:
 
     void set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
     {
-        if (height_sensor == MISSING_SENSOR_H || defaultLevel == Level(103, height_sensor * 1000)
-                || (defaultLevel.ltype1 == 1 && height_sensor == 0))
+        Level lev;
+
+        if (!height_sensor_seen ||
+                 (height_sensor != MISSING_SENSOR_H && (
+                      defaultLevel == Level(103, height_sensor * 1000)
+                  || (defaultLevel.ltype1 == 1 && height_sensor == 0))))
             msg->set(var, code, defaultLevel, trange);
+        else if (height_sensor == MISSING_SENSOR_H)
+        {
+            if (opts.simplified)
+                msg->set(var, code, defaultLevel, trange);
+            else
+                msg->set(var, code, Level(103, MISSING_INT), trange);
+        }
         else if (opts.simplified)
         {
             Var var1(var);

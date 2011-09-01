@@ -485,43 +485,51 @@ void to::test<15>()
     run_test(test, do_wmo, "synop");
 }
 
-// Re-export test for old style temps
 template<> template<>
 void to::test<16>()
+{
+    BufrReimportTest test("bufr/synop-gtscosmo.bufr");
+    test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
+    run_test(test, do_wmo, "synop");
+}
+
+// Re-export test for old style temps
+template<> template<>
+void to::test<17>()
 {
     BufrReimportTest test("bufr/obs2-101.16.bufr");
     test.ecmwf_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
-void to::test<17>()
+void to::test<18>()
 {
     BufrReimportTest test("bufr/obs2-102.1.bufr");
     test.ecmwf_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
-void to::test<18>()
+void to::test<19>()
 {
     BufrReimportTest test("bufr/obs2-91.2.bufr");
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
-void to::test<19>()
+void to::test<20>()
 {
     BufrReimportTest test("bufr/temp-bad3.bufr");
     test.ecmwf_tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
-void to::test<20>()
+void to::test<21>()
 {
     // This has some sounding groups with undefined VSS
     BufrReimportTest test("bufr/temp-bad5.bufr");
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
-void to::test<21>()
+void to::test<22>()
 {
     // This has some sounding groups with undefined VSS, and an unusual template
     BufrReimportTest test("bufr/test-temp1.bufr");
@@ -532,7 +540,7 @@ void to::test<21>()
     //run_test(test, do_wmo, "temp");
 }
 template<> template<>
-void to::test<22>()
+void to::test<23>()
 {
     // This has an unusual template
     BufrReimportTest test("bufr/C23000.bufr");
@@ -548,7 +556,7 @@ void to::test<22>()
 
 // Re-export test for new style temps
 template<> template<>
-void to::test<23>()
+void to::test<24>()
 {
     BufrReimportTest test("bufr/temp-gts1.bufr");
     test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
@@ -556,28 +564,28 @@ void to::test<23>()
     run_test(test, do_wmo, "temp");
 }
 template<> template<>
-void to::test<24>()
+void to::test<25>()
 {
     BufrReimportTest test("bufr/temp-gts2.bufr");
     test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_wmo, "temp");
 }
 template<> template<>
-void to::test<25>()
+void to::test<26>()
 {
     BufrReimportTest test("bufr/temp-gts3.bufr");
     test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_wmo, "temp");
 }
 template<> template<>
-void to::test<26>()
+void to::test<27>()
 {
     BufrReimportTest test("bufr/temp-gtscosmo.bufr");
     test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_wmo, "temp");
 }
 template<> template<>
-void to::test<27>()
+void to::test<28>()
 {
 #warning This is importer with height above ground levels, but exported with pressure levels
 #if 0
@@ -592,7 +600,7 @@ void to::test<27>()
 #endif
 }
 template<> template<>
-void to::test<28>()
+void to::test<29>()
 {
     BufrReimportTest test("bufr/temp-bad1.bufr");
     StripQCAttrs* sqa;
@@ -601,7 +609,7 @@ void to::test<28>()
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
-void to::test<29>()
+void to::test<30>()
 {
     BufrReimportTest test("bufr/temp-bad2.bufr");
     StripQCAttrs* sqa;
@@ -611,13 +619,13 @@ void to::test<29>()
     run_test(test, do_ecmwf, "temp");
 }
 template<> template<>
-void to::test<30>()
+void to::test<31>()
 {
     BufrReimportTest test("bufr/temp-bad4.bufr");
     run_test(test, do_test, "temp-wmo");
 }
 template<> template<>
-void to::test<31>()
+void to::test<32>()
 {
 #warning There is no template that can export these forecast TEMPs except generic
 #if 0
@@ -632,7 +640,7 @@ void to::test<31>()
 
 // Re-export to BUFR (simplified, full template autodetect) and see the differences
 template<> template<>
-void to::test<32>()
+void to::test<33>()
 {
     const char** files = dballe::tests::bufr_files;
     // Uncomment to single out one failing file
@@ -694,7 +702,7 @@ void to::test<32>()
 
 // Re-export to BUFR (not simplified, full template autodetect) and see the differences
 template<> template<>
-void to::test<33>()
+void to::test<34>()
 {
     const char** files = dballe::tests::bufr_files;
     // Uncomment to single out one failing file
