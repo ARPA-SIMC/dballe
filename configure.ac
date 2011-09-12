@@ -41,6 +41,10 @@ AC_ARG_ENABLE([docs],
     [],
     [enable_docs="yes"])
 
+if test x"$enable_dballe_db" != x"yes"; then
+	enable_dballe_python="no"
+fi
+
 AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
 AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
 AC_CHECK_PROG(have_swig, swig, yes, no)
@@ -213,13 +217,13 @@ CFLAGS="$warnings $CFLAGS"
 CXXFLAGS="$warnings $CXXFLAGS"
 
 # Enforce dependencies
-if test x"$enable_dballe_db"=x"yes"; then
+if test x"$enable_dballe_db" = x"yes"; then
 	AC_DEFINE(HAVE_DBALLE_DB,[],[Have DB module])
 fi
-if test x"$enable_dballef"=x"yes"; then
+if test x"$enable_dballef" = x"yes"; then
 	AC_DEFINE(HAVE_DBALLEF,[],[Have Fortran bindings])
 fi
-if test x"$enable_dballe_python"=x"yes"; then
+if test x"$enable_dballe_python" = x"yes"; then
 	AC_DEFINE(HAVE_DBALLE_PYTHON,[],[Have Python bindings])
 fi
 

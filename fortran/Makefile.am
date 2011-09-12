@@ -16,12 +16,15 @@ libdballef_la_SOURCES = \
 	error.cc \
 	simple.cc \
 	commonapi.cc \
-	dbapi.cc \
 	msgapi.cc \
 	binding.cc
 libdballef_la_LIBADD = ../dballe/libdballe.la -lcnf
 libdballef_la_LDFLAGS = -version-info @LIBDBALLEF_VERSION_INFO@
 
+if DO_DBALLE_DB
+libdballef_la_SOURCES += \
+	dbapi.cc
+endif
 
 #
 # Unit testing
@@ -29,7 +32,8 @@ libdballef_la_LDFLAGS = -version-info @LIBDBALLEF_VERSION_INFO@
 
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
-check_PROGRAMS = check_fdballe check_attrs check_missing check_missing_msg check_real0 check_range tut_test
+check_PROGRAMS = check_missing_msg check_real0 check_range tut_test
+
 TESTS = $(check_PROGRAMS)
 testlib = dbtest.f90
 
@@ -45,18 +49,6 @@ tut_test_LDADD = \
 	$(WREPORT_LIBS) \
 	$(WIBBLE_LIBS)
 
-check_fdballe_SOURCES = $(testlib) check_fdballe.f90
-check_fdballe_LDADD = ./libdballef.la -lcnf -lpopt
-check_fdballe_FCFLAGS = -g
-
-check_attrs_SOURCES = $(testlib) check_attrs.f90
-check_attrs_LDADD = ./libdballef.la -lcnf -lpopt
-check_attrs_FCFLAGS = -g
-
-check_missing_SOURCES = $(testlib) check_missing.f90
-check_missing_LDADD = ./libdballef.la -lcnf -lpopt
-check_missing_FCFLAGS = -g
-
 check_missing_msg_SOURCES = $(testlib) check_missing_msg.f90
 check_missing_msg_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_msg_FCFLAGS = -g
@@ -69,11 +61,23 @@ check_range_SOURCES = $(testlib) check_range.f90
 check_range_LDADD = ./libdballef.la -lcnf -lpopt
 check_range_FCFLAGS = -g
 
-noinst_PROGRAMS = dump_dballe dumpmsg_dballe mkmsg mkmsg-sca genattr
+if DO_DBALLE_DB
+check_PROGRAMS += check_fdballe check_attrs check_missing
 
-dump_dballe_SOURCES = dump_dballe.f90
-dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
-dump_dballe_FCFLAGS = -g 
+check_fdballe_SOURCES = $(testlib) check_fdballe.f90
+check_fdballe_LDADD = ./libdballef.la -lcnf -lpopt
+check_fdballe_FCFLAGS = -g
+
+check_attrs_SOURCES = $(testlib) check_attrs.f90
+check_attrs_LDADD = ./libdballef.la -lcnf -lpopt
+check_attrs_FCFLAGS = -g
+
+check_missing_SOURCES = $(testlib) check_missing.f90
+check_missing_LDADD = ./libdballef.la -lcnf -lpopt
+check_missing_FCFLAGS = -g
+endif
+
+noinst_PROGRAMS = dumpmsg_dballe mkmsg mkmsg-sca genattr
 
 dumpmsg_dballe_SOURCES = dumpmsg_dballe.f90
 dumpmsg_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
@@ -91,7 +95,13 @@ genattr_SOURCES = genattr.f90
 genattr_LDADD = ../fortran/libdballef.la -lcnf -lpopt
 genattr_FCFLAGS = -g 
 
-# Normal bureaucracy :)
+if DO_DBALLE_DB
+noinst_PROGRAMS += dump_dballe
+
+dump_dballe_SOURCES = dump_dballe.f90
+dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
+dump_dballe_FCFLAGS = -g 
+endif
 
 INCLUDES = -I$(top_srcdir)
 

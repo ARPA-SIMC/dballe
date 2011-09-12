@@ -17,19 +17,14 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "dbapi.h"
+#include "config.h"
 #include "msgapi.h"
+
+#ifdef HAVE_DBALLE_DB
+#include "dbapi.h"
 #include <dballe/db/db.h>
-#if 0
-#include <dballe/core/verbose.h>
-#include <dballe/core/aliases.h>
-#include <dballe/db/cursor.h>
-#include <dballe/db/internals.h>
-#include <dballe/msg/formatter.h>
-#include <dballe/init.h>
-#include <stdio.h>	// snprintf
-//#include <math.h>
 #endif
+
 #include <cstring>	// memset
 #include <limits.h>
 #include <float.h>
@@ -190,6 +185,7 @@ static inline int fromfortran(int val)
 #define MAX_SIMPLE 50
 #define MAX_SESSION 10
 
+#ifdef HAVE_DBALLE_DB
 struct HSession : public fortran::HBase
 {
 	DB* db;
@@ -207,6 +203,9 @@ struct HSession : public fortran::HBase
 	}
 };
 
+struct fortran::Handler<HSession, MAX_SESSION> hsess;
+#endif
+
 struct HSimple : public fortran::HBase
 {
 	fortran::API* api;
@@ -223,7 +222,6 @@ struct HSimple : public fortran::HBase
 	}
 };
 
-struct fortran::Handler<HSession, MAX_SESSION> hsess;
 struct fortran::Handler<HSimple, MAX_SIMPLE> hsimp;
 
 // FDBA_HANDLE_BODY(simple, MAX_SIMPLE, "Dballe simple sessions")
@@ -241,7 +239,9 @@ static void lib_init()
 		return;
 
 	fortran::error_init();
+#ifdef HAVE_DBALLE_DB
 	hsess.init("DB-All.e database sessions", "MAX_CALLBACKS");
+#endif
 	hsimp.init("DB-All.e work sessions", "MAX_SIMPLE");
 
 	++usage_refcount;
@@ -264,6 +264,7 @@ static inline int double_is_missing(double d)
 
 extern "C" {
 
+#ifdef HAVE_DBALLE_DB
 /**
  * Start working with a DBALLE database.
  *
@@ -335,6 +336,7 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 		return fortran::error(e);
 	}
 }
+#endif
 
 /**
  * Stop working with a DBALLE database
@@ -347,7 +349,9 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 	GENPTR_INTEGER(dbahandle)
 
 	// try {
-		hsess.release(*dbahandle);
+#ifdef HAVE_DBALLE_DB
+        hsess.release(*dbahandle);
+#endif
 
 		/*
 		dba_shutdown does not exist anymore, but I keep this code commented out
@@ -364,6 +368,8 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 	// }
 }
 
+
+#ifdef HAVE_DBALLE_DB
 /**
  * Starts a session with dballe.
  *
@@ -447,6 +453,7 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 		return fortran::error(e);
 	}
 }
+#endif
 
 /**
  * Access a file with wheter messages
