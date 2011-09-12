@@ -103,6 +103,8 @@ fi
 dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 2.0)
 
+if test x$enable_dballe_db = x"yes"
+then
 dnl Check for unixodbc
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
         AC_MSG_WARN([*** sql.h not found. Check 'config.log' for more details.])
@@ -113,6 +115,7 @@ AC_CHECK_LIB(odbc, SQLAllocHandle, LIBS="$LIBS -lodbc",
         AC_MSG_WARN([*** libodbc not found. Check 'config.log' for more details.])
 	enable_dballe_db=false
 )
+fi
 
 dnl Check for lua
 PKG_CHECK_EXISTS([lua5.1], [have_lua=yes], [have_lua=no])

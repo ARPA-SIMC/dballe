@@ -4,7 +4,7 @@ DBALLELIBS =  ../dballe/libdballe.la $(WREPORT_LIBS)
 
 INCLUDES = -I$(top_srcdir)
 
-bin_PROGRAMS = dbatbl dbamsg dbadb
+bin_PROGRAMS = dbatbl dbamsg
 dist_bin_SCRIPTS = dbatbl_makeb
 
 dbatbl_SOURCES = dbatbl.cc
@@ -15,6 +15,9 @@ dbamsg_SOURCES = dbamsg.cc
 dbamsg_LDFLAGS = $(DBALLELIBS) -lpopt
 dbamsg_DEPENDENCIES = $(DBALLELIBS)
 
+if DO_DBALLE_DB
+bin_PROGRAMS += dbadb
 dbadb_SOURCES = dbadb.cc
 dbadb_LDFLAGS = $(DBALLELIBS) -lpopt
 dbadb_DEPENDENCIES = $(DBALLELIBS)
+endif

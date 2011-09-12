@@ -24,6 +24,9 @@ libdballe_la_SOURCES =
 libdballe_la_LIBADD = \
 		core/libdballe-core.la \
 		msg/libdballe-msg.la \
-		db/libdballe-db.la \
 		cmdline/libdballe-cmdline.la
+
+if DO_DBALLE_DB
+libdballe_la_LIBADD += db/libdballe-db.la
+endif
 libdballe_la_LDFLAGS = -lstdc++ -version-info @LIBDBALLE_VERSION_INFO@
