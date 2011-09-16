@@ -11,6 +11,7 @@ export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 # From http://wiki.debian.org/DebianPython/NewPolicy
 binary-install/python-dballe::
 	dh_pycentral -ppython-dballe
+	rm $(CURDIR)/debian/python-dballe/usr/share/pyshared/_dballe.la
 binary-install/provami::
 	dh_pycentral -pprovami
 

@@ -1,6 +1,5 @@
 usr/include/dballe/dballef.h
 usr/lib/libdballef*.a
-usr/lib/libdballef*.la
 usr/lib/libdballef*.so
 usr/lib/pkgconfig/libdballef*
 usr/share/aclocal/libdballef*.m4

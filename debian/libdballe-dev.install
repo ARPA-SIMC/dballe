@@ -3,7 +3,6 @@ usr/include/dballe/msg
 usr/include/dballe/db
 usr/include/dballe/cmdline
 usr/lib/libdballe.a
-usr/lib/libdballe.la
 usr/lib/libdballe.so
 usr/lib/pkgconfig/libdballe.pc
 usr/share/aclocal/libdballe.m4
