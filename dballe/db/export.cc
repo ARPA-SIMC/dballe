@@ -48,7 +48,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 		"  FROM context c, data d"
 		"  LEFT JOIN attr a ON a.id_context = d.id_context AND a.id_var = d.id_var"
 		" WHERE d.id_context = c.id AND c.id_ana = ? AND c.id_report = ?"
-		"   AND c.datetime = {ts '1000-01-01 00:00:00.0'} AND c.ltype1 = 257"
+		"   AND c.datetime = {ts '1000-01-01 00:00:00.000'} AND c.ltype1 = 257"
 		" ORDER BY d.id_var, a.type";
 
     db::Statement stm(*conn);
