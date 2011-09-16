@@ -74,7 +74,7 @@ struct MessageTweaker
 {
     virtual ~MessageTweaker() {}
     virtual void tweak(Msgs&) {}
-    std::string name() const;
+    virtual std::string desc() const = 0;
 };
 
 namespace tweaks {
@@ -85,18 +85,21 @@ struct StripAttrs : public MessageTweaker
     std::vector<wreport::Varcode> codes;
 
     void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "StripAttrs"; }
 };
 
 // Strip attributes from all variables in a Msgs
 struct StripQCAttrs : public StripAttrs
 {
     StripQCAttrs();
+    virtual std::string desc() const { return "StripQCAttrs"; }
 };
 
 // Strip context attributes from all variables in a Msgs
 struct StripContextAttrs : public StripAttrs
 {
     StripContextAttrs();
+    virtual std::string desc() const { return "StripContextAttrs"; }
 };
 
 // Strip a user-defined list of vars from all levels
@@ -105,6 +108,7 @@ struct StripVars : public MessageTweaker
     std::vector<wreport::Varcode> codes;
 
     void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "StripVars"; }
 };
 
 // Round variables to account for a passage through legacy vars
@@ -113,18 +117,21 @@ struct RoundLegacyVars : public MessageTweaker
     const wreport::Vartable* table;
     RoundLegacyVars();
     void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "RoundLegacyVars"; }
 };
 
 // Remove synop vars present in WMO templates but not in ECMWF templates
 struct RemoveSynopWMOOnlyVars : public MessageTweaker
 {
     void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "RemoveSynopWMOOnlyVars"; }
 };
 
 // Remove temp vars present in WMO templates but not in ECMWF templates
 struct RemoveTempWMOOnlyVars : public MessageTweaker
 {
     void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "RemoveTempWMOOnlyVars"; }
 };
 
 // Remove temp vars present only in an odd temp template for which we have
@@ -132,6 +139,7 @@ struct RemoveTempWMOOnlyVars : public MessageTweaker
 struct RemoveOddTempTemplateOnlyVars : public StripVars
 {
     RemoveOddTempTemplateOnlyVars();
+    virtual std::string desc() const { return "RemoveOddTempTemplateOnlyVars"; }
 };
 
 // Remove ground level with missing length of statistical processing, that
@@ -139,12 +147,14 @@ struct RemoveOddTempTemplateOnlyVars : public StripVars
 struct RemoveSynopWMOOddprec : public MessageTweaker
 {
     void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "RemoveSynopWMOOddprec"; }
 };
 
 // Truncate station name to its canonical length
 struct TruncStName : public MessageTweaker
 {
     void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "TruncStName"; }
 };
 
 // Round geopotential with a B10003->B10008->B10009->B10008->B10003 round trip
@@ -153,12 +163,14 @@ struct RoundGeopotential : public MessageTweaker
     const wreport::Vartable* table;
     RoundGeopotential();
     void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "RoundGeopotential"; }
 };
 
 // Round vertical sounding significance with a B08042->B08001->B08042 round trip
 struct RoundVSS : public MessageTweaker
 {
     void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "RoundVSS"; }
 };
 
 }

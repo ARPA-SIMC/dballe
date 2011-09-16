@@ -270,11 +270,6 @@ void dump(const std::string& tag, const std::string& msg, const std::string& des
     cerr << desc << " saved in " << fname << endl;
 }
 
-std::string MessageTweaker::name() const
-{
-    return typeid(this).name();
-}
-
 namespace tweaks {
 
 void StripAttrs::tweak(Msgs& msgs)
