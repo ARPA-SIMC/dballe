@@ -67,6 +67,7 @@ struct ReimportTest
     bool do_wmo_tweaks;
     bool do_ignore_context_attrs;
     bool do_round_geopotential;
+    bool verbose;
 
     void clear_tweaks()
     {
@@ -86,7 +87,7 @@ struct ReimportTest
 
     ReimportTest(const std::string& fname, Encoding type=BUFR)
         : fname(fname), type(type), do_ecmwf_tweaks(false), do_wmo_tweaks(false),
-          do_ignore_context_attrs(false), do_round_geopotential(false)
+          do_ignore_context_attrs(false), do_round_geopotential(false), verbose(false)
     {
         ecmwf_tweaks.push_back(new StripQCAttrs());
         wmo_tweaks.push_back(new RoundLegacyVars());
@@ -101,10 +102,12 @@ struct ReimportTest
         std::auto_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
 
         // Import
+        if (verbose) cerr << "Importing " << fname << " " << input_opts.to_string() << endl;
         msgs1 = inner_read_msgs_opts(fname.c_str(), type, input_opts);
         inner_ensure(msgs1->size() > 0);
 
         // Run tweaks
+        if (verbose) cerr << "Running tweaks" << endl;
         for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
             (*i)->tweak(*msgs1);
         if (do_ecmwf_tweaks)
@@ -121,6 +124,7 @@ struct ReimportTest
                 output_opts.template_name = tname1;
             else
                 output_opts.template_name.clear();
+            if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
             std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
             exporter->to_bulletin(*msgs1, *bulletin);
         } catch (std::exception& e) {
@@ -141,6 +145,7 @@ struct ReimportTest
         }
 
         // Import again
+        if (verbose) cerr << "Reimporting " << input_opts.to_string() << endl;
         msgs2.reset(new Msgs);
         try {
             importer->from_rawmsg(rawmsg, *msgs2);
@@ -157,6 +162,7 @@ struct ReimportTest
             auto_ptr<Bulletin> bulletin(B::create());
             try {
                 output_opts.template_name = tname2;
+                if (verbose) cerr << "Reexporting " << output_opts.to_string() << endl;
                 std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
                 exporter->to_bulletin(*msgs2, *bulletin);
             } catch (std::exception& e) {
@@ -179,6 +185,7 @@ struct ReimportTest
             // Import again
             msgs3.reset(new Msgs);
             try {
+                if (verbose) cerr << "Reimporting " << input_opts.to_string() << endl;
                 importer->from_rawmsg(rawmsg, *msgs3);
             } catch (std::exception& e) {
                 dballe::tests::dump("msg2", *msgs2);
