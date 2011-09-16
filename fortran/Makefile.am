@@ -106,6 +106,8 @@ endif
 
 INCLUDES = -I$(top_srcdir)
 
-EXTRA_DIST = fortran.dox check-utils.h error.h test.mod dbtest.mod
+EXTRA_DIST = fortran.dox check-utils.h error.h
+
+CLEANFILES = test.mod dbtest.mod
 
 endif
