@@ -351,6 +351,10 @@ struct Synop : public Template
                         case 3:
                             if (c->find(WR_VAR(0, 12, 101))) c_tmin = c;
                             break;
+                        case 254:
+                            if (c->find_by_id(DBA_MSG_TEMP_2M) || c->find_by_id(DBA_MSG_DEWPOINT_2M) || c->find_by_id(DBA_MSG_HUMIDITY))
+                                c_thermo = c;
+                            break;
                     }
                     if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
                         if (!c_wind)
@@ -362,8 +366,6 @@ struct Synop : public Template
                         else if (!c_gust2)
                             c_gust2 = c;
                     }
-                    if (c->find_by_id(DBA_MSG_TEMP_2M) || c->find_by_id(DBA_MSG_DEWPOINT_2M) || c->find_by_id(DBA_MSG_HUMIDITY))
-                        c_thermo = c;
                     if (c->find_by_id(DBA_MSG_VISIBILITY))
                         c_visib = c;
                     break;
