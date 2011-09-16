@@ -95,6 +95,13 @@ struct StripQCAttrs : public StripAttrs
     virtual std::string desc() const { return "StripQCAttrs"; }
 };
 
+// Strip attributes with substituted values
+struct StripSubstituteAttrs : public MessageTweaker
+{
+    void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "StripSubstituteAttrs"; }
+};
+
 // Strip context attributes from all variables in a Msgs
 struct StripContextAttrs : public StripAttrs
 {

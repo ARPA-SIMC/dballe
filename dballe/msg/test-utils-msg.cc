@@ -303,6 +303,23 @@ StripContextAttrs::StripContextAttrs()
     codes.push_back(WR_VAR(0, 4, 194));
 }
 
+void StripSubstituteAttrs::tweak(Msgs& msgs)
+{
+    for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+    {
+        Msg& m = **mi;
+        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+        {
+            msg::Context& c = **ci;
+            for (vector<wreport::Var*>::iterator vi = c.data.begin(); vi != c.data.end(); ++vi)
+            {
+                Var& v = **vi;
+                v.unseta(v.code());
+            }
+        }
+    }
+}
+
 void StripVars::tweak(Msgs& msgs)
 {
     for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
