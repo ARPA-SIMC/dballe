@@ -19,3 +19,6 @@ binary-install/provami::
 # Store build information
 common-binary-post-install-arch common-binary-post-install-indep::
 	dh_buildinfo
+
+debsrc:
+	git-buildpackage -S -us -uc
