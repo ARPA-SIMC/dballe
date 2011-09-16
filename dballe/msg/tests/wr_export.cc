@@ -461,7 +461,6 @@ template<> template<>
 void to::test<10>()
 {
     BufrReimportTest test("bufr/synop-groundtemp.bufr");
-    //test.verbose = true;
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
 }
@@ -562,9 +561,11 @@ void to::test<23>()
 {
     // This has an unusual template
     BufrReimportTest test("bufr/C23000.bufr");
-    StripQCAttrs* sqa;
-    test.tweaks.push_back(sqa = new StripQCAttrs());
+    //test.verbose = true;
+    StripQCAttrs* sqa = new StripQCAttrs();
     sqa->codes.push_back(WR_VAR(0, 10, 3));
+    test.tweaks.push_back(sqa);
+    test.tweaks.push_back(new StripSubstituteAttrs());
 
     test.ecmwf_tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
     run_test(test, do_ecmwf, "temp");
@@ -623,6 +624,7 @@ void to::test<29>()
     BufrReimportTest test("bufr/temp-bad1.bufr");
     StripQCAttrs* sqa;
     test.tweaks.push_back(sqa = new StripQCAttrs());
+    test.tweaks.push_back(new StripSubstituteAttrs());
     sqa->codes.push_back(WR_VAR(0, 10, 3));
     run_test(test, do_ecmwf, "temp");
 }
@@ -630,9 +632,10 @@ template<> template<>
 void to::test<30>()
 {
     BufrReimportTest test("bufr/temp-bad2.bufr");
-    StripQCAttrs* sqa;
-    test.tweaks.push_back(sqa = new StripQCAttrs());
+    StripQCAttrs* sqa = new StripQCAttrs();
     sqa->codes.push_back(WR_VAR(0, 10, 3));
+    test.tweaks.push_back(sqa);
+    test.tweaks.push_back(new StripSubstituteAttrs());
     test.tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }

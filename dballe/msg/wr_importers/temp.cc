@@ -390,7 +390,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
             case WR_VAR(0,  6, 15): msg->set(var, WR_VAR(0,  6,  15), lev, Trange::instant()); break;
             case WR_VAR(0,  8,  1):
                 {
-                    // This account for weird data that has '1' for VSS
+                    // This accounts for weird data that has '1' for VSS
                     unsigned val = convert_BUFR08001_to_BUFR08042(var.enqi());
                     if (val == BUFR08042::ALL_MISSING)
                         msg->seti(WR_VAR(0,  8,  42), BUFR08042::MISSING, -1, lev, Trange::instant());
