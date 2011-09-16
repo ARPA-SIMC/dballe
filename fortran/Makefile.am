@@ -32,10 +32,11 @@ endif
 
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
-check_PROGRAMS = check_missing_msg check_real0 check_range tut_test
+check_PROGRAMS = check_missing_msg tut_test
 
 TESTS = $(check_PROGRAMS)
-testlib = dbtest.f90
+testlib = test.f90
+dbtestlib = dbtest.f90 $(testlib)
 
 CXXFLAGS += -O0
 
@@ -53,6 +54,9 @@ check_missing_msg_SOURCES = $(testlib) check_missing_msg.f90
 check_missing_msg_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_msg_FCFLAGS = -g
 
+if DO_DBALLE_DB
+check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing
+
 check_real0_SOURCES = $(testlib) check_real0.f90
 check_real0_LDADD = ./libdballef.la -lcnf -lpopt
 check_real0_FCFLAGS = -g
@@ -61,18 +65,15 @@ check_range_SOURCES = $(testlib) check_range.f90
 check_range_LDADD = ./libdballef.la -lcnf -lpopt
 check_range_FCFLAGS = -g
 
-if DO_DBALLE_DB
-check_PROGRAMS += check_fdballe check_attrs check_missing
-
-check_fdballe_SOURCES = $(testlib) check_fdballe.f90
+check_fdballe_SOURCES = $(dbtestlib) check_fdballe.f90
 check_fdballe_LDADD = ./libdballef.la -lcnf -lpopt
 check_fdballe_FCFLAGS = -g
 
-check_attrs_SOURCES = $(testlib) check_attrs.f90
+check_attrs_SOURCES = $(dbtestlib) check_attrs.f90
 check_attrs_LDADD = ./libdballef.la -lcnf -lpopt
 check_attrs_FCFLAGS = -g
 
-check_missing_SOURCES = $(testlib) check_missing.f90
+check_missing_SOURCES = $(dbtestlib) check_missing.f90
 check_missing_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_FCFLAGS = -g
 endif
@@ -105,6 +106,6 @@ endif
 
 INCLUDES = -I$(top_srcdir)
 
-EXTRA_DIST = fortran.dox check-utils.h error.h
+EXTRA_DIST = fortran.dox check-utils.h error.h test.mod dbtest.mod
 
 endif

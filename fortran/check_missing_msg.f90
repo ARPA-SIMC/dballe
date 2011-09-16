@@ -4,7 +4,7 @@
 ! * Test suite for DBALLE Fortran bindings
 ! *****************************************
 
-      use dbtest
+      use test
 
       include "dballef.h"
 
