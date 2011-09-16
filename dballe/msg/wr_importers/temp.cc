@@ -76,7 +76,7 @@ public:
     /// Return true if \a code can be found at the start of a sounding group
     bool is_possible_group_var(Varcode code)
     {
-        return WR_VAR_F(code) == 0 && WR_VAR_X(code) != 33 && WR_VAR_X(code) != 1;
+        return WR_VAR_F(code) == 0 && WR_VAR_X(code) != 31 && WR_VAR_X(code) != 33 && WR_VAR_X(code) != 1;
         // switch (code)
         // {
         //     default: return false;
@@ -356,7 +356,6 @@ void TempImporter::import_group(unsigned start, unsigned length)
                 break;
         }
     }
-
     if (lev.ltype1 == MISSING_INT)
         return;
         //throw error_consistency("neither B07002 nor B07004 nor B10003 found in sounding group");

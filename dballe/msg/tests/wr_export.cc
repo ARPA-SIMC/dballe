@@ -600,6 +600,7 @@ template<> template<>
 void to::test<27>()
 {
     BufrReimportTest test("bufr/temp-gtscosmo.bufr");
+    //test.verbose = true;
     test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_wmo, "temp");
 }
