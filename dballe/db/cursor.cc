@@ -429,7 +429,7 @@ void Cursor::add_station_info(Record& rec)
         "SELECT d.id_var, d.value, ri.id, ri.prio" \
         "  FROM context c, data d, repinfo ri" \
         " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?" \
-        "   AND c.datetime = {ts '1000-01-01 00:00:00.0'}" \
+        "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}" \
         "   AND c.ltype1 = 257"
 
     const char* query;
@@ -599,8 +599,8 @@ void QueryBuilder::make_from()
     /* Ignore anagraphical context unless explicitly requested */
     if (from_wanted & DBA_DB_FROM_C && !accept_from_ana_context)
     {
-        sql_where.append_list("c.datetime>={ts '1001-01-01 00:00:00.0'}");
-        TRACE("ignoring station info context as it has not been explicitly requested: adding AND c.datetime >= {ts '1001-01-01 00:00:00.0'}\n");
+        sql_where.append_list("c.datetime>={ts '1001-01-01 00:00:00.000'}");
+        TRACE("ignoring station info context as it has not been explicitly requested: adding AND c.datetime >= {ts '1001-01-01 00:00:00.000'}\n");
     }
 
     /* Create the FROM part with everything that is needed */
@@ -715,7 +715,7 @@ void QueryBuilder::add_other_froms(unsigned int base)
                 DBA_RUN_OR_RETURN(dba_querybuf_append(sql_query,
                             " JOIN context cbs ON pa.id=cbs.id_ana"
                             " AND cbs.id_report=254"
-                            " AND cbs.datetime={ts '1000-01-01 00:00:00.0'}"
+                            " AND cbs.datetime={ts '1000-01-01 00:00:00.000'}"
                             " AND cbs.ltype=257 AND cbs.l1=0 AND cbs.l2=0"
                             " AND cbs.ptype=0 AND cbs.p1=0 AND cbs.p2=0 "));
                 break;
@@ -725,7 +725,7 @@ void QueryBuilder::add_other_froms(unsigned int base)
                 sql_query.append(
                             " JOIN context cbs ON c.id_ana=cbs.id_ana"
                             " AND cbs.id_report=c.id_report"
-                            " AND cbs.datetime={ts '1000-01-01 00:00:00.0'}"
+                            " AND cbs.datetime={ts '1000-01-01 00:00:00.000'}"
                             " AND cbs.ltype1=257 ");
                 break;
             default:
