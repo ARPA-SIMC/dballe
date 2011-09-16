@@ -35,9 +35,17 @@ namespace msg {
 
 void Importer::Options::print(FILE* out)
 {
-    putc('[', out);
-    fputs(simplified ? "simplified" : "accurate", out);
-    putc(']', out);
+    string str = to_string();
+    fputs(str.c_str(), out);
+}
+
+std::string Importer::Options::to_string() const
+{
+    string res;
+    res += '[';
+    res += simplified ? "simplified" : "accurate";
+    res += ']';
+    return res;
 }
 
 Importer::Importer(const Options& opts)
@@ -67,10 +75,40 @@ std::auto_ptr<Importer> Importer::create(Encoding type, const Options& opts)
 
 void Exporter::Options::print(FILE* out)
 {
-    putc('[', out);
+    string str = to_string();
+    fputs(str.c_str(), out);
+}
+
+std::string Exporter::Options::to_string() const
+{
+    string res;
+    char buf[100];
+
     if (!template_name.empty())
-        fputs(template_name.c_str(), out);
-    putc(']', out);
+        res += "tpl " + template_name;
+
+    if (centre != MISSING_INT)
+    {
+        if (!res.empty()) res += ", ";
+        snprintf(buf, 100, "centre %d", centre);
+        res += buf;
+    }
+
+    if (subcentre != MISSING_INT)
+    {
+        if (!res.empty()) res += ", ";
+        snprintf(buf, 100, "subcentre %d", subcentre);
+        res += buf;
+    }
+
+    if (application != MISSING_INT)
+    {
+        if (!res.empty()) res += ", ";
+        snprintf(buf, 100, "application %d", application);
+        res += buf;
+    }
+
+    return res;
 }
 
 Exporter::Exporter(const Options& opts)

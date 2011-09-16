@@ -25,6 +25,7 @@
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/defs.h>
 #include <memory>
+#include <string>
 #include <stdio.h>
 
 /** @file
@@ -62,6 +63,9 @@ public:
 
         /// Print a summary of the options to \a out
         void print(FILE* out);
+
+        /// Generate a string summary of import options
+        std::string to_string() const;
     };
 
 protected:
@@ -118,6 +122,9 @@ public:
 
         /// Print a summary of the options to \a out
         void print(FILE* out);
+
+        /// Generate a string summary of export options
+        std::string to_string() const;
     };
 
 protected:
