@@ -62,6 +62,7 @@ Makefile
 /fortran/check_range
 /fortran/check_real0
 /fortran/dbtest.mod
+/fortran/test.mod
 /fortran/dump_dballe
 /fortran/dumpmsg_dballe
 /fortran/mkmsg
@@ -79,6 +80,7 @@ Makefile
 /tables/B0000000000200014001.txt
 /tables/B000000002001400.txt
 /tables/B990204.txt
+/tables/B000299.txt
 /tools/dbadb
 /tools/dbamsg
 /tools/dbatbl
