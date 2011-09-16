@@ -107,15 +107,23 @@ struct ReimportTest
         inner_ensure(msgs1->size() > 0);
 
         // Run tweaks
-        if (verbose) cerr << "Running tweaks" << endl;
         for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
+        {
+            if (verbose) cerr << "Running tweak " << (*i)->name() << endl;
             (*i)->tweak(*msgs1);
+        }
         if (do_ecmwf_tweaks)
             for (typename vector<Tweaker*>::iterator i = ecmwf_tweaks.begin(); i != ecmwf_tweaks.end(); ++i)
+            {
+                if (verbose) cerr << "Running ecmwf tweak " << (*i)->name() << endl;
                 (*i)->tweak(*msgs1);
+            }
         if (do_wmo_tweaks)
             for (typename vector<Tweaker*>::iterator i = wmo_tweaks.begin(); i != wmo_tweaks.end(); ++i)
+            {
+                if (verbose) cerr << "Running wmo tweak " << (*i)->name() << endl;
                 (*i)->tweak(*msgs1);
+            }
 
         // Export
         auto_ptr<Bulletin> bulletin(B::create());

@@ -74,6 +74,7 @@ struct MessageTweaker
 {
     virtual ~MessageTweaker() {}
     virtual void tweak(Msgs&) {}
+    std::string name() const;
 };
 
 namespace tweaks {
