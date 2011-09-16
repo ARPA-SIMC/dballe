@@ -112,3 +112,5 @@ distclean-local:
 
 BUILT_SOURCES = record_keyword.cc aliases.cc aliases-reverse.cc
 EXTRA_DIST = aliases.gperf mkaliasdoc record_keyword.gperf mkkeydoc
+
+CLEANFILES = aliases.dox aliases.tex record_keyword.rst record_keyword.dox record_keyword.tex

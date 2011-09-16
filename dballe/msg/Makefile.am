@@ -61,7 +61,8 @@ libdballe_msg_la_SOURCES = \
 
 ##		filter.c  (todo)
 
-EXTRA_DIST += wr_importers/base.h aof_importers/common.h
+# filter.c and sat.cc are here for now until I manage to turn them into a working system
+EXTRA_DIST += wr_importers/base.h aof_importers/common.h filter.c wr_importers/sat.cc
 
 #if DO_DBALLE_BUFREX
 #libdballe_msg_la_SOURCES += \

@@ -4,4 +4,5 @@ EXTRA_DIST = \
 	test-bufr-table.txt \
 	test-crex-d-table.txt \
 	test-crex-table.txt \
-	test-repinfo1.csv
+	test-repinfo1.csv \
+	test-repinfo2.csv
