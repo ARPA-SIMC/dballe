@@ -6,11 +6,12 @@ include /usr/share/cdbs/1/class/autotools.mk
 # Work around to latex2html bug #368693
 export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 
+DEB_PYTHON2_MODULE_PACKAGES := python-dballe
+
 #DEB_MAKE_CHECK_TARGET := check
 
 # From http://wiki.debian.org/DebianPython/NewPolicy
 binary-install/python-dballe::
-	dh_pycentral -ppython-dballe
 	rm $(CURDIR)/debian/python-dballe/usr/share/pyshared/_dballe.la
 binary-install/provami::
 	dh_pycentral -pprovami
