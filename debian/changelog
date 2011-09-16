@@ -1,3 +1,14 @@
+dballe (5.10-1) unstable; urgency=low
+
+  * New upstream release
+     - in rare cases, SYNOP exports would select the wrong context for
+       temperature exports, incorrectly exporting minimum or maximum
+       temperatures instead
+     - tweaked sounding group detection to deal with an obscure TEMP recently
+       added to the test suite
+
+ -- Enrico Zini <enrico@debian.org>  Fri, 16 Sep 2011 14:48:47 +0200
+
 dballe (5.9-1) unstable; urgency=low
 
   * New upstream release
