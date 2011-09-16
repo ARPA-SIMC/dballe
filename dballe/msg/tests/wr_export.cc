@@ -99,6 +99,8 @@ struct ReimportTest
 
     void do_test(const dballe::tests::Location& loc, const char* tname1, const char* tname2=NULL)
     {
+        if (verbose) cerr << "Running test " << loc.locstr() << endl;
+
         std::auto_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
 
         // Import
@@ -459,6 +461,7 @@ template<> template<>
 void to::test<10>()
 {
     BufrReimportTest test("bufr/synop-groundtemp.bufr");
+    //test.verbose = true;
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
 }
