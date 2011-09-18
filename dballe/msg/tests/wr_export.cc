@@ -660,9 +660,51 @@ void to::test<32>()
 #endif
 }
 
-// Re-export to BUFR (simplified, full template autodetect) and see the differences
 template<> template<>
 void to::test<33>()
+{
+    BufrReimportTest test("bufr/gts-acars1.bufr");
+    run_test(test, do_test, "acars-wmo");
+}
+
+template<> template<>
+void to::test<34>()
+{
+    BufrReimportTest test("bufr/gts-acars2.bufr");
+    run_test(test, do_test, "acars-wmo");
+}
+
+template<> template<>
+void to::test<35>()
+{
+    BufrReimportTest test("bufr/gts-acars-uk1.bufr");
+    run_test(test, do_test, "acars-wmo");
+}
+
+template<> template<>
+void to::test<36>()
+{
+    BufrReimportTest test("bufr/gts-acars-us1.bufr");
+    run_test(test, do_test, "acars-wmo");
+}
+
+template<> template<>
+void to::test<37>()
+{
+    BufrReimportTest test("bufr/gts-amdar1.bufr");
+    run_test(test, do_test, "amdar-wmo");
+}
+
+template<> template<>
+void to::test<38>()
+{
+    BufrReimportTest test("bufr/gts-amdar2.bufr");
+    run_test(test, do_test, "amdar-wmo");
+}
+
+// Re-export to BUFR (simplified, full template autodetect) and see the differences
+template<> template<>
+void to::test<39>()
 {
     const char** files = dballe::tests::bufr_files;
     // Uncomment to single out one failing file
@@ -724,7 +766,7 @@ void to::test<33>()
 
 // Re-export to BUFR (not simplified, full template autodetect) and see the differences
 template<> template<>
-void to::test<34>()
+void to::test<40>()
 {
     const char** files = dballe::tests::bufr_files;
     // Uncomment to single out one failing file
