@@ -26,13 +26,28 @@ using namespace wreport;
 using namespace std;
 
 #define AIREP_NAME "airep"
-#define AIREP_DESC "AIREP (4.142)"
+#define AIREP_DESC "AIREP (autodetect)"
+
+#define AIREP_ECMWF_NAME "airep-ecmwf"
+#define AIREP_ECMWF_DESC "AIREP ECMWF (4.142)"
 
 #define AMDAR_NAME "amdar"
-#define AMDAR_DESC "AMDAR (4.144)"
+#define AMDAR_DESC "AMDAR (autodetect)"
+
+#define AMDAR_ECMWF_NAME "amdar-ecmwf"
+#define AMDAR_ECMWF_DESC "AMDAR ECMWF (4.144)"
+
+#define AMDAR_WMO_NAME "amdar-wmo"
+#define AMDAR_WMO_DESC "AMDAR WMO"
 
 #define ACARS_NAME "acars"
-#define ACARS_DESC "ACARS (4.145)"
+#define ACARS_DESC "ACARS (autodetect)"
+
+#define ACARS_ECMWF_NAME "acars-ecmwf"
+#define ACARS_ECMWF_DESC "ACARS ECMWF (4.145)"
+
+#define ACARS_WMO_NAME "acars-wmo"
+#define ACARS_WMO_DESC "ACARS WMO"
 
 namespace dballe {
 namespace msg {
@@ -89,7 +104,7 @@ struct FlightBase : public Template
         // Find what is the level where the airplane is
         lev = Level();
 
-        for (int i = 0; i < msg.data.size(); ++i)
+        for (unsigned i = 0; i < msg.data.size(); ++i)
         {
             const msg::Context& ctx = *msg.data[i];
             if (ctx.trange != Trange::instant()) continue;
@@ -309,9 +324,36 @@ struct AirepFactory : public TemplateFactory
         return auto_ptr<Template>(new Airep(opts, msgs));
     }
 };
+struct AirepEcmwfFactory : public TemplateFactory
+{
+    AirepEcmwfFactory() { name = AIREP_ECMWF_NAME; description = AIREP_ECMWF_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Airep(opts, msgs));
+    }
+};
 struct AmdarFactory : public TemplateFactory
 {
     AmdarFactory() { name = AMDAR_NAME; description = AMDAR_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Amdar(opts, msgs));
+    }
+};
+struct AmdarEcmwfFactory : public TemplateFactory
+{
+    AmdarEcmwfFactory() { name = AMDAR_ECMWF_NAME; description = AMDAR_ECMWF_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Amdar(opts, msgs));
+    }
+};
+struct AmdarWMOFactory : public TemplateFactory
+{
+    AmdarWMOFactory() { name = AMDAR_WMO_NAME; description = AMDAR_WMO_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
@@ -327,22 +369,55 @@ struct AcarsFactory : public TemplateFactory
         return auto_ptr<Template>(new Acars(opts, msgs));
     }
 };
+struct AcarsEcmwfFactory : public TemplateFactory
+{
+    AcarsEcmwfFactory() { name = ACARS_ECMWF_NAME; description = ACARS_ECMWF_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Acars(opts, msgs));
+    }
+};
+struct AcarsWMOFactory : public TemplateFactory
+{
+    AcarsWMOFactory() { name = ACARS_WMO_NAME; description = ACARS_WMO_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new Acars(opts, msgs));
+    }
+};
 
 } // anonymous namespace
 
 void register_flight(TemplateRegistry& r)
 {
 static const TemplateFactory* airep = NULL;
+static const TemplateFactory* airepecmwf = NULL;
 static const TemplateFactory* amdar = NULL;
+static const TemplateFactory* amdarecmwf = NULL;
+static const TemplateFactory* amdarwmo = NULL;
 static const TemplateFactory* acars = NULL;
+static const TemplateFactory* acarsecmwf = NULL;
+static const TemplateFactory* acarswmo = NULL;
 
     if (!airep) airep = new AirepFactory;
+    if (!airepecmwf) airepecmwf = new AirepEcmwfFactory;
     if (!amdar) amdar = new AmdarFactory;
+    if (!amdarecmwf) amdarecmwf = new AmdarEcmwfFactory;
+    if (!amdarwmo) amdarwmo = new AmdarWMOFactory;
     if (!acars) acars = new AcarsFactory;
+    if (!acarsecmwf) acarsecmwf = new AcarsEcmwfFactory;
+    if (!acarswmo) acarswmo = new AcarsWMOFactory;
 
     r.register_factory(airep);
+    r.register_factory(airepecmwf);
     r.register_factory(amdar);
+    r.register_factory(amdarecmwf);
+    r.register_factory(amdarwmo);
     r.register_factory(acars);
+    r.register_factory(acarsecmwf);
+    r.register_factory(acarswmo);
 }
 
 }
