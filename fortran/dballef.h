@@ -134,7 +134,7 @@ interface
 
    subroutine idba_error_set_callback(code,func,data,handle)
      integer, intent(in) :: code
-     integer, external :: func
+     external :: func
      integer, intent(in) :: data
      integer, intent(out) :: handle
    end subroutine idba_error_set_callback
