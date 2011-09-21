@@ -57,11 +57,11 @@ check_missing_msg_FCFLAGS = -g
 if DO_DBALLE_DB
 check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing
 
-check_real0_SOURCES = $(testlib) check_real0.f90
+check_real0_SOURCES = $(dbtestlib) check_real0.f90
 check_real0_LDADD = ./libdballef.la -lcnf -lpopt
 check_real0_FCFLAGS = -g
 
-check_range_SOURCES = $(testlib) check_range.f90
+check_range_SOURCES = $(dbtestlib) check_range.f90
 check_range_LDADD = ./libdballef.la -lcnf -lpopt
 check_range_FCFLAGS = -g
 

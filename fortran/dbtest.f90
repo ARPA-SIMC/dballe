@@ -1,5 +1,7 @@
       module dbtest
 
+      use test
+
       contains
 
       subroutine dbinit(dbahandle)
