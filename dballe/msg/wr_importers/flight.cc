@@ -20,6 +20,7 @@
 #include "base.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
+#include <wreport/conv.h>
 #include <cmath>
 
 using namespace wreport;
@@ -150,6 +151,20 @@ void FlightImporter::import_var(const Var& var)
             // Isobaric Surface in Pa
             set_level(Level(100, var.enqd()));
             acquire(var, WR_VAR(0, 10,  4));
+            break;
+        case WR_VAR(0,  7,  10):
+            // Flight level
+            if (opts.simplified)
+            {
+                // Convert to pressure using formula from
+                // http://www.wmo.int/pages/prog/www/IMOP/publications/CIMO-Guide/CIMO%20Guide%207th%20Edition,%202008/Part%20II/Chapter%203.pdf
+                double p_hPa = 1013.25 * pow(1.0 - 0.000001 * 6.8756 * var.enqd() * 3.28084, 5.2559);
+                set_level(Level(100, round(p_hPa * 100)));
+            }
+            else
+                // Specific Altitude Above Mean Sea Level in mm
+                set_level(Level(102, var.enqd() * 1000));
+            acquire(var);
             break;
         case WR_VAR(0, 11,  1): acquire(var); break;
         case WR_VAR(0, 11,  2): acquire(var); break;
