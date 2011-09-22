@@ -68,6 +68,7 @@ using namespace dballe;
 }
 
 %ignore dballe::newvar;
+%ignore dballe::var_copy_without_unset_attrs;
 
 namespace dballe {
         wreport::Var var(wreport::Varcode code) { return wreport::Var(varinfo(code)); }
