@@ -46,25 +46,7 @@ void AOFImporter::read_flight(const uint32_t* obs, int obs_len, Msg& msg)
 		default: msg.type = MSG_AIREP; break;
 	}
 
-	//DBA_RUN_OR_RETURN(dba_var_seti(ship->var_st_dir, 0));
-	//DBA_RUN_OR_RETURN(dba_var_seti(ship->var_st_speed, 0));
-
-	/* 08 Latitude */
-	/* 09 Longitude */
-	/* 10 Observation date */
-	/* 12 Exact time of observation */
-	parse_lat_lon_datetime(obs, msg);
-
-	/* 13,14 station ID */
-	parse_st_ident(obs, msg);
-	
-	/* Aircraft roll angle */
-	{
-		int angle = (OBS(17) >> 18) & 0xf;
-		if (angle != 0x0f)
-			msg.set_flight_phase(angle, -1);
-	}
-
+    // Detect the flight level
 	/* 
 	 * If both pressure and height are present, use height, as makeaof makes
 	 * pressure a function of height
@@ -115,28 +97,42 @@ void AOFImporter::read_flight(const uint32_t* obs, int obs_len, Msg& msg)
 	if (ltype == -1)
 		throw error_notfound("looking for pressure or height in an AOF flight message");
 
-	/* File the measures at the right level */
+    Level lev(ltype, l1);
+    Trange tr(Trange::instant());
 
-	/* 21 Wind direction [degrees] */
-	if (OBS(21) != AOF_UNDEF)
-		msg.setd(WR_VAR(0, 11,  1), OBS(21), get_conf6(OBS(flags_start + 1) & 0x3f),
-                Level(ltype, l1), Trange::instant());
-	/* 22 Wind speed [m/s] */
-	if (OBS(22) != AOF_UNDEF)
-		msg.setd(WR_VAR(0, 11,  2), OBS(22), get_conf6((OBS(flags_start + 1) >> 6) & 0x3f),
-                Level(ltype, l1), Trange::instant());
-	/* 23 Air temperature [1/10 K] */
-	if (OBS(23) != AOF_UNDEF)
-		msg.setd(WR_VAR(0, 12, 101), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 12) & 0x3f),
-                Level(ltype, l1), Trange::instant());
+    /* File the measures at the right level */
 
-	if (is_fixed)
-	{
-		if (OBS(25) != AOF_UNDEF)
-			msg.setd(WR_VAR(0, 12, 103), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 24) & 0x3f),
-                Level(ltype, l1), Trange::instant());
-		
-	}
+    /* 08 Latitude */
+    /* 09 Longitude */
+    /* 10 Observation date */
+    /* 12 Exact time of observation */
+    parse_lat_lon_datetime(obs, msg);
+
+    /* 13,14 station ID */
+    parse_st_ident(obs, msg);
+
+    /* Aircraft roll angle */
+    {
+        int angle = (OBS(17) >> 18) & 0xf;
+        if (angle != 0x0f)
+            msg.setd(WR_VAR(0, 8, 4), angle, -1, lev, tr);
+    }
+
+    /* 21 Wind direction [degrees] */
+    if (OBS(21) != AOF_UNDEF)
+        msg.setd(WR_VAR(0, 11,  1), OBS(21), get_conf6(OBS(flags_start + 1) & 0x3f), lev, tr);
+    /* 22 Wind speed [m/s] */
+    if (OBS(22) != AOF_UNDEF)
+        msg.setd(WR_VAR(0, 11,  2), OBS(22), get_conf6((OBS(flags_start + 1) >> 6) & 0x3f), lev, tr);
+    /* 23 Air temperature [1/10 K] */
+    if (OBS(23) != AOF_UNDEF)
+        msg.setd(WR_VAR(0, 12, 101), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 12) & 0x3f), lev, tr);
+
+    if (is_fixed)
+    {
+        if (OBS(25) != AOF_UNDEF)
+            msg.setd(WR_VAR(0, 12, 103), totemp(OBS(23)), get_conf6((OBS(flags_start + 1) >> 24) & 0x3f), lev, tr);
+    }
 }
 
 } // namespace msg

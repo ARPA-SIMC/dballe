@@ -165,7 +165,7 @@ struct Airep : public FlightBase
         FlightBase::to_subset(msg, subset);
 
         /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
-        /*  1 */ add(WR_VAR(0,  2, 61), DBA_MSG_NAVSYS);
+        /*  1 */ add(WR_VAR(0,  2, 61), WR_VAR(0,  2,  61), lev, Trange::instant());
         /*  2 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
         /*  3 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
         /*  4 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
@@ -173,7 +173,7 @@ struct Airep : public FlightBase
         /*  6 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /*  7 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /*  8 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /*  9 */ add(WR_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE);
+        /*  9 */ add(WR_VAR(0,  8,  4), WR_VAR(0,  8,   4), lev, Trange::instant());
         /* 10 */ add(WR_VAR(0,  7,  2), WR_VAR(0,  7,  30), lev, Trange::instant()); /* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
         /* 11 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101), lev, Trange::instant()); /* TEMPERATURE/DRY-BULB TEMPERATURE */
         /* 12 */ add(WR_VAR(0, 11,  1), WR_VAR(0, 11,   1), lev, Trange::instant()); /* WIND DIRECTION */
@@ -367,14 +367,14 @@ struct Acars : public FlightBase
     {
         FlightBase::to_subset(msg, subset);
         /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
-        /*  1 */ add(WR_VAR(0,  1,  8), DBA_MSG_FLIGHT_REG_NO);
-        /*  2 */ add(WR_VAR(0,  2, 61), DBA_MSG_NAVSYS);
-        /*  3 */ add(WR_VAR(0,  2, 62), DBA_MSG_DATA_RELAY);
-        /*  4 */ add(WR_VAR(0,  2,  2), DBA_MSG_WIND_INST);
-        /*  5 */ add(WR_VAR(0,  2,  5), DBA_MSG_TEMP_PRECISION);
-        /*  6 */ add(WR_VAR(0,  2, 70), DBA_MSG_LATLON_SPEC);
-        /*  7 */ add(WR_VAR(0,  2, 63), DBA_MSG_FLIGHT_ROLL);
-        /*  8 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
+        /*  1 */ add(WR_VAR(0,  1,  8), WR_VAR(0,  1,  8), lev, Trange::instant());
+        /*  2 */ add(WR_VAR(0,  2, 61), WR_VAR(0,  2, 61), lev, Trange::instant());
+        /*  3 */ add(WR_VAR(0,  2, 62), WR_VAR(0,  2, 62), lev, Trange::instant());
+        /*  4 */ add(WR_VAR(0,  2,  2), WR_VAR(0,  2,  2), lev, Trange::instant());
+        /*  5 */ add(WR_VAR(0,  2,  5), WR_VAR(0,  2,  5), lev, Trange::instant());
+        /*  6 */ add(WR_VAR(0,  2, 70), WR_VAR(0,  2, 70), lev, Trange::instant());
+        /*  7 */ add(WR_VAR(0,  2, 63), WR_VAR(0,  2, 63), lev, Trange::instant());
+        /*  8 */ add(WR_VAR(0,  2,  1), WR_VAR(0,  2,  1), lev, Trange::instant());
         /*  9 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
         /* 10 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
         /* 11 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
@@ -382,9 +382,9 @@ struct Acars : public FlightBase
         /* 13 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /* 14 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
         /* 15 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
-        /* 16 */ add(WR_VAR(0,  8,  4), DBA_MSG_FLIGHT_PHASE);
+        /* 16 */ add(WR_VAR(0,  8,  4), WR_VAR(0,  8,   4), lev, Trange::instant());
         /* 17 */ add(WR_VAR(0,  7,  4), WR_VAR(0, 10,   4), lev, Trange::instant());
-        /* 18 */ add(WR_VAR(0,  8, 21), DBA_MSG_TIMESIG);
+        /* 18 */ add(WR_VAR(0,  8, 21), WR_VAR(0,  8,  21), lev, Trange::instant());
         /* 19 */ add(WR_VAR(0, 11,  1), WR_VAR(0, 11,   1), lev, Trange::instant()); /* WIND DIRECTION */
         /* 20 */ add(WR_VAR(0, 11,  2), WR_VAR(0, 11,   2), lev, Trange::instant()); /* WIND SPEED */
         /* 21 */ add(WR_VAR(0, 11, 31), WR_VAR(0, 11,  31), lev, Trange::instant()); /* DEGREE OF TURBULENCE */
