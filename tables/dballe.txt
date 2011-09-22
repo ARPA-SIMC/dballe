@@ -52,6 +52,7 @@
  007002 HEIGHT OR ALTITUDE                                               M                         -1          -40  16 M                        -1          5
  007004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
  007007 HEIGHT                                                           M                          0        -1000  17 M                         0          6
+ 007010 FLIGHT LEVEL                                                     M                          0        -1024  16 FT                       -1          5
  007024 SATELLITE ZENITH ANGLE                                           DEGREE                     2        -9000  15 DEGREE                    2          5
  007025 SOLAR ZENITH ANGLE                                               DEGREE                     2        -9000  15 DEGREE                    2          5
  007030 HEIGHT OF STATION GROUND ABOVE MEAN SEA LEVEL (SEE NOTE 3)       M                          1        -4000  17 M                         1          5
@@ -82,6 +83,7 @@
  011006 W-COMPONENT                                                      M/S                        2        -4096  13 M/S                       2          4
  011016 EXTREME COUNTERCLOCKWISE WIND DIRECTION OF A VARIABLE WIND       DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011017 EXTREME CLOCKWISE WIND DIRECTION OF A VARIABLE WIND              DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
+ 011031 DEGREE OF TURBULENCE                                             CODE TABLE 11031           0            0   4 CODE TABLE 11031          0          2
  011041 MAXIMUM WIND GUST SPEED                                          M/S                        1            0  12 M/S                       1          4
  011043 MAXIMUM WIND GUST DIRECTION                                      DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011061 ABSOLUTE WIND SHEAR IN 1 KM LAYER BELOW                          M/S                        1            0  12 M/S                       1          4
