@@ -133,15 +133,15 @@ void FlightImporter::import_var(const Var& var)
     switch (var.code())
     {
         case WR_VAR(0,  1,  8): acquire(var); break;
-        case WR_VAR(0,  2, 61): acquire(var); break;
-        case WR_VAR(0,  2, 62): acquire(var); break;
+        case WR_VAR(0,  1, 23): acquire(var); break;
+        case WR_VAR(0,  2,  1): acquire(var); break;
         case WR_VAR(0,  2,  2): acquire(var); break;
         case WR_VAR(0,  2,  5): acquire(var); break;
-        case WR_VAR(0,  2, 70): acquire(var); break;
+        case WR_VAR(0,  2, 61): acquire(var); break;
+        case WR_VAR(0,  2, 62): acquire(var); break;
         case WR_VAR(0,  2, 63): acquire(var); break;
-        case WR_VAR(0,  2,  1): acquire(var); break;
-        case WR_VAR(0,  8,  4): acquire(var); break;
-        case WR_VAR(0,  8, 21): acquire(var); break;
+        case WR_VAR(0,  2, 64): acquire(var); break;
+        case WR_VAR(0,  2, 70): acquire(var); break;
         case WR_VAR(0,  7,  2):
             // Specific Altitude Above Mean Sea Level in mm
             set_level(Level(102, var.enqd() * 1000));
@@ -166,6 +166,9 @@ void FlightImporter::import_var(const Var& var)
                 set_level(Level(102, var.enqd() * 1000));
             acquire(var);
             break;
+        case WR_VAR(0,  8,  4): acquire(var); break;
+        case WR_VAR(0,  8,  9): acquire(var); break;
+        case WR_VAR(0,  8, 21): acquire(var); break;
         case WR_VAR(0, 11,  1): acquire(var); break;
         case WR_VAR(0, 11,  2): acquire(var); break;
         case WR_VAR(0, 11, 31): acquire(var); break;
@@ -173,10 +176,24 @@ void FlightImporter::import_var(const Var& var)
         case WR_VAR(0, 11, 33): acquire(var); break;
         case WR_VAR(0, 11, 34): acquire(var); break;
         case WR_VAR(0, 11, 35): acquire(var); break;
+        case WR_VAR(0, 11, 36): acquire(var); break;
+        case WR_VAR(0, 11, 37): acquire(var); break;
+        case WR_VAR(0, 11, 39): acquire(var); break;
+        case WR_VAR(0, 11, 77): acquire(var); break;
         case WR_VAR(0, 12,  1): acquire(var, WR_VAR(0, 12, 101)); break;
+        case WR_VAR(0, 12,101): acquire(var); break;
         case WR_VAR(0, 12,  3): acquire(var, WR_VAR(0, 12, 103)); break;
+        case WR_VAR(0, 12,103): acquire(var); break;
+        case WR_VAR(0, 13,  2): acquire(var); break;
         case WR_VAR(0, 13,  3): acquire(var); break;
         case WR_VAR(0, 20, 41): acquire(var); break;
+        case WR_VAR(0, 20, 42): acquire(var); break;
+        case WR_VAR(0, 20, 43): acquire(var); break;
+        case WR_VAR(0, 20, 44): acquire(var); break;
+        case WR_VAR(0, 20, 45): acquire(var); break;
+        case WR_VAR(0, 33, 25): acquire(var); break;
+// TODO: repeated 011075 MEAN TURBULENCE INTENSITY (EDDY DISSIPATION RATE)[M**(2/3)/S]
+// TODO: repeated 011076 PEAK TURBULENCE INTENSITY (EDDY DISSIPATION RATE)[M**(2/3)/S]
         default:
             WMOImporter::import_var(var);
             break;

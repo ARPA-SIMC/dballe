@@ -6,6 +6,7 @@
  001012 DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM**               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  001013 SPEED OF MOTION OF MOVING OBSERVING PLATFORM*                    M/S                        0            0  10 M/S                       0          3
  001019 LONG STATION OR SITE NAME                                        CCITTIA5                   0            0 256 CHARACTER                 0         32
+ 001023 OBSERVATION SEQUENCE NUMBER                                      NUMERIC                    0            0   9 NUMERIC                   0          3
  001063 ICAO LOCATION INDICATOR                                          CCITTIA5                   0            0  64 CHARACTER                 0          8
  001192 [SIM] MeteoDB station ID                                         NUMERIC                    0            0  24 NUMERIC                   0          8
  001193 [SIM] Report code                                                NUMERIC                    0            0  16 NUMERIC                   0          5
@@ -29,6 +30,7 @@
  002061 AIRCRAFT NAVIGATIONAL SYSTEM                                     CODE TABLE 2061            0            0   3 CODE TABLE 2061           0          1
  002062 TYPE OF AIRCRAFT DATA RELAY SYSTEM                               CODE TABLE 2062            0            0   4 CODE TABLE 2062           0          2
  002063 AIRCRAFT ROLL ANGLE                                              DEGREE                     2       -18000  16 DEGREE                    2          5
+ 002064 AIRCRAFT ROLL ANGLE QUALITY                                      CODE TABLE 2064            0            0   2 CODE TABLE 2064           0          1
  002070 ORIGINAL SPECIFICATION OF LATITUDE/LONGITUDE                     CODE TABLE 2070            0            0   4 CODE TABLE 2070           0          2
  004001 YEAR                                                             YEAR                       0            0  12 YEAR                      0          4
  004002 MONTH                                                            MONTH                      0            0   4 MONTH                     0          2
@@ -64,6 +66,7 @@
  007195 [SIM] Second level type                                          NUMERIC                    0            0  31 NUMERIC                   0          4
  008002 VERTICAL SIGNIFICANCE (SURFACE OBSERVATIONS)                     CODE TABLE 8002            0            0   6 CODE TABLE 8002           0          2
  008004 PHASE OF AIRCRAFT FLIGHT                                         CODE TABLE 8004            0            0   3 CODE TABLE 8004           0          1
+ 008009 DETAILED PHASE OF FLIGHT                                         CODE TABLE 8009            0            0   4 CODE TABLE 8009           0          2
  008021 TIME SIGNIFICANCE                                                CODE TABLE 8021            0            0   5 CODE TABLE 8021           0          2
  008042 EXTENDED VERTICAL SOUNDING SIGNIFICANCE                          FLAG TABLE 8042            0            0  18 FLAG TABLE 8042           0          6
  008044 (VAL) CAS REGISTRY NUMBER                                        CCITTIA5                   0            0  88 CHARACTER                 0         11 
@@ -84,10 +87,15 @@
  011016 EXTREME COUNTERCLOCKWISE WIND DIRECTION OF A VARIABLE WIND       DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011017 EXTREME CLOCKWISE WIND DIRECTION OF A VARIABLE WIND              DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011031 DEGREE OF TURBULENCE                                             CODE TABLE 11031           0            0   4 CODE TABLE 11031          0          2
+ 011037 TURBULENCE INDEX                                                 CODE TABLE 11037           0            0   6 CODE TABLE 11037          0          2
+ 011039 EXTENDED TIME OF OCCURRENCE OF PEAK  EDDY DISSIPATION RATE       CODE TABLE 11039           0            0   6 CODE TABLE 11039          0          2
  011041 MAXIMUM WIND GUST SPEED                                          M/S                        1            0  12 M/S                       1          4
  011043 MAXIMUM WIND GUST DIRECTION                                      DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011061 ABSOLUTE WIND SHEAR IN 1 KM LAYER BELOW                          M/S                        1            0  12 M/S                       1          4
  011062 ABSOLUTE WIND SHEAR IN 1 KM LAYER ABOVE                          M/S                        1            0  12 M/S                       1          4
+ 011075 MEAN TURBULENCE INTENSITY (EDDY DISSIPATION RATE)                M**(2/3)/S                 2            0   8 M**(2/3)/S                2          3
+ 011076 PEAK TURBULENCE INTENSITY (EDDY DISSIPATION RATE)                M**(2/3)/S                 2            0   8 M**(2/3)/S                2          3
+ 011077 REPORTING INTERVAL OR AVERAGING TIME FOR EDDY DISSIPATION RATE   S                          0            0  12 S                         0          4
  011192 [SIM] W-component terrain following                              M/S                        2        -4096  13 M/S                       2          4
  011193 [SIM] Stability class                                            NUMERIC                    0            0   4 NUMERIC                   0          2
  011194 [SIM] Friction velocity (calmet)                                 M/S                        3            0  14 M/S                       3          4
@@ -190,6 +198,10 @@
  020017 CLOUD TOP DESCRIPTION                                            CODE TABLE 20017           0            0   4 CODE TABLE 20017          0          2 
  020019 SIGNIFICANT PRESENT OR FORECAST WEATHER                          CCITTIA5                   0            0  72 CHARACTER                 0          9
  020021 TYPE OF PRECIPITATION                                            FLAG TABLE 20021           0            0  30 FLAG TABLE 20021          0         10
+ 020042 AIRFRAME ICING PRESENT                                           CODE TABLE 20042           0            0   2 CODE TABLE 20042          0          1
+ 020043 PEAK LIQUID WATER CONTENT                                        KG/M**3                    4            0   7 KG/M**3                   4          2
+ 020044 AVERAGE LIQUID WATER CONTENT                                     KG/M**3                    4            0   7 KG/M**3                   4          2
+ 020045 SUPERCOOLED LARGE DROPLET (SLD) CONDITIONS                       CODE TABLE 20045           0            0   2 CODE TABLE 20045          0          2
  020062 STATE OF THE GROUND (WITH OR WITHOUT SNOW)                       CODE TABLE 20062           0            0   5 CODE TABLE 20062          0          2
  020193 [SIM] Cloud type (METAR)                                         CCITTIA5                   0            0  16 CHARACTER                 0          2
  022001 DIRECTION OF WAVES                                               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
