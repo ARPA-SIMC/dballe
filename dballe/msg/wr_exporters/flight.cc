@@ -213,6 +213,102 @@ struct Amdar : public Airep
     }
 };
 
+struct AmdarWMO : public FlightBase
+{
+    AmdarWMO(const Exporter::Options& opts, const Msgs& msgs)
+        : FlightBase(opts, msgs) {}
+
+    virtual const char* name() const { return AMDAR_WMO_NAME; }
+    virtual const char* description() const { return AMDAR_WMO_DESC; }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        FlightBase::setupBulletin(bulletin);
+        bulletin.localsubtype = 144;
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        bulletin.datadesc.push_back(WR_VAR(0,  1,  33)); //  0
+        bulletin.datadesc.push_back(WR_VAR(0,  1,  34)); //  1
+        bulletin.datadesc.push_back(WR_VAR(3, 11,   5)); //  2
+        bulletin.datadesc.push_back(WR_VAR(0,  8,   4)); // 20
+        bulletin.datadesc.push_back(WR_VAR(0,  2,  64)); // 21
+        bulletin.datadesc.push_back(WR_VAR(0, 13,   3)); // 22
+        bulletin.datadesc.push_back(WR_VAR(0, 12, 103)); // 23
+        bulletin.datadesc.push_back(WR_VAR(0, 13,   2)); // 24
+        bulletin.datadesc.push_back(WR_VAR(1,  2,   0));
+        bulletin.datadesc.push_back(WR_VAR(0, 31,   1)); // 25
+        bulletin.datadesc.push_back(WR_VAR(0, 11,  75));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,  76));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,  37));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,  39));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,  77));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  42));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  43));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  44));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  45));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  41));
+        bulletin.datadesc.push_back(WR_VAR(0,  2,   5));
+        bulletin.datadesc.push_back(WR_VAR(0,  2,  62));
+        bulletin.datadesc.push_back(WR_VAR(0,  2,  70));
+        bulletin.datadesc.push_back(WR_VAR(0,  2,  65));
+        bulletin.datadesc.push_back(WR_VAR(0,  7,   4));
+        bulletin.datadesc.push_back(WR_VAR(0, 33,  26));
+        bulletin.load_tables();
+    }
+
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        FlightBase::to_subset(msg, subset);
+
+        Level lev;
+
+        /*  0 */ add(WR_VAR(0,  1, 33), WR_VAR(0,  1, 33), lev, Trange::ana());
+        /*  1 */ add(WR_VAR(0,  1, 34), WR_VAR(0,  1, 34), lev, Trange::ana());
+        /*  2 */ add(WR_VAR(0,  1,  8), DBA_MSG_IDENT);
+        /*  3 */ add(WR_VAR(0,  1, 23), WR_VAR(0,  1, 23), lev, Trange::ana());
+        /*  4 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
+        /*  5 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        /*  6 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
+        /*  7 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
+        /*  8 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
+        /*  9 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
+        /* 10 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        /* 11 */ add(WR_VAR(0,  4,  6), DBA_MSG_SECOND);
+        /* 12 */ add(WR_VAR(0,  7, 10), WR_VAR(0,  7, 10), lev, Trange::instant());
+        /* 13 */ add(WR_VAR(0,  8,  9), WR_VAR(0,  8,  9), lev, Trange::instant());
+        /* 14 */ add(WR_VAR(0, 11,  1), WR_VAR(0, 11,  1), lev, Trange::instant());
+        /* 15 */ add(WR_VAR(0, 11,  2), WR_VAR(0, 11,  2), lev, Trange::instant());
+        /* 16 */ add(WR_VAR(0, 11, 31), WR_VAR(0, 11, 31), lev, Trange::instant());
+        /* 17 */ add(WR_VAR(0, 11, 36), WR_VAR(0, 11, 36), lev, Trange::instant());
+        /* 18 */ add(WR_VAR(0, 12,101), WR_VAR(0, 12,101), lev, Trange::instant());
+        /* 19 */ add(WR_VAR(0, 33, 25), WR_VAR(0, 33, 25), lev, Trange::instant());
+        /* 20 */ add(WR_VAR(0,  8,  4), WR_VAR(0,  8,  4), lev, Trange::instant());
+        /* 21 */ add(WR_VAR(0,  2, 64), WR_VAR(0,  2, 64), lev, Trange::instant());
+        /* 22 */ add(WR_VAR(0, 13,  3), WR_VAR(0, 13,  3), lev, Trange::instant());
+        /* 23 */ add(WR_VAR(0, 12,103), WR_VAR(0, 12,103), lev, Trange::instant());
+        /* 24 */ add(WR_VAR(0, 13,  2), WR_VAR(0, 13,  2), lev, Trange::instant());
+        /* 25 */ subset.store_variable_i(WR_VAR(0, 31, 1), 0); // FIXME: no replicated section so far
+        //102000 replicate 2 descriptors (delayed 031001) times
+        //  011075 MEAN TURBULENCE INTENSITY (EDDY DISSIPATION RATE)[M**(2/3)/S]
+        //  011076 PEAK TURBULENCE INTENSITY (EDDY DISSIPATION RATE)[M**(2/3)/S]
+                 add(WR_VAR(0, 11, 37), WR_VAR(0, 11, 37), lev, Trange::instant());
+                 add(WR_VAR(0, 11, 39), WR_VAR(0, 11, 39), lev, Trange::instant());
+                 add(WR_VAR(0, 11, 77), WR_VAR(0, 11, 77), lev, Trange::instant());
+                 add(WR_VAR(0, 20, 42), WR_VAR(0, 20, 42), lev, Trange::instant());
+                 add(WR_VAR(0, 20, 43), WR_VAR(0, 20, 43), lev, Trange::instant());
+                 add(WR_VAR(0, 20, 44), WR_VAR(0, 20, 44), lev, Trange::instant());
+                 add(WR_VAR(0, 20, 45), WR_VAR(0, 20, 45), lev, Trange::instant());
+                 add(WR_VAR(0, 20, 41), WR_VAR(0, 20, 41), lev, Trange::instant());
+                 add(WR_VAR(0,  2,  5), WR_VAR(0,  2,  5), lev, Trange::instant());
+                 add(WR_VAR(0,  2, 62), WR_VAR(0,  2, 62), lev, Trange::instant());
+                 add(WR_VAR(0,  2, 70), WR_VAR(0,  2, 70), lev, Trange::instant());
+                 add(WR_VAR(0,  2, 65), WR_VAR(0,  2, 65), lev, Trange::instant());
+                 add(WR_VAR(0,  7,  4), WR_VAR(0,  7,  4), lev, Trange::instant());
+                 add(WR_VAR(0, 33, 26), WR_VAR(0, 33, 26), lev, Trange::instant());
+    }
+};
+
 struct Acars : public FlightBase
 {
     Acars(const Exporter::Options& opts, const Msgs& msgs)
@@ -357,7 +453,7 @@ struct AmdarWMOFactory : public TemplateFactory
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Amdar(opts, msgs));
+        return auto_ptr<Template>(new AmdarWMO(opts, msgs));
     }
 };
 struct AcarsFactory : public TemplateFactory
