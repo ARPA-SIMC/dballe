@@ -26,9 +26,10 @@ namespace msg {
 
 void AOFImporter::read_flight(const uint32_t* obs, int obs_len, Msg& msg)
 {
-	int ltype = -1, l1 = -1;
-	int is_fixed = 0;
-	int flags_start = 25;
+    Level lev;
+    Trange tr(Trange::instant());
+    int is_fixed = 0;
+    int flags_start = 25;
 
 	/* If the length is 28, then it's a new style message with dew point */
 	is_fixed = obs_len == 28;
@@ -53,9 +54,10 @@ void AOFImporter::read_flight(const uint32_t* obs, int obs_len, Msg& msg)
 	 */
 	if (OBS(24) != AOF_UNDEF)
 	{
-		/* Save the height in an analogous height layer.
-		 * We cannot save in the ana layer because a flight can pass twice in
-		 * the same point, at two different heights */
+        /* Save the height in the height layer together with all other data.
+         * We cannot save in the ana layer because a flight can pass twice in
+         * the same point, at two different heights, or take off from the same
+         * airport in two different days */
 
 		if (OBS(24) > AOF_UNDEF)
 		{
@@ -66,39 +68,23 @@ void AOFImporter::read_flight(const uint32_t* obs, int obs_len, Msg& msg)
 			// makeaof encodes negative numbers with whatever is used in the
 			// local machine.  We hope it is two's complement.
 			uint32_t absheight = ~OBS(24) + 1;
-			msg.setd(WR_VAR(0,  7, 30), -(double)absheight, get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
-				Level(102, OBS(24)), Trange::instant());
+            lev = Level(102, -absheight * 1000);
+            msg.setd(WR_VAR(0,  7, 30), -(double)absheight, get_conf6((OBS(flags_start + 1) >> 18) & 0x3f), lev, tr);
 		} else {
-			msg.setd(WR_VAR(0,  7, 30), (double)OBS(24), get_conf6((OBS(flags_start + 1) >> 18) & 0x3f),
-				Level(102, OBS(24)), Trange::instant());
-		}
-		if (ltype == -1)
-		{
-			ltype = 102;
-			l1 = OBS(24);
+            lev = Level(102, OBS(24) * 1000);
+            msg.setd(WR_VAR(0,  7, 30), (double)OBS(24), get_conf6((OBS(flags_start + 1) >> 18) & 0x3f), lev, tr);
 		}
 	} else if (OBS(20) != AOF_UNDEF) {
-		double press = OBS(20) * 10.0;
+        double press = OBS(20) * 10.0;
+        lev = Level(100, press);
 
-		/* Save the pressure in an analogous pressure layer.
-		 * We cannot save in the ana layer because a flight can pass twice in
-		 * the same point, at two different pressures */
-		msg.setd(WR_VAR(0, 10,  4), press, get_conf6(OBS(flags_start) & 0x3f),
-			Level(100, press), Trange::instant());
-
-		/* Default to height for AMDAR */
-		if (msg.type != MSG_AMDAR || (OBS(24) == AOF_UNDEF))
-		{
-			ltype = 100;
-			l1 = press;
-			/* fprintf(stderr, "Press float: %f int: %d encoded: %s\n", press, l1, dba_var_value(dba_msg_get_flight_press_var(msg))); */
-		}
-	}
-	if (ltype == -1)
-		throw error_notfound("looking for pressure or height in an AOF flight message");
-
-    Level lev(ltype, l1);
-    Trange tr(Trange::instant());
+        /* Save the pressure in an analogous pressure layer.
+         * We cannot save in the ana layer because a flight can pass twice in
+         * the same point, at two different pressures */
+        msg.setd(WR_VAR(0, 10,  4), press, get_conf6(OBS(flags_start) & 0x3f), lev, tr);
+    }
+    if (lev.ltype1 == MISSING_INT)
+        throw error_notfound("looking for pressure or height in an AOF flight message");
 
     /* File the measures at the right level */
 

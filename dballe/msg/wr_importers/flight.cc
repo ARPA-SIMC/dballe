@@ -142,10 +142,12 @@ void FlightImporter::import_var(const Var& var)
         case WR_VAR(0,  8,  4): acquire(var); break;
         case WR_VAR(0,  8, 21): acquire(var); break;
         case WR_VAR(0,  7,  2):
-            set_level(Level(102, var.enqd()));
+            // Specific Altitude Above Mean Sea Level in mm
+            set_level(Level(102, var.enqd() * 1000));
             acquire(var, WR_VAR(0,  7, 30));
             break;
         case WR_VAR(0,  7,  4):
+            // Isobaric Surface in Pa
             set_level(Level(100, var.enqd()));
             acquire(var, WR_VAR(0, 10,  4));
             break;
