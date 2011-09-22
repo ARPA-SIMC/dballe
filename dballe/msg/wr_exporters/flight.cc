@@ -101,7 +101,7 @@ struct FlightBase : public Template
     {
         Template::to_subset(msg, subset);
 
-        // Find what is the level where the airplane is
+        // Find what is the level where the airplane is in
         lev = Level();
 
         for (unsigned i = 0; i < msg.data.size(); ++i)
@@ -109,19 +109,24 @@ struct FlightBase : public Template
             const msg::Context& ctx = *msg.data[i];
             if (ctx.trange != Trange::instant()) continue;
 
-            int use = 0;
+            bool use = false;
             switch (ctx.level.ltype1)
             {
-                case 100: use = ctx.find_by_id(DBA_MSG_PRESS) != NULL; break;
-                case 102: use = ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL; break;
+                case 100:
+                     use = ctx.find_by_id(DBA_MSG_PRESS) != NULL
+                        || ctx.find(WR_VAR(0, 7, 10)) != NULL;
+                     break;
+                case 102:
+                     use = ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL
+                        || ctx.find(WR_VAR(0, 7, 10)) != NULL;
+                     break;
             }
             if (use)
             {
                 if (lev.ltype1 != MISSING_INT && lev.ltype1 != ctx.level.ltype1)
                     error_consistency::throwf("contradicting height indication found (both %d and %d)",
                             lev.ltype1, ctx.level.ltype1);
-                lev.ltype1 = ctx.level.ltype1;
-                lev.l1 = ctx.level.l1;
+                lev = ctx.level;
             }
         }
 
