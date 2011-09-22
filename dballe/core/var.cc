@@ -71,6 +71,41 @@ wreport::Varcode map_code_to_dballe(wreport::Varcode code)
     }
 }
 
+std::auto_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& var)
+{
+    auto_ptr<Var> copy(newvar(var.code()));
+    copy->copy_val_only(var); // Copy value performing conversions
+
+    for (const Var* a = var.next_attr(); a; a = a->next_attr())
+    {
+        // Skip undefined attributes
+        if (!a->isset()) continue;
+        auto_ptr<Var> acopy(newvar(map_code_to_dballe(a->code())));
+        acopy->copy_val_only(*a);
+        copy->seta(acopy);
+    }
+
+    return copy;
+}
+
+std::auto_ptr<wreport::Var> var_copy_without_unset_attrs(
+        const wreport::Var& var, wreport::Varcode code)
+{
+    auto_ptr<Var> copy(newvar(code));
+    copy->copy_val_only(var); // Copy value performing conversions
+
+    for (const Var* a = var.next_attr(); a; a = a->next_attr())
+    {
+        // Skip undefined attributes
+        if (!a->isset()) continue;
+        auto_ptr<Var> acopy(newvar(map_code_to_dballe(a->code())));
+        acopy->copy_val_only(*a);
+        copy->seta(acopy);
+    }
+
+    return copy;
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

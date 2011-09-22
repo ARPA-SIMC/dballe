@@ -556,18 +556,7 @@ void Msg::set_by_id(const wreport::Var& var, int shortcut)
 
 void Msg::set(const Var& var, Varcode code, const Level& lev, const Trange& tr)
 {
-    auto_ptr<Var> copy(newvar(code));
-    copy->copy_val_only(var); // Copy value performing conversions
-
-    for (const Var* a = var.next_attr(); a; a = a->next_attr())
-    {
-        if (!a->isset()) continue;
-        auto_ptr<Var> acopy(newvar(map_code_to_dballe(a->code())));
-        acopy->copy_val_only(*a);
-        copy->seta(acopy);
-    }
-
-    set(copy, lev, tr);
+    set(var_copy_without_unset_attrs(var, code), lev, tr);
 }
 
 void Msg::set(std::auto_ptr<Var> var, const Level& lev, const Trange& tr)
