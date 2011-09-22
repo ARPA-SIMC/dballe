@@ -59,10 +59,10 @@ namespace {
 struct FlightBase : public Template
 {
     bool is_crex;
-    Level lev;
+    const msg::Context* flight_ctx;
 
     FlightBase(const Exporter::Options& opts, const Msgs& msgs)
-        : Template(opts, msgs) {}
+        : Template(opts, msgs), flight_ctx(0) {}
 
     void add(Varcode code, int shortcut)
     {
@@ -73,9 +73,14 @@ struct FlightBase : public Template
             subset->store_variable_undef(code);
     }
 
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
+    void add(Varcode code)
     {
-        const Var* var = msg->find(srccode, level, trange);
+        add(code, code);
+    }
+
+    void add(Varcode code, Varcode srccode)
+    {
+        const Var* var = flight_ctx->find(srccode);
         if (var)
             subset->store_variable(code, *var);
         else
@@ -102,7 +107,7 @@ struct FlightBase : public Template
         Template::to_subset(msg, subset);
 
         // Find what is the level where the airplane is in
-        lev = Level();
+        flight_ctx = 0;
 
         for (unsigned i = 0; i < msg.data.size(); ++i)
         {
@@ -123,14 +128,14 @@ struct FlightBase : public Template
             }
             if (use)
             {
-                if (lev.ltype1 != MISSING_INT && lev.ltype1 != ctx.level.ltype1)
+                if (flight_ctx != 0)
                     error_consistency::throwf("contradicting height indication found (both %d and %d)",
-                            lev.ltype1, ctx.level.ltype1);
-                lev = ctx.level;
+                            flight_ctx->level.ltype1, ctx.level.ltype1);
+                flight_ctx = &ctx;
             }
         }
 
-        if (lev.ltype1 == MISSING_INT)
+        if (flight_ctx == 0)
             throw error_notfound("no airplane pressure or height found in flight message");
     }
 };
@@ -170,7 +175,7 @@ struct Airep : public FlightBase
         FlightBase::to_subset(msg, subset);
 
         /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
-        /*  1 */ add(WR_VAR(0,  2, 61), WR_VAR(0,  2,  61), lev, Trange::instant());
+        /*  1 */ add(WR_VAR(0,  2, 61));
         /*  2 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
         /*  3 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
         /*  4 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
@@ -178,15 +183,15 @@ struct Airep : public FlightBase
         /*  6 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /*  7 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /*  8 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /*  9 */ add(WR_VAR(0,  8,  4), WR_VAR(0,  8,   4), lev, Trange::instant());
-        /* 10 */ add(WR_VAR(0,  7,  2), WR_VAR(0,  7,  30), lev, Trange::instant()); /* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
-        /* 11 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101), lev, Trange::instant()); /* TEMPERATURE/DRY-BULB TEMPERATURE */
-        /* 12 */ add(WR_VAR(0, 11,  1), WR_VAR(0, 11,   1), lev, Trange::instant()); /* WIND DIRECTION */
-        /* 13 */ add(WR_VAR(0, 11,  2), WR_VAR(0, 11,   2), lev, Trange::instant()); /* WIND SPEED */
-        /* 14 */ add(WR_VAR(0, 11, 31), WR_VAR(0, 11,  31), lev, Trange::instant()); /* DEGREE OF TURBULENCE */
-        /* 15 */ add(WR_VAR(0, 11, 32), WR_VAR(0, 11,  32), lev, Trange::instant()); /* HEIGHT OF BASE OF TURBULENCE */
-        /* 16 */ add(WR_VAR(0, 11, 33), WR_VAR(0, 11,  33), lev, Trange::instant()); /* HEIGHT OF TOP OF TURBULENCE */
-        /* 17 */ add(WR_VAR(0, 20, 41), WR_VAR(0, 20,  41), lev, Trange::instant()); /* AIRFRAME ICING */
+        /*  9 */ add(WR_VAR(0,  8,  4));
+        /* 10 */ add(WR_VAR(0,  7,  2), WR_VAR(0,  7,  30)); /* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
+        /* 11 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101)); /* TEMPERATURE/DRY-BULB TEMPERATURE */
+        /* 12 */ add(WR_VAR(0, 11,  1));                     /* WIND DIRECTION */
+        /* 13 */ add(WR_VAR(0, 11,  2));                     /* WIND SPEED */
+        /* 14 */ add(WR_VAR(0, 11, 31));                     /* DEGREE OF TURBULENCE */
+        /* 15 */ add(WR_VAR(0, 11, 32));                     /* HEIGHT OF BASE OF TURBULENCE */
+        /* 16 */ add(WR_VAR(0, 11, 33));                     /* HEIGHT OF TOP OF TURBULENCE */
+        /* 17 */ add(WR_VAR(0, 20, 41));                     /* AIRFRAME ICING */
 
         if (!is_crex)
         {
@@ -268,10 +273,10 @@ struct AmdarWMO : public FlightBase
 
         Level lev;
 
-        /*  0 */ add(WR_VAR(0,  1, 33), WR_VAR(0,  1, 33), lev, Trange::ana());
-        /*  1 */ add(WR_VAR(0,  1, 34), WR_VAR(0,  1, 34), lev, Trange::ana());
+        /*  0 */ add(WR_VAR(0,  1, 33));
+        /*  1 */ add(WR_VAR(0,  1, 34));
         /*  2 */ add(WR_VAR(0,  1,  8), DBA_MSG_IDENT);
-        /*  3 */ add(WR_VAR(0,  1, 23), WR_VAR(0,  1, 23), lev, Trange::ana());
+        /*  3 */ add(WR_VAR(0,  1, 23));
         /*  4 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /*  5 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
         /*  6 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
@@ -280,37 +285,37 @@ struct AmdarWMO : public FlightBase
         /*  9 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
         /* 10 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /* 11 */ add(WR_VAR(0,  4,  6), DBA_MSG_SECOND);
-        /* 12 */ add(WR_VAR(0,  7, 10), WR_VAR(0,  7, 10), lev, Trange::instant());
-        /* 13 */ add(WR_VAR(0,  8,  9), WR_VAR(0,  8,  9), lev, Trange::instant());
-        /* 14 */ add(WR_VAR(0, 11,  1), WR_VAR(0, 11,  1), lev, Trange::instant());
-        /* 15 */ add(WR_VAR(0, 11,  2), WR_VAR(0, 11,  2), lev, Trange::instant());
-        /* 16 */ add(WR_VAR(0, 11, 31), WR_VAR(0, 11, 31), lev, Trange::instant());
-        /* 17 */ add(WR_VAR(0, 11, 36), WR_VAR(0, 11, 36), lev, Trange::instant());
-        /* 18 */ add(WR_VAR(0, 12,101), WR_VAR(0, 12,101), lev, Trange::instant());
-        /* 19 */ add(WR_VAR(0, 33, 25), WR_VAR(0, 33, 25), lev, Trange::instant());
-        /* 20 */ add(WR_VAR(0,  8,  4), WR_VAR(0,  8,  4), lev, Trange::instant());
-        /* 21 */ add(WR_VAR(0,  2, 64), WR_VAR(0,  2, 64), lev, Trange::instant());
-        /* 22 */ add(WR_VAR(0, 13,  3), WR_VAR(0, 13,  3), lev, Trange::instant());
-        /* 23 */ add(WR_VAR(0, 12,103), WR_VAR(0, 12,103), lev, Trange::instant());
-        /* 24 */ add(WR_VAR(0, 13,  2), WR_VAR(0, 13,  2), lev, Trange::instant());
+        /* 12 */ add(WR_VAR(0,  7, 10));
+        /* 13 */ add(WR_VAR(0,  8,  9));
+        /* 14 */ add(WR_VAR(0, 11,  1));
+        /* 15 */ add(WR_VAR(0, 11,  2));
+        /* 16 */ add(WR_VAR(0, 11, 31));
+        /* 17 */ add(WR_VAR(0, 11, 36));
+        /* 18 */ add(WR_VAR(0, 12,101));
+        /* 19 */ add(WR_VAR(0, 33, 25));
+        /* 20 */ add(WR_VAR(0,  8,  4));
+        /* 21 */ add(WR_VAR(0,  2, 64));
+        /* 22 */ add(WR_VAR(0, 13,  3));
+        /* 23 */ add(WR_VAR(0, 12,103));
+        /* 24 */ add(WR_VAR(0, 13,  2));
         /* 25 */ subset.store_variable_i(WR_VAR(0, 31, 1), 0); // FIXME: no replicated section so far
         //102000 replicate 2 descriptors (delayed 031001) times
         //  011075 MEAN TURBULENCE INTENSITY (EDDY DISSIPATION RATE)[M**(2/3)/S]
         //  011076 PEAK TURBULENCE INTENSITY (EDDY DISSIPATION RATE)[M**(2/3)/S]
-                 add(WR_VAR(0, 11, 37), WR_VAR(0, 11, 37), lev, Trange::instant());
-                 add(WR_VAR(0, 11, 39), WR_VAR(0, 11, 39), lev, Trange::instant());
-                 add(WR_VAR(0, 11, 77), WR_VAR(0, 11, 77), lev, Trange::instant());
-                 add(WR_VAR(0, 20, 42), WR_VAR(0, 20, 42), lev, Trange::instant());
-                 add(WR_VAR(0, 20, 43), WR_VAR(0, 20, 43), lev, Trange::instant());
-                 add(WR_VAR(0, 20, 44), WR_VAR(0, 20, 44), lev, Trange::instant());
-                 add(WR_VAR(0, 20, 45), WR_VAR(0, 20, 45), lev, Trange::instant());
-                 add(WR_VAR(0, 20, 41), WR_VAR(0, 20, 41), lev, Trange::instant());
-                 add(WR_VAR(0,  2,  5), WR_VAR(0,  2,  5), lev, Trange::instant());
-                 add(WR_VAR(0,  2, 62), WR_VAR(0,  2, 62), lev, Trange::instant());
-                 add(WR_VAR(0,  2, 70), WR_VAR(0,  2, 70), lev, Trange::instant());
-                 add(WR_VAR(0,  2, 65), WR_VAR(0,  2, 65), lev, Trange::instant());
-                 add(WR_VAR(0,  7,  4), WR_VAR(0,  7,  4), lev, Trange::instant());
-                 add(WR_VAR(0, 33, 26), WR_VAR(0, 33, 26), lev, Trange::instant());
+                 add(WR_VAR(0, 11, 37));
+                 add(WR_VAR(0, 11, 39));
+                 add(WR_VAR(0, 11, 77));
+                 add(WR_VAR(0, 20, 42));
+                 add(WR_VAR(0, 20, 43));
+                 add(WR_VAR(0, 20, 44));
+                 add(WR_VAR(0, 20, 45));
+                 add(WR_VAR(0, 20, 41));
+                 add(WR_VAR(0,  2,  5));
+                 add(WR_VAR(0,  2, 62));
+                 add(WR_VAR(0,  2, 70));
+                 add(WR_VAR(0,  2, 65));
+                 add(WR_VAR(0,  7,  4));
+                 add(WR_VAR(0, 33, 26));
     }
 };
 
@@ -372,14 +377,14 @@ struct Acars : public FlightBase
     {
         FlightBase::to_subset(msg, subset);
         /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
-        /*  1 */ add(WR_VAR(0,  1,  8), WR_VAR(0,  1,  8), lev, Trange::instant());
-        /*  2 */ add(WR_VAR(0,  2, 61), WR_VAR(0,  2, 61), lev, Trange::instant());
-        /*  3 */ add(WR_VAR(0,  2, 62), WR_VAR(0,  2, 62), lev, Trange::instant());
-        /*  4 */ add(WR_VAR(0,  2,  2), WR_VAR(0,  2,  2), lev, Trange::instant());
-        /*  5 */ add(WR_VAR(0,  2,  5), WR_VAR(0,  2,  5), lev, Trange::instant());
-        /*  6 */ add(WR_VAR(0,  2, 70), WR_VAR(0,  2, 70), lev, Trange::instant());
-        /*  7 */ add(WR_VAR(0,  2, 63), WR_VAR(0,  2, 63), lev, Trange::instant());
-        /*  8 */ add(WR_VAR(0,  2,  1), WR_VAR(0,  2,  1), lev, Trange::instant());
+        /*  1 */ add(WR_VAR(0,  1,  8));
+        /*  2 */ add(WR_VAR(0,  2, 61));
+        /*  3 */ add(WR_VAR(0,  2, 62));
+        /*  4 */ add(WR_VAR(0,  2,  2));
+        /*  5 */ add(WR_VAR(0,  2,  5));
+        /*  6 */ add(WR_VAR(0,  2, 70));
+        /*  7 */ add(WR_VAR(0,  2, 63));
+        /*  8 */ add(WR_VAR(0,  2,  1));
         /*  9 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
         /* 10 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
         /* 11 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
@@ -387,18 +392,18 @@ struct Acars : public FlightBase
         /* 13 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /* 14 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
         /* 15 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
-        /* 16 */ add(WR_VAR(0,  8,  4), WR_VAR(0,  8,   4), lev, Trange::instant());
-        /* 17 */ add(WR_VAR(0,  7,  4), WR_VAR(0, 10,   4), lev, Trange::instant());
-        /* 18 */ add(WR_VAR(0,  8, 21), WR_VAR(0,  8,  21), lev, Trange::instant());
-        /* 19 */ add(WR_VAR(0, 11,  1), WR_VAR(0, 11,   1), lev, Trange::instant()); /* WIND DIRECTION */
-        /* 20 */ add(WR_VAR(0, 11,  2), WR_VAR(0, 11,   2), lev, Trange::instant()); /* WIND SPEED */
-        /* 21 */ add(WR_VAR(0, 11, 31), WR_VAR(0, 11,  31), lev, Trange::instant()); /* DEGREE OF TURBULENCE */
-        /* 22 */ add(WR_VAR(0, 11, 34), WR_VAR(0, 11,  34), lev, Trange::instant()); /* VERTICAL GUST VELOCITY */
-        /* 23 */ add(WR_VAR(0, 11, 35), WR_VAR(0, 11,  35), lev, Trange::instant()); /* VERTICAL GUST ACCELERATION */
-        /* 24 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101), lev, Trange::instant()); /* TEMPERATURE/DRY-BULB TEMPERATURE */
-        /* 25 */ add(WR_VAR(0, 12,  3), WR_VAR(0, 12, 103), lev, Trange::instant()); /* DEW-POINT TEMPERATURE */
-        /* 26 */ add(WR_VAR(0, 13,  3), WR_VAR(0, 13,   3), lev, Trange::instant()); /* RELATIVE HUMIDITY */
-        /* 27 */ add(WR_VAR(0, 20, 41), WR_VAR(0, 20,  41), lev, Trange::instant()); /* AIRFRAME ICING */
+        /* 16 */ add(WR_VAR(0,  8,  4));
+        /* 17 */ add(WR_VAR(0,  7,  4), WR_VAR(0, 10,   4));
+        /* 18 */ add(WR_VAR(0,  8, 21));
+        /* 19 */ add(WR_VAR(0, 11,  1));                     /* WIND DIRECTION */
+        /* 20 */ add(WR_VAR(0, 11,  2));                     /* WIND SPEED */
+        /* 21 */ add(WR_VAR(0, 11, 31));                     /* DEGREE OF TURBULENCE */
+        /* 22 */ add(WR_VAR(0, 11, 34));                     /* VERTICAL GUST VELOCITY */
+        /* 23 */ add(WR_VAR(0, 11, 35));                     /* VERTICAL GUST ACCELERATION */
+        /* 24 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101)); /* TEMPERATURE/DRY-BULB TEMPERATURE */
+        /* 25 */ add(WR_VAR(0, 12,  3), WR_VAR(0, 12, 103)); /* DEW-POINT TEMPERATURE */
+        /* 26 */ add(WR_VAR(0, 13,  3));                     /* RELATIVE HUMIDITY */
+        /* 27 */ add(WR_VAR(0, 20, 41));                     /* AIRFRAME ICING */
 
         if (!is_crex)
         {
