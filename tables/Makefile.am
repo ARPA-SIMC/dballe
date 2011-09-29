@@ -33,4 +33,4 @@ B000299.txt: dballe.txt
 EXTRA_DIST = $(table_DATA) mkbdoc
 
 distclean-local:
-	rm -f dballe.tex B0000000000200014001.txt B000000002001400.txt B990204.txt B000299.txt
+	rm -f dballe.tex
