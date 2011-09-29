@@ -105,7 +105,7 @@ fapi.dvi: $(fapisources)
 
 EXTRA_DIST = libdballe.dox $(guidesources) fapi.tex doxy2swig.py add_templates_to_manpage introduzione.odt
 
-CLEANFILES = libdballe.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg} dballe-doc.i
+CLEANFILES = libdballe.doxytags libdballef.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg} dballe-doc.i
 
 clean-local:
 	rm -rf {c,fortran}_api
