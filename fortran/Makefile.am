@@ -41,8 +41,8 @@ CXXFLAGS += -O0
 
 tut_test_SOURCES = \
 	msgapi-tut.cc \
-	../dballe/core/test-utils-core.cc \
-	../dballe/core/tests/tut-main.cpp
+	test-utils-core.cc \
+	tut-main.cpp
 tut_test_LDADD = \
 	libdballef.la \
 	../dballe/libdballe.la \
