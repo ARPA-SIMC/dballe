@@ -12,7 +12,8 @@ DEB_PYTHON2_MODULE_PACKAGES := provami
 
 # From http://wiki.debian.org/DebianPython/NewPolicy
 binary-install/python-dballe::
-	rm $(CURDIR)/debian/python-dballe/usr/share/pyshared/_dballe.la
+	rm -f $(CURDIR)/debian/python-dballe/usr/share/pyshared/_dballe.la
+	rm -f $(CURDIR)/debian/python-dballe/usr/lib/python?.?/dist-packages/_dballe.la
 
 # Store build information
 common-binary-post-install-arch common-binary-post-install-indep::
