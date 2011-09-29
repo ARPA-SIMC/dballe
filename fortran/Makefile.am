@@ -11,7 +11,6 @@ dist_noinst_HEADERS = simple.h commonapi.h dbapi.h msgapi.h handles.h
 
 lib_LTLIBRARIES = libdballef.la
 
-# missing.f90
 libdballef_la_SOURCES = \
 	error.cc \
 	simple.cc \
