@@ -43,6 +43,9 @@ dballe:
 	ln -s . $@
 	for x in $(pkgpython_PYTHON); do test -f $$x || cp $(srcdir)/$$x .; done
 
+clean-local:
+	rm *.pyc
+
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
 EXTRA_DIST = README dballe.i test.py test-db.py test-volnd.py test-rconvert.py test-csv.py doc-dballe
