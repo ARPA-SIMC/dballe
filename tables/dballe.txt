@@ -1,5 +1,6 @@
  001001 WMO BLOCK NUMBER                                                 NUMERIC                    0            0   7 NUMERIC                   0          2
  001002 WMO STATION NUMBER                                               NUMERIC                    0            0  10 NUMERIC                   0          3
+ 001006 AIRCRAFT FLIGHT NUMBER                                           CCITTIA5                   0            0  64 CHARACTER                 0          8
  001007 SATELLITE IDENTIFIER                                             CODE TABLE 1007            0            0  10 CODE TABLE 1007           0          3
  001008 AIRCRAFT REGISTRATION NUMBER OR OTHER IDENTIFICATION             CCITTIA5                   0            0  64 CHARACTER                 0          8
  001011 SHIP OR MOBILE LAND STATION IDENTIFIER                           CCITTIA5                   0            0  72 CHARACTER                 0          9

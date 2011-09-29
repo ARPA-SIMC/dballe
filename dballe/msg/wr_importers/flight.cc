@@ -35,6 +35,8 @@ class FlightImporter : public WMOImporter
 protected:
     Level lev;
     std::vector<Var*> deferred;
+    const Var* b01006;
+    const Var* b01008;
 
     void import_var(const Var& var);
 
@@ -54,6 +56,7 @@ public:
         WMOImporter::init();
         lev = Level();
         deferred.clear();
+        b01006 = b01008 = NULL;
     }
 
     void acquire(const Var& var)
@@ -109,6 +112,26 @@ public:
             if (var.value() != NULL)
                 import_var(var);
         }
+        if (b01008)
+        {
+            msg->set_ident_var(*b01008);
+            if (b01006)
+                acquire(*b01006);
+        } else if (b01006)
+            msg->set_ident_var(*b01006);
+    }
+
+    MsgType scanTypeFromVars(const Subset& subset) const
+    {
+        for (unsigned i = 0; i < subset.size(); ++i)
+        {
+            switch (subset[i].code())
+            {
+                case WR_VAR(0, 2, 65): // ACARS GROUND RECEIVING STATION
+                    return MSG_ACARS;
+            }
+        }
+        return MSG_AMDAR;
     }
 
     MsgType scanType(const Bulletin& bulletin) const
@@ -118,8 +141,11 @@ public:
             case 142: return MSG_AIREP;
             case 144: return MSG_AMDAR;
             case 145: return MSG_ACARS;
-            case   4: return MSG_AMDAR;
-            default: return MSG_GENERIC;
+            default:
+                // Scan for the presence of significant B codes
+                if (bulletin.subsets.empty())
+                    return MSG_GENERIC;
+                return scanTypeFromVars(bulletin.subsets[0]);
         }
     }
 };
@@ -133,7 +159,8 @@ void FlightImporter::import_var(const Var& var)
 {
     switch (var.code())
     {
-        case WR_VAR(0,  1,  8): msg->set_ident_var(var); break;
+        case WR_VAR(0,  1,  6): b01006 = &var; break;
+        case WR_VAR(0,  1,  8): b01008 = &var; break;
         case WR_VAR(0,  1, 23): acquire(var); break;
         case WR_VAR(0,  2,  1): acquire(var); break;
         case WR_VAR(0,  2,  2): acquire(var); break;
@@ -150,7 +177,8 @@ void FlightImporter::import_var(const Var& var)
             break;
         case WR_VAR(0,  7,  4):
             // Isobaric Surface in Pa
-            set_level(Level(100, var.enqd()));
+            if (lev.ltype1 == MISSING_INT)
+                set_level(Level(100, var.enqd()));
             acquire(var, WR_VAR(0, 10,  4));
             break;
         case WR_VAR(0,  7,  10):

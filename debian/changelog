@@ -10,19 +10,21 @@ dballe (5.10-1) unstable; urgency=low
      - flight import/export: all data moved from station information level to
        flight level, to prevent overlaps for flights on different days at the
        same coordinates
-     - Added variables B01023, B20042, B20043, B20044, B20045, B02064, B07010,
-       B08009, B11031, B11037, B11039, B11075, B11076 and B11077 for GTS
-       AMDAR reports
+     - Added variables B01006, B01023, B20042, B20043, B20044, B20045, B02064,
+       B07010, B08009, B11031, B11037, B11039, B11075, B11076 and B11077 for
+       GTS AMDAR reports
      - Make sure that height levels for flights are expressed in millimeters
        as documented
      - Initial support for importing/exporting experimental WMO ACARS
        templates
+     - When scanning flight identification numbers, give preference to B01008
+       over B01006
   * Avoid installing .la files and fixed doxygen dependencies, thanks to Luk
     Claes. Closes: #631898
   * Migrated to dh_python2. Closes: #616784
   * Depend on swig 2.0
 
- -- Enrico Zini <enrico@debian.org>  Thu, 22 Sep 2011 16:17:43 +0200
+ -- Enrico Zini <enrico@debian.org>  Thu, 29 Sep 2011 19:23:52 +0200
 
 dballe (5.9-1) unstable; urgency=low
 

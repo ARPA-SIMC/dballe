@@ -291,6 +291,107 @@ void to::test<12>()
     ensure_equals(msg.type, MSG_TEMP);
 }
 
+// ECWMF AIREP
+template<> template<>
+void to::test<13>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/obs4-142.1.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_AIREP);
+    IS(ident, "ACA872");
+}
+
+// ECWMF AMDAR
+template<> template<>
+void to::test<14>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/obs4-144.4.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_AMDAR);
+    IS(ident, "EU4444");
+}
+
+// ECWMF ACARS
+template<> template<>
+void to::test<15>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/obs4-145.4.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_ACARS);
+    IS(ident, "JBNYR3RA");
+}
+
+// WMO ACARS
+template<> template<>
+void to::test<16>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-acars1.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_ACARS);
+    IS(ident, "EU5331");
+}
+
+// WMO ACARS
+template<> template<>
+void to::test<17>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-acars2.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_ACARS);
+    IS(ident, "FJCYR4RA");
+}
+
+// WMO ACARS UK
+template<> template<>
+void to::test<18>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-acars-uk1.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    // This contains the same data as an AMDAR and has undefined subtype and
+    // localsubtype, so it gets identified as an AMDAR
+    ensure_equals(msg.type, MSG_AMDAR);
+    IS(ident, "EU3375");
+}
+
+// WMO ACARS US
+template<> template<>
+void to::test<19>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-acars-us1.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_ACARS);
+    IS(ident, "FJCYR4RA");
+}
+
+// WMO AMDAR
+template<> template<>
+void to::test<20>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-amdar1.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_AMDAR);
+    IS(ident, "EU0274");
+}
+
+// WMO AMDAR
+template<> template<>
+void to::test<21>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-amdar2.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_AMDAR);
+    IS(ident, "EU7866");
+}
+
 #if 0
 /* Check that a BUFR from a synop high-level station correctly reports isobaric
  * surface and geopotential */

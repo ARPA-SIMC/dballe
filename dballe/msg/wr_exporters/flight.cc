@@ -376,8 +376,8 @@ struct Acars : public FlightBase
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         FlightBase::to_subset(msg, subset);
-        /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
-        /*  1 */ add(WR_VAR(0,  1,  8));
+        /*  0 */ add(WR_VAR(0,  1,  6));
+        /*  1 */ add(WR_VAR(0,  1,  8), DBA_MSG_IDENT);
         /*  2 */ add(WR_VAR(0,  2, 61));
         /*  3 */ add(WR_VAR(0,  2, 62));
         /*  4 */ add(WR_VAR(0,  2,  2));
