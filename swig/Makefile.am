@@ -44,7 +44,7 @@ dballe:
 	for x in $(pkgpython_PYTHON); do test -f $$x || cp $(srcdir)/$$x .; done
 
 clean-local:
-	rm *.pyc
+	rm -f *.pyc
 
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
