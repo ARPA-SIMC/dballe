@@ -17,8 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-msg.h>
-#include <dballe/msg/wr_codec.h>
+#include "msg/test-utils-msg.h"
+#include "msg/wr_codec.h"
 #include <wreport/notes.h>
 
 using namespace dballe;

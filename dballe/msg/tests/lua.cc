@@ -17,9 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-msg.h>
-#include <test-utils-lua.h>
-#include <dballe/msg/msg.h>
+#include "msg/test-utils-msg.h"
+#include "msg/test-utils-lua.h"
+#include "msg/msg.h"
 
 using namespace dballe;
 using namespace wreport;

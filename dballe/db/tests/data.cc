@@ -17,11 +17,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-db.h>
-#include <dballe/db/data.h>
-#include <dballe/db/context.h>
-#include <dballe/db/station.h>
-#include <dballe/db/internals.h>
+#include "db/test-utils-db.h"
+#include "db/data.h"
+#include "db/context.h"
+#include "db/station.h"
+#include "db/internals.h"
 
 using namespace dballe;
 using namespace std;

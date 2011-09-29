@@ -239,10 +239,6 @@ AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
 AC_CONFIG_FILES([
 Makefile
 dballe/Makefile
-dballe/core/Makefile
-dballe/msg/Makefile
-dballe/db/Makefile
-dballe/cmdline/Makefile
 fortran/Makefile
 tools/Makefile
 tables/Makefile

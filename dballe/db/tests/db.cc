@@ -17,11 +17,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-db.h>
-#include <dballe/db/querybuf.h>
-#include <dballe/db/db.h>
-#include <dballe/db/cursor.h>
-#include <dballe/db/internals.h>
+#include "db/test-utils-db.h"
+#include "db/querybuf.h"
+#include "db/db.h"
+#include "db/cursor.h"
+#include "db/internals.h"
 
 using namespace dballe;
 using namespace wreport;

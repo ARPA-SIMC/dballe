@@ -17,11 +17,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-msg.h>
-#include <dballe/core/csv.h>
-#include <dballe/msg/msgs.h>
-#include <dballe/msg/msg.h>
-#include <dballe/msg/context.h>
+#include "msg/test-utils-msg.h"
+#include "core/csv.h"
+#include "msg/msgs.h"
+#include "msg/msg.h"
+#include "msg/context.h"
 #include <wreport/notes.h>
 
 using namespace dballe;

@@ -17,8 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-core.h>
-#include <dballe/core/rawmsg.h>
+#include "core/test-utils-core.h"
+#include "core/rawmsg.h"
 
 using namespace std;
 using namespace dballe;

@@ -17,8 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-db.h>
-#include <dballe/db/querybuf.h>
+#include "db/test-utils-db.h"
+#include "db/querybuf.h"
 
 using namespace dballe;
 using namespace std;

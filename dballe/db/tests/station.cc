@@ -17,8 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-db.h>
-#include <dballe/db/station.h>
+#include "db/test-utils-db.h"
+#include "db/station.h"
 #include <sql.h>
 
 using namespace dballe;

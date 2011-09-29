@@ -17,8 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-db.h>
-#include <dballe/db/repinfo.h>
+#include "db/test-utils-db.h"
+#include "db/repinfo.h"
 
 using namespace dballe;
 using namespace std;

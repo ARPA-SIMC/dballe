@@ -17,8 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-core.h>
-#include "aliases.h"
+#include "core/test-utils-core.h"
+#include "core/aliases.h"
 
 using namespace dballe;
 

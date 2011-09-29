@@ -20,7 +20,7 @@
  */
 
 #include "base.h"
-#include "msgs.h"
+#include "msg/msgs.h"
 #include <wreport/bulletin.h>
 
 using namespace wreport;

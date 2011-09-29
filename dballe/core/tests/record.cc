@@ -17,8 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-core.h>
-#include <dballe/core/record.h>
+#include "core/test-utils-core.h"
+#include "core/record.h"
 
 /*
 extern "C" {

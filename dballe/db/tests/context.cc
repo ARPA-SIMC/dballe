@@ -17,42 +17,42 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-db.h>
-#include <dballe/db/context.h>
-#include <dballe/db/station.h>
+#include "db/test-utils-db.h"
+#include "db/context.h"
+#include "db/station.h"
 
 using namespace dballe;
 using namespace std;
 
 namespace tut {
 
-struct context_shar : public dballe::tests::db_test
+struct db_context_shar : public dballe::tests::db_test
 {
-        db::Context* co;
+    db::Context* co;
 
-	context_shar()
-	{
-		if (!has_db()) return;
-		co = &db->context();
+    db_context_shar()
+    {
+        if (!has_db()) return;
+        co = &db->context();
 
-                db::Station& st = db->station();
+        db::Station& st = db->station();
 
-		// Insert a mobile station
-		st.lat = 4500000;
-		st.lon = 1100000;
-                st.set_ident("ciao");
-		int id = st.insert();
-		ensure_equals(id, 1);
+        // Insert a mobile station
+        st.lat = 4500000;
+        st.lon = 1100000;
+        st.set_ident("ciao");
+        int id = st.insert();
+        ensure_equals(id, 1);
 
-		// Insert a fixed station
-		st.lat = 4600000;
-		st.lon = 1200000;
-		st.set_ident(NULL);
-                id = st.insert();
-		ensure_equals(id, 2);
-	}
+        // Insert a fixed station
+        st.lat = 4600000;
+        st.lon = 1200000;
+        st.set_ident(NULL);
+        id = st.insert();
+        ensure_equals(id, 2);
+    }
 };
-TESTGRP(context);
+TESTGRP(db_context);
 
 /* Insert some values and try to read them again */
 template<> template<>

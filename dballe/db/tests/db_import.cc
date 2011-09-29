@@ -17,11 +17,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-db.h>
-#include <dballe/db/db.h>
-#include <dballe/msg/msgs.h>
-#include <dballe/msg/context.h>
-#include <dballe/core/record.h>
+#include "db/test-utils-db.h"
+#include "db/db.h"
+#include "msg/msgs.h"
+#include "msg/context.h"
+#include "core/record.h"
 #include <wreport/notes.h>
 #include <set>
 

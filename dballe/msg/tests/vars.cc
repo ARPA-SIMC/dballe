@@ -19,9 +19,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-msg.h>
-#include <dballe/core/defs.h>
-#include <dballe/msg/vars.h>
+#include "msg/test-utils-msg.h"
+#include "core/defs.h"
+#include "msg/vars.h"
 
 using namespace dballe;
 using namespace std;

@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-core.h>
-#include <dballe/core/file.h>
+#include "core/test-utils-core.h"
+#include "core/file.h"
 
 using namespace dballe;
 using namespace std;

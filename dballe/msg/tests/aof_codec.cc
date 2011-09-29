@@ -17,10 +17,10 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-msg.h>
-#include <dballe/msg/aof_codec.h>
-#include <dballe/msg/msgs.h>
-#include <dballe/msg/context.h>
+#include "msg/test-utils-msg.h"
+#include "msg/aof_codec.h"
+#include "msg/msgs.h"
+#include "msg/context.h"
 #include <wreport/codetables.h>
 #include <wreport/notes.h>
 #include <math.h>

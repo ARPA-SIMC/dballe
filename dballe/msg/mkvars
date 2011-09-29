@@ -21,6 +21,10 @@
 
 import sys, re, os
 
+DESTDIR = "."
+if len(sys.argv) > 1:
+    DESTDIR = sys.argv[1]
+
 class VC:
     def __init__(self, name):
         m = re.match(r"B(\d\d)(\d\d\d)", name)
@@ -71,7 +75,7 @@ class Var:
 vars = [Var(line) for line in sys.stdin if not re.match(r"^\s*(?:#.+)?$", line)]
 vars.sort()
 
-fh = open("vars.h", "w")
+fh = open("%s/vars.h" % DESTDIR, "w")
 print >>fh, """#ifndef DBA_MSG_VARS_H
 #define DBA_MSG_VARS_H
 
@@ -136,7 +140,7 @@ print >>fh, """
 """
 fh.close()
 
-fh = open("msg-extravars.h", "w")
+fh = open("%s/msg-extravars.h" % DESTDIR, "w")
 types = dict(int = 'int', num = 'double', str = 'const char*')
 ftypes = dict(int = 'i', num = 'd', str = 'c')
 for v in vars:
@@ -158,7 +162,7 @@ for v in vars:
         v.name;
 fh.close()
 
-fc = open("vars.gperf", "w")
+fc = open("%s/vars.gperf" % DESTDIR, "w")
 print >>fc, """
 %define slot-name name
 %define class-name MsgVarLookup

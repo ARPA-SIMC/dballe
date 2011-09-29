@@ -17,12 +17,12 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "wr_codec.h"
+#include "msg/wr_codec.h"
 #include <wreport/bulletin.h>
 #include <wreport/conv.h>
 #include <wreport/codetables.h>
-#include "msgs.h"
-#include "context.h"
+#include "msg/msgs.h"
+#include "msg/context.h"
 
 using namespace wreport;
 using namespace std;

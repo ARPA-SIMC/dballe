@@ -17,9 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "wr_codec.h"
+#include "msg/wr_codec.h"
 #include <wreport/bulletin.h>
-#include "msgs.h"
+#include "msg/msgs.h"
 #include <cstdlib>
 
 using namespace wreport;

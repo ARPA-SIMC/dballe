@@ -17,8 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <test-utils-msg.h>
-#include <dballe/msg/context.h>
+#include "msg/test-utils-msg.h"
+#include "msg/context.h"
 #include <memory>
 
 using namespace wreport;
