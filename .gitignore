@@ -33,9 +33,6 @@ Makefile
 /dbadb.1
 /dbamsg.1
 /dbatbl.1
-/dballe/core/btable.dox
-/dballe/bench/benchmark
-/dballe/core/dump-core-info
 /dballe/core/record_keyword.dox
 /dballe/core/record_keyword.rst
 /dballe/core/record_keyword.tex
@@ -44,7 +41,6 @@ Makefile
 /dballe/core/aliases-reverse.cc
 /dballe/core/aliases.dox
 /dballe/core/aliases.tex
-/dballe/core/tut_test
 /dballe/msg/vars.gperf
 /dballe/msg/vars.cc
 /dballe/msg/vars.h
@@ -53,8 +49,8 @@ Makefile
 /dballe/msg/ltypes.tex
 /dballe/msg/tranges.dox
 /dballe/msg/tranges.tex
-/dballe/msg/tut_test
-/dballe/db/tut_test
+/dballe/tut_test
+/dballe/dump-core-info
 /fortran/check_attrs
 /fortran/check_fdballe
 /fortran/check_missing
