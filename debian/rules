@@ -1,23 +1,31 @@
 #!/usr/bin/make -f
 
-include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/autotools.mk
+VERSION=$(shell debian/vercheck)
 
 # Work around to latex2html bug #368693
 export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 
-DEB_PYTHON2_MODULE_PACKAGES := provami
+%:
+	dh --with python2 $@
 
-#DEB_MAKE_CHECK_TARGET := check
 
-# From http://wiki.debian.org/DebianPython/NewPolicy
-binary-install/python-dballe::
-	rm -f $(CURDIR)/debian/python-dballe/usr/share/pyshared/_dballe.la
-	rm -f $(CURDIR)/debian/python-dballe/usr/lib/python?.?/dist-packages/_dballe.la
+# DEB_PYTHON2_MODULE_PACKAGES := provami
+# 
+# #DEB_MAKE_CHECK_TARGET := check
+# 
+# # From http://wiki.debian.org/DebianPython/NewPolicy
+# binary-install/python-dballe::
+# 	rm -f $(CURDIR)/debian/python-dballe/usr/share/pyshared/_dballe.la
+# 	rm -f $(CURDIR)/debian/python-dballe/usr/lib/python?.?/dist-packages/_dballe.la
 
-# Store build information
-common-binary-post-install-arch common-binary-post-install-indep::
-	dh_buildinfo
+# Temporarily disabled, I'm afraid of #620104
+#override_dh_fixperms:
+#	dh_fixperms
+#	test -e /usr/bin/dh_buildinfo && dh_buildinfo
 
-debsrc:
+
+vercheck:
+	debian/vercheck > /dev/null
+
+debsrc: vercheck
 	git-buildpackage -S -us -uc
