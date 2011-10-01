@@ -103,7 +103,7 @@ Description: DB-ALL.e Python library for weather research
 
 Package: dballe-common
 Section: misc
-Architecture: any
+Architecture: all
 Depends: ${misc:Depends}
 Description: Common data files for all DB-All.e modules
  DB-All.e is a fast on-disk database where meteorological observed and
