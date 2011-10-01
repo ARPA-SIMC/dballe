@@ -121,7 +121,7 @@ Description: Database for punctual meteorological data (Command line tools)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
- This framework allows to manage large amounts of data using its simple
+ This framework allows one to manage large amounts of data using its simple
  Application Program Interface, and provides tools to visualise, import
  and export in the standard formats BUFR, AOF and CREX.
  .
@@ -138,9 +138,9 @@ Description: Database for punctual meteorological data (Command line tools)
     coordinates, table driven vertical coordinate, reference time,
     table driven observation and forecast specification, table driven
     data type.
-  * It allows to store extra information linked to the data, such as
+  * It allows one to store extra information linked to the data, such as
     confidence intervals for quality control.
-  * It allows to store extra information linked to the stations.
+  * It allows one to store extra information linked to the stations.
   * Variables can be represented as real, integer and characters, with
     appropriate precision for the type of measured value.
   * It is based on physical principles, that is, the data it contains are
@@ -165,5 +165,5 @@ Provides: ${python:Provides}
 Description: Graphical interface to DB-All.e databases
  provami is a GUI application to visualise and navigate DB-All.e databases.
  .
- It also allows to perform simple editing tasks, and to graphically select and
- export data subsets.
+ It also allows one to perform simple editing tasks, and to graphically select
+ and export data subsets.

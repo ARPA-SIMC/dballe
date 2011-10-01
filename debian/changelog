@@ -25,6 +25,7 @@ dballe (5.10-1) unstable; urgency=low
   * Depend on swig 2.0
   * Fixed timestamp syntax in old changelog entries
   * dballe-common: make arch:all
+  * fixed lintian spellchecking errors in debian/control
 
  -- Enrico Zini <enrico@debian.org>  Thu, 29 Sep 2011 19:23:52 +0200
 
