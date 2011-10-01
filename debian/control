@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 7.0.50~),
   pkg-config,
   libwreport-dev (>= 2.0), libpopt-dev, unixodbc-dev, gperf, liblua5.1-0-dev,
   libcnf-dev, gfortran | g77,
-  libtut-dev,
+  libtut-dev, libwibble-dev,
   doxygen-latex, ghostscript,
   swig (>= 2.0), python-dev (>= 2.6.6-3~), python-docutils, python-numpy
 Standards-Version: 3.9.1.0
