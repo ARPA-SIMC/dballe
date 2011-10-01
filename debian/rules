@@ -23,6 +23,16 @@ export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 #	dh_fixperms
 #	test -e /usr/bin/dh_buildinfo && dh_buildinfo
 
+override_dh_auto_install:
+	dh_auto_install
+	# Build and install the python bindings for each different python version
+	for ver in `pyversions -vr`; do \
+		dh_auto_configure -- PYTHON=/usr/bin/python$$ver ; \
+		make clean -C swig ; \
+		make install -C swig DESTDIR=`pwd`/debian/tmp ; \
+	done
+	# Remove python modules .la files
+	rm -f debian/tmp/usr/lib/python*/dist-packages/*.la
 
 vercheck:
 	debian/vercheck > /dev/null
