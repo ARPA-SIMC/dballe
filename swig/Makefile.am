@@ -27,8 +27,12 @@ nodist__dballe_la_SOURCES = dballe_wrap_python.cc
 _dballe_la_LDFLAGS = -module
 _dballe_la_LIBADD = ../dballe/libdballe.la
 
+# Workaround for swig 1.3 missing an include in its code
 dballe_wrap_python.cc Dballe.py: dballe.i ../doc/dballe-doc.i
 	swig -python -c++ -I$(top_srcdir) -I/usr/include -o $@ $<
+	mv dballe_wrap_python.cc dballe_wrap_python.cc.tmp
+	( echo "#include <cstddef>"; cat dballe_wrap_python.cc.tmp ) > dballe_wrap_python.cc
+	rm dballe_wrap_python.cc.tmp
 
 python-dballe.rst: doc-dballe $(pkgpython_PYTHON) dballe dballe.i _dballe.so
 	$(srcdir)/doc-dballe > $@ || (rm -f $@; false)
