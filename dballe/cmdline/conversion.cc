@@ -56,9 +56,41 @@ void Converter::process_dba_msg_from_bulletin(const Bulletin& bulletin, const Ms
 {
     auto_ptr<Bulletin> b1(exporter->make_bulletin());
     exporter->to_bulletin(msgs, *b1);
-    b1->type = bulletin.type;
-    b1->subtype = bulletin.subtype;
-    b1->localsubtype = bulletin.localsubtype;
+    if (recompute_categories)
+    {
+        b1->type = bulletin.type;
+        b1->localsubtype = 255;
+#warning TODO: this is skeleton code, actual deduction will shortly be implemented
+        switch (bulletin.type)
+        {
+            case 0: b1->subtype = 0; break;
+            case 1: b1->subtype = 0; break;
+            case 2: b1->subtype = 4; break;
+            case 3: b1->subtype = 0; break;
+            case 4:
+                switch (msgs[0]->type)
+                {
+                    case MSG_AIREP: b1->subtype = 1; break;
+                    default: b1->subtype = 0; break;
+                }
+                break;
+            case 5: b1->subtype = 0; break;
+            case 6: b1->subtype = 0; break;
+            case 7: b1->subtype = 0; break;
+            case 8: b1->subtype = 0; break;
+            case 9: b1->subtype = 0; break;
+            case 10: b1->subtype = 1; break;
+            case 12: b1->subtype = 0; break;
+            case 21: b1->subtype = 5; break;
+            case 31: b1->subtype = 0; break;
+            case 101: b1->subtype = 7; break;
+            default: b1->subtype = 255; break;
+        }
+    } else {
+        b1->type = bulletin.type;
+        b1->subtype = bulletin.subtype;
+        b1->localsubtype = bulletin.localsubtype;
+    }
 
     Rawmsg raw;
     b1->encode(raw);

@@ -1,3 +1,11 @@
+dballe (5.11-1) unstable; urgency=low
+
+  * New upstream release
+     - workaround to be able to build on swig 1.3 with newer gcc
+     - added dbamsg convert --recompute-categories
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 05 Oct 2011 18:04:07 +0200
+
 dballe (5.10-1) unstable; urgency=low
 
   * New upstream release
