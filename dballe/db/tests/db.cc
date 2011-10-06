@@ -427,6 +427,9 @@ void to::test<5>()
         ensure_equals(cur->remaining(), 2);
         cur->to_record(result);
 
+        // Variables from the previous to_record should be removed
+        ensure_equals(result.vars().size(), 1u);
+
         ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
         if (cur->out_varcode == WR_VAR(0, 1, 11))
                 ensure(result.contains(sample00));

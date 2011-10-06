@@ -386,7 +386,10 @@ void Cursor::to_record(Record& rec)
             rec.key(DBA_KEY_VAR).setc(bname);
 
             if (wanted & DBA_DB_WANT_VAR_VALUE)
+            {
+                rec.clear_vars();
                 rec.var(out_varcode).setc(out_value);
+            }
         }
     }
 
