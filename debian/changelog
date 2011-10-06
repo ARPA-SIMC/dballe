@@ -2,8 +2,9 @@ dballe (5.12-1) unstable; urgency=low
 
   * New upstream release
      - clear old vars on Cursor::to_record
+     - fixed compiler errors when building without Lua
 
- -- Enrico Zini <enrico@debian.org>  Thu, 06 Oct 2011 11:36:53 +0200
+ -- Enrico Zini <enrico@debian.org>  Thu, 06 Oct 2011 12:14:55 +0200
 
 dballe (5.11-1) unstable; urgency=low
 

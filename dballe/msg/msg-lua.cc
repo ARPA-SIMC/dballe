@@ -27,22 +27,14 @@ extern "C" {
 #include <lauxlib.h>
 #include <lualib.h>
 }
+#endif
 
 using namespace wreport;
 using namespace std;
 
 namespace dballe {
 
-#if 0
-static void dbalua_checked(lua_State* L, dba_err err)
-{
-	if (err != DBA_OK)
-	{
-		lua_pushstring(L, dba_error_get_message());
-		lua_error(L);
-	}
-}
-#endif
+#ifdef HAVE_LUA
 
 static Varcode dbalua_to_varcode(lua_State* L, int idx)
 {
@@ -246,6 +238,7 @@ msg::Context* msg::Context::lua_check(struct lua_State* L, int idx)
 }
 
 #else
+
 void Msg::lua_push(struct lua_State* L)
 {
 	throw error_unimplemented("DB-All.e compiled without Lua support");
@@ -262,6 +255,7 @@ msg::Context* msg::Context::lua_check(struct lua_State* L, int idx)
 {
 	throw error_unimplemented("DB-All.e compiled without Lua support");
 }
+
 #endif
 
 } // namespace dballe
