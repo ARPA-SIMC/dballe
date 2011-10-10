@@ -4,8 +4,9 @@ dballe (5.12-1) unstable; urgency=low
      - clear old vars on Cursor::to_record
      - fixed compiler errors when building without Lua
      - prevent compiler flags to end up in dependencies in tools/Makefile.am
+     - dbamsg convert: documented 'csv' as a valid input type
 
- -- Enrico Zini <enrico@debian.org>  Thu, 06 Oct 2011 12:18:26 +0200
+ -- Enrico Zini <enrico@debian.org>  Thu, 06 Oct 2011 13:11:36 +0200
 
 dballe (5.11-1) unstable; urgency=low
 
