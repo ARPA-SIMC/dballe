@@ -69,7 +69,6 @@ struct poptOption grepTable[] = {
 static const char* op_dsn = "";
 static const char* op_user = "";
 static const char* op_pass = "";
-static const char* op_input_type = "auto";
 static const char* op_report = "";
 static const char* op_output_type = "bufr";
 static const char* op_output_template = "";
@@ -269,8 +268,7 @@ int do_import(poptContext optCon)
     poptGetArg(optCon);
 
     reader.filter.matcher_from_args(optCon);
-
-    Encoding type = dba_cmdline_stringToMsgType(op_input_type, optCon);
+    if (op_precise_import) reader.import_opts.simplified = false;
 
     DB db;
     connect(db);
@@ -406,8 +404,8 @@ struct poptOption dbadb_wipe_options[] = {
 struct poptOption dbadb_import_options[] = {
     { "help", '?', 0, 0, 1, "print an help message", 0 },
     { "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-    { "type", 't', POPT_ARG_STRING, &op_input_type, 0,
-        "format of the input data ('bufr', 'crex', 'aof')", "type" },
+    { "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+        "format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" },
     { "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
         "overwrite existing data", 0 },
     { "report", 'r', POPT_ARG_STRING, &op_report, 0,
