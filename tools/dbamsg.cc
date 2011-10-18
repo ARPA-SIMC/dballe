@@ -1153,20 +1153,6 @@ struct poptOption dbamsg_compare_options[] = {
 	POPT_TABLEEND
 };
 
-struct poptOption dbamsg_filter_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message", 0 },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output" },
-	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
-		"format of the input data ('bufr', 'crex', 'aof')", "type" },
-	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
-		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
-	{ "precise", 0, 0, &op_precise_import, 0,
-		"import messages using precise contexts instead of standard ones", 0 },
-	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages", 0 },
-	POPT_TABLEEND
-};
-
 struct poptOption dbamsg_fixaof_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message", 0 },
 	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },

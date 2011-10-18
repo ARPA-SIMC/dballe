@@ -1,3 +1,10 @@
+dballe (5.14-1) unstable; urgency=low
+
+  * New upstream release
+     - dbatbl: fixed format formatting when len < scale
+
+ -- Enrico Zini <enrico@debian.org>  Tue, 18 Oct 2011 11:27:24 +0200
+
 dballe (5.13-1) unstable; urgency=low
 
   * New upstream release

@@ -83,9 +83,10 @@ static void print_varinfo(const Varinfo& info)
 		snprintf(fmtdesc, 99, "%d digits", info->len);
 	else if (info->scale > 0)
 	{
-		unsigned i;
-		for (i = 0; i < info->len - info->scale && i < 99; i++)
-			fmtdesc[i] = '#';
+		unsigned i = 0;
+        if (info->len > info->scale)
+            for ( ; i < info->len - info->scale && i < 99; i++)
+                fmtdesc[i] = '#';
 		fmtdesc[i++] = '.';
 		for (int j = 0; j < info->scale && i < 99; i++, j++)
 			fmtdesc[i] = '#';

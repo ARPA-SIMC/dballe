@@ -310,6 +310,11 @@ Reader::Reader()
 
 void Reader::read_csv(poptContext optCon, Action& action)
 {
+    // This cannot be implemented in dballe::File at the moment, since
+    // dballe::File reads dballe::Rawmsg strings, and here we read dballe::Msgs
+    // directly. We could split the input into several Rawmsg strings, but that
+    // would mean parsing the CSV twice: once to detect the message boundaries
+    // and once to parse the Rawmsg strings.
     const char* name = poptGetArg(optCon);
     Item item;
     auto_ptr<istream> in;
