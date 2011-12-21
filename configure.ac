@@ -80,7 +80,7 @@ then
 		then
 			has_build_gperf_sources=no
 			AC_MSG_WARN([please extract $f from the distribution tarball])
-		done
+		fi
 	done
 	if test $has_build_gperf_sources = no
 	then
