@@ -68,10 +68,19 @@ AM_PROG_CC_C_O
 dnl We want to invoke pkg-config directly
 PKG_PROG_PKG_CONFIG
 
+dnl Check for gperf
 AC_CHECK_PROG(have_gperf, gperf, true)
 if test x$have_gperf != xtrue
 then
-	AC_MSG_ERROR([gperf was not found])
+	AC_MSG_WARN([gperf was not found: relying on prebuilt wreport/uniconv.cc])
+	for f in dballe/core/record_keyword.cc dballe/core/aliases.cc dballe/msg/vars.cc
+	do
+		if ! test -f $f
+		then
+			AC_MSG_ERROR([please extract $f from the distribution tarball])
+			fi
+		done
+	done
 fi
 
 dnl Check if std::vector has a std::vector::data method

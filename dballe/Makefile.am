@@ -19,7 +19,7 @@ core/aliases-reverse.cc: core/aliases.gperf core/mkaliasdoc
 	$(srcdir)/core/mkaliasdoc revsolver < $< > $@
 
 BUILT_SOURCES = core/record_keyword.cc core/aliases.cc core/aliases-reverse.cc
-EXTRA_DIST += core/aliases.gperf core/record_keyword.gperf
+EXTRA_DIST += core/aliases.gperf core/aliases.cc core/record_keyword.gperf core/record_keyword.cc
 
 
 msg/vars.h msg/vars.gperf msg/msg-extravars.h: msg/vars.csv msg/mkvars
@@ -29,7 +29,7 @@ msg/vars.cc: msg/vars.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
 BUILT_SOURCES += msg/vars.h msg/vars.cc msg/vars.gperf msg/msg-extravars.h
-EXTRA_DIST += msg/mkvars msg/vars.csv msg/vars.h msg/vars.gperf msg/vars.cc msg/msg-extravars.h
+EXTRA_DIST += msg/mkvars msg/vars.csv msg/vars.h msg/vars.gperf msg/vars.cc msg/vars.cc msg/msg-extravars.h
 
 
 #
