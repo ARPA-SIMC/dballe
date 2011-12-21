@@ -72,15 +72,20 @@ dnl Check for gperf
 AC_CHECK_PROG(have_gperf, gperf, true)
 if test x$have_gperf != xtrue
 then
-	AC_MSG_WARN([gperf was not found: relying on prebuilt wreport/uniconv.cc])
+	AC_MSG_WARN([gperf was not found: relying on prebuilt sources])
+	has_build_gperf_sources=yes
 	for f in dballe/core/record_keyword.cc dballe/core/aliases.cc dballe/msg/vars.cc
 	do
 		if ! test -f $f
 		then
-			AC_MSG_ERROR([please extract $f from the distribution tarball])
-			fi
+			has_build_gperf_sources=no
+			AC_MSG_WARN([please extract $f from the distribution tarball])
 		done
 	done
+	if test $has_build_gperf_sources = no
+	then
+		AC_MSG_ERROR([some gperf-generated source files are missing and gperf is not available to rebuild them])
+	fi
 fi
 
 dnl Check if std::vector has a std::vector::data method
