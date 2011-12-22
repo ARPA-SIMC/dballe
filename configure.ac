@@ -68,6 +68,17 @@ AM_PROG_CC_C_O
 dnl We want to invoke pkg-config directly
 PKG_PROG_PKG_CONFIG
 
+if test x$enable_docs = xyes
+then
+	dnl Check for doxygen
+	AC_CHECK_PROG(have_doxygen, doxygen, true)
+	if test x$have_doxygen != xtrue
+	then
+		AC_MSG_WARN([doxygen was not found: documentation will not be built])
+		enable_docs=no
+	fi
+fi
+
 dnl Check for gperf
 AC_CHECK_PROG(have_gperf, gperf, true)
 if test x$have_gperf != xtrue
