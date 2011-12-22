@@ -1,5 +1,5 @@
-#ifndef WIBBLE_COMPAT_H
-#define WIBBLE_COMPAT_H
+#ifndef DBALLE_CORE_VASPRINTF_H
+#define DBALLE_CORE_VASPRINTF_H
 
 #include "config.h"
 #include <cstdarg>

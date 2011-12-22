@@ -24,7 +24,7 @@
 #include <wreport/error.h>
 #include <cstdlib>
 #include <cstring>
-#include <byteswap.h>
+#include "dballe/core/byteswap.h"
 #include <errno.h>
 
 using namespace wreport;

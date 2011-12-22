@@ -144,6 +144,7 @@ libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(
 # filter.cc and sat.cc are here for now until I manage to turn them into a working system
 EXTRA_DIST += \
 	core/vasprintf.h \
+	core/byteswap.h \
 	msg/wr_importers/base.h \
 	msg/aof_importers/common.h \
 	msg/filter.cc \

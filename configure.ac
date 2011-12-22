@@ -92,6 +92,9 @@ dnl Check for missing functions in libc
 AC_CHECK_FUNC(vasprintf, , [
 	AC_DEFINE([USE_OWN_VASPRINTF], 1, [we need to use our own vasprintf])
 ])
+AC_CHECK_FUNC(bswap_32, , [
+	AC_DEFINE([USE_OWN_BSWAP], 1, [we need to use our own bswap_* functions])
+])
 
 dnl Check if std::vector has a std::vector::data method
 AC_CACHE_CHECK(whether the compiler has std::vector::data (),
