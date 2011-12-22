@@ -27,14 +27,10 @@
 #include <dballe/core/file.h>
 #include <dballe/msg/msgs.h>
 #include <wreport/conv.h>
-//#include <dballe/core/file_internals.h>
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include <byteswap.h>
-#include <time.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 
 using namespace wreport;
 using namespace std;
