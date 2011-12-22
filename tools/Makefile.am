@@ -2,7 +2,7 @@
 
 DBALLELIBS =  ../dballe/libdballe.la
 
-INCLUDES = -I$(top_srcdir)
+INCLUDES = -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
 
 bin_PROGRAMS = dbatbl dbamsg
 dist_bin_SCRIPTS = dbatbl_makeb
