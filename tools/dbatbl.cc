@@ -28,6 +28,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "config.h"
 
 using namespace dballe;
 using namespace dballe::cmdline;
@@ -234,7 +235,12 @@ int do_grep(poptContext optCon)
 	for (Vartable::const_iterator info = table->begin();
 			info != table->end(); ++info)
 	{
+#if HAVE_STRCASESTR
 		if (strcasestr(info->desc, pattern) != NULL)
+#else
+#warning dbatbl grep is case sensite on this sytstem, since strcasestr is not available
+		if (strstr(info->desc, pattern) != NULL)
+#endif
 		{
 			if (op_csv)
 				print_varinfo_csv(*info);

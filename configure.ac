@@ -95,6 +95,9 @@ AC_CHECK_FUNC(vasprintf, , [
 AC_CHECK_FUNC(bswap_32, , [
 	AC_DEFINE([USE_OWN_BSWAP], 1, [we need to use our own bswap_* functions])
 ])
+AC_CHECK_FUNC(strcasestr, [
+	AC_DEFINE([HAVE_STRCASESTR], 1, [we can use strcasestr])
+])
 
 dnl Check if std::vector has a std::vector::data method
 AC_CACHE_CHECK(whether the compiler has std::vector::data (),
