@@ -28,11 +28,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include "dballe/core/vasprintf.h"
 
 #include <iostream>
-#if 0
-#include <config.h>
-#endif
 
 using namespace std;
 using namespace wreport;

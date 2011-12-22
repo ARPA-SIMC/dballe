@@ -88,6 +88,11 @@ then
 	fi
 fi
 
+dnl Check for missing functions in libc
+AC_CHECK_FUNC(vasprintf, , [
+	AC_DEFINE([USE_OWN_VASPRINTF], 1, [we need to use our own vasprintf])
+])
+
 dnl Check if std::vector has a std::vector::data method
 AC_CACHE_CHECK(whether the compiler has std::vector::data (),
 	ac_cv_cxx_have_vector_data,
