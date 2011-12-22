@@ -158,8 +158,11 @@ else
                 have_lua=yes
                 AC_CHECK_LIB([lua], [lua_gettop], [true], [have_lua=no])
                 AC_CHECK_HEADER([lua.h], [true], [have_lua=no])
-                LUA_CFLAGS=
-                LUA_LIBS="-llua"
+		if test x$have_lua = xyes
+		then
+			LUA_CFLAGS=
+			LUA_LIBS="-llua"
+		fi
         fi
 fi
 if test x$have_lua = xyes
