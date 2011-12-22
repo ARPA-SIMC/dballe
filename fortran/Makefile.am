@@ -103,7 +103,7 @@ dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
 dump_dballe_FCFLAGS = -g 
 endif
 
-INCLUDES = -I$(top_srcdir)
+INCLUDES = -I$(top_srcdir) $(WREPORT_CFLAGS)
 
 EXTRA_DIST = fortran.dox check-utils.h error.h
 
