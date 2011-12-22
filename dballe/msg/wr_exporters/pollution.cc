@@ -36,6 +36,25 @@ namespace wr {
 
 namespace {
 
+static int intexp10(unsigned x)
+{
+    switch (x)
+    {
+        case  0: return 1;
+        case  1: return 10;
+        case  2: return 100;
+        case  3: return 1000;
+        case  4: return 10000;
+        case  5: return 100000;
+        case  6: return 1000000;
+        case  7: return 10000000;
+        case  8: return 100000000;
+        case  9: return 1000000000;
+        default:
+                 error_domain::throwf("%u^10 would not fit in 32 bits", x);
+    }
+}
+
 struct Pollution : public Template
 {
     Pollution(const Exporter::Options& opts, const Msgs& msgs)
@@ -183,7 +202,7 @@ struct Pollution : public Template
             {
                 decscale = -factor;
                 //fprintf(stderr, "scale: %d, unscaled: %e, scaled: %f\n", decscale, value, rint(value * exp10(factor)));
-                scaled = (int)rint(value * exp10(factor));
+                scaled = (int)rint(value * intexp10(factor));
             }
         }
 
