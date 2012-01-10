@@ -187,6 +187,14 @@
  015225 [SIM] Uncertainity in PM10 estimate (Pesco)                      KG/M**3                   10            0  20 KG/M**3                  10          6
  015226 [SIM] Uncertainity in NO2 estimate (Pesco)                       KG/M**3                   10            0  20 KG/M**3                  10          6
  015227 [SIM] Uncertainity in PM2.5 estimate (Pesco)                     KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015228 [SIM] NH3 Concentration                                          PPB                        2            0  20 KG/M**3                   2          6
+ 015229 [SIM] Concentration of primary part. matter in aerosol           KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015230 [SIM] Concentration of sulfate in aerosol                        KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015231 [SIM] Concentration of nitrate in aerosol                        KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015232 [SIM] Concentration of ammonium in aerosol                       KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015233 [SIM] Concentration of anthrop. sec. org. in aerosol             KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015234 [SIM] Concentration of biogenic sec. org. in aerosol             KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015235 [SIM] Concentration of ISOPA1 in PM10                            KG/M**3                   10            0  20 KG/M**3                  10          6
  020001 HORIZONTAL VISIBILITY                                            M                         -1            0  13 M                        -1          4
  020003 PRESENT WEATHER (SEE NOTE 1)                                     CODE TABLE 20003           0            0   9 CODE TABLE 20003          0          3
  020004 PAST WEATHER (1) (SEE NOTE 2)                                    CODE TABLE 20004           0            0   5 CODE TABLE 20004          0          2
@@ -215,12 +223,12 @@
  022070 SIGNIFICANT WAVE HEIGHT                                          M                          2            0  13 M                         2          4
  022071 SPECTRAL PEAK WAVE PERIOD                                        S                          1            0   9 S                         1          3
  022074 AVERAGE WAVE PERIOD                                              S                          1            0   9 S                         1          3
- 023192 [SIM] Dry deposition of H2SO4                                    mol/M**2                   5            0  20 KG/M**3                   5          6
- 023193 [SIM] Wet deposition of H2SO4                                    mol/M**2                   5            0  20 KG/M**3                   5          6
- 023194 [SIM] Dry deposition of NH4                                      mol/M**2                   5            0  20 KG/M**3                   5          6
- 023195 [SIM] Wet deposition of NH4                                      mol/M**2                   5            0  20 KG/M**3                   5          6
- 023196 [SIM] Dry deposition of HNO3                                     mol/M**2                   5            0  20 KG/M**3                   5          6
- 023197 [SIM] Wet deposition of HNO3                                     mol/M**2                   5            0  20 KG/M**3                   5          6
+ 023192 [SIM] Dry deposition of H2SO4                                    MOL/M**2                   5            0  20 MOL/M**3                  5          6
+ 023193 [SIM] Wet deposition of H2SO4                                    MOL/M**2                   5            0  20 MOL/M**3                  5          6
+ 023194 [SIM] Dry deposition of NH4                                      MOL/M**2                   5            0  20 MOL/M**3                  5          6
+ 023195 [SIM] Wet deposition of NH4                                      MOL/M**2                   5            0  20 MOL/M**3                  5          6
+ 023196 [SIM] Dry deposition of HNO3                                     MOL/M**2                   5            0  20 MOL/M**3                  5          6
+ 023197 [SIM] Wet deposition of HNO3                                     MOL/M**2                   5            0  20 MOL/M**3                  5          6
  025076 LOG-10 OF (TEMP-RAD CENTRAL WAVENUMBER) FOR ATOVS                LOGM-1                     8            0  30 LOGM-1                    8         10
  029192 [SIM] Land fraction                                              %                          1            0  10 %                         1          4
  031000 SHORT DELAYED DESCRIPTOR REPLICATION FACTOR                      NUMERIC                    0            0   1 NUMERIC                   0          1
