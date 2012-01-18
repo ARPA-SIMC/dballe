@@ -177,7 +177,8 @@ void DbAPI::prendilo()
     int ana_id = input.key_peek(DBA_KEY_ANA_ID)->enqi();
     int context_id = input.key_peek(DBA_KEY_CONTEXT_ID)->enqi();
     // Uncache to prevent confusion on the next insert
-    input.unset(DBA_KEY_ANA_ID);
+    // input.unset(DBA_KEY_ANA_ID); Not needed here, it is reset automatically
+    //                              when trying to set a latitude or longitude
     input.unset(DBA_KEY_CONTEXT_ID);
 
     /* Set the values in the output */

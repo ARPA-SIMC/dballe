@@ -57,6 +57,7 @@ Makefile
 /fortran/check_missing_msg
 /fortran/check_range
 /fortran/check_real0
+/fortran/check_cached_anaid
 /fortran/dbtest.mod
 /fortran/test.mod
 /fortran/dump_dballe

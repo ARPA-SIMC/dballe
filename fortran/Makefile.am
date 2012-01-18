@@ -56,7 +56,7 @@ check_missing_msg_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_msg_FCFLAGS = -g
 
 if DO_DBALLE_DB
-check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing
+check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing check_cached_anaid
 
 check_real0_SOURCES = $(dbtestlib) check_real0.f90
 check_real0_LDADD = ./libdballef.la -lcnf -lpopt
@@ -77,6 +77,10 @@ check_attrs_FCFLAGS = -g
 check_missing_SOURCES = $(dbtestlib) check_missing.f90
 check_missing_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_FCFLAGS = -g
+
+check_cached_anaid_SOURCES = $(dbtestlib) check_cached_anaid.f90
+check_cached_anaid_LDADD = ./libdballef.la -lcnf -lpopt
+check_cached_anaid_FCFLAGS = -g
 endif
 
 noinst_PROGRAMS = dumpmsg_dballe mkmsg mkmsg-sca genattr
