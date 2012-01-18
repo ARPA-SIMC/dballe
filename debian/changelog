@@ -4,8 +4,9 @@ dballe (5.15-1) unstable; urgency=low
      - added a missing m4 dependency
      - fortran api: ana_id is not automatically reset after a prendilo. It is
        still automatically reset after setting latitude or longitude
+     - added dbadb --wipe-first
 
- -- Enrico Zini <enrico@debian.org>  Wed, 18 Jan 2012 15:20:54 +0100
+ -- Enrico Zini <enrico@debian.org>  Wed, 18 Jan 2012 18:19:11 +0100
 
 dballe (5.14-1) unstable; urgency=low
 

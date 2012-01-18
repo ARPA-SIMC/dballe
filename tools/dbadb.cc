@@ -79,6 +79,7 @@ static int op_full_pseudoana = 0;
 static int op_dump = 0;
 static int op_precise_import = 0;
 int op_verbose = 0;
+int op_wipe_first = 0;
 
 struct poptOption dbTable[] = {
     { "dsn", 0, POPT_ARG_STRING, &op_dsn, 0,
@@ -87,6 +88,8 @@ struct poptOption dbTable[] = {
         "username to use for connecting to the DB-All.e database", "user" },
     { "pass", 0, POPT_ARG_STRING, &op_pass, 0,
         "password to use for connecting to the DB-All.e database", "pass" },
+    { "wipe-first", 0, POPT_ARG_NONE, &op_wipe_first, 0,
+        "wipe database before any other action" },
     POPT_TABLEEND
 };
 
@@ -105,9 +108,13 @@ static void connect(DB& db)
 
     /* If dsn looks like a url, treat it accordingly */
     if (DB::is_url(chosen_dsn))
-        return db.connect_from_url(chosen_dsn);
+        db.connect_from_url(chosen_dsn);
     else
-        return db.connect(chosen_dsn, op_user, op_pass);
+        db.connect(chosen_dsn, op_user, op_pass);
+
+    // Wipe database if requested
+    if (op_wipe_first)
+        db.reset();
 }
 
 struct Importer : public cmdline::Action
