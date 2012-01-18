@@ -533,8 +533,15 @@ void DB::init_after_connect()
     /* Set manual commit */
     if (conn->server_type == db::SQLITE)
     {
-        run_sql("PRAGMA journal_mode = MEMORY");
-        run_sql("PRAGMA legacy_file_format = 0");
+        if (getenv("DBA_INSECURE_SQLITE") != NULL)
+        {
+            run_sql("PRAGMA synchronous = OFF");
+            run_sql("PRAGMA journal_mode = OFF");
+            run_sql("PRAGMA legacy_file_format = 0");
+        } else {
+            run_sql("PRAGMA journal_mode = MEMORY");
+            run_sql("PRAGMA legacy_file_format = 0");
+        }
     } else
         conn->set_autocommit(false);
 #endif
