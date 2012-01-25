@@ -151,16 +151,16 @@
  014193 [SIM] Instantenous latent heat flux                              W/m**2                     0        -1024  11 W/M**2                    0          4
  014194 [SIM] Instantenous direct solar radiation                        W/M**2                     0        -2048  12 W/M**2                   -3          4
  014195 [SIM] Instantenous diffuse solar radiation                       W/M**2                     0        -2048  12 W/M**2                   -3          4
- 015192 [SIM] NO Concentration                                           PPB                        2            0  20 KG/M**3                   2          6
- 015193 [SIM] NO2 Concentration                                          PPB                        2            0  20 KG/M**3                   2          6
- 015194 [SIM] O3 Concentration                                           PPB                        2            0  20 KG/M**3                   2          6
+ 015192 [SIM] NO Concentration                                           KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015193 [SIM] NO2 Concentration                                          KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015194 [SIM] O3 Concentration                                           KG/M**3                   10            0  20 KG/M**3                  10          6
  015195 [SIM] PM10 Concentration                                         KG/M**3                   10            0  20 KG/M**3                  10          6
- 015196 [SIM] CO Concentration                                           PPB                        2            0  20 KG/M**3                   2          6
- 015197 [SIM] SO2 Concentration                                          PPB                        2            0  20 KG/M**3                   2          6
+ 015196 [SIM] CO Concentration                                           KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015197 [SIM] SO2 Concentration                                          KG/M**3                   10            0  20 KG/M**3                  10          6
  015198 [SIM] PM2.5 Concentration                                        KG/M**3                   10            0  20 KG/M**3                  10          6
- 015199 [SIM] NOY Concentration                                          PPB                        2            0  20 KG/M**3                   2          6
- 015200 [SIM] HCNM Concentration                                         PPB                        2            0  20 KG/M**3                   2          6
- 015201 [SIM] ALDE Concentration                                         PPB                        2            0  20 KG/M**3                   2          6
+ 015199 [SIM] NOY Concentration                                          KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015200 [SIM] HCNM Concentration                                         KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015201 [SIM] ALDE Concentration                                         KG/M**3                   10            0  20 KG/M**3                  10          6
  015202 [SIM] PM5 Concentration (tot. aerosol < 5 ug)                    KG/M**3                   10            0  20 KG/M**3                  10          6
  015203 [SIM] PM1 Concentration (tot. aerosol < 1.25 ug)                 KG/M**3                   10            0  20 KG/M**3                  10          6
  015204 [SIM] PM06 Concentration (tot. aerosol < 0.6 ug)                 KG/M**3                   10            0  20 KG/M**3                  10          6
@@ -187,7 +187,7 @@
  015225 [SIM] Uncertainity in PM10 estimate (Pesco)                      KG/M**3                   10            0  20 KG/M**3                  10          6
  015226 [SIM] Uncertainity in NO2 estimate (Pesco)                       KG/M**3                   10            0  20 KG/M**3                  10          6
  015227 [SIM] Uncertainity in PM2.5 estimate (Pesco)                     KG/M**3                   10            0  20 KG/M**3                  10          6
- 015228 [SIM] NH3 Concentration                                          PPB                        2            0  20 KG/M**3                   2          6
+ 015228 [SIM] NH3 Concentration                                          KG/M**3                   10            0  20 KG/M**3                  10          6
  015229 [SIM] Concentration of primary part. matter in aerosol           KG/M**3                   10            0  20 KG/M**3                  10          6
  015230 [SIM] Concentration of sulfate in aerosol                        KG/M**3                   10            0  20 KG/M**3                  10          6
  015231 [SIM] Concentration of nitrate in aerosol                        KG/M**3                   10            0  20 KG/M**3                  10          6
