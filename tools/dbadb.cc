@@ -94,7 +94,7 @@ struct MsgWriter : public MsgConsumer
 struct MsgDumper : public MsgConsumer
 {
     FILE* out;
-    MsgDumper() : out(stdout) {}
+    MsgDumper(FILE* out=stdout) : out(out) {}
 
     virtual void operator()(std::auto_ptr<Msg> msg)
     {
@@ -162,26 +162,26 @@ public:
         return 0;
     }
 
-    int do_export(const Record& query, Encoding type=(Encoding)-1, const char* output_template=NULL, const char* forced_repmemo=NULL)
+    int do_export_dump(const Record& query, FILE* out)
     {
-        if (type == (Encoding)-1)
-        {
-            // Dump
-            dbadb_utils::MsgDumper dumper;
-            db.export_msgs(query, dumper);
-        } else {
-            msg::Exporter::Options opts;
-            if (output_template[0] != 0)
-                opts.template_name = output_template;
+        dbadb_utils::MsgDumper dumper(out);
+        db.export_msgs(query, dumper);
+        return 0;
+    }
 
-            dbadb_utils::MsgWriter writer;
-            if (forced_repmemo)
-                writer.forced_rep_memo = dbadb_utils::parse_op_report(db, forced_repmemo);
-            writer.file = File::create(type, "(stdout)", "w").release();
-            writer.exporter = msg::Exporter::create(type, opts).release();
+    int do_export(const Record& query, auto_ptr<File> file, const char* output_template=NULL, const char* forced_repmemo=NULL)
+    {
+        msg::Exporter::Options opts;
+        if (output_template[0] != 0)
+            opts.template_name = output_template;
 
-            db.export_msgs(query, writer);
-        }
+        dbadb_utils::MsgWriter writer;
+        if (forced_repmemo)
+            writer.forced_rep_memo = dbadb_utils::parse_op_report(db, forced_repmemo);
+        writer.file = file.release();
+        writer.exporter = msg::Exporter::create(writer.file->type(), opts).release();
+
+        db.export_msgs(query, writer);
         return 0;
     }
 };
@@ -387,10 +387,11 @@ int do_export(poptContext optCon)
 
     if (op_dump)
     {
-        return dbadb.do_export(query);
+        return dbadb.do_export_dump(query, stdout);
     } else {
         Encoding type = dba_cmdline_stringToMsgType(op_output_type);
-        return dbadb.do_export(query, type, op_output_template, op_report);
+        auto_ptr<File> file = File::create(type, "(stdout)", "w");
+        return dbadb.do_export(query, file, op_output_template, op_report);
     }
 }
 
