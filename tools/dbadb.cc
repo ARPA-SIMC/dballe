@@ -31,18 +31,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#if 0
-#include <dballe/init.h>
-#include <dballe/bufrex/msg.h>
-#include <dballe/msg/file.h>
-#include <dballe/msg/bufrex_codec.h>
-
-#include <ctype.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-#endif
-
 using namespace dballe;
 using namespace dballe::cmdline;
 using namespace wreport;
@@ -114,30 +102,30 @@ struct MsgDumper : public MsgConsumer
     }
 };
 
+const char* parse_op_report(DB& db, const char* name="")
+{
+    if (name != 0)
+    {
+        const char* s;
+        int is_cod = 1;
+        for (s = name; *s && is_cod; s++)
+            if (!isdigit(*s))
+                is_cod = 0;
+
+        if (is_cod)
+            return db.rep_memo_from_cod(strtoul(name, NULL, 0)).c_str();
+        else
+            return name;
+    } else
+        return NULL;
+}
+
 }
 
 class Dbadb
 {
 protected:
     DB& db;
-
-    const char* parse_op_report(DB& db, const char* name="")
-    {
-        if (name != 0)
-        {
-            const char* s;
-            int is_cod = 1;
-            for (s = name; *s && is_cod; s++)
-                if (!isdigit(*s))
-                    is_cod = 0;
-
-            if (is_cod)
-                return db.rep_memo_from_cod(strtoul(name, NULL, 0)).c_str();
-            else
-                return name;
-        } else
-            return NULL;
-    }
 
 public:
     Dbadb(DB& db) : db(db) {}
@@ -174,42 +162,6 @@ public:
         return 0;
     }
 
-    /// Create / empty the database
-    int do_wipe(const char* repinfo_file=NULL)
-    {
-        db.reset(repinfo_file);
-        return 0;
-    }
-
-    /// Perform database cleanup maintenance
-    int do_cleanup()
-    {
-        db.remove_orphans();
-        return 0;
-    }
-
-    /// Update repinfo information in the database
-    int do_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
-    {
-        db.update_repinfo(repinfo_file, added, deleted, updated);
-        return 0;
-    }
-
-    /// Import files into the database
-    int do_import(const std::list<std::string>& fnames, int import_flags=0, bool simplified=true, const char* forced_repmemo=NULL)
-    {
-        reader.import_opts.simplified = simplified;
-
-        dbadb_utils::Importer importer(db);
-        importer.import_flags = import_flags;
-        if (forced_repmemo)
-            importer.forced_repmemo = parse_op_report(db, forced_repmemo);
-
-        reader.read(fnames, importer);
-
-        return 0;
-    }
-
     int do_export(const Record& query, Encoding type=(Encoding)-1, const char* output_template=NULL, const char* forced_repmemo=NULL)
     {
         if (type == (Encoding)-1)
@@ -224,7 +176,7 @@ public:
 
             dbadb_utils::MsgWriter writer;
             if (forced_repmemo)
-                writer.forced_rep_memo = parse_op_report(db, forced_repmemo);
+                writer.forced_rep_memo = dbadb_utils::parse_op_report(db, forced_repmemo);
             writer.file = File::create(type, "(stdout)", "w").release();
             writer.exporter = msg::Exporter::create(type, opts).release();
 
@@ -232,23 +184,10 @@ public:
         }
         return 0;
     }
-
-    int do_delete(const Record& query)
-    {
-        // TODO: check that there is something
-
-        db.remove(query);
-        return 0;
-    }
-
-    // Configuration
-    static struct cmdline::Reader reader;
 };
 
-// Defaults
-struct cmdline::Reader Dbadb::reader;
-
 // Command line parser variables
+struct cmdline::Reader reader;
 static const char* op_output_template = "";
 const char* op_output_type = "bufr";
 const char* op_report = "";
@@ -265,17 +204,17 @@ int op_verbose = 0;
 int op_precise_import = 0;
 
 struct poptOption grepTable[] = {
-    { "category", 0, POPT_ARG_INT, &Dbadb::reader.filter.category, 0,
+    { "category", 0, POPT_ARG_INT, &reader.filter.category, 0,
         "match messages with the given data category", "num" },
-    { "subcategory", 0, POPT_ARG_INT, &Dbadb::reader.filter.subcategory, 0,
+    { "subcategory", 0, POPT_ARG_INT, &reader.filter.subcategory, 0,
         "match BUFR messages with the given data subcategory", "num" },
-    { "check-digit", 0, POPT_ARG_INT, &Dbadb::reader.filter.checkdigit, 0,
+    { "check-digit", 0, POPT_ARG_INT, &reader.filter.checkdigit, 0,
         "match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
-    { "unparsable", 0, 0, &Dbadb::reader.filter.unparsable, 0,
+    { "unparsable", 0, 0, &reader.filter.unparsable, 0,
         "match only messages that cannot be parsed", 0 },
-    { "parsable", 0, 0, &Dbadb::reader.filter.parsable, 0,
+    { "parsable", 0, 0, &reader.filter.parsable, 0,
         "match only messages that can be parsed", 0 },
-    { "index", 0, POPT_ARG_STRING, &Dbadb::reader.filter.index, 0,
+    { "index", 0, POPT_ARG_STRING, &reader.filter.index, 0,
         "match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
     POPT_TABLEEND
 };
@@ -351,28 +290,32 @@ int do_stations(poptContext optCon)
     return dbadb.do_stations(query, stdout);
 }
 
+/// Create / empty the database
 int do_wipe(poptContext optCon)
 {
     /* Throw away the command name */
     poptGetArg(optCon);
 
-    DB db;
-    connect(db);
-    Dbadb dbadb(db);
-
     /* Get the optional name of the repinfo file */
     const char* fname = poptGetArg(optCon);
-    return dbadb.do_wipe(fname);
+
+    DB db;
+    connect(db);
+
+    db.reset(fname);
+    return 0;
 }
 
+/// Perform database cleanup maintenance
 int do_cleanup(poptContext optCon)
 {
     DB db;
     connect(db);
-    Dbadb dbadb(db);
-    return dbadb.do_cleanup();
+    db.remove_orphans();
+    return 0;
 }
 
+/// Update repinfo information in the database
 int do_repinfo(poptContext optCon)
 {
     /* Throw away the command name */
@@ -380,15 +323,14 @@ int do_repinfo(poptContext optCon)
 
     DB db;
     connect(db);
-    Dbadb dbadb(db);
 
     /* Get the optional name of the repinfo file.  If missing, the default will be used */
     const char* fname = poptGetArg(optCon);
 
     int added, deleted, updated;
-    int res = dbadb.do_repinfo(fname, &added, &deleted, &updated);
+    db.update_repinfo(fname, &added, &deleted, &updated);
     printf("Update completed: %d added, %d deleted, %d updated.\n", added, deleted, updated);
-    return res;
+    return 0;
 }
 
 
@@ -399,7 +341,7 @@ int do_import(poptContext optCon)
 
     Record query;
     if (dba_cmdline_get_query(optCon, query) > 0)
-        Dbadb::reader.filter.matcher_from_record(query);
+        reader.filter.matcher_from_record(query);
 
     int import_flags = 0;
     if (op_overwrite)
@@ -411,11 +353,17 @@ int do_import(poptContext optCon)
     if (op_full_pseudoana)
         import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
 
+    reader.import_opts.simplified = !op_precise_import;
+
     DB db;
     connect(db);
-    Dbadb dbadb(db);
 
-    return dbadb.do_import(get_filenames(optCon), import_flags, !op_precise_import, op_report);
+    dbadb_utils::Importer importer(db);
+    importer.import_flags = import_flags;
+    importer.forced_repmemo = dbadb_utils::parse_op_report(db, op_report);
+
+    reader.read(get_filenames(optCon), importer);
+    return 0;
 }
 
 int do_export(poptContext optCon)
@@ -460,9 +408,11 @@ int do_delete(poptContext optCon)
 
     DB db;
     connect(db);
-    Dbadb dbadb(db);
 
-    return dbadb.do_delete(query);
+    // TODO: check that there is something
+
+    db.remove(query);
+    return 0;
 }
 
 
@@ -485,7 +435,7 @@ struct poptOption dbadb_wipe_options[] = {
 struct poptOption dbadb_import_options[] = {
     { "help", '?', 0, 0, 1, "print an help message", 0 },
     { "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-    { "type", 't', POPT_ARG_STRING, &Dbadb::reader.input_type, 0,
+    { "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
         "format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" },
     { "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
         "overwrite existing data", 0 },
