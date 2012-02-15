@@ -25,6 +25,7 @@
  * Common functions for commandline tools
  */
 
+#include <wreport/error.h>
 #include <dballe/core/rawmsg.h>
 #include <popt.h>
 
@@ -60,6 +61,22 @@ struct program_info
     const char* manpage_seealso_section;
 };
 
+/// Report an error with command line options
+struct error_cmdline : public std::exception
+{
+    std::string msg; ///< error message returned by what()
+
+    /// @param msg error message
+    error_cmdline(const std::string& msg) : msg(msg) {}
+    ~error_cmdline() throw () {}
+
+    virtual const char* what() const throw () { return msg.c_str(); }
+
+    /// Throw the exception, building the message printf-style
+    static void throwf(const char* fmt, ...) WREPORT_THROWF_ATTRS(1, 2);
+};
+
+
 /**
  * Print informations about the last error to stderr
  */
@@ -74,7 +91,7 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__ (
 /**
  * Return the ::dba_encoding that corresponds to the name in the string
  */
-Encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon);
+Encoding dba_cmdline_stringToMsgType(const char* type);
 
 /**
  * Process commandline arguments and perform the action requested

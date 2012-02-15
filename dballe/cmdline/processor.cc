@@ -366,7 +366,7 @@ void Reader::read_file(poptContext optCon, Action& action)
         name = "(stdin)";
 
     bool print_errors = !filter.unparsable;
-    Encoding intype = dba_cmdline_stringToMsgType(input_type, optCon);
+    Encoding intype = dba_cmdline_stringToMsgType(input_type);
 
     do
     {

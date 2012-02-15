@@ -48,100 +48,23 @@ using namespace dballe::cmdline;
 using namespace wreport;
 using namespace std;
 
-struct cmdline::Reader reader;
-
-struct poptOption grepTable[] = {
-    { "category", 0, POPT_ARG_INT, &reader.filter.category, 0,
-        "match messages with the given data category", "num" },
-    { "subcategory", 0, POPT_ARG_INT, &reader.filter.subcategory, 0,
-        "match BUFR messages with the given data subcategory", "num" },
-    { "check-digit", 0, POPT_ARG_INT, &reader.filter.checkdigit, 0,
-        "match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
-    { "unparsable", 0, 0, &reader.filter.unparsable, 0,
-        "match only messages that cannot be parsed", 0 },
-    { "parsable", 0, 0, &reader.filter.parsable, 0,
-        "match only messages that can be parsed", 0 },
-    { "index", 0, POPT_ARG_STRING, &reader.filter.index, 0,
-        "match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
-    POPT_TABLEEND
-};
-
-static const char* op_dsn = "";
-static const char* op_user = "";
-static const char* op_pass = "";
-static const char* op_report = "";
-static const char* op_output_type = "bufr";
-static const char* op_output_template = "";
-static int op_overwrite = 0;
-static int op_fast = 0;
-static int op_no_attrs = 0;
-static int op_full_pseudoana = 0;
-static int op_dump = 0;
-static int op_precise_import = 0;
-int op_verbose = 0;
-int op_wipe_first = 0;
-
-struct poptOption dbTable[] = {
-    { "dsn", 0, POPT_ARG_STRING, &op_dsn, 0,
-        "DSN, or URL-like database definition, to use for connecting to the DB-All.e database (can also be specified in the environment as DBA_DB)", "dsn" },
-    { "user", 0, POPT_ARG_STRING, &op_user, 0,
-        "username to use for connecting to the DB-All.e database", "user" },
-    { "pass", 0, POPT_ARG_STRING, &op_pass, 0,
-        "password to use for connecting to the DB-All.e database", "pass" },
-    { "wipe-first", 0, POPT_ARG_NONE, &op_wipe_first, 0,
-        "wipe database before any other action" },
-    POPT_TABLEEND
-};
-
-static void connect(DB& db)
-{
-    const char* chosen_dsn;
-
-    /* If dsn is missing, look in the environment */
-    if (op_dsn[0] == 0)
-    {
-        chosen_dsn = getenv("DBA_DB");
-        if (chosen_dsn == NULL)
-            throw error_consistency("no database specified");
-    } else
-        chosen_dsn = op_dsn;
-
-    /* If dsn looks like a url, treat it accordingly */
-    if (DB::is_url(chosen_dsn))
-        db.connect_from_url(chosen_dsn);
-    else
-        db.connect(chosen_dsn, op_user, op_pass);
-
-    // Wipe database if requested
-    if (op_wipe_first)
-        db.reset();
-}
+namespace dbadb_utils {
 
 struct Importer : public cmdline::Action
 {
     DB& db;
-    bool overwrite;
+    int import_flags;
     const char* forced_repmemo;
 
-    Importer(DB& db) : db(db), overwrite(false), forced_repmemo(0) {}
+    Importer(DB& db) : db(db), import_flags(0), forced_repmemo(0) {}
 
     virtual void operator()(const cmdline::Item& item)
     {
-        int import_flags = 0;;
         if (item.msgs == NULL)
         {
             fprintf(stderr, "Message #%d cannot be parsed: ignored\n", item.idx);
             return;
         }
-        if (overwrite)
-            import_flags |= DBA_IMPORT_OVERWRITE;
-        if (op_fast)
-            import_flags |= DBA_IMPORT_NO_TRANSACTIONS;
-        if (!op_no_attrs)
-            import_flags |= DBA_IMPORT_ATTRS;
-        if (op_full_pseudoana)
-            import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
-
         for (size_t i = 0; i < item.msgs->size(); ++i)
         {
             Msg& msg = *(*item.msgs)[i];
@@ -153,141 +76,6 @@ struct Importer : public cmdline::Action
         }
     }
 };
-
-int do_dump(poptContext optCon)
-{
-    const char* action;
-    DB db;
-
-    /* Throw away the command name */
-    action = poptGetArg(optCon);
-
-    /* Create the query */
-    Record query;
-    dba_cmdline_get_query(optCon, query);
-
-    connect(db);
-    auto_ptr<db::Cursor> cursor = db.query_data(query);
-
-    Record res;
-    for (int i = 0; cursor->next(); ++i)
-    {
-        cursor->to_record(res);
-        printf("#%d: -----------------------\n", i);
-        res.print(stdout);
-    }
-
-    return 0;
-}
-
-int do_stations(poptContext optCon)
-{
-    /* Throw away the command name */
-    poptGetArg(optCon);
-
-    /* Create the query */
-    Record query;
-    dba_cmdline_get_query(optCon, query);
-
-    DB db;
-    connect(db);
-
-    auto_ptr<db::Cursor> cursor = db.query_stations(query);
-
-    Record result;
-    for (size_t i = 0; cursor->next(); ++i)
-    {
-        // result.clear();
-        cursor->to_record(result);
-        printf("#%zd: -----------------------\n", i);
-        result.print(stdout);
-    }
-
-    return 0;
-}
-
-int do_wipe(poptContext optCon)
-{
-    /* Throw away the command name */
-    poptGetArg(optCon);
-
-    /* Get the optional name of the repinfo file */
-    const char* table = poptGetArg(optCon);
-
-    DB db;
-    connect(db);
-    db.reset(table);
-
-    return 0;
-}
-
-int do_cleanup(poptContext optCon)
-{
-    /* Throw away the command name */
-    poptGetArg(optCon);
-
-    DB db;
-    connect(db);
-    db.remove_orphans();
-
-    return 0;
-}
-
-int do_repinfo(poptContext optCon)
-{
-    /* Throw away the command name */
-    poptGetArg(optCon);
-
-    /* Get the optional name of the repinfo file.  If missing, the default will be used */
-    const char* table = poptGetArg(optCon);
-
-    int added, deleted, updated;
-
-    DB db;
-    connect(db);
-    db.update_repinfo(table, &added, &deleted, &updated);
-    printf("Update completed: %d added, %d deleted, %d updated.\n", added, deleted, updated);
-
-    return 0;
-}
-
-const char* parse_op_report(DB& db)
-{
-    if (op_report[0] != 0)
-    {
-        const char* s;
-        int is_cod = 1;
-        for (s = op_report; *s && is_cod; s++)
-            if (!isdigit(*s))
-                is_cod = 0;
-
-        if (is_cod)
-            return db.rep_memo_from_cod(strtoul(op_report, NULL, 0)).c_str();
-        else
-            return op_report;
-    } else
-        return NULL;
-}
-
-int do_import(poptContext optCon)
-{
-    /* Throw away the command name */
-    poptGetArg(optCon);
-
-    reader.filter.matcher_from_args(optCon);
-    if (op_precise_import) reader.import_opts.simplified = false;
-
-    DB db;
-    connect(db);
-
-    Importer importer(db);
-    importer.overwrite = op_overwrite;
-    importer.forced_repmemo = parse_op_report(db);
-
-    reader.read(optCon, importer);
-
-    return 0;
-}
 
 struct MsgWriter : public MsgConsumer
 {
@@ -326,46 +114,327 @@ struct MsgDumper : public MsgConsumer
     }
 };
 
+}
+
+class Dbadb
+{
+protected:
+    static void connect(DB& db)
+    {
+        const char* chosen_dsn;
+
+        /* If dsn is missing, look in the environment */
+        if (op_dsn[0] == 0)
+        {
+            chosen_dsn = getenv("DBA_DB");
+            if (chosen_dsn == NULL)
+                throw error_consistency("no database specified");
+        } else
+            chosen_dsn = op_dsn;
+
+        /* If dsn looks like a url, treat it accordingly */
+        if (DB::is_url(chosen_dsn))
+            db.connect_from_url(chosen_dsn);
+        else
+            db.connect(chosen_dsn, op_user, op_pass);
+
+        // Wipe database if requested
+        if (op_wipe_first)
+            db.reset();
+    }
+
+    const char* parse_op_report(DB& db)
+    {
+        if (op_report[0] != 0)
+        {
+            const char* s;
+            int is_cod = 1;
+            for (s = op_report; *s && is_cod; s++)
+                if (!isdigit(*s))
+                    is_cod = 0;
+
+            if (is_cod)
+                return db.rep_memo_from_cod(strtoul(op_report, NULL, 0)).c_str();
+            else
+                return op_report;
+        } else
+            return NULL;
+    }
+
+public:
+    /// Query data in the database and output results as arbitrary human readable text
+    int do_dump(const Record& query, FILE* out)
+    {
+        DB db;
+        connect(db);
+        auto_ptr<db::Cursor> cursor = db.query_data(query);
+
+        Record res;
+        for (unsigned i = 0; cursor->next(); ++i)
+        {
+            cursor->to_record(res);
+            fprintf(out, "#%u: -----------------------\n", i);
+            res.print(out);
+        }
+
+        return 0;
+    }
+
+    /// Query stations in the database and output results as arbitrary human readable text
+    int do_stations(const Record& query, FILE* out)
+    {
+        DB db;
+        connect(db);
+        auto_ptr<db::Cursor> cursor = db.query_stations(query);
+
+        Record res;
+        for (unsigned i = 0; cursor->next(); ++i)
+        {
+            cursor->to_record(res);
+            fprintf(out, "#%u: -----------------------\n", i);
+            res.print(out);
+        }
+
+        return 0;
+    }
+
+    /// Create / empty the database
+    int do_wipe(const char* repinfo_file=NULL)
+    {
+        DB db;
+        connect(db);
+        db.reset(repinfo_file);
+        return 0;
+    }
+
+    /// Perform database cleanup maintenance
+    int do_cleanup()
+    {
+        DB db;
+        connect(db);
+        db.remove_orphans();
+        return 0;
+    }
+
+    /// Update repinfo information in the database
+    int do_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
+    {
+        DB db;
+        connect(db);
+        db.update_repinfo(repinfo_file, added, deleted, updated);
+        return 0;
+    }
+
+    /// Import files into the database
+    int do_import(poptContext optCon)
+    {
+        if (op_precise_import) reader.import_opts.simplified = false;
+
+        DB db;
+        connect(db);
+
+        dbadb_utils::Importer importer(db);
+
+        if (op_overwrite)
+            importer.import_flags |= DBA_IMPORT_OVERWRITE;
+        if (op_fast)
+            importer.import_flags |= DBA_IMPORT_NO_TRANSACTIONS;
+        if (!op_no_attrs)
+            importer.import_flags |= DBA_IMPORT_ATTRS;
+        if (op_full_pseudoana)
+            importer.import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
+
+        importer.forced_repmemo = parse_op_report(db);
+
+        reader.read(optCon, importer);
+
+        return 0;
+    }
+
+    int do_export(const Record& query)
+    {
+        if (strcmp(op_output_template, "list") == 0)
+        {
+            list_templates();
+            return 0;
+        }
+
+        /* Connect to the database */
+        DB db;
+        connect(db);
+
+        if (op_dump)
+        {
+            dbadb_utils::MsgDumper dumper;
+            db.export_msgs(query, dumper);
+        } else {
+            msg::Exporter::Options opts;
+            Encoding type = dba_cmdline_stringToMsgType(op_output_type);
+            if (op_output_template[0] != 0)
+                opts.template_name = op_output_template;
+
+            dbadb_utils::MsgWriter writer;
+            writer.forced_rep_memo = parse_op_report(db);
+            writer.file = File::create(type, "(stdout)", "w").release();
+            writer.exporter = msg::Exporter::create(type, opts).release();
+
+            db.export_msgs(query, writer);
+        }
+
+        return 0;
+    }
+
+    int do_delete(const Record& query)
+    {
+        DB db;
+        connect(db);
+
+        // TODO: check that there is something
+
+        db.remove(query);
+        return 0;
+    }
+
+    // Configuration
+    static struct cmdline::Reader reader;
+    static const char* op_dsn;
+    static const char* op_user;
+    static const char* op_pass;
+    static const char* op_report;
+    static const char* op_output_type;
+    static const char* op_output_template;
+    static int op_overwrite;
+    static int op_fast;
+    static int op_no_attrs;
+    static int op_full_pseudoana;
+    static int op_dump;
+    static int op_precise_import;
+    static int op_verbose;
+    static int op_wipe_first;
+} dbadb;
+
+// Defaults
+struct cmdline::Reader Dbadb::reader;
+const char* Dbadb::op_dsn = "";
+const char* Dbadb::op_user = "";
+const char* Dbadb::op_pass = "";
+const char* Dbadb::op_report = "";
+const char* Dbadb::op_output_type = "bufr";
+const char* Dbadb::op_output_template = "";
+int Dbadb::op_overwrite = 0;
+int Dbadb::op_fast = 0;
+int Dbadb::op_no_attrs = 0;
+int Dbadb::op_full_pseudoana = 0;
+int Dbadb::op_dump = 0;
+int Dbadb::op_precise_import = 0;
+int Dbadb::op_verbose = 0;
+int Dbadb::op_wipe_first = 0;
+
+struct poptOption grepTable[] = {
+    { "category", 0, POPT_ARG_INT, &dbadb.reader.filter.category, 0,
+        "match messages with the given data category", "num" },
+    { "subcategory", 0, POPT_ARG_INT, &dbadb.reader.filter.subcategory, 0,
+        "match BUFR messages with the given data subcategory", "num" },
+    { "check-digit", 0, POPT_ARG_INT, &dbadb.reader.filter.checkdigit, 0,
+        "match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
+    { "unparsable", 0, 0, &dbadb.reader.filter.unparsable, 0,
+        "match only messages that cannot be parsed", 0 },
+    { "parsable", 0, 0, &dbadb.reader.filter.parsable, 0,
+        "match only messages that can be parsed", 0 },
+    { "index", 0, POPT_ARG_STRING, &dbadb.reader.filter.index, 0,
+        "match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
+    POPT_TABLEEND
+};
+
+struct poptOption dbTable[] = {
+    { "dsn", 0, POPT_ARG_STRING, &dbadb.op_dsn, 0,
+        "DSN, or URL-like database definition, to use for connecting to the DB-All.e database (can also be specified in the environment as DBA_DB)", "dsn" },
+    { "user", 0, POPT_ARG_STRING, &dbadb.op_user, 0,
+        "username to use for connecting to the DB-All.e database", "user" },
+    { "pass", 0, POPT_ARG_STRING, &dbadb.op_pass, 0,
+        "password to use for connecting to the DB-All.e database", "pass" },
+    { "wipe-first", 0, POPT_ARG_NONE, &dbadb.op_wipe_first, 0,
+        "wipe database before any other action" },
+    POPT_TABLEEND
+};
+
+// Command line parsing wrappers for Dbadb methods
+
+int do_dump(poptContext optCon)
+{
+    /* Throw away the command name */
+    poptGetArg(optCon);
+
+    /* Create the query */
+    Record query;
+    dba_cmdline_get_query(optCon, query);
+
+    return dbadb.do_dump(query, stdout);
+}
+
+int do_stations(poptContext optCon)
+{
+    /* Throw away the command name */
+    poptGetArg(optCon);
+
+    /* Create the query */
+    Record query;
+    dba_cmdline_get_query(optCon, query);
+
+    return dbadb.do_stations(query, stdout);
+}
+
+int do_wipe(poptContext optCon)
+{
+    /* Throw away the command name */
+    poptGetArg(optCon);
+
+    /* Get the optional name of the repinfo file */
+    const char* fname = poptGetArg(optCon);
+    return dbadb.do_wipe(fname);
+}
+
+int do_cleanup(poptContext optCon)
+{
+    return dbadb.do_cleanup();
+}
+
+int do_repinfo(poptContext optCon)
+{
+    /* Throw away the command name */
+    poptGetArg(optCon);
+
+    /* Get the optional name of the repinfo file.  If missing, the default will be used */
+    const char* fname = poptGetArg(optCon);
+
+    int added, deleted, updated;
+    int res = dbadb.do_repinfo(fname, &added, &deleted, &updated);
+    printf("Update completed: %d added, %d deleted, %d updated.\n", added, deleted, updated);
+    return res;
+}
+
+
+int do_import(poptContext optCon)
+{
+    /* Throw away the command name */
+    poptGetArg(optCon);
+
+    dbadb.reader.filter.matcher_from_args(optCon);
+
+    // TODO: pass pased args instead of optCon, when possible
+    return dbadb.do_import(optCon);
+}
+
 int do_export(poptContext optCon)
 {
     /* Throw away the command name */
     poptGetArg(optCon);
 
-    if (strcmp(op_output_template, "list") == 0)
-    {
-        list_templates();
-        return 0;
-    }
-
-    /* Connect to the database */
-    DB db;
-    connect(db);
-
-    /* Create the query */
+    // Reat the query from command line
     Record query;
-
-    /* Add the query data from commandline */
     dba_cmdline_get_query(optCon, query);
 
-    if (op_dump)
-    {
-        MsgDumper dumper;
-        db.export_msgs(query, dumper);
-    } else {
-        msg::Exporter::Options opts;
-        Encoding type = dba_cmdline_stringToMsgType(op_output_type, optCon);
-        if (op_output_template[0] != 0)
-            opts.template_name = op_output_template;
-
-        MsgWriter writer;
-        writer.forced_rep_memo = parse_op_report(db);
-        writer.file = File::create(type, "(stdout)", "w").release();
-        writer.exporter = msg::Exporter::create(type, opts).release();
-
-        db.export_msgs(query, writer);
-    }
-
-    return 0;
+    return dbadb.do_export(query);
 }
 
 int do_delete(poptContext optCon)
@@ -376,25 +445,17 @@ int do_delete(poptContext optCon)
     if (poptPeekArg(optCon) == NULL)
         dba_cmdline_error(optCon, "you need to specify some query parameters");
 
-    DB db;
-    connect(db);
-
     /* Add the query data from commandline */
     Record query;
     dba_cmdline_get_query(optCon, query);
 
-    // TODO: check that there is something
-
-    db.remove(query);
-
-    return 0;
+    return dbadb.do_delete(query);
 }
 
-static struct tool_desc dbadb;
 
 struct poptOption dbadb_dump_options[] = {
     { "help", '?', 0, 0, 1, "print an help message", 0 },
-    { "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
+    { "verbose", 0, POPT_ARG_NONE, &dbadb.op_verbose, 0, "verbose output", 0 },
     { NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
         "Options used to connect to the database", 0 },
     POPT_TABLEEND
@@ -402,7 +463,7 @@ struct poptOption dbadb_dump_options[] = {
 
 struct poptOption dbadb_wipe_options[] = {
     { "help", '?', 0, 0, 1, "print an help message", 0 },
-    { "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
+    { "verbose", 0, POPT_ARG_NONE, &dbadb.op_verbose, 0, "verbose output", 0 },
     { NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
         "Options used to connect to the database", 0 },
     POPT_TABLEEND
@@ -410,20 +471,20 @@ struct poptOption dbadb_wipe_options[] = {
 
 struct poptOption dbadb_import_options[] = {
     { "help", '?', 0, 0, 1, "print an help message", 0 },
-    { "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-    { "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+    { "verbose", 0, POPT_ARG_NONE, &dbadb.op_verbose, 0, "verbose output", 0 },
+    { "type", 't', POPT_ARG_STRING, &dbadb.reader.input_type, 0,
         "format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" },
-    { "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
+    { "overwrite", 'f', POPT_ARG_NONE, &dbadb.op_overwrite, 0,
         "overwrite existing data", 0 },
-    { "report", 'r', POPT_ARG_STRING, &op_report, 0,
+    { "report", 'r', POPT_ARG_STRING, &dbadb.op_report, 0,
         "force data to be of this type of report, specified with rep_cod or rep_memo values", "rep" },
-    { "fast", 0, POPT_ARG_NONE, &op_fast, 0,
+    { "fast", 0, POPT_ARG_NONE, &dbadb.op_fast, 0,
         "Ignored.  This option is left here for compatibility with old versions of dbadb.", 0 },
-    { "no-attrs", 0, POPT_ARG_NONE, &op_no_attrs, 0,
+    { "no-attrs", 0, POPT_ARG_NONE, &dbadb.op_no_attrs, 0,
         "do not import data attributes", 0 },
-    { "full-pseudoana", 0, POPT_ARG_NONE, &op_full_pseudoana, 0,
+    { "full-pseudoana", 0, POPT_ARG_NONE, &dbadb.op_full_pseudoana, 0,
         "merge pseudoana extra values with the ones already existing in the database", 0 },
-    { "precise", 0, 0, &op_precise_import, 0,
+    { "precise", 0, 0, &dbadb.op_precise_import, 0,
         "import messages using precise contexts instead of standard ones", 0 },
     { NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
         "Options used to connect to the database", 0 },
@@ -434,14 +495,14 @@ struct poptOption dbadb_import_options[] = {
 
 struct poptOption dbadb_export_options[] = {
     { "help", '?', 0, 0, 1, "print an help message", 0 },
-    { "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-    { "report", 'r', POPT_ARG_STRING, &op_report, 0,
+    { "verbose", 0, POPT_ARG_NONE, &dbadb.op_verbose, 0, "verbose output", 0 },
+    { "report", 'r', POPT_ARG_STRING, &dbadb.op_report, 0,
         "force exported data to be of this type of report, specified with rep_cod or rep_memo values", "rep" },
-    { "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
+    { "dest", 'd', POPT_ARG_STRING, &dbadb.op_output_type, 0,
         "format of the data in output ('bufr', 'crex', 'aof')", "type" },
-    { "template", 't', POPT_ARG_STRING, &op_output_template, 0,
+    { "template", 't', POPT_ARG_STRING, &dbadb.op_output_template, 0,
         "template of the data in output (autoselect if not specified, 'list' gives a list)", "name" },
-    { "dump", 0, POPT_ARG_NONE, &op_dump, 0,
+    { "dump", 0, POPT_ARG_NONE, &dbadb.op_dump, 0,
         "dump data to be encoded instead of encoding it", 0 },
     { NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
         "Options used to connect to the database", 0 },
@@ -450,7 +511,7 @@ struct poptOption dbadb_export_options[] = {
 
 struct poptOption dbadb_repinfo_options[] = {
     { "help", '?', 0, 0, 1, "print an help message", 0 },
-    { "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
+    { "verbose", 0, POPT_ARG_NONE, &dbadb.op_verbose, 0, "verbose output", 0 },
     { NULL, 0, POPT_ARG_INCLUDE_TABLE, &dbTable, 0,
         "Options used to connect to the database", 0 },
     POPT_TABLEEND
@@ -477,95 +538,97 @@ struct poptOption dbadb_delete_options[] = {
     POPT_TABLEEND
 };
 
+static struct tool_desc dbadb_tooldesc;
+
 static void init()
 {
-    dbadb.desc = "Manage the DB-ALLe database";
-    dbadb.longdesc =
+    dbadb_tooldesc.desc = "Manage the DB-ALLe database";
+    dbadb_tooldesc.longdesc =
         "It allows to initialise the database, dump its contents and import and export data "
         "using BUFR, CREX or AOF encoding";
-    dbadb.ops = (struct op_dispatch_table*)calloc(9, sizeof(struct op_dispatch_table));
+    dbadb_tooldesc.ops = (struct op_dispatch_table*)calloc(9, sizeof(struct op_dispatch_table));
 
-    dbadb.ops[0].func = do_dump;
-    dbadb.ops[0].aliases[0] = "dump";
-    dbadb.ops[0].usage = "dump [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
-    dbadb.ops[0].desc = "Dump data from the database";
-    dbadb.ops[0].longdesc = "Query parameters are the same of the Fortran API. "
+    dbadb_tooldesc.ops[0].func = do_dump;
+    dbadb_tooldesc.ops[0].aliases[0] = "dump";
+    dbadb_tooldesc.ops[0].usage = "dump [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
+    dbadb_tooldesc.ops[0].desc = "Dump data from the database";
+    dbadb_tooldesc.ops[0].longdesc = "Query parameters are the same of the Fortran API. "
         "Please see the section \"Input and output parameters -- For data "
         "related action routines\" of the Fortran API documentation for a "
         "complete list.";
-    dbadb.ops[0].optable = dbadb_dump_options;
+    dbadb_tooldesc.ops[0].optable = dbadb_dump_options;
 
-    dbadb.ops[1].func = do_wipe;
-    dbadb.ops[1].aliases[0] = "wipe";
-    dbadb.ops[1].usage = "wipe [options] [optional rep_memo description file]";
-    dbadb.ops[1].desc = "Reinitialise the database, removing all data";
-    dbadb.ops[1].longdesc =
+    dbadb_tooldesc.ops[1].func = do_wipe;
+    dbadb_tooldesc.ops[1].aliases[0] = "wipe";
+    dbadb_tooldesc.ops[1].usage = "wipe [options] [optional rep_memo description file]";
+    dbadb_tooldesc.ops[1].desc = "Reinitialise the database, removing all data";
+    dbadb_tooldesc.ops[1].longdesc =
             "Reinitialisation is done using the given report code description file. "
             "If no file is provided, a default version is used";
-    dbadb.ops[1].optable = dbadb_wipe_options;
+    dbadb_tooldesc.ops[1].optable = dbadb_wipe_options;
 
-    dbadb.ops[2].func = do_import;
-    dbadb.ops[2].aliases[0] = "import";
-    dbadb.ops[2].usage = "import [options] [filter] filename [filename [ ... ] ]";
-    dbadb.ops[2].desc = "Import data into the database";
-    dbadb.ops[2].longdesc = NULL;
-    dbadb.ops[2].optable = dbadb_import_options;
+    dbadb_tooldesc.ops[2].func = do_import;
+    dbadb_tooldesc.ops[2].aliases[0] = "import";
+    dbadb_tooldesc.ops[2].usage = "import [options] [filter] filename [filename [ ... ] ]";
+    dbadb_tooldesc.ops[2].desc = "Import data into the database";
+    dbadb_tooldesc.ops[2].longdesc = NULL;
+    dbadb_tooldesc.ops[2].optable = dbadb_import_options;
 
-    dbadb.ops[3].func = do_export;
-    dbadb.ops[3].aliases[0] = "export";
-    dbadb.ops[3].usage = "export [options] rep_memo [queryparm1=val1 [queryparm2=val2 [...]]]";
-    dbadb.ops[3].desc = "Export data from the database";
-    dbadb.ops[3].longdesc = "Query parameters are the same of the Fortran API. "
+    dbadb_tooldesc.ops[3].func = do_export;
+    dbadb_tooldesc.ops[3].aliases[0] = "export";
+    dbadb_tooldesc.ops[3].usage = "export [options] rep_memo [queryparm1=val1 [queryparm2=val2 [...]]]";
+    dbadb_tooldesc.ops[3].desc = "Export data from the database";
+    dbadb_tooldesc.ops[3].longdesc = "Query parameters are the same of the Fortran API. "
         "Please see the section \"Input and output parameters -- For data "
         "related action routines\" of the Fortran API documentation for a "
         "complete list.";
-    dbadb.ops[3].optable = dbadb_export_options;
+    dbadb_tooldesc.ops[3].optable = dbadb_export_options;
 
-    dbadb.ops[4].func = do_repinfo;
-    dbadb.ops[4].aliases[0] = "repinfo";
-    dbadb.ops[4].usage = "repinfo [options] [filename]";
-    dbadb.ops[4].desc = "Update the report information table";
-    dbadb.ops[4].longdesc =
+    dbadb_tooldesc.ops[4].func = do_repinfo;
+    dbadb_tooldesc.ops[4].aliases[0] = "repinfo";
+    dbadb_tooldesc.ops[4].usage = "repinfo [options] [filename]";
+    dbadb_tooldesc.ops[4].desc = "Update the report information table";
+    dbadb_tooldesc.ops[4].longdesc =
             "Update the report information table with the data from the given "
             "report code description file.  "
             "If no file is provided, a default version is used";
-    dbadb.ops[4].optable = dbadb_repinfo_options;
+    dbadb_tooldesc.ops[4].optable = dbadb_repinfo_options;
 
-    dbadb.ops[5].func = do_cleanup;
-    dbadb.ops[5].aliases[0] = "cleanup";
-    dbadb.ops[5].usage = "cleanup [options]";
-    dbadb.ops[5].desc = "Perform database cleanup operations";
-    dbadb.ops[5].longdesc =
+    dbadb_tooldesc.ops[5].func = do_cleanup;
+    dbadb_tooldesc.ops[5].aliases[0] = "cleanup";
+    dbadb_tooldesc.ops[5].usage = "cleanup [options]";
+    dbadb_tooldesc.ops[5].desc = "Perform database cleanup operations";
+    dbadb_tooldesc.ops[5].longdesc =
             "The only operation currently performed by this command is "
             "deleting stations that have no values.  If more will be added in "
             "the future, they will be documented here.";
-    dbadb.ops[5].optable = dbadb_cleanup_options;
+    dbadb_tooldesc.ops[5].optable = dbadb_cleanup_options;
 
-    dbadb.ops[6].func = do_stations;
-    dbadb.ops[6].aliases[0] = "stations";
-    dbadb.ops[6].usage = "stations [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
-    dbadb.ops[6].desc = "List the stations present in the database";
-    dbadb.ops[6].longdesc = "Query parameters are the same of the Fortran API. "
+    dbadb_tooldesc.ops[6].func = do_stations;
+    dbadb_tooldesc.ops[6].aliases[0] = "stations";
+    dbadb_tooldesc.ops[6].usage = "stations [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
+    dbadb_tooldesc.ops[6].desc = "List the stations present in the database";
+    dbadb_tooldesc.ops[6].longdesc = "Query parameters are the same of the Fortran API. "
         "Please see the section \"Input and output parameters -- For data "
         "related action routines\" of the Fortran API documentation for a "
         "complete list.";
-    dbadb.ops[6].optable = dbadb_stations_options;
+    dbadb_tooldesc.ops[6].optable = dbadb_stations_options;
 
-    dbadb.ops[7].func = do_delete;
-    dbadb.ops[7].aliases[0] = "delete";
-    dbadb.ops[7].usage = "delete [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
-    dbadb.ops[7].desc = "Delete all the data matching the given query parameters";
-    dbadb.ops[7].longdesc = "Query parameters are the same of the Fortran API. "
+    dbadb_tooldesc.ops[7].func = do_delete;
+    dbadb_tooldesc.ops[7].aliases[0] = "delete";
+    dbadb_tooldesc.ops[7].usage = "delete [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
+    dbadb_tooldesc.ops[7].desc = "Delete all the data matching the given query parameters";
+    dbadb_tooldesc.ops[7].longdesc = "Query parameters are the same of the Fortran API. "
         "Please see the section \"Input and output parameters -- For data "
         "related action routines\" of the Fortran API documentation for a "
         "complete list.";
-    dbadb.ops[7].optable = dbadb_delete_options;
+    dbadb_tooldesc.ops[7].optable = dbadb_delete_options;
 
-    dbadb.ops[8].func = NULL;
-    dbadb.ops[8].usage = NULL;
-    dbadb.ops[8].desc = NULL;
-    dbadb.ops[8].longdesc = NULL;
-    dbadb.ops[8].optable = NULL;
+    dbadb_tooldesc.ops[8].func = NULL;
+    dbadb_tooldesc.ops[8].usage = NULL;
+    dbadb_tooldesc.ops[8].desc = NULL;
+    dbadb_tooldesc.ops[8].longdesc = NULL;
+    dbadb_tooldesc.ops[8].optable = NULL;
 };
 
 static struct program_info proginfo = {
@@ -579,7 +642,7 @@ int main (int argc, const char* argv[])
 {
     int res;
     init();
-    res = dba_cmdline_dispatch_main(&proginfo, &dbadb, argc, argv);
+    res = dba_cmdline_dispatch_main(&proginfo, &dbadb_tooldesc, argc, argv);
     return res;
 }
 

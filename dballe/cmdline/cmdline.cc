@@ -42,6 +42,20 @@ void dba_cmdline_print_dba_error()
 }
 #endif
 
+void error_cmdline::throwf(const char* fmt, ...)
+{
+    /* Format the arguments */
+    va_list ap;
+    va_start(ap, fmt);
+    char* cmsg;
+    vasprintf(&cmsg, fmt, ap);
+    va_end(ap);
+    /* Convert to string */
+    std::string msg(cmsg);
+    free(cmsg);
+    throw error_cmdline(msg);
+}
+
 void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
 {
     va_list ap;
@@ -60,7 +74,7 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
     exit(1);
 }
 
-Encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon)
+Encoding dba_cmdline_stringToMsgType(const char* type)
 {
     if (strcmp(type, "bufr") == 0 || strcmp(type, "b") == 0)
     {
@@ -79,7 +93,7 @@ Encoding dba_cmdline_stringToMsgType(const char* type, poptContext optCon)
         return (Encoding)-1;
     }
     else
-        dba_cmdline_error(optCon, "'%s' is not a valid format type", type);
+        error_cmdline::throwf("'%s' is not a valid format type", type);
 }
 
 static const struct op_dispatch_table* op_table_lookup(const struct tool_desc* desc, const char* name)
@@ -506,6 +520,11 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
             int res = 0;
             try {
                 res = action->func(optCon);
+            } catch (error_cmdline& e) {
+                fprintf(stderr, "Error parsing commandline: %s\n", e.what());
+                fputc('\n', stderr);
+                poptPrintHelp(optCon, stderr, 0);
+                res = 1;
             } catch (std::exception& e) {
                 fprintf(stderr, "%s\n", e.what());
                 res = 1;

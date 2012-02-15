@@ -766,7 +766,7 @@ int do_convert(poptContext optCon)
     reader.filter.matcher_from_args(optCon);
     if (op_precise_import) reader.import_opts.simplified = false;
 
-	Encoding outtype = dba_cmdline_stringToMsgType(op_output_type, optCon);
+	Encoding outtype = dba_cmdline_stringToMsgType(op_output_type);
 
 	if (op_report[0] != 0)
 		conv.dest_rep_memo = op_report;
@@ -803,8 +803,8 @@ int do_compare(poptContext optCon)
 	if (file2_name == NULL)
 		file2_name = "(stdin)";
 
-	Encoding in_type = dba_cmdline_stringToMsgType(reader.input_type, optCon);
-	Encoding out_type = dba_cmdline_stringToMsgType(op_output_type, optCon);
+	Encoding in_type = dba_cmdline_stringToMsgType(reader.input_type);
+	Encoding out_type = dba_cmdline_stringToMsgType(op_output_type);
 	File* file1 = File::create(in_type, file1_name, "r").release();
 	File* file2 = File::create(out_type, file2_name, "r").release();
 	std::auto_ptr<msg::Importer> importer = msg::Importer::create(in_type);
