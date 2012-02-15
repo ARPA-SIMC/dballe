@@ -73,7 +73,8 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/data.h \
 	db/attr.h \
 	db/cursor.h \
-	db/db.h
+	db/db.h \
+	cmdline/dbadb.h
 endif
 
 lib_LTLIBRARIES = libdballe.la
@@ -135,7 +136,8 @@ libdballe_la_SOURCES += \
 	db/cursor.cc \
 	db/db.cc \
 	db/import.cc \
-	db/export.cc
+	db/export.cc \
+	cmdline/dbadb.cc
 endif
 
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)

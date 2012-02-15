@@ -17,6 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include <dballe/cmdline/dbadb.h>
 #include <dballe/cmdline/processor.h>
 #include <dballe/cmdline/cmdline.h>
 #include <dballe/core/record.h>
@@ -35,156 +36,6 @@ using namespace dballe;
 using namespace dballe::cmdline;
 using namespace wreport;
 using namespace std;
-
-namespace dbadb_utils {
-
-struct Importer : public cmdline::Action
-{
-    DB& db;
-    int import_flags;
-    const char* forced_repmemo;
-
-    Importer(DB& db) : db(db), import_flags(0), forced_repmemo(0) {}
-
-    virtual void operator()(const cmdline::Item& item)
-    {
-        if (item.msgs == NULL)
-        {
-            fprintf(stderr, "Message #%d cannot be parsed: ignored\n", item.idx);
-            return;
-        }
-        for (size_t i = 0; i < item.msgs->size(); ++i)
-        {
-            Msg& msg = *(*item.msgs)[i];
-            if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
-                /* Put generic messages in the generic rep_cod by default */
-                db.import_msg(msg, NULL, import_flags);
-            else
-                db.import_msg(msg, forced_repmemo, import_flags);
-        }
-    }
-};
-
-struct MsgWriter : public MsgConsumer
-{
-    File* file;
-    msg::Exporter* exporter;
-    const char* forced_rep_memo;
-
-    MsgWriter() : file(0), exporter(0), forced_rep_memo(0) {}
-    ~MsgWriter()
-    {
-        if (file) delete file;
-        if (exporter) delete exporter;
-    }
-
-    virtual void operator()(std::auto_ptr<Msg> msg)
-    {
-        /* Override the message type if the user asks for it */
-        if (forced_rep_memo != NULL)
-            msg->type = Msg::type_from_repmemo(forced_rep_memo);
-        Rawmsg raw;
-        Msgs msgs;
-        msgs.acquire(msg);
-        exporter->to_rawmsg(msgs, raw);
-        file->write(raw);
-    }
-};
-
-struct MsgDumper : public MsgConsumer
-{
-    FILE* out;
-    MsgDumper(FILE* out=stdout) : out(out) {}
-
-    virtual void operator()(std::auto_ptr<Msg> msg)
-    {
-        msg->print(out);
-    }
-};
-
-const char* parse_op_report(DB& db, const char* name="")
-{
-    if (name != 0)
-    {
-        const char* s;
-        int is_cod = 1;
-        for (s = name; *s && is_cod; s++)
-            if (!isdigit(*s))
-                is_cod = 0;
-
-        if (is_cod)
-            return db.rep_memo_from_cod(strtoul(name, NULL, 0)).c_str();
-        else
-            return name;
-    } else
-        return NULL;
-}
-
-}
-
-class Dbadb
-{
-protected:
-    DB& db;
-
-public:
-    Dbadb(DB& db) : db(db) {}
-
-    /// Query data in the database and output results as arbitrary human readable text
-    int do_dump(const Record& query, FILE* out)
-    {
-        auto_ptr<db::Cursor> cursor = db.query_data(query);
-
-        Record res;
-        for (unsigned i = 0; cursor->next(); ++i)
-        {
-            cursor->to_record(res);
-            fprintf(out, "#%u: -----------------------\n", i);
-            res.print(out);
-        }
-
-        return 0;
-    }
-
-    /// Query stations in the database and output results as arbitrary human readable text
-    int do_stations(const Record& query, FILE* out)
-    {
-        auto_ptr<db::Cursor> cursor = db.query_stations(query);
-
-        Record res;
-        for (unsigned i = 0; cursor->next(); ++i)
-        {
-            cursor->to_record(res);
-            fprintf(out, "#%u: -----------------------\n", i);
-            res.print(out);
-        }
-
-        return 0;
-    }
-
-    int do_export_dump(const Record& query, FILE* out)
-    {
-        dbadb_utils::MsgDumper dumper(out);
-        db.export_msgs(query, dumper);
-        return 0;
-    }
-
-    int do_export(const Record& query, auto_ptr<File> file, const char* output_template=NULL, const char* forced_repmemo=NULL)
-    {
-        msg::Exporter::Options opts;
-        if (output_template[0] != 0)
-            opts.template_name = output_template;
-
-        dbadb_utils::MsgWriter writer;
-        if (forced_repmemo)
-            writer.forced_rep_memo = dbadb_utils::parse_op_report(db, forced_repmemo);
-        writer.file = file.release();
-        writer.exporter = msg::Exporter::create(writer.file->type(), opts).release();
-
-        db.export_msgs(query, writer);
-        return 0;
-    }
-};
 
 // Command line parser variables
 struct cmdline::Reader reader;
@@ -358,9 +209,9 @@ int do_import(poptContext optCon)
     DB db;
     connect(db);
 
-    dbadb_utils::Importer importer(db);
+    dbadb::Importer importer(db);
     importer.import_flags = import_flags;
-    importer.forced_repmemo = dbadb_utils::parse_op_report(db, op_report);
+    importer.forced_repmemo = dbadb::parse_op_report(db, op_report);
 
     reader.read(get_filenames(optCon), importer);
     return 0;
