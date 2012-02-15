@@ -1,3 +1,10 @@
+dballe (5.16-1) unstable; urgency=low
+
+  * New upstream release
+     - fixed dbadb --report: the option had no effect
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 15 Feb 2012 20:54:57 +0100
+
 dballe (5.15-1) unstable; urgency=low
 
   * New upstream release

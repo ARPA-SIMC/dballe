@@ -23,7 +23,7 @@
 #include <dballe/core/file.h>
 #include <dballe/core/record.h>
 #include <dballe/cmdline/processor.h>
-#include <memory>
+#include <list>
 #include <cstdio>
 
 namespace dballe {
@@ -33,18 +33,21 @@ namespace cmdline {
 
 namespace dbadb {
 
-struct Importer : public Action
-{
-    DB& db;
-    int import_flags;
-    const char* forced_repmemo;
-
-    Importer(DB& db) : db(db), import_flags(0), forced_repmemo(0) {}
-
-    virtual void operator()(const cmdline::Item& item);
-};
-
-const char* parse_op_report(DB& db, const char* name="");
+/**
+ * Parse a report name from command line.
+ *
+ * If \a name is NULL or the empty string, it returns NULL to signal that no
+ * value was provided.
+ *
+ * Raises an exception if \a name is not the empty string and an invalid report
+ * name.
+ *
+ * @param name
+ *   String with a report number or name
+ * @returns
+ *   The validated report name, or NULL if \a name was the empty string.
+ */
+const char* parse_op_report(DB& db, const char* name=NULL);
 
 }
 
@@ -65,8 +68,14 @@ public:
     /// Export messages and dump their contents to the given file descriptor
     int do_export_dump(const Record& query, FILE* out);
 
+    /// Import the given files
+    int do_import(const std::list<std::string>& fnames, Reader& reader, int import_flags=0, const char* forced_repmemo=NULL);
+
+    /// Import one file
+    int do_import(const std::string& fname, Reader& reader, int import_flags=0, const char* forced_repmemo=NULL);
+
     /// Export messages writing them to the givne file
-    int do_export(const Record& query, std::auto_ptr<File> file, const char* output_template=NULL, const char* forced_repmemo=NULL);
+    int do_export(const Record& query, File& file, const char* output_template=NULL, const char* forced_repmemo=NULL);
 };
 
 

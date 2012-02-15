@@ -33,27 +33,9 @@ namespace cmdline {
 
 namespace dbadb {
 
-void Importer::operator()(const Item& item)
-{
-    if (item.msgs == NULL)
-    {
-        fprintf(stderr, "Message #%d cannot be parsed: ignored\n", item.idx);
-        return;
-    }
-    for (size_t i = 0; i < item.msgs->size(); ++i)
-    {
-        Msg& msg = *(*item.msgs)[i];
-        if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
-            /* Put generic messages in the generic rep_cod by default */
-            db.import_msg(msg, NULL, import_flags);
-        else
-            db.import_msg(msg, forced_repmemo, import_flags);
-    }
-}
-
 const char* parse_op_report(DB& db, const char* name)
 {
-    if (name != 0)
+    if (name != 0 && name[0] != 0)
     {
         const char* s;
         int is_cod = 1;
@@ -73,16 +55,45 @@ const char* parse_op_report(DB& db, const char* name)
 
 namespace {
 
+struct Importer : public Action
+{
+    DB& db;
+    int import_flags;
+    const char* forced_repmemo;
+
+    Importer(DB& db) : db(db), import_flags(0), forced_repmemo(0) {}
+
+    virtual void operator()(const cmdline::Item& item);
+};
+
+void Importer::operator()(const Item& item)
+{
+    if (item.msgs == NULL)
+    {
+        fprintf(stderr, "Message #%d cannot be parsed: ignored\n", item.idx);
+        return;
+    }
+    for (size_t i = 0; i < item.msgs->size(); ++i)
+    {
+        Msg& msg = *(*item.msgs)[i];
+        if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
+            /* Put generic messages in the generic rep_cod by default */
+            db.import_msg(msg, NULL, import_flags);
+        else
+            db.import_msg(msg, forced_repmemo, import_flags);
+    }
+}
+
+
 struct MsgWriter : public MsgConsumer
 {
-    File* file;
+    File& file;
     msg::Exporter* exporter;
     const char* forced_rep_memo;
 
-    MsgWriter() : file(0), exporter(0), forced_rep_memo(0) {}
+    MsgWriter(File& file) : file(file), exporter(0), forced_rep_memo(0) {}
     ~MsgWriter()
     {
-        if (file) delete file;
         if (exporter) delete exporter;
     }
 
@@ -90,12 +101,15 @@ struct MsgWriter : public MsgConsumer
     {
         /* Override the message type if the user asks for it */
         if (forced_rep_memo != NULL)
+        {
             msg->type = Msg::type_from_repmemo(forced_rep_memo);
+            msg->set_rep_memo(forced_rep_memo);
+        }
         Rawmsg raw;
         Msgs msgs;
         msgs.acquire(msg);
         exporter->to_rawmsg(msgs, raw);
-        file->write(raw);
+        file.write(raw);
     }
 };
 
@@ -151,17 +165,32 @@ int Dbadb::do_export_dump(const Record& query, FILE* out)
     return 0;
 }
 
-int Dbadb::do_export(const Record& query, auto_ptr<File> file, const char* output_template, const char* forced_repmemo)
+int Dbadb::do_import(const list<string>& fnames, Reader& reader, int import_flags, const char* forced_repmemo)
+{
+    Importer importer(db);
+    importer.import_flags = import_flags;
+    importer.forced_repmemo = forced_repmemo;
+    reader.read(fnames, importer);
+    return 0;
+}
+
+int Dbadb::do_import(const std::string& fname, Reader& reader, int import_flags, const char* forced_repmemo)
+{
+    list<string> fnames;
+    fnames.push_back(fname);
+    return do_import(fnames, reader, import_flags, forced_repmemo);
+}
+
+int Dbadb::do_export(const Record& query, File& file, const char* output_template, const char* forced_repmemo)
 {
     msg::Exporter::Options opts;
-    if (output_template[0] != 0)
+    if (output_template && output_template[0] != 0)
         opts.template_name = output_template;
 
-    MsgWriter writer;
+    MsgWriter writer(file);
     if (forced_repmemo)
         writer.forced_rep_memo = dbadb::parse_op_report(db, forced_repmemo);
-    writer.file = file.release();
-    writer.exporter = msg::Exporter::create(writer.file->type(), opts).release();
+    writer.exporter = msg::Exporter::create(file.type(), opts).release();
 
     db.export_msgs(query, writer);
     return 0;

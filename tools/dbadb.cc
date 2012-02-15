@@ -187,13 +187,16 @@ int do_repinfo(poptContext optCon)
 
 int do_import(poptContext optCon)
 {
-    /* Throw away the command name */
+    // Throw away the command name
     poptGetArg(optCon);
 
+    // Configure the reader
     Record query;
     if (dba_cmdline_get_query(optCon, query) > 0)
         reader.filter.matcher_from_record(query);
+    reader.import_opts.simplified = !op_precise_import;
 
+    // Configure the importer
     int import_flags = 0;
     if (op_overwrite)
         import_flags |= DBA_IMPORT_OVERWRITE;
@@ -204,17 +207,13 @@ int do_import(poptContext optCon)
     if (op_full_pseudoana)
         import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
 
-    reader.import_opts.simplified = !op_precise_import;
-
     DB db;
     connect(db);
 
-    dbadb::Importer importer(db);
-    importer.import_flags = import_flags;
-    importer.forced_repmemo = dbadb::parse_op_report(db, op_report);
+    const char* forced_repmemo = dbadb::parse_op_report(db, op_report);
 
-    reader.read(get_filenames(optCon), importer);
-    return 0;
+    Dbadb dbadb(db);
+    return dbadb.do_import(get_filenames(optCon), reader, import_flags, forced_repmemo);
 }
 
 int do_export(poptContext optCon)
@@ -242,7 +241,7 @@ int do_export(poptContext optCon)
     } else {
         Encoding type = dba_cmdline_stringToMsgType(op_output_type);
         auto_ptr<File> file = File::create(type, "(stdout)", "w");
-        return dbadb.do_export(query, file, op_output_template, op_report);
+        return dbadb.do_export(query, *file, op_output_template, op_report);
     }
 }
 

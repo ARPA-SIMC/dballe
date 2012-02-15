@@ -45,6 +45,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/var.h \
 	core/rawmsg.h \
 	core/file.h \
+	core/arrayfile.h \
 	core/aoffile.h \
 	core/csv.h \
 	core/record.h \
@@ -85,6 +86,7 @@ libdballe_la_SOURCES = \
 	core/defs.cc \
 	core/var.cc \
 	core/file.cc \
+	core/arrayfile.cc \
 	core/aoffile.cc \
 	core/csv.cc \
 	core/record_keyword.cc \
@@ -205,7 +207,8 @@ tut_test_SOURCES += \
 	db/tests/attr.cc \
 	db/tests/db.cc \
 	db/tests/db_import.cc \
-	db/tests/db_export.cc
+	db/tests/db_export.cc \
+	cmdline/dbadb-tut.cc
 endif
 
 tut_test_LDADD = \
