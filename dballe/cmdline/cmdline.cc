@@ -565,6 +565,15 @@ void list_templates()
                 i->second->name.c_str(), i->second->description.c_str());
 }
 
+
+std::list<std::string> get_filenames(poptContext optCon)
+{
+    std::list<std::string> res;
+    while (const char* name = poptGetArg(optCon))
+        res.push_back(name);
+    return res;
+}
+
 } // namespace cmdline
 } // namespace dballe
 

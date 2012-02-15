@@ -28,6 +28,8 @@
 #include <wreport/error.h>
 #include <dballe/core/rawmsg.h>
 #include <popt.h>
+#include <list>
+#include <string>
 
 namespace dballe {
 struct Record;
@@ -109,6 +111,9 @@ unsigned dba_cmdline_get_query(poptContext optCon, Record& query);
  * List available output templates
  */
 void list_templates();
+
+/// Read all the command line arguments and return them as a list
+std::list<std::string> get_filenames(poptContext optCon);
 
 } // namespace cmdline
 } // namespace dballe

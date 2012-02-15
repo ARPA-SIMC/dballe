@@ -152,16 +152,23 @@ Filter::~Filter()
     if (matcher) delete matcher;
 }
 
-void Filter::matcher_from_args(poptContext optCon)
+void Filter::matcher_reset()
 {
     if (matcher)
     {
         delete matcher;
         matcher = 0;
     }
-    Record query;
-    if (dba_cmdline_get_query(optCon, query) > 0)
-        matcher = Matcher::create(query).release();
+}
+
+void Filter::matcher_from_record(const Record& query)
+{
+    if (matcher)
+    {
+        delete matcher;
+        matcher = 0;
+    }
+    matcher = Matcher::create(query).release();
 }
 
 bool Filter::match_index(int idx) const
@@ -308,26 +315,27 @@ Reader::Reader()
 {
 }
 
-void Reader::read_csv(poptContext optCon, Action& action)
+void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
 {
     // This cannot be implemented in dballe::File at the moment, since
     // dballe::File reads dballe::Rawmsg strings, and here we read dballe::Msgs
     // directly. We could split the input into several Rawmsg strings, but that
     // would mean parsing the CSV twice: once to detect the message boundaries
     // and once to parse the Rawmsg strings.
-    const char* name = poptGetArg(optCon);
     Item item;
     auto_ptr<istream> in;
     auto_ptr<CSVReader> csvin;
 
+    list<string>::const_iterator name = fnames.begin();
     do
     {
-        if (name != NULL)
+        if (name != fnames.end())
         {
-            in.reset(new ifstream(name));
+            in.reset(new ifstream(name->c_str()));
             csvin.reset(new IstreamCSVReader(*in));
+            ++name;
         } else {
-            name = "(stdin)";
+            // name = "(stdin)";
             csvin.reset(new IstreamCSVReader(cin));
         }
 
@@ -353,24 +361,30 @@ void Reader::read_csv(poptContext optCon, Action& action)
 
             action(item);
         }
-    } while ((name = poptGetArg(optCon)) != NULL);
+    } while (name != fnames.end());
 }
 
-void Reader::read_file(poptContext optCon, Action& action)
+void Reader::read_file(const std::list<std::string>& fnames, Action& action)
 {
-    const char* name = poptGetArg(optCon);
     Item item;
     item.rmsg = new Rawmsg;
-
-    if (name == NULL)
-        name = "(stdin)";
 
     bool print_errors = !filter.unparsable;
     Encoding intype = dba_cmdline_stringToMsgType(input_type);
 
+    list<string>::const_iterator name = fnames.begin();
     do
     {
-        auto_ptr<File> file(File::create(intype, name, "r"));
+        auto_ptr<File> file;
+
+        if (name != fnames.end())
+        {
+            file = File::create(intype, *name, "r");
+            ++name;
+        } else {
+            file = File::create(intype, "(stdin)", "r");
+        }
+
         std::auto_ptr<msg::Importer> imp = msg::Importer::create(file->type(), import_opts);
 
         while (file->read(*item.rmsg))
@@ -392,15 +406,15 @@ void Reader::read_file(poptContext optCon, Action& action)
 
             action(item);
         }
-    } while ((name = poptGetArg(optCon)) != NULL);
+    } while (name != fnames.end());
 }
 
-void Reader::read(poptContext optCon, Action& action)
+void Reader::read(const std::list<std::string>& fnames, Action& action)
 {
     if (strcmp(input_type, "csv") == 0)
-        read_csv(optCon, action);
+        read_csv(fnames, action);
     else
-        read_file(optCon, action);
+        read_file(fnames, action);
 }
 
 } // namespace cmdline

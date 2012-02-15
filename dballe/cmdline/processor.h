@@ -21,8 +21,10 @@
 #define PROCESSOR_H
 
 #include <dballe/core/rawmsg.h>
+#include <dballe/core/record.h>
 #include <dballe/msg/codec.h>
-#include <popt.h>
+#include <list>
+#include <string>
 
 namespace wreport {
 struct Bulletin;
@@ -72,8 +74,11 @@ struct Filter
     Filter();
     ~Filter();
 
-    /// Initialise the matcher eating key=val arguments
-    void matcher_from_args(poptContext optCon);
+    /// Reset to the empty matcher
+    void matcher_reset();
+
+    /// Initialise the matcher from a record
+    void matcher_from_record(const Record& query);
 
     bool match_index(int idx) const;
     bool match_common(const Rawmsg& rmsg, const Msgs* msgs) const;
@@ -88,8 +93,8 @@ struct Filter
 class Reader
 {
 protected:
-    void read_csv(poptContext optCon, Action& action);
-    void read_file(poptContext optCon, Action& action);
+    void read_csv(const std::list<std::string>& fnames, Action& action);
+    void read_file(const std::list<std::string>& fnames, Action& action);
 
 public:
     const char* input_type;
@@ -98,21 +103,8 @@ public:
 
     Reader();
 
-    void read(poptContext optCon, Action& action);
+    void read(const std::list<std::string>& fnames, Action& action);
 };
-
-#if 0
-void process_all(poptContext optCon,
-		 Encoding type,
-		 struct Filter* grepdata,
-		 Action& action);
-#endif
-
-#if 0
-void process_csv(poptContext optCon,
-        struct Filter* grepdata,
-        Action& action);
-#endif
 
 } // namespace cmdline
 } // namespace dballe

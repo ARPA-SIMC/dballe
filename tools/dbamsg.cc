@@ -570,9 +570,11 @@ int do_scan(poptContext optCon)
     /* Throw away the command name */
     poptGetArg(optCon);
 
-    reader.filter.matcher_from_args(optCon);
+    Record query;
+    if (dba_cmdline_get_query(optCon, query) > 0)
+        reader.filter.matcher_from_record(query);
     Summarise s;
-    reader.read(optCon, s);
+    reader.read(get_filenames(optCon), s);
     return 0;
 }
 
@@ -581,9 +583,12 @@ int do_head(poptContext optCon)
     /* Throw away the command name */
     poptGetArg(optCon);
 
-    reader.filter.matcher_from_args(optCon);
+    Record query;
+    if (dba_cmdline_get_query(optCon, query) > 0)
+        reader.filter.matcher_from_record(query);
+
     Head head;
-    reader.read(optCon, head);
+    reader.read(get_filenames(optCon), head);
     return 0;
 }
 
@@ -611,8 +616,12 @@ int do_dump(poptContext optCon)
     /* Throw away the command name */
     poptGetArg(optCon);
     if (op_precise_import) reader.import_opts.simplified = false;
-    reader.filter.matcher_from_args(optCon);
-    reader.read(optCon, *action);
+
+    Record query;
+    if (dba_cmdline_get_query(optCon, query) > 0)
+        reader.filter.matcher_from_record(query);
+
+    reader.read(get_filenames(optCon), *action);
     return 0;
 }
 
@@ -621,10 +630,13 @@ int do_cat(poptContext optCon)
     /* Throw away the command name */
     poptGetArg(optCon);
 
-    reader.filter.matcher_from_args(optCon);
+    Record query;
+    if (dba_cmdline_get_query(optCon, query) > 0)
+        reader.filter.matcher_from_record(query);
+
     /*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
     WriteRaw wraw;
-    reader.read(optCon, wraw);
+    reader.read(get_filenames(optCon), wraw);
     return 0;
 }
 
@@ -763,7 +775,10 @@ int do_convert(poptContext optCon)
 		return 0;
 	}
 
-    reader.filter.matcher_from_args(optCon);
+    Record query;
+    if (dba_cmdline_get_query(optCon, query) > 0)
+        reader.filter.matcher_from_record(query);
+
     if (op_precise_import) reader.import_opts.simplified = false;
 
 	Encoding outtype = dba_cmdline_stringToMsgType(op_output_type);
@@ -784,7 +799,7 @@ int do_convert(poptContext optCon)
     conv.file = File::create(outtype, "(stdout)", "w").release();
     conv.exporter = msg::Exporter::create(outtype, opts).release();
 
-    reader.read(optCon, conv);
+    reader.read(get_filenames(optCon), conv);
 
     return 0;
 }
