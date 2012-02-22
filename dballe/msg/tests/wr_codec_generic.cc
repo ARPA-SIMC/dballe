@@ -20,6 +20,7 @@
 #include "msg/test-utils-msg.h"
 #include "msg/wr_codec.h"
 #include <wreport/notes.h>
+#include <wreport/bulletin.h>
 
 using namespace dballe;
 using namespace wreport;
@@ -289,6 +290,34 @@ void to::test<4>()
     int diffs = msgs.diff(msgs1);
     if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericattr");
     ensure_equals(diffs, 0);
+}
+
+// Test a bug in which B01194 ([SIM] Report mnemonic) appears twice
+template<> template<>
+void to::test<5>()
+{
+    // Import a synop message
+    auto_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+    ensure(msgs->size() > 0);
+
+    // Convert it to generic, with a 'ship' rep_memo
+    (*msgs)[0]->type = MSG_GENERIC;
+    (*msgs)[0]->set_rep_memo("ship");
+
+    // Export it
+    auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+    auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+    exporter->to_bulletin(*msgs, *bulletin);
+
+    // Ensure that B01194 only appears once
+    ensure_equals(bulletin->subsets.size(), 1u);
+    unsigned count = 0;
+    for (std::vector<wreport::Var>::const_iterator i = bulletin->subsets[0].begin(); i != bulletin->subsets[0].end(); ++i)
+    {
+        if (i->code() == WR_VAR(0, 1, 194))
+            ++count;
+    }
+    ensure_equals(count, 1u);
 }
 
 }
