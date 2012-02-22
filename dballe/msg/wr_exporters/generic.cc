@@ -99,16 +99,22 @@ struct Generic : public Template
         Level lev;
         Trange tr;
 
-        // Do the station context first
-        subset.store_variable_i(WR_VAR(0, 7, 192), 257);
+        // Do the report type first
         if (repmemo)
             subset.store_variable(repmemo->code(), *repmemo);
-        else if (msg.type != MSG_GENERIC)
+        else if (msg.type != MSG_GENERIC) // It is generic by default, no need to repeat it
             subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
+
+        // Then the station context
+        subset.store_variable_i(WR_VAR(0, 7, 192), 257);
         if (const msg::Context* ctx = msg.find_station_context())
             for (size_t j = 0; j < ctx->data.size(); ++j)
             {
                 const Var& var = *(ctx->data[j]);
+
+                // Do not add rep_memo twice
+                if (var.code() == WR_VAR(0, 1, 194))
+                    continue;
 
                 // Store the variable
                 subset.store_variable(var.code(), var);
