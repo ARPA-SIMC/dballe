@@ -282,14 +282,14 @@ class Model:
             del filter[i]
         return self.db.query_station_summary(filter)
 
-    def queryDateTimes(self):
-        filter = self.filter.copy()
-        filter["query"] = "nosort"
-        for i in ("yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin",
-              "yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax",
-              "year", "month", "day", "hour", "min", "sec"):
-            del filter[i]
-        return self.db.query_datetimes(filter)
+    #def queryDateTimes(self):
+    #    filter = self.filter.copy()
+    #    filter["query"] = "nosort"
+    #    for i in ("yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin",
+    #          "yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax",
+    #          "year", "month", "day", "hour", "min", "sec"):
+    #        del filter[i]
+    #    return self.db.query_datetimes(filter)
 
     def queryVariableTypes(self):
         filter = self.filter.copy()
@@ -457,9 +457,10 @@ class Model:
 
             # Query datetimes
             self.notifyProgress(18, "Querying date and time data...")
-            for result in self.queryDateTimes():
-                self.cached_dtimes.append(result["date"])
-            self.cached_dtimes.sort()
+            #for result in self.queryDateTimes():
+            #    self.cached_dtimes.append(result["date"])
+            #self.cached_dtimes.sort()
+            t.partial("(temporarily disabled for performance reasons)")
             t.partial("got date and time data (%d items)" % (len(self.cached_dtimes)))
             self.notifyProgress(30, "Notifying date and time data...")
             for l in self.updateListeners: l.hasData("dtimes")

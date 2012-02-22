@@ -3,8 +3,10 @@ dballe (5.16-1) unstable; urgency=low
   * New upstream release
      - fixed dbadb --report: the option had no effect
      - fixed B01194 appearing twice in exported generic messages
+     - provami: disabled datetime range checking until the boundaries can be
+       queried with min()/max() queries
 
- -- Enrico Zini <enrico@debian.org>  Wed, 15 Feb 2012 22:03:02 +0100
+ -- Enrico Zini <enrico@debian.org>  Wed, 22 Feb 2012 18:01:46 +0100
 
 dballe (5.15-1) unstable; urgency=low
 
