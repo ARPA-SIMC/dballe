@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
+from __future__ import absolute_import
+from . import dballe
+from . import volnd
 #import rpy, MA, numpy, rconvert
 import numpy, rconvert, rpy2
-import dballe, dballe.volnd
 from datetime import *
 
 numpy.seterr(divide="raise", over="raise", under="raise", invalid="raise")
@@ -24,7 +26,7 @@ query = dballe.Record()
 #query.set("var", "B10004")
 #query.settimerange(dballe.TimeRange(0,0,0))
 query["date"] = datetime(2007, 1, 1, 0, 0, 0)
-vars = dballe.volnd.read(db.query_data(query), (dballe.volnd.AnaIndex(), dballe.volnd.NetworkIndex(), dballe.volnd.LevelIndex(), dballe.volnd.TimeRangeIndex()))
+vars = volnd.read(db.query_data(query), (volnd.AnaIndex(), volnd.NetworkIndex(), volnd.LevelIndex(), volnd.TimeRangeIndex()))
 #print "ana:", vars["B10004"].dims[0]
 #print "net:", vars["B10004"].dims[1]
 #print vars["B10004"]
@@ -46,6 +48,6 @@ query = dballe.Record()
 #query.setd("lonmin", -10.)
 #query.setd("lonmax", 40.)
 query["var"] = "B13011"
-vars = dballe.volnd.read(db.query_data(query), (dballe.volnd.AnaIndex(),dballe.volnd.DateTimeIndex()), checkConflicts=False)
+vars = volnd.read(db.query_data(query), (volnd.AnaIndex(),volnd.DateTimeIndex()), checkConflicts=False)
 rconvert.volnd_save_to_r(vars, "/tmp/pippo")
 

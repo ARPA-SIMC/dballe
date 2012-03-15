@@ -1,3 +1,11 @@
+dballe (5.17-1) unstable; urgency=low
+
+  * New upstream release
+     - various python bindings cleanups
+     - wrapped record.parse_date_extremes
+
+ -- Enrico Zini <enrico@debian.org>  Thu, 15 Mar 2012 15:08:36 +0100
+
 dballe (5.16-1) unstable; urgency=low
 
   * New upstream release

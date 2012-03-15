@@ -1,5 +1,6 @@
 #!/usr/bin/python
-import dballe.dbacsv
+
+import dbacsv
 import unittest
 
 class TestCSV(unittest.TestCase):

@@ -33,6 +33,7 @@
 #include <dballe/db/cursor.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/codec.h>
+#include <datetime.h>
 
 using namespace wreport;
 using namespace dballe;
@@ -67,6 +68,12 @@ using namespace dballe;
         $1 = PyString_Check($input) ? 1 : 0;
 }
 
+/*
+%typemap(typecheck,precedence=SWIG_TYPECHECK_INTEGER) wreport::Varcode {
+        $1 = PyInt_Check($input) ? 1 : 0;
+}
+*/
+
 %ignore dballe::newvar;
 %ignore dballe::var_copy_without_unset_attrs;
 
@@ -83,10 +90,6 @@ namespace dballe {
 
 %typemap(out) DBALLE_SQL_C_SINT_TYPE {
         $result = PyInt_FromLong($1);
-}
-
-%typemap(typecheck,precedence=SWIG_TYPECHECK_INTEGER) wreport::Varcode {
-        $1 = PyInt_Check($input) ? 1 : 0;
 }
 
 %typemap(in) dba_keyword {
@@ -127,6 +130,28 @@ namespace dballe {
                 $1 = AOF;
         else
                 throw std::runtime_error(std::string("Unknown encoding '") + tmp + "'");
+}
+
+// for Record.parse_date_extremes
+%typemap(in, numinputs=0) (int* minvalues, int* maxvalues) {
+        $1 = new int[6];
+        $2 = new int[6];
+}
+%typemap(argout) (int* minvalues, int* maxvalues) {
+        PyDateTime_IMPORT;
+
+        PyObject* res1 = Py_None;
+        PyObject* res2 = Py_None;
+
+        if ($1[0] != -1)
+                res1 = PyDateTime_FromDateAndTime($1[0], $1[1], $1[2], $1[3], $1[4], $1[5], 0);
+        if ($2[0] != -1)
+                res2 = PyDateTime_FromDateAndTime($2[0], $2[1], $2[2], $2[3], $2[4], $2[5], 0);
+        
+        delete[] $1;
+        delete[] $2;
+
+        $result = PyTuple_Pack(2, res1, res2);
 }
 
 namespace std {
@@ -249,7 +274,7 @@ namespace std {
         %ignore operator[];
         %ignore unset(dba_keyword parameter);
         %ignore unset(wreport::Varcode code);
-        %ignore parse_date_extremes;
+
         %rename (getvar) get;
 
         %pythoncode %{
@@ -270,11 +295,16 @@ namespace std {
                                 for k, v in pairs:
                                         self[k] = v
                 def _get_iter(self, *args):
+                        found = False
+                        vals = []
                         for x in args:
-                                if x in self:
-                                        yield self.getvar(x).enq()
-                                else:
-                                        yield None
+                                vals.append(self.get(x, None))
+                                if vals[-1] is not None:
+                                        found = True
+                        if found:
+                                return tuple(vals)
+                        else:
+                                return None
                 def _get_dt(self, *args):
                         res = []
                         for idx, x in enumerate(args):
@@ -300,18 +330,24 @@ namespace std {
                 def _macro_get_datemax(self):
                         return self._get_dt(*self.KEYS_DATEMAX)
                 def _macro_get_level(self):
-                        return tuple(self._get_iter(*self.KEYS_LEVEL))
+                        return self._get_iter(*self.KEYS_LEVEL)
                 def _macro_get_trange(self):
-                        return tuple(self._get_iter(*self.KEYS_TRANGE))
+                        return self._get_iter(*self.KEYS_TRANGE)
                 _macro_get_timerange = _macro_get_trange
 
                 def __getitem__(self, key):
                         "Query one value by name"
                         macro = getattr(self, "_macro_get_" + key, None)
                         if macro:
-                                return macro()
+                                res = macro()
+                                if res is None:
+                                        raise KeyError(key)
+                                return res
                         else:
-                                return self.getvar(key).enq()
+                                var = self.getvar(key)
+                                if not var.isset():
+                                        raise KeyError(key)
+                                return var.enq()
 
                 def _macro_set_date(self, dt):
                         for kd, kr in zip(("year", "month", "day", "hour", "minute", "second"), self.KEYS_DATE):
@@ -338,11 +374,14 @@ namespace std {
 
                 def __setitem__(self, key, val):
                         "Set one value by name"
-                        macro = getattr(self, "_macro_set_" + key, None)
-                        if macro:
-                                return macro(val)
+                        if val is None:
+                                del self[key]
                         else:
-                                self.getvar(key).set(val)
+                                macro = getattr(self, "_macro_set_" + key, None)
+                                if macro:
+                                        return macro(val)
+                                else:
+                                        self.getvar(key).set(val)
 
                 def _macro_del_date(self):
                         for k in self.KEYS_DATE:
@@ -424,21 +463,19 @@ namespace std {
                 def __repr__(self):
                         return "<Record %s>" % self.__str__()
                 def get(self, key, *args):
-                        if key in self:
+                        try:
                                 return self[key]
-                        elif args:
+                        except KeyError:
+                                if not args: raise
                                 return args[0]
-                        else:
-                                raise KeyError, key
                 def pop(self, key, *args):
-                        if key in self:
+                        try:
                                 res = self[key]
                                 del self[key]
                                 return res
-                        elif args:
+                        except KeyError:
+                                if not args: raise
                                 return args[0]
-                        else:
-                                raise KeyError, key
         %}
 }
 

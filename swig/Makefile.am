@@ -44,7 +44,6 @@ _dballe.so: _dballe.la
 	ln -fs .libs/_dballe.so $@
 
 dballe:
-	ln -s . $@
 	for x in $(pkgpython_PYTHON); do test -f $$x || cp $(srcdir)/$$x .; done
 
 clean-local:

@@ -9,8 +9,10 @@ try:
 except ImportError:
     pass
 import sys, re
-import dballe, dballe.volnd, dballe.rconvert
 import inspect
+import dballe
+import volnd
+import rconvert
 
 def print_indented (spaces, string):
     "Print a string, indented by the given number of spaces"
@@ -254,31 +256,31 @@ The volnd API
 =============
 """
 
-document(dballe.volnd)
+document(volnd)
 
 print """
 This is the list of dimensions supported by dballe.volnd:
 """
 
-document (dballe.volnd.AnaIndex)
-document (dballe.volnd.NetworkIndex)
-document (dballe.volnd.LevelIndex)
-document (dballe.volnd.TimeRangeIndex)
-document (dballe.volnd.DateTimeIndex)
-document (dballe.volnd.IntervalIndex)
+document (volnd.AnaIndex)
+document (volnd.NetworkIndex)
+document (volnd.LevelIndex)
+document (volnd.TimeRangeIndex)
+document (volnd.DateTimeIndex)
+document (volnd.IntervalIndex)
 
 print """
 The data objects used by ``AnaIndex`` and ``NetworkIndex`` are:
 """
 
-document (dballe.volnd.AnaIndexEntry)
-document (dballe.volnd.NetworkIndexEntry)
+document (volnd.AnaIndexEntry)
+document (volnd.NetworkIndexEntry)
 
 print """
 The extraction is done using the dballe.volnd.read function:
 """
 
-document (dballe.volnd.read)
+document (volnd.read)
 
 print """
 The result of dballe.volnd.read is a dict mapping output variable names to a
@@ -289,11 +291,11 @@ indexes unless the *xxx*-Index definitions have been created with
 This is the dballe.volnd.Data class documentation:
 """
 
-document (dballe.volnd.Data)
+document (volnd.Data)
 
 print """
 The methods of dballe.volnd.Data are:
 """
 
-documentMethods(dballe.volnd.Data)
+documentMethods(volnd.Data)
 

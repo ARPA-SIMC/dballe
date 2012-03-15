@@ -109,8 +109,8 @@ class VarTest(unittest.TestCase):
         self.assertEqual(var, dballe.var("B01001", 1))
         self.assertNotEqual(var, dballe.var("B01001", 2))
         self.assertNotEqual(var, dballe.var("B01002", 1))
-        self.assertNotEqual(var, None)
-        self.assertNotEqual(dballe.var("B01001"), None)
+        self.assertIsNot(var, None)
+        self.assertIsNot(dballe.var("B01001"), None)
 
 
 class RecordTest(unittest.TestCase):
@@ -186,11 +186,11 @@ class RecordTest(unittest.TestCase):
         del(r["datemax"])
         del(r["level"])
         del(r["timerange"])
-        self.assertEqual(r["date"], None)
-        self.assertEqual(r["datemin"], None)
-        self.assertEqual(r["datemax"], None)
-        self.assertEqual(r["level"], (None, None, None, None))
-        self.assertEqual(r["timerange"], (None, None, None))
+        self.assertEqual(r.get("date", None), None)
+        self.assertEqual(r.get("datemin", None), None)
+        self.assertEqual(r.get("datemax", None), None)
+        self.assertEqual(r.get("level", None), None)
+        self.assertEqual(r.get("timerange", None), None)
         self.assertEqual("date" not in r, True)
         self.assertEqual("datemin" not in r, True)
         self.assertEqual("datemax" not in r, True)
@@ -294,6 +294,11 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(rec["p1"], 5)
         self.assertEqual(rec["p2"], 6)
 
+        # Test that KeyError is raised for several different types of lookup
+        rec = dballe.Record()
+        self.assertRaises(KeyError, rec.__getitem__, "year")
+        self.assertRaises(KeyError, rec.__getitem__, "B01001")
+        self.assertRaises(KeyError, rec.__getitem__, "date")
 
     def testRecordCopying(self):
         # Try out all copying functions
@@ -339,6 +344,44 @@ class RecordTest(unittest.TestCase):
         rec["query"] = "nosort"
         rec1 = rec.copy()
         rec1["query"] = "nosort"
+
+    def testParseDateExtremes(self):
+        # Test the parse_date_extremes reimplementation
+        rec = dballe.Record()
+
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, None)
+
+        rec["yearmin"] = 2000
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, dt.datetime(2000, 1, 1, 0, 0, 0))
+        self.assertEqual(b, None)
+
+        rec["yearmin"] = None
+        rec["yearmax"] = 1900
+        rec["monthmax"] = 2
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, dt.datetime(1900, 2, 28, 23, 59, 59))
+
+        rec["yearmax"] = 2000
+        rec["monthmax"] = 2
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, dt.datetime(2000, 2, 29, 23, 59, 59))
+
+        rec["yearmax"] = 2001
+        rec["monthmax"] = 2
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, dt.datetime(2001, 2, 28, 23, 59, 59))
+
+        rec["yearmax"] = 2004
+        rec["monthmax"] = 2
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, dt.datetime(2004, 2, 29, 23, 59, 59))
 
 class BulletinTest(unittest.TestCase):
     def testBUFRCreation(self):

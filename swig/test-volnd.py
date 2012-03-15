@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import dballe
-from dballe.volnd import *
+from volnd import *
 import unittest, random, sys
 from datetime import *
 import numpy
