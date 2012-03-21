@@ -31,8 +31,8 @@
 %{
 #include <string.h>
 #include <limits.h>
-#include "var.h"
-#include "record.h"
+#include "dballe/core/var.h"
+#include "dballe/core/record.h"
 
 using namespace wreport;
 

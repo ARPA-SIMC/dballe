@@ -20,7 +20,7 @@
 #include "config.h"
 #include "msg.h"
 #include "context.h"
-#include "vars.h"
+#include "dballe/msg/vars.h"
 
 #ifdef HAVE_LUA
 extern "C" {

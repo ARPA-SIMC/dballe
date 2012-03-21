@@ -21,7 +21,7 @@
 
 #include "msg.h"
 #include "context.h"
-#include "vars.h"
+#include "dballe/msg/vars.h"
 #include <dballe/core/csv.h>
 #include <wreport/codetables.h>
 #include <wreport/notes.h>
