@@ -743,7 +743,7 @@ class Model:
         return False
 
     def getLevelFilter(self, record=None):
-        return (record or self.filter)["level"]
+        return (record or self.filter).get("level", None)
 
     def setLevelFilter(self, level):
         """

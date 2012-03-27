@@ -938,7 +938,7 @@ void QueryBuilder::make_select()
 void QueryBuilder::add_int(const Record& rec, DBALLE_SQL_C_SINT_TYPE& in, dba_keyword key, const char* sql, int needed_from)
 {
     const Var* var = rec.key_peek(key);
-    if (!var) return;
+    if (!var || !var->isset()) return;
     in = var->enqi();
     //TRACE("found %s: adding %s. val is %d\n", info(key)->desc, sql, *out);
     sql_where.append_list(sql);
