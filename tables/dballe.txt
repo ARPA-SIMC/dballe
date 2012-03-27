@@ -151,8 +151,8 @@
  014193 [SIM] Instantenous latent heat flux                              W/m**2                     0        -1024  11 W/M**2                    0          4
  014194 [SIM] Instantenous direct solar radiation                        W/M**2                     0        -2048  12 W/M**2                   -3          4
  014195 [SIM] Instantenous diffuse solar radiation                       W/M**2                     0        -2048  12 W/M**2                   -3          4
- 014096 [SIM] INSTANTANEOUS NET LONG-WAVE RADIATION                      W/M**2                     0        -2048  12 W/M**2                    0          4
- 014097 [SIM] INSTANTANEOUS NET SHORT-WAVE RADIATION                     W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014196 [SIM] INSTANTANEOUS NET LONG-WAVE RADIATION                      W/M**2                     0        -2048  12 W/M**2                    0          4
+ 014197 [SIM] INSTANTANEOUS NET SHORT-WAVE RADIATION                     W/M**2                     0        -2048  12 W/M**2                   -3          4
  015192 [SIM] NO Concentration                                           KG/M**3                   10            0  20 KG/M**3                  10          6
  015193 [SIM] NO2 Concentration                                          KG/M**3                   10            0  20 KG/M**3                  10          6
  015194 [SIM] O3 Concentration                                           KG/M**3                   10            0  20 KG/M**3                  10          6
