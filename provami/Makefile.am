@@ -67,7 +67,7 @@ install-exec-hook:
 uninstall-hook:
 	rm -f $(DESTDIR)$(bindir)/provami
 
-EXTRA_DIST = dballe populate.py provami/Paths.py.in \
+EXTRA_DIST = dballe-print-stations populate.py provami/Paths.py.in \
 	     $(dballedata_DATA) $(provamiModules) \
 	     provami.1 dballecsv notes regenerate-provami-manpage
 
