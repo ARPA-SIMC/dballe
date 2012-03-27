@@ -122,7 +122,7 @@
  012121 GROUND MINIMUM TEMPERATURE                                       K                          2            0  16 C                         2          4 
  012192 POTENTIAL TEMPERATURE                                            K                          2            0  16 K                         2          5             
  013001 SPECIFIC HUMIDITY                                                KG/KG                      5            0  14 KG/KG                     5          5
- 013002 MIXING RATIO                                                     KG/KG                      5            0  14 KG/KG                     5         5              
+ 013002 MIXING RATIO                                                     KG/KG                      5            0  14 KG/KG                     5          5              
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
  013013 TOTAL SNOW DEPTH                                                 M                          3          -20  20 M                         3          6
@@ -142,8 +142,8 @@
  013205 [SIM] Snowfall (grid-scale + convective)                         KG/M**2                    1           -1  14 KG/M**2                   1          5
  013206 [SIM] Soil water content                                         KG/M**2                    1            0  14 KG/M**2                   1          5
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
- 014017 INSTANTANEOUS LONG-WAVE RADIATION                                W/M**2                     0        -2048  12 W/M**2                    0          4
- 014018 INSTANTANEOUS SHORT-WAVE RADIATION                               W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014017 INSTANTANEOUS LONG-WAVE RADIATION (incoming)                     W/M**2                     0        -2048  12 W/M**2                    0          4
+ 014018 INSTANTANEOUS SHORT-WAVE RADIATION (incoming)                    W/M**2                     0        -2048  12 W/M**2                   -3          4
  014019 SURFACE ALBEDO                                                   %                          0            0   7 %                         0          3
  014021 GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED         J/M**2                    -4            0  15 J/M**2                   -4          5
  014031 TOTAL SUNSHINE                                                   MINUTE                     0            0  11 MINUTE                    0          4
@@ -151,6 +151,8 @@
  014193 [SIM] Instantenous latent heat flux                              W/m**2                     0        -1024  11 W/M**2                    0          4
  014194 [SIM] Instantenous direct solar radiation                        W/M**2                     0        -2048  12 W/M**2                   -3          4
  014195 [SIM] Instantenous diffuse solar radiation                       W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014096 [SIM] INSTANTANEOUS NET LONG-WAVE RADIATION                      W/M**2                     0        -2048  12 W/M**2                    0          4
+ 014097 [SIM] INSTANTANEOUS NET SHORT-WAVE RADIATION                     W/M**2                     0        -2048  12 W/M**2                   -3          4
  015192 [SIM] NO Concentration                                           KG/M**3                   10            0  20 KG/M**3                  10          6
  015193 [SIM] NO2 Concentration                                          KG/M**3                   10            0  20 KG/M**3                  10          6
  015194 [SIM] O3 Concentration                                           KG/M**3                   10            0  20 KG/M**3                  10          6
