@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Run provami in a bit of a test environment
+
+if [ "$1" = "clean" ]
+then
+	rm -f db.sqlite dballe
+else
+	if ! [ -e db.sqlite ]
+	then
+		eatmydata dbadb import --wipe-first --dsn=sqlite:db.sqlite ../extra/bufr/*.bufr
+	fi
+	if ! [ -e dballe ]
+	then
+		ln -s ../swig dballe
+	fi
+	./provami.py --dsn=sqlite:db.sqlite
+fi
