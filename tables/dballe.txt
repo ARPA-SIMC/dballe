@@ -126,6 +126,7 @@
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
  013013 TOTAL SNOW DEPTH                                                 M                          3          -20  20 M                         3          6
+ 013031 EVAPOTRANSPIRATION                                               KG/M**2                    1            0   7 KG/M**2                   0          3
  013033 EVAPORATION/EVAPOTRANSPIRATION                                   KG/M**2                    1            0  10 KG/M**2                   1          4
  013192 [SIM] Cloud liquid water content                                 KG/KG                      8            0  27 KG/KG                     8          8
  013193 [SIM] Cloud ice content                                          KG/KG                      8            0  27 KG/KG                     8          8
