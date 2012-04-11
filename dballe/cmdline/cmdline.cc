@@ -19,6 +19,7 @@
 
 #include "cmdline.h"
 #include <dballe/core/record.h>
+#include "dballe/core/vasprintf.h"
 #include <dballe/msg/wr_codec.h>
 //#include <dballe/core/verbose.h>
 
