@@ -158,7 +158,7 @@ Description: Database for punctual meteorological data (Command line tools)
 Package: provami
 Section: misc
 Architecture: all
-Depends: python-dballe, python-wxgtk2.6, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Depends: python-dballe, python-wxgtk2.8, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Suggests: python-rpy2
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}

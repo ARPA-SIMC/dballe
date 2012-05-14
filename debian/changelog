@@ -59,6 +59,13 @@ dballe (5.11-1) unstable; urgency=low
 
  -- Enrico Zini <enrico@debian.org>  Wed, 05 Oct 2011 18:04:07 +0200
 
+dballe (5.10-1.1) unstable; urgency=low
+
+  * Non-maintainer upload with maintainer's agreement:
+     - Depend on python-wxgtk2.8 instead of python-wxgtk2.6. Closes: #645626
+
+ -- Olly Betts <olly@survex.com>  Sun, 06 Nov 2011 14:45:33 +0000
+
 dballe (5.10-1) unstable; urgency=low
 
   * New upstream release
