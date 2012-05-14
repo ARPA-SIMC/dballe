@@ -31,10 +31,11 @@
 #include <dballe/core/record.h>
 #include <dballe/core/defs.h>
 
-#include <limits.h>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+#include <limits.h>
+#include <unistd.h>
 
 #include <sql.h>
 

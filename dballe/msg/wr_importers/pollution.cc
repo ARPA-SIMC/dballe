@@ -44,22 +44,29 @@ namespace dballe {
 namespace msg {
 namespace wr {
 
-static int intexp10(unsigned x)
+static double intexp10(unsigned x)
 {
     switch (x)
     {
-        case  0: return 1;
-        case  1: return 10;
-        case  2: return 100;
-        case  3: return 1000;
-        case  4: return 10000;
-        case  5: return 100000;
-        case  6: return 1000000;
-        case  7: return 10000000;
-        case  8: return 100000000;
-        case  9: return 1000000000;
+        case  0: return 1.0;
+        case  1: return 10.0;
+        case  2: return 100.0;
+        case  3: return 1000.0;
+        case  4: return 10000.0;
+        case  5: return 100000.0;
+        case  6: return 1000000.0;
+        case  7: return 10000000.0;
+        case  8: return 100000000.0;
+        case  9: return 1000000000.0;
+        case 10: return 10000000000.0;
+        case 11: return 100000000000.0;
+        case 12: return 1000000000000.0;
+        case 13: return 10000000000000.0;
+        case 14: return 100000000000000.0;
+        case 15: return 1000000000000000.0;
+        case 16: return 10000000000000000.0;
         default:
-                 error_domain::throwf("%u^10 would not fit in 32 bits", x);
+                 error_domain::throwf("computing double value of %u^10 is not yet supported", x);
     }
 }
 
@@ -76,7 +83,7 @@ protected:
     Trange tr;
     int valtype;
     int decscale;
-    double value;
+    int value;
     const Var* attr_conf;
     const Var* attr_cas;
     const Var* attr_pmc;
@@ -128,8 +135,10 @@ public:
         auto_ptr<Var> finalvar = newvar(valtype);
 
         // Scale the value and set it
-        value = value * intexp10(decscale);
-        finalvar->setd(value);
+        if (decscale > 0)
+            finalvar->setd(value * intexp10(decscale));
+        else
+            finalvar->setd(value / intexp10(-decscale));
 
         // Add the attributes
         if (attr_conf) finalvar->seta(*attr_conf);
@@ -345,7 +354,7 @@ void PollutionImporter::import_var(const Var& var)
          * calculation, concentration (kg/m**3)  = scaled mass density *
          * 10**(decimal scaling factor)
          */
-        case WR_VAR(0, 15,  23): value = var.enqd(); break;
+        case WR_VAR(0, 15,  23): value = var.enqi(); break;
         /*
          * Parameter to give a qualitative measure of the quality of the
          * observation. Set at the discretion of the encoder given any

@@ -2,8 +2,9 @@ dballe (5.18-1) unstable; urgency=low
 
   * New upstream release
      - 1:255:12 and 1:255:14 now recognised as ships
+     - fixed AIX-compatibility intexp10 in pollution importers/exporters
 
- -- Enrico Zini <enrico@debian.org>  Mon, 14 May 2012 16:47:37 +0200
+ -- Enrico Zini <enrico@debian.org>  Mon, 14 May 2012 18:23:58 +0200
 
 dballe (5.17-1) unstable; urgency=low
 
