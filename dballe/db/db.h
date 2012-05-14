@@ -472,7 +472,7 @@ public:
 	 * @return
 	 *   Number of attributes returned in attrs
 	 */
-	unsigned query_attrs(int id_context, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs);
+	unsigned query_attrs(int id_context, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs);
 
 	/**
 	 * Insert new attributes into the database.
@@ -529,7 +529,7 @@ public:
 	 *   Array of WMO codes of the attributes to delete.  If empty, all attributes
 	 *   associated to id_data will be deleted.
 	 */
-	void attr_remove(int id_context, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs);
+	void attr_remove(int id_context, wreport::Varcode id_var, const db::AttrList& qcs);
 
 	/**
 	 * Import a Msg message into the DB-All.e database

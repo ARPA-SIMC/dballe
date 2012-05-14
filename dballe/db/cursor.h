@@ -41,6 +41,12 @@ namespace db {
 struct Statement;
 
 /**
+ * Simple typedef to make typing easier, and also to help some versions of swig
+ * match this complex type
+ */
+typedef std::vector<wreport::Varcode> AttrList;
+
+/**
  * Structure used to build and execute a query, and to iterate through the
  * results
  */
@@ -137,7 +143,7 @@ struct Cursor
     /**
      * Query attributes for the current variable
      */
-    unsigned query_attrs(const std::vector<wreport::Varcode>& qcs, Record& attrs);
+    unsigned query_attrs(const AttrList& qcs, Record& attrs);
 
 protected:
     /// Reset the cursor at the beginning of a query

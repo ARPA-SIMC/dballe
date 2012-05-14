@@ -100,7 +100,7 @@ namespace dballe {
         $1 = PyString_Check($input) ? 1 : 0;
 }
 
-%typemap(in) const std::vector<wreport::Varcode>& (std::vector<wreport::Varcode> vec) {
+%typemap(in) dballe::db::AttrList& (dballe::db::AttrList vec) {
         if (!PySequence_Check($input))
                 PyErr_SetString(PyExc_NotImplementedError,"A sequence is needed for the varcode list");
         int len = PyObject_Length($input);
@@ -116,7 +116,7 @@ namespace dballe {
         }
         $1 = &vec;
 }
-%typemap(typecheck) const std::vector<wreport::Varcode>& {
+%typemap(typecheck) const dballe::db::AttrList& {
         $1 = PySequence_Check($input) ? 1 : 0;
 }
 
