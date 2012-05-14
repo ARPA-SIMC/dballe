@@ -12,6 +12,7 @@ Build-Depends: debhelper (>= 7.0.50~),
 Standards-Version: 3.9.1.0
 X-Python-Version: >= 2.3
 Homepage: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
+Vcs-Svn: https://svn.smr.arpa.emr.it/dballe/dballe/trunk
 
 Package: libdballe-dev
 Section: libdevel
