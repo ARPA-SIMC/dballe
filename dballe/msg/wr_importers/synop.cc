@@ -335,7 +335,9 @@ public:
                     case 21: return MSG_BUOY;
                     case 9:
                     case 11:
+                    case 12:
                     case 13:
+                    case 14:
                     case 19: return MSG_SHIP;
                     case 0: {
                         /* Guess looking at the variables */
