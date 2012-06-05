@@ -8,7 +8,11 @@ import traceback
 from provami.Paths import DATADIR
 
 try:
-    import dballe.rconvert, rpy
+    import dballe.rconvert
+    try:
+        import rpy
+    except ImportError:
+        import rpy2
     HAS_RPY = True
 except ImportError:
     HAS_RPY = False
