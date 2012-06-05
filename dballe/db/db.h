@@ -48,10 +48,6 @@
 /* Message data will overwrite existing values; otherwise, trying to insert
  * existing data will cause an error. */
 #define DBA_IMPORT_OVERWRITE		8
-/* Perform the import outside of the transaction.  This will make the function
- * faster but not atomic: if interrupted, for example in case of error, then
- * the data inserted before the interruption will stay in the database. */
-#define DBA_IMPORT_NO_TRANSACTIONS	16
 /// @}
 
 /**

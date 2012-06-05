@@ -67,8 +67,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     db::Data& dd = data();
     db::Attr& dq = attr();
 
-	// Begin transaction
-	/*if (!(flags & DBA_IMPORT_NO_TRANSACTIONS))*/
+    // Begin transaction
     db::Transaction t(*conn);
 
 	// Fill up the pseudoana informations needed to fetch an existing ID
@@ -236,7 +235,6 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 		}
 	}
 
-	/*if (!(flags & DBA_IMPORT_NO_TRANSACTIONS))*/
     t.commit();
 }
 
