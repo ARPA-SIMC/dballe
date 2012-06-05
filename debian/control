@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: debhelper (>= 7.0.50~),
   pkg-config,
-  libwreport-dev (>= 2.0), libpopt-dev, unixodbc-dev, gperf, liblua5.1-0-dev,
+  libwreport-dev (>= 2.5), libpopt-dev, unixodbc-dev, gperf, liblua5.1-0-dev,
   libcnf-dev, gfortran | g77,
   libtut-dev, libwibble-dev,
   doxygen-latex, ghostscript,

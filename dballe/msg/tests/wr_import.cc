@@ -22,6 +22,7 @@
 #include "msg/msgs.h"
 #include "msg/context.h"
 #include <wreport/bulletin.h>
+#include <wreport/options.h>
 #include <cstring>
 
 using namespace dballe;
@@ -390,6 +391,33 @@ void to::test<21>()
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_AMDAR);
     IS(ident, "EU7866");
+}
+
+// BUFR that has a variable that goes out of range when converted to local B
+// table
+template<> template<>
+void to::test<22>()
+{
+    try
+    {
+        // Read and interpretate the message
+        std::auto_ptr<Rawmsg> raw = read_rawmsg("bufr/interpreted-range.bufr", BUFR);
+        std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+        std::auto_ptr<Msgs> msgs(new Msgs);
+        importer->from_rawmsg(*raw, *msgs);
+        ensure(false);
+    } catch (wreport::error_domain& e) {
+        //cerr << e.code() << "--" << e.what() << endl;
+    }
+
+    {
+        wreport::options::LocalOverride<bool> o(wreport::options::var_silent_domain_errors, true);
+        auto_ptr<Msgs> msgs = read_msgs("bufr/interpreted-range.bufr", BUFR);
+        ensure_equals(msgs->size(), 1u);
+        const Msg& msg = *(*msgs)[0];
+        ensure_equals(msg.type, MSG_SHIP);
+        IS(ident, "DBBC");
+    }
 }
 
 #if 0
