@@ -141,7 +141,7 @@ else
 fi
 
 dnl Check for wreport
-PKG_CHECK_MODULES(WREPORT,libwreport >= 2.0)
+PKG_CHECK_MODULES(WREPORT,libwreport >= 2.5)
 
 if test x$enable_dballe_db = x"yes"
 then
