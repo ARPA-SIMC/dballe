@@ -420,6 +420,27 @@ void to::test<22>()
     }
 }
 
+// WMO PILOT, with geopotential levels
+template<> template<>
+void to::test<23>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts1.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_PILOT);
+}
+
+// WMO PILOT, with pressure levels
+template<> template<>
+void to::test<24>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts2.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_PILOT);
+}
+
+
 #if 0
 /* Check that a BUFR from a synop high-level station correctly reports isobaric
  * surface and geopotential */
