@@ -30,16 +30,22 @@
  * differently.
  */
 
+// This does not seem to be needed anymore, and it causes problems with
+// oracle's ODBC driver. See:
+// http://stackoverflow.com/questions/338609/binding-int64-sql-bigint-as-query-parameter-causes-error-during-execution-in-o
+
+/*
 #if __WORDSIZE == 64
 #define DBALLE_SQL_C_SINT_TYPE long
 #define DBALLE_SQL_C_UINT_TYPE unsigned long
 #define DBALLE_SQL_C_SINT SQL_C_SBIGINT
 #define DBALLE_SQL_C_UINT SQL_C_UBIGINT
 #else
+*/
 #define DBALLE_SQL_C_SINT_TYPE long
 #define DBALLE_SQL_C_UINT_TYPE unsigned long
 #define DBALLE_SQL_C_SINT SQL_C_SLONG
 #define DBALLE_SQL_C_UINT SQL_C_ULONG
-#endif
+//#endif
 
 #endif
