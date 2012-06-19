@@ -19,6 +19,7 @@
 
 #include "db/test-utils-db.h"
 #include "db/internals.h"
+#include <sql.h>
 
 using namespace dballe;
 using namespace wreport;
@@ -37,21 +38,29 @@ struct db_internals_shar : public dballe::tests::db_test
 	~db_internals_shar()
 	{
 	}
+
+	void reset()
+	{
+		db::Connection& c = *(db->conn);
+		
+		c.drop_table_if_exists("dballe_test");
+
+		db::Statement s(c);
+		s.exec_direct("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
+	}
 };
 TESTGRP(db_internals);
 
-// Ensure that reset will work on an empty database
+// Test querying DBALLE_SQL_C_SINT_TYPE values
 template<> template<>
 void to::test<1>()
 {
 	use_db();
+	reset();
 
 	db::Connection& c = *(db->conn);
-	
-	c.drop_table_if_exists("dballe_test");
-
 	db::Statement s(c);
-	s.exec_direct("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
+
 	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
 
 	s.prepare("SELECT val FROM dballe_test");
@@ -64,6 +73,106 @@ void to::test<1>()
 	ensure_equals(val, 42);
 	ensure_equals(count, 1);
 }
+
+// Test querying DBALLE_SQL_C_SINT_TYPE values, with indicators
+template<> template<>
+void to::test<2>()
+{
+	use_db();
+	reset();
+
+	db::Connection& c = *(db->conn);
+	db::Statement s(c);
+
+	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
+
+	s.prepare("SELECT val FROM dballe_test");
+	DBALLE_SQL_C_SINT_TYPE val = 0;
+	SQLLEN ind = 0;
+	s.bind_out(1, val, ind);
+	s.execute();
+	unsigned count = 0;
+	while (s.fetch())
+		++count;
+	ensure_equals(val, 42);
+	ensure(ind != SQL_NULL_DATA);
+	ensure_equals(count, 1);
+}
+
+// Test querying DBALLE_SQL_C_UINT_TYPE values
+template<> template<>
+void to::test<3>()
+{
+	use_db();
+	reset();
+
+	db::Connection& c = *(db->conn);
+	db::Statement s(c);
+
+	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
+
+	s.prepare("SELECT val FROM dballe_test");
+	DBALLE_SQL_C_UINT_TYPE val = 0;
+	s.bind_out(1, val);
+	s.execute();
+	unsigned count = 0;
+	while (s.fetch())
+		++count;
+	ensure_equals(val, 42);
+	ensure_equals(count, 1);
+}
+
+// Test querying DBALLE_SQL_C_UINT_TYPE values, with indicators
+template<> template<>
+void to::test<4>()
+{
+	use_db();
+	reset();
+
+	db::Connection& c = *(db->conn);
+	db::Statement s(c);
+
+	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
+
+	s.prepare("SELECT val FROM dballe_test");
+	DBALLE_SQL_C_UINT_TYPE val = 0;
+	SQLLEN ind = 0;
+	s.bind_out(1, val, ind);
+	s.execute();
+	unsigned count = 0;
+	while (s.fetch())
+		++count;
+	ensure_equals(val, 42);
+	ensure(ind != SQL_NULL_DATA);
+	ensure_equals(count, 1);
+}
+
+// Test querying unsigned short values
+template<> template<>
+void to::test<5>()
+{
+	use_db();
+	reset();
+
+	db::Connection& c = *(db->conn);
+	db::Statement s(c);
+
+	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
+
+	s.prepare("SELECT val FROM dballe_test");
+	unsigned short val = 0;
+	s.bind_out(1, val);
+	s.execute();
+	unsigned count = 0;
+	while (s.fetch())
+		++count;
+	ensure_equals(val, 42);
+	ensure_equals(count, 1);
+}
+
+    //void bind_out(int idx, char* val, SQLLEN buflen);
+    //void bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind);
+    //void bind_out(int idx, SQL_TIMESTAMP_STRUCT& val);
 
 }
 
