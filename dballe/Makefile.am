@@ -200,6 +200,7 @@ if DO_DBALLE_DB
 tut_test_SOURCES += \
 	db/test-utils-db.cc \
 	db/tests/querybuf.cc \
+	db/tests/internals.cc \
 	db/tests/repinfo.cc \
 	db/tests/station.cc \
 	db/tests/context.cc \

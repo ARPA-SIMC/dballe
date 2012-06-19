@@ -140,6 +140,16 @@ struct Connection
     /// Rollback a transaction
     void rollback();
 
+	/**
+	 * Delete a table in the database if it exists, otherwise do nothing.
+	 */
+	void drop_table_if_exists(const char* name);
+
+	/**
+	 * Delete a sequence in the database if it exists, otherwise do nothing.
+	 */
+	void drop_sequence_if_exists(const char* name);
+
 protected:
     void init_after_connect();
 

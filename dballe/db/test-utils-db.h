@@ -32,7 +32,7 @@ struct db_test
 	bool has_db() const { return db != NULL; }
 	void use_db();
 
-	db_test();
+	db_test(bool reset=true);
 	~db_test();
 };
 

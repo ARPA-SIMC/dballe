@@ -27,11 +27,11 @@
 namespace dballe {
 namespace tests {
 
-db_test::db_test() : db(NULL)
+db_test::db_test(bool reset) : db(NULL)
 {
 	db = new DB;
 	db->connect_test();
-	db->reset();
+	if (reset) db->reset();
 }
 db_test::~db_test()
 {

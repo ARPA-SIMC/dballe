@@ -204,6 +204,62 @@ void Connection::commit() {}
 void Connection::rollback() {}
 #endif
 
+#define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
+#define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
+#define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
+#define DBA_ODBC_MISSING_TABLE_ORACLE "42S02"
+
+void Connection::drop_table_if_exists(const char* name)
+{
+    db::Statement stm(*this);
+    char buf[100];
+    int len;
+
+    if (server_type == db::MYSQL)
+    {
+        len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", name);
+        stm.exec_direct_and_close(buf, len);
+    } else {
+        switch (server_type)
+        {
+            case db::MYSQL: stm.ignore_error = DBA_ODBC_MISSING_TABLE_MYSQL; break;
+            case db::SQLITE: stm.ignore_error = DBA_ODBC_MISSING_TABLE_SQLITE; break;
+            case db::ORACLE: stm.ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE; break;
+            case db::POSTGRES: stm.ignore_error = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
+            default: stm.ignore_error = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
+        }
+
+        len = snprintf(buf, 100, "DROP TABLE %s", name);
+        stm.exec_direct_and_close(buf, len);
+    }
+    commit();
+}
+
+#define DBA_ODBC_MISSING_SEQUENCE_ORACLE "HY000"
+#define DBA_ODBC_MISSING_SEQUENCE_POSTGRES "42P01"
+void Connection::drop_sequence_if_exists(const char* name)
+{
+    const char* ignore_code;
+
+    switch (server_type)
+    {
+        case db::ORACLE: ignore_code = DBA_ODBC_MISSING_SEQUENCE_ORACLE; break;
+        case db::POSTGRES: ignore_code = DBA_ODBC_MISSING_SEQUENCE_POSTGRES; break;
+        default:
+            // No sequences in MySQL, SQLite or unknown databases
+            return;
+    }
+
+    db::Statement stm(*this);
+    stm.ignore_error = ignore_code;
+
+    char buf[100];
+    int len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
+    stm.exec_direct(buf, len);
+
+    commit();
+}
+
 Statement::Statement(Connection& conn)
     : /*conn(conn),*/ stm(NULL), ignore_error(NULL)
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS

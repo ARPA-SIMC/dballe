@@ -573,73 +573,17 @@ void DB::run_sql(const char* query)
     stm.exec_direct(query);
 }
 
-#define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
-#define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
-#define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
-#define DBA_ODBC_MISSING_TABLE_ORACLE "42S02"
-
-void DB::drop_table_if_exists(const char* name)
-{
-    db::Statement stm(*conn);
-    char buf[100];
-    int len;
-
-    if (conn->server_type == db::MYSQL)
-    {
-        len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", name);
-        stm.exec_direct_and_close(buf, len);
-    } else {
-        switch (conn->server_type)
-        {
-            case db::MYSQL: stm.ignore_error = DBA_ODBC_MISSING_TABLE_MYSQL; break;
-            case db::SQLITE: stm.ignore_error = DBA_ODBC_MISSING_TABLE_SQLITE; break;
-            case db::ORACLE: stm.ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE; break;
-            case db::POSTGRES: stm.ignore_error = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
-            default: stm.ignore_error = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
-        }
-
-        len = snprintf(buf, 100, "DROP TABLE %s", name);
-        stm.exec_direct_and_close(buf, len);
-    }
-    conn->commit();
-}
-
-#define DBA_ODBC_MISSING_SEQUENCE_ORACLE "HY000"
-#define DBA_ODBC_MISSING_SEQUENCE_POSTGRES "42P01"
-void DB::drop_sequence_if_exists(const char* name)
-{
-    const char* ignore_code;
-
-    switch (conn->server_type)
-    {
-        case db::ORACLE: ignore_code = DBA_ODBC_MISSING_SEQUENCE_ORACLE; break;
-        case db::POSTGRES: ignore_code = DBA_ODBC_MISSING_SEQUENCE_POSTGRES; break;
-        default:
-            // No sequences in MySQL, SQLite or unknown databases
-            return;
-    }
-
-    db::Statement stm(*conn);
-    stm.ignore_error = ignore_code;
-
-    char buf[100];
-    int len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
-    stm.exec_direct(buf, len);
-
-    conn->commit();
-
-}
 #define DBA_ODBC_MISSING_FUNCTION_POSTGRES "42883"
 
 void DB::delete_tables()
 {
     /* Drop existing tables */
     for (size_t i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); ++i)
-        drop_table_if_exists(init_tables[i]);
+        conn->drop_table_if_exists(init_tables[i]);
 
     /* Drop existing sequences */
     for (size_t i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); ++i)
-        drop_sequence_if_exists(init_sequences[i]);
+        conn->drop_sequence_if_exists(init_sequences[i]);
 
 #if 0
     /* Allocate statement handle */

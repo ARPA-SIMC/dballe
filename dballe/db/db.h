@@ -171,16 +171,6 @@ protected:
 	void run_sql(const char* query);
 
 	/**
-	 * Delete a table in the database if it exists, otherwise do nothing.
-	 */
-	void drop_table_if_exists(const char* name);
-
-	/**
-	 * Delete a sequence in the database if it exists, otherwise do nothing.
-	 */
-	void drop_sequence_if_exists(const char* name);
-
-	/**
 	 * Fill a message station info layer with information from the given
 	 * station and report IDs
 	 */
