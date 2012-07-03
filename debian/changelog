@@ -1,3 +1,10 @@
+dballe (5.21-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - support for reading and writing WMO PILOT messages
+
+ -- Enrico Zini <enrico@debian.org>  Tue, 05 Jun 2012 12:33:32 +0200
+
 dballe (5.20-1) UNRELEASED; urgency=low
 
   * New upstream release
