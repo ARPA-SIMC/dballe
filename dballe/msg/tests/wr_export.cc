@@ -836,14 +836,14 @@ template<> template<>
 void to::test<41>()
 {
     BufrReimportTest test("bufr/pilot-gts1.bufr");
-    run_test(test, do_wmo, "pilot");
+    run_test(test, do_test, "pilot-wmo");
 }
 
 template<> template<>
 void to::test<42>()
 {
     BufrReimportTest test("bufr/pilot-gts1.bufr");
-    run_test(test, do_wmo, "pilot");
+    run_test(test, do_test, "pilot-wmo");
 }
 
 

@@ -540,9 +540,9 @@ struct PilotWMO : public TempBase
         // Data descriptor section
         bulletin.datadesc.clear();
         if (pressure_levs)
-            bulletin.datadesc.push_back(WR_VAR(3,  9, 50)); // For pressure levels
+            bulletin.datadesc.push_back(WR_VAR(3, 9, 50)); // For pressure levels
         else
-            bulletin.datadesc.push_back(WR_VAR(3,  9, 51)); // For height levels
+            bulletin.datadesc.push_back(WR_VAR(3, 9, 51)); // For height levels
         bulletin.load_tables();
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
@@ -580,9 +580,10 @@ struct PilotWMO : public TempBase
 
         /* Iterate backwards as we need to add levels in decreasing pressure order */
         int group_count = 0;
-        for (int i = msg.data.size() - 1; i >= 0; --i)
+        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
+                i != msg.data.rend(); ++i)
         {
-            msg::Context& c = *msg.data[i];
+            const msg::Context& c = **i;
             // We only want levels with a vertical sounding significance
             const Var* vss = c.find_vsig();
             if (vss == NULL) continue;
