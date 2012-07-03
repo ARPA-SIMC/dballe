@@ -23,6 +23,7 @@
 #include <wreport/codetables.h>
 #include "msg/msgs.h"
 #include "msg/context.h"
+#include <iostream>
 
 using namespace wreport;
 using namespace std;
@@ -46,7 +47,13 @@ using namespace std;
 #define TEMP_ECMWF_SHIP_DESC "Temp ECMWF ship (2.102)"
 
 #define PILOT_NAME "pilot"
-#define PILOT_DESC "Pilot (2.91)"
+#define PILOT_DESC "pilot (autodetect)"
+
+#define PILOT_WMO_NAME "pilot-wmo"
+#define PILOT_WMO_DESC "Pilot (2.1, 2.2, 2.3)"
+
+#define PILOT_ECMWF_NAME "pilot"
+#define PILOT_ECMWF_DESC "Pilot (2.91)"
 
 
 namespace dballe {
@@ -166,6 +173,36 @@ struct TempBase : public Template
     {
         Template::to_subset(msg, subset);
     }
+
+    bool do_D03051(const msg::Context& c)
+    {
+        add(WR_VAR(0,  4, 86), &c);
+        add(WR_VAR(0,  8, 42), &c);
+        if (c.level.l1 == MISSING_INT)
+            subset->store_variable_undef(WR_VAR(0, 7, 4));
+        else
+            subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
+        add(WR_VAR(0,  5, 15), &c);
+        add(WR_VAR(0,  6, 15), &c);
+        add(WR_VAR(0, 11, 61), &c);
+        add(WR_VAR(0, 11, 62), &c);
+        return true;
+    }
+
+    bool do_D03053(const msg::Context& c)
+    {
+        add(WR_VAR(0,  4, 86), &c);
+        add(WR_VAR(0,  8, 42), &c);
+        if (c.level.l1 == MISSING_INT)
+            subset->store_variable_undef(WR_VAR(0, 7, 9));
+        else
+            subset->store_variable_d(WR_VAR(0, 7, 9), c.level.l1);
+        add(WR_VAR(0,  5, 15), &c);
+        add(WR_VAR(0,  6, 15), &c);
+        add(WR_VAR(0, 11, 61), &c);
+        add(WR_VAR(0, 11, 62), &c);
+        return true;
+    }
 };
 
 struct TempWMO : public TempBase
@@ -228,21 +265,6 @@ struct TempWMO : public TempBase
         add(WR_VAR(0, 11,   2), &c);
     }
 
-    bool do_D03051(const msg::Context& c)
-    {
-        add(WR_VAR(0,  4, 86), &c);
-        add(WR_VAR(0,  8, 42), &c);
-        if (c.level.l1 == MISSING_INT)
-            subset->store_variable_undef(WR_VAR(0, 7, 4));
-        else
-            subset->store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
-        add(WR_VAR(0,  5, 15), &c);
-        add(WR_VAR(0,  6, 15), &c);
-        add(WR_VAR(0, 11, 61), &c);
-        add(WR_VAR(0, 11, 62), &c);
-        return true;
-    }
-
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         TempBase::to_subset(msg, subset);
@@ -300,7 +322,7 @@ struct TempWMO : public TempBase
             // Iterate backwards to get pressure levels sorted from the higher
             // to the lower pressure
             const msg::Context* c = *i;
-            // Skip non-presure levels
+            // Skip non-pressure levels
             if (c->level.ltype1 != 100) continue;
             if (do_D03051(*c))
                 ++group_count;
@@ -465,13 +487,163 @@ struct TempEcmwfShip : public TempBase
     }
 };
 
-struct Pilot : public TempBase
+struct PilotWMO : public TempBase
 {
-    Pilot(const Exporter::Options& opts, const Msgs& msgs)
+    bool pressure_levs;
+
+    PilotWMO(const Exporter::Options& opts, const Msgs& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return PILOT_NAME; }
-    virtual const char* description() const { return PILOT_DESC; }
+    virtual const char* name() const { return PILOT_WMO_NAME; }
+    virtual const char* description() const { return PILOT_WMO_DESC; }
+
+    virtual void to_bulletin(wreport::Bulletin& bulletin)
+    {
+        // Scan contexts to see if we are encoding pressure or height levels
+        bool has_press = false;
+        bool has_height = false;
+
+        for (Msgs::const_iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+        {
+            const Msg& msg = **mi;
+            for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                    i != msg.data.end(); ++i)
+            {
+                cerr << (*i)->level << endl;
+                if ((*i)->level.ltype1 == 100)
+                    has_press = true;
+                else if ((*i)->level.ltype1 == 103)
+                    has_height = true;
+            }
+        }
+
+        if (has_press && has_height)
+        {
+            fprintf(stderr, "TODO: warning: has both press and height\n");
+            pressure_levs = true;
+        } else if (has_press) {
+            pressure_levs = true;
+        } else if (has_height) {
+            pressure_levs = false;
+        } else {
+            fprintf(stderr, "TODO: warning: has neither press nor height\n");
+            pressure_levs = true;
+        }
+
+        // Continue with normal operations
+        TempBase::to_bulletin(bulletin);
+    }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        TempBase::setupBulletin(bulletin);
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        if (pressure_levs)
+            bulletin.datadesc.push_back(WR_VAR(3,  9, 50)); // For pressure levels
+        else
+            bulletin.datadesc.push_back(WR_VAR(3,  9, 51)); // For height levels
+        bulletin.load_tables();
+    }
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        TempBase::to_subset(msg, subset);
+
+        // Identification of launch site and instrumentation
+        add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
+        add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
+        add(WR_VAR(0,  1, 11), DBA_MSG_IDENT);
+        add(WR_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE);
+        add(WR_VAR(0,  2, 14), DBA_MSG_SONDE_TRACKING);
+        add(WR_VAR(0,  2,  3), DBA_MSG_MEAS_EQUIP_TYPE);
+
+        // Date/time of launch
+        add(WR_VAR(0,  8, 21), 18); // Launch time
+        add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
+        add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
+        add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
+        add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
+        add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        add(WR_VAR(0,  4,  6), DBA_MSG_SECOND);
+
+        // Horizontal and vertical coordinates of launch site
+        add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
+        add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        add(WR_VAR(0,  7, 30), DBA_MSG_HEIGHT_STATION);
+        add(WR_VAR(0,  7, 31), DBA_MSG_HEIGHT_BARO);
+        add(WR_VAR(0,  7,  7), DBA_MSG_HEIGHT_RELEASE);
+        add(WR_VAR(0, 33, 24), DBA_MSG_STATION_HEIGHT_QUALITY);
+
+        // Keep track of where we stored
+        int rep_count_pos = subset.size();
+        subset.store_variable_undef(WR_VAR(0, 31,  2));
+
+        /* Iterate backwards as we need to add levels in decreasing pressure order */
+        int group_count = 0;
+        for (int i = msg.data.size() - 1; i >= 0; --i)
+        {
+            msg::Context& c = *msg.data[i];
+            // We only want levels with a vertical sounding significance
+            const Var* vss = c.find_vsig();
+            if (vss == NULL) continue;
+
+            add(WR_VAR(0,  4, 86), &c);
+            add(WR_VAR(0,  8, 42), &c);
+            if (pressure_levs)
+            {
+                // Wind data at pressure levels
+                if (c.level.l1 == MISSING_INT)
+                    subset.store_variable_undef(WR_VAR(0, 7, 4));
+                else
+                    subset.store_variable_d(WR_VAR(0, 7, 4), c.level.l1);
+            } else {
+                // Wind data at heights
+                if (c.level.l1 == MISSING_INT)
+                    subset.store_variable_undef(WR_VAR(0, 7, 9));
+                else
+                    subset.store_variable_d(WR_VAR(0, 7, 9), c.level.l1);
+            }
+            add(WR_VAR(0,  5, 15), &c);
+            add(WR_VAR(0,  6, 15), &c);
+            add(WR_VAR(0, 11, 1), &c);
+            add(WR_VAR(0, 11, 2), &c);
+            ++group_count;
+        }
+        subset[rep_count_pos].seti(group_count);
+
+        // Wind shear data
+        rep_count_pos = subset.size();
+        subset.store_variable_undef(WR_VAR(0, 31,  1));
+        group_count = 0;
+        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
+                i != msg.data.rend(); ++i)
+        {
+            // Iterate backwards to get pressure levels sorted from the higher
+            // to the lower pressure
+            const msg::Context* c = *i;
+            // Skip non-pressure levels
+            if (c->level.ltype1 != 100) continue;
+            if (pressure_levs)
+            {
+                if (do_D03051(*c))
+                    ++group_count;
+            } else {
+                if (do_D03053(*c))
+                    ++group_count;
+            }
+        }
+        subset[rep_count_pos].seti(group_count);
+    }
+};
+
+struct PilotEcmwf : public TempBase
+{
+    PilotEcmwf(const Exporter::Options& opts, const Msgs& msgs)
+        : TempBase(opts, msgs) {}
+
+    virtual const char* name() const { return PILOT_ECMWF_NAME; }
+    virtual const char* description() const { return PILOT_ECMWF_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -524,11 +696,11 @@ struct Pilot : public TempBase
         /* 10 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
         /* 11 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
 
-        int var_levcount = subset.size();
+        int rep_count_pos = subset.size();
         subset.store_variable_undef(WR_VAR(0, 31,  1));
 
         /* Iterate backwards as we need to add levels in decreasing pressure order */
-        int lev_no = 0;
+        int group_count = 0;
         for (int i = msg.data.size() - 1; i >= 0; --i)
         {
             msg::Context& c = *msg.data[i];
@@ -573,10 +745,10 @@ struct Pilot : public TempBase
             else
                 subset.store_variable_undef(WR_VAR(0, 11, 2));
 
-            ++lev_no;
+            ++group_count;
         }
 
-        subset[var_levcount].seti(lev_no);
+        subset[rep_count_pos].seti(group_count);
 
         if (!is_crex)
         {
@@ -660,13 +832,37 @@ struct TempFactory : public virtual TempEcmwfFactory, TempWMOFactory
             return TempEcmwfFactory::make(opts, msgs);
     }
 };
-struct PilotFactory : public TemplateFactory
+struct PilotWMOFactory : public virtual TemplateFactory
+{
+    PilotWMOFactory() { name = PILOT_WMO_NAME; description = PILOT_WMO_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new PilotWMO(opts, msgs));
+    }
+};
+struct PilotEcmwfFactory : public virtual TemplateFactory
+{
+    PilotEcmwfFactory() { name = PILOT_ECMWF_NAME; description = PILOT_ECMWF_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new PilotEcmwf(opts, msgs));
+    }
+};
+struct PilotFactory : public virtual PilotEcmwfFactory, PilotWMOFactory
 {
     PilotFactory() { name = PILOT_NAME; description = PILOT_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Pilot(opts, msgs));
+        const Msg& msg = *msgs[0];
+        // TODO: pick a proper sample: this is from temp
+        const Var* var = msg.get_sonde_tracking_var();
+        if (var)
+            return PilotWMOFactory::make(opts, msgs);
+        else
+            return PilotEcmwfFactory::make(opts, msgs);
     }
 };
 
@@ -681,6 +877,8 @@ static const TemplateFactory* tempecmwf = NULL;
 static const TemplateFactory* tempecmwfland = NULL;
 static const TemplateFactory* tempecmwfship = NULL;
 static const TemplateFactory* pilot = NULL;
+static const TemplateFactory* pilotwmo = NULL;
+static const TemplateFactory* pilotecmwf = NULL;
 
     if (!temp) temp = new TempFactory;
     if (!tempship) tempship = new TempShipFactory;
@@ -689,6 +887,8 @@ static const TemplateFactory* pilot = NULL;
     if (!tempecmwfland) tempecmwfland = new TempEcmwfLandFactory;
     if (!tempecmwfship) tempecmwfship = new TempEcmwfShipFactory;
     if (!pilot) pilot = new PilotFactory;
+    if (!pilotwmo) pilotwmo = new PilotWMOFactory;
+    if (!pilotecmwf) pilotecmwf = new PilotEcmwfFactory;
 
     r.register_factory(temp);
     r.register_factory(tempship);
@@ -697,6 +897,8 @@ static const TemplateFactory* pilot = NULL;
     r.register_factory(tempecmwfland);
     r.register_factory(tempecmwfship);
     r.register_factory(pilot);
+    r.register_factory(pilotwmo);
+    r.register_factory(pilotecmwf);
 }
 
 }

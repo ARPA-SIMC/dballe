@@ -832,6 +832,21 @@ void to::test<40>()
         throw tut::failure(str::fmtf("%zd/%d errors:\n", fails.size(), i) + str::join(fails.begin(), fails.end(), "\n"));
 }
 
+template<> template<>
+void to::test<41>()
+{
+    BufrReimportTest test("bufr/pilot-gts1.bufr");
+    run_test(test, do_test, "pilot-wmo");
+}
+
+template<> template<>
+void to::test<42>()
+{
+    BufrReimportTest test("bufr/pilot-gts1.bufr");
+    run_test(test, do_test, "pilot-wmo");
+}
+
+
 }
 
 /* vim:set ts=4 sw=4: */

@@ -191,6 +191,10 @@ public:
     {
         switch (bulletin.subtype)
         {
+            case 1: // 001 for PILOT data,
+            case 2: // 002 for PILOT SHIP data,
+            case 3: // 003 for PILOT MOBIL data.
+                return MSG_PILOT;
             case 4: return MSG_TEMP;
             case 255:
                 switch (bulletin.localsubtype)
