@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2012  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -345,6 +345,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
         {
             // Height level
             case WR_VAR(0, 7, 2):
+            case WR_VAR(0, 7, 9): // Geopotential height, for pilots
                 if (var.isset())
                     lev = Level(103, var.enqd());
                 break;

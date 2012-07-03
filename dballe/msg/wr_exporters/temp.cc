@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2012  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
 #include <wreport/bulletin.h>
 #include <wreport/conv.h>
 #include <wreport/codetables.h>
+#include <wreport/notes.h>
 #include "msg/msgs.h"
 #include "msg/context.h"
-#include <iostream>
 
 using namespace wreport;
 using namespace std;
@@ -52,7 +52,7 @@ using namespace std;
 #define PILOT_WMO_NAME "pilot-wmo"
 #define PILOT_WMO_DESC "Pilot (2.1, 2.2, 2.3)"
 
-#define PILOT_ECMWF_NAME "pilot"
+#define PILOT_ECMWF_NAME "pilot-ecmwf"
 #define PILOT_ECMWF_DESC "Pilot (2.91)"
 
 
@@ -509,7 +509,6 @@ struct PilotWMO : public TempBase
             for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
                     i != msg.data.end(); ++i)
             {
-                cerr << (*i)->level << endl;
                 if ((*i)->level.ltype1 == 100)
                     has_press = true;
                 else if ((*i)->level.ltype1 == 103)
@@ -519,14 +518,14 @@ struct PilotWMO : public TempBase
 
         if (has_press && has_height)
         {
-            fprintf(stderr, "TODO: warning: has both press and height\n");
+            notes::logf("PILOT message to encode has both pressure and height levels: encoding pressure levels\n");
             pressure_levs = true;
         } else if (has_press) {
             pressure_levs = true;
         } else if (has_height) {
             pressure_levs = false;
         } else {
-            fprintf(stderr, "TODO: warning: has neither press nor height\n");
+            notes::logf("PILOT message to encode has neither pressure nor height levels: encoding pressure levels\n");
             pressure_levs = true;
         }
 
@@ -857,8 +856,9 @@ struct PilotFactory : public virtual PilotEcmwfFactory, PilotWMOFactory
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         const Msg& msg = *msgs[0];
-        // TODO: pick a proper sample: this is from temp
         const Var* var = msg.get_sonde_tracking_var();
+        // Try with another one in case the first was just unset
+        if (!var) var = msg.get_meas_equip_type_var();
         if (var)
             return PilotWMOFactory::make(opts, msgs);
         else
