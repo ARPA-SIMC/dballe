@@ -29,17 +29,15 @@ my @descs = (
 );
 
 my @notes = (
-	q{Validity time is defined as the time at which the data are measured or at which forecast is valid; for statistical processing data, the validity time is the end of the time interval.},
+	q{Validity time is defined as the time at which the data are measured or at which forecast is valid; for statistically processed data, the validity time is the end of the time interval.},
 
-	q{The reference time is defined as the nominal time for report or model output (start of forecast time).},
+	q{Reference time is defined as the nominal time of an observation for observed values, or as the time at which a model forecast starts for forecast values.},
 
-	q{For instantaneous values: the date and time in DB-All.e are the validity date and time of a value; P1 and P2 are 0.},
+	q{The date and time in DB-All.e are always the validity date and time of a value, regardless of the value being an observation or a forecast.},
 
-	q{For statistically processed values (for example average, accumulation, extreme values): the date and time in DB-All.e are the date and time of end of the time interval.},
+	q{P1 is defined as the difference in seconds between validity time and reference time. For forecasts it is the positive forecast time. For observed values, the reference time is usually the same as the validity time, therefore P1 is zero. However P1 < 0 is a valid case for reports containing data in the past with respect to the nominal report time.},
 	
-	q{P1 is defined as the difference in seconds from validity time and the reference time. For standard forecast it is the positive forecast time. Note that, for observed values, the reference time is the same as the validity time, therefore for observed values P1 is always zero.  P1 < 0 is a valid case for report containing data in the past with respect to the nominal report time},
-
-	q{P2 is defined as the duration of the period over which statistical processing, and is always positive. Note that, for non statistical values, P2 is always zero.},
+	q{P2 is defined as the duration of the period over which statistical processing is performed, and is always nonnegative. Note that, for instantaneous values, P2 is always zero.},
 
 #	q{The Eta (NAM) vertical coordinate system involves normalizing the pressure at some point on a specific level by the mean sea level pressure at that point.},
 );
@@ -50,11 +48,22 @@ if ($op eq 'dox')
 	print q{/**@defgroup trange_table Time range values
 @ingroup tables
 
-This table lists the various P indicator, P1, P2 value combinations that can be
-used to specify a time range.
+Definition of the main concepts related to the description of time
+range and statistical processing for observed and forecast data:
 
-They values closely correspond to how a time range is specified in the GRIB
-file format.
+};
+
+	for my $n (@notes)
+	{
+		$n =~ s/\n+/\n/g;
+		print '\\li ', $n;
+	}
+
+	print q{
+
+The following table lists the possible values for pindicator and the
+interpretation of the corresponding values of P1 and P2 specifying a
+time range:
 };
 
 	for my $d (@descs)
@@ -65,33 +74,14 @@ file format.
 		print $desc;
 	}
 
-	print q{
-Notes about the time range values:
-};
-
-	for my $n (@notes)
-	{
-		$n =~ s/\n+/\n/g;
-		print '\\li ', $n;
-	}
 
 	print "*/\n";
 }
 elsif ($op eq 'tex')
 {
 	print q( 
-\\begin{description}
-);
-
-	for my $d (@descs)
-	{
-		print '\\item [', $d->[0], "]\n";
-		print $d->[1];
-	}
-
-	print q(\\end{description}
-
-Notes about the time range values:
+Definition of the main concepts related to the description of time
+range and statistical processing for observed and forecast data:
 
 \\begin{itemize}
 );
@@ -102,6 +92,21 @@ Notes about the time range values:
 	}
 
 	print q(\\end{itemize}
+
+The following table lists the possible values for pindicator and the
+interpretation of the corresponding values of P1 and P2 specifying a
+time range:
+
+\\begin{description}
+);
+
+	for my $d (@descs)
+	{
+		print '\\item [', $d->[0], "]\n";
+		print $d->[1];
+	}
+
+	print q(\\end{description}
 );
 } else {
 	print STDERR "Unknown operation: $op\n";

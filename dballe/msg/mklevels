@@ -37,16 +37,23 @@ my ($ltype, $desc, $l1);
 our $DoxIntro = q{/**@defgroup level_table Level type values
 @ingroup tables
 
-This table lists the various level type and l1 value combinations that can be
-used to specify a vertical level.
+This table lists the possible values for leveltype1 or
+leveltype2 and the interpretation of the corresponding numerical
+value l1 or l2.  Leveltype values in the range 0-255 can
+be used for defining either a single level (leveltype1) or a surface
+delimiting a layer (leveltype1 and leveltype2) with any meaningful
+combination of leveltypes; values of leveltype >255 have a special use
+for encoding cloud values in SYNOP reports and they do not strictly
+define physical surfaces.
 
-They values closely correspond to how a level is specified in the GRIB file
-format.
+The idea is borrowed from the GRIB edition 2 fixed surface
+concept and the values for leveltype coincide with the GRIB standard
+where possible.
 
 \verbatim
 };
 format DoxTop =
-Level type  Description                            L1 value                    
+leveltype   Meaning                                unit/contents of l1/l2      
 
 .
 format Dox =
@@ -83,10 +90,23 @@ if ($op eq 'dox')
 }
 elsif ($op eq 'tex')
 {
-	print q(\begin{scriptsize}
+	print q(This table lists the possible values for {\em leveltype1} or
+{\em leveltype2} and the interpretation of the corresponding numerical
+value {\em l1} or {\em l2}.  Leveltype values in the range 0-255 can
+be used for defining either a single level (leveltype1) or a surface
+delimiting a layer (leveltype1 and leveltype2) with any meaningful
+combination of leveltypes; values of leveltype >255 have a special use
+for encoding cloud values in SYNOP reports and they do not strictly
+define physical surfaces.
+
+The idea is borrowed from the GRIB edition 2 {\em fixed surface}
+concept and the values for leveltype coincide with the GRIB standard
+where possible.
+
+\begin{scriptsize}
 \begin{longtable}{|@{\hspace{0.5mm}}l@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|@{\hspace{0.5mm}}p{4.0cm}@{\hspace{0.5mm}}|}
 \hline
-{\em Level type} & {\em Meaning} & {\em Contents ({\tt l1})} \\\\
+{\em leveltype} & {\em Meaning} & {\em unit/contents of l1/l2} \\\\
 \hline
 \endhead
 \hline
