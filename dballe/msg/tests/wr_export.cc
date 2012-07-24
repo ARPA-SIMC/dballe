@@ -885,6 +885,28 @@ void to::test<44>()
     ensure(msg2.find_context(Level(100, 900), Trange(254, 0, 0)) == NULL);
 }
 
+// Test for a range error in one specific BUFR
+template<> template<>
+void to::test<45>()
+{
+    auto_ptr<Msgs> msgs1 = read_msgs("bufr/temp-2-255.bufr", BUFR);
+    ensure_equals(msgs1->size(), 1);
+    Msg& msg1 = *(*msgs1)[0];
+
+    // Convert to CREX
+    msg::Exporter::Options output_opts;
+    output_opts.template_name = "temp-wmo";
+    std::auto_ptr<CrexBulletin> bulletin = CrexBulletin::create();
+    test_export_msgs(*msgs1, *bulletin, "tocrex", output_opts);
+
+    // Import again
+    Msgs msgs2;
+    std::auto_ptr<msg::Importer> imp = msg::Importer::create(BUFR);
+    imp->from_bulletin(*bulletin, msgs2);
+    ensure_equals(msgs2.size(), 1);
+    Msg& msg2 = *msgs2[0];
+}
+
 
 }
 

@@ -250,7 +250,7 @@ struct TempWMO : public TempBase
                 if (const Var* var = c.find(WR_VAR(0, 10, 8)))
                     add(WR_VAR(0, 10, 9), var);
                 else
-                    subset->store_variable_d(WR_VAR(0, 10, 9), (double)c.level.l1 * 9.80665);
+                    subset->store_variable_d(WR_VAR(0, 10, 9), (double)c.level.l1);
                 break;
             case 103:
                 add(WR_VAR(0, 7, 4), &c, WR_VAR(0, 10, 4));
