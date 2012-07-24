@@ -851,8 +851,11 @@ void to::test<43>()
 {
     BufrReimportTest test("bufr/pilot-ecmwf-geopotential.bufr");
     test.tweaks.push_back(new StripQCAttrs());
+    StripVars* sv = new StripVars();
+    sv->codes.push_back(WR_VAR(0, 10, 8));
+    test.tweaks.push_back(sv);
     run_test(test, do_test, "pilot-wmo");
-    run_test(test, do_wmo, "pilot");
+    //run_test(test, do_wmo, "pilot");
 }
 
 // Test for a bug where geopotential levels became pressure levels
