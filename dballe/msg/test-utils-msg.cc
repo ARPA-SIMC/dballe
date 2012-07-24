@@ -154,6 +154,21 @@ std::auto_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename)
     return msgs;
 }
 
+void _export_msgs(const Location& loc, const Msgs& in, Bulletin& out, const std::string& tag, const dballe::msg::Exporter::Options& opts)
+{
+    try {
+        Encoding type = BUFR;
+        if (string(out.encoding_name()) == "CREX")
+            type = CREX;
+        std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, opts));
+        exporter->to_bulletin(in, out);
+    } catch (std::exception& e) {
+        dballe::tests::dump("bul-" + tag, in);
+        dballe::tests::dump("msg-" + tag, out);
+        throw tut::failure(loc.msg("exporting to bulletin (" + tag + "): " + e.what()));
+    }
+}
+
 void track_different_msgs(const Msg& msg1, const Msg& msg2, const std::string& prefix)
 {
 	string fname1 = "/tmp/test-" + prefix + "1.bufr";

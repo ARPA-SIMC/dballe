@@ -846,6 +846,45 @@ void to::test<42>()
     run_test(test, do_test, "pilot-wmo");
 }
 
+template<> template<>
+void to::test<43>()
+{
+    BufrReimportTest test("bufr/pilot-ecmwf-geopotential.bufr");
+    test.tweaks.push_back(new StripQCAttrs());
+    run_test(test, do_test, "pilot-wmo");
+    run_test(test, do_wmo, "pilot");
+}
+
+// Test for a bug where geopotential levels became pressure levels
+template<> template<>
+void to::test<44>()
+{
+    auto_ptr<Msgs> msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", BUFR);
+    ensure_equals(msgs1->size(), 1);
+    Msg& msg1 = *(*msgs1)[0];
+
+    // Geopotential levels are converted to height above msl
+    const msg::Context* c = msg1.find_context(Level(102, 900), Trange(254, 0, 0));
+    ensure(c != NULL);
+
+    // Convert to WMO template
+    msg::Exporter::Options output_opts;
+    output_opts.template_name = "pilot-wmo";
+    //if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
+    std::auto_ptr<BufrBulletin> bulletin = BufrBulletin::create();
+    test_export_msgs(*msgs1, *bulletin, "towmo", output_opts);
+
+    // Import again
+    Msgs msgs2;
+    std::auto_ptr<msg::Importer> imp = msg::Importer::create(BUFR);
+    imp->from_bulletin(*bulletin, msgs2);
+    ensure_equals(msgs2.size(), 1);
+    Msg& msg2 = *msgs2[0];
+
+    // Ensure we didn't get pressure levels
+    ensure(msg2.find_context(Level(100, 900), Trange(254, 0, 0)) == NULL);
+}
+
 
 }
 

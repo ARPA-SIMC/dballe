@@ -345,7 +345,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
         {
             // Height level
             case WR_VAR(0, 7, 2):
-            case WR_VAR(0, 7, 9): // Geopotential height, for pilots
+            case WR_VAR(0, 7, 9): // Geopotential height, for pilots (FIXME: above ground or above msl?)
                 if (var.isset())
                     lev = Level(103, var.enqd());
                 break;

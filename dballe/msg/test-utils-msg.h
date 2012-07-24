@@ -49,6 +49,10 @@ std::auto_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename);
 #define read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(__FILE__, __LINE__, "load csv " #filename), (filename))
 #define inner_read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(loc, __FILE__, __LINE__, "load csv " #filename), (filename))
 
+void _export_msgs(const Location& loc, const Msgs& in, wreport::Bulletin& out, const std::string& tag, const dballe::msg::Exporter::Options& opts=dballe::msg::Exporter::Options());
+#define test_export_msgs(...) dballe::tests::_export_msgs(wibble::tests::Location(__FILE__, __LINE__, "export"), __VA_ARGS__)
+#define test_inner_export_msgs(...) dballe::tests::_export_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "export"), __VA_ARGS__)
+
 void track_different_msgs(const Msg& msg1, const Msg& msg2, const std::string& prefix);
 void track_different_msgs(const Msgs& msgs1, const Msgs& msgs2, const std::string& prefix);
 
