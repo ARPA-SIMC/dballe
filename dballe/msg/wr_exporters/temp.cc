@@ -509,10 +509,12 @@ struct PilotWMO : public TempBase
             for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
                     i != msg.data.end(); ++i)
             {
-                if ((*i)->level.ltype1 == 100)
-                    has_press = true;
-                else if ((*i)->level.ltype1 == 103)
-                    has_height = true;
+                switch ((*i)->level.ltype1)
+                {
+                    case 100: has_press = true; break;
+                    case 102: has_height = true; break;
+                    case 103: has_height = true; break;
+                }
             }
         }
 
