@@ -57,7 +57,7 @@ static int op_dump_csv = 0;
 static int op_dump_dds = 0;
 static int op_dump_structured = 0;
 static int op_precise_import = 0;
-static int op_recompute_categories = 0;
+static int op_bufr2netcdf_categories = 0;
 static const char* op_output_type = "bufr";
 static const char* op_output_template = "";
 static const char* op_report = "";
@@ -794,7 +794,7 @@ int do_convert(poptContext optCon)
 		opts.template_name = op_output_template;
 	}
 
-    conv.recompute_categories = op_recompute_categories != 0;
+    conv.bufr2netcdf_categories = op_bufr2netcdf_categories != 0;
 
     conv.file = File::create(outtype, "(stdout)", "w").release();
     conv.exporter = msg::Exporter::create(outtype, opts).release();
@@ -1149,8 +1149,8 @@ struct poptOption dbamsg_convert_options[] = {
 		"force output data to be of this type of report", "rep_memo" },
 	{ "precise", 0, 0, &op_precise_import, 0,
 		"import messages using precise contexts instead of standard ones", 0 },
-    { "recompute-categories", 0, 0, &op_recompute_categories, 0,
-        "recompute data categories and subcategories according to message contents", 0 },
+    { "bufr2netcdf-categories", 0, 0, &op_bufr2netcdf_categories, 0,
+        "recompute data categories and subcategories according to message contents, for use as input to bufr2netcdf", 0 },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
 	POPT_TABLEEND

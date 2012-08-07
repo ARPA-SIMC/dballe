@@ -47,10 +47,10 @@ struct Converter : public Action
 	File* file;
 	const char* dest_rep_memo;
 	const char* dest_template;
-    bool recompute_categories;
+    bool bufr2netcdf_categories;
 
     msg::Exporter* exporter;
-    Converter() : file(0), dest_rep_memo(0), dest_template(0), recompute_categories(false), exporter(0) {}
+    Converter() : file(0), dest_rep_memo(0), dest_template(0), bufr2netcdf_categories(false), exporter(0) {}
     ~Converter();
 
 	virtual void operator()(const cmdline::Item& item);
