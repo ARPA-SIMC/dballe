@@ -139,6 +139,9 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
     switch (orig.type)
     {
         case 0:
+            // Force subtype to 0, as bufr2netcdf processing doesn't need the
+            // hour distinction
+            b.subtype = 0;
             // 13 for fixed stations
             // 14 for mobile stations
             b.localsubtype = 13;
