@@ -58,6 +58,7 @@ struct ReimportTest
     Encoding type;
     auto_ptr<Msgs> msgs1;
     auto_ptr<Msgs> msgs2;
+    auto_ptr<Bulletin> exported;
     msg::Importer::Options input_opts;
     msg::Exporter::Options output_opts;
     vector<Tweaker*> tweaks;
@@ -128,7 +129,7 @@ struct ReimportTest
             }
 
         // Export
-        auto_ptr<Bulletin> bulletin(B::create());
+        exported.reset(B::create().release());
         try {
             if (tname1 != NULL)
                 output_opts.template_name = tname1;
@@ -136,9 +137,9 @@ struct ReimportTest
                 output_opts.template_name.clear();
             if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
             std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
-            exporter->to_bulletin(*msgs1, *bulletin);
+            exporter->to_bulletin(*msgs1, *exported);
         } catch (std::exception& e) {
-            dballe::tests::dump("bul1", *bulletin);
+            dballe::tests::dump("bul1", *exported);
             dballe::tests::dump("msg1", *msgs1);
             throw tut::failure(loc.msg(string("exporting to bulletin (first template): ") + e.what()));
         }
@@ -146,10 +147,10 @@ struct ReimportTest
         // Encode
         Rawmsg rawmsg;
         try {
-            bulletin->encode(rawmsg);
+            exported->encode(rawmsg);
             //exporter->to_rawmsg(*msgs1, rawmsg);
         } catch (std::exception& e) {
-            dballe::tests::dump("bul1", *bulletin);
+            dballe::tests::dump("bul1", *exported);
             dballe::tests::dump("msg1", *msgs1);
             throw tut::failure(loc.msg(string("encoding to rawmsg (first template): ") + e.what()));
         }
@@ -449,6 +450,9 @@ void to::test<8>()
     BufrReimportTest test("bufr/synop-cloudbelow.bufr");
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
+    ensure_equals(test.exported->type, 0);
+    ensure_equals(test.exported->subtype, 1);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<9>()
@@ -456,6 +460,9 @@ void to::test<9>()
     BufrReimportTest test("bufr/synop-evapo.bufr");
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
+    ensure_equals(test.exported->type, 0);
+    ensure_equals(test.exported->subtype, 2);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<10>()
@@ -463,6 +470,9 @@ void to::test<10>()
     BufrReimportTest test("bufr/synop-groundtemp.bufr");
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
+    ensure_equals(test.exported->type, 0);
+    ensure_equals(test.exported->subtype, 1);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<11>()
@@ -471,6 +481,9 @@ void to::test<11>()
     test.tweaks.push_back(new TruncStName());
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
+    ensure_equals(test.exported->type, 0);
+    ensure_equals(test.exported->subtype, 1);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<12>()
@@ -478,6 +491,9 @@ void to::test<12>()
     BufrReimportTest test("bufr/synop-oddgust.bufr");
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
+    ensure_equals(test.exported->type, 0);
+    ensure_equals(test.exported->subtype, 0);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<13>()
@@ -486,6 +502,9 @@ void to::test<13>()
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     test.wmo_tweaks.push_back(new RemoveSynopWMOOddprec());
     run_test(test, do_wmo, "synop");
+    ensure_equals(test.exported->type, 0);
+    ensure_equals(test.exported->subtype, 0);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<14>()
@@ -493,6 +512,9 @@ void to::test<14>()
     BufrReimportTest test("bufr/synop-strayvs.bufr");
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
+    ensure_equals(test.exported->type, 0);
+    ensure_equals(test.exported->subtype, 1);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<15>()
@@ -500,6 +522,9 @@ void to::test<15>()
     BufrReimportTest test("bufr/synop-sunshine.bufr");
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
+    ensure_equals(test.exported->type, 0);
+    ensure_equals(test.exported->subtype, 1);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 
 template<> template<>
@@ -508,6 +533,9 @@ void to::test<16>()
     BufrReimportTest test("bufr/synop-gtscosmo.bufr");
     test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
     run_test(test, do_wmo, "synop");
+    ensure_equals(test.exported->type, 0);
+    ensure_equals(test.exported->subtype, 2);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 
 // Re-export test for old style temps
@@ -525,11 +553,12 @@ void to::test<18>()
     test.ecmwf_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }
+
 template<> template<>
 void to::test<19>()
 {
     BufrReimportTest test("bufr/obs2-91.2.bufr");
-    run_test(test, do_ecmwf, "temp");
+    run_test(test, do_ecmwf, "pilot");
 }
 template<> template<>
 void to::test<20>()
@@ -581,6 +610,9 @@ void to::test<24>()
     test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     test.wmo_tweaks.push_back(new RoundVSS());
     run_test(test, do_wmo, "temp");
+    ensure_equals(test.exported->type, 2);
+    ensure_equals(test.exported->subtype, 4);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<25>()
@@ -588,6 +620,9 @@ void to::test<25>()
     BufrReimportTest test("bufr/temp-gts2.bufr");
     test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_wmo, "temp");
+    ensure_equals(test.exported->type, 2);
+    ensure_equals(test.exported->subtype, 4);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<26>()
@@ -595,6 +630,9 @@ void to::test<26>()
     BufrReimportTest test("bufr/temp-gts3.bufr");
     test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_wmo, "temp");
+    ensure_equals(test.exported->type, 2);
+    ensure_equals(test.exported->subtype, 4);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<27>()
@@ -603,6 +641,9 @@ void to::test<27>()
     //test.verbose = true;
     test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_wmo, "temp");
+    ensure_equals(test.exported->type, 2);
+    ensure_equals(test.exported->subtype, 4);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<28>()
@@ -645,6 +686,9 @@ void to::test<31>()
 {
     BufrReimportTest test("bufr/temp-bad4.bufr");
     run_test(test, do_test, "temp-wmo");
+    ensure_equals(test.exported->type, 2);
+    ensure_equals(test.exported->subtype, 4);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 template<> template<>
 void to::test<32>()
@@ -837,6 +881,9 @@ void to::test<41>()
 {
     BufrReimportTest test("bufr/pilot-gts1.bufr");
     run_test(test, do_test, "pilot-wmo");
+    ensure_equals(test.exported->type, 2);
+    ensure_equals(test.exported->subtype, 1);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 
 template<> template<>
@@ -844,6 +891,9 @@ void to::test<42>()
 {
     BufrReimportTest test("bufr/pilot-gts1.bufr");
     run_test(test, do_test, "pilot-wmo");
+    ensure_equals(test.exported->type, 2);
+    ensure_equals(test.exported->subtype, 1);
+    ensure_equals(test.exported->localsubtype, 255);
 }
 
 template<> template<>
@@ -910,6 +960,33 @@ void to::test<45>()
     Msg& msg2 = *msgs2[0];
 }
 
+// Test that temp ship subtype is set correctly
+template<> template<>
+void to::test<46>()
+{
+    std::auto_ptr<Msgs> msgs = read_msgs("bufr/obs2-102.1.bufr", BUFR);
+    auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+    msg::Exporter::Options opts;
+    opts.template_name = "temp-wmo";
+    test_export_msgs(*msgs, *bulletin, "tempship", opts);
+    ensure_equals(bulletin->type, 2);
+    ensure_equals(bulletin->subtype, 5);
+    ensure_equals(bulletin->localsubtype, 255);
+}
+
+// Test that pilot subtype is set correctly
+template<> template<>
+void to::test<47>()
+{
+    std::auto_ptr<Msgs> msgs = read_msgs("bufr/obs2-91.2.bufr", BUFR);
+    auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+    msg::Exporter::Options opts;
+    opts.template_name = "pilot-wmo";
+    test_export_msgs(*msgs, *bulletin, "pilotwmo", opts);
+    ensure_equals(bulletin->type, 2);
+    ensure_equals(bulletin->subtype, 1);
+    ensure_equals(bulletin->localsubtype, 255);
+}
 
 }
 

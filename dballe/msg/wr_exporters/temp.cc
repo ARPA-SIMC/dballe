@@ -217,6 +217,19 @@ struct TempWMO : public TempBase
     {
         TempBase::setupBulletin(bulletin);
 
+        bulletin.type = 2;
+        bulletin.subtype = 4;
+        bulletin.localsubtype = 255;
+        for (Msgs::const_iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+        {
+            const Msg& msg = **mi;
+            if (msg.type == MSG_TEMP_SHIP)
+            {
+                bulletin.subtype = 5;
+                break;
+            }
+        }
+
         // Data descriptor section
         bulletin.datadesc.clear();
         bulletin.datadesc.push_back(WR_VAR(3, 9, 52));
@@ -538,6 +551,10 @@ struct PilotWMO : public TempBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         TempBase::setupBulletin(bulletin);
+
+        bulletin.type = 2;
+        bulletin.subtype = 1;
+        bulletin.localsubtype = 255;
 
         // Data descriptor section
         bulletin.datadesc.clear();

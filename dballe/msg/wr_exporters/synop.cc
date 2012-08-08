@@ -649,9 +649,12 @@ struct SynopECMWFAuto : public SynopECMWFLand
 struct SynopWMO : public Synop
 {
     bool is_crex;
+    // Keep track of the bulletin being written, since we amend its headers as
+    // we process its subsets
+    Bulletin* cur_bulletin;
 
     SynopWMO(const Exporter::Options& opts, const Msgs& msgs)
-        : Synop(opts, msgs) {}
+        : Synop(opts, msgs), cur_bulletin(0) {}
 
     virtual const char* name() const { return SYNOP_WMO_NAME; }
     virtual const char* description() const { return SYNOP_WMO_DESC; }
@@ -664,12 +667,14 @@ struct SynopWMO : public Synop
 
         bulletin.type = 0;
         bulletin.subtype = 255;
-        bulletin.localsubtype = 1;
+        bulletin.localsubtype = 255;
 
         // Data descriptor section
         bulletin.datadesc.clear();
         bulletin.datadesc.push_back(WR_VAR(3, 7, 80));
         bulletin.load_tables();
+
+        cur_bulletin = &bulletin;
     }
 
     // D02031  Pressure data
@@ -1114,6 +1119,19 @@ struct SynopWMO : public Synop
         do_D01004(); // station id
         do_D01011(); // date
         int hour = do_D01012(); // time
+
+        // Set subtype based on hour. If we have heterogeneous subsets, keep
+        // the lowest of the constraints
+        if ((hour % 6) == 0)
+            // 002 at main synoptic times 00, 06, 12, 18 UTC,
+            cur_bulletin->subtype = cur_bulletin->subtype == 255 ? 2 : cur_bulletin->subtype;
+        else if ((hour % 3 == 0))
+            // 001 at intermediate synoptic times 03, 09, 15, 21 UTC,
+            cur_bulletin->subtype = cur_bulletin->subtype != 0 ? 1 : cur_bulletin->subtype;
+        else
+            // 000 at observation times 01, 02, 04, 05, 07, 08, 10, 11, 13, 14, 16, 17, 19, 20, 22 and 23 UTC.
+            cur_bulletin->subtype = 0;
+
         do_D01021(); // coordinates
         add(WR_VAR(0,  7, 30), DBA_MSG_HEIGHT_STATION);
         add(WR_VAR(0,  7, 31), DBA_MSG_HEIGHT_BARO);

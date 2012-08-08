@@ -196,13 +196,14 @@ public:
             case 3: // 003 for PILOT MOBIL data.
                 return MSG_PILOT;
             case 4: return MSG_TEMP;
+            case 5: return MSG_TEMP_SHIP;
             case 255:
                 switch (bulletin.localsubtype)
                 {
                     case 0: {
                         /* Guess looking at the variables */
                         if (bulletin.subsets.empty())
-                                throw error_consistency("trying to import a SYNOP message with no data subset");
+                                throw error_consistency("trying to import a TEMP message with no data subset");
                         const Subset& subset = bulletin.subsets[0];
                         if (subset.size() > 1 && subset[0].code() == WR_VAR(0, 1, 11))
                             return MSG_TEMP_SHIP;
