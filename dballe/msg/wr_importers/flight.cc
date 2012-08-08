@@ -128,7 +128,9 @@ public:
             switch (subset[i].code())
             {
                 case WR_VAR(0, 2, 65): // ACARS GROUND RECEIVING STATION
-                    return MSG_ACARS;
+                    if (subset[0].isset())
+                        return MSG_ACARS;
+                    break;
             }
         }
         return MSG_AMDAR;
@@ -193,7 +195,7 @@ void FlightImporter::import_var(const Var& var)
             else
                 // Specific Altitude Above Mean Sea Level in mm
                 set_level(Level(102, var.enqd() * 1000));
-            acquire(var);
+            acquire(var, WR_VAR(0, 7, 30));
             break;
         case WR_VAR(0,  8,  4): acquire(var); break;
         case WR_VAR(0,  8,  9): acquire(var); break;

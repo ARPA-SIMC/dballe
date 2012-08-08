@@ -993,7 +993,8 @@ template<> template<>
 void to::test<48>()
 {
     BufrReimportTest test("bufr/ecmwf-amdar1.bufr");
-    run_test(test, do_wmo, "amdar");
+    test.tweaks.push_back(new StripQCAttrs());
+    run_test(test, do_test, "amdar");
 }
 
 }

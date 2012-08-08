@@ -64,7 +64,12 @@ struct FlightBase : public Template
     FlightBase(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs), flight_ctx(0) {}
 
-    void add(Varcode code, int shortcut)
+    void add(wreport::Varcode code, const wreport::Var* var) const
+    {
+        Template::add(code, var);
+    }
+
+    void add(Varcode code, int shortcut) const
     {
         const Var* var = msg->find_by_id(shortcut);
         if (var)
@@ -73,12 +78,12 @@ struct FlightBase : public Template
             subset->store_variable_undef(code);
     }
 
-    void add(Varcode code)
+    void add(Varcode code) const
     {
         add(code, code);
     }
 
-    void add(Varcode code, Varcode srccode)
+    void add(Varcode code, Varcode srccode) const
     {
         const Var* var = flight_ctx->find(srccode);
         if (var)
@@ -119,11 +124,10 @@ struct FlightBase : public Template
             {
                 case 100:
                      use = ctx.find_by_id(DBA_MSG_PRESS) != NULL
-                        || ctx.find(WR_VAR(0, 7, 10)) != NULL;
+                        || ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL;
                      break;
                 case 102:
-                     use = ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL
-                        || ctx.find(WR_VAR(0, 7, 10)) != NULL;
+                     use = ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL;
                      break;
             }
             if (use)
@@ -234,7 +238,8 @@ struct AmdarWMO : public FlightBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         FlightBase::setupBulletin(bulletin);
-        bulletin.localsubtype = 144;
+        bulletin.subtype = 255;
+        bulletin.localsubtype = 255;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -285,7 +290,13 @@ struct AmdarWMO : public FlightBase
         /*  9 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
         /* 10 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
         /* 11 */ add(WR_VAR(0,  4,  6), DBA_MSG_SECOND);
-        /* 12 */ add(WR_VAR(0,  7, 10));
+        /* 12 */
+        if (const wreport::Var* v = flight_ctx->find(WR_VAR(0,  7, 30)))
+            add(WR_VAR(0,  7, 10), v);
+        else if (flight_ctx->level.ltype1 == 102)
+            subset.store_variable_d(WR_VAR(0,  7, 10), (double)flight_ctx->level.l1 / 1000.0);
+        else
+            subset.store_variable_undef(WR_VAR(0,  7, 10));
         /* 13 */ add(WR_VAR(0,  8,  9));
         /* 14 */ add(WR_VAR(0, 11,  1));
         /* 15 */ add(WR_VAR(0, 11,  2));
