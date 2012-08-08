@@ -989,12 +989,22 @@ void to::test<47>()
     ensure_equals(bulletin->localsubtype, 255);
 }
 
+// Test conversion from amdar ECMWF to amdar WMO
 template<> template<>
 void to::test<48>()
 {
     BufrReimportTest test("bufr/ecmwf-amdar1.bufr");
     test.tweaks.push_back(new StripQCAttrs());
     run_test(test, do_test, "amdar");
+}
+
+// Test conversion from acars ECMWF to amdar WMO
+template<> template<>
+void to::test<49>()
+{
+    BufrReimportTest test("bufr/ecmwf-acars1.bufr");
+    test.tweaks.push_back(new StripQCAttrs());
+    run_test(test, do_test, "acars");
 }
 
 }

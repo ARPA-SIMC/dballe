@@ -239,7 +239,7 @@ struct AmdarWMO : public FlightBase
     {
         FlightBase::setupBulletin(bulletin);
         bulletin.subtype = 255;
-        bulletin.localsubtype = 255;
+        bulletin.localsubtype = 144;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -431,6 +431,22 @@ struct Acars : public FlightBase
     }
 };
 
+struct AcarsWMO : public AmdarWMO
+{
+    AcarsWMO(const Exporter::Options& opts, const Msgs& msgs)
+        : AmdarWMO(opts, msgs) {}
+
+    virtual const char* name() const { return ACARS_WMO_NAME; }
+    virtual const char* description() const { return ACARS_WMO_DESC; }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        AmdarWMO::setupBulletin(bulletin);
+
+        bulletin.subtype = 255;
+        bulletin.localsubtype = 145;
+    }
+};
 
 struct AirepFactory : public TemplateFactory
 {
@@ -501,7 +517,7 @@ struct AcarsWMOFactory : public TemplateFactory
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Acars(opts, msgs));
+        return auto_ptr<Template>(new AcarsWMO(opts, msgs));
     }
 };
 
