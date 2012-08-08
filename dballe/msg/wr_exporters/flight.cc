@@ -243,8 +243,8 @@ struct AmdarWMO : public FlightBase
 
         // Data descriptor section
         bulletin.datadesc.clear();
-        bulletin.datadesc.push_back(WR_VAR(0,  1,  33)); //  0
-        bulletin.datadesc.push_back(WR_VAR(0,  1,  34)); //  1
+        //bulletin.datadesc.push_back(WR_VAR(0,  1,  33)); //  0
+        //bulletin.datadesc.push_back(WR_VAR(0,  1,  34)); //  1
         bulletin.datadesc.push_back(WR_VAR(3, 11,   5)); //  2
         bulletin.datadesc.push_back(WR_VAR(0,  8,   4)); // 20
         bulletin.datadesc.push_back(WR_VAR(0,  2,  64)); // 21
@@ -278,8 +278,8 @@ struct AmdarWMO : public FlightBase
 
         Level lev;
 
-        /*  0 */ add(WR_VAR(0,  1, 33));
-        /*  1 */ add(WR_VAR(0,  1, 34));
+        ///*  0 */ add(WR_VAR(0,  1, 33));
+        ///*  1 */ add(WR_VAR(0,  1, 34));
         /*  2 */ add(WR_VAR(0,  1,  8), DBA_MSG_IDENT);
         /*  3 */ add(WR_VAR(0,  1, 23));
         /*  4 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
