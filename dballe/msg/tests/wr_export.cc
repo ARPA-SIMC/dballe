@@ -546,6 +546,7 @@ void to::test<17>()
     test.ecmwf_tweaks.push_back(new RemoveTempWMOOnlyVars());
     run_test(test, do_ecmwf, "temp");
 }
+
 template<> template<>
 void to::test<18>()
 {
@@ -986,6 +987,13 @@ void to::test<47>()
     ensure_equals(bulletin->type, 2);
     ensure_equals(bulletin->subtype, 1);
     ensure_equals(bulletin->localsubtype, 255);
+}
+
+template<> template<>
+void to::test<48>()
+{
+    BufrReimportTest test("bufr/ecmwf-amdar1.bufr");
+    run_test(test, do_wmo, "amdar");
 }
 
 }
