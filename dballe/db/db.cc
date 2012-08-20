@@ -62,7 +62,7 @@ static const char* init_functions[] = {
 
 
 #ifdef DBA_USE_TRANSACTIONS
-#define TABLETYPE "TYPE=InnoDB;"
+#define TABLETYPE "ENGINE=InnoDB;"
 #else
 #define TABLETYPE ";"
 #endif
