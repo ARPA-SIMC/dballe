@@ -1313,10 +1313,19 @@ void QueryBuilder::make_where(const Record& rec)
         const char *op, *value, *value1;
         Varinfo info = decode_data_filter(val, &op, &value, &value1);
         sql_where.append_list("adf.type=");
-        if (value1 == NULL)
-            sql_where.appendf("%d AND adf.value%s%s", info->var, op, value);
+        if (value[0] == '\'')
+            if (value1 == NULL)
+                sql_where.appendf("%d AND adf.value%s%s", info->var, op, value);
+            else
+                sql_where.appendf("%d AND adf.value BETWEEN %s AND %s", info->var, value, value1);
         else
-            sql_where.appendf("%d AND adf.value BETWEEN %s AND %s", info->var, value, value1);
+        {
+            const char* type = (db.conn->server_type == MYSQL) ? "SIGNED" : "INT";
+            if (value1 == NULL)
+                sql_where.appendf("%d AND CAST(adf.value AS %s)%s%s", info->var, type, op, value);
+            else
+                sql_where.appendf("%d AND CAST(adf.value AS %s) BETWEEN %s AND %s", info->var, type, value, value1);
+        }
         from_wanted |= DBA_DB_FROM_ADF;
     }
 
