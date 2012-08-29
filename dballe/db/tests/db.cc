@@ -1195,6 +1195,81 @@ void to::test<19>()
         }
 }
 
+// Test numeric comparisons in ana_filter
+template<> template<>
+void to::test<20>()
+{
+        use_db();
+        populate_database();
+
+        query.clear();
+        query.set(DBA_KEY_REP_COD, 2);
+        query.set(DBA_KEY_VAR, "B01011");
+        auto_ptr<db::Cursor> cur = db->query_data(query);
+        ensure_equals(cur->count, 1);
+
+        // Move the cursor to B01011
+        cur->next();
+        int context_id = cur->out_context_id;
+        cur->discard_rest();
+
+        // Insert new attributes about this report
+        qc.clear();
+        qc.set(WR_VAR(0, 1, 1), 50);
+        qc.set(WR_VAR(0, 1, 8), "50");
+        db->attr_insert(context_id, WR_VAR(0, 1, 11), qc);
+
+        // Try queries filtered by numeric attributes
+        query.clear();
+        query.set(DBA_KEY_REP_COD, 2);
+        query.set(DBA_KEY_VAR, "B01011");
+
+        query.set(DBA_KEY_ATTR_FILTER, "B01001=50");
+        cur = db->query_data(query);
+        ensure_equals(cur->count, 1);
+        cur->discard_rest();
+
+        query.set(DBA_KEY_ATTR_FILTER, "B01001<=50");
+        cur = db->query_data(query);
+        ensure_equals(cur->count, 1);
+        cur->discard_rest();
+
+        query.set(DBA_KEY_ATTR_FILTER, "B01001<51");
+        cur = db->query_data(query);
+        ensure_equals(cur->count, 1);
+        cur->discard_rest();
+
+        query.set(DBA_KEY_ATTR_FILTER, "B01001<8");
+        cur = db->query_data(query);
+        ensure_equals(cur->count, 0);
+        cur->discard_rest();
+
+        // Try queries filtered by string attributes
+        query.clear();
+        query.set(DBA_KEY_REP_COD, 2);
+        query.set(DBA_KEY_VAR, "B01011");
+
+        query.set(DBA_KEY_ATTR_FILTER, "B01008=50");
+        cur = db->query_data(query);
+        ensure_equals(cur->count, 1);
+        cur->discard_rest();
+
+        query.set(DBA_KEY_ATTR_FILTER, "B01008<=50");
+        cur = db->query_data(query);
+        ensure_equals(cur->count, 1);
+        cur->discard_rest();
+
+        query.set(DBA_KEY_ATTR_FILTER, "B01008<8");
+        cur = db->query_data(query);
+        ensure_equals(cur->count, 1);
+        cur->discard_rest();
+
+        query.set(DBA_KEY_ATTR_FILTER, "B01008<100");
+        cur = db->query_data(query);
+        ensure_equals(cur->count, 0);
+        cur->discard_rest();
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
