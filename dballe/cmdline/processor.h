@@ -100,6 +100,7 @@ public:
     const char* input_type;
     msg::Importer::Options import_opts;
     Filter filter;
+    bool verbose;
 
     Reader();
 

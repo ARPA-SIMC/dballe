@@ -320,6 +320,17 @@ struct TempWMO : public TempBase
             const msg::Context* c = *i;
             // Skip non-presure levels
             if (!c->find_vsig()) continue;
+            // Skip levels not for us
+            if (!(
+                  c->find(WR_VAR(0, 10,   8))
+               || c->find(WR_VAR(0, 12, 101))
+               || c->find(WR_VAR(0, 12, 103))
+               || c->find(WR_VAR(0, 11,   1))
+               || c->find(WR_VAR(0, 11,   2))) && (
+                  c->find(WR_VAR(0, 11, 61))
+               || c->find(WR_VAR(0, 11, 62)))
+               )
+                continue;
             do_D03054(*c);
             ++group_count;
         }
@@ -337,6 +348,11 @@ struct TempWMO : public TempBase
             const msg::Context* c = *i;
             // Skip non-pressure levels
             if (c->level.ltype1 != 100) continue;
+            // Skip levels not for us
+            if (!(
+                  c->find(WR_VAR(0, 11, 61))
+               || c->find(WR_VAR(0, 11, 62))))
+                continue;
             if (do_D03051(*c))
                 ++group_count;
         }

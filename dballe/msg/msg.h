@@ -204,6 +204,9 @@ public:
      */
     msg::Context& obtain_context(const Level& lev, const Trange& tr);
 
+    /// Shortcut to obtain_context(Level::ana(), Trange::ana());
+    msg::Context& obtain_station_context();
+
     /**
      * Find a variable given its description
      *

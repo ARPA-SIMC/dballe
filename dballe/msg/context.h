@@ -109,6 +109,36 @@ public:
     void set(std::auto_ptr<wreport::Var> var);
 
     /**
+     * Add or replace an integer value
+     *
+     * @param code
+     *   The wreport::Varcode of the destination value.
+     * @param val
+     *   The integer value of the data
+     */
+    void seti(wreport::Varcode code, int val);
+
+    /**
+     * Add or replace a double value
+     *
+     * @param code
+     *   The wreport::Varcode of the destination value.
+     * @param val
+     *   The double value of the data
+     */
+    void setd(wreport::Varcode code, double val);
+
+    /**
+     * Add or replace a string value
+     *
+     * @param code
+     *   The wreport::Varcode of the destination value.
+     * @param val
+     *   The string value of the data
+     */
+    void setc(wreport::Varcode code, const char* val);
+
+    /**
      * Find a variable given its varcode
      *
      * @param code
@@ -187,6 +217,8 @@ public:
      * @return the dba_msg_context element, or NULL if the check failed
      */
     static Context* lua_check(struct lua_State* L, int idx);
+
+#include <dballe/msg/context-extravars.h>
 };
 
 

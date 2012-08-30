@@ -162,6 +162,17 @@ for v in vars:
         v.name;
 fh.close()
 
+fh = open("%s/context-extravars.h" % DESTDIR, "w")
+for v in vars:
+    print >>fh, "/** Set the value of \"%s\" from a variable of type %s */" % (v.desc, types[v.type])
+    print >>fh, "inline void set_%s(%s val) " % (v.name.lower(), types[v.type]),
+    print >>fh, "{ set%s(WR_VAR(0, %d, %d), val); }" % (ftypes[v.type], v.b.x, v.b.y)
+
+    print >>fh, "/** Get the \"%s\" physical value stored in the message */" % v.desc;
+    print >>fh, "inline const wreport::Var* get_%s() const" % v.name.lower();
+    print >>fh, "{ return find(WR_VAR(0, %d, %d)); }" % (v.b.x, v.b.y)
+fh.close()
+
 fc = open("%s/vars.gperf" % DESTDIR, "w")
 print >>fc, """
 %define slot-name name

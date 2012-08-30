@@ -391,20 +391,26 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
         {
             ++item.idx;
 
-//          if (op_verbose)
-//              fprintf(stderr, "Reading message #%d...\n", item.index);
+            try {
+    //          if (op_verbose)
+    //              fprintf(stderr, "Reading message #%d...\n", item.index);
 
-            if (!filter.match_index(item.idx))
-                continue;
+                if (!filter.match_index(item.idx))
+                    continue;
 
-            item.rmsg->index = item.idx;
-            item.decode(*imp, print_errors);
-            //process_input(*file, rmsg, grepdata, action);
+                item.rmsg->index = item.idx;
+                item.decode(*imp, print_errors);
+                //process_input(*file, rmsg, grepdata, action);
 
-            if (!filter.match_item(item))
-                continue;
+                if (!filter.match_item(item))
+                    continue;
 
-            action(item);
+                action(item);
+            } catch (std::exception& e) {
+                if (verbose)
+                    fprintf(stderr, "%s:#%d: %s\n", file->name().c_str(), item.idx, e.what());
+                throw;
+            }
         }
     } while (name != fnames.end());
 }

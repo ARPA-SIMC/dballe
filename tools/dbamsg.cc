@@ -763,8 +763,9 @@ int do_bisect(poptContext optCon)
 
 int do_convert(poptContext optCon)
 {
-	msg::Exporter::Options opts;
-	cmdline::Converter conv;
+    msg::Exporter::Options opts;
+    cmdline::Converter conv;
+    reader.verbose = op_verbose;
 
 	/* Throw away the command name */
 	poptGetArg(optCon);

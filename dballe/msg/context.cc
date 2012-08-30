@@ -104,6 +104,21 @@ void Context::set(const Var& var)
     set(auto_ptr<Var>(new Var(var)));
 }
 
+void Context::seti(wreport::Varcode code, int val)
+{
+    set(newvar(code, val));
+}
+
+void Context::setd(wreport::Varcode code, double val)
+{
+    set(newvar(code, val));
+}
+
+void Context::setc(wreport::Varcode code, const char* val)
+{
+    set(newvar(code, val));
+}
+
 void Context::set(auto_ptr<Var> var)
 {
     Varcode code = var->code();

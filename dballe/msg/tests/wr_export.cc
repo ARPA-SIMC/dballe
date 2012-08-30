@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2012  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -882,6 +882,7 @@ void to::test<41>()
 {
     BufrReimportTest test("bufr/pilot-gts1.bufr");
     run_test(test, do_test, "pilot-wmo");
+
     ensure_equals(test.exported->type, 2);
     ensure_equals(test.exported->subtype, 1);
     ensure_equals(test.exported->localsubtype, 255);
@@ -892,6 +893,7 @@ void to::test<42>()
 {
     BufrReimportTest test("bufr/pilot-gts1.bufr");
     run_test(test, do_test, "pilot-wmo");
+
     ensure_equals(test.exported->type, 2);
     ensure_equals(test.exported->subtype, 1);
     ensure_equals(test.exported->localsubtype, 255);
@@ -1005,6 +1007,14 @@ void to::test<49>()
     BufrReimportTest test("bufr/ecmwf-acars1.bufr");
     test.tweaks.push_back(new StripQCAttrs());
     run_test(test, do_test, "acars");
+}
+
+// Test correct import/export of a temp with thousands of levels
+template<> template<>
+void to::test<50>()
+{
+    BufrReimportTest test("bufr/temp-huge.bufr");
+    run_test(test, do_test, "temp-wmo");
 }
 
 }

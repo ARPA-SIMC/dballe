@@ -153,6 +153,11 @@ msg::Context* Msg::edit_context(const Level& lev, const Trange& tr)
     return data[pos];
 }
 
+msg::Context& Msg::obtain_station_context()
+{
+    return obtain_context(Level::ana(), Trange::ana());
+}
+
 msg::Context& Msg::obtain_context(const Level& lev, const Trange& tr)
 {
     int pos = find_index(lev, tr);
