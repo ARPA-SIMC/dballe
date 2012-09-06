@@ -56,6 +56,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/vars.h \
 	msg/msg.h \
 	msg/msg-extravars.h \
+	msg/context-extravars.h \
 	msg/msgs.h \
 	msg/repinfo.h \
 	msg/aof_codec.h \
