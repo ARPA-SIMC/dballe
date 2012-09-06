@@ -43,6 +43,10 @@
  004192 [SIM] Time range type                                            NUMERIC                    0            0  10 NUMERIC                   0          4
  004193 [SIM] Time range P1                                              NUMERIC                    0   -536870912  31 NUMERIC                   0         10
  004194 [SIM] Time range P2                                              NUMERIC                    0   -536870912  31 NUMERIC                   0         10
+ 004195 [SIM] Temperature event - time of occurrence                     MINUTE                     0            0  11 MINUTE                    0          4
+ 004196 [SIM] Relative humidity event - time of occurrence               MINUTE                     0            0  11 MINUTE                    0          4
+ 004197 [SIM] Wind velocity event - time of occurrence                   MINUTE                     0            0  11 MINUTE                    0          4
+ 004198 [SIM] Pressure event - time of occurrence                        MINUTE                     0            0  11 MINUTE                    0          4
  005001 LATITUDE (HIGH ACCURACY)                                         DEGREE                     5     -9000000  25 DEGREE                    5          7
  005015 LATITUDE DISPLACEMENT (HIGH ACCURACY)                            DEGREE                     5     -9000000  25 DEGREE                    5          7
  005021 BEARING OR AZIMUTH                                               DEGREE TRUE                2            0  16 DEGREE TRUE               2          5
@@ -71,9 +75,29 @@
  008021 TIME SIGNIFICANCE                                                CODE TABLE 8021            0            0   5 CODE TABLE 8021           0          2
  008042 EXTENDED VERTICAL SOUNDING SIGNIFICANCE                          FLAG TABLE 8042            0            0  18 FLAG TABLE 8042           0          6
  008044 (VAL) CAS REGISTRY NUMBER                                        CCITTIA5                   0            0  88 CHARACTER                 0         11 
+ 008192 [SIM] Number of wind velocity mean values present                NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008193 [SIM] Number of wind velocity minimum values present             NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008194 [SIM] Number of wind velocity maximum values present             NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008195 [SIM] Number of wind prevalent direction values present          NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008196 [SIM] Number of mean temperature values present                  NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008197 [SIM] Number of minimum temperature values present               NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008198 [SIM] Number of maximum temperature values present               NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008199 [SIM] Number of mean relative humidity values present            NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008200 [SIM] Number of minimum relative humidity values present         NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008201 [SIM] Number of maximum relative humidity values present         NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008202 [SIM] Number of mean pressure values present                     NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008203 [SIM] Number of minimum pressure values present                  NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008204 [SIM] Number of maximum pressure values present                  NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008205 [SIM] Number of precipitation values present                     NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008206 [SIM] Number of leaf wetness values present                      NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008207 [SIM] Number of scalar wind velocity mean values present         NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008208 [SIM] Number of cloud cover mean values present                  NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008209 [SIM] Number of cloud cover maximum values present               NUMERIC                    0            0   5 NUMERIC                   0          2
+ 008210 [SIM] Number of cloud cover minimum values present               NUMERIC                    0            0   5 NUMERIC                   0          2
  010004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
  010007 HEIGHT                                                           M                          0        -1000  17 M                         0          6
  010008 GEOPOTENTIAL                                                     M**2/S**2                  0       -10000  20 M**2/S**2                 0          7
+ 010009 GEOPOTENTIAL HEIGHT                                              GPM                        0        -1000  17 GPM                       0          5
  010051 PRESSURE REDUCED TO MEAN SEA LEVEL                               PA                        -1            0  14 PA                       -1          5
  010052 ALTIMETER SETTING (QNH)                                          PA                        -1            0  14 PA                       -1          5
  010060 PRESSURE CHANGE                                                  PA                        -1        -1024  11 PA                       -1          4              
@@ -113,23 +137,31 @@
  011205 [SIM] Convective velocitiy scale (diagmet)                       M/S                        3            0  14 M/S                       3          4
  011206 [SIM] Friction velocity (COSMO)                                  M/S                        3            0  14 M/S                       3          4
  011207 [SIM] Obukov lenght (COSMO)                                      M                          1      -100000  15 M                         1          5
- 012002 WET-BULB TEMPERATURE                                             K                          1            0  12 K                         1          4
- 012030 SOIL TEMPERATURE                                                 K                          1            0  12 K                         1          4
+ 011208 [SIM] Distance covered by the hourly mean wind                   M                          0            0  23 M                         0          7
+ 012001 TEMPERATURE/AIR TEMPERATURE                                      K                          1            0  12 C                         1          3
+ 012002 WET-BULB TEMPERATURE                                             K                          1            0  12 C                         1          3
+ 012003 DEW-POINT TEMPERATURE                                            K                          1            0  12 C                         1          3
+ 012030 SOIL TEMPERATURE                                                 K                          1            0  12 C                         1          3
  012061 SKIN TEMPERATURE                                                 K                          1            0  12 K                         1          4
  012063 BRIGHTNESS TEMPERATURE                                           K                          1            0  12 K                         1          4
  012101 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          2            0  16 K                         2          5             
  012103 DEW-POINT TEMPERATURE                                            K                          2            0  16 K                         2          5              
  012121 GROUND MINIMUM TEMPERATURE                                       K                          2            0  16 C                         2          4 
+ 012131 SNOW TEMPERATURE                                                 K                          2            0  16 C                         2          4 
  012192 POTENTIAL TEMPERATURE                                            K                          2            0  16 K                         2          5             
  013001 SPECIFIC HUMIDITY                                                KG/KG                      5            0  14 KG/KG                     5          5
  013002 MIXING RATIO                                                     KG/KG                      5            0  14 KG/KG                     5          5              
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013012 DEPTH OF FRESH SNOW                                              M                          2           -2  12 M                         2          4
  013013 TOTAL SNOW DEPTH                                                 M                          3          -20  20 M                         3          6
  013031 EVAPOTRANSPIRATION                                               KG/M**2                    1            0   7 KG/M**2                   0          3
  013033 EVAPORATION/EVAPOTRANSPIRATION                                   KG/M**2                    1            0  10 KG/M**2                   1          4
+ 013081 WATER CONDUCTIVITY                                               S/M                        3            0  14 S/M                       3          4
+ 013082 WATER TEMPERATURE                                                K                          1            0  12 K                         1          4
  013192 [SIM] Cloud liquid water content                                 KG/KG                      8            0  27 KG/KG                     8          8
  013193 [SIM] Cloud ice content                                          KG/KG                      8            0  27 KG/KG                     8          8
+ 013194 [SIM] Water table depth                                          M                          3            0  18 M                         3          6
  013195 [SIM] Precipitating liquid water                                 KG/KG                      8            0  27 KG/KG                     8          8
  013196 [SIM] Precipitating ice                                          KG/KG                      8            0  27 KG/KG                     8          8
  013197 [SIM] Total precipitating water+ice                              KG/KG                      8            0  27 KG/KG                     8          8
@@ -142,7 +174,23 @@
  013204 [SIM] Total convective precipitation (liquid + snow)             KG/M**2                    1           -1  14 KG/M**2                   1          5
  013205 [SIM] Snowfall (grid-scale + convective)                         KG/M**2                    1           -1  14 KG/M**2                   1          5
  013206 [SIM] Soil water content                                         KG/M**2                    1            0  14 KG/M**2                   1          5
+ 013210 [SIM] Penetration of the probe in the snow                       M                          2            0   9 M                         2          3
  013212 [SIM] Leaf wetness duration                                      S                         -1            0  24 S                        -1          7
+ 013215 [SIM] River level                                                M                          2      -100000  18 M                         2          6
+ 013216 [SIM] Hourly precipitation                                       KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013217 [SIM] 5 minutes precipitation                                    KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013218 [SIM] 10 minutes precipitation                                   KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013219 [SIM] 15 minutes precipitation                                   KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013220 [SIM] 20 minutes precipitation                                   KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013221 [SIM] 30 minutes precipitation                                   KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013222 [SIM] 180 minutes precipitation                                  KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013223 [SIM] 360 minutes precipitation                                  KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013224 [SIM] 720 minutes precipitation                                  KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013225 [SIM] 1440 minutes precipitation                                 KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013226 [SIM] River discharge                                            M**3/S                     2            0  21 M**3/S                    2          7
+ 013227 [SIM] Soil volumetric water content                              %                          1            0  10 %                         1          4
+ 013228 [SIM] Piezometric level                                          M                          3            0  18 M                         3          6
+ 013229 [SIM] Density of snow                                            KG/M**3                    1            0  14 KG/M**3                   1          5
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
  014017 INSTANTANEOUS LONG-WAVE RADIATION (incoming)                     W/M**2                     0        -2048  12 W/M**2                    0          4
  014018 INSTANTANEOUS SHORT-WAVE RADIATION (incoming)                    W/M**2                     0        -2048  12 W/M**2                   -3          4
@@ -155,6 +203,10 @@
  014195 [SIM] Instantenous diffuse solar radiation                       W/M**2                     0        -2048  12 W/M**2                   -3          4
  014196 [SIM] INSTANTANEOUS NET LONG-WAVE RADIATION                      W/M**2                     0        -2048  12 W/M**2                    0          4
  014197 [SIM] INSTANTANEOUS NET SHORT-WAVE RADIATION                     W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014198 [SIM] Visible radiation (downward)                               W/M**2                     3       -50000  21 W/M**2                    3          7
+ 014199 [SIM] Visible radiation (upward)                                 W/M**2                     3       -50000  21 W/M**2                    3          7
+ 014200 [SIM] Infrared radiation (downward)                              W/M**2                     3            0  20 W/M**2                    3          7
+ 014201 [SIM] Infrared radiation (upward)                                W/M**2                     3            0  20 W/M**2                    3          7
  015192 [SIM] NO Concentration                                           KG/M**3                   10            0  20 KG/M**3                  10          6
  015193 [SIM] NO2 Concentration                                          KG/M**3                   10            0  20 KG/M**3                  10          6
  015194 [SIM] O3 Concentration                                           KG/M**3                   10            0  20 KG/M**3                  10          6
@@ -216,17 +268,31 @@
  020044 AVERAGE LIQUID WATER CONTENT                                     KG/M**3                    4            0   7 KG/M**3                   4          2
  020045 SUPERCOOLED LARGE DROPLET (SLD) CONDITIONS                       CODE TABLE 20045           0            0   2 CODE TABLE 20045          0          2
  020062 STATE OF THE GROUND (WITH OR WITHOUT SNOW)                       CODE TABLE 20062           0            0   5 CODE TABLE 20062          0          2
+ 020192 [SIM] Presence of rain > 1mm                                     BOOLEAN                    0            0   1 BOOLEAN                   0          1
  020193 [SIM] Cloud type (METAR)                                         CCITTIA5                   0            0  16 CHARACTER                 0          2
+ 020194 [SIM] Presence of shower                                         BOOLEAN                    0            0   1 BOOLEAN                   0          1
+ 020195 [SIM] Presence of hail                                           BOOLEAN                    0            0   1 BOOLEAN                   0          1
+ 020196 [SIM] Presence of thunderstorm                                   BOOLEAN                    0            0   1 BOOLEAN                   0          1
+ 020197 [SIM] Presence of snow                                           BOOLEAN                    0            0   1 BOOLEAN                   0          1
+ 020198 [SIM] Presence of frost                                          BOOLEAN                    0            0   1 BOOLEAN                   0          1
+ 020199 [SIM] Presence of dew                                            BOOLEAN                    0            0   1 BOOLEAN                   0          1
+ 020200 [SIM] Presence of fog                                            BOOLEAN                    0            0   1 BOOLEAN                   0          1
+ 020201 [SIM] Presence of water-spout                                    BOOLEAN                    0            0   1 BOOLEAN                   0          1
+ 020202 [SIM] State of the ground with snow                              CODE TABLE                 0            0   5 CODE TABLE                0          2
  022001 DIRECTION OF WAVES                                               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  022011 PERIOD OF WAVES                                                  S                          0            0   6 S                         0          2
  022012 PERIOD OF WIND WAVES                                             S                          0            0   6 S                         0          2
  022021 HEIGHT OF WAVES                                                  M                          1            0  10 M                         1          4
  022022 HEIGHT OF WIND WAVES                                             M                          1            0  10 M                         1          4
+ 022031 SPEED OF CURRENT                                                 M/S                        2            0  13 M/S                       2          4
  022037 Tidal elevation with respect to national land datum              M                          3       -10000  15 M                         3          5
+ 022038 Tidal elevation with respect to local chart datum                M                          3       -10000  15 M                         3          5
  022043 SEA/WATER TEMPERATURE                                            K                          2            0  15 K                         2          5
  022070 SIGNIFICANT WAVE HEIGHT                                          M                          2            0  13 M                         2          4
  022071 SPECTRAL PEAK WAVE PERIOD                                        S                          1            0   9 S                         1          3
  022074 AVERAGE WAVE PERIOD                                              S                          1            0   9 S                         1          3
+ 022192 [SIM] Current X component                                        M/S                        2            0  13 M/S                       2          4
+ 022193 [SIM] Current Y component                                        M/S                        2            0  13 M/S                       2          4
  023192 [SIM] Dry deposition of H2SO4                                    MOL/M**2                   5            0  20 MOL/M**3                  5          6
  023193 [SIM] Wet deposition of H2SO4                                    MOL/M**2                   5            0  20 MOL/M**3                  5          6
  023194 [SIM] Dry deposition of NH4                                      MOL/M**2                   5            0  20 MOL/M**3                  5          6
@@ -283,3 +349,122 @@
  033207 [SIM] Kalman observation sequential counter                      NUMERIC                    0         -127   8 NUMERIC                   0          3
  033208 [SIM] Kalman osservation missing counter                         NUMERIC                    0         -127   8 NUMERIC                   0          3
  033209 [SIM] Normalized Density Index                                   %                          0            0   7 PERCENT                   0          3
+ 048001 [SIM] Graminacee_Graminacee indistinte                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048002 [SIM] Betulacee_Ontano nero                                      POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048003 [SIM] Betulacee_Betulla                                          POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048004 [SIM] Betulacee_Betulacee indistinte                             POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048005 [SIM] Composite_Ambrosia                                         POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048006 [SIM] Composite_Artemisia                                        POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048007 [SIM] Composite_Composite indistinte                             POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048008 [SIM] Corilacee_Nocciolo                                         POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048009 [SIM] Corilacee_Carpino bianco -Carpino nero                     POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048010 [SIM] Corilacee_Corilacee indistinte                             POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048011 [SIM] Fagacee_Castagno                                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048012 [SIM] Fagacee_Faggio                                             POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048013 [SIM] Fagacee_Quercia                                            POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048014 [SIM] Fagacee_Fagacee indistinte                                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048015 [SIM] Oleacee_Olivo                                              POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048016 [SIM] Oleacee_Frassino                                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048017 [SIM] Oleacee_Oleacee indistinte                                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048018 [SIM] Plantaginacee_Plantaginacee indistinte                     POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048019 [SIM] Urticacee_Urticacee indistinte                             POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048020 [SIM] Cupressacee - Taxacee indistinte_Cipresso comune           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048021 [SIM] Cupressacee - Taxacee indistinte_Cupressacee - Taxacee ind POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048022 [SIM] Chenopodiacee - Amarantacee Indistinte_Amaranto            POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048023 [SIM] Chenopodiacee - Amarantacee Indistinte_Chenopodiacee - Ama POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048024 [SIM] Poligonacee_Poligonacee indistinte                         POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048025 [SIM] Euphorbiacee_Euforbiacee indistinte                        POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048026 [SIM] Mirtacee_Mirtacee indistinte                               POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048027 [SIM] Ulmacee_Bagolaro comune                                    POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048028 [SIM] Ulmacee_Olmo campestre                                     POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048029 [SIM] Ulmacee_Ulmacee indistinte                                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048030 [SIM] Platanacee_Platanacee indistinte                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048031 [SIM] Aceraceae_Aceracee indistinte                              POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048032 [SIM] Pinacee_Pinacee indistinte                                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048033 [SIM] Salicacee_Salice comune                                    POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048034 [SIM] Salicacee_Pioppo                                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048035 [SIM] Salicacee_Salicacee indistinte                             POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048036 [SIM] Ciperacee_Ciperacee indistinte                             POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048037 [SIM] Juglandacee_Juglandacee indistinte                         POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048038 [SIM] Ippocastanacee_Ippocastanacee indistinte                   POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048039 [SIM] Spore fungine_Alternaria                                   POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048040 [SIM] Spore fungine_Botrytis                                     POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048041 [SIM] Spore fungine_Stemphylium                                  POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048042 [SIM] Spore fungine_Cladosporium                                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048043 [SIM] Spore fungine_Epicoccum                                    POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048044 [SIM] Altri Pollini / Non Identificati_Altri pollini identificat POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048045 [SIM] Altri Pollini / Non Identificati_Pollini non identificati  POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048046 [SIM] Altre Spore / Non identificati_Altre spore fungine         POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048047 [SIM] Altre Spore / Non identificati_Spore fungine non identific POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048048 [SIM] Graminacee_Graminacee indistinte 1                         POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048049 [SIM] Plantaginacee_Plantaginacee indistinte 1                   POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048050 [SIM] Urticacee_Urticacee indistinte 1                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048051 [SIM] Poligonacee_Poligonacee indistinte 1                       POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048052 [SIM] Euphorbiacee_Euforbiacee indistinte 1                      POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048053 [SIM] Mirtacee_Mirtacee indistinte 1                             POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048054 [SIM] Platanacee_Platanacee indistinte 1                         POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048055 [SIM] Aceraceae_Aceracee indistinte 1                            POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048056 [SIM] Pinacee_Pinacee indistinte 1                               POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048057 [SIM] Ciperacee_Ciperacee indistinte 1                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048058 [SIM] Juglandacee_Juglandacee indistinte 1                       POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048059 [SIM] Ippocastanacee_Ippocastanacee indistinte 1                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048128 [SIM] Conta Graminacee_Graminacee indistinte                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048129 [SIM] Conta Betulacee_Ontano nero                                NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048130 [SIM] Conta Betulacee_Betulla                                    NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048131 [SIM] Conta Betulacee_Betulacee indistinte                       NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048132 [SIM] Conta Composite_Ambrosia                                   NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048133 [SIM] Conta Composite_Artemisia                                  NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048134 [SIM] Conta Composite_Composite indistinte                       NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048135 [SIM] Conta Corilacee_Nocciolo                                   NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048136 [SIM] Conta Corilacee_Carpino bianco -Carpino nero               NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048137 [SIM] Conta Corilacee_Corilacee indistinte                       NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048138 [SIM] Conta Fagacee_Castagno                                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048139 [SIM] Conta Fagacee_Faggio                                       NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048140 [SIM] Conta Fagacee_Quercia                                      NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048141 [SIM] Conta Fagacee_Fagacee indistinte                           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048142 [SIM] Conta Oleacee_Olivo                                        NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048143 [SIM] Conta Oleacee_Frassino                                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048144 [SIM] Conta Oleacee_Oleacee indistinte                           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048145 [SIM] Conta Plantaginacee_Plantaginacee indistinte               NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048146 [SIM] Conta Urticacee_Urticacee indistinte                       NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048147 [SIM] Conta Cupressacee - Taxacee indistinte_Cipresso comune     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048148 [SIM] Conta Cupressacee - Taxacee indistinte_Cupressacee - Taxac NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048149 [SIM] Conta Chenopodiacee - Amarantacee Indistinte_Amaranto      NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048150 [SIM] Conta Chenopodiacee - Amarantacee Indistinte_Chenopodiacee NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048151 [SIM] Conta Poligonacee_Poligonacee indistinte                   NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048152 [SIM] Conta Euphorbiacee_Euforbiacee indistinte                  NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048153 [SIM] Conta Mirtacee_Mirtacee indistinte                         NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048154 [SIM] Conta Ulmacee_Bagolaro comune                              NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048155 [SIM] Conta Ulmacee_Olmo campestre                               NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048156 [SIM] Conta Ulmacee_Ulmacee indistinte                           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048157 [SIM] Conta Platanacee_Platanacee indistinte                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048158 [SIM] Conta Aceraceae_Aceracee indistinte                        NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048159 [SIM] Conta Pinacee_Pinacee indistinte                           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048160 [SIM] Conta Salicacee_Salice comune                              NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048161 [SIM] Conta Salicacee_Pioppo                                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048162 [SIM] Conta Salicacee_Salicacee indistinte                       NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048163 [SIM] Conta Ciperacee_Ciperacee indistinte                       NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048164 [SIM] Conta Juglandacee_Juglandacee indistinte                   NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048165 [SIM] Conta Ippocastanacee_Ippocastanacee indistinte             NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048166 [SIM] Conta Spore fungine_Alternaria                             NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048167 [SIM] Conta Spore fungine_Botrytis                               NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048168 [SIM] Conta Spore fungine_Stemphylium                            NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048169 [SIM] Conta Spore fungine_Cladosporium                           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048170 [SIM] Conta Spore fungine_Epicoccum                              NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048171 [SIM] Conta Altri Pollini / Non Identificati_Altri pollini ident NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048172 [SIM] Conta Altri Pollini / Non Identificati_Pollini non identif NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048173 [SIM] Conta Altre Spore / Non identificati_Altre spore fungine   NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048174 [SIM] Conta Altre Spore / Non identificati_Spore fungine non ide NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048175 [SIM] Conta Graminacee_Graminacee indistinte 1                   NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048176 [SIM] Conta Plantaginacee_Plantaginacee indistinte 1             NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048177 [SIM] Conta Urticacee_Urticacee indistinte 1                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048178 [SIM] Conta Poligonacee_Poligonacee indistinte 1                 NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048179 [SIM] Conta Euphorbiacee_Euforbiacee indistinte 1                NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048180 [SIM] Conta Mirtacee_Mirtacee indistinte 1                       NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048181 [SIM] Conta Platanacee_Platanacee indistinte 1                   NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048182 [SIM] Conta Aceraceae_Aceracee indistinte 1                      NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048183 [SIM] Conta Pinacee_Pinacee indistinte 1                         NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048184 [SIM] Conta Ciperacee_Ciperacee indistinte 1                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048185 [SIM] Conta Juglandacee_Juglandacee indistinte 1                 NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048186 [SIM] Conta Ippocastanacee_Ippocastanacee indistinte 1           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048187 [SIM] Conta Oleacee_Ligustro                                     NUMERIC                    0            0  20 NUMERIC                   0          7
