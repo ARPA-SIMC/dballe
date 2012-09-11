@@ -408,6 +408,7 @@
  048057 [SIM] Ciperacee_Ciperacee indistinte 1                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048058 [SIM] Juglandacee_Juglandacee indistinte 1                       POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048059 [SIM] Ippocastanacee_Ippocastanacee indistinte 1                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048060 [SIM] Oleacee_Ligustro                                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048128 [SIM] Conta Graminacee_Graminacee indistinte                     NUMERIC                    0            0  20 NUMERIC                   0          7
  048129 [SIM] Conta Betulacee_Ontano nero                                NUMERIC                    0            0  20 NUMERIC                   0          7
  048130 [SIM] Conta Betulacee_Betulla                                    NUMERIC                    0            0  20 NUMERIC                   0          7
