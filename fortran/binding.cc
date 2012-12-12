@@ -297,13 +297,13 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 	GENPTR_CHARACTER(user)
 	GENPTR_CHARACTER(password)
 	const char* chosen_dsn;
-	char s_dsn[50];
+	char s_dsn[256];
 	char s_user[20];
 	char s_password[20];
 
 	try {
 		/* Import input string parameters */
-		cnfImpn(dsn, dsn_length, 49, s_dsn); s_dsn[49] = 0;
+		cnfImpn(dsn, dsn_length, 255, s_dsn); s_dsn[255] = 0;
 		cnfImpn(user, user_length, 19, s_user); s_user[19] = 0;
 		cnfImpn(password, password_length, 19, s_password); s_password[19] = 0;
 
