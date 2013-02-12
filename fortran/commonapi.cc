@@ -257,7 +257,10 @@ void CommonAPIImplementation::setcontextana()
 static inline void enqi_or_missing(int& out, Record& rec, dba_keyword key)
 {
 	if (const Var* var = rec.key_peek(key))
-		out = var->enqi();
+		if (var->value())
+			out = var->enqi();
+		else
+			out = API::missing_int;
 	else
 		out = API::missing_int;
 }
