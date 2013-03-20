@@ -1017,6 +1017,38 @@ void to::test<50>()
     run_test(test, do_test, "temp-wmo");
 }
 
+// Test import/export of ECMWF synop ship
+template<> template<>
+void to::test<51>()
+{
+    BufrReimportTest test("bufr/ecmwf-ship-1-11.bufr");
+    run_test(test, do_wmo, "ship");
+}
+
+// Test import/export of ECMWF synop ship record 2
+template<> template<>
+void to::test<52>()
+{
+    BufrReimportTest test("bufr/ecmwf-ship-1-12.bufr");
+    run_test(test, do_wmo, "ship");
+}
+
+// Test import/export of ECMWF synop ship (auto)
+template<> template<>
+void to::test<53>()
+{
+    BufrReimportTest test("bufr/ecmwf-ship-1-13.bufr");
+    run_test(test, do_wmo, "ship");
+}
+
+// Test import/export of ECMWF synop ship (auto) record 2
+template<> template<>
+void to::test<54>()
+{
+    BufrReimportTest test("bufr/ecmwf-ship-1-14.bufr");
+    run_test(test, do_wmo, "ship");
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
