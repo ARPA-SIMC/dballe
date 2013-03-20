@@ -697,7 +697,7 @@ namespace std {
 %include <wreport/subset.h>
 %include <wreport/bulletin.h>
 %include <dballe/db/db.h>
-%include <dballe/db/cursor.h>
+%include <dballe/db/v5/cursor.h>
 
 /*
 Varinfo varinfo(Varcode code)
