@@ -40,6 +40,9 @@ using namespace std;
 #define SHIP_REDUCED_NAME "ship-reduced"
 #define SHIP_REDUCED_DESC "Synop ship (reduced) (1.19)"
 
+#define SHIP_WMO_NAME "ship-wmo"
+#define SHIP_WMO_DESC "Ship WMO"
+
 namespace dballe {
 namespace msg {
 namespace wr {
@@ -216,6 +219,169 @@ struct ShipReduced : public ShipBase
     }
 };
 
+// Template for WMO ships
+struct ShipWMO : public Template
+{
+    bool is_crex;
+
+    ShipWMO(const Exporter::Options& opts, const Msgs& msgs)
+        : Template(opts, msgs) {}
+
+    virtual const char* name() const { return SHIP_WMO_NAME; }
+    virtual const char* description() const { return SHIP_WMO_DESC; }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        Template::setupBulletin(bulletin);
+
+        is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
+
+        bulletin.type = 1;
+        bulletin.subtype = 0;
+        bulletin.localsubtype = 255;
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        bulletin.datadesc.push_back(WR_VAR(3,  8,   9));
+    }
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        Template::to_subset(msg, subset);
+
+        // Look for significant levels
+        const msg::Context* c_wind = NULL;
+        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                i != msg.data.end(); ++i)
+        {
+            const msg::Context* c = *i;
+            if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
+                c_wind = c;
+        }
+
+        // Ship identification
+        add(WR_VAR(0,  1,  11), DBA_MSG_IDENT);
+        add(WR_VAR(0,  1,  12), DBA_MSG_ST_DIR);
+        add(WR_VAR(0,  1,  13), DBA_MSG_ST_SPEED);
+        add(WR_VAR(0,  2,   1), DBA_MSG_ST_TYPE);
+        add(WR_VAR(0,  4,   1), DBA_MSG_YEAR);
+        add(WR_VAR(0,  4,   2), DBA_MSG_MONTH);
+        add(WR_VAR(0,  4,   3), DBA_MSG_DAY);
+        add(WR_VAR(0,  4,   4), DBA_MSG_HOUR);
+        add(WR_VAR(0,  4,   5), DBA_MSG_MINUTE);
+        add(WR_VAR(0,  5,   2), DBA_MSG_LATITUDE);
+        add(WR_VAR(0,  6,   2), DBA_MSG_LONGITUDE);
+        add(WR_VAR(0,  7,  30), DBA_MSG_HEIGHT_STATION);
+        add(WR_VAR(0,  7,  31), DBA_MSG_HEIGHT_BARO);
+        // Pressure data
+        add(WR_VAR(0, 10,   4), DBA_MSG_PRESS);
+        add(WR_VAR(0, 10,  51), DBA_MSG_PRESS_MSL);
+        add(WR_VAR(0, 10,  61), DBA_MSG_PRESS_3H);
+        add(WR_VAR(0, 10,  63), DBA_MSG_PRESS_TEND);
+        // Temperature and humidity data
+        subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  7,  33)); // FIXME
+        add(WR_VAR(0, 12, 101), DBA_MSG_TEMP_2M);
+        subset.store_variable_undef(WR_VAR(0,  2,  39)); // FIXME
+        add(WR_VAR(0, 12, 102), DBA_MSG_WET_TEMP_2M);
+        add(WR_VAR(0, 12, 103), DBA_MSG_DEWPOINT_2M);
+        add(WR_VAR(0, 13,   3), DBA_MSG_HUMIDITY);
+        // Visibility data
+        subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  7,  33)); // FIXME
+        add(WR_VAR(0, 20,   1), DBA_MSG_VISIBILITY);
+        subset.store_variable_undef(WR_VAR(0,  7,  33));
+        // Precipitation past 24 hours
+        subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 13,  23)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  7,  32));
+        // Cloud data
+        /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
+        /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
+        /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
+        /* 27 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
+        /* 28 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
+        /* 29 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
+        /* 30 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+        subset.store_variable_i(WR_VAR(0, 31,   1), 0); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  8,   2));
+        // Icing and ice
+        subset.store_variable_undef(WR_VAR(0, 20,  31)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 20,  32)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 20,  33)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 20,  34)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 20,  35)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 20,  36)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 20,  37)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 20,  38)); // FIXME
+        // Ship marine data
+        subset.store_variable_undef(WR_VAR(0,  2,  38)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  7,  63)); // FIXME
+        add(WR_VAR(0, 22, 43), DBA_MSG_WATER_TEMP);
+        subset.store_variable_undef(WR_VAR(0,  7,  63));
+        // Waves
+        subset.store_variable_undef(WR_VAR(0, 22,   1)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,  11)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,  21)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,   2)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,  12)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,  22)); // FIXME
+        //  2 systems of swell waves
+        subset.store_variable_undef(WR_VAR(0, 22,   3)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,  13)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,  23)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,   3)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,  13)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 22,  23)); // FIXME
+        // Ship "period" data
+        add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
+        int hour = 0;
+        if (const Var* var = msg.get_hour_var())
+            hour = var->enqi();
+        if (hour % 6 == 0)
+        {
+            subset.store_variable_i(WR_VAR(0, 4, 24), 6);
+            add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1_6H);
+            add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2_6H);
+        } else {
+            subset.store_variable_i(WR_VAR(0, 4, 24), 3);
+            add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1_3H);
+            add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2_3H);
+        }
+        // Precipitation measurement
+        subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  4,  24)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 13,  11)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  4,  24)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 13,  11)); // FIXME
+        // Extreme temperature data
+        subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  7,  33)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  4,  24)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  4,  24)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 12, 111)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  4,  24)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  4,  24)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 12, 112)); // FIXME
+        // Wind data
+        subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  7,  33)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  2,   2)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  8,  21)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  4,  25)); // FIXME
+        add(WR_VAR(0, 11,  1), c_wind, DBA_MSG_WIND_DIR);
+        add(WR_VAR(0, 11,  2), c_wind, DBA_MSG_WIND_SPEED);
+        subset.store_variable_undef(WR_VAR(0,  8,  21));
+        subset.store_variable_undef(WR_VAR(0,  4,  25)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 11,  43)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 11,  41)); // FIXME
+        subset.store_variable_undef(WR_VAR(0,  4,  25)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 11,  43)); // FIXME
+        subset.store_variable_undef(WR_VAR(0, 11,  41)); // FIXME
+
+        // /* 33 */ add(WR_VAR(0, 10,197), DBA_MSG_HEIGHT_ANEM);
+    }
+};
+
 
 struct ShipFactory : public TemplateFactory
 {
@@ -269,6 +435,15 @@ struct ShipReducedFactory : public TemplateFactory
         return auto_ptr<Template>(new ShipReduced(opts, msgs));
     }
 };
+struct ShipWMOFactory : public TemplateFactory
+{
+    ShipWMOFactory() { name = SHIP_WMO_NAME; description = SHIP_WMO_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new ShipWMO(opts, msgs));
+    }
+};
 
 } // anonymous namespace
 
@@ -279,18 +454,21 @@ static const TemplateFactory* shipplain = NULL;
 static const TemplateFactory* shipabbr = NULL;
 static const TemplateFactory* shipauto = NULL;
 static const TemplateFactory* shipreduced = NULL;
+static const TemplateFactory* shipwmo = NULL;
 
     if (!ship) ship = new ShipFactory;
     if (!shipplain) shipplain = new ShipPlainFactory;
     if (!shipabbr) shipabbr = new ShipAbbrFactory;
     if (!shipauto) shipauto = new ShipAutoFactory;
     if (!shipreduced) shipreduced = new ShipReducedFactory;
- 
+    if (!shipwmo) shipwmo = new ShipWMOFactory;
+
     r.register_factory(ship);
     r.register_factory(shipplain);
     r.register_factory(shipabbr);
     r.register_factory(shipauto);
     r.register_factory(shipreduced);
+    r.register_factory(shipwmo);
 }
 
 }
