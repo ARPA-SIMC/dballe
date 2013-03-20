@@ -1,7 +1,7 @@
 /*
  * db/station - station table management
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_STATION_H
-#define DBALLE_DB_STATION_H
+#ifndef DBALLE_DB_V5_STATION_H
+#define DBALLE_DB_V5_STATION_H
 
 /** @file
  * @ingroup db
@@ -33,11 +33,12 @@
 #include <cstdio>
 
 namespace dballe {
-struct DB;
-
 namespace db {
 struct Connection;
 struct Statement;
+
+namespace v5 {
+struct DB;
 
 /**
  * Precompiled queries to manipulate the station table
@@ -47,7 +48,7 @@ struct Station
     /**
      * DB connection.
      */
-    DB& db;
+    v5::DB& db;
 
     /** Precompiled select fixed station query */
     db::Statement* sfstm;
@@ -73,7 +74,7 @@ struct Station
     /** Mobile station identifier indicator */
     SQLLEN ident_ind;
 
-    Station(DB& conn);
+    Station(v5::DB& conn);
     ~Station();
 
     /**
@@ -138,6 +139,7 @@ private:
 
 #endif
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

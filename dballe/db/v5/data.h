@@ -1,7 +1,7 @@
 /*
  * db/data - data table management
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_DATA_H
-#define DBALLE_DB_DATA_H
+#ifndef DBALLE_DB_V5_DATA_H
+#define DBALLE_DB_V5_DATA_H
 
 /** @file
  * @ingroup db
@@ -39,6 +39,8 @@ struct DB;
 namespace db {
 struct Connection;
 struct Statement;
+
+namespace v5 {
 
 /**
  * Precompiled query to manipulate the data table
@@ -112,6 +114,7 @@ private:
     Data& operator=(const Data&);
 };
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

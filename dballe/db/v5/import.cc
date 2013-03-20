@@ -46,6 +46,8 @@
 using namespace wreport;
 
 namespace dballe {
+namespace db {
+namespace v5 {
 
 void DB::import_msgs(const Msgs& msgs, const char* repmemo, int flags)
 {
@@ -62,10 +64,10 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 	// Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
 	
-    db::Station& st = station();
-    db::Context& dc = context();
-    db::Data& dd = data();
-    db::Attr& dq = attr();
+    Station& st = station();
+    Context& dc = context();
+    Data& dd = data();
+    Attr& dq = attr();
 
     // Begin transaction
     db::Transaction t(*conn);
@@ -238,6 +240,8 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     t.commit();
 }
 
-} // namespace dballe
+}
+}
+}
 
 /* vim:set ts=4 sw=4: */

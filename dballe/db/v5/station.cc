@@ -27,9 +27,11 @@
 #include <sql.h>
 
 using namespace wreport;
+using namespace dballe::db;
 
 namespace dballe {
 namespace db {
+namespace v5 {
 
 Station::Station(DB& db)
     : db(db), sfstm(0), smstm(0), sstm(0), istm(0), ustm(0), dstm(0)
@@ -192,6 +194,7 @@ void Station::dump(FILE* out)
     stm.close_cursor();
 }
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

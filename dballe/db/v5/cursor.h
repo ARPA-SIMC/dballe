@@ -1,7 +1,7 @@
 /*
  * db/cursor - manage select queries
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@
  * Functions used to manage a general DB-ALLe query
  */
 
-#ifndef DBA_DB_CURSOR_H
-#define DBA_DB_CURSOR_H
+#ifndef DBA_DB_V5_CURSOR_H
+#define DBA_DB_V5_CURSOR_H
 
 #include <dballe/db/odbcworkarounds.h>
 #include <wreport/varinfo.h>
@@ -34,11 +34,14 @@
 #include <vector>
 
 namespace dballe {
-struct DB;
 struct Record;
 
 namespace db {
 struct Statement;
+
+namespace v5 {
+struct DB;
+}
 
 /**
  * Simple typedef to make typing easier, and also to help some versions of swig
@@ -53,7 +56,7 @@ typedef std::vector<wreport::Varcode> AttrList;
 struct Cursor
 {
     /** Database to operate on */
-    DB& db;
+    v5::DB& db;
     /** ODBC statement to use for the query */
     db::Statement* stm;
 
@@ -92,7 +95,7 @@ struct Cursor
     /** Number of results still to be fetched */
     DBALLE_SQL_C_SINT_TYPE count;
 
-    Cursor(DB& db);
+    Cursor(v5::DB& db);
     ~Cursor();
 
     /**

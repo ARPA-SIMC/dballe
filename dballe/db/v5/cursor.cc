@@ -79,7 +79,7 @@ namespace {
 struct QueryBuilder
 {
     /** Database to operate on */
-    DB& db;
+    v5::DB& db;
 
     /** Statement to build variables to */
     Statement& stm;
@@ -140,7 +140,7 @@ struct QueryBuilder
     DBALLE_SQL_C_SINT_TYPE	sel_context_id;
     /** @} */
 
-    QueryBuilder(DB& db, Statement& stm, Cursor& cur, int wanted, int modifiers)
+    QueryBuilder(v5::DB& db, Statement& stm, Cursor& cur, int wanted, int modifiers)
         : db(db), stm(stm), cur(cur), sql_query(2048), sql_where(1024),
           wanted(wanted), modifiers(modifiers),
           select_wanted(0), from_wanted(0), input_seq(1), output_seq(1),
@@ -190,7 +190,7 @@ struct QueryBuilder
 
 } // anonymous namespace
 
-Cursor::Cursor(DB& db)
+Cursor::Cursor(v5::DB& db)
     : db(db), stm(0)
 {
     stm = new db::Statement(*db.conn);
@@ -308,7 +308,7 @@ void Cursor::to_record(Record& rec)
      * just overwrite the previous ones, as the range of output parameters does
      * not change */
     /* dba_record_clear(rec); */
-    db::Repinfo& ri = db.repinfo();
+    v5::Repinfo& ri = db.repinfo();
 
     if (from_wanted & DBA_DB_FROM_PA)
     {
@@ -400,7 +400,7 @@ void Cursor::to_record(Record& rec)
 
         if (wanted & DBA_DB_WANT_REPCOD)
         {
-            const repinfo::Cache* c = ri.get_by_id(out_rep_cod);
+            const v5::repinfo::Cache* c = ri.get_by_id(out_rep_cod);
             if (c != NULL)
             {
                 rec.key(DBA_KEY_REP_MEMO).setc(c->memo.c_str());

@@ -30,7 +30,7 @@
 #include <dballe/core/defs.h>
 #include <dballe/core/file.h>
 #include <dballe/db/db.h>
-#include <dballe/db/cursor.h>
+#include <dballe/db/v5/cursor.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/codec.h>
 #include <datetime.h>

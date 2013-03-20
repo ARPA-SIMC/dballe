@@ -1,7 +1,7 @@
 /*
  * dballe/db - Archive for point-based meteorological data
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBA_DB_H
-#define DBA_DB_H
+#ifndef DBA_DB_V5_H
+#define DBA_DB_V5_H
 
 #include <dballe/db/odbcworkarounds.h>
-#include <dballe/db/cursor.h>
+#include <dballe/db/v5/cursor.h>
 #include <wreport/varinfo.h>
 #include <string>
 #include <vector>
@@ -110,12 +110,13 @@ namespace db {
 struct Connection;
 struct Statement;
 struct Sequence;
+
+namespace v5 {
 struct Repinfo;
 struct Station;
 struct Context;
 struct Data;
 struct Attr;
-}
 
 /**
  * DB-ALLe database connection
@@ -135,15 +136,15 @@ protected:
 	 * @{
 	 */
 	/** Report information */
-	struct db::Repinfo* m_repinfo;
+	struct Repinfo* m_repinfo;
 	/** Station information */
-	struct db::Station* m_station;
+	struct Station* m_station;
 	/** Variable context */
-	struct db::Context* m_context;
+	struct Context* m_context;
 	/** Variable data */
-	struct db::Data* m_data;
+	struct Data* m_data;
 	/** Variable attributes */
-	struct db::Attr* m_attr;
+	struct Attr* m_attr;
 	/** @} */
 
 	/** Precompiled LAST_INSERT_ID (or equivalent) SQL statement */
@@ -246,19 +247,19 @@ public:
 	static bool is_url(const char* str);
 
 	/// Access the repinfo table
-	db::Repinfo& repinfo();
+	Repinfo& repinfo();
 
 	/// Access the station table
-	db::Station& station();
+	Station& station();
 
 	/// Access the context table
-	db::Context& context();
+	Context& context();
 
 	/// Access the data table
-	db::Data& data();
+	Data& data();
 
 	/// Access the data table
-	db::Attr& attr();
+	Attr& attr();
 
 	/**
 	 * Reset the database, removing all existing DBALLE tables and re-creating them
@@ -566,6 +567,8 @@ public:
 	void dump(FILE* out);
 };
 
+} // namespace v5
+} // namespace db
 } // namespace dballe
 
 /* vim:set ts=4 sw=4: */

@@ -33,6 +33,7 @@ using namespace std;
 
 namespace dballe {
 namespace db {
+namespace v5 {
 
 Context::Context(DB& db)
     : db(db), sstm(0), sdstm(0), istm(0), dstm(0)
@@ -223,6 +224,7 @@ void Context::dump(FILE* out)
     fprintf(out, "%d element%s in table context\n", count, count != 1 ? "s" : "");
 }
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

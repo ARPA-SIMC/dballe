@@ -19,7 +19,7 @@
 
 #include "dbapi.h"
 #include <dballe/db/db.h>
-#include <dballe/db/cursor.h>
+#include <dballe/db/v5/cursor.h>
 //#include <dballe/core/aliases.h>
 //#include <dballe/core/verbose.h>
 //#include <dballe/db/internals.h>

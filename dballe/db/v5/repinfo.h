@@ -1,7 +1,7 @@
 /*
  * db/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_REPINFO_H
-#define DBALLE_DB_REPINFO_H
+#ifndef DBALLE_DB_V5_REPINFO_H
+#define DBALLE_DB_V5_REPINFO_H
 
 /** @file
  * @ingroup db
@@ -35,6 +35,7 @@
 namespace dballe {
 namespace db {
 struct Connection;
+namespace v5 {
 
 namespace repinfo {
 
@@ -183,6 +184,7 @@ private:
 	Repinfo& operator=(const Repinfo&);
 };
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

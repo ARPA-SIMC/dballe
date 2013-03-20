@@ -39,6 +39,8 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace db {
+namespace v5 {
 
 void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 {
@@ -115,7 +117,7 @@ static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_
 
 void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 {
-    db::Attr& at = attr();
+    Attr& at = attr();
 
     // Message being built
     auto_ptr<Msg> msg;
@@ -242,6 +244,8 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     t.commit();
 }
 
-} // namespace dballe
+}
+}
+}
 
 /* vim:set ts=4 sw=4: */

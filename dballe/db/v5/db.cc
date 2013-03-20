@@ -43,6 +43,8 @@ using namespace std;
 using namespace wreport;
 
 namespace dballe {
+namespace db {
+namespace v5 {
 
 /*
  * Database init queries
@@ -493,38 +495,38 @@ bool DB::is_url(const char* str)
     return false;
 }
 
-db::Repinfo& DB::repinfo()
+Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
-        m_repinfo = new db::Repinfo(conn);
+        m_repinfo = new Repinfo(conn);
     return *m_repinfo;
 }
 
-db::Station& DB::station()
+Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = new db::Station(*this);
+        m_station = new Station(*this);
     return *m_station;
 }
 
-db::Context& DB::context()
+Context& DB::context()
 {
     if (m_context == NULL)
-        m_context = new db::Context(*this);
+        m_context = new Context(*this);
     return *m_context;
 }
 
-db::Data& DB::data()
+Data& DB::data()
 {
     if (m_data == NULL)
-        m_data = new db::Data(*conn);
+        m_data = new Data(*conn);
     return *m_data;
 }
 
-db::Attr& DB::attr()
+Attr& DB::attr()
 {
     if (m_attr == NULL)
-        m_attr = new db::Attr(*conn);
+        m_attr = new Attr(*conn);
     return *m_attr;
 }
 
@@ -735,7 +737,7 @@ void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int*
 
 int DB::get_rep_cod(Record& rec)
 {
-    db::Repinfo& ri = repinfo();
+    Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
     {
         int id = ri.get_id(memo);
@@ -760,7 +762,7 @@ int DB::rep_cod_from_memo(const char* memo)
 
 const std::string& DB::rep_memo_from_cod(int rep_cod)
 {
-    const db::repinfo::Cache* c = repinfo().get_by_id(rep_cod);
+    const v5::repinfo::Cache* c = repinfo().get_by_id(rep_cod);
     if (c == NULL) error_notfound::throwf("looking for rep_memo corresponding to rep_cod '%d'", rep_cod);
     return c->memo;
 }
@@ -862,7 +864,7 @@ int DB::obtain_station(Record& rec, bool can_add)
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
         return strtol(val, 0, 10);
 
-    db::Station& s = station();
+    Station& s = station();
 
     // Look for the key data in the record
     if (const Var* var = rec.key_peek(DBA_KEY_LAT))
@@ -909,7 +911,7 @@ int DB::obtain_context(Record& rec)
     if (const char* val = rec.key_peek_value(DBA_KEY_CONTEXT_ID))
         return strtol(val, 0, 10);
 
-    db::Context& c = context();
+    Context& c = context();
 
     /* Retrieve data */
     c.id_station = obtain_station(rec, false);
@@ -981,7 +983,7 @@ int DB::obtain_context(Record& rec)
 
 void DB::insert(Record& rec, bool can_replace, bool station_can_add)
 {
-    db::Data& d = data();
+    Data& d = data();
 
     /* Check for the existance of non-context data, otherwise it's all
      * useless.  Not inserting data is fine in case of setcontextana */
@@ -1306,7 +1308,7 @@ unsigned DB::query_attrs(int id_context, wreport::Varcode id_var, const std::vec
 
 void DB::attr_insert_or_replace(int id_context, wreport::Varcode id_var, const Record& attrs, bool can_replace)
 {
-    db::Attr& a = attr();
+    Attr& a = attr();
 
     a.id_context = id_context;
     a.id_var = id_var;
@@ -1387,6 +1389,8 @@ void DB::dump(FILE* out)
     }
 #endif
 
+} // namespace v5
+} // namespace db
 } // namespace dballe
 
 /* vim:set ts=4 sw=4: */

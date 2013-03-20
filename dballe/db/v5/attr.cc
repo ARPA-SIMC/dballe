@@ -31,6 +31,7 @@ using namespace std;
 
 namespace dballe {
 namespace db {
+namespace v5 {
 
 Attr::Attr(Connection& conn)
     : conn(conn), sstm(0), istm(0), rstm(0)
@@ -182,6 +183,7 @@ void Attr::dump(FILE* out)
     stm.close_cursor();
 }
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

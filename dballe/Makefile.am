@@ -69,6 +69,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/odbcworkarounds.h \
 	db/querybuf.h \
 	db/internals.h \
+	db/db.h \
 	db/v5/attr.h \
 	db/v5/context.h \
 	db/v5/cursor.h \
@@ -131,6 +132,7 @@ if DO_DBALLE_DB
 libdballe_la_SOURCES += \
 	db/querybuf.cc \
 	db/internals.cc \
+	db/db.cc \
 	db/v5/repinfo.cc \
 	db/v5/station.cc \
 	db/v5/context.cc \

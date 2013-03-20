@@ -1,7 +1,7 @@
 /*
  * db/context - context table management
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_CONTEXT_H
-#define DBALLE_DB_CONTEXT_H
+#ifndef DBALLE_DB_V5_CONTEXT_H
+#define DBALLE_DB_V5_CONTEXT_H
 
 /** @file
  * @ingroup db
@@ -33,11 +33,12 @@
 #include <cstdio>
 
 namespace dballe {
-struct DB;
-
 namespace db {
 struct Connection;
 struct Statement;
+
+namespace v5 {
+struct DB;
 
 /**
  * Precompiled queries to manipulate the context table
@@ -47,7 +48,7 @@ struct Context
     /**
      * DB connection.
      */
-    DB& db;
+    v5::DB& db;
 
     /** Precompiled select statement */
     db::Statement* sstm;
@@ -82,7 +83,7 @@ struct Context
     /** Time range P2 SQL parameter */
     DBALLE_SQL_C_SINT_TYPE p2;
 
-    Context(DB& db);
+    Context(v5::DB& db);
     ~Context();
 
     /**
@@ -135,6 +136,7 @@ private:
     Context& operator=(const Context&);
 };
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

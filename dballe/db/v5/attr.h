@@ -1,7 +1,7 @@
 /*
  * db/attr - attr table management
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_ATTR_H
-#define DBALLE_DB_ATTR_H
+#ifndef DBALLE_DB_V5_ATTR_H
+#define DBALLE_DB_V5_ATTR_H
 
 /** @file
  * @ingroup db
@@ -39,6 +39,8 @@ struct DB;
 namespace db {
 struct Connection;
 struct Statement;
+
+namespace v5 {
 
 /**
  * Precompiled queries to manipulate the attr table
@@ -116,6 +118,7 @@ private:
     Attr& operator=(const Attr&);
 };
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

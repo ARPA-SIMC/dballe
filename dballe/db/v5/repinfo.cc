@@ -33,6 +33,7 @@ using namespace std;
 
 namespace dballe {
 namespace db {
+namespace v5 {
 
 namespace repinfo {
 
@@ -431,6 +432,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 	read_cache();
 }
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

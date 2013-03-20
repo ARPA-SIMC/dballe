@@ -30,6 +30,7 @@ using namespace std;
 
 namespace dballe {
 namespace db {
+namespace v5 {
 
 Data::Data(Connection& conn)
     : conn(conn), istm(0), ustm(0), iistm(0)
@@ -194,6 +195,7 @@ void Data::dump(FILE* out)
     stm.close_cursor();
 }
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 
