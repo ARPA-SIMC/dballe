@@ -1,7 +1,7 @@
 /*
  * dballe/db - Archive for point-based meteorological data
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  */
 
 #include "db.h"
-#include "internals.h"
+#include "dballe/db/internals.h"
 #include "repinfo.h"
 #include "station.h"
 #include "context.h"

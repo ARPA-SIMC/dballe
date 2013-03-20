@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,30 @@
  */
 
 #include "db/test-utils-db.h"
-#include "db/data.h"
-#include "db/context.h"
-#include "db/station.h"
+#include "db/v5/attr.h"
+#include "db/v5/data.h"
+#include "db/v5/context.h"
+#include "db/v5/station.h"
 #include "db/internals.h"
 
 using namespace dballe;
+using namespace wreport;
 using namespace std;
 
 namespace tut {
 
-struct data_shar : public dballe::tests::db_test
+struct attr_shar : public dballe::tests::db_test
 {
-    db::Data* da;
+    db::Attr* at;
 
-	data_shar()
+	attr_shar()
 	{
 		if (!has_db()) return;
-		da = &db->data();
+        at = &db->attr();
 
         db::Station& st = db->station();
         db::Context& co = db->context();
+        db::Data& da = db->data();
 
 		// Insert a mobile station
 		st.lat = 4500000;
@@ -77,9 +80,21 @@ struct data_shar : public dballe::tests::db_test
 		co.p1 = 6;
 		co.p2 = 7;
 		ensure_equals(co.insert(), 2);
+
+		// Insert a datum
+		da.id_context = 1;
+		da.id_var = WR_VAR(0, 1, 2);
+		da.set_value("123");
+        da.insert_or_fail();
+
+		// Insert another datum
+		da.id_context = 2;
+		da.id_var = WR_VAR(0, 1, 2);
+		da.set_value("234");
+        da.insert_or_fail();
 	}
 };
-TESTGRP(data);
+TESTGRP(attr);
 
 /* Test dba_db_data_set* */
 template<> template<>
@@ -87,17 +102,15 @@ void to::test<1>()
 {
 	use_db();
 
-	// Test dba_db_data_set
-	da->set(var(WR_VAR(0, 1, 2), 123));
-    ensure_varcode_equals(da->id_var, WR_VAR(0, 1, 2));
-	ensure_equals(da->value, string("123"));
-	ensure_equals(da->value_ind, 3);
+	// Test dba_db_attr_set
+	at->set(var(WR_VAR(0, 1, 2), 123));
+	ensure_equals(at->value, string("123"));
+	ensure_equals(at->value_ind, 3);
 	
-	// Test dba_db_data_set_value
-	da->set_value("32");
-    ensure_varcode_equals(da->id_var, WR_VAR(0, 1, 2));
-	ensure_equals(da->value, string("32"));
-	ensure_equals(da->value_ind, 2);
+	// Test dba_db_attr_set_value
+    at->set_value("32");
+	ensure_equals(at->value, string("32"));
+	ensure_equals(at->value_ind, 2);
 }
 
 
@@ -108,62 +121,80 @@ void to::test<2>()
 	use_db();
 
 	// Insert a datum
-	da->id_context = 1;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("123");
-	da->insert_or_fail();
+	at->id_context = 1;
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("50");
+    at->insert(false);
 
 	// Insert another datum
-	da->id_context = 2;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("234");
-	da->insert_or_fail();
+	at->id_context = 2;
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("75");
+    at->insert(false);
 
 	// Reinsert a datum: it should fail
-	da->id_context = 1;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("123");
+	at->id_context = 1;
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("50");
     try {
-        da->insert_or_fail();
+        at->insert(false);
         ensure(false);
 	} catch (db::error_odbc& e) {
 		//ensure_contains(e.what(), "uplicate");
     }
 
 	// Reinsert the other datum: it should fail
-	da->id_context = 2;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("234");
+	at->id_context = 2;
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("75");
     try {
-        da->insert_or_fail();
+        at->insert(false);
         ensure(false);
 	} catch (db::error_odbc& e) {
 		//ensure_contains(e.what(), "uplicate");
     }
 
 	// Reinsert a datum with overwrite: it should work
-	da->id_context = 1;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("123");
-	da->insert_or_overwrite();
+	at->id_context = 1;
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("50");
+    at->insert(true);
 
 	// Reinsert the other datum with overwrite: it should work
-	da->id_context = 2;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("234");
-	da->insert_or_overwrite();
+	at->id_context = 2;
+	at->id_var = WR_VAR(0, 1, 2);
+	at->type = WR_VAR(0, 33, 7);
+	at->set_value("75");
+    at->insert(true);
 
-	// Insert a new datum with ignore: it should insert
-	da->id_context = 3;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("234");
-    ensure_equals(da->insert_or_ignore(), true);
+	// Load the attributes for the first variable
+    {
+        Var var(varinfo(WR_VAR(0, 1, 2)));
+        at->id_context = 1;
+        ensure(var.next_attr() == 0);
+        at->load(var);
+        ensure(var.next_attr() != 0);
+        const Var* attr = var.next_attr();
+        ensure_equals(string(attr->value()), "50");
+        ensure(attr->next_attr() == NULL);
+    }
 
-	// Reinsert the same datum with ignore: it should ignore
-	da->id_context = 3;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("234");
-    ensure_equals(da->insert_or_ignore(), false);
+	// Load the attributes for the second variable
+    {
+        Var var(varinfo(WR_VAR(0, 1, 2)));
+        at->id_context = 2;
+        ensure(var.next_attr() == 0);
+        at->load(var);
+        ensure(var.next_attr() != 0);
+        const Var* attr = var.next_attr();
+        ensure_equals(string(attr->value()), "75");
+        ensure(attr->next_attr() == NULL);
+    }
 
 #if 0
 	// Get the ID of the first data

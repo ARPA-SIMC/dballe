@@ -69,13 +69,13 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/odbcworkarounds.h \
 	db/querybuf.h \
 	db/internals.h \
-	db/repinfo.h \
-	db/station.h \
-	db/context.h \
-	db/data.h \
-	db/attr.h \
-	db/cursor.h \
-	db/db.h \
+	db/v5/attr.h \
+	db/v5/context.h \
+	db/v5/cursor.h \
+	db/v5/data.h \
+	db/v5/db.h \
+	db/v5/repinfo.h \
+	db/v5/station.h \
 	cmdline/dbadb.h
 endif
 
@@ -131,15 +131,15 @@ if DO_DBALLE_DB
 libdballe_la_SOURCES += \
 	db/querybuf.cc \
 	db/internals.cc \
-	db/repinfo.cc \
-	db/station.cc \
-	db/context.cc \
-	db/data.cc \
-	db/attr.cc \
-	db/cursor.cc \
-	db/db.cc \
-	db/import.cc \
-	db/export.cc \
+	db/v5/repinfo.cc \
+	db/v5/station.cc \
+	db/v5/context.cc \
+	db/v5/data.cc \
+	db/v5/attr.cc \
+	db/v5/cursor.cc \
+	db/v5/db.cc \
+	db/v5/import.cc \
+	db/v5/export.cc \
 	cmdline/dbadb.cc
 endif
 
@@ -202,14 +202,14 @@ tut_test_SOURCES += \
 	db/test-utils-db.cc \
 	db/tests/querybuf.cc \
 	db/tests/internals.cc \
-	db/tests/repinfo.cc \
-	db/tests/station.cc \
-	db/tests/context.cc \
-	db/tests/data.cc \
-	db/tests/attr.cc \
-	db/tests/db.cc \
-	db/tests/db_import.cc \
-	db/tests/db_export.cc \
+	db/v5/tests/repinfo.cc \
+	db/v5/tests/station.cc \
+	db/v5/tests/context.cc \
+	db/v5/tests/data.cc \
+	db/v5/tests/attr.cc \
+	db/v5/tests/db.cc \
+	db/v5/tests/db_import.cc \
+	db/v5/tests/db_export.cc \
 	cmdline/dbadb-tut.cc
 endif
 

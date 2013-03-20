@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 #include "db/test-utils-db.h"
 #include "db/querybuf.h"
-#include "db/db.h"
-#include "db/cursor.h"
+#include "db/v5/db.h"
+#include "db/v5/cursor.h"
 #include "db/internals.h"
 
 using namespace dballe;

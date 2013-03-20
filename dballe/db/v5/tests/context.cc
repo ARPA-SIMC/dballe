@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 
 #include "db/test-utils-db.h"
-#include "db/context.h"
-#include "db/station.h"
+#include "db/v5/context.h"
+#include "db/v5/station.h"
 
 using namespace dballe;
 using namespace std;
