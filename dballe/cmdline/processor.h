@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,9 @@
 
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/record.h>
+#include <dballe/core/file.h>
 #include <dballe/msg/codec.h>
+#include <stdexcept>
 #include <list>
 #include <string>
 
@@ -36,6 +38,64 @@ struct Msgs;
 struct Matcher;
 
 namespace cmdline {
+
+/**
+ * Exception used to embed processing issues that mean that processing of the
+ * current element can safely be skipped.
+ *
+ * When this exception is caught we know, for example, that no output has been
+ * produced for the item currently being processed.
+ */
+struct ProcessingException : public std::exception
+{
+    std::string msg;
+
+    /**
+     * Create a new exception
+     *
+     * @param filename Input file being processed
+     * @param index Index of the data being processed in the input file
+     * @param msg Error message
+     * @param original (optional) original exception that was caught from the
+     *        underlying subsystem
+     */
+    ProcessingException(
+            const std::string& filename,
+            unsigned index,
+            const std::string& msg)
+    {
+        initmsg(filename, index, msg.c_str());
+    }
+
+    ProcessingException(
+            const std::string& filename,
+            unsigned index,
+            const std::exception& original)
+    {
+        initmsg(filename, index, original.what());
+    }
+
+    ProcessingException(
+            const std::string& filename,
+            unsigned index,
+            const std::string& msg,
+            const std::exception& original)
+    {
+        initmsg(filename, index, msg.c_str());
+        this->msg += ": ";
+        this->msg += original.what();
+    }
+
+    virtual ~ProcessingException() throw() {}
+
+    virtual const char* what() const throw ()
+    {
+        return msg.c_str();
+    }
+
+protected:
+    void initmsg(const std::string& fname, unsigned index, const char* msg);
+};
 
 struct Item
 {
@@ -57,7 +117,7 @@ struct Item
 struct Action
 {
     virtual ~Action() {}
-    virtual void operator()(const Item& item) = 0;
+    virtual bool operator()(const Item& item) = 0;
 };
 
 struct Filter
@@ -101,6 +161,7 @@ public:
     msg::Importer::Options import_opts;
     Filter filter;
     bool verbose;
+    const char* fail_file_name;
 
     Reader();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <dballe/msg/aof_codec.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/cmdline/cmdline.h>
+#include "dballe/core/vasprintf.h"
 
 #include <cstring>
 #include <cstdlib>
@@ -40,6 +41,14 @@ using namespace std;
 
 namespace dballe {
 namespace cmdline {
+
+void ProcessingException::initmsg(const std::string& fname, unsigned index, const char* msg)
+{
+    char *c;
+    asprintf(&c, "%s:#%u: %s", fname.c_str(), index, msg);
+    msg = c;
+    free(c);
+}
 
 static void print_parse_error(const Rawmsg& msg, error& e)
 {
@@ -372,6 +381,8 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
     bool print_errors = !filter.unparsable;
     Encoding intype = dba_cmdline_stringToMsgType(input_type);
 
+    std::auto_ptr<File> fail_file;
+
     list<string>::const_iterator name = fnames.begin();
     do
     {
@@ -390,6 +401,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
         while (file->read(*item.rmsg))
         {
             ++item.idx;
+            bool processed = false;
 
             try {
     //          if (op_verbose)
@@ -400,16 +412,31 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
 
                 item.rmsg->index = item.idx;
                 item.decode(*imp, print_errors);
+
                 //process_input(*file, rmsg, grepdata, action);
 
                 if (!filter.match_item(item))
                     continue;
 
-                action(item);
+                processed = action(item);
+            } catch (ProcessingException& pe) {
+                // If ProcessingException has been raised, we can safely skip
+                // to the next input
+                processed = false;
+                if (verbose)
+                    fprintf(stderr, "%s\n", pe.what());
             } catch (std::exception& e) {
                 if (verbose)
                     fprintf(stderr, "%s:#%d: %s\n", file->name().c_str(), item.idx, e.what());
                 throw;
+            }
+
+            // Output items that have not been processed successfully
+            if (!processed && fail_file_name)
+            {
+                if (!fail_file.get())
+                    fail_file = File::create(intype, fail_file_name, "ab");
+                fail_file->write(*item.rmsg);
             }
         }
     } while (name != fnames.end());

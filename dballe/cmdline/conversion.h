@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,20 +44,42 @@ namespace cmdline {
 
 struct Converter : public Action
 {
-	File* file;
-	const char* dest_rep_memo;
-	const char* dest_template;
+    File* file;
+    const char* dest_rep_memo;
+    const char* dest_template;
     bool bufr2netcdf_categories;
 
     msg::Exporter* exporter;
+
     Converter() : file(0), dest_rep_memo(0), dest_template(0), bufr2netcdf_categories(false), exporter(0) {}
     ~Converter();
 
-	virtual void operator()(const cmdline::Item& item);
+    /**
+     * Convert the item as configured in the Converter, and write it to the
+     * output file
+     */
+    virtual bool operator()(const cmdline::Item& item);
 
-	void process_bufrex_msg(const wreport::Bulletin& msg);
-	void process_dba_msg(const Msgs& msgs);
-	void process_dba_msg_from_bulletin(const wreport::Bulletin& bulletin, const Msgs& msgs);
+protected:
+    /**
+     * Perform conversion at the encoding level only (e.g. BUFR->CREX)
+     *
+     * @param orig
+     *   Original Rawmsg used for its source information, to report errors
+     */
+    void process_bufrex_msg(const Rawmsg& orig, const wreport::Bulletin& msg);
+
+    /**
+     * Perform conversion of decoded data, auto-inferring
+     * type/subtype/localsubtype from the Msgs contents
+     */
+    void process_dba_msg(const Rawmsg& orig, const Msgs& msgs);
+
+    /**
+     * Perform conversion of decded data, using the original bulletin for
+     * type/subtype/localsubtype information
+     */
+    void process_dba_msg_from_bulletin(const Rawmsg& orig, const wreport::Bulletin& bulletin, const Msgs& msgs);
 };
 
 }

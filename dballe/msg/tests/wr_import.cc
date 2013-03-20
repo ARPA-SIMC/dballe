@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -438,6 +438,17 @@ void to::test<24>()
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_PILOT);
+}
+
+// WMO PILOT, with pressure levels
+template<> template<>
+void to::test<25>()
+{
+    // FIXME: this still failes
+    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-tsig-2.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_TEMP);
 }
 
 

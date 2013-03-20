@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,18 +39,26 @@ Converter::~Converter()
     if (exporter) delete exporter;
 }
 
-void Converter::process_bufrex_msg(const Bulletin& msg)
+void Converter::process_bufrex_msg(const Rawmsg& orig, const Bulletin& msg)
 {
-	Rawmsg raw;
-	msg.encode(raw);
-	file->write(raw);
+    Rawmsg raw;
+    try {
+        msg.encode(raw);
+    } catch (std::exception& e) {
+        throw ProcessingException(orig.file, orig.index, e);
+    }
+    file->write(raw);
 }
 
-void Converter::process_dba_msg(const Msgs& msgs)
+void Converter::process_dba_msg(const Rawmsg& orig, const Msgs& msgs)
 {
-	Rawmsg raw;
-	exporter->to_rawmsg(msgs, raw);
-	file->write(raw);
+    Rawmsg raw;
+    try {
+        exporter->to_rawmsg(msgs, raw);
+    } catch (std::exception& e) {
+        throw ProcessingException(orig.file, orig.index, e);
+    }
+    file->write(raw);
 }
 
 // Recompute type and subtype according to WMO international values
@@ -183,26 +191,30 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
 }
 
 
-void Converter::process_dba_msg_from_bulletin(const Bulletin& bulletin, const Msgs& msgs)
+void Converter::process_dba_msg_from_bulletin(const Rawmsg& orig, const Bulletin& bulletin, const Msgs& msgs)
 {
-    auto_ptr<Bulletin> b1(exporter->make_bulletin());
-    exporter->to_bulletin(msgs, *b1);
-    if (bufr2netcdf_categories)
-    {
-        compute_wmo_categories(*b1, bulletin, msgs);
-        compute_bufr2netcdf_categories(*b1, bulletin, msgs);
-    } else {
-        b1->type = bulletin.type;
-        b1->subtype = bulletin.subtype;
-        b1->localsubtype = bulletin.localsubtype;
-    }
-
     Rawmsg raw;
-    b1->encode(raw);
+    try {
+        auto_ptr<Bulletin> b1(exporter->make_bulletin());
+        exporter->to_bulletin(msgs, *b1);
+        if (bufr2netcdf_categories)
+        {
+            compute_wmo_categories(*b1, bulletin, msgs);
+            compute_bufr2netcdf_categories(*b1, bulletin, msgs);
+        } else {
+            b1->type = bulletin.type;
+            b1->subtype = bulletin.subtype;
+            b1->localsubtype = bulletin.localsubtype;
+        }
+
+        b1->encode(raw);
+    } catch (std::exception& e) {
+        throw ProcessingException(orig.file, orig.index, e);
+    }
     file->write(raw);
 }
 
-void Converter::operator()(const cmdline::Item& item)
+bool Converter::operator()(const cmdline::Item& item)
 {
     if (item.msgs == NULL || item.msgs->size() == 0)
     {
@@ -213,35 +225,35 @@ void Converter::operator()(const cmdline::Item& item)
         if (item.bulletin == NULL)
         {
             fprintf(stderr, "No BUFREX raw data to attempt low-level bufrex recoding\n");
-            return;
+            return false;
         }
 
-		// No report override
-		if (dest_rep_memo != NULL)
-		{
-			fprintf(stderr, "report override not allowed for low-level bufrex recoding\n");
-			return;
-		}
+        // No report override
+        if (dest_rep_memo != NULL)
+        {
+            fprintf(stderr, "report override not allowed for low-level bufrex recoding\n");
+            return false;
+        }
 
-		// No template change
-		if (dest_template != NULL)
-		{
-			fprintf(stderr, "template change not supported for low-level bufrex recoding\n");
-			return;
-		}
+        // No template change
+        if (dest_template != NULL)
+        {
+            fprintf(stderr, "template change not supported for low-level bufrex recoding\n");
+            return false;
+        }
 
         // Same encoding
         if ((file->type() == BUFR && string(item.bulletin->encoding_name()) == "CREX")
                 || (file->type() == CREX && string(item.bulletin->encoding_name()) == "BUFR"))
         {
             fprintf(stderr, "encoding change not yet supported for low-level bufrex recoding\n");
-            return;
+            return false;
         }
 
         // We can just recode the raw braw
         fprintf(stderr, "we can do a low-level bufrex recoding\n");
-        process_bufrex_msg(*item.bulletin);
-        return;
+        process_bufrex_msg(*item.rmsg, *item.bulletin);
+        return true;
     }
 
     if (dest_rep_memo != NULL)
@@ -253,9 +265,11 @@ void Converter::operator()(const cmdline::Item& item)
     }
 
     if (item.bulletin and dest_rep_memo == NULL)
-        process_dba_msg_from_bulletin(*item.bulletin, *item.msgs);
+        process_dba_msg_from_bulletin(*item.rmsg, *item.bulletin, *item.msgs);
     else
-        process_dba_msg(*item.msgs);
+        process_dba_msg(*item.rmsg, *item.msgs);
+
+    return true;
 }
 
 }

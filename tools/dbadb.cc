@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,8 +61,6 @@ struct poptOption grepTable[] = {
         "match BUFR messages with the given data subcategory", "num" },
     { "check-digit", 0, POPT_ARG_INT, &reader.filter.checkdigit, 0,
         "match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
-    { "unparsable", 0, 0, &reader.filter.unparsable, 0,
-        "match only messages that cannot be parsed", 0 },
     { "parsable", 0, 0, &reader.filter.parsable, 0,
         "match only messages that can be parsed", 0 },
     { "index", 0, POPT_ARG_STRING, &reader.filter.index, 0,
@@ -288,6 +286,8 @@ struct poptOption dbadb_import_options[] = {
     { "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
     { "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
         "format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" },
+    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        "write unprocessed data to this file", "fname" },
     { "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
         "overwrite existing data", 0 },
     { "report", 'r', POPT_ARG_STRING, &op_report, 0,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,15 +63,15 @@ struct Importer : public Action
 
     Importer(DB& db) : db(db), import_flags(0), forced_repmemo(0) {}
 
-    virtual void operator()(const cmdline::Item& item);
+    virtual bool operator()(const cmdline::Item& item);
 };
 
-void Importer::operator()(const Item& item)
+bool Importer::operator()(const Item& item)
 {
     if (item.msgs == NULL)
     {
         fprintf(stderr, "Message #%d cannot be parsed: ignored\n", item.idx);
-        return;
+        return false;
     }
     for (size_t i = 0; i < item.msgs->size(); ++i)
     {
@@ -82,6 +82,7 @@ void Importer::operator()(const Item& item)
         else
             db.import_msg(msg, forced_repmemo, import_flags);
     }
+    return true;
 }
 
 

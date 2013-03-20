@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@ static int op_precise_import = 0;
 static int op_bufr2netcdf_categories = 0;
 static const char* op_output_type = "bufr";
 static const char* op_output_template = "";
+static const char* op_output_file = "(stdout)";
 static const char* op_report = "";
 static const char* op_bisect_cmd = NULL;
 int op_verbose = 0;
@@ -73,7 +74,7 @@ struct poptOption grepTable[] = {
 		"match BUFR messages with the given data subcategory", "num" },
 	{ "check-digit", 0, POPT_ARG_INT, &reader.filter.checkdigit, 0,
 		"match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
-	{ "unparsable", 0, 0, &reader.filter.unparsable, 0,
+	{ "unparsable", 0, POPT_ARG_STRING, &reader.filter.unparsable, 0,
 		"match only messages that cannot be parsed", 0 },
 	{ "parsable", 0, 0, &reader.filter.parsable, 0,
 		"match only messages that can be parsed", 0 },
@@ -229,32 +230,34 @@ static void print_item_header(const Item& item)
 
 struct Summarise : public cmdline::Action
 {
-    virtual void operator()(const cmdline::Item& item)
+    virtual bool operator()(const cmdline::Item& item)
     {
         print_item_header(item);
         puts(".");
+        return true;
     }
 };
 
 struct Head : public cmdline::Action
 {
-    virtual void operator()(const cmdline::Item& item)
+    virtual bool operator()(const cmdline::Item& item)
     {
-        if (!item.rmsg) return;
+        if (!item.rmsg) return false;
         switch (item.rmsg->encoding)
         {
             case BUFR:
-                if (item.bulletin == NULL) return;
+                if (item.bulletin == NULL) return true;
                 dump_bufr_header(*item.rmsg, *dynamic_cast<const BufrBulletin*>(item.bulletin)); puts(".");
                 break;
             case CREX:
-                if (item.bulletin == NULL) return;
+                if (item.bulletin == NULL) return true;
                 dump_crex_header(*item.rmsg, *dynamic_cast<const CrexBulletin*>(item.bulletin)); puts(".");
                 break;
             case AOF:
                 dump_aof_header(*item.rmsg);
                 break;
         }
+        return true;
     }
 };
 
@@ -302,9 +305,9 @@ struct CSVBulletin : public cmdline::Action
         }
     }
 
-    virtual void operator()(const cmdline::Item& item)
+    virtual bool operator()(const cmdline::Item& item)
     {
-        if (!item.rmsg) return;
+        if (!item.rmsg) return false;
         if (first)
         {
             // Column titles
@@ -316,7 +319,7 @@ struct CSVBulletin : public cmdline::Action
             case BUFR:
             case CREX:
             {
-                if (item.bulletin == NULL) return;
+                if (item.bulletin == NULL) return false;
                 cout << "edition," << item.bulletin->edition << endl;
                 cout << "master_table_number," << item.bulletin->master_table_number << endl;
                 cout << "type," << item.bulletin->type << endl;
@@ -350,6 +353,7 @@ struct CSVBulletin : public cmdline::Action
             default:
                 throw error_consistency("encoding not supported for CSV dump");
         }
+        return true;
     }
 };
 
@@ -362,9 +366,9 @@ struct CSVMsgs : public cmdline::Action
 
     CSVMsgs() : first(true) {}
 
-    virtual void operator()(const cmdline::Item& item)
+    virtual bool operator()(const cmdline::Item& item)
     {
-        if (!item.msgs) return;
+        if (!item.msgs) return false;
 
         if (first)
         {
@@ -376,6 +380,7 @@ struct CSVMsgs : public cmdline::Action
         {
             (*mi)->to_csv(cout);
         }
+        return true;
     }
 };
 
@@ -391,20 +396,20 @@ struct DumpMessage : public cmdline::Action
 		}
 	}
 
-    virtual void operator()(const cmdline::Item& item)
+    virtual bool operator()(const cmdline::Item& item)
     {
         print_item_header(item);
         if (!item.rmsg)
         {
             puts(": no low-level information available");
-            return;
+            return true;
         }
         puts(":");
         switch (item.rmsg->encoding)
         {
             case BUFR:
                 {
-                    if (item.bulletin == NULL) return;
+                    if (item.bulletin == NULL) return true;
                     const BufrBulletin& b = *dynamic_cast<const BufrBulletin*>(item.bulletin);
                     printf(" Edition %d, mtn %d, origin %d/%d, master table %d, local table %d\n",
                             b.edition, b.master_table_number, b.centre, b.subcentre, b.master_table, b.local_table);
@@ -413,7 +418,7 @@ struct DumpMessage : public cmdline::Action
                 }
             case CREX:
                 {
-                    if (item.bulletin == NULL) return;
+                    if (item.bulletin == NULL) return true;
                     const CrexBulletin& b = *dynamic_cast<const CrexBulletin*>(item.bulletin);
                     printf(" Edition %d, mtn %d, table %d\n",
                             b.edition, b.master_table_number, b.table);
@@ -424,19 +429,21 @@ struct DumpMessage : public cmdline::Action
                 msg::AOFImporter::dump(*item.rmsg, stdout);
                 break;
         }
+        return true;
     }
 };
 
 struct DumpCooked : public cmdline::Action
 {
-    virtual void operator()(const cmdline::Item& item)
+    virtual bool operator()(const cmdline::Item& item)
     {
-        if (item.msgs == NULL) return;
+        if (item.msgs == NULL) return false;
         for (size_t i = 0; i < item.msgs->size(); ++i)
         {
             printf("#%d[%zd] ", item.idx, i);
             (*item.msgs)[i]->print(stdout);
         }
+        return true;
     }
 };
 
@@ -458,8 +465,8 @@ static void print_var(const Var& var)
 
 struct DumpText : public cmdline::Action
 {
-	virtual void operator()(const cmdline::Item& item)
-	{
+    virtual bool operator()(const cmdline::Item& item)
+    {
 		if (item.bulletin == NULL)
 			throw error_consistency("source is not a BUFR or CREX message");
 		const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(item.bulletin);
@@ -508,46 +515,49 @@ struct DumpText : public cmdline::Action
 				}
 			}
 		}
-	}
+        return true;
+    }
 };
 
 struct DumpStructured : public cmdline::Action
 {
-    virtual void operator()(const cmdline::Item& item)
+    virtual bool operator()(const cmdline::Item& item)
     {
         print_item_header(item);
         if (!item.rmsg)
         {
             puts(": no low-level information available");
-            return;
+            return true;
         }
         if (!item.bulletin)
         {
             puts(": no bulletin information available");
-            return;
+            return true;
         }
         puts(":");
         item.bulletin->print_structured(stdout);
+        return true;
     }
 };
 
 struct DumpDDS : public cmdline::Action
 {
-    virtual void operator()(const cmdline::Item& item)
+    virtual bool operator()(const cmdline::Item& item)
     {
         print_item_header(item);
         if (!item.rmsg)
         {
             puts(": no low-level information available");
-            return;
+            return true;
         }
         if (!item.bulletin)
         {
             puts(": no bulletin information available");
-            return;
+            return true;
         }
         puts(":");
         item.bulletin->print_datadesc(stdout);
+        return false;
     }
 };
 
@@ -557,11 +567,12 @@ struct WriteRaw : public cmdline::Action
     WriteRaw() : file(0) {}
     ~WriteRaw() { if (file) delete file; }
 
-    virtual void operator()(const cmdline::Item& item)
+    virtual bool operator()(const cmdline::Item& item)
     {
-        if (!item.rmsg) return;
+        if (!item.rmsg) return false;
         if (!file) file = File::create(item.rmsg->encoding, "(stdout)", "w").release();
         file->write(*item.rmsg);
+        return true;
     }
 };
 
@@ -797,7 +808,7 @@ int do_convert(poptContext optCon)
 
     conv.bufr2netcdf_categories = op_bufr2netcdf_categories != 0;
 
-    conv.file = File::create(outtype, "(stdout)", "w").release();
+    conv.file = File::create(outtype, op_output_file, "w").release();
     conv.exporter = msg::Exporter::create(outtype, opts).release();
 
     reader.read(get_filenames(optCon), conv);
@@ -1100,6 +1111,8 @@ struct poptOption dbamsg_scan_options[] = {
 	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
+    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        "write unprocessed data to this file", "fname" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
 	POPT_TABLEEND
@@ -1109,7 +1122,9 @@ struct poptOption dbamsg_dump_options[] = {
 	{ "help", '?', 0, 0, 1, "print an help message", 0 },
 	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
-		"format of the unput data ('bufr', 'crex', 'aof')", "type" },
+		"format of the input data ('bufr', 'crex', 'aof')", "type" },
+    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        "write unprocessed data to this file", "fname" },
 	{ "interpreted", 0, 0, &op_dump_interpreted, 0,
 		"dump the message as understood by the importer", 0 },
 	{ "precise", 0, 0, &op_precise_import, 0,
@@ -1132,6 +1147,8 @@ struct poptOption dbamsg_cat_options[] = {
 	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
 	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
+    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        "write unprocessed data to this file", "fname" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
 	POPT_TABLEEND
@@ -1144,6 +1161,8 @@ struct poptOption dbamsg_convert_options[] = {
 		"format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" },
 	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
+    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        "write unprocessed data to this file", "fname" },
 	{ "template", 0, POPT_ARG_STRING, &op_output_template, 0,
 		"template of the data in output (autoselect if not specified, 'list' gives a list)", "name" },
 	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
@@ -1154,6 +1173,8 @@ struct poptOption dbamsg_convert_options[] = {
         "recompute data categories and subcategories according to message contents, for use as input to bufr2netcdf", 0 },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
+    { "output", 'o', POPT_ARG_STRING, &op_output_file, 0,
+        "destination file. Default: stdandard output", "fname" },
 	POPT_TABLEEND
 };
 
@@ -1164,6 +1185,8 @@ struct poptOption dbamsg_compare_options[] = {
 		"format of the first file to compare ('bufr', 'crex', 'aof')", "type" },
 	{ "type2", 'd', POPT_ARG_STRING, &op_output_type, 0,
 		"format of the second file to compare ('bufr', 'crex', 'aof')", "type" },
+    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        "write unprocessed data to this file", "fname" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
 	POPT_TABLEEND
@@ -1188,6 +1211,8 @@ struct poptOption dbamsg_bisect_options[] = {
 		"command to run to test a message group", "cmd" },
 	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
 		"format of the input data ('bufr', 'crex', 'aof')", "type" },
+    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        "write unprocessed data to this file", "fname" },
 	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
 		"Options used to filter messages", 0 },
 	POPT_TABLEEND
