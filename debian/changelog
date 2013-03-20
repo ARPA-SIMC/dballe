@@ -1,3 +1,11 @@
+dballe (5.23-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - added --rejected=filename option to dbamsg and dbadb
+     - dbamsg convert -o/--output
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 20 Mar 2013 16:06:42 +0100
+
 dballe (5.22-1) UNRELEASED; urgency=low
 
   * New upstream release
