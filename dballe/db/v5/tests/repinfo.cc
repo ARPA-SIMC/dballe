@@ -21,13 +21,14 @@
 #include "db/v5/repinfo.h"
 
 using namespace dballe;
+using namespace dballe::db::v5;
 using namespace std;
 
 namespace tut {
 
 struct repinfo_shar : public dballe::tests::db_test
 {
-	db::Repinfo* ri;
+	Repinfo* ri;
 
 	repinfo_shar()
 	{

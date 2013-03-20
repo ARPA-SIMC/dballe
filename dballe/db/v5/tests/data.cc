@@ -24,21 +24,22 @@
 #include "db/internals.h"
 
 using namespace dballe;
+using namespace dballe::db::v5;
 using namespace std;
 
 namespace tut {
 
 struct data_shar : public dballe::tests::db_test
 {
-    db::Data* da;
+    Data* da;
 
-	data_shar()
-	{
-		if (!has_db()) return;
-		da = &db->data();
+    data_shar()
+    {
+        if (!has_db()) return;
+        da = &db->data();
 
-        db::Station& st = db->station();
-        db::Context& co = db->context();
+        Station& st = db->station();
+        Context& co = db->context();
 
 		// Insert a mobile station
 		st.lat = 4500000;

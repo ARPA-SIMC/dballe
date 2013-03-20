@@ -22,20 +22,21 @@
 #include "db/v5/station.h"
 
 using namespace dballe;
+using namespace dballe::db::v5;
 using namespace std;
 
 namespace tut {
 
 struct db_context_shar : public dballe::tests::db_test
 {
-    db::Context* co;
+    Context* co;
 
     db_context_shar()
     {
         if (!has_db()) return;
         co = &db->context();
 
-        db::Station& st = db->station();
+        Station& st = db->station();
 
         // Insert a mobile station
         st.lat = 4500000;

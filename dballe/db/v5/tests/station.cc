@@ -22,13 +22,14 @@
 #include <sql.h>
 
 using namespace dballe;
+using namespace dballe::db::v5;
 using namespace std;
 
 namespace tut {
 
 struct station_shar : public dballe::tests::db_test
 {
-        db::Station* st;
+        Station* st;
 
 	station_shar()
 	{

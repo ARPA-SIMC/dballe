@@ -25,6 +25,7 @@
 #include "db/internals.h"
 
 using namespace dballe;
+using namespace dballe::db::v5;
 using namespace wreport;
 using namespace std;
 
@@ -32,16 +33,16 @@ namespace tut {
 
 struct attr_shar : public dballe::tests::db_test
 {
-    db::Attr* at;
+    Attr* at;
 
-	attr_shar()
-	{
-		if (!has_db()) return;
+    attr_shar()
+    {
+        if (!has_db()) return;
         at = &db->attr();
 
-        db::Station& st = db->station();
-        db::Context& co = db->context();
-        db::Data& da = db->data();
+        Station& st = db->station();
+        Context& co = db->context();
+        Data& da = db->data();
 
 		// Insert a mobile station
 		st.lat = 4500000;
