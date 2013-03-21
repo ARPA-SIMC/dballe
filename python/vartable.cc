@@ -19,18 +19,35 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "vartable.h"
+#include <wreport/vartable.h>
 
 extern "C" {
 
 typedef struct {
     PyObject_HEAD
-} dballe_VartableObject;
+    const wreport::Vartable* table;
+} dpy_Vartable;
 
-static PyTypeObject dballe_VartableType = {
+static PyObject* dpy_Vartable_get(PyTypeObject *type, PyObject *args, PyObject *kw);
+static PyObject* dpy_Vartable_id(dpy_Vartable *self);
+
+static int dpy_Vartable_init(dpy_Vartable *self, PyObject *args, PyObject *kw)
+{
+    self->table = 0;
+    return 0;
+}
+
+static PyMethodDef dpy_Vartable_methods[] = {
+    {"get", (PyCFunction)dpy_Vartable_get, METH_VARARGS | METH_CLASS, "Create a Vartable for the table with the given name" },
+    {"id",  (PyCFunction)dpy_Vartable_id, METH_NOARGS, "Get the table name" },
+    {NULL}
+};
+
+static PyTypeObject dpy_Vartable_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         // ob_size
     "dballe.Vartable",         // tp_name
-    sizeof(dballe_VartableObject),  // tp_basicsize
+    sizeof(dpy_Vartable),  // tp_basicsize
     0,                         // tp_itemsize
     0,                         // tp_dealloc
     0,                         // tp_print
@@ -47,9 +64,51 @@ static PyTypeObject dballe_VartableType = {
     0,                         // tp_getattro
     0,                         // tp_setattro
     0,                         // tp_as_buffer
-    Py_TPFLAGS_DEFAULT,        // tp_flags
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, // tp_flags
     "DB-All.e Vartable object", // tp_doc
+    0,                         // tp_traverse
+    0,                         // tp_clear
+    0,                         // tp_richcompare
+    0,                         // tp_weaklistoffset
+    0,                         // tp_iter
+    0,                         // tp_iternext
+    dpy_Vartable_methods,      // tp_methods
+    0,                         // tp_members
+    0,                         // tp_getset
+    0,                         // tp_base
+    0,                         // tp_dict
+    0,                         // tp_descr_get
+    0,                         // tp_descr_set
+    0,                         // tp_dictoffset
+    (initproc)dpy_Vartable_init, // tp_init
+    0,                         // tp_alloc
+    0,                         // tp_new
 };
+
+static PyObject* dpy_Vartable_get(PyTypeObject *type, PyObject *args, PyObject *kw)
+{
+    dpy_Vartable* result = 0;
+    const char* table_name = 0;
+
+    if (!PyArg_ParseTuple(args, "s", &table_name))
+        return NULL;
+
+    // Create a new Vartable
+    result = (dpy_Vartable*)PyObject_CallObject((PyObject*)&dpy_Vartable_Type, NULL);
+
+    // Make it point to the table we want
+    result->table = wreport::Vartable::get(table_name);
+
+    return (PyObject*)result;
+}
+
+static PyObject* dpy_Vartable_id(dpy_Vartable *self)
+{
+    if (self->table)
+        return PyString_FromString(self->table->id().c_str());
+    else
+        Py_RETURN_NONE;
+}
 
 }
 
@@ -58,12 +117,12 @@ namespace python {
 
 void register_vartable(PyObject* m)
 {
-    dballe_VartableType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&dballe_VartableType) < 0)
+    dpy_Vartable_Type.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&dpy_Vartable_Type) < 0)
         return;
 
-    Py_INCREF(&dballe_VartableType);
-    PyModule_AddObject(m, "Vartable", (PyObject*)&dballe_VartableType);
+    Py_INCREF(&dpy_Vartable_Type);
+    PyModule_AddObject(m, "Vartable", (PyObject*)&dpy_Vartable_Type);
 }
 
 }
