@@ -9,7 +9,13 @@ TESTS = test.py
 
 pyexec_LTLIBRARIES = dballe.la
 
-nodist_dballe_la_SOURCES = vartable.cc var.cc record.cc dballe.cc
+nodist_dballe_la_SOURCES = \
+						   common.cc \
+						   vartable.cc \
+						   varinfo.cc \
+						   var.cc \
+						   record.cc \
+						   dballe.cc
 dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
 dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex initdballe
 dballe_la_LIBADD = ../dballe/libdballe.la
@@ -20,6 +26,11 @@ dballe_la_LIBADD = ../dballe/libdballe.la
 clean-local:
 	rm -f *.pyc
 
-EXTRA_DIST = vartable.h var.h record.h
+EXTRA_DIST = \
+			 common.h \
+			 vartable.h \
+			 varinfo.h \
+			 var.h \
+			 record.h
 
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)

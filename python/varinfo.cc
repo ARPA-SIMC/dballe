@@ -1,0 +1,120 @@
+/*
+ * python/varinfo - DB-All.e Varinfo python bindings
+ *
+ * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ *
+ * Author: Enrico Zini <enrico@enricozini.com>
+ */
+#include "varinfo.h"
+
+using namespace wreport;
+
+extern "C" {
+
+static PyObject* dpy_Varinfo_is_string(dpy_Varinfo *self);
+
+static PyMethodDef dpy_Varinfo_methods[] = {
+    {"is_string",  (PyCFunction)dpy_Varinfo_is_string, METH_NOARGS, "Return true if the value is a string" },
+    {NULL}
+};
+
+static PyObject* dpy_Varinfo_len(dpy_Varinfo *self, void* closure) { return PyInt_FromLong(self->info->len); }
+static PyObject* dpy_Varinfo_unit(dpy_Varinfo *self, void* closure) { return PyString_FromString(self->info->unit); }
+
+
+static PyGetSetDef dpy_Varinfo_getsetters[] = {
+    {"len", (getter)dpy_Varinfo_len, NULL, "number of significant digits", NULL},
+    {"unit", (getter)dpy_Varinfo_unit, NULL, "measurement unit", NULL},
+    {NULL}
+};
+
+
+static PyTypeObject dpy_Varinfo_Type = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         // ob_size
+    "dballe.Varinfo",         // tp_name
+    sizeof(dpy_Varinfo),  // tp_basicsize
+    0,                         // tp_itemsize
+    0,                         // tp_dealloc
+    0,                         // tp_print
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+    0,                         // tp_repr
+    0,                         // tp_as_number
+    0,                         // tp_as_sequence
+    0,                         // tp_as_mapping
+    0,                         // tp_hash
+    0,                         // tp_call
+    0,                         // tp_str
+    0,                         // tp_getattro
+    0,                         // tp_setattro
+    0,                         // tp_as_buffer
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, // tp_flags
+    "DB-All.e Varinfo object", // tp_doc
+    0,                         // tp_traverse
+    0,                         // tp_clear
+    0,                         // tp_richcompare
+    0,                         // tp_weaklistoffset
+    0,                         // tp_iter
+    0,                         // tp_iternext
+    dpy_Varinfo_methods,       // tp_methods
+    0,                         // tp_members
+    dpy_Varinfo_getsetters,    // tp_getset
+    0,                         // tp_base
+    0,                         // tp_dict
+    0,                         // tp_descr_get
+    0,                         // tp_descr_set
+    0,                         // tp_dictoffset
+    0,                         // tp_init
+    0,                         // tp_alloc
+    0,                         // tp_new
+};
+
+static PyObject* dpy_Varinfo_is_string(dpy_Varinfo *self)
+{
+    if (self->info->is_string())
+        return Py_True;
+    else
+        return Py_False;
+}
+
+}
+
+namespace dballe {
+namespace python {
+
+dpy_Varinfo* varinfo_create(const Varinfo& v)
+{
+    dpy_Varinfo* result = PyObject_New(dpy_Varinfo, &dpy_Varinfo_Type);
+    if (!result) return NULL;
+    result = (dpy_Varinfo*)PyObject_Init((PyObject*)result, &dpy_Varinfo_Type);
+    new (&result->info) Varinfo(v);
+    return result;
+}
+
+void register_varinfo(PyObject* m)
+{
+    dpy_Varinfo_Type.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&dpy_Varinfo_Type) < 0)
+        return;
+
+    Py_INCREF(&dpy_Varinfo_Type);
+    PyModule_AddObject(m, "Varinfo", (PyObject*)&dpy_Varinfo_Type);
+}
+
+}
+}

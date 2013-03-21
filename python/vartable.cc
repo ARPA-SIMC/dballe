@@ -19,7 +19,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "vartable.h"
+#include "varinfo.h"
+#include "common.h"
 #include <wreport/vartable.h>
+
+using namespace dballe::python;
 
 extern "C" {
 
@@ -30,16 +34,12 @@ typedef struct {
 
 static PyObject* dpy_Vartable_get(PyTypeObject *type, PyObject *args, PyObject *kw);
 static PyObject* dpy_Vartable_id(dpy_Vartable *self);
-
-static int dpy_Vartable_init(dpy_Vartable *self, PyObject *args, PyObject *kw)
-{
-    self->table = 0;
-    return 0;
-}
+static PyObject* dpy_Vartable_query(dpy_Vartable *self, PyObject *args, PyObject *kw);
 
 static PyMethodDef dpy_Vartable_methods[] = {
-    {"get", (PyCFunction)dpy_Vartable_get, METH_VARARGS | METH_CLASS, "Create a Vartable for the table with the given name" },
-    {"id",  (PyCFunction)dpy_Vartable_id, METH_NOARGS, "Get the table name" },
+    {"get",   (PyCFunction)dpy_Vartable_get, METH_VARARGS | METH_CLASS, "Create a Vartable for the table with the given name" },
+    {"id",    (PyCFunction)dpy_Vartable_id, METH_NOARGS, "Get the table name" },
+    {"query", (PyCFunction)dpy_Vartable_query, METH_VARARGS, "Query the table, returning a Varinfo object or raising an exception" },
     {NULL}
 };
 
@@ -80,7 +80,7 @@ static PyTypeObject dpy_Vartable_Type = {
     0,                         // tp_descr_get
     0,                         // tp_descr_set
     0,                         // tp_dictoffset
-    (initproc)dpy_Vartable_init, // tp_init
+    0,                         // tp_init
     0,                         // tp_alloc
     0,                         // tp_new
 };
@@ -108,6 +108,21 @@ static PyObject* dpy_Vartable_id(dpy_Vartable *self)
         return PyString_FromString(self->table->id().c_str());
     else
         Py_RETURN_NONE;
+}
+
+static PyObject* dpy_Vartable_query(dpy_Vartable *self, PyObject *args, PyObject *kw)
+{
+    dpy_Varinfo* result = 0;
+    const char* varname = 0;
+    if (!PyArg_ParseTuple(args, "s", &varname))
+        return NULL;
+    try {
+        return (PyObject*)varinfo_create(self->table->query(WR_STRING_TO_VAR(varname + 1)));
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
 }
 
 }

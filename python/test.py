@@ -17,6 +17,10 @@ class VartableTest(unittest.TestCase):
         self.assertEqual(info.len, 3)
         self.assertEqual(info.unit, "NUMERIC")
 
+    def testQueryMissing(self):
+        table = dballe.Vartable.get("dballe")
+        self.assertRaises(KeyError, table.query, "B63254")
+
     def testQueryLocal(self):
         info = dballe.varinfo("t")
         self.assertEqual(info.unit, "K")

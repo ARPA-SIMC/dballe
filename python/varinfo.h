@@ -1,5 +1,5 @@
 /*
- * python/dballe - DB-All.e python bindings
+ * python/varinfo - DB-All.e Varinfo python bindings
  *
  * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -19,30 +19,23 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include <Python.h>
-#include "vartable.h"
-#include "varinfo.h"
-#include "var.h"
-#include "record.h"
+#include <wreport/varinfo.h>
 
 extern "C" {
 
-static PyMethodDef dballe_methods[] = {
-    { NULL }
-};
+typedef struct {
+    PyObject_HEAD
+    wreport::Varinfo info;
+} dpy_Varinfo;
 
-PyMODINIT_FUNC initdballe(void)
-{
-    using namespace dballe::python;
-
-    PyObject* m;
-
-    m = Py_InitModule3("dballe", dballe_methods,
-            "DB-All.e Python interface.");
-
-    register_vartable(m);
-    register_varinfo(m);
-    register_var(m);
-    register_record(m);
 }
 
+namespace dballe {
+namespace python {
+
+dpy_Varinfo* varinfo_create(const wreport::Varinfo& v);
+
+void register_varinfo(PyObject* m);
+
+}
 }
