@@ -10,7 +10,7 @@ if DO_DOCS
 SUBDIRS += doc
 endif
 if DO_DBALLE_PYTHON
-SUBDIRS += swig provami
+SUBDIRS += python swig provami
 endif
 SUBDIRS += .
 #examples 

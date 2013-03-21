@@ -284,6 +284,7 @@ fortran/Makefile
 tools/Makefile
 tables/Makefile
 extra/Makefile
+python/Makefile
 swig/Makefile
 doc/Makefile
 doc/libdballe.dox
