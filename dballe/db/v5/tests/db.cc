@@ -24,6 +24,7 @@
 #include "db/internals.h"
 
 using namespace dballe;
+using namespace dballe::db;
 using namespace wreport;
 using namespace std;
 
@@ -167,12 +168,13 @@ void db_shar::populate_database()
 template<> template<>
 void to::test<1>()
 {
-	use_db();
+    use_db();
+    v5::DB& db = v5();
 
-	db->delete_tables();
-	db->reset();
-	// Run twice to see if it is idempotent
-	db->reset();
+    db.delete_tables();
+    db.reset();
+    // Run twice to see if it is idempotent
+    db.reset();
 }
 
 // Test insert
@@ -992,7 +994,8 @@ void to::test<14>()
         query.set(DBA_KEY_ANA_FILTER, "B07030>1");
 
         // Perform the query, limited to level values
-        db::Cursor cur(*db);
+        v5::DB& db = v5();
+        db::Cursor cur(db);
         ensure_equals(cur.query(query, DBA_DB_WANT_ANA_ID, 0), 2);
 
         ensure(cur.next());
@@ -1025,7 +1028,8 @@ void to::test<15>()
         query.set(DBA_KEY_LEVELTYPE1, 44);
         query.set(DBA_KEY_L1, 55);
 
-        db::Cursor cur(*db);
+        v5::DB& db = v5();
+        db::Cursor cur(db);
         ensure_equals(cur.query(query, DBA_DB_WANT_VAR_VALUE | DBA_DB_WANT_LEVEL, 0), 1);
 
         ensure(cur.next());
@@ -1055,7 +1059,8 @@ void to::test<16>()
         query.set(DBA_KEY_LEVELTYPE1, 10);
         query.set(DBA_KEY_L1, 11);
 
-        db::Cursor cur(*db);
+        v5::DB& db = v5();
+        db::Cursor cur(db);
         ensure_equals(cur.query(query, DBA_DB_WANT_VAR_VALUE, 0), 4);
         cur.discard_rest();
 }
@@ -1070,7 +1075,8 @@ void to::test<17>()
         query.clear();
         query.set(DBA_KEY_ATTR_FILTER, "B12001");
 
-        db::Cursor cur(*db);
+        v5::DB& db = v5();
+        db::Cursor cur(db);
 
         try {
                 cur.query(query, DBA_DB_WANT_VAR_VALUE, 0);
@@ -1128,7 +1134,8 @@ void to::test<18>()
 
         // Query with querybest only
         {
-                db::Cursor cur(*db);
+            v5::DB& db = v5();
+            db::Cursor cur(db);
 
                 query.clear();
                 query.set(DBA_KEY_QUERY, "best");
@@ -1153,7 +1160,8 @@ void to::test<18>()
 
         // Query with querybest and priomax
         {
-                db::Cursor cur(*db);
+            v5::DB& db = v5();
+            db::Cursor cur(db);
 
                 query.clear();
                 query.set(DBA_KEY_PRIOMAX, 100);

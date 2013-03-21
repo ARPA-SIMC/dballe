@@ -18,6 +18,7 @@
  */
 
 #include "db/test-utils-db.h"
+#include "db/v5/db.h"
 #include "db/v5/station.h"
 #include <sql.h>
 
@@ -29,13 +30,13 @@ namespace tut {
 
 struct station_shar : public dballe::tests::db_test
 {
-        Station* st;
+    Station* st;
 
-	station_shar()
-	{
-		if (!has_db()) return;
-		st = &db->station();
-	}
+    station_shar()
+    {
+        if (!has_db()) return;
+        st = &v5().station();
+    }
 };
 TESTGRP(station);
 

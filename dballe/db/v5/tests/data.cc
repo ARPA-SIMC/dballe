@@ -18,6 +18,7 @@
  */
 
 #include "db/test-utils-db.h"
+#include "db/v5/db.h"
 #include "db/v5/data.h"
 #include "db/v5/context.h"
 #include "db/v5/station.h"
@@ -36,10 +37,10 @@ struct data_shar : public dballe::tests::db_test
     data_shar()
     {
         if (!has_db()) return;
-        da = &db->data();
+        da = &v5().data();
 
-        Station& st = db->station();
-        Context& co = db->context();
+        Station& st = v5().station();
+        Context& co = v5().context();
 
 		// Insert a mobile station
 		st.lat = 4500000;

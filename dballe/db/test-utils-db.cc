@@ -19,27 +19,37 @@
 
 #include "test-utils-db.h"
 #include <dballe/db/internals.h>
+#include "dballe/db/v5/db.h"
+#include <wreport/error.h>
 
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+
+using namespace wreport;
 
 namespace dballe {
 namespace tests {
 
 db_test::db_test(bool reset) : db(NULL)
 {
-	db = new DB;
-	db->connect_test();
-	if (reset) db->reset();
+    db = DB::connect_test();
+    if (reset) db->reset();
 }
 db_test::~db_test()
 {
-	if (db != NULL) delete db;
 }
 void db_test::use_db()
 {
-	if (db == NULL) throw tut::no_such_test();
+    if (!has_db()) throw tut::no_such_test();
+}
+
+db::v5::DB& db_test::v5()
+{
+    if (db::v5::DB* d = dynamic_cast<db::v5::DB*>(db.get()))
+        return *d;
+    else
+        throw error_consistency("test DB is not a v5 DB");
 }
 
 } // namespace tests

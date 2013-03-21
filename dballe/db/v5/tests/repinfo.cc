@@ -18,6 +18,7 @@
  */
 
 #include "db/test-utils-db.h"
+#include "db/v5/db.h"
 #include "db/v5/repinfo.h"
 
 using namespace dballe;
@@ -33,7 +34,7 @@ struct repinfo_shar : public dballe::tests::db_test
 	repinfo_shar()
 	{
 		if (!has_db()) return;
-		ri = &db->repinfo();
+		ri = &v5().repinfo();
 	}
 };
 TESTGRP(repinfo);

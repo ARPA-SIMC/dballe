@@ -79,8 +79,9 @@ struct poptOption dbTable[] = {
     POPT_TABLEEND
 };
 
-static void connect(DB& db)
+static auto_ptr<DB> connect()
 {
+    auto_ptr<DB> db;
     const char* chosen_dsn;
 
     /* If dsn is missing, look in the environment */
@@ -94,13 +95,15 @@ static void connect(DB& db)
 
     /* If dsn looks like a url, treat it accordingly */
     if (DB::is_url(chosen_dsn))
-        db.connect_from_url(chosen_dsn);
+        db = DB::connect_from_url(chosen_dsn);
     else
-        db.connect(chosen_dsn, op_user, op_pass);
+        db = DB::connect(chosen_dsn, op_user, op_pass);
 
     // Wipe database if requested
     if (op_wipe_first)
-        db.reset();
+        db->reset();
+
+    return db;
 }
 
 
@@ -115,9 +118,8 @@ int do_dump(poptContext optCon)
     Record query;
     dba_cmdline_get_query(optCon, query);
 
-    DB db;
-    connect(db);
-    Dbadb dbadb(db);
+    auto_ptr<DB> db = connect();
+    Dbadb dbadb(*db);
 
     return dbadb.do_dump(query, stdout);
 }
@@ -131,9 +133,8 @@ int do_stations(poptContext optCon)
     Record query;
     dba_cmdline_get_query(optCon, query);
 
-    DB db;
-    connect(db);
-    Dbadb dbadb(db);
+    auto_ptr<DB> db = connect();
+    Dbadb dbadb(*db);
 
     return dbadb.do_stations(query, stdout);
 }
@@ -147,19 +148,16 @@ int do_wipe(poptContext optCon)
     /* Get the optional name of the repinfo file */
     const char* fname = poptGetArg(optCon);
 
-    DB db;
-    connect(db);
-
-    db.reset(fname);
+    auto_ptr<DB> db = connect();
+    db->reset(fname);
     return 0;
 }
 
 /// Perform database cleanup maintenance
 int do_cleanup(poptContext optCon)
 {
-    DB db;
-    connect(db);
-    db.remove_orphans();
+    auto_ptr<DB> db = connect();
+    db->remove_orphans();
     return 0;
 }
 
@@ -169,14 +167,13 @@ int do_repinfo(poptContext optCon)
     /* Throw away the command name */
     poptGetArg(optCon);
 
-    DB db;
-    connect(db);
+    auto_ptr<DB> db = connect();
 
     /* Get the optional name of the repinfo file.  If missing, the default will be used */
     const char* fname = poptGetArg(optCon);
 
     int added, deleted, updated;
-    db.update_repinfo(fname, &added, &deleted, &updated);
+    db->update_repinfo(fname, &added, &deleted, &updated);
     printf("Update completed: %d added, %d deleted, %d updated.\n", added, deleted, updated);
     return 0;
 }
@@ -204,12 +201,11 @@ int do_import(poptContext optCon)
     if (op_full_pseudoana)
         import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
 
-    DB db;
-    connect(db);
+    auto_ptr<DB> db = connect();
 
-    const char* forced_repmemo = dbadb::parse_op_report(db, op_report);
+    const char* forced_repmemo = dbadb::parse_op_report(*db, op_report);
 
-    Dbadb dbadb(db);
+    Dbadb dbadb(*db);
     return dbadb.do_import(get_filenames(optCon), reader, import_flags, forced_repmemo);
 }
 
@@ -228,9 +224,8 @@ int do_export(poptContext optCon)
     Record query;
     dba_cmdline_get_query(optCon, query);
 
-    DB db;
-    connect(db);
-    Dbadb dbadb(db);
+    auto_ptr<DB> db = connect();
+    Dbadb dbadb(*db);
 
     if (op_dump)
     {
@@ -254,12 +249,9 @@ int do_delete(poptContext optCon)
     Record query;
     dba_cmdline_get_query(optCon, query);
 
-    DB db;
-    connect(db);
-
+    auto_ptr<DB> db = connect();
     // TODO: check that there is something
-
-    db.remove(query);
+    db->remove(query);
     return 0;
 }
 

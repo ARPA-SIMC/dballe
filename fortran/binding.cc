@@ -193,12 +193,12 @@ struct HSession : public fortran::HBase
 	void start()
 	{
 		fortran::HBase::start();
-		db = new dballe::DB;
+		db = 0;
 	}
 
 	void stop()
 	{
-		delete db;
+        if (db) delete db;
 		fortran::HBase::stop();
 	}
 };
@@ -326,9 +326,9 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 
 		/* If dsn looks like a url, treat it accordingly */
 		if (DB::is_url(chosen_dsn))
-			hs.db->connect_from_url(chosen_dsn);
+			hs.db = DB::connect_from_url(chosen_dsn).release();
 		else
-			hs.db->connect(chosen_dsn, s_user, s_password);
+			hs.db = DB::connect(chosen_dsn, s_user, s_password).release();
 
 		/* Open the database session */
 		return fortran::success();

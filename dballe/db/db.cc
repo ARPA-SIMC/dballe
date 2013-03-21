@@ -20,11 +20,95 @@
  */
 
 #include "db.h"
+#include "v5/db.h"
+#include <wreport/error.h>
+#include <cstring>
+#include <cstdlib>
 
+using namespace dballe::db;
 using namespace std;
 using namespace wreport;
 
 namespace dballe {
+
+DB::~DB()
+{
+}
+
+bool DB::is_url(const char* str)
+{
+    if (strncmp(str, "sqlite:", 7) == 0) return true;
+    if (strncmp(str, "odbc://", 7) == 0) return true;
+    if (strncmp(str, "test:", 5) == 0) return true;
+    return false;
+}
+
+auto_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
+{
+    v5::DB* v5;
+    auto_ptr<DB> res(v5 = new v5::DB);
+    v5->open_odbc(dsn, user, password);
+    return res;
+}
+
+auto_ptr<DB> DB::connect_from_file(const char* pathname)
+{
+    v5::DB* v5;
+    auto_ptr<DB> res(v5 = new v5::DB);
+    v5->open_file(pathname);
+    return res;
+}
+
+auto_ptr<DB> DB::connect_from_url(const char* url)
+{
+    if (strncmp(url, "sqlite://", 9) == 0)
+    {
+        return connect_from_file(url + 9);
+    }
+    if (strncmp(url, "sqlite:", 7) == 0)
+    {
+        return connect_from_file(url + 7);
+    }
+    if (strncmp(url, "odbc://", 7) == 0)
+    {
+        string buf(url + 7);
+        size_t pos = buf.find('@');
+        if (pos == string::npos)
+        {
+            return connect(buf.c_str(), "", ""); // odbc://dsn
+        }
+        // Split the string at '@'
+        string userpass = buf.substr(0, pos);
+        string dsn = buf.substr(pos + 1);
+
+        pos = userpass.find(':');
+        if (pos == string::npos)
+        {
+            return connect(dsn.c_str(), userpass.c_str(), ""); // odbc://user@dsn
+        }
+
+        string user = userpass.substr(0, pos);
+        string pass = userpass.substr(pos + 1);
+
+        return connect(dsn.c_str(), user.c_str(), pass.c_str()); // odbc://user:pass@dsn
+    }
+    if (strncmp(url, "test:", 5) == 0)
+    {
+        return connect_test();
+    }
+    error_consistency::throwf("unknown url \"%s\"", url);
+}
+
+auto_ptr<DB> DB::connect_test()
+{
+    const char* envurl = getenv("DBA_DB");
+    if (envurl != NULL)
+        return connect_from_url(envurl);
+    else
+        return connect_from_file("test.sqlite");
+}
+
+
 }
 
 /* vim:set ts=4 sw=4: */

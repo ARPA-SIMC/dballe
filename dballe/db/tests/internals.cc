@@ -19,6 +19,7 @@
 
 #include "db/test-utils-db.h"
 #include "db/internals.h"
+#include "db/v5/db.h"
 #include <sql.h>
 
 using namespace dballe;
@@ -39,9 +40,17 @@ struct db_internals_shar : public dballe::tests::db_test
 	{
 	}
 
+    db::Connection& connection()
+    {
+        if (db::v5::DB* d = dynamic_cast<db::v5::DB*>(db.get()))
+            return *(d->conn);
+        else
+            throw error_consistency("test DB is not a v5 DB");
+    }
+
 	void reset()
 	{
-		db::Connection& c = *(db->conn);
+		db::Connection& c = connection();
 		
 		c.drop_table_if_exists("dballe_test");
 
@@ -58,7 +67,7 @@ void to::test<1>()
 	use_db();
 	reset();
 
-	db::Connection& c = *(db->conn);
+	db::Connection& c = connection();
 	db::Statement s(c);
 
 	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
@@ -81,7 +90,7 @@ void to::test<2>()
 	use_db();
 	reset();
 
-	db::Connection& c = *(db->conn);
+	db::Connection& c = connection();
 	db::Statement s(c);
 
 	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
@@ -106,7 +115,7 @@ void to::test<3>()
 	use_db();
 	reset();
 
-	db::Connection& c = *(db->conn);
+	db::Connection& c = connection();
 	db::Statement s(c);
 
 	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
@@ -129,7 +138,7 @@ void to::test<4>()
 	use_db();
 	reset();
 
-	db::Connection& c = *(db->conn);
+	db::Connection& c = connection();
 	db::Statement s(c);
 
 	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
@@ -154,7 +163,7 @@ void to::test<5>()
 	use_db();
 	reset();
 
-	db::Connection& c = *(db->conn);
+	db::Connection& c = connection();
 	db::Statement s(c);
 
 	s.exec_direct("INSERT INTO dballe_test VALUES (42)");

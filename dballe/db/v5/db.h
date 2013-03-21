@@ -23,6 +23,7 @@
 #define DBA_DB_V5_H
 
 #include <dballe/db/odbcworkarounds.h>
+#include <dballe/db/db.h>
 #include <dballe/db/v5/cursor.h>
 #include <wreport/varinfo.h>
 #include <string>
@@ -34,71 +35,6 @@
  *
  * Functions used to connect to DB-All.e and insert, query and delete data.
  */
-
-/**
- * Flags controlling message import
- * @{
- */
-/* Import the attributes. */
-#define DBA_IMPORT_ATTRS		1
-/* Attempt to merge pseudoana extra information into the existing ones. */
-#define DBA_IMPORT_FULL_PSEUDOANA	2
-/* Import datetime information as data to preserve their attributes. */
-#define DBA_IMPORT_DATETIME_ATTRS	4
-/* Message data will overwrite existing values; otherwise, trying to insert
- * existing data will cause an error. */
-#define DBA_IMPORT_OVERWRITE		8
-/// @}
-
-/**
- * Constants used to define what values we should retrieve from a query
- */
-/** Retrieve latitude and longitude */
-#define DBA_DB_WANT_COORDS		(1 << 0)
-/** Retrieve the mobile station identifier */
-#define DBA_DB_WANT_IDENT		(1 << 1)
-/** Retrieve the level information */
-#define DBA_DB_WANT_LEVEL		(1 << 2)
-/** Retrieve the time range information */
-#define DBA_DB_WANT_TIMERANGE	(1 << 3)
-/** Retrieve the date and time information */
-#define DBA_DB_WANT_DATETIME	(1 << 4)
-/** Retrieve the variable name */
-#define DBA_DB_WANT_VAR_NAME	(1 << 5)
-/** Retrieve the variable value */
-#define DBA_DB_WANT_VAR_VALUE	(1 << 6)
-/** Retrieve the report code */
-#define DBA_DB_WANT_REPCOD		(1 << 7)
-/** Retrieve the station ID */
-#define DBA_DB_WANT_ANA_ID		(1 << 8)
-/** Retrieve the context ID */
-#define DBA_DB_WANT_CONTEXT_ID	(1 << 9)
-
-/**
- * Values for query modifier flags
- */
-/** When values from different reports exist on the same point, only report the
- * one from the report with the highest priority */
-#define DBA_DB_MODIFIER_BEST		(1 << 0)
-/** Tell the database optimizer that this is a query on a database with a big
- * pseudoana table (this serves to hint the MySQL optimizer, which would not
- * otherwise apply the correct strategy */
-#define DBA_DB_MODIFIER_BIGANA		(1 << 1)
-/** Remove duplicates in the results */
-#define DBA_DB_MODIFIER_DISTINCT	(1 << 2)
-/** Include the extra anagraphical data in the results */
-#define DBA_DB_MODIFIER_ANAEXTRA	(1 << 3)
-/** Do not include the extra anagraphical data in the results */
-#define DBA_DB_MODIFIER_NOANAEXTRA	(1 << 4)
-/** Do not bother sorting the results */
-#define DBA_DB_MODIFIER_UNSORTED	(1 << 5)
-/** Start geting the results as soon as they are available, without waiting for
- * the database to finish building the result set.  As a side effect, it is
- * impossible to know in advance the number of results.  Currently, it does not
- * work with the MySQL ODBC driver */
-#define DBA_DB_MODIFIER_STREAM		(1 << 6)
-/** Sort by rep_cod after ana_id, to ease reconstructing messages on export */
-#define DBA_DB_MODIFIER_SORT_FOR_EXPORT	(1 << 7)
 
 namespace dballe {
 struct Record;
@@ -121,7 +57,7 @@ struct Attr;
 /**
  * DB-ALLe database connection
  */
-class DB
+class DB : public dballe::DB
 {
 public:
 	/** ODBC database connection */
@@ -191,12 +127,8 @@ public:
 	 * @param password
 	 *   The password to use to connect to the DSN.  To specify an empty password,
 	 *   pass "" or NULL
-	 * @retval db
-	 *   The dba_db handle returned by the function
-	 * @return
-	 *   The error indicator for the function (See @ref error.h)
 	 */
-	void connect(const char* dsn, const char* user, const char* password);
+	void open_odbc(const char* dsn, const char* user, const char* password);
 
 	/**
 	 * Start a session with DB-All.e
@@ -206,7 +138,7 @@ public:
 	 *   passed as is to SQLDriverConnect, so see ODBC documentation for its
 	 *   format.
 	 */
-	void connect_generic(const char* config);
+	void open_generic(const char* config);
 
 	/**
 	 * Create from a SQLite file pathname
@@ -214,37 +146,7 @@ public:
 	 * @param pathname
 	 *   The pathname to a SQLite file
 	 */
-	void connect_from_file(const char* pathname);
-
-	/**
-	 * Create from an url-like specification, that can be:
-	 * 
-	 * @l sqlite:[//]foo.sqlite
-	 * @l odbc://[user[:pass]@]dsn
-	 * @l test:[//]
-	 *
-	 * @param url
-	 *   The url-like connection descriptor
-	 */
-	void connect_from_url(const char* url);
-
-	/**
-	 * Start a test session with DB-All.e
-	 *
-	 * Take information from the environment (@see dba_db_create_from_env) and
-	 * default to ./test.sqlite if nothing is specified.
-	 */
-	void connect_test();
-
-	/**
-	 * Return TRUE if the string looks like a DB URL
-	 *
-	 * @param str
-	 *   The string to test
-	 * @return
-	 *   true if it looks like a URL, else false
-	 */
-	static bool is_url(const char* str);
+	void open_file(const char* pathname);
 
 	/// Access the repinfo table
 	Repinfo& repinfo();

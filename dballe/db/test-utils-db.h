@@ -26,11 +26,13 @@ namespace tests {
 
 struct db_test
 {
-	// DB handle
-	DB* db;
+    // DB handle
+    std::auto_ptr<DB> db;
 
-	bool has_db() const { return db != NULL; }
-	void use_db();
+    bool has_db() const { return db.get() != NULL; }
+    void use_db();
+
+    db::v5::DB& v5();
 
 	db_test(bool reset=true);
 	~db_test();

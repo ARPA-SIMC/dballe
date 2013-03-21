@@ -395,7 +395,7 @@ void dba_db_delete(dba_db db)
 }
 #endif
 
-void DB::connect(const char* dsn, const char* user, const char* password)
+void DB::open_odbc(const char* dsn, const char* user, const char* password)
 {
     /* Connect to the DSN */
     conn->connect(dsn, user, password);
@@ -403,14 +403,14 @@ void DB::connect(const char* dsn, const char* user, const char* password)
     init_after_connect();
 }
 
-void DB::connect_generic(const char* config)
+void DB::open_generic(const char* config)
 {
     conn->driver_connect(config);
 
     init_after_connect();
 }
 
-void DB::connect_from_file(const char* pathname)
+void DB::open_file(const char* pathname)
 {
     // Access sqlite file directly
     string buf;
@@ -429,70 +429,7 @@ void DB::connect_from_file(const char* pathname)
         buf += pathname;
         buf += ";";
     }
-    connect_generic(buf.c_str());
-}
-
-void DB::connect_test()
-{
-    const char* envurl = getenv("DBA_DB");
-    if (envurl != NULL)
-        connect_from_url(envurl);
-    else
-        connect_from_file("test.sqlite");
-}
-
-void DB::connect_from_url(const char* url)
-{
-    if (strncmp(url, "sqlite://", 9) == 0)
-    {
-        connect_from_file(url + 9);
-        return;
-    }
-    if (strncmp(url, "sqlite:", 7) == 0)
-    {
-        connect_from_file(url + 7);
-        return;
-    }
-    if (strncmp(url, "odbc://", 7) == 0)
-    {
-        string buf(url + 7);
-        size_t pos = buf.find('@');
-        if (pos == string::npos)
-        {
-            connect(buf.c_str(), "", ""); // odbc://dsn
-            return;
-        }
-        // Split the string at '@'
-        string userpass = buf.substr(0, pos);
-        string dsn = buf.substr(pos + 1);
-
-        pos = userpass.find(':');
-        if (pos == string::npos)
-        {
-            connect(dsn.c_str(), userpass.c_str(), ""); // odbc://user@dsn
-            return;
-        }
-
-        string user = userpass.substr(0, pos);
-        string pass = userpass.substr(pos + 1);
-
-        connect(dsn.c_str(), user.c_str(), pass.c_str()); // odbc://user:pass@dsn
-        return;
-    }
-    if (strncmp(url, "test:", 5) == 0)
-    {
-        connect_test();
-        return;
-    }
-    error_consistency::throwf("unknown url \"%s\"", url);
-}
-
-bool DB::is_url(const char* str)
-{
-    if (strncmp(str, "sqlite:", 7) == 0) return true;
-    if (strncmp(str, "odbc://", 7) == 0) return true;
-    if (strncmp(str, "test:", 5) == 0) return true;
-    return false;
+    open_generic(buf.c_str());
 }
 
 Repinfo& DB::repinfo()
