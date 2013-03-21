@@ -243,6 +243,8 @@ struct ShipWMO : public Template
         // Data descriptor section
         bulletin.datadesc.clear();
         bulletin.datadesc.push_back(WR_VAR(3,  8,   9));
+
+        bulletin.load_tables();
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {

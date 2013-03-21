@@ -59,6 +59,12 @@ void to::test<1>()
     run_test(test, do_test, "temp-wmo");
 }
 
+/*
+ * TODO: make clean test methods, like:
+ *  test_ecmwf_data(ecmwf template name, wmo template name)
+ *  test_wmo_data(ecmwf template name, wmo template name)
+ */
+
 // Test import/export of ECMWF synop ship
 template<> template<>
 void to::test<2>()
