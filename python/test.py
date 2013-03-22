@@ -22,6 +22,16 @@ class VartableTest(unittest.TestCase):
         self.assertEqual(str(table), "dballe")
         self.assertEqual(repr(table), "Vartable('dballe')")
 
+    def testContains(self):
+        table = dballe.Vartable.get("dballe")
+        self.assertIn("B01001", table)
+        self.assertNotIn("B63254", table)
+
+    def testIndexing(self):
+        table = dballe.Vartable.get("dballe")
+        info = table[0]
+        self.assertEqual(info.var, "B01001")
+
     def testQuery(self):
         table = dballe.Vartable.get("dballe")
         info = table.query("B01001")

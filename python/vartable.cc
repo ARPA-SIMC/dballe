@@ -24,6 +24,7 @@
 #include <wreport/vartable.h>
 
 using namespace dballe::python;
+using namespace wreport;
 
 extern "C" {
 
@@ -78,6 +79,23 @@ static int dpy_Vartable_len(dpy_Vartable* self)
         return 0;
 }
 
+PyObject* dpy_Vartable_item(dpy_Vartable* self, Py_ssize_t i)
+{
+    if (!self->table)
+    {
+        PyErr_SetString(PyExc_IndexError, "table is empty");
+        return NULL;
+    }
+    // We can cast to size_t: since we provide sq_length, i is supposed to
+    // always be positive
+    if ((size_t)i >= self->table->size())
+    {
+        PyErr_SetString(PyExc_IndexError, "table index out of range");
+        return NULL;
+    }
+    return (PyObject*)varinfo_create(Varinfo((*self->table)[i]));
+}
+
 PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
 {
     if (!self->table)
@@ -86,11 +104,19 @@ PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
         return NULL;
     }
 
+    if (PyIndex_Check(key)) {
+        Py_ssize_t i = PyNumber_AsSsize_t(key, PyExc_IndexError);
+        if (i == -1 && PyErr_Occurred())
+            return NULL;
+        if (i < 0)
+            i += PyString_GET_SIZE(self);
+        return dpy_Vartable_item(self, i);
+    }
+
     const char* varname = PyString_AsString(key);
     if (varname == NULL)
         return NULL;
 
-    dpy_Varinfo* result = 0;
     try {
         return (PyObject*)varinfo_create(self->table->query(resolve_varcode(varname)));
     } catch (wreport::error& e) {
@@ -99,6 +125,27 @@ PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
         return raise_std_exception(se);
     }
 }
+
+int dpy_Vartable_contains(dpy_Vartable* self, PyObject *value)
+{
+    if (!self->table) return 0;
+
+    const char* varname = PyString_AsString(value);
+    if (varname == NULL)
+        return -1;
+    return self->table->contains(resolve_varcode(varname)) ? 1 : 0;
+}
+
+static PySequenceMethods dpy_Vartable_sequence = {
+    (lenfunc)dpy_Vartable_len,        // sq_length
+    0,                                // sq_concat
+    0,                                // sq_repeat
+    (ssizeargfunc)dpy_Vartable_item,  // sq_item
+    0,                                // sq_slice
+    0,                                // sq_ass_item
+    0,                                // sq_ass_slice
+    (objobjproc)dpy_Vartable_contains, // sq_contains
+};
 
 static PyMappingMethods dpy_Vartable_mapping = {
     (lenfunc)dpy_Vartable_len,         // __len__
@@ -119,7 +166,7 @@ static PyTypeObject dpy_Vartable_Type = {
     0,                         // tp_compare
     (reprfunc)dpy_Vartable_repr, // tp_repr
     0,                         // tp_as_number
-    0,                         // tp_as_sequence
+    &dpy_Vartable_sequence,    // tp_as_sequence
     &dpy_Vartable_mapping,     // tp_as_mapping
     0,                         // tp_hash
     0,                         // tp_call
