@@ -11,6 +11,9 @@ class VartableTest(unittest.TestCase):
         self.assertEqual(table.id, None)
         self.assertRaises(KeyError, table.query, "B01001")
 
+    def testEmptyVarinfo(self):
+        self.assertRaises(NotImplementedError, dballe.Varinfo)
+
     def testCreate(self):
         table = dballe.Vartable.get("dballe")
         self.assertEqual(table.id, "dballe")
@@ -50,7 +53,7 @@ class VartableTest(unittest.TestCase):
         self.assertEqual(info.scale, 0)
         self.assertEqual(info.ref, 0)
         self.assertEqual(info.len, 3)
-        self.assertEqual(info.is_string(), False)
+        self.assertEqual(info.is_string, False)
 
     def testStringification(self):
         info = dballe.varinfo("B01001")

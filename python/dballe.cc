@@ -19,14 +19,27 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include <Python.h>
+#include "common.h"
 #include "vartable.h"
 #include "varinfo.h"
 #include "var.h"
 #include "record.h"
+#include "dballe/core/var.h"
+
+using namespace dballe::python;
 
 extern "C" {
 
+static PyObject* dballe_varinfo(PyTypeObject *type, PyObject *args, PyObject *kw)
+{
+    const char* var_name;
+    if (!PyArg_ParseTuple(args, "s", &var_name))
+        return NULL;
+    return (PyObject*)varinfo_create(dballe::varinfo(resolve_varcode(var_name)));
+}
+
 static PyMethodDef dballe_methods[] = {
+    {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, "Query the DB-All.e variable table returning a Varinfo" },
     { NULL }
 };
 

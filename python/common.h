@@ -23,9 +23,20 @@
 
 #include <Python.h>
 #include <wreport/error.h>
+#include <wreport/varinfo.h>
 
 namespace dballe {
 namespace python {
+
+/**
+ * Resolve a varcode name to a varcode proper.
+ */
+wreport::Varcode resolve_varcode(const char* name);
+
+/**
+ * Return a python string representing a varcode
+ */
+PyObject* format_varcode(wreport::Varcode code);
 
 /**
  * Given a wreport exception, set the Python error indicator appropriately.

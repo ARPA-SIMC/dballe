@@ -19,7 +19,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "varinfo.h"
+#include "common.h"
 
+using namespace dballe::python;
 using namespace wreport;
 
 extern "C" {
@@ -35,16 +37,32 @@ static PyObject* dpy_Varinfo_is_string(dpy_Varinfo *self, void* closure)
     else
         return Py_False;
 }
+static PyObject* dpy_Varinfo_var(dpy_Varinfo *self, void* closure) { return format_varcode(self->info->var); }
 static PyObject* dpy_Varinfo_len(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->len); }
 static PyObject* dpy_Varinfo_unit(dpy_Varinfo* self, void* closure) { return PyString_FromString(self->info->unit); }
+static PyObject* dpy_Varinfo_desc(dpy_Varinfo* self, void* closure) { return PyString_FromString(self->info->desc); }
+static PyObject* dpy_Varinfo_scale(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->scale); }
+static PyObject* dpy_Varinfo_ref(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->ref); }
 
 
 static PyGetSetDef dpy_Varinfo_getsetters[] = {
     {"is_string", (getter)dpy_Varinfo_is_string, NULL, "true if the value is a string", NULL },
+    {"var", (getter)dpy_Varinfo_var, NULL, "variable code", NULL },
     {"len", (getter)dpy_Varinfo_len, NULL, "number of significant digits", NULL},
+    {"scale", (getter)dpy_Varinfo_scale, NULL, "scale of the value as a power of 10", NULL},
+    {"ref", (getter)dpy_Varinfo_ref, NULL, "reference value added after scaling", NULL},
     {"unit", (getter)dpy_Varinfo_unit, NULL, "measurement unit", NULL},
+    {"desc", (getter)dpy_Varinfo_desc, NULL, "description", NULL},
     {NULL}
 };
+
+static int dpy_Varinfo_init(dpy_Varinfo* self, PyObject* args, PyObject* kw)
+{
+    // People should not invoke Varinfo() as a constructor, but if they do,
+    // this is better than a segfault later on
+    PyErr_SetString(PyExc_NotImplementedError, "Varinfo objects cannot be constructed explicitly");
+    return -1;
+}
 
 
 static PyTypeObject dpy_Varinfo_Type = {
@@ -84,7 +102,7 @@ static PyTypeObject dpy_Varinfo_Type = {
     0,                         // tp_descr_get
     0,                         // tp_descr_set
     0,                         // tp_dictoffset
-    0,                         // tp_init
+    (initproc)dpy_Varinfo_init, // tp_init
     0,                         // tp_alloc
     0,                         // tp_new
 };

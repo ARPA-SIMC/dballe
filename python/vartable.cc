@@ -125,7 +125,7 @@ static PyObject* dpy_Vartable_query(dpy_Vartable *self, PyObject *args, PyObject
     if (!PyArg_ParseTuple(args, "s", &varname))
         return NULL;
     try {
-        return (PyObject*)varinfo_create(self->table->query(WR_STRING_TO_VAR(varname + 1)));
+        return (PyObject*)varinfo_create(self->table->query(resolve_varcode(varname)));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {

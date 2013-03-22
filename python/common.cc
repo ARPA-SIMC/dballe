@@ -19,11 +19,32 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "common.h"
+#include "dballe/core/aliases.h"
 
 using namespace wreport;
 
 namespace dballe {
 namespace python {
+
+wreport::Varcode resolve_varcode(const char* name)
+{
+    wreport::Varcode res = 0;
+    if ((res = varcode_alias_resolve(name)) == 0)
+        res = descriptor_code(name);
+    return res;
+}
+
+PyObject* format_varcode(wreport::Varcode code)
+{
+    char buf[7];
+    snprintf(buf, 7, "%c%02d%03d",
+            WR_VAR_F(code) == 0 ? 'B' :
+            WR_VAR_F(code) == 1 ? 'R' :
+            WR_VAR_F(code) == 2 ? 'C' :
+            WR_VAR_F(code) == 3 ? 'D' : '?',
+            WR_VAR_X(code), WR_VAR_Y(code));
+    return PyString_FromString(buf);
+}
 
 PyObject* raise_wreport_exception(const wreport::error& e)
 {
@@ -66,7 +87,7 @@ PyObject* raise_wreport_exception(const wreport::error& e)
             PyErr_SetString(PyExc_ValueError, e.what());
             return NULL;
         case WR_ERR_UNIMPLEMENTED: // Feature not implemented
-            PyErr_SetString(PyExc_SystemError, e.what());
+            PyErr_SetString(PyExc_NotImplementedError, e.what());
             return NULL;
         case WR_ERR_DOMAIN:      // Value outside acceptable domain
             PyErr_SetString(PyExc_OverflowError, e.what());
