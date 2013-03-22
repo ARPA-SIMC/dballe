@@ -216,6 +216,7 @@ static int level_to_rec(dpy_Record* self, PyObject* l)
 {
     if (l == NULL)
     {
+        // FIXME: this needs None for the trailing unset parts
         self->rec.unset(DBA_KEY_LEVELTYPE1);
         self->rec.unset(DBA_KEY_L1);
         self->rec.unset(DBA_KEY_LEVELTYPE2);
@@ -264,6 +265,67 @@ static int level_to_rec(dpy_Record* self, PyObject* l)
     return 0;
 }
 
+static PyObject* rec_to_trange(dpy_Record* self)
+{
+    try {
+        // FIXME: this needs None for the trailing unset parts
+        int pind = self->rec[DBA_KEY_PINDICATOR].enqi();
+        int p1 = self->rec[DBA_KEY_P1].enqi();
+        int p2 = self->rec[DBA_KEY_P2].enqi();
+        return Py_BuildValue("(iii)", pind, p1, p2);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
+static int trange_to_rec(dpy_Record* self, PyObject* l)
+{
+    if (l == NULL)
+    {
+        self->rec.unset(DBA_KEY_PINDICATOR);
+        self->rec.unset(DBA_KEY_P1);
+        self->rec.unset(DBA_KEY_P2);
+    } else {
+        if (!PySequence_Check(l))
+        {
+            PyErr_SetString(PyExc_TypeError, "value must be a sequence");
+            return -1;
+        }
+
+        Py_ssize_t len = PySequence_Length(l);
+        if (len > 3)
+        {
+            PyErr_SetString(PyExc_TypeError, "value must be a sequence of up to 3 elements");
+            return -1;
+        }
+
+        PyObject* v;
+        int i;
+
+        switch (len)
+        {
+            case 3:
+                if ((v = PySequence_GetItem(l, 2)) == NULL) return -1;
+                i = PyInt_AsLong(v);
+                if (i == -1 && PyErr_Occurred()) return -1;
+                self->rec.set(DBA_KEY_P2, i);
+            case 2:
+                if ((v = PySequence_GetItem(l, 1)) == NULL) return -1;
+                i = PyInt_AsLong(v);
+                if (i == -1 && PyErr_Occurred()) return -1;
+                self->rec.set(DBA_KEY_P1, i);
+            case 1:
+                if ((v = PySequence_GetItem(l, 0)) == NULL) return -1;
+                i = PyInt_AsLong(v);
+                if (i == -1 && PyErr_Occurred()) return -1;
+                self->rec.set(DBA_KEY_PINDICATOR, i);
+        }
+    }
+    return 0;
+}
+
 PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
 {
     const char* varname = PyString_AsString(key);
@@ -294,10 +356,10 @@ PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
             if (strcmp(varname, "level") == 0)
                 return rec_to_level(self);
             break;
-        //case 't':
-//                def _macro_get_trange(self):
-//                        return self._get_iter(*self.KEYS_TRANGE)
-//                _macro_get_timerange = _macro_get_trange
+        case 't':
+            if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
+                return rec_to_trange(self);
+            break;
     }
 
     const Var* var = self->rec.peek(varname);
@@ -345,10 +407,9 @@ int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
         case 'l':
             if (strcmp(varname, "level") == 0)
                 return level_to_rec(self, val);
-        //case 't':
-//                def _macro_get_trange(self):
-//                        return self._get_iter(*self.KEYS_TRANGE)
-//                _macro_get_timerange = _macro_get_trange
+        case 't':
+            if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
+                return trange_to_rec(self, val);
     }
 
     if (val == NULL)
