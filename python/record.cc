@@ -31,6 +31,12 @@ using namespace wreport;
 
 extern "C" {
 
+static dba_keyword date_keys[6] = { DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY, DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC };
+static dba_keyword datemin_keys[6] = { DBA_KEY_YEARMIN, DBA_KEY_MONTHMIN, DBA_KEY_DAYMIN, DBA_KEY_HOURMIN, DBA_KEY_MINUMIN, DBA_KEY_SECMIN };
+static dba_keyword datemax_keys[6] = { DBA_KEY_YEARMAX, DBA_KEY_MONTHMAX, DBA_KEY_DAYMAX, DBA_KEY_HOURMAX, DBA_KEY_MINUMAX, DBA_KEY_SECMAX };
+static dba_keyword level_keys[4] = { DBA_KEY_LEVELTYPE1, DBA_KEY_L1, DBA_KEY_LEVELTYPE2, DBA_KEY_L2 };
+static dba_keyword trange_keys[3] = { DBA_KEY_PINDICATOR, DBA_KEY_P1, DBA_KEY_P2 };
+
 static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val);
 
 /*
@@ -165,17 +171,16 @@ static PyObject* dpy_Record_repr(dpy_Record* self)
     return PyString_FromString("Record object");
 }
 
-static PyObject* rec_to_datetime(dpy_Record* self,
-        dba_keyword ky, dba_keyword km, dba_keyword kd,
-        dba_keyword kho, dba_keyword kmi, dba_keyword kse)
+static PyObject* rec_to_datetime(dpy_Record* self, dba_keyword* keys)
 {
     try {
-        int y = self->rec[ky].enqi();
-        int m = self->rec[km].enqi();
-        int d = self->rec[kd].enqi();
-        int ho = self->rec[kho].enqi();
-        int mi = self->rec[kmi].enqi();
-        int se = self->rec[kse].enqi();
+        int y = self->rec[keys[0]].enqi();
+        int m = self->rec[keys[1]].enqi();
+        int d = self->rec[keys[2]].enqi();
+        int ho = self->rec[keys[3]].enqi();
+        int mi = self->rec[keys[4]].enqi();
+        // Second is optional, defaulting to 0
+        int se = self->rec.get(keys[5], 0);
         return PyDateTime_FromDateAndTime(y, m, d, ho, mi, se, 0);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -184,47 +189,59 @@ static PyObject* rec_to_datetime(dpy_Record* self,
     }
 }
 
-static int datetime_to_rec(dpy_Record* self, PyObject* dt,
-        dba_keyword ky, dba_keyword km, dba_keyword kd,
-        dba_keyword kho, dba_keyword kmi, dba_keyword kse)
+static int datetime_to_rec(dpy_Record* self, PyObject* dt, dba_keyword* keys)
 {
     if (dt == NULL)
     {
-        self->rec.unset(ky);
-        self->rec.unset(km);
-        self->rec.unset(kd);
-        self->rec.unset(kho);
-        self->rec.unset(kmi);
-        self->rec.unset(kse);
+        for (unsigned i = 0; i < 6; ++i)
+            self->rec.unset(keys[i]);
     } else {
         if (!PyDateTime_Check(dt))
         {
             PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
             return -1;
         }
-        self->rec.set(ky, PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt));
-        self->rec.set(km, PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt));
-        self->rec.set(kd, PyDateTime_GET_DAY((PyDateTime_DateTime*)dt));
-        self->rec.set(kho, PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt));
-        self->rec.set(kmi, PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt));
-        self->rec.set(kse, PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
+        self->rec.set(keys[0], PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt));
+        self->rec.set(keys[1], PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt));
+        self->rec.set(keys[2], PyDateTime_GET_DAY((PyDateTime_DateTime*)dt));
+        self->rec.set(keys[3], PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt));
+        self->rec.set(keys[4], PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt));
+        self->rec.set(keys[5], PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
     }
     return 0;
 }
 
-static PyObject* rec_to_level(dpy_Record* self)
+static PyObject* rec_keys_to_tuple(dpy_Record* self, dba_keyword* keys, unsigned len)
 {
     try {
-        int lt1 = self->rec[DBA_KEY_LEVELTYPE1].enqi();
-        int l1 = self->rec[DBA_KEY_L1].enqi();
-        int lt2 = self->rec[DBA_KEY_LEVELTYPE2].enqi();
-        int l2 = self->rec[DBA_KEY_L2].enqi();
-        return Py_BuildValue("(iiii)", lt1, l1, lt2, l2);
+        PyObject* res = PyTuple_New(len);
+        if (!res) return NULL;
+
+        for (unsigned i = 0; i < len; ++i)
+        {
+            if (self->rec.peek_value(keys[i]))
+            {
+                int iv = self->rec[keys[i]].enqi();
+                PyObject* v = PyInt_FromLong(iv);
+                if (!v) return NULL; // FIXME: deallocate res
+                PyTuple_SET_ITEM(res, i, v);
+            } else {
+                PyTuple_SET_ITEM(res, i, Py_None);
+            }
+        }
+        return res;
     } catch (wreport::error& e) {
+        // TODO: deallocate res
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
+        // TODO: deallocate res
         return raise_std_exception(se);
     }
+}
+
+static PyObject* rec_to_level(dpy_Record* self)
+{
+    return rec_keys_to_tuple(self, level_keys, 4);
 }
 
 static int level_to_rec(dpy_Record* self, PyObject* l)
@@ -282,17 +299,7 @@ static int level_to_rec(dpy_Record* self, PyObject* l)
 
 static PyObject* rec_to_trange(dpy_Record* self)
 {
-    try {
-        // FIXME: this needs None for the trailing unset parts
-        int pind = self->rec[DBA_KEY_PINDICATOR].enqi();
-        int p1 = self->rec[DBA_KEY_P1].enqi();
-        int p2 = self->rec[DBA_KEY_P2].enqi();
-        return Py_BuildValue("(iii)", pind, p1, p2);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    return rec_keys_to_tuple(self, trange_keys, 3);
 }
 
 static int trange_to_rec(dpy_Record* self, PyObject* l)
@@ -354,17 +361,11 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
         case 'd':
             if (strcmp(varname, "date") == 0)
             {
-                return rec_to_datetime(self,
-                            DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY,
-                            DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC);
+                return rec_to_datetime(self, date_keys);
             } else if (strcmp(varname, "datemin") == 0) {
-                return rec_to_datetime(self,
-                            DBA_KEY_YEARMIN, DBA_KEY_MONTHMIN, DBA_KEY_DAYMIN,
-                            DBA_KEY_HOURMIN, DBA_KEY_MINUMIN, DBA_KEY_SECMIN);
+                return rec_to_datetime(self, datemin_keys);
             } else if (strcmp(varname, "datemax") == 0) {
-                return rec_to_datetime(self,
-                            DBA_KEY_YEARMAX, DBA_KEY_MONTHMAX, DBA_KEY_DAYMAX,
-                            DBA_KEY_HOURMAX, DBA_KEY_MINUMAX, DBA_KEY_SECMAX);
+                return rec_to_datetime(self, datemax_keys);
             }
             break;
         case 'l':
@@ -406,17 +407,11 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
         case 'd':
             if (strcmp(varname, "date") == 0)
             {
-                return datetime_to_rec(self, val,
-                            DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY,
-                            DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC);
+                return datetime_to_rec(self, val, date_keys);
             } else if (strcmp(varname, "datemin") == 0) {
-                return datetime_to_rec(self, val,
-                            DBA_KEY_YEARMIN, DBA_KEY_MONTHMIN, DBA_KEY_DAYMIN,
-                            DBA_KEY_HOURMIN, DBA_KEY_MINUMIN, DBA_KEY_SECMIN);
+                return datetime_to_rec(self, val, datemin_keys);
             } else if (strcmp(varname, "datemax") == 0) {
-                return datetime_to_rec(self, val,
-                            DBA_KEY_YEARMAX, DBA_KEY_MONTHMAX, DBA_KEY_DAYMAX,
-                            DBA_KEY_HOURMAX, DBA_KEY_MINUMAX, DBA_KEY_SECMAX);
+                return datetime_to_rec(self, val, datemax_keys);
             }
             break;
         case 'l':
@@ -459,11 +454,48 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
     return 0;
 }
 
+static int all_keys_set(const Record& rec, dba_keyword* keys, unsigned len)
+{
+    for (unsigned i = 0; i < len; ++i)
+        if (rec.peek_value(keys[i]) == NULL)
+            return 0;
+    return 1;
+}
+
+static int any_key_set(const Record& rec, dba_keyword* keys, unsigned len)
+{
+    for (unsigned i = 0; i < len; ++i)
+        if (rec.peek_value(keys[i]) != NULL)
+            return 1;
+    return 0;
+}
+
 static int dpy_Record_contains(dpy_Record* self, PyObject *value)
 {
     const char* varname = PyString_AsString(value);
     if (varname == NULL)
         return -1;
+
+    switch (varname[0])
+    {
+        case 'd':
+            // We don't bother checking the seconds, since they default to 0 if
+            // missing
+            if (strcmp(varname, "date") == 0)
+                return all_keys_set(self->rec, date_keys, 5);
+            else if (strcmp(varname, "datemin") == 0)
+                return all_keys_set(self->rec, datemin_keys, 5);
+            else if (strcmp(varname, "datemax") == 0)
+                return all_keys_set(self->rec, datemax_keys, 5);
+            break;
+        case 'l':
+            if (strcmp(varname, "level") == 0)
+                return any_key_set(self->rec, level_keys, 4);
+        case 't':
+            if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
+                return any_key_set(self->rec, trange_keys, 3);
+    }
+
     return self->rec.peek_value(varname) == NULL ? 0 : 1;
 }
 

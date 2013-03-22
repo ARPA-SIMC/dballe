@@ -241,7 +241,7 @@ class RecordTest(unittest.TestCase):
 
         res = self.r.vars()
         self.assertEqual(len(res), len(self.knownvars))
-        self.assertEqual(set(res), set(self.knownvarvals))
+        self.assertEqual(sorted(x.enq() for x in res), sorted(self.knownvarvals))
 
     def testSetDict(self):
         r = dballe.Record()
