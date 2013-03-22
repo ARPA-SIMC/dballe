@@ -24,18 +24,23 @@ using namespace wreport;
 
 extern "C" {
 
-static PyObject* dpy_Varinfo_is_string(dpy_Varinfo *self);
-
 static PyMethodDef dpy_Varinfo_methods[] = {
-    {"is_string",  (PyCFunction)dpy_Varinfo_is_string, METH_NOARGS, "Return true if the value is a string" },
     {NULL}
 };
 
-static PyObject* dpy_Varinfo_len(dpy_Varinfo *self, void* closure) { return PyInt_FromLong(self->info->len); }
-static PyObject* dpy_Varinfo_unit(dpy_Varinfo *self, void* closure) { return PyString_FromString(self->info->unit); }
+static PyObject* dpy_Varinfo_is_string(dpy_Varinfo *self, void* closure)
+{
+    if (self->info->is_string())
+        return Py_True;
+    else
+        return Py_False;
+}
+static PyObject* dpy_Varinfo_len(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->len); }
+static PyObject* dpy_Varinfo_unit(dpy_Varinfo* self, void* closure) { return PyString_FromString(self->info->unit); }
 
 
 static PyGetSetDef dpy_Varinfo_getsetters[] = {
+    {"is_string", (getter)dpy_Varinfo_is_string, NULL, "true if the value is a string", NULL },
     {"len", (getter)dpy_Varinfo_len, NULL, "number of significant digits", NULL},
     {"unit", (getter)dpy_Varinfo_unit, NULL, "measurement unit", NULL},
     {NULL}
@@ -83,14 +88,6 @@ static PyTypeObject dpy_Varinfo_Type = {
     0,                         // tp_alloc
     0,                         // tp_new
 };
-
-static PyObject* dpy_Varinfo_is_string(dpy_Varinfo *self)
-{
-    if (self->info->is_string())
-        return Py_True;
-    else
-        return Py_False;
-}
 
 }
 

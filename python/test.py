@@ -6,14 +6,19 @@ import datetime as dt
 import unittest
 
 class VartableTest(unittest.TestCase):
+    def testEmpty(self):
+        table = dballe.Vartable()
+        self.assertEqual(table.id, None)
+        self.assertRaises(KeyError, table.query, "B01001")
+
     def testCreate(self):
         table = dballe.Vartable.get("dballe")
-        self.assertEqual(table.id(), "dballe")
+        self.assertEqual(table.id, "dballe")
 
     def testQuery(self):
         table = dballe.Vartable.get("dballe")
         info = table.query("B01001")
-        self.assertEqual(info.is_string(), False)
+        self.assertEqual(info.is_string, False)
         self.assertEqual(info.len, 3)
         self.assertEqual(info.unit, "NUMERIC")
 

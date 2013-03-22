@@ -33,13 +33,24 @@ typedef struct {
 } dpy_Vartable;
 
 static PyObject* dpy_Vartable_get(PyTypeObject *type, PyObject *args, PyObject *kw);
-static PyObject* dpy_Vartable_id(dpy_Vartable *self);
 static PyObject* dpy_Vartable_query(dpy_Vartable *self, PyObject *args, PyObject *kw);
 
 static PyMethodDef dpy_Vartable_methods[] = {
     {"get",   (PyCFunction)dpy_Vartable_get, METH_VARARGS | METH_CLASS, "Create a Vartable for the table with the given name" },
-    {"id",    (PyCFunction)dpy_Vartable_id, METH_NOARGS, "Get the table name" },
     {"query", (PyCFunction)dpy_Vartable_query, METH_VARARGS, "Query the table, returning a Varinfo object or raising an exception" },
+    {NULL}
+};
+
+static PyObject* dpy_Vartable_id(dpy_Vartable* self, void* closure)
+{
+    if (self->table)
+        return PyString_FromString(self->table->id().c_str());
+    else
+        Py_RETURN_NONE;
+}
+
+static PyGetSetDef dpy_Vartable_getsetters[] = {
+    {"id", (getter)dpy_Vartable_id, NULL, "name of the table", NULL},
     {NULL}
 };
 
@@ -74,7 +85,7 @@ static PyTypeObject dpy_Vartable_Type = {
     0,                         // tp_iternext
     dpy_Vartable_methods,      // tp_methods
     0,                         // tp_members
-    0,                         // tp_getset
+    dpy_Vartable_getsetters,   // tp_getset
     0,                         // tp_base
     0,                         // tp_dict
     0,                         // tp_descr_get
@@ -102,18 +113,15 @@ static PyObject* dpy_Vartable_get(PyTypeObject *type, PyObject *args, PyObject *
     return (PyObject*)result;
 }
 
-static PyObject* dpy_Vartable_id(dpy_Vartable *self)
-{
-    if (self->table)
-        return PyString_FromString(self->table->id().c_str());
-    else
-        Py_RETURN_NONE;
-}
-
 static PyObject* dpy_Vartable_query(dpy_Vartable *self, PyObject *args, PyObject *kw)
 {
     dpy_Varinfo* result = 0;
     const char* varname = 0;
+    if (!self->table)
+    {
+        PyErr_SetString(PyExc_KeyError, "table is empty");
+        return NULL;
+    }
     if (!PyArg_ParseTuple(args, "s", &varname))
         return NULL;
     try {
