@@ -309,6 +309,31 @@ class RecordTest(unittest.TestCase):
         self.assertRaises(KeyError, rec.__getitem__, "B01001")
         self.assertRaises(KeyError, rec.__getitem__, "date")
 
+    def testRecordClear(self):
+        rec = dballe.Record(ana_id=1, B12101=21.5)
+        self.assertIn("ana_id", rec);
+        self.assertIn("B12101", rec);
+
+        rec.clear()
+        self.assertNotIn("ana_id", rec);
+        self.assertNotIn("B12101", rec);
+
+        rec.update(ana_id=1, B12101=21.5)
+        self.assertIn("ana_id", rec);
+        self.assertIn("B12101", rec);
+
+        rec.clear_vars()
+        self.assertIn("ana_id", rec);
+        self.assertNotIn("B12101", rec);
+
+    def testRecordConstructor(self):
+        rec = dballe.Record(
+            ana_id=1,
+            date=dt.datetime(2001, 2, 3, 4, 5, 6)
+        )
+        self.assertEquals(rec["ana_id"], 1)
+        self.assertEquals(rec["date"], dt.datetime(2001, 2, 3, 4, 5, 6))
+
     def testRecordCopying(self):
         # Try out all copying functions
 

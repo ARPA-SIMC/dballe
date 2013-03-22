@@ -182,7 +182,21 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
     return Py_BuildValue("(NN)", dt_min, dt_max);
 }
 
+static PyObject* dpy_Record_clear(dpy_Record* self)
+{
+    self->rec.clear();
+    Py_RETURN_NONE;
+}
+
+static PyObject* dpy_Record_clear_vars(dpy_Record* self)
+{
+    self->rec.clear_vars();
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef dpy_Record_methods[] = {
+    {"clear", (PyCFunction)dpy_Record_clear, METH_NOARGS, "remove all data from the record" },
+    {"clear_vars", (PyCFunction)dpy_Record_clear_vars, METH_NOARGS, "remove all variables from the record, leaving the keywords intact" },
     {"get", (PyCFunction)dpy_Record_get, METH_VARARGS, "lookup a value, returning a fallback value (None by default) if unset" },
     {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
     {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a sequence with all the varcodes of the variables set on the Record. Note that this does not include keys." },
@@ -196,6 +210,17 @@ static int dpy_Record_init(dpy_Record* self, PyObject* args, PyObject* kw)
 {
     // Construct on preallocated memory
     new (&self->rec) dballe::Record;
+
+    if (kw)
+    {
+        PyObject *key, *value;
+        Py_ssize_t pos = 0;
+
+        while (PyDict_Next(kw, &pos, &key, &value))
+            if (dpy_Record_setitem(self, key, value) < 0)
+                return NULL;
+    }
+
     return 0;
 }
 

@@ -21,6 +21,7 @@
 #include <Python.h>
 #include <datetime.h>
 #include "db.h"
+#include "record.h"
 #include "common.h"
 
 using namespace std;
@@ -100,6 +101,106 @@ static PyObject* dpy_DB_connect_test(PyTypeObject *type)
     return (PyObject*)result;
 }
 
+static PyObject* dpy_DB_is_url(PyTypeObject *type, PyObject *args)
+{
+    const char* url;
+    if (!PyArg_ParseTuple(args, "s", &url))
+        return NULL;
+
+    if (DB::is_url(url))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_TRUE;
+}
+
+static PyObject* dpy_DB_reset(dpy_DB* self, PyObject *args)
+{
+    const char* repinfo_file = 0;
+    if (!PyArg_ParseTuple(args, "|s", &repinfo_file))
+        return NULL;
+
+    try {
+        self->db->reset(repinfo_file);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+
+/*
+virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
+virtual const std::string& rep_memo_from_cod(int rep_cod) = 0;
+*/
+
+static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
+{
+    static char* kwlist[] = { "record", "can_replace", "station_can_add", NULL };
+    dpy_Record* record;
+    int can_replace = 0;
+    int station_can_add = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!|ii", kwlist, &dpy_Record_Type, &record, &can_replace, &station_can_add))
+        return NULL;
+
+    try {
+        self->db->insert(record->rec, can_replace, station_can_add);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    try {
+        self->db->remove(record->rec);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* dpy_DB_vacuum(dpy_DB* self)
+{
+    try {
+        self->db->vacuum();
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+    /*
+    virtual std::auto_ptr<db::Cursor> query(const Record& query, unsigned int wanted, unsigned int modifiers) = 0;
+    virtual std::auto_ptr<db::Cursor> query_stations(const Record& query) = 0;
+    virtual std::auto_ptr<db::Cursor> query_data(const Record& rec) = 0;
+    virtual unsigned query_attrs(int id_context, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs) = 0;
+    virtual void attr_insert_or_replace(int id_context, wreport::Varcode id_var, const Record& attrs, bool can_replace) = 0;
+    */
+    //virtual void attr_insert(int id_context, wreport::Varcode id_var, const Record& attrs) = 0;
+    /*
+    virtual void attr_insert_new(int id_context, wreport::Varcode id_var, const Record& attrs) = 0;
+    virtual void attr_remove(int id_context, wreport::Varcode id_var, const db::AttrList& qcs) = 0;
+    virtual void import_msg(const Msg& msg, const char* repmemo, int flags) = 0;
+    virtual void import_msgs(const Msgs& msgs, const char* repmemo, int flags) = 0;
+    virtual void export_msgs(const Record& query, MsgConsumer& cons) = 0;
+    virtual void dump(FILE* out) = 0;
+    */
+
 static PyMethodDef dpy_DB_methods[] = {
     {"connect",           (PyCFunction)dpy_DB_connect, METH_VARARGS | METH_CLASS,
         "Create a DB connecting to an ODBC source" },
@@ -109,14 +210,16 @@ static PyMethodDef dpy_DB_methods[] = {
         "Create a DB as defined in an URL-like string" },
     {"connect_test",      (PyCFunction)dpy_DB_connect_test, METH_NOARGS | METH_CLASS,
         "Create a DB for running the test suite, as configured in the test environment" },
-    /*
-    {"get", (PyCFunction)dpy_Record_get, METH_VARARGS, "lookup a value, returning a fallback value (None by default) if unset" },
-    {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
-    {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a sequence with all the varcodes of the variables set on the Record. Note that this does not include keys." },
-    {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "return a sequence with all the variables set on the Record. Note that this does not include keys." },
-    {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
-    {"date_extremes", (PyCFunction)dpy_Record_date_extremes, METH_NOARGS, "get two datetime objects with the lower and upper bounds of the datetime period in this record" },
-    */
+    {"is_url",            (PyCFunction)dpy_DB_connect_test, METH_VARARGS | METH_CLASS,
+        "Checks if a string looks like a DB url" },
+    {"reset",             (PyCFunction)dpy_DB_reset, METH_VARARGS,
+        "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
+    {"insert",            (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
+        "Insert a record in the database" },
+    {"remove",            (PyCFunction)dpy_DB_remove, METH_VARARGS,
+        "Remove records from the database" },
+    {"vacuum",            (PyCFunction)dpy_DB_remove, METH_NOARGS,
+        "Perform database cleanup operations" },
     {NULL}
 };
 
@@ -166,7 +269,7 @@ static PyObject* dpy_DB_repr(dpy_DB* self)
 PyTypeObject dpy_DB_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         // ob_size
-    "dballe.Record",           // tp_name
+    "dballe.DB",               // tp_name
     sizeof(dpy_DB),            // tp_basicsize
     0,                         // tp_itemsize
     (destructor)dpy_DB_dealloc, // tp_dealloc
