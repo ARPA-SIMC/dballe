@@ -47,64 +47,17 @@ static PyGetSetDef dpy_Record_getsetters[] = {
     {NULL}
 };
 
-/*
-static PyObject* dpy_Var_enqi(dpy_Var* self)
+static PyObject* dpy_Record_copy(dpy_Record* self)
 {
-    try {
-        return PyInt_FromLong(self->var.enqi());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    dpy_Record* result = PyObject_New(dpy_Record, &dpy_Record_Type);
+    if (!result) return NULL;
+    result = (dpy_Record*)PyObject_Init((PyObject*)result, &dpy_Record_Type);
+    new (&result->rec) Record(self->rec);
+    return (PyObject*)result;
 }
-
-static PyObject* dpy_Var_enqd(dpy_Var* self)
-{
-    try {
-        return PyFloat_FromDouble(self->var.enqd());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-}
-
-static PyObject* dpy_Var_enqc(dpy_Var* self)
-{
-    try {
-        return PyString_FromString(self->var.enqc());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-}
-
-static PyObject* dpy_Var_enq(dpy_Var* self)
-{
-    try {
-        if (self->var.info()->is_string())
-            return PyString_FromString(self->var.enqc());
-        else if (self->var.info()->scale == 0)
-            return PyInt_FromLong(self->var.enqi());
-        else
-            return PyFloat_FromDouble(self->var.enqd());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-}
-*/
 
 static PyMethodDef dpy_Record_methods[] = {
-    /*
-    {"enqi", (PyCFunction)dpy_Var_enqi, METH_NOARGS, "get the value of the variable, as an int" },
-    {"enqd", (PyCFunction)dpy_Var_enqd, METH_NOARGS, "get the value of the variable, as a float" },
-    {"enqc", (PyCFunction)dpy_Var_enqc, METH_NOARGS, "get the value of the variable, as a str" },
-    {"enq", (PyCFunction)dpy_Var_enq, METH_NOARGS, "get the value of the variable, as the int, float or str according the variable definition" },
-    */
+    {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
     {NULL}
 };
 
