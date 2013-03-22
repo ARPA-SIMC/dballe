@@ -70,6 +70,42 @@ static PyObject* dpy_Vartable_repr(dpy_Vartable* self)
         return PyString_FromString("Vartable()");
 }
 
+static int dpy_Vartable_len(dpy_Vartable* self)
+{
+    if (self->table)
+        return self->table->size();
+    else
+        return 0;
+}
+
+PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
+{
+    if (!self->table)
+    {
+        PyErr_SetString(PyExc_KeyError, "table is empty");
+        return NULL;
+    }
+
+    const char* varname = PyString_AsString(key);
+    if (varname == NULL)
+        return NULL;
+
+    dpy_Varinfo* result = 0;
+    try {
+        return (PyObject*)varinfo_create(self->table->query(resolve_varcode(varname)));
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
+static PyMappingMethods dpy_Vartable_mapping = {
+    (lenfunc)dpy_Vartable_len,         // __len__
+    (binaryfunc)dpy_Vartable_getitem,  // __getitem__
+    0,                // __setitem__
+};
+
 static PyTypeObject dpy_Vartable_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         // ob_size
@@ -84,7 +120,7 @@ static PyTypeObject dpy_Vartable_Type = {
     (reprfunc)dpy_Vartable_repr, // tp_repr
     0,                         // tp_as_number
     0,                         // tp_as_sequence
-    0,                         // tp_as_mapping
+    &dpy_Vartable_mapping,     // tp_as_mapping
     0,                         // tp_hash
     0,                         // tp_call
     (reprfunc)dpy_Vartable_str, // tp_str

@@ -29,6 +29,11 @@ class VartableTest(unittest.TestCase):
         self.assertEqual(info.len, 3)
         self.assertEqual(info.unit, "NUMERIC")
 
+        info = table["B01001"]
+        self.assertEqual(info.is_string, False)
+        self.assertEqual(info.len, 3)
+        self.assertEqual(info.unit, "NUMERIC")
+
     def testQueryMissing(self):
         table = dballe.Vartable.get("dballe")
         self.assertRaises(KeyError, table.query, "B63254")
