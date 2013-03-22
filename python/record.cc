@@ -56,8 +56,52 @@ static PyObject* dpy_Record_copy(dpy_Record* self)
     return (PyObject*)result;
 }
 
+static PyObject* dpy_Record_keys(dpy_Record* self)
+{
+    const std::vector<wreport::Var*>& vars = self->rec.vars();
+
+    PyObject* result = PyTuple_New(vars.size());
+    if (!result) return NULL;
+
+    for (size_t i = 0; i < vars.size(); ++i)
+    {
+        PyObject* v = format_varcode(vars[i]->code());
+        if (!v)
+            // FIXME: delete 'result' somehow
+            return NULL;
+
+        if (!PyTuple_SetItem(result, i, v) == -1)
+            // FIXME: delete 'result' somehow
+            return NULL;
+    }
+    return result;
+}
+
+static PyObject* dpy_Record_vars(dpy_Record* self)
+{
+    const std::vector<wreport::Var*>& vars = self->rec.vars();
+
+    PyObject* result = PyTuple_New(vars.size());
+    if (!result) return NULL;
+
+    for (size_t i = 0; i < vars.size(); ++i)
+    {
+        PyObject* v = (PyObject*)var_create(*vars[i]);
+        if (!v)
+            // FIXME: delete 'result' somehow
+            return NULL;
+
+        if (!PyTuple_SetItem(result, i, v) == -1)
+            // FIXME: delete 'result' somehow
+            return NULL;
+    }
+    return result;
+}
+
 static PyMethodDef dpy_Record_methods[] = {
     {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
+    {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a sequence with all the varcodes of the variables set on the Record. Note that this does not include keys." },
+    {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "return a sequence with all the variables set on the Record. Note that this does not include keys." },
     {NULL}
 };
 

@@ -227,37 +227,22 @@ class RecordTest(unittest.TestCase):
         self.assertEqual("level" not in r, False)
         self.assertEqual("timerange" not in r, False)
 
-    def testIterEmpty(self):
-        r = dballe.Record()
-        self.assertEqual([x for x in r], [])
-        self.assertEqual([x for x in r.iterkeys()], [])
-        self.assertEqual([x for x in r.itervalues()], [])
-        self.assertEqual([x for x in r.iteritems()], [])
-    def testIterOne(self):
-        # Used to throw the wrong exception to stop iteration
-        r = dballe.Record()
-        r["B33036"] = 75
-        self.assertEqual([x for x in r.iteritems()], [("B33036", 75)])
-    def testIter(self):
-        res = [n.enq() for n in self.r]
-        self.assertEqual(len(res), len(self.knownvars))
-        self.assertEqual(set(res), set(self.knownvarvals))
-        res = []
-        for n in self.r:
-                res += [n.enq()]
-        self.assertEqual(len(res), len(self.knownvars))
-        self.assertEqual(set(res), set(self.knownvarvals))
-    def testIterkeys(self):
-        res = []
-        for n in self.r.iterkeys():
-                res += [n]
+    def testKeys(self):
+        res = self.r.keys();
         self.assertEqual(len(res), len(self.knownvars))
         self.assertEqual(sorted(res), sorted(self.knownvars))
-    def testIteritems(self):
-        known = zip(self.knownvars, self.knownvarvals)
-        res = self.r.items()
-        self.assertEqual(len(res), len(known))
-        self.assertEqual(set(res), set(known))
+
+    def testVars(self):
+        r = dballe.Record()
+        self.assertEqual(r.vars(), ())
+
+        r["B33036"] = 75
+        self.assertEqual(r.vars(), (dballe.var("B33036", 75),))
+
+        res = self.r.vars()
+        self.assertEqual(len(res), len(self.knownvars))
+        self.assertEqual(set(res), set(self.knownvarvals))
+
     def testSetDict(self):
         r = dballe.Record()
         r.update({"ana_id": 1, "lat": 12.34567, "ident": "ciao"})
@@ -282,7 +267,7 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(rec["B04001"], 2001)
 
         count = 0
-        for var in rec:
+        for var in rec.vars():
                 self.assertEqual(var.code, "B04001")
                 count = count + 1
         self.assertEqual(count, 1)
@@ -291,12 +276,6 @@ class RecordTest(unittest.TestCase):
         self.assertEqual("block" in rec, False)
         del rec["B04001"]
         self.assertEqual("B04001" in rec, False)
-
-        rec["B01001"] = 1
-        var = rec.getvar("B01001")
-        var.set(4)
-        rec.update(var)
-        self.assertEqual(rec["B01001"], 4)
 
         d = dt.datetime(2001, 2, 3, 4, 5, 6)
         rec["date"] = d
