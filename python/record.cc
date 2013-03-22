@@ -77,12 +77,18 @@ static PyObject* dpy_Record_keys(dpy_Record* self)
     {
         PyObject* v = format_varcode(vars[i]->code());
         if (!v)
-            // FIXME: delete 'result' somehow
+        {
+            Py_DECREF(result);
             return NULL;
+        }
 
         if (!PyTuple_SetItem(result, i, v) == -1)
-            // FIXME: delete 'result' somehow
+        {
+            // No need to Py_DECREF v, because PyTuple_SetItem steals its
+            // reference
+            Py_DECREF(result);
             return NULL;
+        }
     }
     return result;
 }
@@ -98,12 +104,16 @@ static PyObject* dpy_Record_vars(dpy_Record* self)
     {
         PyObject* v = (PyObject*)var_create(*vars[i]);
         if (!v)
-            // FIXME: delete 'result' somehow
+        {
+            Py_DECREF(result);
             return NULL;
+        }
 
         if (!PyTuple_SetItem(result, i, v) == -1)
-            // FIXME: delete 'result' somehow
+        {
+            Py_DECREF(result);
             return NULL;
+        }
     }
     return result;
 }
@@ -144,8 +154,8 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
     int maxvals[6];
     self->rec.parse_date_extremes(minvals, maxvals);
 
-    PyObject* dt_min = Py_None;
-    PyObject* dt_max = Py_None;
+    PyObject* dt_min;
+    PyObject* dt_max;
 
     if (minvals[0] != -1)
     {
@@ -153,6 +163,9 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
                 minvals[0], minvals[1], minvals[2],
                 minvals[3], minvals[4], minvals[5], 0);
         if (!dt_min) return NULL;
+    } else {
+        dt_min = Py_None;
+        Py_INCREF(dt_min);
     }
 
     if (maxvals[0] != -1)
@@ -161,9 +174,12 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
                 maxvals[0], maxvals[1], maxvals[2],
                 maxvals[3], maxvals[4], maxvals[5], 0);
         if (!dt_max) return NULL; // FIXME: deallocate dt_min
+    } else {
+        dt_max = Py_None;
+        Py_INCREF(dt_max);
     }
 
-    return Py_BuildValue("(OO)", dt_min, dt_max);
+    return Py_BuildValue("(NN)", dt_min, dt_max);
 }
 
 static PyMethodDef dpy_Record_methods[] = {
@@ -260,9 +276,10 @@ static int datetime_to_rec(dpy_Record* self, PyObject* dt, dba_keyword* keys)
 
 static PyObject* rec_keys_to_tuple(dpy_Record* self, dba_keyword* keys, unsigned len)
 {
+    PyObject* res = PyTuple_New(len);
+    if (!res) return NULL;
+
     try {
-        PyObject* res = PyTuple_New(len);
-        if (!res) return NULL;
 
         for (unsigned i = 0; i < len; ++i)
         {
@@ -278,10 +295,10 @@ static PyObject* rec_keys_to_tuple(dpy_Record* self, dba_keyword* keys, unsigned
         }
         return res;
     } catch (wreport::error& e) {
-        // TODO: deallocate res
+        Py_DECREF(res);
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
-        // TODO: deallocate res
+        Py_DECREF(res);
         return raise_std_exception(se);
     }
 }
@@ -316,6 +333,7 @@ static int rec_tuple_to_keys(dpy_Record* self, PyObject* val, dba_keyword* keys,
             PyObject* v = PySequence_GetItem(val, i);
             if (v == NULL) return -1;
             int vi = PyInt_AsLong(v);
+            Py_DECREF(v);
             if (vi == -1 && PyErr_Occurred()) return -1;
             self->rec.set(keys[i], vi);
         }

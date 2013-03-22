@@ -30,9 +30,9 @@ extern "C" {
 static PyObject* dpy_Var_code(dpy_Var* self, void* closure) { return format_varcode(self->var.code()); }
 static PyObject* dpy_Var_isset(dpy_Var* self, void* closure) {
     if (self->var.isset())
-        return Py_True;
+        Py_RETURN_TRUE;
     else
-        return Py_False;
+        Py_RETURN_FALSE;
 }
 
 static PyGetSetDef dpy_Var_getsetters[] = {

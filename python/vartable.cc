@@ -79,7 +79,7 @@ static int dpy_Vartable_len(dpy_Vartable* self)
         return 0;
 }
 
-PyObject* dpy_Vartable_item(dpy_Vartable* self, Py_ssize_t i)
+static PyObject* dpy_Vartable_item(dpy_Vartable* self, Py_ssize_t i)
 {
     if (!self->table)
     {
@@ -96,7 +96,7 @@ PyObject* dpy_Vartable_item(dpy_Vartable* self, Py_ssize_t i)
     return (PyObject*)varinfo_create(Varinfo((*self->table)[i]));
 }
 
-PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
+static PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
 {
     if (!self->table)
     {
@@ -126,7 +126,7 @@ PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
     }
 }
 
-int dpy_Vartable_contains(dpy_Vartable* self, PyObject *value)
+static int dpy_Vartable_contains(dpy_Vartable* self, PyObject *value)
 {
     if (!self->table) return 0;
 

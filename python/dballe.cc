@@ -19,11 +19,15 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include <Python.h>
+#include "config.h"
 #include "common.h"
 #include "vartable.h"
 #include "varinfo.h"
 #include "var.h"
 #include "record.h"
+#ifdef HAVE_DBALLE_DB
+#include "db.h"
+#endif
 #include "dballe/core/var.h"
 
 using namespace dballe::python;
@@ -91,6 +95,9 @@ PyMODINIT_FUNC initdballe(void)
     register_varinfo(m);
     register_var(m);
     register_record(m);
+#ifdef HAVE_DBALLE_DB
+    register_db(m);
+#endif
 }
 
 }
