@@ -38,13 +38,6 @@ static PyObject* dpy_Var_isset(dpy_Var* self, void* closure) {
 static PyGetSetDef dpy_Var_getsetters[] = {
     {"code", (getter)dpy_Var_code, NULL, "variable code", NULL },
     {"isset", (getter)dpy_Var_isset, NULL, "true if the value is set", NULL },
-    /*
-    {"len", (getter)dpy_Varinfo_len, NULL, "number of significant digits", NULL},
-    {"scale", (getter)dpy_Varinfo_scale, NULL, "scale of the value as a power of 10", NULL},
-    {"ref", (getter)dpy_Varinfo_ref, NULL, "reference value added after scaling", NULL},
-    {"unit", (getter)dpy_Varinfo_unit, NULL, "measurement unit", NULL},
-    {"desc", (getter)dpy_Varinfo_desc, NULL, "description", NULL},
-    */
     {NULL}
 };
 
@@ -83,18 +76,7 @@ static PyObject* dpy_Var_enqc(dpy_Var* self)
 
 static PyObject* dpy_Var_enq(dpy_Var* self)
 {
-    try {
-        if (self->var.info()->is_string())
-            return PyString_FromString(self->var.enqc());
-        else if (self->var.info()->scale == 0)
-            return PyInt_FromLong(self->var.enqi());
-        else
-            return PyFloat_FromDouble(self->var.enqd());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    return var_value_to_python(self->var);
 }
 
 static PyMethodDef dpy_Var_methods[] = {
@@ -251,6 +233,22 @@ PyTypeObject dpy_Var_Type = {
 
 namespace dballe {
 namespace python {
+
+PyObject* var_value_to_python(const wreport::Var& v)
+{
+    try {
+        if (v.info()->is_string())
+            return PyString_FromString(v.enqc());
+        else if (v.info()->scale == 0)
+            return PyInt_FromLong(v.enqi());
+        else
+            return PyFloat_FromDouble(v.enqd());
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
 
 dpy_Var* var_create(const wreport::Varinfo& v)
 {

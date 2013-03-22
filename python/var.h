@@ -38,6 +38,8 @@ PyAPI_DATA(PyTypeObject) dpy_Var_Type;
 namespace dballe {
 namespace python {
 
+PyObject* var_value_to_python(const wreport::Var& v);
+
 dpy_Var* var_create(const wreport::Varinfo& v);
 dpy_Var* var_create(const wreport::Varinfo& v, int val);
 dpy_Var* var_create(const wreport::Varinfo& v, double val);

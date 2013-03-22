@@ -143,277 +143,276 @@ class VarTest(unittest.TestCase):
         self.assertIsNot(var, None)
         self.assertIsNot(dballe.var("B01001"), None)
 
+class RecordTest(unittest.TestCase):
+    def setUp(self):
+        self.r = dballe.Record()
+        self.r["block"] = 1
+        self.r["station"] = 123
+        self.r["lat"] = 45.12345
+        self.r["lon"] = 11.54321
+        self.r["date"] = dt.datetime(2007, 2, 1, 1, 2, 3)
+        self.r["level"] = 105, 2
+        self.r["timerange"] = 2, 3, 4
+        self.r["B12101"] = 285.0
+        self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype1", "l1", "leveltype2", "l2", "pindicator", "p1", "p2"]
+        self.knownvars = ["B12101", "B01002", "B01001"]
+        self.knownkeyvals = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 0, 2, 3, 4]
+        self.knownvarvals = [285.0, 123, 1]
+    def testMulti(self):
+        self.assertEqual(self.r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
+        self.assertEqual(self.r["level"], (105, 2, None, None))
+        self.assertEqual(self.r["timerange"], (2, 3, 4))
+        self.assertEqual(self.r["trange"], (2, 3, 4))
+    def testAlias(self):
+        r = self.r.copy()
+        r["t"] = 283.2
+        self.assertEqual(r["B12101"], 283.2)
+        self.assertEqual(r["t"], 283.2)
 
-#class RecordTest(unittest.TestCase):
-#    def setUp(self):
-#        self.r = dballe.Record()
-#        self.r["block"] = 1
-#        self.r["station"] = 123
-#        self.r["lat"] = 45.12345
-#        self.r["lon"] = 11.54321
-#        self.r["date"] = dt.datetime(2007, 2, 1, 1, 2, 3)
-#        self.r["level"] = 105, 2
-#        self.r["timerange"] = 2, 3, 4
-#        self.r["B12101"] = 285.0
-#        self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype1", "l1", "leveltype2", "l2", "pindicator", "p1", "p2"]
-#        self.knownvars = ["B12101", "B01002", "B01001"]
-#        self.knownkeyvals = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 0, 2, 3, 4]
-#        self.knownvarvals = [285.0, 123, 1]
-#    def testMulti(self):
-#        self.assertEqual(self.r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
-#        self.assertEqual(self.r["level"], (105, 2, None, None))
-#        self.assertEqual(self.r["timerange"], (2, 3, 4))
-#        self.assertEqual(self.r["trange"], (2, 3, 4))
-#    def testAlias(self):
-#        r = self.r.copy()
-#        r["t"] = 283.2
-#        self.assertEqual(r["B12101"], 283.2)
-#        self.assertEqual(r["t"], 283.2)
-#
-#    def testReadDictOperators(self):
-#        r = self.r
-#        self.assertEqual(r["block"], 1)
-#        self.assertEqual(r["station"], 123)
-#        self.assertEqual(r["lat"], 45.12345)
-#        self.assertEqual(r["lon"], 11.54321)
-#        self.assertEqual(r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
-#        self.assertEqual(r["level"], (105, 2, None, None))
-#        self.assertEqual(r["timerange"], (2, 3, 4))
-#        self.assertEqual(r["B12101"], 285.0)
-#    def testWriteDictOperators(self):
-#        r = self.r.copy()
-#        r["block"] = 2
-#        r["station"] = 321
-#        r["lat"] = 45.54321
-#        r["lon"] = 11.12345
-#        r["date"] = dt.datetime(2006, 1, 2, 0, 1, 2)
-#        r["level"] = (104, 1, 105, 2)
-#        r["timerange"] = (1, 2, 3)
-#        r["B12101"] = 294.5
-#        self.assertEqual(r["block"], 2)
-#        self.assertEqual(r["station"], 321)
-#        self.assertEqual(r["lat"], 45.54321)
-#        self.assertEqual(r["lon"], 11.12345)
-#        self.assertEqual(r["date"], dt.datetime(2006, 1, 2, 0, 1, 2))
-#        self.assertEqual(r["level"], (104, 1, 105, 2))
-#        self.assertEqual(r["timerange"], (1, 2, 3))
-#        self.assertEqual(r["B12101"], 294.5)
-#    def testSpecials(self):
-#        r = self.r.copy()
-#        r["datemin"] = dt.datetime(2005, 3, 4, 5, 6, 7)
-#        r["datemax"] = dt.datetime(2004, 4, 5, 6, 7, 8)
-#        self.assertEqual(r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
-#        self.assertEqual(r["datemin"], dt.datetime(2005, 3, 4, 5, 6, 7))
-#        self.assertEqual(r["datemax"], dt.datetime(2004, 4, 5, 6, 7, 8))
-#        self.assertEqual(r["level"], (105, 2, None, None))
-#        self.assertEqual(r["timerange"], (2, 3, 4))
-#        self.assertEqual("date" in r, True)
-#        self.assertEqual("datemin" in r, True)
-#        self.assertEqual("datemax" in r, True)
-#        self.assertEqual("level" in r, True)
-#        self.assertEqual("timerange" in r, True)
-#        del(r["date"])
-#        del(r["datemin"])
-#        del(r["datemax"])
-#        del(r["level"])
-#        del(r["timerange"])
-#        self.assertEqual(r.get("date", None), None)
-#        self.assertEqual(r.get("datemin", None), None)
-#        self.assertEqual(r.get("datemax", None), None)
-#        self.assertEqual(r.get("level", None), None)
-#        self.assertEqual(r.get("timerange", None), None)
-#        self.assertEqual("date" not in r, True)
-#        self.assertEqual("datemin" not in r, True)
-#        self.assertEqual("datemax" not in r, True)
-#        self.assertEqual("level" not in r, False)
-#        self.assertEqual("timerange" not in r, False)
-#
-#    def testIterEmpty(self):
-#        r = dballe.Record()
-#        self.assertEqual([x for x in r], [])
-#        self.assertEqual([x for x in r.iterkeys()], [])
-#        self.assertEqual([x for x in r.itervalues()], [])
-#        self.assertEqual([x for x in r.iteritems()], [])
-#    def testIterOne(self):
-#        # Used to throw the wrong exception to stop iteration
-#        r = dballe.Record()
-#        r["B33036"] = 75
-#        self.assertEqual([x for x in r.iteritems()], [("B33036", 75)])
-#    def testIter(self):
-#        res = [n.enq() for n in self.r]
-#        self.assertEqual(len(res), len(self.knownvars))
-#        self.assertEqual(set(res), set(self.knownvarvals))
-#        res = []
-#        for n in self.r:
-#                res += [n.enq()]
-#        self.assertEqual(len(res), len(self.knownvars))
-#        self.assertEqual(set(res), set(self.knownvarvals))
-#    def testIterkeys(self):
-#        res = []
-#        for n in self.r.iterkeys():
-#                res += [n]
-#        self.assertEqual(len(res), len(self.knownvars))
-#        self.assertEqual(sorted(res), sorted(self.knownvars))
-#    def testIteritems(self):
-#        known = zip(self.knownvars, self.knownvarvals)
-#        res = self.r.items()
-#        self.assertEqual(len(res), len(known))
-#        self.assertEqual(set(res), set(known))
-#    def testSetDict(self):
-#        r = dballe.Record()
-#        r.update({"ana_id": 1, "lat": 12.34567, "ident": "ciao"})
-#        #self.assertEqual([x for x in r.iteritems()], [("ana_id", 1), ("ident", "ciao"), ("lat", 12.34567)])
-#        self.assertEqual([x for x in r.iteritems()], [])
-#        r.update({"t": 290.0})
-#        self.assertEqual([x for x in r.iteritems()], [("B12101", 290.0)])
-#
-#
-#    def testRecord(self):
-#        # Check basic set/get and variable iteration
-#        rec = dballe.Record()
-#
-#        self.assertEqual("ana_id" in rec, False)
-#        rec["ana_id"] = 3
-#        self.assertEqual("ana_id" in rec, True)
-#        self.assertEqual(rec["ana_id"], 3)
-#
-#        self.assertEqual("B04001" in rec, False)
-#        rec["B04001"] = 2001
-#        self.assertEqual("B04001" in rec, True)
-#        self.assertEqual(rec["B04001"], 2001)
-#
-#        count = 0
-#        for var in rec:
-#                self.assertEqual(var.code, "B04001")
-#                count = count + 1
-#        self.assertEqual(count, 1)
-#
-#        del rec["block"]
-#        self.assertEqual("block" in rec, False)
-#        del rec["B04001"]
-#        self.assertEqual("B04001" in rec, False)
-#
-#        rec["B01001"] = 1
-#        var = rec.getvar("B01001")
-#        var.set(4)
-#        rec.update(var)
-#        self.assertEqual(rec["B01001"], 4)
-#
-#        d = dt.datetime(2001, 2, 3, 4, 5, 6)
-#        rec["date"] = d
-#        self.assertEqual(rec["date"], d)
-#        self.assertEqual(rec["year"], 2001)
-#        self.assertEqual(rec["month"], 2)
-#        self.assertEqual(rec["day"], 3)
-#        self.assertEqual(rec["hour"], 4)
-#        self.assertEqual(rec["min"], 5)
-#        self.assertEqual(rec["sec"], 6)
-#
-#        l = (1, 2, 1, 3)
-#        rec["level"] = l
-#        self.assertEqual(rec["level"], l)
-#        self.assertEqual(rec["leveltype1"], 1)
-#        self.assertEqual(rec["l1"], 2)
-#        self.assertEqual(rec["leveltype2"], 1)
-#        self.assertEqual(rec["l2"], 3)
-#
-#        t = (4, 5, 6)
-#        rec["timerange"] = t
-#        self.assertEqual(rec["timerange"], t)
-#        self.assertEqual(rec["trange"], t)
-#        self.assertEqual(rec["pindicator"], 4)
-#        self.assertEqual(rec["p1"], 5)
-#        self.assertEqual(rec["p2"], 6)
-#
-#        # Test that KeyError is raised for several different types of lookup
-#        rec = dballe.Record()
-#        self.assertRaises(KeyError, rec.__getitem__, "year")
-#        self.assertRaises(KeyError, rec.__getitem__, "B01001")
-#        self.assertRaises(KeyError, rec.__getitem__, "date")
-#
-#    def testRecordCopying(self):
-#        # Try out all copying functions
-#
-#        master = dballe.Record()
-#        master["block"] = 4
-#        master["latmin"] = 4.1234
-#        master["B01001"] = 4
-#
-#        if True:
-#                r1 = master;
-#                self.assertEqual(r1["block"], 4)
-#                self.assertEqual(r1["latmin"], 4.1234)
-#                self.assertEqual(r1["B01001"], 4)
-#
-#        r2 = master.copy()
-#        self.assertEqual(r2["block"], 4)
-#        self.assertEqual(r2["latmin"], 4.1234)
-#        self.assertEqual(r2["B01001"], 4)
-#
-#        r3 = r2.copy()
-#        self.assertEqual(r3["block"], 4)
-#        self.assertEqual(r3["latmin"], 4.1234)
-#        self.assertEqual(r3["B01001"], 4)
-#        del r2["latmin"]
-#        self.assertEqual(r3["latmin"], 4.1234)
-#        r3["latmin"] = 4.3214
-#        self.assertEqual(r3["latmin"], 4.3214)
-#
-#        r3 = r3
-#        self.assertEqual(r3["block"], 4)
-#        self.assertEqual(r3["latmin"], 4.3214)
-#        self.assertEqual(r3["B01001"], 4)
-#
-#        master = r3
-#        self.assertEqual(master["block"], 4)
-#        self.assertEqual(master["latmin"], 4.3214)
-#        self.assertEqual(master["B01001"], 4)
-#
-#    def testRecordCopying1(self):
-#        # This caused a repeatable segfault
-#        rec = dballe.Record()
-#        rec["query"] = "nosort"
-#        rec1 = rec.copy()
-#        rec1["query"] = "nosort"
-#
-#    def testParseDateExtremes(self):
-#        # Test the parse_date_extremes reimplementation
-#        rec = dballe.Record()
-#
-#        a, b = rec.parse_date_extremes()
-#        self.assertEqual(a, None)
-#        self.assertEqual(b, None)
-#
-#        rec["yearmin"] = 2000
-#        a, b = rec.parse_date_extremes()
-#        self.assertEqual(a, dt.datetime(2000, 1, 1, 0, 0, 0))
-#        self.assertEqual(b, None)
-#
-#        rec["yearmin"] = None
-#        rec["yearmax"] = 1900
-#        rec["monthmax"] = 2
-#        a, b = rec.parse_date_extremes()
-#        self.assertEqual(a, None)
-#        self.assertEqual(b, dt.datetime(1900, 2, 28, 23, 59, 59))
-#
-#        rec["yearmax"] = 2000
-#        rec["monthmax"] = 2
-#        a, b = rec.parse_date_extremes()
-#        self.assertEqual(a, None)
-#        self.assertEqual(b, dt.datetime(2000, 2, 29, 23, 59, 59))
-#
-#        rec["yearmax"] = 2001
-#        rec["monthmax"] = 2
-#        a, b = rec.parse_date_extremes()
-#        self.assertEqual(a, None)
-#        self.assertEqual(b, dt.datetime(2001, 2, 28, 23, 59, 59))
-#
-#        rec["yearmax"] = 2004
-#        rec["monthmax"] = 2
-#        a, b = rec.parse_date_extremes()
-#        self.assertEqual(a, None)
-#        self.assertEqual(b, dt.datetime(2004, 2, 29, 23, 59, 59))
-#
+    def testReadDictOperators(self):
+        r = self.r
+        self.assertEqual(r["block"], 1)
+        self.assertEqual(r["station"], 123)
+        self.assertEqual(r["lat"], 45.12345)
+        self.assertEqual(r["lon"], 11.54321)
+        self.assertEqual(r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
+        self.assertEqual(r["level"], (105, 2, None, None))
+        self.assertEqual(r["timerange"], (2, 3, 4))
+        self.assertEqual(r["B12101"], 285.0)
+    def testWriteDictOperators(self):
+        r = self.r.copy()
+        r["block"] = 2
+        r["station"] = 321
+        r["lat"] = 45.54321
+        r["lon"] = 11.12345
+        r["date"] = dt.datetime(2006, 1, 2, 0, 1, 2)
+        r["level"] = (104, 1, 105, 2)
+        r["timerange"] = (1, 2, 3)
+        r["B12101"] = 294.5
+        self.assertEqual(r["block"], 2)
+        self.assertEqual(r["station"], 321)
+        self.assertEqual(r["lat"], 45.54321)
+        self.assertEqual(r["lon"], 11.12345)
+        self.assertEqual(r["date"], dt.datetime(2006, 1, 2, 0, 1, 2))
+        self.assertEqual(r["level"], (104, 1, 105, 2))
+        self.assertEqual(r["timerange"], (1, 2, 3))
+        self.assertEqual(r["B12101"], 294.5)
+    def testSpecials(self):
+        r = self.r.copy()
+        r["datemin"] = dt.datetime(2005, 3, 4, 5, 6, 7)
+        r["datemax"] = dt.datetime(2004, 4, 5, 6, 7, 8)
+        self.assertEqual(r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
+        self.assertEqual(r["datemin"], dt.datetime(2005, 3, 4, 5, 6, 7))
+        self.assertEqual(r["datemax"], dt.datetime(2004, 4, 5, 6, 7, 8))
+        self.assertEqual(r["level"], (105, 2, None, None))
+        self.assertEqual(r["timerange"], (2, 3, 4))
+        self.assertEqual("date" in r, True)
+        self.assertEqual("datemin" in r, True)
+        self.assertEqual("datemax" in r, True)
+        self.assertEqual("level" in r, True)
+        self.assertEqual("timerange" in r, True)
+        del(r["date"])
+        del(r["datemin"])
+        del(r["datemax"])
+        del(r["level"])
+        del(r["timerange"])
+        self.assertEqual(r.get("date", None), None)
+        self.assertEqual(r.get("datemin", None), None)
+        self.assertEqual(r.get("datemax", None), None)
+        self.assertEqual(r.get("level", None), None)
+        self.assertEqual(r.get("timerange", None), None)
+        self.assertEqual("date" not in r, True)
+        self.assertEqual("datemin" not in r, True)
+        self.assertEqual("datemax" not in r, True)
+        self.assertEqual("level" not in r, False)
+        self.assertEqual("timerange" not in r, False)
+
+    def testIterEmpty(self):
+        r = dballe.Record()
+        self.assertEqual([x for x in r], [])
+        self.assertEqual([x for x in r.iterkeys()], [])
+        self.assertEqual([x for x in r.itervalues()], [])
+        self.assertEqual([x for x in r.iteritems()], [])
+    def testIterOne(self):
+        # Used to throw the wrong exception to stop iteration
+        r = dballe.Record()
+        r["B33036"] = 75
+        self.assertEqual([x for x in r.iteritems()], [("B33036", 75)])
+    def testIter(self):
+        res = [n.enq() for n in self.r]
+        self.assertEqual(len(res), len(self.knownvars))
+        self.assertEqual(set(res), set(self.knownvarvals))
+        res = []
+        for n in self.r:
+                res += [n.enq()]
+        self.assertEqual(len(res), len(self.knownvars))
+        self.assertEqual(set(res), set(self.knownvarvals))
+    def testIterkeys(self):
+        res = []
+        for n in self.r.iterkeys():
+                res += [n]
+        self.assertEqual(len(res), len(self.knownvars))
+        self.assertEqual(sorted(res), sorted(self.knownvars))
+    def testIteritems(self):
+        known = zip(self.knownvars, self.knownvarvals)
+        res = self.r.items()
+        self.assertEqual(len(res), len(known))
+        self.assertEqual(set(res), set(known))
+    def testSetDict(self):
+        r = dballe.Record()
+        r.update({"ana_id": 1, "lat": 12.34567, "ident": "ciao"})
+        #self.assertEqual([x for x in r.iteritems()], [("ana_id", 1), ("ident", "ciao"), ("lat", 12.34567)])
+        self.assertEqual([x for x in r.iteritems()], [])
+        r.update({"t": 290.0})
+        self.assertEqual([x for x in r.iteritems()], [("B12101", 290.0)])
+
+
+    def testRecord(self):
+        # Check basic set/get and variable iteration
+        rec = dballe.Record()
+
+        self.assertEqual("ana_id" in rec, False)
+        rec["ana_id"] = 3
+        self.assertEqual("ana_id" in rec, True)
+        self.assertEqual(rec["ana_id"], 3)
+
+        self.assertEqual("B04001" in rec, False)
+        rec["B04001"] = 2001
+        self.assertEqual("B04001" in rec, True)
+        self.assertEqual(rec["B04001"], 2001)
+
+        count = 0
+        for var in rec:
+                self.assertEqual(var.code, "B04001")
+                count = count + 1
+        self.assertEqual(count, 1)
+
+        del rec["block"]
+        self.assertEqual("block" in rec, False)
+        del rec["B04001"]
+        self.assertEqual("B04001" in rec, False)
+
+        rec["B01001"] = 1
+        var = rec.getvar("B01001")
+        var.set(4)
+        rec.update(var)
+        self.assertEqual(rec["B01001"], 4)
+
+        d = dt.datetime(2001, 2, 3, 4, 5, 6)
+        rec["date"] = d
+        self.assertEqual(rec["date"], d)
+        self.assertEqual(rec["year"], 2001)
+        self.assertEqual(rec["month"], 2)
+        self.assertEqual(rec["day"], 3)
+        self.assertEqual(rec["hour"], 4)
+        self.assertEqual(rec["min"], 5)
+        self.assertEqual(rec["sec"], 6)
+
+        l = (1, 2, 1, 3)
+        rec["level"] = l
+        self.assertEqual(rec["level"], l)
+        self.assertEqual(rec["leveltype1"], 1)
+        self.assertEqual(rec["l1"], 2)
+        self.assertEqual(rec["leveltype2"], 1)
+        self.assertEqual(rec["l2"], 3)
+
+        t = (4, 5, 6)
+        rec["timerange"] = t
+        self.assertEqual(rec["timerange"], t)
+        self.assertEqual(rec["trange"], t)
+        self.assertEqual(rec["pindicator"], 4)
+        self.assertEqual(rec["p1"], 5)
+        self.assertEqual(rec["p2"], 6)
+
+        # Test that KeyError is raised for several different types of lookup
+        rec = dballe.Record()
+        self.assertRaises(KeyError, rec.__getitem__, "year")
+        self.assertRaises(KeyError, rec.__getitem__, "B01001")
+        self.assertRaises(KeyError, rec.__getitem__, "date")
+
+    def testRecordCopying(self):
+        # Try out all copying functions
+
+        master = dballe.Record()
+        master["block"] = 4
+        master["latmin"] = 4.1234
+        master["B01001"] = 4
+
+        if True:
+                r1 = master;
+                self.assertEqual(r1["block"], 4)
+                self.assertEqual(r1["latmin"], 4.1234)
+                self.assertEqual(r1["B01001"], 4)
+
+        r2 = master.copy()
+        self.assertEqual(r2["block"], 4)
+        self.assertEqual(r2["latmin"], 4.1234)
+        self.assertEqual(r2["B01001"], 4)
+
+        r3 = r2.copy()
+        self.assertEqual(r3["block"], 4)
+        self.assertEqual(r3["latmin"], 4.1234)
+        self.assertEqual(r3["B01001"], 4)
+        del r2["latmin"]
+        self.assertEqual(r3["latmin"], 4.1234)
+        r3["latmin"] = 4.3214
+        self.assertEqual(r3["latmin"], 4.3214)
+
+        r3 = r3
+        self.assertEqual(r3["block"], 4)
+        self.assertEqual(r3["latmin"], 4.3214)
+        self.assertEqual(r3["B01001"], 4)
+
+        master = r3
+        self.assertEqual(master["block"], 4)
+        self.assertEqual(master["latmin"], 4.3214)
+        self.assertEqual(master["B01001"], 4)
+
+    def testRecordCopying1(self):
+        # This caused a repeatable segfault
+        rec = dballe.Record()
+        rec["query"] = "nosort"
+        rec1 = rec.copy()
+        rec1["query"] = "nosort"
+
+    def testParseDateExtremes(self):
+        # Test the parse_date_extremes reimplementation
+        rec = dballe.Record()
+
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, None)
+
+        rec["yearmin"] = 2000
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, dt.datetime(2000, 1, 1, 0, 0, 0))
+        self.assertEqual(b, None)
+
+        rec["yearmin"] = None
+        rec["yearmax"] = 1900
+        rec["monthmax"] = 2
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, dt.datetime(1900, 2, 28, 23, 59, 59))
+
+        rec["yearmax"] = 2000
+        rec["monthmax"] = 2
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, dt.datetime(2000, 2, 29, 23, 59, 59))
+
+        rec["yearmax"] = 2001
+        rec["monthmax"] = 2
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, dt.datetime(2001, 2, 28, 23, 59, 59))
+
+        rec["yearmax"] = 2004
+        rec["monthmax"] = 2
+        a, b = rec.parse_date_extremes()
+        self.assertEqual(a, None)
+        self.assertEqual(b, dt.datetime(2004, 2, 29, 23, 59, 59))
+
 #class BulletinTest(unittest.TestCase):
 #    def testBUFRCreation(self):
 #        # Generate a synop message
