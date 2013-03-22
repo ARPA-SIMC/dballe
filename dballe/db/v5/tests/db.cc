@@ -897,7 +897,7 @@ void to::test<11>()
 {
         use_db();
 
-        db->remove_orphans();
+        db->vacuum();
 }
 
 // Insert some attributes and try to read them again

@@ -157,7 +157,7 @@ int do_wipe(poptContext optCon)
 int do_cleanup(poptContext optCon)
 {
     auto_ptr<DB> db = connect();
-    db->remove_orphans();
+    db->vacuum();
     return 0;
 }
 

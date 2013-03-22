@@ -162,7 +162,7 @@ public:
     static bool is_url(const char* str);
 
     /**
-     * Reset the database, removing all existing DBALLE tables and re-creating them
+     * Reset the database, removing all existing Db-All.e tables and re-creating them
      * empty.
      *
      * @param repinfo_file
@@ -226,7 +226,7 @@ public:
     virtual void remove(const Record& rec) = 0;
 
     /**
-     * Remove orphan values from the database.
+     * Perform database cleanup operations.
      *
      * Orphan values are currently:
      * \li context values for which no data exists
@@ -234,7 +234,7 @@ public:
      *
      * Depending on database size, this routine can take a few minutes to execute.
      */
-    virtual void remove_orphans() = 0;
+    virtual void vacuum() = 0;
 
     /**
      * Create and execute a database query.

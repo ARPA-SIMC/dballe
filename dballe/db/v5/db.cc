@@ -981,7 +981,7 @@ void DB::remove(const Record& rec)
     t.commit();
 }
 
-void DB::remove_orphans()
+void DB::vacuum()
 {
     static const char* cclean_mysql = "delete c from context c left join data d on d.id_context = c.id where d.id_context is NULL";
     static const char* pclean_mysql = "delete p from station p left join context c on c.id_ana = p.id where c.id is NULL";

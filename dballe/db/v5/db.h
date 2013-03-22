@@ -303,7 +303,7 @@ public:
 	 *
 	 * Depending on database size, this routine can take a few minutes to execute.
 	 */
-	void remove_orphans();
+	void vacuum();
 
 	/**
 	 * Create and execute a database query.
