@@ -31,6 +31,8 @@ using namespace wreport;
 
 extern "C" {
 
+static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val);
+
 /*
 static PyObject* dpy_Var_code(dpy_Var* self, void* closure) { return format_varcode(self->var.code()); }
 static PyObject* dpy_Var_isset(dpy_Var* self, void* closure) {
@@ -98,10 +100,26 @@ static PyObject* dpy_Record_vars(dpy_Record* self)
     return result;
 }
 
+static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *kw)
+{
+    if (kw)
+    {
+        PyObject *key, *value;
+        Py_ssize_t pos = 0;
+
+        while (PyDict_Next(kw, &pos, &key, &value))
+            if (dpy_Record_setitem(self, key, value) < 0)
+                return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef dpy_Record_methods[] = {
     {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
     {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a sequence with all the varcodes of the variables set on the Record. Note that this does not include keys." },
     {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "return a sequence with all the variables set on the Record. Note that this does not include keys." },
+    {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
     {NULL}
 };
 
@@ -323,7 +341,7 @@ static int trange_to_rec(dpy_Record* self, PyObject* l)
     return 0;
 }
 
-PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
+static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
 {
     const char* varname = PyString_AsString(key);
     if (varname == NULL)
@@ -375,7 +393,7 @@ PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
     return var_value_to_python(*var);
 }
 
-int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
+static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
 {
     const char* varname = PyString_AsString(key);
     if (varname == NULL)
@@ -441,7 +459,7 @@ int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
     return 0;
 }
 
-int dpy_Record_contains(dpy_Record* self, PyObject *value)
+static int dpy_Record_contains(dpy_Record* self, PyObject *value)
 {
     const char* varname = PyString_AsString(value);
     if (varname == NULL)
