@@ -18,11 +18,14 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
+#include <Python.h>
+#include <datetime.h>
 #include "record.h"
 #include "common.h"
 #include "var.h"
 
 using namespace std;
+using namespace dballe;
 using namespace dballe::python;
 using namespace wreport;
 
@@ -147,11 +150,87 @@ static PyObject* dpy_Record_repr(dpy_Record* self)
     return PyString_FromString("Record object");
 }
 
+static PyObject* rec_to_datetime(dpy_Record* self,
+        dba_keyword ky, dba_keyword km, dba_keyword kd,
+        dba_keyword kho, dba_keyword kmi, dba_keyword kse)
+{
+    try {
+        int y = self->rec[ky].enqi();
+        int m = self->rec[km].enqi();
+        int d = self->rec[kd].enqi();
+        int ho = self->rec[kho].enqi();
+        int mi = self->rec[kmi].enqi();
+        int se = self->rec[kse].enqi();
+        return PyDateTime_FromDateAndTime(y, m, d, ho, mi, se, 0);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
+static int datetime_to_rec(dpy_Record* self, PyObject* dt,
+        dba_keyword ky, dba_keyword km, dba_keyword kd,
+        dba_keyword kho, dba_keyword kmi, dba_keyword kse)
+{
+    if (dt == NULL)
+    {
+        self->rec.unset(ky);
+        self->rec.unset(km);
+        self->rec.unset(kd);
+        self->rec.unset(kho);
+        self->rec.unset(kmi);
+        self->rec.unset(kse);
+    } else {
+        if (!PyDateTime_Check(dt))
+        {
+            PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
+            return -1;
+        }
+        self->rec.set(ky, PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt));
+        self->rec.set(km, PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt));
+        self->rec.set(kd, PyDateTime_GET_DAY((PyDateTime_DateTime*)dt));
+        self->rec.set(kho, PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt));
+        self->rec.set(kmi, PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt));
+        self->rec.set(kse, PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
+    }
+    return 0;
+}
+
 PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
 {
     const char* varname = PyString_AsString(key);
     if (varname == NULL)
         return NULL;
+
+    // Just look at the first character to see if we need to check for python
+    // API specific keys
+    switch (varname[0])
+    {
+        case 'd':
+            if (strcmp(varname, "date") == 0)
+            {
+                return rec_to_datetime(self,
+                            DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY,
+                            DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC);
+            } else if (strcmp(varname, "datemin") == 0) {
+                return rec_to_datetime(self,
+                            DBA_KEY_YEARMIN, DBA_KEY_MONTHMIN, DBA_KEY_DAYMIN,
+                            DBA_KEY_HOURMIN, DBA_KEY_MINUMIN, DBA_KEY_SECMIN);
+            } else if (strcmp(varname, "datemax") == 0) {
+                return rec_to_datetime(self,
+                            DBA_KEY_YEARMAX, DBA_KEY_MONTHMAX, DBA_KEY_DAYMAX,
+                            DBA_KEY_HOURMAX, DBA_KEY_MINUMAX, DBA_KEY_SECMAX);
+            }
+            break;
+        //case 'l':
+//                def _macro_get_level(self):
+//                        return self._get_iter(*self.KEYS_LEVEL)
+        //case 't':
+//                def _macro_get_trange(self):
+//                        return self._get_iter(*self.KEYS_TRANGE)
+//                _macro_get_timerange = _macro_get_trange
+    }
 
     const Var* var = self->rec.peek(varname);
     if (var == NULL)
@@ -174,6 +253,42 @@ int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
     const char* varname = PyString_AsString(key);
     if (varname == NULL)
         return -1;
+
+    // Just look at the first character to see if we need to check for python
+    // API specific keys
+    switch (varname[0])
+    {
+        case 'd':
+            if (strcmp(varname, "date") == 0)
+            {
+                return datetime_to_rec(self, val,
+                            DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY,
+                            DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC);
+            } else if (strcmp(varname, "datemin") == 0) {
+                return datetime_to_rec(self, val,
+                            DBA_KEY_YEARMIN, DBA_KEY_MONTHMIN, DBA_KEY_DAYMIN,
+                            DBA_KEY_HOURMIN, DBA_KEY_MINUMIN, DBA_KEY_SECMIN);
+            } else if (strcmp(varname, "datemax") == 0) {
+                return datetime_to_rec(self, val,
+                            DBA_KEY_YEARMAX, DBA_KEY_MONTHMAX, DBA_KEY_DAYMAX,
+                            DBA_KEY_HOURMAX, DBA_KEY_MINUMAX, DBA_KEY_SECMAX);
+            }
+            break;
+        //case 'l':
+//                def _macro_get_level(self):
+//                        return self._get_iter(*self.KEYS_LEVEL)
+        //case 't':
+//                def _macro_get_trange(self):
+//                        return self._get_iter(*self.KEYS_TRANGE)
+//                _macro_get_timerange = _macro_get_trange
+    }
+
+    if (val == NULL)
+    {
+        // del rec[val]
+        self->rec.unset(varname);
+        return 0;
+    }
 
     if (PyFloat_Check(val))
     {
@@ -255,6 +370,8 @@ namespace python {
 
 void register_record(PyObject* m)
 {
+    PyDateTime_IMPORT;
+
     dpy_Record_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Record_Type) < 0)
         return;
