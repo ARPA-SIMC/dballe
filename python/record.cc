@@ -38,6 +38,8 @@ static dba_keyword level_keys[4] = { DBA_KEY_LEVELTYPE1, DBA_KEY_L1, DBA_KEY_LEV
 static dba_keyword trange_keys[3] = { DBA_KEY_PINDICATOR, DBA_KEY_P1, DBA_KEY_P2 };
 
 static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val);
+static int dpy_Record_contains(dpy_Record* self, PyObject *value);
+static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key);
 
 /*
 static PyObject* dpy_Var_code(dpy_Var* self, void* closure) { return format_varcode(self->var.code()); }
@@ -106,6 +108,21 @@ static PyObject* dpy_Record_vars(dpy_Record* self)
     return result;
 }
 
+static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args)
+{
+    PyObject* key;
+    PyObject* def = Py_None;
+
+    if (!PyArg_ParseTuple(args, "O|O", &key, &def))
+        return NULL;
+
+    int has = dpy_Record_contains(self, key);
+    if (has < 0) return NULL;
+    if (!has) return def;
+
+    return dpy_Record_getitem(self, key);
+}
+
 static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *kw)
 {
     if (kw)
@@ -121,11 +138,41 @@ static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *k
     Py_RETURN_NONE;
 }
 
+static PyObject* dpy_Record_date_extremes(dpy_Record* self)
+{
+    int minvals[6];
+    int maxvals[6];
+    self->rec.parse_date_extremes(minvals, maxvals);
+
+    PyObject* dt_min = Py_None;
+    PyObject* dt_max = Py_None;
+
+    if (minvals[0] != -1)
+    {
+        dt_min = PyDateTime_FromDateAndTime(
+                minvals[0], minvals[1], minvals[2],
+                minvals[3], minvals[4], minvals[5], 0);
+        if (!dt_min) return NULL;
+    }
+
+    if (maxvals[0] != -1)
+    {
+        dt_max = PyDateTime_FromDateAndTime(
+                maxvals[0], maxvals[1], maxvals[2],
+                maxvals[3], maxvals[4], maxvals[5], 0);
+        if (!dt_max) return NULL; // FIXME: deallocate dt_min
+    }
+
+    return Py_BuildValue("(OO)", dt_min, dt_max);
+}
+
 static PyMethodDef dpy_Record_methods[] = {
+    {"get", (PyCFunction)dpy_Record_get, METH_VARARGS, "lookup a value, returning a fallback value (None by default) if unset" },
     {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
     {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a sequence with all the varcodes of the variables set on the Record. Note that this does not include keys." },
     {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "return a sequence with all the variables set on the Record. Note that this does not include keys." },
     {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
+    {"date_extremes", (PyCFunction)dpy_Record_date_extremes, METH_NOARGS, "get two datetime objects with the lower and upper bounds of the datetime period in this record" },
     {NULL}
 };
 
@@ -244,57 +291,41 @@ static PyObject* rec_to_level(dpy_Record* self)
     return rec_keys_to_tuple(self, level_keys, 4);
 }
 
-static int level_to_rec(dpy_Record* self, PyObject* l)
+static int rec_tuple_to_keys(dpy_Record* self, PyObject* val, dba_keyword* keys, unsigned len)
 {
-    if (l == NULL)
+    if (val == NULL)
     {
-        // FIXME: this needs None for the trailing unset parts
-        self->rec.unset(DBA_KEY_LEVELTYPE1);
-        self->rec.unset(DBA_KEY_L1);
-        self->rec.unset(DBA_KEY_LEVELTYPE2);
-        self->rec.unset(DBA_KEY_L2);
+        for (unsigned i = 0; i < len; ++i)
+            self->rec.unset(keys[i]);
     } else {
-        if (!PySequence_Check(l))
+        if (!PySequence_Check(val))
         {
             PyErr_SetString(PyExc_TypeError, "value must be a sequence");
             return -1;
         }
 
-        Py_ssize_t len = PySequence_Length(l);
-        if (len > 4)
+        Py_ssize_t seq_len = PySequence_Length(val);
+        if (seq_len > len)
         {
-            PyErr_SetString(PyExc_TypeError, "value must be a sequence of up to 4 elements");
+            PyErr_Format(PyExc_TypeError, "value must be a sequence of up to %d elements", len);
             return -1;
         }
 
-        PyObject* v;
-        int i;
-
-        switch (len)
+        for (unsigned i = 0; i < seq_len; ++i)
         {
-            case 4:
-                if ((v = PySequence_GetItem(l, 3)) == NULL) return -1;
-                i = PyInt_AsLong(v);
-                if (i == -1 && PyErr_Occurred()) return -1;
-                self->rec.set(DBA_KEY_L2, i);
-            case 3:
-                if ((v = PySequence_GetItem(l, 2)) == NULL) return -1;
-                i = PyInt_AsLong(v);
-                if (i == -1 && PyErr_Occurred()) return -1;
-                self->rec.set(DBA_KEY_LEVELTYPE2, i);
-            case 2:
-                if ((v = PySequence_GetItem(l, 1)) == NULL) return -1;
-                i = PyInt_AsLong(v);
-                if (i == -1 && PyErr_Occurred()) return -1;
-                self->rec.set(DBA_KEY_L1, i);
-            case 1:
-                if ((v = PySequence_GetItem(l, 0)) == NULL) return -1;
-                i = PyInt_AsLong(v);
-                if (i == -1 && PyErr_Occurred()) return -1;
-                self->rec.set(DBA_KEY_LEVELTYPE1, i);
+            PyObject* v = PySequence_GetItem(val, i);
+            if (v == NULL) return -1;
+            int vi = PyInt_AsLong(v);
+            if (vi == -1 && PyErr_Occurred()) return -1;
+            self->rec.set(keys[i], vi);
         }
     }
     return 0;
+}
+
+static int level_to_rec(dpy_Record* self, PyObject* l)
+{
+    return rec_tuple_to_keys(self, l, level_keys, 4);
 }
 
 static PyObject* rec_to_trange(dpy_Record* self)
@@ -304,48 +335,7 @@ static PyObject* rec_to_trange(dpy_Record* self)
 
 static int trange_to_rec(dpy_Record* self, PyObject* l)
 {
-    if (l == NULL)
-    {
-        self->rec.unset(DBA_KEY_PINDICATOR);
-        self->rec.unset(DBA_KEY_P1);
-        self->rec.unset(DBA_KEY_P2);
-    } else {
-        if (!PySequence_Check(l))
-        {
-            PyErr_SetString(PyExc_TypeError, "value must be a sequence");
-            return -1;
-        }
-
-        Py_ssize_t len = PySequence_Length(l);
-        if (len > 3)
-        {
-            PyErr_SetString(PyExc_TypeError, "value must be a sequence of up to 3 elements");
-            return -1;
-        }
-
-        PyObject* v;
-        int i;
-
-        switch (len)
-        {
-            case 3:
-                if ((v = PySequence_GetItem(l, 2)) == NULL) return -1;
-                i = PyInt_AsLong(v);
-                if (i == -1 && PyErr_Occurred()) return -1;
-                self->rec.set(DBA_KEY_P2, i);
-            case 2:
-                if ((v = PySequence_GetItem(l, 1)) == NULL) return -1;
-                i = PyInt_AsLong(v);
-                if (i == -1 && PyErr_Occurred()) return -1;
-                self->rec.set(DBA_KEY_P1, i);
-            case 1:
-                if ((v = PySequence_GetItem(l, 0)) == NULL) return -1;
-                i = PyInt_AsLong(v);
-                if (i == -1 && PyErr_Occurred()) return -1;
-                self->rec.set(DBA_KEY_PINDICATOR, i);
-        }
-    }
-    return 0;
+    return rec_tuple_to_keys(self, l, trange_keys, 3);
 }
 
 static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
@@ -491,9 +481,11 @@ static int dpy_Record_contains(dpy_Record* self, PyObject *value)
         case 'l':
             if (strcmp(varname, "level") == 0)
                 return any_key_set(self->rec, level_keys, 4);
+            break;
         case 't':
             if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
                 return any_key_set(self->rec, trange_keys, 3);
+            break;
     }
 
     return self->rec.peek_value(varname) == NULL ? 0 : 1;

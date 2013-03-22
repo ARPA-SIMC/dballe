@@ -224,8 +224,8 @@ class RecordTest(unittest.TestCase):
         self.assertEqual("date" not in r, True)
         self.assertEqual("datemin" not in r, True)
         self.assertEqual("datemax" not in r, True)
-        self.assertEqual("level" not in r, False)
-        self.assertEqual("timerange" not in r, False)
+        self.assertEqual("level" not in r, True)
+        self.assertEqual("timerange" not in r, True)
 
     def testKeys(self):
         res = self.r.keys();
@@ -358,37 +358,37 @@ class RecordTest(unittest.TestCase):
         # Test the parse_date_extremes reimplementation
         rec = dballe.Record()
 
-        a, b = rec.parse_date_extremes()
+        a, b = rec.date_extremes()
         self.assertEqual(a, None)
         self.assertEqual(b, None)
 
         rec["yearmin"] = 2000
-        a, b = rec.parse_date_extremes()
+        a, b = rec.date_extremes()
         self.assertEqual(a, dt.datetime(2000, 1, 1, 0, 0, 0))
         self.assertEqual(b, None)
 
         rec["yearmin"] = None
         rec["yearmax"] = 1900
         rec["monthmax"] = 2
-        a, b = rec.parse_date_extremes()
+        a, b = rec.date_extremes()
         self.assertEqual(a, None)
         self.assertEqual(b, dt.datetime(1900, 2, 28, 23, 59, 59))
 
         rec["yearmax"] = 2000
         rec["monthmax"] = 2
-        a, b = rec.parse_date_extremes()
+        a, b = rec.date_extremes()
         self.assertEqual(a, None)
         self.assertEqual(b, dt.datetime(2000, 2, 29, 23, 59, 59))
 
         rec["yearmax"] = 2001
         rec["monthmax"] = 2
-        a, b = rec.parse_date_extremes()
+        a, b = rec.date_extremes()
         self.assertEqual(a, None)
         self.assertEqual(b, dt.datetime(2001, 2, 28, 23, 59, 59))
 
         rec["yearmax"] = 2004
         rec["monthmax"] = 2
-        a, b = rec.parse_date_extremes()
+        a, b = rec.date_extremes()
         self.assertEqual(a, None)
         self.assertEqual(b, dt.datetime(2004, 2, 29, 23, 59, 59))
 
