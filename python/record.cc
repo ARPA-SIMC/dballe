@@ -397,6 +397,24 @@ int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
     return 0;
 }
 
+int dpy_Record_contains(dpy_Record* self, PyObject *value)
+{
+    const char* varname = PyString_AsString(value);
+    if (varname == NULL)
+        return -1;
+    return self->rec.peek_value(varname) == NULL ? 0 : 1;
+}
+
+static PySequenceMethods dpy_Record_sequence = {
+    0,                               // sq_length
+    0,                               // sq_concat
+    0,                               // sq_repeat
+    0,                               // sq_item
+    0,                               // sq_slice
+    0,                               // sq_ass_item
+    0,                               // sq_ass_slice
+    (objobjproc)dpy_Record_contains, // sq_contains
+};
 static PyMappingMethods dpy_Record_mapping = {
     0,                                 // __len__
     (binaryfunc)dpy_Record_getitem,    // __getitem__
@@ -416,7 +434,7 @@ PyTypeObject dpy_Record_Type = {
     0,                         // tp_compare
     (reprfunc)dpy_Record_repr, // tp_repr
     0,                         // tp_as_number
-    0,                         // tp_as_sequence
+    &dpy_Record_sequence,      // tp_as_sequence
     &dpy_Record_mapping,       // tp_as_mapping
     0,                         // tp_hash
     0,                         // tp_call
