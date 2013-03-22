@@ -9,6 +9,8 @@ class VartableTest(unittest.TestCase):
     def testEmpty(self):
         table = dballe.Vartable()
         self.assertEqual(table.id, None)
+        self.assertEqual(str(table), "<empty>")
+        self.assertEqual(repr(table), "Vartable()")
         self.assertRaises(KeyError, table.query, "B01001")
 
     def testEmptyVarinfo(self):
@@ -17,6 +19,8 @@ class VartableTest(unittest.TestCase):
     def testCreate(self):
         table = dballe.Vartable.get("dballe")
         self.assertEqual(table.id, "dballe")
+        self.assertEqual(str(table), "dballe")
+        self.assertEqual(repr(table), "Vartable('dballe')")
 
     def testQuery(self):
         table = dballe.Vartable.get("dballe")
@@ -58,7 +62,7 @@ class VartableTest(unittest.TestCase):
     def testStringification(self):
         info = dballe.varinfo("B01001")
         self.assert_(str(info).startswith("B01001"))
-        self.assert_(repr(info).startswith("<Varinfo B01001"))
+        self.assert_(repr(info).startswith("Varinfo('B01001"))
 
     def testFromAlias(self):
         info = dballe.varinfo("t")

@@ -64,6 +64,24 @@ static int dpy_Varinfo_init(dpy_Varinfo* self, PyObject* args, PyObject* kw)
     return -1;
 }
 
+static PyObject* dpy_Varinfo_str(dpy_Varinfo* self)
+{
+    return format_varcode(self->info->var);
+}
+
+static PyObject* dpy_Varinfo_repr(dpy_Varinfo* self)
+{
+    wreport::Varcode code = self->info->var;
+    char buf[20];
+    snprintf(buf, 20, "Varinfo('%c%02d%03d')",
+            WR_VAR_F(code) == 0 ? 'B' :
+            WR_VAR_F(code) == 1 ? 'R' :
+            WR_VAR_F(code) == 2 ? 'C' :
+            WR_VAR_F(code) == 3 ? 'D' : '?',
+            WR_VAR_X(code), WR_VAR_Y(code));
+    return PyString_FromString(buf);
+}
+
 
 static PyTypeObject dpy_Varinfo_Type = {
     PyObject_HEAD_INIT(NULL)
@@ -76,13 +94,13 @@ static PyTypeObject dpy_Varinfo_Type = {
     0,                         // tp_getattr
     0,                         // tp_setattr
     0,                         // tp_compare
-    0,                         // tp_repr
+    (reprfunc)dpy_Varinfo_repr, // tp_repr
     0,                         // tp_as_number
     0,                         // tp_as_sequence
     0,                         // tp_as_mapping
     0,                         // tp_hash
     0,                         // tp_call
-    0,                         // tp_str
+    (reprfunc)dpy_Varinfo_str, // tp_str
     0,                         // tp_getattro
     0,                         // tp_setattro
     0,                         // tp_as_buffer
