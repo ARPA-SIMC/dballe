@@ -83,67 +83,67 @@ class VartableTest(unittest.TestCase):
         info = dballe.varinfo("t")
         self.assertEqual(info.var, "B12101")
 
-#class VarTest(unittest.TestCase):
-#    def testUndefCreation(self):
-#        var = dballe.var("B01001")
-#        self.assertEqual(var.code(), "B01001")
-#        self.assertEqual(var.value(), None)
-#    def testIntCreation(self):
-#        var = dballe.var("B05001", 12)
-#        self.assertEqual(var.code(), "B05001")
-#        self.assertEqual(var.isset(), True)
-#        self.assertEqual(var.enqi(), 12)
-#        self.assertEqual(var.enqd(), 0.00012)
-#        self.assertEqual(var.enqc(), "12")
-#    def testFloatCreation(self):
-#        var = dballe.var("B05001", 12.4)
-#        self.assertEqual(var.code(), "B05001")
-#        self.assertEqual(var.isset(), True)
-#        self.assertEqual(var.enqi(), 1240000)
-#        self.assertEqual(var.enqd(), 12.4)
-#        self.assertEqual(var.enqc(), "1240000")
-#    def testStringCreation(self):
-#        var = dballe.var("B05001", "123456")
-#        self.assertEqual(var.code(), "B05001")
-#        self.assertEqual(var.isset(), True)
-#        self.assertEqual(var.enqi(), 123456)
-#        self.assertEqual(var.enqd(), 1.23456)
-#        self.assertEqual(var.enqc(), "123456")
-#    def testAliasCreation(self):
-#        var = dballe.var("t", 280.3)
-#        self.assertEqual(var.code(), "B12101")
-#        self.assertEqual(var.isset(), True)
-#        self.assertEqual(var.enqi(), 28030)
-#        self.assertEqual(var.enqd(), 280.3)
-#        self.assertEqual(var.enqc(), "28030")
-#    def testStringification(self):
-#        var = dballe.var("B01001")
-#        self.assertEqual(str(var), "None")
-#        self.assertEqual(repr(var), "<Var B01001, None>")
-#
-#        var = dballe.var("B05001", 12.4)
-#        self.assertEqual(str(var), "12.40000")
-#        self.assertEqual(repr(var), "<Var B05001, 12.40000>")
-#    def testEnq(self):
-#        var = dballe.var("B01001", 1)
-#        self.assertEqual(type(var.enq()), int)
-#        self.assertEqual(var.enq(), 1)
-#        var = dballe.var("B05001", 1.12345)
-#        self.assertEqual(type(var.enq()), float)
-#        self.assertEqual(var.enq(), 1.12345)
-#        var = dballe.var("B01019", "ciao")
-#        self.assertEqual(type(var.enq()), str)
-#        self.assertEqual(var.enq(), "ciao")
-#    def testEq(self):
-#        var = dballe.var("B01001", 1)
-#        self.assertEqual(var, var)
-#        self.assertEqual(var, dballe.var("B01001", 1))
-#        self.assertNotEqual(var, dballe.var("B01001", 2))
-#        self.assertNotEqual(var, dballe.var("B01002", 1))
-#        self.assertIsNot(var, None)
-#        self.assertIsNot(dballe.var("B01001"), None)
-#
-#
+class VarTest(unittest.TestCase):
+    def testUndefCreation(self):
+        var = dballe.var("B01001")
+        self.assertEqual(var.code, "B01001")
+        self.assertFalse(var.isset)
+    def testIntCreation(self):
+        var = dballe.var("B05001", 12)
+        self.assertEqual(var.code, "B05001")
+        self.assertEqual(var.isset, True)
+        self.assertEqual(var.enqi(), 12)
+        self.assertEqual(var.enqd(), 0.00012)
+        self.assertEqual(var.enqc(), "12")
+    def testFloatCreation(self):
+        var = dballe.var("B05001", 12.4)
+        self.assertEqual(var.code, "B05001")
+        self.assertEqual(var.isset, True)
+        self.assertEqual(var.enqi(), 1240000)
+        self.assertEqual(var.enqd(), 12.4)
+        self.assertEqual(var.enqc(), "1240000")
+    def testStringCreation(self):
+        var = dballe.var("B05001", "123456")
+        self.assertEqual(var.code, "B05001")
+        self.assertEqual(var.isset, True)
+        self.assertEqual(var.enqi(), 123456)
+        self.assertEqual(var.enqd(), 1.23456)
+        self.assertEqual(var.enqc(), "123456")
+    def testAliasCreation(self):
+        var = dballe.var("t", 280.3)
+        self.assertEqual(var.code, "B12101")
+        self.assertEqual(var.isset, True)
+        self.assertEqual(var.enqi(), 28030)
+        self.assertEqual(var.enqd(), 280.3)
+        self.assertEqual(var.enqc(), "28030")
+    def testStringification(self):
+        var = dballe.var("B01001")
+        self.assertEqual(str(var), "None")
+        self.assertEqual(repr(var), "Var('B01001', None)")
+
+        var = dballe.var("B05001", 12.4)
+        self.assertEqual(str(var), "12.40000")
+        self.assertEqual(repr(var), "Var('B05001', 12.40000)")
+    def testEnq(self):
+        var = dballe.var("B01001", 1)
+        self.assertEqual(type(var.enq()), int)
+        self.assertEqual(var.enq(), 1)
+        var = dballe.var("B05001", 1.12345)
+        self.assertEqual(type(var.enq()), float)
+        self.assertEqual(var.enq(), 1.12345)
+        var = dballe.var("B01019", "ciao")
+        self.assertEqual(type(var.enq()), str)
+        self.assertEqual(var.enq(), "ciao")
+    def testEq(self):
+        var = dballe.var("B01001", 1)
+        self.assertEqual(var, var)
+        self.assertEqual(var, dballe.var("B01001", 1))
+        self.assertNotEqual(var, dballe.var("B01001", 2))
+        self.assertNotEqual(var, dballe.var("B01002", 1))
+        self.assertIsNot(var, None)
+        self.assertIsNot(dballe.var("B01001"), None)
+
+
 #class RecordTest(unittest.TestCase):
 #    def setUp(self):
 #        self.r = dballe.Record()
@@ -284,7 +284,7 @@ class VartableTest(unittest.TestCase):
 #
 #        count = 0
 #        for var in rec:
-#                self.assertEqual(var.code(), "B04001")
+#                self.assertEqual(var.code, "B04001")
 #                count = count + 1
 #        self.assertEqual(count, 1)
 #

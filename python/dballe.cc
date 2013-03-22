@@ -38,8 +38,43 @@ static PyObject* dballe_varinfo(PyTypeObject *type, PyObject *args, PyObject *kw
     return (PyObject*)varinfo_create(dballe::varinfo(resolve_varcode(var_name)));
 }
 
+static PyObject* dballe_var(PyTypeObject *type, PyObject *args, PyObject *kw)
+{
+    const char* var_name;
+    PyObject* val = 0;
+    if (!PyArg_ParseTuple(args, "s|O", &var_name, &val))
+        return NULL;
+    if (val)
+    {
+        if (PyFloat_Check(val))
+        {
+            double v = PyFloat_AsDouble(val);
+            if (v == -1.0 && PyErr_Occurred())
+                return NULL;
+            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), v);
+        } else if (PyInt_Check(val)) {
+            long v = PyInt_AsLong(val);
+            if (v == -1 && PyErr_Occurred())
+                return NULL;
+            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), (int)v);
+        } else if (PyString_Check(val)) {
+            const char* v = PyString_AsString(val);
+            if (v == NULL)
+                return NULL;
+            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), v);
+        } else if (val == Py_None) {
+            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)));
+        } else {
+            PyErr_SetString(PyExc_TypeError, "Expected int, float, str or None");
+            return NULL;
+        }
+    } else
+        return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)));
+}
+
 static PyMethodDef dballe_methods[] = {
     {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, "Query the DB-All.e variable table returning a Varinfo" },
+    {"var", (PyCFunction)dballe_var, METH_VARARGS, "Query the DB-All.e variable table returning an undefined Var" },
     { NULL }
 };
 

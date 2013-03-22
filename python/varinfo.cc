@@ -64,6 +64,13 @@ static int dpy_Varinfo_init(dpy_Varinfo* self, PyObject* args, PyObject* kw)
     return -1;
 }
 
+static void dpy_Varinfo_dealloc(dpy_Varinfo* self)
+{
+    // Explicitly call destructor
+    if (self->info.impl())
+        self->info.~Varinfo();
+}
+
 static PyObject* dpy_Varinfo_str(dpy_Varinfo* self)
 {
     return format_varcode(self->info->var);
@@ -89,7 +96,7 @@ static PyTypeObject dpy_Varinfo_Type = {
     "dballe.Varinfo",         // tp_name
     sizeof(dpy_Varinfo),  // tp_basicsize
     0,                         // tp_itemsize
-    0,                         // tp_dealloc
+    (destructor)dpy_Varinfo_dealloc, // tp_dealloc
     0,                         // tp_print
     0,                         // tp_getattr
     0,                         // tp_setattr
