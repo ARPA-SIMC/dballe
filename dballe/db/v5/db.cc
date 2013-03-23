@@ -1174,6 +1174,11 @@ std::auto_ptr<db::Cursor> DB::query(const Record& query, unsigned int wanted, un
     return std::auto_ptr<db::Cursor>(res.release());
 }
 
+std::auto_ptr<db::Cursor> DB::query_reports(const Record& rec)
+{
+    return query(rec, DBA_DB_WANT_REPCOD, DBA_DB_MODIFIER_DISTINCT);
+}
+
 std::auto_ptr<db::Cursor> DB::query_stations(const Record& rec)
 {
     /* Perform the query, limited to station values */
@@ -1181,6 +1186,41 @@ std::auto_ptr<db::Cursor> DB::query_stations(const Record& rec)
             DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
             DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT);
 }
+
+std::auto_ptr<db::Cursor> DB::query_levels(const Record& rec)
+{
+    return query(rec, DBA_DB_WANT_LEVEL, DBA_DB_MODIFIER_DISTINCT);
+}
+
+std::auto_ptr<db::Cursor> DB::query_tranges(const Record& rec)
+{
+    return query(rec, DBA_DB_WANT_TIMERANGE, DBA_DB_MODIFIER_DISTINCT);
+}
+
+/*
+        dballe::db::Cursor* query_station_summary(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
+                                DBA_DB_MODIFIER_DISTINCT).release();
+
+        }
+        dballe::db::Cursor* query_levels_tranges(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_LEVEL | DBA_DB_WANT_TIMERANGE, DBA_DB_MODIFIER_DISTINCT).release();
+        }
+        dballe::db::Cursor* query_datetimes(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_DATETIME, DBA_DB_MODIFIER_DISTINCT).release();
+        }
+        dballe::db::Cursor* query_idents(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_IDENT, DBA_DB_MODIFIER_DISTINCT).release();
+        }
+        dballe::db::Cursor* query_variable_types(const dballe::Record& rec)
+        {
+                return $self->query(rec, DBA_DB_WANT_VAR_NAME, DBA_DB_MODIFIER_DISTINCT | DBA_DB_MODIFIER_NOANAEXTRA ).release();
+        }
+	*/
 
 std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
 {

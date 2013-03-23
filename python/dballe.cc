@@ -27,6 +27,7 @@
 #include "record.h"
 #ifdef HAVE_DBALLE_DB
 #include "db.h"
+#include "cursor.h"
 #endif
 #include "dballe/core/var.h"
 
@@ -97,6 +98,7 @@ PyMODINIT_FUNC initdballe(void)
     register_record(m);
 #ifdef HAVE_DBALLE_DB
     register_db(m);
+    register_cursor(m);
 #endif
 }
 

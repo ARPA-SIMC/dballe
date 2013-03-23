@@ -185,6 +185,24 @@ static PyObject* dpy_DB_vacuum(dpy_DB* self)
     Py_RETURN_NONE;
 }
 
+static PyObject* dpy_DB_query_reports(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    try {
+        std::auto_ptr<db::Cursor> res = self->db->query_reports(record->rec);
+        // TODO: return res
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+
 static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
 {
     dpy_Record* record;
@@ -193,6 +211,42 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_stations(record->rec);
+        // TODO: return res
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* dpy_DB_query_levels(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    try {
+        std::auto_ptr<db::Cursor> res = self->db->query_levels(record->rec);
+        // TODO: return res
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* dpy_DB_query_tranges(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    try {
+        std::auto_ptr<db::Cursor> res = self->db->query_tranges(record->rec);
         // TODO: return res
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -253,8 +307,14 @@ static PyMethodDef dpy_DB_methods[] = {
         "Remove records from the database" },
     {"vacuum",            (PyCFunction)dpy_DB_remove, METH_NOARGS,
         "Perform database cleanup operations" },
+    {"query_reports",    (PyCFunction)dpy_DB_query_reports, METH_VARARGS,
+        "Query the report information archive in the database; returns a Cursor" },
     {"query_stations",    (PyCFunction)dpy_DB_query_stations, METH_VARARGS,
         "Query the station archive in the database; returns a Cursor" },
+    {"query_levels",      (PyCFunction)dpy_DB_query_levels, METH_VARARGS,
+        "Query the level archive in the database; returns a Cursor" },
+    {"query_tranges",     (PyCFunction)dpy_DB_query_tranges, METH_VARARGS,
+        "Query the time range archive in the database; returns a Cursor" },
     {"query_data",        (PyCFunction)dpy_DB_query_data, METH_VARARGS,
         "Query the variables in the database; returns a Cursor" },
     {NULL}

@@ -21,7 +21,8 @@ nodist_dballe_la_SOURCES = \
 						   dballe.cc
 if DO_DBALLE_DB
 nodist_dballe_la_SOURCES += \
-							db.cc
+							db.cc \
+							cursor.cc
 endif
 dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
 dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex initdballe
@@ -39,6 +40,7 @@ EXTRA_DIST = \
 			 varinfo.h \
 			 var.h \
 			 record.h \
-			 db.h
+			 db.h \
+			 cursor.h
 
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)

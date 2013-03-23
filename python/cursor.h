@@ -1,5 +1,5 @@
 /*
- * python/db - DB-All.e DB python bindings
+ * python/cursor - DB-All.e DB cursor python bindings
  *
  * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -25,20 +25,20 @@ extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::DB* db;
-} dpy_DB;
+    dballe::db::Cursor* cur;
+} dpy_Cursor;
 
-PyAPI_DATA(PyTypeObject) dpy_DB_Type;
+PyAPI_DATA(PyTypeObject) dpy_Cursor_Type;
 
 #define dpy_DB_Check(ob) \
-    (Py_TYPE(ob) == &dpy_DB_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_DB_Type))
+    (Py_TYPE(ob) == &dpy_Cursor_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), &dpy_Cursor_Type))
 }
 
 namespace dballe {
 namespace python {
 
-void register_db(PyObject* m);
+void register_cursor(PyObject* m);
 
 }
 }
