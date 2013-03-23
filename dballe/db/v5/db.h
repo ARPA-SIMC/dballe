@@ -349,7 +349,7 @@ public:
 	/**
 	 * Query attributes
 	 *
-	 * @param id_context
+	 * @param reference_id
 	 *   The database id of the context related to the attributes to retrieve
 	 * @param id_var
 	 *   The varcode of the variable related to the attributes to retrieve.  See @ref vartable.h
@@ -361,12 +361,12 @@ public:
 	 * @return
 	 *   Number of attributes returned in attrs
 	 */
-	unsigned query_attrs(int id_context, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs);
+	unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs);
 
 	/**
 	 * Insert new attributes into the database.
 	 *
-	 * @param id_context
+	 * @param reference_id
 	 *   The database id of the context related to the attributes to insert
 	 * @param id_var
 	 *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
@@ -375,7 +375,7 @@ public:
 	 * @param can_replace
 	 *   If true, then existing data can be rewritten, else data can only be added.
 	 */
-	void attr_insert_or_replace(int id_context, wreport::Varcode id_var, const Record& attrs, bool can_replace);
+	void attr_insert_or_replace(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace);
 
 	/**
 	 * Insert new attributes into the database.
@@ -383,34 +383,34 @@ public:
 	 * If the same attribute exists for the same data, it is
 	 * overwritten
 	 *
-	 * @param id_context
+	 * @param reference_id
 	 *   The database id of the context related to the attributes to insert
 	 * @param id_var
 	 *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
 	 * @param attrs
 	 *   The record with the attributes to be added
 	 */
-	void attr_insert(int id_context, wreport::Varcode id_var, const Record& attrs);
+	void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs);
 
 	/**
 	 * Insert new attributes into the database.
 	 *
 	 * If the same attribute exists for the same data, the function fails.
 	 *
-	 * @param id_context
+	 * @param reference_id
 	 *   The database id of the context related to the attributes to insert
 	 * @param id_var
 	 *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
 	 * @param attrs
 	 *   The record with the attributes to be added
 	 */
-	void attr_insert_new(int id_context, wreport::Varcode id_var, const Record& attrs);
+	void attr_insert_new(int reference_id, wreport::Varcode id_var, const Record& attrs);
 
 	/**
 	 * Delete QC data for the variable `var' in record `rec' (coming from a previous
 	 * dba_query)
 	 *
-	 * @param id_context
+	 * @param reference_id
 	 *   The database id of the context related to the attributes to remove
 	 * @param id_var
 	 *   The varcode of the variable related to the attributes to remove.  See @ref vartable.h
@@ -418,7 +418,7 @@ public:
 	 *   Array of WMO codes of the attributes to delete.  If empty, all attributes
 	 *   associated to id_data will be deleted.
 	 */
-	void attr_remove(int id_context, wreport::Varcode id_var, const db::AttrList& qcs);
+	void attr_remove(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs);
 
 	/**
 	 * Import a Msg message into the DB-All.e database

@@ -31,7 +31,7 @@ using namespace std;
 namespace tut {
 
 // Print all the results, returning the count of results printed
-static int print_results(db::Cursor& cur)
+static int print_results(db::v5::Cursor& cur)
 {
         Record result;
         fprintf(stderr, "%d results:\n", (int)cur.count);
@@ -262,7 +262,7 @@ void to::test<4>()
         auto_ptr<db::Cursor> cur = db->query_data(query); \
         ensure_equals(cur->remaining(), expected_count); \
         int count; \
-        if (0) count = print_results(*cur); \
+        if (0) count = print_results(*dynamic_cast<dballe::db::v5::Cursor*>(cur.get())); \
         else for (count = 0; cur->next(); ++count) ; \
         ensure_equals(count, expected_count); \
 } while (0)
@@ -275,7 +275,7 @@ void to::test<4>()
         auto_ptr<db::Cursor> cur = db->query_data(query); \
         ensure_equals(cur->remaining(), expected_count); \
         int count; \
-        if (0) count = print_results(*cur); \
+        if (0) count = print_results(*dynamic_cast<dballe::db::v5::Cursor*>(cur.get())); \
         else for (count = 0; cur->next(); ++count) ; \
         ensure_equals(count, expected_count); \
 } while (0)
@@ -401,7 +401,8 @@ void to::test<5>()
         query.set(DBA_KEY_LATMIN, 10.0);
 
         // Make the query
-        auto_ptr<db::Cursor> cur = db->query_data(query);
+        auto_ptr<db::Cursor> dbcur = db->query_data(query);
+        auto_ptr<db::v5::Cursor> cur(dynamic_cast<db::v5::Cursor*>(dbcur.release()));
 
         ensure_equals(cur->remaining(), 4);
 
@@ -513,7 +514,8 @@ void to::test<7>()
 
         // 4 items to begin with
         query.clear();
-        auto_ptr<db::Cursor> cur = db->query_data(query);
+        auto_ptr<db::Cursor> dbcur = db->query_data(query);
+        auto_ptr<db::v5::Cursor> cur(dynamic_cast<db::v5::Cursor*>(dbcur.release()));
         ensure_equals(cur->remaining(), 4);
         cur->discard_rest();
 
@@ -527,14 +529,14 @@ void to::test<7>()
 
         // 2 remaining after remove
         query.clear();
-        cur = db->query_data(query);
+        cur.reset(dynamic_cast<db::v5::Cursor*>(db->query_data(query).release()));
         ensure_equals(cur->remaining(), 2);
         cur->discard_rest();
 
         // Did it remove the right ones?
         query.clear();
         query.set(DBA_KEY_LATMIN, 1000000);
-        cur = db->query_data(query);
+        cur.reset(dynamic_cast<db::v5::Cursor*>(db->query_data(query).release()));
         ensure_equals(cur->remaining(), 2);
         ensure(cur->next());
         cur->to_record(result);
@@ -602,7 +604,8 @@ void to::test<8>()
         base.set(DBA_KEY_SEC, 0);
 
 #define WANTRESULT(ab) do { \
-        auto_ptr<db::Cursor> cur = db->query_data(query); \
+        auto_ptr<db::Cursor> dbcur = db->query_data(query); \
+        auto_ptr<db::v5::Cursor> cur(dynamic_cast<db::v5::Cursor*>(dbcur.release())); \
         ensure_equals(cur->remaining(), 1); \
         ensure(cur->next()); \
         cur->to_record(result); \
@@ -808,7 +811,8 @@ void to::test<9>()
 
         query.clear();
         query.set(DBA_KEY_LATMIN, 1000000);
-        auto_ptr<db::Cursor> cur = db->query_data(query);
+        auto_ptr<db::Cursor> dbcur = db->query_data(query);
+        auto_ptr<db::v5::Cursor> cur(dynamic_cast<db::v5::Cursor*>(dbcur.release()));
 
         // Move the cursor to B01011
         bool found = false;
@@ -994,13 +998,12 @@ void to::test<14>()
         query.set(DBA_KEY_ANA_FILTER, "B07030>1");
 
         // Perform the query, limited to level values
-        v5::DB& db = v5();
-        db::Cursor cur(db);
-        ensure_equals(cur.query(query, DBA_DB_WANT_ANA_ID, 0), 2);
+        auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_ANA_ID, 0));
+        ensure_equals(cur->remaining(), 2);
 
-        ensure(cur.next());
-        ensure(cur.next());
-        ensure(!cur.next());
+        ensure(cur->next());
+        ensure(cur->next());
+        ensure(!cur->next());
 }
 
 // Insert with undef leveltype2 and l2
@@ -1028,13 +1031,12 @@ void to::test<15>()
         query.set(DBA_KEY_LEVELTYPE1, 44);
         query.set(DBA_KEY_L1, 55);
 
-        v5::DB& db = v5();
-        db::Cursor cur(db);
-        ensure_equals(cur.query(query, DBA_DB_WANT_VAR_VALUE | DBA_DB_WANT_LEVEL, 0), 1);
+        auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_VAR_VALUE | DBA_DB_WANT_LEVEL, 0));
+        ensure_equals(cur->remaining(), 1);
 
-        ensure(cur.next());
+        ensure(cur->next());
         result.clear();
-        cur.to_record(result);
+        cur->to_record(result);
 
         ensure(result.key_peek(DBA_KEY_LEVELTYPE1) != NULL);
         ensure_equals(result[DBA_KEY_LEVELTYPE1].enqi(), 44);
@@ -1045,7 +1047,7 @@ void to::test<15>()
         ensure(result.key_peek(DBA_KEY_L2) != NULL);
         ensure_equals(result[DBA_KEY_L2].enqi(), MISSING_INT);
 
-        ensure(!cur.next());
+        ensure(!cur->next());
 }
 
 // Query with undef leveltype2 and l2
@@ -1059,10 +1061,9 @@ void to::test<16>()
         query.set(DBA_KEY_LEVELTYPE1, 10);
         query.set(DBA_KEY_L1, 11);
 
-        v5::DB& db = v5();
-        db::Cursor cur(db);
-        ensure_equals(cur.query(query, DBA_DB_WANT_VAR_VALUE, 0), 4);
-        cur.discard_rest();
+        auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_VAR_VALUE, 0));
+        ensure_equals(cur->remaining(), 4);
+        cur->discard_rest();
 }
 
 // Query with an incorrect attr_filter
@@ -1075,11 +1076,8 @@ void to::test<17>()
         query.clear();
         query.set(DBA_KEY_ATTR_FILTER, "B12001");
 
-        v5::DB& db = v5();
-        db::Cursor cur(db);
-
         try {
-                cur.query(query, DBA_DB_WANT_VAR_VALUE, 0);
+                db->query(query, DBA_DB_WANT_VAR_VALUE, 0);
         } catch (error_consistency& e) {
                 ensure_contains(e.what(), "B12001 is not a valid filter");
         }
@@ -1134,55 +1132,52 @@ void to::test<18>()
 
         // Query with querybest only
         {
-            v5::DB& db = v5();
-            db::Cursor cur(db);
+            query.clear();
+            query.set(DBA_KEY_QUERY, "best");
+            query.set(DBA_KEY_YEAR, 2009);
+            query.set(DBA_KEY_MONTH, 11);
+            query.set(DBA_KEY_DAY, 11);
+            query.set(DBA_KEY_HOUR, 0);
+            query.set(DBA_KEY_MIN, 0);
+            query.set(DBA_KEY_SEC, 0);
+            query.set(DBA_KEY_VAR, "B12101");
 
-                query.clear();
-                query.set(DBA_KEY_QUERY, "best");
-                query.set(DBA_KEY_YEAR, 2009);
-                query.set(DBA_KEY_MONTH, 11);
-                query.set(DBA_KEY_DAY, 11);
-                query.set(DBA_KEY_HOUR, 0);
-                query.set(DBA_KEY_MIN, 0);
-                query.set(DBA_KEY_SEC, 0);
-                query.set(DBA_KEY_VAR, "B12101");
-                ensure_equals(cur.query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0), 1);
+            auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
+            ensure_equals(cur->remaining(), 1);
 
-                ensure(cur.next());
-                result.clear();
-                cur.to_record(result);
+            ensure(cur->next());
+            result.clear();
+            cur->to_record(result);
 
-                ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
-                ensure_equals(result[DBA_KEY_REP_COD].enqi(), 255);
+            ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
+            ensure_equals(result[DBA_KEY_REP_COD].enqi(), 255);
 
-                cur.discard_rest();
+            cur->discard_rest();
         }
 
         // Query with querybest and priomax
         {
-            v5::DB& db = v5();
-            db::Cursor cur(db);
+            query.clear();
+            query.set(DBA_KEY_PRIOMAX, 100);
+            query.set(DBA_KEY_QUERY, "best");
+            query.set(DBA_KEY_YEAR, 2009);
+            query.set(DBA_KEY_MONTH, 11);
+            query.set(DBA_KEY_DAY, 11);
+            query.set(DBA_KEY_HOUR, 0);
+            query.set(DBA_KEY_MIN, 0);
+            query.set(DBA_KEY_SEC, 0);
+            query.set(DBA_KEY_VAR, "B12101");
+            auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
+            ensure_equals(cur->remaining(), 1);
 
-                query.clear();
-                query.set(DBA_KEY_PRIOMAX, 100);
-                query.set(DBA_KEY_QUERY, "best");
-                query.set(DBA_KEY_YEAR, 2009);
-                query.set(DBA_KEY_MONTH, 11);
-                query.set(DBA_KEY_DAY, 11);
-                query.set(DBA_KEY_HOUR, 0);
-                query.set(DBA_KEY_MIN, 0);
-                query.set(DBA_KEY_SEC, 0);
-                query.set(DBA_KEY_VAR, "B12101");
-                ensure_equals(cur.query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0), 1);
+            ensure(cur->next());
+            result.clear();
+            cur->to_record(result);
 
-                ensure(cur.next());
-                result.clear();
-                cur.to_record(result);
+            ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
+            ensure_equals(result[DBA_KEY_REP_COD].enqi(), 11);
 
-                ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
-                ensure_equals(result[DBA_KEY_REP_COD].enqi(), 11);
-
-                cur.discard_rest();
+            cur->discard_rest();
         }
 }
 
@@ -1214,11 +1209,11 @@ void to::test<20>()
         query.set(DBA_KEY_REP_COD, 2);
         query.set(DBA_KEY_VAR, "B01011");
         auto_ptr<db::Cursor> cur = db->query_data(query);
-        ensure_equals(cur->count, 1);
+        ensure_equals(cur->remaining(), 1);
 
         // Move the cursor to B01011
         cur->next();
-        int context_id = cur->out_context_id;
+        int context_id = cur->attr_reference_id();
         cur->discard_rest();
 
         // Insert new attributes about this report
@@ -1234,22 +1229,22 @@ void to::test<20>()
 
         query.set(DBA_KEY_ATTR_FILTER, "B01001=50");
         cur = db->query_data(query);
-        ensure_equals(cur->count, 1);
+        ensure_equals(cur->remaining(), 1);
         cur->discard_rest();
 
         query.set(DBA_KEY_ATTR_FILTER, "B01001<=50");
         cur = db->query_data(query);
-        ensure_equals(cur->count, 1);
+        ensure_equals(cur->remaining(), 1);
         cur->discard_rest();
 
         query.set(DBA_KEY_ATTR_FILTER, "B01001<51");
         cur = db->query_data(query);
-        ensure_equals(cur->count, 1);
+        ensure_equals(cur->remaining(), 1);
         cur->discard_rest();
 
         query.set(DBA_KEY_ATTR_FILTER, "B01001<8");
         cur = db->query_data(query);
-        ensure_equals(cur->count, 0);
+        ensure_equals(cur->remaining(), 0);
         cur->discard_rest();
 
         // Try queries filtered by string attributes
@@ -1259,22 +1254,22 @@ void to::test<20>()
 
         query.set(DBA_KEY_ATTR_FILTER, "B01008=50");
         cur = db->query_data(query);
-        ensure_equals(cur->count, 1);
+        ensure_equals(cur->remaining(), 1);
         cur->discard_rest();
 
         query.set(DBA_KEY_ATTR_FILTER, "B01008<=50");
         cur = db->query_data(query);
-        ensure_equals(cur->count, 1);
+        ensure_equals(cur->remaining(), 1);
         cur->discard_rest();
 
         query.set(DBA_KEY_ATTR_FILTER, "B01008<8");
         cur = db->query_data(query);
-        ensure_equals(cur->count, 1);
+        ensure_equals(cur->remaining(), 1);
         cur->discard_rest();
 
         query.set(DBA_KEY_ATTR_FILTER, "B01008<100");
         cur = db->query_data(query);
-        ensure_equals(cur->count, 0);
+        ensure_equals(cur->remaining(), 0);
         cur->discard_rest();
 }
 

@@ -1195,7 +1195,7 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
 }
 
 
-unsigned DB::query_attrs(int id_context, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
+unsigned DB::query_attrs(int reference_id, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {
     // Create the query
     Querybuf query(200);
@@ -1217,7 +1217,7 @@ unsigned DB::query_attrs(int id_context, wreport::Varcode id_var, const std::vec
     }
 
     // Perform the query
-    DBALLE_SQL_C_SINT_TYPE in_id_context = id_context;
+    DBALLE_SQL_C_SINT_TYPE in_id_context = reference_id;
     Varcode out_type;
     char out_value[255];
 
@@ -1243,11 +1243,11 @@ unsigned DB::query_attrs(int id_context, wreport::Varcode id_var, const std::vec
     return count;
 }
 
-void DB::attr_insert_or_replace(int id_context, wreport::Varcode id_var, const Record& attrs, bool can_replace)
+void DB::attr_insert_or_replace(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace)
 {
     Attr& a = attr();
 
-    a.id_context = id_context;
+    a.id_context = reference_id;
     a.id_var = id_var;
 
     // Begin the transaction
@@ -1263,17 +1263,17 @@ void DB::attr_insert_or_replace(int id_context, wreport::Varcode id_var, const R
     t.commit();
 }
 
-void DB::attr_insert(int id_context, wreport::Varcode id_var, const Record& attrs)
+void DB::attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs)
 {
-    return attr_insert_or_replace(id_context, id_var, attrs, true);
+    return attr_insert_or_replace(reference_id, id_var, attrs, true);
 }
 
-void DB::attr_insert_new(int id_context, wreport::Varcode id_var, const Record& attrs)
+void DB::attr_insert_new(int reference_id, wreport::Varcode id_var, const Record& attrs)
 {
-    return attr_insert_or_replace(id_context, id_var, attrs, false);
+    return attr_insert_or_replace(reference_id, id_var, attrs, false);
 }
 
-void DB::attr_remove(int id_context, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
+void DB::attr_remove(int reference_id, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
 {
     // Create the query
     Querybuf query(500);
@@ -1289,7 +1289,7 @@ void DB::attr_remove(int id_context, wreport::Varcode id_var, const std::vector<
 
     // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_context, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 
-    DBALLE_SQL_C_SINT_TYPE in_id_context = id_context;
+    DBALLE_SQL_C_SINT_TYPE in_id_context = reference_id;
 
     db::Statement stm(*conn);
     stm.bind_in(1, in_id_context);
