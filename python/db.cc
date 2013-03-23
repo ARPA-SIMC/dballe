@@ -296,21 +296,31 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
         return raise_std_exception(se);
     }
 }
-    /*
-     * Query attributes
-     *
-     * @param reference_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the variable we query
-     * @param id_var
-     *   The varcode of the variable related to the attributes to retrieve.  See @ref vartable.h
-     * @param qcs
-     *   The WMO codes of the QC values requested.  If it is empty, then all values
-     *   are returned.
-     * @param attrs
-     *   The Record that will hold the resulting attributes
-     * @return
-    virtual unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs) = 0;
-    */
+
+static bool read_attrlist(PyObject* attrs, db::AttrList& codes)
+{
+    if (!attrs) return true;
+
+    OwnedPyObject iter(PyObject_GetIter(attrs));
+    if (iter == NULL) return false;
+
+    try {
+        while (PyObject* iter_item = PyIter_Next(iter)) {
+            OwnedPyObject item(iter_item);
+            const char* name = PyString_AsString(item);
+            if (!name) return false;
+            codes.push_back(resolve_varcode(name));
+        }
+        return true;
+    } catch (wreport::error& e) {
+        raise_wreport_exception(e);
+        return false;
+    } catch (std::exception& se) {
+        raise_std_exception(se);
+        return false;
+    }
+}
+
 static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 {
     static char* kwlist[] = { "reference_id", "varcode", "attrs", NULL };
@@ -323,22 +333,12 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
     wreport::Varcode varcode = resolve_varcode(varname);
 
     // Read the attribute list, if provided
-    db::AttrList qcs;
-    if (attrs)
-    {
-        OwnedPyObject iter(PyObject_GetIter(attrs));
-        if (iter == NULL)
-            return NULL;
-        while (PyObject* iter_item = PyIter_Next(iter)) {
-            OwnedPyObject item(iter_item);
-            const char* name = PyString_AsString(item);
-            if (!name) return NULL;
-            qcs.push_back(resolve_varcode(name));
-        }
-    }
+    db::AttrList codes;
+    if (!read_attrlist(attrs, codes))
+        return NULL;
 
     try {
-        self->db->query_attrs(reference_id, varcode, qcs, self->attr_rec->rec);
+        self->db->query_attrs(reference_id, varcode, codes, self->attr_rec->rec);
         Py_INCREF(self->attr_rec);
         return (PyObject*)self->attr_rec;
     } catch (wreport::error& e) {
@@ -372,8 +372,33 @@ static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
     }
 }
 
+static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
+{
+    static char* kwlist[] = { "reference_id", "varcode", "attrs", NULL };
+    int reference_id;
+    const char* varname;
+    PyObject* attrs = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "is|O", kwlist, &reference_id, &varname, &attrs))
+        return NULL;
+
+    wreport::Varcode varcode = resolve_varcode(varname);
+
+    // Read the attribute list, if provided
+    db::AttrList codes;
+    if (!read_attrlist(attrs, codes))
+        return NULL;
+
+    try {
+        self->db->attr_remove(reference_id, varcode, codes);
+        Py_RETURN_NONE;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
     /*
-    virtual void attr_remove(int id_context, wreport::Varcode id_var, const db::AttrList& qcs) = 0;
     virtual void import_msg(const Msg& msg, const char* repmemo, int flags) = 0;
     virtual void import_msgs(const Msgs& msgs, const char* repmemo, int flags) = 0;
     virtual void export_msgs(const Record& query, MsgConsumer& cons) = 0;
@@ -413,6 +438,8 @@ static PyMethodDef dpy_DB_methods[] = {
         "Query the variables in the database; returns a Cursor" },
     {"attr_insert",       (PyCFunction)dpy_DB_attr_insert, METH_VARARGS | METH_KEYWORDS,
         "Insert new attributes into the database" },
+    {"attr_remove",       (PyCFunction)dpy_DB_attr_remove, METH_VARARGS | METH_KEYWORDS,
+        "Remove attributes" },
     {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
         "Query attributes" },
     {NULL}
