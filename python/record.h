@@ -18,6 +18,9 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
+#ifndef DBALLE_PYTHON_RECORD_H
+#define DBALLE_PYTHON_RECORD_H
+
 #include <Python.h>
 #include <dballe/core/record.h>
 
@@ -44,3 +47,5 @@ void register_record(PyObject* m);
 
 }
 }
+
+#endif

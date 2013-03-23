@@ -18,6 +18,9 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
+#ifndef DBALLE_PYTHON_DB_H
+#define DBALLE_PYTHON_DB_H
+
 #include <Python.h>
 #include <dballe/db/db.h>
 
@@ -42,3 +45,5 @@ void register_db(PyObject* m);
 
 }
 }
+
+#endif

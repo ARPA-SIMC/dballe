@@ -53,8 +53,27 @@ static int dpy_Cursor_init(dpy_Cursor* self, PyObject* args, PyObject* kw)
 
 static void dpy_Cursor_dealloc(dpy_Cursor* self)
 {
-    if (self->cur)
-        delete self->cur;
+    delete self->cur;
+    Py_DECREF(self->rec);
+}
+
+static PyObject* dpy_Cursor_iter(dpy_Cursor* self)
+{
+    Py_INCREF(self);
+    return (PyObject*)self;
+}
+
+static PyObject* dpy_Cursor_iternext(dpy_Cursor* self)
+{
+    if (self->cur->next())
+    {
+        self->cur->to_record(self->rec->rec);
+        Py_INCREF(self->rec);
+        return (PyObject*)self->rec;
+    } else {
+        PyErr_SetNone(PyExc_StopIteration);
+        return NULL;
+    }
 }
 
 static PyObject* dpy_Cursor_str(dpy_Cursor* self)
@@ -107,14 +126,14 @@ PyTypeObject dpy_Cursor_Type = {
     0,                         // tp_getattro
     0,                         // tp_setattro
     0,                         // tp_as_buffer
-    Py_TPFLAGS_DEFAULT,        // tp_flags
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER, // tp_flags
     "DB-All.e Cursor",         // tp_doc
     0,                         // tp_traverse
     0,                         // tp_clear
     0,                         // tp_richcompare
     0,                         // tp_weaklistoffset
-    0,                         // tp_iter
-    0,                         // tp_iternext
+    (getiterfunc)dpy_Cursor_iter,      // tp_iter
+    (iternextfunc)dpy_Cursor_iternext, // tp_iternext
     dpy_Cursor_methods,        // tp_methods
     0,                         // tp_members
     dpy_Cursor_getsetters,     // tp_getset
@@ -139,6 +158,7 @@ dpy_Cursor* cursor_create(std::auto_ptr<db::Cursor> cur)
     if (!result) return NULL;
     result = (dpy_Cursor*)PyObject_Init((PyObject*)result, &dpy_Cursor_Type);
     result->cur = cur.release();
+    result->rec = record_create();
     return result;
 }
 

@@ -597,6 +597,11 @@ PyTypeObject dpy_Record_Type = {
 namespace dballe {
 namespace python {
 
+dpy_Record* record_create()
+{
+    return (dpy_Record*)PyObject_CallObject((PyObject*)&dpy_Record_Type, NULL);
+}
+
 void register_record(PyObject* m)
 {
     PyDateTime_IMPORT;

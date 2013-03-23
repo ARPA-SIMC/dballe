@@ -18,14 +18,19 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
+#ifndef DBALLE_PYTHON_CURSOR_H
+#define DBALLE_PYTHON_CURSOR_H
+
 #include <Python.h>
 #include <dballe/db/db.h>
+#include "record.h"
 
 extern "C" {
 
 typedef struct {
     PyObject_HEAD
     dballe::db::Cursor* cur;
+    dpy_Record* rec;
 } dpy_Cursor;
 
 PyAPI_DATA(PyTypeObject) dpy_Cursor_Type;
@@ -47,3 +52,5 @@ void register_cursor(PyObject* m);
 
 }
 }
+
+#endif

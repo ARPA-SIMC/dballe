@@ -18,6 +18,9 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
+#ifndef DBALLE_PYTHON_VAR_H
+#define DBALLE_PYTHON_VAR_H
+
 #include <Python.h>
 #include <wreport/var.h>
 
@@ -50,3 +53,5 @@ void register_var(PyObject* m);
 
 }
 }
+
+#endif
