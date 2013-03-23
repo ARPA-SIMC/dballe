@@ -36,7 +36,7 @@ class DballeTest(unittest.TestCase):
     def testQueryAna(self):
         query = dballe.Record()
         cur = self.db.query_stations(query)
-        self.assertEqual(cur.remaining(), 1)
+        self.assertEqual(cur.remaining, 1)
         count = 0
         for result in cur:
                 self.assertEqual(result["lat"], 12.34560)
@@ -52,10 +52,10 @@ class DballeTest(unittest.TestCase):
         query = dballe.Record()
         query["latmin"] = 10.0
         cur = self.db.query_data(query)
-        self.assertEqual(cur.remaining(), 2)
+        self.assertEqual(cur.remaining, 2)
         count = 0
         for result in cur:
-                self.assertEqual(cur.remaining(), 2-count-1)
+                self.assertEqual(cur.remaining, 2-count-1)
                 assert cur.out_varcode in expected
                 self.assertEqual(result[cur.out_varcode], expected[cur.out_varcode])
                 del expected[cur.out_varcode]
@@ -115,26 +115,26 @@ class DballeTest(unittest.TestCase):
     def testQueryLevels(self):
         query = dballe.Record()
         cur = self.db.query_levels(query)
-        self.assertEqual(cur.remaining(), 1)
+        self.assertEqual(cur.remaining, 1)
         for result in cur:
             self.assertEqual(result["level"], (10, 11, 15, 22))
     def testQueryTimeRanges(self):
         query = dballe.Record()
         cur = self.db.query_tranges(query)
-        self.assertEqual(cur.remaining(), 1)
+        self.assertEqual(cur.remaining, 1)
         for result in cur:
             self.assertEqual(result["trange"], (20, 111, 222))
     def testQueryLevelsAndTimeRanges(self):
         query = dballe.Record()
         cur = self.db.query_levels_tranges(query)
-        self.assertEqual(cur.remaining(), 1)
+        self.assertEqual(cur.remaining, 1)
         for result in cur:
             self.assertEqual(result["level"], (10, 11, 15, 22))
             self.assertEqual(result["trange"], (20, 111, 222))
     def testQueryVariableTypes(self):
         query = dballe.Record()
         cur = self.db.query_variable_types(query)
-        self.assertEqual(cur.remaining(), 2)
+        self.assertEqual(cur.remaining, 2)
         expected = {}
         expected["B01011"] = 1
         expected["B01012"] = 1
@@ -147,20 +147,20 @@ class DballeTest(unittest.TestCase):
     def testQueryIdents(self):
         query = dballe.Record()
         cur = self.db.query_idents(query)
-        self.assertEqual(cur.remaining(), 1)
+        self.assertEqual(cur.remaining, 1)
         for result in cur:
             self.assert_("ident" not in result)
     def testQueryReports(self):
         query = dballe.Record()
         cur = self.db.query_reports(query)
-        self.assertEqual(cur.remaining(), 1)
+        self.assertEqual(cur.remaining, 1)
         for result in cur:
             self.assertEqual(result["rep_cod"], 1)
             self.assertEqual(result["rep_memo"], "synop")
     def testQueryDateTimes(self):
         query = dballe.Record()
         cur = self.db.query_datetimes(query)
-        self.assertEqual(cur.remaining(), 1)
+        self.assertEqual(cur.remaining, 1)
         for result in cur:
             self.assertEqual(result["date"], dt.datetime(1945, 4, 25, 8, 0, 0))
     def testQueryExport(self):

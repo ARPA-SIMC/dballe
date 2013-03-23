@@ -22,6 +22,7 @@
 #include <datetime.h>
 #include "db.h"
 #include "record.h"
+#include "cursor.h"
 #include "common.h"
 
 using namespace std;
@@ -193,7 +194,7 @@ static PyObject* dpy_DB_query_reports(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_reports(record->rec);
-        // TODO: return res
+        return (PyObject*)cursor_create(res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -211,7 +212,7 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_stations(record->rec);
-        // TODO: return res
+        return (PyObject*)cursor_create(res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -229,7 +230,7 @@ static PyObject* dpy_DB_query_levels(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_levels(record->rec);
-        // TODO: return res
+        return (PyObject*)cursor_create(res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -247,7 +248,7 @@ static PyObject* dpy_DB_query_tranges(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_tranges(record->rec);
-        // TODO: return res
+        return (PyObject*)cursor_create(res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -265,7 +266,7 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_data(record->rec);
-        // TODO: return res
+        return (PyObject*)cursor_create(res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {

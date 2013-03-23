@@ -31,7 +31,10 @@ using namespace wreport;
 
 extern "C" {
 
+static PyObject* dpy_Cursor_remaining(dpy_Cursor* self, void* closure) { return PyInt_FromLong(self->cur->remaining()); }
+
 static PyGetSetDef dpy_Cursor_getsetters[] = {
+    {"remaining", (getter)dpy_Cursor_remaining, NULL, "number of results still to be returned", NULL },
     {NULL}
 };
 
@@ -129,6 +132,15 @@ PyTypeObject dpy_Cursor_Type = {
 
 namespace dballe {
 namespace python {
+
+dpy_Cursor* cursor_create(std::auto_ptr<db::Cursor> cur)
+{
+    dpy_Cursor* result = PyObject_New(dpy_Cursor, &dpy_Cursor_Type);
+    if (!result) return NULL;
+    result = (dpy_Cursor*)PyObject_Init((PyObject*)result, &dpy_Cursor_Type);
+    result->cur = cur.release();
+    return result;
+}
 
 void register_cursor(PyObject* m)
 {

@@ -38,6 +38,11 @@ PyAPI_DATA(PyTypeObject) dpy_Cursor_Type;
 namespace dballe {
 namespace python {
 
+/**
+ * Create a new dpy_Cursor, taking ownership of memory management
+ */
+dpy_Cursor* cursor_create(std::auto_ptr<db::Cursor> cur);
+
 void register_cursor(PyObject* m);
 
 }
