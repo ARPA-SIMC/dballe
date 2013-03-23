@@ -129,9 +129,10 @@ class DballeTest(unittest.TestCase):
         expected["B01012"] = 1
         count = 0
         for result in cur:
-                self.assert_(cur.out_varcode in expected)
-                del expected[cur.out_varcode]
-                count = count + 1
+            code = result["var"]
+            self.assertIn(code, expected)
+            del expected[code]
+            count += 1
         self.assertEqual(count, 2)
     def testQueryReports(self):
         query = dballe.Record()
