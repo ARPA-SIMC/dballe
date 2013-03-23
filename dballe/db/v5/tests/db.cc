@@ -998,6 +998,7 @@ void to::test<14>()
         query.set(DBA_KEY_ANA_FILTER, "B07030>1");
 
         // Perform the query, limited to level values
+        v5::DB& db = v5();
         auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_ANA_ID, 0));
         ensure_equals(cur->remaining(), 2);
 

@@ -48,56 +48,6 @@
 #define DBA_IMPORT_OVERWRITE		8
 /// @}
 
-/**
- * Constants used to define what values we should retrieve from a query
- */
-/** Retrieve latitude and longitude */
-#define DBA_DB_WANT_COORDS		(1 << 0)
-/** Retrieve the mobile station identifier */
-#define DBA_DB_WANT_IDENT		(1 << 1)
-/** Retrieve the level information */
-#define DBA_DB_WANT_LEVEL		(1 << 2)
-/** Retrieve the time range information */
-#define DBA_DB_WANT_TIMERANGE	(1 << 3)
-/** Retrieve the date and time information */
-#define DBA_DB_WANT_DATETIME	(1 << 4)
-/** Retrieve the variable name */
-#define DBA_DB_WANT_VAR_NAME	(1 << 5)
-/** Retrieve the variable value */
-#define DBA_DB_WANT_VAR_VALUE	(1 << 6)
-/** Retrieve the report code */
-#define DBA_DB_WANT_REPCOD		(1 << 7)
-/** Retrieve the station ID */
-#define DBA_DB_WANT_ANA_ID		(1 << 8)
-/** Retrieve the context ID */
-#define DBA_DB_WANT_CONTEXT_ID	(1 << 9)
-
-/**
- * Values for query modifier flags
- */
-/** When values from different reports exist on the same point, only report the
- * one from the report with the highest priority */
-#define DBA_DB_MODIFIER_BEST		(1 << 0)
-/** Tell the database optimizer that this is a query on a database with a big
- * pseudoana table (this serves to hint the MySQL optimizer, which would not
- * otherwise apply the correct strategy */
-#define DBA_DB_MODIFIER_BIGANA		(1 << 1)
-/** Remove duplicates in the results */
-#define DBA_DB_MODIFIER_DISTINCT	(1 << 2)
-/** Include the extra anagraphical data in the results */
-#define DBA_DB_MODIFIER_ANAEXTRA	(1 << 3)
-/** Do not include the extra anagraphical data in the results */
-#define DBA_DB_MODIFIER_NOANAEXTRA	(1 << 4)
-/** Do not bother sorting the results */
-#define DBA_DB_MODIFIER_UNSORTED	(1 << 5)
-/** Start geting the results as soon as they are available, without waiting for
- * the database to finish building the result set.  As a side effect, it is
- * impossible to know in advance the number of results.  Currently, it does not
- * work with the MySQL ODBC driver */
-#define DBA_DB_MODIFIER_STREAM		(1 << 6)
-/** Sort by rep_cod after ana_id, to ease reconstructing messages on export */
-#define DBA_DB_MODIFIER_SORT_FOR_EXPORT	(1 << 7)
-
 namespace dballe {
 struct Record;
 struct Msg;
@@ -290,23 +240,6 @@ public:
      * Depending on database size, this routine can take a few minutes to execute.
      */
     virtual void vacuum() = 0;
-
-    /**
-     * Create and execute a database query.
-     *
-     * The results are retrieved by iterating the cursor.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input"
-     * @param wanted
-     *   The values wanted in output
-     * @param modifiers
-     *   Optional modifiers to ask for special query behaviours
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::auto_ptr<db::Cursor> query(const Record& query, unsigned int wanted, unsigned int modifiers) = 0;
 
     /**
      * Start a query on the station archive

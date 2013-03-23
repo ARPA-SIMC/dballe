@@ -184,10 +184,43 @@ static PyObject* dpy_DB_vacuum(dpy_DB* self)
 
     Py_RETURN_NONE;
 }
+
+static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    try {
+        std::auto_ptr<db::Cursor> res = self->db->query_stations(record->rec);
+        // TODO: return res
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    try {
+        std::auto_ptr<db::Cursor> res = self->db->query_data(record->rec);
+        // TODO: return res
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
     /*
-    virtual std::auto_ptr<db::Cursor> query(const Record& query, unsigned int wanted, unsigned int modifiers) = 0;
-    virtual std::auto_ptr<db::Cursor> query_stations(const Record& query) = 0;
-    virtual std::auto_ptr<db::Cursor> query_data(const Record& rec) = 0;
     virtual unsigned query_attrs(int id_context, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs) = 0;
     virtual void attr_insert_or_replace(int id_context, wreport::Varcode id_var, const Record& attrs, bool can_replace) = 0;
     */
@@ -220,6 +253,10 @@ static PyMethodDef dpy_DB_methods[] = {
         "Remove records from the database" },
     {"vacuum",            (PyCFunction)dpy_DB_remove, METH_NOARGS,
         "Perform database cleanup operations" },
+    {"query_stations",    (PyCFunction)dpy_DB_query_stations, METH_VARARGS,
+        "Query the station archive in the database; returns a Cursor" },
+    {"query_data",        (PyCFunction)dpy_DB_query_data, METH_VARARGS,
+        "Query the variables in the database; returns a Cursor" },
     {NULL}
 };
 
