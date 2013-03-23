@@ -29,6 +29,7 @@
 #define DBA_DB_V5_CURSOR_H
 
 #include <dballe/db/odbcworkarounds.h>
+#include <dballe/db/db.h>
 #include <wreport/varinfo.h>
 #include <sqltypes.h>
 #include <vector>
@@ -41,19 +42,12 @@ struct Statement;
 
 namespace v5 {
 struct DB;
-}
-
-/**
- * Simple typedef to make typing easier, and also to help some versions of swig
- * match this complex type
- */
-typedef std::vector<wreport::Varcode> AttrList;
 
 /**
  * Structure used to build and execute a query, and to iterate through the
  * results
  */
-struct Cursor
+struct Cursor : public dballe::db::Cursor
 {
     /** Database to operate on */
     v5::DB& db;
@@ -143,6 +137,8 @@ struct Cursor
      */
     void to_record(Record& rec);
 
+    virtual int attr_reference_id() const;
+
     /**
      * Query attributes for the current variable
      */
@@ -167,6 +163,7 @@ protected:
     int getcount(const Record& query, unsigned int wanted, unsigned int modifiers);
 };
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

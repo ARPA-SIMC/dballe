@@ -22,7 +22,8 @@
 #ifndef DBA_DB_H
 #define DBA_DB_H
 
-#include <dballe/db/v5/cursor.h>
+#include <wreport/varinfo.h>
+#include <vector>
 #include <string>
 #include <memory>
 
@@ -102,6 +103,60 @@ struct Record;
 struct Msg;
 struct Msgs;
 struct MsgConsumer;
+
+namespace db {
+
+/**
+ * Simple typedef to make typing easier
+ */
+typedef std::vector<wreport::Varcode> AttrList;
+
+class Cursor
+{
+public:
+    virtual ~Cursor();
+
+    /**
+     * Get the number of rows still to be fetched
+     *
+     * @return
+     *   The number of rows still to be queried.  The value is undefined if no
+     *   query has been successfully peformed yet using this cursor.
+     */
+    virtual int remaining() const = 0;
+
+    /**
+     * Get a new item from the results of a query
+     *
+     * @returns
+     *   true if a new record has been read, false if there is no more data to read
+     */
+    virtual bool next() = 0;
+
+    /// Discard the results that have not been read yet
+    virtual void discard_rest() = 0;
+
+    /**
+     * Fill in a record with the contents of a dba_db_cursor
+     *
+     * @param rec
+     *   The record where to store the values
+     */
+    virtual void to_record(Record& rec) = 0;
+
+    /**
+     * Return an integer value that can be used to refer to the current
+     * variable for attribute access
+     */
+    virtual int attr_reference_id() const = 0;
+
+    /**
+     * Query attributes for the current variable
+     */
+    virtual unsigned query_attrs(const AttrList& qcs, Record& attrs) = 0;
+};
+
+}
 
 class DB
 {

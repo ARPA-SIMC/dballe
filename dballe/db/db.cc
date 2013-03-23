@@ -31,6 +31,14 @@ using namespace wreport;
 
 namespace dballe {
 
+namespace db {
+
+Cursor::~Cursor()
+{
+}
+
+}
+
 DB::~DB()
 {
 }

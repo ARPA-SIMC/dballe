@@ -145,7 +145,7 @@ const char* DbAPI::dammelo()
         /* Set context id and variable name on qcinput so that
          * attribute functions will refer to the last variable read */
         const char* varstr = output.key_peek_value(DBA_KEY_VAR);
-        qcinput.set(DBA_KEY_CONTEXT_ID, (int)query_cur->out_context_id);
+        qcinput.set(DBA_KEY_CONTEXT_ID, query_cur->attr_reference_id());
         qcinput.set(DBA_KEY_VAR_RELATED, varstr);
         return varstr;
     } else {

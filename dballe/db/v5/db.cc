@@ -953,7 +953,7 @@ void DB::insert(Record& rec, bool can_replace, bool station_can_add)
 void DB::remove(const Record& rec)
 {
     db::Transaction t(*conn);
-    db::Cursor c(*this);
+    db::v5::Cursor c(*this);
 
     // Compile the DELETE query for the data
     db::Statement stmd(*conn);
@@ -1169,9 +1169,9 @@ cleanup:
 
 std::auto_ptr<db::Cursor> DB::query(const Record& query, unsigned int wanted, unsigned int modifiers)
 {
-    auto_ptr<db::Cursor> res(new db::Cursor(*this));
+    auto_ptr<db::v5::Cursor> res(new db::v5::Cursor(*this));
     res->query(query, wanted, modifiers);
-    return res;
+    return std::auto_ptr<db::Cursor>(res.release());
 }
 
 std::auto_ptr<db::Cursor> DB::query_stations(const Record& rec)

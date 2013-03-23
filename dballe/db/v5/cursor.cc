@@ -47,6 +47,7 @@ using namespace wreport;
 
 namespace dballe {
 namespace db {
+namespace v5 {
 
 namespace {
 
@@ -205,6 +206,11 @@ void Cursor::reset()
 {
     wanted = 0;
     modifiers = 0;
+}
+
+int Cursor::attr_reference_id() const
+{
+    return out_context_id;
 }
 
 int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifiers)
@@ -1403,6 +1409,7 @@ static dba_err setstmtattr(SQLHSTMT stm, SQLINTEGER attr, SQLPOINTER val, SQLINT
 }
 #endif
 
+} // namespace v5
 } // namespace db
 } // namespace dballe
 

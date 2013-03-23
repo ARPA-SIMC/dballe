@@ -125,7 +125,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     db::Transaction t(*conn);
 
     // The big export query
-    db::Cursor cur(*this);
+    db::v5::Cursor cur(*this);
 	cur.query(rec,
 				DBA_DB_WANT_ANA_ID | DBA_DB_WANT_CONTEXT_ID |
 				DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT | DBA_DB_WANT_LEVEL |
