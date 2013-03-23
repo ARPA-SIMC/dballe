@@ -37,6 +37,87 @@ static dba_keyword datemax_keys[6] = { DBA_KEY_YEARMAX, DBA_KEY_MONTHMAX, DBA_KE
 static dba_keyword level_keys[4] = { DBA_KEY_LEVELTYPE1, DBA_KEY_L1, DBA_KEY_LEVELTYPE2, DBA_KEY_L2 };
 static dba_keyword trange_keys[3] = { DBA_KEY_PINDICATOR, DBA_KEY_P1, DBA_KEY_P2 };
 
+/*
+ * Record iterator
+ */
+
+typedef struct {
+    PyObject_HEAD
+    // Pointer to the container record, to hold a reference to it
+    dpy_Record* rec;
+    std::vector<wreport::Var*>::const_iterator iter;
+} dpy_RecordIter;
+
+static void dpy_RecordIter_dealloc(dpy_RecordIter* self)
+{
+    Py_DECREF(self->rec);
+}
+
+static PyObject* dpy_RecordIter_iter(dpy_RecordIter* self)
+{
+    Py_INCREF(self);
+    return (PyObject*)self;
+}
+
+static PyObject* dpy_RecordIter_iternext(dpy_RecordIter* self)
+{
+    if (self->iter == self->rec->rec.vars().end())
+    {
+        PyErr_SetNone(PyExc_StopIteration);
+        return NULL;
+    }
+    wreport::Varcode result = (*self->iter)->code();
+    ++(self->iter);
+    return format_varcode(result);
+}
+
+PyTypeObject dpy_RecordIter_Type = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         // ob_size
+    "dballe.RecordIter",           // tp_name
+    sizeof(dpy_RecordIter),        // tp_basicsize
+    0,                         // tp_itemsize
+    (destructor)dpy_RecordIter_dealloc, // tp_dealloc
+    0,                         // tp_print
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+    0,                         // tp_repr
+    0,                         // tp_as_number
+    0,                         // tp_as_sequence
+    0,                         // tp_as_mapping
+    0,                         // tp_hash
+    0,                         // tp_call
+    0,                         // tp_str
+    0,                         // tp_getattro
+    0,                         // tp_setattro
+    0,                         // tp_as_buffer
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER, // tp_flags
+    "DB-All.e Record Iterator", // tp_doc
+    0,                         // tp_traverse
+    0,                         // tp_clear
+    0,                         // tp_richcompare
+    0,                         // tp_weaklistoffset
+    (getiterfunc)dpy_RecordIter_iter,      // tp_iter
+    (iternextfunc)dpy_RecordIter_iternext, // tp_iternext
+    0,                         // tp_methods
+    0,                         // tp_members
+    0,                         // tp_getset
+    0,                         // tp_base
+    0,                         // tp_dict
+    0,                         // tp_descr_get
+    0,                         // tp_descr_set
+    0,                         // tp_dictoffset
+    0,                         // tp_init
+    0,                         // tp_alloc
+    0,                         // tp_new
+};
+
+
+/*
+ * Record
+ */
+
 static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val);
 static int dpy_Record_contains(dpy_Record* self, PyObject *value);
 static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key);
@@ -230,7 +311,7 @@ static int dpy_Record_init(dpy_Record* self, PyObject* args, PyObject* kw)
 
         while (PyDict_Next(kw, &pos, &key, &value))
             if (dpy_Record_setitem(self, key, value) < 0)
-                return NULL;
+                return -1;
     }
 
     return 0;
@@ -566,6 +647,18 @@ static PyMappingMethods dpy_Record_mapping = {
     (objobjargproc)dpy_Record_setitem, // __setitem__
 };
 
+static PyObject* dpy_Record_iter(dpy_Record* self)
+{
+    dpy_RecordIter* result = PyObject_New(dpy_RecordIter, &dpy_RecordIter_Type);
+    if (!result) return NULL;
+
+    result = (dpy_RecordIter*)PyObject_Init((PyObject*)result, &dpy_RecordIter_Type);
+    Py_INCREF(self);
+    result->rec = self;
+    result->iter = self->rec.vars().begin();
+    return (PyObject*)result;
+}
+
 PyTypeObject dpy_Record_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         // ob_size
@@ -587,13 +680,13 @@ PyTypeObject dpy_Record_Type = {
     0,                         // tp_getattro
     0,                         // tp_setattro
     0,                         // tp_as_buffer
-    Py_TPFLAGS_DEFAULT,        // tp_flags
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER, // tp_flags
     "DB-All.e Record",         // tp_doc
     0,                         // tp_traverse
     0,                         // tp_clear
     0,                         // tp_richcompare
     0,                         // tp_weaklistoffset
-    0,                         // tp_iter
+    (getiterfunc)dpy_Record_iter, // tp_iter
     0,                         // tp_iternext
     dpy_Record_methods,        // tp_methods
     0,                         // tp_members

@@ -67,11 +67,11 @@ class DballeTest(unittest.TestCase):
         expected["B33036"] = 75
 
         count = 0
-        for var in data:
-                self.assert_(var.code() in expected)
-                self.assertEqual(var.enq(), expected[var.code()])
-                del expected[var.code()]
-                count = count + 1
+        for code in data:
+            self.assertIn(code, expected)
+            self.assertEqual(data[code], expected[code])
+            del expected[code]
+            count += 1
         self.assertEqual(count, 2)
 
     def testQuerySomeAttrs(self):
