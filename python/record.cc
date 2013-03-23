@@ -274,6 +274,12 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
     return Py_BuildValue("(NN)", dt_min, dt_max);
 }
 
+static PyObject* dpy_Record_set_station_context(dpy_Record* self)
+{
+    self->rec.set_ana_context();
+    Py_RETURN_NONE;
+}
+
 static PyObject* dpy_Record_clear(dpy_Record* self)
 {
     self->rec.clear();
@@ -296,6 +302,7 @@ static PyMethodDef dpy_Record_methods[] = {
     {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "return a sequence with all the variables set on the Record. Note that this does not include keys." },
     {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
     {"date_extremes", (PyCFunction)dpy_Record_date_extremes, METH_NOARGS, "get two datetime objects with the lower and upper bounds of the datetime period in this record" },
+    {"set_station_context", (PyCFunction)dpy_Record_set_station_context, METH_NOARGS, "set the date, level and time range values to match the station data context" },
     {NULL}
 };
 

@@ -6,9 +6,13 @@ export PYTHONPATH=.
 
 TESTS = test.py
 if DO_DBALLE_DB
-TESTS += test-db.py
+TESTS += test-db.py test-volnd.py test-rconvert.py
 endif
-#pkgpython_PYTHON = dbacsv.py rconvert.py __init__.py
+
+pkgpython_PYTHON = dbacsv.py rconvert.py __init__.py
+if DO_DBALLE_DB
+pkgpython_PYTHON += volnd.py
+endif
 
 pyexec_LTLIBRARIES = dballe.la
 
@@ -41,6 +45,7 @@ EXTRA_DIST = \
 			 var.h \
 			 record.h \
 			 db.h \
-			 cursor.h
+			 cursor.h \
+			 test.py test-db.py test-volnd.py test-rconvert.py
 
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)

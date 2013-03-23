@@ -39,18 +39,22 @@ static PyObject* dpy_Varinfo_is_string(dpy_Varinfo *self, void* closure)
 }
 static PyObject* dpy_Varinfo_var(dpy_Varinfo *self, void* closure) { return format_varcode(self->info->var); }
 static PyObject* dpy_Varinfo_len(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->len); }
+static PyObject* dpy_Varinfo_bit_len(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->bit_len); }
 static PyObject* dpy_Varinfo_unit(dpy_Varinfo* self, void* closure) { return PyString_FromString(self->info->unit); }
 static PyObject* dpy_Varinfo_desc(dpy_Varinfo* self, void* closure) { return PyString_FromString(self->info->desc); }
 static PyObject* dpy_Varinfo_scale(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->scale); }
 static PyObject* dpy_Varinfo_ref(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->ref); }
+static PyObject* dpy_Varinfo_bit_ref(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->bit_ref); }
 
 
 static PyGetSetDef dpy_Varinfo_getsetters[] = {
     {"is_string", (getter)dpy_Varinfo_is_string, NULL, "true if the value is a string", NULL },
     {"var", (getter)dpy_Varinfo_var, NULL, "variable code", NULL },
     {"len", (getter)dpy_Varinfo_len, NULL, "number of significant digits", NULL},
+    {"bit_len", (getter)dpy_Varinfo_bit_len, NULL, "number of bits used to encode the value in BUFR", NULL},
     {"scale", (getter)dpy_Varinfo_scale, NULL, "scale of the value as a power of 10", NULL},
     {"ref", (getter)dpy_Varinfo_ref, NULL, "reference value added after scaling", NULL},
+    {"bit_ref", (getter)dpy_Varinfo_bit_ref, NULL, "reference value added after scaling, for BUFR decoding", NULL},
     {"unit", (getter)dpy_Varinfo_unit, NULL, "measurement unit", NULL},
     {"desc", (getter)dpy_Varinfo_desc, NULL, "description", NULL},
     {NULL}
