@@ -93,6 +93,17 @@ static PyObject* dpy_Record_keys(dpy_Record* self)
     return result;
 }
 
+static PyObject* dpy_Record_var(dpy_Record* self)
+{
+    if (self->rec.vars().empty())
+    {
+        PyErr_SetString(PyExc_IndexError, "Record is empty");
+        return NULL;
+
+    }
+    return (PyObject*)var_create(*(self->rec.vars()[0]));
+}
+
 static PyObject* dpy_Record_vars(dpy_Record* self)
 {
     const std::vector<wreport::Var*>& vars = self->rec.vars();
@@ -199,6 +210,7 @@ static PyMethodDef dpy_Record_methods[] = {
     {"clear_vars", (PyCFunction)dpy_Record_clear_vars, METH_NOARGS, "remove all variables from the record, leaving the keywords intact" },
     {"get", (PyCFunction)dpy_Record_get, METH_VARARGS, "lookup a value, returning a fallback value (None by default) if unset" },
     {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
+    {"var", (PyCFunction)dpy_Record_var, METH_NOARGS, "return the first (or only) Variable in the record. Raises IndexError if the record contains no variables" },
     {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a sequence with all the varcodes of the variables set on the Record. Note that this does not include keys." },
     {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "return a sequence with all the variables set on the Record. Note that this does not include keys." },
     {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
@@ -503,6 +515,10 @@ static int any_key_set(const Record& rec, dba_keyword* keys, unsigned len)
     return 0;
 }
 
+static int dpy_Record_len(dpy_Record* self)
+{
+    return self->rec.vars().size();
+}
 static int dpy_Record_contains(dpy_Record* self, PyObject *value)
 {
     const char* varname = PyString_AsString(value);
@@ -535,7 +551,7 @@ static int dpy_Record_contains(dpy_Record* self, PyObject *value)
 }
 
 static PySequenceMethods dpy_Record_sequence = {
-    0,                               // sq_length
+    (lenfunc)dpy_Record_len,         // sq_length
     0,                               // sq_concat
     0,                               // sq_repeat
     0,                               // sq_item

@@ -23,12 +23,14 @@
 
 #include <Python.h>
 #include <dballe/db/db.h>
+#include "record.h"
 
 extern "C" {
 
 typedef struct {
     PyObject_HEAD
     dballe::DB* db;
+    dpy_Record* attr_rec;
 } dpy_DB;
 
 PyAPI_DATA(PyTypeObject) dpy_DB_Type;
@@ -40,6 +42,11 @@ PyAPI_DATA(PyTypeObject) dpy_DB_Type;
 
 namespace dballe {
 namespace python {
+
+/**
+ * Create a new dpy_DB, taking over memory management
+ */
+dpy_DB* db_create(std::auto_ptr<DB> db);
 
 void register_db(PyObject* m);
 

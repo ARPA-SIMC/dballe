@@ -317,23 +317,7 @@ public:
 	 */
 	int obtain_context(Record& rec);
 
-	/**
-	 * Insert a record into the database
-	 *
-	 * In a record with the same phisical situation already exists, the function
-	 * fails.
-	 *
-	 * ana_id and context_id will be set in the record at the end of this function.
-	 *
-	 * @param rec
-	 *   The record to insert.
-	 * @param can_replace
-	 *   If true, then existing data can be rewritten, else data can only be added.
-	 * @param station_can_add
-	 *   If true, then it is allowed to add new station records to the database.
-	 *   Otherwise, data can be added only by reusing existing ones.
-	 */
-	void insert(Record& rec, bool can_replace, bool station_can_add);
+    int insert(Record& rec, bool can_replace, bool station_can_add);
 
 	/**
 	 * Remove data from the database
@@ -375,6 +359,7 @@ public:
     std::auto_ptr<db::Cursor> query_reports(const Record& query);
     std::auto_ptr<db::Cursor> query_levels(const Record& rec);
     std::auto_ptr<db::Cursor> query_tranges(const Record& rec);
+    std::auto_ptr<db::Cursor> query_variable_types(const Record& rec);
 
 	/**
 	 * Start a query on the station archive
@@ -417,48 +402,19 @@ public:
 	 */
 	unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs);
 
-	/**
-	 * Insert new attributes into the database.
-	 *
-	 * @param reference_id
-	 *   The database id of the context related to the attributes to insert
-	 * @param id_var
-	 *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
-	 * @param attrs
-	 *   The record with the attributes to be added
-	 * @param can_replace
-	 *   If true, then existing data can be rewritten, else data can only be added.
-	 */
-	void attr_insert_or_replace(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace);
-
-	/**
-	 * Insert new attributes into the database.
-	 *
-	 * If the same attribute exists for the same data, it is
-	 * overwritten
-	 *
-	 * @param reference_id
-	 *   The database id of the context related to the attributes to insert
-	 * @param id_var
-	 *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
-	 * @param attrs
-	 *   The record with the attributes to be added
-	 */
-	void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs);
-
-	/**
-	 * Insert new attributes into the database.
-	 *
-	 * If the same attribute exists for the same data, the function fails.
-	 *
-	 * @param reference_id
-	 *   The database id of the context related to the attributes to insert
-	 * @param id_var
-	 *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
-	 * @param attrs
-	 *   The record with the attributes to be added
-	 */
-	void attr_insert_new(int reference_id, wreport::Varcode id_var, const Record& attrs);
+    /**
+     * Insert new attributes into the database.
+     *
+     * @param reference_id
+     *   The database id of the context related to the attributes to insert
+     * @param id_var
+     *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
+     * @param attrs
+     *   The record with the attributes to be added
+     * @param can_replace
+     *   If true, then existing data can be rewritten, else data can only be added.
+     */
+    void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace=true);
 
 	/**
 	 * Delete QC data for the variable `var' in record `rec' (coming from a previous

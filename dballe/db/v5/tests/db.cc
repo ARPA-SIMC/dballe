@@ -936,7 +936,7 @@ void to::test<12>()
         qc.set(WR_VAR(0,  7, 25),  9);
         qc.set(WR_VAR(0,  5, 22), 10);
 
-        db->attr_insert_new(1, WR_VAR(0, 1, 11), qc);
+        db->attr_insert(1, WR_VAR(0, 1, 11), qc, false);
 
         qc.clear();
         vector<Varcode> codes;
@@ -999,7 +999,7 @@ void to::test<14>()
 
         // Perform the query, limited to level values
         v5::DB& db = v5();
-        auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_ANA_ID, 0));
+        auto_ptr<db::Cursor> cur(db.query(query, DBA_DB_WANT_ANA_ID, 0));
         ensure_equals(cur->remaining(), 2);
 
         ensure(cur->next());
@@ -1032,7 +1032,8 @@ void to::test<15>()
         query.set(DBA_KEY_LEVELTYPE1, 44);
         query.set(DBA_KEY_L1, 55);
 
-        auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_VAR_VALUE | DBA_DB_WANT_LEVEL, 0));
+        v5::DB& db = v5();
+        auto_ptr<db::Cursor> cur(db.query(query, DBA_DB_WANT_VAR_VALUE | DBA_DB_WANT_LEVEL, 0));
         ensure_equals(cur->remaining(), 1);
 
         ensure(cur->next());
@@ -1062,7 +1063,8 @@ void to::test<16>()
         query.set(DBA_KEY_LEVELTYPE1, 10);
         query.set(DBA_KEY_L1, 11);
 
-        auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_VAR_VALUE, 0));
+        v5::DB& db = v5();
+        auto_ptr<db::Cursor> cur(db.query(query, DBA_DB_WANT_VAR_VALUE, 0));
         ensure_equals(cur->remaining(), 4);
         cur->discard_rest();
 }
@@ -1077,11 +1079,12 @@ void to::test<17>()
         query.clear();
         query.set(DBA_KEY_ATTR_FILTER, "B12001");
 
-        try {
-                db->query(query, DBA_DB_WANT_VAR_VALUE, 0);
-        } catch (error_consistency& e) {
-                ensure_contains(e.what(), "B12001 is not a valid filter");
-        }
+    try {
+        v5::DB& db = v5();
+        db.query(query, DBA_DB_WANT_VAR_VALUE, 0);
+    } catch (error_consistency& e) {
+        ensure_contains(e.what(), "B12001 is not a valid filter");
+    }
 }
 
 /* Test querying priomax together with query=best */
@@ -1143,8 +1146,9 @@ void to::test<18>()
             query.set(DBA_KEY_SEC, 0);
             query.set(DBA_KEY_VAR, "B12101");
 
-            auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
-            ensure_equals(cur->remaining(), 1);
+        v5::DB& db = v5();
+        auto_ptr<db::Cursor> cur(db.query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
+        ensure_equals(cur->remaining(), 1);
 
             ensure(cur->next());
             result.clear();
@@ -1156,20 +1160,21 @@ void to::test<18>()
             cur->discard_rest();
         }
 
-        // Query with querybest and priomax
-        {
-            query.clear();
-            query.set(DBA_KEY_PRIOMAX, 100);
-            query.set(DBA_KEY_QUERY, "best");
-            query.set(DBA_KEY_YEAR, 2009);
-            query.set(DBA_KEY_MONTH, 11);
-            query.set(DBA_KEY_DAY, 11);
-            query.set(DBA_KEY_HOUR, 0);
-            query.set(DBA_KEY_MIN, 0);
-            query.set(DBA_KEY_SEC, 0);
-            query.set(DBA_KEY_VAR, "B12101");
-            auto_ptr<db::Cursor> cur(db->query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
-            ensure_equals(cur->remaining(), 1);
+    // Query with querybest and priomax
+    {
+        query.clear();
+        query.set(DBA_KEY_PRIOMAX, 100);
+        query.set(DBA_KEY_QUERY, "best");
+        query.set(DBA_KEY_YEAR, 2009);
+        query.set(DBA_KEY_MONTH, 11);
+        query.set(DBA_KEY_DAY, 11);
+        query.set(DBA_KEY_HOUR, 0);
+        query.set(DBA_KEY_MIN, 0);
+        query.set(DBA_KEY_SEC, 0);
+        query.set(DBA_KEY_VAR, "B12101");
+        v5::DB& db = v5();
+        auto_ptr<db::Cursor> cur(db.query(query, DBA_DB_WANT_REPCOD | DBA_DB_WANT_VAR_VALUE, 0));
+        ensure_equals(cur->remaining(), 1);
 
             ensure(cur->next());
             result.clear();
@@ -1189,14 +1194,15 @@ void to::test<19>()
         use_db();
         populate_database();
 
-        Record res;
-        Record rec;
-        auto_ptr<db::Cursor> cur = db->query(rec, DBA_DB_WANT_REPCOD, DBA_DB_MODIFIER_DISTINCT);
-        while (cur->next())
-        {
-            cur->to_record(res);
-            ensure(res.key_peek_value(DBA_KEY_REP_MEMO) != 0);
-        }
+    Record res;
+    Record rec;
+    v5::DB& db = v5();
+    auto_ptr<db::Cursor> cur = db.query(rec, DBA_DB_WANT_REPCOD, DBA_DB_MODIFIER_DISTINCT);
+    while (cur->next())
+    {
+        cur->to_record(res);
+        ensure(res.key_peek_value(DBA_KEY_REP_MEMO) != 0);
+    }
 }
 
 // Test numeric comparisons in ana_filter

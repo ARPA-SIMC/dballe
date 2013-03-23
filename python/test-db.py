@@ -20,15 +20,12 @@ class DballeTest(unittest.TestCase):
                 B01011="Hey Hey!!",
                 B01012=500)
 
-        self.db.insert(data, False, True)
-        self.context_id = data["context_id"]
+        self.attr_ref = self.db.insert(data, False, True)
 
         data.clear()
         data["B33007"] = 50
         data["B33036"] = 75
-        # FIXME: reenable once implemented: we cannot test all the other
-        # functions otherwise
-        #self.db.attr_insert(self.context_id, "B01011", data)
+        self.db.attr_insert(self.attr_ref, "B01011", data)
 
     def tearDown(self):
         self.db = None
@@ -55,15 +52,15 @@ class DballeTest(unittest.TestCase):
         self.assertEqual(cur.remaining, 2)
         count = 0
         for result in cur:
-                self.assertEqual(cur.remaining, 2-count-1)
-                assert cur.out_varcode in expected
-                self.assertEqual(result[cur.out_varcode], expected[cur.out_varcode])
-                del expected[cur.out_varcode]
-                count = count + 1
+            self.assertEqual(cur.remaining, 2-count-1)
+            var = result.var();
+            assert var.code in expected
+            self.assertEqual(var.enq(), expected[var.code])
+            del expected[var.code]
+            count += 1
     def testQueryAttrs(self):
-        data = dballe.Record()
-        count = self.db.query_attrs(self.context_id, "B01011", [], data)
-        self.assertEqual(count, 2)
+        data = self.db.query_attrs(self.attr_ref, "B01011")
+        self.assertEqual(len(data), 2)
 
         expected = {}
         expected["B33007"] = 50
@@ -79,10 +76,9 @@ class DballeTest(unittest.TestCase):
 
     def testQuerySomeAttrs(self):
         # Try limiting the set of wanted attributes
-        data = dballe.Record()
-        count = self.db.query_attrs(self.context_id, "B01011", ("B33036",), data)
-        self.assertEqual(count, 1)
-        self.assertEqual(data.items(), [("B33036", 75)])
+        data = self.db.query_attrs(self.attr_ref, "B01011", ("B33036",))
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data.vars(), (dballe.var("B33036", 75),))
 
     def testQueryCursorAttrs(self):
         query = dballe.Record()
@@ -124,13 +120,6 @@ class DballeTest(unittest.TestCase):
         self.assertEqual(cur.remaining, 1)
         for result in cur:
             self.assertEqual(result["trange"], (20, 111, 222))
-    def testQueryLevelsAndTimeRanges(self):
-        query = dballe.Record()
-        cur = self.db.query_levels_tranges(query)
-        self.assertEqual(cur.remaining, 1)
-        for result in cur:
-            self.assertEqual(result["level"], (10, 11, 15, 22))
-            self.assertEqual(result["trange"], (20, 111, 222))
     def testQueryVariableTypes(self):
         query = dballe.Record()
         cur = self.db.query_variable_types(query)
@@ -144,12 +133,6 @@ class DballeTest(unittest.TestCase):
                 del expected[cur.out_varcode]
                 count = count + 1
         self.assertEqual(count, 2)
-    def testQueryIdents(self):
-        query = dballe.Record()
-        cur = self.db.query_idents(query)
-        self.assertEqual(cur.remaining, 1)
-        for result in cur:
-            self.assert_("ident" not in result)
     def testQueryReports(self):
         query = dballe.Record()
         cur = self.db.query_reports(query)

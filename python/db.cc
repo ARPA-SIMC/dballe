@@ -60,11 +60,15 @@ static PyObject* dpy_DB_connect(PyTypeObject *type, PyObject *args)
     if (!PyArg_ParseTuple(args, "s|ss", &dsn, &user, &pass))
         return NULL;
 
-    dpy_DB* result = PyObject_New(dpy_DB, &dpy_DB_Type);
-    if (!result) return NULL;
-    result = (dpy_DB*)PyObject_Init((PyObject*)result, &dpy_DB_Type);
-    result->db = DB::connect(dsn, user, pass).release();
-    return (PyObject*)result;
+    auto_ptr<DB> db;
+    try {
+        db = DB::connect(dsn, user, pass);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+    return (PyObject*)db_create(db);
 }
 
 static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
@@ -73,11 +77,15 @@ static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
     if (!PyArg_ParseTuple(args, "s", &fname))
         return NULL;
 
-    dpy_DB* result = PyObject_New(dpy_DB, &dpy_DB_Type);
-    if (!result) return NULL;
-    result = (dpy_DB*)PyObject_Init((PyObject*)result, &dpy_DB_Type);
-    result->db = DB::connect_from_file(fname).release();
-    return (PyObject*)result;
+    auto_ptr<DB> db;
+    try {
+        db = DB::connect_from_file(fname);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+    return (PyObject*)db_create(db);
 }
 
 static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
@@ -86,20 +94,28 @@ static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
     if (!PyArg_ParseTuple(args, "s", &url))
         return NULL;
 
-    dpy_DB* result = PyObject_New(dpy_DB, &dpy_DB_Type);
-    if (!result) return NULL;
-    result = (dpy_DB*)PyObject_Init((PyObject*)result, &dpy_DB_Type);
-    result->db = DB::connect_from_url(url).release();
-    return (PyObject*)result;
+    auto_ptr<DB> db;
+    try {
+        db = DB::connect_from_url(url);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+    return (PyObject*)db_create(db);
 }
 
 static PyObject* dpy_DB_connect_test(PyTypeObject *type)
 {
-    dpy_DB* result = PyObject_New(dpy_DB, &dpy_DB_Type);
-    if (!result) return NULL;
-    result = (dpy_DB*)PyObject_Init((PyObject*)result, &dpy_DB_Type);
-    result->db = DB::connect_test().release();
-    return (PyObject*)result;
+    auto_ptr<DB> db;
+    try {
+        db = DB::connect_test();
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+    return (PyObject*)db_create(db);
 }
 
 static PyObject* dpy_DB_is_url(PyTypeObject *type, PyObject *args)
@@ -146,14 +162,13 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
         return NULL;
 
     try {
-        self->db->insert(record->rec, can_replace, station_can_add);
+        int res = self->db->insert(record->rec, can_replace, station_can_add);
+        return PyInt_FromLong(res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-
-    Py_RETURN_NONE;
 }
 
 static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
@@ -200,8 +215,6 @@ static PyObject* dpy_DB_query_reports(dpy_DB* self, PyObject* args)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-
-    Py_RETURN_NONE;
 }
 
 static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
@@ -218,8 +231,6 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-
-    Py_RETURN_NONE;
 }
 
 static PyObject* dpy_DB_query_levels(dpy_DB* self, PyObject* args)
@@ -236,8 +247,6 @@ static PyObject* dpy_DB_query_levels(dpy_DB* self, PyObject* args)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-
-    Py_RETURN_NONE;
 }
 
 static PyObject* dpy_DB_query_tranges(dpy_DB* self, PyObject* args)
@@ -254,8 +263,22 @@ static PyObject* dpy_DB_query_tranges(dpy_DB* self, PyObject* args)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
+}
 
-    Py_RETURN_NONE;
+static PyObject* dpy_DB_query_variable_types(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    try {
+        std::auto_ptr<db::Cursor> res = self->db->query_variable_types(record->rec);
+        return (PyObject*)cursor_create(res);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
 }
 
 static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
@@ -272,16 +295,84 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-
-    Py_RETURN_NONE;
 }
     /*
-    virtual unsigned query_attrs(int id_context, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs) = 0;
-    virtual void attr_insert_or_replace(int id_context, wreport::Varcode id_var, const Record& attrs, bool can_replace) = 0;
+     * Query attributes
+     *
+     * @param reference_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the variable we query
+     * @param id_var
+     *   The varcode of the variable related to the attributes to retrieve.  See @ref vartable.h
+     * @param qcs
+     *   The WMO codes of the QC values requested.  If it is empty, then all values
+     *   are returned.
+     * @param attrs
+     *   The Record that will hold the resulting attributes
+     * @return
+    virtual unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs) = 0;
     */
-    //virtual void attr_insert(int id_context, wreport::Varcode id_var, const Record& attrs) = 0;
+static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
+{
+    static char* kwlist[] = { "reference_id", "varcode", "attrs", NULL };
+    int reference_id;
+    const char* varname;
+    PyObject* attrs = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "is|O", kwlist, &reference_id, &varname, &attrs))
+        return NULL;
+
+    wreport::Varcode varcode = resolve_varcode(varname);
+
+    // Read the attribute list, if provided
+    db::AttrList qcs;
+    if (attrs)
+    {
+        OwnedPyObject iter(PyObject_GetIter(attrs));
+        if (iter == NULL)
+            return NULL;
+        while (PyObject* iter_item = PyIter_Next(iter)) {
+            OwnedPyObject item(iter_item);
+            const char* name = PyString_AsString(item);
+            if (!name) return NULL;
+            qcs.push_back(resolve_varcode(name));
+        }
+    }
+
+    try {
+        self->db->query_attrs(reference_id, varcode, qcs, self->attr_rec->rec);
+        Py_INCREF(self->attr_rec);
+        return (PyObject*)self->attr_rec;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
+static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
+{
+    static char* kwlist[] = { "reference_id", "varcode", "attrs", "replace", NULL };
+    int reference_id;
+    const char* varname;
+    dpy_Record* record;
+    int can_replace = 1;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "isO!|i", kwlist,
+                &reference_id,
+                &varname,
+                &dpy_Record_Type, &record,
+                &can_replace))
+        return NULL;
+
+    try {
+        self->db->attr_insert(reference_id, resolve_varcode(varname), record->rec, can_replace);
+        Py_RETURN_NONE;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
     /*
-    virtual void attr_insert_new(int id_context, wreport::Varcode id_var, const Record& attrs) = 0;
     virtual void attr_remove(int id_context, wreport::Varcode id_var, const db::AttrList& qcs) = 0;
     virtual void import_msg(const Msg& msg, const char* repmemo, int flags) = 0;
     virtual void import_msgs(const Msgs& msgs, const char* repmemo, int flags) = 0;
@@ -298,7 +389,7 @@ static PyMethodDef dpy_DB_methods[] = {
         "Create a DB as defined in an URL-like string" },
     {"connect_test",      (PyCFunction)dpy_DB_connect_test, METH_NOARGS | METH_CLASS,
         "Create a DB for running the test suite, as configured in the test environment" },
-    {"is_url",            (PyCFunction)dpy_DB_connect_test, METH_VARARGS | METH_CLASS,
+    {"is_url",            (PyCFunction)dpy_DB_is_url, METH_VARARGS | METH_CLASS,
         "Checks if a string looks like a DB url" },
     {"reset",             (PyCFunction)dpy_DB_reset, METH_VARARGS,
         "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
@@ -306,7 +397,7 @@ static PyMethodDef dpy_DB_methods[] = {
         "Insert a record in the database" },
     {"remove",            (PyCFunction)dpy_DB_remove, METH_VARARGS,
         "Remove records from the database" },
-    {"vacuum",            (PyCFunction)dpy_DB_remove, METH_NOARGS,
+    {"vacuum",            (PyCFunction)dpy_DB_vacuum, METH_NOARGS,
         "Perform database cleanup operations" },
     {"query_reports",    (PyCFunction)dpy_DB_query_reports, METH_VARARGS,
         "Query the report information archive in the database; returns a Cursor" },
@@ -316,8 +407,14 @@ static PyMethodDef dpy_DB_methods[] = {
         "Query the level archive in the database; returns a Cursor" },
     {"query_tranges",     (PyCFunction)dpy_DB_query_tranges, METH_VARARGS,
         "Query the time range archive in the database; returns a Cursor" },
+    {"query_variable_types", (PyCFunction)dpy_DB_query_variable_types, METH_VARARGS,
+        "Query the variable types in the database; returns a Cursor" },
     {"query_data",        (PyCFunction)dpy_DB_query_data, METH_VARARGS,
         "Query the variables in the database; returns a Cursor" },
+    {"attr_insert",       (PyCFunction)dpy_DB_attr_insert, METH_VARARGS | METH_KEYWORDS,
+        "Insert new attributes into the database" },
+    {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
+        "Query attributes" },
     {NULL}
 };
 
@@ -410,6 +507,24 @@ PyTypeObject dpy_DB_Type = {
 
 namespace dballe {
 namespace python {
+
+dpy_DB* db_create(std::auto_ptr<DB> db)
+{
+    dpy_Record* attr_rec = record_create();
+    if (!attr_rec) return NULL;
+
+    dpy_DB* result = PyObject_New(dpy_DB, &dpy_DB_Type);
+    if (!result)
+    {
+        Py_DECREF(attr_rec);
+        return NULL;
+    }
+
+    result = (dpy_DB*)PyObject_Init((PyObject*)result, &dpy_DB_Type);
+    result->db = db.release();
+    result->attr_rec = attr_rec;
+    return result;
+}
 
 void register_db(PyObject* m)
 {

@@ -242,7 +242,7 @@ void DbAPI::critica()
     Varcode id_var;
     get_referred_data_id(&id_context, &id_var);
 
-    db.attr_insert_or_replace(id_context, id_var, qcinput, (perms & PERM_ATTR_WRITE) != 0);
+    db.attr_insert(id_context, id_var, qcinput, (perms & PERM_ATTR_WRITE) != 0);
 
     clear_qcinput();
 }

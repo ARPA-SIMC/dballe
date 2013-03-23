@@ -918,7 +918,7 @@ int DB::obtain_context(Record& rec)
     return id;
 }
 
-void DB::insert(Record& rec, bool can_replace, bool station_can_add)
+int DB::insert(Record& rec, bool can_replace, bool station_can_add)
 {
     Data& d = data();
 
@@ -948,6 +948,8 @@ void DB::insert(Record& rec, bool can_replace, bool station_can_add)
     }
 
     t.commit();
+
+    return d.id_context;
 }
 
 void DB::remove(const Record& rec)
@@ -1197,6 +1199,11 @@ std::auto_ptr<db::Cursor> DB::query_tranges(const Record& rec)
     return query(rec, DBA_DB_WANT_TIMERANGE, DBA_DB_MODIFIER_DISTINCT);
 }
 
+std::auto_ptr<db::Cursor> DB::query_variable_types(const Record& rec)
+{
+    return query(rec, DBA_DB_WANT_VAR_NAME, DBA_DB_MODIFIER_DISTINCT | DBA_DB_MODIFIER_NOANAEXTRA);
+}
+
 /*
         dballe::db::Cursor* query_station_summary(const dballe::Record& rec)
         {
@@ -1204,21 +1211,9 @@ std::auto_ptr<db::Cursor> DB::query_tranges(const Record& rec)
                                 DBA_DB_MODIFIER_DISTINCT).release();
 
         }
-        dballe::db::Cursor* query_levels_tranges(const dballe::Record& rec)
-        {
-                return $self->query(rec, DBA_DB_WANT_LEVEL | DBA_DB_WANT_TIMERANGE, DBA_DB_MODIFIER_DISTINCT).release();
-        }
         dballe::db::Cursor* query_datetimes(const dballe::Record& rec)
         {
                 return $self->query(rec, DBA_DB_WANT_DATETIME, DBA_DB_MODIFIER_DISTINCT).release();
-        }
-        dballe::db::Cursor* query_idents(const dballe::Record& rec)
-        {
-                return $self->query(rec, DBA_DB_WANT_IDENT, DBA_DB_MODIFIER_DISTINCT).release();
-        }
-        dballe::db::Cursor* query_variable_types(const dballe::Record& rec)
-        {
-                return $self->query(rec, DBA_DB_WANT_VAR_NAME, DBA_DB_MODIFIER_DISTINCT | DBA_DB_MODIFIER_NOANAEXTRA ).release();
         }
 	*/
 
@@ -1283,7 +1278,7 @@ unsigned DB::query_attrs(int reference_id, wreport::Varcode id_var, const std::v
     return count;
 }
 
-void DB::attr_insert_or_replace(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace)
+void DB::attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace)
 {
     Attr& a = attr();
 
@@ -1301,16 +1296,6 @@ void DB::attr_insert_or_replace(int reference_id, wreport::Varcode id_var, const
     }
 
     t.commit();
-}
-
-void DB::attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs)
-{
-    return attr_insert_or_replace(reference_id, id_var, attrs, true);
-}
-
-void DB::attr_insert_new(int reference_id, wreport::Varcode id_var, const Record& attrs)
-{
-    return attr_insert_or_replace(reference_id, id_var, attrs, false);
 }
 
 void DB::attr_remove(int reference_id, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)

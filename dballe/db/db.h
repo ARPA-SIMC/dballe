@@ -218,8 +218,11 @@ public:
      * @param station_can_add
      *   If true, then it is allowed to add new station records to the database.
      *   Otherwise, data can be added only by reusing existing ones.
+     * @returns
+     *   Integer value that can be used to refer to the current variable for
+     *   attribute access
      */
-    virtual void insert(Record& rec, bool can_replace, bool station_can_add) = 0;
+    virtual int insert(Record& rec, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Remove data from the database
@@ -282,6 +285,16 @@ public:
     virtual std::auto_ptr<db::Cursor> query_tranges(const Record& rec) = 0;
 
     /**
+     * Start a query on the variable types in the archive
+     *
+     * @param query
+     *   The record with the query data (see @ref dba_record_keywords)
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::auto_ptr<db::Cursor> query_variable_types(const Record& rec) = 0;
+
+    /**
      * Query the database.
      *
      * When multiple values per variable are present, the results will be presented
@@ -324,36 +337,7 @@ public:
      * @param can_replace
      *   If true, then existing data can be rewritten, else data can only be added.
      */
-    virtual void attr_insert_or_replace(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace) = 0;
-
-    /**
-     * Insert new attributes into the database.
-     *
-     * If the same attribute exists for the same data, it is
-     * overwritten
-     *
-     * @param reference_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the variable we query
-     * @param id_var
-     *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
-     * @param attrs
-     *   The record with the attributes to be added
-     */
-    virtual void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs) = 0;
-
-    /**
-     * Insert new attributes into the database.
-     *
-     * If the same attribute exists for the same data, the function fails.
-     *
-     * @param reference_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the variable we query
-     * @param id_var
-     *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
-     * @param attrs
-     *   The record with the attributes to be added
-     */
-    virtual void attr_insert_new(int reference_id, wreport::Varcode id_var, const Record& attrs) = 0;
+    virtual void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace=true) = 0;
 
     /**
      * Delete QC data for the variable `var' in record `rec' (coming from a previous

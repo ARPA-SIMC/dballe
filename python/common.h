@@ -29,6 +29,34 @@ namespace dballe {
 namespace python {
 
 /**
+ * Scope-managed python reference: calls Py_DECREF when exiting the scope
+ */
+struct OwnedPyObject
+{
+    PyObject* o;
+    OwnedPyObject(PyObject* o) : o(o) {}
+    ~OwnedPyObject() { Py_XDECREF(o); }
+
+    /**
+     * Release the reference without calling Py_DECREF
+     */
+    PyObject* release()
+    {
+        PyObject* res = o;
+        o = NULL;
+        return res;
+    }
+
+    // Use it as a PyObject
+    operator PyObject*() { return o; }
+
+private:
+    // Disable copy for now
+    OwnedPyObject(const OwnedPyObject&);
+    OwnedPyObject& operator=(const OwnedPyObject&);
+};
+
+/**
  * Resolve a varcode name to a varcode proper.
  */
 wreport::Varcode resolve_varcode(const char* name);

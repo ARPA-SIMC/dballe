@@ -35,7 +35,7 @@ typedef struct {
 
 PyAPI_DATA(PyTypeObject) dpy_Cursor_Type;
 
-#define dpy_DB_Check(ob) \
+#define dpy_Cursor_Check(ob) \
     (Py_TYPE(ob) == &dpy_Cursor_Type || \
      PyType_IsSubtype(Py_TYPE(ob), &dpy_Cursor_Type))
 }
