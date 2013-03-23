@@ -718,8 +718,13 @@ void register_record(PyObject* m)
     dpy_Record_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Record_Type) < 0)
         return;
-
     Py_INCREF(&dpy_Record_Type);
+
+    dpy_RecordIter_Type.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&dpy_RecordIter_Type) < 0)
+        return;
+    Py_INCREF(&dpy_Record_Type);
+
     PyModule_AddObject(m, "Record", (PyObject*)&dpy_Record_Type);
 }
 
