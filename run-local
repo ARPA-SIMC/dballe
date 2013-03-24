@@ -5,7 +5,7 @@ export LD_LIBRARY_PATH="$TOP_SRCDIR/dballe:$LD_LIBRARY_PATH"
 export WREPORT_EXTRA_TABLES=$TOP_SRCDIR/tables
 export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
 export DBA_TABLES=$TOP_SRCDIR/tables/
-export PYTHONPATH=$TOP_SRCDIR/swig
+export PYTHONPATH=$TOP_SRCDIR/python
 export PATH="$TOP_SRCDIR/tools:$PATH"
 
 exec "$@"

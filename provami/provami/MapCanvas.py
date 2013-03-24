@@ -101,7 +101,7 @@ class MapCanvas(wx.Window, ModelListener):
 	def distanceToPixels (self, p):
 		"Map distances from world units to pixel units"
 		return (p[0] * self.xscale, -p[1] * self.yscale)
-	
+
 	def coordsToPixels (self, p):
 		"Map coordinates from world space to pixel space"
 		return ((p[0] + 180) * self.xscale + self.xoffset, (-(p[1]-90)) * self.yscale + self.yoffset)
@@ -119,7 +119,7 @@ class MapCanvas(wx.Window, ModelListener):
 
 		The resulting size of the displayed world is the previous size
 		multiplied by the factor.
-		
+
 		For example, a factor of 1.2 zooms out 20%, while a factor of
 		0.8 zooms in 20%.
 		"""
@@ -219,7 +219,7 @@ class MapCanvas(wx.Window, ModelListener):
 	def nearestPoint(self, plon, plat):
 		mindist = 500000.0;
 		cand = None
-		for (id, lat, lon, ident) in self.model.stations():
+		for id, lat, lon, ident, info in self.model.stations():
 			x = lon - plon
 			y = lat - plat
 			dist = x*x + y*y
@@ -282,7 +282,7 @@ class MapCanvas(wx.Window, ModelListener):
 		lonmin = 360
 		latmax = -360
 		lonmax = -360
-		for (id, lat, lon, ident) in self.model.stations():
+		for id, lat, lon, ident, info in self.model.stations():
 			if lat < latmin: latmin = lat
 			if lat > latmax: latmax = lat
 			if lon < lonmin: lonmin = lon
@@ -349,8 +349,8 @@ class MapCanvas(wx.Window, ModelListener):
 		# (disabled because it was confusing)
 		#wplon, wplat = self.coordsToWorld(tuple(event.GetPosition()))
 		#self.panTowards(wplon, wplat, 0.05)
-		
-		#self.loncentre, self.latcentre = 
+
+		#self.loncentre, self.latcentre =
 		if fac > 0:
 			self.zoom(0.8 / abs(fac))
 		elif fac < 0:
@@ -384,7 +384,7 @@ class MapCanvas(wx.Window, ModelListener):
 		#	#self.canvas.Draw()
 		#	#self.mode = 0
 		#	#self.selectButton.SetValue(False)
-		#	coords = tuple(event.GetCoords()) 
+		#	coords = tuple(event.GetCoords())
 		#	stride = (coords[0] - self.mouseDownCoords[0], coords[1] - self.mouseDownCoords[1])
 		#	self.select(self.mouseDownCoords, stride)
 		elif self.mode == MapCanvas.MODE_SELECT_STATION:
@@ -399,7 +399,7 @@ class MapCanvas(wx.Window, ModelListener):
 	def OnMouseMoved (self, event):
 		#print "Move: ", event.GetPosition()
 		if self.mouseDown:
-			coords = tuple(event.GetPosition()) 
+			coords = tuple(event.GetPosition())
 			stride = (coords[0] - self.mouseDownCoords[0], coords[1] - self.mouseDownCoords[1])
 			worldStride = self.distanceToWorld(stride)
 			if self.mode == MapCanvas.MODE_MOVE:
@@ -420,7 +420,7 @@ class MapCanvas(wx.Window, ModelListener):
 
 	def OnResize (self, event):
 		self.resize()
-	
+
 	def resize (self):
 		(width, height) = self.GetClientSizeTuple()
 		owidth, oheight = (width, height)
@@ -498,7 +498,7 @@ class MapCanvas(wx.Window, ModelListener):
 		# Add the points
 		countSelected = 0
 		lastSelectedID = None
-		for (id, lat, lon, ident) in self.model.stations():
+		for id, lat, lon, ident, info in self.model.stations():
 			selected = False
 			if has_id and id == sel_id:
 				# Try selecting by ID

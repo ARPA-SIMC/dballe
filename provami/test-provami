@@ -12,7 +12,7 @@ else
 	fi
 	if ! [ -e dballe ]
 	then
-		ln -s ../swig dballe
+		ln -s ../python dballe
 	fi
 	./provami.py --dsn=sqlite:db.sqlite
 fi

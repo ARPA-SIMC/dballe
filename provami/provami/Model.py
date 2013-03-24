@@ -220,7 +220,7 @@ class Model:
         tracer = TTracer("model.datetimes")
         for results in self.cached_dtimes:
             yield results
-    
+
     # Return a 2-tuple with the minimum and maximum datetime values
     def daterange(self):
         if len(self.cached_dtimes) == 0:
@@ -284,7 +284,7 @@ class Model:
         filter["query"] = "nosort"
         for i in ("latmin", "latmax", "lonmin", "lonmax", "ana_id", "ident", "mobile"):
             del filter[i]
-        return self.db.query_station_summary(filter)
+        return self.db.query_stations(filter)
 
     def queryDateTimes(self):
         filter = self.filter.copy()
@@ -443,11 +443,17 @@ class Model:
             self.notifyProgress(2, "Querying station data...")
             idents = {}
             for result in self.queryStations():
-                self.cached_stations.append((
-                    result["ana_id"],
-                    result["lat"],
-                    result["lon"],
-                    result.get("ident", None)))
+                ana_id = result["ana_id"]
+                if self.cached_stations and self.cached_stations[-1][0] == ana_id:
+                    code = result["var"]
+                    self.cached_stations[-1][4][code] = result[code]
+                else:
+                    self.cached_stations.append((
+                        result["ana_id"],
+                        result["lat"],
+                        result["lon"],
+                        result.get("ident", None),
+                        {}))
                 idents[result.get("ident", None)] = 1
             self.cached_idents = idents.keys()
             self.cached_idents.sort()

@@ -255,7 +255,7 @@ public:
     virtual std::auto_ptr<db::Cursor> query_reports(const Record& query) = 0;
 
     /**
-     * Start a query on the station archive
+     * Start a query on the station variables archive
      *
      * @param query
      *   The record with the query data (see @ref dba_record_keywords)

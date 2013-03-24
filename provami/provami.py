@@ -29,26 +29,18 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args()
 
     import dballe
-    import string
-    import re
     import wx
 
     from provami.Model import *
-    #from provami.ModelSingleQuery import Model
-    from provami.MapCanvas import MapCanvas
-    from provami.MapChoice import MapChoice
-    #from provami.MapChoiceSingleQuery import MapChoice
-    #from provami.DateCanvas import DateCanvas
 
     from provami.ProvamiArtProvider import ProvamiArtProvider
     from provami.Navigator import Navigator
 
     app = wx.PySimpleApp()
-    db = dballe.DB()
     if dballe.DB.is_url(opts.dsn):
-        db.connect_from_url(opts.dsn)
+        db = dballe.DB.connect_from_url(opts.dsn)
     else:
-        db.connect(opts.dsn, opts.user, opts.password)
+        db = dballe.DB.connect(opts.dsn, opts.user, opts.password)
     model = Model(db)
 
 

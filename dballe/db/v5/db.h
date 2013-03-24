@@ -362,7 +362,7 @@ public:
     std::auto_ptr<db::Cursor> query_variable_types(const Record& rec);
 
 	/**
-	 * Start a query on the station archive
+	 * Start a query on the station variables archive
 	 *
 	 * @param query
 	 *   The record with the query data (see @ref dba_record_keywords)
