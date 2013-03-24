@@ -6,10 +6,10 @@ from provami.ResultGrid import ResultTable, ResultGrid
 from provami.DataMenu import DataMenu
 
 def val_compare(a, b):
-    vara = a.getvar(a["var"])
-    varb = b.getvar(b["var"])
-    isstra = vara.info().is_string()
-    isstrb = varb.info().is_string()
+    vara = a.var()
+    varb = b.var()
+    isstra = vara.info.is_string
+    isstrb = varb.info.is_string
     if isstra and isstrb:
         return cmp(vara.enqc(), varb.enqc())
     elif isstra and not isstrb:
@@ -24,7 +24,7 @@ class AnaTable(ResultTable):
         ResultTable.__init__(self)
 
         self.model = model
-        
+
         self.appendColumn("Network", \
                   renderer = lambda x: x["rep_memo"], \
                   sorter = lambda x, y: cmp(x["rep_memo"], y["rep_memo"]))
@@ -34,16 +34,16 @@ class AnaTable(ResultTable):
                   sorter = lambda x, y: cmp(x["var"], y["var"]))
 
         self.appendColumn("Value", \
-                  renderer = lambda x: x.getvar(x["var"]).format(), \
+                  renderer = lambda x: x.var().format(), \
                   sorter = val_compare,
                   editable = True)
 
         self.appendColumn("Unit", \
-                  renderer = lambda x: x.getvar(x["var"]).info().unit, \
+                  renderer = lambda x: x.var().info.unit, \
                   sorter = val_compare)
 
         self.appendColumn("Description", \
-                  renderer = lambda x: x.getvar(x["var"]).info().desc, \
+                  renderer = lambda x: x.var().info.desc, \
                   sorter = val_compare)
 
     def SetValue(self, row, col, value):
@@ -52,12 +52,11 @@ class AnaTable(ResultTable):
 
         try :
             record = self.items[row]
-            varcode = record["var"]
-            var = record.getvar(varcode)
-            if var.info().is_string():
-                record[varcode] = str(value)
+            var = record.var()
+            if var.info.is_string:
+                record[var.code] = str(value)
             else:
-                record[varcode] = float(value)
+                record[var.code] = float(value)
             self.model.writeRecord(record)
         except ValueError:
             pass
@@ -167,7 +166,7 @@ class AnaResults(wx.Frame, ModelListener):
         row, col = event.GetCell()
         record = event.GetData()
         if record is not None:
-            info = record.getvar(record["var"]).info()
+            info = record.var().info
             info = "%s (%s)" % (info.desc, info.unit)
             self.statusBar.SetStatusText(info, 0)
 

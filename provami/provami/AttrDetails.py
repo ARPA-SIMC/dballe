@@ -6,8 +6,8 @@ from provami.Model import ModelListener
 from provami.ResultGrid import ResultTable, ResultGrid
 
 def val_compare(a, b):
-    isstra = a.info().is_string()
-    isstrb = b.info().is_string()
+    isstra = a.info.is_string
+    isstrb = b.info.is_string
     if isstra and isstrb:
         return cmp(a.enqc(), b.enqc())
     elif isstra and not isstrb:
@@ -78,13 +78,13 @@ class AttributeTable(ResultTable):
                   editable = True)
 
         self.appendColumn("Unit", \
-                  renderer = lambda x: x.info().unit, \
+                  renderer = lambda x: x.info.unit, \
                   sorter = val_compare)
 
         self.appendColumn("Description", \
-                  renderer = lambda x: x.info().desc, \
+                  renderer = lambda x: x.info.desc, \
                   sorter = val_compare)
-    
+
         self.context = None
         self.varcode = None
 
@@ -94,7 +94,7 @@ class AttributeTable(ResultTable):
 
         try :
             var = self.items[row]
-            if var.info().is_string():
+            if var.info.is_string:
                 var.set(str(value))
             else:
                 var.set(float(value))
@@ -205,7 +205,7 @@ class AttrResults(wx.Frame, ModelListener):
         row, col = event.GetCell()
         var = event.GetData()
         if var is not None:
-            info = var.info()
+            info = var.info
             info = "%s (%s)" % (info.desc, info.unit)
             self.statusBar.SetStatusText(info, 0)
 

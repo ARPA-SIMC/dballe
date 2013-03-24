@@ -13,10 +13,10 @@ from provami.DataMenu import DataMenu
 # http://wiki.wxpython.org/index.cgi/wxGrid
 
 def val_compare(a, b):
-    vara = a.getvar(a["var"])
-    varb = b.getvar(b["var"])
-    isstra = vara.info().is_string()
-    isstrb = varb.info().is_string()
+    vara = a.var()
+    varb = b.var()
+    isstra = vara.info.is_string
+    isstrb = varb.info.is_string
     if isstra and isstrb:
         return cmp(vara.enqc(), varb.enqc())
     elif isstra and not isstrb:
@@ -62,7 +62,7 @@ class DataTable(ResultTable):
                   sorter = lambda x, y: cmp(x["var"], y["var"]))
 
         self.appendColumn("Value", \
-                  renderer = lambda x: x.getvar(x["var"]).format(), \
+                  renderer = lambda x: x.var().format(), \
                   sorter = val_compare,
                   editable = True)
 
@@ -72,12 +72,11 @@ class DataTable(ResultTable):
 
         try:
             record = self.items[row]
-            varcode = record["var"]
-            var = record.getvar(varcode)
-            if var.info().is_string():
-                record[varcode] = str(value)
+            var = record.var()
+            if var.info.is_string:
+                record[var.code] = str(value)
             else:
-                record[varcode] = float(value)
+                record[var.code] = float(value)
             self.model.writeRecord(record)
         except ValueError:
             pass
@@ -165,7 +164,7 @@ class DataPanel(wx.Panel, ModelListener):
             elif col == 4:
                 info = dballe.Trange(*record["trange"]).describe()
             else:
-                info = record.getvar(record["var"]).info()
+                info = record.var().info
                 info = "%s (%s)" % (info.desc, info.unit)
 
             self.statusBar.SetStatusText(info, 0)
