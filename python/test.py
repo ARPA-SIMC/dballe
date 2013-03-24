@@ -417,6 +417,16 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(a, None)
         self.assertEqual(b, dt.datetime(2004, 2, 29, 23, 59, 59))
 
+    def testCompare(self):
+        a = dballe.Record(ana_id=1, ident="ciao", B12101=23.1)
+        b = dballe.Record(ana_id=1, ident="ciao", B12101=23.1)
+        self.assertTrue(a == b)
+        self.assertFalse(a != b)
+
+        a["ana_id"] = 2
+        self.assertTrue(a != b)
+        self.assertFalse(a == b)
+
 #class BulletinTest(unittest.TestCase):
 #    def testBUFRCreation(self):
 #        # Generate a synop message

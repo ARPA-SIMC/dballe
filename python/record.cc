@@ -681,6 +681,35 @@ static PyObject* dpy_Record_iter(dpy_Record* self)
     return (PyObject*)result;
 }
 
+static PyObject* dpy_Record_richcompare(dpy_Record* a, dpy_Record* b, int op)
+{
+    PyObject *result;
+
+    // Make sure both arguments are Records.
+    if (!(dpy_Record_Check(a) && dpy_Record_Check(b))) {
+        result = Py_NotImplemented;
+        goto out;
+    }
+
+    int cmp;
+    switch (op) {
+        case Py_LT: cmp = cmp <  0; break;
+        case Py_LE: cmp = cmp <= 0; break;
+        case Py_EQ: cmp = a->rec == b->rec; break;
+        case Py_NE: cmp = a->rec != b->rec; break;
+        case Py_GT: cmp = cmp >  0; break;
+        case Py_GE: cmp = cmp >= 0; break;
+        default:
+            result = Py_NotImplemented;
+        goto out;
+    }
+    result = cmp ? Py_True : Py_False;
+
+out:
+    Py_INCREF(result);
+    return result;
+}
+
 PyTypeObject dpy_Record_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         // ob_size
@@ -706,7 +735,7 @@ PyTypeObject dpy_Record_Type = {
     "DB-All.e Record",         // tp_doc
     0,                         // tp_traverse
     0,                         // tp_clear
-    0,                         // tp_richcompare
+    (richcmpfunc)dpy_Record_richcompare, // tp_richcompare
     0,                         // tp_weaklistoffset
     (getiterfunc)dpy_Record_iter, // tp_iter
     0,                         // tp_iternext

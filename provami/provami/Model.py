@@ -156,7 +156,7 @@ class Model:
             self.resetResultLimit()
 
         # See if the filter has been changed
-        dirty = not self.activeFilter.equals(self.filter)
+        dirty = self.activeFilter != self.filter
         if self.filterDirty != dirty:
             for l in self.updateListeners: l.filterDirty(dirty)
             self.filterDirty = dirty
