@@ -20,6 +20,7 @@
  */
 #include "var.h"
 #include "common.h"
+#include "varinfo.h"
 
 using namespace std;
 using namespace dballe::python;
@@ -34,10 +35,14 @@ static PyObject* dpy_Var_isset(dpy_Var* self, void* closure) {
     else
         Py_RETURN_FALSE;
 }
+static PyObject* dpy_Var_info(dpy_Var* self, void* closure) {
+    return (PyObject*)varinfo_create(self->var.info());
+}
 
 static PyGetSetDef dpy_Var_getsetters[] = {
     {"code", (getter)dpy_Var_code, NULL, "variable code", NULL },
     {"isset", (getter)dpy_Var_isset, NULL, "true if the value is set", NULL },
+    {"info", (getter)dpy_Var_info, NULL, "Varinfo for this variable", NULL },
     {NULL}
 };
 

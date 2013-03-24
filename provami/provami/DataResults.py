@@ -62,7 +62,7 @@ class DataTable(ResultTable):
                   sorter = lambda x, y: cmp(x["var"], y["var"]))
 
         self.appendColumn("Value", \
-                  renderer = lambda x: x.var().format(), \
+                  renderer = lambda x: str(x.var()), \
                   sorter = val_compare,
                   editable = True)
 

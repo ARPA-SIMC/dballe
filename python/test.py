@@ -87,6 +87,7 @@ class VarTest(unittest.TestCase):
     def testUndefCreation(self):
         var = dballe.var("B01001")
         self.assertEqual(var.code, "B01001")
+        self.assertEqual(var.info.var, "B01001")
         self.assertFalse(var.isset)
     def testIntCreation(self):
         var = dballe.var("B05001", 12)
