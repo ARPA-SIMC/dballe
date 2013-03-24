@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 from __future__ import absolute_import
-from . import dballe
-from . import volnd
+import dballe
+import volnd
 #import rpy, MA, numpy, rconvert
 import numpy, rconvert, rpy2
 from datetime import *
@@ -20,12 +20,10 @@ numpy.seterr(divide="raise", over="raise", under="raise", invalid="raise")
 
 
 # Test from volnd
-db = dballe.DB()
-db.connect_test();
-query = dballe.Record()
+db = dballe.DB.connect_test()
+query = dballe.Record(date=datetime(2007, 1, 1, 0, 0, 0))
 #query.set("var", "B10004")
 #query.settimerange(dballe.TimeRange(0,0,0))
-query["date"] = datetime(2007, 1, 1, 0, 0, 0)
 vars = volnd.read(db.query_data(query), (volnd.AnaIndex(), volnd.NetworkIndex(), volnd.LevelIndex(), volnd.TimeRangeIndex()))
 #print "ana:", vars["B10004"].dims[0]
 #print "net:", vars["B10004"].dims[1]
