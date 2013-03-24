@@ -3,7 +3,7 @@ import dballe
 from provami.QueryChoice import QueryChoice
 
 def intormiss(x):
-    if x == dballe.MISSING_INT:
+    if x is None:
         return "-"
     else:
         return "%d" % x

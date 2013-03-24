@@ -27,7 +27,7 @@ def val_compare(a, b):
         return cmp(vara.enqd(), varb.enqd())
 
 def intormiss(x):
-    if x == dballe.MISSING_INT:
+    if x is None:
         return "-"
     else:
         return "%d" % x
@@ -36,9 +36,9 @@ class DataTable(ResultTable):
     def __init__(self, model):
         ResultTable.__init__(self)
         self.model = model
-        
+
         self.appendColumn("Ana", \
-                  renderer = lambda x: x["ana_id"], 
+                  renderer = lambda x: x["ana_id"],
                   sorter = lambda x, y: cmp(x["ana_id"], y["ana_id"]))
 
         self.appendColumn("Network", \

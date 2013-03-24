@@ -130,7 +130,7 @@ class Model:
         self.cached_results = []
         self.cached_stations = []
         self.cached_idents = []
-        self.cached_dtimes = []
+        self.cached_dtimes = [None, None]
         self.cached_levels = []
         self.cached_tranges = []
         self.cached_vartypes = []
@@ -165,7 +165,7 @@ class Model:
 
     def hasStation(self, s_id):
         "Return true if the given station is among the current result set"
-        for id, lat, lon, ident in self.cached_stations:
+        for id, lat, lon, ident, vars in self.cached_stations:
             if id == s_id:
                 return True
         return False
@@ -215,17 +215,9 @@ class Model:
         for result in self.cached_results:
             yield result
 
-    # Generate the list of all available datetimes
-    def datetimes(self):
-        tracer = TTracer("model.datetimes")
-        for results in self.cached_dtimes:
-            yield results
-
     # Return a 2-tuple with the minimum and maximum datetime values
     def daterange(self):
-        if len(self.cached_dtimes) == 0:
-            return (None, None)
-        return (self.cached_dtimes[0], self.cached_dtimes[-1])
+        return self.cached_dtimes
 
     # Generate the list of all available levels
     def levels(self):
@@ -288,12 +280,11 @@ class Model:
 
     def queryDateTimes(self):
         filter = self.filter.copy()
-        filter["query"] = "nosort"
         for i in ("yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin",
               "yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax",
               "year", "month", "day", "hour", "min", "sec"):
             del filter[i]
-        return self.db.query_datetimes(filter)
+        return self.db.query_datetime_extremes(filter)
 
     def queryVariableTypes(self):
         filter = self.filter.copy()
@@ -420,7 +411,7 @@ class Model:
 
             self.cached_stations = []
             self.cached_idents = []
-            self.cached_dtimes = []
+            self.cached_dtimes = [None, None]
             self.resultsCount = 0
             self.resultsTruncated = False
             self.cached_results = []
@@ -467,9 +458,7 @@ class Model:
 
             # Query datetimes
             self.notifyProgress(18, "Querying date and time data...")
-            for result in self.queryDateTimes():
-                self.cached_dtimes.append(result["date"])
-            self.cached_dtimes.sort()
+            self.cahced_dtimes = self.queryDateTimes()
             t.partial("got date and time data (%d items)" % (len(self.cached_dtimes)))
             self.notifyProgress(30, "Notifying date and time data...")
             for l in self.updateListeners: l.hasData("dtimes")

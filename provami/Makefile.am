@@ -22,9 +22,7 @@ provamiModules = \
 	provami/AttrDetails.py \
 	provami/DataMenu.py \
 	provami/DataResults.py \
-	provami/DateCanvas.py \
 	provami/DateChoice.py \
-	provami/DateTimeCanvas.py \
 	provami/FilterWindow.py \
 	provami/IdentChoice.py \
 	provami/LevelsChoice.py \
