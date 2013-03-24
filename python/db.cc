@@ -297,6 +297,42 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
     }
 }
 
+static PyObject* dpy_DB_query_datetime_extremes(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    try {
+        Record res;
+        self->db->query_datetime_extremes(record->rec, res);
+        if (res.key_peek_value(DBA_KEY_YEARMIN))
+        {
+            OwnedPyObject dt_min(PyDateTime_FromDateAndTime(
+                        res.get(DBA_KEY_YEARMIN).enqi(),
+                        res.get(DBA_KEY_MONTHMIN).enqi(),
+                        res.get(DBA_KEY_DAYMIN).enqi(),
+                        res.get(DBA_KEY_HOURMIN).enqi(),
+                        res.get(DBA_KEY_MINUMIN).enqi(),
+                        res.get(DBA_KEY_SECMIN).enqi(), 0));
+            OwnedPyObject dt_max(PyDateTime_FromDateAndTime(
+                        res.get(DBA_KEY_YEARMAX).enqi(),
+                        res.get(DBA_KEY_MONTHMAX).enqi(),
+                        res.get(DBA_KEY_DAYMAX).enqi(),
+                        res.get(DBA_KEY_HOURMAX).enqi(),
+                        res.get(DBA_KEY_MINUMAX).enqi(),
+                        res.get(DBA_KEY_SECMAX).enqi(), 0));
+            return Py_BuildValue("OO", dt_min.get(), dt_max.get());
+        } else {
+            return Py_BuildValue("OO", Py_None, Py_None);
+        }
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
 static bool read_attrlist(PyObject* attrs, db::AttrList& codes)
 {
     if (!attrs) return true;
@@ -436,6 +472,9 @@ static PyMethodDef dpy_DB_methods[] = {
         "Query the variable types in the database; returns a Cursor" },
     {"query_data",        (PyCFunction)dpy_DB_query_data, METH_VARARGS,
         "Query the variables in the database; returns a Cursor" },
+    {"query_datetime_extremes", (PyCFunction)dpy_DB_query_datetime_extremes, METH_VARARGS,
+        "Compute the earliest and lastest datetimes for the results of the given query."
+        " Returns two datetime objects, or two None if the query has no results" },
     {"attr_insert",       (PyCFunction)dpy_DB_attr_insert, METH_VARARGS | METH_KEYWORDS,
         "Insert new attributes into the database" },
     {"attr_remove",       (PyCFunction)dpy_DB_attr_remove, METH_VARARGS | METH_KEYWORDS,

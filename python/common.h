@@ -50,6 +50,9 @@ struct OwnedPyObject
     // Use it as a PyObject
     operator PyObject*() { return o; }
 
+    // Get the pointer (useful for passing to Py_BuildValue)
+    PyObject* get() { return o; }
+
 private:
     // Disable copy for now
     OwnedPyObject(const OwnedPyObject&);

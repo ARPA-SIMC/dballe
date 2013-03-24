@@ -1211,10 +1211,6 @@ std::auto_ptr<db::Cursor> DB::query_variable_types(const Record& rec)
                                 DBA_DB_MODIFIER_DISTINCT).release();
 
         }
-        dballe::db::Cursor* query_datetimes(const dballe::Record& rec)
-        {
-                return $self->query(rec, DBA_DB_WANT_DATETIME, DBA_DB_MODIFIER_DISTINCT).release();
-        }
 	*/
 
 std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)

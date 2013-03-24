@@ -143,10 +143,14 @@ class DballeTest(unittest.TestCase):
             self.assertEqual(result["rep_memo"], "synop")
     def testQueryDateTimes(self):
         query = dballe.Record()
-        cur = self.db.query_datetimes(query)
-        self.assertEqual(cur.remaining, 1)
-        for result in cur:
-            self.assertEqual(result["date"], dt.datetime(1945, 4, 25, 8, 0, 0))
+        dmin, dmax = self.db.query_datetime_extremes(query)
+        self.assertEqual(dmin, dt.datetime(1945, 4, 25, 8, 0, 0))
+        self.assertEqual(dmax, dt.datetime(1945, 4, 25, 8, 0, 0))
+
+        query.update(yearmin=2000)
+        dmin, dmax = self.db.query_datetime_extremes(query)
+        self.assertIsNone(dmin)
+        self.assertIsNone(dmax)
     def testQueryExport(self):
         query = dballe.Record()
         self.db.export_results(query, "BUFR", "/dev/null")
