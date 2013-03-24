@@ -109,6 +109,9 @@ struct Cursor : public dballe::db::Cursor
      */
     int query(const Record& query, unsigned int wanted, unsigned int modifiers);
 
+    // See DB::query_date_extremes
+    void query_datetime_extremes(const Record& query, Record& result);
+
     /**
      * Get the number of rows still to be fetched
      *

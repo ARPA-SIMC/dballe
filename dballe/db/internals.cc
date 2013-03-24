@@ -391,6 +391,10 @@ void Statement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val)
 {
     SQLBindCol(stm, idx, SQL_C_TYPE_TIMESTAMP, &val, sizeof(val), 0);
 }
+void Statement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val, SQLLEN& ind)
+{
+    SQLBindCol(stm, idx, SQL_C_TYPE_TIMESTAMP, &val, sizeof(val), &ind);
+}
 
 bool Statement::fetch()
 {

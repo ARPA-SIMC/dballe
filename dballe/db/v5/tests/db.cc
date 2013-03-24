@@ -1280,6 +1280,72 @@ void to::test<20>()
         cur->discard_rest();
 }
 
+// Test querying datetime ranges
+template<> template<>
+void to::test<21>()
+{
+    use_db();
+    populate_database();
+
+    // All DB
+    query.clear();
+    db->query_datetime_extremes(query, result);
+
+    ensure_equals(result.get("yearmin",  -1), 1945);
+    ensure_equals(result.get("monthmin", -1),    4);
+    ensure_equals(result.get("daymin",   -1),   25);
+    ensure_equals(result.get("hourmin",  -1),    8);
+    ensure_equals(result.get("minumin",  -1),    0);
+    ensure_equals(result.get("secmin",   -1),    0);
+
+    ensure_equals(result.get("yearmax",  -1), 1945);
+    ensure_equals(result.get("monthmax", -1),    4);
+    ensure_equals(result.get("daymax",   -1),   25);
+    ensure_equals(result.get("hourmax",  -1),    8);
+    ensure_equals(result.get("minumax",  -1),   30);
+    ensure_equals(result.get("secmax",   -1),    0);
+
+    // Subset of the DB
+    query.clear();
+    query.set("pindicator", 20);
+    query.set("p1", 111);
+    query.set("p2", 122);
+    db->query_datetime_extremes(query, result);
+
+    ensure_equals(result.get("yearmin",  -1), 1945);
+    ensure_equals(result.get("monthmin", -1),    4);
+    ensure_equals(result.get("daymin",   -1),   25);
+    ensure_equals(result.get("hourmin",  -1),    8);
+    ensure_equals(result.get("minumin",  -1),    0);
+    ensure_equals(result.get("secmin",   -1),    0);
+
+    ensure_equals(result.get("yearmax",  -1), 1945);
+    ensure_equals(result.get("monthmax", -1),    4);
+    ensure_equals(result.get("daymax",   -1),   25);
+    ensure_equals(result.get("hourmax",  -1),    8);
+    ensure_equals(result.get("minumax",  -1),    0);
+    ensure_equals(result.get("secmax",   -1),    0);
+
+    // No matches
+    query.clear();
+    query.set("pindicator", 1);
+    db->query_datetime_extremes(query, result);
+
+    ensure_equals(result.get("yearmin",  -1), -1);
+    ensure_equals(result.get("monthmin", -1), -1);
+    ensure_equals(result.get("daymin",   -1), -1);
+    ensure_equals(result.get("hourmin",  -1), -1);
+    ensure_equals(result.get("minumin",  -1), -1);
+    ensure_equals(result.get("secmin",   -1), -1);
+
+    ensure_equals(result.get("yearmax",  -1), -1);
+    ensure_equals(result.get("monthmax", -1), -1);
+    ensure_equals(result.get("daymax",   -1), -1);
+    ensure_equals(result.get("hourmax",  -1), -1);
+    ensure_equals(result.get("minumax",  -1), -1);
+    ensure_equals(result.get("secmax",   -1), -1);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

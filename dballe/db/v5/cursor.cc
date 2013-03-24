@@ -187,6 +187,9 @@ struct QueryBuilder
 
     /// Build the query with just SELECT COUNT(*)
     void build_count_query(const Record& rec);
+
+    /// Build the query with just a select for date extremes
+    void build_date_extremes_query(const Record& rec);
 };
 
 } // anonymous namespace
@@ -259,6 +262,74 @@ int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifie
 
     /* Retrieve results will happen in dba_db_cursor_next() */
     return count;
+}
+
+void Cursor::query_datetime_extremes(const Record& query, Record& result)
+{
+    reset();
+
+    QueryBuilder qb(db, *stm, *this, 0, 0);
+    wanted = 0;
+    modifiers = 0;
+    qb.init_modifiers(query);
+    qb.from_wanted |= DBA_DB_FROM_C;
+
+    SQL_TIMESTAMP_STRUCT dmin;
+    SQL_TIMESTAMP_STRUCT dmax;
+    SQLLEN dmin_ind;
+    SQLLEN dmax_ind;
+    qb.build_date_extremes_query(query);
+    qb.stm.bind_out(qb.output_seq++, dmin, dmin_ind);
+    qb.stm.bind_out(qb.output_seq++, dmax, dmax_ind);
+
+    from_wanted = qb.from_wanted;
+
+    TRACE("Performing query: %s\n", qb.sql_query.c_str());
+
+    stm->set_cursor_forward_only();
+
+    /* Perform the query */
+    stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
+
+    // Fetch result row
+    bool res = stm->fetch();
+    if (!res)
+    {
+        stm->close_cursor();
+        throw error_consistency("datetime extremes query returned no results");
+    }
+
+    if (dmin_ind == SQL_NULL_DATA)
+    {
+        result.unset(DBA_KEY_YEARMIN);
+        result.unset(DBA_KEY_MONTHMIN);
+        result.unset(DBA_KEY_DAYMIN);
+        result.unset(DBA_KEY_HOURMIN);
+        result.unset(DBA_KEY_MINUMIN);
+        result.unset(DBA_KEY_SECMIN);
+
+        result.unset(DBA_KEY_YEARMAX);
+        result.unset(DBA_KEY_MONTHMAX);
+        result.unset(DBA_KEY_DAYMAX);
+        result.unset(DBA_KEY_HOURMAX);
+        result.unset(DBA_KEY_MINUMAX);
+        result.unset(DBA_KEY_SECMAX);
+    } else {
+        result.key(DBA_KEY_YEARMIN).seti(dmin.year);
+        result.key(DBA_KEY_MONTHMIN).seti(dmin.month);
+        result.key(DBA_KEY_DAYMIN).seti(dmin.day);
+        result.key(DBA_KEY_HOURMIN).seti(dmin.hour);
+        result.key(DBA_KEY_MINUMIN).seti(dmin.minute);
+        result.key(DBA_KEY_SECMIN).seti(dmin.second);
+
+        result.key(DBA_KEY_YEARMAX).seti(dmax.year);
+        result.key(DBA_KEY_MONTHMAX).seti(dmax.month);
+        result.key(DBA_KEY_DAYMAX).seti(dmax.day);
+        result.key(DBA_KEY_HOURMAX).seti(dmax.hour);
+        result.key(DBA_KEY_MINUMAX).seti(dmax.minute);
+        result.key(DBA_KEY_SECMAX).seti(dmax.second);
+    }
+    stm->close_cursor();
 }
 
 int Cursor::getcount(const Record& rec, unsigned int qwanted, unsigned int qmodifiers)
@@ -585,6 +656,29 @@ void QueryBuilder::build_count_query(const Record& rec)
 #endif
         sql_query.append("COUNT(*) ");
     stm.bind_out(output_seq++, cur.count);
+
+    /* Prepare WHERE part and see what needs to be available in the FROM part */
+    make_where(rec);
+
+    /* Solve dependencies among the various parts of the query */
+    resolve_dependencies();
+
+    /* Append the FROM part of the query */
+    make_from();
+
+    /* Append the WHERE part that we prepared previously */
+    if (!sql_where.empty())
+    {
+        sql_query.append("WHERE ");
+        sql_query.append(sql_where);
+    }
+}
+
+void QueryBuilder::build_date_extremes_query(const Record& rec)
+{
+    init_modifiers(rec);
+
+    sql_query.append("SELECT MIN(c.datetime), MAX(c.datetime) ");
 
     /* Prepare WHERE part and see what needs to be available in the FROM part */
     make_where(rec);

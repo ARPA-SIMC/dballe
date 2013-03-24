@@ -205,6 +205,7 @@ struct Statement
     void bind_out(int idx, char* val, SQLLEN buflen);
     void bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind);
     void bind_out(int idx, SQL_TIMESTAMP_STRUCT& val);
+    void bind_out(int idx, SQL_TIMESTAMP_STRUCT& val, SQLLEN& ind);
 
     void prepare(const char* query);
     void prepare(const char* query, int qlen);

@@ -309,6 +309,14 @@ public:
     virtual std::auto_ptr<db::Cursor> query_data(const Record& rec) = 0;
 
     /**
+     * Compute the earliest and lastest datetimes for the results of the given
+     * query.
+     *
+     * Results are stored in \a result {year,...,sec}min and {year,...,sec}max.
+     */
+    virtual void query_datetime_extremes(const Record& query, Record& result) = 0;
+
+    /**
      * Query attributes
      *
      * @param reference_id
