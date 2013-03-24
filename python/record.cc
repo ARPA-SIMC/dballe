@@ -20,6 +20,7 @@
  */
 #include <Python.h>
 #include <datetime.h>
+#include <dballe/core/defs.h>
 #include "record.h"
 #include "common.h"
 #include "var.h"
@@ -405,15 +406,19 @@ static PyObject* rec_keys_to_tuple(dpy_Record* self, dba_keyword* keys, unsigned
     if (!res) return NULL;
 
     try {
-
         for (unsigned i = 0; i < len; ++i)
         {
             if (self->rec.peek_value(keys[i]))
             {
                 int iv = self->rec[keys[i]].enqi();
-                PyObject* v = PyInt_FromLong(iv);
-                if (!v) return NULL; // FIXME: deallocate res
-                PyTuple_SET_ITEM(res, i, v);
+                if (iv == MISSING_INT)
+                {
+                    PyTuple_SET_ITEM(res, i, Py_None);
+                } else {
+                    PyObject* v = PyInt_FromLong(iv);
+                    if (!v) return NULL; // FIXME: deallocate res
+                    PyTuple_SET_ITEM(res, i, v);
+                }
             } else {
                 PyTuple_SET_ITEM(res, i, Py_None);
             }
@@ -453,14 +458,24 @@ static int rec_tuple_to_keys(dpy_Record* self, PyObject* val, dba_keyword* keys,
             return -1;
         }
 
-        for (unsigned i = 0; i < seq_len; ++i)
+        for (unsigned i = 0; i < len; ++i)
         {
-            PyObject* v = PySequence_GetItem(val, i);
-            if (v == NULL) return -1;
-            int vi = PyInt_AsLong(v);
-            Py_DECREF(v);
-            if (vi == -1 && PyErr_Occurred()) return -1;
-            self->rec.set(keys[i], vi);
+            if (i < seq_len)
+            {
+                PyObject* v = PySequence_GetItem(val, i);
+                if (v == NULL) return -1;
+                if (v == Py_None)
+                {
+                    self->rec.unset(keys[i]);
+                    Py_DECREF(v);
+                } else {
+                    int vi = PyInt_AsLong(v);
+                    Py_DECREF(v);
+                    if (vi == -1 && PyErr_Occurred()) return -1;
+                    self->rec.set(keys[i], vi);
+                }
+            } else
+                self->rec.unset(keys[i]);
         }
     }
     return 0;

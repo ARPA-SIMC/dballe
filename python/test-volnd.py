@@ -72,8 +72,7 @@ class TestRead(unittest.TestCase):
         self.db.reset()
 
         attrs = dballe.Record()
-        rec = dballe.Record()
-        rec["mobile"] = 0
+        rec = dballe.Record(mobile=0)
 
         def contexts():
             # 2 networks
@@ -212,22 +211,22 @@ class TestRead(unittest.TestCase):
         vars = read(self.db.query_data(query),
                 (AnaIndex(), TimeRangeIndex(frozen=True,
                         start=((4, -21600, 0), (4, -43200, 0)) ) ),
-                checkConflicts = False)
+                checkConflicts=False)
         self.assertEquals(len(vars["B13011"].dims[1]), 2)
 
         vars = read(self.db.query_data(query),
                 (AnaIndex(), TimeRangeIndex()),
-                checkConflicts = False)
+                checkConflicts=False)
         self.assertEquals(len(vars["B13011"].dims[1]), 3)
 
         vars = read(self.db.query_data(query),
-                (AnaIndex(), LevelIndex(frozen=True, start=((1, None, None, None),) )),
-                checkConflicts = False)
+                (AnaIndex(), LevelIndex(frozen=True, start=((1, None, None, None),))),
+                checkConflicts=False)
         self.assertEquals(len(vars["B13011"].dims[1]), 1)
 
         vars = read(self.db.query_data(query),
                 (AnaIndex(), LevelIndex()),
-                checkConflicts = False)
+                checkConflicts=False)
         self.assertEquals(len(vars["B13011"].dims[1]), 2)
 
     def testAnaNetwork(self):
@@ -259,8 +258,7 @@ class TestRead(unittest.TestCase):
     def testAnaTrangeNetwork(self):
         # 3 dimensions: ana, timerange, network
         # 2 variables
-        query = dballe.Record()
-        query["date"] = datetime(2007, 1, 1, 0, 0, 0)
+        query = dballe.Record(date=datetime(2007, 1, 1, 0, 0, 0))
         vars = read(self.db.query_data(query), (AnaIndex(), TimeRangeIndex(shared=False), NetworkIndex()))
         self.assertEquals(len(vars), 2)
         self.assertEquals(sorted(vars.keys()), ["B10004", "B13011"])
