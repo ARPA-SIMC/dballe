@@ -47,7 +47,6 @@ fi
 
 AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
 AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
-AC_CHECK_PROG(have_swig, swig, yes, no)
 
 dnl To use subdirs
 AC_PROG_MAKE_SET
@@ -133,12 +132,9 @@ then
 	AC_SUBST(docdir)
 fi
 
-if test x$have_swig = x"yes"
-then
-	AM_PATH_PYTHON
-else
+AM_PATH_PYTHON([], [], [
 	enable_dballe_python=no
-fi
+])
 
 dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 2.5)
@@ -285,7 +281,6 @@ tools/Makefile
 tables/Makefile
 extra/Makefile
 python/Makefile
-swig/Makefile
 doc/Makefile
 doc/libdballe.dox
 doc/libdballef.dox

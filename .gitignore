@@ -67,12 +67,6 @@ Makefile
 /fortran/tut_test
 /fortran/genattr
 /provami/provami/Paths.py
-/swig/_dballe.so
-/swig/dballe
-/swig/dballe.py
-/swig/dballe_wrap_python.cc
-/swig/python-dballe.html
-/swig/python-dballe.rst
 /tables/dballe.tex
 /tables/B0000000000200014001.txt
 /tables/B000000002001400.txt

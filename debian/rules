@@ -28,8 +28,8 @@ override_dh_auto_install:
 	# Build and install the python bindings for each different python version
 	for ver in `pyversions -vr`; do \
 		dh_auto_configure -- PYTHON=/usr/bin/python$$ver ; \
-		make clean -C swig ; \
-		make install -C swig DESTDIR=`pwd`/debian/tmp ; \
+		make clean -C python ; \
+		make install -C python DESTDIR=`pwd`/debian/tmp ; \
 	done
 	# Remove python modules .la files
 	rm -f debian/tmp/usr/lib/python*/dist-packages/*.la
