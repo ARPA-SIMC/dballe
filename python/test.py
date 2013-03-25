@@ -121,10 +121,12 @@ class VarTest(unittest.TestCase):
         var = dballe.var("B01001")
         self.assertEqual(str(var), "None")
         self.assertEqual(repr(var), "Var('B01001', None)")
+        self.assertEqual(var.format("foo"), "foo")
 
         var = dballe.var("B05001", 12.4)
         self.assertEqual(str(var), "12.40000")
         self.assertEqual(repr(var), "Var('B05001', 12.40000)")
+        self.assertEqual(var.format("foo"), "12.40000")
     def testEnq(self):
         var = dballe.var("B01001", 1)
         self.assertEqual(type(var.enq()), int)
@@ -135,6 +137,16 @@ class VarTest(unittest.TestCase):
         var = dballe.var("B01019", "ciao")
         self.assertEqual(type(var.enq()), str)
         self.assertEqual(var.enq(), "ciao")
+    def testGet(self):
+        var = dballe.var("B01001")
+        self.assertIsNone(var.get())
+        self.assertIs(var.get("foo"), "foo")
+        var = dballe.var("B01001", 1)
+        self.assertIs(var.get(), 1)
+        var = dballe.var("B05001", 1.12345)
+        self.assertEquals(var.get(), 1.12345)
+        var = dballe.var("B01019", "ciao")
+        self.assertEqual(var.get(), "ciao")
     def testEq(self):
         var = dballe.var("B01001", 1)
         self.assertEqual(var, var)

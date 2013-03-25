@@ -8,7 +8,7 @@ import dballe
 import csv
 
 def intormiss(x):
-    if x == dballe.MISSING_INT:
+    if x is None:
         return "-"
     else:
         return "%d" % x
@@ -60,19 +60,18 @@ class Exporter:
 
             # Get info about the pseudoana extra data
             if id not in self.anaData:
-                query = dballe.Record()
-                query["ana_id"] = id
-                query.set_ana_context()
+                query = dballe.Record(ana_id=id)
+                query.set_station_context()
                 items = {}
                 for record in self.db.query_data(query):
-                    v = record["var"]
-                    items[v] = dballe.Var(record.getvar(v))
-                    val = record.getvar(v).format("");
-                    if v in anaVars:
-                        if anaVars[v] != val:
+                    v = record.var()
+                    items[v.code] = v
+                    val = v.get()
+                    if v.code in anaVars:
+                        if anaVars[v.code] != val:
                             anaVars[v] = None
                     else:
-                        anaVars[v] = val
+                        anaVars[v.code] = val
                     #print id, v, items[v].format('none')
                 self.anaData[id] = items
 
@@ -95,12 +94,10 @@ class Exporter:
             vars.add(d["var"])
 
             # Attributes
-            attributes = dballe.Record()
-            self.db.query_attrs(d["context_id"], d["var"], [], attributes)
+            attributes = self.db.query_attrs(d["context_id"], d["var"])
             self.attrData["%d,%s"%(d["context_id"], d["var"])] = attributes
-            for v in attributes:
-                #attrs.add(v.code())
-                code = v.code()
+            for code in attributes:
+                v = attributes.var(code)
                 val = v.format("");
                 if code in attrs:
                     if attrs[code] != val:
