@@ -153,8 +153,10 @@ class DballeTest(unittest.TestCase):
         self.assertIsNone(dmax)
     def testQueryExport(self):
         query = dballe.Record()
-        self.db.export_results(query, "BUFR", "/dev/null")
-        self.db.export_results(query, "CREX", "/dev/null")
+        self.db.export_to_file(query, "BUFR", "/dev/null")
+        self.db.export_to_file(query, "CREX", "/dev/null")
+        self.db.export_to_file(query, "BUFR", "/dev/null", generic=True)
+        self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
     def testAttrRemove(self):
         #db.attrRemove(1, "B01011", [ "B33007" ])
         self.db.attr_remove(1, "B01011", ("B33007",))

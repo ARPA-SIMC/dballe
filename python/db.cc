@@ -24,6 +24,10 @@
 #include "record.h"
 #include "cursor.h"
 #include "common.h"
+#include "dballe/core/defs.h"
+#include "dballe/core/file.h"
+#include "dballe/msg/msgs.h"
+#include "dballe/msg/codec.h"
 
 using namespace std;
 using namespace dballe;
@@ -441,6 +445,71 @@ static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
     virtual void dump(FILE* out) = 0;
     */
 
+namespace {
+struct ExportConsumer : public MsgConsumer
+{
+    File& out;
+    msg::Exporter* exporter;
+    ExportConsumer(File& out, const char* template_name=NULL)
+        : out(out), exporter(0)
+    {
+        if (template_name == NULL)
+            exporter = msg::Exporter::create(out.type()).release();
+        else
+        {
+            msg::Exporter::Options opts;
+            opts.template_name = "generic";
+            exporter = msg::Exporter::create(out.type(), opts).release();
+        }
+    }
+    ~ExportConsumer()
+    {
+        if (exporter) delete exporter;
+    }
+    void operator()(std::auto_ptr<Msg> msg)
+    {
+        Rawmsg raw;
+        Msgs msgs;
+        msgs.acquire(msg);
+        exporter->to_rawmsg(msgs, raw);
+        out.write(raw);
+    }
+};
+}
+
+static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* kw)
+{
+    static char* kwlist[] = { "query", "format", "filename", "generic", NULL };
+    dpy_Record* query;
+    const char* format;
+    const char* filename;
+    int as_generic = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!ss|i", kwlist, &dpy_Record_Type, &query, &format, &filename, &as_generic))
+        return NULL;
+
+    Encoding encoding = BUFR;
+    if (strcmp(format, "BUFR") == 0)
+        encoding = BUFR;
+    else if (strcmp(format, "CREX") == 0)
+        encoding = CREX;
+    else
+    {
+        PyErr_SetString(PyExc_ValueError, "encoding must be one of BUFR or CREX");
+        return NULL;
+    }
+
+    try {
+        std::auto_ptr<File> out = File::create(encoding, filename, "wb");
+        ExportConsumer msg_writer(*out, as_generic ? "generic" : NULL);
+        self->db->export_msgs(query->rec, msg_writer);
+        Py_RETURN_NONE;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
 static PyMethodDef dpy_DB_methods[] = {
     {"connect",           (PyCFunction)dpy_DB_connect, METH_VARARGS | METH_CLASS,
         "Create a DB connecting to an ODBC source" },
@@ -481,6 +550,8 @@ static PyMethodDef dpy_DB_methods[] = {
         "Remove attributes" },
     {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
         "Query attributes" },
+    {"export_to_file",    (PyCFunction)dpy_DB_export_to_file, METH_VARARGS | METH_KEYWORDS,
+        "Export data matching a query as bulletins to a named file" },
     {NULL}
 };
 
