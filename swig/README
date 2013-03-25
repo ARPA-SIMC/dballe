@@ -1,3 +1,0 @@
-To test it without installing it, you need to use this work-around:
-
-  ln -s .libs/_Dballe.so .
