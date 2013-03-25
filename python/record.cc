@@ -175,15 +175,28 @@ static PyObject* dpy_Record_keys(dpy_Record* self)
     return result;
 }
 
-static PyObject* dpy_Record_var(dpy_Record* self)
+static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args)
 {
-    if (self->rec.vars().empty())
-    {
-        PyErr_SetString(PyExc_IndexError, "Record is empty");
+    const char* name = NULL;
+
+    if (!PyArg_ParseTuple(args, "|s", &name))
         return NULL;
 
+    try {
+        wreport::Varcode code;
+        if (name == NULL)
+        {
+            const char* scode = self->rec.get(DBA_KEY_VAR).enqc();
+            code = WR_STRING_TO_VAR(scode + 1);
+        } else
+            code = resolve_varcode(name);
+
+        return (PyObject*)var_create(self->rec.get(code));
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
     }
-    return (PyObject*)var_create(*(self->rec.vars()[0]));
 }
 
 static PyObject* dpy_Record_vars(dpy_Record* self)
@@ -221,7 +234,11 @@ static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args)
 
     int has = dpy_Record_contains(self, key);
     if (has < 0) return NULL;
-    if (!has) return def;
+    if (!has)
+    {
+        Py_INCREF(def);
+        return def;
+    }
 
     return dpy_Record_getitem(self, key);
 }
@@ -298,7 +315,7 @@ static PyMethodDef dpy_Record_methods[] = {
     {"clear_vars", (PyCFunction)dpy_Record_clear_vars, METH_NOARGS, "remove all variables from the record, leaving the keywords intact" },
     {"get", (PyCFunction)dpy_Record_get, METH_VARARGS, "lookup a value, returning a fallback value (None by default) if unset" },
     {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
-    {"var", (PyCFunction)dpy_Record_var, METH_NOARGS, "return the first (or only) Variable in the record. Raises IndexError if the record contains no variables" },
+    {"var", (PyCFunction)dpy_Record_var, METH_VARARGS, "return a variable from the record. If no varcode is given, use record['var']" },
     {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a sequence with all the varcodes of the variables set on the Record. Note that this does not include keys." },
     {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "return a sequence with all the variables set on the Record. Note that this does not include keys." },
     {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
@@ -413,6 +430,7 @@ static PyObject* rec_keys_to_tuple(dpy_Record* self, dba_keyword* keys, unsigned
                 int iv = self->rec[keys[i]].enqi();
                 if (iv == MISSING_INT)
                 {
+                    Py_INCREF(Py_None);
                     PyTuple_SET_ITEM(res, i, Py_None);
                 } else {
                     PyObject* v = PyInt_FromLong(iv);
@@ -420,6 +438,7 @@ static PyObject* rec_keys_to_tuple(dpy_Record* self, dba_keyword* keys, unsigned
                     PyTuple_SET_ITEM(res, i, v);
                 }
             } else {
+                Py_INCREF(Py_None);
                 PyTuple_SET_ITEM(res, i, Py_None);
             }
         }

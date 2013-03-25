@@ -34,7 +34,7 @@ class AnaTable(ResultTable):
                   sorter = lambda x, y: cmp(x["var"], y["var"]))
 
         self.appendColumn("Value", \
-                  renderer = lambda x: x.var().format(), \
+                  renderer = lambda x: str(x.var()), \
                   sorter = val_compare,
                   editable = True)
 
@@ -68,7 +68,7 @@ class AnaTable(ResultTable):
         if id is not None:
             query = dballe.Record()
             query["ana_id"] = id
-            query.set_ana_context()
+            query.set_station_context()
             del query["rep_cod"]
             for record in self.model.db.query_data(query):
                 self.items.append(record.copy())

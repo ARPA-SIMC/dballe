@@ -160,9 +160,9 @@ class DataPanel(wx.Panel, ModelListener):
                     info = "Mobile station " + ident
                 info = info + ", lat %f, lon %f" % (record["lat"], record["lon"])
             elif col == 3:
-                info = dballe.Level(*record["level"]).describe()
+                info = dballe.describe_level(*record["level"])
             elif col == 4:
-                info = dballe.Trange(*record["trange"]).describe()
+                info = dballe.describe_trange(*record["trange"])
             else:
                 info = record.var().info
                 info = "%s (%s)" % (info.desc, info.unit)

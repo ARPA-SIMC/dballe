@@ -29,8 +29,11 @@
 #include "db.h"
 #include "cursor.h"
 #endif
+#include "dballe/core/defs.h"
 #include "dballe/core/var.h"
 
+using namespace std;
+using namespace dballe;
 using namespace dballe::python;
 
 extern "C" {
@@ -43,7 +46,7 @@ static PyObject* dballe_varinfo(PyTypeObject *type, PyObject *args, PyObject *kw
     return (PyObject*)varinfo_create(dballe::varinfo(resolve_varcode(var_name)));
 }
 
-static PyObject* dballe_var(PyTypeObject *type, PyObject *args, PyObject *kw)
+static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
 {
     const char* var_name;
     PyObject* val = 0;
@@ -77,9 +80,58 @@ static PyObject* dballe_var(PyTypeObject *type, PyObject *args, PyObject *kw)
         return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)));
 }
 
+#define get_int_or_missing(intvar, ovar) \
+    int intvar; \
+    if (ovar == Py_None) \
+        intvar = MISSING_INT; \
+    else { \
+        intvar = PyInt_AsLong(ovar); \
+        if (intvar == -1 && PyErr_Occurred()) \
+            return NULL; \
+    }
+
+
+static PyObject* dballe_describe_level(PyTypeObject *type, PyObject *args)
+{
+    PyObject* oltype1 = Py_None;
+    PyObject* ol1 = Py_None;
+    PyObject* oltype2 = Py_None;
+    PyObject* ol2 = Py_None;
+    if (!PyArg_ParseTuple(args, "O|OOO", &oltype1, &ol1, &oltype2, &ol2))
+        return NULL;
+
+    get_int_or_missing(ltype1, oltype1);
+    get_int_or_missing(l1, ol1);
+    get_int_or_missing(ltype2, oltype2);
+    get_int_or_missing(l2, ol2);
+
+    Level lev(ltype1, l1, ltype2, l2);
+    string desc = lev.describe();
+    return PyString_FromString(desc.c_str());
+}
+
+static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args)
+{
+    PyObject* opind = Py_None;
+    PyObject* op1 = Py_None;
+    PyObject* op2 = Py_None;
+    if (!PyArg_ParseTuple(args, "O|OO", &opind, &op1, &op2))
+        return NULL;
+
+    get_int_or_missing(pind, opind);
+    get_int_or_missing(p1, op1);
+    get_int_or_missing(p2, op2);
+
+    Trange tr(pind, p1, p2);
+    string desc = tr.describe();
+    return PyString_FromString(desc.c_str());
+}
+
 static PyMethodDef dballe_methods[] = {
     {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, "Query the DB-All.e variable table returning a Varinfo" },
     {"var", (PyCFunction)dballe_var, METH_VARARGS, "Query the DB-All.e variable table returning an undefined Var" },
+    {"describe_level", (PyCFunction)dballe_describe_level, METH_VARARGS, "Return a string description for a level" },
+    {"describe_trange", (PyCFunction)dballe_describe_trange, METH_VARARGS, "Return a string description for a time range" },
     { NULL }
 };
 

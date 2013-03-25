@@ -69,11 +69,11 @@ class AttributeTable(ResultTable):
         self.model = model
 
         self.appendColumn("Variable", \
-                  renderer = lambda x: x.code(), \
-                  sorter = lambda x, y: cmp(x.code(), y.code()))
+                  renderer = lambda x: x.code, \
+                  sorter = lambda x, y: cmp(x.code, y.code))
 
         self.appendColumn("Value", \
-                  renderer = lambda x: x.format(), \
+                  renderer = lambda x: str(x), \
                   sorter = val_compare,
                   editable = True)
 
@@ -109,11 +109,10 @@ class AttributeTable(ResultTable):
         self.varcode = var
 
         if context is not None:
-            attrs = dballe.Record()
-            self.model.db.query_attrs(context, var, [], attrs)
+            attrs = self.model.db.query_attrs(context, var)
 
             for var in attrs:
-                self.items.append(dballe.Var(var))
+                self.items.append(attrs.var(var))
 
             self.sort()
 
@@ -130,9 +129,9 @@ class AttributeTable(ResultTable):
 
     def getRow(self, data):
         if data is None: return None
-        var = data.code()
+        var = data.code
         for row, d in enumerate(self.items):
-            if d.code() == var:
+            if d.code == var:
                 return row
         return None
 
@@ -222,10 +221,10 @@ class AttrResults(wx.Frame, ModelListener):
             table = self.data.GetTable()
             context, id = table.context, table.varcode
             var = self.dataMenu.getData()
-            self.model.deleteAttrs(context, id, (var.code(),))
+            self.model.deleteAttrs(context, id, (var.code,))
         elif event.GetId() == AttrMenu.ACTION_DELETE_SELECTED:
             table = self.data.GetTable()
             context, id = table.context, table.varcode
-            self.model.deleteAttrs(context, id, [v.code() for v in self.data.getSelectedData()])
+            self.model.deleteAttrs(context, id, [v.code for v in self.data.getSelectedData()])
         else:
             event.Skip()

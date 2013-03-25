@@ -53,7 +53,7 @@ class DballeTest(unittest.TestCase):
         count = 0
         for result in cur:
             self.assertEqual(cur.remaining, 2-count-1)
-            var = result.var();
+            var = result.var()
             assert var.code in expected
             self.assertEqual(var.enq(), expected[var.code])
             del expected[var.code]

@@ -428,6 +428,13 @@ class RecordTest(unittest.TestCase):
         self.assertTrue(a != b)
         self.assertFalse(a == b)
 
+class DescribeTest(unittest.TestCase):
+    def testLevel(self):
+        self.assertIn("surface", dballe.describe_level(1))
+
+    def testTrange(self):
+        self.assertIn("Accumulation", dballe.describe_trange(1))
+
 #class BulletinTest(unittest.TestCase):
 #    def testBUFRCreation(self):
 #        # Generate a synop message

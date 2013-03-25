@@ -178,7 +178,7 @@ class Model:
 
     def stationByID(self, station_id):
         "Return the data for one station, given its ID"
-        for id, lat, lon, ident in self.cached_stations:
+        for id, lat, lon, ident, vars in self.cached_stations:
             if id == station_id:
                 return id, lat, lon, ident
         # Not found in cache, query through elencamele so we can give basic
@@ -458,7 +458,7 @@ class Model:
 
             # Query datetimes
             self.notifyProgress(18, "Querying date and time data...")
-            self.cahced_dtimes = self.queryDateTimes()
+            self.cached_dtimes = self.queryDateTimes()
             t.partial("got date and time data (%d items)" % (len(self.cached_dtimes)))
             self.notifyProgress(30, "Notifying date and time data...")
             for l in self.updateListeners: l.hasData("dtimes")
