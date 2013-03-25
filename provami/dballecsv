@@ -38,11 +38,10 @@ for q in args:
 
 print >>sys.stderr, query
 
-db = dballe.DB()
 if dballe.DB.is_url(opts.dsn):
-    db.connect_from_url(opts.dsn)
+    db = dballe.DB.connect_from_url(opts.dsn)
 else:
-    db.connect(opts.dsn, opts.user, opts.password)
+    db = dballe.DB.connect(opts.dsn, opts.user, opts.password)
 exporter = dballe.dbacsv.export(db, query, sys.stdout)
 
 # vim:set ts=4 sw=4 expandtab:

@@ -259,11 +259,23 @@ class RecordTest(unittest.TestCase):
     def testSetDict(self):
         r = dballe.Record()
         r.update(ana_id=1, lat=12.34567, ident="ciao")
-        #self.assertEqual([x for x in r.iteritems()], [("ana_id", 1), ("ident", "ciao"), ("lat", 12.34567)])
+        self.assertEqual(r["ana_id"], 1)
+        self.assertEqual(r["ident"], "ciao")
+        self.assertEqual(r["lat"], 12.34567)
         self.assertEqual(r.vars(), ())
         r.update(t=290.0)
         self.assertEqual(r.vars(), (dballe.var("B12101", 290.0),))
 
+    def testSetFromString(self):
+        r = dballe.Record()
+        r.set_from_string("ana_id=1")
+        r.set_from_string("lat=12.34567")
+        r.set_from_string("ident=ciao")
+        r.set_from_string("B12101=32.5")
+        self.assertEqual(r["ana_id"], 1)
+        self.assertEqual(r["ident"], "ciao")
+        self.assertEqual(r["lat"], 12.34567)
+        self.assertEqual(r["B12101"], 32.5)
 
     def testRecord(self):
         # Check basic set/get and variable iteration

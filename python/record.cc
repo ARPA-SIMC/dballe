@@ -310,6 +310,22 @@ static PyObject* dpy_Record_clear_vars(dpy_Record* self)
     Py_RETURN_NONE;
 }
 
+static PyObject* dpy_Record_set_from_string(dpy_Record* self, PyObject *args)
+{
+    const char* str = NULL;
+    if (!PyArg_ParseTuple(args, "s", &str))
+        return NULL;
+
+    try {
+        self->rec.set_from_string(str);
+        Py_RETURN_NONE;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
 static PyMethodDef dpy_Record_methods[] = {
     {"clear", (PyCFunction)dpy_Record_clear, METH_NOARGS, "remove all data from the record" },
     {"clear_vars", (PyCFunction)dpy_Record_clear_vars, METH_NOARGS, "remove all variables from the record, leaving the keywords intact" },
@@ -321,6 +337,7 @@ static PyMethodDef dpy_Record_methods[] = {
     {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
     {"date_extremes", (PyCFunction)dpy_Record_date_extremes, METH_NOARGS, "get two datetime objects with the lower and upper bounds of the datetime period in this record" },
     {"set_station_context", (PyCFunction)dpy_Record_set_station_context, METH_NOARGS, "set the date, level and time range values to match the station data context" },
+    {"set_from_string", (PyCFunction)dpy_Record_set_from_string, METH_VARARGS, "set values from a 'key=val' string" },
     {NULL}
 };
 

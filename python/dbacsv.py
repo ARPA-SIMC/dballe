@@ -33,7 +33,7 @@ class Exporter:
     def getattrval (self, x, v):
         data = self.attrData["%d,%s"%(x["context_id"],x["var"])]
         if v in data:
-            return data.getvar(v).format()
+            return data.var(v).format()
         else:
             return ""
 
@@ -154,7 +154,7 @@ class Exporter:
 
         # Variables
         for v in sorted(vars):
-            cols.append([v, lambda x, v=v: x.getvar(v).format("")])
+            cols.append([v, lambda x, v=v: x.var(v).format("")])
 
         # Column for special station ana data
         for av in sorted(anaVars.keys()):
