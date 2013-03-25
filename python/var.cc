@@ -84,10 +84,11 @@ static PyObject* dpy_Var_enq(dpy_Var* self)
     return var_value_to_python(self->var);
 }
 
-static PyObject* dpy_Var_get(dpy_Var* self, PyObject* args)
+static PyObject* dpy_Var_get(dpy_Var* self, PyObject* args, PyObject* kw)
 {
+    static char* kwlist[] = { "default", NULL };
     PyObject* def = Py_None;
-    if (!PyArg_ParseTuple(args, "|O", &def))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", kwlist, &def))
         return NULL;
     if (self->var.isset())
         return var_value_to_python(self->var);
@@ -98,10 +99,11 @@ static PyObject* dpy_Var_get(dpy_Var* self, PyObject* args)
     }
 }
 
-static PyObject* dpy_Var_format(dpy_Var* self, PyObject* args)
+static PyObject* dpy_Var_format(dpy_Var* self, PyObject* args, PyObject* kw)
 {
+    static char* kwlist[] = { "default", NULL };
     const char* def = "";
-    if (!PyArg_ParseTuple(args, "|s", &def))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "|s", kwlist, &def))
         return NULL;
     std::string f = self->var.format(def);
     return PyString_FromString(f.c_str());
@@ -111,7 +113,7 @@ static PyMethodDef dpy_Var_methods[] = {
     {"enqi", (PyCFunction)dpy_Var_enqi, METH_NOARGS, "get the value of the variable, as an int" },
     {"enqd", (PyCFunction)dpy_Var_enqd, METH_NOARGS, "get the value of the variable, as a float" },
     {"enqc", (PyCFunction)dpy_Var_enqc, METH_NOARGS, "get the value of the variable, as a str" },
-    {"enq", (PyCFunction)dpy_Var_enq, METH_NOARGS, "get the value of the variable, as the int, float or str according the variable definition" },
+    {"enq", (PyCFunction)dpy_Var_enq, METH_NOARGS, "get the value of the variable, as int, float or str according the variable definition" },
     {"get", (PyCFunction)dpy_Var_get, METH_VARARGS, "get the value of the variable, with a default if it is unset" },
     {"format", (PyCFunction)dpy_Var_format, METH_VARARGS, "format the value of the variable to a string" },
     {NULL}

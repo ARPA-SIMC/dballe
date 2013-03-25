@@ -32,11 +32,23 @@ dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
 dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex initdballe
 dballe_la_LIBADD = ../dballe/libdballe.la
 
-#_dballe.so: _dballe.la
-#	ln -fs .libs/_dballe.so $@
+doc_DATA = python-dballe.rst
+
+if HAVE_RST2HTML
+doc_DATA += python-dballe.html
+endif
+
+dballe.so: dballe.la
+	ln -fs .libs/dballe.so $@
+
+python-dballe.rst: doc-dballe $(pkgpython_PYTHON) dballe.so
+	$(srcdir)/doc-dballe > $@ || (rm -f $@; false)
+
+python-dballe.html: python-dballe.rst
+	rst2html $< > $@ || (rm -f $@; false)
 
 clean-local:
-	rm -f *.pyc
+	rm -f *.pyc dballe.so
 
 EXTRA_DIST = \
 			 common.h \

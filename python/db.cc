@@ -36,32 +36,19 @@ using namespace wreport;
 
 extern "C" {
 
-/*
-static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val);
-static int dpy_Record_contains(dpy_Record* self, PyObject *value);
-static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key);
-
-static PyObject* dpy_Var_code(dpy_Var* self, void* closure) { return format_varcode(self->var.code()); }
-static PyObject* dpy_Var_isset(dpy_Var* self, void* closure) {
-    if (self->var.isset())
-        return Py_True;
-    else
-        return Py_False;
-}
-*/
-
 static PyGetSetDef dpy_DB_getsetters[] = {
     //{"code", (getter)dpy_Var_code, NULL, "variable code", NULL },
     //{"isset", (getter)dpy_Var_isset, NULL, "true if the value is set", NULL },
     {NULL}
 };
 
-static PyObject* dpy_DB_connect(PyTypeObject *type, PyObject *args)
+static PyObject* dpy_DB_connect(PyTypeObject *type, PyObject *args, PyObject* kw)
 {
+    static char* kwlist[] = { "dsn", "user", "password", NULL };
     const char* dsn;
     const char* user = "";
     const char* pass = "";
-    if (!PyArg_ParseTuple(args, "s|ss", &dsn, &user, &pass))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "s|ss", kwlist, &dsn, &user, &pass))
         return NULL;
 
     auto_ptr<DB> db;
@@ -158,7 +145,7 @@ virtual const std::string& rep_memo_from_cod(int rep_cod) = 0;
 
 static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
 {
-    static char* kwlist[] = { "record", "can_replace", "station_can_add", NULL };
+    static char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
     dpy_Record* record;
     int can_replace = 0;
     int station_can_add = 0;

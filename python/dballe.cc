@@ -91,13 +91,14 @@ static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
     }
 
 
-static PyObject* dballe_describe_level(PyTypeObject *type, PyObject *args)
+static PyObject* dballe_describe_level(PyTypeObject *type, PyObject *args, PyObject* kw)
 {
+    static char* kwlist[] = { "ltype1", "l1", "ltype2", "l2", NULL };
     PyObject* oltype1 = Py_None;
     PyObject* ol1 = Py_None;
     PyObject* oltype2 = Py_None;
     PyObject* ol2 = Py_None;
-    if (!PyArg_ParseTuple(args, "O|OOO", &oltype1, &ol1, &oltype2, &ol2))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OOO", kwlist, &oltype1, &ol1, &oltype2, &ol2))
         return NULL;
 
     get_int_or_missing(ltype1, oltype1);
@@ -110,12 +111,13 @@ static PyObject* dballe_describe_level(PyTypeObject *type, PyObject *args)
     return PyString_FromString(desc.c_str());
 }
 
-static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args)
+static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyObject* kw)
 {
+    static char* kwlist[] = { "pind", "p1", "p2", NULL };
     PyObject* opind = Py_None;
     PyObject* op1 = Py_None;
     PyObject* op2 = Py_None;
-    if (!PyArg_ParseTuple(args, "O|OO", &opind, &op1, &op2))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OO", kwlist, &opind, &op1, &op2))
         return NULL;
 
     get_int_or_missing(pind, opind);
@@ -129,7 +131,7 @@ static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args)
 
 static PyMethodDef dballe_methods[] = {
     {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, "Query the DB-All.e variable table returning a Varinfo" },
-    {"var", (PyCFunction)dballe_var, METH_VARARGS, "Query the DB-All.e variable table returning an undefined Var" },
+    {"var", (PyCFunction)dballe_var, METH_VARARGS, "Query the DB-All.e variable table returning a Var, optionally initialized with a value" },
     {"describe_level", (PyCFunction)dballe_describe_level, METH_VARARGS, "Return a string description for a level" },
     {"describe_trange", (PyCFunction)dballe_describe_trange, METH_VARARGS, "Return a string description for a time range" },
     { NULL }

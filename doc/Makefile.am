@@ -23,9 +23,6 @@ if DO_DBALLEF
 doc_DATA += fapi.ps libdballef.doxytags
 noinst_DATA += fortran_api/index.html
 endif
-if DO_DBALLE_PYTHON
-noinst_DATA += dballe-doc.i
-endif
 if HAVE_LATEX2HTML
 noinst_DATA += \
 	fapi_html/index.html \
@@ -68,9 +65,6 @@ libdballe.doxytags c_api/index.html xml/index.xml: $(cdoxdeps) $(mainpages)
 libdballef.doxytags fortran_api/index.html: $(fortrandoxdeps)
 	doxygen $<
 
-dballe-doc.i: xml/index.xml doxy2swig.py
-	$(srcdir)/doxy2swig.py $< $@
-
 fapi_html/index.html: $(fapisources)
 	$(LATEX2HTML) -dir fapi_html -mkdir $<
 
@@ -105,7 +99,7 @@ fapi.dvi: $(fapisources)
 
 EXTRA_DIST = libdballe.dox $(guidesources) fapi.tex doxy2swig.py add_templates_to_manpage introduzione.odt
 
-CLEANFILES = libdballe.doxytags libdballef.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg} dballe-doc.i
+CLEANFILES = libdballe.doxytags libdballef.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
 
 clean-local:
 	rm -rf {c,fortran}_api

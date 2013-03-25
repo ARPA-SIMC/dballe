@@ -175,11 +175,12 @@ static PyObject* dpy_Record_keys(dpy_Record* self)
     return result;
 }
 
-static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args)
+static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args, PyObject* kw)
 {
+    static char* kwlist[] = { "code", NULL };
     const char* name = NULL;
 
-    if (!PyArg_ParseTuple(args, "|s", &name))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "|s", kwlist, &name))
         return NULL;
 
     try {
@@ -224,12 +225,13 @@ static PyObject* dpy_Record_vars(dpy_Record* self)
     return result;
 }
 
-static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args)
+static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args, PyObject* kw)
 {
+    static char* kwlist[] = { "key", "default", NULL };
     PyObject* key;
     PyObject* def = Py_None;
 
-    if (!PyArg_ParseTuple(args, "O|O", &key, &def))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|O", kwlist, &key, &def))
         return NULL;
 
     int has = dpy_Record_contains(self, key);
