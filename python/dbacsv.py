@@ -69,7 +69,7 @@ class Exporter:
                     val = v.get()
                     if v.code in anaVars:
                         if anaVars[v.code] != val:
-                            anaVars[v] = None
+                            anaVars[v.code] = None
                     else:
                         anaVars[v.code] = val
                     #print id, v, items[v].format('none')
