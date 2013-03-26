@@ -26,24 +26,20 @@
 #include <set>
 
 using namespace dballe;
+using namespace dballe::db;
 using namespace wreport;
 using namespace std;
 
 namespace tut {
 
-#warning this needs to be run twice, once for each format
 struct db_import_shar : public dballe::tests::db_test
 {
     Record query;
 
-    db_import_shar() : dballe::tests::db_test(db::V5)
-    {
-        if (!has_db()) return;
-    }
-
-    ~db_import_shar()
-    {
-    }
+    void test_crex();
+    void test_bufr();
+    void test_aof();
+    void test_multi();
 };
 TESTGRP(db_import);
 
@@ -60,12 +56,11 @@ struct MsgCollector : public vector<Msg*>, public MsgConsumer
     }
 };
 
-// Test import/export with all CREX samples
-template<> template<>
-void to::test<1>()
+template<> template<> void to::test<1>() { use_db(V5); test_crex(); }
+template<> template<> void to::test<2>() { use_db(V6); test_crex(); }
+void db_import_shar::test_crex()
 {
-    use_db();
-
+    // Test import/export with all CREX samples
     const char** files = dballe::tests::crex_files;
     for (int i = 0; files[i] != NULL; ++i)
     {
@@ -111,11 +106,11 @@ void to::test<1>()
     }
 }
 
-// Test import/export with all BUFR samples
-template<> template<>
-void to::test<2>()
+template<> template<> void to::test<3>() { use_db(V5); test_bufr(); }
+template<> template<> void to::test<4>() { use_db(V6); test_bufr(); }
+void db_import_shar::test_bufr()
 {
-    use_db();
+    // Test import/export with all BUFR samples
 
     const char** files = dballe::tests::bufr_files;
     for (int i = 0; files[i] != NULL; i++)
@@ -161,12 +156,11 @@ void to::test<2>()
     }
 }
 
-// Test import/export with all AOF samples
-template<> template<>
-void to::test<3>()
+template<> template<> void to::test<5>() { use_db(V5); test_aof(); }
+template<> template<> void to::test<6>() { use_db(V6); test_aof(); }
+void db_import_shar::test_aof()
 {
-    use_db();
-
+    // Test import/export with all AOF samples
     const char** files = dballe::tests::aof_files;
     for (int i = 0; files[i] != NULL; i++)
     {
@@ -213,11 +207,11 @@ void to::test<3>()
     }
 }
 
-// Check that multiple messages are correctly identified during export
-template<> template<>
-void to::test<4>()
+template<> template<> void to::test<7>() { use_db(V5); test_multi(); }
+template<> template<> void to::test<8>() { use_db(V6); test_multi(); }
+void db_import_shar::test_multi()
 {
-    use_db();
+    // Check that multiple messages are correctly identified during export
 
     // msg1 has latitude 33.88
     // msg2 has latitude 46.22

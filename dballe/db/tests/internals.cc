@@ -30,8 +30,7 @@ namespace tut {
 
 struct db_internals_shar : public dballe::tests::db_test
 {
-    db_internals_shar()
-        : dballe::tests::db_test(db::V5, false)
+    db_internals_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
     }

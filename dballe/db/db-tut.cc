@@ -42,35 +42,40 @@ static int print_results(db::Cursor& cur)
     return i;
 }
 
-#warning this needs to be called twice, once for each db type
 struct db_shar : public dballe::tests::DB_test_base
 {
-    db_shar() : dballe::tests::DB_test_base(db::V5)
-    {
-    }
-
+    void test_reset();
+    void test_insert();
+    void test_ana_query();
+    void test_misc_queries();
+    void test_querybest();
+    void test_deletion();
+    void test_datetime_queries();
+    void test_qc();
+    void test_ana_queries();
+    void test_vacuum();
+    void test_attrs();
+    void test_wrap_longitude();
+    void test_invalid_sql_querybest();
+    void test_ana_filter();
+    void test_datetime_extremes();
+    void test_bug_querybest();
 };
 TESTGRP(db);
 
-// Ensure that reset will work on an empty database
-template<> template<>
-void to::test<1>()
+template<> template<> void to::test<1>() { use_db(db::V5); test_reset(); }
+template<> template<> void to::test<2>() { use_db(db::V6); test_reset(); }
+void db_shar::test_reset()
 {
-    use_db();
-
     // Run twice to see if it is idempotent
     db->reset();
     db->reset();
 }
 
-// Test insert
-template<> template<>
-void to::test<2>()
+template<> template<> void to::test<3>() { use_db(db::V5); test_insert(); }
+template<> template<> void to::test<4>() { use_db(db::V6); test_insert(); }
+void db_shar::test_insert()
 {
-    use_db();
-
-    db->reset();
-
     // Prepare a record to insert
     insert.clear();
     insert.add(sampleAna);
@@ -98,15 +103,12 @@ void to::test<2>()
     } catch (wreport::error& e) {
         // ensure_contains(e.what(), "uplicate");
     }
-
 }
 
-// Test ana_query
-template<> template<>
-void to::test<3>()
+template<> template<> void to::test<5>() { use_db(db::V5); test_ana_query(); }
+template<> template<> void to::test<6>() { use_db(db::V6); test_ana_query(); }
+void db_shar::test_ana_query()
 {
-    use_db();
-
     populate_database();
 
     /*
@@ -133,12 +135,10 @@ void to::test<3>()
     ensure(!cur->next());
 }
 
-// Try many possible queries
-template<> template<>
-void to::test<4>()
+template<> template<> void to::test<7>() { use_db(V5); test_misc_queries(); }
+template<> template<> void to::test<8>() { use_db(V6); test_misc_queries(); }
+void db_shar::test_misc_queries()
 {
-    use_db();
-
     populate_database();
 
 /* Try a query using a KEY query parameter */
@@ -275,11 +275,10 @@ void to::test<4>()
     TRY_QUERY(DBA_KEY_PRIOMAX, 110, 4);
 }
 
-// Try a query for best value
-template<> template<>
-void to::test<5>()
+template<> template<> void to::test< 9>() { use_db(V5); test_querybest(); }
+template<> template<> void to::test<10>() { use_db(V6); test_querybest(); }
+void db_shar::test_querybest()
 {
-    use_db();
     populate_database();
 
     //if (db->server_type == ORACLE || db->server_type == POSTGRES)
@@ -309,11 +308,10 @@ void to::test<5>()
     ensure(!cur->next());
 }
 
-// Check if deletion works
-template<> template<>
-void to::test<6>()
+template<> template<> void to::test<11>() { use_db(V5); test_deletion(); }
+template<> template<> void to::test<12>() { use_db(V6); test_deletion(); }
+void db_shar::test_deletion()
 {
-    use_db();
     populate_database();
 
     // 4 items to begin with
@@ -377,12 +375,10 @@ void to::test<6>()
     }
 }
 
-/* Test datetime queries */
-template<> template<>
-void to::test<7>()
+template<> template<> void to::test<13>() { use_db(V5); test_datetime_queries(); }
+template<> template<> void to::test<14>() { use_db(V6); test_datetime_queries(); }
+void db_shar::test_datetime_queries()
 {
-    use_db();
-
     /* Prepare test data */
     Record base, a, b;
 
@@ -616,11 +612,10 @@ void to::test<7>()
     WANTRESULT(b);
 }
 
-// Test working with QC data
-template<> template<>
-void to::test<8>()
+template<> template<> void to::test<15>() { use_db(V5); test_qc(); }
+template<> template<> void to::test<16>() { use_db(V6); test_qc(); }
+void db_shar::test_qc()
 {
-    use_db();
     populate_database();
 
     query.clear();
@@ -694,11 +689,10 @@ void to::test<8>()
     /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
 }
 
-// Test ana queries
-template<> template<>
-void to::test<9>()
+template<> template<> void to::test<17>() { use_db(V5); test_ana_queries(); }
+template<> template<> void to::test<18>() { use_db(V6); test_ana_queries(); }
+void db_shar::test_ana_queries()
 {
-    use_db();
     populate_database();
 
     query.clear();
@@ -711,23 +705,17 @@ void to::test<9>()
     ensure(!cur->next());
 }
 
-// Run a search for orphan elements
-template<> template<>
-void to::test<10>()
+template<> template<> void to::test<19>() { use_db(V5); test_vacuum(); }
+template<> template<> void to::test<20>() { use_db(V6); test_vacuum(); }
+void db_shar::test_vacuum()
 {
-    use_db();
-
     db->vacuum();
 }
 
-// Insert some attributes and try to read them again
-template<> template<>
-void to::test<11>()
+template<> template<> void to::test<21>() { use_db(V5); test_attrs(); }
+template<> template<> void to::test<22>() { use_db(V6); test_attrs(); }
+void db_shar::test_attrs()
 {
-    use_db();
-    // Start with an empty database
-    db->reset();
-
     // Insert a data record
     insert.clear();
     insert.add(sampleAna);
@@ -774,15 +762,10 @@ void to::test<11>()
     ensure_varcode_equals(vars[9]->code(), WR_VAR(0,  33, 32)); ensure_var_equals(*vars[9],  6);
 }
 
-/* Query using lonmin > latmax */
-template<> template<>
-void to::test<12>()
+template<> template<> void to::test<23>() { use_db(V5); test_wrap_longitude(); }
+template<> template<> void to::test<24>() { use_db(V6); test_wrap_longitude(); }
+void db_shar::test_wrap_longitude()
 {
-    use_db();
-
-    // Start with an empty database
-    db->reset();
-
     // Insert a data record
     insert.clear();
     insert.add(sampleAna);
@@ -803,13 +786,12 @@ void to::test<12>()
     cur->discard_rest();
 }
 
-// Reproduce a querybest scenario which produced invalid SQL
-template<> template<>
-void to::test<13>()
+template<> template<> void to::test<25>() { use_db(V5); test_invalid_sql_querybest(); }
+template<> template<> void to::test<26>() { use_db(V6); test_invalid_sql_querybest(); }
+void db_shar::test_invalid_sql_querybest()
 {
-    use_db();
+// Reproduce a querybest scenario which produced invalid SQL
     populate_database();
-
     // SELECT pa.lat, pa.lon, pa.ident,
     //        d.datetime, d.id_report, d.id_var, d.value,
     //        ri.prio, pa.id, d.id, d.id_lev_tr
@@ -834,11 +816,11 @@ void to::test<13>()
     }
 }
 
-// Test numeric comparisons in ana_filter
-template<> template<>
-void to::test<14>()
+template<> template<> void to::test<27>() { use_db(V5); test_ana_filter(); }
+template<> template<> void to::test<28>() { use_db(V6); test_ana_filter(); }
+void db_shar::test_ana_filter()
 {
-    use_db();
+    // Test numeric comparisons in ana_filter
     populate_database();
 
     query.clear();
@@ -909,11 +891,10 @@ void to::test<14>()
     cur->discard_rest();
 }
 
-// Test querying datetime ranges
-template<> template<>
-void to::test<15>()
+template<> template<> void to::test<29>() { use_db(V5); test_datetime_extremes(); }
+template<> template<> void to::test<30>() { use_db(V6); test_datetime_extremes(); }
+void db_shar::test_datetime_extremes()
 {
-    use_db();
     populate_database();
 
     // All DB
@@ -975,12 +956,11 @@ void to::test<15>()
     ensure_equals(result.get("secmax",   -1), -1);
 }
 
-// Reproduce a querybest scenario which produced always the same data record
-template<> template<>
-void to::test<16>()
+template<> template<> void to::test<31>() { use_db(V5); test_bug_querybest(); }
+template<> template<> void to::test<32>() { use_db(V6); test_bug_querybest(); }
+void db_shar::test_bug_querybest()
 {
-    use_db();
-    db->reset();
+    // Reproduce a querybest scenario which produced always the same data record
 
     // Import lots
     const char** files = dballe::tests::bufr_files;

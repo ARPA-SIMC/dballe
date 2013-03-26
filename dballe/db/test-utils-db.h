@@ -40,12 +40,14 @@ struct db_test
     db::Format orig_format;
 
     bool has_db() const { return db.get() != NULL; }
-    void use_db();
+    void use_db(bool reset=true);
+    void use_db(db::Format format, bool reset=true);
 
     db::v5::DB& v5();
     db::v6::DB& v6();
 
-	db_test(db::Format format, bool reset=true);
+	db_test();
+	db_test(db::Format format);
 	~db_test();
 };
 
@@ -69,7 +71,10 @@ struct DB_test_base : public db_test
     Record result;
     Record qc;
 
+    DB_test_base();
     DB_test_base(db::Format format);
+
+    void init_records();
 
     void populate_database();
 };

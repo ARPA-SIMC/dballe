@@ -27,62 +27,58 @@ using namespace std;
 
 namespace tut {
 
-#warning This needs to be run twice
 struct db_export_shar : public dballe::tests::db_test
 {
-	db_export_shar() : dballe::tests::db_test(db::V5)
-	{
-		if (!has_db()) return;
-
-		// Insert some data
+    void populate_database()
+    {
+        // Insert some data
         Record rec;
-		rec.set(DBA_KEY_LAT, 12.34560);
-		rec.set(DBA_KEY_LON, 76.54321);
-		rec.set(DBA_KEY_MOBILE, 0);
+        rec.set(DBA_KEY_LAT, 12.34560);
+        rec.set(DBA_KEY_LON, 76.54321);
+        rec.set(DBA_KEY_MOBILE, 0);
 
-		rec.set(DBA_KEY_YEAR, 1945);
-		rec.set(DBA_KEY_MONTH, 4);
-		rec.set(DBA_KEY_DAY, 25);
-		rec.set(DBA_KEY_HOUR, 8);
-		rec.set(DBA_KEY_MIN, 0);
+        rec.set(DBA_KEY_YEAR, 1945);
+        rec.set(DBA_KEY_MONTH, 4);
+        rec.set(DBA_KEY_DAY, 25);
+        rec.set(DBA_KEY_HOUR, 8);
+        rec.set(DBA_KEY_MIN, 0);
 
-		rec.set(DBA_KEY_LEVELTYPE1, 1);
-		rec.set(DBA_KEY_L1, 2);
-		rec.set(DBA_KEY_LEVELTYPE2, 0);
-		rec.set(DBA_KEY_L2, 3);
-		rec.set(DBA_KEY_PINDICATOR, 4);
-		rec.set(DBA_KEY_P1, 5);
-		rec.set(DBA_KEY_P2, 6);
+        rec.set(DBA_KEY_LEVELTYPE1, 1);
+        rec.set(DBA_KEY_L1, 2);
+        rec.set(DBA_KEY_LEVELTYPE2, 0);
+        rec.set(DBA_KEY_L2, 3);
+        rec.set(DBA_KEY_PINDICATOR, 4);
+        rec.set(DBA_KEY_P1, 5);
+        rec.set(DBA_KEY_P2, 6);
 
-		rec.set(DBA_KEY_REP_COD, 1);
+        rec.set(DBA_KEY_REP_COD, 1);
 
-		rec.set(WR_VAR(0, 1, 12), 500);
+        rec.set(WR_VAR(0, 1, 12), 500);
 
         db->insert(rec, false, true);
 
         rec.unset(DBA_KEY_ANA_ID);
         rec.unset(DBA_KEY_CONTEXT_ID);
-		rec.set(DBA_KEY_DAY, 26);
-		rec.set(WR_VAR(0, 1, 12), 400);
+        rec.set(DBA_KEY_DAY, 26);
+        rec.set(WR_VAR(0, 1, 12), 400);
         db->insert(rec, false, true);
 
         rec.unset(DBA_KEY_ANA_ID);
         rec.unset(DBA_KEY_CONTEXT_ID);
-		rec.set(DBA_KEY_MOBILE, 1);
-		rec.set(DBA_KEY_IDENT, "ciao");
-		rec.set(WR_VAR(0, 1, 12), 300);
+        rec.set(DBA_KEY_MOBILE, 1);
+        rec.set(DBA_KEY_IDENT, "ciao");
+        rec.set(WR_VAR(0, 1, 12), 300);
         db->insert(rec, false, true);
 
         rec.unset(DBA_KEY_ANA_ID);
         rec.unset(DBA_KEY_CONTEXT_ID);
-		rec.set(DBA_KEY_REP_COD, 2);
-		rec.set(WR_VAR(0, 1, 12), 200);
+        rec.set(DBA_KEY_REP_COD, 2);
+        rec.set(WR_VAR(0, 1, 12), 200);
         db->insert(rec, false, true);
-	}
+    }
 
-	~db_export_shar()
-	{
-	}
+    void test_simple_export();
+    void test_station_info_export();
 };
 TESTGRP(db_export);
 
@@ -99,12 +95,13 @@ struct MsgCollector : public vector<Msg*>, public MsgConsumer
     }
 };
 
-// Put some data in the database and check that it gets exported properly
-template<> template<>
-void to::test<1>()
+template<> template<> void to::test<1>() { use_db(db::V5); test_simple_export(); }
+template<> template<> void to::test<2>() { use_db(db::V6); test_simple_export(); }
+void db_export_shar::test_simple_export()
 {
-	use_db();
+    populate_database();
 
+    // Put some data in the database and check that it gets exported properly
 	// Query back the data
     Record query;
 
@@ -165,12 +162,11 @@ void to::test<1>()
 	ensure_var_equals(want_var(*msgs[3], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 200);
 }
 
-// Text exporting of extra station information
-template<> template<>
-void to::test<2>()
+template<> template<> void to::test<3>() { use_db(db::V5); test_station_info_export(); }
+template<> template<> void to::test<4>() { use_db(db::V6); test_station_info_export(); }
+void db_export_shar::test_station_info_export()
 {
-	use_db();
-    db->reset();
+    // Text exporting of extra station information
 
     // Import some data in the station extra information context
     Record in;

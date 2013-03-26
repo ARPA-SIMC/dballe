@@ -32,12 +32,16 @@ using namespace wreport;
 namespace dballe {
 namespace tests {
 
-db_test::db_test(db::Format format, bool reset) : db(NULL)
+db_test::db_test() : db(NULL)
+{
+    orig_format = DB::get_default_format();
+}
+
+db_test::db_test(db::Format format) : db(NULL)
 {
     orig_format = DB::get_default_format();
     DB::set_default_format(format);
     db = DB::connect_test();
-    if (reset) db->reset();
 }
 
 db_test::~db_test()
@@ -45,9 +49,20 @@ db_test::~db_test()
     DB::set_default_format(orig_format);
 }
 
-void db_test::use_db()
+void db_test::use_db(bool reset)
 {
     if (!has_db()) throw tut::no_such_test();
+    if (reset) db->reset();
+}
+
+void db_test::use_db(db::Format format, bool reset)
+{
+    if (!db.get())
+    {
+        DB::set_default_format(format);
+        db = DB::connect_test();
+    }
+    use_db(reset);
 }
 
 db::v5::DB& db_test::v5()
@@ -66,11 +81,17 @@ db::v6::DB& db_test::v6()
         throw error_consistency("test DB is not a v6 DB");
 }
 
-DB_test_base::DB_test_base(db::Format format)
-    : db_test(format)
+DB_test_base::DB_test_base()
 {
-    if (!has_db()) return;
+    init_records();
+}
+DB_test_base::DB_test_base(db::Format format) : db_test(format)
+{
+    init_records();
+}
 
+void DB_test_base::init_records()
+{
     // Common data (ana)
     sampleAna.set(DBA_KEY_LAT, 12.34560);
     sampleAna.set(DBA_KEY_LON, 76.54320);
