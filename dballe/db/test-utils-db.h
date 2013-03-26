@@ -47,7 +47,7 @@ struct db_test
     db::v6::DB& v6();
 
 	db_test();
-	db_test(db::Format format);
+	db_test(db::Format format, bool reset=true);
 	~db_test();
 };
 

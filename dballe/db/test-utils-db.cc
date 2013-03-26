@@ -37,11 +37,12 @@ db_test::db_test() : db(NULL)
     orig_format = DB::get_default_format();
 }
 
-db_test::db_test(db::Format format) : db(NULL)
+db_test::db_test(db::Format format, bool reset) : db(NULL)
 {
     orig_format = DB::get_default_format();
     DB::set_default_format(format);
     db = DB::connect_test();
+    if (reset) db->reset();
 }
 
 db_test::~db_test()
