@@ -21,7 +21,7 @@
 
 #include "db.h"
 #include "dballe/db/internals.h"
-#include "dballe/db/v5/repinfo.h"
+#include "dballe/db/v6/repinfo.h"
 #include "dballe/db/v5/station.h"
 #include "lev_tr.h"
 #include "data.h"
@@ -359,10 +359,10 @@ void DB::open_file(const char* pathname)
     open_generic(buf.c_str());
 }
 
-v5::Repinfo& DB::repinfo()
+v6::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
-        m_repinfo = new v5::Repinfo(conn);
+        m_repinfo = new Repinfo(conn);
     return *m_repinfo;
 }
 
@@ -539,7 +539,7 @@ void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int*
 
 int DB::get_rep_cod(Record& rec)
 {
-    v5::Repinfo& ri = repinfo();
+    v6::Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
     {
         int id = ri.get_id(memo);

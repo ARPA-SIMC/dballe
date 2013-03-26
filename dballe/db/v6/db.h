@@ -97,11 +97,11 @@ struct Statement;
 struct Sequence;
 
 namespace v5 {
-struct Repinfo;
 struct Station;
 }
 
 namespace v6 {
+struct Repinfo;
 struct LevTr;
 struct LevTrCache;
 struct Data;
@@ -137,7 +137,7 @@ protected:
      * @{
      */
     /** Report information */
-    struct v5::Repinfo* m_repinfo;
+    struct v6::Repinfo* m_repinfo;
     /** Station information */
     struct v5::Station* m_station;
     /** Level/timerange information */
@@ -179,7 +179,7 @@ public:
     void open_file(const char* pathname);
 
     /// Access the repinfo table
-    v5::Repinfo& repinfo();
+    v6::Repinfo& repinfo();
 
     /// Access the station table
     v5::Station& station();

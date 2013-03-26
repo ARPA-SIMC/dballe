@@ -1,5 +1,5 @@
 /*
- * db/repinfo - repinfo table management
+ * db/v5/repinfo - repinfo table management
  *
  * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -102,8 +102,8 @@ struct Repinfo
 	 */
 	Connection* conn;
 
-	Repinfo(Connection* conn);
-	~Repinfo();
+    Repinfo(Connection* conn);
+    virtual ~Repinfo();
 
 	/**
 	 * Invalidate the repinfo cache.  To be called if the repinfo table is modified
@@ -176,6 +176,9 @@ struct Repinfo
     void dump(FILE* out);
 
 protected:
+    /// Return how many time this ID is used in the database
+    virtual int id_use_count(unsigned id, const char* name);
+
 	void read_cache();
 	void cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea);
 	void rebuild_memo_idx() const;

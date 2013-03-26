@@ -1,5 +1,5 @@
 /*
- * db/repinfo - repinfo table management
+ * db/v5/repinfo - repinfo table management
  *
  * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -329,6 +329,20 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 	return newitems;
 }
 
+int Repinfo::id_use_count(unsigned id, const char* name)
+{
+    DBALLE_SQL_C_UINT_TYPE dbid = id;
+    DBALLE_SQL_C_UINT_TYPE count;
+    db::Statement stm(*conn);
+    stm.prepare("SELECT COUNT(1) FROM context WHERE id_report = ?");
+    stm.bind_in(1, dbid);
+    stm.bind_out(1, count);
+    stm.execute();
+    if (!stm.fetch_expecting_one())
+        error_consistency::throwf("%s is in cache but not in the database (database externally modified?)", name);
+    return count;
+}
+
 void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated)
 {
 	*added = *deleted = *updated = 0;
@@ -336,33 +350,17 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 	// Read the new repinfo data from file
 	vector<repinfo::Cache> newitems = read_repinfo_file(deffile);
 
-	// Verify that we are not trying to delete a repinfo entry that is
-	// used in some data context
-	{
-		DBALLE_SQL_C_UINT_TYPE id;
-		DBALLE_SQL_C_UINT_TYPE count;
-		db::Statement stm(*conn);
-		stm.prepare("SELECT COUNT(1) FROM context WHERE id_report = ?");
-		stm.bind_in(1, id);
-		stm.bind_out(1, count);
-
-		for (size_t i = 0; i < cache.size(); ++i)
-		{
-			/* Ensure that we are not deleting a repinfo entry that is already in use */
-			if (!cache[i].memo.empty() && cache[i].new_memo.empty())
-			{
-				id = cache[i].id;
-				stm.execute();
-				if (!stm.fetch_expecting_one())
-					error_consistency::throwf("%s is in cache but not in the database (database externally modified?)",
-							cache[i].memo.c_str());
-				if (count > 0)
-					error_consistency::throwf(
-							"trying to delete repinfo entry %u,%s which is currently in use",
-							(unsigned)cache[i].id, cache[i].memo.c_str());
-			}
-		}
-	}
+    // Verify that we are not trying to delete a repinfo entry that is
+    // in use
+    for (size_t i = 0; i < cache.size(); ++i)
+    {
+        /* Ensure that we are not deleting a repinfo entry that is already in use */
+        if (!cache[i].memo.empty() && cache[i].new_memo.empty())
+            if (id_use_count(cache[i].id, cache[i].memo.c_str()) > 0)
+                error_consistency::throwf(
+                        "trying to delete repinfo entry %u,%s which is currently in use",
+                        (unsigned)cache[i].id, cache[i].memo.c_str());
+    }
 
 	/* Perform the changes */
 

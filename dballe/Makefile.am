@@ -78,6 +78,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v5/repinfo.h \
 	db/v5/station.h \
 	db/v6/db.h \
+	db/v6/repinfo.h \
 	db/v6/attr.h \
 	db/v6/lev_tr.h \
 	db/v6/cursor.h \
@@ -147,6 +148,7 @@ libdballe_la_SOURCES += \
 	db/v5/db.cc \
 	db/v5/import.cc \
 	db/v5/export.cc \
+	db/v6/repinfo.cc \
 	db/v6/lev_tr.cc \
 	db/v6/data.cc \
 	db/v6/attr.cc \

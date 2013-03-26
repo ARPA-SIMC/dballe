@@ -22,7 +22,7 @@
 #include "cursor.h"
 #include "db.h"
 #include "dballe/db/internals.h"
-#include "dballe/db/v5/repinfo.h"
+#include "dballe/db/v6/repinfo.h"
 
 #include <wreport/var.h>
 #include <dballe/core/defs.h>
@@ -289,7 +289,7 @@ void Cursor::to_record(Record& rec)
      * just overwrite the previous ones, as the range of output parameters does
      * not change */
     /* dba_record_clear(rec); */
-    db::v5::Repinfo& ri = db.repinfo();
+    db::v6::Repinfo& ri = db.repinfo();
 
     if (from_wanted & DBA_DB_FROM_PA)
     {
