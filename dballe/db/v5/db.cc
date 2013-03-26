@@ -52,11 +52,11 @@ namespace v5 {
 
 static const char* init_tables[] = {
     // Delete 'pseudoana' to clean up pre-5.0 databases
-    "attr", "data", "context", "station", "repinfo", "pseudoana"
+    "attr", "data", "context", "repinfo", "pseudoana"
 };
 static const char* init_sequences[] = {
     // Delete 'seq_pseudoana' to clean up pre-5.0 databases
-    "seq_context", "seq_station", "seq_pseudoana"
+    "seq_context", "seq_pseudoana"
 };
 static const char* init_functions[] = {
 /*  "identity (val anyelement, val1 anyelement)", */
@@ -78,14 +78,6 @@ static const char* init_queries_mysql[] = {
     "   tablea       INTEGER NOT NULL,"
     "   UNIQUE INDEX (prio),"
     "   UNIQUE INDEX (memo)"
-    ") " TABLETYPE,
-    "CREATE TABLE station ("
-    "   id         INTEGER auto_increment PRIMARY KEY,"
-    "   lat        INTEGER NOT NULL,"
-    "   lon        INTEGER NOT NULL,"
-    "   ident      CHAR(64),"
-    "   UNIQUE INDEX(lat, lon, ident(8)),"
-    "   INDEX(lon)"
     ") " TABLETYPE,
     "CREATE TABLE context ("
     "   id          INTEGER auto_increment PRIMARY KEY,"
@@ -144,15 +136,6 @@ static const char* init_queries_postgres[] = {
     ") ",
     "CREATE UNIQUE INDEX ri_memo_uniq ON repinfo(memo)",
     "CREATE UNIQUE INDEX ri_prio_uniq ON repinfo(prio)",
-    "CREATE SEQUENCE seq_station",
-    "CREATE TABLE station ("
-    "   id         INTEGER PRIMARY KEY,"
-    "   lat        INTEGER NOT NULL,"
-    "   lon        INTEGER NOT NULL,"
-    "   ident      VARCHAR(64)"
-    ") ",
-    "CREATE UNIQUE INDEX pa_uniq ON station(lat, lon, ident)",
-    "CREATE INDEX pa_lon ON station(lon)",
     "CREATE SEQUENCE seq_context",
     "CREATE TABLE context ("
     "   id          SERIAL PRIMARY KEY,"
@@ -225,14 +208,6 @@ static const char* init_queries_sqlite[] = {
     "   UNIQUE (prio),"
     "   UNIQUE (memo)"
     ") ",
-    "CREATE TABLE station ("
-    "   id         INTEGER PRIMARY KEY,"
-    "   lat        INTEGER NOT NULL,"
-    "   lon        INTEGER NOT NULL,"
-    "   ident      CHAR(64),"
-    "   UNIQUE (lat, lon, ident)"
-    ") ",
-    "CREATE INDEX pa_lon ON station(lon)",
     "CREATE TABLE context ("
     "   id          INTEGER PRIMARY KEY,"
     "   id_ana      INTEGER NOT NULL,"
@@ -290,15 +265,6 @@ static const char* init_queries_oracle[] = {
     "   UNIQUE (prio),"
     "   UNIQUE (memo)"
     ") ",
-    "CREATE TABLE station ("
-    "   id         INTEGER PRIMARY KEY,"
-    "   lat        INTEGER NOT NULL,"
-    "   lon        INTEGER NOT NULL,"
-    "   ident      VARCHAR2(64),"
-    "   UNIQUE (lat, lon, ident)"
-    ") ",
-    "CREATE INDEX pa_lon ON station(lon)",
-    "CREATE SEQUENCE seq_station",
     "CREATE TABLE context ("
     "   id          INTEGER PRIMARY KEY,"
     "   id_ana      INTEGER NOT NULL,"
@@ -442,7 +408,7 @@ Repinfo& DB::repinfo()
 Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = new Station(*this);
+        m_station = new Station(*this->conn);
     return *m_station;
 }
 
@@ -570,6 +536,8 @@ void DB::reset(const char* repinfo_file)
     if (in == NULL)
         return dba_error_system("opening file %s", repinfo_file);
     */
+
+    Station::reset_db(*conn);
 
     /* Drop existing tables */
     delete_tables();

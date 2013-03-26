@@ -1,5 +1,5 @@
 /*
- * dballe/db - Archive for point-based meteorological data
+ * dballe/v5/db - Archive for point-based meteorological data, db layout version 5
  *
  * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -24,7 +24,6 @@
 
 #include <dballe/db/odbcworkarounds.h>
 #include <dballe/db/db.h>
-#include <dballe/db/v5/cursor.h>
 #include <wreport/varinfo.h>
 #include <string>
 #include <vector>
@@ -163,9 +162,10 @@ protected:
 	 */
 	void fill_ana_layer(Msg& msg, int id_station, int id_report);
 
+    DB();
+
 public:
-	DB();
-	~DB();
+    ~DB();
 
 	/**
 	 * Start a session with DB-All.e
@@ -479,6 +479,8 @@ public:
          * Dump the entire contents of the database to an output stream
          */
 	void dump(FILE* out);
+
+    friend class dballe::DB;
 };
 
 } // namespace v5

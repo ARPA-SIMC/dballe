@@ -21,7 +21,6 @@
 
 #include "station.h"
 #include "dballe/db/internals.h"
-#include "db.h"
 
 #include <cstring>
 #include <sql.h>
@@ -33,8 +32,56 @@ namespace dballe {
 namespace db {
 namespace v5 {
 
-Station::Station(DB& db)
-    : db(db), sfstm(0), smstm(0), sstm(0), istm(0), ustm(0), dstm(0)
+#ifdef DBA_USE_TRANSACTIONS
+#define TABLETYPE "ENGINE=InnoDB;"
+#else
+#define TABLETYPE ";"
+#endif
+static const char* init_queries_mysql[] = {
+    "CREATE TABLE station ("
+    "   id         INTEGER auto_increment PRIMARY KEY,"
+    "   lat        INTEGER NOT NULL,"
+    "   lon        INTEGER NOT NULL,"
+    "   ident      CHAR(64),"
+    "   UNIQUE INDEX(lat, lon, ident(8)),"
+    "   INDEX(lon)"
+    ") " TABLETYPE,
+};
+static const char* init_queries_postgres[] = {
+    "CREATE TABLE station ("
+    "   id         SERIAL PRIMARY KEY,"
+    "   lat        INTEGER NOT NULL,"
+    "   lon        INTEGER NOT NULL,"
+    "   ident      VARCHAR(64)"
+    ") ",
+    "CREATE UNIQUE INDEX pa_uniq ON station(lat, lon, ident)",
+    "CREATE INDEX pa_lon ON station(lon)",
+};
+static const char* init_queries_sqlite[] = {
+    "CREATE TABLE station ("
+    "   id         INTEGER PRIMARY KEY,"
+    "   lat        INTEGER NOT NULL,"
+    "   lon        INTEGER NOT NULL,"
+    "   ident      CHAR(64),"
+    "   UNIQUE (lat, lon, ident)"
+    ") ",
+    "CREATE INDEX pa_lon ON station(lon)",
+};
+static const char* init_queries_oracle[] = {
+    "CREATE TABLE station ("
+    "   id         INTEGER PRIMARY KEY,"
+    "   lat        INTEGER NOT NULL,"
+    "   lon        INTEGER NOT NULL,"
+    "   ident      VARCHAR2(64),"
+    "   UNIQUE (lat, lon, ident)"
+    ") ",
+    "CREATE INDEX pa_lon ON station(lon)",
+    "CREATE SEQUENCE seq_station",
+};
+
+
+Station::Station(Connection& conn)
+    : conn(conn), seq_station(0), sfstm(0), smstm(0), sstm(0), istm(0), ustm(0), dstm(0)
 {
     const char* select_fixed_query =
         "SELECT id FROM station WHERE lat=? AND lon=? AND ident IS NULL";
@@ -51,9 +98,10 @@ Station::Station(DB& db)
         "DELETE FROM station WHERE id=?";
 
     /* Override queries for some databases */
-    switch (db.conn->server_type)
+    switch (conn.server_type)
     {
         case ORACLE:
+            seq_station = new db::Sequence(conn, "station_id_seq");
             insert_query = "INSERT INTO station (id, lat, lon, ident) VALUES (seq_station.NextVal, ?, ?, ?)";
             break;
         case POSTGRES:
@@ -63,14 +111,14 @@ Station::Station(DB& db)
     }
 
     /* Create the statement for select fixed */
-    sfstm = new Statement(*db.conn);
+    sfstm = new Statement(conn);
     sfstm->bind_in(1, lat);
     sfstm->bind_in(2, lon);
     sfstm->bind_out(1, id);
     sfstm->prepare(select_fixed_query);
 
     /* Create the statement for select mobile */
-    smstm = new Statement(*db.conn);
+    smstm = new Statement(conn);
     smstm->bind_in(1, lat);
     smstm->bind_in(2, lon);
     smstm->bind_in(3, ident, ident_ind);
@@ -78,7 +126,7 @@ Station::Station(DB& db)
     smstm->prepare(select_mobile_query);
 
     /* Create the statement for select station data */
-    sstm = new Statement(*db.conn);
+    sstm = new Statement(conn);
     sstm->bind_in(1, id);
     sstm->bind_out(1, lat);
     sstm->bind_out(2, lon);
@@ -86,14 +134,14 @@ Station::Station(DB& db)
     sstm->prepare(select_query);
 
     /* Create the statement for insert */
-    istm = new Statement(*db.conn);
+    istm = new Statement(conn);
     istm->bind_in(1, lat);
     istm->bind_in(2, lon);
     istm->bind_in(3, ident, ident_ind);
     istm->prepare(insert_query);
 
     /* Create the statement for update */
-    ustm = new Statement(*db.conn);
+    ustm = new Statement(conn);
     ustm->bind_in(1, lat);
     ustm->bind_in(2, lon);
     ustm->bind_in(3, ident, ident_ind);
@@ -101,7 +149,7 @@ Station::Station(DB& db)
     ustm->prepare(update_query);
 
     /* Create the statement for remove */
-    dstm = new Statement(*db.conn);
+    dstm = new Statement(conn);
     dstm->bind_in(1, id);
     dstm->prepare(remove_query);
 }
@@ -114,6 +162,7 @@ Station::~Station()
     if (istm) delete istm;
     if (ustm) delete ustm;
     if (dstm) delete dstm;
+    if (seq_station) delete seq_station;
 }
 
 void Station::set_ident(const char* val)
@@ -156,7 +205,10 @@ void Station::get_data(int qid)
 int Station::insert()
 {
     istm->execute_and_close();
-    return db.last_station_insert_id();
+    if (seq_station)
+        return seq_station->read();
+    else
+        return conn.get_last_insert_id();
 }
 
 void Station::update()
@@ -177,7 +229,7 @@ void Station::dump(FILE* out)
     char ident[64];
     SQLLEN ident_ind;
 
-    Statement stm(*db.conn);
+    Statement stm(conn);
     stm.bind_out(1, id);
     stm.bind_out(2, lat);
     stm.bind_out(3, lon);
@@ -192,6 +244,39 @@ void Station::dump(FILE* out)
             fprintf(out, " %d, %.5f, %.5f, %.*s\n", (int)id, lat/10000.0, lon/10000.0, (int)ident_ind, ident);
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
     stm.close_cursor();
+}
+
+void Station::reset_db(db::Connection& conn)
+{
+    conn.drop_table_if_exists("station");
+    conn.drop_sequence_if_exists("seq_station");
+
+    /* Allocate statement handle */
+    db::Statement stm(conn);
+
+    const char** queries = NULL;
+    int query_count = 0;
+    switch (conn.server_type)
+    {
+        case db::MYSQL:
+            queries = init_queries_mysql;
+            query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
+        case db::SQLITE:
+            queries = init_queries_sqlite;
+            query_count = sizeof(init_queries_sqlite) / sizeof(init_queries_sqlite[0]); break;
+        case db::ORACLE:
+            queries = init_queries_oracle;
+            query_count = sizeof(init_queries_oracle) / sizeof(init_queries_oracle[0]); break;
+        case db::POSTGRES:
+            queries = init_queries_postgres;
+            query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
+        default:
+            queries = init_queries_postgres;
+            query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
+    }
+    /* Create tables */
+    for (int i = 0; i < query_count; i++)
+        stm.exec_direct_and_close(queries[i]);
 }
 
 } // namespace v5

@@ -18,7 +18,7 @@
  */
 
 #include "db/test-utils-db.h"
-#include "db/v5/db.h"
+#include "db/db.h"
 #include "core/record.h"
 
 using namespace dballe;
@@ -27,6 +27,7 @@ using namespace std;
 
 namespace tut {
 
+#warning This needs to be run twice
 struct db_export_shar : public dballe::tests::db_test
 {
 	db_export_shar()

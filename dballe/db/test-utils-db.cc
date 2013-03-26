@@ -20,6 +20,7 @@
 #include "test-utils-db.h"
 #include <dballe/db/internals.h>
 #include "dballe/db/v5/db.h"
+#include "dballe/db/v6/db.h"
 #include <wreport/error.h>
 
 #include <unistd.h>
@@ -50,6 +51,14 @@ db::v5::DB& db_test::v5()
         return *d;
     else
         throw error_consistency("test DB is not a v5 DB");
+}
+
+db::v6::DB& db_test::v6()
+{
+    if (db::v6::DB* d = dynamic_cast<db::v6::DB*>(db.get()))
+        return *d;
+    else
+        throw error_consistency("test DB is not a v6 DB");
 }
 
 } // namespace tests

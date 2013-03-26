@@ -36,9 +36,9 @@ namespace dballe {
 namespace db {
 struct Connection;
 struct Statement;
+struct Sequence;
 
 namespace v5 {
-struct DB;
 
 /**
  * Precompiled queries to manipulate the station table
@@ -48,7 +48,10 @@ struct Station
     /**
      * DB connection.
      */
-    v5::DB& db;
+    db::Connection& conn;
+
+    /** Station ID sequence, when the DB requires it */
+    db::Sequence* seq_station;
 
     /** Precompiled select fixed station query */
     db::Statement* sfstm;
@@ -74,7 +77,7 @@ struct Station
     /** Mobile station identifier indicator */
     SQLLEN ident_ind;
 
-    Station(v5::DB& conn);
+    Station(db::Connection& conn);
     ~Station();
 
     /**
@@ -123,6 +126,11 @@ struct Station
      * Dump the entire contents of the table to an output stream
      */
     void dump(FILE* out);
+
+    /**
+     * Clear (if applicable) and recreate the table structure in the database
+     */
+    static void reset_db(db::Connection& conn);
 
 private:
     // disallow copy

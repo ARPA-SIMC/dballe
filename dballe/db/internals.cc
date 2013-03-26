@@ -1,7 +1,7 @@
 /*
  * db/internals - Internal support infrastructure for the DB
  *
- * Copyright (C) 2005--2009  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ Environment& Environment::get()
 }
 
 Connection::Connection()
-    : connected(false)
+    : connected(false), stm_last_insert_id(0)
 {
     /* Allocate the ODBC connection handle */
     Environment& env = Environment::get();
@@ -108,6 +108,7 @@ Connection::Connection()
 
 Connection::~Connection()
 {
+    if (stm_last_insert_id) delete stm_last_insert_id;
     if (connected)
     {
         // FIXME: It was commit with no reason, setting it to rollback,
@@ -158,7 +159,7 @@ void Connection::init_after_connect()
         server_type = SQLITE;
     else if (name.substr(0, 5) == "SQORA")
         server_type = ORACLE;
-    else if (name.substr(0, 11) == "libpsqlodbc")
+    else if (name.substr(0, 11) == "libpsqlodbc" || name.substr(0, 8) == "psqlodbc")
         server_type = POSTGRES;
     else
     {
@@ -255,9 +256,37 @@ void Connection::drop_sequence_if_exists(const char* name)
 
     char buf[100];
     int len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
-    stm.exec_direct(buf, len);
+    stm.exec_direct_and_close(buf, len);
 
     commit();
+}
+
+int Connection::get_last_insert_id()
+{
+    // Compile the query on demand
+    if (!stm_last_insert_id)
+    {
+        switch (server_type)
+        {
+            case db::MYSQL:
+                stm_last_insert_id = new db::Statement(*this);
+                stm_last_insert_id->bind_out(1, m_last_insert_id);
+                stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
+                break;
+            case db::SQLITE:
+                stm_last_insert_id = new db::Statement(*this);
+                stm_last_insert_id->bind_out(1, m_last_insert_id);
+                stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
+                break;
+        }
+    }
+    if (!stm_last_insert_id)
+        throw error_consistency("get_last_insert_id called on a database that does not support it");
+
+    stm_last_insert_id->execute();
+    if (!stm_last_insert_id->fetch_expecting_one())
+        throw error_consistency("no last insert ID value returned from database");
+    return m_last_insert_id;
 }
 
 Statement::Statement(Connection& conn)
@@ -276,8 +305,9 @@ Statement::~Statement()
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     if (!debug_reached_completion)
     {
-        throw error_consistency("Statement " + debug_query + " destroyed before reaching completion");
-        close_cursor();
+        string msg("Statement " + debug_query + " destroyed before reaching completion");
+        fprintf(stderr, "-- %s\n", msg.c_str());
+        //throw error_consistency(msg)
         SQLCloseCursor(stm);
     }
 #endif
@@ -413,7 +443,11 @@ bool Statement::fetch()
 
 bool Statement::fetch_expecting_one()
 {
-    if (!fetch()) return false;
+    if (!fetch()) 
+    {
+        close_cursor();
+        return false;
+    }
     if (fetch())
         throw error_consistency("expecting only one result from statement");
     close_cursor();
@@ -450,6 +484,14 @@ void Statement::close_cursor()
 void Statement::prepare(const char* query)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    if (!debug_reached_completion)
+    {
+        string msg = "Statement " + debug_query + " prepare was called before reaching completion";
+        fprintf(stderr, "-- %s\n", msg.c_str());
+        //throw error_consistency(msg);
+    }
+#endif
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = query;
 #endif
     // Casting out 'const' because ODBC API is not const-conscious
@@ -469,6 +511,14 @@ void Statement::prepare(const char* query, int qlen)
 
 int Statement::execute()
 {
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    if (!debug_reached_completion)
+    {
+        string msg = "Statement " + debug_query + " restarted before reaching completion";
+        fprintf(stderr, "-- %s\n", msg.c_str());
+        //throw error_consistency(msg);
+    }
+#endif
     int sqlres = SQLExecute(stm);
     if (is_error(sqlres))
         throw error_odbc(SQL_HANDLE_STMT, stm, "executing precompiled query");
@@ -508,6 +558,24 @@ int Statement::exec_direct(const char* query, int qlen)
     return sqlres;
 }
 
+void Statement::close_cursor_if_needed()
+{
+    /*
+    // If the query raised an error that we are ignoring, closing the cursor
+    // would raise invalid cursor state
+    if (sqlres != SQL_ERROR)
+        close_cursor();
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    else if (sqlres == SQL_ERROR && error_is_ignored())
+        debug_reached_completion = true;
+#endif
+*/
+    SQLCloseCursor(stm);
+#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
+    debug_reached_completion = true;
+#endif
+}
+
 int Statement::execute_and_close()
 {
     int sqlres = SQLExecute(stm);
@@ -516,10 +584,7 @@ int Statement::execute_and_close()
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_reached_completion = false;
 #endif
-    // If the query raised an error that we are ignoring, closing the cursor
-    // would raise invalid cursor state
-    if (sqlres != SQL_ERROR && columns_count() > 0)
-        close_cursor();
+    close_cursor_if_needed();
     return sqlres;
 }
 
@@ -535,10 +600,7 @@ int Statement::exec_direct_and_close(const char* query)
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_reached_completion = false;
 #endif
-    // If the query raised an error that we are ignoring, closing the cursor
-    // would raise invalid cursor state
-    if (sqlres != SQL_ERROR && columns_count() > 0)
-        close_cursor();
+    close_cursor_if_needed();
     return sqlres;
 }
 
@@ -554,10 +616,7 @@ int Statement::exec_direct_and_close(const char* query, int qlen)
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_reached_completion = false;
 #endif
-    // If the query raised an error that we are ignoring, closing the cursor
-    // would raise invalid cursor state
-    if (sqlres != SQL_ERROR && columns_count() > 0)
-        close_cursor();
+    close_cursor_if_needed();
     return sqlres;
 }
 

@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
+#include <sql.h>
 
 using namespace wreport;
 using namespace std;
@@ -431,6 +432,44 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 	/* Reread the cache */
 	read_cache();
 }
+
+void Repinfo::dump(FILE* out)
+{
+    DBALLE_SQL_C_UINT_TYPE id;
+    char memo[20]; SQLLEN memo_ind;
+    char description[255]; SQLLEN description_ind;
+    DBALLE_SQL_C_SINT_TYPE prio; SQLLEN prio_ind;
+    char descriptor[6]; SQLLEN descriptor_ind;
+    DBALLE_SQL_C_UINT_TYPE tablea; SQLLEN tablea_ind;
+
+    db::Statement stm(*conn);
+
+    stm.bind_out(1, id);
+    stm.bind_out(2, memo, sizeof(memo), memo_ind);
+    stm.bind_out(3, description, sizeof(description), description_ind);
+    stm.bind_out(4, prio);
+    stm.bind_out(5, descriptor, sizeof(descriptor), descriptor_ind);
+    stm.bind_out(6, tablea);
+
+    stm.exec_direct("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
+
+    int count;
+    fprintf(out, "dump of table repinfo:\n");
+    fprintf(out, "   id   memo   description  prio   desc  tablea\n");
+    for (count = 0; stm.fetch(); ++count)
+    {
+        fprintf(out, " %4d   %s  %s  %d  %s %u\n",
+                (int)id,
+                memo_ind == SQL_NULL_DATA ? "-" : memo,
+                description_ind == SQL_NULL_DATA ? "-" : description,
+                (int)prio,
+                descriptor_ind == SQL_NULL_DATA ? "-" : descriptor,
+                (unsigned)tablea
+               );
+    }
+    fprintf(out, "%d element%s in table repinfo\n", count, count != 1 ? "s" : "");
+}
+
 
 } // namespace v5
 } // namespace db

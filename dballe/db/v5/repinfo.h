@@ -170,6 +170,11 @@ struct Repinfo
 	 */
 	const repinfo::Cache* get_by_memo(const char* memo) const;
 
+    /**
+     * Dump the entire contents of the table to an output stream
+     */
+    void dump(FILE* out);
+
 protected:
 	void read_cache();
 	void cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea);

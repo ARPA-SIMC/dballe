@@ -77,6 +77,11 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v5/db.h \
 	db/v5/repinfo.h \
 	db/v5/station.h \
+	db/v6/db.h \
+	db/v6/attr.h \
+	db/v6/lev_tr.h \
+	db/v6/cursor.h \
+	db/v6/data.h \
 	cmdline/dbadb.h
 endif
 
@@ -142,6 +147,13 @@ libdballe_la_SOURCES += \
 	db/v5/db.cc \
 	db/v5/import.cc \
 	db/v5/export.cc \
+	db/v6/lev_tr.cc \
+	db/v6/data.cc \
+	db/v6/attr.cc \
+	db/v6/db.cc \
+	db/v6/cursor.cc \
+	db/v6/import.cc \
+	db/v6/export.cc \
 	cmdline/dbadb.cc
 endif
 
@@ -206,14 +218,19 @@ tut_test_SOURCES += \
 	db/test-utils-db.cc \
 	db/tests/querybuf.cc \
 	db/tests/internals.cc \
+	db/db-tut.cc \
+	db/db-import-tut.cc \
+	db/db-export-tut.cc \
 	db/v5/tests/repinfo.cc \
 	db/v5/tests/station.cc \
 	db/v5/tests/context.cc \
 	db/v5/tests/data.cc \
 	db/v5/tests/attr.cc \
 	db/v5/tests/db.cc \
-	db/v5/tests/db_import.cc \
-	db/v5/tests/db_export.cc \
+	db/v6/tests/lev_tr.cc \
+	db/v6/tests/data.cc \
+	db/v6/tests/attr.cc \
+	db/v6/tests/db.cc \
 	cmdline/dbadb-tut.cc
 endif
 

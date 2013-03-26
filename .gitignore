@@ -90,4 +90,5 @@ Makefile
 /debian/provami/
 /debian/python-dballe/
 /debian/tmp/
-
+/python/python-dballe.html
+/python/python-dballe.rst

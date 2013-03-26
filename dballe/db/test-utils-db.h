@@ -26,6 +26,9 @@ namespace db {
 namespace v5 {
 class DB;
 }
+namespace v6 {
+class DB;
+}
 }
 
 namespace tests {
@@ -39,6 +42,7 @@ struct db_test
     void use_db();
 
     db::v5::DB& v5();
+    db::v6::DB& v6();
 
 	db_test(bool reset=true);
 	~db_test();
