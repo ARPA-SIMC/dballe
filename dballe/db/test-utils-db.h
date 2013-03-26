@@ -48,6 +48,31 @@ struct db_test
 	~db_test();
 };
 
+/// Common bits for db::DB test suites
+struct DB_test_base : public db_test
+{
+    // Records with test data
+    Record sampleAna;
+    Record extraAna;
+    Record sampleBase;
+    Record sample0;
+    Record sample00;
+    Record sample01;
+    Record sample1;
+    Record sample10;
+    Record sample11;
+
+    // Work records
+    Record insert;
+    Record query;
+    Record result;
+    Record qc;
+
+    DB_test_base();
+
+    void populate_database();
+};
+
 static inline SQL_TIMESTAMP_STRUCT mkts(int year, int month, int day, int hour, int minute, int second)
 {
 	SQL_TIMESTAMP_STRUCT res;
