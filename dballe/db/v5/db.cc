@@ -1172,15 +1172,6 @@ std::auto_ptr<db::Cursor> DB::query_variable_types(const Record& rec)
     return query(rec, DBA_DB_WANT_VAR_NAME, DBA_DB_MODIFIER_DISTINCT | DBA_DB_MODIFIER_NOANAEXTRA);
 }
 
-/*
-        dballe::db::Cursor* query_station_summary(const dballe::Record& rec)
-        {
-                return $self->query(rec, DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
-                                DBA_DB_MODIFIER_DISTINCT).release();
-
-        }
-	*/
-
 std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
 {
     /* Perform the query */

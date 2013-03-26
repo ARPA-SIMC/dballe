@@ -35,7 +35,7 @@ struct db_v6_attr_shar : public dballe::tests::db_test
 {
     db::v6::Attr* at;
 
-    db_v6_attr_shar()
+    db_v6_attr_shar() : dballe::tests::db_test(db::V6)
     {
         if (!has_db()) return;
         at = &v6().attr();

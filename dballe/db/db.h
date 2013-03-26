@@ -57,6 +57,14 @@ struct MsgConsumer;
 namespace db {
 
 /**
+ * Supported formats
+ */
+typedef enum {
+    V5 = 0,
+    V6 = 1,
+} Format;
+
+/**
  * Simple typedef to make typing easier
  */
 typedef std::vector<wreport::Varcode> AttrList;
@@ -112,6 +120,9 @@ class DB
 {
 public:
     virtual ~DB();
+
+    static db::Format get_default_format();
+    static void set_default_format(db::Format format);
 
     /**
      * Start a session with DB-All.e

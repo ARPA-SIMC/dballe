@@ -355,6 +355,11 @@ public:
      */
     std::auto_ptr<db::Cursor> query(const Record& query, unsigned int wanted, unsigned int modifiers);
 
+    std::auto_ptr<db::Cursor> query_reports(const Record& query);
+    std::auto_ptr<db::Cursor> query_levels(const Record& rec);
+    std::auto_ptr<db::Cursor> query_tranges(const Record& rec);
+    std::auto_ptr<db::Cursor> query_variable_types(const Record& rec);
+
     /**
      * Start a query on the station archive
      *
@@ -378,6 +383,8 @@ public:
      *   The cursor to use to iterate over the results
      */
     std::auto_ptr<db::Cursor> query_data(const Record& rec);
+
+    void query_datetime_extremes(const Record& query, Record& result);
 
     /**
      * Query attributes

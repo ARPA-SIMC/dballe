@@ -875,12 +875,32 @@ std::auto_ptr<db::Cursor> DB::query(const Record& query, unsigned int wanted, un
     return auto_ptr<db::Cursor>(res.release());
 }
 
+std::auto_ptr<db::Cursor> DB::query_reports(const Record& rec)
+{
+    return query(rec, DBA_DB_WANT_REPCOD, DBA_DB_MODIFIER_DISTINCT);
+}
+
 std::auto_ptr<db::Cursor> DB::query_stations(const Record& rec)
 {
     /* Perform the query, limited to station values */
     return query(rec,
             DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
             DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT);
+}
+
+std::auto_ptr<db::Cursor> DB::query_levels(const Record& rec)
+{
+    return query(rec, DBA_DB_WANT_LEVEL, DBA_DB_MODIFIER_DISTINCT);
+}
+
+std::auto_ptr<db::Cursor> DB::query_tranges(const Record& rec)
+{
+    return query(rec, DBA_DB_WANT_TIMERANGE, DBA_DB_MODIFIER_DISTINCT);
+}
+
+std::auto_ptr<db::Cursor> DB::query_variable_types(const Record& rec)
+{
+    return query(rec, DBA_DB_WANT_VAR_NAME, DBA_DB_MODIFIER_DISTINCT | DBA_DB_MODIFIER_NOANAEXTRA);
 }
 
 std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
@@ -895,6 +915,12 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
                 0);
 }
 
+void DB::query_datetime_extremes(const Record& query, Record& result)
+{
+    db::v6::CursorLinear cursor(*this, 0, 0);
+#warning TODO
+    //cursor.query_datetime_extremes(query, result);
+}
 
 unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {

@@ -21,6 +21,7 @@
 
 #include "db.h"
 #include "v5/db.h"
+#include "v6/db.h"
 #include <wreport/error.h>
 #include <cstring>
 #include <cstdlib>
@@ -30,8 +31,9 @@ using namespace std;
 using namespace wreport;
 
 namespace dballe {
-
 namespace db {
+
+static Format default_format = V5;
 
 Cursor::~Cursor()
 {
@@ -43,6 +45,9 @@ DB::~DB()
 {
 }
 
+Format DB::get_default_format() { return default_format; }
+void DB::set_default_format(Format format) { default_format = format; }
+
 bool DB::is_url(const char* str)
 {
     if (strncmp(str, "sqlite:", 7) == 0) return true;
@@ -53,17 +58,43 @@ bool DB::is_url(const char* str)
 
 auto_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
 {
-    v5::DB* v5;
-    auto_ptr<DB> res(v5 = new v5::DB);
-    v5->open_odbc(dsn, user, password);
+    auto_ptr<DB> res;
+    switch (default_format)
+    {
+        case V5: {
+            v5::DB* v5;
+            res.reset(v5 = new v5::DB);
+            v5->open_odbc(dsn, user, password);
+            break;
+        }
+        case V6: {
+            v6::DB* v6;
+            res.reset(v6 = new v6::DB);
+            v6->open_odbc(dsn, user, password);
+            break;
+        }
+    }
     return res;
 }
 
 auto_ptr<DB> DB::connect_from_file(const char* pathname)
 {
-    v5::DB* v5;
-    auto_ptr<DB> res(v5 = new v5::DB);
-    v5->open_file(pathname);
+    auto_ptr<DB> res;
+    switch (default_format)
+    {
+        case V5: {
+            v5::DB* v5;
+            res.reset(v5 = new v5::DB);
+            v5->open_file(pathname);
+            break;
+        }
+        case V6: {
+            v6::DB* v6;
+            res.reset(v6 = new v6::DB);
+            v6->open_file(pathname);
+            break;
+        }
+    }
     return res;
 }
 

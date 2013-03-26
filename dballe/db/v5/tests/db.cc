@@ -47,7 +47,7 @@ static int print_results(db::v5::Cursor& cur)
 
 struct db_v5_shar : public dballe::tests::DB_test_base
 {
-	db_v5_shar()
+	db_v5_shar() : dballe::tests::DB_test_base(db::V5)
 	{
 	}
 

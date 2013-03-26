@@ -36,7 +36,7 @@ struct db_import_shar : public dballe::tests::db_test
 {
     Record query;
 
-    db_import_shar()
+    db_import_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
     }

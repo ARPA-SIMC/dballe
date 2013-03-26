@@ -31,7 +31,7 @@ struct db_v6_lev_tr_shar : public dballe::tests::db_test
 {
     db::v6::LevTr* co;
 
-    db_v6_lev_tr_shar()
+    db_v6_lev_tr_shar() : dballe::tests::db_test(db::V6)
     {
         if (!has_db()) return;
         co = &v6().lev_tr();

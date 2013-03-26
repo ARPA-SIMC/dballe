@@ -32,14 +32,19 @@ using namespace wreport;
 namespace dballe {
 namespace tests {
 
-db_test::db_test(bool reset) : db(NULL)
+db_test::db_test(db::Format format, bool reset) : db(NULL)
 {
+    orig_format = DB::get_default_format();
+    DB::set_default_format(format);
     db = DB::connect_test();
     if (reset) db->reset();
 }
+
 db_test::~db_test()
 {
+    DB::set_default_format(orig_format);
 }
+
 void db_test::use_db()
 {
     if (!has_db()) throw tut::no_such_test();
@@ -61,7 +66,8 @@ db::v6::DB& db_test::v6()
         throw error_consistency("test DB is not a v6 DB");
 }
 
-DB_test_base::DB_test_base()
+DB_test_base::DB_test_base(db::Format format)
+    : db_test(format)
 {
     if (!has_db()) return;
 

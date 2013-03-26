@@ -37,6 +37,7 @@ struct db_test
 {
     // DB handle
     std::auto_ptr<DB> db;
+    db::Format orig_format;
 
     bool has_db() const { return db.get() != NULL; }
     void use_db();
@@ -44,7 +45,7 @@ struct db_test
     db::v5::DB& v5();
     db::v6::DB& v6();
 
-	db_test(bool reset=true);
+	db_test(db::Format format, bool reset=true);
 	~db_test();
 };
 
@@ -68,7 +69,7 @@ struct DB_test_base : public db_test
     Record result;
     Record qc;
 
-    DB_test_base();
+    DB_test_base(db::Format format);
 
     void populate_database();
 };

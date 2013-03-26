@@ -33,7 +33,7 @@ struct db_v6_data_shar : public dballe::tests::db_test
 {
     db::v6::Data* da;
 
-    db_v6_data_shar()
+    db_v6_data_shar() : dballe::tests::db_test(db::V6)
     {
         if (!has_db()) return;
         db::v6::DB& v6db = v6();

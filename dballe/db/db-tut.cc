@@ -45,7 +45,7 @@ static int print_results(db::Cursor& cur)
 #warning this needs to be called twice, once for each db type
 struct db_shar : public dballe::tests::DB_test_base
 {
-    db_shar()
+    db_shar() : dballe::tests::DB_test_base(db::V5)
     {
     }
 

@@ -27,17 +27,17 @@ using namespace std;
 
 namespace tut {
 
-struct repinfo_shar : public dballe::tests::db_test
+struct v5_repinfo_shar : public dballe::tests::db_test
 {
 	Repinfo* ri;
 
-	repinfo_shar()
+	v5_repinfo_shar() : dballe::tests::db_test(db::V5)
 	{
 		if (!has_db()) return;
 		ri = &v5().repinfo();
 	}
 };
-TESTGRP(repinfo);
+TESTGRP(v5_repinfo);
 
 /* Test simple queries */
 template<> template<>

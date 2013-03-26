@@ -47,7 +47,7 @@ static int print_results(db::v6::Cursor& cur)
 
 struct db_v6_shar : public dballe::tests::DB_test_base
 {
-    db_v6_shar()
+    db_v6_shar() : dballe::tests::DB_test_base(db::V6)
     {
     }
 

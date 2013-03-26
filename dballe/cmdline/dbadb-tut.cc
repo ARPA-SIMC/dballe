@@ -10,8 +10,12 @@ using namespace std;
 
 namespace tut {
 
+#warning This needs to be run twice
 struct dbadb_shar : public dballe::tests::db_test
 {
+    dbadb_shar() : dballe::tests::db_test(db::V5)
+    {
+    }
 };
 TESTGRP(dbadb);
 
