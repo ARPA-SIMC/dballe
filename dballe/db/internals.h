@@ -149,6 +149,23 @@ public:
     /// Rollback a transaction
     void rollback();
 
+    /// Check if the database contains a table
+    bool has_table(const std::string& name);
+
+    /**
+     * Get a value from the settings table.
+     *
+     * Returns the empty string if the table does not exist.
+     */
+    std::string get_setting(const std::string& key);
+
+    /**
+     * Set a value in the settings table.
+     *
+     * The table is created if it does not exist.
+     */
+    void set_setting(const std::string& key, const std::string& value);
+
 	/**
 	 * Delete a table in the database if it exists, otherwise do nothing.
 	 */

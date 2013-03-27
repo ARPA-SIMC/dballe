@@ -314,6 +314,50 @@ int Connection::get_last_insert_id()
     return m_last_insert_id;
 }
 
+bool Connection::has_table(const std::string& name)
+{
+    Statement stm(*this);
+    DBALLE_SQL_C_SINT_TYPE count;
+
+    switch (server_type)
+    {
+        case db::MYSQL:
+            stm.prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?");
+            stm.bind_in(1, name.data(), name.size());
+            stm.bind_out(1, count);
+            break;
+        case db::SQLITE:
+            stm.prepare("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
+            stm.bind_in(1, name.data(), name.size());
+            stm.bind_out(1, count);
+            break;
+        case db::ORACLE:
+            stm.prepare("SELECT COUNT(*) FROM user_tables WHERE table_name=UPPER(?)");
+            stm.bind_in(1, name.data(), name.size());
+            stm.bind_out(1, count);
+            break;
+        case db::POSTGRES:
+            stm.prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?");
+            stm.bind_in(1, name.data(), name.size());
+            stm.bind_out(1, count);
+            break;
+    }
+    stm.execute();
+    stm.fetch_expecting_one();
+    return count > 0;
+}
+
+std::string Connection::get_setting(const std::string& key)
+{
+    if (!has_table("dballe_settings"))
+        return string();
+}
+
+void Connection::set_setting(const std::string& key, const std::string& value)
+{
+}
+
+
 Statement::Statement(Connection& conn)
     : /*conn(conn),*/ stm(NULL), ignore_error(NULL)
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS

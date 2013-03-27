@@ -178,6 +178,18 @@ void to::test<5>()
 	ensure_equals(count, 1);
 }
 
+// Test has_tables
+template<> template<>
+void to::test<6>()
+{
+    use_db();
+    reset();
+
+    db::Connection& c = connection();
+    ensure(!c.has_table("this_should_not_exist"));
+    ensure(c.has_table("dballe_test"));
+}
+
     //void bind_out(int idx, char* val, SQLLEN buflen);
     //void bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind);
     //void bind_out(int idx, SQL_TIMESTAMP_STRUCT& val);
