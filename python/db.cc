@@ -153,8 +153,8 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
         return NULL;
 
     try {
-        int res = self->db->insert(record->rec, can_replace, station_can_add);
-        return PyInt_FromLong(res);
+        self->db->insert(record->rec, can_replace, station_can_add);
+        Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -350,11 +350,11 @@ static bool read_attrlist(PyObject* attrs, db::AttrList& codes)
 
 static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 {
-    static char* kwlist[] = { "reference_id", "varcode", "attrs", NULL };
+    static char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
     int reference_id;
     const char* varname;
     PyObject* attrs = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "is|O", kwlist, &reference_id, &varname, &attrs))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", kwlist, &varname, &reference_id, &attrs))
         return NULL;
 
     wreport::Varcode varcode = resolve_varcode(varname);
@@ -377,20 +377,23 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 
 static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
 {
-    static char* kwlist[] = { "reference_id", "varcode", "attrs", "replace", NULL };
-    int reference_id;
+    static char* kwlist[] = { "varcode", "attrs", "reference_id", "replace", NULL };
+    int reference_id = -1;
     const char* varname;
     dpy_Record* record;
     int can_replace = 1;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "isO!|i", kwlist,
-                &reference_id,
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "sO!|ii", kwlist,
                 &varname,
                 &dpy_Record_Type, &record,
+                &reference_id,
                 &can_replace))
         return NULL;
 
     try {
-        self->db->attr_insert(reference_id, resolve_varcode(varname), record->rec, can_replace);
+        if (reference_id == -1)
+            self->db->attr_insert(resolve_varcode(varname), record->rec, can_replace);
+        else
+            self->db->attr_insert(reference_id, resolve_varcode(varname), record->rec, can_replace);
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -401,11 +404,11 @@ static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
 
 static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
 {
-    static char* kwlist[] = { "reference_id", "varcode", "attrs", NULL };
+    static char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
     int reference_id;
     const char* varname;
     PyObject* attrs = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "is|O", kwlist, &reference_id, &varname, &attrs))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", kwlist, &varname, &reference_id, &attrs))
         return NULL;
 
     wreport::Varcode varcode = resolve_varcode(varname);

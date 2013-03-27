@@ -113,6 +113,10 @@ struct Attr;
 class DB : public dballe::DB
 {
 public:
+    /** ODBC database connection */
+    db::Connection* conn;
+
+protected:
     /// Store information about the database ID of a variable
     struct VarID
     {
@@ -121,14 +125,9 @@ public:
         VarID(wreport::Varcode code, DBALLE_SQL_C_SINT_TYPE id) : code(code), id(id) {}
     };
 
-    /** ODBC database connection */
-    db::Connection* conn;
-
     /// Store database variable IDs for all last inserted variables
     std::vector<VarID> last_insert_varids;
 
-
-protected:
     /**
      * Accessors for the various parts of the database.
      *
@@ -269,7 +268,7 @@ public:
      * If rep_memo is specified instead, the corresponding report id is queried in
      * the database and set as "rep_cod" in the record.
      */
-    int get_rep_cod(Record& rec);
+    int get_rep_cod(const Record& rec);
 
     /*
      * Lookup, insert or replace data in station taking the values from
@@ -285,7 +284,7 @@ public:
      * @returns
      *   The station ID
      */
-    int obtain_station(Record& rec, bool can_add=true);
+    int obtain_station(const Record& rec, bool can_add=true);
 
     /*
      * Lookup, insert or replace data in station taking the values from
@@ -298,15 +297,13 @@ public:
      * @returns
      *   The lev_tr ID
      */
-    int obtain_lev_tr(Record& rec);
+    int obtain_lev_tr(const Record& rec);
 
     /**
      * Insert a record into the database
      *
      * In a record with the same phisical situation already exists, the function
      * fails.
-     *
-     * ana_id and lev_tr_id will be set in the record at the end of this function.
      *
      * @param rec
      *   The record to insert.
@@ -316,7 +313,7 @@ public:
      *   If true, then it is allowed to add new station records to the database.
      *   Otherwise, data can be added only by reusing existing ones.
      */
-    int insert(Record& rec, bool can_replace, bool station_can_add);
+    void insert(const Record& rec, bool can_replace, bool station_can_add);
 
     /**
      * Remove data from the database
@@ -403,6 +400,7 @@ public:
      */
     unsigned query_attrs(int id_data, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs);
 
+    void attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace=true);
     void attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs, bool can_replace=true);
 
     /**

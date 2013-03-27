@@ -19,20 +19,6 @@
 
 #include "dbapi.h"
 #include <dballe/db/db.h>
-//#include <dballe/core/aliases.h>
-//#include <dballe/core/verbose.h>
-//#include <dballe/db/internals.h>
-//#include <cstdlib>
-
-/*
-#include <f77.h>
-#include <float.h>
-#include <limits.h>
-
-#include <stdio.h>  // snprintf
-#include <string.h> // strncpy
-#include <math.h>
-*/
 
 using namespace wreport;
 using namespace std;
@@ -141,12 +127,13 @@ const char* DbAPI::dammelo()
     if (query_cur->next())
     {
         query_cur->to_record(output);
-
-        /* Set context id and variable name on qcinput so that
-         * attribute functions will refer to the last variable read */
         const char* varstr = output.key_peek_value(DBA_KEY_VAR);
-        qcinput.set(DBA_KEY_CONTEXT_ID, query_cur->attr_reference_id());
-        qcinput.set(DBA_KEY_VAR_RELATED, varstr);
+
+        // Remember the varcode and reference ID for the next attribute
+        // operations
+        attr_varid = WR_STRING_TO_VAR(varstr + 1);
+        attr_reference_id = output.get(DBA_KEY_CONTEXT_ID).enqi();
+
         return varstr;
     } else {
         delete query_cur;
@@ -173,34 +160,18 @@ void DbAPI::prendilo()
 #endif
 
     db.insert(input, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
-    int ana_id = input.key_peek(DBA_KEY_ANA_ID)->enqi();
-    int context_id = input.key_peek(DBA_KEY_CONTEXT_ID)->enqi();
-    // Uncache to prevent confusion on the next insert
-    // input.unset(DBA_KEY_ANA_ID); Not needed here, it is reset automatically
-    //                              when trying to set a latitude or longitude
-    input.unset(DBA_KEY_CONTEXT_ID);
 
-    /* Set the values in the output */
-    output.set(DBA_KEY_ANA_ID, ana_id);
-    output.set(DBA_KEY_CONTEXT_ID, context_id);
+    // Mark the attr reference id as invalid, so that a critica() will call
+    // attr_insert without the reference id
+    attr_reference_id = -1;
 
-    /* Set context id and variable name on qcinput so that
-     * attribute functions will refer to what has been written */
-    qcinput.set(DBA_KEY_CONTEXT_ID, context_id);
-
-    /* If there was only one variable in the input, we can pass it on as a
-     * default for attribute handling routines; otherwise we unset to mark
-     * the ambiguity */
+    // If there was only one variable in the input, make it a valid default for
+    // the next critica
     const vector<Var*> vars = input.vars();
     if (vars.size() == 1)
-    {
-        Varcode code = vars[0]->code();
-        char varname[8];
-        snprintf(varname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
-        qcinput.set(DBA_KEY_VAR_RELATED, varname);
-    }
+        attr_varid = vars[0]->code();
     else
-        qcinput.unset(DBA_KEY_VAR_RELATED);
+        attr_varid = 0;
 }
 
 void DbAPI::dimenticami()
@@ -213,21 +184,18 @@ void DbAPI::dimenticami()
 
 int DbAPI::voglioancora()
 {
-    int id_context;
-    Varcode id_var;
+    if (attr_reference_id == -1 || attr_varid == 0)
+        throw error_consistency("voglioancora must be called after a dammelo, or after setting *context_id and *var_related");
 
-    /* Retrieve the ID of the data to query */
-    get_referred_data_id(&id_context, &id_var);
-
-    /* Retrieve the varcodes of the wanted QC values */
+    // Retrieve the varcodes of the attributes that we want
     std::vector<wreport::Varcode> arr;
     read_qc_list(arr);
 
-    /* Do QC query */
-    int qc_count = db.query_attrs(id_context, id_var, arr, qcoutput);
+    // Query attributes
+    int qc_count = db.query_attrs(attr_reference_id, attr_varid, arr, qcoutput);
     qc_iter = 0;
 
-    clear_qcinput();
+    qcinput.clear();
 
     return qc_count;
 }
@@ -238,13 +206,15 @@ void DbAPI::critica()
         throw error_consistency(
             "critica cannot be called with the database open in attribute readonly mode");
 
-    int id_context;
-    Varcode id_var;
-    get_referred_data_id(&id_context, &id_var);
+    if (attr_varid == 0)
+        throw error_consistency("critica must be called after a dammelo, a prendilo, or after setting *context_id and *var_related");
 
-    db.attr_insert(id_context, id_var, qcinput, (perms & PERM_ATTR_WRITE) != 0);
+    if (attr_reference_id == -1)
+        db.attr_insert(attr_varid, qcinput, (perms & PERM_ATTR_WRITE) != 0);
+    else
+        db.attr_insert(attr_reference_id, attr_varid, qcinput, (perms & PERM_ATTR_WRITE) != 0);
 
-    clear_qcinput();
+    qcinput.clear();
 }
 
 void DbAPI::scusa()
@@ -253,18 +223,16 @@ void DbAPI::scusa()
         throw error_consistency(
             "scusa must be called with the database open in attribute write mode");
 
-    int id_context;
-    Varcode id_var;
-    get_referred_data_id(&id_context, &id_var);
+    if (attr_reference_id == -1 || attr_varid == 0)
+        throw error_consistency("voglioancora must be called after a dammelo, or after setting *context_id and *var_related");
 
-    /* Retrieve the varcodes of the wanted QC values */
+    // Retrieve the varcodes of the attributes we want to remove
     std::vector<wreport::Varcode> arr;
     read_qc_list(arr);
 
-    // If arr is still 0, then dba_qc_delete deletes all QC values
-    db.attr_remove(id_context, id_var, arr);
+    db.attr_remove(attr_reference_id, attr_varid, arr);
 
-    clear_qcinput();
+    qcinput.clear();
 }
 
 }

@@ -51,9 +51,6 @@
       call idba_prendilo(handleinit)
       call ensure_no_error("prendilo")
 
-      call idba_enqi(handleinit, "context_id", i)
-      call ensure_no_error("init 7")
-
       call idba_setr(handleinit, "*B33007", 75.0)
       call ensure_no_error("init 8")
       call idba_setc(handleinit, "*var_related", "B12101")
@@ -75,9 +72,14 @@
       call idba_critica(handleinit)
       call ensure_no_error("critica 3")
 
-      call idba_seti(handle, "*context_id", i)
+      call idba_setc(handle, "var", "B12101")
       call ensure_no_error("query set 1")
-      call idba_setc(handle, "*var_related", "B12101")
+      call idba_voglioquesto(handle, nattr)
+      call ensure("I need 1 var in output", nattr.eq.1)
+      call ensure_no_error("query voglioquesto 1")
+      call idba_dammelo(handle, btable)
+      call ensure_no_error("query dammelo 1")
+
       call ensure_no_error("query set 2")
       call idba_voglioancora(handle, nattr)
       call ensure_no_error("query voglioancora 1")

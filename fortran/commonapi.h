@@ -53,6 +53,13 @@ protected:
 	Record qcoutput;
 	int qc_iter;
 	int qc_count;
+
+    // Varcode of the variable referred to by the next attribute operations
+    wreport::Varcode attr_varid;
+
+    // Reference ID of the variable referred to by the next attribute operations
+    int attr_reference_id;
+
 	// Last string returned by one of the spiega* functions, held here so
 	// that we can deallocate it when needed.
 	std::string cached_spiega;
@@ -74,20 +81,8 @@ protected:
 	 */
 	Record& choose_output_record(const char*& param);
 
-	/**
-	 * Look for the ID of the data which a critica or scusa operation are
-	 * supposed to operate on.
-	 */
-	void get_referred_data_id(int* id_context, wreport::Varcode* id_var) const;
-
 	/// Reads the list of QC values to operate on, for dba_voglioancora and dba_scusa
 	void read_qc_list(std::vector<wreport::Varcode>& res_arr) const;
-
-	/**
-	 * Clear the qcinput record preserving DBA_KEY_CONTEXT_ID and
-	 * DBA_KEY_VAR_RELATED
-	 */
-	void clear_qcinput();
 
 public:
 	CommonAPIImplementation();

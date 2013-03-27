@@ -19,13 +19,15 @@ class DballeTest(unittest.TestCase):
                 rep_cod=1,
                 B01011="Hey Hey!!",
                 B01012=500)
-
-        self.attr_ref = self.db.insert(data, False, True)
+        self.db.insert(data, False, True)
 
         data.clear()
         data["B33007"] = 50
         data["B33036"] = 75
-        self.db.attr_insert(self.attr_ref, "B01011", data)
+        self.db.attr_insert("B01011", data)
+
+        for rec in self.db.query_data(dballe.Record(var="B01011")):
+            self.attr_ref = rec["context_id"]
 
     def tearDown(self):
         self.db = None
@@ -59,7 +61,7 @@ class DballeTest(unittest.TestCase):
             del expected[var.code]
             count += 1
     def testQueryAttrs(self):
-        data = self.db.query_attrs(self.attr_ref, "B01011")
+        data = self.db.query_attrs("B01011", self.attr_ref)
         self.assertEqual(len(data), 2)
 
         expected = {}
@@ -76,7 +78,7 @@ class DballeTest(unittest.TestCase):
 
     def testQuerySomeAttrs(self):
         # Try limiting the set of wanted attributes
-        data = self.db.query_attrs(self.attr_ref, "B01011", ("B33036",))
+        data = self.db.query_attrs("B01011", self.attr_ref, ("B33036",))
         self.assertEqual(len(data), 1)
         self.assertEqual(data.vars(), (dballe.var("B33036", 75),))
 
@@ -159,7 +161,7 @@ class DballeTest(unittest.TestCase):
         self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
     def testAttrRemove(self):
         #db.attrRemove(1, "B01011", [ "B33007" ])
-        self.db.attr_remove(1, "B01011", ("B33007",))
+        self.db.attr_remove("B01011", self.attr_ref, ("B33007",))
 
 if __name__ == "__main__":
         unittest.main()

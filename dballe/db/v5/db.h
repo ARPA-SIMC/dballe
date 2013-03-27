@@ -113,6 +113,8 @@ public:
 	db::Connection* conn;
 
 protected:
+    int last_context_id;
+
 	/**
 	 * Accessors for the various parts of the database.
 	 *
@@ -286,7 +288,7 @@ public:
 	 * If rep_memo is specified instead, the corresponding report id is queried in
 	 * the database and set as "rep_cod" in the record.
 	 */
-	int get_rep_cod(Record& rec);
+	int get_rep_cod(const Record& rec);
 
 	/*
 	 * Lookup, insert or replace data in station taking the values from
@@ -302,7 +304,7 @@ public:
 	 * @returns
 	 *   The station ID
 	 */
-	int obtain_station(Record& rec, bool can_add=true);
+	int obtain_station(const Record& rec, bool can_add=true);
 
 	/*
 	 * Lookup, insert or replace data in station taking the values from
@@ -315,9 +317,9 @@ public:
 	 * @returns
 	 *   The context ID
 	 */
-	int obtain_context(Record& rec);
+	int obtain_context(const Record& rec);
 
-    int insert(Record& rec, bool can_replace, bool station_can_add);
+    void insert(const Record& rec, bool can_replace, bool station_can_add);
 
 	/**
 	 * Remove data from the database
@@ -404,18 +406,7 @@ public:
 	 */
 	unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs);
 
-    /**
-     * Insert new attributes into the database.
-     *
-     * @param reference_id
-     *   The database id of the context related to the attributes to insert
-     * @param id_var
-     *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
-     * @param attrs
-     *   The record with the attributes to be added
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     */
+    void attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace=true);
     void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace=true);
 
 	/**

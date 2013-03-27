@@ -640,15 +640,11 @@ void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int*
     repinfo().update(repinfo_file, added, deleted, updated);
 }
 
-int DB::get_rep_cod(Record& rec)
+int DB::get_rep_cod(const Record& rec)
 {
     Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
-    {
-        int id = ri.get_id(memo);
-        rec.key(DBA_KEY_REP_COD).seti(id);
-        return id;
-    }
+        return ri.get_id(memo);
     else if (const Var* var = rec.key_peek(DBA_KEY_REP_COD))
     {
         int id = var->enqi();
@@ -763,7 +759,7 @@ static inline int normalon(int lon)
     return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-int DB::obtain_station(Record& rec, bool can_add)
+int DB::obtain_station(const Record& rec, bool can_add)
 {
     // Look if the record already knows the ID
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
@@ -804,13 +800,10 @@ int DB::obtain_station(Record& rec, bool can_add)
             throw error_consistency("trying to insert a station entry when it is forbidden");
     }
 
-    // Set the new ana_id in the record
-    rec.key(DBA_KEY_ANA_ID).seti(id);
-
     return id;
 }
 
-int DB::obtain_context(Record& rec)
+int DB::obtain_context(const Record& rec)
 {
     // Look if the record already knows the ID
     if (const char* val = rec.key_peek_value(DBA_KEY_CONTEXT_ID))
@@ -880,13 +873,10 @@ int DB::obtain_context(Record& rec)
     if (id == -1)
         id = c.insert();
 
-    // Set the new context id in the record
-    rec.key(DBA_KEY_CONTEXT_ID).seti(id);
-
     return id;
 }
 
-int DB::insert(Record& rec, bool can_replace, bool station_can_add)
+void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
     Data& d = data();
 
@@ -917,7 +907,7 @@ int DB::insert(Record& rec, bool can_replace, bool station_can_add)
 
     t.commit();
 
-    return d.id_context;
+    last_context_id = d.id_context;
 }
 
 void DB::remove(const Record& rec)
@@ -1236,6 +1226,11 @@ unsigned DB::query_attrs(int reference_id, wreport::Varcode id_var, const std::v
         attrs.var(out_type).setc(out_value);
 
     return count;
+}
+
+void DB::attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace)
+{
+    attr_insert(last_context_id, id_var, attrs, can_replace);
 }
 
 void DB::attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace)

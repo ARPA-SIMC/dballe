@@ -24,6 +24,7 @@
 
 #include "commonapi.h"
 #include <dballe/core/aliases.h>
+#include <dballe/core/var.h>
 #include <dballe/core/defs.h>
 #include <stdio.h>	// snprintf
 #include <limits>
@@ -31,6 +32,7 @@
 #include <cstring>
 #include <strings.h>
 
+using namespace dballe;
 using namespace wreport;
 using namespace std;
 
@@ -38,7 +40,7 @@ namespace dballe {
 namespace fortran {
 
 CommonAPIImplementation::CommonAPIImplementation()
-	: perms(0), qc_iter(-1), qc_count(0)
+	: perms(0), qc_iter(-1), qc_count(0), attr_varid(0), attr_reference_id(-1)
 {
 }
 
@@ -169,46 +171,17 @@ const char* CommonAPIImplementation::enqc(const char* param)
 	return rec.peek_value(param);
 }
 
-static Varcode checkvar(const char* param)
-{
-	if (param[0] == 'B')
-		return WR_STRING_TO_VAR(param + 1);
-	return varcode_alias_resolve(param);
-}
-
-static dba_keyword prepare_key_change(Record& rec, const char* param)
-{
-	dba_keyword key = Record::keyword_byname(param);
-	switch (key)
-	{
-		case DBA_KEY_ERROR:
-			error_notfound::throwf("looking for misspelled parameter \"%s\"", param);
-			break;
-		case DBA_KEY_LAT:
-		case DBA_KEY_LON:
-			rec.key_unset(DBA_KEY_ANA_ID);
-			break;
-		case DBA_KEY_ANA_ID:
-			rec.key_unset(DBA_KEY_LAT);
-			rec.key_unset(DBA_KEY_LON);
-			break;
-		default: break;
-	}
-	return key;
-}
-
 void CommonAPIImplementation::seti(const char* param, int value)
 {
-	Record& rec = choose_input_record(param);
-	Varcode code = checkvar(param);
-
-	if (code)
-	{
-		rec.var(code).seti(value);
-	} else {
-		dba_keyword key = prepare_key_change(rec, param);
-		rec.key(key).seti(value);
-	}
+    if (param[0] == '*')
+    {
+        if (strcmp(param + 1, "context_id") == 0)
+            attr_reference_id = value;
+        else {
+            qcinput.set(param + 1, value);
+        }
+    } else
+        input.set(param, value);
 }
 
 void CommonAPIImplementation::setb(const char* param, signed char value)
@@ -223,30 +196,21 @@ void CommonAPIImplementation::setr(const char* param, float value)
 
 void CommonAPIImplementation::setd(const char* param, double value)
 {
-	Record& rec = choose_input_record(param);
-	Varcode code = checkvar(param);
-
-	if (code)
-	{
-		rec.var(code).setd(value);
-	} else {
-		dba_keyword key = prepare_key_change(rec, param);
-		rec.key(key).setd(value);
-	}
+    Record& rec = choose_input_record(param);
+    rec.set(param, value);
 }
 
 void CommonAPIImplementation::setc(const char* param, const char* value)
 {
-	Record& rec = choose_input_record(param);
-	Varcode code = checkvar(param);
-
-	if (code)
-	{
-		rec.var(code).setc(value);
-	} else {
-		dba_keyword key = prepare_key_change(rec, param);
-		rec.key(key).setc(value);
-	}
+    if (param[0] == '*')
+    {
+        if (strcmp(param + 1, "var_related") == 0)
+            attr_varid = resolve_varcode(value);
+        else {
+            qcinput.set(param + 1, value);
+        }
+    } else
+        input.set(param, value);
 }
 
 void CommonAPIImplementation::setcontextana()
@@ -346,22 +310,14 @@ void CommonAPIImplementation::setdatemax(int year, int month, int day, int hour,
 
 void CommonAPIImplementation::unset(const char* param)
 {
-	Record& rec = choose_input_record(param);
-	Varcode code = checkvar(param);
-
-	if (code)
-	{
-		rec.var_unset(code);
-	} else {
-		dba_keyword key = prepare_key_change(rec, param);
-		rec.key_unset(key);
-	}
+    Record& rec = choose_input_record(param);
+    rec.unset(param);
 }
 
 void CommonAPIImplementation::unsetall()
 {
-	clear_qcinput();
-	input.clear();
+    qcinput.clear();
+    input.clear();
 }
 
 void CommonAPIImplementation::unsetb()
@@ -412,21 +368,6 @@ const char* CommonAPIImplementation::ancora()
 	return parm;
 }
 
-void CommonAPIImplementation::get_referred_data_id(int* id_context, Varcode* id_var) const
-{
-	/* Read context ID */
-	if (const Var* var = qcinput.key_peek(DBA_KEY_CONTEXT_ID))
-		*id_context = var->enqi();
-	else
-		throw error_notfound("looking for variable context id");
-
-	/* Read variable ID */
-	if (const char* val = qcinput.key_peek_value(DBA_KEY_VAR_RELATED))
-		*id_var = WR_STRING_TO_VAR(val + 1);
-	else
-		throw error_consistency("finding out which variabile to add attributes to, *var is not set");
-}
-
 void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
 {
 	res_arr.clear();
@@ -452,32 +393,6 @@ void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
 			res_arr.push_back(WR_STRING_TO_VAR(val + pos + 2));
 		}
 	}
-}
-
-void CommonAPIImplementation::clear_qcinput()
-{
-	int saved_context_id = -1;
-	char saved_varname[8];
-
-	// Save the values to be preserved
-	if (const char* val = qcinput.key_peek_value(DBA_KEY_CONTEXT_ID))
-		saved_context_id = strtol(val, NULL, 10);
-	if (const char* val = qcinput.key_peek_value(DBA_KEY_VAR_RELATED))
-	{
-		strncpy(saved_varname, val, 7);
-		saved_varname[6] = 0;
-	}
-	else
-		saved_varname[0] = 0;
-
-	// Clear the qcinput record
-	qcinput.clear();
-
-	// Restore the saved values
-	if (saved_context_id != -1)
-		qcinput.set(DBA_KEY_CONTEXT_ID, saved_context_id);
-	if (saved_varname[0] != 0)
-		qcinput.set(DBA_KEY_VAR_RELATED, saved_varname);
 }
 
 }

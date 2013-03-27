@@ -201,11 +201,11 @@ public:
      *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
      *   used.
      * @retval added
-     *   The number of repinfo entryes that have been added
+     *   The number of repinfo entries that have been added
      * @retval deleted
-     *   The number of repinfo entryes that have been deleted
+     *   The number of repinfo entries that have been deleted
      * @retval updated
-     *   The number of repinfo entryes that have been updated
+     *   The number of repinfo entries that have been updated
      */
     virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
 
@@ -217,10 +217,10 @@ public:
     /**
      * Insert a record into the database
      *
-     * In a record with the same phisical situation already exists, the function
-     * fails.
-     *
-     * ana_id and context_id will be set in the record at the end of this function.
+     * The reference IDs of all variables that were inserted will be stored in
+     * memory until the next insert operation. To insert attributes related to
+     * one of the variables just inserted, just call attr_insert() without the
+     * reference_id parameter.
      *
      * @param rec
      *   The record to insert.
@@ -229,11 +229,8 @@ public:
      * @param station_can_add
      *   If true, then it is allowed to add new station records to the database.
      *   Otherwise, data can be added only by reusing existing ones.
-     * @returns
-     *   Integer value that can be used to refer to the current variable for
-     *   attribute access
      */
-    virtual int insert(Record& rec, bool can_replace, bool station_can_add) = 0;
+    virtual void insert(const Record& rec, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Remove data from the database
@@ -343,6 +340,18 @@ public:
      *   Number of attributes returned in attrs
      */
     virtual unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs) = 0;
+
+    /**
+     * Insert new attributes into the database, reusing the reference IDs stored by the last insert.
+     *
+     * @param id_var
+     *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
+     * @param attrs
+     *   The record with the attributes to be added
+     * @param can_replace
+     *   If true, then existing data can be rewritten, else data can only be added.
+     */
+    virtual void attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace=true) = 0;
 
     /**
      * Insert new attributes into the database.

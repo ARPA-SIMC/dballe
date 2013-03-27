@@ -537,15 +537,11 @@ void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int*
     repinfo().update(repinfo_file, added, deleted, updated);
 }
 
-int DB::get_rep_cod(Record& rec)
+int DB::get_rep_cod(const Record& rec)
 {
     v6::Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
-    {
-        int id = ri.get_id(memo);
-        rec.key(DBA_KEY_REP_COD).seti(id);
-        return id;
-    }
+        return ri.get_id(memo);
     else if (const Var* var = rec.key_peek(DBA_KEY_REP_COD))
     {
         int id = var->enqi();
@@ -596,7 +592,7 @@ static inline int normalon(int lon)
     return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-int DB::obtain_station(Record& rec, bool can_add)
+int DB::obtain_station(const Record& rec, bool can_add)
 {
     // Look if the record already knows the ID
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
@@ -637,13 +633,10 @@ int DB::obtain_station(Record& rec, bool can_add)
             throw error_consistency("trying to insert a station entry when it is forbidden");
     }
 
-    // Set the new ana_id in the record
-    rec.key(DBA_KEY_ANA_ID).seti(id);
-
     return id;
 }
 
-int DB::obtain_lev_tr(Record& rec)
+int DB::obtain_lev_tr(const Record& rec)
 {
     if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
         if (var->enqi() == 257)
@@ -687,13 +680,10 @@ int DB::obtain_lev_tr(Record& rec)
     if (id == -1)
         id = c.insert();
 
-    // Set the new lev_tr id in the record
-    rec.key(DBA_KEY_CONTEXT_ID).seti(id);
-
     return id;
 }
 
-int DB::insert(Record& rec, bool can_replace, bool station_can_add)
+void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
     v6::Data& d = data();
 
@@ -737,8 +727,6 @@ int DB::insert(Record& rec, bool can_replace, bool station_can_add)
     }
 
     t.commit();
-
-#warning We have nothing to return here
 }
 
 void DB::remove(const Record& rec)
@@ -966,6 +954,19 @@ unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector
         attrs.var(out_type).setc(out_value);
 
     return count;
+}
+
+void DB::attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace)
+{
+    // Find the data id for id_var
+    for (vector<VarID>::const_iterator i = last_insert_varids.begin();
+            i != last_insert_varids.end(); ++i)
+        if (i->code == id_var)
+        {
+            attr_insert(i->id, id_var, attrs, can_replace);
+            return;
+        }
+    error_notfound::throwf("variable B%02d%03d was not involved in the last insert operation", WR_VAR_X(id_var), WR_VAR_Y(id_var));
 }
 
 void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs, bool can_replace)

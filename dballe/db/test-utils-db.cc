@@ -32,12 +32,12 @@ using namespace wreport;
 namespace dballe {
 namespace tests {
 
-db_test::db_test() : db(NULL)
+db_test::db_test()
 {
     orig_format = DB::get_default_format();
 }
 
-db_test::db_test(db::Format format, bool reset) : db(NULL)
+db_test::db_test(db::Format format, bool reset)
 {
     orig_format = DB::get_default_format();
     DB::set_default_format(format);

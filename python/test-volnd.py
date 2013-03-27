@@ -96,13 +96,11 @@ class TestRead(unittest.TestCase):
         def maybe_insert(rec, aname):
             if random.random() <= 0.9:
                 #print repr(rec)
-                ctx = self.db.insert(rec, False, True)
-                del rec["context_id"]
-                del rec["ana_id"]
+                self.db.insert(rec, False, True)
                 attrs.clear()
                 attrs[aname] = rattr.random() * 100.
                 for code in rec:
-                    self.db.attr_insert(ctx, code, attrs)
+                    self.db.attr_insert(code, attrs)
 
         # Enter some sample data
         for net, lat, lon in contexts():

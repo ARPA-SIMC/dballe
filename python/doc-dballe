@@ -61,9 +61,9 @@ c_argspecs = {
     "DB.query_variable_types": "(query)",
     "DB.query_data": "(query)",
     "DB.query_datetime_extremes": "(query)",
-    "DB.attr_insert": "(reference_id, varcode, attrs, replace=True)",
-    "DB.attr_remove": "(reference_id, varcode, attrs=None)",
-    "DB.query_attrs": "(reference_id, varcode, attrs=None)",
+    "DB.attr_insert": "(varcode, attrs, reference_id=None, replace=True)",
+    "DB.attr_remove": "(varcode, reference_id, attrs=None)",
+    "DB.query_attrs": "(varcode, reference_id, attrs=None)",
     "DB.export_to_file": "(query, format, filename, generic=False)",
     "Cursor.next": "()",
 }
