@@ -725,9 +725,6 @@ void db_shar::test_attrs()
     insert.add(sample01);
     db->insert(insert, false, true);
 
-    ensure_equals(insert[DBA_KEY_ANA_ID].enqi(), 1);
-    ensure_equals(insert[DBA_KEY_CONTEXT_ID].enqi(), 1);
-
     qc.clear();
     qc.set(WR_VAR(0,  1,  7),  1);
     qc.set(WR_VAR(0,  2, 48),  2);
@@ -740,7 +737,7 @@ void db_shar::test_attrs()
     qc.set(WR_VAR(0,  7, 25),  9);
     qc.set(WR_VAR(0,  5, 22), 10);
 
-    db->attr_insert(1, WR_VAR(0, 1, 11), qc, false);
+    db->attr_insert(WR_VAR(0, 1, 11), qc, false);
 
     qc.clear();
     vector<Varcode> codes;
