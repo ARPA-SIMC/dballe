@@ -19,20 +19,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "common.h"
-#include "dballe/core/aliases.h"
 
 using namespace wreport;
 
 namespace dballe {
 namespace python {
-
-wreport::Varcode resolve_varcode(const char* name)
-{
-    wreport::Varcode res = 0;
-    if ((res = varcode_alias_resolve(name)) == 0)
-        res = descriptor_code(name);
-    return res;
-}
 
 PyObject* format_varcode(wreport::Varcode code)
 {

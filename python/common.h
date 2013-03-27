@@ -60,11 +60,6 @@ private:
 };
 
 /**
- * Resolve a varcode name to a varcode proper.
- */
-wreport::Varcode resolve_varcode(const char* name);
-
-/**
  * Return a python string representing a varcode
  */
 PyObject* format_varcode(wreport::Varcode code);

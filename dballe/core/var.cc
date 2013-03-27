@@ -20,6 +20,7 @@
  */
 
 #include "var.h"
+#include "aliases.h"
 #include <wreport/vartable.h>
 
 using namespace wreport;
@@ -56,6 +57,14 @@ std::string format_code(wreport::Varcode code)
     char buf[8];
     format_code(code, buf);
     return buf;
+}
+
+wreport::Varcode resolve_varcode(const char* name)
+{
+    wreport::Varcode res = 0;
+    if ((res = varcode_alias_resolve(name)) == 0)
+        res = descriptor_code(name);
+    return res;
 }
 
 wreport::Varcode map_code_to_dballe(wreport::Varcode code)

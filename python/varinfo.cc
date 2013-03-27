@@ -19,8 +19,10 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "varinfo.h"
+#include "dballe/core/var.h"
 #include "common.h"
 
+using namespace dballe;
 using namespace dballe::python;
 using namespace wreport;
 

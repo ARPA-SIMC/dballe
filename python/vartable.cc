@@ -21,8 +21,10 @@
 #include "vartable.h"
 #include "varinfo.h"
 #include "common.h"
+#include "dballe/core/var.h"
 #include <wreport/vartable.h>
 
+using namespace dballe;
 using namespace dballe::python;
 using namespace wreport;
 
