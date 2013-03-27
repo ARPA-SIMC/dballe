@@ -200,6 +200,8 @@ protected:
     CursorLinear(DB& db, unsigned int wanted, unsigned int modifiers);
 
     virtual int query(const Record& query);
+    // See DB::query_date_extremes
+    void query_datetime_extremes(const Record& query, Record& result);
     virtual void discard_rest();
     virtual bool next();
 

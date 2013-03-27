@@ -175,6 +175,9 @@ struct QueryBuilder
 
     /// Build the query with just SELECT COUNT(*)
     void build_count_query(const Record& rec);
+
+    /// Build the query with just a select for date extremes
+    void build_date_extremes_query(const Record& rec);
 };
 
 } // anonymous namespace
@@ -572,6 +575,27 @@ void QueryBuilder::build_count_query(const Record& rec)
     }
 }
 
+void QueryBuilder::build_date_extremes_query(const Record& rec)
+{
+    sql_query.append("SELECT MIN(d.datetime), MAX(d.datetime) ");
+
+    /* Prepare WHERE part and see what needs to be available in the FROM part */
+    make_where(rec);
+
+    /* Solve dependencies among the various parts of the query */
+    resolve_dependencies();
+
+    /* Append the FROM part of the query */
+    make_from(rec);
+
+    /* Append the WHERE part that we prepared previously */
+    if (!sql_where.empty())
+    {
+        sql_query.append("WHERE ");
+        sql_query.append(sql_where);
+    }
+}
+
 void QueryBuilder::make_from(const Record& rec)
 {
     /* Ignore anagraphical context unless explicitly requested */
@@ -580,6 +604,10 @@ void QueryBuilder::make_from(const Record& rec)
         sql_where.append_list("d.id_lev_tr IS NULL ");
         TRACE("ignoring station info context as it has not been explicitly requested: adding AND d.id_lev_tr IS NULL\n");
     }
+
+    // Make sure we do not include station vars by mistake
+    if (from_wanted & DBA_DB_FROM_D && !(from_wanted & DBA_DB_FROM_LTR) && !query_station_vars)
+        sql_where.append_list("d.id_lev_tr IS NOT NULL ");
 
     /* Create the FROM part with everything that is needed */
     if (from_wanted & DBA_DB_FROM_D) {
@@ -1313,6 +1341,70 @@ int CursorLinear::query(const Record& rec)
     count = raw_query(*stm, rec);
     return count;
 }
+
+void CursorLinear::query_datetime_extremes(const Record& query, Record& result)
+{
+    QueryBuilder qb(db, *stm, *this, 0, 0);
+    qb.from_wanted |= DBA_DB_FROM_D;
+
+    SQL_TIMESTAMP_STRUCT dmin;
+    SQL_TIMESTAMP_STRUCT dmax;
+    SQLLEN dmin_ind;
+    SQLLEN dmax_ind;
+    qb.build_date_extremes_query(query);
+    qb.stm.bind_out(qb.output_seq++, dmin, dmin_ind);
+    qb.stm.bind_out(qb.output_seq++, dmax, dmax_ind);
+
+    from_wanted = qb.from_wanted;
+
+    TRACE("Performing query: %s\n", qb.sql_query.c_str());
+
+    stm->set_cursor_forward_only();
+
+    /* Perform the query */
+    stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
+
+    // Fetch result row
+    bool res = stm->fetch();
+    if (!res)
+    {
+        stm->close_cursor();
+        throw error_consistency("datetime extremes query returned no results");
+    }
+
+    if (dmin_ind == SQL_NULL_DATA)
+    {
+        result.unset(DBA_KEY_YEARMIN);
+        result.unset(DBA_KEY_MONTHMIN);
+        result.unset(DBA_KEY_DAYMIN);
+        result.unset(DBA_KEY_HOURMIN);
+        result.unset(DBA_KEY_MINUMIN);
+        result.unset(DBA_KEY_SECMIN);
+
+        result.unset(DBA_KEY_YEARMAX);
+        result.unset(DBA_KEY_MONTHMAX);
+        result.unset(DBA_KEY_DAYMAX);
+        result.unset(DBA_KEY_HOURMAX);
+        result.unset(DBA_KEY_MINUMAX);
+        result.unset(DBA_KEY_SECMAX);
+    } else {
+        result.key(DBA_KEY_YEARMIN).seti(dmin.year);
+        result.key(DBA_KEY_MONTHMIN).seti(dmin.month);
+        result.key(DBA_KEY_DAYMIN).seti(dmin.day);
+        result.key(DBA_KEY_HOURMIN).seti(dmin.hour);
+        result.key(DBA_KEY_MINUMIN).seti(dmin.minute);
+        result.key(DBA_KEY_SECMIN).seti(dmin.second);
+
+        result.key(DBA_KEY_YEARMAX).seti(dmax.year);
+        result.key(DBA_KEY_MONTHMAX).seti(dmax.month);
+        result.key(DBA_KEY_DAYMAX).seti(dmax.day);
+        result.key(DBA_KEY_HOURMAX).seti(dmax.hour);
+        result.key(DBA_KEY_MINUMAX).seti(dmax.minute);
+        result.key(DBA_KEY_SECMAX).seti(dmax.second);
+    }
+    stm->close_cursor();
+}
+
 
 bool CursorLinear::next()
 {

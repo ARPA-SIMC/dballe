@@ -918,8 +918,7 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
 void DB::query_datetime_extremes(const Record& query, Record& result)
 {
     db::v6::CursorLinear cursor(*this, 0, 0);
-#warning TODO
-    //cursor.query_datetime_extremes(query, result);
+    cursor.query_datetime_extremes(query, result);
 }
 
 unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
