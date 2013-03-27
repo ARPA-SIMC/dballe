@@ -174,7 +174,6 @@ public:
     ~DB();
 
     void open_odbc(const char* dsn, const char* user, const char* password);
-    void open_generic(const char* config);
     void open_file(const char* pathname);
 
     /// Access the repinfo table

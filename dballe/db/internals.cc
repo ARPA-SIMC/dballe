@@ -28,6 +28,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cstdlib>
+#include <limits.h>
+#include <unistd.h>
 #include "dballe/core/vasprintf.h"
 
 #include <iostream>
@@ -130,6 +133,28 @@ void Connection::connect(const char* dsn, const char* user, const char* password
         error_odbc::throwf(SQL_HANDLE_DBC, od_conn, "Connecting to DSN %s as user %s", dsn, user);
     connected = true;
     init_after_connect();
+}
+
+void Connection::connect_file(const std::string& fname)
+{
+    // Access sqlite file directly
+    string buf;
+    if (fname[0] != '/')
+    {
+        char cwd[PATH_MAX];
+        buf = "Driver=SQLite3;Database=";
+        buf += getcwd(cwd, PATH_MAX);
+        buf += "/";
+        buf += fname;
+        buf += ";";
+    }
+    else
+    {
+        buf = "Driver=SQLite3;Database=";
+        buf += fname;
+        buf += ";";
+    }
+    driver_connect(buf.c_str());
 }
 
 void Connection::driver_connect(const char* config)

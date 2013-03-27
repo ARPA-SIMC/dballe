@@ -34,8 +34,6 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
-#include <limits.h>
-#include <unistd.h>
 
 #include <sql.h>
 
@@ -363,39 +361,14 @@ void dba_db_delete(dba_db db)
 
 void DB::open_odbc(const char* dsn, const char* user, const char* password)
 {
-    /* Connect to the DSN */
     conn->connect(dsn, user, password);
-
-    init_after_connect();
-}
-
-void DB::open_generic(const char* config)
-{
-    conn->driver_connect(config);
-
     init_after_connect();
 }
 
 void DB::open_file(const char* pathname)
 {
-    // Access sqlite file directly
-    string buf;
-    if (pathname[0] != '/')
-    {
-        char cwd[PATH_MAX];
-        buf = "Driver=SQLite3;Database=";
-        buf += getcwd(cwd, PATH_MAX);
-        buf += "/";
-        buf += pathname;
-        buf += ";";
-    }
-    else
-    {
-        buf = "Driver=SQLite3;Database=";
-        buf += pathname;
-        buf += ";";
-    }
-    open_generic(buf.c_str());
+    conn->connect_file(pathname);
+    init_after_connect();
 }
 
 Repinfo& DB::repinfo()

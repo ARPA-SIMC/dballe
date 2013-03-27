@@ -183,16 +183,6 @@ public:
 	void open_odbc(const char* dsn, const char* user, const char* password);
 
 	/**
-	 * Start a session with DB-All.e
-	 *
-	 * @param config
-	 *   The string with the configuration to use to start the connection. This is
-	 *   passed as is to SQLDriverConnect, so see ODBC documentation for its
-	 *   format.
-	 */
-	void open_generic(const char* config);
-
-	/**
 	 * Create from a SQLite file pathname
 	 * 
 	 * @param pathname
