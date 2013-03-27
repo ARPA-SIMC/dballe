@@ -121,8 +121,9 @@ public:
 	virtual void setdatemin(int year, int month, int day, int hour, int min, int sec);
 	virtual void setdatemax(int year, int month, int day, int hour, int min, int sec);
 
-	virtual void unset(const char* param);
-	virtual void unsetall();
+    virtual void unset(const char* param);
+    virtual void unsetall();
+    virtual void unsetb();
 
 	virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2);
 	virtual const char* spiegat(int ptype, int p1, int p2);

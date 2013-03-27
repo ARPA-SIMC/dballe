@@ -309,6 +309,16 @@ c     Restart the query from scratch
 c     ...
 \end{verbatim}
 
+To reset only Bxxyyy variables you can use {\tt idba\_unsetb}:
+\label{fun-idba_unsetall}
+
+\begin{verbatim}
+c     Insert a new variable with the old station, level and so on
+      call idba_unsetb(handle)
+      call idba_setd(handle, "B12101", 21.5)
+c     ...
+\end{verbatim}
+
 There is no way to reset output parameters: it is not needed since all action
 routines will get rid of old output values before producing new ones.
 
@@ -1673,6 +1683,7 @@ These routines are used to set the input and read the output of action routines.
 {\tt \small idba\_setc(h, param, val)} & Set a character in input         & \ref{fun-idba_set} \\
 {\tt \small idba\_unset(h, param)}     & Unset a value from the input     & \ref{fun-idba_unset} \\
 {\tt \small idba\_unsetall(h)}         & Unset all values from the input  & \ref{fun-idba_unsetall} \\
+{\tt \small idba\_unsetb(h)}           & Unset B* values from the input   & \ref{fun-idba_unsetb} \\
 {\tt \small idba\_enqi(h, param, val)} & Read an integer from the output  & \ref{fun-idba_enq} \\
 {\tt \small idba\_enqr(h, param, val)} & Read a real from the output      & \ref{fun-idba_enq} \\
 {\tt \small idba\_enqd(h, param, val)} & Read a double from the output    & \ref{fun-idba_enq} \\

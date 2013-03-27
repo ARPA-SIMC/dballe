@@ -364,6 +364,12 @@ void CommonAPIImplementation::unsetall()
 	input.clear();
 }
 
+void CommonAPIImplementation::unsetb()
+{
+    qcinput.clear_vars();
+    input.clear_vars();
+}
+
 const char* CommonAPIImplementation::spiegal(int ltype1, int l1, int ltype2, int l2)
 {
 	cached_spiega = Level(ltype1, l1, ltype2, l2).describe();

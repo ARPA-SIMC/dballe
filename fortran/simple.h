@@ -420,6 +420,14 @@ struct API
 	 */
 	virtual void unsetall() = 0;
 
+    /**
+     * Remove all B* parameters from the input record
+     * 
+     * @param handle
+     *   Handle to a DBALLE session
+     */
+    virtual void unsetb() = 0;
+
 	/**
 	 * Count the number of elements in the anagraphical storage, and start a new
 	 * anagraphical query.

@@ -1394,8 +1394,23 @@ F77_INTEGER_FUNCTION(idba_unset)(
 }
 
 /**
- * Remove all parameters from the input record
+ * Remove all B* parameters from the input record
  * 
+ * @param handle
+ *   Handle to a DBALLE session
+ */
+F77_SUBROUTINE(idba_unsetb)(
+		INTEGER(handle))
+{
+	GENPTR_INTEGER(handle)
+
+	HSimple& h = hsimp.get(*handle);
+	h.api->unsetb();
+}
+
+/**
+ * Remove all parameters from the input record
+ *
  * @param handle
  *   Handle to a DBALLE session
  */
