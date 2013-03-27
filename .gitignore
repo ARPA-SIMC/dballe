@@ -45,6 +45,7 @@ Makefile
 /dballe/msg/vars.cc
 /dballe/msg/vars.h
 /dballe/msg/msg-extravars.h
+/dballe/msg/context-extravars.h
 /dballe/msg/ltypes.dox
 /dballe/msg/ltypes.tex
 /dballe/msg/tranges.dox

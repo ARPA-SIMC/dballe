@@ -44,6 +44,8 @@
       call ensure_no_error("init 5")
       call idba_setd(handleinit, "B12101", 12.345D0)
       call ensure_no_error("init 6")
+      call idba_setd(handleinit, "B12103", 23.456D0)
+      call ensure_no_error("init 6")
       call idba_setc(handleinit, "rep_memo", 'synop')
       call ensure_no_error("init 6b")
       call idba_prendilo(handleinit)
