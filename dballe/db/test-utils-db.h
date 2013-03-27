@@ -39,8 +39,9 @@ struct db_test
     std::auto_ptr<DB> db;
     db::Format orig_format;
 
+    void disappear();
     bool has_db() const { return db.get() != NULL; }
-    void use_db(bool reset=true);
+    void use_db();
     void use_db(db::Format format, bool reset=true);
 
     db::v5::DB& v5();

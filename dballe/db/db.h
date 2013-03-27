@@ -55,6 +55,7 @@ struct Msgs;
 struct MsgConsumer;
 
 namespace db {
+struct Connection;
 
 /**
  * Supported formats
@@ -176,6 +177,17 @@ public:
      *   true if it looks like a URL, else false
      */
     static bool is_url(const char* str);
+
+    /// Return the format of this DB
+    virtual db::Format format() const = 0;
+
+    /**
+     * Remove all our traces from the database, if applicable.
+     *
+     * After this has been called, all other DB methods except for reset() will
+     * fail.
+     */
+    virtual void disappear() = 0;
 
     /**
      * Reset the database, removing all existing Db-All.e tables and re-creating them
@@ -428,6 +440,9 @@ public:
      * Dump the entire contents of the database to an output stream
      */
     virtual void dump(FILE* out) = 0;
+
+protected:
+    static std::auto_ptr<DB> instantiate_db(std::auto_ptr<db::Connection>& conn);
 };
 
 }

@@ -57,40 +57,54 @@ bool DB::is_url(const char* str)
     return false;
 }
 
+auto_ptr<DB> DB::instantiate_db(auto_ptr<Connection>& conn)
+{
+    // Autodetect format
+    Format format = default_format;
+
+    bool found = true;
+
+    // Try with reading it from the settings table
+    string version = conn->get_setting("version");
+    if (version == "V5")
+        format = V5;
+    else if (version == "V6")
+        format = V6;
+    else if (version == "")
+        found = false;// Some other key exists, but the version has not been set
+    else
+        error_consistency::throwf("unsupported database version: '%s'", version.c_str());
+   
+    // If it failed, try looking at the existing table structure
+    if (!found)
+    {
+        if (conn->has_table("lev_tr"))
+            format = V6;
+        else if (conn->has_table("context"))
+            format = V5;
+        else
+            format = default_format;
+    }
+
+    switch (format)
+    {
+        case V5: return auto_ptr<DB>(new v5::DB(conn));
+        case V6: return auto_ptr<DB>(new v6::DB(conn));
+    }
+}
+
 auto_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
 {
     auto_ptr<Connection> conn(new Connection);
     conn->connect(dsn, user, password);
-
-    auto_ptr<DB> res;
-    switch (default_format)
-    {
-        case V5:
-            res.reset(new v5::DB(conn));
-            break;
-        case V6:
-            res.reset(new v6::DB(conn));
-            break;
-    }
-    return res;
+    return instantiate_db(conn);
 }
 
 auto_ptr<DB> DB::connect_from_file(const char* pathname)
 {
     auto_ptr<Connection> conn(new Connection);
     conn->connect_file(pathname);
-
-    auto_ptr<DB> res;
-    switch (default_format)
-    {
-        case V5:
-            res.reset(new v5::DB(conn));
-            break;
-        case V6:
-            res.reset(new v6::DB(conn));
-            break;
-    }
-    return res;
+    return instantiate_db(conn);
 }
 
 auto_ptr<DB> DB::connect_from_url(const char* url)

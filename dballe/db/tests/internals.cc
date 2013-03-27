@@ -190,6 +190,23 @@ void to::test<6>()
     ensure(c.has_table("dballe_test"));
 }
 
+// Test settings
+template<> template<>
+void to::test<7>()
+{
+    use_db();
+    db::Connection& c = connection();
+    c.drop_table_if_exists("dballe_settings");
+    ensure(!c.has_table("dballe_settings"));
+
+    ensure_equals(c.get_setting("test_key"), "");
+
+    c.set_setting("test_key", "42");
+    ensure(c.has_table("dballe_settings"));
+
+    ensure_equals(c.get_setting("test_key"), "42");
+}
+
     //void bind_out(int idx, char* val, SQLLEN buflen);
     //void bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind);
     //void bind_out(int idx, SQL_TIMESTAMP_STRUCT& val);

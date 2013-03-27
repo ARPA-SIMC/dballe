@@ -488,15 +488,8 @@ void DB::delete_tables()
 }
 
 
-void DB::reset(const char* repinfo_file)
+void DB::disappear()
 {
-    /* Open the input CSV file */
-    /*
-    FILE* in = fopen(repinfo_file, "r");
-    if (in == NULL)
-        return dba_error_system("opening file %s", repinfo_file);
-    */
-
     Station::reset_db(*conn);
 
     /* Drop existing tables */
@@ -505,6 +498,13 @@ void DB::reset(const char* repinfo_file)
     /* Invalidate the repinfo cache if we have a repinfo structure active */
     if (m_repinfo)
         m_repinfo->invalidate_cache();
+
+    conn->drop_settings();
+}
+
+void DB::reset(const char* repinfo_file)
+{
+    disappear();
 
     /* Allocate statement handle */
     db::Statement stm(*conn);
@@ -537,61 +537,8 @@ void DB::reset(const char* repinfo_file)
     {
         int added, deleted, updated;
         repinfo().update(repinfo_file, &added, &deleted, &updated);
-        /* fprintf(stderr, "%d added, %d deleted, %d updated\n", added, deleted, updated); */
-        /*
-        DBALLE_SQL_C_UINT_TYPE id;
-        char memo[30];
-        char description[255];
-        DBALLE_SQL_C_UINT_TYPE prio;
-        char descriptor[6];
-        DBALLE_SQL_C_UINT_TYPE tablea;
-        int i;
-        char* columns[7];
-        int line;
-
-        res = SQLPrepare(stm, (unsigned char*)
-                "INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
-                "     VALUES (?, ?, ?, ?, ?, ?)", SQL_NTS);
-        if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-        {
-            err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "compiling query to insert into 'repinfo'");
-            goto cleanup;
-        }
-
-        SQLBindParameter(stm, 1, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &id, 0, 0);
-        SQLBindParameter(stm, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, memo, 0, 0);
-        SQLBindParameter(stm, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, description, 0, 0);
-        SQLBindParameter(stm, 4, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &prio, 0, 0);
-        SQLBindParameter(stm, 5, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, descriptor, 0, 0);
-        SQLBindParameter(stm, 6, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, &tablea, 0, 0);
-
-        for (line = 0; (i = dba_csv_read_next(in, columns, 7)) != 0; line++)
-        {
-            if (i != 6)
-            {
-                err = dba_error_parse(repinfo_file, line, "Expected 6 columns, got %d", i);
-                goto cleanup;
-            }
-                
-            id = strtol(columns[0], 0, 10);
-            strncpy(memo, columns[1], 30); memo[29] = 0;
-            strncpy(description, columns[2], 255); description[254] = 0;
-            prio = strtol(columns[3], 0, 10);
-            strncpy(descriptor, columns[4], 6); descriptor[5] = 0;
-            tablea = strtol(columns[5], 0, 10);
-
-            res = SQLExecute(stm);
-            if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-            {
-                err = dba_db_error_odbc(SQL_HANDLE_STMT, stm, "inserting new data into 'repinfo'");
-                goto cleanup;
-            }
-
-            for (i = 0; i < 6; i++)
-                free(columns[i]);
-        }
-        */
     }
+    conn->set_setting("version", "V5");
     conn->commit();
 }
 

@@ -438,24 +438,23 @@ void DB::delete_tables()
 #endif
 }
 
+void DB::disappear()
+{
+    v5::Station::reset_db(*conn);
+
+    // Drop existing tables
+    delete_tables();
+
+    // Invalidate the repinfo cache if we have a repinfo structure active
+    if (m_repinfo)
+        m_repinfo->invalidate_cache();
+
+    conn->drop_settings();
+}
 
 void DB::reset(const char* repinfo_file)
 {
-    /* Open the input CSV file */
-    /*
-    FILE* in = fopen(repinfo_file, "r");
-    if (in == NULL)
-        return dba_error_system("opening file %s", repinfo_file);
-    */
-
-    v5::Station::reset_db(*conn);
-
-    /* Drop existing tables */
-    delete_tables();
-
-    /* Invalidate the repinfo cache if we have a repinfo structure active */
-    if (m_repinfo)
-        m_repinfo->invalidate_cache();
+    disappear();
 
     /* Allocate statement handle */
     db::Statement stm(*conn);
@@ -489,6 +488,7 @@ void DB::reset(const char* repinfo_file)
         int added, deleted, updated;
         repinfo().update(repinfo_file, &added, &deleted, &updated);
     }
+    conn->set_setting("version", "V6");
     conn->commit();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();

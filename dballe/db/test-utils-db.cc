@@ -28,6 +28,7 @@
 #include <pwd.h>
 
 using namespace wreport;
+using namespace std;
 
 namespace dballe {
 namespace tests {
@@ -40,6 +41,7 @@ db_test::db_test()
 db_test::db_test(db::Format format, bool reset)
 {
     orig_format = DB::get_default_format();
+    if (reset) disappear();
     DB::set_default_format(format);
     db = DB::connect_test();
     if (reset) db->reset();
@@ -50,20 +52,29 @@ db_test::~db_test()
     DB::set_default_format(orig_format);
 }
 
-void db_test::use_db(bool reset)
+void db_test::disappear()
+{
+    auto_ptr<DB> db(DB::connect_test());
+    db->disappear();
+}
+
+void db_test::use_db()
 {
     if (!has_db()) throw tut::no_such_test();
-    if (reset) db->reset();
 }
 
 void db_test::use_db(db::Format format, bool reset)
 {
     if (!db.get())
     {
+        if (reset) disappear();
         DB::set_default_format(format);
         db = DB::connect_test();
     }
-    use_db(reset);
+    if (db->format() != format)
+        throw error_consistency("DB format mismatch in test init");
+    use_db();
+    if (reset) db->reset();
 }
 
 db::v5::DB& db_test::v5()

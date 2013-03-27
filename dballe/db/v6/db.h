@@ -173,6 +173,8 @@ protected:
 public:
     ~DB();
 
+    db::Format format() const { return V6; }
+
     /// Access the repinfo table
     v6::Repinfo& repinfo();
 
@@ -190,6 +192,8 @@ public:
 
     /// Access the data table
     Attr& attr();
+
+    void disappear();
 
     /**
      * Reset the database, removing all existing DBALLE tables and re-creating them

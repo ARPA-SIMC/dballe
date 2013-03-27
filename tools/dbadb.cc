@@ -148,6 +148,13 @@ int do_wipe(poptContext optCon)
     /* Get the optional name of the repinfo file */
     const char* fname = poptGetArg(optCon);
 
+    {
+        // Connect first using the current format, and remove all tables.
+        auto_ptr<DB> db = connect();
+        db->disappear();
+    }
+
+    // Recreate tables
     auto_ptr<DB> db = connect();
     db->reset(fname);
     return 0;

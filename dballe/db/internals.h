@@ -166,6 +166,9 @@ public:
      */
     void set_setting(const std::string& key, const std::string& value);
 
+    /// Drop the settings table
+    void drop_settings();
+
 	/**
 	 * Delete a table in the database if it exists, otherwise do nothing.
 	 */
