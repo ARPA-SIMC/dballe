@@ -179,6 +179,19 @@ static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
+static PyObject* dpy_DB_disappear(dpy_DB* self)
+{
+    try {
+        self->db->disappear();
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+
 static PyObject* dpy_DB_vacuum(dpy_DB* self)
 {
     try {
@@ -511,6 +524,8 @@ static PyMethodDef dpy_DB_methods[] = {
         "Create a DB for running the test suite, as configured in the test environment" },
     {"is_url",            (PyCFunction)dpy_DB_is_url, METH_VARARGS | METH_CLASS,
         "Checks if a string looks like a DB url" },
+    {"disappear",         (PyCFunction)dpy_DB_disappear, METH_NOARGS,
+        "Remove all our traces from the database, if applicable." },
     {"reset",             (PyCFunction)dpy_DB_reset, METH_VARARGS,
         "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
     {"insert",            (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,

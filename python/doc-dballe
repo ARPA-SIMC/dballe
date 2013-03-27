@@ -50,6 +50,7 @@ c_argspecs = {
     "DB.connect_from_url": "(url)",
     "DB.connect_test": "()",
     "DB.is_url": "(string)",
+    "DB.disappear": "()",
     "DB.reset": "([repinfo_filename])",
     "DB.insert": "(record, can_replace=False, can_add_stations=False)",
     "DB.remove": "(query)",
