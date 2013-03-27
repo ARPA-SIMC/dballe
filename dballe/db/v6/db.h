@@ -168,13 +168,10 @@ protected:
      */
     void run_sql(const char* query);
 
-    DB();
+    DB(std::auto_ptr<Connection>& conn);
 
 public:
     ~DB();
-
-    void open_odbc(const char* dsn, const char* user, const char* password);
-    void open_file(const char* pathname);
 
     /// Access the repinfo table
     v6::Repinfo& repinfo();

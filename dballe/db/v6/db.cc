@@ -296,14 +296,13 @@ static const char* init_queries_oracle[] = {
 
 
 // First part of initialising a dba_db
-DB::DB()
-    : conn(0),
+DB::DB(auto_ptr<Connection>& conn)
+    : conn(conn.release()),
       m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
       m_data(0), m_attr(0),
       seq_lev_tr(0), seq_data(0)
 {
-    /* Allocate the ODBC connection handle */
-    conn = new db::Connection;
+    init_after_connect();
 
     /* Set the connection timeout */
     /* SQLSetConnectAttr(pc.od_conn, SQL_LOGIN_TIMEOUT, (SQLPOINTER *)5, 0); */
@@ -320,19 +319,6 @@ DB::~DB()
     if (seq_data) delete seq_data;
     if (seq_lev_tr) delete seq_lev_tr;
     if (conn) delete conn;
-}
-
-void DB::open_odbc(const char* dsn, const char* user, const char* password)
-{
-    /* Connect to the DSN */
-    conn->connect(dsn, user, password);
-    init_after_connect();
-}
-
-void DB::open_file(const char* pathname)
-{
-    conn->connect_file(pathname);
-    init_after_connect();
 }
 
 v6::Repinfo& DB::repinfo()

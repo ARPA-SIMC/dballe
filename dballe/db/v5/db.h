@@ -164,31 +164,10 @@ protected:
 	 */
 	void fill_ana_layer(Msg& msg, int id_station, int id_report);
 
-    DB();
+    DB(std::auto_ptr<Connection>& conn);
 
 public:
     ~DB();
-
-	/**
-	 * Start a session with DB-All.e
-	 *
-	 * @param dsn
-	 *   The ODBC DSN of the database to use
-	 * @param user
-	 *   The user name to use to connect to the DSN
-	 * @param password
-	 *   The password to use to connect to the DSN.  To specify an empty password,
-	 *   pass "" or NULL
-	 */
-	void open_odbc(const char* dsn, const char* user, const char* password);
-
-	/**
-	 * Create from a SQLite file pathname
-	 * 
-	 * @param pathname
-	 *   The pathname to a SQLite file
-	 */
-	void open_file(const char* pathname);
 
 	/// Access the repinfo table
 	Repinfo& repinfo();

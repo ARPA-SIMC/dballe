@@ -22,6 +22,7 @@
 #include "db.h"
 #include "v5/db.h"
 #include "v6/db.h"
+#include "internals.h"
 #include <wreport/error.h>
 #include <cstring>
 #include <cstdlib>
@@ -58,42 +59,36 @@ bool DB::is_url(const char* str)
 
 auto_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
 {
+    auto_ptr<Connection> conn(new Connection);
+    conn->connect(dsn, user, password);
+
     auto_ptr<DB> res;
     switch (default_format)
     {
-        case V5: {
-            v5::DB* v5;
-            res.reset(v5 = new v5::DB);
-            v5->open_odbc(dsn, user, password);
+        case V5:
+            res.reset(new v5::DB(conn));
             break;
-        }
-        case V6: {
-            v6::DB* v6;
-            res.reset(v6 = new v6::DB);
-            v6->open_odbc(dsn, user, password);
+        case V6:
+            res.reset(new v6::DB(conn));
             break;
-        }
     }
     return res;
 }
 
 auto_ptr<DB> DB::connect_from_file(const char* pathname)
 {
+    auto_ptr<Connection> conn(new Connection);
+    conn->connect_file(pathname);
+
     auto_ptr<DB> res;
     switch (default_format)
     {
-        case V5: {
-            v5::DB* v5;
-            res.reset(v5 = new v5::DB);
-            v5->open_file(pathname);
+        case V5:
+            res.reset(new v5::DB(conn));
             break;
-        }
-        case V6: {
-            v6::DB* v6;
-            res.reset(v6 = new v6::DB);
-            v6->open_file(pathname);
+        case V6:
+            res.reset(new v6::DB(conn));
             break;
-        }
     }
     return res;
 }
