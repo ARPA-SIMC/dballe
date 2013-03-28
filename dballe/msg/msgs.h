@@ -38,7 +38,10 @@ struct CSVReader;
 struct Msgs : public std::vector<Msg*>
 {
     Msgs();
+    Msgs(const Msgs& msgs);
     ~Msgs();
+
+    Msgs& operator=(const Msgs& msgs);
 
     /**
      * Append a copy of the message to the array.
@@ -56,6 +59,11 @@ struct Msgs : public std::vector<Msg*>
      *   management for it.
      */
     void acquire(std::auto_ptr<Msg> msg);
+
+    /**
+     * Remove all messages
+     */
+    void clear();
 
     /**
      * Read data from a CSV input.

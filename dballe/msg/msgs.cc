@@ -36,10 +36,36 @@ Msgs::Msgs()
 {
 }
 
+Msgs::Msgs(const Msgs& msgs)
+{
+    reserve(msgs.size());
+    for (const_iterator i = msgs.begin(); i != msgs.end(); ++i)
+        push_back(new Msg(**i));
+}
+
 Msgs::~Msgs()
 {
 	for (iterator i = begin(); i != end(); ++i)
         delete *i;
+}
+
+Msgs& Msgs::operator=(const Msgs& msgs)
+{
+    if (this != &msgs)
+    {
+        clear();
+        reserve(msgs.size());
+        for (const_iterator i = msgs.begin(); i != msgs.end(); ++i)
+            push_back(new Msg(**i));
+    }
+    return *this;
+}
+
+void Msgs::clear()
+{
+    for (iterator i = begin(); i != end(); ++i)
+        delete *i;
+    vector<Msg*>::clear();
 }
 
 void Msgs::acquire(const Msg& msg)

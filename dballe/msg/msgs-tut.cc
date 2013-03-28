@@ -340,6 +340,17 @@ void to::test<8>()
     ensure_equals(msgs->diff(msgs1), 0u);
 }
 
+// Test copy
+template<> template<>
+void to::test<9>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/synop-evapo.bufr", BUFR);
+    Msgs msgs1(*msgs);
+    Msgs msgs2;
+    msgs2 = *msgs;
+    msgs1 = msgs1;
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
