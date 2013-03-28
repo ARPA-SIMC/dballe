@@ -56,6 +56,7 @@ template<> template<>
 void to::test<1>()
 {
     dballe::tests::TestCodec test("bufr/temp-huge.bufr");
+    test.expected_min_vars = 30000;
     TESTCODEC(test, reimport);
 
     BufrReimportTest testold("bufr/temp-huge.bufr");
@@ -73,6 +74,7 @@ template<> template<>
 void to::test<2>()
 {
     dballe::tests::TestCodec test("bufr/ecmwf-ship-1-11.bufr");
+    test.expected_min_vars = 30;
     TESTCODEC(test, reimport);
 
     BufrReimportTest testold("bufr/ecmwf-ship-1-11.bufr");

@@ -212,6 +212,8 @@ struct TestCodec
     bool verbose;
     msg::Importer::Options input_opts;
     msg::Exporter::Options output_opts;
+    int expected_subsets;
+    int expected_min_vars;
 
     TestCodec(const std::string& fname, Encoding type=BUFR);
 

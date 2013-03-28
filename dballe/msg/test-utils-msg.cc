@@ -586,7 +586,7 @@ void TestMessage::read_from_msgs(const Msgs& _msgs, const msg::Exporter::Options
 }
 
 TestCodec::TestCodec(const std::string& fname, Encoding type)
-    : fname(fname), type(type), verbose(false)
+    : fname(fname), type(type), verbose(false), expected_subsets(1), expected_min_vars(1)
 {
 }
 
@@ -625,6 +625,7 @@ void TestCodec::run_reimport(const dballe::tests::Location& loc)
             (*i)->tweak(*msgs1);
         }
 #endif
+
     // Export
     if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
     TestMessage exported(type, "exported");
@@ -660,17 +661,44 @@ void TestCodec::run_reimport(const dballe::tests::Location& loc)
     }
 #endif
 
-    // Compare
-    stringstream str;
-    notes::Collect c(str);
-    int diffs = orig.msgs.diff(final.msgs);
-    if (diffs)
+    // Compare msgs
     {
-        dballe::tests::dump("msg1", orig.msgs);
-        dballe::tests::dump("msg2", final.msgs);
-        dballe::tests::dump("msg", final.raw);
-        dballe::tests::dump("diffs", str.str(), "details of differences");
-        throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
+        stringstream str;
+        notes::Collect c(str);
+        int diffs = orig.msgs.diff(final.msgs);
+        if (diffs)
+        {
+            dballe::tests::dump("msg1", orig.msgs);
+            dballe::tests::dump("msg2", final.msgs);
+            dballe::tests::dump("msg", final.raw);
+            dballe::tests::dump("diffs", str.str(), "details of differences");
+            throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
+        }
+    }
+
+    // Compare bulletins
+    {
+        stringstream str;
+        notes::Collect c(str);
+        int diffs = 0;
+        if (final.bulletin->subsets.size() != (unsigned)expected_subsets)
+        {
+            notes::logf("Number of subsets differ from expected: %zd != %d\n", final.bulletin->subsets.size(), expected_subsets);
+            ++diffs;
+        }
+        if (final.bulletin->subsets[0].size() < (unsigned)expected_min_vars)
+        {
+            notes::logf("Number of items in first subset is too small: %zd < %zd\n", final.bulletin->subsets[0].size(), expected_min_vars);
+            ++diffs;
+        }
+        if (diffs)
+        {
+            dballe::tests::dump("bull1", *orig.bulletin);
+            dballe::tests::dump("bull2", *final.bulletin);
+            dballe::tests::dump("msg", final.raw);
+            dballe::tests::dump("diffs", str.str(), "details of differences");
+            throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
+        }
     }
 }
 
