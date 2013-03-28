@@ -75,7 +75,7 @@ Msg::Msg(const Msg& m)
 {
     // Reserve space for the new contexts
     data.reserve(m.data.size());
-    
+
     // Copy the contexts
     for (vector<msg::Context*>::const_iterator i = m.data.begin();
             i != m.data.end(); ++i)

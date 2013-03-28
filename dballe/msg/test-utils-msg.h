@@ -186,6 +186,41 @@ struct RoundVSS : public MessageTweaker
 
 }
 
+struct TestMessage
+{
+    const std::string& name;
+    Encoding type;
+    Rawmsg raw;
+    wreport::Bulletin* bulletin;
+    Msgs msgs;
+
+    TestMessage(Encoding type, const std::string& name);
+    ~TestMessage();
+
+    /// Create a bulletin for the current encoding
+    std::auto_ptr<wreport::Bulletin> create_bulletin();
+
+    void read_from_file(const std::string& fname, const msg::Importer::Options& input_opts);
+    void read_from_raw(const Rawmsg& msg, const msg::Importer::Options& input_opts);
+    void read_from_msgs(const Msgs& msgs, const msg::Exporter::Options& export_opts);
+};
+
+struct TestCodec
+{
+    std::string fname;
+    Encoding type;
+    bool verbose;
+    msg::Importer::Options input_opts;
+    msg::Exporter::Options output_opts;
+
+    TestCodec(const std::string& fname, Encoding type=BUFR);
+
+    void run_reimport(const dballe::tests::Location& loc);
+};
+
+#define TESTCODEC(obj, name) obj.run_##name(wibble::tests::Location(__FILE__, __LINE__, #obj ".run_" #name))
+
+
 #if 0
 
 /* Random message generation functions */

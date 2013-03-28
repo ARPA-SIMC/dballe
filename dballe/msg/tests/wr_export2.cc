@@ -55,8 +55,11 @@ TESTGRP(wr_export2);
 template<> template<>
 void to::test<1>()
 {
-    BufrReimportTest test("bufr/temp-huge.bufr");
-    run_test(test, do_test, "temp-wmo");
+    dballe::tests::TestCodec test("bufr/temp-huge.bufr");
+    TESTCODEC(test, reimport);
+
+    BufrReimportTest testold("bufr/temp-huge.bufr");
+    run_test(testold, do_test, "temp-wmo");
 }
 
 /*
@@ -69,8 +72,11 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
-    BufrReimportTest test("bufr/ecmwf-ship-1-11.bufr");
-    run_test(test, do_test, "ship-wmo");
+    dballe::tests::TestCodec test("bufr/ecmwf-ship-1-11.bufr");
+    TESTCODEC(test, reimport);
+
+    BufrReimportTest testold("bufr/ecmwf-ship-1-11.bufr");
+    run_test(testold, do_test, "ship-wmo");
 }
 
 // Test import/export of ECMWF synop ship record 2

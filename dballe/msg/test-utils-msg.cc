@@ -23,6 +23,8 @@
 #include <dballe/msg/context.h>
 #include <wreport/bulletin.h>
 #include <wreport/conv.h>
+#include <wreport/notes.h>
+#include <wibble/string.h>
 
 #include <cstring>
 #include <unistd.h>
@@ -30,6 +32,7 @@
 #include <pwd.h>
 #include <fstream>
 
+using namespace wibble;
 using namespace wreport;
 using namespace std;
 
@@ -540,6 +543,135 @@ void RoundVSS::tweak(Msgs& msgs)
     }
 }
 
+}
+
+TestMessage::TestMessage(Encoding type, const std::string& name)
+    : name(name), type(type), bulletin(0)
+{
+    switch (type)
+    {
+        case BUFR: bulletin = BufrBulletin::create().release(); break;
+        case CREX: bulletin = CrexBulletin::create().release(); break;
+        default: throw wreport::error_unimplemented("Unsupported message type");
+    }
+}
+
+TestMessage::~TestMessage()
+{
+    if (bulletin) delete bulletin;
+}
+
+void TestMessage::read_from_file(const std::string& fname, const msg::Importer::Options& input_opts)
+{
+    auto_ptr<Rawmsg> src = read_rawmsg(fname.c_str(), type);
+    read_from_raw(*src, input_opts);
+}
+
+void TestMessage::read_from_raw(const Rawmsg& msg, const msg::Importer::Options& input_opts)
+{
+    std::auto_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
+    raw = msg;
+    bulletin->decode(raw);
+    importer->from_rawmsg(raw, msgs);
+}
+
+void TestMessage::read_from_msgs(const Msgs& _msgs, const msg::Exporter::Options& export_opts)
+{
+    // Export
+    std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, export_opts));
+
+    msgs = _msgs;
+    exporter->to_bulletin(msgs, *bulletin);
+    bulletin->encode(raw);
+}
+
+TestCodec::TestCodec(const std::string& fname, Encoding type)
+    : fname(fname), type(type), verbose(false)
+{
+}
+
+void TestCodec::run_reimport(const dballe::tests::Location& loc)
+{
+    if (verbose) cerr << "Running test " << loc.locstr() << endl;
+
+    // Import
+    if (verbose) cerr << "Importing " << fname << " " << input_opts.to_string() << endl;
+    TestMessage orig(type, "orig");
+    try {
+        orig.read_from_file(fname, input_opts);
+    } catch (std::exception& e) {
+        throw tut::failure(loc.msg(string("cannot decode ") + fname + ": " + e.what()));
+    }
+
+    inner_ensure(orig.msgs.size() > 0);
+
+#if 0
+    // Run tweaks
+    for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
+    {
+        if (verbose) cerr << "Running tweak " << (*i)->desc() << endl;
+        (*i)->tweak(*msgs1);
+    }
+    if (do_ecmwf_tweaks)
+        for (typename vector<Tweaker*>::iterator i = ecmwf_tweaks.begin(); i != ecmwf_tweaks.end(); ++i)
+        {
+            if (verbose) cerr << "Running ecmwf tweak " << (*i)->desc() << endl;
+            (*i)->tweak(*msgs1);
+        }
+    if (do_wmo_tweaks)
+        for (typename vector<Tweaker*>::iterator i = wmo_tweaks.begin(); i != wmo_tweaks.end(); ++i)
+        {
+            if (verbose) cerr << "Running wmo tweak " << (*i)->desc() << endl;
+            (*i)->tweak(*msgs1);
+        }
+#endif
+    // Export
+    if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
+    TestMessage exported(type, "exported");
+    try {
+        exported.read_from_msgs(orig.msgs, output_opts);
+    } catch (std::exception& e) {
+        //dballe::tests::dump("bul1", *exported);
+        //balle::tests::dump("msg1", *msgs1);
+        throw tut::failure(loc.msg(string("cannot export: ") + e.what()));
+    }
+
+    // Import again
+    TestMessage final(type, "final");
+    try {
+        final.read_from_raw(exported.raw, input_opts);
+    } catch (std::exception& e) {
+        //dballe::tests::dump("msg1", *msgs1);
+        //dballe::tests::dump("msg", rawmsg);
+        throw tut::failure(loc.msg(string("importing from exported rawmsg: ") + e.what()));
+    }
+
+#if 0
+    if (do_ignore_context_attrs)
+    {
+        StripContextAttrs sca;
+        sca.tweak(*msgs1);
+    }
+    if (do_round_geopotential)
+    {
+        RoundGeopotential rg;
+        rg.tweak(*msgs1);
+        rg.tweak(*msgs3);
+    }
+#endif
+
+    // Compare
+    stringstream str;
+    notes::Collect c(str);
+    int diffs = orig.msgs.diff(final.msgs);
+    if (diffs)
+    {
+        dballe::tests::dump("msg1", orig.msgs);
+        dballe::tests::dump("msg2", final.msgs);
+        dballe::tests::dump("msg", final.raw);
+        dballe::tests::dump("diffs", str.str(), "details of differences");
+        throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
+    }
 }
 
 }
