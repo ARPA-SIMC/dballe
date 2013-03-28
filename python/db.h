@@ -48,6 +48,11 @@ namespace python {
  */
 dpy_DB* db_create(std::auto_ptr<DB> db);
 
+/**
+ * Copy varcodes from a Python sequence to a db::AttrList
+ */
+bool db_read_attrlist(PyObject* attrs, db::AttrList& codes);
+
 void register_db(PyObject* m);
 
 }

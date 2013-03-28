@@ -83,33 +83,34 @@ class DballeTest(unittest.TestCase):
         self.assertEqual(data.vars(), (dballe.var("B33036", 75),))
 
     def testQueryCursorAttrs(self):
-        query = dballe.Record()
-        query["var"] = "B01011"
+        # Query a variable
+        query = dballe.Record(var="B01011")
         cur = self.db.query_data(query);
+        data = cur.next()
+        self.failUnless(data)
 
-        self.failUnless(cur.next())
-
-        data = dballe.Record()
-        count = cur.query_attrs([], data)
-        self.assertEqual(count, 2)
+        attrs = cur.query_attrs()
 
         expected = {}
         expected["B33007"] = 50
         expected["B33036"] = 75
 
         count = 0
-        for var in data:
-                assert var.code() in expected
-                self.assertEqual(var.enq(), expected[var.code()])
-                del expected[var.code()]
+        for code in attrs:
+                var = attrs.var(code)
+                assert var.code in expected
+                self.assertEqual(var.enq(), expected[var.code])
+                del expected[var.code]
                 count = count + 1
         self.assertEqual(count, 2)
 
         # Try limiting the set of wanted attributes
-        data.clear()
-        count = cur.query_attrs(["B33036"], data)
-        self.assertEqual(count, 1)
-        self.assertEqual(data.items(), [("B33036", 75)])
+        attrs = cur.query_attrs(["B33036"])
+        for code in attrs:
+            var = attrs.var(code)
+            self.assertEqual(var.code, "B33036")
+            self.assertEqual(var.enqi(), 75)
+
     def testQueryLevels(self):
         query = dballe.Record()
         cur = self.db.query_levels(query)

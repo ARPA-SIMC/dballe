@@ -213,7 +213,7 @@ static PyObject* dpy_DB_query_reports(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_reports(record->rec);
-        return (PyObject*)cursor_create(res);
+        return (PyObject*)cursor_create(self, res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -229,7 +229,7 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_stations(record->rec);
-        return (PyObject*)cursor_create(res);
+        return (PyObject*)cursor_create(self, res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -245,7 +245,7 @@ static PyObject* dpy_DB_query_levels(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_levels(record->rec);
-        return (PyObject*)cursor_create(res);
+        return (PyObject*)cursor_create(self, res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -261,7 +261,7 @@ static PyObject* dpy_DB_query_tranges(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_tranges(record->rec);
-        return (PyObject*)cursor_create(res);
+        return (PyObject*)cursor_create(self, res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -277,7 +277,7 @@ static PyObject* dpy_DB_query_variable_types(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_variable_types(record->rec);
-        return (PyObject*)cursor_create(res);
+        return (PyObject*)cursor_create(self, res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -293,7 +293,7 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
 
     try {
         std::auto_ptr<db::Cursor> res = self->db->query_data(record->rec);
-        return (PyObject*)cursor_create(res);
+        return (PyObject*)cursor_create(self, res);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -337,30 +337,6 @@ static PyObject* dpy_DB_query_datetime_extremes(dpy_DB* self, PyObject* args)
     }
 }
 
-static bool read_attrlist(PyObject* attrs, db::AttrList& codes)
-{
-    if (!attrs) return true;
-
-    OwnedPyObject iter(PyObject_GetIter(attrs));
-    if (iter == NULL) return false;
-
-    try {
-        while (PyObject* iter_item = PyIter_Next(iter)) {
-            OwnedPyObject item(iter_item);
-            const char* name = PyString_AsString(item);
-            if (!name) return false;
-            codes.push_back(resolve_varcode(name));
-        }
-        return true;
-    } catch (wreport::error& e) {
-        raise_wreport_exception(e);
-        return false;
-    } catch (std::exception& se) {
-        raise_std_exception(se);
-        return false;
-    }
-}
-
 static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 {
     static char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
@@ -374,7 +350,7 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 
     // Read the attribute list, if provided
     db::AttrList codes;
-    if (!read_attrlist(attrs, codes))
+    if (!db_read_attrlist(attrs, codes))
         return NULL;
 
     try {
@@ -428,7 +404,7 @@ static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
 
     // Read the attribute list, if provided
     db::AttrList codes;
-    if (!read_attrlist(attrs, codes))
+    if (!db_read_attrlist(attrs, codes))
         return NULL;
 
     try {
@@ -649,6 +625,30 @@ PyTypeObject dpy_DB_Type = {
 
 namespace dballe {
 namespace python {
+
+bool db_read_attrlist(PyObject* attrs, db::AttrList& codes)
+{
+    if (!attrs) return true;
+
+    OwnedPyObject iter(PyObject_GetIter(attrs));
+    if (iter == NULL) return false;
+
+    try {
+        while (PyObject* iter_item = PyIter_Next(iter)) {
+            OwnedPyObject item(iter_item);
+            const char* name = PyString_AsString(item);
+            if (!name) return false;
+            codes.push_back(resolve_varcode(name));
+        }
+        return true;
+    } catch (wreport::error& e) {
+        raise_wreport_exception(e);
+        return false;
+    } catch (std::exception& se) {
+        raise_std_exception(se);
+        return false;
+    }
+}
 
 dpy_DB* db_create(std::auto_ptr<DB> db)
 {

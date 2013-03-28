@@ -22,6 +22,7 @@
 #include <datetime.h>
 #include "cursor.h"
 #include "record.h"
+#include "db.h"
 #include "common.h"
 
 using namespace std;
@@ -38,8 +39,33 @@ static PyGetSetDef dpy_Cursor_getsetters[] = {
     {NULL}
 };
 
+static PyObject* dpy_Cursor_query_attrs(dpy_Cursor* self, PyObject* args, PyObject* kw)
+{
+    static char* kwlist[] = { "attrs", NULL };
+    PyObject* attrs = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", kwlist, &attrs))
+        return NULL;
+
+    // Read the attribute list, if provided
+    db::AttrList codes;
+    if (!db_read_attrlist(attrs, codes))
+        return NULL;
+
+    try {
+        self->cur->query_attrs(codes, self->db->attr_rec->rec);
+        Py_INCREF(self->db->attr_rec);
+        return (PyObject*)self->db->attr_rec;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
 
 static PyMethodDef dpy_Cursor_methods[] = {
+    {"query_attrs",       (PyCFunction)dpy_Cursor_query_attrs, METH_VARARGS | METH_KEYWORDS,
+        "Query attributes for the current variable" },
     {NULL}
 };
 
@@ -55,6 +81,7 @@ static void dpy_Cursor_dealloc(dpy_Cursor* self)
 {
     delete self->cur;
     Py_DECREF(self->rec);
+    Py_DECREF(self->db);
 }
 
 static PyObject* dpy_Cursor_iter(dpy_Cursor* self)
@@ -152,11 +179,13 @@ PyTypeObject dpy_Cursor_Type = {
 namespace dballe {
 namespace python {
 
-dpy_Cursor* cursor_create(std::auto_ptr<db::Cursor> cur)
+dpy_Cursor* cursor_create(dpy_DB* db, std::auto_ptr<db::Cursor> cur)
 {
     dpy_Cursor* result = PyObject_New(dpy_Cursor, &dpy_Cursor_Type);
     if (!result) return NULL;
     result = (dpy_Cursor*)PyObject_Init((PyObject*)result, &dpy_Cursor_Type);
+    Py_INCREF(db);
+    result->db = db;
     result->cur = cur.release();
     result->rec = record_create();
     return result;

@@ -24,11 +24,13 @@
 #include <Python.h>
 #include <dballe/db/db.h>
 #include "record.h"
+#include "db.h"
 
 extern "C" {
 
 typedef struct {
     PyObject_HEAD
+    dpy_DB* db;
     dballe::db::Cursor* cur;
     dpy_Record* rec;
 } dpy_Cursor;
@@ -46,7 +48,7 @@ namespace python {
 /**
  * Create a new dpy_Cursor, taking ownership of memory management
  */
-dpy_Cursor* cursor_create(std::auto_ptr<db::Cursor> cur);
+dpy_Cursor* cursor_create(dpy_DB* db, std::auto_ptr<db::Cursor> cur);
 
 void register_cursor(PyObject* m);
 

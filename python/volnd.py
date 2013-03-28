@@ -473,16 +473,16 @@ class Data:
                 """
                 if not self._lastPos:
                         return
-                for var in rec.itervars():
-                        #print "Attr", var.code(), "for", self.name, "at", self._lastPos
-                        if var.code() in self.attrs:
-                                data = self.attrs[var.code()]
-                        else:
-                                data = Data(self.name, self.dims, False)
-                                self.attrs[var.code()] = data
-                        # Append at the same position as the last variable
-                        # collected
-                        data.vals.append( (self._lastPos, var.enq()) )
+                for code in rec:
+                    #print "Attr", var.code(), "for", self.name, "at", self._lastPos
+                    if code in self.attrs:
+                            data = self.attrs[code]
+                    else:
+                            data = Data(self.name, self.dims, False)
+                            self.attrs[code] = data
+                    # Append at the same position as the last variable
+                    # collected
+                    data.vals.append((self._lastPos, rec[code]))
 
         def _instantiateIntMatrix(self):
                 if self.info.bit_ref == 0:
@@ -604,7 +604,6 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
         """
         ndims = len(dims)
         vars = {}
-        arec = dballe.Record()
         #print "volnd iterate"
         # Iterate results
         for rec in cursor:
@@ -631,10 +630,10 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
                 # Add the attributes
                 if attributes != None:
                         if attributes == True:
-                                count = cursor.query_attrs([], arec);
+                                arec = cursor.query_attrs([]);
                                 var.appendAttrs(arec)
                         else:
-                                count = cursor.query_attrs(attributes, arec)
+                                arec = cursor.query_attrs(attributes)
                                 var.appendAttrs(arec)
 
 

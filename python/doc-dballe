@@ -67,6 +67,7 @@ c_argspecs = {
     "DB.query_attrs": "(varcode, reference_id, attrs=None)",
     "DB.export_to_file": "(query, format, filename, generic=False)",
     "Cursor.next": "()",
+    "Cursor.query_attrs": "(attrs=None)",
 }
 
 def document(obj):
