@@ -242,7 +242,7 @@ dnl
 dnl  6. If any interfaces have been removed since the last public release,
 dnl     then set AGE to 0.
 
-LIBDBALLE_VERSION_INFO="5:0:0"
+LIBDBALLE_VERSION_INFO="6:0:0"
 LIBDBALLEF_VERSION_INFO="4:19:0"
 AC_SUBST(LIBDBALLE_VERSION_INFO)
 AC_SUBST(LIBDBALLEF_VERSION_INFO)
