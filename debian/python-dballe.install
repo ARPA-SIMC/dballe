@@ -1,1 +1,2 @@
-usr/lib/python*/*-packages/dballe*
+usr/lib/python*/*-packages/_dballe*.so
+usr/lib/python*/*-packages/dballe/

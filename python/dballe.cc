@@ -137,13 +137,13 @@ static PyMethodDef dballe_methods[] = {
     { NULL }
 };
 
-PyMODINIT_FUNC initdballe(void)
+PyMODINIT_FUNC init_dballe(void)
 {
     using namespace dballe::python;
 
     PyObject* m;
 
-    m = Py_InitModule3("dballe", dballe_methods,
+    m = Py_InitModule3("_dballe", dballe_methods,
             "DB-All.e Python interface.");
 
     register_vartable(m);

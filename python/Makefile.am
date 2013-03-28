@@ -28,9 +28,9 @@ nodist__dballe_la_SOURCES += \
     db.cc \
     cursor.cc
 endif
-dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
-dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex initdballe
-dballe_la_LIBADD = ../dballe/libdballe.la
+_dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
+_dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
+_dballe_la_LIBADD = ../dballe/libdballe.la
 
 doc_DATA = python-dballe.rst
 
@@ -41,14 +41,17 @@ endif
 _dballe.so: _dballe.la
 	ln -fs .libs/_dballe.so $@
 
-python-dballe.rst: doc-dballe $(pkgpython_PYTHON) _dballe.so
+dballe: _dballe.so
+	ln -s . dballe
+
+python-dballe.rst: doc-dballe $(pkgpython_PYTHON) dballe
 	$(srcdir)/doc-dballe > $@ || (rm -f $@; false)
 
 python-dballe.html: python-dballe.rst
 	rst2html $< > $@ || (rm -f $@; false)
 
 clean-local:
-	rm -f *.pyc dballe.so
+	rm -f *.pyc dballe.so dballe
 
 EXTRA_DIST = \
     common.h \
