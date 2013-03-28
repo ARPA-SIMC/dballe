@@ -1,3 +1,18 @@
+dballe (6.0-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - new, faster database layout
+     - old layout still supported for existing databases
+     - changes to C++ and Python API to make it possible to have multiple
+       database engines
+     - Python API redesigned from scratch with clean, hand-written, documented
+       bindings
+     - support for WMO SHIP messages
+  * Updated sonames
+  * Removed dependency on swig
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 20 Mar 2013 16:06:42 +0100
+
 dballe (5.23-1) UNRELEASED; urgency=low
 
   * New upstream release
