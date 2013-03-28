@@ -109,6 +109,16 @@ void to::test<5>()
     TEST_convert(test, "ship-wmo");
 }
 
+// Test import/export of WMO synop ship
+template<> template<>
+void to::test<6>()
+{
+    dballe::tests::TestCodec test("bufr/wmo-ship-1.bufr");
+    test.expected_min_vars = 50;
+    TEST_reimport(test);
+    TEST_convert(test, "ship-wmo");
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
