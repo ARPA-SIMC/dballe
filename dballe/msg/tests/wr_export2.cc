@@ -57,7 +57,7 @@ void to::test<1>()
 {
     dballe::tests::TestCodec test("bufr/temp-huge.bufr");
     test.expected_min_vars = 30000;
-    TESTCODEC(test, reimport);
+    TEST_reimport(test);
 
     BufrReimportTest testold("bufr/temp-huge.bufr");
     run_test(testold, do_test, "temp-wmo");
@@ -74,35 +74,39 @@ template<> template<>
 void to::test<2>()
 {
     dballe::tests::TestCodec test("bufr/ecmwf-ship-1-11.bufr");
-    test.expected_min_vars = 30;
-    TESTCODEC(test, reimport);
-
-    BufrReimportTest testold("bufr/ecmwf-ship-1-11.bufr");
-    run_test(testold, do_test, "ship-wmo");
+    test.expected_min_vars = 34;
+    TEST_reimport(test);
+    TEST_convert(test, "ship-wmo");
 }
 
 // Test import/export of ECMWF synop ship record 2
 template<> template<>
 void to::test<3>()
 {
-    BufrReimportTest test("bufr/ecmwf-ship-1-12.bufr");
-    run_test(test, do_test, "ship-wmo");
+    dballe::tests::TestCodec test("bufr/ecmwf-ship-1-12.bufr");
+    test.expected_min_vars = 21;
+    TEST_reimport(test);
+    TEST_convert(test, "ship-wmo");
 }
 
 // Test import/export of ECMWF synop ship (auto)
 template<> template<>
 void to::test<4>()
 {
-    BufrReimportTest test("bufr/ecmwf-ship-1-13.bufr");
-    run_test(test, do_test, "ship-wmo");
+    dballe::tests::TestCodec test("bufr/ecmwf-ship-1-13.bufr");
+    test.expected_min_vars = 30;
+    TEST_reimport(test);
+    TEST_convert(test, "ship-wmo");
 }
 
 // Test import/export of ECMWF synop ship (auto) record 2
 template<> template<>
 void to::test<5>()
 {
-    BufrReimportTest test("bufr/ecmwf-ship-1-14.bufr");
-    run_test(test, do_test, "ship-wmo");
+    dballe::tests::TestCodec test("bufr/ecmwf-ship-1-14.bufr");
+    test.expected_min_vars = 28;
+    TEST_reimport(test);
+    TEST_convert(test, "ship-wmo");
 }
 
 }

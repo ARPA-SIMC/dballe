@@ -590,6 +590,37 @@ TestCodec::TestCodec(const std::string& fname, Encoding type)
 {
 }
 
+void TestCodec::do_compare(const dballe::tests::Location& loc, const TestMessage& msg1, const TestMessage& msg2)
+{
+    // Compare msgs
+    {
+        stringstream str;
+        notes::Collect c(str);
+        int diffs = msg1.msgs.diff(msg2.msgs);
+        if (diffs)
+        {
+            dballe::tests::dump("msg1", msg1.msgs);
+            dballe::tests::dump("msg2", msg2.msgs);
+            dballe::tests::dump("msg", msg2.raw);
+            dballe::tests::dump("diffs", str.str(), "details of differences");
+            throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
+        }
+    }
+
+    // Compare bulletins
+    try {
+        if (msg2.bulletin->subsets.size() != (unsigned)expected_subsets)
+            throw tut::failure(loc.msg(str::fmtf("Number of subsets differ from expected: %zd != %d\n", msg2.bulletin->subsets.size(), expected_subsets)));
+        if (msg2.bulletin->subsets[0].size() < (unsigned)expected_min_vars)
+            throw tut::failure(loc.msg(str::fmtf("Number of items in first subset is too small: %zd < %d\n", msg2.bulletin->subsets[0].size(), expected_min_vars)));
+    } catch (...) {
+        dballe::tests::dump("bull1", *msg1.bulletin);
+        dballe::tests::dump("bull2", *msg2.bulletin);
+        dballe::tests::dump("msg", msg2.raw);
+        throw;
+    }
+}
+
 void TestCodec::run_reimport(const dballe::tests::Location& loc)
 {
     if (verbose) cerr << "Running test " << loc.locstr() << endl;
@@ -660,46 +691,82 @@ void TestCodec::run_reimport(const dballe::tests::Location& loc)
         rg.tweak(*msgs3);
     }
 #endif
+    do_compare(loc, orig, final);
+}
 
-    // Compare msgs
-    {
-        stringstream str;
-        notes::Collect c(str);
-        int diffs = orig.msgs.diff(final.msgs);
-        if (diffs)
-        {
-            dballe::tests::dump("msg1", orig.msgs);
-            dballe::tests::dump("msg2", final.msgs);
-            dballe::tests::dump("msg", final.raw);
-            dballe::tests::dump("diffs", str.str(), "details of differences");
-            throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
-        }
+void TestCodec::run_convert(const dballe::tests::Location& loc, const std::string& tplname)
+{
+    if (verbose) cerr << "Running test " << loc.locstr() << endl;
+
+    // Import
+    if (verbose) cerr << "Importing " << fname << " " << input_opts.to_string() << endl;
+    TestMessage orig(type, "orig");
+    try {
+        orig.read_from_file(fname, input_opts);
+    } catch (std::exception& e) {
+        throw tut::failure(loc.msg(string("cannot decode ") + fname + ": " + e.what()));
     }
 
-    // Compare bulletins
+    inner_ensure(orig.msgs.size() > 0);
+
+#if 0
+    // Run tweaks
+    for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
     {
-        stringstream str;
-        notes::Collect c(str);
-        int diffs = 0;
-        if (final.bulletin->subsets.size() != (unsigned)expected_subsets)
-        {
-            notes::logf("Number of subsets differ from expected: %zd != %d\n", final.bulletin->subsets.size(), expected_subsets);
-            ++diffs;
-        }
-        if (final.bulletin->subsets[0].size() < (unsigned)expected_min_vars)
-        {
-            notes::logf("Number of items in first subset is too small: %zd < %zd\n", final.bulletin->subsets[0].size(), expected_min_vars);
-            ++diffs;
-        }
-        if (diffs)
-        {
-            dballe::tests::dump("bull1", *orig.bulletin);
-            dballe::tests::dump("bull2", *final.bulletin);
-            dballe::tests::dump("msg", final.raw);
-            dballe::tests::dump("diffs", str.str(), "details of differences");
-            throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
-        }
+        if (verbose) cerr << "Running tweak " << (*i)->desc() << endl;
+        (*i)->tweak(*msgs1);
     }
+    if (do_ecmwf_tweaks)
+        for (typename vector<Tweaker*>::iterator i = ecmwf_tweaks.begin(); i != ecmwf_tweaks.end(); ++i)
+        {
+            if (verbose) cerr << "Running ecmwf tweak " << (*i)->desc() << endl;
+            (*i)->tweak(*msgs1);
+        }
+    if (do_wmo_tweaks)
+        for (typename vector<Tweaker*>::iterator i = wmo_tweaks.begin(); i != wmo_tweaks.end(); ++i)
+        {
+            if (verbose) cerr << "Running wmo tweak " << (*i)->desc() << endl;
+            (*i)->tweak(*msgs1);
+        }
+#endif
+
+    // Export
+    if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
+    msg::Exporter::Options output_opts = this->output_opts;
+    output_opts.template_name = tplname;
+    TestMessage exported(type, "exported");
+    try {
+        exported.read_from_msgs(orig.msgs, output_opts);
+    } catch (std::exception& e) {
+        //dballe::tests::dump("bul1", *exported);
+        //balle::tests::dump("msg1", *msgs1);
+        throw tut::failure(loc.msg(string("cannot export: ") + e.what()));
+    }
+
+    // Import again
+    TestMessage final(type, "final");
+    try {
+        final.read_from_raw(exported.raw, input_opts);
+    } catch (std::exception& e) {
+        //dballe::tests::dump("msg1", *msgs1);
+        //dballe::tests::dump("msg", rawmsg);
+        throw tut::failure(loc.msg(string("importing from exported rawmsg: ") + e.what()));
+    }
+
+#if 0
+    if (do_ignore_context_attrs)
+    {
+        StripContextAttrs sca;
+        sca.tweak(*msgs1);
+    }
+    if (do_round_geopotential)
+    {
+        RoundGeopotential rg;
+        rg.tweak(*msgs1);
+        rg.tweak(*msgs3);
+    }
+#endif
+    do_compare(loc, orig, final);
 }
 
 }

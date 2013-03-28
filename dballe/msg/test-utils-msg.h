@@ -215,12 +215,19 @@ struct TestCodec
     int expected_subsets;
     int expected_min_vars;
 
+    void do_compare(const dballe::tests::Location& loc, const TestMessage& msg1, const TestMessage& msg2);
+
     TestCodec(const std::string& fname, Encoding type=BUFR);
 
+    // "import, export, import again, compare" test
     void run_reimport(const dballe::tests::Location& loc);
+
+    // "import, export as different template, import again, compare" test
+    void run_convert(const dballe::tests::Location& loc, const std::string& tplname);
 };
 
-#define TESTCODEC(obj, name) obj.run_##name(wibble::tests::Location(__FILE__, __LINE__, #obj ".run_" #name))
+#define TEST_reimport(obj) obj.run_reimport(wibble::tests::Location(__FILE__, __LINE__, #obj ".run_reimport"))
+#define TEST_convert(obj, tpl) obj.run_convert(wibble::tests::Location(__FILE__, __LINE__, #obj ".run_convert " tpl), tpl)
 
 
 #if 0
