@@ -77,69 +77,41 @@ void ShipImporter::import_var(const Var& var)
 {
     switch (var.code())
     {
-        // Cloud data
-        case WR_VAR(0, 20, 10): msg->set_cloud_n_var(var); break;
+        // Icing and ice
+        // TODO: check levels and time ranges
+        case WR_VAR(0, 20, 31):
+        case WR_VAR(0, 20, 32):
+        case WR_VAR(0, 20, 33):
+        case WR_VAR(0, 20, 34):
+        case WR_VAR(0, 20, 35):
+        case WR_VAR(0, 20, 36):
+        case WR_VAR(0, 20, 37):
+        case WR_VAR(0, 20, 38): msg->set(var, var.code(), Level(1), Trange::instant()); break;
 
-/* Individual cloud layers or masses (complete) */
-/* Clouds with bases below station level (complete) */
-/* Direction of cloud drift (complete) */
-        case WR_VAR(0, 20, 11):
-        case WR_VAR(0, 20, 13):
-        case WR_VAR(0, 20, 17):
-        case WR_VAR(0, 20, 54): msg->set(var, var.code(), clouds.level, Trange::instant()); break;
-        case WR_VAR(0, 20, 12): // CH CL CM
-            msg->set(var, WR_VAR(0, 20, 12), clouds.clcmch(), Trange::instant());
-            break;
-/* Direction and elevation of cloud (complete) */
-        case WR_VAR(0, 5, 21): msg->set(var, WR_VAR(0, 5, 21), Level::cloud(262, 0), Trange::instant()); break;
-        case WR_VAR(0, 7, 21): msg->set(var, WR_VAR(0, 7, 21), Level::cloud(262, 0), Trange::instant()); break;
-        /* Cloud type is handled by the generic cloud type handler */
-
-/* State of ground, snow depth, ground minimum temperature (complete) */
-        case WR_VAR(0, 20,  62): msg->set_state_ground_var(var); break;
-        case WR_VAR(0, 13,  13): msg->set_tot_snow_var(var); break;
-        case WR_VAR(0, 12, 113): msg->set(var, WR_VAR(0, 12, 121), Level(1), Trange(3, 0, 43200)); break;
-
-/* Basic synoptic "period" data */
-
-/* Present and past weather (complete) */
-        case WR_VAR(0, 20,  3): msg->set_pres_wtr_var(var); break;
-        case WR_VAR(0, 20,  4): ctx.set_past_weather(var, DBA_MSG_PAST_WTR1_6H); break;
-        case WR_VAR(0, 20,  5): ctx.set_past_weather(var, DBA_MSG_PAST_WTR2_6H); break;
-
-/* Sunshine data (complete) */
-        case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, abs(trange.time_period))); break;
-
-/* Precipitation measurement (complete) */
-        case WR_VAR(0, 13, 11): ctx.set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(trange.time_period))); break;
-
-/* Extreme temperature data */
-        case WR_VAR(0, 12, 111):
-            ctx.set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(2, -abs(trange.time_period_offset), abs(trange.time_period)));
-            break;
-        case WR_VAR(0, 12, 112):
-            ctx.set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(3, -abs(trange.time_period_offset), abs(trange.time_period)));
+        // Ship marine data
+        // TODO: check levels and time ranges
+        case WR_VAR(0,  2, 38): msg->set(var, var.code(), Level::ana(), Trange::ana()); break;
+        // TODO: check levels and time ranges
+        // TODO: context WR_VAR(0, 7, 63)
+        case WR_VAR(0, 22, 43):
             break;
 
-/* Wind data (complete) */
-        case WR_VAR(0, 2, 2): msg->set_wind_inst_var(var); break;
+        // Waves
+        // TODO: check levels and time ranges
+        case WR_VAR(0, 22,  1):
+        case WR_VAR(0, 22, 11):
+        case WR_VAR(0, 22, 21):
+        case WR_VAR(0, 22,  2):
+        case WR_VAR(0, 22, 12):
+        case WR_VAR(0, 22, 22): msg->set(var, var.code(), Level(1), Trange::instant()); break;
+            break;
 
-        /* Note B/C 1.10.5.3.2 Calm shall be reported by
-         * setting wind direction to 0 and wind speed to 0.
-         * Variable shall be reported by setting wind direction
-         * to 0 and wind speed to a positive value, not a
-         * missing value indicator.
-         */
-        case WR_VAR(0, 11,  1):
-        case WR_VAR(0, 11, 11): ctx.set_wind(var, DBA_MSG_WIND_DIR); break;
-        case WR_VAR(0, 11,  2):
-        case WR_VAR(0, 11, 12): ctx.set_wind(var, DBA_MSG_WIND_SPEED); break;
-        case WR_VAR(0, 11, 43): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_DIR); break;
-        case WR_VAR(0, 11, 41): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_SPEED); break;
-
-        case WR_VAR(0, 22, 42): msg->set_water_temp_var(var); break;
-        case WR_VAR(0, 12,  5): msg->set_wet_temp_2m_var(var); break;
-        case WR_VAR(0, 10,197): msg->set_height_anem_var(var); break;
+        // D03023 swell waves (2 grups)
+        // TODO: check levels and time ranges
+        case WR_VAR(0, 22,  3): // Direction of swell waves
+        case WR_VAR(0, 22, 13): // Period of swell waves
+        case WR_VAR(0, 22, 23): // Height of swell waves
+            break;
 
         default: SynopBaseImporter::import_var(var); break;
     }

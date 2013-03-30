@@ -55,67 +55,22 @@ void SynopImporter::import_var(const Var& var)
 {
     switch (var.code())
     {
-/* Cloud data */
-        case WR_VAR(0, 20, 10): msg->set_cloud_n_var(var); break;
-
-/* Individual cloud layers or masses (complete) */
-/* Clouds with bases below station level (complete) */
-/* Direction of cloud drift (complete) */
-        case WR_VAR(0, 20, 11):
-        case WR_VAR(0, 20, 13):
-        case WR_VAR(0, 20, 17):
-        case WR_VAR(0, 20, 54): msg->set(var, var.code(), clouds.level, Trange::instant()); break;
-        case WR_VAR(0, 20, 12): // CH CL CM
-            msg->set(var, WR_VAR(0, 20, 12), clouds.clcmch(), Trange::instant());
-            break;
-/* Direction and elevation of cloud (complete) */
+        // Direction and elevation of cloud (complete)
         case WR_VAR(0, 5, 21): msg->set(var, WR_VAR(0, 5, 21), Level::cloud(262, 0), Trange::instant()); break;
         case WR_VAR(0, 7, 21): msg->set(var, WR_VAR(0, 7, 21), Level::cloud(262, 0), Trange::instant()); break;
-        /* Cloud type is handled by the generic cloud type handler */
+        // Cloud type is handled by the generic cloud type handler
 
-/* State of ground, snow depth, ground minimum temperature (complete) */
+        // State of ground, snow depth, ground minimum temperature (complete)
         case WR_VAR(0, 20,  62): msg->set_state_ground_var(var); break;
         case WR_VAR(0, 13,  13): msg->set_tot_snow_var(var); break;
         case WR_VAR(0, 12, 113): msg->set(var, WR_VAR(0, 12, 121), Level(1), Trange(3, 0, 43200)); break;
 
-/* Basic synoptic "period" data */
+        // Basic synoptic "period" data
 
-/* Present and past weather (complete) */
-        case WR_VAR(0, 20,  3): msg->set_pres_wtr_var(var); break;
-        case WR_VAR(0, 20,  4): ctx.set_past_weather(var, DBA_MSG_PAST_WTR1_6H); break;
-        case WR_VAR(0, 20,  5): ctx.set_past_weather(var, DBA_MSG_PAST_WTR2_6H); break;
-
-/* Sunshine data (complete) */
+        // Sunshine data (complete)
         case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, abs(trange.time_period))); break;
 
-/* Precipitation measurement (complete) */
-        case WR_VAR(0, 13, 11): ctx.set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(trange.time_period))); break;
-
-/* Extreme temperature data */
-        case WR_VAR(0, 12, 111):
-            ctx.set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(2, -abs(trange.time_period_offset), abs(trange.time_period)));
-            break;
-        case WR_VAR(0, 12, 112):
-            ctx.set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(3, -abs(trange.time_period_offset), abs(trange.time_period)));
-            break;
-
-/* Wind data (complete) */
-        case WR_VAR(0, 2, 2): msg->set_wind_inst_var(var); break;
-
-        /* Note B/C 1.10.5.3.2 Calm shall be reported by
-         * setting wind direction to 0 and wind speed to 0.
-         * Variable shall be reported by setting wind direction
-         * to 0 and wind speed to a positive value, not a
-         * missing value indicator.
-         */
-        case WR_VAR(0, 11,  1):
-        case WR_VAR(0, 11, 11): ctx.set_wind(var, DBA_MSG_WIND_DIR); break;
-        case WR_VAR(0, 11,  2):
-        case WR_VAR(0, 11, 12): ctx.set_wind(var, DBA_MSG_WIND_SPEED); break;
-        case WR_VAR(0, 11, 43): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_DIR); break;
-        case WR_VAR(0, 11, 41): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_SPEED); break;
-
-/* Evaporation data */
+        // Evaporation data
         case WR_VAR(0, 2, 4): msg->set(var, WR_VAR(0, 2, 4), Level(1), Trange::instant()); break;
         case WR_VAR(0, 13, 33):
             if (trange.time_period == MISSING_INT)
@@ -124,11 +79,11 @@ void SynopImporter::import_var(const Var& var)
                 msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, abs(trange.time_period)));
             break;
 
-/* Radiation data */
+        // Radiation data
         case WR_VAR(0, 14, 2):
             throw error_unimplemented("wow, a synop with radiation info, please give it to Enrico");
 
-/* Temperature change */
+        // Temperature change
         case WR_VAR(0, 12, 49):
             throw error_unimplemented("wow, a synop with temperature change info, please give it to Enrico");
 
