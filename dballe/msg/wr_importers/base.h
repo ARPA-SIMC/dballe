@@ -181,6 +181,27 @@ protected:
     void ib_set();
 };
 
+/**
+ * Base class for synop, ship and other importer with synop-like data
+ */
+class SynopBaseImporter : public WMOImporter
+{
+protected:
+    CloudContext clouds;
+    LevelContext level;
+    TimerangeContext trange;
+    ContextChooser ctx;
+
+    virtual void peek_var(const wreport::Var& var);
+    virtual void import_var(const wreport::Var& var);
+
+public:
+    SynopBaseImporter(const msg::Importer::Options& opts);
+
+    virtual void init();
+    virtual void run();
+};
+
 } // namespace wr
 } // namespace msg
 } // namespace dballe

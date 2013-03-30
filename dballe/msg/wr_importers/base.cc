@@ -482,6 +482,99 @@ void ContextChooser::set_pressure(const wreport::Var& var)
     msg->set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
 }
 
+SynopBaseImporter::SynopBaseImporter(const msg::Importer::Options& opts)
+    : WMOImporter(opts), ctx(level, trange)
+{
+}
+
+void SynopBaseImporter::init()
+{
+    WMOImporter::init();
+    clouds.init();
+    level.init();
+    trange.init();
+    ctx.init(*msg, opts.simplified);
+}
+
+void SynopBaseImporter::run()
+{
+    for (pos = 0; pos < subset->size(); ++pos)
+    {
+        const Var& var = (*subset)[pos];
+        if (WR_VAR_F(var.code()) != 0) continue;
+        if (WR_VAR_X(var.code()) < 10) peek_var(var);
+        if (var.isset()) import_var(var);
+    }
+}
+
+void SynopBaseImporter::peek_var(const Var& var)
+{
+    switch (var.code())
+    {
+        case WR_VAR(0,  4,  4):
+        case WR_VAR(0,  4, 24):
+        case WR_VAR(0,  4, 25):
+        case WR_VAR(0,  8, 21): trange.peek_var(var, pos); break;
+        case WR_VAR(0,  8,  2): clouds.on_vss(*subset, pos); break;
+        case WR_VAR(0,  7,  4):
+        case WR_VAR(0,  7, 31):
+        case WR_VAR(0,  7, 32): level.peek_var(var); break;
+    }
+}
+
+void SynopBaseImporter::import_var(const Var& var)
+{
+    switch (var.code())
+    {
+        case WR_VAR(0,  8,  2):
+            // Store original VS value as a measured value
+            msg->set(var, WR_VAR(0, 8, 2), clouds.level, Trange::instant());
+            break;
+
+        // Ship identification, movement, date/time, horizontal and vertical
+        // coordinates
+        case WR_VAR(0,  7,  1):
+        case WR_VAR(0,  7, 30): msg->set_height_station_var(var); break;
+        case WR_VAR(0,  7, 31):
+            /* Store also in the ana level, so that if the
+             * pressure later is missing we still have
+             * access to the value */
+            msg->set_height_baro_var(var);
+            break;
+
+        // Pressure data (complete)
+        case WR_VAR(0, 10,  4): ctx.set_baro_sensor(var, DBA_MSG_PRESS); break;
+        case WR_VAR(0, 10, 51): ctx.set_baro_sensor(var, DBA_MSG_PRESS_MSL); break;
+        case WR_VAR(0, 10, 61): ctx.set_baro_sensor(var, DBA_MSG_PRESS_3H); break;
+        case WR_VAR(0, 10, 62): ctx.set_baro_sensor(var, DBA_MSG_PRESS_24H); break;
+        case WR_VAR(0, 10, 63): ctx.set_baro_sensor(var, DBA_MSG_PRESS_TEND); break;
+        case WR_VAR(0, 10,  3):
+        case WR_VAR(0, 10,  8):
+        case WR_VAR(0, 10,  9): ctx.set_pressure(var); break;
+
+        // Ship “instantaneous” data
+
+        // Temperature and humidity data (complete)
+        case WR_VAR(0, 12,   4):
+        case WR_VAR(0, 12, 101): ctx.set_gen_sensor(var, DBA_MSG_TEMP_2M); break;
+        case WR_VAR(0, 12,   6):
+        case WR_VAR(0, 12, 103): ctx.set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
+        case WR_VAR(0, 13,   3): ctx.set_gen_sensor(var, DBA_MSG_HUMIDITY); break;
+        case WR_VAR(0, 12, 102): ctx.set_gen_sensor(var, DBA_MSG_WET_TEMP_2M); break;
+
+        // Visibility data (complete)
+        case WR_VAR(0, 20,  1): ctx.set_gen_sensor(var, DBA_MSG_VISIBILITY); break;
+
+        // Precipitation past 24h (complete)
+        case WR_VAR(0, 13, 19): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC1); break;
+        case WR_VAR(0, 13, 20): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC3); break;
+        case WR_VAR(0, 13, 21): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC6); break;
+        case WR_VAR(0, 13, 22): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC12); break;
+        case WR_VAR(0, 13, 23): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC24); break;
+
+        default: WMOImporter::import_var(var); break;
+    }
+}
 
 } // namespace wr
 } // namespace msg

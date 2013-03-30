@@ -444,7 +444,7 @@ void to::test<24>()
 template<> template<>
 void to::test<25>()
 {
-    // FIXME: this still failes
+    // FIXME: this still fails
     auto_ptr<Msgs> msgs = read_msgs("bufr/temp-tsig-2.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];

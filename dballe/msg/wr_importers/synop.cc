@@ -31,41 +31,15 @@ namespace wr {
 
 namespace {
 
-class SynopImporter : public WMOImporter
+class SynopImporter : public SynopBaseImporter
 {
 protected:
-    CloudContext clouds;
-    LevelContext level;
-    TimerangeContext trange;
-    ContextChooser ctx;
-
-    void peek_var(const Var& var);
-    void import_var(const Var& var);
+    virtual void import_var(const Var& var);
 
 public:
     SynopImporter(const msg::Importer::Options& opts)
-        : WMOImporter(opts), ctx(level, trange) {}
+        : SynopBaseImporter(opts) {}
     virtual ~SynopImporter() {}
-
-    virtual void init()
-    {
-        WMOImporter::init();
-        clouds.init();
-        level.init();
-        trange.init();
-        ctx.init(*msg, opts.simplified);
-    }
-
-    virtual void run()
-    {
-        for (pos = 0; pos < subset->size(); ++pos)
-        {
-            const Var& var = (*subset)[pos];
-            if (WR_VAR_F(var.code()) != 0) continue;
-            if (WR_VAR_X(var.code()) < 10) peek_var(var);
-            if (var.isset()) import_var(var);
-        }
-    }
 
     MsgType scanType(const Bulletin& bulletin) const
     {
@@ -77,72 +51,10 @@ public:
     }
 };
 
-void SynopImporter::peek_var(const Var& var)
-{
-    switch (var.code())
-    {
-        case WR_VAR(0,  4,  4):
-        case WR_VAR(0,  4, 24):
-        case WR_VAR(0,  4, 25):
-        case WR_VAR(0,  8, 21): trange.peek_var(var, pos); break;
-        case WR_VAR(0,  8,  2): clouds.on_vss(*subset, pos); break;
-        case WR_VAR(0,  7,  4):
-        case WR_VAR(0,  7, 31):
-        case WR_VAR(0,  7, 32): level.peek_var(var); break;
-    }
-}
-
 void SynopImporter::import_var(const Var& var)
 {
     switch (var.code())
     {
-/* Context items */
-        case WR_VAR(0,  8,  2):
-            /* Store original VS value as a measured value */
-            msg->set(var, WR_VAR(0, 8, 2), clouds.level, Trange::instant());
-            break;
-/* Fixed surface station identification, time, horizontal and vertical
- * coordinates (complete) */
-        case WR_VAR(0,  7,  1):
-        case WR_VAR(0,  7, 30): msg->set_height_station_var(var); break;
-        /* case WR_VAR(0,  7,  4): DBA_RUN_OR_RETURN(dba_msg_set_isobaric_surface_var(msg, var)); break; */
-        case WR_VAR(0,  7, 31):
-            /* Store also in the ana level, so that if the
-             * pressure later is missing we still have
-             * access to the value */
-            msg->set_height_baro_var(var);
-            break;
-
-/* Pressure data (complete) */
-        case WR_VAR(0, 10,  4): ctx.set_baro_sensor(var, DBA_MSG_PRESS); break;
-        case WR_VAR(0, 10, 51): ctx.set_baro_sensor(var, DBA_MSG_PRESS_MSL); break;
-        case WR_VAR(0, 10, 61): ctx.set_baro_sensor(var, DBA_MSG_PRESS_3H); break;
-        case WR_VAR(0, 10, 62): ctx.set_baro_sensor(var, DBA_MSG_PRESS_24H); break;
-        case WR_VAR(0, 10, 63): ctx.set_baro_sensor(var, DBA_MSG_PRESS_TEND); break;
-        case WR_VAR(0, 10,  3):
-        case WR_VAR(0, 10,  8):
-        case WR_VAR(0, 10,  9): ctx.set_pressure(var); break;
-
-        /* Legacy bits */
-/* Basic synoptic "instantaneous" data */
-
-/* Temperature and humidity data (complete) */
-        case WR_VAR(0, 12,   4):
-        case WR_VAR(0, 12, 101): ctx.set_gen_sensor(var, DBA_MSG_TEMP_2M); break;
-        case WR_VAR(0, 12,   6):
-        case WR_VAR(0, 12, 103): ctx.set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
-        case WR_VAR(0, 13,   3): ctx.set_gen_sensor(var, DBA_MSG_HUMIDITY); break;
-
-/* Visibility data (complete) */
-        case WR_VAR(0, 20,  1): ctx.set_gen_sensor(var, DBA_MSG_VISIBILITY); break;
-
-/* Precipitation past 24h (complete) */
-        case WR_VAR(0, 13, 19): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC1); break;
-        case WR_VAR(0, 13, 20): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC3); break;
-        case WR_VAR(0, 13, 21): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC6); break;
-        case WR_VAR(0, 13, 22): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC12); break;
-        case WR_VAR(0, 13, 23): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC24); break;
-
 /* Cloud data */
         case WR_VAR(0, 20, 10): msg->set_cloud_n_var(var); break;
 
@@ -224,7 +136,7 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0, 12,  5): msg->set_wet_temp_2m_var(var); break;
         case WR_VAR(0, 10,197): msg->set_height_anem_var(var); break;
 
-        default: WMOImporter::import_var(var); break;
+        default: SynopBaseImporter::import_var(var); break;
     }
 }
 
