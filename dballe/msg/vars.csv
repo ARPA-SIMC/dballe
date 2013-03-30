@@ -66,7 +66,7 @@ PAST_WTR1_6H,   int,    B20004,       1,     -, -, -,  205,      0, 21600, Past 
 PAST_WTR2_3H,   int,    B20005,       1,     -, -, -,  205,      0, 10800, Past weather (2 - 3h)
 PAST_WTR2_6H,   int,    B20005,       1,     -, -, -,  205,      0, 21600, Past weather (2 - 6h)
 METAR_WTR,      int,    B20009,       1,     -, -, -,  254,      0,     0, General weather indicator (TAF/METAR)
-CLOUD_N ,       int,    B20010,     256,     -, -, -,  254,      0,     0, Total cloud cover (N)
+CLOUD_N ,       int,    B20010,     256,   -, 258, 0,  254,      0,     0, Total cloud cover (N)
 CLOUD_NH,       int,    B20011,     256,   -, 258, 0,  254,      0,     0, Cloud amount (NH)
 CLOUD_HH,       num,    B20013,     256,   -, 258, 0,  254,      0,     0, Height of base of cloud (HH)
 CLOUD_CL,       int,    B20012,     256,   -, 258, 1,  254,      0,     0, Cloud type (CL)
