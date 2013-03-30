@@ -288,6 +288,23 @@ void dump(const std::string& tag, const std::string& msg, const std::string& des
     cerr << desc << " saved in " << fname << endl;
 }
 
+MessageTweakers::~MessageTweakers()
+{
+    for (vector<MessageTweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
+        delete *i;
+}
+
+void MessageTweakers::add(MessageTweaker* tweak)
+{
+    tweaks.push_back(tweak);
+}
+
+void MessageTweakers::apply(Msgs& msgs)
+{
+    for (vector<MessageTweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
+        (*i)->tweak(msgs);
+}
+
 namespace tweaks {
 
 void StripAttrs::tweak(Msgs& msgs)
@@ -590,6 +607,11 @@ TestCodec::TestCodec(const std::string& fname, Encoding type)
 {
 }
 
+void TestCodec::configure_ecmwf_to_wmo_tweaks()
+{
+    after_convert_import.add(new tweaks::StripQCAttrs);
+}
+
 void TestCodec::do_compare(const dballe::tests::Location& loc, const TestMessage& msg1, const TestMessage& msg2)
 {
     // Compare msgs
@@ -636,26 +658,8 @@ void TestCodec::run_reimport(const dballe::tests::Location& loc)
 
     inner_ensure(orig.msgs.size() > 0);
 
-#if 0
     // Run tweaks
-    for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
-    {
-        if (verbose) cerr << "Running tweak " << (*i)->desc() << endl;
-        (*i)->tweak(*msgs1);
-    }
-    if (do_ecmwf_tweaks)
-        for (typename vector<Tweaker*>::iterator i = ecmwf_tweaks.begin(); i != ecmwf_tweaks.end(); ++i)
-        {
-            if (verbose) cerr << "Running ecmwf tweak " << (*i)->desc() << endl;
-            (*i)->tweak(*msgs1);
-        }
-    if (do_wmo_tweaks)
-        for (typename vector<Tweaker*>::iterator i = wmo_tweaks.begin(); i != wmo_tweaks.end(); ++i)
-        {
-            if (verbose) cerr << "Running wmo tweak " << (*i)->desc() << endl;
-            (*i)->tweak(*msgs1);
-        }
-#endif
+    after_reimport_import.apply(orig.msgs);
 
     // Export
     if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
@@ -678,19 +682,9 @@ void TestCodec::run_reimport(const dballe::tests::Location& loc)
         throw tut::failure(loc.msg(string("importing from exported rawmsg: ") + e.what()));
     }
 
-#if 0
-    if (do_ignore_context_attrs)
-    {
-        StripContextAttrs sca;
-        sca.tweak(*msgs1);
-    }
-    if (do_round_geopotential)
-    {
-        RoundGeopotential rg;
-        rg.tweak(*msgs1);
-        rg.tweak(*msgs3);
-    }
-#endif
+    // Run tweaks
+    after_reimport_reimport.apply(final.msgs);
+
     do_compare(loc, orig, final);
 }
 
@@ -709,26 +703,8 @@ void TestCodec::run_convert(const dballe::tests::Location& loc, const std::strin
 
     inner_ensure(orig.msgs.size() > 0);
 
-#if 0
     // Run tweaks
-    for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
-    {
-        if (verbose) cerr << "Running tweak " << (*i)->desc() << endl;
-        (*i)->tweak(*msgs1);
-    }
-    if (do_ecmwf_tweaks)
-        for (typename vector<Tweaker*>::iterator i = ecmwf_tweaks.begin(); i != ecmwf_tweaks.end(); ++i)
-        {
-            if (verbose) cerr << "Running ecmwf tweak " << (*i)->desc() << endl;
-            (*i)->tweak(*msgs1);
-        }
-    if (do_wmo_tweaks)
-        for (typename vector<Tweaker*>::iterator i = wmo_tweaks.begin(); i != wmo_tweaks.end(); ++i)
-        {
-            if (verbose) cerr << "Running wmo tweak " << (*i)->desc() << endl;
-            (*i)->tweak(*msgs1);
-        }
-#endif
+    after_convert_import.apply(orig.msgs);
 
     // Export
     if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
@@ -753,19 +729,9 @@ void TestCodec::run_convert(const dballe::tests::Location& loc, const std::strin
         throw tut::failure(loc.msg(string("importing from exported rawmsg: ") + e.what()));
     }
 
-#if 0
-    if (do_ignore_context_attrs)
-    {
-        StripContextAttrs sca;
-        sca.tweak(*msgs1);
-    }
-    if (do_round_geopotential)
-    {
-        RoundGeopotential rg;
-        rg.tweak(*msgs1);
-        rg.tweak(*msgs3);
-    }
-#endif
+    // Run tweaks
+    after_convert_reimport.apply(final.msgs);
+
     do_compare(loc, orig, final);
 }
 

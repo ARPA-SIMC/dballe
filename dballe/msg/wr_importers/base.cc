@@ -22,6 +22,7 @@
 #include "base.h"
 #include "msg/msgs.h"
 #include <wreport/bulletin.h>
+#include <iostream>
 
 using namespace wreport;
 using namespace std;
@@ -58,6 +59,93 @@ void WMOImporter::import_var(const Var& var)
 		case WR_VAR(0,  6,  1):
 		case WR_VAR(0,  6,  2): msg->set_longitude_var(var); break;
 	}
+}
+
+void CloudContext::init()
+{
+    level = Level::cloud(MISSING_INT, MISSING_INT);
+}
+
+void CloudContext::on_vss(const wreport::Subset& subset, unsigned pos)
+{
+    /* Vertical significance */
+    if (pos == 0) throw error_consistency("B08002 found at beginning of message");
+    Varcode prev = subset[pos - 1].code();
+
+    if (prev == WR_VAR(0, 20, 10))
+    {
+        // Normal cloud data
+        level.ltype2 = 258;
+        level.l2 = 0;
+        return;
+    }
+
+    if (pos == subset.size() - 1) throw error_consistency("B08002 found at end of message");
+    Varcode next = subset[pos + 1].code();
+
+    switch (next)
+    {
+        case WR_VAR(0, 20, 11): {
+            if (pos >= subset.size() - 3)
+                throw error_consistency("B08002 followed by B20011 found less than 3 places before end of message");
+            Varcode next2 = subset[pos + 3].code();
+            if (next2 == WR_VAR(0, 20, 14))
+            {
+                // Clouds with bases below station level
+                if (level.ltype2 != 263)
+                {
+                    level.ltype2 = 263;
+                    level.l2 = 1;
+                } else {
+                    ++level.l2;
+                }
+            } else {
+                /* Individual cloud groups */
+                if (level.ltype2 != 259)
+                {
+                    level.ltype2 = 259;
+                    level.l2 = 1;
+                } else {
+                    ++level.l2;
+                }
+            }
+            break;
+        } case WR_VAR(0, 20, 54):
+            // Direction of cloud drift
+            if (level.ltype2 != 260)
+            {
+                level.ltype2 = 260;
+                level.l2 = 1;
+            } else {
+                ++level.l2;
+            }
+            break;
+        default:
+            break;
+#if 0
+            /* Vertical significance */
+            if (pos == 0) throw error_consistency("B08002 found at beginning of message");
+            if (pos == subset->size() - 1) throw error_consistency("B08002 found at end of message");
+            Varcode prev = (*subset)[pos - 1].code();
+            Varcode next = (*subset)[pos + 1].code();
+
+            } else if (var.value() == NULL) {
+                level.ltype2 = 0;
+            } else {
+                /* Unless we can detect known buggy situations, raise an error */
+                if (next != WR_VAR(0, 20, 62))
+                    error_consistency::throwf("Vertical significance %d found in unrecognised context", var.enqi());
+            }
+            break;
+#endif
+    }
+}
+
+const Level& CloudContext::clcmch()
+{
+    if (level.ltype2 == 258)
+        ++level.l2;
+    return level;
 }
 
 } // namespace wr

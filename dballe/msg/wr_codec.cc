@@ -64,12 +64,12 @@ void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
     switch (msg.type)
     {
         case 0:
-        case 1:
             if (msg.localsubtype == 140)
                 importer = wr::Importer::createMetar(opts);
             else
                 importer = wr::Importer::createSynop(opts);
             break;
+        case 1: importer = wr::Importer::createShip(opts); break;
         case 2: importer = wr::Importer::createTemp(opts); break;
         case 3: importer = wr::Importer::createSat(opts); break;
         case 4: importer = wr::Importer::createFlight(opts); break;
@@ -93,6 +93,7 @@ WRExporter::WRExporter(const Options& opts)
 
 BufrExporter::BufrExporter(const Options& opts)
     : WRExporter(opts) {}
+
 BufrExporter::~BufrExporter() {}
 
 std::auto_ptr<wreport::Bulletin> BufrExporter::make_bulletin() const

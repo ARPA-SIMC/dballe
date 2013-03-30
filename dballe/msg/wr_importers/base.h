@@ -1,7 +1,7 @@
 /*
  * dballe/wr_importers/base - Base infrastructure for wreport importers
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,6 +61,7 @@ public:
     }
 
     static std::auto_ptr<Importer> createSynop(const msg::Importer::Options&);
+    static std::auto_ptr<Importer> createShip(const msg::Importer::Options&);
     static std::auto_ptr<Importer> createMetar(const msg::Importer::Options&);
     static std::auto_ptr<Importer> createTemp(const msg::Importer::Options&);
     static std::auto_ptr<Importer> createPilot(const msg::Importer::Options&);
@@ -86,6 +87,19 @@ protected:
 public:
     WMOImporter(const msg::Importer::Options& opts) : Importer(opts) {}
     virtual ~WMOImporter() {}
+};
+
+/**
+ * Keep track of the current cloud metadata
+ */
+struct CloudContext
+{
+    Level level;
+
+    const Level& clcmch();
+
+    void init();
+    void on_vss(const wreport::Subset& subset, unsigned pos);
 };
 
 } // namespace wr

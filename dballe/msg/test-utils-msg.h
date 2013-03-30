@@ -81,6 +81,16 @@ struct MessageTweaker
     virtual std::string desc() const = 0;
 };
 
+struct MessageTweakers
+{
+    std::vector<MessageTweaker*> tweaks;
+
+    ~MessageTweakers();
+    // Takes ownership of memory management
+    void add(MessageTweaker* tweak);
+    void apply(Msgs& msgs);
+};
+
 namespace tweaks {
 
 // Strip attributes from all variables in a Msgs
@@ -214,10 +224,16 @@ struct TestCodec
     msg::Exporter::Options output_opts;
     int expected_subsets;
     int expected_min_vars;
+    MessageTweakers after_reimport_import;
+    MessageTweakers after_reimport_reimport;
+    MessageTweakers after_convert_import;
+    MessageTweakers after_convert_reimport;
 
     void do_compare(const dballe::tests::Location& loc, const TestMessage& msg1, const TestMessage& msg2);
 
     TestCodec(const std::string& fname, Encoding type=BUFR);
+
+    void configure_ecmwf_to_wmo_tweaks();
 
     // "import, export, import again, compare" test
     void run_reimport(const dballe::tests::Location& loc);

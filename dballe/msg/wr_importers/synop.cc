@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ static const Trange tr_std_past_wtr6(205, 0, 21600);
 class SynopImporter : public WMOImporter
 {
 protected:
-    Level cloudlevel;
+    CloudContext clouds;
     double height_baro;
     double press_std;
     double height_sensor;
@@ -296,7 +296,7 @@ public:
     virtual void init()
     {
         WMOImporter::init();
-        cloudlevel = Level::cloud(MISSING_INT, MISSING_INT);
+        clouds.init();
         height_baro = MISSING_BARO;
         press_std = MISSING_PRESS_STD;
         height_sensor = MISSING_SENSOR_H;
@@ -329,29 +329,6 @@ public:
         switch (bulletin.type)
         {
             case 0: return MSG_SYNOP;
-            case 1:
-                switch (bulletin.localsubtype)
-                {
-                    case 21: return MSG_BUOY;
-                    case 9:
-                    case 11:
-                    case 12:
-                    case 13:
-                    case 14:
-                    case 19: return MSG_SHIP;
-                    case 0: {
-                        /* Guess looking at the variables */
-			if (bulletin.subsets.empty())
-				throw error_consistency("trying to import a SYNOP message with no data subset");
-			const Subset& subset = bulletin.subsets[0];
-                        if (subset.size() > 1 && subset[0].code() == WR_VAR(0, 1, 5))
-                            return MSG_BUOY;
-                        else
-                            return MSG_SHIP;
-		    }
-                    default: return MSG_GENERIC;
-                }
-                break;
             default: return MSG_GENERIC; break;
         }
     }
@@ -361,66 +338,8 @@ void SynopImporter::peek_var(const Var& var)
 {
     switch (var.code())
     {
-/* Context items */
         case WR_VAR(0,  4,  4): hour = var.enq(MISSING_INT); break;
-        case WR_VAR(0,  8,  2): {
-            /* Vertical significance */
-            if (pos == 0) throw error_consistency("B08002 found at beginning of message");
-            if (pos == subset->size() - 1) throw error_consistency("B08002 found at end of message");
-            Varcode prev = (*subset)[pos - 1].code();
-            Varcode next = (*subset)[pos + 1].code();
-
-            if (prev == WR_VAR(0, 20, 10))
-            {
-                /* Cloud Data */
-                cloudlevel.ltype2 = 258;
-                cloudlevel.l2 = 0;
-            } else if (next == WR_VAR(0, 20, 11)) {
-                if (pos >= subset->size() - 3)
-                    throw error_consistency("B08002 followed by B20011 found less than 3 places before end of message");
-                Varcode next2 = (*subset)[pos + 3].code();
-                if (next2 == WR_VAR(0, 20, 14))
-                {
-                    /* Clouds with bases below */
-                    if (cloudlevel.ltype2 != 263)
-                    {
-                        cloudlevel.ltype2 = 263;
-                        cloudlevel.l2 = 1;
-                    } else {
-                        ++cloudlevel.l2;
-                    }
-                } else {
-                    /* Individual cloud groups */
-                    if (cloudlevel.ltype2 != 259)
-                    {
-                        cloudlevel.ltype2 = 259;
-                        cloudlevel.l2 = 1;
-                    } else {
-                        ++cloudlevel.l2;
-                    }
-                }
-            } else if (next == WR_VAR(0, 20, 54)) {
-                /* Direction of cloud drift */
-                if (cloudlevel.ltype2 != 260)
-                {
-                    cloudlevel.ltype2 = 260;
-                    cloudlevel.l2 = 1;
-                } else {
-                    ++cloudlevel.l2;
-                }
-            } else if (var.value() == NULL) {
-                cloudlevel.ltype2 = 0;
-            } else {
-                /* Unless we can detect known buggy situations, raise an error */
-                if (next != WR_VAR(0, 20, 62))
-                    error_consistency::throwf("Vertical significance %d found in unrecognised context", var.enqi());
-            }
-            break;
-        }
-        case WR_VAR(0,  5, 21):
-            cloudlevel.ltype2 = 262;
-            cloudlevel.l2 = 0;
-            break;
+        case WR_VAR(0,  8,  2): clouds.on_vss(*subset, pos); break;
     }
 }
 
@@ -475,7 +394,7 @@ void SynopImporter::import_var(const Var& var)
             /* Vertical significance */
             vs = var.enqd();
             /* Store original VS value as a measured value */
-            msg->set(var, WR_VAR(0, 8, 2), cloudlevel, Trange::instant());
+            msg->set(var, WR_VAR(0, 8, 2), clouds.level, Trange::instant());
             break;
         case WR_VAR(0,  4, 24):
             /* Time period in hours */
@@ -568,30 +487,13 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0, 20, 11):
         case WR_VAR(0, 20, 13):
         case WR_VAR(0, 20, 17):
-        case WR_VAR(0, 20, 54): msg->set(var, var.code(), cloudlevel, Trange::instant()); break;
-        case WR_VAR(0, 20, 12): { // CH CL CM
-            int lt2 = cloudlevel.ltype2, l2=cloudlevel.l2;
-            if (lt2 == 258)
-            {
-                l2 = 1;
-                if (pos > 0 && (*subset)[pos - 1].code() == WR_VAR(0, 20, 12))
-                {
-                    ++l2;
-                    if (pos > 1 && (*subset)[pos - 2].code() == WR_VAR(0, 20, 12))
-                        ++l2;
-                }
-            }
-            msg->set(var, WR_VAR(0, 20, 12), Level::cloud(lt2, l2), Trange::instant());
+        case WR_VAR(0, 20, 54): msg->set(var, var.code(), clouds.level, Trange::instant()); break;
+        case WR_VAR(0, 20, 12): // CH CL CM
+            msg->set(var, WR_VAR(0, 20, 12), clouds.clcmch(), Trange::instant());
             break;
-        }
-
 /* Direction and elevation of cloud (complete) */
-        case WR_VAR(0, 5, 21):
-            cloudlevel.ltype2 = 262;
-            cloudlevel.l2 = 0;
-            msg->set(var, WR_VAR(0, 5, 21), cloudlevel, Trange::instant());
-            break;
-        case WR_VAR(0, 7, 21): msg->set(var, WR_VAR(0, 7, 21), cloudlevel, Trange::instant()); break;
+        case WR_VAR(0, 5, 21): msg->set(var, WR_VAR(0, 5, 21), Level::cloud(262, 0), Trange::instant()); break;
+        case WR_VAR(0, 7, 21): msg->set(var, WR_VAR(0, 7, 21), Level::cloud(262, 0), Trange::instant()); break;
         /* Cloud type is handled by the generic cloud type handler */
 
 /* State of ground, snow depth, ground minimum temperature (complete) */

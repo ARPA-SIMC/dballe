@@ -118,6 +118,7 @@ libdballe_la_SOURCES = \
 	msg/wr_codec.cc \
 	msg/wr_importers/base.cc \
 	msg/wr_importers/synop.cc \
+	msg/wr_importers/ship.cc \
 	msg/wr_importers/temp.cc \
 	msg/wr_importers/metar.cc \
 	msg/wr_importers/flight.cc \

@@ -171,8 +171,15 @@ void to::test<3>()
 template<> template<>
 void to::test<5>()
 {
-    BufrReimportTest test("bufr/obs0-1.22.bufr");
-    run_test(test, do_ecmwf, "synop");
+    dballe::tests::TestCodec test("bufr/obs0-1.22.bufr");
+    test.expected_min_vars = 34;
+    test.configure_ecmwf_to_wmo_tweaks();
+
+    TEST_reimport(test);
+    TEST_convert(test, "synop-wmo");
+
+    BufrReimportTest test1("bufr/obs0-1.22.bufr");
+    run_test(test1, do_ecmwf, "synop");
 }
 template<> template<>
 void to::test<6>()

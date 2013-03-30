@@ -63,18 +63,14 @@ void to::test<1>()
     run_test(testold, do_test, "temp-wmo");
 }
 
-/*
- * TODO: make clean test methods, like:
- *  test_ecmwf_data(ecmwf template name, wmo template name)
- *  test_wmo_data(ecmwf template name, wmo template name)
- */
-
 // Test import/export of ECMWF synop ship
 template<> template<>
 void to::test<2>()
 {
     dballe::tests::TestCodec test("bufr/ecmwf-ship-1-11.bufr");
     test.expected_min_vars = 34;
+    test.configure_ecmwf_to_wmo_tweaks();
+
     TEST_reimport(test);
     TEST_convert(test, "ship-wmo");
 }
@@ -85,6 +81,8 @@ void to::test<3>()
 {
     dballe::tests::TestCodec test("bufr/ecmwf-ship-1-12.bufr");
     test.expected_min_vars = 21;
+    test.configure_ecmwf_to_wmo_tweaks();
+
     TEST_reimport(test);
     TEST_convert(test, "ship-wmo");
 }
@@ -95,6 +93,8 @@ void to::test<4>()
 {
     dballe::tests::TestCodec test("bufr/ecmwf-ship-1-13.bufr");
     test.expected_min_vars = 30;
+    test.configure_ecmwf_to_wmo_tweaks();
+
     TEST_reimport(test);
     TEST_convert(test, "ship-wmo");
 }
@@ -105,6 +105,8 @@ void to::test<5>()
 {
     dballe::tests::TestCodec test("bufr/ecmwf-ship-1-14.bufr");
     test.expected_min_vars = 28;
+    test.configure_ecmwf_to_wmo_tweaks();
+
     TEST_reimport(test);
     TEST_convert(test, "ship-wmo");
 }
@@ -115,6 +117,7 @@ void to::test<6>()
 {
     dballe::tests::TestCodec test("bufr/wmo-ship-1.bufr");
     test.expected_min_vars = 50;
+
     TEST_reimport(test);
     TEST_convert(test, "ship-wmo");
 }
