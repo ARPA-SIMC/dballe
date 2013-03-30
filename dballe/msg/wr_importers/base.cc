@@ -25,6 +25,11 @@
 #include <cstdlib>
 #include <iostream>
 
+#define MISSING_BARO -10000.0
+#define MISSING_PRESS_STD 0.0
+#define MISSING_SENSOR_H -10000.0
+#define MISSING_TIME_SIG -10000
+
 using namespace wreport;
 using namespace std;
 
@@ -34,6 +39,10 @@ namespace wr {
 
 static const Trange tr_std_past_wtr3(205, 0, 10800);
 static const Trange tr_std_past_wtr6(205, 0, 21600);
+static const Level lev_std_wind(103, 10*1000);
+static const Trange tr_std_wind(200, 0, 600);
+static const Trange tr_std_wind_max10m(205, 0, 600);
+
 
 std::auto_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB sat Importers"); }
 
@@ -452,6 +461,18 @@ void ContextChooser::set_past_weather(const wreport::Var& var, int shortcut)
     else
         ib_trange_use_real((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
     ib_set();
+}
+
+void ContextChooser::set_wind(const wreport::Var& var, int shortcut)
+{
+    if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
+        error_consistency::throwf("Found unsupported time significance %d for wind direction", trange.time_sig);
+    set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind);
+}
+
+void ContextChooser::set_wind_max(const wreport::Var& var, int shortcut)
+{
+    set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind_max10m, false, true);
 }
 
 void ContextChooser::set_pressure(const wreport::Var& var)

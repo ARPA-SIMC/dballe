@@ -31,11 +31,6 @@ namespace wr {
 
 namespace {
 
-static const Level lev_ground(1);
-static const Level lev_std_wind(103, 10*1000);
-static const Trange tr_std_wind(200, 0, 600);
-static const Trange tr_std_wind_max10m(205, 0, 600);
-
 class SynopImporter : public WMOImporter
 {
 protected:
@@ -202,19 +197,11 @@ void SynopImporter::import_var(const Var& var)
          * missing value indicator.
          */
         case WR_VAR(0, 11,  1):
-        case WR_VAR(0, 11, 11):
-            if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
-                    error_consistency::throwf("Found unsupported time significance %d for wind direction", trange.time_sig);
-            ctx.set_gen_sensor(var, DBA_MSG_WIND_DIR, lev_std_wind, tr_std_wind);
-            break;
+        case WR_VAR(0, 11, 11): ctx.set_wind(var, DBA_MSG_WIND_DIR); break;
         case WR_VAR(0, 11,  2):
-        case WR_VAR(0, 11, 12):
-            if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
-                error_consistency::throwf("Found unsupported time significance %d for wind speed", trange.time_sig);
-            ctx.set_gen_sensor(var, DBA_MSG_WIND_SPEED, lev_std_wind, tr_std_wind);
-            break;
-        case WR_VAR(0, 11, 43): ctx.set_gen_sensor(var, DBA_MSG_WIND_GUST_MAX_DIR, lev_std_wind, tr_std_wind_max10m, false, true); break;
-        case WR_VAR(0, 11, 41): ctx.set_gen_sensor(var, DBA_MSG_WIND_GUST_MAX_SPEED, lev_std_wind, tr_std_wind_max10m, false, true); break;
+        case WR_VAR(0, 11, 12): ctx.set_wind(var, DBA_MSG_WIND_SPEED); break;
+        case WR_VAR(0, 11, 43): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_DIR); break;
+        case WR_VAR(0, 11, 41): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_SPEED); break;
 
 /* Evaporation data */
         case WR_VAR(0, 2, 4): msg->set(var, WR_VAR(0, 2, 4), Level(1), Trange::instant()); break;

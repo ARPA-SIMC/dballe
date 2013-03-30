@@ -89,11 +89,6 @@ public:
     virtual ~WMOImporter() {}
 };
 
-#define MISSING_BARO -10000.0
-#define MISSING_PRESS_STD 0.0
-#define MISSING_SENSOR_H -10000.0
-#define MISSING_TIME_SIG -10000
-
 /// Keep track of level context changes
 struct LevelContext
 {
@@ -161,6 +156,8 @@ struct ContextChooser
     void set_gen_sensor(const wreport::Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful=false, bool tr_careful=false);
     void set_baro_sensor(const wreport::Var& var, int shortcut);
     void set_past_weather(const wreport::Var& var, int shortcut);
+    void set_wind(const wreport::Var& var, int shortcut);
+    void set_wind_max(const wreport::Var& var, int shortcut);
     void set_pressure(const wreport::Var& var);
 
 protected:
