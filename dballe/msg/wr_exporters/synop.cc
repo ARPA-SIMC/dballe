@@ -66,171 +66,6 @@ static int override_trange(const Var* var, int orig)
     return orig;
 }
 
-struct ContextFinder
-{
-    struct Entry
-    {
-        Varcode code;
-        const Var* var;
-        Entry(Varcode code) : code(code), var(0) {}
-        void add(Subset& subset)
-        {
-            if (var)
-                subset.store_variable(*var);
-            else
-                subset.store_variable_undef(code);
-        }
-        void add(Subset& subset, Varcode as_code)
-        {
-            if (var)
-                subset.store_variable(as_code, *var);
-            else
-                subset.store_variable_undef(as_code);
-        }
-    };
-
-    const Msg& msg;
-    const msg::Context* ctx;
-    vector<Entry> vars;
-
-    ContextFinder(const Msg& msg) : msg(msg), ctx(0)
-    {
-    }
-
-    void add_var(Varcode code)
-    {
-        vars.push_back(Entry(code));
-    }
-    void add_var(int shortcut)
-    {
-        add_var(shortcutTable[shortcut].code);
-    }
-
-    bool scan_vars_in_context(const msg::Context& c)
-    {
-        bool found = false;
-        for (vector<Entry>::iterator i = vars.begin();
-                i != vars.end(); ++i)
-        {
-            if (const Var* var = c.find(i->code))
-            {
-                found = true;
-                i->var = var;
-            }
-        }
-        return found;
-    }
-
-    bool find_in_level(int ltype1, int or_shortcut=-1)
-    {
-        bool found = false;
-        if (or_shortcut != -1)
-        {
-            if (const msg::Context* c = msg.find_context_by_id(or_shortcut))
-                if (scan_vars_in_context(*c))
-                {
-                    ctx = c;
-                    found = true;
-                }
-        }
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                !found && i != msg.data.end(); ++i)
-        {
-            const msg::Context* c = *i;
-            if (c->level.ltype1 != ltype1) continue;
-            if (scan_vars_in_context(*c))
-            {
-                ctx = c;
-                found = true;
-            }
-        }
-        return found;
-    }
-
-    const Var* find_first_attr(Varcode code) const
-    {
-        for (vector<Entry>::const_iterator i = vars.begin();
-                i != vars.end(); ++i)
-        {
-            if (!i->var) continue;
-            if (const Var* a = i->var->enqa(code))
-                return a;
-        }
-        return NULL;
-    }
-
-    void add_found_sensor_height(Subset& subset)
-    {
-        if (!ctx)
-        {
-            subset.store_variable_undef(WR_VAR(0, 7, 32));
-            return;
-        }
-
-        // Check the attributes to see if we're exporting a message
-        // imported with the 'simplified' method
-        if (const Var* a = find_first_attr(WR_VAR(0, 7, 32)))
-            subset.store_variable_d(WR_VAR(0, 7, 32), a->enqd());
-        else if (ctx->level.ltype1 == 1)
-            // Ground level
-            subset.store_variable_d(WR_VAR(0, 7, 32), 0);
-        else if (ctx->level.ltype1 == 103)
-            // Height above ground level
-            subset.store_variable_d(WR_VAR(0, 7, 32), double(ctx->level.l1) / 1000.0);
-        else
-            error_consistency::throwf("Cannot add sensor height from unsupported level type %d", ctx->level.ltype1);
-    }
-};
-
-struct PressureInfo
-{
-    const Var* v_press;
-    const Var* v_pressmsl;
-    const Var* v_pchange3;
-    const Var* v_pchange24;
-    const Var* v_ptend;
-
-    void reset()
-    {
-        v_press = 0;
-        v_pressmsl = 0;
-        v_pchange3 = 0;
-        v_pchange24 = 0;
-        v_ptend = 0;
-    }
-
-    void scan_context4(const msg::Context& c)
-    {
-        if (const Var* v = c.find_by_id(DBA_MSG_PRESS_3H))
-            switch (c.trange.p2)
-            {
-                case  3*3600: v_pchange3 = v; break;
-                case 24*3600: v_pchange24 = v; break;
-            }
-    }
-    void scan_context205(const msg::Context& c)
-    {
-        if (const Var* v = c.find_by_id(DBA_MSG_PRESS_TEND))
-            v_ptend = v;
-    }
-    void scan_context254(const msg::Context& c)
-    {
-        if (const Var* v = c.find_by_id(DBA_MSG_PRESS))
-            v_press = v;
-        if (const Var* v = c.find_by_id(DBA_MSG_PRESS_MSL))
-            v_pressmsl = v;
-    }
-    void scan_context(const msg::Context& c)
-    {
-        switch (c.trange.pind)
-        {
-            case 4: scan_context4(c); break;
-            case 205: scan_context205(c); break;
-            case 254: scan_context254(c); break;
-        }
-    }
-};
-
 struct PrecInfo
 {
     const msg::Context* c_prec1;
@@ -272,7 +107,6 @@ struct Synop : public Template
     const msg::Context* c_visib;
     const msg::Context* c_tmax;
     const msg::Context* c_tmin;
-    PressureInfo i_press;
     PrecInfo i_prec;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
@@ -291,7 +125,6 @@ struct Synop : public Template
         c_visib = NULL;
         c_tmax = NULL;
         c_tmin = NULL;
-        i_press.reset();
         i_prec.reset();
 
         // Scan message finding context for the data that follow
@@ -327,22 +160,15 @@ struct Synop : public Template
                         case 3:
                             if (c->find(WR_VAR(0, 12, 101))) c_tmin = c;
                             break;
-                        case 4: i_press.scan_context4(*c); break;
                         case 205:
                             if (c->find(WR_VAR(0, 20, 4)) || c->find(WR_VAR(0, 20, 5)))
                                 c_past_wtr = c;
-                            i_press.scan_context205(*c);
                             break;
                         case 254:
                             if (c->find_by_id(DBA_MSG_VISIBILITY))
                                 c_visib = c;
-                            i_press.scan_context254(*c);
                             break;
                     }
-                    break;
-                case 101:
-                case 102:
-                    i_press.scan_context(*c);
                     break;
                 case 103:
                     switch (c->trange.pind)
@@ -455,7 +281,6 @@ struct SynopECMWF : public Synop
         synop.add_year_to_minute();
         synop.add_latlon_high();
         /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
-        /* 11 */ add(WR_VAR(0, 10,  4), i_press.v_press);
     }
 };
 
@@ -493,9 +318,7 @@ struct SynopECMWFLand : public SynopECMWF
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         SynopECMWF::to_subset(msg, subset);
-        /* 12 */ add(WR_VAR(0, 10, 51), i_press.v_pressmsl);
-        /* 13 */ add(WR_VAR(0, 10, 61), i_press.v_pchange3);
-        /* 14 */ add(WR_VAR(0, 10, 63), i_press.v_ptend);
+        synop.add_D02001();
         /* 15 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
         /* 16 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
         /* 17 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
@@ -580,19 +403,11 @@ struct SynopECMWFLandHigh : public SynopECMWF
     {
         SynopECMWF::to_subset(msg, subset);
 
-        ///* 12 */ add(WR_VAR(0,  7,  4), DBA_MSG_ISOBARIC_SURFACE);
-        ///* 13 */ add(WR_VAR(0, 10,  3), DBA_MSG_GEOPOTENTIAL);
-        // Find pressure level of geopotential
-        ContextFinder finder(msg);
-        finder.add_var(WR_VAR(0, 10, 8));
-        if (finder.find_in_level(100))
-            subset.store_variable_d(WR_VAR(0, 7, 4), finder.ctx->level.l1);
-        else
-            subset.store_variable_undef(WR_VAR(0,  7, 4));
-        finder.vars[0].add(subset, WR_VAR(0, 10, 3));
-
-        /* 14 */ add(WR_VAR(0, 10, 61), i_press.v_pchange3);
-        /* 15 */ add(WR_VAR(0, 10, 63), i_press.v_ptend);
+        /* 11 */ add(WR_VAR(0, 10,  4), synop.v_press);
+        synop.add_pressure();
+        synop.add_geopotential(WR_VAR(0, 10, 3));
+        /* 14 */ add(WR_VAR(0, 10, 61), synop.v_pchange3);
+        /* 15 */ add(WR_VAR(0, 10, 63), synop.v_ptend);
         /* 16 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
         /* 17 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
         /* 18 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
@@ -672,25 +487,6 @@ struct SynopWMO : public Synop
         bulletin.load_tables();
 
         cur_bulletin = &bulletin;
-    }
-
-    // D02031  Pressure data
-    void do_D02031(const Msg& msg, wreport::Subset& subset)
-    {
-        add(WR_VAR(0, 10,  4), i_press.v_press);
-        add(WR_VAR(0, 10, 51), i_press.v_pressmsl);
-        add(WR_VAR(0, 10, 61), i_press.v_pchange3);
-        add(WR_VAR(0, 10, 63), i_press.v_ptend);
-        add(WR_VAR(0, 10, 62), i_press.v_pchange24);
-
-        // Find pressure level of geopotential
-        ContextFinder finder(msg);
-        finder.add_var(WR_VAR(0, 10, 8));
-        if (finder.find_in_level(100))
-            subset.store_variable_d(WR_VAR(0, 7, 4), finder.ctx->level.l1);
-        else
-            subset.store_variable_undef(WR_VAR(0,  7, 4));
-        finder.vars[0].add(subset, WR_VAR(0, 10, 9));
     }
 
     void add_sensor_height(const msg::Context& c, const Var* sample_var=NULL)
@@ -1111,12 +907,10 @@ struct SynopWMO : public Synop
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Synop::to_subset(msg, subset);
-        synop.add_D01090();
-
-        int hour = synop.get_hour();
 
         // Set subtype based on hour. If we have heterogeneous subsets, keep
         // the lowest of the constraints
+        int hour = synop.get_hour();
         if ((hour % 6) == 0)
             // 002 at main synoptic times 00, 06, 12, 18 UTC,
             cur_bulletin->subtype = cur_bulletin->subtype == 255 ? 2 : cur_bulletin->subtype;
@@ -1127,8 +921,13 @@ struct SynopWMO : public Synop
             // 000 at observation times 01, 02, 04, 05, 07, 08, 10, 11, 13, 14, 16, 17, 19, 20, 22 and 23 UTC.
             cur_bulletin->subtype = 0;
 
+        // Fixed surface station identification, time, horizontal and vertical
+        // coordinates
+        synop.add_D01090();
+
         // D02031  Pressure data
-        do_D02031(msg, subset);
+        synop.add_D02031();
+
         // D02035  Basis synoptic "instantaneous" data
         do_D02035(msg, subset);
         // D02036  Clouds with bases below station level
@@ -1235,10 +1034,12 @@ struct SynopECMWFFactory : public virtual TemplateFactory
         if (var != NULL && var->enqi() == 0)
             return auto_ptr<Template>(new SynopECMWFAuto(opts, msgs));
 
-        ContextFinder finder(msg);
-        finder.add_var(WR_VAR(0, 10, 8));
-        if (finder.find_in_level(100))
-            return auto_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
+        // If it has a geopotential, it's a land high station
+        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                i != msg.data.end(); ++i)
+            if ((*i)->level.ltype1 == 100)
+                if (const Var* v = (*i)->find(WR_VAR(0, 10, 8)))
+                    return auto_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
 
         return auto_ptr<Template>(new SynopECMWFLand(opts, msgs));
     }

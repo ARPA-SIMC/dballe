@@ -45,6 +45,7 @@ protected:
     void add(wreport::Varcode code, const msg::Context* ctx, int shortcut) const;
     void add(wreport::Varcode code, const msg::Context* ctx, wreport::Varcode srccode) const;
     void add(wreport::Varcode code, const msg::Context* ctx) const;
+    void add(wreport::Varcode code, const wreport::Var* var) const;
 
 public:
     void init(wreport::Subset& subset);
@@ -68,10 +69,23 @@ public:
 class CommonSynopExporter : public ExporterModule
 {
 protected:
+    const msg::Context* c_geopotential;
 
 public:
+    const wreport::Var* v_press;
+    const wreport::Var* v_pressmsl;
+    const wreport::Var* v_pchange3;
+    const wreport::Var* v_pchange24;
+    const wreport::Var* v_ptend;
+    const wreport::Var* v_geopotential;
+
     void init(wreport::Subset& subset);
     void scan_context(const msg::Context& c);
+
+    void add_D02001();
+    void add_D02031();
+    void add_pressure();
+    void add_geopotential(wreport::Varcode code);
 };
 
 }

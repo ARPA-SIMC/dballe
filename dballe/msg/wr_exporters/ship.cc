@@ -278,13 +278,13 @@ struct ShipWMO : public ShipBase
                 c_wind = c;
         }
 
+        // Ship identification, movement, date/time, horizontal and vertical
+        // coordinates
         synop.add_D01093();
 
         // Pressure data
-        add(WR_VAR(0, 10,   4), DBA_MSG_PRESS);
-        add(WR_VAR(0, 10,  51), DBA_MSG_PRESS_MSL);
-        add(WR_VAR(0, 10,  61), DBA_MSG_PRESS_3H);
-        add(WR_VAR(0, 10,  63), DBA_MSG_PRESS_TEND);
+        synop.add_D02001();
+
         // Temperature and humidity data
         subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
         subset.store_variable_undef(WR_VAR(0,  7,  33)); // FIXME

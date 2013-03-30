@@ -78,6 +78,14 @@ void ExporterModule::add(Varcode code, const msg::Context* ctx) const
         subset->store_variable_undef(code);
 }
 
+void ExporterModule::add(wreport::Varcode code, const wreport::Var* var) const
+{
+    if (var)
+        subset->store_variable(code, *var);
+    else
+        subset->store_variable_undef(code);
+}
+
 int ExporterModule::get_hour()
 {
     if (!c_ana) return MISSING_INT;
@@ -164,13 +172,106 @@ void ExporterModule::add_D01093()
 void CommonSynopExporter::init(wreport::Subset& subset)
 {
     ExporterModule::init(subset);
+    c_geopotential = 0;
+    v_press = 0;
+    v_pressmsl = 0;
+    v_pchange3 = 0;
+    v_pchange24 = 0;
+    v_ptend = 0;
+    v_geopotential = 0;
 }
 
 void CommonSynopExporter::scan_context(const msg::Context& c)
 {
     ExporterModule::scan_context(c);
+    switch (c.level.ltype1)
+    {
+        case 1:
+            switch (c.trange.pind)
+            {
+                case 4:
+                    if (const Var* v = c.find_by_id(DBA_MSG_PRESS_3H))
+                        switch (c.trange.p2)
+                        {
+                            case  3*3600: v_pchange3 = v; break;
+                            case 24*3600: v_pchange24 = v; break;
+                        }
+                    break;
+                case 205:
+                    if (const Var* v = c.find_by_id(DBA_MSG_PRESS_TEND))
+                        v_ptend = v;
+                    break;
+                case 254:
+                    if (const Var* v = c.find_by_id(DBA_MSG_PRESS))
+                        v_press = v;
+                    if (const Var* v = c.find_by_id(DBA_MSG_PRESS_MSL))
+                        v_pressmsl = v;
+                    break;
+            }
+            break;
+        case 100:
+            // Look for geopotential
+            if (const Var* v = c.find(WR_VAR(0, 10, 8)))
+            {
+                c_geopotential = &c;
+                v_geopotential = v;
+            }
+            break;
+        case 101:
+        case 102:
+            switch (c.trange.pind)
+            {
+                case 4:
+                    if (const Var* v = c.find_by_id(DBA_MSG_PRESS_3H))
+                        switch (c.trange.p2)
+                        {
+                            case  3*3600: v_pchange3 = v; break;
+                            case 24*3600: v_pchange24 = v; break;
+                        }
+                    break;
+                case 205:
+                    if (const Var* v = c.find_by_id(DBA_MSG_PRESS_TEND))
+                        v_ptend = v;
+                    break;
+                case 254:
+                    if (const Var* v = c.find_by_id(DBA_MSG_PRESS))
+                        v_press = v;
+                    if (const Var* v = c.find_by_id(DBA_MSG_PRESS_MSL))
+                        v_pressmsl = v;
+                    break;
+            }
+            break;
+    }
+};
+
+void CommonSynopExporter::add_D02001()
+{
+    add(WR_VAR(0, 10,  4), v_press);
+    add(WR_VAR(0, 10, 51), v_pressmsl);
+    add(WR_VAR(0, 10, 61), v_pchange3);
+    add(WR_VAR(0, 10, 63), v_ptend);
 }
 
+void CommonSynopExporter::add_D02031()
+{
+    add_D02001();
+    add(WR_VAR(0, 10, 62), v_pchange24);
+    add_pressure();
+    add_geopotential(WR_VAR(0, 10,  9));
+}
+
+void CommonSynopExporter::add_pressure()
+{
+    if (c_geopotential)
+        subset->store_variable_d(WR_VAR(0, 7, 4), c_geopotential->level.l1);
+    else
+        subset->store_variable_undef(WR_VAR(0,  7,  4));
+}
+
+void CommonSynopExporter::add_geopotential(wreport::Varcode code)
+{
+    add(code, v_geopotential);
+}
 
 }
 }
