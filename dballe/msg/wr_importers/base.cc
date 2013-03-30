@@ -61,6 +61,77 @@ void WMOImporter::import_var(const Var& var)
 	}
 }
 
+void TimerangeContext::init()
+{
+    time_period = MISSING_INT;
+    time_period_offset = 0;
+    time_period_seen = false;
+    time_sig = MISSING_TIME_SIG;
+    hour = MISSING_INT;
+    last_B04024_pos = -1;
+}
+
+void TimerangeContext::peek_var(const Var& var, unsigned pos)
+{
+    if (var.isset())
+    {
+        switch (var.code())
+        {
+            case WR_VAR(0,  4,  4): hour = var.enqi(); break;
+            case WR_VAR(0,  4, 24):
+                // Time period in hours
+                if (pos == last_B04024_pos + 1 && var.enqi() != 0)
+                {
+                    // Cope with the weird idea of using B04024 twice to indicate
+                    // beginning and end of a period not ending with the SYNOP
+                    // reference time
+                    if (time_period != MISSING_INT)
+                    {
+                        time_period -= var.enqd() * 3600;
+                        time_period_offset = var.enqd() * 3600;
+                    }
+                } else {
+                    time_period = var.enqd() * 3600;
+                    time_period_seen = true;
+                    time_period_offset = 0;
+                }
+                last_B04024_pos = pos;
+                break;
+            case WR_VAR(0,  4, 25):
+                // Time period in minutes
+                time_period = var.enqd() * 60;
+                time_period_seen = true;
+                time_period_offset = 0;
+                break;
+            case WR_VAR(0,  8, 21):
+                // Time significance
+                time_sig = var.enqi();
+                break;
+        }
+    } else {
+        switch (var.code())
+        {
+            case WR_VAR(0,  4,  4): hour = MISSING_INT; break;
+            case WR_VAR(0,  4, 24):
+                // Time period in hours
+                time_period = MISSING_INT;
+                time_period_offset = 0;
+                time_period_seen = true;
+                break;
+            case WR_VAR(0,  4, 25):
+                // Time period in minutes
+                time_period = MISSING_INT;
+                time_period_offset = 0;
+                time_period_seen = true;
+                break;
+            case WR_VAR(0,  8, 21):
+                // Time significance
+                time_sig = MISSING_TIME_SIG;
+                break;
+        }
+    }
+}
+
 void CloudContext::init()
 {
     level = Level::cloud(MISSING_INT, MISSING_INT);

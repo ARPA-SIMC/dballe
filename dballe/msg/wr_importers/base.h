@@ -89,6 +89,22 @@ public:
     virtual ~WMOImporter() {}
 };
 
+#define MISSING_TIME_SIG -10000
+
+/// Keep track of time range context changes
+struct TimerangeContext
+{
+    int time_period;
+    int time_period_offset;
+    bool time_period_seen;
+    int time_sig;
+    int hour;
+    int last_B04024_pos;
+
+    void init();
+    void peek_var(const wreport::Var& var, unsigned pos);
+};
+
 /**
  * Keep track of the current cloud metadata
  */

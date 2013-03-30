@@ -33,7 +33,6 @@ namespace wr {
 #define MISSING_PRESS_STD 0.0
 #define MISSING_SENSOR_H -10000.0
 #define MISSING_VSS 63
-#define MISSING_TIME_SIG -10000
 
 namespace {
 
@@ -48,16 +47,13 @@ class SynopImporter : public WMOImporter
 {
 protected:
     CloudContext clouds;
+    TimerangeContext trange;
+
     double height_baro;
     double press_std;
     double height_sensor;
     bool height_sensor_seen;
     int vs;
-    int time_period;
-    int time_period_offset;
-    bool time_period_seen;
-    int time_sig;
-    int hour;
 
     // Import builder parts
     const MsgVarShortcut* v;
@@ -93,10 +89,10 @@ protected:
     Trange tr_real(const Trange& standard) const
     {
         if (standard.pind == 254) return Trange::instant();
-        if (!time_period_seen) return standard;
-        return time_period == MISSING_INT ?
+        if (!trange.time_period_seen) return standard;
+        return trange.time_period == MISSING_INT ?
             Trange(standard.pind, 0) :
-            Trange(standard.pind, 0, abs(time_period));
+            Trange(standard.pind, 0, abs(trange.time_period));
     }
 
     Level lev_shortcut() const { return Level(v->ltype1, v->l1, v->ltype2, v->l2); }
@@ -118,9 +114,9 @@ protected:
     }
     void ib_annotate_trange()
     {
-        if (time_period == MISSING_INT) return;
+        if (trange.time_period == MISSING_INT) return;
         ib_use_temp_var();
-        temp_var->seta(newvar(WR_VAR(0, 4, 194), abs(time_period)));
+        temp_var->seta(newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
     }
 
     void ib_level_use_real(const Level& standard) { chosen_lev = lev_real(standard); }
@@ -297,16 +293,12 @@ public:
     {
         WMOImporter::init();
         clouds.init();
+        trange.init();
         height_baro = MISSING_BARO;
         press_std = MISSING_PRESS_STD;
         height_sensor = MISSING_SENSOR_H;
         height_sensor_seen = false;
         vs = MISSING_VSS;
-        time_period = MISSING_INT;
-        time_period_offset = 0;
-        time_period_seen = false;
-        time_sig = MISSING_TIME_SIG;
-        hour = MISSING_INT;
     }
 
     virtual void run()
@@ -315,8 +307,7 @@ public:
         {
                 const Var& var = (*subset)[pos];
                 if (WR_VAR_F(var.code()) != 0) continue;
-                if (WR_VAR_X(var.code()) < 10)
-                        peek_var(var);
+                if (WR_VAR_X(var.code()) < 10) peek_var(var);
                 if (var.value() == NULL)
                         import_var_undef(var);
                 else
@@ -338,7 +329,10 @@ void SynopImporter::peek_var(const Var& var)
 {
     switch (var.code())
     {
-        case WR_VAR(0,  4,  4): hour = var.enq(MISSING_INT); break;
+        case WR_VAR(0,  4,  4):
+        case WR_VAR(0,  4, 24):
+        case WR_VAR(0,  4, 25):
+        case WR_VAR(0,  8, 21): trange.peek_var(var, pos); break;
         case WR_VAR(0,  8,  2): clouds.on_vss(*subset, pos); break;
     }
 }
@@ -347,9 +341,6 @@ void SynopImporter::import_var_undef(const Var& var)
 {
     switch (var.code())
     {
-        case WR_VAR(0,  4,  4):
-            hour = MISSING_INT;
-            break;
         case WR_VAR(0,  7, 32):
             /* Height to use later as level for what needs it */
             height_sensor = MISSING_SENSOR_H;
@@ -358,24 +349,8 @@ void SynopImporter::import_var_undef(const Var& var)
         case WR_VAR(0,  8,  2):
             vs = MISSING_VSS;
             break;
-        case WR_VAR(0,  4, 24):
-            /* Time period in hours */
-            time_period = MISSING_INT;
-            time_period_offset = 0;
-            time_period_seen = true;
-            break;
-        case WR_VAR(0,  4, 25):
-            /* Time period in minutes */
-            time_period = MISSING_INT;
-            time_period_offset = 0;
-            time_period_seen = true;
-            break;
-        case WR_VAR(0,  8, 21):
-            /* Time significance */
-            time_sig = MISSING_TIME_SIG;
-            break;
         default:
-	    //WMOImporter::import_var_undef(var);
+            //WMOImporter::import_var_undef(var);
             break;
     }
 }
@@ -396,35 +371,6 @@ void SynopImporter::import_var(const Var& var)
             /* Store original VS value as a measured value */
             msg->set(var, WR_VAR(0, 8, 2), clouds.level, Trange::instant());
             break;
-        case WR_VAR(0,  4, 24):
-            /* Time period in hours */
-            if (pos > 0 && (*subset)[pos-1].code() == WR_VAR(0, 4, 24) && var.enqi() != 0)
-            {
-                // Cope with the weird idea of using B04024 twice to indicate
-                // beginning and end of a period not ending with the SYNOP
-                // reference time
-                if (time_period != MISSING_INT)
-                {
-                    time_period -= var.enqd() * 3600;
-                    time_period_offset = var.enqd() * 3600;
-                }
-            } else {
-                time_period = var.enqd() * 3600;
-                time_period_seen = true;
-                time_period_offset = 0;
-            }
-            break;
-        case WR_VAR(0,  4, 25):
-            /* Time period in minutes */
-            time_period = var.enqd() * 60;
-            time_period_seen = true;
-            time_period_offset = 0;
-            break;
-        case WR_VAR(0,  8, 21):
-            /* Time significance */
-            time_sig = var.enqi();
-            break;
-
 /* Fixed surface station identification, time, horizontal and vertical
  * coordinates (complete) */
         case WR_VAR(0,  7,  1):
@@ -509,33 +455,33 @@ void SynopImporter::import_var(const Var& var)
             ib_start(DBA_MSG_PAST_WTR1_6H, var);
             ib_level_use_shorcut_and_discard_rest();
             if (opts.simplified)
-                ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+                ib_trange_use_standard_and_preserve_rest((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
             else
-                ib_trange_use_real((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+                ib_trange_use_real((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
             ib_set();
             break;
         case WR_VAR(0, 20,  5):
             ib_start(DBA_MSG_PAST_WTR2_6H, var);
             ib_level_use_shorcut_and_discard_rest();
             if (opts.simplified)
-                ib_trange_use_standard_and_preserve_rest((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+                ib_trange_use_standard_and_preserve_rest((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
             else
-                ib_trange_use_real((hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+                ib_trange_use_real((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
             ib_set();
             break;
 
 /* Sunshine data (complete) */
-        case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, abs(time_period))); break;
+        case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, abs(trange.time_period))); break;
 
 /* Precipitation measurement (complete) */
-        case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(time_period))); break;
+        case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(trange.time_period))); break;
 
 /* Extreme temperature data */
         case WR_VAR(0, 12, 111):
-            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(2, -abs(time_period_offset), abs(time_period)));
+            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(2, -abs(trange.time_period_offset), abs(trange.time_period)));
             break;
         case WR_VAR(0, 12, 112):
-            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(3, -abs(time_period_offset), abs(time_period)));
+            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(3, -abs(trange.time_period_offset), abs(trange.time_period)));
             break;
 
 /* Wind data (complete) */
@@ -549,14 +495,14 @@ void SynopImporter::import_var(const Var& var)
          */
         case WR_VAR(0, 11,  1):
         case WR_VAR(0, 11, 11):
-            if (time_sig != MISSING_TIME_SIG && time_sig != 2)
-                    error_consistency::throwf("Found unsupported time significance %d for wind direction", time_sig);
+            if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
+                    error_consistency::throwf("Found unsupported time significance %d for wind direction", trange.time_sig);
             set_gen_sensor(var, DBA_MSG_WIND_DIR, lev_std_wind, tr_std_wind);
             break;
         case WR_VAR(0, 11,  2):
         case WR_VAR(0, 11, 12):
-            if (time_sig != MISSING_TIME_SIG && time_sig != 2)
-                error_consistency::throwf("Found unsupported time significance %d for wind speed", time_sig);
+            if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
+                error_consistency::throwf("Found unsupported time significance %d for wind speed", trange.time_sig);
             set_gen_sensor(var, DBA_MSG_WIND_SPEED, lev_std_wind, tr_std_wind);
             break;
         case WR_VAR(0, 11, 43): set_gen_sensor(var, DBA_MSG_WIND_GUST_MAX_DIR, lev_std_wind, tr_std_wind_max10m, false, true); break;
@@ -565,10 +511,10 @@ void SynopImporter::import_var(const Var& var)
 /* Evaporation data */
         case WR_VAR(0, 2, 4): msg->set(var, WR_VAR(0, 2, 4), Level(1), Trange::instant()); break;
         case WR_VAR(0, 13, 33):
-            if (time_period == MISSING_INT)
+            if (trange.time_period == MISSING_INT)
                 msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1));
             else
-                msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, abs(time_period)));
+                msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, abs(trange.time_period)));
             break;
 
 /* Radiation data */
