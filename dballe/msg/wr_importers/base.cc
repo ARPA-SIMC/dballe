@@ -573,6 +573,7 @@ void SynopBaseImporter::import_var(const Var& var)
         case WR_VAR(0, 12,   6):
         case WR_VAR(0, 12, 103): ctx.set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
         case WR_VAR(0, 13,   3): ctx.set_gen_sensor(var, DBA_MSG_HUMIDITY); break;
+        case WR_VAR(0, 12,   2):
         case WR_VAR(0, 12, 102): ctx.set_gen_sensor(var, DBA_MSG_WET_TEMP_2M); break;
 
         // Visibility data (complete)

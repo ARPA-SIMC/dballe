@@ -75,6 +75,7 @@ wreport::Varcode map_code_to_dballe(wreport::Varcode code)
         case WR_VAR(0, 10,  3): return WR_VAR(0, 10,   8);
         case WR_VAR(0, 10, 61): return WR_VAR(0, 10,  60);
         case WR_VAR(0, 12,  1): return WR_VAR(0, 12, 101);
+        case WR_VAR(0, 12,  2): return WR_VAR(0, 12, 102);
         case WR_VAR(0, 12,  3): return WR_VAR(0, 12, 103);
         default: return code;
     }

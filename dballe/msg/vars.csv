@@ -53,7 +53,7 @@ WIND_GUST_MAX_DIR,   num,    B11043,     103, 10000, -, -,  254,      0,     0, 
 EX_CCW_WIND,    num,    B11016,     103, 10000, -, -,  254,      0,     0, Extreme counterclockwise wind direction of a variable wind at 10 metres above ground
 EX_CW_WIND,     num,    B11017,     103, 10000, -, -,  254,      0,     0, Extreme clockwise wind direction of a variable wind at 10 metres above ground
 TEMP_2M,        num,    B12101,     103,  2000, -, -,  254,      0,     0, Temperature at 2 metres above ground
-WET_TEMP_2M,    num,    B12002,     103,  2000, -, -,  254,      0,     0, Wet bulb temperature at 2 metres above ground
+WET_TEMP_2M,    num,    B12102,     103,  2000, -, -,  254,      0,     0, Wet bulb temperature at 2 metres above ground
 DEWPOINT_2M,    num,    B12103,     103,  2000, -, -,  254,      0,     0, Dew point at 2 metres above ground
 HUMIDITY,       num,    B13003,     103,  2000, -, -,  254,      0,     0, Humidity at 2 metres above ground
 WATER_TEMP,     num,    B22043,       1,     -, -, -,  254,      0,     0, Sea/water surface temperature

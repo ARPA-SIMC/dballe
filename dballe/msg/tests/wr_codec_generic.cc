@@ -265,7 +265,7 @@ void to::test<4>()
     msg->set(var, Level(1), Trange::instant());
 
 	/* Create a second variable to add to the message */
-    var = newvar(WR_VAR(0, 12, 2), 272.0);
+    var = newvar(WR_VAR(0, 12, 102), 272.0);
 
 	/* Add some attributes to the variable */
 	var->seta(newvar(WR_VAR(0, 33, 3), 1));
