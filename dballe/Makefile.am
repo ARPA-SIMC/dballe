@@ -61,6 +61,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/repinfo.h \
 	msg/aof_codec.h \
 	msg/wr_codec.h \
+	msg/wr_exporters/common.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
 	cmdline/processor.h
@@ -124,6 +125,7 @@ libdballe_la_SOURCES = \
 	msg/wr_importers/flight.cc \
 	msg/wr_importers/generic.cc \
 	msg/wr_importers/pollution.cc \
+	msg/wr_exporters/common.cc \
 	msg/wr_exporters/synop.cc \
 	msg/wr_exporters/ship.cc \
 	msg/wr_exporters/buoy.cc \

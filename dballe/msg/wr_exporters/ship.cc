@@ -17,6 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include "common.h"
 #include "msg/wr_codec.h"
 #include <wreport/bulletin.h>
 #include "msg/msgs.h"
@@ -52,6 +53,7 @@ namespace {
 // Base template for ships
 struct ShipBase : public Template
 {
+    CommonSynopExporter synop;
     bool is_crex;
 
     ShipBase(const Exporter::Options& opts, const Msgs& msgs)
@@ -61,13 +63,37 @@ struct ShipBase : public Template
     {
         Template::setupBulletin(bulletin);
 
+        is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
+
+        bulletin.type = 1;
+        bulletin.subtype = 255;
+    }
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        Template::to_subset(msg, subset);
+        synop.init(subset);
+
+        // Scan message finding context for the data that follow
+        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                i != msg.data.end(); ++i)
+            synop.scan_context(**i);
+    }
+};
+
+struct ShipECMWFBase : public ShipBase
+{
+    ShipECMWFBase(const Exporter::Options& opts, const Msgs& msgs)
+        : ShipBase(opts, msgs) {}
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        ShipBase::setupBulletin(bulletin);
+
         // Use old table for old templates
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
             b->master_table = 13;
         }
-
-        is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
         bulletin.type = 1;
         bulletin.subtype = 255;
@@ -90,7 +116,7 @@ struct ShipBase : public Template
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
-        Template::to_subset(msg, subset);
+        ShipBase::to_subset(msg, subset);
 
         // Look for significant levels
         const msg::Context* c_wind = NULL;
@@ -102,17 +128,9 @@ struct ShipBase : public Template
                 c_wind = c;
         }
 
-        /*  0 */ add(WR_VAR(0,  1, 11), DBA_MSG_IDENT);
-        /*  1 */ add(WR_VAR(0,  1, 12), DBA_MSG_ST_DIR);
-        /*  2 */ add(WR_VAR(0,  1, 13), DBA_MSG_ST_SPEED);
-        /*  3 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
-        /*  4 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  5 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  6 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  7 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  8 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
-        /*  9 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
-        /* 10 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
+        synop.add_ship_head();
+        synop.add_year_to_minute();
+        synop.add_latlon_coarse();
         /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
         /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
         /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
@@ -151,68 +169,68 @@ struct ShipBase : public Template
     }
 };
 
-struct ShipAbbr : public ShipBase
+struct ShipAbbr : public ShipECMWFBase
 {
     ShipAbbr(const Exporter::Options& opts, const Msgs& msgs)
-        : ShipBase(opts, msgs) {}
+        : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_ABBR_NAME; }
     virtual const char* description() const { return SHIP_ABBR_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        ShipBase::setupBulletin(bulletin);
+        ShipECMWFBase::setupBulletin(bulletin);
         bulletin.localsubtype = 9;
 
         bulletin.load_tables();
     }
 };
 
-struct ShipPlain : public ShipBase
+struct ShipPlain : public ShipECMWFBase
 {
     ShipPlain(const Exporter::Options& opts, const Msgs& msgs)
-        : ShipBase(opts, msgs) {}
+        : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_PLAIN_NAME; }
     virtual const char* description() const { return SHIP_PLAIN_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        ShipBase::setupBulletin(bulletin);
+        ShipECMWFBase::setupBulletin(bulletin);
         bulletin.localsubtype = 11;
 
         bulletin.load_tables();
     }
 };
 
-struct ShipAuto : public ShipBase
+struct ShipAuto : public ShipECMWFBase
 {
     ShipAuto(const Exporter::Options& opts, const Msgs& msgs)
-        : ShipBase(opts, msgs) {}
+        : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_AUTO_NAME; }
     virtual const char* description() const { return SHIP_AUTO_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        ShipBase::setupBulletin(bulletin);
+        ShipECMWFBase::setupBulletin(bulletin);
         bulletin.localsubtype = 13;
 
         bulletin.load_tables();
     }
 };
 
-struct ShipReduced : public ShipBase
+struct ShipReduced : public ShipECMWFBase
 {
     ShipReduced(const Exporter::Options& opts, const Msgs& msgs)
-        : ShipBase(opts, msgs) {}
+        : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_REDUCED_NAME; }
     virtual const char* description() const { return SHIP_REDUCED_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        ShipBase::setupBulletin(bulletin);
+        ShipECMWFBase::setupBulletin(bulletin);
         bulletin.localsubtype = 19;
 
         bulletin.load_tables();
@@ -220,19 +238,19 @@ struct ShipReduced : public ShipBase
 };
 
 // Template for WMO ships
-struct ShipWMO : public Template
+struct ShipWMO : public ShipBase
 {
     bool is_crex;
 
     ShipWMO(const Exporter::Options& opts, const Msgs& msgs)
-        : Template(opts, msgs) {}
+        : ShipBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_WMO_NAME; }
     virtual const char* description() const { return SHIP_WMO_DESC; }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
-        Template::setupBulletin(bulletin);
+        ShipBase::setupBulletin(bulletin);
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
@@ -248,7 +266,7 @@ struct ShipWMO : public Template
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
-        Template::to_subset(msg, subset);
+        ShipBase::to_subset(msg, subset);
 
         // Look for significant levels
         const msg::Context* c_wind = NULL;
@@ -260,20 +278,8 @@ struct ShipWMO : public Template
                 c_wind = c;
         }
 
-        // Ship identification
-        add(WR_VAR(0,  1,  11), DBA_MSG_IDENT);
-        add(WR_VAR(0,  1,  12), DBA_MSG_ST_DIR);
-        add(WR_VAR(0,  1,  13), DBA_MSG_ST_SPEED);
-        add(WR_VAR(0,  2,   1), DBA_MSG_ST_TYPE);
-        add(WR_VAR(0,  4,   1), DBA_MSG_YEAR);
-        add(WR_VAR(0,  4,   2), DBA_MSG_MONTH);
-        add(WR_VAR(0,  4,   3), DBA_MSG_DAY);
-        add(WR_VAR(0,  4,   4), DBA_MSG_HOUR);
-        add(WR_VAR(0,  4,   5), DBA_MSG_MINUTE);
-        add(WR_VAR(0,  5,   2), DBA_MSG_LATITUDE);
-        add(WR_VAR(0,  6,   2), DBA_MSG_LONGITUDE);
-        add(WR_VAR(0,  7,  30), DBA_MSG_HEIGHT_STATION);
-        add(WR_VAR(0,  7,  31), DBA_MSG_HEIGHT_BARO);
+        synop.add_D01093();
+
         // Pressure data
         add(WR_VAR(0, 10,   4), DBA_MSG_PRESS);
         add(WR_VAR(0, 10,  51), DBA_MSG_PRESS_MSL);
@@ -321,12 +327,12 @@ struct ShipWMO : public Template
         add(WR_VAR(0, 22, 43), DBA_MSG_WATER_TEMP);
         subset.store_variable_undef(WR_VAR(0,  7,  63));
         // Waves
-        subset.store_variable_undef(WR_VAR(0, 22,   1)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,  11)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,  21)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,   2)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,  12)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,  22)); // FIXME
+        add(WR_VAR(0, 22,   1), WR_VAR(0, 22,   1), Level(1), Trange::instant());
+        add(WR_VAR(0, 22,  11), WR_VAR(0, 22,  11), Level(1), Trange::instant());
+        add(WR_VAR(0, 22,  21), WR_VAR(0, 22,  21), Level(1), Trange::instant());
+        add(WR_VAR(0, 22,   2), WR_VAR(0, 22,   2), Level(1), Trange::instant());
+        add(WR_VAR(0, 22,  12), WR_VAR(0, 22,  12), Level(1), Trange::instant());
+        add(WR_VAR(0, 22,  22), WR_VAR(0, 22,  22), Level(1), Trange::instant());
         //  2 systems of swell waves
         subset.store_variable_undef(WR_VAR(0, 22,   3)); // FIXME
         subset.store_variable_undef(WR_VAR(0, 22,  13)); // FIXME

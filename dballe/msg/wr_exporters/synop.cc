@@ -17,6 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include "common.h"
 #include "msg/wr_codec.h"
 #include <wreport/bulletin.h>
 #include "msg/msgs.h"
@@ -259,6 +260,7 @@ struct PrecInfo
 
 struct Synop : public Template
 {
+    CommonSynopExporter synop;
     const msg::Context* c_sunshine1;
     const msg::Context* c_sunshine2;
     const msg::Context* c_wind;
@@ -297,6 +299,7 @@ struct Synop : public Template
                 i != msg->data.end(); ++i)
         {
             const msg::Context* c = *i;
+            synop.scan_context(*c);
             switch (c->level.ltype1)
             {
                 case 1:
@@ -376,6 +379,7 @@ struct Synop : public Template
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Template::to_subset(msg, subset);
+        synop.init(subset);
         scan_levels();
     }
 };
@@ -447,16 +451,9 @@ struct SynopECMWF : public Synop
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Synop::to_subset(msg, subset);
-        /*  0 */ add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
-        /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
-        /*  2 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
-        /*  3 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  4 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  5 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  6 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  7 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
-        /*  8 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        /*  9 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        synop.add_ecmwf_synop_head();
+        synop.add_year_to_minute();
+        synop.add_latlon_high();
         /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
         /* 11 */ add(WR_VAR(0, 10,  4), i_press.v_press);
     }
@@ -1114,11 +1111,9 @@ struct SynopWMO : public Synop
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Synop::to_subset(msg, subset);
+        synop.add_D01090();
 
-        // D01090  Fixed surface identification, time, horizontal and vertical coordinates
-        do_D01004(); // station id
-        do_D01011(); // date
-        int hour = do_D01012(); // time
+        int hour = synop.get_hour();
 
         // Set subtype based on hour. If we have heterogeneous subsets, keep
         // the lowest of the constraints
@@ -1132,9 +1127,6 @@ struct SynopWMO : public Synop
             // 000 at observation times 01, 02, 04, 05, 07, 08, 10, 11, 13, 14, 16, 17, 19, 20, 22 and 23 UTC.
             cur_bulletin->subtype = 0;
 
-        do_D01021(); // coordinates
-        add(WR_VAR(0,  7, 30), DBA_MSG_HEIGHT_STATION);
-        add(WR_VAR(0,  7, 31), DBA_MSG_HEIGHT_BARO);
         // D02031  Pressure data
         do_D02031(msg, subset);
         // D02035  Basis synoptic "instantaneous" data
