@@ -95,6 +95,7 @@ struct LevelContext
     double height_baro;
     double press_std;
     double height_sensor;
+    double depth;
     bool height_sensor_seen;
 
     void init();
@@ -159,6 +160,7 @@ struct ContextChooser
     void set_wind(const wreport::Var& var, int shortcut);
     void set_wind_max(const wreport::Var& var, int shortcut);
     void set_pressure(const wreport::Var& var);
+    void set_water_temperature(const wreport::Var& var);
 
 protected:
     void ib_start(int shortcut, const wreport::Var& var);

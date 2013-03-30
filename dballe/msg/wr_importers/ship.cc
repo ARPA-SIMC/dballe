@@ -65,7 +65,7 @@ public:
                         else
                             return MSG_SHIP;
                     }
-                    default: return MSG_GENERIC;
+                    default: return MSG_SHIP;
                 }
                 break;
             default: return MSG_GENERIC; break;
@@ -92,9 +92,8 @@ void ShipImporter::import_var(const Var& var)
         // TODO: check levels and time ranges
         case WR_VAR(0,  2, 38): msg->set(var, var.code(), Level::ana(), Trange::ana()); break;
         // TODO: check levels and time ranges
-        // TODO: context WR_VAR(0, 7, 63)
-        case WR_VAR(0, 22, 43):
-            break;
+        case WR_VAR(0, 22, 42):
+        case WR_VAR(0, 22, 43): ctx.set_water_temperature(var); break;
 
         // Waves
         // TODO: check levels and time ranges

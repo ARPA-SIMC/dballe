@@ -80,6 +80,7 @@ void LevelContext::init()
     press_std = MISSING_PRESS_STD;
     height_sensor = MISSING_SENSOR_H;
     height_sensor_seen = false;
+    depth = MISSING_SENSOR_H;
 }
 
 void LevelContext::peek_var(const wreport::Var& var)
@@ -99,6 +100,9 @@ void LevelContext::peek_var(const wreport::Var& var)
             height_sensor = MISSING_SENSOR_H;
             height_sensor = var.enq(MISSING_SENSOR_H);
             height_sensor_seen = true;
+            break;
+        case WR_VAR(0,  7, 63):
+            depth = var.enq(MISSING_SENSOR_H);
             break;
     }
 }
@@ -482,6 +486,14 @@ void ContextChooser::set_pressure(const wreport::Var& var)
     msg->set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
 }
 
+void ContextChooser::set_water_temperature(const wreport::Var& var)
+{
+    if (level.depth == MISSING_SENSOR_H)
+        msg->set(var, WR_VAR(0, 22, 43), Level(1), Trange::instant());
+    else
+        msg->set(var, WR_VAR(0, 22, 43), Level(160, level.depth * 1000), Trange::instant());
+}
+
 SynopBaseImporter::SynopBaseImporter(const msg::Importer::Options& opts)
     : WMOImporter(opts), ctx(level, trange)
 {
@@ -518,7 +530,8 @@ void SynopBaseImporter::peek_var(const Var& var)
         case WR_VAR(0,  8,  2): clouds.on_vss(*subset, pos); break;
         case WR_VAR(0,  7,  4):
         case WR_VAR(0,  7, 31):
-        case WR_VAR(0,  7, 32): level.peek_var(var); break;
+        case WR_VAR(0,  7, 32):
+        case WR_VAR(0,  7, 63): level.peek_var(var); break;
     }
 }
 
@@ -618,7 +631,6 @@ void SynopBaseImporter::import_var(const Var& var)
         case WR_VAR(0, 11, 43): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_DIR); break;
         case WR_VAR(0, 11, 41): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_SPEED); break;
 
-        case WR_VAR(0, 22, 42): msg->set_water_temp_var(var); break;
         case WR_VAR(0, 12,  5): msg->set_wet_temp_2m_var(var); break;
         case WR_VAR(0, 10,197): msg->set_height_anem_var(var); break;
 
