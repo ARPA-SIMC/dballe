@@ -29,289 +29,46 @@ namespace dballe {
 namespace msg {
 namespace wr {
 
-#define MISSING_BARO -10000
-#define MISSING_PRESS_STD 0.0
-#define MISSING_SENSOR_H -10000.0
-#define MISSING_VSS 63
-
 namespace {
 
 static const Level lev_ground(1);
 static const Level lev_std_wind(103, 10*1000);
 static const Trange tr_std_wind(200, 0, 600);
 static const Trange tr_std_wind_max10m(205, 0, 600);
-static const Trange tr_std_past_wtr3(205, 0, 10800);
-static const Trange tr_std_past_wtr6(205, 0, 21600);
 
 class SynopImporter : public WMOImporter
 {
 protected:
     CloudContext clouds;
+    LevelContext level;
     TimerangeContext trange;
-
-    double height_baro;
-    double press_std;
-    double height_sensor;
-    bool height_sensor_seen;
-    int vs;
-
-    // Import builder parts
-    const MsgVarShortcut* v;
-    Var* temp_var;
-    Level chosen_lev;
-    Trange chosen_tr;
-    const Var* chosen_var;
+    ContextChooser ctx;
 
     void peek_var(const Var& var);
-    void import_var_undef(const Var& var);
     void import_var(const Var& var);
-
-    void ib_start(int shortcut, const Var& var)
-    {
-        v = &shortcutTable[shortcut];
-        chosen_var = &var;
-        if (temp_var)
-        {
-            delete temp_var;
-            temp_var = 0;
-        }
-    }
-
-    Level lev_real(const Level& standard) const
-    {
-        if (height_sensor == 0) return Level(1);
-        if (!height_sensor_seen) return standard;
-        return height_sensor == MISSING_SENSOR_H ?
-            Level(103) :
-            Level(103, height_sensor * 1000);
-    }
-
-    Trange tr_real(const Trange& standard) const
-    {
-        if (standard.pind == 254) return Trange::instant();
-        if (!trange.time_period_seen) return standard;
-        return trange.time_period == MISSING_INT ?
-            Trange(standard.pind, 0) :
-            Trange(standard.pind, 0, abs(trange.time_period));
-    }
-
-    Level lev_shortcut() const { return Level(v->ltype1, v->l1, v->ltype2, v->l2); }
-    Trange tr_shortcut() const { return Trange(v->pind, v->p1, v->p2); }
-
-    void ib_use_temp_var()
-    {
-        if (!temp_var)
-        {
-            temp_var = new Var(*chosen_var);
-            chosen_var = temp_var;
-        }
-    }
-    void ib_annotate_level()
-    {
-        if (height_sensor == MISSING_SENSOR_H) return;
-        ib_use_temp_var();
-        temp_var->seta(newvar(WR_VAR(0, 7, 32), height_sensor));
-    }
-    void ib_annotate_trange()
-    {
-        if (trange.time_period == MISSING_INT) return;
-        ib_use_temp_var();
-        temp_var->seta(newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
-    }
-
-    void ib_level_use_real(const Level& standard) { chosen_lev = lev_real(standard); }
-    void ib_trange_use_real(const Trange& standard) { chosen_tr = tr_real(standard); }
-
-    void ib_level_use_shorcut_and_discard_rest() { chosen_lev = lev_shortcut(); }
-    void ib_trange_use_shortcut_and_discard_rest() { chosen_tr = tr_shortcut(); }
-
-    void ib_level_use_shorcut_and_preserve_rest(const Level& standard)
-    {
-        chosen_lev = lev_shortcut();
-        Level real = lev_real(standard);
-        if (real != chosen_lev && real != standard)
-            ib_annotate_level();
-    }
-
-    void ib_trange_use_shorcut_and_preserve_rest(const Trange& standard)
-    {
-        chosen_tr = tr_shortcut();
-        Trange real = tr_real(standard);
-        if (real != chosen_tr && real != standard)
-            ib_annotate_trange();
-    }
-
-    void ib_level_use_standard_and_preserve_rest(const Level& standard)
-    {
-        chosen_lev = standard;
-        if (chosen_lev != lev_real(standard))
-            ib_annotate_level();
-    }
-
-    void ib_trange_use_standard_and_preserve_rest(const Trange& standard)
-    {
-        chosen_tr = standard;
-        if (chosen_tr != tr_real(standard))
-            ib_annotate_trange();
-    }
-
-    void ib_level_use_shorcut_if_standard_else_real(const Level& standard)
-    {
-        Level shortcut = lev_shortcut();
-        Level real = lev_real(standard);
-        if (real == shortcut || real == standard)
-            chosen_lev = shortcut;
-        else
-            chosen_lev = real;
-    }
-
-    void ib_trange_use_shorcut_if_standard_else_real(const Trange& standard)
-    {
-        Trange shortcut = tr_shortcut();
-        Trange real = tr_real(standard);
-        if (real == shortcut || real == standard)
-            chosen_tr = shortcut;
-        else
-            chosen_tr = real;
-    }
-
-    void ib_set()
-    {
-        msg->set(*chosen_var, v->code, chosen_lev, chosen_tr);
-    }
-
-    void set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
-    {
-        Level lev;
-
-        if (!height_sensor_seen ||
-                 (height_sensor != MISSING_SENSOR_H && (
-                      defaultLevel == Level(103, height_sensor * 1000)
-                  || (defaultLevel.ltype1 == 1 && height_sensor == 0))))
-            msg->set(var, code, defaultLevel, trange);
-        else if (height_sensor == MISSING_SENSOR_H)
-        {
-            if (opts.simplified)
-                msg->set(var, code, defaultLevel, trange);
-            else
-                msg->set(var, code, Level(103, MISSING_INT), trange);
-        }
-        else if (opts.simplified)
-        {
-            Var var1(var);
-            var1.seta(newvar(WR_VAR(0, 7, 32), height_sensor));
-            msg->set(var1, code, defaultLevel, trange);
-        } else
-            msg->set(var, code, Level(103, height_sensor * 1000), trange);
-    }
-
-    void set_gen_sensor(const Var& var, int shortcut)
-    {
-        const MsgVarShortcut& v = shortcutTable[shortcut];
-        set_gen_sensor(var, shortcut, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
-    }
-
-    void set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful=false)
-    {
-        ib_start(shortcut, var);
-        ib_level_use_shorcut_and_discard_rest();
-        if (!opts.simplified)
-            ib_trange_use_real(tr_std);
-        else if (tr_careful)
-            ib_trange_use_shorcut_if_standard_else_real(tr_std);
-        else
-            ib_trange_use_shorcut_and_preserve_rest(tr_std);
-        ib_set();
-    }
-
-    void set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful=false, bool tr_careful=false)
-    {
-        ib_start(shortcut, var);
-        if (!opts.simplified)
-        {
-            ib_level_use_real(lev_std);
-            ib_trange_use_real(tr_std);
-        }
-        else
-        {
-            if (lev_careful)
-                ib_level_use_shorcut_if_standard_else_real(lev_std);
-            else
-                ib_level_use_shorcut_and_preserve_rest(lev_std);
-            if (tr_careful)
-                ib_trange_use_shorcut_if_standard_else_real(tr_std);
-            else
-                ib_trange_use_shorcut_and_preserve_rest(tr_std);
-        }
-        ib_set();
-    }
-
-#if 0
-    void set_gen_sensor(const Var& var, int shortcut, const Trange& trange)
-    {
-        if (height_sensor == MISSING_SENSOR_H)
-            msg->set_by_id(var, shortcut);
-        else 
-        {
-            if (opts.simplified)
-            {
-                Var var1(var);
-                var1.seta(newvar(WR_VAR(0, 7, 32), height_sensor));
-                msg->set(var1, v.code, Level(103, height_sensor * 1000), trange);
-            } else {
-                const MsgVarShortcut& v = shortcutTable[shortcut];
-                msg->set(var, v.code, Level(103, height_sensor * 1000), trange);
-            }
-        }
-    }
-#endif
-
-    void set_baro_sensor(const Var& var, int shortcut)
-    {
-        if (height_baro == MISSING_BARO)
-            msg->set_by_id(var, shortcut);
-        else if (opts.simplified)
-        {
-            Var var1(var);
-            var1.seta(newvar(WR_VAR(0, 7, 31), height_baro));
-            msg->set_by_id(var1, shortcut);
-        } else {
-            const MsgVarShortcut& v = shortcutTable[shortcut];
-            msg->set(var, v.code, Level(102, height_baro*1000), Trange(v.pind, v.p1, v.p2));
-        }
-    }
 
 public:
     SynopImporter(const msg::Importer::Options& opts)
-        : WMOImporter(opts), v(0), temp_var(0), chosen_var(0) {}
-    virtual ~SynopImporter()
-    {
-        if (temp_var) delete temp_var;
-    }
+        : WMOImporter(opts), ctx(level, trange) {}
+    virtual ~SynopImporter() {}
 
     virtual void init()
     {
         WMOImporter::init();
         clouds.init();
+        level.init();
         trange.init();
-        height_baro = MISSING_BARO;
-        press_std = MISSING_PRESS_STD;
-        height_sensor = MISSING_SENSOR_H;
-        height_sensor_seen = false;
-        vs = MISSING_VSS;
+        ctx.init(*msg, opts.simplified);
     }
 
     virtual void run()
     {
         for (pos = 0; pos < subset->size(); ++pos)
         {
-                const Var& var = (*subset)[pos];
-                if (WR_VAR_F(var.code()) != 0) continue;
-                if (WR_VAR_X(var.code()) < 10) peek_var(var);
-                if (var.value() == NULL)
-                        import_var_undef(var);
-                else
-                        import_var(var);
+            const Var& var = (*subset)[pos];
+            if (WR_VAR_F(var.code()) != 0) continue;
+            if (WR_VAR_X(var.code()) < 10) peek_var(var);
+            if (var.isset()) import_var(var);
         }
     }
 
@@ -334,24 +91,9 @@ void SynopImporter::peek_var(const Var& var)
         case WR_VAR(0,  4, 25):
         case WR_VAR(0,  8, 21): trange.peek_var(var, pos); break;
         case WR_VAR(0,  8,  2): clouds.on_vss(*subset, pos); break;
-    }
-}
-
-void SynopImporter::import_var_undef(const Var& var)
-{
-    switch (var.code())
-    {
-        case WR_VAR(0,  7, 32):
-            /* Height to use later as level for what needs it */
-            height_sensor = MISSING_SENSOR_H;
-            height_sensor_seen = true;
-            break;
-        case WR_VAR(0,  8,  2):
-            vs = MISSING_VSS;
-            break;
-        default:
-            //WMOImporter::import_var_undef(var);
-            break;
+        case WR_VAR(0,  7,  4):
+        case WR_VAR(0,  7, 31):
+        case WR_VAR(0,  7, 32): level.peek_var(var); break;
     }
 }
 
@@ -360,14 +102,7 @@ void SynopImporter::import_var(const Var& var)
     switch (var.code())
     {
 /* Context items */
-        case WR_VAR(0,  7, 32):
-            /* Height to use later as level for what needs it */
-            height_sensor = var.enqd();
-            height_sensor_seen = true;
-            break;
         case WR_VAR(0,  8,  2):
-            /* Vertical significance */
-            vs = var.enqd();
             /* Store original VS value as a measured value */
             msg->set(var, WR_VAR(0, 8, 2), clouds.level, Trange::instant());
             break;
@@ -377,8 +112,6 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0,  7, 30): msg->set_height_station_var(var); break;
         /* case WR_VAR(0,  7,  4): DBA_RUN_OR_RETURN(dba_msg_set_isobaric_surface_var(msg, var)); break; */
         case WR_VAR(0,  7, 31):
-            /* Remember the height to use later as layer for pressure */
-            height_baro = var.enqd();
             /* Store also in the ana level, so that if the
              * pressure later is missing we still have
              * access to the value */
@@ -386,43 +119,34 @@ void SynopImporter::import_var(const Var& var)
             break;
 
 /* Pressure data (complete) */
-        case WR_VAR(0, 10,  4): set_baro_sensor(var, DBA_MSG_PRESS); break;
-        case WR_VAR(0, 10, 51): set_baro_sensor(var, DBA_MSG_PRESS_MSL); break;
-        case WR_VAR(0, 10, 61): set_baro_sensor(var, DBA_MSG_PRESS_3H); break;
-        case WR_VAR(0, 10, 62): set_baro_sensor(var, DBA_MSG_PRESS_24H); break;
-        case WR_VAR(0, 10, 63): set_baro_sensor(var, DBA_MSG_PRESS_TEND); break;
-        case WR_VAR(0,  7,  4):
-            /* Remember the standard level pressure to use later as layer for geopotential */
-            press_std = var.enqd();
-            /* DBA_RUN_OR_RETURN(dba_msg_set_height_baro_var(msg, var)); */
-            break;
+        case WR_VAR(0, 10,  4): ctx.set_baro_sensor(var, DBA_MSG_PRESS); break;
+        case WR_VAR(0, 10, 51): ctx.set_baro_sensor(var, DBA_MSG_PRESS_MSL); break;
+        case WR_VAR(0, 10, 61): ctx.set_baro_sensor(var, DBA_MSG_PRESS_3H); break;
+        case WR_VAR(0, 10, 62): ctx.set_baro_sensor(var, DBA_MSG_PRESS_24H); break;
+        case WR_VAR(0, 10, 63): ctx.set_baro_sensor(var, DBA_MSG_PRESS_TEND); break;
         case WR_VAR(0, 10,  3):
         case WR_VAR(0, 10,  8):
-        case WR_VAR(0, 10,  9):
-            if (press_std == MISSING_PRESS_STD)
-                throw error_consistency("B10009 given without pressure of standard level");
-            msg->set(var, WR_VAR(0, 10,  8), Level(100, press_std), Trange::instant());
-            break;
+        case WR_VAR(0, 10,  9): ctx.set_pressure(var); break;
 
         /* Legacy bits */
 /* Basic synoptic "instantaneous" data */
 
 /* Temperature and humidity data (complete) */
         case WR_VAR(0, 12,   4):
-        case WR_VAR(0, 12, 101): set_gen_sensor(var, DBA_MSG_TEMP_2M); break;
+        case WR_VAR(0, 12, 101): ctx.set_gen_sensor(var, DBA_MSG_TEMP_2M); break;
         case WR_VAR(0, 12,   6):
-        case WR_VAR(0, 12, 103): set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
-        case WR_VAR(0, 13,   3): set_gen_sensor(var, DBA_MSG_HUMIDITY); break;
+        case WR_VAR(0, 12, 103): ctx.set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
+        case WR_VAR(0, 13,   3): ctx.set_gen_sensor(var, DBA_MSG_HUMIDITY); break;
 
 /* Visibility data (complete) */
-        case WR_VAR(0, 20,  1): set_gen_sensor(var, DBA_MSG_VISIBILITY); break;
+        case WR_VAR(0, 20,  1): ctx.set_gen_sensor(var, DBA_MSG_VISIBILITY); break;
 
 /* Precipitation past 24h (complete) */
-        case WR_VAR(0, 13, 19): set_gen_sensor(var, DBA_MSG_TOT_PREC1); break;
-        case WR_VAR(0, 13, 20): set_gen_sensor(var, DBA_MSG_TOT_PREC3); break;
-        case WR_VAR(0, 13, 21): set_gen_sensor(var, DBA_MSG_TOT_PREC6); break;
-        case WR_VAR(0, 13, 22): set_gen_sensor(var, DBA_MSG_TOT_PREC12); break;
-        case WR_VAR(0, 13, 23): set_gen_sensor(var, DBA_MSG_TOT_PREC24); break;
+        case WR_VAR(0, 13, 19): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC1); break;
+        case WR_VAR(0, 13, 20): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC3); break;
+        case WR_VAR(0, 13, 21): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC6); break;
+        case WR_VAR(0, 13, 22): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC12); break;
+        case WR_VAR(0, 13, 23): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC24); break;
 
 /* Cloud data */
         case WR_VAR(0, 20, 10): msg->set_cloud_n_var(var); break;
@@ -451,37 +175,21 @@ void SynopImporter::import_var(const Var& var)
 
 /* Present and past weather (complete) */
         case WR_VAR(0, 20,  3): msg->set_pres_wtr_var(var); break;
-        case WR_VAR(0, 20,  4):
-            ib_start(DBA_MSG_PAST_WTR1_6H, var);
-            ib_level_use_shorcut_and_discard_rest();
-            if (opts.simplified)
-                ib_trange_use_standard_and_preserve_rest((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
-            else
-                ib_trange_use_real((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
-            ib_set();
-            break;
-        case WR_VAR(0, 20,  5):
-            ib_start(DBA_MSG_PAST_WTR2_6H, var);
-            ib_level_use_shorcut_and_discard_rest();
-            if (opts.simplified)
-                ib_trange_use_standard_and_preserve_rest((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
-            else
-                ib_trange_use_real((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
-            ib_set();
-            break;
+        case WR_VAR(0, 20,  4): ctx.set_past_weather(var, DBA_MSG_PAST_WTR1_6H); break;
+        case WR_VAR(0, 20,  5): ctx.set_past_weather(var, DBA_MSG_PAST_WTR2_6H); break;
 
 /* Sunshine data (complete) */
         case WR_VAR(0, 14, 31): msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, abs(trange.time_period))); break;
 
 /* Precipitation measurement (complete) */
-        case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(trange.time_period))); break;
+        case WR_VAR(0, 13, 11): ctx.set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(trange.time_period))); break;
 
 /* Extreme temperature data */
         case WR_VAR(0, 12, 111):
-            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(2, -abs(trange.time_period_offset), abs(trange.time_period)));
+            ctx.set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(2, -abs(trange.time_period_offset), abs(trange.time_period)));
             break;
         case WR_VAR(0, 12, 112):
-            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(3, -abs(trange.time_period_offset), abs(trange.time_period)));
+            ctx.set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(3, -abs(trange.time_period_offset), abs(trange.time_period)));
             break;
 
 /* Wind data (complete) */
@@ -497,16 +205,16 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0, 11, 11):
             if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
                     error_consistency::throwf("Found unsupported time significance %d for wind direction", trange.time_sig);
-            set_gen_sensor(var, DBA_MSG_WIND_DIR, lev_std_wind, tr_std_wind);
+            ctx.set_gen_sensor(var, DBA_MSG_WIND_DIR, lev_std_wind, tr_std_wind);
             break;
         case WR_VAR(0, 11,  2):
         case WR_VAR(0, 11, 12):
             if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
                 error_consistency::throwf("Found unsupported time significance %d for wind speed", trange.time_sig);
-            set_gen_sensor(var, DBA_MSG_WIND_SPEED, lev_std_wind, tr_std_wind);
+            ctx.set_gen_sensor(var, DBA_MSG_WIND_SPEED, lev_std_wind, tr_std_wind);
             break;
-        case WR_VAR(0, 11, 43): set_gen_sensor(var, DBA_MSG_WIND_GUST_MAX_DIR, lev_std_wind, tr_std_wind_max10m, false, true); break;
-        case WR_VAR(0, 11, 41): set_gen_sensor(var, DBA_MSG_WIND_GUST_MAX_SPEED, lev_std_wind, tr_std_wind_max10m, false, true); break;
+        case WR_VAR(0, 11, 43): ctx.set_gen_sensor(var, DBA_MSG_WIND_GUST_MAX_DIR, lev_std_wind, tr_std_wind_max10m, false, true); break;
+        case WR_VAR(0, 11, 41): ctx.set_gen_sensor(var, DBA_MSG_WIND_GUST_MAX_SPEED, lev_std_wind, tr_std_wind_max10m, false, true); break;
 
 /* Evaporation data */
         case WR_VAR(0, 2, 4): msg->set(var, WR_VAR(0, 2, 4), Level(1), Trange::instant()); break;
@@ -529,9 +237,7 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0, 12,  5): msg->set_wet_temp_2m_var(var); break;
         case WR_VAR(0, 10,197): msg->set_height_anem_var(var); break;
 
-        default:
-                WMOImporter::import_var(var);
-                break;
+        default: WMOImporter::import_var(var); break;
     }
 }
 

@@ -22,6 +22,7 @@
 #include "base.h"
 #include "msg/msgs.h"
 #include <wreport/bulletin.h>
+#include <cstdlib>
 #include <iostream>
 
 using namespace wreport;
@@ -30,6 +31,9 @@ using namespace std;
 namespace dballe {
 namespace msg {
 namespace wr {
+
+static const Trange tr_std_past_wtr3(205, 0, 10800);
+static const Trange tr_std_past_wtr6(205, 0, 21600);
 
 std::auto_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB sat Importers"); }
 
@@ -61,6 +65,35 @@ void WMOImporter::import_var(const Var& var)
 	}
 }
 
+void LevelContext::init()
+{
+    height_baro = MISSING_BARO;
+    press_std = MISSING_PRESS_STD;
+    height_sensor = MISSING_SENSOR_H;
+    height_sensor_seen = false;
+}
+
+void LevelContext::peek_var(const wreport::Var& var)
+{
+    switch (var.code())
+    {
+        case WR_VAR(0,  7,  4):
+            // Remember the standard level pressure to use later as layer for geopotential
+            press_std = var.enq(MISSING_PRESS_STD);
+            break;
+        case WR_VAR(0,  7, 31):
+            // Remember the height to use later as layer for pressure
+            height_baro = var.enq(MISSING_BARO);
+            break;
+        case WR_VAR(0,  7, 32):
+            // Height to use later as level for whatever needs it
+            height_sensor = MISSING_SENSOR_H;
+            height_sensor = var.enq(MISSING_SENSOR_H);
+            height_sensor_seen = true;
+            break;
+    }
+}
+
 void TimerangeContext::init()
 {
     time_period = MISSING_INT;
@@ -80,7 +113,7 @@ void TimerangeContext::peek_var(const Var& var, unsigned pos)
             case WR_VAR(0,  4,  4): hour = var.enqi(); break;
             case WR_VAR(0,  4, 24):
                 // Time period in hours
-                if (pos == last_B04024_pos + 1 && var.enqi() != 0)
+                if ((int)pos == last_B04024_pos + 1 && var.enqi() != 0)
                 {
                     // Cope with the weird idea of using B04024 twice to indicate
                     // beginning and end of a period not ending with the SYNOP
@@ -218,6 +251,216 @@ const Level& CloudContext::clcmch()
         ++level.l2;
     return level;
 }
+
+ContextChooser::ContextChooser(const LevelContext& level, const TimerangeContext& trange)
+    : level(level), trange(trange), simplified(false), var(0)
+{
+}
+
+ContextChooser::~ContextChooser()
+{
+    if (var) delete var;
+}
+
+void ContextChooser::init(Msg& _msg, bool simplified)
+{
+    this->simplified = simplified;
+    msg = &_msg;
+}
+
+void ContextChooser::ib_start(int shortcut, const Var& var)
+{
+    v = &shortcutTable[shortcut];
+    if (this->var)
+        delete this->var;
+    this->var = var_copy_without_unset_attrs(var, v->code).release();
+}
+
+Level ContextChooser::lev_real(const Level& standard) const
+{
+    if (level.height_sensor == 0) return Level(1);
+    if (!level.height_sensor_seen) return standard;
+    return level.height_sensor == MISSING_SENSOR_H ?
+        Level(103) :
+        Level(103, level.height_sensor * 1000);
+}
+
+Trange ContextChooser::tr_real(const Trange& standard) const
+{
+    if (standard.pind == 254) return Trange::instant();
+    if (!trange.time_period_seen) return standard;
+    return trange.time_period == MISSING_INT ?
+        Trange(standard.pind, 0) :
+        Trange(standard.pind, 0, abs(trange.time_period));
+}
+
+void ContextChooser::ib_annotate_level()
+{
+    if (level.height_sensor == MISSING_SENSOR_H) return;
+    var->seta(newvar(WR_VAR(0, 7, 32), level.height_sensor));
+}
+void ContextChooser::ib_annotate_trange()
+{
+    if (trange.time_period == MISSING_INT) return;
+    var->seta(newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
+}
+
+void ContextChooser::ib_level_use_shorcut_and_preserve_rest(const Level& standard)
+{
+    chosen_lev = lev_shortcut();
+    Level real = lev_real(standard);
+    if (real != chosen_lev && real != standard)
+        ib_annotate_level();
+}
+
+void ContextChooser::ib_trange_use_shorcut_and_preserve_rest(const Trange& standard)
+{
+    chosen_tr = tr_shortcut();
+    Trange real = tr_real(standard);
+    if (real != chosen_tr && real != standard)
+        ib_annotate_trange();
+}
+
+void ContextChooser::ib_level_use_standard_and_preserve_rest(const Level& standard)
+{
+    chosen_lev = standard;
+    if (chosen_lev != lev_real(standard))
+        ib_annotate_level();
+}
+
+void ContextChooser::ib_trange_use_standard_and_preserve_rest(const Trange& standard)
+{
+    chosen_tr = standard;
+    if (chosen_tr != tr_real(standard))
+        ib_annotate_trange();
+}
+
+void ContextChooser::ib_level_use_shorcut_if_standard_else_real(const Level& standard)
+{
+    Level shortcut = lev_shortcut();
+    Level real = lev_real(standard);
+    if (real == shortcut || real == standard)
+        chosen_lev = shortcut;
+    else
+        chosen_lev = real;
+}
+
+void ContextChooser::ib_trange_use_shorcut_if_standard_else_real(const Trange& standard)
+{
+    Trange shortcut = tr_shortcut();
+    Trange real = tr_real(standard);
+    if (real == shortcut || real == standard)
+        chosen_tr = shortcut;
+    else
+        chosen_tr = real;
+}
+
+void ContextChooser::ib_set()
+{
+    auto_ptr<Var> handover(var);
+    var = 0;
+    msg->set(handover, chosen_lev, chosen_tr);
+}
+
+void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
+{
+    Level lev;
+
+    if (!level.height_sensor_seen ||
+                (level.height_sensor != MISSING_SENSOR_H && (
+                    defaultLevel == Level(103, level.height_sensor * 1000)
+                || (defaultLevel.ltype1 == 1 && level.height_sensor == 0))))
+        msg->set(var, code, defaultLevel, trange);
+    else if (level.height_sensor == MISSING_SENSOR_H)
+    {
+        if (simplified)
+            msg->set(var, code, defaultLevel, trange);
+        else
+            msg->set(var, code, Level(103, MISSING_INT), trange);
+    }
+    else if (simplified)
+    {
+        Var var1(var);
+        var1.seta(newvar(WR_VAR(0, 7, 32), level.height_sensor));
+        msg->set(var1, code, defaultLevel, trange);
+    } else
+        msg->set(var, code, Level(103, level.height_sensor * 1000), trange);
+}
+
+void ContextChooser::set_gen_sensor(const Var& var, int shortcut)
+{
+    const MsgVarShortcut& v = shortcutTable[shortcut];
+    set_gen_sensor(var, shortcut, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+}
+
+void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful)
+{
+    ib_start(shortcut, var);
+    ib_level_use_shorcut_and_discard_rest();
+    if (!simplified)
+        ib_trange_use_real(tr_std);
+    else if (tr_careful)
+        ib_trange_use_shorcut_if_standard_else_real(tr_std);
+    else
+        ib_trange_use_shorcut_and_preserve_rest(tr_std);
+    ib_set();
+}
+
+void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful, bool tr_careful)
+{
+    ib_start(shortcut, var);
+    if (!simplified)
+    {
+        ib_level_use_real(lev_std);
+        ib_trange_use_real(tr_std);
+    }
+    else
+    {
+        if (lev_careful)
+            ib_level_use_shorcut_if_standard_else_real(lev_std);
+        else
+            ib_level_use_shorcut_and_preserve_rest(lev_std);
+        if (tr_careful)
+            ib_trange_use_shorcut_if_standard_else_real(tr_std);
+        else
+            ib_trange_use_shorcut_and_preserve_rest(tr_std);
+    }
+    ib_set();
+}
+
+void ContextChooser::set_baro_sensor(const Var& var, int shortcut)
+{
+    if (level.height_baro == MISSING_BARO)
+        msg->set_by_id(var, shortcut);
+    else if (simplified)
+    {
+        Var var1(var);
+        var1.seta(newvar(WR_VAR(0, 7, 31), level.height_baro));
+        msg->set_by_id(var1, shortcut);
+    } else {
+        const MsgVarShortcut& v = shortcutTable[shortcut];
+        msg->set(var, v.code, Level(102, level.height_baro*1000), Trange(v.pind, v.p1, v.p2));
+    }
+}
+
+void ContextChooser::set_past_weather(const wreport::Var& var, int shortcut)
+{
+    ib_start(shortcut, var);
+    ib_level_use_shorcut_and_discard_rest();
+    if (simplified)
+        ib_trange_use_standard_and_preserve_rest((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+    else
+        ib_trange_use_real((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+    ib_set();
+}
+
+void ContextChooser::set_pressure(const wreport::Var& var)
+{
+    if (level.press_std == MISSING_PRESS_STD)
+        throw error_consistency("B10009 given without pressure of standard level");
+    msg->set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
+}
+
 
 } // namespace wr
 } // namespace msg

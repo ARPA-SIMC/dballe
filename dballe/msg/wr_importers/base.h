@@ -89,7 +89,22 @@ public:
     virtual ~WMOImporter() {}
 };
 
+#define MISSING_BARO -10000.0
+#define MISSING_PRESS_STD 0.0
+#define MISSING_SENSOR_H -10000.0
 #define MISSING_TIME_SIG -10000
+
+/// Keep track of level context changes
+struct LevelContext
+{
+    double height_baro;
+    double press_std;
+    double height_sensor;
+    bool height_sensor_seen;
+
+    void init();
+    void peek_var(const wreport::Var& var);
+};
 
 /// Keep track of time range context changes
 struct TimerangeContext
@@ -116,6 +131,57 @@ struct CloudContext
 
     void init();
     void on_vss(const wreport::Subset& subset, unsigned pos);
+};
+
+struct ContextChooser
+{
+    const LevelContext& level;
+    const TimerangeContext& trange;
+
+    // Configuration
+    bool simplified;
+
+    // Import builder parts
+    const MsgVarShortcut* v;
+    wreport::Var* var;
+    Level chosen_lev;
+    Trange chosen_tr;
+
+    // Output message
+    Msg* msg;
+
+    ContextChooser(const LevelContext& level, const TimerangeContext& trange);
+    ~ContextChooser();
+
+    void init(Msg& msg, bool simplified);
+
+    void set_gen_sensor(const wreport::Var& var, wreport::Varcode code, const Level& defaultLevel, const Trange& trange);
+    void set_gen_sensor(const wreport::Var& var, int shortcut);
+    void set_gen_sensor(const wreport::Var& var, int shortcut, const Trange& tr_std, bool tr_careful=false);
+    void set_gen_sensor(const wreport::Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful=false, bool tr_careful=false);
+    void set_baro_sensor(const wreport::Var& var, int shortcut);
+    void set_past_weather(const wreport::Var& var, int shortcut);
+    void set_pressure(const wreport::Var& var);
+
+protected:
+    void ib_start(int shortcut, const wreport::Var& var);
+    Level lev_real(const Level& standard) const;
+    Trange tr_real(const Trange& standard) const;
+    Level lev_shortcut() const { return Level(v->ltype1, v->l1, v->ltype2, v->l2); }
+    Trange tr_shortcut() const { return Trange(v->pind, v->p1, v->p2); }
+    void ib_annotate_level();
+    void ib_annotate_trange();
+    void ib_level_use_real(const Level& standard) { chosen_lev = lev_real(standard); }
+    void ib_trange_use_real(const Trange& standard) { chosen_tr = tr_real(standard); }
+    void ib_level_use_shorcut_and_discard_rest() { chosen_lev = lev_shortcut(); }
+    void ib_trange_use_shortcut_and_discard_rest() { chosen_tr = tr_shortcut(); }
+    void ib_level_use_shorcut_and_preserve_rest(const Level& standard);
+    void ib_trange_use_shorcut_and_preserve_rest(const Trange& standard);
+    void ib_level_use_standard_and_preserve_rest(const Level& standard);
+    void ib_trange_use_standard_and_preserve_rest(const Trange& standard);
+    void ib_level_use_shorcut_if_standard_else_real(const Level& standard);
+    void ib_trange_use_shorcut_if_standard_else_real(const Trange& standard);
+    void ib_set();
 };
 
 } // namespace wr
