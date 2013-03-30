@@ -53,30 +53,12 @@ namespace wr {
 
 namespace {
 
-static const Trange tr_std_past_wtr3(205, 0, 10800);
-static const Trange tr_std_past_wtr6(205, 0, 21600);
-
-// If var is not NULL and has a B04194 attribute, return its value
-// otherwise, return orig
-static int override_trange(const Var* var, int orig)
-{
-    if (var)
-        if (const Var* a = var->enqa(WR_VAR(0, 4, 194)))
-            return a->enq(orig);
-    return orig;
-}
-
 struct Synop : public Template
 {
     CommonSynopExporter synop;
     const msg::Context* c_sunshine1;
     const msg::Context* c_sunshine2;
-    const msg::Context* c_wind;
-    const msg::Context* c_gust1;
-    const msg::Context* c_gust2;
     const msg::Context* c_evapo;
-    const msg::Context* c_past_wtr;
-    const msg::Context* c_visib;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -85,12 +67,7 @@ struct Synop : public Template
     {
         c_sunshine1 = NULL;
         c_sunshine2 = NULL;
-        c_wind = NULL;
-        c_gust1 = NULL;
-        c_gust2 = NULL;
         c_evapo = NULL;
-        c_past_wtr = NULL;
-        c_visib = NULL;
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg->data.begin();
@@ -117,29 +94,7 @@ struct Synop : public Template
                             if (c->find(WR_VAR(0, 13, 33)))
                                 c_evapo = c;
                             break;
-                        case 205:
-                            if (c->find(WR_VAR(0, 20, 4)) || c->find(WR_VAR(0, 20, 5)))
-                                c_past_wtr = c;
-                            break;
-                        case 254:
-                            if (c->find_by_id(DBA_MSG_VISIBILITY))
-                                c_visib = c;
-                            break;
                     }
-                    break;
-                case 103:
-                    if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
-                        if (!c_wind)
-                            c_wind = c;
-                    if (c->find(WR_VAR(0, 11, 41)) || c->find(WR_VAR(0, 11, 43)))
-                    {
-                        if (!c_gust1)
-                            c_gust1 = c;
-                        else if (!c_gust2)
-                            c_gust2 = c;
-                    }
-                    if (c->find_by_id(DBA_MSG_VISIBILITY))
-                        c_visib = c;
                     break;
             }
         }
@@ -262,14 +217,7 @@ struct SynopECMWFLand : public SynopECMWF
     {
         SynopECMWF::to_subset(msg, subset);
         synop.add_D02001();
-        /* 15 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
-        /* 16 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
-        /* 17 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
-        /* 18 */ add(WR_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M);
-        /* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
-        /* 20 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
-        /* 21 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        do_ecmwf_past_wtr();
+        synop.add_ecmwf_synop_weather();
         /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
         /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
@@ -351,14 +299,7 @@ struct SynopECMWFLandHigh : public SynopECMWF
         synop.add_geopotential(WR_VAR(0, 10, 3));
         /* 14 */ add(WR_VAR(0, 10, 61), synop.v_pchange3);
         /* 15 */ add(WR_VAR(0, 10, 63), synop.v_ptend);
-        /* 16 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
-        /* 17 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
-        /* 18 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
-        /* 19 */ add(WR_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M);
-        /* 20 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
-        /* 21 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
-        /* 22 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        do_ecmwf_past_wtr();
+        synop.add_ecmwf_synop_weather();
         /* 25 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
         /* 26 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
         /* 27 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
@@ -430,30 +371,6 @@ struct SynopWMO : public Synop
         bulletin.load_tables();
 
         cur_bulletin = &bulletin;
-    }
-
-    // D02035  Basis synoptic "instantaneous" data
-    void do_D02035(const Msg& msg, wreport::Subset& subset)
-    {
-        // Temperature and humidity data
-        synop.add_D02032();
-
-        //   Visibility data
-        {
-            if (c_visib)
-            {
-                const Var* var = c_visib->find_by_id(DBA_MSG_VISIBILITY);
-                synop.add_sensor_height(*c_visib, var);
-            } else
-                subset.store_variable_undef(WR_VAR(0, 7, 32));
-            add(WR_VAR(0, 20, 1), c_visib, DBA_MSG_VISIBILITY);
-        }
-
-        // Precipitation past 24 hours
-        synop.add_D02034();
-
-        // Cloud data
-        synop.add_cloud_data();
     }
 
     // D02036  Clouds with bases below station level
@@ -544,76 +461,10 @@ struct SynopWMO : public Synop
             subset.store_variable_undef(WR_VAR(0, 12, 113));
     }
 
-    void do_wind_gust(const msg::Context* c)
-    {
-        if (c)
-        {
-            // Compute time range from level and attrs
-            const Var* var_dir = c->find(WR_VAR(0, 11, 43));
-            const Var* var_speed = c->find(WR_VAR(0, 11, 41));
-            int tr = MISSING_INT;
-            if (c->trange.pind == 205)
-                tr = c->trange.p2;
-            else if (c->trange.pind == 254)
-                tr = 600;
-            tr = override_trange(var_dir, override_trange(var_speed, tr));
-            if (tr == MISSING_INT)
-                subset->store_variable_undef(WR_VAR(0,  4, 25));
-            else
-                subset->store_variable_d(WR_VAR(0,  4, 25), -tr / 60.0);
-
-            add(WR_VAR(0, 11, 43), var_dir);
-            add(WR_VAR(0, 11, 41), var_speed);
-        } else {
-            subset->store_variable_undef(WR_VAR(0,  4, 25));
-            subset->store_variable_undef(WR_VAR(0, 11, 43));
-            subset->store_variable_undef(WR_VAR(0, 11, 41));
-        }
-    }
-
-    void add_time_period(Varcode code, const msg::Context& c, const Var* sample_var, const Trange& tr_std)
-    {
-        int p2;
-        if (c.trange.pind == 254)
-            p2 = tr_std.p2;
-        else
-            p2 = c.trange.p2;
-
-        // Look for a p2 override in the attributes
-        if (sample_var)
-            if (const Var* a = sample_var->enqa(WR_VAR(0, 4, 194)))
-                p2 = a->enqi();
-
-        if (p2 == MISSING_INT)
-        {
-            subset->store_variable_undef(WR_VAR(0, 4, 24));
-            return;
-        }
-
-        double res = -p2;
-        switch (code)
-        {
-            case WR_VAR(0, 4, 24): res /= 3600.0; break;
-            case WR_VAR(0, 4, 25): res /= 60.0; break;
-        }
-        subset->store_variable_d(code, res);
-    }
-
     // D02043  Basic synoptic "period" data
     void do_D02043(int hour)
     {
-        //   Present and past weather
-        add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
-        if (c_past_wtr)
-        {
-            // Look for a p2 override in the attributes
-            const Var* v = c_past_wtr->find(WR_VAR(0, 20, 4));
-            if (!v) v = c_past_wtr->find(WR_VAR(0, 20, 5));
-            add_time_period(WR_VAR(0, 4, 24), *c_past_wtr, v, hour % 6 == 0 ? tr_std_past_wtr6 : tr_std_past_wtr3);
-        } else
-            subset->store_variable_undef(WR_VAR(0, 4, 24));
-        add(WR_VAR(0, 20, 4), c_past_wtr, DBA_MSG_PAST_WTR1_6H);
-        add(WR_VAR(0, 20, 5), c_past_wtr, DBA_MSG_PAST_WTR2_6H);
+        synop.add_D02038();
 
         //   Sunshine data (form 1 hour and 24 hour period)
         if (c_sunshine1)
@@ -646,59 +497,7 @@ struct SynopWMO : public Synop
         synop.add_D02041();
 
         //   Wind data
-        if (c_wind || c_gust1 || c_gust2)
-        {
-            // Look for the sensor height in the context of any of the found levels
-            const msg::Context* c_first = c_wind ? c_wind : c_gust1 ? c_gust1 : c_gust2;
-            const Var* sample_var = c_first->find(WR_VAR(0, 11, 1));
-            if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 2));
-            if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 41));
-            if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 43));
-            synop.add_sensor_height(*c_first, sample_var);
-
-            add(WR_VAR(0, 2, 2), DBA_MSG_WIND_INST);
-            subset->store_variable_i(WR_VAR(0, 8, 21), 2);
-
-            if (c_wind)
-            {
-                // Compute time range from level and attrs
-                const Var* var_dir = c_wind->find(WR_VAR(0, 11, 1));
-                const Var* var_speed = c_wind->find(WR_VAR(0, 11, 2));
-                int tr = MISSING_INT;
-                if (c_wind->trange.pind == 200)
-                    tr = c_wind->trange.p2;
-                tr = override_trange(var_dir, override_trange(var_speed, tr));
-                if (tr == MISSING_INT)
-                    subset->store_variable_undef(WR_VAR(0,  4, 25));
-                else
-                    subset->store_variable_d(WR_VAR(0,  4, 25), -tr / 60.0);
-
-                add(WR_VAR(0, 11,  1), var_dir);
-                add(WR_VAR(0, 11,  2), var_speed);
-            } else {
-                subset->store_variable_undef(WR_VAR(0,  4, 25));
-                subset->store_variable_undef(WR_VAR(0, 11,  1));
-                subset->store_variable_undef(WR_VAR(0, 11,  2));
-            }
-            subset->store_variable_undef(WR_VAR(0,  8, 21));
-
-            do_wind_gust(c_gust1);
-            do_wind_gust(c_gust2);
-        } else {
-            subset->store_variable_undef(WR_VAR(0,  7, 32));
-            subset->store_variable_undef(WR_VAR(0,  2,  2));
-            subset->store_variable_i(WR_VAR(0,  8, 21), 2);
-            subset->store_variable_undef(WR_VAR(0,  4, 25));
-            subset->store_variable_undef(WR_VAR(0, 11,  1));
-            subset->store_variable_undef(WR_VAR(0, 11,  2));
-            subset->store_variable_undef(WR_VAR(0,  8, 21));
-            for (int i = 1; i <= 2; ++i)
-            {
-                subset->store_variable_undef(WR_VAR(0,  4, 25));
-                subset->store_variable_undef(WR_VAR(0, 11, 43));
-                subset->store_variable_undef(WR_VAR(0, 11, 41));
-            }
-        }
+        synop.add_D02042();
         subset->store_variable_undef(WR_VAR(0,  7, 32));
     }
 
@@ -726,8 +525,8 @@ struct SynopWMO : public Synop
         // D02031  Pressure data
         synop.add_D02031();
 
-        // D02035  Basis synoptic "instantaneous" data
-        do_D02035(msg, subset);
+        // D02035  Basic synoptic "instantaneous" data
+        synop.add_D02035();
         // D02036  Clouds with bases below station level
         do_D02036(msg, subset);
         // D02047  Direction of cloud drift

@@ -79,6 +79,11 @@ protected:
     const msg::Context* c_cloud_data[4];
     // FIXME: what is the maximum number of cloud groups we should support?
     const msg::Context* c_cloud_group[8];
+    const msg::Context* c_wind;
+    const msg::Context* c_gust1;
+    const msg::Context* c_gust2;
+    const msg::Context* c_visib;
+    const msg::Context* c_past_wtr;
 
 public:
     const wreport::Var* v_press;
@@ -91,15 +96,31 @@ public:
     void init(wreport::Subset& subset);
     void scan_context(const msg::Context& c);
 
+    // Pressure data
     void add_D02001();
+    // synop: pressure data
     void add_D02031();
+    // synop: temperature and humidity
     void add_D02032();
+    // ship: temperature and humidity
     void add_D02052();
+    // Extreme temperature data
     void add_D02041();
     void add_pressure();
     void add_geopotential(wreport::Varcode code);
+    // Precipitation past 24 hours
     void add_D02034();
+    // Precipitation measurement
     void add_D02040();
+    // synop: wind data
+    void add_D02042();
+    // ship: wind data
+    void add_D02059();
+    // Present and past weather
+    void add_D02038();
+    void add_ecmwf_synop_weather();
+    //  Basic synoptic "instantaneous" data
+    void add_D02035();
 
     /**
      * Add B07032 sensor height, taking the value from the var attributes or
@@ -128,6 +149,15 @@ public:
      * Add cloud data, as D02004 and a delayed replication of D02005
      */
     void add_cloud_data();
+
+    /// Add a wind gust block with info from the given context
+    void add_wind_gust(const msg::Context* c);
+
+    /**
+     * Add a B04025 or B04025 time period variable, with data taken from its
+     * parameters as needed
+     */
+    void add_time_period(wreport::Varcode code, const msg::Context& c, const wreport::Var* sample_var, const Trange& tr_std);
 };
 
 }

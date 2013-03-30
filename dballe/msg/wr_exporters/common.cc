@@ -29,6 +29,19 @@ namespace dballe {
 namespace msg {
 namespace wr {
 
+static const Trange tr_std_past_wtr3(205, 0, 10800);
+static const Trange tr_std_past_wtr6(205, 0, 21600);
+
+// If var is not NULL and has a B04194 attribute, return its value
+// otherwise, return orig
+static int override_trange(const Var* var, int orig)
+{
+    if (var)
+        if (const Var* a = var->enqa(WR_VAR(0, 4, 194)))
+            return a->enq(orig);
+    return orig;
+}
+
 void ExporterModule::init(wreport::Subset& subset)
 {
     this->subset = &subset;
@@ -183,6 +196,11 @@ void CommonSynopExporter::init(wreport::Subset& subset)
         c_cloud_data[i] = 0;
     for (unsigned i = 0; i < sizeof(c_cloud_group) / sizeof(c_cloud_group[0]); ++i)
         c_cloud_group[i] = 0;
+    c_wind = 0;
+    c_gust1 = 0;
+    c_gust2 = 0;
+    c_visib = 0;
+    c_past_wtr = 0;
     v_press = 0;
     v_pressmsl = 0;
     v_pchange3 = 0;
@@ -227,12 +245,16 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                 case 205:
                     if (const Var* v = c.find_by_id(DBA_MSG_PRESS_TEND))
                         v_ptend = v;
+                    if (c.find(WR_VAR(0, 20, 4)) || c.find(WR_VAR(0, 20, 5)))
+                        c_past_wtr = &c;
                     break;
                 case 254:
                     if (const Var* v = c.find_by_id(DBA_MSG_PRESS))
                         v_press = v;
                     if (const Var* v = c.find_by_id(DBA_MSG_PRESS_MSL))
                         v_pressmsl = v;
+                    if (c.find_by_id(DBA_MSG_VISIBILITY))
+                        c_visib = &c;
                     break;
             }
             break;
@@ -269,6 +291,18 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
             }
             break;
         case 103:
+            if (c.find(WR_VAR(0, 11, 1)) || c.find(WR_VAR(0, 11, 2)))
+                if (!c_wind)
+                    c_wind = &c;
+            if (c.find(WR_VAR(0, 11, 41)) || c.find(WR_VAR(0, 11, 43)))
+            {
+                if (!c_gust1)
+                    c_gust1 = &c;
+                else if (!c_gust2)
+                    c_gust2 = &c;
+            }
+            if (c.find_by_id(DBA_MSG_VISIBILITY))
+                c_visib = &c;
             switch (c.trange.pind)
             {
                 case 1:
@@ -371,12 +405,13 @@ void CommonSynopExporter::add_D02052()
         subset->store_variable_undef(WR_VAR(0, 13,   3));
     } else {
         const Var* var_t = c_thermo->find_by_id(DBA_MSG_TEMP_2M);
+        const Var* var_w = c_thermo->find_by_id(DBA_MSG_WET_TEMP_2M);
         const Var* var_d = c_thermo->find_by_id(DBA_MSG_DEWPOINT_2M);
         const Var* var_h = c_thermo->find_by_id(DBA_MSG_HUMIDITY);
-        add_marine_sensor_height(*c_thermo, var_t ? var_t : var_d ? var_d : var_h);
+        add_marine_sensor_height(*c_thermo, var_t ? var_t : var_w ? var_w : var_d ? var_d : var_h);
         add(WR_VAR(0, 12, 101), var_t);
         add(WR_VAR(0,  2,  39), c_ana);
-        add(WR_VAR(0, 12, 102), var_t);
+        add(WR_VAR(0, 12, 102), var_w);
         add(WR_VAR(0, 12, 103), var_d);
         add(WR_VAR(0, 13,   3), var_h);
     }
@@ -421,6 +456,149 @@ void CommonSynopExporter::add_D02040()
     add_prec_group(c_prec1);
     add_prec_group(c_prec2);
 }
+
+void CommonSynopExporter::add_D02042()
+{
+    if (c_wind || c_gust1 || c_gust2)
+    {
+        // Look for the sensor height in the context of any of the found levels
+        const msg::Context* c_first = c_wind ? c_wind : c_gust1 ? c_gust1 : c_gust2;
+        const Var* sample_var = c_first->find(WR_VAR(0, 11, 1));
+        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 2));
+        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 41));
+        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 43));
+        add_sensor_height(*c_first, sample_var);
+
+        add(WR_VAR(0, 2, 2), c_ana);
+        subset->store_variable_i(WR_VAR(0, 8, 21), 2);
+
+        if (c_wind)
+        {
+            // Compute time range from level and attrs
+            const Var* var_dir = c_wind->find(WR_VAR(0, 11, 1));
+            const Var* var_speed = c_wind->find(WR_VAR(0, 11, 2));
+            int tr = MISSING_INT;
+            if (c_wind->trange.pind == 200)
+                tr = c_wind->trange.p2;
+            tr = override_trange(var_dir, override_trange(var_speed, tr));
+            if (tr == MISSING_INT)
+                subset->store_variable_undef(WR_VAR(0,  4, 25));
+            else
+                subset->store_variable_d(WR_VAR(0,  4, 25), -tr / 60.0);
+
+            add(WR_VAR(0, 11,  1), var_dir);
+            add(WR_VAR(0, 11,  2), var_speed);
+        } else {
+            subset->store_variable_undef(WR_VAR(0,  4, 25));
+            subset->store_variable_undef(WR_VAR(0, 11,  1));
+            subset->store_variable_undef(WR_VAR(0, 11,  2));
+        }
+        subset->store_variable_undef(WR_VAR(0,  8, 21));
+
+        add_wind_gust(c_gust1);
+        add_wind_gust(c_gust2);
+    } else {
+        subset->store_variable_undef(WR_VAR(0,  7, 32));
+        subset->store_variable_undef(WR_VAR(0,  2,  2));
+        subset->store_variable_i(WR_VAR(0,  8, 21), 2);
+        subset->store_variable_undef(WR_VAR(0,  4, 25));
+        subset->store_variable_undef(WR_VAR(0, 11,  1));
+        subset->store_variable_undef(WR_VAR(0, 11,  2));
+        subset->store_variable_undef(WR_VAR(0,  8, 21));
+        for (int i = 1; i <= 2; ++i)
+        {
+            subset->store_variable_undef(WR_VAR(0,  4, 25));
+            subset->store_variable_undef(WR_VAR(0, 11, 43));
+            subset->store_variable_undef(WR_VAR(0, 11, 41));
+        }
+    }
+}
+
+void CommonSynopExporter::add_D02059()
+{
+    if (c_wind || c_gust1 || c_gust2)
+    {
+        // Look for the sensor height in the context of any of the found levels
+        const msg::Context* c_first = c_wind ? c_wind : c_gust1 ? c_gust1 : c_gust2;
+        const Var* sample_var = c_first->find(WR_VAR(0, 11, 1));
+        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 2));
+        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 41));
+        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 43));
+        add_marine_sensor_height(*c_first, sample_var);
+
+        add(WR_VAR(0, 2, 2), c_ana);
+        subset->store_variable_i(WR_VAR(0, 8, 21), 2);
+
+        if (c_wind)
+        {
+            // Compute time range from level and attrs
+            const Var* var_dir = c_wind->find(WR_VAR(0, 11, 1));
+            const Var* var_speed = c_wind->find(WR_VAR(0, 11, 2));
+            int tr = MISSING_INT;
+            if (c_wind->trange.pind == 200)
+                tr = c_wind->trange.p2;
+            tr = override_trange(var_dir, override_trange(var_speed, tr));
+            if (tr == MISSING_INT)
+                subset->store_variable_undef(WR_VAR(0,  4, 25));
+            else
+                subset->store_variable_d(WR_VAR(0,  4, 25), -tr / 60.0);
+
+            add(WR_VAR(0, 11,  1), var_dir);
+            add(WR_VAR(0, 11,  2), var_speed);
+        } else {
+            subset->store_variable_undef(WR_VAR(0,  4, 25));
+            subset->store_variable_undef(WR_VAR(0, 11,  1));
+            subset->store_variable_undef(WR_VAR(0, 11,  2));
+        }
+        subset->store_variable_undef(WR_VAR(0,  8, 21));
+
+        add_wind_gust(c_gust1);
+        add_wind_gust(c_gust2);
+    } else {
+        subset->store_variable_undef(WR_VAR(0,  7, 32));
+        subset->store_variable_undef(WR_VAR(0,  7, 33));
+        subset->store_variable_undef(WR_VAR(0,  2,  2));
+        subset->store_variable_i(WR_VAR(0,  8, 21), 2);
+        subset->store_variable_undef(WR_VAR(0,  4, 25));
+        subset->store_variable_undef(WR_VAR(0, 11,  1));
+        subset->store_variable_undef(WR_VAR(0, 11,  2));
+        subset->store_variable_undef(WR_VAR(0,  8, 21));
+        for (int i = 1; i <= 2; ++i)
+        {
+            subset->store_variable_undef(WR_VAR(0,  4, 25));
+            subset->store_variable_undef(WR_VAR(0, 11, 43));
+            subset->store_variable_undef(WR_VAR(0, 11, 41));
+        }
+    }
+}
+
+void CommonSynopExporter::add_wind_gust(const msg::Context* c)
+{
+    if (c)
+    {
+        // Compute time range from level and attrs
+        const Var* var_dir = c->find(WR_VAR(0, 11, 43));
+        const Var* var_speed = c->find(WR_VAR(0, 11, 41));
+        int tr = MISSING_INT;
+        if (c->trange.pind == 205)
+            tr = c->trange.p2;
+        else if (c->trange.pind == 254)
+            tr = 600;
+        tr = override_trange(var_dir, override_trange(var_speed, tr));
+        if (tr == MISSING_INT)
+            subset->store_variable_undef(WR_VAR(0,  4, 25));
+        else
+            subset->store_variable_d(WR_VAR(0,  4, 25), -tr / 60.0);
+
+        add(WR_VAR(0, 11, 43), var_dir);
+        add(WR_VAR(0, 11, 41), var_speed);
+    } else {
+        subset->store_variable_undef(WR_VAR(0,  4, 25));
+        subset->store_variable_undef(WR_VAR(0, 11, 43));
+        subset->store_variable_undef(WR_VAR(0, 11, 41));
+    }
+}
+
 
 void CommonSynopExporter::add_cloud_data()
 {
@@ -560,7 +738,85 @@ void CommonSynopExporter::add_xtemp_group(Varcode code, const msg::Context* c)
     }
 }
 
+void CommonSynopExporter::add_ecmwf_synop_weather()
+{
+    add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
+    add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
+    add(WR_VAR(0, 12,  4), c_thermo, DBA_MSG_TEMP_2M);
+    add(WR_VAR(0, 12,  6), c_thermo, DBA_MSG_DEWPOINT_2M);
+    add(WR_VAR(0, 13,  3), c_thermo, DBA_MSG_HUMIDITY);
+    add(WR_VAR(0, 20,  1), c_visib);
+    add(WR_VAR(0, 20,  3), c_surface_instant, DBA_MSG_PRES_WTR);
+    add(WR_VAR(0, 20,  4), c_past_wtr);
+    add(WR_VAR(0, 20,  5), c_past_wtr);
+}
 
+void CommonSynopExporter::add_D02038()
+{
+    //   Present and past weather
+    add(WR_VAR(0, 20,  3), c_surface_instant);
+    if (c_past_wtr)
+    {
+        int hour = get_hour();
+        // Look for a p2 override in the attributes
+        const Var* v = c_past_wtr->find(WR_VAR(0, 20, 4));
+        if (!v) v = c_past_wtr->find(WR_VAR(0, 20, 5));
+        add_time_period(WR_VAR(0, 4, 24), *c_past_wtr, v, hour % 6 == 0 ? tr_std_past_wtr6 : tr_std_past_wtr3);
+    } else
+        subset->store_variable_undef(WR_VAR(0, 4, 24));
+    add(WR_VAR(0, 20, 4), c_past_wtr);
+    add(WR_VAR(0, 20, 5), c_past_wtr);
+}
+
+void CommonSynopExporter::add_time_period(Varcode code, const msg::Context& c, const Var* sample_var, const Trange& tr_std)
+{
+    int p2;
+    if (c.trange.pind == 254)
+        p2 = tr_std.p2;
+    else
+        p2 = c.trange.p2;
+
+    // Look for a p2 override in the attributes
+    if (sample_var)
+        if (const Var* a = sample_var->enqa(WR_VAR(0, 4, 194)))
+            p2 = a->enqi();
+
+    if (p2 == MISSING_INT)
+    {
+        subset->store_variable_undef(WR_VAR(0, 4, 24));
+        return;
+    }
+
+    double res = -p2;
+    switch (code)
+    {
+        case WR_VAR(0, 4, 24): res /= 3600.0; break;
+        case WR_VAR(0, 4, 25): res /= 60.0; break;
+    }
+    subset->store_variable_d(code, res);
+}
+
+
+void CommonSynopExporter::add_D02035()
+{
+    // Temperature and humidity data
+    add_D02032();
+
+    //   Visibility data
+    if (c_visib)
+    {
+        const Var* var = c_visib->find_by_id(DBA_MSG_VISIBILITY);
+        add_sensor_height(*c_visib, var);
+    } else
+        subset->store_variable_undef(WR_VAR(0, 7, 32));
+    add(WR_VAR(0, 20, 1), c_visib, DBA_MSG_VISIBILITY);
+
+    // Precipitation past 24 hours
+    add_D02034();
+
+    // Cloud data
+    add_cloud_data();
+}
 
 }
 }

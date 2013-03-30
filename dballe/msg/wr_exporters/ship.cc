@@ -360,22 +360,7 @@ struct ShipWMO : public ShipBase
         subset.store_variable_undef(WR_VAR(0,  4,  24)); // FIXME
         subset.store_variable_undef(WR_VAR(0, 12, 112)); // FIXME
         // Wind data
-        subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
-        subset.store_variable_undef(WR_VAR(0,  7,  33)); // FIXME
-        subset.store_variable_undef(WR_VAR(0,  2,   2)); // FIXME
-        subset.store_variable_undef(WR_VAR(0,  8,  21)); // FIXME
-        subset.store_variable_undef(WR_VAR(0,  4,  25)); // FIXME
-        add(WR_VAR(0, 11,  1), c_wind, DBA_MSG_WIND_DIR);
-        add(WR_VAR(0, 11,  2), c_wind, DBA_MSG_WIND_SPEED);
-        subset.store_variable_undef(WR_VAR(0,  8,  21));
-        subset.store_variable_undef(WR_VAR(0,  4,  25)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 11,  43)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 11,  41)); // FIXME
-        subset.store_variable_undef(WR_VAR(0,  4,  25)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 11,  43)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 11,  41)); // FIXME
-
-        // /* 33 */ add(WR_VAR(0, 10,197), DBA_MSG_HEIGHT_ANEM);
+        synop.add_D02059();
     }
 };
 
@@ -388,6 +373,8 @@ struct ShipFactory : public TemplateFactory
     {
         // Scan msgs and pick the right one
         const Msg& msg = *msgs[0];
+        if (msg.find(WR_VAR(0, 2, 2), Level::ana(), Trange::ana()))
+            return auto_ptr<Template>(new ShipWMO(opts, msgs));
         const Var* var = msg.get_st_type_var();
         if (var == NULL || var->enqi() == 1)
             return auto_ptr<Template>(new ShipPlain(opts, msgs));

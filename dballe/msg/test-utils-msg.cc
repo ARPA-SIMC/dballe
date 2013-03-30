@@ -685,7 +685,12 @@ void TestCodec::run_reimport(const dballe::tests::Location& loc)
     // Run tweaks
     after_reimport_reimport.apply(final.msgs);
 
-    do_compare(loc, orig, final);
+    try {
+        do_compare(loc, orig, final);
+    } catch (...) {
+        dballe::tests::dump("reexported", exported.raw);
+        throw;
+    }
 }
 
 void TestCodec::run_convert(const dballe::tests::Location& loc, const std::string& tplname)
@@ -732,7 +737,12 @@ void TestCodec::run_convert(const dballe::tests::Location& loc, const std::strin
     // Run tweaks
     after_convert_reimport.apply(final.msgs);
 
-    do_compare(loc, orig, final);
+    try {
+        do_compare(loc, orig, final);
+    } catch (...) {
+        dballe::tests::dump("converted", exported.raw);
+        throw;
+    }
 }
 
 }
