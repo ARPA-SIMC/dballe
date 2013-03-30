@@ -65,6 +65,8 @@ void db_test::use_db()
 
 void db_test::use_db(db::Format format, bool reset)
 {
+    if (getenv("DBALLE_SKIP_DB_TESTS")) throw tut::no_such_test();
+
     if (!db.get())
     {
         if (reset) disappear();
