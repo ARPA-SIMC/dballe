@@ -173,6 +173,16 @@ void CommonSynopExporter::init(wreport::Subset& subset)
 {
     ExporterModule::init(subset);
     c_geopotential = 0;
+    c_thermo = 0;
+    c_tmax = 0;
+    c_tmin = 0;
+    c_prec1 = 0;
+    c_prec2 = 0;
+    c_prec24 = 0;
+    for (int i = 0; i < 4; ++i)
+        c_cloud_data[i] = 0;
+    for (unsigned i = 0; i < sizeof(c_cloud_group) / sizeof(c_cloud_group[0]); ++i)
+        c_cloud_group[i] = 0;
     v_press = 0;
     v_pressmsl = 0;
     v_pchange3 = 0;
@@ -189,6 +199,23 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
         case 1:
             switch (c.trange.pind)
             {
+                case 1:
+                    if (c.find(WR_VAR(0, 13, 11)))
+                    {
+                        if (c.trange.p2 == 86400)
+                            c_prec24 = &c;
+                        else if (!c_prec1)
+                            c_prec1 = &c;
+                        else if (!c_prec2)
+                            c_prec2 = &c;
+                    }
+                    break;
+                case 2:
+                    if (c.find(WR_VAR(0, 12, 101))) c_tmax = &c;
+                    break;
+                case 3:
+                    if (c.find(WR_VAR(0, 12, 101))) c_tmin = &c;
+                    break;
                 case 4:
                     if (const Var* v = c.find_by_id(DBA_MSG_PRESS_3H))
                         switch (c.trange.p2)
@@ -241,6 +268,46 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                     break;
             }
             break;
+        case 103:
+            switch (c.trange.pind)
+            {
+                case 1:
+                    if (c.find(WR_VAR(0, 13, 11)))
+                    {
+                        if (c.trange.p2 == 86400)
+                            c_prec24 = &c;
+                        else if (!c_prec1)
+                            c_prec1 = &c;
+                        else if (!c_prec2)
+                            c_prec2 = &c;
+                    }
+                    break;
+                case 2:
+                    if (c.find(WR_VAR(0, 12, 101))) c_tmax = &c;
+                    break;
+                case 3:
+                    if (c.find(WR_VAR(0, 12, 101))) c_tmin = &c;
+                    break;
+                case 254:
+                    if (c.find_by_id(DBA_MSG_TEMP_2M) || c.find_by_id(DBA_MSG_DEWPOINT_2M) || c.find_by_id(DBA_MSG_HUMIDITY))
+                        c_thermo = &c;
+                    break;
+            }
+            break;
+        case 256:
+            // Clouds
+            switch (c.level.ltype2)
+            {
+                case 258:
+                    if (c.level.l2 >= 0 && c.level.l2 < 4)
+                        c_cloud_data[c.level.l2] = &c;
+                    break;
+                case 259:
+                    if (c.level.l2 >= 0 && c.level.l2 < (int)(sizeof(c_cloud_group) / sizeof(c_cloud_group[0])))
+                        c_cloud_group[c.level.l2] = &c;
+                    break;
+            }
+            break;
     }
 };
 
@@ -272,6 +339,228 @@ void CommonSynopExporter::add_geopotential(wreport::Varcode code)
 {
     add(code, v_geopotential);
 }
+
+void CommonSynopExporter::add_D02032()
+{
+    if (!c_thermo)
+    {
+        subset->store_variable_undef(WR_VAR(0,  7,  32));
+        subset->store_variable_undef(WR_VAR(0, 12, 101));
+        subset->store_variable_undef(WR_VAR(0, 12, 103));
+        subset->store_variable_undef(WR_VAR(0, 13,   3));
+    } else {
+        const Var* var_t = c_thermo->find_by_id(DBA_MSG_TEMP_2M);
+        const Var* var_d = c_thermo->find_by_id(DBA_MSG_DEWPOINT_2M);
+        const Var* var_h = c_thermo->find_by_id(DBA_MSG_HUMIDITY);
+        add_sensor_height(*c_thermo, var_t ? var_t : var_d ? var_d : var_h);
+        add(WR_VAR(0, 12, 101), var_t);
+        add(WR_VAR(0, 12, 103), var_d);
+        add(WR_VAR(0, 13,   3), var_h);
+    }
+}
+void CommonSynopExporter::add_D02052()
+{
+    if (!c_thermo)
+    {
+        subset->store_variable_undef(WR_VAR(0,  7,  32));
+        subset->store_variable_undef(WR_VAR(0,  7,  33));
+        subset->store_variable_undef(WR_VAR(0, 12, 101));
+        subset->store_variable_undef(WR_VAR(0,  2,  39));
+        subset->store_variable_undef(WR_VAR(0, 12, 102));
+        subset->store_variable_undef(WR_VAR(0, 12, 103));
+        subset->store_variable_undef(WR_VAR(0, 13,   3));
+    } else {
+        const Var* var_t = c_thermo->find_by_id(DBA_MSG_TEMP_2M);
+        const Var* var_d = c_thermo->find_by_id(DBA_MSG_DEWPOINT_2M);
+        const Var* var_h = c_thermo->find_by_id(DBA_MSG_HUMIDITY);
+        add_marine_sensor_height(*c_thermo, var_t ? var_t : var_d ? var_d : var_h);
+        add(WR_VAR(0, 12, 101), var_t);
+        add(WR_VAR(0,  2,  39), c_ana);
+        add(WR_VAR(0, 12, 102), var_t);
+        add(WR_VAR(0, 12, 103), var_d);
+        add(WR_VAR(0, 13,   3), var_h);
+    }
+}
+
+void CommonSynopExporter::add_D02041()
+{
+    if (c_tmax || c_tmin)
+    {
+        const msg::Context* c_first = c_tmax ? c_tmax : c_tmin;
+        add_sensor_height(*c_first, c_first->find(WR_VAR(0, 12, 101)));
+    }
+    else
+        subset->store_variable_undef(WR_VAR(0,  7, 32));
+    add_xtemp_group(WR_VAR(0, 12, 111), c_tmax);
+    add_xtemp_group(WR_VAR(0, 12, 112), c_tmin);
+}
+
+void CommonSynopExporter::add_D02034()
+{
+    if (c_prec24)
+    {
+        const Var* var = c_prec24->find(WR_VAR(0, 13, 11));
+        add_sensor_height(*c_prec24, var);
+        add(WR_VAR(0, 13, 23), c_prec24, DBA_MSG_TOT_PREC24);
+    } else {
+        subset->store_variable_undef(WR_VAR(0,  7, 32));
+        subset->store_variable_undef(WR_VAR(0, 13, 23));
+    }
+    subset->store_variable_undef(WR_VAR(0, 7, 32));
+}
+
+void CommonSynopExporter::add_D02040()
+{
+    if (c_prec1)
+    {
+        const Var* prec_var = c_prec1->find(WR_VAR(0, 13, 11));
+        add_sensor_height(*c_prec1, prec_var);
+    } else {
+        subset->store_variable_undef(WR_VAR(0,  7, 32));
+    }
+    add_prec_group(c_prec1);
+    add_prec_group(c_prec2);
+}
+
+void CommonSynopExporter::add_cloud_data()
+{
+    // Cloud data
+    add(WR_VAR(0, 20, 10), c_cloud_data[0]);
+    add(WR_VAR(0,  8,  2), c_cloud_data[0]);
+    add(WR_VAR(0, 20, 11), c_cloud_data[0]);
+    add(WR_VAR(0, 20, 13), c_cloud_data[0]);
+    add(WR_VAR(0, 20, 12), c_cloud_data[1]);
+    add(WR_VAR(0, 20, 12), c_cloud_data[2]);
+    add(WR_VAR(0, 20, 12), c_cloud_data[3]);
+
+    // Individual cloud layers or masses
+    int count = 0;
+    for (unsigned i = 0; i < sizeof(c_cloud_group) / sizeof(c_cloud_group[0]); ++i)
+        if (c_cloud_group[i])
+            ++count;
+
+    // Number of individual cloud layers or masses
+    subset->store_variable_i(WR_VAR(0, 1, 31), count);
+    for (unsigned i = 0; i < sizeof(c_cloud_group) / sizeof(c_cloud_group[0]); ++i)
+    {
+        if (!c_cloud_group[i]) continue;
+
+        add(WR_VAR(0,  8,  2), c_cloud_group[i]);
+        add(WR_VAR(0, 20, 11), c_cloud_group[i]);
+        add(WR_VAR(0, 20, 12), c_cloud_group[i]);
+        add(WR_VAR(0, 20, 13), c_cloud_group[i]);
+    }
+}
+
+void CommonSynopExporter::add_prec_group(const msg::Context* c)
+{
+    if (c)
+    {
+        if (c->trange.p2 != MISSING_INT)
+            subset->store_variable_d(WR_VAR(0,  4, 24), -c->trange.p2 / 3600);
+        else
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+        if (const Var* var = c->find(WR_VAR(0, 13, 11)))
+            subset->store_variable(*var);
+        else
+            subset->store_variable_undef(WR_VAR(0, 13, 11));
+    } else {
+        subset->store_variable_undef(WR_VAR(0,  4, 24));
+        subset->store_variable_undef(WR_VAR(0, 13, 11));
+    }
+}
+
+void CommonSynopExporter::add_sensor_height(const msg::Context& c, const Var* sample_var)
+{
+    // Try with attributes first
+    if (sample_var)
+    {
+        if (const Var* a = sample_var->enqa(WR_VAR(0, 7, 32)))
+        {
+            subset->store_variable_d(WR_VAR(0, 7, 32), a->enqd());
+            return;
+        }
+    }
+
+    // Use level
+    if (c.level.ltype1 == 1)
+        // Ground level
+        subset->store_variable_d(WR_VAR(0, 7, 32), 0);
+    else if (c.level.ltype1 == 103)
+    {
+        // Height above ground level
+        if (c.level.l1 == MISSING_INT)
+            subset->store_variable_undef(WR_VAR(0, 7, 32));
+        else
+            subset->store_variable_d(WR_VAR(0, 7, 32), double(c.level.l1) / 1000.0);
+    }
+    else
+        error_consistency::throwf("Cannot add sensor height from unsupported level type %d", c.level.ltype1);
+}
+
+void CommonSynopExporter::add_marine_sensor_height(const msg::Context& c, const Var* sample_var)
+{
+    // FIXME: B07033 is hardcoded as undef for now, until we actually found
+    //        bulletins in which it is set
+
+    // Try with attributes first
+    if (sample_var)
+    {
+        if (const Var* a = sample_var->enqa(WR_VAR(0, 7, 32)))
+        {
+            subset->store_variable_d(WR_VAR(0, 7, 32), a->enqd());
+            subset->store_variable_undef(WR_VAR(0, 7, 33));
+            return;
+        }
+    }
+
+    // Use level
+    if (c.level.ltype1 == 1)
+    {
+        // Ground level
+        subset->store_variable_d(WR_VAR(0, 7, 32), 0);
+        subset->store_variable_undef(WR_VAR(0, 7, 33));
+    }
+    else if (c.level.ltype1 == 103)
+    {
+        // Height above ground level
+        if (c.level.l1 == MISSING_INT)
+            subset->store_variable_undef(WR_VAR(0, 7, 32));
+        else
+            subset->store_variable_d(WR_VAR(0, 7, 32), double(c.level.l1) / 1000.0);
+        subset->store_variable_undef(WR_VAR(0, 7, 33));
+    }
+    else
+        error_consistency::throwf("Cannot add sensor height from unsupported level type %d", c.level.ltype1);
+}
+
+void CommonSynopExporter::add_xtemp_group(Varcode code, const msg::Context* c)
+{
+    if (c)
+    {
+        // Duration of statistical processing
+        if (c->trange.p2 != MISSING_INT)
+            subset->store_variable_d(WR_VAR(0,  4, 24), -c->trange.p2 / 3600);
+        else
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+
+        // Offset from end of interval to synop reference time
+        if (c->trange.p1 != 0 && c->trange.p1 != MISSING_INT)
+            subset->store_variable_d(WR_VAR(0,  4, 24), c->trange.p1 / 3600);
+        else if (c->trange.p1 == MISSING_INT || c->trange.p2 == MISSING_INT)
+            subset->store_variable_undef(WR_VAR(0,  4, 24));
+        else
+            subset->store_variable_d(WR_VAR(0,  4, 24), 0);
+
+        add(code, c, WR_VAR(0, 12, 101));
+    } else {
+        subset->store_variable_undef(WR_VAR(0,  4, 24));
+        subset->store_variable_undef(WR_VAR(0,  4, 24));
+        subset->store_variable_undef(code);
+    }
+}
+
+
 
 }
 }

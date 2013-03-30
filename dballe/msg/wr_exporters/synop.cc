@@ -66,33 +66,6 @@ static int override_trange(const Var* var, int orig)
     return orig;
 }
 
-struct PrecInfo
-{
-    const msg::Context* c_prec1;
-    const msg::Context* c_prec2;
-    const msg::Context* c_prec24;
-
-    void reset()
-    {
-        c_prec1 = NULL;
-        c_prec2 = NULL;
-        c_prec24 = NULL;
-    }
-
-    void scan_context1(const msg::Context& c)
-    {
-        if (c.find(WR_VAR(0, 13, 11)))
-        {
-            if (c.trange.p2 == 86400)
-                c_prec24 = &c;
-            else if (!c_prec1)
-                c_prec1 = &c;
-            else if (!c_prec2)
-                c_prec2 = &c;
-        }
-    }
-};
-
 struct Synop : public Template
 {
     CommonSynopExporter synop;
@@ -103,11 +76,7 @@ struct Synop : public Template
     const msg::Context* c_gust2;
     const msg::Context* c_evapo;
     const msg::Context* c_past_wtr;
-    const msg::Context* c_thermo;
     const msg::Context* c_visib;
-    const msg::Context* c_tmax;
-    const msg::Context* c_tmin;
-    PrecInfo i_prec;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -121,11 +90,7 @@ struct Synop : public Template
         c_gust2 = NULL;
         c_evapo = NULL;
         c_past_wtr = NULL;
-        c_thermo = NULL;
         c_visib = NULL;
-        c_tmax = NULL;
-        c_tmin = NULL;
-        i_prec.reset();
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg->data.begin();
@@ -148,17 +113,9 @@ struct Synop : public Template
                                     c_sunshine2 = c;
                             }
 
-                            i_prec.scan_context1(*c);
-
                             // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
                             if (c->find(WR_VAR(0, 13, 33)))
                                 c_evapo = c;
-                            break;
-                        case 2:
-                            if (c->find(WR_VAR(0, 12, 101))) c_tmax = c;
-                            break;
-                        case 3:
-                            if (c->find(WR_VAR(0, 12, 101))) c_tmin = c;
                             break;
                         case 205:
                             if (c->find(WR_VAR(0, 20, 4)) || c->find(WR_VAR(0, 20, 5)))
@@ -171,20 +128,6 @@ struct Synop : public Template
                     }
                     break;
                 case 103:
-                    switch (c->trange.pind)
-                    {
-                        case 1: i_prec.scan_context1(*c); break;
-                        case 2:
-                            if (c->find(WR_VAR(0, 12, 101))) c_tmax = c;
-                            break;
-                        case 3:
-                            if (c->find(WR_VAR(0, 12, 101))) c_tmin = c;
-                            break;
-                        case 254:
-                            if (c->find_by_id(DBA_MSG_TEMP_2M) || c->find_by_id(DBA_MSG_DEWPOINT_2M) || c->find_by_id(DBA_MSG_HUMIDITY))
-                                c_thermo = c;
-                            break;
-                    }
                     if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
                         if (!c_wind)
                             c_wind = c;
@@ -489,113 +432,28 @@ struct SynopWMO : public Synop
         cur_bulletin = &bulletin;
     }
 
-    void add_sensor_height(const msg::Context& c, const Var* sample_var=NULL)
-    {
-        // Try with attributes first
-        if (sample_var)
-        {
-            if (const Var* a = sample_var->enqa(WR_VAR(0, 7, 32)))
-            {
-                subset->store_variable_d(WR_VAR(0, 7, 32), a->enqd());
-                return;
-            }
-        }
-
-        // Use level
-        if (c.level.ltype1 == 1)
-            // Ground level
-            subset->store_variable_d(WR_VAR(0, 7, 32), 0);
-        else if (c.level.ltype1 == 103)
-        {
-            // Height above ground level
-            if (c.level.l1 == MISSING_INT)
-                subset->store_variable_undef(WR_VAR(0, 7, 32));
-            else
-                subset->store_variable_d(WR_VAR(0, 7, 32), double(c.level.l1) / 1000.0);
-        }
-        else
-            error_consistency::throwf("Cannot add sensor height from unsupported level type %d", c.level.ltype1);
-    }
-
     // D02035  Basis synoptic "instantaneous" data
     void do_D02035(const Msg& msg, wreport::Subset& subset)
     {
-        //   Temperature and humidity data
-        {
-            if (c_thermo)
-            {
-                const Var* var = c_thermo->find_by_id(DBA_MSG_TEMP_2M);
-                if (!var) var = c_thermo->find_by_id(DBA_MSG_DEWPOINT_2M);
-                if (!var) var = c_thermo->find_by_id(DBA_MSG_HUMIDITY);
-                add_sensor_height(*c_thermo, var);
-            } else
-                subset.store_variable_undef(WR_VAR(0, 7, 32));
-            add(WR_VAR(0, 12, 101), c_thermo, DBA_MSG_TEMP_2M);
-            add(WR_VAR(0, 12, 103), c_thermo, DBA_MSG_DEWPOINT_2M);
-            add(WR_VAR(0, 13,   3), c_thermo, DBA_MSG_HUMIDITY);
-        }
+        // Temperature and humidity data
+        synop.add_D02032();
 
         //   Visibility data
         {
             if (c_visib)
             {
                 const Var* var = c_visib->find_by_id(DBA_MSG_VISIBILITY);
-                add_sensor_height(*c_visib, var);
+                synop.add_sensor_height(*c_visib, var);
             } else
                 subset.store_variable_undef(WR_VAR(0, 7, 32));
             add(WR_VAR(0, 20, 1), c_visib, DBA_MSG_VISIBILITY);
         }
 
-        //   Precipitation past 24 hours
-        if (i_prec.c_prec24)
-        {
-            const Var* var = i_prec.c_prec24->find(WR_VAR(0, 13, 11));
-            add_sensor_height(*i_prec.c_prec24, var);
-            add(WR_VAR(0, 13, 23), i_prec.c_prec24, DBA_MSG_TOT_PREC24);
-        } else {
-            subset.store_variable_undef(WR_VAR(0,  7, 32));
-            subset.store_variable_undef(WR_VAR(0, 13, 23));
-        }
-        subset.store_variable_undef(WR_VAR(0, 7, 32));
+        // Precipitation past 24 hours
+        synop.add_D02034();
 
-        //   Cloud data
-        {
-            add(WR_VAR(0, 20,  10), DBA_MSG_CLOUD_N);
-            add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-            add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-            add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-            add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-            add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-            add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
-
-            //   Individual cloud layers or masses
-            int max_cloud_group = 0;
-            for (int i = 1; ; ++i)
-            {
-                if (msg.find_context(Level::cloud(259, i), Trange::instant()))
-                {
-                    max_cloud_group = i;
-                } else if (i > 4)
-                    break;
-            }
-
-            // Number of individual cloud layers or masses
-            subset.store_variable_i(WR_VAR(0, 1, 31), max_cloud_group);
-            for (int i = 1; i <= max_cloud_group; ++i)
-            {
-                add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, i), Trange::instant());
-                if (const msg::Context* c = msg.find_context(Level::cloud(259, i), Trange::instant()))
-                {
-                    add(WR_VAR(0, 20, 11), c, DBA_MSG_CLOUD_N1);
-                    add(WR_VAR(0, 20, 12), c, DBA_MSG_CLOUD_C1);
-                    add(WR_VAR(0, 20, 13), c, DBA_MSG_CLOUD_H1);
-                } else {
-                    subset.store_variable_undef(WR_VAR(0, 20, 11));
-                    subset.store_variable_undef(WR_VAR(0, 20, 12));
-                    subset.store_variable_undef(WR_VAR(0, 20, 13));
-                }
-            }
-        }
+        // Cloud data
+        synop.add_cloud_data();
     }
 
     // D02036  Clouds with bases below station level
@@ -741,50 +599,6 @@ struct SynopWMO : public Synop
         subset->store_variable_d(code, res);
     }
 
-    void do_prec_group(const msg::Context* c)
-    {
-        if (c)
-        {
-            if (c->trange.p2 != MISSING_INT)
-                subset->store_variable_d(WR_VAR(0,  4, 24), -c->trange.p2 / 3600);
-            else
-                subset->store_variable_undef(WR_VAR(0,  4, 24));
-            if (const Var* var = c->find(WR_VAR(0, 13, 11)))
-                subset->store_variable(*var);
-            else
-                subset->store_variable_undef(WR_VAR(0, 13, 11));
-        } else {
-            subset->store_variable_undef(WR_VAR(0,  4, 24));
-            subset->store_variable_undef(WR_VAR(0, 13, 11));
-        }
-    }
-
-    void do_xtemp_group(Varcode code, const msg::Context* c)
-    {
-        if (c)
-        {
-            // Duration of statistical processing
-            if (c->trange.p2 != MISSING_INT)
-                subset->store_variable_d(WR_VAR(0,  4, 24), -c->trange.p2 / 3600);
-            else
-                subset->store_variable_undef(WR_VAR(0,  4, 24));
-
-            // Offset from end of interval to synop reference time
-            if (c->trange.p1 != 0 && c->trange.p1 != MISSING_INT)
-                subset->store_variable_d(WR_VAR(0,  4, 24), c->trange.p1 / 3600);
-            else if (c->trange.p1 == MISSING_INT || c->trange.p2 == MISSING_INT)
-                subset->store_variable_undef(WR_VAR(0,  4, 24));
-            else
-                subset->store_variable_d(WR_VAR(0,  4, 24), 0);
-
-            add(code, c, WR_VAR(0, 12, 101));
-        } else {
-            subset->store_variable_undef(WR_VAR(0,  4, 24));
-            subset->store_variable_undef(WR_VAR(0,  4, 24));
-            subset->store_variable_undef(code);
-        }
-    }
-
     // D02043  Basic synoptic "period" data
     void do_D02043(int hour)
     {
@@ -826,26 +640,10 @@ struct SynopWMO : public Synop
         }
 
         //   Precipitation measurement
-        if (i_prec.c_prec1)
-        {
-            const Var* prec_var = i_prec.c_prec1->find(WR_VAR(0, 13, 11));
-            add_sensor_height(*i_prec.c_prec1, prec_var);
-        } else {
-            subset->store_variable_undef(WR_VAR(0,  7, 32));
-        }
-        do_prec_group(i_prec.c_prec1);
-        do_prec_group(i_prec.c_prec2);
+        synop.add_D02040();
 
-        //   Extreme temperature data
-        if (c_tmax || c_tmin)
-        {
-            const msg::Context* c_first = c_tmax ? c_tmax : c_tmin;
-            add_sensor_height(*c_first, c_first->find(WR_VAR(0, 12, 101)));
-        }
-        else
-            subset->store_variable_undef(WR_VAR(0,  7, 32));
-        do_xtemp_group(WR_VAR(0, 12, 111), c_tmax);
-        do_xtemp_group(WR_VAR(0, 12, 112), c_tmin);
+        // Extreme temperature data
+        synop.add_D02041();
 
         //   Wind data
         if (c_wind || c_gust1 || c_gust2)
@@ -856,7 +654,7 @@ struct SynopWMO : public Synop
             if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 2));
             if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 41));
             if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 43));
-            add_sensor_height(*c_first, sample_var);
+            synop.add_sensor_height(*c_first, sample_var);
 
             add(WR_VAR(0, 2, 2), DBA_MSG_WIND_INST);
             subset->store_variable_i(WR_VAR(0, 8, 21), 2);

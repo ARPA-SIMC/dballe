@@ -91,6 +91,7 @@ void ShipImporter::import_var(const Var& var)
         // Ship marine data
         // TODO: check levels and time ranges
         case WR_VAR(0,  2, 38): msg->set(var, var.code(), Level::ana(), Trange::ana()); break;
+        case WR_VAR(0,  2, 39): msg->set(var, var.code(), Level::ana(), Trange::ana()); break;
         // TODO: check levels and time ranges
         case WR_VAR(0, 22, 42):
         case WR_VAR(0, 22, 43): ctx.set_water_temperature(var); break;

@@ -28,6 +28,7 @@
  002013 SOLAR AND INFRARED RADIATION CORRECTION                          CODE TABLE 2013            0            0   4 CODE TABLE 2013           0          2
  002014 TRACKING TECHNIQUE/STATUS OF SYSTEM USED                         CODE TABLE 2014            0            0   7 CODE TABLE 2014           0          3
  002038 METHOD OF WATER TEMPERATURE AND/OR SALINITY MEASUREMENT          CODE TABLE 2038            0            0   4 CODE TABLE 2038           0         2              
+ 002039 METHOD OF WET-BULB TEMPERATURE MEASUREMENT                       CODE TABLE 2039            0            0   3 CODE TABLE 2039           0         1              
  002048 SATELLITE SENSOR INDICATOR                                       CODE TABLE 2048            0            0   4 CODE TABLE 2048           0          2
  002061 AIRCRAFT NAVIGATIONAL SYSTEM                                     CODE TABLE 2061            0            0   3 CODE TABLE 2061           0          1
  002062 TYPE OF AIRCRAFT DATA RELAY SYSTEM                               CODE TABLE 2062            0            0   4 CODE TABLE 2062           0          2

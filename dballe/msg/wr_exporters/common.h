@@ -70,6 +70,15 @@ class CommonSynopExporter : public ExporterModule
 {
 protected:
     const msg::Context* c_geopotential;
+    const msg::Context* c_thermo;
+    const msg::Context* c_tmax;
+    const msg::Context* c_tmin;
+    const msg::Context* c_prec1;
+    const msg::Context* c_prec2;
+    const msg::Context* c_prec24;
+    const msg::Context* c_cloud_data[4];
+    // FIXME: what is the maximum number of cloud groups we should support?
+    const msg::Context* c_cloud_group[8];
 
 public:
     const wreport::Var* v_press;
@@ -84,8 +93,41 @@ public:
 
     void add_D02001();
     void add_D02031();
+    void add_D02032();
+    void add_D02052();
+    void add_D02041();
     void add_pressure();
     void add_geopotential(wreport::Varcode code);
+    void add_D02034();
+    void add_D02040();
+
+    /**
+     * Add B07032 sensor height, taking the value from the var attributes or
+     * the context, as appropriate.
+     */
+    void add_sensor_height(const msg::Context& c, const wreport::Var* sample_var=NULL);
+
+    /**
+     * Add B07032 and B07033 sensor heights, taking the value from the var
+     * attributes or the context, as appropriate.
+     */
+    void add_marine_sensor_height(const msg::Context& c, const wreport::Var* sample_var=NULL);
+
+    /**
+     * Add an extreme temperature group, with the measured value added with the
+     * given code, from temperature data found on the given context
+     */
+    void add_xtemp_group(wreport::Varcode code, const msg::Context* c);
+
+    /**
+     * Add time period and total precipitation from the given context
+     */
+    void add_prec_group(const msg::Context* c);
+
+    /**
+     * Add cloud data, as D02004 and a delayed replication of D02005
+     */
+    void add_cloud_data();
 };
 
 }

@@ -286,32 +286,21 @@ struct ShipWMO : public ShipBase
         synop.add_D02001();
 
         // Temperature and humidity data
-        subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
-        subset.store_variable_undef(WR_VAR(0,  7,  33)); // FIXME
-        add(WR_VAR(0, 12, 101), DBA_MSG_TEMP_2M);
-        subset.store_variable_undef(WR_VAR(0,  2,  39)); // FIXME
-        add(WR_VAR(0, 12, 102), DBA_MSG_WET_TEMP_2M);
-        add(WR_VAR(0, 12, 103), DBA_MSG_DEWPOINT_2M);
-        add(WR_VAR(0, 13,   3), DBA_MSG_HUMIDITY);
+        synop.add_D02052();
+
         // Visibility data
         subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
         subset.store_variable_undef(WR_VAR(0,  7,  33)); // FIXME
         add(WR_VAR(0, 20,   1), DBA_MSG_VISIBILITY);
         subset.store_variable_undef(WR_VAR(0,  7,  33));
+
         // Precipitation past 24 hours
-        subset.store_variable_undef(WR_VAR(0,  7,  32)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 13,  23)); // FIXME
-        subset.store_variable_undef(WR_VAR(0,  7,  32));
+        synop.add_D02034();
+
         // Cloud data
-        /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
-        /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-        /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-        /* 27 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-        /* 28 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-        /* 29 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-        /* 30 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
-        subset.store_variable_i(WR_VAR(0, 31,   1), 0); // FIXME
+        synop.add_cloud_data();
         subset.store_variable_undef(WR_VAR(0,  8,   2));
+
         // Icing and ice
         subset.store_variable_undef(WR_VAR(0, 20,  31)); // FIXME
         subset.store_variable_undef(WR_VAR(0, 20,  32)); // FIXME
