@@ -201,6 +201,7 @@ void CommonSynopExporter::init(wreport::Subset& subset)
     c_gust2 = 0;
     c_visib = 0;
     c_past_wtr = 0;
+    c_depth = 0;
     v_press = 0;
     v_pressmsl = 0;
     v_pchange3 = 0;
@@ -255,6 +256,8 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                         v_pressmsl = v;
                     if (c.find_by_id(DBA_MSG_VISIBILITY))
                         c_visib = &c;
+                    if (c.find(WR_VAR(0, 22, 43)))
+                        c_depth = &c;
                     break;
             }
             break;
@@ -327,6 +330,10 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                         c_thermo = &c;
                     break;
             }
+            break;
+        case 160:
+            if (c.find_by_id(WR_VAR(0, 22, 43)))
+                c_depth = &c;
             break;
         case 256:
             // Clouds
@@ -426,6 +433,22 @@ void CommonSynopExporter::add_D02041()
     }
     else
         subset->store_variable_undef(WR_VAR(0,  7, 32));
+    add_xtemp_group(WR_VAR(0, 12, 111), c_tmax);
+    add_xtemp_group(WR_VAR(0, 12, 112), c_tmin);
+}
+
+void CommonSynopExporter::add_D02058()
+{
+    if (c_tmax || c_tmin)
+    {
+        const msg::Context* c_first = c_tmax ? c_tmax : c_tmin;
+        add_marine_sensor_height(*c_first, c_first->find(WR_VAR(0, 12, 101)));
+    }
+    else
+    {
+        subset->store_variable_undef(WR_VAR(0,  7, 32));
+        subset->store_variable_undef(WR_VAR(0,  7, 33));
+    }
     add_xtemp_group(WR_VAR(0, 12, 111), c_tmax);
     add_xtemp_group(WR_VAR(0, 12, 112), c_tmin);
 }
@@ -816,6 +839,50 @@ void CommonSynopExporter::add_D02035()
 
     // Cloud data
     add_cloud_data();
+}
+
+void CommonSynopExporter::add_D02053()
+{
+    //   Visibility data
+    if (c_visib)
+    {
+        const Var* var = c_visib->find_by_id(DBA_MSG_VISIBILITY);
+        add_marine_sensor_height(*c_visib, var);
+    } else {
+        subset->store_variable_undef(WR_VAR(0, 7, 32));
+        subset->store_variable_undef(WR_VAR(0, 7, 33));
+    }
+    add(WR_VAR(0, 20, 1), c_visib, DBA_MSG_VISIBILITY);
+    subset->store_variable_undef(WR_VAR(0, 7, 33));
+}
+
+void CommonSynopExporter::add_D02055()
+{
+    add(WR_VAR(0, 20,  31), c_surface_instant);
+    add(WR_VAR(0, 20,  32), c_surface_instant);
+    add(WR_VAR(0, 20,  33), c_surface_instant);
+    add(WR_VAR(0, 20,  34), c_surface_instant);
+    add(WR_VAR(0, 20,  35), c_surface_instant);
+    add(WR_VAR(0, 20,  36), c_surface_instant);
+    add(WR_VAR(0, 20,  37), c_surface_instant);
+    add(WR_VAR(0, 20,  38), c_surface_instant);
+}
+
+void CommonSynopExporter::add_D02056()
+{
+    add(WR_VAR(0,  2,  38), c_ana);
+    if (c_depth)
+    {
+        if (c_depth->level.ltype1 == 160)
+            subset->store_variable_d(WR_VAR(0,  7, 63), (double)c_depth->level.l1 / 1000.0);
+        else
+            subset->store_variable_undef(WR_VAR(0,  7, 63));
+        add(WR_VAR(0, 22, 43), c_depth);
+    } else {
+        subset->store_variable_undef(WR_VAR(0,  7, 63));
+        subset->store_variable_undef(WR_VAR(0, 22, 43));
+    }
+    subset->store_variable_undef(WR_VAR(0,  7, 63));
 }
 
 }

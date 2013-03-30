@@ -84,6 +84,7 @@ protected:
     const msg::Context* c_gust2;
     const msg::Context* c_visib;
     const msg::Context* c_past_wtr;
+    const msg::Context* c_depth;
 
 public:
     const wreport::Var* v_press;
@@ -104,8 +105,10 @@ public:
     void add_D02032();
     // ship: temperature and humidity
     void add_D02052();
-    // Extreme temperature data
+    // synop: extreme temperature data
     void add_D02041();
+    // ship: extreme temperature data
+    void add_D02058();
     void add_pressure();
     void add_geopotential(wreport::Varcode code);
     // Precipitation past 24 hours
@@ -119,8 +122,14 @@ public:
     // Present and past weather
     void add_D02038();
     void add_ecmwf_synop_weather();
-    //  Basic synoptic "instantaneous" data
+    // Basic synoptic "instantaneous" data
     void add_D02035();
+    // Icing and ice
+    void add_D02055();
+    // ship: visibility data
+    void add_D02053();
+    // Ship marine data
+    void add_D02056();
 
     /**
      * Add B07032 sensor height, taking the value from the var attributes or
