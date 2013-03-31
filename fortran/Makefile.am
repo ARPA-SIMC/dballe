@@ -9,23 +9,16 @@ dballeincludedir = $(includedir)/dballe
 # Include the F90 interface file as well
 dist_dballeinclude_HEADERS = dballef.h
 
-dist_noinst_HEADERS = simple.h commonapi.h dbapi.h msgapi.h handles.h
+dist_noinst_HEADERS = handles.h
 
 lib_LTLIBRARIES = libdballef.la
 
 libdballef_la_SOURCES = \
 	error.cc \
-	simple.cc \
-	commonapi.cc \
-	msgapi.cc \
 	binding.cc
 libdballef_la_LIBADD = ../dballe/libdballe.la -lcnf
 libdballef_la_LDFLAGS = -version-info @LIBDBALLEF_VERSION_INFO@
 
-if DO_DBALLE_DB
-libdballef_la_SOURCES += \
-	dbapi.cc
-endif
 
 #
 # Unit testing
@@ -33,24 +26,13 @@ endif
 
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
-check_PROGRAMS = check_missing_msg tut_test
+check_PROGRAMS = check_missing_msg
 
 TESTS = $(check_PROGRAMS)
 testlib = test.f90
 dbtestlib = dbtest.f90 $(testlib)
 
 CXXFLAGS += -O0
-
-tut_test_SOURCES = \
-	dbapi-tut.cc \
-	msgapi-tut.cc \
-	test-utils-core.cc \
-	tut-main.cpp
-tut_test_LDADD = \
-	libdballef.la \
-	../dballe/libdballe.la \
-	$(WREPORT_LIBS) \
-	$(WIBBLE_LIBS)
 
 check_missing_msg_SOURCES = $(testlib) check_missing_msg.f90
 check_missing_msg_LDADD = ./libdballef.la -lcnf -lpopt

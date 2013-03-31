@@ -18,10 +18,10 @@
  */
 
 #include "config.h"
-#include "msgapi.h"
+#include "dballe/simple/msgapi.h"
 
 #ifdef HAVE_DBALLE_DB
-#include "dbapi.h"
+#include "dballe/simple/dbapi.h"
 #include <dballe/db/db.h>
 #endif
 

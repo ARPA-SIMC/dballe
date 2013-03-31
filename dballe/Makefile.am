@@ -64,7 +64,10 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/wr_exporters/common.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
-	cmdline/processor.h
+	cmdline/processor.h \
+	simple/simple.h \
+	simple/commonapi.h \
+	simple/msgapi.h
 if DO_DBALLE_DB
 nobase_dist_dballeinclude_HEADERS += \
 	db/odbcworkarounds.h \
@@ -84,7 +87,8 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v6/lev_tr.h \
 	db/v6/cursor.h \
 	db/v6/data.h \
-	cmdline/dbadb.h
+	cmdline/dbadb.h \
+	simple/dbapi.h
 endif
 
 lib_LTLIBRARIES = libdballe.la
@@ -136,7 +140,11 @@ libdballe_la_SOURCES = \
 	msg/wr_exporters/pollution.cc \
 	cmdline/cmdline.cc \
 	cmdline/processor.cc \
-	cmdline/conversion.cc
+	cmdline/conversion.cc \
+	simple/simple.cc \
+	simple/commonapi.cc \
+	simple/msgapi.cc
+
 if DO_DBALLE_DB
 libdballe_la_SOURCES += \
 	db/querybuf.cc \
@@ -159,7 +167,8 @@ libdballe_la_SOURCES += \
 	db/v6/cursor.cc \
 	db/v6/import.cc \
 	db/v6/export.cc \
-	cmdline/dbadb.cc
+	cmdline/dbadb.cc \
+	simple/dbapi.cc
 endif
 
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
@@ -212,7 +221,8 @@ tut_test_SOURCES = \
 	msg/tests/wr_export.cc \
 	msg/tests/wr_export2.cc \
 	msg/tests/wr_codec.cc \
-	msg/tests/wr_codec_generic.cc
+	msg/tests/wr_codec_generic.cc \
+	simple/msgapi-tut.cc
 if LUA
 tut_test_SOURCES += \
 	msg/tests/lua.cc \
@@ -236,7 +246,8 @@ tut_test_SOURCES += \
 	db/v6/tests/data.cc \
 	db/v6/tests/attr.cc \
 	db/v6/tests/db.cc \
-	cmdline/dbadb-tut.cc
+	cmdline/dbadb-tut.cc \
+	simple/dbapi-tut.cc
 endif
 
 tut_test_LDADD = \
