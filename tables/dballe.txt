@@ -297,6 +297,7 @@
  022013 PERIOD OF SWELL WAVES                                            S                          0            0   6 S                         0         2              
  022021 HEIGHT OF WAVES                                                  M                          1            0  10 M                         1          4
  022022 HEIGHT OF WIND WAVES                                             M                          1            0  10 M                         1          4
+ 022023 HEIGHT OF SWELL WAVES                                            M                          1            0  10 M                         1         4              
  022031 SPEED OF CURRENT                                                 M/S                        2            0  13 M/S                       2          4
  022032 SPEED OF SEA SURFACE CURRENT                                     M/S                        2            0  13 M/S                       2         4              
  022037 Tidal elevation with respect to national land datum              M                          3       -10000  15 M                         3          5

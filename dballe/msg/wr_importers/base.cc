@@ -81,6 +81,7 @@ void LevelContext::init()
     height_sensor = MISSING_SENSOR_H;
     height_sensor_seen = false;
     depth = MISSING_SENSOR_H;
+    swell_wave_group = 0;
 }
 
 void LevelContext::peek_var(const wreport::Var& var)
@@ -494,6 +495,11 @@ void ContextChooser::set_water_temperature(const wreport::Var& var)
         msg->set(var, WR_VAR(0, 22, 43), Level(160, level.depth * 1000), Trange::instant());
 }
 
+void ContextChooser::set_swell_waves(const wreport::Var& var)
+{
+    msg->set(var, var.code(), Level::waves(261, level.swell_wave_group), Trange::instant());
+}
+
 SynopBaseImporter::SynopBaseImporter(const msg::Importer::Options& opts)
     : WMOImporter(opts), ctx(level, trange)
 {
@@ -514,7 +520,7 @@ void SynopBaseImporter::run()
     {
         const Var& var = (*subset)[pos];
         if (WR_VAR_F(var.code()) != 0) continue;
-        if (WR_VAR_X(var.code()) < 10) peek_var(var);
+        if (WR_VAR_X(var.code()) < 10 || var.code() == WR_VAR(0, 22, 3)) peek_var(var);
         if (var.isset()) import_var(var);
     }
 }
@@ -532,6 +538,7 @@ void SynopBaseImporter::peek_var(const Var& var)
         case WR_VAR(0,  7, 31):
         case WR_VAR(0,  7, 32):
         case WR_VAR(0,  7, 63): level.peek_var(var); break;
+        case WR_VAR(0, 22,  3): ++level.swell_wave_group; break;
     }
 }
 

@@ -107,10 +107,10 @@ void ShipImporter::import_var(const Var& var)
             break;
 
         // D03023 swell waves (2 grups)
-        // TODO: check levels and time ranges
         case WR_VAR(0, 22,  3): // Direction of swell waves
         case WR_VAR(0, 22, 13): // Period of swell waves
         case WR_VAR(0, 22, 23): // Height of swell waves
+            ctx.set_swell_waves(var);
             break;
 
         default: SynopBaseImporter::import_var(var); break;

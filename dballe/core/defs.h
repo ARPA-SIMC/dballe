@@ -99,7 +99,8 @@ struct Level
 
     void format(std::ostream& out, const char* undef="-") const;
 
-    static inline Level cloud(int ltype2, int l2=MISSING_INT) { return Level(256, MISSING_INT, ltype2, l2); }
+    static inline Level cloud(int ltype2=MISSING_INT, int l2=MISSING_INT) { return Level(256, MISSING_INT, ltype2, l2); }
+    static inline Level waves(int ltype2=MISSING_INT, int l2=MISSING_INT) { return Level(264, MISSING_INT, ltype2, l2); }
     static inline Level ana() { return Level(257); }
 };
 

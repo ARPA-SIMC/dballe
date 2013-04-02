@@ -97,6 +97,7 @@ struct LevelContext
     double height_sensor;
     double depth;
     bool height_sensor_seen;
+    bool swell_wave_group;
 
     void init();
     void peek_var(const wreport::Var& var);
@@ -161,6 +162,7 @@ struct ContextChooser
     void set_wind_max(const wreport::Var& var, int shortcut);
     void set_pressure(const wreport::Var& var);
     void set_water_temperature(const wreport::Var& var);
+    void set_swell_waves(const wreport::Var& var);
 
 protected:
     void ib_start(int shortcut, const wreport::Var& var);
