@@ -192,6 +192,7 @@ void CommonSynopExporter::init(wreport::Subset& subset)
     c_prec1 = 0;
     c_prec2 = 0;
     c_prec24 = 0;
+    c_cloud_cover = 0;
     for (int i = 0; i < 4; ++i)
         c_cloud_data[i] = 0;
     for (unsigned i = 0; i < sizeof(c_cloud_group) / sizeof(c_cloud_group[0]); ++i)
@@ -346,6 +347,9 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                 case 259:
                     if (c.level.l2 >= 0 && c.level.l2 < (int)(sizeof(c_cloud_group) / sizeof(c_cloud_group[0])))
                         c_cloud_group[c.level.l2] = &c;
+                    break;
+                case MISSING_INT:
+                    c_cloud_cover = &c;
                     break;
             }
             break;
@@ -626,7 +630,7 @@ void CommonSynopExporter::add_wind_gust(const msg::Context* c)
 void CommonSynopExporter::add_cloud_data()
 {
     // Cloud data
-    add(WR_VAR(0, 20, 10), c_cloud_data[0]);
+    add(WR_VAR(0, 20, 10), c_cloud_cover);
     add(WR_VAR(0,  8,  2), c_cloud_data[0]);
     add(WR_VAR(0, 20, 11), c_cloud_data[0]);
     add(WR_VAR(0, 20, 13), c_cloud_data[0]);

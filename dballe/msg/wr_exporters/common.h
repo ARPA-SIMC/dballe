@@ -76,6 +76,7 @@ protected:
     const msg::Context* c_prec1;
     const msg::Context* c_prec2;
     const msg::Context* c_prec24;
+    const msg::Context* c_cloud_cover;
     const msg::Context* c_cloud_data[4];
     // FIXME: what is the maximum number of cloud groups we should support?
     const msg::Context* c_cloud_group[8];

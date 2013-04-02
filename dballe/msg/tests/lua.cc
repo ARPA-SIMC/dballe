@@ -52,11 +52,11 @@ void to::test<1>()
     dballe::tests::Lua test(
 		"function test() \n"
 		"  if msg:type() ~= 'synop' then return 'type is '..msg:type()..' instead of synop' end \n"
-		"  if msg:size() ~= 16 then return 'size is '..msg:size()..' instead of 16' end \n"
+		"  if msg:size() ~= 17 then return 'size is '..msg:size()..' instead of 17' end \n"
 
 		"  count = 0\n"
 		"  msg:foreach(function(x) count = count + 1 end)\n"
-		"  if count ~= 16 then return 'count is '..count..' instead of 16' end\n"
+		"  if count ~= 17 then return 'count is '..count..' instead of 17' end\n"
 
 		"  count = 0\n"
 		"  msg:foreach(function(x) count = count + x:size() end)\n"
