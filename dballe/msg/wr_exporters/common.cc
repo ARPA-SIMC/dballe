@@ -203,6 +203,8 @@ void CommonSynopExporter::init(wreport::Subset& subset)
     c_visib = 0;
     c_past_wtr = 0;
     c_depth = 0;
+    for (unsigned i = 0; i < sizeof(c_swell_waves) / sizeof(c_swell_waves[0]); ++i)
+        c_swell_waves[i] = 0;
     v_press = 0;
     v_pressmsl = 0;
     v_pchange3 = 0;
@@ -350,6 +352,16 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                     break;
                 case MISSING_INT:
                     c_cloud_cover = &c;
+                    break;
+            }
+            break;
+        case 264:
+            // Swell wave groups
+            switch (c.level.ltype2)
+            {
+                case 261:
+                    if (c.level.l2 >= 1 && c.level.l2 <= (int)(sizeof(c_swell_waves) / sizeof(c_swell_waves[0])))
+                        c_swell_waves[c.level.l2 - 1] = &c;
                     break;
             }
             break;
@@ -887,6 +899,33 @@ void CommonSynopExporter::add_D02056()
         subset->store_variable_undef(WR_VAR(0, 22, 43));
     }
     subset->store_variable_undef(WR_VAR(0,  7, 63));
+}
+
+void CommonSynopExporter::add_D02024()
+{
+    // Wind waves
+    add(WR_VAR(0, 22,   2), c_surface_instant);
+    add(WR_VAR(0, 22,  12), c_surface_instant);
+    add(WR_VAR(0, 22,  22), c_surface_instant);
+
+    // 2 systems of swell waves
+    unsigned src_idx = 0;
+    for (int i = 0; i < 2; ++i)
+    {
+        // Look for the next available swell waves group
+        const msg::Context* c = 0;
+        for ( ; src_idx < sizeof(c_swell_waves) / sizeof(c_swell_waves[0]); ++src_idx)
+            if (c_swell_waves[src_idx])
+            {
+                c = c_swell_waves[src_idx];
+                break;
+            }
+
+        add(WR_VAR(0, 22,   3), c);
+        add(WR_VAR(0, 22,  13), c);
+        add(WR_VAR(0, 22,  23), c);
+        ++src_idx;
+    }
 }
 
 }

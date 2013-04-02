@@ -86,6 +86,8 @@ protected:
     const msg::Context* c_visib;
     const msg::Context* c_past_wtr;
     const msg::Context* c_depth;
+    // FIXME: what is the maximum number of swell wave groups we should support?
+    const msg::Context* c_swell_waves[2];
 
 public:
     const wreport::Var* v_press;
@@ -131,6 +133,8 @@ public:
     void add_D02053();
     // Ship marine data
     void add_D02056();
+    // Ship waves (wind and swell)
+    void add_D02024();
 
     /**
      * Add B07032 sensor height, taking the value from the var attributes or

@@ -306,16 +306,8 @@ struct ShipWMO : public ShipBase
         add(WR_VAR(0, 22,   1), WR_VAR(0, 22,   1), Level(1), Trange::instant());
         add(WR_VAR(0, 22,  11), WR_VAR(0, 22,  11), Level(1), Trange::instant());
         add(WR_VAR(0, 22,  21), WR_VAR(0, 22,  21), Level(1), Trange::instant());
-        add(WR_VAR(0, 22,   2), WR_VAR(0, 22,   2), Level(1), Trange::instant());
-        add(WR_VAR(0, 22,  12), WR_VAR(0, 22,  12), Level(1), Trange::instant());
-        add(WR_VAR(0, 22,  22), WR_VAR(0, 22,  22), Level(1), Trange::instant());
-        //  2 systems of swell waves
-        subset.store_variable_undef(WR_VAR(0, 22,   3)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,  13)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,  23)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,   3)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,  13)); // FIXME
-        subset.store_variable_undef(WR_VAR(0, 22,  23)); // FIXME
+        // Wind and swell waves
+        synop.add_D02024();
         // Ship "period" data
         synop.add_D02038();
         // Precipitation measurement
