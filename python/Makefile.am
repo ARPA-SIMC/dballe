@@ -54,6 +54,7 @@ clean-local:
 	rm -f *.pyc dballe.so dballe
 
 EXTRA_DIST = \
+    doc-dballe \
     common.h \
     vartable.h \
     varinfo.h \
