@@ -78,7 +78,6 @@ void ShipImporter::import_var(const Var& var)
     switch (var.code())
     {
         // Icing and ice
-        // TODO: check levels and time ranges
         case WR_VAR(0, 20, 31):
         case WR_VAR(0, 20, 32):
         case WR_VAR(0, 20, 33):
@@ -89,15 +88,12 @@ void ShipImporter::import_var(const Var& var)
         case WR_VAR(0, 20, 38): msg->set(var, var.code(), Level(1), Trange::instant()); break;
 
         // Ship marine data
-        // TODO: check levels and time ranges
         case WR_VAR(0,  2, 38): msg->set(var, var.code(), Level::ana(), Trange::ana()); break;
         case WR_VAR(0,  2, 39): msg->set(var, var.code(), Level::ana(), Trange::ana()); break;
-        // TODO: check levels and time ranges
         case WR_VAR(0, 22, 42):
         case WR_VAR(0, 22, 43): ctx.set_water_temperature(var); break;
 
         // Waves
-        // TODO: check levels and time ranges
         case WR_VAR(0, 22,  1):
         case WR_VAR(0, 22, 11):
         case WR_VAR(0, 22, 21):

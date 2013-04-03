@@ -78,15 +78,13 @@ protected:
     const msg::Context* c_prec24;
     const msg::Context* c_cloud_cover;
     const msg::Context* c_cloud_data[4];
-    // FIXME: what is the maximum number of cloud groups we should support?
-    const msg::Context* c_cloud_group[8];
+    const msg::Context* c_cloud_group[4];
     const msg::Context* c_wind;
     const msg::Context* c_gust1;
     const msg::Context* c_gust2;
     const msg::Context* c_visib;
     const msg::Context* c_past_wtr;
     const msg::Context* c_depth;
-    // FIXME: what is the maximum number of swell wave groups we should support?
     const msg::Context* c_swell_waves[2];
 
 public:
