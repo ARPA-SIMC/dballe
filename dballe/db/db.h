@@ -245,6 +245,11 @@ public:
     virtual void insert(const Record& rec, bool can_replace, bool station_can_add) = 0;
 
     /**
+     * Return the station id for the last data that was inserted.
+     */
+    virtual int last_station_id() const = 0;
+
+    /**
      * Remove data from the database
      *
      * @param rec

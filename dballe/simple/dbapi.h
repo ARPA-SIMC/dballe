@@ -42,6 +42,8 @@ public:
     DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag);
     virtual ~DbAPI();
 
+    virtual int enqi(const char* param);
+
     virtual void scopa(const char* repinfofile = 0);
 
     virtual int quantesono();

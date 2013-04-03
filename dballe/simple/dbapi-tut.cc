@@ -77,6 +77,7 @@ struct dbapi_shar
     void test_vars();
     void test_attrs();
     void test_attrs_prendilo();
+    void test_prendilo_anaid();
 };
 TESTGRP(dbapi);
 
@@ -182,5 +183,24 @@ void dbapi_shar::test_attrs_prendilo()
     ensure_equals(api.enqi("*B33007"), 60);
 }
 
+template<> template<> void to::test<7>() { use_db(db::V5); test_prendilo_anaid(); }
+template<> template<> void to::test<8>() { use_db(db::V6); test_prendilo_anaid(); }
+void dbapi_shar::test_prendilo_anaid()
+{
+    fortran::DbAPI api(*db, "write", "write", "write");
+    populate_variables(api);
+
+    // Run a prendilo
+    api.setd("lat", 44.5);
+    api.setd("lon", 11.5);
+    api.setc("rep_memo", "synop");
+    api.setdate(2013, 4, 25, 12, 0, 0);
+    api.setlevel(1, MISSING_INT, MISSING_INT, MISSING_INT);
+    api.settimerange(254, 0, 0);
+    api.setd("B10004", 100000.0);
+    api.prendilo(); // Pressure at ground level
+
+    ensure(api.enqi("*ana_id") > 0);
+}
 
 }

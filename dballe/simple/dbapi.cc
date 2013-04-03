@@ -19,6 +19,7 @@
 
 #include "dbapi.h"
 #include <dballe/db/db.h>
+#include <cstring>
 
 using namespace wreport;
 using namespace std;
@@ -45,6 +46,14 @@ DbAPI::~DbAPI()
         query_cur->discard_rest();
         delete query_cur;
     }
+}
+
+int DbAPI::enqi(const char* param)
+{
+    if (strcmp(param, "*ana_id") == 0)
+        return db.last_station_id();
+    else
+        return CommonAPIImplementation::enqi(param);
 }
 
 void DbAPI::scopa(const char* repinfofile)

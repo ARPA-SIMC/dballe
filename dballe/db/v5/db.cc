@@ -321,7 +321,7 @@ DB::DB(auto_ptr<Connection>& conn)
     : conn(conn.release()),
       m_repinfo(0), m_station(0), m_context(0), m_data(0), m_attr(0),
       stm_last_insert_id(0),
-      seq_station(0), seq_context(0)
+      seq_station(0), seq_context(0), _last_station_id(0)
 {
     init_after_connect();
 
@@ -815,6 +815,12 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     t.commit();
 
     last_context_id = d.id_context;
+    _last_station_id = id_station;
+}
+
+int DB::last_station_id() const
+{
+    return _last_station_id;
 }
 
 void DB::remove(const Record& rec)

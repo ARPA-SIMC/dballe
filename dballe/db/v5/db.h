@@ -151,6 +151,8 @@ protected:
 	db::Sequence* seq_context;
         /** @} */
 
+        int _last_station_id;
+
 	void init_after_connect();
 
 	/**
@@ -293,6 +295,8 @@ public:
 	int obtain_context(const Record& rec);
 
     void insert(const Record& rec, bool can_replace, bool station_can_add);
+
+    int last_station_id() const;
 
 	/**
 	 * Remove data from the database

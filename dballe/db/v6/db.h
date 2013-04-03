@@ -161,6 +161,8 @@ protected:
     db::Sequence* seq_data;
     /** @} */
 
+    int _last_station_id;
+
     void init_after_connect();
 
     /**
@@ -314,6 +316,8 @@ public:
      *   Otherwise, data can be added only by reusing existing ones.
      */
     void insert(const Record& rec, bool can_replace, bool station_can_add);
+
+    int last_station_id() const;
 
     /**
      * Remove data from the database

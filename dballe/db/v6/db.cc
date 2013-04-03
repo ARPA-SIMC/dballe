@@ -1,5 +1,5 @@
 /*
- * dballe/v6/db - Archive for point-based meteorological data
+ * dballe/v6/db - Archive for point-based meteorological data, db layout version 6
  *
  * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -300,7 +300,7 @@ DB::DB(auto_ptr<Connection>& conn)
     : conn(conn.release()),
       m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
       m_data(0), m_attr(0),
-      seq_lev_tr(0), seq_data(0)
+      seq_lev_tr(0), seq_data(0), _last_station_id(0)
 {
     init_after_connect();
 
@@ -689,6 +689,13 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     }
 
     t.commit();
+
+    _last_station_id = d.id_station;
+}
+
+int DB::last_station_id() const
+{
+    return _last_station_id;
 }
 
 void DB::remove(const Record& rec)
