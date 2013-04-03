@@ -171,6 +171,13 @@ class RecordTest(unittest.TestCase):
         self.knownvars = ["B12101", "B01002", "B01001"]
         self.knownkeyvals = [45.12345, 11.54321, 2007, 2, 1, 1, 2, 3, 105, 2, 0, 0, 2, 3, 4]
         self.knownvarvals = [285.0, 123, 1]
+
+    def testGet(self):
+        self.assertEqual(self.r.get("block"), 1)
+        self.assertEqual(self.r.get(key="block"), 1)
+        self.assertEqual(self.r.get(key="ana_id", default="ciao"), "ciao")
+        self.assertEqual(self.r.get("ana_id", default="ciao"), "ciao")
+
     def testMulti(self):
         self.assertEqual(self.r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
         self.assertEqual(self.r["level"], (105, 2, None, None))
