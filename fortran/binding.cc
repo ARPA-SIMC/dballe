@@ -219,6 +219,7 @@ struct HSimple : public fortran::HBase
 	fortran::API* api;
     FILE* trace;
     std::string trace_tag;
+    int trace_handle;
 
 	void start()
 	{
@@ -233,48 +234,47 @@ struct HSimple : public fortran::HBase
 
     void log(const char* call)
     {
-        fputs(call, trace);
-        putc('\n', trace);
+        fprintf(trace, "%s:%d:%s\n", trace_tag.c_str(), trace_handle, call);
     }
 
     void log_set(const char* parm, int val)
     {
-        fprintf(trace, "%s:seti %s %d\n", trace_tag.c_str(), parm, val);
+        fprintf(trace, "%s:%d:seti %s %d\n", trace_tag.c_str(), trace_handle, parm, val);
     }
 
     void log_set(const char* parm, double val)
     {
-        fprintf(trace, "%s:setd %s %f\n", trace_tag.c_str(), parm, val);
+        fprintf(trace, "%s:%d:setd %s %f\n", trace_tag.c_str(), trace_handle, parm, val);
     }
 
     void log_set(const char* parm, const char* val)
     {
-        fprintf(trace, "%s:setd %s %s\n", trace_tag.c_str(), parm, val);
+        fprintf(trace, "%s:%d:setd %s %s\n", trace_tag.c_str(), trace_handle, parm, val);
     }
 
     void log_setlevel(int ltype1, int l1, int ltype2, int l2)
     {
-        fprintf(trace, "%s:setlevel %d,%d %d,%d\n", trace_tag.c_str(), ltype1, l1, ltype2, l2);
+        fprintf(trace, "%s:%d:setlevel %d,%d %d,%d\n", trace_tag.c_str(), trace_handle, ltype1, l1, ltype2, l2);
     }
 
     void log_settimerange(int pind, int p1, int p2)
     {
-        fprintf(trace, "%s:settimerange %d,%d,%d\n", trace_tag.c_str(), pind, p1, p2);
+        fprintf(trace, "%s:%d:settimerange %d,%d,%d\n", trace_tag.c_str(), trace_handle, pind, p1, p2);
     }
 
     void log_setdate(int y, int m, int d, int ho, int mi, int se)
     {
-        fprintf(trace, "%s:setdate %04d-%02d-%02d %02d:%02d:%02d\n", trace_tag.c_str(), y, m, d, ho, mi, se);
+        fprintf(trace, "%s:%d:setdate %04d-%02d-%02d %02d:%02d:%02d\n", trace_tag.c_str(), trace_handle, y, m, d, ho, mi, se);
     }
 
     void log_unset(const char* parm)
     {
-        fprintf(trace, "%s:unset %s\n", trace_tag.c_str(), parm);
+        fprintf(trace, "%s:%d:unset %s\n", trace_tag.c_str(), trace_handle, parm);
     }
 
     void log_scopa(const char* fname)
     {
-        fprintf(trace, "%s:scopa '%s'\n", trace_tag.c_str(), fname);
+        fprintf(trace, "%s:%d:scopa '%s'\n", trace_tag.c_str(), trace_handle, fname);
     }
 };
 
@@ -511,6 +511,7 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 		h.api = new fortran::DbAPI(*hs.db, c_anaflag, c_dataflag, c_attrflag);
         h.trace = hs.trace;
         h.trace_tag = hs.trace_tag;
+        h.trace_handle = *handle;
 
 		return fortran::success();
 	} catch (error& e) {
