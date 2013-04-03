@@ -132,8 +132,8 @@ static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyOb
 static PyMethodDef dballe_methods[] = {
     {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, "Query the DB-All.e variable table returning a Varinfo" },
     {"var", (PyCFunction)dballe_var, METH_VARARGS, "Query the DB-All.e variable table returning a Var, optionally initialized with a value" },
-    {"describe_level", (PyCFunction)dballe_describe_level, METH_VARARGS, "Return a string description for a level" },
-    {"describe_trange", (PyCFunction)dballe_describe_trange, METH_VARARGS, "Return a string description for a time range" },
+    {"describe_level", (PyCFunction)dballe_describe_level, METH_VARARGS | METH_KEYWORDS, "Return a string description for a level" },
+    {"describe_trange", (PyCFunction)dballe_describe_trange, METH_VARARGS | METH_KEYWORDS, "Return a string description for a time range" },
     { NULL }
 };
 
