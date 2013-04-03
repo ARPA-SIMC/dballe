@@ -127,10 +127,13 @@ public:
     void add_D02035();
     // Icing and ice
     void add_D02055();
+    void add_ecmwf_ice();
     // ship: visibility data
     void add_D02053();
     // Ship marine data
     void add_D02056();
+    // Sea waves
+    void add_plain_waves();
     // Ship waves (wind and swell)
     void add_D02024();
 

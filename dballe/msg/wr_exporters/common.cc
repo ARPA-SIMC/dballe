@@ -884,6 +884,17 @@ void CommonSynopExporter::add_D02055()
     add(WR_VAR(0, 20,  38), c_surface_instant);
 }
 
+void CommonSynopExporter::add_ecmwf_ice()
+{
+    add(WR_VAR(0, 20,  33), c_surface_instant);
+    add(WR_VAR(0, 20,  31), c_surface_instant);
+    add(WR_VAR(0, 20,  32), c_surface_instant);
+    add(WR_VAR(0, 20,  34), c_surface_instant);
+    add(WR_VAR(0, 20,  37), c_surface_instant);
+    add(WR_VAR(0, 20,  38), c_surface_instant);
+    add(WR_VAR(0, 20,  36), c_surface_instant);
+}
+
 void CommonSynopExporter::add_D02056()
 {
     add(WR_VAR(0,  2,  38), c_ana);
@@ -899,6 +910,13 @@ void CommonSynopExporter::add_D02056()
         subset->store_variable_undef(WR_VAR(0, 22, 43));
     }
     subset->store_variable_undef(WR_VAR(0,  7, 63));
+}
+
+void CommonSynopExporter::add_plain_waves()
+{
+    add(WR_VAR(0, 22,   1), c_surface_instant);
+    add(WR_VAR(0, 22,  11), c_surface_instant);
+    add(WR_VAR(0, 22,  21), c_surface_instant);
 }
 
 void CommonSynopExporter::add_D02024()

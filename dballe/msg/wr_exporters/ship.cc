@@ -237,6 +237,95 @@ struct ShipReduced : public ShipECMWFBase
     }
 };
 
+struct ShipECMWFSecondRecord : public ShipBase
+{
+    ShipECMWFSecondRecord(const Exporter::Options& opts, const Msgs& msgs)
+        : ShipBase(opts, msgs) {}
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        ShipBase::setupBulletin(bulletin);
+
+        // Use old table for old templates
+        if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
+        {
+            b->master_table = 13;
+        }
+
+        bulletin.type = 1;
+        bulletin.subtype = 255;
+        bulletin.localsubtype = 12;
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        bulletin.datadesc.push_back(WR_VAR(3,  1,  36));
+        bulletin.datadesc.push_back(WR_VAR(0, 12,  15));
+        bulletin.datadesc.push_back(WR_VAR(0, 12,  14));
+        bulletin.datadesc.push_back(WR_VAR(3,  2,  24));
+        bulletin.datadesc.push_back(WR_VAR(0, 22,   1));
+        bulletin.datadesc.push_back(WR_VAR(0, 22,  11));
+        bulletin.datadesc.push_back(WR_VAR(0, 22,  21));
+        bulletin.datadesc.push_back(WR_VAR(0, 13,  31));
+        bulletin.datadesc.push_back(WR_VAR(0, 14,  15));
+        bulletin.datadesc.push_back(WR_VAR(0, 14,  31));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  63));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  63));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  63));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  63));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  33));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  31));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  32));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  34));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  37));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  38));
+        bulletin.datadesc.push_back(WR_VAR(0, 20,  36));
+        if (!is_crex)
+        {
+            bulletin.datadesc.push_back(WR_VAR(2, 22,   0));
+            bulletin.datadesc.push_back(WR_VAR(1,  1,  39));
+            bulletin.datadesc.push_back(WR_VAR(0, 31,  31));
+            bulletin.datadesc.push_back(WR_VAR(0,  1,  31));
+            bulletin.datadesc.push_back(WR_VAR(0,  1,  32));
+            bulletin.datadesc.push_back(WR_VAR(1,  1,  39));
+            bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
+        }
+    }
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        ShipBase::to_subset(msg, subset);
+
+        synop.add_ship_head();
+        synop.add_year_to_minute();
+        synop.add_latlon_coarse();
+
+        subset.store_variable_undef(WR_VAR(0, 12,  15)); // MINIMUM TEMPERATURE AT 2M, PAST 12 HOURS
+        subset.store_variable_undef(WR_VAR(0, 12,  14)); // MAXIMUM TEMPERATURE AT 2M, PAST 12 HOURS
+        synop.add_D02024();
+        synop.add_plain_waves();
+        subset.store_variable_undef(WR_VAR(0, 13,  31)); // EVAPOTRANSPIRATION
+        subset.store_variable_undef(WR_VAR(0, 14,  15)); // NET RADIATION INTEGRATED OVER 24HOURS
+        subset.store_variable_undef(WR_VAR(0, 14,  31)); // TOTAL SUNSHINE
+        subset.store_variable_undef(WR_VAR(0, 20,  63)); // SPECIAL PHENOMENA
+        subset.store_variable_undef(WR_VAR(0, 20,  63)); // SPECIAL PHENOMENA
+        subset.store_variable_undef(WR_VAR(0, 20,  63)); // SPECIAL PHENOMENA
+        subset.store_variable_undef(WR_VAR(0, 20,  63)); // SPECIAL PHENOMENA
+        synop.add_ecmwf_ice();
+
+        if (!is_crex)
+        {
+            subset.append_fixed_dpb(WR_VAR(2, 22, 0), 39);
+            if (opts.centre != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 31), opts.centre);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 31));
+            if (opts.application != MISSING_INT)
+                subset.store_variable_i(WR_VAR(0, 1, 32), opts.application);
+            else
+                subset.store_variable_undef(WR_VAR(0, 1, 32));
+        }
+    }
+};
+
 // Template for WMO ships
 struct ShipWMO : public ShipBase
 {
@@ -303,9 +392,7 @@ struct ShipWMO : public ShipBase
         // Ship marine data
         synop.add_D02056();
         // Waves
-        add(WR_VAR(0, 22,   1), WR_VAR(0, 22,   1), Level(1), Trange::instant());
-        add(WR_VAR(0, 22,  11), WR_VAR(0, 22,  11), Level(1), Trange::instant());
-        add(WR_VAR(0, 22,  21), WR_VAR(0, 22,  21), Level(1), Trange::instant());
+        synop.add_plain_waves();
         // Wind and swell waves
         synop.add_D02024();
         // Ship "period" data
