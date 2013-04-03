@@ -331,7 +331,7 @@ static PyObject* dpy_Record_set_from_string(dpy_Record* self, PyObject *args)
 static PyMethodDef dpy_Record_methods[] = {
     {"clear", (PyCFunction)dpy_Record_clear, METH_NOARGS, "remove all data from the record" },
     {"clear_vars", (PyCFunction)dpy_Record_clear_vars, METH_NOARGS, "remove all variables from the record, leaving the keywords intact" },
-    {"get", (PyCFunction)dpy_Record_get, METH_VARARGS, "lookup a value, returning a fallback value (None by default) if unset" },
+    {"get", (PyCFunction)dpy_Record_get, METH_VARARGS | METH_KEYWORDS, "lookup a value, returning a fallback value (None by default) if unset" },
     {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
     {"var", (PyCFunction)dpy_Record_var, METH_VARARGS, "return a variable from the record. If no varcode is given, use record['var']" },
     {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a sequence with all the varcodes of the variables set on the Record. Note that this does not include keys." },
