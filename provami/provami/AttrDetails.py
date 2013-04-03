@@ -109,7 +109,7 @@ class AttributeTable(ResultTable):
         self.varcode = var
 
         if context is not None:
-            attrs = self.model.db.query_attrs(context, var)
+            attrs = self.model.db.query_attrs(var, context)
 
             for var in attrs:
                 self.items.append(attrs.var(var))
