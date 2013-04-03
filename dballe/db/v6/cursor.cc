@@ -1124,7 +1124,7 @@ void QueryBuilder::make_where(const Record& rec)
         }
 
         if (rec.key_peek_value(DBA_KEY_CONTEXT_ID) != NULL ||
-            minvalues[0] == 1000 || maxvalues[0] == 1000)
+            minvalues[0] == 1000 || maxvalues[0] == 1000 || modifiers & DBA_DB_MODIFIER_ANAEXTRA)
             query_station_vars = true;
 
         if (modifiers & DBA_DB_MODIFIER_NOANAEXTRA)
