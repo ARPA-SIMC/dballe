@@ -1374,7 +1374,8 @@ c     Insert data about a station
       call idba_prendilo (handle)
 
 c     Read the station ID for the station we just inserted
-      call idba_enqi (handle, "ana_id", anaid)
+c     Use *ana_id instead of ana_id after an idba_prendilo
+      call idba_enqi (handle, "*ana_id", anaid)
 
 c     Reset the input data
       call idba_unsetall (handle)
