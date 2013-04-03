@@ -16,7 +16,7 @@ endif
 
 pyexec_LTLIBRARIES = _dballe.la
 
-nodist__dballe_la_SOURCES = \
+_dballe_la_SOURCES = \
     common.cc \
     vartable.cc \
     varinfo.cc \
@@ -24,7 +24,7 @@ nodist__dballe_la_SOURCES = \
     record.cc \
     dballe.cc
 if DO_DBALLE_DB
-nodist__dballe_la_SOURCES += \
+_dballe_la_SOURCES += \
     db.cc \
     cursor.cc
 endif
