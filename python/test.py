@@ -166,6 +166,7 @@ class RecordTest(unittest.TestCase):
         self.r["date"] = dt.datetime(2007, 2, 1, 1, 2, 3)
         self.r["level"] = 105, 2
         self.r["timerange"] = 2, 3, 4
+        self.r["var"] = "B12101"
         self.r["B12101"] = 285.0
         self.knownkeys = ["lat", "lon", "year", "month", "day", "hour", "min", "sec", "leveltype1", "l1", "leveltype2", "l2", "pindicator", "p1", "p2"]
         self.knownvars = ["B12101", "B01002", "B01001"]
@@ -177,6 +178,11 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(self.r.get(key="block"), 1)
         self.assertEqual(self.r.get(key="ana_id", default="ciao"), "ciao")
         self.assertEqual(self.r.get("ana_id", default="ciao"), "ciao")
+
+    def testVar(self):
+        self.assertEqual(self.r.var().code, "B12101")
+        self.assertEqual(self.r.var("B12101").code, "B12101")
+        self.assertEqual(self.r.var(code="B12101").code, "B12101")
 
     def testMulti(self):
         self.assertEqual(self.r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
