@@ -249,7 +249,7 @@ struct HSimple : public fortran::HBase
 
     void log_set(const char* parm, const char* val)
     {
-        fprintf(trace, "%s:%d:setd %s %s\n", trace_tag.c_str(), trace_handle, parm, val);
+        fprintf(trace, "%s:%d:setc %s %s\n", trace_tag.c_str(), trace_handle, parm, val);
     }
 
     void log_setlevel(int ltype1, int l1, int ltype2, int l2)
@@ -1074,7 +1074,7 @@ F77_INTEGER_FUNCTION(idba_setc)(
 		}
 		else
         {
-            if (h.trace) h.log_set(parm, *value);
+            if (h.trace) h.log_set(parm, val);
 			h.api->setc(parm, val);
         }
 
