@@ -282,7 +282,11 @@ std::string Trange::describe() const
 		case 203: return mkdesc("Vectorial maximum", p1, p2);
 		case 204: return mkdesc("Vectorial minimum", p1, p2);
 		case 205: return mkdesc("Product with a valid time ranging", p1, p2);
-		case 254: return "Instantaneous value";
+		case 254:
+			  if (p1 == 0 && p2 == 0)
+				  return "Instantaneous value";
+			  else
+				  return "Instantaneous value forecast at t+" + format_seconds(p1);
 		default:  return fmtf("%d %d %d", pind, p1, p2);
 	}
 }
