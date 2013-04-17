@@ -356,7 +356,7 @@ std::string Connection::get_setting(const std::string& key)
     SQLLEN result_len;
 
     Statement stm(*this);
-    stm.prepare("SELECT value FROM dballe_settings WHERE key=?");
+    stm.prepare("SELECT value FROM dballe_settings WHERE `key`=?");
     stm.bind_in(1, key.data(), key.size());
     stm.bind_out(1, result, 64, result_len);
     stm.execute();
@@ -371,15 +371,15 @@ void Connection::set_setting(const std::string& key, const std::string& value)
     Statement stm(*this);
 
     if (!has_table("dballe_settings"))
-        stm.exec_direct("CREATE TABLE dballe_settings (key CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
+        stm.exec_direct("CREATE TABLE dballe_settings (`key` CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
 
     // Remove if it exists
-    stm.prepare("DELETE FROM dballe_settings WHERE key=?");
+    stm.prepare("DELETE FROM dballe_settings WHERE `key`=?");
     stm.bind_in(1, key.data(), key.size());
     stm.execute_and_close();
 
     // Then insert it
-    stm.prepare("INSERT INTO dballe_settings (key, value) VALUES (?, ?)");
+    stm.prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
     stm.bind_in(1, key.data(), key.size());
     stm.bind_in(2, value.data(), value.size());
     stm.execute_and_close();
