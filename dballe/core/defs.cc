@@ -284,9 +284,9 @@ std::string Trange::describe() const
 		case 205: return mkdesc("Product with a valid time ranging", p1, p2);
 		case 254:
 			  if (p1 == 0 && p2 == 0)
-				  return "Instantaneous value";
+				  return "Analysis or observation, istantaneous value";
 			  else
-				  return "Instantaneous value forecast at t+" + format_seconds(p1);
+				  return "Forecast at t+" + format_seconds(p1) + ", instantaneous value";
 		default:  return fmtf("%d %d %d", pind, p1, p2);
 	}
 }
