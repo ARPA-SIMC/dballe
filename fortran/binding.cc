@@ -225,6 +225,7 @@ struct HSimple : public fortran::HBase
 	{
 		fortran::HBase::start();
 		api = 0;
+		trace = 0;
 	}
 	void stop()
 	{
