@@ -1,15 +1,14 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 4.0.18
-Release: 2513%{dist}
+Version: 6.0
+Release: 3878%{dist}
 License: GPL
 Group: Applications/Meteo
 URL: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils
-#Requires:  mysql >= 4.1.1 ,mysql-connector-odbc, sqlite sqliteodbc, %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-Requires:  %{name}-common = %{?epoch:%epoch:}%{version}-%{release} unixODBC sqliteodbc
+BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 2.5 , libwibble-devel >= 0.1.27 , swig , python-devel, popt-devel
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release} unixODBC sqliteodbc mysql-connector-odbc
 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
@@ -58,7 +57,7 @@ Requires:  %{name}-common = %{?epoch:%epoch:}%{version}-%{release} unixODBC sqli
 %package  -n provami
 Summary: Graphical interface to DB-All.e databases
 Group: Applications/Meteo
-requires: wxPython, dballe >= 3.0-1 ,rpy, numpy
+requires: python-dballe, wxPython, dballe = %{?epoch:%epoch:}%{version}-%{release} ,rpy, numpy
 
 %description -n provami
  provami is a GUI application to visualise and navigate DB-All.e databases.
@@ -69,7 +68,8 @@ requires: wxPython, dballe >= 3.0-1 ,rpy, numpy
 %package  -n libdballe-devel
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
-Requires: lib%{name}4 = %{?epoch:%epoch:}%{version}-%{release}
+Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel
+Obsoletes: libdballepp-devel 
 
 %description -n libdballe-devel
  DB-ALL.e core C development library
@@ -109,16 +109,17 @@ Group: Applications/Meteo
  This is the documentation for the core DB_All.e development library.
 
 
-%package  -n libdballe4
+%package  -n libdballe6
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Obsoletes: libdballe5, libdballe4, libdballepp4 
 
-%description -n libdballe4
+%description -n libdballe6
 DB-ALL.e C shared library
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
- .
+ 
  This is the shared library for C programs.
 
 
@@ -126,7 +127,7 @@ DB-ALL.e C shared library
 
 Summary:  DB-All.e Fortran development library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},lib%{name}f-devel = %{?epoch:%epoch:}%{version}-%{release}
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, cnf-devel
 
 %description -n libdballef-devel
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -163,36 +164,6 @@ Common data files for all DB-All.e modules
  BUFR and CREX decoding tables, report metadata, level and time range
  descriptions.
 
-
-
-
-%package -n libdballepp4
-
-Summary:  DB-ALL.e C++ shared library
-Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-%description -n libdballepp4
- Database for punctual meteorological data (C++ shared library)
- DB-All.e is a fast on-disk database where meteorological observed and
- forecast data can be stored, searched, retrieved and updated.
- .
- This is the shared library for C++ programs.
-
-
-%package -n  libdballepp-devel
-Summary:  DB-All.e C++ development library
-Group:    Applications/Meteo
-Requires: lib%{name}-devel = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}4  = %{?epoch:%epoch:}%{version}-%{release}, lib%{name}pp4 = %{?epoch:%epoch:}%{version}-%{release} 
-
-%description -n libdballepp-devel
- Database for punctual meteorological data (C++ development library) 
- DB-All.e is a fast on-disk database where meteorological observed and
- forecast data can be stored, searched, retrieved and updated.
- .
- This is the DB-All.e C++ API, a thin wrapper around the C API that takes
- advantage of C++ features.
-
-
 %package -n python-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
@@ -210,30 +181,22 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},rpy,numpy
 %setup -q 
 
 %build
-### configure  pyexecdir=%{python_sitearch}/dballe pkgpythondir=%{python_sitelib}/dballe
-%configure --disable-rpath FC=gfortran F90=gfortan F77=gfortran --enable-dballe-bufrex --enable-dballe-msg --enable-dballe-db --enable-dballepp --enable-dballef --enable-dballe-python --enable-docs
 
-# do not work smp
-#make %{?_smp_mflags}
+### opzioni configure probabilmente obsolete: --disable-rpath   --enable-dballe-msg
+%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballe-db  --enable-dballef --enable-dballe-python --enable-docs
 
 make
-
-#make SITELIB=%{python_sitelib}
-#make  pyexecdir=%{python_sitearch}/dballe pkgpythondir=%{python_sitelib}/dballe
 
 #make check
 
 %install
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
 
-#make install DESTDIR=$RPM_BUILD_ROOT pyexecdir=%{python_sitearch}/dballe  pkgpythondir=%{python_sitelib}/dballe
-#make install DESTDIR=$RPM_BUILD_ROOT SITELIB=%{python_sitelib}
-
-make install DESTDIR=$RPM_BUILD_ROOT
+make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 %clean
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
-#rm -rf $RPM_BUILD_ROOT
+
 
 
 %files
@@ -266,11 +229,11 @@ make install DESTDIR=$RPM_BUILD_ROOT
 
 %files common
 %defattr(-,root,root,-)
-/usr/share/dballe/[DB]*
-/usr/share/dballe/dballe.txt
-/usr/share/dballe/repinfo.csv
+%{_datadir}/wreport/[BD]*
+%{_datadir}/wreport/dballe.txt
+%{_datadir}/wreport/repinfo.csv
 
-%files -n libdballe4
+%files -n libdballe6
 %defattr(-,root,root,-)
 %{_libdir}/libdballe.so.*
 #%{_libdir}/libdballe[0-9]*.so.*
@@ -279,10 +242,10 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %doc %{_docdir}/dballe/libdballe.doxytags
 %{_includedir}/dballe/core/*
-%{_includedir}/dballe/bufrex/*
 %{_includedir}/dballe/msg/*
 %{_includedir}/dballe/db/*
-%{_includedir}/dballe/init.h
+%{_includedir}/dballe/cmdline/*
+%{_includedir}/dballe/simple/*
 
 %{_libdir}/libdballe.a
 %{_libdir}/libdballe.la
@@ -326,24 +289,6 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %doc %{_docdir}/dballe/python-dballe*
 
 
-%files -n libdballepp4
-%defattr(-,root,root,-)
-%{_libdir}/libdballepp*.so.*
-
-%files -n libdballepp-devel
-%defattr(-,root,root,-)
-
-%doc %{_docdir}/dballe/libdballepp.doxytags
-%doc %{_docdir}/dballe/c++_api
-
-%{_includedir}/dballe++
-%{_libdir}/libdballepp*.a
-%{_libdir}/pkgconfig/libdballepp*
-%{_libdir}/libdballepp*.la
-%{_libdir}/libdballepp*.so
-/usr/share/aclocal/libdballepp.m4
-
-
 %files -n libdballe-doc
 %defattr(-,root,root,-)
 %doc %{_docdir}/dballe/c_api
@@ -357,23 +302,38 @@ make install DESTDIR=$RPM_BUILD_ROOT
 
 
 %changelog
+* Thu May 23 2013 Daniele Branchini <dbranchini@arpa.emr.it> - 6.0-3878%{dist}
+- Fixed segfault bug on idba_messaggi
+
+* Wed Aug 29 2012 Daniele Branchini <dbranchini@arpa.emr.it> - 5.22-3684%{dist}
+- corretto bug in provami su query
+
+* Tue Jun 12 2012 Daniele Branchini <dbranchini@arpa.emr.it> - 5.19-3633%{dist}
+- Aggiornato a revisione 3633
+
+* Tue May  8 2012 Daniele Branchini <dbranchini@arpa.emr.it> - 5.17-3621%{dist}
+- Nuova variabile bagnatura fogliare
+
+* Tue Jul 19 2011 root <root@pigna> - 5.7-3390%{dist}
+- port to wreport 2.0
+
 * Thu Jul  8 2010 Daniele Branchini <dbranchini@carenza.metarpa> - 4.0.18-2513%{dist}
 - Aggiornato alla revisione 2513
 
 * Thu Feb 25 2010 Daniele Branchini <dbranchini@localhost.localdomain> - 4.0.16-2451
 - corretta sintassi release di pacchettizzazione
 
-* Tue Nov 11 2008 root <root@strip.metarpa> - %epoch:}%{version}-%{release}:4.0.8-1
+* Tue Nov 11 2008 root <root@strip.metarpa> - 4.0.8-1
 - bug resolved about units conversion in import/export and template used in api query message
 
-* Wed Oct 29 2008 root <root@strip.metarpa> - %epoch:}%{version}-%{release}:4.0.7-1
+* Wed Oct 29 2008 root <root@strip.metarpa> - 4.0.7-1
 - bug on query best corrected
 
-* Wed Apr  2 2008 root <root@localhost.localdomain> - %epoch:}%{version}-%{release}:4.0.0-8
+* Wed Apr  2 2008 root <root@localhost.localdomain> - 4.0.0-8
 - added some units conversion
 
-* Tue Mar 18 2008 root <root@spinacio> - %epoch:}%{version}-%{release}:4.0.0-4
-- new pachage (less pachages)
+* Tue Mar 18 2008 root <root@spinacio> - 4.0.0-4
+- new package (less packages)
 
 * Tue Dec 19 2006 root <root@strip.metarpa> - 3.0-1
 - spitted in more packages for version 3.0
