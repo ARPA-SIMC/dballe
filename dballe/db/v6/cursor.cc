@@ -709,7 +709,7 @@ void QueryBuilder::resolve_dependencies()
     if (wanted & DBA_DB_WANT_LEVEL)
         from_wanted |= DBA_DB_FROM_LTR | DBA_DB_FROM_D;
     if (wanted & DBA_DB_WANT_TIMERANGE)
-        from_wanted |= DBA_DB_FROM_LTR;
+        from_wanted |= DBA_DB_FROM_LTR | DBA_DB_FROM_D;
     if (wanted & DBA_DB_WANT_DATETIME)
         from_wanted |= DBA_DB_FROM_D;
     if (wanted & DBA_DB_WANT_REPCOD)

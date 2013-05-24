@@ -1019,6 +1019,7 @@ void db_shar::test_bug_query_levels_by_station()
     query.clear();
     query.set(DBA_KEY_ANA_ID, 1);
     db->query_levels(query);
+    db->query_tranges(query);
 }
 
 }
