@@ -465,6 +465,17 @@ class RecordTest(unittest.TestCase):
         self.assertTrue(a != b)
         self.assertFalse(a == b)
 
+    def testSetTuplesToNone(self):
+        a = dballe.Record(level=(1, 2, 3, 4), trange=(1, 2, 3))
+        self.assertEquals(a["level"], (1, 2, 3, 4))
+        self.assertEquals(a["trange"], (1, 2, 3))
+        a["level"] = None
+        self.assertEquals(a["level"], (None, None, None, None))
+        self.assertEquals(a["trange"], (1, 2, 3))
+        a["trange"] = None
+        self.assertEquals(a["level"], (None, None, None, None))
+        self.assertEquals(a["trange"], (None, None, None))
+
 class DescribeTest(unittest.TestCase):
     def testLevel(self):
         self.assertIn("surface", dballe.describe_level(1))

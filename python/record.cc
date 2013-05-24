@@ -478,7 +478,7 @@ static PyObject* rec_to_level(dpy_Record* self)
 
 static int rec_tuple_to_keys(dpy_Record* self, PyObject* val, dba_keyword* keys, unsigned len)
 {
-    if (val == NULL)
+    if (val == NULL || val == Py_None)
     {
         for (unsigned i = 0; i < len; ++i)
             self->rec.unset(keys[i]);
