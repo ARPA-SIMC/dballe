@@ -1,7 +1,8 @@
 dballe (6.1-1) UNRELEASED; urgency=low
 
   * New upstream release
-     + Allow levels and time ranges to be set to None in the python interface
+     - python: allow levels and time ranges to be set to None
+     - provami: filtering by one station doesn't raise a SQL exception anymore
 
  -- Enrico Zini <enrico@debian.org>  Fri, 24 May 2013 17:43:49 +0200
 
