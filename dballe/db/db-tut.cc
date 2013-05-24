@@ -61,6 +61,7 @@ struct db_shar : public dballe::tests::DB_test_base
     void test_datetime_extremes();
     void test_bug_querybest();
     void test_bug_query_stations_by_level();
+    void test_bug_query_levels_by_station();
 };
 TESTGRP(db);
 
@@ -1005,6 +1006,19 @@ void db_shar::test_bug_query_stations_by_level()
     query.set(DBA_KEY_LEVELTYPE1, 103);
     query.set(DBA_KEY_L1, 2000);
     db->query_stations(query);
+}
+
+template<> template<> void to::test<35>() { use_db(V5); test_bug_query_levels_by_station(); }
+template<> template<> void to::test<36>() { use_db(V6); test_bug_query_levels_by_station(); }
+void db_shar::test_bug_query_levels_by_station()
+{
+    // Reproduce a query that generated invalid SQL on V6
+    populate_database();
+
+    // All DB
+    query.clear();
+    query.set(DBA_KEY_ANA_ID, 1);
+    db->query_levels(query);
 }
 
 }
