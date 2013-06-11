@@ -86,6 +86,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v6/attr.h \
 	db/v6/lev_tr.h \
 	db/v6/cursor.h \
+	db/v6/qbuilder.h \
 	db/v6/data.h \
 	cmdline/dbadb.h \
 	simple/dbapi.h
@@ -165,6 +166,7 @@ libdballe_la_SOURCES += \
 	db/v6/attr.cc \
 	db/v6/db.cc \
 	db/v6/cursor.cc \
+	db/v6/qbuilder.cc \
 	db/v6/import.cc \
 	db/v6/export.cc \
 	cmdline/dbadb.cc \

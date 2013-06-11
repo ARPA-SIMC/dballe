@@ -168,6 +168,15 @@ protected:
     /// Query extra station info and add it to \a rec
     void add_station_info(Record& rec);
 
+    /// Query count of items (only for stations and data)
+    int query_count(db::Statement& stm, const Record& rec);
+    /// Query station info
+    int query_stations(db::Statement& stm, const Record& rec);
+    /// Query data
+    int query_data(db::Statement& stm, const Record& rec);
+    /// Query stats about all possible context combinations
+    void query_summary(db::Statement& stm, const Record& rec);
+
     /**
      * Perform the raw sql query
      *
