@@ -51,7 +51,7 @@ namespace v6 {
  */
 
 static const char* init_tables[] = {
-    // Delete 'pseudoana' to clean up pre-5.0 databases
+    // Delete 'context' to clean up pre-5.0 databases
     "attr", "data", "context", "lev_tr", "repinfo", "pseudoana"
 };
 static const char* init_sequences[] = {
