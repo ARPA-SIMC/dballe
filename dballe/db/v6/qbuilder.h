@@ -36,7 +36,7 @@
 #include "cursor.h"
 #include <regex.h>
 
-
+#if 0
 /**
  * Constants used to define what is needed from the FROM part of the query
  */
@@ -60,10 +60,27 @@
 /** Add an extra attr table as 'adf' to the FROM part of the query, to restrict
  * the query on variable attributes */
 #define DBA_DB_FROM_ADF         (1 << 9)
+#endif
 
 namespace dballe {
 namespace db {
 namespace v6 {
+
+/**
+ * Copies of bind values that cannot be bound to data inside the query
+ * Record
+ */
+struct ExtraQueryArgs
+{
+    /// Minimum datetime
+    SQL_TIMESTAMP_STRUCT    sel_dtmin;
+    /// Maximum datetime
+    SQL_TIMESTAMP_STRUCT    sel_dtmax;
+    /// Positional sequence number to use to bind ODBC input parameters
+    unsigned int input_seq;
+
+    ExtraQueryArgs() : input_seq(1) {};
+};
 
 struct QueryBuilder
 {
@@ -76,17 +93,32 @@ struct QueryBuilder
     /** Cursor with the output variables */
     Cursor& cur;
 
+    /// Record with the query
+    const Record& rec;
+
     /** Dynamically generated SQL query */
     Querybuf sql_query;
 
-    /** WHERE subquery */
+    /// FROM part of the SQL query
+    Querybuf sql_from;
+
+    /// WHERE part of the SQL query
     Querybuf sql_where;
 
+    /// Modifier flags to enable special query behaviours
+    const unsigned int modifiers;
+
+    ExtraQueryArgs qargs;
+
+    /// Sequence number to use to bind ODBC output parameters
+    unsigned int output_seq;
+
+    /// True if we are querying station information, rather than measured data
+    bool query_station_vars;
+
+#if 0
     /** What values are wanted from the query */
     unsigned int wanted;
-
-    /** Modifier flags to enable special query behaviours */
-    unsigned int modifiers;
 
     /** What is needed from the SELECT part of the query */
     unsigned int select_wanted;
@@ -94,36 +126,30 @@ struct QueryBuilder
     /** What is needed from the FROM part of the query */
     unsigned int from_wanted;
 
-    /** Sequence number to use to bind ODBC input parameters */
-    unsigned int input_seq;
-
-    /** Sequence number to use to bind ODBC output parameters */
-    unsigned int output_seq;
-
-    /** True if we also accept results from the anagraphical context */
-    bool query_station_vars;
-
     /// true if we have already appended the "ORDER BY" clause to the query
     bool has_orderby;
+#endif
 
-    /** Selection parameters (input) for the query
-     * @{
-     */
-    SQL_TIMESTAMP_STRUCT    sel_dtmin;
-    SQL_TIMESTAMP_STRUCT    sel_dtmax;
-    char    sel_ident[64];
-    /** @} */
+    QueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers);
+    virtual ~QueryBuilder() {}
 
-    QueryBuilder(DB& db, Statement& stm, Cursor& cur, int wanted, int modifiers)
-        : db(db), stm(stm), cur(cur), sql_query(2048), sql_where(1024),
-          wanted(wanted), modifiers(modifiers),
-          select_wanted(0), from_wanted(0), input_seq(1), output_seq(1),
-          query_station_vars(false), has_orderby(false) {}
+    void build();
 
-    void build_query_stations(db::Statement& stm, const Record& rec);
+protected:
+    // Add WHERE conditions
+    bool add_pa_where(const char* tbl);
+    bool add_dt_where(const char* tbl);
+    bool add_ltr_where(const char* tbl);
+    bool add_varcode_where(const char* tbl);
+    bool add_repinfo_where(const char* tbl);
+    bool add_datafilter_where(const char* tbl);
+    bool add_attrfilter_where(const char* tbl);
 
-    void build_query_data(db::Statement& stm, const Record& rec);
+    virtual void build_select() = 0;
+    virtual bool build_where() = 0;
+    virtual void build_order_by() = 0;
 
+#if 0
     /**
      * Add one or more fields to the ORDER BY part of sql_query.
      */
@@ -137,12 +163,6 @@ struct QueryBuilder
      *   joined
      */
     void add_other_froms(unsigned int base, const Record& rec);
-
-    /**
-     * Add an extra data table to the join, set to act as a filter on the
-     * station level
-     */
-    void add_station_filter(Querybuf& q, const char* name, const char* extra_query=NULL);
 
     /// Resolve table/field dependencies adding the missing bits to from_wanted
     void resolve_dependencies();
@@ -176,6 +196,48 @@ struct QueryBuilder
 
     /// Build the query with just a select for date extremes
     void build_date_extremes_query(const Record& rec);
+#endif
+};
+
+struct StationQueryBuilder : public QueryBuilder
+{
+    StationQueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
+        : QueryBuilder(db, stm, cur, rec, modifiers) {}
+
+    virtual void build_select();
+    virtual bool build_where();
+    virtual void build_order_by();
+};
+
+struct DataQueryBuilder : public QueryBuilder
+{
+    int query_data_id;
+
+    DataQueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers);
+
+    virtual void build_select();
+    virtual bool build_where();
+    virtual void build_order_by();
+};
+
+struct IdQueryBuilder : public DataQueryBuilder
+{
+    IdQueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
+        : DataQueryBuilder(db, stm, cur, rec, modifiers) {}
+
+    virtual void build_select();
+    virtual void build_order_by();
+};
+
+struct SummaryQueryBuilder : public DataQueryBuilder
+{
+    CursorSummary& cur_s;
+
+    SummaryQueryBuilder(DB& db, Statement& stm, CursorSummary& cur, const Record& rec, unsigned int modifiers)
+        : DataQueryBuilder(db, stm, cur, rec, modifiers), cur_s(cur) {}
+
+    virtual void build_select();
+    virtual void build_order_by();
 };
 
 }

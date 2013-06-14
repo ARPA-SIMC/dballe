@@ -156,13 +156,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     db::Transaction t(*conn);
 
     // The big export query
-    CursorLinear cur(*this,
-                DBA_DB_WANT_ANA_ID | DBA_DB_WANT_CONTEXT_ID |
-                DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT | DBA_DB_WANT_LEVEL |
-                DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
-                DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
-                DBA_DB_WANT_REPCOD,
-                DBA_DB_MODIFIER_SORT_FOR_EXPORT);
+    CursorData cur(*this, DBA_DB_MODIFIER_SORT_FOR_EXPORT);
             /*  DBA_DB_MODIFIER_STREAM)); */
     cur.query(rec);
 

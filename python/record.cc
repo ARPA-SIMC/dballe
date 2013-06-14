@@ -416,7 +416,7 @@ static PyObject* rec_to_datetime(dpy_Record* self, dba_keyword* keys)
 
 static int datetime_to_rec(dpy_Record* self, PyObject* dt, dba_keyword* keys)
 {
-    if (dt == NULL)
+    if (dt == NULL || dt == Py_None)
     {
         for (unsigned i = 0; i < 6; ++i)
             self->rec.unset(keys[i]);

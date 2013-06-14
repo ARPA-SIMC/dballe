@@ -111,55 +111,23 @@ class DballeTest(unittest.TestCase):
             self.assertEqual(var.code, "B33036")
             self.assertEqual(var.enqi(), 75)
 
-    def testQueryLevels(self):
+    def testQuerySummary(self):
         query = dballe.Record()
-        cur = self.db.query_levels(query)
-        self.assertEqual(cur.remaining, 1)
+        cur = self.db.query_summary(query)
+        res = dict()
         for result in cur:
-            self.assertEqual(result["level"], (10, 11, 15, 22))
-    def testQueryTimeRanges(self):
-        query = dballe.Record()
-        cur = self.db.query_tranges(query)
-        self.assertEqual(cur.remaining, 1)
-        for result in cur:
-            self.assertEqual(result["trange"], (20, 111, 222))
-    def testQueryVariableTypes(self):
-        query = dballe.Record()
-        cur = self.db.query_variable_types(query)
-        self.assertEqual(cur.remaining, 2)
-        expected = {}
-        expected["B01011"] = 1
-        expected["B01012"] = 1
-        count = 0
-        for result in cur:
-            code = result["var"]
-            self.assertIn(code, expected)
-            del expected[code]
-            count += 1
-        self.assertEqual(count, 2)
-    def testQueryReports(self):
-        query = dballe.Record()
-        cur = self.db.query_reports(query)
-        self.assertEqual(cur.remaining, 1)
-        for result in cur:
-            self.assertEqual(result["rep_cod"], 1)
-            self.assertEqual(result["rep_memo"], "synop")
-    def testQueryDateTimes(self):
-        query = dballe.Record()
-        dmin, dmax = self.db.query_datetime_extremes(query)
-        self.assertEqual(dmin, dt.datetime(1945, 4, 25, 8, 0, 0))
-        self.assertEqual(dmax, dt.datetime(1945, 4, 25, 8, 0, 0))
+            res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
+                result["datemin"], result["datemax"], result["limit"])
+        self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01011')], (dt.datetime(1945, 4, 25, 8, 0), dt.datetime(1945, 4, 25, 8, 0), 1))
+        self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01012')], (dt.datetime(1945, 4, 25, 8, 0), dt.datetime(1945, 4, 25, 8, 0), 1))
 
-        query.update(yearmin=2000)
-        dmin, dmax = self.db.query_datetime_extremes(query)
-        self.assertIsNone(dmin)
-        self.assertIsNone(dmax)
     def testQueryExport(self):
         query = dballe.Record()
         self.db.export_to_file(query, "BUFR", "/dev/null")
         self.db.export_to_file(query, "CREX", "/dev/null")
         self.db.export_to_file(query, "BUFR", "/dev/null", generic=True)
         self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
+
     def testAttrRemove(self):
         #db.attrRemove(1, "B01011", [ "B33007" ])
         self.db.attr_remove("B01011", self.attr_ref, ("B33007",))

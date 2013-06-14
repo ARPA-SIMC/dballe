@@ -113,6 +113,13 @@ public:
      * Query attributes for the current variable
      */
     virtual unsigned query_attrs(const AttrList& qcs, Record& attrs) = 0;
+
+    /**
+     * Iterate the cursor until the end, returning the number of items.
+     *
+     * If dump is a FILE pointer, also dump the cursor values to it
+     */
+    virtual unsigned test_iterate(FILE* dump=0);
 };
 
 }
@@ -294,12 +301,17 @@ public:
     virtual std::auto_ptr<db::Cursor> query_data(const Record& rec) = 0;
 
     /**
-     * Compute the earliest and lastest datetimes for the results of the given
-     * query.
+     * Query a summary of what the result would be for a query.
      *
-     * Results are stored in \a result {year,...,sec}min and {year,...,sec}max.
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input")
+     * @return
+     *   The cursor to use to iterate over the results. The results are the
+     *   same as query_data, except that no context_id, datetime and value are
+     *   provided. Instead, min and max date
      */
-    virtual void query_datetime_extremes(const Record& query, Record& result) = 0;
+    virtual std::auto_ptr<db::Cursor> query_summary(const Record& rec) = 0;
 
     /**
      * Query attributes

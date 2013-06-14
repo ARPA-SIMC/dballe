@@ -1067,6 +1067,11 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
                 0);
 }
 
+std::auto_ptr<db::Cursor> DB::query_summary(const Record& rec)
+{
+    throw error_consistency("query_summary not implemented on v5 databases");
+}
+
 void DB::query_datetime_extremes(const Record& query, Record& result)
 {
     db::v5::Cursor cursor(*this);

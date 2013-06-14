@@ -70,7 +70,7 @@ struct Cursor : public db::Cursor
         DBALLE_SQL_C_SINT_TYPE  out_ana_id;
         DBALLE_SQL_C_SINT_TYPE  out_id_ltr; SQLLEN out_id_ltr_ind;
         DBALLE_SQL_C_SINT_TYPE  out_id_data;
-        DBALLE_SQL_C_SINT_TYPE  out_priority;
+        int priority;
 
         /**
          * Checks true if ana_id, id_ltr, datetime and varcode are the same in
@@ -84,15 +84,8 @@ struct Cursor : public db::Cursor
     /** Database to operate on */
     v6::DB& db;
 
-    /** What values are wanted from the query */
-    const unsigned int wanted;
-
     /** Modifier flags to enable special query behaviours */
     const unsigned int modifiers;
-
-    /** What is in the FROM part of the query, used to know what output fields
-     * are bound */
-    unsigned int from_wanted;
 
     /** Number of results still to be fetched */
     DBALLE_SQL_C_SINT_TYPE count;
@@ -104,19 +97,6 @@ struct Cursor : public db::Cursor
     virtual ~Cursor();
 
     /**
-     * Create and execute a database query.
-     *
-     * The results are retrieved by iterating the cursor.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input"
-     * @return
-     *   The count of items in the results
-     */
-    virtual int query(const Record& query) = 0;
-
-    /**
      * Get the number of rows still to be fetched
      *
      * @return
@@ -124,6 +104,9 @@ struct Cursor : public db::Cursor
      *   query has been successfully peformed yet using this cursor.
      */
     int remaining() const;
+
+    /// Perform the query
+    virtual void query(const Record& query) = 0;
 
     /**
      * Get a new item from the results of a query
@@ -140,19 +123,18 @@ struct Cursor : public db::Cursor
     wreport::Varcode varcode() const;
 
     /**
-     * Fill in a record with the contents of a dba_db_cursor
-     *
-     * @param rec
-     *   The record where to store the values
-     */
-    void to_record(Record& rec);
-
-    /**
      * Query attributes for the current variable
      */
     unsigned query_attrs(const AttrList& qcs, Record& attrs);
 
     virtual int attr_reference_id() const;
+
+    /**
+     * Iterate the cursor until the end, returning the number of items.
+     *
+     * If dump is a FILE pointer, also dump the cursor values to it
+     */
+    virtual unsigned test_iterate(FILE* dump=0) = 0;
 
 protected:
     /**
@@ -163,20 +145,21 @@ protected:
      * @param modifiers
      *   Optional modifiers to ask for special query behaviours
      */
-    Cursor(v6::DB& db, unsigned int wanted, unsigned int modifiers);
+    Cursor(v6::DB& db, unsigned int modifiers);
+
+    void to_record_pseudoana(Record& rec);
+    void to_record_repinfo(Record& rec);
+    void to_record_ltr(Record& rec);
+    void to_record_datetime(Record& rec);
+    void to_record_varcode(Record& rec);
+
+    int query_stations(db::Statement& stm, const Record& rec);
+    int query_data(db::Statement& stm, const Record& rec);
 
     /// Query extra station info and add it to \a rec
     void add_station_info(Record& rec);
 
-    /// Query count of items (only for stations and data)
-    int query_count(db::Statement& stm, const Record& rec);
-    /// Query station info
-    int query_stations(db::Statement& stm, const Record& rec);
-    /// Query data
-    int query_data(db::Statement& stm, const Record& rec);
-    /// Query stats about all possible context combinations
-    void query_summary(db::Statement& stm, const Record& rec);
-
+#if 0
     /**
      * Perform the raw sql query
      *
@@ -184,6 +167,7 @@ protected:
      *   the number of results
      */
     int raw_query(db::Statement& stm, const Record& rec);
+#endif
 
     /**
      * Return the number of results for a query.
@@ -194,7 +178,7 @@ protected:
      * insert/delete/update queries run between the count and the select will
      * change the size of the result set.
      */
-    int getcount(const Record& query);
+    //int getcount(const Record& query);
 };
 
 class CursorLinear : public Cursor
@@ -206,13 +190,72 @@ protected:
     /** ODBC statement to use for the query */
     db::Statement* stm;
 
-    CursorLinear(DB& db, unsigned int wanted, unsigned int modifiers);
+    CursorLinear(DB& db, unsigned int modifiers);
 
-    virtual int query(const Record& query);
-    // See DB::query_date_extremes
-    void query_datetime_extremes(const Record& query, Record& result);
     virtual void discard_rest();
     virtual bool next();
+
+    friend class dballe::db::v6::DB;
+};
+
+struct CursorStations : public CursorLinear
+{
+    /// Query station info
+    virtual void query(const Record& rec);
+    virtual void to_record(Record& rec);
+    virtual unsigned test_iterate(FILE* dump=0);
+
+protected:
+    CursorStations(DB& db, unsigned int modifiers)
+        : CursorLinear(db, modifiers) {}
+
+    friend class dballe::db::v6::DB;
+};
+
+struct CursorData : public CursorLinear
+{
+    /// Query data
+    virtual void query(const Record& rec);
+    virtual void to_record(Record& rec);
+    virtual unsigned test_iterate(FILE* dump=0);
+
+    /// Query count of items (only for stations and data)
+    //int query_count(const Record& rec);
+
+protected:
+    CursorData(DB& db, unsigned int modifiers)
+        : CursorLinear(db, modifiers) {}
+
+    friend class dballe::db::v6::DB;
+};
+
+class CursorSummary : public CursorLinear
+{
+public:
+    SQL_TIMESTAMP_STRUCT    out_datetime_max;
+
+    /// Query stats about all possible context combinations
+    virtual void query(const Record& rec);
+    virtual void to_record(Record& rec);
+    virtual unsigned test_iterate(FILE* dump=0);
+
+protected:
+    CursorSummary(DB& db, unsigned int modifiers)
+        : CursorLinear(db, modifiers) {}
+
+    friend class dballe::db::v6::DB;
+};
+
+struct CursorDataIDs : public CursorLinear
+{
+    /// Query the data IDs only, to use to delete things
+    virtual void query(const Record& rec);
+    virtual void to_record(Record& rec);
+    virtual unsigned test_iterate(FILE* dump=0);
+
+protected:
+    CursorDataIDs(DB& db, unsigned int modifiers)
+        : CursorLinear(db, modifiers) {}
 
     friend class dballe::db::v6::DB;
 };
@@ -222,12 +265,19 @@ class CursorBest : public Cursor
 public:
     virtual ~CursorBest();
 
+    virtual void query(const Record& rec);
+    virtual void to_record(Record& rec);
+    virtual unsigned test_iterate(FILE* dump=0);
+
 protected:
     FILE* results;
 
-    CursorBest(DB& db, unsigned int wanted, unsigned int modifiers);
+    CursorBest(DB& db, unsigned int modifiers);
 
-    virtual int query(const Record& query);
+    // Save all cursor results to a temp file, filtered to keep the best values
+    // only
+    int buffer_results(db::Statement& stm);
+
     virtual void discard_rest();
     virtual bool next();
 

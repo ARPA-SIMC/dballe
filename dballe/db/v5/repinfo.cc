@@ -21,8 +21,9 @@
 
 #include "repinfo.h"
 #include "dballe/db/internals.h"
-
-#include <dballe/core/csv.h>
+#include "dballe/core/defs.h"
+#include "dballe/core/record.h"
+#include "dballe/core/csv.h"
 
 #include <algorithm>
 #include <cctype>
@@ -77,9 +78,9 @@ void Repinfo::read_cache()
 	DBALLE_SQL_C_UINT_TYPE id;
 	char memo[20]; SQLLEN memo_ind;
 	char description[255]; SQLLEN description_ind;
-	DBALLE_SQL_C_SINT_TYPE prio; SQLLEN prio_ind;
+	DBALLE_SQL_C_SINT_TYPE prio;
 	char descriptor[6]; SQLLEN descriptor_ind;
-	DBALLE_SQL_C_UINT_TYPE tablea; SQLLEN tablea_ind;
+	DBALLE_SQL_C_UINT_TYPE tablea;
 
 	invalidate_cache();
 
@@ -204,6 +205,25 @@ const repinfo::Cache* Repinfo::get_by_memo(const char* memo) const
 	int pos = cache_find_by_memo(memo);
 	if (pos == -1) return NULL;
 	return get_by_id(memo_idx[pos].id);
+}
+
+std::vector<int> Repinfo::ids_by_prio(const Record& rec) const
+{
+    int prio = rec.get(DBA_KEY_PRIORITY, MISSING_INT);
+    int priomin = rec.get(DBA_KEY_PRIOMIN, MISSING_INT);
+    int priomax = rec.get(DBA_KEY_PRIOMAX, MISSING_INT);
+
+    vector<int> res;
+    for (std::vector<repinfo::Cache>::const_iterator i = cache.begin();
+            i != cache.end(); ++i)
+    {
+        if (prio != MISSING_INT && i->prio != prio) continue;
+        if (priomin != MISSING_INT && i->prio < priomin) continue;
+        if (priomax != MISSING_INT && i->prio > priomax) continue;
+        res.push_back(i->id);
+    }
+
+    return res;
 }
 
 #if 0
@@ -436,9 +456,9 @@ void Repinfo::dump(FILE* out)
     DBALLE_SQL_C_UINT_TYPE id;
     char memo[20]; SQLLEN memo_ind;
     char description[255]; SQLLEN description_ind;
-    DBALLE_SQL_C_SINT_TYPE prio; SQLLEN prio_ind;
+    DBALLE_SQL_C_SINT_TYPE prio;
     char descriptor[6]; SQLLEN descriptor_ind;
-    DBALLE_SQL_C_UINT_TYPE tablea; SQLLEN tablea_ind;
+    DBALLE_SQL_C_UINT_TYPE tablea;
 
     db::Statement stm(*conn);
 

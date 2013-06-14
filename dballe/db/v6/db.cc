@@ -59,9 +59,11 @@ static const char* init_sequences[] = {
     // Delete 'seq_context' to clean up pre-6.0 databases
     "seq_data", "seq_lev_tr", "seq_context", "seq_pseudoana"
 };
+#if 0
 static const char* init_functions[] = {
 /*  "identity (val anyelement, val1 anyelement)", */
 };
+#endif
 
 
 #ifdef DBA_USE_TRANSACTIONS
@@ -703,9 +705,7 @@ void DB::remove(const Record& rec)
     db::Transaction t(*conn);
 
     // Get the list of data to delete
-    v6::CursorLinear c(*this,
-            DBA_DB_WANT_CONTEXT_ID | DBA_DB_WANT_VAR_NAME,
-            DBA_DB_MODIFIER_UNSORTED | DBA_DB_MODIFIER_STREAM);
+    v6::CursorDataIDs c(*this, DBA_DB_MODIFIER_UNSORTED | DBA_DB_MODIFIER_STREAM);
     c.query(rec);
 
     // Compile the DELETE query for the data
@@ -819,43 +819,33 @@ static void scan_modifiers(const Record& rec, unsigned int& modifiers)
     }
 }
 
-
-std::auto_ptr<db::Cursor> DB::query(const Record& query, unsigned int wanted, unsigned int modifiers)
+std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 {
+    unsigned int modifiers = DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
     scan_modifiers(query, modifiers);
-    auto_ptr<Cursor> res;
-    if (modifiers & DBA_DB_MODIFIER_BEST)
-        res.reset(new CursorBest(*this, wanted, modifiers));
-    else
-        res.reset(new CursorLinear(*this, wanted, modifiers));
+    auto_ptr<Cursor> res(new CursorStations(*this, modifiers));
     res->query(query);
     return auto_ptr<db::Cursor>(res.release());
 }
 
-std::auto_ptr<db::Cursor> DB::query_stations(const Record& rec)
+std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 {
-    /* Perform the query, limited to station values */
-    return query(rec,
-            DBA_DB_WANT_ANA_ID | DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT,
-            DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT);
+    unsigned int modifiers = 0;
+    scan_modifiers(query, modifiers);
+    auto_ptr<Cursor> res;
+    if (modifiers & DBA_DB_MODIFIER_BEST)
+        res.reset(new CursorBest(*this, modifiers));
+    else
+        res.reset(new CursorData(*this, modifiers));
+    res->query(query);
+    return auto_ptr<db::Cursor>(res.release());
 }
 
-std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
+std::auto_ptr<db::Cursor> DB::query_summary(const Record& rec)
 {
-    /* Perform the query */
-    return query(rec,
-                DBA_DB_WANT_ANA_ID | DBA_DB_WANT_CONTEXT_ID |
-                DBA_DB_WANT_COORDS | DBA_DB_WANT_IDENT | DBA_DB_WANT_LEVEL |
-                DBA_DB_WANT_TIMERANGE | DBA_DB_WANT_DATETIME |
-                DBA_DB_WANT_VAR_NAME | DBA_DB_WANT_VAR_VALUE |
-                DBA_DB_WANT_REPCOD,
-                0);
-}
-
-void DB::query_datetime_extremes(const Record& query, Record& result)
-{
-    db::v6::CursorLinear cursor(*this, 0, 0);
-    cursor.query_datetime_extremes(query, result);
+    auto_ptr<Cursor> res(new CursorSummary(*this, 0));
+    res->query(rec);
+    return auto_ptr<db::Cursor>(res.release());
 }
 
 unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)

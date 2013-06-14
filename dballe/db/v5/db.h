@@ -359,6 +359,8 @@ public:
 	 */
 	std::auto_ptr<db::Cursor> query_data(const Record& rec);
 
+    virtual std::auto_ptr<db::Cursor> query_summary(const Record& rec);
+
     void query_datetime_extremes(const Record& query, Record& result);
 
 	/**

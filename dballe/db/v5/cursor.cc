@@ -1212,7 +1212,7 @@ void QueryBuilder::make_where(const Record& rec)
     {
         sel_lonmin = normalon(rec.key(DBA_KEY_LONMIN).enqi());
         sel_lonmax = normalon(rec.key(DBA_KEY_LONMAX).enqi());
-        if (sel_lonmin < sel_lonmax)
+        if (sel_lonmin <= sel_lonmax)
         {
             sql_where.append_list("pa.lon>=? AND pa.lon<=?");
         } else {

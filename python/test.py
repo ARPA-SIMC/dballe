@@ -178,6 +178,7 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(self.r.get(key="block"), 1)
         self.assertEqual(self.r.get(key="ana_id", default="ciao"), "ciao")
         self.assertEqual(self.r.get("ana_id", default="ciao"), "ciao")
+        self.assertEqual(self.r.get("datemin", None), None)
 
     def testVar(self):
         self.assertEqual(self.r.var().code, "B12101")
@@ -189,6 +190,7 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(self.r["level"], (105, 2, None, None))
         self.assertEqual(self.r["timerange"], (2, 3, 4))
         self.assertEqual(self.r["trange"], (2, 3, 4))
+
     def testAlias(self):
         r = self.r.copy()
         r["t"] = 283.2
@@ -346,6 +348,10 @@ class RecordTest(unittest.TestCase):
         self.assertRaises(KeyError, rec.__getitem__, "year")
         self.assertRaises(KeyError, rec.__getitem__, "B01001")
         self.assertRaises(KeyError, rec.__getitem__, "date")
+
+        rec["date"] = None
+        self.assertEqual(rec.get("date", None), None)
+
 
     def testRecordClear(self):
         rec = dballe.Record(ana_id=1, B12101=21.5)

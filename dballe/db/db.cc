@@ -40,6 +40,14 @@ Cursor::~Cursor()
 {
 }
 
+unsigned Cursor::test_iterate(FILE* dump)
+{
+    unsigned count;
+    for (count = 0; next(); ++count)
+        ;
+    return count;
+}
+
 }
 
 DB::~DB()
@@ -90,6 +98,7 @@ auto_ptr<DB> DB::instantiate_db(auto_ptr<Connection>& conn)
     {
         case V5: return auto_ptr<DB>(new v5::DB(conn));
         case V6: return auto_ptr<DB>(new v6::DB(conn));
+        default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
 }
 

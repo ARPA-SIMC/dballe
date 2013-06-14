@@ -6,6 +6,7 @@ import os
 import sys
 import traceback
 from provami.Paths import DATADIR
+from collections import namedtuple
 
 try:
     import dballe.rconvert
@@ -116,6 +117,151 @@ class ProgressListener:
 class UpdateInterrupted:
     pass
 
+SummaryKey = namedtuple("SummaryKey", ["ana_id", "rep_cod", "rep_memo", "level", "trange", "var"])
+SummaryVal = namedtuple("SummaryVal", ["datemin", "datemax", "count"])
+
+def normalon(lon):
+    """
+    Normalise longitude values to the [-180..180[ interval
+    """
+    lon = round(lon * 100000)
+    lon = ((lon + 18000000) % 36000000) - 18000000;
+    return lon / 100000
+
+class Summary(object):
+    def __init__(self, db):
+        self.db = db
+        self.filter = None
+        self.stations = dict()
+        self.summary = dict()
+
+    def update(self, filter):
+        flt1 = dballe.Record()
+        flt1["ana_filter"] = filter.get("ana_filter", None)
+        flt1["data_filter"] = filter.get("data_filter", None)
+        flt1["attr_filter"] = filter.get("attr_filter", None)
+        flt1["date"] = filter.get("date", None)
+        flt1["datemin"] = filter.get("datemin", None)
+        flt1["datemax"] = filter.get("datemax", None)
+        if self.filter != flt1:
+            self.filter = flt1
+            # Requery the summary
+            self.stations = dict()
+            self.summary = dict()
+            for r in self.db.query_summary(self.filter):
+                self.stations[r["ana_id"]] = {
+                    "lat": r["lat"],
+                    "lon": r["lon"],
+                    "ident": r.get("ident", None),
+                }
+                self.summary[SummaryKey(r["ana_id"], r["rep_cod"], r["rep_memo"], r["level"], r["trange"], r["var"])] = SummaryVal(
+                    r["datemin"], r["datemax"], r["limit"])
+
+    def iter_stations_filtered(self, filter):
+        ana_id = filter.get("ana_id", None)
+        if ana_id:
+            info = self.stations.get(ana_id, None)
+            if info: yield ana_id, info
+        else:
+            lat = filter.get("lat", None)
+            latmin = filter.get("latmin", None)
+            latmax = filter.get("latmax", None)
+            lon = filter.get("lon", None)
+            lonmin = filter.get("lonmin", None)
+            lonmax = filter.get("lonmax", None)
+            if lonmin: lonmin = normalon(lonmin)
+            if lonmax: lonmax = normalon(lonmax)
+            for ana_id, info in self.stations.iteritems():
+                if lat and info["lat"] != lat: continue
+                if lon and info["lon"] != lon: continue
+                if latmin and info["lat"] < latmin: continue
+                if latmax and info["lat"] > latmax: continue
+                if lonmin and lonmax:
+                    if lonmin <= lonmax:
+                        if info["lon"] < lonmin or info["lon"] > lonmax: continue
+                    else:
+                        if info["lon"] > lonmin and info["lon"] < lonmax: continue
+                yield ana_id, info
+
+    def iter_filtered(self, filter):
+        # Filter stations
+        station_whitelist = set(x[0] for x in self.iter_stations_filtered(filter))
+        level = filter.get("level", None)
+        trange = filter.get("trange", None)
+        var = filter.get("var", None)
+        rep = filter.get("rep_memo", None)
+        for k, v in self.summary.iteritems():
+            if k.ana_id not in station_whitelist: continue
+            if level and level != k.level: continue
+            if trange and trange != k.trange: continue
+            if var and var != k.var: continue
+            if rep and rep != k.rep: continue
+            yield k, v
+
+    def get_stations(self, filter):
+        f = filter.copy()
+        del f["ana_id"]
+        del f["lat"]
+        del f["latmin"]
+        del f["latmax"]
+        del f["lon"]
+        del f["lonmin"]
+        del f["lonmax"]
+        # Build a set with the matched stations
+        stations = set()
+        for k, v in self.iter_filtered(filter):
+            stations.add(k.ana_id)
+        for s in stations:
+            yield s, self.stations[s]
+
+    def get_dtimes(self, filter):
+        f = filter.copy()
+        del f["date"]
+        del f["datemin"]
+        del f["datemax"]
+        res = [None, None]
+        for k, v in self.iter_filtered(f):
+            # TODO, skip entries that do not match filter
+            if res[0] is None:
+                res = [v.datemin, v.datemax]
+            else:
+                if v[0] < res[0]: res[0] = v[0]
+                if v[1] < res[1]: res[1] = v[1]
+        return res
+
+    def get_levels(self, filter):
+        f = filter.copy()
+        del f["level"]
+        levels = set()
+        for k, v in self.iter_filtered(f):
+            levels.add(k.level)
+        return sorted(levels)
+
+    def get_tranges(self, filter):
+        f = filter.copy()
+        del f["trange"]
+        tranges = set()
+        for k, v in self.iter_filtered(f):
+            tranges.add(k.trange)
+        return sorted(tranges)
+
+    def get_vartypes(self, filter):
+        f = filter.copy()
+        del f["var"]
+        vt = set()
+        for k, v in self.iter_filtered(f):
+            vt.add(k.var)
+        return sorted(vt)
+
+    def get_repinfo(self, filter):
+        f = filter.copy()
+        del f["rep_cod"]
+        del f["rep_memo"]
+        rt = set()
+        for k, v in self.iter_filtered(f):
+            rt.add((k.rep_cod, k.rep_memo))
+        return sorted(rt)
+
 class Model:
     HAS_RPY = HAS_RPY
     HAS_VOLND = HAS_VOLND
@@ -127,6 +273,7 @@ class Model:
         self.resultsMax = 500
         self.resultsCount = 0
         self.resultsTruncated = False
+        self.summary = Summary(self.db)
         self.cached_results = []
         self.cached_stations = []
         self.cached_idents = []
@@ -278,39 +425,6 @@ class Model:
             del filter[i]
         return self.db.query_stations(filter)
 
-    def queryDateTimes(self):
-        filter = self.filter.copy()
-        for i in ("yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin",
-              "yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax",
-              "year", "month", "day", "hour", "min", "sec"):
-            del filter[i]
-        return self.db.query_datetime_extremes(filter)
-
-    def queryVariableTypes(self):
-        filter = self.filter.copy()
-        filter["query"] = "nosort"
-        del filter["var"]
-        return self.db.query_variable_types(filter)
-
-    def queryReportTypes(self):
-        filter = self.filter.copy()
-        filter["query"] = "nosort"
-        del filter["rep_cod"]
-        del filter["rep_memo"]
-        return self.db.query_reports(filter)
-
-    def queryLevels(self):
-        filter = self.filter.copy()
-        filter["query"] = "nosort"
-        del filter["level"]
-        return self.db.query_levels(filter)
-
-    def queryTimeRanges(self):
-        filter = self.filter.copy()
-        filter["query"] = "nosort"
-        del filter["trange"]
-        return self.db.query_tranges(filter)
-
     def writeRecord(self, record):
         self.db.insert(record, True, False)
         #context = record.pop("context_id")
@@ -431,23 +545,18 @@ class Model:
             t = TTracer("model.update")
 
             # Query station data
-            self.notifyProgress(2, "Querying station data...")
-            idents = {}
-            for result in self.queryStations():
-                ana_id = result["ana_id"]
-                if self.cached_stations and self.cached_stations[-1][0] == ana_id:
-                    code = result["var"]
-                    self.cached_stations[-1][4][code] = result[code]
-                else:
-                    self.cached_stations.append((
-                        result["ana_id"],
-                        result["lat"],
-                        result["lon"],
-                        result.get("ident", None),
-                        {}))
-                idents[result.get("ident", None)] = 1
-            self.cached_idents = idents.keys()
-            self.cached_idents.sort()
+            self.notifyProgress(2, "Querying summary information...")
+            self.summary.update(self.filter)
+            idents = set()
+            for ana_id, info in self.summary.get_stations(self.filter):
+                self.cached_stations.append((
+                    ana_id,
+                    info["lat"],
+                    info["lon"],
+                    info["ident"],
+                    {}))
+                idents.add(info["ident"])
+            self.cached_idents = sorted(idents)
             t.partial("got station (%d items) and ident (%d items) data" % (len(self.cached_stations), len(self.cached_idents)))
 
             self.notifyProgress(15, "Notifying station data...")
@@ -458,7 +567,7 @@ class Model:
 
             # Query datetimes
             self.notifyProgress(18, "Querying date and time data...")
-            self.cached_dtimes = self.queryDateTimes()
+            self.cached_dtimes = self.summary.get_dtimes(self.filter);
             t.partial("got date and time data (%d items)" % (len(self.cached_dtimes)))
             self.notifyProgress(30, "Notifying date and time data...")
             for l in self.updateListeners: l.hasData("dtimes")
@@ -489,11 +598,7 @@ class Model:
 
             # Query levels
             self.notifyProgress(55, "Querying level data...")
-            levels = {}
-            for results in self.queryLevels():
-                levels[results["level"]] = 1
-            self.cached_levels = levels.keys()
-            self.cached_levels.sort()
+            self.cached_levels = self.summary.get_levels(self.filter)
             t.partial("got level data (%d items)" % (len(self.cached_levels)));
             self.notifyProgress(60, "Notifying level data...")
             for l in self.updateListeners: l.hasData("levels")
@@ -501,11 +606,7 @@ class Model:
 
             # Query time ranges
             self.notifyProgress(62, "Querying time range data...")
-            tranges = {}
-            for results in self.queryTimeRanges():
-                tranges[results["trange"]] = 1
-            self.cached_tranges = tranges.keys()
-            self.cached_tranges.sort()
+            self.cached_tranges = self.summary.get_tranges(self.filter)
             t.partial("got time range data (%d items)" % (len(self.cached_tranges)));
             self.notifyProgress(68, "Notifying time range data...")
             for l in self.updateListeners: l.hasData("tranges")
@@ -513,8 +614,7 @@ class Model:
 
             # Query variable types
             self.notifyProgress(70, "Querying variable types...")
-            for results in self.queryVariableTypes():
-                self.cached_vartypes.append(results["var"])
+            self.cached_vartypes = self.summary.get_vartypes(self.filter)
             t.partial("got variable type data (%d items)" % (len(self.cached_vartypes)));
             self.notifyProgress(82, "Notifying variable types...")
             for l in self.updateListeners: l.hasData("vartypes")
@@ -522,8 +622,7 @@ class Model:
 
             # Query available reports
             self.notifyProgress(85, "Querying report types...")
-            for results in self.queryReportTypes():
-                self.cached_repinfo.append((results["rep_cod"], results["rep_memo"]))
+            self.cached_repinfo = self.summary.get_repinfo(self.filter)
             t.partial("got repinfo data (%d items)" % (len(self.cached_repinfo)));
             self.notifyProgress(95, "Notifying report types...")
             for l in self.updateListeners: l.hasData("repinfo")

@@ -33,8 +33,11 @@
 #include <string>
 
 namespace dballe {
+struct Record;
+
 namespace db {
 struct Connection;
+
 namespace v5 {
 
 namespace repinfo {
@@ -169,6 +172,11 @@ struct Repinfo
 	 *   The Cache structure found, or NULL if none was found.
 	 */
 	const repinfo::Cache* get_by_memo(const char* memo) const;
+
+    /**
+     * Return a vector of IDs matching the priority constraints in the given record.
+     */
+    std::vector<int> ids_by_prio(const Record& rec) const;
 
     /**
      * Dump the entire contents of the table to an output stream
