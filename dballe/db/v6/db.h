@@ -340,28 +340,6 @@ public:
     void vacuum();
 
     /**
-     * Create and execute a database query.
-     *
-     * The results are retrieved by iterating the cursor.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input"
-     * @param wanted
-     *   The values wanted in output
-     * @param modifiers
-     *   Optional modifiers to ask for special query behaviours
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    std::auto_ptr<db::Cursor> query(const Record& query, unsigned int wanted, unsigned int modifiers);
-
-    std::auto_ptr<db::Cursor> query_reports(const Record& query);
-    std::auto_ptr<db::Cursor> query_levels(const Record& rec);
-    std::auto_ptr<db::Cursor> query_tranges(const Record& rec);
-    std::auto_ptr<db::Cursor> query_variable_types(const Record& rec);
-
-    /**
      * Start a query on the station archive
      *
      * @param query
@@ -470,6 +448,25 @@ public:
     void dump(FILE* out);
 
     friend class dballe::DB;
+
+protected:
+    /**
+     * Create and execute a database query.
+     *
+     * The results are retrieved by iterating the cursor.
+     *
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input"
+     * @param wanted
+     *   The values wanted in output
+     * @param modifiers
+     *   Optional modifiers to ask for special query behaviours
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    std::auto_ptr<db::Cursor> query(const Record& query, unsigned int wanted, unsigned int modifiers);
+
 };
 
 } // namespace v6

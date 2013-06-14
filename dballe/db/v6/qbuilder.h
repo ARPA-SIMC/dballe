@@ -34,6 +34,7 @@
 #include "dballe/core/record.h"
 #include "db.h"
 #include "cursor.h"
+#include <regex.h>
 
 
 /**
@@ -118,6 +119,10 @@ struct QueryBuilder
           wanted(wanted), modifiers(modifiers),
           select_wanted(0), from_wanted(0), input_seq(1), output_seq(1),
           query_station_vars(false), has_orderby(false) {}
+
+    void build_query_stations(db::Statement& stm, const Record& rec);
+
+    void build_query_data(db::Statement& stm, const Record& rec);
 
     /**
      * Add one or more fields to the ORDER BY part of sql_query.

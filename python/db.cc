@@ -212,8 +212,9 @@ static PyObject* dpy_DB_query_reports(dpy_DB* self, PyObject* args)
         return NULL;
 
     try {
-        std::auto_ptr<db::Cursor> res = self->db->query_reports(record->rec);
-        return (PyObject*)cursor_create(self, res);
+        //std::auto_ptr<db::Cursor> res = self->db->query_reports(record->rec);
+        //return (PyObject*)cursor_create(self, res);
+	Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -244,8 +245,9 @@ static PyObject* dpy_DB_query_levels(dpy_DB* self, PyObject* args)
         return NULL;
 
     try {
-        std::auto_ptr<db::Cursor> res = self->db->query_levels(record->rec);
-        return (PyObject*)cursor_create(self, res);
+        //std::auto_ptr<db::Cursor> res = self->db->query_levels(record->rec);
+        //return (PyObject*)cursor_create(self, res);
+	Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -260,8 +262,9 @@ static PyObject* dpy_DB_query_tranges(dpy_DB* self, PyObject* args)
         return NULL;
 
     try {
-        std::auto_ptr<db::Cursor> res = self->db->query_tranges(record->rec);
-        return (PyObject*)cursor_create(self, res);
+        //std::auto_ptr<db::Cursor> res = self->db->query_tranges(record->rec);
+        //return (PyObject*)cursor_create(self, res);
+	Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -276,8 +279,9 @@ static PyObject* dpy_DB_query_variable_types(dpy_DB* self, PyObject* args)
         return NULL;
 
     try {
-        std::auto_ptr<db::Cursor> res = self->db->query_variable_types(record->rec);
-        return (PyObject*)cursor_create(self, res);
+        //std::auto_ptr<db::Cursor> res = self->db->query_variable_types(record->rec);
+        //return (PyObject*)cursor_create(self, res);
+	Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {

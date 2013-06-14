@@ -270,16 +270,6 @@ public:
     virtual void vacuum() = 0;
 
     /**
-     * Start a query on the report type archive
-     *
-     * @param query
-     *   The record with the query data (see @ref dba_record_keywords)
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::auto_ptr<db::Cursor> query_reports(const Record& query) = 0;
-
-    /**
      * Start a query on the station variables archive
      *
      * @param query
@@ -288,36 +278,6 @@ public:
      *   The cursor to use to iterate over the results
      */
     virtual std::auto_ptr<db::Cursor> query_stations(const Record& query) = 0;
-
-    /**
-     * Start a query on the set of levels in the archive
-     *
-     * @param query
-     *   The record with the query data (see @ref dba_record_keywords)
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::auto_ptr<db::Cursor> query_levels(const Record& rec) = 0;
-
-    /**
-     * Start a query on the set of time ranges in the archive
-     *
-     * @param query
-     *   The record with the query data (see @ref dba_record_keywords)
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::auto_ptr<db::Cursor> query_tranges(const Record& rec) = 0;
-
-    /**
-     * Start a query on the variable types in the archive
-     *
-     * @param query
-     *   The record with the query data (see @ref dba_record_keywords)
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::auto_ptr<db::Cursor> query_variable_types(const Record& rec) = 0;
 
     /**
      * Query the database.

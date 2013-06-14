@@ -35,6 +35,15 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
+void QueryBuilder::build_query_stations(db::Statement& stm, const Record& rec)
+{
+}
+
+void QueryBuilder::build_query_data(db::Statement& stm, const Record& rec)
+{
+}
+
+
 void QueryBuilder::build_query(const Record& rec)
 {
     int limit = -1;
