@@ -1,3 +1,10 @@
+dballe (6.2-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - refactored cursor+querybuilder for v6 databases
+
+ -- Enrico Zini <enrico@debian.org>  Fri, 24 May 2013 17:43:49 +0200
+
 dballe (6.1-1) UNRELEASED; urgency=low
 
   * New upstream release
