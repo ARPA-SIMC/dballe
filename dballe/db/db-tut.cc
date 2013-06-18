@@ -64,6 +64,7 @@ struct db_shar : public dballe::tests::DB_test_base
     void test_bug_query_levels_by_station();
     void test_query_stations();
     void test_summary_queries();
+    void test_connect_leaks();
 
     void populate_for_station_queries()
     {
@@ -1407,6 +1408,26 @@ void db_shar::test_summary_queries()
     TRY_QUERY(DBA_KEY_CONTEXT_ID, 11, 1);
 #undef TRY_QUERY
 #undef TRY_QUERY2
+}
+
+template<> template<> void to::test<41>() { use_db(V5); test_connect_leaks(); }
+template<> template<> void to::test<42>() { use_db(V6); test_connect_leaks(); }
+void db_shar::test_connect_leaks()
+{
+    insert.clear();
+    insert.set_ana_context();
+    insert.set(DBA_KEY_LAT, 12.34560);
+    insert.set(DBA_KEY_LON, 76.54320);
+    insert.set(DBA_KEY_MOBILE, 0);
+    insert.set(DBA_KEY_REP_MEMO, "synop");
+    insert.set(WR_VAR(0, 7, 30), 42.0); // Height
+
+    // Assume a max open file limit of 1100
+    for (unsigned i = 0; i < 1100; ++i)
+    {
+        std::auto_ptr<DB> db = DB::connect_test();
+        db->insert(insert, false, true);
+    }
 }
 
 }
