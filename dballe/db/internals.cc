@@ -391,9 +391,9 @@ std::string Connection::get_setting(const std::string& key)
 
     Statement stm(*this);
     if (server_type == ORACLE)
-		stm.prepare("SELECT value FROM dballe_settings WHERE \"key\"=?");
-	else
-		stm.prepare("SELECT value FROM dballe_settings WHERE `key`=?");
+        stm.prepare("SELECT value FROM dballe_settings WHERE \"key\"=?");
+    else
+        stm.prepare("SELECT value FROM dballe_settings WHERE `key`=?");
     stm.bind_in(1, key.data(), key.size());
     stm.bind_out(1, result, 64, result_len);
     stm.execute();
@@ -408,26 +408,26 @@ void Connection::set_setting(const std::string& key, const std::string& value)
     Statement stm(*this);
 
     if (!has_table("dballe_settings"))
-	{
-		if (server_type == ORACLE)
-			stm.exec_direct("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
-		else
-			stm.exec_direct("CREATE TABLE dballe_settings (`key` CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
-	}
+    {
+        if (server_type == ORACLE)
+            stm.exec_direct_and_close("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
+        else
+            stm.exec_direct_and_close("CREATE TABLE dballe_settings (`key` CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
+    }
 
     // Remove if it exists
-	if (server_type == ORACLE)
-		stm.prepare("DELETE FROM dballe_settings WHERE \"key\"=?");
-	else
-		stm.prepare("DELETE FROM dballe_settings WHERE `key`=?");
+    if (server_type == ORACLE)
+        stm.prepare("DELETE FROM dballe_settings WHERE \"key\"=?");
+    else
+        stm.prepare("DELETE FROM dballe_settings WHERE `key`=?");
     stm.bind_in(1, key.data(), key.size());
     stm.execute_and_close();
 
     // Then insert it
-	if (server_type == ORACLE)
-		stm.prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
-	else
-		stm.prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
+    if (server_type == ORACLE)
+        stm.prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
+    else
+        stm.prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
     stm.bind_in(1, key.data(), key.size());
     stm.bind_in(2, value.data(), value.size());
     stm.execute_and_close();
@@ -592,7 +592,7 @@ bool Statement::fetch()
 
 bool Statement::fetch_expecting_one()
 {
-    if (!fetch()) 
+    if (!fetch())
     {
         close_cursor();
         return false;
