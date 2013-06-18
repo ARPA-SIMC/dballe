@@ -100,7 +100,7 @@ Environment& Environment::get()
 }
 
 Connection::Connection()
-    : connected(false), stm_last_insert_id(0)
+    : connected(false), server_quirks(0), stm_last_insert_id(0)
 {
     /* Allocate the ODBC connection handle */
     Environment& env = Environment::get();
@@ -181,7 +181,12 @@ void Connection::init_after_connect()
     if (name.substr(0, 9) == "libmyodbc" || name.substr(0, 6) == "myodbc")
         server_type = MYSQL;
     else if (name.substr(0, 6) == "sqlite")
+    {
+        string version = driver_version();
         server_type = SQLITE;
+        if (version < "0.99")
+            server_quirks = DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG;
+    }
     else if (name.substr(0, 5) == "SQORA")
         server_type = ORACLE;
     else if (name.substr(0, 11) == "libpsqlodbc" || name.substr(0, 8) == "psqlodbc")
@@ -201,6 +206,16 @@ std::string Connection::driver_name()
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
         throw error_odbc(SQL_HANDLE_DBC, od_conn, "Getting ODBC driver name");
     return string(drivername, len);
+}
+
+std::string Connection::driver_version()
+{
+    char driverver[50];
+    SQLSMALLINT len;
+    int sqlres = SQLGetInfo(od_conn, SQL_DRIVER_VER, (SQLPOINTER)driverver, 50, &len);
+    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+        throw error_odbc(SQL_HANDLE_DBC, od_conn, "Getting ODBC driver version");
+    return string(driverver, len);
 }
 
 void Connection::set_autocommit(bool val)
@@ -391,7 +406,7 @@ void Connection::drop_settings()
 }
 
 Statement::Statement(Connection& conn)
-    : /*conn(conn),*/ stm(NULL), ignore_error(NULL)
+    : conn(conn), stm(NULL), ignore_error(NULL)
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
       , debug_reached_completion(true)
 #endif
@@ -557,6 +572,9 @@ bool Statement::fetch_expecting_one()
 
 size_t Statement::select_rowcount()
 {
+    if (conn.server_quirks & DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG)
+        return rowcount();
+
     SQLLEN res;
     int sqlres = SQLGetDiagField(SQL_HANDLE_STMT, stm, 0, SQL_DIAG_CURSOR_ROW_COUNT, &res, NULL, NULL);
     // SQLRowCount is broken in newer sqlite odbc

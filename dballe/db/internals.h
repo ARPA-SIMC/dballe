@@ -40,6 +40,9 @@
  */
 #define DBA_USE_TRANSACTIONS
 
+// Bit values for server/driver quirks
+#define DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG (1 << 0)
+
 /* Define this to enable referential integrity */
 #undef USE_REF_INT
 
@@ -126,6 +129,8 @@ struct Connection
     bool connected;
     /** Type of SQL server we are connected to */
     enum ServerType server_type;
+    /// Bitfield of quirks we should be aware of when using ODBC
+    unsigned server_quirks;
 
 protected:
     /** Precompiled LAST_INSERT_ID (or equivalent) SQL statement */
@@ -141,6 +146,7 @@ public:
     void connect_file(const std::string& fname);
     void driver_connect(const char* config);
     std::string driver_name();
+    std::string driver_version();
     void set_autocommit(bool val);
 
     /// Commit a transaction
@@ -212,7 +218,7 @@ struct Transaction
 /// ODBC statement
 struct Statement
 {
-    //Connection& conn;
+    const Connection& conn;
     SQLHSTMT stm;
     /// If non-NULL, ignore all errors with this code
     const char* ignore_error;
