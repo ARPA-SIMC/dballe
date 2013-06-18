@@ -35,7 +35,7 @@ namespace db {
 namespace v6 {
 
 Data::Data(DB& db)
-    : db(db), istm(0), ustm(0), iistm(0)
+    : db(db), istm(0), ustm(0), iistm(0), sidstm(0)
 {
     const char* insert_query =
         "INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(?, ?, ?, ?, ?, ?)";
@@ -142,6 +142,7 @@ Data::~Data()
     if (istm) delete istm;
     if (ustm) delete ustm;
     if (iistm) delete iistm;
+    if (sidstm) delete sidstm;
 }
 
 void Data::set_date(const Record& rec)
