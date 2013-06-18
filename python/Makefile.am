@@ -4,10 +4,12 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 export PYTHONPATH=.
 
-TESTS = test.py
+dballe_python_tests = test.py
 if DO_DBALLE_DB
-TESTS += test-db.py test-volnd.py test-rconvert.py
+dballe_python_tests += test-db.py test-volnd.py test-rconvert.py
 endif
+
+# TESTS = $(dballe_python_tests)
 
 pkgpython_PYTHON = dbacsv.py rconvert.py __init__.py
 if DO_DBALLE_DB
@@ -62,6 +64,11 @@ EXTRA_DIST = \
     record.h \
     db.h \
     cursor.h \
-    test.py test-db.py test-volnd.py test-rconvert.py
+    $(dballe_python_tests)
 
 INCLUDES = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
+
+check-local:
+	for test in $(dballe_python_tests); do \
+		$(TESTS_ENVIRONMENT) $$test ; \
+	done

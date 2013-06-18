@@ -192,7 +192,12 @@ EXTRA_DIST += \
 
 check_PROGRAMS = tut_test
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
-TESTS = $(check_PROGRAMS)
+#TESTS = $(check_PROGRAMS)
+
+check-local:
+	for test in $(check_PROGRAMS); do \
+		$(TESTS_ENVIRONMENT) $$test ; \
+	done
 
 CXXFLAGS += -O0
 

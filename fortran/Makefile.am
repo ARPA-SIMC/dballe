@@ -28,7 +28,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 check_PROGRAMS = check_missing_msg
 
-TESTS = $(check_PROGRAMS)
+#TESTS = $(check_PROGRAMS)
 testlib = test.f90
 dbtestlib = dbtest.f90 $(testlib)
 
@@ -100,5 +100,10 @@ endif
 EXTRA_DIST = fortran.dox check-utils.h error.h
 
 CLEANFILES = test.mod dbtest.mod
+
+check-local:
+	for test in $(check_PROGRAMS); do \
+		$(TESTS_ENVIRONMENT) $$test ; \
+	done
 
 endif
