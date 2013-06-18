@@ -380,8 +380,8 @@ void DB::init_after_connect()
             run_sql("PRAGMA journal_mode = MEMORY");
             run_sql("PRAGMA legacy_file_format = 0");
         }
-    } else
-        conn->set_autocommit(false);
+    }
+    conn->set_autocommit(false);
 #endif
 }
 
