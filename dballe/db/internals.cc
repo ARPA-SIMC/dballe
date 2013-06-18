@@ -32,6 +32,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include "dballe/core/vasprintf.h"
+#include "dballe/core/verbose.h"
 
 #include <iostream>
 
@@ -69,6 +70,19 @@ void error_odbc::throwf(SQLSMALLINT handleType, SQLHANDLE handle, const char* fm
     std::string msg(cmsg);
     free(cmsg);
     throw error_odbc(handleType, handle, msg);
+}
+
+static void verbose_odbc_error(SQLSMALLINT handleType, SQLHANDLE handle, const std::string& msg)
+{
+    static const int strsize = 200;
+    char stat[10], sqlmsg[strsize];
+    SQLINTEGER err;
+    SQLSMALLINT mlen;
+
+    SQLGetDiagRec(handleType, handle, 1, (unsigned char*)stat, &err, (unsigned char*)sqlmsg, strsize, &mlen);
+    if (mlen > strsize) mlen = strsize;
+
+    dba_verbose(DBA_VERB_DB_SQL, "%s: %s\n", msg.c_str(), sqlmsg);
 }
 
 Environment::Environment()
@@ -114,12 +128,17 @@ Connection::~Connection()
     if (stm_last_insert_id) delete stm_last_insert_id;
     if (connected)
     {
-        // FIXME: It was commit with no reason, setting it to rollback,
-        // needs checking it doesn't cause trouble
-        SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_ROLLBACK);
-        SQLDisconnect(od_conn);
+        int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_ROLLBACK);
+        if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+            verbose_odbc_error(SQL_HANDLE_DBC, od_conn, "Cannot close existing transactions");
+
+        sqlres = SQLDisconnect(od_conn);
+        if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+            verbose_odbc_error(SQL_HANDLE_DBC, od_conn, "Cannot disconnect from database");
     }
-    SQLFreeHandle(SQL_HANDLE_DBC, od_conn);
+    int sqlres = SQLFreeHandle(SQL_HANDLE_DBC, od_conn);
+    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+        verbose_odbc_error(SQL_HANDLE_DBC, od_conn, "Cannot free handle");
 }
 
 void Connection::connect(const char* dsn, const char* user, const char* password)
@@ -131,7 +150,6 @@ void Connection::connect(const char* dsn, const char* user, const char* password
                 (SQLCHAR*)(password == NULL ? "" : password), SQL_NTS);
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
         error_odbc::throwf(SQL_HANDLE_DBC, od_conn, "Connecting to DSN %s as user %s", dsn, user);
-    connected = true;
     init_after_connect();
 }
 
@@ -169,7 +187,6 @@ void Connection::driver_connect(const char* config)
 
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
         error_odbc::throwf(SQL_HANDLE_DBC, od_conn, "Connecting to DB using configuration %s", config);
-    connected = true;
     init_after_connect();
 }
 
@@ -196,6 +213,8 @@ void Connection::init_after_connect()
         fprintf(stderr, "ODBC driver %s is unsupported: assuming it's similar to Postgres", name.c_str());
         server_type = POSTGRES;
     }
+
+    connected = true;
 }
 
 std::string Connection::driver_name()
@@ -590,7 +609,7 @@ size_t Statement::select_rowcount()
         return rowcount();
 
     SQLLEN res;
-    int sqlres = SQLGetDiagField(SQL_HANDLE_STMT, stm, 0, SQL_DIAG_CURSOR_ROW_COUNT, &res, NULL, NULL);
+    int sqlres = SQLGetDiagField(SQL_HANDLE_STMT, stm, 0, SQL_DIAG_CURSOR_ROW_COUNT, &res, 0, NULL);
     // SQLRowCount is broken in newer sqlite odbc
     //int sqlres = SQLRowCount(stm, &res);
     if (is_error(sqlres))

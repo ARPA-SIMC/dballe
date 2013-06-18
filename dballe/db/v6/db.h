@@ -173,7 +173,7 @@ protected:
     DB(std::auto_ptr<Connection>& conn);
 
 public:
-    ~DB();
+    virtual ~DB();
 
     db::Format format() const { return V6; }
 
