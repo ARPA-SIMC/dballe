@@ -115,7 +115,7 @@ int Cursor::raw_query(db::Statement& stm, const Record& rec)
 
     /* Get the number of affected rows */
     if (db.conn->server_type != ORACLE)
-        count = stm.rowcount();
+        count = stm.select_rowcount();
 
     /* Retrieve results will happen in dba_db_cursor_next() */
     return count;
@@ -343,7 +343,7 @@ void CursorStations::query(const Record& rec)
 
     // Get the number of affected rows
     if (db.conn->server_type != ORACLE)
-        count = stm->rowcount();
+        count = stm->select_rowcount();
 }
 
 void CursorStations::to_record(Record& rec)
@@ -392,7 +392,7 @@ void CursorData::query(const Record& rec)
 
     // Get the number of affected rows
     if (db.conn->server_type != ORACLE)
-        count = stm->rowcount();
+        count = stm->select_rowcount();
 }
 
 void CursorData::to_record(Record& rec)

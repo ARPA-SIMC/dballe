@@ -258,7 +258,7 @@ int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifie
 
     /* Get the number of affected rows */
     if (db.conn->server_type != ORACLE)
-        count = stm->rowcount();
+        count = stm->select_rowcount();
 
     /* Retrieve results will happen in dba_db_cursor_next() */
     return count;

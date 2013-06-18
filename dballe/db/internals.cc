@@ -555,12 +555,21 @@ bool Statement::fetch_expecting_one()
     return true;
 }
 
-size_t Statement::rowcount()
+size_t Statement::select_rowcount()
 {
     SQLLEN res;
     int sqlres = SQLGetDiagField(SQL_HANDLE_STMT, stm, 0, SQL_DIAG_CURSOR_ROW_COUNT, &res, NULL, NULL);
     // SQLRowCount is broken in newer sqlite odbc
     //int sqlres = SQLRowCount(stm, &res);
+    if (is_error(sqlres))
+        throw error_odbc(SQL_HANDLE_STMT, stm, "reading row count");
+    return res;
+}
+
+size_t Statement::rowcount()
+{
+    SQLLEN res;
+    int sqlres = SQLRowCount(stm, &res);
     if (is_error(sqlres))
         throw error_odbc(SQL_HANDLE_STMT, stm, "reading row count");
     return res;

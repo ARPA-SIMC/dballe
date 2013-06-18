@@ -270,6 +270,9 @@ struct Statement
     bool fetch_expecting_one();
     void close_cursor();
     void close_cursor_if_needed();
+    /// Row count for select operations
+    size_t select_rowcount();
+    /// Row count for insert, delete and other non-select operations
     size_t rowcount();
 
     void set_cursor_forward_only();
