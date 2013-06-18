@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include "dballe/core/verbose.h"
 #include "dballe/simple/msgapi.h"
 
 #ifdef HAVE_DBALLE_DB
@@ -292,8 +293,10 @@ static int usage_refcount = 0;
 
 static void lib_init()
 {
-	if (usage_refcount > 0)
-		return;
+    if (usage_refcount > 0)
+        return;
+
+    dba_verbose_init();
 
 	fortran::error_init();
 #ifdef HAVE_DBALLE_DB
