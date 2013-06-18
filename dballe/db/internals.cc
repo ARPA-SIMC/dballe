@@ -558,7 +558,9 @@ bool Statement::fetch_expecting_one()
 size_t Statement::rowcount()
 {
     SQLLEN res;
-    int sqlres = SQLRowCount(stm, &res);
+    int sqlres = SQLGetDiagField(SQL_HANDLE_STMT, stm, 0, SQL_DIAG_CURSOR_ROW_COUNT, &res, NULL, NULL);
+    // SQLRowCount is broken in newer sqlite odbc
+    //int sqlres = SQLRowCount(stm, &res);
     if (is_error(sqlres))
         throw error_odbc(SQL_HANDLE_STMT, stm, "reading row count");
     return res;
@@ -566,10 +568,18 @@ size_t Statement::rowcount()
 
 void Statement::set_cursor_forward_only()
 {
-    int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE, 
+    int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
         (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY, SQL_IS_INTEGER);
     if (is_error(sqlres))
         throw error_odbc(SQL_HANDLE_STMT, stm, "setting SQL_CURSOR_FORWARD_ONLY");
+}
+
+void Statement::set_cursor_static()
+{
+    int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
+        (SQLPOINTER)SQL_CURSOR_STATIC, SQL_IS_INTEGER);
+    if (is_error(sqlres))
+        throw error_odbc(SQL_HANDLE_STMT, stm, "setting SQL_CURSOR_STATIC");
 }
 
 void Statement::close_cursor()

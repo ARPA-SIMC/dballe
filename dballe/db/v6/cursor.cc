@@ -332,10 +332,14 @@ void CursorStations::query(const Record& rec)
     qb.build();
 
     if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ORACLE)
+    {
         stm->set_cursor_forward_only();
+    //} else {
+    //    stm->set_cursor_static();
+    }
     stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
 
-    // fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
+    //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
 
     // Get the number of affected rows
     if (db.conn->server_type != ORACLE)

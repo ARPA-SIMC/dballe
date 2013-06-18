@@ -273,6 +273,7 @@ struct Statement
     size_t rowcount();
 
     void set_cursor_forward_only();
+    void set_cursor_static();
 
 protected:
     bool error_is_ignored();
