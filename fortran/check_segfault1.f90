@@ -10,6 +10,11 @@ include "dballef.h"
 
 call idba_error_set_callback(0, idba_default_error_handler, 42, error_handle)
 
+call idba_presentati(idbhandle1,"sqlite:tmp.sqlite","","")
+call idba_preparati (idbhandle1,handle1,"write","write","write")
+call idba_scopa (handle1, "")
+call idba_fatto(handle1)
+call idba_arrivederci(idbhandle1)
 
 do i =1, 2000
 
@@ -30,24 +35,26 @@ do i =1, 2000
 
 
 !     Insert data about a station
+  call idba_set (handle1, "rep_memo", "synop")
   call idba_set (handle1, "lat", 11.345)
   call idba_set (handle1, "lon", 44.678)
-  call idba_set (handle1, "height", 23)
+  call idba_set (handle1, "height", 23.0)
+  call idba_setcontextana (handle1);
   call idba_prendilo (handle1)
 
 !     Read the station ID for the station we just inserted
-  call idba_enq (handle1, "ana_id", anaid)
+  call idba_enq (handle1, "*ana_id", anaid)
 
 !     Reset the input data
   call idba_unsetall (handle1)
 
 !     Add data to the station we just inserted
   call idba_set (handle1, "ana_id", anaid)
+  call idba_set (handle1, "rep_memo", "synop")
   call idba_setlevel (handle1, 100, 1, 0, 0)
   call idba_settimerange (handle1, 0, 0, 0)
   call idba_setdate (handle1, 2006, 06, 20, 19, 30, 0)
-  call idba_seti (handle1, "t", 21)
-  call idba_setc (handle1, "B12345", "ciao")
+  call idba_set (handle1, "B12101", 12.34)
   call idba_prendilo (handle1)
  
 !  print *,"Fatto2",handle2
