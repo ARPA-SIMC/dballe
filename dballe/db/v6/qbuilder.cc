@@ -615,7 +615,7 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
         if (ids.empty())
         {
             // No repinfo matches, so we just introduce a false value
-            sql_where.append_list("1==0");
+            sql_where.append_list("1=0");
         } else {
             sql_where.append_listf("%s.id_report IN (", tbl);
             for (std::vector<int>::const_iterator i = ids.begin(); i != ids.end(); ++i)
