@@ -154,8 +154,12 @@ class Summary(object):
                     "lon": r["lon"],
                     "ident": r.get("ident", None),
                 }
+                # FIXME: quick fix now that a simplified summary query in
+                # DB-All.e doesn't give us stats
+                #self.summary[SummaryKey(r["ana_id"], r["rep_cod"], r["rep_memo"], r["level"], r["trange"], r["var"])] = SummaryVal(
+                #    r["datemin"], r["datemax"], r["limit"])
                 self.summary[SummaryKey(r["ana_id"], r["rep_cod"], r["rep_memo"], r["level"], r["trange"], r["var"])] = SummaryVal(
-                    r["datemin"], r["datemax"], r["limit"])
+                    datetime.datetime(1000, 1, 1, 0, 0, 0), datetime.datetime(3000, 1, 1, 0, 0, 0), 1)
 
     def iter_stations_filtered(self, filter):
         ana_id = filter.get("ana_id", None)
