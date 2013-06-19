@@ -529,8 +529,8 @@ struct PilotWMO : public TempBase
     virtual void to_bulletin(wreport::Bulletin& bulletin)
     {
         // Scan contexts to see if we are encoding pressure or height levels
-        bool has_press = false;
-        bool has_height = false;
+        unsigned has_press = 0;
+        unsigned has_height = 0;
 
         for (Msgs::const_iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
         {
@@ -540,25 +540,14 @@ struct PilotWMO : public TempBase
             {
                 switch ((*i)->level.ltype1)
                 {
-                    case 100: has_press = true; break;
-                    case 102: has_height = true; break;
-                    case 103: has_height = true; break;
+                    case 100: ++has_press; break;
+                    case 102: ++has_height; break;
+                    case 103: ++has_height; break;
                 }
             }
         }
 
-        if (has_press && has_height)
-        {
-            notes::logf("PILOT message to encode has both pressure and height levels: encoding pressure levels\n");
-            pressure_levs = true;
-        } else if (has_press) {
-            pressure_levs = true;
-        } else if (has_height) {
-            pressure_levs = false;
-        } else {
-            notes::logf("PILOT message to encode has neither pressure nor height levels: encoding pressure levels\n");
-            pressure_levs = true;
-        }
+        pressure_levs = has_press >= has_height;
 
         // Continue with normal operations
         TempBase::to_bulletin(bulletin);
