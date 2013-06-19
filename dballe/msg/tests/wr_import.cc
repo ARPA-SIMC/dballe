@@ -451,6 +451,26 @@ void to::test<25>()
     ensure_equals(msg.type, MSG_TEMP);
 }
 
+// WMO pilot pressure
+template<> template<>
+void to::test<26>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts3.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_PILOT);
+}
+
+// WMO pilot geopotential
+template<> template<>
+void to::test<27>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts4.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_PILOT);
+}
+
 
 #if 0
 /* Check that a BUFR from a synop high-level station correctly reports isobaric

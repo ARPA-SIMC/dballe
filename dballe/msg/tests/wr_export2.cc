@@ -122,6 +122,30 @@ void to::test<6>()
     TEST_convert(test, "ship-wmo");
 }
 
+// Test import/export of ECMWF pilot with pressure levels
+template<> template<>
+void to::test<7>()
+{
+    dballe::tests::TestCodec test("bufr/pilot-gts3.bufr");
+    test.expected_min_vars = 50;
+    test.configure_ecmwf_to_wmo_tweaks();
+
+    TEST_reimport(test);
+    TEST_convert(test, "pilot-wmo");
+}
+
+// Test import/export of ECMWF pilot with geopotential levels
+template<> template<>
+void to::test<8>()
+{
+    dballe::tests::TestCodec test("bufr/pilot-gts4.bufr");
+    test.expected_min_vars = 50;
+    test.configure_ecmwf_to_wmo_tweaks();
+
+    TEST_reimport(test);
+    TEST_convert(test, "pilot-wmo");
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
