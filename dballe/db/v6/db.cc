@@ -224,9 +224,7 @@ static const char* init_queries_sqlite[] = {
     "   , FOREIGN KEY (id_lev_tr) REFERENCES lev_tr (id) ON DELETE CASCADE"
 #endif
     ") ",
-    "CREATE INDEX data_ana ON data(id_station)",
     "CREATE INDEX data_report ON data(id_report)",
-    "CREATE INDEX data_dt ON data(datetime)",
     "CREATE INDEX data_lt ON data(id_lev_tr)",
     "CREATE TABLE attr ("
     "   id_data     INTEGER NOT NULL,"
