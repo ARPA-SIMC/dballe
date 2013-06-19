@@ -279,9 +279,9 @@ void db_shar::test_misc_queries()
     populate_database();
 
 /* Try a query using a KEY query parameter */
-#define TRY_QUERY(param, value, expected_count) do {\
+#define TRY_QUERY(qstring, expected_count) do {\
         query.clear(); \
-        query.set(param, value); \
+        query.set_from_string(qstring); \
         auto_ptr<db::Cursor> cur = db->query_data(query); \
         ensure_equals(cur->remaining(), expected_count); \
         int count; \
@@ -304,8 +304,8 @@ void db_shar::test_misc_queries()
 } while (0)
 
 
-    TRY_QUERY(DBA_KEY_ANA_ID, "1", 4);
-    TRY_QUERY(DBA_KEY_ANA_ID, "2", 0);
+    TRY_QUERY("ana_id=1", 4);
+    TRY_QUERY("ana_id=2", 0);
     {
         query.clear();
         query.set_ana_context();
@@ -313,36 +313,36 @@ void db_shar::test_misc_queries()
         ensure_equals(cur->remaining(), 10);
     }
     //TRY_QUERY(DBA_KEY_YEAR, 1000, 10);
-    TRY_QUERY(DBA_KEY_YEAR, 1001, 0);
-    TRY_QUERY(DBA_KEY_YEARMIN, 1999, 0);
-    TRY_QUERY(DBA_KEY_YEARMIN, 1945, 4);
-    TRY_QUERY(DBA_KEY_YEARMAX, 1944, 0);
-    TRY_QUERY(DBA_KEY_YEARMAX, 1945, 4);
-    TRY_QUERY(DBA_KEY_YEARMAX, 2030, 4);
-    TRY_QUERY(DBA_KEY_YEAR, 1944, 0);
-    TRY_QUERY(DBA_KEY_YEAR, 1945, 4);
-    TRY_QUERY(DBA_KEY_YEAR, 1946, 0);
-    TRY_QUERY(WR_VAR(0, 1, 1), 1, 4);
-    TRY_QUERY(WR_VAR(0, 1, 1), 2, 0);
-    TRY_QUERY(WR_VAR(0, 1, 2), 52, 4);
-    TRY_QUERY(WR_VAR(0, 1, 2), 53, 0);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block=1", 4);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B01001=1", 4);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block>1", 0);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B01001>1", 0);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block<=1", 4);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B01001<=1", 4);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "0<=B01001<=2", 4);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "1<=B01001<=1", 4);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "2<=B01001<=4", 0);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B01011=DB-All.e!", 4);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B01012<300", 0);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B01012<=300", 4);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B01012=300", 4);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B01012>=300", 4);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B01012>300", 4);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B01012<400", 4);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B01012<=400", 4);
+    TRY_QUERY("year=1001", 0);
+    TRY_QUERY("yearmin=1999", 0);
+    TRY_QUERY("yearmin=1945", 4);
+    TRY_QUERY("yearmax=1944", 0);
+    TRY_QUERY("yearmax=1945", 4);
+    TRY_QUERY("yearmax=2030", 4);
+    TRY_QUERY("year=1944", 0);
+    TRY_QUERY("year=1945", 4);
+    TRY_QUERY("year=1946", 0);
+    TRY_QUERY("B01001=1", 4);
+    TRY_QUERY("B01001=2", 0);
+    TRY_QUERY("B01002=52", 4);
+    TRY_QUERY("B01002=53", 0);
+    TRY_QUERY("ana_filter=block=1", 4);
+    TRY_QUERY("ana_filter=B01001=1", 4);
+    TRY_QUERY("ana_filter=block>1", 0);
+    TRY_QUERY("ana_filter=B01001>1", 0);
+    TRY_QUERY("ana_filter=block<=1", 4);
+    TRY_QUERY("ana_filter=B01001<=1", 4);
+    TRY_QUERY("ana_filter=0<=B01001<=2", 4);
+    TRY_QUERY("ana_filter=1<=B01001<=1", 4);
+    TRY_QUERY("ana_filter=2<=B01001<=4", 0);
+    TRY_QUERY("data_filter=B01011=DB-All.e!", 4);
+    TRY_QUERY("data_filter=B01012<300", 0);
+    TRY_QUERY("data_filter=B01012<=300", 4);
+    TRY_QUERY("data_filter=B01012=300", 4);
+    TRY_QUERY("data_filter=B01012>=300", 4);
+    TRY_QUERY("data_filter=B01012>300", 4);
+    TRY_QUERY("data_filter=B01012<400", 4);
+    TRY_QUERY("data_filter=B01012<=400", 4);
 
     /*
     TRY_QUERY(i, DBA_KEY_MONTHMIN, 1);
@@ -369,57 +369,59 @@ void db_shar::test_misc_queries()
     TRY_QUERY(i, DBA_KEY_SECMAX, 12);
     TRY_QUERY(i, DBA_KEY_SEC, 5);
     */
-    TRY_QUERY(DBA_KEY_LATMIN, 11.0, 4);
-    TRY_QUERY(DBA_KEY_LATMIN, 12.34560, 4);
-    TRY_QUERY(DBA_KEY_LATMIN, 13.0, 0);
-    TRY_QUERY(DBA_KEY_LATMAX, 11.0, 0);
-    TRY_QUERY(DBA_KEY_LATMAX, 12.34560, 4);
-    TRY_QUERY(DBA_KEY_LATMAX, 13.0, 4);
+    TRY_QUERY("latmin=11.0", 4);
+    TRY_QUERY("latmin=12.34560", 4);
+    TRY_QUERY("latmin=13.0", 0);
+    TRY_QUERY("latmax=11.0", 0);
+    TRY_QUERY("latmax=12.34560", 4);
+    TRY_QUERY("latmax=13.0", 4);
     TRY_QUERY2(75., 77., 4);
     TRY_QUERY2(76.54320, 76.54320, 4);
     TRY_QUERY2(76.54330, 77., 0);
     TRY_QUERY2(77., 76.54330, 4);
     TRY_QUERY2(77., 76.54320, 4);
     TRY_QUERY2(77., -10, 0);
-    TRY_QUERY(DBA_KEY_MOBILE, 0, 4);
-    TRY_QUERY(DBA_KEY_MOBILE, 1, 0);
+    TRY_QUERY2(0., 360., 4);
+    TRY_QUERY2(-180., 180., 4);
+    TRY_QUERY("mobile=0", 4);
+    TRY_QUERY("mobile=1", 0);
     //TRY_QUERY(c, DBA_KEY_IDENT_SELECT, "pippo");
-    TRY_QUERY(DBA_KEY_PINDICATOR, 20, 4);
-    TRY_QUERY(DBA_KEY_PINDICATOR, 21, 0);
-    TRY_QUERY(DBA_KEY_P1, 111, 4);
-    TRY_QUERY(DBA_KEY_P1, 112, 0);
-    TRY_QUERY(DBA_KEY_P2, 121, 0);
-    TRY_QUERY(DBA_KEY_P2, 122, 2);
-    TRY_QUERY(DBA_KEY_P2, 123, 2);
-    TRY_QUERY(DBA_KEY_LEVELTYPE1, 10, 4);
-    TRY_QUERY(DBA_KEY_LEVELTYPE1, 11, 0);
-    TRY_QUERY(DBA_KEY_LEVELTYPE2, 15, 4);
-    TRY_QUERY(DBA_KEY_LEVELTYPE2, 16, 0);
-    TRY_QUERY(DBA_KEY_L1, 11, 4);
-    TRY_QUERY(DBA_KEY_L1, 12, 0);
-    TRY_QUERY(DBA_KEY_L2, 22, 4);
-    TRY_QUERY(DBA_KEY_L2, 23, 0);
-    TRY_QUERY(DBA_KEY_VAR, "B01011", 2);
-    TRY_QUERY(DBA_KEY_VAR, "B01012", 2);
-    TRY_QUERY(DBA_KEY_VAR, "B01013", 0);
-    TRY_QUERY(DBA_KEY_REP_COD, 1, 2);
-    TRY_QUERY(DBA_KEY_REP_COD, 2, 2);
-    TRY_QUERY(DBA_KEY_REP_COD, 3, 0);
-    TRY_QUERY(DBA_KEY_PRIORITY, 101, 2);
-    TRY_QUERY(DBA_KEY_PRIORITY, 81, 2);
-    TRY_QUERY(DBA_KEY_PRIORITY, 102, 0);
-    TRY_QUERY(DBA_KEY_PRIOMIN, 70, 4);
-    TRY_QUERY(DBA_KEY_PRIOMIN, 80, 4);
-    TRY_QUERY(DBA_KEY_PRIOMIN, 90, 2);
-    TRY_QUERY(DBA_KEY_PRIOMIN, 100, 2);
-    TRY_QUERY(DBA_KEY_PRIOMIN, 110, 0);
-    TRY_QUERY(DBA_KEY_PRIOMAX, 70, 0);
-    TRY_QUERY(DBA_KEY_PRIOMAX, 81, 2);
-    TRY_QUERY(DBA_KEY_PRIOMAX, 100, 2);
-    TRY_QUERY(DBA_KEY_PRIOMAX, 101, 4);
-    TRY_QUERY(DBA_KEY_PRIOMAX, 110, 4);
-    TRY_QUERY(DBA_KEY_CONTEXT_ID, 1, 1);
-    TRY_QUERY(DBA_KEY_CONTEXT_ID, 11, 1);
+    TRY_QUERY("pindicator=20", 4);
+    TRY_QUERY("pindicator=21", 0);
+    TRY_QUERY("p1=111", 4);
+    TRY_QUERY("p1=112", 0);
+    TRY_QUERY("p2=121", 0);
+    TRY_QUERY("p2=122", 2);
+    TRY_QUERY("p2=123", 2);
+    TRY_QUERY("leveltype1=10", 4);
+    TRY_QUERY("leveltype1=11", 0);
+    TRY_QUERY("leveltype2=15", 4);
+    TRY_QUERY("leveltype2=16", 0);
+    TRY_QUERY("l1=11", 4);
+    TRY_QUERY("l1=12", 0);
+    TRY_QUERY("l2=22", 4);
+    TRY_QUERY("l2=23", 0);
+    TRY_QUERY("var=B01011", 2);
+    TRY_QUERY("var=B01012", 2);
+    TRY_QUERY("var=B01013", 0);
+    TRY_QUERY("rep_cod=1", 2);
+    TRY_QUERY("rep_cod=2", 2);
+    TRY_QUERY("rep_cod=3", 0);
+    TRY_QUERY("priority=101", 2);
+    TRY_QUERY("priority=81", 2);
+    TRY_QUERY("priority=102", 0);
+    TRY_QUERY("priomin=70", 4);
+    TRY_QUERY("priomin=80", 4);
+    TRY_QUERY("priomin=90", 2);
+    TRY_QUERY("priomin=100", 2);
+    TRY_QUERY("priomin=110", 0);
+    TRY_QUERY("priomax=70", 0);
+    TRY_QUERY("priomax=81", 2);
+    TRY_QUERY("priomax=100", 2);
+    TRY_QUERY("priomax=101", 4);
+    TRY_QUERY("priomax=110", 4);
+    TRY_QUERY("context_id=1", 1);
+    TRY_QUERY("context_id=11", 1);
 
 #undef TRY_QUERY
 #undef TRY_QUERY2

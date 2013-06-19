@@ -205,16 +205,28 @@ struct Constraints
         }
         if (rec.key_peek_value(DBA_KEY_LONMIN) && rec.key_peek_value(DBA_KEY_LONMAX))
         {
-            int lonmin = normalon(rec.key(DBA_KEY_LONMIN).enqi());
-            int lonmax = normalon(rec.key(DBA_KEY_LONMAX).enqi());
-            if (lonmin <= lonmax)
+            int lonmin = rec.key(DBA_KEY_LONMIN).enqi();
+            int lonmax = rec.key(DBA_KEY_LONMAX).enqi();
+            if (lonmin == lonmax)
             {
-                q.append_listf("%s.lon>=%d AND %s.lon<=%d", tbl, lonmin, tbl, lonmax);
+                q.append_listf("%s.lon=%d", tbl, normalon(lonmin));
+                found = true;
             } else {
-                q.append_listf("((%s.lon>=%d AND %s.lon<=18000000) OR (%s.lon>=-18000000 AND %s.lon<=%d))",
-                        tbl, lonmin, tbl, tbl, tbl, lonmax);
+                lonmin = normalon(lonmin);
+                lonmax = normalon(lonmax);
+                if (lonmin < lonmax)
+                {
+                    q.append_listf("%s.lon>=%d AND %s.lon<=%d", tbl, lonmin, tbl, lonmax);
+                    found = true;
+                } else if (lonmin > lonmax) {
+                    q.append_listf("((%s.lon>=%d AND %s.lon<=18000000) OR (%s.lon>=-18000000 AND %s.lon<=%d))",
+                            tbl, lonmin, tbl, tbl, tbl, lonmax);
+                    found = true;
+                }
+                // If after being normalised min and max are the same, we
+                // assume that one wants "any longitude", as is the case with
+                // lonmin=0 lonmax=360 or lonmin=-180 lonmax=180
             }
-            found = true;
         } else if (rec.key_peek_value(DBA_KEY_LONMIN) != NULL) {
             throw error_consistency("'lonmin' query parameter was specified without 'lonmax'");
         } else if (rec.key_peek_value(DBA_KEY_LONMAX) != NULL) {
