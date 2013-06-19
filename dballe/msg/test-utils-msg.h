@@ -203,6 +203,16 @@ struct RoundVSS : public MessageTweaker
     virtual std::string desc() const { return "RoundVSS"; }
 };
 
+// Remove a context given its level and time range
+struct RemoveContext : public MessageTweaker
+{
+    Level lev;
+    Trange tr;
+    RemoveContext(const Level& lev, const Trange& tr);
+    void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "RemoveContext"; }
+};
+
 }
 
 struct TestMessage
@@ -236,6 +246,7 @@ struct TestCodec
     MessageTweakers after_reimport_import;
     MessageTweakers after_reimport_reimport;
     MessageTweakers after_convert_import;
+    MessageTweakers after_convert_reimport_on_orig;
     MessageTweakers after_convert_reimport;
 
     void do_compare(const dballe::tests::Location& loc, const TestMessage& msg1, const TestMessage& msg2);

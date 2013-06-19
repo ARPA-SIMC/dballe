@@ -142,6 +142,10 @@ void to::test<8>()
     test.expected_min_vars = 50;
     test.configure_ecmwf_to_wmo_tweaks();
     test.after_convert_reimport.add(new dballe::tests::tweaks::HeightToGeopotential);
+    test.after_convert_reimport_on_orig.add(new dballe::tests::tweaks::RemoveContext(
+                Level(100, 70000), Trange::instant()));
+    test.after_convert_reimport_on_orig.add(new dballe::tests::tweaks::RemoveContext(
+                Level(100, 85000), Trange::instant()));
 
     TEST_reimport(test);
     TEST_convert(test, "pilot-wmo");

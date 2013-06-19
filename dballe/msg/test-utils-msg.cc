@@ -580,6 +580,19 @@ void RoundVSS::tweak(Msgs& msgs)
     }
 }
 
+RemoveContext::RemoveContext(const Level& lev, const Trange& tr)
+    : lev(lev), tr(tr)
+{
+}
+void RemoveContext::tweak(Msgs& msgs)
+{
+    for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+    {
+        Msg& m = **mi;
+        m.remove_context(lev, tr);
+    }
+}
+
 }
 
 TestMessage::TestMessage(Encoding type, const std::string& name)
@@ -755,6 +768,7 @@ void TestCodec::run_convert(const dballe::tests::Location& loc, const std::strin
     }
 
     // Run tweaks
+    after_convert_reimport_on_orig.apply(orig.msgs);
     after_convert_reimport.apply(final.msgs);
 
     try {
