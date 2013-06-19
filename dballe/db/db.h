@@ -309,7 +309,8 @@ public:
      * @return
      *   The cursor to use to iterate over the results. The results are the
      *   same as query_data, except that no context_id, datetime and value are
-     *   provided. Instead, min and max date
+     *   provided, so it only gives all the available combinations of data
+     *   contexts.
      */
     virtual std::auto_ptr<db::Cursor> query_summary(const Record& rec) = 0;
 

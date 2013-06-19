@@ -401,7 +401,9 @@ void IdQueryBuilder::build_order_by()
 
 void SummaryQueryBuilder::build_select()
 {
-    sql_query.append("SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var, COUNT(*), MIN(d.datetime), MAX(d.datetime)");
+    // sql_query.append("SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var, COUNT(*), MIN(d.datetime), MAX(d.dat
+
+    sql_query.append("SELECT DISTINCT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var");
     stm.bind_out(output_seq++, cur.sqlrec.out_ana_id);
     stm.bind_out(output_seq++, cur.sqlrec.out_lat);
     stm.bind_out(output_seq++, cur.sqlrec.out_lon);
@@ -409,10 +411,12 @@ void SummaryQueryBuilder::build_select()
     stm.bind_out(output_seq++, cur.sqlrec.out_rep_cod);
     stm.bind_out(output_seq++, cur.sqlrec.out_id_ltr, cur.sqlrec.out_id_ltr_ind);
     stm.bind_out(output_seq++, cur.sqlrec.out_varcode);
+    /*
     // Abuse id_data and datetime for count and min(datetime)
     stm.bind_out(output_seq++, cur.sqlrec.out_id_data);
     stm.bind_out(output_seq++, cur.sqlrec.out_datetime);
     stm.bind_out(output_seq++, cur_s.out_datetime_max);
+    */
     sql_from.append(
             " FROM station s"
             " JOIN data d ON s.id = d.id_station"
@@ -427,7 +431,7 @@ void SummaryQueryBuilder::build_order_by()
 {
     // No ordering required
     // But we add a GROUP BY
-    sql_query.append(" GROUP BY s.id, d.id_report, d.id_lev_tr, d.id_var");
+    //sql_query.append(" GROUP BY s.id, d.id_report, d.id_lev_tr, d.id_var");
 }
 
 

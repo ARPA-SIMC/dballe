@@ -488,6 +488,7 @@ void CursorSummary::to_record(Record& rec)
     to_record_varcode(rec);
     to_record_ltr(rec);
 
+    /*
     // Min datetime
     rec.key(DBA_KEY_YEARMIN).seti(sqlrec.out_datetime.year);
     rec.key(DBA_KEY_MONTHMIN).seti(sqlrec.out_datetime.month);
@@ -506,6 +507,7 @@ void CursorSummary::to_record(Record& rec)
 
     // Abuse id_data and datetime for count and min(datetime)
     rec.key(DBA_KEY_LIMIT).seti(sqlrec.out_id_data);
+    */
 }
 
 unsigned CursorSummary::test_iterate(FILE* dump)
