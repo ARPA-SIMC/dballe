@@ -611,6 +611,8 @@ struct PilotWMO : public TempBase
             // We only want levels with a vertical sounding significance
             const Var* vss = c.find_vsig();
             if (vss == NULL) continue;
+            if (pressure_levs && c.level.ltype1 != 100) continue;
+            if (!pressure_levs && c.level.ltype1 != 102) continue;
 
             add(WR_VAR(0,  4, 86), &c);
             add(WR_VAR(0,  8, 42), &c);
@@ -645,15 +647,16 @@ struct PilotWMO : public TempBase
         {
             // Iterate backwards to get pressure levels sorted from the higher
             // to the lower pressure
-            const msg::Context* c = *i;
-            // Skip non-pressure levels
-            if (c->level.ltype1 != 100) continue;
+            const msg::Context& c = **i;
+            // Skip levels that do not fit
+            if (pressure_levs && c.level.ltype1 != 100) continue;
+            if (!pressure_levs && c.level.ltype1 != 102) continue;
             if (pressure_levs)
             {
-                if (do_D03051(*c))
+                if (do_D03051(c))
                     ++group_count;
             } else {
-                if (do_D03053(*c))
+                if (do_D03053(c))
                     ++group_count;
             }
         }
