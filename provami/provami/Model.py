@@ -213,7 +213,7 @@ class Summary(object):
         del f["lonmax"]
         # Build a set with the matched stations
         stations = set()
-        for k, v in self.iter_filtered(filter):
+        for k, v in self.iter_filtered(f):
             stations.add(k.ana_id)
         for s in stations:
             yield s, self.stations[s]
