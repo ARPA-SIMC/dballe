@@ -19,10 +19,12 @@
 
 #include "db/test-utils-db.h"
 #include "db/querybuf.h"
+#include <wibble/string.h>
 
 using namespace dballe;
 using namespace dballe::db;
 using namespace wreport;
+using namespace wibble;
 using namespace std;
 
 namespace tut {
@@ -40,6 +42,14 @@ static int print_results(db::Cursor& cur)
         result.print(stderr);
     }
     return i;
+}
+
+// Set a record from a ", "-separated string of assignments
+static void set_record_from_string(Record& rec, const std::string& s)
+{
+     str::Split splitter(", ", s);
+     for (str::Split::const_iterator i = splitter.begin(); i != splitter.end(); ++i)
+         rec.set_from_string(i->c_str());
 }
 
 struct db_shar : public dballe::tests::DB_test_base
@@ -281,7 +291,7 @@ void db_shar::test_misc_queries()
 /* Try a query using a KEY query parameter */
 #define TRY_QUERY(qstring, expected_count) do {\
         query.clear(); \
-        query.set_from_string(qstring); \
+        set_record_from_string(query, qstring); \
         auto_ptr<db::Cursor> cur = db->query_data(query); \
         ensure_equals(cur->remaining(), expected_count); \
         int count; \
@@ -289,20 +299,6 @@ void db_shar::test_misc_queries()
         else for (count = 0; cur->next(); ++count) ; \
         ensure_equals(count, expected_count); \
 } while (0)
-
-/* Try a query using a longitude range */
-#define TRY_QUERY2(lonmin, lonmax, expected_count) do {\
-        query.clear(); \
-        query.key(DBA_KEY_LONMIN).setd(lonmin); \
-        query.key(DBA_KEY_LONMAX).setd(lonmax); \
-        auto_ptr<db::Cursor> cur = db->query_data(query); \
-        ensure_equals(cur->remaining(), expected_count); \
-        int count; \
-        if (0) count = print_results(*cur); \
-        else for (count = 0; cur->next(); ++count) ; \
-        ensure_equals(count, expected_count); \
-} while (0)
-
 
     TRY_QUERY("ana_id=1", 4);
     TRY_QUERY("ana_id=2", 0);
@@ -375,14 +371,14 @@ void db_shar::test_misc_queries()
     TRY_QUERY("latmax=11.0", 0);
     TRY_QUERY("latmax=12.34560", 4);
     TRY_QUERY("latmax=13.0", 4);
-    TRY_QUERY2(75., 77., 4);
-    TRY_QUERY2(76.54320, 76.54320, 4);
-    TRY_QUERY2(76.54330, 77., 0);
-    TRY_QUERY2(77., 76.54330, 4);
-    TRY_QUERY2(77., 76.54320, 4);
-    TRY_QUERY2(77., -10, 0);
-    TRY_QUERY2(0., 360., 4);
-    TRY_QUERY2(-180., 180., 4);
+    TRY_QUERY("lonmin=75, lonmax=77", 4);
+    TRY_QUERY("lonmin=76.54320, lonmax=76.54320", 4);
+    TRY_QUERY("lonmin=76.54330, lonmax=77.", 0);
+    TRY_QUERY("lonmin=77., lonmax=76.54330", 4);
+    TRY_QUERY("lonmin=77., lonmax=76.54320", 4);
+    TRY_QUERY("lonmin=77., lonmax=-10", 0);
+    TRY_QUERY("lonmin=0., lonmax=360.", 4);
+    TRY_QUERY("lonmin=-180., lonmax=180.", 4);
     TRY_QUERY("mobile=0", 4);
     TRY_QUERY("mobile=1", 0);
     //TRY_QUERY(c, DBA_KEY_IDENT_SELECT, "pippo");
