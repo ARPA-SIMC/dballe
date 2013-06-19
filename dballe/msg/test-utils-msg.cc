@@ -27,6 +27,7 @@
 #include <wibble/string.h>
 
 #include <cstring>
+#include <cmath>
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -542,6 +543,25 @@ void RoundGeopotential::tweak(Msgs& msgs)
                 Var var4(table->query(WR_VAR(0, 10, 3)), var3);
                 orig->set(var4);
             }
+        }
+    }
+}
+
+HeightToGeopotential::HeightToGeopotential()
+{
+    table = Vartable::get("B0000000000000014000");
+}
+void HeightToGeopotential::tweak(Msgs& msgs)
+{
+    for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+    {
+        Msg& m = **mi;
+        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+        {
+            msg::Context& c = **ci;
+            if (c.level.ltype1 != 102) continue;
+            Var var(table->query(WR_VAR(0, 10, 8)), round(c.level.l1 * 9.807 / 10) * 10);
+            c.set(var);
         }
     }
 }

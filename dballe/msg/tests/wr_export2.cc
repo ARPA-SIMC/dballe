@@ -141,6 +141,7 @@ void to::test<8>()
     dballe::tests::TestCodec test("bufr/pilot-gts4.bufr");
     test.expected_min_vars = 50;
     test.configure_ecmwf_to_wmo_tweaks();
+    test.after_convert_reimport.add(new dballe::tests::tweaks::HeightToGeopotential);
 
     TEST_reimport(test);
     TEST_convert(test, "pilot-wmo");

@@ -187,6 +187,15 @@ struct RoundGeopotential : public MessageTweaker
     virtual std::string desc() const { return "RoundGeopotential"; }
 };
 
+// Add B10008 GEOPOTENTIAL to all height levels, with its value taken from the height
+struct HeightToGeopotential : public MessageTweaker
+{
+    const wreport::Vartable* table;
+    HeightToGeopotential();
+    void tweak(Msgs& msgs);
+    virtual std::string desc() const { return "HeightToGeopotential"; }
+};
+
 // Round vertical sounding significance with a B08042->B08001->B08042 round trip
 struct RoundVSS : public MessageTweaker
 {
