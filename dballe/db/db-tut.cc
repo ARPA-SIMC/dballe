@@ -371,6 +371,12 @@ void db_shar::test_misc_queries()
     TRY_QUERY("latmax=11.0", 0);
     TRY_QUERY("latmax=12.34560", 4);
     TRY_QUERY("latmax=13.0", 4);
+    TRY_QUERY("latmin=0, latmax=20", 4);
+    TRY_QUERY("latmin=-90, latmax=20", 4);
+    TRY_QUERY("latmin=-90, latmax=0", 0);
+    TRY_QUERY("latmin=10, latmax=90", 4);
+    TRY_QUERY("latmin=45, latmax=90", 0);
+    TRY_QUERY("latmin=-90, latmax=90", 4);
     TRY_QUERY("lonmin=75, lonmax=77", 4);
     TRY_QUERY("lonmin=76.54320, lonmax=76.54320", 4);
     TRY_QUERY("lonmin=76.54330, lonmax=77.", 0);

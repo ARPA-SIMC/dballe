@@ -195,6 +195,23 @@ struct Constraints
         found = true;
     }
 
+    void add_lat()
+    {
+        add_int(DBA_KEY_LAT, "%s.lat=%d");
+        int latmin = rec.get(DBA_KEY_LATMIN, -9000000);
+        if (latmin > -9000000)
+        {
+            q.append_listf("%s.lat>=%d", tbl, latmin);
+            found = true;
+        }
+        int latmax = rec.get(DBA_KEY_LATMAX, 9000000);
+        if (latmax < 9000000)
+        {
+            q.append_listf("%s.lat<=%d", tbl, latmax);
+            found = true;
+        }
+    }
+
     void add_lon()
     {
         //add_int(rec, cur->sel_lonmin, DBA_KEY_LON, "pa.lon=?", DBA_DB_FROM_PA);
@@ -451,9 +468,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
 {
     Constraints c(rec, tbl, sql_where);
     c.add_int(DBA_KEY_ANA_ID, "%s.id=%d");
-    c.add_int(DBA_KEY_LAT, "%s.lat=%d");
-    c.add_int(DBA_KEY_LATMIN, "%s.lat>=%d");
-    c.add_int(DBA_KEY_LATMAX, "%s.lat<=%d");
+    c.add_lat();
     c.add_lon();
     c.add_mobile();
     if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
