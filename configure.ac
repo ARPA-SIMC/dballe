@@ -277,7 +277,7 @@ AC_CONFIG_FILES([
 Makefile
 dballe/Makefile
 fortran/Makefile
-tools/Makefile
+src/Makefile
 tables/Makefile
 extra/Makefile
 python/Makefile
