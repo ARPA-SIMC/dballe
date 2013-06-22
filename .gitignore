@@ -73,9 +73,10 @@ Makefile
 /tables/B000000002001400.txt
 /tables/B990204.txt
 /tables/B000299.txt
-/tools/dbadb
-/tools/dbamsg
-/tools/dbatbl
+/src/dbadb
+/src/dbamsg
+/src/dbatbl
+/src/bench
 /debian/*.debhelper.log
 /debian/*.debhelper
 /debian/*.substvars
