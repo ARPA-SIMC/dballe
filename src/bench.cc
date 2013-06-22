@@ -21,6 +21,7 @@
 #include <dballe/core/rawmsg.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/codec.h>
+#include <dballe/db/db.h>
 #include <wreport/bulletin.h>
 #include <wibble/string.h>
 #include <functional>
@@ -91,14 +92,20 @@ struct FileBenchmark : public Benchmark
     vector<Rawmsg*> raw_messages;
     vector<Bulletin*> bulletins;
     vector<Msgs*> messages;
+    DB* db;
 
     FileBenchmark(const std::string& name, const std::string& desc, const std::string& fname)
         : Benchmark(name, desc), fname(str::joinpath(BENCHDIR, fname))
     {
+        db = DB::connect_test().release();
+        db->reset();
     }
 
     ~FileBenchmark()
     {
+        delete db;
+        for (auto i : messages) delete i;
+        for (auto i : bulletins) delete i;
         for (auto i : raw_messages) delete i;
     }
 
@@ -132,6 +139,15 @@ struct FileBenchmark : public Benchmark
             std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
             std::unique_ptr<Msgs> msgs(new Msgs);
             importer->from_bulletin(*b, *msgs);
+            messages.push_back(msgs.release());
+        }
+    }
+
+    void import()
+    {
+        for (auto m : messages)
+        {
+            db->import_msgs(*m, NULL, 0);
         }
     }
 
@@ -140,6 +156,7 @@ struct FileBenchmark : public Benchmark
         timeit("read", [this] { read_file(); });
         timeit("decode", [this] { decode_bufr(); });
         timeit("interpret", [this] { interpret_bulletins(); });
+        timeit("import", [this] { import(); });
     }
 };
 
