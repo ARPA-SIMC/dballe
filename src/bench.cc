@@ -20,6 +20,7 @@
 #include <dballe/core/file.h>
 #include <dballe/core/rawmsg.h>
 #include <dballe/msg/msgs.h>
+#include <dballe/msg/codec.h>
 #include <wreport/bulletin.h>
 #include <wibble/string.h>
 #include <functional>
@@ -124,10 +125,21 @@ struct FileBenchmark : public Benchmark
         }
     }
 
+    void interpret_bulletins()
+    {
+        for (auto b : bulletins)
+        {
+            std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+            std::unique_ptr<Msgs> msgs(new Msgs);
+            importer->from_bulletin(*b, *msgs);
+        }
+    }
+
     virtual void run() override
     {
         timeit("read", [this] { read_file(); });
         timeit("decode", [this] { decode_bufr(); });
+        timeit("interpret", [this] { interpret_bulletins(); });
     }
 };
 
