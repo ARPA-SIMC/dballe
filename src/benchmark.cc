@@ -99,9 +99,9 @@ struct FileBenchmark : public Benchmark
     string query_report{"rep_memo=synop"};
     string query_datetime{"yearmin=2013 monthmin=6 daymin=18 yearmax=2013 monthmax=6 daymax=19"};
     string query_varcode{"var=B12101"};
-    string query_anafilter{"B07030>50"};
-    string query_datafilter{"B12101>290"};
-    string query_attrfilter{"B33007>70"};
+    string query_anafilter{"B07030>=50"};
+    string query_datafilter{"B12101>=290"};
+    string query_attrfilter{"B33007>=70"};
 
     vector<Rawmsg*> raw_messages;
     vector<Bulletin*> bulletins;
@@ -179,19 +179,19 @@ struct FileBenchmark : public Benchmark
         DBBenchmark db_all(name + ".db_all", "Query with an empty filter", *db);
         db_all.run(runner);
 
-        DBBenchmark db_anaid(name + ".db_anaid", "Query by station ID", *db, 10);
+        DBBenchmark db_anaid(name + ".db_anaid", "Query by station ID", *db, 5);
         set_record_from_string(db_anaid.query, query_anaid);
         db_anaid.run(runner);
 
-        DBBenchmark db_anall(name + ".db_anall", "Query by station coordinates", *db, 10);
+        DBBenchmark db_anall(name + ".db_anall", "Query by station coordinates", *db, 5);
         set_record_from_string(db_anall.query, query_anall);
         db_anall.run(runner);
 
-        DBBenchmark db_level(name + ".db_level", "Query by level", *db, 10);
+        DBBenchmark db_level(name + ".db_level", "Query by level", *db, 5);
         set_record_from_string(db_level.query, query_level);
         db_level.run(runner);
 
-        DBBenchmark db_report(name + ".db_report", "Query by report", *db, 10);
+        DBBenchmark db_report(name + ".db_report", "Query by report", *db, 5);
         set_record_from_string(db_report.query, query_report);
         db_report.run(runner);
 
@@ -199,7 +199,7 @@ struct FileBenchmark : public Benchmark
         set_record_from_string(db_datetime.query, query_datetime);
         db_datetime.run(runner);
 
-        DBBenchmark db_varcode(name + ".db_varcode", "Query by varcode", *db, 10);
+        DBBenchmark db_varcode(name + ".db_varcode", "Query by varcode", *db, 5);
         set_record_from_string(db_varcode.query, query_varcode);
         db_varcode.run(runner);
 
