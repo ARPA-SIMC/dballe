@@ -72,7 +72,7 @@ void Runner::timeit(const Benchmark& bench, const std::string& name, std::functi
     clock_t stime = tms_end.tms_stime - tms_start.tms_stime;
 
     log.push_back(LogEntry(bench, name, (double)utime/ticks_per_sec, (double)stime/ticks_per_sec));
-    log.back().print(cout);
+    log.back().print(cerr);
 }
 
 void Runner::run()
@@ -83,6 +83,14 @@ void Runner::run()
     }
 }
 
+void Runner::dump_csv(std::ostream& out)
+{
+    out << "Suite,Test,User,System" << endl;
+    for (auto l : log)
+    {
+        out << l.b_name << "," << l.name << "," << l.utime << "," << l.stime << endl;
+    }
+}
 
 }
 }

@@ -71,6 +71,9 @@ struct Runner
 
     /// Run all benchmarks that have been added to this runner
     void run();
+
+    /// Dump benchmark measurements in CSV format
+    void dump_csv(std::ostream& out);
 };
 
 

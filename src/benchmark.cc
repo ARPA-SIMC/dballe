@@ -27,6 +27,7 @@
 #include <wreport/bulletin.h>
 #include <wibble/string.h>
 #include <vector>
+#include <iostream>
 #include <config.h>
 
 using namespace std;
@@ -96,8 +97,11 @@ struct FileBenchmark : public Benchmark
     string query_anall{"latmin=42, latmax=46, lonmin=9, lonmax=13"};
     string query_level{"leveltype1=1"};
     string query_report{"rep_memo=synop"};
-    string query_datetime{"yearmin=2013 monthmin=6 daymin=20 yearmax=2013 monthmax=6 daymax=21"};
+    string query_datetime{"yearmin=2013 monthmin=6 daymin=18 yearmax=2013 monthmax=6 daymax=19"};
     string query_varcode{"var=B12101"};
+    string query_anafilter{"B07030>50"};
+    string query_datafilter{"B12101>290"};
+    string query_attrfilter{"B33007>70"};
 
     vector<Rawmsg*> raw_messages;
     vector<Bulletin*> bulletins;
@@ -113,7 +117,7 @@ struct FileBenchmark : public Benchmark
 
     ~FileBenchmark()
     {
-        delete db;
+        if (db) delete db;
         for (auto i : messages) delete i;
         for (auto i : bulletins) delete i;
         for (auto i : raw_messages) delete i;
@@ -148,7 +152,11 @@ struct FileBenchmark : public Benchmark
         {
             std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
             std::unique_ptr<Msgs> msgs(new Msgs);
-            importer->from_bulletin(*b, *msgs);
+            try {
+                importer->from_bulletin(*b, *msgs);
+            } catch (std::exception& e) {
+                continue;
+            }
             messages.push_back(msgs.release());
         }
     }
@@ -157,7 +165,7 @@ struct FileBenchmark : public Benchmark
     {
         for (auto m : messages)
         {
-            db->import_msgs(*m, NULL, 0);
+            db->import_msgs(*m, NULL, DBA_IMPORT_OVERWRITE);
         }
     }
 
@@ -194,6 +202,21 @@ struct FileBenchmark : public Benchmark
         DBBenchmark db_varcode(name + ".db_varcode", "Query by varcode", *db, 10);
         set_record_from_string(db_varcode.query, query_varcode);
         db_varcode.run(runner);
+
+        DBBenchmark db_anafilter(name + ".db_anafilter", "Query by anafilter", *db, 1);
+        set_record_from_string(db_anafilter.query, query_anafilter);
+        db_anafilter.run(runner);
+
+        DBBenchmark db_datafilter(name + ".db_datafilter", "Query by datafilter", *db, 1);
+        set_record_from_string(db_datafilter.query, query_datafilter);
+        db_datafilter.run(runner);
+
+        DBBenchmark db_attrfilter(name + ".db_attrfilter", "Query by attrfilter", *db, 1);
+        set_record_from_string(db_attrfilter.query, query_attrfilter);
+        db_attrfilter.run(runner);
+
+        delete db;
+        db = 0;
     }
 };
 
@@ -203,7 +226,11 @@ int main (int argc, const char* argv[])
 {
     Runner runner;
     FileBenchmark* fb;
+    runner.add(fb = new FileBenchmark("synop", "fixed stations, few levels", "synop1_20130615_20130620.bufr"));
+    runner.add(fb = new FileBenchmark("ship", "mobile stations, few levels", "ship_20130615_20130620.bufr"));
+    runner.add(fb = new FileBenchmark("pilottemp", "fixed stations, many levels", "pilottemp_20130615_20130620.bufr"));
     runner.add(fb = new FileBenchmark("airep", "mobile stations, many levels", "airep_20130615_20130620.bufr"));
     runner.run();
+    runner.dump_csv(cout);
     return 0;
 }
