@@ -19,6 +19,7 @@
 
 #include <dballe/core/file.h>
 #include <dballe/core/rawmsg.h>
+#include <dballe/core/record.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/codec.h>
 #include <dballe/db/db.h>
@@ -151,12 +152,45 @@ struct FileBenchmark : public Benchmark
         }
     }
 
+    void query_all_stations()
+    {
+        Record rec;
+        auto c = db->query_stations(rec);
+        c->test_iterate();
+    }
+
+    void query_all_data()
+    {
+        Record rec;
+        auto c = db->query_data(rec);
+        c->test_iterate();
+    }
+
+    void query_all_data_best()
+    {
+        Record rec;
+        rec.set_from_string("query=best");
+        auto c = db->query_data(rec);
+        c->test_iterate();
+    }
+
+    void query_all_summary()
+    {
+        Record rec;
+        auto c = db->query_summary(rec);
+        c->test_iterate();
+    }
+
     virtual void run() override
     {
         timeit("read", [this] { read_file(); });
         timeit("decode", [this] { decode_bufr(); });
         timeit("interpret", [this] { interpret_bulletins(); });
         timeit("import", [this] { import(); });
+        timeit("query_all_stations", [this] { query_all_stations(); });
+        timeit("query_all_data", [this] { query_all_data(); });
+        timeit("query_all_data_best", [this] { query_all_data_best(); });
+        timeit("query_all_summary", [this] { query_all_summary(); });
     }
 };
 
