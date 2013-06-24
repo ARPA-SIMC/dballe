@@ -76,7 +76,7 @@ Makefile
 /src/dbadb
 /src/dbamsg
 /src/dbatbl
-/src/bench
+/src/benchmark
 /debian/*.debhelper.log
 /debian/*.debhelper
 /debian/*.substvars
