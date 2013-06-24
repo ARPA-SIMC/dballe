@@ -1,0 +1,46 @@
+#!/usr/bin/python
+
+import csv
+import os
+import os.path
+
+class Suite(object):
+    def __init__(self, name):
+        self.name = name
+
+    def add_result(self, names, utime, stime):
+        print names, utime, stime
+
+
+def last_two_files():
+    # Find all .csv files
+    files = [fn for fn in os.listdir("src/bench") if fn.endswith(".csv")]
+    files.sort(key=lambda fn:int(fn.split("-")[0]))
+    return files[-2:]
+
+def read_file(fn):
+    suites = {}
+    pathname = os.path.join("src/bench", fn)
+    with open(pathname) as fd:
+        reader = csv.reader(fd)
+        for idx, row in enumerate(reader):
+            # Skip titles
+            if idx == 0: continue
+            sname, name, utime, stime = row
+            # Mangle suite names differently than found in CSV: take only the
+            # toplevel suite name and use all other names as if they were
+            # categories
+            snames = sname.split(".")
+            suite_name = snames.pop(0)
+            if suite_name not in suites:
+                suite = Suite(suite_name)
+                suites[suite_name] = suite
+            else:
+                suite = suites[suite_name]
+            snames.append(name)
+            suite.add_result(snames, utime, stime)
+    return suites
+
+fn_old, fn_new = last_two_files()
+suites_old = read_file(fn_old)
+suites_new = read_file(fn_new)
