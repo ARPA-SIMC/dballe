@@ -11,4 +11,4 @@ else
 	exit 1
 fi
 
-./run-local src/benchmark > "src/bench/$SVNID-`date +%Y%m%d-%H%M%S`.csv"
+eatmydata ./run-local src/benchmark > "src/bench/$SVNID-`date +%Y%m%d-%H%M%S`.csv"
