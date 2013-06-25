@@ -27,7 +27,7 @@ noinst_PROGRAMS = benchmark
 benchmark_SOURCES = benchmark.cc bench/bench.cc
 benchmark_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
 benchmark_DEPENDENCIES = $(DBALLELIBS)
-benchmark_CPPFLAGS = -DBENCHDIR='"$(top_srcdir)/extra/bench/"' -std=c++11
+benchmark_CPPFLAGS = -DBENCHDIR='"$(top_srcdir)/extra/bench/"'
 endif
 
 EXTRA_DIST = bench/bench.h
