@@ -118,7 +118,7 @@ static PyObject* dpy_DB_is_url(PyTypeObject *type, PyObject *args)
     if (DB::is_url(url))
         Py_RETURN_TRUE;
     else
-        Py_RETURN_TRUE;
+        Py_RETURN_FALSE;
 }
 
 static PyObject* dpy_DB_reset(dpy_DB* self, PyObject *args)
