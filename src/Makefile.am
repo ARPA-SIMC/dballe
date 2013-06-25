@@ -6,7 +6,6 @@ AM_CPPFLAGS = -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
 
 bin_PROGRAMS = dbatbl dbamsg
 dist_bin_SCRIPTS = dbatbl_makeb
-noinst_PROGRAMS = benchmark
 
 dbatbl_SOURCES = dbatbl.cc
 dbatbl_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
@@ -23,9 +22,12 @@ dbadb_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
 dbadb_DEPENDENCIES = $(DBALLELIBS)
 endif
 
+if DO_BENCHMARKS
+noinst_PROGRAMS = benchmark
 benchmark_SOURCES = benchmark.cc bench/bench.cc
 benchmark_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
 benchmark_DEPENDENCIES = $(DBALLELIBS)
 benchmark_CPPFLAGS = -DBENCHDIR='"$(top_srcdir)/extra/bench/"' -std=c++11
+endif
 
 EXTRA_DIST = bench/bench.h

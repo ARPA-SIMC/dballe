@@ -64,6 +64,14 @@ AM_PROG_CC_STDC
 dnl Needed by subdir-objects
 AM_PROG_CC_C_O
 
+AX_CXX_COMPILE_STDCXX_11(noext,optional)
+if test x$HAVE_CXX11 = x1
+then
+	have_benchmarks=yes
+else
+	have_benchmarks=no
+fi
+
 dnl We want to invoke pkg-config directly
 PKG_PROG_PKG_CONFIG
 
@@ -269,6 +277,7 @@ AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
 AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
 AM_CONDITIONAL([DO_TESTS], [test x"$enable_tests" = x"yes"])
+AM_CONDITIONAL([DO_BENCHMARKS], [test x"$have_benchmarks" = x"yes"])
 
 AM_CONDITIONAL([HAVE_LATEX2HTML], [test x$have_latex2html = xyes])
 AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
@@ -305,4 +314,5 @@ AS_HELP_STRING([documentation:], [$enable_docs])
 AS_HELP_STRING([tests:], [$enable_tests])
 AS_HELP_STRING([latex2html:], [$have_latex2html])
 AS_HELP_STRING([rst2html:], [$have_rst2html])
+AS_HELP_STRING([benchmarks:], [$have_benchmarks])
 ===================================================])
