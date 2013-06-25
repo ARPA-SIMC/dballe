@@ -7,9 +7,9 @@ import os.path
 def changed_significantly(old, new):
     if old == new: return False
     diff = abs(new-old)
-    if old == 0 or new == 0:
-        return diff >= 0.2
-    return diff/old > 0.05
+    if diff < 0.3: return False
+    if old == 0 or new == 0: return True
+    return diff/old > 0.03
 
 def format_diff(old, new):
     if new == old: return "no change"
@@ -17,7 +17,7 @@ def format_diff(old, new):
     if new == 0: return "-%.2f (down to 0.00)" % old
     diff = new - old
     perc = diff / old
-    return "%+.2f (%+.2f%%)" % (diff, perc * 100)
+    return "%.2f (%+.2f, %+.2f%%)" % (new, diff, perc * 100)
 
 class Stats(object):
     def __init__(self, utime=0, stime=0):
@@ -28,12 +28,12 @@ class Stats(object):
         self.utime += utime
         self.stime += stime
 
-    def diff(self, name, prev):
+    def diff(self, name, prev, print_always=False):
         """
         Print differences from a previous run
         """
-        if changed_significantly(prev.utime, self.utime):
-            if changed_significantly(prev.stime, self.stime):
+        if changed_significantly(prev.utime, self.utime) or print_always:
+            if changed_significantly(prev.stime, self.stime) or print_always:
                 print "%s: user: %s sys: %s" % (
                     name,
                     format_diff(prev.utime, self.utime),
@@ -65,7 +65,7 @@ class Suite(object):
         """
         Print differences from a previous run
         """
-        self.stats.diff(self.name, prev.stats)
+        self.stats.diff(self.name, prev.stats, print_always=True)
         names = set(self.sub.iterkeys())
         names.update(prev.sub.iterkeys())
         for n in sorted(names):
