@@ -406,7 +406,7 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
 }
 
 static PyMethodDef dpy_DB_methods[] = {
-    {"connect",           (PyCFunction)dpy_DB_connect, METH_VARARGS | METH_CLASS,
+    {"connect",           (PyCFunction)dpy_DB_connect, METH_VARARGS | METH_KEYWORDS | METH_CLASS,
         "Create a DB connecting to an ODBC source" },
     {"connect_from_file", (PyCFunction)dpy_DB_connect_from_file, METH_VARARGS | METH_CLASS,
         "Create a DB connecting to a SQLite file" },
