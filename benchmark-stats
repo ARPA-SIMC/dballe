@@ -4,12 +4,108 @@ import csv
 import os
 import os.path
 
+def changed_significantly(old, new):
+    if old == new: return False
+    diff = abs(new-old)
+    if old == 0 or new == 0:
+        return diff >= 0.2
+    return diff/old > 0.05
+
+def format_diff(old, new):
+    if new == old: return "no change"
+    if old == 0: return "+%.2f (from 0.00)" % new
+    if new == 0: return "-%.2f (down to 0.00)" % old
+    diff = new - old
+    perc = diff / old
+    return "%+.2f (%+.2f%%)" % (diff, perc * 100)
+
+class Stats(object):
+    def __init__(self, utime=0, stime=0):
+        self.utime = utime
+        self.stime = stime
+
+    def add(self, utime, stime):
+        self.utime += utime
+        self.stime += stime
+
+    def diff(self, name, prev):
+        """
+        Print differences from a previous run
+        """
+        if changed_significantly(prev.utime, self.utime):
+            if changed_significantly(prev.stime, self.stime):
+                print "%s: user: %s sys: %s" % (
+                    name,
+                    format_diff(prev.utime, self.utime),
+                    format_diff(prev.stime, self.stime))
+            else:
+                print "%s: user: %s" % (
+                    name,
+                    format_diff(prev.utime, self.utime))
+        elif changed_significantly(prev.stime, self.stime):
+            print "%s: sys: %s" % (
+                name,
+                format_diff(prev.stime, self.stime))
+
 class Suite(object):
     def __init__(self, name):
         self.name = name
+        self.stats = Stats()
+        self.sub = {}
 
     def add_result(self, names, utime, stime):
-        print names, utime, stime
+        self.stats.add(utime, stime)
+        for n in names + [".".join(names)]:
+            if n in self.sub:
+                self.sub[n].add(utime, stime)
+            else:
+                self.sub[n] = Stats(utime, stime)
+
+    def diff(self, prev):
+        """
+        Print differences from a previous run
+        """
+        self.stats.diff(self.name, prev.stats)
+        names = set(self.sub.iterkeys())
+        names.update(prev.sub.iterkeys())
+        for n in sorted(names):
+            if n not in prev.sub:
+                print "%s.%s: new test appeared" % (self.name, n)
+            elif n not in self.sub:
+                print "%s.%s: old test disappeared" % (self.name, n)
+            else:
+                self.sub[n].diff("%s.%s" % (self.name, n), prev.sub[n])
+
+
+class Suites(object):
+    """
+    All results of a benchmark run
+    """
+    def __init__(self, name):
+        self.name = name
+        self.suites = {}
+
+    def add_result(self, suite_name, names, utime, stime):
+        if suite_name not in self.suites:
+            suite = Suite(suite_name)
+            self.suites[suite_name] = suite
+        else:
+            suite = self.suites[suite_name]
+        suite.add_result(names, utime, stime)
+
+    def diff(self, prev):
+        """
+        Print differences from a previous run
+        """
+        all_keys = set(self.suites.iterkeys())
+        all_keys.update(prev.suites.iterkeys())
+        for k in sorted(all_keys):
+            if k not in prev.suites:
+                print "%s: new suite appeared" % k
+            elif k not in self.suites:
+                print "%s: old suite disappeared" % k
+            else:
+                self.suites[k].diff(prev.suites[k])
 
 
 def last_two_files():
@@ -19,7 +115,7 @@ def last_two_files():
     return files[-2:]
 
 def read_file(fn):
-    suites = {}
+    suites = Suites(fn)
     pathname = os.path.join("src/bench", fn)
     with open(pathname) as fd:
         reader = csv.reader(fd)
@@ -32,15 +128,12 @@ def read_file(fn):
             # categories
             snames = sname.split(".")
             suite_name = snames.pop(0)
-            if suite_name not in suites:
-                suite = Suite(suite_name)
-                suites[suite_name] = suite
-            else:
-                suite = suites[suite_name]
             snames.append(name)
-            suite.add_result(snames, utime, stime)
+            suites.add_result(suite_name, snames, float(utime), float(stime))
     return suites
 
 fn_old, fn_new = last_two_files()
 suites_old = read_file(fn_old)
 suites_new = read_file(fn_new)
+
+suites_new.diff(suites_old)
