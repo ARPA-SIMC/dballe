@@ -12,4 +12,4 @@ else
 fi
 
 cd src
-eatmydata ../run-local ./benchmark > "bench/$SVNID-`date +%Y%m%d-%H%M%S`.csv"
+eatmydata ../run-local ./benchmark > "bench/$SVNID-`hostname`-`date +%Y%m%d-%H%M%S`.csv"
