@@ -390,10 +390,10 @@ std::string Connection::get_setting(const std::string& key)
     SQLLEN result_len;
 
     Statement stm(*this);
-    if (server_type == ORACLE)
-        stm.prepare("SELECT value FROM dballe_settings WHERE \"key\"=?");
-    else
+    if (server_type == MYSQL)
         stm.prepare("SELECT value FROM dballe_settings WHERE `key`=?");
+    else
+        stm.prepare("SELECT value FROM dballe_settings WHERE \"key\"=?");
     stm.bind_in(1, key.data(), key.size());
     stm.bind_out(1, result, 64, result_len);
     stm.execute();
@@ -409,25 +409,25 @@ void Connection::set_setting(const std::string& key, const std::string& value)
 
     if (!has_table("dballe_settings"))
     {
-        if (server_type == ORACLE)
-            stm.exec_direct_and_close("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
-        else
+        if (server_type == MYSQL)
             stm.exec_direct_and_close("CREATE TABLE dballe_settings (`key` CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
+        else
+            stm.exec_direct_and_close("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
     }
 
     // Remove if it exists
-    if (server_type == ORACLE)
-        stm.prepare("DELETE FROM dballe_settings WHERE \"key\"=?");
-    else
+    if (server_type == MYSQL)
         stm.prepare("DELETE FROM dballe_settings WHERE `key`=?");
+    else
+        stm.prepare("DELETE FROM dballe_settings WHERE \"key\"=?");
     stm.bind_in(1, key.data(), key.size());
     stm.execute_and_close();
 
     // Then insert it
-    if (server_type == ORACLE)
-        stm.prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
-    else
+    if (server_type == MYSQL)
         stm.prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
+    else
+        stm.prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
     stm.bind_in(1, key.data(), key.size());
     stm.bind_in(2, value.data(), value.size());
     stm.execute_and_close();
