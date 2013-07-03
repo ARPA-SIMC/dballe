@@ -41,7 +41,7 @@ c_argspecs = {
     "Record.var": "(code=None)",
     "Record.keys": "()",
     "Record.vars": "()",
-    "Record.update": "(**kwargs)",
+    "Record.update": "(\*\*kwargs)",
     "Record.date_extremes": "()",
     "Record.set_station_context": "()",
     "Record.set_from_string": "(str)",
@@ -157,6 +157,8 @@ print """
 
 Examples:
 
+::
+
     v = dballe.var("B12101", 32.5)
     # v.info returns detailed informations about the variable in a Varinfo object.
     print "%s: %s %s %s" % (v.code, str(v), v.info.unit, v.info.desc)
@@ -189,19 +191,27 @@ document_members(dballe.Record)
 
 print """
 When creating a new record, keyword arguments can be passed and they are set as
-if Record.update(**kwargs) had been called.
+if Record.update(\*\*kwargs) had been called.
 
 There are 6 extra keys available in the Python API, which can be used as
 shortcuts to get and set many values in one shot:
 
-    date: a datetime.datetime()
-    datemin: a datetime.datetime()
-    datemax: a datetime.datetime()
-    level: a tuple of integers
-    trange: a tuple of integers
-    timerange: a tuple of integers
+ date
+   a datetime.datetime()
+ datemin
+   a datetime.datetime()
+ datemax
+   a datetime.datetime()
+ level
+   a tuple of integers
+ trange
+   a tuple of integers
+ timerange
+   a tuple of integers
 
 Examples:
+
+::
 
     rec = Record(lat=44.05, lon=11.03, B12101=22.1)
 
@@ -226,6 +236,8 @@ document_members(dballe.DB)
 print """
 
 Examples:
+
+::
 
     # Connect to a database and run a query
     db = dballe.DB.connect_from_file("db.sqlite")
