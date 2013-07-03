@@ -320,7 +320,7 @@ bool Filter::match_item(const Item& item) const
 }
 
 Reader::Reader()
-    : input_type("auto")
+    : input_type("auto"), verbose(false), fail_file_name(0)
 {
 }
 
