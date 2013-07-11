@@ -337,6 +337,11 @@ int Connection::get_last_insert_id()
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
                 stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
                 break;
+            case db::POSTGRES:
+                stm_last_insert_id = new db::Statement(*this);
+                stm_last_insert_id->bind_out(1, m_last_insert_id);
+                stm_last_insert_id->prepare("SELECT LASTVAL()");
+                break;
         }
     }
     if (!stm_last_insert_id)
