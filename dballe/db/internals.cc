@@ -400,6 +400,10 @@ std::string Connection::get_setting(const std::string& key)
     string res;
     while (stm.fetch())
         res = string(result, result_len);
+    // rtrim string
+    size_t n = res.substr(0, 63).find_last_not_of(' ');
+    if (n != string::npos)
+        res.erase(n+1);
     return res;
 }
 
