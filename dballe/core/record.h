@@ -341,6 +341,9 @@ public:
 	 * String can use keywords, aliases and varcodes.  Examples: ana_id=3,
 	 * name=Bologna, B12012=32.4
 	 *
+     * In case of numeric parameter, a hyphen ("-") means MISSING_INT (e.g.,
+     * `leveltype2=-`).
+     *
 	 * @param rec
 	 *   The record where the value is to be set.
 	 * @param str

@@ -527,8 +527,12 @@ void Record::set_from_string(const char* str)
 		Varinfo info = keyword_info(param);
 		if (info->is_string())
 			key(param).setc(val);
-		else
-			key(param).setd(strtod(val, 0));
+		else {
+            if (strcmp(val, "-") == 0)
+                key(param).setd(MISSING_INT);
+            else
+                key(param).setd(strtod(val, 0));
+        }
 	}
 }
 
