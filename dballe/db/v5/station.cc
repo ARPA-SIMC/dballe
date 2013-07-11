@@ -105,7 +105,7 @@ Station::Station(Connection& conn)
             insert_query = "INSERT INTO station (id, lat, lon, ident) VALUES (seq_station.NextVal, ?, ?, ?)";
             break;
         case POSTGRES:
-            insert_query = "INSERT INTO station (id, lat, lon, ident) VALUES (nextval('seq_station'), ?, ?, ?)";
+            insert_query = "INSERT INTO station (id, lat, lon, ident) VALUES (nextval(pg_get_serial_sequence('station', 'id')), ?, ?, ?)";
             break;
         default: break;
     }

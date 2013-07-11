@@ -56,7 +56,7 @@ Context::Context(DB& db)
             insert_query = "INSERT INTO context VALUES (seq_context.NextVal, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             break;
         case POSTGRES:
-            insert_query = "INSERT INTO context VALUES (nextval('seq_context'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            insert_query = "INSERT INTO context VALUES (nextval(pg_get_serial_sequence('context','id')), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             break;
         default: break;
     }
