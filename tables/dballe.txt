@@ -254,6 +254,7 @@
  015233 [SIM] Concentration of anthrop. sec. org. in aerosol             KG/M**3                   10            0  20 KG/M**3                  10          6
  015234 [SIM] Concentration of biogenic sec. org. in aerosol             KG/M**3                   10            0  20 KG/M**3                  10          6
  015235 [SIM] Concentration of ISOPA1 in PM10                            KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015236 [SIM] C6H6 Concentration                                         KG/M**3                   10            0  20 KG/M**3                  10          6
  020001 HORIZONTAL VISIBILITY                                            M                         -1            0  13 M                        -1          4
  020003 PRESENT WEATHER (SEE NOTE 1)                                     CODE TABLE 20003           0            0   9 CODE TABLE 20003          0          3
  020004 PAST WEATHER (1) (SEE NOTE 2)                                    CODE TABLE 20004           0            0   5 CODE TABLE 20004          0          2
