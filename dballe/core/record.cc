@@ -474,6 +474,64 @@ const std::vector<wreport::Var*>& Record::vars() const
 	return m_vars;
 }
 
+void Record::set(const Level& lev)
+{
+    if (lev.ltype1 == MISSING_INT)
+        unset(DBA_KEY_LEVELTYPE1);
+    else
+        set(DBA_KEY_LEVELTYPE1, lev.ltype1);
+
+    if (lev.l1 == MISSING_INT)
+        unset(DBA_KEY_L1);
+    else
+        set(DBA_KEY_L1, lev.l1);
+
+    if (lev.ltype2 == MISSING_INT)
+        unset(DBA_KEY_LEVELTYPE2);
+    else
+        set(DBA_KEY_LEVELTYPE2, lev.ltype2);
+
+    if (lev.l2 == MISSING_INT)
+        unset(DBA_KEY_L2);
+    else
+        set(DBA_KEY_L2, lev.l2);
+}
+
+void Record::set(const Trange& tr)
+{
+    if (tr.pind == MISSING_INT)
+        unset(DBA_KEY_PINDICATOR);
+    else
+        set(DBA_KEY_PINDICATOR, tr.pind);
+
+    if (tr.p1 == MISSING_INT)
+        unset(DBA_KEY_P1);
+    else
+        set(DBA_KEY_P1, tr.p1);
+
+    if (tr.p2 == MISSING_INT)
+        unset(DBA_KEY_P2);
+    else
+        set(DBA_KEY_P2, tr.p2);
+}
+
+Level Record::get_level() const
+{
+    return Level(
+            get(DBA_KEY_LEVELTYPE1, MISSING_INT),
+            get(DBA_KEY_L1, MISSING_INT),
+            get(DBA_KEY_LEVELTYPE2, MISSING_INT),
+            get(DBA_KEY_L2, MISSING_INT));
+}
+
+Trange Record::get_trange() const
+{
+    return Trange(
+            get(DBA_KEY_PINDICATOR, MISSING_INT),
+            get(DBA_KEY_P1, MISSING_INT),
+            get(DBA_KEY_P2, MISSING_INT));
+}
+
 void Record::set_ana_context()
 {
 	key(DBA_KEY_YEAR).seti(1000);

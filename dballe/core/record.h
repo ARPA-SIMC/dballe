@@ -27,6 +27,7 @@
  * Implement a storage object for a group of related observation data
  */
 
+#include <dballe/core/defs.h>
 #include <dballe/core/var.h>
 #include <dballe/core/matcher.h>
 #include <vector>
@@ -275,10 +276,15 @@ public:
 	template<typename P, typename V>
 	void set(const P& field, const V& val) { get(field).set(val); }
 	void set(const wreport::Var& var) { get(var.code()).set(var); }
+	void set(const Level& lev);
+	void set(const Trange& tr);
 	void unset(dba_keyword parameter) { key_unset(parameter); }
 	void unset(wreport::Varcode code) { var_unset(code); }
 	void unset(const char* name);
 	// @}
+
+	Level get_level() const;
+	Trange get_trange() const;
 
 	/**
 	 * Set the date, level and timerange values to match the anagraphical context.

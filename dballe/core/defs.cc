@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cstring>
 #include "dballe/core/vasprintf.h"
+#include "dballe/core/record.h"
 
 using namespace std;
 

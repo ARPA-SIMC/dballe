@@ -361,6 +361,45 @@ void to::test<6>()
 	ensure(info->is_string());
 }
 
+// Test getting/setting Level and Trange structures
+template<> template<>
+void to::test<7>()
+{
+    Record rec;
+
+    ensure_equals(rec.get_level(), Level());
+    ensure_equals(rec.get_trange(), Trange());
+
+    rec.set("leveltype1", 1);
+    rec.set("l1", 0);
+    rec.set("leveltype2", 2);
+    rec.set("l2", 3);
+
+    ensure_equals(rec.get_level(), Level(1, 0, 2, 3));
+    ensure_equals(rec.get_trange(), Trange());
+
+    rec.set("pindicator", 11);
+    rec.set("p1", 22);
+    rec.set("p2", 33);
+
+    ensure_equals(rec.get_level(), Level(1, 0, 2, 3));
+    ensure_equals(rec.get_trange(), Trange(11, 22, 33));
+
+    rec.set(Level(9, 8));
+    rec.set(Trange(7, 6));
+
+    ensure_equals(rec.get("leveltype1", 0), 9);
+    ensure_equals(rec.get("l1", 0), 8);
+    ensure_equals(rec.get("leveltype2", 0), 0);
+    ensure_equals(rec.get("l2", 0), 0);
+    ensure_equals(rec.get("pindicator", 0), 7);
+    ensure_equals(rec.get("p1", 0), 6);
+    ensure_equals(rec.get("p2", 0), 0);
+
+    ensure_equals(rec.get_level(), Level(9, 8));
+    ensure_equals(rec.get_trange(), Trange(7, 6));
+}
+
 #if 0
 // Test set_from_string
 template<> template<>
