@@ -77,6 +77,11 @@ struct Level
             || ltype2 != l.ltype2 || l2 != l.l2;
     }
 
+    bool operator<(const Level& l) const
+    {
+	return compare(l) < 0;
+    }
+
     /**
      * Compare two Level strutures, for use in sorting.
      *
@@ -127,6 +132,11 @@ struct Trange
     bool operator!=(const Trange& tr) const
     {
         return pind != tr.pind || p1 != tr.p1 || p2 != tr.p2;
+    }
+
+    bool operator<(const Trange& t) const
+    {
+	return compare(t) < 0;
     }
 
     /**
