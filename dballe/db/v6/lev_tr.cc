@@ -189,6 +189,18 @@ LevTrCache::~LevTrCache() {}
 
 struct MapLevTrCache : public LevTrCache
 {
+    struct SQLOut
+    {
+        DBALLE_SQL_C_SINT_TYPE id;
+        DBALLE_SQL_C_SINT_TYPE ltype1;
+        DBALLE_SQL_C_SINT_TYPE l1;
+        DBALLE_SQL_C_SINT_TYPE ltype2;
+        DBALLE_SQL_C_SINT_TYPE l2;
+        DBALLE_SQL_C_SINT_TYPE pind;
+        DBALLE_SQL_C_SINT_TYPE p1;
+        DBALLE_SQL_C_SINT_TYPE p2;
+    };
+
     struct Item
     {
         int ltype1;
@@ -198,14 +210,10 @@ struct MapLevTrCache : public LevTrCache
         int pind;
         int p1;
         int p2;
-        Item(const LevTr& lt)
-            : ltype1(lt.ltype1), l1(lt.l1),
-              ltype2(lt.ltype2), l2(lt.l2),
-              pind(lt.pind), p1(lt.p1), p2(lt.p2) {}
-        Item(const MapLevTrCache& lt)
-            : ltype1(lt.ltype1), l1(lt.l1),
-              ltype2(lt.ltype2), l2(lt.l2),
-              pind(lt.pind), p1(lt.p1), p2(lt.p2) {}
+        Item(const SQLOut& o)
+            : ltype1(o.ltype1), l1(o.l1),
+              ltype2(o.ltype2), l2(o.l2),
+              pind(o.pind), p1(o.p1), p2(o.p2) {}
 
         void to_record(Record& rec) const
         {
@@ -229,58 +237,69 @@ struct MapLevTrCache : public LevTrCache
         }
     };
 
-    map<int, Item> cache;
-    DB& db;
-    Statement stm;
+    struct FetchStatement
+    {
+        // Output values
+        SQLOut out;
+        DB& db;
+        Statement stm;
 
-    // Query output vals
-    DBALLE_SQL_C_SINT_TYPE id;
-    DBALLE_SQL_C_SINT_TYPE ltype1;
-    DBALLE_SQL_C_SINT_TYPE l1;
-    DBALLE_SQL_C_SINT_TYPE ltype2;
-    DBALLE_SQL_C_SINT_TYPE l2;
-    DBALLE_SQL_C_SINT_TYPE pind;
-    DBALLE_SQL_C_SINT_TYPE p1;
-    DBALLE_SQL_C_SINT_TYPE p2;
+        FetchStatement(DB& db)
+            : db(db), stm(*db.conn)
+        {
+            // Create the fetch query
+            stm.bind_in(1, out.id);
+            stm.bind_out(1, out.ltype1);
+            stm.bind_out(2, out.l1);
+            stm.bind_out(3, out.ltype2);
+            stm.bind_out(4, out.l2);
+            stm.bind_out(5, out.pind);
+            stm.bind_out(6, out.p1);
+            stm.bind_out(7, out.p2);
+            stm.prepare("SELECT ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr WHERE id=?");
+        }
+
+        void prefetch(map<int, Item>& cache)
+        {
+            // Prefetch everything
+            Statement stm(*db.conn);
+            stm.bind_out(1, out.id);
+            stm.bind_out(2, out.ltype1);
+            stm.bind_out(3, out.l1);
+            stm.bind_out(4, out.ltype2);
+            stm.bind_out(5, out.l2);
+            stm.bind_out(6, out.pind);
+            stm.bind_out(7, out.p1);
+            stm.bind_out(8, out.p2);
+            stm.exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
+            while (stm.fetch())
+                cache.insert(make_pair((int)out.id, Item(out)));
+        }
+
+        bool get(int id)
+        {
+            out.id = id;
+            stm.execute();
+            if (!stm.fetch_expecting_one())
+                return false;
+            return true;
+        }
+
+    };
+
+    mutable map<int, Item> cache;
+    mutable FetchStatement stm;
+
 
     MapLevTrCache(LevTr& lt)
-        : db(lt.db), stm(*db.conn)
+        : stm(lt.db)
     {
-        // Create the fetch query
-        stm.bind_in(1, id);
-        stm.bind_out(1, ltype1);
-        stm.bind_out(2, l1);
-        stm.bind_out(3, ltype2);
-        stm.bind_out(4, l2);
-        stm.bind_out(5, pind);
-        stm.bind_out(6, p1);
-        stm.bind_out(7, p2);
-        stm.prepare("SELECT ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr WHERE id=?");
-
         // TODO: make prefetch optional if needed, controlled by an env
         //       variable
-        // Prefetch, too
-        prefetch(lt);
+        stm.prefetch(cache);
     }
 
-    void prefetch(LevTr& lt)
-    {
-        // Prefetch everything
-        Statement stm(*db.conn);
-        stm.bind_out(1, lt.id);
-        stm.bind_out(2, lt.ltype1);
-        stm.bind_out(3, lt.l1);
-        stm.bind_out(4, lt.ltype2);
-        stm.bind_out(5, lt.l2);
-        stm.bind_out(6, lt.pind);
-        stm.bind_out(7, lt.p1);
-        stm.bind_out(8, lt.p2);
-        stm.exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
-        while (stm.fetch())
-            cache.insert(make_pair((int)lt.id, Item(lt)));
-    }
-
-    const Item* get(int id)
+    const Item* get(int id) const
     {
         map<int, Item>::const_iterator i = cache.find(id);
 
@@ -288,13 +307,11 @@ struct MapLevTrCache : public LevTrCache
         if (i != cache.end()) return &(i->second);
 
         // Miss: try the DB
-        this->id = id;
-        stm.execute();
-        if (!stm.fetch_expecting_one())
+        if (!stm.get(id))
             return 0;
 
         // Fill cache
-        pair<map<int, Item>::iterator, bool> res = cache.insert(make_pair(id, Item(*this)));
+        pair<map<int, Item>::iterator, bool> res = cache.insert(make_pair(id, Item(stm.out)));
         return &(res.first->second);
     }
 
@@ -304,6 +321,20 @@ struct MapLevTrCache : public LevTrCache
         if (!i) return 0;
         i->to_record(rec);
         return true;
+    }
+
+    Level to_level(int id) const
+    {
+        const Item* i = get(id);
+        if (!i) return Level();
+        return i->lev();
+    }
+
+    Trange to_trange(int id) const
+    {
+        const Item* i = get(id);
+        if (!i) return Trange();
+        return i->tr();
     }
 
     msg::Context* to_msg(int id, Msg& msg)

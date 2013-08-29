@@ -22,7 +22,9 @@
 #ifndef DBA_DB_H
 #define DBA_DB_H
 
+#include <dballe/core/defs.h>
 #include <wreport/varinfo.h>
+#include <wreport/var.h>
 #include <vector>
 #include <string>
 #include <memory>
@@ -102,6 +104,33 @@ public:
      *   The record where to store the values
      */
     virtual void to_record(Record& rec) = 0;
+
+    /// Get the station identifier
+    virtual int get_station_id() const = 0;
+
+    /// Get the station latitude
+    virtual double get_lat() const = 0;
+
+    /// Get the station longitude
+    virtual double get_lon() const = 0;
+
+    /// Get the station identifier, or NULL if missing
+    virtual const char* get_ident() const = 0;
+
+    /// Get the report name
+    virtual const char* get_rep_memo() const = 0;
+
+    /// Get the level
+    virtual Level get_level() const = 0;
+
+    /// Get the level
+    virtual Trange get_trange() const = 0;
+
+    /// Get the datetime
+    virtual void get_datetime(int (&dt)[6]) const = 0;
+
+    /// Get the variable
+    virtual wreport::Var get_var() const = 0;
 
     /**
      * Return an integer value that can be used to refer to the current

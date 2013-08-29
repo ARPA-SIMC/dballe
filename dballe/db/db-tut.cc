@@ -270,6 +270,9 @@ void db_shar::test_ana_query()
 
     /* There should be an item */
     ensure(cur->next());
+    ensure_equals(cur->get_lat(), 12.34560);
+    ensure_equals(cur->get_lon(), 76.54320);
+    ensure_equals(cur->get_ident(), (const char*)0);
     cur->to_record(result);
 
     /* Check that the result matches */
@@ -450,6 +453,14 @@ void db_shar::test_querybest()
 
     // There should be four items
     ensure(cur->next());
+    ensure_equals(cur->get_lat(), 12.34560);
+    ensure_equals(cur->get_lon(), 76.54320);
+    ensure_equals(cur->get_ident(), (const char*)0);
+    ensure(cur->get_rep_memo());
+    ensure_equals(string(cur->get_rep_memo()), "synop");
+    ensure_equals(cur->get_level(), Level(10, 11, 15, 22));
+    ensure_equals(cur->get_trange(), Trange(20, 111, 122));
+    ensure_equals(cur->get_var().code(), WR_VAR(0, 1, 11));
     ensure_equals(cur->remaining(), 3);
     ensure(cur->next());
     ensure_equals(cur->remaining(), 2);

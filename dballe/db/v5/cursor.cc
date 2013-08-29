@@ -490,6 +490,44 @@ void Cursor::to_record(Record& rec)
         add_station_info(rec);
 }
 
+int Cursor::get_station_id() const { return out_ana_id; }
+double Cursor::get_lat() const { return (double)out_lat / 100000.0; }
+double Cursor::get_lon() const { return (double)out_lon / 100000.0; }
+const char* Cursor::get_ident() const
+{
+    if (out_ident_ind == SQL_NULL_DATA || out_ident[0] == 0)
+        return 0;
+    return out_ident;
+}
+const char* Cursor::get_rep_memo() const
+{
+    v5::Repinfo& ri = db.repinfo();
+    const v5::repinfo::Cache* c = ri.get_by_id(out_rep_cod);
+    if (c == NULL) return 0;
+    return c->memo.c_str();
+}
+Level Cursor::get_level() const
+{
+    return Level(out_ltype1, out_l1, out_ltype2, out_l2);
+}
+Trange Cursor::get_trange() const
+{
+    return Trange(out_pind, out_p1, out_p2);
+}
+void Cursor::get_datetime(int (&dt)[6]) const
+{
+    dt[0] = out_datetime.year;
+    dt[1] = out_datetime.month;
+    dt[2] = out_datetime.day;
+    dt[3] = out_datetime.hour;
+    dt[4] = out_datetime.minute;
+    dt[5] = out_datetime.second;
+}
+wreport::Var Cursor::get_var() const
+{
+    return Var(varinfo(out_varcode), out_value);
+}
+
 unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {
     return db.query_attrs(out_context_id, out_varcode, qcs, attrs);

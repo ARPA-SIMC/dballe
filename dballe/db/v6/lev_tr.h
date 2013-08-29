@@ -29,6 +29,7 @@
  */
 
 #include <dballe/db/odbcworkarounds.h>
+#include <dballe/core/defs.h>
 #include <sqltypes.h>
 #include <cstdio>
 #include <memory>
@@ -138,6 +139,12 @@ struct LevTrCache
      * @return true if found, else false
      */
     virtual bool to_rec(int id, Record& rec) = 0;
+
+    /// Return a Level for this ID
+    virtual Level to_level(int id) const = 0;
+
+    /// Return a Trange for this ID
+    virtual Trange to_trange(int id) const = 0;
 
     /**
      * Get/create a Context in the Msg for this level/timerange.

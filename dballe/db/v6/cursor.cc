@@ -157,6 +157,48 @@ wreport::Varcode Cursor::varcode() const
     return sqlrec.out_varcode;
 }
 
+int Cursor::get_station_id() const { return sqlrec.out_ana_id; }
+double Cursor::get_lat() const { return (double)sqlrec.out_lat / 100000.0; }
+double Cursor::get_lon() const { return (double)sqlrec.out_lon / 100000.0; }
+const char* Cursor::get_ident() const
+{
+    if (sqlrec.out_ident_ind == SQL_NULL_DATA || sqlrec.out_ident[0] == 0)
+        return 0;
+    return sqlrec.out_ident;
+}
+const char* Cursor::get_rep_memo() const
+{
+    v5::Repinfo& ri = db.repinfo();
+    const v5::repinfo::Cache* c = ri.get_by_id(sqlrec.out_rep_cod);
+    if (c == NULL) return 0;
+    return c->memo.c_str();
+}
+Level Cursor::get_level() const
+{
+    if (sqlrec.out_id_ltr_ind == SQL_NULL_DATA)
+        return Level();
+    return db.lev_tr_cache().to_level(sqlrec.out_id_ltr);
+}
+Trange Cursor::get_trange() const
+{
+    if (sqlrec.out_id_ltr_ind == SQL_NULL_DATA)
+        return Trange();
+    return db.lev_tr_cache().to_trange(sqlrec.out_id_ltr);
+}
+void Cursor::get_datetime(int (&dt)[6]) const
+{
+    dt[0] = sqlrec.out_datetime.year;
+    dt[1] = sqlrec.out_datetime.month;
+    dt[2] = sqlrec.out_datetime.day;
+    dt[3] = sqlrec.out_datetime.hour;
+    dt[4] = sqlrec.out_datetime.minute;
+    dt[5] = sqlrec.out_datetime.second;
+}
+wreport::Var Cursor::get_var() const
+{
+    return Var(varinfo(sqlrec.out_varcode), sqlrec.out_value);
+}
+
 void Cursor::to_record_pseudoana(Record& rec)
 {
     rec.key(DBA_KEY_ANA_ID).seti(sqlrec.out_ana_id);

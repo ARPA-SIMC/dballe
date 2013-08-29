@@ -140,6 +140,16 @@ struct Cursor : public dballe::db::Cursor
      */
     void to_record(Record& rec);
 
+    virtual int get_station_id() const;
+    virtual double get_lat() const;
+    virtual double get_lon() const;
+    virtual const char* get_ident() const;
+    virtual const char* get_rep_memo() const;
+    virtual Level get_level() const;
+    virtual Trange get_trange() const;
+    virtual void get_datetime(int (&dt)[6]) const;
+    virtual wreport::Var get_var() const;
+
     virtual int attr_reference_id() const;
 
     /**
