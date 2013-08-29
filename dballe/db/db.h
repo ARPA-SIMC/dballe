@@ -115,10 +115,10 @@ public:
     virtual double get_lon() const = 0;
 
     /// Get the station identifier, or NULL if missing
-    virtual const char* get_ident() const = 0;
+    virtual const char* get_ident(const char* def=0) const = 0;
 
     /// Get the report name
-    virtual const char* get_rep_memo() const = 0;
+    virtual const char* get_rep_memo(const char* def=0) const = 0;
 
     /// Get the level
     virtual Level get_level() const = 0;
@@ -128,6 +128,9 @@ public:
 
     /// Get the datetime
     virtual void get_datetime(int (&dt)[6]) const = 0;
+
+    /// Get the variable code
+    virtual wreport::Varcode get_varcode() const = 0;
 
     /// Get the variable
     virtual wreport::Var get_var() const = 0;

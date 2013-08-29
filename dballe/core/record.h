@@ -152,6 +152,25 @@ public:
 	 */
 	bool contains(const Record& subset) const;
 
+    /**
+     * Return true if the given parameter is set in this record
+     */
+    bool contains(dba_keyword parameter) const throw();
+
+    /**
+     * Return true if the given variable is set in this record
+     */
+    bool contains(wreport::Varcode parameter) const throw();
+
+    /// Return true if some level attribute is set in this record
+    bool contains_level() const throw();
+
+    /// Return true if some time range attribute is set in this record
+    bool contains_trange() const throw();
+
+    /// Return true if some datetime information is set in this record
+    bool contains_datetime() const throw();
+
 	/**
 	 * Set the record to contain only those fields that change source1 into source2.
 	 *
@@ -285,6 +304,7 @@ public:
 
 	Level get_level() const;
 	Trange get_trange() const;
+	void get_datetime(int (&val)[6]) const;
 
 	/**
 	 * Set the date, level and timerange values to match the anagraphical context.

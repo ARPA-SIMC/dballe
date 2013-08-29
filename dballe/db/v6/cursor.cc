@@ -160,17 +160,17 @@ wreport::Varcode Cursor::varcode() const
 int Cursor::get_station_id() const { return sqlrec.out_ana_id; }
 double Cursor::get_lat() const { return (double)sqlrec.out_lat / 100000.0; }
 double Cursor::get_lon() const { return (double)sqlrec.out_lon / 100000.0; }
-const char* Cursor::get_ident() const
+const char* Cursor::get_ident(const char* def) const
 {
     if (sqlrec.out_ident_ind == SQL_NULL_DATA || sqlrec.out_ident[0] == 0)
-        return 0;
+        return def;
     return sqlrec.out_ident;
 }
-const char* Cursor::get_rep_memo() const
+const char* Cursor::get_rep_memo(const char* def) const
 {
     v5::Repinfo& ri = db.repinfo();
     const v5::repinfo::Cache* c = ri.get_by_id(sqlrec.out_rep_cod);
-    if (c == NULL) return 0;
+    if (c == NULL) return def;
     return c->memo.c_str();
 }
 Level Cursor::get_level() const
@@ -194,6 +194,7 @@ void Cursor::get_datetime(int (&dt)[6]) const
     dt[4] = sqlrec.out_datetime.minute;
     dt[5] = sqlrec.out_datetime.second;
 }
+wreport::Varcode Cursor::get_varcode() const { return (wreport::Varcode)sqlrec.out_varcode; }
 wreport::Var Cursor::get_var() const
 {
     return Var(varinfo(sqlrec.out_varcode), sqlrec.out_value);

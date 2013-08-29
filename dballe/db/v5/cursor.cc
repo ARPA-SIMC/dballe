@@ -493,17 +493,17 @@ void Cursor::to_record(Record& rec)
 int Cursor::get_station_id() const { return out_ana_id; }
 double Cursor::get_lat() const { return (double)out_lat / 100000.0; }
 double Cursor::get_lon() const { return (double)out_lon / 100000.0; }
-const char* Cursor::get_ident() const
+const char* Cursor::get_ident(const char* def) const
 {
     if (out_ident_ind == SQL_NULL_DATA || out_ident[0] == 0)
-        return 0;
+        return def;
     return out_ident;
 }
-const char* Cursor::get_rep_memo() const
+const char* Cursor::get_rep_memo(const char* def) const
 {
     v5::Repinfo& ri = db.repinfo();
     const v5::repinfo::Cache* c = ri.get_by_id(out_rep_cod);
-    if (c == NULL) return 0;
+    if (c == NULL) return def;
     return c->memo.c_str();
 }
 Level Cursor::get_level() const
@@ -523,6 +523,7 @@ void Cursor::get_datetime(int (&dt)[6]) const
     dt[4] = out_datetime.minute;
     dt[5] = out_datetime.second;
 }
+wreport::Varcode Cursor::get_varcode() const { return (wreport::Varcode)out_varcode; }
 wreport::Var Cursor::get_var() const
 {
     return Var(varinfo(out_varcode), out_value);

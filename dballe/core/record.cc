@@ -318,6 +318,35 @@ bool Record::contains(const Record& subset) const
 	return true;
 }
 
+bool Record::contains(dba_keyword parameter) const throw()
+{
+    const Var* res = key_peek(parameter);
+    return res ? res->value() != NULL : NULL;
+}
+
+bool Record::contains(wreport::Varcode parameter) const throw()
+{
+    const Var* res = var_peek(parameter);
+    return res ? res->value() != NULL : NULL;
+}
+
+bool Record::contains_level() const throw ()
+{
+    return contains(DBA_KEY_LEVELTYPE1) || contains(DBA_KEY_L1)
+        || contains(DBA_KEY_LEVELTYPE2) || contains(DBA_KEY_L2);
+}
+
+bool Record::contains_trange() const throw ()
+{
+    return contains(DBA_KEY_PINDICATOR) || contains(DBA_KEY_P1) || contains(DBA_KEY_P2);
+}
+
+bool Record::contains_datetime() const throw ()
+{
+    return contains(DBA_KEY_YEAR) || contains(DBA_KEY_MONTH) || contains(DBA_KEY_DAY)
+        || contains(DBA_KEY_HOUR) || contains(DBA_KEY_MIN) || contains(DBA_KEY_SEC);
+}
+
 const Var* Record::key_peek(dba_keyword parameter) const throw ()
 {
 	return keydata[parameter];
@@ -530,6 +559,16 @@ Trange Record::get_trange() const
             get(DBA_KEY_PINDICATOR, MISSING_INT),
             get(DBA_KEY_P1, MISSING_INT),
             get(DBA_KEY_P2, MISSING_INT));
+}
+
+void Record::get_datetime(int (&val)[6]) const
+{
+    val[0] = get(DBA_KEY_YEAR, MISSING_INT);
+    val[1] = get(DBA_KEY_MONTH, MISSING_INT);
+    val[2] = get(DBA_KEY_DAY, MISSING_INT);
+    val[3] = get(DBA_KEY_HOUR, MISSING_INT);
+    val[4] = get(DBA_KEY_MIN, MISSING_INT);
+    val[5] = get(DBA_KEY_SEC, MISSING_INT);
 }
 
 void Record::set_ana_context()

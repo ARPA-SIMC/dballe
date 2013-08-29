@@ -460,6 +460,7 @@ void db_shar::test_querybest()
     ensure_equals(string(cur->get_rep_memo()), "synop");
     ensure_equals(cur->get_level(), Level(10, 11, 15, 22));
     ensure_equals(cur->get_trange(), Trange(20, 111, 122));
+    ensure_equals(cur->get_varcode(), WR_VAR(0, 1, 11));
     ensure_equals(cur->get_var().code(), WR_VAR(0, 1, 11));
     ensure_equals(cur->remaining(), 3);
     ensure(cur->next());
