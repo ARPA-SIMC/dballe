@@ -571,6 +571,16 @@ void Record::get_datetime(int (&val)[6]) const
     val[5] = get(DBA_KEY_SEC, MISSING_INT);
 }
 
+void Record::set_datetime(const int (&val)[6])
+{
+    set(DBA_KEY_YEAR,  val[0]);
+    set(DBA_KEY_MONTH, val[1]);
+    set(DBA_KEY_DAY,   val[2]);
+    set(DBA_KEY_HOUR,  val[3]);
+    set(DBA_KEY_MIN,   val[4]);
+    set(DBA_KEY_SEC,   val[5]);
+}
+
 void Record::set_ana_context()
 {
 	key(DBA_KEY_YEAR).seti(1000);

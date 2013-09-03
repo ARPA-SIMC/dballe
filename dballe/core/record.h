@@ -305,6 +305,7 @@ public:
 	Level get_level() const;
 	Trange get_trange() const;
 	void get_datetime(int (&val)[6]) const;
+	void set_datetime(const int (&val)[6]);
 
 	/**
 	 * Set the date, level and timerange values to match the anagraphical context.
