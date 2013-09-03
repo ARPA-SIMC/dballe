@@ -42,11 +42,12 @@ namespace fortran {
 class MsgAPI : public CommonAPIImplementation
 {
 protected:
-	enum {
-		STATE_QUANTESONO = 1,
-		STATE_VOGLIOQUESTO = 2,
-		STATE_EOF = 4,
-	};
+    enum {
+        STATE_BLANK = 1,
+        STATE_QUANTESONO = 2,
+        STATE_VOGLIOQUESTO = 4,
+        STATE_EOF = 8,
+    };
 	File* file;
 	/**
 	 * State flag to track what actions have been performed in order to decide

@@ -35,7 +35,7 @@ namespace fortran {
 
 
 MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
-	: file(0), state(0), importer(0), exporter(0), msgs(0), wmsg(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
+	: file(0), state(STATE_BLANK), importer(0), exporter(0), msgs(0), wmsg(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
 		cached_cat(0), cached_subcat(0), cached_lcat(0)
 {
 	if (strchr(mode, 'r') != NULL)
@@ -61,7 +61,6 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 	if (strchr(mode, 'r') != NULL)
 	{
 		importer = msg::Importer::create(etype).release();
-		readNextMessage();
 	}
 }
 
@@ -101,7 +100,7 @@ bool MsgAPI::readNextMessage()
 		return true;
 	}
 
-	state = 0;
+    state = STATE_BLANK;
 	curmsgidx = 0;
 	if (msgs)
 	{
@@ -112,11 +111,14 @@ bool MsgAPI::readNextMessage()
 	Rawmsg raw;
 	if (file->read(raw))
 	{
-		msgs = new Msgs;
-		importer->from_rawmsg(raw, *msgs);
+        auto_ptr<Msgs> new_msgs(new Msgs);
+        importer->from_rawmsg(raw, *new_msgs);
+        msgs = new_msgs.release();
+        state &= ~STATE_BLANK;
 		return true;
 	}
 
+    state &= ~STATE_BLANK;
 	state |= STATE_EOF;
 	return false;
 }
@@ -133,8 +135,8 @@ void MsgAPI::scopa(const char* repinfofile)
 
 int MsgAPI::quantesono()
 {
-	if (state & STATE_QUANTESONO)
-		readNextMessage();
+    if (state & (STATE_BLANK | STATE_QUANTESONO))
+        readNextMessage();
 	if (state & STATE_EOF)
 		return 0;
 	state |= STATE_QUANTESONO;
@@ -211,8 +213,8 @@ bool MsgAPI::incrementMsgIters()
 
 int MsgAPI::voglioquesto()
 {
-	if (state & STATE_VOGLIOQUESTO)
-		readNextMessage();
+    if (state & (STATE_BLANK | STATE_VOGLIOQUESTO))
+        readNextMessage();
 	if (state & STATE_EOF)
 		return 0;
 	state |= STATE_VOGLIOQUESTO;

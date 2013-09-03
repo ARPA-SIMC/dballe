@@ -20,6 +20,7 @@
 #include <dballe/core/test-utils-core.h>
 #include "msgapi.h"
 
+using namespace std;
 using namespace dballe;
 
 namespace tut {
@@ -46,6 +47,81 @@ void to::test<1>()
     ensure_equals(api.voglioquesto(), 12);
     ensure_equals(api.voglioquesto(), 12);
     ensure_equals(api.voglioquesto(), 12);
+}
+
+// Test resuming after a broken BUFR
+template<> template<>
+void to::test<2>()
+{
+    // Concatenate a broken BUFR with a good one
+    std::auto_ptr<Rawmsg> rm1(read_rawmsg("bufr/interpreted-range.bufr", BUFR));
+    std::auto_ptr<Rawmsg> rm2(read_rawmsg("bufr/temp-gts1.bufr", BUFR));
+
+    // Broken + good
+    {
+        string concat = *rm1 + *rm2;
+        FILE* out = fopen("test-simple-concat.bufr", "w");
+        fwrite(concat.data(), concat.size(), 1, out);
+        fclose(out);
+
+        fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
+
+        // The first one fails
+        try {
+            api.voglioquesto();
+            ensure(false);
+        } catch (std::exception) {
+        }
+
+        // The second one should be read
+        ensure_equals(api.voglioquesto(), 563);
+    }
+
+    // Good + broken + good
+    {
+        string concat = *rm2 + *rm1 + *rm2;
+        FILE* out = fopen("test-simple-concat.bufr", "w");
+        fwrite(concat.data(), concat.size(), 1, out);
+        fclose(out);
+
+        fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
+
+        ensure_equals(api.voglioquesto(), 563);
+
+        try {
+            api.voglioquesto();
+            ensure(false);
+        } catch (std::exception) {
+        }
+
+        ensure_equals(api.voglioquesto(), 563);
+    }
+
+    // Good + broken + broken + good
+    {
+        string concat = *rm2 + *rm1 + *rm1 + *rm2;
+        FILE* out = fopen("test-simple-concat.bufr", "w");
+        fwrite(concat.data(), concat.size(), 1, out);
+        fclose(out);
+
+        fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
+
+        ensure_equals(api.voglioquesto(), 563);
+
+        try {
+            api.voglioquesto();
+            ensure(false);
+        } catch (std::exception) {
+        }
+
+        try {
+            api.voglioquesto();
+            ensure(false);
+        } catch (std::exception) {
+        }
+
+        ensure_equals(api.voglioquesto(), 563);
+    }
 }
 
 }
