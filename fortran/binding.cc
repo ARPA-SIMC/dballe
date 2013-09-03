@@ -1499,14 +1499,19 @@ F77_INTEGER_FUNCTION(idba_unset)(
  * @param handle
  *   Handle to a DBALLE session
  */
-F77_SUBROUTINE(idba_unsetb)(
-		INTEGER(handle))
+F77_INTEGER_FUNCTION(idba_unsetb)(
+        INTEGER(handle))
 {
-	GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(handle)
 
-	HSimple& h = hsimp.get(*handle);
-    if (h.trace) h.log("unsetb");
-	h.api->unsetb();
+    try {
+        HSimple& h = hsimp.get(*handle);
+        if (h.trace) h.log("unsetb");
+        h.api->unsetb();
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
@@ -1515,14 +1520,18 @@ F77_SUBROUTINE(idba_unsetb)(
  * @param handle
  *   Handle to a DBALLE session
  */
-F77_SUBROUTINE(idba_unsetall)(
-		INTEGER(handle))
+F77_INTEGER_FUNCTION(idba_unsetall)(
+        INTEGER(handle))
 {
-	GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(handle)
 
-	HSimple& h = hsimp.get(*handle);
-    if (h.trace) h.log("unsetall");
-	h.api->unsetall();
+    try {
+        HSimple& h = hsimp.get(*handle);
+        if (h.trace) h.log("unsetall");
+        h.api->unsetall();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
