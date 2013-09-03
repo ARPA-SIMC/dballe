@@ -19,6 +19,8 @@
  ! Author: Enrico Zini <enrico@enricozini.com>
  !
 
+! TODO: function o subroutine?
+
 ! missing value
 
 INTEGER, PARAMETER :: &
@@ -44,68 +46,68 @@ CHARACTER(len=1), PARAMETER :: DBA_MVC = char(0)
 
 interface idba_enq
 
-   integer function idba_enqb(handle,param,value)
+   subroutine idba_enqb(handle,param,value)
      integer, intent(in) :: handle
      integer (kind=1),intent(out) :: value
      character (len=*), intent(in) :: param
-   end function idba_enqb
+   end subroutine idba_enqb
    
-   integer function idba_enqi(handle,param,value)
+   subroutine idba_enqi(handle,param,value)
      integer, intent(in) :: handle
      integer, intent(out) :: value
      character (len=*), intent(in) :: param
-   end function idba_enqi
+   end subroutine idba_enqi
    
-   integer function idba_enqr(handle,param,value)
+   subroutine idba_enqr(handle,param,value)
      integer, intent(in) :: handle
      real, intent(out) :: value
      character (len=*), intent(in) :: param
-   end function idba_enqr
+   end subroutine idba_enqr
    
-   integer function idba_enqd(handle,param,value)
+   subroutine idba_enqd(handle,param,value)
      integer, intent(in) :: handle
      double precision, intent(out) :: value
      character (len=*), intent(in) :: param
-   end function idba_enqd
+   end subroutine idba_enqd
    
-   integer function idba_enqc(handle,param,value)
+   subroutine idba_enqc(handle,param,value)
      integer, intent(in) :: handle
      character (len=*), intent(in) :: param
      character (len=*), intent(out) :: value
-   end function idba_enqc
+   end subroutine idba_enqc
      
 end interface
 
   
 interface idba_set
      
-   integer function idba_setb(handle,param,value)
+   subroutine idba_setb(handle,param,value)
      integer, intent(in) :: handle
      integer (kind=1), intent(in) :: value
      character (len=*), intent(in) :: param
-   end function idba_setb
+   end subroutine idba_setb
    
-   integer function idba_seti(handle,param,value)
+   subroutine idba_seti(handle,param,value)
      integer, intent(in) :: handle,value
      character (len=*), intent(in) :: param
-   end function idba_seti
+   end subroutine idba_seti
   
-   integer function idba_setr(handle,param,value)
+   subroutine idba_setr(handle,param,value)
      integer, intent(in) :: handle
      real, intent(in) :: value
      character (len=*), intent(in) :: param
-   end function idba_setr
+   end subroutine idba_setr
 
-   integer function idba_setd(handle,param,value)
+   subroutine idba_setd(handle,param,value)
      integer, intent(in) :: handle
      double precision, intent(in) :: value
      character (len=*), intent(in) :: param
-   end function idba_setd
+   end subroutine idba_setd
 
-   integer function idba_setc(handle,param,value)
+   subroutine idba_setc(handle,param,value)
      integer, intent(in) :: handle
      character (len=*), intent(in) :: param,value
-   end function idba_setc
+   end subroutine idba_setc
 
 
 end interface
@@ -115,6 +117,9 @@ interface
 
 ! Error handling routines
 
+   integer function idba_error_code()
+   end function idba_error_code
+   
    subroutine idba_error_message(message)
      character (len=*), intent(out) :: message
    end subroutine idba_error_message
@@ -127,182 +132,179 @@ interface
      character (len=*), intent(out) :: message
    end subroutine idba_error_details
 
-   integer integer function idba_error_code()
-   end function idba_error_code
-   
-   integer function idba_error_set_callback(code,func,data,handle)
+   subroutine idba_error_set_callback(code,func,data,handle)
      integer, intent(in) :: code
      external :: func
      integer, intent(in) :: data
      integer, intent(out) :: handle
-   end function idba_error_set_callback
+   end subroutine idba_error_set_callback
 
-   integer function idba_error_remove_callback(handle)
+   subroutine idba_error_remove_callback(handle)
      integer, intent(in) :: handle
-   end function idba_error_remove_callback
+   end subroutine idba_error_remove_callback
 
-   integer integer function idba_default_error_handler(debug)
+   integer function idba_default_error_handler(debug)
      logical, intent(in) :: debug
    end function idba_default_error_handler
 
-   integer integer function idba_error_handler_tolerating_overflows(debug)
+   integer function idba_error_handler_tolerating_overflows(debug)
      logical, intent(in) :: debug
    end function idba_error_handler_tolerating_overflows
 
 
 ! Init/Shutdown routines
    
-   integer function idba_presentati(dbahandle, dsn, user, password)
+   subroutine idba_presentati(dbahandle, dsn, user, password)
      integer, intent(out) :: dbahandle
      character (len=*), intent(in) :: dsn,user,password
-   end function idba_presentati
+   end subroutine idba_presentati
 
-   integer function idba_arrivederci(dbahandle)
+   subroutine idba_arrivederci(dbahandle)
      integer, intent(in) :: dbahandle
-   end function idba_arrivederci
+   end subroutine idba_arrivederci
 
-   integer function idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
+   subroutine idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
      integer, intent(in) :: dbahandle
      integer, intent(out) :: handle
      character (len=*), intent(in) :: anaflag,dataflag,attrflag
-   end function idba_preparati
+   end subroutine idba_preparati
 
-   integer function idba_messaggi(handle, filename, mode, type)
+   subroutine idba_messaggi(handle, filename, mode, type)
      integer, intent(out) :: handle
      character (len=*), intent(in) :: filename,mode,type
-   end function idba_messaggi
+   end subroutine idba_messaggi
 
-   integer function idba_fatto(handle)
+   subroutine idba_fatto(handle)
      integer, intent(in) :: handle
-   end function idba_fatto
+   end subroutine idba_fatto
 
 
 
-   integer function idba_unset(handle,param)
+   subroutine idba_unset(handle,param)
      integer, intent(in) :: handle
      character (len=*), intent(in) :: param
-   end function idba_unset
+   end subroutine idba_unset
 
-   integer function idba_unsetall(handle)
+   subroutine idba_unsetall(handle)
      integer, intent(in) :: handle
-   end function idba_unsetall
+   end subroutine idba_unsetall
 
 
-   integer function idba_setcontextana(handle)
+   subroutine idba_setcontextana(handle)
      integer, intent(in) :: handle
-   end function idba_setcontextana
+   end subroutine idba_setcontextana
 
 
-   integer function idba_enqlevel(handle,ltype1,l1,ltype2,l2)
+   subroutine idba_enqlevel(handle,ltype1,l1,ltype2,l2)
      integer, intent(in) :: handle
      integer, intent(out) :: ltype1,l1,ltype2,l2
-   end function idba_enqlevel
+   end subroutine idba_enqlevel
 
-   integer function idba_setlevel(handle,ltype1,l1,ltype2,l2)
+   subroutine idba_setlevel(handle,ltype1,l1,ltype2,l2)
      integer, intent(in) :: handle,ltype1,l1,ltype2,l2
-   end function idba_setlevel
+   end subroutine idba_setlevel
 
 
-   integer function idba_enqtimerange(handle,ptype,p1,p2)
+   subroutine idba_enqtimerange(handle,ptype,p1,p2)
      integer, intent(in) :: handle
      integer, intent(out) :: ptype,p1,p2
-   end function idba_enqtimerange
+   end subroutine idba_enqtimerange
 
-   integer function idba_settimerange(handle,ptype,p1,p2)
+   subroutine idba_settimerange(handle,ptype,p1,p2)
      integer, intent(in) :: handle,ptype,p1,p2
-   end function idba_settimerange
+   end subroutine idba_settimerange
 
 
-   integer function idba_enqdate(handle,year,month,day,hour,min,sec)
+   subroutine idba_enqdate(handle,year,month,day,hour,min,sec)
      integer, intent(in) :: handle
      integer, intent(out) :: year,month,day,hour,min,sec
-   end function idba_enqdate
+   end subroutine idba_enqdate
 
-   integer function idba_setdate(handle,year,month,day,hour,min,sec)
+   subroutine idba_setdate(handle,year,month,day,hour,min,sec)
      integer, intent(in) :: handle,year,month,day,hour,min,sec
-   end function idba_setdate
+   end subroutine idba_setdate
 
-   integer function idba_setdatemin(handle,year,month,day,hour,min,sec)
+   subroutine idba_setdatemin(handle,year,month,day,hour,min,sec)
      integer, intent(in) :: handle,year,month,day,hour,min,sec
-   end function idba_setdatemin
+   end subroutine idba_setdatemin
 
-   integer function idba_setdatemax(handle,year,month,day,hour,min,sec)
+   subroutine idba_setdatemax(handle,year,month,day,hour,min,sec)
      integer, intent(in) :: handle,year,month,day,hour,min,sec
-   end function idba_setdatemax
+   end subroutine idba_setdatemax
 
 
 ! Action routines
 
-   integer function idba_scopa(handle, repinfofile)
+   subroutine idba_scopa(handle, repinfofile)
      integer, intent(in) :: handle
      character (len=*), intent(in) :: repinfofile
-   end function idba_scopa
+   end subroutine idba_scopa
 
 
-   integer function idba_quantesono(handle, count)
+   subroutine idba_quantesono(handle, count)
      integer, intent(in) :: handle
      integer, intent(out) :: count
-   end function idba_quantesono
+   end subroutine idba_quantesono
 
-   integer function idba_elencamele(handle)
+   subroutine idba_elencamele(handle)
      integer, intent(in) :: handle
-   end function idba_elencamele
+   end subroutine idba_elencamele
 
 
-   integer function idba_voglioquesto(handle, count)
+   subroutine idba_voglioquesto(handle, count)
      integer, intent(in) :: handle
      integer, intent(out) :: count
-   end function idba_voglioquesto
+   end subroutine idba_voglioquesto
 
-   integer function idba_dammelo(handle,param)
+   subroutine idba_dammelo(handle,param)
      integer, intent(in) :: handle
      character (len=*), intent(out) :: param
-   end function idba_dammelo
+   end subroutine idba_dammelo
 
-   integer function idba_prendilo(handle)
+   subroutine idba_prendilo(handle)
      integer, intent(in) :: handle
-   end function idba_prendilo
+   end subroutine idba_prendilo
 
-   integer function idba_dimenticami(handle)
+   subroutine idba_dimenticami(handle)
      integer, intent(in) :: handle
-   end function idba_dimenticami
+   end subroutine idba_dimenticami
 
 
-   integer function idba_voglioancora(handle, count)
+   subroutine idba_voglioancora(handle, count)
      integer, intent(in) :: handle
      integer, intent(out) :: count
-   end function idba_voglioancora
+   end subroutine idba_voglioancora
 
-   integer function idba_ancora(handle,param)
+   subroutine idba_ancora(handle,param)
      integer, intent(in) :: handle
      character (len=*), intent(out) :: param
-   end function idba_ancora
+   end subroutine idba_ancora
 
-   integer function idba_critica(handle)
+   subroutine idba_critica(handle)
      integer, intent(in) :: handle
-   end function idba_critica
+   end subroutine idba_critica
 
-   integer function idba_scusa(handle)
+   subroutine idba_scusa(handle)
      integer, intent(in) :: handle
-   end function idba_scusa
+   end subroutine idba_scusa
 
 
 ! Pretty printing routines
 
-   integer function idba_spiegal(handle,ltype1,l1,ltype2,l2,result)
+   subroutine idba_spiegal(handle,ltype1,l1,ltype2,l2,result)
      integer, intent(in) :: handle,ltype1,l1,ltype2,l2
      character (len=*), intent(out) :: result
-   end function idba_spiegal
+   end subroutine idba_spiegal
 
-   integer function idba_spiegat(handle,ptype,p1,p2,result)
+   subroutine idba_spiegat(handle,ptype,p1,p2,result)
      integer, intent(in) :: handle,ptype,p1,p2
      character (len=*), intent(out) :: result
-   end function idba_spiegat
+   end subroutine idba_spiegat
 
-   integer function idba_spiegab(handle,varcode,var,result)
+   subroutine idba_spiegab(handle,varcode,var,result)
      integer, intent(in) :: handle
      character (len=*), intent(in) :: varcode,var
      character (len=*), intent(out) :: result
-   end function idba_spiegab
+   end subroutine idba_spiegab
 
 end interface
