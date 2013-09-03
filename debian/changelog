@@ -1,11 +1,11 @@
-dballe (6.3-1) UNRELEASED; urgency=low
+dballe (6.3-1) unstable; urgency=low
 
   * New upstream release
      - refactored cursor+querybuilder for v6 databases
      - do not leave SQL_TIMESTAMP_STRUCT.fraction uninitialised, which caused
        duplicate imports in some cases
 
- -- Enrico Zini <enrico@debian.org>  Fri, 24 May 2013 17:43:49 +0200
+ -- Enrico Zini <enrico@debian.org>  Tue, 03 Sep 2013 13:43:39 +0200
 
 dballe (6.2-1) UNRELEASED; urgency=low
 
