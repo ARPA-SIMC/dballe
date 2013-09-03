@@ -7,7 +7,7 @@ INCLUDES = -I$(top_srcdir) $(WREPORT_CFLAGS)
 dballeincludedir = $(includedir)/dballe
 
 # Include the F90 interface file as well
-dist_dballeinclude_HEADERS = dballef.h
+dist_dballeinclude_HEADERS = dballef.h dballeff.h
 
 dist_noinst_HEADERS = handles.h
 
