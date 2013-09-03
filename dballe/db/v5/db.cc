@@ -740,6 +740,7 @@ int DB::obtain_context(const Record& rec)
         c.date.hour = hour->enqi();
         c.date.minute = min->enqi();
         c.date.second = sec ? sec->enqi() : 0;
+        c.date.fraction = 0;
     }
     else
         throw error_notfound("datetime informations not found among context information");

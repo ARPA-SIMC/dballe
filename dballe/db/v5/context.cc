@@ -149,7 +149,7 @@ int Context::obtain_station_info()
     date.year = 1000;
     date.month = 1;
     date.day = 1;
-    date.hour = date.minute = date.second = 0;
+    date.hour = date.minute = date.second = date.fraction = 0;
     ltype1 = 257;
     l1 = ltype2 = l2 = MISSING_INT;
     pind = p1 = p2 = MISSING_INT;

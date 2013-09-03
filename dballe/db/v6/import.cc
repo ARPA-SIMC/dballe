@@ -160,6 +160,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
         dd.date.hour = hour->enqi();
         dd.date.minute = min->enqi();
         dd.date.second = sec ? sec->enqi() : 0;
+        dd.date.fraction = 0;
     }
 
 	/* Insert the rest of the data */
