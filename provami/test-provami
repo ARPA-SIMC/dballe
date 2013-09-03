@@ -16,8 +16,8 @@ else
 	fi
 	if [ -z "$DEBUGGER" ]
 	then
-		./provami.py --dsn=sqlite:db.sqlite
+		./provami.py --dsn=sqlite:db.sqlite "$@"
 	else
-		$DEBUGGER python ./provami.py --dsn=sqlite:db.sqlite
+		$DEBUGGER python ./provami.py --dsn=sqlite:db.sqlite "$@"
 	fi
 fi

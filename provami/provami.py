@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
 
     for q in args:
-        model.filter.setFromString(q)
+        model.filter.set_from_string(q)
 
     wx.ArtProvider.PushProvider(ProvamiArtProvider())
 
