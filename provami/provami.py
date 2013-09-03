@@ -19,7 +19,7 @@ class Parser(OptionParser):
         sys.exit(2)
 
 if __name__ == "__main__":
-    parser = Parser(usage="usage: %prog [options]",
+    parser = Parser(usage="usage: %prog [options] [key1=val] [key2=val]",
             version="%prog "+ VERSION,
             description="Navigate a DB-ALLe database")
     parser.add_option("--dsn", default=os.environ.get("DBA_DB", "test"), help="DSN, or URL-like database definition, to use for connecting to the DB-All.e database (default: %default, can be set in the environment as DBA_DB)"),
