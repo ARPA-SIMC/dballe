@@ -4,6 +4,8 @@ dballe (6.3-1) unstable; urgency=low
      - refactored cursor+querybuilder for v6 databases
      - do not leave SQL_TIMESTAMP_STRUCT.fraction uninitialised, which caused
        duplicate imports in some cases
+     - fortran message api: deal gracefully with uninterpretable messaes
+     - fixed data overwrite on V6 databases
 
  -- Enrico Zini <enrico@debian.org>  Tue, 03 Sep 2013 13:43:39 +0200
 

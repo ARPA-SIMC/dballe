@@ -1471,12 +1471,13 @@ void db_shar::test_value_update()
     auto_ptr<db::Cursor> cur = db->query_data(q);
     ensure_equals(cur->remaining(), 1);
     cur->next();
+    int ana_id = cur->get_station_id();
     wreport::Var var = cur->get_var();
     ensure_equals(var.enqi(), 300);
 
     // Update it
     Record update;
-    update.set(DBA_KEY_ANA_ID, q.get(DBA_KEY_ANA_ID, -1));
+    update.set(DBA_KEY_ANA_ID, ana_id);
     update.set(DBA_KEY_REP_COD, 1);
     int dt[6];
     q.get_datetime(dt);

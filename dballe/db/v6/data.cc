@@ -237,7 +237,9 @@ void Data::insert_or_overwrite(bool want_id)
         // select id
         sidstm->execute();
         if (sidstm->fetch_expecting_one())
-            ;
+        {
+            ustm->execute_and_close();
+        }
         else
         {
             istm->execute_and_close();
