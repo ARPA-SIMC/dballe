@@ -75,6 +75,7 @@ struct db_shar : public dballe::tests::DB_test_base
     void test_query_stations();
     void test_summary_queries();
     void test_connect_leaks();
+    void test_value_update();
 
     void populate_for_station_queries()
     {
@@ -1444,6 +1445,54 @@ void db_shar::test_connect_leaks()
         std::auto_ptr<DB> db = DB::connect_test();
         db->insert(insert, false, true);
     }
+}
+
+template<> template<> void to::test<43>() { use_db(V5); test_value_update(); }
+template<> template<> void to::test<44>() { use_db(V6); test_value_update(); }
+void db_shar::test_value_update()
+{
+    populate_database();
+
+    Record q;
+    q.set(DBA_KEY_LAT, 12.34560);
+    q.set(DBA_KEY_LON, 76.54320);
+    q.set(DBA_KEY_YEAR, 1945);
+    q.set(DBA_KEY_MONTH, 4);
+    q.set(DBA_KEY_DAY, 25);
+    q.set(DBA_KEY_HOUR, 8);
+    q.set(DBA_KEY_MIN, 0);
+    q.set(DBA_KEY_SEC, 0);
+    q.set(DBA_KEY_REP_COD, 1);
+    q.set(Level(10, 11, 15, 22));
+    q.set(Trange(20, 111, 122));
+    q.set(DBA_KEY_VAR, "B01012");
+
+    // Query the initial value
+    auto_ptr<db::Cursor> cur = db->query_data(q);
+    ensure_equals(cur->remaining(), 1);
+    cur->next();
+    wreport::Var var = cur->get_var();
+    ensure_equals(var.enqi(), 300);
+
+    // Update it
+    Record update;
+    update.set(DBA_KEY_ANA_ID, q.get(DBA_KEY_ANA_ID, -1));
+    update.set(DBA_KEY_REP_COD, 1);
+    int dt[6];
+    q.get_datetime(dt);
+    update.set_datetime(dt);
+    update.set(q.get_level());
+    update.set(q.get_trange());
+    var.seti(200);
+    update.set(var);
+    db->insert(update, true, false);
+
+    // Query again
+    cur = db->query_data(q);
+    ensure_equals(cur->remaining(), 1);
+    cur->next();
+    var = cur->get_var();
+    ensure_equals(var.enqi(), 200);
 }
 
 }
