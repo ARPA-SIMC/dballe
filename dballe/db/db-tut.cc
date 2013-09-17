@@ -1437,7 +1437,11 @@ template<> template<> void to::test<43>() { use_db(V5); test_value_update(); }
 template<> template<> void to::test<44>() { use_db(V6); test_value_update(); }
 void db_shar::test_value_update()
 {
-    populate_database();
+    db->reset();
+    dballe::tests::TestRecord dataset;
+    Record& attrs = dataset.attrs[WR_VAR(0, 1, 12)];
+    attrs.set(WR_VAR(0, 33, 7), 50);
+    dataset.insert(*db);
 
     Record q;
     q.set(DBA_KEY_LAT, 12.34560);
@@ -1461,6 +1465,13 @@ void db_shar::test_value_update()
     wreport::Var var = cur->get_var();
     ensure_equals(var.enqi(), 300);
 
+    // Query the attributes and check that they are there
+    AttrList qcs;
+    qcs.push_back(WR_VAR(0, 33, 7));
+    Record qattrs;
+    ensure_equals(cur->query_attrs(qcs, qattrs), 1u);
+    ensure_equals(qattrs.get(WR_VAR(0, 33, 7), MISSING_INT), 50);
+
     // Update it
     Record update;
     update.set(DBA_KEY_ANA_ID, ana_id);
@@ -1480,6 +1491,10 @@ void db_shar::test_value_update()
     cur->next();
     var = cur->get_var();
     ensure_equals(var.enqi(), 200);
+
+    qattrs.clear();
+    ensure_equals(cur->query_attrs(qcs, qattrs), 1u);
+    ensure_equals(qattrs.get(WR_VAR(0, 33, 7), MISSING_INT), 50);
 }
 
 template<> template<> void to::test<45>() { use_db(V5); test_query_step_by_step(); }
