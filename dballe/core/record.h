@@ -300,6 +300,24 @@ public:
 	void unset(dba_keyword parameter) { key_unset(parameter); }
 	void unset(wreport::Varcode code) { var_unset(code); }
 	void unset(const char* name);
+    template<typename K>
+    void copy(const Record& rec, K parameter)
+    {
+        const wreport::Var* val = rec.peek(parameter);
+        if (!val)
+            unset(parameter);
+        else
+            set(parameter, *val);
+    }
+    template<typename K>
+    bool contains(const Record& rec, K parameter)
+    {
+        const wreport::Var* mine = peek(parameter);
+        const wreport::Var* theirs = rec.peek(parameter);
+        if (!mine and !theirs) return true;
+        if (!mine or !theirs) return false;
+        return *mine == *theirs;
+    }
 	// @}
 
 	Level get_level() const;

@@ -33,6 +33,40 @@ class DB;
 
 namespace tests {
 
+struct TestRecord
+{
+    Record data;
+    Record station_data;
+    std::map<wreport::Varcode, Record> attrs;
+
+    TestRecord()
+    {
+        data.set(Level(10, 11, 15, 22));
+        data.set(Trange(20, 111, 122));
+        data.set(DBA_KEY_REP_MEMO, "synop");
+        data.set(DBA_KEY_LAT, 12.34560);
+        data.set(DBA_KEY_LON, 76.54320);
+        data.set_datetime({1945, 4, 25, 8, 0, 0});
+        data.set(WR_VAR(0, 1, 11), "DB-All.e!");
+        data.set(WR_VAR(0, 1, 12), 300);
+
+        station_data.set(WR_VAR(0, 7, 30), 42);     // Height
+        station_data.set(WR_VAR(0, 7, 31), 234);    // Heightbaro
+        station_data.set(WR_VAR(0, 1,  1), 1);      // Block
+        station_data.set(WR_VAR(0, 1,  2), 52);     // Station
+        station_data.set(WR_VAR(0, 1, 19), "Cippo Lippo");  // Name
+    }
+
+    void insert(DB& db, bool can_replace=false);
+
+    /// Returns true if rec matches our station keys
+    bool match_station_keys(const Record& rec);
+    /// Returns true if rec matches our station/datetime/level/timerange/report keys
+    bool match_context_keys(const Record& rec);
+    /// Returns true if rec matches our data variable with the given code
+    bool match_data_var(wreport::Varcode code, const Record& rec);
+};
+
 struct db_test
 {
     // DB handle
@@ -55,16 +89,8 @@ struct db_test
 /// Common bits for db::DB test suites
 struct DB_test_base : public db_test
 {
-    // Records with test data
-    Record sampleAna;
-    Record extraAna;
-    Record sampleBase;
-    Record sample0;
-    Record sample00;
-    Record sample01;
-    Record sample1;
-    Record sample10;
-    Record sample11;
+    TestRecord dataset0;
+    TestRecord dataset1;
 
     // Work records
     Record insert;

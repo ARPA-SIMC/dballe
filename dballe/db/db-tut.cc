@@ -76,6 +76,7 @@ struct db_shar : public dballe::tests::DB_test_base
     void test_summary_queries();
     void test_connect_leaks();
     void test_value_update();
+    void test_query_step_by_step();
 
     void populate_for_station_queries()
     {
@@ -224,29 +225,21 @@ template<> template<> void to::test<3>() { use_db(db::V5); test_insert(); }
 template<> template<> void to::test<4>() { use_db(db::V6); test_insert(); }
 void db_shar::test_insert()
 {
-    // Prepare a record to insert
-    insert.clear();
-    insert.add(sampleAna);
-    insert.add(sampleBase);
-    insert.add(sample0);
-    insert.add(sample00);
-    insert.add(sample01);
-
     // Check if adding a nonexisting station when not allowed causes an error
     try {
-        db->insert(insert, false, false);
+        db->insert(dataset0.data, false, false);
         ensure(false);
     } catch (error_consistency& e) {
         ensure_contains(e.what(), "insert a station entry when it is forbidden");
     }
 
     /* Insert the record */
-    db->insert(insert, false, true);
+    db->insert(dataset0.data, false, true);
     /* Check if duplicate updates are allowed by insert */
-    db->insert(insert, true, false);
+    db->insert(dataset0.data, true, false);
     /* Check if duplicate updates are trapped by insert_new */
     try {
-        db->insert(insert, false, false);
+        db->insert(dataset0.data, false, false);
         ensure(false);
     } catch (wreport::error& e) {
         // ensure_contains(e.what(), "uplicate");
@@ -277,8 +270,7 @@ void db_shar::test_ana_query()
     cur->to_record(result);
 
     /* Check that the result matches */
-    ensure(result.contains(sampleAna));
-    //ensureTestRecEquals(result, extraAna);
+    ensure(dataset0.match_station_keys(result));
 
     /* There should be only one item */
     ensure_equals(cur->remaining(), 0);
@@ -508,8 +500,7 @@ void db_shar::test_deletion()
     ensure_equals(cur->remaining(), 2);
     ensure(cur->next());
     cur->to_record(result);
-    ensure(result.contains(sampleAna));
-    ensure(result.contains(sampleBase));
+    ensure(dataset0.match_context_keys(result));
 
     Varcode last_code = 0;
     for (unsigned i = 0; i < 2; ++i)
@@ -522,10 +513,8 @@ void db_shar::test_deletion()
         switch (last_code)
         {
             case WR_VAR(0, 1, 11):
-                ensure(result.contains(sample00));
-                break;
             case WR_VAR(0, 1, 12):
-                ensure(result.contains(sample01));
+                ensure(dataset0.match_data_var(last_code, result));
                 break;
             default:
                 ensure(false);
@@ -884,13 +873,7 @@ template<> template<> void to::test<22>() { use_db(V6); test_attrs(); }
 void db_shar::test_attrs()
 {
     // Insert a data record
-    insert.clear();
-    insert.add(sampleAna);
-    insert.add(sampleBase);
-    insert.add(sample0);
-    insert.add(sample00);
-    insert.add(sample01);
-    db->insert(insert, false, true);
+    dataset0.insert(*db);
 
     qc.clear();
     qc.set(WR_VAR(0,  1,  7),  1);
@@ -906,9 +889,18 @@ void db_shar::test_attrs()
 
     db->attr_insert(WR_VAR(0, 1, 11), qc, false);
 
+    // Query back the B01011 variable to read the attr reference id
+    Record query;
+    query.set(DBA_KEY_VAR, "B01011");
+    auto_ptr<db::Cursor> cur = db->query_data(query);
+    ensure_equals(cur->remaining(), 1);
+    cur->next();
+    int attr_id = cur->attr_reference_id();
+    cur->discard_rest();
+
     qc.clear();
     vector<Varcode> codes;
-    int count = db->query_attrs(1, WR_VAR(0, 1, 11), codes, qc);
+    int count = db->query_attrs(attr_id, WR_VAR(0, 1, 11), codes, qc);
     ensure_equals(count, 10);
 
     // Check that all the attributes come out
@@ -931,13 +923,7 @@ template<> template<> void to::test<24>() { use_db(V6); test_wrap_longitude(); }
 void db_shar::test_wrap_longitude()
 {
     // Insert a data record
-    insert.clear();
-    insert.add(sampleAna);
-    insert.add(sampleBase);
-    insert.add(sample0);
-    insert.add(sample00);
-    insert.add(sample01);
-    db->insert(insert, false, true);
+    dataset0.insert(*db);
 
     query.clear();
     query.set(DBA_KEY_LATMIN, 10.0);
@@ -1494,6 +1480,70 @@ void db_shar::test_value_update()
     cur->next();
     var = cur->get_var();
     ensure_equals(var.enqi(), 200);
+}
+
+template<> template<> void to::test<45>() { use_db(V5); test_query_step_by_step(); }
+template<> template<> void to::test<46>() { use_db(V6); test_query_step_by_step(); }
+void db_shar::test_query_step_by_step()
+{
+    // Try a query checking all the steps
+    populate_database();
+
+    // Prepare a query
+    query.clear();
+    query.set(DBA_KEY_LATMIN, 10.0);
+
+    // Make the query
+    auto_ptr<db::Cursor> cur = db->query_data(query);
+    ensure_equals(cur->remaining(), 4);
+
+    // There should be at least one item
+    ensure(cur->next());
+    ensure_equals(cur->remaining(), 3);
+    cur->to_record(result);
+
+    /* Check that the results match */
+    ensure(dataset0.match_context_keys(result));
+
+    // result.print(stderr);
+    // exit(0);
+
+    ensure(cur->get_varcode() == WR_VAR(0, 1, 11) || cur->get_varcode() == WR_VAR(0, 1, 12));
+    ensure(dataset0.match_data_var(cur->get_varcode(), result));
+
+    // The item should have two data in it
+    ensure(cur->next());
+    ensure_equals(cur->remaining(), 2);
+    cur->to_record(result);
+
+    // Variables from the previous to_record should be removed
+    ensure_equals(result.vars().size(), 1u);
+
+    ensure(cur->get_varcode() == WR_VAR(0, 1, 11) || cur->get_varcode() == WR_VAR(0, 1, 12));
+    ensure(dataset0.match_data_var(cur->get_varcode(), result));
+
+    // There should be also another item
+    ensure(cur->next());
+    ensure_equals(cur->remaining(), 1);
+    cur->to_record(result);
+
+    // Check that the results matches
+    ensure(dataset1.match_context_keys(result));
+
+    ensure(cur->get_varcode() == WR_VAR(0, 1, 11) || cur->get_varcode() == WR_VAR(0, 1, 12));
+    ensure(dataset1.match_data_var(cur->get_varcode(), result));
+
+    // And finally the last item
+    ensure(cur->next());
+    ensure_equals(cur->remaining(), 0);
+    cur->to_record(result);
+
+    ensure(cur->get_varcode() == WR_VAR(0, 1, 11) || cur->get_varcode() == WR_VAR(0, 1, 12));
+    ensure(dataset1.match_data_var(cur->get_varcode(), result));
+
+    // Now there should not be anything anymore
+    ensure_equals(cur->remaining(), 0);
+    ensure(!cur->next());
 }
 
 }

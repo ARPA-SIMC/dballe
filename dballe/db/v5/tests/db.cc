@@ -70,91 +70,9 @@ void to::test<1>()
     db.reset();
 }
 
-// Try a query checking all the steps
-template<> template<>
-void to::test<2>()
-{
-        use_db();
-        populate_database();
-
-        // Prepare a query
-        query.clear();
-        query.set(DBA_KEY_LATMIN, 10.0);
-
-        // Make the query
-        auto_ptr<db::Cursor> dbcur = db->query_data(query);
-        auto_ptr<db::v5::Cursor> cur(dynamic_cast<db::v5::Cursor*>(dbcur.release()));
-
-        ensure_equals(cur->remaining(), 4);
-
-        // There should be at least one item
-        ensure(cur->next());
-        ensure_equals(cur->remaining(), 3);
-        cur->to_record(result);
-
-        /* Check that the results match */
-        ensure(result.contains(sampleAna));
-        ensure(result.contains(sampleBase));
-        ensure(result.contains(sample0));
-
-        // result.print(stderr);
-        // exit(0);
-
-        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
-        if (cur->out_varcode == WR_VAR(0, 1, 11))
-                ensure(result.contains(sample00));
-        if (cur->out_varcode == WR_VAR(0, 1, 12))
-                ensure(result.contains(sample01));
-
-        // The item should have two data in it
-        ensure(cur->next());
-        ensure_equals(cur->remaining(), 2);
-        cur->to_record(result);
-
-        // Variables from the previous to_record should be removed
-        ensure_equals(result.vars().size(), 1u);
-
-        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
-        if (cur->out_varcode == WR_VAR(0, 1, 11))
-                ensure(result.contains(sample00));
-        if (cur->out_varcode == WR_VAR(0, 1, 12))
-                ensure(result.contains(sample01));
-
-        // There should be also another item
-        ensure(cur->next());
-        ensure_equals(cur->remaining(), 1);
-        cur->to_record(result);
-
-        // Check that the results matches
-        ensure(result.contains(sampleAna));
-        ensure(result.contains(sampleBase));
-        ensure(result.contains(sample1));
-
-        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
-        if (cur->out_varcode == WR_VAR(0, 1, 11))
-                ensure(result.contains(sample10));
-        if (cur->out_varcode == WR_VAR(0, 1, 12))
-                ensure(result.contains(sample11));
-
-        // And finally the last item
-        ensure(cur->next());
-        ensure_equals(cur->remaining(), 0);
-        cur->to_record(result);
-
-        ensure(cur->out_varcode == WR_VAR(0, 1, 11) || cur->out_varcode == WR_VAR(0, 1, 12));
-        if (cur->out_varcode == WR_VAR(0, 1, 11))
-                ensure(result.contains(sample10));
-        if (cur->out_varcode == WR_VAR(0, 1, 12))
-                ensure(result.contains(sample11));
-
-        // Now there should not be anything anymore
-        ensure_equals(cur->remaining(), 0);
-        ensure(!cur->next());
-}
-
 // This query caused problems
 template<> template<>
-void to::test<3>()
+void to::test<2>()
 {
         use_db();
         populate_database();
@@ -174,23 +92,18 @@ void to::test<3>()
 
 // Insert with undef leveltype2 and l2
 template<> template<>
-void to::test<4>()
+void to::test<3>()
 {
         use_db();
         populate_database();
 
-        insert.clear();
-        insert.add(sampleAna);
-        insert.add(sampleBase);
-        insert.add(sample0);
-        insert.add(sample01);
-
-        insert.set(DBA_KEY_LEVELTYPE1, 44);
-        insert.set(DBA_KEY_L1, 55);
-        insert.unset(DBA_KEY_LEVELTYPE2);
-        insert.unset(DBA_KEY_L2);
-
-        db->insert(insert, false, false);
+        dballe::tests::TestRecord dataset;
+        dataset.data.unset(WR_VAR(0, 1, 11));
+        dataset.data.set(DBA_KEY_LEVELTYPE1, 44);
+        dataset.data.set(DBA_KEY_L1, 55);
+        dataset.data.unset(DBA_KEY_LEVELTYPE2);
+        dataset.data.unset(DBA_KEY_L2);
+        dataset.insert(*db);
 
         // Query it back
         query.clear();
@@ -219,7 +132,7 @@ void to::test<4>()
 
 // Query with undef leveltype2 and l2
 template<> template<>
-void to::test<5>()
+void to::test<4>()
 {
         use_db();
         populate_database();
@@ -236,7 +149,7 @@ void to::test<5>()
 
 // Query with an incorrect attr_filter
 template<> template<>
-void to::test<6>()
+void to::test<5>()
 {
         use_db();
         populate_database();
@@ -254,7 +167,7 @@ void to::test<6>()
 
 /* Test querying priomax together with query=best */
 template<> template<>
-void to::test<7>()
+void to::test<6>()
 {
         use_db();
         // Start with an empty database
@@ -354,7 +267,7 @@ void to::test<7>()
 
 /* Test querying priomax together with query=best */
 template<> template<>
-void to::test<8>()
+void to::test<7>()
 {
         use_db();
         populate_database();
