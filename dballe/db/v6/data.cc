@@ -35,15 +35,16 @@ namespace db {
 namespace v6 {
 
 Data::Data(DB& db)
-    : db(db), istm(0), ustm(0), iistm(0), sidstm(0)
+    : db(db), istm(0), ustm(0), ioustm(0), iistm(0), sidstm(0)
 {
     const char* insert_query =
         "INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(?, ?, ?, ?, ?, ?)";
     const char* replace_query_mysql =
         "INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(?, ?, ?, ?, ?, ?)"
         " ON DUPLICATE KEY UPDATE value=VALUES(value)";
-    const char* replace_query_sqlite =
-        "INSERT OR REPLACE INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(?, ?, ?, ?, ?, ?)";
+// Do not use this: REPLACE is a DELETE+INSERT, which changes the primary key
+//    const char* replace_query_sqlite =
+//        "INSERT OR REPLACE INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(?, ?, ?, ?, ?, ?)";
     const char* replace_query_oracle =
         "MERGE INTO data USING"
         " (SELECT ? as station, ? as report, ? as lev_tr, ? as d, ? as var, ? as val FROM dual)"
@@ -51,7 +52,7 @@ Data::Data(DB& db)
         " WHEN MATCHED THEN UPDATE SET value=val"
         " WHEN NOT MATCHED THEN"
         "  INSERT (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES (station, report, lev_tr, datetime, var, val)";
-    const char* replace_query_postgres =
+    const char* update_query =
         "UPDATE data SET value=? WHERE id_station=? AND id_report=? AND id_lev_tr=? AND datetime=? AND id_var=?";
     const char* insert_ignore_query_mysql =
         "INSERT IGNORE INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(?, ?, ?, ?, ?, ?)";
@@ -81,31 +82,36 @@ Data::Data(DB& db)
     istm->bind_in(6, value, value_ind);
     istm->prepare(insert_query);
 
-    /* Create the statement for replace */
+    /* Create the statement for update */
     ustm = new db::Statement(*db.conn);
-    if (db.conn->server_type == POSTGRES)
+    ustm->bind_in(1, value, value_ind);
+    ustm->bind_in(2, id_station);
+    ustm->bind_in(3, id_report);
+    ustm->bind_in(4, id_lev_tr, id_lev_tr_ind);
+    ustm->bind_in(5, date);
+    ustm->bind_in(6, id_var);
+    ustm->prepare(update_query);
+
+    /* Create the statement for replace (where available) */
+    switch (db.conn->server_type)
     {
-        ustm->bind_in(1, value, value_ind);
-        ustm->bind_in(2, id_station);
-        ustm->bind_in(3, id_report);
-        ustm->bind_in(4, id_lev_tr, id_lev_tr_ind);
-        ustm->bind_in(5, date);
-        ustm->bind_in(6, id_var);
-    } else {
-        ustm->bind_in(1, id_station);
-        ustm->bind_in(2, id_report);
-        ustm->bind_in(3, id_lev_tr, id_lev_tr_ind);
-        ustm->bind_in(4, date);
-        ustm->bind_in(5, id_var);
-        ustm->bind_in(6, value, value_ind);
+        case MYSQL:
+        case ORACLE:
+            ioustm = new db::Statement(*db.conn);
+            ioustm->bind_in(1, id_station);
+            ioustm->bind_in(2, id_report);
+            ioustm->bind_in(3, id_lev_tr, id_lev_tr_ind);
+            ioustm->bind_in(4, date);
+            ioustm->bind_in(5, id_var);
+            ioustm->bind_in(6, value, value_ind);
+            break;
+        default:
+            break;
     }
     switch (db.conn->server_type)
     {
-        case MYSQL: ustm->prepare(replace_query_mysql); break;
-        case SQLITE: ustm->prepare(replace_query_sqlite); break;
-        case ORACLE: ustm->prepare(replace_query_oracle); break;
-        case POSTGRES: ustm->prepare(replace_query_postgres); break;
-        default: ustm->prepare(replace_query_postgres); break;
+        case MYSQL: ioustm->prepare(replace_query_mysql); break;
+        case ORACLE: ioustm->prepare(replace_query_oracle); break;
     }
 
     /* Create the statement for insert ignore */
@@ -141,6 +147,7 @@ Data::~Data()
 {
     if (istm) delete istm;
     if (ustm) delete ustm;
+    if (ioustm) delete ioustm;
     if (iistm) delete iistm;
     if (sidstm) delete sidstm;
 }
@@ -246,12 +253,13 @@ void Data::insert_or_overwrite(bool want_id)
             id = db.last_data_insert_id();
         }
     } else {
-        if (db.conn->server_type == POSTGRES)
-        {
+        if (ioustm)
+            // Try to use a single query where available
+            ioustm->execute_and_close();
+        else {
             if (ustm->execute_and_close() == SQL_NO_DATA)
                 istm->execute_and_close();
-        } else
-            ustm->execute_and_close();
+        }
     }
 }
 

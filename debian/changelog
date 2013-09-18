@@ -1,3 +1,11 @@
+dballe (6.4-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - changed SQLite queries to avoid losing existing when overwriting a data
+       value
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 18 Sep 2013 12:49:58 +0200
+
 dballe (6.3-1) unstable; urgency=low
 
   * New upstream release

@@ -54,6 +54,8 @@ struct Data
     db::Statement* istm;
     /** Precompiled update statement */
     db::Statement* ustm;
+    /** Precompiled insert or update statement, for DBs where it is available */
+    db::Statement* ioustm;
     /** Precompiled insert or ignore statement */
     db::Statement* iistm;
     /** Precompiled select ID statement */
