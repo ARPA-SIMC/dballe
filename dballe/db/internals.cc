@@ -275,22 +275,19 @@ void Connection::drop_table_if_exists(const char* name)
     char buf[100];
     int len;
 
-    if (server_type == db::MYSQL)
+    switch (server_type)
     {
-        len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", name);
-        stm.exec_direct_and_close(buf, len);
-    } else {
-        switch (server_type)
-        {
-            case db::MYSQL: stm.ignore_error = DBA_ODBC_MISSING_TABLE_MYSQL; break;
-            case db::SQLITE: stm.ignore_error = DBA_ODBC_MISSING_TABLE_SQLITE; break;
-            case db::ORACLE: stm.ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE; break;
-            case db::POSTGRES: stm.ignore_error = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
-            default: stm.ignore_error = DBA_ODBC_MISSING_TABLE_POSTGRES; break;
-        }
-
-        len = snprintf(buf, 100, "DROP TABLE %s", name);
-        stm.exec_direct_and_close(buf, len);
+        case db::MYSQL:
+        case db::POSTGRES:
+        case db::SQLITE:
+            len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", name);
+            stm.exec_direct_and_close(buf, len);
+            break;
+        case db::ORACLE:
+            stm.ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE;
+            len = snprintf(buf, 100, "DROP TABLE %s", name);
+            stm.exec_direct_and_close(buf, len);
+            break;
     }
     commit();
 }
