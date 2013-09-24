@@ -298,23 +298,22 @@ void Connection::drop_table_if_exists(const char* name)
 #define DBA_ODBC_MISSING_SEQUENCE_POSTGRES "42P01"
 void Connection::drop_sequence_if_exists(const char* name)
 {
-    const char* ignore_code;
+    db::Statement stm(*this);
+    char buf[100];
+    int len;
 
     switch (server_type)
     {
-        case db::ORACLE: ignore_code = DBA_ODBC_MISSING_SEQUENCE_ORACLE; break;
-        case db::POSTGRES: ignore_code = DBA_ODBC_MISSING_SEQUENCE_POSTGRES; break;
+        case db::POSTGRES:
+            len = snprintf(buf, 100, "DROP SEQUENCE IF EXISTS %s", name);
+            stm.exec_direct_and_close(buf, len);
+            break;
         default:
-            // No sequences in MySQL, SQLite or unknown databases
-            return;
+            stm.ignore_error = DBA_ODBC_MISSING_SEQUENCE_ORACLE;
+            len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
+            stm.exec_direct_and_close(buf, len);
+            break;
     }
-
-    db::Statement stm(*this);
-    stm.ignore_error = ignore_code;
-
-    char buf[100];
-    int len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
-    stm.exec_direct_and_close(buf, len);
 
     commit();
 }
