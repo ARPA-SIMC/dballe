@@ -53,7 +53,9 @@ error_odbc::error_odbc(SQLSMALLINT handleType, SQLHANDLE handle, const std::stri
     if (mlen > strsize) mlen = strsize;
 
     this->msg = msg;
-    this->msg += ": ";
+    this->msg += ":";
+    this->msg += stat;
+    this->msg += " ";
     this->msg += sqlmsg;
 }
 
