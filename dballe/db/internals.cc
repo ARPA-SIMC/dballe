@@ -308,10 +308,12 @@ void Connection::drop_sequence_if_exists(const char* name)
             len = snprintf(buf, 100, "DROP SEQUENCE IF EXISTS %s", name);
             stm.exec_direct_and_close(buf, len);
             break;
-        default:
+        case db::ORACLE:
             stm.ignore_error = DBA_ODBC_MISSING_SEQUENCE_ORACLE;
             len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
             stm.exec_direct_and_close(buf, len);
+            break;
+        default:
             break;
     }
 
