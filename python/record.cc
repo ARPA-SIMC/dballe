@@ -225,6 +225,23 @@ static PyObject* dpy_Record_vars(dpy_Record* self)
     return result;
 }
 
+static PyObject* dpy_Record_key(dpy_Record* self, PyObject* args)
+{
+    const char* name = NULL;
+
+    if (!PyArg_ParseTuple(args, "s", &name))
+        return NULL;
+
+    try {
+        dba_keyword key = Record::keyword_byname(name);
+        return (PyObject*)var_create(self->rec.get(key));
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
 static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args, PyObject* kw)
 {
     static char* kwlist[] = { "key", "default", NULL };
@@ -331,6 +348,7 @@ static PyObject* dpy_Record_set_from_string(dpy_Record* self, PyObject *args)
 static PyMethodDef dpy_Record_methods[] = {
     {"clear", (PyCFunction)dpy_Record_clear, METH_NOARGS, "remove all data from the record" },
     {"clear_vars", (PyCFunction)dpy_Record_clear_vars, METH_NOARGS, "remove all variables from the record, leaving the keywords intact" },
+    {"key", (PyCFunction)dpy_Record_key, METH_VARARGS, "return a var key from the record"},
     {"get", (PyCFunction)dpy_Record_get, METH_VARARGS | METH_KEYWORDS, "lookup a value, returning a fallback value (None by default) if unset" },
     {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a copy of the Record" },
     {"var", (PyCFunction)dpy_Record_var, METH_VARARGS | METH_KEYWORDS, "return a variable from the record. If no varcode is given, use record['var']" },

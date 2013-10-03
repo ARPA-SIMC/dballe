@@ -185,6 +185,14 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(self.r.var("B12101").code, "B12101")
         self.assertEqual(self.r.var(code="B12101").code, "B12101")
 
+    def testKey(self):
+        self.assertEqual(self.r.key("lon").code, "B00000")
+        self.assertEqual(self.r.key("lon").enqd(), 11.54321)
+        self.assertEqual(self.r.key("lon").enqi(), 1154321)
+        self.assertEqual(self.r.key("lon").enqc(), "11.54321")
+        self.assertEqual(self.r.key("lon").enq(), 11.54321)
+        self.assertEqual(self.r.get("lon") == self.r.key("lon").enqd())
+
     def testMulti(self):
         self.assertEqual(self.r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
         self.assertEqual(self.r["level"], (105, 2, None, None))
