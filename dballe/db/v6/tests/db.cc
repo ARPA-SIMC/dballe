@@ -100,7 +100,7 @@ void to::test<3>()
     use_db();
     populate_database();
 
-    dballe::tests::TestRecord dataset;
+    dballe::tests::DefaultTestRecord dataset;
     dataset.data.unset(WR_VAR(0, 1, 11));
     dataset.data.set(DBA_KEY_LEVELTYPE1, 44);
     dataset.data.set(DBA_KEY_L1, 55);

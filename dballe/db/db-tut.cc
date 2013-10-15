@@ -25,6 +25,7 @@ using namespace dballe;
 using namespace dballe::db;
 using namespace wreport;
 using namespace wibble;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -77,6 +78,7 @@ struct db_shar : public dballe::tests::DB_test_base
     void test_connect_leaks();
     void test_value_update();
     void test_query_step_by_step();
+    void test_double_stationinfo_insert();
 
     void populate_for_station_queries()
     {
@@ -1438,7 +1440,7 @@ template<> template<> void to::test<44>() { use_db(V6); test_value_update(); }
 void db_shar::test_value_update()
 {
     db->reset();
-    dballe::tests::TestRecord dataset;
+    dballe::tests::DefaultTestRecord dataset;
     Record& attrs = dataset.attrs[WR_VAR(0, 1, 12)];
     attrs.set(WR_VAR(0, 33, 7), 50);
     dataset.insert(*db);
@@ -1560,6 +1562,22 @@ void db_shar::test_query_step_by_step()
     ensure_equals(cur->remaining(), 0);
     ensure(!cur->next());
 }
+
+template<> template<> void to::test<47>() { use_db(V5); test_double_stationinfo_insert(); }
+template<> template<> void to::test<48>() { use_db(V6); test_double_stationinfo_insert(); }
+void db_shar::test_double_stationinfo_insert()
+{
+    //wassert(actual(*db).empty());
+    ds_navile.insert(*db, true);
+    ds_navile.insert(*db, true);
+
+    // Query station data and ensure there is only one info (height)
+    query.clear();
+    query.set_ana_context();
+    auto_ptr<db::Cursor> cur = db->query_data(query);
+    wassert(actual(cur->remaining()) == 1);
+}
+
 
 }
 

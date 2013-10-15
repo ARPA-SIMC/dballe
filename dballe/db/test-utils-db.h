@@ -39,7 +39,19 @@ struct TestRecord
     Record station_data;
     std::map<wreport::Varcode, Record> attrs;
 
-    TestRecord()
+    void insert(DB& db, bool can_replace=false);
+
+    /// Returns true if rec matches our station keys
+    bool match_station_keys(const Record& rec);
+    /// Returns true if rec matches our station/datetime/level/timerange/report keys
+    bool match_context_keys(const Record& rec);
+    /// Returns true if rec matches our data variable with the given code
+    bool match_data_var(wreport::Varcode code, const Record& rec);
+};
+
+struct DefaultTestRecord : public TestRecord
+{
+    DefaultTestRecord()
     {
         data.set(Level(10, 11, 15, 22));
         data.set(Trange(20, 111, 122));
@@ -56,15 +68,6 @@ struct TestRecord
         station_data.set(WR_VAR(0, 1,  2), 52);     // Station
         station_data.set(WR_VAR(0, 1, 19), "Cippo Lippo");  // Name
     }
-
-    void insert(DB& db, bool can_replace=false);
-
-    /// Returns true if rec matches our station keys
-    bool match_station_keys(const Record& rec);
-    /// Returns true if rec matches our station/datetime/level/timerange/report keys
-    bool match_context_keys(const Record& rec);
-    /// Returns true if rec matches our data variable with the given code
-    bool match_data_var(wreport::Varcode code, const Record& rec);
 };
 
 struct db_test
@@ -89,8 +92,9 @@ struct db_test
 /// Common bits for db::DB test suites
 struct DB_test_base : public db_test
 {
-    TestRecord dataset0;
-    TestRecord dataset1;
+    DefaultTestRecord dataset0;
+    DefaultTestRecord dataset1;
+    TestRecord ds_navile;
 
     // Work records
     Record insert;

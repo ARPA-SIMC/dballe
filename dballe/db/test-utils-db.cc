@@ -169,6 +169,11 @@ void DB_test_base::init_records()
     dataset1.data.clear_vars();
     dataset1.data.set(WR_VAR(0, 1, 11), "Arpa-Sim!");
     dataset1.data.set(WR_VAR(0, 1, 12), 400);
+
+    ds_navile.data.set(DBA_KEY_REP_MEMO, "synop");
+    ds_navile.data.set(DBA_KEY_LAT, 44.500754);
+    ds_navile.data.set(DBA_KEY_LON, 11.328789);
+    ds_navile.station_data.set(WR_VAR(0, 7, 30), 78); // Height
 }
 
 void DB_test_base::populate_database()
