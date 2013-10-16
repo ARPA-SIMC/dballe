@@ -156,6 +156,12 @@ AM_PATH_PYTHON([], [], [
 	enable_dballe_python=no
 ])
 
+if test x$enable_dballe_python = xyes
+then
+    PYTHON_CFLAGS=`unset CFLAGS; $PYTHON-config --cflags`
+    AC_SUBST(PYTHON_CFLAGS)
+fi
+
 dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 2.5)
 
