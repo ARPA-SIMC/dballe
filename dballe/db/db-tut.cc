@@ -30,29 +30,6 @@ using namespace std;
 
 namespace tut {
 
-// Print all the results, returning the count of results printed
-static int print_results(db::Cursor& cur)
-{
-    Record result;
-    fprintf(stderr, "%d results:\n", (int)cur.remaining());
-    int i;
-    for (i = 0; cur.next(); ++i)
-    {
-        fprintf(stderr, " * Result %d:\n", i);
-        cur.to_record(result);
-        result.print(stderr);
-    }
-    return i;
-}
-
-// Set a record from a ", "-separated string of assignments
-static void set_record_from_string(Record& rec, const std::string& s)
-{
-     str::Split splitter(", ", s);
-     for (str::Split::const_iterator i = splitter.begin(); i != splitter.end(); ++i)
-         rec.set_from_string(i->c_str());
-}
-
 struct db_shar : public dballe::tests::DB_test_base
 {
     void test_reset();
@@ -77,63 +54,6 @@ struct db_shar : public dballe::tests::DB_test_base
     void test_query_step_by_step();
     void test_double_stationinfo_insert();
     void test_double_stationinfo_insert1();
-
-    void populate_for_station_queries()
-    {
-        // Start with an empty database
-        db->reset();
-
-        // Insert two stations
-        insert.clear();
-        insert.set_ana_context();
-        insert.set(DBA_KEY_LAT, 12.34560);
-        insert.set(DBA_KEY_LON, 76.54320);
-        insert.set(DBA_KEY_MOBILE, 0);
-        insert.set(DBA_KEY_REP_MEMO, "synop");
-        insert.set(WR_VAR(0, 1,  1),  1); // Block
-        insert.set(WR_VAR(0, 1,  2),  2); // Station
-        insert.set(WR_VAR(0, 7, 30), 42.0); // Height
-        db->insert(insert, false, true);
-        insert.set(DBA_KEY_REP_MEMO, "metar");
-        insert.set(WR_VAR(0, 7, 30), 50.0); // Height
-        db->insert(insert, false, true);
-
-        insert.clear();
-        insert.set_ana_context();
-        insert.set(DBA_KEY_REP_MEMO, "temp");
-        insert.set(DBA_KEY_LAT, 23.45670);
-        insert.set(DBA_KEY_LON, 65.43210);
-        insert.set(DBA_KEY_MOBILE, 0);
-        insert.set(WR_VAR(0, 1,  1),   3); // Block
-        insert.set(WR_VAR(0, 1,  2),   4); // Station
-        insert.set(WR_VAR(0, 7, 30), 100.0); // Height
-        db->insert(insert, false, true);
-        insert.set(DBA_KEY_REP_MEMO, "metar");
-        insert.set(WR_VAR(0, 7, 30), 110.0); // Height
-        db->insert(insert, false, true);
-
-        // Insert measured temperatures
-        insert.set(DBA_KEY_YEAR, 1945);
-        insert.set(DBA_KEY_MONTH, 4);
-        insert.set(DBA_KEY_DAY, 25);
-        insert.set(DBA_KEY_HOUR, 8);
-        insert.set(DBA_KEY_MIN, 0);
-        insert.set(DBA_KEY_LEVELTYPE1, 10);
-        insert.set(DBA_KEY_L1, 11);
-        insert.set(DBA_KEY_LEVELTYPE2, 15);
-        insert.set(DBA_KEY_L2, 22);
-        insert.set(DBA_KEY_PINDICATOR, 20);
-        insert.set(DBA_KEY_P1, 111);
-        insert.set(DBA_KEY_P2, 122);
-
-        insert.set(DBA_KEY_ANA_ID, 1);
-        insert.set(WR_VAR(0, 12, 101), 290.0);
-        db->insert(insert, false, false);
-
-        insert.set(DBA_KEY_ANA_ID, 2);
-        insert.set(WR_VAR(0, 12, 101), 300.0);
-        db->insert(insert, false, false);
-    }
 
     void populate_for_summary_queries()
     {
@@ -342,16 +262,7 @@ void db_shar::test_misc_queries()
     wruntest(populate_database);
 
 /* Try a query using a KEY query parameter */
-#define TRY_QUERY(qstring, expected_count) do {\
-        query.clear(); \
-        set_record_from_string(query, qstring); \
-        auto_ptr<db::Cursor> cur = db->query_data(query); \
-        ensure_equals(cur->remaining(), expected_count); \
-        int count; \
-        if (0) count = print_results(*cur); \
-        else for (count = 0; cur->next(); ++count) ; \
-        ensure_equals(count, expected_count); \
-} while (0)
+#define TRY_QUERY(qstring, expected_count) wassert(actual(db).try_data_query(qstring, expected_count))
 
     TRY_QUERY("ana_id=1", 4);
     TRY_QUERY("ana_id=2", 0);
@@ -1138,129 +1049,120 @@ template<> template<> void to::test<33>() { use_db(V5); test_query_stations(); }
 template<> template<> void to::test<34>() { use_db(V6); test_query_stations(); }
 void db_shar::test_query_stations()
 {
-/* Try a query using a KEY query parameter */
-#define TRY_QUERY(param, value, expected_count) do {\
-        query.clear(); \
-        query.set(param, value); \
-        auto_ptr<db::Cursor> cur = db->query_stations(query); \
-        ensure_equals(cur->remaining(), expected_count); \
-        int count; \
-        if (0) count = print_results(*cur); \
-        else for (count = 0; cur->next(); ++count) ; \
-        ensure_equals(count, expected_count); \
-} while (0)
+    // Start with an empty database
+    db->reset();
 
-/* Try a query using a longitude range */
-#define TRY_QUERY2(lonmin, lonmax, expected_count) do {\
-        query.clear(); \
-        query.key(DBA_KEY_LONMIN).setd(lonmin); \
-        query.key(DBA_KEY_LONMAX).setd(lonmax); \
-        auto_ptr<db::Cursor> cur = db->query_stations(query); \
-        ensure_equals(cur->remaining(), expected_count); \
-        int count; \
-        if (0) count = print_results(*cur); \
-        else for (count = 0; cur->next(); ++count) ; \
-        ensure_equals(count, expected_count); \
-} while (0)
+    dballe::tests::TestStation st1;
+    st1.lat = 12.34560;
+    st1.lon = 76.54320;
+    st1.info["synop"].set("block", 1);
+    st1.info["synop"].set("station", 2);
+    st1.info["synop"].set("B07030", 42.0); // height
+    st1.info["metar"].set("B07030", 50.0); // height
 
-    populate_for_station_queries();
+    dballe::tests::TestStation st2;
+    st2.lat = 23.45670;
+    st2.lon = 65.43210;
+    st2.info["temp"].set("block", 3);
+    st2.info["temp"].set("station", 4);
+    st2.info["temp"].set("B07030", 100.0); // height
+    st2.info["metar"].set("B07030", 110.0); // height
 
-    TRY_QUERY(DBA_KEY_ANA_ID, "1", 1);
-    TRY_QUERY(DBA_KEY_ANA_ID, "2", 1);
-    TRY_QUERY(DBA_KEY_LAT, 12.00000, 0);
-    TRY_QUERY(DBA_KEY_LAT, 12.34560, 1);
-    TRY_QUERY(DBA_KEY_LAT, 23.45670, 1);
-    TRY_QUERY(DBA_KEY_LATMIN, 12.00000, 2);
-    TRY_QUERY(DBA_KEY_LATMIN, 12.34560, 2);
-    TRY_QUERY(DBA_KEY_LATMIN, 12.34570, 1);
-    TRY_QUERY(DBA_KEY_LATMIN, 23.45670, 1);
-    TRY_QUERY(DBA_KEY_LATMIN, 23.45680, 0);
-    TRY_QUERY(DBA_KEY_LATMAX, 12.00000, 0);
-    TRY_QUERY(DBA_KEY_LATMAX, 12.34560, 1);
-    TRY_QUERY(DBA_KEY_LATMAX, 12.34570, 1);
-    TRY_QUERY(DBA_KEY_LATMAX, 23.45670, 2);
-    TRY_QUERY(DBA_KEY_LATMAX, 23.45680, 2);
-    TRY_QUERY(DBA_KEY_LON, 76.00000, 0);
-    TRY_QUERY(DBA_KEY_LON, 76.54320, 1);
-    TRY_QUERY(DBA_KEY_LON, 65.43210, 1);
-    TRY_QUERY2(10., 20., 0);
-    TRY_QUERY2(76.54320, 76.54320, 1);
-    TRY_QUERY2(76.54320, 77., 1);
-    TRY_QUERY2(76.54330, 77., 0);
-    TRY_QUERY2(60., 77., 2);
-    TRY_QUERY2(77., 76.54310, 1);
-    TRY_QUERY2(77., 76.54320, 2);
-    TRY_QUERY2(77., -10, 0);
-    TRY_QUERY(DBA_KEY_MOBILE, 0, 2);
-    TRY_QUERY(DBA_KEY_MOBILE, 1, 0);
-    TRY_QUERY(WR_VAR(0, 1, 1), 1, 1);
-    TRY_QUERY(WR_VAR(0, 1, 1), 2, 0);
-    TRY_QUERY(WR_VAR(0, 1, 1), 3, 1);
-    TRY_QUERY(WR_VAR(0, 1, 1), 4, 0);
-    TRY_QUERY(WR_VAR(0, 1, 2), 1, 0);
-    TRY_QUERY(WR_VAR(0, 1, 2), 2, 1);
-    TRY_QUERY(WR_VAR(0, 1, 2), 3, 0);
-    TRY_QUERY(WR_VAR(0, 1, 2), 4, 1);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block=1", 1);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block=2", 0);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block=3", 1);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block>=1", 2);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B07030=42", 1);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B07030=50", 1);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B07030=100", 1);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B07030=110", 1);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B07030=120", 0);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B07030>50", 1);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B07030>=50", 2);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "50<=B07030<=100", 2);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101=290", 1);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101=300", 1);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101<300", 1);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101<=300", 2);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101>=300", 1);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101>300", 0);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101<400", 2);
-#undef TRY_QUERY
-#undef TRY_QUERY2
+    dballe::tests::TestRecord rec1;
+    rec1.station = st1;
+    rec1.data.set(DBA_KEY_REP_MEMO, "metar");
+    rec1.data.set_datetime(1945, 4, 25, 8);
+    rec1.data.set(Level(10, 11, 15, 22));
+    rec1.data.set(Trange(20, 111, 122));
+    rec1.data.set(WR_VAR(0, 12, 101), 290.0);
+
+    dballe::tests::TestRecord rec2;
+    rec2.station = st2;
+    rec2.data.set(DBA_KEY_REP_MEMO, "metar");
+    rec2.data.set_datetime(1945, 4, 25, 8);
+    rec2.data.set(Level(10, 11, 15, 22));
+    rec2.data.set(Trange(20, 111, 122));
+    rec2.data.set(WR_VAR(0, 12, 101), 300.0);
+
+    wruntest(rec1.insert, *db, true);
+    wruntest(rec2.insert, *db, true);
+
+    wassert(actual(db).try_station_query("ana_id=1", 1));
+    wassert(actual(db).try_station_query("ana_id=2", 1));
+    wassert(actual(db).try_station_query("lat=12.00000", 0));
+    wassert(actual(db).try_station_query("lat=12.34560", 1));
+    wassert(actual(db).try_station_query("lat=23.45670", 1));
+    wassert(actual(db).try_station_query("latmin=12.00000", 2));
+    wassert(actual(db).try_station_query("latmin=12.34560", 2));
+    wassert(actual(db).try_station_query("latmin=12.34570", 1));
+    wassert(actual(db).try_station_query("latmin=23.45670", 1));
+    wassert(actual(db).try_station_query("latmin=23.45680", 0));
+    wassert(actual(db).try_station_query("latmax=12.00000", 0));
+    wassert(actual(db).try_station_query("latmax=12.34560", 1));
+    wassert(actual(db).try_station_query("latmax=12.34570", 1));
+    wassert(actual(db).try_station_query("latmax=23.45670", 2));
+    wassert(actual(db).try_station_query("latmax=23.45680", 2));
+    wassert(actual(db).try_station_query("lon=76.00000", 0));
+    wassert(actual(db).try_station_query("lon=76.54320", 1));
+    wassert(actual(db).try_station_query("lon=65.43210", 1));
+    wassert(actual(db).try_station_query("lonmin=10., lonmax=20.", 0));
+    wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=76.54320", 1));
+    wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=77.", 1));
+    wassert(actual(db).try_station_query("lonmin=76.54330, lonmax=77.", 0));
+    wassert(actual(db).try_station_query("lonmin=60., lonmax=77.", 2));
+    wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54310", 1));
+    wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54320", 2));
+    wassert(actual(db).try_station_query("lonmin=77., lonmax=-10", 0));
+    wassert(actual(db).try_station_query("mobile=0", 2));
+    wassert(actual(db).try_station_query("mobile=1", 0));
+    wassert(actual(db).try_station_query("B01001=1", 1));
+    wassert(actual(db).try_station_query("B01001=2", 0));
+    wassert(actual(db).try_station_query("B01001=3", 1));
+    wassert(actual(db).try_station_query("B01001=4", 0));
+    wassert(actual(db).try_station_query("B01002=1", 0));
+    wassert(actual(db).try_station_query("B01002=2", 1));
+    wassert(actual(db).try_station_query("B01002=3", 0));
+    wassert(actual(db).try_station_query("B01002=4", 1));
+    wassert(actual(db).try_station_query("ana_filter=block=1", 1));
+    wassert(actual(db).try_station_query("ana_filter=block=2", 0));
+    wassert(actual(db).try_station_query("ana_filter=block=3", 1));
+    wassert(actual(db).try_station_query("ana_filter=block>=1", 2));
+    wassert(actual(db).try_station_query("ana_filter=B07030=42", 1));
+    wassert(actual(db).try_station_query("ana_filter=B07030=50", 1));
+    wassert(actual(db).try_station_query("ana_filter=B07030=100", 1));
+    wassert(actual(db).try_station_query("ana_filter=B07030=110", 1));
+    wassert(actual(db).try_station_query("ana_filter=B07030=120", 0));
+    wassert(actual(db).try_station_query("ana_filter=B07030>50", 1));
+    wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
+    wassert(actual(db).try_station_query("ana_filter=50<=B07030<=100", 2));
+    wassert(actual(db).try_station_query("data_filter=B12101=290", 1));
+    wassert(actual(db).try_station_query("data_filter=B12101=300", 1));
+    wassert(actual(db).try_station_query("data_filter=B12101<300", 1));
+    wassert(actual(db).try_station_query("data_filter=B12101<=300", 2));
+    wassert(actual(db).try_station_query("data_filter=B12101>=300", 1));
+    wassert(actual(db).try_station_query("data_filter=B12101>300", 0));
+    wassert(actual(db).try_station_query("data_filter=B12101<400", 2));
 }
 
 template<> template<> void to::test<35>() {
     use_db(V5);
+    bool worked = false;
     try {
         test_summary_queries();
-        ensure(false);
-    } catch (wreport::error_unimplemented& e) {
+        worked = true;
+    } catch (tut::failure& e) {
+        wassert(actual(e.what()).contains("unimplemented"));
     }
+    wassert(actual(worked).isfalse());
 }
 template<> template<> void to::test<36>() { use_db(V6); test_summary_queries(); }
 void db_shar::test_summary_queries()
 {
     populate_for_summary_queries();
 
-/* Try a query using a KEY query parameter */
-#define TRY_QUERY(param, value, expected_count) do {\
-        query.clear(); \
-        query.set(param, value); \
-        auto_ptr<db::Cursor> cur = db->query_summary(query); \
-        ensure_equals(cur->remaining(), 0); \
-        int count = cur->test_iterate(); \
-        ensure_equals(count, expected_count); \
-} while (0)
-
-/* Try a query using a longitude range */
-#define TRY_QUERY2(lonmin, lonmax, expected_count) do {\
-        query.clear(); \
-        query.key(DBA_KEY_LONMIN).setd(lonmin); \
-        query.key(DBA_KEY_LONMAX).setd(lonmax); \
-        auto_ptr<db::Cursor> cur = db->query_summary(query); \
-        ensure_equals(cur->remaining(), 0); \
-        int count = cur->test_iterate(); \
-        ensure_equals(count, expected_count); \
-} while (0)
-
-    TRY_QUERY(DBA_KEY_ANA_ID, 1, 5);
-    TRY_QUERY(DBA_KEY_ANA_ID, 2, 5);
-    TRY_QUERY(DBA_KEY_ANA_ID, 3, 0);
+    wassert(actual(db).try_summary_query("ana_id=1", 5));
+    wassert(actual(db).try_summary_query("ana_id=2", 5));
+    wassert(actual(db).try_summary_query("ana_id=3", 0));
     {
         query.clear();
         query.set_ana_context();
@@ -1268,38 +1170,38 @@ void db_shar::test_summary_queries()
         ensure_equals(cur->test_iterate(), 12);
     }
     //TRY_QUERY(DBA_KEY_YEAR, 1000, 10);
-    TRY_QUERY(DBA_KEY_YEAR, 1001, 0);
-    TRY_QUERY(DBA_KEY_YEARMIN, 1999, 0);
-    TRY_QUERY(DBA_KEY_YEARMIN, 1945, 10);
-    TRY_QUERY(DBA_KEY_YEARMAX, 1944, 0);
-    TRY_QUERY(DBA_KEY_YEARMAX, 1945, 10);
-    TRY_QUERY(DBA_KEY_YEARMAX, 2030, 10);
-    TRY_QUERY(DBA_KEY_YEAR, 1944, 0);
-    TRY_QUERY(DBA_KEY_YEAR, 1945, 10);
-    TRY_QUERY(DBA_KEY_YEAR, 1946, 0);
-    TRY_QUERY(WR_VAR(0, 1, 1), 1, 5);
-    TRY_QUERY(WR_VAR(0, 1, 1), 2, 0);
-    TRY_QUERY(WR_VAR(0, 1, 2), 3, 0);
-    TRY_QUERY(WR_VAR(0, 1, 2), 4, 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block=1", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B01001=1", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block>1", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B01001>1", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "block<=1", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B01001>3", 0);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B01001>=3", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "B01001<=1", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "0<=B01001<=2", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "1<=B01001<=1", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "2<=B01001<=4", 5);
-    TRY_QUERY(DBA_KEY_ANA_FILTER, "4<=B01001<=6", 0);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101<300.0", 5);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101<=300.0", 10);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101=300.0", 5);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101>=300,0", 5);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101>300.0", 5);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101<400.0", 10);
-    TRY_QUERY(DBA_KEY_DATA_FILTER, "B12101<=400.0", 10);
+    wassert(actual(db).try_summary_query("year=1001", 0));
+    wassert(actual(db).try_summary_query("yearmin=1999", 0));
+    wassert(actual(db).try_summary_query("yearmin=1945", 10));
+    wassert(actual(db).try_summary_query("yearmax=1944", 0));
+    wassert(actual(db).try_summary_query("yearmax=1945", 10));
+    wassert(actual(db).try_summary_query("yearmax=2030", 10));
+    wassert(actual(db).try_summary_query("year=1944", 0));
+    wassert(actual(db).try_summary_query("year=1945", 10));
+    wassert(actual(db).try_summary_query("year=1946", 0));
+    wassert(actual(db).try_summary_query("B01001=1", 5));
+    wassert(actual(db).try_summary_query("B01001=2", 0));
+    wassert(actual(db).try_summary_query("B01002=3", 0));
+    wassert(actual(db).try_summary_query("B01002=4", 5));
+    wassert(actual(db).try_summary_query("ana_filter=block=1", 5));
+    wassert(actual(db).try_summary_query("ana_filter=B01001=1", 5));
+    wassert(actual(db).try_summary_query("ana_filter=block>1", 5));
+    wassert(actual(db).try_summary_query("ana_filter=B01001>1", 5));
+    wassert(actual(db).try_summary_query("ana_filter=block<=1", 5));
+    wassert(actual(db).try_summary_query("ana_filter=B01001>3", 0));
+    wassert(actual(db).try_summary_query("ana_filter=B01001>=3", 5));
+    wassert(actual(db).try_summary_query("ana_filter=B01001<=1", 5));
+    wassert(actual(db).try_summary_query("ana_filter=0<=B01001<=2", 5));
+    wassert(actual(db).try_summary_query("ana_filter=1<=B01001<=1", 5));
+    wassert(actual(db).try_summary_query("ana_filter=2<=B01001<=4", 5));
+    wassert(actual(db).try_summary_query("ana_filter=4<=B01001<=6", 0));
+    wassert(actual(db).try_summary_query("data_filter=B12101<300.0", 5));
+    wassert(actual(db).try_summary_query("data_filter=B12101<=300.0", 10));
+    wassert(actual(db).try_summary_query("data_filter=B12101=300.0", 5));
+    wassert(actual(db).try_summary_query("data_filter=B12101>=300,0", 5));
+    wassert(actual(db).try_summary_query("data_filter=B12101>300.0", 5));
+    wassert(actual(db).try_summary_query("data_filter=B12101<400.0", 10));
+    wassert(actual(db).try_summary_query("data_filter=B12101<=400.0", 10));
 
     /*
     TRY_QUERY(i, DBA_KEY_MONTHMIN, 1);
@@ -1326,55 +1228,53 @@ void db_shar::test_summary_queries()
     TRY_QUERY(i, DBA_KEY_SECMAX, 12);
     TRY_QUERY(i, DBA_KEY_SEC, 5);
     */
-    TRY_QUERY(DBA_KEY_LATMIN, 11.0, 10);
-    TRY_QUERY(DBA_KEY_LATMIN, 12.34560, 10);
-    TRY_QUERY(DBA_KEY_LATMIN, 13.0, 5);
-    TRY_QUERY(DBA_KEY_LATMAX, 11.0, 0);
-    TRY_QUERY(DBA_KEY_LATMAX, 12.34560, 5);
-    TRY_QUERY(DBA_KEY_LATMAX, 13.0, 5);
-    TRY_QUERY2(75., 77., 5);
-    TRY_QUERY2(76.54320, 76.54320, 5);
-    TRY_QUERY2(76.54330, 77., 0);
-    TRY_QUERY2(77., 76.54310, 5);
-    TRY_QUERY2(77., 76.54320, 10);
-    TRY_QUERY2(77., -10, 0);
-    TRY_QUERY(DBA_KEY_MOBILE, 0, 10);
-    TRY_QUERY(DBA_KEY_MOBILE, 1, 0);
+    wassert(actual(db).try_summary_query("latmin=11.0", 10));
+    wassert(actual(db).try_summary_query("latmin=12.34560", 10));
+    wassert(actual(db).try_summary_query("latmin=13.0", 5));
+    wassert(actual(db).try_summary_query("latmax=11.0", 0));
+    wassert(actual(db).try_summary_query("latmax=12.34560", 5));
+    wassert(actual(db).try_summary_query("latmax=13.0", 5));
+    wassert(actual(db).try_summary_query("lonmin=75., lonmax=77.", 5));
+    wassert(actual(db).try_summary_query("lonmin=76.54320, lonmax=76.54320", 5));
+    wassert(actual(db).try_summary_query("lonmin=76.54330, lonmax=77.", 0));
+    wassert(actual(db).try_summary_query("lonmin=77., lonmax=76.54310", 5));
+    wassert(actual(db).try_summary_query("lonmin=77., lonmax=76.54320", 10));
+    wassert(actual(db).try_summary_query("lonmin=77., lonmax=-10", 0));
+    wassert(actual(db).try_summary_query("mobile=0", 10));
+    wassert(actual(db).try_summary_query("mobile=1", 0));
     //TRY_QUERY(c, DBA_KEY_IDENT_SELECT, "pippo");
-    TRY_QUERY(DBA_KEY_PINDICATOR, 20, 10);
-    TRY_QUERY(DBA_KEY_PINDICATOR, 21, 0);
-    TRY_QUERY(DBA_KEY_P1, 111, 10);
-    TRY_QUERY(DBA_KEY_P1, 112, 0);
-    TRY_QUERY(DBA_KEY_P2, 121, 0);
-    TRY_QUERY(DBA_KEY_P2, 122, 10);
-    TRY_QUERY(DBA_KEY_P2, 123, 0);
-    TRY_QUERY(DBA_KEY_LEVELTYPE1, 10, 10);
-    TRY_QUERY(DBA_KEY_LEVELTYPE1, 11, 0);
-    TRY_QUERY(DBA_KEY_LEVELTYPE2, 15, 10);
-    TRY_QUERY(DBA_KEY_LEVELTYPE2, 16, 0);
-    TRY_QUERY(DBA_KEY_L1, 11, 10);
-    TRY_QUERY(DBA_KEY_L1, 12, 0);
-    TRY_QUERY(DBA_KEY_L2, 22, 10);
-    TRY_QUERY(DBA_KEY_L2, 23, 0);
-    TRY_QUERY(DBA_KEY_VAR, "B01001", 2);
-    TRY_QUERY(DBA_KEY_VAR, "B12101", 2);
-    TRY_QUERY(DBA_KEY_VAR, "B12102", 0);
-    TRY_QUERY(DBA_KEY_REP_COD, 1, 0);
-    TRY_QUERY(DBA_KEY_REP_COD, 2, 10);
-    TRY_QUERY(DBA_KEY_REP_COD, 3, 0);
-    TRY_QUERY(DBA_KEY_PRIORITY, 101, 0);
-    TRY_QUERY(DBA_KEY_PRIORITY, 81, 10);
-    TRY_QUERY(DBA_KEY_PRIORITY, 102, 0);
-    TRY_QUERY(DBA_KEY_PRIOMIN, 70, 10);
-    TRY_QUERY(DBA_KEY_PRIOMIN, 80, 10);
-    TRY_QUERY(DBA_KEY_PRIOMIN, 90, 0);
-    TRY_QUERY(DBA_KEY_PRIOMAX, 70, 0);
-    TRY_QUERY(DBA_KEY_PRIOMAX, 81, 10);
-    TRY_QUERY(DBA_KEY_PRIOMAX, 100, 10);
-    TRY_QUERY(DBA_KEY_CONTEXT_ID, 1, 1);
-    TRY_QUERY(DBA_KEY_CONTEXT_ID, 11, 1);
-#undef TRY_QUERY
-#undef TRY_QUERY2
+    wassert(actual(db).try_summary_query("pindicator=20", 10));
+    wassert(actual(db).try_summary_query("pindicator=21", 0));
+    wassert(actual(db).try_summary_query("p1=111", 10));
+    wassert(actual(db).try_summary_query("p1=112", 0));
+    wassert(actual(db).try_summary_query("p2=121", 0));
+    wassert(actual(db).try_summary_query("p2=122", 10));
+    wassert(actual(db).try_summary_query("p2=123", 0));
+    wassert(actual(db).try_summary_query("leveltype1=10", 10));
+    wassert(actual(db).try_summary_query("leveltype1=11", 0));
+    wassert(actual(db).try_summary_query("leveltype2=15", 10));
+    wassert(actual(db).try_summary_query("leveltype2=16", 0));
+    wassert(actual(db).try_summary_query("l1=11", 10));
+    wassert(actual(db).try_summary_query("l1=12", 0));
+    wassert(actual(db).try_summary_query("l2=22", 10));
+    wassert(actual(db).try_summary_query("l2=23", 0));
+    wassert(actual(db).try_summary_query("var=B01001", 2));
+    wassert(actual(db).try_summary_query("var=B12101", 2));
+    wassert(actual(db).try_summary_query("var=B12102", 0));
+    wassert(actual(db).try_summary_query("rep_cod=1", 0));
+    wassert(actual(db).try_summary_query("rep_cod=2", 10));
+    wassert(actual(db).try_summary_query("rep_cod=3", 0));
+    wassert(actual(db).try_summary_query("priority=101", 0));
+    wassert(actual(db).try_summary_query("priority=81", 10));
+    wassert(actual(db).try_summary_query("priority=102", 0));
+    wassert(actual(db).try_summary_query("priomin=70", 10));
+    wassert(actual(db).try_summary_query("priomin=80", 10));
+    wassert(actual(db).try_summary_query("priomin=90", 0));
+    wassert(actual(db).try_summary_query("priomax=70", 0));
+    wassert(actual(db).try_summary_query("priomax=81", 10));
+    wassert(actual(db).try_summary_query("priomax=100", 10));
+    wassert(actual(db).try_summary_query("context_id=1", 1));
+    wassert(actual(db).try_summary_query("context_id=11", 1));
 }
 
 template<> template<> void to::test<37>() { use_db(V5); test_value_update(); }

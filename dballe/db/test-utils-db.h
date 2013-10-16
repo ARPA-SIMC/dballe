@@ -136,6 +136,42 @@ struct TestCursorDataMatch
     void check(WIBBLE_TEST_LOCPRM) const;
 };
 
+/// Check cursor data context anda variable after a query_data
+struct TestDBTryDataQuery
+{
+    DB& db;
+    std::string query;
+    unsigned expected;
+
+    TestDBTryDataQuery(DB& db, const std::string& query, unsigned expected) : db(db), query(query), expected(expected) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
+};
+
+/// Check cursor data context anda variable after a query_data
+struct TestDBTryStationQuery
+{
+    DB& db;
+    std::string query;
+    unsigned expected;
+
+    TestDBTryStationQuery(DB& db, const std::string& query, unsigned expected) : db(db), query(query), expected(expected) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
+};
+
+/// Check cursor data context anda variable after a query_data
+struct TestDBTrySummaryQuery
+{
+    DB& db;
+    std::string query;
+    unsigned expected;
+
+    TestDBTrySummaryQuery(DB& db, const std::string& query, unsigned expected) : db(db), query(query), expected(expected) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
+};
+
 struct db_test
 {
     // DB handle
@@ -204,6 +240,15 @@ struct ActualCursor : public wibble::tests::Actual<dballe::db::Cursor&>
     TestCursorDataMatch data_matches(const TestRecord& ds, wreport::Varcode code) { return TestCursorDataMatch(this->actual, ds, code); }
 };
 
+struct ActualDB : public wibble::tests::Actual<dballe::DB&>
+{
+    ActualDB(dballe::DB& actual) : wibble::tests::Actual<dballe::DB&>(actual) {}
+
+    TestDBTryDataQuery try_data_query(const std::string& query, unsigned expected) { return TestDBTryDataQuery(this->actual, query, expected); }
+    TestDBTryStationQuery try_station_query(const std::string& query, unsigned expected) { return TestDBTryStationQuery(this->actual, query, expected); }
+    TestDBTrySummaryQuery try_summary_query(const std::string& query, unsigned expected) { return TestDBTrySummaryQuery(this->actual, query, expected); }
+};
+
 } // namespace tests
 } // namespace dballe
 
@@ -229,6 +274,8 @@ namespace tests {
 
 inline dballe::tests::ActualCursor actual(dballe::db::Cursor& actual) { return dballe::tests::ActualCursor(actual); }
 inline dballe::tests::ActualCursor actual(std::auto_ptr<dballe::db::Cursor>& actual) { return dballe::tests::ActualCursor(*actual); }
+inline dballe::tests::ActualDB actual(dballe::DB& actual) { return dballe::tests::ActualDB(actual); }
+inline dballe::tests::ActualDB actual(std::auto_ptr<dballe::DB>& actual) { return dballe::tests::ActualDB(*actual); }
 
 }
 }

@@ -23,6 +23,7 @@
 #include "dballe/db/v6/db.h"
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
+#include <wibble/string.h>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -30,10 +31,22 @@
 
 using namespace wreport;
 using namespace std;
+using namespace wibble;
 using namespace wibble::tests;
 
 namespace dballe {
 namespace tests {
+
+namespace {
+// Set a record from a ", "-separated string of assignments
+void set_record_from_string(Record& rec, const std::string& s)
+{
+     str::Split splitter(", ", s);
+     for (str::Split::const_iterator i = splitter.begin(); i != splitter.end(); ++i)
+         rec.set_from_string(i->c_str());
+}
+}
+
 
 void TestStation::set_latlonident_into(Record& rec) const
 {
@@ -188,6 +201,51 @@ void TestCursorDataMatch::check(WIBBLE_TEST_LOCPRM) const
     wassert(actual(cur).data_var_matches(ds, code));
 }
 
+void TestDBTryDataQuery::check(WIBBLE_TEST_LOCPRM) const
+{
+    // Build the query
+    Record query;
+    set_record_from_string(query, this->query);
+
+    // Run the query
+    auto_ptr<db::Cursor> cur = db.query_data(query);
+
+    // Check the number of results
+    wassert(actual(cur->remaining()) == expected);
+    unsigned count = cur->test_iterate(/* stderr */);
+    wassert(actual(count) == expected);
+}
+
+void TestDBTryStationQuery::check(WIBBLE_TEST_LOCPRM) const
+{
+    // Build the query
+    Record query;
+    set_record_from_string(query, this->query);
+
+    // Run the query
+    auto_ptr<db::Cursor> cur = db.query_stations(query);
+
+    // Check the number of results
+    wassert(actual(cur->remaining()) == expected);
+    unsigned count = cur->test_iterate(/* stderr */);
+    wassert(actual(count) == expected);
+}
+
+void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
+{
+    // Build the query
+    Record query;
+    set_record_from_string(query, this->query);
+
+    // Run the query
+    auto_ptr<db::Cursor> cur = db.query_summary(query);
+
+    // Check the number of results
+    // query_summary does not count results in advance
+    wassert(actual(cur->remaining()) == 0);
+    unsigned count = cur->test_iterate(/* stderr */);
+    wassert(actual(count) == expected);
+}
 
 db_test::db_test()
 {
