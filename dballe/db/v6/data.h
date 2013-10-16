@@ -70,8 +70,6 @@ struct Data
     DBALLE_SQL_C_SINT_TYPE id_report;
     /** Context ID SQL parameter */
     DBALLE_SQL_C_SINT_TYPE id_lev_tr;
-    /// NULL indicator for id_lev_tr
-    SQLLEN id_lev_tr_ind;
     /** Date SQL parameter */
     SQL_TIMESTAMP_STRUCT date;
     /** Variable type SQL parameter */

@@ -76,7 +76,7 @@ Data::Data(DB& db)
     istm = new db::Statement(*db.conn);
     istm->bind_in(1, id_station);
     istm->bind_in(2, id_report);
-    istm->bind_in(3, id_lev_tr, id_lev_tr_ind);
+    istm->bind_in(3, id_lev_tr);
     istm->bind_in(4, date);
     istm->bind_in(5, id_var);
     istm->bind_in(6, value, value_ind);
@@ -87,7 +87,7 @@ Data::Data(DB& db)
     ustm->bind_in(1, value, value_ind);
     ustm->bind_in(2, id_station);
     ustm->bind_in(3, id_report);
-    ustm->bind_in(4, id_lev_tr, id_lev_tr_ind);
+    ustm->bind_in(4, id_lev_tr);
     ustm->bind_in(5, date);
     ustm->bind_in(6, id_var);
     ustm->prepare(update_query);
@@ -100,7 +100,7 @@ Data::Data(DB& db)
             ioustm = new db::Statement(*db.conn);
             ioustm->bind_in(1, id_station);
             ioustm->bind_in(2, id_report);
-            ioustm->bind_in(3, id_lev_tr, id_lev_tr_ind);
+            ioustm->bind_in(3, id_lev_tr);
             ioustm->bind_in(4, date);
             ioustm->bind_in(5, id_var);
             ioustm->bind_in(6, value, value_ind);
@@ -112,13 +112,15 @@ Data::Data(DB& db)
     {
         case MYSQL: ioustm->prepare(replace_query_mysql); break;
         case ORACLE: ioustm->prepare(replace_query_oracle); break;
+        default:
+            break;
     }
 
     /* Create the statement for insert ignore */
     iistm = new db::Statement(*db.conn);
     iistm->bind_in(1, id_station);
     iistm->bind_in(2, id_report);
-    iistm->bind_in(3, id_lev_tr, id_lev_tr_ind);
+    iistm->bind_in(3, id_lev_tr);
     iistm->bind_in(4, date);
     iistm->bind_in(5, id_var);
     iistm->bind_in(6, value, value_ind);
@@ -136,7 +138,7 @@ Data::Data(DB& db)
     sidstm = new db::Statement(*db.conn);
     sidstm->bind_in(1, id_station);
     sidstm->bind_in(2, id_report);
-    sidstm->bind_in(3, id_lev_tr, id_lev_tr_ind);
+    sidstm->bind_in(3, id_lev_tr);
     sidstm->bind_in(4, date);
     sidstm->bind_in(5, id_var);
     sidstm->bind_out(1, id);
@@ -178,8 +180,10 @@ void Data::set_date(const Record& rec)
 
 void Data::set_station_info()
 {
-    id_lev_tr = 0;
-    id_lev_tr_ind = SQL_NULL_DATA;
+    // Use -1 instead of NULL, as NULL are considered different in UNIQUE
+    // indices by some databases but not others, due to an ambiguity in the SQL
+    // standard
+    id_lev_tr = -1;
     date.year = 1000;
     date.month = 1;
     date.day = 1;
@@ -192,7 +196,6 @@ void Data::set_station_info()
 void Data::set_id_lev_tr(int id)
 {
     id_lev_tr = id;
-    id_lev_tr_ind = sizeof(id_lev_tr);
 }
 
 void Data::set(const wreport::Var& var)
@@ -269,7 +272,6 @@ void Data::dump(FILE* out)
     DBALLE_SQL_C_SINT_TYPE id_station;
     DBALLE_SQL_C_SINT_TYPE id_report;
     DBALLE_SQL_C_SINT_TYPE id_lev_tr;
-    SQLLEN id_lev_tr_ind;
     SQL_TIMESTAMP_STRUCT date;
     wreport::Varcode id_var;
     char value[255];
@@ -279,7 +281,7 @@ void Data::dump(FILE* out)
     stm.bind_out(1, id);
     stm.bind_out(2, id_station);
     stm.bind_out(3, id_report);
-    stm.bind_out(4, id_lev_tr, id_lev_tr_ind);
+    stm.bind_out(4, id_lev_tr);
     stm.bind_out(5, date);
     stm.bind_out(6, id_var);
     stm.bind_out(7, value, 255, value_ind);
@@ -290,7 +292,7 @@ void Data::dump(FILE* out)
     for (count = 0; stm.fetch(); ++count)
     {
         char ltr[20];
-        if (id_lev_tr_ind == SQL_NULL_DATA)
+        if (id_lev_tr == -1)
             strcpy(ltr, "----");
         else
             snprintf(ltr, 20, "%04d", (int)id_lev_tr);

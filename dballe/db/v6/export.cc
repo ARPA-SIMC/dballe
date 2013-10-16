@@ -75,7 +75,7 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
             "  FROM data d"
             "  LEFT JOIN attr a ON a.id_data = d.id"
             " WHERE d.id_station = ? AND d.id_report = ?"
-            "   AND d.id_lev_tr IS NULL"
+            "   AND d.id_lev_tr == -1"
             " ORDER BY d.id_var, a.type";
 
         db::Statement stm(*db.conn);
@@ -242,7 +242,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
         }
 
         TRACE("Inserting var B%02d%03d (%s)\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()), var->value());
-        if (cur.sqlrec.out_id_ltr_ind == SQL_NULL_DATA)
+        if (cur.sqlrec.out_id_ltr == -1)
         {
             msg->set(var, Level::ana(), Trange::ana());
         } else {

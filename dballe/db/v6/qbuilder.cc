@@ -356,7 +356,7 @@ void DataQueryBuilder::build_select()
     stm.bind_out(output_seq++, cur.sqlrec.out_id_data);
     stm.bind_out(output_seq++, cur.sqlrec.out_datetime);
     stm.bind_out(output_seq++, cur.sqlrec.out_rep_cod);
-    stm.bind_out(output_seq++, cur.sqlrec.out_id_ltr, cur.sqlrec.out_id_ltr_ind);
+    stm.bind_out(output_seq++, cur.sqlrec.out_id_ltr);
     stm.bind_out(output_seq++, cur.sqlrec.out_varcode);
     stm.bind_out(output_seq++, cur.sqlrec.out_value, sizeof(cur.sqlrec.out_value));
     sql_from.append(
@@ -380,9 +380,9 @@ bool DataQueryBuilder::build_where()
         sql_where.append_listf("d.id=%d", query_data_id);
     } else {
         if (query_station_vars)
-            sql_where.append_list("d.id_lev_tr IS NULL");
+            sql_where.append_list("d.id_lev_tr == -1");
         else
-            sql_where.append_list("d.id_lev_tr IS NOT NULL");
+            sql_where.append_list("d.id_lev_tr != -1");
     }
 
     // Add pseudoana-specific where parts
@@ -438,7 +438,7 @@ void SummaryQueryBuilder::build_select()
     stm.bind_out(output_seq++, cur.sqlrec.out_lon);
     stm.bind_out(output_seq++, cur.sqlrec.out_ident, sizeof(cur.sqlrec.out_ident), cur.sqlrec.out_ident_ind);
     stm.bind_out(output_seq++, cur.sqlrec.out_rep_cod);
-    stm.bind_out(output_seq++, cur.sqlrec.out_id_ltr, cur.sqlrec.out_id_ltr_ind);
+    stm.bind_out(output_seq++, cur.sqlrec.out_id_ltr);
     stm.bind_out(output_seq++, cur.sqlrec.out_varcode);
     /*
     // Abuse id_data and datetime for count and min(datetime)
@@ -482,14 +482,14 @@ bool QueryBuilder::add_pa_where(const char* tbl)
     {
         // No need to escape since the variable is integer
         sql_where.append_listf("EXISTS(SELECT id FROM data %s_blo WHERE %s_blo.id_station=%s.id"
-                               " AND %s_blo.id_var=257 AND %s_blo.id_lev_tr IS NULL AND %s_blo.value='%s')",
+                               " AND %s_blo.id_var=257 AND %s_blo.id_lev_tr == -1 AND %s_blo.value='%s')",
                 tbl, tbl, tbl, tbl, tbl, tbl, val);
         c.found = true;
     }
     if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 2)))
     {
         sql_where.append_listf("EXISTS(SELECT id FROM data %s_sta WHERE %s_sta.id_station=%s.id"
-                               " AND %s_sta.id_var=258 AND %s_sta.id_lev_tr IS NULL AND %s_sta.value='%s')",
+                               " AND %s_sta.id_var=258 AND %s_sta.id_lev_tr == -1 AND %s_sta.value='%s')",
                 tbl, tbl, tbl, tbl, tbl, tbl, val);
         c.found = true;
     }
@@ -499,7 +499,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
         Varinfo info = decode_data_filter(val, &op, &value, &value1);
 
         sql_where.append_listf("EXISTS(SELECT id FROM data %s_af WHERE %s_af.id_station=%s.id"
-                               " AND %s_af.id_lev_tr IS NULL"
+                               " AND %s_af.id_lev_tr == -1"
                                " AND %s_af.id_var=%d", tbl, tbl, tbl, tbl, tbl, info->var);
 
         if (value[0] == '\'')
@@ -683,7 +683,7 @@ bool QueryBuilder::add_datafilter_where(const char* tbl)
     Varinfo info = decode_data_filter(val, &op, &value, &value1);
 
     sql_where.append_listf("EXISTS(SELECT id FROM data %s_df WHERE %s_df.id_station=%s.id"
-                           " AND %s_df.id_lev_tr IS NOT NULL"
+                           " AND %s_df.id_lev_tr != -1"
                            " AND %s_df.id_var=%d", tbl, tbl, tbl, tbl, tbl, info->var);
 
     if (value[0] == '\'')

@@ -54,8 +54,7 @@ namespace v6 {
 bool Cursor::SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
 {
     if (out_ana_id != r.out_ana_id) return false;
-    if (out_id_ltr_ind != r.out_id_ltr_ind) return false;
-    if (out_id_ltr_ind != SQL_NULL_DATA and out_id_ltr != r.out_id_ltr) return false;
+    if (out_id_ltr != r.out_id_ltr) return false;
     if (memcmp(&out_datetime, &r.out_datetime, sizeof(SQL_TIMESTAMP_STRUCT)) != 0) return false;
     if (out_varcode != r.out_varcode) return false;
     return true;
@@ -177,13 +176,13 @@ const char* Cursor::get_rep_memo(const char* def) const
 }
 Level Cursor::get_level() const
 {
-    if (sqlrec.out_id_ltr_ind == SQL_NULL_DATA)
+    if (sqlrec.out_id_ltr == -1)
         return Level();
     return db.lev_tr_cache().to_level(sqlrec.out_id_ltr);
 }
 Trange Cursor::get_trange() const
 {
-    if (sqlrec.out_id_ltr_ind == SQL_NULL_DATA)
+    if (sqlrec.out_id_ltr == -1)
         return Trange();
     return db.lev_tr_cache().to_trange(sqlrec.out_id_ltr);
 }
@@ -235,7 +234,7 @@ void Cursor::to_record_repinfo(Record& rec)
 
 void Cursor::to_record_ltr(Record& rec)
 {
-    if (sqlrec.out_id_ltr_ind != SQL_NULL_DATA)
+    if (sqlrec.out_id_ltr != -1)
         db.lev_tr_cache().to_rec(sqlrec.out_id_ltr, rec);
     else
     {
@@ -286,7 +285,7 @@ void Cursor::add_station_info(Record& rec)
 #define BASE_QUERY \
         "SELECT d.id_var, d.value, ri.id, ri.prio" \
         "  FROM data d, repinfo ri" \
-        " WHERE d.id_lev_tr IS NULL AND ri.id = d.id_report AND d.id_station = ?"
+        " WHERE d.id_lev_tr == -1 AND ri.id = d.id_report AND d.id_station = ?"
 
     const char* query;
     switch (db.conn->server_type)
@@ -301,7 +300,7 @@ void Cursor::add_station_info(Record& rec)
                 " AND ri.prio=("
                 "  SELECT MAX(sri.prio) FROM repinfo sri"
                 "    JOIN data sd ON sri.id=sd.id_report"
-                "  WHERE sd.id_station=d.id_station AND sd.id_lev_tr IS NULL"
+                "  WHERE sd.id_station=d.id_station AND sd.id_lev_tr == -1"
                 "    AND sd.id_var=d.id_var)";
             break;
     }
@@ -567,7 +566,7 @@ unsigned CursorSummary::test_iterate(FILE* dump)
             fprintf(dump, "%02d %03d %03d %s %04d-%02d-%02d %02d:%02d:%02d  %04d-%02d-%02d %02d:%02d:%02d  %d\n",
                     r.get(DBA_KEY_ANA_ID, -1),
                     r.get(DBA_KEY_REP_COD, -1),
-                    sqlrec.out_id_ltr_ind == SQL_NULL_DATA ? -1 : sqlrec.out_id_ltr,
+                    (int)sqlrec.out_id_ltr,
                     r.get(DBA_KEY_VAR, ""),
                     r.get(DBA_KEY_YEARMIN, 0), r.get(DBA_KEY_MONTHMIN, 0), r.get(DBA_KEY_DAYMIN, 0),
                     r.get(DBA_KEY_HOURMIN, 0), r.get(DBA_KEY_MINUMIN, 0), r.get(DBA_KEY_SECMIN, 0),

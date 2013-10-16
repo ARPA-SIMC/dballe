@@ -97,7 +97,7 @@ static const char* init_queries_mysql[] = {
     "   id          INTEGER auto_increment PRIMARY KEY,"
     "   id_station  SMALLINT NOT NULL,"
     "   id_report   INTEGER NOT NULL,"
-    "   id_lev_tr   INTEGER NULL,"
+    "   id_lev_tr   INTEGER NOT NULL,"
     "   datetime    DATETIME NOT NULL,"
     "   id_var      SMALLINT NOT NULL,"
     "   value       VARCHAR(255) NOT NULL,"
@@ -147,7 +147,7 @@ static const char* init_queries_postgres[] = {
     "   id          SERIAL PRIMARY KEY,"
     "   id_station  INTEGER NOT NULL,"
     "   id_report   INTEGER NOT NULL,"
-    "   id_lev_tr   INTEGER NULL,"
+    "   id_lev_tr   INTEGER NOT NULL,"
     "   datetime    TIMESTAMP NOT NULL,"
     "   id_var      INTEGER NOT NULL,"
     "   value       VARCHAR(255) NOT NULL"
@@ -213,7 +213,7 @@ static const char* init_queries_sqlite[] = {
     "   id          INTEGER PRIMARY KEY,"
     "   id_station  INTEGER NOT NULL,"
     "   id_report   INTEGER NOT NULL,"
-    "   id_lev_tr   INTEGER NULL,"
+    "   id_lev_tr   INTEGER NOT NULL,"
     "   datetime    TEXT NOT NULL,"
     "   id_var      INTEGER NOT NULL,"
     "   value       VARCHAR(255) NOT NULL,"
@@ -264,7 +264,7 @@ static const char* init_queries_oracle[] = {
     "   id          SERIAL PRIMARY KEY,"
     "   id_station  INTEGER NOT NULL,"
     "   id_report   INTEGER NOT NULL,"
-    "   id_lev_tr   INTEGER NULL,"
+    "   id_lev_tr   INTEGER NOT NULL,"
     "   datetime    DATE NOT NULL,"
     "   id_var      INTEGER NOT NULL,"
     "   value       VARCHAR(255) NOT NULL,"
@@ -607,7 +607,7 @@ int DB::obtain_lev_tr(const Record& rec)
 {
     if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
         if (var->enqi() == 257)
-            return MISSING_INT;
+            return -1;
 
     LevTr& c = lev_tr();
 
@@ -670,10 +670,6 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 
     // Insert the lev_tr data, and get the ID
     d.id_lev_tr = obtain_lev_tr(rec);
-    if (d.id_lev_tr == MISSING_INT)
-        d.id_lev_tr_ind = SQL_NULL_DATA;
-    else
-        d.id_lev_tr_ind = sizeof(d.id_lev_tr);
 
     // Set the date from the record contents
     d.set_date(rec);

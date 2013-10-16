@@ -68,7 +68,7 @@ struct Cursor : public db::Cursor
         char    out_value[255];
         DBALLE_SQL_C_SINT_TYPE  out_rep_cod;
         DBALLE_SQL_C_SINT_TYPE  out_ana_id;
-        DBALLE_SQL_C_SINT_TYPE  out_id_ltr; SQLLEN out_id_ltr_ind;
+        DBALLE_SQL_C_SINT_TYPE  out_id_ltr;
         DBALLE_SQL_C_SINT_TYPE  out_id_data;
         int priority;
 

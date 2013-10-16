@@ -91,7 +91,7 @@ void to::test<3>()
     dataset.data.set(DBA_KEY_L1, 55);
     dataset.data.unset(DBA_KEY_LEVELTYPE2);
     dataset.data.unset(DBA_KEY_L2);
-    wruntest(dataset.insert, *db);
+    wruntest(dataset.insert, *db, true);
 
     // Query it back
     query.clear();
