@@ -278,8 +278,10 @@ public:
      * @param can_replace
      *   If true, then existing data can be rewritten, else data can only be added.
      * @param station_can_add
-     *   If true, then it is allowed to add new station records to the database.
-     *   Otherwise, data can be added only by reusing existing ones.
+     *   If false, it will not create a missing station record, and only data
+     *   for existing stations can be added. If true, then if we are inserting
+     *   data for a station that does not yet exists in the database, it will
+     *   be created.
      */
     virtual void insert(const Record& rec, bool can_replace, bool station_can_add) = 0;
 
@@ -309,7 +311,12 @@ public:
     virtual void vacuum() = 0;
 
     /**
-     * Start a query on the station variables archive
+     * Start a query on the station variables archive.
+     *
+     * The cursor will iterate over unique lat, lon, ident triples, and will
+     * contain all station vars. If a station var exists twice on two different
+     * networks, only one will be present: the one of the network with the
+     * highest priority.
      *
      * @param query
      *   The record with the query data (see @ref dba_record_keywords)
