@@ -868,7 +868,6 @@ void QueryBuilder::add_other_froms(unsigned int base)
             case DBA_DB_FROM_C:
                 sql_query.append(
                             " JOIN context cbs ON c.id_ana=cbs.id_ana"
-                            " AND cbs.id_report=c.id_report"
                             " AND cbs.datetime={ts '1000-01-01 00:00:00.000'}"
                             " AND cbs.ltype1=257 ");
                 break;
