@@ -104,8 +104,8 @@ protected:
 	/* The storage for the core keyword data */
 	wreport::Var* keydata[DBA_KEY_COUNT];
 
-	/* The variables */
-	std::vector<wreport::Var*> m_vars;
+    // The variables, sorted by varcode
+    std::vector<wreport::Var*> m_vars;
 
 	/// Find an item by wreport::Varcode, returning -1 if not found
 	int find_item(wreport::Varcode code) const throw ();
@@ -331,10 +331,8 @@ public:
 	 */
 	void set_ana_context();
 
-	/**
-	 * Return the vector with the variables
-	 */
-	const std::vector<wreport::Var*>& vars() const;
+    /// Return the varcode-sorted vector with the variables
+    const std::vector<wreport::Var*>& vars() const;
 
 	/**
 	 * Remove a parameter from the record.
