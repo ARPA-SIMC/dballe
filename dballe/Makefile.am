@@ -3,7 +3,7 @@
 EXTRA_DIST=
 CLEANFILES=
 
-INCLUDES = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
+AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
 
 #
 # Autobuilt files

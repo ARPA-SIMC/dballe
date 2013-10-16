@@ -1,6 +1,6 @@
 if DO_DBALLEF
 
-INCLUDES = -I$(top_srcdir) $(WREPORT_CFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir) $(WREPORT_CFLAGS)
 
 # libdballef
 

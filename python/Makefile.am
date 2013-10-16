@@ -66,7 +66,7 @@ EXTRA_DIST = \
     cursor.h \
     $(dballe_python_tests)
 
-INCLUDES = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
+AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
 check-local:
 	for test in $(dballe_python_tests); do \
