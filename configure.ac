@@ -41,6 +41,13 @@ AC_ARG_ENABLE([docs],
     [],
     [enable_docs="yes"])
 
+AC_ARG_ENABLE([benchmarks],
+    [AS_HELP_STRING(
+        [--enable-benchmarks],
+        [enable benchmarks (requires C++11 support)])],
+    [],
+    [enable_benchmarks="yes"])
+
 if test x"$enable_dballe_db" != x"yes"; then
 	enable_dballe_python="no"
 fi
@@ -64,10 +71,15 @@ AM_PROG_CC_STDC
 dnl Needed by subdir-objects
 AM_PROG_CC_C_O
 
-AX_CXX_COMPILE_STDCXX_11(noext,optional)
-if test x$HAVE_CXX11 = x1
+if test x$enable_benchmarks = xyes
 then
-	have_benchmarks=yes
+	AX_CXX_COMPILE_STDCXX_11(noext,optional)
+	if test x$HAVE_CXX11 = x1
+	then
+		have_benchmarks=yes
+	else
+		have_benchmarks=no
+	fi
 else
 	have_benchmarks=no
 fi
