@@ -226,6 +226,15 @@ std::vector<int> Repinfo::ids_by_prio(const Record& rec) const
     return res;
 }
 
+std::map<std::string, int> Repinfo::get_priorities() const
+{
+    std::map<std::string, int> res;
+    for (std::vector<repinfo::Cache>::const_iterator i = cache.begin();
+            i != cache.end(); ++i)
+        res[i->memo] = i->prio;
+    return res;
+}
+
 #if 0
 /*
 static void commit_cache_item(struct _dba_db_repinfo_cache* item)

@@ -92,6 +92,8 @@ struct Cursor : public dballe::db::Cursor
     Cursor(v5::DB& db);
     ~Cursor();
 
+    virtual dballe::DB& get_db() const;
+
     /**
      * Create and execute a database query.
      *

@@ -31,6 +31,7 @@
 #include <dballe/db/odbcworkarounds.h>
 #include <vector>
 #include <string>
+#include <map>
 
 namespace dballe {
 struct Record;
@@ -177,6 +178,11 @@ struct Repinfo
      * Return a vector of IDs matching the priority constraints in the given record.
      */
     std::vector<int> ids_by_prio(const Record& rec) const;
+
+    /**
+     * Get a mapping between rep_memo and their priorities
+     */
+    std::map<std::string, int> get_priorities() const;
 
     /**
      * Dump the entire contents of the table to an output stream

@@ -547,6 +547,11 @@ void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int*
     repinfo().update(repinfo_file, added, deleted, updated);
 }
 
+std::map<std::string, int> DB::get_repinfo_priorities()
+{
+    return repinfo().get_priorities();
+}
+
 int DB::get_rep_cod(const Record& rec)
 {
     Repinfo& ri = repinfo();

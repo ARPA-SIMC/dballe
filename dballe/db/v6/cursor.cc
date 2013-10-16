@@ -70,6 +70,8 @@ Cursor::~Cursor()
 {
 }
 
+dballe::DB& Cursor::get_db() const { return db; }
+
 int Cursor::attr_reference_id() const
 {
     return sqlrec.out_id_data;

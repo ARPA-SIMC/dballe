@@ -227,6 +227,8 @@ public:
 	 */
 	void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated);
 
+    virtual std::map<std::string, int> get_repinfo_priorities();
+
 	/**
 	 * Get the report code from a report mnemonic
 	 */

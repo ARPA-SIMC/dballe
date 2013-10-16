@@ -205,6 +205,8 @@ Cursor::~Cursor()
     if (stm) delete stm;
 }
 
+dballe::DB& Cursor::get_db() const { return db; }
+
 void Cursor::reset()
 {
     wanted = 0;

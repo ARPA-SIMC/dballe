@@ -27,6 +27,7 @@
 #include <wreport/var.h>
 #include <vector>
 #include <string>
+#include <map>
 #include <memory>
 
 /** @file
@@ -55,6 +56,7 @@ struct Record;
 struct Msg;
 struct Msgs;
 struct MsgConsumer;
+struct DB;
 
 namespace db {
 struct Connection;
@@ -76,6 +78,9 @@ class Cursor
 {
 public:
     virtual ~Cursor();
+
+    /// Get the database that created this cursor
+    virtual DB& get_db() const = 0;
 
     /**
      * Get the number of rows still to be fetched
@@ -264,6 +269,11 @@ public:
      * Get the report mnemonic from a report code
      */
     virtual const std::string& rep_memo_from_cod(int rep_cod) = 0;
+
+    /**
+     * Get a mapping between rep_memo and their priorities
+     */
+    virtual std::map<std::string, int> get_repinfo_priorities() = 0;
 
     /**
      * Insert a record into the database

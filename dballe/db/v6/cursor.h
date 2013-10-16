@@ -96,6 +96,8 @@ struct Cursor : public db::Cursor
 
     virtual ~Cursor();
 
+    virtual dballe::DB& get_db() const;
+
     /**
      * Get the number of rows still to be fetched
      *
