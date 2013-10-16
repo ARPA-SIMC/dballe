@@ -48,6 +48,11 @@ namespace dballe {
 		assert((rec) != NULL); \
 	} while (0)
 
+std::ostream& operator<<(std::ostream& o, dba_keyword k)
+{
+    return o << Record::keyword_name(k);
+}
+
 Record::Record()
 {
 	memset(keydata, 0, sizeof(keydata));

@@ -92,6 +92,8 @@ enum _dba_keyword {
 /** @copydoc ::_dba_keyword */
 typedef enum _dba_keyword dba_keyword;
 
+std::ostream& operator<<(std::ostream& o, dba_keyword k);
+
 /** DB-All.E record.
  *
  * A Record is a container for one observation of meteorological values, that
