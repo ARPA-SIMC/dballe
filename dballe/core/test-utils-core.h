@@ -284,6 +284,54 @@ std::auto_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const cha
 #define read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 
+/// Check that actual and expected have the same vars
+template<typename K>
+struct TestRecordValEqual
+{
+    const dballe::Record& actual;
+    const dballe::Record& expected;
+    K name;
+    bool with_missing_int;
+
+    TestRecordValEqual(const dballe::Record& actual, const dballe::Record& expected, const K& name, bool with_missing_int=false)
+        : actual(actual), expected(expected), name(name), with_missing_int(with_missing_int) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
+};
+
+/// Check that actual and expected have the same vars
+struct TestRecordVarsEqual
+{
+    const dballe::Record& actual;
+    const dballe::Record& expected;
+
+    TestRecordVarsEqual(const dballe::Record& actual, const dballe::Record& expected) : actual(actual), expected(expected) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
+};
+
+struct ActualRecord : public wibble::tests::Actual<const dballe::Record&>
+{
+    ActualRecord(const dballe::Record& actual) : wibble::tests::Actual<const dballe::Record&>(actual) {}
+
+    template<typename K>
+    TestRecordValEqual<K> equals(const Record& expected, const K& name) { return TestRecordValEqual<K>(this->actual, expected, name); }
+    template<typename K>
+    TestRecordValEqual<K> equals_with_missing_int(const Record& expected, const K& name)
+    {
+        return TestRecordValEqual<K>(this->actual, expected, name, true);
+    }
+    TestRecordVarsEqual vars_equal(const Record& expected) { return TestRecordVarsEqual(this->actual, expected); }
+};
+
+}
+}
+
+namespace wibble {
+namespace tests {
+
+inline dballe::tests::ActualRecord actual(const dballe::Record& actual) { return dballe::tests::ActualRecord(actual); }
+
 }
 }
 

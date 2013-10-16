@@ -33,41 +33,107 @@ class DB;
 
 namespace tests {
 
-struct TestRecord
+/// Fixture data about a station
+struct TestStation
 {
-    Record data;
-    Record station_data;
-    std::map<wreport::Varcode, Record> attrs;
+    double lat;
+    double lon;
+    std::string ident;
+    /// Station information variables for each network
+    std::map<std::string, Record> info;
 
-    void insert(DB& db, bool can_replace=false);
+    /// Set our lat, lon and indent into the given record
+    void set_latlonident_into(Record& rec) const;
 
-    /// Returns true if rec matches our station keys
-    bool match_station_keys(const Record& rec);
-    /// Returns true if rec matches our station/datetime/level/timerange/report keys
-    bool match_context_keys(const Record& rec);
-    /// Returns true if rec matches our data variable with the given code
-    bool match_data_var(wreport::Varcode code, const Record& rec);
+    /**
+     * Get a record with all info variables. In case of conflict, keeps only
+     * those with highest priority.
+     *
+     * @param db
+     *   Database used to read priority information
+     */
+    Record merged_info_with_highest_prio(DB& db) const;
+
+    /**
+     * Insert the station and its info in the database.
+     *
+     * Note that if info is empty, nothing will happen, as a station cannot
+     * exist without station vars or measured values.
+     */
+    void insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace=false);
 };
 
-struct DefaultTestRecord : public TestRecord
+/// Fixture data about measured variables
+struct TestRecord
 {
-    DefaultTestRecord()
-    {
-        data.set(Level(10, 11, 15, 22));
-        data.set(Trange(20, 111, 122));
-        data.set(DBA_KEY_REP_MEMO, "synop");
-        data.set(DBA_KEY_LAT, 12.34560);
-        data.set(DBA_KEY_LON, 76.54320);
-        data.set_datetime({1945, 4, 25, 8, 0, 0});
-        data.set(WR_VAR(0, 1, 11), "DB-All.e!");
-        data.set(WR_VAR(0, 1, 12), 300);
+    TestStation station;
+    /// Measured variables context, measured variables
+    Record data;
+    /// Attributes on measured variables
+    std::map<wreport::Varcode, Record> attrs;
 
-        station_data.set(WR_VAR(0, 7, 30), 42);     // Height
-        station_data.set(WR_VAR(0, 7, 31), 234);    // Heightbaro
-        station_data.set(WR_VAR(0, 1,  1), 1);      // Block
-        station_data.set(WR_VAR(0, 1,  2), 52);     // Station
-        station_data.set(WR_VAR(0, 1, 19), "Cippo Lippo");  // Name
-    }
+    /// Set a value as identified by the Msg ID, with its level, timerange and
+    /// varcode, at the given date and with an optional confidence %
+    void set_var(const char* msgvarname, float val, int conf=-1);
+
+    void insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace=false);
+};
+
+/// Check cursor context after a query_stations
+struct TestCursorStationKeys
+{
+    db::Cursor& cur;
+    const TestStation& ds;
+
+    TestCursorStationKeys(db::Cursor& cur, const TestStation& ds) : cur(cur), ds(ds) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
+};
+
+/// Check cursor context after a query_stations
+struct TestCursorStationVars
+{
+    db::Cursor& cur;
+    const TestStation& ds;
+
+    TestCursorStationVars(db::Cursor& cur, const TestStation& ds) : cur(cur), ds(ds) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
+};
+
+/// Check cursor data context after a query_data
+struct TestCursorDataContext
+{
+    db::Cursor& cur;
+    const TestRecord& ds;
+
+    TestCursorDataContext(db::Cursor& cur, const TestRecord& ds) : cur(cur), ds(ds) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
+};
+
+/// Check cursor data variable after a query_data
+struct TestCursorDataVar
+{
+    db::Cursor& cur;
+    const TestRecord& ds;
+    wreport::Varcode code;
+
+    TestCursorDataVar(db::Cursor& cur, const TestRecord& ds, wreport::Varcode code) : cur(cur), ds(ds), code(code) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
+};
+
+/// Check cursor data context anda variable after a query_data
+struct TestCursorDataMatch
+{
+    db::Cursor& cur;
+    const TestRecord& ds;
+    wreport::Varcode code;
+
+    TestCursorDataMatch(db::Cursor& cur, const TestRecord& ds, wreport::Varcode code) : cur(cur), ds(ds), code(code) {}
+
+    void check(WIBBLE_TEST_LOCPRM) const;
 };
 
 struct db_test
@@ -92,9 +158,10 @@ struct db_test
 /// Common bits for db::DB test suites
 struct DB_test_base : public db_test
 {
-    DefaultTestRecord dataset0;
-    DefaultTestRecord dataset1;
-    TestRecord ds_navile;
+    TestStation ds_st_oldtests;
+    TestRecord dataset0;
+    TestRecord dataset1;
+    TestStation ds_st_navile;
 
     // Work records
     Record insert;
@@ -107,7 +174,7 @@ struct DB_test_base : public db_test
 
     void init_records();
 
-    void populate_database();
+    void populate_database(WIBBLE_TEST_LOCPRM);
 };
 
 static inline SQL_TIMESTAMP_STRUCT mkts(int year, int month, int day, int hour, int minute, int second)
@@ -122,6 +189,20 @@ static inline SQL_TIMESTAMP_STRUCT mkts(int year, int month, int day, int hour, 
 	res.fraction = 0;
 	return res;
 }
+
+struct ActualCursor : public wibble::tests::Actual<dballe::db::Cursor&>
+{
+    ActualCursor(dballe::db::Cursor& actual) : wibble::tests::Actual<dballe::db::Cursor&>(actual) {}
+
+    TestCursorStationKeys station_keys_match(const TestStation& ds) { return TestCursorStationKeys(this->actual, ds); }
+    TestCursorStationVars station_vars_match(const TestStation& ds) { return TestCursorStationVars(this->actual, ds); }
+    TestCursorStationVars station_vars_match(const TestRecord& ds) { return TestCursorStationVars(this->actual, ds.station); }
+    TestCursorDataContext data_context_matches(const TestRecord& ds) { return TestCursorDataContext(this->actual, ds); }
+    TestCursorDataVar data_var_matches(const TestRecord& ds) { return TestCursorDataVar(this->actual, ds, this->actual.get_varcode()); }
+    TestCursorDataVar data_var_matches(const TestRecord& ds, wreport::Varcode code) { return TestCursorDataVar(this->actual, ds, code); }
+    TestCursorDataMatch data_matches(const TestRecord& ds) { return TestCursorDataMatch(this->actual, ds, this->actual.get_varcode()); }
+    TestCursorDataMatch data_matches(const TestRecord& ds, wreport::Varcode code) { return TestCursorDataMatch(this->actual, ds, code); }
+};
 
 } // namespace tests
 } // namespace dballe
@@ -141,6 +222,15 @@ static inline std::ostream& operator<<(std::ostream& o, const SQL_TIMESTAMP_STRU
 	return o;
 }
 
+}
+
+namespace wibble {
+namespace tests {
+
+inline dballe::tests::ActualCursor actual(dballe::db::Cursor& actual) { return dballe::tests::ActualCursor(actual); }
+inline dballe::tests::ActualCursor actual(std::auto_ptr<dballe::db::Cursor>& actual) { return dballe::tests::ActualCursor(*actual); }
+
+}
 }
 
 // vim:set ts=4 sw=4:

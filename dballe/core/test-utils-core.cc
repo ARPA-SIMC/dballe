@@ -238,6 +238,71 @@ auto_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* fi
 	}
 }
 
+static std::string format_name(dba_keyword k) { return Record::keyword_name(k); }
+static std::string format_name(wreport::Varcode c) { return format_code(c); }
+static std::string format_name(const char* c) { return c; }
+
+template<typename K>
+void TestRecordValEqual<K>::check(WIBBLE_TEST_LOCPRM) const
+{
+    const wreport::Var* evar = expected.peek(name);
+    const wreport::Var* avar = actual.peek(name);
+
+    if (with_missing_int && evar && evar->enq(MISSING_INT) == MISSING_INT)
+        evar = NULL;
+    if (with_missing_int && avar && avar->enq(MISSING_INT) == MISSING_INT)
+        avar = NULL;
+
+    if (!evar && !avar) return;
+    if (!evar || !avar || *evar != *avar)
+    {
+        std::stringstream ss;
+        ss << "records differ on " << format_name(name) << ": ";
+        if (!evar)
+            ss << "it is expected unset";
+        else
+            ss << evar->format() << " is expected";
+        ss << ", but actual ";
+        if (!avar)
+            ss << "is unset";
+        else
+            ss << "has " << avar->format();
+        wibble_test_location.fail_test(ss.str());
+    }
+}
+template class TestRecordValEqual<dba_keyword>;
+template class TestRecordValEqual<wreport::Varcode>;
+template class TestRecordValEqual<const char*>;
+
+void TestRecordVarsEqual::check(WIBBLE_TEST_LOCPRM) const
+{
+    WIBBLE_TEST_INFO(locinfo);
+    locinfo() << "Expected: " << expected.to_string() << " actual: " << actual.to_string();
+
+    const vector<Var*>& vars1 = actual.vars();
+    const vector<Var*>& vars2 = expected.vars();
+
+    if (vars1.size() != vars2.size())
+    {
+        std::stringstream ss;
+        ss << "records have a different number of variables. Expected is " << vars2.size() << " and actual has " << vars1.size();
+        wibble_test_location.fail_test(ss.str());
+    }
+
+    for (unsigned i = 0; i < vars1.size(); ++i)
+    {
+        if (*vars1[i] != *vars2[i])
+        {
+            std::stringstream ss;
+            ss << "records variables differ at position " << i << ": expected is "
+               << varcode_format(vars2[i]->code()) << "=" << vars2[i]->format("")
+               << " and actual has "
+               << varcode_format(vars1[i]->code()) << "=" << vars1[i]->format("");
+            wibble_test_location.fail_test(ss.str());
+        }
+    }
+}
+
 }
 }
 

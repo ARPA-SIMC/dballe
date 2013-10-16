@@ -56,7 +56,9 @@ static void set_record_from_string(Record& rec, const std::string& s)
 struct db_shar : public dballe::tests::DB_test_base
 {
     void test_reset();
+    void test_simple_insert();
     void test_insert();
+    void test_double_station_insert();
     void test_ana_query();
     void test_misc_queries();
     void test_querybest();
@@ -67,18 +69,14 @@ struct db_shar : public dballe::tests::DB_test_base
     void test_vacuum();
     void test_attrs();
     void test_wrap_longitude();
-    void test_invalid_sql_querybest();
     void test_ana_filter();
     void test_datetime_extremes();
-    void test_bug_querybest();
-    void test_bug_query_stations_by_level();
-    void test_bug_query_levels_by_station();
     void test_query_stations();
     void test_summary_queries();
-    void test_connect_leaks();
     void test_value_update();
     void test_query_step_by_step();
     void test_double_stationinfo_insert();
+    void test_double_stationinfo_insert1();
 
     void populate_for_station_queries()
     {
@@ -223,36 +221,94 @@ void db_shar::test_reset()
     db->reset();
 }
 
-template<> template<> void to::test<3>() { use_db(db::V5); test_insert(); }
-template<> template<> void to::test<4>() { use_db(db::V6); test_insert(); }
-void db_shar::test_insert()
+template<> template<> void to::test<3>() { use_db(db::V5); test_simple_insert(); }
+template<> template<> void to::test<4>() { use_db(db::V6); test_simple_insert(); }
+void db_shar::test_simple_insert()
 {
-    // Check if adding a nonexisting station when not allowed causes an error
-    try {
-        db->insert(dataset0.data, false, false);
-        ensure(false);
-    } catch (error_consistency& e) {
-        ensure_contains(e.what(), "insert a station entry when it is forbidden");
+    // Insert some data
+    dballe::tests::TestRecord ds;
+    ds.station = ds_st_navile;
+    ds.data.set(DBA_KEY_REP_MEMO, "synop");
+    ds.data.set_datetime(2013, 10, 16, 10);
+    ds.set_var("temp_2m", 16.5, 50);
+    wruntest(ds.insert, *db);
+
+    query.clear();
+
+    // Query and verify the station data
+    {
+        auto_ptr<db::Cursor> cur = db->query_stations(query);
+        wassert(actual(cur->remaining()) == 1);
+        cur->next();
+        wassert(actual(cur).station_vars_match(ds));
     }
 
-    /* Insert the record */
-    db->insert(dataset0.data, false, true);
-    /* Check if duplicate updates are allowed by insert */
-    db->insert(dataset0.data, true, false);
-    /* Check if duplicate updates are trapped by insert_new */
+    // Query and verify the measured data
+    {
+        auto_ptr<db::Cursor> cur = db->query_data(query);
+        wassert(actual(cur->remaining()) == 1);
+        cur->next();
+        wassert(actual(cur).data_context_matches(ds));
+        wassert(actual(cur).data_var_matches(ds, WR_VAR(0, 12, 101)));
+    }
+
+    // Query and verify attributes
+    // TODO
+}
+
+template<> template<> void to::test<5>() { use_db(db::V5); test_insert(); }
+template<> template<> void to::test<6>() { use_db(db::V6); test_insert(); }
+void db_shar::test_insert()
+{
+    // Prepare a valid record to insert
+    Record insert(dataset0.data);
+    wrunchecked(dataset0.station.set_latlonident_into(insert));
+
+    // Check if adding a nonexisting station when not allowed causes an error
     try {
-        db->insert(dataset0.data, false, false);
+        db->insert(insert, false, false);
+        ensure(false);
+    } catch (error_consistency& e) {
+        wassert(actual(e.what()).contains("insert a station entry when it is forbidden"));
+    }
+
+    // Insert the record
+    wrunchecked(db->insert(insert, false, true));
+    // Check if duplicate updates are allowed by insert
+    wrunchecked(db->insert(insert, true, false));
+    // Check if duplicate updates are trapped by insert_new
+    try {
+        db->insert(insert, false, false);
         ensure(false);
     } catch (wreport::error& e) {
-        // ensure_contains(e.what(), "uplicate");
+        wassert(actual(e.what()).matches("([Dd]uplicate|not unique)"));
     }
 }
 
-template<> template<> void to::test<5>() { use_db(db::V5); test_ana_query(); }
-template<> template<> void to::test<6>() { use_db(db::V6); test_ana_query(); }
+template<> template<> void to::test<7>() { use_db(db::V5); test_double_station_insert(); }
+template<> template<> void to::test<8>() { use_db(db::V6); test_double_station_insert(); }
+void db_shar::test_double_station_insert()
+{
+    // Prepare a valid record to insert
+    Record insert(dataset0.data);
+    wrunchecked(dataset0.station.set_latlonident_into(insert));
+
+    // Insert the record twice
+    wrunchecked(db->insert(insert, false, true));
+    // This should fail, refusing to replace station info
+    try {
+        db->insert(insert, false, true);
+        ensure(false);
+    } catch (wreport::error& e) {
+        wassert(actual(e.what()).matches("([Dd]uplicate|not unique)"));
+    }
+}
+
+template<> template<> void to::test<9>() { use_db(db::V5); test_ana_query(); }
+template<> template<> void to::test<10>() { use_db(db::V6); test_ana_query(); }
 void db_shar::test_ana_query()
 {
-    populate_database();
+    wruntest(populate_database);
 
     /*
        CHECKED(dba_ana_count(db, &count));
@@ -269,10 +325,9 @@ void db_shar::test_ana_query()
     ensure_equals(cur->get_lat(), 12.34560);
     ensure_equals(cur->get_lon(), 76.54320);
     ensure_equals(cur->get_ident(), (const char*)0);
-    cur->to_record(result);
 
-    /* Check that the result matches */
-    ensure(dataset0.match_station_keys(result));
+    // Check that the result matches
+    wassert(actual(cur).station_keys_match(dataset0.station));
 
     /* There should be only one item */
     ensure_equals(cur->remaining(), 0);
@@ -280,11 +335,11 @@ void db_shar::test_ana_query()
     ensure(!cur->next());
 }
 
-template<> template<> void to::test<7>() { use_db(V5); test_misc_queries(); }
-template<> template<> void to::test<8>() { use_db(V6); test_misc_queries(); }
+template<> template<> void to::test<11>() { use_db(V5); test_misc_queries(); }
+template<> template<> void to::test<12>() { use_db(V6); test_misc_queries(); }
 void db_shar::test_misc_queries()
 {
-    populate_database();
+    wruntest(populate_database);
 
 /* Try a query using a KEY query parameter */
 #define TRY_QUERY(qstring, expected_count) do {\
@@ -304,7 +359,7 @@ void db_shar::test_misc_queries()
         query.clear();
         query.set_ana_context();
         auto_ptr<db::Cursor> cur = db->query_data(query);
-        ensure_equals(cur->remaining(), 10);
+        ensure_equals(cur->remaining(), 5);
     }
     //TRY_QUERY(DBA_KEY_YEAR, 1000, 10);
     TRY_QUERY("year=1001", 0);
@@ -316,26 +371,26 @@ void db_shar::test_misc_queries()
     TRY_QUERY("year=1944", 0);
     TRY_QUERY("year=1945", 4);
     TRY_QUERY("year=1946", 0);
-    TRY_QUERY("B01001=1", 4);
+    TRY_QUERY("B01001=1", 2);
     TRY_QUERY("B01001=2", 0);
-    TRY_QUERY("B01002=52", 4);
+    TRY_QUERY("B01002=52", 2);
     TRY_QUERY("B01002=53", 0);
-    TRY_QUERY("ana_filter=block=1", 4);
-    TRY_QUERY("ana_filter=B01001=1", 4);
+    TRY_QUERY("ana_filter=block=1", 2);
+    TRY_QUERY("ana_filter=B01001=1", 2);
     TRY_QUERY("ana_filter=block>1", 0);
     TRY_QUERY("ana_filter=B01001>1", 0);
-    TRY_QUERY("ana_filter=block<=1", 4);
-    TRY_QUERY("ana_filter=B01001<=1", 4);
-    TRY_QUERY("ana_filter=0<=B01001<=2", 4);
-    TRY_QUERY("ana_filter=1<=B01001<=1", 4);
+    TRY_QUERY("ana_filter=block<=1", 2);
+    TRY_QUERY("ana_filter=B01001<=1", 2);
+    TRY_QUERY("ana_filter=0<=B01001<=2", 2);
+    TRY_QUERY("ana_filter=1<=B01001<=1", 2);
     TRY_QUERY("ana_filter=2<=B01001<=4", 0);
-    TRY_QUERY("data_filter=B01011=DB-All.e!", 4);
+    TRY_QUERY("data_filter=B01011=DB-All.e!", 2);
     TRY_QUERY("data_filter=B01012<300", 0);
-    TRY_QUERY("data_filter=B01012<=300", 4);
-    TRY_QUERY("data_filter=B01012=300", 4);
+    TRY_QUERY("data_filter=B01012<=300", 2);
+    TRY_QUERY("data_filter=B01012=300", 2);
     TRY_QUERY("data_filter=B01012>=300", 4);
-    TRY_QUERY("data_filter=B01012>300", 4);
-    TRY_QUERY("data_filter=B01012<400", 4);
+    TRY_QUERY("data_filter=B01012>300", 2);
+    TRY_QUERY("data_filter=B01012<400", 2);
     TRY_QUERY("data_filter=B01012<=400", 4);
 
     /*
@@ -427,11 +482,11 @@ void db_shar::test_misc_queries()
 #undef TRY_QUERY2
 }
 
-template<> template<> void to::test< 9>() { use_db(V5); test_querybest(); }
-template<> template<> void to::test<10>() { use_db(V6); test_querybest(); }
+template<> template<> void to::test<13>() { use_db(V5); test_querybest(); }
+template<> template<> void to::test<14>() { use_db(V6); test_querybest(); }
 void db_shar::test_querybest()
 {
-    populate_database();
+    wruntest(populate_database);
 
     //if (db->server_type == ORACLE || db->server_type == POSTGRES)
     //      return;
@@ -469,11 +524,11 @@ void db_shar::test_querybest()
     ensure(!cur->next());
 }
 
-template<> template<> void to::test<11>() { use_db(V5); test_deletion(); }
-template<> template<> void to::test<12>() { use_db(V6); test_deletion(); }
+template<> template<> void to::test<15>() { use_db(V5); test_deletion(); }
+template<> template<> void to::test<16>() { use_db(V6); test_deletion(); }
 void db_shar::test_deletion()
 {
-    populate_database();
+    wruntest(populate_database);
 
     // 4 items to begin with
     query.clear();
@@ -501,22 +556,21 @@ void db_shar::test_deletion()
     cur = db->query_data(query);
     ensure_equals(cur->remaining(), 2);
     ensure(cur->next());
-    cur->to_record(result);
-    ensure(dataset0.match_context_keys(result));
+    wassert(actual(cur).data_context_matches(dataset0));
 
     Varcode last_code = 0;
     for (unsigned i = 0; i < 2; ++i)
     {
-        // Check that varcodes repeat
+        // Check that varcodes do not repeat
         if (last_code != 0)
-            ensure(last_code != result.vars()[0]->code());
-        last_code = result.vars()[0]->code();
+            wassert(actual(cur->get_varcode()) != last_code);
+        last_code = cur->get_varcode();
 
         switch (last_code)
         {
             case WR_VAR(0, 1, 11):
             case WR_VAR(0, 1, 12):
-                ensure(dataset0.match_data_var(last_code, result));
+                wassert(actual(cur).data_var_matches(dataset0, last_code));
                 break;
             default:
                 ensure(false);
@@ -526,15 +580,14 @@ void db_shar::test_deletion()
         {
             /* The item should have two data in it */
             ensure(cur->next());
-            cur->to_record(result);
         } else {
             ensure(!cur->next());
         }
     }
 }
 
-template<> template<> void to::test<13>() { use_db(V5); test_datetime_queries(); }
-template<> template<> void to::test<14>() { use_db(V6); test_datetime_queries(); }
+template<> template<> void to::test<17>() { use_db(V5); test_datetime_queries(); }
+template<> template<> void to::test<18>() { use_db(V6); test_datetime_queries(); }
 void db_shar::test_datetime_queries()
 {
     /* Prepare test data */
@@ -770,11 +823,11 @@ void db_shar::test_datetime_queries()
     WANTRESULT(b);
 }
 
-template<> template<> void to::test<15>() { use_db(V5); test_qc(); }
-template<> template<> void to::test<16>() { use_db(V6); test_qc(); }
+template<> template<> void to::test<19>() { use_db(V5); test_qc(); }
+template<> template<> void to::test<20>() { use_db(V6); test_qc(); }
 void db_shar::test_qc()
 {
-    populate_database();
+    wruntest(populate_database);
 
     query.clear();
     query.set(DBA_KEY_LATMIN, 1000000);
@@ -847,11 +900,11 @@ void db_shar::test_qc()
     /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
 }
 
-template<> template<> void to::test<17>() { use_db(V5); test_ana_queries(); }
-template<> template<> void to::test<18>() { use_db(V6); test_ana_queries(); }
+template<> template<> void to::test<21>() { use_db(V5); test_ana_queries(); }
+template<> template<> void to::test<22>() { use_db(V6); test_ana_queries(); }
 void db_shar::test_ana_queries()
 {
-    populate_database();
+    wruntest(populate_database);
 
     query.clear();
     query.set(DBA_KEY_REP_COD, 1);
@@ -863,19 +916,19 @@ void db_shar::test_ana_queries()
     ensure(!cur->next());
 }
 
-template<> template<> void to::test<19>() { use_db(V5); test_vacuum(); }
-template<> template<> void to::test<20>() { use_db(V6); test_vacuum(); }
+template<> template<> void to::test<23>() { use_db(V5); test_vacuum(); }
+template<> template<> void to::test<24>() { use_db(V6); test_vacuum(); }
 void db_shar::test_vacuum()
 {
     db->vacuum();
 }
 
-template<> template<> void to::test<21>() { use_db(V5); test_attrs(); }
-template<> template<> void to::test<22>() { use_db(V6); test_attrs(); }
+template<> template<> void to::test<25>() { use_db(V5); test_attrs(); }
+template<> template<> void to::test<26>() { use_db(V6); test_attrs(); }
 void db_shar::test_attrs()
 {
     // Insert a data record
-    dataset0.insert(*db);
+    wruntest(dataset0.insert, *db);
 
     qc.clear();
     qc.set(WR_VAR(0,  1,  7),  1);
@@ -920,12 +973,12 @@ void db_shar::test_attrs()
     ensure_varcode_equals(vars[9]->code(), WR_VAR(0,  33, 32)); ensure_var_equals(*vars[9],  6);
 }
 
-template<> template<> void to::test<23>() { use_db(V5); test_wrap_longitude(); }
-template<> template<> void to::test<24>() { use_db(V6); test_wrap_longitude(); }
+template<> template<> void to::test<27>() { use_db(V5); test_wrap_longitude(); }
+template<> template<> void to::test<28>() { use_db(V6); test_wrap_longitude(); }
 void db_shar::test_wrap_longitude()
 {
     // Insert a data record
-    dataset0.insert(*db);
+    wruntest(dataset0.insert, *db);
 
     query.clear();
     query.set(DBA_KEY_LATMIN, 10.0);
@@ -938,42 +991,12 @@ void db_shar::test_wrap_longitude()
     cur->discard_rest();
 }
 
-template<> template<> void to::test<25>() { use_db(V5); test_invalid_sql_querybest(); }
-template<> template<> void to::test<26>() { use_db(V6); test_invalid_sql_querybest(); }
-void db_shar::test_invalid_sql_querybest()
-{
-// Reproduce a querybest scenario which produced invalid SQL
-    populate_database();
-    // SELECT pa.lat, pa.lon, pa.ident,
-    //        d.datetime, d.id_report, d.id_var, d.value,
-    //        ri.prio, pa.id, d.id, d.id_lev_tr
-    //   FROM data d
-    //   JOIN station pa ON d.id_station = pa.id
-    //   JOIN repinfo ri ON ri.id=d.id_report
-    //  WHERE pa.lat>=? AND pa.lat<=? AND pa.lon>=? AND pa.lon<=? AND pa.ident IS NULL
-    //    AND d.datetime=?
-    //    AND d.id_var IN (1822)
-    //    AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN data sd ON sri.id=sd.id_report WHERE sd.id_station=d.id_station AND sd.id_lev_tr=d.id_lev_tr AND sd.datetime=d.datetime AND sd.id_var=d.id_var)
-    //    AND d.id_lev_tr IS NULLORDER BY d.id_station, d.datetime
-    Record rec;
-    rec.set(DBA_KEY_YEAR,  1000);
-    rec.set(DBA_KEY_MONTH,    1);
-    rec.set(DBA_KEY_DAY,      1);
-    rec.set(DBA_KEY_HOUR,     0);
-    rec.set(DBA_KEY_MIN,     0);
-    rec.set(DBA_KEY_QUERY,    "best");
-    auto_ptr<db::Cursor> cur = db->query_data(rec);
-    while (cur->next())
-    {
-    }
-}
-
-template<> template<> void to::test<27>() { use_db(V5); test_ana_filter(); }
-template<> template<> void to::test<28>() { use_db(V6); test_ana_filter(); }
+template<> template<> void to::test<29>() { use_db(V5); test_ana_filter(); }
+template<> template<> void to::test<30>() { use_db(V6); test_ana_filter(); }
 void db_shar::test_ana_filter()
 {
     // Test numeric comparisons in ana_filter
-    populate_database();
+    wruntest(populate_database);
 
     query.clear();
     query.set(DBA_KEY_REP_COD, 2);
@@ -1043,13 +1066,13 @@ void db_shar::test_ana_filter()
     cur->discard_rest();
 }
 
-template<> template<> void to::test<29>() { use_db(V5); test_datetime_extremes(); }
-template<> template<> void to::test<30>() { use_db(V6); test_datetime_extremes(); }
+template<> template<> void to::test<31>() { use_db(V5); test_datetime_extremes(); }
+template<> template<> void to::test<32>() { use_db(V6); test_datetime_extremes(); }
 void db_shar::test_datetime_extremes()
 {
 #warning temporary disabled
 #if 0
-    populate_database();
+    wruntest(populate_database);
 
     // All DB
     query.clear();
@@ -1111,76 +1134,8 @@ void db_shar::test_datetime_extremes()
 #endif
 }
 
-template<> template<> void to::test<31>() { use_db(V5); test_bug_querybest(); }
-template<> template<> void to::test<32>() { use_db(V6); test_bug_querybest(); }
-void db_shar::test_bug_querybest()
-{
-    // Reproduce a querybest scenario which produced always the same data record
-
-    // Import lots
-    const char** files = dballe::tests::bufr_files;
-    for (int i = 0; files[i] != NULL; i++)
-    {
-        std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
-        Msg& msg = *(*inmsgs)[0];
-        db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS | DBA_IMPORT_OVERWRITE);
-    }
-
-    // Query all with best
-    Record rec;
-    rec.set(DBA_KEY_VAR,   "B12101");
-    rec.set(DBA_KEY_QUERY, "best");
-    auto_ptr<db::Cursor> cur = db->query_data(rec);
-    unsigned orig_count = cur->remaining();
-    unsigned count = 0;
-    int id_data = 0;
-    unsigned id_data_changes = 0;
-    while (cur->next())
-    {
-        ++count;
-        if (cur->attr_reference_id() != id_data)
-        {
-            id_data = cur->attr_reference_id();
-            ++id_data_changes;
-        }
-    }
-
-    ensure(count > 1);
-    ensure_equals(id_data_changes, count);
-    ensure_equals(count, orig_count);
-}
-
-template<> template<> void to::test<33>() { use_db(V5); test_bug_query_stations_by_level(); }
-template<> template<> void to::test<34>() { use_db(V6); test_bug_query_stations_by_level(); }
-void db_shar::test_bug_query_stations_by_level()
-{
-    // Reproduce a query that generated invalid SQL on V6
-    populate_database();
-
-    // All DB
-    query.clear();
-    query.set(DBA_KEY_LEVELTYPE1, 103);
-    query.set(DBA_KEY_L1, 2000);
-    db->query_stations(query);
-}
-
-template<> template<> void to::test<35>() { use_db(V5); test_bug_query_levels_by_station(); }
-template<> template<> void to::test<36>() { use_db(V6); test_bug_query_levels_by_station(); }
-void db_shar::test_bug_query_levels_by_station()
-{
-    // Reproduce a query that generated invalid SQL on V6
-    populate_database();
-
-    // All DB
-    query.clear();
-    query.set(DBA_KEY_ANA_ID, 1);
-    //db->query_levels(query);
-    //db->query_tranges(query);
-#warning currently disabled
-}
-
-template<> template<> void to::test<37>() { use_db(V5); test_query_stations(); }
-template<> template<> void to::test<38>() { use_db(V6); test_query_stations(); }
+template<> template<> void to::test<33>() { use_db(V5); test_query_stations(); }
+template<> template<> void to::test<34>() { use_db(V6); test_query_stations(); }
 void db_shar::test_query_stations()
 {
 /* Try a query using a KEY query parameter */
@@ -1269,8 +1224,15 @@ void db_shar::test_query_stations()
 #undef TRY_QUERY2
 }
 
-template<> template<> void to::test<39>() { use_db(V5); test_summary_queries(); }
-template<> template<> void to::test<40>() { use_db(V6); test_summary_queries(); }
+template<> template<> void to::test<35>() {
+    use_db(V5);
+    try {
+        test_summary_queries();
+        ensure(false);
+    } catch (wreport::error_unimplemented& e) {
+    }
+}
+template<> template<> void to::test<36>() { use_db(V6); test_summary_queries(); }
 void db_shar::test_summary_queries()
 {
     populate_for_summary_queries();
@@ -1415,35 +1377,15 @@ void db_shar::test_summary_queries()
 #undef TRY_QUERY2
 }
 
-template<> template<> void to::test<41>() { use_db(V5); test_connect_leaks(); }
-template<> template<> void to::test<42>() { use_db(V6); test_connect_leaks(); }
-void db_shar::test_connect_leaks()
-{
-    insert.clear();
-    insert.set_ana_context();
-    insert.set(DBA_KEY_LAT, 12.34560);
-    insert.set(DBA_KEY_LON, 76.54320);
-    insert.set(DBA_KEY_MOBILE, 0);
-    insert.set(DBA_KEY_REP_MEMO, "synop");
-    insert.set(WR_VAR(0, 7, 30), 42.0); // Height
-
-    // Assume a max open file limit of 1100
-    for (unsigned i = 0; i < 1100; ++i)
-    {
-        std::auto_ptr<DB> db = DB::connect_test();
-        db->insert(insert, false, true);
-    }
-}
-
-template<> template<> void to::test<43>() { use_db(V5); test_value_update(); }
-template<> template<> void to::test<44>() { use_db(V6); test_value_update(); }
+template<> template<> void to::test<37>() { use_db(V5); test_value_update(); }
+template<> template<> void to::test<38>() { use_db(V6); test_value_update(); }
 void db_shar::test_value_update()
 {
     db->reset();
-    dballe::tests::DefaultTestRecord dataset;
+    dballe::tests::TestRecord dataset = dataset0;
     Record& attrs = dataset.attrs[WR_VAR(0, 1, 12)];
     attrs.set(WR_VAR(0, 33, 7), 50);
-    dataset.insert(*db);
+    wruntest(dataset.insert, *db);
 
     Record q;
     q.set(DBA_KEY_LAT, 12.34560);
@@ -1499,12 +1441,12 @@ void db_shar::test_value_update()
     ensure_equals(qattrs.get(WR_VAR(0, 33, 7), MISSING_INT), 50);
 }
 
-template<> template<> void to::test<45>() { use_db(V5); test_query_step_by_step(); }
-template<> template<> void to::test<46>() { use_db(V6); test_query_step_by_step(); }
+template<> template<> void to::test<39>() { use_db(V5); test_query_step_by_step(); }
+template<> template<> void to::test<40>() { use_db(V6); test_query_step_by_step(); }
 void db_shar::test_query_step_by_step()
 {
     // Try a query checking all the steps
-    populate_database();
+    wruntest(populate_database);
 
     // Prepare a query
     query.clear();
@@ -1514,68 +1456,77 @@ void db_shar::test_query_step_by_step()
     auto_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 4);
 
-    // There should be at least one item
     ensure(cur->next());
+    // remaining() should decrement
     ensure_equals(cur->remaining(), 3);
+    // results should match what was inserted
+    wassert(actual(cur).data_matches(dataset0));
+    // just call to_record now, to check if in the next call old variables are removed
     cur->to_record(result);
 
-    /* Check that the results match */
-    ensure(dataset0.match_context_keys(result));
-
-    // result.print(stderr);
-    // exit(0);
-
-    ensure(cur->get_varcode() == WR_VAR(0, 1, 11) || cur->get_varcode() == WR_VAR(0, 1, 12));
-    ensure(dataset0.match_data_var(cur->get_varcode(), result));
-
-    // The item should have two data in it
     ensure(cur->next());
     ensure_equals(cur->remaining(), 2);
-    cur->to_record(result);
+    wassert(actual(cur).data_matches(dataset0));
 
     // Variables from the previous to_record should be removed
-    ensure_equals(result.vars().size(), 1u);
+    cur->to_record(result);
+    wassert(actual(result.vars().size()) == 1u);
 
-    ensure(cur->get_varcode() == WR_VAR(0, 1, 11) || cur->get_varcode() == WR_VAR(0, 1, 12));
-    ensure(dataset0.match_data_var(cur->get_varcode(), result));
 
-    // There should be also another item
     ensure(cur->next());
     ensure_equals(cur->remaining(), 1);
-    cur->to_record(result);
+    wassert(actual(cur).data_matches(dataset1));
 
-    // Check that the results matches
-    ensure(dataset1.match_context_keys(result));
-
-    ensure(cur->get_varcode() == WR_VAR(0, 1, 11) || cur->get_varcode() == WR_VAR(0, 1, 12));
-    ensure(dataset1.match_data_var(cur->get_varcode(), result));
-
-    // And finally the last item
     ensure(cur->next());
     ensure_equals(cur->remaining(), 0);
-    cur->to_record(result);
-
-    ensure(cur->get_varcode() == WR_VAR(0, 1, 11) || cur->get_varcode() == WR_VAR(0, 1, 12));
-    ensure(dataset1.match_data_var(cur->get_varcode(), result));
+    wassert(actual(cur).data_matches(dataset1));
 
     // Now there should not be anything anymore
     ensure_equals(cur->remaining(), 0);
     ensure(!cur->next());
 }
 
-template<> template<> void to::test<47>() { use_db(V5); test_double_stationinfo_insert(); }
-template<> template<> void to::test<48>() { use_db(V6); test_double_stationinfo_insert(); }
+template<> template<> void to::test<41>() { use_db(V5); test_double_stationinfo_insert(); }
+template<> template<> void to::test<42>() { use_db(V6); test_double_stationinfo_insert(); }
 void db_shar::test_double_stationinfo_insert()
 {
     //wassert(actual(*db).empty());
-    ds_navile.insert(*db, true);
-    ds_navile.insert(*db, true);
+    wruntest(ds_st_navile.insert, *db, true);
+    wruntest(ds_st_navile.insert, *db, true);
 
     // Query station data and ensure there is only one info (height)
     query.clear();
     query.set_ana_context();
     auto_ptr<db::Cursor> cur = db->query_data(query);
     wassert(actual(cur->remaining()) == 1);
+    cur->next();
+    wassert(actual(cur).station_vars_match(ds_st_navile));
+}
+
+
+template<> template<> void to::test<43>() { use_db(V5); test_double_stationinfo_insert1(); }
+template<> template<> void to::test<44>() { use_db(V6); test_double_stationinfo_insert1(); }
+void db_shar::test_double_stationinfo_insert1()
+{
+    //wassert(actual(*db).empty());
+
+    dballe::tests::TestStation ds_st_navile_metar(ds_st_navile);
+    ds_st_navile_metar.info["metar"] = ds_st_navile_metar.info["synop"];
+    ds_st_navile_metar.info.erase("synop");
+    wruntest(ds_st_navile.insert, *db, true);
+    wruntest(ds_st_navile_metar.insert, *db, true);
+
+    // Query station data and ensure there is only one info (height)
+    query.clear();
+    query.set_ana_context();
+    auto_ptr<db::Cursor> cur = db->query_data(query);
+    wassert(actual(cur->remaining()) == 2);
+
+    // Ensure that the network info is preserved
+    wassert(actual(cur->next()).istrue());
+    wassert(actual(cur->get_rep_memo()) == "synop");
+    wassert(actual(cur->next()).istrue());
+    wassert(actual(cur->get_rep_memo()) == "metar");
 }
 
 

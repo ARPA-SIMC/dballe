@@ -30,21 +30,6 @@ using namespace std;
 
 namespace tut {
 
-// Print all the results, returning the count of results printed
-static int print_results(db::v6::Cursor& cur)
-{
-    Record result;
-    fprintf(stderr, "%d results:\n", (int)cur.count);
-    int i;
-    for (i = 0; cur.next(); ++i)
-    {
-        fprintf(stderr, " * Result %d:\n", i);
-        cur.to_record(result);
-        result.print(stderr);
-    }
-    return i;
-}
-
 struct db_v6_shar : public dballe::tests::DB_test_base
 {
     db_v6_shar() : dballe::tests::DB_test_base(db::V6)
@@ -77,7 +62,7 @@ void to::test<2>()
 #warning temporary disabled
 #if 0
     use_db();
-    populate_database();
+    wruntest(populate_database);
 
     query.clear();
     query.set(DBA_KEY_ANA_FILTER, "B07030>1");
@@ -98,15 +83,15 @@ template<> template<>
 void to::test<3>()
 {
     use_db();
-    populate_database();
+    wruntest(populate_database);
 
-    dballe::tests::DefaultTestRecord dataset;
+    dballe::tests::TestRecord dataset = dataset0;
     dataset.data.unset(WR_VAR(0, 1, 11));
     dataset.data.set(DBA_KEY_LEVELTYPE1, 44);
     dataset.data.set(DBA_KEY_L1, 55);
     dataset.data.unset(DBA_KEY_LEVELTYPE2);
     dataset.data.unset(DBA_KEY_L2);
-    dataset.insert(*db);
+    wruntest(dataset.insert, *db);
 
     // Query it back
     query.clear();
@@ -138,7 +123,7 @@ template<> template<>
 void to::test<4>()
 {
     use_db();
-    populate_database();
+    wruntest(populate_database);
 
     query.clear();
     query.set(DBA_KEY_LEVELTYPE1, 10);
@@ -155,7 +140,7 @@ template<> template<>
 void to::test<5>()
 {
     use_db();
-    populate_database();
+    wruntest(populate_database);
 
     query.clear();
     query.set(DBA_KEY_ATTR_FILTER, "B12001");
@@ -276,7 +261,7 @@ template<> template<>
 void to::test<7>()
 {
     use_db();
-    populate_database();
+    wruntest(populate_database);
 
     Record res;
     Record rec;

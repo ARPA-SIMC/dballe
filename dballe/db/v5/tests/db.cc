@@ -30,21 +30,6 @@ using namespace std;
 
 namespace tut {
 
-// Print all the results, returning the count of results printed
-static int print_results(db::v5::Cursor& cur)
-{
-        Record result;
-        fprintf(stderr, "%d results:\n", (int)cur.count);
-        int i;
-        for (i = 0; cur.next(); ++i)
-        {
-                fprintf(stderr, " * Result %d:\n", i);
-                cur.to_record(result);
-                result.print(stderr);
-        }
-        return i;
-}
-
 struct db_v5_shar : public dballe::tests::DB_test_base
 {
 	db_v5_shar() : dballe::tests::DB_test_base(db::V5)
@@ -74,20 +59,25 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
-        use_db();
-        populate_database();
+    // This query makes no sense: a station query will have a MODIFIER_DISTINCT.
+    // querying only ana_id without distinct could predictably have
+    // unpredictable effects ( :P ) and is not really useful in real life
+#if 0
+    use_db();
+    wruntest(populate_database);
 
-        query.clear();
-        query.set(DBA_KEY_ANA_FILTER, "B07030>1");
+    query.clear();
+    query.set(DBA_KEY_ANA_FILTER, "B07030>1");
 
-        // Perform the query, limited to level values
-        v5::DB& db = v5();
-        auto_ptr<db::Cursor> cur(db.query(query, DBA_DB_WANT_ANA_ID, 0));
-        ensure_equals(cur->remaining(), 2);
+    // Perform the query, limited to level values
+    v5::DB& db = v5();
+    auto_ptr<db::Cursor> cur(db.query(query, DBA_DB_WANT_ANA_ID, 0));
+    ensure_equals(cur->remaining(), 2);
 
-        ensure(cur->next());
-        ensure(cur->next());
-        ensure(!cur->next());
+    ensure(cur->next());
+    ensure(cur->next());
+    ensure(!cur->next());
+#endif
 }
 
 // Insert with undef leveltype2 and l2
@@ -95,15 +85,14 @@ template<> template<>
 void to::test<3>()
 {
         use_db();
-        populate_database();
 
-        dballe::tests::DefaultTestRecord dataset;
+        dballe::tests::TestRecord dataset = dataset0;
         dataset.data.unset(WR_VAR(0, 1, 11));
         dataset.data.set(DBA_KEY_LEVELTYPE1, 44);
         dataset.data.set(DBA_KEY_L1, 55);
         dataset.data.unset(DBA_KEY_LEVELTYPE2);
         dataset.data.unset(DBA_KEY_L2);
-        dataset.insert(*db);
+        wruntest(dataset.insert, *db);
 
         // Query it back
         query.clear();
@@ -135,7 +124,7 @@ template<> template<>
 void to::test<4>()
 {
         use_db();
-        populate_database();
+        wruntest(populate_database);
 
         query.clear();
         query.set(DBA_KEY_LEVELTYPE1, 10);
@@ -152,7 +141,7 @@ template<> template<>
 void to::test<5>()
 {
         use_db();
-        populate_database();
+        wruntest(populate_database);
 
         query.clear();
         query.set(DBA_KEY_ATTR_FILTER, "B12001");
@@ -270,7 +259,7 @@ template<> template<>
 void to::test<7>()
 {
         use_db();
-        populate_database();
+        wruntest(populate_database);
 
     Record res;
     Record rec;

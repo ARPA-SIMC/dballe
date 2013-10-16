@@ -241,6 +241,7 @@ tut_test_SOURCES += \
 	db/tests/querybuf.cc \
 	db/tests/internals.cc \
 	db/db-tut.cc \
+	db/db1-tut.cc \
 	db/db-import-tut.cc \
 	db/db-export-tut.cc \
 	db/v5/tests/repinfo.cc \
