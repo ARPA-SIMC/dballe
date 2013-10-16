@@ -371,26 +371,26 @@ void db_shar::test_misc_queries()
     TRY_QUERY("year=1944", 0);
     TRY_QUERY("year=1945", 4);
     TRY_QUERY("year=1946", 0);
-    TRY_QUERY("B01001=1", 2);
+    TRY_QUERY("B01001=1", 4);
     TRY_QUERY("B01001=2", 0);
-    TRY_QUERY("B01002=52", 2);
+    TRY_QUERY("B01002=52", 4);
     TRY_QUERY("B01002=53", 0);
-    TRY_QUERY("ana_filter=block=1", 2);
-    TRY_QUERY("ana_filter=B01001=1", 2);
+    TRY_QUERY("ana_filter=block=1", 4);
+    TRY_QUERY("ana_filter=B01001=1", 4);
     TRY_QUERY("ana_filter=block>1", 0);
     TRY_QUERY("ana_filter=B01001>1", 0);
-    TRY_QUERY("ana_filter=block<=1", 2);
-    TRY_QUERY("ana_filter=B01001<=1", 2);
-    TRY_QUERY("ana_filter=0<=B01001<=2", 2);
-    TRY_QUERY("ana_filter=1<=B01001<=1", 2);
+    TRY_QUERY("ana_filter=block<=1", 4);
+    TRY_QUERY("ana_filter=B01001<=1", 4);
+    TRY_QUERY("ana_filter=0<=B01001<=2", 4);
+    TRY_QUERY("ana_filter=1<=B01001<=1", 4);
     TRY_QUERY("ana_filter=2<=B01001<=4", 0);
-    TRY_QUERY("data_filter=B01011=DB-All.e!", 2);
+    TRY_QUERY("data_filter=B01011=DB-All.e!", 4);
     TRY_QUERY("data_filter=B01012<300", 0);
-    TRY_QUERY("data_filter=B01012<=300", 2);
-    TRY_QUERY("data_filter=B01012=300", 2);
+    TRY_QUERY("data_filter=B01012<=300", 4);
+    TRY_QUERY("data_filter=B01012=300", 4);
     TRY_QUERY("data_filter=B01012>=300", 4);
-    TRY_QUERY("data_filter=B01012>300", 2);
-    TRY_QUERY("data_filter=B01012<400", 2);
+    TRY_QUERY("data_filter=B01012>300", 4);
+    TRY_QUERY("data_filter=B01012<400", 4);
     TRY_QUERY("data_filter=B01012<=400", 4);
 
     /*
@@ -476,7 +476,7 @@ void db_shar::test_misc_queries()
     TRY_QUERY("priomax=101", 4);
     TRY_QUERY("priomax=110", 4);
     TRY_QUERY("context_id=1", 1);
-    TRY_QUERY("context_id=11", 1);
+    TRY_QUERY("context_id=11", 0);
 
 #undef TRY_QUERY
 #undef TRY_QUERY2
