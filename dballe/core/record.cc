@@ -1,7 +1,7 @@
 /*
  * dballe/record - groups of related variables
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 
 #include "config.h"
 
+#include <sstream>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -321,13 +322,13 @@ bool Record::contains(const Record& subset) const
 bool Record::contains(dba_keyword parameter) const throw()
 {
     const Var* res = key_peek(parameter);
-    return res ? res->value() != NULL : NULL;
+    return res ? res->value() != NULL : false;
 }
 
 bool Record::contains(wreport::Varcode parameter) const throw()
 {
     const Var* res = var_peek(parameter);
-    return res ? res->value() != NULL : NULL;
+    return res ? res->value() != NULL : false;
 }
 
 bool Record::contains_level() const throw ()
@@ -581,6 +582,16 @@ void Record::set_datetime(const int (&val)[6])
     set(DBA_KEY_SEC,   val[5]);
 }
 
+void Record::set_datetime(int ye, int mo, int da, int ho, int mi, int se)
+{
+    set(DBA_KEY_YEAR,  ye);
+    set(DBA_KEY_MONTH, mo);
+    set(DBA_KEY_DAY,   da);
+    set(DBA_KEY_HOUR,  ho);
+    set(DBA_KEY_MIN,   mi);
+    set(DBA_KEY_SEC,   se);
+}
+
 void Record::set_ana_context()
 {
 	key(DBA_KEY_YEAR).seti(1000);
@@ -641,6 +652,33 @@ void Record::set_from_string(const char* str)
                 key(param).setd(strtod(val, 0));
         }
 	}
+}
+
+std::string Record::to_string() const
+{
+    std::stringstream s;
+    bool first = true;
+
+    for (int i = 0; i < KEYWORD_TABLE_SIZE; ++i)
+        if (keydata[i] != NULL)
+        {
+            if (first)
+                first = false;
+            else
+                s << ",";
+            s << keyword_name((dba_keyword)i) << "=" << keydata[i]->format("");
+        }
+
+    for (vector<Var*>::const_iterator i = m_vars.begin(); i != m_vars.end(); ++i)
+    {
+        if (first)
+            first = false;
+        else
+            s << ",";
+        s << wreport::varcode_format((*i)->code()) << "=" << (*i)->format("");
+    }
+
+    return s.str();
 }
 
 void Record::print(FILE* out) const

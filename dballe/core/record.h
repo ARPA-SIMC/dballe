@@ -324,6 +324,7 @@ public:
 	Trange get_trange() const;
 	void get_datetime(int (&val)[6]) const;
 	void set_datetime(const int (&val)[6]);
+    void set_datetime(int ye, int mo=1, int da=1, int ho=0, int mi=0, int se=0);
 
 	/**
 	 * Set the date, level and timerange values to match the anagraphical context.
@@ -397,6 +398,11 @@ public:
 	 *   The error indicator for the function.
 	 */
 	void set_from_string(const char* str);
+
+    /**
+     * Encode in a one-liner of comma-separated assignments
+     */
+    std::string to_string() const;
 
 	/**
 	 * Print the contents of this record to the given file descriptor
