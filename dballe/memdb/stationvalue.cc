@@ -1,5 +1,5 @@
 /*
- * memdb/station - In memory representation of stations
+ * memdb/stationvalue - In memory representation of station values
  *
  * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -18,7 +18,7 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
-
+#include "stationvalue.h"
 #include "station.h"
 #include <iostream>
 
@@ -27,44 +27,49 @@ using namespace std;
 namespace dballe {
 namespace memdb {
 
-Stations::Stations() : ValueStorage<Station>() {}
-
-
-const Station& Stations::get_station(double lat, double lon, const std::string& report)
+StationValue::~StationValue()
 {
-    // Search
-    Coord coords(lat, lon);
-    Positions res = by_coord.search(coords);
-    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i) && !get(*i)->mobile && get(*i)->report == report)
-            return *get(*i);
-
-    // Station not found, create it
-    size_t pos = value_add(new Station(coords, report));
-    // Index it
-    by_coord[coords].insert(pos);
-    // And return it
-    return *get(pos);
+    delete var;
 }
 
-const Station& Stations::get_station(double lat, double lon, const std::string& ident, const std::string& report)
+void StationValue::replace(std::auto_ptr<wreport::Var> var)
 {
-    // Search
-    Coord coords(lat, lon);
-    Positions res = by_coord.search(coords);
-    by_ident.refine(ident, res);
+    delete this->var;
+    this->var = var.release();
+}
+
+const StationValue& StationValues::insert_or_replace(const Station& station, std::auto_ptr<wreport::Var> var)
+{
+    Positions res = by_station.search(&station);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i) && get(*i)->mobile && get(*i)->report == report)
+        if (get(*i) && !get(*i)->var->code() == var->code())
+        {
+            get(*i)->replace(var);
             return *get(*i);
+        }
 
     // Station not found, create it
-    size_t pos = value_add(new Station(coords, ident, report));
+    size_t pos = value_add(new StationValue(station, var));
     // Index it
-    by_coord[coords].insert(pos);
-    by_ident[ident].insert(pos);
+    by_station[&station].insert(pos);
     // And return it
     return *get(pos);
+
 }
+
+bool StationValues::remove(const Station& station, wreport::Varcode code)
+{
+    Positions res = by_station.search(&station);
+    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
+        if (get(*i) && !get(*i)->var->code() == code)
+        {
+            value_remove(*i);
+            return true;
+        }
+    return false;
+}
+
+template class Index<const Station*>;
 
 }
 }

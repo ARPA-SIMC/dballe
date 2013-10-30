@@ -1,5 +1,5 @@
 /*
- * memdb/value - In memory representation of a station
+ * memdb/station - In memory representation of stations
  *
  * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -22,11 +22,9 @@
 #ifndef DBA_MEMDB_STATION_H
 #define DBA_MEMDB_STATION_H
 
-#include <dballe/core/defs.h>
 #include <dballe/memdb/core.h>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace dballe {
 namespace memdb {
@@ -38,8 +36,6 @@ struct Station
     bool mobile;
     std::string ident;
     std::string report;
-
-    Station() {}
 
     // Fixed station
     Station(const Coord& coords, const std::string& report)
@@ -55,14 +51,15 @@ struct Station
 };
 
 /// Storage and index for station information
-class Stations
+class Stations : public ValueStorage<Station>
 {
 protected:
-    std::vector<Station> stations;
     Index<Coord> by_coord;
     Index<std::string> by_ident;
 
 public:
+    Stations();
+
     /// Get a fixed Station record
     const Station& get_station(double lat, double lon, const std::string& report);
 

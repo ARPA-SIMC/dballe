@@ -24,6 +24,7 @@
 
 #include <set>
 #include <map>
+#include <vector>
 #include <cstddef>
 
 namespace dballe {
@@ -104,6 +105,53 @@ struct Index : public std::map<T, Positions>
 
         res.inplace_intersect(i->second);
     }
+};
+
+template<typename T>
+struct ValueStorage : public std::vector<T*>
+{
+    std::vector<size_t> empty_slots;
+
+    ValueStorage() {}
+    virtual ~ValueStorage()
+    {
+        for (typename ValueStorage::iterator i = this->begin(); i != this->end(); ++i)
+            delete *i;
+    }
+
+    T* get(size_t idx) { return (*this)[idx]; }
+    const T* get(size_t idx) const { return (*this)[idx]; }
+
+protected:
+    /// Add the value to the storage and return its index
+    /// take ownership of the pointer memory management
+    size_t value_add(T* value)
+    {
+        if (empty_slots.empty())
+        {
+            // No slots to reuse: append
+            this->push_back(value);
+            return this->size() - 1;
+        }
+
+        // Reuse an old slot
+        size_t res = empty_slots.back();
+        empty_slots.pop_back();
+        (*this)[res] = value;
+        return res;
+    }
+
+    /// Remove a value given its position
+    void value_remove(size_t pos)
+    {
+        delete (*this)[pos];
+        (*this)[pos] = 0;
+        empty_slots.push_back(pos);
+    }
+
+private:
+    ValueStorage(const ValueStorage<T>&);
+    ValueStorage& operator=(const ValueStorage<T>&);
 };
 
 }

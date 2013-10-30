@@ -29,14 +29,7 @@
 namespace dballe {
 namespace memdb {
 
-struct Station
-{
-    double lat;
-    double lon;
-    std::string ident;
-    std::string rep_memo;
-};
-
+    /*
 struct StationValue
 {
     Station* station;
@@ -56,6 +49,7 @@ struct Value
     int datetime[6];
     wreport::Var var;
 };
+*/
 
 }
 }
