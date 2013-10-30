@@ -24,8 +24,6 @@
 
 #include <dballe/memdb/core.h>
 #include <wreport/var.h>
-#include <string>
-#include <vector>
 #include <memory>
 
 namespace dballe {

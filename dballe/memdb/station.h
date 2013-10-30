@@ -24,7 +24,6 @@
 
 #include <dballe/memdb/core.h>
 #include <string>
-#include <vector>
 
 namespace dballe {
 namespace memdb {

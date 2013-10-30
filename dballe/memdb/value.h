@@ -23,27 +23,87 @@
 #ifndef DBA_MEMDB_VALUE_H
 #define DBA_MEMDB_VALUE_H
 
+#include <dballe/memdb/core.h>
 #include <dballe/core/defs.h>
 #include <wreport/var.h>
+#include <memory>
+#include <iosfwd>
 
 namespace dballe {
 namespace memdb {
 
-    /*
-struct Levtr
+struct Station;
+struct LevTr;
+
+/// Simple datetime structure
+struct Datetime
 {
-    Level level;
-    Trange trange;
+    unsigned short year;
+    unsigned char month;
+    unsigned char day;
+    unsigned char hour;
+    unsigned char minute;
+    unsigned char second;
+
+    Datetime(unsigned short year, unsigned char month=1, unsigned char day=1,
+             unsigned char hour=0, unsigned char minute=0, unsigned char second=0)
+        : year(year), month(month), day(day), hour(hour), minute(minute), second(second)
+    {
+    }
+
+    bool operator==(const Datetime& dt) const
+    {
+        return year == dt.year && month == dt.month && day == dt.day
+            && hour == dt.hour && minute == dt.minute && second == dt.second;
+    }
+
+    bool operator!=(const Datetime& dt) const
+    {
+        return year != dt.year || month != dt.month || day != dt.day
+            || hour != dt.hour || minute != dt.minute || second != dt.second;
+    }
 };
 
+std::ostream& operator<<(std::ostream& out, const Datetime& dt);
+
+/// Station information
 struct Value
 {
-    Station* station;
-    Levtr* levtr;
-    int datetime[6];
-    wreport::Var var;
+    const Station& station;
+    const LevTr& levtr;
+    Datetime datetime;
+    wreport::Var* var;
+
+    Value(const Station& station, const LevTr& levtr, const Datetime& datetime, std::auto_ptr<wreport::Var> var)
+        : station(station), levtr(levtr), datetime(datetime), var(var.release()) {}
+    ~Value();
+
+    /// Replace the variable with the given one
+    void replace(std::auto_ptr<wreport::Var> var);
+
+private:
+    Value(const Value&);
+    Value& operator=(const Value&);
 };
-*/
+
+/// Storage and index for station information
+class Values : public ValueStorage<Value>
+{
+protected:
+    Index<const Station*> by_station;
+    Index<const LevTr*> by_levtr;
+
+public:
+    /// Get a fixed Station record
+    const Value& insert_or_replace(const Station& station, const LevTr& levtr, const Datetime& datetime, std::auto_ptr<wreport::Var> var);
+
+    /**
+     * Remove a value.
+     *
+     * Returns true if found and removed, false if it was not found.
+     */
+    bool remove(const Station& station, const LevTr& levtr, const Datetime& datetime, wreport::Varcode code);
+};
 
 }
 }
