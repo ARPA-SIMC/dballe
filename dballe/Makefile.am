@@ -51,6 +51,9 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/record.h \
 	core/matcher.h \
 	core/match-wreport.h \
+	memdb/core.h \
+	memdb/station.h \
+	memdb/value.h \
 	msg/codec.h \
 	msg/context.h \
 	msg/vars.h \
@@ -107,6 +110,9 @@ libdballe_la_SOURCES = \
 	core/record.cc \
 	core/matcher.cc \
 	core/match-wreport.cc \
+	memdb/station.cc \
+	memdb/core.cc \
+	memdb/value.cc \
 	msg/repinfo.cc \
 	msg/vars.cc \
 	msg/context.cc \
@@ -203,6 +209,7 @@ CXXFLAGS += -O0
 
 dist_noinst_HEADERS = \
 	core/test-utils-core.h \
+	memdb/tests.h \
 	msg/test-utils-msg.h \
 	msg/test-utils-lua.h \
 	db/test-utils-db.h
@@ -218,6 +225,10 @@ tut_test_SOURCES = \
 	core/matcher-tut.cc \
 	core/match-wreport-tut.cc \
 	core/test-utils-core.cc \
+	memdb/tests.cc \
+	memdb/core-tut.cc \
+	memdb/station-tut.cc \
+	memdb/value-tut.cc \
 	msg/test-utils-msg.cc \
 	msg/tests/vars.cc \
 	msg/tests/context.cc \
