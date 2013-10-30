@@ -30,12 +30,6 @@ namespace dballe {
 namespace memdb {
 
     /*
-struct StationValue
-{
-    Station* station;
-    wreport::Var var;
-};
-
 struct Levtr
 {
     Level level;
