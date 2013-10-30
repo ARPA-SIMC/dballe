@@ -54,7 +54,7 @@ void WMOImporter::import_var(const Var& var)
 		case WR_VAR(0,  1,  1): msg->set_block_var(var); break;
 		case WR_VAR(0,  1,  2): msg->set_station_var(var); break;
 		case WR_VAR(0,  1,  5):
-		case WR_VAR(0,  1,  6): msg->set_ident_var(var); break;
+		case WR_VAR(0,  1,  6):
 		case WR_VAR(0,  1, 11): msg->set_ident_var(var); break;
 		case WR_VAR(0,  1, 12): msg->set_st_dir_var(var); break;
 		case WR_VAR(0,  1, 13): msg->set_st_speed_var(var); break;

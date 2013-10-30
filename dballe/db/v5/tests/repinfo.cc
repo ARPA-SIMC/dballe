@@ -24,6 +24,7 @@
 using namespace dballe;
 using namespace dballe::db::v5;
 using namespace std;
+using namespace wibble::tests;
 
 namespace tut {
 
@@ -104,6 +105,20 @@ void to::test<4>()
 	ensure_equals(updated, 3);
 
 	ensure_equals(ri->get_by_memo("generic")->prio, -5);
+}
+
+// Test automatic repinfo creation
+template<> template<>
+void to::test<5>()
+{
+    use_db();
+
+    wassert(actual(ri->obtain_id("foobar")) > 0);
+    const repinfo::Cache *c = ri->get_by_memo("foobar");
+    wassert(actual(c) != (const repinfo::Cache *)NULL);
+    wassert(actual(c->memo) == "foobar");
+    wassert(actual(c->desc) == "foobar");
+    wassert(actual(c->prio) == 1000);
 }
 
 }

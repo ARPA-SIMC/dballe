@@ -28,6 +28,7 @@
 using namespace dballe;
 using namespace dballe::db;
 using namespace wreport;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -40,6 +41,7 @@ struct db_import_shar : public dballe::tests::db_test
     void test_bufr();
     void test_aof();
     void test_multi();
+    void test_auto_repinfo();
 };
 TESTGRP(db_import);
 
@@ -253,6 +255,32 @@ void db_import_shar::test_multi()
 
     diffs = msg2.diff(*msgs[1]);
     if (diffs) dballe::tests::track_different_msgs(msg2, *msgs[1], "synop2");
+    ensure_equals(diffs, 0);
+}
+
+template<> template<> void to::test<9>() { use_db(V5); test_auto_repinfo(); }
+template<> template<> void to::test<10>() { use_db(V6); test_auto_repinfo(); }
+void db_import_shar::test_auto_repinfo()
+{
+    // Check automatic repinfo allocation
+    std::auto_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
+    Msg& msg = *(*msgs)[0];
+
+    db->reset();
+    db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+
+    query.clear();
+    query.set(DBA_KEY_REP_MEMO, "enrico");
+
+    MsgCollector outmsgs;
+    db->export_msgs(query, outmsgs);
+    wassert(actual(outmsgs.size()) == 1u);
+    ensure(outmsgs[0] != NULL);
+
+    // Compare the two dba_msg
+    notes::Collect c(cerr);
+    int diffs = msg.diff(*outmsgs[0]);
+    if (diffs) dballe::tests::track_different_msgs(msg, *outmsgs[0], "enrico");
     ensure_equals(diffs, 0);
 }
 

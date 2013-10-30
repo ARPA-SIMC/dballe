@@ -144,9 +144,9 @@ public:
             const Var& var = (*subset)[pos];
             if (WR_VAR_F(var.code()) != 0 || var.value() == NULL)
             {
-                // Ignore non-B variables and unset variables
+                // Ignore non-B variables and variables that are unset
                 ++pos;
-            } else if ((var.code() == WR_VAR(0, 31, 1) || var.code() == WR_VAR(0, 31, 2))) {
+            } else if ((var.code() == WR_VAR(0, 31, 1) || var.code() == WR_VAR(0, 31, 2))) { // delayed descriptor replication count
                 if (!try_soundings(var.enqi()))
                     // If it does not look like a sounding, ignore delayed
                     // repetition count and proceed normally

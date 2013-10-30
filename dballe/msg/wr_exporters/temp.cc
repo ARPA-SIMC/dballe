@@ -62,7 +62,7 @@ namespace wr {
 
 namespace {
 
-// Base template for ships
+// Base template for vertical soundings
 struct TempBase : public Template
 {
     bool is_crex;

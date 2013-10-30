@@ -570,7 +570,7 @@ int DB::get_rep_cod(const Record& rec)
 
 int DB::rep_cod_from_memo(const char* memo)
 {
-    return repinfo().get_id(memo);
+    return repinfo().obtain_id(memo);
 }
 
 const std::string& DB::rep_memo_from_cod(int rep_cod)

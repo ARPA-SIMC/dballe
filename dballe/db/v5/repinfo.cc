@@ -149,6 +149,24 @@ int Repinfo::get_id(const char* memo) const
 	return memo_idx[pos].id;
 }
 
+int Repinfo::obtain_id(const char* memo)
+{
+    char lc_memo[20];
+    int i;
+    for (i = 0; i < 19 && memo[i]; ++i)
+        lc_memo[i] = tolower(memo[i]);
+    lc_memo[i] = 0;
+
+    if (memo_idx.empty()) rebuild_memo_idx();
+
+    int pos = cache_find_by_memo(lc_memo);
+    if (pos == -1)
+    {
+        error_notfound::throwf("looking for repinfo corresponding to '%s'", memo);
+    }
+    return memo_idx[pos].id;
+}
+
 int Repinfo::cache_find_by_memo(const char* memo) const
 {
 	/* Binary search the memo index */

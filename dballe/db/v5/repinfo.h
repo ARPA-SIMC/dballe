@@ -144,6 +144,18 @@ struct Repinfo
 	 */
 	int get_id(const char* memo) const;
 
+    /**
+     * Get the id of a repinfo entry given its name.
+     *
+     * It creates a new entry if the memo is missing from the database.
+     *
+     * @param memo
+     *   The name to query
+     * @return
+     *   The resulting id.
+     */
+    int obtain_id(const char* memo);
+
 	/**
 	 * Check if the database contains the given rep_cod id
 	 *
