@@ -1,5 +1,5 @@
 /*
- * memdb/station - In memory representation of stations
+ * memdb/levtr - In memory representation of level-timerange metadata
  *
  * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "station.h"
+#include "levtr.h"
 #include <iostream>
 
 using namespace std;
@@ -27,41 +27,23 @@ using namespace std;
 namespace dballe {
 namespace memdb {
 
-Stations::Stations() : ValueStorage<Station>() {}
+LevTrs::LevTrs() : ValueStorage<LevTr>() {}
 
 
-const Station& Stations::obtain(double lat, double lon, const std::string& report)
+const LevTr& LevTrs::obtain(const Level& level, const Trange& trange)
 {
     // Search
-    Coord coords(lat, lon);
-    Positions res = by_coord.search(coords);
+    Positions res = by_level.search(level);
+    by_trange.refine(trange, res);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i) && !get(*i)->mobile && get(*i)->report == report)
+        if (get(*i))
             return *get(*i);
 
     // Station not found, create it
-    size_t pos = value_add(new Station(coords, report));
+    size_t pos = value_add(new LevTr(level, trange));
     // Index it
-    by_coord[coords].insert(pos);
-    // And return it
-    return *get(pos);
-}
-
-const Station& Stations::obtain(double lat, double lon, const std::string& ident, const std::string& report)
-{
-    // Search
-    Coord coords(lat, lon);
-    Positions res = by_coord.search(coords);
-    by_ident.refine(ident, res);
-    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i) && get(*i)->mobile && get(*i)->report == report)
-            return *get(*i);
-
-    // Station not found, create it
-    size_t pos = value_add(new Station(coords, ident, report));
-    // Index it
-    by_coord[coords].insert(pos);
-    by_ident[ident].insert(pos);
+    by_level[level].insert(pos);
+    by_trange[trange].insert(pos);
     // And return it
     return *get(pos);
 }

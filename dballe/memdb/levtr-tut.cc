@@ -17,10 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/var.h>
 #include "memdb/tests.h"
-#include "stationvalue.h"
-#include "station.h"
+#include "levtr.h"
 
 using namespace dballe;
 using namespace dballe::memdb;
@@ -29,31 +27,24 @@ using namespace std;
 
 namespace tut {
 
-struct memdb_stationvalue_shar
+struct memdb_levtr_shar
 {
 };
 
-TESTGRP(memdb_stationvalue);
+TESTGRP(memdb_levtr);
 
 template<> template<> void to::test<1>()
 {
-    Stations stations;
-    const Station& stf = stations.obtain(44, 11, "synop");
+    LevTrs values;
 
-    // Insert a station value and check that all data is there
-    StationValues svalues;
-    const StationValue& sv = svalues.insert_or_replace(stf, newvar(WR_VAR(0, 12, 101), 28.5));
-    wassert(actual(&sv.station) == &stf);
-    wassert(actual(sv.var->code()) == WR_VAR(0, 12, 101));
-    wassert(actual(sv.var->enqd()) == 28.5);
+    // Insert a levtr and check that all data is there
+    const LevTr& val = values.obtain(Level(1), Trange::instant());
+    wassert(actual(val.level) == Level(1));
+    wassert(actual(val.trange) == Trange::instant());
 
-    // Replacing a value should reuse an existing one
-    const StationValue& sv1 = svalues.insert_or_replace(stf, newvar(WR_VAR(0, 12, 101), 29.5));
-    wassert(actual(&sv1) == &sv);
-    wassert(actual(&sv1.station) == &stf);
-    wassert(actual(sv1.var->code()) == WR_VAR(0, 12, 101));
-    wassert(actual(sv1.var->enqd()) == 29.5);
+    // Check that lookup returns the same element
+    const LevTr& val1 = values.obtain(Level(1), Trange::instant());
+    wassert(actual(&val1) == &val);
 }
 
 }
-

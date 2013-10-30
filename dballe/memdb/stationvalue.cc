@@ -42,7 +42,7 @@ const StationValue& StationValues::insert_or_replace(const Station& station, std
 {
     Positions res = by_station.search(&station);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i) && !get(*i)->var->code() == var->code())
+        if (get(*i) && get(*i)->var->code() == var->code())
         {
             get(*i)->replace(var);
             return *get(*i);
@@ -63,6 +63,7 @@ bool StationValues::remove(const Station& station, wreport::Varcode code)
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
         if (get(*i) && !get(*i)->var->code() == code)
         {
+            by_station[&station].erase(*i);
             value_remove(*i);
             return true;
         }

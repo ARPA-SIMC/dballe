@@ -54,6 +54,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	memdb/core.h \
 	memdb/station.h \
 	memdb/stationvalue.h \
+	memdb/levtr.h \
 	memdb/value.h \
 	msg/codec.h \
 	msg/context.h \
@@ -113,6 +114,7 @@ libdballe_la_SOURCES = \
 	core/match-wreport.cc \
 	memdb/station.cc \
 	memdb/stationvalue.cc \
+	memdb/levtr.cc \
 	memdb/core.cc \
 	memdb/value.cc \
 	msg/repinfo.cc \
@@ -231,6 +233,7 @@ tut_test_SOURCES = \
 	memdb/core-tut.cc \
 	memdb/station-tut.cc \
 	memdb/stationvalue-tut.cc \
+	memdb/levtr-tut.cc \
 	memdb/value-tut.cc \
 	msg/test-utils-msg.cc \
 	msg/tests/vars.cc \

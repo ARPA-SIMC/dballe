@@ -61,10 +61,10 @@ public:
     Stations();
 
     /// Get a fixed Station record
-    const Station& get_station(double lat, double lon, const std::string& report);
+    const Station& obtain(double lat, double lon, const std::string& report);
 
     /// Get a mobile Station record
-    const Station& get_station(double lat, double lon, const std::string& ident, const std::string& report);
+    const Station& obtain(double lat, double lon, const std::string& ident, const std::string& report);
 };
 
 }
