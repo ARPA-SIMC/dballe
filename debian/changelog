@@ -1,10 +1,22 @@
-dballe (6.4-1) UNRELEASED; urgency=low
+dballe (6.5-1) UNRELEASED; urgency=low
 
   * New upstream release
-     - changed SQLite queries to avoid losing existing when overwriting a data
-       value
+     - clarified and remplemented the meaning of data_filter
+     - auto-insert new rep_memo values when importing data, if they are
+       missing from the database
+     - work around SQL having undefined behaviour with NULLs on an UNIQUE
+       index. You need to run the following query to fix existing v6
+       databases: UPDATE data SET id_lev_tr=1 WHERE id_lev_tr IS NULL
 
- -- Enrico Zini <enrico@debian.org>  Wed, 18 Sep 2013 12:49:58 +0200
+ -- Enrico Zini <enrico@debian.org>  Wed, 30 Oct 2013 17:21:25 +0100
+
+dballe (6.4-1) unstable; urgency=low
+
+  * New upstream release
+     - changed SQLite queries to avoid losing existing values when overwriting
+       a data value
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 30 Oct 2013 17:21:22 +0100
 
 dballe (6.3-1) unstable; urgency=low
 
