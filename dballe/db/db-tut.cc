@@ -240,14 +240,14 @@ void db_shar::test_misc_queries()
     TRY_QUERY("ana_filter=0<=B01001<=2", 4);
     TRY_QUERY("ana_filter=1<=B01001<=1", 4);
     TRY_QUERY("ana_filter=2<=B01001<=4", 0);
-    TRY_QUERY("data_filter=B01011=DB-All.e!", 4);
+    TRY_QUERY("data_filter=B01011=DB-All.e!", 1);
     TRY_QUERY("data_filter=B01012<300", 0);
-    TRY_QUERY("data_filter=B01012<=300", 4);
-    TRY_QUERY("data_filter=B01012=300", 4);
-    TRY_QUERY("data_filter=B01012>=300", 4);
-    TRY_QUERY("data_filter=B01012>300", 4);
-    TRY_QUERY("data_filter=B01012<400", 4);
-    TRY_QUERY("data_filter=B01012<=400", 4);
+    TRY_QUERY("data_filter=B01012<=300", 1);
+    TRY_QUERY("data_filter=B01012=300", 1);
+    TRY_QUERY("data_filter=B01012>=300", 2);
+    TRY_QUERY("data_filter=B01012>300", 1);
+    TRY_QUERY("data_filter=B01012<400", 1);
+    TRY_QUERY("data_filter=B01012<=400", 2);
 
     /*
     TRY_QUERY(i, DBA_KEY_MONTHMIN, 1);
@@ -1064,13 +1064,6 @@ void db_shar::test_query_stations()
     wassert(actual(db).try_station_query("ana_filter=B07030>50", 1));
     wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
     wassert(actual(db).try_station_query("ana_filter=50<=B07030<=100", 2));
-    wassert(actual(db).try_station_query("data_filter=B12101=290", 1));
-    wassert(actual(db).try_station_query("data_filter=B12101=300", 1));
-    wassert(actual(db).try_station_query("data_filter=B12101<300", 1));
-    wassert(actual(db).try_station_query("data_filter=B12101<=300", 2));
-    wassert(actual(db).try_station_query("data_filter=B12101>=300", 1));
-    wassert(actual(db).try_station_query("data_filter=B12101>300", 0));
-    wassert(actual(db).try_station_query("data_filter=B12101<400", 2));
 }
 
 template<> template<> void to::test<35>() {
@@ -1156,13 +1149,14 @@ void db_shar::test_summary_queries()
     wassert(actual(db).try_summary_query("ana_filter=1<=B01001<=1", 2));
     wassert(actual(db).try_summary_query("ana_filter=2<=B01001<=4", 2));
     wassert(actual(db).try_summary_query("ana_filter=4<=B01001<=6", 0));
-    wassert(actual(db).try_summary_query("data_filter=B12101<300.0", 2));
-    wassert(actual(db).try_summary_query("data_filter=B12101<=300.0", 4));
-    wassert(actual(db).try_summary_query("data_filter=B12101=300.0", 2));
-    wassert(actual(db).try_summary_query("data_filter=B12101>=300,0", 2));
-    wassert(actual(db).try_summary_query("data_filter=B12101>300.0", 2));
-    wassert(actual(db).try_summary_query("data_filter=B12101<400.0", 4));
-    wassert(actual(db).try_summary_query("data_filter=B12101<=400.0", 4));
+    wassert(actual(db).try_summary_query("data_filter=B12101<300.0", 1));
+    wassert(actual(db).try_summary_query("data_filter=B12101<=300.0", 2));
+    wassert(actual(db).try_summary_query("data_filter=B12101=300.0", 1));
+    wassert(actual(db).try_summary_query("data_filter=B12101>=300,0", 1));
+    wassert(actual(db).try_summary_query("data_filter=B12101>300.0", 1));
+    wassert(actual(db).try_summary_query("data_filter=B12101<400.0", 2));
+    wassert(actual(db).try_summary_query("data_filter=B12101<=400.0", 2));
+    wassert(actual(db).try_summary_query("data_filter=B12102>400.0", 0));
     wassert(actual(db).try_summary_query("latmin=11.0", 4));
     wassert(actual(db).try_summary_query("latmin=12.34560", 4));
     wassert(actual(db).try_summary_query("latmin=13.0", 2));

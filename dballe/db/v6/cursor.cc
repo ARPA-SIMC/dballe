@@ -428,7 +428,7 @@ void CursorData::query(const Record& rec)
 #endif
     DataQueryBuilder qb(db, *stm, *this, rec, modifiers);
     qb.build();
-    // fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
+    //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
 
     if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ORACLE)
         stm->set_cursor_forward_only();

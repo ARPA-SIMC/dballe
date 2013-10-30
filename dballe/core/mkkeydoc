@@ -84,8 +84,8 @@ our %comments = (
 			  "have a pseudoana value that matches the filter. ".
 			  "Examples: 'height>=1000', 'B02001=1', '1000<=height<=2000" ],
 	data_filter =>	[ "ignored", "optional", "absent",
-			  "Restricts the results to only those stations which ".
-			  "have a data value that matches the filter. ".
+			  "Restricts the results to only the variables of the given type, which ".
+			  "have a value that matches the filter. ".
 			  "Examples: 't<260', 'B22021>2', '10<=B22021<=20'" ],
 	attr_filter =>	[ "ignored", "optional", "absent",
 			  "Restricts the results to only those data which ".

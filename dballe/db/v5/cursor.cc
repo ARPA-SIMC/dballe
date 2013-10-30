@@ -70,9 +70,6 @@ namespace {
 #define DBA_DB_FROM_DSTA		(1 << 6)
 /** Add the the pseudoana variables as 'dana' to the FROM part of the query */
 #define DBA_DB_FROM_DANA		(1 << 7)
-/** Add an extra data table as 'ddf' to the FROM part of the query, to restrict
- * the query on variable values */
-#define DBA_DB_FROM_DDF			(1 << 8)
 /** Add an extra attr table as 'adf' to the FROM part of the query, to restrict
  * the query on variable attributes */
 #define DBA_DB_FROM_ADF			(1 << 9)
@@ -125,8 +122,6 @@ struct QueryBuilder
     SQL_TIMESTAMP_STRUCT	sel_dtmax;
     DBALLE_SQL_C_SINT_TYPE	sel_latmin;
     DBALLE_SQL_C_SINT_TYPE	sel_latmax;
-    DBALLE_SQL_C_SINT_TYPE	sel_lonmin;
-    DBALLE_SQL_C_SINT_TYPE	sel_lonmax;
     char	sel_ident[64];
     DBALLE_SQL_C_SINT_TYPE	sel_ltype1;
     DBALLE_SQL_C_SINT_TYPE	sel_l1;
@@ -890,9 +885,6 @@ void QueryBuilder::add_other_froms(unsigned int base)
     if (wanted & DBA_DB_FROM_DANA)
         sql_query.append("JOIN data dana ON dana.id_context=cbs.id ");
 
-    if (wanted & DBA_DB_FROM_DDF)
-        sql_query.append("JOIN data ddf ON ddf.id_context=c.id ");
-
     if (wanted & DBA_DB_FROM_ADF)
         sql_query.append("JOIN attr adf ON adf.id_context=c.id AND adf.id_var=d.id_var ");
 }
@@ -938,8 +930,6 @@ void QueryBuilder::resolve_dependencies()
     /* Enforce join dependencies */
     if (from_wanted & (DBA_DB_FROM_DBLO | DBA_DB_FROM_DSTA | DBA_DB_FROM_DANA))
         from_wanted |= DBA_DB_FROM_CBS;
-    if (from_wanted & (DBA_DB_FROM_DDF))
-        from_wanted |= DBA_DB_FROM_C;
     if (from_wanted & (DBA_DB_FROM_ADF))
         from_wanted |= (DBA_DB_FROM_C | DBA_DB_FROM_D);
     if (from_wanted & DBA_DB_FROM_PA && from_wanted & DBA_DB_FROM_D)
@@ -1240,27 +1230,34 @@ void QueryBuilder::make_where(const Record& rec)
     add_int(rec, sel_latmin, DBA_KEY_LAT, "pa.lat=?", DBA_DB_FROM_PA);
     add_int(rec, sel_latmin, DBA_KEY_LATMIN, "pa.lat>=?", DBA_DB_FROM_PA);
     add_int(rec, sel_latmax, DBA_KEY_LATMAX, "pa.lat<=?", DBA_DB_FROM_PA);
-    //add_int(rec, cur->sel_lonmin, DBA_KEY_LON, "pa.lon=?", DBA_DB_FROM_PA);
     if (const char* val = rec.key_peek_value(DBA_KEY_LON))
     {
-        sel_lonmin = normalon(strtol(val, 0, 10));
-        sql_where.append_list("pa.lon=?");
-        stm.bind_in(input_seq++, sel_lonmin);
+        sql_where.append_listf("pa.lon=%d", normalon(strtol(val, 0, 10)));
         from_wanted |= DBA_DB_FROM_PA;
     }
     if (rec.key_peek_value(DBA_KEY_LONMIN) && rec.key_peek_value(DBA_KEY_LONMAX))
     {
-        sel_lonmin = normalon(rec.key(DBA_KEY_LONMIN).enqi());
-        sel_lonmax = normalon(rec.key(DBA_KEY_LONMAX).enqi());
-        if (sel_lonmin <= sel_lonmax)
+        int lonmin = rec.key(DBA_KEY_LONMIN).enqi();
+        int lonmax = rec.key(DBA_KEY_LONMAX).enqi();
+        if (lonmin == lonmax)
         {
-            sql_where.append_list("pa.lon>=? AND pa.lon<=?");
+            sql_where.append_listf("pa.lon=%d", normalon(lonmin));
+            from_wanted |= DBA_DB_FROM_PA;
         } else {
-            sql_where.append_list("((pa.lon>=? AND pa.lon<=18000000) OR (pa.lon>=-18000000 AND pa.lon<=?))");
+            lonmin = normalon(lonmin);
+            lonmax = normalon(lonmax);
+            if (lonmin < lonmax)
+            {
+                sql_where.append_listf("pa.lon>=%d AND pa.lon<=%d", lonmin, lonmax);
+                from_wanted |= DBA_DB_FROM_PA;
+            } else if (lonmin > lonmax) {
+                sql_where.append_listf("((pa.lon>=%d AND pa.lon<=18000000) OR (pa.lon>=-18000000 AND pa.lon<=%d))", lonmin, lonmax);
+                from_wanted |= DBA_DB_FROM_PA;
+            }
+            // If after being normalised min and max are the same, we
+            // assume that one wants "any longitude", as is the case with
+            // lonmin=0 lonmax=360 or lonmin=-180 lonmax=180
         }
-        stm.bind_in(input_seq++, sel_lonmin);
-        stm.bind_in(input_seq++, sel_lonmax);
-        from_wanted |= DBA_DB_FROM_PA;
     } else if (rec.key_peek_value(DBA_KEY_LONMIN) != NULL) {
         throw error_consistency("'lonmin' query parameter was specified without 'lonmax'");
     } else if (rec.key_peek_value(DBA_KEY_LONMAX) != NULL) {
@@ -1440,12 +1437,12 @@ void QueryBuilder::make_where(const Record& rec)
     {
         const char *op, *value, *value1;
         Varinfo info = decode_data_filter(val, &op, &value, &value1);
-        sql_where.append_list("ddf.id_var=");
+        sql_where.append_listf("d.id_var=%d", (int)info->var);
         if (value1 == NULL)
-            sql_where.appendf("%d AND ddf.value%s%s", info->var, op, value);
+            sql_where.append_listf("d.value%s%s", op, value);
         else
-            sql_where.appendf("%d AND ddf.value BETWEEN %s AND %s", info->var, value, value1);
-        from_wanted |= DBA_DB_FROM_DDF;
+            sql_where.append_listf("d.value BETWEEN %s AND %s", value, value1);
+        from_wanted |= DBA_DB_FROM_D;
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER))

@@ -336,7 +336,6 @@ bool StationQueryBuilder::build_where()
 
     // Add pseudoana-specific where parts
     has_where |= add_pa_where("s");
-    has_where |= add_datafilter_where("s");
 
     return has_where;
 }
@@ -391,7 +390,7 @@ bool DataQueryBuilder::build_where()
     add_ltr_where("ltr");
     add_varcode_where("d");
     add_repinfo_where("d");
-    add_datafilter_where("s");
+    add_datafilter_where("d");
     add_attrfilter_where("d");
 
     return true;
@@ -682,22 +681,20 @@ bool QueryBuilder::add_datafilter_where(const char* tbl)
     const char *op, *value, *value1;
     Varinfo info = decode_data_filter(val, &op, &value, &value1);
 
-    sql_where.append_listf("EXISTS(SELECT id FROM data %s_df WHERE %s_df.id_station=%s.id"
-                           " AND %s_df.id_lev_tr != -1"
-                           " AND %s_df.id_var=%d", tbl, tbl, tbl, tbl, tbl, info->var);
+    sql_where.append_listf("%s.id_var=%d", tbl, (int)info->var);
 
     if (value[0] == '\'')
         if (value1 == NULL)
-            sql_where.appendf(" AND %s_df.value%s%s)", tbl, op, value);
+            sql_where.append_listf("%s.value%s%s", tbl, op, value);
         else
-            sql_where.appendf(" AND %s_df.value BETWEEN %s AND %s)", tbl, value, value1);
+            sql_where.append_listf("%s.value BETWEEN %s AND %s", tbl, value, value1);
     else
     {
         const char* type = (db.conn->server_type == MYSQL) ? "SIGNED" : "INT";
         if (value1 == NULL)
-            sql_where.appendf(" AND CAST(%s_df.value AS %s)%s%s)", tbl, type, op, value);
+            sql_where.append_listf("CAST(%s.value AS %s)%s%s", tbl, type, op, value);
         else
-            sql_where.appendf(" AND CAST(%s_df.value AS %s) BETWEEN %s AND %s)", tbl, type, value, value1);
+            sql_where.append_listf("CAST(%s.value AS %s) BETWEEN %s AND %s", tbl, type, value, value1);
     }
 
     return true;
