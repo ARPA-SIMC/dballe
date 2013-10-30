@@ -1,4 +1,4 @@
-dballe (6.5-1) UNRELEASED; urgency=low
+dballe (6.5-1) unstable; urgency=low
 
   * New upstream release
      - clarified and remplemented the meaning of data_filter
@@ -8,7 +8,7 @@ dballe (6.5-1) UNRELEASED; urgency=low
        index. You need to run the following query to fix existing v6
        databases: UPDATE data SET id_lev_tr=1 WHERE id_lev_tr IS NULL
 
- -- Enrico Zini <enrico@debian.org>  Wed, 30 Oct 2013 17:21:25 +0100
+ -- Enrico Zini <enrico@debian.org>  Wed, 30 Oct 2013 17:28:42 +0100
 
 dballe (6.4-1) unstable; urgency=low
 
