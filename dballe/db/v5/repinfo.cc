@@ -110,14 +110,21 @@ void Repinfo::insert_auto_entry(const char* memo)
     stm.exec_direct("SELECT MAX(id) FROM repinfo");
     stm.fetch_expecting_one();
 
+    DBALLE_SQL_C_UINT_TYPE prio;
+    stm.bind_out(1, prio);
+    stm.exec_direct("SELECT MAX(prio) FROM repinfo");
+    stm.fetch_expecting_one();
+
     ++id;
+    ++prio;
 
     stm.bind_in(1, id);
     stm.bind_in(2, memo);
     stm.bind_in(3, memo);
+    stm.bind_in(4, prio);
 
     stm.exec_direct_and_close("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
-                    " VALUES (?, ?, ?, 9999, '-', 255)");
+                    " VALUES (?, ?, ?, ?, '-', 255)");
 }
 
 void Repinfo::cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea)

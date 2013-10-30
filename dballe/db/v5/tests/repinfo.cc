@@ -116,9 +116,18 @@ void to::test<5>()
     wassert(actual(ri->obtain_id("foobar")) > 0);
     const repinfo::Cache *c = ri->get_by_memo("foobar");
     wassert(actual(c) != (const repinfo::Cache *)NULL);
+    wassert(actual(c->id) == 256);
     wassert(actual(c->memo) == "foobar");
     wassert(actual(c->desc) == "foobar");
-    wassert(actual(c->prio) == 9999);
+    wassert(actual(c->prio) == 1001);
+
+    wassert(actual(ri->obtain_id("barbaz")) > 0);
+    c = ri->get_by_memo("barbaz");
+    wassert(actual(c) != (const repinfo::Cache *)NULL);
+    wassert(actual(c->id) == 257);
+    wassert(actual(c->memo) == "barbaz");
+    wassert(actual(c->desc) == "barbaz");
+    wassert(actual(c->prio) == 1002);
 }
 
 }
