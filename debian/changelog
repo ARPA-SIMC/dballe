@@ -6,7 +6,7 @@ dballe (6.5-1) unstable; urgency=low
        missing from the database
      - work around SQL having undefined behaviour with NULLs on an UNIQUE
        index. You need to run the following query to fix existing v6
-       databases: UPDATE data SET id_lev_tr=1 WHERE id_lev_tr IS NULL
+       databases: UPDATE data SET id_lev_tr=-1 WHERE id_lev_tr IS NULL
 
  -- Enrico Zini <enrico@debian.org>  Wed, 30 Oct 2013 17:28:42 +0100
 
