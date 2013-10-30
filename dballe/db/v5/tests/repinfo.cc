@@ -118,7 +118,7 @@ void to::test<5>()
     wassert(actual(c) != (const repinfo::Cache *)NULL);
     wassert(actual(c->memo) == "foobar");
     wassert(actual(c->desc) == "foobar");
-    wassert(actual(c->prio) == 1000);
+    wassert(actual(c->prio) == 9999);
 }
 
 }

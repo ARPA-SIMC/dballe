@@ -1184,6 +1184,7 @@ void DB::attr_remove(int reference_id, wreport::Varcode id_var, const std::vecto
 
 void DB::dump(FILE* out)
 {
+    repinfo().dump(out);
     station().dump(out);
     context().dump(out);
     data().dump(out);

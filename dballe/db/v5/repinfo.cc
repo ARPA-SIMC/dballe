@@ -101,6 +101,25 @@ void Repinfo::read_cache()
 	rebuild_memo_idx();
 }
 
+void Repinfo::insert_auto_entry(const char* memo)
+{
+    db::Statement stm(*conn);
+
+    DBALLE_SQL_C_UINT_TYPE id;
+    stm.bind_out(1, id);
+    stm.exec_direct("SELECT MAX(id) FROM repinfo");
+    stm.fetch_expecting_one();
+
+    ++id;
+
+    stm.bind_in(1, id);
+    stm.bind_in(2, memo);
+    stm.bind_in(3, memo);
+
+    stm.exec_direct_and_close("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
+                    " VALUES (?, ?, ?, 9999, '-', 255)");
+}
+
 void Repinfo::cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea)
 {
 	/* Ensure that we are adding things in order */
@@ -162,7 +181,9 @@ int Repinfo::obtain_id(const char* memo)
     int pos = cache_find_by_memo(lc_memo);
     if (pos == -1)
     {
-        error_notfound::throwf("looking for repinfo corresponding to '%s'", memo);
+        insert_auto_entry(memo);
+        read_cache();
+        return get_id(memo);
     }
     return memo_idx[pos].id;
 }

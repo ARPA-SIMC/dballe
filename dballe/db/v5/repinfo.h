@@ -211,6 +211,8 @@ protected:
 	int cache_find_by_memo(const char* memo) const;
 	int cache_find_by_id(unsigned id) const;
 	std::vector<repinfo::Cache> read_repinfo_file(const char* deffile);
+    /// Create an automatic entry for a missing memo, and insert it in the database
+    void insert_auto_entry(const char* memo);
 
 private:
 	// disallow copy
