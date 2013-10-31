@@ -146,12 +146,13 @@
  012061 SKIN TEMPERATURE                                                 K                          1            0  12 K                         1          4
  012063 BRIGHTNESS TEMPERATURE                                           K                          1            0  12 K                         1          4
  012101 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          2            0  16 K                         2          5             
- 012102 WET-BULB TEMPERATURE                                             K                          2            0  16 C                         2         4              
+ 012102 WET-BULB TEMPERATURE                                             K                          2            0  16 C                         2          4              
  012103 DEW-POINT TEMPERATURE                                            K                          2            0  16 K                         2          5              
  012121 GROUND MINIMUM TEMPERATURE                                       K                          2            0  16 C                         2          4 
  012131 SNOW TEMPERATURE                                                 K                          2            0  16 C                         2          4 
  012192 POTENTIAL TEMPERATURE                                            K                          2            0  16 K                         2          5             
  012193 PSEUDO-EQUIVALENT POTENTIAL TEMPERATURE                          K                          2            0  16 K                         2          5             
+ 012194 [SIM] Air density                                                KG/M**3                    6            0  20 KG/M**3                   6          6
  013001 SPECIFIC HUMIDITY                                                KG/KG                      5            0  14 KG/KG                     5          5
  013002 MIXING RATIO                                                     KG/KG                      5            0  14 KG/KG                     5          5              
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
@@ -255,6 +256,10 @@
  015234 [SIM] Concentration of biogenic sec. org. in aerosol             KG/M**3                   10            0  20 KG/M**3                  10          6
  015235 [SIM] Concentration of ISOPA1 in PM10                            KG/M**3                   10            0  20 KG/M**3                  10          6
  015236 [SIM] C6H6 Concentration                                         KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015237 [SIM] Concentration of anthropogenic aerosol in PM10             KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015238 [SIM] Concentration of biogenic aerosol in PM10                  KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015239 [SIM] Concentration of anthropogenic aerosol in PM2.5            KG/M**3                   10            0  20 KG/M**3                  10          6
+ 015240 [SIM] Concentration of biogenic aerosol in PM2.5                 KG/M**3                   10            0  20 KG/M**3                  10          6
  020001 HORIZONTAL VISIBILITY                                            M                         -1            0  13 M                        -1          4
  020003 PRESENT WEATHER (SEE NOTE 1)                                     CODE TABLE 20003           0            0   9 CODE TABLE 20003          0          3
  020004 PAST WEATHER (1) (SEE NOTE 2)                                    CODE TABLE 20004           0            0   5 CODE TABLE 20004          0          2
