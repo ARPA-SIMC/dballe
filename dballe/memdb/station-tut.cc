@@ -39,15 +39,15 @@ template<> template<> void to::test<1>()
 
     // Insert a fixed station and check that all data is there
     const Station& stf = stations.obtain(44, 11, "synop");
-    wassert(actual(stf.coords.lat) == 44.0);
-    wassert(actual(stf.coords.lon) == 11.0);
+    wassert(actual(stf.coords.dlat()) == 44.0);
+    wassert(actual(stf.coords.dlon()) == 11.0);
     wassert(actual(stf.ident) == "");
     wassert(actual(stf.report) == "synop");
 
     // Insert a mobile station and check that all data is there
     const Station& stm = stations.obtain(44, 11, "LH1234", "airep");
-    wassert(actual(stm.coords.lat) == 44.0);
-    wassert(actual(stm.coords.lon) == 11.0);
+    wassert(actual(stm.coords.dlat()) == 44.0);
+    wassert(actual(stm.coords.dlon()) == 11.0);
     wassert(actual(stm.ident) == "LH1234");
     wassert(actual(stm.report) == "airep");
 

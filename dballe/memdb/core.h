@@ -33,11 +33,15 @@ namespace memdb {
 /// Coordinates
 struct Coord
 {
-    double lat;
-    double lon;
+    int lat;
+    int lon;
 
     Coord() {}
-    Coord(double lat, double lon) : lat(lat), lon(lon) {}
+    Coord(int lat, int lon) : lat(lat), lon(lon) {}
+    Coord(double lat, double lon);
+
+    double dlat() const;
+    double dlon() const;
 
     bool operator<(const Coord& c) const
     {
