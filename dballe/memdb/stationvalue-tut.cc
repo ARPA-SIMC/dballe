@@ -38,7 +38,7 @@ TESTGRP(memdb_stationvalue);
 template<> template<> void to::test<1>()
 {
     Stations stations;
-    const Station& stf = stations.obtain(44, 11, "synop");
+    const Station& stf = stations.obtain(Coord(44.0, 11.0), "synop");
 
     // Insert a station value and check that all data is there
     StationValues svalues;

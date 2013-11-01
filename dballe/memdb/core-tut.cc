@@ -33,6 +33,7 @@ struct memdb_core_shar
 
 TESTGRP(memdb_core);
 
+// Test Positions
 template<> template<> void to::test<1>()
 {
     Positions pa;

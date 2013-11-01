@@ -20,12 +20,7 @@
 #include "core/test-utils-core.h"
 #include "core/record.h"
 
-/*
-extern "C" {
-	dba_err dba_record_keyword_selftest();
-};
-*/
-
+using namespace wibble::tests;
 using namespace dballe;
 using namespace std;
 
@@ -398,6 +393,25 @@ void to::test<7>()
 
     ensure_equals(rec.get_level(), Level(9, 8));
     ensure_equals(rec.get_trange(), Trange(7, 6));
+}
+
+// Test getting/setting datetimes
+template<> template<>
+void to::test<8>()
+{
+    Record rec;
+    rec.set_datetime(2013, 11, 1, 12, 0, 0);
+    wassert(actual(rec.get_datetime()) == Datetime(2013, 11, 1, 12));
+
+    rec.set(Datetime(2012, 5, 15, 17, 30, 30));
+    int dt[6];
+    rec.get_datetime(dt);
+    wassert(actual(dt[0]) == 2012);
+    wassert(actual(dt[1]) == 5);
+    wassert(actual(dt[2]) == 15);
+    wassert(actual(dt[3]) == 17);
+    wassert(actual(dt[4]) == 30);
+    wassert(actual(dt[5]) == 30);
 }
 
 #if 0

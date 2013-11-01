@@ -30,27 +30,6 @@
 namespace dballe {
 namespace memdb {
 
-/// Coordinates
-struct Coord
-{
-    int lat;
-    int lon;
-
-    Coord() {}
-    Coord(int lat, int lon) : lat(lat), lon(lon) {}
-    Coord(double lat, double lon);
-
-    double dlat() const;
-    double dlon() const;
-
-    bool operator<(const Coord& c) const
-    {
-        if (lat < c.lat) return true;
-        if (lat > c.lat) return false;
-        return lon < c.lon;
-    }
-};
-
 /// Indices of elements inside a vector
 struct Positions : public std::set<size_t>
 {
@@ -85,30 +64,10 @@ template<typename T>
 struct Index : public std::map<T, Positions>
 {
     /// Lookup all positions for a value
-    Positions search(const T& el) const
-    {
-        typename std::map<T, Positions>::const_iterator i = this->find(el);
-        if (i == this->end())
-            return Positions();
-        else
-            return i->second;
-    }
+    Positions search(const T& el) const;
 
     /// Refine a Positions set with the results of this lookup
-    void refine(const T& el, Positions& res)
-    {
-        if (res.empty()) return;
-
-        typename std::map<T, Positions>::const_iterator i = this->find(el);
-        // If we have no results, the result set becomes empty
-        if (i == this->end())
-        {
-            res.clear();
-            return;
-        }
-
-        res.inplace_intersect(i->second);
-    }
+    void refine(const T& el, Positions& res);
 };
 
 template<typename T>

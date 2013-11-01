@@ -20,6 +20,7 @@
  */
 
 #include "station.h"
+#include <dballe/core/record.h>
 #include <iostream>
 
 using namespace std;
@@ -30,10 +31,9 @@ namespace memdb {
 Stations::Stations() : ValueStorage<Station>() {}
 
 
-const Station& Stations::obtain(double lat, double lon, const std::string& report)
+const Station& Stations::obtain(const Coord& coords, const std::string& report)
 {
     // Search
-    Coord coords(lat, lon);
     Positions res = by_coord.search(coords);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
         if (get(*i) && !get(*i)->mobile && get(*i)->report == report)
@@ -47,10 +47,9 @@ const Station& Stations::obtain(double lat, double lon, const std::string& repor
     return *get(pos);
 }
 
-const Station& Stations::obtain(double lat, double lon, const std::string& ident, const std::string& report)
+const Station& Stations::obtain(const Coord& coords, const std::string& ident, const std::string& report)
 {
     // Search
-    Coord coords(lat, lon);
     Positions res = by_coord.search(coords);
     by_ident.refine(ident, res);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)

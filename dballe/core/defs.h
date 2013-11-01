@@ -166,6 +166,104 @@ struct Trange
 
 std::ostream& operator<<(std::ostream& out, const Trange& l);
 
+/// Coordinates
+struct Coord
+{
+    /// Latitude multiplied by 100000 (5 significant digits preserved)
+    int lat;
+    /// Longitude normalised from -180.0 to 180.0 and multiplied by 100000 (5
+    /// significant digits preserved) 
+    int lon;
+
+    Coord() {}
+    Coord(int lat, int lon);
+    Coord(double lat, double lon);
+
+    double dlat() const;
+    double dlon() const;
+
+    bool operator<(const Coord& c) const
+    {
+        if (lat < c.lat) return true;
+        if (lat > c.lat) return false;
+        return lon < c.lon;
+    }
+
+    bool operator==(const Coord& c) const
+    {
+        return lat == c.lat && lon == c.lon;
+    }
+
+    bool operator!=(const Coord& c) const
+    {
+        return lat != c.lat || lon != c.lon;
+    }
+};
+
+std::ostream& operator<<(std::ostream& out, const Coord& c);
+
+// Simple date structure
+struct Date
+{
+    unsigned short year;
+    unsigned char month;
+    unsigned char day;
+
+    Date(unsigned short year, unsigned char month=1, unsigned char day=1)
+        : year(year), month(month), day(day)
+    {
+    }
+
+    bool operator<(const Date& dt) const
+    {
+        if (year < dt.year) return true;
+        if (year > dt.year) return false;
+        if (month < dt.month) return true;
+        if (month > dt.month) return false;
+        return day < dt.day;
+    }
+
+    bool operator==(const Date& dt) const
+    {
+        return year == dt.year && month == dt.month && day == dt.day;
+    }
+
+    bool operator!=(const Date& dt) const
+    {
+        return year != dt.year || month != dt.month || day != dt.day;
+    }
+};
+
+std::ostream& operator<<(std::ostream& out, const Date& dt);
+
+/// Simple datetime structure
+struct Datetime : public Date
+{
+    unsigned char hour;
+    unsigned char minute;
+    unsigned char second;
+
+    Datetime(unsigned short year, unsigned char month=1, unsigned char day=1,
+             unsigned char hour=0, unsigned char minute=0, unsigned char second=0)
+        : Date(year, month, day), hour(hour), minute(minute), second(second)
+    {
+    }
+
+    bool operator==(const Datetime& dt) const
+    {
+        if (!Date::operator==(dt)) return false;
+        return hour == dt.hour && minute == dt.minute && second == dt.second;
+    }
+
+    bool operator!=(const Datetime& dt) const
+    {
+        if (!Date::operator!=(dt)) return false;
+        return hour != dt.hour || minute != dt.minute || second != dt.second;
+    }
+};
+
+std::ostream& operator<<(std::ostream& out, const Datetime& dt);
+
 }
 
 // vim:set ts=4 sw=4:

@@ -324,6 +324,8 @@ public:
 
 	Level get_level() const;
 	Trange get_trange() const;
+    Datetime get_datetime() const;
+    void set(const Datetime& dt);
 	void get_datetime(int (&val)[6]) const;
 	void set_datetime(const int (&val)[6]);
     void set_datetime(int ye, int mo=1, int da=1, int ho=0, int mi=0, int se=0);
@@ -332,6 +334,9 @@ public:
 	 * Set the date, level and timerange values to match the anagraphical context.
 	 */
 	void set_ana_context();
+
+    /// Check if this record is set to the ana context
+    bool is_ana_context() const;
 
     /// Return the varcode-sorted vector with the variables
     const std::vector<wreport::Var*>& vars() const;

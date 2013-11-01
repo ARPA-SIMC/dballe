@@ -23,6 +23,7 @@
 #define DBA_MEMDB_STATION_H
 
 #include <dballe/memdb/core.h>
+#include <dballe/core/defs.h>
 #include <string>
 
 namespace dballe {
@@ -60,10 +61,10 @@ public:
     Stations();
 
     /// Get a fixed Station record
-    const Station& obtain(double lat, double lon, const std::string& report);
+    const Station& obtain(const Coord& coords, const std::string& report);
 
     /// Get a mobile Station record
-    const Station& obtain(double lat, double lon, const std::string& ident, const std::string& report);
+    const Station& obtain(const Coord& coords, const std::string& ident, const std::string& report);
 };
 
 }

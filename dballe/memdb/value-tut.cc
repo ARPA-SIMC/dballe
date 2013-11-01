@@ -38,7 +38,7 @@ TESTGRP(memdb_value);
 template<> template<> void to::test<1>()
 {
     Stations stations;
-    const Station& stf = stations.obtain(44, 11, "synop");
+    const Station& stf = stations.obtain(Coord(44.0, 11.0), "synop");
 
     LevTrs levtrs;
     const LevTr& levtr = levtrs.obtain(Level(1), Trange::instant());

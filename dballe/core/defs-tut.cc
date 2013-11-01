@@ -21,6 +21,7 @@
 #include "core/defs.h"
 
 using namespace dballe;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -67,6 +68,13 @@ void to::test<3>()
 			"Instantaneous value");
 	ensure_equals(Trange(2, 0, 43200).describe(), "Maximum over 12h at forecast time 0");
 	ensure_equals(Trange(3, 194400, 43200).describe(), "Minimum over 12h at forecast time 2d 6h");
+}
+
+// Test Coord
+template<> template<>
+void to::test<4>()
+{
+    wassert(actual(Coord(44.0, 11.0)) == Coord(44.0, 360.0+11.0));
 }
 
 }

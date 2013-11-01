@@ -220,11 +220,11 @@ dist_noinst_HEADERS = \
 
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
-	core/tests/aliases.cc \
-	core/tests/defs.cc \
-	core/tests/rawmsg.cc \
-	core/tests/file.cc \
-	core/tests/record.cc \
+	core/aliases-tut.cc \
+	core/defs-tut.cc \
+	core/rawmsg-tut.cc \
+	core/file-tut.cc \
+	core/record-tut.cc \
 	core/csv-tut.cc \
 	core/matcher-tut.cc \
 	core/match-wreport-tut.cc \

@@ -587,6 +587,27 @@ void Record::set_datetime(const int (&val)[6])
     set(DBA_KEY_SEC,   val[5]);
 }
 
+Datetime Record::get_datetime() const
+{
+    return Datetime(
+        get(DBA_KEY_YEAR).enqi(),
+        get(DBA_KEY_MONTH, 1),
+        get(DBA_KEY_DAY, 1),
+        get(DBA_KEY_HOUR, 0),
+        get(DBA_KEY_MIN, 0),
+        get(DBA_KEY_SEC, 0));
+}
+
+void Record::set(const Datetime& dt)
+{
+    set(DBA_KEY_YEAR,  (int)dt.year);
+    set(DBA_KEY_MONTH, (int)dt.month);
+    set(DBA_KEY_DAY,   (int)dt.day);
+    set(DBA_KEY_HOUR,  (int)dt.hour);
+    set(DBA_KEY_MIN,   (int)dt.minute);
+    set(DBA_KEY_SEC,   (int)dt.second);
+}
+
 void Record::set_datetime(int ye, int mo, int da, int ho, int mi, int se)
 {
     set(DBA_KEY_YEAR,  ye);
@@ -613,6 +634,11 @@ void Record::set_ana_context()
 	unset(DBA_KEY_P1);
 	unset(DBA_KEY_P2);
 	/* DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, 254)); */
+}
+
+bool Record::is_ana_context() const
+{
+    return get(DBA_KEY_YEAR, 1000) == 1000;
 }
 
 void Record::set_from_string(const char* str)

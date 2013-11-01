@@ -9,25 +9,6 @@ using namespace std;
 namespace dballe {
 namespace memdb {
 
-std::ostream& operator<<(std::ostream& out, const Date& dt)
-{
-    out <<        setw(4) << setfill('0') << dt.year
-        << '-' << setw(2) << setfill('0') << (unsigned)dt.month
-        << '-' << setw(2) << setfill('0') << (unsigned)dt.day;
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const Datetime& dt)
-{
-    out <<        setw(4) << setfill('0') << dt.year
-        << '-' << setw(2) << setfill('0') << (unsigned)dt.month
-        << '-' << setw(2) << setfill('0') << (unsigned)dt.day
-        << 'T' << setw(2) << setfill('0') << (unsigned)dt.hour
-        << ':' << setw(2) << setfill('0') << (unsigned)dt.minute
-        << ':' << setw(2) << setfill('0') << (unsigned)dt.second;
-    return out;
-}
-
 Value::~Value()
 {
     delete var;

@@ -28,6 +28,9 @@
 #include <cstring>
 #include "dballe/core/vasprintf.h"
 #include "dballe/core/record.h"
+#include <math.h>
+#include <ostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -292,6 +295,55 @@ std::string Trange::describe() const
 	}
 }
 
+
+// Normalise longitude values to the [-180..180[ interval
+static inline int normalon(int lon)
+{
+    return ((lon + 18000000) % 36000000) - 18000000;
+}
+
+
+Coord::Coord(int lat, int lon)
+    : lat(lat),
+      lon(normalon(lon))
+{
+}
+
+Coord::Coord(double lat, double lon)
+    : lat(lround(lat * 100000)),
+      lon(normalon(lround(lon * 100000)))
+{
+}
+
+double Coord::dlat() const { return (double)lat/100000.0; }
+double Coord::dlon() const { return (double)lon/100000.0; }
+
+std::ostream& operator<<(std::ostream& out, const Coord& c)
+{
+    out << "(" << setprecision(5) << c.dlat()
+        << "," << setprecision(5) << c.dlon()
+        << ")";
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const Date& dt)
+{
+    out <<        setw(4) << setfill('0') << dt.year
+        << '-' << setw(2) << setfill('0') << (unsigned)dt.month
+        << '-' << setw(2) << setfill('0') << (unsigned)dt.day;
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const Datetime& dt)
+{
+    out <<        setw(4) << setfill('0') << dt.year
+        << '-' << setw(2) << setfill('0') << (unsigned)dt.month
+        << '-' << setw(2) << setfill('0') << (unsigned)dt.day
+        << 'T' << setw(2) << setfill('0') << (unsigned)dt.hour
+        << ':' << setw(2) << setfill('0') << (unsigned)dt.minute
+        << ':' << setw(2) << setfill('0') << (unsigned)dt.second;
+    return out;
+}
 
 } // namespace dballe
 
