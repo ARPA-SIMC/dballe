@@ -56,6 +56,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	memdb/stationvalue.h \
 	memdb/levtr.h \
 	memdb/value.h \
+	memdb/memdb.h \
 	msg/codec.h \
 	msg/context.h \
 	msg/vars.h \
@@ -117,6 +118,7 @@ libdballe_la_SOURCES = \
 	memdb/levtr.cc \
 	memdb/core.cc \
 	memdb/value.cc \
+	memdb/memdb.cc \
 	msg/repinfo.cc \
 	msg/vars.cc \
 	msg/context.cc \
@@ -235,6 +237,7 @@ tut_test_SOURCES = \
 	memdb/stationvalue-tut.cc \
 	memdb/levtr-tut.cc \
 	memdb/value-tut.cc \
+	memdb/memdb-tut.cc \
 	msg/test-utils-msg.cc \
 	msg/tests/vars.cc \
 	msg/tests/context.cc \
