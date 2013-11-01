@@ -43,6 +43,11 @@ struct db1_shar : public dballe::tests::DB_test_base
     void test_query_step_by_step();
     void test_double_stationinfo_insert();
     void test_double_stationinfo_insert1();
+    void test_insert_undef_lev2();
+    void test_query_undef_lev2();
+    void test_query_bad_attr_filter();
+    void test_querybest_priomax();
+    void test_repmemo_in_output();
 
     dballe::tests::TestStation st1;
     dballe::tests::TestStation st2;
@@ -562,7 +567,188 @@ void db1_shar::test_double_stationinfo_insert1()
     wassert(actual(cur->get_rep_memo()) == "metar");
 }
 
+template<> template<> void to::test<34>() { use_db(V5); test_insert_undef_lev2(); }
+template<> template<> void to::test<35>() { use_db(V6); test_insert_undef_lev2(); }
+template<> template<> void to::test<36>() { use_db(MEM); test_insert_undef_lev2(); }
+void db1_shar::test_insert_undef_lev2()
+{
+    // Insert with undef leveltype2 and l2
+    use_db();
+    wruntest(populate_database);
 
+    dballe::tests::TestRecord dataset = dataset0;
+    dataset.data.unset(WR_VAR(0, 1, 11));
+    dataset.data.set(DBA_KEY_LEVELTYPE1, 44);
+    dataset.data.set(DBA_KEY_L1, 55);
+    dataset.data.unset(DBA_KEY_LEVELTYPE2);
+    dataset.data.unset(DBA_KEY_L2);
+    wruntest(dataset.insert, *db, true);
+
+    // Query it back
+    query.clear();
+    query.set(DBA_KEY_LEVELTYPE1, 44);
+    query.set(DBA_KEY_L1, 55);
+
+    auto_ptr<db::Cursor> cur = db->query_data(query);
+    ensure_equals(cur->remaining(), 1);
+
+    ensure(cur->next());
+    result.clear();
+    cur->to_record(result);
+
+    ensure(result.key_peek(DBA_KEY_LEVELTYPE1) != NULL);
+    ensure_equals(result[DBA_KEY_LEVELTYPE1].enqi(), 44);
+    ensure(result.key_peek(DBA_KEY_L1) != NULL);
+    ensure_equals(result[DBA_KEY_L1].enqi(), 55);
+    ensure(result.key_peek(DBA_KEY_LEVELTYPE2) != NULL);
+    ensure_equals(result[DBA_KEY_LEVELTYPE2].enqi(), MISSING_INT);
+    ensure(result.key_peek(DBA_KEY_L2) != NULL);
+    ensure_equals(result[DBA_KEY_L2].enqi(), MISSING_INT);
+
+    ensure(!cur->next());
+}
+
+template<> template<> void to::test<37>() { use_db(V5); test_query_undef_lev2(); }
+template<> template<> void to::test<38>() { use_db(V6); test_query_undef_lev2(); }
+template<> template<> void to::test<39>() { use_db(MEM); test_query_undef_lev2(); }
+void db1_shar::test_query_undef_lev2()
+{
+    // Query with undef leveltype2 and l2
+    use_db();
+    wruntest(populate_database);
+
+    query.clear();
+    query.set(DBA_KEY_LEVELTYPE1, 10);
+    query.set(DBA_KEY_L1, 11);
+
+    auto_ptr<db::Cursor> cur = db->query_data(query);
+    ensure_equals(cur->remaining(), 4);
+    cur->discard_rest();
+}
+
+
+template<> template<> void to::test<40>() { use_db(V5); test_query_bad_attr_filter(); }
+template<> template<> void to::test<41>() { use_db(V6); test_query_bad_attr_filter(); }
+template<> template<> void to::test<42>() { use_db(MEM); test_query_bad_attr_filter(); }
+void db1_shar::test_query_bad_attr_filter()
+{
+    // Query with an incorrect attr_filter
+    use_db();
+    wruntest(populate_database);
+
+    query.clear();
+    query.set(DBA_KEY_ATTR_FILTER, "B12001");
+
+    try {
+        db->query_data(query);
+    } catch (error_consistency& e) {
+        ensure_contains(e.what(), "B12001 is not a valid filter");
+    }
+}
+
+template<> template<> void to::test<43>() { use_db(V5); test_querybest_priomax(); }
+template<> template<> void to::test<44>() { use_db(V6); test_querybest_priomax(); }
+template<> template<> void to::test<45>() { use_db(MEM); test_querybest_priomax(); }
+void db1_shar::test_querybest_priomax()
+{
+    // Test querying priomax together with query=best
+    use_db();
+    // Start with an empty database
+    db->reset();
+
+    // Prepare the common parts of some data
+    insert.clear();
+    insert.set(DBA_KEY_LAT, 1);
+    insert.set(DBA_KEY_LON, 1);
+    insert.set(Level(1, 0));
+    insert.set(Trange(254, 0, 0));
+    insert.set_datetime(2009, 11, 11, 0, 0, 0);
+
+    //  1,synop,synop,101,oss,0
+    //  2,metar,metar,81,oss,0
+    //  3,temp,sounding,98,oss,2
+    //  4,pilot,wind profile,80,oss,2
+    //  9,buoy,buoy,50,oss,31
+    // 10,ship,synop ship,99,oss,1
+    // 11,tempship,temp ship,100,oss,2
+    // 12,airep,airep,82,oss,4
+    // 13,amdar,amdar,97,oss,4
+    // 14,acars,acars,96,oss,4
+    // 42,pollution,pollution,199,oss,8
+    // 200,satellite,NOAA satellites,41,oss,255
+    // 255,generic,generic data,1000,?,255
+    static int rep_cods[] = { 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 42, 200, 255, -1 };
+
+    for (int* i = rep_cods; *i != -1; ++i)
+    {
+        insert.set(DBA_KEY_REP_COD, *i);
+        insert.set(WR_VAR(0, 12, 101), *i);
+        db->insert(insert, false, true);
+        insert.unset(DBA_KEY_CONTEXT_ID);
+    }
+
+    // Query with querybest only
+    {
+        query.clear();
+        query.set(DBA_KEY_QUERY, "best");
+        query.set_datetime(2009, 11, 11, 0, 0, 0);
+        query.set(DBA_KEY_VAR, "B12101");
+        auto_ptr<db::Cursor> cur = db->query_data(query);
+
+        ensure_equals(cur->remaining(), 1);
+
+        ensure(cur->next());
+        result.clear();
+        cur->to_record(result);
+
+        ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
+        ensure_equals(result[DBA_KEY_REP_COD].enqi(), 255);
+
+        cur->discard_rest();
+    }
+
+    //db->dump(stderr);
+    //system("bash");
+
+    // Query with querybest and priomax
+    {
+        query.clear();
+        query.set(DBA_KEY_PRIOMAX, 100);
+        query.set(DBA_KEY_QUERY, "best");
+        query.set_datetime(2009, 11, 11, 0, 0, 0);
+        query.set(DBA_KEY_VAR, "B12101");
+        auto_ptr<db::Cursor> cur = db->query_data(query);
+        ensure_equals(cur->remaining(), 1);
+
+        ensure(cur->next());
+        result.clear();
+        cur->to_record(result);
+
+        ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
+        ensure_equals(result[DBA_KEY_REP_COD].enqi(), 11);
+
+        cur->discard_rest();
+    }
+}
+
+template<> template<> void to::test<46>() { use_db(V5); test_repmemo_in_output(); }
+template<> template<> void to::test<47>() { use_db(V6); test_repmemo_in_output(); }
+template<> template<> void to::test<48>() { use_db(MEM); test_repmemo_in_output(); }
+void db1_shar::test_repmemo_in_output()
+{
+    // Ensure that rep_memo is set in the results
+    use_db();
+    wruntest(populate_database);
+
+    Record res;
+    Record rec;
+    auto_ptr<db::Cursor> cur = db->query_data(rec);
+    while (cur->next())
+    {
+        cur->to_record(res);
+        ensure(res.key_peek_value(DBA_KEY_REP_MEMO) != 0);
+    }
+}
 
 }
 
