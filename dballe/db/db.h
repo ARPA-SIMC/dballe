@@ -67,6 +67,7 @@ struct Connection;
 typedef enum {
     V5 = 0,
     V6 = 1,
+    MEM = 2,
 } Format;
 
 /**
@@ -203,6 +204,11 @@ public:
      *   The url-like connection descriptor
      */
     static std::auto_ptr<DB> connect_from_url(const char* url);
+
+    /**
+     * Create an in-memory database
+     */
+    static std::auto_ptr<DB> connect_memory();
 
     /**
      * Start a test session with DB-All.e

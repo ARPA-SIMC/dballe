@@ -29,6 +29,10 @@ using namespace dballe::memdb;
 
 namespace dballe {
 
+Memdb::Memdb()
+{
+}
+
 void Memdb::insert_or_replace(const Record& rec)
 {
     const Station& station = stations.obtain(rec);

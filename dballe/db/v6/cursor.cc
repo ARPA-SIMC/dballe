@@ -23,6 +23,7 @@
 #include "qbuilder.h"
 #include "db.h"
 #include "dballe/db/internals.h"
+#include "dballe/db/modifiers.h"
 #include "dballe/db/v6/repinfo.h"
 
 #include <wreport/var.h>

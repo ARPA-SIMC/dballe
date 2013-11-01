@@ -1,6 +1,4 @@
 /*
- * memdb/memdb - In-memory indexed storage of DB-All.e data
- *
  * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,37 +17,35 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBA_MEMDB_MEMDB_H
-#define DBA_MEMDB_MEMDB_H
+#include "db/test-utils-db.h"
+#include "modifiers.h"
 
-#include <dballe/memdb/station.h>
-#include <dballe/memdb/stationvalue.h>
-#include <dballe/memdb/levtr.h>
-#include <dballe/memdb/value.h>
+using namespace dballe;
+using namespace dballe::db;
+using namespace wibble::tests;
+using namespace wreport;
+using namespace std;
 
-namespace dballe {
-struct Record;
-struct Msg;
+namespace tut {
 
-/// In-memory database backend
-struct Memdb
+struct db_modifiers_shar
 {
-    memdb::Stations stations;
-    memdb::StationValues stationvalues;
-    memdb::LevTrs levtrs;
-    memdb::Values values;
+    db_modifiers_shar()
+    {
+    }
 
-    Memdb();
-
-    void insert_or_replace(const Record& rec);
-    void insert_or_replace(const Msg& msg);
-
-private:
-    Memdb(const Memdb&);
-    Memdb& operator=(const Memdb&);
+    ~db_modifiers_shar()
+    {
+    }
 };
+TESTGRP(db_modifiers);
 
+template<> template<>
+void to::test<1>()
+{
+    Record rec;
+    rec.set("query", "best");
+    wassert(actual(db::parse_modifiers(rec)) == DBA_DB_MODIFIER_BEST);
 }
 
-#endif
-
+}

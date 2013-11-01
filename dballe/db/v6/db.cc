@@ -21,6 +21,7 @@
 
 #include "db.h"
 #include "dballe/db/internals.h"
+#include "dballe/db/modifiers.h"
 #include "dballe/db/v6/repinfo.h"
 #include "dballe/db/v5/station.h"
 #include "lev_tr.h"
@@ -766,62 +767,9 @@ void DB::vacuum()
         m_lev_tr_cache->invalidate();
 }
 
-/// Read rec["query"] to add extra modifiers
-static void scan_modifiers(const Record& rec, unsigned int& modifiers)
-{
-    /* Decode query modifiers */
-    const char* val = rec.key_peek_value(DBA_KEY_QUERY);
-    if (!val) return;
-
-    const char* s = val;
-    while (*s)
-    {
-        size_t len = strcspn(s, ",");
-        int got = 1;
-        switch (len)
-        {
-            case 0:
-                /* If it's an empty token, skip it */
-                break;
-            case 4:
-                /* "best": if more values exist in a point, get only the
-                   best one */
-                if (strncmp(s, "best", 4) == 0)
-                    modifiers |= DBA_DB_MODIFIER_BEST;
-                else
-                    got = 0;
-                break;
-            case 6:
-                /* "bigana": optimize with date first */
-                if (strncmp(s, "bigana", 6) == 0)
-                    modifiers |= DBA_DB_MODIFIER_BIGANA;
-                else if (strncmp(s, "nosort", 6) == 0)
-                    modifiers |= DBA_DB_MODIFIER_UNSORTED;
-                else if (strncmp(s, "stream", 6) == 0)
-                    modifiers |= DBA_DB_MODIFIER_STREAM;
-                else
-                    got = 0;
-                break;
-            default:
-                got = 0;
-                break;
-        }
-
-        /* Check that we parsed it correctly */
-        if (!got)
-            error_consistency::throwf("Query modifier \"%.*s\" is not recognized", (int)len, s);
-
-        /* Move to the next token */
-        s += len;
-        if (*s == ',')
-            ++s;
-    }
-}
-
 std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 {
-    unsigned int modifiers = DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
-    scan_modifiers(query, modifiers);
+    unsigned int modifiers = parse_modifiers(query) | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
     auto_ptr<Cursor> res(new CursorStations(*this, modifiers));
     res->query(query);
     return auto_ptr<db::Cursor>(res.release());
@@ -829,8 +777,7 @@ std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 
 std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 {
-    unsigned int modifiers = 0;
-    scan_modifiers(query, modifiers);
+    unsigned int modifiers = parse_modifiers(query);
     auto_ptr<Cursor> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
         res.reset(new CursorBest(*this, modifiers));

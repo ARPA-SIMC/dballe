@@ -22,6 +22,7 @@
 #include "db/v5/db.h"
 #include "db/v5/cursor.h"
 #include "db/internals.h"
+#include "db/modifiers.h"
 
 using namespace dballe;
 using namespace dballe::db;

@@ -79,6 +79,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/odbcworkarounds.h \
 	db/querybuf.h \
 	db/internals.h \
+	db/modifiers.h \
 	db/db.h \
 	db/v5/attr.h \
 	db/v5/context.h \
@@ -94,6 +95,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
 	db/v6/data.h \
+	db/mem/db.h \
 	cmdline/dbadb.h \
 	simple/dbapi.h
 endif
@@ -162,6 +164,7 @@ if DO_DBALLE_DB
 libdballe_la_SOURCES += \
 	db/querybuf.cc \
 	db/internals.cc \
+	db/modifiers.cc \
 	db/db.cc \
 	db/v5/repinfo.cc \
 	db/v5/station.cc \
@@ -181,6 +184,7 @@ libdballe_la_SOURCES += \
 	db/v6/qbuilder.cc \
 	db/v6/import.cc \
 	db/v6/export.cc \
+	db/mem/db.cc \
 	cmdline/dbadb.cc \
 	simple/dbapi.cc
 endif
@@ -260,6 +264,7 @@ tut_test_SOURCES += \
 	db/test-utils-db.cc \
 	db/tests/querybuf.cc \
 	db/tests/internals.cc \
+	db/modifiers-tut.cc \
 	db/db-tut.cc \
 	db/db1-tut.cc \
 	db/db-import-tut.cc \
@@ -274,6 +279,7 @@ tut_test_SOURCES += \
 	db/v6/tests/data.cc \
 	db/v6/tests/attr.cc \
 	db/v6/tests/db.cc \
+	db/mem/db-tut.cc \
 	cmdline/dbadb-tut.cc \
 	simple/dbapi-tut.cc
 endif

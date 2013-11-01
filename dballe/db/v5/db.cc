@@ -21,6 +21,7 @@
 
 #include "db.h"
 #include "dballe/db/internals.h"
+#include "dballe/db/modifiers.h"
 #include "repinfo.h"
 #include "station.h"
 #include "context.h"

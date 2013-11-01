@@ -22,6 +22,7 @@
 #include "cursor.h"
 #include "db.h"
 #include "dballe/db/internals.h"
+#include "dballe/db/modifiers.h"
 #include "repinfo.h"
 
 #include <wreport/var.h>
@@ -761,57 +762,7 @@ void QueryBuilder::make_from()
 
 void QueryBuilder::init_modifiers(const Record& rec)
 {
-    /* Decode query modifiers */
-    const char* val = rec.key_peek_value(DBA_KEY_QUERY);
-    if (!val) return;
-
-    const char* s = val;
-    while (*s)
-    {
-        size_t len = strcspn(s, ",");
-        int got = 1;
-        switch (len)
-        {
-            case 0:
-                /* If it's an empty token, skip it */
-                break;
-            case 4:
-                /* "best": if more values exist in a point, get only the
-                   best one */
-                if (strncmp(s, "best", 4) == 0)
-                {
-                    modifiers |= DBA_DB_MODIFIER_BEST;
-                    from_wanted |= DBA_DB_FROM_D;
-                    from_wanted |= DBA_DB_FROM_RI;
-                }
-                else
-                    got = 0;
-                break;
-            case 6:
-                /* "bigana": optimize with date first */
-                if (strncmp(s, "bigana", 6) == 0)
-                    modifiers |= DBA_DB_MODIFIER_BIGANA;
-                else if (strncmp(s, "nosort", 6) == 0)
-                    modifiers |= DBA_DB_MODIFIER_UNSORTED;
-                else if (strncmp(s, "stream", 6) == 0)
-                    modifiers |= DBA_DB_MODIFIER_STREAM;
-                else
-                    got = 0;
-                break;
-            default:
-                got = 0;
-                break;
-        }
-
-        /* Check that we parsed it correctly */
-        if (!got)
-            error_consistency::throwf("Query modifier \"%.*s\" is not recognized", (int)len, s);
-
-        /* Move to the next token */
-        s += len;
-        if (*s == ',')
-            ++s;
-    }
+    modifiers = parse_modifiers(rec);
 }
 
 void QueryBuilder::add_to_orderby(const char* fields)

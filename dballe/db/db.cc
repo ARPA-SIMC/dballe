@@ -22,6 +22,7 @@
 #include "db.h"
 #include "v5/db.h"
 #include "v6/db.h"
+#include "mem/db.h"
 #include "internals.h"
 #include <wreport/error.h>
 #include <cstring>
@@ -59,6 +60,7 @@ void DB::set_default_format(Format format) { default_format = format; }
 
 bool DB::is_url(const char* str)
 {
+    if (strncmp(str, "mem:", 4) == 0) return true;
     if (strncmp(str, "sqlite:", 7) == 0) return true;
     if (strncmp(str, "odbc://", 7) == 0) return true;
     if (strncmp(str, "test:", 5) == 0) return true;
@@ -126,6 +128,10 @@ auto_ptr<DB> DB::connect_from_url(const char* url)
     {
         return connect_from_file(url + 7);
     }
+    if (strncmp(url, "mem:", 4) == 0)
+    {
+        return connect_memory();
+    }
     if (strncmp(url, "odbc://", 7) == 0)
     {
         string buf(url + 7);
@@ -156,8 +162,16 @@ auto_ptr<DB> DB::connect_from_url(const char* url)
     error_consistency::throwf("unknown url \"%s\"", url);
 }
 
+auto_ptr<DB> DB::connect_memory()
+{
+    return auto_ptr<DB>(new mem::DB());
+}
+
 auto_ptr<DB> DB::connect_test()
 {
+    if (default_format == MEM)
+        return connect_memory();
+
     const char* envurl = getenv("DBA_DB");
     if (envurl != NULL)
         return connect_from_url(envurl);
