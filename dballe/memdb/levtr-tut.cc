@@ -45,6 +45,13 @@ template<> template<> void to::test<1>()
     // Check that lookup returns the same element
     const LevTr& val1 = values.obtain(Level(1), Trange::instant());
     wassert(actual(&val1) == &val);
+
+    // Check again, looking up records
+    Record rec;
+    rec.set(Level(1));
+    rec.set(Trange::instant());
+    const LevTr& val2 = values.obtain(rec);
+    wassert(actual(&val2) == &val);
 }
 
 }

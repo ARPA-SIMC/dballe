@@ -57,6 +57,21 @@ template<> template<> void to::test<1>()
     const Station& stm1 = stations.obtain(Coord(44.0, 11.0), "LH1234", "airep");
     wassert(actual(&stm1) == &stm);
 
+    // Check again, looking up records
+    Record sfrec;
+    sfrec.set(DBA_KEY_LAT, 44.0);
+    sfrec.set(DBA_KEY_LON, 11.0);
+    sfrec.set(DBA_KEY_REP_MEMO, "synop");
+    const Station& stf2 = stations.obtain(sfrec);
+    wassert(actual(&stf2) == &stf);
+
+    Record smrec;
+    smrec.set(DBA_KEY_LAT, 44.0);
+    smrec.set(DBA_KEY_LON, 11.0);
+    smrec.set(DBA_KEY_IDENT, "LH1234");
+    smrec.set(DBA_KEY_REP_MEMO, "airep");
+    const Station& stm2 = stations.obtain(smrec);
+    wassert(actual(&stm2) == &stm);
 }
 
 }

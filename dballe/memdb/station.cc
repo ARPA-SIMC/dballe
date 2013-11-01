@@ -24,6 +24,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
 namespace memdb {
@@ -63,6 +64,34 @@ const Station& Stations::obtain(const Coord& coords, const std::string& ident, c
     by_ident[ident].insert(pos);
     // And return it
     return *get(pos);
+}
+
+const Station& Stations::obtain(const Record& rec)
+{
+    int s_lat;
+    if (const Var* var = rec.key_peek(DBA_KEY_LAT))
+        s_lat = var->enqi();
+    else
+        throw error_notfound("record with no latitude, looking up a memdb Station");
+
+    int s_lon;
+    if (const Var* var = rec.key_peek(DBA_KEY_LON))
+        s_lon = var->enqi();
+    else
+        throw error_notfound("record with no longitude, looking up a memdb Station");
+
+    const char* s_ident = rec.key_peek_value(DBA_KEY_IDENT);
+
+    const char* s_report;
+    if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
+        s_report = memo;
+    else
+        throw error_notfound("record with no rep_memo, looking up a memdb Station");
+
+    if (s_ident)
+        return obtain(Coord(s_lat, s_lon), s_ident, s_report);
+    else
+        return obtain(Coord(s_lat, s_lon), s_report);
 }
 
 }

@@ -20,6 +20,7 @@
  */
 
 #include "levtr.h"
+#include <dballe/core/record.h>
 #include <iostream>
 
 using namespace std;
@@ -46,6 +47,11 @@ const LevTr& LevTrs::obtain(const Level& level, const Trange& trange)
     by_trange[trange].insert(pos);
     // And return it
     return *get(pos);
+}
+
+const LevTr& LevTrs::obtain(const Record& rec)
+{
+    return obtain(rec.get_level(), rec.get_trange());
 }
 
 }

@@ -22,6 +22,7 @@
 #include "station.h"
 #include <iostream>
 
+using namespace wreport;
 using namespace std;
 
 namespace dballe {
@@ -32,13 +33,13 @@ StationValue::~StationValue()
     delete var;
 }
 
-void StationValue::replace(std::auto_ptr<wreport::Var> var)
+void StationValue::replace(std::auto_ptr<Var> var)
 {
     delete this->var;
     this->var = var.release();
 }
 
-const StationValue& StationValues::insert_or_replace(const Station& station, std::auto_ptr<wreport::Var> var)
+const StationValue& StationValues::insert_or_replace(const Station& station, std::auto_ptr<Var> var)
 {
     Positions res = by_station.search(&station);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
@@ -57,7 +58,13 @@ const StationValue& StationValues::insert_or_replace(const Station& station, std
 
 }
 
-bool StationValues::remove(const Station& station, wreport::Varcode code)
+const StationValue& StationValues::insert_or_replace(const Station& station, const Var& var)
+{
+    auto_ptr<Var> copy(new Var(var));
+    return insert_or_replace(station, copy);
+}
+
+bool StationValues::remove(const Station& station, Varcode code)
 {
     Positions res = by_station.search(&station);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)

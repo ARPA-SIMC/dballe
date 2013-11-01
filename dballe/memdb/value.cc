@@ -5,6 +5,7 @@
 #include <ostream>
 
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
 namespace memdb {
@@ -14,7 +15,7 @@ Value::~Value()
     delete var;
 }
 
-void Value::replace(std::auto_ptr<wreport::Var> var)
+void Value::replace(std::auto_ptr<Var> var)
 {
     delete this->var;
     this->var = var.release();
@@ -22,7 +23,7 @@ void Value::replace(std::auto_ptr<wreport::Var> var)
 
 const Value& Values::insert_or_replace(
         const Station& station, const LevTr& levtr,
-        const Datetime& datetime, std::auto_ptr<wreport::Var> var)
+        const Datetime& datetime, std::auto_ptr<Var> var)
 {
     Positions res = by_station.search(&station);
     by_levtr.refine(&levtr, res);
@@ -45,7 +46,15 @@ const Value& Values::insert_or_replace(
 
 }
 
-bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& datetime, wreport::Varcode code)
+const Value& Values::insert_or_replace(
+        const Station& station, const LevTr& levtr,
+        const Datetime& datetime, const Var& var)
+{
+    auto_ptr<Var> copy(new Var(var));
+    return insert_or_replace(station, levtr, datetime, copy);
+}
+
+bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& datetime, Varcode code)
 {
     Positions res = by_station.search(&station);
     by_levtr.refine(&levtr, res);

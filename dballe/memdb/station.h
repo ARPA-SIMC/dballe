@@ -27,6 +27,8 @@
 #include <string>
 
 namespace dballe {
+struct Record;
+
 namespace memdb {
 
 /// Station information
@@ -65,6 +67,9 @@ public:
 
     /// Get a mobile Station record
     const Station& obtain(const Coord& coords, const std::string& ident, const std::string& report);
+
+    /// Get a fixed or mobile Station record depending on the data in rec
+    const Station& obtain(const Record& rec);
 };
 
 }

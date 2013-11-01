@@ -26,6 +26,8 @@
 #include <dballe/core/defs.h>
 
 namespace dballe {
+struct Record;
+
 namespace memdb {
 
 /// Station information
@@ -50,6 +52,9 @@ public:
 
     /// Get a LevTr record
     const LevTr& obtain(const Level& level, const Trange& trange);
+
+    /// Get a LevTr record
+    const LevTr& obtain(const Record& rec);
 };
 
 }
