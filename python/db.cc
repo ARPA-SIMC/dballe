@@ -140,7 +140,6 @@ static PyObject* dpy_DB_reset(dpy_DB* self, PyObject *args)
 
 /*
 virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
-virtual const std::string& rep_memo_from_cod(int rep_cod) = 0;
 */
 
 static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)

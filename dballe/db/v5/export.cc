@@ -189,7 +189,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 		
             // Fill in report information
 			{
-				const char* memo = rep_memo_from_cod(cur.out_rep_cod).c_str();
+                const char* memo = cur.get_rep_memo();
                 msg->set_rep_memo(memo);
 				msg->type = Msg::type_from_repmemo(memo);
 			}

@@ -272,11 +272,6 @@ public:
     virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
 
     /**
-     * Get the report mnemonic from a report code
-     */
-    virtual const std::string& rep_memo_from_cod(int rep_cod) = 0;
-
-    /**
      * Get a mapping between rep_memo and their priorities
      */
     virtual std::map<std::string, int> get_repinfo_priorities() = 0;

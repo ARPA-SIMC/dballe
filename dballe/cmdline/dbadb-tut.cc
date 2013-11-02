@@ -18,9 +18,6 @@ struct dbadb_shar : public dballe::tests::db_test
         ensure_equals(dbadb::parse_op_report(*db, NULL), (const char*)NULL);
         ensure_equals(dbadb::parse_op_report(*db, ""), (const char*)NULL);
 
-        // Resolve from numbers
-        ensure_equals(string(dbadb::parse_op_report(*db, "1")), "synop");
-
         // Resolve from names
         ensure_equals(string(dbadb::parse_op_report(*db, "synop")), "synop");
 

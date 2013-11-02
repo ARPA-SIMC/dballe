@@ -526,13 +526,6 @@ int DB::rep_cod_from_memo(const char* memo)
     return repinfo().obtain_id(memo);
 }
 
-const std::string& DB::rep_memo_from_cod(int rep_cod)
-{
-    const v5::repinfo::Cache* c = repinfo().get_by_id(rep_cod);
-    if (c == NULL) error_notfound::throwf("looking for rep_memo corresponding to rep_cod '%d'", rep_cod);
-    return c->memo;
-}
-
 bool DB::check_rep_cod(int rep_cod)
 {
     return repinfo().has_id(rep_cod);

@@ -70,11 +70,6 @@ std::map<std::string, int> DB::get_repinfo_priorities()
     throw error_unimplemented("not yet implemented in MEM database");
 }
 
-const std::string& DB::rep_memo_from_cod(int rep_cod)
-{
-    throw error_unimplemented("not yet implemented in MEM database");
-}
-
 void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
     // Obtain the station

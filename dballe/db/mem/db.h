@@ -112,11 +112,6 @@ public:
     std::map<std::string, int> get_repinfo_priorities();
 
     /**
-     * Get the report mnemonic from a report code
-     */
-    const std::string& rep_memo_from_cod(int rep_cod);
-
-    /**
      * Insert a record into the database
      *
      * In a record with the same phisical situation already exists, the function

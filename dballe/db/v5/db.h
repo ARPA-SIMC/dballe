@@ -209,11 +209,6 @@ public:
 	int rep_cod_from_memo(const char* memo);
 
 	/**
-	 * Get the report mnemonic from a report code
-	 */
-	const std::string& rep_memo_from_cod(int rep_cod);
-
-	/**
 	 * Verify that a rep_cod is supported by the database
 	 *
 	 * @param rep_cod

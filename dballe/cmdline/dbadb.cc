@@ -37,16 +37,7 @@ const char* parse_op_report(DB& db, const char* name)
 {
     if (name != 0 && name[0] != 0)
     {
-        const char* s;
-        int is_cod = 1;
-        for (s = name; *s && is_cod; s++)
-            if (!isdigit(*s))
-                is_cod = 0;
-
-        if (is_cod)
-            return db.rep_memo_from_cod(strtoul(name, NULL, 0)).c_str();
-        else
-            return name;
+        return name;
     } else
         return NULL;
 }
