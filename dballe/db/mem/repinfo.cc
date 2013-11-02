@@ -136,7 +136,7 @@ void Repinfo::dump(FILE* out) const
 {
     for (std::map<std::string, int>::const_iterator i = priorities.begin();
             i != priorities.end(); ++i)
-        fprintf(out, "%s: %d\n", i->first.c_str(), i->second);
+        fprintf(out, " %s: %d\n", i->first.c_str(), i->second);
 }
 
 }

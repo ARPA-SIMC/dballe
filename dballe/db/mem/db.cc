@@ -119,8 +119,11 @@ std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 
 std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 {
-#if 0
     unsigned int modifiers = parse_modifiers(query);
+    Results<Value> res(memdb.values);
+    memdb.query_data(query, res);
+    return auto_ptr<db::Cursor>(new CursorData(*this, modifiers, res));
+#if 0
     auto_ptr<Cursor> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
         res.reset(new CursorBest(*this, modifiers));
@@ -129,7 +132,6 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
     res->query(query);
     return auto_ptr<db::Cursor>(res.release());
 #endif
-    throw error_unimplemented("not yet implemented in MEM database");
 }
 
 std::auto_ptr<db::Cursor> DB::query_summary(const Record& rec)
@@ -166,7 +168,7 @@ void DB::dump(FILE* out)
 {
     fprintf(out, "repinfo data:\n");
     repinfo.dump(out);
-    // TODO: dump memdb
+    memdb.dump(out);
 }
 
 void DB::import_msg(const Msg& msg, const char* repmemo, int flags)

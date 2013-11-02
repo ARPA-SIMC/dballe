@@ -22,12 +22,28 @@
 #ifndef DBA_MEMDB_QUERY_H
 #define DBA_MEMDB_QUERY_H
 
+#include <dballe/memdb/core.h>
 #include <vector>
 #include <cstddef>
 
+//#define TRACE_QUERY
+
+
 namespace dballe {
+
+namespace stl {
+template<typename T> struct Intersection;
+}
+
 namespace memdb {
 template<typename T> struct ValueStorage;
+
+#ifdef TRACE_QUERY
+void trace_query(const char* fmt, ...);
+#else
+#define trace_query(...) do {} while(0)
+#endif
+
 
 /// Base class for match functors
 template<typename T>
@@ -51,6 +67,13 @@ public:
 
     bool is_select_all() const { return select_all; }
 
+    // Set to an empty result set
+    void set_to_empty()
+    {
+        select_all = false;
+        indices.clear();
+    }
+
     /// Intersect with a singleton set
     void intersect(size_t pos);
 
@@ -64,16 +87,21 @@ public:
     {
         intersect(begin, end, &match);
     }
+
+    typedef std::vector<size_t>::const_iterator index_const_iterator;
+    index_const_iterator selected_index_begin() const { return indices.begin(); }
+    index_const_iterator selected_index_end() const { return indices.end(); }
 };
 
 /// Query results as a sorted vector of indices
 template<typename T>
 class Results : public BaseResults
 {
-protected:
+public:
     /// ValueStorage mapping indices to values
     const ValueStorage<T>& values;
 
+protected:
     struct AbstractIterator
     {
         virtual ~AbstractIterator() {}
@@ -93,7 +121,7 @@ protected:
         virtual bool next()
         {
             ++begin;
-            return begin == end;
+            return begin != end;
         }
         virtual AbstractIterator* clone() const
         {
@@ -110,6 +138,7 @@ protected:
     template<typename ITER>
     static IteratorImpl<ITER>* make_abstract_iter(const ITER& begin, const ITER& end)
     {
+        if (begin == end) return 0;
         return new IteratorImpl<ITER>(begin, end);
     }
 
@@ -117,10 +146,6 @@ public:
     Results(const ValueStorage<T>& values) : values(values) {}
 
     size_t size() const;
-
-    typedef std::vector<size_t>::const_iterator index_const_iterator;
-    index_const_iterator selected_index_begin() const { return indices.begin(); }
-    index_const_iterator selected_index_end() const { return indices.end(); }
 
     typename ValueStorage<T>::index_iterator all_index_begin() const { return values.index_begin(); }
     typename ValueStorage<T>::index_iterator all_index_end() const { return values.index_end(); }
@@ -210,6 +235,8 @@ protected:
     std::vector<Match<T>*> matches;
 
 public:
+    And() {}
+    And(Match<T>* f1, Match<T>* f2) { add(f1); add(f2); }
     ~And();
 
     /// Add a match to and, taking ownership of its memory management
@@ -222,20 +249,73 @@ private:
     And<T>& operator=(const And<T>&);
 };
 
+/// Build an And of filters step by step
+template<typename T>
+struct FilterBuilder
+{
+    Match<T>* filter;
+    And<T>* is_and; // When nonzero, it points to the same as 'filter'
+
+    FilterBuilder() : filter(0), is_and(0) {}
+    ~FilterBuilder()
+    {
+        if (filter) delete filter;
+    }
+
+    const Match<T>* get() const { return filter; }
+    const Match<T>& operator*() const { return *filter; }
+
+    void add(Match<T>* f)
+    {
+        if (!filter)
+            filter = f;
+        else if (!is_and)
+            filter = is_and = new And<T>(filter, f);
+        else
+            is_and->add(f);
+    }
+};
+
+template<typename T>
+struct Strategy
+{
+    stl::Intersection<Positions::const_iterator>* indices;
+    FilterBuilder<T> filter;
+
+    Strategy() : indices(0) {}
+    ~Strategy()
+    {
+        if (indices) delete indices;
+    }
+
+    void add(const Positions& p);
+
+    void add(Match<T>* f)
+    {
+        filter.add(f);
+    }
+
+    void activate(Results<T>& res) const;
+
+private:
+    Strategy(const Strategy<T>&);
+    Strategy<T> operator=(const Strategy<T>&);
+};
+
 template<typename T>
 class Idx2Values : public Match<size_t>
 {
 protected:
     const ValueStorage<T>& index;
-    const Match<const T&>& next;
+    const Match<T>& next;
 
 public:
-    Idx2Values(const ValueStorage<T>& index, const Match<const T&>& next) : index(index), next(next) {}
+    Idx2Values(const ValueStorage<T>& index, const Match<T>& next) : index(index), next(next) {}
 
     bool operator()(const size_t& val) const;
 };
 template<typename T>
-Idx2Values<T> idx2values(const ValueStorage<T>& index, const Match<const T&>& next) { return Idx2Values<T>(index, next); }
+Idx2Values<T> idx2values(const ValueStorage<T>& index, const Match<T>& next) { return Idx2Values<T>(index, next); }
 
 }
 

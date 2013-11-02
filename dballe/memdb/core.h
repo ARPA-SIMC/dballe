@@ -26,6 +26,7 @@
 #include <map>
 #include <vector>
 #include <cstddef>
+#include <cstdio>
 
 namespace dballe {
 namespace memdb {
@@ -60,6 +61,8 @@ struct Positions : public std::set<size_t>
         }
         erase(ia, end());
     }
+
+    void dump(FILE* out) const;
 };
 
 /// Index a vector's elements based by one value

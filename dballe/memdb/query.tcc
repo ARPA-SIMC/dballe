@@ -23,6 +23,7 @@
 #define DBA_MEMDB_QUERY_TCC
 
 #include "query.h"
+#include "dballe/core/stlutils.h"
 #include <algorithm>
 
 namespace dballe {
@@ -92,7 +93,7 @@ And<T>::~And()
 template<typename T>
 bool And<T>::operator()(const T& val) const
 {
-    for (typename std::vector<Match<T>*>::iterator i = matches.begin(); i != matches.end(); ++i)
+    for (typename std::vector<Match<T>*>::const_iterator i = matches.begin(); i != matches.end(); ++i)
         if (!(**i)(val))
             return false;
     return true;
@@ -104,6 +105,31 @@ bool Idx2Values<T>::operator()(const size_t& val) const
     const T* v = index[val];
     if (!v) return false;
     return next(*v);
+}
+
+template<typename T>
+void Strategy<T>::add(const Positions& p)
+{
+    if (!indices)
+        indices = new stl::Intersection<Positions::const_iterator>;
+    indices->add(p.begin(), p.end());
+}
+
+template<typename T>
+void Strategy<T>::activate(Results<T>& res) const
+{
+    if (indices)
+    {
+        if (filter.get())
+            res.intersect(indices->begin(), indices->end(), match::idx2values(res.values, *filter));
+        else
+            res.intersect(indices->begin(), indices->end());
+    } else {
+        if (filter.get())
+            res.intersect(res.values.index_begin(), res.values.index_end(), match::idx2values(res.values, *filter));
+        else
+            ; // Nothing to do: we don't filter on any constraint, so we just leave res as it is
+    }
 }
 
 }

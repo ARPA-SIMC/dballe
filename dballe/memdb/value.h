@@ -30,8 +30,10 @@
 #include <iosfwd>
 
 namespace dballe {
-namespace memdb {
+struct Record;
 
+namespace memdb {
+template<typename T> struct Results;
 struct Station;
 struct LevTr;
 
@@ -78,6 +80,9 @@ public:
      * Returns true if found and removed, false if it was not found.
      */
     bool remove(const Station& station, const LevTr& levtr, const Datetime& datetime, wreport::Varcode code);
+
+    /// Query stations returning the IDs
+    void query(const Record& rec, const Results<Station>& stations, Results<Value>& res) const;
 };
 
 }

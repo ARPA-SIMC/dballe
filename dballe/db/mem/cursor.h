@@ -61,7 +61,6 @@ struct Cursor : public db::Cursor
     /// Number of results still to be fetched
     size_t count;
 
-    size_t cur_station_id;
     const memdb::Station* cur_station;
     const memdb::Value* cur_value;
 
@@ -123,11 +122,7 @@ protected:
 
     void to_record_station(Record& rec);
     void to_record_stationvar(const memdb::StationValue& value, Record& rec);
-#if 0
-    void to_record_ltr(Record& rec);
-    void to_record_datetime(Record& rec);
-    void to_record_varcode(Record& rec);
-#endif
+    void to_record_value(Record& rec);
 
     /// Query extra station info and add it to \a rec
     void add_station_info(const memdb::Station& station, Record& rec);
@@ -153,6 +148,7 @@ protected:
     friend class mem::DB;
 };
 
+// TODO: merge multiple results from the same station with different reports, keeping the vars with the highest priority
 struct CursorStations : public CursorLinear<memdb::Station>
 {
 protected:
@@ -168,24 +164,22 @@ protected:
     friend class mem::DB;
 };
 
-#if 0
-struct CursorData : public CursorLinear
+struct CursorData : public CursorLinear<memdb::Value>
 {
-    /// Query data
-    virtual void query(const Record& rec);
-    virtual void to_record(Record& rec);
-    virtual unsigned test_iterate(FILE* dump=0);
-
-    /// Query count of items (only for stations and data)
-    //int query_count(const Record& rec);
-
 protected:
-    CursorData(DB& db, unsigned int modifiers)
-        : CursorLinear(db, modifiers) {}
+    virtual void to_record(Record& rec);
+    virtual bool next();
+#if 0
+    virtual unsigned test_iterate(FILE* dump=0);
+#endif
 
-    friend class dballe::db::v6::DB;
+    CursorData(DB& db, unsigned int modifiers, memdb::Results<memdb::Value>& res)
+        : CursorLinear<memdb::Value>(db, modifiers, res) {}
+
+    friend class mem::DB;
 };
 
+#if 0
 class CursorSummary : public CursorLinear
 {
 public:

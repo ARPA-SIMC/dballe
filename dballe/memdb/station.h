@@ -25,6 +25,7 @@
 #include <dballe/memdb/core.h>
 #include <dballe/core/defs.h>
 #include <string>
+#include <cstddef>
 
 namespace dballe {
 struct Record;
@@ -35,22 +36,23 @@ template<typename T> struct Results;
 /// Station information
 struct Station
 {
+    size_t id;
     Coord coords;
     bool mobile;
     std::string ident;
     std::string report;
 
     // Fixed station
-    Station(const Coord& coords, const std::string& report)
-        : coords(coords), mobile(false), report(report) {}
-    Station(double lat, double lon, const std::string& report)
-        : coords(lat, lon), mobile(false), report(report) {}
+    Station(size_t id, const Coord& coords, const std::string& report)
+        : id(id), coords(coords), mobile(false), report(report) {}
+    Station(size_t id, double lat, double lon, const std::string& report)
+        : id(id), coords(lat, lon), mobile(false), report(report) {}
 
     // Mobile station
-    Station(const Coord& coords, const std::string& ident, const std::string& report)
-        : coords(coords), mobile(true), ident(ident), report(report) {}
-    Station(double lat, double lon, const std::string& ident, const std::string& report)
-        : coords(lat, lon), mobile(true), ident(ident), report(report) {}
+    Station(size_t id, const Coord& coords, const std::string& ident, const std::string& report)
+        : id(id), coords(coords), mobile(true), ident(ident), report(report) {}
+    Station(size_t id, double lat, double lon, const std::string& ident, const std::string& report)
+        : id(id), coords(lat, lon), mobile(true), ident(ident), report(report) {}
 };
 
 /// Storage and index for station information
@@ -76,6 +78,8 @@ public:
 
     /// Query stations returning the IDs
     void query(const Record& rec, Results<Station>& res) const;
+
+    void dump(FILE* out) const;
 };
 
 }

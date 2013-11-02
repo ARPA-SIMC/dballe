@@ -85,6 +85,7 @@ void Memdb::insert_or_replace(const Msg& msg)
 void Memdb::query_stations(const Record& rec, Results<Station>& res) const
 {
     stations.query(rec, res);
+#warning todo
 #if 0
     if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))
     {
@@ -129,6 +130,19 @@ void Memdb::query_stations(const Record& rec, Results<Station>& res) const
 
     return c.found;
 #endif
+}
+
+void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) const
+{
+    // Get a list of stations we can match
+    Results<Station> res_st(stations);
+    query_stations(rec, res_st);
+
+}
+
+void Memdb::dump(FILE* out) const
+{
+    stations.dump(out);
 }
 
 }

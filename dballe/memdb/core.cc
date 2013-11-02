@@ -37,6 +37,15 @@ void Index<T>::refine(const T& el, Positions& res)
     res.inplace_intersect(i->second);
 }
 
+void Positions::dump(FILE* out) const
+{
+    for (const_iterator i = begin(); i != end(); ++i)
+    {
+        if (i != begin()) putc(',', out);
+        fprintf(out, "%zu", *i);
+    }
+}
+
 template class Index<std::string>;
 template class Index<Coord>;
 template class Index<Level>;

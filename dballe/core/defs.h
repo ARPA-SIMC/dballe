@@ -198,6 +198,10 @@ struct Coord
     {
         return lat != c.lat || lon != c.lon;
     }
+
+    // Normalise longitude values to the [-180..180[ interval
+    static int normalon(int lon);
+    static double fnormalon(double lon);
 };
 
 std::ostream& operator<<(std::ostream& out, const Coord& c);

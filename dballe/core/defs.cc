@@ -296,12 +296,15 @@ std::string Trange::describe() const
 }
 
 
-// Normalise longitude values to the [-180..180[ interval
-static inline int normalon(int lon)
+int Coord::normalon(int lon)
 {
     return ((lon + 18000000) % 36000000) - 18000000;
 }
 
+double Coord::fnormalon(double lon)
+{
+    return fmod(lon + 180.0, 360.0) - 180.0;
+}
 
 Coord::Coord(int lat, int lon)
     : lat(lat),

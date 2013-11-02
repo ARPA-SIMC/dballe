@@ -101,6 +101,8 @@ void db_shar::test_insert()
         ensure(false);
     } catch (error_consistency& e) {
         wassert(actual(e.what()).contains("insert a station entry when it is forbidden"));
+    } catch (error_notfound& e) {
+        wassert(actual(e.what()).contains("synop station not found at"));
     }
 
     // Insert the record
@@ -112,7 +114,7 @@ void db_shar::test_insert()
         db->insert(insert, false, false);
         ensure(false);
     } catch (wreport::error& e) {
-        wassert(actual(e.what()).matches("([Dd]uplicate|not unique)"));
+        wassert(actual(e.what()).matches("([Dd]uplicate|not unique|cannot replace an existing value)"));
     }
 }
 
@@ -132,7 +134,7 @@ void db_shar::test_double_station_insert()
         db->insert(insert, false, true);
         ensure(false);
     } catch (wreport::error& e) {
-        wassert(actual(e.what()).matches("([Dd]uplicate|not unique)"));
+        wassert(actual(e.what()).matches("([Dd]uplicate|not unique|cannot replace an existing value)"));
     }
 }
 

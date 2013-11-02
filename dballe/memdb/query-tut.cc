@@ -35,6 +35,17 @@ TESTGRP(memdb_query);
 
 template<> template<> void to::test<1>()
 {
+    BaseResults res;
+    res.intersect(1);
+
+    BaseResults::index_const_iterator i = res.selected_index_begin();
+    wassert(actual(i != res.selected_index_end()).istrue());
+
+    wassert(actual(*i) == 1);
+
+    ++i;
+
+    wassert(actual(i == res.selected_index_end()).istrue());
 }
 
 }

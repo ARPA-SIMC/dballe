@@ -34,7 +34,8 @@ struct memdb_station_shar
 
 TESTGRP(memdb_station);
 
-template<> template<> void to::test<1>()
+template<> template<>
+void to::test<1>()
 {
     Stations stations;
 
@@ -75,14 +76,15 @@ template<> template<> void to::test<1>()
     wassert(actual(&stm2) == &stm);
 }
 
-template<> template<> void to::test<2>()
+template<> template<>
+void to::test<2>()
 {
     // Query by ana_id
     Stations stations;
-    stations.obtain_fixed(Coord(44.0, 11.0), "synop");
+    size_t pos = stations.obtain_fixed(Coord(44.0, 11.0), "synop");
 
     Record query;
-    query.set(DBA_KEY_ANA_ID, 0);
+    query.set(DBA_KEY_ANA_ID, (int)pos);
 
     Results<Station> res(stations);
     stations.query(query, res);
@@ -90,11 +92,80 @@ template<> template<> void to::test<2>()
     wassert(actual(res.size()) == 1u);
 
     Results<Station>::const_iterator i = res.begin();
-    wassert(actual(i.index()) == 0);
+    wassert(actual(i != res.end()).istrue());
+
+    wassert(actual(i.index()) == pos);
     wassert(actual(i->coords.dlat()) == 44.0);
     wassert(actual(i->coords.dlon()) == 11.0);
     wassert(actual(i->ident) == "");
     wassert(actual(i->report) == "synop");
+
+    ++i;
+    wassert(actual(i == res.end()).istrue());
+
+
+    {
+        query.set(DBA_KEY_ANA_ID, 100);
+        Results<Station> res(stations);
+        stations.query(query, res);
+        wassert(actual(res.size()) == 0u);
+        wassert(actual(res.begin() == res.end()).istrue());
+    }
+}
+
+template<> template<>
+void to::test<3>()
+{
+    // Query by lat,lon
+    Stations stations;
+    size_t pos = stations.obtain_fixed(Coord(44.0, 11.0), "synop");
+    stations.obtain_fixed(Coord(45.0, 12.0), "synop");
+
+    Record query;
+    query.set(DBA_KEY_LAT, 44.0);
+    query.set(DBA_KEY_LON, 11.0);
+
+    Results<Station> res(stations);
+    stations.query(query, res);
+
+    wassert(actual(res.size()) == 1u);
+
+    Results<Station>::const_iterator i = res.begin();
+    wassert(actual(i != res.end()).istrue());
+
+    wassert(actual(i.index()) == pos);
+    wassert(actual(i->coords.dlat()) == 44.0);
+    wassert(actual(i->coords.dlon()) == 11.0);
+    wassert(actual(i->ident) == "");
+    wassert(actual(i->report) == "synop");
+
+    ++i;
+    wassert(actual(i == res.end()).istrue());
+}
+
+template<> template<>
+void to::test<4>()
+{
+    // Query everything
+    Stations stations;
+    size_t pos1 = stations.obtain_fixed(Coord(44.0, 11.0), "synop");
+    size_t pos2 = stations.obtain_fixed(Coord(45.0, 12.0), "synop");
+
+    Record query;
+    Results<Station> res(stations);
+    stations.query(query, res);
+
+    wassert(actual(res.size()) == 2u);
+
+    Results<Station>::const_iterator i = res.begin();
+    wassert(actual(i != res.end()).istrue());
+    wassert(actual(i.index()) == pos1);
+    wassert(actual(i->coords) == Coord(44.0, 11.0));
+
+    ++i;
+    wassert(actual(i != res.end()).istrue());
+    wassert(actual(i.index()) == pos2);
+    wassert(actual(i->coords) == Coord(45.0, 12.0));
 
     ++i;
     wassert(actual(i == res.end()).istrue());
