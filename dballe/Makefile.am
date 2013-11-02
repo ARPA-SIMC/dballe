@@ -41,6 +41,7 @@ dballeincludedir = $(includedir)/dballe
 nobase_dist_dballeinclude_HEADERS = \
 	core/aliases.h \
 	core/verbose.h \
+	core/stlutils.h \
 	core/defs.h \
 	core/var.h \
 	core/rawmsg.h \
@@ -230,6 +231,7 @@ dist_noinst_HEADERS = \
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
 	core/aliases-tut.cc \
+	core/stlutils-tut.cc \
 	core/defs-tut.cc \
 	core/rawmsg-tut.cc \
 	core/file-tut.cc \
