@@ -42,13 +42,13 @@ template<> template<> void to::test<1>()
 
     // Insert a station value and check that all data is there
     StationValues svalues;
-    const StationValue& sv = *svalues[svalues.insert_or_replace(stf, newvar(WR_VAR(0, 12, 101), 28.5))];
+    const StationValue& sv = *svalues[svalues.insert(stf, newvar(WR_VAR(0, 12, 101), 28.5))];
     wassert(actual(&sv.station) == &stf);
     wassert(actual(sv.var->code()) == WR_VAR(0, 12, 101));
     wassert(actual(sv.var->enqd()) == 28.5);
 
     // Replacing a value should reuse an existing one
-    const StationValue& sv1 = *svalues[svalues.insert_or_replace(stf, newvar(WR_VAR(0, 12, 101), 29.5))];
+    const StationValue& sv1 = *svalues[svalues.insert(stf, newvar(WR_VAR(0, 12, 101), 29.5))];
     wassert(actual(&sv1) == &sv);
     wassert(actual(&sv1.station) == &stf);
     wassert(actual(sv1.var->code()) == WR_VAR(0, 12, 101));

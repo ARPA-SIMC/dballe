@@ -29,6 +29,7 @@
 #include <unistd.h>
 #endif
 
+using namespace dballe::memdb;
 using namespace std;
 using namespace wreport;
 
@@ -76,12 +77,36 @@ const std::string& DB::rep_memo_from_cod(int rep_cod)
 
 void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    // Obtain the station
+    m_last_station_id = memdb.stations.obtain(rec, station_can_add);
+    const Station& station = *memdb.stations[m_last_station_id];
+
+    // Obtain values
+    last_insert_varids.clear();
+    if (rec.is_ana_context())
+    {
+        // Insert all the variables we find
+        for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
+        {
+            size_t pos = memdb.stationvalues.insert(station, **i, can_replace);
+            last_insert_varids.push_back(VarID((*i)->code(), true, pos));
+        }
+    } else {
+        const LevTr& levtr = *memdb.levtrs[memdb.levtrs.obtain(rec)];
+        Datetime datetime = rec.get_datetime();
+
+        // Insert all the variables we find
+        for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
+        {
+            size_t pos = memdb.values.insert(station, levtr, datetime, **i, can_replace);
+            last_insert_varids.push_back(VarID((*i)->code(), false, pos));
+        }
+    }
 }
 
 int DB::last_station_id() const
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    return m_last_station_id;
 }
 
 void DB::remove(const Record& rec)

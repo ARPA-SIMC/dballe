@@ -59,10 +59,10 @@ public:
     void clear();
 
     /// Insert a new value, or replace an existing one for the same station
-    size_t insert_or_replace(const Station& station, std::auto_ptr<wreport::Var> var);
+    size_t insert(const Station& station, std::auto_ptr<wreport::Var> var, bool replace=true);
 
     /// Insert a new value, or replace an existing one for the same station
-    size_t insert_or_replace(const Station& station, const wreport::Var& var);
+    size_t insert(const Station& station, const wreport::Var& var, bool replace=true);
 
     /**
      * Remove a value.

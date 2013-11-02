@@ -29,9 +29,9 @@ void Values::clear()
     ValueStorage<Value>::clear();
 }
 
-size_t Values::insert_or_replace(
+size_t Values::insert(
         const Station& station, const LevTr& levtr,
-        const Datetime& datetime, std::auto_ptr<Var> var)
+        const Datetime& datetime, std::auto_ptr<Var> var, bool replace)
 {
     Positions res = by_station.search(&station);
     by_levtr.refine(&levtr, res);
@@ -41,6 +41,8 @@ size_t Values::insert_or_replace(
         Value* v = (*this)[*i];
         if (v && v->datetime == datetime && v->var->code() == var->code())
         {
+            if (!replace)
+                throw error_consistency("cannot replace an existing value");
             v->replace(var);
             return *i;
         }
@@ -57,12 +59,12 @@ size_t Values::insert_or_replace(
 
 }
 
-size_t Values::insert_or_replace(
+size_t Values::insert(
         const Station& station, const LevTr& levtr,
-        const Datetime& datetime, const Var& var)
+        const Datetime& datetime, const Var& var, bool replace)
 {
     auto_ptr<Var> copy(new Var(var));
-    return insert_or_replace(station, levtr, datetime, copy);
+    return insert(station, levtr, datetime, copy, replace);
 }
 
 bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& datetime, Varcode code)

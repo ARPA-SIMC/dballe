@@ -55,18 +55,20 @@ public:
     Memdb memdb;
 
 protected:
-#if 0
+    size_t m_last_station_id;
+
     /// Store information about the database ID of a variable
     struct VarID
     {
         wreport::Varcode code;
-        DBALLE_SQL_C_SINT_TYPE id;
-        VarID(wreport::Varcode code, DBALLE_SQL_C_SINT_TYPE id) : code(code), id(id) {}
+        // True if it is a station value
+        bool station;
+        size_t id;
+        VarID(wreport::Varcode code, bool station, size_t id) : code(code), station(station), id(id) {}
     };
 
     /// Store database variable IDs for all last inserted variables
     std::vector<VarID> last_insert_varids;
-#endif
 
 public:
     virtual ~DB();

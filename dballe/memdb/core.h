@@ -71,29 +71,32 @@ struct Index : public std::map<T, Positions>
 };
 
 template<typename T>
-struct ValueStorage : protected std::vector<T*>
+class ValueStorage
 {
+protected:
+    std::vector<T*> values;
     std::vector<size_t> empty_slots;
 
+public:
     ValueStorage() {}
     virtual ~ValueStorage()
     {
-        for (typename ValueStorage::iterator i = this->begin(); i != this->end(); ++i)
+        for (typename std::vector<T*>::iterator i = values.begin(); i != values.end(); ++i)
             delete *i;
     }
 
     void clear()
     {
-        for (typename ValueStorage::iterator i = this->begin(); i != this->end(); ++i)
+        for (typename std::vector<T*>::iterator i = values.begin(); i != values.end(); ++i)
             delete *i;
-        std::vector<T*>::clear();
+        values.clear();
     }
 
-    T* at(size_t idx) { return std::vector<T*>::at(idx); }
-    const T* at(size_t idx) const { return std::vector<T*>::at(idx); }
+    T* at(size_t idx) { return values.at(idx); }
+    const T* at(size_t idx) const { return values.at(idx); }
 
-    T*& operator[](size_t idx) { return std::vector<T*>::operator[](idx); }
-    const T*& operator[](size_t idx) const { return std::vector<T*>::operator[](idx); }
+    T*& operator[](size_t idx) { return values[idx]; }
+    const T*& operator[](size_t idx) const { return values[idx]; }
 
 protected:
     /// Add the value to the storage and return its index
@@ -103,8 +106,8 @@ protected:
         if (empty_slots.empty())
         {
             // No slots to reuse: append
-            this->push_back(value);
-            return this->size() - 1;
+            values.push_back(value);
+            return values.size() - 1;
         }
 
         // Reuse an old slot

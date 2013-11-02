@@ -49,7 +49,7 @@ void Memdb::insert_or_replace(const Record& rec)
         // Insert all the variables we find
         for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
         {
-            stationvalues.insert_or_replace(station, **i);
+            stationvalues.insert(station, **i);
 #if 0
             if (can_replace)
                 d.insert_or_overwrite(true);
@@ -65,7 +65,7 @@ void Memdb::insert_or_replace(const Record& rec)
         // Insert all the variables we find
         for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
         {
-            values.insert_or_replace(station, levtr, datetime, **i);
+            values.insert(station, levtr, datetime, **i);
 #if 0
             if (can_replace)
                 d.insert_or_overwrite(true);

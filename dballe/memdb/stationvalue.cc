@@ -45,7 +45,7 @@ void StationValues::clear()
     ValueStorage<StationValue>::clear();
 }
 
-size_t StationValues::insert_or_replace(const Station& station, std::auto_ptr<Var> var)
+size_t StationValues::insert(const Station& station, std::auto_ptr<Var> var, bool replace)
 {
     Positions res = by_station.search(&station);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
@@ -53,12 +53,14 @@ size_t StationValues::insert_or_replace(const Station& station, std::auto_ptr<Va
         StationValue* s = (*this)[*i];
         if (s && s->var->code() == var->code())
         {
+            if (!replace)
+                throw error_consistency("cannot replace an existing station value");
             s->replace(var);
             return *i;
         }
     }
 
-    // Station not found, create it
+    // Value not found, create it
     size_t pos = value_add(new StationValue(station, var));
     // Index it
     by_station[&station].insert(pos);
@@ -67,10 +69,10 @@ size_t StationValues::insert_or_replace(const Station& station, std::auto_ptr<Va
 
 }
 
-size_t StationValues::insert_or_replace(const Station& station, const Var& var)
+size_t StationValues::insert(const Station& station, const Var& var, bool replace)
 {
     auto_ptr<Var> copy(new Var(var));
-    return insert_or_replace(station, copy);
+    return insert(station, copy, replace);
 }
 
 bool StationValues::remove(const Station& station, Varcode code)

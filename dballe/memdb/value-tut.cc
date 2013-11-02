@@ -47,7 +47,7 @@ template<> template<> void to::test<1>()
 
     // Insert a station value and check that all data is there
     Values values;
-    const Value& v = *values[values.insert_or_replace(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 28.5))];
+    const Value& v = *values[values.insert(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 28.5))];
     wassert(actual(&v.station) == &stf);
     wassert(actual(&v.levtr) == &levtr);
     wassert(actual(v.datetime) == datetime);
@@ -55,7 +55,7 @@ template<> template<> void to::test<1>()
     wassert(actual(v.var->enqd()) == 28.5);
 
     // Replacing a value should reuse an existing one
-    const Value& v1 = *values[values.insert_or_replace(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 29.5))];
+    const Value& v1 = *values[values.insert(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 29.5))];
     wassert(actual(&v1.station) == &stf);
     wassert(actual(&v1.levtr) == &levtr);
     wassert(actual(v1.datetime) == datetime);
