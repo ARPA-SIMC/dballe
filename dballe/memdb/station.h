@@ -30,6 +30,7 @@ namespace dballe {
 struct Record;
 
 namespace memdb {
+struct Results;
 
 /// Station information
 struct Station

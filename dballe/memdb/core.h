@@ -30,6 +30,9 @@
 namespace dballe {
 namespace memdb {
 
+struct Results;
+template<typename T> struct Match;
+
 /// Indices of elements inside a vector
 struct Positions : public std::set<size_t>
 {
@@ -59,35 +62,21 @@ struct Positions : public std::set<size_t>
     }
 };
 
-/// Query results as a sorted vector of indices
-class Results
-{
-protected:
-    /// True if the result is 'any ID is good'
-    bool select_all;
-    /// If select_all is false, this is the list of good IDs
-    std::vector<size_t> values;
-
-public:
-    Results();
-
-    /// Intersect with a singleton set
-    void intersect(size_t pos);
-
-    /// Intersect with Positions
-    template<typename ITER>
-    void intersect(ITER begin, const ITER& end);
-};
-
 /// Index a vector's elements based by one value
 template<typename T>
 struct Index : public std::map<T, Positions>
 {
+    typedef typename std::map<T, Positions>::const_iterator const_iterator;
+
     /// Lookup all positions for a value
     Positions search(const T& el) const;
 
     /// Refine a Positions set with the results of this lookup
     void refine(const T& el, Positions& res);
+
+    void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, Results& res) const;
+    void query(const const_iterator& begin, const const_iterator& end, Results& res) const;
+    void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>* filter, Results& res) const;
 };
 
 template<typename T>
@@ -98,6 +87,37 @@ protected:
     std::vector<size_t> empty_slots;
 
 public:
+    struct index_iterator : public std::iterator<std::forward_iterator_tag, size_t>
+    {
+        const std::vector<T*>* values;
+        size_t pos;
+
+        index_iterator(const std::vector<T*>& values, size_t pos) : values(&values), pos(pos) { skip_gaps(); }
+        // End iterator
+        index_iterator(const std::vector<T*>& values) : values(&values), pos(values.size()) {}
+        index_iterator& operator++() {
+            ++pos;
+            skip_gaps();
+            return *this;
+        }
+        void skip_gaps()
+        {
+            while (pos != values->size() && !(*values)[pos])
+                ++pos;
+        }
+        size_t operator*() { return pos; }
+
+        bool operator==(const index_iterator& i) const
+        {
+            return values == i.values && pos == i.pos;
+        }
+
+        bool operator!=(const index_iterator& i) const
+        {
+            return values != i.values || pos != i.pos;
+        }
+    };
+
     ValueStorage() {}
     virtual ~ValueStorage();
 
@@ -108,6 +128,9 @@ public:
 
     typename std::vector<T*>::reference operator[](size_t idx) { return values[idx]; }
     typename std::vector<T*>::const_reference operator[](size_t idx) const { return values[idx]; }
+
+    index_iterator index_begin() const { return index_iterator(values, 0); }
+    index_iterator index_end() const { return index_iterator(values); }
 
 protected:
     /// Add the value to the storage and return its index

@@ -31,6 +31,10 @@ namespace dballe {
 struct Record;
 struct Msg;
 
+namespace memdb {
+struct Results;
+}
+
 /// In-memory database backend
 struct Memdb
 {
@@ -46,7 +50,7 @@ struct Memdb
     void insert_or_replace(const Msg& msg);
 
     /// Query stations, returning a list of station IDs
-    void query_stations(const Record& rec, Results& res) const;
+    void query_stations(const Record& rec, memdb::Results& res) const;
 
 private:
     Memdb(const Memdb&);

@@ -20,7 +20,9 @@
  */
 
 #include "station.h"
-#include <dballe/core/record.h>
+#include "query.h"
+#include "dballe/core/record.h"
+#include "dballe/core/stlutils.h"
 #include <iostream>
 #include <cstdlib>
 
@@ -131,24 +133,10 @@ void Stations::query(const Record& rec, Results& res) const
         if (pos >= 0 && pos < values.size() && values[pos])
             res.intersect(pos);
     }
-#if 0
-    void add_lat()
-    {
-        add_int(DBA_KEY_LAT, "%s.lat=%d");
-        int latmin = rec.get(DBA_KEY_LATMIN, -9000000);
-        if (latmin > -9000000)
-        {
-            q.append_listf("%s.lat>=%d", tbl, latmin);
-            found = true;
-        }
-        int latmax = rec.get(DBA_KEY_LATMAX, 9000000);
-        if (latmax < 9000000)
-        {
-            q.append_listf("%s.lat<=%d", tbl, latmax);
-            found = true;
-        }
-    }
 
+    // Build a Match with non-index constraints
+    auto_ptr< Match<const Station&> > filter;
+#if 0
     void add_lon()
     {
         //add_int(rec, cur->sel_lonmin, DBA_KEY_LON, "pa.lon=?", DBA_DB_FROM_PA);
@@ -203,17 +191,81 @@ void Stations::query(const Record& rec, Results& res) const
             found = true;
         }
     }
-    if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
-    {
-        sql_where.append_listf("%s.ident=?", tbl);
-        TRACE("found ident: adding AND %s.ident = ?.  val is %s\n", tbl, val);
-        stm.bind_in(qargs.input_seq++, val);
-        c.found = true;
-    }
 #endif
+
+    // Lookup latitude query parameters
+    int latmin = MISSING_INT;
+    int latmax = MISSING_INT;
+    if (const char* lat = rec.key_peek_value(DBA_KEY_LAT))
+    {
+        latmin = latmax = strtoul(lat, 0, 10);
+    } else {
+        if (const char* v = rec.key_peek_value(DBA_KEY_LATMIN))
+        {
+            latmin = strtoul(v, 0, 10);
+            if (latmin <= -9000000) latmin = MISSING_INT;
+        }
+        if (const char* v = rec.key_peek_value(DBA_KEY_LATMAX))
+        {
+            latmax = strtoul(v, 0, 10);
+            if (latmin >= 9000000) latmin = MISSING_INT;
+        }
+    }
+
+    // Lookup ident
+    const char* ident = rec.key_peek_value(DBA_KEY_IDENT);
+
+    if (latmin != MISSING_INT || latmax != MISSING_INT)
+    {
+        Index<Coord>::const_iterator ilatmin = by_coord.begin();
+        Index<Coord>::const_iterator ilatmax = by_coord.end();
+
+        if (ilatmin == by_coord.end())
+            return;
+
+        stl::Intersection<Positions::const_iterator> merger;
+        for ( ; ilatmin != ilatmax; ++ilatmin)
+            merger.add(ilatmin->second.begin(), ilatmin->second.end());
+
+        if (ident)
+        {
+            Index<std::string>::const_iterator iident = by_ident.find(ident);
+            if (iident == by_ident.end())
+                return;
+
+            merger.add(iident->second.begin(), iident->second.end());
+        }
+
+        if (filter.get())
+            res.intersect(merger.begin(), merger.end(), match::idx2values(*this, *filter));
+        else
+            res.intersect(merger.begin(), merger.end());
+        return;
+    }
+
+    if (ident)
+    {
+        Index<std::string>::const_iterator iident = by_ident.find(ident);
+        if (iident == by_ident.end())
+            return;
+
+        if (filter.get())
+            res.intersect(iident->second.begin(), iident->second.end(), match::idx2values(*this, *filter));
+        else
+            res.intersect(iident->second.begin(), iident->second.end());
+        return;
+    }
+
+    if (filter.get()) {
+        res.intersect(index_begin(), index_end(), match::idx2values(*this, *filter));
+        return;
+    }
+
+    // If we don't have any constraints, leave res as it is
 }
 
 }
 }
 
 #include "core.tcc"
+#include "query.tcc"

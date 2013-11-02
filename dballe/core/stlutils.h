@@ -59,7 +59,7 @@ protected:
     std::vector<Sequence> sequences;
 
 public:
-    struct const_iterator
+    struct const_iterator : public std::iterator<std::forward_iterator_tag, typename ITER::value_type>
     {
         std::vector<Sequence> iters;
 

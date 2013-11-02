@@ -21,27 +21,6 @@ Positions Index<T>::search(const T& el) const
         return i->second;
 }
 
-Results::Results()
-    : select_all(true)
-{
-}
-
-void Results::intersect(size_t pos)
-{
-    if (select_all)
-    {
-        values.push_back(pos);
-        select_all = false;
-        return;
-    }
-
-    vector<size_t>::const_iterator i = lower_bound(values.begin(), values.end(), pos);
-    bool found = i != values.end();
-    values.clear();
-    if (found)
-        values.push_back(pos);
-}
-
 template<typename T>
 void Index<T>::refine(const T& el, Positions& res)
 {

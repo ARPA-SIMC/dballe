@@ -20,6 +20,7 @@
  */
 
 #include "memdb.h"
+#include "query.h"
 #include <dballe/core/record.h>
 #include <dballe/msg/msg.h>
 
