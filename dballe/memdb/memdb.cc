@@ -33,6 +33,14 @@ Memdb::Memdb()
 {
 }
 
+void Memdb::clear()
+{
+    values.clear();
+    levtrs.clear();
+    stationvalues.clear();
+    stations.clear();
+}
+
 void Memdb::insert_or_replace(const Record& rec)
 {
     const Station& station = stations.obtain(rec);

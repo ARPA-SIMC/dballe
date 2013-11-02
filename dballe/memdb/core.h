@@ -82,6 +82,13 @@ struct ValueStorage : public std::vector<T*>
             delete *i;
     }
 
+    void clear()
+    {
+        for (typename ValueStorage::iterator i = this->begin(); i != this->end(); ++i)
+            delete *i;
+        std::vector<T*>::clear();
+    }
+
     T* get(size_t idx) { return (*this)[idx]; }
     const T* get(size_t idx) const { return (*this)[idx]; }
 

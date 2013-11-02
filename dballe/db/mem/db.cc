@@ -42,7 +42,7 @@ DB::~DB()
 
 void DB::disappear()
 {
-    // TODO: memdb.clear();
+    memdb.clear();
 }
 
 void DB::reset(const char* repinfo_file)

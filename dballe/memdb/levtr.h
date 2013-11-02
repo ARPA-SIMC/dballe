@@ -50,6 +50,8 @@ protected:
 public:
     LevTrs();
 
+    void clear();
+
     /// Get a LevTr record
     const LevTr& obtain(const Level& level, const Trange& trange);
 

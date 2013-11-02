@@ -39,6 +39,12 @@ void StationValue::replace(std::auto_ptr<Var> var)
     this->var = var.release();
 }
 
+void StationValues::clear()
+{
+    by_station.clear();
+    ValueStorage<StationValue>::clear();
+}
+
 const StationValue& StationValues::insert_or_replace(const Station& station, std::auto_ptr<Var> var)
 {
     Positions res = by_station.search(&station);

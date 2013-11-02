@@ -21,6 +21,14 @@ void Value::replace(std::auto_ptr<Var> var)
     this->var = var.release();
 }
 
+void Values::clear()
+{
+    by_station.clear();
+    by_levtr.clear();
+    by_date.clear();
+    ValueStorage<Value>::clear();
+}
+
 const Value& Values::insert_or_replace(
         const Station& station, const LevTr& levtr,
         const Datetime& datetime, std::auto_ptr<Var> var)

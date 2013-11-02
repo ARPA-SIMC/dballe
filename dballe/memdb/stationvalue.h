@@ -56,6 +56,8 @@ protected:
     Index<const Station*> by_station;
 
 public:
+    void clear();
+
     /// Insert a new value, or replace an existing one for the same station
     const StationValue& insert_or_replace(const Station& station, std::auto_ptr<wreport::Var> var);
 

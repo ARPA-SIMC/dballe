@@ -28,8 +28,14 @@ using namespace std;
 namespace dballe {
 namespace memdb {
 
-LevTrs::LevTrs() : ValueStorage<LevTr>() {}
+void LevTrs::clear()
+{
+    by_level.clear();
+    by_trange.clear();
+    ValueStorage<LevTr>::clear();
+}
 
+LevTrs::LevTrs() : ValueStorage<LevTr>() {}
 
 const LevTr& LevTrs::obtain(const Level& level, const Trange& trange)
 {

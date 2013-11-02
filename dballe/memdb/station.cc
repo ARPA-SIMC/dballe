@@ -31,6 +31,12 @@ namespace memdb {
 
 Stations::Stations() : ValueStorage<Station>() {}
 
+void Stations::clear()
+{
+    by_coord.clear();
+    by_ident.clear();
+    ValueStorage<Station>::clear();
+}
 
 const Station& Stations::obtain(const Coord& coords, const std::string& report)
 {

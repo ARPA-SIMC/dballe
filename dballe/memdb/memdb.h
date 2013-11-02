@@ -41,6 +41,7 @@ struct Memdb
 
     Memdb();
 
+    void clear();
     void insert_or_replace(const Record& rec);
     void insert_or_replace(const Msg& msg);
 

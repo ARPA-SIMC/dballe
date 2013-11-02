@@ -62,6 +62,8 @@ protected:
 public:
     Stations();
 
+    void clear();
+
     /// Get a fixed Station record
     const Station& obtain(const Coord& coords, const std::string& report);
 

@@ -64,6 +64,8 @@ protected:
     Index<Date> by_date;
 
 public:
+    void clear();
+
     /// Insert a new value, or replace an existing one
     const Value& insert_or_replace(const Station& station, const LevTr& levtr, const Datetime& datetime, std::auto_ptr<wreport::Var> var);
 
