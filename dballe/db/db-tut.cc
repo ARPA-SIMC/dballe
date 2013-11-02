@@ -32,7 +32,6 @@ namespace tut {
 
 struct db_shar : public dballe::tests::DB_test_base
 {
-    void test_reset();
     void test_simple_insert();
     void test_insert();
     void test_double_station_insert();
@@ -50,16 +49,6 @@ struct db_shar : public dballe::tests::DB_test_base
     void test_datetime_extremes();
 };
 TESTGRP(db);
-
-template<> template<> void to::test<1>() { use_db(db::V5); test_reset(); }
-template<> template<> void to::test<2>() { use_db(db::V6); test_reset(); }
-template<> template<> void to::test<3>() { use_db(db::MEM); test_reset(); }
-void db_shar::test_reset()
-{
-    // Run twice to see if it is idempotent
-    db->reset();
-    db->reset();
-}
 
 template<> template<> void to::test<4>() { use_db(db::V5); test_simple_insert(); }
 template<> template<> void to::test<5>() { use_db(db::V6); test_simple_insert(); }

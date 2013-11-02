@@ -267,6 +267,7 @@ tut_test_SOURCES += \
 	db/tests/querybuf.cc \
 	db/tests/internals.cc \
 	db/modifiers-tut.cc \
+	db/db-basic-tut.cc \
 	db/db-tut.cc \
 	db/db1-tut.cc \
 	db/db-import-tut.cc \

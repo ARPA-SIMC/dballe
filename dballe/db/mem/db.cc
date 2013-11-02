@@ -59,7 +59,7 @@ void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int*
 
 std::map<std::string, int> DB::get_repinfo_priorities()
 {
-    repinfo.get_priorities();
+    return repinfo.get_priorities();
 }
 
 void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
@@ -143,7 +143,9 @@ void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wre
 
 void DB::dump(FILE* out)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    fprintf(out, "repinfo data:\n");
+    repinfo.dump(out);
+    // TODO: dump memdb
 }
 
 void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
