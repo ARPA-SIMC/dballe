@@ -52,6 +52,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/matcher.h \
 	core/match-wreport.h \
 	memdb/core.h \
+	memdb/core.tcc \
 	memdb/station.h \
 	memdb/stationvalue.h \
 	memdb/levtr.h \

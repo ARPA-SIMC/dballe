@@ -59,6 +59,26 @@ struct Positions : public std::set<size_t>
     }
 };
 
+/// Query results as a sorted vector of indices
+class Results
+{
+protected:
+    /// True if the result is 'any ID is good'
+    bool select_all;
+    /// If select_all is false, this is the list of good IDs
+    std::vector<size_t> values;
+
+public:
+    Results();
+
+    /// Intersect with a singleton set
+    void intersect(size_t pos);
+
+    /// Intersect with Positions
+    template<typename ITER>
+    void intersect(ITER begin, const ITER& end);
+};
+
 /// Index a vector's elements based by one value
 template<typename T>
 struct Index : public std::map<T, Positions>
@@ -79,51 +99,23 @@ protected:
 
 public:
     ValueStorage() {}
-    virtual ~ValueStorage()
-    {
-        for (typename std::vector<T*>::iterator i = values.begin(); i != values.end(); ++i)
-            delete *i;
-    }
+    virtual ~ValueStorage();
 
-    void clear()
-    {
-        for (typename std::vector<T*>::iterator i = values.begin(); i != values.end(); ++i)
-            delete *i;
-        values.clear();
-    }
+    void clear();
 
     T* at(size_t idx) { return values.at(idx); }
     const T* at(size_t idx) const { return values.at(idx); }
 
-    T*& operator[](size_t idx) { return values[idx]; }
-    const T*& operator[](size_t idx) const { return values[idx]; }
+    typename std::vector<T*>::reference operator[](size_t idx) { return values[idx]; }
+    typename std::vector<T*>::const_reference operator[](size_t idx) const { return values[idx]; }
 
 protected:
     /// Add the value to the storage and return its index
     /// take ownership of the pointer memory management
-    size_t value_add(T* value)
-    {
-        if (empty_slots.empty())
-        {
-            // No slots to reuse: append
-            values.push_back(value);
-            return values.size() - 1;
-        }
-
-        // Reuse an old slot
-        size_t res = empty_slots.back();
-        empty_slots.pop_back();
-        (*this)[res] = value;
-        return res;
-    }
+    size_t value_add(T* value);
 
     /// Remove a value given its position
-    void value_remove(size_t pos)
-    {
-        delete (*this)[pos];
-        (*this)[pos] = 0;
-        empty_slots.push_back(pos);
-    }
+    void value_remove(size_t pos);
 
 private:
     ValueStorage(const ValueStorage<T>&);

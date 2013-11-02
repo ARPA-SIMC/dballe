@@ -88,6 +88,8 @@ bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& 
 }
 
 template class Index<const Station*>;
+template class ValueStorage<Value>;
 
 }
 }
+#include "core.tcc"

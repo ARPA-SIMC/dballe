@@ -108,6 +108,10 @@ void DB::vacuum()
 
 std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 {
+    memdb::Results res;
+    memdb.query_stations(rec, res);
+    // TODO: create a Cursor that iterates res over stations
+    // if select_all, the result count is stations.size() - stations.empty_slots.size()
     throw error_unimplemented("not yet implemented in MEM database");
 }
 

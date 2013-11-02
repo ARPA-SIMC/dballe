@@ -45,6 +45,9 @@ struct Memdb
     void insert_or_replace(const Record& rec);
     void insert_or_replace(const Msg& msg);
 
+    /// Query stations, returning a list of station IDs
+    void query_stations(const Record& rec, Results& res) const;
+
 private:
     Memdb(const Memdb&);
     Memdb& operator=(const Memdb&);

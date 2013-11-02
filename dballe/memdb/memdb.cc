@@ -81,4 +81,53 @@ void Memdb::insert_or_replace(const Msg& msg)
 {
 }
 
+void Memdb::query_stations(const Record& rec, Results& res) const
+{
+    stations.query(rec, res);
+#if 0
+    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))
+    {
+        // No need to escape since the variable is integer
+        sql_where.append_listf("EXISTS(SELECT id FROM data %s_blo WHERE %s_blo.id_station=%s.id"
+                               " AND %s_blo.id_var=257 AND %s_blo.id_lev_tr == -1 AND %s_blo.value='%s')",
+                tbl, tbl, tbl, tbl, tbl, tbl, val);
+        c.found = true;
+    }
+    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 2)))
+    {
+        sql_where.append_listf("EXISTS(SELECT id FROM data %s_sta WHERE %s_sta.id_station=%s.id"
+                               " AND %s_sta.id_var=258 AND %s_sta.id_lev_tr == -1 AND %s_sta.value='%s')",
+                tbl, tbl, tbl, tbl, tbl, tbl, val);
+        c.found = true;
+    }
+    if (const char* val = rec.key_peek_value(DBA_KEY_ANA_FILTER))
+    {
+        const char *op, *value, *value1;
+        Varinfo info = decode_data_filter(val, &op, &value, &value1);
+
+        sql_where.append_listf("EXISTS(SELECT id FROM data %s_af WHERE %s_af.id_station=%s.id"
+                               " AND %s_af.id_lev_tr == -1"
+                               " AND %s_af.id_var=%d", tbl, tbl, tbl, tbl, tbl, info->var);
+
+        if (value[0] == '\'')
+            if (value1 == NULL)
+                sql_where.appendf(" AND %s_af.value%s%s)", tbl, op, value);
+            else
+                sql_where.appendf(" AND %s_af.value BETWEEN %s AND %s)", tbl, value, value1);
+        else
+        {
+            const char* type = (db.conn->server_type == MYSQL) ? "SIGNED" : "INT";
+            if (value1 == NULL)
+                sql_where.appendf(" AND CAST(%s_af.value AS %s)%s%s)", tbl, type, op, value);
+            else
+                sql_where.appendf(" AND CAST(%s_af.value AS %s) BETWEEN %s AND %s)", tbl, type, value, value1);
+        }
+
+        c.found = true;
+    }
+
+    return c.found;
+#endif
+}
+
 }

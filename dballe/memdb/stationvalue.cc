@@ -92,7 +92,9 @@ bool StationValues::remove(const Station& station, Varcode code)
 }
 
 template class Index<const Station*>;
+template class ValueStorage<StationValue>;
 
 }
 }
 
+#include "core.tcc"

@@ -22,6 +22,7 @@
 #include "station.h"
 #include <dballe/core/record.h>
 #include <iostream>
+#include <cstdlib>
 
 using namespace std;
 using namespace wreport;
@@ -112,6 +113,107 @@ size_t Stations::obtain(const Record& rec, bool create)
         return obtain_fixed(Coord(s_lat, s_lon), s_report, create);
 }
 
+#if 0
+namespace {
+
+struct CoordsIter
+{
+};
+
+}
+#endif
+
+void Stations::query(const Record& rec, Results& res) const
+{
+    if (const char* ana_id = rec.key_peek_value(DBA_KEY_ANA_ID))
+    {
+        size_t pos = strtoul(ana_id, 0, 10);
+        if (pos >= 0 && pos < values.size() && values[pos])
+            res.intersect(pos);
+    }
+#if 0
+    void add_lat()
+    {
+        add_int(DBA_KEY_LAT, "%s.lat=%d");
+        int latmin = rec.get(DBA_KEY_LATMIN, -9000000);
+        if (latmin > -9000000)
+        {
+            q.append_listf("%s.lat>=%d", tbl, latmin);
+            found = true;
+        }
+        int latmax = rec.get(DBA_KEY_LATMAX, 9000000);
+        if (latmax < 9000000)
+        {
+            q.append_listf("%s.lat<=%d", tbl, latmax);
+            found = true;
+        }
+    }
+
+    void add_lon()
+    {
+        //add_int(rec, cur->sel_lonmin, DBA_KEY_LON, "pa.lon=?", DBA_DB_FROM_PA);
+        if (const char* val = rec.key_peek_value(DBA_KEY_LON))
+        {
+            q.append_listf("%s.lon=%d", tbl, normalon(strtol(val, 0, 10)));
+            found = true;
+        }
+        if (rec.key_peek_value(DBA_KEY_LONMIN) && rec.key_peek_value(DBA_KEY_LONMAX))
+        {
+            int lonmin = rec.key(DBA_KEY_LONMIN).enqi();
+            int lonmax = rec.key(DBA_KEY_LONMAX).enqi();
+            if (lonmin == lonmax)
+            {
+                q.append_listf("%s.lon=%d", tbl, normalon(lonmin));
+                found = true;
+            } else {
+                lonmin = normalon(lonmin);
+                lonmax = normalon(lonmax);
+                if (lonmin < lonmax)
+                {
+                    q.append_listf("%s.lon>=%d AND %s.lon<=%d", tbl, lonmin, tbl, lonmax);
+                    found = true;
+                } else if (lonmin > lonmax) {
+                    q.append_listf("((%s.lon>=%d AND %s.lon<=18000000) OR (%s.lon>=-18000000 AND %s.lon<=%d))",
+                            tbl, lonmin, tbl, tbl, tbl, lonmax);
+                    found = true;
+                }
+                // If after being normalised min and max are the same, we
+                // assume that one wants "any longitude", as is the case with
+                // lonmin=0 lonmax=360 or lonmin=-180 lonmax=180
+            }
+        } else if (rec.key_peek_value(DBA_KEY_LONMIN) != NULL) {
+            throw error_consistency("'lonmin' query parameter was specified without 'lonmax'");
+        } else if (rec.key_peek_value(DBA_KEY_LONMAX) != NULL) {
+            throw error_consistency("'lonmax' query parameter was specified without 'lonmin'");
+        }
+    }
+
+    void add_mobile()
+    {
+        if (const char* val = rec.key_peek_value(DBA_KEY_MOBILE))
+        {
+            if (val[0] == '0')
+            {
+                q.append_listf("%s.ident IS NULL", tbl);
+                TRACE("found fixed/mobile: adding AND %s.ident IS NULL.\n", tbl);
+            } else {
+                q.append_listf("NOT (%s.ident IS NULL)", tbl);
+                TRACE("found fixed/mobile: adding AND NOT (%s.ident IS NULL)\n", tbl);
+            }
+            found = true;
+        }
+    }
+    if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
+    {
+        sql_where.append_listf("%s.ident=?", tbl);
+        TRACE("found ident: adding AND %s.ident = ?.  val is %s\n", tbl, val);
+        stm.bind_in(qargs.input_seq++, val);
+        c.found = true;
+    }
+#endif
+}
+
 }
 }
 
+#include "core.tcc"

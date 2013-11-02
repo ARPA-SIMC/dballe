@@ -63,3 +63,4 @@ size_t LevTrs::obtain(const Record& rec)
 }
 }
 
+#include "core.tcc"
