@@ -133,7 +133,7 @@ protected:
     void add_station_info(const memdb::Station& station, Record& rec);
 };
 
-template<typename T, typename ITER>
+template<typename T>
 class CursorLinear : public Cursor
 {
 public:
@@ -141,11 +141,11 @@ public:
 
 protected:
     memdb::Results<T> res;
-    ITER iter_cur;
-    ITER iter_end;
+    typename memdb::Results<T>::const_iterator iter_cur;
+    typename memdb::Results<T>::const_iterator iter_end;
 
-    CursorLinear(DB& db, unsigned int modifiers, memdb::Results<T>& res, const ITER& begin, const ITER& end)
-        : Cursor(db, modifiers, res.size()), res(res), iter_cur(begin), iter_end(end) {}
+    CursorLinear(DB& db, unsigned int modifiers, memdb::Results<T>& res)
+        : Cursor(db, modifiers, res.size()), res(res), iter_cur(res.begin()), iter_end(res.end()) {}
 
     virtual void discard_rest();
     virtual bool next();
@@ -153,8 +153,7 @@ protected:
     friend class mem::DB;
 };
 
-template<typename ITER>
-struct CursorStations : public CursorLinear<memdb::Station, ITER>
+struct CursorStations : public CursorLinear<memdb::Station>
 {
 protected:
     virtual void to_record(Record& rec);
@@ -163,26 +162,8 @@ protected:
     virtual unsigned test_iterate(FILE* dump=0);
 #endif
 
-    CursorStations(DB& db, unsigned int modifiers, memdb::Results<memdb::Station>& res, const ITER& begin, const ITER& end)
-        : CursorLinear<memdb::Station, ITER>(db, modifiers, res, begin, end) {}
-
-    friend class mem::DB;
-};
-
-struct CursorAllStations : public CursorStations<memdb::Results<memdb::Station>::all_const_iterator>
-{
-protected:
-    CursorAllStations(DB& db, unsigned int modifiers, memdb::Results<memdb::Station>& res)
-        : CursorStations(db, modifiers, res, res.all_begin(), res.all_end()) {}
-
-    friend class mem::DB;
-};
-
-struct CursorSelectedStations : public CursorStations<memdb::Results<memdb::Station>::selected_const_iterator>
-{
-protected:
-    CursorSelectedStations(DB& db, unsigned int modifiers, memdb::Results<memdb::Station>& res)
-        : CursorStations(db, modifiers, res, res.selected_begin(), res.selected_end()) {}
+    CursorStations(DB& db, unsigned int modifiers, memdb::Results<memdb::Station>& res)
+        : CursorLinear<memdb::Station>(db, modifiers, res) {}
 
     friend class mem::DB;
 };

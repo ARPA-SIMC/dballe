@@ -74,69 +74,131 @@ protected:
     /// ValueStorage mapping indices to values
     const ValueStorage<T>& values;
 
-public:
-    typedef std::vector<size_t>::const_iterator index_const_iterator;
+    struct AbstractIterator
+    {
+        virtual ~AbstractIterator() {}
+        virtual size_t get() const = 0;
+        virtual bool next() = 0;
+        virtual AbstractIterator* clone() const = 0;
+        virtual bool equals(const AbstractIterator* i) const = 0;
+    };
 
+    template<typename ITER>
+    struct IteratorImpl : public AbstractIterator
+    {
+        ITER begin;
+        ITER end;
+        IteratorImpl(const ITER& begin, const ITER& end) : begin(begin), end(end) {}
+        virtual size_t get() const { return *begin; }
+        virtual bool next()
+        {
+            ++begin;
+            return begin == end;
+        }
+        virtual AbstractIterator* clone() const
+        {
+            return new IteratorImpl<ITER>(begin, end);
+        }
+        virtual bool equals(const AbstractIterator* i) const
+        {
+            if (const IteratorImpl<ITER>* i = dynamic_cast<const IteratorImpl<ITER>*>(i))
+                return begin == i->begin;
+            return false;
+        }
+    };
+
+    template<typename ITER>
+    static IteratorImpl<ITER>* make_abstract_iter(const ITER& begin, const ITER& end)
+    {
+        return new IteratorImpl<ITER>(begin, end);
+    }
+
+public:
     Results(const ValueStorage<T>& values) : values(values) {}
 
     size_t size() const;
 
-    template<typename ITER>
-    struct values_const_iterator : std::iterator<std::forward_iterator_tag, T>
-    {
-        const ValueStorage<T>* values;
-        ITER iter;
-
-        values_const_iterator(const ValueStorage<T>& values, const ITER& iter)
-            : values(&values), iter(iter) {}
-
-        size_t index() const { return *iter; }
-
-        const T& operator*() const
-        {
-            return *(*values)[*iter];
-        }
-        values_const_iterator& operator++()
-        {
-            ++iter;
-            return *this;
-        }
-        bool operator==(const values_const_iterator& i) const
-        {
-            return values == i.values && iter == i.iter;
-        }
-        bool operator!=(const values_const_iterator& i) const
-        {
-            return values != i.values || iter != i.iter;
-        }
-    };
-
-    typedef values_const_iterator<std::vector<size_t>::const_iterator> selected_const_iterator;
-    typedef values_const_iterator<typename ValueStorage<T>::index_iterator> all_const_iterator;
-
-    selected_const_iterator selected_begin() const
-    {
-        return selected_const_iterator(values, indices.begin());
-    }
-    selected_const_iterator selected_end() const
-    {
-        return selected_const_iterator(values, indices.end());
-    }
-
+    typedef std::vector<size_t>::const_iterator index_const_iterator;
     index_const_iterator selected_index_begin() const { return indices.begin(); }
     index_const_iterator selected_index_end() const { return indices.end(); }
 
-    all_const_iterator all_begin() const
-    {
-        return all_const_iterator(values, values.index_begin());
-    }
-    all_const_iterator all_end() const
-    {
-        return all_const_iterator(values, values.index_end());
-    }
-
     typename ValueStorage<T>::index_iterator all_index_begin() const { return values.index_begin(); }
     typename ValueStorage<T>::index_iterator all_index_end() const { return values.index_end(); }
+
+    struct const_iterator : std::iterator<std::forward_iterator_tag, T>
+    {
+        const ValueStorage<T>* values;
+        AbstractIterator* iter;
+
+        const_iterator(const ValueStorage<T>& values, AbstractIterator* iter)
+            : values(&values), iter(iter) {}
+        const_iterator(const const_iterator& i)
+            : values(i.values), iter(i.iter ? i.iter->clone() : 0) {}
+        ~const_iterator() { if (iter) delete iter; }
+        const_iterator& operator=(const const_iterator& i)
+        {
+            values = i.values;
+            if (iter != i.iter)
+            {
+                if (iter)
+                {
+                    delete iter;
+                    iter = 0;
+                }
+                if (i.iter)
+                    iter = i.iter->clone();
+            }
+            return *this;
+        }
+
+        size_t index() const { return iter->get(); }
+
+        const T* operator->() const
+        {
+            return (*values)[iter->get()];
+        }
+        const T& operator*() const
+        {
+            return *(*values)[iter->get()];
+        }
+        const_iterator& operator++()
+        {
+            if (!iter->next())
+            {
+                delete iter;
+                iter = 0;
+            }
+            return *this;
+        }
+        bool operator==(const const_iterator& i) const
+        {
+            if (values != i.values) return false;
+            if (!iter && !i.iter) return true;
+            if (!iter || !i.iter) return false;
+            return iter->equals(i.iter);
+        }
+        bool operator!=(const const_iterator& i) const
+        {
+            if (values != i.values) return true;
+            if (!iter && !i.iter) return false;
+            if (!iter || !i.iter) return true;
+            return !iter->equals(i.iter);
+        }
+    };
+
+    const_iterator begin() const
+    {
+        if (select_all)
+        {
+            return const_iterator(values, make_abstract_iter(all_index_begin(), all_index_end()));
+        } else {
+            return const_iterator(values, make_abstract_iter(selected_index_begin(), selected_index_end()));
+        }
+    }
+    const_iterator end() const
+    {
+        return const_iterator(values, 0);
+    }
 };
 
 namespace match {

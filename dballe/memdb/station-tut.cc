@@ -19,6 +19,7 @@
 
 #include "memdb/tests.h"
 #include "station.h"
+#include "query.h"
 
 using namespace dballe;
 using namespace dballe::memdb;
@@ -72,6 +73,31 @@ template<> template<> void to::test<1>()
     smrec.set(DBA_KEY_REP_MEMO, "airep");
     const Station& stm2 = *stations[stations.obtain(smrec)];
     wassert(actual(&stm2) == &stm);
+}
+
+template<> template<> void to::test<2>()
+{
+    // Query by ana_id
+    Stations stations;
+    stations.obtain_fixed(Coord(44.0, 11.0), "synop");
+
+    Record query;
+    query.set(DBA_KEY_ANA_ID, 0);
+
+    Results<Station> res(stations);
+    stations.query(query, res);
+
+    wassert(actual(res.size()) == 1u);
+
+    Results<Station>::const_iterator i = res.begin();
+    wassert(actual(i.index()) == 0);
+    wassert(actual(i->coords.dlat()) == 44.0);
+    wassert(actual(i->coords.dlon()) == 11.0);
+    wassert(actual(i->ident) == "");
+    wassert(actual(i->report) == "synop");
+
+    ++i;
+    wassert(actual(i == res.end()).istrue());
 }
 
 }

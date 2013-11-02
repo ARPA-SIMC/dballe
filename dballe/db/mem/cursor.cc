@@ -197,21 +197,14 @@ unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& a
 void Cursor::add_station_info(const Station& station, Record& rec)
 {
     Results<StationValue> res(db.memdb.stationvalues);
+#warning to implement here
     //db.memdb.stationvalues.query(station, res);
-    if (res.is_select_all())
-    {
-        for (Results<StationValue>::all_const_iterator i = res.all_begin();
-                i != res.all_end(); ++i)
-            to_record_stationvar(*i, rec);
-    } else {
-        for (Results<StationValue>::selected_const_iterator i = res.selected_begin();
-                i != res.selected_end(); ++i)
-            to_record_stationvar(*i, rec);
-    }
+    for (Results<StationValue>::const_iterator i = res.begin(); i != res.end(); ++i)
+        to_record_stationvar(*i, rec);
 }
 
-template<typename T, typename ITER>
-bool CursorLinear<T, ITER>::next()
+template<typename T>
+bool CursorLinear<T>::next()
 {
     if (iter_cur == iter_end)
         return false;
@@ -221,30 +214,28 @@ bool CursorLinear<T, ITER>::next()
     return iter_cur != iter_end;
 }
 
-template<typename T, typename ITER>
-void CursorLinear<T, ITER>::discard_rest()
+template<typename T>
+void CursorLinear<T>::discard_rest()
 {
     iter_cur = iter_end;
     count = 0;
 }
 
-template<typename ITER>
-bool CursorStations<ITER>::next()
+bool CursorStations::next()
 {
-    bool res = CursorLinear<memdb::Station, ITER>::next();
+    bool res = CursorLinear<memdb::Station>::next();
     if (res)
     {
-        this->cur_station_id = this->iter_cur.index();
-        this->cur_station = &(*this->iter_cur);
+        cur_station_id = iter_cur.index();
+        cur_station = &(*iter_cur);
     }
     return res;
 }
 
-template<typename ITER>
-void CursorStations<ITER>::to_record(Record& rec)
+void CursorStations::to_record(Record& rec)
 {
-    this->to_record_station(rec);
-    this->add_station_info(*this->iter_cur, rec);
+    to_record_station(rec);
+    add_station_info(*iter_cur, rec);
 }
 
 #if 0
@@ -560,9 +551,6 @@ void CursorBest::discard_rest()
     }
 }
 #endif
-
-template class CursorStations<memdb::Results<memdb::Station>::all_const_iterator>;
-template class CursorStations<memdb::Results<memdb::Station>::selected_const_iterator>;
 
 }
 }

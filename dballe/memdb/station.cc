@@ -264,10 +264,14 @@ void Stations::query(const Record& rec, Results<Station>& res) const
     // If we don't have any constraints, leave res as it is
 }
 
-template class Results<Station>;
-
 }
 }
 
 #include "core.tcc"
 #include "query.tcc"
+
+namespace dballe {
+namespace memdb {
+template class Results<Station>;
+}
+}

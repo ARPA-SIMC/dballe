@@ -111,13 +111,10 @@ void DB::vacuum()
 
 std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 {
-    unsigned int modifiers = parse_modifiers(query) | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
+    unsigned int modifiers = parse_modifiers(query);
     Results<Station> res(memdb.stations);
     memdb.query_stations(query, res);
-    if (res.is_select_all())
-        return auto_ptr<db::Cursor>(new CursorAllStations(*this, modifiers, res));
-    else
-        return auto_ptr<db::Cursor>(new CursorSelectedStations(*this, modifiers, res));
+    return auto_ptr<db::Cursor>(new CursorStations(*this, modifiers, res));
 }
 
 std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
