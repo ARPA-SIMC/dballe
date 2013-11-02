@@ -125,15 +125,6 @@ void Values::query(const Record& rec, const Results<Station>& stations, Results<
             sql_where.append_list("d.id_lev_tr != -1");
     }
 
-    // Add pseudoana-specific where parts
-    add_pa_where("s");
-    add_dt_where("d");
-    add_ltr_where("ltr");
-    add_varcode_where("d");
-    add_repinfo_where("d");
-    add_datafilter_where("d");
-    add_attrfilter_where("d");
-
 bool QueryBuilder::add_dt_where(const char* tbl)
 {
     if (rec.get(DBA_KEY_LEVELTYPE1, 0) == 257)
