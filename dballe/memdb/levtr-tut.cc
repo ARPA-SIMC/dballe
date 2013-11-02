@@ -38,19 +38,19 @@ template<> template<> void to::test<1>()
     LevTrs values;
 
     // Insert a levtr and check that all data is there
-    const LevTr& val = values.obtain(Level(1), Trange::instant());
+    const LevTr& val = *values[values.obtain(Level(1), Trange::instant())];
     wassert(actual(val.level) == Level(1));
     wassert(actual(val.trange) == Trange::instant());
 
     // Check that lookup returns the same element
-    const LevTr& val1 = values.obtain(Level(1), Trange::instant());
+    const LevTr& val1 = *values[values.obtain(Level(1), Trange::instant())];
     wassert(actual(&val1) == &val);
 
     // Check again, looking up records
     Record rec;
     rec.set(Level(1));
     rec.set(Trange::instant());
-    const LevTr& val2 = values.obtain(rec);
+    const LevTr& val2 = *values[values.obtain(rec)];
     wassert(actual(&val2) == &val);
 }
 

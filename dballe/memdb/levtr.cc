@@ -37,14 +37,14 @@ void LevTrs::clear()
 
 LevTrs::LevTrs() : ValueStorage<LevTr>() {}
 
-const LevTr& LevTrs::obtain(const Level& level, const Trange& trange)
+size_t LevTrs::obtain(const Level& level, const Trange& trange)
 {
     // Search
     Positions res = by_level.search(level);
     by_trange.refine(trange, res);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i))
-            return *get(*i);
+        if ((*this)[*i])
+            return *i;
 
     // Station not found, create it
     size_t pos = value_add(new LevTr(level, trange));
@@ -52,10 +52,10 @@ const LevTr& LevTrs::obtain(const Level& level, const Trange& trange)
     by_level[level].insert(pos);
     by_trange[trange].insert(pos);
     // And return it
-    return *get(pos);
+    return pos;
 }
 
-const LevTr& LevTrs::obtain(const Record& rec)
+size_t LevTrs::obtain(const Record& rec)
 {
     return obtain(rec.get_level(), rec.get_trange());
 }

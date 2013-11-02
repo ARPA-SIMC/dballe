@@ -53,10 +53,10 @@ public:
     void clear();
 
     /// Get a LevTr record
-    const LevTr& obtain(const Level& level, const Trange& trange);
+    size_t obtain(const Level& level, const Trange& trange);
 
     /// Get a LevTr record
-    const LevTr& obtain(const Record& rec);
+    size_t obtain(const Record& rec);
 };
 
 }

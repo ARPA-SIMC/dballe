@@ -38,16 +38,16 @@ TESTGRP(memdb_value);
 template<> template<> void to::test<1>()
 {
     Stations stations;
-    const Station& stf = stations.obtain(Coord(44.0, 11.0), "synop");
+    const Station& stf = *stations[stations.obtain_fixed(Coord(44.0, 11.0), "synop")];
 
     LevTrs levtrs;
-    const LevTr& levtr = levtrs.obtain(Level(1), Trange::instant());
+    const LevTr& levtr = *levtrs[levtrs.obtain(Level(1), Trange::instant())];
 
     Datetime datetime(2013, 10, 30, 23);
 
     // Insert a station value and check that all data is there
     Values values;
-    const Value& v = values.insert_or_replace(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 28.5));
+    const Value& v = *values[values.insert_or_replace(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 28.5))];
     wassert(actual(&v.station) == &stf);
     wassert(actual(&v.levtr) == &levtr);
     wassert(actual(v.datetime) == datetime);
@@ -55,7 +55,7 @@ template<> template<> void to::test<1>()
     wassert(actual(v.var->enqd()) == 28.5);
 
     // Replacing a value should reuse an existing one
-    const Value& v1 = values.insert_or_replace(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 29.5));
+    const Value& v1 = *values[values.insert_or_replace(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 29.5))];
     wassert(actual(&v1.station) == &stf);
     wassert(actual(&v1.levtr) == &levtr);
     wassert(actual(v1.datetime) == datetime);

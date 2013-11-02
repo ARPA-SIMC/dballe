@@ -43,7 +43,7 @@ void Memdb::clear()
 
 void Memdb::insert_or_replace(const Record& rec)
 {
-    const Station& station = stations.obtain(rec);
+    const Station& station = *stations[stations.obtain(rec)];
     if (rec.is_ana_context())
     {
         // Insert all the variables we find
@@ -59,7 +59,7 @@ void Memdb::insert_or_replace(const Record& rec)
 #endif
         }
     } else {
-        const LevTr& levtr = levtrs.obtain(rec);
+        const LevTr& levtr = *levtrs[levtrs.obtain(rec)];
         Datetime datetime = rec.get_datetime();
 
         // Insert all the variables we find

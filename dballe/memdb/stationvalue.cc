@@ -45,26 +45,29 @@ void StationValues::clear()
     ValueStorage<StationValue>::clear();
 }
 
-const StationValue& StationValues::insert_or_replace(const Station& station, std::auto_ptr<Var> var)
+size_t StationValues::insert_or_replace(const Station& station, std::auto_ptr<Var> var)
 {
     Positions res = by_station.search(&station);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i) && get(*i)->var->code() == var->code())
+    {
+        StationValue* s = (*this)[*i];
+        if (s && s->var->code() == var->code())
         {
-            get(*i)->replace(var);
-            return *get(*i);
+            s->replace(var);
+            return *i;
         }
+    }
 
     // Station not found, create it
     size_t pos = value_add(new StationValue(station, var));
     // Index it
     by_station[&station].insert(pos);
     // And return it
-    return *get(pos);
+    return pos;
 
 }
 
-const StationValue& StationValues::insert_or_replace(const Station& station, const Var& var)
+size_t StationValues::insert_or_replace(const Station& station, const Var& var)
 {
     auto_ptr<Var> copy(new Var(var));
     return insert_or_replace(station, copy);
@@ -74,12 +77,15 @@ bool StationValues::remove(const Station& station, Varcode code)
 {
     Positions res = by_station.search(&station);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i) && !get(*i)->var->code() == code)
+    {
+        const StationValue* s = (*this)[*i];
+        if (s && !s->var->code() == code)
         {
             by_station[&station].erase(*i);
             value_remove(*i);
             return true;
         }
+    }
     return false;
 }
 

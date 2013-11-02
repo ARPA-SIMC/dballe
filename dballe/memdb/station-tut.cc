@@ -38,23 +38,23 @@ template<> template<> void to::test<1>()
     Stations stations;
 
     // Insert a fixed station and check that all data is there
-    const Station& stf = stations.obtain(Coord(44.0, 11.0), "synop");
+    const Station& stf = *stations[stations.obtain_fixed(Coord(44.0, 11.0), "synop")];
     wassert(actual(stf.coords.dlat()) == 44.0);
     wassert(actual(stf.coords.dlon()) == 11.0);
     wassert(actual(stf.ident) == "");
     wassert(actual(stf.report) == "synop");
 
     // Insert a mobile station and check that all data is there
-    const Station& stm = stations.obtain(Coord(44.0, 11.0), "LH1234", "airep");
+    const Station& stm = *stations[stations.obtain_mobile(Coord(44.0, 11.0), "LH1234", "airep")];
     wassert(actual(stm.coords.dlat()) == 44.0);
     wassert(actual(stm.coords.dlon()) == 11.0);
     wassert(actual(stm.ident) == "LH1234");
     wassert(actual(stm.report) == "airep");
 
     // Check that lookup returns the same element
-    const Station& stf1 = stations.obtain(Coord(44.0, 11.0), "synop");
+    const Station& stf1 = *stations[stations.obtain_fixed(Coord(44.0, 11.0), "synop")];
     wassert(actual(&stf1) == &stf);
-    const Station& stm1 = stations.obtain(Coord(44.0, 11.0), "LH1234", "airep");
+    const Station& stm1 = *stations[stations.obtain_mobile(Coord(44.0, 11.0), "LH1234", "airep")];
     wassert(actual(&stm1) == &stm);
 
     // Check again, looking up records
@@ -62,7 +62,7 @@ template<> template<> void to::test<1>()
     sfrec.set(DBA_KEY_LAT, 44.0);
     sfrec.set(DBA_KEY_LON, 11.0);
     sfrec.set(DBA_KEY_REP_MEMO, "synop");
-    const Station& stf2 = stations.obtain(sfrec);
+    const Station& stf2 = *stations[stations.obtain(sfrec)];
     wassert(actual(&stf2) == &stf);
 
     Record smrec;
@@ -70,7 +70,7 @@ template<> template<> void to::test<1>()
     smrec.set(DBA_KEY_LON, 11.0);
     smrec.set(DBA_KEY_IDENT, "LH1234");
     smrec.set(DBA_KEY_REP_MEMO, "airep");
-    const Station& stm2 = stations.obtain(smrec);
+    const Station& stm2 = *stations[stations.obtain(smrec)];
     wassert(actual(&stm2) == &stm);
 }
 

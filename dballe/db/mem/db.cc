@@ -91,6 +91,7 @@ void DB::remove(const Record& rec)
 
 void DB::vacuum()
 {
+    // Nothing to do
 }
 
 std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)

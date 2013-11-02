@@ -29,7 +29,7 @@ void Values::clear()
     ValueStorage<Value>::clear();
 }
 
-const Value& Values::insert_or_replace(
+size_t Values::insert_or_replace(
         const Station& station, const LevTr& levtr,
         const Datetime& datetime, std::auto_ptr<Var> var)
 {
@@ -37,11 +37,14 @@ const Value& Values::insert_or_replace(
     by_levtr.refine(&levtr, res);
     by_date.refine(datetime, res);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i) && get(*i)->datetime == datetime && get(*i)->var->code() == var->code())
+    {
+        Value* v = (*this)[*i];
+        if (v && v->datetime == datetime && v->var->code() == var->code())
         {
-            get(*i)->replace(var);
-            return *get(*i);
+            v->replace(var);
+            return *i;
         }
+    }
 
     // Station not found, create it
     size_t pos = value_add(new Value(station, levtr, datetime, var));
@@ -50,11 +53,11 @@ const Value& Values::insert_or_replace(
     by_levtr[&levtr].insert(pos);
     by_date[datetime].insert(pos);
     // And return it
-    return *get(pos);
+    return pos;
 
 }
 
-const Value& Values::insert_or_replace(
+size_t Values::insert_or_replace(
         const Station& station, const LevTr& levtr,
         const Datetime& datetime, const Var& var)
 {
@@ -68,7 +71,9 @@ bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& 
     by_levtr.refine(&levtr, res);
     by_date.refine(datetime, res);
     for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if (get(*i) && get(*i)->datetime == datetime && get(*i)->var->code() == code)
+    {
+        Value* v = (*this)[*i];
+        if (v && v->datetime == datetime && v->var->code() == code)
         {
             by_station[&station].erase(*i);
             by_levtr[&levtr].erase(*i);
@@ -76,6 +81,7 @@ bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& 
             value_remove(*i);
             return true;
         }
+    }
     return false;
 }
 

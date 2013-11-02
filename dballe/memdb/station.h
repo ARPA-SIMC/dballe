@@ -65,13 +65,13 @@ public:
     void clear();
 
     /// Get a fixed Station record
-    const Station& obtain(const Coord& coords, const std::string& report);
+    size_t obtain_fixed(const Coord& coords, const std::string& report, bool create=true);
 
     /// Get a mobile Station record
-    const Station& obtain(const Coord& coords, const std::string& ident, const std::string& report);
+    size_t obtain_mobile(const Coord& coords, const std::string& ident, const std::string& report, bool create=true);
 
     /// Get a fixed or mobile Station record depending on the data in rec
-    const Station& obtain(const Record& rec);
+    size_t obtain(const Record& rec, bool create=true);
 };
 
 }

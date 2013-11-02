@@ -71,7 +71,7 @@ struct Index : public std::map<T, Positions>
 };
 
 template<typename T>
-struct ValueStorage : public std::vector<T*>
+struct ValueStorage : protected std::vector<T*>
 {
     std::vector<size_t> empty_slots;
 
@@ -89,8 +89,11 @@ struct ValueStorage : public std::vector<T*>
         std::vector<T*>::clear();
     }
 
-    T* get(size_t idx) { return (*this)[idx]; }
-    const T* get(size_t idx) const { return (*this)[idx]; }
+    T* at(size_t idx) { return std::vector<T*>::at(idx); }
+    const T* at(size_t idx) const { return std::vector<T*>::at(idx); }
+
+    T*& operator[](size_t idx) { return std::vector<T*>::operator[](idx); }
+    const T*& operator[](size_t idx) const { return std::vector<T*>::operator[](idx); }
 
 protected:
     /// Add the value to the storage and return its index
