@@ -1,7 +1,7 @@
 /*
- * db/v6/repinfo - repinfo table management
+ * db/mem/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,28 +21,122 @@
 
 #include "repinfo.h"
 #include "dballe/db/internals.h"
+#include "dballe/core/csv.h"
 #include <wreport/error.h>
+#include <set>
+#include <limits>
+#include <cstdlib>
+#include <cstdio>
 
+using namespace std;
 using namespace wreport;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace mem {
 
-Repinfo::Repinfo(Connection* conn) : v5::Repinfo(conn) {}
+namespace {
 
-int Repinfo::id_use_count(unsigned id, const char* name)
+struct fd_closer
 {
-    DBALLE_SQL_C_UINT_TYPE dbid = id;
-    DBALLE_SQL_C_UINT_TYPE count;
-    db::Statement stm(*conn);
-    stm.prepare("SELECT COUNT(1) FROM data WHERE id_report = ?");
-    stm.bind_in(1, dbid);
-    stm.bind_out(1, count);
-    stm.execute();
-    if (!stm.fetch_expecting_one())
-        error_consistency::throwf("%s is in cache but not in the database (database externally modified?)", name);
-    return count;
+    FILE* fd;
+    fd_closer(FILE* fd) : fd(fd) {}
+    ~fd_closer() { fclose(fd); }
+};
+
+static inline void inplace_tolower(std::string& buf)
+{
+    for (string::iterator i = buf.begin(); i != buf.end(); ++i)
+        *i = tolower(*i);
+}
+
+}
+
+void Repinfo::load(const char* repinfo_file)
+{
+    int added, deleted, updated;
+    update(repinfo_file, &added, &deleted, &updated);
+}
+
+void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated)
+{
+    *added = *deleted = *updated = 0;
+
+    if (deffile == 0)
+        deffile = default_repinfo_file();
+
+    // Open the input CSV file
+    FILE* in = fopen(deffile, "r");
+    if (in == NULL)
+        error_system::throwf("opening file %s", deffile);
+    fd_closer closer(in);
+
+    set<string> oldkeys;
+    for (map<string, int>::const_iterator i = priorities.begin(); i != priorities.end(); ++i)
+        oldkeys.insert(i->first);
+
+    // Read the CSV file
+    vector<string> columns;
+    for (int line = 1; csv_read_next(in, columns); ++line)
+    {
+        if (columns.size() != 6)
+            error_parse::throwf(deffile, line, "Expected 6 columns, got %zd", columns.size());
+
+        // Lowercase all rep_memos
+        inplace_tolower(columns[1]);
+        string memo = columns[1];
+        int prio = strtol(columns[3].c_str(), 0, 10);
+
+        map<string, int>::iterator old = priorities.find(memo);
+        if (old == priorities.end())
+        {
+            priorities.insert(make_pair(memo, prio));
+            ++*added;
+        } else {
+            old->second = prio;
+            ++*updated;
+        }
+
+        oldkeys.erase(memo);
+    }
+
+    for (set<string>::const_iterator i = oldkeys.begin(); i != oldkeys.end(); ++i)
+    {
+        priorities.erase(*i);
+        ++*deleted;
+    }
+}
+
+std::map<std::string, int> Repinfo::get_priorities() const
+{
+    return priorities;
+}
+
+int Repinfo::get_prio(const std::string& memo)
+{
+    string lc_memo = memo;
+    inplace_tolower(lc_memo);
+
+    std::map<std::string, int>::const_iterator i = priorities.find(lc_memo);
+    if (i != priorities.end())
+        return i->second;
+
+    int max_prio = numeric_limits<int>::min();
+    for (std::map<std::string, int>::const_iterator i = priorities.begin();
+            i != priorities.end(); ++i)
+        if (i->second > max_prio)
+            max_prio = i->second;
+
+    int new_prio = max_prio + 1;
+    priorities.insert(make_pair(lc_memo, new_prio));
+    return new_prio;
+}
+
+void Repinfo::dump(FILE* out) const
+{
+    for (std::map<std::string, int>::const_iterator i = priorities.begin();
+            i != priorities.end(); ++i)
+        fprintf(out, "%s: %d\n", i->first.c_str(), i->second);
 }
 
 }

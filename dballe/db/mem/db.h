@@ -23,6 +23,7 @@
 #define DBA_DB_MEM_H
 
 #include <dballe/db/db.h>
+#include <dballe/db/mem/repinfo.h>
 #include <dballe/memdb/memdb.h>
 #include <wreport/varinfo.h>
 #include <string>
@@ -55,6 +56,8 @@ public:
     Memdb memdb;
 
 protected:
+    Repinfo repinfo;
+
     size_t m_last_station_id;
 
     /// Store information about the database ID of a variable

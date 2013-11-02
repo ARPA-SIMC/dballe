@@ -49,25 +49,17 @@ void DB::disappear()
 void DB::reset(const char* repinfo_file)
 {
     disappear();
-
-    // TODO:
-#if 0
-    /* Populate the tables with values */
-    {
-        int added, deleted, updated;
-        repinfo().update(repinfo_file, &added, &deleted, &updated);
-    }
-#endif
+    repinfo.load(repinfo_file);
 }
 
 void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    repinfo.update(repinfo_file, added, deleted, updated);
 }
 
 std::map<std::string, int> DB::get_repinfo_priorities()
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    repinfo.get_priorities();
 }
 
 void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
