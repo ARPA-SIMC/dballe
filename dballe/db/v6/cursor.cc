@@ -154,11 +154,6 @@ int Cursor::remaining() const
     return count;
 }
 
-wreport::Varcode Cursor::varcode() const
-{
-    return sqlrec.out_varcode;
-}
-
 int Cursor::get_station_id() const { return sqlrec.out_ana_id; }
 double Cursor::get_lat() const { return (double)sqlrec.out_lat / 100000.0; }
 double Cursor::get_lon() const { return (double)sqlrec.out_lon / 100000.0; }

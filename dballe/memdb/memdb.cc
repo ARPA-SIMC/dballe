@@ -82,7 +82,7 @@ void Memdb::insert_or_replace(const Msg& msg)
 {
 }
 
-void Memdb::query_stations(const Record& rec, Results& res) const
+void Memdb::query_stations(const Record& rec, Results<Station>& res) const
 {
     stations.query(rec, res);
 #if 0

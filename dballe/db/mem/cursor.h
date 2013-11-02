@@ -1,7 +1,7 @@
 /*
- * db/v6/cursor - manage select queries
+ * db/mem/cursor - iterate results of queries on mem databases
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,30 +19,25 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-/** @file
- * @ingroup db
- *
- * Functions used to manage a general DB-ALLe query
- */
+#ifndef DBA_DB_MEM_CURSOR_H
+#define DBA_DB_MEM_CURSOR_H
 
-#ifndef DBA_DB_V6_CURSOR_H
-#define DBA_DB_V6_CURSOR_H
-
-#include <dballe/db/odbcworkarounds.h>
+#include <dballe/memdb/memdb.h>
+#include <dballe/memdb/query.h>
 #include <dballe/db/db.h>
+#if 0
 #include <wreport/varinfo.h>
-#include <sqltypes.h>
 #include <cstddef>
 #include <vector>
+#endif
 
 namespace dballe {
 struct DB;
 struct Record;
 
 namespace db {
-struct Statement;
 
-namespace v6 {
+namespace mem {
 struct DB;
 
 /**
@@ -57,58 +52,25 @@ typedef std::vector<wreport::Varcode> AttrList;
  */
 struct Cursor : public db::Cursor
 {
-    /// Query results from SQL output
-    struct SQLRecord
-    {
-        DBALLE_SQL_C_SINT_TYPE  out_lat;
-        DBALLE_SQL_C_SINT_TYPE  out_lon;
-        char    out_ident[64];      SQLLEN out_ident_ind;
-        wreport::Varcode        out_varcode;
-        SQL_TIMESTAMP_STRUCT    out_datetime;
-        char    out_value[255];
-        DBALLE_SQL_C_SINT_TYPE  out_rep_cod;
-        DBALLE_SQL_C_SINT_TYPE  out_ana_id;
-        DBALLE_SQL_C_SINT_TYPE  out_id_ltr;
-        DBALLE_SQL_C_SINT_TYPE  out_id_data;
-        int priority;
+    /// Database to operate on
+    mem::DB& db;
 
-        /**
-         * Checks true if ana_id, id_ltr, datetime and varcode are the same in
-         * both records
-         *
-         * @returns true if they match, false if they are different
-         */
-        bool querybest_fields_are_the_same(const SQLRecord& r);
-    };
-
-    /** Database to operate on */
-    v6::DB& db;
-
-    /** Modifier flags to enable special query behaviours */
+    /// Modifier flags to enable special query behaviours
     const unsigned int modifiers;
 
-    /** Number of results still to be fetched */
-    DBALLE_SQL_C_SINT_TYPE count;
+    /// Number of results still to be fetched
+    size_t count;
 
-    /// Results written by fetch
-    SQLRecord sqlrec;
-
+    size_t cur_station_id;
+    const memdb::Station* cur_station;
+    const memdb::Value* cur_value;
 
     virtual ~Cursor();
 
     virtual dballe::DB& get_db() const;
 
-    /**
-     * Get the number of rows still to be fetched
-     *
-     * @return
-     *   The number of rows still to be queried.  The value is undefined if no
-     *   query has been successfully peformed yet using this cursor.
-     */
+    /// Get the number of rows still to be fetched
     int remaining() const;
-
-    /// Perform the query
-    virtual void query(const Record& query) = 0;
 
     /**
      * Get a new item from the results of a query
@@ -120,9 +82,6 @@ struct Cursor : public db::Cursor
 
     /// Discard the results that have not been read yet
     virtual void discard_rest() = 0;
-
-    /// Get the varcode of the current entry
-    wreport::Varcode varcode() const;
 
     /**
      * Query attributes for the current variable
@@ -142,12 +101,14 @@ struct Cursor : public db::Cursor
 
     virtual int attr_reference_id() const;
 
+#if 0
     /**
      * Iterate the cursor until the end, returning the number of items.
      *
      * If dump is a FILE pointer, also dump the cursor values to it
      */
     virtual unsigned test_iterate(FILE* dump=0) = 0;
+#endif
 
 protected:
     /**
@@ -158,73 +119,75 @@ protected:
      * @param modifiers
      *   Optional modifiers to ask for special query behaviours
      */
-    Cursor(v6::DB& db, unsigned int modifiers);
+    Cursor(mem::DB& db, unsigned modifiers, size_t count=0);
 
-    void to_record_pseudoana(Record& rec);
-    void to_record_repinfo(Record& rec);
+    void to_record_station(Record& rec);
+    void to_record_stationvar(const memdb::StationValue& value, Record& rec);
+#if 0
     void to_record_ltr(Record& rec);
     void to_record_datetime(Record& rec);
     void to_record_varcode(Record& rec);
-
-    int query_stations(db::Statement& stm, const Record& rec);
-    int query_data(db::Statement& stm, const Record& rec);
-
-    /// Query extra station info and add it to \a rec
-    void add_station_info(Record& rec);
-
-#if 0
-    /**
-     * Perform the raw sql query
-     *
-     * @returns
-     *   the number of results
-     */
-    int raw_query(db::Statement& stm, const Record& rec);
 #endif
 
-    /**
-     * Return the number of results for a query.
-     *
-     * This is the same as Cursor::query, but it does a SELECT COUNT(*) only.
-     *
-     * @warning: do not use it except to get an approximate row count:
-     * insert/delete/update queries run between the count and the select will
-     * change the size of the result set.
-     */
-    //int getcount(const Record& query);
+    /// Query extra station info and add it to \a rec
+    void add_station_info(const memdb::Station& station, Record& rec);
 };
 
+template<typename T, typename ITER>
 class CursorLinear : public Cursor
 {
 public:
-    virtual ~CursorLinear();
+    virtual ~CursorLinear() {};
 
 protected:
-    /** ODBC statement to use for the query */
-    db::Statement* stm;
+    memdb::Results<T> res;
+    ITER iter_cur;
+    ITER iter_end;
 
-    CursorLinear(DB& db, unsigned int modifiers);
+    CursorLinear(DB& db, unsigned int modifiers, memdb::Results<T>& res, const ITER& begin, const ITER& end)
+        : Cursor(db, modifiers, res.size()), res(res), iter_cur(begin), iter_end(end) {}
 
     virtual void discard_rest();
     virtual bool next();
 
-    friend class dballe::db::v6::DB;
+    friend class mem::DB;
 };
 
-struct CursorStations : public CursorLinear
+template<typename ITER>
+struct CursorStations : public CursorLinear<memdb::Station, ITER>
 {
-    /// Query station info
-    virtual void query(const Record& rec);
-    virtual void to_record(Record& rec);
-    virtual unsigned test_iterate(FILE* dump=0);
-
 protected:
-    CursorStations(DB& db, unsigned int modifiers)
-        : CursorLinear(db, modifiers) {}
+    virtual void to_record(Record& rec);
+    virtual bool next();
+#if 0
+    virtual unsigned test_iterate(FILE* dump=0);
+#endif
 
-    friend class dballe::db::v6::DB;
+    CursorStations(DB& db, unsigned int modifiers, memdb::Results<memdb::Station>& res, const ITER& begin, const ITER& end)
+        : CursorLinear<memdb::Station, ITER>(db, modifiers, res, begin, end) {}
+
+    friend class mem::DB;
 };
 
+struct CursorAllStations : public CursorStations<memdb::Results<memdb::Station>::all_const_iterator>
+{
+protected:
+    CursorAllStations(DB& db, unsigned int modifiers, memdb::Results<memdb::Station>& res)
+        : CursorStations(db, modifiers, res, res.all_begin(), res.all_end()) {}
+
+    friend class mem::DB;
+};
+
+struct CursorSelectedStations : public CursorStations<memdb::Results<memdb::Station>::selected_const_iterator>
+{
+protected:
+    CursorSelectedStations(DB& db, unsigned int modifiers, memdb::Results<memdb::Station>& res)
+        : CursorStations(db, modifiers, res, res.selected_begin(), res.selected_end()) {}
+
+    friend class mem::DB;
+};
+
+#if 0
 struct CursorData : public CursorLinear
 {
     /// Query data
@@ -296,6 +259,7 @@ protected:
 
     friend class dballe::db::v6::DB;
 };
+#endif
 
 } // namespace v6
 } // namespace db

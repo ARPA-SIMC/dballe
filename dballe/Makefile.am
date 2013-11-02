@@ -100,6 +100,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v6/qbuilder.h \
 	db/v6/data.h \
 	db/mem/repinfo.h \
+	db/mem/cursor.h \
 	db/mem/db.h \
 	cmdline/dbadb.h \
 	simple/dbapi.h
@@ -191,6 +192,7 @@ libdballe_la_SOURCES += \
 	db/v6/import.cc \
 	db/v6/export.cc \
 	db/mem/repinfo.cc \
+	db/mem/cursor.cc \
 	db/mem/db.cc \
 	cmdline/dbadb.cc \
 	simple/dbapi.cc

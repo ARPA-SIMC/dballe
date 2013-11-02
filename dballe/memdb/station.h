@@ -30,7 +30,7 @@ namespace dballe {
 struct Record;
 
 namespace memdb {
-struct Results;
+template<typename T> struct Results;
 
 /// Station information
 struct Station
@@ -75,7 +75,7 @@ public:
     size_t obtain(const Record& rec, bool create=true);
 
     /// Query stations returning the IDs
-    void query(const Record& rec, Results& res) const;
+    void query(const Record& rec, Results<Station>& res) const;
 };
 
 }

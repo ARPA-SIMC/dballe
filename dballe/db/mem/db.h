@@ -54,10 +54,9 @@ class DB : public dballe::DB
 public:
     /// In-memory database backend
     Memdb memdb;
-
-protected:
     Repinfo repinfo;
 
+protected:
     size_t m_last_station_id;
 
     /// Store information about the database ID of a variable

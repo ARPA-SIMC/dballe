@@ -20,6 +20,8 @@
  */
 
 #include "db.h"
+#include "cursor.h"
+#include "dballe/db/modifiers.h"
 #include <dballe/core/record.h>
 #include <dballe/core/defs.h>
 #include <dballe/memdb/query.h>
@@ -109,20 +111,37 @@ void DB::vacuum()
 
 std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 {
-    memdb::Results res;
+    unsigned int modifiers = parse_modifiers(query) | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
+    Results<Station> res(memdb.stations);
     memdb.query_stations(query, res);
-    // TODO: create a Cursor that iterates res over stations
-    // if select_all, the result count is stations.size() - stations.empty_slots.size()
-    throw error_unimplemented("not yet implemented in MEM database");
+    if (res.is_select_all())
+        return auto_ptr<db::Cursor>(new CursorAllStations(*this, modifiers, res));
+    else
+        return auto_ptr<db::Cursor>(new CursorSelectedStations(*this, modifiers, res));
 }
 
 std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 {
+#if 0
+    unsigned int modifiers = parse_modifiers(query);
+    auto_ptr<Cursor> res;
+    if (modifiers & DBA_DB_MODIFIER_BEST)
+        res.reset(new CursorBest(*this, modifiers));
+    else
+        res.reset(new CursorData(*this, modifiers));
+    res->query(query);
+    return auto_ptr<db::Cursor>(res.release());
+#endif
     throw error_unimplemented("not yet implemented in MEM database");
 }
 
 std::auto_ptr<db::Cursor> DB::query_summary(const Record& rec)
 {
+#if 0
+    auto_ptr<Cursor> res(new CursorSummary(*this, 0));
+    res->query(rec);
+    return auto_ptr<db::Cursor>(res.release());
+#endif
     throw error_unimplemented("not yet implemented in MEM database");
 }
 

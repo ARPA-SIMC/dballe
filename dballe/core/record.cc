@@ -618,6 +618,12 @@ void Record::set_datetime(int ye, int mo, int da, int ho, int mi, int se)
     set(DBA_KEY_SEC,   se);
 }
 
+void Record::set(const Coord& c)
+{
+    set(DBA_KEY_LAT, c.lat);
+    set(DBA_KEY_LON, c.lon);
+}
+
 void Record::set_ana_context()
 {
 	key(DBA_KEY_YEAR).seti(1000);

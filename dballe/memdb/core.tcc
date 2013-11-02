@@ -31,7 +31,7 @@ namespace dballe {
 namespace memdb {
 
 template<typename T>
-void Index<T>::query(const const_iterator& begin, const const_iterator& end, const Match<size_t>* filter, Results& res) const
+void Index<T>::query(const const_iterator& begin, const const_iterator& end, const Match<size_t>* filter, BaseResults& res) const
 {
     stl::Intersection<Positions::const_iterator> merger;
     for (const_iterator i = begin; begin != end; ++i)
@@ -40,13 +40,13 @@ void Index<T>::query(const const_iterator& begin, const const_iterator& end, con
 }
 
 template<typename T>
-void Index<T>::query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, Results& res) const
+void Index<T>::query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, BaseResults& res) const
 {
     query(begin, end, &filter, res);
 }
 
 template<typename T>
-void Index<T>::query(const const_iterator& begin, const const_iterator& end, Results& res) const
+void Index<T>::query(const const_iterator& begin, const const_iterator& end, BaseResults& res) const
 {
     query(begin, end, 0, res);
 }

@@ -32,7 +32,7 @@ struct Record;
 struct Msg;
 
 namespace memdb {
-struct Results;
+template<typename T> struct Results;
 }
 
 /// In-memory database backend
@@ -50,7 +50,7 @@ struct Memdb
     void insert_or_replace(const Msg& msg);
 
     /// Query stations, returning a list of station IDs
-    void query_stations(const Record& rec, memdb::Results& res) const;
+    void query_stations(const Record& rec, memdb::Results<memdb::Station>& res) const;
 
 private:
     Memdb(const Memdb&);

@@ -1,7 +1,7 @@
 /*
- * db/v6/cursor - manage select queries
+ * db/mem/cursor - iterate results of queries on mem databases
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,37 +20,30 @@
  */
 
 #include "cursor.h"
-#include "qbuilder.h"
 #include "db.h"
+#include "dballe/core/record.h"
+#if 0
 #include "dballe/db/internals.h"
 #include "dballe/db/v6/repinfo.h"
 
 #include <wreport/var.h>
 #include <dballe/core/defs.h>
-#include <dballe/core/record.h>
 #include "lev_tr.h"
 
 #include <sql.h>
 #include <cstdio>
 #include <cstring>
-
-namespace {
-
-// Consts used for to_record_todo
-const unsigned int TOREC_PSEUDOANA   = 1 << 0;
-const unsigned int TOREC_BASECONTEXT = 1 << 1;
-const unsigned int TOREC_DATACONTEXT = 1 << 2;
-const unsigned int TOREC_DATA        = 1 << 3;
-
-}
+#endif
 
 using namespace std;
 using namespace wreport;
+using namespace dballe::memdb;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace mem {
 
+#if 0
 bool Cursor::SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
 {
     if (out_ana_id != r.out_ana_id) return false;
@@ -59,9 +52,11 @@ bool Cursor::SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
     if (out_varcode != r.out_varcode) return false;
     return true;
 }
+#endif
 
-Cursor::Cursor(v6::DB& db, unsigned int modifiers)
-    : db(db), modifiers(modifiers)
+Cursor::Cursor(mem::DB& db, unsigned modifiers, size_t count)
+    : db(db), modifiers(modifiers), count(count),
+      cur_station_id(0), cur_station(0), cur_value(0)
 {
 }
 
@@ -71,167 +66,91 @@ Cursor::~Cursor()
 
 dballe::DB& Cursor::get_db() const { return db; }
 
-int Cursor::attr_reference_id() const
-{
-    return sqlrec.out_id_data;
-}
-
-#if 0
-int Cursor::raw_query(db::Statement& stm, const Record& rec)
-{
-    int count;
-
-    if (db.conn->server_type == ORACLE && !(modifiers & DBA_DB_MODIFIER_STREAM))
-    {
-        /* FIXME: this is a temporary solution giving an approximate row count only:
-         * insert/delete/update queries run between the count and the select will
-         * change the size of the result set */
-        count = getcount(rec);
-    }
-
-    QueryBuilder qb(db, stm, *this, modifiers);
-
-    qb.build_query(rec);
-
-    from_wanted = qb.from_wanted;
-
-    TRACE("Performing query: %s\n", qb.sql_query.c_str());
-    //if (qb.modifiers & DBA_DB_MODIFIER_BEST)
-    //    fprintf(stderr, "Q %s\n", qb.sql_query.c_str());
-
-    if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ORACLE)
-        stm.set_cursor_forward_only();
-
-#if 0
-    //DBA_RUN_OR_RETURN(setstmtattr(cur->stm, SQL_ATTR_CURSOR_TYPE, (SQLPOINTER)SQL_CURSOR_STATIC, SQL_IS_INTEGER, "Setting SQL_CURSOR_STATIC"));
-    DBA_RUN_OR_RETURN(setstmtattr(cur->stm, SQL_ATTR_CURSOR_SCROLLABLE, (SQLPOINTER)SQL_SCROLLABLE, SQL_IS_INTEGER, "Setting SQL_SCROLLABLE"));
-    DBA_RUN_OR_RETURN(setstmtattr(cur->stm, SQL_ATTR_CURSOR_TYPE, (SQLPOINTER)SQL_CURSOR_DYNAMIC, SQL_IS_INTEGER, "Setting SQL_CURSOR_DYNAMIC"));
-
-#endif
-    //fprintf(stderr, "********************** 0 ************\n");
-    //fprintf(stderr, "** Q %s\n", dba_querybuf_get(sql_query));
-
-    /* Perform the query */
-    stm.exec_direct(qb.sql_query.data(), qb.sql_query.size());
-
-    /* Get the number of affected rows */
-    if (db.conn->server_type != ORACLE)
-        count = stm.select_rowcount();
-
-    /* Retrieve results will happen in dba_db_cursor_next() */
-    return count;
-}
-#endif
-
-#if 0
-int Cursor::getcount(const Record& rec)
-{
-    db::Statement stm(*db.conn);
-
-    /* Scan query modifiers */
-    QueryBuilder qb(db, stm, *this, rec, modifiers);
-
-    //TODO
-    //qb.build_count_query(rec);
-
-    TRACE("Performing query: %s\n", qb.sql_query.c_str());
-    /* fprintf(stderr, "Performing query: %s\n", dba_querybuf_get(sql_query)); */
-
-    /* Perform the query */
-    stm.exec_direct(qb.sql_query.data(), qb.sql_query.size());
-
-    if (!stm.fetch())
-        throw error_consistency("no results when trying to get the row count");
-
-    stm.close_cursor();
-    return count;
-}
-#endif
-
 int Cursor::remaining() const
 {
     return count;
 }
 
-wreport::Varcode Cursor::varcode() const
+int Cursor::attr_reference_id() const
 {
-    return sqlrec.out_varcode;
+#warning no idea what to use here yet
+    //return sqlrec.out_id_data;
+    return 0;
 }
 
-int Cursor::get_station_id() const { return sqlrec.out_ana_id; }
-double Cursor::get_lat() const { return (double)sqlrec.out_lat / 100000.0; }
-double Cursor::get_lon() const { return (double)sqlrec.out_lon / 100000.0; }
+int Cursor::get_station_id() const { return cur_station_id; }
+double Cursor::get_lat() const { return cur_station->coords.dlat(); }
+double Cursor::get_lon() const { return cur_station->coords.dlon(); }
 const char* Cursor::get_ident(const char* def) const
 {
-    if (sqlrec.out_ident_ind == SQL_NULL_DATA || sqlrec.out_ident[0] == 0)
+    if (cur_station->mobile)
+        return cur_station->ident.c_str();
+    else
         return def;
-    return sqlrec.out_ident;
 }
-const char* Cursor::get_rep_memo(const char* def) const
-{
-    v5::Repinfo& ri = db.repinfo();
-    const v5::repinfo::Cache* c = ri.get_by_id(sqlrec.out_rep_cod);
-    if (c == NULL) return def;
-    return c->memo.c_str();
-}
+const char* Cursor::get_rep_memo(const char* def) const { return cur_station->report.c_str(); }
+
 Level Cursor::get_level() const
 {
-    if (sqlrec.out_id_ltr == -1)
+    if (cur_value)
+        return cur_value->levtr.level;
+    else
         return Level();
-    return db.lev_tr_cache().to_level(sqlrec.out_id_ltr);
 }
 Trange Cursor::get_trange() const
 {
-    if (sqlrec.out_id_ltr == -1)
+    if (cur_value)
+        return cur_value->levtr.trange;
+    else
         return Trange();
-    return db.lev_tr_cache().to_trange(sqlrec.out_id_ltr);
 }
 void Cursor::get_datetime(int (&dt)[6]) const
 {
-    dt[0] = sqlrec.out_datetime.year;
-    dt[1] = sqlrec.out_datetime.month;
-    dt[2] = sqlrec.out_datetime.day;
-    dt[3] = sqlrec.out_datetime.hour;
-    dt[4] = sqlrec.out_datetime.minute;
-    dt[5] = sqlrec.out_datetime.second;
+    if (cur_value)
+    {
+        dt[0] = cur_value->datetime.year;
+        dt[1] = cur_value->datetime.month;
+        dt[2] = cur_value->datetime.day;
+        dt[3] = cur_value->datetime.hour;
+        dt[4] = cur_value->datetime.minute;
+        dt[5] = cur_value->datetime.second;
+    } else {
+        dt[0] = 1000;
+        dt[1] = 1;
+        dt[2] = 1;
+        dt[3] = 0;
+        dt[4] = 0;
+        dt[5] = 0;
+    }
 }
-wreport::Varcode Cursor::get_varcode() const { return (wreport::Varcode)sqlrec.out_varcode; }
+wreport::Varcode Cursor::get_varcode() const { return (wreport::Varcode)0; }
 wreport::Var Cursor::get_var() const
 {
-    return Var(varinfo(sqlrec.out_varcode), sqlrec.out_value);
+    throw error_consistency("get_var not supported on this query");
 }
 
-void Cursor::to_record_pseudoana(Record& rec)
+void Cursor::to_record_station(Record& rec)
 {
-    rec.key(DBA_KEY_ANA_ID).seti(sqlrec.out_ana_id);
-    rec.key(DBA_KEY_LAT).seti(sqlrec.out_lat);
-    rec.key(DBA_KEY_LON).seti(sqlrec.out_lon);
-    if (sqlrec.out_ident_ind != SQL_NULL_DATA && sqlrec.out_ident[0] != 0)
+    rec.set(DBA_KEY_ANA_ID, (int)cur_station_id);
+    rec.set(cur_station->coords);
+    if (cur_station->mobile)
     {
-        rec.key(DBA_KEY_IDENT).setc(sqlrec.out_ident);
+        rec.set(DBA_KEY_IDENT, cur_station->ident);
         rec.key(DBA_KEY_MOBILE).seti(1);
     } else {
         rec.key_unset(DBA_KEY_IDENT);
         rec.key(DBA_KEY_MOBILE).seti(0);
     }
+    rec.set(DBA_KEY_REP_MEMO, cur_station->report);
+    rec.set(DBA_KEY_PRIORITY, db.repinfo.get_prio(cur_station->report));
 }
 
-void Cursor::to_record_repinfo(Record& rec)
+void Cursor::to_record_stationvar(const StationValue& value, Record& rec)
 {
-    db::v6::Repinfo& ri = db.repinfo();
-
-    rec.key(DBA_KEY_REP_COD).seti(sqlrec.out_rep_cod);
-    const v5::repinfo::Cache* c = ri.get_by_id(sqlrec.out_rep_cod);
-    if (c != NULL)
-    {
-        rec.key(DBA_KEY_REP_MEMO).setc(c->memo.c_str());
-        rec.key(DBA_KEY_PRIORITY).seti(c->prio);
-    } else {
-        rec.key(DBA_KEY_REP_MEMO).unset();
-        rec.key(DBA_KEY_PRIORITY).unset();
-    }
+    rec.set(*value.var);
 }
 
+#if 0
 void Cursor::to_record_ltr(Record& rec)
 {
     if (sqlrec.out_id_ltr != -1)
@@ -266,136 +185,69 @@ void Cursor::to_record_varcode(Record& rec)
             WR_VAR_Y(sqlrec.out_varcode));
     rec.key(DBA_KEY_VAR).setc(bname);
 }
+#endif
 
 unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {
-    return db.query_attrs(sqlrec.out_id_data, sqlrec.out_varcode, qcs, attrs);
+#warning to be implemented
+    return 0;
+    //return db.query_attrs(sqlrec.out_id_data, sqlrec.out_varcode, qcs, attrs);
 }
 
-void Cursor::add_station_info(Record& rec)
+void Cursor::add_station_info(const Station& station, Record& rec)
 {
-    /* Extra variables to add:
-     *
-     * HEIGHT,      B07001  1793
-     * HEIGHT_BARO, B07031  1823
-     * ST_NAME,     B01019   275
-     * BLOCK,       B01001   257
-     * STATION,     B01002   258
-    */
-#define BASE_QUERY \
-        "SELECT d.id_var, d.value, ri.id, ri.prio" \
-        "  FROM data d, repinfo ri" \
-        " WHERE d.id_lev_tr == -1 AND ri.id = d.id_report AND d.id_station = ?"
-
-    const char* query;
-    switch (db.conn->server_type)
+    Results<StationValue> res(db.memdb.stationvalues);
+    //db.memdb.stationvalues.query(station, res);
+    if (res.is_select_all())
     {
-        case MYSQL:
-            query = BASE_QUERY
-                " GROUP BY d.id_var,ri.id "
-                "HAVING ri.prio=MAX(ri.prio)";
-            break;
-        default:
-            query = BASE_QUERY
-                " AND ri.prio=("
-                "  SELECT MAX(sri.prio) FROM repinfo sri"
-                "    JOIN data sd ON sri.id=sd.id_report"
-                "  WHERE sd.id_station=d.id_station AND sd.id_lev_tr == -1"
-                "    AND sd.id_var=d.id_var)";
-            break;
-    }
-#undef BASE_QUERY
-
-    unsigned short st_out_code;
-    char st_out_val[256];
-    SQLLEN st_out_val_ind;
-    DBALLE_SQL_C_SINT_TYPE st_out_rep_cod;
-
-    /* Allocate statement handle */
-    db::Statement stm(*db.conn);
-
-    /* Bind input fields */
-    stm.bind_in(1, sqlrec.out_ana_id);
-
-    /* Bind output fields */
-    stm.bind_out(1, st_out_code);
-    stm.bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
-    stm.bind_out(3, st_out_rep_cod);
-
-    /* Perform the query */
-    stm.exec_direct(query);
-
-    /* Get the results and save them in the record */
-    while (stm.fetch())
-    {
-        rec.var(st_out_code).setc(st_out_val);
-        rec.key(DBA_KEY_REP_COD).seti(st_out_rep_cod);
+        for (Results<StationValue>::all_const_iterator i = res.all_begin();
+                i != res.all_end(); ++i)
+            to_record_stationvar(*i, rec);
+    } else {
+        for (Results<StationValue>::selected_const_iterator i = res.selected_begin();
+                i != res.selected_end(); ++i)
+            to_record_stationvar(*i, rec);
     }
 }
 
-CursorLinear::CursorLinear(DB& db, unsigned int modifiers)
-    : Cursor(db, modifiers), stm(0)
+template<typename T, typename ITER>
+bool CursorLinear<T, ITER>::next()
 {
-    stm = new db::Statement(*db.conn);
+    if (iter_cur == iter_end)
+        return false;
+
+    ++iter_cur;
+    --count;
+    return iter_cur != iter_end;
 }
 
-CursorLinear::~CursorLinear()
+template<typename T, typename ITER>
+void CursorLinear<T, ITER>::discard_rest()
 {
-    if (stm) delete stm;
+    iter_cur = iter_end;
+    count = 0;
 }
 
-bool CursorLinear::next()
+template<typename ITER>
+bool CursorStations<ITER>::next()
 {
-    /* Fetch new data */
-    bool res = stm->fetch();
-    if (count != -1)
-        --count;
-    if (!res)
-        stm->close_cursor();
+    bool res = CursorLinear<memdb::Station, ITER>::next();
+    if (res)
+    {
+        this->cur_station_id = this->iter_cur.index();
+        this->cur_station = &(*this->iter_cur);
+    }
     return res;
 }
 
-void CursorLinear::discard_rest()
+template<typename ITER>
+void CursorStations<ITER>::to_record(Record& rec)
 {
-    stm->close_cursor();
+    this->to_record_station(rec);
+    this->add_station_info(*this->iter_cur, rec);
 }
 
-void CursorStations::query(const Record& rec)
-{
 #if 0
-    if (db.conn->server_type == ORACLE && !(modifiers & DBA_DB_MODIFIER_STREAM))
-    {
-        /* FIXME: this is a temporary solution giving an approximate row count only:
-         * insert/delete/update queries run between the count and the select will
-         * change the size of the result set */
-        count = getcount(rec);
-    }
-#endif
-
-    StationQueryBuilder qb(db, *stm, *this, rec, modifiers);
-    qb.build();
-
-    if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ORACLE)
-    {
-        stm->set_cursor_forward_only();
-    //} else {
-    //    stm->set_cursor_static();
-    }
-    stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
-
-    //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
-
-    // Get the number of affected rows
-    if (db.conn->server_type != ORACLE)
-        count = stm->select_rowcount();
-}
-
-void CursorStations::to_record(Record& rec)
-{
-    to_record_pseudoana(rec);
-    add_station_info(rec);
-}
-
 unsigned CursorStations::test_iterate(FILE* dump)
 {
     Record r;
@@ -707,9 +559,12 @@ void CursorBest::discard_rest()
         results = 0;
     }
 }
+#endif
 
-} // namespace v6
-} // namespace db
-} // namespace dballe
+template class CursorStations<memdb::Results<memdb::Station>::all_const_iterator>;
+template class CursorStations<memdb::Results<memdb::Station>::selected_const_iterator>;
 
-/* vim:set ts=4 sw=4: */
+}
+}
+}
+#include "dballe/memdb/query.tcc"

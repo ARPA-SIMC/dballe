@@ -29,13 +29,13 @@ namespace dballe {
 namespace memdb {
 
 template<typename ITER>
-void Results::intersect(const ITER& begin, const ITER& iend, const Match<typename ITER::value_type>* match)
+void BaseResults::intersect(const ITER& begin, const ITER& iend, const Match<typename ITER::value_type>* match)
 {
     ITER i = begin;
 
     if (select_all)
     {
-        std::copy(i, iend, back_inserter(values));
+        std::copy(i, iend, back_inserter(indices));
         select_all = false;
         return;
     }
@@ -44,15 +44,15 @@ void Results::intersect(const ITER& begin, const ITER& iend, const Match<typenam
     vector<size_t> res;
 
     // Iterate the two sorted sequence
-    vector<size_t>::const_iterator vi = values.begin();
+    vector<size_t>::const_iterator vi = indices.begin();
 
     // If the set starts after the beginning of the current value vector,
     // jump to a valid starting point
     if (*i > *vi)
-        vi = lower_bound(values.begin(), values.end(), *i);
+        vi = lower_bound(indices.begin(), indices.end(), *i);
 
     // Step through both sequences looking for the common values
-    while (i != iend && vi != values.end())
+    while (i != iend && vi != indices.end())
     {
         if (*vi < *i)
             ++vi;
@@ -68,7 +68,16 @@ void Results::intersect(const ITER& begin, const ITER& iend, const Match<typenam
     }
 
     // Commit the results
-    values = res;
+    indices = res;
+}
+
+template<typename T>
+size_t Results<T>::size() const
+{
+    if (select_all)
+        return values.element_count();
+    else
+        return indices.size();
 }
 
 namespace match {

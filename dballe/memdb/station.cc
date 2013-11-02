@@ -125,7 +125,7 @@ struct CoordsIter
 }
 #endif
 
-void Stations::query(const Record& rec, Results& res) const
+void Stations::query(const Record& rec, Results<Station>& res) const
 {
     if (const char* ana_id = rec.key_peek_value(DBA_KEY_ANA_ID))
     {
@@ -263,6 +263,8 @@ void Stations::query(const Record& rec, Results& res) const
 
     // If we don't have any constraints, leave res as it is
 }
+
+template class Results<Station>;
 
 }
 }

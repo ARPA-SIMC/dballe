@@ -38,18 +38,18 @@ struct Match
     virtual bool operator()(const T&) const = 0;
 };
 
-
-/// Query results as a sorted vector of indices
-class Results
+class BaseResults
 {
 protected:
     /// True if the result is 'any ID is good'
     bool select_all;
     /// If select_all is false, this is the list of good IDs
-    std::vector<size_t> values;
+    std::vector<size_t> indices;
 
 public:
-    Results();
+    BaseResults();
+
+    bool is_select_all() const { return select_all; }
 
     /// Intersect with a singleton set
     void intersect(size_t pos);
@@ -64,6 +64,79 @@ public:
     {
         intersect(begin, end, &match);
     }
+};
+
+/// Query results as a sorted vector of indices
+template<typename T>
+class Results : public BaseResults
+{
+protected:
+    /// ValueStorage mapping indices to values
+    const ValueStorage<T>& values;
+
+public:
+    typedef std::vector<size_t>::const_iterator index_const_iterator;
+
+    Results(const ValueStorage<T>& values) : values(values) {}
+
+    size_t size() const;
+
+    template<typename ITER>
+    struct values_const_iterator : std::iterator<std::forward_iterator_tag, T>
+    {
+        const ValueStorage<T>* values;
+        ITER iter;
+
+        values_const_iterator(const ValueStorage<T>& values, const ITER& iter)
+            : values(&values), iter(iter) {}
+
+        size_t index() const { return *iter; }
+
+        const T& operator*() const
+        {
+            return *(*values)[*iter];
+        }
+        values_const_iterator& operator++()
+        {
+            ++iter;
+            return *this;
+        }
+        bool operator==(const values_const_iterator& i) const
+        {
+            return values == i.values && iter == i.iter;
+        }
+        bool operator!=(const values_const_iterator& i) const
+        {
+            return values != i.values || iter != i.iter;
+        }
+    };
+
+    typedef values_const_iterator<std::vector<size_t>::const_iterator> selected_const_iterator;
+    typedef values_const_iterator<typename ValueStorage<T>::index_iterator> all_const_iterator;
+
+    selected_const_iterator selected_begin() const
+    {
+        return selected_const_iterator(values, indices.begin());
+    }
+    selected_const_iterator selected_end() const
+    {
+        return selected_const_iterator(values, indices.end());
+    }
+
+    index_const_iterator selected_index_begin() const { return indices.begin(); }
+    index_const_iterator selected_index_end() const { return indices.end(); }
+
+    all_const_iterator all_begin() const
+    {
+        return all_const_iterator(values, values.index_begin());
+    }
+    all_const_iterator all_end() const
+    {
+        return all_const_iterator(values, values.index_end());
+    }
+
+    typename ValueStorage<T>::index_iterator all_index_begin() const { return values.index_begin(); }
+    typename ValueStorage<T>::index_iterator all_index_end() const { return values.index_end(); }
 };
 
 namespace match {

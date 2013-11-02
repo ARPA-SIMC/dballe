@@ -6,25 +6,25 @@ using namespace std;
 namespace dballe {
 namespace memdb {
 
-Results::Results()
+BaseResults::BaseResults()
     : select_all(true)
 {
 }
 
-void Results::intersect(size_t pos)
+void BaseResults::intersect(size_t pos)
 {
     if (select_all)
     {
-        values.push_back(pos);
+        indices.push_back(pos);
         select_all = false;
         return;
     }
 
-    vector<size_t>::const_iterator i = lower_bound(values.begin(), values.end(), pos);
-    bool found = i != values.end();
-    values.clear();
+    vector<size_t>::const_iterator i = lower_bound(indices.begin(), indices.end(), pos);
+    bool found = i != indices.end();
+    indices.clear();
     if (found)
-        values.push_back(pos);
+        indices.push_back(pos);
 }
 
 }

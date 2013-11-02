@@ -30,7 +30,7 @@
 namespace dballe {
 namespace memdb {
 
-struct Results;
+struct BaseResults;
 template<typename T> struct Match;
 
 /// Indices of elements inside a vector
@@ -74,9 +74,9 @@ struct Index : public std::map<T, Positions>
     /// Refine a Positions set with the results of this lookup
     void refine(const T& el, Positions& res);
 
-    void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, Results& res) const;
-    void query(const const_iterator& begin, const const_iterator& end, Results& res) const;
-    void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>* filter, Results& res) const;
+    void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, BaseResults& res) const;
+    void query(const const_iterator& begin, const const_iterator& end, BaseResults& res) const;
+    void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>* filter, BaseResults& res) const;
 };
 
 template<typename T>
@@ -105,7 +105,7 @@ public:
             while (pos != values->size() && !(*values)[pos])
                 ++pos;
         }
-        size_t operator*() { return pos; }
+        size_t operator*() const { return pos; }
 
         bool operator==(const index_iterator& i) const
         {
@@ -122,6 +122,14 @@ public:
     virtual ~ValueStorage();
 
     void clear();
+
+    /**
+     * Number of valid elements
+     *
+     * This is not called size, because it is not the same as the maximum index
+     * that can be passed to operator[]
+     */
+    size_t element_count() const { return values.size() - empty_slots.size(); }
 
     T* at(size_t idx) { return values.at(idx); }
     const T* at(size_t idx) const { return values.at(idx); }

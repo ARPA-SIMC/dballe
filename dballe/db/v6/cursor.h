@@ -121,9 +121,6 @@ struct Cursor : public db::Cursor
     /// Discard the results that have not been read yet
     virtual void discard_rest() = 0;
 
-    /// Get the varcode of the current entry
-    wreport::Varcode varcode() const;
-
     /**
      * Query attributes for the current variable
      */
