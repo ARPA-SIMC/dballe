@@ -23,7 +23,7 @@ namespace tut {
 
 struct db_v6_shar : public dballe::tests::db_tests
 {
-    db_v6_shar() : dballe::tests::db_tests(V6) {}
+    db_v6_shar() : dballe::tests::db_tests(dballe::db::V6) {}
 };
 TESTGRP(db_v6);
 

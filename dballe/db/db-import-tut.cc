@@ -17,11 +17,12 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "db/test-utils-db.h"
+#ifndef TUT_TEST_BODY
+
+#include "db/db-import-tut.h"
 #include "db/db.h"
 #include "msg/msgs.h"
 #include "msg/context.h"
-#include "core/record.h"
 #include <wreport/notes.h>
 #include <set>
 
@@ -31,19 +32,8 @@ using namespace wreport;
 using namespace wibble::tests;
 using namespace std;
 
-namespace tut {
-
-struct db_import_shar : public dballe::tests::db_test
-{
-    Record query;
-
-    void test_crex();
-    void test_bufr();
-    void test_aof();
-    void test_multi();
-    void test_auto_repinfo();
-};
-TESTGRP(db_import);
+namespace dballe {
+namespace tests {
 
 struct MsgCollector : public vector<Msg*>, public MsgConsumer
 {
@@ -75,10 +65,7 @@ static void normalise_datetime(Msg& msg)
         msg.set_second(0, -1);
 }
 
-template<> template<> void to::test<1>() { use_db(V5); test_crex(); }
-template<> template<> void to::test<2>() { use_db(V6); test_crex(); }
-template<> template<> void to::test<3>() { use_db(MEM); test_crex(); }
-void db_import_shar::test_crex()
+void db_import::test_crex()
 {
     // Test import/export with all CREX samples
     const char** files = dballe::tests::crex_files;
@@ -118,10 +105,7 @@ void db_import_shar::test_crex()
     }
 }
 
-template<> template<> void to::test<4>() { use_db(V5); test_bufr(); }
-template<> template<> void to::test<5>() { use_db(V6); test_bufr(); }
-template<> template<> void to::test<6>() { use_db(MEM); test_bufr(); }
-void db_import_shar::test_bufr()
+void db_import::test_bufr()
 {
     // Test import/export with all BUFR samples
 
@@ -157,10 +141,7 @@ void db_import_shar::test_bufr()
     }
 }
 
-template<> template<> void to::test<7>() { use_db(V5); test_aof(); }
-template<> template<> void to::test<8>() { use_db(V6); test_aof(); }
-template<> template<> void to::test<9>() { use_db(MEM); test_aof(); }
-void db_import_shar::test_aof()
+void db_import::test_aof()
 {
     // Test import/export with all AOF samples
     const char** files = dballe::tests::aof_files;
@@ -197,10 +178,7 @@ void db_import_shar::test_aof()
     }
 }
 
-template<> template<> void to::test<10>() { use_db(V5); test_multi(); }
-template<> template<> void to::test<11>() { use_db(V6); test_multi(); }
-template<> template<> void to::test<12>() { use_db(MEM); test_multi(); }
-void db_import_shar::test_multi()
+void db_import::test_multi()
 {
     // Check that multiple messages are correctly identified during export
 
@@ -245,10 +223,7 @@ void db_import_shar::test_multi()
     ensure_equals(diffs, 0);
 }
 
-template<> template<> void to::test<13>() { use_db(V5); test_auto_repinfo(); }
-template<> template<> void to::test<14>() { use_db(V6); test_auto_repinfo(); }
-template<> template<> void to::test<15>() { use_db(MEM); test_auto_repinfo(); }
-void db_import_shar::test_auto_repinfo()
+void db_import::test_auto_repinfo()
 {
     // Check automatic repinfo allocation
     std::auto_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
@@ -579,5 +554,14 @@ void to::test<8>()
 #endif
 
 }
+}
 
-// vim:set ts=4 sw=4:
+#else
+
+template<> template<> void to::test<1>() { test_crex(); }
+template<> template<> void to::test<2>() { test_bufr(); }
+template<> template<> void to::test<3>() { test_aof(); }
+template<> template<> void to::test<4>() { test_multi(); }
+template<> template<> void to::test<5>() { test_auto_repinfo(); }
+
+#endif

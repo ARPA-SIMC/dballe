@@ -31,11 +31,11 @@ using namespace std;
 
 namespace tut {
 
-struct db_v6_attr_shar : public dballe::tests::db_test
+struct dbv6_attr_shar : public dballe::tests::db_test
 {
     db::v6::Attr* at;
 
-    db_v6_attr_shar() : dballe::tests::db_test(db::V6)
+    dbv6_attr_shar() : dballe::tests::db_test(db::V6)
     {
         if (!has_db()) return;
         at = &v6().attr();
@@ -95,7 +95,7 @@ struct db_v6_attr_shar : public dballe::tests::db_test
         da.insert_or_fail();
     }
 };
-TESTGRP(db_v6_attr);
+TESTGRP(dbv6_attr);
 
 /* Test dba_db_data_set* */
 template<> template<>

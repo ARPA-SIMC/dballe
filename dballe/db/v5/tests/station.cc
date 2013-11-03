@@ -28,17 +28,17 @@ using namespace std;
 
 namespace tut {
 
-struct v5_station_shar : public dballe::tests::db_test
+struct dbv5_station_shar : public dballe::tests::db_test
 {
     Station* st;
 
-    v5_station_shar() : dballe::tests::db_test(db::V5)
+    dbv5_station_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
         st = &v5().station();
     }
 };
-TESTGRP(v5_station);
+TESTGRP(dbv5_station);
 
 /* Test dba_db_pseudoana_set_ident */
 template<> template<>

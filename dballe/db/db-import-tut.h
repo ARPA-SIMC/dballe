@@ -17,17 +17,25 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "db-tut.h"
+#include "db/test-utils-db.h"
+#include <dballe/core/record.h>
 
-namespace tut {
+namespace dballe {
+namespace tests {
 
-struct db_v5_shar : public dballe::tests::db_tests
+struct db_import : public dballe::tests::db_test
 {
-    db_v5_shar() : dballe::tests::db_tests(dballe::db::V5) {}
-};
-TESTGRP(db_v5);
+    db_import(dballe::db::Format format) : dballe::tests::db_test(format) {}
 
-#define TUT_TEST_BODY
-#include "db-tut.cc"
+    Record query;
+
+    void test_crex();
+    void test_bufr();
+    void test_aof();
+    void test_multi();
+    void test_auto_repinfo();
+};
 
 }
+}
+

@@ -18,15 +18,6 @@
  */
 
 #include "db/test-utils-db.h"
-#include "db/querybuf.h"
-#include <wibble/string.h>
-
-using namespace dballe;
-using namespace dballe::db;
-using namespace wreport;
-using namespace wibble;
-using namespace wibble::tests;
-using namespace std;
 
 namespace dballe {
 namespace tests {
@@ -68,7 +59,7 @@ struct db_tests : public dballe::tests::DB_test_base
     dballe::tests::TestStation st1;
     dballe::tests::TestStation st2;
 
-    db_tests(db::Format format) : dballe::tests::DB_test_base(format)
+    db_tests(dballe::db::Format format) : dballe::tests::DB_test_base(format)
     {
         st1.lat = 12.34560;
         st1.lon = 76.54320;

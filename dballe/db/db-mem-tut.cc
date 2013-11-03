@@ -23,7 +23,7 @@ namespace tut {
 
 struct db_mem_shar : public dballe::tests::db_tests
 {
-    db_mem_shar() : dballe::tests::db_tests(MEM) {}
+    db_mem_shar() : dballe::tests::db_tests(dballe::db::MEM) {}
 };
 TESTGRP(db_mem);
 

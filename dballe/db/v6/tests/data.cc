@@ -29,11 +29,11 @@ using namespace std;
 
 namespace tut {
 
-struct db_v6_data_shar : public dballe::tests::db_test
+struct dbv6_data_shar : public dballe::tests::db_test
 {
     db::v6::Data* da;
 
-    db_v6_data_shar() : dballe::tests::db_test(db::V6)
+    dbv6_data_shar() : dballe::tests::db_test(db::V6)
     {
         if (!has_db()) return;
         db::v6::DB& v6db = v6();
@@ -95,7 +95,7 @@ struct db_v6_data_shar : public dballe::tests::db_test
         da->set_value("234");
     }
 };
-TESTGRP(db_v6_data);
+TESTGRP(dbv6_data);
 
 /* Test Data::set * */
 template<> template<>

@@ -30,11 +30,11 @@ using namespace std;
 
 namespace tut {
 
-struct v5_data_shar : public dballe::tests::db_test
+struct dbv5_data_shar : public dballe::tests::db_test
 {
     Data* da;
 
-    v5_data_shar() : dballe::tests::db_test(db::V5)
+    dbv5_data_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
         da = &v5().data();
@@ -81,7 +81,7 @@ struct v5_data_shar : public dballe::tests::db_test
 		ensure_equals(co.insert(), 2);
 	}
 };
-TESTGRP(v5_data);
+TESTGRP(dbv5_data);
 
 /* Test dba_db_data_set* */
 template<> template<>

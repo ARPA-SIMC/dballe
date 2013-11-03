@@ -232,7 +232,8 @@ dist_noinst_HEADERS = \
 	msg/test-utils-msg.h \
 	msg/test-utils-lua.h \
 	db/test-utils-db.h \
-	db/db-tut.h
+	db/db-tut.h \
+	db/db-import-tut.h
 
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
@@ -283,6 +284,9 @@ tut_test_SOURCES += \
 	db/db-v6-tut.cc \
 	db/db-mem-tut.cc \
 	db/db-import-tut.cc \
+	db/db-import-v5-tut.cc \
+	db/db-import-v6-tut.cc \
+	db/db-import-mem-tut.cc \
 	db/db-export-tut.cc \
 	db/v5/tests/repinfo.cc \
 	db/v5/tests/station.cc \

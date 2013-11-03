@@ -28,17 +28,17 @@ using namespace wibble::tests;
 
 namespace tut {
 
-struct v5_repinfo_shar : public dballe::tests::db_test
+struct dbv5_repinfo_shar : public dballe::tests::db_test
 {
-	Repinfo* ri;
+    Repinfo* ri;
 
-	v5_repinfo_shar() : dballe::tests::db_test(db::V5)
+    dbv5_repinfo_shar() : dballe::tests::db_test(db::V5)
 	{
 		if (!has_db()) return;
 		ri = &v5().repinfo();
 	}
 };
-TESTGRP(v5_repinfo);
+TESTGRP(dbv5_repinfo);
 
 /* Test simple queries */
 template<> template<>

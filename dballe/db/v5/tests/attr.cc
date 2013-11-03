@@ -32,11 +32,11 @@ using namespace std;
 
 namespace tut {
 
-struct v5_attr_shar : public dballe::tests::db_test
+struct dbv5_attr_shar : public dballe::tests::db_test
 {
     Attr* at;
 
-    v5_attr_shar() : dballe::tests::db_test(db::V5)
+    dbv5_attr_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
         at = &v5().attr();
@@ -96,7 +96,7 @@ struct v5_attr_shar : public dballe::tests::db_test
         da.insert_or_fail();
 	}
 };
-TESTGRP(v5_attr);
+TESTGRP(dbv5_attr);
 
 /* Test dba_db_data_set* */
 template<> template<>

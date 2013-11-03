@@ -28,11 +28,11 @@ using namespace std;
 
 namespace tut {
 
-struct db_v5_context_shar : public dballe::tests::db_test
+struct dbv5_context_shar : public dballe::tests::db_test
 {
     Context* co;
 
-    db_v5_context_shar() : dballe::tests::db_test(db::V5)
+    dbv5_context_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
         co = &v5().context();
@@ -53,7 +53,7 @@ struct db_v5_context_shar : public dballe::tests::db_test
         ensure_equals(id, 2);
     }
 };
-TESTGRP(db_v5_context);
+TESTGRP(dbv5_context);
 
 /* Insert some values and try to read them again */
 template<> template<>

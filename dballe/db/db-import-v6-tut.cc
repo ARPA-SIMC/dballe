@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,17 +17,18 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "db-tut.h"
+#include "db-import-tut.h"
 
 namespace tut {
 
-struct db_v5_shar : public dballe::tests::db_tests
+struct db_import_mem_shar : public dballe::tests::db_import
 {
-    db_v5_shar() : dballe::tests::db_tests(dballe::db::V5) {}
+    db_import_mem_shar() : dballe::tests::db_import(dballe::db::MEM) {}
 };
-TESTGRP(db_v5);
+TESTGRP(db_import_mem);
 
 #define TUT_TEST_BODY
-#include "db-tut.cc"
+#include "db-import-tut.cc"
 
 }
+
