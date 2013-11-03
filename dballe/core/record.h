@@ -296,7 +296,7 @@ public:
 	wreport::Var& operator[](const char* name) { return get(name); }
 	template<typename P, typename V>
 	void set(const P& field, const V& val) { get(field).set(val); }
-	void set(const wreport::Var& var) { get(var.code()).set(var); }
+	void set(const wreport::Var& var) { get(var.code()).copy_val(var); }
 	void set(const Level& lev);
 	void set(const Trange& tr);
 	void unset(dba_keyword parameter) { key_unset(parameter); }
