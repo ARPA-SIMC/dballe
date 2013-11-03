@@ -20,7 +20,8 @@
  */
 
 #include "levtr.h"
-#include <dballe/core/record.h>
+#include "dballe/core/record.h"
+#include "dballe/core/stlutils.h"
 #include <iostream>
 
 using namespace std;
@@ -40,11 +41,11 @@ LevTrs::LevTrs() : ValueStorage<LevTr>() {}
 size_t LevTrs::obtain(const Level& level, const Trange& trange)
 {
     // Search
-    Positions res = by_level.search(level);
-    by_trange.refine(trange, res);
-    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-        if ((*this)[*i])
-            return *i;
+    stl::SetIntersection<size_t> res;
+    if (by_level.search(level, res) && by_trange.search(trange, res))
+        for (stl::SetIntersection<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
+            if ((*this)[*i])
+                return *i;
 
     // Station not found, create it
     size_t pos = value_add(new LevTr(level, trange));

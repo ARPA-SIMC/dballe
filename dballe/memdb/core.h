@@ -29,6 +29,11 @@
 #include <cstdio>
 
 namespace dballe {
+
+namespace stl {
+template<typename T> class SetIntersection;
+}
+
 namespace memdb {
 
 struct BaseResults;
@@ -42,6 +47,7 @@ struct Positions : public std::set<size_t>
         return find(val) != end();
     }
 
+#if 0
     void inplace_intersect(const Positions& pos)
     {
         // Inplace intersection
@@ -61,6 +67,7 @@ struct Positions : public std::set<size_t>
         }
         erase(ia, end());
     }
+#endif
 
     void dump(FILE* out) const;
 };
@@ -74,8 +81,12 @@ struct Index : public std::map<T, Positions>
     /// Lookup all positions for a value
     Positions search(const T& el) const;
 
-    /// Refine a Positions set with the results of this lookup
-    void refine(const T& el, Positions& res);
+    /**
+     * Lookup all positions for a value, appending the results to a SetIntersection
+     *
+     * @returns false if el was not found; it leaves out untouched in that case
+     */
+    bool search(const T& el, stl::SetIntersection<size_t>& out) const;
 
     void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, BaseResults& res) const;
     void query(const const_iterator& begin, const const_iterator& end, BaseResults& res) const;

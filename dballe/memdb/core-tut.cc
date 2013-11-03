@@ -36,6 +36,7 @@ TESTGRP(memdb_core);
 // Test Positions
 template<> template<> void to::test<1>()
 {
+#if 0
     Positions pa;
     pa.insert(1);
     pa.insert(2);
@@ -51,6 +52,7 @@ template<> template<> void to::test<1>()
 
     wassert(actual(pa.contains(1)).istrue());
     wassert(actual(pa.contains(3)).istrue());
+#endif
 }
 
 }

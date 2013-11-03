@@ -23,6 +23,7 @@
 #define DBA_CORE_STLUTILS_H
 
 #include <vector>
+#include <set>
 
 namespace dballe {
 namespace stl {
@@ -132,6 +133,10 @@ public:
         }
     };
 
+    void clear() { sequences.clear(); }
+
+    size_t sources_size() const { return sequences.size(); }
+
     const_iterator begin() const
     {
         return const_iterator(sequences);
@@ -145,6 +150,63 @@ public:
     void add(const ITER& begin, const ITER& end)
     {
         sequences.push_back(Sequence(begin, end));
+    }
+};
+
+template<typename T>
+class SetIntersection
+{
+protected:
+    std::vector<const std::set<T>*> sets;
+    Intersection<typename std::set<T>::const_iterator> intersection;
+
+public:
+    void add(const std::set<T>& set)
+    {
+        sets.push_back(&set);
+    }
+
+    typedef typename Intersection<typename std::set<T>::const_iterator>::const_iterator const_iterator;
+
+    const_iterator begin()
+    {
+        if (sets.size() != intersection.sources_size())
+        {
+            intersection.clear();
+
+            // Look for the highest first element in all sets
+            bool first = true;
+            T max_of_first;
+            for (typename std::vector<const std::set<T>*>::const_iterator i = sets.begin();
+                    i != sets.end(); ++i)
+            {
+                const std::set<T>& s = **i;
+                // If one of the sets is empty, then the intersection is empty
+                if (s.begin() == s.end()) return end();
+                if (first)
+                {
+                    max_of_first = *s.begin();
+                    first = false;
+                } else {
+                    if (max_of_first < *s.begin())
+                        max_of_first = *s.begin();
+                }
+            }
+
+            // Populate intersection with all the ranges we intersect
+            for (typename std::vector<const std::set<T>*>::const_iterator i = sets.begin();
+                    i != sets.end(); ++i)
+            {
+                const std::set<T>& s = **i;
+                intersection.add(s.lower_bound(max_of_first), s.end());
+            }
+        }
+        return intersection.begin();
+    }
+
+    const_iterator end()
+    {
+        return intersection.end();
     }
 };
 

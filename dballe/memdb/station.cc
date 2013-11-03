@@ -22,6 +22,7 @@
 #include "station.h"
 #include "query.h"
 #include "dballe/core/record.h"
+#include "dballe/core/stlutils.h"
 #include <algorithm>
 #include <iostream>
 #include <cstdlib>
@@ -67,14 +68,14 @@ size_t Stations::obtain_fixed(const Coord& coords, const std::string& report, bo
 size_t Stations::obtain_mobile(const Coord& coords, const std::string& ident, const std::string& report, bool create)
 {
     // Search
-    Positions res = by_coord.search(coords);
-    by_ident.refine(ident, res);
-    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
-    {
-        const Station* s = (*this)[*i];
-        if (s && s->mobile && s->report == report)
-            return *i;
-    }
+    stl::SetIntersection<size_t> res;
+    if (by_coord.search(coords, res) && by_ident.search(ident, res))
+        for (stl::SetIntersection<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
+        {
+            const Station* s = (*this)[*i];
+            if (s && s->mobile && s->report == report)
+                return *i;
+        }
 
     if (!create)
         error_notfound::throwf("%s station %s not found at %f,%f", report.c_str(), ident.c_str(), coords.dlat(), coords.dlon());

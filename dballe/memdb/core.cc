@@ -1,5 +1,6 @@
 #include "core.h"
-#include <dballe/core/defs.h>
+#include "dballe/core/defs.h"
+#include "dballe/core/stlutils.h"
 #include <string>
 #include <algorithm>
 
@@ -22,19 +23,14 @@ Positions Index<T>::search(const T& el) const
 }
 
 template<typename T>
-void Index<T>::refine(const T& el, Positions& res)
+bool Index<T>::search(const T& el, stl::SetIntersection<size_t>& out) const
 {
-    if (res.empty()) return;
-
     typename std::map<T, Positions>::const_iterator i = this->find(el);
-    // If we have no results, the result set becomes empty
     if (i == this->end())
-    {
-        res.clear();
-        return;
-    }
+        return false;
 
-    res.inplace_intersect(i->second);
+    out.add(i->second);
+    return true;
 }
 
 void Positions::dump(FILE* out) const
@@ -56,5 +52,3 @@ template class Index<Date>;
 
 }
 }
-
-
