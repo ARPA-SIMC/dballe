@@ -32,7 +32,7 @@
 namespace dballe {
 
 namespace stl {
-template<typename T> struct Intersection;
+template<typename T> struct SetIntersection;
 }
 
 namespace memdb {
@@ -279,7 +279,7 @@ struct FilterBuilder
 template<typename T>
 struct Strategy
 {
-    stl::Intersection<Positions::const_iterator>* indices;
+    stl::SetIntersection<size_t>* indices;
     FilterBuilder<T> filter;
 
     Strategy() : indices(0) {}

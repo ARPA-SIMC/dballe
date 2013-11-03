@@ -111,8 +111,8 @@ template<typename T>
 void Strategy<T>::add(const Positions& p)
 {
     if (!indices)
-        indices = new stl::Intersection<Positions::const_iterator>;
-    indices->add(p.begin(), p.end());
+        indices = new stl::SetIntersection<size_t>;
+    indices->add(p);
 }
 
 template<typename T>
