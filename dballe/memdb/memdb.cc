@@ -78,8 +78,9 @@ void Memdb::insert_or_replace(const Record& rec)
     }
 }
 
-void Memdb::insert_or_replace(const Msg& msg)
+void Memdb::insert(const Msg& msg, bool overwrite, bool with_station_info, bool with_attrs, const char* force_report)
 {
+    throw error_unimplemented("not yet implemented in MEM database");
 }
 
 void Memdb::query_stations(const Record& rec, Results<Station>& res) const

@@ -173,7 +173,11 @@ void DB::dump(FILE* out)
 
 void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    memdb.insert(msg,
+            flags | DBA_IMPORT_OVERWRITE,
+            flags | DBA_IMPORT_FULL_PSEUDOANA,
+            flags | DBA_IMPORT_ATTRS,
+            repmemo);
 }
 
 void DB::export_msgs(const Record& query, MsgConsumer& cons)
