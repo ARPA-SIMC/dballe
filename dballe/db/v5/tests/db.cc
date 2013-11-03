@@ -31,17 +31,17 @@ using namespace std;
 
 namespace tut {
 
-struct db_v5_shar : public dballe::tests::DB_test_base
+struct dbv5_shar : public dballe::tests::DB_test_base
 {
-	db_v5_shar() : dballe::tests::DB_test_base(db::V5)
-	{
-	}
+    dbv5_shar() : dballe::tests::DB_test_base(db::V5)
+    {
+    }
 
-	~db_v5_shar()
-	{
-	}
+    ~dbv5_shar()
+    {
+    }
 };
-TESTGRP(db_v5);
+TESTGRP(dbv5);
 
 // Ensure that reset will work on an empty database
 template<> template<>

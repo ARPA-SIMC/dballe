@@ -27,17 +27,17 @@ using namespace std;
 
 namespace tut {
 
-struct db_mem_shar : public dballe::tests::DB_test_base
+struct dbmem_shar : public dballe::tests::DB_test_base
 {
-    db_mem_shar() : dballe::tests::DB_test_base(db::MEM)
+    dbmem_shar() : dballe::tests::DB_test_base(db::MEM)
     {
     }
 
-    ~db_mem_shar()
+    ~dbmem_shar()
     {
     }
 };
-TESTGRP(db_mem);
+TESTGRP(dbmem);
 
 template<> template<>
 void to::test<1>()

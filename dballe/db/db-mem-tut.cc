@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,44 +17,17 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "db/test-utils-db.h"
-#include "db/querybuf.h"
-#include "db/v6/db.h"
-#include "db/v6/cursor.h"
-#include "db/internals.h"
-
-using namespace dballe;
-using namespace dballe::db;
-using namespace wreport;
-using namespace std;
+#include "db-tut.h"
 
 namespace tut {
 
-struct dbv6_shar : public dballe::tests::DB_test_base
+struct db_mem_shar : public dballe::tests::db_tests
 {
-    dbv6_shar() : dballe::tests::DB_test_base(db::V6)
-    {
-    }
-
-    ~dbv6_shar()
-    {
-    }
+    db_mem_shar() : dballe::tests::db_tests(MEM) {}
 };
-TESTGRP(dbv6);
+TESTGRP(db_mem);
 
-// Ensure that reset will work on an empty database
-template<> template<>
-void to::test<1>()
-{
-    use_db();
-    v6::DB& db = v6();
-
-    db.delete_tables();
-    db.reset();
-    // Run twice to see if it is idempotent
-    db.reset();
-}
+#define TUT_TEST_BODY
+#include "db-tut.cc"
 
 }
-
-/* vim:set ts=4 sw=4: */

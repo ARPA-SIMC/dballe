@@ -231,7 +231,8 @@ dist_noinst_HEADERS = \
 	memdb/tests.h \
 	msg/test-utils-msg.h \
 	msg/test-utils-lua.h \
-	db/test-utils-db.h
+	db/test-utils-db.h \
+	db/db-tut.h
 
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
@@ -278,7 +279,9 @@ tut_test_SOURCES += \
 	db/modifiers-tut.cc \
 	db/db-basic-tut.cc \
 	db/db-tut.cc \
-	db/db1-tut.cc \
+	db/db-v5-tut.cc \
+	db/db-v6-tut.cc \
+	db/db-mem-tut.cc \
 	db/db-import-tut.cc \
 	db/db-export-tut.cc \
 	db/v5/tests/repinfo.cc \

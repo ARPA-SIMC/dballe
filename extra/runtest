@@ -1,5 +1,8 @@
 #!/bin/sh -e
 
+# Limit to 1G of virtual memory
+ulimit -v 1000000
+
 TOP_SRCDIR=`pwd`/`dirname $0`/..
 
 CMD=`pwd`/"$1"
