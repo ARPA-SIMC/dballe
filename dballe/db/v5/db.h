@@ -385,22 +385,6 @@ public:
 	void import_msg(const Msg& msg, const char* repmemo, int flags);
 
 	/**
-	 * Import Msgs messages into the DB-All.e database
-	 *
-	 * @param db
-	 *   The DB-All.e database to write the data into
-	 * @param msgs
-	 *   The Msgs containing the data to import
-	 * @param repmemo
-	 *   Report mnemonic to which imported data belong.  If NULL is passed, then it
-	 *   will be chosen automatically based on the message type.
-	 * @param flags
-	 *   Customise different aspects of the import process.  It is a bitmask of the
-	 *   various DBA_IMPORT_* macros.
-	 */
-	void import_msgs(const Msgs& msgs, const char* repmemo, int flags);
-
-	/**
 	 * Perform the query in `query', and return the results as a NULL-terminated
 	 * array of dba_msg.
 	 *

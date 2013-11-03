@@ -176,11 +176,6 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     throw error_unimplemented("not yet implemented in MEM database");
 }
 
-void DB::import_msgs(const Msgs& msgs, const char* repmemo, int flags)
-{
-    throw error_unimplemented("not yet implemented in MEM database");
-}
-
 void DB::export_msgs(const Record& query, MsgConsumer& cons)
 {
     throw error_unimplemented("not yet implemented in MEM database");

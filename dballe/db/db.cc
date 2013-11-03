@@ -24,6 +24,7 @@
 #include "v6/db.h"
 #include "mem/db.h"
 #include "internals.h"
+#include "dballe/msg/msgs.h"
 #include <wreport/error.h>
 #include <cstring>
 #include <cstdlib>
@@ -53,6 +54,12 @@ unsigned Cursor::test_iterate(FILE* dump)
 
 DB::~DB()
 {
+}
+
+void DB::import_msgs(const Msgs& msgs, const char* repmemo, int flags)
+{
+    for (Msgs::const_iterator i = msgs.begin(); i != msgs.end(); ++i)
+        import_msg(**i, repmemo, flags);
 }
 
 Format DB::get_default_format() { return default_format; }

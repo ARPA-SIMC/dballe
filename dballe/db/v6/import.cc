@@ -36,12 +36,6 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-void DB::import_msgs(const Msgs& msgs, const char* repmemo, int flags)
-{
-	for (Msgs::const_iterator i = msgs.begin(); i != msgs.end(); ++i)
-		import_msg(**i, repmemo, flags);
-}
-
 void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 {
     const msg::Context* l_ana = msg.find_context(Level(257), Trange());

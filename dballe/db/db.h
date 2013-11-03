@@ -451,7 +451,7 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    virtual void import_msgs(const Msgs& msgs, const char* repmemo, int flags) = 0;
+    virtual void import_msgs(const Msgs& msgs, const char* repmemo, int flags);
 
     /**
      * Perform the query in `query', and return the results as a NULL-terminated
