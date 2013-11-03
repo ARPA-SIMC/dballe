@@ -47,7 +47,7 @@ struct Memdb
 
     void clear();
     void insert_or_replace(const Record& rec);
-    void insert(const Msg& msg, bool overwrite=true, bool with_station_info=true, bool with_attrs=true, const char* force_report=NULL);
+    void insert(const Msg& msg, bool replace=true, bool with_station_info=true, bool with_attrs=true, const char* force_report=NULL);
 
     /// Query stations, returning a list of station IDs
     void query_stations(const Record& rec, memdb::Results<memdb::Station>& res) const;

@@ -58,6 +58,11 @@ protected:
 public:
     void clear();
 
+    bool has_variables_for(const Station& station) const
+    {
+        return by_station.find(&station) != by_station.end();
+    }
+
     /// Insert a new value, or replace an existing one for the same station
     size_t insert(const Station& station, std::auto_ptr<wreport::Var> var, bool replace=true);
 

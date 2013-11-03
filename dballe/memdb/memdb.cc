@@ -23,6 +23,7 @@
 #include "query.h"
 #include <dballe/core/record.h>
 #include <dballe/msg/msg.h>
+#include <dballe/msg/context.h>
 
 using namespace std;
 using namespace wreport;
@@ -78,9 +79,97 @@ void Memdb::insert_or_replace(const Record& rec)
     }
 }
 
-void Memdb::insert(const Msg& msg, bool overwrite, bool with_station_info, bool with_attrs, const char* force_report)
+void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool with_attrs, const char* force_report)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    const msg::Context* l_ana = msg.find_context(Level(257), Trange());
+    if (!l_ana)
+        throw error_consistency("cannot import into the database a message without station information");
+
+    // Coordinates
+    Coord coord;
+    if (const Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
+        coord.lat = var->enqi();
+    else
+        throw error_notfound("latitude not found in data to import");
+    if (const Var* var = l_ana->find_by_id(DBA_MSG_LONGITUDE))
+        coord.lon = var->enqi();
+    else
+        throw error_notfound("longitude not found in data to import");
+
+    // Report code
+    string report;
+    if (force_report != NULL)
+        report = force_report;
+    else if (const Var* var = msg.get_rep_memo_var())
+        report = var->value();
+    else
+        report = Msg::repmemo_from_type(msg.type);
+
+    size_t station_id;
+    if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
+    {
+        // Mobile station
+        station_id = stations.obtain_mobile(coord, var->value(), report, true);
+    }
+    else
+    {
+        // Fixed station
+        station_id = stations.obtain_fixed(coord, report, true);
+    }
+
+    const Station& station = *stations[station_id];
+
+    if (with_station_info || stationvalues.has_variables_for(station))
+    {
+        // Insert the rest of the station information
+        for (size_t i = 0; i < l_ana->data.size(); ++i)
+        {
+            Varcode code = l_ana->data[i]->code();
+            // Do not import datetime in the station info context
+            if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
+                continue;
+
+            auto_ptr<Var> var(new Var(*l_ana->data[i], with_attrs));
+            stationvalues.insert(station, var, replace);
+        }
+    }
+
+    // Fill up the common context information for the rest of the data
+
+    // Date and time
+    const Var* year = l_ana->find_by_id(DBA_MSG_YEAR);
+    const Var* month = l_ana->find_by_id(DBA_MSG_MONTH);
+    const Var* day = l_ana->find_by_id(DBA_MSG_DAY);
+    const Var* hour = l_ana->find_by_id(DBA_MSG_HOUR);
+    const Var* min = l_ana->find_by_id(DBA_MSG_MINUTE);
+    const Var* sec = l_ana->find_by_id(DBA_MSG_SECOND);
+
+    if (year == NULL || month == NULL || day == NULL || hour == NULL || min == NULL)
+        throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+
+    Datetime dt(year->enqi(), month->enqi(), day->enqi(),
+                hour->enqi(), min->enqi(), sec ? sec->enqi() : 0);
+
+    // Insert the rest of the data
+    for (size_t i = 0; i < msg.data.size(); ++i)
+    {
+        const msg::Context& ctx = *msg.data[i];
+        bool is_ana_level = ctx.level == Level(257) && ctx.trange == Trange();
+        // Skip the station info level
+        if (is_ana_level) continue;
+
+        size_t levtr_id = levtrs.obtain(ctx.level, ctx.trange);
+        const LevTr& levtr = *levtrs[levtr_id];
+
+        for (size_t j = 0; j < ctx.data.size(); ++j)
+        {
+            const Var& var = *ctx.data[j];
+            if (not var.isset()) continue;
+
+            auto_ptr<Var> newvar(new Var(var, with_attrs));
+            values.insert(station, levtr, dt, newvar, replace);
+        }
+    }
 }
 
 void Memdb::query_stations(const Record& rec, Results<Station>& res) const
