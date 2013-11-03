@@ -176,9 +176,9 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 		const msg::Context& ctx = *msg.data[i];
 		bool is_ana_level = ctx.level == Level(257) && ctx.trange == Trange();
 
-		/* Skip the station info level */
-		if (is_ana_level && !(flags & DBA_IMPORT_DATETIME_ATTRS))
-			continue;
+        // Skip the station info level
+        if (is_ana_level)
+            continue;
 
 		/* Insert the new context */
 		dc.ltype1 = ctx.level.ltype1;
@@ -199,16 +199,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
             const Var& var = *ctx.data[j];
             if (not var.isset()) continue;
 
-			// Only import dates from ana level, and only if requested
-			if (is_ana_level)
-			{
-                Varcode code = var.code();
-				if (!(flags & DBA_IMPORT_DATETIME_ATTRS)
-					|| WR_VAR_X(code) != 4 || WR_VAR_Y(code) < 1 || WR_VAR_Y(code) > 6)
-					continue;
-			}
-
-			/* Insert the variable */
+            // Insert the variable
             dd.set(var);
 			if (flags & DBA_IMPORT_OVERWRITE)
 				dd.insert_or_overwrite();

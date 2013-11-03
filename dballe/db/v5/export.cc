@@ -206,6 +206,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
             msg->set_day(cur.out_datetime.day);
             msg->set_hour(cur.out_datetime.hour);
             msg->set_minute(cur.out_datetime.minute);
+            msg->set_second(cur.out_datetime.second);
 
             // Fill in extra station info
 			fill_ana_layer(*msg, cur.out_ana_id, cur.out_rep_cod);

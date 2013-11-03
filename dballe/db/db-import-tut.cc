@@ -58,6 +58,23 @@ struct MsgCollector : public vector<Msg*>, public MsgConsumer
     }
 };
 
+static void normalise_datetime(Msg& msg)
+{
+    // Strip datetime attrs
+    static int vars[] = { DBA_MSG_YEAR, DBA_MSG_MONTH, DBA_MSG_DAY, DBA_MSG_HOUR, DBA_MSG_MINUTE, DBA_MSG_SECOND };
+    for (unsigned i = 0; i < 6; ++i)
+    {
+        Var* v = msg.edit_by_id(vars[i]);
+        if (!v) continue;
+        v->clear_attrs();
+    }
+
+    // Add a second of 0 if missing, since db export will always add
+    // seconds
+    if (!msg.get_second_var())
+        msg.set_second(0, -1);
+}
+
 template<> template<> void to::test<1>() { use_db(V5); test_crex(); }
 template<> template<> void to::test<2>() { use_db(V6); test_crex(); }
 template<> template<> void to::test<3>() { use_db(MEM); test_crex(); }
@@ -65,19 +82,20 @@ void db_import_shar::test_crex()
 {
     // Test import/export with all CREX samples
     const char** files = dballe::tests::crex_files;
+    set<string> blacklist;
+    // These files have no data to import
+    blacklist.insert("crex/test-synop1.crex");
+    blacklist.insert("crex/test-synop3.crex");
     for (int i = 0; files[i] != NULL; ++i)
     {
+        if (blacklist.find(files[i]) != blacklist.end()) continue;
         try {
             std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], CREX);
             Msg& msg = *(*inmsgs)[0];
-
-            // Add a second of 0 if missing, since db export will always add
-            // seconds
-            if (!msg.get_second_var())
-                msg.set_second(0, -1);
+            normalise_datetime(msg);
 
             db->reset();
-            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
             // Explicitly set the rep_memo variable that is added during export
             msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
@@ -86,18 +104,9 @@ void db_import_shar::test_crex()
             query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
 
             MsgCollector msgs;
-            //db->dump(stderr);
             db->export_msgs(query, msgs);
             ensure_equals(msgs.size(), 1u);
             ensure(msgs[0] != NULL);
-
-            /*
-            if (string(files[i]).find("temp0") != string::npos)
-            {
-                dba_msg_print(msg, stderr);
-                dba_msg_print(msgs[0], stderr);
-            }
-            */
 
             notes::Collect c(cerr);
             int diffs = msg.diff(*msgs[0]);
@@ -122,14 +131,10 @@ void db_import_shar::test_bufr()
         try {
             std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
             Msg& msg = *(*inmsgs)[0];
-
-            // Add a second of 0 if missing, since db export will always add
-            // seconds
-            if (!msg.get_second_var())
-                msg.set_second(0, -1);
+            normalise_datetime(msg);
 
             db->reset();
-            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
             query.clear();
             query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
@@ -141,14 +146,6 @@ void db_import_shar::test_bufr()
 
             // Explicitly set the rep_memo variable that is added during export
             msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
-
-            /*
-            if (string(files[i]).find("temp0") != string::npos)
-            {
-                dba_msg_print(msg, stderr);
-                dba_msg_print(msgs[0], stderr);
-            }
-            */
 
             notes::Collect c(cerr);
             int diffs = msg.diff(*msgs[0]);
@@ -172,14 +169,10 @@ void db_import_shar::test_aof()
         try {
             std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], AOF);
             Msg& msg = *(*inmsgs)[0];
-
-            // Add a second of 0 if missing, since db export will always add
-            // seconds
-            if (!msg.get_second_var())
-                msg.set_second(0, -1);
+            normalise_datetime(msg);
 
             db->reset();
-            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
             // Explicitly set the rep_memo variable that is added during export
             msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
@@ -193,14 +186,6 @@ void db_import_shar::test_aof()
             db->export_msgs(query, msgs);
             ensure_equals(msgs.size(), 1u);
             ensure(msgs[0] != NULL);
-
-            /*
-            if (string(files[i]).find("temp0") != string::npos)
-            {
-                dba_msg_print(msg, stderr);
-                dba_msg_print(msgs[0], stderr);
-            }
-            */
 
             notes::Collect c(cerr);
             int diffs = msg.diff(*msgs[0]);
@@ -226,14 +211,12 @@ void db_import_shar::test_multi()
     Msg& msg1 = *(*msgs1)[0];
     Msg& msg2 = *(*msgs2)[0];
 
-    // Add a second of 0 if missing, since db export will always add
-    // seconds
-    if (!msg1.get_second_var()) msg1.set_second(0, -1);
-    if (!msg2.get_second_var()) msg2.set_second(0, -1);
+    normalise_datetime(msg1);
+    normalise_datetime(msg2);
 
     db->reset();
-    db->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
-    db->import_msg(msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+    db->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+    db->import_msg(msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
     // Explicitly set the rep_memo variable that is added during export
     msg1.set_rep_memo(Msg::repmemo_from_type(msg1.type));
@@ -272,7 +255,7 @@ void db_import_shar::test_auto_repinfo()
     Msg& msg = *(*msgs)[0];
 
     db->reset();
-    db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS);
+    db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
     query.clear();
     query.set(DBA_KEY_REP_MEMO, "enrico");
@@ -309,7 +292,7 @@ void to::test<5>()
         dba_msg msg;
         CHECKED(dba_msg_create(&msg));
         CHECKED(gen.fill_message(msg, rnd(0.8)));
-        CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+        CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
         dba_msg_delete(msg);
     }
 
@@ -393,7 +376,7 @@ void to::test<6>()
     map<dba_msg_type, int> rep_cods;
     for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
     {
-        CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS | DBA_IMPORT_OVERWRITE));
+        CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
         rep_cods[(*i)->msgs[0]->type]++;
     }
 
@@ -526,7 +509,7 @@ void to::test<8>()
     //map<dba_msg_type, int> rep_cods;
     for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
     {
-        CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS));
+        CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
         //rep_cods[(*i)->msgs[0]->type]++;
     }
 

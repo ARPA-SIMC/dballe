@@ -163,31 +163,17 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 		const msg::Context& ctx = *msg.data[i];
 		bool is_ana_level = ctx.level == Level(257) && ctx.trange == Trange();
 
-		/* Skip the station info level */
-		if (is_ana_level && !(flags & DBA_IMPORT_DATETIME_ATTRS))
-			continue;
+        // Skip the station info level
+        if (is_ana_level) continue;
 
-        if (is_ana_level)
-        {
-            lt.ltype1 = 257;
-            lt.l1 = MISSING_INT;
-            lt.ltype2 = MISSING_INT;
-            lt.l2 = MISSING_INT;
-            lt.pind = MISSING_INT;
-            lt.p1 = MISSING_INT;
-            lt.p2 = MISSING_INT;
-        }
-        else
-        {
-            /* Insert the new level/timerange */
-            lt.ltype1 = ctx.level.ltype1;
-            lt.l1 = ctx.level.l1;
-            lt.ltype2 = ctx.level.ltype2;
-            lt.l2 = ctx.level.l2;
-            lt.pind = ctx.trange.pind;
-            lt.p1 = ctx.trange.p1;
-            lt.p2 = ctx.trange.p2;
-        }
+        // Insert the new level/timerange
+        lt.ltype1 = ctx.level.ltype1;
+        lt.l1 = ctx.level.l1;
+        lt.ltype2 = ctx.level.ltype2;
+        lt.l2 = ctx.level.l2;
+        lt.pind = ctx.trange.pind;
+        lt.p1 = ctx.trange.p1;
+        lt.p2 = ctx.trange.p2;
 
         // Get the database ID of the lev_tr
         dd.set_id_lev_tr(lt.get_id());
@@ -199,16 +185,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
             const Var& var = *ctx.data[j];
             if (not var.isset()) continue;
 
-			// Only import dates from ana level, and only if requested
-			if (is_ana_level)
-			{
-                Varcode code = var.code();
-				if (!(flags & DBA_IMPORT_DATETIME_ATTRS)
-					|| WR_VAR_X(code) != 4 || WR_VAR_Y(code) < 1 || WR_VAR_Y(code) > 6)
-					continue;
-			}
-
-            /* Insert the variable */
+            // Insert the variable
             dd.set(var);
             if (flags & DBA_IMPORT_OVERWRITE)
                 dd.insert_or_overwrite(true);

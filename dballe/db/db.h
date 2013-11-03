@@ -44,8 +44,6 @@
 #define DBA_IMPORT_ATTRS		1
 /* Attempt to merge pseudoana extra information into the existing ones. */
 #define DBA_IMPORT_FULL_PSEUDOANA	2
-/* Import datetime information as data to preserve their attributes. */
-#define DBA_IMPORT_DATETIME_ATTRS	4
 /* Message data will overwrite existing values; otherwise, trying to insert
  * existing data will cause an error. */
 #define DBA_IMPORT_OVERWRITE		8

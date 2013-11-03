@@ -115,7 +115,7 @@ void db1_shar::test_bug_querybest()
     {
         std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
         Msg& msg = *(*inmsgs)[0];
-        wrunchecked(db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_DATETIME_ATTRS | DBA_IMPORT_OVERWRITE));
+        wrunchecked(db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
     }
 
     // Query all with best
