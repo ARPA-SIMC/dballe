@@ -60,6 +60,7 @@ struct MsgCollector : public vector<Msg*>, public MsgConsumer
 
 template<> template<> void to::test<1>() { use_db(V5); test_crex(); }
 template<> template<> void to::test<2>() { use_db(V6); test_crex(); }
+template<> template<> void to::test<3>() { use_db(MEM); test_crex(); }
 void db_import_shar::test_crex()
 {
     // Test import/export with all CREX samples
@@ -108,8 +109,9 @@ void db_import_shar::test_crex()
     }
 }
 
-template<> template<> void to::test<3>() { use_db(V5); test_bufr(); }
-template<> template<> void to::test<4>() { use_db(V6); test_bufr(); }
+template<> template<> void to::test<4>() { use_db(V5); test_bufr(); }
+template<> template<> void to::test<5>() { use_db(V6); test_bufr(); }
+template<> template<> void to::test<6>() { use_db(MEM); test_bufr(); }
 void db_import_shar::test_bufr()
 {
     // Test import/export with all BUFR samples
@@ -158,8 +160,9 @@ void db_import_shar::test_bufr()
     }
 }
 
-template<> template<> void to::test<5>() { use_db(V5); test_aof(); }
-template<> template<> void to::test<6>() { use_db(V6); test_aof(); }
+template<> template<> void to::test<7>() { use_db(V5); test_aof(); }
+template<> template<> void to::test<8>() { use_db(V6); test_aof(); }
+template<> template<> void to::test<9>() { use_db(MEM); test_aof(); }
 void db_import_shar::test_aof()
 {
     // Test import/export with all AOF samples
@@ -209,8 +212,9 @@ void db_import_shar::test_aof()
     }
 }
 
-template<> template<> void to::test<7>() { use_db(V5); test_multi(); }
-template<> template<> void to::test<8>() { use_db(V6); test_multi(); }
+template<> template<> void to::test<10>() { use_db(V5); test_multi(); }
+template<> template<> void to::test<11>() { use_db(V6); test_multi(); }
+template<> template<> void to::test<12>() { use_db(MEM); test_multi(); }
 void db_import_shar::test_multi()
 {
     // Check that multiple messages are correctly identified during export
@@ -258,8 +262,9 @@ void db_import_shar::test_multi()
     ensure_equals(diffs, 0);
 }
 
-template<> template<> void to::test<9>() { use_db(V5); test_auto_repinfo(); }
-template<> template<> void to::test<10>() { use_db(V6); test_auto_repinfo(); }
+template<> template<> void to::test<13>() { use_db(V5); test_auto_repinfo(); }
+template<> template<> void to::test<14>() { use_db(V6); test_auto_repinfo(); }
+template<> template<> void to::test<15>() { use_db(MEM); test_auto_repinfo(); }
 void db_import_shar::test_auto_repinfo()
 {
     // Check automatic repinfo allocation
