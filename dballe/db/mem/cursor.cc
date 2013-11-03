@@ -189,7 +189,11 @@ bool CursorLinear<T>::next()
     if (iter_cur == iter_end)
         return false;
 
-    ++iter_cur;
+    if (first)
+        first = false;
+    else
+        ++iter_cur;
+
     --count;
     return iter_cur != iter_end;
 }

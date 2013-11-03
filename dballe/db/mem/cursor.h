@@ -138,9 +138,10 @@ protected:
     memdb::Results<T> res;
     typename memdb::Results<T>::const_iterator iter_cur;
     typename memdb::Results<T>::const_iterator iter_end;
+    bool first;
 
     CursorLinear(DB& db, unsigned int modifiers, memdb::Results<T>& res)
-        : Cursor(db, modifiers, res.size()), res(res), iter_cur(res.begin()), iter_end(res.end()) {}
+        : Cursor(db, modifiers, res.size()), res(res), iter_cur(res.begin()), iter_end(res.end()), first(true) {}
 
     virtual void discard_rest();
     virtual bool next();

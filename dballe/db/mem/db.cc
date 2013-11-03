@@ -151,17 +151,35 @@ unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector
 
 void DB::attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    // Find the data id for id_var
+    for (vector<VarID>::const_iterator i = last_insert_varids.begin();
+            i != last_insert_varids.end(); ++i)
+        if (i->code == id_var)
+        {
+            attr_insert(i->id, id_var, attrs, can_replace);
+            return;
+        }
+    error_notfound::throwf("variable B%02d%03d was not involved in the last insert operation", WR_VAR_X(id_var), WR_VAR_Y(id_var));
 }
 
 void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs, bool can_replace)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    Value& val = *memdb.values[id_data];
+    for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
+    {
+        if (!can_replace && val.var->enqa((*i)->code()))
+            error_consistency::throwf("attribute B%02d%03d already exists on variable B%02d%03d",
+                    WR_VAR_X((*i)->code()), WR_VAR_Y((*i)->code()),
+                    WR_VAR_X(val.var->code()), WR_VAR_Y(val.var->code()));
+        val.var->seta(**i);
+    }
 }
 
 void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    Value& val = *memdb.values[id_data];
+    for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
+        val.var->unseta(*i);
 }
 
 void DB::dump(FILE* out)
