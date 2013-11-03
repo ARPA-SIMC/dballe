@@ -133,7 +133,7 @@ wreport::Varcode Cursor::get_varcode() const
 wreport::Var Cursor::get_var() const
 {
     if (cur_value)
-        return *(cur_value->var);
+        return Var(*(cur_value->var), false);
     else
         throw error_consistency("get_var not supported on this query");
 }

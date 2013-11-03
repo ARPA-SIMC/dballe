@@ -254,7 +254,7 @@ void TestRecordValEqual<K>::check(WIBBLE_TEST_LOCPRM) const
         avar = NULL;
 
     if (!evar && !avar) return;
-    if (!evar || !avar || *evar != *avar)
+    if (!evar || !avar || evar->code() != avar->code() || !evar->value_equals(*avar))
     {
         std::stringstream ss;
         ss << "records differ on " << format_name(name) << ": ";
