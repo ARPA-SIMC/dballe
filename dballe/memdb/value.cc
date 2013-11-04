@@ -5,6 +5,7 @@
 #include "query.h"
 #include <iomanip>
 #include <ostream>
+#include <sstream>
 
 using namespace std;
 using namespace wreport;
@@ -331,7 +332,45 @@ bool QueryBuilder::add_attrfilter_where(const char* tbl)
 }
 #endif
     strategy.activate(res);
+
 }
+
+void Values::dump(FILE* out) const
+{
+    fprintf(out, "Values:\n");
+    for (size_t pos = 0; pos < values.size(); ++pos)
+    {
+        if (values[pos])
+        {
+            stringstream buf;
+            buf << values[pos]->levtr.level
+                << "\t" << values[pos]->levtr.trange
+                << "\t" << values[pos]->datetime
+                << "\t";
+            values[pos]->var->print_without_attrs(buf);
+
+            fprintf(out, " %4zu: %4zu\t%s", pos, values[pos]->station.id, buf.str().c_str());
+            // TODO: print attrs
+        } else
+            fprintf(out, " %4zu: (empty)\n", pos);
+    }
+#if 0
+    fprintf(out, " coord index:\n");
+    for (Index<Coord>::const_iterator i = by_coord.begin(); i != by_coord.end(); ++i)
+    {
+        fprintf(out, "  %d %d -> ", i->first.lat, i->first.lon);
+        i->second.dump(out);
+        putc('\n', out);
+    }
+    fprintf(out, " ident index:\n");
+    for (Index<string>::const_iterator i = by_ident.begin(); i != by_ident.end(); ++i)
+    {
+        fprintf(out, "  %s -> \n", i->first.c_str());
+        i->second.dump(out);
+        putc('\n', out);
+    }
+#endif
+};
 
 template class Index<const Station*>;
 template class ValueStorage<Value>;

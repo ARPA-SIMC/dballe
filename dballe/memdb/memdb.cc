@@ -235,6 +235,7 @@ void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) con
 void Memdb::dump(FILE* out) const
 {
     stations.dump(out);
+    values.dump(out);
 }
 
 }

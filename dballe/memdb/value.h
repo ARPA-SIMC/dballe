@@ -83,6 +83,8 @@ public:
 
     /// Query stations returning the IDs
     void query(const Record& rec, const Results<Station>& stations, Results<Value>& res) const;
+
+    void dump(FILE* out) const;
 };
 
 }
