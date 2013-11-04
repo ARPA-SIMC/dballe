@@ -217,6 +217,10 @@ struct Date
         : year(year), month(month), day(day)
     {
     }
+    Date(const int* val)
+        : year(val[0]), month(val[1]), day(val[2])
+    {
+    }
 
     bool operator<(const Date& dt) const
     {
@@ -250,6 +254,10 @@ struct Datetime : public Date
     Datetime(unsigned short year, unsigned char month=1, unsigned char day=1,
              unsigned char hour=0, unsigned char minute=0, unsigned char second=0)
         : Date(year, month, day), hour(hour), minute(minute), second(second)
+    {
+    }
+    Datetime(const int* val)
+        : Date(val[0], val[1], val[2]), hour(val[3]), minute(val[4]), second(val[5])
     {
     }
 

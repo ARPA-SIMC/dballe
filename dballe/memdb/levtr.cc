@@ -20,6 +20,7 @@
  */
 
 #include "levtr.h"
+#include "query.h"
 #include "dballe/core/record.h"
 #include "dballe/core/stlutils.h"
 #include <iostream>
@@ -61,7 +62,43 @@ size_t LevTrs::obtain(const Record& rec)
     return obtain(rec.get_level(), rec.get_trange());
 }
 
+void LevTrs::query(const Record& rec, Results<LevTr>& res) const
+{
+    match::Strategy<LevTr> strategy;
+
+    Level level = rec.get_level();
+    if (level != Level())
+    {
+        Level levmin(
+                level.ltype1 != MISSING_INT ? level.ltype1 : 0,
+                level.l1 != MISSING_INT ? level.l1 : 0,
+                level.ltype2 != MISSING_INT ? level.ltype2 : 0,
+                level.l2 != MISSING_INT ? level.l2 : 0);
+        strategy.add(by_level, levmin, level);
+    }
+
+    Trange trange = rec.get_trange();
+    if (trange != Trange())
+    {
+        Trange trmin(
+                trange.pind != MISSING_INT ? trange.pind : 0,
+                trange.p1 != MISSING_INT ? trange.p1 : 0,
+                trange.p2 != MISSING_INT ? trange.p2 : 0);
+        strategy.add(by_trange, trmin, trange);
+    }
+
+    strategy.activate(res);
+}
+
+
 }
 }
 
 #include "core.tcc"
+#include "query.tcc"
+
+namespace dballe {
+namespace memdb {
+template class Results<LevTr>;
+}
+}

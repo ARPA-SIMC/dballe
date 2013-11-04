@@ -129,8 +129,8 @@ protected:
         }
         virtual bool equals(const AbstractIterator* i) const
         {
-            if (const IteratorImpl<ITER>* i = dynamic_cast<const IteratorImpl<ITER>*>(i))
-                return begin == i->begin;
+            if (const IteratorImpl<ITER>* ii = dynamic_cast<const IteratorImpl<ITER>*>(i))
+                return begin == ii->begin;
             return false;
         }
     };
@@ -281,6 +281,52 @@ struct Strategy
     }
 
     void add(const Positions& p);
+
+    template<typename K>
+    bool add(const Index<K>& index, const K& val)
+    {
+        typename Index<K>::const_iterator i = index.find(val);
+        if (i == index.end()) return false;
+        this->add(i->second);
+        return true;
+    }
+
+    template<typename K>
+    bool add(const Index<K>& index, const K& min, const K& max)
+    {
+        bool res = false;
+        for (typename Index<K>::const_iterator i = index.lower_bound(min);
+                i != index.upper_bound(max); ++i)
+        {
+            this->add(i->second);
+            res = true;
+        }
+        return res;
+    }
+
+    template<typename K>
+    bool add_since(const Index<K>& index, const typename Index<K>::const_iterator begin)
+    {
+        bool res = false;
+        for (typename Index<K>::const_iterator i = begin; i != index.end(); ++i)
+        {
+            this->add(i->second);
+            res = true;
+        }
+        return res;
+    }
+
+    template<typename K>
+    bool add_until(const Index<K>& index, const typename Index<K>::const_iterator end)
+    {
+        bool res = false;
+        for (typename Index<K>::const_iterator i = index.begin(); i != end; ++i)
+        {
+            this->add(i->second);
+            res = true;
+        }
+        return res;
+    }
 
     void add(Match<T>* f)
     {

@@ -125,6 +125,12 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
     memdb.query_data(query, res);
     return auto_ptr<db::Cursor>(new CursorData(*this, modifiers, res));
 #if 0
+        if (query_station_vars)
+            sql_where.append_list("d.id_lev_tr == -1");
+        else
+            sql_where.append_list("d.id_lev_tr != -1");
+#endif
+#if 0
     auto_ptr<Cursor> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
         res.reset(new CursorBest(*this, modifiers));

@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <ostream>
 #include <sstream>
+#include <cstdlib>
+#include <cstring>
 
 using namespace std;
 using namespace wreport;
@@ -104,23 +106,43 @@ struct MatchVarcode : public Match<Value>
     }
 };
 
+struct MatchVarcodes : public Match<Value>
+{
+    std::set<Varcode> codes;
+
+    MatchVarcodes(std::set<Varcode> codes) : codes(codes) {}
+    virtual bool operator()(const Value& val) const
+    {
+        return codes.find(val.var->code()) != codes.end();
+    }
+};
+
 }
 
-void Values::query(const Record& rec, const Results<Station>& stations, Results<Value>& res) const
+void Values::query(const Record& rec, const Results<Station>& stations, const Results<LevTr>& tranges, Results<Value>& res) const
 {
+    if (const char* data_id = rec.key_peek_value(DBA_KEY_CONTEXT_ID))
+    {
+        trace_query("Found data_id %s\n", data_id);
+        size_t pos = strtoul(data_id, 0, 10);
+        if (pos >= 0 && pos < values.size() && values[pos])
+        {
+            trace_query(" intersect with %zu\n", pos);
+            res.intersect(pos);
+        } else {
+            trace_query(" set to empty result set\n");
+            res.set_to_empty();
+            return;
+        }
+    }
+
     match::Strategy<Value> strategy;
 
     if (!stations.is_select_all())
     {
         bool found = false;
         for (Results<Station>::const_iterator i = stations.begin(); i != stations.end(); ++i)
-        {
-            Index<const Station*>::const_iterator ids = by_station.find(&*i);
-            if (ids == by_station.end())
-                continue;
-            strategy.add(ids->second);
-            found = true;
-        }
+            found |= strategy.add(by_station, &*i);
         if (!found)
         {
             res.set_to_empty();
@@ -128,102 +150,38 @@ void Values::query(const Record& rec, const Results<Station>& stations, Results<
         }
     }
 
-#if 0
-    if (query_data_id != MISSING_INT)
+    if (!tranges.is_select_all())
     {
-        // Skip arbitrary limits on id_lev_tr if data_id is queried, since we
-        // must allow to select either a station or a data value
-
-        //TRACE("found %s: adding %s. val is %d\n", info(key)->desc, sql, *out);
-        sql_where.append_listf("d.id=%d", query_data_id);
-    } else {
-        if (query_station_vars)
-            sql_where.append_list("d.id_lev_tr == -1");
-        else
-            sql_where.append_list("d.id_lev_tr != -1");
-    }
-
-bool QueryBuilder::add_dt_where(const char* tbl)
-{
-    if (rec.get(DBA_KEY_LEVELTYPE1, 0) == 257)
-        return false;
-
-    bool found = false;
-    int minvalues[6], maxvalues[6];
-    rec.parse_date_extremes(minvalues, maxvalues);
-
-    if (minvalues[0] != -1 || maxvalues[0] != -1)
-    {
-        if (memcmp(minvalues, maxvalues, 6 * sizeof(int)) == 0)
+        bool found = false;
+        for (Results<LevTr>::const_iterator i = tranges.begin(); i != tranges.end(); ++i)
+            found |= strategy.add(by_levtr, &*i);
+        if (!found)
         {
-            /* Add constraint on the exact date interval */
-            qargs.sel_dtmin.year = minvalues[0];
-            qargs.sel_dtmin.month = minvalues[1];
-            qargs.sel_dtmin.day = minvalues[2];
-            qargs.sel_dtmin.hour = minvalues[3];
-            qargs.sel_dtmin.minute = minvalues[4];
-            qargs.sel_dtmin.second = minvalues[5];
-            qargs.sel_dtmin.fraction = 0;
-            sql_where.append_listf("%s.datetime=?", tbl);
-            TRACE("found exact time: adding AND %s.datetime={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
-                    tbl, minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
-            stm.bind_in(qargs.input_seq++, qargs.sel_dtmin);
-            found = true;
-        }
-        else
-        {
-            if (minvalues[0] != -1)
-            {
-                /* Add constraint on the minimum date interval */
-                qargs.sel_dtmin.year = minvalues[0];
-                qargs.sel_dtmin.month = minvalues[1];
-                qargs.sel_dtmin.day = minvalues[2];
-                qargs.sel_dtmin.hour = minvalues[3];
-                qargs.sel_dtmin.minute = minvalues[4];
-                qargs.sel_dtmin.second = minvalues[5];
-                qargs.sel_dtmin.fraction = 0;
-                sql_where.append_listf("%s.datetime>=?", tbl);
-                TRACE("found min time: adding AND %s.datetime>={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
-                    tbl, minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
-                stm.bind_in(qargs.input_seq++, qargs.sel_dtmin);
-                found = true;
-            }
-            if (maxvalues[0] != -1)
-            {
-                qargs.sel_dtmax.year = maxvalues[0];
-                qargs.sel_dtmax.month = maxvalues[1];
-                qargs.sel_dtmax.day = maxvalues[2];
-                qargs.sel_dtmax.hour = maxvalues[3];
-                qargs.sel_dtmax.minute = maxvalues[4];
-                qargs.sel_dtmax.second = maxvalues[5];
-                qargs.sel_dtmax.fraction = 0;
-                sql_where.append_listf("%s.datetime<=?", tbl);
-                TRACE("found max time: adding AND %s.datetime<={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
-                        tbl, maxvalues[0], maxvalues[1], maxvalues[2], maxvalues[3], maxvalues[4], maxvalues[5]);
-                stm.bind_in(qargs.input_seq++, qargs.sel_dtmax);
-                found = true;
-            }
+            res.set_to_empty();
+            return;
         }
     }
 
-    return found;
-}
-
-bool QueryBuilder::add_ltr_where(const char* tbl)
-{
-    if (query_station_vars) return false;
-
-    Constraints c(rec, tbl, sql_where);
-    c.add_int(DBA_KEY_LEVELTYPE1, "%s.ltype1=%d");
-    c.add_int(DBA_KEY_L1, "%s.l1=%d");
-    c.add_int(DBA_KEY_LEVELTYPE2, "%s.ltype2=%d");
-    c.add_int(DBA_KEY_L2, "%s.l2=%d");
-    c.add_int(DBA_KEY_PINDICATOR, "%s.ptype=%d");
-    c.add_int(DBA_KEY_P1, "%s.p1=%d");
-    c.add_int(DBA_KEY_P2, "%s.p2=%d");
-    return c.found;
-}
-#endif
+    int mind[6], maxd[6];
+    rec.parse_date_extremes(mind, maxd);
+    if (mind[0] != -1 || maxd[0] != -1)
+    {
+        if (mind[0] == maxd[0] && mind[1] == maxd[1] && mind[2] == maxd[2])
+        {
+            Date d(mind);
+            strategy.add(by_date, d);
+        } else if (mind[0] == -1) {
+            Date d(maxd);
+            strategy.add_until(by_date, by_date.upper_bound(d));
+        } else if (maxd[0] == -1) {
+            Date d(mind);
+            strategy.add_since(by_date, by_date.lower_bound(d));
+        } else {
+            Date dmin(mind);
+            Date dmax(maxd);
+            strategy.add(by_date, dmin, dmax);
+        }
+    }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
     {
@@ -231,29 +189,17 @@ bool QueryBuilder::add_ltr_where(const char* tbl)
         strategy.add(new MatchVarcode(descriptor_code(val)));
     }
 
-#if 0
     if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
     {
+        set<Varcode> codes;
         size_t pos;
         size_t len;
-        sql_where.append_listf("%s.id_var IN (", tbl);
         for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-        {
-            Varcode code = WR_STRING_TO_VAR(val + pos + 1);
-            if (pos == 0)
-                sql_where.appendf("%d", code);
-            else
-                sql_where.appendf(",%d", code);
-        }
-        sql_where.append(")");
-        TRACE("found blist: adding AND %s.id_var IN (%s)\n", tbl, val);
-        found = true;
+            codes.insert(WR_STRING_TO_VAR(val + pos + 1));
+        strategy.add(new MatchVarcodes(codes));
     }
 
-bool QueryBuilder::add_repinfo_where(const char* tbl)
-{
-    Constraints c(rec, tbl, sql_where);
- 
+#if 0
     if (rec.key_peek(DBA_KEY_PRIORITY) || rec.key_peek(DBA_KEY_PRIOMIN) || rec.key_peek(DBA_KEY_PRIOMAX))
     {
         // Filter the repinfo cache and build a IN query
@@ -275,20 +221,9 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
         }
         c.found = true;
     }
+#endif
 
-    // rep_memo has priority over rep_cod
-    if (const char* val = rec.key_peek_value(DBA_KEY_REP_MEMO))
-    {
-        int src_val = db.repinfo().get_id(val);
-        sql_where.append_listf("%s.id_report=%d", tbl, src_val);
-        TRACE("found rep_memo %s: adding AND %s.id_report=%d\n", val, tbl, (int)src_val);
-        c.found = true;
-    } else
-        c.add_int(DBA_KEY_REP_COD, "%s.id_report=%d");
-
-    return c.found;
-}
-
+#if 0
 bool QueryBuilder::add_datafilter_where(const char* tbl)
 {
     const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER);

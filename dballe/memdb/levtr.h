@@ -29,6 +29,7 @@ namespace dballe {
 struct Record;
 
 namespace memdb {
+template<typename T> struct Results;
 
 /// Station information
 struct LevTr
@@ -57,6 +58,9 @@ public:
 
     /// Get a LevTr record
     size_t obtain(const Record& rec);
+
+    /// Query levtrs returning the IDs
+    void query(const Record& rec, Results<LevTr>& res) const;
 };
 
 }

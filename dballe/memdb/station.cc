@@ -170,6 +170,18 @@ struct MatchLonOutside : public Match<Station>
     }
 };
 
+struct MatchReport : public Match<Station>
+{
+    string report;
+
+    MatchReport(const std::string& report) : report(report) {}
+
+    virtual bool operator()(const Station& val) const
+    {
+        return val.report == report;
+    }
+};
+
 }
 
 void Stations::query(const Record& rec, Results<Station>& res) const
@@ -306,6 +318,9 @@ void Stations::query(const Record& rec, Results<Station>& res) const
 
         strategy.add(iident->second);
     }
+
+    if (const char* val = rec.key_peek_value(DBA_KEY_REP_MEMO))
+        strategy.add(new MatchReport(val));
 
     strategy.activate(res);
 }

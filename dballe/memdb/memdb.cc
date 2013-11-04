@@ -228,8 +228,13 @@ void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) con
     Results<Station> res_st(stations);
     query_stations(rec, res_st);
 
+    // Get a list of stations we can match
+    Results<LevTr> res_tr(levtrs);
+    levtrs.query(rec, res_tr);
+
+
     // Query variables
-    values.query(rec, res_st, res);
+    values.query(rec, res_st, res_tr, res);
 }
 
 void Memdb::dump(FILE* out) const
