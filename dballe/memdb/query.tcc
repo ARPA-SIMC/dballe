@@ -36,7 +36,9 @@ void BaseResults::intersect(const ITER& begin, const ITER& iend, const Match<typ
 
     if (select_all)
     {
-        std::copy(i, iend, back_inserter(indices));
+        for ( ; i != iend; ++i)
+            if (!match || (*match)(*i))
+                indices.push_back(*i);
         select_all = false;
         return;
     }
