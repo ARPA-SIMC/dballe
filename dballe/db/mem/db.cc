@@ -25,6 +25,7 @@
 #include <dballe/core/record.h>
 #include <dballe/core/defs.h>
 #include <dballe/memdb/query.h>
+#include <algorithm>
 
 #if 0
 #include <cstdio>
@@ -146,7 +147,16 @@ std::auto_ptr<db::Cursor> DB::query_summary(const Record& rec)
 
 unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    Value& val = *memdb.values[id_data];
+    if (qcs.empty())
+    {
+        for (const Var* a = val.var->next_attr(); a != NULL; a = a->next_attr())
+            attrs.set(*a);
+    } else {
+        for (const Var* a = val.var->next_attr(); a != NULL; a = a->next_attr())
+            if (std::find(qcs.begin(), qcs.end(), a->code()) != qcs.end())
+                attrs.set(*a);
+    }
 }
 
 void DB::attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace)
