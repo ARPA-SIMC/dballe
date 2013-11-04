@@ -265,15 +265,7 @@ struct FilterBuilder
     const Match<T>* get() const { return filter; }
     const Match<T>& operator*() const { return *filter; }
 
-    void add(Match<T>* f)
-    {
-        if (!filter)
-            filter = f;
-        else if (!is_and)
-            filter = is_and = new And<T>(filter, f);
-        else
-            is_and->add(f);
-    }
+    void add(Match<T>* f);
 };
 
 template<typename T>

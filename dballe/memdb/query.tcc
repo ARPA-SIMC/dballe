@@ -110,6 +110,17 @@ bool Idx2Values<T>::operator()(const size_t& val) const
 }
 
 template<typename T>
+void FilterBuilder<T>::add(Match<T>* f)
+{
+    if (!filter)
+        filter = f;
+    else if (!is_and)
+        filter = is_and = new And<T>(filter, f);
+    else
+        is_and->add(f);
+}
+
+template<typename T>
 void Strategy<T>::add(const Positions& p)
 {
     if (!indices)
