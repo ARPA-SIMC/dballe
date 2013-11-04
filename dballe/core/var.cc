@@ -67,6 +67,28 @@ wreport::Varcode resolve_varcode(const char* name)
     return res;
 }
 
+wreport::Varcode resolve_varcode_safe(const char* name)
+{
+    if (!name)
+        throw error_consistency("cannot parse a Varcode out of a NULL");
+    if (!name[0])
+        throw error_consistency("cannot parse a Varcode out of an empty string");
+
+    // Try looking up among aliases
+    Varcode res = varcode_alias_resolve(name);
+    if (res) return res;
+
+    if (name[0] != 'B')
+        error_consistency::throwf("cannot parse a Varcode out of '%s'", name);
+
+    // Ensure that B is followed by 5 integers
+    for (unsigned i = 1; i < 6; ++i)
+        if (name[i] and !isdigit(name[i]))
+            error_consistency::throwf("cannot parse a Varcode out of '%s'", name);
+
+    return WR_STRING_TO_VAR(name + 1);
+}
+
 wreport::Varcode map_code_to_dballe(wreport::Varcode code)
 {
     switch (code)
