@@ -2,6 +2,7 @@
 #include "station.h"
 #include "levtr.h"
 #include "dballe/core/stlutils.h"
+#include "dballe/core/record.h"
 #include "query.h"
 #include <iomanip>
 #include <ostream>
@@ -88,6 +89,21 @@ bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& 
         }
     }
     return false;
+}
+
+namespace {
+
+struct MatchVarcode : public Match<Value>
+{
+    Varcode code;
+
+    MatchVarcode(Varcode code) : code(code) {}
+    virtual bool operator()(const Value& val) const
+    {
+        return val.var->code() == code;
+    }
+};
+
 }
 
 void Values::query(const Record& rec, const Results<Station>& stations, Results<Value>& res) const
@@ -207,18 +223,15 @@ bool QueryBuilder::add_ltr_where(const char* tbl)
     c.add_int(DBA_KEY_P2, "%s.p2=%d");
     return c.found;
 }
-
-bool QueryBuilder::add_varcode_where(const char* tbl)
-{
-    bool found = false;
+#endif
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
     {
-        sql_where.append_listf("%s.id_var=%d", tbl, descriptor_code(val));
-        TRACE("found b: adding AND %s.id_var=%d [from %s]\n", tbl, (int)descriptor_code(val), val);
-        found = true;
+        trace_query("Found varcode=%s\n", val);
+        strategy.add(new MatchVarcode(descriptor_code(val)));
     }
 
+#if 0
     if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
     {
         size_t pos;
@@ -236,9 +249,6 @@ bool QueryBuilder::add_varcode_where(const char* tbl)
         TRACE("found blist: adding AND %s.id_var IN (%s)\n", tbl, val);
         found = true;
     }
-
-    return found;
-}
 
 bool QueryBuilder::add_repinfo_where(const char* tbl)
 {
