@@ -70,13 +70,69 @@ template<> template<> void to::test<1>()
 template<> template<> void to::test<2>()
 {
     Var var(varinfo(WR_VAR(0, 12, 101)), 273.15);
-    //auto_ptr<Varmatch> m(Varmatch::parse());
+
+    wassert(actual((*Varmatch::parse("B12101<274"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101<273.15"))(var)).isfalse());
+    wassert(actual((*Varmatch::parse("B12101<273"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B12101<=274"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101<=273.15"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101<=273"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B12101>273"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101>273.15"))(var)).isfalse());
+    wassert(actual((*Varmatch::parse("B12101>274"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B12101>=273"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101>=273.15"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101>=274"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B12101==273.15"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101=273.15"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101==274"))(var)).isfalse());
+    wassert(actual((*Varmatch::parse("B12101=274"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B12101<>274"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101<>273.15"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("273<=B12101<=273.15"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("273.15<=B12101<=273.15"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("273.15<=B12101<=274"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("272<=B12101<=273"))(var)).isfalse());
 }
 
 template<> template<> void to::test<3>()
 {
     Var var(varinfo(WR_VAR(0, 1, 11)), "enrico");
-    //auto_ptr<Varmatch> m(Varmatch::parse());
+
+    wassert(actual((*Varmatch::parse("B01011<paolo"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011<enrico"))(var)).isfalse());
+    wassert(actual((*Varmatch::parse("B01011<emanuele"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B01011<=paolo"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011<=enrico"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011<=emanuele"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B01011>emanuele"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011>enrico"))(var)).isfalse());
+    wassert(actual((*Varmatch::parse("B01011>paolo"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B01011>=emanuele"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011>=enrico"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011>=paolo"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B01011==enrico"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011=enrico"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011==paolo"))(var)).isfalse());
+    wassert(actual((*Varmatch::parse("B01011=paolo"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("B01011<>paolo"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011<>enrico"))(var)).isfalse());
+
+    wassert(actual((*Varmatch::parse("emanuele<=B01011<=enrico"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("enrico<=B01011<=enrico"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("enrico<=B01011<=paolo"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("daniele<=B01011<=emanuele"))(var)).isfalse());
 }
 
 }

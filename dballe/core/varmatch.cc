@@ -140,8 +140,11 @@ std::auto_ptr<Varmatch> Varmatch::parse(const std::string& filter)
         if (info->is_string())
             return auto_ptr<Varmatch>(new varmatch::BetweenString(code, min, max));
         else
-            return auto_ptr<Varmatch>(new varmatch::BetweenInt(code,
-                        strtoul(min.c_str(), 0, 10), strtoul(max.c_str(), 0, 10)));
+        {
+            int imin = info->encode_int(strtod(min.c_str(), NULL));
+            int imax = info->encode_int(strtod(max.c_str(), NULL));
+            return auto_ptr<Varmatch>(new varmatch::BetweenInt(code, imin, imax));
+        }
     } else {
         // B12345<=>val
         Varcode code = resolve_varcode_safe(filter.substr(0, sep1_begin).c_str());
@@ -151,7 +154,7 @@ std::auto_ptr<Varmatch> Varmatch::parse(const std::string& filter)
         if (info->is_string())
             return varmatch::make_op(code, op, filter.substr(sep1_end));
         else {
-            int val = strtoul(filter.substr(sep1_end).c_str(), 0, 10);
+            int val = info->encode_int(strtod(filter.substr(sep1_end).c_str(), NULL));
             return varmatch::make_op(code, op, val);
         }
     }
