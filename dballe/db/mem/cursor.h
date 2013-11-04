@@ -140,8 +140,8 @@ protected:
     typename memdb::Results<T>::const_iterator iter_end;
     bool first;
 
-    CursorLinear(DB& db, unsigned int modifiers, memdb::Results<T>& res)
-        : Cursor(db, modifiers, res.size()), res(res), iter_cur(res.begin()), iter_end(res.end()), first(true) {}
+    CursorLinear(DB& db, unsigned int modifiers, const memdb::Results<T>& origres)
+        : Cursor(db, modifiers, origres.size()), res(origres), iter_cur(res.begin()), iter_end(res.end()), first(true) {}
 
     virtual void discard_rest();
     virtual bool next();
@@ -159,7 +159,7 @@ protected:
     virtual unsigned test_iterate(FILE* dump=0);
 #endif
 
-    CursorStations(DB& db, unsigned int modifiers, memdb::Results<memdb::Station>& res)
+    CursorStations(DB& db, unsigned int modifiers, const memdb::Results<memdb::Station>& res)
         : CursorLinear<memdb::Station>(db, modifiers, res) {}
 
     friend class mem::DB;
@@ -174,7 +174,7 @@ protected:
     virtual unsigned test_iterate(FILE* dump=0);
 #endif
 
-    CursorData(DB& db, unsigned int modifiers, memdb::Results<memdb::Value>& res)
+    CursorData(DB& db, unsigned int modifiers, const memdb::Results<memdb::Value>& res)
         : CursorLinear<memdb::Value>(db, modifiers, res) {}
 
     friend class mem::DB;
