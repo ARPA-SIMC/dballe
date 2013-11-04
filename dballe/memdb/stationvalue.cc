@@ -45,6 +45,18 @@ void StationValues::clear()
     ValueStorage<StationValue>::clear();
 }
 
+const StationValue* StationValues::get(const Station& station, wreport::Varcode code) const
+{
+    Positions res = by_station.search(&station);
+    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
+    {
+        const StationValue* s = (*this)[*i];
+        if (s && s->var->code() == code)
+            return s;
+    }
+    return 0;
+}
+
 size_t StationValues::insert(const Station& station, std::auto_ptr<Var> var, bool replace)
 {
     Positions res = by_station.search(&station);

@@ -77,7 +77,7 @@ public:
     size_t obtain(const Record& rec, bool create=true);
 
     /// Query stations returning the IDs
-    void query(const Record& rec, Results<Station>& res) const;
+    void query(const Record& rec, Results<Station>& res, Match<Station>* filter=0) const;
 
     void dump(FILE* out) const;
 };

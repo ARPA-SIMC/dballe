@@ -63,6 +63,8 @@ public:
         return by_station.find(&station) != by_station.end();
     }
 
+    const StationValue* get(const Station& station, wreport::Varcode code) const;
+
     /// Insert a new value, or replace an existing one for the same station
     size_t insert(const Station& station, std::auto_ptr<wreport::Var> var, bool replace=true);
 

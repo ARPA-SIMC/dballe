@@ -184,8 +184,10 @@ struct MatchReport : public Match<Station>
 
 }
 
-void Stations::query(const Record& rec, Results<Station>& res) const
+void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* filter) const
 {
+    auto_ptr< Match<Station> > filterp(filter);
+
     if (const char* ana_id = rec.key_peek_value(DBA_KEY_ANA_ID))
     {
         trace_query("Found ana_id %s\n", ana_id);
@@ -202,6 +204,8 @@ void Stations::query(const Record& rec, Results<Station>& res) const
     }
 
     match::Strategy<Station> strategy;
+
+    if (filter) strategy.add(filterp.release());
 
     if (const char* val = rec.key_peek_value(DBA_KEY_LON))
     {
