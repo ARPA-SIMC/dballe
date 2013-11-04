@@ -1440,7 +1440,7 @@ void db_tests::test_query_bad_attr_filter()
     try {
         db->query_data(query);
     } catch (error_consistency& e) {
-        ensure_contains(e.what(), "B12001 is not a valid filter");
+        wassert(actual(e.what()).matches("B12001 is not a valid filter|cannot find any operator in filter 'B12001'"));
     }
 }
 

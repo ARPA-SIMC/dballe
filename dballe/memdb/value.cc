@@ -3,6 +3,7 @@
 #include "levtr.h"
 #include "dballe/core/stlutils.h"
 #include "dballe/core/record.h"
+#include "dballe/core/varmatch.h"
 #include "query.h"
 #include <iomanip>
 #include <ostream>
@@ -117,6 +118,43 @@ struct MatchVarcodes : public Match<Value>
     }
 };
 
+struct MatchDataFilter : public Match<Value>
+{
+    Varmatch* match;
+
+    MatchDataFilter(const std::string& expr) : match(Varmatch::parse(expr).release()) {}
+    ~MatchDataFilter() { delete match; }
+
+    virtual bool operator()(const Value& val) const
+    {
+        return (*match)(*val.var);
+    }
+
+private:
+    MatchDataFilter(const MatchDataFilter&);
+    MatchDataFilter& operator=(const MatchDataFilter&);
+};
+
+struct MatchAttrFilter : public Match<Value>
+{
+    Varmatch* match;
+
+    MatchAttrFilter(const std::string& expr) : match(Varmatch::parse(expr).release()) {}
+    ~MatchAttrFilter() { delete match; }
+
+    virtual bool operator()(const Value& val) const
+    {
+        const Var* a = val.var->enqa(match->code);
+        if (!a) return false;
+        return (*match)(*a);
+    }
+
+private:
+    MatchAttrFilter(const MatchAttrFilter&);
+    MatchAttrFilter& operator=(const MatchAttrFilter&);
+};
+
+
 }
 
 void Values::query(const Record& rec, const Results<Station>& stations, const Results<LevTr>& tranges, Results<Value>& res) const
@@ -223,59 +261,18 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
     }
 #endif
 
-#if 0
-bool QueryBuilder::add_datafilter_where(const char* tbl)
-{
-    const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER);
-    if (!val) return false;
-
-    const char *op, *value, *value1;
-    Varinfo info = decode_data_filter(val, &op, &value, &value1);
-
-    sql_where.append_listf("%s.id_var=%d", tbl, (int)info->var);
-
-    if (value[0] == '\'')
-        if (value1 == NULL)
-            sql_where.append_listf("%s.value%s%s", tbl, op, value);
-        else
-            sql_where.append_listf("%s.value BETWEEN %s AND %s", tbl, value, value1);
-    else
+    if (const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER))
     {
-        const char* type = (db.conn->server_type == MYSQL) ? "SIGNED" : "INT";
-        if (value1 == NULL)
-            sql_where.append_listf("CAST(%s.value AS %s)%s%s", tbl, type, op, value);
-        else
-            sql_where.append_listf("CAST(%s.value AS %s) BETWEEN %s AND %s", tbl, type, value, value1);
+        trace_query("Found data_filter=%s\n", val);
+        strategy.add(new MatchDataFilter(val));
     }
 
-    return true;
-}
-
-bool QueryBuilder::add_attrfilter_where(const char* tbl)
-{
-    const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER);
-    if (!val) return false;
-
-    const char *op, *value, *value1;
-    Varinfo info = decode_data_filter(val, &op, &value, &value1);
-
-    sql_from.appendf(" JOIN attr %s_atf ON %s.id=%s_atf.id_data AND %s_atf.type=%d", tbl, tbl, tbl, tbl, info->var);
-    if (value[0] == '\'')
-        if (value1 == NULL)
-            sql_where.append_listf("%s_atf.value%s%s", tbl, op, value);
-        else
-            sql_where.append_listf("%s_atf.value BETWEEN %s AND %s", tbl, value, value1);
-    else
+    if (const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER))
     {
-        const char* type = (db.conn->server_type == MYSQL) ? "SIGNED" : "INT";
-        if (value1 == NULL)
-            sql_where.append_listf("CAST(%s_atf.value AS %s)%s%s", tbl, type, op, value);
-        else
-            sql_where.append_listf("CAST(%s_atf.value AS %s) BETWEEN %s AND %s", tbl, type, value, value1);
+        trace_query("Found attr_filter=%s\n", val);
+        strategy.add(new MatchAttrFilter(val));
     }
-    return true;
-}
-#endif
+
     strategy.activate(res);
 
 }
