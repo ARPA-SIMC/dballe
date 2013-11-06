@@ -31,7 +31,6 @@ provamiModules = \
 	provami/MapChoice.py \
 	provami/MapChoiceSingleQuery.py \
 	provami/Model.py \
-	provami/ModelSingleQuery.py \
 	provami/Navigator.py \
 	provami/ProgressDisplay.py \
 	provami/ProvamiArtProvider.py \
