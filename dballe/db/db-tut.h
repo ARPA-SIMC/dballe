@@ -79,6 +79,3 @@ struct db_tests : public dballe::tests::DB_test_base
 
 }
 }
-
-/* vim:set ts=4 sw=4: */
-

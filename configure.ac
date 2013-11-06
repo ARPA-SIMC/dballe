@@ -13,13 +13,6 @@ LT_INIT()
 LT_LANG([C++])
 AM_PROG_LIBTOOL
 
-AC_ARG_ENABLE([dballe-db],
-    [AS_HELP_STRING(
-        [--enable-dballe-db],
-        [build DB-All.e database support])],
-    [],
-    [enable_dballe_db="yes"])
-
 AC_ARG_ENABLE([dballef],
     [AS_HELP_STRING(
         [--enable-dballef],
@@ -47,10 +40,6 @@ AC_ARG_ENABLE([benchmarks],
         [enable benchmarks (requires C++11 support)])],
     [],
     [enable_benchmarks="yes"])
-
-if test x"$enable_dballe_db" != x"yes"; then
-	enable_dballe_python="no"
-fi
 
 AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
 AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
@@ -165,19 +154,16 @@ fi
 dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 2.5)
 
-if test x$enable_dballe_db = x"yes"
-then
 dnl Check for unixodbc
+have_odbc=yes
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
         AC_MSG_WARN([*** sql.h not found. Check 'config.log' for more details.])
-	enable_dballe_db=false
+        have_odbc=no
 )
-
 AC_CHECK_LIB(odbc, SQLAllocHandle, LIBS="$LIBS -lodbc",
         AC_MSG_WARN([*** libodbc not found. Check 'config.log' for more details.])
-	enable_dballe_db=false
+        have_odbc=no
 )
-fi
 
 dnl Check for lua
 PKG_CHECK_EXISTS([lua5.1], [have_lua=yes], [have_lua=no])
@@ -280,8 +266,8 @@ dnl CFLAGS="$warnings $CFLAGS"
 dnl CXXFLAGS="$warnings $CXXFLAGS"
 
 # Enforce dependencies
-if test x"$enable_dballe_db" = x"yes"; then
-	AC_DEFINE(HAVE_DBALLE_DB,[],[Have DB module])
+if test x"$have_odbc" = x"yes"; then
+	AC_DEFINE(HAVE_ODBC,[],[Have DB module])
 fi
 if test x"$enable_dballef" = x"yes"; then
 	AC_DEFINE(HAVE_DBALLEF,[],[Have Fortran bindings])
@@ -290,7 +276,7 @@ if test x"$enable_dballe_python" = x"yes"; then
 	AC_DEFINE(HAVE_DBALLE_PYTHON,[],[Have Python bindings])
 fi
 
-AM_CONDITIONAL([DO_DBALLE_DB], [test x"$enable_dballe_db" = x"yes"])
+AM_CONDITIONAL([HAVE_ODBC], [test x"$have_odbc" = x"yes"])
 AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
 AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
@@ -325,7 +311,7 @@ dnl doc/Makefile
 AC_MSG_NOTICE([
 ===================================================
 $PACKAGE_NAME-$PACKAGE_VERSION configuration:
-AS_HELP_STRING([db:], [$enable_dballe_db])
+AS_HELP_STRING([ODBC:], [$have_odbc])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])

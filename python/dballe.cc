@@ -25,10 +25,8 @@
 #include "varinfo.h"
 #include "var.h"
 #include "record.h"
-#ifdef HAVE_DBALLE_DB
 #include "db.h"
 #include "cursor.h"
-#endif
 #include "dballe/core/defs.h"
 #include "dballe/core/var.h"
 
@@ -150,10 +148,8 @@ PyMODINIT_FUNC init_dballe(void)
     register_varinfo(m);
     register_var(m);
     register_record(m);
-#ifdef HAVE_DBALLE_DB
     register_db(m);
     register_cursor(m);
-#endif
 }
 
 }

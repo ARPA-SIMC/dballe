@@ -19,7 +19,6 @@
 
 #include <dballe/msg/test-utils-msg.h>
 #include <dballe/db/db.h>
-#include <sqltypes.h>
 
 namespace dballe {
 namespace db {
@@ -213,19 +212,6 @@ struct DB_test_base : public db_test
     void populate_database(WIBBLE_TEST_LOCPRM);
 };
 
-static inline SQL_TIMESTAMP_STRUCT mkts(int year, int month, int day, int hour, int minute, int second)
-{
-	SQL_TIMESTAMP_STRUCT res;
-	res.year = year;
-	res.month = month;
-	res.day = day;
-	res.hour = hour;
-	res.minute = minute;
-	res.second = second;
-	res.fraction = 0;
-	return res;
-}
-
 struct ActualCursor : public wibble::tests::Actual<dballe::db::Cursor&>
 {
     ActualCursor(dballe::db::Cursor& actual) : wibble::tests::Actual<dballe::db::Cursor&>(actual) {}
@@ -251,23 +237,6 @@ struct ActualDB : public wibble::tests::Actual<dballe::DB&>
 
 } // namespace tests
 } // namespace dballe
-
-namespace std {
-
-static inline bool operator!=(const SQL_TIMESTAMP_STRUCT& a, const SQL_TIMESTAMP_STRUCT& b)
-{
-	return a.year != b.year || a.month != b.month || a.day != b.day || a.hour != b.hour || a.minute != b.minute || a.second != b.second || a.fraction != b.fraction;
-}
-
-static inline std::ostream& operator<<(std::ostream& o, const SQL_TIMESTAMP_STRUCT& t)
-{
-	char buf[20];
-	snprintf(buf, 20, "%04d-%02d-%02d %02d:%02d:%02d.%d", t.year, t.month, t.day, t.hour, t.minute, t.second, t.fraction);
-	o << buf;
-	return o;
-}
-
-}
 
 namespace wibble {
 namespace tests {

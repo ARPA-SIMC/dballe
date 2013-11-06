@@ -73,19 +73,24 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/aof_codec.h \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
+	db/modifiers.h \
+	db/db.h \
+	db/mem/repinfo.h \
+	db/mem/cursor.h \
+	db/mem/db.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
 	cmdline/processor.h \
+	cmdline/dbadb.h \
+	simple/dbapi.h
 	simple/simple.h \
 	simple/commonapi.h \
 	simple/msgapi.h
-if DO_DBALLE_DB
+if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
 	db/odbcworkarounds.h \
 	db/querybuf.h \
 	db/internals.h \
-	db/modifiers.h \
-	db/db.h \
 	db/v5/attr.h \
 	db/v5/context.h \
 	db/v5/cursor.h \
@@ -99,12 +104,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v6/lev_tr.h \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
-	db/v6/data.h \
-	db/mem/repinfo.h \
-	db/mem/cursor.h \
-	db/mem/db.h \
-	cmdline/dbadb.h \
-	simple/dbapi.h
+	db/v6/data.h
 endif
 
 lib_LTLIBRARIES = libdballe.la
@@ -162,19 +162,24 @@ libdballe_la_SOURCES = \
 	msg/wr_exporters/flight.cc \
 	msg/wr_exporters/generic.cc \
 	msg/wr_exporters/pollution.cc \
+	db/modifiers.cc \
+	db/db.cc \
+	db/mem/repinfo.cc \
+	db/mem/cursor.cc \
+	db/mem/db.cc \
 	cmdline/cmdline.cc \
 	cmdline/processor.cc \
 	cmdline/conversion.cc \
+	cmdline/dbadb.cc \
 	simple/simple.cc \
 	simple/commonapi.cc \
-	simple/msgapi.cc
+	simple/msgapi.cc \
+	simple/dbapi.cc
 
-if DO_DBALLE_DB
+if HAVE_ODBC
 libdballe_la_SOURCES += \
 	db/querybuf.cc \
 	db/internals.cc \
-	db/modifiers.cc \
-	db/db.cc \
 	db/v5/repinfo.cc \
 	db/v5/station.cc \
 	db/v5/context.cc \
@@ -192,12 +197,7 @@ libdballe_la_SOURCES += \
 	db/v6/cursor.cc \
 	db/v6/qbuilder.cc \
 	db/v6/import.cc \
-	db/v6/export.cc \
-	db/mem/repinfo.cc \
-	db/mem/cursor.cc \
-	db/mem/db.cc \
-	cmdline/dbadb.cc \
-	simple/dbapi.cc
+	db/v6/export.cc
 endif
 
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
@@ -235,7 +235,10 @@ dist_noinst_HEADERS = \
 	msg/test-utils-lua.h \
 	db/test-utils-db.h \
 	db/db-tut.h \
-	db/db-import-tut.h
+	db/db-basic-tut.h \
+	db/db-import-tut.h \
+	db/db-export-tut.h \
+	simple/dbapi-tut.h
 
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
@@ -269,28 +272,39 @@ tut_test_SOURCES = \
 	msg/tests/wr_export2.cc \
 	msg/tests/wr_codec.cc \
 	msg/tests/wr_codec_generic.cc \
-	simple/msgapi-tut.cc
+	db/test-utils-db.cc \
+	db/modifiers-tut.cc \
+	db/db-basic-tut.cc \
+	db/db-basic-mem-tut.cc \
+	db/db-tut.cc \
+	db/db-mem-tut.cc \
+	db/db-import-tut.cc \
+	db/db-import-mem-tut.cc \
+	db/db-export-tut.cc \
+	db/db-export-mem-tut.cc \
+	db/mem/repinfo-tut.cc \
+	db/mem/db-tut.cc \
+	simple/msgapi-tut.cc \
+	cmdline/dbadb-tut.cc \
+	simple/dbapi-tut.cc \
+	simple/dbapi-mem-tut.cc
 if LUA
 tut_test_SOURCES += \
 	msg/tests/lua.cc \
 	msg/test-utils-lua.cc
 endif
-if DO_DBALLE_DB
+if HAVE_ODBC
 tut_test_SOURCES += \
-	db/test-utils-db.cc \
 	db/tests/querybuf.cc \
 	db/tests/internals.cc \
-	db/modifiers-tut.cc \
-	db/db-basic-tut.cc \
-	db/db-tut.cc \
 	db/db-v5-tut.cc \
 	db/db-v6-tut.cc \
-	db/db-mem-tut.cc \
-	db/db-import-tut.cc \
+	db/db-basic-v5-tut.cc \
+	db/db-basic-v6-tut.cc \
 	db/db-import-v5-tut.cc \
 	db/db-import-v6-tut.cc \
-	db/db-import-mem-tut.cc \
-	db/db-export-tut.cc \
+	db/db-export-v5-tut.cc \
+	db/db-export-v6-tut.cc \
 	db/v5/tests/repinfo.cc \
 	db/v5/tests/station.cc \
 	db/v5/tests/context.cc \
@@ -301,10 +315,8 @@ tut_test_SOURCES += \
 	db/v6/tests/data.cc \
 	db/v6/tests/attr.cc \
 	db/v6/tests/db.cc \
-	db/mem/repinfo-tut.cc \
-	db/mem/db-tut.cc \
-	cmdline/dbadb-tut.cc \
-	simple/dbapi-tut.cc
+	simple/dbapi-v5-tut.cc \
+	simple/dbapi-v6-tut.cc
 endif
 
 tut_test_LDADD = \

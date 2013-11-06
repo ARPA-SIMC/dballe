@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 
 #include "db/test-utils-db.h"
+#include "db/internals.h"
 #include "db/v6/db.h"
 #include "db/v6/attr.h"
 #include "db/v6/data.h"
@@ -26,6 +27,7 @@
 #include "db/internals.h"
 
 using namespace dballe;
+using namespace dballe::db;
 using namespace wreport;
 using namespace std;
 
@@ -80,7 +82,7 @@ struct dbv6_attr_shar : public dballe::tests::db_test
         da.id_station = 1;
         da.id_report = 1;
         da.set_id_lev_tr(1);
-        da.date = dballe::tests::mkts(2001, 2, 3, 4, 5, 6);
+        da.date = make_sql_timestamp(2001, 2, 3, 4, 5, 6);
         da.id_var = WR_VAR(0, 1, 2);
         da.set_value("123");
         da.insert_or_fail();
@@ -89,7 +91,7 @@ struct dbv6_attr_shar : public dballe::tests::db_test
         da.id_station = 2;
         da.id_report = 2;
         da.set_id_lev_tr(2);
-        da.date = dballe::tests::mkts(2002, 3, 4, 5, 6, 7);
+        da.date = make_sql_timestamp(2002, 3, 4, 5, 6, 7);
         da.id_var = WR_VAR(0, 1, 2);
         da.set_value("234");
         da.insert_or_fail();

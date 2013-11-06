@@ -19,11 +19,14 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include "config.h"
 #include "db.h"
 #include "v5/db.h"
 #include "v6/db.h"
 #include "mem/db.h"
+#ifdef HAVE_ODBC
 #include "internals.h"
+#endif
 #include "dballe/msg/msgs.h"
 #include <wreport/error.h>
 #include <cstring>
@@ -76,6 +79,7 @@ bool DB::is_url(const char* str)
 
 auto_ptr<DB> DB::instantiate_db(auto_ptr<Connection>& conn)
 {
+#ifdef HAVE_ODBC
     // Autodetect format
     Format format = default_format;
 
@@ -109,20 +113,31 @@ auto_ptr<DB> DB::instantiate_db(auto_ptr<Connection>& conn)
         case V6: return auto_ptr<DB>(new v6::DB(conn));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
+#else
+    throw error_unimplemented("ODBC support is not available");
+#endif
 }
 
 auto_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
 {
+#ifdef HAVE_ODBC
     auto_ptr<Connection> conn(new Connection);
     conn->connect(dsn, user, password);
     return instantiate_db(conn);
+#else
+    throw error_unimplemented("ODBC support is not available");
+#endif
 }
 
 auto_ptr<DB> DB::connect_from_file(const char* pathname)
 {
+#ifdef HAVE_ODBC
     auto_ptr<Connection> conn(new Connection);
     conn->connect_file(pathname);
     return instantiate_db(conn);
+#else
+    throw error_unimplemented("ODBC support is not available");
+#endif
 }
 
 auto_ptr<DB> DB::connect_from_url(const char* url)
@@ -176,6 +191,7 @@ auto_ptr<DB> DB::connect_memory()
 
 auto_ptr<DB> DB::connect_test()
 {
+#ifdef HAVE_ODBC
     if (default_format == MEM)
         return connect_memory();
 
@@ -184,8 +200,18 @@ auto_ptr<DB> DB::connect_test()
         return connect_from_url(envurl);
     else
         return connect_from_file("test.sqlite");
+#else
+    return connect_memory();
+#endif
 }
 
+const char* DB::default_repinfo_file()
+{
+    const char* repinfo_file = getenv("DBA_REPINFO");
+    if (repinfo_file == 0 || repinfo_file[0] == 0)
+        repinfo_file = TABLE_DIR "/repinfo.csv";
+    return repinfo_file;
+}
 
 }
 

@@ -17,10 +17,12 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include "config.h"
 #include "test-utils-db.h"
-#include <dballe/db/internals.h>
+#ifdef HAVE_ODBC
 #include "dballe/db/v5/db.h"
 #include "dballe/db/v6/db.h"
+#endif
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
 #include <wibble/string.h>
@@ -295,18 +297,26 @@ void db_test::use_db(db::Format format, bool reset)
 
 db::v5::DB& db_test::v5()
 {
+#ifdef HAVE_ODBC
     if (db::v5::DB* d = dynamic_cast<db::v5::DB*>(db.get()))
         return *d;
     else
         throw error_consistency("test DB is not a v5 DB");
+#else
+    throw error_unimplemented("V5 database is not enabled because ODBC is not available");
+#endif
 }
 
 db::v6::DB& db_test::v6()
 {
+#ifdef HAVE_ODBC
     if (db::v6::DB* d = dynamic_cast<db::v6::DB*>(db.get()))
         return *d;
     else
         throw error_consistency("test DB is not a v6 DB");
+#else
+    throw error_unimplemented("V5 database is not enabled because ODBC is not available");
+#endif
 }
 
 DB_test_base::DB_test_base()

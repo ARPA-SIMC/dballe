@@ -17,18 +17,21 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "db-import-tut.h"
+#include "db/test-utils-db.h"
 
-namespace tut {
+namespace dballe {
+namespace tests {
 
-struct db_import_v6_shar : public dballe::tests::db_import
+struct db_export_tests : public dballe::tests::DB_test_base
 {
-    db_import_v6_shar() : dballe::tests::db_import(dballe::db::V6) {}
+    db_export_tests(dballe::db::Format format) : dballe::tests::DB_test_base(format) {}
+
+    void populate_database();
+
+    void test_simple_export();
+    void test_station_info_export();
 };
-TESTGRP(db_import_v6);
 
-#define TUT_TEST_BODY
-#include "db-import-tut.cc"
-
+}
 }
 

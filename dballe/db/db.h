@@ -467,6 +467,9 @@ public:
      */
     virtual void dump(FILE* out) = 0;
 
+    /// Return the default repinfo file pathname
+    static const char* default_repinfo_file();
+
 protected:
     static std::auto_ptr<DB> instantiate_db(std::auto_ptr<db::Connection>& conn);
 };

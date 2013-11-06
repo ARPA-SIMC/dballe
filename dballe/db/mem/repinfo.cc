@@ -20,8 +20,8 @@
  */
 
 #include "repinfo.h"
-#include "dballe/db/internals.h"
 #include "dballe/core/csv.h"
+#include "dballe/db/db.h"
 #include <wreport/error.h>
 #include <set>
 #include <limits>
@@ -63,7 +63,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
     *added = *deleted = *updated = 0;
 
     if (deffile == 0)
-        deffile = default_repinfo_file();
+        deffile = DB::default_repinfo_file();
 
     // Open the input CSV file
     FILE* in = fopen(deffile, "r");

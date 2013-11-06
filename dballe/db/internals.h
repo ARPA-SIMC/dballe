@@ -311,8 +311,26 @@ private:
     Sequence& operator=(const Sequence&);
 };
 
-/// Return the default repinfo file pathname
-const char* default_repinfo_file();
+static inline bool operator!=(const SQL_TIMESTAMP_STRUCT& a, const SQL_TIMESTAMP_STRUCT& b)
+{
+    return a.year != b.year || a.month != b.month || a.day != b.day || a.hour != b.hour || a.minute != b.minute || a.second != b.second || a.fraction != b.fraction;
+}
+
+std::ostream& operator<<(std::ostream& o, const SQL_TIMESTAMP_STRUCT& t);
+
+static inline SQL_TIMESTAMP_STRUCT make_sql_timestamp(int year, int month, int day, int hour, int minute, int second)
+{
+    SQL_TIMESTAMP_STRUCT res;
+    res.year = year;
+    res.month = month;
+    res.day = day;
+    res.hour = hour;
+    res.minute = minute;
+    res.second = second;
+    res.fraction = 0;
+    return res;
+}
+
 
 } // namespace db
 } // namespace dballe

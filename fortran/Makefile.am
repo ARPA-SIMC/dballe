@@ -38,7 +38,6 @@ check_missing_msg_SOURCES = $(testlib) check_missing_msg.f90
 check_missing_msg_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_msg_FCFLAGS = -g
 
-if DO_DBALLE_DB
 check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing check_segfault1
 # check_cached_anaid
 
@@ -69,7 +68,6 @@ check_segfault1_FCFLAGS = -g
 #check_cached_anaid_SOURCES = $(dbtestlib) check_cached_anaid.f90
 #check_cached_anaid_LDADD = ./libdballef.la -lcnf -lpopt
 #check_cached_anaid_FCFLAGS = -g
-endif
 
 noinst_PROGRAMS = dumpmsg_dballe mkmsg mkmsg-sca genattr
 
@@ -89,13 +87,11 @@ genattr_SOURCES = genattr.f90
 genattr_LDADD = ../fortran/libdballef.la -lcnf -lpopt
 genattr_FCFLAGS = -g 
 
-if DO_DBALLE_DB
 noinst_PROGRAMS += dump_dballe
 
 dump_dballe_SOURCES = dump_dballe.f90
 dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
 dump_dballe_FCFLAGS = -g 
-endif
 
 EXTRA_DIST = fortran.dox check-utils.h error.h
 

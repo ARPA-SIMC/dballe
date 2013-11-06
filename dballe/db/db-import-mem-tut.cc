@@ -21,11 +21,11 @@
 
 namespace tut {
 
-struct db_import_v6_shar : public dballe::tests::db_import
+struct db_import_mem_shar : public dballe::tests::db_import
 {
-    db_import_v6_shar() : dballe::tests::db_import(dballe::db::V6) {}
+    db_import_mem_shar() : dballe::tests::db_import(dballe::db::MEM) {}
 };
-TESTGRP(db_import_v6);
+TESTGRP(db_import_mem);
 
 #define TUT_TEST_BODY
 #include "db-import-tut.cc"

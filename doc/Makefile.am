@@ -47,12 +47,10 @@ uninstall-local:
 		rm -rf $(DESTDIR)$(docdir)/$${pkg}_api; \
 	done || true
 
-mainpages = ../dballe/main-core.dox 
-#mainpages += ../dballe/main-bufrex.dox 
-mainpages += ../dballe/main-msg.dox 
-if DO_DBALLE_DB
-mainpages += ../dballe/main-db.dox 
-endif
+mainpages = ../dballe/main-core.dox
+#mainpages += ../dballe/main-bufrex.dox
+mainpages += ../dballe/main-msg.dox
+mainpages += ../dballe/main-db.dox
 
 TEXINPUTS="$(srcdir)"
 

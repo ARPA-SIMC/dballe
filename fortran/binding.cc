@@ -20,11 +20,8 @@
 #include "config.h"
 #include "dballe/core/verbose.h"
 #include "dballe/simple/msgapi.h"
-
-#ifdef HAVE_DBALLE_DB
 #include "dballe/simple/dbapi.h"
 #include <dballe/db/db.h>
-#endif
 
 #include <cstring>	// memset
 #include <limits.h>
@@ -186,7 +183,6 @@ static inline int fromfortran(int val)
 #define MAX_SIMPLE 50
 #define MAX_SESSION 10
 
-#ifdef HAVE_DBALLE_DB
 struct HSession : public fortran::HBase
 {
 	DB* db;
@@ -213,7 +209,6 @@ struct HSession : public fortran::HBase
 };
 
 struct fortran::Handler<HSession, MAX_SESSION> hsess;
-#endif
 
 struct HSimple : public fortran::HBase
 {
@@ -298,33 +293,15 @@ static void lib_init()
 
     dba_verbose_init();
 
-	fortran::error_init();
-#ifdef HAVE_DBALLE_DB
-	hsess.init("DB-All.e database sessions", "MAX_CALLBACKS");
-#endif
-	hsimp.init("DB-All.e work sessions", "MAX_SIMPLE");
+    fortran::error_init();
+    hsess.init("DB-All.e database sessions", "MAX_CALLBACKS");
+    hsimp.init("DB-All.e work sessions", "MAX_SIMPLE");
 
 	++usage_refcount;
 }
 
-#if 0
-static inline int double_is_missing(double d)
-{
-	switch (fpclassify(d))
-	{
-		case FP_ZERO:
-			return 0;
-		case FP_NORMAL:
-			return d == MISSING_DOUBLE;
-		default:
-			return 1;
-	}
-}
-#endif
-
 extern "C" {
 
-#ifdef HAVE_DBALLE_DB
 /**
  * Start working with a DBALLE database.
  *
@@ -403,7 +380,6 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 		return fortran::error(e);
 	}
 }
-#endif
 
 /**
  * Stop working with a DBALLE database
@@ -415,10 +391,8 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 {
 	GENPTR_INTEGER(dbahandle)
 
-	// try {
-#ifdef HAVE_DBALLE_DB
+    // try {
         hsess.release(*dbahandle);
-#endif
 
 		/*
 		dba_shutdown does not exist anymore, but I keep this code commented out
@@ -436,7 +410,6 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 }
 
 
-#ifdef HAVE_DBALLE_DB
 /**
  * Starts a session with dballe.
  *
@@ -523,10 +496,9 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 		return fortran::error(e);
 	}
 }
-#endif
 
 /**
- * Access a file with wheter messages
+ * Access a file with weather messages
  *
  * @retval handle
  *   The session handle returned by the function

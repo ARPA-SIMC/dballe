@@ -837,12 +837,12 @@ const DBALLE_SQL_C_SINT_TYPE& Sequence::read()
     return out;
 }
 
-const char* default_repinfo_file()
+std::ostream& operator<<(std::ostream& o, const SQL_TIMESTAMP_STRUCT& t)
 {
-    const char* repinfo_file = getenv("DBA_REPINFO");
-    if (repinfo_file == 0 || repinfo_file[0] == 0)
-        repinfo_file = TABLE_DIR "/repinfo.csv";
-    return repinfo_file;
+    char buf[20];
+    snprintf(buf, 20, "%04d-%02d-%02d %02d:%02d:%02d.%d", t.year, t.month, t.day, t.hour, t.minute, t.second, t.fraction);
+    o << buf;
+    return o;
 }
 
 } // namespace db

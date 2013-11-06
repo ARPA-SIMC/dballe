@@ -4,17 +4,11 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 export PYTHONPATH=.
 
-dballe_python_tests = test.py
-if DO_DBALLE_DB
-dballe_python_tests += test-db.py test-volnd.py test-rconvert.py
-endif
+dballe_python_tests = test.py test-db.py test-volnd.py test-rconvert.py
 
 # TESTS = $(dballe_python_tests)
 
-pkgpython_PYTHON = dbacsv.py rconvert.py __init__.py
-if DO_DBALLE_DB
-pkgpython_PYTHON += volnd.py
-endif
+pkgpython_PYTHON = dbacsv.py rconvert.py __init__.py volnd.py
 
 pyexec_LTLIBRARIES = _dballe.la
 
@@ -24,12 +18,9 @@ _dballe_la_SOURCES = \
     varinfo.cc \
     var.cc \
     record.cc \
-    dballe.cc
-if DO_DBALLE_DB
-_dballe_la_SOURCES += \
+    dballe.cc \
     db.cc \
     cursor.cc
-endif
 _dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
 _dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
 _dballe_la_LIBADD = ../dballe/libdballe.la

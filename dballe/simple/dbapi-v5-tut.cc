@@ -17,18 +17,18 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "db-import-tut.h"
+#include "dbapi-tut.h"
+#include "dballe/db/db.h"
 
 namespace tut {
 
-struct db_import_v6_shar : public dballe::tests::db_import
+struct dbapi_v5_shar : public dballe::tests::dbapi_tests
 {
-    db_import_v6_shar() : dballe::tests::db_import(dballe::db::V6) {}
+    dbapi_v5_shar() : dballe::tests::dbapi_tests(dballe::db::V5) {}
 };
-TESTGRP(db_import_v6);
+TESTGRP(dbapi_v5);
 
 #define TUT_TEST_BODY
-#include "db-import-tut.cc"
+#include "dbapi-tut.cc"
 
 }
-

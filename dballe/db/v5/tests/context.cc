@@ -18,11 +18,13 @@
  */
 
 #include "db/test-utils-db.h"
+#include "db/internals.h"
 #include "db/v5/db.h"
 #include "db/v5/context.h"
 #include "db/v5/station.h"
 
 using namespace dballe;
+using namespace dballe::db;
 using namespace dballe::db::v5;
 using namespace std;
 
@@ -64,7 +66,7 @@ void to::test<1>()
 	// Insert a context
 	co->id_station = 1;
 	co->id_report = 1;
-	co->date = dballe::tests::mkts(2001, 2, 3, 4, 5, 6);
+	co->date = make_sql_timestamp(2001, 2, 3, 4, 5, 6);
 	co->ltype1 = 1;
 	co->l1 = 2;
 	co->ltype2 = 0;
@@ -77,7 +79,7 @@ void to::test<1>()
 	// Insert another context
 	co->id_station = 2;
 	co->id_report = 2;
-	co->date = dballe::tests::mkts(2002, 3, 4, 5, 6, 7);
+	co->date = make_sql_timestamp(2002, 3, 4, 5, 6, 7);
 	co->ltype1 = 2;
 	co->l1 = 3;
 	co->ltype2 = 1;
@@ -91,7 +93,7 @@ void to::test<1>()
 	co->id = 0;
 	co->id_station = 1;
 	co->id_report = 1;
-	co->date = dballe::tests::mkts(2001, 2, 3, 4, 5, 6);
+	co->date = make_sql_timestamp(2001, 2, 3, 4, 5, 6);
 	co->ltype1 = 1;
 	co->l1 = 2;
 	co->ltype2 = 0;
@@ -105,7 +107,7 @@ void to::test<1>()
 	co->id = 0;
 	co->id_station = 2;
 	co->id_report = 2;
-	co->date = dballe::tests::mkts(2002, 3, 4, 5, 6, 7);
+	co->date = make_sql_timestamp(2002, 3, 4, 5, 6, 7);
 	co->ltype1 = 2;
 	co->l1 = 3;
 	co->ltype2 = 1;
@@ -119,7 +121,7 @@ void to::test<1>()
 	co->get_data(1);
 	ensure_equals(co->id_station, 1);
 	ensure_equals(co->id_report, 1);
-	ensure_equals(co->date, dballe::tests::mkts(2001, 2, 3, 4, 5, 6));
+	ensure_equals(co->date, make_sql_timestamp(2001, 2, 3, 4, 5, 6));
 	//ensure_equals(co->date_ind, 19);
 	ensure_equals(co->ltype1, 1);
 	ensure_equals(co->l1, 2);
@@ -133,7 +135,7 @@ void to::test<1>()
 	co->get_data(2);
 	ensure_equals(co->id_station, 2);
 	ensure_equals(co->id_report, 2);
-	ensure_equals(co->date, dballe::tests::mkts(2002, 3, 4, 5, 6, 7));
+	ensure_equals(co->date, make_sql_timestamp(2002, 3, 4, 5, 6, 7));
 	//ensure_equals(co->date_ind, 19);
 	ensure_equals(co->ltype1, 2);
 	ensure_equals(co->l1, 3);

@@ -15,12 +15,10 @@ dbamsg_SOURCES = dbamsg.cc
 dbamsg_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
 dbamsg_DEPENDENCIES = $(DBALLELIBS)
 
-if DO_DBALLE_DB
 bin_PROGRAMS += dbadb
 dbadb_SOURCES = dbadb.cc
 dbadb_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt 
 dbadb_DEPENDENCIES = $(DBALLELIBS)
-endif
 
 if DO_BENCHMARKS
 noinst_PROGRAMS = benchmark

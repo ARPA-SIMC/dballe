@@ -20,6 +20,7 @@
  */
 
 #include "repinfo.h"
+#include "dballe/db/db.h"
 #include "dballe/db/internals.h"
 #include "dballe/core/defs.h"
 #include "dballe/core/record.h"
@@ -322,7 +323,7 @@ struct fd_closer
 std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 {
 	if (deffile == 0)
-		deffile = default_repinfo_file();
+		deffile = DB::default_repinfo_file();
 
 	/* Open the input CSV file */
 	FILE* in = fopen(deffile, "r");

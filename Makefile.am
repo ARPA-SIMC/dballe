@@ -23,11 +23,9 @@ m4_DATA = libdballe.m4 libdballef.m4
 
 man_MANS = dbatbl.1 dbamsg.1
 
-if DO_DBALLE_DB
 man_MANS += dbadb.1
 dbadb.1: src/dbadb doc/add_templates_to_manpage
 	( cd src && ./`basename $<` help manpage ) | ( cd $(srcdir) && $(srcdir)/doc/add_templates_to_manpage ) > $@
-endif
 
 dbamsg.1: src/dbamsg doc/add_templates_to_manpage
 	( cd src && ./`basename $<` help manpage ) | ( cd $(srcdir) && $(srcdir)/doc/add_templates_to_manpage ) > $@

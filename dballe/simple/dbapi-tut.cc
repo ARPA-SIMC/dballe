@@ -17,73 +17,17 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/test-utils-core.h>
-#include <dballe/db/db.h>
-#include "dbapi.h"
+#ifndef TUT_TEST_BODY
+
+#include "dbapi-tut.h"
 
 using namespace std;
 using namespace dballe;
 
-namespace tut {
+namespace dballe {
+namespace tests {
 
-struct dbapi_shar
-{
-    std::auto_ptr<DB> db;
-    db::Format orig_format;
-
-    dbapi_shar()
-    {
-        orig_format = DB::get_default_format();
-    }
-
-    ~dbapi_shar()
-    {
-        DB::set_default_format(orig_format);
-    }
-
-    void use_db(db::Format format)
-    {
-        if (db.get())
-            throw tut::failure("attempt to init DB twice");
-        DB::set_default_format(format);
-        db = DB::connect_test();
-        if (!db.get())
-            throw tut::no_such_test();
-        db->reset();
-    }
-
-    void populate_variables(fortran::DbAPI& api)
-    {
-        api.setd("lat", 44.5);
-        api.setd("lon", 11.5);
-        api.setc("rep_memo", "synop");
-        api.settimerange(254, 0, 0);
-        api.setdate(2013, 4, 25, 12, 0, 0);
-
-        // Instant temperature, 2 meters above ground
-        api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
-        api.setd("B12101", 21.5);
-        api.prendilo();
-
-        // Instant wind speed, 10 meters above ground
-        api.unsetb();
-        api.setlevel(103, 10000, MISSING_INT, MISSING_INT);
-        api.setd("B11002", 2.4);
-        api.prendilo();
-
-        api.unsetall();
-    }
-
-    void test_vars();
-    void test_attrs();
-    void test_attrs_prendilo();
-    void test_prendilo_anaid();
-};
-TESTGRP(dbapi);
-
-template<> template<> void to::test<1>() { use_db(db::V5); test_vars(); }
-template<> template<> void to::test<2>() { use_db(db::V6); test_vars(); }
-void dbapi_shar::test_vars()
+void dbapi_tests::test_vars()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
@@ -112,9 +56,7 @@ void dbapi_shar::test_vars()
     ensure_equals(api.voglioquesto(), 0);
 }
 
-template<> template<> void to::test<3>() { use_db(db::V5); test_attrs(); }
-template<> template<> void to::test<4>() { use_db(db::V6); test_attrs(); }
-void dbapi_shar::test_attrs()
+void dbapi_tests::test_attrs()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
@@ -155,9 +97,7 @@ void dbapi_shar::test_attrs()
     ensure_equals(api.enqi("*B33007"), 50);
 }
 
-template<> template<> void to::test<5>() { use_db(db::V5); test_attrs_prendilo(); }
-template<> template<> void to::test<6>() { use_db(db::V6); test_attrs_prendilo(); }
-void dbapi_shar::test_attrs_prendilo()
+void dbapi_tests::test_attrs_prendilo()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
@@ -183,9 +123,7 @@ void dbapi_shar::test_attrs_prendilo()
     ensure_equals(api.enqi("*B33007"), 60);
 }
 
-template<> template<> void to::test<7>() { use_db(db::V5); test_prendilo_anaid(); }
-template<> template<> void to::test<8>() { use_db(db::V6); test_prendilo_anaid(); }
-void dbapi_shar::test_prendilo_anaid()
+void dbapi_tests::test_prendilo_anaid()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
@@ -204,3 +142,13 @@ void dbapi_shar::test_prendilo_anaid()
 }
 
 }
+}
+
+#else
+
+template<> template<> void to::test<1>() { test_vars(); }
+template<> template<> void to::test<2>() { test_attrs(); }
+template<> template<> void to::test<3>() { test_attrs_prendilo(); }
+template<> template<> void to::test<4>() { test_prendilo_anaid(); }
+
+#endif

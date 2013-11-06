@@ -17,7 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "db/test-utils-db.h"
+#ifndef TUT_TEST_BODY
+
+#include "db/db-basic-tut.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -26,29 +28,17 @@ using namespace wibble;
 using namespace wibble::tests;
 using namespace std;
 
-namespace tut {
+namespace dballe {
+namespace tests {
 
-struct db_basic_shar : public dballe::tests::DB_test_base
-{
-    void test_reset();
-    void test_repinfo();
-};
-TESTGRP(db_basic);
-
-template<> template<> void to::test<1>() { use_db(db::V5); test_reset(); }
-template<> template<> void to::test<2>() { use_db(db::V6); test_reset(); }
-template<> template<> void to::test<3>() { use_db(db::MEM); test_reset(); }
-void db_basic_shar::test_reset()
+void db_tests_basic::test_reset()
 {
     // Run twice to see if it is idempotent
     db->reset();
     db->reset();
 }
 
-template<> template<> void to::test<4>() { use_db(db::V5); test_repinfo(); }
-template<> template<> void to::test<5>() { use_db(db::V6); test_repinfo(); }
-template<> template<> void to::test<6>() { use_db(db::MEM); test_repinfo(); }
-void db_basic_shar::test_repinfo()
+void db_tests_basic::test_repinfo()
 {
     // Test repinfo-related functions
     std::map<std::string, int> prios = db->get_repinfo_priorities();
@@ -68,7 +58,11 @@ void db_basic_shar::test_repinfo()
 }
 
 }
+}
 
-/* vim:set ts=4 sw=4: */
+#else
 
+template<> template<> void to::test<1>() { test_reset(); }
+template<> template<> void to::test<2>() { test_repinfo(); }
 
+#endif

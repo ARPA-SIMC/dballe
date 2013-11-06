@@ -18,6 +18,7 @@
  */
 
 #include "db/test-utils-db.h"
+#include "db/internals.h"
 #include "db/v5/db.h"
 #include "db/v5/attr.h"
 #include "db/v5/data.h"
@@ -26,6 +27,7 @@
 #include "db/internals.h"
 
 using namespace dballe;
+using namespace dballe::db;
 using namespace dballe::db::v5;
 using namespace wreport;
 using namespace std;
@@ -60,7 +62,7 @@ struct dbv5_attr_shar : public dballe::tests::db_test
 		// Insert a context
 		co.id_station = 1;
 		co.id_report = 1;
-		co.date = dballe::tests::mkts(2001, 2, 3, 4, 5, 6);
+		co.date = make_sql_timestamp(2001, 2, 3, 4, 5, 6);
 		co.ltype1 = 1;
 		co.l1 = 2;
 		co.ltype2 = 0;
@@ -73,7 +75,7 @@ struct dbv5_attr_shar : public dballe::tests::db_test
 		// Insert another context
 		co.id_station = 2;
 		co.id_report = 2;
-		co.date = dballe::tests::mkts(2002, 3, 4, 5, 6, 7);
+		co.date = make_sql_timestamp(2002, 3, 4, 5, 6, 7);
 		co.ltype1 = 2;
 		co.l1 = 3;
 		co.ltype2 = 1;
