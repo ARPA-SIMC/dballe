@@ -42,7 +42,7 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 	{
 		set_permissions("read", "read", "read");
 	} else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL) {
-		set_permissions("write", "add", "add");
+		set_permissions("write", "add", "write");
 	}
 	Encoding etype = (Encoding)-1;
 	if (strcasecmp(type, "BUFR") == 0)
