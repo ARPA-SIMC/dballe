@@ -661,15 +661,13 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
         c.found = true;
     }
 
-    // rep_memo has priority over rep_cod
     if (const char* val = rec.key_peek_value(DBA_KEY_REP_MEMO))
     {
         int src_val = db.repinfo().get_id(val);
         sql_where.append_listf("%s.id_report=%d", tbl, src_val);
         TRACE("found rep_memo %s: adding AND %s.id_report=%d\n", val, tbl, (int)src_val);
         c.found = true;
-    } else
-        c.add_int(DBA_KEY_REP_COD, "%s.id_report=%d");
+    }
 
     return c.found;
 }

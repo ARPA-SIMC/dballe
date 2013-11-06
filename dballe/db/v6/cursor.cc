@@ -216,7 +216,6 @@ void Cursor::to_record_repinfo(Record& rec)
 {
     db::v6::Repinfo& ri = db.repinfo();
 
-    rec.key(DBA_KEY_REP_COD).seti(sqlrec.out_rep_cod);
     const v5::repinfo::Cache* c = ri.get_by_id(sqlrec.out_rep_cod);
     if (c != NULL)
     {
@@ -279,7 +278,7 @@ void Cursor::add_station_info(Record& rec)
      * STATION,     B01002   258
     */
 #define BASE_QUERY \
-        "SELECT d.id_var, d.value, ri.id, ri.prio" \
+        "SELECT d.id_var, d.value" \
         "  FROM data d, repinfo ri" \
         " WHERE d.id_lev_tr == -1 AND ri.id = d.id_report AND d.id_station = ?"
 
@@ -305,7 +304,6 @@ void Cursor::add_station_info(Record& rec)
     unsigned short st_out_code;
     char st_out_val[256];
     SQLLEN st_out_val_ind;
-    DBALLE_SQL_C_SINT_TYPE st_out_rep_cod;
 
     /* Allocate statement handle */
     db::Statement stm(*db.conn);
@@ -316,17 +314,13 @@ void Cursor::add_station_info(Record& rec)
     /* Bind output fields */
     stm.bind_out(1, st_out_code);
     stm.bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
-    stm.bind_out(3, st_out_rep_cod);
 
     /* Perform the query */
     stm.exec_direct(query);
 
     /* Get the results and save them in the record */
     while (stm.fetch())
-    {
         rec.var(st_out_code).setc(st_out_val);
-        rec.key(DBA_KEY_REP_COD).seti(st_out_rep_cod);
-    }
 }
 
 CursorLinear::CursorLinear(DB& db, unsigned int modifiers)
@@ -559,9 +553,9 @@ unsigned CursorSummary::test_iterate(FILE* dump)
         if (dump)
         {
             to_record(r);
-            fprintf(dump, "%02d %03d %03d %s %04d-%02d-%02d %02d:%02d:%02d  %04d-%02d-%02d %02d:%02d:%02d  %d\n",
+            fprintf(dump, "%02d %s %03d %s %04d-%02d-%02d %02d:%02d:%02d  %04d-%02d-%02d %02d:%02d:%02d  %d\n",
                     r.get(DBA_KEY_ANA_ID, -1),
-                    r.get(DBA_KEY_REP_COD, -1),
+                    r.get(DBA_KEY_REP_MEMO, -1),
                     (int)sqlrec.out_id_ltr,
                     r.get(DBA_KEY_VAR, ""),
                     r.get(DBA_KEY_YEARMIN, 0), r.get(DBA_KEY_MONTHMIN, 0), r.get(DBA_KEY_DAYMIN, 0),

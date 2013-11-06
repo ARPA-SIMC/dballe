@@ -558,13 +558,6 @@ int DB::get_rep_cod(const Record& rec)
     Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
         return ri.get_id(memo);
-    else if (const Var* var = rec.key_peek(DBA_KEY_REP_COD))
-    {
-        int id = var->enqi();
-        if (!ri.has_id(id))
-            error_notfound::throwf("rep_cod %d does not exist in the database", id);
-        return id;
-    }
     else
         throw error_notfound("input record has neither rep_cod nor rep_memo");
 }

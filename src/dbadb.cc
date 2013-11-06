@@ -289,7 +289,7 @@ struct poptOption dbadb_import_options[] = {
     { "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
         "overwrite existing data", 0 },
     { "report", 'r', POPT_ARG_STRING, &op_report, 0,
-        "force data to be of this type of report, specified with rep_cod or rep_memo values", "rep" },
+        "force data to be of this type of report", "rep" },
     { "fast", 0, POPT_ARG_NONE, &op_fast, 0,
         "Prefer speed to transactional integrity: if the import is interrupted,"
         " the database needs to be wiped and recreated.", 0 },
@@ -310,7 +310,7 @@ struct poptOption dbadb_export_options[] = {
     { "help", '?', 0, 0, 1, "print an help message", 0 },
     { "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
     { "report", 'r', POPT_ARG_STRING, &op_report, 0,
-        "force exported data to be of this type of report, specified with rep_cod or rep_memo values", "rep" },
+        "force exported data to be of this type of report", "rep" },
     { "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
         "format of the data in output ('bufr', 'crex', 'aof')", "type" },
     { "template", 't', POPT_ARG_STRING, &op_output_template, 0,

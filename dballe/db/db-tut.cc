@@ -254,9 +254,9 @@ void db_tests::test_misc_queries()
     TRY_QUERY("var=B01011", 2);
     TRY_QUERY("var=B01012", 2);
     TRY_QUERY("var=B01013", 0);
-    TRY_QUERY("rep_cod=1", 2);
-    TRY_QUERY("rep_cod=2", 2);
-    TRY_QUERY("rep_cod=3", 0);
+    TRY_QUERY("rep_memo=synop", 2);
+    TRY_QUERY("rep_memo=metar", 2);
+    TRY_QUERY("rep_memo=temp", 0);
     TRY_QUERY("priority=101", 2);
     TRY_QUERY("priority=81", 2);
     TRY_QUERY("priority=102", 0);
@@ -402,7 +402,7 @@ void db_tests::test_datetime_queries()
     base.set(DBA_KEY_P1, 0);
     base.set(DBA_KEY_P2, 0);
 
-    base.set(DBA_KEY_REP_COD, 1);
+    base.set(DBA_KEY_REP_MEMO, "synop");
     base.set(DBA_KEY_PRIORITY, 101);
 
     base.set(WR_VAR(0, 1, 12), 500);
@@ -692,7 +692,7 @@ void db_tests::test_ana_queries()
     wruntest(populate_database);
 
     query.clear();
-    query.set(DBA_KEY_REP_COD, 1);
+    query.set(DBA_KEY_REP_MEMO, "synop");
 
     auto_ptr<db::Cursor> cur = db->query_stations(query);
     ensure_equals(cur->remaining(), 1);
@@ -776,7 +776,7 @@ void db_tests::test_ana_filter()
     wruntest(populate_database);
 
     query.clear();
-    query.set(DBA_KEY_REP_COD, 2);
+    query.set(DBA_KEY_REP_MEMO, "metar");
     query.set(DBA_KEY_VAR, "B01011");
     auto_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 1);
@@ -794,7 +794,7 @@ void db_tests::test_ana_filter()
 
     // Try queries filtered by numeric attributes
     query.clear();
-    query.set(DBA_KEY_REP_COD, 2);
+    query.set(DBA_KEY_REP_MEMO, "metar");
     query.set(DBA_KEY_VAR, "B01011");
 
     query.set(DBA_KEY_ATTR_FILTER, "B01001=50");
@@ -819,7 +819,7 @@ void db_tests::test_ana_filter()
 
     // Try queries filtered by string attributes
     query.clear();
-    query.set(DBA_KEY_REP_COD, 2);
+    query.set(DBA_KEY_REP_MEMO, "metar");
     query.set(DBA_KEY_VAR, "B01011");
 
     query.set(DBA_KEY_ATTR_FILTER, "B01008=50");
@@ -1216,9 +1216,9 @@ void db_tests::test_summary_queries()
     wassert(actual(db).try_summary_query("var=B01001", 0));
     wassert(actual(db).try_summary_query("var=B12101", 2));
     wassert(actual(db).try_summary_query("var=B12102", 0));
-    wassert(actual(db).try_summary_query("rep_cod=1", 0));
-    wassert(actual(db).try_summary_query("rep_cod=2", 4));
-    wassert(actual(db).try_summary_query("rep_cod=3", 0));
+    wassert(actual(db).try_summary_query("rep_memo=synop", 0));
+    wassert(actual(db).try_summary_query("rep_memo=metar", 4));
+    wassert(actual(db).try_summary_query("rep_memo=temp", 0));
     wassert(actual(db).try_summary_query("priority=101", 0));
     wassert(actual(db).try_summary_query("priority=81", 4));
     wassert(actual(db).try_summary_query("priority=102", 0));
@@ -1249,7 +1249,7 @@ void db_tests::test_value_update()
     q.set(DBA_KEY_HOUR, 8);
     q.set(DBA_KEY_MIN, 0);
     q.set(DBA_KEY_SEC, 0);
-    q.set(DBA_KEY_REP_COD, 1);
+    q.set(DBA_KEY_REP_MEMO, "synop");
     q.set(Level(10, 11, 15, 22));
     q.set(Trange(20, 111, 122));
     q.set(DBA_KEY_VAR, "B01012");
@@ -1272,7 +1272,7 @@ void db_tests::test_value_update()
     // Update it
     Record update;
     update.set(DBA_KEY_ANA_ID, ana_id);
-    update.set(DBA_KEY_REP_COD, 1);
+    update.set(DBA_KEY_REP_MEMO, "synop");
     int dt[6];
     q.get_datetime(dt);
     update.set_datetime(dt);
@@ -1472,12 +1472,11 @@ void db_tests::test_querybest_priomax()
     // 42,pollution,pollution,199,oss,8
     // 200,satellite,NOAA satellites,41,oss,255
     // 255,generic,generic data,1000,?,255
-    static int rep_cods[] = { 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 42, 200, 255, -1 };
-
-    for (int* i = rep_cods; *i != -1; ++i)
+    static const char* rep_memos[] = { "synop", "metar", "temp", "pilot", "buoy", "ship", "tempship", "airep", "amdar", "acars", "pollution", "satellite", "generic", NULL };
+    for (const char** i = rep_memos; *i; ++i)
     {
-        insert.set(DBA_KEY_REP_COD, *i);
-        insert.set(WR_VAR(0, 12, 101), *i);
+        insert.set(DBA_KEY_REP_MEMO, *i);
+        insert.set(WR_VAR(0, 12, 101), (int)(i - rep_memos));
         db->insert(insert, false, true);
         insert.unset(DBA_KEY_CONTEXT_ID);
     }
@@ -1496,8 +1495,8 @@ void db_tests::test_querybest_priomax()
         result.clear();
         cur->to_record(result);
 
-        ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
-        ensure_equals(result[DBA_KEY_REP_COD].enqi(), 255);
+        ensure(result.key_peek(DBA_KEY_REP_MEMO) != NULL);
+        wassert(actual(result[DBA_KEY_REP_MEMO].enqc()) == "generic");
 
         cur->discard_rest();
     }
@@ -1519,8 +1518,8 @@ void db_tests::test_querybest_priomax()
         result.clear();
         cur->to_record(result);
 
-        ensure(result.key_peek(DBA_KEY_REP_COD) != NULL);
-        ensure_equals(result[DBA_KEY_REP_COD].enqi(), 11);
+        ensure(result.key_peek(DBA_KEY_REP_MEMO) != NULL);
+        wassert(actual(result[DBA_KEY_REP_MEMO].enqc()) == "tempship");
 
         cur->discard_rest();
     }

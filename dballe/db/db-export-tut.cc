@@ -51,7 +51,7 @@ struct db_export_shar : public dballe::tests::db_test
         rec.set(DBA_KEY_P1, 5);
         rec.set(DBA_KEY_P2, 6);
 
-        rec.set(DBA_KEY_REP_COD, 1);
+        rec.set(DBA_KEY_REP_MEMO, "synop");
 
         rec.set(WR_VAR(0, 1, 12), 500);
 
@@ -72,7 +72,7 @@ struct db_export_shar : public dballe::tests::db_test
 
         rec.unset(DBA_KEY_ANA_ID);
         rec.unset(DBA_KEY_CONTEXT_ID);
-        rec.set(DBA_KEY_REP_COD, 2);
+        rec.set(DBA_KEY_REP_MEMO, "metar");
         rec.set(WR_VAR(0, 1, 12), 200);
         db->insert(rec, false, true);
     }

@@ -68,7 +68,7 @@ bool Importer::operator()(const Item& item)
     {
         Msg& msg = *(*item.msgs)[i];
         if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
-            /* Put generic messages in the generic rep_cod by default */
+            /* Put generic messages in the generic report by default */
             db.import_msg(msg, NULL, import_flags);
         else
             db.import_msg(msg, forced_repmemo, import_flags);

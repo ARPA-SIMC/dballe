@@ -6,7 +6,7 @@
 
       integer dbahandle, handle, handle_ana, nstaz, ndata, nattr
       integer i, i1, i2, tmp
-      integer id,height,codrete
+      integer id,height
       character cname*20,rete*20,value*255,avalue*255
       character btable*10,starbtable*10
       real dlat,dlon
@@ -33,10 +33,9 @@
         call idba_enqr(handle_ana, "lon", dlon)
         call idba_enqi(handle_ana, "height", height)
         call idba_enqc(handle_ana,"rep_memo",rete)
-        call idba_enqi(handle_ana,"rep_cod",codrete)
         write (*,*) "Staz ",id," (",dlat,",",dlon,") '", &
             cname(:istrlen(cname)),"' h:",height, &
-            " ",rep_memo,":",rep_cod
+            " ",rep_memo
         call idba_seti(handle,"ana_id",id)
         call idba_voglioquesto(handle,ndata)
         write (*,*) " ",ndata," dati:"

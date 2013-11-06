@@ -44,7 +44,6 @@ struct tagdef { const char* tag; dba_keyword index; };
 priority,    DBA_KEY_PRIORITY
 priomax,     DBA_KEY_PRIOMAX
 priomin,     DBA_KEY_PRIOMIN
-rep_cod,     DBA_KEY_REP_COD
 rep_memo,    DBA_KEY_REP_MEMO
 ana_id,      DBA_KEY_ANA_ID
 mobile,      DBA_KEY_MOBILE
@@ -106,7 +105,6 @@ struct keyword_infos
 		infos[DBA_KEY_PRIORITY	 ].set(0, "Priority of this type of report",         "NUMBER", DEF_MAXINT);
 		infos[DBA_KEY_PRIOMAX	 ].set(0, "Maximum priority of reports queried",     "NUMBER", DEF_MAXINT);
 		infos[DBA_KEY_PRIOMIN	 ].set(0, "Minimum priority of reports queried",     "NUMBER", DEF_MAXINT);
-		infos[DBA_KEY_REP_COD	 ].set(0, "Type of report",                          "NUMBER", DEF_MAXINT);
 		infos[DBA_KEY_REP_MEMO	 ].set(0, "Mnemonic alias for type of report",     "CCITTIA5", DEF_STRING(20));
 		infos[DBA_KEY_ANA_ID	 ].set(0, "Station database ID",                    "NUMERIC", DEF_MAXINT);
 		infos[DBA_KEY_MOBILE	 ].set(0, "Station is mobile",                      "NUMERIC", DEF_MAXINT);
@@ -166,7 +164,6 @@ static const char* keyword_names[] = {
 	"priority",
 	"priomax",
 	"priomin",
-	"rep_cod",
 	"rep_memo",
 	"ana_id",
 	"mobile",

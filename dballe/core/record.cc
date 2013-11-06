@@ -639,7 +639,6 @@ void Record::set_ana_context()
 	unset(DBA_KEY_PINDICATOR);
 	unset(DBA_KEY_P1);
 	unset(DBA_KEY_P2);
-	/* DBA_RUN_OR_RETURN(dba_record_key_seti(rec, DBA_KEY_REP_COD, 254)); */
 }
 
 bool Record::is_ana_context() const

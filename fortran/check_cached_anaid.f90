@@ -31,7 +31,7 @@ call idba_preparati(dbahandle, handle, "write", "write", "write")
 call idba_scopa(handle, "") 
 
 !     Insert some data
-call idba_seti(handle, "rep_cod", 1)
+call idba_setc(handle, "rep_memo", "synop")
 call idba_setd(handle, "lat", 30D00)
 call idba_setr(handle, "lon", 10.0)
 call idba_setc(handle, "mobile", "0")
@@ -61,7 +61,7 @@ call idba_seti(handle, "pindicator", 20)
 call idba_seti(handle, "p1", 1)
 call idba_seti(handle, "p2", 1)
       
-call idba_seti(handle, "rep_cod", 1)
+call idba_setc(handle, "rep_memo", "synop")
 
 call idba_setc(handle, "B01011", "DB-All.e!")
 

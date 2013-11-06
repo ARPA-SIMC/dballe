@@ -25,7 +25,7 @@ implicit none
 
 integer :: handle, nstaz, ndata, nattr
 integer :: i, i1, i2, type1, l1, type2, l2
-integer ::  height, rep_cod, year, month, day, hour, minute, second
+integer ::  height, year, month, day, hour, minute, second
 character(len=255) :: fname,prettyvalue
 character(len=20)  :: cname, rep_memo,value, avalue
 character(len=10) :: btable, starbtable

@@ -203,8 +203,6 @@ void db_import::test_multi()
     query.clear();
     query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg1.type));
 
-    // fprintf(stderr, "Queried: %d\n", rep_cod_from_msg(msg1));
-
     // Warning: this test used to fail on Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
     MsgCollector msgs;
     db->export_msgs(query, msgs);
@@ -348,16 +346,16 @@ void to::test<6>()
 
     CHECKED(dba_db_reset(db, NULL));
 
-    map<dba_msg_type, int> rep_cods;
+    map<dba_msg_type, int> rep_types;
     for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
     {
         CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
-        rep_cods[(*i)->msgs[0]->type]++;
+        rep_types[(*i)->msgs[0]->type]++;
     }
 
     dba_record query;
     CHECKED(dba_record_create(&query));
-    for (map<dba_msg_type, int>::const_iterator i = rep_cods.begin(); i != rep_cods.end(); i++)
+    for (map<dba_msg_type, int>::const_iterator i = rep_types.begin(); i != rep_types.end(); i++)
     {
         test_tag(dba_msg_type_name(i->first));
 
@@ -398,11 +396,9 @@ void to::test<7>()
 
     CHECKED(dba_db_reset(db, NULL));
 
-    //map<dba_msg_type, int> rep_cods;
     for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
     {
         CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS));
-        //rep_cods[(*i)->msgs[0]->type]++;
     }
 
     dba_record query;
@@ -450,21 +446,6 @@ void to::test<7>()
 
 
     dba_record_delete(query);
-
-
-    #if 0
-    dba_record query;
-    CHECKED(dba_record_create(&query));
-    for (map<dba_msg_type, int>::const_iterator i = rep_cods.begin(); i != rep_cods.end(); i++)
-    {
-        test_tag(dba_msg_type_name(i->first));
-
-        int count = 0;
-        CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type(i->first)));
-        CHECKED(dba_db_export(db, query, msg_counter, &count));
-        gen_ensure_equals(count, i->second);
-    }
-    #endif
 }
 
 // Check a case when two messages imported get mangled and export exports
@@ -481,12 +462,8 @@ void to::test<8>()
 
     CHECKED(dba_db_reset(db, NULL));
 
-    //map<dba_msg_type, int> rep_cods;
     for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
-    {
         CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
-        //rep_cods[(*i)->msgs[0]->type]++;
-    }
 
     dba_record query;
     CHECKED(dba_record_create(&query));
@@ -535,21 +512,6 @@ void to::test<8>()
 
 
     dba_record_delete(query);
-
-
-    #if 0
-    dba_record query;
-    CHECKED(dba_record_create(&query));
-    for (map<dba_msg_type, int>::const_iterator i = rep_cods.begin(); i != rep_cods.end(); i++)
-    {
-        test_tag(dba_msg_type_name(i->first));
-
-        int count = 0;
-        CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, dba_msg_repcod_from_type(i->first)));
-        CHECKED(dba_db_export(db, query, msg_counter, &count));
-        gen_ensure_equals(count, i->second);
-    }
-    #endif
 }
 #endif
 

@@ -48,7 +48,7 @@
 
 !     One setting 'query' to message, and making a synop
       call idba_setc(handle, "query", "message")
-      call idba_seti(handle, "rep_cod", 1)
+      call idba_setc(handle, "rep_memo", "synop")
       call idba_seti(handle, "B12001",  2731+90)
       call idba_prendilo(handle)
       call idba_seti(handle, "*B33007", 81)
@@ -59,7 +59,7 @@
 
 !     One setting 'query' to message, and making a synop
       call idba_setc(handle, "query", "message synop")
-      call idba_seti(handle, "rep_cod", 1)
+      call idba_setc(handle, "rep_memo", "synop")
       call idba_seti(handle, "B12001",  2731+90)
       call idba_prendilo(handle)
 

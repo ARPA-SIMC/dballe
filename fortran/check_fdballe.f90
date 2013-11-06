@@ -74,7 +74,7 @@
       call idba_seti(handle, "p2", 1)
       call ensure_no_error("seti 14")
       
-      call idba_seti(handle, "rep_cod", 1)
+      call idba_setc(handle, "rep_memo", "synop")
       call ensure_no_error("seti 15")
 
       call idba_setc(handle, "B01011", "DB-All.e!")

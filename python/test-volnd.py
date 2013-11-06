@@ -152,7 +152,7 @@ class TestRead(unittest.TestCase):
         # Insert some pseudoana data for the station 1, to test
         # pseudoana export and mixed data types
         rec.clear()
-        rec.update(ana_id=1, B01001=12, B01002=123, B01019="Test of long station name", rep_cod=1)
+        rec.update(ana_id=1, B01001=12, B01002=123, B01019="Test of long station name", rep_memo="synop")
         rec.set_station_context()
         self.db.insert(rec, False, True)
 
@@ -405,7 +405,7 @@ class TestRead(unittest.TestCase):
         indexes = (AnaIndex(),)
         query = dballe.Record()
         query.set_station_context()
-        query["rep_cod"] = 1
+        query["rep_memo"] = "synop"
         vars = read(self.db.query_data(query), indexes, checkConflicts=True)
         self.assertEquals(sorted(vars.keys()), ["B01001", "B01002", "B01019"])
 
@@ -426,7 +426,7 @@ class TestRead(unittest.TestCase):
         # Export the pseudoana data in sync with the data
         query.clear()
         query.set_station_context()
-        query["rep_cod"] = 1
+        query["rep_memo"] = "synop"
         anas = read(self.db.query_data(query), (indexes[0],), checkConflicts=True)
 
         self.assertEquals(sorted(anas.keys()), ["B01001", "B01002", "B01019"])

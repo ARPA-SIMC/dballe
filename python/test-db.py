@@ -16,7 +16,7 @@ class DballeTest(unittest.TestCase):
                 date=dt.datetime(1945, 4, 25, 8, 0, 0),
                 level=(10, 11, 15, 22),
                 trange=(20,111,222),
-                rep_cod=1,
+                rep_memo="synop",
                 B01011="Hey Hey!!",
                 B01012=500)
         self.db.insert(data, False, True)

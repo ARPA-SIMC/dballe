@@ -408,7 +408,6 @@ void Cursor::to_record(Record& rec)
     if (from_wanted & DBA_DB_FROM_C)
     {
         rec.key(DBA_KEY_CONTEXT_ID).seti(out_context_id);
-        rec.key(DBA_KEY_REP_COD).seti(out_rep_cod);
 
         /* If PA was not wanted, we can still get the ana_id */
         if (!(from_wanted & DBA_DB_FROM_PA))
@@ -470,9 +469,6 @@ void Cursor::to_record(Record& rec)
 
     if (from_wanted & (DBA_DB_FROM_RI | DBA_DB_FROM_C))
     {
-        if (!(from_wanted & DBA_DB_FROM_C))
-            rec.key(DBA_KEY_REP_COD).seti(out_rep_cod);
-
         if (wanted & DBA_DB_WANT_REPCOD)
         {
             const v5::repinfo::Cache* c = ri.get_by_id(out_rep_cod);
@@ -543,7 +539,7 @@ void Cursor::add_station_info(Record& rec)
      * STATION,     B01002   258
     */
 #define BASE_QUERY \
-        "SELECT d.id_var, d.value, ri.id, ri.prio" \
+        "SELECT d.id_var, d.value" \
         "  FROM context c, data d, repinfo ri" \
         " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?" \
         "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}" \
@@ -585,17 +581,13 @@ void Cursor::add_station_info(Record& rec)
     /* Bind output fields */
     stm.bind_out(1, st_out_code);
     stm.bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
-    stm.bind_out(3, st_out_rep_cod);
 
     /* Perform the query */
     stm.exec_direct(query);
 
     /* Get the results and save them in the record */
     while (stm.fetch())
-    {
         rec.var(st_out_code).setc(st_out_val);
-        rec.key(DBA_KEY_REP_COD).seti(out_rep_cod);
-    }
 }
 
 void QueryBuilder::build_query(const Record& rec)
@@ -1318,7 +1310,6 @@ void QueryBuilder::make_where(const Record& rec)
     add_int(rec, sel_p2, DBA_KEY_P2, "c.p2=?", DBA_DB_FROM_C);
     add_int(rec, sel_context_id, DBA_KEY_CONTEXT_ID, "c.id = ?", DBA_DB_FROM_C);
 
-    /* rep_memo has priority over rep_cod */
     if (const char* val = rec.key_peek_value(DBA_KEY_REP_MEMO))
     {
         int src_val = db.repinfo().get_id(val);
@@ -1327,9 +1318,7 @@ void QueryBuilder::make_where(const Record& rec)
         TRACE("found rep_memo %s: adding AND c.id_report = ?. val is %d\n", val, (int)sel_rep_cod);
         stm.bind_in(input_seq++, sel_rep_cod);
         from_wanted |= DBA_DB_FROM_C;
-    } else
-        add_int(rec, sel_rep_cod, DBA_KEY_REP_COD, "c.id_report=?", DBA_DB_FROM_C);
-
+    }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
     {

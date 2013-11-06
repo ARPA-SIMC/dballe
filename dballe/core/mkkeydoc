@@ -16,8 +16,7 @@ our %comments = (
 			  "/etc/dballe/repinfo.csv"],
 	priomax =>	[ "ignored", "optional", "absent" ],
 	priomin =>	[ "ignored", "optional", "absent" ],
-	rep_cod =>	[ "required this or rep_memo", "optional", "present" ],
-	rep_memo =>	[ "required this or rep_cod", "optional", "present" ],
+	rep_memo =>	[ "required", "optional", "present" ],
 	ana_id =>	[ "optional", "optional", "present",
 			  "Internal DB-ALLe ID referring to a pseudoana entry, used as ".
 	                  "a shortcut reference instead of specifying the full data" ],
