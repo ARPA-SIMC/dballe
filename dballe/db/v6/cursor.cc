@@ -280,7 +280,7 @@ void Cursor::add_station_info(Record& rec)
 #define BASE_QUERY \
         "SELECT d.id_var, d.value" \
         "  FROM data d, repinfo ri" \
-        " WHERE d.id_lev_tr == -1 AND ri.id = d.id_report AND d.id_station = ?"
+        " WHERE d.id_lev_tr = -1 AND ri.id = d.id_report AND d.id_station = ?"
 
     const char* query;
     switch (db.conn->server_type)
@@ -295,7 +295,7 @@ void Cursor::add_station_info(Record& rec)
                 " AND ri.prio=("
                 "  SELECT MAX(sri.prio) FROM repinfo sri"
                 "    JOIN data sd ON sri.id=sd.id_report"
-                "  WHERE sd.id_station=d.id_station AND sd.id_lev_tr == -1"
+                "  WHERE sd.id_station=d.id_station AND sd.id_lev_tr = -1"
                 "    AND sd.id_var=d.id_var)";
             break;
     }

@@ -76,7 +76,7 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
             "  FROM data d"
             "  LEFT JOIN attr a ON a.id_data = d.id"
             " WHERE d.id_station = ? AND d.id_report = ?"
-            "   AND d.id_lev_tr == -1"
+            "   AND d.id_lev_tr = -1"
             " ORDER BY d.id_var, a.type";
 
         db::Statement stm(*db.conn);
