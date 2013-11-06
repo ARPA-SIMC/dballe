@@ -112,7 +112,7 @@ static inline int fromfortran(int val)
  * This is a sample code for a data insert session with the simplified interface:
  * \code
  *   call idba_presentati(dba, "myDSN", "mariorossi", "CippoLippo")
- *   call idba_preparati(dba, handle, "reuse", "add", "add")
+ *   call idba_preparati(dba, handle, "read", "add", "write")
  *   call idba_scopa(handle, "")
  *   call idba_setr(handle, "lat", 30.)
  *   call idba_setr(handle, "lon", 10.)
@@ -443,10 +443,6 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
  * @param qcflag
  *    Controls access to data attributes and can have these values:
  *    \li \c "read" attributes cannot be modified in any way.
- *    \li \c "add" attributes can can be added to the database, but existing
- *    attributes cannot be modified.  Deletion of attributes is disabled.  This is
- *    used to insert new attribute in the database while preserving the attributes
- *    that were already present in it.
  *    \li \c "write" attributes can freely be added, overwritten and deleted.
  * @return
  *   The error indication for the function.

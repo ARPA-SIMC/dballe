@@ -1156,8 +1156,6 @@ opening mode of the database:
 
 \begin{description}
 \item[{\tt "read"}] attributes cannot be modified in any way.
-\item[{\tt "add"}] attributes can can be added to the database, but existing
-		   attributes cannot be modified.
 \item[{\tt "rewrite"}] attributes can be added, and existing attributes can be
                    overwritten.
 \end{description}
@@ -1360,7 +1358,7 @@ databases:
 \section{Insert station data, then insert data}
 
 \begin{verbatim}
-      call idba_preparati(dbhandle, handle, "write", "add", "add")
+      call idba_preparati(dbhandle, handle, "write", "add", "write")
       
 c     Insert data about a station
       call idba_setr (handle, "lat", 11.345)
