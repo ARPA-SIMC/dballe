@@ -27,7 +27,7 @@ rec.seti("l2", 0)
 rec.seti("pindicator", 0)
 rec.seti("p1", 0)
 rec.seti("p2", 0)
-rec.seti("rep_cod", 1)
+rec.seti("rep_memo", "synop")
 rec.setc("B01011", "Hey Hey !")
 rec.seti("B01012", 500)
 
@@ -54,7 +54,7 @@ for a in anas:
 	context, ana = db.insert(rec, True, True)
 	contexts.append(context)
 
-	rec.seti("rep_cod", 1)
+	rec.seti("rep_memo", "synop")
 	rec.setc("B01011", "AnaSynoYe")
 	rec.seti("B01012", a * 10)
 	context, ana = db.insert(rec, True, True)

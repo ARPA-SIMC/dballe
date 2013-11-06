@@ -188,7 +188,7 @@ class DataPanel(wx.Panel, ModelListener):
             self.model.setVarFilter(record["var"])
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_REPCOD:
             record = self.dataMenu.getData()
-            self.model.setReportFilter(record["rep_cod"])
+            self.model.setReportFilter(record["rep_memo"])
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_DATEMIN:
             dt = datetimeFromRecord(self.dataMenu.getData(), DateUtils.EXACT)
             self.model.setDateTimeFilter(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, DateUtils.MIN)

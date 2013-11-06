@@ -117,7 +117,7 @@ class ProgressListener:
 class UpdateInterrupted:
     pass
 
-SummaryKey = namedtuple("SummaryKey", ["ana_id", "rep_cod", "rep_memo", "level", "trange", "var"])
+SummaryKey = namedtuple("SummaryKey", ["ana_id", "rep_memo", "level", "trange", "var"])
 SummaryVal = namedtuple("SummaryVal", ["datemin", "datemax", "count"])
 
 def normalon(lon):
@@ -156,9 +156,9 @@ class Summary(object):
                 }
                 # FIXME: quick fix now that a simplified summary query in
                 # DB-All.e doesn't give us stats
-                #self.summary[SummaryKey(r["ana_id"], r["rep_cod"], r["rep_memo"], r["level"], r["trange"], r["var"])] = SummaryVal(
+                #self.summary[SummaryKey(r["ana_id"], r["rep_memo"], r["level"], r["trange"], r["var"])] = SummaryVal(
                 #    r["datemin"], r["datemax"], r["limit"])
-                self.summary[SummaryKey(r["ana_id"], r["rep_cod"], r["rep_memo"], r["level"], r["trange"], r["var"])] = SummaryVal(
+                self.summary[SummaryKey(r["ana_id"], r["rep_memo"], r["level"], r["trange"], r["var"])] = SummaryVal(
                     datetime.datetime(1000, 1, 1, 0, 0, 0), datetime.datetime(3000, 1, 1, 0, 0, 0), 1)
 
     def iter_stations_filtered(self, filter):
@@ -193,13 +193,13 @@ class Summary(object):
         level = filter.get("level", None)
         trange = filter.get("trange", None)
         var = filter.get("var", None)
-        rep = filter.get("rep_memo", None)
+        rep_memo = filter.get("rep_memo", None)
         for k, v in self.summary.iteritems():
             if k.ana_id not in station_whitelist: continue
             if level and level != k.level: continue
             if trange and trange != k.trange: continue
             if var and var != k.var: continue
-            if rep and rep != k.rep: continue
+            if rep_memo and rep_memo != k.rep_memo: continue
             yield k, v
 
     def get_stations(self, filter):
@@ -259,11 +259,10 @@ class Summary(object):
 
     def get_repinfo(self, filter):
         f = filter.copy()
-        del f["rep_cod"]
         del f["rep_memo"]
         rt = set()
         for k, v in self.iter_filtered(f):
-            rt.add((k.rep_cod, k.rep_memo))
+            rt.add((k.rep_memo, k.rep_memo))
         return sorted(rt)
 
 class Model:
@@ -732,13 +731,13 @@ class Model:
             return True
         return False
 
-    def setReportFilter(self, rep_cod):
+    def setReportFilter(self, rep_memo):
         """
         Set the filter to match a given report code
 
         Returns True if the filter has been changed, else False
         """
-        r1 = self.setiFilter("rep_cod", rep_cod);
+        r1 = self.setcFilter("rep_memo", rep_memo);
         if r1:
             self.filterChanged("repinfo")
             return True

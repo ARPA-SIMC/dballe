@@ -69,7 +69,6 @@ class AnaTable(ResultTable):
             query = dballe.Record()
             query["ana_id"] = id
             query.set_station_context()
-            del query["rep_cod"]
             for record in self.model.db.query_data(query):
                 self.items.append(record.copy())
 
@@ -89,9 +88,9 @@ class AnaTable(ResultTable):
     def getRow(self, data):
         if data is None: return None
         ana_id = data["ana_id"]
-        rep_cod = data["rep_cod"]
+        rep_memo = data["rep_memo"]
         for row, d in enumerate(self.items):
-            if d["ana_id"] == ana_id and d["rep_cod"]  == rep_cod:
+            if d["ana_id"] == ana_id and d["rep_memo"] == rep_memo:
                 return row
         return None
 
@@ -227,7 +226,7 @@ class AnaResults(wx.Frame, ModelListener):
             self.model.setIdentFilter(ident is not None, ident)
         elif event.GetId() == DataMenu.ACTION_SELECT_SAME_REPCOD:
             record = self.dataMenu.getData()
-            self.model.setReportFilter(record["rep_cod"])
+            self.model.setReportFilter(record["rep_memo"])
         elif event.GetId() == DataMenu.ACTION_DELETE_CURRENT:
             record = self.dataMenu.getData()
             context, id = record["context_id"], record["var"]
