@@ -143,7 +143,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 					if (attr->value() != NULL)
 					{
 						dq.set(*attr);
-                        dq.insert(flags & DBA_IMPORT_OVERWRITE);
+                        dq.insert();
 					}
 		}
 	}
@@ -216,7 +216,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 					if (attr->value() != NULL)
 					{
                         dq.set(*attr);
-                        dq.insert(flags & DBA_IMPORT_OVERWRITE);
+                        dq.insert();
 					}
 			}
 		}

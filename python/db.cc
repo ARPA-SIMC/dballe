@@ -44,11 +44,11 @@ static PyGetSetDef dpy_DB_getsetters[] = {
 
 static PyObject* dpy_DB_connect(PyTypeObject *type, PyObject *args, PyObject* kw)
 {
-    static char* kwlist[] = { "dsn", "user", "password", NULL };
+    static const char* kwlist[] = { "dsn", "user", "password", NULL };
     const char* dsn;
     const char* user = "";
     const char* pass = "";
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "s|ss", kwlist, &dsn, &user, &pass))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "s|ss", const_cast<char**>(kwlist), &dsn, &user, &pass))
         return NULL;
 
     auto_ptr<DB> db;
@@ -144,11 +144,11 @@ virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, 
 
 static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
 {
-    static char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
+    static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
     dpy_Record* record;
     int can_replace = 0;
     int station_can_add = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!|ii", kwlist, &dpy_Record_Type, &record, &can_replace, &station_can_add))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!|ii", const_cast<char**>(kwlist), &dpy_Record_Type, &record, &can_replace, &station_can_add))
         return NULL;
 
     try {
@@ -254,11 +254,11 @@ static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
 
 static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 {
-    static char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
+    static const char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
     int reference_id;
     const char* varname;
     PyObject* attrs = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", kwlist, &varname, &reference_id, &attrs))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", const_cast<char**>(kwlist), &varname, &reference_id, &attrs))
         return NULL;
 
     wreport::Varcode varcode = resolve_varcode(varname);
@@ -281,23 +281,21 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 
 static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
 {
-    static char* kwlist[] = { "varcode", "attrs", "reference_id", "replace", NULL };
+    static const char* kwlist[] = { "varcode", "attrs", "reference_id", NULL };
     int reference_id = -1;
     const char* varname;
     dpy_Record* record;
-    int can_replace = 1;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "sO!|ii", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "sO!|i", const_cast<char**>(kwlist),
                 &varname,
                 &dpy_Record_Type, &record,
-                &reference_id,
-                &can_replace))
+                &reference_id))
         return NULL;
 
     try {
         if (reference_id == -1)
-            self->db->attr_insert(resolve_varcode(varname), record->rec, can_replace);
+            self->db->attr_insert(resolve_varcode(varname), record->rec);
         else
-            self->db->attr_insert(reference_id, resolve_varcode(varname), record->rec, can_replace);
+            self->db->attr_insert(reference_id, resolve_varcode(varname), record->rec);
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -308,11 +306,11 @@ static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
 
 static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
 {
-    static char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
+    static const char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
     int reference_id;
     const char* varname;
     PyObject* attrs = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", kwlist, &varname, &reference_id, &attrs))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", const_cast<char**>(kwlist), &varname, &reference_id, &attrs))
         return NULL;
 
     wreport::Varcode varcode = resolve_varcode(varname);
@@ -373,12 +371,12 @@ struct ExportConsumer : public MsgConsumer
 
 static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* kw)
 {
-    static char* kwlist[] = { "query", "format", "filename", "generic", NULL };
+    static const char* kwlist[] = { "query", "format", "filename", "generic", NULL };
     dpy_Record* query;
     const char* format;
     const char* filename;
     int as_generic = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!ss|i", kwlist, &dpy_Record_Type, &query, &format, &filename, &as_generic))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!ss|i", const_cast<char**>(kwlist), &dpy_Record_Type, &query, &format, &filename, &as_generic))
         return NULL;
 
     Encoding encoding = BUFR;

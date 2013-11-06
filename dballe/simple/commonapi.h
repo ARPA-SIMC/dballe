@@ -1,7 +1,7 @@
 /*
  * fortran/commonapi - Common parts of all Fortran API implementations
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,8 +42,7 @@ protected:
 		PERM_DATA_ADD =		(1 << 3),
 		PERM_DATA_WRITE =	(1 << 4),
 		PERM_ATTR_RO =		(1 << 5),
-		PERM_ATTR_ADD =		(1 << 6),
-		PERM_ATTR_WRITE	=	(1 << 7)
+		PERM_ATTR_WRITE	=	(1 << 6)
 	};
 
 	int perms;

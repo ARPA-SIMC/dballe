@@ -88,12 +88,10 @@ struct Attr
     /**
      * Insert an entry into the attr table
      *
-     * @param replace
-     *   If set to true, an existing attribute with the same context and
-     *   wreport::Varcode will be overwritten; else, trying to replace an
-     *   existing attribute will result in an error.
+     * If set to true, an existing attribute with the same context and
+     * wreport::Varcode will be overwritten
      */
-    void insert(bool replace);
+    void insert();
 
     /**
      * Load from the database all the attributes for var

@@ -351,8 +351,8 @@ public:
 	 */
 	unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs);
 
-    void attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace=true);
-    void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace=true);
+    void attr_insert(wreport::Varcode id_var, const Record& attrs);
+    void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs);
 
 	/**
 	 * Delete QC data for the variable `var' in record `rec' (coming from a previous

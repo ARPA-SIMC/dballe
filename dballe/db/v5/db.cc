@@ -1120,12 +1120,12 @@ unsigned DB::query_attrs(int reference_id, wreport::Varcode id_var, const std::v
     return count;
 }
 
-void DB::attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace)
+void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)
 {
-    attr_insert(last_context_id, id_var, attrs, can_replace);
+    attr_insert(last_context_id, id_var, attrs);
 }
 
-void DB::attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace)
+void DB::attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs)
 {
     Attr& a = attr();
 
@@ -1139,7 +1139,7 @@ void DB::attr_insert(int reference_id, wreport::Varcode id_var, const Record& at
     for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
     {
         a.set(**i);
-        a.insert(can_replace);
+        a.insert();
     }
 
     t.commit();

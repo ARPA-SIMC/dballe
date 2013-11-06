@@ -127,52 +127,28 @@ void to::test<2>()
 	at->id_var = WR_VAR(0, 1, 2);
 	at->type = WR_VAR(0, 33, 7);
 	at->set_value("50");
-    at->insert(false);
+    at->insert();
 
 	// Insert another datum
 	at->id_context = 2;
 	at->id_var = WR_VAR(0, 1, 2);
 	at->type = WR_VAR(0, 33, 7);
 	at->set_value("75");
-    at->insert(false);
+    at->insert();
 
-	// Reinsert a datum: it should fail
+    // Reinsert a datum: it should work
 	at->id_context = 1;
 	at->id_var = WR_VAR(0, 1, 2);
 	at->type = WR_VAR(0, 33, 7);
 	at->set_value("50");
-    try {
-        at->insert(false);
-        ensure(false);
-	} catch (db::error_odbc& e) {
-		//ensure_contains(e.what(), "uplicate");
-    }
+    at->insert();
 
-	// Reinsert the other datum: it should fail
+    // Reinsert the other datum: it should work
 	at->id_context = 2;
 	at->id_var = WR_VAR(0, 1, 2);
 	at->type = WR_VAR(0, 33, 7);
 	at->set_value("75");
-    try {
-        at->insert(false);
-        ensure(false);
-	} catch (db::error_odbc& e) {
-		//ensure_contains(e.what(), "uplicate");
-    }
-
-	// Reinsert a datum with overwrite: it should work
-	at->id_context = 1;
-	at->id_var = WR_VAR(0, 1, 2);
-	at->type = WR_VAR(0, 33, 7);
-	at->set_value("50");
-    at->insert(true);
-
-	// Reinsert the other datum with overwrite: it should work
-	at->id_context = 2;
-	at->id_var = WR_VAR(0, 1, 2);
-	at->type = WR_VAR(0, 33, 7);
-	at->set_value("75");
-    at->insert(true);
+    at->insert();
 
 	// Load the attributes for the first variable
     {

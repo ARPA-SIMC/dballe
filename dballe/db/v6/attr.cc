@@ -121,18 +121,14 @@ void Attr::set_value(const char* qvalue)
     }
 }
 
-void Attr::insert(bool replace)
+void Attr::insert()
 {
-    if (replace)
+    if (conn.server_type == POSTGRES)
     {
-        if (conn.server_type == POSTGRES)
-        {
-            if (rstm->execute_and_close() == SQL_NO_DATA)
-                istm->execute_and_close();
-        } else
-            rstm->execute_and_close();
+        if (rstm->execute_and_close() == SQL_NO_DATA)
+            istm->execute_and_close();
     } else
-        istm->execute_and_close();
+        rstm->execute_and_close();
 }
 
 void Attr::load(wreport::Var& var)

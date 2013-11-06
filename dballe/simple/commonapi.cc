@@ -1,7 +1,7 @@
 /*
  * fortran/commonapi - Common parts of all Fortran API implementations
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,8 +62,6 @@ void CommonAPIImplementation::set_permissions(const char* anaflag, const char* d
 		perms |= PERM_DATA_WRITE;
 	if (strcasecmp("read",	attrflag) == 0)
 		perms |= PERM_ATTR_RO;
-	if (strcasecmp("add",	attrflag) == 0)
-		perms |= PERM_ATTR_ADD;
 	if (strcasecmp("write",	attrflag) == 0)
 		perms |= PERM_ATTR_WRITE;
 
@@ -71,13 +69,13 @@ void CommonAPIImplementation::set_permissions(const char* anaflag, const char* d
 		throw error_consistency("pseudoana should be opened in either 'read' or 'write' mode");
 	if ((perms & (PERM_DATA_RO | PERM_DATA_ADD | PERM_DATA_WRITE)) == 0)
 		throw error_consistency("data should be opened in one of 'read', 'add' or 'write' mode");
-	if ((perms & (PERM_ATTR_RO | PERM_ATTR_ADD | PERM_ATTR_WRITE)) == 0)
-		throw error_consistency("attr should be opened in one of 'read', 'add' or 'write' mode");
+	if ((perms & (PERM_ATTR_RO | PERM_ATTR_WRITE)) == 0)
+		throw error_consistency("attr should be opened in either 'read' or 'write' mode");
 
 	if (perms & PERM_ANA_RO && perms & PERM_DATA_WRITE)
 		throw error_consistency("when data is 'write' ana must also be set to 'write', because deleting data can potentially also delete pseudoana");
 	if (perms & PERM_ATTR_RO && perms & PERM_DATA_WRITE)
-		throw error_consistency("when data is 'write' attr must also be set to 'write', because deleting data also delete its attributes");
+		throw error_consistency("when data is 'write' attr must also be set to 'write', because deleting data also deletes its attributes");
 }
 
 Record& CommonAPIImplementation::choose_input_record(const char*& param)

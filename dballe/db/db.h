@@ -389,7 +389,7 @@ public:
      * @param can_replace
      *   If true, then existing data can be rewritten, else data can only be added.
      */
-    virtual void attr_insert(wreport::Varcode id_var, const Record& attrs, bool can_replace=true) = 0;
+    virtual void attr_insert(wreport::Varcode id_var, const Record& attrs) = 0;
 
     /**
      * Insert new attributes into the database.
@@ -403,7 +403,7 @@ public:
      * @param can_replace
      *   If true, then existing data can be rewritten, else data can only be added.
      */
-    virtual void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs, bool can_replace=true) = 0;
+    virtual void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs) = 0;
 
     /**
      * Delete QC data for the variable `var' in record `rec' (coming from a previous

@@ -723,7 +723,7 @@ void db_tests::test_attrs()
     qc.set(WR_VAR(0,  7, 25),  9);
     qc.set(WR_VAR(0,  5, 22), 10);
 
-    db->attr_insert(WR_VAR(0, 1, 11), qc, false);
+    db->attr_insert(WR_VAR(0, 1, 11), qc);
 
     // Query back the B01011 variable to read the attr reference id
     Record query;

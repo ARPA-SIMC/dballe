@@ -219,9 +219,9 @@ void DbAPI::critica()
         throw error_consistency("critica must be called after a dammelo, a prendilo, or after setting *context_id and *var_related");
 
     if (attr_reference_id == -1)
-        db.attr_insert(attr_varid, qcinput, (perms & PERM_ATTR_WRITE) != 0);
+        db.attr_insert(attr_varid, qcinput);
     else
-        db.attr_insert(attr_reference_id, attr_varid, qcinput, (perms & PERM_ATTR_WRITE) != 0);
+        db.attr_insert(attr_reference_id, attr_varid, qcinput);
 
     qcinput.clear();
 }

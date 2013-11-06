@@ -95,7 +95,7 @@ struct Attr
      *   wreport::Varcode will be overwritten; else, trying to replace an
      *   existing attribute will result in an error.
      */
-    void insert(bool replace);
+    void insert();
 
     /**
      * Load from the database all the attributes for var

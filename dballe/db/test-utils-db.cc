@@ -120,7 +120,7 @@ void TestRecord::insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace)
     {
         WIBBLE_TEST_INFO(locinfo);
         locinfo() << wreport::varcode_format(i->first) << ": " << i->second.to_string();
-        wrunchecked(db.attr_insert(i->first, i->second, can_replace));
+        wrunchecked(db.attr_insert(i->first, i->second));
     }
 }
 
