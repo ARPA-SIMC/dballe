@@ -1,5 +1,6 @@
 #include <wibble/tests.h>
 #include <signal.h>
+#include <fnmatch.h>
 #include <cstring>
 #include <cstdlib>
 
@@ -55,7 +56,14 @@ int main(int argc,const char* argv[])
     }
     else if( argc == 2 && std::string(argv[1]) != "regression" )
     {
-      tut::runner.get().run_tests(argv[1]);
+      if (strchr(argv[1], '*'))
+      {
+          tut::groupnames gl = tut::runner.get().list_groups();
+          for (tut::groupnames::const_iterator i = gl.begin(); i != gl.end(); ++i)
+              if (fnmatch(argv[1], i->c_str(), 0) == 0)
+                  tut::runner.get().run_tests(*i);
+      } else
+          tut::runner.get().run_tests(argv[1]);
     }
     else if( argc == 3 )
     {
