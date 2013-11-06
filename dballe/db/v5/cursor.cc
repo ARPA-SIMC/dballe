@@ -538,23 +538,26 @@ void Cursor::add_station_info(Record& rec)
      * BLOCK,       B01001   257
      * STATION,     B01002   258
     */
-#define BASE_QUERY \
-        "SELECT d.id_var, d.value" \
-        "  FROM context c, data d, repinfo ri" \
-        " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?" \
-        "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}" \
-        "   AND c.ltype1 = 257"
-
     const char* query;
     switch (db.conn->server_type)
     {
         case MYSQL:
-            query = BASE_QUERY
+            query =
+                "SELECT d.id_var, d.value, ri.prio"
+                "  FROM context c, data d, repinfo ri"
+                " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
+                "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
+                "   AND c.ltype1 = 257"
                 " GROUP BY d.id_var,ri.id "
                 "HAVING ri.prio=MAX(ri.prio)";
             break;
         default:
-            query = BASE_QUERY
+            query =
+                "SELECT d.id_var, d.value"
+                "  FROM context c, data d, repinfo ri"
+                " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
+                "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
+                "   AND c.ltype1 = 257"
                 " AND ri.prio=("
                 "  SELECT MAX(sri.prio) FROM repinfo sri"
                 "    JOIN context sc ON sri.id=sc.id_report"
@@ -565,7 +568,6 @@ void Cursor::add_station_info(Record& rec)
                 "    AND sc.datetime=c.datetime AND sd.id_var=d.id_var)";
             break;
     }
-#undef BASE_QUERY
 
     unsigned short st_out_code;
     char st_out_val[256];
