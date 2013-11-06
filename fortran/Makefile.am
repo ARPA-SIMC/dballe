@@ -38,7 +38,7 @@ check_missing_msg_SOURCES = $(testlib) check_missing_msg.f90
 check_missing_msg_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_msg_FCFLAGS = -g
 
-check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing check_segfault1 check_multiplehandler
+check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing check_segfault1 check_multiplehandler check_spiegab
 # check_cached_anaid
 
 check_real0_SOURCES = $(dbtestlib) check_real0.f90
@@ -65,6 +65,9 @@ check_segfault1_SOURCES = $(dbtestlib) check_segfault1.f90
 check_segfault1_LDADD = ./libdballef.la -lcnf -lpopt
 check_segfault1_FCFLAGS = -g
 
+check_spiegab_SOURCES = $(dbtestlib) check_spiegab.f90
+check_spiegab_LDADD = ./libdballef.la -lcnf -lpopt
+check_spiegab_FCFLAGS = -g
 
 check_multiplehandler_SOURCES = $(dbtestlib) check_multiplehandler.f90
 check_multiplehandler_LDADD = ./libdballef.la -lcnf -lpopt
