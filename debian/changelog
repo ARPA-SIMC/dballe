@@ -1,3 +1,15 @@
+dballe (6.6-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - added a third database type: "mem:", which uses in-memory data
+       structures instead of a SQL database
+     - removed unused support for attr=add in Fortran API
+     - removed obsolete support for rep_cod
+     - removed need of having mobile=1 when inserting a mobile station. The
+       presence of 'ident' is enough to know that the station is mobile
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 06 Nov 2013 12:01:35 +0100
+
 dballe (6.5-1) unstable; urgency=low
 
   * New upstream release

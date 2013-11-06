@@ -565,15 +565,10 @@ int DB::obtain_station(const Record& rec, bool can_add)
     else
         throw error_notfound("no longitude in record when trying to insert a station in the database");
 
-    s.set_ident(NULL);
-    if (const Var* var = rec.key_peek(DBA_KEY_MOBILE))
-        if (var->enqi())
-        {
-            if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
-                s.set_ident(val);
-            else
-                throw error_notfound("no mobile station identifier in record when trying to insert a mobile station in the database");
-        }
+    if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
+        s.set_ident(val);
+    else
+        s.set_ident(NULL);
 
     // Check for an existing station with these data
     int id = s.get_id();
