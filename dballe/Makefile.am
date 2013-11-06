@@ -82,7 +82,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	cmdline/conversion.h \
 	cmdline/processor.h \
 	cmdline/dbadb.h \
-	simple/dbapi.h
+	simple/dbapi.h \
 	simple/simple.h \
 	simple/commonapi.h \
 	simple/msgapi.h
