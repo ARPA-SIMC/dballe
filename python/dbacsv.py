@@ -46,7 +46,6 @@ class Exporter:
         idents = set()
         anaVars = {}
         reps = set()
-        rcod = {}
         dates = set()
         levels = set()
         tranges = set()
@@ -78,8 +77,7 @@ class Exporter:
             # Add columns about the context
 
             # Repcod
-            reps.add(d["rep_cod"])
-            rcod[d["rep_cod"]] = d["rep_memo"]
+            reps.add(d["rep_memo"])
 
             # Date
             dates.add(d["date"])
@@ -94,7 +92,7 @@ class Exporter:
             vars.add(d["var"])
 
             # Attributes
-            attributes = self.db.query_attrs(d["context_id"], d["var"])
+            attributes = self.db.query_attrs(d["var"], d["context_id"])
             self.attrData["%d,%s"%(d["context_id"], d["var"])] = attributes
             for code in attributes:
                 v = attributes.var(code)
@@ -125,7 +123,7 @@ class Exporter:
 
         # Repcod
         if len(reps) == 1:
-            title = title + "Report: %s." % rcod[reps.pop()]
+            title = title + "Report: %s." % reps.pop()
         elif len(reps) > 1:
             cols.append(["Report", lambda x: x["rep_memo"]])
 
