@@ -189,19 +189,17 @@ class NetworkIndexEntry(tuple):
          * network code
          * network name
         """
-        def __new__(self, rec_or_rep_cod, rep_memo=None):
-                """
-                Create an index entry.  The details can be given explitly, or
-                a dballe.Record can be passed and all data will be fetched from
-                it.
-                """
-                if type(rec_or_rep_cod) == int:
-                        if rep_memo == None:
-                                raise TypeError, "got rep_cod but rep_memo is None"
-                        return tuple.__new__(self, (rec_or_rep_cod, rep_memo))
-                else:
-                        rec = rec_or_rep_cod
-                        return tuple.__new__(self, (rec["rep_cod"], rec["rep_memo"]))
+        def __new__(self, rep_memo=None):
+            """
+            Create an index entry. The rep_memo can be given explitly, or
+            a dballe.Record can be passed and data will be fetched from
+            it.
+            """
+            if isinstance(rep_memo, (str, unicode)):
+                return tuple.__new__(self, (rep_memo,))
+            else:
+                rec = rep_memo
+                return tuple.__new__(self, (rec["rep_memo"],))
         def __str__(self):
                 return self[1]
         def __repr__(self):
@@ -217,7 +215,7 @@ class NetworkIndex(ListIndex):
         order as they come out of the database.
         """
         def _indexKey(self, rec):
-                return rec["rep_cod"]
+                return rec["rep_memo"]
         def _indexData(self, rec):
                 return NetworkIndexEntry(rec)
         def _splitInit(self, el):
