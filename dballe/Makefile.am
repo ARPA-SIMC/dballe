@@ -275,7 +275,9 @@ tut_test_SOURCES = \
 	db/modifiers-tut.cc \
 	db/db-basic-tut.cc \
 	db/db-tut.cc \
+	db/db-station-query-tut.cc \
 	db/db-data-query-tut.cc \
+	db/db-summary-query-tut.cc \
 	db/db-mem-tut.cc \
 	db/db-import-tut.cc \
 	db/db-import-mem-tut.cc \

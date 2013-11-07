@@ -56,24 +56,8 @@ struct db_tests : public dballe::tests::DB_test_base
     void test_querybest_priomax();
     void test_repmemo_in_output();
 
-    dballe::tests::TestStation st1;
-    dballe::tests::TestStation st2;
-
     db_tests(dballe::db::Format format) : dballe::tests::DB_test_base(format)
     {
-        st1.lat = 12.34560;
-        st1.lon = 76.54320;
-        st1.info["synop"].set("block", 1);
-        st1.info["synop"].set("station", 2);
-        st1.info["synop"].set("B07030", 42.0); // height
-        st1.info["metar"].set("B07030", 50.0); // height
-
-        st2.lat = 23.45670;
-        st2.lon = 65.43210;
-        st2.info["temp"].set("block", 3);
-        st2.info["temp"].set("station", 4);
-        st2.info["temp"].set("B07030", 100.0); // height
-        st2.info["metar"].set("B07030", 110.0); // height
     }
 };
 
