@@ -17,28 +17,39 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef TUT_TEST_BODY
-
-#include "db/db-basic-tut.h"
+#include "config.h"
+#include "db/test-utils-db.h"
 
 using namespace dballe;
 using namespace dballe::db;
+using namespace dballe::tests;
 using namespace wreport;
 using namespace wibble;
 using namespace wibble::tests;
 using namespace std;
 
-namespace dballe {
-namespace tests {
+namespace {
 
-void db_tests_basic::test_reset()
+struct db_tests_basic : public dballe::tests::DB_test_base
+{
+};
+
+}
+
+namespace tut {
+
+typedef db_tg<db_tests_basic> tg;
+typedef tg::object to;
+
+
+template<> template<> void to::test<1>()
 {
     // Run twice to see if it is idempotent
     db->reset();
     db->reset();
 }
 
-void db_tests_basic::test_repinfo()
+template<> template<> void to::test<2>()
 {
     // Test repinfo-related functions
     std::map<std::string, int> prios = db->get_repinfo_priorities();
@@ -58,11 +69,13 @@ void db_tests_basic::test_repinfo()
 }
 
 }
-}
 
-#else
+namespace {
 
-template<> template<> void to::test<1>() { test_reset(); }
-template<> template<> void to::test<2>() { test_repinfo(); }
-
+tut::tg db_tests_query_mem_tg("db_basic_mem", MEM);
+#ifdef HAVE_ODBC
+tut::tg db_tests_query_v5_tg("db_basic_v5", V5);
+tut::tg db_tests_query_v6_tg("db_basic_v6", V6);
 #endif
+
+}
