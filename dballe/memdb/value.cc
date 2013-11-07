@@ -157,7 +157,7 @@ private:
 
 }
 
-void Values::query(const Record& rec, const Results<Station>& stations, const Results<LevTr>& tranges, Results<Value>& res) const
+void Values::query(const Record& rec, const Results<Station>& stations, const Results<LevTr>& levtrs, Results<Value>& res) const
 {
     if (const char* data_id = rec.key_peek_value(DBA_KEY_CONTEXT_ID))
     {
@@ -178,23 +178,27 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
 
     if (!stations.is_select_all())
     {
+        trace_query("Adding selected stations to strategy\n");
         bool found = false;
         for (Results<Station>::const_iterator i = stations.begin(); i != stations.end(); ++i)
             found |= strategy.add(by_station, &*i);
         if (!found)
         {
+            trace_query(" no matching stations found, setting empty result\n");
             res.set_to_empty();
             return;
         }
     }
 
-    if (!tranges.is_select_all())
+    if (!levtrs.is_select_all())
     {
+        trace_query("Adding selected levtrs to strategy\n");
         bool found = false;
-        for (Results<LevTr>::const_iterator i = tranges.begin(); i != tranges.end(); ++i)
+        for (Results<LevTr>::const_iterator i = levtrs.begin(); i != levtrs.end(); ++i)
             found |= strategy.add(by_levtr, &*i);
         if (!found)
         {
+            trace_query(" no matching levtrs found, setting empty result\n");
             res.set_to_empty();
             return;
         }
@@ -204,21 +208,29 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
     rec.parse_date_extremes(mind, maxd);
     if (mind[0] != -1 || maxd[0] != -1)
     {
+        bool found = false;
         if (mind[0] == maxd[0] && mind[1] == maxd[1] && mind[2] == maxd[2])
         {
             Date d(mind);
-            strategy.add(by_date, d);
+            found |= strategy.add(by_date, d);
         } else if (mind[0] == -1) {
             Date d(maxd);
-            strategy.add_until(by_date, by_date.upper_bound(d));
+            found |= strategy.add_until(by_date, by_date.upper_bound(d));
         } else if (maxd[0] == -1) {
             Date d(mind);
-            strategy.add_since(by_date, by_date.lower_bound(d));
+            found |= strategy.add_since(by_date, by_date.lower_bound(d));
         } else {
             Date dmin(mind);
             Date dmax(maxd);
-            strategy.add(by_date, dmin, dmax);
+            found |= strategy.add(by_date, dmin, dmax);
         }
+        if (!found)
+        {
+            trace_query("No matching dates found, setting to empty result set\n");
+            res.set_to_empty();
+            return;
+        }
+        // TODO: also add a matcher to match datetimes fully, since the index only selects on dates
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))

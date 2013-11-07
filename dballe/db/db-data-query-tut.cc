@@ -32,6 +32,10 @@ namespace {
 
 struct db_tests_query : public DB_test_base
 {
+    db_tests_query()
+    {
+        wruntest(populate_database);
+    }
 };
 
 }
@@ -46,7 +50,6 @@ typedef tg::object to;
 
 template<> template<> void to::test<1>()
 {
-    wruntest(populate_database);
     TRY_QUERY("ana_id=1", 4);
     TRY_QUERY("ana_id=2", 0);
 }
@@ -54,7 +57,6 @@ template<> template<> void to::test<1>()
 template<> template<> void to::test<2>()
 {
     // Query data in station context
-    wruntest(populate_database);
     query.clear();
     query.set_ana_context();
     auto_ptr<db::Cursor> cur = db->query_data(query);
@@ -64,7 +66,6 @@ template<> template<> void to::test<2>()
 template<> template<> void to::test<3>()
 {
     // Datetime queries
-    wruntest(populate_database);
     TRY_QUERY("year=1001", 0);
     TRY_QUERY("yearmin=1999", 0);
     TRY_QUERY("yearmin=1945", 4);
@@ -104,7 +105,6 @@ template<> template<> void to::test<3>()
 template<> template<> void to::test<4>()
 {
     // Block and station queries
-    wruntest(populate_database);
     TRY_QUERY("B01001=1", 4);
     TRY_QUERY("B01001=2", 0);
     TRY_QUERY("B01002=52", 4);
@@ -114,7 +114,6 @@ template<> template<> void to::test<4>()
 template<> template<> void to::test<5>()
 {
     // ana_filter queries
-    wruntest(populate_database);
     TRY_QUERY("ana_filter=block=1", 4);
     TRY_QUERY("ana_filter=B01001=1", 4);
     TRY_QUERY("ana_filter=block>1", 0);
@@ -129,7 +128,6 @@ template<> template<> void to::test<5>()
 template<> template<> void to::test<6>()
 {
     // data_filter queries
-    wruntest(populate_database);
     TRY_QUERY("data_filter=B01011=DB-All.e!", 1);
     TRY_QUERY("data_filter=B01012<300", 0);
     TRY_QUERY("data_filter=B01012<=300", 1);
@@ -143,7 +141,6 @@ template<> template<> void to::test<6>()
 template<> template<> void to::test<7>()
 {
     // latitude/longitude queries
-    wruntest(populate_database);
     TRY_QUERY("latmin=11.0", 4);
     TRY_QUERY("latmin=12.34560", 4);
     TRY_QUERY("latmin=13.0", 0);
@@ -169,7 +166,6 @@ template<> template<> void to::test<7>()
 template<> template<> void to::test<8>()
 {
     // fixed/mobile queries
-    wruntest(populate_database);
     TRY_QUERY("mobile=0", 4);
     TRY_QUERY("mobile=1", 0);
 }
@@ -177,7 +173,6 @@ template<> template<> void to::test<8>()
 template<> template<> void to::test<9>()
 {
     // ident queries
-    wruntest(populate_database);
     // FIXME: we currently have no mobile station data in the samples
     //TRY_QUERY(c, DBA_KEY_IDENT_SELECT, "pippo");
 }
@@ -185,7 +180,6 @@ template<> template<> void to::test<9>()
 template<> template<> void to::test<10>()
 {
     // timerange queries
-    wruntest(populate_database);
     TRY_QUERY("pindicator=20", 4);
     TRY_QUERY("pindicator=21", 0);
     TRY_QUERY("p1=111", 4);
@@ -198,7 +192,6 @@ template<> template<> void to::test<10>()
 template<> template<> void to::test<11>()
 {
     // level queries
-    wruntest(populate_database);
     TRY_QUERY("leveltype1=10", 4);
     TRY_QUERY("leveltype1=11", 0);
     TRY_QUERY("leveltype2=15", 4);
@@ -212,7 +205,6 @@ template<> template<> void to::test<11>()
 template<> template<> void to::test<12>()
 {
     // varcode queries
-    wruntest(populate_database);
     TRY_QUERY("var=B01011", 2);
     TRY_QUERY("var=B01012", 2);
     TRY_QUERY("var=B01013", 0);
@@ -221,7 +213,6 @@ template<> template<> void to::test<12>()
 template<> template<> void to::test<13>()
 {
     // report queries
-    wruntest(populate_database);
     TRY_QUERY("rep_memo=synop", 2);
     TRY_QUERY("rep_memo=metar", 2);
     TRY_QUERY("rep_memo=temp", 0);
@@ -230,7 +221,6 @@ template<> template<> void to::test<13>()
 template<> template<> void to::test<14>()
 {
     // report priority queries
-    wruntest(populate_database);
     TRY_QUERY("priority=101", 2);
     TRY_QUERY("priority=81", 2);
     TRY_QUERY("priority=102", 0);
@@ -249,7 +239,6 @@ template<> template<> void to::test<14>()
 template<> template<> void to::test<15>()
 {
     // context ID queries
-    wruntest(populate_database);
     TRY_QUERY("context_id=1", 1);
     TRY_QUERY("context_id=11", 0);
 }

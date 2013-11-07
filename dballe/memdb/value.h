@@ -82,7 +82,7 @@ public:
     bool remove(const Station& station, const LevTr& levtr, const Datetime& datetime, wreport::Varcode code);
 
     /// Query values returning the IDs
-    void query(const Record& rec, const Results<Station>& stations, const Results<LevTr>& tranges, Results<Value>& res) const;
+    void query(const Record& rec, const Results<Station>& stations, const Results<LevTr>& levtrs, Results<Value>& res) const;
 
     void dump(FILE* out) const;
 };
