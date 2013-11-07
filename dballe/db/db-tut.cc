@@ -567,10 +567,7 @@ void db_tests::test_ana_queries()
     ensure(!cur->next());
 }
 
-void db_tests::test_vacuum()
-{
-    db->vacuum();
-}
+void db_tests::test_vacuum() {} // Moved to basic test module
 
 void db_tests::test_attrs()
 {

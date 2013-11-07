@@ -305,6 +305,13 @@ void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* f
             return;
         }
 
+        if (ilatmin == ilatmax)
+        {
+            trace_query(" latmin iterator matches latmax end iterator: setting empty result set\n");
+            res.set_to_empty();
+            return;
+        }
+
         for ( ; ilatmin != ilatmax; ++ilatmin)
             strategy.add(ilatmin->second);
     }

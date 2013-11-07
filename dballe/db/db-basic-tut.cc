@@ -30,7 +30,7 @@ using namespace std;
 
 namespace {
 
-struct db_tests_basic : public dballe::tests::DB_test_base
+struct db_tests_basic : public dballe::tests::db_test
 {
 };
 
@@ -66,6 +66,12 @@ template<> template<> void to::test<2>()
     prios = db->get_repinfo_priorities();
     wassert(actual(prios.find("fixspnpo") != prios.end()).istrue());
     wassert(actual(prios["fixspnpo"]) == 200);
+}
+
+template<> template<> void to::test<3>()
+{
+    // Just invoke vacuum
+    db->vacuum();
 }
 
 }
