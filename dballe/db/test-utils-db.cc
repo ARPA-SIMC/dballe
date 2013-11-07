@@ -39,6 +39,17 @@ using namespace wibble::tests;
 namespace dballe {
 namespace tests {
 
+OverrideTestDBFormat::OverrideTestDBFormat(dballe::db::Format fmt)
+    : old_format(DB::get_default_format())
+{
+    DB::set_default_format(fmt);
+}
+
+OverrideTestDBFormat::~OverrideTestDBFormat()
+{
+    DB::set_default_format(old_format);
+}
+
 namespace {
 // Set a record from a ", "-separated string of assignments
 void set_record_from_string(Record& rec, const std::string& s)
@@ -249,9 +260,11 @@ void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
     wassert(actual(count) == expected);
 }
 
-db_test::db_test()
+db_test::db_test(bool reset)
 {
-    orig_format = DB::get_default_format();
+    if (reset) disappear();
+    db = DB::connect_test();
+    if (reset) db->reset();
 }
 
 db_test::db_test(db::Format format, bool reset)

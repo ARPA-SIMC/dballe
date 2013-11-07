@@ -39,7 +39,11 @@ using namespace wreport;
 namespace dballe {
 namespace db {
 
+#ifdef HAVE_ODBC
 static Format default_format = V6;
+#else
+static Format default_format = MEM;
+#endif
 
 Cursor::~Cursor()
 {

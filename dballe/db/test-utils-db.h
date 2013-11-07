@@ -32,6 +32,34 @@ class DB;
 
 namespace tests {
 
+struct OverrideTestDBFormat
+{
+    dballe::db::Format old_format;
+    OverrideTestDBFormat(dballe::db::Format fmt);
+    ~OverrideTestDBFormat();
+};
+
+template<typename T>
+struct db_tg : public tut::test_group<T>
+{
+    dballe::db::Format db_format;
+    db_tg(const char* name, dballe::db::Format fmt)
+        : tut::test_group<T>(name), db_format(fmt)
+    {
+    }
+
+    tut::test_result run_next()
+    {
+        dballe::tests::OverrideTestDBFormat otf(db_format);
+        return tut::test_group<T>::run_next();
+    }
+    tut::test_result run_test(int n)
+    {
+        dballe::tests::OverrideTestDBFormat otf(db_format);
+        return tut::test_group<T>::run_test(n);
+    }
+};
+
 /// Fixture data about a station
 struct TestStation
 {
@@ -185,7 +213,7 @@ struct db_test
     db::v5::DB& v5();
     db::v6::DB& v6();
 
-	db_test();
+    db_test(bool reset=true);
 	db_test(db::Format format, bool reset=true);
 	~db_test();
 };
