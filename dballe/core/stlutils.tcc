@@ -25,41 +25,47 @@ namespace dballe {
 namespace stl {
 namespace stlutils {
 
-template<typename ITER>
-bool Itersection<ITER>::sync_iters()
+template<typename T>
+void Itersection<T>::sync_iters()
 {
     using namespace std;
 
     while (true)
     {
-        typename std::vector< Sequence<ITER> >::iterator i = iters.begin();
-        const typename ITER::value_type& candidate = **i;
+        typename Sequences<T>::iterator i = this->sequences->begin();
+        const T& candidate = (*i)->get();
 
-        for ( ; i != iters.end(); ++i)
+        for ( ; i != this->sequences->end(); ++i)
         {
-            while (i->valid() && **i < candidate)
-                i->next();
+            while ((*i)->valid() && (*i)->get() < candidate)
+                (*i)->next();
             // When we reach the end of a sequence, we are done
-            if (!i->valid())
-                return false;
-            if (**i > candidate)
+            if (!(*i)->valid())
             {
-                iters[0].next();
-                if (!iters[0].valid())
-                    return false;
-                // Continue at the while level
+                this->clear();
+                return;
+            }
+            if ((*i)->get() > candidate)
+            {
+                (*this->sequences)[0]->next();
+                if (!(*this->sequences)[0]->valid())
+                {
+                    this->clear();
+                    return;
+                }
+                // Continue, but at the while level
                 goto next_round;
             }
         }
 
         // All sequences have the same item: stop.
-        return true;
+        return;
         next_round: ;
     }
 }
 
-template<typename ITER>
-bool Iterunion<ITER>::find_min()
+template<typename T>
+void Iterunion<T>::find_min()
 {
     /**
      * If minval is 0, set it to the minimum value.
@@ -75,30 +81,34 @@ bool Iterunion<ITER>::find_min()
         // set minval to the next minimum value.
 
         // Advance all iterators that point to the minimum value
-        for (typename std::vector< Sequence<ITER> >::iterator i = iters.begin();
-                i != iters.end(); ++i)
+        for (typename Sequences<T>::iterator i = this->sequences->begin();
+                i != this->sequences->end(); ++i)
         {
-            if (!i->valid()) continue;
-            if (**i == *minval)
-                i->next();
+            if (!(*i)->valid()) continue;
+            if ((*i)->get() == *minval)
+                (*i)->next();
         }
     }
 
     // Set it to the minimum value.
     bool found = false;
     minval = 0;
-    for (typename std::vector< Sequence<ITER> >::const_iterator i = iters.begin();
-            i != iters.end(); ++i)
+    for (typename Sequences<T>::const_iterator i = this->sequences->begin();
+            i != this->sequences->end(); ++i)
     {
-        if (!i->valid()) continue;
-        if (!minval || **i < *minval)
+        if (!(*i)->valid()) continue;
+        if (!minval || (*i)->get() < *minval)
         {
-            minval = &**i;
+            minval = &((*i)->get());
             found = true;
         }
     }
 
-    return found;
+    if (!found)
+    {
+        this->clear();
+        minval = 0;
+    }
 #if 0
         for (typename std::vector< Sequence<ITER> >::const_iterator i = iters.begin();
                 i != iters.end(); )

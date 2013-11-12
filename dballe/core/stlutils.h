@@ -24,67 +24,174 @@
 
 #include <vector>
 #include <set>
+#include <memory>
 
 namespace dballe {
 namespace stl {
 
 namespace stlutils {
 
-template<typename ITER>
+template<typename T>
 struct Sequence
+{
+    virtual ~Sequence() {}
+    virtual bool valid() const = 0;
+    virtual const T& get() const = 0;
+    virtual void next() = 0;
+};
+
+template<typename ITER>
+struct IterSequence : public Sequence<typename ITER::value_type>
 {
     ITER begin;
     ITER end;
 
-    Sequence(const ITER& begin, const ITER& end)
+    IterSequence(const ITER& begin, const ITER& end)
         : begin(begin), end(end) {}
 
-    bool valid() const { return begin != end; }
-    const typename ITER::value_type& operator*() const { return *begin; }
-    void next() { ++begin; }
-    bool operator==(const Sequence& s) const
+    virtual bool valid() const { return begin != end; }
+    virtual const typename ITER::value_type& get() const { return *begin; }
+    virtual void next() { ++begin; }
+};
+
+} // back to dballe::stl
+
+template<typename T>
+struct Sequences : public std::vector<stlutils::Sequence<T>*>
+{
+    typedef typename std::vector<stlutils::Sequence<T>*>::iterator iterator;
+    typedef typename std::vector<stlutils::Sequence<T>*>::const_iterator const_iterator;
+
+    Sequences() {}
+    ~Sequences()
     {
-        return begin == s.begin && end == s.end;
+        for (iterator i = this->begin(); i != this->end(); ++i)
+            delete *i;
     }
-    bool operator!=(const Sequence& s) const
+
+    template<typename ITER>
+    void add(const ITER& begin, const ITER& end)
     {
-        return begin != s.begin || end != s.end;
+        this->push_back(new stlutils::IterSequence<ITER>(begin, end));
+    }
+
+    template<typename C>
+    void add(const C& container)
+    {
+        this->push_back(new stlutils::IterSequence<typename C::const_iterator>(container.begin(), container.end()));
+    }
+
+private:
+    Sequences(const Sequences&);
+    Sequences& operator=(const Sequences&);
+};
+
+namespace stlutils {
+
+template<typename T>
+struct SequenceGenerator
+{
+    Sequences<T>* sequences;
+
+    SequenceGenerator() : sequences(0) {}
+    SequenceGenerator(const SequenceGenerator<T>& sg) : sequences(sg.sequences)
+    {
+        // auto_ptr semantics
+        const_cast<SequenceGenerator<T>*>(&sg)->sequences = 0;
+    }
+    SequenceGenerator(std::auto_ptr< Sequences<T> >& sequences) : sequences(sequences.release()) {}
+    ~SequenceGenerator() { if (sequences) delete sequences; }
+
+    SequenceGenerator<T>& operator=(const SequenceGenerator<T>& sg)
+    {
+        // auto_ptr semantics
+        if (&sg == this) return this;
+        if (sequences) delete sequences;
+        sequences = sg.sequences;
+        const_cast<SequenceGenerator<T>*>(&sg)->sequences = 0;
+        return *this;
+    }
+
+    void clear()
+    {
+        if (sequences) delete sequences;
+        sequences = 0;
+    }
+
+    bool has_items() const { return sequences != 0; }
+
+    bool operator==(const SequenceGenerator<T>& i) const
+    {
+        if (sequences == i.sequences) return true;
+        if (!sequences || !i.sequences) return false;
+        return *sequences == *i.sequences;
+    }
+    bool operator!=(const SequenceGenerator<T>& i) const
+    {
+        if (sequences == i.sequences) return false;
+        if (!sequences || !i.sequences) return true;
+        return *sequences != *i.sequences;
     }
 };
 
-template<typename ITER>
-struct Itersection
+template<typename T>
+struct Itersection : public SequenceGenerator<T>, public std::iterator<std::forward_iterator_tag, T>
 {
-    std::vector< Sequence<ITER> > iters;
-
-    Itersection(const std::vector< Sequence<ITER> >& iters) : iters(iters) {}
-    bool operator==(const Itersection& i) { return iters == i.iters; }
-    bool operator!=(const Itersection& i) { return iters != i.iters; }
-
-    const typename ITER::value_type& get() const { return *iters[0].begin; }
-
-    bool advance()
+    Itersection() {}
+    Itersection(const Itersection<T>& sg) : SequenceGenerator<T>(sg) {}
+    Itersection(std::auto_ptr< Sequences<T> >& sequences)
+        : SequenceGenerator<T>(sequences)
     {
-        iters[0].next();
-        return sync_iters();
+        sync_iters();
+    }
+
+    const T& get() const { return (*this->sequences)[0]->get(); }
+
+    void advance()
+    {
+        (*this->sequences)[0]->next();
+        sync_iters();
     }
 
     // Advance iterators so that they all point to items of the same value,
     // or so that we become the end iterator
-    bool sync_iters();
+    void sync_iters();
+
+    const T& operator*() const { return this->get(); }
+    Itersection<T>& operator++()
+    {
+        this->advance();
+        return *this;
+    }
 };
 
-template<typename ITER>
-struct Iterunion
+template<typename T>
+struct Iterunion : public SequenceGenerator<T>, public std::iterator<std::forward_iterator_tag, T>
 {
-    std::vector< Sequence<ITER> > iters;
-    const typename ITER::value_type* minval;
+    const T* minval;
 
-    Iterunion(const std::vector< Sequence<ITER> >& iters) : iters(iters), minval(0) { }
-    bool operator==(const Iterunion& i) { return iters == i.iters; }
-    bool operator!=(const Iterunion& i) { return iters != i.iters; }
+    Iterunion() {}
+    Iterunion(const Iterunion<T>& sg)
+        : SequenceGenerator<T>(sg), minval(sg.minval)
+    {
+        // auto_ptr semantics
+        const_cast<Iterunion<T>*>(&sg)->minval = 0;
+    }
+    Iterunion(std::auto_ptr< Sequences<T> >& sequences)
+        : SequenceGenerator<T>(sequences), minval(0)
+    {
+        find_min();
+    }
+    Iterunion<T>& operator=(const Iterunion<T>& sg)
+    {
+        // auto_ptr semantics
+        SequenceGenerator<T>::operator=(sg);
+        minval = sg.minval;
+        const_cast<Iterunion<T>*>(&sg)->minval = 0;
+        return *this;
+    }
 
-    const typename ITER::value_type& get() const { return *minval; }
+    const T& get() const { return *minval; }
 
     /**
      * Find the next minimum value.
@@ -96,7 +203,14 @@ struct Iterunion
      * Returns false when all sequences are exausted; true if a new minimum
      * value was found.
      */
-    bool find_min();
+    void find_min();
+
+    const T& operator*() const { return this->get(); }
+    Iterunion<T>& operator++()
+    {
+        this->find_min();
+        return *this;
+    }
 };
 
 }
@@ -105,75 +219,13 @@ struct Iterunion
  * Virtual container containing the intersection of an arbitrary number of
  * sorted (begin, end) sequences.
  */
-template<class ITER>
+template<class T>
 class Intersection
 {
-protected:
-    std::vector< stlutils::Sequence<ITER> > sequences;
-
 public:
-    struct const_iterator : public std::iterator<std::forward_iterator_tag, typename ITER::value_type>
-    {
-        stlutils::Itersection<ITER>* iters;
+    typedef stlutils::Itersection<T> const_iterator;
 
-        // Begin iterator
-        const_iterator(const std::vector< stlutils::Sequence<ITER> >& seqs)
-            : iters(new stlutils::Itersection<ITER>(seqs))
-        {
-            if (!iters->sync_iters())
-            {
-                delete iters;
-                iters = 0;
-            }
-        }
-        // End iterator
-        const_iterator() : iters(0) {}
-        const_iterator(const const_iterator& i)
-            : iters(i.iters)
-        {
-            // auto_ptr semantics
-            const_cast<const_iterator*>(&i)->iters = 0;
-        }
-        const_iterator& operator=(const const_iterator& i)
-        {
-            // auto_ptr semantics
-            if (&i == this) return this;
-            if (iters) delete iters;
-            iters = i.iters;
-            const_cast<const_iterator*>(&i)->iters = 0;
-            return *this;
-        }
-        ~const_iterator() { if (iters) delete iters; }
-
-        const typename ITER::value_type& operator*() const { return iters->get(); }
-        const_iterator& operator++()
-        {
-            if (!iters->advance())
-            {
-                delete iters;
-                iters = 0;
-            }
-            return *this;
-        }
-        bool operator==(const const_iterator& i) const
-        {
-            if (iters == i.iters) return true;
-            if (!iters || !i.iters) return false;
-            return *iters == *i.iters;
-        }
-        bool operator!=(const const_iterator& i) const
-        {
-            if (iters == i.iters) return false;
-            if (!iters || !i.iters) return true;
-            return *iters != *i.iters;
-        }
-    };
-
-    void clear() { sequences.clear(); }
-
-    size_t sources_size() const { return sequences.size(); }
-
-    const_iterator begin() const
+    const_iterator begin(std::auto_ptr< Sequences<T> >& sequences) const
     {
         return const_iterator(sequences);
     }
@@ -182,11 +234,6 @@ public:
     {
         return const_iterator();
     }
-
-    void add(const ITER& begin, const ITER& end)
-    {
-        sequences.push_back(stlutils::Sequence<ITER>(begin, end));
-    }
 };
 
 template<typename T>
@@ -194,7 +241,7 @@ class SetIntersection
 {
 protected:
     std::vector<const std::set<T>*> sets;
-    Intersection<typename std::set<T>::const_iterator> intersection;
+    Intersection<T> intersection;
 
 public:
     void add(const std::set<T>& set)
@@ -202,42 +249,40 @@ public:
         sets.push_back(&set);
     }
 
-    typedef typename Intersection<typename std::set<T>::const_iterator>::const_iterator const_iterator;
+    typedef typename Intersection<T>::const_iterator const_iterator;
 
     const_iterator begin()
     {
-        if (sets.size() != intersection.sources_size())
+        std::auto_ptr< Sequences<T> > sequences(new Sequences<T>);
+
+        // Look for the highest first element in all sets
+        bool first = true;
+        T max_of_first;
+        for (typename std::vector<const std::set<T>*>::const_iterator i = sets.begin();
+                i != sets.end(); ++i)
         {
-            intersection.clear();
-
-            // Look for the highest first element in all sets
-            bool first = true;
-            T max_of_first;
-            for (typename std::vector<const std::set<T>*>::const_iterator i = sets.begin();
-                    i != sets.end(); ++i)
+            const std::set<T>& s = **i;
+            // If one of the sets is empty, then the intersection is empty
+            if (s.begin() == s.end()) return end();
+            if (first)
             {
-                const std::set<T>& s = **i;
-                // If one of the sets is empty, then the intersection is empty
-                if (s.begin() == s.end()) return end();
-                if (first)
-                {
+                max_of_first = *s.begin();
+                first = false;
+            } else {
+                if (max_of_first < *s.begin())
                     max_of_first = *s.begin();
-                    first = false;
-                } else {
-                    if (max_of_first < *s.begin())
-                        max_of_first = *s.begin();
-                }
-            }
-
-            // Populate intersection with all the ranges we intersect
-            for (typename std::vector<const std::set<T>*>::const_iterator i = sets.begin();
-                    i != sets.end(); ++i)
-            {
-                const std::set<T>& s = **i;
-                intersection.add(s.lower_bound(max_of_first), s.end());
             }
         }
-        return intersection.begin();
+
+        // Populate intersection with all the ranges we intersect
+        for (typename std::vector<const std::set<T>*>::const_iterator i = sets.begin();
+                i != sets.end(); ++i)
+        {
+            const std::set<T>& s = **i;
+            sequences->add(s.lower_bound(max_of_first), s.end());
+        }
+
+        return intersection.begin(sequences);
     }
 
     const_iterator end()
@@ -250,75 +295,13 @@ public:
  * Virtual container containing the union of an arbitrary number of
  * sorted (begin, end) sequences.
  */
-template<class ITER>
+template<class T>
 class Union
 {
-protected:
-    std::vector< stlutils::Sequence<ITER> > sequences;
-
 public:
-    struct const_iterator : public std::iterator<std::forward_iterator_tag, typename ITER::value_type>
-    {
-        typename stlutils::Iterunion<ITER>* iters;
+    typedef stlutils::Iterunion<T> const_iterator;
 
-        // Begin iterator
-        const_iterator(const std::vector< stlutils::Sequence<ITER> >& seqs)
-            : iters(new stlutils::Iterunion<ITER>(seqs))
-        {
-            if (!iters->find_min())
-            {
-                delete iters;
-                iters = 0;
-            }
-        }
-        // End iterator
-        const_iterator() : iters(0) {}
-        const_iterator(const const_iterator& i)
-            : iters(i.iters)
-        {
-            // auto_ptr semantics
-            const_cast<const_iterator*>(&i)->iters = 0;
-        }
-        const_iterator& operator=(const const_iterator& i)
-        {
-            // auto_ptr semantics
-            if (&i == this) return this;
-            if (iters) delete iters;
-            iters = i.iters;
-            const_cast<const_iterator*>(&i)->iters = 0;
-            return *this;
-        }
-        ~const_iterator() { if (iters) delete iters; }
-
-        const typename ITER::value_type& operator*() const { return iters->get(); }
-        const_iterator& operator++()
-        {
-            if (!iters->find_min())
-            {
-                delete iters;
-                iters = 0;
-            }
-            return *this;
-        }
-        bool operator==(const const_iterator& i) const
-        {
-            if (iters == i.iters) return true;
-            if (!iters || !i.iters) return false;
-            return *iters == *i.iters;
-        }
-        bool operator!=(const const_iterator& i) const
-        {
-            if (iters == i.iters) return false;
-            if (!iters || !i.iters) return true;
-            return *iters != *i.iters;
-        }
-    };
-
-    void clear() { sequences.clear(); }
-
-    size_t sources_size() const { return sequences.size(); }
-
-    const_iterator begin() const
+    const_iterator begin(std::auto_ptr< Sequences<T> >& sequences) const
     {
         return const_iterator(sequences);
     }
@@ -326,11 +309,6 @@ public:
     const_iterator end() const
     {
         return const_iterator();
-    }
-
-    void add(const ITER& begin, const ITER& end)
-    {
-        sequences.push_back(stlutils::Sequence<ITER>(begin, end));
     }
 };
 

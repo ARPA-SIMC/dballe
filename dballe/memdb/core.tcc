@@ -33,10 +33,11 @@ namespace memdb {
 template<typename T>
 void Index<T>::query(const const_iterator& begin, const const_iterator& end, const Match<size_t>* filter, BaseResults& res) const
 {
-    stl::Intersection<Positions::const_iterator> merger;
+    std::auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
     for (const_iterator i = begin; begin != end; ++i)
-        merger.add(i->second.begin(), i->second.end());
-    res.intersect(merger.begin(), merger.end(), filter);
+        sequences->add(i->second.begin(), i->second.end());
+    stl::Intersection<size_t> merger;
+    res.intersect(merger.begin(sequences), merger.end(), filter);
 }
 
 template<typename T>

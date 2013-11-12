@@ -36,19 +36,23 @@ TESTGRP(core_stlutils);
 // Test Intersection
 template<> template<> void to::test<1>()
 {
+    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
+
     vector<int> a;
     a.push_back(1); a.push_back(2); a.push_back(3);
+    sequences->add(a);
+
     vector<int> b;
     b.push_back(2); b.push_back(3);
+    sequences->add(b);
+
     vector<int> c;
     c.push_back(0); c.push_back(2);
+    sequences->add(c);
 
-    Intersection<vector<int>::const_iterator> intersection;
-    intersection.add(a.begin(), a.end());
-    intersection.add(b.begin(), b.end());
-    intersection.add(c.begin(), c.end());
+    Intersection<int> intersection;
 
-    Intersection<vector<int>::const_iterator>::const_iterator i = intersection.begin();
+    Intersection<int>::const_iterator i = intersection.begin(sequences);
     wassert(actual(i != intersection.end()).istrue());
     wassert(actual(*i) == 2);
     ++i;
@@ -58,48 +62,74 @@ template<> template<> void to::test<1>()
 // Test Intersection
 template<> template<> void to::test<2>()
 {
+    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
+
     vector<int> a;
     a.push_back(1);
+    sequences->add(a);
+
     vector<int> b;
     b.push_back(1);
+    sequences->add(b);
 
-    Intersection<vector<int>::const_iterator> intersection;
-    intersection.add(a.begin(), a.end());
-    intersection.add(b.begin(), b.end());
-
-    Intersection<vector<int>::const_iterator>::const_iterator i = intersection.begin();
+    Intersection<int> intersection;
+    Intersection<int>::const_iterator i = intersection.begin(sequences);
     wassert(actual(i != intersection.end()).istrue());
     wassert(actual(*i) == 1);
     ++i;
     wassert(actual(i == intersection.end()).istrue());
 }
 
-// Test Union
+// Test SetIntersection
 template<> template<> void to::test<3>()
 {
-    vector<int> a;
-    vector<int> b;
+    stl::SetIntersection<int> intersection;
 
-    Union<vector<int>::const_iterator> ab;
-    ab.add(a.begin(), a.end());
-    ab.add(b.begin(), b.end());
+    set<int> a;
+    a.insert(1); a.insert(2); a.insert(3);
+    intersection.add(a);
 
-    Union<vector<int>::const_iterator>::const_iterator i = ab.begin();
-    wassert(actual(i == ab.end()).istrue());
+    set<int> b;
+    b.insert(2); b.insert(3);
+    intersection.add(b);
+
+    set<int> c;
+    c.insert(0); c.insert(2);
+    intersection.add(c);
+
+    stl::SetIntersection<int>::const_iterator i = intersection.begin();
+    wassert(actual(i != intersection.end()).istrue());
+    wassert(actual(*i) == 2);
+    ++i;
+    wassert(actual(i == intersection.end()).istrue());
 }
 
 // Test Union
 template<> template<> void to::test<4>()
 {
+    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
+    vector<int> a;
+    sequences->add(a);
+    vector<int> b;
+    sequences->add(b);
+
+    Union<int> ab;
+    Union<int>::const_iterator i = ab.begin(sequences);
+    wassert(actual(i == ab.end()).istrue());
+}
+
+// Test Union
+template<> template<> void to::test<5>()
+{
+    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
     vector<int> a;
     a.push_back(1);
+    sequences->add(a);
     vector<int> b;
+    sequences->add(b);
 
-    Union<vector<int>::const_iterator> ab;
-    ab.add(a.begin(), a.end());
-    ab.add(b.begin(), b.end());
-
-    Union<vector<int>::const_iterator>::const_iterator i = ab.begin();
+    Union<int> ab;
+    Union<int>::const_iterator i = ab.begin(sequences);
     wassert(actual(i != ab.end()).istrue());
     wassert(actual(*i) == 1);
     ++i;
@@ -107,20 +137,20 @@ template<> template<> void to::test<4>()
 }
 
 // Test Union
-template<> template<> void to::test<5>()
+template<> template<> void to::test<6>()
 {
+    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
     vector<int> a;
     a.push_back(1);
     a.push_back(2);
+    sequences->add(a);
     vector<int> b;
     b.push_back(2);
     b.push_back(3);
+    sequences->add(b);
 
-    Union<vector<int>::const_iterator> ab;
-    ab.add(a.begin(), a.end());
-    ab.add(b.begin(), b.end());
-
-    Union<vector<int>::const_iterator>::const_iterator i = ab.begin();
+    Union<int> ab;
+    Union<int>::const_iterator i = ab.begin(sequences);
     wassert(actual(i != ab.end()).istrue());
     wassert(actual(*i) == 1);
     ++i;
