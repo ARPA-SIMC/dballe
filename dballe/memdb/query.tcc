@@ -156,16 +156,24 @@ bool Strategy<T>::add(const Index<K>& index, const K& val)
 template<typename T> template<typename K>
 bool Strategy<T>::add(const Index<K>& index, const K& min, const K& max)
 {
-    bool res = false;
+    auto_ptr< stl::Sequences<size_t> > sequences;
     for (typename Index<K>::const_iterator i = index.lower_bound(min);
             i != index.upper_bound(max); ++i)
     {
         trace_query("Adding positions from index lookup: found %zu elements\n", i->second.size());
-        this->add(i->second);
-        res = true;
+        if (!sequences.get())
+            sequences.reset(new stl::Sequences<size_t>);
+        sequences->add(i->second);
     }
-    if (!res) trace_query("Adding positions from index lookup: no element not found\n");
-    return res;
+    if (sequences.get())
+    {
+        trace_query("Adding positions from index lookup: union of %zu sequences\n", sequences->size());
+        add_union(sequences);
+        return true;
+    } else {
+        trace_query("Adding positions from index lookup: no element not found\n");
+        return false;
+    }
 }
 
 template<typename T>

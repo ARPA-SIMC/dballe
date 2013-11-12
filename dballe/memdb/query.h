@@ -28,7 +28,7 @@
 #include <memory>
 #include <cstddef>
 
-// #define TRACE_QUERY
+//#define TRACE_QUERY
 
 
 namespace dballe {

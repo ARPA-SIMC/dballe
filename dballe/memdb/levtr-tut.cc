@@ -19,8 +19,10 @@
 
 #include "memdb/tests.h"
 #include "levtr.h"
+#include "query.h"
 
 using namespace dballe;
+using namespace dballe::tests;
 using namespace dballe::memdb;
 using namespace wibble::tests;
 using namespace std;
@@ -54,4 +56,49 @@ template<> template<> void to::test<1>()
     wassert(actual(&val2) == &val);
 }
 
+template<> template<> void to::test<2>()
+{
+    LevTrs values;
+    values.obtain(Level(1), Trange::instant());
+    values.obtain(Level::cloud(2, 3), Trange(1, 2, 3));
+
+    {
+        Results<LevTr> res(values);
+        values.query(record_from_string("leveltype1=1"), res);
+        wassert(actual(res.size()) == 1);
+    }
+
+    {
+        Results<LevTr> res(values);
+        values.query(record_from_string("leveltype2=2"), res);
+        wassert(actual(res.size()) == 1);
+    }
+
+    {
+        Results<LevTr> res(values);
+        values.query(record_from_string("l2=3"), res);
+        wassert(actual(res.size()) == 1);
+    }
+
+    {
+        Results<LevTr> res(values);
+        values.query(record_from_string("pindicator=1"), res);
+        wassert(actual(res.size()) == 1);
+    }
+
+    {
+        Results<LevTr> res(values);
+        values.query(record_from_string("p1=2"), res);
+        wassert(actual(res.size()) == 1);
+    }
+
+    {
+        Results<LevTr> res(values);
+        values.query(record_from_string("p2=3"), res);
+        wassert(actual(res.size()) == 1);
+    }
 }
+
+}
+
+#include "query.tcc"

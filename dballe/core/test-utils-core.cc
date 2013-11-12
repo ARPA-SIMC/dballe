@@ -20,11 +20,12 @@
  */
 
 #include "dballe/core/test-utils-core.h"
-
+#include <wibble/string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 
+using namespace wibble;
 using namespace wreport;
 using namespace std;
 
@@ -301,6 +302,20 @@ void TestRecordVarsEqual::check(WIBBLE_TEST_LOCPRM) const
             wibble_test_location.fail_test(ss.str());
         }
     }
+}
+
+void set_record_from_string(Record& rec, const std::string& s)
+{
+    str::Split splitter(", ", s);
+    for (str::Split::const_iterator i = splitter.begin(); i != splitter.end(); ++i)
+        rec.set_from_string(i->c_str());
+}
+
+Record record_from_string(const std::string& s)
+{
+    Record res;
+    set_record_from_string(res, s);
+    return res;
 }
 
 }

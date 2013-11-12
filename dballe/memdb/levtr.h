@@ -61,6 +61,8 @@ public:
 
     /// Query levtrs returning the IDs
     void query(const Record& rec, Results<LevTr>& res) const;
+
+    void dump(FILE* out) const;
 };
 
 }

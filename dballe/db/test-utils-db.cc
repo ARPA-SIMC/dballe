@@ -50,17 +50,6 @@ OverrideTestDBFormat::~OverrideTestDBFormat()
     DB::set_default_format(old_format);
 }
 
-namespace {
-// Set a record from a ", "-separated string of assignments
-void set_record_from_string(Record& rec, const std::string& s)
-{
-     str::Split splitter(", ", s);
-     for (str::Split::const_iterator i = splitter.begin(); i != splitter.end(); ++i)
-         rec.set_from_string(i->c_str());
-}
-}
-
-
 void TestStation::set_latlonident_into(Record& rec) const
 {
     rec.set(DBA_KEY_LAT, lat);

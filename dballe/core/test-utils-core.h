@@ -324,6 +324,10 @@ struct ActualRecord : public wibble::tests::Actual<const dballe::Record&>
     TestRecordVarsEqual vars_equal(const Record& expected) { return TestRecordVarsEqual(this->actual, expected); }
 };
 
+// Set a record from a ", "-separated string of assignments
+void set_record_from_string(Record& rec, const std::string& s);
+Record record_from_string(const std::string& s);
+
 }
 }
 
