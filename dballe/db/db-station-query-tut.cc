@@ -66,6 +66,7 @@ struct db_tests_query : public db_test
         rec2.data.set(Level(10, 11, 15, 22));
         rec2.data.set(Trange(20, 111, 122));
         rec2.data.set(WR_VAR(0, 12, 101), 300.0);
+        rec2.data.set(WR_VAR(0, 12, 103), 298.0);
 
         wruntest(rec1.insert, *db, true);
         wruntest(rec2.insert, *db, true);
@@ -153,6 +154,15 @@ template<> template<> void to::test<6>()
     wassert(actual(db).try_station_query("ana_filter=B07030>50", 1));
     wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
     wassert(actual(db).try_station_query("ana_filter=50<=B07030<=100", 2));
+}
+
+template<> template<> void to::test<7>()
+{
+    wassert(actual(db).try_station_query("var=B12101", 2));
+    wassert(actual(db).try_station_query("var=B12103", 1));
+    wassert(actual(db).try_station_query("varlist=B12101", 2));
+    wassert(actual(db).try_station_query("varlist=B12103", 1));
+    wassert(actual(db).try_station_query("varlist=B12101,B12103", 2));
 }
 
 }

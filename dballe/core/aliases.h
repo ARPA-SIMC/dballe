@@ -1,7 +1,7 @@
 /*
  * wreport/aliases - Aliases for commonly used variable codes
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
  */
 
 #include <wreport/varinfo.h>
+#include <string>
 
 namespace dballe {
 
@@ -37,7 +38,7 @@ namespace dballe {
  * @param alias
  *   The alias to resolve
  * @return
- *   The varcode corresponding to the aliase, or 0 if no variable has the given
+ *   The varcode corresponding to the alias, or 0 if no variable has the given
  *   alias.  See @ref vartable.h
  */
 wreport::Varcode varcode_alias_resolve(const char* alias);
@@ -54,6 +55,17 @@ wreport::Varcode varcode_alias_resolve(const char* alias);
  *   alias.  See @ref vartable.h
  */
 wreport::Varcode varcode_alias_resolve_substring(const char* alias, int len);
+
+/**
+ * Resolve a variable alias.
+ *
+ * @param alias
+ *   The alias to resolve
+ * @return
+ *   The varcode corresponding to the alias, or 0 if no variable has the given
+ *   alias.  See @ref vartable.h
+ */
+wreport::Varcode varcode_alias_resolve(const std::string& alias);
 
 /**
  * Look for the aliase for a Varcode.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,22 +20,24 @@
 #include "db/test-utils-db.h"
 #include "db/querybuf.h"
 
+using namespace wibble::tests;
+using namespace wreport;
 using namespace dballe;
 using namespace std;
 
 namespace tut {
 
-struct querybuf_shar
+struct db_querybuf_shar
 {
-        querybuf_shar()
+        db_querybuf_shar()
         {
         }
 
-        ~querybuf_shar()
+        ~db_querybuf_shar()
         {
         }
 };
-TESTGRP(querybuf);
+TESTGRP(db_querybuf);
 
 /* Test querybuf */
 template<> template<>
@@ -70,6 +72,15 @@ void to::test<1>()
         buf.append_list("2");
         buf.append_listf("%d", 3);
         ensure_equals(buf, "1, 2, 3");
+}
+
+/* Test querybuf */
+template<> template<>
+void to::test<2>()
+{
+    Querybuf buf(50);
+    buf.append_varlist("B12101,B12103,block");
+    wassert(actual((string)buf) == "3173,3175,257");
 }
 
 }

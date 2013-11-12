@@ -1,7 +1,7 @@
 /*
  * db/querybuf - Buffer used to build SQL queries
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,6 +87,12 @@ struct Querybuf : public std::string
 	 *   The string to append
 	 */
 	void append_listf(const char* fmt, ...) __attribute__((format(printf, 2, 3)));
+
+    /**
+     * Append a comma-separated list of varcodes parsed from a varlist=B12101,B12013
+     * query parameter
+     */
+    void append_varlist(const std::string& varlist);
 };
 
 } // namespace dballe

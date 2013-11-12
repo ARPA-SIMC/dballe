@@ -1,7 +1,7 @@
 /*
  * db/querybuf - Buffer used to build SQL queries
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,10 @@
 #include <stdarg.h>
 #include <string.h>
 #include "dballe/core/vasprintf.h"
+#include "dballe/core/var.h"
 
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
 
@@ -89,6 +91,27 @@ void Querybuf::append_listf(const char* fmt, ...)
 	free(buf);
 
 	va_end(ap);
+}
+
+void Querybuf::append_varlist(const std::string& varlist)
+{
+    size_t pos = 0;
+    while (true)
+    {
+        size_t end = varlist.find(',', pos);
+        Varcode code;
+        if (end == string::npos)
+            code = resolve_varcode_safe(varlist.substr(pos));
+        else
+            code = resolve_varcode_safe(varlist.substr(pos, end - pos));
+        if (pos == 0)
+            appendf("%d", code);
+        else
+            appendf(",%d", code);
+        if (end == string::npos)
+            break;
+        pos = end + 1;
+    }
 }
 
 }

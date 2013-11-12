@@ -338,6 +338,22 @@ bool StationQueryBuilder::build_where()
     // Add pseudoana-specific where parts
     has_where |= add_pa_where("s");
 
+    if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
+    {
+        sql_where.append_listf("EXISTS(SELECT id FROM data s_stvar"
+                               " WHERE s_stvar.id_station=s.id AND s_stvar.id_lev_tr!=-1"
+                               "   AND s_stvar.id_var=%d)",
+                               descriptor_code(val));
+        has_where = true;
+    } else if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST)) {
+        sql_where.append_listf("EXISTS(SELECT id FROM data s_stvar"
+                               " WHERE s_stvar.id_station=s.id AND s_stvar.id_lev_tr!=-1"
+                               "   AND s_stvar.id_var IN (");
+        sql_where.append_varlist(val);
+        sql_where.append("))");
+        has_where = true;
+    }
+
     return has_where;
 }
 
@@ -616,17 +632,8 @@ bool QueryBuilder::add_varcode_where(const char* tbl)
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
     {
-        size_t pos;
-        size_t len;
         sql_where.append_listf("%s.id_var IN (", tbl);
-        for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-        {
-            Varcode code = WR_STRING_TO_VAR(val + pos + 1);
-            if (pos == 0)
-                sql_where.appendf("%d", code);
-            else
-                sql_where.appendf(",%d", code);
-        }
+        sql_where.append_varlist(val);
         sql_where.append(")");
         TRACE("found blist: adding AND %s.id_var IN (%s)\n", tbl, val);
         found = true;

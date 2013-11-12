@@ -49,6 +49,9 @@ wreport::Varcode resolve_varcode(const char* name);
 /// Resolve a varcode name to a varcode proper, performing careful validation
 wreport::Varcode resolve_varcode_safe(const char* name);
 
+/// Resolve a varcode name to a varcode proper, performing careful validation
+wreport::Varcode resolve_varcode_safe(const std::string& name);
+
 /// Create a new Var, from the local B table, with undefined value
 static inline wreport::Var var(wreport::Varcode code) { return wreport::Var(varinfo(code)); }
 

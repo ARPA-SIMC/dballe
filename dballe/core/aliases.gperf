@@ -86,6 +86,15 @@ Varcode varcode_alias_resolve_substring(const char* alias, int len)
 		return res->var;
 }
 
+wreport::Varcode varcode_alias_resolve(const std::string& alias)
+{
+	struct aliasdef* res = VarcodeAliases::find(alias.data(), alias.size());
+	if (res == NULL)
+		return 0;
+	else
+		return res->var;
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
