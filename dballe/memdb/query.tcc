@@ -150,4 +150,5 @@ void Strategy<T>::activate(Results<T>& res) const
 }
 }
 
+#include "dballe/core/stlutils.tcc"
 #endif

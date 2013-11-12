@@ -55,6 +55,84 @@ template<> template<> void to::test<1>()
     wassert(actual(i == intersection.end()).istrue());
 }
 
+// Test Intersection
+template<> template<> void to::test<2>()
+{
+    vector<int> a;
+    a.push_back(1);
+    vector<int> b;
+    b.push_back(1);
+
+    Intersection<vector<int>::const_iterator> intersection;
+    intersection.add(a.begin(), a.end());
+    intersection.add(b.begin(), b.end());
+
+    Intersection<vector<int>::const_iterator>::const_iterator i = intersection.begin();
+    wassert(actual(i != intersection.end()).istrue());
+    wassert(actual(*i) == 1);
+    ++i;
+    wassert(actual(i == intersection.end()).istrue());
 }
 
+// Test Union
+template<> template<> void to::test<3>()
+{
+    vector<int> a;
+    vector<int> b;
 
+    Union<vector<int>::const_iterator> ab;
+    ab.add(a.begin(), a.end());
+    ab.add(b.begin(), b.end());
+
+    Union<vector<int>::const_iterator>::const_iterator i = ab.begin();
+    wassert(actual(i == ab.end()).istrue());
+}
+
+// Test Union
+template<> template<> void to::test<4>()
+{
+    vector<int> a;
+    a.push_back(1);
+    vector<int> b;
+
+    Union<vector<int>::const_iterator> ab;
+    ab.add(a.begin(), a.end());
+    ab.add(b.begin(), b.end());
+
+    Union<vector<int>::const_iterator>::const_iterator i = ab.begin();
+    wassert(actual(i != ab.end()).istrue());
+    wassert(actual(*i) == 1);
+    ++i;
+    wassert(actual(i == ab.end()).istrue());
+}
+
+// Test Union
+template<> template<> void to::test<5>()
+{
+    vector<int> a;
+    a.push_back(1);
+    a.push_back(2);
+    vector<int> b;
+    b.push_back(2);
+    b.push_back(3);
+
+    Union<vector<int>::const_iterator> ab;
+    ab.add(a.begin(), a.end());
+    ab.add(b.begin(), b.end());
+
+    Union<vector<int>::const_iterator>::const_iterator i = ab.begin();
+    wassert(actual(i != ab.end()).istrue());
+    wassert(actual(*i) == 1);
+    ++i;
+    wassert(actual(i != ab.end()).istrue());
+    wassert(actual(*i) == 2);
+    ++i;
+    wassert(actual(i != ab.end()).istrue());
+    wassert(actual(*i) == 3);
+    ++i;
+    wassert(actual(i == ab.end()).istrue());
+}
+
+}
+
+#include "stlutils.tcc"

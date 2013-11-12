@@ -52,3 +52,5 @@ template class Index<Date>;
 
 }
 }
+
+#include "dballe/core/stlutils.tcc"
