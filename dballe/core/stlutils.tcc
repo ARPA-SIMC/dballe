@@ -23,6 +23,86 @@
 
 namespace dballe {
 namespace stl {
+
+namespace stlutils {
+
+template<typename ITER>
+struct SequenceIters : public Sequence<typename ITER::value_type>
+{
+    ITER begin;
+    ITER end;
+
+    SequenceIters(const ITER& begin, const ITER& end)
+        : begin(begin), end(end) {}
+
+    virtual bool valid() const { return begin != end; }
+    virtual const typename ITER::value_type& get() const { return *begin; }
+    virtual void next() { ++begin; }
+};
+
+template<typename T>
+struct SequenceUnion : public Sequence<T>
+{
+    Union<T> sequence_union;
+    typename Union<T>::const_iterator begin;
+    typename Union<T>::const_iterator end;
+
+    SequenceUnion(std::auto_ptr< Sequences<T> >& sequences)
+        : begin(sequence_union.begin(sequences)), end(sequence_union.end()) {}
+
+    virtual bool valid() const { return begin != end; }
+    virtual const T& get() const { return *begin; }
+    virtual void next() { ++begin; }
+};
+
+template<typename T>
+struct SequenceIntersection : public Sequence<T>
+{
+    Intersection<T> sequence_intersection;
+    typename Intersection<T>::const_iterator begin;
+    typename Intersection<T>::const_iterator end;
+
+    SequenceIntersection(std::auto_ptr< Sequences<T> >& sequences)
+        : begin(sequence_intersection.begin(sequences)), end(sequence_intersection.end()) {}
+
+    virtual bool valid() const { return begin != end; }
+    virtual const T& get() const { return *begin; }
+    virtual void next() { ++begin; }
+};
+
+} // back to dballe::stl
+
+
+template<typename T> template<typename ITER>
+void Sequences<T>::add(const ITER& begin, const ITER& end)
+{
+    this->push_back(new stlutils::SequenceIters<ITER>(begin, end));
+}
+
+template<typename T> template<typename C>
+void Sequences<T>::add(const C& container)
+{
+    this->push_back(new stlutils::SequenceIters<typename C::const_iterator>(container.begin(), container.end()));
+}
+
+template<typename T>
+void Sequences<T>::add(std::auto_ptr< stlutils::Sequence<T> >& sequence)
+{
+    this->push_back(sequence.release());
+}
+
+template<typename T>
+void Sequences<T>::add_union(std::auto_ptr< Sequences<T> >& sequences)
+{
+    this->push_back(new stlutils::SequenceUnion<T>(sequences));
+}
+
+template<typename T>
+void Sequences<T>::add_intersection(std::auto_ptr< Sequences<T> >& sequences)
+{
+    this->push_back(new stlutils::SequenceIntersection<T>(sequences));
+}
+
 namespace stlutils {
 
 template<typename T>

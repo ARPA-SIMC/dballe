@@ -180,28 +180,34 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
     {
         trace_query("Adding selected stations to strategy\n");
         bool found = false;
+        auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
         for (Results<Station>::const_iterator i = stations.begin(); i != stations.end(); ++i)
-            found |= strategy.add(by_station, &*i);
+            found |= by_station.search(&*i, *sequences);
         if (!found)
         {
             trace_query(" no matching stations found, setting empty result\n");
             res.set_to_empty();
             return;
         }
+        // OR the results together into a single sequence
+        strategy.add_union(sequences);
     }
 
     if (!levtrs.is_select_all())
     {
         trace_query("Adding selected levtrs to strategy\n");
         bool found = false;
+        auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
         for (Results<LevTr>::const_iterator i = levtrs.begin(); i != levtrs.end(); ++i)
-            found |= strategy.add(by_levtr, &*i);
+            found |= by_levtr.search(&*i, *sequences);
         if (!found)
         {
             trace_query(" no matching levtrs found, setting empty result\n");
             res.set_to_empty();
             return;
         }
+        // OR the results together into a single sequence
+        strategy.add_union(sequences);
     }
 
     int mind[6], maxd[6];

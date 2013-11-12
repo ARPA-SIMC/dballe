@@ -25,6 +25,9 @@
 #include "query.h"
 #include "dballe/core/stlutils.h"
 #include <algorithm>
+#ifdef TRACE_QUERY
+#include <cstdio>
+#endif
 
 namespace dballe {
 namespace memdb {
@@ -121,6 +124,14 @@ void FilterBuilder<T>::add(Match<T>* f)
 }
 
 template<typename T>
+void Strategy<T>::add_union(std::auto_ptr< stl::Sequences<size_t> >& seq)
+{
+    if (!others_to_intersect)
+        others_to_intersect = new stl::Sequences<size_t>;
+    others_to_intersect->add_union(seq);
+}
+
+template<typename T>
 void Strategy<T>::add(const Positions& p)
 {
     if (!indices)
@@ -138,7 +149,6 @@ bool Strategy<T>::add(const Index<K>& index, const K& val)
         return false;
     }
     trace_query("Adding positions from index lookup: found %zu elements\n", i->second.size());
-    i->second.dump(stderr);
     this->add(i->second);
     return true;
 }
@@ -159,26 +169,42 @@ bool Strategy<T>::add(const Index<K>& index, const K& min, const K& max)
 }
 
 template<typename T>
-void Strategy<T>::activate(Results<T>& res) const
+void Strategy<T>::activate(Results<T>& res)
 {
-    if (indices)
+    if (!others_to_intersect)
     {
-        if (filter.get())
+        if (indices)
         {
-            trace_query("Activating strategy with intersection and filter\n");
-            res.intersect(indices->begin(), indices->end(), match::idx2values(res.values, *filter));
+            if (filter.get())
+            {
+                trace_query("Activating strategy with intersection and filter\n");
+                res.intersect(indices->begin(), indices->end(), match::idx2values(res.values, *filter));
+            } else {
+                trace_query("Activating strategy with intersection only\n");
+                res.intersect(indices->begin(), indices->end());
+            }
         } else {
-            trace_query("Activating strategy with intersection only\n");
-            res.intersect(indices->begin(), indices->end());
+            if (filter.get())
+            {
+                trace_query("Activating strategy with filter only\n");
+                res.intersect(res.values.index_begin(), res.values.index_end(), match::idx2values(res.values, *filter));
+            } else {
+                // Nothing to do: we don't filter on any constraint, so we just leave res as it is
+                trace_query("Activating strategy leaving results as it is\n");
+            }
         }
     } else {
+        if (indices)
+            others_to_intersect->add(indices->begin(), indices->end());
+        auto_ptr< stl::Sequences<size_t> > sequences(others_to_intersect);
+        others_to_intersect = 0;
+        stl::Intersection<size_t> intersection;
         if (filter.get())
         {
             trace_query("Activating strategy with filter only\n");
-            res.intersect(res.values.index_begin(), res.values.index_end(), match::idx2values(res.values, *filter));
+            res.intersect(intersection.begin(sequences), intersection.end(), match::idx2values(res.values, *filter));
         } else {
-            // Nothing to do: we don't filter on any constraint, so we just leave res as it is
-            trace_query("Activating strategy leaving results as it is\n");
+            res.intersect(intersection.begin(sequences), intersection.end());
         }
     }
 }

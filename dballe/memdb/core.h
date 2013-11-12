@@ -32,6 +32,7 @@ namespace dballe {
 
 namespace stl {
 template<typename T> class SetIntersection;
+template<typename T> class Sequences;
 }
 
 namespace memdb {
@@ -87,6 +88,13 @@ struct Index : public std::map<T, Positions>
      * @returns false if el was not found; it leaves out untouched in that case
      */
     bool search(const T& el, stl::SetIntersection<size_t>& out) const;
+
+    /**
+     * Lookup all positions for a value, appending the results to a Sequences
+     *
+     * @returns false if el was not found; it leaves out untouched in that case
+     */
+    bool search(const T& el, stl::Sequences<size_t>& out) const;
 
     void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, BaseResults& res) const;
     void query(const const_iterator& begin, const const_iterator& end, BaseResults& res) const;

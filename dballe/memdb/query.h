@@ -22,18 +22,16 @@
 #ifndef DBA_MEMDB_QUERY_H
 #define DBA_MEMDB_QUERY_H
 
+#include <dballe/core/stlutils.h>
 #include <dballe/memdb/core.h>
 #include <vector>
+#include <memory>
 #include <cstddef>
 
-//#define TRACE_QUERY
+// #define TRACE_QUERY
 
 
 namespace dballe {
-
-namespace stl {
-template<typename T> struct SetIntersection;
-}
 
 namespace memdb {
 template<typename T> struct ValueStorage;
@@ -271,14 +269,18 @@ struct FilterBuilder
 template<typename T>
 struct Strategy
 {
+    stl::Sequences<size_t>* others_to_intersect;
     stl::SetIntersection<size_t>* indices;
     FilterBuilder<T> filter;
 
-    Strategy() : indices(0) {}
+    Strategy() : others_to_intersect(0), indices(0) {}
     ~Strategy()
     {
+        if (others_to_intersect) delete others_to_intersect;
         if (indices) delete indices;
     }
+
+    void add_union(std::auto_ptr< stl::Sequences<size_t> >& seq);
 
     void add(const Positions& p);
 
@@ -317,7 +319,12 @@ struct Strategy
         filter.add(f);
     }
 
-    void activate(Results<T>& res) const;
+    /**
+     * Send results to res.
+     *
+     * It empties all sequences, so it can only be used once.
+     */
+    void activate(Results<T>& res);
 
 private:
     Strategy(const Strategy<T>&);

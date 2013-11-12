@@ -40,22 +40,9 @@ struct Sequence
     virtual void next() = 0;
 };
 
-template<typename ITER>
-struct IterSequence : public Sequence<typename ITER::value_type>
-{
-    ITER begin;
-    ITER end;
-
-    IterSequence(const ITER& begin, const ITER& end)
-        : begin(begin), end(end) {}
-
-    virtual bool valid() const { return begin != end; }
-    virtual const typename ITER::value_type& get() const { return *begin; }
-    virtual void next() { ++begin; }
-};
-
 } // back to dballe::stl
 
+/// List of ranges
 template<typename T>
 struct Sequences : public std::vector<stlutils::Sequence<T>*>
 {
@@ -69,17 +56,21 @@ struct Sequences : public std::vector<stlutils::Sequence<T>*>
             delete *i;
     }
 
+    // Add a begin-end range
     template<typename ITER>
-    void add(const ITER& begin, const ITER& end)
-    {
-        this->push_back(new stlutils::IterSequence<ITER>(begin, end));
-    }
+    void add(const ITER& begin, const ITER& end);
 
+    // Add a container's begin()-end() range
     template<typename C>
-    void add(const C& container)
-    {
-        this->push_back(new stlutils::IterSequence<typename C::const_iterator>(container.begin(), container.end()));
-    }
+    void add(const C& container);
+
+    void add(std::auto_ptr< stlutils::Sequence<T> >& sequence);
+
+    // Add the union of the given sequences
+    void add_union(std::auto_ptr< Sequences<T> >& sequences);
+
+    // Add the union of the given sequences
+    void add_intersection(std::auto_ptr< Sequences<T> >& sequences);
 
 private:
     Sequences(const Sequences&);
@@ -311,6 +302,7 @@ public:
         return const_iterator();
     }
 };
+
 
 }
 }

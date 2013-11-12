@@ -33,6 +33,17 @@ bool Index<T>::search(const T& el, stl::SetIntersection<size_t>& out) const
     return true;
 }
 
+template<typename T>
+bool Index<T>::search(const T& el, stl::Sequences<size_t>& out) const
+{
+    typename std::map<T, Positions>::const_iterator i = this->find(el);
+    if (i == this->end())
+        return false;
+
+    out.add(i->second);
+    return true;
+}
+
 void Positions::dump(FILE* out) const
 {
     for (const_iterator i = begin(); i != end(); ++i)
