@@ -152,7 +152,7 @@ then
 fi
 
 dnl Check for wreport
-PKG_CHECK_MODULES(WREPORT,libwreport >= 2.5)
+PKG_CHECK_MODULES(WREPORT,libwreport >= 2.10)
 
 dnl Check for unixodbc
 have_odbc=yes
