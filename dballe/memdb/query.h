@@ -283,26 +283,10 @@ struct Strategy
     void add(const Positions& p);
 
     template<typename K>
-    bool add(const Index<K>& index, const K& val)
-    {
-        typename Index<K>::const_iterator i = index.find(val);
-        if (i == index.end()) return false;
-        this->add(i->second);
-        return true;
-    }
+    bool add(const Index<K>& index, const K& val);
 
     template<typename K>
-    bool add(const Index<K>& index, const K& min, const K& max)
-    {
-        bool res = false;
-        for (typename Index<K>::const_iterator i = index.lower_bound(min);
-                i != index.upper_bound(max); ++i)
-        {
-            this->add(i->second);
-            res = true;
-        }
-        return res;
-    }
+    bool add(const Index<K>& index, const K& min, const K& max);
 
     template<typename K>
     bool add_since(const Index<K>& index, const typename Index<K>::const_iterator begin)

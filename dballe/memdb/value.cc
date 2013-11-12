@@ -286,7 +286,7 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
     }
 
     strategy.activate(res);
-
+    trace_query("Strategy activated, %zu results\n", res.size());
 }
 
 void Values::dump(FILE* out) const

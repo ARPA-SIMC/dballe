@@ -128,20 +128,58 @@ void Strategy<T>::add(const Positions& p)
     indices->add(p);
 }
 
+template<typename T> template<typename K>
+bool Strategy<T>::add(const Index<K>& index, const K& val)
+{
+    typename Index<K>::const_iterator i = index.find(val);
+    if (i == index.end())
+    {
+        trace_query("Adding positions from index lookup: element not found\n");
+        return false;
+    }
+    trace_query("Adding positions from index lookup: found %zu elements\n", i->second.size());
+    i->second.dump(stderr);
+    this->add(i->second);
+    return true;
+}
+
+template<typename T> template<typename K>
+bool Strategy<T>::add(const Index<K>& index, const K& min, const K& max)
+{
+    bool res = false;
+    for (typename Index<K>::const_iterator i = index.lower_bound(min);
+            i != index.upper_bound(max); ++i)
+    {
+        trace_query("Adding positions from index lookup: found %zu elements\n", i->second.size());
+        this->add(i->second);
+        res = true;
+    }
+    if (!res) trace_query("Adding positions from index lookup: no element not found\n");
+    return res;
+}
+
 template<typename T>
 void Strategy<T>::activate(Results<T>& res) const
 {
     if (indices)
     {
         if (filter.get())
+        {
+            trace_query("Activating strategy with intersection and filter\n");
             res.intersect(indices->begin(), indices->end(), match::idx2values(res.values, *filter));
-        else
+        } else {
+            trace_query("Activating strategy with intersection only\n");
             res.intersect(indices->begin(), indices->end());
+        }
     } else {
         if (filter.get())
+        {
+            trace_query("Activating strategy with filter only\n");
             res.intersect(res.values.index_begin(), res.values.index_end(), match::idx2values(res.values, *filter));
-        else
-            ; // Nothing to do: we don't filter on any constraint, so we just leave res as it is
+        } else {
+            // Nothing to do: we don't filter on any constraint, so we just leave res as it is
+            trace_query("Activating strategy leaving results as it is\n");
+        }
     }
 }
 
