@@ -236,7 +236,6 @@ dist_noinst_HEADERS = \
 	msg/test-utils-lua.h \
 	db/test-utils-db.h \
 	db/db-tut.h \
-	db/db-export-tut.h \
 	simple/dbapi-tut.h
 
 tut_test_SOURCES = \
@@ -281,7 +280,6 @@ tut_test_SOURCES = \
 	db/db-mem-tut.cc \
 	db/db-import-tut.cc \
 	db/db-export-tut.cc \
-	db/db-export-mem-tut.cc \
 	db/mem/repinfo-tut.cc \
 	db/mem/db-tut.cc \
 	simple/msgapi-tut.cc \
@@ -299,8 +297,6 @@ tut_test_SOURCES += \
 	db/tests/internals.cc \
 	db/db-v5-tut.cc \
 	db/db-v6-tut.cc \
-	db/db-export-v5-tut.cc \
-	db/db-export-v6-tut.cc \
 	db/v5/tests/repinfo.cc \
 	db/v5/tests/station.cc \
 	db/v5/tests/context.cc \

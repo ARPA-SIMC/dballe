@@ -17,68 +17,70 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef TUT_TEST_BODY
-
-#include "db/db-export-tut.h"
+#include "config.h"
+#include "db/test-utils-db.h"
 #include "db/db.h"
 #include "core/record.h"
 
 using namespace dballe;
+using namespace dballe::db;
 using namespace wreport;
+using namespace wibble::tests;
 using namespace std;
 
-namespace dballe {
-namespace tests {
-
-void db_export_tests::populate_database()
-{
-    // Insert some data
-    Record rec;
-    rec.set(DBA_KEY_LAT, 12.34560);
-    rec.set(DBA_KEY_LON, 76.54321);
-    rec.set(DBA_KEY_MOBILE, 0);
-
-    rec.set(DBA_KEY_YEAR, 1945);
-    rec.set(DBA_KEY_MONTH, 4);
-    rec.set(DBA_KEY_DAY, 25);
-    rec.set(DBA_KEY_HOUR, 8);
-    rec.set(DBA_KEY_MIN, 0);
-
-    rec.set(DBA_KEY_LEVELTYPE1, 1);
-    rec.set(DBA_KEY_L1, 2);
-    rec.set(DBA_KEY_LEVELTYPE2, 0);
-    rec.set(DBA_KEY_L2, 3);
-    rec.set(DBA_KEY_PINDICATOR, 4);
-    rec.set(DBA_KEY_P1, 5);
-    rec.set(DBA_KEY_P2, 6);
-
-    rec.set(DBA_KEY_REP_MEMO, "synop");
-
-    rec.set(WR_VAR(0, 1, 12), 500);
-
-    db->insert(rec, false, true);
-
-    rec.unset(DBA_KEY_ANA_ID);
-    rec.unset(DBA_KEY_CONTEXT_ID);
-    rec.set(DBA_KEY_DAY, 26);
-    rec.set(WR_VAR(0, 1, 12), 400);
-    db->insert(rec, false, true);
-
-    rec.unset(DBA_KEY_ANA_ID);
-    rec.unset(DBA_KEY_CONTEXT_ID);
-    rec.set(DBA_KEY_MOBILE, 1);
-    rec.set(DBA_KEY_IDENT, "ciao");
-    rec.set(WR_VAR(0, 1, 12), 300);
-    db->insert(rec, false, true);
-
-    rec.unset(DBA_KEY_ANA_ID);
-    rec.unset(DBA_KEY_CONTEXT_ID);
-    rec.set(DBA_KEY_REP_MEMO, "metar");
-    rec.set(WR_VAR(0, 1, 12), 200);
-    db->insert(rec, false, true);
-}
-
 namespace {
+
+struct db_export : public dballe::tests::db_test
+{
+    void populate_database()
+    {
+        // Insert some data
+        Record rec;
+        rec.set(DBA_KEY_LAT, 12.34560);
+        rec.set(DBA_KEY_LON, 76.54321);
+        rec.set(DBA_KEY_MOBILE, 0);
+
+        rec.set(DBA_KEY_YEAR, 1945);
+        rec.set(DBA_KEY_MONTH, 4);
+        rec.set(DBA_KEY_DAY, 25);
+        rec.set(DBA_KEY_HOUR, 8);
+        rec.set(DBA_KEY_MIN, 0);
+
+        rec.set(DBA_KEY_LEVELTYPE1, 1);
+        rec.set(DBA_KEY_L1, 2);
+        rec.set(DBA_KEY_LEVELTYPE2, 0);
+        rec.set(DBA_KEY_L2, 3);
+        rec.set(DBA_KEY_PINDICATOR, 4);
+        rec.set(DBA_KEY_P1, 5);
+        rec.set(DBA_KEY_P2, 6);
+
+        rec.set(DBA_KEY_REP_MEMO, "synop");
+
+        rec.set(WR_VAR(0, 1, 12), 500);
+
+        db->insert(rec, false, true);
+
+        rec.unset(DBA_KEY_ANA_ID);
+        rec.unset(DBA_KEY_CONTEXT_ID);
+        rec.set(DBA_KEY_DAY, 26);
+        rec.set(WR_VAR(0, 1, 12), 400);
+        db->insert(rec, false, true);
+
+        rec.unset(DBA_KEY_ANA_ID);
+        rec.unset(DBA_KEY_CONTEXT_ID);
+        rec.set(DBA_KEY_MOBILE, 1);
+        rec.set(DBA_KEY_IDENT, "ciao");
+        rec.set(WR_VAR(0, 1, 12), 300);
+        db->insert(rec, false, true);
+
+        rec.unset(DBA_KEY_ANA_ID);
+        rec.unset(DBA_KEY_CONTEXT_ID);
+        rec.set(DBA_KEY_REP_MEMO, "metar");
+        rec.set(WR_VAR(0, 1, 12), 200);
+        db->insert(rec, false, true);
+    }
+};
+
 struct MsgCollector : public vector<Msg*>, public MsgConsumer
 {
     ~MsgCollector()
@@ -91,10 +93,19 @@ struct MsgCollector : public vector<Msg*>, public MsgConsumer
         push_back(msg.release());
     }
 };
+
 }
 
-void db_export_tests::test_simple_export()
+namespace tut {
+
+using namespace dballe::tests;
+typedef db_tg<db_export> tg;
+typedef tg::object to;
+
+
+template<> template<> void to::test<1>()
 {
+    // Simple export
     populate_database();
 
     // Put some data in the database and check that it gets exported properly
@@ -158,7 +169,7 @@ void db_export_tests::test_simple_export()
 	ensure_var_equals(want_var(*msgs[3], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 200);
 }
 
-void db_export_tests::test_station_info_export()
+template<> template<> void to::test<2>()
 {
     // Text exporting of extra station information
 
@@ -205,13 +216,13 @@ void db_export_tests::test_station_info_export()
 }
 
 }
-}
 
-#else
+namespace {
 
-template<> template<> void to::test<1>() { test_simple_export(); }
-template<> template<> void to::test<2>() { test_station_info_export(); }
-
+tut::tg db_export_mem_tg("db_export_mem", MEM);
+#ifdef HAVE_ODBC
+tut::tg db_export_v5_tg("db_export_v5", V5);
+tut::tg db_export_v6_tg("db_export_v6", V6);
 #endif
 
-// vim:set ts=4 sw=4:
+}
