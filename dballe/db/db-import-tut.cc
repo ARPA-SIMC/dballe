@@ -17,10 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef TUT_TEST_BODY
-
-#include "db/db-import-tut.h"
-#include "db/db.h"
+#include "config.h"
+#include "db/test-utils-db.h"
 #include "msg/msgs.h"
 #include "msg/context.h"
 #include <wreport/notes.h>
@@ -32,8 +30,12 @@ using namespace wreport;
 using namespace wibble::tests;
 using namespace std;
 
-namespace dballe {
-namespace tests {
+namespace {
+
+struct db_import : public dballe::tests::db_test
+{
+    Record query;
+};
 
 struct MsgCollector : public vector<Msg*>, public MsgConsumer
 {
@@ -65,7 +67,16 @@ static void normalise_datetime(Msg& msg)
         msg.set_second(0, -1);
 }
 
-void db_import::test_crex()
+}
+
+namespace tut {
+
+using namespace dballe::tests;
+typedef db_tg<db_import> tg;
+typedef tg::object to;
+
+
+template<> template<> void to::test<1>()
 {
     // Test import/export with all CREX samples
     const char** files = dballe::tests::crex_files;
@@ -105,7 +116,7 @@ void db_import::test_crex()
     }
 }
 
-void db_import::test_bufr()
+template<> template<> void to::test<2>()
 {
     // Test import/export with all BUFR samples
 
@@ -141,7 +152,7 @@ void db_import::test_bufr()
     }
 }
 
-void db_import::test_aof()
+template<> template<> void to::test<3>()
 {
     // Test import/export with all AOF samples
     const char** files = dballe::tests::aof_files;
@@ -178,7 +189,7 @@ void db_import::test_aof()
     }
 }
 
-void db_import::test_multi()
+template<> template<> void to::test<4>()
 {
     // Check that multiple messages are correctly identified during export
 
@@ -221,7 +232,7 @@ void db_import::test_multi()
     ensure_equals(diffs, 0);
 }
 
-void db_import::test_auto_repinfo()
+template<> template<> void to::test<5>()
 {
     // Check automatic repinfo allocation
     std::auto_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
@@ -516,14 +527,13 @@ void to::test<8>()
 #endif
 
 }
-}
 
-#else
+namespace {
 
-template<> template<> void to::test<1>() { test_crex(); }
-template<> template<> void to::test<2>() { test_bufr(); }
-template<> template<> void to::test<3>() { test_aof(); }
-template<> template<> void to::test<4>() { test_multi(); }
-template<> template<> void to::test<5>() { test_auto_repinfo(); }
-
+tut::tg db_import_mem_tg("db_import_mem", MEM);
+#ifdef HAVE_ODBC
+tut::tg db_import_v5_tg("db_import_v5", V5);
+tut::tg db_import_v6_tg("db_import_v6", V6);
 #endif
+
+}
