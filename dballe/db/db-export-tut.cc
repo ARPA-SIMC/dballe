@@ -34,50 +34,41 @@ struct db_export : public dballe::tests::db_test
 {
     void populate_database()
     {
-        // Insert some data
-        Record rec;
-        rec.set(DBA_KEY_LAT, 12.34560);
-        rec.set(DBA_KEY_LON, 76.54321);
-        rec.set(DBA_KEY_MOBILE, 0);
+        using namespace dballe::tests;
 
-        rec.set(DBA_KEY_YEAR, 1945);
-        rec.set(DBA_KEY_MONTH, 4);
-        rec.set(DBA_KEY_DAY, 25);
-        rec.set(DBA_KEY_HOUR, 8);
-        rec.set(DBA_KEY_MIN, 0);
+        TestStation st1;
+        st1.lat = 12.34560;
+        st1.lon = 76.54321;
+        //st1.info["synop"]
 
-        rec.set(DBA_KEY_LEVELTYPE1, 1);
-        rec.set(DBA_KEY_L1, 2);
-        rec.set(DBA_KEY_LEVELTYPE2, 0);
-        rec.set(DBA_KEY_L2, 3);
-        rec.set(DBA_KEY_PINDICATOR, 4);
-        rec.set(DBA_KEY_P1, 5);
-        rec.set(DBA_KEY_P2, 6);
+        TestStation st2(st1);
+        st2.ident = "ciao";
 
-        rec.set(DBA_KEY_REP_MEMO, "synop");
+        TestRecord ds0;
+        ds0.station = st1;
+        ds0.data.set_datetime(1945, 4, 25, 8, 0);
+        ds0.data.set(Level(1, 2, 0, 3));
+        ds0.data.set(Trange(4, 5, 6));
+        ds0.data.set(DBA_KEY_REP_MEMO, "synop");
+        ds0.data.set(WR_VAR(0, 1, 12), 500);
 
-        rec.set(WR_VAR(0, 1, 12), 500);
+        TestRecord ds1(ds0);
+        ds1.data.set_datetime(1945, 4, 26, 8, 0);
+        ds1.data.set(WR_VAR(0, 1, 12), 400);
 
-        db->insert(rec, false, true);
+        TestRecord ds2(ds1);
+        ds2.station = st2;
+        ds2.data.set(WR_VAR(0, 1, 12), 300);
 
-        rec.unset(DBA_KEY_ANA_ID);
-        rec.unset(DBA_KEY_CONTEXT_ID);
-        rec.set(DBA_KEY_DAY, 26);
-        rec.set(WR_VAR(0, 1, 12), 400);
-        db->insert(rec, false, true);
+        TestRecord ds3(ds2);
+        ds3.station = st2;
+        ds3.data.set(DBA_KEY_REP_MEMO, "metar");
+        ds3.data.set(WR_VAR(0, 1, 12), 200);
 
-        rec.unset(DBA_KEY_ANA_ID);
-        rec.unset(DBA_KEY_CONTEXT_ID);
-        rec.set(DBA_KEY_MOBILE, 1);
-        rec.set(DBA_KEY_IDENT, "ciao");
-        rec.set(WR_VAR(0, 1, 12), 300);
-        db->insert(rec, false, true);
-
-        rec.unset(DBA_KEY_ANA_ID);
-        rec.unset(DBA_KEY_CONTEXT_ID);
-        rec.set(DBA_KEY_REP_MEMO, "metar");
-        rec.set(WR_VAR(0, 1, 12), 200);
-        db->insert(rec, false, true);
+        wruntest(ds0.insert, *db, false);
+        wruntest(ds1.insert, *db, false);
+        wruntest(ds2.insert, *db, false);
+        wruntest(ds3.insert, *db, false);
     }
 };
 
