@@ -148,6 +148,55 @@ public:
     typename ValueStorage<T>::index_iterator all_index_begin() const { return values.index_begin(); }
     typename ValueStorage<T>::index_iterator all_index_end() const { return values.index_end(); }
 
+    struct const_index_iterator : std::iterator<std::forward_iterator_tag, size_t>
+    {
+        AbstractIterator* iter;
+
+        const_index_iterator(AbstractIterator* iter) : iter(iter) {}
+        const_index_iterator(const const_index_iterator& i) : iter(i.iter ? i.iter->clone() : 0) {}
+        ~const_index_iterator() { if (iter) delete iter; }
+        const_index_iterator& operator=(const const_index_iterator& i)
+        {
+            if (iter != i.iter)
+            {
+                if (iter)
+                {
+                    delete iter;
+                    iter = 0;
+                }
+                if (i.iter)
+                    iter = i.iter->clone();
+            }
+            return *this;
+        }
+
+        const size_t operator*() const
+        {
+            return iter->get();
+        }
+        const_index_iterator& operator++()
+        {
+            if (!iter->next())
+            {
+                delete iter;
+                iter = 0;
+            }
+            return *this;
+        }
+        bool operator==(const const_index_iterator& i) const
+        {
+            if (!iter && !i.iter) return true;
+            if (!iter || !i.iter) return false;
+            return iter->equals(i.iter);
+        }
+        bool operator!=(const const_index_iterator& i) const
+        {
+            if (!iter && !i.iter) return false;
+            if (!iter || !i.iter) return true;
+            return !iter->equals(i.iter);
+        }
+    };
+
     struct const_iterator : std::iterator<std::forward_iterator_tag, T>
     {
         const ValueStorage<T>* values;
@@ -221,6 +270,20 @@ public:
     const_iterator end() const
     {
         return const_iterator(values, 0);
+    }
+
+    const_index_iterator index_begin() const
+    {
+        if (select_all)
+        {
+            return const_index_iterator(make_abstract_iter(all_index_begin(), all_index_end()));
+        } else {
+            return const_index_iterator(make_abstract_iter(selected_index_begin(), selected_index_end()));
+        }
+    }
+    const_index_iterator index_end() const
+    {
+        return const_index_iterator(0);
     }
 };
 

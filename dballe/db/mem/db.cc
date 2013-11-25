@@ -245,8 +245,12 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
     Results<Value> res(memdb.values);
     memdb.query_data(query, res);
 
+    TRACE("export_msgs: %zd values found\n", res.size());
+
     // Sorted value IDs
-    priority_queue<size_t, vector<size_t>, CompareForExport> values(res.selected_index_begin(), res.selected_index_end(), CompareForExport(memdb.values));
+    priority_queue<size_t, vector<size_t>, CompareForExport> values(res.index_begin(), res.index_end(), CompareForExport(memdb.values));
+
+    TRACE("export_msgs: %zd values in priority queue\n", values.size());
 
     // Message being built
     auto_ptr<Msg> msg;
@@ -260,8 +264,8 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
         const Value* val = memdb.values[values.top()];
         TRACE("Got %zd %04d-%02d-%02d %02d:%02d:%02d B%02d%03d %d,%d, %d,%d %d,%d,%d %s\n",
                 val->station.id,
-                (int)val->datetime.year, (int)val->datetime.month, (int)val->datetime.day,
-                (int)val->datetime.hour, (int)val->datetime.minute, (int)val->datetime.second,
+                (int)val->datetime.date.year, (int)val->datetime.date.month, (int)val->datetime.date.day,
+                (int)val->datetime.time.hour, (int)val->datetime.time.minute, (int)val->datetime.time.second,
                 WR_VAR_X(val->var->code()), WR_VAR_Y(val->var->code()),
                 val->levtr.level.ltype1, val->levtr.level.l1, val->levtr.level.ltype2, val->levtr.level.l2,
                 val->levtr.trange.pind, val->levtr.trange.p1, val->levtr.trange.p2,
@@ -295,12 +299,12 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
             memdb.stationvalues.fill_msg(val->station, c_st);
 
             // Fill datetime
-            c_st.set_year(val->datetime.year);
-            c_st.set_month(val->datetime.month);
-            c_st.set_day(val->datetime.day);
-            c_st.set_hour(val->datetime.hour);
-            c_st.set_minute(val->datetime.minute);
-            c_st.set_second(val->datetime.second);
+            c_st.set_year(val->datetime.date.year);
+            c_st.set_month(val->datetime.date.month);
+            c_st.set_day(val->datetime.date.day);
+            c_st.set_hour(val->datetime.time.hour);
+            c_st.set_minute(val->datetime.time.minute);
+            c_st.set_second(val->datetime.time.second);
 
             // Update last value seen info
             old_val = val;

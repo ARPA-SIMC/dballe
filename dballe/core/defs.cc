@@ -65,6 +65,86 @@ Trange::Trange(const char* pind, const char* p1, const char* p2)
 {
 }
 
+bool Date::operator==(const Date& dt) const
+{
+    return year == dt.year && month == dt.month && day == dt.day;
+}
+
+bool Date::operator!=(const Date& dt) const
+{
+    return year != dt.year || month != dt.month || day != dt.day;
+}
+
+bool Date::operator<(const Date& dt) const
+{
+    if (year < dt.year) return true;
+    if (year > dt.year) return false;
+    if (month < dt.month) return true;
+    if (month > dt.month) return false;
+    return day < dt.day;
+}
+
+bool Date::operator>(const Date& dt) const
+{
+    if (year < dt.year) return false;
+    if (year > dt.year) return true;
+    if (month < dt.month) return false;
+    if (month > dt.month) return true;
+    return day > dt.day;
+}
+
+bool Time::operator==(const Time& dt) const
+{
+    return hour == dt.hour && minute == dt.minute && second == dt.second;
+}
+
+bool Time::operator!=(const Time& dt) const
+{
+    return hour != dt.hour || minute != dt.minute || second != dt.second;
+}
+
+bool Time::operator<(const Time& dt) const
+{
+    if (hour < dt.hour) return true;
+    if (hour > dt.hour) return false;
+    if (minute < dt.minute) return true;
+    if (minute > dt.minute) return false;
+    return second < dt.second;
+}
+
+bool Time::operator>(const Time& dt) const
+{
+    if (hour < dt.hour) return false;
+    if (hour > dt.hour) return true;
+    if (minute < dt.minute) return false;
+    if (minute > dt.minute) return true;
+    return second > dt.second;
+}
+
+bool Datetime::operator==(const Datetime& dt) const
+{
+    return date == dt.date && time == dt.time;
+}
+
+bool Datetime::operator!=(const Datetime& dt) const
+{
+    return date != dt.date || time != dt.time;
+}
+
+bool Datetime::operator<(const Datetime& dt) const
+{
+    if (date < dt.date) return true;
+    if (date > dt.date) return false;
+    return time < dt.time;
+}
+
+bool Datetime::operator>(const Datetime& dt) const
+{
+    if (date < dt.date) return false;
+    if (date > dt.date) return true;
+    return time > dt.time;
+}
+
 
 namespace {
 std::string fmtf( const char* f, ... )
@@ -337,14 +417,17 @@ std::ostream& operator<<(std::ostream& out, const Date& dt)
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Datetime& dt)
+std::ostream& operator<<(std::ostream& out, const Time& dt)
 {
-    out <<        setw(4) << setfill('0') << dt.year
-        << '-' << setw(2) << setfill('0') << (unsigned)dt.month
-        << '-' << setw(2) << setfill('0') << (unsigned)dt.day
-        << 'T' << setw(2) << setfill('0') << (unsigned)dt.hour
+    out <<        setw(2) << setfill('0') << (unsigned)dt.hour
         << ':' << setw(2) << setfill('0') << (unsigned)dt.minute
         << ':' << setw(2) << setfill('0') << (unsigned)dt.second;
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const Datetime& dt)
+{
+    out << dt.date << "T" << dt.time;
     return out;
 }
 

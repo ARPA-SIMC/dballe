@@ -217,102 +217,58 @@ struct Date
         : year(year), month(month), day(day)
     {
     }
+    Date(const Date& d) : year(d.year), month(d.month), day(d.day) {}
     Date(const int* val)
         : year(val[0]), month(val[1]), day(val[2])
     {
     }
 
-    bool operator<(const Date& dt) const
-    {
-        if (year < dt.year) return true;
-        if (year > dt.year) return false;
-        if (month < dt.month) return true;
-        if (month > dt.month) return false;
-        return day < dt.day;
-    }
-
-    bool operator>(const Date& dt) const
-    {
-        if (year < dt.year) return false;
-        if (year > dt.year) return true;
-        if (month < dt.month) return false;
-        if (month > dt.month) return true;
-        return day > dt.day;
-    }
-
-    bool operator==(const Date& dt) const
-    {
-        return year == dt.year && month == dt.month && day == dt.day;
-    }
-
-    bool operator!=(const Date& dt) const
-    {
-        return year != dt.year || month != dt.month || day != dt.day;
-    }
+    bool operator<(const Date& dt) const;
+    bool operator>(const Date& dt) const;
+    bool operator==(const Date& dt) const;
+    bool operator!=(const Date& dt) const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Date& dt);
 
-/// Simple datetime structure
-struct Datetime : public Date
+struct Time
 {
     unsigned char hour;
     unsigned char minute;
     unsigned char second;
 
+    Time(unsigned char hour=0, unsigned char minute=0, unsigned char second=0)
+        : hour(hour), minute(minute), second(second) {}
+    Time(const Time& d) : hour(d.hour), minute(d.minute), second(d.second) {}
+    Time(const int* val)
+        : hour(val[0]), minute(val[1]), second(val[2])
+    {
+    }
+
+    bool operator<(const Time& dt) const;
+    bool operator>(const Time& dt) const;
+    bool operator==(const Time& dt) const;
+    bool operator!=(const Time& dt) const;
+};
+
+std::ostream& operator<<(std::ostream& out, const Time& t);
+
+/// Simple datetime structure
+struct Datetime
+{
+    Date date;
+    Time time;
+
+    Datetime(const Date& date, const Time& time) : date(date), time(time) {}
     Datetime(unsigned short year, unsigned char month=1, unsigned char day=1,
              unsigned char hour=0, unsigned char minute=0, unsigned char second=0)
-        : Date(year, month, day), hour(hour), minute(minute), second(second)
-    {
-    }
-    Datetime(const int* val)
-        : Date(val[0], val[1], val[2]), hour(val[3]), minute(val[4]), second(val[5])
-    {
-    }
+        : date(year, month, day), time(hour, minute, second) {}
+    Datetime(const int* val) : date(val), time(val+3) {}
 
-    bool operator==(const Datetime& dt) const
-    {
-        if (!Date::operator==(dt)) return false;
-        return hour == dt.hour && minute == dt.minute && second == dt.second;
-    }
-
-    bool operator!=(const Datetime& dt) const
-    {
-        if (!Date::operator!=(dt)) return false;
-        return hour != dt.hour || minute != dt.minute || second != dt.second;
-    }
-
-    bool operator<(const Datetime& dt) const
-    {
-        if (year < dt.year) return true;
-        if (year > dt.year) return false;
-        if (month < dt.month) return true;
-        if (month > dt.month) return false;
-        if (day < dt.day) return true;
-        if (day > dt.day) return false;
-        if (hour < dt.hour) return true;
-        if (hour > dt.hour) return false;
-        if (minute < dt.minute) return true;
-        if (minute > dt.minute) return false;
-        return second < dt.second;
-
-    }
-
-    bool operator>(const Datetime& dt) const
-    {
-        if (year < dt.year) return false;
-        if (year > dt.year) return true;
-        if (month < dt.month) return false;
-        if (month > dt.month) return true;
-        if (day < dt.day) return false;
-        if (day > dt.day) return true;
-        if (hour < dt.hour) return false;
-        if (hour > dt.hour) return true;
-        if (minute < dt.minute) return false;
-        if (minute > dt.minute) return true;
-        return second > dt.second;
-
-    }
+    bool operator==(const Datetime& dt) const;
+    bool operator!=(const Datetime& dt) const;
+    bool operator<(const Datetime& dt) const;
+    bool operator>(const Datetime& dt) const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Datetime& dt);

@@ -41,7 +41,7 @@ size_t Values::insert(
         const Datetime& datetime, std::auto_ptr<Var> var, bool replace)
 {
     stl::SetIntersection<size_t> res;
-    if (by_station.search(&station, res) && by_levtr.search(&levtr, res) && by_date.search(datetime, res))
+    if (by_station.search(&station, res) && by_levtr.search(&levtr, res) && by_date.search(datetime.date, res))
         for (stl::SetIntersection<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
         {
             Value* v = (*this)[*i];
@@ -59,7 +59,7 @@ size_t Values::insert(
     // Index it
     by_station[&station].insert(pos);
     by_levtr[&levtr].insert(pos);
-    by_date[datetime].insert(pos);
+    by_date[datetime.date].insert(pos);
     // And return it
     return pos;
 
@@ -76,7 +76,7 @@ size_t Values::insert(
 bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& datetime, Varcode code)
 {
     stl::SetIntersection<size_t> res;
-    if (!by_station.search(&station, res) || !by_levtr.search(&levtr, res) || !by_date.search(datetime, res))
+    if (!by_station.search(&station, res) || !by_levtr.search(&levtr, res) || !by_date.search(datetime.date, res))
         return false;
 
     for (stl::SetIntersection<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
@@ -86,7 +86,7 @@ bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& 
         {
             by_station[&station].erase(*i);
             by_levtr[&levtr].erase(*i);
-            by_date[datetime].erase(*i);
+            by_date[datetime.date].erase(*i);
             value_remove(*i);
             return true;
         }

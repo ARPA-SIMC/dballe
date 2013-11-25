@@ -600,12 +600,12 @@ Datetime Record::get_datetime() const
 
 void Record::set(const Datetime& dt)
 {
-    set(DBA_KEY_YEAR,  (int)dt.year);
-    set(DBA_KEY_MONTH, (int)dt.month);
-    set(DBA_KEY_DAY,   (int)dt.day);
-    set(DBA_KEY_HOUR,  (int)dt.hour);
-    set(DBA_KEY_MIN,   (int)dt.minute);
-    set(DBA_KEY_SEC,   (int)dt.second);
+    set(DBA_KEY_YEAR,  (int)dt.date.year);
+    set(DBA_KEY_MONTH, (int)dt.date.month);
+    set(DBA_KEY_DAY,   (int)dt.date.day);
+    set(DBA_KEY_HOUR,  (int)dt.time.hour);
+    set(DBA_KEY_MIN,   (int)dt.time.minute);
+    set(DBA_KEY_SEC,   (int)dt.time.second);
 }
 
 void Record::set_datetime(int ye, int mo, int da, int ho, int mi, int se)

@@ -84,12 +84,15 @@ void to::test<5>()
     wassert(actual(Date(2013, 1, 1)) < Date(2014, 1, 1));
     wassert(actual(Date(2013, 1, 1)) < Date(2013, 2, 1));
     wassert(actual(Date(2013, 1, 1)) < Date(2013, 1, 2));
+    wassert(actual(Date(1945, 4, 25)) != Date(1945, 4, 26));
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2014, 1, 1, 0, 0, 0));
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 2, 1, 0, 0, 0));
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 2, 0, 0, 0));
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 1, 0, 0));
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 0, 1, 0));
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 0, 0, 1));
+    wassert(actual(Datetime(1945, 4, 25, 8, 0, 0)) != Datetime(1945, 4, 26, 8, 0, 0));
+
 }
 
 }
