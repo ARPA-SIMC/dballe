@@ -231,6 +231,15 @@ struct Date
         return day < dt.day;
     }
 
+    bool operator>(const Date& dt) const
+    {
+        if (year < dt.year) return false;
+        if (year > dt.year) return true;
+        if (month < dt.month) return false;
+        if (month > dt.month) return true;
+        return day > dt.day;
+    }
+
     bool operator==(const Date& dt) const
     {
         return year == dt.year && month == dt.month && day == dt.day;
@@ -271,6 +280,38 @@ struct Datetime : public Date
     {
         if (!Date::operator!=(dt)) return false;
         return hour != dt.hour || minute != dt.minute || second != dt.second;
+    }
+
+    bool operator<(const Datetime& dt) const
+    {
+        if (year < dt.year) return true;
+        if (year > dt.year) return false;
+        if (month < dt.month) return true;
+        if (month > dt.month) return false;
+        if (day < dt.day) return true;
+        if (day > dt.day) return false;
+        if (hour < dt.hour) return true;
+        if (hour > dt.hour) return false;
+        if (minute < dt.minute) return true;
+        if (minute > dt.minute) return false;
+        return second < dt.second;
+
+    }
+
+    bool operator>(const Datetime& dt) const
+    {
+        if (year < dt.year) return false;
+        if (year > dt.year) return true;
+        if (month < dt.month) return false;
+        if (month > dt.month) return true;
+        if (day < dt.day) return false;
+        if (day > dt.day) return true;
+        if (hour < dt.hour) return false;
+        if (hour > dt.hour) return true;
+        if (minute < dt.minute) return false;
+        if (minute > dt.minute) return true;
+        return second > dt.second;
+
     }
 };
 

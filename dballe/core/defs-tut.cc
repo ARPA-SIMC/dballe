@@ -77,6 +77,21 @@ void to::test<4>()
     wassert(actual(Coord(44.0, 11.0)) == Coord(44.0, 360.0+11.0));
 }
 
+// Test Date and Datetime
+template<> template<>
+void to::test<5>()
+{
+    wassert(actual(Date(2013, 1, 1)) < Date(2014, 1, 1));
+    wassert(actual(Date(2013, 1, 1)) < Date(2013, 2, 1));
+    wassert(actual(Date(2013, 1, 1)) < Date(2013, 1, 2));
+    wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2014, 1, 1, 0, 0, 0));
+    wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 2, 1, 0, 0, 0));
+    wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 2, 0, 0, 0));
+    wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 1, 0, 0));
+    wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 0, 1, 0));
+    wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 0, 0, 1));
+}
+
 }
 
 /* vim:set ts=4 sw=4: */
