@@ -29,6 +29,11 @@
 
 namespace dballe {
 struct Record;
+struct Msg;
+
+namespace msg {
+struct Context;
+}
 
 namespace memdb {
 template<typename T> struct Results;
@@ -53,6 +58,14 @@ struct Station
         : id(id), coords(coords), mobile(true), ident(ident), report(report) {}
     Station(size_t id, double lat, double lon, const std::string& ident, const std::string& report)
         : id(id), coords(lat, lon), mobile(true), ident(ident), report(report) {}
+
+    /**
+     * Fill lat, lon, report information, message type (from report) and identifier in msg.
+     *
+     * Return the station level in msg, so further changes to msg will not need
+     * to look it up again.
+     */
+    msg::Context& fill_msg(Msg& msg) const;
 };
 
 /// Storage and index for station information

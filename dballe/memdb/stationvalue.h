@@ -27,6 +27,11 @@
 #include <memory>
 
 namespace dballe {
+
+namespace msg {
+struct Context;
+}
+
 namespace memdb {
 
 struct Station;
@@ -77,6 +82,9 @@ public:
      * Returns true if found and removed, false if it was not found.
      */
     bool remove(const Station& station, wreport::Varcode code);
+
+    /// Fill a message context with all the variables for this station
+    void fill_msg(const Station& station, msg::Context& ctx) const;
 };
 
 }

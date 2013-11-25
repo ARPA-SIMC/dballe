@@ -214,7 +214,8 @@ template<> template<> void to::test<4>()
     query.clear();
     query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg1.type));
 
-    // Warning: this test used to fail on Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
+    // Warning: this test used to fail with older versions of MySQL.
+    // See http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
     MsgCollector msgs;
     db->export_msgs(query, msgs);
     ensure_equals(msgs.size(), 2u);

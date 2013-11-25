@@ -22,16 +22,16 @@
 #include "db.h"
 #include "cursor.h"
 #include "dballe/db/modifiers.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 #include <dballe/core/record.h>
 #include <dballe/core/defs.h>
 #include <dballe/memdb/query.h>
 #include <algorithm>
+#include <queue>
 
-#if 0
-#include <cstdio>
-#include <limits.h>
-#include <unistd.h>
-#endif
+//#define TRACE_SOURCE
+#include "dballe/core/trace.h"
 
 using namespace dballe::memdb;
 using namespace std;
@@ -216,9 +216,112 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
             repmemo);
 }
 
+namespace {
+
+struct CompareForExport
+{
+    const memdb::Values& values;
+    CompareForExport(const memdb::Values& values) : values(values) {}
+
+    // Return an inverse comparison, so that the priority queue gives us the
+    // smallest items first
+    bool operator() (const size_t& x, const size_t& y) const
+    {
+        const Value& vx = *values[x];
+        const Value& vy = *values[y];
+
+        // Compare station and report
+        if (vx.station.id < vy.station.id) return false;
+        if (vx.station.id > vy.station.id) return true;
+        // Compare datetime
+        return vx.datetime > vy.datetime;
+    }
+};
+
+}
+
 void DB::export_msgs(const Record& query, MsgConsumer& cons)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    Results<Value> res(memdb.values);
+    memdb.query_data(query, res);
+
+    // Sorted value IDs
+    priority_queue<size_t, vector<size_t>, CompareForExport> values(res.selected_index_begin(), res.selected_index_end(), CompareForExport(memdb.values));
+
+    // Message being built
+    auto_ptr<Msg> msg;
+
+    // Last value seen, used to detect when we can move on to the next message
+    const Value* old_val = 0;
+
+    // Iterate all results, sorted
+    for ( ; !values.empty(); values.pop())
+    {
+        const Value* val = memdb.values[values.top()];
+        TRACE("Got %zd %04d-%02d-%02d %02d:%02d:%02d B%02d%03d %d,%d, %d,%d %d,%d,%d %s\n",
+                val->station.id,
+                (int)val->datetime.year, (int)val->datetime.month, (int)val->datetime.day,
+                (int)val->datetime.hour, (int)val->datetime.minute, (int)val->datetime.second,
+                WR_VAR_X(val->var->code()), WR_VAR_Y(val->var->code()),
+                val->levtr.level.ltype1, val->levtr.level.l1, val->levtr.level.ltype2, val->levtr.level.l2,
+                val->levtr.trange.pind, val->levtr.trange.p1, val->levtr.trange.p2,
+                val->var->value());
+
+        // See if we have the start of a new message
+        if (!old_val || old_val->station.id != val->station.id ||
+                old_val->datetime != val->datetime)
+        {
+            // Flush current message
+            TRACE("New message\n");
+            if (msg.get() != NULL)
+            {
+                //TRACE("Sending old message to consumer\n");
+                if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
+                {
+                    auto_ptr<Msg> copy(new Msg);
+                    msg->sounding_pack_levels(*copy);
+                    cons(copy);
+                } else
+                    cons(msg);
+            }
+
+            // Start writing a new message
+            msg.reset(new Msg);
+
+            // Fill station info
+            msg::Context& c_st = val->station.fill_msg(*msg);
+
+            // Fill station vars
+            memdb.stationvalues.fill_msg(val->station, c_st);
+
+            // Fill datetime
+            c_st.set_year(val->datetime.year);
+            c_st.set_month(val->datetime.month);
+            c_st.set_day(val->datetime.day);
+            c_st.set_hour(val->datetime.hour);
+            c_st.set_minute(val->datetime.minute);
+            c_st.set_second(val->datetime.second);
+
+            // Update last value seen info
+            old_val = val;
+        }
+
+        TRACE("Inserting var B%02d%03d (%s)\n", WR_VAR_X(val->var->code()), WR_VAR_Y(val->var->code()), val->var->value());
+        msg::Context& ctx = msg->obtain_context(val->levtr.level, val->levtr.trange);
+        ctx.set(*val->var);
+    }
+
+    if (msg.get() != NULL)
+    {
+        TRACE("Inserting leftover old message\n");
+        if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
+        {
+            auto_ptr<Msg> copy(new Msg);
+            msg->sounding_pack_levels(*copy);
+            cons(copy);
+        } else
+            cons(msg);
+    }
 }
 
 }

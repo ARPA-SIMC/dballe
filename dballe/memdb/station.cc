@@ -23,6 +23,8 @@
 #include "query.h"
 #include "dballe/core/record.h"
 #include "dballe/core/stlutils.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 #include <algorithm>
 #include <iostream>
 #include <cstdlib>
@@ -32,6 +34,23 @@ using namespace wreport;
 
 namespace dballe {
 namespace memdb {
+
+msg::Context& Station::fill_msg(Msg& msg) const
+{
+    msg::Context& c_st = msg.obtain_station_context();
+
+    // Fill in report information
+    msg.type = Msg::type_from_repmemo(report.c_str());
+    c_st.set_rep_memo(report.c_str());
+
+    // Fill in the basic station values
+    c_st.seti(WR_VAR(0, 5, 1), coords.lat);
+    c_st.seti(WR_VAR(0, 6, 1), coords.lon);
+    if (!ident.empty())
+        c_st.set_ident(ident.c_str());
+
+    return c_st;
+}
 
 Stations::Stations() : ValueStorage<Station>() {}
 

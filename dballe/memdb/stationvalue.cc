@@ -20,6 +20,7 @@
  */
 #include "stationvalue.h"
 #include "station.h"
+#include "dballe/msg/context.h"
 #include <iostream>
 
 using namespace wreport;
@@ -101,6 +102,16 @@ bool StationValues::remove(const Station& station, Varcode code)
         }
     }
     return false;
+}
+
+void StationValues::fill_msg(const Station& station, msg::Context& ctx) const
+{
+    Positions res = by_station.search(&station);
+    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
+    {
+        const StationValue* s = (*this)[*i];
+        ctx.set(*s->var);
+    }
 }
 
 template class Index<const Station*>;
