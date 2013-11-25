@@ -153,6 +153,7 @@ fi
 
 dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 2.10)
+PKG_CHECK_EXISTS([libwreport-test >= 2.10], [have_wreport_test=yes], [have_wreport_test=no])
 
 dnl Check for unixodbc
 have_odbc=yes
@@ -195,12 +196,14 @@ AM_CONDITIONAL([LUA], [test x"$have_lua" = x"yes"])
 
 dnl Check for wibble
 PKG_CHECK_EXISTS([libwibble], [have_wibble=yes], [have_wibble=no])
-if test x$have_wibble = xyes
+if test x$have_wibble = xyes && test x$have_wreport_test = xyes
 then
-	PKG_CHECK_MODULES(WIBBLE,libwibble)
+	PKG_CHECK_MODULES(WREPORT_TEST, libwreport-test)
+	PKG_CHECK_MODULES(WIBBLE, libwibble)
 	enable_tests=yes
 else
-	AC_MSG_WARN([libwibble not found, tests will be disabled])
+	test x$have_wibble = xno && AC_MSG_WARN([libwibble not found, tests will be disabled])
+	test x$have_wreport_test = xno && AC_MSG_WARN([libwreport-test not found, tests will be disabled])
 	enable_tests=no
 fi
 

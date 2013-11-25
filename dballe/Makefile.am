@@ -321,6 +321,7 @@ endif
 tut_test_LDADD = \
 	libdballe.la \
 	$(WREPORT_LIBS) \
+	$(WREPORT_TEST_LIBS) \
 	$(LUA_LIBS) \
 	$(WIBBLE_LIBS)
 
@@ -335,8 +336,7 @@ dump_core_info_SOURCES = core/dump-core-info.cc
 dump_core_info_LDADD = \
 	libdballe.la \
 	$(WREPORT_LIBS) \
-	$(LUA_LIBS) \
-	$(WIBBLE_LIBS)
+	$(LUA_LIBS)
 
 # core
 
