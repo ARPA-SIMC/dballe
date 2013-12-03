@@ -66,6 +66,11 @@ struct Station
      * to look it up again.
      */
     msg::Context& fill_msg(Msg& msg) const;
+
+    bool operator<(const Station& o) const { return id < o.id; }
+    bool operator>(const Station& o) const { return id > o.id; }
+    bool operator==(const Station& o) const { return id == o.id; }
+    bool operator!=(const Station& o) const { return id != o.id; }
 };
 
 /// Storage and index for station information

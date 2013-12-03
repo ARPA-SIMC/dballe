@@ -39,6 +39,23 @@ struct LevTr
 
     LevTr(const Level& level, const Trange& trange)
         : level(level), trange(trange) {}
+
+    bool operator<(const LevTr& o) const { return compare(o) < 0; }
+    bool operator>(const LevTr& o) const { return compare(o) > 0; }
+    bool operator==(const LevTr& o) const { return level == o.level && trange == o.trange; }
+    bool operator!=(const LevTr& o) const { return level != o.level || trange != o.trange; }
+
+    /**
+     * Compare two LevTr strutures, for use in sorting.
+     *
+     * @return
+     *   -1 if *this < l, 0 if *this == l, 1 if *this > l
+     */
+    int compare(const LevTr& o) const
+    {
+        if (int res = level.compare(o.level)) return res;
+        return trange.compare(o.trange);
+    }
 };
 
 /// Storage and index for station information
