@@ -25,7 +25,6 @@
 #include "dballe/core/defs.h"
 #include "dballe/core/record.h"
 #include "dballe/core/csv.h"
-
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -368,6 +367,11 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 		/* Skip empty items or items that will be deleted */
 		if (cache[i].memo.empty() || cache[i].new_memo.empty())
 			continue;
+        if (cache[i].memo != cache[i].new_memo)
+            error_consistency::throwf("cannot rename rep_cod %d (previous rep_memo was %s, new rep_memo is %s)",
+                    (int)cache[i].id,
+                    cache[i].memo.c_str(),
+                    cache[i].new_memo.c_str());
 		for (size_t j = i + 1; j < cache.size(); ++j)
 		{
 			/* Skip empty items or items that will be deleted */

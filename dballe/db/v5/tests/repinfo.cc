@@ -81,12 +81,12 @@ void to::test<3>()
 	int added, deleted, updated;
 	ri->update((string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated);
 
-	ensure_equals(added, 2);
-	ensure_equals(deleted, 10);
-	ensure_equals(updated, 3);
+	ensure_equals(added, 3);
+	ensure_equals(deleted, 11);
+	ensure_equals(updated, 2);
 
 	ensure_equals(ri->get_id("synop"), 1);
-	ensure_equals(ri->get_id("FIXspnpo"), 200);
+	ensure_equals(ri->get_id("FIXspnpo"), 201);
 }
 
 /* Test update from a file with a negative priority */
@@ -100,9 +100,9 @@ void to::test<4>()
 	int added, deleted, updated;
 	ri->update((string(getenv("DBA_TESTDATA")) + "/test-repinfo2.csv").c_str(), &added, &deleted, &updated);
 
-	ensure_equals(added, 2);
-	ensure_equals(deleted, 10);
-	ensure_equals(updated, 3);
+	ensure_equals(added, 3);
+	ensure_equals(deleted, 11);
+	ensure_equals(updated, 2);
 
 	ensure_equals(ri->get_by_memo("generic")->prio, -5);
 }
