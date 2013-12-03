@@ -235,8 +235,7 @@ dist_noinst_HEADERS = \
 	msg/test-utils-msg.h \
 	msg/test-utils-lua.h \
 	db/test-utils-db.h \
-	db/db-tut.h \
-	simple/dbapi-tut.h
+	db/db-tut.h
 
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
@@ -284,8 +283,7 @@ tut_test_SOURCES = \
 	db/mem/db-tut.cc \
 	simple/msgapi-tut.cc \
 	cmdline/dbadb-tut.cc \
-	simple/dbapi-tut.cc \
-	simple/dbapi-mem-tut.cc
+	simple/dbapi-tut.cc
 if LUA
 tut_test_SOURCES += \
 	msg/tests/lua.cc \
@@ -306,9 +304,7 @@ tut_test_SOURCES += \
 	db/v6/tests/lev_tr.cc \
 	db/v6/tests/data.cc \
 	db/v6/tests/attr.cc \
-	db/v6/tests/db.cc \
-	simple/dbapi-v5-tut.cc \
-	simple/dbapi-v6-tut.cc
+	db/v6/tests/db.cc
 endif
 
 tut_test_LDADD = \

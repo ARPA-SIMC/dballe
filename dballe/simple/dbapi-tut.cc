@@ -17,17 +17,52 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef TUT_TEST_BODY
-
-#include "dbapi-tut.h"
+#include "config.h"
+#include "db/test-utils-db.h"
+#include "dbapi.h"
 
 using namespace std;
 using namespace dballe;
+using namespace dballe::db;
+using namespace wibble::tests;
 
-namespace dballe {
-namespace tests {
+namespace {
 
-void dbapi_tests::test_vars()
+struct dbapi_tests : public dballe::tests::db_test
+{
+    void populate_variables(fortran::DbAPI& api)
+    {
+        api.setd("lat", 44.5);
+        api.setd("lon", 11.5);
+        api.setc("rep_memo", "synop");
+        api.settimerange(254, 0, 0);
+        api.setdate(2013, 4, 25, 12, 0, 0);
+
+        // Instant temperature, 2 meters above ground
+        api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
+        api.setd("B12101", 21.5);
+        api.prendilo();
+
+        // Instant wind speed, 10 meters above ground
+        api.unsetb();
+        api.setlevel(103, 10000, MISSING_INT, MISSING_INT);
+        api.setd("B11002", 2.4);
+        api.prendilo();
+
+        api.unsetall();
+    }
+};
+
+}
+
+namespace tut {
+
+using namespace dballe::tests;
+typedef db_tg<dbapi_tests> tg;
+typedef tg::object to;
+
+// Test vars
+template<> template<> void to::test<1>()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
@@ -56,7 +91,8 @@ void dbapi_tests::test_vars()
     ensure_equals(api.voglioquesto(), 0);
 }
 
-void dbapi_tests::test_attrs()
+// Test attrs
+template<> template<> void to::test<2>()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
@@ -97,7 +133,8 @@ void dbapi_tests::test_attrs()
     ensure_equals(api.enqi("*B33007"), 50);
 }
 
-void dbapi_tests::test_attrs_prendilo()
+// Test attrs prendilo
+template<> template<> void to::test<3>()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
@@ -123,7 +160,8 @@ void dbapi_tests::test_attrs_prendilo()
     ensure_equals(api.enqi("*B33007"), 60);
 }
 
-void dbapi_tests::test_prendilo_anaid()
+// Test prendilo anaid
+template<> template<> void to::test<4>()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
@@ -142,13 +180,13 @@ void dbapi_tests::test_prendilo_anaid()
 }
 
 }
-}
 
-#else
+namespace {
 
-template<> template<> void to::test<1>() { test_vars(); }
-template<> template<> void to::test<2>() { test_attrs(); }
-template<> template<> void to::test<3>() { test_attrs_prendilo(); }
-template<> template<> void to::test<4>() { test_prendilo_anaid(); }
-
+tut::tg db_tests_dbapi_mem_tg("dbapi_mem", MEM);
+#ifdef HAVE_ODBC
+tut::tg db_tests_dbapi_v5_tg("dbapi_v5", V5);
+tut::tg db_tests_dbapi_v6_tg("dbapi_v6", V6);
 #endif
+
+}
