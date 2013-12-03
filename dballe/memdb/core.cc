@@ -44,6 +44,44 @@ bool Index<T>::search(const T& el, stl::Sequences<size_t>& out) const
     return true;
 }
 
+template<typename T>
+bool Index<T>::search_from(const T& first, stl::Sequences<size_t>& out) const
+{
+    bool res = false;
+    for (const_iterator i = this->lower_bound(first); i != this->end(); ++i)
+    {
+        out.add(i->second);
+        res = true;
+    }
+    return res;
+}
+
+template<typename T>
+bool Index<T>::search_to(const T& end, stl::Sequences<size_t>& out) const
+{
+    bool res = false;
+    const_iterator i_end = this->upper_bound(end);
+    for (const_iterator i = this->begin(); i != i_end; ++i)
+    {
+        out.add(i->second);
+        res = true;
+    }
+    return res;
+}
+
+template<typename T>
+bool Index<T>::search_between(const T& first, const T& end, stl::Sequences<size_t>& out) const
+{
+    bool res = false;
+    const_iterator i_end = this->upper_bound(end);
+    for (const_iterator i = this->lower_bound(first); i != i_end; ++i)
+    {
+        out.add(i->second);
+        res = true;
+    }
+    return res;
+}
+
 void Positions::dump(FILE* out) const
 {
     for (const_iterator i = begin(); i != end(); ++i)

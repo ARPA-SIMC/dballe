@@ -96,6 +96,30 @@ struct Index : public std::map<T, Positions>
      */
     bool search(const T& el, stl::Sequences<size_t>& out) const;
 
+    /**
+     * Lookup all positions for a value and all values after it, appending the
+     * results to a Sequences
+     *
+     * @returns false if el was not found; it leaves out untouched in that case
+     */
+    bool search_from(const T& first, stl::Sequences<size_t>& out) const;
+
+    /**
+     * Lookup all positions all values before the given one, appending the
+     * results to a Sequences
+     *
+     * @returns false if el was not found; it leaves out untouched in that case
+     */
+    bool search_to(const T& end, stl::Sequences<size_t>& out) const;
+
+    /**
+     * Lookup all positions all values between two extremes (first included,
+     * second excluded), appending the results to a Sequences
+     *
+     * @returns false if el was not found; it leaves out untouched in that case
+     */
+    bool search_between(const T& first, const T& end, stl::Sequences<size_t>& out) const;
+
     void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, BaseResults& res) const;
     void query(const const_iterator& begin, const const_iterator& end, BaseResults& res) const;
     void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>* filter, BaseResults& res) const;
