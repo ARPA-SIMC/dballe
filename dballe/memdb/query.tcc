@@ -203,15 +203,19 @@ void Strategy<T>::activate(Results<T>& res)
         }
     } else {
         if (indices)
+        {
+            trace_query("Activating strategy: adding filters to extra intersections\n");
             others_to_intersect->add(indices->begin(), indices->end());
+        }
         auto_ptr< stl::Sequences<size_t> > sequences(others_to_intersect);
         others_to_intersect = 0;
         stl::Intersection<size_t> intersection;
         if (filter.get())
         {
-            trace_query("Activating strategy with filter only\n");
+            trace_query("Activating strategy with extra intersections and filter\n");
             res.intersect(intersection.begin(sequences), intersection.end(), match::idx2values(res.values, *filter));
         } else {
+            trace_query("Activating strategy with extra intersections\n");
             res.intersect(intersection.begin(sequences), intersection.end());
         }
     }
