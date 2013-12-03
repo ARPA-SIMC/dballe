@@ -214,21 +214,31 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
     rec.parse_date_extremes(mind, maxd);
     if (mind[0] != -1 || maxd[0] != -1)
     {
+        auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
         bool found = false;
         if (mind[0] == maxd[0] && mind[1] == maxd[1] && mind[2] == maxd[2])
         {
             Date d(mind);
-            found |= strategy.add(by_date, d);
+            found |= by_date.search(d, *sequences);
+            trace_query("Found exact date %04d-%02d-%02d\n", d.year, d.month, d.day);
         } else if (mind[0] == -1) {
             Date d(maxd);
-            found |= strategy.add_until(by_date, by_date.upper_bound(d));
+            found |= by_date.search_to(d, *sequences);
+            trace_query("Found date max %04d-%02d-%02d\n", d.year, d.month, d.day);
         } else if (maxd[0] == -1) {
             Date d(mind);
-            found |= strategy.add_since(by_date, by_date.lower_bound(d));
+            found |= by_date.search_from(d, *sequences);
+            IF_TRACE_QUERY {
+                for (Index<Date>::const_iterator i = by_date.lower_bound(d); i != by_date.end(); ++i)
+                    trace_query(" Selecting %04d-%02d-%02d %zd elements\n", i->first.year, i->first.month, i->first.day, i->second.size());
+            }
+            trace_query("Found date min %04d-%02d-%02d\n", d.year, d.month, d.day);
         } else {
             Date dmin(mind);
             Date dmax(maxd);
-            found |= strategy.add(by_date, dmin, dmax);
+            found |= by_date.search_between(dmin, dmax, *sequences);
+            trace_query("Found date range %04d-%02d-%02d to %04d-%02d-%02d\n",
+                    dmin.year, dmin.month, dmin.day, dmax.year, dmax.month, dmax.day);
         }
         if (!found)
         {
@@ -236,7 +246,10 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
             res.set_to_empty();
             return;
         }
-        // TODO: also add a matcher to match datetimes fully, since the index only selects on dates
+        // OR the results together into a single sequence
+        strategy.add_union(sequences);
+
+#warning TODO: also add a matcher to match datetimes fully, since the index only selects on dates
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
