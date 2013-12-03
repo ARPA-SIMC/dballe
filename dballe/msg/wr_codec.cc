@@ -59,20 +59,44 @@ void CrexImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
 
 void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
 {
-    // Infer the right importer
+    // Infer the right importer. See Common Code Table C-13
     std::auto_ptr<wr::Importer> importer;
     switch (msg.type)
     {
+        // Surface data - land
         case 0:
-            if (msg.localsubtype == 140)
-                importer = wr::Importer::createMetar(opts);
-            else
-                importer = wr::Importer::createSynop(opts);
+            switch (msg.subtype)
+            {
+                // Routine aeronautical observations (METAR)
+                case 10:
+                    importer = wr::Importer::createMetar(opts);
+                    break;
+                default:
+                    // Old ECMWF METAR type
+                    if (msg.localsubtype == 140)
+                        importer = wr::Importer::createMetar(opts);
+                    else
+                        importer = wr::Importer::createSynop(opts);
+                    break;
+            }
             break;
+        // Surface data - sea
         case 1: importer = wr::Importer::createShip(opts); break;
+        // Vertical soundings (other than satellite)
         case 2: importer = wr::Importer::createTemp(opts); break;
+        // Vertical soundings (satellite)
         case 3: importer = wr::Importer::createSat(opts); break;
+        // Single level upper-air data (other than satellite)
         case 4: importer = wr::Importer::createFlight(opts); break;
+        // Radar data
+        case 6:
+            if (msg.subtype == 1)
+                // Doppler wind profiles
+                importer = wr::Importer::createTemp(opts);
+            else
+                importer = wr::Importer::createGeneric(opts);
+            break;
+        // Physical/chemical constituents
         case 8: importer = wr::Importer::createPollution(opts); break;
         default: importer = wr::Importer::createGeneric(opts); break;
     }
