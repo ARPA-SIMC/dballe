@@ -760,6 +760,25 @@ void to::test<49>()
     run_test(test, do_test, "acars");
 }
 
+// Test that temp vad subtype is set correctly
+template<> template<>
+void to::test<50>()
+{
+    BufrReimportTest test("bufr/vad.bufr");
+    //test.tweaks.push_back(new StripQCAttrs());
+    run_test(test, do_test, "temp");
+#if 0
+    std::auto_ptr<Msgs> msgs = read_msgs("bufr/vad.bufr", BUFR);
+    auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+    msg::Exporter::Options opts;
+    opts.template_name = "temp";
+    test_export_msgs(*msgs, *bulletin, "temp", opts);
+    ensure_equals(bulletin->type, 6);
+    ensure_equals(bulletin->subtype, 1);
+    ensure_equals(bulletin->localsubtype, 255);
+#endif
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

@@ -131,6 +131,7 @@ protected:
     int do_D01012() const;  // Return the number of hours
     void do_D01013() const;
     void do_D01021() const;
+    void do_D01022() const;
 
 public:
     const Exporter::Options& opts;

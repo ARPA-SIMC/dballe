@@ -46,6 +46,9 @@ using namespace std;
 #define TEMP_ECMWF_SHIP_NAME "temp-ecmwf-ship"
 #define TEMP_ECMWF_SHIP_DESC "Temp ECMWF ship (2.102)"
 
+#define TEMP_RADAR_NAME "temp-radar"
+#define TEMP_RADAR_DESC "Temp radar doppler wind profile (6.1)"
+
 #define PILOT_NAME "pilot"
 #define PILOT_DESC "pilot (autodetect)"
 
@@ -355,6 +358,97 @@ struct TempWMO : public TempBase
                 continue;
             if (do_D03051(*c))
                 ++group_count;
+        }
+        subset[rep_count_pos].seti(group_count);
+    }
+};
+
+struct TempRadar : public TempBase
+{
+    TempRadar(const Exporter::Options& opts, const Msgs& msgs)
+        : TempBase(opts, msgs) {}
+
+    virtual const char* name() const { return TEMP_RADAR_NAME; }
+    virtual const char* description() const { return TEMP_RADAR_DESC; }
+
+    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    {
+        TempBase::setupBulletin(bulletin);
+
+        bulletin.type = 6;
+        bulletin.subtype = 1;
+        bulletin.localsubtype = 255;
+
+        // Data descriptor section
+        bulletin.datadesc.clear();
+        bulletin.datadesc.push_back(WR_VAR(0,  1,  33));
+        bulletin.datadesc.push_back(WR_VAR(0,  1,  34));
+        bulletin.datadesc.push_back(WR_VAR(3,  1,   1));
+        bulletin.datadesc.push_back(WR_VAR(3,  1,  11));
+        bulletin.datadesc.push_back(WR_VAR(3,  1,  12));
+        bulletin.datadesc.push_back(WR_VAR(3,  1,  22));
+        bulletin.datadesc.push_back(WR_VAR(0,  2,   3));
+        bulletin.datadesc.push_back(WR_VAR(0,  2, 121));
+        bulletin.datadesc.push_back(WR_VAR(0,  2, 125));
+        bulletin.datadesc.push_back(WR_VAR(1,  7,   0));
+        bulletin.datadesc.push_back(WR_VAR(0, 31,   1));
+        bulletin.datadesc.push_back(WR_VAR(0,  7,   7));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,   1));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,   2));
+        bulletin.datadesc.push_back(WR_VAR(0, 33,   2));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,   6));
+        bulletin.datadesc.push_back(WR_VAR(0, 33,   2));
+        bulletin.datadesc.push_back(WR_VAR(0, 11,  50));
+        bulletin.load_tables();
+    }
+
+    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    {
+        TempBase::to_subset(msg, subset);
+        add(WR_VAR(0, 1, 33), c_station);
+        add(WR_VAR(0, 1, 34), c_station);
+        do_D01001(); // station id
+        do_D01011(); // date
+        do_D01012(); // date
+        do_D01022(); // date
+        add(WR_VAR(0,  2,  3), c_gnd_instant, DBA_MSG_MEAS_EQUIP_TYPE);
+        add(WR_VAR(0, 2, 121), c_gnd_instant);
+        add(WR_VAR(0, 2, 125), c_gnd_instant);
+
+        // Undef for now, we fill it later
+        size_t rep_count_pos = subset.size();
+        subset.store_variable_undef(WR_VAR(0, 31, 1));
+
+        // Sounding levels
+        int group_count = 0;
+        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
+                i != msg.data.rend(); ++i)
+        {
+            // Iterate backwards to get pressure levels sorted from the higher
+            // to the lower pressure
+            const msg::Context* c = *i;
+            // We are only interested in height levels
+            if (c->level.ltype1 != 102) continue;
+            if (const Var* var = c->find(WR_VAR(0, 7, 7)))
+                add(WR_VAR(0, 7, 7), var);
+            else
+                subset.store_variable_d(WR_VAR(0, 7, 7), (double)c->level.l1);
+            add(WR_VAR(0, 11,   1), c);
+            static const Varcode codes[] = { WR_VAR(0, 11,   2), WR_VAR(0, 11,   6) };
+            for (unsigned i = 0; i < 2; ++i)
+            {
+                Varcode code = codes[i];
+                if (const wreport::Var *var = c->find(code))
+                {
+                    add(code, var);
+                    add(code, var->enqa(WR_VAR(0, 33,  2)));
+                } else {
+                    subset.store_variable_undef(code);
+                    subset.store_variable_undef(WR_VAR(0, 33,   2));
+                }
+            }
+            add(WR_VAR(0, 11,  50), c);
+            ++group_count;
         }
         subset[rep_count_pos].seti(group_count);
     }
@@ -842,13 +936,29 @@ struct TempShipFactory : public virtual TemplateFactory
         return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
 };
-struct TempFactory : public virtual TempEcmwfFactory, TempWMOFactory
+struct TempRadarFactory : public virtual TemplateFactory
+{
+    TempRadarFactory() { name = TEMP_RADAR_NAME; description = TEMP_RADAR_DESC; }
+
+    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    {
+        return auto_ptr<Template>(new TempRadar(opts, msgs));
+    }
+};
+struct TempFactory : public TempEcmwfFactory, public TempWMOFactory, public TempRadarFactory
 {
     TempFactory() { name = TEMP_NAME; description = TEMP_DESC; }
 
     std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         const Msg& msg = *msgs[0];
+
+        // Get the type of equipment used
+        if (const wreport::Var* var = msg.find(WR_VAR(0, 2, 3), Level(1), Trange::instant()))
+            // Is it a Radar?
+            if (var->enq(0) == 3)
+                return TempRadarFactory::make(opts, msgs);
+
         // ECMWF temps use normal replication which cannot do more than 256 levels
         if (msg.data.size() > 260)
             return TempWMOFactory::make(opts, msgs);
@@ -904,6 +1014,7 @@ static const TemplateFactory* tempwmo = NULL;
 static const TemplateFactory* tempecmwf = NULL;
 static const TemplateFactory* tempecmwfland = NULL;
 static const TemplateFactory* tempecmwfship = NULL;
+static const TemplateFactory* tempradar = NULL;
 static const TemplateFactory* pilot = NULL;
 static const TemplateFactory* pilotwmo = NULL;
 static const TemplateFactory* pilotecmwf = NULL;
@@ -914,6 +1025,7 @@ static const TemplateFactory* pilotecmwf = NULL;
     if (!tempecmwf) tempecmwf = new TempEcmwfFactory;
     if (!tempecmwfland) tempecmwfland = new TempEcmwfLandFactory;
     if (!tempecmwfship) tempecmwfship = new TempEcmwfShipFactory;
+    if (!tempradar) tempradar = new TempRadarFactory;
     if (!pilot) pilot = new PilotFactory;
     if (!pilotwmo) pilotwmo = new PilotWMOFactory;
     if (!pilotecmwf) pilotecmwf = new PilotEcmwfFactory;
@@ -924,6 +1036,7 @@ static const TemplateFactory* pilotecmwf = NULL;
     r.register_factory(tempecmwf);
     r.register_factory(tempecmwfland);
     r.register_factory(tempecmwfship);
+    r.register_factory(tempradar);
     r.register_factory(pilot);
     r.register_factory(pilotwmo);
     r.register_factory(pilotecmwf);

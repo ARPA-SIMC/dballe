@@ -461,6 +461,12 @@ void Template::do_D01021() const
     add(WR_VAR(0,  6,  1), c_station, DBA_MSG_LONGITUDE);
 }
 
+void Template::do_D01022() const
+{
+    do_D01021();
+    add(WR_VAR(0,  7,  1), c_station, DBA_MSG_HEIGHT_STATION);
+}
+
 } // namespace wr
 
 
