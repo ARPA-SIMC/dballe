@@ -337,6 +337,66 @@ int CursorLinear::query_count(const Record& rec)
 }
 #endif
 
+#endif
+
+CursorSummary::CursorSummary(DB& db, unsigned int modifiers, const memdb::Results<memdb::Value>& vals)
+    : Cursor(db, modifiers), first(true)
+{
+    // Build the summary
+    for (memdb::Results<memdb::Value>::const_iterator i = vals.begin();
+            i != vals.end(); ++i)
+    {
+        SummaryContext ctx(*i);
+        memdb::Summary::iterator out = summary.find(ctx);
+        if (out == summary.end())
+        {
+            summary.insert(make_pair(ctx, memdb::SummaryStats(i->datetime)));
+        } else {
+            out->second.extend(i->datetime);
+        }
+    }
+
+    // Initialize the result count
+    count = summary.size();
+
+    // Start iterating at the beginning
+    cur = summary.begin();
+}
+
+bool CursorSummary::next()
+{
+    if (cur == summary.end())
+        return false;
+
+    if (first)
+        first = false;
+    else
+        ++cur;
+
+    --count;
+    if (cur == summary.end())
+        return false;
+
+    cur_value = &(cur->first.sample);
+    cur_station = &(cur->first.sample.station);
+    return true;
+}
+
+void CursorSummary::discard_rest()
+{
+    cur = summary.end();
+    count = 0;
+}
+
+void CursorSummary::to_record(Record& rec)
+{
+    to_record_station(rec);
+    to_record_levtr(rec);
+    to_record_varcode(rec);
+    // TODO: Add stats
+}
+
+#if 0
 void CursorSummary::query(const Record& rec)
 {
     SummaryQueryBuilder qb(db, *stm, *this, rec, modifiers);

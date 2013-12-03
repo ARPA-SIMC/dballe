@@ -182,24 +182,24 @@ protected:
     friend class mem::DB;
 };
 
-#if 0
-class CursorSummary : public CursorLinear
+class CursorSummary : public Cursor
 {
 public:
-    SQL_TIMESTAMP_STRUCT    out_datetime_max;
+    memdb::Summary summary;
+    memdb::Summary::const_iterator cur;
+    bool first;
 
-    /// Query stats about all possible context combinations
-    virtual void query(const Record& rec);
     virtual void to_record(Record& rec);
-    virtual unsigned test_iterate(FILE* dump=0);
+    virtual void discard_rest();
+    virtual bool next();
 
 protected:
-    CursorSummary(DB& db, unsigned int modifiers)
-        : CursorLinear(db, modifiers) {}
+    CursorSummary(DB& db, unsigned int modifiers, const memdb::Results<memdb::Value>& vals);
 
-    friend class dballe::db::v6::DB;
+    friend class mem::DB;
 };
 
+#if 0
 struct CursorDataIDs : public CursorLinear
 {
     /// Query the data IDs only, to use to delete things

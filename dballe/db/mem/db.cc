@@ -141,14 +141,12 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 #endif
 }
 
-std::auto_ptr<db::Cursor> DB::query_summary(const Record& rec)
+std::auto_ptr<db::Cursor> DB::query_summary(const Record& query)
 {
-#if 0
-    auto_ptr<Cursor> res(new CursorSummary(*this, 0));
-    res->query(rec);
-    return auto_ptr<db::Cursor>(res.release());
-#endif
-    throw error_unimplemented("not yet implemented in MEM database");
+    unsigned int modifiers = parse_modifiers(query);
+    Results<Value> res(memdb.values);
+    memdb.query_data(query, res);
+    return auto_ptr<db::Cursor>(new CursorSummary(*this, modifiers, res));
 }
 
 unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
