@@ -28,8 +28,7 @@
 #include <memory>
 #include <cstddef>
 
-//#define TRACE_QUERY
-
+// #define TRACE_QUERY
 
 namespace dballe {
 
@@ -37,8 +36,10 @@ namespace memdb {
 template<typename T> struct ValueStorage;
 
 #ifdef TRACE_QUERY
+#define IF_TRACE_QUERY if (1)
 void trace_query(const char* fmt, ...);
 #else
+#define IF_TRACE_QUERY if (0)
 #define trace_query(...) do {} while(0)
 #endif
 
