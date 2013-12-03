@@ -121,6 +121,8 @@ protected:
     Cursor(mem::DB& db, unsigned modifiers, size_t count=0);
 
     void to_record_station(Record& rec);
+    void to_record_levtr(Record& rec);
+    void to_record_varcode(Record& rec);
     void to_record_stationvar(const memdb::StationValue& value, Record& rec);
     void to_record_value(Record& rec);
 

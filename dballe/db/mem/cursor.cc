@@ -154,6 +154,20 @@ void Cursor::to_record_station(Record& rec)
     rec.set(DBA_KEY_PRIORITY, db.repinfo.get_prio(cur_station->report));
 }
 
+void Cursor::to_record_levtr(Record& rec)
+{
+    rec.set(cur_value->levtr.level);
+    rec.set(cur_value->levtr.trange);
+}
+
+void Cursor::to_record_varcode(Record& rec)
+{
+    wreport::Varcode code = cur_value->var->code();
+    char bname[7];
+    snprintf(bname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
+    rec.key(DBA_KEY_VAR).setc(bname);
+}
+
 void Cursor::to_record_stationvar(const StationValue& value, Record& rec)
 {
     rec.set(*value.var);
@@ -161,9 +175,9 @@ void Cursor::to_record_stationvar(const StationValue& value, Record& rec)
 
 void Cursor::to_record_value(Record& rec)
 {
-    rec.set(cur_value->levtr.level);
-    rec.set(cur_value->levtr.trange);
+    to_record_levtr(rec);
     rec.set(cur_value->datetime);
+    to_record_varcode(rec);
     rec.set(*cur_value->var);
 }
 
