@@ -148,6 +148,20 @@ void CrexExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
     bulletin->encode(msg);
 }
 
+namespace {
+
+const char* infer_from_message(const Msg& msg)
+{
+    switch (msg.type)
+    {
+        case MSG_TEMP_SHIP: return "temp-ship";
+        default: break;
+    }
+    return msg_type_name(msg.type);
+}
+
+}
+
 void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) const
 {
     if (msgs.empty())
@@ -156,13 +170,7 @@ void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) cons
     // Select initial template name
     string tpl = opts.template_name;
     if (tpl.empty())
-    {
-        switch (msgs[0]->type)
-        {
-            case MSG_TEMP_SHIP: tpl = "temp-ship"; break;
-            default: tpl = msg_type_name(msgs[0]->type); break;
-        }
-    }
+        tpl = infer_from_message(*msgs[0]);
 
     // Get template factory
     const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);

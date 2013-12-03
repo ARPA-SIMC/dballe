@@ -472,6 +472,14 @@ void to::test<27>()
 }
 
 
+template<> template<>
+void to::test<28>()
+{
+    auto_ptr<Msgs> msgs = read_msgs("bufr/vad.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_TEMP);
+}
 #if 0
 /* Check that a BUFR from a synop high-level station correctly reports isobaric
  * surface and geopotential */

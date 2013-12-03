@@ -76,18 +76,15 @@ public:
     /// Return true if \a code can be found at the start of a sounding group
     bool is_possible_group_var(Varcode code)
     {
-        return WR_VAR_F(code) == 0 && WR_VAR_X(code) != 31 && WR_VAR_X(code) != 33 && WR_VAR_X(code) != 1;
-        // switch (code)
-        // {
-        //     default: return false;
-        // }
+        return WR_VAR_F(code) == 0 && WR_VAR_X(code) != 31 && WR_VAR_X(code) != 1;
     }
 
     /// If the next variables in the current subset look like \a group_count
     /// sounding groups, scan them and return true; otherwise return false.
     bool try_soundings(unsigned group_count)
     {
-        // Check if the following var is a likely start of a sounding group
+        // Check if the first var in the first candidate group is a likely start
+        // of a sounding group
         if (pos + 1 == subset->size())
             return false;
         const Var& start_var = (*subset)[pos + 1];
@@ -100,8 +97,8 @@ public:
                 WR_VAR_X(start_var.code()),
                 WR_VAR_Y(start_var.code()), group_count);
 
-        // Seek forward to compute the group length, catching the repetition
-        // of the start var
+        // Seek forward until the same variable is found again, to compute the
+        // group length
         unsigned group_length = 0;
         unsigned start = pos + 1;
         unsigned cur = start + 1;
@@ -124,12 +121,17 @@ public:
         {
             const Var& next = (*subset)[pos + 1 + i * group_length];
             if (next.code() != start_var.code() && !is_possible_group_var(next.code()))
+            {
+                debug_groups("  Group count %u/%u fails check at leading var %01d%02d%03d\n",
+                             i, group_count, WR_VAR_F(next.code()), WR_VAR_X(next.code()), WR_VAR_Y(next.code()));
                 return false;
+            }
         }
 
         debug_groups("Validated first group: %d+%d\n", start, group_length);
 
-        // Foreach subset in delayed repetition count, iterate a group scan
+        // Now we know how many groups there are and how long they are: iterate
+        // them importing one at a time
         for (unsigned i = 0; i < group_count; ++i)
             import_group(pos + 1 + i * group_length, group_length);
 
@@ -147,11 +149,14 @@ public:
                 // Ignore non-B variables and variables that are unset
                 ++pos;
             } else if ((var.code() == WR_VAR(0, 31, 1) || var.code() == WR_VAR(0, 31, 2))) { // delayed descriptor replication count
+                // Try to see if this is a sounding block, and import it a group
+                // at a time
                 if (!try_soundings(var.enqi()))
                     // If it does not look like a sounding, ignore delayed
                     // repetition count and proceed normally
                     ++pos;
             } else {
+                // Import all non-sounding vars
                 import_var(var);
                 ++pos;
             }
@@ -189,32 +194,39 @@ public:
 
     MsgType scanType(const Bulletin& bulletin) const
     {
-        switch (bulletin.subtype)
+        switch (bulletin.type)
         {
-            case 1: // 001 for PILOT data,
-            case 2: // 002 for PILOT SHIP data,
-            case 3: // 003 for PILOT MOBIL data.
-                return MSG_PILOT;
-            case 4: return MSG_TEMP;
-            case 5: return MSG_TEMP_SHIP;
-            case 255:
-                switch (bulletin.localsubtype)
+            case 2:
+                switch (bulletin.subtype)
                 {
-                    case 0: {
-                        /* Guess looking at the variables */
-                        if (bulletin.subsets.empty())
-                                throw error_consistency("trying to import a TEMP message with no data subset");
-                        const Subset& subset = bulletin.subsets[0];
-                        if (subset.size() > 1 && subset[0].code() == WR_VAR(0, 1, 11))
-                            return MSG_TEMP_SHIP;
-                        else
-                            return MSG_TEMP;
-                    }
-                    case 101: return MSG_TEMP;
-                    case 102: return MSG_TEMP_SHIP;
-                    case 91:
-                    case 92: return MSG_PILOT;
+                    case 1: // 001 for PILOT data,
+                    case 2: // 002 for PILOT SHIP data,
+                    case 3: // 003 for PILOT MOBIL data.
+                        return MSG_PILOT;
+                    case 4: return MSG_TEMP;
+                    case 5: return MSG_TEMP_SHIP;
+                    case 255:
+                        switch (bulletin.localsubtype)
+                        {
+                            case 0: {
+                                /* Guess looking at the variables */
+                                if (bulletin.subsets.empty())
+                                        throw error_consistency("trying to import a TEMP message with no data subset");
+                                const Subset& subset = bulletin.subsets[0];
+                                if (subset.size() > 1 && subset[0].code() == WR_VAR(0, 1, 11))
+                                    return MSG_TEMP_SHIP;
+                                else
+                                    return MSG_TEMP;
+                            }
+                            case 101: return MSG_TEMP;
+                            case 102: return MSG_TEMP_SHIP;
+                            case 91:
+                            case 92: return MSG_PILOT;
+                        }
                 }
+                break;
+            case 6:
+                return MSG_TEMP;
         }
         return MSG_TEMP;
     }
@@ -346,6 +358,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
         {
             // Height level
             case WR_VAR(0, 7, 2):
+            case WR_VAR(0, 7, 7):
             case WR_VAR(0, 7, 9): // Geopotential height, for pilots (FIXME: above ground or above msl?)
                 if (var.isset())
                     lev = Level(102, var.enqd());
@@ -419,6 +432,30 @@ void TempImporter::import_group(unsigned start, unsigned length)
             case WR_VAR(0, 11,  1):
             case WR_VAR(0, 11,  2):
                 msg->set(var, var.code(), lev, Trange::instant());
+                break;
+            // Variables from Radar doppler wind profiles
+            case WR_VAR(0, 11,  6): msg->set(var, var.code(), lev, Trange::instant()); break;
+            case WR_VAR(0, 11, 50): msg->set(var, var.code(), lev, Trange::instant()); break;
+            case WR_VAR(0, 33,  2):
+                // Doppler wind profiles transmit quality information inline,
+                // following the variable they refer to.
+                if (i > 0)
+                {
+                    // So we look at the varcode of the previous value
+                    Varcode prev_code = (*subset)[start + i - 1].code();
+                    switch (prev_code)
+                    {
+                        // And if it is one of those for which quality info is
+                        // set in this way...
+                        case WR_VAR(0, 11, 2):
+                        case WR_VAR(0, 11, 6):
+                            // ...we lookup the variable we previously set in
+                            // msg and add the attribute to it
+                            if (wreport::Var* prev_var = msg->edit(prev_code, lev, Trange::instant()))
+                                prev_var->seta(var);
+                            break;
+                    }
+                }
                 break;
             //default:
             //    msg->set(var, var.code(), lev, Trange::instant());
