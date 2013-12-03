@@ -243,8 +243,9 @@ void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
     auto_ptr<db::Cursor> cur = db.query_summary(query);
 
     // Check the number of results
-    // query_summary does not count results in advance
-    wassert(actual(cur->remaining()) == 0);
+    // query_summary counts results in advance only optionally
+    if (cur->remaining() != 0)
+        wassert(actual(cur->remaining()) == expected);
     unsigned count = cur->test_iterate(/* stderr */);
     wassert(actual(count) == expected);
 }
