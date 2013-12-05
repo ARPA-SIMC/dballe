@@ -28,6 +28,11 @@ void Value::replace(std::auto_ptr<Var> var)
     this->var = var.release();
 }
 
+void Value::replace(const Var& var)
+{
+    this->var->copy_val_only(var);
+}
+
 void Value::dump(FILE* out) const
 {
     stringstream buf;
@@ -74,15 +79,35 @@ size_t Values::insert(
     by_date[datetime.date].insert(pos);
     // And return it
     return pos;
-
 }
 
 size_t Values::insert(
         const Station& station, const LevTr& levtr,
         const Datetime& datetime, const Var& var, bool replace)
 {
+    stl::SetIntersection<size_t> res;
+    if (by_station.search(&station, res) && by_levtr.search(&levtr, res) && by_date.search(datetime.date, res))
+        for (stl::SetIntersection<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
+        {
+            Value* v = (*this)[*i];
+            if (v && v->datetime == datetime && v->var->code() == var.code())
+            {
+                if (!replace)
+                    throw error_consistency("cannot replace an existing value");
+                v->replace(var);
+                return *i;
+            }
+        }
+
+    // Station not found, create it
     auto_ptr<Var> copy(new Var(var));
-    return insert(station, levtr, datetime, copy, replace);
+    size_t pos = value_add(new Value(station, levtr, datetime, copy));
+    // Index it
+    by_station[&station].insert(pos);
+    by_levtr[&levtr].insert(pos);
+    by_date[datetime.date].insert(pos);
+    // And return it
+    return pos;
 }
 
 bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& datetime, Varcode code)

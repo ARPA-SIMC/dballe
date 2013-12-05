@@ -167,9 +167,8 @@ void Cursor::to_record_value(Record& rec)
 
 unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {
-#warning to be implemented
+    // Default implementation for cursors for which this does not make any sense
     return 0;
-    //return db.query_attrs(sqlrec.out_id_data, sqlrec.out_varcode, qcs, attrs);
 }
 
 namespace {
@@ -337,6 +336,11 @@ struct CursorData : public CursorSorted<DataResultQueue>
         rec.key(DBA_KEY_CONTEXT_ID).seti(cur_idx);
         if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
             add_station_info(rec);
+    }
+
+    unsigned query_attrs(const AttrList& qcs, Record& attrs)
+    {
+        return db.query_attrs(cur_idx, 0, qcs, attrs);
     }
 };
 

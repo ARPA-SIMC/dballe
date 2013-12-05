@@ -112,6 +112,16 @@ size_t Stations::obtain_mobile(const Coord& coords, const std::string& ident, co
 
 size_t Stations::obtain(const Record& rec, bool create)
 {
+    // Shortcut by ana_id
+    if (const Var* var = rec.key_peek(DBA_KEY_ANA_ID))
+    {
+        size_t res = var->enqi();
+        if (res > values.size() || !values[res])
+            error_notfound::throwf("ana_id %zd is invalid", res);
+        return res;
+    }
+
+    // Lookup by lat, lon and ident
     int s_lat;
     if (const Var* var = rec.key_peek(DBA_KEY_LAT))
         s_lat = var->enqi();
