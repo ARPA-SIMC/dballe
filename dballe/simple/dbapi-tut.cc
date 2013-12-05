@@ -91,7 +91,7 @@ template<> template<> void to::test<1>()
     ensure_equals(api.voglioquesto(), 0);
 }
 
-// Test attrs
+// Check that the context ID we get is correct
 template<> template<> void to::test<2>()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
@@ -106,7 +106,30 @@ template<> template<> void to::test<2>()
 
     // Store its context info to access attributes of this variable later
     reference_id = api.enqi("context_id");
-    ensure(reference_id > 0);
+
+    // Check that the context id that we get points to the right variable
+    api.unsetall();
+    api.seti("context_id", reference_id);
+    wassert(actual(api.voglioquesto()) == 1);
+    wassert(actual(api.dammelo()) == "B12101");
+    ensure_equals(api.enqi("l1"), 2000);
+}
+
+// Test attrs
+template<> template<> void to::test<3>()
+{
+    fortran::DbAPI api(*db, "write", "write", "write");
+    populate_variables(api);
+
+    int reference_id;
+
+    // Query a variable
+    api.setc("var", "B12101");
+    ensure_equals(api.voglioquesto(), 1);
+    api.dammelo();
+
+    // Store its context info to access attributes of this variable later
+    reference_id = api.enqi("context_id");
 
     // It has no attributes
     ensure_equals(api.voglioancora(), 0);
@@ -134,7 +157,7 @@ template<> template<> void to::test<2>()
 }
 
 // Test attrs prendilo
-template<> template<> void to::test<3>()
+template<> template<> void to::test<4>()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
@@ -161,7 +184,7 @@ template<> template<> void to::test<3>()
 }
 
 // Test prendilo anaid
-template<> template<> void to::test<4>()
+template<> template<> void to::test<5>()
 {
     fortran::DbAPI api(*db, "write", "write", "write");
     populate_variables(api);
