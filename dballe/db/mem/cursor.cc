@@ -21,7 +21,9 @@
 
 #include "cursor.h"
 #include "db.h"
+#include "dballe/db/modifiers.h"
 #include "dballe/core/record.h"
+#include <queue>
 
 using namespace std;
 using namespace wreport;
@@ -184,117 +186,76 @@ void Cursor::add_station_info(Record& rec)
         //to_record_stationvar(*i, rec);
 }
 
-template<typename T>
-struct CursorAll : public Cursor
+namespace {
+
+struct StationResultQueue : public priority_queue<const Station*, vector<const Station*> >
 {
-    const ValueStorage<T>& values;
-    typename ValueStorage<T>::index_iterator iter_cur;
-    typename ValueStorage<T>::index_iterator iter_end;
-    bool first;
-
-    bool next();
-    void discard_rest();
-    const T* get_cur()
+    StationResultQueue(Results<Station>& res)
     {
-        return values[*iter_cur];
-    }
-
-    CursorAll(mem::DB& db, unsigned modifiers, const ValueStorage<T>& values)
-        : Cursor(db, modifiers), values(values),
-          iter_cur(values.index_begin()), iter_end(values.index_end()), first(true)
-    {
-        count = values.element_count();
+        res.copy_valptrs_to(stl::pusher(*this));
     }
 };
 
-template<typename T>
-bool CursorAll<T>::next()
+struct DataResultQueue : public priority_queue<size_t, vector<size_t> >
 {
-    if (iter_cur == iter_end)
-        return false;
+    DataResultQueue(Results<Value>& res)
+    {
+        res.copy_indices_to(stl::pusher(*this));
+    }
+};
 
-    if (first)
-        first = false;
-    else
-        ++iter_cur;
-
-    --count;
-    return iter_cur != iter_end;
 }
 
-template<typename T>
-void CursorAll<T>::discard_rest()
+template<typename QUEUE>
+struct CursorSorted : public Cursor
 {
-    iter_cur = iter_end;
-    count = 0;
-}
-
-template<typename T, typename C>
-struct CursorSomeBase : public Cursor
-{
-    C values;
-    typename C::const_iterator iter_cur;
-    typename C::const_iterator iter_end;
+    QUEUE queue;
     bool first;
 
     bool next()
     {
-        if (iter_cur == iter_end)
+        if (count == 0 || queue.empty())
             return false;
 
         if (first)
             first = false;
         else
-            ++iter_cur;
+            queue.pop();
 
         --count;
-        return iter_cur != iter_end;
+        return !queue.empty();
     }
 
     void discard_rest()
     {
-        iter_cur = iter_end;
+        // We cannot call queue.clear()
+        // FIXME: we can probably get rid of discard_rest() and do proper
+        // review and destructor work. This is only used to flush DB cursors to
+        // avoid shutting down a partial query for some databases. But really,
+        // is it needed at all?
         count = 0;
     }
 
-    CursorSomeBase(mem::DB& db, unsigned modifiers)
-        : Cursor(db, modifiers), first(true)
-    {
-    }
-};
-
-template<typename T>
-struct CursorSome : public CursorSomeBase< T, vector<const T*> >
-{
-    const T* get_cur()
-    {
-        return *this->iter_cur;
-    }
-
-    CursorSome(mem::DB& db, unsigned modifiers, Results<T>& values)
-        : CursorSomeBase<T, vector<const T*> >(db, modifiers)
-    {
-        values.copy_valptrs_to(back_inserter(this->values));
-        this->iter_cur = this->values.begin();
-        this->iter_end = this->values.end();
-        this->count = this->values.size();
-    }
-};
-
-template<typename PARENT>
-struct CursorStations : public PARENT
-{
     template<typename T>
-    CursorStations(mem::DB& db, unsigned modifiers, T& res)
-        : PARENT(db, modifiers, res)
+    CursorSorted(mem::DB& db, unsigned modifiers, T& res)
+        : Cursor(db, modifiers), queue(res), first(true)
+    {
+        count = queue.size();
+    }
+};
+
+struct CursorStations : public CursorSorted<StationResultQueue>
+{
+    CursorStations(mem::DB& db, unsigned modifiers, Results<Station>& res)
+        : CursorSorted<StationResultQueue>(db, modifiers, res)
     {
     }
 
     bool next()
     {
-        if (PARENT::next())
+        if (CursorSorted<StationResultQueue>::next())
         {
-            this->cur_station = this->get_cur();
+            this->cur_station = queue.top();
             this->cur_value = 0;
             return true;
         }
@@ -308,21 +269,23 @@ struct CursorStations : public PARENT
     }
 };
 
-template<typename PARENT>
-struct CursorData : public PARENT
+struct CursorData : public CursorSorted<DataResultQueue>
 {
-    template<typename T>
-    CursorData(mem::DB& db, unsigned modifiers, T& res)
-        : PARENT(db, modifiers, res)
+    const ValueStorage<Value>& values;
+    size_t cur_idx;
+
+    CursorData(mem::DB& db, unsigned modifiers, Results<Value>& res)
+        : CursorSorted<DataResultQueue>(db, modifiers, res), values(res.values)
     {
     }
 
     bool next()
     {
-        if (PARENT::next())
+        if (CursorSorted<DataResultQueue>::next())
         {
-            this->cur_value = this->get_cur();
-            this->cur_station = &(this->cur_value->station);
+            cur_idx = queue.top();
+            cur_value = values[cur_idx];
+            cur_station = &(cur_value->station);
             return true;
         }
         return false;
@@ -330,29 +293,27 @@ struct CursorData : public PARENT
 
     void to_record(Record& rec)
     {
-        this->to_record_station(rec);
+        to_record_station(rec);
         rec.clear_vars();
-        this->to_record_value(rec);
-#if 0
-    rec.key(DBA_KEY_CONTEXT_ID).seti(sqlrec.out_id_data);
-    if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
-        add_station_info(rec);
-#endif
+        to_record_value(rec);
+        rec.key(DBA_KEY_CONTEXT_ID).seti(cur_idx);
+        if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
+            add_station_info(rec);
     }
 };
 
-struct CursorSummary : public CursorSomeBase<Value, memdb::Summary>
+struct CursorSummary : public Cursor
 {
+    memdb::Summary values;
+    memdb::Summary::const_iterator iter_cur;
+    memdb::Summary::const_iterator iter_end;
+    bool first;
+
     CursorSummary(mem::DB& db, unsigned modifiers, Results<Value>& res)
-        : CursorSomeBase(db, modifiers)
+        : Cursor(db, modifiers), first(true)
     {
         memdb::Summarizer summarizer(values);
-        if (res.is_select_all())
-        {
-            res.values.copy_valptrs_to(stl::trivial_inserter(summarizer));
-        } else {
-            res.copy_valptrs_to(stl::trivial_inserter(summarizer));
-        }
+        res.copy_valptrs_to(stl::trivial_inserter(summarizer));
 
         // Start iterating at the beginning
         iter_cur = values.begin();
@@ -364,13 +325,28 @@ struct CursorSummary : public CursorSomeBase<Value, memdb::Summary>
 
     bool next()
     {
-        if (CursorSomeBase<Value, memdb::Summary>::next())
+        if (iter_cur == iter_end)
+            return false;
+
+        if (first)
+            first = false;
+        else
+            ++iter_cur;
+
+        --count;
+        if (iter_cur != iter_end)
         {
             cur_value = &(iter_cur->first.sample);
             cur_station = &(iter_cur->first.sample.station);
             return true;
         }
         return false;
+    }
+
+    void discard_rest()
+    {
+        iter_cur = iter_end;
+        count = 0;
     }
 
     void to_record(Record& rec)
@@ -382,25 +358,14 @@ struct CursorSummary : public CursorSomeBase<Value, memdb::Summary>
     }
 };
 
-
 auto_ptr<db::Cursor> Cursor::createStations(mem::DB& db, unsigned modifiers, Results<Station>& res)
 {
-    if (res.is_select_all())
-    {
-        return auto_ptr<db::Cursor>(new CursorStations< CursorAll<Station> >(db, modifiers, res.values));
-    } else {
-        return auto_ptr<db::Cursor>(new CursorStations< CursorSome<Station> >(db, modifiers, res));
-    }
+    return auto_ptr<db::Cursor>(new CursorStations(db, modifiers, res));
 }
 
 auto_ptr<db::Cursor> Cursor::createData(mem::DB& db, unsigned modifiers, Results<Value>& res)
 {
-    if (res.is_select_all())
-    {
-        return auto_ptr<db::Cursor>(new CursorData< CursorAll<Value> >(db, modifiers, res.values));
-    } else {
-        return auto_ptr<db::Cursor>(new CursorData< CursorSome<Value> >(db, modifiers, res));
-    }
+    return auto_ptr<db::Cursor>(new CursorData(db, modifiers, res));
 }
 
 auto_ptr<db::Cursor> Cursor::createSummary(mem::DB& db, unsigned modifiers, Results<Value>& res)

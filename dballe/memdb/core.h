@@ -95,6 +95,10 @@ public:
     template<typename OUTITER>
     void copy_valptrs_to(OUTITER res) const;
 
+    /// Send all T pointers to the given output iterator
+    template<typename OUTITER>
+    void copy_indices_to(OUTITER res) const;
+
 protected:
     /// Add the value to the storage and return its index
     /// take ownership of the pointer memory management

@@ -52,8 +52,7 @@ template<> template<> void to::test<1>()
     wassert(actual(res.is_empty()).isfalse());
 
     vector<const Station*> items;
-    bool retval = res.copy_valptrs_to(back_inserter(items));
-    wassert(actual(retval).isfalse());
+    res.copy_valptrs_to(back_inserter(items));
     wassert(actual(items.size()) == 0);
 }
 
@@ -67,8 +66,7 @@ template<> template<> void to::test<2>()
     wassert(actual(res.is_empty()).istrue());
 
     vector<const Station*> items;
-    bool retval = res.copy_valptrs_to(back_inserter(items));
-    wassert(actual(retval).istrue());
+    res.copy_valptrs_to(back_inserter(items));
     wassert(actual(items.size()) == 0);
 }
 
@@ -82,8 +80,7 @@ template<> template<> void to::test<3>()
     wassert(actual(res.is_empty()).isfalse());
 
     vector<const Station*> items;
-    bool retval = res.copy_valptrs_to(back_inserter(items));
-    wassert(actual(retval).istrue());
+    res.copy_valptrs_to(back_inserter(items));
     wassert(actual(items.size()) == 1);
     wassert(actual(items[0]->id) == pos[0]);
 }

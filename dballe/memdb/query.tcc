@@ -138,11 +138,15 @@ bool Results<T>::add(const Index<K>& index, const K& min, const K& max)
 }
 
 template<typename T> template<typename OUTITER>
-bool Results<T>::copy_valptrs_to(OUTITER res)
+void Results<T>::copy_valptrs_to(OUTITER res)
 {
-    if (all) return false;
-    if (empty) return true;
+    if (empty) return;
 
+    if (all)
+    {
+       values.copy_valptrs_to(res);
+       return;
+    }
     if (!others_to_intersect)
     {
         if (indices)
@@ -169,7 +173,6 @@ bool Results<T>::copy_valptrs_to(OUTITER res)
                     ++res;
                 }
             }
-            return true;
         } else {
             if (filter.get())
             {
@@ -182,11 +185,11 @@ bool Results<T>::copy_valptrs_to(OUTITER res)
                     *res = val;
                     ++res;
                 }
-                return true;
             } else {
                 // Nothing to do: we don't filter on any constraint, so we just leave res as it is
-                trace_query("Generating results leaving results as it is\n");
-                return false;
+                trace_query("Generating all results\n");
+                values.copy_valptrs_to(res);
+                // TODO: run an optimization phase, which detects this and sets 'all'
             }
         }
     } else {
@@ -218,7 +221,92 @@ bool Results<T>::copy_valptrs_to(OUTITER res)
                 ++res;
             }
         }
-        return true;
+    }
+}
+
+template<typename T> template<typename OUTITER>
+void Results<T>::copy_indices_to(OUTITER res)
+{
+    if (empty) return;
+
+    if (all)
+    {
+       values.copy_indices_to(res);
+       return;
+    }
+
+    if (!others_to_intersect)
+    {
+        if (indices)
+        {
+            if (filter.get())
+            {
+                trace_query("Generating results with intersection and filter\n");
+                const Match<T>& match(*filter);
+                for (stl::SetIntersection<size_t>::const_iterator i = indices->begin();
+                        i != indices->end(); ++i)
+                {
+                    const T* val = values[*i];
+                    if (!match(*val)) continue;
+                    *res = *i;
+                    ++res;
+                }
+            } else {
+                trace_query("Generating results with intersection only\n");
+                for (stl::SetIntersection<size_t>::const_iterator i = indices->begin();
+                        i != indices->end(); ++i)
+                {
+                    *res = *i;
+                    ++res;
+                }
+            }
+        } else {
+            if (filter.get())
+            {
+                trace_query("Generating results with filter only\n");
+                const Match<T>& match(*filter);
+                for (typename ValueStorage<T>::index_iterator i = values.index_begin(); i != values.index_end(); ++i)
+                {
+                    const T* val = values[*i];
+                    if (!match(*val)) continue;
+                    *res = *i;
+                    ++res;
+                }
+            } else {
+                // Nothing to do: we don't filter on any constraint, so we just leave res as it is
+                trace_query("Generating all results\n");
+                values.copy_indices_to(res);
+                // TODO: run an optimization phase, which detects this and sets 'all'
+            }
+        }
+    } else {
+        if (indices)
+        {
+            trace_query("Generating results: adding filters to extra intersections\n");
+            others_to_intersect->add(indices->begin(), indices->end());
+        }
+        auto_ptr< stl::Sequences<size_t> > sequences(others_to_intersect);
+        others_to_intersect = 0;
+        stl::Intersection<size_t> intersection;
+        if (filter.get())
+        {
+            trace_query("Generating results with extra intersections and filter\n");
+            const Match<T>& match(*filter);
+            for (stl::Intersection<size_t>::const_iterator i = intersection.begin(sequences); i != intersection.end(); ++i)
+            {
+                const T* val = values[*i];
+                if (!match(*val)) continue;
+                *res = *i;
+                ++res;
+            }
+        } else {
+            trace_query("Generating results with extra intersections\n");
+            for (stl::Intersection<size_t>::const_iterator i = intersection.begin(sequences); i != intersection.end(); ++i)
+            {
+                *res = *i;
+                ++res;
+            }
+        }
     }
 }
 
@@ -226,4 +314,5 @@ bool Results<T>::copy_valptrs_to(OUTITER res)
 }
 
 #include "dballe/core/stlutils.tcc"
+#include "dballe/memdb/core.tcc"
 #endif

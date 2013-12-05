@@ -81,6 +81,17 @@ void ValueStorage<T>::copy_valptrs_to(OUTITER res) const
     }
 }
 
+template<typename T> template<typename OUTITER>
+void ValueStorage<T>::copy_indices_to(OUTITER res) const
+{
+    for (size_t i = 0; i < values.size(); ++i)
+    {
+        if (!values[i]) continue;
+        *res = i;
+        ++res;
+    }
+}
+
 }
 }
 

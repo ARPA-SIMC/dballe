@@ -201,14 +201,17 @@ public:
      * Send results to res.
      *
      * It empties all sequences, so it can only be used once.
-     *
-     * @returns
-     *   true if resulting values have been copied to \a res
-     *   false if all of values is part of the result set, in which case
-     *   nothing is sent to \a res
      */
     template<typename OUTITER>
-    bool copy_valptrs_to(OUTITER res);
+    void copy_valptrs_to(OUTITER res);
+
+    /**
+     * Send results to res.
+     *
+     * It empties all sequences, so it can only be used once.
+     */
+    template<typename OUTITER>
+    void copy_indices_to(OUTITER res);
 
 private:
     Results(const Results<T>&);

@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <queue>
 
-//#define TRACE_SOURCE
+// #define TRACE_SOURCE
 #include "dballe/core/trace.h"
 
 using namespace dballe::memdb;
@@ -237,8 +237,6 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
     Results<Value> res(memdb.values);
     memdb.query_data(query, res);
 
-    TRACE("export_msgs: %zd values found\n", res.size());
-
     // Sorted value IDs
     priority_queue<const Value*, vector<const Value*>, CompareForExport> values;
     res.copy_valptrs_to(stl::pusher(values));
@@ -325,6 +323,7 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
 }
 }
 
+#include "dballe/memdb/core.tcc"
 #include "dballe/memdb/query.tcc"
 
 /* vim:set ts=4 sw=4: */
