@@ -17,29 +17,26 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/test-utils-core.h>
-#include <dballe/memdb/query.h>
-#include <vector>
-#include <iterator>
+#include "memdb/tests.h"
+#include "index.h"
 
-namespace dballe {
-namespace tests {
+using namespace dballe;
+using namespace dballe::memdb;
+using namespace wibble::tests;
+using namespace std;
 
-template<typename T>
-static inline std::vector<const T*> _get_results(WIBBLE_TEST_LOCPRM, memdb::Results<T>& res)
+namespace tut {
+
+struct memdb_index_shar
 {
-    using namespace wibble::tests;
+};
 
-    wassert(actual(res.is_select_all()).isfalse());
-    wassert(actual(res.is_empty()).isfalse());
-    std::vector<const T*> items;
-    res.copy_valptrs_to(std::back_inserter(items));
-    return items;
+TESTGRP(memdb_index);
+
+template<> template<> void to::test<1>()
+{
 }
 
-#define get_results(res) _get_results(wibble_test_location.nest(wibble_test_location_info, __FILE__, __LINE__, "get_results(" #res ")"), res)
-
-}
 }
 
-// vim:set ts=4 sw=4:
+

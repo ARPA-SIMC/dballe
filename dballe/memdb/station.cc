@@ -64,8 +64,8 @@ void Stations::clear()
 size_t Stations::obtain_fixed(const Coord& coords, const std::string& report, bool create)
 {
     // Search
-    Positions res = by_coord.search(coords);
-    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
+    set<size_t> res = by_coord.search(coords);
+    for (set<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
     {
         const Station* s = (*this)[*i];
         if (s && !s->mobile && s->report == report)
@@ -203,10 +203,8 @@ struct MatchReport : public Match<Station>
 
 }
 
-void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* filter) const
+void Stations::query(const Record& rec, Results<Station>& res) const
 {
-    auto_ptr< Match<Station> > filterp(filter);
-
     if (const char* ana_id = rec.key_peek_value(DBA_KEY_ANA_ID))
     {
         trace_query("Found ana_id %s\n", ana_id);
@@ -214,7 +212,7 @@ void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* f
         if (pos >= 0 && pos < values.size() && values[pos])
         {
             trace_query(" intersect with %zu\n", pos);
-            res.intersect(pos);
+            res.add(pos);
         } else {
             trace_query(" set to empty result set\n");
             res.set_to_empty();
@@ -222,14 +220,10 @@ void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* f
         }
     }
 
-    match::Strategy<Station> strategy;
-
-    if (filter) strategy.add(filterp.release());
-
     if (const char* val = rec.key_peek_value(DBA_KEY_LON))
     {
         trace_query("Found lon %s, using MatchLonExact\n", val);
-        strategy.add(new MatchLonExact(strtoul(val, 0, 10)));
+        res.add(new MatchLonExact(strtoul(val, 0, 10)));
     }
 
     if (rec.key_peek_value(DBA_KEY_LONMIN) && rec.key_peek_value(DBA_KEY_LONMAX))
@@ -238,7 +232,7 @@ void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* f
         int lonmax = rec.key(DBA_KEY_LONMAX).enqi();
         if (lonmin == lonmax)
         {
-            strategy.add(new MatchLonExact(lonmin));
+            res.add(new MatchLonExact(lonmin));
             trace_query("Found lonmin=lonmax=%d, using MatchLonExact\n", lonmin);
         } else {
             lonmin = Coord::normalon(lonmin);
@@ -246,12 +240,12 @@ void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* f
             if (lonmin < lonmax)
             {
                 trace_query("Found lonmin=%d, lonmax=%d, using MatchLonInside\n", lonmin, lonmax);
-                strategy.add(new MatchLonInside(lonmin, lonmax));
+                res.add(new MatchLonInside(lonmin, lonmax));
             }
             else if (lonmin > lonmax)
             {
                 trace_query("Found lonmin=%d, lonmax=%d, using MatchLonOutside\n", lonmin, lonmax);
-                strategy.add(new MatchLonOutside(lonmin, lonmax));
+                res.add(new MatchLonOutside(lonmin, lonmax));
             }
             // If after being normalised min and max are the same, we
             // assume that one wants "any longitude", as is the case with
@@ -266,7 +260,7 @@ void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* f
     if (const char* val = rec.key_peek_value(DBA_KEY_MOBILE))
     {
         trace_query("Found mobile=%s, using MatchMobile\n", val);
-        strategy.add(new MatchMobile(val[0] == '1'));
+        res.add(new MatchMobile(val[0] == '1'));
     }
 
     // Lookup latitude query parameters
@@ -332,7 +326,7 @@ void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* f
         }
 
         for ( ; ilatmin != ilatmax; ++ilatmin)
-            strategy.add(ilatmin->second);
+            res.add(ilatmin->second);
     }
 
     if (ident)
@@ -346,13 +340,13 @@ void Stations::query(const Record& rec, Results<Station>& res, Match<Station>* f
             return;
         }
 
-        strategy.add(iident->second);
+        res.add(iident->second);
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_REP_MEMO))
-        strategy.add(new MatchReport(val));
+        res.add(new MatchReport(val));
 
-    strategy.activate(res);
+    //strategy.activate(res);
 }
 
 void Stations::dump(FILE* out) const
@@ -368,6 +362,7 @@ void Stations::dump(FILE* out) const
             fprintf(out, " %4zu (empty)\n", pos);
     }
 
+    /*
     fprintf(out, " coord index:\n");
     for (Index<Coord>::const_iterator i = by_coord.begin(); i != by_coord.end(); ++i)
     {
@@ -382,6 +377,7 @@ void Stations::dump(FILE* out) const
         i->second.dump(out);
         putc('\n', out);
     }
+    */
 };
 
 }

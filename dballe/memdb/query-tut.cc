@@ -19,6 +19,7 @@
 
 #include "memdb/tests.h"
 #include "query.h"
+#include "station.h"
 
 using namespace dballe;
 using namespace dballe::memdb;
@@ -29,24 +30,64 @@ namespace tut {
 
 struct memdb_query_shar
 {
+    Stations stations;
+    size_t pos[10];
+
+    memdb_query_shar()
+    {
+        // 10 stations in a line from latitude 40.0 to 50.0
+        for (unsigned i = 0; i < 10; ++i)
+            pos[i] = stations.obtain_fixed(Coord(40.0 + i, 11.0), "synop");
+    }
 };
 
 TESTGRP(memdb_query);
 
 template<> template<> void to::test<1>()
 {
-    BaseResults res;
-    res.intersect(1);
+    // Test not performing any selection: all should be selected
+    Results<Station> res(stations);
 
-    BaseResults::index_const_iterator i = res.selected_index_begin();
-    wassert(actual(i != res.selected_index_end()).istrue());
+    wassert(actual(res.is_select_all()).istrue());
+    wassert(actual(res.is_empty()).isfalse());
 
-    wassert(actual(*i) == 1);
+    vector<const Station*> items;
+    bool retval = res.copy_valptrs_to(back_inserter(items));
+    wassert(actual(retval).isfalse());
+    wassert(actual(items.size()) == 0);
+}
 
-    ++i;
+template<> template<> void to::test<2>()
+{
+    // Test setting to no results
+    Results<Station> res(stations);
+    res.set_to_empty();
 
-    wassert(actual(i == res.selected_index_end()).istrue());
+    wassert(actual(res.is_select_all()).isfalse());
+    wassert(actual(res.is_empty()).istrue());
+
+    vector<const Station*> items;
+    bool retval = res.copy_valptrs_to(back_inserter(items));
+    wassert(actual(retval).istrue());
+    wassert(actual(items.size()) == 0);
+}
+
+template<> template<> void to::test<3>()
+{
+    // Test selecting a singleton
+    Results<Station> res(stations);
+    res.add(pos[0]);
+
+    wassert(actual(res.is_select_all()).isfalse());
+    wassert(actual(res.is_empty()).isfalse());
+
+    vector<const Station*> items;
+    bool retval = res.copy_valptrs_to(back_inserter(items));
+    wassert(actual(retval).istrue());
+    wassert(actual(items.size()) == 1);
+    wassert(actual(items[0]->id) == pos[0]);
 }
 
 }
 
+#include "query.tcc"

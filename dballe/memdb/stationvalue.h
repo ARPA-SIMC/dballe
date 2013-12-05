@@ -23,6 +23,7 @@
 #define DBA_MEMDB_STATIONVALUE_H
 
 #include <dballe/memdb/core.h>
+#include <dballe/memdb/index.h>
 #include <wreport/var.h>
 #include <memory>
 
@@ -85,6 +86,8 @@ public:
 
     /// Fill a message context with all the variables for this station
     void fill_msg(const Station& station, msg::Context& ctx) const;
+
+    void dump(FILE* out) const;
 };
 
 }

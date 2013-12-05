@@ -25,11 +25,6 @@
 #include <dballe/memdb/memdb.h>
 #include <dballe/memdb/query.h>
 #include <dballe/db/db.h>
-#if 0
-#include <wreport/varinfo.h>
-#include <cstddef>
-#include <vector>
-#endif
 
 namespace dballe {
 struct DB;
@@ -50,8 +45,9 @@ typedef std::vector<wreport::Varcode> AttrList;
  * Structure used to build and execute a query, and to iterate through the
  * results
  */
-struct Cursor : public db::Cursor
+class Cursor : public db::Cursor
 {
+protected:
     /// Database to operate on
     mem::DB& db;
 
@@ -64,6 +60,7 @@ struct Cursor : public db::Cursor
     const memdb::Station* cur_station;
     const memdb::Value* cur_value;
 
+public:
     virtual ~Cursor();
 
     virtual dballe::DB& get_db() const;
@@ -108,6 +105,9 @@ struct Cursor : public db::Cursor
      */
     virtual unsigned test_iterate(FILE* dump=0) = 0;
 #endif
+    static std::auto_ptr<db::Cursor> createStations(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Station>& res);
+    static std::auto_ptr<db::Cursor> createData(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
+    static std::auto_ptr<db::Cursor> createSummary(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
 
 protected:
     /**
@@ -118,7 +118,7 @@ protected:
      * @param modifiers
      *   Optional modifiers to ask for special query behaviours
      */
-    Cursor(mem::DB& db, unsigned modifiers, size_t count=0);
+    Cursor(mem::DB& db, unsigned modifiers);
 
     void to_record_station(Record& rec);
     void to_record_levtr(Record& rec);
@@ -127,32 +127,12 @@ protected:
     void to_record_value(Record& rec);
 
     /// Query extra station info and add it to \a rec
-    void add_station_info(const memdb::Station& station, Record& rec);
+    void add_station_info(Record& rec);
 };
 
-template<typename T>
-class CursorLinear : public Cursor
-{
-public:
-    virtual ~CursorLinear() {};
-
-protected:
-    memdb::Results<T> res;
-    typename memdb::Results<T>::const_iterator iter_cur;
-    typename memdb::Results<T>::const_iterator iter_end;
-    bool first;
-
-    CursorLinear(DB& db, unsigned int modifiers, const memdb::Results<T>& origres)
-        : Cursor(db, modifiers, origres.size()), res(origres), iter_cur(res.begin()), iter_end(res.end()), first(true) {}
-
-    virtual void discard_rest();
-    virtual bool next();
-
-    friend class mem::DB;
-};
-
+#if 0
 // TODO: merge multiple results from the same station with different reports, keeping the vars with the highest priority
-struct CursorStations : public CursorLinear<memdb::Station>
+struct CursorStations : public CursorResults<memdb::Station>
 {
 protected:
     virtual void to_record(Record& rec);
@@ -161,26 +141,14 @@ protected:
     virtual unsigned test_iterate(FILE* dump=0);
 #endif
 
-    CursorStations(DB& db, unsigned int modifiers, const memdb::Results<memdb::Station>& res)
-        : CursorLinear<memdb::Station>(db, modifiers, res) {}
+    CursorStations(DB& db, const memdb::ValueStorage<memdb::Station>& values,  unsigned int modifiers)
+        : CursorResults<memdb::Station>(db, values, modifiers) {}
 
     friend class mem::DB;
 };
-
-struct CursorData : public CursorLinear<memdb::Value>
-{
-protected:
-    virtual void to_record(Record& rec);
-    virtual bool next();
-#if 0
-    virtual unsigned test_iterate(FILE* dump=0);
 #endif
 
-    CursorData(DB& db, unsigned int modifiers, const memdb::Results<memdb::Value>& res)
-        : CursorLinear<memdb::Value>(db, modifiers, res) {}
-
-    friend class mem::DB;
-};
+#if 0
 
 class CursorSummary : public Cursor
 {
@@ -200,7 +168,7 @@ protected:
 };
 
 #if 0
-struct CursorDataIDs : public CursorLinear
+struct CursorDataIDs : public CursorResults
 {
     /// Query the data IDs only, to use to delete things
     virtual void query(const Record& rec);
@@ -209,7 +177,7 @@ struct CursorDataIDs : public CursorLinear
 
 protected:
     CursorDataIDs(DB& db, unsigned int modifiers)
-        : CursorLinear(db, modifiers) {}
+        : CursorResults(db, modifiers) {}
 
     friend class dballe::db::v6::DB;
 };
@@ -237,6 +205,8 @@ protected:
 
     friend class dballe::db::v6::DB;
 };
+#endif
+
 #endif
 
 } // namespace v6

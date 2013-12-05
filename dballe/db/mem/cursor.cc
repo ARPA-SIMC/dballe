@@ -22,18 +22,6 @@
 #include "cursor.h"
 #include "db.h"
 #include "dballe/core/record.h"
-#if 0
-#include "dballe/db/internals.h"
-#include "dballe/db/v6/repinfo.h"
-
-#include <wreport/var.h>
-#include <dballe/core/defs.h>
-#include "lev_tr.h"
-
-#include <sql.h>
-#include <cstdio>
-#include <cstring>
-#endif
 
 using namespace std;
 using namespace wreport;
@@ -54,9 +42,8 @@ bool Cursor::SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
 }
 #endif
 
-Cursor::Cursor(mem::DB& db, unsigned modifiers, size_t count)
-    : db(db), modifiers(modifiers), count(count),
-      cur_station(0), cur_value(0)
+Cursor::Cursor(mem::DB& db, unsigned modifiers)
+    : db(db), modifiers(modifiers), count(0), cur_station(0), cur_value(0)
 {
 }
 
@@ -188,17 +175,40 @@ unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& a
     //return db.query_attrs(sqlrec.out_id_data, sqlrec.out_varcode, qcs, attrs);
 }
 
-void Cursor::add_station_info(const Station& station, Record& rec)
+void Cursor::add_station_info(Record& rec)
 {
     Results<StationValue> res(db.memdb.stationvalues);
 #warning to implement here
-    //db.memdb.stationvalues.query(station, res);
-    for (Results<StationValue>::const_iterator i = res.begin(); i != res.end(); ++i)
-        to_record_stationvar(*i, rec);
+    //db.memdb.stationvalues.query(cur_station, res);
+    //for (Results<StationValue>::const_iterator i = res.begin(); i != res.end(); ++i)
+        //to_record_stationvar(*i, rec);
 }
 
 template<typename T>
-bool CursorLinear<T>::next()
+struct CursorAll : public Cursor
+{
+    const ValueStorage<T>& values;
+    typename ValueStorage<T>::index_iterator iter_cur;
+    typename ValueStorage<T>::index_iterator iter_end;
+    bool first;
+
+    bool next();
+    void discard_rest();
+    const T* get_cur()
+    {
+        return values[*iter_cur];
+    }
+
+    CursorAll(mem::DB& db, unsigned modifiers, const ValueStorage<T>& values)
+        : Cursor(db, modifiers), values(values),
+          iter_cur(values.index_begin()), iter_end(values.index_end()), first(true)
+    {
+        count = values.element_count();
+    }
+};
+
+template<typename T>
+bool CursorAll<T>::next()
 {
     if (iter_cur == iter_end)
         return false;
@@ -213,25 +223,205 @@ bool CursorLinear<T>::next()
 }
 
 template<typename T>
-void CursorLinear<T>::discard_rest()
+void CursorAll<T>::discard_rest()
 {
     iter_cur = iter_end;
     count = 0;
 }
 
-bool CursorStations::next()
+template<typename T, typename C>
+struct CursorSomeBase : public Cursor
 {
-    bool res = CursorLinear<memdb::Station>::next();
-    if (res)
-        cur_station = &(*iter_cur);
-    return res;
+    C values;
+    typename C::const_iterator iter_cur;
+    typename C::const_iterator iter_end;
+    bool first;
+
+    bool next()
+    {
+        if (iter_cur == iter_end)
+            return false;
+
+        if (first)
+            first = false;
+        else
+            ++iter_cur;
+
+        --count;
+        return iter_cur != iter_end;
+    }
+
+    void discard_rest()
+    {
+        iter_cur = iter_end;
+        count = 0;
+    }
+
+    CursorSomeBase(mem::DB& db, unsigned modifiers)
+        : Cursor(db, modifiers), first(true)
+    {
+    }
+};
+
+template<typename T>
+struct CursorSome : public CursorSomeBase< T, vector<const T*> >
+{
+    const T* get_cur()
+    {
+        return *this->iter_cur;
+    }
+
+    CursorSome(mem::DB& db, unsigned modifiers, Results<T>& values)
+        : CursorSomeBase<T, vector<const T*> >(db, modifiers)
+    {
+        values.copy_valptrs_to(back_inserter(this->values));
+        this->iter_cur = this->values.begin();
+        this->iter_end = this->values.end();
+        this->count = this->values.size();
+    }
+};
+
+template<typename PARENT>
+struct CursorStations : public PARENT
+{
+    template<typename T>
+    CursorStations(mem::DB& db, unsigned modifiers, T& res)
+        : PARENT(db, modifiers, res)
+    {
+    }
+
+    bool next()
+    {
+        if (PARENT::next())
+        {
+            this->cur_station = this->get_cur();
+            this->cur_value = 0;
+            return true;
+        }
+        return false;
+    }
+
+    void to_record(Record& rec)
+    {
+        this->to_record_station(rec);
+        this->add_station_info(rec);
+    }
+};
+
+template<typename PARENT>
+struct CursorData : public PARENT
+{
+    template<typename T>
+    CursorData(mem::DB& db, unsigned modifiers, T& res)
+        : PARENT(db, modifiers, res)
+    {
+    }
+
+    bool next()
+    {
+        if (PARENT::next())
+        {
+            this->cur_value = this->get_cur();
+            this->cur_station = &(this->cur_value->station);
+            return true;
+        }
+        return false;
+    }
+
+    void to_record(Record& rec)
+    {
+        this->to_record_station(rec);
+        rec.clear_vars();
+        this->to_record_value(rec);
+#if 0
+    rec.key(DBA_KEY_CONTEXT_ID).seti(sqlrec.out_id_data);
+    if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
+        add_station_info(rec);
+#endif
+    }
+};
+
+struct CursorSummary : public CursorSomeBase<Value, memdb::Summary>
+{
+    CursorSummary(mem::DB& db, unsigned modifiers, Results<Value>& res)
+        : CursorSomeBase(db, modifiers)
+    {
+        memdb::Summarizer summarizer(values);
+        if (res.is_select_all())
+        {
+            res.values.copy_valptrs_to(stl::trivial_inserter(summarizer));
+        } else {
+            res.copy_valptrs_to(stl::trivial_inserter(summarizer));
+        }
+
+        // Start iterating at the beginning
+        iter_cur = values.begin();
+        iter_end = values.begin();
+
+        // Initialize the result count
+        count = values.size();
+    }
+
+    bool next()
+    {
+        if (CursorSomeBase<Value, memdb::Summary>::next())
+        {
+            cur_value = &(iter_cur->first.sample);
+            cur_station = &(iter_cur->first.sample.station);
+            return true;
+        }
+        return false;
+    }
+
+    void to_record(Record& rec)
+    {
+        to_record_station(rec);
+        to_record_levtr(rec);
+        to_record_varcode(rec);
+        // TODO: Add stats
+    }
+};
+
+
+auto_ptr<db::Cursor> Cursor::createStations(mem::DB& db, unsigned modifiers, Results<Station>& res)
+{
+    if (res.is_select_all())
+    {
+        return auto_ptr<db::Cursor>(new CursorStations< CursorAll<Station> >(db, modifiers, res.values));
+    } else {
+        return auto_ptr<db::Cursor>(new CursorStations< CursorSome<Station> >(db, modifiers, res));
+    }
 }
 
-void CursorStations::to_record(Record& rec)
+auto_ptr<db::Cursor> Cursor::createData(mem::DB& db, unsigned modifiers, Results<Value>& res)
 {
-    to_record_station(rec);
-    add_station_info(*iter_cur, rec);
+    if (res.is_select_all())
+    {
+        return auto_ptr<db::Cursor>(new CursorData< CursorAll<Value> >(db, modifiers, res.values));
+    } else {
+        return auto_ptr<db::Cursor>(new CursorData< CursorSome<Value> >(db, modifiers, res));
+    }
 }
+
+auto_ptr<db::Cursor> Cursor::createSummary(mem::DB& db, unsigned modifiers, Results<Value>& res)
+{
+    return auto_ptr<db::Cursor>(new CursorSummary(db, modifiers, res));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #if 0
 unsigned CursorStations::test_iterate(FILE* dump)
@@ -254,28 +444,6 @@ unsigned CursorStations::test_iterate(FILE* dump)
 }
 #endif
 
-void CursorData::to_record(Record& rec)
-{
-    to_record_station(rec);
-    rec.clear_vars();
-    to_record_value(rec);
-#if 0
-    rec.key(DBA_KEY_CONTEXT_ID).seti(sqlrec.out_id_data);
-    if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
-        add_station_info(rec);
-#endif
-}
-
-bool CursorData::next()
-{
-    bool res = CursorLinear<memdb::Value>::next();
-    if (res)
-    {
-        cur_value = &(*iter_cur);
-        cur_station = &(cur_value->station);
-    }
-    return res;
-}
 
 #if 0
 unsigned CursorData::test_iterate(FILE* dump)
@@ -329,7 +497,7 @@ unsigned CursorDataIDs::test_iterate(FILE* dump)
 }
 
 #if 0
-int CursorLinear::query_count(const Record& rec)
+int CursorResults::query_count(const Record& rec)
 {
     to_record_todo = 0;
     // select <count(*)> from...
@@ -339,62 +507,6 @@ int CursorLinear::query_count(const Record& rec)
 
 #endif
 
-CursorSummary::CursorSummary(DB& db, unsigned int modifiers, const memdb::Results<memdb::Value>& vals)
-    : Cursor(db, modifiers), first(true)
-{
-    // Build the summary
-    for (memdb::Results<memdb::Value>::const_iterator i = vals.begin();
-            i != vals.end(); ++i)
-    {
-        SummaryContext ctx(*i);
-        memdb::Summary::iterator out = summary.find(ctx);
-        if (out == summary.end())
-        {
-            summary.insert(make_pair(ctx, memdb::SummaryStats(i->datetime)));
-        } else {
-            out->second.extend(i->datetime);
-        }
-    }
-
-    // Initialize the result count
-    count = summary.size();
-
-    // Start iterating at the beginning
-    cur = summary.begin();
-}
-
-bool CursorSummary::next()
-{
-    if (cur == summary.end())
-        return false;
-
-    if (first)
-        first = false;
-    else
-        ++cur;
-
-    --count;
-    if (cur == summary.end())
-        return false;
-
-    cur_value = &(cur->first.sample);
-    cur_station = &(cur->first.sample.station);
-    return true;
-}
-
-void CursorSummary::discard_rest()
-{
-    cur = summary.end();
-    count = 0;
-}
-
-void CursorSummary::to_record(Record& rec)
-{
-    to_record_station(rec);
-    to_record_levtr(rec);
-    to_record_varcode(rec);
-    // TODO: Add stats
-}
 
 #if 0
 void CursorSummary::query(const Record& rec)
@@ -597,4 +709,5 @@ void CursorBest::discard_rest()
 }
 }
 }
+#include "dballe/memdb/core.tcc"
 #include "dballe/memdb/query.tcc"

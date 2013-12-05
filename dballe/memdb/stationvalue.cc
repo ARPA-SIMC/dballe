@@ -21,6 +21,7 @@
 #include "stationvalue.h"
 #include "station.h"
 #include "dballe/msg/context.h"
+#include <sstream>
 #include <iostream>
 
 using namespace wreport;
@@ -48,8 +49,8 @@ void StationValues::clear()
 
 const StationValue* StationValues::get(const Station& station, wreport::Varcode code) const
 {
-    Positions res = by_station.search(&station);
-    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
+    set<size_t> res = by_station.search(&station);
+    for (set<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
     {
         const StationValue* s = (*this)[*i];
         if (s && s->var->code() == code)
@@ -60,8 +61,8 @@ const StationValue* StationValues::get(const Station& station, wreport::Varcode 
 
 size_t StationValues::insert(const Station& station, std::auto_ptr<Var> var, bool replace)
 {
-    Positions res = by_station.search(&station);
-    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
+    set<size_t> res = by_station.search(&station);
+    for (set<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
     {
         StationValue* s = (*this)[*i];
         if (s && s->var->code() == var->code())
@@ -90,8 +91,8 @@ size_t StationValues::insert(const Station& station, const Var& var, bool replac
 
 bool StationValues::remove(const Station& station, Varcode code)
 {
-    Positions res = by_station.search(&station);
-    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
+    set<size_t> res = by_station.search(&station);
+    for (set<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
     {
         const StationValue* s = (*this)[*i];
         if (s && !s->var->code() == code)
@@ -106,12 +107,45 @@ bool StationValues::remove(const Station& station, Varcode code)
 
 void StationValues::fill_msg(const Station& station, msg::Context& ctx) const
 {
-    Positions res = by_station.search(&station);
-    for (Positions::const_iterator i = res.begin(); i != res.end(); ++i)
+    set<size_t> res = by_station.search(&station);
+    for (set<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
     {
         const StationValue* s = (*this)[*i];
         ctx.set(*s->var);
     }
+}
+
+void StationValues::dump(FILE* out) const
+{
+    fprintf(out, "Station values:\n");
+    for (size_t pos = 0; pos < values.size(); ++pos)
+    {
+        if (values[pos])
+        {
+            stringstream buf;
+            values[pos]->var->print_without_attrs(buf);
+
+            fprintf(out, " %4zu: %4zu\t%s", pos, values[pos]->station.id, buf.str().c_str());
+            // TODO: print attrs
+        } else
+            fprintf(out, " %4zu: (empty)\n", pos);
+    }
+#if 0
+    fprintf(out, " coord index:\n");
+    for (Index<Coord>::const_iterator i = by_coord.begin(); i != by_coord.end(); ++i)
+    {
+        fprintf(out, "  %d %d -> ", i->first.lat, i->first.lon);
+        i->second.dump(out);
+        putc('\n', out);
+    }
+    fprintf(out, " ident index:\n");
+    for (Index<string>::const_iterator i = by_ident.begin(); i != by_ident.end(); ++i)
+    {
+        fprintf(out, "  %s -> \n", i->first.c_str());
+        i->second.dump(out);
+        putc('\n', out);
+    }
+#endif
 }
 
 template class Index<const Station*>;

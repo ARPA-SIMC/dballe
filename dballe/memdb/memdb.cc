@@ -32,6 +32,45 @@ using namespace dballe::memdb;
 
 namespace dballe {
 
+namespace memdb {
+
+bool SummaryContext::operator<(const SummaryContext& c) const
+{
+    if (sample.station < c.sample.station) return true;
+    if (sample.station > c.sample.station) return false;
+    if (sample.levtr < c.sample.levtr) return true;
+    if (sample.levtr > c.sample.levtr) return false;
+    return sample.var->code() < c.sample.var->code();
+}
+
+void SummaryStats::extend(const Datetime& dt)
+{
+    if (count == 0)
+    {
+        dtmin = dtmax = dt;
+    } else {
+        if (dt < dtmin)
+            dtmin = dt;
+        else if (dt > dtmax)
+            dtmax = dt;
+    }
+    ++count;
+}
+
+void Summarizer::insert(const Value* val)
+{
+    SummaryContext ctx(*val);
+    memdb::Summary::iterator out = summary.find(ctx);
+    if (out == summary.end())
+    {
+        summary.insert(make_pair(ctx, memdb::SummaryStats(val->datetime)));
+    } else {
+        out->second.extend(val->datetime);
+    }
+}
+
+}
+
 Memdb::Memdb()
 {
 }
@@ -202,27 +241,20 @@ void Memdb::query_stations(const Record& rec, Results<Station>& res) const
     {
         new MatchAnaFilter(stationvalues, val);
     }
-    stations.query(rec, res);
-#warning todo
-#if 0
     if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))
     {
-        // No need to escape since the variable is integer
-        sql_where.append_listf("EXISTS(SELECT id FROM data %s_blo WHERE %s_blo.id_station=%s.id"
-                               " AND %s_blo.id_var=257 AND %s_blo.id_lev_tr == -1 AND %s_blo.value='%s')",
-                tbl, tbl, tbl, tbl, tbl, tbl, val);
-        c.found = true;
+        string query("B01001=");
+        query += val;
+        new MatchAnaFilter(stationvalues, query);
     }
     if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 2)))
     {
-        sql_where.append_listf("EXISTS(SELECT id FROM data %s_sta WHERE %s_sta.id_station=%s.id"
-                               " AND %s_sta.id_var=258 AND %s_sta.id_lev_tr == -1 AND %s_sta.value='%s')",
-                tbl, tbl, tbl, tbl, tbl, tbl, val);
-        c.found = true;
+        string query("B01002=");
+        query += val;
+        new MatchAnaFilter(stationvalues, query);
     }
-
-    return c.found;
-#endif
+    stations.query(rec, res);
+#warning todo
 }
 
 void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) const
@@ -242,6 +274,7 @@ void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) con
 void Memdb::dump(FILE* out) const
 {
     stations.dump(out);
+    stationvalues.dump(out);
     levtrs.dump(out);
     values.dump(out);
 }

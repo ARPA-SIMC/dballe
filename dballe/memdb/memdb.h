@@ -34,22 +34,20 @@ struct Msg;
 namespace memdb {
 template<typename T> struct Results;
 
+/**
+ * Wraps a Value providing a std::map key that considers all values the same as
+ * long as they have the same station, level, timerange and varcode.
+ */
 struct SummaryContext
 {
     const Value& sample;
 
     SummaryContext(const Value& val) : sample(val) {}
 
-    bool operator<(const SummaryContext& c) const
-    {
-        if (sample.station < c.sample.station) return true;
-        if (sample.station > c.sample.station) return false;
-        if (sample.levtr < c.sample.levtr) return true;
-        if (sample.levtr > c.sample.levtr) return false;
-        return sample.var->code() < c.sample.var->code();
-    }
+    bool operator<(const SummaryContext& c) const;
 };
 
+/// Statistics about all 'Value's with the same SummaryContext
 struct SummaryStats
 {
     size_t count;
@@ -58,22 +56,21 @@ struct SummaryStats
 
     SummaryStats(const Datetime& dt) : count(1), dtmin(dt), dtmax(dt) {}
 
-    void extend(const Datetime& dt)
-    {
-        if (count == 0)
-        {
-            dtmin = dtmax = dt;
-        } else {
-            if (dt < dtmin)
-                dtmin = dt;
-            else if (dt > dtmax)
-                dtmax = dt;
-        }
-        ++count;
-    }
+    void extend(const Datetime& dt);
 };
 
+/// A summary of a set of 'Value's
 typedef std::map<memdb::SummaryContext, memdb::SummaryStats> Summary;
+
+/// Build a summary one Value at a time
+struct Summarizer
+{
+    Summary& summary;
+
+    Summarizer(Summary& summary) : summary(summary) {}
+
+    void insert(const Value* val);
+};
 
 }
 

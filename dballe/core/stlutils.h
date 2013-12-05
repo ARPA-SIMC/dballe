@@ -56,6 +56,9 @@ struct Sequences : public std::vector<stlutils::Sequence<T>*>
             delete *i;
     }
 
+    /// Add a singleton set
+    void add_singleton(const T& val);
+
     // Add a begin-end range
     template<typename ITER>
     void add(const ITER& begin, const ITER& end);
@@ -303,6 +306,59 @@ public:
     }
 };
 
+/**
+ * Similar to std::inserter, but just calls target.insert() without requiring
+ * it to have iterators at all.
+ */
+template<typename T>
+class TrivialInserter : public std::iterator<std::output_iterator_tag, void, void, void, void>
+{
+protected:
+    T* target;
+
+public:
+    TrivialInserter(T& target) : target(&target) {}
+
+    template<typename V>
+    V operator=(V val) { target->insert(val); return val; }
+
+    TrivialInserter& operator*() { return *this; }
+    TrivialInserter& operator++() { return *this; }
+    TrivialInserter& operator++(int) { return *this; }
+};
+
+template<typename T>
+TrivialInserter<T> trivial_inserter(T& target)
+{
+    return TrivialInserter<T>(target);
+}
+
+/**
+ * Similar to std::inserter, but just calls target.insert() without requiring
+ * it to have iterators at all.
+ */
+template<typename T>
+class Pusher : public std::iterator<std::output_iterator_tag, void, void, void, void>
+{
+protected:
+    T* target;
+
+public:
+    Pusher(T& target) : target(&target) {}
+
+    template<typename V>
+    V operator=(V val) { target->push(val); return val; }
+
+    Pusher& operator*() { return *this; }
+    Pusher& operator++() { return *this; }
+    Pusher& operator++(int) { return *this; }
+};
+
+template<typename T>
+Pusher<T> pusher(T& target)
+{
+    return Pusher<T>(target);
+}
 
 }
 }

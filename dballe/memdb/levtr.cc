@@ -95,8 +95,6 @@ struct MatchTrange : public Match<LevTr>
 
 void LevTrs::query(const Record& rec, Results<LevTr>& res) const
 {
-    match::Strategy<LevTr> strategy;
-
     Level level = rec.get_level();
     if (level != Level())
     {
@@ -107,14 +105,14 @@ void LevTrs::query(const Record& rec, Results<LevTr>& res) const
                     level.l1 != MISSING_INT ? level.l1 : 0,
                     level.ltype2 != MISSING_INT ? level.ltype2 : 0,
                     level.l2 != MISSING_INT ? level.l2 : 0);
-            strategy.add(by_level, levmin, level);
+            res.add(by_level, levmin, level);
             trace_query("Adding level range to strategy, from %d,%d,%d,%d to %d,%d,%d,%d\n",
                     levmin.ltype1, levmin.l1, levmin.ltype2, levmin.l2,
                     level.ltype1, level.l1, level.ltype2, level.l2);
         }
         trace_query("Adding level matcher for %d,%d,%d,%d\n",
                 level.ltype1, level.l1, level.ltype2, level.l2);
-        strategy.add(new MatchLevel(level));
+        res.add(new MatchLevel(level));
     }
 
     Trange trange = rec.get_trange();
@@ -126,17 +124,15 @@ void LevTrs::query(const Record& rec, Results<LevTr>& res) const
                     trange.pind,
                     trange.p1 != MISSING_INT ? trange.p1 : 0,
                     trange.p2 != MISSING_INT ? trange.p2 : 0);
-            strategy.add(by_trange, trmin, trange);
+            res.add(by_trange, trmin, trange);
             trace_query("Adding trange range to strategy, from %d,%d,%d to %d,%d,%d\n",
                     trmin.pind, trmin.p1, trmin.p2,
                     trange.pind, trange.p1, trange.p2);
         }
         trace_query("Adding trange matcher for %d,%d,%d\n",
                 trange.pind, trange.p1, trange.p2);
-        strategy.add(new MatchTrange(trange));
+        res.add(new MatchTrange(trange));
     }
-
-    strategy.activate(res);
 }
 
 void LevTrs::dump(FILE* out) const

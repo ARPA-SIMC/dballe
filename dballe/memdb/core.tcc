@@ -31,28 +31,6 @@ namespace dballe {
 namespace memdb {
 
 template<typename T>
-void Index<T>::query(const const_iterator& begin, const const_iterator& end, const Match<size_t>* filter, BaseResults& res) const
-{
-    std::auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
-    for (const_iterator i = begin; begin != end; ++i)
-        sequences->add(i->second.begin(), i->second.end());
-    stl::Intersection<size_t> merger;
-    res.intersect(merger.begin(sequences), merger.end(), filter);
-}
-
-template<typename T>
-void Index<T>::query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, BaseResults& res) const
-{
-    query(begin, end, &filter, res);
-}
-
-template<typename T>
-void Index<T>::query(const const_iterator& begin, const const_iterator& end, BaseResults& res) const
-{
-    query(begin, end, 0, res);
-}
-
-template<typename T>
 ValueStorage<T>::~ValueStorage()
 {
     for (typename std::vector<T*>::iterator i = values.begin(); i != values.end(); ++i)
@@ -90,6 +68,17 @@ void ValueStorage<T>::value_remove(size_t pos)
     delete (*this)[pos];
     (*this)[pos] = 0;
     empty_slots.push_back(pos);
+}
+
+template<typename T> template<typename OUTITER>
+void ValueStorage<T>::copy_valptrs_to(OUTITER res) const
+{
+    for (typename std::vector<T*>::const_iterator i = values.begin(); i != values.end(); ++i)
+    {
+        if (!*i) continue;
+        *res = *i;
+        ++res;
+    }
 }
 
 }

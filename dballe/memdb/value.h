@@ -24,6 +24,7 @@
 #define DBA_MEMDB_VALUE_H
 
 #include <dballe/memdb/core.h>
+#include <dballe/memdb/index.h>
 #include <dballe/core/defs.h>
 #include <wreport/var.h>
 #include <memory>
@@ -82,7 +83,7 @@ public:
     bool remove(const Station& station, const LevTr& levtr, const Datetime& datetime, wreport::Varcode code);
 
     /// Query values returning the IDs
-    void query(const Record& rec, const Results<Station>& stations, const Results<LevTr>& levtrs, Results<Value>& res) const;
+    void query(const Record& rec, Results<Station>& stations, Results<LevTr>& levtrs, Results<Value>& res) const;
 
     void dump(FILE* out) const;
 };

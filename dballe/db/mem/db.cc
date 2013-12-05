@@ -115,7 +115,7 @@ std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
     unsigned int modifiers = parse_modifiers(query);
     Results<Station> res(memdb.stations);
     memdb.query_stations(query, res);
-    return auto_ptr<db::Cursor>(new CursorStations(*this, modifiers, res));
+    return Cursor::createStations(*this, modifiers, res);
 }
 
 std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
@@ -123,7 +123,7 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
     unsigned int modifiers = parse_modifiers(query);
     Results<Value> res(memdb.values);
     memdb.query_data(query, res);
-    return auto_ptr<db::Cursor>(new CursorData(*this, modifiers, res));
+    return Cursor::createData(*this, modifiers, res);
 #if 0
         if (query_station_vars)
             sql_where.append_list("d.id_lev_tr == -1");
@@ -146,7 +146,7 @@ std::auto_ptr<db::Cursor> DB::query_summary(const Record& query)
     unsigned int modifiers = parse_modifiers(query);
     Results<Value> res(memdb.values);
     memdb.query_data(query, res);
-    return auto_ptr<db::Cursor>(new CursorSummary(*this, modifiers, res));
+    return Cursor::createSummary(*this, modifiers, res);
 }
 
 unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
@@ -218,21 +218,15 @@ namespace {
 
 struct CompareForExport
 {
-    const memdb::Values& values;
-    CompareForExport(const memdb::Values& values) : values(values) {}
-
     // Return an inverse comparison, so that the priority queue gives us the
     // smallest items first
-    bool operator() (const size_t& x, const size_t& y) const
+    bool operator() (const Value* x, const Value* y) const
     {
-        const Value& vx = *values[x];
-        const Value& vy = *values[y];
-
         // Compare station and report
-        if (vx.station.id < vy.station.id) return false;
-        if (vx.station.id > vy.station.id) return true;
+        if (x->station.id < y->station.id) return false;
+        if (x->station.id > y->station.id) return true;
         // Compare datetime
-        return vx.datetime > vy.datetime;
+        return x->datetime > y->datetime;
     }
 };
 
@@ -246,7 +240,8 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
     TRACE("export_msgs: %zd values found\n", res.size());
 
     // Sorted value IDs
-    priority_queue<size_t, vector<size_t>, CompareForExport> values(res.index_begin(), res.index_end(), CompareForExport(memdb.values));
+    priority_queue<const Value*, vector<const Value*>, CompareForExport> values;
+    res.copy_valptrs_to(stl::pusher(values));
 
     TRACE("export_msgs: %zd values in priority queue\n", values.size());
 
@@ -259,7 +254,7 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
     // Iterate all results, sorted
     for ( ; !values.empty(); values.pop())
     {
-        const Value* val = memdb.values[values.top()];
+        const Value* val = values.top();
         TRACE("Got %zd %04d-%02d-%02d %02d:%02d:%02d B%02d%03d %d,%d, %d,%d %d,%d,%d %s\n",
                 val->station.id,
                 (int)val->datetime.date.year, (int)val->datetime.date.month, (int)val->datetime.date.day,
@@ -329,5 +324,7 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
 }
 }
 }
+
+#include "dballe/memdb/query.tcc"
 
 /* vim:set ts=4 sw=4: */

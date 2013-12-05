@@ -32,60 +32,6 @@
 namespace dballe {
 namespace memdb {
 
-template<typename ITER>
-void BaseResults::intersect(const ITER& begin, const ITER& iend, const Match<typename ITER::value_type>* match)
-{
-    ITER i = begin;
-
-    if (select_all)
-    {
-        for ( ; i != iend; ++i)
-            if (!match || (*match)(*i))
-                indices.push_back(*i);
-        select_all = false;
-        return;
-    }
-
-    // Vector that holds the common values
-    vector<size_t> res;
-
-    // Iterate the two sorted sequence
-    vector<size_t>::const_iterator vi = indices.begin();
-
-    // If the set starts after the beginning of the current value vector,
-    // jump to a valid starting point
-    if (*i > *vi)
-        vi = lower_bound(indices.begin(), indices.end(), *i);
-
-    // Step through both sequences looking for the common values
-    while (i != iend && vi != indices.end())
-    {
-        if (*vi < *i)
-            ++vi;
-        else if (*vi > *i)
-            ++i;
-        else
-        {
-            if (!match || (*match)(*vi))
-                res.push_back(*vi);
-            ++vi;
-            ++i;
-        }
-    }
-
-    // Commit the results
-    indices = res;
-}
-
-template<typename T>
-size_t Results<T>::size() const
-{
-    if (select_all)
-        return values.element_count();
-    else
-        return indices.size();
-}
-
 namespace match {
 
 template<typename T>
@@ -123,25 +69,39 @@ void FilterBuilder<T>::add(Match<T>* f)
         is_and->add(f);
 }
 
+}
+
 template<typename T>
-void Strategy<T>::add_union(std::auto_ptr< stl::Sequences<size_t> >& seq)
+void Results<T>::add_union(std::auto_ptr< stl::Sequences<size_t> > seq)
 {
+    all = false;
     if (!others_to_intersect)
         others_to_intersect = new stl::Sequences<size_t>;
     others_to_intersect->add_union(seq);
 }
 
 template<typename T>
-void Strategy<T>::add(const Positions& p)
+void Results<T>::add(size_t singleton)
 {
+    all = false;
+    if (!others_to_intersect)
+        others_to_intersect = new stl::Sequences<size_t>;
+    others_to_intersect->add_singleton(singleton);
+}
+
+template<typename T>
+void Results<T>::add(const std::set<size_t>& p)
+{
+    all = false;
     if (!indices)
         indices = new stl::SetIntersection<size_t>;
     indices->add(p);
 }
 
 template<typename T> template<typename K>
-bool Strategy<T>::add(const Index<K>& index, const K& val)
+bool Results<T>::add(const Index<K>& index, const K& val)
 {
+    all = false;
     typename Index<K>::const_iterator i = index.find(val);
     if (i == index.end())
     {
@@ -154,8 +114,9 @@ bool Strategy<T>::add(const Index<K>& index, const K& val)
 }
 
 template<typename T> template<typename K>
-bool Strategy<T>::add(const Index<K>& index, const K& min, const K& max)
+bool Results<T>::add(const Index<K>& index, const K& min, const K& max)
 {
+    all = false;
     auto_ptr< stl::Sequences<size_t> > sequences;
     for (typename Index<K>::const_iterator i = index.lower_bound(min);
             i != index.upper_bound(max); ++i)
@@ -176,35 +137,62 @@ bool Strategy<T>::add(const Index<K>& index, const K& min, const K& max)
     }
 }
 
-template<typename T>
-void Strategy<T>::activate(Results<T>& res)
+template<typename T> template<typename OUTITER>
+bool Results<T>::copy_valptrs_to(OUTITER res)
 {
+    if (all) return false;
+    if (empty) return true;
+
     if (!others_to_intersect)
     {
         if (indices)
         {
             if (filter.get())
             {
-                trace_query("Activating strategy with intersection and filter\n");
-                res.intersect(indices->begin(), indices->end(), match::idx2values(res.values, *filter));
+                trace_query("Generating results with intersection and filter\n");
+                const Match<T>& match(*filter);
+                for (stl::SetIntersection<size_t>::const_iterator i = indices->begin();
+                        i != indices->end(); ++i)
+                {
+                    const T* val = values[*i];
+                    if (!match(*val)) continue;
+                    *res = val;
+                    ++res;
+                }
             } else {
-                trace_query("Activating strategy with intersection only\n");
-                res.intersect(indices->begin(), indices->end());
+                trace_query("Generating results with intersection only\n");
+                for (stl::SetIntersection<size_t>::const_iterator i = indices->begin();
+                        i != indices->end(); ++i)
+                {
+                    const T* val = values[*i];
+                    *res = val;
+                    ++res;
+                }
             }
+            return true;
         } else {
             if (filter.get())
             {
-                trace_query("Activating strategy with filter only\n");
-                res.intersect(res.values.index_begin(), res.values.index_end(), match::idx2values(res.values, *filter));
+                trace_query("Generating results with filter only\n");
+                const Match<T>& match(*filter);
+                for (typename ValueStorage<T>::index_iterator i = values.index_begin(); i != values.index_end(); ++i)
+                {
+                    const T* val = values[*i];
+                    if (!match(*val)) continue;
+                    *res = val;
+                    ++res;
+                }
+                return true;
             } else {
                 // Nothing to do: we don't filter on any constraint, so we just leave res as it is
-                trace_query("Activating strategy leaving results as it is\n");
+                trace_query("Generating results leaving results as it is\n");
+                return false;
             }
         }
     } else {
         if (indices)
         {
-            trace_query("Activating strategy: adding filters to extra intersections\n");
+            trace_query("Generating results: adding filters to extra intersections\n");
             others_to_intersect->add(indices->begin(), indices->end());
         }
         auto_ptr< stl::Sequences<size_t> > sequences(others_to_intersect);
@@ -212,15 +200,26 @@ void Strategy<T>::activate(Results<T>& res)
         stl::Intersection<size_t> intersection;
         if (filter.get())
         {
-            trace_query("Activating strategy with extra intersections and filter\n");
-            res.intersect(intersection.begin(sequences), intersection.end(), match::idx2values(res.values, *filter));
+            trace_query("Generating results with extra intersections and filter\n");
+            const Match<T>& match(*filter);
+            for (stl::Intersection<size_t>::const_iterator i = intersection.begin(sequences); i != intersection.end(); ++i)
+            {
+                const T* val = values[*i];
+                if (!match(*val)) continue;
+                *res = val;
+                ++res;
+            }
         } else {
-            trace_query("Activating strategy with extra intersections\n");
-            res.intersect(intersection.begin(sequences), intersection.end());
+            trace_query("Generating results with extra intersections\n");
+            for (stl::Intersection<size_t>::const_iterator i = intersection.begin(sequences); i != intersection.end(); ++i)
+            {
+                const T* val = values[*i];
+                *res = val;
+                ++res;
+            }
         }
+        return true;
     }
-}
-
 }
 
 }

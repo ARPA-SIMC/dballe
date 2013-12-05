@@ -22,108 +22,13 @@
 #ifndef DBA_MEMDB_CORE_H
 #define DBA_MEMDB_CORE_H
 
-#include <set>
-#include <map>
 #include <vector>
 #include <cstddef>
-#include <cstdio>
 
 namespace dballe {
-
-namespace stl {
-template<typename T> class SetIntersection;
-template<typename T> class Sequences;
-}
-
 namespace memdb {
 
-struct BaseResults;
 template<typename T> struct Match;
-
-/// Indices of elements inside a vector
-struct Positions : public std::set<size_t>
-{
-    bool contains(size_t val) const
-    {
-        return find(val) != end();
-    }
-
-#if 0
-    void inplace_intersect(const Positions& pos)
-    {
-        // Inplace intersection
-        typename Positions::iterator ia = begin();
-        typename Positions::const_iterator ib = pos.begin();
-        while (ia != end() && ib != pos.end())
-        {
-            if (*ia < *ib)
-                erase(ia++);
-            else if (*ib < *ia)
-                ++ib;
-            else
-            {
-                ++ia;
-                ++ib;
-            }
-        }
-        erase(ia, end());
-    }
-#endif
-
-    void dump(FILE* out) const;
-};
-
-/// Index a vector's elements based by one value
-template<typename T>
-struct Index : public std::map<T, Positions>
-{
-    typedef typename std::map<T, Positions>::const_iterator const_iterator;
-
-    /// Lookup all positions for a value
-    Positions search(const T& el) const;
-
-    /**
-     * Lookup all positions for a value, appending the results to a SetIntersection
-     *
-     * @returns false if el was not found; it leaves out untouched in that case
-     */
-    bool search(const T& el, stl::SetIntersection<size_t>& out) const;
-
-    /**
-     * Lookup all positions for a value, appending the results to a Sequences
-     *
-     * @returns false if el was not found; it leaves out untouched in that case
-     */
-    bool search(const T& el, stl::Sequences<size_t>& out) const;
-
-    /**
-     * Lookup all positions for a value and all values after it, appending the
-     * results to a Sequences
-     *
-     * @returns false if el was not found; it leaves out untouched in that case
-     */
-    bool search_from(const T& first, stl::Sequences<size_t>& out) const;
-
-    /**
-     * Lookup all positions all values before the given one, appending the
-     * results to a Sequences
-     *
-     * @returns false if el was not found; it leaves out untouched in that case
-     */
-    bool search_to(const T& end, stl::Sequences<size_t>& out) const;
-
-    /**
-     * Lookup all positions all values between two extremes (first included,
-     * second excluded), appending the results to a Sequences
-     *
-     * @returns false if el was not found; it leaves out untouched in that case
-     */
-    bool search_between(const T& first, const T& end, stl::Sequences<size_t>& out) const;
-
-    void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, BaseResults& res) const;
-    void query(const const_iterator& begin, const const_iterator& end, BaseResults& res) const;
-    void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>* filter, BaseResults& res) const;
-};
 
 template<typename T>
 class ValueStorage
@@ -185,6 +90,10 @@ public:
 
     index_iterator index_begin() const { return index_iterator(values, 0); }
     index_iterator index_end() const { return index_iterator(values); }
+
+    /// Send all T pointers to the given output iterator
+    template<typename OUTITER>
+    void copy_valptrs_to(OUTITER res) const;
 
 protected:
     /// Add the value to the storage and return its index

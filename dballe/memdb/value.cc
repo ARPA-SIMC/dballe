@@ -157,7 +157,7 @@ private:
 
 }
 
-void Values::query(const Record& rec, const Results<Station>& stations, const Results<LevTr>& levtrs, Results<Value>& res) const
+void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>& levtrs, Results<Value>& res) const
 {
     if (const char* data_id = rec.key_peek_value(DBA_KEY_CONTEXT_ID))
     {
@@ -166,7 +166,7 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
         if (pos >= 0 && pos < values.size() && values[pos])
         {
             trace_query(" intersect with %zu\n", pos);
-            res.intersect(pos);
+            res.add(pos);
         } else {
             trace_query(" set to empty result set\n");
             res.set_to_empty();
@@ -174,40 +174,34 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
         }
     }
 
-    match::Strategy<Value> strategy;
-
     if (!stations.is_select_all())
     {
         trace_query("Adding selected stations to strategy\n");
-        bool found = false;
-        auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
-        for (Results<Station>::const_iterator i = stations.begin(); i != stations.end(); ++i)
-            found |= by_station.search(&*i, *sequences);
-        if (!found)
+        match::SequenceBuilder<Station> lookup_by_station(by_station);
+        stations.copy_valptrs_to(stl::trivial_inserter(lookup_by_station));
+        if (!lookup_by_station.found_items_in_index())
         {
             trace_query(" no matching stations found, setting empty result\n");
             res.set_to_empty();
             return;
         }
         // OR the results together into a single sequence
-        strategy.add_union(sequences);
+        res.add_union(lookup_by_station.release_sequences());
     }
 
     if (!levtrs.is_select_all())
     {
         trace_query("Adding selected levtrs to strategy\n");
-        bool found = false;
-        auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
-        for (Results<LevTr>::const_iterator i = levtrs.begin(); i != levtrs.end(); ++i)
-            found |= by_levtr.search(&*i, *sequences);
-        if (!found)
+        match::SequenceBuilder<LevTr> lookup_by_levtr(by_levtr);
+        levtrs.copy_valptrs_to(stl::trivial_inserter(lookup_by_levtr));
+        if (!lookup_by_levtr.found_items_in_index())
         {
             trace_query(" no matching levtrs found, setting empty result\n");
             res.set_to_empty();
             return;
         }
         // OR the results together into a single sequence
-        strategy.add_union(sequences);
+        res.add_union(lookup_by_levtr.release_sequences());
     }
 
     int mind[6], maxd[6];
@@ -247,7 +241,7 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
             return;
         }
         // OR the results together into a single sequence
-        strategy.add_union(sequences);
+        res.add_union(sequences);
 
 #warning TODO: also add a matcher to match datetimes fully, since the index only selects on dates
     }
@@ -255,7 +249,7 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
     {
         trace_query("Found varcode=%s\n", val);
-        strategy.add(new MatchVarcode(descriptor_code(val)));
+        res.add(new MatchVarcode(descriptor_code(val)));
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
@@ -265,7 +259,7 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
         size_t len;
         for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
             codes.insert(WR_STRING_TO_VAR(val + pos + 1));
-        strategy.add(new MatchVarcodes(codes));
+        res.add(new MatchVarcodes(codes));
     }
 
 #if 0
@@ -295,17 +289,16 @@ void Values::query(const Record& rec, const Results<Station>& stations, const Re
     if (const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER))
     {
         trace_query("Found data_filter=%s\n", val);
-        strategy.add(new MatchDataFilter(val));
+        res.add(new MatchDataFilter(val));
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER))
     {
         trace_query("Found attr_filter=%s\n", val);
-        strategy.add(new MatchAttrFilter(val));
+        res.add(new MatchAttrFilter(val));
     }
 
-    strategy.activate(res);
-    trace_query("Strategy activated, %zu results\n", res.size());
+    //trace_query("Strategy activated, %zu results\n", res.size());
 }
 
 void Values::dump(FILE* out) const

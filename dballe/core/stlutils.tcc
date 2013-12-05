@@ -26,6 +26,19 @@ namespace stl {
 
 namespace stlutils {
 
+template<typename T>
+struct SequenceSingleton : public Sequence<T>
+{
+    T val;
+    bool exausted;
+
+    SequenceSingleton(const T& val) : val(val), exausted(false) {}
+
+    virtual bool valid() const { return !exausted; }
+    virtual const T& get() const { return val; }
+    virtual void next() { exausted = true; }
+};
+
 template<typename ITER>
 struct SequenceIters : public Sequence<typename ITER::value_type>
 {
@@ -72,6 +85,11 @@ struct SequenceIntersection : public Sequence<T>
 
 } // back to dballe::stl
 
+template<typename T>
+void Sequences<T>::add_singleton(const T& val)
+{
+    this->push_back(new stlutils::SequenceSingleton<T>(val));
+}
 
 template<typename T> template<typename ITER>
 void Sequences<T>::add(const ITER& begin, const ITER& end)

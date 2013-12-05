@@ -23,6 +23,7 @@
 #define DBA_MEMDB_LTR_H
 
 #include <dballe/memdb/core.h>
+#include <dballe/memdb/index.h>
 #include <dballe/core/defs.h>
 
 namespace dballe {
