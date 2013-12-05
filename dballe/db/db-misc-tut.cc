@@ -17,24 +17,36 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef TUT_TEST_BODY
-
-#include "db-tut.h"
+#include "config.h"
+#include "db/test-utils-db.h"
 #include "db/querybuf.h"
 #include <wibble/string.h>
 
 using namespace dballe;
 using namespace dballe::db;
+using namespace dballe::tests;
 using namespace wreport;
 using namespace wibble;
 using namespace wibble::tests;
 using namespace std;
 
-namespace dballe {
-namespace tests {
+namespace {
 
-void db_tests::test_simple_insert()
+struct db_tests_basic : public dballe::tests::DB_test_base
 {
+};
+
+}
+
+namespace tut {
+
+typedef db_tg<db_tests_basic> tg;
+typedef tg::object to;
+
+template<> template<> void to::test<1>()
+{
+    // Test a simple insert round trip
+
     // Insert some data
     dballe::tests::TestRecord ds;
     ds.station = ds_st_navile;
@@ -66,8 +78,10 @@ void db_tests::test_simple_insert()
     // TODO
 }
 
-void db_tests::test_insert()
+template<> template<> void to::test<2>()
 {
+    // Test insert
+
     // Prepare a valid record to insert
     Record insert(dataset0.data);
     wrunchecked(dataset0.station.set_latlonident_into(insert));
@@ -95,8 +109,10 @@ void db_tests::test_insert()
     }
 }
 
-void db_tests::test_double_station_insert()
+template<> template<> void to::test<3>()
 {
+    // Test double station insert
+
     // Prepare a valid record to insert
     Record insert(dataset0.data);
     wrunchecked(dataset0.station.set_latlonident_into(insert));
@@ -112,8 +128,9 @@ void db_tests::test_double_station_insert()
     }
 }
 
-void db_tests::test_ana_query()
+template<> template<> void to::test<4>()
 {
+    // Test ana query
     wruntest(populate_database);
 
     /*
@@ -141,10 +158,9 @@ void db_tests::test_ana_query()
     ensure(!cur->next());
 }
 
-void db_tests::test_misc_queries() {} // Moved to test-query
-
-void db_tests::test_querybest()
+template<> template<> void to::test<5>()
 {
+    // Test querybest
     wruntest(populate_database);
 
     //if (db->server_type == ORACLE || db->server_type == POSTGRES)
@@ -183,8 +199,9 @@ void db_tests::test_querybest()
     ensure(!cur->next());
 }
 
-void db_tests::test_deletion()
+template<> template<> void to::test<6>()
 {
+    // Test deletion
     wruntest(populate_database);
 
     // 4 items to begin with
@@ -243,8 +260,10 @@ void db_tests::test_deletion()
     }
 }
 
-void db_tests::test_datetime_queries()
+template<> template<> void to::test<7>()
 {
+    // Test datetime queries
+
     /* Prepare test data */
     Record base, a, b;
 
@@ -478,8 +497,9 @@ void db_tests::test_datetime_queries()
     WANTRESULT(b);
 }
 
-void db_tests::test_qc()
+template<> template<> void to::test<8>()
 {
+    // Test QC
     wruntest(populate_database);
 
     query.clear();
@@ -553,8 +573,9 @@ void db_tests::test_qc()
     /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
 }
 
-void db_tests::test_ana_queries()
+template<> template<> void to::test<9>()
 {
+    // Test station queries
     wruntest(populate_database);
 
     query.clear();
@@ -567,10 +588,10 @@ void db_tests::test_ana_queries()
     ensure(!cur->next());
 }
 
-void db_tests::test_vacuum() {} // Moved to basic test module
-
-void db_tests::test_attrs()
+template<> template<> void to::test<10>()
 {
+    // Test attributes
+
     // Insert a data record
     wruntest(dataset0.insert, *db);
 
@@ -617,8 +638,10 @@ void db_tests::test_attrs()
     ensure_varcode_equals(vars[9]->code(), WR_VAR(0,  33, 32)); ensure_var_equals(*vars[9],  6);
 }
 
-void db_tests::test_wrap_longitude()
+template<> template<> void to::test<11>()
 {
+    // Test longitude wrapping around
+
     // Insert a data record
     wruntest(dataset0.insert, *db);
 
@@ -633,8 +656,10 @@ void db_tests::test_wrap_longitude()
     cur->discard_rest();
 }
 
-void db_tests::test_ana_filter()
+template<> template<> void to::test<12>()
 {
+    // Test ana filter
+
     // Test numeric comparisons in ana_filter
     wruntest(populate_database);
 
@@ -706,75 +731,11 @@ void db_tests::test_ana_filter()
     cur->discard_rest();
 }
 
-void db_tests::test_datetime_extremes()
+
+template<> template<> void to::test<13>()
 {
-#warning temporary disabled
-#if 0
-    wruntest(populate_database);
+    // Reproduce a querybest scenario which produced invalid SQL
 
-    // All DB
-    query.clear();
-    db->query_datetime_extremes(query, result);
-
-    ensure_equals(result.get("yearmin",  -1), 1945);
-    ensure_equals(result.get("monthmin", -1),    4);
-    ensure_equals(result.get("daymin",   -1),   25);
-    ensure_equals(result.get("hourmin",  -1),    8);
-    ensure_equals(result.get("minumin",  -1),    0);
-    ensure_equals(result.get("secmin",   -1),    0);
-
-    ensure_equals(result.get("yearmax",  -1), 1945);
-    ensure_equals(result.get("monthmax", -1),    4);
-    ensure_equals(result.get("daymax",   -1),   25);
-    ensure_equals(result.get("hourmax",  -1),    8);
-    ensure_equals(result.get("minumax",  -1),   30);
-    ensure_equals(result.get("secmax",   -1),    0);
-
-    // Subset of the DB
-    query.clear();
-    query.set("pindicator", 20);
-    query.set("p1", 111);
-    query.set("p2", 122);
-    db->query_datetime_extremes(query, result);
-
-    ensure_equals(result.get("yearmin",  -1), 1945);
-    ensure_equals(result.get("monthmin", -1),    4);
-    ensure_equals(result.get("daymin",   -1),   25);
-    ensure_equals(result.get("hourmin",  -1),    8);
-    ensure_equals(result.get("minumin",  -1),    0);
-    ensure_equals(result.get("secmin",   -1),    0);
-
-    ensure_equals(result.get("yearmax",  -1), 1945);
-    ensure_equals(result.get("monthmax", -1),    4);
-    ensure_equals(result.get("daymax",   -1),   25);
-    ensure_equals(result.get("hourmax",  -1),    8);
-    ensure_equals(result.get("minumax",  -1),    0);
-    ensure_equals(result.get("secmax",   -1),    0);
-
-    // No matches
-    query.clear();
-    query.set("pindicator", 1);
-    db->query_datetime_extremes(query, result);
-
-    ensure_equals(result.get("yearmin",  -1), -1);
-    ensure_equals(result.get("monthmin", -1), -1);
-    ensure_equals(result.get("daymin",   -1), -1);
-    ensure_equals(result.get("hourmin",  -1), -1);
-    ensure_equals(result.get("minumin",  -1), -1);
-    ensure_equals(result.get("secmin",   -1), -1);
-
-    ensure_equals(result.get("yearmax",  -1), -1);
-    ensure_equals(result.get("monthmax", -1), -1);
-    ensure_equals(result.get("daymax",   -1), -1);
-    ensure_equals(result.get("hourmax",  -1), -1);
-    ensure_equals(result.get("minumax",  -1), -1);
-    ensure_equals(result.get("secmax",   -1), -1);
-#endif
-}
-
-void db_tests::test_invalid_sql_querybest()
-{
-// Reproduce a querybest scenario which produced invalid SQL
     wruntest(populate_database);
     // SELECT pa.lat, pa.lon, pa.ident,
     //        d.datetime, d.id_report, d.id_var, d.value,
@@ -800,7 +761,7 @@ void db_tests::test_invalid_sql_querybest()
     }
 }
 
-void db_tests::test_bug_querybest()
+template<> template<> void to::test<14>()
 {
     // Reproduce a querybest scenario which produced always the same data record
 
@@ -837,7 +798,7 @@ void db_tests::test_bug_querybest()
     ensure_equals(count, orig_count);
 }
 
-void db_tests::test_bug_query_stations_by_level()
+template<> template<> void to::test<15>()
 {
     // Reproduce a query that generated invalid SQL on V6
     wruntest(populate_database);
@@ -849,21 +810,9 @@ void db_tests::test_bug_query_stations_by_level()
     db->query_stations(query);
 }
 
-void db_tests::test_bug_query_levels_by_station()
+template<> template<> void to::test<16>()
 {
-    // Reproduce a query that generated invalid SQL on V6
-    wruntest(populate_database);
-
-    // All DB
-    query.clear();
-    query.set(DBA_KEY_ANA_ID, 1);
-    //db->query_levels(query);
-    //db->query_tranges(query);
-#warning currently disabled
-}
-
-void db_tests::test_connect_leaks()
-{
+    // Test connect leaks
     insert.clear();
     insert.set_ana_context();
     insert.set(DBA_KEY_LAT, 12.34560);
@@ -880,12 +829,9 @@ void db_tests::test_connect_leaks()
     }
 }
 
-void db_tests::test_query_stations() {} // Moved to own module
-
-void db_tests::test_summary_queries() {} // Moved to own module
-
-void db_tests::test_value_update()
+template<> template<> void to::test<17>()
 {
+    // Test value update
     db->reset();
     dballe::tests::TestRecord dataset = dataset0;
     Record& attrs = dataset.attrs[WR_VAR(0, 1, 12)];
@@ -946,7 +892,7 @@ void db_tests::test_value_update()
     ensure_equals(qattrs.get(WR_VAR(0, 33, 7), MISSING_INT), 50);
 }
 
-void db_tests::test_query_step_by_step()
+template<> template<> void to::test<18>()
 {
     // Try a query checking all the steps
     wruntest(populate_database);
@@ -989,8 +935,10 @@ void db_tests::test_query_step_by_step()
     ensure(!cur->next());
 }
 
-void db_tests::test_double_stationinfo_insert()
+template<> template<> void to::test<19>()
 {
+    // Test double insert of station info
+
     //wassert(actual(*db).empty());
     wruntest(ds_st_navile.insert, *db, true);
     wruntest(ds_st_navile.insert, *db, true);
@@ -1004,8 +952,10 @@ void db_tests::test_double_stationinfo_insert()
     wassert(actual(cur).station_vars_match(ds_st_navile));
 }
 
-void db_tests::test_double_stationinfo_insert1()
+template<> template<> void to::test<20>()
 {
+    // Test double insert of station info
+
     //wassert(actual(*db).empty());
 
     dballe::tests::TestStation ds_st_navile_metar(ds_st_navile);
@@ -1027,8 +977,10 @@ void db_tests::test_double_stationinfo_insert1()
     wassert(actual(cur->get_rep_memo()) == "metar");
 }
 
-void db_tests::test_insert_undef_lev2()
+template<> template<> void to::test<21>()
 {
+    // Test handling of values with undefined leveltype2 and l2
+
     // Insert with undef leveltype2 and l2
     use_db();
     wruntest(populate_database);
@@ -1065,8 +1017,10 @@ void db_tests::test_insert_undef_lev2()
     ensure(!cur->next());
 }
 
-void db_tests::test_query_undef_lev2()
+template<> template<> void to::test<22>()
 {
+    // Test handling of values with undefined leveltype2 and l2
+
     // Query with undef leveltype2 and l2
     use_db();
     wruntest(populate_database);
@@ -1080,7 +1034,7 @@ void db_tests::test_query_undef_lev2()
     cur->discard_rest();
 }
 
-void db_tests::test_query_bad_attr_filter()
+template<> template<> void to::test<23>()
 {
     // Query with an incorrect attr_filter
     use_db();
@@ -1096,7 +1050,7 @@ void db_tests::test_query_bad_attr_filter()
     }
 }
 
-void db_tests::test_querybest_priomax()
+template<> template<> void to::test<24>()
 {
     // Test querying priomax together with query=best
     use_db();
@@ -1177,7 +1131,7 @@ void db_tests::test_querybest_priomax()
     }
 }
 
-void db_tests::test_repmemo_in_output()
+template<> template<> void to::test<25>()
 {
     // Ensure that rep_memo is set in the results
     use_db();
@@ -1193,41 +1147,95 @@ void db_tests::test_repmemo_in_output()
     }
 }
 
-}
-}
+#if 0
+void db_tests::test_datetime_extremes()
+{
+#warning temporary disabled
+#if 0
+    wruntest(populate_database);
 
-#else
+    // All DB
+    query.clear();
+    db->query_datetime_extremes(query, result);
 
-template<> template<> void to::test<1>() { test_simple_insert(); }
-template<> template<> void to::test<2>() { test_insert(); }
-template<> template<> void to::test<3>() { test_double_station_insert(); }
-template<> template<> void to::test<4>() { test_ana_query(); }
-template<> template<> void to::test<5>() { test_misc_queries(); }
-template<> template<> void to::test<6>() { test_querybest(); }
-template<> template<> void to::test<7>() { test_deletion(); }
-template<> template<> void to::test<8>() { test_datetime_queries(); }
-template<> template<> void to::test<9>() { test_qc(); }
-template<> template<> void to::test<10>() { test_ana_queries(); }
-template<> template<> void to::test<11>() { test_vacuum(); }
-template<> template<> void to::test<12>() { test_attrs(); }
-template<> template<> void to::test<13>() { test_wrap_longitude(); }
-template<> template<> void to::test<14>() { test_ana_filter(); }
-template<> template<> void to::test<15>() { test_datetime_extremes(); }
-template<> template<> void to::test<16>() { test_invalid_sql_querybest(); }
-template<> template<> void to::test<17>() { test_bug_querybest(); }
-template<> template<> void to::test<18>() { test_bug_query_stations_by_level(); }
-template<> template<> void to::test<19>() { test_bug_query_levels_by_station(); }
-template<> template<> void to::test<20>() { test_connect_leaks(); }
-template<> template<> void to::test<21>() { test_query_stations(); }
-template<> template<> void to::test<22>() { test_summary_queries(); }
-template<> template<> void to::test<23>() { test_value_update(); }
-template<> template<> void to::test<24>() { test_query_step_by_step(); }
-template<> template<> void to::test<25>() { test_double_stationinfo_insert(); }
-template<> template<> void to::test<26>() { test_double_stationinfo_insert1(); }
-template<> template<> void to::test<27>() { test_insert_undef_lev2(); }
-template<> template<> void to::test<28>() { test_query_undef_lev2(); }
-template<> template<> void to::test<29>() { test_query_bad_attr_filter(); }
-template<> template<> void to::test<30>() { test_querybest_priomax(); }
-template<> template<> void to::test<31>() { test_repmemo_in_output(); }
+    ensure_equals(result.get("yearmin",  -1), 1945);
+    ensure_equals(result.get("monthmin", -1),    4);
+    ensure_equals(result.get("daymin",   -1),   25);
+    ensure_equals(result.get("hourmin",  -1),    8);
+    ensure_equals(result.get("minumin",  -1),    0);
+    ensure_equals(result.get("secmin",   -1),    0);
 
+    ensure_equals(result.get("yearmax",  -1), 1945);
+    ensure_equals(result.get("monthmax", -1),    4);
+    ensure_equals(result.get("daymax",   -1),   25);
+    ensure_equals(result.get("hourmax",  -1),    8);
+    ensure_equals(result.get("minumax",  -1),   30);
+    ensure_equals(result.get("secmax",   -1),    0);
+
+    // Subset of the DB
+    query.clear();
+    query.set("pindicator", 20);
+    query.set("p1", 111);
+    query.set("p2", 122);
+    db->query_datetime_extremes(query, result);
+
+    ensure_equals(result.get("yearmin",  -1), 1945);
+    ensure_equals(result.get("monthmin", -1),    4);
+    ensure_equals(result.get("daymin",   -1),   25);
+    ensure_equals(result.get("hourmin",  -1),    8);
+    ensure_equals(result.get("minumin",  -1),    0);
+    ensure_equals(result.get("secmin",   -1),    0);
+
+    ensure_equals(result.get("yearmax",  -1), 1945);
+    ensure_equals(result.get("monthmax", -1),    4);
+    ensure_equals(result.get("daymax",   -1),   25);
+    ensure_equals(result.get("hourmax",  -1),    8);
+    ensure_equals(result.get("minumax",  -1),    0);
+    ensure_equals(result.get("secmax",   -1),    0);
+
+    // No matches
+    query.clear();
+    query.set("pindicator", 1);
+    db->query_datetime_extremes(query, result);
+
+    ensure_equals(result.get("yearmin",  -1), -1);
+    ensure_equals(result.get("monthmin", -1), -1);
+    ensure_equals(result.get("daymin",   -1), -1);
+    ensure_equals(result.get("hourmin",  -1), -1);
+    ensure_equals(result.get("minumin",  -1), -1);
+    ensure_equals(result.get("secmin",   -1), -1);
+
+    ensure_equals(result.get("yearmax",  -1), -1);
+    ensure_equals(result.get("monthmax", -1), -1);
+    ensure_equals(result.get("daymax",   -1), -1);
+    ensure_equals(result.get("hourmax",  -1), -1);
+    ensure_equals(result.get("minumax",  -1), -1);
+    ensure_equals(result.get("secmax",   -1), -1);
 #endif
+}
+
+template<> template<> void to::test<15>()
+{
+    // Reproduce a query that generated invalid SQL on V6
+    wruntest(populate_database);
+
+    // All DB
+    query.clear();
+    query.set(DBA_KEY_ANA_ID, 1);
+    //db->query_levels(query);
+    //db->query_tranges(query);
+#warning currently disabled
+}
+#endif
+
+}
+
+namespace {
+
+tut::tg db_tests_mem_tg("db_misc_mem", MEM);
+#ifdef HAVE_ODBC
+tut::tg db_tests_v5_tg("db_misc_v5", V5);
+tut::tg db_tests_v6_tg("db_misc_v6", V6);
+#endif
+
+}

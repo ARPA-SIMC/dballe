@@ -236,8 +236,7 @@ dist_noinst_HEADERS = \
 	memdb/tests.h \
 	msg/test-utils-msg.h \
 	msg/test-utils-lua.h \
-	db/test-utils-db.h \
-	db/db-tut.h
+	db/test-utils-db.h
 
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
@@ -275,11 +274,10 @@ tut_test_SOURCES = \
 	db/test-utils-db.cc \
 	db/modifiers-tut.cc \
 	db/db-basic-tut.cc \
-	db/db-tut.cc \
+	db/db-misc-tut.cc \
 	db/db-station-query-tut.cc \
 	db/db-data-query-tut.cc \
 	db/db-summary-query-tut.cc \
-	db/db-mem-tut.cc \
 	db/db-import-tut.cc \
 	db/db-export-tut.cc \
 	db/mem/repinfo-tut.cc \
@@ -296,8 +294,6 @@ if HAVE_ODBC
 tut_test_SOURCES += \
 	db/tests/querybuf.cc \
 	db/tests/internals.cc \
-	db/db-v5-tut.cc \
-	db/db-v6-tut.cc \
 	db/v5/tests/repinfo.cc \
 	db/v5/tests/station.cc \
 	db/v5/tests/context.cc \
