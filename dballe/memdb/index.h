@@ -24,6 +24,7 @@
 
 #include <set>
 #include <map>
+#include <memory>
 #include <cstddef>
 
 namespace dballe {
@@ -42,7 +43,7 @@ struct Index : public std::map< T, std::set<size_t> >
     typedef typename std::map< T, std::set<size_t> >::const_iterator const_iterator;
 
     /// Lookup all positions for a value
-    std::set<size_t> search(const T& el) const;
+    const std::set<size_t>* search(const T& el) const;
 
     /**
      * Lookup all positions for a value, appending the results to a SetIntersection
@@ -52,35 +53,46 @@ struct Index : public std::map< T, std::set<size_t> >
     bool search(const T& el, stl::SetIntersection<size_t>& out) const;
 
     /**
-     * Lookup all positions for a value, appending the results to a Sequences
-     *
-     * @returns false if el was not found; it leaves out untouched in that case
-     */
-    bool search(const T& el, stl::Sequences<size_t>& out) const;
-
-    /**
      * Lookup all positions for a value and all values after it, appending the
      * results to a Sequences
      *
-     * @returns false if el was not found; it leaves out untouched in that case
+     * If the extremes match the whole index, returns 0 without allocating a
+     * Sequences, and sets found to true.
+     *
+     * If the extremes do not match anything in the index, returns 0 without
+     * allocating a Sequences and sets found to false.
+     *
+     * Else, returns a Sequences and sets found to true.
      */
-    bool search_from(const T& first, stl::Sequences<size_t>& out) const;
+    std::auto_ptr< stl::Sequences<size_t> > search_from(const T& first, bool& found) const;
 
     /**
      * Lookup all positions all values before the given one, appending the
      * results to a Sequences
      *
-     * @returns false if el was not found; it leaves out untouched in that case
+     * If the extremes match the whole index, returns 0 without allocating a
+     * Sequences, and sets found to true.
+     *
+     * If the extremes do not match anything in the index, returns 0 without
+     * allocating a Sequences and sets found to false.
+     *
+     * Else, returns a Sequences and sets found to true.
      */
-    bool search_to(const T& end, stl::Sequences<size_t>& out) const;
+    std::auto_ptr< stl::Sequences<size_t> > search_to(const T& end, bool& found) const;
 
     /**
      * Lookup all positions all values between two extremes (first included,
-     * second excluded), appending the results to a Sequences
+     * second excluded), appending the results to a Sequences.
      *
-     * @returns false if el was not found; it leaves out untouched in that case
+     * If the extremes match the whole index, returns 0 without allocating a
+     * Sequences, and sets found to true.
+     *
+     * If the extremes do not match anything in the index, returns 0 without
+     * allocating a Sequences and sets found to false.
+     *
+     * Else, returns a Sequences and sets found to true.
      */
-    bool search_between(const T& first, const T& end, stl::Sequences<size_t>& out) const;
+    std::auto_ptr< stl::Sequences<size_t> > search_between(const T& first, const T& end, bool& found) const;
 
 #if 0
     void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, BaseResults& res) const;

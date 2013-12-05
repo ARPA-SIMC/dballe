@@ -221,40 +221,57 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
     if (mind[0] != -1 || maxd[0] != -1)
     {
         auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
-        bool found = false;
         if (mind[0] == maxd[0] && mind[1] == maxd[1] && mind[2] == maxd[2])
         {
             Date d(mind);
-            found |= by_date.search(d, *sequences);
+            const set<size_t>* s = by_date.search(d);
             trace_query("Found exact date %04d-%02d-%02d\n", d.year, d.month, d.day);
-        } else if (mind[0] == -1) {
-            Date d(maxd);
-            found |= by_date.search_to(d, *sequences);
-            trace_query("Found date max %04d-%02d-%02d\n", d.year, d.month, d.day);
-        } else if (maxd[0] == -1) {
-            Date d(mind);
-            found |= by_date.search_from(d, *sequences);
-            IF_TRACE_QUERY {
-                for (Index<Date>::const_iterator i = by_date.lower_bound(d); i != by_date.end(); ++i)
-                    trace_query(" Selecting %04d-%02d-%02d %zd elements\n", i->first.year, i->first.month, i->first.day, i->second.size());
+            if (!s)
+            {
+                trace_query(" date not found in index, setting to the empty result set\n");
+                res.set_to_empty();
+                return;
             }
-            trace_query("Found date min %04d-%02d-%02d\n", d.year, d.month, d.day);
+            if (by_date.size() == 1)
+            {
+                trace_query(" date matches the whole index: no point in adding a filter\n");
+            } else {
+                res.add(*s);
+            }
         } else {
-            Date dmin(mind);
-            Date dmax(maxd);
-            found |= by_date.search_between(dmin, dmax, *sequences);
-            trace_query("Found date range %04d-%02d-%02d to %04d-%02d-%02d\n",
-                    dmin.year, dmin.month, dmin.day, dmax.year, dmax.month, dmax.day);
-        }
-        if (!found)
-        {
-            trace_query("No matching dates found, setting to empty result set\n");
-            res.set_to_empty();
-            return;
-        }
-        // OR the results together into a single sequence
-        res.add_union(sequences);
+            bool found;
+            auto_ptr< stl::Sequences<size_t> > sequences;
 
+            if (maxd[0] == -1) {
+                Date d(mind);
+                sequences = by_date.search_from(mind, found);
+                trace_query("Found date min %04d-%02d-%02d\n", d.year, d.month, d.day);
+            } else if (mind[0] == -1) {
+                // FIXME: we need to add 1 second to maxd, as it is right extreme excluded
+                Date d(maxd);
+                sequences = by_date.search_to(d, found);
+                trace_query("Found date max %04d-%02d-%02d\n", d.year, d.month, d.day);
+            } else {
+                // FIXME: we need to add 1 second to maxd, as it is right extreme excluded
+                Date dmin(mind);
+                Date dmax(maxd);
+                sequences = by_date.search_between(mind, maxd, found);
+                trace_query("Found date range %04d-%02d-%02d to %04d-%02d-%02d\n",
+                        dmin.year, dmin.month, dmin.day, dmax.year, dmax.month, dmax.day);
+            }
+
+            if (!found)
+            {
+                trace_query(" no matching dates found, setting to the empty result set\n");
+                res.set_to_empty();
+                return;
+            }
+
+            if (sequences.get())
+                res.add_union(sequences);
+            else
+                trace_query(" date range matches the whole index: no point in adding a filter\n");
+        }
 #warning TODO: also add a matcher to match datetimes fully, since the index only selects on dates
     }
 

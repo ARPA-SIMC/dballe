@@ -78,7 +78,7 @@ struct Station
 class Stations : public ValueStorage<Station>
 {
 protected:
-    Index<Coord> by_coord;
+    Index<int> by_lat;
     Index<std::string> by_ident;
 
 public:

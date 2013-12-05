@@ -151,4 +151,26 @@ void to::test<4>()
     wassert(actual(res.is_empty()).isfalse());
 }
 
+template<> template<>
+void to::test<5>()
+{
+    // Query latitudes matching multiple index entries
+    Stations stations;
+    size_t pos1 = stations.obtain_fixed(Coord(44.0, 11.0), "synop");
+    size_t pos2 = stations.obtain_fixed(Coord(45.0, 11.0), "synop");
+    size_t pos3 = stations.obtain_fixed(Coord(46.0, 11.0), "synop");
+
+    Record query;
+    query.set(DBA_KEY_LATMIN, 45.0);
+
+    Results<Station> res(stations);
+    stations.query(query, res);
+
+    vector<const Station*> items = get_results(res);
+    wassert(actual(items.size()) == 2);
+    wassert(actual(items[0]->id) == pos2);
+    wassert(actual(items[1]->id) == pos3);
+}
+
+
 }

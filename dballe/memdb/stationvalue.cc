@@ -49,30 +49,32 @@ void StationValues::clear()
 
 const StationValue* StationValues::get(const Station& station, wreport::Varcode code) const
 {
-    set<size_t> res = by_station.search(&station);
-    for (set<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
-    {
-        const StationValue* s = (*this)[*i];
-        if (s && s->var->code() == code)
-            return s;
-    }
+    const set<size_t>* res = by_station.search(&station);
+    if (res)
+        for (set<size_t>::const_iterator i = res->begin(); i != res->end(); ++i)
+        {
+            const StationValue* s = (*this)[*i];
+            if (s && s->var->code() == code)
+                return s;
+        }
     return 0;
 }
 
 size_t StationValues::insert(const Station& station, std::auto_ptr<Var> var, bool replace)
 {
-    set<size_t> res = by_station.search(&station);
-    for (set<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
-    {
-        StationValue* s = (*this)[*i];
-        if (s && s->var->code() == var->code())
+    const set<size_t>* res = by_station.search(&station);
+    if (res)
+        for (set<size_t>::const_iterator i = res->begin(); i != res->end(); ++i)
         {
-            if (!replace)
-                throw error_consistency("cannot replace an existing station value");
-            s->replace(var);
-            return *i;
+            StationValue* s = (*this)[*i];
+            if (s && s->var->code() == var->code())
+            {
+                if (!replace)
+                    throw error_consistency("cannot replace an existing station value");
+                s->replace(var);
+                return *i;
+            }
         }
-    }
 
     // Value not found, create it
     size_t pos = value_add(new StationValue(station, var));
@@ -91,24 +93,27 @@ size_t StationValues::insert(const Station& station, const Var& var, bool replac
 
 bool StationValues::remove(const Station& station, Varcode code)
 {
-    set<size_t> res = by_station.search(&station);
-    for (set<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
-    {
-        const StationValue* s = (*this)[*i];
-        if (s && !s->var->code() == code)
+    const set<size_t>* res = by_station.search(&station);
+    if (res)
+        for (set<size_t>::const_iterator i = res->begin(); i != res->end(); ++i)
         {
-            by_station[&station].erase(*i);
-            value_remove(*i);
-            return true;
+            const StationValue* s = (*this)[*i];
+            if (s && !s->var->code() == code)
+            {
+                by_station[&station].erase(*i);
+                value_remove(*i);
+                return true;
+            }
         }
-    }
     return false;
 }
 
 void StationValues::fill_msg(const Station& station, msg::Context& ctx) const
 {
-    set<size_t> res = by_station.search(&station);
-    for (set<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
+    const set<size_t>* res = by_station.search(&station);
+    if (!res) return;
+
+    for (set<size_t>::const_iterator i = res->begin(); i != res->end(); ++i)
     {
         const StationValue* s = (*this)[*i];
         ctx.set(*s->var);

@@ -244,7 +244,10 @@ public:
 
     void insert(const T* val)
     {
-        found |= index.search(val, *sequences);
+        const std::set<size_t>* s = index.search(val);
+        if (!s || s->empty()) return;
+        sequences->add(*s);
+        found = true;
     }
 
 private:

@@ -13,13 +13,13 @@ struct Station;
 struct LevTr;
 
 template<typename T>
-std::set<size_t> Index<T>::search(const T& el) const
+const std::set<size_t>* Index<T>::search(const T& el) const
 {
     const_iterator i = this->find(el);
     if (i == this->end())
-        return set<size_t>();
+        return 0;
     else
-        return i->second;
+        return &(i->second);
 }
 
 template<typename T>
@@ -34,51 +34,92 @@ bool Index<T>::search(const T& el, stl::SetIntersection<size_t>& out) const
 }
 
 template<typename T>
-bool Index<T>::search(const T& el, stl::Sequences<size_t>& out) const
+std::auto_ptr< stl::Sequences<size_t> > Index<T>::search_from(const T& first, bool& found) const
 {
-    const_iterator i = this->find(el);
+    typedef std::auto_ptr< stl::Sequences<size_t> > RES;
+
+    const_iterator i = this->lower_bound(first);
+    if (i == this->begin())
+    {
+        // Whole index match
+        found = true;
+        return RES(0);
+    }
+
     if (i == this->end())
-        return false;
-
-    out.add(i->second);
-    return true;
-}
-
-template<typename T>
-bool Index<T>::search_from(const T& first, stl::Sequences<size_t>& out) const
-{
-    bool res = false;
-    for (const_iterator i = this->lower_bound(first); i != this->end(); ++i)
     {
-        out.add(i->second);
-        res = true;
+        // No match
+        found = false;
+        return RES(0);
     }
+
+    found = true;
+    RES res(new stl::Sequences<size_t>);
+    for ( ; i != this->end(); ++i)
+        res->add(i->second);
     return res;
 }
 
 template<typename T>
-bool Index<T>::search_to(const T& end, stl::Sequences<size_t>& out) const
+std::auto_ptr< stl::Sequences<size_t> > Index<T>::search_to(const T& end, bool& found) const
 {
-    bool res = false;
+    typedef std::auto_ptr< stl::Sequences<size_t> > RES;
+
     const_iterator i_end = this->upper_bound(end);
+    if (i_end == this->end())
+    {
+        // Whole index match
+        found = true;
+        return RES(0);
+    }
+
+    if (i_end == this->begin())
+    {
+        // No match
+        found = false;
+        return RES(0);
+    }
+
+    found = true;
+    RES res(new stl::Sequences<size_t>);
     for (const_iterator i = this->begin(); i != i_end; ++i)
-    {
-        out.add(i->second);
-        res = true;
-    }
+        res->add(i->second);
     return res;
 }
 
 template<typename T>
-bool Index<T>::search_between(const T& first, const T& end, stl::Sequences<size_t>& out) const
+std::auto_ptr< stl::Sequences<size_t> > Index<T>::search_between(const T& first, const T& end, bool& found) const
 {
-    bool res = false;
-    const_iterator i_end = this->upper_bound(end);
-    for (const_iterator i = this->lower_bound(first); i != i_end; ++i)
+    typedef std::auto_ptr< stl::Sequences<size_t> > RES;
+
+    if (end < first)
     {
-        out.add(i->second);
-        res = true;
+        // Impossible match
+        found = false;
+        return RES(0);
     }
+
+    const_iterator i = this->lower_bound(first);
+    const_iterator i_end = this->upper_bound(end);
+
+    if (i == this->begin() && i_end == this->end())
+    {
+        // Whole index match
+        found = true;
+        return RES(0);
+    }
+
+    if (i == this->end() && i_end == this->begin())
+    {
+        // No match
+        found = false;
+        return RES(0);
+    }
+
+    found = true;
+    RES res(new stl::Sequences<size_t>);
+    for ( ; i != i_end; ++i)
+        res->add(i->second);
     return res;
 }
 
@@ -94,7 +135,7 @@ void Positions::dump(FILE* out) const
 #endif
 
 template class Index<std::string>;
-template class Index<Coord>;
+template class Index<int>;
 template class Index<Level>;
 template class Index<Trange>;
 template class Index<const Station*>;
