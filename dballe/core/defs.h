@@ -226,6 +226,13 @@ struct Date
     {
     }
 
+    int compare(const Date& o) const
+    {
+        if (int res = year - o.year) return res;
+        if (int res = month - o.month) return res;
+        return day - o.day;
+    }
+
     bool operator<(const Date& dt) const;
     bool operator>(const Date& dt) const;
     bool operator==(const Date& dt) const;
@@ -248,6 +255,13 @@ struct Time
     {
     }
 
+    int compare(const Time& o) const
+    {
+        if (int res = hour - o.hour) return res;
+        if (int res = minute - o.minute) return res;
+        return second - o.second;
+    }
+
     bool operator<(const Time& dt) const;
     bool operator>(const Time& dt) const;
     bool operator==(const Time& dt) const;
@@ -267,6 +281,12 @@ struct Datetime
              unsigned char hour=0, unsigned char minute=0, unsigned char second=0)
         : date(year, month, day), time(hour, minute, second) {}
     Datetime(const int* val) : date(val), time(val+3) {}
+
+    int compare(const Datetime& o) const
+    {
+        if (int res = date.compare(o.date)) return res;
+        return time.compare(o.time);
+    }
 
     bool operator==(const Datetime& dt) const;
     bool operator!=(const Datetime& dt) const;

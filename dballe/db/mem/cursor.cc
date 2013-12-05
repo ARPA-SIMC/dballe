@@ -24,6 +24,7 @@
 #include "dballe/db/modifiers.h"
 #include "dballe/core/record.h"
 #include <queue>
+#include <stack>
 
 using namespace std;
 using namespace wreport;
@@ -187,7 +188,7 @@ void Cursor::add_station_info(Record& rec)
 
 namespace {
 
-struct StationResultQueue : public priority_queue<const Station*, vector<const Station*> >
+struct StationResultQueue : public stack<const Station*>
 {
     StationResultQueue(Results<Station>& res)
     {
@@ -195,9 +196,35 @@ struct StationResultQueue : public priority_queue<const Station*, vector<const S
     }
 };
 
-struct DataResultQueue : public priority_queue<size_t, vector<size_t> >
+struct CompareData
 {
+    const ValueStorage<Value>& values;
+
+    CompareData(const ValueStorage<Value>& values) : values(values) {}
+
+    // Return an inverse comparison, so that the priority queue gives us the
+    // smallest items first
+    bool operator() (size_t x, size_t y) const
+    {
+        const Value& vx = *values[x];
+        const Value& vy = *values[y];
+
+        if (vx.station.id < vy.station.id) return false;
+        if (vx.station.id > vy.station.id) return true;
+
+        if (int res = vx.datetime.compare(vy.datetime)) return res > 0;
+        if (int res = vx.levtr.level.compare(vy.levtr.level)) return res > 0;
+        if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res > 0;
+
+        return false; // They are the same
+    }
+};
+
+struct DataResultQueue : public priority_queue<size_t, vector<size_t>, CompareData>
+{
+
     DataResultQueue(Results<Value>& res)
+        : priority_queue<size_t, vector<size_t>, CompareData>(CompareData(res.values))
     {
         res.copy_indices_to(stl::pusher(*this));
     }
