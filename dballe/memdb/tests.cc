@@ -18,14 +18,28 @@
  */
 
 #include "tests.h"
+#include "memdb.h"
 
+using namespace dballe::memdb;
 using namespace wibble;
 using namespace std;
 
 namespace dballe {
 namespace tests {
 
+std::vector<const Value*> _get_data_results(WIBBLE_TEST_LOCPRM, const Memdb& memdb, const Record& query)
+{
+    using namespace wibble::tests;
+
+    Results<Value> res(memdb.values);
+    memdb.query_data(query, res);
+    std::vector<const Value*> items;
+    res.copy_valptrs_to(std::back_inserter(items));
+    return items;
+}
+
+
 }
 }
 
-// vim:set ts=4 sw=4:
+#include "query.tcc"

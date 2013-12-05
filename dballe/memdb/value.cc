@@ -175,6 +175,44 @@ private:
     MatchAttrFilter& operator=(const MatchAttrFilter&);
 };
 
+struct MatchDateExact : public Match<Value>
+{
+    Datetime dt;
+    MatchDateExact(const Datetime& dt) : dt(dt) {}
+    virtual bool operator()(const Value& val) const
+    {
+        return val.datetime == dt;
+    }
+};
+struct MatchDateMin : public Match<Value>
+{
+    Datetime dt;
+    MatchDateMin(const Datetime& dt) : dt(dt) {}
+    virtual bool operator()(const Value& val) const
+    {
+        return !(val.datetime < dt);
+    }
+};
+struct MatchDateMax : public Match<Value>
+{
+    Datetime dt;
+    MatchDateMax(const Datetime& dt) : dt(dt) {}
+    virtual bool operator()(const Value& val) const
+    {
+        return !(val.datetime > dt);
+    }
+};
+struct MatchDateMinMax : public Match<Value>
+{
+    Datetime dtmin;
+    Datetime dtmax;
+    MatchDateMinMax(const Datetime& dtmin, const Datetime& dtmax) : dtmin(dtmin), dtmax(dtmax) {}
+    virtual bool operator()(const Value& val) const
+    {
+        return !(dtmin > val.datetime) && !(val.datetime > dtmax);
+    }
+};
+
 
 }
 
@@ -247,24 +285,32 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
             } else {
                 res.add(*s);
             }
+            if (mind[3] == maxd[3] && mind[4] == maxd[4] && mind[5] == maxd[5])
+                res.add(new MatchDateExact(mind));
+            else
+                res.add(new MatchDateMinMax(mind, maxd));
         } else {
             bool found;
             auto_ptr< stl::Sequences<size_t> > sequences;
+            auto_ptr< Match<Value> > extra_match;
 
             if (maxd[0] == -1) {
                 Date d(mind);
                 sequences = by_date.search_from(mind, found);
+                extra_match.reset(new MatchDateMin(mind));
                 trace_query("Found date min %04d-%02d-%02d\n", d.year, d.month, d.day);
             } else if (mind[0] == -1) {
                 // FIXME: we need to add 1 second to maxd, as it is right extreme excluded
                 Date d(maxd);
                 sequences = by_date.search_to(d, found);
+                extra_match.reset(new MatchDateMax(maxd));
                 trace_query("Found date max %04d-%02d-%02d\n", d.year, d.month, d.day);
             } else {
                 // FIXME: we need to add 1 second to maxd, as it is right extreme excluded
                 Date dmin(mind);
                 Date dmax(maxd);
-                sequences = by_date.search_between(mind, maxd, found);
+                sequences = by_date.search_between(dmin, dmax, found);
+                extra_match.reset(new MatchDateMinMax(mind, maxd));
                 trace_query("Found date range %04d-%02d-%02d to %04d-%02d-%02d\n",
                         dmin.year, dmin.month, dmin.day, dmax.year, dmax.month, dmax.day);
             }
@@ -280,8 +326,9 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
                 res.add_union(sequences);
             else
                 trace_query(" date range matches the whole index: no point in adding a filter\n");
+
+            res.add(extra_match.release());
         }
-#warning TODO: also add a matcher to match datetimes fully, since the index only selects on dates
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))

@@ -16,6 +16,8 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
+#ifndef DBA_MEMDB_TESTS_H
+#define DBA_MEMDB_TESTS_H
 
 #include <dballe/core/test-utils-core.h>
 #include <dballe/memdb/query.h>
@@ -23,6 +25,12 @@
 #include <iterator>
 
 namespace dballe {
+struct Memdb;
+
+namespace memdb {
+struct Value;
+}
+
 namespace tests {
 
 template<typename T>
@@ -39,7 +47,10 @@ static inline std::vector<const T*> _get_results(WIBBLE_TEST_LOCPRM, memdb::Resu
 
 #define get_results(res) _get_results(wibble_test_location.nest(wibble_test_location_info, __FILE__, __LINE__, "get_results(" #res ")"), res)
 
+std::vector<const memdb::Value*> _get_data_results(WIBBLE_TEST_LOCPRM, const Memdb& memdb, const Record& query);
+#define get_data_results(memdb, query) _get_data_results(wibble_test_location.nest(wibble_test_location_info, __FILE__, __LINE__, "get_data_results(" #memdb ", " #query ")"), memdb, query)
+
 }
 }
 
-// vim:set ts=4 sw=4:
+#endif

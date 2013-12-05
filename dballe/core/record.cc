@@ -608,6 +608,26 @@ void Record::set(const Datetime& dt)
     set(DBA_KEY_SEC,   (int)dt.time.second);
 }
 
+void Record::setmin(const Datetime& dt)
+{
+    set(DBA_KEY_YEARMIN,  (int)dt.date.year);
+    set(DBA_KEY_MONTHMIN, (int)dt.date.month);
+    set(DBA_KEY_DAYMIN,   (int)dt.date.day);
+    set(DBA_KEY_HOURMIN,  (int)dt.time.hour);
+    set(DBA_KEY_MINUMIN,  (int)dt.time.minute);
+    set(DBA_KEY_SECMIN,   (int)dt.time.second);
+}
+
+void Record::setmax(const Datetime& dt)
+{
+    set(DBA_KEY_YEARMAX,  (int)dt.date.year);
+    set(DBA_KEY_MONTHMAX, (int)dt.date.month);
+    set(DBA_KEY_DAYMAX,   (int)dt.date.day);
+    set(DBA_KEY_HOURMAX,  (int)dt.time.hour);
+    set(DBA_KEY_MINUMAX,  (int)dt.time.minute);
+    set(DBA_KEY_SECMAX,   (int)dt.time.second);
+}
+
 void Record::set_datetime(int ye, int mo, int da, int ho, int mi, int se)
 {
     set(DBA_KEY_YEAR,  ye);
