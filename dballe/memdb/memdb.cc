@@ -255,7 +255,6 @@ void Memdb::query_stations(const Record& rec, Results<Station>& res) const
         trace_query("Found station filter %s\n", query.c_str());
     }
     stations.query(rec, res);
-#warning todo
 }
 
 void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) const
