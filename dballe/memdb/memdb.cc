@@ -88,32 +88,14 @@ void Memdb::insert_or_replace(const Record& rec)
     {
         // Insert all the variables we find
         for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
-        {
             stationvalues.insert(station, **i);
-#if 0
-            if (can_replace)
-                d.insert_or_overwrite(true);
-            else
-                d.insert_or_fail(true);
-            last_insert_varids.push_back(VarID((*i)->code(), d.id));
-#endif
-        }
     } else {
         const LevTr& levtr = *levtrs[levtrs.obtain(rec)];
         Datetime datetime = rec.get_datetime();
 
         // Insert all the variables we find
         for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
-        {
             values.insert(station, levtr, datetime, **i);
-#if 0
-            if (can_replace)
-                d.insert_or_overwrite(true);
-            else
-                d.insert_or_fail(true);
-            last_insert_varids.push_back(VarID((*i)->code(), d.id));
-#endif
-        }
     }
 }
 
@@ -273,7 +255,7 @@ void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) con
 
 void Memdb::remove(const Record& query)
 {
-#warning: check if ana context, in which case remove from station index
+#warning TODO: check if ana context, in which case remove from station index
     Results<Value> res(values);
     query_data(query, res);
     res.copy_indices_to(stl::eraser(values));
