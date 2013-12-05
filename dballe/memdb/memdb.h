@@ -93,6 +93,8 @@ struct Memdb
     /// Query data, returning a list of Value IDs
     void query_data(const Record& rec, memdb::Results<memdb::Value>& res) const;
 
+    void remove(const Record& query);
+
     void dump(FILE* out) const;
 
 private:

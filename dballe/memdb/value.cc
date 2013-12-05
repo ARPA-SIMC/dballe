@@ -106,6 +106,15 @@ bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& 
     return false;
 }
 
+void Values::erase(size_t idx)
+{
+    const Value& val = *(*this)[idx];
+    by_station[&val.station].erase(idx);
+    by_levtr[&val.levtr].erase(idx);
+    by_date[val.datetime.date].erase(idx);
+    value_remove(idx);
+}
+
 namespace {
 
 struct MatchVarcode : public Match<Value>

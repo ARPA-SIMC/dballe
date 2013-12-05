@@ -360,6 +360,33 @@ Pusher<T> pusher(T& target)
     return Pusher<T>(target);
 }
 
+/**
+ * Similar to std::inserter, but just calls target.insert() without requiring
+ * it to have iterators at all.
+ */
+template<typename T>
+class Eraser : public std::iterator<std::output_iterator_tag, void, void, void, void>
+{
+protected:
+    T* target;
+
+public:
+    Eraser(T& target) : target(&target) {}
+
+    template<typename V>
+    V operator=(V val) { target->erase(val); return val; }
+
+    Eraser& operator*() { return *this; }
+    Eraser& operator++() { return *this; }
+    Eraser& operator++(int) { return *this; }
+};
+
+template<typename T>
+Eraser<T> eraser(T& target)
+{
+    return Eraser<T>(target);
+}
+
 }
 }
 

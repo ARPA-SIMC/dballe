@@ -100,9 +100,9 @@ int DB::last_station_id() const
     return m_last_station_id;
 }
 
-void DB::remove(const Record& rec)
+void DB::remove(const Record& query)
 {
-    throw error_unimplemented("not yet implemented in MEM database");
+    memdb.remove(query);
 }
 
 void DB::vacuum()

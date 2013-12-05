@@ -272,6 +272,14 @@ void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) con
     values.query(rec, res_st, res_tr, res);
 }
 
+void Memdb::remove(const Record& query)
+{
+#warning: check if ana context, in which case remove from station index
+    Results<Value> res(values);
+    query_data(query, res);
+    res.copy_indices_to(stl::eraser(values));
+}
+
 void Memdb::dump(FILE* out) const
 {
     stations.dump(out);
@@ -281,3 +289,5 @@ void Memdb::dump(FILE* out) const
 }
 
 }
+
+#include "query.tcc"
