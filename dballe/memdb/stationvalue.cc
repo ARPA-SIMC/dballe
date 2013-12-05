@@ -20,6 +20,7 @@
  */
 #include "stationvalue.h"
 #include "station.h"
+#include "dballe/core/record.h"
 #include "dballe/msg/context.h"
 #include <sstream>
 #include <iostream>
@@ -106,6 +107,18 @@ bool StationValues::remove(const Station& station, Varcode code)
             }
         }
     return false;
+}
+
+void StationValues::fill_record(const Station& station, Record& rec) const
+{
+    const set<size_t>* res = by_station.search(&station);
+    if (!res) return;
+
+    for (set<size_t>::const_iterator i = res->begin(); i != res->end(); ++i)
+    {
+        const StationValue* s = (*this)[*i];
+        rec.set(*s->var);
+    }
 }
 
 void StationValues::fill_msg(const Station& station, msg::Context& ctx) const

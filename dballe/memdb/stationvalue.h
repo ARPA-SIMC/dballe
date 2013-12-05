@@ -28,6 +28,7 @@
 #include <memory>
 
 namespace dballe {
+struct Record;
 
 namespace msg {
 struct Context;
@@ -83,6 +84,9 @@ public:
      * Returns true if found and removed, false if it was not found.
      */
     bool remove(const Station& station, wreport::Varcode code);
+
+    /// Fill a record with all the variables for this station
+    void fill_record(const Station& station, Record& rec) const;
 
     /// Fill a message context with all the variables for this station
     void fill_msg(const Station& station, msg::Context& ctx) const;

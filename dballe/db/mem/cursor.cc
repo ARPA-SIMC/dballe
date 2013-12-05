@@ -157,11 +157,6 @@ void Cursor::to_record_varcode(Record& rec)
     rec.key(DBA_KEY_VAR).setc(bname);
 }
 
-void Cursor::to_record_stationvar(const StationValue& value, Record& rec)
-{
-    rec.set(*value.var);
-}
-
 void Cursor::to_record_value(Record& rec)
 {
     to_record_levtr(rec);
@@ -177,13 +172,25 @@ unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& a
     //return db.query_attrs(sqlrec.out_id_data, sqlrec.out_varcode, qcs, attrs);
 }
 
+namespace {
+
+struct StationVarInserter
+{
+    Record& rec;
+
+    StationVarInserter(Record& rec) : rec(rec) {}
+
+    void insert(const StationValue* val)
+    {
+        rec.set(*val->var);
+    }
+};
+
+}
+
 void Cursor::add_station_info(Record& rec)
 {
-    Results<StationValue> res(db.memdb.stationvalues);
-#warning to implement here
-    //db.memdb.stationvalues.query(cur_station, res);
-    //for (Results<StationValue>::const_iterator i = res.begin(); i != res.end(); ++i)
-        //to_record_stationvar(*i, rec);
+    db.memdb.stationvalues.fill_record(*cur_station, rec);
 }
 
 namespace {
