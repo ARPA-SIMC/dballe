@@ -62,11 +62,9 @@ void Summarizer::insert(const Value* val)
     SummaryContext ctx(*val);
     memdb::Summary::iterator out = summary.find(ctx);
     if (out == summary.end())
-    {
         summary.insert(make_pair(ctx, memdb::SummaryStats(val->datetime)));
-    } else {
+    else
         out->second.extend(val->datetime);
-    }
 }
 
 }
@@ -239,19 +237,22 @@ void Memdb::query_stations(const Record& rec, Results<Station>& res) const
 {
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_FILTER))
     {
-        new MatchAnaFilter(stationvalues, val);
+        res.add(new MatchAnaFilter(stationvalues, val));
+        trace_query("Found ana filter %s\n", val);
     }
     if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))
     {
         string query("B01001=");
         query += val;
-        new MatchAnaFilter(stationvalues, query);
+        res.add(new MatchAnaFilter(stationvalues, query));
+        trace_query("Found block filter %s\n", query.c_str());
     }
     if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 2)))
     {
         string query("B01002=");
         query += val;
-        new MatchAnaFilter(stationvalues, query);
+        res.add(new MatchAnaFilter(stationvalues, query));
+        trace_query("Found station filter %s\n", query.c_str());
     }
     stations.query(rec, res);
 #warning todo

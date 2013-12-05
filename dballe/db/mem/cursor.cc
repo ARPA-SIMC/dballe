@@ -356,7 +356,7 @@ struct CursorSummary : public CursorSomeBase<Value, memdb::Summary>
 
         // Start iterating at the beginning
         iter_cur = values.begin();
-        iter_end = values.begin();
+        iter_end = values.end();
 
         // Initialize the result count
         count = values.size();

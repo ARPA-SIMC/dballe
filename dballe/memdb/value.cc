@@ -28,6 +28,18 @@ void Value::replace(std::auto_ptr<Var> var)
     this->var = var.release();
 }
 
+void Value::dump(FILE* out) const
+{
+    stringstream buf;
+    buf << station.id
+        << "\t" << levtr.level
+        << "\t" << levtr.trange
+        << "\t" << datetime
+        << "\t";
+    var->print_without_attrs(buf);
+    fputs(buf.str().c_str(), out);
+}
+
 void Values::clear()
 {
     by_station.clear();
@@ -308,14 +320,8 @@ void Values::dump(FILE* out) const
     {
         if (values[pos])
         {
-            stringstream buf;
-            buf << values[pos]->levtr.level
-                << "\t" << values[pos]->levtr.trange
-                << "\t" << values[pos]->datetime
-                << "\t";
-            values[pos]->var->print_without_attrs(buf);
-
-            fprintf(out, " %4zu: %4zu\t%s", pos, values[pos]->station.id, buf.str().c_str());
+            fprintf(out, " %4zu: ", pos);
+            values[pos]->dump(out);
             // TODO: print attrs
         } else
             fprintf(out, " %4zu: (empty)\n", pos);

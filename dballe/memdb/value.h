@@ -53,6 +53,8 @@ struct Value
     /// Replace the variable with the given one
     void replace(std::auto_ptr<wreport::Var> var);
 
+    void dump(FILE* out) const;
+
 private:
     Value(const Value&);
     Value& operator=(const Value&);
