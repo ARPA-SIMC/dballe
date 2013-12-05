@@ -62,8 +62,7 @@ int Cursor::remaining() const
 
 int Cursor::attr_reference_id() const
 {
-#warning no idea what to use here yet
-    //return sqlrec.out_id_data;
+    // Default implementation for cursors for which this does not make any sense
     return 0;
 }
 
@@ -277,6 +276,11 @@ struct CursorData : public CursorSorted<DataResultQueue>
     CursorData(mem::DB& db, unsigned modifiers, Results<Value>& res)
         : CursorSorted<DataResultQueue>(db, modifiers, res), values(res.values)
     {
+    }
+
+    int attr_reference_id() const
+    {
+        return cur_idx;
     }
 
     bool next()
