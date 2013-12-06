@@ -315,6 +315,7 @@
  022032 SPEED OF SEA SURFACE CURRENT                                     M/S                        2            0  13 M/S                       2         4              
  022037 Tidal elevation with respect to national land datum              M                          3       -10000  15 M                         3          5
  022038 Tidal elevation with respect to local chart datum                M                          3       -10000  15 M                         3          5
+ 022042 SEA/WATER TEMPERATURE                                            K                          1            0  12 K                         1          4
  022043 SEA/WATER TEMPERATURE                                            K                          2            0  15 K                         2          5
  022049 SEA-SURFACE TEMPERATURE                                          K                          2            0  15 K                         2          5
  022070 SIGNIFICANT WAVE HEIGHT                                          M                          2            0  13 M                         2          4
