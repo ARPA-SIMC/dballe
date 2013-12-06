@@ -304,6 +304,7 @@
  022001 DIRECTION OF WAVES                                               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  022002 DIRECTION OF WIND WAVES                                          DEGREE TRUE                0            0   9 DEGREE TRUE               0         3              
  022003 DIRECTION OF SWELL WAVES                                         DEGREE TRUE                0            0   9 DEGREE TRUE               0         3              
+ 022004 DIRECTION OF CURRENT                                             DEGREE TRUE                0            0   9 DEGREE TRUE               0         3
  022011 PERIOD OF WAVES                                                  S                          0            0   6 S                         0          2
  022012 PERIOD OF WIND WAVES                                             S                          0            0   6 S                         0          2
  022013 PERIOD OF SWELL WAVES                                            S                          0            0   6 S                         0         2              
