@@ -53,7 +53,7 @@ template<> template<> void to::test<1>()
 
     vector<const Station*> items;
     res.copy_valptrs_to(back_inserter(items));
-    wassert(actual(items.size()) == 0);
+    wassert(actual(items.size()) == 10);
 }
 
 template<> template<> void to::test<2>()
