@@ -129,8 +129,9 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
             throw error_unimplemented("best queries of station vars");
 #warning TODO
         } else {
-            throw error_unimplemented("query of station vars");
-#warning TODO
+            Results<StationValue> res(memdb.stationvalues);
+            memdb.query_station_data(query, res);
+            return Cursor::createStationData(*this, modifiers, res);
         }
     } else {
         if (modifiers & DBA_DB_MODIFIER_BEST)

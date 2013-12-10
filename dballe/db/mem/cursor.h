@@ -59,6 +59,7 @@ protected:
 
     const memdb::Station* cur_station;
     const memdb::Value* cur_value;
+    const wreport::Var* cur_var;
 
 public:
     virtual ~Cursor();
@@ -106,6 +107,7 @@ public:
     virtual unsigned test_iterate(FILE* dump=0) = 0;
 #endif
     static std::auto_ptr<db::Cursor> createStations(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Station>& res);
+    static std::auto_ptr<db::Cursor> createStationData(mem::DB& db, unsigned modifiers, memdb::Results<memdb::StationValue>& res);
     static std::auto_ptr<db::Cursor> createData(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
     static std::auto_ptr<db::Cursor> createSummary(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
 

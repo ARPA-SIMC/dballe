@@ -20,14 +20,61 @@
  */
 
 #include "match.h"
+#include "stationvalue.h"
+#include "value.h"
+#include "dballe/core/varmatch.h"
 
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
 namespace memdb {
 namespace match {
 
-}
-}
+template<typename T>
+Varcodes<T>::Varcodes(std::set<wreport::Varcode> codes) : codes(codes) {}
+
+template<typename T>
+bool Varcodes<T>::operator()(const T& val) const
+{
+    return codes.find(val.var->code()) != codes.end();
 }
 
+template<typename T>
+DataFilter<T>::DataFilter(const std::string& expr) : match(Varmatch::parse(expr).release()) {}
+
+template<typename T>
+DataFilter<T>::~DataFilter() { delete match; }
+
+template<typename T>
+bool DataFilter<T>::operator()(const T& val) const
+{
+    return (*match)(*val.var);
+}
+
+template<typename T>
+AttrFilter<T>::AttrFilter(const std::string& expr) : match(Varmatch::parse(expr).release()) {}
+
+template<typename T>
+AttrFilter<T>::~AttrFilter() { delete match; }
+
+template<typename T>
+bool AttrFilter<T>::operator()(const T& val) const
+{
+    const Var* a = val.var->enqa(match->code);
+    if (!a) return false;
+    return (*match)(*a);
+}
+
+template class Varcode<Value>;
+template class Varcode<StationValue>;
+template class Varcodes<Value>;
+template class Varcodes<StationValue>;
+template class DataFilter<Value>;
+template class DataFilter<StationValue>;
+template class AttrFilter<Value>;
+template class AttrFilter<StationValue>;
+
+}
+}
+}

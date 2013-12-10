@@ -29,6 +29,9 @@
 #include <cstdio>
 #endif
 
+using namespace std;
+using namespace wreport;
+
 namespace dballe {
 namespace memdb {
 namespace match {

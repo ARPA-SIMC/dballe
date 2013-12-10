@@ -142,64 +142,6 @@ void Values::erase(size_t idx)
 
 namespace {
 
-struct MatchVarcode : public Match<Value>
-{
-    Varcode code;
-
-    MatchVarcode(Varcode code) : code(code) {}
-    virtual bool operator()(const Value& val) const
-    {
-        return val.var->code() == code;
-    }
-};
-
-struct MatchVarcodes : public Match<Value>
-{
-    std::set<Varcode> codes;
-
-    MatchVarcodes(std::set<Varcode> codes) : codes(codes) {}
-    virtual bool operator()(const Value& val) const
-    {
-        return codes.find(val.var->code()) != codes.end();
-    }
-};
-
-struct MatchDataFilter : public Match<Value>
-{
-    Varmatch* match;
-
-    MatchDataFilter(const std::string& expr) : match(Varmatch::parse(expr).release()) {}
-    ~MatchDataFilter() { delete match; }
-
-    virtual bool operator()(const Value& val) const
-    {
-        return (*match)(*val.var);
-    }
-
-private:
-    MatchDataFilter(const MatchDataFilter&);
-    MatchDataFilter& operator=(const MatchDataFilter&);
-};
-
-struct MatchAttrFilter : public Match<Value>
-{
-    Varmatch* match;
-
-    MatchAttrFilter(const std::string& expr) : match(Varmatch::parse(expr).release()) {}
-    ~MatchAttrFilter() { delete match; }
-
-    virtual bool operator()(const Value& val) const
-    {
-        const Var* a = val.var->enqa(match->code);
-        if (!a) return false;
-        return (*match)(*a);
-    }
-
-private:
-    MatchAttrFilter(const MatchAttrFilter&);
-    MatchAttrFilter& operator=(const MatchAttrFilter&);
-};
-
 struct MatchDateExact : public Match<Value>
 {
     Datetime dt;
@@ -359,7 +301,7 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
     {
         trace_query("Found varcode=%s\n", val);
-        res.add(new MatchVarcode(descriptor_code(val)));
+        res.add(new match::Varcode<Value>(descriptor_code(val)));
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
@@ -369,7 +311,7 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
         size_t len;
         for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
             codes.insert(WR_STRING_TO_VAR(val + pos + 1));
-        res.add(new MatchVarcodes(codes));
+        res.add(new match::Varcodes<Value>(codes));
     }
 
 #if 0
@@ -399,13 +341,13 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
     if (const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER))
     {
         trace_query("Found data_filter=%s\n", val);
-        res.add(new MatchDataFilter(val));
+        res.add(new match::DataFilter<Value>(val));
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER))
     {
         trace_query("Found attr_filter=%s\n", val);
-        res.add(new MatchAttrFilter(val));
+        res.add(new match::AttrFilter<Value>(val));
     }
 
     //trace_query("Strategy activated, %zu results\n", res.size());

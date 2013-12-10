@@ -23,6 +23,7 @@
 #include "query.h"
 #include "dballe/core/record.h"
 #include "dballe/msg/context.h"
+#include <cstring>
 #include <sstream>
 #include <iostream>
 
@@ -151,11 +152,10 @@ void StationValues::query(const Record& rec, Results<Station>& stations, Results
         res.add_union(lookup_by_station.release_sequences());
     }
 
-#if 0
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
     {
         trace_query("Found varcode=%s\n", val);
-        res.add(new MatchVarcode(descriptor_code(val)));
+        res.add(new match::Varcode<StationValue>(descriptor_code(val)));
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
@@ -165,21 +165,20 @@ void StationValues::query(const Record& rec, Results<Station>& stations, Results
         size_t len;
         for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
             codes.insert(WR_STRING_TO_VAR(val + pos + 1));
-        res.add(new MatchVarcodes(codes));
+        res.add(new match::Varcodes<StationValue>(codes));
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER))
     {
         trace_query("Found data_filter=%s\n", val);
-        res.add(new MatchDataFilter(val));
+        res.add(new match::DataFilter<StationValue>(val));
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER))
     {
         trace_query("Found attr_filter=%s\n", val);
-        res.add(new MatchAttrFilter(val));
+        res.add(new match::AttrFilter<StationValue>(val));
     }
-#endif
 }
 
 void StationValues::dump(FILE* out) const

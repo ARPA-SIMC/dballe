@@ -46,7 +46,7 @@ bool Cursor::SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
 #endif
 
 Cursor::Cursor(mem::DB& db, unsigned modifiers)
-    : db(db), modifiers(modifiers), count(0), cur_station(0), cur_value(0)
+    : db(db), modifiers(modifiers), count(0), cur_station(0), cur_value(0), cur_var(0)
 {
 }
 
@@ -114,15 +114,15 @@ void Cursor::get_datetime(int (&dt)[6]) const
 }
 wreport::Varcode Cursor::get_varcode() const
 {
-    if (cur_value)
-        return cur_value->var->code();
+    if (cur_var)
+        return cur_var->code();
     else
         return (wreport::Varcode)0;
 }
 wreport::Var Cursor::get_var() const
 {
-    if (cur_value)
-        return Var(*(cur_value->var), false);
+    if (cur_var)
+        return Var(*cur_var, false);
     else
         throw error_consistency("get_var not supported on this query");
 }
@@ -151,7 +151,7 @@ void Cursor::to_record_levtr(Record& rec)
 
 void Cursor::to_record_varcode(Record& rec)
 {
-    wreport::Varcode code = cur_value->var->code();
+    wreport::Varcode code = cur_var->code();
     char bname[7];
     snprintf(bname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
     rec.key(DBA_KEY_VAR).setc(bname);
@@ -162,7 +162,7 @@ void Cursor::to_record_value(Record& rec)
     to_record_levtr(rec);
     rec.set(cur_value->datetime);
     to_record_varcode(rec);
-    rec.set(*cur_value->var);
+    rec.set(*cur_var);
 }
 
 unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& attrs)
@@ -202,6 +202,14 @@ struct StationResultQueue : public stack<const Station*>
     }
 };
 
+struct StationValueResultQueue : public stack<const StationValue*>
+{
+    StationValueResultQueue(Results<StationValue>& res)
+    {
+        res.copy_valptrs_to(stl::pusher(*this));
+    }
+};
+
 struct CompareData
 {
     const ValueStorage<Value>& values;
@@ -228,7 +236,6 @@ struct CompareData
 
 struct DataResultQueue : public priority_queue<size_t, vector<size_t>, CompareData>
 {
-
     DataResultQueue(Results<Value>& res)
         : priority_queue<size_t, vector<size_t>, CompareData>(CompareData(res.values))
     {
@@ -289,6 +296,7 @@ struct CursorStations : public CursorSorted<StationResultQueue>
         {
             this->cur_station = queue.top();
             this->cur_value = 0;
+            this->cur_var = 0;
             return true;
         }
         return false;
@@ -298,6 +306,32 @@ struct CursorStations : public CursorSorted<StationResultQueue>
     {
         this->to_record_station(rec);
         this->add_station_info(rec);
+    }
+};
+
+struct CursorStationData : public CursorSorted<StationValueResultQueue>
+{
+    CursorStationData(mem::DB& db, unsigned modifiers, Results<StationValue>& res)
+        : CursorSorted<StationValueResultQueue>(db, modifiers, res)
+    {
+    }
+
+    bool next()
+    {
+        if (CursorSorted<StationValueResultQueue>::next())
+        {
+            cur_var = queue.top()->var;
+            cur_station = &(queue.top()->station);
+            return true;
+        }
+        return false;
+    }
+
+    void to_record(Record& rec)
+    {
+        to_record_station(rec);
+        to_record_varcode(rec);
+        rec.set(*cur_var);
     }
 };
 
@@ -322,6 +356,7 @@ struct CursorData : public CursorSorted<DataResultQueue>
         {
             cur_idx = queue.top();
             cur_value = values[cur_idx];
+            cur_var = cur_value->var;
             cur_station = &(cur_value->station);
             return true;
         }
@@ -379,6 +414,7 @@ struct CursorSummary : public Cursor
         if (iter_cur != iter_end)
         {
             cur_value = &(iter_cur->first.sample);
+            cur_var = cur_value->var;
             cur_station = &(iter_cur->first.sample.station);
             return true;
         }
@@ -403,6 +439,11 @@ struct CursorSummary : public Cursor
 auto_ptr<db::Cursor> Cursor::createStations(mem::DB& db, unsigned modifiers, Results<Station>& res)
 {
     return auto_ptr<db::Cursor>(new CursorStations(db, modifiers, res));
+}
+
+auto_ptr<db::Cursor> Cursor::createStationData(mem::DB& db, unsigned modifiers, Results<StationValue>& res)
+{
+    return auto_ptr<db::Cursor>(new CursorStationData(db, modifiers, res));
 }
 
 auto_ptr<db::Cursor> Cursor::createData(mem::DB& db, unsigned modifiers, Results<Value>& res)
