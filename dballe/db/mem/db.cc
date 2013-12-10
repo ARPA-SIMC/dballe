@@ -121,24 +121,28 @@ std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
-    Results<Value> res(memdb.values);
-    memdb.query_data(query, res);
-    return Cursor::createData(*this, modifiers, res);
-#if 0
-        if (query_station_vars)
-            sql_where.append_list("d.id_lev_tr == -1");
-        else
-            sql_where.append_list("d.id_lev_tr != -1");
-#endif
-#if 0
-    auto_ptr<Cursor> res;
-    if (modifiers & DBA_DB_MODIFIER_BEST)
-        res.reset(new CursorBest(*this, modifiers));
-    else
-        res.reset(new CursorData(*this, modifiers));
-    res->query(query);
-    return auto_ptr<db::Cursor>(res.release());
-#endif
+    bool query_station_vars = (query.get(DBA_KEY_LEVELTYPE1, 0) == 257);
+    if (query_station_vars)
+    {
+        if (modifiers & DBA_DB_MODIFIER_BEST)
+        {
+            throw error_unimplemented("best queries of station vars");
+#warning TODO
+        } else {
+            throw error_unimplemented("query of station vars");
+#warning TODO
+        }
+    } else {
+        if (modifiers & DBA_DB_MODIFIER_BEST)
+        {
+            throw error_unimplemented("best queries of data vars");
+#warning TODO
+        } else {
+            Results<Value> res(memdb.values);
+            memdb.query_data(query, res);
+            return Cursor::createData(*this, modifiers, res);
+        }
+    }
 }
 
 std::auto_ptr<db::Cursor> DB::query_summary(const Record& query)
