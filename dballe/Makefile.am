@@ -58,6 +58,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	memdb/core.tcc \
 	memdb/index.h \
 	memdb/match.h \
+	memdb/match.tcc \
 	memdb/query.h \
 	memdb/query.tcc \
 	memdb/station.h \
