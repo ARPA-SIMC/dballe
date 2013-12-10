@@ -57,6 +57,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	memdb/core.h \
 	memdb/core.tcc \
 	memdb/index.h \
+	memdb/match.h \
 	memdb/query.h \
 	memdb/query.tcc \
 	memdb/station.h \
@@ -130,6 +131,7 @@ libdballe_la_SOURCES = \
 	memdb/levtr.cc \
 	memdb/core.cc \
 	memdb/index.cc \
+	memdb/match.cc \
 	memdb/query.cc \
 	memdb/value.cc \
 	memdb/memdb.cc \
@@ -254,6 +256,7 @@ tut_test_SOURCES = \
 	memdb/tests.cc \
 	memdb/core-tut.cc \
 	memdb/index-tut.cc \
+	memdb/match-tut.cc \
 	memdb/query-tut.cc \
 	memdb/station-tut.cc \
 	memdb/stationvalue-tut.cc \

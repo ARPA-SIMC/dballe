@@ -20,6 +20,7 @@
  */
 #include "stationvalue.h"
 #include "station.h"
+#include "query.h"
 #include "dballe/core/record.h"
 #include "dballe/msg/context.h"
 #include <sstream>
@@ -133,6 +134,54 @@ void StationValues::fill_msg(const Station& station, msg::Context& ctx) const
     }
 }
 
+void StationValues::query(const Record& rec, Results<Station>& stations, Results<StationValue>& res) const
+{
+    if (!stations.is_select_all())
+    {
+        trace_query("Adding selected stations to strategy\n");
+        match::SequenceBuilder<Station> lookup_by_station(by_station);
+        stations.copy_valptrs_to(stl::trivial_inserter(lookup_by_station));
+        if (!lookup_by_station.found_items_in_index())
+        {
+            trace_query(" no matching stations found, setting empty result\n");
+            res.set_to_empty();
+            return;
+        }
+        // OR the results together into a single sequence
+        res.add_union(lookup_by_station.release_sequences());
+    }
+
+#if 0
+    if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
+    {
+        trace_query("Found varcode=%s\n", val);
+        res.add(new MatchVarcode(descriptor_code(val)));
+    }
+
+    if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
+    {
+        set<Varcode> codes;
+        size_t pos;
+        size_t len;
+        for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
+            codes.insert(WR_STRING_TO_VAR(val + pos + 1));
+        res.add(new MatchVarcodes(codes));
+    }
+
+    if (const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER))
+    {
+        trace_query("Found data_filter=%s\n", val);
+        res.add(new MatchDataFilter(val));
+    }
+
+    if (const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER))
+    {
+        trace_query("Found attr_filter=%s\n", val);
+        res.add(new MatchAttrFilter(val));
+    }
+#endif
+}
+
 void StationValues::dump(FILE* out) const
 {
     fprintf(out, "Station values:\n");
@@ -173,3 +222,4 @@ template class ValueStorage<StationValue>;
 }
 
 #include "core.tcc"
+#include "query.tcc"

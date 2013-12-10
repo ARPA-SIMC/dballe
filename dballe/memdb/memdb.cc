@@ -239,6 +239,15 @@ void Memdb::query_stations(const Record& rec, Results<Station>& res) const
     stations.query(rec, res);
 }
 
+void Memdb::query_station_data(const Record& rec, memdb::Results<memdb::StationValue>& res) const
+{
+    // Get a list of stations we can match
+    Results<Station> res_st(stations);
+    query_stations(rec, res_st);
+
+    stationvalues.query(rec, res_st, res);
+}
+
 void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) const
 {
     // Get a list of stations we can match

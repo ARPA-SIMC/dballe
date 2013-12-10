@@ -25,6 +25,7 @@
 #include <dballe/core/stlutils.h>
 #include <dballe/memdb/core.h>
 #include <dballe/memdb/index.h>
+#include <dballe/memdb/match.h>
 #include <vector>
 #include <memory>
 #include <cstddef>
@@ -44,57 +45,7 @@ void trace_query(const char* fmt, ...);
 #define trace_query(...) do {} while(0)
 #endif
 
-
-/// Base class for match functors
-template<typename T>
-struct Match
-{
-    virtual ~Match() {}
-
-    virtual bool operator()(const T&) const = 0;
-};
-
 namespace match {
-
-template<typename T>
-class And : public Match<T>
-{
-protected:
-    std::vector<Match<T>*> matches;
-
-public:
-    And() {}
-    And(Match<T>* f1, Match<T>* f2) { add(f1); add(f2); }
-    ~And();
-
-    /// Add a match to and, taking ownership of its memory management
-    void add(Match<T>* m) { matches.push_back(m); }
-
-    bool operator()(const T& val) const;
-
-private:
-    And(const And<T>&);
-    And<T>& operator=(const And<T>&);
-};
-
-/// Build an And of filters step by step
-template<typename T>
-struct FilterBuilder
-{
-    Match<T>* filter;
-    And<T>* is_and; // When nonzero, it points to the same as 'filter'
-
-    FilterBuilder() : filter(0), is_and(0) {}
-    ~FilterBuilder()
-    {
-        if (filter) delete filter;
-    }
-
-    const Match<T>* get() const { return filter; }
-    const Match<T>& operator*() const { return *filter; }
-
-    void add(Match<T>* f);
-};
 
 template<typename T>
 class Idx2Values : public Match<size_t>

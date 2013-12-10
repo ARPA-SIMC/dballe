@@ -90,6 +90,8 @@ struct Memdb
 
     /// Query stations, returning a list of station IDs
     void query_stations(const Record& rec, memdb::Results<memdb::Station>& res) const;
+    /// Query station data, returning a list of Value IDs
+    void query_station_data(const Record& rec, memdb::Results<memdb::StationValue>& res) const;
     /// Query data, returning a list of Value IDs
     void query_data(const Record& rec, memdb::Results<memdb::Value>& res) const;
 

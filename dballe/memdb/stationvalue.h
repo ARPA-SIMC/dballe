@@ -35,6 +35,7 @@ struct Context;
 }
 
 namespace memdb {
+template<typename T> struct Results;
 
 struct Station;
 
@@ -90,6 +91,9 @@ public:
 
     /// Fill a message context with all the variables for this station
     void fill_msg(const Station& station, msg::Context& ctx) const;
+
+    /// Query values for the given stations
+    void query(const Record& rec, Results<Station>& stations, Results<StationValue>& res) const;
 
     void dump(FILE* out) const;
 };
