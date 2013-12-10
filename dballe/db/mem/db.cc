@@ -136,8 +136,9 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
     } else {
         if (modifiers & DBA_DB_MODIFIER_BEST)
         {
-            throw error_unimplemented("best queries of data vars");
-#warning TODO
+            Results<Value> res(memdb.values);
+            memdb.query_data(query, res);
+            return Cursor::createDataBest(*this, modifiers, res);
         } else {
             Results<Value> res(memdb.values);
             memdb.query_data(query, res);

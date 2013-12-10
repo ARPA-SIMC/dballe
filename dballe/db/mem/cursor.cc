@@ -34,17 +34,6 @@ namespace dballe {
 namespace db {
 namespace mem {
 
-#if 0
-bool Cursor::SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
-{
-    if (out_ana_id != r.out_ana_id) return false;
-    if (out_id_ltr != r.out_id_ltr) return false;
-    if (memcmp(&out_datetime, &r.out_datetime, sizeof(SQL_TIMESTAMP_STRUCT)) != 0) return false;
-    if (out_varcode != r.out_varcode) return false;
-    return true;
-}
-#endif
-
 Cursor::Cursor(mem::DB& db, unsigned modifiers)
     : db(db), modifiers(modifiers), count(0), cur_station(0), cur_value(0), cur_var(0)
 {
@@ -196,7 +185,7 @@ namespace {
 
 struct StationResultQueue : public stack<const Station*>
 {
-    StationResultQueue(Results<Station>& res)
+    StationResultQueue(DB&, Results<Station>& res)
     {
         res.copy_valptrs_to(stl::pusher(*this));
     }
@@ -204,7 +193,7 @@ struct StationResultQueue : public stack<const Station*>
 
 struct StationValueResultQueue : public stack<const StationValue*>
 {
-    StationValueResultQueue(Results<StationValue>& res)
+    StationValueResultQueue(DB&, Results<StationValue>& res)
     {
         res.copy_valptrs_to(stl::pusher(*this));
     }
@@ -223,23 +212,96 @@ struct CompareData
         const Value& vx = *values[x];
         const Value& vy = *values[y];
 
-        if (vx.station.id < vy.station.id) return false;
-        if (vx.station.id > vy.station.id) return true;
+        if (vx.station.coords < vy.station.coords) return false;
+        if (vx.station.coords > vy.station.coords) return true;
+        if (vx.station.ident < vy.station.ident) return false;
+        if (vx.station.ident > vy.station.ident) return true;
 
         if (int res = vx.datetime.compare(vy.datetime)) return res > 0;
         if (int res = vx.levtr.level.compare(vy.levtr.level)) return res > 0;
         if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res > 0;
 
-        return false; // They are the same
+        return vx.station.report > vy.station.report;
     }
 };
 
 struct DataResultQueue : public priority_queue<size_t, vector<size_t>, CompareData>
 {
-    DataResultQueue(Results<Value>& res)
+    DataResultQueue(DB&, Results<Value>& res)
         : priority_queue<size_t, vector<size_t>, CompareData>(CompareData(res.values))
     {
         res.copy_indices_to(stl::pusher(*this));
+    }
+};
+
+struct DataBestKey
+{
+    const ValueStorage<Value>& values;
+    size_t idx;
+
+    DataBestKey(const ValueStorage<Value>& values, size_t idx)
+        : values(values), idx(idx) {}
+
+    const Value& value() const { return *values[idx]; }
+
+    // Normal sort here, but we ignore report so that two values which only
+    // differ in report are considered the same
+    bool operator<(const DataBestKey& o) const
+    {
+        const Value& vx = value();
+        const Value& vy = o.value();
+
+        if (vx.station.coords < vy.station.coords) return true;
+        if (vx.station.coords > vy.station.coords) return false;
+        if (vx.station.ident < vy.station.ident) return true;
+        if (vx.station.ident > vy.station.ident) return false;
+
+        if (int res = vx.datetime.compare(vy.datetime)) return res < 0;
+        if (int res = vx.levtr.level.compare(vy.levtr.level)) return res < 0;
+        if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res < 0;
+
+        // They are the same
+        return false;
+    }
+};
+
+struct DataBestResultQueue : public map<DataBestKey, size_t>
+{
+    const ValueStorage<Value>& values;
+    std::map<std::string, int> prios;
+
+    DataBestResultQueue(DB& db, Results<Value>& res)
+        : values(res.values), prios(db.get_repinfo_priorities())
+    {
+        res.copy_indices_to(stl::pusher(*this));
+    }
+
+    /**
+     * Add val to the map, but in case of conflict it only keeps the value with
+     * the highest priority.
+     */
+    void push(size_t val)
+    {
+        iterator i = find(DataBestKey(values, val));
+        if (i == end())
+            insert(make_pair(DataBestKey(values, val), val));
+        else
+        {
+            const Value& vx = i->first.value();
+            const Value& vy = *values[val];
+            if (prios[vx.station.report] < prios[vy.station.report])
+                i->second = val;
+        }
+    }
+
+    size_t top() const
+    {
+        return begin()->second;
+    }
+
+    void pop()
+    {
+        erase(begin());
     }
 };
 
@@ -277,7 +339,7 @@ struct CursorSorted : public Cursor
 
     template<typename T>
     CursorSorted(mem::DB& db, unsigned modifiers, T& res)
-        : Cursor(db, modifiers), queue(res), first(true)
+        : Cursor(db, modifiers), queue(db, res), first(true)
     {
         count = queue.size();
     }
@@ -335,13 +397,14 @@ struct CursorStationData : public CursorSorted<StationValueResultQueue>
     }
 };
 
-struct CursorData : public CursorSorted<DataResultQueue>
+template<typename QUEUE>
+struct CursorDataBase : public CursorSorted<QUEUE>
 {
     const ValueStorage<Value>& values;
     size_t cur_idx;
 
-    CursorData(mem::DB& db, unsigned modifiers, Results<Value>& res)
-        : CursorSorted<DataResultQueue>(db, modifiers, res), values(res.values)
+    CursorDataBase(mem::DB& db, unsigned modifiers, Results<Value>& res)
+        : CursorSorted<QUEUE>(db, modifiers, res), values(res.values)
     {
     }
 
@@ -352,12 +415,12 @@ struct CursorData : public CursorSorted<DataResultQueue>
 
     bool next()
     {
-        if (CursorSorted<DataResultQueue>::next())
+        if (CursorSorted<QUEUE>::next())
         {
-            cur_idx = queue.top();
-            cur_value = values[cur_idx];
-            cur_var = cur_value->var;
-            cur_station = &(cur_value->station);
+            this->cur_idx = this->queue.top();
+            this->cur_value = this->values[this->cur_idx];
+            this->cur_var = this->cur_value->var;
+            this->cur_station = &(this->cur_value->station);
             return true;
         }
         return false;
@@ -365,17 +428,33 @@ struct CursorData : public CursorSorted<DataResultQueue>
 
     void to_record(Record& rec)
     {
-        to_record_station(rec);
+        this->to_record_station(rec);
         rec.clear_vars();
-        to_record_value(rec);
-        rec.key(DBA_KEY_CONTEXT_ID).seti(cur_idx);
-        if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
-            add_station_info(rec);
+        this->to_record_value(rec);
+        rec.key(DBA_KEY_CONTEXT_ID).seti(this->cur_idx);
+        if (this->modifiers & DBA_DB_MODIFIER_ANAEXTRA)
+            this->add_station_info(rec);
     }
 
     unsigned query_attrs(const AttrList& qcs, Record& attrs)
     {
-        return db.query_attrs(cur_idx, 0, qcs, attrs);
+        return this->db.query_attrs(this->cur_idx, 0, qcs, attrs);
+    }
+};
+
+struct CursorData : public CursorDataBase<DataResultQueue>
+{
+    CursorData(mem::DB& db, unsigned modifiers, Results<Value>& res)
+        : CursorDataBase<DataResultQueue>(db, modifiers, res)
+    {
+    }
+};
+
+struct CursorDataBest : public CursorDataBase<DataBestResultQueue>
+{
+    CursorDataBest(mem::DB& db, unsigned modifiers, Results<Value>& res)
+        : CursorDataBase<DataBestResultQueue>(db, modifiers, res)
+    {
     }
 };
 
@@ -451,22 +530,15 @@ auto_ptr<db::Cursor> Cursor::createData(mem::DB& db, unsigned modifiers, Results
     return auto_ptr<db::Cursor>(new CursorData(db, modifiers, res));
 }
 
+auto_ptr<db::Cursor> Cursor::createDataBest(mem::DB& db, unsigned modifiers, Results<Value>& res)
+{
+    return auto_ptr<db::Cursor>(new CursorDataBest(db, modifiers, res));
+}
+
 auto_ptr<db::Cursor> Cursor::createSummary(mem::DB& db, unsigned modifiers, Results<Value>& res)
 {
     return auto_ptr<db::Cursor>(new CursorSummary(db, modifiers, res));
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -490,10 +562,7 @@ unsigned CursorStations::test_iterate(FILE* dump)
     }
     return count;
 }
-#endif
 
-
-#if 0
 unsigned CursorData::test_iterate(FILE* dump)
 {
     Record r;
@@ -513,60 +582,6 @@ unsigned CursorData::test_iterate(FILE* dump)
         }
     }
     return count;
-}
-#endif
-
-#if 0
-void CursorDataIDs::query(const Record& rec)
-{
-    IdQueryBuilder qb(db, *stm, *this, rec, modifiers);
-    qb.build();
-    //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
-
-    if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ORACLE)
-        stm->set_cursor_forward_only();
-    stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
-
-    count = 0;
-}
-
-void CursorDataIDs::to_record(Record& rec)
-{
-}
-
-unsigned CursorDataIDs::test_iterate(FILE* dump)
-{
-    Record r;
-    unsigned count;
-    for (count = 0; next(); ++count)
-        if (dump)
-            fprintf(dump, "%03d\n", (int)sqlrec.out_id_data);
-    return count;
-}
-
-#if 0
-int CursorResults::query_count(const Record& rec)
-{
-    to_record_todo = 0;
-    // select <count(*)> from...
-    return 0;
-}
-#endif
-
-#endif
-
-
-#if 0
-void CursorSummary::query(const Record& rec)
-{
-    SummaryQueryBuilder qb(db, *stm, *this, rec, modifiers);
-    qb.build();
-    //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
-
-    stm->set_cursor_forward_only();
-    stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
-
-    count = 0;
 }
 
 void CursorSummary::to_record(Record& rec)
@@ -621,136 +636,6 @@ unsigned CursorSummary::test_iterate(FILE* dump)
         }
     }
     return count;
-}
-
-
-CursorBest::CursorBest(DB& db, unsigned int modifiers)
-    : Cursor(db, modifiers), results(0) {}
-
-CursorBest::~CursorBest()
-{
-    if (results)
-        fclose(results);
-}
-
-void CursorBest::query(const Record& rec)
-{
-    db::Statement stm(*db.conn);
-
-    DataQueryBuilder qb(db, stm, *this, rec, modifiers);
-    qb.build();
-    // fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
-
-    stm.set_cursor_forward_only();
-    stm.exec_direct(qb.sql_query.data(), qb.sql_query.size());
-
-    buffer_results(stm);
-}
-
-void CursorBest::to_record(Record& rec)
-{
-    to_record_pseudoana(rec);
-    to_record_repinfo(rec);
-    rec.key(DBA_KEY_CONTEXT_ID).seti(sqlrec.out_id_data);
-    to_record_varcode(rec);
-    to_record_ltr(rec);
-    to_record_datetime(rec);
-
-    rec.clear_vars();
-    rec.var(sqlrec.out_varcode).setc(sqlrec.out_value);
-
-    if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
-        add_station_info(rec);
-}
-
-unsigned CursorBest::test_iterate(FILE* dump)
-{
-    Record r;
-    unsigned count;
-    for (count = 0; next(); ++count)
-    {
-        /*
-        if (dump)
-            fprintf(dump, "%03d\n", (int)sqlrec.out_id_data);
-            */
-    }
-    return count;
-}
-
-int CursorBest::buffer_results(db::Statement& stm)
-{
-    db::v6::Repinfo& ri = db.repinfo();
-
-    // Do the counting here, so we don't count the records we skip
-    count = 0;
-
-    // Open temporary file
-    results = tmpfile();
-    if (!results)
-        throw error_system("cannot create temporary file for query=best results");
-
-    bool first = true;
-    SQLRecord best;
-
-    // Copy results to temporary file
-    while (stm.fetch())
-    {
-        // Fill priority
-        const db::v5::repinfo::Cache* ri_entry = ri.get_by_id(sqlrec.out_rep_cod);
-        sqlrec.priority = ri_entry ? ri_entry->prio : INT_MAX;
-
-        // Filter results keeping only those with the best priority
-        if (first)
-        {
-            // The first record initialises 'best'
-            best = sqlrec;
-            first = false;
-        } else if (sqlrec.querybest_fields_are_the_same(best)) {
-            // If they match, keep the record with the highest priority
-            if (sqlrec.priority > best.priority)
-                best = sqlrec;
-        } else {
-            // If they don't match, write out the previous best value
-            if (fwrite(&best, sizeof(best), 1, results) != 1)
-                throw error_system("cannot write query=best result record to temporary file");
-            ++count;
-            // And restart with a new candidate best record for the next batch
-            best = sqlrec;
-        }
-    }
-
-    if (!first)
-    {
-        // Write out the last best value
-        if (fwrite(&best, sizeof(best), 1, results) != 1)
-            throw error_system("cannot write query=best result record to temporary file");
-        ++count;
-    }
-
-    // Go back to the beginning of the file so that next() can read results
-    rewind(results);
-
-    return count;
-}
-
-bool CursorBest::next()
-{
-    if (count <= 0) return false;
-
-    if (fread(&sqlrec, sizeof(sqlrec), 1, results) != 1)
-        throw error_system("cannot read query=best result record from temporary file");
-    --count;
-
-    return true;
-}
-
-void CursorBest::discard_rest()
-{
-    if (results)
-    {
-        fclose(results);
-        results = 0;
-    }
 }
 #endif
 

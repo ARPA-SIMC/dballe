@@ -109,6 +109,7 @@ public:
     static std::auto_ptr<db::Cursor> createStations(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Station>& res);
     static std::auto_ptr<db::Cursor> createStationData(mem::DB& db, unsigned modifiers, memdb::Results<memdb::StationValue>& res);
     static std::auto_ptr<db::Cursor> createData(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
+    static std::auto_ptr<db::Cursor> createDataBest(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
     static std::auto_ptr<db::Cursor> createSummary(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
 
 protected:
@@ -132,25 +133,6 @@ protected:
 };
 
 #if 0
-// TODO: merge multiple results from the same station with different reports, keeping the vars with the highest priority
-struct CursorStations : public CursorResults<memdb::Station>
-{
-protected:
-    virtual void to_record(Record& rec);
-    virtual bool next();
-#if 0
-    virtual unsigned test_iterate(FILE* dump=0);
-#endif
-
-    CursorStations(DB& db, const memdb::ValueStorage<memdb::Station>& values,  unsigned int modifiers)
-        : CursorResults<memdb::Station>(db, values, modifiers) {}
-
-    friend class mem::DB;
-};
-#endif
-
-#if 0
-
 class CursorSummary : public Cursor
 {
 public:
@@ -169,20 +151,6 @@ protected:
 };
 
 #if 0
-struct CursorDataIDs : public CursorResults
-{
-    /// Query the data IDs only, to use to delete things
-    virtual void query(const Record& rec);
-    virtual void to_record(Record& rec);
-    virtual unsigned test_iterate(FILE* dump=0);
-
-protected:
-    CursorDataIDs(DB& db, unsigned int modifiers)
-        : CursorResults(db, modifiers) {}
-
-    friend class dballe::db::v6::DB;
-};
-
 class CursorBest : public Cursor
 {
 public:

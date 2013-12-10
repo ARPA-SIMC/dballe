@@ -1084,7 +1084,6 @@ template<> template<> void to::test<24>()
         insert.set(DBA_KEY_REP_MEMO, *i);
         insert.set(WR_VAR(0, 12, 101), (int)(i - rep_memos));
         db->insert(insert, false, true);
-        insert.unset(DBA_KEY_CONTEXT_ID);
     }
 
     // Query with querybest only
