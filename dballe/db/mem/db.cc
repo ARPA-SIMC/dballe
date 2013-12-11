@@ -28,6 +28,7 @@
 #include "dballe/core/record.h"
 #include "dballe/core/defs.h"
 #include "dballe/memdb/results.h"
+#include "dballe/memdb/serializer.h"
 #include <algorithm>
 #include <queue>
 
@@ -42,8 +43,21 @@ namespace dballe {
 namespace db {
 namespace mem {
 
+DB::DB() {}
+
+DB::DB(const std::string& arg)
+    : serialization_dir(arg)
+{
+}
+
 DB::~DB()
 {
+    if (!serialization_dir.empty())
+    {
+        serialize::CSVWriter writer(serialization_dir);
+        writer.write(memdb);
+        writer.commit();
+    }
 }
 
 void DB::disappear()

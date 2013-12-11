@@ -27,6 +27,7 @@
  * Routines to parse data in CSV format
  */
 
+#include <wreport/var.h>
 #include <vector>
 #include <string>
 #include <iosfwd>
@@ -101,6 +102,49 @@ public:
  * Output a string value, quoted if needed according to CSV rules
  */
 void csv_output_quoted_string(std::ostream& out, const std::string& str);
+
+class CSVWriter
+{
+protected:
+    std::string row;
+
+public:
+    virtual ~CSVWriter();
+
+    /// Add a value to the current row, without any escaping
+    void add_value_raw(const char* str);
+
+    /// Add a value to the current row, without any escaping
+    void add_value_raw(const std::string& str);
+
+    /// Add an int value to the current row
+    void add_value(int val);
+
+    /// Add an int value that can potentially be missing
+    void add_value_withmissing(int val);
+
+    /// Add an int value to the current row
+    void add_value(unsigned val);
+
+    /// Add an int value to the current row
+    void add_value(size_t val);
+
+    /// Add an int value to the current row
+    void add_value(wreport::Varcode val);
+
+    /// Add a variable value
+    void add_var_value(const wreport::Var& val);
+
+    /// Add a string to the current row
+    void add_value(const char* val);
+
+    /// Add a string to the current row
+    void add_value(const std::string& val);
+
+    /// Write the current line to the output file, and start a new one
+    virtual void flush_row() = 0;
+};
+
 
 }
 

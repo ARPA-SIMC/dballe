@@ -57,6 +57,8 @@ public:
     Repinfo repinfo;
 
 protected:
+    std::string serialization_dir;
+
     size_t m_last_station_id;
 
     /// Store information about the database ID of a variable
@@ -82,6 +84,8 @@ protected:
     void raw_query_data(const Record& rec, memdb::Results<memdb::Value>& res);
     
 public:
+    DB();
+    DB(const std::string& arg);
     virtual ~DB();
 
     db::Format format() const { return MEM; }

@@ -156,7 +156,7 @@ auto_ptr<DB> DB::connect_from_url(const char* url)
     }
     if (strncmp(url, "mem:", 4) == 0)
     {
-        return connect_memory();
+        return connect_memory(url + 4);
     }
     if (strncmp(url, "odbc://", 7) == 0)
     {
@@ -188,9 +188,12 @@ auto_ptr<DB> DB::connect_from_url(const char* url)
     error_consistency::throwf("unknown url \"%s\"", url);
 }
 
-auto_ptr<DB> DB::connect_memory()
+auto_ptr<DB> DB::connect_memory(const std::string& arg)
 {
-    return auto_ptr<DB>(new mem::DB());
+    if (arg.empty())
+        return auto_ptr<DB>(new mem::DB());
+    else
+        return auto_ptr<DB>(new mem::DB(arg));
 }
 
 auto_ptr<DB> DB::connect_test()

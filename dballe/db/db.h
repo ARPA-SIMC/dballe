@@ -206,7 +206,7 @@ public:
     /**
      * Create an in-memory database
      */
-    static std::auto_ptr<DB> connect_memory();
+    static std::auto_ptr<DB> connect_memory(const std::string& arg = std::string());
 
     /**
      * Start a test session with DB-All.e
