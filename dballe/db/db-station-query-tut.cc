@@ -35,7 +35,12 @@ struct db_tests_query : public db_test
     dballe::tests::TestStation st1;
     dballe::tests::TestStation st2;
 
+    const int some;
+    const int all;
+
     db_tests_query()
+        : some(db->format() == MEM ? 2 : 1), all(db->format() == MEM ? 4 : 2)
+#warning FIXME: change after testing if we can move to report-in-station behaviour or not
     {
         st1.lat = 12.34560;
         st1.lon = 76.54320;
@@ -92,34 +97,34 @@ template<> template<> void to::test<1>()
 template<> template<> void to::test<2>()
 {
     wassert(actual(db).try_station_query("lat=12.00000", 0));
-    wassert(actual(db).try_station_query("lat=12.34560", 1));
-    wassert(actual(db).try_station_query("lat=23.45670", 1));
-    wassert(actual(db).try_station_query("latmin=12.00000", 2));
-    wassert(actual(db).try_station_query("latmin=12.34560", 2));
-    wassert(actual(db).try_station_query("latmin=12.34570", 1));
-    wassert(actual(db).try_station_query("latmin=23.45670", 1));
+    wassert(actual(db).try_station_query("lat=12.34560", some));
+    wassert(actual(db).try_station_query("lat=23.45670", some));
+    wassert(actual(db).try_station_query("latmin=12.00000", all));
+    wassert(actual(db).try_station_query("latmin=12.34560", all));
+    wassert(actual(db).try_station_query("latmin=12.34570", some));
+    wassert(actual(db).try_station_query("latmin=23.45670", some));
     wassert(actual(db).try_station_query("latmin=23.45680", 0));
     wassert(actual(db).try_station_query("latmax=12.00000", 0));
-    wassert(actual(db).try_station_query("latmax=12.34560", 1));
-    wassert(actual(db).try_station_query("latmax=12.34570", 1));
-    wassert(actual(db).try_station_query("latmax=23.45670", 2));
-    wassert(actual(db).try_station_query("latmax=23.45680", 2));
+    wassert(actual(db).try_station_query("latmax=12.34560", some));
+    wassert(actual(db).try_station_query("latmax=12.34570", some));
+    wassert(actual(db).try_station_query("latmax=23.45670", all));
+    wassert(actual(db).try_station_query("latmax=23.45680", all));
     wassert(actual(db).try_station_query("lon=76.00000", 0));
-    wassert(actual(db).try_station_query("lon=76.54320", 1));
-    wassert(actual(db).try_station_query("lon=65.43210", 1));
+    wassert(actual(db).try_station_query("lon=76.54320", some));
+    wassert(actual(db).try_station_query("lon=65.43210", some));
     wassert(actual(db).try_station_query("lonmin=10., lonmax=20.", 0));
-    wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=76.54320", 1));
-    wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=77.", 1));
+    wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=76.54320", some));
+    wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=77.", some));
     wassert(actual(db).try_station_query("lonmin=76.54330, lonmax=77.", 0));
-    wassert(actual(db).try_station_query("lonmin=60., lonmax=77.", 2));
-    wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54310", 1));
-    wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54320", 2));
+    wassert(actual(db).try_station_query("lonmin=60., lonmax=77.", all));
+    wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54310", some));
+    wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54320", all));
     wassert(actual(db).try_station_query("lonmin=77., lonmax=-10", 0));
 }
 
 template<> template<> void to::test<3>()
 {
-    wassert(actual(db).try_station_query("mobile=0", 2));
+    wassert(actual(db).try_station_query("mobile=0", all));
     wassert(actual(db).try_station_query("mobile=1", 0));
 }
 
@@ -142,17 +147,21 @@ template<> template<> void to::test<5>()
 
 template<> template<> void to::test<6>()
 {
-    wassert(actual(db).try_station_query("ana_filter=block=1", 1));
+    wassert(actual(db).try_station_query("ana_filter=block=1", some));
     wassert(actual(db).try_station_query("ana_filter=block=2", 0));
-    wassert(actual(db).try_station_query("ana_filter=block=3", 1));
-    wassert(actual(db).try_station_query("ana_filter=block>=1", 2));
+    wassert(actual(db).try_station_query("ana_filter=block=3", some));
+    wassert(actual(db).try_station_query("ana_filter=block>=1", all));
     wassert(actual(db).try_station_query("ana_filter=B07030=42", 1));
     wassert(actual(db).try_station_query("ana_filter=B07030=50", 1));
     wassert(actual(db).try_station_query("ana_filter=B07030=100", 1));
     wassert(actual(db).try_station_query("ana_filter=B07030=110", 1));
     wassert(actual(db).try_station_query("ana_filter=B07030=120", 0));
-    wassert(actual(db).try_station_query("ana_filter=B07030>50", 1));
-    wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
+    wassert(actual(db).try_station_query("ana_filter=B07030>50", some));
+#warning FIXME: change after testing if we can move to report-in-station behaviour or not
+    if (db->format() == MEM)
+        wassert(actual(db).try_station_query("ana_filter=B07030>=50", 3));
+    else
+        wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
     wassert(actual(db).try_station_query("ana_filter=50<=B07030<=100", 2));
 }
 
@@ -160,9 +169,9 @@ template<> template<> void to::test<7>()
 {
     wassert(actual(db).try_station_query("var=B12101", 2));
     wassert(actual(db).try_station_query("var=B12103", 1));
-    wassert(actual(db).try_station_query("varlist=B12101", 2));
-    wassert(actual(db).try_station_query("varlist=B12103", 1));
-    wassert(actual(db).try_station_query("varlist=B12101,B12103", 2));
+    wassert(actual(db).try_station_query("varlist=B12101", all));
+    wassert(actual(db).try_station_query("varlist=B12103", some));
+    wassert(actual(db).try_station_query("varlist=B12101,B12103", all));
 }
 
 }
