@@ -47,6 +47,8 @@ struct db_tests_query : public db_test
         st1.info["synop"].set("block", 1);
         st1.info["synop"].set("station", 2);
         st1.info["synop"].set("B07030", 42.0); // height
+        st1.info["metar"].set("block", 1);
+        st1.info["metar"].set("station", 2);
         st1.info["metar"].set("B07030", 50.0); // height
 
         st2.lat = 23.45670;
@@ -54,6 +56,8 @@ struct db_tests_query : public db_test
         st2.info["temp"].set("block", 3);
         st2.info["temp"].set("station", 4);
         st2.info["temp"].set("B07030", 100.0); // height
+        st2.info["metar"].set("block", 3);
+        st2.info["metar"].set("station", 4);
         st2.info["metar"].set("B07030", 110.0); // height
 
         dballe::tests::TestRecord rec1;
