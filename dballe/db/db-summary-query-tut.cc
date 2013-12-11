@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include "db/test-utils-db.h"
+#include <wibble/string.h>
 
 using namespace dballe;
 using namespace dballe::db;
@@ -34,6 +35,8 @@ struct db_tests_query : public db_test
 {
     dballe::tests::TestStation st1;
     dballe::tests::TestStation st2;
+    int st1_id;
+    int st2_id;
 
     db_tests_query()
     {
@@ -60,6 +63,7 @@ struct db_tests_query : public db_test
         rec1.data.set(WR_VAR(0, 12, 101), 290.0);
         rec1.data.set(WR_VAR(0, 12, 103), 280.0);
         wruntest(rec1.insert, *db, true);
+        st1_id = db->last_station_id();
 
         rec1.data.clear_vars();
         rec1.data.set_datetime(1945, 4, 26, 8);
@@ -76,6 +80,7 @@ struct db_tests_query : public db_test
         rec2.data.set(WR_VAR(0, 12, 101), 300.0);
         rec2.data.set(WR_VAR(0, 12, 103), 290.0);
         wruntest(rec2.insert, *db, true);
+        st2_id = db->last_station_id();
 
         rec2.data.clear_vars();
         rec2.data.set_datetime(1945, 4, 26, 8);
@@ -95,9 +100,9 @@ typedef tg::object to;
 
 template<> template<> void to::test<1>()
 {
-    wassert(actual(db).try_summary_query("ana_id=1", 2));
-    wassert(actual(db).try_summary_query("ana_id=2", 2));
-    wassert(actual(db).try_summary_query("ana_id=3", 0));
+    wassert(actual(db).try_summary_query(str::fmtf("ana_id=%d", st1_id), 2));
+    wassert(actual(db).try_summary_query(str::fmtf("ana_id=%d", st2_id), 2));
+    wassert(actual(db).try_summary_query(str::fmtf("ana_id=%d", (st1_id + st2_id) * 2), 0));
 }
 
 template<> template<> void to::test<2>()
@@ -236,8 +241,26 @@ template<> template<> void to::test<14>()
 
 template<> template<> void to::test<15>()
 {
-    wassert(actual(db).try_summary_query("context_id=1", 1));
-    wassert(actual(db).try_summary_query("context_id=11", 1));
+    // Collect a vector of valid context IDs
+    vector<int> context_ids;
+    // And an invalid one
+    int sum = 1;
+    Record query;
+    auto_ptr<db::Cursor> cur = db->query_data(query);
+    while (cur->next())
+    {
+        context_ids.push_back(cur->attr_reference_id());
+        sum += context_ids.back();
+    }
+
+    WIBBLE_TEST_INFO(info);
+
+    wassert(actual(db).try_summary_query(str::fmtf("context_id=%d", sum), 0));
+    for (vector<int>::const_iterator i = context_ids.begin(); i != context_ids.end(); ++i)
+    {
+        info() << "Context ID " << *i;
+        wassert(actual(db).try_summary_query(str::fmtf("context_id=%d", *i), 1));
+    }
 }
 
 }

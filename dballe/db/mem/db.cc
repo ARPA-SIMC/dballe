@@ -293,9 +293,16 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 std::auto_ptr<db::Cursor> DB::query_summary(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
-    Results<Value> res(memdb.values);
-    raw_query_data(query, res);
-    return Cursor::createSummary(*this, modifiers, res);
+    bool query_station_vars = (query.get(DBA_KEY_LEVELTYPE1, 0) == 257);
+    if (query_station_vars)
+    {
+        throw error_unimplemented("summary query of station vars");
+#warning TODO
+    } else {
+        Results<Value> res(memdb.values);
+        raw_query_data(query, res);
+        return Cursor::createSummary(*this, modifiers, res);
+    }
 }
 
 unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
