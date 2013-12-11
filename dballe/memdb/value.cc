@@ -307,10 +307,7 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
     if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
     {
         set<Varcode> codes;
-        size_t pos;
-        size_t len;
-        for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-            codes.insert(WR_STRING_TO_VAR(val + pos + 1));
+        resolve_varlist_safe(val, codes);
         res.add(new match::Varcodes<Value>(codes));
     }
 

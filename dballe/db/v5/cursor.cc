@@ -131,7 +131,6 @@ struct QueryBuilder
     DBALLE_SQL_C_SINT_TYPE	sel_pind;
     DBALLE_SQL_C_SINT_TYPE	sel_p1;
     DBALLE_SQL_C_SINT_TYPE	sel_p2;
-    DBALLE_SQL_C_SINT_TYPE	sel_b;
     DBALLE_SQL_C_SINT_TYPE	sel_rep_cod;
     DBALLE_SQL_C_SINT_TYPE	sel_ana_id;
     DBALLE_SQL_C_SINT_TYPE	sel_context_id;
@@ -1349,25 +1348,21 @@ void QueryBuilder::make_where(const Record& rec)
 
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
     {
-        sel_b = descriptor_code(val);
-        sql_where.append_list("d.id_var=?");
-        TRACE("found b: adding AND d.id_var = ?. val is %d %s\n", (int)sel_b, val);
-        stm.bind_in(input_seq++, sel_b);
+        Varcode code = resolve_varcode_safe(val);
+        sql_where.append_listf("d.id_var=%d", (int)code);
+        TRACE("found b: adding AND d.id_var=%d %s\n", (int)code, val);
         from_wanted |= DBA_DB_FROM_D;
     }
     if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
     {
-        size_t pos;
-        size_t len;
+        set<Varcode> codes;
+        resolve_varlist_safe(val, codes);
         sql_where.append_list("d.id_var IN (");
-        for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-        {
-            Varcode code = WR_STRING_TO_VAR(val + pos + 1);
-            if (pos == 0)
-                sql_where.appendf("%d", code);
+        for (set<Varcode>::const_iterator i = codes.begin(); i != codes.end(); ++i)
+            if (i == codes.begin())
+                sql_where.appendf("%d", *i);
             else
-                sql_where.appendf(",%d", code);
-        }
+                sql_where.appendf(",%d", *i);
         sql_where.append(")");
         TRACE("found blist: adding AND d.id_var IN (%s)\n", val);
         from_wanted |= DBA_DB_FROM_D;
