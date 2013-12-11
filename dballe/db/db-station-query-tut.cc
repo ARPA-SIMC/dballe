@@ -173,9 +173,13 @@ template<> template<> void to::test<7>()
 {
     wassert(actual(db).try_station_query("var=B12101", 2));
     wassert(actual(db).try_station_query("var=B12103", 1));
-    wassert(actual(db).try_station_query("varlist=B12101", all));
-    wassert(actual(db).try_station_query("varlist=B12103", some));
-    wassert(actual(db).try_station_query("varlist=B12101,B12103", all));
+    wassert(actual(db).try_station_query("varlist=B12101", 2));
+    wassert(actual(db).try_station_query("varlist=B12103", 1));
+#warning FIXME: change after testing if we can move to report-in-station behaviour or not
+    if (db->format() == MEM)
+        wassert(actual(db).try_station_query("varlist=B12101,B12103", 3));
+    else
+        wassert(actual(db).try_station_query("varlist=B12101,B12103", 2));
 }
 
 }

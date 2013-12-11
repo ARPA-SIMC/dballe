@@ -261,6 +261,35 @@ std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     Results<Station> res(memdb.stations);
+
+    // Build var/varlist special-cased filter for station queries
+    const char* filter_var = query.key_peek_value(DBA_KEY_VAR);
+    const char* filter_varlist = query.key_peek_value(DBA_KEY_VARLIST);
+    if (filter_var || filter_varlist)
+    {
+        set<Varcode> varcodes;
+        if (filter_var) varcodes.insert(resolve_varcode_safe(filter_var));
+        if (filter_varlist) resolve_varlist_safe(filter_varlist, varcodes);
+
+        // Iterate all the possible values, taking note of the stations for
+        // variables whose varcodes are in 'varcodes'
+        auto_ptr< set<size_t> > id_whitelist(new set<size_t>);
+        for (ValueStorage<Value>::index_iterator i = memdb.values.index_begin();
+                i != memdb.values.index_end(); ++i)
+        {
+            const Value& v = *memdb.values[*i];
+            if (varcodes.find(v.var->code()) != varcodes.end())
+                id_whitelist->insert(*i);
+        }
+        IF_TRACE_QUERY {
+            trace_query("Found var/varlist station filter: %zd items in id whitelist:", id_whitelist->size());
+            for (set<size_t>::const_iterator i = id_whitelist->begin(); i != id_whitelist->end(); ++i)
+                trace_query(" %zd", *i);
+            trace_query("\n");
+        }
+        res.add_set(id_whitelist);
+    }
+
     raw_query_stations(query, res);
     return Cursor::createStations(*this, modifiers, res);
 }
