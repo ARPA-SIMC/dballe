@@ -315,8 +315,21 @@ void Stations::query(const Record& rec, Results<Station>& res) const
         // example, with the ident index.
         trace_query("Found latmin=%d, latmax=%d\n", latmin, latmax);
 
-        if (latmin != MISSING_INT)
+        if (latmin != MISSING_INT && latmax != MISSING_INT)
         {
+            bool found;
+            auto_ptr< stl::Sequences<size_t> > sequences(by_lat.search_between(latmin, latmax + 1, found));
+            if (!found)
+            {
+                trace_query(" latmin-latmax range is outside the index: setting empty result set\n");
+                res.set_to_empty();
+                return;
+            }
+            if (sequences.get())
+                res.add_union(sequences);
+            else
+                trace_query(" latmin-latmax range covers the whole index: no point in adding a filter\n");
+        } else if (latmin != MISSING_INT) {
             bool found;
             auto_ptr< stl::Sequences<size_t> > sequences(by_lat.search_from(latmin, found));
             if (!found)
@@ -342,19 +355,6 @@ void Stations::query(const Record& rec, Results<Station>& res) const
                 res.add_union(sequences);
             else
                 trace_query(" latmax matches end of index: no point in adding a filter\n");
-        } else {
-            bool found;
-            auto_ptr< stl::Sequences<size_t> > sequences(by_lat.search_between(latmin, latmax + 1, found));
-            if (!found)
-            {
-                trace_query(" latmin-latmax range is outside the index: setting empty result set\n");
-                res.set_to_empty();
-                return;
-            }
-            if (sequences.get())
-                res.add_union(sequences);
-            else
-                trace_query(" latmin-latmax range covers the whole index: no point in adding a filter\n");
         }
     }
 
