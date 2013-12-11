@@ -109,6 +109,26 @@ wreport::Varcode resolve_varcode_safe(const std::string& name)
     return WR_STRING_TO_VAR(name.data() + 1);
 }
 
+void resolve_varlist_safe(const std::string& varlist, std::set<wreport::Varcode>& out)
+{
+    if (varlist.empty())
+        throw error_consistency("cannot parse a Varcode list out of an empty string");
+
+    size_t beg = 0;
+    while (true)
+    {
+        size_t end = varlist.find(',', beg);
+        if (end == string::npos)
+        {
+            out.insert(resolve_varcode_safe(varlist.substr(beg)));
+            break;
+        } else {
+            out.insert(resolve_varcode_safe(varlist.substr(beg, end-beg)));
+        }
+        beg = end + 1;
+    }
+}
+
 wreport::Varcode map_code_to_dballe(wreport::Varcode code)
 {
     switch (code)

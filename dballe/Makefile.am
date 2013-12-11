@@ -246,6 +246,7 @@ tut_test_SOURCES = \
 	core/aliases-tut.cc \
 	core/stlutils-tut.cc \
 	core/defs-tut.cc \
+	core/var-tut.cc \
 	core/rawmsg-tut.cc \
 	core/file-tut.cc \
 	core/record-tut.cc \
