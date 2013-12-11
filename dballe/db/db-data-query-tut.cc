@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include "db/test-utils-db.h"
+#include <wibble/string.h>
 
 using namespace dballe;
 using namespace dballe::db;
@@ -46,9 +47,10 @@ typedef tg::object to;
 
 template<> template<> void to::test<1>()
 {
-    wruntest(populate<OldDballeTestFixture>);
-    TRY_QUERY("ana_id=1", 4);
-    TRY_QUERY("ana_id=2", 0);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
+    TRY_QUERY(str::fmtf("ana_id=%d", f.dataset0.ana_id), 4);
+    TRY_QUERY("ana_id=4242", 0);
 }
 
 template<> template<> void to::test<2>()
