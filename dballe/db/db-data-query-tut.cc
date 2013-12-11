@@ -49,7 +49,11 @@ template<> template<> void to::test<1>()
 {
     OldDballeTestFixture f;
     wruntest(populate_database, f);
-    TRY_QUERY(str::fmtf("ana_id=%d", f.dataset0.ana_id), 4);
+#warning FIXME: change after testing if we can move to report-in-station behaviour or not
+    if (db->format() == MEM)
+        TRY_QUERY(str::fmtf("ana_id=%d", f.dataset0.ana_id), 2);
+    else
+        TRY_QUERY(str::fmtf("ana_id=%d", f.dataset0.ana_id), 4);
     TRY_QUERY("ana_id=4242", 0);
 }
 
@@ -106,25 +110,29 @@ template<> template<> void to::test<3>()
 template<> template<> void to::test<4>()
 {
     wruntest(populate<OldDballeTestFixture>);
+#warning FIXME: change after testing if we can move to report-in-station behaviour or not
+    const int all = (db->format() == MEM ? 2 : 4);
     // Block and station queries
-    TRY_QUERY("B01001=1", 4);
+    TRY_QUERY("B01001=1", all);
     TRY_QUERY("B01001=2", 0);
-    TRY_QUERY("B01002=52", 4);
+    TRY_QUERY("B01002=52", all);
     TRY_QUERY("B01002=53", 0);
 }
 
 template<> template<> void to::test<5>()
 {
+#warning FIXME: change after testing if we can move to report-in-station behaviour or not
+    const int all = (db->format() == MEM ? 2 : 4);
     wruntest(populate<OldDballeTestFixture>);
     // ana_filter queries
-    TRY_QUERY("ana_filter=block=1", 4);
-    TRY_QUERY("ana_filter=B01001=1", 4);
+    TRY_QUERY("ana_filter=block=1", all);
+    TRY_QUERY("ana_filter=B01001=1", all);
     TRY_QUERY("ana_filter=block>1", 0);
     TRY_QUERY("ana_filter=B01001>1", 0);
-    TRY_QUERY("ana_filter=block<=1", 4);
-    TRY_QUERY("ana_filter=B01001<=1", 4);
-    TRY_QUERY("ana_filter=0<=B01001<=2", 4);
-    TRY_QUERY("ana_filter=1<=B01001<=1", 4);
+    TRY_QUERY("ana_filter=block<=1", all);
+    TRY_QUERY("ana_filter=B01001<=1", all);
+    TRY_QUERY("ana_filter=0<=B01001<=2", all);
+    TRY_QUERY("ana_filter=1<=B01001<=1", all);
     TRY_QUERY("ana_filter=2<=B01001<=4", 0);
 }
 
