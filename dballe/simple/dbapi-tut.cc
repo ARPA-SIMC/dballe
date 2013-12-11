@@ -199,7 +199,14 @@ template<> template<> void to::test<5>()
     api.setd("B10004", 100000.0);
     api.prendilo(); // Pressure at ground level
 
-    ensure(api.enqi("*ana_id") > 0);
+    int anaid = api.enqi("*ana_id");
+    wassert(actual(anaid) != MISSING_INT);
+
+    // Query it back
+    api.unsetall();
+    api.seti("ana_id", anaid);
+    api.setc("var", "B12101");
+    wassert(actual(api.voglioquesto()) == 1);
 }
 
 }
