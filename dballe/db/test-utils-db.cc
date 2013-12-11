@@ -105,6 +105,7 @@ void TestRecord::insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace)
 {
     // Insert the station info
     wruntest(station.insert, db, can_replace);
+    ana_id = db.last_station_id();
 
     // Insert variables
     if (!data.vars().empty())
@@ -114,6 +115,7 @@ void TestRecord::insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace)
         wrunchecked(station.set_latlonident_into(insert));
         locinfo() << insert.to_string();
         wrunchecked(db.insert(insert, can_replace, true));
+        ana_id = db.last_station_id();
     }
 
     // Insert attributes

@@ -98,6 +98,8 @@ struct TestRecord
     Record data;
     /// Attributes on measured variables
     std::map<wreport::Varcode, Record> attrs;
+    /// ana_id of this station after inserting it
+    int ana_id;
 
     /// Set a value as identified by the Msg ID, with its level, timerange and
     /// varcode, at the given date and with an optional confidence %
