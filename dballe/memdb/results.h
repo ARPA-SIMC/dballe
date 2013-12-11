@@ -23,7 +23,7 @@
 #define DBA_MEMDB_RESULTS_H
 
 #include <dballe/core/stlutils.h>
-#include <dballe/memdb/core.h>
+#include <dballe/memdb/valuestorage.h>
 #include <dballe/memdb/index.h>
 #include <dballe/memdb/match.h>
 #include <vector>

@@ -366,7 +366,7 @@ template class ValueStorage<Value>;
 }
 }
 
-#include "core.tcc"
+#include "valuestorage.tcc"
 #include "results.tcc"
 
 namespace dballe {

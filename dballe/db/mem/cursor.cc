@@ -642,5 +642,4 @@ unsigned CursorSummary::test_iterate(FILE* dump)
 }
 }
 }
-#include "dballe/memdb/core.tcc"
 #include "dballe/memdb/results.tcc"

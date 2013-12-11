@@ -156,7 +156,7 @@ void LevTrs::dump(FILE* out) const
 }
 }
 
-#include "core.tcc"
+#include "valuestorage.tcc"
 #include "results.tcc"
 
 namespace dballe {

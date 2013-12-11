@@ -297,6 +297,6 @@ void Results<T>::copy_indices_to(OUTITER res)
 }
 
 #include "dballe/core/stlutils.tcc"
-#include "dballe/memdb/core.tcc"
+#include "dballe/memdb/valuestorage.tcc"
 #include "dballe/memdb/match.tcc"
 #endif

@@ -22,7 +22,7 @@
 #ifndef DBA_MEMDB_CORE_TCC
 #define DBA_MEMDB_CORE_TCC
 
-#include "core.h"
+#include "valuestorage.h"
 #include "dballe/core/stlutils.h"
 #include <algorithm>
 

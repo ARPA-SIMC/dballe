@@ -22,7 +22,7 @@
 #ifndef DBA_MEMDB_STATION_H
 #define DBA_MEMDB_STATION_H
 
-#include <dballe/memdb/core.h>
+#include <dballe/memdb/valuestorage.h>
 #include <dballe/memdb/index.h>
 #include <dballe/core/defs.h>
 #include <string>

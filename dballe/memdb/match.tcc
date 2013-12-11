@@ -66,6 +66,5 @@ void FilterBuilder<T>::add(Match<T>* f)
 }
 }
 
-#include "dballe/memdb/core.tcc"
 #endif
 

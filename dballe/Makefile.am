@@ -54,8 +54,8 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/match-wreport.h \
 	core/varmatch.h \
 	core/trace.h \
-	memdb/core.h \
-	memdb/core.tcc \
+	memdb/valuestorage.h \
+	memdb/valuestorage.tcc \
 	memdb/index.h \
 	memdb/match.h \
 	memdb/match.tcc \
@@ -130,7 +130,7 @@ libdballe_la_SOURCES = \
 	memdb/station.cc \
 	memdb/stationvalue.cc \
 	memdb/levtr.cc \
-	memdb/core.cc \
+	memdb/valuestorage.cc \
 	memdb/index.cc \
 	memdb/match.cc \
 	memdb/results.cc \
@@ -255,7 +255,7 @@ tut_test_SOURCES = \
 	core/varmatch-tut.cc \
 	core/test-utils-core.cc \
 	memdb/tests.cc \
-	memdb/core-tut.cc \
+	memdb/valuestorage-tut.cc \
 	memdb/index-tut.cc \
 	memdb/match-tut.cc \
 	memdb/results-tut.cc \

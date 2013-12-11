@@ -1,4 +1,4 @@
-#include "core.h"
+#include "valuestorage.h"
 #include "dballe/core/defs.h"
 #include "dballe/core/stlutils.h"
 #include <string>

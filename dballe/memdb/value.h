@@ -23,7 +23,7 @@
 #ifndef DBA_MEMDB_VALUE_H
 #define DBA_MEMDB_VALUE_H
 
-#include <dballe/memdb/core.h>
+#include <dballe/memdb/valuestorage.h>
 #include <dballe/memdb/index.h>
 #include <dballe/core/defs.h>
 #include <wreport/var.h>

@@ -22,7 +22,7 @@
 #ifndef DBA_MEMDB_LTR_H
 #define DBA_MEMDB_LTR_H
 
-#include <dballe/memdb/core.h>
+#include <dballe/memdb/valuestorage.h>
 #include <dballe/memdb/index.h>
 #include <dballe/core/defs.h>
 

@@ -472,7 +472,6 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
 }
 }
 
-#include "dballe/memdb/core.tcc"
 #include "dballe/memdb/results.tcc"
 
 /* vim:set ts=4 sw=4: */

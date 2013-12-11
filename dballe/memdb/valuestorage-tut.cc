@@ -18,7 +18,7 @@
  */
 
 #include "memdb/tests.h"
-#include "core.h"
+#include "valuestorage.h"
 
 using namespace dballe;
 using namespace dballe::memdb;

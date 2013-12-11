@@ -220,5 +220,5 @@ template class ValueStorage<StationValue>;
 }
 }
 
-#include "core.tcc"
+#include "valuestorage.tcc"
 #include "results.tcc"
