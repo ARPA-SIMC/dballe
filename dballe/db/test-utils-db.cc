@@ -328,13 +328,6 @@ void db_test::populate_database(WIBBLE_TEST_LOCPRM, const TestFixture& fixture)
     wruntest(fixture.populate_db, *db);
 }
 
-void DB_test_base::populate_database(WIBBLE_TEST_LOCPRM)
-{
-    /* Start with an empty database */
-    db->reset();
-    wruntest(old_fixture.populate_db, *db);
-}
-
 void TestFixture::populate_db(WIBBLE_TEST_LOCPRM, DB& db) const
 {
     for (size_t i = 0; i < records_count; ++i)

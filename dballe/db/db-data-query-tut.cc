@@ -30,7 +30,7 @@ using namespace std;
 
 namespace {
 
-struct db_tests_query : public DB_test_base
+struct db_tests_query : public db_test
 {
 };
 
@@ -46,16 +46,16 @@ typedef tg::object to;
 
 template<> template<> void to::test<1>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     TRY_QUERY("ana_id=1", 4);
     TRY_QUERY("ana_id=2", 0);
 }
 
 template<> template<> void to::test<2>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // Query data in station context
-    query.clear();
+    Record query;
     query.set_ana_context();
     auto_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 5);
@@ -63,7 +63,7 @@ template<> template<> void to::test<2>()
 
 template<> template<> void to::test<3>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // Datetime queries
     TRY_QUERY("year=1001", 0);
     TRY_QUERY("yearmin=1999", 0);
@@ -103,7 +103,7 @@ template<> template<> void to::test<3>()
 
 template<> template<> void to::test<4>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // Block and station queries
     TRY_QUERY("B01001=1", 4);
     TRY_QUERY("B01001=2", 0);
@@ -113,7 +113,7 @@ template<> template<> void to::test<4>()
 
 template<> template<> void to::test<5>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // ana_filter queries
     TRY_QUERY("ana_filter=block=1", 4);
     TRY_QUERY("ana_filter=B01001=1", 4);
@@ -128,7 +128,7 @@ template<> template<> void to::test<5>()
 
 template<> template<> void to::test<6>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // data_filter queries
     TRY_QUERY("data_filter=B01011=DB-All.e!", 1);
     TRY_QUERY("data_filter=B01012<300", 0);
@@ -142,7 +142,7 @@ template<> template<> void to::test<6>()
 
 template<> template<> void to::test<7>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // latitude/longitude queries
     TRY_QUERY("latmin=11.0", 4);
     TRY_QUERY("latmin=12.34560", 4);
@@ -168,7 +168,7 @@ template<> template<> void to::test<7>()
 
 template<> template<> void to::test<8>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // fixed/mobile queries
     TRY_QUERY("mobile=0", 4);
     TRY_QUERY("mobile=1", 0);
@@ -183,7 +183,7 @@ template<> template<> void to::test<9>()
 
 template<> template<> void to::test<10>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // timerange queries
     TRY_QUERY("pindicator=20", 4);
     TRY_QUERY("pindicator=21", 0);
@@ -196,7 +196,7 @@ template<> template<> void to::test<10>()
 
 template<> template<> void to::test<11>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // level queries
     TRY_QUERY("leveltype1=10", 4);
     TRY_QUERY("leveltype1=11", 0);
@@ -210,7 +210,7 @@ template<> template<> void to::test<11>()
 
 template<> template<> void to::test<12>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // varcode queries
     TRY_QUERY("var=B01011", 2);
     TRY_QUERY("var=B01012", 2);
@@ -219,7 +219,7 @@ template<> template<> void to::test<12>()
 
 template<> template<> void to::test<13>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // report queries
     TRY_QUERY("rep_memo=synop", 2);
     TRY_QUERY("rep_memo=metar", 2);
@@ -228,7 +228,7 @@ template<> template<> void to::test<13>()
 
 template<> template<> void to::test<14>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // report priority queries
     TRY_QUERY("priority=101", 2);
     TRY_QUERY("priority=81", 2);
@@ -247,7 +247,7 @@ template<> template<> void to::test<14>()
 
 template<> template<> void to::test<15>()
 {
-    wruntest(populate_database);
+    wruntest(populate<OldDballeTestFixture>);
     // context ID queries
     TRY_QUERY("context_id=1", 1);
     TRY_QUERY("context_id=11", 0);

@@ -259,20 +259,6 @@ struct db_test
     void populate_database(WIBBLE_TEST_LOCPRM, const TestFixture& fixture);
 };
 
-/// Common bits for db::DB test suites
-struct DB_test_base : public db_test
-{
-    OldDballeTestFixture old_fixture;
-
-    // Work records
-    Record insert;
-    Record query;
-    Record result;
-    Record qc;
-
-    void populate_database(WIBBLE_TEST_LOCPRM);
-};
-
 struct ActualCursor : public wibble::tests::Actual<dballe::db::Cursor&>
 {
     ActualCursor(dballe::db::Cursor& actual) : wibble::tests::Actual<dballe::db::Cursor&>(actual) {}
