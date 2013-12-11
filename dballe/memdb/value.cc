@@ -4,7 +4,7 @@
 #include "dballe/core/stlutils.h"
 #include "dballe/core/record.h"
 #include "dballe/core/varmatch.h"
-#include "query.h"
+#include "results.h"
 #include <iomanip>
 #include <ostream>
 #include <sstream>
@@ -367,7 +367,7 @@ template class ValueStorage<Value>;
 }
 
 #include "core.tcc"
-#include "query.tcc"
+#include "results.tcc"
 
 namespace dballe {
 namespace memdb {

@@ -19,10 +19,10 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBA_MEMDB_QUERY_TCC
-#define DBA_MEMDB_QUERY_TCC
+#ifndef DBA_MEMDB_RESULTS_TCC
+#define DBA_MEMDB_RESULTS_TCC
 
-#include "query.h"
+#include "results.h"
 #include "dballe/core/stlutils.h"
 #include <algorithm>
 #ifdef TRACE_QUERY
@@ -32,15 +32,25 @@
 namespace dballe {
 namespace memdb {
 
-namespace match {
+namespace {
 
 template<typename T>
-bool Idx2Values<T>::operator()(const size_t& val) const
+class Idx2Values : public Match<size_t>
 {
-    const T* v = index[val];
-    if (!v) return false;
-    return next(*v);
-}
+protected:
+    const ValueStorage<T>& index;
+    const Match<T>& next;
+
+public:
+    Idx2Values(const ValueStorage<T>& index, const Match<T>& next) : index(index), next(next) {}
+
+    bool operator()(const size_t& val) const
+    {
+        const T* v = index[val];
+        if (!v) return false;
+        return next(*v);
+    }
+};
 
 }
 

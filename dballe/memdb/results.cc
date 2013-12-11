@@ -1,4 +1,4 @@
-#include "query.h"
+#include "results.h"
 #include <algorithm>
 #ifdef TRACE_QUERY
 #include <cstdio>

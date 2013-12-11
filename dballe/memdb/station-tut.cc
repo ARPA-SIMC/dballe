@@ -19,7 +19,7 @@
 
 #include "memdb/tests.h"
 #include "station.h"
-#include "query.h"
+#include "results.h"
 
 using namespace dballe;
 using namespace dballe::memdb;
@@ -172,5 +172,6 @@ void to::test<5>()
     wassert(actual(items[1]->id) == pos3);
 }
 
-
 }
+
+#include "results.tcc"

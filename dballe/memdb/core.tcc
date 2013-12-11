@@ -23,7 +23,6 @@
 #define DBA_MEMDB_CORE_TCC
 
 #include "core.h"
-#include "query.h"
 #include "dballe/core/stlutils.h"
 #include <algorithm>
 

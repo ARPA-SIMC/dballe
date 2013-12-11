@@ -20,7 +20,7 @@
  */
 
 #include "memdb.h"
-#include "query.h"
+#include "results.h"
 #include "dballe/core/record.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
@@ -207,4 +207,4 @@ void Memdb::dump(FILE* out) const
 
 }
 
-#include "query.tcc"
+#include "results.tcc"

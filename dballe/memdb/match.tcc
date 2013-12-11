@@ -22,7 +22,6 @@
 #ifndef DBA_MEMDB_MATCH_TCC
 #define DBA_MEMDB_MATCH_TCC
 
-#include "query.h"
 #include "dballe/core/stlutils.h"
 #include <algorithm>
 #ifdef TRACE_QUERY

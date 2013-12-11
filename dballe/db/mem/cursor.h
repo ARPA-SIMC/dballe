@@ -23,7 +23,7 @@
 #define DBA_DB_MEM_CURSOR_H
 
 #include <dballe/memdb/memdb.h>
-#include <dballe/memdb/query.h>
+#include <dballe/memdb/results.h>
 #include <dballe/db/db.h>
 
 namespace dballe {

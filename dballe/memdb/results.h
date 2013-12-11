@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBA_MEMDB_QUERY_H
-#define DBA_MEMDB_QUERY_H
+#ifndef DBA_MEMDB_RESULTS_H
+#define DBA_MEMDB_RESULTS_H
 
 #include <dballe/core/stlutils.h>
 #include <dballe/memdb/core.h>
@@ -44,25 +44,6 @@ void trace_query(const char* fmt, ...);
 #define IF_TRACE_QUERY if (0)
 #define trace_query(...) do {} while(0)
 #endif
-
-namespace match {
-
-template<typename T>
-class Idx2Values : public Match<size_t>
-{
-protected:
-    const ValueStorage<T>& index;
-    const Match<T>& next;
-
-public:
-    Idx2Values(const ValueStorage<T>& index, const Match<T>& next) : index(index), next(next) {}
-
-    bool operator()(const size_t& val) const;
-};
-template<typename T>
-Idx2Values<T> idx2values(const ValueStorage<T>& index, const Match<T>& next) { return Idx2Values<T>(index, next); }
-
-}
 
 template<typename T>
 class Results

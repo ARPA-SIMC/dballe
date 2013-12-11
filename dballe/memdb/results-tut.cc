@@ -18,7 +18,7 @@
  */
 
 #include "memdb/tests.h"
-#include "query.h"
+#include "results.h"
 #include "station.h"
 
 using namespace dballe;
@@ -87,4 +87,4 @@ template<> template<> void to::test<3>()
 
 }
 
-#include "query.tcc"
+#include "results.tcc"

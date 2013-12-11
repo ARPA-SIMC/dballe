@@ -19,7 +19,7 @@
 
 #include "memdb/tests.h"
 #include "levtr.h"
-#include "query.h"
+#include "results.h"
 
 using namespace dballe;
 using namespace dballe::tests;
@@ -113,4 +113,4 @@ template<> template<> void to::test<2>()
 
 }
 
-#include "query.tcc"
+#include "results.tcc"

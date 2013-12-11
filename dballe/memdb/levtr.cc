@@ -20,7 +20,7 @@
  */
 
 #include "levtr.h"
-#include "query.h"
+#include "results.h"
 #include "dballe/core/record.h"
 #include "dballe/core/stlutils.h"
 #include <sstream>
@@ -157,7 +157,7 @@ void LevTrs::dump(FILE* out) const
 }
 
 #include "core.tcc"
-#include "query.tcc"
+#include "results.tcc"
 
 namespace dballe {
 namespace memdb {

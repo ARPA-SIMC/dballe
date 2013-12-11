@@ -27,7 +27,7 @@
 #include "dballe/core/varmatch.h"
 #include "dballe/core/record.h"
 #include "dballe/core/defs.h"
-#include "dballe/memdb/query.h"
+#include "dballe/memdb/results.h"
 #include <algorithm>
 #include <queue>
 
@@ -473,6 +473,6 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
 }
 
 #include "dballe/memdb/core.tcc"
-#include "dballe/memdb/query.tcc"
+#include "dballe/memdb/results.tcc"
 
 /* vim:set ts=4 sw=4: */
