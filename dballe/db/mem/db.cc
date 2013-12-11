@@ -24,9 +24,10 @@
 #include "dballe/db/modifiers.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
-#include <dballe/core/record.h>
-#include <dballe/core/defs.h>
-#include <dballe/memdb/query.h>
+#include "dballe/core/varmatch.h"
+#include "dballe/core/record.h"
+#include "dballe/core/defs.h"
+#include "dballe/memdb/query.h"
 #include <algorithm>
 #include <queue>
 
@@ -102,7 +103,9 @@ int DB::last_station_id() const
 
 void DB::remove(const Record& query)
 {
-    memdb.remove(query);
+    Results<Value> res(memdb.values);
+    raw_query_data(query, res);
+    memdb.remove(res);
 }
 
 void DB::vacuum()
@@ -110,11 +113,82 @@ void DB::vacuum()
     // Nothing to do
 }
 
+namespace {
+struct MatchAnaFilter : public Match<Station>
+{
+    const StationValues& stationvalues;
+    Varmatch* match;
+
+    MatchAnaFilter(const StationValues& stationvalues, const std::string& expr)
+        : stationvalues(stationvalues), match(Varmatch::parse(expr).release()) {}
+    ~MatchAnaFilter() { delete match; }
+
+    virtual bool operator()(const Station& val) const
+    {
+        const StationValue* sv = stationvalues.get(val, match->code);
+        if (!sv) return false;
+        return (*match)(*(sv->var));
+    }
+
+private:
+    MatchAnaFilter(const MatchAnaFilter&);
+    MatchAnaFilter& operator=(const MatchAnaFilter&);
+};
+}
+
+void DB::raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& res) const
+{
+    if (const char* val = rec.key_peek_value(DBA_KEY_ANA_FILTER))
+    {
+        res.add(new MatchAnaFilter(memdb.stationvalues, val));
+        trace_query("Found ana filter %s\n", val);
+    }
+    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))
+    {
+        string query("B01001=");
+        query += val;
+        res.add(new MatchAnaFilter(memdb.stationvalues, query));
+        trace_query("Found block filter %s\n", query.c_str());
+    }
+    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 2)))
+    {
+        string query("B01002=");
+        query += val;
+        res.add(new MatchAnaFilter(memdb.stationvalues, query));
+        trace_query("Found station filter %s\n", query.c_str());
+    }
+    memdb.stations.query(rec, res);
+}
+
+
+void DB::raw_query_station_data(const Record& rec, memdb::Results<memdb::StationValue>& res) const
+{
+    // Get a list of stations we can match
+    Results<Station> res_st(memdb.stations);
+    raw_query_stations(rec, res_st);
+
+    memdb.stationvalues.query(rec, res_st, res);
+}
+
+void DB::raw_query_data(const Record& rec, memdb::Results<memdb::Value>& res) const
+{
+    // Get a list of stations we can match
+    Results<Station> res_st(memdb.stations);
+    raw_query_stations(rec, res_st);
+
+    // Get a list of stations we can match
+    Results<LevTr> res_tr(memdb.levtrs);
+    memdb.levtrs.query(rec, res_tr);
+
+    // Query variables
+    memdb.values.query(rec, res_st, res_tr, res);
+}
+
 std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     Results<Station> res(memdb.stations);
-    memdb.query_stations(query, res);
+    raw_query_stations(query, res);
     return Cursor::createStations(*this, modifiers, res);
 }
 
@@ -130,18 +204,16 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 #warning TODO
         } else {
             Results<StationValue> res(memdb.stationvalues);
-            memdb.query_station_data(query, res);
+            raw_query_station_data(query, res);
             return Cursor::createStationData(*this, modifiers, res);
         }
     } else {
+        Results<Value> res(memdb.values);
+        raw_query_data(query, res);
         if (modifiers & DBA_DB_MODIFIER_BEST)
         {
-            Results<Value> res(memdb.values);
-            memdb.query_data(query, res);
             return Cursor::createDataBest(*this, modifiers, res);
         } else {
-            Results<Value> res(memdb.values);
-            memdb.query_data(query, res);
             return Cursor::createData(*this, modifiers, res);
         }
     }
@@ -151,7 +223,7 @@ std::auto_ptr<db::Cursor> DB::query_summary(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     Results<Value> res(memdb.values);
-    memdb.query_data(query, res);
+    raw_query_data(query, res);
     return Cursor::createSummary(*this, modifiers, res);
 }
 
@@ -241,7 +313,7 @@ struct CompareForExport
 void DB::export_msgs(const Record& query, MsgConsumer& cons)
 {
     Results<Value> res(memdb.values);
-    memdb.query_data(query, res);
+    raw_query_data(query, res);
 
     // Sorted value IDs
     priority_queue<const Value*, vector<const Value*>, CompareForExport> values;

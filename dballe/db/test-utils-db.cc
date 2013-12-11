@@ -203,12 +203,13 @@ void TestCursorDataMatch::check(WIBBLE_TEST_LOCPRM) const
     wassert(actual(cur).data_var_matches(ds, code));
 }
 
+TestDBTryDataQuery::TestDBTryDataQuery(DB& db, const std::string& query, unsigned expected)
+    : db(db), expected(expected)
+{
+    set_record_from_string(this->query, query);
+}
 void TestDBTryDataQuery::check(WIBBLE_TEST_LOCPRM) const
 {
-    // Build the query
-    Record query;
-    set_record_from_string(query, this->query);
-
     // Run the query
     auto_ptr<db::Cursor> cur = db.query_data(query);
 
@@ -322,16 +323,26 @@ db::v6::DB& db_test::v6()
 #endif
 }
 
-DB_test_base::DB_test_base()
+void db_test::populate_database(WIBBLE_TEST_LOCPRM, const TestFixture& fixture)
 {
-    init_records();
-}
-DB_test_base::DB_test_base(db::Format format) : db_test(format)
-{
-    init_records();
+    wruntest(fixture.populate_db, *db);
 }
 
-void DB_test_base::init_records()
+void DB_test_base::populate_database(WIBBLE_TEST_LOCPRM)
+{
+    /* Start with an empty database */
+    db->reset();
+    wruntest(old_fixture.populate_db, *db);
+}
+
+void TestFixture::populate_db(WIBBLE_TEST_LOCPRM, DB& db) const
+{
+    for (size_t i = 0; i < records_count; ++i)
+        wruntest(records[i].insert, db, true);
+}
+
+OldDballeTestFixture::OldDballeTestFixture()
+    : TestFixture(2), dataset0(records[0]), dataset1(records[1])
 {
     ds_st_oldtests.lat = 12.34560;
     ds_st_oldtests.lon = 76.54320;
@@ -356,20 +367,6 @@ void DB_test_base::init_records()
     dataset0.data.set(WR_VAR(0, 1, 12), 300);
     dataset1.data.set(WR_VAR(0, 1, 11), "Arpa-Sim!");
     dataset1.data.set(WR_VAR(0, 1, 12), 400);
-
-    ds_st_navile.lat = 44.5008;
-    ds_st_navile.lon = 11.3288;
-    ds_st_navile.info["synop"].set(WR_VAR(0, 7, 30), 78); // Height
-}
-
-void DB_test_base::populate_database(WIBBLE_TEST_LOCPRM)
-{
-    /* Start with an empty database */
-    db->reset();
-
-    wruntest(dataset0.insert, *db, false);
-    // replace=true to replace existing station info data
-    wruntest(dataset1.insert, *db, true);
 }
 
 } // namespace tests

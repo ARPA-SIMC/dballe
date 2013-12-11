@@ -27,9 +27,9 @@ using namespace std;
 
 namespace tut {
 
-struct dbmem_shar : public dballe::tests::DB_test_base
+struct dbmem_shar : public dballe::tests::db_test
 {
-    dbmem_shar() : dballe::tests::DB_test_base(db::MEM)
+    dbmem_shar() : dballe::tests::db_test(db::MEM)
     {
     }
 

@@ -31,9 +31,9 @@ using namespace std;
 
 namespace tut {
 
-struct dbv5_shar : public dballe::tests::DB_test_base
+struct dbv5_shar : public dballe::tests::db_test
 {
-    dbv5_shar() : dballe::tests::DB_test_base(db::V5)
+    dbv5_shar() : dballe::tests::db_test(db::V5)
     {
     }
 

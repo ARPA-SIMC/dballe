@@ -32,15 +32,22 @@ using namespace std;
 
 namespace {
 
-struct db_tests_basic : public dballe::tests::DB_test_base
+struct db_tests_misc : public dballe::tests::db_test
 {
+    TestStation ds_st_navile;
+    db_tests_misc()
+    {
+        ds_st_navile.lat = 44.5008;
+        ds_st_navile.lon = 11.3288;
+        ds_st_navile.info["synop"].set(WR_VAR(0, 7, 30), 78); // Height
+    }
 };
 
 }
 
 namespace tut {
 
-typedef db_tg<db_tests_basic> tg;
+typedef db_tg<db_tests_misc> tg;
 typedef tg::object to;
 
 template<> template<> void to::test<1>()
@@ -55,7 +62,7 @@ template<> template<> void to::test<1>()
     ds.set_var("temp_2m", 16.5, 50);
     wruntest(ds.insert, *db);
 
-    query.clear();
+    Record query;
 
     // Query and verify the station data
     {
@@ -81,10 +88,11 @@ template<> template<> void to::test<1>()
 template<> template<> void to::test<2>()
 {
     // Test insert
+    OldDballeTestFixture f;
 
     // Prepare a valid record to insert
-    Record insert(dataset0.data);
-    wrunchecked(dataset0.station.set_latlonident_into(insert));
+    Record insert(f.dataset0.data);
+    wrunchecked(f.dataset0.station.set_latlonident_into(insert));
 
     // Check if adding a nonexisting station when not allowed causes an error
     try {
@@ -112,10 +120,11 @@ template<> template<> void to::test<2>()
 template<> template<> void to::test<3>()
 {
     // Test double station insert
+    OldDballeTestFixture f;
 
     // Prepare a valid record to insert
-    Record insert(dataset0.data);
-    wrunchecked(dataset0.station.set_latlonident_into(insert));
+    Record insert(f.dataset0.data);
+    wrunchecked(f.dataset0.station.set_latlonident_into(insert));
 
     // Insert the record twice
     wrunchecked(db->insert(insert, false, true));
@@ -131,13 +140,14 @@ template<> template<> void to::test<3>()
 template<> template<> void to::test<4>()
 {
     // Test ana query
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
     /*
        CHECKED(dba_ana_count(db, &count));
        fail_unless(count == 1);
        */
-    query.clear();
+    Record query;
 
     /* Iterate the anagraphic database */
     auto_ptr<db::Cursor> cur = db->query_stations(query);
@@ -150,7 +160,7 @@ template<> template<> void to::test<4>()
     ensure_equals(cur->get_ident(), (const char*)0);
 
     // Check that the result matches
-    wassert(actual(cur).station_keys_match(dataset0.station));
+    wassert(actual(cur).station_keys_match(f.dataset0.station));
 
     /* There should be only one item */
     ensure_equals(cur->remaining(), 0);
@@ -161,13 +171,14 @@ template<> template<> void to::test<4>()
 template<> template<> void to::test<5>()
 {
     // Test querybest
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
     //if (db->server_type == ORACLE || db->server_type == POSTGRES)
     //      return;
 
     // Prepare a query
-    query.clear();
+    Record query;
     query.set(DBA_KEY_LATMIN, 1000000);
     query.set(DBA_KEY_QUERY, "best");
 
@@ -202,10 +213,11 @@ template<> template<> void to::test<5>()
 template<> template<> void to::test<6>()
 {
     // Test deletion
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
     // 4 items to begin with
-    query.clear();
+    Record query;
     auto_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 4);
     cur->discard_rest();
@@ -230,7 +242,7 @@ template<> template<> void to::test<6>()
     cur = db->query_data(query);
     ensure_equals(cur->remaining(), 2);
     ensure(cur->next());
-    wassert(actual(cur).data_context_matches(dataset0));
+    wassert(actual(cur).data_context_matches(f.dataset0));
 
     Varcode last_code = 0;
     for (unsigned i = 0; i < 2; ++i)
@@ -244,7 +256,7 @@ template<> template<> void to::test<6>()
         {
             case WR_VAR(0, 1, 11):
             case WR_VAR(0, 1, 12):
-                wassert(actual(cur).data_var_matches(dataset0, last_code));
+                wassert(actual(cur).data_var_matches(f.dataset0, last_code));
                 break;
             default:
                 ensure(false);
@@ -263,6 +275,7 @@ template<> template<> void to::test<6>()
 template<> template<> void to::test<7>()
 {
     // Test datetime queries
+    Record insert, query, result;
 
     /* Prepare test data */
     Record base, a, b;
@@ -500,9 +513,10 @@ template<> template<> void to::test<7>()
 template<> template<> void to::test<8>()
 {
     // Test QC
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
-    query.clear();
+    Record query, result;
     query.set(DBA_KEY_LATMIN, 1000000);
     auto_ptr<db::Cursor> cur = db->query_data(query);
 
@@ -523,7 +537,7 @@ template<> template<> void to::test<8>()
     int context_id = cur->attr_reference_id();
 
     // Insert new attributes about this report
-    qc.clear();
+    Record qc;
     qc.set(WR_VAR(0, 33, 2), 2);
     qc.set(WR_VAR(0, 33, 3), 5);
     qc.set(WR_VAR(0, 33, 5), 33);
@@ -576,9 +590,10 @@ template<> template<> void to::test<8>()
 template<> template<> void to::test<9>()
 {
     // Test station queries
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
-    query.clear();
+    Record query;
     query.set(DBA_KEY_REP_MEMO, "synop");
 
     auto_ptr<db::Cursor> cur = db->query_stations(query);
@@ -591,11 +606,12 @@ template<> template<> void to::test<9>()
 template<> template<> void to::test<10>()
 {
     // Test attributes
+    OldDballeTestFixture f;
 
     // Insert a data record
-    wruntest(dataset0.insert, *db);
+    wruntest(f.dataset0.insert, *db);
 
-    qc.clear();
+    Record qc;
     qc.set(WR_VAR(0,  1,  7),  1);
     qc.set(WR_VAR(0,  2, 48),  2);
     qc.set(WR_VAR(0,  5, 40),  3);
@@ -641,11 +657,12 @@ template<> template<> void to::test<10>()
 template<> template<> void to::test<11>()
 {
     // Test longitude wrapping around
+    OldDballeTestFixture f;
 
     // Insert a data record
-    wruntest(dataset0.insert, *db);
+    wruntest(f.dataset0.insert, *db);
 
-    query.clear();
+    Record query;
     query.set(DBA_KEY_LATMIN, 10.0);
     query.set(DBA_KEY_LATMAX, 15.0);
     query.set(DBA_KEY_LONMIN, 70.0);
@@ -658,12 +675,11 @@ template<> template<> void to::test<11>()
 
 template<> template<> void to::test<12>()
 {
-    // Test ana filter
-
     // Test numeric comparisons in ana_filter
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
-    query.clear();
+    Record query;
     query.set(DBA_KEY_REP_MEMO, "metar");
     query.set(DBA_KEY_VAR, "B01011");
     auto_ptr<db::Cursor> cur = db->query_data(query);
@@ -675,7 +691,7 @@ template<> template<> void to::test<12>()
     cur->discard_rest();
 
     // Insert new attributes about this report
-    qc.clear();
+    Record qc;
     qc.set(WR_VAR(0, 1, 1), 50);
     qc.set(WR_VAR(0, 1, 8), "50");
     db->attr_insert(context_id, WR_VAR(0, 1, 11), qc);
@@ -735,8 +751,9 @@ template<> template<> void to::test<12>()
 template<> template<> void to::test<13>()
 {
     // Reproduce a querybest scenario which produced invalid SQL
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
-    wruntest(populate_database);
     // SELECT pa.lat, pa.lon, pa.ident,
     //        d.datetime, d.id_report, d.id_var, d.value,
     //        ri.prio, pa.id, d.id, d.id_lev_tr
@@ -801,10 +818,11 @@ template<> template<> void to::test<14>()
 template<> template<> void to::test<15>()
 {
     // Reproduce a query that generated invalid SQL on V6
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
     // All DB
-    query.clear();
+    Record query;
     query.set(DBA_KEY_LEVELTYPE1, 103);
     query.set(DBA_KEY_L1, 2000);
     db->query_stations(query);
@@ -813,7 +831,7 @@ template<> template<> void to::test<15>()
 template<> template<> void to::test<16>()
 {
     // Test connect leaks
-    insert.clear();
+    Record insert;
     insert.set_ana_context();
     insert.set(DBA_KEY_LAT, 12.34560);
     insert.set(DBA_KEY_LON, 76.54320);
@@ -832,8 +850,9 @@ template<> template<> void to::test<16>()
 template<> template<> void to::test<17>()
 {
     // Test value update
-    db->reset();
-    dballe::tests::TestRecord dataset = dataset0;
+    OldDballeTestFixture f;
+
+    dballe::tests::TestRecord dataset = f.dataset0;
     Record& attrs = dataset.attrs[WR_VAR(0, 1, 12)];
     attrs.set(WR_VAR(0, 33, 7), 50);
     wruntest(dataset.insert, *db);
@@ -895,10 +914,11 @@ template<> template<> void to::test<17>()
 template<> template<> void to::test<18>()
 {
     // Try a query checking all the steps
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
     // Prepare a query
-    query.clear();
+    Record query, result;
     query.set(DBA_KEY_LATMIN, 10.0);
 
     // Make the query
@@ -909,13 +929,13 @@ template<> template<> void to::test<18>()
     // remaining() should decrement
     ensure_equals(cur->remaining(), 3);
     // results should match what was inserted
-    wassert(actual(cur).data_matches(dataset0));
+    wassert(actual(cur).data_matches(f.dataset0));
     // just call to_record now, to check if in the next call old variables are removed
     cur->to_record(result);
 
     ensure(cur->next());
     ensure_equals(cur->remaining(), 2);
-    wassert(actual(cur).data_matches(dataset0));
+    wassert(actual(cur).data_matches(f.dataset0));
 
     // Variables from the previous to_record should be removed
     cur->to_record(result);
@@ -924,11 +944,11 @@ template<> template<> void to::test<18>()
 
     ensure(cur->next());
     ensure_equals(cur->remaining(), 1);
-    wassert(actual(cur).data_matches(dataset1));
+    wassert(actual(cur).data_matches(f.dataset1));
 
     ensure(cur->next());
     ensure_equals(cur->remaining(), 0);
-    wassert(actual(cur).data_matches(dataset1));
+    wassert(actual(cur).data_matches(f.dataset1));
 
     // Now there should not be anything anymore
     ensure_equals(cur->remaining(), 0);
@@ -944,7 +964,7 @@ template<> template<> void to::test<19>()
     wruntest(ds_st_navile.insert, *db, true);
 
     // Query station data and ensure there is only one info (height)
-    query.clear();
+    Record query;
     query.set_ana_context();
     auto_ptr<db::Cursor> cur = db->query_data(query);
     wassert(actual(cur->remaining()) == 1);
@@ -955,9 +975,6 @@ template<> template<> void to::test<19>()
 template<> template<> void to::test<20>()
 {
     // Test double insert of station info
-
-    //wassert(actual(*db).empty());
-
     dballe::tests::TestStation ds_st_navile_metar(ds_st_navile);
     ds_st_navile_metar.info["metar"] = ds_st_navile_metar.info["synop"];
     ds_st_navile_metar.info.erase("synop");
@@ -965,7 +982,7 @@ template<> template<> void to::test<20>()
     wruntest(ds_st_navile_metar.insert, *db, true);
 
     // Query station data and ensure there is only one info (height)
-    query.clear();
+    Record query;
     query.set_ana_context();
     auto_ptr<db::Cursor> cur = db->query_data(query);
     wassert(actual(cur->remaining()) == 2);
@@ -980,12 +997,10 @@ template<> template<> void to::test<20>()
 template<> template<> void to::test<21>()
 {
     // Test handling of values with undefined leveltype2 and l2
+    OldDballeTestFixture f;
 
     // Insert with undef leveltype2 and l2
-    use_db();
-    wruntest(populate_database);
-
-    dballe::tests::TestRecord dataset = dataset0;
+    dballe::tests::TestRecord dataset = f.dataset0;
     dataset.data.unset(WR_VAR(0, 1, 11));
     dataset.data.set(DBA_KEY_LEVELTYPE1, 44);
     dataset.data.set(DBA_KEY_L1, 55);
@@ -994,7 +1009,7 @@ template<> template<> void to::test<21>()
     wruntest(dataset.insert, *db, true);
 
     // Query it back
-    query.clear();
+    Record query;
     query.set(DBA_KEY_LEVELTYPE1, 44);
     query.set(DBA_KEY_L1, 55);
 
@@ -1002,7 +1017,7 @@ template<> template<> void to::test<21>()
     ensure_equals(cur->remaining(), 1);
 
     ensure(cur->next());
-    result.clear();
+    Record result;
     cur->to_record(result);
 
     ensure(result.key_peek(DBA_KEY_LEVELTYPE1) != NULL);
@@ -1020,12 +1035,11 @@ template<> template<> void to::test<21>()
 template<> template<> void to::test<22>()
 {
     // Test handling of values with undefined leveltype2 and l2
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
     // Query with undef leveltype2 and l2
-    use_db();
-    wruntest(populate_database);
-
-    query.clear();
+    Record query;
     query.set(DBA_KEY_LEVELTYPE1, 10);
     query.set(DBA_KEY_L1, 11);
 
@@ -1037,10 +1051,10 @@ template<> template<> void to::test<22>()
 template<> template<> void to::test<23>()
 {
     // Query with an incorrect attr_filter
-    use_db();
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
-    query.clear();
+    Record query;
     query.set(DBA_KEY_ATTR_FILTER, "B12001");
 
     try {
@@ -1053,12 +1067,9 @@ template<> template<> void to::test<23>()
 template<> template<> void to::test<24>()
 {
     // Test querying priomax together with query=best
-    use_db();
-    // Start with an empty database
-    db->reset();
 
     // Prepare the common parts of some data
-    insert.clear();
+    Record insert;
     insert.set(DBA_KEY_LAT, 1);
     insert.set(DBA_KEY_LON, 1);
     insert.set(Level(1, 0));
@@ -1088,7 +1099,7 @@ template<> template<> void to::test<24>()
 
     // Query with querybest only
     {
-        query.clear();
+        Record query;
         query.set(DBA_KEY_QUERY, "best");
         query.set_datetime(2009, 11, 11, 0, 0, 0);
         query.set(DBA_KEY_VAR, "B12101");
@@ -1097,7 +1108,7 @@ template<> template<> void to::test<24>()
         ensure_equals(cur->remaining(), 1);
 
         ensure(cur->next());
-        result.clear();
+        Record result;
         cur->to_record(result);
 
         ensure(result.key_peek(DBA_KEY_REP_MEMO) != NULL);
@@ -1111,7 +1122,7 @@ template<> template<> void to::test<24>()
 
     // Query with querybest and priomax
     {
-        query.clear();
+        Record query;
         query.set(DBA_KEY_PRIOMAX, 100);
         query.set(DBA_KEY_QUERY, "best");
         query.set_datetime(2009, 11, 11, 0, 0, 0);
@@ -1120,7 +1131,7 @@ template<> template<> void to::test<24>()
         ensure_equals(cur->remaining(), 1);
 
         ensure(cur->next());
-        result.clear();
+        Record result;
         cur->to_record(result);
 
         ensure(result.key_peek(DBA_KEY_REP_MEMO) != NULL);
@@ -1133,8 +1144,8 @@ template<> template<> void to::test<24>()
 template<> template<> void to::test<25>()
 {
     // Ensure that rep_memo is set in the results
-    use_db();
-    wruntest(populate_database);
+    OldDballeTestFixture f;
+    wruntest(populate_database, f);
 
     Record res;
     Record rec;

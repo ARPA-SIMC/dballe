@@ -27,6 +27,7 @@ using namespace std;
 namespace dballe {
 namespace tests {
 
+/*
 std::vector<const Value*> _get_data_results(WIBBLE_TEST_LOCPRM, const Memdb& memdb, const Record& query)
 {
     using namespace wibble::tests;
@@ -37,7 +38,7 @@ std::vector<const Value*> _get_data_results(WIBBLE_TEST_LOCPRM, const Memdb& mem
     res.copy_valptrs_to(std::back_inserter(items));
     return items;
 }
-
+*/
 
 }
 }

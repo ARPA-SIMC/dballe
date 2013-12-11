@@ -88,14 +88,7 @@ struct Memdb
     void insert_or_replace(const Record& rec);
     void insert(const Msg& msg, bool replace=true, bool with_station_info=true, bool with_attrs=true, const char* force_report=NULL);
 
-    /// Query stations, returning a list of station IDs
-    void query_stations(const Record& rec, memdb::Results<memdb::Station>& res) const;
-    /// Query station data, returning a list of Value IDs
-    void query_station_data(const Record& rec, memdb::Results<memdb::StationValue>& res) const;
-    /// Query data, returning a list of Value IDs
-    void query_data(const Record& rec, memdb::Results<memdb::Value>& res) const;
-
-    void remove(const Record& query);
+    void remove(memdb::Results<memdb::Value>& query);
 
     void dump(FILE* out) const;
 

@@ -22,7 +22,6 @@
 #include "memdb.h"
 #include "query.h"
 #include "dballe/core/record.h"
-#include "dballe/core/varmatch.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 
@@ -192,81 +191,9 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
     }
 }
 
-namespace {
-struct MatchAnaFilter : public Match<Station>
-{
-    const StationValues& stationvalues;
-    Varmatch* match;
-
-    MatchAnaFilter(const StationValues& stationvalues, const std::string& expr)
-        : stationvalues(stationvalues), match(Varmatch::parse(expr).release()) {}
-    ~MatchAnaFilter() { delete match; }
-
-    virtual bool operator()(const Station& val) const
-    {
-        const StationValue* sv = stationvalues.get(val, match->code);
-        if (!sv) return false;
-        return (*match)(*(sv->var));
-    }
-
-private:
-    MatchAnaFilter(const MatchAnaFilter&);
-    MatchAnaFilter& operator=(const MatchAnaFilter&);
-};
-}
-
-void Memdb::query_stations(const Record& rec, Results<Station>& res) const
-{
-    if (const char* val = rec.key_peek_value(DBA_KEY_ANA_FILTER))
-    {
-        res.add(new MatchAnaFilter(stationvalues, val));
-        trace_query("Found ana filter %s\n", val);
-    }
-    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))
-    {
-        string query("B01001=");
-        query += val;
-        res.add(new MatchAnaFilter(stationvalues, query));
-        trace_query("Found block filter %s\n", query.c_str());
-    }
-    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 2)))
-    {
-        string query("B01002=");
-        query += val;
-        res.add(new MatchAnaFilter(stationvalues, query));
-        trace_query("Found station filter %s\n", query.c_str());
-    }
-    stations.query(rec, res);
-}
-
-void Memdb::query_station_data(const Record& rec, memdb::Results<memdb::StationValue>& res) const
-{
-    // Get a list of stations we can match
-    Results<Station> res_st(stations);
-    query_stations(rec, res_st);
-
-    stationvalues.query(rec, res_st, res);
-}
-
-void Memdb::query_data(const Record& rec, memdb::Results<memdb::Value>& res) const
-{
-    // Get a list of stations we can match
-    Results<Station> res_st(stations);
-    query_stations(rec, res_st);
-
-    // Get a list of stations we can match
-    Results<LevTr> res_tr(levtrs);
-    levtrs.query(rec, res_tr);
-
-    // Query variables
-    values.query(rec, res_st, res_tr, res);
-}
-
-void Memdb::remove(const Record& query)
+void Memdb::remove(Results<Value>& res)
 {
 #warning TODO: check if ana context, in which case remove from station index
-    Results<Value> res(values);
-    query_data(query, res);
     res.copy_indices_to(stl::eraser(values));
 }
 

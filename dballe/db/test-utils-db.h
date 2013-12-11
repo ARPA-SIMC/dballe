@@ -106,6 +106,37 @@ struct TestRecord
     void insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace=false);
 };
 
+/// Base for all database initialization data fixtures
+struct TestFixture
+{
+    TestRecord* records;
+    size_t records_count;
+
+    TestFixture(size_t records_count)
+        : records(new TestRecord[records_count]),
+          records_count(records_count) {}
+    virtual ~TestFixture()
+    {
+        if (records) delete[] records;
+    }
+
+    virtual void populate_db(WIBBLE_TEST_LOCPRM, DB& db) const;
+
+private:
+    TestFixture(const TestFixture&);
+    TestFixture& operator=(const TestFixture&);
+};
+
+/// Test fixture used by old DB-All.e db tests
+struct OldDballeTestFixture : public TestFixture
+{
+    TestStation ds_st_oldtests;
+    TestRecord& dataset0;
+    TestRecord& dataset1;
+
+    OldDballeTestFixture();
+};
+
 /// Check cursor context after a query_stations
 struct TestCursorStationKeys
 {
@@ -167,10 +198,11 @@ struct TestCursorDataMatch
 struct TestDBTryDataQuery
 {
     DB& db;
-    std::string query;
+    Record query;
     unsigned expected;
 
-    TestDBTryDataQuery(DB& db, const std::string& query, unsigned expected) : db(db), query(query), expected(expected) {}
+    TestDBTryDataQuery(DB& db, const std::string& query, unsigned expected);
+    TestDBTryDataQuery(DB& db, const Record& query, unsigned expected) : db(db), query(query), expected(expected) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
 };
@@ -216,26 +248,27 @@ struct db_test
     db_test(bool reset=true);
 	db_test(db::Format format, bool reset=true);
 	~db_test();
+
+    template<typename FIXTURE>
+    void populate(WIBBLE_TEST_LOCPRM)
+    {
+        FIXTURE fixture;
+        wruntest(populate_database, fixture);
+    }
+
+    void populate_database(WIBBLE_TEST_LOCPRM, const TestFixture& fixture);
 };
 
 /// Common bits for db::DB test suites
 struct DB_test_base : public db_test
 {
-    TestStation ds_st_oldtests;
-    TestRecord dataset0;
-    TestRecord dataset1;
-    TestStation ds_st_navile;
+    OldDballeTestFixture old_fixture;
 
     // Work records
     Record insert;
     Record query;
     Record result;
     Record qc;
-
-    DB_test_base();
-    DB_test_base(db::Format format);
-
-    void init_records();
 
     void populate_database(WIBBLE_TEST_LOCPRM);
 };
@@ -259,6 +292,7 @@ struct ActualDB : public wibble::tests::Actual<dballe::DB&>
     ActualDB(dballe::DB& actual) : wibble::tests::Actual<dballe::DB&>(actual) {}
 
     TestDBTryDataQuery try_data_query(const std::string& query, unsigned expected) { return TestDBTryDataQuery(this->actual, query, expected); }
+    TestDBTryDataQuery try_data_query(const Record& query, unsigned expected) { return TestDBTryDataQuery(this->actual, query, expected); }
     TestDBTryStationQuery try_station_query(const std::string& query, unsigned expected) { return TestDBTryStationQuery(this->actual, query, expected); }
     TestDBTrySummaryQuery try_summary_query(const std::string& query, unsigned expected) { return TestDBTrySummaryQuery(this->actual, query, expected); }
 };

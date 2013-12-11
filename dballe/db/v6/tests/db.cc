@@ -30,9 +30,9 @@ using namespace std;
 
 namespace tut {
 
-struct dbv6_shar : public dballe::tests::DB_test_base
+struct dbv6_shar : public dballe::tests::db_test
 {
-    dbv6_shar() : dballe::tests::DB_test_base(db::V6)
+    dbv6_shar() : dballe::tests::db_test(db::V6)
     {
     }
 

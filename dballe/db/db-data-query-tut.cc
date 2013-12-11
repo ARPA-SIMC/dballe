@@ -32,10 +32,6 @@ namespace {
 
 struct db_tests_query : public DB_test_base
 {
-    db_tests_query()
-    {
-        wruntest(populate_database);
-    }
 };
 
 }
@@ -50,12 +46,14 @@ typedef tg::object to;
 
 template<> template<> void to::test<1>()
 {
+    wruntest(populate_database);
     TRY_QUERY("ana_id=1", 4);
     TRY_QUERY("ana_id=2", 0);
 }
 
 template<> template<> void to::test<2>()
 {
+    wruntest(populate_database);
     // Query data in station context
     query.clear();
     query.set_ana_context();
@@ -65,6 +63,7 @@ template<> template<> void to::test<2>()
 
 template<> template<> void to::test<3>()
 {
+    wruntest(populate_database);
     // Datetime queries
     TRY_QUERY("year=1001", 0);
     TRY_QUERY("yearmin=1999", 0);
@@ -104,6 +103,7 @@ template<> template<> void to::test<3>()
 
 template<> template<> void to::test<4>()
 {
+    wruntest(populate_database);
     // Block and station queries
     TRY_QUERY("B01001=1", 4);
     TRY_QUERY("B01001=2", 0);
@@ -113,6 +113,7 @@ template<> template<> void to::test<4>()
 
 template<> template<> void to::test<5>()
 {
+    wruntest(populate_database);
     // ana_filter queries
     TRY_QUERY("ana_filter=block=1", 4);
     TRY_QUERY("ana_filter=B01001=1", 4);
@@ -127,6 +128,7 @@ template<> template<> void to::test<5>()
 
 template<> template<> void to::test<6>()
 {
+    wruntest(populate_database);
     // data_filter queries
     TRY_QUERY("data_filter=B01011=DB-All.e!", 1);
     TRY_QUERY("data_filter=B01012<300", 0);
@@ -140,6 +142,7 @@ template<> template<> void to::test<6>()
 
 template<> template<> void to::test<7>()
 {
+    wruntest(populate_database);
     // latitude/longitude queries
     TRY_QUERY("latmin=11.0", 4);
     TRY_QUERY("latmin=12.34560", 4);
@@ -165,6 +168,7 @@ template<> template<> void to::test<7>()
 
 template<> template<> void to::test<8>()
 {
+    wruntest(populate_database);
     // fixed/mobile queries
     TRY_QUERY("mobile=0", 4);
     TRY_QUERY("mobile=1", 0);
@@ -179,6 +183,7 @@ template<> template<> void to::test<9>()
 
 template<> template<> void to::test<10>()
 {
+    wruntest(populate_database);
     // timerange queries
     TRY_QUERY("pindicator=20", 4);
     TRY_QUERY("pindicator=21", 0);
@@ -191,6 +196,7 @@ template<> template<> void to::test<10>()
 
 template<> template<> void to::test<11>()
 {
+    wruntest(populate_database);
     // level queries
     TRY_QUERY("leveltype1=10", 4);
     TRY_QUERY("leveltype1=11", 0);
@@ -204,6 +210,7 @@ template<> template<> void to::test<11>()
 
 template<> template<> void to::test<12>()
 {
+    wruntest(populate_database);
     // varcode queries
     TRY_QUERY("var=B01011", 2);
     TRY_QUERY("var=B01012", 2);
@@ -212,6 +219,7 @@ template<> template<> void to::test<12>()
 
 template<> template<> void to::test<13>()
 {
+    wruntest(populate_database);
     // report queries
     TRY_QUERY("rep_memo=synop", 2);
     TRY_QUERY("rep_memo=metar", 2);
@@ -220,6 +228,7 @@ template<> template<> void to::test<13>()
 
 template<> template<> void to::test<14>()
 {
+    wruntest(populate_database);
     // report priority queries
     TRY_QUERY("priority=101", 2);
     TRY_QUERY("priority=81", 2);
@@ -238,9 +247,149 @@ template<> template<> void to::test<14>()
 
 template<> template<> void to::test<15>()
 {
+    wruntest(populate_database);
     // context ID queries
     TRY_QUERY("context_id=1", 1);
     TRY_QUERY("context_id=11", 0);
+}
+
+namespace {
+static inline Record query_exact(const Datetime& dt)
+{
+    Record query;
+    query.set(dt);
+    return query;
+}
+static inline Record query_min(const Datetime& dt)
+{
+    Record query;
+    query.setmin(dt);
+    return query;
+}
+static inline Record query_max(const Datetime& dt)
+{
+    Record query;
+    query.setmax(dt);
+    return query;
+}
+static inline Record query_minmax(const Datetime& min, const Datetime& max)
+{
+    Record query;
+    query.setmin(min);
+    query.setmax(max);
+    return query;
+}
+
+struct DateHourFixture : public TestFixture
+{
+    DateHourFixture() : TestFixture(2)
+    {
+        TestStation st;
+        st.lat = 12.34560;
+        st.lon = 76.54320;
+
+        for (unsigned i = 0; i < 2; ++i)
+        {
+            records[i].station = st;
+            records[i].data.set(DBA_KEY_REP_MEMO, "synop");
+            records[i].data.set(Level(10, 11, 15, 22));
+            records[i].data.set(Trange(20, 111, 122));
+            records[i].data.set_datetime(2013, 10, 30, 11 + i);
+            records[i].data.set(WR_VAR(0, 12, 101), 11.5 + i);
+        }
+    }
+};
+
+struct DateDayFixture : public TestFixture
+{
+    DateDayFixture() : TestFixture(2)
+    {
+        TestStation st;
+        st.lat = 12.34560;
+        st.lon = 76.54320;
+
+        for (unsigned i = 0; i < 2; ++i)
+        {
+            records[i].station = st;
+            records[i].data.set(DBA_KEY_REP_MEMO, "synop");
+            records[i].data.set(Level(10, 11, 15, 22));
+            records[i].data.set(Trange(20, 111, 122));
+            records[i].data.set_datetime(2013, 10, 23 + i);
+            records[i].data.set(WR_VAR(0, 12, 101), 23.5 + i);
+        }
+    }
+};
+
+}
+
+template<> template<> void to::test<16>()
+{
+    // Check datetime queries, with data that only differs by its hour
+    wruntest(populate<DateHourFixture>);
+
+    // Valid hours: 11 and 12
+
+    // Exact match
+    wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 30, 10)), 0));
+    wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 30, 11)), 1));
+    wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 30, 12)), 1));
+    wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 30, 13)), 0));
+
+    // Datemin match
+    wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 30, 10)), 2));
+    wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 30, 11)), 2));
+    wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 30, 12)), 1));
+    wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 30, 13)), 0));
+
+    // Datemax match
+    wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 30, 13)), 2));
+    wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 30, 12)), 2));
+    wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 30, 11)), 1));
+    wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 30, 10)), 0));
+
+    // Date min-max match
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 10), Datetime(2013, 10, 30, 13)), 2));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 11), Datetime(2013, 10, 30, 12)), 2));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 10), Datetime(2013, 10, 30, 11)), 1));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 12), Datetime(2013, 10, 30, 13)), 1));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30,  9), Datetime(2013, 10, 30, 10)), 0));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 13), Datetime(2013, 10, 30, 14)), 0));
+}
+
+template<> template<> void to::test<17>()
+{
+    // Check datetime queries, with data that only differs by its day
+    wruntest(populate<DateDayFixture>);
+
+    // Valid days: 23 and 24
+
+    // Exact match
+    wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 22)), 0));
+    wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 23)), 1));
+    wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 24)), 1));
+    wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 25)), 0));
+
+    // Datemin match
+    wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 22)), 2));
+    wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 23)), 2));
+    wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 24)), 1));
+    wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 25)), 0));
+
+    // Datemax match
+    wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 25)), 2));
+    wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 24)), 2));
+    wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 23)), 1));
+    wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 22)), 0));
+
+    // Date min-max match
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 22), Datetime(2013, 10, 25)), 2));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 23), Datetime(2013, 10, 24)), 2));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 23), Datetime(2013, 10, 23)), 1));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 24), Datetime(2013, 10, 24)), 1));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 22), Datetime(2013, 10, 23)), 1));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 24), Datetime(2013, 10, 25)), 1));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 21), Datetime(2013, 10, 22)), 0));
+    wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 25), Datetime(2013, 10, 26)), 0));
 }
 
 }
