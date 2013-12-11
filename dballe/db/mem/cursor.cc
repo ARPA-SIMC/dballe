@@ -25,6 +25,7 @@
 #include "dballe/core/record.h"
 #include <queue>
 #include <stack>
+#include <sstream>
 
 using namespace std;
 using namespace wreport;
@@ -33,6 +34,46 @@ using namespace dballe::memdb;
 namespace dballe {
 namespace db {
 namespace mem {
+
+namespace cursor {
+
+const Value& DataBestKey::value() const { return *values[idx]; }
+
+bool DataBestKey::operator<(const DataBestKey& o) const
+{
+    // Normal sort here, but we ignore report so that two values which only
+    // differ in report are considered the same
+    const Value& vx = value();
+    const Value& vy = o.value();
+
+    if (int res = vx.station.coords.compare(vy.station.coords)) return res < 0;
+    if (vx.station.ident < vy.station.ident) return true;
+    if (vx.station.ident > vy.station.ident) return false;
+
+    if (int res = vx.datetime.compare(vy.datetime)) return res < 0;
+    if (int res = vx.levtr.level.compare(vy.levtr.level)) return res < 0;
+    if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res < 0;
+
+    if (int res = vx.var->code() - vy.var->code()) return res < 0;
+
+    // They are the same
+    return false;
+}
+
+std::ostream& operator<<(std::ostream& out, const DataBestKey& k)
+{
+    const Value& v = k.value();
+
+    out << v.station.coords
+        << "." << v.station.ident
+        << ":" << v.levtr.level
+        << ":" << v.levtr.trange
+        << ":" << v.datetime
+        << ":" << format_code(v.var->code());
+    return out;
+}
+
+}
 
 Cursor::Cursor(mem::DB& db, unsigned modifiers)
     : db(db), modifiers(modifiers), count(0), cur_station(0), cur_value(0), cur_var(0)
@@ -212,14 +253,15 @@ struct CompareData
         const Value& vx = *values[x];
         const Value& vy = *values[y];
 
-        if (vx.station.coords < vy.station.coords) return false;
-        if (vx.station.coords > vy.station.coords) return true;
+        if (int res = vx.station.coords.compare(vy.station.coords)) return res > 0;
         if (vx.station.ident < vy.station.ident) return false;
         if (vx.station.ident > vy.station.ident) return true;
 
         if (int res = vx.datetime.compare(vy.datetime)) return res > 0;
         if (int res = vx.levtr.level.compare(vy.levtr.level)) return res > 0;
         if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res > 0;
+
+        if (int res = vx.var->code() - vy.var->code()) return res < 0;
 
         return vx.station.report > vy.station.report;
     }
@@ -234,38 +276,7 @@ struct DataResultQueue : public priority_queue<size_t, vector<size_t>, CompareDa
     }
 };
 
-struct DataBestKey
-{
-    const ValueStorage<Value>& values;
-    size_t idx;
-
-    DataBestKey(const ValueStorage<Value>& values, size_t idx)
-        : values(values), idx(idx) {}
-
-    const Value& value() const { return *values[idx]; }
-
-    // Normal sort here, but we ignore report so that two values which only
-    // differ in report are considered the same
-    bool operator<(const DataBestKey& o) const
-    {
-        const Value& vx = value();
-        const Value& vy = o.value();
-
-        if (vx.station.coords < vy.station.coords) return true;
-        if (vx.station.coords > vy.station.coords) return false;
-        if (vx.station.ident < vy.station.ident) return true;
-        if (vx.station.ident > vy.station.ident) return false;
-
-        if (int res = vx.datetime.compare(vy.datetime)) return res < 0;
-        if (int res = vx.levtr.level.compare(vy.levtr.level)) return res < 0;
-        if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res < 0;
-
-        // They are the same
-        return false;
-    }
-};
-
-struct DataBestResultQueue : public map<DataBestKey, size_t>
+struct DataBestResultQueue : public map<cursor::DataBestKey, size_t>
 {
     const ValueStorage<Value>& values;
     std::map<std::string, int> prios;
@@ -276,15 +287,35 @@ struct DataBestResultQueue : public map<DataBestKey, size_t>
         res.copy_indices_to(stl::pusher(*this));
     }
 
+    void dump(FILE* out) const
+    {
+        for (const_iterator i = begin(); i != end(); ++i)
+        {
+            const Value& k = i->first.value();
+            const Value& v = *values[i->second];
+
+            stringstream buf;
+            buf << k.station.coords
+                << "\t" << k.station.ident
+                << "\t" << k.levtr.level
+                << "\t" << k.levtr.trange
+                << "\t" << k.datetime
+                << ": " << v.station.report
+                << "\t";
+            v.var->print_without_attrs(buf);
+            fputs(buf.str().c_str(), out);
+        }
+    }
+
     /**
      * Add val to the map, but in case of conflict it only keeps the value with
      * the highest priority.
      */
     void push(size_t val)
     {
-        iterator i = find(DataBestKey(values, val));
+        iterator i = find(cursor::DataBestKey(values, val));
         if (i == end())
-            insert(make_pair(DataBestKey(values, val), val));
+            insert(make_pair(cursor::DataBestKey(values, val), val));
         else
         {
             const Value& vx = i->first.value();

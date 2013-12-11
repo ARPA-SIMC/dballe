@@ -87,6 +87,10 @@ struct Memdb
     void clear();
     void insert_or_replace(const Record& rec);
     void insert(const Msg& msg, bool replace=true, bool with_station_info=true, bool with_attrs=true, const char* force_report=NULL);
+    size_t insert(
+            const Coord& coords, const std::string& ident, const std::string& report,
+            const Level& level, const Trange& trange, const Datetime& datetime,
+            std::auto_ptr<wreport::Var> var);
 
     void remove(memdb::Results<memdb::Value>& query);
 

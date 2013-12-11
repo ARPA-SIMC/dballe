@@ -191,6 +191,24 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
     }
 }
 
+size_t Memdb::insert(
+        const Coord& coords, const std::string& ident, const std::string& report,
+        const Level& level, const Trange& trange, const Datetime& datetime,
+        std::auto_ptr<wreport::Var> var)
+{
+    size_t id_station;
+    if (ident.empty())
+        id_station = stations.obtain_fixed(coords, report, true);
+    else
+        id_station = stations.obtain_mobile(coords, ident, report, true);
+    const Station& station = *stations[id_station];
+
+    size_t id_levtr = levtrs.obtain(level, trange);
+    const LevTr& levtr = *levtrs[id_levtr];
+
+    return values.insert(station, levtr, datetime, var);
+}
+
 void Memdb::remove(Results<Value>& res)
 {
 #warning TODO: check if ana context, in which case remove from station index

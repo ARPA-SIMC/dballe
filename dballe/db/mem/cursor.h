@@ -25,10 +25,15 @@
 #include <dballe/memdb/memdb.h>
 #include <dballe/memdb/results.h>
 #include <dballe/db/db.h>
+#include <iosfwd>
 
 namespace dballe {
 struct DB;
 struct Record;
+
+namespace memdb {
+template<typename T> class ValueStorage;
+}
 
 namespace db {
 
@@ -132,51 +137,28 @@ protected:
     void add_station_info(Record& rec);
 };
 
-#if 0
-class CursorSummary : public Cursor
+namespace cursor {
+
+/**
+ * Wrapper around a Value index that compares so that all values from which the
+ * best report should be selected appear to be the same
+ */
+struct DataBestKey
 {
-public:
-    memdb::Summary summary;
-    memdb::Summary::const_iterator cur;
-    bool first;
+    const memdb::ValueStorage<memdb::Value>& values;
+    size_t idx;
 
-    virtual void to_record(Record& rec);
-    virtual void discard_rest();
-    virtual bool next();
+    DataBestKey(const memdb::ValueStorage<memdb::Value>& values, size_t idx)
+        : values(values), idx(idx) {}
 
-protected:
-    CursorSummary(DB& db, unsigned int modifiers, const memdb::Results<memdb::Value>& vals);
+    const memdb::Value& value() const;
 
-    friend class mem::DB;
+    bool operator<(const DataBestKey& o) const;
 };
 
-#if 0
-class CursorBest : public Cursor
-{
-public:
-    virtual ~CursorBest();
+std::ostream& operator<<(std::ostream& out, const DataBestKey& k);
 
-    virtual void query(const Record& rec);
-    virtual void to_record(Record& rec);
-    virtual unsigned test_iterate(FILE* dump=0);
-
-protected:
-    FILE* results;
-
-    CursorBest(DB& db, unsigned int modifiers);
-
-    // Save all cursor results to a temp file, filtered to keep the best values
-    // only
-    int buffer_results(db::Statement& stm);
-
-    virtual void discard_rest();
-    virtual bool next();
-
-    friend class dballe::db::v6::DB;
-};
-#endif
-
-#endif
+}
 
 } // namespace v6
 } // namespace db

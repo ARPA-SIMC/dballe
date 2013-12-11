@@ -139,21 +139,17 @@ template<> template<> void to::test<3>()
 
 template<> template<> void to::test<4>()
 {
-    // Test ana query
+    // Test station query
     OldDballeTestFixture f;
     wruntest(populate_database, f);
 
-    /*
-       CHECKED(dba_ana_count(db, &count));
-       fail_unless(count == 1);
-       */
     Record query;
 
-    /* Iterate the anagraphic database */
+    // Iterate the station database
     auto_ptr<db::Cursor> cur = db->query_stations(query);
-    ensure_equals(cur->remaining(), 1);
+    wassert(actual(cur->remaining()) == 1);
 
-    /* There should be an item */
+    // There should be an item
     ensure(cur->next());
     ensure_equals(cur->get_lat(), 12.34560);
     ensure_equals(cur->get_lon(), 76.54320);
@@ -162,7 +158,7 @@ template<> template<> void to::test<4>()
     // Check that the result matches
     wassert(actual(cur).station_keys_match(f.dataset0.station));
 
-    /* There should be only one item */
+    // There should be only one item
     ensure_equals(cur->remaining(), 0);
 
     ensure(!cur->next());

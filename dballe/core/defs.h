@@ -178,19 +178,8 @@ struct Coord
     double dlat() const;
     double dlon() const;
 
-    bool operator<(const Coord& c) const
-    {
-        if (lat < c.lat) return true;
-        if (lat > c.lat) return false;
-        return lon < c.lon;
-    }
-
-    bool operator>(const Coord& c) const
-    {
-        if (lat > c.lat) return true;
-        if (lat < c.lat) return false;
-        return lon > c.lon;
-    }
+    bool operator<(const Coord& o) const { return compare(o) < 0; }
+    bool operator>(const Coord& o) const { return compare(o) > 0; }
 
     bool operator==(const Coord& c) const
     {
@@ -200,6 +189,18 @@ struct Coord
     bool operator!=(const Coord& c) const
     {
         return lat != c.lat || lon != c.lon;
+    }
+
+    /**
+     * Compare two Coords strutures, for use in sorting.
+     *
+     * @return
+     *   -1 if *this < o, 0 if *this == o, 1 if *this > o
+     */
+    int compare(const Coord& o) const
+    {
+        if (int res = lat - o.lat) return res;
+        return lon - o.lon;
     }
 
     // Normalise longitude values to the [-180..180[ interval

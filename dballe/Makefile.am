@@ -285,6 +285,7 @@ tut_test_SOURCES = \
 	db/db-import-tut.cc \
 	db/db-export-tut.cc \
 	db/mem/repinfo-tut.cc \
+	db/mem/cursor-tut.cc \
 	db/mem/db-tut.cc \
 	simple/msgapi-tut.cc \
 	cmdline/dbadb-tut.cc \
