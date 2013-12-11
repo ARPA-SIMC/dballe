@@ -314,30 +314,6 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
         res.add(new match::Varcodes<Value>(codes));
     }
 
-#if 0
-    if (rec.key_peek(DBA_KEY_PRIORITY) || rec.key_peek(DBA_KEY_PRIOMIN) || rec.key_peek(DBA_KEY_PRIOMAX))
-    {
-        // Filter the repinfo cache and build a IN query
-        std::vector<int> ids = db.repinfo().ids_by_prio(rec);
-        if (ids.empty())
-        {
-            // No repinfo matches, so we just introduce a false value
-            sql_where.append_list("1=0");
-        } else {
-            sql_where.append_listf("%s.id_report IN (", tbl);
-            for (std::vector<int>::const_iterator i = ids.begin(); i != ids.end(); ++i)
-            {
-                if (i == ids.begin())
-                    sql_where.appendf("%d", *i);
-                else
-                    sql_where.appendf(",%d", *i);
-            }
-            sql_where.append(")");
-        }
-        c.found = true;
-    }
-#endif
-
     if (const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER))
     {
         trace_query("Found data_filter=%s\n", val);

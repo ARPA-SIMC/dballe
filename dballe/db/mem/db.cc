@@ -134,10 +134,81 @@ private:
     MatchAnaFilter(const MatchAnaFilter&);
     MatchAnaFilter& operator=(const MatchAnaFilter&);
 };
+
+struct MatchRepinfo : public Match<Station>
+{
+    std::set<std::string> report_whitelist;
+
+    virtual bool operator()(const Station& val) const
+    {
+        return report_whitelist.find(val.report) != report_whitelist.end();
+    }
+};
+
 }
 
-void DB::raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& res) const
+void DB::raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& res)
 {
+    // Build a matcher for queries by priority
+    int prio = rec.get(DBA_KEY_PRIORITY, MISSING_INT);
+    int priomin = rec.get(DBA_KEY_PRIOMIN, MISSING_INT);
+    int priomax = rec.get(DBA_KEY_PRIOMAX, MISSING_INT);
+    if (prio != MISSING_INT || priomin != MISSING_INT || priomax != MISSING_INT)
+    {
+        // If priomax == priomin and prio is unset, use exact prio instead of
+        // min-max bounds
+        if (prio == MISSING_INT && priomax == priomin)
+        {
+            prio = priomin;
+            priomax = priomin = MISSING_INT;
+        }
+
+        if (prio != MISSING_INT)
+        {
+            // Deal with impossible prio/priomin/priomax combinations
+            if (priomin != MISSING_INT && prio < priomin)
+            {
+                res.set_to_empty();
+                return;
+            }
+            if (priomax != MISSING_INT && prio > priomax)
+            {
+                res.set_to_empty();
+                return;
+            }
+
+            // We can now ignore priomin and priomax
+
+            std::map<std::string, int> prios = get_repinfo_priorities();
+            auto_ptr<MatchRepinfo> m(new MatchRepinfo);
+            for (std::map<std::string, int>::const_iterator i = prios.begin();
+                    i != prios.end(); ++i)
+                if (i->second == prio)
+                    m->report_whitelist.insert(i->first);
+            res.add(m.release());
+        } else {
+            // Here, prio is unset and priomin != priomax
+
+            // Deal with priomin > priomax
+            if (priomin != MISSING_INT && priomax != MISSING_INT && priomax < priomin)
+            {
+                res.set_to_empty();
+                return;
+            }
+
+            std::map<std::string, int> prios = get_repinfo_priorities();
+            auto_ptr<MatchRepinfo> m(new MatchRepinfo);
+            for (std::map<std::string, int>::const_iterator i = prios.begin();
+                    i != prios.end(); ++i)
+            {
+                if (priomin != MISSING_INT && i->second < priomin) continue;
+                if (priomax != MISSING_INT && i->second > priomax) continue;
+                m->report_whitelist.insert(i->first);
+            }
+            res.add(m.release());
+        }
+    }
+
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_FILTER))
     {
         res.add(new MatchAnaFilter(memdb.stationvalues, val));
@@ -161,7 +232,7 @@ void DB::raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& r
 }
 
 
-void DB::raw_query_station_data(const Record& rec, memdb::Results<memdb::StationValue>& res) const
+void DB::raw_query_station_data(const Record& rec, memdb::Results<memdb::StationValue>& res)
 {
     // Get a list of stations we can match
     Results<Station> res_st(memdb.stations);
@@ -170,7 +241,7 @@ void DB::raw_query_station_data(const Record& rec, memdb::Results<memdb::Station
     memdb.stationvalues.query(rec, res_st, res);
 }
 
-void DB::raw_query_data(const Record& rec, memdb::Results<memdb::Value>& res) const
+void DB::raw_query_data(const Record& rec, memdb::Results<memdb::Value>& res)
 {
     // Get a list of stations we can match
     Results<Station> res_st(memdb.stations);
