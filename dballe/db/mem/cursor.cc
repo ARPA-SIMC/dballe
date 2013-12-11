@@ -318,7 +318,7 @@ struct DataBestResultQueue : public map<cursor::DataBestKey, size_t>
             insert(make_pair(cursor::DataBestKey(values, val), val));
         else
         {
-            const Value& vx = i->first.value();
+            const Value& vx = *values[i->second];
             const Value& vy = *values[val];
             if (prios[vx.station.report] < prios[vy.station.report])
                 i->second = val;

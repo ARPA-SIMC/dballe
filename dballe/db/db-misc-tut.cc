@@ -1074,8 +1074,8 @@ template<> template<> void to::test<24>()
 
     // Prepare the common parts of some data
     Record insert;
-    insert.set(DBA_KEY_LAT, 1);
-    insert.set(DBA_KEY_LON, 1);
+    insert.set(DBA_KEY_LAT, 1.0);
+    insert.set(DBA_KEY_LON, 1.0);
     insert.set(Level(1, 0));
     insert.set(Trange(254, 0, 0));
     insert.set_datetime(2009, 11, 11, 0, 0, 0);
@@ -1120,9 +1120,6 @@ template<> template<> void to::test<24>()
 
         cur->discard_rest();
     }
-
-    //db->dump(stderr);
-    //system("bash");
 
     // Query with querybest and priomax
     {
