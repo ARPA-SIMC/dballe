@@ -732,34 +732,13 @@ int DB::obtain_context(const Record& rec)
     else
         throw error_notfound("datetime informations not found among context information");
 
-    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
-        c.ltype1 = var->enqi();
-    else
-        c.ltype1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_L1))
-        c.l1 = var->enqi();
-    else
-        c.l1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE2))
-        c.ltype2 = var->enqi();
-    else
-        c.ltype2 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_L2))
-        c.l2 = var->enqi();
-    else
-        c.l2 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_PINDICATOR))
-        c.pind = var->enqi();
-    else
-        c.pind = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_P1))
-        c.p1 = var->enqi();
-    else
-        c.p1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_P2))
-        c.p2 = var->enqi();
-    else
-        c.p2 = MISSING_INT;
+    c.ltype1 = rec.get(DBA_KEY_LEVELTYPE1, MISSING_INT);
+    c.l1 = rec.get(DBA_KEY_L1, MISSING_INT);
+    c.ltype2 = rec.get(DBA_KEY_LEVELTYPE2, MISSING_INT);
+    c.l2 = rec.get(DBA_KEY_L2, MISSING_INT);
+    c.pind = rec.get(DBA_KEY_PINDICATOR, MISSING_INT);
+    c.p1 = rec.get(DBA_KEY_P1, MISSING_INT);
+    c.p2 = rec.get(DBA_KEY_P2, MISSING_INT);
 
     // Check for an existing context with these data
     int id = c.get_id();

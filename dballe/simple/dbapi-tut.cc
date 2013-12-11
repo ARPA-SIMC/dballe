@@ -209,6 +209,34 @@ template<> template<> void to::test<5>()
     wassert(actual(api.voglioquesto()) == 1);
 }
 
+// Test handling of values with undefined leveltype2 and l2
+template<> template<> void to::test<6>()
+{
+    fortran::DbAPI api(*db, "write", "write", "write");
+    api.setd("lat", 44.5);
+    api.setd("lon", 11.5);
+    api.setc("rep_memo", "synop");
+    api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
+    api.settimerange(254, MISSING_INT, MISSING_INT);
+    api.setdate(2013, 4, 25, 12, 0, 0);
+    api.setd("B12101", 21.5);
+    api.prendilo();
+    api.unsetall();
+
+    // Query it back
+    api.seti("leveltype1", 103);
+    wassert(actual(api.voglioquesto()) == 1);
+
+    wassert(actual(api.dammelo()) == "B12101");
+    wassert(actual(api.enqi("leveltype1")) == 103);
+    wassert(actual(api.enqi("l1")) == 2000);
+    wassert(actual(api.enqi("leveltype2")) == fortran::DbAPI::missing_int);
+    wassert(actual(api.enqi("l2")) == fortran::DbAPI::missing_int);
+    wassert(actual(api.enqi("pindicator")) == 254);
+    wassert(actual(api.enqi("p1")) == fortran::DbAPI::missing_int);
+    wassert(actual(api.enqi("p2")) == fortran::DbAPI::missing_int);
+}
+
 }
 
 namespace {

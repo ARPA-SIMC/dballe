@@ -217,13 +217,40 @@ struct MapLevTrCache : public LevTrCache
 
         void to_record(Record& rec) const
         {
-            rec.set(DBA_KEY_LEVELTYPE1, ltype1);
-            rec.set(DBA_KEY_L1, l1);
-            rec.set(DBA_KEY_LEVELTYPE2, ltype2);
-            rec.set(DBA_KEY_L2, l2);
-            rec.set(DBA_KEY_PINDICATOR, pind);
-            rec.set(DBA_KEY_P1, p1);
-            rec.set(DBA_KEY_P2, p2);
+            if (ltype1 == MISSING_INT)
+                rec.unset(DBA_KEY_LEVELTYPE1);
+            else
+                rec.set(DBA_KEY_LEVELTYPE1, ltype1);
+
+            if (l1 == MISSING_INT)
+                rec.unset(DBA_KEY_L1);
+            else
+                rec.set(DBA_KEY_L1, l1);
+
+            if (ltype2 == MISSING_INT)
+                rec.unset(DBA_KEY_LEVELTYPE2);
+            else
+                rec.set(DBA_KEY_LEVELTYPE2, ltype2);
+
+            if (l2 == MISSING_INT)
+                rec.unset(DBA_KEY_L2);
+            else
+                rec.set(DBA_KEY_L2, l2);
+
+            if (pind == MISSING_INT)
+                rec.unset(DBA_KEY_PINDICATOR);
+            else
+                rec.set(DBA_KEY_PINDICATOR, pind);
+
+            if (p1 == MISSING_INT)
+                rec.unset(DBA_KEY_P1);
+            else
+                rec.set(DBA_KEY_P1, p1);
+
+            if (p2 == MISSING_INT)
+                rec.unset(DBA_KEY_P2);
+            else
+                rec.set(DBA_KEY_P2, p2);
         }
 
         Level lev() const

@@ -415,17 +415,43 @@ void Cursor::to_record(Record& rec)
 
         if (wanted & DBA_DB_WANT_LEVEL)
         {
-            rec.key(DBA_KEY_LEVELTYPE1).seti(out_ltype1);
-            rec.key(DBA_KEY_L1).seti(out_l1);
-            rec.key(DBA_KEY_LEVELTYPE2).seti(out_ltype2);
-            rec.key(DBA_KEY_L2).seti(out_l2);
+            if (out_ltype1 == MISSING_INT)
+                rec.unset(DBA_KEY_LEVELTYPE1);
+            else
+                rec.key(DBA_KEY_LEVELTYPE1).seti(out_ltype1);
+
+            if (out_l1 == MISSING_INT)
+                rec.key(DBA_KEY_L1).unset();
+            else
+                rec.key(DBA_KEY_L1).seti(out_l1);
+
+            if (out_ltype2 == MISSING_INT)
+                rec.unset(DBA_KEY_LEVELTYPE2);
+            else
+                rec.key(DBA_KEY_LEVELTYPE2).seti(out_ltype2);
+
+            if (out_l2 == MISSING_INT)
+                rec.unset(DBA_KEY_L2);
+            else
+                rec.key(DBA_KEY_L2).seti(out_l2);
         }
 
         if (wanted & DBA_DB_WANT_TIMERANGE)
         {
-            rec.key(DBA_KEY_PINDICATOR).seti(out_pind);
-            rec.key(DBA_KEY_P1).seti(out_p1);
-            rec.key(DBA_KEY_P2).seti(out_p2);
+            if (out_pind == MISSING_INT)
+                rec.unset(DBA_KEY_PINDICATOR);
+            else
+                rec.key(DBA_KEY_PINDICATOR).seti(out_pind);
+
+            if (out_p1 == MISSING_INT)
+                rec.unset(DBA_KEY_P1);
+            else
+                rec.key(DBA_KEY_P1).seti(out_p1);
+
+            if (out_p2 == MISSING_INT)
+                rec.unset(DBA_KEY_P2);
+            else
+                rec.key(DBA_KEY_P2).seti(out_p2);
         }
 
         if (wanted & DBA_DB_WANT_DATETIME)
@@ -572,7 +598,6 @@ void Cursor::add_station_info(Record& rec)
     unsigned short st_out_code;
     char st_out_val[256];
     SQLLEN st_out_val_ind;
-    DBALLE_SQL_C_SINT_TYPE st_out_rep_cod;
 
     /* Allocate statement handle */
     db::Statement stm(*db.conn);

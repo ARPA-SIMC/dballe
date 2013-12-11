@@ -28,8 +28,8 @@ using namespace std;
 namespace dballe {
 namespace fortran {
 
-const signed char API::missing_byte = numeric_limits<signed char>::min();
-const int API::missing_int = numeric_limits<int>::min();
+const signed char API::missing_byte = numeric_limits<signed char>::max();
+const int API::missing_int = numeric_limits<int>::max();
 const float API::missing_float = numeric_limits<float>::max();
 const double API::missing_double = numeric_limits<double>::max();
 

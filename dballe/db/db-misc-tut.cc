@@ -984,10 +984,14 @@ template<> template<> void to::test<20>()
     wassert(actual(cur->remaining()) == 2);
 
     // Ensure that the network info is preserved
-    wassert(actual(cur->next()).istrue());
-    wassert(actual(cur->get_rep_memo()) == "synop");
-    wassert(actual(cur->next()).istrue());
-    wassert(actual(cur->get_rep_memo()) == "metar");
+    // Use a sorted vector because while all DBs group by report, not all DBs
+    // sort by report name.
+    vector<string> reports;
+    while (cur->next())
+        reports.push_back(cur->get_rep_memo());
+    std::sort(reports.begin(), reports.end());
+    wassert(actual(reports[0]) == "metar");
+    wassert(actual(reports[1]) == "synop");
 }
 
 template<> template<> void to::test<21>()
@@ -1002,6 +1006,8 @@ template<> template<> void to::test<21>()
     dataset.data.set(DBA_KEY_L1, 55);
     dataset.data.unset(DBA_KEY_LEVELTYPE2);
     dataset.data.unset(DBA_KEY_L2);
+    dataset.data.unset(DBA_KEY_P1);
+    dataset.data.unset(DBA_KEY_P2);
     wruntest(dataset.insert, *db, true);
 
     // Query it back
@@ -1020,10 +1026,12 @@ template<> template<> void to::test<21>()
     ensure_equals(result[DBA_KEY_LEVELTYPE1].enqi(), 44);
     ensure(result.key_peek(DBA_KEY_L1) != NULL);
     ensure_equals(result[DBA_KEY_L1].enqi(), 55);
-    ensure(result.key_peek(DBA_KEY_LEVELTYPE2) != NULL);
-    ensure_equals(result[DBA_KEY_LEVELTYPE2].enqi(), MISSING_INT);
-    ensure(result.key_peek(DBA_KEY_L2) != NULL);
-    ensure_equals(result[DBA_KEY_L2].enqi(), MISSING_INT);
+    ensure(result.key_peek(DBA_KEY_LEVELTYPE2) == NULL);
+    ensure(result.key_peek(DBA_KEY_L2) == NULL);
+    ensure(result.key_peek(DBA_KEY_PINDICATOR) != NULL);
+    ensure_equals(result[DBA_KEY_PINDICATOR].enqi(), 20);
+    ensure(result.key_peek(DBA_KEY_P1) == NULL);
+    ensure(result.key_peek(DBA_KEY_P2) == NULL);
 
     ensure(!cur->next());
 }
