@@ -1355,14 +1355,8 @@ void QueryBuilder::make_where(const Record& rec)
     }
     if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
     {
-        set<Varcode> codes;
-        resolve_varlist_safe(val, codes);
         sql_where.append_list("d.id_var IN (");
-        for (set<Varcode>::const_iterator i = codes.begin(); i != codes.end(); ++i)
-            if (i == codes.begin())
-                sql_where.appendf("%d", *i);
-            else
-                sql_where.appendf(",%d", *i);
+        sql_where.append_varlist(val);
         sql_where.append(")");
         TRACE("found blist: adding AND d.id_var IN (%s)\n", val);
         from_wanted |= DBA_DB_FROM_D;

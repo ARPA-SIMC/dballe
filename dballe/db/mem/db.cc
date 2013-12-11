@@ -228,6 +228,7 @@ void DB::raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& r
         res.add(new MatchAnaFilter(memdb.stationvalues, query));
         trace_query("Found station filter %s\n", query.c_str());
     }
+
     memdb.stations.query(rec, res);
 }
 
@@ -236,6 +237,7 @@ void DB::raw_query_station_data(const Record& rec, memdb::Results<memdb::Station
 {
     // Get a list of stations we can match
     Results<Station> res_st(memdb.stations);
+
     raw_query_stations(rec, res_st);
 
     memdb.stationvalues.query(rec, res_st, res);
