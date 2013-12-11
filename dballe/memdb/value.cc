@@ -192,7 +192,7 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
         if (pos >= 0 && pos < values.size() && values[pos])
         {
             trace_query(" intersect with %zu\n", pos);
-            res.add(pos);
+            res.add_singleton(pos);
         } else {
             trace_query(" set to empty result set\n");
             res.set_to_empty();
@@ -250,7 +250,7 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
             {
                 trace_query(" date matches the whole index: no point in adding a filter\n");
             } else {
-                res.add(*s);
+                res.add_set(*s);
             }
             if (mind[3] == maxd[3] && mind[4] == maxd[4] && mind[5] == maxd[5])
                 res.add(new MatchDateExact(mind));

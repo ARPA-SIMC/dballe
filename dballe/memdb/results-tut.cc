@@ -74,7 +74,7 @@ template<> template<> void to::test<3>()
 {
     // Test selecting a singleton
     Results<Station> res(stations);
-    res.add(pos[0]);
+    res.add_singleton(pos[0]);
 
     wassert(actual(res.is_select_all()).isfalse());
     wassert(actual(res.is_empty()).isfalse());

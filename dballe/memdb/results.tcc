@@ -54,33 +54,6 @@ public:
 
 }
 
-template<typename T>
-void Results<T>::add_union(std::auto_ptr< stl::Sequences<size_t> > seq)
-{
-    all = false;
-    if (!others_to_intersect)
-        others_to_intersect = new stl::Sequences<size_t>;
-    others_to_intersect->add_union(seq);
-}
-
-template<typename T>
-void Results<T>::add(size_t singleton)
-{
-    all = false;
-    if (!others_to_intersect)
-        others_to_intersect = new stl::Sequences<size_t>;
-    others_to_intersect->add_singleton(singleton);
-}
-
-template<typename T>
-void Results<T>::add(const std::set<size_t>& p)
-{
-    all = false;
-    if (!indices)
-        indices = new stl::SetIntersection<size_t>;
-    indices->add(p);
-}
-
 template<typename T> template<typename K>
 bool Results<T>::add(const Index<K>& index, const K& val)
 {

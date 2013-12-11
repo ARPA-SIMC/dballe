@@ -265,7 +265,7 @@ void Stations::query(const Record& rec, Results<Station>& res) const
         if (pos >= 0 && pos < values.size() && values[pos])
         {
             trace_query(" intersect with %zu\n", pos);
-            res.add(pos);
+            res.add_singleton(pos);
         } else {
             trace_query(" set to empty result set\n");
             res.set_to_empty();
@@ -369,7 +369,7 @@ void Stations::query(const Record& rec, Results<Station>& res) const
             return;
         }
 
-        res.add(iident->second);
+        res.add_set(iident->second);
     }
 
     if (const char* val = rec.key_peek_value(DBA_KEY_REP_MEMO))

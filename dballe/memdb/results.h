@@ -45,21 +45,20 @@ void trace_query(const char* fmt, ...);
 #define trace_query(...) do {} while(0)
 #endif
 
-template<typename T>
-class Results
-{
-public:
-    const ValueStorage<T>& values;
+namespace results {
 
+/// Non-template part of Results, split here for faster compilation
+class Base
+{
 protected:
+    /// Keep track of transient sets here, for memory management purpose
+    std::vector<std::set<size_t>*> transient_sets;
+
     /// Sequences of possible results to be intersected
     stl::Sequences<size_t>* others_to_intersect;
 
     /// Sets of possible results, to be intersected
     stl::SetIntersection<size_t>* indices;
-
-    /// Filters to apply to each candidate result
-    match::FilterBuilder<T> filter;
 
     /// True if all elements are selected
     bool all;
@@ -67,13 +66,10 @@ protected:
     /// True if it has been determined that there are no results
     bool empty;
 
+    Base();
+
 public:
-    Results(const ValueStorage<T>& values) : values(values), others_to_intersect(0), indices(0), all(true), empty(false) {}
-    ~Results()
-    {
-        if (others_to_intersect) delete others_to_intersect;
-        if (indices) delete indices;
-    }
+    ~Base();
 
     /// Check if we just select all elements
     bool is_select_all() const { return all; }
@@ -87,9 +83,28 @@ public:
     void add_union(std::auto_ptr< stl::Sequences<size_t> > seq);
 
     /// Add a set of one single element to intersect with the rest
-    void add(size_t singleton);
+    void add_singleton(size_t singleton);
 
-    void add(const std::set<size_t>& p);
+    void add_set(const std::set<size_t>& p);
+
+    /// Add a set, taking over its memory management
+    void add_set(std::auto_ptr< std::set<size_t> > p);
+};
+
+}
+
+template<typename T>
+class Results : public results::Base
+{
+public:
+    const ValueStorage<T>& values;
+
+protected:
+    /// Filters to apply to each candidate result
+    match::FilterBuilder<T> filter;
+
+public:
+    Results(const ValueStorage<T>& values) : values(values) {}
 
     template<typename K>
     bool add(const Index<K>& index, const K& val);
