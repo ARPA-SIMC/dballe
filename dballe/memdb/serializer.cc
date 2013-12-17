@@ -69,6 +69,8 @@ void CSVOutfile::open(const std::string& pathname)
 
     // Wrap with stdio
     fd = fdopen(ifd, "w");
+    if (fd == NULL)
+        error_system::throwf("cannot fdopen file %s", pathname_tmp.c_str());
 }
 
 void CSVOutfile::commit()
@@ -200,6 +202,70 @@ void CSVWriter::write(const Memdb& memdb)
 
         ++new_id;
     }
+}
+
+CSVReader::CSVReader(const std::string& dir)
+{
+    in_station.open(dir + "/stations.csv");
+    in_stationvalue.open(dir + "/stationvalues.csv");
+    in_stationvalue_attr.open(dir + "/stationvalues-attrs.csv");
+    in_value.open(dir + "/values.csv");
+    in_value_attr.open(dir + "/values-attrs.csv");
+}
+
+CSVInfile::CSVInfile() : fd(0) {}
+
+CSVInfile::CSVInfile(const std::string& pathname)
+    : fd(0)
+{
+    open(pathname);
+}
+
+CSVInfile::~CSVInfile()
+{
+    if (fd) fclose(fd);
+}
+
+void CSVInfile::open(const std::string& pathname)
+{
+    if (fd)
+    {
+        fclose(fd);
+        fd = 0;
+    }
+
+    this->pathname = pathname;
+
+    fd = fopen(pathname.c_str(), "rt");
+    if (fd == NULL)
+        // TODO: accept that the file does not exist
+        error_system::throwf("cannot open file %s", pathname.c_str());
+}
+
+bool CSVInfile::nextline()
+{
+    if (fd == 0) return false;
+    line.clear();
+    while (true)
+    {
+        char c = getc(fd);
+        switch (c)
+        {
+            case EOF:
+                if (feof(fd))
+                    return false;
+                error_system::throwf("cannot read a character from %s", pathname.c_str());
+                break;
+            case '\n':
+                // Break out of switch and while
+                goto done;
+            default:
+                line += c;
+                break;
+        }
+    }
+done:
+    return true;
 }
 
 }

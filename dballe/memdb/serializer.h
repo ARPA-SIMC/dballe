@@ -72,6 +72,39 @@ struct CSVWriter
     void commit();
 };
 
+class CSVInfile : public dballe::CSVReader
+{
+public:
+    std::string pathname;
+
+protected:
+    FILE* fd;
+
+    virtual bool nextline();
+
+public:
+    CSVInfile();
+    CSVInfile(const std::string& pathname);
+    virtual ~CSVInfile();
+
+    void open(const std::string& pathname);
+
+private:
+    CSVInfile(const CSVInfile&);
+    CSVInfile& operator=(const CSVInfile&);
+};
+
+struct CSVReader
+{
+    CSVInfile in_station;
+    CSVInfile in_stationvalue;
+    CSVInfile in_stationvalue_attr;
+    CSVInfile in_value;
+    CSVInfile in_value_attr;
+
+    CSVReader(const std::string& dir);
+};
+
 }
 }
 }
