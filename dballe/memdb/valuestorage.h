@@ -82,8 +82,8 @@ public:
      */
     size_t element_count() const { return values.size() - empty_slots.size(); }
 
-    T* at(size_t idx) { return values.at(idx); }
-    const T* at(size_t idx) const { return values.at(idx); }
+    T* get_checked(size_t idx) { if (idx >= values.size()) return 0; return values[idx]; }
+    const T* get_checked(size_t idx) const { if (idx >= values.size()) return 0; return values[idx]; }
 
     typename std::vector<T*>::reference operator[](size_t idx) { return values[idx]; }
     typename std::vector<T*>::const_reference operator[](size_t idx) const { return values[idx]; }

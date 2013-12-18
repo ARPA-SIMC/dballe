@@ -20,6 +20,7 @@
  */
 #include "serializer.h"
 #include "memdb.h"
+#include "dballe/core/var.h"
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
@@ -204,6 +205,46 @@ void CSVWriter::write(const Memdb& memdb)
     }
 }
 
+void CSVStationsInfile::read_stations(memdb::Stations& stations)
+{
+    size_t lineno = 0;
+    while (next())
+    {
+        // 0:id, 1:lat, 2:lon, 3:mobile, 4:ident, 5:report
+        ++lineno;
+        if (cols.size() != 6)
+            error_consistency::throwf("%s:%zd: expected 6 columns, got %zd",
+                    pathname.c_str(), lineno, cols.size());
+        size_t old_id = strtoul(cols[0].c_str(), 0, 10);
+        Coord coords(
+                strtod(cols[1].c_str(), NULL),
+                strtod(cols[2].c_str(), NULL));
+        size_t new_id;
+        if (cols[3] == "0")
+            new_id = stations.obtain_fixed(coords, cols[5]);
+        else
+            new_id = stations.obtain_mobile(coords, cols[4], cols[5]);
+        station_id_map[old_id] = new_id;
+    }
+}
+
+const Station& CSVStationsInfile::station_by_id(const memdb::Stations& stations, size_t id) const
+{
+    // TODO: find a way to annotate the messages with file name and line
+    // number. It likely requires the caller to catch and annotate the
+    // exception
+
+    map<size_t, size_t>::const_iterator i = station_id_map.find(id);
+    if (i == station_id_map.end())
+        error_consistency::throwf("station ID %zd not found in stations file", id);
+
+    const Station* station = stations.get_checked(i->second);
+    if (!station)
+        error_consistency::throwf("station ID %zd does not map to a valid station", id);
+
+    return *station;
+}
+
 CSVReader::CSVReader(const std::string& dir)
 {
     in_station.open(dir + "/stations.csv");
@@ -211,6 +252,70 @@ CSVReader::CSVReader(const std::string& dir)
     in_stationvalue_attr.open(dir + "/stationvalues-attrs.csv");
     in_value.open(dir + "/values.csv");
     in_value_attr.open(dir + "/values-attrs.csv");
+}
+
+
+void CSVReader::read(Memdb& memdb)
+{
+    in_station.read_stations(memdb.stations);
+
+    // new_id = 0;
+    size_t lineno = 0;
+    while (in_stationvalue.next())
+    {
+        // 0: id, 1: stationid, 2: varcode, 3: value
+        ++lineno;
+        const std::vector<std::string>& cols = in_stationvalue.cols;
+        if (cols.size() != 4)
+            error_consistency::throwf("%s:%zd: expected 4 columns, got %zd",
+                    in_stationvalue.pathname.c_str(), lineno, cols.size());
+
+        size_t station_id = strtoul(cols[1].c_str(), 0, 10);
+        const Station& station = in_station.station_by_id(memdb.stations, station_id);
+        Varcode code = resolve_varcode_safe(cols[2]);
+        std::auto_ptr<wreport::Var> var = newvar(code, cols[3].c_str());
+
+        memdb.stationvalues.insert(station, var);
+    }
+
+    // new_id = 0;
+    lineno = 0;
+    while (in_value.next())
+    {
+        // 0:id, 1:stationid, 2:ltype1, 3:l1, 4:ltype2, 5:l2, 6:pind, 7:p1, 8:p2, 9:datetime 10:varcode, 11:value
+        ++lineno;
+        const std::vector<std::string>& cols = in_value.cols;
+        if (cols.size() != 12)
+            error_consistency::throwf("%s:%zd: expected 12 columns, got %zd",
+                    in_value.pathname.c_str(), lineno, cols.size());
+
+        size_t station_id = strtoul(cols[1].c_str(), 0, 10);
+        const Station& station = in_station.station_by_id(memdb.stations, station_id);
+
+        Level level(
+                strtoul(cols[2].c_str(), 0, 10), strtoul(cols[3].c_str(), 0, 10),
+                strtoul(cols[4].c_str(), 0, 10), strtoul(cols[5].c_str(), 0, 10));
+        Trange trange(
+                strtoul(cols[6].c_str(), 0, 10), strtoul(cols[7].c_str(), 0, 10), strtoul(cols[8].c_str(), 0, 10));
+
+        unsigned short year;
+        unsigned char month, day, hour, minute, second;
+        if (sscanf(cols[9].c_str(), "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
+                &year, &month, &day, &hour, &minute, &second) != 6)
+            error_consistency::throwf("%s:%zd: cannot parse datetime '%s'",
+                    in_value.pathname.c_str(), lineno, cols[9].c_str());
+        Datetime dt(year, month, day, hour, minute, second);
+
+        size_t levtr_id = memdb.levtrs.obtain(level, trange);
+        const LevTr& levtr = *memdb.levtrs[levtr_id];
+
+        Varcode code = resolve_varcode_safe(cols[10]);
+        std::auto_ptr<wreport::Var> var = newvar(code, cols[11].c_str());
+
+        memdb.values.insert(station, levtr, dt, var);
+
+        // ++new_id;
+    }
 }
 
 CSVInfile::CSVInfile() : fd(0) {}
@@ -238,8 +343,12 @@ void CSVInfile::open(const std::string& pathname)
 
     fd = fopen(pathname.c_str(), "rt");
     if (fd == NULL)
-        // TODO: accept that the file does not exist
-        error_system::throwf("cannot open file %s", pathname.c_str());
+    {
+        if (errno == ENOENT)
+            ; // If the file does not exist, treat it as an empty file
+        else
+            error_system::throwf("cannot open file %s", pathname.c_str());
+    }
 }
 
 bool CSVInfile::nextline()

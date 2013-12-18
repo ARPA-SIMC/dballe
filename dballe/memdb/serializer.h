@@ -27,6 +27,7 @@
 #include <dballe/memdb/levtr.h>
 #include <dballe/memdb/value.h>
 #include <dballe/core/csv.h>
+#include <map>
 #include <cstdio>
 
 namespace dballe {
@@ -94,15 +95,25 @@ private:
     CSVInfile& operator=(const CSVInfile&);
 };
 
+struct CSVStationsInfile : public CSVInfile
+{
+    std::map<size_t, size_t> station_id_map;
+
+    const Station& station_by_id(const memdb::Stations& stations, size_t id) const;
+    void read_stations(memdb::Stations& stations);
+};
+
 struct CSVReader
 {
-    CSVInfile in_station;
+    CSVStationsInfile in_station;
     CSVInfile in_stationvalue;
     CSVInfile in_stationvalue_attr;
     CSVInfile in_value;
     CSVInfile in_value_attr;
 
     CSVReader(const std::string& dir);
+
+    void read(Memdb& memdb);
 };
 
 }

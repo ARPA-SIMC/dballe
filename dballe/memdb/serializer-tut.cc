@@ -60,9 +60,19 @@ template<> template<> void to::test<1>()
 
         serialize::CSVWriter serializer(testdir);
         serializer.write(memdb);
+        serializer.commit();
     }
 
     // Read it back
+    {
+        Memdb memdb;
+        serialize::CSVReader reader(testdir);
+        reader.read(memdb);
+        wassert(actual(memdb.stations.element_count()) == 2);
+        wassert(actual(memdb.stationvalues.element_count()) == 0);
+        wassert(actual(memdb.levtrs.element_count()) == 1);
+        wassert(actual(memdb.values.element_count()) == 2);
+    }
 }
 
 }
