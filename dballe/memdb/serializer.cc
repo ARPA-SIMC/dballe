@@ -217,8 +217,8 @@ void CSVStationsInfile::read_stations(memdb::Stations& stations)
                     pathname.c_str(), lineno, cols.size());
         size_t old_id = strtoul(cols[0].c_str(), 0, 10);
         Coord coords(
-                strtod(cols[1].c_str(), NULL),
-                strtod(cols[2].c_str(), NULL));
+                (int)strtol(cols[1].c_str(), 0, 10),
+                (int)strtol(cols[2].c_str(), 0, 10));
         size_t new_id;
         if (cols[3] == "0")
             new_id = stations.obtain_fixed(coords, cols[5]);
