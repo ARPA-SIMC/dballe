@@ -49,11 +49,15 @@ struct memdb_serialize_shar
 
 TESTGRP(memdb_serialize);
 
+// Test a simple serialize/deserialize round
 template<> template<> void to::test<1>()
 {
     reset_test_dir();
+
     Var var_st_1(varinfo(WR_VAR(0, 7, 7)), 100.0);
+    var_st_1.seta(newvar(WR_VAR(0, 33, 7), 30));
     Var var_st_2(varinfo(WR_VAR(0, 7, 7)), 5000.0);
+    var_st_2.seta(newvar(WR_VAR(0, 33, 7), 40));
     Var var_1(varinfo(WR_VAR(0, 12, 101)), 274.0);
     var_1.seta(newvar(WR_VAR(0, 33, 7), 50));
     Var var_2(varinfo(WR_VAR(0, 12, 101)), 273.0);
