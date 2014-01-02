@@ -116,5 +116,50 @@ template<> template<> void to::test<1>()
     }
 }
 
+// Test nasty chars in values
+template<> template<> void to::test<2>()
+{
+    reset_test_dir();
+
+    const char* str_ident = "\"'\n,";
+    const char* str_report = "\n\"',";
+    Var var_st_1(varinfo(WR_VAR(0, 1, 19)), "'\"\n,");
+    var_st_1.seta(newvar(WR_VAR(0, 33, 7), 30));
+    Var var_1(varinfo(WR_VAR(0, 12, 101)), 274.0);
+    var_1.seta(newvar(WR_VAR(0, 1, 212), "'\"\n,"));
+
+    {
+        Memdb memdb;
+        memdb.insert(Coord(45, 11), str_ident, str_report, Level(1), Trange::instant(), Datetime(2013, 12, 15), var_1);
+        memdb.stationvalues.insert(*memdb.stations[0], var_st_1);
+    }
+
+    {
+        Memdb memdb;
+        serialize::CSVReader reader(testdir);
+        reader.read(memdb);
+        wassert(actual(memdb.stations.element_count()) == 1);
+        wassert(actual(memdb.stations[0]->coords) == Coord(45, 11));
+        wassert(actual(memdb.stations[0]->mobile).istrue());
+        wassert(actual(memdb.stations[0]->ident) == str_ident);
+        wassert(actual(memdb.stations[0]->report) == str_report);
+
+        wassert(actual(memdb.stationvalues.element_count()) == 1);
+        wassert(actual(memdb.stationvalues[0]->station.id) == memdb.stations[0]->id);
+        wassert(actual(*(memdb.stationvalues[0]->var)) == var_st_1);
+
+        wassert(actual(memdb.levtrs.element_count()) == 1);
+        wassert(actual(memdb.levtrs[0]->level) == Level(1));
+        wassert(actual(memdb.levtrs[0]->trange) == Trange::instant());
+
+        wassert(actual(memdb.values.element_count()) == 1);
+        wassert(actual(memdb.values[0]->station.id) == memdb.stations[0]->id);
+        wassert(actual(memdb.values[0]->levtr.level) == Level(1));
+        wassert(actual(memdb.values[0]->levtr.trange) == Trange::instant());
+        wassert(actual(memdb.values[0]->datetime) == Datetime(2013, 12, 15));
+        wassert(actual(*(memdb.values[0]->var)) == var_1);
+    }
+}
+
 }
 
