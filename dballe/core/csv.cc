@@ -83,6 +83,13 @@ std::string CSVReader::unescape(const std::string& csvstr)
     return res;
 }
 
+int CSVReader::as_int(unsigned col) const
+{
+    if (cols[col].empty())
+        error_consistency::throwf("cannot parse a number from column %u, which is empty", col);
+    return strtoul(cols[col].c_str(), 0, 10);
+}
+
 int CSVReader::as_int_withmissing(unsigned col) const
 {
     if (cols[col].empty()) return MISSING_INT;

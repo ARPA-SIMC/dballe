@@ -66,6 +66,13 @@ public:
     /**
      * Return the given column, as an integer.
      *
+     * A missing value raises an exception.
+     */
+    int as_int(unsigned col) const;
+
+    /**
+     * Return the given column, as an integer.
+     *
      * A missing value is returned as MISSING_INT.
      */
     int as_int_withmissing(unsigned col) const;

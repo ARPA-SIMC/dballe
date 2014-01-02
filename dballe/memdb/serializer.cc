@@ -215,10 +215,8 @@ void CSVStationsInfile::read_stations(memdb::Stations& stations)
         if (cols.size() != 6)
             error_consistency::throwf("%s:%zd: expected 6 columns, got %zd",
                     pathname.c_str(), lineno, cols.size());
-        size_t old_id = strtoul(cols[0].c_str(), 0, 10);
-        Coord coords(
-                (int)strtol(cols[1].c_str(), 0, 10),
-                (int)strtol(cols[2].c_str(), 0, 10));
+        size_t old_id = as_int(0);
+        Coord coords(as_int(1), as_int(2));
         size_t new_id;
         if (cols[3] == "0")
             new_id = stations.obtain_fixed(coords, cols[5]);
