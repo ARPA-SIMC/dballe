@@ -1,7 +1,7 @@
 /*
  * memdb/serializer - Read/write memdb contents to disk
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,10 @@ struct Memdb;
 namespace memdb {
 namespace serialize {
 
-struct CSVOutfile : public CSVWriter
+/**
+ * CSVWriter implementation that writes its output file atomically.
+ */
+struct CSVOutfile : public dballe::CSVWriter
 {
     std::string pathname;
     std::string pathname_tmp;
@@ -48,7 +51,16 @@ struct CSVOutfile : public CSVWriter
 
     void open(const std::string& pathname);
 
+    /**
+     * Commit the write, closing the output temporary file and renaming it to
+     * its final name
+     */
     void commit();
+
+    /**
+     * Roll back the write, deleting the output temporary file and leaving the
+     * original untouched
+     */
     void rollback();
 
     virtual void flush_row();
@@ -58,6 +70,9 @@ private:
     CSVOutfile& operator=(const CSVOutfile&);
 };
 
+/**
+ * Serializer for Memdb contents
+ */
 struct CSVWriter
 {
     CSVOutfile out_station;
@@ -73,6 +88,10 @@ struct CSVWriter
     void commit();
 };
 
+/**
+ * CSVReader implementation that reads using stdio and has helper functions to
+ * deserialize Memdb
+ */
 class CSVInfile : public dballe::CSVReader
 {
 public:
@@ -90,30 +109,70 @@ public:
 
     void open(const std::string& pathname);
 
+    template<typename INFILE>
+    void read_attrs(const INFILE& values);
+
 private:
     CSVInfile(const CSVInfile&);
     CSVInfile& operator=(const CSVInfile&);
 };
 
-struct CSVStationsInfile : public CSVInfile
+/**
+ * Common implementation bits of ValueStorage deserializers.
+ *
+ * It supports mapping line numbers to the IDs of deserialized values.
+ */
+template<typename VALUES>
+struct CSVValueStorageInfile : public CSVInfile
 {
-    std::map<size_t, size_t> station_id_map;
+    typedef typename VALUES::value_type value_type;
 
-    const Station& station_by_id(const memdb::Stations& stations, size_t id) const;
-    void read_stations(memdb::Stations& stations);
+    VALUES& values;
+    // Map 0-based line numbers to IDs in values
+    std::map<size_t, size_t> id_map;
+
+    CSVValueStorageInfile(VALUES& values) : values(values) {}
+    const typename VALUES::value_type& by_lineno(size_t lineno) const;
 };
 
+struct CSVStationsInfile : public CSVValueStorageInfile<memdb::Stations>
+{
+    CSVStationsInfile(memdb::Stations& stations);
+
+    void read();
+};
+
+struct CSVStationValuesInfile : public CSVValueStorageInfile<memdb::StationValues>
+{
+    CSVStationValuesInfile(memdb::StationValues& stationvalues);
+
+    void read(const CSVStationsInfile& stations);
+};
+
+struct CSVValuesInfile : public CSVValueStorageInfile<memdb::Values>
+{
+    Memdb& memdb;
+    CSVValuesInfile(Memdb& memdb);
+
+    void read(const CSVStationsInfile& stations);
+};
+
+/**
+ * Deserializer for Memdb
+ */
 struct CSVReader
 {
+    Memdb& memdb;
+
     CSVStationsInfile in_station;
-    CSVInfile in_stationvalue;
+    CSVStationValuesInfile in_stationvalue;
     CSVInfile in_stationvalue_attr;
-    CSVInfile in_value;
+    CSVValuesInfile in_value;
     CSVInfile in_value_attr;
 
-    CSVReader(const std::string& dir);
+    CSVReader(const std::string& dir, Memdb& memdb);
 
-    void read(Memdb& memdb);
+    void read();
 };
 
 }

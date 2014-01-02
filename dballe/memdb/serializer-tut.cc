@@ -80,8 +80,8 @@ template<> template<> void to::test<1>()
     // Read it back
     {
         Memdb memdb;
-        serialize::CSVReader reader(testdir);
-        reader.read(memdb);
+        serialize::CSVReader reader(testdir, memdb);
+        reader.read();
         wassert(actual(memdb.stations.element_count()) == 2);
         wassert(actual(memdb.stations[0]->coords) == Coord(45, 11));
         wassert(actual(memdb.stations[0]->mobile).isfalse());
@@ -136,8 +136,8 @@ template<> template<> void to::test<2>()
 
     {
         Memdb memdb;
-        serialize::CSVReader reader(testdir);
-        reader.read(memdb);
+        serialize::CSVReader reader(testdir, memdb);
+        reader.read();
         wassert(actual(memdb.stations.element_count()) == 1);
         wassert(actual(memdb.stations[0]->coords) == Coord(45, 11));
         wassert(actual(memdb.stations[0]->mobile).istrue());

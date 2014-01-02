@@ -132,6 +132,7 @@ void CSVWriter::write(const Memdb& memdb)
 {
     map<size_t, size_t> station_id_map;
 
+    // Serialize stations
     size_t lineno = 0;
     for (Stations::index_iterator i = memdb.stations.index_begin();
             i != memdb.stations.index_end(); ++i)
@@ -148,6 +149,7 @@ void CSVWriter::write(const Memdb& memdb)
         ++lineno;
     }
 
+    // Serialize stationvalues and their attributes
     lineno = 0;
     for (StationValues::index_iterator i = memdb.stationvalues.index_begin();
             i != memdb.stationvalues.index_end(); ++i)
@@ -170,6 +172,7 @@ void CSVWriter::write(const Memdb& memdb)
         ++lineno;
     }
 
+    // Serialize values and their attrs
     lineno = 0;
     for (Values::index_iterator i = memdb.values.index_begin();
             i != memdb.values.index_end(); ++i)
@@ -205,45 +208,150 @@ void CSVWriter::write(const Memdb& memdb)
     }
 }
 
-void CSVStationsInfile::read_stations(memdb::Stations& stations)
+namespace {
+
+template<typename T>
+struct error_traits;
+
+template<> struct error_traits<Station>
+{
+    static const char* value_name() { return "station"; }
+};
+template<> struct error_traits<StationValue>
+{
+    static const char* value_name() { return "stationvalue"; }
+};
+template<> struct error_traits<Value>
+{
+    static const char* value_name() { return "value"; }
+};
+
+}
+
+template<typename VALUES>
+const typename VALUES::value_type& CSVValueStorageInfile<VALUES>::by_lineno(size_t lineno) const
+{
+    typedef typename VALUES::value_type value_t;
+    typedef error_traits<value_t> traits;
+
+    // TODO: find a way to annotate the exceptions with file name and line
+    // number. It likely requires the caller to catch and annotate the
+    // exception
+
+    map<size_t, size_t>::const_iterator i = id_map.find(lineno);
+    if (i == id_map.end())
+        error_consistency::throwf("%s ID %zd not found in %s",
+                traits::value_name(), lineno, pathname.c_str());
+
+    const value_t* res = values.get_checked(i->second);
+    if (!res)
+        error_consistency::throwf("%s ID %zd does not map to a valid %s",
+                traits::value_name(),
+                lineno, error_traits<value_t>::value_name());
+
+    return *res;
+}
+
+CSVStationsInfile::CSVStationsInfile(memdb::Stations& stations)
+    : CSVValueStorageInfile<memdb::Stations>(stations)
+{
+}
+
+void CSVStationsInfile::read()
 {
     size_t lineno = 0;
     while (next())
     {
         // 0:id, 1:lat, 2:lon, 3:mobile, 4:ident, 5:report
-        ++lineno;
         if (cols.size() != 6)
             error_consistency::throwf("%s:%zd: expected 6 columns, got %zd",
-                    pathname.c_str(), lineno, cols.size());
-        size_t old_id = as_int(0);
+                    pathname.c_str(), lineno + 1, cols.size());
         Coord coords(as_int(1), as_int(2));
         size_t new_id;
         if (cols[3] == "0")
-            new_id = stations.obtain_fixed(coords, cols[5]);
+            new_id = values.obtain_fixed(coords, cols[5]);
         else
-            new_id = stations.obtain_mobile(coords, cols[4], cols[5]);
-        station_id_map[old_id] = new_id;
+            new_id = values.obtain_mobile(coords, cols[4], cols[5]);
+        id_map[lineno] = new_id;
+        ++lineno;
     }
 }
 
-const Station& CSVStationsInfile::station_by_id(const memdb::Stations& stations, size_t id) const
+CSVStationValuesInfile::CSVStationValuesInfile(memdb::StationValues& stationvalues)
+    : CSVValueStorageInfile<memdb::StationValues>(stationvalues)
 {
-    // TODO: find a way to annotate the messages with file name and line
-    // number. It likely requires the caller to catch and annotate the
-    // exception
-
-    map<size_t, size_t>::const_iterator i = station_id_map.find(id);
-    if (i == station_id_map.end())
-        error_consistency::throwf("station ID %zd not found in stations file", id);
-
-    const Station* station = stations.get_checked(i->second);
-    if (!station)
-        error_consistency::throwf("station ID %zd does not map to a valid station", id);
-
-    return *station;
 }
 
-CSVReader::CSVReader(const std::string& dir)
+void CSVStationValuesInfile::read(const CSVStationsInfile& stations)
+{
+    // new_id = 0;
+    size_t lineno = 0;
+    while (next())
+    {
+        // 0: id, 1: stationid, 2: varcode, 3: value
+        if (cols.size() != 4)
+            error_consistency::throwf("%s:%zd: expected 4 columns, got %zd",
+                    pathname.c_str(), lineno + 1, cols.size());
+
+        size_t station_lineno = as_int(1);
+        const Station& station = stations.by_lineno(station_lineno);
+        Varcode code = as_varcode(2);
+        std::auto_ptr<wreport::Var> var = newvar(code, cols[3].c_str());
+
+        size_t newid = values.insert(station, var);
+        id_map[lineno] = newid;
+        ++lineno;
+    }
+}
+
+
+CSVValuesInfile::CSVValuesInfile(Memdb& memdb)
+    : CSVValueStorageInfile<memdb::Values>(memdb.values), memdb(memdb)
+{
+}
+
+void CSVValuesInfile::read(const CSVStationsInfile& stations)
+{
+    size_t lineno = 0;
+    while (next())
+    {
+        // 0:id, 1:stationid, 2:ltype1, 3:l1, 4:ltype2, 5:l2, 6:pind, 7:p1, 8:p2, 9:datetime 10:varcode, 11:value
+        if (cols.size() != 12)
+            error_consistency::throwf("%s:%zd: expected 12 columns, got %zd",
+                    pathname.c_str(), lineno, cols.size());
+
+        const Station& station = stations.by_lineno(as_int(1));
+
+        Level level(as_int_withmissing(2), as_int_withmissing(3),
+                    as_int_withmissing(4), as_int_withmissing(5));
+        Trange trange(as_int_withmissing(6), as_int_withmissing(7), as_int_withmissing(8));
+
+        unsigned short year;
+        unsigned char month, day, hour, minute, second;
+        if (sscanf(cols[9].c_str(), "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
+                &year, &month, &day, &hour, &minute, &second) != 6)
+            error_consistency::throwf("%s:%zd: cannot parse datetime '%s'",
+                    pathname.c_str(), lineno, cols[9].c_str());
+        Datetime dt(year, month, day, hour, minute, second);
+
+        size_t levtr_id = memdb.levtrs.obtain(level, trange);
+        const LevTr& levtr = *memdb.levtrs[levtr_id];
+
+        Varcode code = as_varcode(10);
+        std::auto_ptr<wreport::Var> var = newvar(code, cols[11].c_str());
+
+        size_t newid = values.insert(station, levtr, dt, var);
+        id_map[lineno] = newid;
+
+        ++lineno;
+    }
+}
+
+CSVReader::CSVReader(const std::string& dir, Memdb& memdb)
+    : memdb(memdb),
+      in_station(memdb.stations),
+      in_stationvalue(memdb.stationvalues),
+      in_value(memdb)
 {
     in_station.open(dir + "/stations.csv");
     in_stationvalue.open(dir + "/stationvalues.csv");
@@ -252,66 +360,13 @@ CSVReader::CSVReader(const std::string& dir)
     in_value_attr.open(dir + "/values-attrs.csv");
 }
 
-
-void CSVReader::read(Memdb& memdb)
+void CSVReader::read()
 {
-    in_station.read_stations(memdb.stations);
-
-    // new_id = 0;
-    size_t lineno = 0;
-    while (in_stationvalue.next())
-    {
-        // 0: id, 1: stationid, 2: varcode, 3: value
-        ++lineno;
-        const std::vector<std::string>& cols = in_stationvalue.cols;
-        if (cols.size() != 4)
-            error_consistency::throwf("%s:%zd: expected 4 columns, got %zd",
-                    in_stationvalue.pathname.c_str(), lineno, cols.size());
-
-        size_t station_id = strtoul(cols[1].c_str(), 0, 10);
-        const Station& station = in_station.station_by_id(memdb.stations, station_id);
-        Varcode code = resolve_varcode_safe(cols[2]);
-        std::auto_ptr<wreport::Var> var = newvar(code, cols[3].c_str());
-
-        memdb.stationvalues.insert(station, var);
-    }
-
-    // new_id = 0;
-    lineno = 0;
-    while (in_value.next())
-    {
-        // 0:id, 1:stationid, 2:ltype1, 3:l1, 4:ltype2, 5:l2, 6:pind, 7:p1, 8:p2, 9:datetime 10:varcode, 11:value
-        ++lineno;
-        const std::vector<std::string>& cols = in_value.cols;
-        if (cols.size() != 12)
-            error_consistency::throwf("%s:%zd: expected 12 columns, got %zd",
-                    in_value.pathname.c_str(), lineno, cols.size());
-
-        size_t station_id = strtoul(cols[1].c_str(), 0, 10);
-        const Station& station = in_station.station_by_id(memdb.stations, station_id);
-
-        Level level(in_value.as_int_withmissing(2), in_value.as_int_withmissing(3),
-                    in_value.as_int_withmissing(4), in_value.as_int_withmissing(5));
-        Trange trange(in_value.as_int_withmissing(6), in_value.as_int_withmissing(7), in_value.as_int_withmissing(8));
-
-        unsigned short year;
-        unsigned char month, day, hour, minute, second;
-        if (sscanf(cols[9].c_str(), "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
-                &year, &month, &day, &hour, &minute, &second) != 6)
-            error_consistency::throwf("%s:%zd: cannot parse datetime '%s'",
-                    in_value.pathname.c_str(), lineno, cols[9].c_str());
-        Datetime dt(year, month, day, hour, minute, second);
-
-        size_t levtr_id = memdb.levtrs.obtain(level, trange);
-        const LevTr& levtr = *memdb.levtrs[levtr_id];
-
-        Varcode code = resolve_varcode_safe(cols[10]);
-        std::auto_ptr<wreport::Var> var = newvar(code, cols[11].c_str());
-
-        memdb.values.insert(station, levtr, dt, var);
-
-        // ++new_id;
-    }
+    in_station.read();
+    in_stationvalue.read(in_station);
+    in_stationvalue_attr.read_attrs(in_stationvalue);
+    in_value.read(in_station);
+    in_value_attr.read_attrs(in_value);
 }
 
 CSVInfile::CSVInfile() : fd(0) {}
@@ -371,6 +426,24 @@ bool CSVInfile::nextline()
     }
 done:
     return true;
+}
+
+template<typename INFILE>
+void CSVInfile::read_attrs(const INFILE& values)
+{
+    size_t lineno = 0;
+    while (next())
+    {
+        // 0:stationvalue_lineno, 1:varcode, 2:value
+        ++lineno;
+        if (cols.size() != 3)
+            error_consistency::throwf("%s:%zd: expected 3 columns, got %zd",
+                    pathname.c_str(), lineno, cols.size());
+
+        const typename INFILE::value_type& value = values.by_lineno(as_int(0));
+        Varcode code = as_varcode(1);
+        value.var->seta(newvar(code, cols[2].c_str()));
+    }
 }
 
 }

@@ -44,6 +44,7 @@
 
 #include <dballe/core/csv.h>
 #include <dballe/core/defs.h>
+#include "dballe/core/var.h"
 #include <wreport/error.h>
 #include <cctype>
 #include <iostream>
@@ -94,6 +95,11 @@ int CSVReader::as_int_withmissing(unsigned col) const
 {
     if (cols[col].empty()) return MISSING_INT;
     return strtoul(cols[col].c_str(), 0, 10);
+}
+
+wreport::Varcode CSVReader::as_varcode(unsigned col) const
+{
+    return resolve_varcode_safe(cols[col]);
 }
 
 bool CSVReader::move_to_data(unsigned number_col)

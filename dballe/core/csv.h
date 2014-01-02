@@ -78,6 +78,13 @@ public:
     int as_int_withmissing(unsigned col) const;
 
     /**
+     * Return the given column, as a Varcode.
+     *
+     * A missing value raises an exception.
+     */
+    wreport::Varcode as_varcode(unsigned col) const;
+
+    /**
      * Find the first line where the given column exists and starts with a
      * number.
      *

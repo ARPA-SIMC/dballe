@@ -50,8 +50,8 @@ DB::DB(const std::string& arg)
 {
     if (!serialization_dir.empty())
     {
-        serialize::CSVReader reader(serialization_dir);
-        reader.read(memdb);
+        serialize::CSVReader reader(serialization_dir, memdb);
+        reader.read();
     }
 }
 

@@ -1,7 +1,7 @@
 /*
  * memdb/core - Core functions for memdb implementation
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,8 @@ protected:
     std::vector<size_t> empty_slots;
 
 public:
+    typedef T value_type;
+
     struct index_iterator : public std::iterator<std::forward_iterator_tag, size_t>
     {
         const std::vector<T*>* values;
