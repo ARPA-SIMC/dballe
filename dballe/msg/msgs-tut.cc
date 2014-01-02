@@ -324,7 +324,7 @@ void to::test<8>()
     // Read back
     Msgs msgs1;
     str.seekg(0);
-    IstreamCSVReader in(str);
+    CSVReader in(str);
     ensure(in.next());
     msgs1.from_csv(in);
 

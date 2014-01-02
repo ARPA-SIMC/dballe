@@ -116,8 +116,21 @@ template<> template<> void to::test<1>()
     }
 }
 
-// Test nasty chars in values
+// Test deserializing a nonexisting data dir
 template<> template<> void to::test<2>()
+{
+    reset_test_dir();
+    Memdb memdb;
+    serialize::CSVReader reader(testdir, memdb);
+    reader.read();
+    wassert(actual(memdb.stations.element_count()) == 0);
+    wassert(actual(memdb.stationvalues.element_count()) == 0);
+    wassert(actual(memdb.levtrs.element_count()) == 0);
+    wassert(actual(memdb.values.element_count()) == 0);
+}
+
+// Test nasty chars in values
+template<> template<> void to::test<3>()
 {
     reset_test_dir();
 
@@ -132,6 +145,10 @@ template<> template<> void to::test<2>()
         Memdb memdb;
         memdb.insert(Coord(45, 11), str_ident, str_report, Level(1), Trange::instant(), Datetime(2013, 12, 15), var_1);
         memdb.stationvalues.insert(*memdb.stations[0], var_st_1);
+
+        serialize::CSVWriter serializer(testdir);
+        serializer.write(memdb);
+        serializer.commit();
     }
 
     {

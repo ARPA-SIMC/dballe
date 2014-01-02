@@ -51,17 +51,36 @@ bool csv_read_next(FILE* in, std::vector<std::string>& cols);
 class CSVReader
 {
 protected:
-    /// Read one line from the input source, returning false if EOF is reached
-    virtual bool nextline() = 0;
+    std::istream* in;
+
+    int next_char();
 
 public:
+    /**
+     * If true, the input stream will be deleted upon destruction.
+     * If false, it will be left alone.
+     */
+    bool close_on_exit;
     /// Last line read
     std::string line;
 
     /// Parsed CSV columns for the last line read
     std::vector<std::string> cols;
 
-    virtual ~CSVReader();
+    CSVReader();
+    CSVReader(std::istream& in);
+    CSVReader(const std::string& pathname);
+    ~CSVReader();
+
+    /**
+     * Open the given file and sets close_on_exit to true
+     */
+    void open(const std::string& pathname);
+    /**
+     * Sets in to 0.
+     * If close_on_exit is true, close the currently opened file.
+     */
+    void close();
 
     /**
      * Return the given column, as an integer.
@@ -100,17 +119,6 @@ public:
     bool next();
 
     static std::string unescape(const std::string& csvstr);
-};
-
-class IstreamCSVReader : public CSVReader
-{
-protected:
-    virtual bool nextline();
-
-public:
-    std::istream& in;
-
-    IstreamCSVReader(std::istream& in) : in(in) {}
 };
 
 // TODO: CSV readers allowing to peek on the next line without consuming it, to

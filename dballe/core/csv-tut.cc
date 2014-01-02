@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2011--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,12 +26,13 @@
 
 using namespace std;
 using namespace dballe;
+using namespace wibble::tests;
 
 namespace tut {
 
-struct csv_shar {
+struct core_csv_shar {
 };
-TESTGRP(csv);
+TESTGRP(core_csv);
 
 // Test CSV string escaping
 template<> template<>
@@ -96,21 +97,53 @@ void to::test<2>()
 {
     {
         stringstream in("");
-        IstreamCSVReader reader(in);
+        CSVReader reader(in);
         ensure(!reader.next());
     }
 
     {
         stringstream in("\n");
-        IstreamCSVReader reader(in);
+        CSVReader reader(in);
         ensure(reader.next());
-        ensure(reader.cols.empty());
+        wassert(actual(reader.cols.size()) == 1);
+        wassert(actual(reader.cols[0]) == "");
+        ensure(!reader.next());
+    }
+
+    {
+        stringstream in("\r\n");
+        CSVReader reader(in);
+        ensure(reader.next());
+        wassert(actual(reader.cols.size()) == 1);
+        wassert(actual(reader.cols[0]) == "");
+        ensure(!reader.next());
+    }
+
+    {
+        stringstream in("1,2\r\n");
+        CSVReader reader(in);
+        ensure(reader.next());
+        ensure_equals(reader.cols.size(), 2u);
+        ensure_equals(reader.cols[0], "1");
+        ensure_equals(reader.cols[1], "2");
+        ensure(!reader.next());
+    }
+
+    {
+        stringstream in("1\r\n2\r\n");
+        CSVReader reader(in);
+        ensure(reader.next());
+        ensure_equals(reader.cols.size(), 1u);
+        ensure_equals(reader.cols[0], "1");
+        ensure(reader.next());
+        ensure_equals(reader.cols.size(), 1u);
+        ensure_equals(reader.cols[0], "2");
         ensure(!reader.next());
     }
 
     {
         stringstream in("1,2\n");
-        IstreamCSVReader reader(in);
+        CSVReader reader(in);
         ensure(reader.next());
         ensure_equals(reader.cols.size(), 2u);
         ensure_equals(reader.cols[0], "1");
@@ -124,7 +157,7 @@ void to::test<2>()
                 "antani,,blinda\n"
                 ",\n"
         );
-        IstreamCSVReader reader(in);
+        CSVReader reader(in);
 
         ensure(reader.next());
         ensure_equals(reader.cols.size(), 3u);
@@ -139,15 +172,16 @@ void to::test<2>()
         ensure_equals(reader.cols[2], "blinda");
 
         ensure(reader.next());
-        ensure_equals(reader.cols.size(), 1u);
+        ensure_equals(reader.cols.size(), 2u);
         ensure_equals(reader.cols[0], "");
+        ensure_equals(reader.cols[1], "");
 
         ensure(!reader.next());
     }
 
     {
         stringstream in("1,2");
-        IstreamCSVReader reader(in);
+        CSVReader reader(in);
 
         ensure(reader.next());
         ensure_equals(reader.cols.size(), 2u);
@@ -156,6 +190,55 @@ void to::test<2>()
 
         ensure(!reader.next());
     }
+
+    {
+        stringstream in("\"1\"\r\n");
+        CSVReader reader(in);
+
+        ensure(reader.next());
+        ensure_equals(reader.cols.size(), 1u);
+        ensure_equals(reader.cols[0], "1");
+
+        ensure(!reader.next());
+    }
+}
+
+namespace {
+
+class TestCSVWriter : public CSVWriter
+{
+public:
+    stringstream buf;
+    virtual void flush_row()
+    {
+        buf << row;
+    }
+};
+
+}
+
+// Test write/read cycles
+template<> template<>
+void to::test<3>()
+{
+    TestCSVWriter out;
+    out.add_value(1);
+    out.add_value("\"");
+    out.add_value("'");
+    out.add_value(",");
+    out.add_value("\n");
+    out.flush_row();
+
+    out.buf.seekg(0);
+    CSVReader in(out.buf);
+    wassert(actual(in.next()).istrue());
+    wassert(actual(in.cols.size()) == 5);
+    wassert(actual(in.as_int(0)) == 1);
+    wassert(actual(in.cols[1]) == "\"");
+    wassert(actual(in.cols[2]) == "'");
+    wassert(actual(in.cols[3]) == ",");
+    wassert(actual(in.cols[4]) == "\n");
+    wassert(actual(in.next()).isfalse());
 }
 
 }

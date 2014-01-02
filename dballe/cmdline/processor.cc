@@ -332,7 +332,6 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
     // would mean parsing the CSV twice: once to detect the message boundaries
     // and once to parse the Rawmsg strings.
     Item item;
-    auto_ptr<istream> in;
     auto_ptr<CSVReader> csvin;
 
     list<string>::const_iterator name = fnames.begin();
@@ -340,12 +339,11 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
     {
         if (name != fnames.end())
         {
-            in.reset(new ifstream(name->c_str()));
-            csvin.reset(new IstreamCSVReader(*in));
+            csvin.reset(new CSVReader(*name));
             ++name;
         } else {
             // name = "(stdin)";
-            csvin.reset(new IstreamCSVReader(cin));
+            csvin.reset(new CSVReader(cin));
         }
 
         while (true)

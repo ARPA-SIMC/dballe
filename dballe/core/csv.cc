@@ -48,6 +48,7 @@
 #include <wreport/error.h>
 #include <cctype>
 #include <iostream>
+#include <fstream>
 #include <limits>
 #include <cstdio>
 #include <cstring>
@@ -59,7 +60,31 @@ using namespace wreport;
 
 namespace dballe {
 
+CSVReader::CSVReader() : in(0), close_on_exit(false) {}
+CSVReader::CSVReader(std::istream& in) : in(&in), close_on_exit(false) {}
+CSVReader::CSVReader(const std::string& pathname)
+    : in(0), close_on_exit(false)
+{
+    open(pathname);
+}
 CSVReader::~CSVReader() {}
+
+void CSVReader::open(const std::string& pathname)
+{
+    close();
+    close_on_exit = true;
+    in = new ifstream(pathname.c_str());
+    if (in->fail())
+        error_system::throwf("cannot open file %s", pathname.c_str());
+}
+
+void CSVReader::close()
+{
+    if (in && close_on_exit)
+        delete in;
+    in = 0;
+    close_on_exit = true;
+}
 
 std::string CSVReader::unescape(const std::string& csvstr)
 {
@@ -115,93 +140,130 @@ bool CSVReader::move_to_data(unsigned number_col)
     return true;
 }
 
+int CSVReader::next_char()
+{
+    int res = in->get();
+    if (res == EOF && !in->eof())
+        throw error_system("reading a character from CSV input");
+    return res;
+}
+
 bool CSVReader::next()
 {
+    if (!in) return false;
+
     cols.clear();
 
-    if (!nextline()) return false;
-
     // Tokenize the input line
-    enum State { BEG, COL, QCOL, EQCOL } state = BEG;
+    enum State { BEG, COL, QCOL, EQCOL, HALFEOL } state = BEG;
     string col;
-    for (string::const_iterator i = line.begin(); i != line.end(); ++i)
+    int c;
+    while ((c = next_char()) != EOF)
     {
         switch (state)
         {
+            // Look for the beginning of a column value
             case BEG:
-                switch (*i)
+                switch (c)
                 {
                     case '"':
                         state = QCOL;
                         break;
                     case ',':
-                    case '\n':
-                        state = BEG;
-                        cols.push_back(col);
-                        break;
-                    default:
-                        state = COL;
-                        col += *i; break;
-                }
-                break;
-            case COL:
-                switch (*i)
-                {
-                    case ',':
-                    case '\n':
                         state = BEG;
                         cols.push_back(col);
                         col.clear();
                         break;
+                    case '\r':
+                        state = HALFEOL;
+                        break;
+                    case '\n':
+                        cols.push_back(col);
+                        return true;
                     default:
-                        col += *i;
+                        state = COL;
+                        col += c;
                         break;
                 }
                 break;
+            // Inside a column value
+            case COL:
+                switch (c)
+                {
+                    case ',':
+                        state = BEG;
+                        cols.push_back(col);
+                        col.clear();
+                        break;
+                    case '\r':
+                        state = HALFEOL;
+                        break;
+                    case '\n':
+                        cols.push_back(col);
+                        return true;
+                    default:
+                        col += c;
+                        break;
+                }
+                break;
+            // Inside a quoted column value
             case QCOL:
-                switch (*i)
+                switch (c)
                 {
                     case '\"':
                         state = EQCOL;
                         break;
-                    case '\n':
-                        state = BEG;
-                        cols.push_back(col);
-                        col.clear();
-                        break;
                     default:
-                        col += *i;
+                        col += c;
                         break;
                 }
                 break;
+            // After a quote character found inside a quoted column value
             case EQCOL:
-                switch (*i)
+                switch (c)
                 {
+                    // The quote marked the end of the value
                     case ',':
-                    case '\n':
                         state = BEG;
                         cols.push_back(col);
                         col.clear();
                         break;
+                    case '\r':
+                        state = HALFEOL;
+                        break;
+                    case '\n':
+                        cols.push_back(col);
+                        return true;
+                    // The quote was an escape
                     default:
-                        col += *i;
+                        state = QCOL;
+                        col += c;
+                        break;
+                }
+                break;
+            // After \r was found
+            case HALFEOL:
+                switch (c)
+                {
+                    case '\n':
+                        cols.push_back(col);
+                        return true;
+                    default:
+                        state = COL;
+                        col += '\r';
+                        col += c;
                         break;
                 }
                 break;
         }
     }
+
+    if (state == BEG)
+        return false;
+
     if (!col.empty())
         cols.push_back(col);
 
-    return true;
-}
-
-bool IstreamCSVReader::nextline()
-{
-    if (in.eof()) return false;
-    getline(in, line);
-    if (in.bad()) throw error_system("reading line from CSV input");
-    if (in.eof() && line.empty()) return false;
     return true;
 }
 

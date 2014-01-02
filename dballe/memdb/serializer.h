@@ -97,16 +97,11 @@ class CSVInfile : public dballe::CSVReader
 public:
     std::string pathname;
 
-protected:
-    FILE* fd;
-
-    virtual bool nextline();
-
 public:
     CSVInfile();
     CSVInfile(const std::string& pathname);
-    virtual ~CSVInfile();
 
+    /// Same as CSVReader::open, but it considers missing files as empty files
     void open(const std::string& pathname);
 
     template<typename INFILE>

@@ -567,7 +567,7 @@ void to::test<11>()
 
     Msg msg1;
     str.seekg(0);
-    IstreamCSVReader in(str);
+    CSVReader in(str);
     ensure(in.next());
     msg1.from_csv(in);
 

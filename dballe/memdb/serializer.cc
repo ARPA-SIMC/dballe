@@ -21,6 +21,7 @@
 #include "serializer.h"
 #include "memdb.h"
 #include "dballe/core/var.h"
+#include <fstream>
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
@@ -96,8 +97,10 @@ void CSVOutfile::flush_row()
 {
     if (fwrite(row.data(), row.size(), 1, fd) != 1)
         error_system::throwf("cannot write %zd bytes to file %s", row.size(), pathname_tmp.c_str());
+    if (putc('\r', fd) == EOF)
+        error_system::throwf("cannot write end of line characters to file %s", pathname_tmp.c_str());
     if (putc('\n', fd) == EOF)
-        error_system::throwf("cannot write end of line character to file %s", pathname_tmp.c_str());
+        error_system::throwf("cannot write end of line characters to file %s", pathname_tmp.c_str());
     row.clear();
 }
 
@@ -264,8 +267,12 @@ void CSVStationsInfile::read()
     {
         // 0:id, 1:lat, 2:lon, 3:mobile, 4:ident, 5:report
         if (cols.size() != 6)
+        {
+            for (size_t i = 0; i < cols.size(); ++i)
+                fprintf(stderr, "%zd: '%s'\n", i, cols[i].c_str());
             error_consistency::throwf("%s:%zd: expected 6 columns, got %zd",
                     pathname.c_str(), lineno + 1, cols.size());
+        }
         Coord coords(as_int(1), as_int(2));
         size_t new_id;
         if (cols[3] == "0")
@@ -369,63 +376,26 @@ void CSVReader::read()
     in_value_attr.read_attrs(in_value);
 }
 
-CSVInfile::CSVInfile() : fd(0) {}
-
-CSVInfile::CSVInfile(const std::string& pathname)
-    : fd(0)
-{
-    open(pathname);
-}
-
-CSVInfile::~CSVInfile()
-{
-    if (fd) fclose(fd);
-}
+CSVInfile::CSVInfile() : CSVReader() {}
+CSVInfile::CSVInfile(const std::string& pathname) : CSVReader(pathname), pathname(pathname) {}
 
 void CSVInfile::open(const std::string& pathname)
 {
-    if (fd)
-    {
-        fclose(fd);
-        fd = 0;
-    }
-
     this->pathname = pathname;
-
-    fd = fopen(pathname.c_str(), "rt");
-    if (fd == NULL)
+    close();
+    close_on_exit = true;
+    in = new ifstream(pathname.c_str());
+    if (in->fail())
     {
         if (errno == ENOENT)
-            ; // If the file does not exist, treat it as an empty file
+        {
+            // If the file does not exist, treat it as an empty file
+            close();
+            return;
+        }
         else
             error_system::throwf("cannot open file %s", pathname.c_str());
     }
-}
-
-bool CSVInfile::nextline()
-{
-    if (fd == 0) return false;
-    line.clear();
-    while (true)
-    {
-        char c = getc(fd);
-        switch (c)
-        {
-            case EOF:
-                if (feof(fd))
-                    return false;
-                error_system::throwf("cannot read a character from %s", pathname.c_str());
-                break;
-            case '\n':
-                // Break out of switch and while
-                goto done;
-            default:
-                line += c;
-                break;
-        }
-    }
-done:
-    return true;
 }
 
 template<typename INFILE>

@@ -145,8 +145,7 @@ auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filena
 std::auto_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename)
 {
     std::string fname = datafile(filename);
-    ifstream in(fname.c_str());
-    IstreamCSVReader reader(in);
+    CSVReader reader(fname);
 
     auto_ptr<Msgs> msgs(new Msgs);
     if (!msgs->from_csv(reader))
