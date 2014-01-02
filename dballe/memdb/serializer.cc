@@ -292,11 +292,9 @@ void CSVReader::read(Memdb& memdb)
         size_t station_id = strtoul(cols[1].c_str(), 0, 10);
         const Station& station = in_station.station_by_id(memdb.stations, station_id);
 
-        Level level(
-                strtoul(cols[2].c_str(), 0, 10), strtoul(cols[3].c_str(), 0, 10),
-                strtoul(cols[4].c_str(), 0, 10), strtoul(cols[5].c_str(), 0, 10));
-        Trange trange(
-                strtoul(cols[6].c_str(), 0, 10), strtoul(cols[7].c_str(), 0, 10), strtoul(cols[8].c_str(), 0, 10));
+        Level level(in_value.as_int_withmissing(2), in_value.as_int_withmissing(3),
+                    in_value.as_int_withmissing(4), in_value.as_int_withmissing(5));
+        Trange trange(in_value.as_int_withmissing(6), in_value.as_int_withmissing(7), in_value.as_int_withmissing(8));
 
         unsigned short year;
         unsigned char month, day, hour, minute, second;

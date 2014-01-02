@@ -64,6 +64,13 @@ public:
     virtual ~CSVReader();
 
     /**
+     * Return the given column, as an integer.
+     *
+     * A missing value is returned as MISSING_INT.
+     */
+    int as_int_withmissing(unsigned col) const;
+
+    /**
      * Find the first line where the given column exists and starts with a
      * number.
      *
