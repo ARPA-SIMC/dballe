@@ -132,28 +132,28 @@ void CSVWriter::write(const Memdb& memdb)
 {
     map<size_t, size_t> station_id_map;
 
-    size_t new_id = 0;
+    size_t lineno = 0;
     for (Stations::index_iterator i = memdb.stations.index_begin();
             i != memdb.stations.index_end(); ++i)
     {
         const Station& s = *memdb.stations[*i];
-        station_id_map[s.id] = new_id;
-        out_station.add_value(new_id);
+        station_id_map[s.id] = lineno;
+        out_station.add_value(lineno);
         out_station.add_value(s.coords.lat);
         out_station.add_value(s.coords.lon);
         out_station.add_value(s.mobile ? 1 : 0);
         out_station.add_value(s.ident);
         out_station.add_value(s.report);
         out_station.flush_row();
-        ++new_id;
+        ++lineno;
     }
 
-    new_id = 0;
+    lineno = 0;
     for (StationValues::index_iterator i = memdb.stationvalues.index_begin();
             i != memdb.stationvalues.index_end(); ++i)
     {
         const StationValue& v = *memdb.stationvalues[*i];
-        out_stationvalue.add_value(new_id);
+        out_stationvalue.add_value(lineno);
         out_stationvalue.add_value(station_id_map[v.station.id]);
         out_stationvalue.add_value(v.var->code());
         out_stationvalue.add_var_value(*v.var);
@@ -161,21 +161,21 @@ void CSVWriter::write(const Memdb& memdb)
 
         for (const Var* a = v.var->next_attr(); a != NULL; a = a->next_attr())
         {
-            out_stationvalue_attr.add_value(new_id);
+            out_stationvalue_attr.add_value(lineno);
             out_stationvalue_attr.add_value(a->code());
             out_stationvalue_attr.add_var_value(*a);
             out_stationvalue_attr.flush_row();
         }
 
-        ++new_id;
+        ++lineno;
     }
 
-    new_id = 0;
+    lineno = 0;
     for (Values::index_iterator i = memdb.values.index_begin();
             i != memdb.values.index_end(); ++i)
     {
         const Value& v = *memdb.values[*i];
-        out_value.add_value(new_id);
+        out_value.add_value(lineno);
         out_value.add_value(station_id_map[v.station.id]);
         out_value.add_value_withmissing(v.levtr.level.ltype1);
         out_value.add_value_withmissing(v.levtr.level.l1);
@@ -195,13 +195,13 @@ void CSVWriter::write(const Memdb& memdb)
 
         for (const Var* a = v.var->next_attr(); a != NULL; a = a->next_attr())
         {
-            out_value_attr.add_value(new_id);
+            out_value_attr.add_value(lineno);
             out_value_attr.add_value(a->code());
             out_value_attr.add_var_value(*a);
             out_value_attr.flush_row();
         }
 
-        ++new_id;
+        ++lineno;
     }
 }
 
