@@ -209,6 +209,15 @@ size_t Memdb::insert(
     return values.insert(station, levtr, datetime, var);
 }
 
+size_t Memdb::insert(
+        const Coord& coords, const std::string& ident, const std::string& report,
+        const Level& level, const Trange& trange, const Datetime& datetime,
+        const Var& var)
+{
+    auto_ptr<Var> newvar(new Var(var));
+    return insert(coords, ident, report, level, trange, datetime, newvar);
+}
+
 void Memdb::remove(Results<Value>& res)
 {
 #warning TODO: check if ana context, in which case remove from station index
