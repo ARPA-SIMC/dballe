@@ -21,13 +21,7 @@
 #include "msg.h"
 #include "context.h"
 #include "dballe/msg/vars.h"
-
-#ifdef HAVE_LUA
-extern "C" {
-#include <lauxlib.h>
-#include <lualib.h>
-}
-#endif
+#include "wreport/utils/lua.h"
 
 using namespace wreport;
 using namespace std;
@@ -127,23 +121,7 @@ static const struct luaL_Reg dbalua_msg_lib [] = {
 
 void Msg::lua_push(struct lua_State* L)
 {
-    // The 'grib' object is a userdata that holds a pointer to this Grib structure
-    Msg** s = (Msg**)lua_newuserdata(L, sizeof(Msg*));
-    *s = this;
-
-    // Set the metatable for the userdata
-    if (luaL_newmetatable(L, "dballe.msg"))
-    {
-            // If the metatable wasn't previously created, create it now
-            lua_pushstring(L, "__index");
-            lua_pushvalue(L, -2);  /* pushes the metatable */
-            lua_settable(L, -3);  /* metatable.__index = metatable */
-
-            // Load normal methods
-            luaL_register(L, NULL, dbalua_msg_lib);
-    }
-
-    lua_setmetatable(L, -2);
+    lua::push_object(L, this, "dballe.msg", dbalua_msg_lib);
 }
 
 Msg* Msg::lua_check(struct lua_State* L, int idx)
@@ -212,23 +190,7 @@ static const struct luaL_Reg dbalua_msg_context_lib [] = {
 
 void msg::Context::lua_push(struct lua_State* L)
 {
-    // The object is a userdata that holds a pointer to this dba_msg_context structure
-    msg::Context** s = (msg::Context**)lua_newuserdata(L, sizeof(msg::Context*));
-    *s = this;
-
-    // Set the metatable for the userdata
-    if (luaL_newmetatable(L, "dballe.msg.context"))
-    {
-            // If the metatable wasn't previously created, create it now
-            lua_pushstring(L, "__index");
-            lua_pushvalue(L, -2);  /* pushes the metatable */
-            lua_settable(L, -3);  /* metatable.__index = metatable */
-
-            // Load normal methods
-            luaL_register(L, NULL, dbalua_msg_context_lib);
-    }
-
-    lua_setmetatable(L, -2);
+    lua::push_object(L, this, "dballe.msg.context", dbalua_msg_context_lib);
 }
 
 msg::Context* msg::Context::lua_check(struct lua_State* L, int idx)

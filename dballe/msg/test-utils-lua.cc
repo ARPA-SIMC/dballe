@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2008--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2008--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ namespace tests {
 
 Lua::Lua(const std::string& src) : L(NULL)
 {
-	// Initialise the lua logic
-	L = luaL_newstate();
+    // Initialise the lua logic
+    L = luaL_newstate();
 
 	// NOTE: This one is optional: only use it for debugging
 	#if LUA_VERSION_NUM >= 501
