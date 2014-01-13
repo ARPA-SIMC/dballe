@@ -42,6 +42,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/aliases.h \
 	core/verbose.h \
 	core/stlutils.h \
+	core/stlutils.tcc \
 	core/defs.h \
 	core/var.h \
 	core/rawmsg.h \
@@ -234,7 +235,7 @@ check-local:
 		$(TESTS_ENVIRONMENT) $$test ; \
 	done
 
-CXXFLAGS += -O0
+#CXXFLAGS += -O0
 
 dist_noinst_HEADERS = \
 	core/test-utils-core.h \
