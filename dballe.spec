@@ -1,13 +1,13 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 6.0
-Release: 3878%{dist}
+Version: 6.6
+Release: 4210%{dist}
 License: GPL
 Group: Applications/Meteo
 URL: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 2.5 , libwibble-devel >= 0.1.27 , swig , python-devel, popt-devel
+BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 2.10 , libwibble-devel >= 1.1 , swig , python-devel, popt-devel
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release} unixODBC sqliteodbc mysql-connector-odbc
 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
@@ -246,6 +246,7 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %{_includedir}/dballe/db/*
 %{_includedir}/dballe/cmdline/*
 %{_includedir}/dballe/simple/*
+%{_includedir}/dballe/memdb/*
 
 %{_libdir}/libdballe.a
 %{_libdir}/libdballe.la
@@ -262,6 +263,7 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %doc %{_docdir}/dballe/fapi.ps
 
 %{_includedir}/dballe/dballef.h
+%{_includedir}/dballe/dballeff.h
 %{_libdir}/libdballef*.a
 %{_libdir}/pkgconfig/libdballef*
 %{_libdir}/libdballef*.la
@@ -302,8 +304,28 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 
 %changelog
-* Thu May 23 2013 Daniele Branchini <dbranchini@arpa.emr.it> - 6.0-3878%{dist}
-- Fixed segfault bug on idba_messaggi
+* Wed Nov 13 2013 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 6.6-4105%{dist}
+- Requires libwreport v2.10
+
+* Wed Sep  4 2013 Paolo Patruno <ppatruno@pigna.metarpa> - 6.3-3991%{dist}
+-  * New upstream release
+     - refactored cursor+querybuilder for v6 databases
+     - do not leave SQL_TIMESTAMP_STRUCT.fraction uninitialised, which caused
+       duplicate imports in some cases
+     - fortran message api: deal gracefully with uninterpretable messaes
+     - fixed data overwrite on V6 databases
+     - provami: documented the possibility of passing initial key=val filters
+       on command line
+
+
+* Fri Aug 23 2013 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 6.2-3967%{dist}
+- Record::set_from_string: hyphen ("-") as MISSING_INT
+- Fixes for PostgreSQL (trim char(n) and sequence support)
+- B22049 - Sea-surface temperature
+- B15236 - [SIM] C6H6 Concentration
+
+* Tue May 28 2013 Paolo Patruno <ppatruno@pigna.metarpa> - 6.1-3884%{dist}
+- dballe 6.1
 
 * Wed Aug 29 2012 Daniele Branchini <dbranchini@arpa.emr.it> - 5.22-3684%{dist}
 - corretto bug in provami su query
