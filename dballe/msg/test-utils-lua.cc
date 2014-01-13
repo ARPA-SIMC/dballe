@@ -30,7 +30,7 @@ namespace tests {
 Lua::Lua(const std::string& src) : L(NULL)
 {
 	// Initialise the lua logic
-	L = lua_open();
+	L = luaL_newstate();
 
 	// NOTE: This one is optional: only use it for debugging
 	#if LUA_VERSION_NUM >= 501

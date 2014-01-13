@@ -116,7 +116,7 @@ static int dbalua_msg_tostring(lua_State *L)
 	return 1;
 }
 
-static const struct luaL_reg dbalua_msg_lib [] = {
+static const struct luaL_Reg dbalua_msg_lib [] = {
         { "type", dbalua_msg_type },
         { "size", dbalua_msg_size },
         { "foreach", dbalua_msg_foreach },
@@ -196,7 +196,7 @@ make_accessor(p2, trange.p2)
 #undef make_accessor
 
 
-static const struct luaL_reg dbalua_msg_context_lib [] = {
+static const struct luaL_Reg dbalua_msg_context_lib [] = {
         { "ltype1", dbalua_msg_context_ltype1 },
         { "l1", dbalua_msg_context_l1 },
         { "ltype2", dbalua_msg_context_ltype2 },
