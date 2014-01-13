@@ -201,8 +201,6 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 %files
 %defattr(-,root,root,-)
-%dir %{_bindir}
-%dir %{_mandir}/man1
 %{_bindir}/dbadb
 %{_bindir}/dbamsg
 %{_bindir}/dbatbl
@@ -217,12 +215,9 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 %files -n provami
 %defattr(-,root,root,-)
-%dir /usr/bin
 %{_bindir}/provami
 
-%dir %{python_sitelib}/
 %{python_sitelib}/provami/*
-%dir %{_mandir}/man1
 %doc %{_mandir}/man1/provami*
 /usr/share/dballe/icon*.png
 /usr/share/dballe/world.dat
