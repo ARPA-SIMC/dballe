@@ -152,8 +152,8 @@ then
 fi
 
 dnl Check for wreport
-PKG_CHECK_MODULES(WREPORT,libwreport >= 2.10)
-PKG_CHECK_EXISTS([libwreport-test >= 2.10], [have_wreport_test=yes], [have_wreport_test=no])
+PKG_CHECK_MODULES(WREPORT,libwreport >= 2.11)
+PKG_CHECK_EXISTS([libwreport-test >= 2.11], [have_wreport_test=yes], [have_wreport_test=no])
 
 dnl Check for unixodbc
 have_odbc=yes
