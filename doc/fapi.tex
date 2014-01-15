@@ -396,22 +396,9 @@ functions:
   idba_seti(handle, "p2", p2)
   \end{verbatim}
 \item[{\tt idba\_setcontextana(handle)}]
-  sets the date, time, level and time range in the input record to the fixed
-  values that identify pseudoana values.  It is a shortcut to:
-  \begin{verbatim}
-  idba_seti(handle, "year", 1000)
-  idba_seti(handle, "month", 1)
-  idba_seti(handle, "day", 1)
-  idba_seti(handle, "hour", 0)
-  idba_seti(handle, "min", 0)
-  idba_seti(handle, "sec", 0)
-  idba_seti(handle, "leveltype", 257)
-  idba_seti(handle, "l1", 0)
-  idba_seti(handle, "l2", 0)
-  idba_seti(handle, "pindicator", 0)
-  idba_seti(handle, "p1", 0)
-  idba_seti(handle, "p2", 0)
-  \end{verbatim}
+  sets the date, time, level and time range in the input record to some magic
+  values, to signal that we are going to work with station attributes instead
+  of normal values.
 \end{description}
 
 \section {API invariants}
