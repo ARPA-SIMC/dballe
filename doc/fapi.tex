@@ -126,6 +126,21 @@ A pseudoana entry is uniquely identified by:
 \item \emph{station identifier} (if the station is mobile).
 \end{itemize}
 
+\section {Station values}
+
+Each \emph{pseudoana} entry can have zero or more values associated to it. They
+are just like measured variables (see \ref{basic-values}), but lack date, time,
+level, and time range information. They can be used to store station
+attributes, like the height above sea level, or the center operating it.
+
+The interface to work with station values is the same as the interface to work
+with normal values, except that date, time, level, and timerange information
+are not set when inserting or querying data, and \texttt{idba\_setcontextana}
+is called instead (see \ref{fun-setcontextana}), to signal the intention of
+working with station values.
+
+See section \ref{sec-querying} for examples on how to work with values.
+
 \section {Level or layer}
 
 The vertical coordinate of a value in \dballe{} is described using a level
@@ -151,6 +166,7 @@ The time range is defined by a table code (\texttt{pindicator}) and two
 numerical values (\texttt{p1} and \texttt{p2}, see \ref{tranges}).
 
 \section {Values}
+\label{basics-values}
 
 The main work of \dballe{} is to store and access \emph{measured values}.
 
@@ -248,6 +264,12 @@ You can set the input parameters using the {\tt idba\_set*} functions:
 
 \item[{\tt idba\_setd(handle, "param", doublevalue)}]
   Set the input parameter to the real*8 value {\tt doublevalue}
+
+\item[{\tt idba\_setcontextana(handle)}]
+  \label{fun-setcontextana}
+  Sets the date, time, level and time range in the input record to some magic
+  values, to signal that we are going to work with station attributes instead
+  of normal values.
 \end{description}
 
 You can read the output parameters using the {\tt idba\_enq*} functions:
@@ -395,10 +417,6 @@ functions:
   idba_seti(handle, "p1", p1)
   idba_seti(handle, "p2", p2)
   \end{verbatim}
-\item[{\tt idba\_setcontextana(handle)}]
-  sets the date, time, level and time range in the input record to some magic
-  values, to signal that we are going to work with station attributes instead
-  of normal values.
 \end{description}
 
 \section {API invariants}
