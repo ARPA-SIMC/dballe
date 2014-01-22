@@ -298,8 +298,8 @@ code:
 
 \begin{verbatim}
 c     A possible misunderstanding
-      call idba_seti(handle, "height", 1)
-      call idba_enqi(handle, "height", val)
+      ierr = idba_seti(handle, "height", 1)
+      ierr = idba_enqi(handle, "height", val)
 \end{verbatim}
 
 the value of {\tt val} after the {\tt idba\_enqi} will not probably be 1, and
@@ -313,9 +313,9 @@ To reset one input parameter you can use {\tt idba\_unset}:
 \begin{verbatim}
 c     ...
 c     We don't want to limit results by latitude this time
-      call idba_unset(handle, "latmin")
-      call idba_unset(handle, "latmax")
-      call idba_voglioquesto(handle, count)
+      ierr = idba_unset(handle, "latmin")
+      ierr = idba_unset(handle, "latmax")
+      ierr = idba_voglioquesto(handle, count)
 \end{verbatim}
 
 Alternatively, you can reset an input parameter by setting it to one of the
@@ -326,8 +326,8 @@ To reset all input parameters you can use {\tt idba\_unsetall}:
 
 \begin{verbatim}
 c     Restart the query from scratch
-      call idba_unsetall(handle)
-      call idba_setd(handle, "latmin", 10.D0)
+      ierr = idba_unsetall(handle)
+      ierr = idba_setd(handle, "latmin", 10.D0)
 c     ...
 \end{verbatim}
 
@@ -336,8 +336,8 @@ To reset only Bxxyyy variables you can use {\tt idba\_unsetb}:
 
 \begin{verbatim}
 c     Insert a new variable with the old station, level and so on
-      call idba_unsetb(handle)
-      call idba_setd(handle, "B12101", 21.5)
+      ierr = idba_unsetb(handle)
+      ierr = idba_setd(handle, "B12101", 21.5)
 c     ...
 \end{verbatim}
 
@@ -455,7 +455,7 @@ c       * the third parameter is a convenience arbitrary integer that will be
 c         passed to the function
 c       * the fourth parameter is used to return a handle that can be used to
 c         remove the callback
-      call idba_error_set_callback(0, error_handler, 42, cb_handle)
+      ierr = idba_error_set_callback(0, error_handler, 42, cb_handle)
 \end{verbatim}
 
 The previous code will setup DB-ALLe to call {\tt error\_handler} after any error,
@@ -464,7 +464,7 @@ calling {\tt idba\_error\_remove\_callback}:
  
 \begin{verbatim}
 c     How to remove a callback
-      call idba_error_remove_callback(cb_handle)
+      ierr = idba_error_remove_callback(cb_handle)
 \end{verbatim}
 
 This is a useful error handling function:
@@ -527,7 +527,7 @@ c     Declare the external function (not necessary if you include dballeff.h)
       external idba_default_error_handler
 
 c     Use it as the error handling callback
-      call idba_error_set_callback(0, idba_default_error_handler, 1, cb_handle)
+      ierr = idba_error_set_callback(0, idba_default_error_handler, 1, cb_handle)
 \end{verbatim}
 
 An alternative error handler called {\tt
@@ -544,7 +544,7 @@ c     Declare the external function (not necessary if you include dballeff.h)
       external idba_error_handler_tolerating_overflows
 
 c     Use it as the error handling callback
-      call idba_error_set_callback(0, idba_error_handler_tolerating_overflows, 1, cb_handle)
+      ierr = idba_error_set_callback(0, idba_error_handler_tolerating_overflows, 1, cb_handle)
 \end{verbatim}
 
 
@@ -580,13 +580,13 @@ This code will open a connection with \dballe{}, then it will start a session:
 
 \begin{verbatim}
 c     Connect to the database and get a handle to work with it
-      call idba_presentati(dbhandle, "dsn", "username", "password")
-      call idba_preparati(dbhandle, handle, "read", "read", "read")
+      ierr = idba_presentati(dbhandle, "dsn", "username", "password")
+      ierr = idba_preparati(dbhandle, handle, "read", "read", "read")
 
 c     ...do your work...
 
 c     End of the work
-      call idba_fatto(handle)
+      ierr = idba_fatto(handle)
       call idba_arrivederci(dbhandle)
 \end{verbatim}
 
@@ -646,12 +646,12 @@ To do that, use {\tt idba\_messaggi} instead of both {\tt idba\_presentati} and
 
 \begin{verbatim}
 c     Connect to the database and get a handle to work with it
-      call idba_messaggi(handle, "file.bufr", "r", "auto")
+      ierr = idba_messaggi(handle, "file.bufr", "r", "auto")
 
 c     ...do your work...
 
 c     End of the work
-      call idba_fatto(handle)
+      ierr = idba_fatto(handle)
 \end{verbatim}
 
 \label{fun-idba_messaggi}
@@ -682,19 +682,19 @@ is read with the functions {\tt idba\_enq*} (see \ref{basics-inout}):
 
 \begin{verbatim}
 c     Set the extremes of an area and retrieve all the stations in it
-      call idba_setd(handle, "latmin", 30.D0)
-      call idba_setd(handle, "latmax", 50.D0)
-      call idba_setd(handle, "lonmin", 10.D0)
-      call idba_setd(handle, "lonmax", 20.D0)
-      call idba_quantesono(handle, count)
+      ierr = idba_setd(handle, "latmin", 30.D0)
+      ierr = idba_setd(handle, "latmax", 50.D0)
+      ierr = idba_setd(handle, "lonmin", 10.D0)
+      ierr = idba_setd(handle, "lonmax", 20.D0)
+      ierr = idba_quantesono(handle, count)
    
 c     Get the informations about a station
       do while (count.gt.0)
-        call idba_elencamele(handle)
-        call idba_enqc(handle, "name", cname)
-        call idba_enqi(handle, "ana_id", id)
-        call idba_enqd(handle, "lat", lat)
-        call idba_enqd(handle, "lon", lon)
+        ierr = idba_elencamele(handle)
+        ierr = idba_enqc(handle, "name", cname)
+        ierr = idba_enqi(handle, "ana_id", id)
+        ierr = idba_enqd(handle, "lat", lat)
+        ierr = idba_enqd(handle, "lon", lon)
 c       ....
         count = count - 1
       enddo
@@ -709,19 +709,19 @@ The following example shows exactly what happens:
 
 \begin{verbatim}
 c     Set the latitude to 30.0 degrees
-      call idba_setr(handle, "lat", 30.0)
+      ierr = idba_setr(handle, "lat", 30.0)
 c     Set the latitude to 30.0 degrees
-      call idba_setd(handle, "lat", 30.0D0)
+      ierr = idba_setd(handle, "lat", 30.0D0)
 
 c     Set the latitude to 0.00030 degrees
-      call idba_seti(handle, "lat", 30)
+      ierr = idba_seti(handle, "lat", 30)
 c     Set the latitude to 30.0 degrees
-      call idba_seti(handle, "lat", 3000000)
+      ierr = idba_seti(handle, "lat", 3000000)
 
 c     Set the latitude to 0.00030 degrees
-      call idba_setc(handle, "lat", "30")
+      ierr = idba_setc(handle, "lat", "30")
 c     Set the latitude to 30.0 degrees
-      call idba_setc(handle, "lat", "3000000")
+      ierr = idba_setc(handle, "lat", "3000000")
 \end{verbatim}
 
 \subsection {Parameter names}
@@ -757,10 +757,10 @@ For example:
 
 \begin{verbatim}
 c     Set the speed of the wind (very useful in summer)
-      call idba_setr(handle, "B11002", 1.8)
+      ierr = idba_setr(handle, "B11002", 1.8)
 c     Also set the temperature
-      call idba_setr(handle, "B12001", 21.8)
-      call idba_prendilo(handle)
+      ierr = idba_setr(handle, "B12001", 21.8)
+      ierr = idba_prendilo(handle)
 \end{verbatim}
 
 
@@ -778,9 +778,9 @@ For example:
 \begin{verbatim}
 c     Set the confidence of the wind speed value we inserted
 c     in the last 'idba_prendilo'
-      call idba_setr(handle, "*B33007", 75.0)
-      call idba_setc(handle, "*var_related", "B11002")
-      call idba_critica(handle)
+      ierr = idba_setr(handle, "*B33007", 75.0)
+      ierr = idba_setc(handle, "*var_related", "B11002")
+      ierr = idba_critica(handle)
 \end{verbatim}
 
 \section {Querying the database}
@@ -798,17 +798,17 @@ Example code to query all the stations in a given area:
 \label{fun-idba_elencamele}
 
 \begin{verbatim}
-      call idba_setd(handle, "latmin", 30.D0)
-      call idba_setd(handle, "latmax", 50.D0)
-      call idba_setd(handle, "lonmin", 10.D0)
-      call idba_setd(handle, "lonmax", 20.D0)
-      call idba_quantesono(handle, count)
+      ierr = idba_setd(handle, "latmin", 30.D0)
+      ierr = idba_setd(handle, "latmax", 50.D0)
+      ierr = idba_setd(handle, "lonmin", 10.D0)
+      ierr = idba_setd(handle, "lonmax", 20.D0)
+      ierr = idba_quantesono(handle, count)
       do while (count.gt.0)
-        call idba_elencamele(handle)
-        call idba_enqi(handle, "ana_id", id)
+        ierr = idba_elencamele(handle)
+        ierr = idba_enqi(handle, "ana_id", id)
 c       Pseudoana values can be read as well:
-        call idba_enqc(handle, "name", cname)
-        call idba_enqd(handle, "B07001", height)
+        ierr = idba_enqc(handle, "name", cname)
+        ierr = idba_enqd(handle, "B07001", height)
 c       ...query more data and work with it...
         count = count - 1
       enddo
@@ -840,19 +840,19 @@ Example code to query all the values in a given area and time:
 \label{fun-idba_dammelo}
 
 \begin{verbatim}
-      call idba_seti(handle, "latmin", 30)
-      call idba_seti(handle, "latmax", 50)
-      call idba_seti(handle, "lonmin", 10)
-      call idba_seti(handle, "lonmax", 20)
-      call idba_seti(handle, "yearmin", 2004)
-      call idba_seti(handle, "yearmax", 2004)
-      call idba_voglioquesto(handle, count)
+      ierr = idba_seti(handle, "latmin", 30)
+      ierr = idba_seti(handle, "latmax", 50)
+      ierr = idba_seti(handle, "lonmin", 10)
+      ierr = idba_seti(handle, "lonmax", 20)
+      ierr = idba_seti(handle, "yearmin", 2004)
+      ierr = idba_seti(handle, "yearmax", 2004)
+      ierr = idba_voglioquesto(handle, count)
       do while (count.gt.0)
-        call idba_dammelo(handle, param)
+        ierr = idba_dammelo(handle, param)
 c       get the value of this variable
-        call idba_enqc(handle, param, cvalue)
-        call idba_enqd(handle, "lat", dlat)
-        call idba_enqd(handle, "lon", dlon)
+        ierr = idba_enqc(handle, param, cvalue)
+        ierr = idba_enqd(handle, "lat", dlat)
+        ierr = idba_enqd(handle, "lon", dlon)
 c       query more data and work with it
         count = count - 1
       enddo
@@ -875,7 +875,7 @@ You can initialise or reinitialise the database using {\tt idba\_scopa}:
 
 \begin{verbatim}
 c     Start the work with a clean database
-      call idba_scopa(handle, "repinfo.csv")
+      ierr = idba_scopa(handle, "repinfo.csv")
 \end{verbatim}
 
 {\tt idba\_scopa} clears the database if it exists, then recreates all the
@@ -921,16 +921,16 @@ Data is inserted using {\tt idba\_prendilo}:
          
 \begin{verbatim}
 c     Insert a new data in the database
-      call idba_setr(handle, "ana_id", 4)
-      call idba_setr(handle, "rep_memo", "synop")
-      call idba_setd(handle, "lat", 44.500D0)
-      call idba_setd(handle, "lon", 11.328D0)
-      call idba_setr(handle, "year", 2005)
-      call idba_setr(handle, "month", 7)
-      call idba_setr(handle, "day", 26)
+      ierr = idba_setr(handle, "ana_id", 4)
+      ierr = idba_setr(handle, "rep_memo", "synop")
+      ierr = idba_setd(handle, "lat", 44.500D0)
+      ierr = idba_setd(handle, "lon", 11.328D0)
+      ierr = idba_setr(handle, "year", 2005)
+      ierr = idba_setr(handle, "month", 7)
+      ierr = idba_setr(handle, "day", 26)
       ...
-      call idba_setr(handle, "B11002", 1.8)
-      call idba_prendilo(handle)
+      ierr = idba_setr(handle, "B11002", 1.8)
+      ierr = idba_prendilo(handle)
 \end{verbatim}
 
 This code introduces a new function:
@@ -979,9 +979,9 @@ Data is deleted using {\tt idba\_dimenticami}:
 
 \begin{verbatim}
 c     Delete all data from the station with id 4 in year 2002
-      call idba_seti(handle, "ana_id", 4)
-      call idba_seti(handle, "year", 2002)
-      call idba_dimenticami(handle)
+      ierr = idba_seti(handle, "ana_id", 4)
+      ierr = idba_seti(handle, "year", 2002)
+      ierr = idba_dimenticami(handle)
 \end{verbatim}
 
 This code introduces a new function:
@@ -1006,13 +1006,13 @@ Attributes are read using {\tt idba\_ancora}:
 c     ...setup a query...
       idba_voglioquesto(handle, count)
       do while (count.gt.0)
-        call idba_dammelo(handle, param)
+        ierr = idba_dammelo(handle, param)
 
 c       Read QC informations about the last value read
-        call idba_voglioancora(handle, qc_count)
+        ierr = idba_voglioancora(handle, qc_count)
         do while (qc_count.gt.0)
-            call idba_ancora(handle, param) 
-            call idba_enqc(handle, param, value)
+            ierr = idba_ancora(handle, param) 
+            ierr = idba_enqc(handle, param, value)
 c           ...process the value...
             qc_count = qc_count - 1
         enddo
@@ -1055,10 +1055,10 @@ c     some attributes: idba_setc(handle, "*varlist", "B33007,B33036")
 c     by default, all attributes are returned
 
 c     Read QC informations about the last value read
-      call idba_voglioancora(handle, qc_count)
+      ierr = idba_voglioancora(handle, qc_count)
       do while (qc_count.gt.0)
-          call idba_ancora(handle, param) 
-          call idba_enqc(handle, param, value)
+          ierr = idba_ancora(handle, param) 
+          ierr = idba_enqc(handle, param, value)
 c         ...process the value...
           qc_count = qc_count - 1
       enddo
@@ -1078,15 +1078,15 @@ last data retrieved:
 
 \begin{verbatim}
 c     ...setup a query...
-      call idba_voglioquesto(handle, count)
+      ierr = idba_voglioquesto(handle, count)
       do while (count.gt.0)
-        call idba_dammelo(handle, param)
+        ierr = idba_dammelo(handle, param)
 c       ...process data...
 
 c       Set the attributes
-        call idba_seti(handle, "*B33007", 75)
-        call idba_seti(handle, "*B33006", 42)
-        call idba_critica(handle)
+        ierr = idba_seti(handle, "*B33007", 75)
+        ierr = idba_seti(handle, "*B33006", 42)
+        ierr = idba_critica(handle)
 
         count = count - 1
       enddo
@@ -1098,17 +1098,17 @@ referring to:
 
 \begin{verbatim}
 c     Insert wind speed and temperature
-      call idba_setr(handle, "B11002", 1.8)
-      call idba_setr(handle, "B12001", 22)
-      call idba_prendilo(handle)
+      ierr = idba_setr(handle, "B11002", 1.8)
+      ierr = idba_setr(handle, "B12001", 22)
+      ierr = idba_prendilo(handle)
 
 c     Set the attributes
-      call idba_seti(handle, "*B33007", 75)
+      ierr = idba_seti(handle, "*B33007", 75)
 
 c     Use "*var_related" to indicate which of the two variables we are annotating
-      call idba_setc(handle, "*var_related", "B11002")
+      ierr = idba_setc(handle, "*var_related", "B11002")
 
-      call idba_critica(handle)
+      ierr = idba_critica(handle)
 \end{verbatim}
 
 
@@ -1117,12 +1117,12 @@ c     Use "*var_related" to indicate which of the two variables we are annotatin
 \begin{verbatim}
 c     ...perform a query with idba\_voglioquesto...
       do while (count.gt.0)
-        call idba_dammelo(handle, param)
+        ierr = idba_dammelo(handle, param)
 c       ...process data...
 
 c       This variable is interesting: save the context ID
 c       to refer to it later
-        call idba_enqi(handle, "context_id", saved_id)
+        ierr = idba_enqi(handle, "context_id", saved_id)
         
         count = count - 1
       enddo
@@ -1130,14 +1130,14 @@ c       to refer to it later
 c     ...some time later...
 
 c     Insert attributes about that interesting variable
-      call idba_seti(handle, "*B33007", 75)
-      call idba_seti(handle, "*B33006", 42)
+      ierr = idba_seti(handle, "*B33007", 75)
+      ierr = idba_seti(handle, "*B33006", 42)
       
 c     Select the variable using its context id
 c     and variable code
-      call idba_seti(handle, "*context_id", saved_id)
-      call idba_seti(handle, "*var_related", "B11001")
-      call idba_critica(handle)
+      ierr = idba_seti(handle, "*context_id", saved_id)
+      ierr = idba_seti(handle, "*var_related", "B11001")
+      ierr = idba_critica(handle)
 \end{verbatim}
 
 This code introduces a new function:
@@ -1177,12 +1177,12 @@ c     Delete the confidence interval from the wind speed
 
 c     The referring variable is identified in the same way as with
 c     idba_critica:
-      call idba_seti(handle, "*context_id", saved_id)
-      call idba_seti(handle, "*var_related", "B11002")
+      ierr = idba_seti(handle, "*context_id", saved_id)
+      ierr = idba_seti(handle, "*var_related", "B11002")
 
 c     The attributes to delete are selected by setting "*varlist":
-      call idba_setc(handle, "*varlist", "*B33007")
-      call idba_scusa(handle)
+      ierr = idba_setc(handle, "*varlist", "*B33007")
+      ierr = idba_scusa(handle)
 \end{verbatim}
 
 This code introduces a new function:
@@ -1207,7 +1207,7 @@ When you are finished working with a handle, you can release it with {\tt idba\_
 
 \begin{verbatim}
 c     We are finished with this handle
-      call idba_fatto(handle)
+      ierr = idba_fatto(handle)
 \end{verbatim}
 
 When you are finished working with DB-ALLe, you can ask it to close all
@@ -1296,13 +1296,13 @@ parameter.  The available options are:
   output parameters to undefined when there is no more data to read.  One could
   thus use a loop like this:
   \begin{verbatim}
-      call idba_setc (handle, "query", "stream")
+      ierr = idba_setc (handle, "query", "stream")
 c     Make the query
-      call idba_voglioquesto (handle, N)
+      ierr = idba_voglioquesto (handle, N)
 c     Iterate the results.  Ignore N because it is
 c     meaningless when using query=stream
       do
-        call idba_dammelo (handle, varname)
+        ierr = idba_dammelo (handle, varname)
 c       If ana_id is missing value, then we are done
         idba_enqi(handle, "ana_id", value)
         if (value .eq. 2147483647) exit
@@ -1363,67 +1363,67 @@ databases:
 \section{Insert station data, then insert data}
 
 \begin{verbatim}
-      call idba_preparati(dbhandle, handle, "write", "add", "write")
+      ierr = idba_preparati(dbhandle, handle, "write", "add", "write")
       
 c     Insert data about a station
-      call idba_setr (handle, "lat", 11.345)
-      call idba_setr (handle, "lon", 44.678)
-      call idba_setr (handle, "height", 23)
-      call idba_prendilo (handle)
+      ierr = idba_setr (handle, "lat", 11.345)
+      ierr = idba_setr (handle, "lon", 44.678)
+      ierr = idba_setr (handle, "height", 23)
+      ierr = idba_prendilo (handle)
 
 c     Read the station ID for the station we just inserted
 c     Use *ana_id instead of ana_id after an idba_prendilo
-      call idba_enqi (handle, "*ana_id", anaid)
+      ierr = idba_enqi (handle, "*ana_id", anaid)
 
 c     Reset the input data
-      call idba_unsetall (handle)
+      ierr = idba_unsetall (handle)
 
 c     Add data to the station we just inserted
-      call idba_seti (handle, "ana_id", anaid)
-      call idba_setlevel (handle, 100, 1, 0, 0)
-      call idba_settimerange (handle, 0, 0, 0)
-      call idba_setdate (handle, 2006, 06, 20, 19, 30, 0)
-      call idba_seti (handle, "t", 21)
-      call idba_setc (handle, "B12345", "ciao")
-      call idba_prendilo (handle)
+      ierr = idba_seti (handle, "ana_id", anaid)
+      ierr = idba_setlevel (handle, 100, 1, 0, 0)
+      ierr = idba_settimerange (handle, 0, 0, 0)
+      ierr = idba_setdate (handle, 2006, 06, 20, 19, 30, 0)
+      ierr = idba_seti (handle, "t", 21)
+      ierr = idba_setc (handle, "B12345", "ciao")
+      ierr = idba_prendilo (handle)
 \end{verbatim}
 
 
 \section{Query data, then query station data}
 
 \begin{verbatim}
-      call idba_preparati(dbhandle, handle, "read", "read", "read")
-      call idba_preparati(dbhandle, handleana, "read", "read", "read")
+      ierr = idba_preparati(dbhandle, handle, "read", "read", "read")
+      ierr = idba_preparati(dbhandle, handleana, "read", "read", "read")
       
 c     Prepare a query
-      call idba_setd (handle, "latmin", 10)
+      ierr = idba_setd (handle, "latmin", 10)
       ...
-      call idba_setd (handle, "lonmax", 60)
+      ierr = idba_setd (handle, "lonmax", 60)
 
 c     Make the query
-      call idba_voglioquesto (handle, N)
+      ierr = idba_voglioquesto (handle, N)
 
 c     Iterate the results
       do i=1,N
-        call idba_dammelo (handle, varname)
+        ierr = idba_dammelo (handle, varname)
 
 c       Read data about the variable we just had
-        call idba_enqlevel (handle, ltype, l1, l2)
+        ierr = idba_enqlevel (handle, ltype, l1, l2)
 
 c       Read pseudoana data about the variable we just had
 c       Setup a query for the station with 'quantesono'
-        call idba_enqi (handle, "ana_id", anaid)
-        call idba_seti (handleana, "ana_id", anaid)
+        ierr = idba_enqi (handle, "ana_id", anaid)
+        ierr = idba_seti (handleana, "ana_id", anaid)
 
 c       Query.  Nstaz should always be 1 because we query a specific station
-        call idba_quantesono (handleana, Nstaz)
+        ierr = idba_quantesono (handleana, Nstaz)
 
 c       Fetch the data
-        call idba_elencamele (handleana)
+        ierr = idba_elencamele (handleana)
 
 c       Read the data about the station
 c       All the data inserted with setcontextana is available here
-        call idba_enqi (handleana, "height", height)
+        ierr = idba_enqi (handleana, "height", height)
       enddo
 \end{verbatim}
 
@@ -1432,7 +1432,7 @@ c       All the data inserted with setcontextana is available here
 \label{ch-trouble}
 
 \begin{description}
-\item [ {\tt call idba\_setc (handle, "query", "stream")} does not make any difference ]
+\item [ {\tt ierr = idba\_setc (handle, "query", "stream")} does not make any difference ]
   Because of a quirk of the MySQL ODBC driver, you may need to add a special
   configuration option to the MySQL driver.
   
@@ -1454,13 +1454,13 @@ c       All the data inserted with setcontextana is available here
         them among the results of {\tt idba\_elencamele}:
 	\begin{verbatim}
 c     Query station data
-      call idba_quantesono(handle, count)
+      ierr = idba_quantesono(handle, count)
    
 c     Get the informations about a station
       do i=1,count
-        call idba_elencamele(handle)
-        call idba_enqc(handle, "name", cname)
-        call idba_enqi(handle, "B02001", type)
+        ierr = idba_elencamele(handle)
+        ierr = idba_enqc(handle, "name", cname)
+        ierr = idba_enqi(handle, "B02001", type)
 c       ....
       enddo
 	\end{verbatim}
@@ -1468,12 +1468,12 @@ c       ....
 	an explicit query for the extra station data using {\tt
 	idba\_voglioquesto} and {\tt idba\_dammelo}
 	\begin{verbatim}
-      call idba_seti("ana_id", id)
-      call idba_voglioquesto(handle, count)
+      ierr = idba_seti("ana_id", id)
+      ierr = idba_voglioquesto(handle, count)
       do i=1,count
-        call idba_dammelo(handle, param)
+        ierr = idba_dammelo(handle, param)
 c       get the value of this variable
-        call idba_enqc(handle, param, cvalue)
+        ierr = idba_enqc(handle, param, cvalue)
         print*,param,": ",cvalue
       enddo
 	\end{verbatim}
@@ -1586,7 +1586,7 @@ Specifying DSN, user and password:
 
 \begin{description}
 \item[in Fortran]
-  {\tt call idba\_presentati(dbhandle, "dsn", "username", "password")}
+  {\tt ierr = idba\_presentati(dbhandle, "dsn", "username", "password")}
 \item[with dbadb]
   {\tt dbadb \-\-dsn=dsn \-\-user=username \-\-pass=password}
 \item[with provami]
@@ -1597,7 +1597,7 @@ Via URL:
 
 \begin{description}
 \item[in Fortran]
-  {\tt call idba\_presentati(dbhandle, "odbc://username:password@dsn", DBA\_MVC, DBA\_MVC)}
+  {\tt ierr = idba\_presentati(dbhandle, "odbc://username:password@dsn", DBA\_MVC, DBA\_MVC)}
 \item[with dbadb]
   {\tt dbadb \-\-dsn="odbc://username:password@dsn" \dots}
 \item[with provami]
@@ -1613,7 +1613,7 @@ export DBA_DB="odbc://username:password@dsn"
 
 \begin{description}
 \item[in Fortran]
-  {\tt call idba\_presentati(dbhandle, DBA\_MVC, DBA\_MVC, DBA\_MVC)}
+  {\tt ierr = idba\_presentati(dbhandle, DBA\_MVC, DBA\_MVC, DBA\_MVC)}
 \item[with dbadb]
   {\tt dbadb \dots}
 \item[with provami]
@@ -1639,7 +1639,7 @@ Via URL:
 
 \begin{description}
 \item[in Fortran]
-  {\tt call idba\_presentati(dbhandle, "sqlite:file.sqlite", DBA\_MVC, DBA\_MVC)}
+  {\tt ierr = idba\_presentati(dbhandle, "sqlite:file.sqlite", DBA\_MVC, DBA\_MVC)}
 \item[with dbadb]
   {\tt dbadb \-\-dsn="sqlite:file.sqlite" \dots}
 \item[with provami]
@@ -1655,7 +1655,7 @@ export DBA_DB="sqlite:file.sqlite"
 
 \begin{description}
 \item[in Fortran]
-  {\tt call idba\_presentati(dbhandle, DBA\_MVC, DBA\_MVC, DBA\_MVC)}
+  {\tt ierr = idba\_presentati(dbhandle, DBA\_MVC, DBA\_MVC, DBA\_MVC)}
 \item[with dbadb]
   {\tt dbadb \dots}
 \item[with provami]
