@@ -523,7 +523,7 @@ convenience function {\tt idba\_default\_error\_handler}:
 \label{fun-error-handler}
 
 \begin{verbatim}
-c     Declare the external function (not necessary if you include dballef.h)
+c     Declare the external function (not necessary if you include dballeff.h)
       external idba_default_error_handler
 
 c     Use it as the error handling callback
@@ -540,7 +540,7 @@ function that causes the error.
 This is how to use it:
 
 \begin{verbatim}
-c     Declare the external function (not necessary if you include dballef.h)
+c     Declare the external function (not necessary if you include dballeff.h)
       external idba_error_handler_tolerating_overflows
 
 c     Use it as the error handling callback
@@ -560,7 +560,7 @@ To make use of the interface file, just include it at the beginning of your
 program:
 
 \begin{verbatim}
-      include "dballe/dballef.h"
+      include "dballe/dballeff.h"
 \end{verbatim}
 
 The Fortran 90 interface also allows to replace all the functions {\tt
