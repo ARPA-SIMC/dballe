@@ -17,10 +17,10 @@ doc_DATA =
 noinst_DATA =
 
 if DO_DOCS
-doc_DATA += libdballe.doxytags guide.ps
+doc_DATA += libdballe.doxytags guide.pdf
 noinst_DATA += c_api/index.html
 if DO_DBALLEF
-doc_DATA += fapi.ps libdballef.doxytags
+doc_DATA += fapi.pdf libdballef.doxytags
 noinst_DATA += fortran_api/index.html
 endif
 if HAVE_LATEX2HTML
@@ -76,8 +76,8 @@ guide_html/index.html: $(guidesources)
 %.ps: %.dvi
 	TEXINPUTS="$(TEXINPUTS):" dvips $< -o
 
-%.pdf: %.ps
-	ps2pdf $<
+%.pdf: %.tex
+	pdflatex $<
 
 %.aux: %.tex
 	TEXINPUTS="$(TEXINPUTS):" latex $<
