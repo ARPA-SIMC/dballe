@@ -64,10 +64,10 @@ libdballef.doxytags fortran_api/index.html: $(fortrandoxdeps)
 	doxygen $<
 
 fapi_html/index.html: $(fapisources)
-	$(LATEX2HTML) -dir fapi_html -mkdir $<
+	$(LATEX2HTML) -dir fapi_html -split 1 -mkdir $<
 
 guide_html/index.html: $(guidesources)
-	$(LATEX2HTML) -dir guide_html -mkdir $<
+	$(LATEX2HTML) -dir guide_html -split 1 -mkdir $<
 
 #fapi-quick.html: fapi-quick.rst ../dballe/core/dba_record_keyword.rst
 #fapi-quick.html: fapi-quick.rst
