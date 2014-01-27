@@ -1,7 +1,7 @@
 *.idx
 *.dvi
 *.log
-*.ps
+*.pdf
 *.toc
 *.aux
 *.blg
