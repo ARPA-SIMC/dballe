@@ -219,8 +219,8 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 %{python_sitelib}/provami/*
 %doc %{_mandir}/man1/provami*
-/usr/share/dballe/icon*.png
-/usr/share/dballe/world.dat
+%{_datadir}/dballe/icon*.png
+%{_datadir}/dballe/world.dat
 
 %files common
 %defattr(-,root,root,-)
@@ -231,7 +231,6 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %files -n libdballe6
 %defattr(-,root,root,-)
 %{_libdir}/libdballe.so.*
-#%{_libdir}/libdballe[0-9]*.so.*
 
 %files -n libdballe-devel
 %defattr(-,root,root,-)
@@ -246,9 +245,8 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %{_libdir}/libdballe.a
 %{_libdir}/libdballe.la
 %{_libdir}/libdballe.so
-#%{_libdir}/libdballe[0-9]*.so
 %{_libdir}/pkgconfig/libdballe.pc
-/usr/share/aclocal/libdballe.m4
+%{_datadir}/aclocal/libdballe.m4
 
 
 %files -n libdballef-devel
@@ -263,7 +261,7 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %{_libdir}/pkgconfig/libdballef*
 %{_libdir}/libdballef*.la
 %{_libdir}/libdballef*.so
-/usr/share/aclocal/libdballef*.m4
+%{_datadir}/aclocal/libdballef*.m4
 
 
 
