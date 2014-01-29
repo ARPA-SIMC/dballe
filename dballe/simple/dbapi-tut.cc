@@ -154,6 +154,10 @@ template<> template<> void to::test<3>()
     api.setc("*var_related", "B12101");
     ensure_equals(api.voglioancora(), 1);
     ensure_equals(api.enqi("*B33007"), 50);
+
+    // Delete all attributes
+    api.scusa();
+    ensure_equals(api.voglioancora(), 0);
 }
 
 // Test attrs prendilo
