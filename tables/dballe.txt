@@ -122,6 +122,7 @@
  011039 EXTENDED TIME OF OCCURRENCE OF PEAK  EDDY DISSIPATION RATE       CODE TABLE 11039           0            0   6 CODE TABLE 11039          0          2
  011041 MAXIMUM WIND GUST SPEED                                          M/S                        1            0  12 M/S                       1          4
  011043 MAXIMUM WIND GUST DIRECTION                                      DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
+ 011050 STANDARD DEVIATION OF HORIZONTAL WIND SPEED                      M/S                        1            0  12 M/S                       1          4
  011061 ABSOLUTE WIND SHEAR IN 1 KM LAYER BELOW                          M/S                        1            0  12 M/S                       1          4
  011062 ABSOLUTE WIND SHEAR IN 1 KM LAYER ABOVE                          M/S                        1            0  12 M/S                       1          4
  011075 MEAN TURBULENCE INTENSITY (EDDY DISSIPATION RATE)                M**(2/3)/S                 2            0   8 M**(2/3)/S                2          3
