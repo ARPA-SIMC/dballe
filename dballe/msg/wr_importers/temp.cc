@@ -358,10 +358,14 @@ void TempImporter::import_group(unsigned start, unsigned length)
         {
             // Height level
             case WR_VAR(0, 7, 2):
-            case WR_VAR(0, 7, 7):
             case WR_VAR(0, 7, 9): // Geopotential height, for pilots (FIXME: above ground or above msl?)
                 if (var.isset())
                     lev = Level(102, var.enqd());
+                break;
+            // Height level converted in mm
+            case WR_VAR(0, 7, 7):
+                if (var.isset())
+                    lev = Level(102, var.enqd() * 1000);
                 break;
             // Pressure level
             case WR_VAR(0, 7, 4):

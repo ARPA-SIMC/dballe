@@ -432,7 +432,7 @@ struct TempRadar : public TempBase
             if (const Var* var = c->find(WR_VAR(0, 7, 7)))
                 add(WR_VAR(0, 7, 7), var);
             else
-                subset.store_variable_d(WR_VAR(0, 7, 7), (double)c->level.l1);
+                subset.store_variable_d(WR_VAR(0, 7, 7), c->level.l1/1000.0);
             add(WR_VAR(0, 11,   1), c);
             static const Varcode codes[] = { WR_VAR(0, 11,   2), WR_VAR(0, 11,   6) };
             for (unsigned i = 0; i < 2; ++i)
