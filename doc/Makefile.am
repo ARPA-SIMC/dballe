@@ -77,7 +77,7 @@ guide_html/index.html: $(guidesources)
 	TEXINPUTS="$(TEXINPUTS):" dvips $< -o
 
 %.pdf: %.tex
-	pdflatex $<
+	pdflatex --shell-escape $<
 
 %.aux: %.tex
 	TEXINPUTS="$(TEXINPUTS):" latex $<
