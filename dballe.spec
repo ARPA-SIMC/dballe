@@ -1,7 +1,7 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
 Version: 6.6
-Release: 4218%{dist}
+Release: 4234%{dist}
 License: GPL
 Group: Applications/Meteo
 URL: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
@@ -207,7 +207,7 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %doc %{_mandir}/man1/dbadb*
 %doc %{_mandir}/man1/dbamsg*
 %doc %{_mandir}/man1/dbatbl*
-%doc %{_docdir}/dballe/guide.ps
+%doc %{_docdir}/dballe/guide.pdf
 %doc %{_docdir}/dballe/guide_html/*
 %doc %{_docdir}/dballe/fortran_api/*
 %doc %{_docdir}/dballe/libdballef.doxytags
@@ -253,7 +253,7 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %defattr(-,root,root,-)
 
 %doc %{_docdir}/dballe/fapi_html
-%doc %{_docdir}/dballe/fapi.ps
+%doc %{_docdir}/dballe/fapi.pdf
 
 %{_includedir}/dballe/dballef.h
 %{_includedir}/dballe/dballeff.h
@@ -297,6 +297,9 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 
 %changelog
+* Wed Feb  5 2014 Daniele Branchini <dbranchini@arpa.emr.it> - 6.6-4233%{dist}
+- fixed conversion B07007 (M) <-> B07193 (mm).
+
 * Wed Nov 13 2013 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 6.6-4105%{dist}
 - Requires libwreport v2.10
 
