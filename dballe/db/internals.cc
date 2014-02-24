@@ -437,8 +437,10 @@ void Connection::set_setting(const std::string& key, const std::string& value)
         stm.prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
     else
         stm.prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
-    stm.bind_in(1, key.data(), key.size());
-    stm.bind_in(2, value.data(), value.size());
+    SQLLEN key_size = key.size();
+    SQLLEN value_size = value.size();
+    stm.bind_in(1, key.data(), key_size);
+    stm.bind_in(2, value.data(), value_size);
     stm.execute_and_close();
 }
 
