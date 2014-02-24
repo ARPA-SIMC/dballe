@@ -113,7 +113,7 @@ template<> template<> void to::test<2>()
         db->insert(insert, false, false);
         ensure(false);
     } catch (wreport::error& e) {
-        wassert(actual(e.what()).matches("([Dd]uplicate|not unique|cannot replace an existing value)"));
+        wassert(actual(e.what()).matches("([Dd]uplicate|not unique|cannot replace an existing value|UNIQUE constraint failed:)"));
     }
 }
 
@@ -133,7 +133,7 @@ template<> template<> void to::test<3>()
         db->insert(insert, false, true);
         ensure(false);
     } catch (wreport::error& e) {
-        wassert(actual(e.what()).matches("([Dd]uplicate|not unique|cannot replace an existing value)"));
+        wassert(actual(e.what()).matches("([Dd]uplicate|not unique|cannot replace an existing value|UNIQUE constraint failed:)"));
     }
 }
 
