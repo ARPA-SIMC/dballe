@@ -200,6 +200,7 @@
  013227 [SIM] Soil volumetric water content                              %                          1            0  10 %                         1          4
  013228 [SIM] Piezometric level                                          M                          3            0  18 M                         3          6
  013229 [SIM] Density of snow                                            KG/M**3                    1            0  14 KG/M**3                   1          5
+ 013230 [SIM] Convective Available Potential Energy (CAPE)               J/KG                       1            0  17 J/KG                      1          5
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
  014017 INSTANTANEOUS LONG-WAVE RADIATION (incoming)                     W/M**2                     0        -2048  12 W/M**2                    0          4
  014018 INSTANTANEOUS SHORT-WAVE RADIATION (incoming)                    W/M**2                     0        -2048  12 W/M**2                   -3          4
