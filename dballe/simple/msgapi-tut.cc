@@ -124,6 +124,20 @@ void to::test<2>()
     }
 }
 
+template<> template<>
+void to::test<3>()
+{
+    // Try reading a file
+    std::string fname = tests::datafile("bufr/dbapi-emptymsg.bufr");
+    fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
+
+    ensure_equals(api.voglioquesto(), 107);
+    // FIXME: this is indistinguishable from an EOF
+    ensure_equals(api.voglioquesto(), 0);
+    ensure_equals(api.voglioquesto(), 98);
+    ensure_equals(api.voglioquesto(), 0);
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

@@ -241,6 +241,52 @@ template<> template<> void to::test<6>()
     wassert(actual(api.enqi("p2")) == fortran::DbAPI::missing_int);
 }
 
+// Test deleting attributes after a dammelo
+template<> template<> void to::test<7>()
+{
+    fortran::DbAPI api(*db, "write", "write", "write");
+    populate_variables(api);
+
+    // Query all variables and add attributes
+    api.unsetall();
+    wassert(actual(api.voglioquesto()) == 2);
+    wassert(actual(api.dammelo()) == "B12101");
+    api.seti("*B33007", 50);
+    api.critica();
+    wassert(actual(api.dammelo()) == "B11002");
+    api.seti("*B33007", 60);
+    api.critica();
+
+    // Query all variables again and check that attributes are there
+    api.unsetall();
+    wassert(actual(api.voglioquesto()) == 2);
+    wassert(actual(api.dammelo()) == "B12101");
+    wassert(actual(api.voglioancora()) == 1);
+    wassert(actual(api.enqi("*B33007")) == 50);
+    wassert(actual(api.dammelo()) == "B11002");
+    wassert(actual(api.voglioancora()) == 1);
+    wassert(actual(api.enqi("*B33007")) == 60);
+
+    // Query all variables and delete all attributes
+    api.unsetall();
+    wassert(actual(api.voglioquesto()) == 2);
+    wassert(actual(api.dammelo()) == "B12101");
+    api.scusa();
+    wassert(actual(api.dammelo()) == "B11002");
+    api.scusa();
+
+    // Query again and check that the attributes are gone
+    api.unsetall();
+    wassert(actual(api.voglioquesto()) == 2);
+    wassert(actual(api.dammelo()) == "B12101");
+    wassert(actual(api.voglioancora()) == 0);
+    wassert(actual(api.dammelo()) == "B11002");
+    wassert(actual(api.voglioancora()) == 0);
+
+    // The QC attrs record should be cleaned
+    wassert(actual(api.enqi("*B33007")) == MISSING_INT);
+}
+
 }
 
 namespace {
