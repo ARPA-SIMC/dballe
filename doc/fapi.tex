@@ -660,7 +660,8 @@ c     End of the work
 
 \begin{enumerate}
 \item the name of the file to open
-\item the open mode ("r" for read, "w" for write or create)
+\item the open mode ("r" for read, "w" for write or create, "a" for append).
+      See the documentation of libc's {\tt fopen} for more details.
 \item the file format.  It can be "BUFR", "CREX", "AOF" or "AUTO".  "AUTO"
       tells \dballe{} to autodetect the file format, but it only works when
       reading files, not when writing new one.
