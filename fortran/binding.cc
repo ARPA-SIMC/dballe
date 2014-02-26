@@ -207,61 +207,51 @@ struct HSimpleTraceLogger
 
     void log(const char* call)
     {
-        if (!trace) return;
         fprintf(trace, "%s:%d:%s\n", trace_tag.c_str(), trace_handle, call);
     }
 
     void log_set(const char* parm, int val)
     {
-        if (!trace) return;
         fprintf(trace, "%s:%d:seti %s %d\n", trace_tag.c_str(), trace_handle, parm, val);
     }
 
     void log_set(const char* parm, double val)
     {
-        if (!trace) return;
         fprintf(trace, "%s:%d:setd %s %f\n", trace_tag.c_str(), trace_handle, parm, val);
     }
 
     void log_set(const char* parm, const char* val)
     {
-        if (!trace) return;
         fprintf(trace, "%s:%d:setc %s %s\n", trace_tag.c_str(), trace_handle, parm, val);
     }
 
     void log_setlevel(int ltype1, int l1, int ltype2, int l2)
     {
-        if (!trace) return;
         fprintf(trace, "%s:%d:setlevel %d,%d %d,%d\n", trace_tag.c_str(), trace_handle, ltype1, l1, ltype2, l2);
     }
 
     void log_settimerange(int pind, int p1, int p2)
     {
-        if (!trace) return;
         fprintf(trace, "%s:%d:settimerange %d,%d,%d\n", trace_tag.c_str(), trace_handle, pind, p1, p2);
     }
 
-    void log_setdate(int y, int m, int d, int ho, int mi, int se)
+    void log_setdate(int y, int m, int d, int ho, int mi, int se, const char* what="")
     {
-        if (!trace) return;
-        fprintf(trace, "%s:%d:setdate %04d-%02d-%02d %02d:%02d:%02d\n", trace_tag.c_str(), trace_handle, y, m, d, ho, mi, se);
+        fprintf(trace, "%s:%d:setdate%s %04d-%02d-%02d %02d:%02d:%02d\n", trace_tag.c_str(), trace_handle, what, y, m, d, ho, mi, se);
     }
 
     void log_unset(const char* parm)
     {
-        if (!trace) return;
         fprintf(trace, "%s:%d:unset %s\n", trace_tag.c_str(), trace_handle, parm);
     }
 
     void log_scopa(const char* fname)
     {
-        if (!trace) return;
         fprintf(trace, "%s:%d:scopa '%s'\n", trace_tag.c_str(), trace_handle, fname);
     }
 
     void log_fatto()
     {
-        if (!trace) return;
         fprintf(trace, "%s:%d:fatto\n", trace_tag.c_str(), trace_handle);
     }
 };
@@ -615,7 +605,7 @@ F77_INTEGER_FUNCTION(idba_fatto)(INTEGER(handle))
 
     try {
         HSimple& h = hsimp.get(*handle);
-        h.trace.log_fatto();
+        if (trace_file) h.trace.log_fatto();
 		hsimp.release(*handle);
 		return fortran::success();
 	} catch (error& e) {
@@ -646,7 +636,7 @@ F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(r
 
 	try {
 		HSimple& h = hsimp.get(*handle);
-        h.trace.log_scopa(fname);
+        if (trace_file) h.trace.log_scopa(fname);
 		if (fname[0] == 0)
 			h.api->scopa(0);
 		else
@@ -903,12 +893,12 @@ F77_INTEGER_FUNCTION(idba_seti)(
 		if (*value == MISSING_INT)
 		{
 			TRACEMISSING("int");
-            h.trace.log_unset(parm);
+            if (trace_file) h.trace.log_unset(parm);
 			h.api->unset(parm);
 		}
 		else
         {
-            h.trace.log_set(parm, *value);
+            if (trace_file) h.trace.log_set(parm, *value);
 			h.api->seti(parm, *value);
         }
 		return fortran::success();
@@ -949,12 +939,12 @@ F77_INTEGER_FUNCTION(idba_setb)(
 		if (*value == MISSING_BYTE)
 		{
 			TRACEMISSING("byte");
-            h.trace.log_unset(parm);
+            if (trace_file) h.trace.log_unset(parm);
 			h.api->unset(parm);
 		}
 		else
         {
-            h.trace.log_set(parm, *value);
+            if (trace_file) h.trace.log_set(parm, *value);
 			h.api->setb(parm, *value);
         }
 		return fortran::success();
@@ -996,12 +986,12 @@ F77_INTEGER_FUNCTION(idba_setr)(
 		if (*value == MISSING_REAL)
 		{
 			TRACEMISSING("real");
-            h.trace.log_unset(parm);
+            if (trace_file) h.trace.log_unset(parm);
 			h.api->unset(parm);
 		}
 		else
         {
-            h.trace.log_set(parm, *value);
+            if (trace_file) h.trace.log_set(parm, *value);
 			h.api->setr(parm, *value);
         }
 		return fortran::success();
@@ -1042,12 +1032,12 @@ F77_INTEGER_FUNCTION(idba_setd)(
 		if (*value == MISSING_DOUBLE)
 		{
 			TRACEMISSING("double");
-            h.trace.log_unset(parm);
+            if (trace_file) h.trace.log_unset(parm);
 			h.api->unset(parm);
 		}
 		else
         {
-            h.trace.log_set(parm, *value);
+            if (trace_file) h.trace.log_set(parm, *value);
 			h.api->setd(parm, *value);
         }
 		return fortran::success();
@@ -1091,12 +1081,12 @@ F77_INTEGER_FUNCTION(idba_setc)(
 		if (val[0] == 0)
 		{
 			TRACEMISSING("char");
-            h.trace.log_unset(parm);
+            if (trace_file) h.trace.log_unset(parm);
 			h.api->unset(parm);
 		}
 		else
         {
-            h.trace.log_set(parm, val);
+            if (trace_file) h.trace.log_set(parm, val);
 			h.api->setc(parm, val);
         }
 
@@ -1120,7 +1110,7 @@ F77_INTEGER_FUNCTION(idba_setcontextana)(
 	GENPTR_INTEGER(handle)
 	try {
 		HSimple& h = hsimp.get(*handle);
-		h.trace.log("setcontextana");
+		if (trace_file) h.trace.log("setcontextana");
 		h.api->setcontextana();
 
 		return fortran::success();
@@ -1195,7 +1185,7 @@ F77_INTEGER_FUNCTION(idba_setlevel)(
 	GENPTR_INTEGER(l2)
 	try {
 		HSimple& h = hsimp.get(*handle);
-        h.trace.log_setlevel(
+        if (trace_file) h.trace.log_setlevel(
                 fromfortran(*ltype1), fromfortran(*l1),
                 fromfortran(*ltype2), fromfortran(*l2));
 		h.api->setlevel(
@@ -1269,7 +1259,7 @@ F77_INTEGER_FUNCTION(idba_settimerange)(
 	GENPTR_INTEGER(p2)
 	try {
 		HSimple& h = hsimp.get(*handle);
-        h.trace.log_settimerange(fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2));
+        if (trace_file) h.trace.log_settimerange(fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2));
 		h.api->settimerange(
 			fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2));
 
@@ -1365,7 +1355,7 @@ F77_INTEGER_FUNCTION(idba_setdate)(
 	GENPTR_INTEGER(sec)
 	try {
 		HSimple& h = hsimp.get(*handle);
-        h.trace.log_setdate(
+        if (trace_file) h.trace.log_setdate(
                 fromfortran(*year), fromfortran(*month), fromfortran(*day),
                 fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
 
@@ -1417,7 +1407,9 @@ F77_INTEGER_FUNCTION(idba_setdatemin)(
 	GENPTR_INTEGER(sec)
 	try {
 		HSimple& h = hsimp.get(*handle);
-		h.trace.log("setdatemin");
+        if (trace_file) h.trace.log_setdate(
+                fromfortran(*year), fromfortran(*month), fromfortran(*day),
+                fromfortran(*hour), fromfortran(*min), fromfortran(*sec), "min");
 		h.api->setdatemin(
 			fromfortran(*year), fromfortran(*month), fromfortran(*day),
 			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
@@ -1466,7 +1458,9 @@ F77_INTEGER_FUNCTION(idba_setdatemax)(
 	GENPTR_INTEGER(sec)
 	try {
 		HSimple& h = hsimp.get(*handle);
-		h.trace.log("setdatemax");
+        if (trace_file) h.trace.log_setdate(
+                fromfortran(*year), fromfortran(*month), fromfortran(*day),
+                fromfortran(*hour), fromfortran(*min), fromfortran(*sec), "max");
 		h.api->setdatemax(
 			fromfortran(*year), fromfortran(*month), fromfortran(*day),
 			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
@@ -1505,7 +1499,7 @@ F77_INTEGER_FUNCTION(idba_unset)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
-        h.trace.log_unset(parm);
+        if (trace_file) h.trace.log_unset(parm);
 		h.api->unset(parm);
 
 		return fortran::success();
@@ -1527,7 +1521,7 @@ F77_INTEGER_FUNCTION(idba_unsetb)(
 
     try {
         HSimple& h = hsimp.get(*handle);
-        h.trace.log("unsetb");
+        if (trace_file) h.trace.log("unsetb");
         h.api->unsetb();
         return fortran::success();
     } catch (error& e) {
@@ -1548,7 +1542,7 @@ F77_INTEGER_FUNCTION(idba_unsetall)(
 
     try {
         HSimple& h = hsimp.get(*handle);
-        h.trace.log("unsetall");
+        if (trace_file) h.trace.log("unsetall");
         h.api->unsetall();
     } catch (error& e) {
         return fortran::error(e);
@@ -1577,7 +1571,7 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
-		h.trace.log("quantesono");
+		if (trace_file) h.trace.log("quantesono");
 		*count = h.api->quantesono();
 
 		return fortran::success();
@@ -1604,7 +1598,7 @@ F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 
 	try {
 		HSimple& h = hsimp.get(*handle);
-		h.trace.log("elencamele");
+		if (trace_file) h.trace.log("elencamele");
 		h.api->elencamele();
 
 		return fortran::success();
@@ -1634,7 +1628,7 @@ F77_INTEGER_FUNCTION(idba_voglioquesto)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
-		h.trace.log("voglioquesto");
+		if (trace_file) h.trace.log("voglioquesto");
 		*count = h.api->voglioquesto();
 
 		return fortran::success();
@@ -1666,7 +1660,7 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
-		h.trace.log("dammelo");
+		if (trace_file) h.trace.log("dammelo");
 		const char* res = h.api->dammelo();
 		if (!res)
 			cnfExprt("", parameter, parameter_length);
@@ -1704,7 +1698,7 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
 	try {
 		HSimple& h = hsimp.get(*handle);
 		h.api->prendilo();
-        h.trace.log("prendilo");
+        if (trace_file) h.trace.log("prendilo");
 
 		return fortran::success();
 	} catch (error& e) {
@@ -1729,7 +1723,7 @@ F77_INTEGER_FUNCTION(idba_dimenticami)(
 	try {
 		HSimple& h = hsimp.get(*handle);
 		h.api->dimenticami();
-        h.trace.log("dimenticami");
+        if (trace_file) h.trace.log("dimenticami");
 
 		return fortran::success();
 	} catch (error& e) {
@@ -1753,7 +1747,7 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 	GENPTR_INTEGER(count)
 	try {
 		HSimple& h = hsimp.get(*handle);
-		h.trace.log("voglioancora");
+		if (trace_file) h.trace.log("voglioancora");
 		*count = h.api->voglioancora();
 
 		return fortran::success();
@@ -1782,7 +1776,7 @@ F77_INTEGER_FUNCTION(idba_ancora)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
-		h.trace.log("ancora");
+		if (trace_file) h.trace.log("ancora");
 		const char* res = h.api->ancora();
 		if (!res)
 			cnfExprt("", parameter, parameter_length);
@@ -1828,7 +1822,7 @@ F77_INTEGER_FUNCTION(idba_critica)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
-        h.trace.log("critica");
+        if (trace_file) h.trace.log("critica");
 		h.api->critica();
 
 		return fortran::success();
@@ -1862,7 +1856,7 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 
 	try {
 		HSimple& h = hsimp.get(*handle);
-        h.trace.log("scusa");
+        if (trace_file) h.trace.log("scusa");
 		h.api->scusa();
 
 		return fortran::success();
