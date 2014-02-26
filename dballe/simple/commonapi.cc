@@ -354,8 +354,10 @@ const char* CommonAPIImplementation::ancora()
 {
 	static char parm[10];
 
-	if (qc_iter < 0 || (unsigned)qc_iter >= qcoutput.vars().size())
-		throw error_notfound("reading a QC item");
+    if (qc_iter < 0)
+        throw error_consistency("ancora called without a previous voglioancora");
+    if ((unsigned)qc_iter >= qcoutput.vars().size())
+        throw error_notfound("ancora called with no (or no more) results available");
 
 	Varcode var = qcoutput.vars()[qc_iter]->code();
 	snprintf(parm, 10, "*B%02d%03d", WR_VAR_X(var), WR_VAR_Y(var));
