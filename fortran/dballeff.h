@@ -187,6 +187,9 @@ interface
      integer, intent(in) :: handle
    end function idba_unsetall
 
+   integer function idba_unsetb(handle)
+     integer, intent(in) :: handle
+   end function idba_unsetb
 
    integer function idba_setcontextana(handle)
      integer, intent(in) :: handle
