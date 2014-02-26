@@ -257,6 +257,38 @@ template<> template<> void to::test<5>()
     ensure_equals(diffs, 0);
 }
 
+// Check that a message that only contains station variables does get imported
+template<> template<>
+void to::test<6>()
+{
+    std::auto_ptr<Msgs> msgs = read_msgs("bufr/generic-onlystation.bufr", BUFR);
+    Msg& msg = *(*msgs)[0];
+
+    db->reset();
+    db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+
+    query.clear();
+    std::auto_ptr<db::Cursor> cur = db->query_stations(query);
+    wassert(actual(cur->remaining()) == 1);
+    wassert(actual(cur->next()).istrue());
+
+    Record result;
+    cur->to_record(result);
+
+    const std::vector<wreport::Var*>& vars = result.vars();
+    wassert(actual(vars.size()) == 5);
+    wassert(actual(varcode_format(vars[0]->code())) == "B01019");
+    wassert(actual(vars[0]->format()) == "My beautifull station");
+    wassert(actual(varcode_format(vars[1]->code())) == "B01194");
+    wassert(actual(vars[1]->format()) == "generic");
+    wassert(actual(varcode_format(vars[2]->code())) == "B05001");
+    wassert(actual(vars[2]->format()) == "45.00000");
+    wassert(actual(varcode_format(vars[3]->code())) == "B06001");
+    wassert(actual(vars[3]->format()) == "10.00000");
+    wassert(actual(varcode_format(vars[4]->code())) == "B07030");
+    wassert(actual(vars[4]->format()) == "22.3");
+}
+
 #if 0
 // Check that all imported messages are found on export
 template<> template<>
