@@ -1120,6 +1120,7 @@ F77_INTEGER_FUNCTION(idba_setcontextana)(
 	GENPTR_INTEGER(handle)
 	try {
 		HSimple& h = hsimp.get(*handle);
+		h.trace.log("setcontextana");
 		h.api->setcontextana();
 
 		return fortran::success();
@@ -1416,6 +1417,7 @@ F77_INTEGER_FUNCTION(idba_setdatemin)(
 	GENPTR_INTEGER(sec)
 	try {
 		HSimple& h = hsimp.get(*handle);
+		h.trace.log("setdatemin");
 		h.api->setdatemin(
 			fromfortran(*year), fromfortran(*month), fromfortran(*day),
 			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
@@ -1464,6 +1466,7 @@ F77_INTEGER_FUNCTION(idba_setdatemax)(
 	GENPTR_INTEGER(sec)
 	try {
 		HSimple& h = hsimp.get(*handle);
+		h.trace.log("setdatemax");
 		h.api->setdatemax(
 			fromfortran(*year), fromfortran(*month), fromfortran(*day),
 			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
@@ -1574,6 +1577,7 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
+		h.trace.log("quantesono");
 		*count = h.api->quantesono();
 
 		return fortran::success();
@@ -1600,6 +1604,7 @@ F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 
 	try {
 		HSimple& h = hsimp.get(*handle);
+		h.trace.log("elencamele");
 		h.api->elencamele();
 
 		return fortran::success();
@@ -1629,6 +1634,7 @@ F77_INTEGER_FUNCTION(idba_voglioquesto)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
+		h.trace.log("voglioquesto");
 		*count = h.api->voglioquesto();
 
 		return fortran::success();
@@ -1660,6 +1666,7 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
+		h.trace.log("dammelo");
 		const char* res = h.api->dammelo();
 		if (!res)
 			cnfExprt("", parameter, parameter_length);
@@ -1746,6 +1753,7 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 	GENPTR_INTEGER(count)
 	try {
 		HSimple& h = hsimp.get(*handle);
+		h.trace.log("voglioancora");
 		*count = h.api->voglioancora();
 
 		return fortran::success();
@@ -1774,6 +1782,7 @@ F77_INTEGER_FUNCTION(idba_ancora)(
 
 	try {
 		HSimple& h = hsimp.get(*handle);
+		h.trace.log("ancora");
 		const char* res = h.api->ancora();
 		if (!res)
 			cnfExprt("", parameter, parameter_length);
