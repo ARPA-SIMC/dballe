@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
  */
 
 #include "handles.h"
+#include "trace.h"
 #include <wreport/error.h>
 #include <stdint.h>
 #include <cstring>
@@ -80,6 +81,8 @@ void error_init()
 
 int error(wreport::error& e)
 {
+    IF_TRACING(log_error(e));
+
 	last_err_code = e.code();
 	strncpy(last_err_msg, e.what(), 1024);
 	size_t todo = herr.in_use;

@@ -15,6 +15,7 @@ lib_LTLIBRARIES = libdballef.la
 
 libdballef_la_SOURCES = \
 	error.cc \
+	trace.cc \
 	binding.cc
 libdballef_la_LIBADD = ../dballe/libdballe.la -lcnf
 libdballef_la_LDFLAGS = -version-info @LIBDBALLEF_VERSION_INFO@
@@ -102,7 +103,7 @@ dump_dballe_SOURCES = dump_dballe.f90
 dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
 dump_dballe_FCFLAGS = -g 
 
-EXTRA_DIST = fortran.dox check-utils.h error.h
+EXTRA_DIST = fortran.dox check-utils.h error.h trace.h
 
 CLEANFILES = test.mod dbtest.mod
 
