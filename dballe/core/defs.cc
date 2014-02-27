@@ -33,6 +33,7 @@
 #include <iomanip>
 
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
 
@@ -45,6 +46,14 @@ const char* encoding_name(Encoding enc)
 		case AOF: return "AOF";
 		default: return "(unknown)";
 	}
+}
+
+Encoding parse_encoding(const std::string& s)
+{
+    if (s == "BUFR") return BUFR;
+    if (s == "CREX") return CREX;
+    if (s == "AOF") return AOF;
+    error_notfound::throwf("unsupported encoding '%s'", s.c_str());
 }
 
 static int str_to_val(const char* str)

@@ -89,6 +89,19 @@ void log_presentati_dsn(int handle, const char* dsn, const char* user, const cha
             handle, arg1.c_str(), arg2.c_str());
 }
 
+void log_bulletin(int handle, const char* type, const char* fname, const char* options)
+{
+    string arg1 = c_escape(fname);
+    string arg2 = c_escape(options);
+    fprintf(trace_file, "auto_ptr<DB> db%d(new messages::DB(%s, \"%s\", msg::Importer::Options::from_string(\"%s\")));\n",
+            handle, type, arg1.c_str(), arg2.c_str());
+}
+
+void log_bulletin_read_next(int handle)
+{
+    fprintf(trace_file, "ires = db%d.next_message();\n", handle);
+}
+
 void log_arrivederci(int handle)
 {
     fprintf(trace_file, "// db%d not used anymore\n", handle);
@@ -97,6 +110,17 @@ void log_arrivederci(int handle)
 void log_error(wreport::error& e)
 {
     fprintf(trace_file, "// error: %s\n", e.what());
+}
+
+void log_result(int res)
+{
+    fprintf(trace_file, "check_result(ires, %d);\n", res);
+}
+
+void log_result(const char* res)
+{
+    string arg = c_escape(res);
+    fprintf(trace_file, "check_result(sres, \"%s\");\n", arg.c_str());
 }
 
 void SessionTracer::log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag)
@@ -142,17 +166,6 @@ void SessionTracer::log_dammelo()
 void SessionTracer::log_ancora()
 {
     fprintf(trace_file, "sres = %s.ancora();\n", trace_tag);
-}
-
-void SessionTracer::log_result(int res)
-{
-    fprintf(trace_file, "check_result(ires, %d);\n", res);
-}
-
-void SessionTracer::log_result(const char* res)
-{
-    string arg = c_escape(res);
-    fprintf(trace_file, "check_result(sres, \"%s\");\n", arg.c_str());
 }
 
 void SessionTracer::log_set(const char* parm, int val)

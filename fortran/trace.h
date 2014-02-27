@@ -32,8 +32,12 @@ void trace_init();
 
 void log_presentati_url(int handle, const char* chosen_dsn);
 void log_presentati_dsn(int handle, const char* dsn, const char* user, const char* pwd);
+void log_bulletin(int handle, const char* type, const char* fname, const char* options);
+void log_bulletin_read_next(int handle);
 void log_arrivederci(int handle);
 void log_error(wreport::error& e);
+void log_result(int res);
+void log_result(const char* res);
 
 struct SessionTracer
 {
@@ -47,8 +51,6 @@ struct SessionTracer
     void log_voglioancora();
     void log_dammelo();
     void log_ancora();
-    void log_result(int res);
-    void log_result(const char* res);
     void log_set(const char* parm, int val);
     void log_set(const char* parm, double val);
     void log_set(const char* parm, const char* val);

@@ -44,6 +44,7 @@ typedef enum {
 } Encoding;
 
 const char* encoding_name(Encoding enc);
+Encoding parse_encoding(const std::string& s);
 
 /**
  * Value to use for missing levels and time range components

@@ -61,11 +61,17 @@ public:
         Options()
             : simplified(true) {}
 
+        bool operator==(const Options& o) const { return simplified == o.simplified; }
+        bool operator!=(const Options& o) const { return simplified != o.simplified; }
+
         /// Print a summary of the options to \a out
         void print(FILE* out);
 
         /// Generate a string summary of import options
         std::string to_string() const;
+
+        /// Opposite of to_string: create an Options from a string
+        static Options from_string(const std::string& s);
     };
 
 protected:

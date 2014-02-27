@@ -274,6 +274,7 @@ tut_test_SOURCES = \
 	msg/test-utils-msg.cc \
 	msg/tests/vars.cc \
 	msg/tests/context.cc \
+	msg/codec-tut.cc \
 	msg/msg-tut.cc \
 	msg/msgs-tut.cc \
 	msg/tests/aof_codec.cc \

@@ -42,9 +42,17 @@ void Importer::Options::print(FILE* out)
 std::string Importer::Options::to_string() const
 {
     string res;
-    res += '[';
     res += simplified ? "simplified" : "accurate";
-    res += ']';
+    return res;
+}
+
+Importer::Options Importer::Options::from_string(const std::string& s)
+{
+    Importer::Options res;
+    if (s.empty()) return res;
+    if (s == "simplified") return res;
+    if (s == "accurate")
+        res.simplified = false;
     return res;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@
 #include "dballe/core/verbose.h"
 #include "dballe/simple/msgapi.h"
 #include "dballe/simple/dbapi.h"
-#include <dballe/db/db.h>
+#include "dballe/db/db.h"
+#include "dballe/db/messages/db.h"
 
 #include <cstring>	// memset
 #include <limits.h>
@@ -189,7 +190,6 @@ using namespace std;
 struct HSession : public fortran::HBase
 {
 	DB* db;
-    std::string dsn;
 
 	void start()
 	{
@@ -322,11 +322,10 @@ F77_INTEGER_FUNCTION(idba_presentati)(
             hs.db = DB::connect(chosen_dsn, s_user, s_password).release();
         }
 
-        hs.dsn = chosen_dsn;
-
 		/* Open the database session */
 		return fortran::success();
 	} catch (error& e) {
+        hsess.release(*dbahandle);
 		return fortran::error(e);
 	}
 }
@@ -440,6 +439,102 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 		hsimp.release(*handle);
 		return fortran::error(e);
 	}
+}
+
+F77_INTEGER_FUNCTION(idba_bulletin)(
+        INTEGER(dbahandle),
+        CHARACTER(type),
+        CHARACTER(filename),
+        CHARACTER(options)
+        TRAIL(filename)
+        TRAIL(type)
+        TRAIL(options))
+{
+    GENPTR_INTEGER(dbahandle)
+    GENPTR_CHARACTER(type)
+    GENPTR_CHARACTER(filename)
+    GENPTR_CHARACTER(options)
+    char c_type[10];
+    char c_filename[512];
+    char c_options[512];
+
+    cnfImpn(type, type_length,  9, c_type); c_type[9] = 0;
+    cnfImpn(filename, filename_length,  511, c_filename); c_filename[511] = 0;
+    cnfImpn(options, options_length,  511, c_options); c_options[511] = 0;
+
+    try {
+        // Initialize the library if needed
+        lib_init();
+
+        // Allocate and initialize a new handle
+        *dbahandle = hsess.request();
+        HSession& hs = hsess.get(*dbahandle);
+
+        IF_TRACING(fortran::log_bulletin(*dbahandle, c_type, c_filename, c_options));
+        hs.db = new db::messages::DB(parse_encoding(c_type), c_filename, msg::Importer::Options::from_string(c_options));
+
+
+        return fortran::success();
+    } catch (error& e) {
+        hsess.release(*dbahandle);
+        return fortran::error(e);
+    }
+#if 0
+    /**
+     * Move to the next message, when we are reading/writing one message at a time
+     *
+     * @param args is a comma-separated list of flags or key=value arguments:
+     *   'subset': flush the current data as a subset, and start a new subset
+     *   'message': flush the current data as a message, and start a new message
+     *   'template=name': choose the template name
+     * @returns true if there is another message, false if there is not
+     */
+    virtual bool next_message(const char* args=0) = 0;
+bool DbAPI::next_message(const char* args)
+{
+    if (db::messages::DB* msgdb = dynamic_cast<db::messages::DB*>(&db))
+    {
+        // TODO
+        return false;
+    } else
+        throw error_consistency("next_message cannot be called on a normal database");
+}
+#endif
+}
+
+/// Move to the next message we are reading
+F77_INTEGER_FUNCTION(idba_bulletin_read_next)(
+        INTEGER(dbahandle),
+        INTEGER(found))
+{
+    GENPTR_INTEGER(dbahandle)
+    GENPTR_INTEGER(found)
+
+    try {
+        HSession& hs = hsess.get(*dbahandle);
+        IF_TRACING(fortran::log_bulletin_read_next(*dbahandle));
+        if (db::messages::DB* msgdb = dynamic_cast<db::messages::DB*>(hs.db))
+        {
+            bool res = msgdb->next_message();
+            *found = res ? 1 : 0;
+        } else
+            throw error_consistency("next_message cannot be called on a normal database");
+        return fortran::success();
+    } catch (error& e) {
+        hsess.release(*dbahandle);
+        return fortran::error(e);
+    }
+#if 0
+    /**
+     * Move to the next message, when we are reading/writing one message at a time
+     *
+     * @param args is a comma-separated list of flags or key=value arguments:
+     *   'subset': flush the current data as a subset, and start a new subset
+     *   'message': flush the current data as a message, and start a new message
+     *   'template=name': choose the template name
+     * @returns true if there is another message, false if there is not
+     */
+#endif
 }
 
 /**
@@ -1490,7 +1585,7 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
 		HSimple& h = hsimp.get(*handle);
 		IF_TRACING(h.trace.log_quantesono());
 		*count = h.api->quantesono();
-        IF_TRACING(h.trace.log_result(*count));
+        IF_TRACING(fortran::log_result(*count));
 
 		return fortran::success();
 	} catch (error& e) {
@@ -1548,7 +1643,7 @@ F77_INTEGER_FUNCTION(idba_voglioquesto)(
 		HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_voglioquesto());
         *count = h.api->voglioquesto();
-        IF_TRACING(h.trace.log_result(*count));
+        IF_TRACING(fortran::log_result(*count));
 
 		return fortran::success();
 	} catch (error& e) {
@@ -1581,7 +1676,7 @@ F77_INTEGER_FUNCTION(idba_dammelo)(
 		HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_dammelo());
         const char* res = h.api->dammelo();
-        IF_TRACING(h.trace.log_result(res));
+        IF_TRACING(fortran::log_result(res));
 		if (!res)
 			cnfExprt("", parameter, parameter_length);
 		else
@@ -1669,7 +1764,7 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 		HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_voglioancora());
         *count = h.api->voglioancora();
-        IF_TRACING(h.trace.log_result(*count));
+        IF_TRACING(fortran::log_result(*count));
 
 		return fortran::success();
 	} catch (error& e) {
@@ -1699,7 +1794,7 @@ F77_INTEGER_FUNCTION(idba_ancora)(
 		HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_ancora());
         const char* res = h.api->ancora();
-        IF_TRACING(h.trace.log_result(res));
+        IF_TRACING(fortran::log_result(res));
 		if (!res)
 			cnfExprt("", parameter, parameter_length);
 		else
@@ -1882,6 +1977,7 @@ F77_INTEGER_FUNCTION(idba_test_input_to_output)(
 		return fortran::error(e);
 	}
 }
+
 
 }
 
