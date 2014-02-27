@@ -32,8 +32,8 @@ void trace_init();
 
 void log_presentati_url(int handle, const char* chosen_dsn);
 void log_presentati_dsn(int handle, const char* dsn, const char* user, const char* pwd);
-void log_bulletin(int handle, const char* type, const char* fname, const char* options);
-void log_bulletin_read_next(int handle);
+void log_messages(int handle, const char* type, const char* fname, const char* options);
+void log_messages_read_next(int handle);
 void log_arrivederci(int handle);
 void log_error(wreport::error& e);
 void log_result(int res);

@@ -441,7 +441,7 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 	}
 }
 
-F77_INTEGER_FUNCTION(idba_bulletin)(
+F77_INTEGER_FUNCTION(idba_messages)(
         INTEGER(dbahandle),
         CHARACTER(type),
         CHARACTER(filename),
@@ -470,7 +470,7 @@ F77_INTEGER_FUNCTION(idba_bulletin)(
         *dbahandle = hsess.request();
         HSession& hs = hsess.get(*dbahandle);
 
-        IF_TRACING(fortran::log_bulletin(*dbahandle, c_type, c_filename, c_options));
+        IF_TRACING(fortran::log_messages(*dbahandle, c_type, c_filename, c_options));
         hs.db = new db::messages::DB(parse_encoding(c_type), c_filename, msg::Importer::Options::from_string(c_options));
 
 
@@ -503,7 +503,7 @@ bool DbAPI::next_message(const char* args)
 }
 
 /// Move to the next message we are reading
-F77_INTEGER_FUNCTION(idba_bulletin_read_next)(
+F77_INTEGER_FUNCTION(idba_messages_read_next)(
         INTEGER(dbahandle),
         INTEGER(found))
 {
@@ -512,7 +512,7 @@ F77_INTEGER_FUNCTION(idba_bulletin_read_next)(
 
     try {
         HSession& hs = hsess.get(*dbahandle);
-        IF_TRACING(fortran::log_bulletin_read_next(*dbahandle));
+        IF_TRACING(fortran::log_messages_read_next(*dbahandle));
         if (db::messages::DB* msgdb = dynamic_cast<db::messages::DB*>(hs.db))
         {
             bool res = msgdb->next_message();

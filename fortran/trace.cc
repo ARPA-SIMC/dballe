@@ -89,7 +89,7 @@ void log_presentati_dsn(int handle, const char* dsn, const char* user, const cha
             handle, arg1.c_str(), arg2.c_str());
 }
 
-void log_bulletin(int handle, const char* type, const char* fname, const char* options)
+void log_messages(int handle, const char* type, const char* fname, const char* options)
 {
     string arg1 = c_escape(fname);
     string arg2 = c_escape(options);
@@ -97,7 +97,7 @@ void log_bulletin(int handle, const char* type, const char* fname, const char* o
             handle, type, arg1.c_str(), arg2.c_str());
 }
 
-void log_bulletin_read_next(int handle)
+void log_messages_read_next(int handle)
 {
     fprintf(trace_file, "ires = db%d.next_message();\n", handle);
 }
