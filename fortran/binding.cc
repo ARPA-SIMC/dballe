@@ -446,8 +446,8 @@ F77_INTEGER_FUNCTION(idba_messages)(
         CHARACTER(type),
         CHARACTER(filename),
         CHARACTER(options)
-        TRAIL(filename)
         TRAIL(type)
+        TRAIL(filename)
         TRAIL(options))
 {
     GENPTR_INTEGER(dbahandle)
