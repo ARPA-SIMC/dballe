@@ -19,6 +19,7 @@
 
 #include "dbapi.h"
 #include <dballe/db/db.h>
+#include <dballe/db/messages/db.h>
 #include <cstring>
 
 using namespace wreport;

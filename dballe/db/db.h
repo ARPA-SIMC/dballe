@@ -66,6 +66,7 @@ typedef enum {
     V5 = 0,
     V6 = 1,
     MEM = 2,
+    MESSAGES = 3,
 } Format;
 
 /**

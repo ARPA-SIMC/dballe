@@ -84,6 +84,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/mem/repinfo.h \
 	db/mem/cursor.h \
 	db/mem/db.h \
+	db/messages/db.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
 	cmdline/processor.h \
@@ -176,6 +177,7 @@ libdballe_la_SOURCES = \
 	db/mem/repinfo.cc \
 	db/mem/cursor.cc \
 	db/mem/db.cc \
+	db/messages/db.cc \
 	cmdline/cmdline.cc \
 	cmdline/processor.cc \
 	cmdline/conversion.cc \
@@ -292,6 +294,7 @@ tut_test_SOURCES = \
 	db/mem/repinfo-tut.cc \
 	db/mem/cursor-tut.cc \
 	db/mem/db-tut.cc \
+	db/messages/db-tut.cc \
 	simple/msgapi-tut.cc \
 	cmdline/dbadb-tut.cc \
 	simple/dbapi-tut.cc
