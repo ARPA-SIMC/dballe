@@ -278,6 +278,8 @@ public:
 	 */
 	void remove(const Record& rec);
 
+    void remove_all();
+
 	/**
 	 * Remove orphan values from the database.
 	 *

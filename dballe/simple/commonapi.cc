@@ -74,8 +74,12 @@ void CommonAPIImplementation::set_permissions(const char* anaflag, const char* d
 
 	if (perms & PERM_ANA_RO && perms & PERM_DATA_WRITE)
 		throw error_consistency("when data is 'write' ana must also be set to 'write', because deleting data can potentially also delete pseudoana");
+    /*
+    // Check disabled: allowing importing data without attributes is more
+    // important than a dubious corner case
 	if (perms & PERM_ATTR_RO && perms & PERM_DATA_WRITE)
 		throw error_consistency("when data is 'write' attr must also be set to 'write', because deleting data also deletes its attributes");
+    */
 }
 
 Record& CommonAPIImplementation::choose_input_record(const char*& param)

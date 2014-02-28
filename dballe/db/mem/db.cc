@@ -127,6 +127,11 @@ void DB::remove(const Record& query)
     memdb.remove(res);
 }
 
+void DB::remove_all()
+{
+    memdb.clear();
+}
+
 void DB::vacuum()
 {
     // Nothing to do

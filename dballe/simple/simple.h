@@ -4,7 +4,7 @@
 /*
  * fortran/simple - Interface for Fortran API implementations
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
+#include <dballe/core/defs.h>
 
 namespace dballe {
 namespace fortran {
@@ -49,6 +50,13 @@ struct API
 	 *   The error indicator for the function
 	 */
 	virtual void scopa(const char* repinfofile = 0) = 0;
+
+    /**
+     * Remove all data from the database.
+     *
+     * The difference with scopa() is that it preserves report information.
+     */
+    virtual void remove_all() = 0;
 
 	/**@name enq*
 	 * @anchor enq
@@ -592,6 +600,46 @@ struct API
 	virtual void scusa() = 0;
 
 	/*@}*/
+
+    /**
+     * Open a BUFR/CREX/AOF file for reading or writing.
+     *
+     * Each session can have up to two messages open at the same time: one for
+     * reading and one for writing.
+     *
+     * @param filename
+     *   The file name
+     * @param mode
+     *   The opening mode. See the mode parameter of libc's fopen() call for details.
+     * @param encoding
+     *   The file encoding
+     * @param options
+     *   An optional string that will be passed to
+     *   dballe::msg::Importer::Options::from_string or
+     *   dballe::msg::Exporter::Options::from_string to configure the import or
+     *   export process.
+     */
+    virtual void messages_open(const char* filename, const char* mode, Encoding format, const char* options=0) = 0;
+
+    /**
+     * Read the next message and import it in the database.
+     *
+     * The access mode of the session controls how data is imported.
+     *
+     * @returns
+     *   True if a message has been imported, false if we have reached the end
+     *   of file.
+     */
+    virtual bool messages_read_next() = 0;
+
+#if 0
+    /**
+     * Export the currently selected data to the output message.
+     *
+     * TODO: redesign the subsets use case
+     */
+    virtual void messages_write_next(bool subset, const char* msg_template=0) = 0;
+#endif
 
 	virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
 

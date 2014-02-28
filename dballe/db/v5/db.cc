@@ -821,6 +821,17 @@ void DB::remove(const Record& rec)
     t.commit();
 }
 
+void DB::remove_all()
+{
+    db::Transaction t(*conn);
+    db::Statement stm(*conn);
+    stm.exec_direct_and_close("DELETE FROM attr");
+    stm.exec_direct_and_close("DELETE FROM data");
+    stm.exec_direct_and_close("DELETE FROM context");
+    stm.exec_direct_and_close("DELETE FROM station");
+    t.commit();
+}
+
 void DB::vacuum()
 {
     static const char* cclean_mysql = "delete c from context c left join data d on d.id_context = c.id where d.id_context is NULL";

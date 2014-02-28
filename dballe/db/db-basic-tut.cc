@@ -74,6 +74,31 @@ template<> template<> void to::test<3>()
     db->vacuum();
 }
 
+template<> template<> void to::test<4>()
+{
+    // Test remove_all
+    db->remove_all();
+    Record query;
+    std::auto_ptr<db::Cursor> cur = db->query_data(query);
+    wassert(actual(cur->remaining()) == 0);
+
+    // Check that it is idempotent
+    db->remove_all();
+    cur = db->query_data(query);
+    wassert(actual(cur->remaining()) == 0);
+
+    // Insert something
+    wruntest(populate<OldDballeTestFixture>);
+
+    cur = db->query_data(query);
+    wassert(actual(cur->remaining()) == 4);
+
+    db->remove_all();
+
+    cur = db->query_data(query);
+    wassert(actual(cur->remaining()) == 0);
+}
+
 }
 
 namespace {

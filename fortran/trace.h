@@ -32,8 +32,6 @@ void trace_init();
 
 void log_presentati_url(int handle, const char* chosen_dsn);
 void log_presentati_dsn(int handle, const char* dsn, const char* user, const char* pwd);
-void log_messages(int handle, const char* type, const char* fname, const char* options);
-void log_messages_read_next(int handle);
 void log_arrivederci(int handle);
 void log_error(wreport::error& e);
 void log_result(int res);
@@ -60,6 +58,8 @@ struct SessionTracer
     void log_unset(const char* parm);
     void log_scopa(const char* fname=0);
     void log_fatto();
+    void log_messages_open(const char* fname, const char* mode, const char* format, const char* options);
+    void log_messages_read_next();
 };
 
 

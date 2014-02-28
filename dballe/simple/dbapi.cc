@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,10 @@
  */
 
 #include "dbapi.h"
-#include <dballe/db/db.h>
-#include <dballe/db/messages/db.h>
+#include "dballe/core/file.h"
+#include "dballe/db/db.h"
+#include "dballe/msg/msgs.h"
+#include "dballe/msg/codec.h"
 #include <cstring>
 
 using namespace wreport;
@@ -28,15 +30,83 @@ using namespace std;
 namespace dballe {
 namespace fortran {
 
+struct InputFile
+{
+    File* input;
+    msg::Importer* importer;
+    Msgs current_msg;
+    unsigned current_msg_idx;
+    int import_flags;
+
+    InputFile(const char* fname, Encoding format, const char* options=0)
+        : input(0), importer(0), import_flags(0)
+    {
+        msg::Importer::Options importer_options;
+        if (options)
+            importer_options = msg::Importer::Options::from_string(options);
+        input = File::create(format, fname, "rb").release();
+        importer = msg::Importer::create(format, importer_options).release();
+    }
+    ~InputFile()
+    {
+        if (input) delete input;
+        if (importer) delete importer;
+    }
+
+    bool next()
+    {
+        if (current_msg_idx + 1 < current_msg.size())
+            // Move to the next message
+            ++current_msg_idx;
+        else
+        {
+            // Read data
+            Rawmsg rmsg;
+            if (!input->read(rmsg))
+                return false;
+
+            // Parse and interpret data
+            current_msg.clear();
+            importer->from_rawmsg(rmsg, current_msg);
+
+            // Move to the first message
+            current_msg_idx = 0;
+        }
+
+        return true;
+    }
+
+    const Msg& msg() const
+    {
+        return *current_msg[current_msg_idx];
+    }
+};
+
+struct OutputFile
+{
+    File* output;
+#if 0
+    msg::Exporter* exporter;
+#endif
+
+    OutputFile(const char* filename, const char* mode, Encoding format, const char* options)
+        : output(0)
+    {
+        // TODO
+    }
+};
+
 
 DbAPI::DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag)
-    : db(db), ana_cur(0), query_cur(0)
+    : db(db), ana_cur(0), query_cur(0), input_file(0), output_file(0)
 {
     set_permissions(anaflag, dataflag, attrflag);
 }
 
 DbAPI::~DbAPI()
 {
+    if (input_file) delete input_file;
+    if (output_file) delete output_file;
     if (ana_cur)
     {
         ana_cur->discard_rest();
@@ -63,6 +133,14 @@ void DbAPI::scopa(const char* repinfofile)
         error_consistency::throwf(
             "scopa must be run with the database open in data write mode");
     db.reset(repinfofile);
+}
+
+void DbAPI::remove_all()
+{
+    if (!(perms & PERM_DATA_WRITE))
+        error_consistency::throwf(
+            "remove_all must be run with the database open in data write mode");
+    db.remove_all();
 }
 
 int DbAPI::quantesono()
@@ -243,6 +321,51 @@ void DbAPI::scusa()
     db.attr_remove(attr_reference_id, attr_varid, arr);
 
     qcinput.clear();
+}
+
+void DbAPI::messages_open(const char* filename, const char* mode, Encoding format, const char* options)
+{
+    if (strchr(mode, 'r') != NULL)
+    {
+        if ((perms & PERM_ANA_RO) || (perms & PERM_DATA_RO))
+            throw error_consistency("messages_open must be called on a session with writable station and data");
+        if (input_file)
+        {
+            delete input_file;
+            input_file = 0;
+        }
+        input_file = new InputFile(filename, format, options);
+
+        input_file->import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
+        if (perms & PERM_ATTR_WRITE)
+            input_file->import_flags |= DBA_IMPORT_ATTRS;
+        if (perms & PERM_DATA_WRITE)
+            input_file->import_flags |= DBA_IMPORT_OVERWRITE;
+    } else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL) {
+        if (output_file)
+        {
+            delete output_file;
+            output_file = 0;
+        }
+        output_file = new OutputFile(filename, mode, format, options);
+    }
+}
+
+bool DbAPI::messages_read_next()
+{
+    if (!input_file)
+        throw error_consistency("messages_read_next called but there are no open input files");
+#if 0
+    // Clear existing data
+    // Do not use reset to preserve repinfo information
+    memdb.clear();
+#endif
+    if (!input_file->next())
+        return false;
+
+    db.import_msg(input_file->msg(), NULL, input_file->import_flags);
+
+    return true;
 }
 
 }

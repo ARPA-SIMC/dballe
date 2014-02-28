@@ -310,6 +310,14 @@ public:
     virtual void remove(const Record& rec) = 0;
 
     /**
+     * Remove all data from the database.
+     *
+     * This is faster than remove() with an empty record, and unlike reset() it
+     * preserves existing report information.
+     */
+    virtual void remove_all() = 0;
+
+    /**
      * Perform database cleanup operations.
      *
      * Orphan values are currently:

@@ -132,6 +132,9 @@ public:
 
 	virtual void critica();
 	virtual void scusa();
+    virtual void remove_all();
+    virtual void messages_open(const char* filename, const char* mode, Encoding format, const char* options=0);
+    virtual bool messages_read_next();
 };
 
 }

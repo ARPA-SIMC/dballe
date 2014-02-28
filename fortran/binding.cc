@@ -22,7 +22,6 @@
 #include "dballe/simple/msgapi.h"
 #include "dballe/simple/dbapi.h"
 #include "dballe/db/db.h"
-#include "dballe/db/messages/db.h"
 
 #include <cstring>	// memset
 #include <limits.h>
@@ -439,102 +438,6 @@ F77_INTEGER_FUNCTION(idba_preparati)(
 		hsimp.release(*handle);
 		return fortran::error(e);
 	}
-}
-
-F77_INTEGER_FUNCTION(idba_messages)(
-        INTEGER(dbahandle),
-        CHARACTER(type),
-        CHARACTER(filename),
-        CHARACTER(options)
-        TRAIL(type)
-        TRAIL(filename)
-        TRAIL(options))
-{
-    GENPTR_INTEGER(dbahandle)
-    GENPTR_CHARACTER(type)
-    GENPTR_CHARACTER(filename)
-    GENPTR_CHARACTER(options)
-    char c_type[10];
-    char c_filename[512];
-    char c_options[512];
-
-    cnfImpn(type, type_length,  9, c_type); c_type[9] = 0;
-    cnfImpn(filename, filename_length,  511, c_filename); c_filename[511] = 0;
-    cnfImpn(options, options_length,  511, c_options); c_options[511] = 0;
-
-    try {
-        // Initialize the library if needed
-        lib_init();
-
-        // Allocate and initialize a new handle
-        *dbahandle = hsess.request();
-        HSession& hs = hsess.get(*dbahandle);
-
-        IF_TRACING(fortran::log_messages(*dbahandle, c_type, c_filename, c_options));
-        hs.db = new db::messages::DB(parse_encoding(c_type), c_filename, msg::Importer::Options::from_string(c_options));
-
-
-        return fortran::success();
-    } catch (error& e) {
-        hsess.release(*dbahandle);
-        return fortran::error(e);
-    }
-#if 0
-    /**
-     * Move to the next message, when we are reading/writing one message at a time
-     *
-     * @param args is a comma-separated list of flags or key=value arguments:
-     *   'subset': flush the current data as a subset, and start a new subset
-     *   'message': flush the current data as a message, and start a new message
-     *   'template=name': choose the template name
-     * @returns true if there is another message, false if there is not
-     */
-    virtual bool next_message(const char* args=0) = 0;
-bool DbAPI::next_message(const char* args)
-{
-    if (db::messages::DB* msgdb = dynamic_cast<db::messages::DB*>(&db))
-    {
-        // TODO
-        return false;
-    } else
-        throw error_consistency("next_message cannot be called on a normal database");
-}
-#endif
-}
-
-/// Move to the next message we are reading
-F77_INTEGER_FUNCTION(idba_messages_read_next)(
-        INTEGER(dbahandle),
-        INTEGER(found))
-{
-    GENPTR_INTEGER(dbahandle)
-    GENPTR_INTEGER(found)
-
-    try {
-        HSession& hs = hsess.get(*dbahandle);
-        IF_TRACING(fortran::log_messages_read_next(*dbahandle));
-        if (db::messages::DB* msgdb = dynamic_cast<db::messages::DB*>(hs.db))
-        {
-            bool res = msgdb->next_message();
-            *found = res ? 1 : 0;
-        } else
-            throw error_consistency("next_message cannot be called on a normal database");
-        return fortran::success();
-    } catch (error& e) {
-        hsess.release(*dbahandle);
-        return fortran::error(e);
-    }
-#if 0
-    /**
-     * Move to the next message, when we are reading/writing one message at a time
-     *
-     * @param args is a comma-separated list of flags or key=value arguments:
-     *   'subset': flush the current data as a subset, and start a new subset
-     *   'message': flush the current data as a message, and start a new message
-     *   'template=name': choose the template name
-     * @returns true if there is another message, false if there is not
-     */
-#endif
 }
 
 /**
@@ -1880,6 +1783,73 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 	} catch (error& e) {
 		return fortran::error(e);
 	}
+}
+
+F77_INTEGER_FUNCTION(idba_messages_open)(
+        INTEGER(handle),
+        CHARACTER(filename),
+        CHARACTER(mode),
+        CHARACTER(format),
+        CHARACTER(options)
+        TRAIL(filename)
+        TRAIL(mode)
+        TRAIL(format)
+        TRAIL(options))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(filename)
+    GENPTR_CHARACTER(mode)
+    GENPTR_CHARACTER(format)
+    GENPTR_CHARACTER(options)
+    char c_filename[512];
+    char c_mode[10];
+    char c_format[10];
+    char c_options[512];
+    cnfImpn(filename, filename_length,  511, c_filename); c_filename[511] = 0;
+    cnfImpn(mode, mode_length,  9, c_mode); c_mode[9] = 0;
+    cnfImpn(format, format_length,  9, c_format); c_format[9] = 0;
+    cnfImpn(options, options_length,  511, c_options); c_options[511] = 0;
+
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_messages_open(c_filename, c_mode, c_format, c_options));
+        h.api->messages_open(c_filename, c_mode, parse_encoding(c_format), c_options);
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+F77_INTEGER_FUNCTION(idba_messages_read_next)(INTEGER(handle), INTEGER(found))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(found)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_messages_read_next());
+        *found = (int)h.api->messages_read_next();
+        IF_TRACING(fortran::log_result(*found));
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+F77_INTEGER_FUNCTION(idba_remove_all)(
+        INTEGER(handle))
+{
+    GENPTR_INTEGER(handle)
+
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_func("remove_all"));
+        h.api->remove_all();
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 F77_INTEGER_FUNCTION(idba_spiegal)(

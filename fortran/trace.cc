@@ -89,19 +89,6 @@ void log_presentati_dsn(int handle, const char* dsn, const char* user, const cha
             handle, arg1.c_str(), arg2.c_str());
 }
 
-void log_messages(int handle, const char* type, const char* fname, const char* options)
-{
-    string arg1 = c_escape(fname);
-    string arg2 = c_escape(options);
-    fprintf(trace_file, "auto_ptr<DB> db%d(new messages::DB(%s, \"%s\", msg::Importer::Options::from_string(\"%s\")));\n",
-            handle, type, arg1.c_str(), arg2.c_str());
-}
-
-void log_messages_read_next(int handle)
-{
-    fprintf(trace_file, "ires = db%d.next_message();\n", handle);
-}
-
 void log_arrivederci(int handle)
 {
     fprintf(trace_file, "// db%d not used anymore\n", handle);
@@ -222,6 +209,20 @@ void SessionTracer::log_scopa(const char* fname)
 void SessionTracer::log_fatto()
 {
     fprintf(trace_file, "// %s not used anymore\n", trace_tag);
+}
+
+void SessionTracer::log_messages_open(const char* fname, const char* mode, const char* format, const char* options)
+{
+    string arg1 = c_escape(fname);
+    string arg2 = c_escape(mode);
+    string arg3 = c_escape(options);
+    fprintf(trace_file, "%s.messages_open(\"%s\", \"%s\", %s, \"%s\");\n",
+            trace_tag, arg1.c_str(), arg2.c_str(), format, arg3.c_str());
+}
+
+void SessionTracer::log_messages_read_next()
+{
+    fprintf(trace_file, "ires = %s.messages_read_next();\n", trace_tag);
 }
 
 

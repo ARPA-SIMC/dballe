@@ -287,6 +287,150 @@ template<> template<> void to::test<7>()
     wassert(actual(api.enqi("*B33007")) == MISSING_INT);
 }
 
+template<> template<> void to::test<8>()
+{
+    {
+        fortran::DbAPI api(*db, "read", "read", "read");
+        try {
+            api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+        } catch (std::exception& e) {
+            wassert(actual(e.what()).contains("must be called on a session with writable"));
+        }
+    }
+    {
+        fortran::DbAPI api(*db, "write", "read", "read");
+        try {
+            api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+        } catch (std::exception& e) {
+            wassert(actual(e.what()).contains("must be called on a session with writable"));
+        }
+    }
+    {
+        fortran::DbAPI api(*db, "read", "add", "read");
+        try {
+            api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+        } catch (std::exception& e) {
+            wassert(actual(e.what()).contains("must be called on a session with writable"));
+        }
+    }
+    {
+        fortran::DbAPI api(*db, "write", "add", "read");
+        api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+    }
+    {
+        fortran::DbAPI api(*db, "write", "write", "read");
+        api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+    }
+    {
+        fortran::DbAPI api(*db, "write", "add", "write");
+        api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+    }
+    {
+        fortran::DbAPI api(*db, "write", "write", "write");
+        api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+    }
+}
+
+template<> template<> void to::test<9>()
+{
+    // 2 messages, 1 subset each
+    fortran::DbAPI api(*db, "write", "write", "write");
+    api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+
+    // At the beginning, the DB is empty
+    wassert(actual(api.voglioquesto()) == 0);
+
+    // First message
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 88);
+
+    // Second message
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 9);
+
+    // End of messages
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).isfalse());
+    wassert(actual(api.voglioquesto()) == 0);
+}
+
+template<> template<> void to::test<10>()
+{
+    // 1 message, 6 subsets
+    fortran::DbAPI api(*db, "write", "write", "write");
+    api.messages_open(dballe::tests::datafile("bufr/temp-gts2.bufr").c_str(), "r", BUFR);
+
+    // At the beginning, the DB is empty
+    wassert(actual(api.voglioquesto()) == 0);
+
+    // 6 subsets
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 193);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 182);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 170);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 184);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 256);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 213);
+
+    // End of messages
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).isfalse());
+    wassert(actual(api.voglioquesto()) == 0);
+}
+
+template<> template<> void to::test<11>()
+{
+    // 2 messages, 2 subsets each
+    fortran::DbAPI api(*db, "write", "write", "write");
+    api.messages_open(dballe::tests::datafile("bufr/db-messages1.bufr").c_str(), "r", BUFR);
+
+    // At the beginning, the DB is empty
+    wassert(actual(api.voglioquesto()) == 0);
+
+    // 6 subsets
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 88);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 9);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 193);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 182);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 170);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 184);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 256);
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).istrue());
+    wassert(actual(api.voglioquesto()) == 213);
+
+    // End of messages
+    api.remove_all();
+    wassert(actual(api.messages_read_next()).isfalse());
+    wassert(actual(api.voglioquesto()) == 0);
+}
+
+
 }
 
 namespace {

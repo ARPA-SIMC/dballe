@@ -31,12 +31,17 @@ struct Cursor;
 
 namespace fortran {
 
+struct InputFile;
+struct OutputFile;
+
 class DbAPI : public CommonAPIImplementation
 {
 protected:
     DB& db;
     db::Cursor* ana_cur;
     db::Cursor* query_cur;
+    InputFile* input_file;
+    OutputFile* output_file;
 
 public:
     DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag);
@@ -45,6 +50,7 @@ public:
     virtual int enqi(const char* param);
 
     virtual void scopa(const char* repinfofile = 0);
+    virtual void remove_all();
 
     virtual int quantesono();
     virtual void elencamele();
@@ -59,6 +65,9 @@ public:
 
     virtual void critica();
     virtual void scusa();
+
+    virtual void messages_open(const char* filename, const char* mode, Encoding format, const char* options=0);
+    virtual bool messages_read_next();
 };
 
 }
