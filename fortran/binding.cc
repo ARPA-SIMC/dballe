@@ -1821,14 +1821,14 @@ F77_INTEGER_FUNCTION(idba_messages_open)(
     }
 }
 
-F77_INTEGER_FUNCTION(idba_messages_read_next)(INTEGER(handle), INTEGER(found))
+F77_INTEGER_FUNCTION(idba_messages_read_next)(INTEGER(handle), LOGICAL(found))
 {
     GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(found)
+    GENPTR_LOGICAL(found)
     try {
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_messages_read_next());
-        *found = (int)h.api->messages_read_next();
+        *found = h.api->messages_read_next();
         IF_TRACING(fortran::log_result(*found));
 
         return fortran::success();
