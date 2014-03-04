@@ -172,6 +172,16 @@ interface
      character (len=*), intent(in) :: filename,mode,type
    end function idba_messaggi
 
+      integer function idba_messages_open(handle, filename, mode, format, options)
+     integer, intent(in) :: handle
+      character (len=*), intent(in) :: filename,mode,format,options
+   end function idba_messages_open
+
+   integer function idba_messages_read_next(handle, status)
+     integer, intent(in) :: handle
+     logical, intent(out) :: status
+   end function idba_messages_read_next
+
    integer function idba_fatto(handle)
      integer, intent(in) :: handle
    end function idba_fatto
@@ -186,6 +196,10 @@ interface
    integer function idba_unsetall(handle)
      integer, intent(in) :: handle
    end function idba_unsetall
+
+   integer function idba_remove_all(handle)
+     integer, intent(in) :: handle
+   end function idba_remove_all
 
    integer function idba_unsetb(handle)
      integer, intent(in) :: handle
