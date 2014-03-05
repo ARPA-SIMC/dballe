@@ -430,6 +430,46 @@ template<> template<> void to::test<11>()
     wassert(actual(api.voglioquesto()) == 0);
 }
 
+template<> template<> void to::test<12>()
+{
+    // Write one message
+    {
+        fortran::DbAPI api(*db, "write", "write", "write");
+        api.messages_open("test.bufr", "wb", BUFR);
+
+        api.setd("lat", 44.5);
+        api.setd("lon", 11.5);
+        api.setc("rep_memo", "synop");
+        api.settimerange(254, 0, 0);
+        api.setdate(2013, 4, 25, 12, 0, 0);
+        // Instant temperature, 2 meters above ground
+        api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
+        api.setd("B12101", 21.5);
+        api.prendilo();
+        // Instant wind speed, 10 meters above ground
+        api.unsetb();
+        api.setlevel(103, 10000, MISSING_INT, MISSING_INT);
+        api.setd("B11002", 2.4);
+        api.prendilo();
+
+        api.messages_write_next("wmo");
+    }
+
+    // Read it back
+    {
+        fortran::DbAPI api(*db, "write", "write", "write");
+        api.messages_open("test.bufr", "rb", BUFR);
+
+        wassert(actual(api.messages_read_next()).istrue());
+        wassert(actual(api.voglioquesto()) == 2);
+        wassert(actual(api.dammelo()) == "B12101");
+        wassert(actual(api.enqd("B11002")) == 2.4);
+        wassert(actual(api.dammelo()) == "B11002");
+        wassert(actual(api.enqd("B12101")) == 21.5);
+
+        wassert(actual(api.messages_read_next()).isfalse());
+    }
+}
 
 }
 

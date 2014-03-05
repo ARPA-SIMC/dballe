@@ -101,6 +101,20 @@ struct Msgs : public std::vector<Msg*>
     unsigned diff(const Msgs& msgs) const;
 };
 
+namespace msg {
+struct AcquireMessages : public MsgConsumer
+{
+    Msgs& out;
+
+    AcquireMessages(Msgs& out) : out(out) {}
+
+    void operator()(std::auto_ptr<Msg> msg)
+    {
+        out.acquire(msg);
+    }
+};
+}
+
 /**
  * Match adapter for Msgs
  */

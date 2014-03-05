@@ -68,6 +68,7 @@ public:
 
     virtual void messages_open(const char* filename, const char* mode, Encoding format, const char* options=0);
     virtual bool messages_read_next();
+    virtual void messages_write_next(const char* template_name=0);
 };
 
 }

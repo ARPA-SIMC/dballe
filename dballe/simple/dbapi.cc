@@ -85,14 +85,20 @@ struct InputFile
 struct OutputFile
 {
     File* output;
-#if 0
     msg::Exporter* exporter;
-#endif
 
-    OutputFile(const char* filename, const char* mode, Encoding format, const char* options)
+    OutputFile(const char* fname, const char* mode, Encoding format, const char* template_name)
         : output(0)
     {
-        // TODO
+        msg::Exporter::Options options;
+        if (template_name) options.template_name = template_name;
+        exporter = msg::Exporter::create(format, options).release();
+        output = File::create(format, fname, mode).release();
+    }
+    ~OutputFile()
+    {
+        if (output) delete output;
+        if (exporter) delete exporter;
     }
 };
 
@@ -366,6 +372,18 @@ bool DbAPI::messages_read_next()
     db.import_msg(input_file->msg(), NULL, input_file->import_flags);
 
     return true;
+}
+
+void DbAPI::messages_write_next(const char* template_name)
+{
+    Msgs msgs;
+    msg::AcquireMessages am(msgs);
+    db.export_msgs(input, am);
+    if (msgs.size() != 1)
+        error_consistency::throwf("messages_write_next has data for %zd messages instead of 1", msgs.size());
+    Rawmsg rmsg;
+    output_file->exporter->to_rawmsg(msgs, rmsg);
+    output_file->output->write(rmsg);
 }
 
 }
