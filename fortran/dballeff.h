@@ -172,10 +172,11 @@ interface
      character (len=*), intent(in) :: filename,mode,type
    end function idba_messaggi
 
-      integer function idba_messages_open(handle, filename, mode, format, options)
+   integer function idba_messages_open_input(handle, filename, mode, format, simplified)
      integer, intent(in) :: handle
-      character (len=*), intent(in) :: filename,mode,format,options
-   end function idba_messages_open
+     character (len=*), intent(in) :: filename,mode,format
+     logical, intent(in) :: simplified
+   end function idba_messages_open_input
 
    integer function idba_messages_read_next(handle, status)
      integer, intent(in) :: handle

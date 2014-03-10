@@ -292,7 +292,7 @@ template<> template<> void to::test<8>()
     {
         fortran::DbAPI api(*db, "read", "read", "read");
         try {
-            api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
         } catch (std::exception& e) {
             wassert(actual(e.what()).contains("must be called on a session with writable"));
         }
@@ -300,7 +300,7 @@ template<> template<> void to::test<8>()
     {
         fortran::DbAPI api(*db, "write", "read", "read");
         try {
-            api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
         } catch (std::exception& e) {
             wassert(actual(e.what()).contains("must be called on a session with writable"));
         }
@@ -308,26 +308,26 @@ template<> template<> void to::test<8>()
     {
         fortran::DbAPI api(*db, "read", "add", "read");
         try {
-            api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
         } catch (std::exception& e) {
             wassert(actual(e.what()).contains("must be called on a session with writable"));
         }
     }
     {
         fortran::DbAPI api(*db, "write", "add", "read");
-        api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
     }
     {
         fortran::DbAPI api(*db, "write", "write", "read");
-        api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
     }
     {
         fortran::DbAPI api(*db, "write", "add", "write");
-        api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
     }
     {
         fortran::DbAPI api(*db, "write", "write", "write");
-        api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
     }
 }
 
@@ -335,7 +335,7 @@ template<> template<> void to::test<9>()
 {
     // 2 messages, 1 subset each
     fortran::DbAPI api(*db, "write", "write", "write");
-    api.messages_open(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+    api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
 
     // At the beginning, the DB is empty
     wassert(actual(api.voglioquesto()) == 0);
@@ -359,7 +359,7 @@ template<> template<> void to::test<10>()
 {
     // 1 message, 6 subsets
     fortran::DbAPI api(*db, "write", "write", "write");
-    api.messages_open(dballe::tests::datafile("bufr/temp-gts2.bufr").c_str(), "r", BUFR);
+    api.messages_open_input(dballe::tests::datafile("bufr/temp-gts2.bufr").c_str(), "r", BUFR);
 
     // At the beginning, the DB is empty
     wassert(actual(api.voglioquesto()) == 0);
@@ -394,7 +394,7 @@ template<> template<> void to::test<11>()
 {
     // 2 messages, 2 subsets each
     fortran::DbAPI api(*db, "write", "write", "write");
-    api.messages_open(dballe::tests::datafile("bufr/db-messages1.bufr").c_str(), "r", BUFR);
+    api.messages_open_input(dballe::tests::datafile("bufr/db-messages1.bufr").c_str(), "r", BUFR);
 
     // At the beginning, the DB is empty
     wassert(actual(api.voglioquesto()) == 0);
@@ -435,7 +435,7 @@ template<> template<> void to::test<12>()
     // Write one message
     {
         fortran::DbAPI api(*db, "write", "write", "write");
-        api.messages_open("test.bufr", "wb", BUFR);
+        api.messages_open_input("test.bufr", "wb", BUFR);
 
         api.setd("lat", 44.5);
         api.setd("lon", 11.5);
@@ -458,7 +458,7 @@ template<> template<> void to::test<12>()
     // Read it back
     {
         fortran::DbAPI api(*db, "write", "write", "write");
-        api.messages_open("test.bufr", "rb", BUFR);
+        api.messages_open_input("test.bufr", "rb", BUFR);
 
         wassert(actual(api.messages_read_next()).istrue());
         wassert(actual(api.voglioquesto()) == 2);

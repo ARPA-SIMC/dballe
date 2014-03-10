@@ -211,18 +211,31 @@ void SessionTracer::log_fatto()
     fprintf(trace_file, "// %s not used anymore\n", trace_tag);
 }
 
-void SessionTracer::log_messages_open(const char* fname, const char* mode, const char* format, const char* options)
+void SessionTracer::log_messages_open_input(const char* fname, const char* mode, const char* format, bool simplified)
 {
     string arg1 = c_escape(fname);
     string arg2 = c_escape(mode);
-    string arg3 = c_escape(options);
-    fprintf(trace_file, "%s.messages_open(\"%s\", \"%s\", %s, \"%s\");\n",
-            trace_tag, arg1.c_str(), arg2.c_str(), format, arg3.c_str());
+    fprintf(trace_file, "%s.messages_open(\"%s\", \"%s\", %s, %s);\n",
+            trace_tag, arg1.c_str(), arg2.c_str(), format, simplified ? "true" : "false");
+}
+
+void SessionTracer::log_messages_open_output(const char* fname, const char* mode, const char* format)
+{
+    string arg1 = c_escape(fname);
+    string arg2 = c_escape(mode);
+    fprintf(trace_file, "%s.messages_open(\"%s\", \"%s\", %s);\n",
+            trace_tag, arg1.c_str(), arg2.c_str(), format);
 }
 
 void SessionTracer::log_messages_read_next()
 {
     fprintf(trace_file, "ires = %s.messages_read_next();\n", trace_tag);
+}
+
+void SessionTracer::log_messages_write_next(const char* template_name)
+{
+    string arg = c_escape(template_name);
+    fprintf(trace_file, "%s.messages_write_next(\"%s\");\n", trace_tag, arg.c_str());
 }
 
 

@@ -29,8 +29,8 @@
       infile = trim(infile) // "/bufr/db-messages1.bufr";
 
 !     Database login
-      ier = idba_messages_open(handle, infile, "rb", "BUFR", "")
-      call ensure_no_error("messages_open")
+      ier = idba_messages_open_input(handle, infile, "rb", "BUFR", .true.)
+      call ensure_no_error("messages_open_input")
 
 !     Open a session
       ier = idba_unsetall(handle)

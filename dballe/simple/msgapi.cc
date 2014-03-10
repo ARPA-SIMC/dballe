@@ -478,14 +478,24 @@ void MsgAPI::scusa()
 	throw error_consistency("scusa does not make sense when writing messages");
 }
 
-void MsgAPI::messages_open(const char* filename, const char* mode, Encoding format, const char* options)
+void MsgAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool)
 {
-    throw error_unimplemented("MsgAPI::messages_open");
+    throw error_unimplemented("MsgAPI::messages_open_input");
+}
+
+void MsgAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
+{
+    throw error_unimplemented("MsgAPI::messages_open_output");
 }
 
 bool MsgAPI::messages_read_next()
 {
     throw error_unimplemented("MsgAPI::messages_read_next");
+}
+
+void MsgAPI::messages_write_next(const char*)
+{
+    throw error_unimplemented("MsgAPI::messages_write_next");
 }
 
 void MsgAPI::remove_all()

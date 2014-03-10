@@ -38,12 +38,11 @@ struct InputFile
     unsigned current_msg_idx;
     int import_flags;
 
-    InputFile(const char* fname, Encoding format, const char* options=0)
+    InputFile(const char* fname, Encoding format, bool simplified)
         : input(0), importer(0), import_flags(0)
     {
         msg::Importer::Options importer_options;
-        if (options)
-            importer_options = msg::Importer::Options::from_string(options);
+        importer_options.simplified = simplified;
         input = File::create(format, fname, "rb").release();
         importer = msg::Importer::create(format, importer_options).release();
     }
@@ -85,20 +84,15 @@ struct InputFile
 struct OutputFile
 {
     File* output;
-    msg::Exporter* exporter;
 
-    OutputFile(const char* fname, const char* mode, Encoding format, const char* template_name)
+    OutputFile(const char* fname, const char* mode, Encoding format)
         : output(0)
     {
-        msg::Exporter::Options options;
-        if (template_name) options.template_name = template_name;
-        exporter = msg::Exporter::create(format, options).release();
         output = File::create(format, fname, mode).release();
     }
     ~OutputFile()
     {
         if (output) delete output;
-        if (exporter) delete exporter;
     }
 };
 
@@ -329,43 +323,50 @@ void DbAPI::scusa()
     qcinput.clear();
 }
 
-void DbAPI::messages_open(const char* filename, const char* mode, Encoding format, const char* options)
+void DbAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified)
 {
-    if (strchr(mode, 'r') != NULL)
-    {
-        if ((perms & PERM_ANA_RO) || (perms & PERM_DATA_RO))
-            throw error_consistency("messages_open must be called on a session with writable station and data");
-        if (input_file)
-        {
-            delete input_file;
-            input_file = 0;
-        }
-        input_file = new InputFile(filename, format, options);
+    // Consistency checks
+    if (strchr(mode, 'r') == NULL)
+        throw error_consistency("input files should be open with 'r' mode");
+    if ((perms & PERM_ANA_RO) || (perms & PERM_DATA_RO))
+        throw error_consistency("messages_open must be called on a session with writable station and data");
 
-        input_file->import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
-        if (perms & PERM_ATTR_WRITE)
-            input_file->import_flags |= DBA_IMPORT_ATTRS;
-        if (perms & PERM_DATA_WRITE)
-            input_file->import_flags |= DBA_IMPORT_OVERWRITE;
-    } else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL) {
-        if (output_file)
-        {
-            delete output_file;
-            output_file = 0;
-        }
-        output_file = new OutputFile(filename, mode, format, options);
+    // Close existing file, if any
+    if (input_file)
+    {
+        delete input_file;
+        input_file = 0;
     }
+
+    // Open new one and set import options
+    input_file = new InputFile(filename, format, simplified);
+
+    input_file->import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
+    if (perms & PERM_ATTR_WRITE)
+        input_file->import_flags |= DBA_IMPORT_ATTRS;
+    if (perms & PERM_DATA_WRITE)
+        input_file->import_flags |= DBA_IMPORT_OVERWRITE;
+}
+
+void DbAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
+{
+    if (strchr(mode, 'w') == NULL && strchr(mode, 'a') == NULL)
+        throw error_consistency("output files should be open with 'w' or 'a' mode");
+
+    // Close existing file, if any
+    if (output_file)
+    {
+        delete output_file;
+        output_file = 0;
+    }
+
+    output_file = new OutputFile(filename, mode, format);
 }
 
 bool DbAPI::messages_read_next()
 {
     if (!input_file)
         throw error_consistency("messages_read_next called but there are no open input files");
-#if 0
-    // Clear existing data
-    // Do not use reset to preserve repinfo information
-    memdb.clear();
-#endif
     if (!input_file->next())
         return false;
 
@@ -374,16 +375,37 @@ bool DbAPI::messages_read_next()
     return true;
 }
 
+namespace {
+struct Exporter : public MsgConsumer
+{
+    File& out;
+    msg::Exporter* exporter;
+
+    Exporter(File& out, msg::Exporter::Options& options)
+        : out(out), exporter(msg::Exporter::create(out.type(), options).release())
+    {
+    }
+
+    void operator()(std::auto_ptr<Msg> msg)
+    {
+        Msgs msgs;
+        msgs.acquire(msg);
+        Rawmsg rmsg;
+        exporter->to_rawmsg(msgs, rmsg);
+        out.write(rmsg);
+    }
+};
+}
+
 void DbAPI::messages_write_next(const char* template_name)
 {
-    Msgs msgs;
-    msg::AcquireMessages am(msgs);
-    db.export_msgs(input, am);
-    if (msgs.size() != 1)
-        error_consistency::throwf("messages_write_next has data for %zd messages instead of 1", msgs.size());
-    Rawmsg rmsg;
-    output_file->exporter->to_rawmsg(msgs, rmsg);
-    output_file->output->write(rmsg);
+    // Build an exporter for this template
+    msg::Exporter::Options options;
+    if (template_name) options.template_name = template_name;
+    Exporter exporter(*(output_file->output), options);
+
+    // Do the export with the current filter
+    db.export_msgs(input, exporter);
 }
 
 }

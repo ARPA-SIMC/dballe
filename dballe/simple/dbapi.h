@@ -66,7 +66,8 @@ public:
     virtual void critica();
     virtual void scusa();
 
-    virtual void messages_open(const char* filename, const char* mode, Encoding format, const char* options=0);
+    virtual void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true);
+    virtual void messages_open_output(const char* filename, const char* mode, Encoding format);
     virtual bool messages_read_next();
     virtual void messages_write_next(const char* template_name=0);
 };

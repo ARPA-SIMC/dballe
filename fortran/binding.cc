@@ -1785,35 +1785,63 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 	}
 }
 
-F77_INTEGER_FUNCTION(idba_messages_open)(
+F77_INTEGER_FUNCTION(idba_messages_open_input)(
         INTEGER(handle),
         CHARACTER(filename),
         CHARACTER(mode),
         CHARACTER(format),
-        CHARACTER(options)
+        LOGICAL(simplified)
         TRAIL(filename)
         TRAIL(mode)
-        TRAIL(format)
-        TRAIL(options))
+        TRAIL(format))
 {
     GENPTR_INTEGER(handle)
     GENPTR_CHARACTER(filename)
     GENPTR_CHARACTER(mode)
     GENPTR_CHARACTER(format)
-    GENPTR_CHARACTER(options)
+    GENPTR_LOGICAL(simplified)
     char c_filename[512];
     char c_mode[10];
     char c_format[10];
-    char c_options[512];
     cnfImpn(filename, filename_length,  511, c_filename); c_filename[511] = 0;
     cnfImpn(mode, mode_length,  9, c_mode); c_mode[9] = 0;
     cnfImpn(format, format_length,  9, c_format); c_format[9] = 0;
-    cnfImpn(options, options_length,  511, c_options); c_options[511] = 0;
 
     try {
         HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_messages_open(c_filename, c_mode, c_format, c_options));
-        h.api->messages_open(c_filename, c_mode, parse_encoding(c_format), c_options);
+        IF_TRACING(h.trace.log_messages_open_input(c_filename, c_mode, c_format, *simplified));
+        h.api->messages_open_input(c_filename, c_mode, parse_encoding(c_format), *simplified);
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+F77_INTEGER_FUNCTION(idba_messages_open_output)(
+        INTEGER(handle),
+        CHARACTER(filename),
+        CHARACTER(mode),
+        CHARACTER(format)
+        TRAIL(filename)
+        TRAIL(mode)
+        TRAIL(format))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(filename)
+    GENPTR_CHARACTER(mode)
+    GENPTR_CHARACTER(format)
+    char c_filename[512];
+    char c_mode[10];
+    char c_format[10];
+    cnfImpn(filename, filename_length,  511, c_filename); c_filename[511] = 0;
+    cnfImpn(mode, mode_length,  9, c_mode); c_mode[9] = 0;
+    cnfImpn(format, format_length,  9, c_format); c_format[9] = 0;
+
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_messages_open_output(c_filename, c_mode, c_format));
+        h.api->messages_open_output(c_filename, c_mode, parse_encoding(c_format));
 
         return fortran::success();
     } catch (error& e) {
@@ -1830,6 +1858,23 @@ F77_INTEGER_FUNCTION(idba_messages_read_next)(INTEGER(handle), LOGICAL(found))
         IF_TRACING(h.trace.log_messages_read_next());
         *found = h.api->messages_read_next();
         IF_TRACING(fortran::log_result(*found));
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+F77_INTEGER_FUNCTION(idba_messages_write_next)(INTEGER(handle), CHARACTER(template_name) TRAIL(template_name))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(template_name)
+    char c_template_name[64];
+    cnfImpn(template_name, template_name_length, 63, c_template_name); c_template_name[63] = 0;
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_messages_write_next(c_template_name));
+        h.api->messages_write_next(c_template_name);
 
         return fortran::success();
     } catch (error& e) {

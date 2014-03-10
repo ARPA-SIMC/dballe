@@ -602,10 +602,10 @@ struct API
 	/*@}*/
 
     /**
-     * Open a BUFR/CREX/AOF file for reading or writing.
+     * Open a BUFR/CREX/AOF file for reading.
      *
-     * Each session can have up to two messages open at the same time: one for
-     * reading and one for writing.
+     * Each session can only have one input file: if one was previously open,
+     * it is closed before opening the new one.
      *
      * @param filename
      *   The file name
@@ -613,13 +613,25 @@ struct API
      *   The opening mode. See the mode parameter of libc's fopen() call for details.
      * @param encoding
      *   The file encoding
-     * @param options
-     *   An optional string that will be passed to
-     *   dballe::msg::Importer::Options::from_string or
-     *   dballe::msg::Exporter::Options::from_string to configure the import or
-     *   export process.
+     * @param simplified
+     *   An argument for configuring the Importers::Options used to create the
+     *   importer for this file.
      */
-    virtual void messages_open(const char* filename, const char* mode, Encoding format, const char* options=0) = 0;
+    virtual void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) = 0;
+
+    /**
+     * Open a BUFR/CREX/AOF file for writing.
+     *
+     * Each session can only have one output file: if one was previously open, it is closed before opening the new one.
+     *
+     * @param filename
+     *   The file name
+     * @param mode
+     *   The opening mode. See the mode parameter of libc's fopen() call for details.
+     * @param encoding
+     *   The file encoding
+     */
+    virtual void messages_open_output(const char* filename, const char* mode, Encoding format) = 0;
 
     /**
      * Read the next message and import it in the database.
@@ -632,14 +644,10 @@ struct API
      */
     virtual bool messages_read_next() = 0;
 
-#if 0
     /**
      * Export the currently selected data to the output message.
-     *
-     * TODO: redesign the subsets use case
      */
-    virtual void messages_write_next(bool subset, const char* msg_template=0) = 0;
-#endif
+    virtual void messages_write_next(const char* template_name=0) = 0;
 
 	virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
 

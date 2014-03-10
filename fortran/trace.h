@@ -58,8 +58,10 @@ struct SessionTracer
     void log_unset(const char* parm);
     void log_scopa(const char* fname=0);
     void log_fatto();
-    void log_messages_open(const char* fname, const char* mode, const char* format, const char* options);
+    void log_messages_open_input(const char* fname, const char* mode, const char* format, bool simplified=true);
+    void log_messages_open_output(const char* fname, const char* mode, const char* format);
     void log_messages_read_next();
+    void log_messages_write_next(const char* template_name);
 };
 
 
