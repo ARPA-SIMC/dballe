@@ -435,7 +435,7 @@ template<> template<> void to::test<12>()
     // Write one message
     {
         fortran::DbAPI api(*db, "write", "write", "write");
-        api.messages_open_input("test.bufr", "wb", BUFR);
+        api.messages_open_output("test.bufr", "wb", BUFR);
 
         api.setd("lat", 44.5);
         api.setd("lon", 11.5);
@@ -452,6 +452,7 @@ template<> template<> void to::test<12>()
         api.setd("B11002", 2.4);
         api.prendilo();
 
+        api.unsetall();
         api.messages_write_next("wmo");
     }
 
@@ -463,9 +464,9 @@ template<> template<> void to::test<12>()
         wassert(actual(api.messages_read_next()).istrue());
         wassert(actual(api.voglioquesto()) == 2);
         wassert(actual(api.dammelo()) == "B12101");
-        wassert(actual(api.enqd("B11002")) == 2.4);
-        wassert(actual(api.dammelo()) == "B11002");
         wassert(actual(api.enqd("B12101")) == 21.5);
+        wassert(actual(api.dammelo()) == "B11002");
+        wassert(actual(api.enqd("B11002")) == 2.4);
 
         wassert(actual(api.messages_read_next()).isfalse());
     }
