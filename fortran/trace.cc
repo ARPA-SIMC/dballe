@@ -238,7 +238,10 @@ void SessionTracer::log_messages_write_next(const char* template_name)
     fprintf(trace_file, "%s.messages_write_next(\"%s\");\n", trace_tag, arg.c_str());
 }
 
-
-
 }
+}
+
+void dballe_fortran_debug_flush_trace_log()
+{
+    if (trace_file) fflush(trace_file);
 }
