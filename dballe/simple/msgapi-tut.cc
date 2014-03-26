@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2010--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@ void to::test<3>()
     // FIXME: this is indistinguishable from an EOF
     ensure_equals(api.voglioquesto(), 0);
     ensure_equals(api.voglioquesto(), 98);
-    ensure_equals(api.voglioquesto(), 0);
+    ensure_equals(api.voglioquesto(), api.missing_int);
 }
 
 }

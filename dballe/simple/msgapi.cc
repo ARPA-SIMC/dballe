@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -137,8 +137,8 @@ int MsgAPI::quantesono()
 {
     if (state & (STATE_BLANK | STATE_QUANTESONO))
         readNextMessage();
-	if (state & STATE_EOF)
-		return 0;
+    if (state & STATE_EOF)
+        return missing_int;
 	state |= STATE_QUANTESONO;
 		
 	return 1;
@@ -215,14 +215,14 @@ int MsgAPI::voglioquesto()
 {
     if (state & (STATE_BLANK | STATE_VOGLIOQUESTO))
         readNextMessage();
-	if (state & STATE_EOF)
-		return 0;
+    if (state & STATE_EOF)
+        return missing_int;
 	state |= STATE_VOGLIOQUESTO;
 		
 	iter_ctx = iter_var = -1;
 
-	Msg* msg = curmsg();
-	if (!msg) return 0;
+    Msg* msg = curmsg();
+    if (!msg) return missing_int;
 
 	int count = 0;
 	for (size_t l = 0; l < msg->data.size(); ++l)
@@ -242,7 +242,7 @@ const char* MsgAPI::dammelo()
 	output.clear();
 
 	Msg* msg = curmsg();
-	if (!msg) return 0;
+    if (!msg) return 0;
 
 	if (!incrementMsgIters())
 		return 0;
