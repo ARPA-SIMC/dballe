@@ -483,8 +483,9 @@ template<> template<> void to::test<13>()
     api.setcontextana();
     wassert(actual(api.voglioquesto()) == 3);
     // bug with mem DB: message: "enqi: B00000 (Context ID of the variable) is not defined"
-    string sres = api.dammelo();
-    wassert(actual(sres) == "B01194");
+    wassert(actual(api.dammelo()) == "B01194");
+    wassert(actual(api.dammelo()) == "B05001");
+    wassert(actual(api.dammelo()) == "B06001");
 }
 
 }

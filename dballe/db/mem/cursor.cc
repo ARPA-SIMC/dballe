@@ -232,7 +232,22 @@ struct StationResultQueue : public stack<const Station*>
     }
 };
 
-struct StationValueResultQueue : public stack<const StationValue*>
+struct CompareStationValueResult
+{
+    // Return an inverse comparison, so that the priority queue gives us the
+    // smallest items first
+    bool operator() (const StationValue* x, const StationValue* y) const
+    {
+        if (int res = x->station.coords.compare(y->station.coords)) return res > 0;
+        if (x->station.ident < y->station.ident) return false;
+        if (x->station.ident > y->station.ident) return true;
+        if (int res = x->var->code() - y->var->code()) return res > 0;
+        return x->station.report > y->station.report;
+    }
+};
+
+// TODO: order by code and report
+struct StationValueResultQueue : public priority_queue<const StationValue*, vector<const StationValue*>, CompareStationValueResult>
 {
     StationValueResultQueue(DB&, Results<StationValue>& res)
     {
@@ -261,7 +276,7 @@ struct CompareData
         if (int res = vx.levtr.level.compare(vy.levtr.level)) return res > 0;
         if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res > 0;
 
-        if (int res = vx.var->code() - vy.var->code()) return res < 0;
+        if (int res = vx.var->code() - vy.var->code()) return res > 0;
 
         return vx.station.report > vy.station.report;
     }
