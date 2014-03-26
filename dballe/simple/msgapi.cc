@@ -197,14 +197,11 @@ bool MsgAPI::incrementMsgIters()
 		++iter_var;
 	} else {
 		++iter_ctx;
+		// Skip the pseudoana layer
+		if (msg->data[iter_ctx]->level.ltype1 == 257)
+			++iter_ctx;
 		iter_var = 0;
 	}
-	// No not skip the pseudoana layer
-	// if (level->ltype1 == 257)
-	// {
-	// 	++iter_l;
-	// 	iter_d = 0;
-	// }
 	if ((unsigned)iter_ctx >= msg->data.size())
 		return false;
 
@@ -228,7 +225,7 @@ int MsgAPI::voglioquesto()
 	for (size_t l = 0; l < msg->data.size(); ++l)
 	{
 		const msg::Context* ctx = msg->data[l];
-		//if (level->ltype1 == 257) continue;
+		if (ctx->level.ltype1 == 257) continue;
 		count += ctx->data.size();
 	}
 	return count;
