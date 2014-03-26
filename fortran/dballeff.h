@@ -178,10 +178,20 @@ interface
      logical, intent(in) :: simplified
    end function idba_messages_open_input
 
+   integer function idba_messages_open_output(handle, filename, mode, format)
+     integer, intent(in) :: handle
+     character (len=*), intent(in) :: filename,mode,format
+   end function idba_messages_open_output
+
    integer function idba_messages_read_next(handle, status)
      integer, intent(in) :: handle
      logical, intent(out) :: status
    end function idba_messages_read_next
+
+   integer function idba_messages_write_next(handle, template_name)
+     integer, intent(in) :: handle
+     character (len=*), intent(in) :: template_name
+   end function idba_messages_write_next
 
    integer function idba_fatto(handle)
      integer, intent(in) :: handle
