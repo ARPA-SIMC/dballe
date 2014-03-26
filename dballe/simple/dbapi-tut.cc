@@ -472,6 +472,21 @@ template<> template<> void to::test<12>()
     }
 }
 
+// Reproduce an issue reported by Paolo
+template<> template<> void to::test<13>()
+{
+    // 2 messages, 2 subsets each
+    fortran::DbAPI api(*db, "write", "write", "write");
+    api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140312.bufr").c_str(), "r", BUFR);
+    wassert(actual(api.messages_read_next()) == 1);
+    api.unsetall();
+    api.setcontextana();
+    wassert(actual(api.voglioquesto()) == 3);
+    // bug with mem DB: message: "enqi: B00000 (Context ID of the variable) is not defined"
+    string sres = api.dammelo();
+    wassert(actual(sres) == "B01194");
+}
+
 }
 
 namespace {
