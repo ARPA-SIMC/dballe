@@ -243,5 +243,5 @@ void SessionTracer::log_messages_write_next(const char* template_name)
 
 void dballe_fortran_debug_flush_trace_log()
 {
-    if (trace_file) fflush(trace_file);
+    if (dballe::fortran::trace_file) fflush(dballe::fortran::trace_file);
 }
