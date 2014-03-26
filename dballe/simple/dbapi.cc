@@ -220,7 +220,7 @@ const char* DbAPI::dammelo()
         // Remember the varcode and reference ID for the next attribute
         // operations
         attr_varid = WR_STRING_TO_VAR(varstr + 1);
-        attr_reference_id = output.get(DBA_KEY_CONTEXT_ID).enqi();
+        attr_reference_id = query_cur->attr_reference_id();
 
         return varstr;
     } else {
