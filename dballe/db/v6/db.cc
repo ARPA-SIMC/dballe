@@ -714,7 +714,7 @@ void DB::remove_all()
     db::Statement stm(*conn);
     stm.exec_direct_and_close("DELETE FROM attr");
     stm.exec_direct_and_close("DELETE FROM data");
-    stm.exec_direct_and_close("DELETE FROM levtr");
+    stm.exec_direct_and_close("DELETE FROM lev_tr");
     stm.exec_direct_and_close("DELETE FROM station");
     t.commit();
 }
