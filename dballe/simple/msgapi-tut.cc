@@ -44,9 +44,10 @@ void to::test<1>()
     std::string fname = tests::datafile("bufr/simple-generic-group.bufr");
     fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
 
-    ensure_equals(api.voglioquesto(), 12);
-    ensure_equals(api.voglioquesto(), 12);
-    ensure_equals(api.voglioquesto(), 12);
+    ensure_equals(api.voglioquesto(), 0);
+    ensure_equals(api.voglioquesto(), 0);
+    ensure_equals(api.voglioquesto(), 0);
+    ensure_equals(api.quantesono(), 1);
 }
 
 // Test resuming after a broken BUFR
@@ -74,7 +75,7 @@ void to::test<2>()
         }
 
         // The second one should be read
-        ensure_equals(api.voglioquesto(), 563);
+        ensure_equals(api.voglioquesto(), 550);
     }
 
     // Good + broken + good
@@ -86,7 +87,7 @@ void to::test<2>()
 
         fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
 
-        ensure_equals(api.voglioquesto(), 563);
+        ensure_equals(api.voglioquesto(), 550);
 
         try {
             api.voglioquesto();
@@ -94,7 +95,7 @@ void to::test<2>()
         } catch (std::exception) {
         }
 
-        ensure_equals(api.voglioquesto(), 563);
+        ensure_equals(api.voglioquesto(), 550);
     }
 
     // Good + broken + broken + good
@@ -106,7 +107,7 @@ void to::test<2>()
 
         fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
 
-        ensure_equals(api.voglioquesto(), 563);
+        ensure_equals(api.voglioquesto(), 550);
 
         try {
             api.voglioquesto();
@@ -120,7 +121,7 @@ void to::test<2>()
         } catch (std::exception) {
         }
 
-        ensure_equals(api.voglioquesto(), 563);
+        ensure_equals(api.voglioquesto(), 550);
     }
 }
 
@@ -131,10 +132,10 @@ void to::test<3>()
     std::string fname = tests::datafile("bufr/dbapi-emptymsg.bufr");
     fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
 
-    ensure_equals(api.voglioquesto(), 107);
+    ensure_equals(api.voglioquesto(), 96);
     // FIXME: this is indistinguishable from an EOF
     ensure_equals(api.voglioquesto(), 0);
-    ensure_equals(api.voglioquesto(), 98);
+    ensure_equals(api.voglioquesto(), 86);
     ensure_equals(api.voglioquesto(), api.missing_int);
 }
 
