@@ -2,7 +2,7 @@
  * memdb/value - In memory representation of a variable with metadata and
  *               attributes
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,9 @@ struct Value
 
     /// Replace the value with the one of the given variable
     void replace(const wreport::Var& var);
+
+    void attr_insert(const Record& attrs);
+    void attr_remove(const std::vector<wreport::Varcode>& qcs);
 
     void dump(FILE* out) const;
 

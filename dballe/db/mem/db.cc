@@ -397,16 +397,12 @@ void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)
 
 void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
 {
-    Value& val = *memdb.values[id_data];
-    for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
-        val.var->seta(**i);
+    memdb.values[id_data]->attr_insert(attrs);
 }
 
 void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
 {
-    Value& val = *memdb.values[id_data];
-    for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
-        val.var->unseta(*i);
+    memdb.values[id_data]->attr_remove(qcs);
 }
 
 void DB::dump(FILE* out)

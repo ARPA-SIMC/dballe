@@ -49,6 +49,9 @@ struct StationValue
         : station(station), var(var.release()) {}
     ~StationValue();
 
+    void attr_insert(const Record& attrs);
+    void attr_remove(const std::vector<wreport::Varcode>& qcs);
+
     /// Replace the variable with the given one
     void replace(std::auto_ptr<wreport::Var> var);
 
