@@ -39,7 +39,7 @@ struct InputFile
     int import_flags;
 
     InputFile(const char* fname, Encoding format, bool simplified)
-        : input(0), importer(0), import_flags(0)
+        : input(0), importer(0), current_msg_idx(0), import_flags(0)
     {
         msg::Importer::Options importer_options;
         importer_options.simplified = simplified;

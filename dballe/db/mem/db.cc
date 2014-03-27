@@ -362,24 +362,7 @@ std::auto_ptr<db::Cursor> DB::query_summary(const Record& query)
 
 unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {
-    Value& val = *memdb.values[id_data];
-    unsigned res = 0;
-    if (qcs.empty())
-    {
-        for (const Var* a = val.var->next_attr(); a != NULL; a = a->next_attr())
-        {
-            attrs.set(*a);
-            ++res;
-        }
-    } else {
-        for (const Var* a = val.var->next_attr(); a != NULL; a = a->next_attr())
-            if (std::find(qcs.begin(), qcs.end(), a->code()) != qcs.end())
-            {
-                attrs.set(*a);
-                ++res;
-            }
-    }
-    return res;
+    return memdb.values[id_data]->query_attrs(qcs, attrs);
 }
 
 void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)

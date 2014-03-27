@@ -35,26 +35,6 @@ namespace memdb {
 
 StationValue::~StationValue()
 {
-    delete var;
-}
-
-void StationValue::replace(std::auto_ptr<Var> var)
-{
-    delete this->var;
-    this->var = var.release();
-}
-
-void StationValue::attr_insert(const Record& attrs)
-{
-    for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
-        var->seta(**i);
-}
-
-void StationValue::attr_remove(const std::vector<wreport::Varcode>& qcs)
-{
-    // FIXME: if qcs is empty, remove all?
-    for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
-        var->unseta(*i);
 }
 
 void StationValues::clear()

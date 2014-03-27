@@ -236,7 +236,7 @@ struct CompareStationValueResult
 {
     // Return an inverse comparison, so that the priority queue gives us the
     // smallest items first
-    bool operator() (const StationValue* x, const StationValue* y) const
+    bool operator() (StationValue* x, StationValue* y) const
     {
         if (int res = x->station.coords.compare(y->station.coords)) return res > 0;
         if (x->station.ident < y->station.ident) return false;
@@ -247,7 +247,7 @@ struct CompareStationValueResult
 };
 
 // TODO: order by code and report
-struct StationValueResultQueue : public priority_queue<const StationValue*, vector<const StationValue*>, CompareStationValueResult>
+struct StationValueResultQueue : public priority_queue<StationValue*, vector<StationValue*>, CompareStationValueResult>
 {
     StationValueResultQueue(DB&, Results<StationValue>& res)
     {
@@ -400,11 +400,13 @@ struct CursorStations : public CursorSorted<StationResultQueue>
 
     virtual void attr_insert(const Record& attrs)
     {
+        // Attributes for stations do not make any sense
         throw error_unimplemented("CursorStations::attr_insert");
     }
 
     virtual void attr_remove(const AttrList& qcs)
     {
+        // Attributes for stations do not make any sense
         throw error_unimplemented("CursorStations::attr_remove");
     }
 
@@ -434,16 +436,19 @@ struct CursorStationData : public CursorSorted<StationValueResultQueue>
     {
     }
 
+    virtual unsigned query_attrs(const AttrList& qcs, Record& attrs)
+    {
+        return queue.top()->query_attrs(qcs, attrs);
+    }
+
     virtual void attr_insert(const Record& attrs)
     {
-        // TODO
-        throw error_unimplemented("CursorStationData::attr_insert");
+        queue.top()->attr_insert(attrs);
     }
 
     virtual void attr_remove(const AttrList& qcs)
     {
-        // TODO
-        throw error_unimplemented("CursorStationData::attr_remove");
+        queue.top()->attr_remove(qcs);
     }
 
     bool next()
@@ -478,14 +483,12 @@ struct CursorDataBase : public CursorSorted<QUEUE>
 
     virtual void attr_insert(const Record& attrs)
     {
-        // TODO
-        throw error_unimplemented("CursorData::attr_insert");
+        this->values[this->cur_idx]->attr_insert(attrs);
     }
 
     virtual void attr_remove(const AttrList& qcs)
     {
-        // TODO
-        throw error_unimplemented("CursorData::attr_remove");
+        this->values[this->cur_idx]->attr_remove(qcs);
     }
 
     int attr_reference_id() const
@@ -518,7 +521,7 @@ struct CursorDataBase : public CursorSorted<QUEUE>
 
     unsigned query_attrs(const AttrList& qcs, Record& attrs)
     {
-        return this->db.query_attrs(this->cur_idx, 0, qcs, attrs);
+        return this->cur_value->query_attrs(qcs, attrs);
     }
 };
 

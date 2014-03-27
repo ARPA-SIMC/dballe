@@ -114,9 +114,8 @@ void Results<T>::copy_valptrs_to(OUTITER res)
                 for (stl::SetIntersection<size_t>::const_iterator i = indices->begin();
                         i != indices->end(); ++i)
                 {
-                    const T* val = values[*i];
-                    if (!match(*val)) continue;
-                    *res = val;
+                    if (!match(*values[*i])) continue;
+                    *res = values[*i];
                     ++res;
                 }
             } else {
@@ -124,8 +123,7 @@ void Results<T>::copy_valptrs_to(OUTITER res)
                 for (stl::SetIntersection<size_t>::const_iterator i = indices->begin();
                         i != indices->end(); ++i)
                 {
-                    const T* val = values[*i];
-                    *res = val;
+                    *res = values[*i];
                     ++res;
                 }
             }
@@ -136,9 +134,8 @@ void Results<T>::copy_valptrs_to(OUTITER res)
                 const Match<T>& match(*filter);
                 for (typename ValueStorage<T>::index_iterator i = values.index_begin(); i != values.index_end(); ++i)
                 {
-                    const T* val = values[*i];
-                    if (!match(*val)) continue;
-                    *res = val;
+                    if (!match(*values[*i])) continue;
+                    *res = values[*i];
                     ++res;
                 }
             } else {
@@ -163,17 +160,15 @@ void Results<T>::copy_valptrs_to(OUTITER res)
             const Match<T>& match(*filter);
             for (stl::Intersection<size_t>::const_iterator i = intersection.begin(sequences); i != intersection.end(); ++i)
             {
-                const T* val = values[*i];
-                if (!match(*val)) continue;
-                *res = val;
+                if (!match(*values[*i])) continue;
+                *res = values[*i];
                 ++res;
             }
         } else {
             trace_query("Generating results with extra intersections\n");
             for (stl::Intersection<size_t>::const_iterator i = intersection.begin(sequences); i != intersection.end(); ++i)
             {
-                const T* val = values[*i];
-                *res = val;
+                *res = values[*i];
                 ++res;
             }
         }

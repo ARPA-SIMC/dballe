@@ -19,31 +19,6 @@ namespace memdb {
 
 Value::~Value()
 {
-    delete var;
-}
-
-void Value::replace(std::auto_ptr<Var> var)
-{
-    delete this->var;
-    this->var = var.release();
-}
-
-void Value::replace(const Var& var)
-{
-    this->var->copy_val_only(var);
-}
-
-void Value::attr_insert(const Record& attrs)
-{
-    for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
-        var->seta(**i);
-}
-
-void Value::attr_remove(const std::vector<wreport::Varcode>& qcs)
-{
-    // FIXME: if qcs is empty, remove all?
-    for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
-        var->unseta(*i);
 }
 
 void Value::dump(FILE* out) const

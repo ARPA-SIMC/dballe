@@ -24,6 +24,7 @@
 
 #include <dballe/memdb/valuestorage.h>
 #include <dballe/memdb/index.h>
+#include <dballe/memdb/valuebase.h>
 #include <wreport/var.h>
 #include <memory>
 
@@ -40,20 +41,13 @@ template<typename T> struct Results;
 struct Station;
 
 /// Station information
-struct StationValue
+struct StationValue : public ValueBase
 {
     const Station& station;
-    wreport::Var* var;
 
     StationValue(const Station& station, std::auto_ptr<wreport::Var> var)
-        : station(station), var(var.release()) {}
+        : ValueBase(var), station(station) {}
     ~StationValue();
-
-    void attr_insert(const Record& attrs);
-    void attr_remove(const std::vector<wreport::Varcode>& qcs);
-
-    /// Replace the variable with the given one
-    void replace(std::auto_ptr<wreport::Var> var);
 
 private:
     StationValue(const StationValue&);
