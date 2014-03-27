@@ -1,7 +1,7 @@
 /*
  * fortran/commonapi - Common parts of all Fortran API implementations
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,16 @@ namespace fortran {
  */
 class CommonAPIImplementation : public API
 {
+public:
+    enum AttrState {
+        /// After a dammelo
+        ATTR_DAMMELO =   1,
+        /// After a prendilo
+        ATTR_PRENDILO =  2,
+        /// After a set *context_id or *var_related
+        ATTR_REFERENCE = 3,
+    };
+
 protected:
 	enum {
 		PERM_ANA_RO =		(1 << 0),
@@ -52,6 +62,8 @@ protected:
 	Record qcoutput;
 	int qc_iter;
 	int qc_count;
+
+    AttrState attr_state;
 
     // Varcode of the variable referred to by the next attribute operations
     wreport::Varcode attr_varid;
@@ -125,6 +137,8 @@ public:
 
 
 	virtual const char* ancora();
+
+    AttrState test_get_attr_state() const { return attr_state; }
 };
 
 }

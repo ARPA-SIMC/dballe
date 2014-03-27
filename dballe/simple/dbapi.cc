@@ -133,6 +133,8 @@ void DbAPI::scopa(const char* repinfofile)
         error_consistency::throwf(
             "scopa must be run with the database open in data write mode");
     db.reset(repinfofile);
+    attr_state = ATTR_REFERENCE;
+    attr_reference_id = missing_int;
 }
 
 void DbAPI::remove_all()
@@ -141,6 +143,8 @@ void DbAPI::remove_all()
         error_consistency::throwf(
             "remove_all must be run with the database open in data write mode");
     db.remove_all();
+    attr_state = ATTR_REFERENCE;
+    attr_reference_id = missing_int;
 }
 
 int DbAPI::quantesono()
@@ -152,15 +156,8 @@ int DbAPI::quantesono()
         ana_cur = 0;
     }
     ana_cur = db.query_stations(input).release();
-
-#if 0
-    if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
-    {
-        dba_verbose(DBA_VERB_DB_INPUT,
-                "invoking dba_db_ana_query(db, <input>).  <input> is:\n");
-        dba_record_print(input, DBA_VERBOSE_STREAM);
-    }
-#endif
+    attr_state = ATTR_REFERENCE;
+    attr_reference_id = missing_int;
 
     return ana_cur->remaining();
 }
@@ -189,15 +186,8 @@ int DbAPI::voglioquesto()
         query_cur = NULL;
     }
     query_cur = db.query_data(input).release();
-
-#if 0
-    if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
-    {
-        dba_verbose(DBA_VERB_DB_INPUT,
-                "invoking dba_query(db, <input>).  <input> is:\n");
-        dba_record_print(input, DBA_VERBOSE_STREAM);
-    }
-#endif
+    attr_state = ATTR_REFERENCE;
+    attr_reference_id = missing_int;
 
     return query_cur->remaining();
 }
@@ -219,6 +209,7 @@ const char* DbAPI::dammelo()
 
         // Remember the varcode and reference ID for the next attribute
         // operations
+        attr_state = ATTR_DAMMELO;
         attr_varid = WR_STRING_TO_VAR(varstr + 1);
         attr_reference_id = query_cur->attr_reference_id();
 
@@ -226,6 +217,8 @@ const char* DbAPI::dammelo()
     } else {
         delete query_cur;
         query_cur = NULL;
+        attr_state = ATTR_REFERENCE;
+        attr_reference_id = missing_int;
         return 0;
     }
 }
@@ -236,22 +229,12 @@ void DbAPI::prendilo()
         throw error_consistency(
             "idba_prendilo cannot be called with the database open in data readonly mode");
 
-#if 0
-    if (dba_verbose_is_allowed(DBA_VERB_DB_INPUT))
-    {
-        dba_verbose(DBA_VERB_DB_INPUT,
-                "invoking dba_insert_or_replace(db, <input>, %d, %d).  <input> is:\n",
-                perms & PERM_DATA_WRITE ? 1 : 0,
-                perms & PERM_ANA_WRITE ? 1 : 0);
-        dba_record_print(input, DBA_VERBOSE_STREAM);
-    }
-#endif
-
     db.insert(input, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
 
     // Mark the attr reference id as invalid, so that a critica() will call
     // attr_insert without the reference id
-    attr_reference_id = -1;
+    attr_state = ATTR_PRENDILO;
+    attr_reference_id = missing_int;
 
     // If there was only one variable in the input, make it a valid default for
     // the next critica
@@ -268,21 +251,33 @@ void DbAPI::dimenticami()
         throw error_consistency("dimenticami must be called with the database open in data write mode");
 
     db.remove(input);
+    attr_state = ATTR_REFERENCE;
+    attr_reference_id = missing_int;
 }
 
 int DbAPI::voglioancora()
 {
-    if (attr_reference_id == -1 || attr_varid == 0)
-        throw error_consistency("voglioancora must be called after a dammelo, or after setting *context_id and *var_related");
-
     // Retrieve the varcodes of the attributes that we want
     std::vector<wreport::Varcode> arr;
     read_qc_list(arr);
 
     // Query attributes
-    int qc_count = db.query_attrs(attr_reference_id, attr_varid, arr, qcoutput);
-    qc_iter = 0;
+    int qc_count = 0;
+    switch (attr_state)
+    {
+        case ATTR_REFERENCE:
+            if (attr_reference_id == missing_int || attr_varid == 0)
+                throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
+            qc_count = db.query_attrs(attr_reference_id, attr_varid, arr, qcoutput);
+            break;
+        case ATTR_DAMMELO:
+            qc_count = query_cur->query_attrs(arr, qcoutput);
+            break;
+        case ATTR_PRENDILO:
+            throw error_consistency("voglioancora cannot be called after a prendilo");
+    }
 
+    qc_iter = 0;
     qcinput.clear();
 
     return qc_count;
@@ -294,13 +289,20 @@ void DbAPI::critica()
         throw error_consistency(
             "critica cannot be called with the database open in attribute readonly mode");
 
-    if (attr_varid == 0)
-        throw error_consistency("critica must be called after a dammelo, a prendilo, or after setting *context_id and *var_related");
-
-    if (attr_reference_id == -1)
-        db.attr_insert(attr_varid, qcinput);
-    else
-        db.attr_insert(attr_reference_id, attr_varid, qcinput);
+    switch (attr_state)
+    {
+        case ATTR_REFERENCE:
+            if (attr_reference_id == missing_int || attr_varid == 0)
+                throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
+            db.attr_insert(attr_reference_id, attr_varid, qcinput);
+            break;
+        case ATTR_DAMMELO:
+            query_cur->attr_insert(qcinput);
+            break;
+        case ATTR_PRENDILO:
+            db.attr_insert(attr_varid, qcinput);
+            break;
+    }
 
     qcinput.clear();
 }
@@ -311,14 +313,24 @@ void DbAPI::scusa()
         throw error_consistency(
             "scusa must be called with the database open in attribute write mode");
 
-    if (attr_reference_id == -1 || attr_varid == 0)
-        throw error_consistency("voglioancora must be called after a dammelo, or after setting *context_id and *var_related");
 
     // Retrieve the varcodes of the attributes we want to remove
     std::vector<wreport::Varcode> arr;
     read_qc_list(arr);
 
-    db.attr_remove(attr_reference_id, attr_varid, arr);
+    switch (attr_state)
+    {
+        case ATTR_REFERENCE:
+            if (attr_reference_id == missing_int || attr_varid == 0)
+                throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
+            db.attr_remove(attr_reference_id, attr_varid, arr);
+            break;
+        case ATTR_DAMMELO:
+            query_cur->attr_remove(arr);
+            break;
+        case ATTR_PRENDILO:
+            throw error_consistency("scusa cannot be called after a prendilo");
+    }
 
     qcinput.clear();
 }

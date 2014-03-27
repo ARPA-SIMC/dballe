@@ -1,7 +1,7 @@
 /*
  * fortran/commonapi - Common parts of all Fortran API implementations
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,8 @@ namespace dballe {
 namespace fortran {
 
 CommonAPIImplementation::CommonAPIImplementation()
-	: perms(0), qc_iter(-1), qc_count(0), attr_varid(0), attr_reference_id(-1)
+    : perms(0), qc_iter(-1), qc_count(0),
+      attr_state(ATTR_REFERENCE), attr_varid(0), attr_reference_id(missing_int)
 {
 }
 
@@ -178,8 +179,10 @@ void CommonAPIImplementation::seti(const char* param, int value)
     if (param[0] == '*')
     {
         if (strcmp(param + 1, "context_id") == 0)
+        {
+            attr_state = ATTR_REFERENCE;
             attr_reference_id = value;
-        else {
+        } else {
             qcinput.set(param + 1, value);
         }
     } else
@@ -207,8 +210,10 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
     if (param[0] == '*')
     {
         if (strcmp(param + 1, "var_related") == 0)
+        {
+            attr_state = ATTR_REFERENCE;
             attr_varid = resolve_varcode(value);
-        else {
+        } else {
             qcinput.set(param + 1, value);
         }
     } else

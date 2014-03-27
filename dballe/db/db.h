@@ -152,6 +152,23 @@ public:
     virtual unsigned query_attrs(const AttrList& qcs, Record& attrs) = 0;
 
     /**
+     * Insert/overwrite new attributes for the current variable
+     *
+     * @param attrs
+     *   The record with the attributes to be added
+     */
+    virtual void attr_insert(const Record& attrs) = 0;
+
+    /**
+     * Delete attributes for the current variable
+     *
+     * @param qcs
+     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
+     *   associated to id_data will be deleted.
+     */
+    virtual void attr_remove(const AttrList& qcs) = 0;
+
+    /**
      * Iterate the cursor until the end, returning the number of items.
      *
      * If dump is a FILE pointer, also dump the cursor values to it

@@ -94,7 +94,7 @@ int Cursor::remaining() const
 int Cursor::attr_reference_id() const
 {
     // Default implementation for cursors for which this does not make any sense
-    return 0;
+    return MISSING_INT;
 }
 
 int Cursor::get_station_id() const { return cur_station->id; }
@@ -398,6 +398,16 @@ struct CursorStations : public CursorSorted<StationResultQueue>
     {
     }
 
+    virtual void attr_insert(const Record& attrs)
+    {
+        throw error_unimplemented("CursorStations::attr_insert");
+    }
+
+    virtual void attr_remove(const AttrList& qcs)
+    {
+        throw error_unimplemented("CursorStations::attr_remove");
+    }
+
     bool next()
     {
         if (CursorSorted<StationResultQueue>::next())
@@ -422,6 +432,18 @@ struct CursorStationData : public CursorSorted<StationValueResultQueue>
     CursorStationData(mem::DB& db, unsigned modifiers, Results<StationValue>& res)
         : CursorSorted<StationValueResultQueue>(db, modifiers, res)
     {
+    }
+
+    virtual void attr_insert(const Record& attrs)
+    {
+        // TODO
+        throw error_unimplemented("CursorStationData::attr_insert");
+    }
+
+    virtual void attr_remove(const AttrList& qcs)
+    {
+        // TODO
+        throw error_unimplemented("CursorStationData::attr_remove");
     }
 
     bool next()
@@ -452,6 +474,18 @@ struct CursorDataBase : public CursorSorted<QUEUE>
     CursorDataBase(mem::DB& db, unsigned modifiers, Results<Value>& res)
         : CursorSorted<QUEUE>(db, modifiers, res), values(res.values)
     {
+    }
+
+    virtual void attr_insert(const Record& attrs)
+    {
+        // TODO
+        throw error_unimplemented("CursorData::attr_insert");
+    }
+
+    virtual void attr_remove(const AttrList& qcs)
+    {
+        // TODO
+        throw error_unimplemented("CursorData::attr_remove");
     }
 
     int attr_reference_id() const
@@ -523,6 +557,16 @@ struct CursorSummary : public Cursor
 
         // Initialize the result count
         count = values.size();
+    }
+
+    virtual void attr_insert(const Record& attrs)
+    {
+        throw error_unimplemented("CursorSummary::attr_insert");
+    }
+
+    virtual void attr_remove(const AttrList& qcs)
+    {
+        throw error_unimplemented("CursorSummary::attr_remove");
     }
 
     bool next()

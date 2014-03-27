@@ -74,6 +74,8 @@ dballe::DB& Cursor::get_db() const { return db; }
 
 int Cursor::attr_reference_id() const
 {
+    if (sqlrec.out_id_ltr == -1)
+        return MISSING_INT;
     return sqlrec.out_id_data;
 }
 
@@ -267,6 +269,16 @@ unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& a
     return db.query_attrs(sqlrec.out_id_data, sqlrec.out_varcode, qcs, attrs);
 }
 
+void Cursor::attr_insert(const dballe::Record& attrs)
+{
+    db.attr_insert(sqlrec.out_id_data, sqlrec.out_varcode, attrs);
+}
+
+void Cursor::attr_remove(const AttrList& qcs)
+{
+    db.attr_remove(sqlrec.out_id_data, sqlrec.out_varcode, qcs);
+}
+
 void Cursor::add_station_info(Record& rec)
 {
     /* Extra variables to add:
@@ -433,7 +445,10 @@ void CursorData::to_record(Record& rec)
 {
     to_record_pseudoana(rec);
     to_record_repinfo(rec);
-    rec.key(DBA_KEY_CONTEXT_ID).seti(sqlrec.out_id_data);
+    if (sqlrec.out_id_ltr == -1)
+        rec.unset(DBA_KEY_CONTEXT_ID);
+    else
+        rec.key(DBA_KEY_CONTEXT_ID).seti(sqlrec.out_id_data);
     to_record_varcode(rec);
     to_record_ltr(rec);
     to_record_datetime(rec);
@@ -596,7 +611,10 @@ void CursorBest::to_record(Record& rec)
 {
     to_record_pseudoana(rec);
     to_record_repinfo(rec);
-    rec.key(DBA_KEY_CONTEXT_ID).seti(sqlrec.out_id_data);
+    if (sqlrec.out_id_ltr == -1)
+        rec.unset(DBA_KEY_CONTEXT_ID);
+    else
+        rec.key(DBA_KEY_CONTEXT_ID).seti(sqlrec.out_id_data);
     to_record_varcode(rec);
     to_record_ltr(rec);
     to_record_datetime(rec);

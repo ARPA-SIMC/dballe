@@ -670,7 +670,6 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
             d.insert_or_fail(true);
         last_insert_varids.push_back(VarID((*i)->code(), d.id));
     }
-
     t.commit();
 
     _last_station_id = d.id_station;

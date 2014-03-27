@@ -125,6 +125,8 @@ struct Cursor : public db::Cursor
      * Query attributes for the current variable
      */
     unsigned query_attrs(const AttrList& qcs, Record& attrs);
+    virtual void attr_insert(const Record& attrs);
+    virtual void attr_remove(const AttrList& qcs);
 
     virtual int get_station_id() const;
     virtual double get_lat() const;

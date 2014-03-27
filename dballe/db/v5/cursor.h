@@ -64,6 +64,9 @@ struct Cursor : public dballe::db::Cursor
      * are bound */
     unsigned int from_wanted;
 
+    /// True if we are querying station variables
+    bool query_station_vars;
+
     /** Query results
      * @{
      */
@@ -152,13 +155,14 @@ struct Cursor : public dballe::db::Cursor
     virtual void get_datetime(int (&dt)[6]) const;
     virtual wreport::Varcode get_varcode() const;
     virtual wreport::Var get_var() const;
-
     virtual int attr_reference_id() const;
 
     /**
      * Query attributes for the current variable
      */
     unsigned query_attrs(const AttrList& qcs, Record& attrs);
+    virtual void attr_insert(const Record& attrs);
+    virtual void attr_remove(const AttrList& qcs);
 
 protected:
     /// Reset the cursor at the beginning of a query

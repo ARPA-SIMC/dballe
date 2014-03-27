@@ -210,6 +210,7 @@ void Cursor::reset()
 
 int Cursor::attr_reference_id() const
 {
+    if (query_station_vars) return MISSING_INT;
     return out_context_id;
 }
 
@@ -235,6 +236,7 @@ int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifie
     qb.build_query(rec);
 
     from_wanted = qb.from_wanted;
+    query_station_vars = qb.accept_from_ana_context;
 
     TRACE("Performing query: %s\n", qb.sql_query.c_str());
 
@@ -280,6 +282,7 @@ void Cursor::query_datetime_extremes(const Record& query, Record& result)
     qb.stm.bind_out(qb.output_seq++, dmax, dmax_ind);
 
     from_wanted = qb.from_wanted;
+    query_station_vars = qb.accept_from_ana_context;
 
     TRACE("Performing query: %s\n", qb.sql_query.c_str());
 
@@ -406,7 +409,10 @@ void Cursor::to_record(Record& rec)
     }
     if (from_wanted & DBA_DB_FROM_C)
     {
-        rec.key(DBA_KEY_CONTEXT_ID).seti(out_context_id);
+        if (query_station_vars)
+            rec.unset(DBA_KEY_CONTEXT_ID);
+        else
+            rec.key(DBA_KEY_CONTEXT_ID).seti(out_context_id);
 
         /* If PA was not wanted, we can still get the ana_id */
         if (!(from_wanted & DBA_DB_FROM_PA))
@@ -473,7 +479,9 @@ void Cursor::to_record(Record& rec)
     }
     if (from_wanted & DBA_DB_FROM_D)
     {
-        if (!(from_wanted & DBA_DB_FROM_C))
+        if (query_station_vars)
+            rec.unset(DBA_KEY_CONTEXT_ID);
+        else if (!(from_wanted & DBA_DB_FROM_C))
             rec.key(DBA_KEY_CONTEXT_ID).seti(out_context_id);
 
         if (wanted & DBA_DB_WANT_VAR_NAME || wanted & DBA_DB_WANT_VAR_VALUE)
@@ -551,6 +559,16 @@ wreport::Var Cursor::get_var() const
 unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& attrs)
 {
     return db.query_attrs(out_context_id, out_varcode, qcs, attrs);
+}
+
+void Cursor::attr_insert(const dballe::Record& attrs)
+{
+    db.attr_insert(out_context_id, out_varcode, attrs);
+}
+
+void Cursor::attr_remove(const AttrList& qcs)
+{
+    db.attr_remove(out_context_id, out_varcode, qcs);
 }
 
 void Cursor::add_station_info(Record& rec)

@@ -128,18 +128,22 @@ template<> template<> void to::test<3>()
     ensure_equals(api.voglioquesto(), 1);
     api.dammelo();
 
+    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+
     // Store its context info to access attributes of this variable later
     reference_id = api.enqi("context_id");
 
     // It has no attributes
-    ensure_equals(api.voglioancora(), 0);
+    wassert(actual(api.voglioancora()) ==  0);
+    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
 
     // Set one attribute after a dammelo
     api.seti("*B33007", 50);
     api.critica();
+    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
 
     // It now has one attribute
-    ensure_equals(api.voglioancora(), 1);
+    wassert(actual(api.voglioancora()) ==  1);
 
 
     // Query a different variable, it has no attributes
@@ -152,6 +156,7 @@ template<> template<> void to::test<3>()
     // Query the first variable using its stored reference id
     api.seti("*context_id", reference_id);
     api.setc("*var_related", "B12101");
+    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_REFERENCE);
     ensure_equals(api.voglioancora(), 1);
     ensure_equals(api.enqi("*B33007"), 50);
 
@@ -486,6 +491,124 @@ template<> template<> void to::test<13>()
     wassert(actual(api.dammelo()) == "B01194");
     wassert(actual(api.dammelo()) == "B05001");
     wassert(actual(api.dammelo()) == "B06001");
+}
+
+// Reproduce an issue reported by Paolo
+template<> template<> void to::test<14>()
+{
+    // 2 messages, 2 subsets each
+    fortran::DbAPI api(*db, "write", "write", "write");
+    api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140426.bufr").c_str(), "r", BUFR);
+    wassert(actual(api.messages_read_next()) == 1);
+    api.unsetall();
+    api.setcontextana();
+    wassert(actual(api.voglioquesto()) == 5);
+    wassert(actual(api.dammelo()) == "B01019");
+    // Bug: missing variable 000000 in table dballe
+    wassert(actual(api.voglioancora()) == 0);
+}
+
+// Test attr_reference_id behaviour
+template<> template<> void to::test<15>()
+{
+    fortran::DbAPI api(*db, "write", "write", "write");
+    // Initial data
+    api.setd("lat", 44.5);
+    api.setd("lon", 11.5);
+    api.setc("rep_memo", "synop");
+    // One station variable
+    api.setcontextana();
+    api.setd("B07030", 100.0);
+    api.prendilo();
+    // One data variable
+    api.settimerange(254, 0, 0);
+    api.setdate(2013, 4, 25, 12, 0, 0);
+    api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
+    api.setd("B12101", 21.5);
+    api.prendilo();
+    api.unsetall();
+
+    // Query the station variable
+    api.setcontextana();
+    api.setc("var", "B07030");
+    wassert(actual(api.voglioquesto()) == 1);
+    api.dammelo();
+    // Get its reference id
+    wassert(actual(api.enqi("context_id")) == MISSING_INT);
+    // Get its attrs (none)
+    wassert(actual(api.voglioancora()) == 0);
+    // Set an attr
+    api.seti("*B33007", 50);
+    api.critica();
+    // Query the variable again
+    api.unsetall();
+    api.setcontextana();
+    api.setc("var", "B07030");
+    wassert(actual(api.voglioquesto()) == 1);
+    api.dammelo();
+    // Read its attrs (ok)
+    wassert(actual(api.voglioancora()) == 1);
+    // Read attrs setting *context_id and *varid: it fails
+    api.seti("*context_id", MISSING_INT);
+    api.setc("*var_related", "B07030");
+    try {
+        api.voglioancora();
+    } catch (std::exception& e) {
+        wassert(actual(e.what()).matches("invalid \\*context_id"));
+    }
+    // Query the variable again, to delete all attributes
+    api.unsetall();
+    api.setcontextana();
+    api.setc("var", "B07030");
+    wassert(actual(api.voglioquesto()) == 1);
+    api.dammelo();
+    api.scusa();
+    wassert(actual(api.voglioancora()) == 0);
+    // Try to delete by *context_id and *varid: it fails
+    api.seti("*context_id", MISSING_INT);
+    api.setc("*var_related", "B07030");
+    try {
+        api.scusa();
+    } catch (std::exception& e) {
+        wassert(actual(e.what()).matches("invalid \\*context_id"));
+    }
+
+    // Query the variable
+    api.unsetall();
+    api.setc("var", "B12101");
+    wassert(actual(api.voglioquesto()) == 1);
+    api.dammelo();
+    int ref_id = api.enqi("context_id");
+    // Save its ref id (ok)
+    wassert(actual(ref_id) != MISSING_INT);
+    // Get its attrs (none)
+    wassert(actual(api.voglioancora()) == 0);
+    // Set an attr
+    api.seti("*B33007", 50);
+    api.critica();
+    // Query the variable again
+    api.unsetall();
+    api.setc("var", "B12101");
+    wassert(actual(api.voglioquesto()) == 1);
+    api.dammelo();
+    // Read its attrs (ok)
+    wassert(actual(api.voglioancora()) == 1);
+    // Set *context_id and *varid
+    // Read attrs (ok)
+    api.seti("*context_id", ref_id);
+    api.setc("*var_related", "B12101");
+    wassert(actual(api.voglioancora()) == 1);
+    // Query the variable again, to delete all attributes
+    api.unsetall();
+    api.setc("var", "B12101");
+    wassert(actual(api.voglioquesto()) == 1);
+    api.dammelo();
+    api.scusa();
+    wassert(actual(api.voglioancora()) == 0);
+    // Try to delete by *context_id and *varid: it works
+    api.seti("*context_id", ref_id);
+    api.setc("*var_related", "B12101");
+    api.scusa();
 }
 
 }
