@@ -211,7 +211,6 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
     {
         if (strcmp(param + 1, "var_related") == 0)
         {
-            attr_state = ATTR_REFERENCE;
             attr_varid = resolve_varcode(value);
         } else {
             qcinput.set(param + 1, value);
@@ -393,9 +392,8 @@ void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
 		/* Get only the QC values in *varlist */
 		size_t pos;
 		size_t len;
-		int i;
 
-		for (pos = 0, i = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
+		for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
 		{
 			if (*(val+pos) != '*')
 				throw error_consistency("QC value names must start with '*'");

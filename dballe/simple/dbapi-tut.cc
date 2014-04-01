@@ -611,6 +611,40 @@ template<> template<> void to::test<15>()
     api.scusa();
 }
 
+// Reproduce a bug when setting attributes
+template<> template<> void to::test<16>()
+{
+    fortran::DbAPI dbapi0(*db, "write", "write", "write");
+    dbapi0.scopa();
+
+    // Add a value
+    dbapi0.unsetall();
+    dbapi0.seti("lat", 4500000);
+    dbapi0.seti("lon", 1000000);
+    dbapi0.unset("ident");
+    dbapi0.seti("mobile", 0);
+    dbapi0.setc("rep_memo", "generic");
+    dbapi0.setdate(2014, 1, 6, 18, 0, 0);
+    dbapi0.setlevel(105, 2000, 2147483647, 2147483647);
+    dbapi0.settimerange(4, 3600, 7200);
+    dbapi0.seti("B13003", 85);
+    dbapi0.prendilo();
+
+    // Add attributes
+    dbapi0.setd("*B33192", 30.000000);
+    dbapi0.seti("*B33193", 50);
+    dbapi0.setd("*B33194", 70.000000);
+    dbapi0.setc("*var_related", "B13003");
+    dbapi0.critica();
+
+    // Read them back
+    dbapi0.unsetall();
+    dbapi0.setc("var", "B13003");
+    wassert(actual(dbapi0.voglioquesto()) == 1);
+    wassert(actual(dbapi0.dammelo()) == "B13003");
+    wassert(actual(dbapi0.voglioancora()) == 3);
+}
+
 }
 
 namespace {
