@@ -498,7 +498,7 @@ template<> template<> void to::test<14>()
 {
     // 2 messages, 2 subsets each
     fortran::DbAPI api(*db, "write", "write", "write");
-    api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140426.bufr").c_str(), "r", BUFR);
+    api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140326.bufr").c_str(), "r", BUFR);
     wassert(actual(api.messages_read_next()) == 1);
     api.unsetall();
     api.setcontextana();
