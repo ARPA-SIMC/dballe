@@ -211,6 +211,8 @@ cleanup:
 
 std::string datafile(const std::string& fname)
 {
+    // Skip appending the test data path for pathnames starting with ./
+    if (fname[0] == '.') return fname;
 	const char* testdatadirenv = getenv("DBA_TESTDATA");
 	std::string testdatadir = testdatadirenv ? testdatadirenv : ".";
 	return testdatadir + "/" + fname;

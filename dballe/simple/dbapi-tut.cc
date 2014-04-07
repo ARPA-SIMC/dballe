@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -643,6 +643,37 @@ template<> template<> void to::test<16>()
     wassert(actual(dbapi0.voglioquesto()) == 1);
     wassert(actual(dbapi0.dammelo()) == "B13003");
     wassert(actual(dbapi0.voglioancora()) == 3);
+}
+
+// Reproduce a bug handling station data
+template<> template<> void to::test<17>()
+{
+    {
+        fortran::DbAPI dbapi0(*db, "write", "write", "write");
+        dbapi0.scopa();
+        // Copy a message using the API
+        dbapi0.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140403.bufr").c_str(), "r", BUFR);
+        dbapi0.messages_open_output("test.bufr", "w", BUFR);
+        wassert(actual(dbapi0.messages_read_next()) == 1);
+        //dbapi0.setcontextana();
+        dbapi0.messages_write_next("generic");
+        dbapi0.remove_all();
+        wassert(actual(dbapi0.messages_read_next()) == 1);
+        //dbapi0.setcontextana();
+        dbapi0.messages_write_next("generic");
+        dbapi0.remove_all();
+        wassert(actual(dbapi0.messages_read_next()) == 0);
+    }
+
+    // TODO: decide what is the expected behaviour for exporting only station
+    // values
+
+    // // Compare the two messages
+    // std::auto_ptr<Msgs> msgs1 = read_msgs("bufr/generic-bug20140403.bufr", BUFR);
+    // std::auto_ptr<Msgs> msgs2 = read_msgs("./test.bufr", BUFR);
+    // unsigned diffs = msgs1->diff(*msgs2);
+    // if (diffs) dballe::tests::track_different_msgs(*msgs1, *msgs2, "apicopy");
+    // wassert(actual(diffs) == 0);
 }
 
 }
