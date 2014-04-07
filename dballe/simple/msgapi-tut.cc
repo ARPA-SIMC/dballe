@@ -22,6 +22,7 @@
 
 using namespace std;
 using namespace dballe;
+using namespace wibble::tests;
 
 namespace tut {
 
@@ -44,9 +45,9 @@ void to::test<1>()
     std::string fname = tests::datafile("bufr/simple-generic-group.bufr");
     fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
 
-    ensure_equals(api.voglioquesto(), 0);
-    ensure_equals(api.voglioquesto(), 0);
-    ensure_equals(api.voglioquesto(), 0);
+    ensure_equals(api.voglioquesto(), 4);
+    ensure_equals(api.voglioquesto(), 4);
+    ensure_equals(api.voglioquesto(), 4);
     ensure_equals(api.quantesono(), 1);
 }
 
@@ -75,7 +76,7 @@ void to::test<2>()
         }
 
         // The second one should be read
-        ensure_equals(api.voglioquesto(), 550);
+        ensure_equals(api.voglioquesto(), 555);
     }
 
     // Good + broken + good
@@ -87,7 +88,7 @@ void to::test<2>()
 
         fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
 
-        ensure_equals(api.voglioquesto(), 550);
+        ensure_equals(api.voglioquesto(), 555);
 
         try {
             api.voglioquesto();
@@ -95,7 +96,7 @@ void to::test<2>()
         } catch (std::exception) {
         }
 
-        ensure_equals(api.voglioquesto(), 550);
+        ensure_equals(api.voglioquesto(), 555);
     }
 
     // Good + broken + broken + good
@@ -107,7 +108,7 @@ void to::test<2>()
 
         fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
 
-        ensure_equals(api.voglioquesto(), 550);
+        ensure_equals(api.voglioquesto(), 555);
 
         try {
             api.voglioquesto();
@@ -121,7 +122,7 @@ void to::test<2>()
         } catch (std::exception) {
         }
 
-        ensure_equals(api.voglioquesto(), 550);
+        ensure_equals(api.voglioquesto(), 555);
     }
 }
 
@@ -132,11 +133,55 @@ void to::test<3>()
     std::string fname = tests::datafile("bufr/dbapi-emptymsg.bufr");
     fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
 
-    ensure_equals(api.voglioquesto(), 96);
-    // FIXME: this is indistinguishable from an EOF
+    ensure_equals(api.voglioquesto(), 99);
     ensure_equals(api.voglioquesto(), 0);
-    ensure_equals(api.voglioquesto(), 86);
+    ensure_equals(api.voglioquesto(), 90);
     ensure_equals(api.voglioquesto(), api.missing_int);
+}
+
+template<> template<>
+void to::test<4>()
+{
+    // Try reading a file
+    std::string fname = tests::datafile("bufr/synop-bug20140401.bufr");
+    fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
+
+    api.unsetall();
+    api.setcontextana();
+    wassert(actual(api.voglioquesto()) == 25);
+    wassert(actual(api.dammelo()) == "B13011");
+    wassert(actual(api.dammelo()) == "B10060");
+    wassert(actual(api.dammelo()) == "B10063");
+    wassert(actual(api.dammelo()) == "B20004");
+    wassert(actual(api.dammelo()) == "B20005");
+    wassert(actual(api.dammelo()) == "B10004");
+    wassert(actual(api.dammelo()) == "B20001");
+    wassert(actual(api.dammelo()) == "B20003");
+    wassert(actual(api.dammelo()) == "B10051");
+    wassert(actual(api.dammelo()) == "B12101"); // 10
+    wassert(actual(api.dammelo()) == "B12103");
+    wassert(actual(api.dammelo()) == "B11001");
+    wassert(actual(api.dammelo()) == "B11002");
+    wassert(actual(api.dammelo()) == "B08002");
+    wassert(actual(api.dammelo()) == "B20012");
+    wassert(actual(api.dammelo()) == "B20012");
+    wassert(actual(api.dammelo()) == "B20012");
+    wassert(actual(api.dammelo()) == "B08002");
+    wassert(actual(api.dammelo()) == "B08002");
+    wassert(actual(api.dammelo()) == "B08002"); // 20
+    wassert(actual(api.dammelo()) == "B20010");
+    wassert(actual(api.dammelo()) == "B01001");
+    wassert(actual(api.dammelo()) == "B01002");
+    wassert(actual(api.dammelo()) == "B02001");
+//    wassert(actual(api.dammelo()) == "B04001");
+//    wassert(actual(api.dammelo()) == "B04002");
+//    wassert(actual(api.dammelo()) == "B04003");
+//    wassert(actual(api.dammelo()) == "B04004");
+//    wassert(actual(api.dammelo()) == "B04005");
+//    wassert(actual(api.dammelo()) == "B05001"); // 30
+//    wassert(actual(api.dammelo()) == "B06001");
+    wassert(actual(api.dammelo()) == "B07030");
+    wassert(actual(api.voglioquesto()) == MISSING_INT);
 }
 
 }

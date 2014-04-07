@@ -197,11 +197,22 @@ bool MsgAPI::incrementMsgIters()
 		++iter_var;
 	} else {
 		++iter_ctx;
-		// Skip the pseudoana layer
-		if (msg->data[iter_ctx]->level.ltype1 == 257)
-			++iter_ctx;
 		iter_var = 0;
 	}
+
+    // Skip redundant variables in the pseudoana layer
+    if ((unsigned)iter_ctx < msg->data.size() && msg->data[iter_ctx]->level.ltype1 == 257)
+    {
+        vector<Var*> data = msg->data[iter_ctx]->data;
+        while((unsigned)iter_var < data.size() && WR_VAR_X(data[iter_var]->code()) >= 4 && WR_VAR_X(data[iter_var]->code()) <= 6)
+            ++iter_var;
+        if ((unsigned)iter_var == data.size())
+        {
+            ++iter_ctx;
+            iter_var = 0;
+        }
+    }
+
 	if ((unsigned)iter_ctx >= msg->data.size())
 		return false;
 
@@ -225,8 +236,15 @@ int MsgAPI::voglioquesto()
 	for (size_t l = 0; l < msg->data.size(); ++l)
 	{
 		const msg::Context* ctx = msg->data[l];
-		if (ctx->level.ltype1 == 257) continue;
-		count += ctx->data.size();
+        if (ctx->level.ltype1 == 257)
+        {
+            // Count skipping datetime and coordinate variables
+            for (vector<Var*>::const_iterator i = ctx->data.begin();
+                    i != ctx->data.end(); ++i)
+                if (WR_VAR_X((*i)->code()) < 4 || WR_VAR_X((*i)->code()) > 6)
+                    ++count;
+        } else
+            count += ctx->data.size();
 	}
 	return count;
 }
