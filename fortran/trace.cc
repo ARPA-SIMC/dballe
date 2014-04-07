@@ -215,7 +215,7 @@ void SessionTracer::log_messages_open_input(const char* fname, const char* mode,
 {
     string arg1 = c_escape(fname);
     string arg2 = c_escape(mode);
-    fprintf(trace_file, "%s.messages_open(\"%s\", \"%s\", %s, %s);\n",
+    fprintf(trace_file, "%s.messages_open_input(\"%s\", \"%s\", %s, %s);\n",
             trace_tag, arg1.c_str(), arg2.c_str(), format, simplified ? "true" : "false");
 }
 
@@ -223,7 +223,7 @@ void SessionTracer::log_messages_open_output(const char* fname, const char* mode
 {
     string arg1 = c_escape(fname);
     string arg2 = c_escape(mode);
-    fprintf(trace_file, "%s.messages_open(\"%s\", \"%s\", %s);\n",
+    fprintf(trace_file, "%s.messages_open_output(\"%s\", \"%s\", %s);\n",
             trace_tag, arg1.c_str(), arg2.c_str(), format);
 }
 
