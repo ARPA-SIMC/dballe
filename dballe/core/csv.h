@@ -156,7 +156,7 @@ public:
     void add_value(unsigned val);
 
     /// Add an int value to the current row
-    void add_value(size_t val);
+    void add_value(uint64_t val);
 
     /// Add an int value to the current row
     void add_value(wreport::Varcode val);

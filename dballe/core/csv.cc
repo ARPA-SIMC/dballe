@@ -380,7 +380,7 @@ void CSVWriter::add_value_raw(const std::string& str)
     row.append(str);
 }
 
-void CSVWriter::add_value(size_t val)
+void CSVWriter::add_value(uint64_t val)
 {
     FormatInt fmt(val);
     add_value_raw(fmt.c_str());
