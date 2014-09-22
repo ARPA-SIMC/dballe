@@ -198,7 +198,11 @@ void Connection::init_after_connect()
     string name = driver_name();
 
     if (name.substr(0, 9) == "libmyodbc" || name.substr(0, 6) == "myodbc")
+    {
         server_type = MYSQL;
+        // MariaDB in at least one version returns 0 for rowcount in SQL_DIAG_CURSOR_ROW_COUNT
+        server_quirks = DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG;
+    }
     else if (name.substr(0, 6) == "sqlite")
     {
         string version = driver_version();
@@ -217,6 +221,23 @@ void Connection::init_after_connect()
     }
 
     connected = true;
+
+    IFTRACE {
+        SQLINTEGER v;
+        get_info(SQL_DYNAMIC_CURSOR_ATTRIBUTES2, v);
+        if (v & SQL_CA2_CRC_EXACT) TRACE("SQL_DYNAMIC_CURSOR_ATTRIBUTES2 SQL_CA2_CRC_EXACT\n");
+        if (v & SQL_CA2_CRC_APPROXIMATE) TRACE("SQL_DYNAMIC_CURSOR_ATTRIBUTES2 SQL_CA2_CRC_APPROXIMATE\n");
+        get_info(SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2, v);
+        if (v & SQL_CA2_CRC_EXACT) TRACE("SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2 SQL_CA2_CRC_EXACT\n");
+        if (v & SQL_CA2_CRC_APPROXIMATE) TRACE("SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2 SQL_CA2_CRC_APPROXIMATE\n");
+
+        get_info(SQL_KEYSET_CURSOR_ATTRIBUTES2, v);
+        if (v & SQL_CA2_CRC_EXACT) TRACE("SQL_KEYSET_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_EXACT\n");
+        if (v & SQL_CA2_CRC_APPROXIMATE) TRACE("SQL_KEYSET_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_APPROXIMATE\n");
+        get_info(SQL_STATIC_CURSOR_ATTRIBUTES2, v);
+        if (v & SQL_CA2_CRC_EXACT) TRACE("SQL_STATIC_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_EXACT\n");
+        if (v & SQL_CA2_CRC_APPROXIMATE) TRACE("SQL_STATIC_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_APPROXIMATE\n");
+    }
 }
 
 std::string Connection::driver_name()
@@ -237,6 +258,13 @@ std::string Connection::driver_version()
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
         throw error_odbc(SQL_HANDLE_DBC, od_conn, "Getting ODBC driver version");
     return string(driverver, len);
+}
+
+void Connection::get_info(SQLUSMALLINT info_type, SQLINTEGER& res)
+{
+    int sqlres = SQLGetInfo(od_conn, info_type, &res, 0, 0);
+    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+        throw error_odbc(SQL_HANDLE_DBC, od_conn, "Getting ODBC driver information");
 }
 
 void Connection::set_autocommit(bool val)

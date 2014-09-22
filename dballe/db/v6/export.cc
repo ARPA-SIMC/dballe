@@ -172,10 +172,10 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     // Retrieve results
     while (cur.next())
     {
-        TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
-                WR_VAR_X(cur.sqlrec.out_varcode), WR_VAR_Y(cur.sqlrec.out_varcode),
-                cur.sqlrec.out_ltype1, cur.sqlrec.out_l1, cur.sqlrec.out_ltype2, cur.sqlrec.out_l2, cur.sqlrec.out_pind, cur.sqlrec.out_p1, cur.sqlrec.out_p2,
-                cur.sqlrec.out_value);
+        //TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
+        //        WR_VAR_X(cur.sqlrec.out_varcode), WR_VAR_Y(cur.sqlrec.out_varcode),
+        //        cur.sqlrec.out_ltype1, cur.sqlrec.out_l1, cur.sqlrec.out_ltype2, cur.sqlrec.out_l2, cur.sqlrec.out_pind, cur.sqlrec.out_p1, cur.sqlrec.out_p2,
+        //        cur.sqlrec.out_value);
 
         /* Create the variable that we got on this iteration */
         auto_ptr<Var> var(newvar(cur.sqlrec.out_varcode, cur.sqlrec.out_value));

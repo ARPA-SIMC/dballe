@@ -147,6 +147,7 @@ public:
     void driver_connect(const char* config);
     std::string driver_name();
     std::string driver_version();
+    void get_info(SQLUSMALLINT info_type, SQLINTEGER& res);
     void set_autocommit(bool val);
 
     /// Commit a transaction
