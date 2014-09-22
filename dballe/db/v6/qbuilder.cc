@@ -423,6 +423,7 @@ void DataQueryBuilder::build_order_by()
         sql_query.append(", ltr.ltype1, ltr.l1, ltr.ltype2, ltr.l2, ltr.ptype, ltr.p1, ltr.p2");
     if (!(modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT))
         sql_query.append(", d.id_report");
+    sql_query.append(", d.id_var");
 }
 
 
