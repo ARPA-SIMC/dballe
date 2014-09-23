@@ -78,7 +78,7 @@ void trace_init()
 void log_presentati_url(int handle, const char* chosen_dsn)
 {
     string arg1 = c_escape(chosen_dsn);
-    fprintf(trace_file, "auto_ptr<DB> db%d(DB::connect_from_url(\"%s\");\n", handle, arg1.c_str());
+    fprintf(trace_file, "auto_ptr<DB> db%d(DB::connect_from_url(\"%s\"));\n", handle, arg1.c_str());
 }
 
 void log_presentati_dsn(int handle, const char* dsn, const char* user, const char* pwd)
@@ -101,19 +101,19 @@ void log_error(wreport::error& e)
 
 void log_result(int res)
 {
-    fprintf(trace_file, "check_result(ires, %d);\n", res);
+    fprintf(trace_file, "wassert(actual(ires) == %d);\n", res);
 }
 
 void log_result(const char* res)
 {
     string arg = c_escape(res);
-    fprintf(trace_file, "check_result(sres, \"%s\");\n", arg.c_str());
+    fprintf(trace_file, "wassert(actual(sres) == \"%s\");\n", arg.c_str());
 }
 
 void SessionTracer::log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag)
 {
     snprintf(trace_tag, 10, "dbapi%d", handle);
-    fprintf(trace_file, "DbAPI %s(db%d, \"%s\", \"%s\", \"%s\");\n",
+    fprintf(trace_file, "DbAPI %s(*db%d, \"%s\", \"%s\", \"%s\");\n",
             trace_tag, dbahandle, anaflag, dataflag, attrflag);
 }
 
@@ -186,7 +186,7 @@ void SessionTracer::log_settimerange(int pind, int p1, int p2)
 
 void SessionTracer::log_setdate(int y, int m, int d, int ho, int mi, int se, const char* what)
 {
-    fprintf(trace_file, "%s.setdate%s(%d, %d, %d, %d, %d, %d)\n", trace_tag, what, y, m, d, ho, mi, se);
+    fprintf(trace_file, "%s.setdate%s(%d, %d, %d, %d, %d, %d);\n", trace_tag, what, y, m, d, ho, mi, se);
 }
 
 void SessionTracer::log_unset(const char* parm)
