@@ -676,6 +676,23 @@ template<> template<> void to::test<17>()
     // wassert(actual(diffs) == 0);
 }
 
+// Reproduce a segfault
+template<> template<> void to::test<18>()
+{
+    int ires;
+    const char* sres;
+    auto_ptr<DB> db0(DB::connect_from_url("mem:"));
+    fortran::DbAPI dbapi0(*db0, "write", "write", "write");
+    dbapi0.seti("lat", 4500000);
+    dbapi0.seti("lon", 1300000);
+    dbapi0.setc("rep_memo", "generic");
+    dbapi0.setcontextana();
+    dbapi0.setc("B12102", "26312");
+    dbapi0.prendilo();
+    dbapi0.setc("*B33194", "50");
+    dbapi0.critica();
+}
+
 }
 
 namespace {
