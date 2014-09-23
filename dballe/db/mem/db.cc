@@ -372,20 +372,36 @@ void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)
             i != last_insert_varids.end(); ++i)
         if (i->code == id_var)
         {
-            attr_insert(i->id, id_var, attrs);
+            if (i->station)
+                memdb.stationvalues[i->id]->attr_insert(attrs);
+            else
+                memdb.values[i->id]->attr_insert(attrs);
             return;
         }
     error_notfound::throwf("variable B%02d%03d was not involved in the last insert operation", WR_VAR_X(id_var), WR_VAR_Y(id_var));
 }
 
+static ValueBase* get_value(Memdb& memdb, int id_data, wreport::Varcode id_var)
+{
+    // FIXME: this is hackish, and has unexpected results if we have data
+    // values and station values with the same id_var and id_data. Giving that
+    // measured values are usually different than the station values, the case
+    // should be rare enough that we can work around the issue in this way
+    // rather than breaking the Fortran API.
+    ValueBase* v = memdb.values.get_checked(id_data);
+    if (!v || v->var->code() != id_var) v = memdb.stationvalues.get_checked(id_data);
+    if (!v || v->var->code() != id_var) error_notfound::throwf("variable B%02d%03d not found at context id %d", WR_VAR_X(id_var), WR_VAR_Y(id_var), id_data);
+    return v;
+}
+
 void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
 {
-    memdb.values[id_data]->attr_insert(attrs);
+    get_value(memdb, id_data, id_var)->attr_insert(attrs);
 }
 
 void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
 {
-    memdb.values[id_data]->attr_remove(qcs);
+    get_value(memdb, id_data, id_var)->attr_remove(qcs);
 }
 
 void DB::dump(FILE* out)
