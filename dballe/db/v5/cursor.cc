@@ -1,7 +1,7 @@
 /*
  * db/cursor - manage select queries
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -593,7 +593,6 @@ void Cursor::add_station_info(Record& rec)
                 "  FROM context c, data d, repinfo ri"
                 " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
                 "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
-                "   AND c.ltype1 = 257"
                 " GROUP BY d.id_var,ri.id "
                 "HAVING ri.prio=MAX(ri.prio)";
             break;
@@ -603,7 +602,6 @@ void Cursor::add_station_info(Record& rec)
                 "  FROM context c, data d, repinfo ri"
                 " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
                 "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
-                "   AND c.ltype1 = 257"
                 " AND ri.prio=("
                 "  SELECT MAX(sri.prio) FROM repinfo sri"
                 "    JOIN context sc ON sri.id=sc.id_report"
@@ -853,8 +851,7 @@ void QueryBuilder::add_other_froms(unsigned int base)
             case DBA_DB_FROM_C:
                 sql_query.append(
                             " JOIN context cbs ON c.id_ana=cbs.id_ana"
-                            " AND cbs.datetime={ts '1000-01-01 00:00:00.000'}"
-                            " AND cbs.ltype1=257 ");
+                            " AND cbs.datetime={ts '1000-01-01 00:00:00.000'}");
                 break;
             default:
                 error_consistency::throwf("requested to add a JOIN on station info context on the unsupported base %d", base);

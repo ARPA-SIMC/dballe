@@ -154,7 +154,7 @@ void MsgAPI::elencamele()
 	Msg* msg = curmsg();
 	if (!msg) return;
 
-	const msg::Context* ctx = msg->find_context(Level(257), Trange());
+	const msg::Context* ctx = msg->find_context(Level::ana(), Trange());
 	if (!ctx) return;
 
 	output.set_ana_context();
@@ -201,7 +201,7 @@ bool MsgAPI::incrementMsgIters()
 	}
 
     // Skip redundant variables in the pseudoana layer
-    if ((unsigned)iter_ctx < msg->data.size() && msg->data[iter_ctx]->level.ltype1 == 257)
+    if ((unsigned)iter_ctx < msg->data.size() && msg->data[iter_ctx]->level == Level::ana())
     {
         vector<Var*> data = msg->data[iter_ctx]->data;
         while((unsigned)iter_var < data.size() && WR_VAR_X(data[iter_var]->code()) >= 4 && WR_VAR_X(data[iter_var]->code()) <= 6)
@@ -236,7 +236,7 @@ int MsgAPI::voglioquesto()
 	for (size_t l = 0; l < msg->data.size(); ++l)
 	{
 		const msg::Context* ctx = msg->data[l];
-        if (ctx->level.ltype1 == 257)
+        if (ctx->level == Level::ana())
         {
             // Count skipping datetime and coordinate variables
             for (vector<Var*>::const_iterator i = ctx->data.begin();
@@ -263,7 +263,7 @@ const char* MsgAPI::dammelo()
 		return 0;
 
 	// Set metainfo from msg ana layer
-	if (const msg::Context* ctx = msg->find_context(Level(257), Trange()))
+	if (const msg::Context* ctx = msg->find_context(Level::ana(), Trange()))
 	{
 		output.set(DBA_KEY_MOBILE, 0);
 		output.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg->type));
@@ -373,7 +373,7 @@ void MsgAPI::prendilo()
 		wmsg->type = Msg::type_from_repmemo(sval);
 	}
 	if (const Var* var = input.key_peek(DBA_KEY_ANA_ID))
-		wmsg->seti(WR_VAR(0, 1, 192), var->enqi(), -1, Level(257), Trange());
+		wmsg->seti(WR_VAR(0, 1, 192), var->enqi(), -1, Level::ana(), Trange());
 	if (const Var* var = input.key_peek(DBA_KEY_IDENT))
 		wmsg->set_ident(var->enqc());
 	if (const Var* var = input.key_peek(DBA_KEY_LAT))

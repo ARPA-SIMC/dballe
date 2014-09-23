@@ -1,7 +1,7 @@
 /*
  * db/context - context table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -150,8 +150,7 @@ int Context::obtain_station_info()
     date.month = 1;
     date.day = 1;
     date.hour = date.minute = date.second = date.fraction = 0;
-    ltype1 = 257;
-    l1 = ltype2 = l2 = MISSING_INT;
+    ltype1 = l1 = ltype2 = l2 = MISSING_INT;
     pind = p1 = p2 = MISSING_INT;
 
     /* See if the context entry already exists */

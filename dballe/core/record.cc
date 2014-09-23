@@ -1,7 +1,7 @@
 /*
  * dballe/record - groups of related variables
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -652,7 +652,7 @@ void Record::set_ana_context()
 	key(DBA_KEY_HOUR).seti(0);
 	key(DBA_KEY_MIN).seti(0);
 	key(DBA_KEY_SEC).seti(0);
-	key(DBA_KEY_LEVELTYPE1).seti(257);
+	unset(DBA_KEY_LEVELTYPE1);
 	unset(DBA_KEY_L1);
 	unset(DBA_KEY_LEVELTYPE2);
 	unset(DBA_KEY_L2);
@@ -663,7 +663,7 @@ void Record::set_ana_context()
 
 bool Record::is_ana_context() const
 {
-    return get(DBA_KEY_YEAR, 1000) == 1000;
+    return get(DBA_KEY_YEAR, MISSING_INT) == 1000;
 }
 
 void Record::set_from_string(const char* str)

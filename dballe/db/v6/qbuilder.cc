@@ -1,7 +1,7 @@
 /*
  * db/v6/qbuilder - build SQL queries for V6 databases
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -273,7 +273,7 @@ QueryBuilder::QueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& re
     : db(db), stm(stm), cur(cur), rec(rec), sql_query(2048), sql_from(1024), sql_where(1024),
       modifiers(modifiers), output_seq(1), query_station_vars(false)
 {
-    query_station_vars = (rec.get(DBA_KEY_LEVELTYPE1, 0) == 257);
+    query_station_vars = rec.is_ana_context();
 }
 
 DataQueryBuilder::DataQueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
@@ -541,8 +541,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
 
 bool QueryBuilder::add_dt_where(const char* tbl)
 {
-    if (rec.get(DBA_KEY_LEVELTYPE1, 0) == 257)
-        return false;
+    if (rec.is_ana_context()) return false;
 
     bool found = false;
     int minvalues[6], maxvalues[6];

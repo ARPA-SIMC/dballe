@@ -1,7 +1,7 @@
 /*
  * dballe/v6/db - Archive for point-based meteorological data, db layout version 6
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -587,9 +587,8 @@ int DB::obtain_station(const Record& rec, bool can_add)
 
 int DB::obtain_lev_tr(const Record& rec)
 {
-    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
-        if (var->enqi() == 257)
-            return -1;
+    if (rec.is_ana_context())
+        return -1;
 
     LevTr& c = lev_tr();
 

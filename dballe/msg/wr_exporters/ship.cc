@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -434,7 +434,7 @@ struct ShipFactory : public TemplateFactory
             const msg::Context& c = **i;
             switch (c.level.ltype1)
             {
-                case 257:
+                case MISSING_INT:
                     for (std::vector<wreport::Var*>::const_iterator vi = c.data.begin();
                             vi != c.data.end(); ++vi)
                     {

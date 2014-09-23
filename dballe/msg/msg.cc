@@ -1,7 +1,7 @@
 /*
  * dballe/msg - Hold an interpreted weather bulletin
  *
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -288,7 +288,7 @@ struct VarContext
         // Report type
         out << rep_memo << ",";
 
-        if (c.level.ltype1 != 257)
+        if (c.level != Level::ana())
         {
             // Datetime
             out << setfill('0') << setw(4) << (year ? year->enq(0) : 0) << "-";

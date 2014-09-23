@@ -1,46 +1,46 @@
 # Name,         Type,   B local,    Level (ltype1, l1, ltype2, l2), Timerange (pind, p1, p2)
-ST_TYPE,        int,    B02001,     257,     -, -, -,    -,      -,     -, Type of station
+ST_TYPE,        int,    B02001,       -,     -, -, -,    -,      -,     -, Type of station
 ST_DIR,         int,    B01012,       1,     -, -, -,  254,      0,     0, Direction of motion of moving observing platform
 ST_SPEED,       int,    B01013,       1,     -, -, -,  254,      0,     0, Speed of motion of moving observing platform
-ST_NAME,        str,    B01019,     257,     -, -, -,    -,      -,     -, Station or site name
-ST_NAME_ICAO,   str,    B01063,     257,     -, -, -,    -,      -,     -, ICAO location indicator
-REP_MEMO,       str,    B01194,     257,     -, -, -,    -,      -,     -, Report mnemonic
-POLL_LCODE,     int,    B01212,     257,     -, -, -,    -,      -,     -, Air quality observing station local code
-POLL_SCODE,     int,    B01213,     257,     -, -, -,    -,      -,     -, Airbase air quality observing station code
-POLL_GEMSCODE,  int,    B01214,     257,     -, -, -,    -,      -,     -, GEMS air quality observing station code
-POLL_SOURCE,    int,    B01215,     257,     -, -, -,    -,      -,     -, Air quality observing station dominant emission source
-POLL_ATYPE,     int,    B01216,     257,     -, -, -,    -,      -,     -, Air quality observing station area type
-POLL_TTYPE,     int,    B01217,     257,     -, -, -,    -,      -,     -, Air quality observing station terrain type
-FLIGHT_REG_NO,  str,    B01008,     257,     -, -, -,    -,      -,     -, Aircraft registration number or other identification
-FLIGHT_PHASE,   int,    B08004,     257,     -, -, -,    -,      -,     -, Phase of aircraft flight
-FLIGHT_ROLL,    num,    B02063,     257,     -, -, -,    -,      -,     -, Aircraft roll angle
-NAVSYS,         int,    B02061,     257,     -, -, -,    -,      -,     -, Aircraft navigational system
-DATA_RELAY,     int,    B02062,     257,     -, -, -,    -,      -,     -, Aircraft data relay system
-WIND_INST,      int,    B02002,     257,     -, -, -,    -,      -,     -, Type of instrumentation for wind measurement
-TEMP_PRECISION, num,    B02005,     257,     -, -, -,    -,      -,     -, Precision of temperature observation
-LATLON_SPEC,    int,    B02070,     257,     -, -, -,    -,      -,     -, Original specification of latitude/longitude
-TIMESIG,        int,    B08021,     257,     -, -, -,    -,      -,     -, Time significance
+ST_NAME,        str,    B01019,       -,     -, -, -,    -,      -,     -, Station or site name
+ST_NAME_ICAO,   str,    B01063,       -,     -, -, -,    -,      -,     -, ICAO location indicator
+REP_MEMO,       str,    B01194,       -,     -, -, -,    -,      -,     -, Report mnemonic
+POLL_LCODE,     int,    B01212,       -,     -, -, -,    -,      -,     -, Air quality observing station local code
+POLL_SCODE,     int,    B01213,       -,     -, -, -,    -,      -,     -, Airbase air quality observing station code
+POLL_GEMSCODE,  int,    B01214,       -,     -, -, -,    -,      -,     -, GEMS air quality observing station code
+POLL_SOURCE,    int,    B01215,       -,     -, -, -,    -,      -,     -, Air quality observing station dominant emission source
+POLL_ATYPE,     int,    B01216,       -,     -, -, -,    -,      -,     -, Air quality observing station area type
+POLL_TTYPE,     int,    B01217,       -,     -, -, -,    -,      -,     -, Air quality observing station terrain type
+FLIGHT_REG_NO,  str,    B01008,       -,     -, -, -,    -,      -,     -, Aircraft registration number or other identification
+FLIGHT_PHASE,   int,    B08004,       -,     -, -, -,    -,      -,     -, Phase of aircraft flight
+FLIGHT_ROLL,    num,    B02063,       -,     -, -, -,    -,      -,     -, Aircraft roll angle
+NAVSYS,         int,    B02061,       -,     -, -, -,    -,      -,     -, Aircraft navigational system
+DATA_RELAY,     int,    B02062,       -,     -, -, -,    -,      -,     -, Aircraft data relay system
+WIND_INST,      int,    B02002,       -,     -, -, -,    -,      -,     -, Type of instrumentation for wind measurement
+TEMP_PRECISION, num,    B02005,       -,     -, -, -,    -,      -,     -, Precision of temperature observation
+LATLON_SPEC,    int,    B02070,       -,     -, -, -,    -,      -,     -, Original specification of latitude/longitude
+TIMESIG,        int,    B08021,       -,     -, -, -,    -,      -,     -, Time significance
 MEAS_EQUIP_TYPE, int,   B02003,       1,     -, -, -,  254,      0,     0, Type of measuring equipment used
 SONDE_TYPE,     int,    B02011,       1,     -, -, -,  254,      0,     0, Radiosonde type
 SONDE_METHOD,   int,    B02012,       1,     -, -, -,  254,      0,     0, Radiosonde computational method
 SONDE_CORRECTION, int,  B02013,       1,     -, -, -,  254,      0,     0, Solar and infrared radiation correction
 SONDE_TRACKING, int,    B02014,       1,     -, -, -,  254,      0,     0, Tracking technique/status of system used
-BLOCK,          int,    B01001,     257,     -, -, -,    -,      -,     -, WMO block number
-STATION,        int,    B01002,     257,     -, -, -,    -,      -,     -, WMO station number
-IDENT,          str,    B01011,     257,     -, -, -,    -,      -,     -, Mobile station identifier
-YEAR,           int,    B04001,     257,     -, -, -,    -,      -,     -, Year of the observation
-MONTH,          int,    B04002,     257,     -, -, -,    -,      -,     -, Month of the observation
-DAY,            int,    B04003,     257,     -, -, -,    -,      -,     -, Day of the observation
-HOUR,           int,    B04004,     257,     -, -, -,    -,      -,     -, Hour of the observation
-MINUTE,         int,    B04005,     257,     -, -, -,    -,      -,     -, Minute of the observation
-SECOND,         int,    B04006,     257,     -, -, -,    -,      -,     -, Second of the observation
-LATITUDE,       num,    B05001,     257,     -, -, -,    -,      -,     -, Latitude of the station
-LONGITUDE,      num,    B06001,     257,     -, -, -,    -,      -,     -, Longiture of the station
-HEIGHT_STATION, num,    B07030,     257,     -, -, -,    -,      -,     -, Height of station
-HEIGHT_BARO,    num,    B07031,     257,     -, -, -,    -,      -,     -, Height of barometer above mean sea level
-HEIGHT_RELEASE, num,    B07007,     257,     -, -, -,    -,      -,     -, Height of release of sonde above msl
-STATION_HEIGHT_QUALITY, int, B33024, 257,    -, -, -,    -,      -,     -, Station elevation quality mark (for mobile stations)
-ISOBARIC_SURFACE, num,  B07004,     257,     -, -, -,    -,      -,     -, Isobaric surface
+BLOCK,          int,    B01001,       -,     -, -, -,    -,      -,     -, WMO block number
+STATION,        int,    B01002,       -,     -, -, -,    -,      -,     -, WMO station number
+IDENT,          str,    B01011,       -,     -, -, -,    -,      -,     -, Mobile station identifier
+YEAR,           int,    B04001,       -,     -, -, -,    -,      -,     -, Year of the observation
+MONTH,          int,    B04002,       -,     -, -, -,    -,      -,     -, Month of the observation
+DAY,            int,    B04003,       -,     -, -, -,    -,      -,     -, Day of the observation
+HOUR,           int,    B04004,       -,     -, -, -,    -,      -,     -, Hour of the observation
+MINUTE,         int,    B04005,       -,     -, -, -,    -,      -,     -, Minute of the observation
+SECOND,         int,    B04006,       -,     -, -, -,    -,      -,     -, Second of the observation
+LATITUDE,       num,    B05001,       -,     -, -, -,    -,      -,     -, Latitude of the station
+LONGITUDE,      num,    B06001,       -,     -, -, -,    -,      -,     -, Longiture of the station
+HEIGHT_STATION, num,    B07030,       -,     -, -, -,    -,      -,     -, Height of station
+HEIGHT_BARO,    num,    B07031,       -,     -, -, -,    -,      -,     -, Height of barometer above mean sea level
+HEIGHT_RELEASE, num,    B07007,       -,     -, -, -,    -,      -,     -, Height of release of sonde above msl
+STATION_HEIGHT_QUALITY, int, B33024,  -,     -, -, -,    -,      -,     -, Station elevation quality mark (for mobile stations)
+ISOBARIC_SURFACE, num,  B07004,       -,     -, -, -,    -,      -,     -, Isobaric surface
 PRESS,          num,    B10004,       1,     -, -, -,  254,      0,     0, Pressure at ground level
 PRESS_3H,       num,    B10060,       1,     -, -, -,    4,      0, 10800, 3 hour pressure change at ground level
 PRESS_24H,      num,    B10060,       1,     -, -, -,    4,      0, 86400, 24 hour pressure change at ground level

@@ -1,7 +1,7 @@
 /*
  * db/import - Import Msg data into the database
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ namespace v5 {
 
 void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 {
-    const msg::Context* l_ana = msg.find_context(Level(257), Trange());
+    const msg::Context* l_ana = msg.find_context(Level::ana(), Trange());
 	if (!l_ana)
 		throw error_consistency("cannot import into the database a message without station information");
 
@@ -174,7 +174,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 	for (size_t i = 0; i < msg.data.size(); ++i)
 	{
 		const msg::Context& ctx = *msg.data[i];
-		bool is_ana_level = ctx.level == Level(257) && ctx.trange == Trange();
+		bool is_ana_level = ctx.level == Level::ana() && ctx.trange == Trange();
 
         // Skip the station info level
         if (is_ana_level)

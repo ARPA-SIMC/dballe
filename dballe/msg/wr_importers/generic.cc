@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -129,8 +129,8 @@ void GenericImporter::import_var(const Var& var)
         }
         default:
             // Adjust station info level for pre-dballe-5.0 generics
-            if (lev == Level(257, 0, 0, 0) && tr == Trange(0, 0, 0))
-                msg->set(var, map_code_to_dballe(var.code()), Level(257), Trange());
+            if (lev.ltype1 == 257)
+                msg->set(var, map_code_to_dballe(var.code()), Level::ana(), Trange());
             else
                 msg->set(var, map_code_to_dballe(var.code()), lev, tr);
             break;

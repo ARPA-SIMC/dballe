@@ -1,7 +1,7 @@
 /*
  * db/v6/cursor - manage select queries
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -235,7 +235,7 @@ void Cursor::to_record_ltr(Record& rec)
         db.lev_tr_cache().to_rec(sqlrec.out_id_ltr, rec);
     else
     {
-        rec.key(DBA_KEY_LEVELTYPE1).seti(257);
+        rec.key(DBA_KEY_LEVELTYPE1).unset();
         rec.key(DBA_KEY_L1).unset();
         rec.key(DBA_KEY_LEVELTYPE2).unset();
         rec.key(DBA_KEY_L2).unset();

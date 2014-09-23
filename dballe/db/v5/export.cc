@@ -1,7 +1,7 @@
 /*
  * db/export - Export Msg data from the database
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 		"  FROM context c, data d"
 		"  LEFT JOIN attr a ON a.id_context = d.id_context AND a.id_var = d.id_var"
 		" WHERE d.id_context = c.id AND c.id_ana = ? AND c.id_report = ?"
-		"   AND c.datetime = {ts '1000-01-01 00:00:00.000'} AND c.ltype1 = 257"
+		"   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
 		" ORDER BY d.id_var, a.type";
 
     db::Statement stm(*conn);
@@ -91,7 +91,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 			if (var.get())
 			{
 				TRACE("fill_ana_layer inserting old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
-                msg.set(var, Level(257), Trange());
+                msg.set(var, Level::ana(), Trange());
 			}
             var = newvar(out_varcode, out_value);
 			last_varcode = out_varcode;
@@ -107,7 +107,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 	if (var.get())
 	{
 		TRACE("fill_ana_layer inserting leftover old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
-        msg.set(var, Level(257), Trange());
+        msg.set(var, Level::ana(), Trange());
 	}
 }
 
@@ -195,8 +195,8 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 			}
 
 			// Fill in the basic station values
-            msg->seti(WR_VAR(0, 5, 1), cur.out_lat, -1, Level(257), Trange());
-            msg->seti(WR_VAR(0, 6, 1), cur.out_lon, -1, Level(257), Trange());
+            msg->seti(WR_VAR(0, 5, 1), cur.out_lat, -1, Level::ana(), Trange());
+            msg->seti(WR_VAR(0, 6, 1), cur.out_lon, -1, Level::ana(), Trange());
 			if (cur.out_ident_ind != SQL_NULL_DATA)
 				msg->set_ident(cur.out_ident);
 

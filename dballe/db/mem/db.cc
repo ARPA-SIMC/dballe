@@ -1,7 +1,7 @@
 /*
  * dballe/mem/db - Archive for point-based meteorological data, in-memory db
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -321,7 +321,7 @@ std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
 std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
-    bool query_station_vars = (query.get(DBA_KEY_LEVELTYPE1, 0) == 257);
+    bool query_station_vars = query.is_ana_context();
     if (query_station_vars)
     {
         if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -348,7 +348,7 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
 std::auto_ptr<db::Cursor> DB::query_summary(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
-    bool query_station_vars = (query.get(DBA_KEY_LEVELTYPE1, 0) == 257);
+    bool query_station_vars = query.is_ana_context();
     if (query_station_vars)
     {
         throw error_unimplemented("summary query of station vars");

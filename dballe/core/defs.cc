@@ -1,7 +1,7 @@
 /*
  * msg/defs - Common definitions
  *
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -233,7 +233,6 @@ static std::string describe_level(int ltype, int l1)
 		case 254: return "Highest top level of supercooled liquid water layer";
 		case 255: return "Missing";
 		case 256: return "Clouds";
-		case 257: return "Information about the station that generated the data";
 		case 258:
 			switch (l1) {
 				case 0: return "General cloud group";
@@ -247,7 +246,7 @@ static std::string describe_level(int ltype, int l1)
 		case 260: return fmtf("Cloud drift group %d", l1);
 		case 261: return fmtf("Cloud elevation group %d", l1);
 		case 262: return "Direction and elevation of clouds";
-	        case MISSING_INT: return "-";
+		case MISSING_INT: return "Information about the station that generated the data";
 		default:	return fmtf("%d %d", ltype, l1); break;
 	}
 }
