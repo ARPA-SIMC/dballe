@@ -1,3 +1,16 @@
+dballe (6.8-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - several bug and documentation fixes
+     - new fortran API: unsetb
+     - if DBALLE_TRACE_FORTRAN is set to a file name, a trace of fortran API
+       calls will be written to it to assist in filing bug reports
+     - new fortran APIs: idba_messages_open_input, idba_messages_open_output,
+       idba_messages_read_next, idba_messages_write_next
+     - work around getting rowcount bug in new MariaDB
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 06 Nov 2013 12:01:35 +0100
+
 dballe (6.6-1) UNRELEASED; urgency=low
 
   * New upstream release
