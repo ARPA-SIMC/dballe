@@ -6,7 +6,7 @@ VERSION=$(shell debian/vercheck)
 export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 
 %:
-	dh --with python2 $@
+	dh --with python2 --buildsystem=pybuild $@
 
 
 # DEB_PYTHON2_MODULE_PACKAGES := provami
