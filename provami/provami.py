@@ -36,7 +36,7 @@ if __name__ == "__main__":
     from provami.ProvamiArtProvider import ProvamiArtProvider
     from provami.Navigator import Navigator
 
-    app = wx.PySimpleApp()
+    app = wx.App(False)
     if dballe.DB.is_url(opts.dsn):
         db = dballe.DB.connect_from_url(opts.dsn)
     else:

@@ -8,6 +8,7 @@ dballe (6.8-1) UNRELEASED; urgency=low
      - new fortran APIs: idba_messages_open_input, idba_messages_open_output,
        idba_messages_read_next, idba_messages_write_next
      - work around getting rowcount bug in new MariaDB
+     - Update for wxPython 3.0. Closes: #759043. Thanks Olly Betts <olly@survex.com>
 
  -- Enrico Zini <enrico@debian.org>  Wed, 06 Nov 2013 12:01:35 +0100
 

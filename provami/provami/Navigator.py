@@ -237,7 +237,7 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
         elif event.GetId() == Navigator.ACTION_EXPORT:
 #           dlg = wx.FileDialog(
 #                   self, message="Save file as...", defaultDir=os.getcwd(), 
-#                   defaultFile="", style=wx.SAVE
+#                   defaultFile="", style=wx.FD_SAVE
 #                   )
             wildcards="According to file extension|*|BUFR optimal template (*.bufr)|*.bufr|BUFR generic template (*.bufr)|*.bufr|CREX (*.crex)|*.crex|Comma Separated Values (*.csv)|*.csv"
             if Model.HAS_RPY:
@@ -245,8 +245,8 @@ class Navigator(wx.Frame, ProgressListener, ModelListener):
 
             dlg = wx.FileDialog(
                     self, message="Save file as...", defaultDir=os.getcwd(), 
-                    #defaultFile="", wildcard="According to file extension|*|BUFR optimal template (*.bufr)|*.bufr|BUFR generic template (*.bufr)|*.bufr|CREX (*.crex)|*.crex|Comma Separated Values (*.csv)|*.csv|GNU R data file (*.Rdata)|*.Rdata|Pickled volNd Python objects (*.volnd)|*.volnd", style=wx.SAVE
-                    defaultFile="", wildcard=wildcards, style=wx.SAVE
+                    #defaultFile="", wildcard="According to file extension|*|BUFR optimal template (*.bufr)|*.bufr|BUFR generic template (*.bufr)|*.bufr|CREX (*.crex)|*.crex|Comma Separated Values (*.csv)|*.csv|GNU R data file (*.Rdata)|*.Rdata|Pickled volNd Python objects (*.volnd)|*.volnd", style=wx.FD_SAVE
+                    defaultFile="", wildcard=wildcards, style=wx.FD_SAVE
                     )
 
             # Show the dialog and retrieve the user response. If it is the OK response, 
