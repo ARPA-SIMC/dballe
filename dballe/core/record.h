@@ -327,6 +327,9 @@ public:
     void set(const Datetime& dt);
     void setmin(const Datetime& dt);
     void setmax(const Datetime& dt);
+    void unset_datetime();
+    void unset_datetimemin();
+    void unset_datetimemax();
 	void get_datetime(int (&val)[6]) const;
 	void set_datetime(const int (&val)[6]);
     void set_datetime(int ye, int mo=1, int da=1, int ho=0, int mi=0, int se=0);

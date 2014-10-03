@@ -598,6 +598,36 @@ Datetime Record::get_datetime() const
         get(DBA_KEY_SEC, 0));
 }
 
+void Record::unset_datetime()
+{
+    unset(DBA_KEY_YEAR);
+    unset(DBA_KEY_MONTH);
+    unset(DBA_KEY_DAY);
+    unset(DBA_KEY_HOUR);
+    unset(DBA_KEY_MIN);
+    unset(DBA_KEY_SEC);
+}
+
+void Record::unset_datetimemin()
+{
+    unset(DBA_KEY_YEARMIN);
+    unset(DBA_KEY_MONTHMIN);
+    unset(DBA_KEY_DAYMIN);
+    unset(DBA_KEY_HOURMIN);
+    unset(DBA_KEY_MINUMIN);
+    unset(DBA_KEY_SECMIN);
+}
+
+void Record::unset_datetimemax()
+{
+    unset(DBA_KEY_YEARMAX);
+    unset(DBA_KEY_MONTHMAX);
+    unset(DBA_KEY_DAYMAX);
+    unset(DBA_KEY_HOURMAX);
+    unset(DBA_KEY_MINUMAX);
+    unset(DBA_KEY_SECMAX);
+}
+
 void Record::set(const Datetime& dt)
 {
     set(DBA_KEY_YEAR,  (int)dt.date.year);
