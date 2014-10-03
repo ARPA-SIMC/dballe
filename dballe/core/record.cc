@@ -579,12 +579,32 @@ void Record::get_datetime(int (&val)[6]) const
 
 void Record::set_datetime(const int (&val)[6])
 {
-    set(DBA_KEY_YEAR,  val[0]);
-    set(DBA_KEY_MONTH, val[1]);
-    set(DBA_KEY_DAY,   val[2]);
-    set(DBA_KEY_HOUR,  val[3]);
-    set(DBA_KEY_MIN,   val[4]);
-    set(DBA_KEY_SEC,   val[5]);
+    if (val[0] == MISSING_INT) unset(DBA_KEY_YEAR);  else set(DBA_KEY_YEAR,  val[0]);
+    if (val[1] == MISSING_INT) unset(DBA_KEY_MONTH); else set(DBA_KEY_MONTH, val[1]);
+    if (val[2] == MISSING_INT) unset(DBA_KEY_DAY);   else set(DBA_KEY_DAY,   val[2]);
+    if (val[3] == MISSING_INT) unset(DBA_KEY_HOUR);  else set(DBA_KEY_HOUR,  val[3]);
+    if (val[4] == MISSING_INT) unset(DBA_KEY_MIN);   else set(DBA_KEY_MIN,   val[4]);
+    if (val[5] == MISSING_INT) unset(DBA_KEY_SEC);   else set(DBA_KEY_SEC,   val[5]);
+}
+
+void Record::set_datetimemin(const int (&val)[6])
+{
+    if (val[0] == MISSING_INT) unset(DBA_KEY_YEARMIN);  else set(DBA_KEY_YEARMIN,  val[0]);
+    if (val[1] == MISSING_INT) unset(DBA_KEY_MONTHMIN); else set(DBA_KEY_MONTHMIN, val[1]);
+    if (val[2] == MISSING_INT) unset(DBA_KEY_DAYMIN);   else set(DBA_KEY_DAYMIN,   val[2]);
+    if (val[3] == MISSING_INT) unset(DBA_KEY_HOURMIN);  else set(DBA_KEY_HOURMIN,  val[3]);
+    if (val[4] == MISSING_INT) unset(DBA_KEY_MINUMIN);  else set(DBA_KEY_MINUMIN,  val[4]);
+    if (val[5] == MISSING_INT) unset(DBA_KEY_SECMIN);   else set(DBA_KEY_SECMIN,   val[5]);
+}
+
+void Record::set_datetimemax(const int (&val)[6])
+{
+    if (val[0] == MISSING_INT) unset(DBA_KEY_YEARMAX);  else set(DBA_KEY_YEARMAX,  val[0]);
+    if (val[1] == MISSING_INT) unset(DBA_KEY_MONTHMAX); else set(DBA_KEY_MONTHMAX, val[1]);
+    if (val[2] == MISSING_INT) unset(DBA_KEY_DAYMAX);   else set(DBA_KEY_DAYMAX,   val[2]);
+    if (val[3] == MISSING_INT) unset(DBA_KEY_HOURMAX);  else set(DBA_KEY_HOURMAX,  val[3]);
+    if (val[4] == MISSING_INT) unset(DBA_KEY_MINUMAX);  else set(DBA_KEY_MINUMAX,  val[4]);
+    if (val[5] == MISSING_INT) unset(DBA_KEY_SECMAX);   else set(DBA_KEY_SECMAX,   val[5]);
 }
 
 Datetime Record::get_datetime() const
