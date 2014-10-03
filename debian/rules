@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+export PYBUILD_NAME=python-dballe
+
 VERSION=$(shell debian/vercheck)
 
 # Work around to latex2html bug #368693
