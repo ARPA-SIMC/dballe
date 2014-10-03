@@ -1281,7 +1281,7 @@ void QueryBuilder::make_where(const Record& rec)
         int minvalues[6], maxvalues[6];
         rec.parse_date_extremes(minvalues, maxvalues);
 
-        if (minvalues[0] != -1 || maxvalues[0] != -1)
+        if (minvalues[0] != MISSING_INT || maxvalues[0] != MISSING_INT)
         {
             if (memcmp(minvalues, maxvalues, 6 * sizeof(int)) == 0)
             {
@@ -1301,7 +1301,7 @@ void QueryBuilder::make_where(const Record& rec)
             }
             else
             {
-                if (minvalues[0] != -1)
+                if (minvalues[0] != MISSING_INT)
                 {
                     /* Add constraint on the minimum date interval */
                     sel_dtmin.year = minvalues[0];
@@ -1317,7 +1317,7 @@ void QueryBuilder::make_where(const Record& rec)
                     stm.bind_in(input_seq++, sel_dtmin);
                     from_wanted |= DBA_DB_FROM_C;
                 }
-                if (maxvalues[0] != -1)
+                if (maxvalues[0] != MISSING_INT)
                 {
                     sel_dtmax.year = maxvalues[0];
                     sel_dtmax.month = maxvalues[1];

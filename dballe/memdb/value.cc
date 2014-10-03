@@ -220,7 +220,7 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
 
     int mind[6], maxd[6];
     rec.parse_date_extremes(mind, maxd);
-    if (mind[0] != -1 || maxd[0] != -1)
+    if (mind[0] != MISSING_INT || maxd[0] != MISSING_INT)
     {
         auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
         if (mind[0] == maxd[0] && mind[1] == maxd[1] && mind[2] == maxd[2])
@@ -249,12 +249,12 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
             auto_ptr< stl::Sequences<size_t> > sequences;
             auto_ptr< Match<Value> > extra_match;
 
-            if (maxd[0] == -1) {
+            if (maxd[0] == MISSING_INT) {
                 Date d(mind);
                 sequences = by_date.search_from(mind, found);
                 extra_match.reset(new MatchDateMin(mind));
                 trace_query("Found date min %04d-%02d-%02d\n", d.year, d.month, d.day);
-            } else if (mind[0] == -1) {
+            } else if (mind[0] == MISSING_INT) {
                 // FIXME: we need to add 1 second to maxd, as it is right extreme excluded
                 Date d(maxd);
                 sequences = by_date.search_to(d, found);

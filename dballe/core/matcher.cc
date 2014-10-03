@@ -70,8 +70,8 @@ static bool lt(const int* v1, const int* v2)
 
 matcher::Result Matched::date_in_range(const int* date, const int* min, const int* max)
 {
-    if (min[0] != -1 && lt(date, min)) return matcher::MATCH_NO;
-    if (max[1] != -1 && lt(max, date)) return matcher::MATCH_NO;
+    if (min[0] != MISSING_INT && lt(date, min)) return matcher::MATCH_NO;
+    if (max[1] != MISSING_INT && lt(max, date)) return matcher::MATCH_NO;
     return matcher::MATCH_YES;
 }
 
@@ -214,7 +214,7 @@ struct DateMatcher : public Matcher
 
     virtual void to_record(Record& query) const
     {
-        if (datemin[0] != -1 && datemax[0] != -1 && eq(datemin, datemax))
+        if (datemin[0] != MISSING_INT && datemax[0] != MISSING_INT && eq(datemin, datemax))
         {
             query.set(DBA_KEY_YEAR, datemin[0]);
             query.set(DBA_KEY_MONTH, datemin[1]);
@@ -223,7 +223,7 @@ struct DateMatcher : public Matcher
             query.set(DBA_KEY_MIN, datemin[4]);
             query.set(DBA_KEY_SEC, datemin[5]);
         } else {
-            if (datemin[0] != -1) {
+            if (datemin[0] != MISSING_INT) {
                 query.set(DBA_KEY_YEARMIN, datemin[0]);
                 query.set(DBA_KEY_MONTHMIN, datemin[1]);
                 query.set(DBA_KEY_DAYMIN, datemin[2]);
@@ -231,7 +231,7 @@ struct DateMatcher : public Matcher
                 query.set(DBA_KEY_MINUMIN, datemin[4]);
                 query.set(DBA_KEY_SECMIN, datemin[5]);
             }
-            if (datemax[0] != -1) {
+            if (datemax[0] != MISSING_INT) {
                 query.set(DBA_KEY_YEARMAX, datemax[0]);
                 query.set(DBA_KEY_MONTHMAX, datemax[1]);
                 query.set(DBA_KEY_DAYMAX, datemax[2]);
@@ -352,7 +352,7 @@ std::auto_ptr<Matcher> Matcher::create(const Record& query)
 
     int minvalues[6], maxvalues[6];
     query.parse_date_extremes(minvalues, maxvalues);
-    if (minvalues[0] != -1 || maxvalues[0] != -1)
+    if (minvalues[0] != MISSING_INT || maxvalues[0] != MISSING_INT)
         res->exprs.push_back(new DateMatcher(minvalues, maxvalues));
 
     int latmin = 0, latmax = 0, lonmin = 0, lonmax = 0;

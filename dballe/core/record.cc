@@ -830,24 +830,24 @@ void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out)
 
 static inline int peek_int(const Record& rec, dba_keyword key)
 {
-	const char* s = rec.key_peek_value(key);
-	return s != NULL ? strtol(s, 0, 10) : -1;
+    const char* s = rec.key_peek_value(key);
+    return s != NULL ? strtol(s, 0, 10) : MISSING_INT;
 }
 
 static inline int min_with_undef(int v1, int v2)
 {
-	if (v1 == -1)
-		return v2;
-	if (v2 == -1)
-		return v1;
-	return v1 < v2 ? v1 : v2;
+    if (v1 == MISSING_INT)
+        return v2;
+    if (v2 == MISSING_INT)
+        return v1;
+    return v1 < v2 ? v1 : v2;
 }
 
 static inline int max_with_undef(int v1, int v2)
 {
-	if (v1 == -1)
+	if (v1 == MISSING_INT)
 		return v2;
-	if (v2 == -1)
+	if (v2 == MISSING_INT)
 		return v1;
 	return v1 > v2 ? v1 : v2;
 }
@@ -856,7 +856,7 @@ static inline int max_days(int y, int m)
 {
 	int days[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	if (m != 2)
-		return days[m-1];
+		return days[m - 1];
 	else
 		return (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0)) ? 29 : 28;
 }
@@ -880,9 +880,9 @@ void Record::parse_date_extremes(int* minvalues, int* maxvalues) const
 		minvalues[i] = max_with_undef(val, min);
 		maxvalues[i] = min_with_undef(val, max);
 
-		if (i > 0 &&
-		  ((minvalues[i-1] == -1 && minvalues[i] != -1) ||
-		   (maxvalues[i-1] == -1 && maxvalues[i] != -1)))
+        if (i > 0 &&
+           ((minvalues[i - 1] == MISSING_INT && minvalues[i] != MISSING_INT) ||
+            (maxvalues[i - 1] == MISSING_INT && maxvalues[i] != MISSING_INT)))
 		{
 			Varinfo key1 = keyword_info(names[i - 1]);
 			Varinfo key2 = keyword_info(names[i]);
@@ -892,27 +892,27 @@ void Record::parse_date_extremes(int* minvalues, int* maxvalues) const
 		}
 	}
 
-	/* Now values is either 6 times -1, 6 values, or X values followed by 6-X times -1 */
+	/* Now values is either 6 times MISSING_INT, 6 values, or X values followed by 6-X times MISSING_INT */
 
 	/* If one of the extremes has been selected, fill in the blanks */
 
-	if (minvalues[0] != -1)
-	{
-		minvalues[1] = minvalues[1] != -1 ? minvalues[1] : 1;
-		minvalues[2] = minvalues[2] != -1 ? minvalues[2] : 1;
-		minvalues[3] = minvalues[3] != -1 ? minvalues[3] : 0;
-		minvalues[4] = minvalues[4] != -1 ? minvalues[4] : 0;
-		minvalues[5] = minvalues[5] != -1 ? minvalues[5] : 0;
-	}
+    if (minvalues[0] != MISSING_INT)
+    {
+        minvalues[1] = minvalues[1] != MISSING_INT ? minvalues[1] : 1;
+        minvalues[2] = minvalues[2] != MISSING_INT ? minvalues[2] : 1;
+        minvalues[3] = minvalues[3] != MISSING_INT ? minvalues[3] : 0;
+        minvalues[4] = minvalues[4] != MISSING_INT ? minvalues[4] : 0;
+        minvalues[5] = minvalues[5] != MISSING_INT ? minvalues[5] : 0;
+    }
 
-	if (maxvalues[0] != -1)
-	{
-		maxvalues[1] = maxvalues[1] != -1 ? maxvalues[1] : 12;
-		maxvalues[2] = maxvalues[2] != -1 ? maxvalues[2] : max_days(maxvalues[0], maxvalues[1]);
-		maxvalues[3] = maxvalues[3] != -1 ? maxvalues[3] : 23;
-		maxvalues[4] = maxvalues[4] != -1 ? maxvalues[4] : 59;
-		maxvalues[5] = maxvalues[5] != -1 ? maxvalues[5] : 59;
-	}
+    if (maxvalues[0] != MISSING_INT)
+    {
+        maxvalues[1] = maxvalues[1] != MISSING_INT ? maxvalues[1] : 12;
+        maxvalues[2] = maxvalues[2] != MISSING_INT ? maxvalues[2] : max_days(maxvalues[0], maxvalues[1]);
+        maxvalues[3] = maxvalues[3] != MISSING_INT ? maxvalues[3] : 23;
+        maxvalues[4] = maxvalues[4] != MISSING_INT ? maxvalues[4] : 59;
+        maxvalues[5] = maxvalues[5] != MISSING_INT ? maxvalues[5] : 59;
+    }
 }
 
 void Record::parse_date(int* values) const
@@ -922,7 +922,7 @@ void Record::parse_date(int* values) const
     {
         values[i] = peek_int(*this, names[i]);
 
-        if (i > 0 && (values[i-1] == -1 && values[i] != -1))
+        if (i > 0 && (values[i-1] == MISSING_INT && values[i] != MISSING_INT))
         {
             Varinfo key1 = keyword_info(names[i - 1]);
             Varinfo key2 = keyword_info(names[i]);
@@ -932,17 +932,17 @@ void Record::parse_date(int* values) const
         }
     }
 
-    /* Now values is either 6 times -1, 6 values, or X values followed by 6-X times -1 */
+    /* Now values is either 6 times MISSING_INT, 6 values, or X values followed by 6-X times MISSING_INT */
 
     /* If one of the extremes has been selected, fill in the blanks */
 
-    if (values[0] != -1)
+    if (values[0] != MISSING_INT)
     {
-        values[1] = values[1] != -1 ? values[1] : 1;
-        values[2] = values[2] != -1 ? values[2] : 1;
-        values[3] = values[3] != -1 ? values[3] : 0;
-        values[4] = values[4] != -1 ? values[4] : 0;
-        values[5] = values[5] != -1 ? values[5] : 0;
+        values[1] = values[1] != MISSING_INT ? values[1] : 1;
+        values[2] = values[2] != MISSING_INT ? values[2] : 1;
+        values[3] = values[3] != MISSING_INT ? values[3] : 0;
+        values[4] = values[4] != MISSING_INT ? values[4] : 0;
+        values[5] = values[5] != MISSING_INT ? values[5] : 0;
     }
 }
 
@@ -997,7 +997,7 @@ matcher::Result MatchedRecord::match_date(const int* min, const int* max) const
 {
     int date[6];
     r.parse_date(date);
-    if (date[0] == -1) return matcher::MATCH_NA;
+    if (date[0] == MISSING_INT) return matcher::MATCH_NA;
     return Matched::date_in_range(date, min, max);
 }
 

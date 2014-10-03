@@ -547,7 +547,7 @@ bool QueryBuilder::add_dt_where(const char* tbl)
     int minvalues[6], maxvalues[6];
     rec.parse_date_extremes(minvalues, maxvalues);
 
-    if (minvalues[0] != -1 || maxvalues[0] != -1)
+    if (minvalues[0] != MISSING_INT || maxvalues[0] != MISSING_INT)
     {
         if (memcmp(minvalues, maxvalues, 6 * sizeof(int)) == 0)
         {
@@ -567,7 +567,7 @@ bool QueryBuilder::add_dt_where(const char* tbl)
         }
         else
         {
-            if (minvalues[0] != -1)
+            if (minvalues[0] != MISSING_INT)
             {
                 /* Add constraint on the minimum date interval */
                 qargs.sel_dtmin.year = minvalues[0];
@@ -583,7 +583,7 @@ bool QueryBuilder::add_dt_where(const char* tbl)
                 stm.bind_in(qargs.input_seq++, qargs.sel_dtmin);
                 found = true;
             }
-            if (maxvalues[0] != -1)
+            if (maxvalues[0] != MISSING_INT)
             {
                 qargs.sel_dtmax.year = maxvalues[0];
                 qargs.sel_dtmax.month = maxvalues[1];

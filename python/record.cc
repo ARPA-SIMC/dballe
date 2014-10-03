@@ -286,7 +286,7 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
     PyObject* dt_min;
     PyObject* dt_max;
 
-    if (minvals[0] != -1)
+    if (minvals[0] != MISSING_INT)
     {
         dt_min = PyDateTime_FromDateAndTime(
                 minvals[0], minvals[1], minvals[2],
@@ -297,7 +297,7 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
         Py_INCREF(dt_min);
     }
 
-    if (maxvals[0] != -1)
+    if (maxvals[0] != MISSING_INT)
     {
         dt_max = PyDateTime_FromDateAndTime(
                 maxvals[0], maxvals[1], maxvals[2],
