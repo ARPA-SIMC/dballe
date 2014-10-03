@@ -1,14 +1,12 @@
 #!/usr/bin/make -f
 
-export PYBUILD_NAME=python-dballe
-
 VERSION=$(shell debian/vercheck)
 
 # Work around to latex2html bug #368693
 export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 
 %:
-	dh --with python2 --buildsystem=pybuild $@
+	dh --with python2 $@
 
 
 # DEB_PYTHON2_MODULE_PACKAGES := provami
