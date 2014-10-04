@@ -30,14 +30,20 @@ dbadb.1: src/dbadb doc/add_templates_to_manpage
 dbamsg.1: src/dbamsg doc/add_templates_to_manpage
 	( cd src && ./`basename $<` help manpage ) | ( cd $(srcdir) && $(srcdir)/doc/add_templates_to_manpage ) > $@
 
+dbaexport.1: src/dbaexport
+	COLUMNS=200 help2man --name='export data from DB-All.e' --section=1 --no-info --version-string="$(PACKAGE_VERSION)" $< > $@
+
 %.1: src/%
 	( cd src && ./`basename $<` help manpage ) > $@
+
+BUILT_SOURCES = dbaexport.1
 
 EXTRA_DIST = autogen.sh \
 	     libdballe.m4 libdballef.m4 \
 	     libdballe.pc.in libdballef.pc.in \
 	     $(conf_DATA) dballe.spec get_line_no run-check.conf.example \
 	     run-check run-local show_code_notes \
-	     TODO.provami UPGRADE-5.x
+	     TODO.provami UPGRADE-5.x \
+	     dbaexport.1
 
 CLEANFILES = $(man_MANS)
