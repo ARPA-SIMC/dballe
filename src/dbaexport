@@ -8,6 +8,7 @@ import argparse
 import logging
 import os
 import sys
+import io
 try:
     import dballe
     HAS_DBALLE = True
@@ -40,22 +41,60 @@ def get_db(args):
     else:
         return dballe.DB.connect(dsn, args.user, args.password)
 
+def get_query(args):
+    query = dballe.Record()
+    for q in args.query:
+        query.set_from_string(q)
+    return query
+
+def get_outfd(args, text=False):
+    """
+    Get the output file descriptor
+    """
+    if args.outfile:
+        if text:
+            return io.open(args, "wt", encoding="utf-8")
+        else:
+            return io.open(args, "wb")
+    else:
+        if text:
+            return io.open(sys.stdout.fileno(), "wt", encoding="utf-8", closefd=False)
+        else:
+            return io.open(sys.stdout.fileno(), "wb", closefd=False)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Export data from a DB-All.e database.')
+    parser.add_argument("--verbose", action="store_true",
+                        help="verbose output")
     parser.add_argument("--dsn", type=str, metavar="dsn",
                         help="DSN, or URL-like database definition, to use for connecting to the DB-All.e database (can also be specified in the environment as DBA_DB)")
     parser.add_argument("--user", type=str, metavar="name",
                         help="username to use for connecting to the DB-All.e database")
     parser.add_argument("--pass", type=str, metavar="password", dest="password",
                         help="password to use for connecting to the DB-All.e database")
-    parser.add_argument("--verbose",
-                        help="verbose output")
+    parser.add_argument("--outfile", "-o", type=str, metavar="file",
+                        help="output file. Default is standard output, if supported")
 
     subparsers = parser.add_subparsers(dest="format", help="output formats")
-    parser_csv = subparsers.add_parser("csv", help="export data as CSV")
-    parser_csv.add_argument("query", nargs="+", metavar="key=val",
+    # Use a byte-string for subparser name to avoid seeing u'csv' in output.
+    # Remove in python3
+    parser_csv = subparsers.add_parser(b"csv", help="export data as CSV")
+    parser_csv.add_argument("query", nargs="*", metavar="key=val",
                             help="DB-All.e query to select data to export")
+    parser_gnur = subparsers.add_parser(b"gnur", help="export data as GNU R workspace")
+    parser_gnur.add_argument("query", nargs="*", metavar="key=val",
+                             help="DB-All.e query to select data to export")
+    parser_bufr = subparsers.add_parser(b"bufr", help="export data as BUFR")
+    parser_bufr.add_argument("query", nargs="*", metavar="key=val",
+                             help="DB-All.e query to select data to export")
+    parser_bufr.add_argument("--generic", action="store_true",
+                             help="export generic BUFR messages")
+    parser_crex = subparsers.add_parser(b"crex", help="export data as CREX")
+    parser_crex.add_argument("query", nargs="*", metavar="key=val",
+                             help="DB-All.e query to select data to export")
+    parser_crex.add_argument("--generic", action="store_true",
+                             help="export generic BUFR messages")
 
     args = parser.parse_args()
 
@@ -66,12 +105,32 @@ if __name__ == "__main__":
             raise CommandError("This command requires the dballe python module to run")
 
         db = get_db(args)
+        query = get_query(args)
 
-        print(args.query)
-        print(args.format)
-        #dd         (csv, R, bufr, crex, ...?)
+        if args.format == "csv":
+            import dballe.dbacsv
+            with get_outfd(args, text=True) as fd:
+                dballe.dbacsv.export(db, query, fd)
+        elif args.format == "gnur":
+            import dballe.rconvert
+            import dballe.volnd
+            idx = (dballe.volnd.AnaIndex(), \
+                dballe.volnd.DateTimeIndex(), \
+                dballe.volnd.LevelIndex(), \
+                dballe.volnd.TimeRangeIndex(), \
+                dballe.volnd.NetworkIndex())
+            res = dballe.volnd.read(db.query_data(query), idx)
+            with get_outfd(args, text=True) as fd:
+                dballe.rconvert.volnd_save_to_r(res, fd)
+        elif args.format == "bufr":
+            if not args.outfile: raise CommandError("BUFR output requires --outfile")
+            db.export_to_file(query, "BUFR", args.outfile, generic=args.generic)
+        elif args.format == "crex":
+            if not args.outfile: raise CommandError("CREX output requires --outfile")
+            db.export_to_file(query, "CREX", args.outfile, generic=args.generic)
+        else:
+            raise CommandError("Exporter for {} is not available.".format(args.format))
 
-        #exporter = dballe.dbacsv.export(db, query, sys.stdout)
     except CommandError as e:
         log.error("%s", e)
         sys.exit(1)

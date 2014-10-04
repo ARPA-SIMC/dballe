@@ -117,6 +117,7 @@ Package: dballe
 Section: misc
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}
+Recommends: python-dballe
 Description: Database for punctual meteorological data (Command line tools)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
