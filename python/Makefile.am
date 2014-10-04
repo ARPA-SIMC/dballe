@@ -63,3 +63,5 @@ check-local:
 	for test in $(dballe_python_tests); do \
 		$(TESTS_ENVIRONMENT) $$test ; \
 	done
+
+CLEANFILES = python-dballe.rst python-dballe.html
