@@ -577,6 +577,26 @@ void Record::get_datetime(int (&val)[6]) const
     val[5] = get(DBA_KEY_SEC, MISSING_INT);
 }
 
+void Record::get_datetimemin(int (&val)[6]) const
+{
+    val[0] = get(DBA_KEY_YEARMIN, MISSING_INT);
+    val[1] = get(DBA_KEY_MONTHMIN, MISSING_INT);
+    val[2] = get(DBA_KEY_DAYMIN, MISSING_INT);
+    val[3] = get(DBA_KEY_HOURMIN, MISSING_INT);
+    val[4] = get(DBA_KEY_MINUMIN, MISSING_INT);
+    val[5] = get(DBA_KEY_SECMIN, MISSING_INT);
+}
+
+void Record::get_datetimemax(int (&val)[6]) const
+{
+    val[0] = get(DBA_KEY_YEARMAX, MISSING_INT);
+    val[1] = get(DBA_KEY_MONTHMAX, MISSING_INT);
+    val[2] = get(DBA_KEY_DAYMAX, MISSING_INT);
+    val[3] = get(DBA_KEY_HOURMAX, MISSING_INT);
+    val[4] = get(DBA_KEY_MINUMAX, MISSING_INT);
+    val[5] = get(DBA_KEY_SECMAX, MISSING_INT);
+}
+
 void Record::set_datetime(const int (&val)[6])
 {
     if (val[0] == MISSING_INT) unset(DBA_KEY_YEAR);  else set(DBA_KEY_YEAR,  val[0]);
