@@ -155,16 +155,3 @@ Description: Database for punctual meteorological data (Command line tools)
     from soundings and airplanes.
   * Report information is preserved. It can work based on physical
     parameters or on report types.
-
-Package: provami
-Section: misc
-Architecture: all
-Depends: python-dballe, python-wxgtk3.0, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
-Suggests: python-rpy2
-XB-Python-Version: ${python:Versions}
-Provides: ${python:Provides}
-Description: Graphical interface to DB-All.e databases
- provami is a GUI application to visualise and navigate DB-All.e databases.
- .
- It also allows one to perform simple editing tasks, and to graphically select
- and export data subsets.
