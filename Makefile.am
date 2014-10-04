@@ -45,4 +45,4 @@ EXTRA_DIST = autogen.sh \
 	     TODO.provami UPGRADE-5.x \
 	     dbaexport.1
 
-CLEANFILES = $(man_MANS)
+CLEANFILES = dbatbl.1 dbamsg.1 dbadb.1
