@@ -5,7 +5,7 @@ DBALLELIBS =  ../dballe/libdballe.la
 AM_CPPFLAGS = -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
 
 bin_PROGRAMS = dbatbl dbamsg
-dist_bin_SCRIPTS = dbatbl_makeb
+dist_bin_SCRIPTS = dbatbl_makeb dbaexport
 
 dbatbl_SOURCES = dbatbl.cc
 dbatbl_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
