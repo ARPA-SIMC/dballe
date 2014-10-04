@@ -66,6 +66,6 @@ uninstall-hook:
 
 EXTRA_DIST = dballe-print-stations populate.py provami/Paths.py.in \
 	     $(dballedata_DATA) $(provamiModules) \
-	     provami.1 dballecsv notes regenerate-provami-manpage
+	     provami.1 dballecsv notes regenerate-provami-manpage test-provami
 
 CLEANFILES = provami/*.pyc provami/Paths.py
