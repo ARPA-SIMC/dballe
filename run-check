@@ -1,9 +1,13 @@
 #!/bin/sh
 
-if [ -f run-check.conf ]
-then
-	. ./run-check.conf
-	export DBA_DB
-fi
+for conffile in ./run-check.conf .git/run-check.conf
+do
+	if [ -f "$conffile" ]
+	then
+		. "$conffile"
+		export DBA_DB
+		break
+	fi
+done
 
 exec make check "$@"
