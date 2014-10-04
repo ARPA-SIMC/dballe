@@ -28,4 +28,7 @@ benchmark_DEPENDENCIES = $(DBALLELIBS)
 benchmark_CPPFLAGS = -DBENCHDIR='"$(top_srcdir)/extra/bench/"'
 endif
 
-EXTRA_DIST = bench/bench.h
+EXTRA_DIST = bench/bench.h \
+             bench/3928-viaza-20130624-180728.csv \
+             bench/3932-viaza-20130625-105958.csv
+
