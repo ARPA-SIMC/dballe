@@ -12,6 +12,7 @@ dballe (6.8-1) UNRELEASED; urgency=low
        old wxPytyhon codebase and a QT rewrite is in progress. Closes: #759043.
        Thanks Olly Betts <olly@survex.com> for patches in the meantime.
      - improvements to dballe::Record's API
+     - run with autoreconf. Closes: #744563.
 
  -- Enrico Zini <enrico@debian.org>  Wed, 06 Nov 2013 12:01:35 +0100
 
