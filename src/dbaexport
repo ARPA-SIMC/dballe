@@ -53,9 +53,9 @@ def get_outfd(args, text=False):
     """
     if args.outfile:
         if text:
-            return io.open(args, "wt", encoding="utf-8")
+            return io.open(args.outfile, "wt", encoding="utf-8")
         else:
-            return io.open(args, "wb")
+            return io.open(args.outfile, "wb")
     else:
         if text:
             return io.open(sys.stdout.fileno(), "wt", encoding="utf-8", closefd=False)
