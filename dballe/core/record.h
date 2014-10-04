@@ -413,6 +413,9 @@ public:
 	 */
 	void set_from_string(const char* str);
 
+    /// Same as set_from_string(str) but takes already split key and val
+    void set_from_string(const char* key, const char* val);
+
     /**
      * Encode in a one-liner of comma-separated assignments
      */

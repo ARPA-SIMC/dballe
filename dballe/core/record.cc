@@ -738,46 +738,23 @@ bool Record::is_ana_context() const
 
 void Record::set_from_string(const char* str)
 {
-	/* Split the input as name=val */
-	const char* s;
-	const char* val;
-	Varcode varcode;
-	
-	if ((s = strchr(str, '=')) == NULL)
-		error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
+    // Split the input as name=val
+    const char* s = strchr(str, '=');
 
-//		name = strndup(queryparm, s - queryparm);
-	val = s + 1;
+    if (!s) error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
 
-	/* First see if it's an alias or a variable */
-	if ((varcode = varcode_alias_resolve_substring(str, s - str)) != 0 || str[0] == 'B')
-	{
-		if (varcode == 0)
-			varcode = WR_STRING_TO_VAR(str + 1);
+    string key(str, s - str);
+    set_from_string(key.c_str(), s + 1);
+}
 
-		/* Query informations about the parameter */
-		Varinfo info = varinfo(varcode);
-		if (info->is_string())
-			var(varcode).setc(val);
-		else
-			var(varcode).setd(strtod(val, 0));
-	} else {
-		/* Else handle a normal keyword */
-		dba_keyword param = keyword_byname_len(str, s - str);
-		if (param == DBA_KEY_ERROR)
-			error_notfound::throwf("keyword \"%.*s\" does not exist", (int)(s - str), str);
+void Record::set_from_string(const char* name, const char* val)
+{
+    dba_keyword k = Record::keyword_byname(name);
 
-		/* Query informations about the parameter */
-		Varinfo info = keyword_info(param);
-		if (info->is_string())
-			key(param).setc(val);
-		else {
-            if (strcmp(val, "-") == 0)
-                key(param).setd(MISSING_INT);
-            else
-                key(param).setd(strtod(val, 0));
-        }
-	}
+    if (k != DBA_KEY_ERROR)
+        key(k).set_from_formatted(val);
+    else
+        var(resolve_varcode_safe(name)).set_from_formatted(val);
 }
 
 std::string Record::to_string() const
