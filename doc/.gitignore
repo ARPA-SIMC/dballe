@@ -8,6 +8,5 @@
 c_api/
 fortran_api/
 xml/
-dballe-doc.i
 libdballe.dox
 libdballef.dox
