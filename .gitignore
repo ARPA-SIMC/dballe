@@ -33,6 +33,7 @@ Makefile
 /dbadb.1
 /dbamsg.1
 /dbatbl.1
+/dbaexport.1
 /dballe/core/record_keyword.dox
 /dballe/core/record_keyword.rst
 /dballe/core/record_keyword.tex
