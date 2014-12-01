@@ -13,6 +13,7 @@ dballe (6.8-1) UNRELEASED; urgency=low
        Thanks Olly Betts <olly@survex.com> for patches in the meantime.
      - improvements to dballe::Record's API
      - run with autoreconf. Closes: #744563.
+     - updated standards-version, no changes required.
 
  -- Enrico Zini <enrico@debian.org>  Wed, 06 Nov 2013 12:01:35 +0100
 

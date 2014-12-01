@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 9), dh-python, dh-autoreconf,
   libtut-dev, libwibble-dev,
   doxygen-latex, ghostscript,
   python-all-dev, python-docutils, python-numpy
-Standards-Version: 3.9.3.0
+Standards-Version: 3.9.6.0
 Homepage: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
 Vcs-Svn: https://svn.smr.arpa.emr.it/dballe/dballe/trunk
 
