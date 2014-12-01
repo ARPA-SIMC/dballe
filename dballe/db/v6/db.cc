@@ -643,14 +643,16 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 
     db::Transaction t(*conn);
 
-    // Insert the station data, and get the ID
-    d.id_station = obtain_station(rec, station_can_add);
+    int id_station = obtain_station(rec, station_can_add);
 
-    /* Get the ID of the report */
-    d.id_report = get_rep_cod(rec);
-
-    // Insert the lev_tr data, and get the ID
-    d.id_lev_tr = obtain_lev_tr(rec);
+    d.set_context(
+            // Insert the station data, and get the ID
+            id_station,
+            // Get the ID of the report
+            get_rep_cod(rec),
+            // Insert the lev_tr data, and get the ID
+            obtain_lev_tr(rec)
+    );
 
     // Set the date from the record contents
     d.set_date(rec);
@@ -661,17 +663,17 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     // Insert all the variables we find
     for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
     {
+        int id;
         /* Datum to be inserted, linked to id_station and all the other IDs */
-        d.set(**i);
         if (can_replace)
-            d.insert_or_overwrite(true);
+            d.insert_or_overwrite(**i, &id);
         else
-            d.insert_or_fail(true);
-        last_insert_varids.push_back(VarID((*i)->code(), d.id));
+            d.insert_or_fail(**i, &id);
+        last_insert_varids.push_back(VarID((*i)->code(), id));
     }
     t.commit();
 
-    _last_station_id = d.id_station;
+    _last_station_id = id_station;
 }
 
 int DB::last_station_id() const

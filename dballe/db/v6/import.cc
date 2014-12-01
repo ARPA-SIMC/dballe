@@ -79,27 +79,28 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
     bool inserted_pseudoana = false;
     // Check if we can reuse a pseudoana row
-    dd.id_station = st.get_id();
-    if (dd.id_station == -1)
+    int id_station = st.get_id();
+    if (id_station == -1)
     {
-        dd.id_station = st.insert();
+        id_station = st.insert();
         inserted_pseudoana = true;
     }
 
     // Report code
+    int id_report;
     if (repmemo != NULL)
-        dd.id_report = rep_cod_from_memo(repmemo);
+        id_report = rep_cod_from_memo(repmemo);
     else {
         // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
-            dd.id_report = rep_cod_from_memo(var->value());
+            id_report = rep_cod_from_memo(var->value());
         else
-            dd.id_report = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
+            id_report = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
     }
 
 	if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
 	{
-        dd.set_station_info();
+        dd.set_station_info(id_station, id_report);
 
 		// Insert the rest of the station information
 		for (size_t i = 0; i < l_ana->data.size(); ++i)
@@ -109,15 +110,14 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 			if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
 				continue;
 
-			dd.set(*l_ana->data[i]);
-
             bool inserted = false;
+            int id_data;
 			if ((flags & DBA_IMPORT_OVERWRITE) == 0)
 			{
 				// Insert only if it is missing
-				inserted = dd.insert_or_ignore(true);
+				inserted = dd.insert_or_ignore(*l_ana->data[i], &id_data);
 			} else {
-				dd.insert_or_overwrite(true);
+				dd.insert_or_overwrite(*l_ana->data[i], &id_data);
 				inserted = true;
 			}
 
@@ -125,7 +125,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
             if (inserted && (flags & DBA_IMPORT_ATTRS))
                 for (const Var* attr = l_ana->data[i]->next_attr(); attr != NULL; attr = attr->next_attr())
                     if (attr->value() != NULL)
-                        dq.write(dd.id, *attr);
+                        dq.write(id_data, *attr);
         }
     }
 
@@ -143,13 +143,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
         if (year == NULL || month == NULL || day == NULL || hour == NULL || min == NULL)
             throw error_notfound("date/time informations not found (or incomplete) in message to insert");
 
-        dd.date.year = year->enqi();
-        dd.date.month = month->enqi();
-        dd.date.day = day->enqi();
-        dd.date.hour = hour->enqi();
-        dd.date.minute = min->enqi();
-        dd.date.second = sec ? sec->enqi() : 0;
-        dd.date.fraction = 0;
+        dd.set_date(year->enqi(), month->enqi(), day->enqi(), hour->enqi(), min->enqi(), sec ? sec->enqi() : 0);
     }
 
 	/* Insert the rest of the data */
@@ -171,9 +165,11 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
         lt.p2 = ctx.trange.p2;
 
         // Get the database ID of the lev_tr
-        dd.set_id_lev_tr(lt.get_id());
-        if (dd.id_lev_tr == -1)
-            dd.set_id_lev_tr(lt.insert());
+        int id_lev_tr = lt.get_id();
+        if (id_lev_tr == -1)
+            id_lev_tr = lt.insert();
+
+        dd.set_context(id_station, id_report, id_lev_tr);
 
 		for (size_t j = 0; j < ctx.data.size(); ++j)
 		{
@@ -181,17 +177,17 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
             if (not var.isset()) continue;
 
             // Insert the variable
-            dd.set(var);
+            int id_data;
             if (flags & DBA_IMPORT_OVERWRITE)
-                dd.insert_or_overwrite(true);
+                dd.insert_or_overwrite(var, &id_data);
             else
-                dd.insert_or_fail(true);
+                dd.insert_or_fail(var, &id_data);
 
             /* Insert the attributes */
             if (flags & DBA_IMPORT_ATTRS)
                 for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
                     if (attr->value() != NULL)
-                        dq.write(dd.id, *attr);
+                        dq.write(id_data, *attr);
         }
     }
 

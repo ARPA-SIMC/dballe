@@ -80,22 +80,14 @@ struct dbv6_attr_shar : public dballe::tests::db_test
         ensure_equals(lt.insert(), 2);
 
         // Insert a datum
-        da.id_station = 1;
-        da.id_report = 1;
-        da.set_id_lev_tr(1);
-        da.date = make_sql_timestamp(2001, 2, 3, 4, 5, 6);
-        da.id_var = WR_VAR(0, 1, 2);
-        da.set_value("123");
-        da.insert_or_fail();
+        da.set_context(1, 1, 1);
+        da.set_date(2001, 2, 3, 4, 5, 6);
+        da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
 
         // Insert another datum
-        da.id_station = 2;
-        da.id_report = 2;
-        da.set_id_lev_tr(2);
-        da.date = make_sql_timestamp(2002, 3, 4, 5, 6, 7);
-        da.id_var = WR_VAR(0, 1, 2);
-        da.set_value("234");
-        da.insert_or_fail();
+        da.set_context(2, 2, 2);
+        da.set_date(2002, 3, 4, 5, 6, 7);
+        da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
     }
 };
 TESTGRP(dbv6_attr);

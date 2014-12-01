@@ -45,8 +45,9 @@ struct DB;
 /**
  * Precompiled query to manipulate the data table
  */
-struct Data
+class Data
 {
+protected:
     /** DB connection. */
     v6::DB& db;
 
@@ -79,40 +80,38 @@ struct Data
     /** Variable value indicator */
     SQLLEN value_ind;
 
-    Data(v6::DB& conn);
-    ~Data();
-
-    /**
-     * Set the date from the date information in the record
-     */
-    void set_date(const Record& rec);
-
-    /**
-     * Set id_lev_tr and datetime to mean 'station information'
-     */
-    void set_station_info();
-
-    /**
-     * Set id_lev_tr to a valid value
-     */
-    void set_id_lev_tr(int id);
-
-    /**
-     * Set the value input fields using a wreport::Var
-     */
-    void set(const wreport::Var& var);
-
     /**
      * Set the value input fields using a string value
      */
     void set_value(const char* value);
 
     /**
+     * Set the value input fields using a wreport::Var
+     */
+    void set(const wreport::Var& var);
+
+public:
+    Data(v6::DB& conn);
+    ~Data();
+
+    /// Set the IDs that identify this variable
+    void set_context(int id_station, int id_report, int id_lev_tr);
+
+    /// Set id_lev_tr and datetime to mean 'station information'
+    void set_station_info(int id_station, int id_report);
+
+    /// Set the date from the date information in the record
+    void set_date(const Record& rec);
+
+    /// Set the date from a split up date
+    void set_date(int ye, int mo, int da, int ho, int mi, int se);
+
+    /**
      * Insert an entry into the data table, failing on conflicts.
      *
      * Trying to replace an existing value will result in an error.
      */
-    void insert_or_fail(bool want_id=false);
+    void insert_or_fail(const wreport::Var& var, int* res_id=nullptr);
 
     /**
      * Insert an entry into the data table, ignoring conflicts.
@@ -121,7 +120,7 @@ struct Data
      *
      * @return true if it was inserted, false if it was already present
      */
-    bool insert_or_ignore(bool want_id=false);
+    bool insert_or_ignore(const wreport::Var& var, int* res_id=nullptr);
 
     /**
      * Insert an entry into the data table, overwriting on conflicts.
@@ -132,7 +131,7 @@ struct Data
      * If id is not NULL, it stores the database id of the inserted/modified
      * data in *id.
      */
-    void insert_or_overwrite(bool want_id=false);
+    void insert_or_overwrite(const wreport::Var& var, int* res_id=nullptr);
 
     /**
      * Dump the entire contents of the table to an output stream

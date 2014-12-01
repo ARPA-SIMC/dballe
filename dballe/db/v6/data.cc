@@ -154,6 +154,13 @@ Data::~Data()
     if (sidstm) delete sidstm;
 }
 
+void Data::set_context(int id_station, int id_report, int id_lev_tr)
+{
+    this->id_station = id_station;
+    this->id_report = id_report;
+    this->id_lev_tr = id_lev_tr;
+}
+
 void Data::set_date(const Record& rec)
 {
     /* Also input the seconds, defaulting to 0 if not found */
@@ -178,8 +185,21 @@ void Data::set_date(const Record& rec)
         throw error_notfound("datetime informations not found among context information");
 }
 
-void Data::set_station_info()
+void Data::set_date(int ye, int mo, int da, int ho, int mi, int se)
 {
+    date.year = ye;
+    date.month = mo;
+    date.day = da;
+    date.hour = ho;
+    date.minute = mi;
+    date.second = se;
+    date.fraction = 0;
+}
+
+void Data::set_station_info(int id_station, int id_report)
+{
+    this->id_station = id_station;
+    this->id_report = id_report;
     // Use -1 instead of NULL, as NULL are considered different in UNIQUE
     // indices by some databases but not others, due to an ambiguity in the SQL
     // standard
@@ -191,11 +211,6 @@ void Data::set_station_info()
     date.minute = 0;
     date.second = 0;
     date.fraction = 0;
-}
-
-void Data::set_id_lev_tr(int id)
-{
-    id_lev_tr = id;
 }
 
 void Data::set(const wreport::Var& var)
@@ -219,15 +234,17 @@ void Data::set_value(const char* qvalue)
     }
 }
 
-void Data::insert_or_fail(bool want_id)
+void Data::insert_or_fail(const wreport::Var& var, int* res_id)
 {
+    set(var);
     istm->execute_and_close();
-    if (want_id)
-        id = db.last_data_insert_id();
+    if (res_id)
+        *res_id = db.last_data_insert_id();
 }
 
-bool Data::insert_or_ignore(bool want_id)
+bool Data::insert_or_ignore(const wreport::Var& var, int* res_id)
 {
+    set(var);
     int sqlres = iistm->execute();
     bool res;
     if (db.conn->server_type == POSTGRES || db.conn->server_type == ORACLE)
@@ -235,25 +252,27 @@ bool Data::insert_or_ignore(bool want_id)
     else
         res = iistm->rowcount() != 0;
     iistm->close_cursor_if_needed();
-    if (want_id)
-        id = db.last_data_insert_id();
+    if (res_id)
+        *res_id = db.last_data_insert_id();
     return res;
 }
 
-void Data::insert_or_overwrite(bool want_id)
+void Data::insert_or_overwrite(const wreport::Var& var, int* res_id)
 {
-    if (want_id)
+    set(var);
+    if (res_id)
     {
         // select id
         sidstm->execute();
         if (sidstm->fetch_expecting_one())
         {
             ustm->execute_and_close();
+            *res_id = id;
         }
         else
         {
             istm->execute_and_close();
-            id = db.last_data_insert_id();
+            *res_id = db.last_data_insert_id();
         }
     } else {
         if (ioustm)

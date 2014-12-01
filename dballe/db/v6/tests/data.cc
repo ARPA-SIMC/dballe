@@ -27,6 +27,8 @@
 
 using namespace dballe;
 using namespace dballe::db;
+using namespace wreport;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -48,13 +50,13 @@ struct dbv6_data_shar : public dballe::tests::db_test
 		st.lat = 4500000;
 		st.lon = 1100000;
 		st.set_ident("ciao");
-        ensure_equals(st.insert(), 1);
+        wassert(actual(st.insert()) == 1);
 
 		// Insert a fixed station
 		st.lat = 4600000;
 		st.lon = 1200000;
 		st.set_ident(NULL);
-		ensure_equals(st.insert(), 2);
+		wassert(actual(st.insert()) == 2);
 
         // Insert a lev_tr
         lt.ltype1 = 1;
@@ -77,25 +79,6 @@ struct dbv6_data_shar : public dballe::tests::db_test
         ensure_equals(lt.insert(), 2);
     }
 
-    void set_sample1()
-    {
-        da->id_station = 1;
-        da->id_report = 1;
-        da->id_lev_tr = 1;
-        da->date = make_sql_timestamp(2001, 2, 3, 4, 5, 6);
-        da->id_var = WR_VAR(0, 1, 2);
-        da->set_value("123");
-    }
-
-    void set_sample2()
-    {
-        da->id_station = 2;
-        da->id_report = 2;
-        da->id_lev_tr = 2;
-        da->date = make_sql_timestamp(2002, 3, 4, 5, 6, 7);
-        da->id_var = WR_VAR(0, 1, 2);
-        da->set_value("234");
-    }
 };
 TESTGRP(dbv6_data);
 
@@ -103,6 +86,8 @@ TESTGRP(dbv6_data);
 template<> template<>
 void to::test<1>()
 {
+#if 0
+    // Now this is just an internal function
 	use_db();
 
     // Test set
@@ -116,6 +101,7 @@ void to::test<1>()
     ensure_varcode_equals(da->id_var, WR_VAR(0, 1, 2));
 	ensure_equals(da->value, string("32"));
 	ensure_equals(da->value_ind, 2);
+#endif
 }
 
 
@@ -126,50 +112,51 @@ void to::test<2>()
     use_db();
 
     // Insert a datum
-    set_sample1();
-    da->insert_or_fail();
+    da->set_context(1, 1, 1);
+    da->set_date(2001, 2, 3, 4, 5, 6);
+    da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
 
     // Insert another datum
-    set_sample2();
-    da->insert_or_fail();
+    da->set_context(2, 2, 2);
+    da->set_date(2002, 3, 4, 5, 6, 7);
+    da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
 
     // Reinsert a datum: it should fail
-    set_sample1();
+    da->set_context(1, 1, 1);
+    da->set_date(2001, 2, 3, 4, 5, 6);
     try {
-        da->insert_or_fail();
+        da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
         ensure(false);
     } catch (db::error_odbc& e) {
         //ensure_contains(e.what(), "uplicate");
     }
 
     // Reinsert the other datum: it should fail
-    set_sample2();
+    da->set_context(2, 2, 2);
+    da->set_date(2002, 3, 4, 5, 6, 7);
     try {
-        da->insert_or_fail();
+        da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
         ensure(false);
     } catch (db::error_odbc& e) {
         //ensure_contains(e.what(), "uplicate");
     }
 
     // Reinsert a datum with overwrite: it should work
-    set_sample1();
-    da->insert_or_overwrite();
+    da->set_context(1, 1, 1);
+    da->set_date(2001, 2, 3, 4, 5, 6);
+    da->insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
 
     // Reinsert the other datum with overwrite: it should work
-    set_sample2();
-    da->insert_or_overwrite();
+    da->set_context(2, 2, 2);
+    da->set_date(2002, 3, 4, 5, 6, 7);
+    da->insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 234));
 
-	// Insert a new datum with ignore: it should insert
-	da->id_lev_tr = 3;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("234");
-    ensure_equals(da->insert_or_ignore(), true);
+    // Insert a new datum with ignore: it should insert
+    da->set_context(2, 2, 3);
+    wassert(actual(da->insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == true);
 
-	// Reinsert the same datum with ignore: it should ignore
-	da->id_lev_tr = 3;
-	da->id_var = WR_VAR(0, 1, 2);
-	da->set_value("234");
-    ensure_equals(da->insert_or_ignore(), false);
+    // Reinsert the same datum with ignore: it should ignore
+    wassert(actual(da->insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == false);
 
 #if 0
 	// Get the ID of the first data
