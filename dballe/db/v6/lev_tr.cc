@@ -132,6 +132,61 @@ void LevTr::get_data(int qid)
         error_notfound::throwf("no data found for lev_tr id %d", qid);
 }
 
+int LevTr::obtain_id(const Level& lev, const Trange& tr)
+{
+    ltype1 = lev.ltype1;
+    l1 = lev.l1;
+    ltype2 = lev.ltype2;
+    l2 = lev.l2;
+    pind = tr.pind;
+    p1 = tr.p1;
+    p2 = tr.p2;
+
+    // Check for an existing lev_tr with these data
+    int id = get_id();
+    // If there is an existing record, use its ID and don't do an INSERT
+    if (id != -1) return id;
+    return insert();
+}
+
+int LevTr::obtain_id(const Record& rec)
+{
+    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
+        ltype1 = var->enqi();
+    else
+        ltype1 = MISSING_INT;
+    if (const Var* var = rec.key_peek(DBA_KEY_L1))
+        l1 = var->enqi();
+    else
+        l1 = MISSING_INT;
+    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE2))
+        ltype2 = var->enqi();
+    else
+        ltype2 = MISSING_INT;
+    if (const Var* var = rec.key_peek(DBA_KEY_L2))
+        l2 = var->enqi();
+    else
+        l2 = MISSING_INT;
+    if (const Var* var = rec.key_peek(DBA_KEY_PINDICATOR))
+        pind = var->enqi();
+    else
+        pind = MISSING_INT;
+    if (const Var* var = rec.key_peek(DBA_KEY_P1))
+        p1 = var->enqi();
+    else
+        p1 = MISSING_INT;
+    if (const Var* var = rec.key_peek(DBA_KEY_P2))
+        p2 = var->enqi();
+    else
+        p2 = MISSING_INT;
+
+    // Check for an existing lev_tr with these data
+    int id = get_id();
+    // If there is an existing record, use its ID and don't do an INSERT
+    if (id != -1) return id;
+    return insert();
+}
+
 int LevTr::insert()
 {
     istm->execute_and_close();
@@ -318,8 +373,8 @@ struct MapLevTrCache : public LevTrCache
     mutable FetchStatement stm;
 
 
-    MapLevTrCache(LevTr& lt)
-        : stm(lt.db)
+    MapLevTrCache(DB& db)
+        : stm(db)
     {
         // TODO: make prefetch optional if needed, controlled by an env
         //       variable
@@ -392,11 +447,11 @@ struct MapLevTrCache : public LevTrCache
 };
 
 
-std::auto_ptr<LevTrCache> LevTrCache::create(LevTr& lt)
+std::auto_ptr<LevTrCache> LevTrCache::create(DB& db)
 {
     // TODO: check env vars to select alternate caching implementations, such
     // as a hit/miss that queries single items from the DB when not in cache
-    return auto_ptr<LevTrCache>(new MapLevTrCache(lt));
+    return auto_ptr<LevTrCache>(new MapLevTrCache(db));
 }
 
 } // namespace v6

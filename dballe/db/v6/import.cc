@@ -155,19 +155,8 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
         // Skip the station info level
         if (is_ana_level) continue;
 
-        // Insert the new level/timerange
-        lt.ltype1 = ctx.level.ltype1;
-        lt.l1 = ctx.level.l1;
-        lt.ltype2 = ctx.level.ltype2;
-        lt.l2 = ctx.level.l2;
-        lt.pind = ctx.trange.pind;
-        lt.p1 = ctx.trange.p1;
-        lt.p2 = ctx.trange.p2;
-
         // Get the database ID of the lev_tr
-        int id_lev_tr = lt.get_id();
-        if (id_lev_tr == -1)
-            id_lev_tr = lt.insert();
+        int id_lev_tr = lt.obtain_id(ctx.level, ctx.trange);
 
         dd.set_context(id_station, id_report, id_lev_tr);
 

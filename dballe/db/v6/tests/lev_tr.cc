@@ -23,6 +23,7 @@
 #include "db/v5/station.h"
 
 using namespace dballe;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -45,26 +46,13 @@ void to::test<1>()
 {
 	use_db();
 
-	// Insert a lev_tr
-	co->ltype1 = 1;
-	co->l1 = 2;
-	co->ltype2 = 0;
-	co->l2 = 3;
-	co->pind = 4;
-	co->p1 = 5;
-	co->p2 = 6;
-	ensure_equals(co->insert(), 1);
+    // Insert a lev_tr
+    wassert(actual(co->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
 
-	// Insert another lev_tr
-	co->ltype1 = 2;
-	co->l1 = 3;
-	co->ltype2 = 1;
-	co->l2 = 4;
-	co->pind = 5;
-	co->p1 = 6;
-	co->p2 = 7;
-	ensure_equals(co->insert(), 2);
+    // Insert another lev_tr
+    wassert(actual(co->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
 
+#if 0
 	// Get the ID of the first lev_tr
 	co->id = 0;
 	co->ltype1 = 1;
@@ -106,6 +94,7 @@ void to::test<1>()
 	ensure_equals(co->pind, 5);
 	ensure_equals(co->p1, 6);
 	ensure_equals(co->p2, 7);
+#endif
 
 #if 0
 	// Update the second lev_tr

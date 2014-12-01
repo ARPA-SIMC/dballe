@@ -60,24 +60,10 @@ struct dbv6_attr_shar : public dballe::tests::db_test
 		ensure_equals(st.insert(), 2);
 
         // Insert a lev_tr
-        lt.ltype1 = 1;
-        lt.l1 = 2;
-        lt.ltype2 = 0;
-        lt.l2 = 3;
-        lt.pind = 4;
-        lt.p1 = 5;
-        lt.p2 = 6;
-        ensure_equals(lt.insert(), 1);
+        wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
 
         // Insert another lev_tr
-        lt.ltype1 = 2;
-        lt.l1 = 3;
-        lt.ltype2 = 1;
-        lt.l2 = 4;
-        lt.pind = 5;
-        lt.p1 = 6;
-        lt.p2 = 7;
-        ensure_equals(lt.insert(), 2);
+        wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
 
         // Insert a datum
         da.set_context(1, 1, 1);

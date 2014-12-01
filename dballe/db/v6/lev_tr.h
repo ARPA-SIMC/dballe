@@ -54,6 +54,7 @@ struct DB;
  */
 struct LevTr
 {
+protected:
     /**
      * DB connection.
      */
@@ -86,8 +87,13 @@ struct LevTr
     /** Time range P2 SQL parameter */
     DBALLE_SQL_C_SINT_TYPE p2;
 
-    LevTr(DB& db);
-    ~LevTr();
+    /**
+     * Insert a new lev_tr in the database
+     *
+     * @return
+     *   The ID of the newly inserted lev_tr
+     */
+    int insert();
 
     /**
      * Get the lev_tr id for the current lev_tr data.
@@ -106,17 +112,25 @@ struct LevTr
     void get_data(int id);
 
     /**
-     * Insert a new lev_tr in the database
-     *
-     * @return
-     *   The ID of the newly inserted lev_tr
-     */
-    int insert();
-
-    /**
      * Remove a lev_tr record
      */
     void remove();
+
+public:
+    LevTr(DB& db);
+    ~LevTr();
+
+    /**
+     * Return the ID for the given Level and Trange, adding it to the database
+     * if it does not already exist
+     */
+    int obtain_id(const Level& lev, const Trange& tr);
+
+    /**
+     * Return the ID for the given Record, adding it to the database if it does
+     * not already exist
+     */
+    int obtain_id(const Record& rec);
 
     /**
      * Dump the entire contents of the table to an output stream
@@ -159,7 +173,7 @@ struct LevTrCache
     /// Dump cache contents to an output stream
     virtual void dump(FILE* out) const = 0;
 
-    static std::auto_ptr<LevTrCache> create(LevTr& lt);
+    static std::auto_ptr<LevTrCache> create(DB& db);
 };
 
 } // namespace v6

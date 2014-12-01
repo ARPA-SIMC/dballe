@@ -346,7 +346,7 @@ LevTr& DB::lev_tr()
 LevTrCache& DB::lev_tr_cache()
 {
     if (m_lev_tr_cache == NULL)
-        m_lev_tr_cache = v6::LevTrCache::create(lev_tr()).release();
+        m_lev_tr_cache = v6::LevTrCache::create(*this).release();
     return *m_lev_tr_cache;
 }
 
@@ -590,45 +590,7 @@ int DB::obtain_lev_tr(const Record& rec)
     if (rec.is_ana_context())
         return -1;
 
-    LevTr& c = lev_tr();
-
-    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
-        c.ltype1 = var->enqi();
-    else
-        c.ltype1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_L1))
-        c.l1 = var->enqi();
-    else
-        c.l1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE2))
-        c.ltype2 = var->enqi();
-    else
-        c.ltype2 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_L2))
-        c.l2 = var->enqi();
-    else
-        c.l2 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_PINDICATOR))
-        c.pind = var->enqi();
-    else
-        c.pind = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_P1))
-        c.p1 = var->enqi();
-    else
-        c.p1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_P2))
-        c.p2 = var->enqi();
-    else
-        c.p2 = MISSING_INT;
-
-    // Check for an existing lev_tr with these data
-    int id = c.get_id();
-
-    /* If there is an existing record, use its ID and don't do an INSERT */
-    if (id == -1)
-        id = c.insert();
-
-    return id;
+    return lev_tr().obtain_id(rec);
 }
 
 void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
@@ -664,7 +626,7 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
     {
         int id;
-        /* Datum to be inserted, linked to id_station and all the other IDs */
+        // Datum to be inserted, linked to id_station and all the other IDs
         if (can_replace)
             d.insert_or_overwrite(**i, &id);
         else
