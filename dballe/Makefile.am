@@ -308,6 +308,7 @@ if HAVE_ODBC
 tut_test_SOURCES += \
 	db/tests/querybuf.cc \
 	db/tests/internals.cc \
+	db/tests/sqlite.cc \
 	db/v5/tests/repinfo.cc \
 	db/v5/tests/station.cc \
 	db/v5/tests/context.cc \
