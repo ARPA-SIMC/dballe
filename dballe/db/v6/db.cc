@@ -848,17 +848,12 @@ void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
 {
     v6::Attr& a = attr();
 
-    a.id_data = id_data;
-
     // Begin the transaction
     db::Transaction t(*conn);
 
     /* Insert all found variables */
     for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
-    {
-        a.set(**i);
-        a.insert();
-    }
+        a.write(id_data, **i);
 
     t.commit();
 }

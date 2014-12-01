@@ -121,18 +121,13 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 				inserted = true;
 			}
 
-			dq.id_data = dd.id;
-
-			/* Insert the attributes */
-			if (inserted && (flags & DBA_IMPORT_ATTRS))
+            /* Insert the attributes */
+            if (inserted && (flags & DBA_IMPORT_ATTRS))
                 for (const Var* attr = l_ana->data[i]->next_attr(); attr != NULL; attr = attr->next_attr())
-					if (attr->value() != NULL)
-					{
-						dq.set(*attr);
-                        dq.insert();
-					}
-		}
-	}
+                    if (attr->value() != NULL)
+                        dq.write(dd.id, *attr);
+        }
+    }
 
     // Fill up the common context information for the rest of the data
 
@@ -194,18 +189,11 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
             /* Insert the attributes */
             if (flags & DBA_IMPORT_ATTRS)
-            {
-                dq.id_data = dd.id;
-
-				for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
-					if (attr->value() != NULL)
-					{
-                        dq.set(*attr);
-                        dq.insert();
-					}
-			}
-		}
-	}
+                for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
+                    if (attr->value() != NULL)
+                        dq.write(dd.id, *attr);
+        }
+    }
 
     t.commit();
 }

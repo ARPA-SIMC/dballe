@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 using namespace dballe;
 using namespace dballe::db;
 using namespace wreport;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -103,6 +104,8 @@ TESTGRP(dbv6_attr);
 template<> template<>
 void to::test<1>()
 {
+#if 0
+    // Currently these are inaccessible internals
 	use_db();
 
 	// Test dba_db_attr_set
@@ -114,6 +117,7 @@ void to::test<1>()
     at->set_value("32");
 	ensure_equals(at->value, string("32"));
 	ensure_equals(at->value_ind, 2);
+#endif
 }
 
 
@@ -124,51 +128,37 @@ void to::test<2>()
     use_db();
 
     // Insert a datum
-    at->id_data = 1;
-    at->type = WR_VAR(0, 33, 7);
-    at->set_value("50");
-    at->insert();
+    at->write(1, Var(varinfo(WR_VAR(0, 33, 7)), 50));
 
     // Insert another datum
-    at->id_data = 2;
-    at->type = WR_VAR(0, 33, 7);
-    at->set_value("75");
-    at->insert();
+    at->write(2, Var(varinfo(WR_VAR(0, 33, 7)), 75));
 
     // Reinsert a datum: it should work
-    at->id_data = 1;
-    at->type = WR_VAR(0, 33, 7);
-    at->set_value("50");
-    at->insert();
+    at->write(1, Var(varinfo(WR_VAR(0, 33, 7)), 50));
 
     // Reinsert the other datum: it should work
-    at->id_data = 2;
-    at->type = WR_VAR(0, 33, 7);
-    at->set_value("75");
-    at->insert();
+    at->write(2, Var(varinfo(WR_VAR(0, 33, 7)), 75));
 
     // Load the attributes for the first variable
     {
         Var var(varinfo(WR_VAR(0, 1, 2)));
-        at->id_data = 1;
-        ensure(var.next_attr() == 0);
-        at->load(var);
-        ensure(var.next_attr() != 0);
+        wassert(actual(var.next_attr()).isfalse());
+        at->read(1, var);
+        wassert(actual(var.next_attr()).istrue());
         const Var* attr = var.next_attr();
-        ensure_equals(string(attr->value()), "50");
-        ensure(attr->next_attr() == NULL);
+        wassert(actual(attr->value()) == "50");
+        wassert(actual(attr->next_attr()).isfalse());
     }
 
     // Load the attributes for the second variable
     {
         Var var(varinfo(WR_VAR(0, 1, 2)));
-        at->id_data = 2;
-        ensure(var.next_attr() == 0);
-        at->load(var);
-        ensure(var.next_attr() != 0);
+        wassert(actual(var.next_attr()).isfalse());
+        at->read(2, var);
+        wassert(actual(var.next_attr()).istrue());
         const Var* attr = var.next_attr();
-        ensure_equals(string(attr->value()), "75");
-        ensure(attr->next_attr() == NULL);
+        wassert(actual(attr->value()) == "75");
+        wassert(actual(attr->next_attr()).isfalse());
     }
 }
 

@@ -1,7 +1,7 @@
 /*
  * db/v6/attr - attr table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,8 +45,9 @@ namespace v6 {
 /**
  * Precompiled queries to manipulate the attr table
  */
-struct Attr
+class Attr
 {
+protected:
     /** DB connection. */
     db::Connection& conn;
 
@@ -66,17 +67,6 @@ struct Attr
     /** attribute value indicator */
     SQLLEN value_ind;
 
-    Attr(Connection& conn);
-    ~Attr();
-
-    /**
-     * Set the input fields using the values in a wreport::Var
-     *
-     * @param var
-     *   The Var with the data to copy into ins
-     */
-    void set(const wreport::Var& var);
-
     /**
      * Set the value input field from a string
      *
@@ -85,13 +75,17 @@ struct Attr
      */
     void set_value(const char* value);
 
+public:
+    Attr(Connection& conn);
+    ~Attr();
+
     /**
      * Insert an entry into the attr table
      *
      * If set to true, an existing attribute with the same context and
      * wreport::Varcode will be overwritten
      */
-    void insert();
+    void write(int id_data, const wreport::Var& var);
 
     /**
      * Load from the database all the attributes for var
@@ -101,7 +95,7 @@ struct Attr
      * @return
      *   The error indicator for the function (See @ref error.h)
      */
-    void load(wreport::Var& var);
+    void read(int id_data, wreport::Var& var);
 
     /**
      * Dump the entire contents of the table to an output stream

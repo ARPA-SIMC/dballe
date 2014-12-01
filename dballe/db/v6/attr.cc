@@ -1,7 +1,7 @@
 /*
  * db/v6/attr - attr table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -100,12 +100,6 @@ Attr::~Attr()
     if (rstm) delete rstm;
 }
 
-void Attr::set(const wreport::Var& var)
-{
-    type = var.code();
-    set_value(var.value());
-}
-
 void Attr::set_value(const char* qvalue)
 {
     if (qvalue == NULL)
@@ -121,8 +115,12 @@ void Attr::set_value(const char* qvalue)
     }
 }
 
-void Attr::insert()
+void Attr::write(int id_data, const wreport::Var& var)
 {
+    this->id_data = id_data;
+    type = var.code();
+    set_value(var.value());
+
     if (conn.server_type == POSTGRES)
     {
         if (rstm->execute_and_close() == SQL_NO_DATA)
@@ -131,8 +129,10 @@ void Attr::insert()
         rstm->execute_and_close();
 }
 
-void Attr::load(wreport::Var& var)
+void Attr::read(int id_data, wreport::Var& var)
 {
+    this->id_data = id_data;
+
     // Query all attributes for this var in the current context
     sstm->execute();
 
