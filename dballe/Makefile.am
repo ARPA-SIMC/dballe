@@ -194,6 +194,7 @@ if HAVE_ODBC
 libdballe_la_SOURCES += \
 	db/querybuf.cc \
 	db/internals.cc \
+	db/odbc/internals.cc \
 	db/odbc/v6_data.cc \
 	db/odbc/v6_attr.cc \
 	db/v5/repinfo.cc \

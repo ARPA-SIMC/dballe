@@ -25,7 +25,7 @@
 #include "v6/db.h"
 #include "mem/db.h"
 #ifdef HAVE_ODBC
-#include "internals.h"
+#include "odbc/internals.h"
 #endif
 #include "dballe/msg/msgs.h"
 #include <wreport/error.h>

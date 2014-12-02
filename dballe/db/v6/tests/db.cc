@@ -21,7 +21,6 @@
 #include "db/querybuf.h"
 #include "db/v6/db.h"
 #include "db/v6/cursor.h"
-#include "db/internals.h"
 
 using namespace dballe;
 using namespace dballe::db;

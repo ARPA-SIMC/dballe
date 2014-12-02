@@ -21,7 +21,7 @@
 
 #include "repinfo.h"
 #include "dballe/db/db.h"
-#include "dballe/db/internals.h"
+#include "dballe/db/odbc/internals.h"
 #include "dballe/core/defs.h"
 #include "dballe/core/record.h"
 #include "dballe/core/csv.h"

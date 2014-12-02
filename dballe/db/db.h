@@ -69,6 +69,9 @@ typedef enum {
     MESSAGES = 3,
 } Format;
 
+/// Base exception for database errors
+struct error : public wreport::error {};
+
 /**
  * Simple typedef to make typing easier
  */

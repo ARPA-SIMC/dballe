@@ -20,7 +20,7 @@
  */
 
 #include "data.h"
-#include "dballe/db/internals.h"
+#include "dballe/db/odbc/internals.h"
 
 #include <sql.h>
 #include <cstring>

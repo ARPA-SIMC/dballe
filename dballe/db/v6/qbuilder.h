@@ -29,7 +29,7 @@
 #define DBA_DB_V6_QBUILDER_H
 
 #include "dballe/db/querybuf.h"
-#include "dballe/db/internals.h"
+#include "dballe/db/odbc/internals.h"
 #include "dballe/db/db.h"
 #include "dballe/core/record.h"
 #include "db.h"

@@ -18,7 +18,7 @@
  */
 
 #include "db/test-utils-db.h"
-#include "db/internals.h"
+#include "db/odbc/internals.h"
 #include "db/v5/db.h"
 #include "db/v5/context.h"
 #include "db/v5/station.h"

@@ -20,7 +20,7 @@
  */
 
 #include "db.h"
-#include "dballe/db/internals.h"
+#include "dballe/db/odbc/internals.h"
 #include "station.h"
 #include "context.h"
 #include "data.h"

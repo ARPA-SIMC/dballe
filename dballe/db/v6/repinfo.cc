@@ -20,7 +20,7 @@
  */
 
 #include "repinfo.h"
-#include "dballe/db/internals.h"
+#include "dballe/db/odbc/internals.h"
 #include <wreport/error.h>
 
 using namespace wreport;

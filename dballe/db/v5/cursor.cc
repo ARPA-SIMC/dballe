@@ -21,7 +21,7 @@
 
 #include "cursor.h"
 #include "db.h"
-#include "dballe/db/internals.h"
+#include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
 #include "repinfo.h"
 

@@ -18,7 +18,6 @@
  */
 
 #include "db/test-utils-db.h"
-#include "db/internals.h"
 #include "db/v6/db.h"
 #include "db/v6/lev_tr.h"
 #include "db/v5/station.h"
@@ -106,7 +105,7 @@ void to::test<2>()
     try {
         da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
         ensure(false);
-    } catch (db::error_odbc& e) {
+    } catch (db::error& e) {
         //ensure_contains(e.what(), "uplicate");
     }
 
@@ -116,7 +115,7 @@ void to::test<2>()
     try {
         da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
         ensure(false);
-    } catch (db::error_odbc& e) {
+    } catch (db::error& e) {
         //ensure_contains(e.what(), "uplicate");
     }
 
