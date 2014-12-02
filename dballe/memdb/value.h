@@ -46,8 +46,8 @@ struct Value : public ValueBase
     const LevTr& levtr;
     Datetime datetime;
 
-    Value(const Station& station, const LevTr& levtr, const Datetime& datetime, std::auto_ptr<wreport::Var> var)
-        : ValueBase(var), station(station), levtr(levtr), datetime(datetime) {}
+    Value(const Station& station, const LevTr& levtr, const Datetime& datetime, std::unique_ptr<wreport::Var> var)
+        : ValueBase(std::move(var)), station(station), levtr(levtr), datetime(datetime) {}
     ~Value();
 
     void dump(FILE* out) const;
@@ -69,7 +69,7 @@ public:
     void clear();
 
     /// Insert a new value, or replace an existing one
-    size_t insert(const Station& station, const LevTr& levtr, const Datetime& datetime, std::auto_ptr<wreport::Var> var, bool replace=true);
+    size_t insert(const Station& station, const LevTr& levtr, const Datetime& datetime, std::unique_ptr<wreport::Var> var, bool replace=true);
 
     /// Insert a new value, or replace an existing one
     size_t insert(const Station& station, const LevTr& levtr, const Datetime& datetime, const wreport::Var& var, bool replace=true);

@@ -79,7 +79,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 
 	// Retrieve results
 	Varcode last_varcode = 0;
-    auto_ptr<Var> var;
+    unique_ptr<Var> var;
 	while (stm.fetch())
 	{
 		TRACE("fill_ana_layer Got B%02ld%03ld %s\n", WR_VAR_X(out_varcode), WR_VAR_Y(out_varcode), out_value);
@@ -91,7 +91,7 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 			if (var.get())
 			{
 				TRACE("fill_ana_layer inserting old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
-                msg.set(var, Level::ana(), Trange());
+                msg.set(move(var), Level::ana(), Trange());
 			}
             var = newvar(out_varcode, out_value);
 			last_varcode = out_varcode;
@@ -100,14 +100,14 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 		if (out_attr_varcode_ind != -1)
 		{
 			TRACE("fill_ana_layer new attribute\n");
-            var->seta(newvar(out_attr_varcode, out_attr_value));
+            var->seta(ap_newvar(out_attr_varcode, out_attr_value));
 		}
 	}
 
 	if (var.get())
 	{
 		TRACE("fill_ana_layer inserting leftover old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
-        msg.set(var, Level::ana(), Trange());
+        msg.set(move(var), Level::ana(), Trange());
 	}
 }
 
@@ -121,7 +121,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     Attr& at = attr();
 
     // Message being built
-    auto_ptr<Msg> msg;
+    unique_ptr<Msg> msg;
 
     db::Transaction t(*conn);
 
@@ -160,7 +160,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 			ident_differs = last_ident[0] != 0;
 
 		/* Create the variable that we got on this iteration */
-        auto_ptr<Var> var(newvar(cur.out_varcode, cur.out_value));
+        unique_ptr<Var> var(newvar(cur.out_varcode, cur.out_value));
 
 		/* Load the attributes from the database */
         at.id_context = cur.out_context_id;
@@ -175,13 +175,13 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 				TRACE("Sending old message to consumer\n");
 				if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 				{
-                    auto_ptr<Msg> copy(new Msg);
+                    unique_ptr<Msg> copy(new Msg);
                     msg->sounding_pack_levels(*copy);
 					/* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-                    consumer(copy);
+                    consumer(move(copy));
                     msg.release();
 				} else
-                    consumer(msg);
+                    consumer(move(msg));
 			}
 
             // Start writing a new message
@@ -223,7 +223,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 		}
 
 		TRACE("Inserting var B%02d%03d (%s)\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()), var->value());
-        msg->set(var,
+        msg->set(move(var),
                 Level(cur.out_ltype1, cur.out_l1, cur.out_ltype2, cur.out_l2),
                 Trange(cur.out_pind, cur.out_p1, cur.out_p2));
 	}
@@ -233,16 +233,16 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 		TRACE("Inserting leftover old message\n");
 		if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 		{
-            auto_ptr<Msg> copy(new Msg);
+            unique_ptr<Msg> copy(new Msg);
             msg->sounding_pack_levels(*copy);
             /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-            consumer(copy);
+            consumer(move(copy));
             msg.release();
-		} else
-            consumer(msg);
-	}
+        } else
+            consumer(move(msg));
+    }
 
-	/* Useful for Oracle to end the session */
+    /* Useful for Oracle to end the session */
     t.commit();
 }
 

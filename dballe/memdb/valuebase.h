@@ -36,7 +36,7 @@ struct ValueBase
 {
     wreport::Var* var;
 
-    ValueBase(std::auto_ptr<wreport::Var> var)
+    ValueBase(std::unique_ptr<wreport::Var> var)
         : var(var.release()) {}
     ~ValueBase();
 
@@ -46,7 +46,7 @@ struct ValueBase
     void attr_remove(const std::vector<wreport::Varcode>& qcs);
 
     /// Replace the variable with the given one
-    void replace(std::auto_ptr<wreport::Var> var);
+    void replace(std::unique_ptr<wreport::Var> var);
 
     /// Replace the value with the one of the given variable
     void replace(const wreport::Var& var);

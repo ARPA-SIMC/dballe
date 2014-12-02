@@ -1,7 +1,7 @@
 /*
- * core/varmatch - Variable matcher
+ * db/sql - Generic infrastructure for talking with SQL databases
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,12 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
-
-#ifndef DBA_CORE_VARMATCH_H
-#define DBA_CORE_VARMATCH_H
-
-#include <memory>
-#include <wreport/var.h>
+#include "sql.h"
 
 namespace dballe {
+namespace db {
 
-struct Varmatch
-{
-    wreport::Varcode code;
-
-    Varmatch(wreport::Varcode code);
-    virtual ~Varmatch() {}
-
-    virtual bool operator()(const wreport::Var&) const;
-
-    static std::unique_ptr<Varmatch> parse(const std::string& filter);
-};
+Connection::~Connection() {}
 
 }
-
-#endif
+}

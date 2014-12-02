@@ -60,7 +60,7 @@ struct SequenceUnion : public Sequence<T>
     typename Union<T>::const_iterator begin;
     typename Union<T>::const_iterator end;
 
-    SequenceUnion(std::auto_ptr< Sequences<T> >& sequences)
+    SequenceUnion(std::unique_ptr< Sequences<T> >& sequences)
         : begin(sequence_union.begin(sequences)), end(sequence_union.end()) {}
 
     virtual bool valid() const { return begin != end; }
@@ -75,7 +75,7 @@ struct SequenceIntersection : public Sequence<T>
     typename Intersection<T>::const_iterator begin;
     typename Intersection<T>::const_iterator end;
 
-    SequenceIntersection(std::auto_ptr< Sequences<T> >& sequences)
+    SequenceIntersection(std::unique_ptr< Sequences<T> >& sequences)
         : begin(sequence_intersection.begin(sequences)), end(sequence_intersection.end()) {}
 
     virtual bool valid() const { return begin != end; }
@@ -104,19 +104,19 @@ void Sequences<T>::add(const C& container)
 }
 
 template<typename T>
-void Sequences<T>::add(std::auto_ptr< stlutils::Sequence<T> >& sequence)
+void Sequences<T>::add(std::unique_ptr< stlutils::Sequence<T> >& sequence)
 {
     this->push_back(sequence.release());
 }
 
 template<typename T>
-void Sequences<T>::add_union(std::auto_ptr< Sequences<T> >& sequences)
+void Sequences<T>::add_union(std::unique_ptr< Sequences<T> >& sequences)
 {
     this->push_back(new stlutils::SequenceUnion<T>(sequences));
 }
 
 template<typename T>
-void Sequences<T>::add_intersection(std::auto_ptr< Sequences<T> >& sequences)
+void Sequences<T>::add_intersection(std::unique_ptr< Sequences<T> >& sequences)
 {
     this->push_back(new stlutils::SequenceIntersection<T>(sequences));
 }

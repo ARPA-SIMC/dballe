@@ -89,7 +89,7 @@ struct MsgWriter : public MsgConsumer
         if (exporter) delete exporter;
     }
 
-    virtual void operator()(std::auto_ptr<Msg> msg)
+    virtual void operator()(std::unique_ptr<Msg> msg)
     {
         /* Override the message type if the user asks for it */
         if (forced_rep_memo != NULL)
@@ -99,7 +99,7 @@ struct MsgWriter : public MsgConsumer
         }
         Rawmsg raw;
         Msgs msgs;
-        msgs.acquire(msg);
+        msgs.acquire(move(msg));
         exporter->to_rawmsg(msgs, raw);
         file.write(raw);
     }
@@ -110,7 +110,7 @@ struct MsgDumper : public MsgConsumer
     FILE* out;
     MsgDumper(FILE* out=stdout) : out(out) {}
 
-    virtual void operator()(std::auto_ptr<Msg> msg)
+    virtual void operator()(std::unique_ptr<Msg> msg)
     {
         msg->print(out);
     }

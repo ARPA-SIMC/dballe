@@ -106,7 +106,7 @@ public:
 
 } // anonymous namespace
 
-auto_ptr<File> File::create(Encoding type, const std::string& name, const char* mode)
+unique_ptr<File> File::create(Encoding type, const std::string& name, const char* mode)
 {
 	fd_tracker fdt;
 
@@ -148,9 +148,9 @@ auto_ptr<File> File::create(Encoding type, const std::string& name, const char* 
 
 	switch (type)
 	{
-		case BUFR: return auto_ptr<File>(new BufrFile(name, fdt.release(), fdt.close_on_exit));
-		case CREX: return auto_ptr<File>(new CrexFile(name, fdt.release(), fdt.close_on_exit));
-		case AOF: return auto_ptr<File>(new AofFile(name, fdt.release(), fdt.close_on_exit));
+		case BUFR: return unique_ptr<File>(new BufrFile(name, fdt.release(), fdt.close_on_exit));
+		case CREX: return unique_ptr<File>(new CrexFile(name, fdt.release(), fdt.close_on_exit));
+		case AOF: return unique_ptr<File>(new AofFile(name, fdt.release(), fdt.close_on_exit));
 	}
 	error_consistency::throwf("requested unknown %d file type", (int)type);
 }

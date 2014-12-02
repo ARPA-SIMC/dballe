@@ -44,7 +44,7 @@ static const Trange tr_std_wind(200, 0, 600);
 static const Trange tr_std_wind_max10m(205, 0, 600);
 
 
-std::auto_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB sat Importers"); }
+std::unique_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB sat Importers"); }
 
 void WMOImporter::import_var(const Var& var)
 {
@@ -311,12 +311,12 @@ Trange ContextChooser::tr_real(const Trange& standard) const
 void ContextChooser::ib_annotate_level()
 {
     if (level.height_sensor == MISSING_SENSOR_H) return;
-    var->seta(newvar(WR_VAR(0, 7, 32), level.height_sensor));
+    var->seta(ap_newvar(WR_VAR(0, 7, 32), level.height_sensor));
 }
 void ContextChooser::ib_annotate_trange()
 {
     if (trange.time_period == MISSING_INT) return;
-    var->seta(newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
+    var->seta(ap_newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
 }
 
 void ContextChooser::ib_level_use_shorcut_and_preserve_rest(const Level& standard)
@@ -371,9 +371,9 @@ void ContextChooser::ib_trange_use_shorcut_if_standard_else_real(const Trange& s
 
 void ContextChooser::ib_set()
 {
-    auto_ptr<Var> handover(var);
+    unique_ptr<Var> handover(var);
     var = 0;
-    msg->set(handover, chosen_lev, chosen_tr);
+    msg->set(move(handover), chosen_lev, chosen_tr);
 }
 
 void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
@@ -395,7 +395,7 @@ void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& d
     else if (simplified)
     {
         Var var1(var);
-        var1.seta(newvar(WR_VAR(0, 7, 32), level.height_sensor));
+        var1.seta(auto_ptr<Var>(newvar(WR_VAR(0, 7, 32), level.height_sensor).release()));
         msg->set(var1, code, defaultLevel, trange);
     } else
         msg->set(var, code, Level(103, level.height_sensor * 1000), trange);
@@ -449,7 +449,7 @@ void ContextChooser::set_baro_sensor(const Var& var, int shortcut)
     else if (simplified)
     {
         Var var1(var);
-        var1.seta(newvar(WR_VAR(0, 7, 31), level.height_baro));
+        var1.seta(auto_ptr<Var>(newvar(WR_VAR(0, 7, 31), level.height_baro).release()));
         msg->set_by_id(var1, shortcut);
     } else {
         const MsgVarShortcut& v = shortcutTable[shortcut];

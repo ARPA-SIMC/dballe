@@ -605,7 +605,7 @@ int do_head(poptContext optCon)
 
 int do_dump(poptContext optCon)
 {
-    auto_ptr<cmdline::Action> action;
+    unique_ptr<cmdline::Action> action;
     if (op_dump_csv)
     {
         if (op_dump_interpreted)
@@ -834,8 +834,8 @@ int do_compare(poptContext optCon)
 	Encoding out_type = dba_cmdline_stringToMsgType(op_output_type);
 	File* file1 = File::create(in_type, file1_name, "r").release();
 	File* file2 = File::create(out_type, file2_name, "r").release();
-	std::auto_ptr<msg::Importer> importer = msg::Importer::create(in_type);
-	std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(out_type);
+	std::unique_ptr<msg::Importer> importer = msg::Importer::create(in_type);
+	std::unique_ptr<msg::Exporter> exporter = msg::Exporter::create(out_type);
 	size_t idx = 0;
 	for ( ; ; ++idx)
 	{
@@ -874,7 +874,7 @@ int do_fixaof(poptContext optCon)
 	int count = 0;
 	while (const char* filename = poptGetArg(optCon))
 	{
-		auto_ptr<File> file = File::create(AOF, filename, "rb+");
+		unique_ptr<File> file = File::create(AOF, filename, "rb+");
 		AofFile* aoffile = dynamic_cast<AofFile*>(file.get());
 		aoffile->fix_header();
 		++count;

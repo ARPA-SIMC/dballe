@@ -85,9 +85,9 @@ public:
     }
 };
 
-std::auto_ptr<Importer> Importer::createGeneric(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createGeneric(const msg::Importer::Options& opts)
 {
-    return auto_ptr<Importer>(new GenericImporter(opts));
+    return unique_ptr<Importer>(new GenericImporter(opts));
 }
 
 void GenericImporter::import_var_undef(const Var& var)
@@ -122,9 +122,9 @@ void GenericImporter::import_var(const Var& var)
             break;
         // Legacy variable conversions
         case WR_VAR(0, 8, 1): {
-            auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), convert_BUFR08001_to_BUFR08042(var.enqi())));
+            unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), convert_BUFR08001_to_BUFR08042(var.enqi())));
             nvar->copy_attrs(var);
-            msg->set(nvar, lev, tr);
+            msg->set(move(nvar), lev, tr);
             break;
         }
         default:

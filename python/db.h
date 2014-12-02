@@ -46,7 +46,7 @@ namespace python {
 /**
  * Create a new dpy_DB, taking over memory management
  */
-dpy_DB* db_create(std::auto_ptr<DB> db);
+dpy_DB* db_create(std::unique_ptr<DB> db);
 
 /**
  * Copy varcodes from a Python sequence to a db::AttrList

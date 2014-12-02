@@ -43,7 +43,7 @@ TESTGRP(file);
 template<> template<>
 void to::test<1>()
 {
-	auto_ptr<File> f(File::create(BUFR, tests::datafile("bufr/bufr1"), "r"));
+	unique_ptr<File> f(File::create(BUFR, tests::datafile("bufr/bufr1"), "r"));
 	Rawmsg msg;
 	ensure(f->read(msg));
 	ensure_equals(msg.size(), 182u);
@@ -53,7 +53,7 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
-	auto_ptr<File> f(File::create(CREX, tests::datafile("crex/test-synop0.crex"), "r"));
+	unique_ptr<File> f(File::create(CREX, tests::datafile("crex/test-synop0.crex"), "r"));
 	Rawmsg msg;
 	ensure(f->read(msg));
 	ensure_equals(msg.size(), 251u);
@@ -63,7 +63,7 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-	auto_ptr<File> f(File::create(AOF, tests::datafile("aof/obs1-11.0.aof"), "r"));
+	unique_ptr<File> f(File::create(AOF, tests::datafile("aof/obs1-11.0.aof"), "r"));
 	Rawmsg msg;
 	ensure(f->read(msg));
 	ensure_equals(msg.size(), 140u);

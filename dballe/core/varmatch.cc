@@ -96,27 +96,27 @@ struct Op : public Varmatch
 };
 
 template<typename T>
-static auto_ptr<Varmatch> make_op(Varcode code, const std::string& op, const T& val)
+static unique_ptr<Varmatch> make_op(Varcode code, const std::string& op, const T& val)
 {
     if (op == "<")
-        return auto_ptr<Varmatch>(new Op< T, less<T> >(code, val));
+        return unique_ptr<Varmatch>(new Op< T, less<T> >(code, val));
     else if (op == "<=")
-        return auto_ptr<Varmatch>(new Op< T, less_equal<T> >(code, val));
+        return unique_ptr<Varmatch>(new Op< T, less_equal<T> >(code, val));
     else if (op == ">")
-        return auto_ptr<Varmatch>(new Op< T, greater<T> >(code, val));
+        return unique_ptr<Varmatch>(new Op< T, greater<T> >(code, val));
     else if (op == ">=")
-        return auto_ptr<Varmatch>(new Op< T, greater_equal<T> >(code, val));
+        return unique_ptr<Varmatch>(new Op< T, greater_equal<T> >(code, val));
     else if (op == "=" || op == "==")
-        return auto_ptr<Varmatch>(new Op< T, equal_to<T> >(code, val));
+        return unique_ptr<Varmatch>(new Op< T, equal_to<T> >(code, val));
     else if (op == "<>")
-        return auto_ptr<Varmatch>(new Op< T, not_equal_to<T> >(code, val));
+        return unique_ptr<Varmatch>(new Op< T, not_equal_to<T> >(code, val));
     else
         error_consistency::throwf("cannot understand comparison operator '%s'", op.c_str());
 }
 
 }
 
-std::auto_ptr<Varmatch> Varmatch::parse(const std::string& filter)
+std::unique_ptr<Varmatch> Varmatch::parse(const std::string& filter)
 {
     size_t sep1_begin = filter.find_first_of("<=>");
     if (sep1_begin == string::npos)
@@ -138,12 +138,12 @@ std::auto_ptr<Varmatch> Varmatch::parse(const std::string& filter)
         string max = filter.substr(sep2_end);
 
         if (info->is_string())
-            return auto_ptr<Varmatch>(new varmatch::BetweenString(code, min, max));
+            return unique_ptr<Varmatch>(new varmatch::BetweenString(code, min, max));
         else
         {
             int imin = info->encode_int(strtod(min.c_str(), NULL));
             int imax = info->encode_int(strtod(max.c_str(), NULL));
-            return auto_ptr<Varmatch>(new varmatch::BetweenInt(code, imin, imax));
+            return unique_ptr<Varmatch>(new varmatch::BetweenInt(code, imin, imax));
         }
     } else {
         // B12345<=>val

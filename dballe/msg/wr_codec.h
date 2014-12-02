@@ -92,7 +92,7 @@ public:
     virtual ~BufrExporter();
 
     virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const;
-    virtual std::auto_ptr<wreport::Bulletin> make_bulletin() const;
+    virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
 };
 
 class CrexExporter : public WRExporter
@@ -102,7 +102,7 @@ public:
     virtual ~CrexExporter();
 
     virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const;
-    virtual std::auto_ptr<wreport::Bulletin> make_bulletin() const;
+    virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
 };
 
 namespace wr {
@@ -156,7 +156,7 @@ struct TemplateFactory
     std::string description;
 
     virtual ~TemplateFactory() {}
-    virtual std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const = 0;
+    virtual std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const = 0;
 };
 
 struct TemplateRegistry : public std::map<std::string, const TemplateFactory*>

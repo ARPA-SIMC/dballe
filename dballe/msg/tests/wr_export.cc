@@ -70,19 +70,19 @@ void to::test<1>()
     for (i = 0; files[i] != NULL; i++)
     {
         try {
-            auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
+            unique_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
             ensure(msgs->size() > 0);
 
-            std::auto_ptr<msg::Exporter> exporter;
+            std::unique_ptr<msg::Exporter> exporter;
 
             exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
-            auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+            unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
             exporter->to_bulletin(*msgs, *bbulletin);
 
             if (bl_crex.find(files[i]) == bl_crex.end())
             {
                 exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
-                auto_ptr<Bulletin> cbulletin(CrexBulletin::create());
+                unique_ptr<Bulletin> cbulletin(CrexBulletin::create());
                 exporter->to_bulletin(*msgs, *cbulletin);
             }
         } catch (std::exception& e) {
@@ -104,15 +104,15 @@ void to::test<2>()
     for (i = 0; files[i] != NULL; i++)
     {
         try {
-            auto_ptr<Msgs> msgs = read_msgs(files[i], CREX);
+            unique_ptr<Msgs> msgs = read_msgs(files[i], CREX);
             ensure(msgs->size() > 0);
 
-            std::auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
-            auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+            std::unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
+            unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
             exporter->to_bulletin(*msgs, *bbulletin);
 
             exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
-            auto_ptr<Bulletin> cbulletin(CrexBulletin::create());
+            unique_ptr<Bulletin> cbulletin(CrexBulletin::create());
             exporter->to_bulletin(*msgs, *cbulletin);
         } catch (std::exception& e) {
             fails.push_back(string(files[i]) + ": " + e.what());
@@ -126,26 +126,26 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-    auto_ptr<Msgs> msgs = read_msgs_csv("csv/temp1.csv");
+    unique_ptr<Msgs> msgs = read_msgs_csv("csv/temp1.csv");
     ensure(msgs->size() > 0);
 
     // Replace with packed levels because comparison later happens against
     // packed levels
     {
-        auto_ptr<Msg> msg(new Msg);
+        unique_ptr<Msg> msg(new Msg);
         msg->sounding_pack_levels(*(*msgs)[0]);
         msgs.reset(new Msgs);
-        msgs->acquire(msg);
+        msgs->acquire(move(msg));
     }
 
     // Export to BUFR
-    std::auto_ptr<msg::Exporter> bufr_exporter(msg::Exporter::create(BUFR/*, const Options& opts=Options()*/));
-    auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+    std::unique_ptr<msg::Exporter> bufr_exporter(msg::Exporter::create(BUFR/*, const Options& opts=Options()*/));
+    unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
     bufr_exporter->to_bulletin(*msgs, *bbulletin);
 
     // Import and check the differences
     {
-        std::auto_ptr<msg::Importer> bufr_importer(msg::Importer::create(BUFR/*, const Options& opts=Options()*/));
+        std::unique_ptr<msg::Importer> bufr_importer(msg::Importer::create(BUFR/*, const Options& opts=Options()*/));
         Msgs msgs1;
         bufr_importer->from_bulletin(*bbulletin, msgs1);
         notes::Collect c(cerr);
@@ -153,13 +153,13 @@ void to::test<3>()
     }
 
     // Export to CREX
-    std::auto_ptr<msg::Exporter> crex_exporter(msg::Exporter::create(CREX/*, const Options& opts=Options()*/));
-    auto_ptr<Bulletin> cbulletin(CrexBulletin::create());
+    std::unique_ptr<msg::Exporter> crex_exporter(msg::Exporter::create(CREX/*, const Options& opts=Options()*/));
+    unique_ptr<Bulletin> cbulletin(CrexBulletin::create());
     crex_exporter->to_bulletin(*msgs, *cbulletin);
 
     // Import and check the differences
     {
-        std::auto_ptr<msg::Importer> crex_importer(msg::Importer::create(CREX/*, const Options& opts=Options()*/));
+        std::unique_ptr<msg::Importer> crex_importer(msg::Importer::create(CREX/*, const Options& opts=Options()*/));
         Msgs msgs1;
         crex_importer->from_bulletin(*cbulletin, msgs1);
         notes::Collect c(cerr);
@@ -523,20 +523,20 @@ void to::test<39>()
 
     vector<string> fails;
     int i;
-    std::auto_ptr<msg::Exporter> exporter;
+    std::unique_ptr<msg::Exporter> exporter;
     exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
-    std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR/*, opts*/);
+    std::unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR/*, opts*/);
 
     for (i = 0; files[i] != NULL; i++)
     {
         if (blacklist.find(files[i]) != blacklist.end()) continue;
         try {
             // Import
-            auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
+            unique_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
             ensure(msgs->size() > 0);
 
             // Export
-            auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+            unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
             exporter->to_bulletin(*msgs, *bbulletin);
 
             // Import again
@@ -585,22 +585,22 @@ void to::test<40>()
 
     vector<string> fails;
     int i;
-    std::auto_ptr<msg::Exporter> exporter;
+    std::unique_ptr<msg::Exporter> exporter;
     exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
     msg::Importer::Options import_opts;
     import_opts.simplified = false;
-    std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR, import_opts);
+    std::unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR, import_opts);
 
     for (i = 0; files[i] != NULL; i++)
     {
         if (blacklist.find(files[i]) != blacklist.end()) continue;
         try {
             // Import
-            auto_ptr<Msgs> msgs = read_msgs_opts(files[i], BUFR, import_opts);
+            unique_ptr<Msgs> msgs = read_msgs_opts(files[i], BUFR, import_opts);
             ensure(msgs->size() > 0);
 
             // Export
-            auto_ptr<Bulletin> bbulletin(BufrBulletin::create());
+            unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
             exporter->to_bulletin(*msgs, *bbulletin);
 
             // Import again
@@ -666,7 +666,7 @@ void to::test<43>()
 template<> template<>
 void to::test<44>()
 {
-    auto_ptr<Msgs> msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", BUFR);
+    unique_ptr<Msgs> msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", BUFR);
     ensure_equals(msgs1->size(), 1);
     Msg& msg1 = *(*msgs1)[0];
 
@@ -678,12 +678,12 @@ void to::test<44>()
     msg::Exporter::Options output_opts;
     output_opts.template_name = "pilot-wmo";
     //if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
-    std::auto_ptr<BufrBulletin> bulletin = BufrBulletin::create();
+    std::unique_ptr<BufrBulletin> bulletin = BufrBulletin::create();
     test_export_msgs(*msgs1, *bulletin, "towmo", output_opts);
 
     // Import again
     Msgs msgs2;
-    std::auto_ptr<msg::Importer> imp = msg::Importer::create(BUFR);
+    std::unique_ptr<msg::Importer> imp = msg::Importer::create(BUFR);
     imp->from_bulletin(*bulletin, msgs2);
     ensure_equals(msgs2.size(), 1);
     Msg& msg2 = *msgs2[0];
@@ -696,19 +696,19 @@ void to::test<44>()
 template<> template<>
 void to::test<45>()
 {
-    auto_ptr<Msgs> msgs1 = read_msgs("bufr/temp-2-255.bufr", BUFR);
+    unique_ptr<Msgs> msgs1 = read_msgs("bufr/temp-2-255.bufr", BUFR);
     ensure_equals(msgs1->size(), 1);
     Msg& msg1 = *(*msgs1)[0];
 
     // Convert to CREX
     msg::Exporter::Options output_opts;
     output_opts.template_name = "temp-wmo";
-    std::auto_ptr<CrexBulletin> bulletin = CrexBulletin::create();
+    std::unique_ptr<CrexBulletin> bulletin = CrexBulletin::create();
     test_export_msgs(*msgs1, *bulletin, "tocrex", output_opts);
 
     // Import again
     Msgs msgs2;
-    std::auto_ptr<msg::Importer> imp = msg::Importer::create(BUFR);
+    std::unique_ptr<msg::Importer> imp = msg::Importer::create(BUFR);
     imp->from_bulletin(*bulletin, msgs2);
     ensure_equals(msgs2.size(), 1);
     Msg& msg2 = *msgs2[0];
@@ -718,8 +718,8 @@ void to::test<45>()
 template<> template<>
 void to::test<46>()
 {
-    std::auto_ptr<Msgs> msgs = read_msgs("bufr/obs2-102.1.bufr", BUFR);
-    auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+    std::unique_ptr<Msgs> msgs = read_msgs("bufr/obs2-102.1.bufr", BUFR);
+    unique_ptr<Bulletin> bulletin(BufrBulletin::create());
     msg::Exporter::Options opts;
     opts.template_name = "temp-wmo";
     test_export_msgs(*msgs, *bulletin, "tempship", opts);
@@ -732,8 +732,8 @@ void to::test<46>()
 template<> template<>
 void to::test<47>()
 {
-    std::auto_ptr<Msgs> msgs = read_msgs("bufr/obs2-91.2.bufr", BUFR);
-    auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+    std::unique_ptr<Msgs> msgs = read_msgs("bufr/obs2-91.2.bufr", BUFR);
+    unique_ptr<Bulletin> bulletin(BufrBulletin::create());
     msg::Exporter::Options opts;
     opts.template_name = "pilot-wmo";
     test_export_msgs(*msgs, *bulletin, "pilotwmo", opts);
@@ -768,8 +768,8 @@ void to::test<50>()
     //test.tweaks.push_back(new StripQCAttrs());
     run_test(test, do_test, "temp");
 #if 0
-    std::auto_ptr<Msgs> msgs = read_msgs("bufr/vad.bufr", BUFR);
-    auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+    std::unique_ptr<Msgs> msgs = read_msgs("bufr/vad.bufr", BUFR);
+    unique_ptr<Bulletin> bulletin(BufrBulletin::create());
     msg::Exporter::Options opts;
     opts.template_name = "temp";
     test_export_msgs(*msgs, *bulletin, "temp", opts);

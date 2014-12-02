@@ -90,7 +90,7 @@ struct Memdb
     size_t insert(
             const Coord& coords, const std::string& ident, const std::string& report,
             const Level& level, const Trange& trange, const Datetime& datetime,
-            std::auto_ptr<wreport::Var> var);
+            std::unique_ptr<wreport::Var> var);
     size_t insert(
             const Coord& coords, const std::string& ident, const std::string& report,
             const Level& level, const Trange& trange, const Datetime& datetime,

@@ -73,13 +73,13 @@ void to::test<1>()
     for (int i = 0; files[i] != NULL; i++)
     {
         try {
-            auto_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
+            unique_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
             ensure(msgs->size() > 0);
         } catch (std::exception& e) {
             cerr << "Failing bulletin:";
             try {
-                std::auto_ptr<Rawmsg> raw = read_rawmsg(files[i], BUFR);
-                auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+                std::unique_ptr<Rawmsg> raw = read_rawmsg(files[i], BUFR);
+                unique_ptr<Bulletin> bulletin(BufrBulletin::create());
                 bulletin->decode(*raw);
                 bulletin->print(stderr);
             } catch (std::exception& e1) {
@@ -99,13 +99,13 @@ void to::test<2>()
     for (int i = 0; files[i] != NULL; i++)
     {
         try {
-            auto_ptr<Msgs> msgs = read_msgs(files[i], CREX);
+            unique_ptr<Msgs> msgs = read_msgs(files[i], CREX);
             ensure(msgs->size() > 0);
         } catch (std::exception& e) {
             cerr << "Failing bulletin:";
             try {
-                std::auto_ptr<Rawmsg> raw = read_rawmsg(files[i], CREX);
-                auto_ptr<Bulletin> bulletin(CrexBulletin::create());
+                std::unique_ptr<Rawmsg> raw = read_rawmsg(files[i], CREX);
+                unique_ptr<Bulletin> bulletin(CrexBulletin::create());
                 bulletin->decode(*raw);
                 bulletin->print(stderr);
             } catch (std::exception& e1) {
@@ -119,7 +119,7 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("crex/test-synop0.crex", CREX);
+    unique_ptr<Msgs> msgs = read_msgs("crex/test-synop0.crex", CREX);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
@@ -143,7 +143,7 @@ void to::test<3>()
 template<> template<>
 void to::test<4>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
@@ -169,7 +169,7 @@ void to::test<5>()
 {
     msg::Importer::Options opts;
     opts.simplified = true;
-    auto_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
+    unique_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
@@ -199,7 +199,7 @@ void to::test<6>()
 {
     msg::Importer::Options opts;
     opts.simplified = false;
-    auto_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
+    unique_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
@@ -234,7 +234,7 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-2-255.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-2-255.bufr", BUFR);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
 
@@ -245,7 +245,7 @@ void to::test<7>()
 template<> template<>
 void to::test<8>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/synop-longname.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/synop-longname.bufr", BUFR);
     ensure_equals(msgs->size(), 7u);
     const Msg& msg = *(*msgs)[2];
     ensure_equals(msg.type, MSG_SYNOP);
@@ -259,7 +259,7 @@ void to::test<8>()
 template<> template<>
 void to::test<9>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-bad1.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-bad1.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
@@ -268,7 +268,7 @@ void to::test<9>()
 template<> template<>
 void to::test<10>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-bad2.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-bad2.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
@@ -277,7 +277,7 @@ void to::test<10>()
 template<> template<>
 void to::test<11>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-bad3.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-bad3.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
@@ -286,7 +286,7 @@ void to::test<11>()
 template<> template<>
 void to::test<12>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-bad4.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-bad4.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
@@ -296,7 +296,7 @@ void to::test<12>()
 template<> template<>
 void to::test<13>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/obs4-142.1.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/obs4-142.1.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_AIREP);
@@ -307,7 +307,7 @@ void to::test<13>()
 template<> template<>
 void to::test<14>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/obs4-144.4.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/obs4-144.4.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_AMDAR);
@@ -318,7 +318,7 @@ void to::test<14>()
 template<> template<>
 void to::test<15>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/obs4-145.4.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/obs4-145.4.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_ACARS);
@@ -329,7 +329,7 @@ void to::test<15>()
 template<> template<>
 void to::test<16>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-acars1.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-acars1.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_ACARS);
@@ -340,7 +340,7 @@ void to::test<16>()
 template<> template<>
 void to::test<17>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-acars2.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-acars2.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_ACARS);
@@ -351,7 +351,7 @@ void to::test<17>()
 template<> template<>
 void to::test<18>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-acars-uk1.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-acars-uk1.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     // This contains the same data as an AMDAR and has undefined subtype and
@@ -364,7 +364,7 @@ void to::test<18>()
 template<> template<>
 void to::test<19>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-acars-us1.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-acars-us1.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_ACARS);
@@ -375,7 +375,7 @@ void to::test<19>()
 template<> template<>
 void to::test<20>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-amdar1.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-amdar1.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_AMDAR);
@@ -386,7 +386,7 @@ void to::test<20>()
 template<> template<>
 void to::test<21>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/gts-amdar2.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-amdar2.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_AMDAR);
@@ -401,9 +401,9 @@ void to::test<22>()
     try
     {
         // Read and interpretate the message
-        std::auto_ptr<Rawmsg> raw = read_rawmsg("bufr/interpreted-range.bufr", BUFR);
-        std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
-        std::auto_ptr<Msgs> msgs(new Msgs);
+        std::unique_ptr<Rawmsg> raw = read_rawmsg("bufr/interpreted-range.bufr", BUFR);
+        std::unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+        std::unique_ptr<Msgs> msgs(new Msgs);
         importer->from_rawmsg(*raw, *msgs);
         ensure(false);
     } catch (wreport::error_domain& e) {
@@ -412,7 +412,7 @@ void to::test<22>()
 
     {
         wreport::options::LocalOverride<bool> o(wreport::options::var_silent_domain_errors, true);
-        auto_ptr<Msgs> msgs = read_msgs("bufr/interpreted-range.bufr", BUFR);
+        unique_ptr<Msgs> msgs = read_msgs("bufr/interpreted-range.bufr", BUFR);
         ensure_equals(msgs->size(), 1u);
         const Msg& msg = *(*msgs)[0];
         ensure_equals(msg.type, MSG_SHIP);
@@ -424,7 +424,7 @@ void to::test<22>()
 template<> template<>
 void to::test<23>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts1.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts1.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_PILOT);
@@ -434,7 +434,7 @@ void to::test<23>()
 template<> template<>
 void to::test<24>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts2.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts2.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_PILOT);
@@ -445,7 +445,7 @@ template<> template<>
 void to::test<25>()
 {
     // FIXME: this still fails
-    auto_ptr<Msgs> msgs = read_msgs("bufr/temp-tsig-2.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-tsig-2.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
@@ -455,7 +455,7 @@ void to::test<25>()
 template<> template<>
 void to::test<26>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts3.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts3.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_PILOT);
@@ -465,7 +465,7 @@ void to::test<26>()
 template<> template<>
 void to::test<27>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts4.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts4.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_PILOT);
@@ -475,7 +475,7 @@ void to::test<27>()
 template<> template<>
 void to::test<28>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/vad.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/vad.bufr", BUFR);
     ensure_equals(msgs->size(), 1u);
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);

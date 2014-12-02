@@ -36,7 +36,7 @@ TESTGRP(core_stlutils);
 // Test Intersection
 template<> template<> void to::test<1>()
 {
-    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
+    unique_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
 
     vector<int> a;
     a.push_back(1); a.push_back(2); a.push_back(3);
@@ -62,7 +62,7 @@ template<> template<> void to::test<1>()
 // Test Intersection
 template<> template<> void to::test<2>()
 {
-    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
+    unique_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
 
     vector<int> a;
     a.push_back(1);
@@ -107,7 +107,7 @@ template<> template<> void to::test<3>()
 // Test Union
 template<> template<> void to::test<4>()
 {
-    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
+    unique_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
     vector<int> a;
     sequences->add(a);
     vector<int> b;
@@ -121,7 +121,7 @@ template<> template<> void to::test<4>()
 // Test Union
 template<> template<> void to::test<5>()
 {
-    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
+    unique_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
     vector<int> a;
     a.push_back(1);
     sequences->add(a);
@@ -139,7 +139,7 @@ template<> template<> void to::test<5>()
 // Test Union
 template<> template<> void to::test<6>()
 {
-    auto_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
+    unique_ptr<stl::Sequences<int> > sequences(new stl::Sequences<int>);
     vector<int> a;
     a.push_back(1);
     a.push_back(2);

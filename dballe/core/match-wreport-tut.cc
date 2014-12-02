@@ -65,7 +65,7 @@ void to::test<1>()
 {
     Record matcher;
     matcher.set("data_id", 1);
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Subset s(Vartable::get("dballe"));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -73,7 +73,7 @@ void to::test<1>()
     s.store_variable_i(WR_VAR(0, 1, 1), 1);
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
-    s.back().seta(newvar(WR_VAR(0, 33, 195), 1));
+    s.back().seta(ap_newvar(WR_VAR(0, 33, 195), 1));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
 }
 
@@ -83,7 +83,7 @@ void to::test<2>()
 {
     Record matcher;
     matcher.set("ana_id", 1);
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Subset s(Vartable::get("dballe"));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -102,7 +102,7 @@ void to::test<3>()
     {
         Record matcher;
         matcher.set("block", 11);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -121,7 +121,7 @@ void to::test<3>()
         Record matcher;
         matcher.set("block", 11);
         matcher.set("station", 222);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -153,7 +153,7 @@ void to::test<4>()
     {
         Record matcher;
         matcher.set("yearmin", 2000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -167,7 +167,7 @@ void to::test<4>()
     {
         Record matcher;
         matcher.set("yearmax", 2000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -182,7 +182,7 @@ void to::test<4>()
         Record matcher;
         matcher.set("yearmin", 2000);
         matcher.set("yearmax", 2010);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -211,7 +211,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("latmin", 4500000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -227,7 +227,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("latmax", 4500000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -243,7 +243,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("lonmin", 1100000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -259,7 +259,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("lonmax", 1100000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -278,7 +278,7 @@ void to::test<5>()
         matcher.set("latmax", 4600000);
         matcher.set("lonmin", 1000000);
         matcher.set("lonmax", 1200000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -300,7 +300,7 @@ void to::test<6>()
 {
     Record matcher;
     matcher.set(DBA_KEY_REP_MEMO, "synop");
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Subset s(Vartable::get("dballe"));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -317,7 +317,7 @@ template<> template<>
 void to::test<7>()
 {
     Record matcher;
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Subset s(Vartable::get("dballe"));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
@@ -329,7 +329,7 @@ void to::test<8>()
 {
     Record matcher;
     matcher.set("data_id", 1);
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -337,7 +337,7 @@ void to::test<8>()
     b.obtain_subset(1).store_variable_i(WR_VAR(0, 1, 1), 1);
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
-    b.obtain_subset(1).back().seta(newvar(WR_VAR(0, 33, 195), 1));
+    b.obtain_subset(1).back().seta(ap_newvar(WR_VAR(0, 33, 195), 1));
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
 }
 
@@ -347,7 +347,7 @@ void to::test<9>()
 {
     Record matcher;
     matcher.set("ana_id", 1);
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -366,7 +366,7 @@ void to::test<10>()
     {
         Record matcher;
         matcher.set("block", 11);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -385,7 +385,7 @@ void to::test<10>()
         Record matcher;
         matcher.set("block", 11);
         matcher.set("station", 222);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -414,7 +414,7 @@ void to::test<10>()
         Record matcher;
         matcher.set("block", 11);
         matcher.set("station", 222);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -435,7 +435,7 @@ void to::test<11>()
     {
         Record matcher;
         matcher.set("yearmin", 2000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -449,7 +449,7 @@ void to::test<11>()
     {
         Record matcher;
         matcher.set("yearmax", 2000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -464,7 +464,7 @@ void to::test<11>()
         Record matcher;
         matcher.set("yearmin", 2000);
         matcher.set("yearmax", 2010);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -493,7 +493,7 @@ void to::test<12>()
     {
         Record matcher;
         matcher.set("latmin", 4500000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -509,7 +509,7 @@ void to::test<12>()
     {
         Record matcher;
         matcher.set("latmax", 4500000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -525,7 +525,7 @@ void to::test<12>()
     {
         Record matcher;
         matcher.set("lonmin", 1100000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -541,7 +541,7 @@ void to::test<12>()
     {
         Record matcher;
         matcher.set("lonmax", 1100000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -560,7 +560,7 @@ void to::test<12>()
         matcher.set("latmax", 4600000);
         matcher.set("lonmin", 1000000);
         matcher.set("lonmax", 1200000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -582,7 +582,7 @@ void to::test<13>()
 {
     Record matcher;
     matcher.set(DBA_KEY_REP_MEMO, "synop");
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -599,7 +599,7 @@ template<> template<>
 void to::test<14>()
 {
     Record matcher;
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);

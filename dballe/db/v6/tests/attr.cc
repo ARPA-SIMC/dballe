@@ -22,7 +22,6 @@
 #include "db/v6/internals.h"
 #include "db/v6/lev_tr.h"
 #include "db/v5/station.h"
-#include "db/internals.h"
 
 using namespace dballe;
 using namespace dballe::db;

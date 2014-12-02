@@ -45,7 +45,7 @@ template<> template<>
 void to::test<1>()
 {
 	// Get a test message
-	auto_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+	unique_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
 	ensure_equals(msgs->size(), 1u);
 	Msg& msg = *(*msgs)[0];
 

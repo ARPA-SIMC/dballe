@@ -58,7 +58,7 @@ struct Msgs : public std::vector<Msg*>
      *   The message to append.  The Msgs will take over memory
      *   management for it.
      */
-    void acquire(std::auto_ptr<Msg> msg);
+    void acquire(std::unique_ptr<Msg> msg);
 
     /**
      * Remove all messages
@@ -108,9 +108,9 @@ struct AcquireMessages : public MsgConsumer
 
     AcquireMessages(Msgs& out) : out(out) {}
 
-    void operator()(std::auto_ptr<Msg> msg)
+    void operator()(std::unique_ptr<Msg> msg)
     {
-        out.acquire(msg);
+        out.acquire(std::move(msg));
     }
 };
 }

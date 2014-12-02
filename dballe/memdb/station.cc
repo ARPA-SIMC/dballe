@@ -212,9 +212,9 @@ struct MatchReport : public Match<Station>
     }
 };
 
-auto_ptr< Match<Station> > build_lon_filter(const Record& rec)
+unique_ptr< Match<Station> > build_lon_filter(const Record& rec)
 {
-    typedef auto_ptr< Match<Station> > RES;
+    typedef unique_ptr< Match<Station> > RES;
     if (const char* val = rec.key_peek_value(DBA_KEY_LON))
     {
         trace_query("Found lon %s, using MatchLonExact\n", val);
@@ -251,7 +251,7 @@ auto_ptr< Match<Station> > build_lon_filter(const Record& rec)
     } else if (rec.key_peek_value(DBA_KEY_LONMAX) != NULL) {
         throw error_consistency("'lonmax' query parameter was specified without 'lonmin'");
     }
-    return RES(0);
+    return RES(nullptr);
 }
 
 }
@@ -273,7 +273,7 @@ void Stations::query(const Record& rec, Results<Station>& res) const
         }
     }
 
-    auto_ptr< Match<Station> > lon_filter(build_lon_filter(rec));
+    unique_ptr< Match<Station> > lon_filter(build_lon_filter(rec));
     if (lon_filter.get())
         res.add(lon_filter.release());
 
@@ -318,7 +318,7 @@ void Stations::query(const Record& rec, Results<Station>& res) const
         if (latmin != MISSING_INT && latmax != MISSING_INT)
         {
             bool found;
-            auto_ptr< stl::Sequences<size_t> > sequences(by_lat.search_between(latmin, latmax + 1, found));
+            unique_ptr< stl::Sequences<size_t> > sequences(by_lat.search_between(latmin, latmax + 1, found));
             if (!found)
             {
                 trace_query(" latmin-latmax range is outside the index: setting empty result set\n");
@@ -326,12 +326,12 @@ void Stations::query(const Record& rec, Results<Station>& res) const
                 return;
             }
             if (sequences.get())
-                res.add_union(sequences);
+                res.add_union(std::move(sequences));
             else
                 trace_query(" latmin-latmax range covers the whole index: no point in adding a filter\n");
         } else if (latmin != MISSING_INT) {
             bool found;
-            auto_ptr< stl::Sequences<size_t> > sequences(by_lat.search_from(latmin, found));
+            unique_ptr< stl::Sequences<size_t> > sequences(by_lat.search_from(latmin, found));
             if (!found)
             {
                 trace_query(" latmin is beyond end of index: setting empty result set\n");
@@ -339,12 +339,12 @@ void Stations::query(const Record& rec, Results<Station>& res) const
                 return;
             }
             if (sequences.get())
-                res.add_union(sequences);
+                res.add_union(std::move(sequences));
             else
                 trace_query(" latmin matches beginning of index: no point in adding a filter\n");
         } else if (latmax != MISSING_INT) {
             bool found;
-            auto_ptr< stl::Sequences<size_t> > sequences(by_lat.search_to(latmax + 1, found));
+            unique_ptr< stl::Sequences<size_t> > sequences(by_lat.search_to(latmax + 1, found));
             if (!found)
             {
                 trace_query(" latmax is before start of index: setting empty result set\n");
@@ -352,7 +352,7 @@ void Stations::query(const Record& rec, Results<Station>& res) const
                 return;
             }
             if (sequences.get())
-                res.add_union(sequences);
+                res.add_union(std::move(sequences));
             else
                 trace_query(" latmax matches end of index: no point in adding a filter\n");
         }

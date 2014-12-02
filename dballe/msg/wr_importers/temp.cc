@@ -232,9 +232,9 @@ public:
     }
 };
 
-std::auto_ptr<Importer> Importer::createTemp(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createTemp(const msg::Importer::Options& opts)
 {
-    return auto_ptr<Importer>(new TempImporter(opts));
+    return unique_ptr<Importer>(new TempImporter(opts));
 }
 
 void TempImporter::import_var(const Var& var)
@@ -307,9 +307,9 @@ void TempImporter::import_var(const Var& var)
                 unsigned val = convert_BUFR08001_to_BUFR08042(var.enqi());
                 if (val != BUFR08042::ALL_MISSING)
                 {
-                    auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
+                    unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
                     nvar->copy_attrs(var);
-                    msg->set(nvar, Level(100, press), Trange::instant());
+                    msg->set(move(nvar), Level(100, press), Trange::instant());
                 }
             }
             if (var.enqi() & BUFR08001::SURFACE)
@@ -418,9 +418,9 @@ void TempImporter::import_group(unsigned start, unsigned length)
                         msg->seti(WR_VAR(0,  8,  42), BUFR08042::MISSING, -1, lev, Trange::instant());
                     else
                     {
-                        auto_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
+                        unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
                         nvar->copy_attrs(var);
-                        msg->set(nvar, lev, Trange::instant());
+                        msg->set(move(nvar), lev, Trange::instant());
                     }
                 }
                 break;

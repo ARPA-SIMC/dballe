@@ -24,6 +24,7 @@
 #include "wr_codec.h"
 #include <dballe/core/rawmsg.h>
 #include <wreport/error.h>
+#include <wreport/bulletin.h>
 
 #include "config.h"
 
@@ -65,16 +66,16 @@ Importer::~Importer()
 {
 }
 
-std::auto_ptr<Importer> Importer::create(Encoding type, const Options& opts)
+std::unique_ptr<Importer> Importer::create(Encoding type, const Options& opts)
 {
     switch (type)
     {
         case BUFR:
-            return auto_ptr<Importer>(new BufrImporter(opts));
+            return unique_ptr<Importer>(new BufrImporter(opts));
         case CREX:
-            return auto_ptr<Importer>(new CrexImporter(opts));
+            return unique_ptr<Importer>(new CrexImporter(opts));
         case AOF:
-            return auto_ptr<Importer>(new AOFImporter(opts));
+            return unique_ptr<Importer>(new AOFImporter(opts));
         default:
             error_unimplemented::throwf("%s importer is not implemented yet", encoding_name(type));
     }
@@ -128,21 +129,21 @@ Exporter::~Exporter()
 {
 }
 
-std::auto_ptr<wreport::Bulletin> Exporter::make_bulletin() const
+std::unique_ptr<wreport::Bulletin> Exporter::make_bulletin() const
 {
-    return std::auto_ptr<wreport::Bulletin>(0);
+    return std::unique_ptr<wreport::Bulletin>(nullptr);
 }
 
-std::auto_ptr<Exporter> Exporter::create(Encoding type, const Options& opts)
+std::unique_ptr<Exporter> Exporter::create(Encoding type, const Options& opts)
 {
     switch (type)
     {
         case BUFR:
-            return auto_ptr<Exporter>(new BufrExporter(opts));
+            return unique_ptr<Exporter>(new BufrExporter(opts));
         case CREX:
-            return auto_ptr<Exporter>(new CrexExporter(opts));
+            return unique_ptr<Exporter>(new CrexExporter(opts));
         case AOF:
-            //return auto_ptr<Exporter>(new AOFExporter(opts));
+            //return unique_ptr<Exporter>(new AOFExporter(opts));
         default:
             error_unimplemented::throwf("%s exporter is not implemented yet", encoding_name(type));
     }

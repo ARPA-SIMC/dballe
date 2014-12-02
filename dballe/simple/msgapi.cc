@@ -111,7 +111,7 @@ bool MsgAPI::readNextMessage()
 	Rawmsg raw;
 	if (file->read(raw))
 	{
-        auto_ptr<Msgs> new_msgs(new Msgs);
+        unique_ptr<Msgs> new_msgs(new Msgs);
         importer->from_rawmsg(raw, *new_msgs);
         msgs = new_msgs.release();
         state &= ~STATE_BLANK;
@@ -321,10 +321,10 @@ void MsgAPI::flushVars()
 	{
 		// Pop a variable from the vector and take ownership of
 		// its memory management
-		auto_ptr<Var> var(vars.back());
+		unique_ptr<Var> var(vars.back());
 		vars.pop_back();
 
-		wmsg->set(var, vars_level, vars_trange);
+		wmsg->set(move(var), vars_level, vars_trange);
 	}
 }
 
@@ -333,9 +333,9 @@ void MsgAPI::flushSubset()
 	if (wmsg)
 	{
 		flushVars();
-		auto_ptr<Msg> awmsg(wmsg);
+		unique_ptr<Msg> awmsg(wmsg);
 		wmsg = 0;
-		msgs->acquire(awmsg);
+		msgs->acquire(move(awmsg));
 	}
 }
 

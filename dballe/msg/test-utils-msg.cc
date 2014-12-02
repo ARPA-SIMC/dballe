@@ -129,12 +129,12 @@ const char* aof_files[] = {
 	NULL,
 };
 
-auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const msg::Importer::Options& opts)
+unique_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const msg::Importer::Options& opts)
 {
     try {
-        std::auto_ptr<Rawmsg> raw = read_rawmsg(filename, type);
-        std::auto_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
-        std::auto_ptr<Msgs> msgs(new Msgs);
+        std::unique_ptr<Rawmsg> raw = read_rawmsg(filename, type);
+        std::unique_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
+        std::unique_ptr<Msgs> msgs(new Msgs);
         importer->from_rawmsg(*raw, *msgs);
         return msgs;
     } catch (std::exception& e) {
@@ -142,12 +142,12 @@ auto_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filena
     }
 }
 
-std::auto_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename)
+std::unique_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename)
 {
     std::string fname = datafile(filename);
     CSVReader reader(fname);
 
-    auto_ptr<Msgs> msgs(new Msgs);
+    unique_ptr<Msgs> msgs(new Msgs);
     if (!msgs->from_csv(reader))
     {
         std::stringstream ss;
@@ -163,7 +163,7 @@ void _export_msgs(const Location& loc, const Msgs& in, Bulletin& out, const std:
         Encoding type = BUFR;
         if (string(out.encoding_name()) == "CREX")
             type = CREX;
-        std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, opts));
+        std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, opts));
         exporter->to_bulletin(in, out);
     } catch (std::exception& e) {
         dballe::tests::dump("bul-" + tag, in);
@@ -612,13 +612,13 @@ TestMessage::~TestMessage()
 
 void TestMessage::read_from_file(const std::string& fname, const msg::Importer::Options& input_opts)
 {
-    auto_ptr<Rawmsg> src = read_rawmsg(fname.c_str(), type);
+    unique_ptr<Rawmsg> src = read_rawmsg(fname.c_str(), type);
     read_from_raw(*src, input_opts);
 }
 
 void TestMessage::read_from_raw(const Rawmsg& msg, const msg::Importer::Options& input_opts)
 {
-    std::auto_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
+    std::unique_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
     raw = msg;
     bulletin->decode(raw);
     importer->from_rawmsg(raw, msgs);
@@ -627,7 +627,7 @@ void TestMessage::read_from_raw(const Rawmsg& msg, const msg::Importer::Options&
 void TestMessage::read_from_msgs(const Msgs& _msgs, const msg::Exporter::Options& export_opts)
 {
     // Export
-    std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, export_opts));
+    std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, export_opts));
 
     msgs = _msgs;
     exporter->to_bulletin(msgs, *bulletin);

@@ -41,7 +41,7 @@ BufrImporter::~BufrImporter() {}
 
 void BufrImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
 {
-    auto_ptr<BufrBulletin> bulletin(BufrBulletin::create());
+    unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
     bulletin->decode(msg);
     from_bulletin(*bulletin, msgs);
 }
@@ -52,7 +52,7 @@ CrexImporter::~CrexImporter() {}
 
 void CrexImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
 {
-    auto_ptr<CrexBulletin> bulletin(CrexBulletin::create());
+    unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
     bulletin->decode(msg);
     from_bulletin(*bulletin, msgs);
 }
@@ -60,7 +60,7 @@ void CrexImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
 void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
 {
     // Infer the right importer. See Common Code Table C-13
-    std::auto_ptr<wr::Importer> importer;
+    std::unique_ptr<wr::Importer> importer;
     switch (msg.type)
     {
         // Surface data - land
@@ -104,10 +104,10 @@ void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
     MsgType type = importer->scanType(msg);
     for (unsigned i = 0; i < msg.subsets.size(); ++i)
     {
-        std::auto_ptr<Msg> newmsg(new Msg);
+        std::unique_ptr<Msg> newmsg(new Msg);
         newmsg->type = type;
         importer->import(msg.subsets[i], *newmsg);
-        msgs.acquire(newmsg);
+        msgs.acquire(move(newmsg));
     }
 }
 
@@ -120,14 +120,14 @@ BufrExporter::BufrExporter(const Options& opts)
 
 BufrExporter::~BufrExporter() {}
 
-std::auto_ptr<wreport::Bulletin> BufrExporter::make_bulletin() const
+std::unique_ptr<wreport::Bulletin> BufrExporter::make_bulletin() const
 {
-    return std::auto_ptr<wreport::Bulletin>(BufrBulletin::create().release());
+    return std::unique_ptr<wreport::Bulletin>(BufrBulletin::create().release());
 }
 
 void BufrExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
 {
-    auto_ptr<BufrBulletin> bulletin(BufrBulletin::create());
+    unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
     to_bulletin(msgs, *bulletin);
     bulletin->encode(msg);
 }
@@ -136,14 +136,14 @@ CrexExporter::CrexExporter(const Options& opts)
     : WRExporter(opts) {}
 CrexExporter::~CrexExporter() {}
 
-std::auto_ptr<wreport::Bulletin> CrexExporter::make_bulletin() const
+std::unique_ptr<wreport::Bulletin> CrexExporter::make_bulletin() const
 {
-    return std::auto_ptr<wreport::Bulletin>(CrexBulletin::create().release());
+    return std::unique_ptr<wreport::Bulletin>(CrexBulletin::create().release());
 }
 
 void CrexExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
 {
-    auto_ptr<CrexBulletin> bulletin(CrexBulletin::create());
+    unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
     to_bulletin(msgs, *bulletin);
     bulletin->encode(msg);
 }
@@ -174,7 +174,7 @@ void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) cons
 
     // Get template factory
     const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
-    std::auto_ptr<wr::Template> encoder = fac.make(opts, msgs);
+    std::unique_ptr<wr::Template> encoder = fac.make(opts, msgs);
     // fprintf(stderr, "Encoding with template %s\n", encoder->name());
     encoder->to_bulletin(bulletin);
 }
@@ -195,7 +195,7 @@ struct WMOFactory : public TemplateFactory
 {
     WMOFactory() { name = "wmo"; description = "WMO style templates (autodetect)"; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         const Msg& msg = *msgs[0];
         string tpl;

@@ -117,7 +117,7 @@ struct Matcher
     virtual matcher::Result match(const Matched& item) const = 0;
     virtual void to_record(dballe::Record& query) const = 0;
 
-    static std::auto_ptr<Matcher> create(const dballe::Record& query);
+    static std::unique_ptr<Matcher> create(const dballe::Record& query);
 };
 
 }

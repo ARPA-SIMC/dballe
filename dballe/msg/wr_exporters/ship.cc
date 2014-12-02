@@ -420,7 +420,7 @@ struct ShipFactory : public TemplateFactory
 {
     ShipFactory() { name = SHIP_NAME; description = SHIP_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         // Scan msgs and pick the right one
         bool maybe_wmo = true;
@@ -457,15 +457,15 @@ struct ShipFactory : public TemplateFactory
             }
         }
         //if (maybe_wmo)
-        //    return auto_ptr<Template>(new ShipWMO(opts, msgs));
+        //    return unique_ptr<Template>(new ShipWMO(opts, msgs));
         if (maybe_plain)
-            return auto_ptr<Template>(new ShipPlain(opts, msgs));
+            return unique_ptr<Template>(new ShipPlain(opts, msgs));
         if (maybe_auto)
-            return auto_ptr<Template>(new ShipAuto(opts, msgs));
+            return unique_ptr<Template>(new ShipAuto(opts, msgs));
         if (maybe_second)
-            return auto_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
+            return unique_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
         // Fallback on WMO if we are confused
-        return auto_ptr<Template>(new ShipWMO(opts, msgs));
+        return unique_ptr<Template>(new ShipWMO(opts, msgs));
     }
 };
 
@@ -473,54 +473,54 @@ struct ShipPlainFactory : public TemplateFactory
 {
     ShipPlainFactory() { name = SHIP_PLAIN_NAME; description = SHIP_PLAIN_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new ShipPlain(opts, msgs));
+        return unique_ptr<Template>(new ShipPlain(opts, msgs));
     }
 };
 struct ShipECMWFSecondRecordFactory : public TemplateFactory
 {
     ShipECMWFSecondRecordFactory() { name = SHIP_ECMWF_SECOND_NAME; description = SHIP_ECMWF_SECOND_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
+        return unique_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
     }
 };
 struct ShipAbbrFactory : public TemplateFactory
 {
     ShipAbbrFactory() { name = SHIP_ABBR_NAME; description = SHIP_ABBR_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new ShipAbbr(opts, msgs));
+        return unique_ptr<Template>(new ShipAbbr(opts, msgs));
     }
 };
 struct ShipAutoFactory : public TemplateFactory
 {
     ShipAutoFactory() { name = SHIP_AUTO_NAME; description = SHIP_AUTO_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new ShipAuto(opts, msgs));
+        return unique_ptr<Template>(new ShipAuto(opts, msgs));
     }
 };
 struct ShipReducedFactory : public TemplateFactory
 {
     ShipReducedFactory() { name = SHIP_REDUCED_NAME; description = SHIP_REDUCED_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new ShipReduced(opts, msgs));
+        return unique_ptr<Template>(new ShipReduced(opts, msgs));
     }
 };
 struct ShipWMOFactory : public TemplateFactory
 {
     ShipWMOFactory() { name = SHIP_WMO_NAME; description = SHIP_WMO_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new ShipWMO(opts, msgs));
+        return unique_ptr<Template>(new ShipWMO(opts, msgs));
     }
 };
 

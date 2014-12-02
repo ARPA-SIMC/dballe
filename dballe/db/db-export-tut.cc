@@ -79,7 +79,7 @@ struct MsgCollector : public vector<Msg*>, public MsgConsumer
         for (iterator i = begin(); i != end(); ++i)
             delete *i;
     }
-    void operator()(auto_ptr<Msg> msg)
+    void operator()(unique_ptr<Msg> msg) override
     {
         push_back(msg.release());
     }

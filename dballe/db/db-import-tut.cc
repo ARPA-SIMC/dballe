@@ -44,7 +44,7 @@ struct MsgCollector : public vector<Msg*>, public MsgConsumer
         for (iterator i = begin(); i != end(); ++i)
             delete *i;
     }
-    void operator()(auto_ptr<Msg> msg)
+    void operator()(unique_ptr<Msg> msg) override
     {
         push_back(msg.release());
     }
@@ -88,7 +88,7 @@ template<> template<> void to::test<1>()
     {
         if (blacklist.find(files[i]) != blacklist.end()) continue;
         try {
-            std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], CREX);
+            std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], CREX);
             Msg& msg = *(*inmsgs)[0];
             normalise_datetime(msg);
 
@@ -124,7 +124,7 @@ template<> template<> void to::test<2>()
     for (int i = 0; files[i] != NULL; i++)
     {
         try {
-            std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
+            std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
             Msg& msg = *(*inmsgs)[0];
             normalise_datetime(msg);
 
@@ -159,7 +159,7 @@ template<> template<> void to::test<3>()
     for (int i = 0; files[i] != NULL; i++)
     {
         try {
-            std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], AOF);
+            std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], AOF);
             Msg& msg = *(*inmsgs)[0];
             normalise_datetime(msg);
 
@@ -195,8 +195,8 @@ template<> template<> void to::test<4>()
 
     // msg1 has latitude 33.88
     // msg2 has latitude 46.22
-    std::auto_ptr<Msgs> msgs1 = read_msgs("bufr/obs0-1.22.bufr", BUFR);
-    std::auto_ptr<Msgs> msgs2 = read_msgs("bufr/obs0-3.504.bufr", BUFR);
+    std::unique_ptr<Msgs> msgs1 = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+    std::unique_ptr<Msgs> msgs2 = read_msgs("bufr/obs0-3.504.bufr", BUFR);
     Msg& msg1 = *(*msgs1)[0];
     Msg& msg2 = *(*msgs2)[0];
 
@@ -236,7 +236,7 @@ template<> template<> void to::test<4>()
 template<> template<> void to::test<5>()
 {
     // Check automatic repinfo allocation
-    std::auto_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
+    std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
     Msg& msg = *(*msgs)[0];
 
     db->reset();
@@ -261,7 +261,7 @@ template<> template<> void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-    std::auto_ptr<Msgs> msgs = read_msgs("bufr/generic-onlystation.bufr", BUFR);
+    std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-onlystation.bufr", BUFR);
     Msg& msg = *(*msgs)[0];
 
     db->reset();

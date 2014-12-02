@@ -53,7 +53,7 @@ void to::test<1>()
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
-            std::auto_ptr<Rawmsg> raw = read_rawmsg(files[i], AOF);
+            std::unique_ptr<Rawmsg> raw = read_rawmsg(files[i], AOF);
 
             /* Parse it */
             Msgs msgs;
@@ -311,8 +311,8 @@ void to::test<2>()
 	for (size_t i = 0; !files[i].empty(); i++)
 	{
         try {
-            auto_ptr<Msgs> amsgs = read_msgs((files[i] + ".aof").c_str(), AOF);
-            auto_ptr<Msgs> bmsgs = read_msgs((files[i] + ".bufr").c_str(), BUFR);
+            unique_ptr<Msgs> amsgs = read_msgs((files[i] + ".aof").c_str(), AOF);
+            unique_ptr<Msgs> bmsgs = read_msgs((files[i] + ".bufr").c_str(), BUFR);
             normalise_encoding_quirks(*amsgs, *bmsgs);
 
             // Compare the two dba_msg
@@ -333,15 +333,15 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-    std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(BUFR));
-    std::auto_ptr<msg::Importer> importer(msg::Importer::create(BUFR));
+    std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(BUFR));
+    std::unique_ptr<msg::Importer> importer(msg::Importer::create(BUFR));
 	const char** files = dballe::tests::aof_files;
 	// Note: missingclouds and brokenamdar were not in the original file list before it got unified
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
             // Read
-            auto_ptr<Msgs> amsgs = read_msgs(files[i], AOF);
+            unique_ptr<Msgs> amsgs = read_msgs(files[i], AOF);
 
             // Reencode to BUFR
             Rawmsg raw;
@@ -441,8 +441,8 @@ void to::test<5>()
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
-            auto_ptr<Msgs> amsgs1 = read_msgs(string(prefix + "27" + files[i]).c_str(), AOF);
-            auto_ptr<Msgs> amsgs2 = read_msgs(string(prefix + "28" + files[i]).c_str(), AOF);
+            unique_ptr<Msgs> amsgs1 = read_msgs(string(prefix + "27" + files[i]).c_str(), AOF);
+            unique_ptr<Msgs> amsgs2 = read_msgs(string(prefix + "28" + files[i]).c_str(), AOF);
 
             // Compare the two dba_msg
             notes::Collect c(cerr);
@@ -460,7 +460,7 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-	auto_ptr<Msgs> msgs = read_msgs("aof/missing-cloud-h.aof", AOF);
+	unique_ptr<Msgs> msgs = read_msgs("aof/missing-cloud-h.aof", AOF);
 	ensure_equals(msgs->size(), 1);
 
 	const Msg& msg = *(*msgs)[0];
@@ -471,7 +471,7 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-	auto_ptr<Msgs> msgs = read_msgs("aof/confship.aof", AOF);
+	unique_ptr<Msgs> msgs = read_msgs("aof/confship.aof", AOF);
 	ensure_equals(msgs->size(), 1);
 
 	const Msg& msg = *(*msgs)[0];

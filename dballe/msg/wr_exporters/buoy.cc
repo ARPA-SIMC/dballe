@@ -157,9 +157,9 @@ struct BuoyFactory : public TemplateFactory
 {
     BuoyFactory() { name = BUOY_NAME; description = BUOY_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Buoy(opts, msgs));
+        return unique_ptr<Template>(new Buoy(opts, msgs));
     }
 };
 

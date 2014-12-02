@@ -24,7 +24,6 @@
 #include "db/v5/data.h"
 #include "db/v5/context.h"
 #include "db/v5/station.h"
-#include "db/internals.h"
 
 using namespace dballe;
 using namespace dballe::db;

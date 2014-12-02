@@ -226,9 +226,9 @@ struct GenericFactory : public TemplateFactory
 {
     GenericFactory() { name = GENERIC_NAME; description = GENERIC_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Generic(opts, msgs));
+        return unique_ptr<Template>(new Generic(opts, msgs));
     }
 };
 

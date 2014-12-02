@@ -297,7 +297,7 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Record& query)
 
         // Iterate all the possible values, taking note of the stations for
         // variables whose varcodes are in 'varcodes'
-        auto_ptr< set<size_t> > id_whitelist(new set<size_t>);
+        unique_ptr<set<size_t>> id_whitelist(new set<size_t>);
         for (ValueStorage<Value>::index_iterator i = memdb.values.index_begin();
                 i != memdb.values.index_end(); ++i)
         {
@@ -311,7 +311,7 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Record& query)
                 trace_query(" %zd", *i);
             trace_query("\n");
         }
-        res.add_set(id_whitelist);
+        res.add_set(move(id_whitelist));
     }
 
     raw_query_stations(query, res);
@@ -450,7 +450,7 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
     TRACE("export_msgs: %zd values in priority queue\n", values.size());
 
     // Message being built
-    auto_ptr<Msg> msg;
+    unique_ptr<Msg> msg;
 
     // Last value seen, used to detect when we can move on to the next message
     const Value* old_val = 0;
@@ -479,11 +479,11 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
                 //TRACE("Sending old message to consumer\n");
                 if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
                 {
-                    auto_ptr<Msg> copy(new Msg);
+                    unique_ptr<Msg> copy(new Msg);
                     msg->sounding_pack_levels(*copy);
-                    cons(copy);
+                    cons(move(copy));
                 } else
-                    cons(msg);
+                    cons(move(msg));
             }
 
             // Start writing a new message
@@ -517,11 +517,11 @@ void DB::export_msgs(const Record& query, MsgConsumer& cons)
         TRACE("Inserting leftover old message\n");
         if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
         {
-            auto_ptr<Msg> copy(new Msg);
+            unique_ptr<Msg> copy(new Msg);
             msg->sounding_pack_levels(*copy);
-            cons(copy);
+            cons(move(copy));
         } else
-            cons(msg);
+            cons(move(msg));
     }
 }
 

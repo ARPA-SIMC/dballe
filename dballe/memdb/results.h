@@ -80,7 +80,7 @@ public:
     /// Disregard everything and just return no items
     void set_to_empty() { all = false; empty = true; }
 
-    void add_union(std::auto_ptr< stl::Sequences<size_t> > seq);
+    void add_union(std::unique_ptr<stl::Sequences<size_t>> seq);
 
     /// Add a set of one single element to intersect with the rest
     void add_singleton(size_t singleton);
@@ -88,7 +88,7 @@ public:
     void add_set(const std::set<size_t>& p);
 
     /// Add a set, taking over its memory management
-    void add_set(std::auto_ptr< std::set<size_t> > p);
+    void add_set(std::unique_ptr< std::set<size_t> > p);
 };
 
 }
@@ -185,9 +185,9 @@ public:
 
     bool found_items_in_index() const { return found; }
 
-    std::auto_ptr< stl::Sequences<size_t> > release_sequences()
+    std::unique_ptr< stl::Sequences<size_t> > release_sequences()
     {
-        std::auto_ptr< stl::Sequences<size_t> > res(sequences);
+        std::unique_ptr< stl::Sequences<size_t> > res(sequences);
         sequences = 0;
         return res;
     }

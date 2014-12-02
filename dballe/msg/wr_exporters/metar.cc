@@ -132,9 +132,9 @@ struct MetarFactory : public TemplateFactory
 {
     MetarFactory() { name = METAR_NAME; description = METAR_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Metar(opts, msgs));
+        return unique_ptr<Template>(new Metar(opts, msgs));
     }
 };
 

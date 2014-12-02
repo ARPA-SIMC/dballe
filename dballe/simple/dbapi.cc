@@ -398,10 +398,10 @@ struct Exporter : public MsgConsumer
     {
     }
 
-    void operator()(std::auto_ptr<Msg> msg)
+    void operator()(std::unique_ptr<Msg> msg)
     {
         Msgs msgs;
-        msgs.acquire(msg);
+        msgs.acquire(move(msg));
         Rawmsg rmsg;
         exporter->to_rawmsg(msgs, rmsg);
         out.write(rmsg);

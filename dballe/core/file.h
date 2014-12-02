@@ -114,7 +114,7 @@ public:
 	 * @returns
 	 *   The newly allocated File, that needs to be deleted by the caller.
 	 */
-	static std::auto_ptr<File> create(Encoding type, const std::string& name, const char* mode);
+	static std::unique_ptr<File> create(Encoding type, const std::string& name, const char* mode);
 };
 
 } // namespace dballe

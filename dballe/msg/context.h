@@ -106,7 +106,7 @@ public:
      * @param var
      *   The variable to add or replace.
      */
-    void set(std::auto_ptr<wreport::Var> var);
+    void set(std::unique_ptr<wreport::Var> var);
 
     /**
      * Add or replace an integer value

@@ -452,72 +452,72 @@ struct AirepFactory : public TemplateFactory
 {
     AirepFactory() { name = AIREP_NAME; description = AIREP_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Airep(opts, msgs));
+        return unique_ptr<Template>(new Airep(opts, msgs));
     }
 };
 struct AirepEcmwfFactory : public TemplateFactory
 {
     AirepEcmwfFactory() { name = AIREP_ECMWF_NAME; description = AIREP_ECMWF_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Airep(opts, msgs));
+        return unique_ptr<Template>(new Airep(opts, msgs));
     }
 };
 struct AmdarFactory : public TemplateFactory
 {
     AmdarFactory() { name = AMDAR_NAME; description = AMDAR_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Amdar(opts, msgs));
+        return unique_ptr<Template>(new Amdar(opts, msgs));
     }
 };
 struct AmdarEcmwfFactory : public TemplateFactory
 {
     AmdarEcmwfFactory() { name = AMDAR_ECMWF_NAME; description = AMDAR_ECMWF_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Amdar(opts, msgs));
+        return unique_ptr<Template>(new Amdar(opts, msgs));
     }
 };
 struct AmdarWMOFactory : public TemplateFactory
 {
     AmdarWMOFactory() { name = AMDAR_WMO_NAME; description = AMDAR_WMO_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new AmdarWMO(opts, msgs));
+        return unique_ptr<Template>(new AmdarWMO(opts, msgs));
     }
 };
 struct AcarsFactory : public TemplateFactory
 {
     AcarsFactory() { name = ACARS_NAME; description = ACARS_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Acars(opts, msgs));
+        return unique_ptr<Template>(new Acars(opts, msgs));
     }
 };
 struct AcarsEcmwfFactory : public TemplateFactory
 {
     AcarsEcmwfFactory() { name = ACARS_ECMWF_NAME; description = ACARS_ECMWF_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Acars(opts, msgs));
+        return unique_ptr<Template>(new Acars(opts, msgs));
     }
 };
 struct AcarsWMOFactory : public TemplateFactory
 {
     AcarsWMOFactory() { name = ACARS_WMO_NAME; description = ACARS_WMO_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new AcarsWMO(opts, msgs));
+        return unique_ptr<Template>(new AcarsWMO(opts, msgs));
     }
 };
 

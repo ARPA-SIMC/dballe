@@ -195,7 +195,7 @@ void Converter::process_dba_msg_from_bulletin(const Rawmsg& orig, const Bulletin
 {
     Rawmsg raw;
     try {
-        auto_ptr<Bulletin> b1(exporter->make_bulletin());
+        unique_ptr<Bulletin> b1(exporter->make_bulletin());
         exporter->to_bulletin(msgs, *b1);
         if (bufr2netcdf_categories)
         {

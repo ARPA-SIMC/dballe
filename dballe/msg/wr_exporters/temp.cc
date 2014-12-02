@@ -892,64 +892,64 @@ struct TempWMOFactory : public virtual TemplateFactory
 {
     TempWMOFactory() { name = TEMP_WMO_NAME; description = TEMP_WMO_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new TempWMO(opts, msgs));
+        return unique_ptr<Template>(new TempWMO(opts, msgs));
     }
 };
 struct TempEcmwfLandFactory : public virtual TemplateFactory
 {
     TempEcmwfLandFactory() { name = TEMP_ECMWF_LAND_NAME; description = TEMP_ECMWF_LAND_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new TempEcmwfLand(opts, msgs));
+        return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
     }
 };
 struct TempEcmwfShipFactory : public virtual TemplateFactory
 {
     TempEcmwfShipFactory() { name = TEMP_ECMWF_SHIP_NAME; description = TEMP_ECMWF_SHIP_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
+        return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
 };
 struct TempEcmwfFactory : public virtual TemplateFactory
 {
     TempEcmwfFactory() { name = TEMP_ECMWF_NAME; description = TEMP_ECMWF_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         if (msgs.empty() || msgs[0]->type != MSG_TEMP_SHIP)
-            return auto_ptr<Template>(new TempEcmwfLand(opts, msgs));
+            return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
         else
-            return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
+            return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
 };
 struct TempShipFactory : public virtual TemplateFactory
 {
     TempShipFactory() { name = TEMP_SHIP_NAME; description = TEMP_SHIP_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new TempEcmwfShip(opts, msgs));
+        return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
 };
 struct TempRadarFactory : public virtual TemplateFactory
 {
     TempRadarFactory() { name = TEMP_RADAR_NAME; description = TEMP_RADAR_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new TempRadar(opts, msgs));
+        return unique_ptr<Template>(new TempRadar(opts, msgs));
     }
 };
 struct TempFactory : public TempEcmwfFactory, public TempWMOFactory, public TempRadarFactory
 {
     TempFactory() { name = TEMP_NAME; description = TEMP_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         const Msg& msg = *msgs[0];
 
@@ -973,25 +973,25 @@ struct PilotWMOFactory : public virtual TemplateFactory
 {
     PilotWMOFactory() { name = PILOT_WMO_NAME; description = PILOT_WMO_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new PilotWMO(opts, msgs));
+        return unique_ptr<Template>(new PilotWMO(opts, msgs));
     }
 };
 struct PilotEcmwfFactory : public virtual TemplateFactory
 {
     PilotEcmwfFactory() { name = PILOT_ECMWF_NAME; description = PILOT_ECMWF_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new PilotEcmwf(opts, msgs));
+        return unique_ptr<Template>(new PilotEcmwf(opts, msgs));
     }
 };
 struct PilotFactory : public virtual PilotEcmwfFactory, PilotWMOFactory
 {
     PilotFactory() { name = PILOT_NAME; description = PILOT_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
         const Msg& msg = *msgs[0];
         const Var* var = msg.get_sonde_tracking_var();

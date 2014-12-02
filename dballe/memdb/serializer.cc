@@ -303,9 +303,9 @@ void CSVStationValuesInfile::read(const CSVStationsInfile& stations)
         size_t station_lineno = as_int(1);
         const Station& station = stations.by_lineno(station_lineno);
         Varcode code = as_varcode(2);
-        std::auto_ptr<wreport::Var> var = newvar(code, cols[3].c_str());
+        std::unique_ptr<wreport::Var> var = newvar(code, cols[3].c_str());
 
-        size_t newid = values.insert(station, var);
+        size_t newid = values.insert(station, std::move(var));
         id_map[lineno] = newid;
         ++lineno;
     }
@@ -345,9 +345,9 @@ void CSVValuesInfile::read(const CSVStationsInfile& stations)
         const LevTr& levtr = *memdb.levtrs[levtr_id];
 
         Varcode code = as_varcode(10);
-        std::auto_ptr<wreport::Var> var = newvar(code, cols[11].c_str());
+        std::unique_ptr<wreport::Var> var = newvar(code, cols[11].c_str());
 
-        size_t newid = values.insert(station, levtr, dt, var);
+        size_t newid = values.insert(station, levtr, dt, std::move(var));
         id_map[lineno] = newid;
 
         ++lineno;
@@ -412,7 +412,7 @@ void CSVInfile::read_attrs(const INFILE& values)
 
         const typename INFILE::value_type& value = values.by_lineno(as_int(0));
         Varcode code = as_varcode(1);
-        value.var->seta(newvar(code, cols[2].c_str()));
+        value.var->seta(ap_newvar(code, cols[2].c_str()));
     }
 }
 

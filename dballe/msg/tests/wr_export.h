@@ -11,9 +11,9 @@ struct ReimportTest
 
     string fname;
     Encoding type;
-    auto_ptr<Msgs> msgs1;
-    auto_ptr<Msgs> msgs2;
-    auto_ptr<Bulletin> exported;
+    unique_ptr<Msgs> msgs1;
+    unique_ptr<Msgs> msgs2;
+    unique_ptr<Bulletin> exported;
     msg::Importer::Options input_opts;
     msg::Exporter::Options output_opts;
     vector<Tweaker*> tweaks;
@@ -57,7 +57,7 @@ struct ReimportTest
     {
         if (verbose) cerr << "Running test " << loc.locstr() << endl;
 
-        std::auto_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
+        std::unique_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
 
         // Import
         if (verbose) cerr << "Importing " << fname << " " << input_opts.to_string() << endl;
@@ -91,7 +91,7 @@ struct ReimportTest
             else
                 output_opts.template_name.clear();
             if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
-            std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
+            std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
             exporter->to_bulletin(*msgs1, *exported);
         } catch (std::exception& e) {
             dballe::tests::dump("bul1", *exported);
@@ -121,15 +121,15 @@ struct ReimportTest
             throw tut::failure(loc.msg(string("importing from rawmsg (first template): ") + e.what()));
         }
 
-        auto_ptr<Msgs> msgs3;
+        unique_ptr<Msgs> msgs3;
         if (tname2)
         {
             // Export
-            auto_ptr<Bulletin> bulletin(B::create());
+            unique_ptr<Bulletin> bulletin(B::create());
             try {
                 output_opts.template_name = tname2;
                 if (verbose) cerr << "Reexporting " << output_opts.to_string() << endl;
-                std::auto_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
+                std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
                 exporter->to_bulletin(*msgs2, *bulletin);
             } catch (std::exception& e) {
                 dballe::tests::dump("bul2", *bulletin);
@@ -159,7 +159,7 @@ struct ReimportTest
                 throw tut::failure(loc.msg(string("importing from rawmsg (first template): ") + e.what()));
             }
         } else
-            msgs3 = msgs2;
+            msgs3 = move(msgs2);
 
 #if 0
         // Run tweaks

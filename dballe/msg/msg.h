@@ -150,7 +150,7 @@ public:
      *
      * Note: if the context already exists, an exception is thrown
      */
-    void add_context(std::auto_ptr<msg::Context> ctx);
+    void add_context(std::unique_ptr<msg::Context> ctx);
 
     /**
      * Remove a context from the message
@@ -308,7 +308,7 @@ public:
      * @param tr
      *   The Trange of the value
      */
-    void set(std::auto_ptr<wreport::Var> var, const Level& lev, const Trange& tr);
+    void set(std::unique_ptr<wreport::Var> var, const Level& lev, const Trange& tr);
 
     /**
      * Add or replace an integer value in the dba_msg
@@ -478,7 +478,7 @@ public:
 struct MsgConsumer
 {
     virtual ~MsgConsumer() {}
-    virtual void operator()(std::auto_ptr<Msg>) = 0;
+    virtual void operator()(std::unique_ptr<Msg>) = 0;
 };
 
 /**

@@ -21,7 +21,7 @@
 #include "db/querybuf.h"
 #include "db/v5/db.h"
 #include "db/v5/cursor.h"
-#include "db/internals.h"
+#include "db/sql.h"
 #include "db/modifiers.h"
 
 using namespace dballe;

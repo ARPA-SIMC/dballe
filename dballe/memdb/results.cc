@@ -22,7 +22,7 @@ Base::~Base()
         delete *i;
 }
 
-void Base::add_union(std::auto_ptr< stl::Sequences<size_t> > seq)
+void Base::add_union(std::unique_ptr< stl::Sequences<size_t> > seq)
 {
     all = false;
     if (!others_to_intersect)
@@ -46,7 +46,7 @@ void Base::add_set(const std::set<size_t>& p)
     indices->add(p);
 }
 
-void Base::add_set(std::auto_ptr< std::set<size_t> > p)
+void Base::add_set(std::unique_ptr< std::set<size_t> > p)
 {
     transient_sets.push_back(p.release());
     add_set(*transient_sets.back());

@@ -60,15 +60,15 @@ public:
 	    run();
     }
 
-    static std::auto_ptr<Importer> createSynop(const msg::Importer::Options&);
-    static std::auto_ptr<Importer> createShip(const msg::Importer::Options&);
-    static std::auto_ptr<Importer> createMetar(const msg::Importer::Options&);
-    static std::auto_ptr<Importer> createTemp(const msg::Importer::Options&);
-    static std::auto_ptr<Importer> createPilot(const msg::Importer::Options&);
-    static std::auto_ptr<Importer> createFlight(const msg::Importer::Options&);
-    static std::auto_ptr<Importer> createSat(const msg::Importer::Options&);
-    static std::auto_ptr<Importer> createPollution(const msg::Importer::Options&);
-    static std::auto_ptr<Importer> createGeneric(const msg::Importer::Options&);
+    static std::unique_ptr<Importer> createSynop(const msg::Importer::Options&);
+    static std::unique_ptr<Importer> createShip(const msg::Importer::Options&);
+    static std::unique_ptr<Importer> createMetar(const msg::Importer::Options&);
+    static std::unique_ptr<Importer> createTemp(const msg::Importer::Options&);
+    static std::unique_ptr<Importer> createPilot(const msg::Importer::Options&);
+    static std::unique_ptr<Importer> createFlight(const msg::Importer::Options&);
+    static std::unique_ptr<Importer> createSat(const msg::Importer::Options&);
+    static std::unique_ptr<Importer> createPollution(const msg::Importer::Options&);
+    static std::unique_ptr<Importer> createGeneric(const msg::Importer::Options&);
 };
 
 class WMOImporter : public Importer

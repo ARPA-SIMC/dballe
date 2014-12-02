@@ -37,11 +37,11 @@ TESTGRP(wr_codec_generic);
 template<> template<>
 void to::test<1>()
 {
-    auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
-    auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+    unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+    unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
 
 	Msgs msgs;
-    msgs.acquire(auto_ptr<Msg>(new Msg));
+    msgs.acquire(unique_ptr<Msg>(new Msg));
 
 	/* Export msg as a generic message */
 	Rawmsg raw;
@@ -62,10 +62,10 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
-    auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
-    auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+    unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+    unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
 
-    auto_ptr<Msg> msg(new Msg);
+    unique_ptr<Msg> msg(new Msg);
 
 	/* Fill up msg */
 	msg->set_press(			15,	45);
@@ -140,7 +140,7 @@ void to::test<2>()
 	//CHECKED(dba_msg_set_flight_press(	msg, 3,		45));
 
 	Msgs msgs;
-    msgs.acquire(msg);
+    msgs.acquire(move(msg));
 
 	/* Export msg as a generic message */
 	Rawmsg raw;
@@ -237,12 +237,12 @@ void to::test<3>()
 template<> template<>
 void to::test<4>()
 {
-    auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
-    auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+    unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+    unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
 
-	/* Create a new message */
-    auto_ptr<Msg> msg(new Msg);
-	msg->type = MSG_GENERIC;
+    /* Create a new message */
+    unique_ptr<Msg> msg(new Msg);
+    msg->type = MSG_GENERIC;
 
 	/* Set some metadata */
 	msg->set_year(2006);
@@ -253,29 +253,29 @@ void to::test<4>()
 	msg->set_latitude(50.0);
 	msg->set_longitude(12.0);
 
-	/* Create a variable to add to the message */
-	auto_ptr<Var> var = newvar(WR_VAR(0, 12, 101), 270.15);
+    /* Create a variable to add to the message */
+    unique_ptr<Var> var = newvar(WR_VAR(0, 12, 101), 270.15);
 
-	/* Add some attributes to the variable */
-	var->seta(newvar(WR_VAR(0, 33, 2), 1));
-	var->seta(newvar(WR_VAR(0, 33, 3), 2));
-	var->seta(newvar(WR_VAR(0, 33, 5), 3));
+    /* Add some attributes to the variable */
+    var->seta(ap_newvar(WR_VAR(0, 33, 2), 1));
+    var->seta(ap_newvar(WR_VAR(0, 33, 3), 2));
+    var->seta(ap_newvar(WR_VAR(0, 33, 5), 3));
 
-	/* Add the variable to the message */
-    msg->set(var, Level(1), Trange::instant());
+    /* Add the variable to the message */
+    msg->set(move(var), Level(1), Trange::instant());
 
-	/* Create a second variable to add to the message */
+    /* Create a second variable to add to the message */
     var = newvar(WR_VAR(0, 12, 102), 272.0);
 
-	/* Add some attributes to the variable */
-	var->seta(newvar(WR_VAR(0, 33, 3), 1));
-	var->seta(newvar(WR_VAR(0, 33, 5), 2));
+    /* Add some attributes to the variable */
+    var->seta(ap_newvar(WR_VAR(0, 33, 3), 1));
+    var->seta(ap_newvar(WR_VAR(0, 33, 5), 2));
 
-	/* Add the variable to the message */
-    msg->set(var, Level(1), Trange::instant());
+    /* Add the variable to the message */
+    msg->set(move(var), Level(1), Trange::instant());
 
-	Msgs msgs;
-    msgs.acquire(msg);
+    Msgs msgs;
+    msgs.acquire(move(msg));
 
 	/* Encode the message */
 	Rawmsg raw;
@@ -297,7 +297,7 @@ template<> template<>
 void to::test<5>()
 {
     // Import a synop message
-    auto_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
     ensure(msgs->size() > 0);
 
     // Convert it to generic, with a 'ship' rep_memo
@@ -305,8 +305,8 @@ void to::test<5>()
     (*msgs)[0]->set_rep_memo("ship");
 
     // Export it
-    auto_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
-    auto_ptr<Bulletin> bulletin(BufrBulletin::create());
+    unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+    unique_ptr<Bulletin> bulletin(BufrBulletin::create());
     exporter->to_bulletin(*msgs, *bulletin);
 
     // Ensure that B01194 only appears once

@@ -82,7 +82,7 @@ template<> template<> void to::test<2>()
     ensure_equals(file.msgs.size(), 1u);
 
     // Decode results
-    std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+    auto importer = msg::Importer::create(BUFR);
     Msgs msgs;
     importer->from_rawmsg(file.msgs[0], msgs);
     ensure_equals(msgs.size(), 1u);

@@ -20,7 +20,7 @@
  */
 
 #include "db.h"
-#include "dballe/db/internals.h"
+#include "dballe/db/sql.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
 #include "dballe/db/v6/repinfo.h"

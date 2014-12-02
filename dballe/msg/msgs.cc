@@ -73,7 +73,7 @@ void Msgs::acquire(const Msg& msg)
     push_back(new Msg(msg));
 }
 
-void Msgs::acquire(auto_ptr<Msg> msg)
+void Msgs::acquire(unique_ptr<Msg> msg)
 {
     push_back(msg.release());
 }
@@ -99,9 +99,9 @@ bool Msgs::from_csv(CSVReader& in)
             // If Report changes, we are done
             break;
 
-        auto_ptr<Msg> msg(new Msg);
+        unique_ptr<Msg> msg(new Msg);
         bool has_next = msg->from_csv(in);
-        acquire(msg);
+        acquire(std::move(msg));
         if (!has_next)
             break;
     }

@@ -332,7 +332,7 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
     // would mean parsing the CSV twice: once to detect the message boundaries
     // and once to parse the Rawmsg strings.
     Item item;
-    auto_ptr<CSVReader> csvin;
+    unique_ptr<CSVReader> csvin;
 
     list<string>::const_iterator name = fnames.begin();
     do
@@ -349,7 +349,7 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
         while (true)
         {
             // Read input message
-            auto_ptr<Msg> msg(new Msg);
+            unique_ptr<Msg> msg(new Msg);
             if (!msg->from_csv(*csvin))
                 break;
 
@@ -359,8 +359,8 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
                 continue;
 
             // We want it: move it to the item
-            auto_ptr<Msgs> msgs(new Msgs);
-            msgs->acquire(msg);
+            unique_ptr<Msgs> msgs(new Msgs);
+            msgs->acquire(move(msg));
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))
@@ -379,12 +379,12 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
     bool print_errors = !filter.unparsable;
     Encoding intype = dba_cmdline_stringToMsgType(input_type);
 
-    std::auto_ptr<File> fail_file;
+    std::unique_ptr<File> fail_file;
 
     list<string>::const_iterator name = fnames.begin();
     do
     {
-        auto_ptr<File> file;
+        unique_ptr<File> file;
 
         if (name != fnames.end())
         {
@@ -394,7 +394,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
             file = File::create(intype, "(stdin)", "r");
         }
 
-        std::auto_ptr<msg::Importer> imp = msg::Importer::create(file->type(), import_opts);
+        std::unique_ptr<msg::Importer> imp = msg::Importer::create(file->type(), import_opts);
 
         while (file->read(*item.rmsg))
         {

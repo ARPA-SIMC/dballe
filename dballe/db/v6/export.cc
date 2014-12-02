@@ -106,7 +106,7 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
 
         // Retrieve results
         Varcode last_varcode = 0;
-        auto_ptr<Var> var;
+        unique_ptr<Var> var;
         while (stm.fetch())
         {
             TRACE("StationLayerCache::fill Got B%02ld%03ld %s\n", WR_VAR_X(out_varcode), WR_VAR_Y(out_varcode), out_value);
@@ -127,7 +127,7 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
             if (out_attr_varcode_ind != -1)
             {
                 TRACE("fill_ana_layer new attribute\n");
-                var->seta(newvar(out_attr_varcode, out_attr_value));
+                var->seta(ap_newvar(out_attr_varcode, out_attr_value));
             }
         }
 
@@ -152,7 +152,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     LevTrCache& ltrc = lev_tr_cache();
 
     // Message being built
-    auto_ptr<Msg> msg;
+    unique_ptr<Msg> msg;
 
     db::Transaction t(*conn);
 
@@ -178,7 +178,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
         //        cur.sqlrec.out_value);
 
         /* Create the variable that we got on this iteration */
-        auto_ptr<Var> var(newvar(cur.sqlrec.out_varcode, cur.sqlrec.out_value));
+        unique_ptr<Var> var(newvar(cur.sqlrec.out_varcode, cur.sqlrec.out_value));
 
         /* Load the attributes from the database */
         at.read(cur.sqlrec.out_id_data, *var);
@@ -195,12 +195,12 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 				TRACE("Sending old message to consumer\n");
 				if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 				{
-                    auto_ptr<Msg> copy(new Msg);
+                    unique_ptr<Msg> copy(new Msg);
                     msg->sounding_pack_levels(*copy);
                     /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-                    consumer(copy);
+                    consumer(move(copy));
                 } else
-                    consumer(msg);
+                    consumer(move(msg));
             }
 
             // Start writing a new message
@@ -244,11 +244,11 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
         TRACE("Inserting var B%02d%03d (%s)\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()), var->value());
         if (cur.sqlrec.out_id_ltr == -1)
         {
-            msg->set(var, Level::ana(), Trange::ana());
+            msg->set(move(var), Level::ana(), Trange::ana());
         } else {
             msg::Context* ctx = ltrc.to_msg(cur.sqlrec.out_id_ltr, *msg);
             if (ctx)
-                ctx->set(var);
+                ctx->set(move(var));
         }
     }
 
@@ -257,16 +257,16 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 		TRACE("Inserting leftover old message\n");
 		if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
 		{
-            auto_ptr<Msg> copy(new Msg);
+            unique_ptr<Msg> copy(new Msg);
             msg->sounding_pack_levels(*copy);
             /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-            consumer(copy);
+            consumer(move(copy));
             msg.release();
-		} else
-            consumer(msg);
-	}
+        } else
+            consumer(move(msg));
+    }
 
-	/* Useful for Oracle to end the session */
+    /* Useful for Oracle to end the session */
     t.commit();
 }
 

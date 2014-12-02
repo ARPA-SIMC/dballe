@@ -56,7 +56,7 @@ const StationValue* StationValues::get(const Station& station, wreport::Varcode 
     return 0;
 }
 
-size_t StationValues::insert(const Station& station, std::auto_ptr<Var> var, bool replace)
+size_t StationValues::insert(const Station& station, std::unique_ptr<Var> var, bool replace)
 {
     const set<size_t>* res = by_station.search(&station);
     if (res)
@@ -67,13 +67,13 @@ size_t StationValues::insert(const Station& station, std::auto_ptr<Var> var, boo
             {
                 if (!replace)
                     throw error_consistency("cannot replace an existing station value");
-                s->replace(var);
+                s->replace(std::move(var));
                 return *i;
             }
         }
 
     // Value not found, create it
-    size_t pos = value_add(new StationValue(station, var));
+    size_t pos = value_add(new StationValue(station, std::move(var)));
     // Index it
     by_station[&station].insert(pos);
     // And return it
@@ -83,8 +83,8 @@ size_t StationValues::insert(const Station& station, std::auto_ptr<Var> var, boo
 
 size_t StationValues::insert(const Station& station, const Var& var, bool replace)
 {
-    auto_ptr<Var> copy(new Var(var));
-    return insert(station, copy, replace);
+    unique_ptr<Var> copy(new Var(var));
+    return insert(station, std::move(copy), replace);
 }
 
 bool StationValues::remove(const Station& station, Varcode code)

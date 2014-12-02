@@ -30,7 +30,7 @@
  */
 
 #include <dballe/db/db.h>
-#include <dballe/db/internals.h>
+#include <dballe/db/sql.h>
 #include <dballe/db/querybuf.h>
 #include <dballe/db/odbcworkarounds.h>
 #include <sqltypes.h>

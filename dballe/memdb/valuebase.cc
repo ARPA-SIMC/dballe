@@ -33,7 +33,7 @@ ValueBase::~ValueBase()
     delete var;
 }
 
-void ValueBase::replace(std::auto_ptr<Var> var)
+void ValueBase::replace(std::unique_ptr<Var> var)
 {
     delete this->var;
     this->var = var.release();

@@ -39,13 +39,13 @@ namespace tests {
 
 typedef wibble::tests::Location Location;
 
-std::auto_ptr<Msgs> _read_msgs(const Location& loc, const char* filename, Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
+std::unique_ptr<Msgs> _read_msgs(const Location& loc, const char* filename, Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
 #define read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
 #define inner_read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
 
-std::auto_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename);
+std::unique_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename);
 #define read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(__FILE__, __LINE__, "load csv " #filename), (filename))
 #define inner_read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(loc, __FILE__, __LINE__, "load csv " #filename), (filename))
 
@@ -227,7 +227,7 @@ struct TestMessage
     ~TestMessage();
 
     /// Create a bulletin for the current encoding
-    std::auto_ptr<wreport::Bulletin> create_bulletin();
+    std::unique_ptr<wreport::Bulletin> create_bulletin();
 
     void read_from_file(const std::string& fname, const msg::Importer::Options& input_opts);
     void read_from_raw(const Rawmsg& msg, const msg::Importer::Options& input_opts);

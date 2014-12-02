@@ -73,7 +73,7 @@ template<typename T> template<typename K>
 bool Results<T>::add(const Index<K>& index, const K& min, const K& max)
 {
     all = false;
-    auto_ptr< stl::Sequences<size_t> > sequences;
+    unique_ptr< stl::Sequences<size_t> > sequences;
     for (typename Index<K>::const_iterator i = index.lower_bound(min);
             i != index.upper_bound(max); ++i)
     {
@@ -85,7 +85,7 @@ bool Results<T>::add(const Index<K>& index, const K& min, const K& max)
     if (sequences.get())
     {
         trace_query("Adding positions from index lookup: union of %zu sequences\n", sequences->size());
-        add_union(sequences);
+        add_union(std::move(sequences));
         return true;
     } else {
         trace_query("Adding positions from index lookup: no element not found\n");
@@ -151,7 +151,7 @@ void Results<T>::copy_valptrs_to(OUTITER res)
             trace_query("Generating results: adding filters to extra intersections\n");
             others_to_intersect->add(indices->begin(), indices->end());
         }
-        auto_ptr< stl::Sequences<size_t> > sequences(others_to_intersect);
+        unique_ptr< stl::Sequences<size_t> > sequences(others_to_intersect);
         others_to_intersect = 0;
         stl::Intersection<size_t> intersection;
         if (filter.get())
@@ -236,7 +236,7 @@ void Results<T>::copy_indices_to(OUTITER res)
             trace_query("Generating results: adding filters to extra intersections\n");
             others_to_intersect->add(indices->begin(), indices->end());
         }
-        auto_ptr< stl::Sequences<size_t> > sequences(others_to_intersect);
+        unique_ptr< stl::Sequences<size_t> > sequences(others_to_intersect);
         others_to_intersect = 0;
         stl::Intersection<size_t> intersection;
         if (filter.get())

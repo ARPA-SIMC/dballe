@@ -101,7 +101,7 @@ int Context::compare(const Level& lev, const Trange& tr) const
 
 void Context::set(const Var& var)
 {
-    set(auto_ptr<Var>(new Var(var)));
+    set(unique_ptr<Var>(new Var(var)));
 }
 
 void Context::seti(wreport::Varcode code, int val)
@@ -119,7 +119,7 @@ void Context::setc(wreport::Varcode code, const char* val)
     set(newvar(code, val));
 }
 
-void Context::set(auto_ptr<Var> var)
+void Context::set(unique_ptr<Var> var)
 {
     Varcode code = var->code();
     int idx = find_index(code);

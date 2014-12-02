@@ -150,7 +150,7 @@ struct FileBenchmark : public Benchmark
     {
         for (auto b : bulletins)
         {
-            std::auto_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
+            std::unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
             std::unique_ptr<Msgs> msgs(new Msgs);
             try {
                 importer->from_bulletin(*b, *msgs);

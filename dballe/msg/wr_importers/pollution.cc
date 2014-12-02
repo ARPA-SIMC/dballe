@@ -132,7 +132,7 @@ public:
         }
 
         // Create the final variable
-        auto_ptr<Var> finalvar = newvar(valtype);
+        unique_ptr<Var> finalvar = newvar(valtype);
 
         // Scale the value and set it
         if (decscale > 0)
@@ -146,15 +146,15 @@ public:
         if (attr_pmc) finalvar->seta(*attr_pmc);
 
         // Store it into the dba_msg
-        msg->set(finalvar, lev, tr);
+        msg->set(move(finalvar), lev, tr);
     }
 
     MsgType scanType(const Bulletin& bulletin) const { return MSG_POLLUTION; }
 };
 
-std::auto_ptr<Importer> Importer::createPollution(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createPollution(const msg::Importer::Options& opts)
 {
-    return auto_ptr<Importer>(new PollutionImporter(opts));
+    return unique_ptr<Importer>(new PollutionImporter(opts));
 }
 
 void PollutionImporter::import_var(const Var& var)

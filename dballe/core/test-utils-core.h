@@ -276,11 +276,11 @@ public:
 dba_err read_file(dba_encoding type, const std::string& name, dba_raw_consumer& cons);
 #endif
 
-std::auto_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* filename, Encoding type);
+std::unique_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* filename, Encoding type);
 #define open_test_data(filename, type) dballe::tests::_open_test_data(wibble::tests::Location(__FILE__, __LINE__, "open " #filename " " #type), (filename), (type))
 #define inner_open_test_data(filename, type) dballe::tests::_open_test_data(wibble::tests::Location(loc, __FILE__, __LINE__, #filename " " #type), (filename), (type))
 
-std::auto_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* filename, Encoding type);
+std::unique_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* filename, Encoding type);
 #define read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 

@@ -330,11 +330,11 @@ static bool parse_lat_extremes(const Record& query, int* rlatmin, int* rlatmax, 
     return true;
 }
 
-std::auto_ptr<Matcher> Matcher::create(const Record& query)
+std::unique_ptr<Matcher> Matcher::create(const Record& query)
 {
     using namespace matcher;
 
-    std::auto_ptr<And> res(new And);
+    std::unique_ptr<And> res(new And);
 
     if (const Var* var = query.var_peek(WR_VAR(0, 33, 195)))
         res->exprs.push_back(new VarIDMatcher(var->enqi()));
@@ -362,7 +362,7 @@ std::auto_ptr<Matcher> Matcher::create(const Record& query)
     if (const char* rete = query.key_peek_value(DBA_KEY_REP_MEMO))
         res->exprs.push_back(new ReteMatcher(rete));
 
-    return auto_ptr<Matcher>(res.release());
+    return unique_ptr<Matcher>(res.release());
 }
 
 }

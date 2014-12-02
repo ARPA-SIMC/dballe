@@ -45,8 +45,8 @@ struct StationValue : public ValueBase
 {
     const Station& station;
 
-    StationValue(const Station& station, std::auto_ptr<wreport::Var> var)
-        : ValueBase(var), station(station) {}
+    StationValue(const Station& station, std::unique_ptr<wreport::Var> var)
+        : ValueBase(std::move(var)), station(station) {}
     ~StationValue();
 
 private:
@@ -71,7 +71,7 @@ public:
     const StationValue* get(const Station& station, wreport::Varcode code) const;
 
     /// Insert a new value, or replace an existing one for the same station
-    size_t insert(const Station& station, std::auto_ptr<wreport::Var> var, bool replace=true);
+    size_t insert(const Station& station, std::unique_ptr<wreport::Var> var, bool replace=true);
 
     /// Insert a new value, or replace an existing one for the same station
     size_t insert(const Station& station, const wreport::Var& var, bool replace=true);

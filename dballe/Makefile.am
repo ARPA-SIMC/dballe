@@ -98,7 +98,7 @@ if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
 	db/odbcworkarounds.h \
 	db/querybuf.h \
-	db/internals.h \
+	db/sql.h \
 	db/odbc/internals.h \
 	db/odbc/v6_data.h \
 	db/odbc/v6_attr.h \
@@ -193,7 +193,7 @@ libdballe_la_SOURCES = \
 if HAVE_ODBC
 libdballe_la_SOURCES += \
 	db/querybuf.cc \
-	db/internals.cc \
+	db/sql.cc \
 	db/odbc/internals.cc \
 	db/odbc/v6_data.cc \
 	db/odbc/v6_attr.cc \

@@ -148,8 +148,8 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
             if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
                 continue;
 
-            auto_ptr<Var> var(new Var(*l_ana->data[i], with_attrs));
-            stationvalues.insert(station, var, replace);
+            unique_ptr<Var> var(new Var(*l_ana->data[i], with_attrs));
+            stationvalues.insert(station, std::move(var), replace);
         }
     }
 
@@ -185,8 +185,8 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
             const Var& var = *ctx.data[j];
             if (not var.isset()) continue;
 
-            auto_ptr<Var> newvar(new Var(var, with_attrs));
-            values.insert(station, levtr, dt, newvar, replace);
+            unique_ptr<Var> newvar(new Var(var, with_attrs));
+            values.insert(station, levtr, dt, std::move(newvar), replace);
         }
     }
 }
@@ -194,7 +194,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
 size_t Memdb::insert(
         const Coord& coords, const std::string& ident, const std::string& report,
         const Level& level, const Trange& trange, const Datetime& datetime,
-        std::auto_ptr<wreport::Var> var)
+        std::unique_ptr<wreport::Var> var)
 {
     size_t id_station;
     if (ident.empty())
@@ -206,7 +206,7 @@ size_t Memdb::insert(
     size_t id_levtr = levtrs.obtain(level, trange);
     const LevTr& levtr = *levtrs[id_levtr];
 
-    return values.insert(station, levtr, datetime, var);
+    return values.insert(station, levtr, datetime, std::move(var));
 }
 
 size_t Memdb::insert(
@@ -214,8 +214,8 @@ size_t Memdb::insert(
         const Level& level, const Trange& trange, const Datetime& datetime,
         const Var& var)
 {
-    auto_ptr<Var> newvar(new Var(var));
-    return insert(coords, ident, report, level, trange, datetime, newvar);
+    unique_ptr<Var> newvar(new Var(var));
+    return insert(coords, ident, report, level, trange, datetime, std::move(newvar));
 }
 
 void Memdb::remove(Results<Value>& res)

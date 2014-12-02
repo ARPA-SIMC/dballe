@@ -143,7 +143,7 @@ void Attr::load(wreport::Var& var)
 
     // Make attribues from the result, and add them to var
     while (sstm->fetch())
-        var.seta(newvar(type, value));
+        var.seta(ap_newvar(type, value));
 
     sstm->close_cursor();
 }

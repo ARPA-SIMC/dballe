@@ -115,9 +115,9 @@ void ShipImporter::import_var(const Var& var)
 
 } // anonynmous namespace
 
-std::auto_ptr<Importer> Importer::createShip(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createShip(const msg::Importer::Options& opts)
 {
-    return auto_ptr<Importer>(new ShipImporter(opts));
+    return unique_ptr<Importer>(new ShipImporter(opts));
 }
 
 

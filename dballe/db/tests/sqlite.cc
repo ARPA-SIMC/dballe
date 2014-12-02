@@ -18,7 +18,7 @@
  */
 
 #include "db/test-utils-db.h"
-#include "db/internals.h"
+#include "db/sql.h"
 #include "db/v5/db.h"
 #include <wibble/sys/fs.h>
 #include <sql.h>

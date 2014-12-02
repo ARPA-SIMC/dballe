@@ -42,8 +42,8 @@ struct msgs_shar
 
     void init(Msgs& m)
     {
-        auto_ptr<Msg> msg(new Msg);
-        m.acquire(msg);
+        unique_ptr<Msg> msg(new Msg);
+        m.acquire(move(msg));
     }
 };
 TESTGRP(msgs);
@@ -54,7 +54,7 @@ void to::test<1>()
 {
     Record matcher;
     matcher.set("data_id", 1);
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -62,9 +62,9 @@ void to::test<1>()
     matched[0]->set(newvar(WR_VAR(0, 12, 101), 21.5), Level(1), Trange::instant());
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-    std::auto_ptr<wreport::Var> var = newvar(WR_VAR(0, 12, 103), 18.5);
-    var->seta(newvar(WR_VAR(0, 33, 195), 1));
-    matched[0]->set(var, Level(1), Trange::instant());
+    std::unique_ptr<wreport::Var> var = newvar(WR_VAR(0, 12, 103), 18.5);
+    var->seta(ap_newvar(WR_VAR(0, 33, 195), 1));
+    matched[0]->set(move(var), Level(1), Trange::instant());
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
 }
 
@@ -74,7 +74,7 @@ void to::test<2>()
 {
     Record matcher;
     matcher.set("ana_id", 1);
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -93,7 +93,7 @@ void to::test<3>()
     {
         Record matcher;
         matcher.set("block", 11);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -112,7 +112,7 @@ void to::test<3>()
         Record matcher;
         matcher.set("block", 11);
         matcher.set("station", 222);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -141,7 +141,7 @@ void to::test<4>()
     {
         Record matcher;
         matcher.set("yearmin", 2000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -155,7 +155,7 @@ void to::test<4>()
     {
         Record matcher;
         matcher.set("yearmax", 2000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -170,7 +170,7 @@ void to::test<4>()
         Record matcher;
         matcher.set("yearmin", 2000);
         matcher.set("yearmax", 2010);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -199,7 +199,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("latmin", 45.0);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -215,7 +215,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("latmax", 45.0);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -231,7 +231,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("lonmin", 45.0);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -247,7 +247,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("lonmax", 45.0);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -266,7 +266,7 @@ void to::test<5>()
         matcher.set("latmax", 46.0);
         matcher.set("lonmin", 10.0);
         matcher.set("lonmax", 12.0);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -288,7 +288,7 @@ void to::test<6>()
 {
     Record matcher;
     matcher.set(DBA_KEY_REP_MEMO, "synop");
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -305,7 +305,7 @@ template<> template<>
 void to::test<7>()
 {
     Record matcher;
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
@@ -315,7 +315,7 @@ void to::test<7>()
 template<> template<>
 void to::test<8>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/synop-evapo.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/synop-evapo.bufr", BUFR);
 
     // Serialise to CSV
     stringstream str;
@@ -344,7 +344,7 @@ void to::test<8>()
 template<> template<>
 void to::test<9>()
 {
-    auto_ptr<Msgs> msgs = read_msgs("bufr/synop-evapo.bufr", BUFR);
+    unique_ptr<Msgs> msgs = read_msgs("bufr/synop-evapo.bufr", BUFR);
     Msgs msgs1(*msgs);
     Msgs msgs2;
     msgs2 = *msgs;

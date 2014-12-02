@@ -21,9 +21,12 @@
 #include "v6_attr.h"
 #include "dballe/db/odbcworkarounds.h"
 #include "dballe/core/var.h"
+#include <memory>
 #include <sqltypes.h>
 #include <sql.h>
 #include <cstring>
+
+using namespace std;
 
 namespace dballe {
 namespace db {
@@ -134,7 +137,7 @@ void ODBCAttr::read(int id_data, wreport::Var& var)
 
     // Make attribues from the result, and add them to var
     while (sstm->fetch())
-        var.seta(newvar(type, value));
+        var.seta(auto_ptr<wreport::Var>(newvar(type, value).release()));
 
     sstm->close_cursor();
 }

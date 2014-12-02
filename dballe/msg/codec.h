@@ -98,7 +98,7 @@ public:
 
 
     /// Instantiate the right importer for the given type
-    static std::auto_ptr<Importer> create(Encoding type, const Options& opts=Options());
+    static std::unique_ptr<Importer> create(Encoding type, const Options& opts=Options());
 };
 
 /**
@@ -161,11 +161,11 @@ public:
      * @returns the bulletin, or NULL of this is an exporter for a format not
      * covered by Bulletin
      */
-    virtual std::auto_ptr<wreport::Bulletin> make_bulletin() const;
+    virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
 
 
     /// Instantiate the right importer for the given type
-    static std::auto_ptr<Exporter> create(Encoding type, const Options& opts=Options());
+    static std::unique_ptr<Exporter> create(Encoding type, const Options& opts=Options());
 };
 
 } // namespace msg

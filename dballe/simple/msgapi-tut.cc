@@ -56,8 +56,8 @@ template<> template<>
 void to::test<2>()
 {
     // Concatenate a broken BUFR with a good one
-    std::auto_ptr<Rawmsg> rm1(read_rawmsg("bufr/interpreted-range.bufr", BUFR));
-    std::auto_ptr<Rawmsg> rm2(read_rawmsg("bufr/temp-gts1.bufr", BUFR));
+    std::unique_ptr<Rawmsg> rm1(read_rawmsg("bufr/interpreted-range.bufr", BUFR));
+    std::unique_ptr<Rawmsg> rm2(read_rawmsg("bufr/temp-gts1.bufr", BUFR));
 
     // Broken + good
     {

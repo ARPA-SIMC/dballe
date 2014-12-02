@@ -40,7 +40,7 @@ void to::test<1>()
 {
     Record matcher;
     matcher.set("data_id", 1);
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -58,7 +58,7 @@ void to::test<2>()
 {
     Record matcher;
     matcher.set("ana_id", 1);
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -77,7 +77,7 @@ void to::test<3>()
     {
         Record matcher;
         matcher.set("block", 11);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -96,7 +96,7 @@ void to::test<3>()
         Record matcher;
         matcher.set("block", 11);
         matcher.set("station", 222);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -128,7 +128,7 @@ void to::test<4>()
     {
         Record matcher;
         matcher.set("yearmin", 2000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -142,7 +142,7 @@ void to::test<4>()
     {
         Record matcher;
         matcher.set("yearmax", 2000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -157,7 +157,7 @@ void to::test<4>()
         Record matcher;
         matcher.set("yearmin", 2000);
         matcher.set("yearmax", 2010);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -186,7 +186,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("latmin", 4500000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -202,7 +202,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("latmax", 4500000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -218,7 +218,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("lonmin", 4500000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -234,7 +234,7 @@ void to::test<5>()
     {
         Record matcher;
         matcher.set("lonmax", 4500000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -253,7 +253,7 @@ void to::test<5>()
         matcher.set("latmax", 4600000);
         matcher.set("lonmin", 1000000);
         matcher.set("lonmax", 1200000);
-        std::auto_ptr<Matcher> m = Matcher::create(matcher);
+        std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
         Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -275,7 +275,7 @@ void to::test<6>()
 {
     Record matcher;
     matcher.set(DBA_KEY_REP_MEMO, "synop");
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -292,7 +292,7 @@ template<> template<>
 void to::test<7>()
 {
     Record matcher;
-    std::auto_ptr<Matcher> m = Matcher::create(matcher);
+    std::unique_ptr<Matcher> m = Matcher::create(matcher);
 
     Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);

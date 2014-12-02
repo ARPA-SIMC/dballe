@@ -261,9 +261,9 @@ struct PollutionFactory : public TemplateFactory
 {
     PollutionFactory() { name = POLLUTION_NAME; description = POLLUTION_DESC; }
 
-    std::auto_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
     {
-        return auto_ptr<Template>(new Pollution(opts, msgs));
+        return unique_ptr<Template>(new Pollution(opts, msgs));
     }
 };
 

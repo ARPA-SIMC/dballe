@@ -65,26 +65,39 @@ wreport::Var var(wreport::Varcode code, const T& val) { return wreport::Var(vari
 
 
 /// Create a new Var, from the local B table, with undefined value
-static inline std::auto_ptr<wreport::Var> newvar(wreport::Varcode code)
+static inline std::unique_ptr<wreport::Var> newvar(wreport::Varcode code)
 {
-	return std::auto_ptr<wreport::Var>(new wreport::Var(varinfo(code)));
+	return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code)));
 }
 
 /// Create a new Var, from the local B table, with value
 template<typename T>
-std::auto_ptr<wreport::Var> newvar(wreport::Varcode code, const T& val)
+std::unique_ptr<wreport::Var> newvar(wreport::Varcode code, const T& val)
 {
-	return std::auto_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
+	return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
+}
+
+/// Create a new Var, from the local B table, with undefined value
+static inline std::auto_ptr<wreport::Var> ap_newvar(wreport::Varcode code)
+{
+    return std::auto_ptr<wreport::Var>(new wreport::Var(varinfo(code)));
+}
+
+/// Create a new Var, from the local B table, with value
+template<typename T>
+std::auto_ptr<wreport::Var> ap_newvar(wreport::Varcode code, const T& val)
+{
+    return std::auto_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
 }
 
 /// Create a new Var, copying \a var and all its attributes except the unset ones
-std::auto_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& var);
+std::unique_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& var);
 
 /**
  * Create a new Var with code \a code, copying the value from \a var and all
  * its attributes except the unset ones
  */
-std::auto_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& var, wreport::Varcode code);
+std::unique_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& var, wreport::Varcode code);
 
 /**
  * Format the code to its string representation

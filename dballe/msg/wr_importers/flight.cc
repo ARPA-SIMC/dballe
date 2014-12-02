@@ -65,7 +65,7 @@ public:
         {
             // If we don't have a level yet, defer adding the variable until we
             // have one
-            auto_ptr<Var> copy(var_copy_without_unset_attrs(var));
+            unique_ptr<Var> copy(var_copy_without_unset_attrs(var));
             deferred.push_back(copy.release());
         }
         else
@@ -78,7 +78,7 @@ public:
         {
             // If we don't have a level yet, defer adding the variable until we
             // have one
-            auto_ptr<Var> copy(var_copy_without_unset_attrs(var, code));
+            unique_ptr<Var> copy(var_copy_without_unset_attrs(var, code));
             deferred.push_back(copy.release());
         }
         else
@@ -96,9 +96,9 @@ public:
         for (vector<Var*>::iterator i = deferred.begin();
                 i != deferred.end(); ++i)
         {
-            auto_ptr<Var> var(*i);
+            unique_ptr<Var> var(*i);
             *i = 0;
-            msg->set(var, lev, Trange::instant());
+            msg->set(move(var), lev, Trange::instant());
         }
         deferred.clear();
     }
@@ -152,9 +152,9 @@ public:
     }
 };
 
-std::auto_ptr<Importer> Importer::createFlight(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createFlight(const msg::Importer::Options& opts)
 {
-    return auto_ptr<Importer>(new FlightImporter(opts));
+    return unique_ptr<Importer>(new FlightImporter(opts));
 }
 
 void FlightImporter::import_var(const Var& var)

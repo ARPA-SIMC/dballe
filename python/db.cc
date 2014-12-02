@@ -51,7 +51,7 @@ static PyObject* dpy_DB_connect(PyTypeObject *type, PyObject *args, PyObject* kw
     if (!PyArg_ParseTupleAndKeywords(args, kw, "s|ss", const_cast<char**>(kwlist), &dsn, &user, &pass))
         return NULL;
 
-    auto_ptr<DB> db;
+    unique_ptr<DB> db;
     try {
         db = DB::connect(dsn, user, pass);
     } catch (wreport::error& e) {
@@ -59,7 +59,7 @@ static PyObject* dpy_DB_connect(PyTypeObject *type, PyObject *args, PyObject* kw
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-    return (PyObject*)db_create(db);
+    return (PyObject*)db_create(move(db));
 }
 
 static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
@@ -68,7 +68,7 @@ static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
     if (!PyArg_ParseTuple(args, "s", &fname))
         return NULL;
 
-    auto_ptr<DB> db;
+    unique_ptr<DB> db;
     try {
         db = DB::connect_from_file(fname);
     } catch (wreport::error& e) {
@@ -76,7 +76,7 @@ static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-    return (PyObject*)db_create(db);
+    return (PyObject*)db_create(move(db));
 }
 
 static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
@@ -85,7 +85,7 @@ static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
     if (!PyArg_ParseTuple(args, "s", &url))
         return NULL;
 
-    auto_ptr<DB> db;
+    unique_ptr<DB> db;
     try {
         db = DB::connect_from_url(url);
     } catch (wreport::error& e) {
@@ -93,12 +93,12 @@ static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-    return (PyObject*)db_create(db);
+    return (PyObject*)db_create(move(db));
 }
 
 static PyObject* dpy_DB_connect_test(PyTypeObject *type)
 {
-    auto_ptr<DB> db;
+    unique_ptr<DB> db;
     try {
         db = DB::connect_test();
     } catch (wreport::error& e) {
@@ -106,7 +106,7 @@ static PyObject* dpy_DB_connect_test(PyTypeObject *type)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-    return (PyObject*)db_create(db);
+    return (PyObject*)db_create(move(db));
 }
 
 static PyObject* dpy_DB_is_url(PyTypeObject *type, PyObject *args)
@@ -211,8 +211,8 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
         return NULL;
 
     try {
-        std::auto_ptr<db::Cursor> res = self->db->query_stations(record->rec);
-        return (PyObject*)cursor_create(self, res);
+        std::unique_ptr<db::Cursor> res = self->db->query_stations(record->rec);
+        return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -227,8 +227,8 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
         return NULL;
 
     try {
-        std::auto_ptr<db::Cursor> res = self->db->query_data(record->rec);
-        return (PyObject*)cursor_create(self, res);
+        std::unique_ptr<db::Cursor> res = self->db->query_data(record->rec);
+        return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -243,8 +243,8 @@ static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
         return NULL;
 
     try {
-        std::auto_ptr<db::Cursor> res = self->db->query_summary(record->rec);
-        return (PyObject*)cursor_create(self, res);
+        std::unique_ptr<db::Cursor> res = self->db->query_summary(record->rec);
+        return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -358,11 +358,11 @@ struct ExportConsumer : public MsgConsumer
     {
         if (exporter) delete exporter;
     }
-    void operator()(std::auto_ptr<Msg> msg)
+    void operator()(std::unique_ptr<Msg> msg)
     {
         Rawmsg raw;
         Msgs msgs;
-        msgs.acquire(msg);
+        msgs.acquire(move(msg));
         exporter->to_rawmsg(msgs, raw);
         out.write(raw);
     }
@@ -391,7 +391,7 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
     }
 
     try {
-        std::auto_ptr<File> out = File::create(encoding, filename, "wb");
+        std::unique_ptr<File> out = File::create(encoding, filename, "wb");
         ExportConsumer msg_writer(*out, as_generic ? "generic" : NULL);
         self->db->export_msgs(query->rec, msg_writer);
         Py_RETURN_NONE;
@@ -554,7 +554,7 @@ bool db_read_attrlist(PyObject* attrs, db::AttrList& codes)
     }
 }
 
-dpy_DB* db_create(std::auto_ptr<DB> db)
+dpy_DB* db_create(std::unique_ptr<DB> db)
 {
     dpy_Record* attr_rec = record_create();
     if (!attr_rec) return NULL;

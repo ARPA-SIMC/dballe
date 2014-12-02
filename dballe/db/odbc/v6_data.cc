@@ -1,5 +1,5 @@
 #include "v6_data.h"
-#include "dballe/db/internals.h"
+#include "dballe/db/sql.h"
 #include "dballe/db/odbcworkarounds.h"
 #include "dballe/db/v6/db.h"
 #include "dballe/core/record.h"

@@ -179,7 +179,7 @@ PyTypeObject dpy_Cursor_Type = {
 namespace dballe {
 namespace python {
 
-dpy_Cursor* cursor_create(dpy_DB* db, std::auto_ptr<db::Cursor> cur)
+dpy_Cursor* cursor_create(dpy_DB* db, std::unique_ptr<db::Cursor> cur)
 {
     dpy_Cursor* result = PyObject_New(dpy_Cursor, &dpy_Cursor_Type);
     if (!result) return NULL;

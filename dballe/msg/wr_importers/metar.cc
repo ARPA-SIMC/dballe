@@ -46,7 +46,7 @@ protected:
         else if (opts.simplified)
         {
             Var var1(var);
-            var1.seta(newvar(WR_VAR(0, 7, 32), height_sensor));
+            var1.seta(auto_ptr<Var>(newvar(WR_VAR(0, 7, 32), height_sensor).release()));
             msg->set(var1, code, defaultLevel, trange);
         } else
             msg->set(var, code, Level(103, height_sensor * 1000), trange);
@@ -84,9 +84,9 @@ public:
     MsgType scanType(const Bulletin& bulletin) const { return MSG_METAR; }
 };
 
-std::auto_ptr<Importer> Importer::createMetar(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createMetar(const msg::Importer::Options& opts)
 {
-    return auto_ptr<Importer>(new MetarImporter(opts));
+    return unique_ptr<Importer>(new MetarImporter(opts));
 }
 
 void MetarImporter::peek_var(const Var& var)

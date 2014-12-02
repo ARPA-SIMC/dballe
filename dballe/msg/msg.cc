@@ -163,15 +163,15 @@ msg::Context& Msg::obtain_context(const Level& lev, const Trange& tr)
     int pos = find_index(lev, tr);
     if (pos == -1)
     {
-        auto_ptr<msg::Context> c(new msg::Context(lev, tr));
+        unique_ptr<msg::Context> c(new msg::Context(lev, tr));
         msg::Context* res = c.get();
-        add_context(c);
+        add_context(std::move(c));
         return *res;
     }
     return *data[pos];
 }
 
-void Msg::add_context(auto_ptr<msg::Context> ctx)
+void Msg::add_context(unique_ptr<msg::Context> ctx)
 {
     // Enlarge the data
     data.resize(data.size() + 1);
@@ -418,16 +418,16 @@ bool Msg::from_csv(CSVReader& in)
                 error_consistency::throwf("cannot find corresponding variable for attribute %s", in.cols[11].c_str());
 
             Varcode acode = descriptor_code(in.cols[11].substr(7).c_str());
-            auto_ptr<Var> attr = newvar(acode);
+            auto_ptr<Var> attr(ap_newvar(acode));
             Varinfo info = attr->info();
             attr->set_from_formatted(in.cols[12].c_str());
             var->seta(attr);
         } else if (in.cols[11].size() == 6) {
             // Bxxyyy: variable
             Varcode vcode = descriptor_code(in.cols[11].c_str());
-            auto_ptr<Var> var = newvar(vcode);
+            unique_ptr<Var> var = newvar(vcode);
             var->set_from_formatted(in.cols[12].c_str());
-            set(var, lev, tr);
+            set(std::move(var), lev, tr);
         } else
             error_consistency::throwf("cannot parse variable code %s", in.cols[11].c_str());
 
@@ -564,34 +564,34 @@ void Msg::set(const Var& var, Varcode code, const Level& lev, const Trange& tr)
     set(var_copy_without_unset_attrs(var, code), lev, tr);
 }
 
-void Msg::set(std::auto_ptr<Var> var, const Level& lev, const Trange& tr)
+void Msg::set(std::unique_ptr<Var> var, const Level& lev, const Trange& tr)
 {
     msg::Context& ctx = obtain_context(lev, tr);
-    ctx.set(var);
+    ctx.set(std::move(var));
 }
 
 void Msg::seti(Varcode code, int val, int conf, const Level& lev, const Trange& tr)
 {
-    auto_ptr<Var> var(newvar(code, val));
+    unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
-        var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
-    set(var, lev, tr);
+        var->seta(ap_newvar(WR_VAR(0, 33, 7), conf));
+    set(std::move(var), lev, tr);
 }
 
 void Msg::setd(Varcode code, double val, int conf, const Level& lev, const Trange& tr)
 {
-    auto_ptr<Var> var(newvar(code, val));
+    unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
-        var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
-    set(var, lev, tr);
+        var->seta(ap_newvar(WR_VAR(0, 33, 7), conf));
+    set(std::move(var), lev, tr);
 }
 
 void Msg::setc(Varcode code, const char* val, int conf, const Level& lev, const Trange& tr)
 {
-    auto_ptr<Var> var(newvar(code, val));
+    unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
-        var->seta(auto_ptr<Var>(newvar(WR_VAR(0, 33, 7), conf)));
-    set(var, lev, tr);
+        var->seta(ap_newvar(WR_VAR(0, 33, 7), conf));
+    set(std::move(var), lev, tr);
 }
 
 void Msg::set_date(const char* date)
@@ -673,16 +673,16 @@ void Msg::sounding_pack_levels(Msg& dst) const
         // If it is not a sounding level, just copy it
         if (ctx.find_vsig() == NULL)
         {
-            auto_ptr<msg::Context> newctx(new msg::Context(ctx));
-            dst.add_context(newctx);
+            unique_ptr<msg::Context> newctx(new msg::Context(ctx));
+            dst.add_context(std::move(newctx));
             continue;
         }
 
         // FIXME: shouldn't this also set significance bits in the output level?
         for (size_t j = 0; j < ctx.data.size(); ++j)
         {
-            auto_ptr<Var> copy(new Var(*ctx.data[j]));
-            dst.set(copy, Level(ctx.level.ltype1, ctx.level.l1), ctx.trange);
+            unique_ptr<Var> copy(new Var(*ctx.data[j]));
+            dst.set(std::move(copy), Level(ctx.level.ltype1, ctx.level.l1), ctx.trange);
         }
     }
 }

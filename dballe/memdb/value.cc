@@ -43,7 +43,7 @@ void Values::clear()
 
 size_t Values::insert(
         const Station& station, const LevTr& levtr,
-        const Datetime& datetime, std::auto_ptr<Var> var, bool replace)
+        const Datetime& datetime, std::unique_ptr<Var> var, bool replace)
 {
     stl::SetIntersection<size_t> res;
     if (by_station.search(&station, res) && by_levtr.search(&levtr, res) && by_date.search(datetime.date, res))
@@ -54,13 +54,13 @@ size_t Values::insert(
             {
                 if (!replace)
                     throw error_consistency("cannot replace an existing value");
-                v->replace(var);
+                v->replace(std::move(var));
                 return *i;
             }
         }
 
     // Station not found, create it
-    size_t pos = value_add(new Value(station, levtr, datetime, var));
+    size_t pos = value_add(new Value(station, levtr, datetime, std::move(var)));
     // Index it
     by_station[&station].insert(pos);
     by_levtr[&levtr].insert(pos);
@@ -88,8 +88,8 @@ size_t Values::insert(
         }
 
     // Station not found, create it
-    auto_ptr<Var> copy(new Var(var));
-    size_t pos = value_add(new Value(station, levtr, datetime, copy));
+    unique_ptr<Var> copy(new Var(var));
+    size_t pos = value_add(new Value(station, levtr, datetime, std::move(copy)));
     // Index it
     by_station[&station].insert(pos);
     by_levtr[&levtr].insert(pos);
@@ -222,7 +222,7 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
     rec.parse_date_extremes(mind, maxd);
     if (mind[0] != MISSING_INT || maxd[0] != MISSING_INT)
     {
-        auto_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
+        unique_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
         if (mind[0] == maxd[0] && mind[1] == maxd[1] && mind[2] == maxd[2])
         {
             Date d(mind);
@@ -246,8 +246,8 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
                 res.add(new MatchDateMinMax(mind, maxd));
         } else {
             bool found;
-            auto_ptr< stl::Sequences<size_t> > sequences;
-            auto_ptr< Match<Value> > extra_match;
+            unique_ptr< stl::Sequences<size_t> > sequences;
+            unique_ptr< Match<Value> > extra_match;
 
             if (maxd[0] == MISSING_INT) {
                 Date d(mind);
@@ -278,7 +278,7 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
             }
 
             if (sequences.get())
-                res.add_union(sequences);
+                res.add_union(std::move(sequences));
             else
                 trace_query(" date range matches the whole index: no point in adding a filter\n");
 

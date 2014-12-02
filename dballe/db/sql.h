@@ -1,5 +1,5 @@
 /*
- * db/internals - Internal support infrastructure for the DB
+ * db/sql - Generic infrastructure for talking with SQL databases
  *
  * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *

@@ -67,13 +67,13 @@ struct Sequences : public std::vector<stlutils::Sequence<T>*>
     template<typename C>
     void add(const C& container);
 
-    void add(std::auto_ptr< stlutils::Sequence<T> >& sequence);
+    void add(std::unique_ptr< stlutils::Sequence<T> >& sequence);
 
     // Add the union of the given sequences
-    void add_union(std::auto_ptr< Sequences<T> >& sequences);
+    void add_union(std::unique_ptr< Sequences<T> >& sequences);
 
     // Add the union of the given sequences
-    void add_intersection(std::auto_ptr< Sequences<T> >& sequences);
+    void add_intersection(std::unique_ptr< Sequences<T> >& sequences);
 
 private:
     Sequences(const Sequences&);
@@ -90,15 +90,15 @@ struct SequenceGenerator
     SequenceGenerator() : sequences(0) {}
     SequenceGenerator(const SequenceGenerator<T>& sg) : sequences(sg.sequences)
     {
-        // auto_ptr semantics
+        // unique_ptr semantics
         const_cast<SequenceGenerator<T>*>(&sg)->sequences = 0;
     }
-    SequenceGenerator(std::auto_ptr< Sequences<T> >& sequences) : sequences(sequences.release()) {}
+    SequenceGenerator(std::unique_ptr< Sequences<T> >& sequences) : sequences(sequences.release()) {}
     ~SequenceGenerator() { if (sequences) delete sequences; }
 
     SequenceGenerator<T>& operator=(const SequenceGenerator<T>& sg)
     {
-        // auto_ptr semantics
+        // unique_ptr semantics
         if (&sg == this) return this;
         if (sequences) delete sequences;
         sequences = sg.sequences;
@@ -133,7 +133,7 @@ struct Itersection : public SequenceGenerator<T>, public std::iterator<std::forw
 {
     Itersection() {}
     Itersection(const Itersection<T>& sg) : SequenceGenerator<T>(sg) {}
-    Itersection(std::auto_ptr< Sequences<T> >& sequences)
+    Itersection(std::unique_ptr< Sequences<T> >& sequences)
         : SequenceGenerator<T>(sequences)
     {
         sync_iters();
@@ -168,17 +168,17 @@ struct Iterunion : public SequenceGenerator<T>, public std::iterator<std::forwar
     Iterunion(const Iterunion<T>& sg)
         : SequenceGenerator<T>(sg), minval(sg.minval)
     {
-        // auto_ptr semantics
+        // unique_ptr semantics
         const_cast<Iterunion<T>*>(&sg)->minval = 0;
     }
-    Iterunion(std::auto_ptr< Sequences<T> >& sequences)
+    Iterunion(std::unique_ptr< Sequences<T> >& sequences)
         : SequenceGenerator<T>(sequences), minval(0)
     {
         find_min();
     }
     Iterunion<T>& operator=(const Iterunion<T>& sg)
     {
-        // auto_ptr semantics
+        // unique_ptr semantics
         SequenceGenerator<T>::operator=(sg);
         minval = sg.minval;
         const_cast<Iterunion<T>*>(&sg)->minval = 0;
@@ -219,7 +219,7 @@ class Intersection
 public:
     typedef stlutils::Itersection<T> const_iterator;
 
-    const_iterator begin(std::auto_ptr< Sequences<T> >& sequences) const
+    const_iterator begin(std::unique_ptr< Sequences<T> >& sequences) const
     {
         return const_iterator(sequences);
     }
@@ -247,7 +247,7 @@ public:
 
     const_iterator begin()
     {
-        std::auto_ptr< Sequences<T> > sequences(new Sequences<T>);
+        std::unique_ptr< Sequences<T> > sequences(new Sequences<T>);
 
         // Look for the highest first element in all sets
         bool first = true;
@@ -295,7 +295,7 @@ class Union
 public:
     typedef stlutils::Iterunion<T> const_iterator;
 
-    const_iterator begin(std::auto_ptr< Sequences<T> >& sequences) const
+    const_iterator begin(std::unique_ptr< Sequences<T> >& sequences) const
     {
         return const_iterator(sequences);
     }

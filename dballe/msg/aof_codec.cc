@@ -55,7 +55,7 @@ void AOFImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
     TRACE("05 grid box number: %d\n", OBS(5));
     TRACE("obs type: %d, %d\n", OBS(6), OBS(7));
 
-    auto_ptr<Msg> out(new Msg);
+    unique_ptr<Msg> out(new Msg);
 
 #if 0
     /* 13 Station ID (1:4) */
@@ -85,7 +85,7 @@ void AOFImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
                     OBS(5), OBS(6));
     }
 
-    msgs.acquire(out);
+    msgs.acquire(std::move(out));
 }
 
 void AOFImporter::from_bulletin(const wreport::Bulletin&, Msgs&) const
