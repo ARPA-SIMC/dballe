@@ -23,7 +23,7 @@
 #include "cursor.h"
 #include "dballe/db/internals.h"
 #include "dballe/db/modifiers.h"
-#include "attr.h"
+#include "internals.h"
 
 #include "lev_tr.h"
 #include <dballe/msg/msg.h>

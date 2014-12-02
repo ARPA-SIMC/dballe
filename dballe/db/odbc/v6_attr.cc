@@ -1,5 +1,5 @@
 /*
- * db/v6/attr - attr table management
+ * db/v6/odbc/attr - attribute table management
  *
  * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -18,87 +18,16 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
-
-#include "attr.h"
-#include "dballe/db/internals.h"
+#include "v6_attr.h"
 #include "dballe/db/odbcworkarounds.h"
 #include "dballe/core/var.h"
 #include <sqltypes.h>
 #include <sql.h>
 #include <cstring>
 
-using namespace wreport;
-using namespace std;
-
 namespace dballe {
 namespace db {
 namespace v6 {
-
-/**
- * Precompiled queries to manipulate the attr table
- */
-class ODBCAttr : public Attr
-{
-protected:
-    /** DB connection. */
-    db::Connection& conn;
-
-    /** Precompiled select statement */
-    db::Statement* sstm;
-    /** Precompiled insert statement */
-    db::Statement* istm;
-    /** Precompiled replace statement */
-    db::Statement* rstm;
-
-    /** id_data SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_data;
-    /** attribute id SQL parameter */
-    wreport::Varcode type;
-    /** attribute value SQL parameter */
-    char value[255];
-    /** attribute value indicator */
-    SQLLEN value_ind;
-
-    /**
-     * Set the value input field from a string
-     *
-     * @param value
-     *   The value to copy into ins
-     */
-    void set_value(const char* value);
-
-public:
-    ODBCAttr(Connection& conn);
-    ~ODBCAttr();
-
-    /**
-     * Insert an entry into the attr table
-     *
-     * If set to true, an existing attribute with the same context and
-     * wreport::Varcode will be overwritten
-     */
-    void write(int id_data, const wreport::Var& var) override;
-
-    /**
-     * Load from the database all the attributes for var
-     *
-     * @param var
-     *   wreport::Var to which the resulting attributes will be added
-     * @return
-     *   The error indicator for the function (See @ref error.h)
-     */
-    void read(int id_data, wreport::Var& var) override;
-
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
-    void dump(FILE* out) override;
-
-private:
-    // disallow copy
-    ODBCAttr(const ODBCAttr&);
-    ODBCAttr& operator=(const ODBCAttr&);
-};
 
 ODBCAttr::ODBCAttr(Connection& conn)
     : conn(conn), sstm(0), istm(0), rstm(0)
@@ -238,12 +167,7 @@ void ODBCAttr::dump(FILE* out)
     stm.close_cursor();
 }
 
-Attr::~Attr() {}
-unique_ptr<Attr> Attr::create(Connection& conn)
-{
-    return unique_ptr<Attr>(new ODBCAttr(conn));
+}
+}
 }
 
-}
-}
-}

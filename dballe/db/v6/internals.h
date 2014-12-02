@@ -1,5 +1,5 @@
 /*
- * db/v6/data - data table management
+ * db/v6/internals - internal interfaces for v6 db implementation
  *
  * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -19,13 +19,13 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_V6_DATA_H
-#define DBALLE_DB_V6_DATA_H
+#ifndef DBALLE_DB_V6_INTERNALS_H
+#define DBALLE_DB_V6_INTERNALS_H
 
 /** @file
  * @ingroup db
  *
- * Data table management used by the db module.
+ * Attribute table management used by the db module.
  */
 
 #include <wreport/var.h>
@@ -36,6 +36,8 @@ namespace dballe {
 struct Record;
 
 namespace db {
+struct Connection;
+
 namespace v6 {
 struct DB;
 
@@ -92,8 +94,42 @@ struct Data
     virtual void dump(FILE* out) = 0;
 };
 
+
+/**
+ * Precompiled queries to manipulate the attr table
+ */
+struct Attr
+{
+    static std::unique_ptr<Attr> create(Connection& conn);
+    virtual ~Attr();
+
+    /**
+     * Insert an entry into the attr table
+     *
+     * If set to true, an existing attribute with the same context and
+     * wreport::Varcode will be overwritten
+     */
+    virtual void write(int id_data, const wreport::Var& var) = 0;
+
+    /**
+     * Load from the database all the attributes for var
+     *
+     * @param var
+     *   wreport::Var to which the resulting attributes will be added
+     * @return
+     *   The error indicator for the function (See @ref error.h)
+     */
+    virtual void read(int id_data, wreport::Var& var) = 0;
+
+    /**
+     * Dump the entire contents of the table to an output stream
+     */
+    virtual void dump(FILE* out) = 0;
+};
+
 }
 }
 }
 
 #endif
+

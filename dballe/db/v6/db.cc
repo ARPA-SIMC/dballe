@@ -25,9 +25,8 @@
 #include "dballe/db/v6/repinfo.h"
 #include "dballe/db/v5/station.h"
 #include "lev_tr.h"
-#include "data.h"
 #include "cursor.h"
-#include "attr.h"
+#include "internals.h"
 
 #include <dballe/core/record.h>
 #include <dballe/core/defs.h>

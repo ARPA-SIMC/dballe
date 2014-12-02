@@ -85,6 +85,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/mem/repinfo.h \
 	db/mem/cursor.h \
 	db/mem/db.h \
+	db/v6/internals.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
 	cmdline/processor.h \
@@ -98,6 +99,9 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/odbcworkarounds.h \
 	db/querybuf.h \
 	db/internals.h \
+	db/odbc/internals.h \
+	db/odbc/v6_data.h \
+	db/odbc/v6_attr.h \
 	db/v5/attr.h \
 	db/v5/context.h \
 	db/v5/cursor.h \
@@ -107,11 +111,9 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v5/station.h \
 	db/v6/db.h \
 	db/v6/repinfo.h \
-	db/v6/attr.h \
 	db/v6/lev_tr.h \
 	db/v6/cursor.h \
-	db/v6/qbuilder.h \
-	db/v6/data.h
+	db/v6/qbuilder.h
 endif
 
 lib_LTLIBRARIES = libdballe.la
@@ -178,6 +180,7 @@ libdballe_la_SOURCES = \
 	db/mem/repinfo.cc \
 	db/mem/cursor.cc \
 	db/mem/db.cc \
+	db/v6/internals.cc \
 	cmdline/cmdline.cc \
 	cmdline/processor.cc \
 	cmdline/conversion.cc \
@@ -191,6 +194,8 @@ if HAVE_ODBC
 libdballe_la_SOURCES += \
 	db/querybuf.cc \
 	db/internals.cc \
+	db/odbc/v6_data.cc \
+	db/odbc/v6_attr.cc \
 	db/v5/repinfo.cc \
 	db/v5/station.cc \
 	db/v5/context.cc \
@@ -202,8 +207,6 @@ libdballe_la_SOURCES += \
 	db/v5/export.cc \
 	db/v6/repinfo.cc \
 	db/v6/lev_tr.cc \
-	db/v6/data.cc \
-	db/v6/attr.cc \
 	db/v6/db.cc \
 	db/v6/cursor.cc \
 	db/v6/qbuilder.cc \
