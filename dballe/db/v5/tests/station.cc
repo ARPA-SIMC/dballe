@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 
 using namespace dballe;
 using namespace dballe::db::v5;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -44,6 +45,8 @@ TESTGRP(dbv5_station);
 template<> template<>
 void to::test<1>()
 {
+#if 0
+    // FIXME: these are now unaccessible internals
 	use_db();
 
 	// Set to a valid value
@@ -55,40 +58,36 @@ void to::test<1>()
 	st->set_ident(NULL);
 	ensure_equals(st->ident[0], 0);
 	ensure_equals(st->ident_ind, SQL_NULL_DATA);
+#endif
 }
 
 /* Insert some values and try to read them again */
 template<> template<>
 void to::test<2>()
 {
-	use_db();
+    use_db();
+    bool inserted;
 
-	// Insert a mobile station
-	st->lat = 4500000;
-	st->lon = 1100000;
-        st->set_ident("ciao");
-        ensure_equals(st->insert(), 1);
+    // Insert a mobile station
+    wassert(actual(st->obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
+    wassert(actual(inserted).istrue());
+    wassert(actual(st->obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
+    wassert(actual(inserted).isfalse());
 
-	// Insert a fixed station
-	st->lat = 4600000;
-	st->lon = 1200000;
-	st->set_ident(NULL);
-	ensure_equals(st->insert(), 2);
+    // Insert a fixed station
+    wassert(actual(st->obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
+    wassert(actual(inserted).istrue());
+    wassert(actual(st->obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
+    wassert(actual(inserted).isfalse());
 
-	// Get the ID of the first station
-	st->id = 0;
-	st->lat = 4500000;
-	st->lon = 1100000;
-	st->set_ident("ciao");
-	ensure_equals(st->get_id(), 1);
+    // Get the ID of the first station
+    wassert(actual(st->get_id(4500000, 1100000, "ciao")) == 1);
 
-	// Get the ID of the second station
-	st->id = 0;
-	st->lat = 4600000;
-	st->lon = 1200000;
-	st->set_ident(NULL);
-	ensure_equals(st->get_id(), 2);
+    // Get the ID of the second station
+    wassert(actual(st->get_id(4600000, 1200000)) == 2);
 
+#if 0
+    // FIXME: unused functions now unaccessible
 	// Get info on the first station
 	st->get_data(1);
 	ensure_equals(st->lat, 4500000);
@@ -120,6 +119,7 @@ void to::test<2>()
 	ensure_equals(st->lat, 4700000);
 	ensure_equals(st->lon, 1300000);
 	ensure_equals(st->ident[0], 0);
+#endif
 }
 
 }

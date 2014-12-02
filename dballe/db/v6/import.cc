@@ -53,38 +53,34 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     // Begin transaction
     db::Transaction t(*conn);
 
-	// Fill up the pseudoana informations needed to fetch an existing ID
+    // Fill up the pseudoana informations needed to fetch an existing ID
 
-	// Latitude
-	if (const Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
-		st.lat = var->enqi();
-	else
+    // Latitude
+    int lat;
+    if (const Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
+        lat = var->enqi();
+    else
         throw error_notfound("latitude not found in data to import");
 
-	// Longitude
-	if (const Var* var = l_ana->find_by_id(DBA_MSG_LONGITUDE))
-		st.lon = var->enqi();
-	else
+    // Longitude
+    int lon;
+    if (const Var* var = l_ana->find_by_id(DBA_MSG_LONGITUDE))
+        lon = var->enqi();
+    else
         throw error_notfound("longitude not found in data to import");
 
-	// Station identifier
-	if (mobile)
-	{
-		if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
-			st.set_ident(var->value());
-		else
+    // Station identifier
+    const char* ident = NULL;
+    if (mobile)
+    {
+        if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
+            ident = var->value();
+        else
             throw error_notfound("mobile station identifier not found in data to import");
-	} else
-        st.set_ident(NULL);
+    }
 
     bool inserted_pseudoana = false;
-    // Check if we can reuse a pseudoana row
-    int id_station = st.get_id();
-    if (id_station == -1)
-    {
-        id_station = st.insert();
-        inserted_pseudoana = true;
-    }
+    int id_station = st.obtain_id(lat, lon, ident, &inserted_pseudoana);
 
     // Report code
     int id_report;

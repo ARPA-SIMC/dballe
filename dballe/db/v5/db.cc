@@ -667,34 +667,25 @@ int DB::obtain_station(const Record& rec, bool can_add)
     Station& s = station();
 
     // Look for the key data in the record
+    int lat;
     if (const Var* var = rec.key_peek(DBA_KEY_LAT))
-        s.lat = var->enqi();
+        lat = var->enqi();
     else
         throw error_notfound("no latitude in record when trying to insert a station in the database");
 
+    int lon;
     if (const Var* var = rec.key_peek(DBA_KEY_LON))
-        s.lon = normalon(var->enqi());
+        lon = normalon(var->enqi());
     else
         throw error_notfound("no longitude in record when trying to insert a station in the database");
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
-        s.set_ident(val);
+    const char* ident = rec.key_peek_value(DBA_KEY_IDENT);
+
+    // Get the ID for the station
+    if (can_add)
+        return s.obtain_id(lat, lon, ident);
     else
-        s.set_ident(NULL);
-
-    // Check for an existing station with these data
-    int id = s.get_id();
-
-    /* If not found, insert a new one */
-    if (id == -1)
-    {
-        if (can_add)
-            id = s.insert();
-        else
-            throw error_consistency("trying to insert a station entry when it is forbidden");
-    }
-
-    return id;
+        return s.get_id(lat, lon, ident);
 }
 
 int DB::obtain_context(const Record& rec)

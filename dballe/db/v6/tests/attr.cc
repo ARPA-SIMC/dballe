@@ -47,17 +47,11 @@ struct dbv6_attr_shar : public dballe::tests::db_test
         db::v6::LevTr& lt = v6().lev_tr();
         db::v6::Data& da = v6().data();
 
-		// Insert a mobile station
-		st.lat = 4500000;
-		st.lon = 1100000;
-		st.set_ident("ciao");
-        ensure_equals(st.insert(), 1);
+        // Insert a mobile station
+        wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);
 
-		// Insert a fixed station
-		st.lat = 4600000;
-		st.lon = 1200000;
-		st.set_ident(NULL);
-		ensure_equals(st.insert(), 2);
+        // Insert a fixed station
+        wassert(actual(st.obtain_id(4600000, 1200000)) == 2);
 
         // Insert a lev_tr
         wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);

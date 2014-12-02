@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 using namespace dballe;
 using namespace dballe::db;
 using namespace dballe::db::v5;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -44,17 +45,11 @@ struct dbv5_data_shar : public dballe::tests::db_test
         Station& st = v5().station();
         Context& co = v5().context();
 
-		// Insert a mobile station
-		st.lat = 4500000;
-		st.lon = 1100000;
-		st.set_ident("ciao");
-        ensure_equals(st.insert(), 1);
+        // Insert a mobile station
+        wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);
 
-		// Insert a fixed station
-		st.lat = 4600000;
-		st.lon = 1200000;
-		st.set_ident(NULL);
-		ensure_equals(st.insert(), 2);
+        // Insert a fixed station
+        wassert(actual(st.obtain_id(4600000, 1200000)) == 2);
 
 		// Insert a context
 		co.id_station = 1;

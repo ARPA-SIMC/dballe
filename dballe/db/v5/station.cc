@@ -1,7 +1,7 @@
 /*
  * db/station - station table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -180,16 +180,17 @@ void Station::set_ident(const char* val)
     }
 }
 
-int Station::get_id()
+int Station::get_id(int lat, int lon, const char* ident)
 {
+    this->lat = lat;
+    this->lon = lon;
+    set_ident(ident);
     db::Statement* stm = ident_ind == SQL_NULL_DATA ? sfstm : smstm;
     stm->execute();
-    int res;
     if (stm->fetch_expecting_one())
-        res = id;
-    else
-        res = -1;
-    return res;
+        return id;
+
+    throw error_notfound("station not found in the database");
 }
 
 void Station::get_data(int qid)
@@ -202,8 +203,23 @@ void Station::get_data(int qid)
         ident[0] = 0;
 }
 
-int Station::insert()
+int Station::obtain_id(int lat, int lon, const char* ident, bool* inserted)
 {
+    this->lat = lat;
+    this->lon = lon;
+    set_ident(ident);
+
+    // Trying querying
+    db::Statement* stm = ident_ind == SQL_NULL_DATA ? sfstm : smstm;
+    stm->execute();
+    if (stm->fetch_expecting_one())
+    {
+        if (inserted) *inserted = false;
+        return id;
+    }
+
+    // If nothing was found, insert it
+    if (inserted) *inserted = true;
     istm->execute_and_close();
     if (seq_station)
         return seq_station->read();

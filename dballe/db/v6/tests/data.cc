@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,17 +46,11 @@ struct dbv6_data_shar : public dballe::tests::db_test
         db::v5::Station& st = v6db.station();
         db::v6::LevTr& lt = v6db.lev_tr();
 
-		// Insert a mobile station
-		st.lat = 4500000;
-		st.lon = 1100000;
-		st.set_ident("ciao");
-        wassert(actual(st.insert()) == 1);
+        // Insert a mobile station
+        wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);
 
-		// Insert a fixed station
-		st.lat = 4600000;
-		st.lon = 1200000;
-		st.set_ident(NULL);
-		wassert(actual(st.insert()) == 2);
+        // Insert a fixed station
+        wassert(actual(st.obtain_id(4600000, 1200000)) == 2);
 
         // Insert a lev_tr
         wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);

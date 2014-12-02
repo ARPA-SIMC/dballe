@@ -1,7 +1,7 @@
 /*
  * db/station - station table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,8 +43,9 @@ namespace v5 {
 /**
  * Precompiled queries to manipulate the station table
  */
-struct Station
+class Station
 {
+protected:
     /**
      * DB connection.
      */
@@ -77,9 +78,6 @@ struct Station
     /** Mobile station identifier indicator */
     SQLLEN ident_ind;
 
-    Station(db::Connection& conn);
-    ~Station();
-
     /**
      * Set the mobile station identifier input value for this ::dba_db_station
      *
@@ -87,14 +85,6 @@ struct Station
      *   Value to use for ident.  NULL can be used to unset ident.
      */
     void set_ident(const char* ident);
-
-    /**
-     * Get the station ID given latitude, longitude and mobile identifier
-     *
-     * @return
-     *   Resulting ID of the station
-     */
-    int get_id();
 
     /**
      * Get station information given a station ID
@@ -105,14 +95,6 @@ struct Station
     void get_data(int id);
 
     /**
-     * Insert a new station entry
-     *
-     * @retval id
-     *   ID of the newly inserted station
-     */
-    int insert();
-
-    /**
      * Update the information about a station entry
      */
     void update();
@@ -121,6 +103,30 @@ struct Station
      * Remove a station record
      */
     void remove();
+
+public:
+    Station(db::Connection& conn);
+    ~Station();
+
+    /**
+     * Get the station ID given latitude, longitude and mobile identifier.
+     *
+     * It throws an exception if it does not exist.
+     *
+     * @return
+     *   Resulting ID of the station
+     */
+    int get_id(int lat, int lon, const char* ident=NULL);
+
+    /**
+     * Get the station ID given latitude, longitude and mobile identifier.
+     *
+     * It creates the station record if it does not exist.
+     *
+     * @return
+     *   Resulting ID of the station
+     */
+    int obtain_id(int lat, int lon, const char* ident=NULL, bool* inserted=NULL);
 
     /**
      * Dump the entire contents of the table to an output stream
