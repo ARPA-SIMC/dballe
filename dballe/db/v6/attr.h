@@ -28,9 +28,8 @@
  * Attribute table management used by the db module.
  */
 
-#include <dballe/db/odbcworkarounds.h>
 #include <wreport/var.h>
-#include <sqltypes.h>
+#include <memory>
 #include <cstdio>
 
 namespace dballe {
@@ -38,46 +37,16 @@ struct DB;
 
 namespace db {
 struct Connection;
-struct Statement;
 
 namespace v6 {
 
 /**
  * Precompiled queries to manipulate the attr table
  */
-class Attr
+struct Attr
 {
-protected:
-    /** DB connection. */
-    db::Connection& conn;
-
-    /** Precompiled select statement */
-    db::Statement* sstm;
-    /** Precompiled insert statement */
-    db::Statement* istm;
-    /** Precompiled replace statement */
-    db::Statement* rstm;
-
-    /** id_data SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_data;
-    /** attribute id SQL parameter */
-    wreport::Varcode type;
-    /** attribute value SQL parameter */
-    char value[255];
-    /** attribute value indicator */
-    SQLLEN value_ind;
-
-    /**
-     * Set the value input field from a string
-     *
-     * @param value
-     *   The value to copy into ins
-     */
-    void set_value(const char* value);
-
-public:
-    Attr(Connection& conn);
-    ~Attr();
+    static std::unique_ptr<Attr> create(Connection& conn);
+    virtual ~Attr();
 
     /**
      * Insert an entry into the attr table
@@ -85,7 +54,7 @@ public:
      * If set to true, an existing attribute with the same context and
      * wreport::Varcode will be overwritten
      */
-    void write(int id_data, const wreport::Var& var);
+    virtual void write(int id_data, const wreport::Var& var) = 0;
 
     /**
      * Load from the database all the attributes for var
@@ -95,22 +64,16 @@ public:
      * @return
      *   The error indicator for the function (See @ref error.h)
      */
-    void read(int id_data, wreport::Var& var);
+    virtual void read(int id_data, wreport::Var& var) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream
      */
-    void dump(FILE* out);
-
-private:
-    // disallow copy
-    Attr(const Attr&);
-    Attr& operator=(const Attr&);
+    virtual void dump(FILE* out) = 0;
 };
 
-} // namespace v6
-} // namespace db
-} // namespace dballe
+}
+}
+}
 
-/* vim:set ts=4 sw=4: */
 #endif

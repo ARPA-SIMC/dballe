@@ -353,14 +353,14 @@ LevTrCache& DB::lev_tr_cache()
 Data& DB::data()
 {
     if (m_data == NULL)
-        m_data = new v6::Data(*this);
+        m_data = v6::Data::create(*this).release();
     return *m_data;
 }
 
 Attr& DB::attr()
 {
     if (m_attr == NULL)
-        m_attr = new v6::Attr(*conn);
+        m_attr = v6::Attr::create(*conn).release();
     return *m_attr;
 }
 

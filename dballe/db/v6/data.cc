@@ -1,7 +1,7 @@
 /*
  * db/v6/data - data table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,9 @@
 #include "data.h"
 #include "db.h"
 #include "dballe/db/internals.h"
-#include <dballe/core/record.h>
-
+#include "dballe/db/odbcworkarounds.h"
+#include "dballe/core/record.h"
+#include <sqltypes.h>
 #include <sql.h>
 #include <cstring>
 
@@ -34,7 +35,107 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-Data::Data(DB& db)
+/**
+ * Precompiled query to manipulate the data table
+ */
+class ODBCData : public Data
+{
+protected:
+    /** DB connection. */
+    v6::DB& db;
+
+    /** Precompiled insert statement */
+    db::Statement* istm;
+    /** Precompiled update statement */
+    db::Statement* ustm;
+    /** Precompiled insert or update statement, for DBs where it is available */
+    db::Statement* ioustm;
+    /** Precompiled insert or ignore statement */
+    db::Statement* iistm;
+    /** Precompiled select ID statement */
+    db::Statement* sidstm;
+
+    /** data ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id;
+
+    /** Station ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id_station;
+    /** Report ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id_report;
+    /** Context ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id_lev_tr;
+    /** Date SQL parameter */
+    SQL_TIMESTAMP_STRUCT date;
+    /** Variable type SQL parameter */
+    wreport::Varcode id_var;
+    /** Variable value SQL parameter */
+    char value[255];
+    /** Variable value indicator */
+    SQLLEN value_ind;
+
+    /**
+     * Set the value input fields using a string value
+     */
+    void set_value(const char* value);
+
+    /**
+     * Set the value input fields using a wreport::Var
+     */
+    void set(const wreport::Var& var);
+
+public:
+    ODBCData(v6::DB& conn);
+    ODBCData(const ODBCData&) = delete;
+    ODBCData(const ODBCData&&) = delete;
+    ODBCData& operator=(const ODBCData&) = delete;
+    ~ODBCData();
+
+    /// Set the IDs that identify this variable
+    void set_context(int id_station, int id_report, int id_lev_tr) override;
+
+    /// Set id_lev_tr and datetime to mean 'station information'
+    void set_station_info(int id_station, int id_report) override;
+
+    /// Set the date from the date information in the record
+    void set_date(const Record& rec) override;
+
+    /// Set the date from a split up date
+    void set_date(int ye, int mo, int da, int ho, int mi, int se) override;
+
+    /**
+     * Insert an entry into the data table, failing on conflicts.
+     *
+     * Trying to replace an existing value will result in an error.
+     */
+    void insert_or_fail(const wreport::Var& var, int* res_id=nullptr) override;
+
+    /**
+     * Insert an entry into the data table, ignoring conflicts.
+     *
+     * Trying to replace an existing value will do nothing.
+     *
+     * @return true if it was inserted, false if it was already present
+     */
+    bool insert_or_ignore(const wreport::Var& var, int* res_id=nullptr) override;
+
+    /**
+     * Insert an entry into the data table, overwriting on conflicts.
+     *
+     * An existing data with the same context and ::dba_varcode will be
+     * overwritten.
+     *
+     * If id is not NULL, it stores the database id of the inserted/modified
+     * data in *id.
+     */
+    void insert_or_overwrite(const wreport::Var& var, int* res_id=nullptr) override;
+
+    /**
+     * Dump the entire contents of the table to an output stream
+     */
+    void dump(FILE* out) override;
+};
+
+ODBCData::ODBCData(DB& db)
     : db(db), istm(0), ustm(0), ioustm(0), iistm(0), sidstm(0)
 {
     const char* insert_query =
@@ -145,7 +246,7 @@ Data::Data(DB& db)
     sidstm->prepare(select_id_query);
 }
 
-Data::~Data()
+ODBCData::~ODBCData()
 {
     if (istm) delete istm;
     if (ustm) delete ustm;
@@ -154,14 +255,14 @@ Data::~Data()
     if (sidstm) delete sidstm;
 }
 
-void Data::set_context(int id_station, int id_report, int id_lev_tr)
+void ODBCData::set_context(int id_station, int id_report, int id_lev_tr)
 {
     this->id_station = id_station;
     this->id_report = id_report;
     this->id_lev_tr = id_lev_tr;
 }
 
-void Data::set_date(const Record& rec)
+void ODBCData::set_date(const Record& rec)
 {
     /* Also input the seconds, defaulting to 0 if not found */
     const Var* year = rec.key_peek(DBA_KEY_YEAR);
@@ -185,7 +286,7 @@ void Data::set_date(const Record& rec)
         throw error_notfound("datetime informations not found among context information");
 }
 
-void Data::set_date(int ye, int mo, int da, int ho, int mi, int se)
+void ODBCData::set_date(int ye, int mo, int da, int ho, int mi, int se)
 {
     date.year = ye;
     date.month = mo;
@@ -196,7 +297,7 @@ void Data::set_date(int ye, int mo, int da, int ho, int mi, int se)
     date.fraction = 0;
 }
 
-void Data::set_station_info(int id_station, int id_report)
+void ODBCData::set_station_info(int id_station, int id_report)
 {
     this->id_station = id_station;
     this->id_report = id_report;
@@ -213,13 +314,13 @@ void Data::set_station_info(int id_station, int id_report)
     date.fraction = 0;
 }
 
-void Data::set(const wreport::Var& var)
+void ODBCData::set(const wreport::Var& var)
 {
     id_var = var.code();
     set_value(var.value());
 }
 
-void Data::set_value(const char* qvalue)
+void ODBCData::set_value(const char* qvalue)
 {
     if (qvalue == NULL)
     {
@@ -234,7 +335,7 @@ void Data::set_value(const char* qvalue)
     }
 }
 
-void Data::insert_or_fail(const wreport::Var& var, int* res_id)
+void ODBCData::insert_or_fail(const wreport::Var& var, int* res_id)
 {
     set(var);
     istm->execute_and_close();
@@ -242,7 +343,7 @@ void Data::insert_or_fail(const wreport::Var& var, int* res_id)
         *res_id = db.last_data_insert_id();
 }
 
-bool Data::insert_or_ignore(const wreport::Var& var, int* res_id)
+bool ODBCData::insert_or_ignore(const wreport::Var& var, int* res_id)
 {
     set(var);
     int sqlres = iistm->execute();
@@ -257,7 +358,7 @@ bool Data::insert_or_ignore(const wreport::Var& var, int* res_id)
     return res;
 }
 
-void Data::insert_or_overwrite(const wreport::Var& var, int* res_id)
+void ODBCData::insert_or_overwrite(const wreport::Var& var, int* res_id)
 {
     set(var);
     if (res_id)
@@ -285,7 +386,7 @@ void Data::insert_or_overwrite(const wreport::Var& var, int* res_id)
     }
 }
 
-void Data::dump(FILE* out)
+void ODBCData::dump(FILE* out)
 {
     DBALLE_SQL_C_SINT_TYPE id;
     DBALLE_SQL_C_SINT_TYPE id_station;
@@ -331,8 +432,13 @@ void Data::dump(FILE* out)
     stm.close_cursor();
 }
 
-} // namespace v6
-} // namespace db
-} // namespace dballe
+Data::~Data() {}
 
-/* vim:set ts=4 sw=4: */
+unique_ptr<Data> Data::create(DB& db)
+{
+    return unique_ptr<Data>(new ODBCData(db));
+}
+
+}
+}
+}
