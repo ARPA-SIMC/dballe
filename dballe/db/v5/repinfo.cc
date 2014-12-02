@@ -430,82 +430,86 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 	// Read the new repinfo data from file
 	vector<repinfo::Cache> newitems = read_repinfo_file(deffile);
 
-    // Verify that we are not trying to delete a repinfo entry that is
-    // in use
-    for (size_t i = 0; i < cache.size(); ++i)
     {
-        /* Ensure that we are not deleting a repinfo entry that is already in use */
-        if (!cache[i].memo.empty() && cache[i].new_memo.empty())
-            if (id_use_count(cache[i].id, cache[i].memo.c_str()) > 0)
-                error_consistency::throwf(
-                        "trying to delete repinfo entry %u,%s which is currently in use",
-                        (unsigned)cache[i].id, cache[i].memo.c_str());
+        Transaction transaction(*conn);
+
+        // Verify that we are not trying to delete a repinfo entry that is
+        // in use
+        for (size_t i = 0; i < cache.size(); ++i)
+        {
+            /* Ensure that we are not deleting a repinfo entry that is already in use */
+            if (!cache[i].memo.empty() && cache[i].new_memo.empty())
+                if (id_use_count(cache[i].id, cache[i].memo.c_str()) > 0)
+                    error_consistency::throwf(
+                            "trying to delete repinfo entry %u,%s which is currently in use",
+                            (unsigned)cache[i].id, cache[i].memo.c_str());
+        }
+
+        /* Perform the changes */
+
+        /* Delete the items that were deleted */
+        {
+            db::Statement stm(*conn);
+            stm.prepare("DELETE FROM repinfo WHERE id=?");
+            for (size_t i = 0; i < cache.size(); ++i)
+                if (!cache[i].memo.empty() && cache[i].new_memo.empty())
+                {
+                    stm.bind_in(1, cache[i].id);
+                    stm.execute_and_close();
+
+                    /* clear_cache_item(&(ri->cache[i])); */
+                    ++*deleted;
+                }
+        }
+
+        /* Update the items that were modified */
+        {
+            db::Statement stm(*conn);
+            stm.prepare("UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
+                    "  WHERE id=?");
+            for (size_t i = 0; i < cache.size(); ++i)
+                if (!cache[i].memo.empty() && !cache[i].new_memo.empty())
+                {
+                    stm.bind_in(1, cache[i].new_memo.c_str());
+                    stm.bind_in(2, cache[i].new_desc.c_str());
+                    stm.bind_in(3, cache[i].new_prio);
+                    stm.bind_in(4, cache[i].new_descriptor.c_str());
+                    stm.bind_in(5, cache[i].new_tablea);
+                    stm.bind_in(6, cache[i].id);
+
+                    stm.execute_and_close();
+
+                    /* commit_cache_item(&(ri->cache[i])); */
+                    ++*updated;
+                }
+        }
+
+        /* Insert the new items */
+        if (!newitems.empty())
+        {
+            Statement stm(*conn);
+            stm.prepare("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
+                    "     VALUES (?, ?, ?, ?, ?, ?)");
+
+            for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
+                    i != newitems.end(); ++i)
+            {
+                stm.bind_in(1, i->id);
+                stm.bind_in(2, i->new_memo.c_str());
+                stm.bind_in(3, i->new_desc.c_str());
+                stm.bind_in(4, i->new_prio);
+                stm.bind_in(5, i->new_descriptor.c_str());
+                stm.bind_in(6, i->new_tablea);
+
+                stm.execute_and_close();
+
+                /* DBA_RUN_OR_GOTO(cleanup, cache_append(ri, id, memo, description, prio, descriptor, tablea)); */
+                ++*added;
+            }
+        }
+
+        transaction.commit();
     }
-
-	/* Perform the changes */
-
-	/* Delete the items that were deleted */
-	{
-		db::Statement stm(*conn);
-		stm.prepare("DELETE FROM repinfo WHERE id=?");
-		for (size_t i = 0; i < cache.size(); ++i)
-			if (!cache[i].memo.empty() && cache[i].new_memo.empty())
-			{
-				stm.bind_in(1, cache[i].id);
-				stm.execute_and_close();
-
-				/* clear_cache_item(&(ri->cache[i])); */
-				++*deleted;
-			}
-	}
-
-	/* Update the items that were modified */
-	{
-		db::Statement stm(*conn);
-		stm.prepare("UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
-			    "  WHERE id=?");
-		for (size_t i = 0; i < cache.size(); ++i)
-			if (!cache[i].memo.empty() && !cache[i].new_memo.empty())
-			{
-				stm.bind_in(1, cache[i].new_memo.c_str());
-				stm.bind_in(2, cache[i].new_desc.c_str());
-				stm.bind_in(3, cache[i].new_prio);
-				stm.bind_in(4, cache[i].new_descriptor.c_str());
-				stm.bind_in(5, cache[i].new_tablea);
-				stm.bind_in(6, cache[i].id);
-
-				stm.execute_and_close();
-
-				/* commit_cache_item(&(ri->cache[i])); */
-				++*updated;
-			}
-	}
-
-	/* Insert the new items */
-	if (!newitems.empty())
-	{
-		Statement stm(*conn);
-		stm.prepare("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
-			    "     VALUES (?, ?, ?, ?, ?, ?)");
-
-		for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
-				i != newitems.end(); ++i)
-		{
-			stm.bind_in(1, i->id);
-			stm.bind_in(2, i->new_memo.c_str());
-			stm.bind_in(3, i->new_desc.c_str());
-			stm.bind_in(4, i->new_prio);
-			stm.bind_in(5, i->new_descriptor.c_str());
-			stm.bind_in(6, i->new_tablea);
-
-			stm.execute_and_close();
-
-			/* DBA_RUN_OR_GOTO(cleanup, cache_append(ri, id, memo, description, prio, descriptor, tablea)); */
-			++*added;
-		}
-	}
-
-	conn->commit();
 
 	/* Reread the cache */
 	read_cache();

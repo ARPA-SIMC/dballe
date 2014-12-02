@@ -79,7 +79,7 @@ template<> template<> void to::test<4>()
     // Test remove_all
     db->remove_all();
     Record query;
-    std::auto_ptr<db::Cursor> cur = db->query_data(query);
+    std::unique_ptr<db::Cursor> cur = db->query_data(query);
     wassert(actual(cur->remaining()) == 0);
 
     // Check that it is idempotent

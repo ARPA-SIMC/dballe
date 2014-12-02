@@ -63,7 +63,7 @@ template<> template<> void to::test<2>()
     // Query data in station context
     Record query;
     query.set_ana_context();
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 5);
 }
 

@@ -33,7 +33,7 @@
 
 namespace dballe {
 namespace db {
-struct Connection;
+struct ODBCConnection;
 
 namespace v5 {
 
@@ -41,7 +41,7 @@ struct Station
 {
 public:
     /// Instantiate a Station object for this connection
-    static std::unique_ptr<Station> create(db::Connection& conn);
+    static std::unique_ptr<Station> create(db::ODBCConnection& conn);
 
     virtual ~Station();
 
@@ -73,7 +73,7 @@ public:
     /**
      * Clear (if applicable) and recreate the table structure in the database
      */
-    static void reset_db(db::Connection& conn);
+    static void reset_db(db::ODBCConnection& conn);
 };
 
 }

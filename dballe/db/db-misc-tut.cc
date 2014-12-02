@@ -66,7 +66,7 @@ template<> template<> void to::test<1>()
 
     // Query and verify the station data
     {
-        auto_ptr<db::Cursor> cur = db->query_stations(query);
+        unique_ptr<db::Cursor> cur = db->query_stations(query);
         wassert(actual(cur->remaining()) == 1);
         cur->next();
         wassert(actual(cur).station_vars_match(ds));
@@ -74,7 +74,7 @@ template<> template<> void to::test<1>()
 
     // Query and verify the measured data
     {
-        auto_ptr<db::Cursor> cur = db->query_data(query);
+        unique_ptr<db::Cursor> cur = db->query_data(query);
         wassert(actual(cur->remaining()) == 1);
         cur->next();
         wassert(actual(cur).data_context_matches(ds));
@@ -146,7 +146,7 @@ template<> template<> void to::test<4>()
     Record query;
 
     // Iterate the station database
-    auto_ptr<db::Cursor> cur = db->query_stations(query);
+    unique_ptr<db::Cursor> cur = db->query_stations(query);
     wassert(actual(cur->remaining()) == 1);
 
     // There should be an item
@@ -179,7 +179,7 @@ template<> template<> void to::test<5>()
     query.set(DBA_KEY_QUERY, "best");
 
     // Make the query
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
 
     ensure_equals(cur->remaining(), 4);
 
@@ -214,7 +214,7 @@ template<> template<> void to::test<6>()
 
     // 4 items to begin with
     Record query;
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 4);
     cur->discard_rest();
 
@@ -309,7 +309,7 @@ template<> template<> void to::test<7>()
     base.set(DBA_KEY_SEC, 0);
 
 #define WANTRESULT(ab) do { \
-    auto_ptr<db::Cursor> cur = db->query_data(query); \
+    unique_ptr<db::Cursor> cur = db->query_data(query); \
     ensure_equals(cur->remaining(), 1); \
     ensure(cur->next()); \
     cur->to_record(result); \
@@ -514,7 +514,7 @@ template<> template<> void to::test<8>()
 
     Record query, result;
     query.set(DBA_KEY_LATMIN, 1000000);
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
 
     // Move the cursor to B01011
     bool found = false;
@@ -592,7 +592,7 @@ template<> template<> void to::test<9>()
     Record query;
     query.set(DBA_KEY_REP_MEMO, "synop");
 
-    auto_ptr<db::Cursor> cur = db->query_stations(query);
+    unique_ptr<db::Cursor> cur = db->query_stations(query);
     ensure_equals(cur->remaining(), 1);
 
     ensure(cur->next());
@@ -624,7 +624,7 @@ template<> template<> void to::test<10>()
     // Query back the B01011 variable to read the attr reference id
     Record query;
     query.set(DBA_KEY_VAR, "B01011");
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 1);
     cur->next();
     int attr_id = cur->attr_reference_id();
@@ -664,7 +664,7 @@ template<> template<> void to::test<11>()
     query.set(DBA_KEY_LONMIN, 70.0);
     query.set(DBA_KEY_LONMAX, -160.0);
 
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 2);
     cur->discard_rest();
 }
@@ -678,7 +678,7 @@ template<> template<> void to::test<12>()
     Record query;
     query.set(DBA_KEY_REP_MEMO, "metar");
     query.set(DBA_KEY_VAR, "B01011");
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 1);
 
     // Move the cursor to B01011
@@ -768,7 +768,7 @@ template<> template<> void to::test<13>()
     rec.set(DBA_KEY_HOUR,     0);
     rec.set(DBA_KEY_MIN,     0);
     rec.set(DBA_KEY_QUERY,    "best");
-    auto_ptr<db::Cursor> cur = db->query_data(rec);
+    unique_ptr<db::Cursor> cur = db->query_data(rec);
     while (cur->next())
     {
     }
@@ -782,7 +782,7 @@ template<> template<> void to::test<14>()
     const char** files = dballe::tests::bufr_files;
     for (int i = 0; files[i] != NULL; i++)
     {
-        std::auto_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
+        std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
         Msg& msg = *(*inmsgs)[0];
         wrunchecked(db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
     }
@@ -791,7 +791,7 @@ template<> template<> void to::test<14>()
     Record rec;
     rec.set(DBA_KEY_VAR,   "B12101");
     rec.set(DBA_KEY_QUERY, "best");
-    auto_ptr<db::Cursor> cur = db->query_data(rec);
+    unique_ptr<db::Cursor> cur = db->query_data(rec);
     unsigned orig_count = cur->remaining();
     unsigned count = 0;
     int id_data = 0;
@@ -838,7 +838,7 @@ template<> template<> void to::test<16>()
     // Assume a max open file limit of 1100
     for (unsigned i = 0; i < 1100; ++i)
     {
-        std::auto_ptr<DB> db = DB::connect_test();
+        std::unique_ptr<DB> db = DB::connect_test();
         wrunchecked(db->insert(insert, true, true));
     }
 }
@@ -868,7 +868,7 @@ template<> template<> void to::test<17>()
     q.set(DBA_KEY_VAR, "B01012");
 
     // Query the initial value
-    auto_ptr<db::Cursor> cur = db->query_data(q);
+    unique_ptr<db::Cursor> cur = db->query_data(q);
     ensure_equals(cur->remaining(), 1);
     cur->next();
     int ana_id = cur->get_station_id();
@@ -918,7 +918,7 @@ template<> template<> void to::test<18>()
     query.set(DBA_KEY_LATMIN, 10.0);
 
     // Make the query
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 4);
 
     ensure(cur->next());
@@ -962,7 +962,7 @@ template<> template<> void to::test<19>()
     // Query station data and ensure there is only one info (height)
     Record query;
     query.set_ana_context();
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     wassert(actual(cur->remaining()) == 1);
     cur->next();
     wassert(actual(cur).station_vars_match(ds_st_navile));
@@ -980,7 +980,7 @@ template<> template<> void to::test<20>()
     // Query station data and ensure there is only one info (height)
     Record query;
     query.set_ana_context();
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     wassert(actual(cur->remaining()) == 2);
 
     // Ensure that the network info is preserved
@@ -1015,7 +1015,7 @@ template<> template<> void to::test<21>()
     query.set(DBA_KEY_LEVELTYPE1, 44);
     query.set(DBA_KEY_L1, 55);
 
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 1);
 
     ensure(cur->next());
@@ -1047,7 +1047,7 @@ template<> template<> void to::test<22>()
     query.set(DBA_KEY_LEVELTYPE1, 10);
     query.set(DBA_KEY_L1, 11);
 
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     ensure_equals(cur->remaining(), 4);
     cur->discard_rest();
 }
@@ -1107,7 +1107,7 @@ template<> template<> void to::test<24>()
         query.set(DBA_KEY_QUERY, "best");
         query.set_datetime(2009, 11, 11, 0, 0, 0);
         query.set(DBA_KEY_VAR, "B12101");
-        auto_ptr<db::Cursor> cur = db->query_data(query);
+        unique_ptr<db::Cursor> cur = db->query_data(query);
 
         ensure_equals(cur->remaining(), 1);
 
@@ -1128,7 +1128,7 @@ template<> template<> void to::test<24>()
         query.set(DBA_KEY_QUERY, "best");
         query.set_datetime(2009, 11, 11, 0, 0, 0);
         query.set(DBA_KEY_VAR, "B12101");
-        auto_ptr<db::Cursor> cur = db->query_data(query);
+        unique_ptr<db::Cursor> cur = db->query_data(query);
         ensure_equals(cur->remaining(), 1);
 
         ensure(cur->next());
@@ -1150,7 +1150,7 @@ template<> template<> void to::test<25>()
 
     Record res;
     Record rec;
-    auto_ptr<db::Cursor> cur = db->query_data(rec);
+    unique_ptr<db::Cursor> cur = db->query_data(rec);
     while (cur->next())
     {
         cur->to_record(res);

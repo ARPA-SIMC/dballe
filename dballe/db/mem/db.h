@@ -174,7 +174,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    std::auto_ptr<db::Cursor> query_stations(const Record& query);
+    std::unique_ptr<db::Cursor> query_stations(const Record& query);
 
     /**
      * Query the database.
@@ -188,9 +188,9 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    std::auto_ptr<db::Cursor> query_data(const Record& rec);
+    std::unique_ptr<db::Cursor> query_data(const Record& rec);
 
-    std::auto_ptr<db::Cursor> query_summary(const Record& rec);
+    std::unique_ptr<db::Cursor> query_summary(const Record& rec);
 
     /**
      * Query attributes

@@ -204,7 +204,7 @@ void DB::raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& r
             // We can now ignore priomin and priomax
 
             std::map<std::string, int> prios = get_repinfo_priorities();
-            auto_ptr<MatchRepinfo> m(new MatchRepinfo);
+            unique_ptr<MatchRepinfo> m(new MatchRepinfo);
             for (std::map<std::string, int>::const_iterator i = prios.begin();
                     i != prios.end(); ++i)
                 if (i->second == prio)
@@ -221,7 +221,7 @@ void DB::raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& r
             }
 
             std::map<std::string, int> prios = get_repinfo_priorities();
-            auto_ptr<MatchRepinfo> m(new MatchRepinfo);
+            unique_ptr<MatchRepinfo> m(new MatchRepinfo);
             for (std::map<std::string, int>::const_iterator i = prios.begin();
                     i != prios.end(); ++i)
             {
@@ -281,7 +281,7 @@ void DB::raw_query_data(const Record& rec, memdb::Results<memdb::Value>& res)
     memdb.values.query(rec, res_st, res_tr, res);
 }
 
-std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_stations(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     Results<Station> res(memdb.stations);
@@ -318,7 +318,7 @@ std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
     return Cursor::createStations(*this, modifiers, res);
 }
 
-std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_data(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     bool query_station_vars = query.is_ana_context();
@@ -345,7 +345,7 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
     }
 }
 
-std::auto_ptr<db::Cursor> DB::query_summary(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_summary(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     bool query_station_vars = query.is_ana_context();

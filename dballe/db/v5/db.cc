@@ -318,8 +318,8 @@ static const char* init_queries_oracle[] = {
 
 
 // First part of initialising a dba_db
-DB::DB(auto_ptr<Connection>& conn)
-    : conn(conn.release()),
+DB::DB(unique_ptr<Connection>& conn)
+    : conn(dynamic_cast<ODBCConnection*>(conn.release())),
       m_repinfo(0), m_station(0), m_context(0), m_data(0), m_attr(0),
       stm_last_insert_id(0),
       seq_station(0), seq_context(0), _last_station_id(0)
@@ -1009,14 +1009,14 @@ cleanup:
 #endif
 #endif
 
-std::auto_ptr<db::Cursor> DB::query(const Record& query, unsigned int wanted, unsigned int modifiers)
+std::unique_ptr<db::Cursor> DB::query(const Record& query, unsigned int wanted, unsigned int modifiers)
 {
-    auto_ptr<db::v5::Cursor> res(new db::v5::Cursor(*this));
+    unique_ptr<db::v5::Cursor> res(new db::v5::Cursor(*this));
     res->query(query, wanted, modifiers);
-    return std::auto_ptr<db::Cursor>(res.release());
+    return std::unique_ptr<db::Cursor>(res.release());
 }
 
-std::auto_ptr<db::Cursor> DB::query_stations(const Record& rec)
+std::unique_ptr<db::Cursor> DB::query_stations(const Record& rec)
 {
     /* Perform the query, limited to station values */
     return query(rec,
@@ -1024,7 +1024,7 @@ std::auto_ptr<db::Cursor> DB::query_stations(const Record& rec)
             DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT);
 }
 
-std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
+std::unique_ptr<db::Cursor> DB::query_data(const Record& rec)
 {
     /* Perform the query */
     return query(rec,
@@ -1036,7 +1036,7 @@ std::auto_ptr<db::Cursor> DB::query_data(const Record& rec)
                 0);
 }
 
-std::auto_ptr<db::Cursor> DB::query_summary(const Record& rec)
+std::unique_ptr<db::Cursor> DB::query_summary(const Record& rec)
 {
 #warning query_summary is not implemented for v5
     throw error_unimplemented("query_summary not implemented on v5 databases");

@@ -669,8 +669,8 @@ template<> template<> void to::test<17>()
     // values
 
     // // Compare the two messages
-    // std::auto_ptr<Msgs> msgs1 = read_msgs("bufr/generic-bug20140403.bufr", BUFR);
-    // std::auto_ptr<Msgs> msgs2 = read_msgs("./test.bufr", BUFR);
+    // std::unique_ptr<Msgs> msgs1 = read_msgs("bufr/generic-bug20140403.bufr", BUFR);
+    // std::unique_ptr<Msgs> msgs2 = read_msgs("./test.bufr", BUFR);
     // unsigned diffs = msgs1->diff(*msgs2);
     // if (diffs) dballe::tests::track_different_msgs(*msgs1, *msgs2, "apicopy");
     // wassert(actual(diffs) == 0);
@@ -681,7 +681,7 @@ template<> template<> void to::test<18>()
 {
     int ires;
     const char* sres;
-    auto_ptr<DB> db0(DB::connect_from_url("mem:"));
+    unique_ptr<DB> db0(DB::connect_from_url("mem:"));
     fortran::DbAPI dbapi0(*db0, "write", "write", "write");
     dbapi0.seti("lat", 4500000);
     dbapi0.seti("lon", 1300000);

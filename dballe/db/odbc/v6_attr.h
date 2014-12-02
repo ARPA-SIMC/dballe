@@ -36,7 +36,7 @@ class ODBCAttr : public Attr
 {
 protected:
     /** DB connection. */
-    db::Connection& conn;
+    db::ODBCConnection& conn;
 
     /** Precompiled select statement */
     db::Statement* sstm;
@@ -63,7 +63,7 @@ protected:
     void set_value(const char* value);
 
 public:
-    ODBCAttr(Connection& conn);
+    ODBCAttr(ODBCConnection& conn);
     ~ODBCAttr();
 
     /**

@@ -67,6 +67,7 @@ struct MsgConsumer;
 
 namespace db {
 struct Connection;
+struct ODBCConnection;
 struct Statement;
 struct Sequence;
 
@@ -88,7 +89,7 @@ class DB : public dballe::DB
 {
 public:
     /** ODBC database connection */
-    db::Connection* conn;
+    db::ODBCConnection* conn;
 
 protected:
     /// Store information about the database ID of a variable
@@ -144,7 +145,7 @@ protected:
      */
     void run_sql(const char* query);
 
-    DB(std::auto_ptr<Connection>& conn);
+    DB(std::unique_ptr<Connection>& conn);
 
 public:
     virtual ~DB();
@@ -320,7 +321,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    std::auto_ptr<db::Cursor> query_stations(const Record& query);
+    std::unique_ptr<db::Cursor> query_stations(const Record& query);
 
     /**
      * Query the database.
@@ -334,9 +335,9 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    std::auto_ptr<db::Cursor> query_data(const Record& rec);
+    std::unique_ptr<db::Cursor> query_data(const Record& rec);
 
-    std::auto_ptr<db::Cursor> query_summary(const Record& rec);
+    std::unique_ptr<db::Cursor> query_summary(const Record& rec);
 
     /**
      * Query attributes

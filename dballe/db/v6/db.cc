@@ -297,8 +297,8 @@ static const char* init_queries_oracle[] = {
 
 
 // First part of initialising a dba_db
-DB::DB(auto_ptr<Connection>& conn)
-    : conn(conn.release()),
+DB::DB(unique_ptr<Connection>& conn)
+    : conn(dynamic_cast<ODBCConnection*>(conn.release())),
       m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
       m_data(0), m_attr(0),
       seq_lev_tr(0), seq_data(0), _last_station_id(0)
@@ -360,7 +360,7 @@ Data& DB::data()
 Attr& DB::attr()
 {
     if (m_attr == NULL)
-        m_attr = v6::Attr::create(*conn).release();
+        m_attr = v6::Attr::create(*this).release();
     return *m_attr;
 }
 
@@ -712,31 +712,31 @@ void DB::vacuum()
         m_lev_tr_cache->invalidate();
 }
 
-std::auto_ptr<db::Cursor> DB::query_stations(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_stations(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query) | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
-    auto_ptr<Cursor> res(new CursorStations(*this, modifiers));
+    unique_ptr<Cursor> res(new CursorStations(*this, modifiers));
     res->query(query);
-    return auto_ptr<db::Cursor>(res.release());
+    return unique_ptr<db::Cursor>(res.release());
 }
 
-std::auto_ptr<db::Cursor> DB::query_data(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_data(const Record& query)
 {
     unsigned int modifiers = parse_modifiers(query);
-    auto_ptr<Cursor> res;
+    unique_ptr<Cursor> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
         res.reset(new CursorBest(*this, modifiers));
     else
         res.reset(new CursorData(*this, modifiers));
     res->query(query);
-    return auto_ptr<db::Cursor>(res.release());
+    return unique_ptr<db::Cursor>(res.release());
 }
 
-std::auto_ptr<db::Cursor> DB::query_summary(const Record& rec)
+std::unique_ptr<db::Cursor> DB::query_summary(const Record& rec)
 {
-    auto_ptr<Cursor> res(new CursorSummary(*this, 0));
+    unique_ptr<Cursor> res(new CursorSummary(*this, 0));
     res->query(rec);
-    return auto_ptr<db::Cursor>(res.release());
+    return unique_ptr<db::Cursor>(res.release());
 }
 
 unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)

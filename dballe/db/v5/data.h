@@ -37,7 +37,7 @@ namespace dballe {
 struct DB;
 
 namespace db {
-struct Connection;
+struct ODBCConnection;
 struct Statement;
 
 namespace v5 {
@@ -48,7 +48,7 @@ namespace v5 {
 struct Data
 {
     /** DB connection. */
-    db::Connection& conn;
+    db::ODBCConnection& conn;
 
     /** Precompiled insert statement */
     db::Statement* istm;
@@ -66,7 +66,7 @@ struct Data
     /** Variable value indicator */
     SQLLEN value_ind;
 
-    Data(Connection& conn);
+    Data(ODBCConnection& conn);
     ~Data();
 
     /**

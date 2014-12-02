@@ -3,5 +3,7 @@
 namespace dballe {
 namespace db {
 
+Connection::~Connection() {}
+
 }
 }

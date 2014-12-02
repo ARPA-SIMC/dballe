@@ -40,9 +40,9 @@ unique_ptr<Data> Data::create(DB& db)
 
 
 Attr::~Attr() {}
-unique_ptr<Attr> Attr::create(Connection& conn)
+unique_ptr<Attr> Attr::create(DB& db)
 {
-    return unique_ptr<Attr>(new ODBCAttr(conn));
+    return unique_ptr<Attr>(new ODBCAttr(*db.conn));
 }
 
 }

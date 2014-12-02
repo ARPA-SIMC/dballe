@@ -202,7 +202,7 @@ public:
      * @return
      *   The new DB object
      */
-    static std::auto_ptr<DB> connect(const char* dsn, const char* user, const char* password);
+    static std::unique_ptr<DB> connect(const char* dsn, const char* user, const char* password);
 
     /**
      * Create from a SQLite file pathname
@@ -210,7 +210,7 @@ public:
      * @param pathname
      *   The pathname to a SQLite file
      */
-    static std::auto_ptr<DB> connect_from_file(const char* pathname);
+    static std::unique_ptr<DB> connect_from_file(const char* pathname);
 
     /**
      * Create from an url-like specification, that can be:
@@ -222,12 +222,12 @@ public:
      * @param url
      *   The url-like connection descriptor
      */
-    static std::auto_ptr<DB> connect_from_url(const char* url);
+    static std::unique_ptr<DB> connect_from_url(const char* url);
 
     /**
      * Create an in-memory database
      */
-    static std::auto_ptr<DB> connect_memory(const std::string& arg = std::string());
+    static std::unique_ptr<DB> connect_memory(const std::string& arg = std::string());
 
     /**
      * Start a test session with DB-All.e
@@ -235,7 +235,7 @@ public:
      * Take information from the environment (@see dba_db_create_from_env) and
      * default to ./test.sqlite if nothing is specified.
      */
-    static std::auto_ptr<DB> connect_test();
+    static std::unique_ptr<DB> connect_test();
 
     /**
      * Return TRUE if the string looks like a DB URL
@@ -361,7 +361,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::auto_ptr<db::Cursor> query_stations(const Record& query) = 0;
+    virtual std::unique_ptr<db::Cursor> query_stations(const Record& query) = 0;
 
     /**
      * Query the database.
@@ -375,7 +375,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::auto_ptr<db::Cursor> query_data(const Record& rec) = 0;
+    virtual std::unique_ptr<db::Cursor> query_data(const Record& rec) = 0;
 
     /**
      * Query a summary of what the result would be for a query.
@@ -389,7 +389,7 @@ public:
      *   provided, so it only gives all the available combinations of data
      *   contexts.
      */
-    virtual std::auto_ptr<db::Cursor> query_summary(const Record& rec) = 0;
+    virtual std::unique_ptr<db::Cursor> query_summary(const Record& rec) = 0;
 
     /**
      * Query attributes
@@ -500,7 +500,7 @@ public:
     static const char* default_repinfo_file();
 
 protected:
-    static std::auto_ptr<DB> instantiate_db(std::auto_ptr<db::Connection>& conn);
+    static std::unique_ptr<DB> instantiate_db(std::unique_ptr<db::Connection> conn);
 };
 
 }

@@ -109,7 +109,7 @@ template<> template<> void to::test<2>()
 {
     Record query;
     query.set_ana_context();
-    auto_ptr<db::Cursor> cur = db->query_summary(query);
+    unique_ptr<db::Cursor> cur = db->query_summary(query);
     ensure_equals(cur->test_iterate(), 8);
 }
 
@@ -246,7 +246,7 @@ template<> template<> void to::test<15>()
     // And an invalid one
     int sum = 1;
     Record query;
-    auto_ptr<db::Cursor> cur = db->query_data(query);
+    unique_ptr<db::Cursor> cur = db->query_data(query);
     while (cur->next())
     {
         context_ids.push_back(cur->attr_reference_id());

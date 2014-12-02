@@ -51,6 +51,68 @@
 namespace dballe {
 namespace db {
 
+/**
+ * Supported SQL servers.
+ */
+enum ServerType
+{
+    MYSQL,
+    SQLITE,
+    ORACLE,
+    POSTGRES,
+};
+
+struct Connection
+{
+    /**
+     * Type of SQL server we are connected to.
+     *
+     * Use this to tell which SQL dialect to use, in case standard SQL
+     * behaviour is not enough
+     */
+    enum ServerType server_type;
+
+    virtual ~Connection();
+
+    /// Check if the database contains a table
+    virtual bool has_table(const std::string& name) = 0;
+
+    /**
+     * Get a value from the settings table.
+     *
+     * Returns the empty string if the table does not exist.
+     */
+    virtual std::string get_setting(const std::string& key) = 0;
+
+    /**
+     * Set a value in the settings table.
+     *
+     * The table is created if it does not exist.
+     */
+    virtual void set_setting(const std::string& key, const std::string& value) = 0;
+
+    /// Drop the settings table
+    virtual void drop_settings() = 0;
+
+    /**
+     * Delete a table in the database if it exists, otherwise do nothing.
+     */
+    virtual void drop_table_if_exists(const char* name) = 0;
+
+    /**
+     * Delete a sequence in the database if it exists, otherwise do nothing.
+     */
+    virtual void drop_sequence_if_exists(const char* name) = 0;
+
+    /**
+     * Return LAST_INSERT_ID or LAST_INSER_ROWID or whatever is appropriate for
+     * the current database, if supported.
+     *
+     * If not supported, an exception is thrown.
+     */
+    virtual int get_last_insert_id() = 0;
+};
+
 }
 }
 

@@ -213,7 +213,7 @@ TestDBTryDataQuery::TestDBTryDataQuery(DB& db, const std::string& query, unsigne
 void TestDBTryDataQuery::check(WIBBLE_TEST_LOCPRM) const
 {
     // Run the query
-    auto_ptr<db::Cursor> cur = db.query_data(query);
+    unique_ptr<db::Cursor> cur = db.query_data(query);
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
@@ -228,7 +228,7 @@ void TestDBTryStationQuery::check(WIBBLE_TEST_LOCPRM) const
     set_record_from_string(query, this->query);
 
     // Run the query
-    auto_ptr<db::Cursor> cur = db.query_stations(query);
+    unique_ptr<db::Cursor> cur = db.query_stations(query);
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
@@ -243,7 +243,7 @@ void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
     set_record_from_string(query, this->query);
 
     // Run the query
-    auto_ptr<db::Cursor> cur = db.query_summary(query);
+    unique_ptr<db::Cursor> cur = db.query_summary(query);
 
     // Check the number of results
     // query_summary counts results in advance only optionally
@@ -276,7 +276,7 @@ db_test::~db_test()
 
 void db_test::disappear()
 {
-    auto_ptr<DB> db(DB::connect_test());
+    unique_ptr<DB> db(DB::connect_test());
     db->disappear();
 }
 

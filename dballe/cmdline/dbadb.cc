@@ -121,7 +121,7 @@ struct MsgDumper : public MsgConsumer
 /// Query data in the database and output results as arbitrary human readable text
 int Dbadb::do_dump(const Record& query, FILE* out)
 {
-    auto_ptr<db::Cursor> cursor = db.query_data(query);
+    unique_ptr<db::Cursor> cursor = db.query_data(query);
 
     Record res;
     for (unsigned i = 0; cursor->next(); ++i)
@@ -137,7 +137,7 @@ int Dbadb::do_dump(const Record& query, FILE* out)
 /// Query stations in the database and output results as arbitrary human readable text
 int Dbadb::do_stations(const Record& query, FILE* out)
 {
-    auto_ptr<db::Cursor> cursor = db.query_stations(query);
+    unique_ptr<db::Cursor> cursor = db.query_stations(query);
 
     Record res;
     for (unsigned i = 0; cursor->next(); ++i)

@@ -29,7 +29,7 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-ODBCAttr::ODBCAttr(Connection& conn)
+ODBCAttr::ODBCAttr(ODBCConnection& conn)
     : conn(conn), sstm(0), istm(0), rstm(0)
 {
     const char* select_query =

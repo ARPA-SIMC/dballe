@@ -32,7 +32,7 @@ namespace dballe {
 namespace db {
 namespace v5 {
 
-Data::Data(Connection& conn)
+Data::Data(ODBCConnection& conn)
     : conn(conn), istm(0), ustm(0), iistm(0)
 {
     const char* insert_query =

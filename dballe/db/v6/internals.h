@@ -100,7 +100,7 @@ struct Data
  */
 struct Attr
 {
-    static std::unique_ptr<Attr> create(Connection& conn);
+    static std::unique_ptr<Attr> create(DB& db);
     virtual ~Attr();
 
     /**

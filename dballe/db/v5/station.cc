@@ -146,8 +146,11 @@ protected:
     void remove();
 
 public:
-    ODBCStation(db::Connection& conn);
+    ODBCStation(db::ODBCConnection& conn);
     ~ODBCStation();
+    ODBCStation(const ODBCStation&) = delete;
+    ODBCStation(const ODBCStation&&) = delete;
+    ODBCStation& operator=(const ODBCStation&) = delete;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -173,14 +176,9 @@ public:
      * Dump the entire contents of the table to an output stream
      */
     void dump(FILE* out) override;
-
-private:
-    // disallow copy
-    ODBCStation(const ODBCStation&);
-    ODBCStation& operator=(const ODBCStation&);
 };
 
-ODBCStation::ODBCStation(Connection& conn)
+ODBCStation::ODBCStation(ODBCConnection& conn)
     : conn(conn), seq_station(0), sfstm(0), smstm(0), sstm(0), istm(0), ustm(0), dstm(0)
 {
     const char* select_fixed_query =
@@ -362,7 +360,7 @@ void ODBCStation::dump(FILE* out)
     stm.close_cursor();
 }
 
-void Station::reset_db(db::Connection& conn)
+void Station::reset_db(db::ODBCConnection& conn)
 {
     conn.drop_table_if_exists("station");
     conn.drop_sequence_if_exists("seq_station");
@@ -399,7 +397,7 @@ Station::~Station()
 {
 }
 
-std::unique_ptr<Station> Station::create(db::Connection& conn)
+std::unique_ptr<Station> Station::create(db::ODBCConnection& conn)
 {
     return unique_ptr<Station>(new ODBCStation(conn));
 }

@@ -81,7 +81,7 @@ bool DB::is_url(const char* str)
     return false;
 }
 
-auto_ptr<DB> DB::instantiate_db(auto_ptr<Connection>& conn)
+unique_ptr<DB> DB::instantiate_db(unique_ptr<Connection> conn)
 {
 #ifdef HAVE_ODBC
     // Autodetect format
@@ -113,8 +113,8 @@ auto_ptr<DB> DB::instantiate_db(auto_ptr<Connection>& conn)
 
     switch (format)
     {
-        case V5: return auto_ptr<DB>(new v5::DB(conn));
-        case V6: return auto_ptr<DB>(new v6::DB(conn));
+        case V5: return unique_ptr<DB>(new v5::DB(conn));
+        case V6: return unique_ptr<DB>(new v6::DB(conn));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
 #else
@@ -122,29 +122,29 @@ auto_ptr<DB> DB::instantiate_db(auto_ptr<Connection>& conn)
 #endif
 }
 
-auto_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
+unique_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
 {
 #ifdef HAVE_ODBC
-    auto_ptr<Connection> conn(new Connection);
+    unique_ptr<ODBCConnection> conn(new ODBCConnection);
     conn->connect(dsn, user, password);
-    return instantiate_db(conn);
+    return instantiate_db(unique_ptr<Connection>(conn.release()));
 #else
     throw error_unimplemented("ODBC support is not available");
 #endif
 }
 
-auto_ptr<DB> DB::connect_from_file(const char* pathname)
+unique_ptr<DB> DB::connect_from_file(const char* pathname)
 {
 #ifdef HAVE_ODBC
-    auto_ptr<Connection> conn(new Connection);
+    unique_ptr<ODBCConnection> conn(new ODBCConnection);
     conn->connect_file(pathname);
-    return instantiate_db(conn);
+    return instantiate_db(unique_ptr<Connection>(conn.release()));
 #else
     throw error_unimplemented("ODBC support is not available");
 #endif
 }
 
-auto_ptr<DB> DB::connect_from_url(const char* url)
+unique_ptr<DB> DB::connect_from_url(const char* url)
 {
     if (strncmp(url, "sqlite://", 9) == 0)
     {
@@ -188,15 +188,15 @@ auto_ptr<DB> DB::connect_from_url(const char* url)
     error_consistency::throwf("unknown url \"%s\"", url);
 }
 
-auto_ptr<DB> DB::connect_memory(const std::string& arg)
+unique_ptr<DB> DB::connect_memory(const std::string& arg)
 {
     if (arg.empty())
-        return auto_ptr<DB>(new mem::DB());
+        return unique_ptr<DB>(new mem::DB());
     else
-        return auto_ptr<DB>(new mem::DB(arg));
+        return unique_ptr<DB>(new mem::DB(arg));
 }
 
-auto_ptr<DB> DB::connect_test()
+unique_ptr<DB> DB::connect_test()
 {
 #ifdef HAVE_ODBC
     if (default_format == MEM)

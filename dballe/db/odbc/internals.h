@@ -67,17 +67,6 @@ struct error_odbc : public db::error
     static void throwf(SQLSMALLINT handleType, SQLHANDLE handle, const char* fmt, ...) WREPORT_THROWF_ATTRS(3, 4);
 };
 
-/**
- * Supported SQL servers.
- */
-enum ServerType
-{
-    MYSQL,
-    SQLITE,
-    ORACLE,
-    POSTGRES,
-};
-
 /// ODBC environment
 struct Environment
 {
@@ -95,14 +84,12 @@ private:
 };
 
 /// Database connection
-struct Connection
+struct ODBCConnection : public Connection
 {
     /** ODBC database connection */
     SQLHDBC od_conn;
     /** True if the connection is open */
     bool connected;
-    /** Type of SQL server we are connected to */
-    enum ServerType server_type;
     /// Bitfield of quirks we should be aware of when using ODBC
     unsigned server_quirks;
 
@@ -113,8 +100,12 @@ protected:
     DBALLE_SQL_C_SINT_TYPE m_last_insert_id;
 
 public:
-    Connection();
-    ~Connection();
+    ODBCConnection();
+    ODBCConnection(const ODBCConnection&) = delete;
+    ODBCConnection(const ODBCConnection&&) = delete;
+    ~ODBCConnection();
+
+    ODBCConnection& operator=(const ODBCConnection&) = delete;
 
     void connect(const char* dsn, const char* user, const char* password);
     void connect_file(const std::string& fname);
@@ -131,34 +122,34 @@ public:
     void rollback();
 
     /// Check if the database contains a table
-    bool has_table(const std::string& name);
+    bool has_table(const std::string& name) override;
 
     /**
      * Get a value from the settings table.
      *
      * Returns the empty string if the table does not exist.
      */
-    std::string get_setting(const std::string& key);
+    std::string get_setting(const std::string& key) override;
 
     /**
      * Set a value in the settings table.
      *
      * The table is created if it does not exist.
      */
-    void set_setting(const std::string& key, const std::string& value);
+    void set_setting(const std::string& key, const std::string& value) override;
 
     /// Drop the settings table
-    void drop_settings();
+    void drop_settings() override;
 
-	/**
-	 * Delete a table in the database if it exists, otherwise do nothing.
-	 */
-	void drop_table_if_exists(const char* name);
+    /**
+     * Delete a table in the database if it exists, otherwise do nothing.
+     */
+    void drop_table_if_exists(const char* name) override;
 
-	/**
-	 * Delete a sequence in the database if it exists, otherwise do nothing.
-	 */
-	void drop_sequence_if_exists(const char* name);
+    /**
+     * Delete a sequence in the database if it exists, otherwise do nothing.
+     */
+    void drop_sequence_if_exists(const char* name) override;
 
     /**
      * Return LAST_INSERT_ID or LAST_INSER_ROWID or whatever is appropriate for
@@ -166,24 +157,19 @@ public:
      *
      * If not supported, an exception is thrown.
      */
-    int get_last_insert_id();
+    int get_last_insert_id() override;
 
 protected:
     void init_after_connect();
-
-private:
-    // disallow copy
-    Connection(const Connection&);
-    Connection& operator=(const Connection&);
 };
 
 /// RAII transaction
 struct Transaction
 {
-    Connection& conn;
+    ODBCConnection& conn;
     bool fired;
 
-    Transaction(Connection& conn) : conn(conn), fired(false) {}
+    Transaction(Connection& conn) : conn(*dynamic_cast<ODBCConnection*>(&conn)), fired(false) {}
     ~Transaction() { if (!fired) rollback(); }
 
     void commit() { conn.commit(); fired = true; }
@@ -193,7 +179,7 @@ struct Transaction
 /// ODBC statement
 struct Statement
 {
-    const Connection& conn;
+    const ODBCConnection& conn;
     SQLHSTMT stm;
     /// If non-NULL, ignore all errors with this code
     const char* ignore_error;

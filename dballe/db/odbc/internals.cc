@@ -115,7 +115,7 @@ Environment& Environment::get()
     return *env;
 }
 
-Connection::Connection()
+ODBCConnection::ODBCConnection()
     : connected(false), server_quirks(0), stm_last_insert_id(0)
 {
     /* Allocate the ODBC connection handle */
@@ -125,7 +125,7 @@ Connection::Connection()
         throw error_odbc(SQL_HANDLE_DBC, od_conn, "Allocating new connection handle");
 }
 
-Connection::~Connection()
+ODBCConnection::~ODBCConnection()
 {
     if (stm_last_insert_id) delete stm_last_insert_id;
     if (connected)
@@ -143,7 +143,7 @@ Connection::~Connection()
         verbose_odbc_error(SQL_HANDLE_DBC, od_conn, "Cannot free handle");
 }
 
-void Connection::connect(const char* dsn, const char* user, const char* password)
+void ODBCConnection::connect(const char* dsn, const char* user, const char* password)
 {
     /* Connect to the DSN */
     int sqlres = SQLConnect(od_conn,
@@ -155,7 +155,7 @@ void Connection::connect(const char* dsn, const char* user, const char* password
     init_after_connect();
 }
 
-void Connection::connect_file(const std::string& fname)
+void ODBCConnection::connect_file(const std::string& fname)
 {
     // Access sqlite file directly
     string buf;
@@ -177,7 +177,7 @@ void Connection::connect_file(const std::string& fname)
     driver_connect(buf.c_str());
 }
 
-void Connection::driver_connect(const char* config)
+void ODBCConnection::driver_connect(const char* config)
 {
     /* Connect to the DSN */
     char sdcout[1024];
@@ -192,7 +192,7 @@ void Connection::driver_connect(const char* config)
     init_after_connect();
 }
 
-void Connection::init_after_connect()
+void ODBCConnection::init_after_connect()
 {
     /* Find out what kind of database we are working with */
     string name = driver_name();
@@ -240,7 +240,7 @@ void Connection::init_after_connect()
     }
 }
 
-std::string Connection::driver_name()
+std::string ODBCConnection::driver_name()
 {
     char drivername[50];
     SQLSMALLINT len;
@@ -250,7 +250,7 @@ std::string Connection::driver_name()
     return string(drivername, len);
 }
 
-std::string Connection::driver_version()
+std::string ODBCConnection::driver_version()
 {
     char driverver[50];
     SQLSMALLINT len;
@@ -260,14 +260,14 @@ std::string Connection::driver_version()
     return string(driverver, len);
 }
 
-void Connection::get_info(SQLUSMALLINT info_type, SQLINTEGER& res)
+void ODBCConnection::get_info(SQLUSMALLINT info_type, SQLINTEGER& res)
 {
     int sqlres = SQLGetInfo(od_conn, info_type, &res, 0, 0);
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
         throw error_odbc(SQL_HANDLE_DBC, od_conn, "Getting ODBC driver information");
 }
 
-void Connection::set_autocommit(bool val)
+void ODBCConnection::set_autocommit(bool val)
 {
     int sqlres = SQLSetConnectAttr(od_conn, SQL_ATTR_AUTOCOMMIT, (void*)(val ? SQL_AUTOCOMMIT_ON : SQL_AUTOCOMMIT_OFF), 0);
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
@@ -275,14 +275,14 @@ void Connection::set_autocommit(bool val)
 }
 
 #ifdef DBA_USE_TRANSACTIONS
-void Connection::commit()
+void ODBCConnection::commit()
 {
     int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_COMMIT);
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
         throw error_odbc(SQL_HANDLE_DBC, od_conn, "Committing a transaction");
 }
 
-void Connection::rollback()
+void ODBCConnection::rollback()
 {
     int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_ROLLBACK);
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
@@ -290,8 +290,8 @@ void Connection::rollback()
 }
 #else
 // TODO: lock and unlock tables instead
-void Connection::commit() {}
-void Connection::rollback() {}
+void ODBCConnection::commit() {}
+void ODBCConnection::rollback() {}
 #endif
 
 #define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
@@ -299,7 +299,7 @@ void Connection::rollback() {}
 #define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
 #define DBA_ODBC_MISSING_TABLE_ORACLE "42S02"
 
-void Connection::drop_table_if_exists(const char* name)
+void ODBCConnection::drop_table_if_exists(const char* name)
 {
     db::Statement stm(*this);
     char buf[100];
@@ -324,7 +324,7 @@ void Connection::drop_table_if_exists(const char* name)
 
 #define DBA_ODBC_MISSING_SEQUENCE_ORACLE "HY000"
 #define DBA_ODBC_MISSING_SEQUENCE_POSTGRES "42P01"
-void Connection::drop_sequence_if_exists(const char* name)
+void ODBCConnection::drop_sequence_if_exists(const char* name)
 {
     db::Statement stm(*this);
     char buf[100];
@@ -348,7 +348,7 @@ void Connection::drop_sequence_if_exists(const char* name)
     commit();
 }
 
-int Connection::get_last_insert_id()
+int ODBCConnection::get_last_insert_id()
 {
     // Compile the query on demand
     if (!stm_last_insert_id)
@@ -381,7 +381,7 @@ int Connection::get_last_insert_id()
     return m_last_insert_id;
 }
 
-bool Connection::has_table(const std::string& name)
+bool ODBCConnection::has_table(const std::string& name)
 {
     Statement stm(*this);
     DBALLE_SQL_C_SINT_TYPE count;
@@ -414,7 +414,7 @@ bool Connection::has_table(const std::string& name)
     return count > 0;
 }
 
-std::string Connection::get_setting(const std::string& key)
+std::string ODBCConnection::get_setting(const std::string& key)
 {
     if (!has_table("dballe_settings"))
         return string();
@@ -440,7 +440,7 @@ std::string Connection::get_setting(const std::string& key)
     return res;
 }
 
-void Connection::set_setting(const std::string& key, const std::string& value)
+void ODBCConnection::set_setting(const std::string& key, const std::string& value)
 {
     Statement stm(*this);
 
@@ -472,13 +472,14 @@ void Connection::set_setting(const std::string& key, const std::string& value)
     stm.execute_and_close();
 }
 
-void Connection::drop_settings()
+void ODBCConnection::drop_settings()
 {
     drop_table_if_exists("dballe_settings");
 }
 
-Statement::Statement(Connection& conn)
-    : conn(conn), stm(NULL), ignore_error(NULL)
+Statement::Statement(Connection& gconn)
+#warning eventually pass ODBCConnection
+    : conn(*dynamic_cast<ODBCConnection*>(&gconn)), stm(NULL), ignore_error(NULL)
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
       , debug_reached_completion(true)
 #endif
@@ -839,8 +840,8 @@ int Statement::columns_count()
     return res;
 }
 
-Sequence::Sequence(Connection& conn, const char* name)
-    : Statement(conn)
+Sequence::Sequence(Connection& gconn, const char* name)
+    : Statement(gconn)
 {
     char qbuf[100];
     int qlen;

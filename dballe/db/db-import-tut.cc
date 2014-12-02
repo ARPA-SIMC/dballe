@@ -268,7 +268,7 @@ void to::test<6>()
     db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
     query.clear();
-    std::auto_ptr<db::Cursor> cur = db->query_stations(query);
+    std::unique_ptr<db::Cursor> cur = db->query_stations(query);
     wassert(actual(cur->remaining()) == 1);
     wassert(actual(cur->next()).istrue());
 

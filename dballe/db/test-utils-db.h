@@ -236,7 +236,7 @@ struct TestDBTrySummaryQuery
 struct db_test
 {
     // DB handle
-    std::auto_ptr<DB> db;
+    std::unique_ptr<DB> db;
     db::Format orig_format;
 
     void disappear();
@@ -292,9 +292,9 @@ namespace wibble {
 namespace tests {
 
 inline dballe::tests::ActualCursor actual(dballe::db::Cursor& actual) { return dballe::tests::ActualCursor(actual); }
-inline dballe::tests::ActualCursor actual(std::auto_ptr<dballe::db::Cursor>& actual) { return dballe::tests::ActualCursor(*actual); }
+inline dballe::tests::ActualCursor actual(std::unique_ptr<dballe::db::Cursor>& actual) { return dballe::tests::ActualCursor(*actual); }
 inline dballe::tests::ActualDB actual(dballe::DB& actual) { return dballe::tests::ActualDB(actual); }
-inline dballe::tests::ActualDB actual(std::auto_ptr<dballe::DB>& actual) { return dballe::tests::ActualDB(*actual); }
+inline dballe::tests::ActualDB actual(std::unique_ptr<dballe::DB>& actual) { return dballe::tests::ActualDB(*actual); }
 
 }
 }

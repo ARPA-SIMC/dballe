@@ -67,6 +67,7 @@ struct MsgConsumer;
 
 namespace db {
 struct Connection;
+struct ODBCConnection;
 struct Statement;
 struct Sequence;
 
@@ -84,7 +85,7 @@ class DB : public dballe::DB
 {
 public:
 	/** ODBC database connection */
-	db::Connection* conn;
+	db::ODBCConnection* conn;
 
 protected:
     int last_context_id;
@@ -140,7 +141,7 @@ protected:
 	 */
 	void fill_ana_layer(Msg& msg, int id_station, int id_report);
 
-    DB(std::auto_ptr<Connection>& conn);
+    DB(std::unique_ptr<Connection>& conn);
 
 public:
     ~DB();
@@ -306,7 +307,7 @@ public:
 	 * @return
 	 *   The cursor to use to iterate over the results
 	 */
-	std::auto_ptr<db::Cursor> query(const Record& query, unsigned int wanted, unsigned int modifiers);
+	std::unique_ptr<db::Cursor> query(const Record& query, unsigned int wanted, unsigned int modifiers);
 
 	/**
 	 * Start a query on the station variables archive
@@ -316,7 +317,7 @@ public:
 	 * @return
 	 *   The cursor to use to iterate over the results
 	 */
-	std::auto_ptr<db::Cursor> query_stations(const Record& query);
+	std::unique_ptr<db::Cursor> query_stations(const Record& query);
 
 	/**
 	 * Query the database.
@@ -330,9 +331,9 @@ public:
 	 * @return
 	 *   The cursor to use to iterate over the results
 	 */
-	std::auto_ptr<db::Cursor> query_data(const Record& rec);
+	std::unique_ptr<db::Cursor> query_data(const Record& rec);
 
-    virtual std::auto_ptr<db::Cursor> query_summary(const Record& rec);
+    virtual std::unique_ptr<db::Cursor> query_summary(const Record& rec);
 
     void query_datetime_extremes(const Record& query, Record& result);
 
