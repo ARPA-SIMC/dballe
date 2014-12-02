@@ -21,12 +21,14 @@
 
 #include "station.h"
 #include "dballe/db/internals.h"
-
+#include "dballe/db/odbcworkarounds.h"
+#include <sqltypes.h>
 #include <cstring>
 #include <sql.h>
 
 using namespace wreport;
 using namespace dballe::db;
+using namespace std;
 
 namespace dballe {
 namespace db {
@@ -79,8 +81,106 @@ static const char* init_queries_oracle[] = {
     "CREATE SEQUENCE seq_station",
 };
 
+/**
+ * Precompiled queries to manipulate the station table
+ */
+class ODBCStation : public Station
+{
+protected:
+    /**
+     * DB connection.
+     */
+    db::Connection& conn;
 
-Station::Station(Connection& conn)
+    /** Station ID sequence, when the DB requires it */
+    db::Sequence* seq_station;
+
+    /** Precompiled select fixed station query */
+    db::Statement* sfstm;
+    /** Precompiled select mobile station query */
+    db::Statement* smstm;
+    /** Precompiled select data by station id query */
+    db::Statement* sstm;
+    /** Precompiled insert query */
+    db::Statement* istm;
+    /** Precompiled update query */
+    db::Statement* ustm;
+    /** Precompiled delete query */
+    db::Statement* dstm;
+
+    /** Station ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id;
+    /** Station latitude SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE lat;
+    /** Station longitude SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE lon;
+    /** Mobile station identifier SQL parameter */
+    char ident[64];
+    /** Mobile station identifier indicator */
+    SQLLEN ident_ind;
+
+    /**
+     * Set the mobile station identifier input value for this ::dba_db_station
+     *
+     * @param ident
+     *   Value to use for ident.  NULL can be used to unset ident.
+     */
+    void set_ident(const char* ident);
+
+    /**
+     * Get station information given a station ID
+     *
+     * @param id
+     *   ID of the station to query
+     */
+    void get_data(int id);
+
+    /**
+     * Update the information about a station entry
+     */
+    void update();
+
+    /**
+     * Remove a station record
+     */
+    void remove();
+
+public:
+    ODBCStation(db::Connection& conn);
+    ~ODBCStation();
+
+    /**
+     * Get the station ID given latitude, longitude and mobile identifier.
+     *
+     * It throws an exception if it does not exist.
+     *
+     * @return
+     *   Resulting ID of the station
+     */
+    int get_id(int lat, int lon, const char* ident=NULL) override;
+
+    /**
+     * Get the station ID given latitude, longitude and mobile identifier.
+     *
+     * It creates the station record if it does not exist.
+     *
+     * @return
+     *   Resulting ID of the station
+     */
+    int obtain_id(int lat, int lon, const char* ident=NULL, bool* inserted=NULL) override;
+
+    /**
+     * Dump the entire contents of the table to an output stream
+     */
+    void dump(FILE* out) override;
+
+private:
+    // disallow copy
+    ODBCStation(const ODBCStation&);
+    ODBCStation& operator=(const ODBCStation&);
+};
+
+ODBCStation::ODBCStation(Connection& conn)
     : conn(conn), seq_station(0), sfstm(0), smstm(0), sstm(0), istm(0), ustm(0), dstm(0)
 {
     const char* select_fixed_query =
@@ -154,7 +254,7 @@ Station::Station(Connection& conn)
     dstm->prepare(remove_query);
 }
 
-Station::~Station()
+ODBCStation::~ODBCStation()
 {
     if (sfstm) delete sfstm;
     if (smstm) delete smstm;
@@ -165,7 +265,7 @@ Station::~Station()
     if (seq_station) delete seq_station;
 }
 
-void Station::set_ident(const char* val)
+void ODBCStation::set_ident(const char* val)
 {
     if (val)
     {
@@ -180,7 +280,7 @@ void Station::set_ident(const char* val)
     }
 }
 
-int Station::get_id(int lat, int lon, const char* ident)
+int ODBCStation::get_id(int lat, int lon, const char* ident)
 {
     this->lat = lat;
     this->lon = lon;
@@ -193,7 +293,7 @@ int Station::get_id(int lat, int lon, const char* ident)
     throw error_notfound("station not found in the database");
 }
 
-void Station::get_data(int qid)
+void ODBCStation::get_data(int qid)
 {
     id = qid;
     sstm->execute();
@@ -203,7 +303,7 @@ void Station::get_data(int qid)
         ident[0] = 0;
 }
 
-int Station::obtain_id(int lat, int lon, const char* ident, bool* inserted)
+int ODBCStation::obtain_id(int lat, int lon, const char* ident, bool* inserted)
 {
     this->lat = lat;
     this->lon = lon;
@@ -227,17 +327,17 @@ int Station::obtain_id(int lat, int lon, const char* ident, bool* inserted)
         return conn.get_last_insert_id();
 }
 
-void Station::update()
+void ODBCStation::update()
 {
     ustm->execute_and_close();
 }
 
-void Station::remove()
+void ODBCStation::remove()
 {
     dstm->execute_and_close();
 }
 
-void Station::dump(FILE* out)
+void ODBCStation::dump(FILE* out)
 {
     DBALLE_SQL_C_SINT_TYPE id;
     DBALLE_SQL_C_SINT_TYPE lat;
@@ -295,8 +395,15 @@ void Station::reset_db(db::Connection& conn)
         stm.exec_direct_and_close(queries[i]);
 }
 
-} // namespace v5
-} // namespace db
-} // namespace dballe
+Station::~Station()
+{
+}
 
-/* vim:set ts=4 sw=4: */
+std::unique_ptr<Station> Station::create(db::Connection& conn)
+{
+    return unique_ptr<Station>(new ODBCStation(conn));
+}
+
+}
+}
+}

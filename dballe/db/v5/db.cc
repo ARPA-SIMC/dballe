@@ -369,7 +369,7 @@ Repinfo& DB::repinfo()
 Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = new Station(*this->conn);
+        m_station = Station::create(*this->conn).release();
     return *m_station;
 }
 

@@ -28,85 +28,22 @@
  * Station table management used by the db module.
  */
 
-#include <dballe/db/odbcworkarounds.h>
-#include <sqltypes.h>
+#include <memory>
 #include <cstdio>
 
 namespace dballe {
 namespace db {
 struct Connection;
-struct Statement;
-struct Sequence;
 
 namespace v5 {
 
-/**
- * Precompiled queries to manipulate the station table
- */
-class Station
+struct Station
 {
-protected:
-    /**
-     * DB connection.
-     */
-    db::Connection& conn;
-
-    /** Station ID sequence, when the DB requires it */
-    db::Sequence* seq_station;
-
-    /** Precompiled select fixed station query */
-    db::Statement* sfstm;
-    /** Precompiled select mobile station query */
-    db::Statement* smstm;
-    /** Precompiled select data by station id query */
-    db::Statement* sstm;
-    /** Precompiled insert query */
-    db::Statement* istm;
-    /** Precompiled update query */
-    db::Statement* ustm;
-    /** Precompiled delete query */
-    db::Statement* dstm;
-
-    /** Station ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id;
-    /** Station latitude SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE lat;
-    /** Station longitude SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE lon;
-    /** Mobile station identifier SQL parameter */
-    char ident[64];
-    /** Mobile station identifier indicator */
-    SQLLEN ident_ind;
-
-    /**
-     * Set the mobile station identifier input value for this ::dba_db_station
-     *
-     * @param ident
-     *   Value to use for ident.  NULL can be used to unset ident.
-     */
-    void set_ident(const char* ident);
-
-    /**
-     * Get station information given a station ID
-     *
-     * @param id
-     *   ID of the station to query
-     */
-    void get_data(int id);
-
-    /**
-     * Update the information about a station entry
-     */
-    void update();
-
-    /**
-     * Remove a station record
-     */
-    void remove();
-
 public:
-    Station(db::Connection& conn);
-    ~Station();
+    /// Instantiate a Station object for this connection
+    static std::unique_ptr<Station> create(db::Connection& conn);
+
+    virtual ~Station();
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -116,7 +53,7 @@ public:
      * @return
      *   Resulting ID of the station
      */
-    int get_id(int lat, int lon, const char* ident=NULL);
+    virtual int get_id(int lat, int lon, const char* ident=NULL) = 0;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -126,36 +63,21 @@ public:
      * @return
      *   Resulting ID of the station
      */
-    int obtain_id(int lat, int lon, const char* ident=NULL, bool* inserted=NULL);
+    virtual int obtain_id(int lat, int lon, const char* ident=NULL, bool* inserted=NULL) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream
      */
-    void dump(FILE* out);
+    virtual void dump(FILE* out) = 0;
 
     /**
      * Clear (if applicable) and recreate the table structure in the database
      */
     static void reset_db(db::Connection& conn);
-
-private:
-    // disallow copy
-    Station(const Station&);
-    Station& operator=(const Station&);
 };
 
-#if 0
-
-
-#ifdef  __cplusplus
 }
-#endif
+}
+}
 
-#endif
-
-} // namespace v5
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
 #endif

@@ -28,9 +28,7 @@
  * lev_tr table management used by the db module.
  */
 
-#include <dballe/db/odbcworkarounds.h>
 #include <dballe/core/defs.h>
-#include <sqltypes.h>
 #include <cstdio>
 #include <memory>
 
@@ -54,93 +52,24 @@ struct DB;
  */
 struct LevTr
 {
-protected:
-    /**
-     * DB connection.
-     */
-    DB& db;
+    static std::unique_ptr<LevTr> create(DB& db);
 
-    /** Precompiled select statement */
-    db::Statement* sstm;
-    /** Precompiled select data statement */
-    db::Statement* sdstm;
-    /** Precompiled insert statement */
-    db::Statement* istm;
-    /** Precompiled delete statement */
-    db::Statement* dstm;
-
-    /** lev_tr ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id;
-
-    /** First level type SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE ltype1;
-    /** Level L1 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE l1;
-    /** Second level type SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE ltype2;
-    /** Level L2 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE l2;
-    /** Time range type SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE pind;
-    /** Time range P1 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE p1;
-    /** Time range P2 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE p2;
-
-    /**
-     * Insert a new lev_tr in the database
-     *
-     * @return
-     *   The ID of the newly inserted lev_tr
-     */
-    int insert();
-
-    /**
-     * Get the lev_tr id for the current lev_tr data.
-     *
-     * @return
-     *   The database ID, or -1 if no existing lev_tr entry matches the given values
-     */
-    int get_id();
-
-    /**
-     * Get lev_tr information given a lev_tr ID
-     *
-     * @param id
-     *   ID of the lev_tr to query
-     */
-    void get_data(int id);
-
-    /**
-     * Remove a lev_tr record
-     */
-    void remove();
-
-public:
-    LevTr(DB& db);
-    ~LevTr();
+    virtual ~LevTr();
 
     /**
      * Return the ID for the given Level and Trange, adding it to the database
      * if it does not already exist
      */
-    int obtain_id(const Level& lev, const Trange& tr);
+    virtual int obtain_id(const Level& lev, const Trange& tr) = 0;
 
     /**
      * Return the ID for the given Record, adding it to the database if it does
      * not already exist
      */
-    int obtain_id(const Record& rec);
+    virtual int obtain_id(const Record& rec) = 0;
 
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
-    void dump(FILE* out);
-
-private:
-    // disallow copy
-    LevTr(const LevTr&);
-    LevTr& operator=(const LevTr&);
+    /// Dump the entire contents of the table to an output stream
+    virtual void dump(FILE* out) = 0;
 };
 
 struct LevTrCache

@@ -22,13 +22,14 @@
 #include "lev_tr.h"
 #include "dballe/db/internals.h"
 #include "db.h"
-#include <dballe/core/defs.h>
-#include <dballe/core/record.h>
-#include <dballe/msg/msg.h>
-
+#include "dballe/db/odbcworkarounds.h"
+#include "dballe/core/defs.h"
+#include "dballe/core/record.h"
+#include "dballe/msg/msg.h"
 #include <map>
 #include <sstream>
 #include <cstring>
+#include <sqltypes.h>
 #include <sql.h>
 
 using namespace wreport;
@@ -38,7 +39,100 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-LevTr::LevTr(DB& db)
+/**
+ * Precompiled queries to manipulate the lev_tr table
+ */
+struct ODBCLevTr : public LevTr
+{
+protected:
+    /**
+     * DB connection.
+     */
+    DB& db;
+
+    /** Precompiled select statement */
+    db::Statement* sstm;
+    /** Precompiled select data statement */
+    db::Statement* sdstm;
+    /** Precompiled insert statement */
+    db::Statement* istm;
+    /** Precompiled delete statement */
+    db::Statement* dstm;
+
+    /** lev_tr ID SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE id;
+
+    /** First level type SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE ltype1;
+    /** Level L1 SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE l1;
+    /** Second level type SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE ltype2;
+    /** Level L2 SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE l2;
+    /** Time range type SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE pind;
+    /** Time range P1 SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE p1;
+    /** Time range P2 SQL parameter */
+    DBALLE_SQL_C_SINT_TYPE p2;
+
+    /**
+     * Insert a new lev_tr in the database
+     *
+     * @return
+     *   The ID of the newly inserted lev_tr
+     */
+    int insert();
+
+    /**
+     * Get the lev_tr id for the current lev_tr data.
+     *
+     * @return
+     *   The database ID, or -1 if no existing lev_tr entry matches the given values
+     */
+    int get_id();
+
+    /**
+     * Get lev_tr information given a lev_tr ID
+     *
+     * @param id
+     *   ID of the lev_tr to query
+     */
+    void get_data(int id);
+
+    /**
+     * Remove a lev_tr record
+     */
+    void remove();
+
+public:
+    ODBCLevTr(DB& db);
+    ODBCLevTr(const LevTr&) = delete;
+    ODBCLevTr(const LevTr&&) = delete;
+    ODBCLevTr& operator=(const ODBCLevTr&) = delete;
+    ~ODBCLevTr();
+
+    /**
+     * Return the ID for the given Level and Trange, adding it to the database
+     * if it does not already exist
+     */
+    int obtain_id(const Level& lev, const Trange& tr) override;
+
+    /**
+     * Return the ID for the given Record, adding it to the database if it does
+     * not already exist
+     */
+    int obtain_id(const Record& rec) override;
+
+    /**
+     * Dump the entire contents of the table to an output stream
+     */
+    void dump(FILE* out) override;
+};
+
+
+ODBCLevTr::ODBCLevTr(DB& db)
     : db(db), sstm(0), sdstm(0), istm(0), dstm(0)
 {
     const char* select_query =
@@ -102,7 +196,7 @@ LevTr::LevTr(DB& db)
     dstm->prepare(remove_query);
 }
 
-LevTr::~LevTr()
+ODBCLevTr::~ODBCLevTr()
 {
     if (sstm) delete sstm;
     if (sdstm) delete sdstm;
@@ -110,7 +204,7 @@ LevTr::~LevTr()
     if (dstm) delete dstm;
 }
 
-int LevTr::get_id()
+int ODBCLevTr::get_id()
 {
     sstm->execute();
 
@@ -124,7 +218,7 @@ int LevTr::get_id()
     return res;
 }
 
-void LevTr::get_data(int qid)
+void ODBCLevTr::get_data(int qid)
 {
     id = qid;
     sdstm->execute();
@@ -132,7 +226,7 @@ void LevTr::get_data(int qid)
         error_notfound::throwf("no data found for lev_tr id %d", qid);
 }
 
-int LevTr::obtain_id(const Level& lev, const Trange& tr)
+int ODBCLevTr::obtain_id(const Level& lev, const Trange& tr)
 {
     ltype1 = lev.ltype1;
     l1 = lev.l1;
@@ -149,7 +243,7 @@ int LevTr::obtain_id(const Level& lev, const Trange& tr)
     return insert();
 }
 
-int LevTr::obtain_id(const Record& rec)
+int ODBCLevTr::obtain_id(const Record& rec)
 {
     if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
         ltype1 = var->enqi();
@@ -187,18 +281,18 @@ int LevTr::obtain_id(const Record& rec)
     return insert();
 }
 
-int LevTr::insert()
+int ODBCLevTr::insert()
 {
     istm->execute_and_close();
     return db.last_lev_tr_insert_id();
 }
 
-void LevTr::remove()
+void ODBCLevTr::remove()
 {
     dstm->execute_and_close();
 }
 
-void LevTr::dump(FILE* out)
+void ODBCLevTr::dump(FILE* out)
 {
     DBALLE_SQL_C_SINT_TYPE id;
     DBALLE_SQL_C_SINT_TYPE ltype1;
@@ -238,6 +332,13 @@ void LevTr::dump(FILE* out)
     }
     fprintf(out, "%d element%s in table lev_tr\n", count, count != 1 ? "s" : "");
 }
+
+unique_ptr<LevTr> LevTr::create(DB& db)
+{
+    return unique_ptr<LevTr>(new ODBCLevTr(db));
+}
+
+LevTr::~LevTr() {}
 
 
 LevTrCache::~LevTrCache() {}

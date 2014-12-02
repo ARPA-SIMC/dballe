@@ -332,14 +332,14 @@ v6::Repinfo& DB::repinfo()
 v5::Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = new v5::Station(*this->conn);
+        m_station = v5::Station::create(*this->conn).release();
     return *m_station;
 }
 
 LevTr& DB::lev_tr()
 {
     if (m_lev_tr == NULL)
-        m_lev_tr = new v6::LevTr(*this);
+        m_lev_tr = v6::LevTr::create(*this).release();
     return *m_lev_tr;
 }
 
