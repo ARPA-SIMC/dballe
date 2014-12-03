@@ -88,7 +88,7 @@ struct Cursor : public db::Cursor
     const unsigned int modifiers;
 
     /** Number of results still to be fetched */
-    DBALLE_SQL_C_SINT_TYPE count;
+    int count;
 
     /// Results written by fetch
     SQLRecord sqlrec;

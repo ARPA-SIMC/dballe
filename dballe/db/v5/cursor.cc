@@ -1469,53 +1469,6 @@ void QueryBuilder::add_repinfo_where(Querybuf& buf, const Record& rec, const cha
 #undef ADD_INT
 }
 
-#if 0
-static dba_err rowcount(dba_db db, const char* table, DBALLE_SQL_C_SINT_TYPE* count)
-{
-    dba_err err = DBA_OK;
-    SQLHSTMT stm = NULL;
-    char buf[100];
-    int len, res;
-
-    /* Allocate statement handle */
-    DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
-
-    /* Bind count directly in the output  */
-    SQLBindCol(stm, 1, DBALLE_SQL_C_SINT, count, sizeof(*count), NULL);
-
-    len = snprintf(buf, 100, "SELECT COUNT(*) FROM %s", table);
-    res = SQLExecDirect(stm, (unsigned char*)buf, len);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-    {
-        err = dba_db_error_odbc(SQL_HANDLE_STMT, stm,
-                "Counting the elements of table %s", table);
-        goto cleanup;
-    }
-
-    /* Get the result */
-    if (SQLFetch(stm) == SQL_NO_DATA)
-    {
-        err = dba_error_consistency("no results from database when querying row count of table %s", table);
-        goto cleanup;
-    }
-
-cleanup:
-    if (stm != NULL)
-        SQLFreeHandle(SQL_HANDLE_STMT, stm);
-    return err == DBA_OK ? dba_error_ok() : err;
 }
-
-static dba_err setstmtattr(SQLHSTMT stm, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len, const char* context)
-{
-    int res = SQLSetStmtAttr(stm, attr, val, len);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-        return dba_db_error_odbc(SQL_HANDLE_STMT, stm, context);
-    return dba_error_ok();
 }
-#endif
-
-} // namespace v5
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
