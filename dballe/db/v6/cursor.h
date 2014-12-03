@@ -30,6 +30,7 @@
 
 #include <dballe/db/odbcworkarounds.h>
 #include <dballe/db/db.h>
+#include <dballe/core/structbuf.h>
 #include <wreport/varinfo.h>
 #include <sqltypes.h>
 #include <cstddef>
@@ -282,7 +283,7 @@ public:
     virtual unsigned test_iterate(FILE* dump=0);
 
 protected:
-    FILE* results;
+    Structbuf<SQLRecord> results;
 
     CursorBest(DB& db, unsigned int modifiers);
 

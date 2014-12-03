@@ -513,13 +513,9 @@ unsigned CursorSummary::test_iterate(FILE* dump)
 
 
 CursorBest::CursorBest(DB& db, unsigned int modifiers)
-    : Cursor(db, modifiers), results(0) {}
+    : Cursor(db, modifiers) {}
 
-CursorBest::~CursorBest()
-{
-    if (results)
-        fclose(results);
-}
+CursorBest::~CursorBest() {}
 
 void CursorBest::query(const Record& rec)
 {
@@ -572,14 +568,6 @@ int CursorBest::buffer_results(db::Statement& stm)
 {
     db::v6::Repinfo& ri = db.repinfo();
 
-    // Do the counting here, so we don't count the records we skip
-    count = 0;
-
-    // Open temporary file
-    results = tmpfile();
-    if (!results)
-        throw error_system("cannot create temporary file for query=best results");
-
     bool first = true;
     SQLRecord best;
 
@@ -602,24 +590,20 @@ int CursorBest::buffer_results(db::Statement& stm)
                 best = sqlrec;
         } else {
             // If they don't match, write out the previous best value
-            if (fwrite(&best, sizeof(best), 1, results) != 1)
-                throw error_system("cannot write query=best result record to temporary file");
-            ++count;
+            results.append(best);
             // And restart with a new candidate best record for the next batch
             best = sqlrec;
         }
     }
 
+    // Write out the last best value
     if (!first)
-    {
-        // Write out the last best value
-        if (fwrite(&best, sizeof(best), 1, results) != 1)
-            throw error_system("cannot write query=best result record to temporary file");
-        ++count;
-    }
+        results.append(best);
 
-    // Go back to the beginning of the file so that next() can read results
-    rewind(results);
+    count = results.size();
+
+    // We are done adding, prepare the structbuf for reading
+    results.ready_to_read();
 
     return count;
 }
@@ -628,8 +612,7 @@ bool CursorBest::next()
 {
     if (count <= 0) return false;
 
-    if (fread(&sqlrec, sizeof(sqlrec), 1, results) != 1)
-        throw error_system("cannot read query=best result record from temporary file");
+    sqlrec = results[results.size() - count];
     --count;
 
     return true;
@@ -637,15 +620,9 @@ bool CursorBest::next()
 
 void CursorBest::discard_rest()
 {
-    if (results)
-    {
-        fclose(results);
-        results = 0;
-    }
+    count = 0;
 }
 
-} // namespace v6
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
