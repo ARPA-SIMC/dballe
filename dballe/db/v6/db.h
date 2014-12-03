@@ -1,7 +1,7 @@
 /*
  * dballe/v6/db - Archive for point-based meteorological data, db layout version 6
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 #ifndef DBA_DB_V6_H
 #define DBA_DB_V6_H
 
-#include <dballe/db/odbcworkarounds.h>
 #include <dballe/db/db.h>
 #include <wreport/varinfo.h>
 #include <string>
@@ -95,8 +94,8 @@ protected:
     struct VarID
     {
         wreport::Varcode code;
-        DBALLE_SQL_C_SINT_TYPE id;
-        VarID(wreport::Varcode code, DBALLE_SQL_C_SINT_TYPE id) : code(code), id(id) {}
+        int id;
+        VarID(wreport::Varcode code, int id) : code(code), id(id) {}
     };
 
     /// Store database variable IDs for all last inserted variables
