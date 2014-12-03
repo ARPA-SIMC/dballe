@@ -80,10 +80,12 @@ struct ExtraQueryArgs
 
 struct QueryBuilder
 {
+    Connection& conn;
+
     /** Database to operate on */
     DB& db;
 
-    /** Statement to build variables to */
+    /** Statement to bind variables to */
     Statement& stm;
 
     /** Cursor with the output variables */

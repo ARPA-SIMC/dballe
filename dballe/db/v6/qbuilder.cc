@@ -270,7 +270,7 @@ struct Constraints
 };
 
 QueryBuilder::QueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
-    : db(db), stm(stm), cur(cur), rec(rec), sql_query(2048), sql_from(1024), sql_where(1024),
+    : conn(*db.conn), db(db), stm(stm), cur(cur), rec(rec), sql_query(2048), sql_from(1024), sql_where(1024),
       modifiers(modifiers), output_seq(1), query_station_vars(false)
 {
     query_station_vars = rec.is_ana_context();
@@ -291,7 +291,7 @@ void QueryBuilder::build()
 
     sql_where.start_list(" AND ");
     bool has_where = build_where();
-    if (limit != -1 && db.conn->server_type == ORACLE)
+    if (limit != -1 && conn.server_type == ORACLE)
     {
         sql_where.append_listf("rownum <= %d", limit);
         has_where = true;
@@ -308,14 +308,14 @@ void QueryBuilder::build()
     // Append ORDER BY as needed
     if (!(modifiers & DBA_DB_MODIFIER_UNSORTED))
     {
-        if (limit != -1 && db.conn->server_type == ORACLE)
+        if (limit != -1 && conn.server_type == ORACLE)
             throw error_unimplemented("sorted queries with result limit are not implemented for Oracle");
 
         build_order_by();
     }
 
     // Append LIMIT if requested
-    if (limit != -1 && db.conn->server_type != ORACLE)
+    if (limit != -1 && conn.server_type != ORACLE)
         sql_query.appendf(" LIMIT %d", limit);
 }
 
@@ -526,7 +526,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
                 sql_where.appendf(" AND %s_af.value BETWEEN %s AND %s)", tbl, value, value1);
         else
         {
-            const char* type = (db.conn->server_type == MYSQL) ? "SIGNED" : "INT";
+            const char* type = (conn.server_type == MYSQL) ? "SIGNED" : "INT";
             if (value1 == NULL)
                 sql_where.appendf(" AND CAST(%s_af.value AS %s)%s%s)", tbl, type, op, value);
             else
@@ -553,7 +553,7 @@ bool QueryBuilder::add_dt_where(const char* tbl)
         {
             // Add constraint on the exact date interval
             sql_where.append_listf("%s.datetime=", tbl);
-            db.conn->add_datetime(sql_where, minvalues);
+            conn.add_datetime(sql_where, minvalues);
             TRACE("found exact time: adding AND %s.datetime={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
                     tbl, minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
             found = true;
@@ -564,7 +564,7 @@ bool QueryBuilder::add_dt_where(const char* tbl)
             {
                 // Add constraint on the minimum date interval
                 sql_where.append_listf("%s.datetime>=", tbl);
-                db.conn->add_datetime(sql_where, minvalues);
+                conn.add_datetime(sql_where, minvalues);
                 TRACE("found min time: adding AND %s.datetime>={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
                     tbl, minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
                 found = true;
@@ -572,7 +572,7 @@ bool QueryBuilder::add_dt_where(const char* tbl)
             if (maxvalues[0] != MISSING_INT)
             {
                 sql_where.append_listf("%s.datetime<=", tbl);
-                db.conn->add_datetime(sql_where, maxvalues);
+                conn.add_datetime(sql_where, maxvalues);
                 TRACE("found max time: adding AND %s.datetime<={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
                         tbl, maxvalues[0], maxvalues[1], maxvalues[2], maxvalues[3], maxvalues[4], maxvalues[5]);
                 found = true;
@@ -675,7 +675,7 @@ bool QueryBuilder::add_datafilter_where(const char* tbl)
             sql_where.append_listf("%s.value BETWEEN %s AND %s", tbl, value, value1);
     else
     {
-        const char* type = (db.conn->server_type == MYSQL) ? "SIGNED" : "INT";
+        const char* type = (conn.server_type == MYSQL) ? "SIGNED" : "INT";
         if (value1 == NULL)
             sql_where.append_listf("CAST(%s.value AS %s)%s%s", tbl, type, op, value);
         else
@@ -701,7 +701,7 @@ bool QueryBuilder::add_attrfilter_where(const char* tbl)
             sql_where.append_listf("%s_atf.value BETWEEN %s AND %s", tbl, value, value1);
     else
     {
-        const char* type = (db.conn->server_type == MYSQL) ? "SIGNED" : "INT";
+        const char* type = (conn.server_type == MYSQL) ? "SIGNED" : "INT";
         if (value1 == NULL)
             sql_where.append_listf("CAST(%s_atf.value AS %s)%s%s", tbl, type, op, value);
         else
