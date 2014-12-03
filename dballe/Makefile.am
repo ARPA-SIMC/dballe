@@ -51,6 +51,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/aoffile.h \
 	core/csv.h \
 	core/record.h \
+	core/structbuf.h \
 	core/matcher.h \
 	core/match-wreport.h \
 	core/varmatch.h \
@@ -129,6 +130,7 @@ libdballe_la_SOURCES = \
 	core/csv.cc \
 	core/record_keyword.cc \
 	core/record.cc \
+	core/structbuf.cc \
 	core/matcher.cc \
 	core/match-wreport.cc \
 	core/varmatch.cc \
@@ -259,6 +261,7 @@ tut_test_SOURCES = \
 	core/rawmsg-tut.cc \
 	core/file-tut.cc \
 	core/record-tut.cc \
+	core/structbuf-tut.cc \
 	core/csv-tut.cc \
 	core/matcher-tut.cc \
 	core/match-wreport-tut.cc \
