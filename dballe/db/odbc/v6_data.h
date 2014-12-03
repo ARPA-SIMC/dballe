@@ -46,17 +46,18 @@ class ODBCData : public Data
 protected:
     /** DB connection. */
     v6::DB& db;
+    ODBCConnection& conn;
 
     /** Precompiled insert statement */
-    db::Statement* istm;
+    ODBCStatement* istm;
     /** Precompiled update statement */
-    db::Statement* ustm;
+    ODBCStatement* ustm;
     /** Precompiled insert or update statement, for DBs where it is available */
-    db::Statement* ioustm;
+    ODBCStatement* ioustm;
     /** Precompiled insert or ignore statement */
-    db::Statement* iistm;
+    ODBCStatement* iistm;
     /** Precompiled select ID statement */
-    db::Statement* sidstm;
+    ODBCStatement* sidstm;
 
     /** data ID SQL parameter */
     DBALLE_SQL_C_SINT_TYPE id;

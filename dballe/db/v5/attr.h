@@ -37,8 +37,8 @@ namespace dballe {
 struct DB;
 
 namespace db {
-struct Connection;
-struct Statement;
+struct ODBCConnection;
+struct ODBCStatement;
 
 namespace v5 {
 
@@ -48,14 +48,14 @@ namespace v5 {
 struct Attr
 {
     /** DB connection. */
-    db::Connection& conn;
+    ODBCConnection& conn;
 
     /** Precompiled select statement */
-    db::Statement* sstm;
+    ODBCStatement* sstm;
     /** Precompiled insert statement */
-    db::Statement* istm;
+    ODBCStatement* istm;
     /** Precompiled replace statement */
-    db::Statement* rstm;
+    ODBCStatement* rstm;
 
     /** context id SQL parameter */
     DBALLE_SQL_C_SINT_TYPE id_context;
@@ -68,7 +68,7 @@ struct Attr
     /** attribute value indicator */
     SQLLEN value_ind;
 
-    Attr(Connection& conn);
+    Attr(ODBCConnection& conn);
     ~Attr();
 
     /**

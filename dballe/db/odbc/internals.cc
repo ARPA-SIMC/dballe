@@ -304,9 +304,19 @@ std::unique_ptr<Transaction> ODBCConnection::transaction()
     return unique_ptr<Transaction>(new ODBCTransaction(od_conn));
 }
 
+std::unique_ptr<Statement> ODBCConnection::statement()
+{
+    return unique_ptr<Statement>(new ODBCStatement(*this));
+}
+
+std::unique_ptr<ODBCStatement> ODBCConnection::odbcstatement()
+{
+    return unique_ptr<ODBCStatement>(new ODBCStatement(*this));
+}
+
 void ODBCConnection::exec(const std::string& query)
 {
-    Statement stm(*this);
+    ODBCStatement stm(*this);
     stm.exec_direct_and_close(query.c_str());
 }
 
@@ -326,12 +336,12 @@ void ODBCConnection::drop_table_if_exists(const char* name)
             break;
         case db::ORACLE:
         {
-            db::Statement stm(*this);
+            auto stm = odbcstatement();
             char buf[100];
             int len;
-            stm.ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE;
+            stm->ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE;
             len = snprintf(buf, 100, "DROP TABLE %s", name);
-            stm.exec_direct_and_close(buf, len);
+            stm->exec_direct_and_close(buf, len);
             break;
         }
     }
@@ -348,12 +358,12 @@ void ODBCConnection::drop_sequence_if_exists(const char* name)
             break;
         case db::ORACLE:
         {
-            db::Statement stm(*this);
+            auto stm = odbcstatement();
             char buf[100];
             int len;
-            stm.ignore_error = DBA_ODBC_MISSING_SEQUENCE_ORACLE;
+            stm->ignore_error = DBA_ODBC_MISSING_SEQUENCE_ORACLE;
             len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
-            stm.exec_direct_and_close(buf, len);
+            stm->exec_direct_and_close(buf, len);
             break;
         }
         default:
@@ -369,17 +379,17 @@ int ODBCConnection::get_last_insert_id()
         switch (server_type)
         {
             case db::MYSQL:
-                stm_last_insert_id = new db::Statement(*this);
+                stm_last_insert_id = odbcstatement().release();
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
                 stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
                 break;
             case db::SQLITE:
-                stm_last_insert_id = new db::Statement(*this);
+                stm_last_insert_id = odbcstatement().release();
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
                 stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
                 break;
             case db::POSTGRES:
-                stm_last_insert_id = new db::Statement(*this);
+                stm_last_insert_id = odbcstatement().release();
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
                 stm_last_insert_id->prepare("SELECT LASTVAL()");
                 break;
@@ -396,34 +406,34 @@ int ODBCConnection::get_last_insert_id()
 
 bool ODBCConnection::has_table(const std::string& name)
 {
-    Statement stm(*this);
+    auto stm = odbcstatement();
     DBALLE_SQL_C_SINT_TYPE count;
 
     switch (server_type)
     {
         case db::MYSQL:
-            stm.prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?");
-            stm.bind_in(1, name.data(), name.size());
-            stm.bind_out(1, count);
+            stm->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?");
+            stm->bind_in(1, name.data(), name.size());
+            stm->bind_out(1, count);
             break;
         case db::SQLITE:
-            stm.prepare("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
-            stm.bind_in(1, name.data(), name.size());
-            stm.bind_out(1, count);
+            stm->prepare("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
+            stm->bind_in(1, name.data(), name.size());
+            stm->bind_out(1, count);
             break;
         case db::ORACLE:
-            stm.prepare("SELECT COUNT(*) FROM user_tables WHERE table_name=UPPER(?)");
-            stm.bind_in(1, name.data(), name.size());
-            stm.bind_out(1, count);
+            stm->prepare("SELECT COUNT(*) FROM user_tables WHERE table_name=UPPER(?)");
+            stm->bind_in(1, name.data(), name.size());
+            stm->bind_out(1, count);
             break;
         case db::POSTGRES:
-            stm.prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?");
-            stm.bind_in(1, name.data(), name.size());
-            stm.bind_out(1, count);
+            stm->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?");
+            stm->bind_in(1, name.data(), name.size());
+            stm->bind_out(1, count);
             break;
     }
-    stm.execute();
-    stm.fetch_expecting_one();
+    stm->execute();
+    stm->fetch_expecting_one();
     return count > 0;
 }
 
@@ -435,16 +445,16 @@ std::string ODBCConnection::get_setting(const std::string& key)
     char result[64];
     SQLLEN result_len;
 
-    Statement stm(*this);
+    auto stm = odbcstatement();
     if (server_type == MYSQL)
-        stm.prepare("SELECT value FROM dballe_settings WHERE `key`=?");
+        stm->prepare("SELECT value FROM dballe_settings WHERE `key`=?");
     else
-        stm.prepare("SELECT value FROM dballe_settings WHERE \"key\"=?");
-    stm.bind_in(1, key.data(), key.size());
-    stm.bind_out(1, result, 64, result_len);
-    stm.execute();
+        stm->prepare("SELECT value FROM dballe_settings WHERE \"key\"=?");
+    stm->bind_in(1, key.data(), key.size());
+    stm->bind_out(1, result, 64, result_len);
+    stm->execute();
     string res;
-    while (stm.fetch())
+    while (stm->fetch())
         res = string(result, result_len);
     // rtrim string
     size_t n = res.substr(0, 63).find_last_not_of(' ');
@@ -455,7 +465,7 @@ std::string ODBCConnection::get_setting(const std::string& key)
 
 void ODBCConnection::set_setting(const std::string& key, const std::string& value)
 {
-    Statement stm(*this);
+    auto stm = odbcstatement();
 
     if (!has_table("dballe_settings"))
     {
@@ -467,22 +477,22 @@ void ODBCConnection::set_setting(const std::string& key, const std::string& valu
 
     // Remove if it exists
     if (server_type == MYSQL)
-        stm.prepare("DELETE FROM dballe_settings WHERE `key`=?");
+        stm->prepare("DELETE FROM dballe_settings WHERE `key`=?");
     else
-        stm.prepare("DELETE FROM dballe_settings WHERE \"key\"=?");
-    stm.bind_in(1, key.data(), key.size());
-    stm.execute_and_close();
+        stm->prepare("DELETE FROM dballe_settings WHERE \"key\"=?");
+    stm->bind_in(1, key.data(), key.size());
+    stm->execute_and_close();
 
     // Then insert it
     if (server_type == MYSQL)
-        stm.prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
+        stm->prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
     else
-        stm.prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
+        stm->prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
     SQLLEN key_size = key.size();
     SQLLEN value_size = value.size();
-    stm.bind_in(1, key.data(), key_size);
-    stm.bind_in(2, value.data(), value_size);
-    stm.execute_and_close();
+    stm->bind_in(1, key.data(), key_size);
+    stm->bind_in(2, value.data(), value_size);
+    stm->execute_and_close();
 }
 
 void ODBCConnection::drop_settings()
@@ -496,19 +506,15 @@ void ODBCConnection::add_datetime(Querybuf& qb, const int* dt) const
 }
 
 
-Statement::Statement(Connection& gconn)
-#warning eventually pass ODBCConnection
-    : conn(*dynamic_cast<ODBCConnection*>(&gconn)), stm(NULL), ignore_error(NULL)
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-      , debug_reached_completion(true)
-#endif
+ODBCStatement::ODBCStatement(ODBCConnection& conn)
+    : conn(conn)
 {
     int sqlres = SQLAllocHandle(SQL_HANDLE_STMT, conn.od_conn, &stm);
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
         throw error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
 }
 
-Statement::~Statement()
+ODBCStatement::~ODBCStatement()
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     if (!debug_reached_completion)
@@ -522,7 +528,7 @@ Statement::~Statement()
     SQLFreeHandle(SQL_HANDLE_STMT, stm);
 }
 
-bool Statement::error_is_ignored()
+bool ODBCStatement::error_is_ignored()
 {
     if (!ignore_error) return false;
 
@@ -536,7 +542,7 @@ bool Statement::error_is_ignored()
     return memcmp(stat, ignore_error, 5) == 0;
 }
 
-bool Statement::is_error(int sqlres)
+bool ODBCStatement::is_error(int sqlres)
 {
     return (sqlres != SQL_SUCCESS)
         && (sqlres != SQL_SUCCESS_WITH_INFO)
@@ -544,46 +550,46 @@ bool Statement::is_error(int sqlres)
         && !error_is_ignored();
 }
 
-void Statement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val)
+void ODBCStatement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_SINT_TYPE*)&val, 0, 0);
 }
-void Statement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val, const SQLLEN& ind)
+void ODBCStatement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_SINT_TYPE*)&val, 0, (SQLLEN*)&ind);
 }
 
-void Statement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val)
+void ODBCStatement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_UINT_TYPE*)&val, 0, 0);
 }
-void Statement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val, const SQLLEN& ind)
+void ODBCStatement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_UINT_TYPE*)&val, 0, (SQLLEN*)&ind);
 }
 
-void Statement::bind_in(int idx, const unsigned short& val)
+void ODBCStatement::bind_in(int idx, const unsigned short& val)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, (unsigned short*)&val, 0, 0);
 }
 
-void Statement::bind_in(int idx, const char* val)
+void ODBCStatement::bind_in(int idx, const char* val)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, 0);
 }
-void Statement::bind_in(int idx, const char* val, const SQLLEN& ind)
+void ODBCStatement::bind_in(int idx, const char* val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, (SQLLEN*)&ind);
 }
 
-void Statement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)
+void ODBCStatement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)
 {
     // cast away const because the ODBC API is not const-aware
     //if (conn.server_type == POSTGRES || conn.server_type == SQLITE)
@@ -593,48 +599,48 @@ void Statement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)
 }
 
 
-void Statement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val)
+void ODBCStatement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val)
 {
     SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), 0);
 }
-void Statement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val, SQLLEN& ind)
+void ODBCStatement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val, SQLLEN& ind)
 {
     SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), &ind);
 }
 
-void Statement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val)
+void ODBCStatement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val)
 {
     SQLBindCol(stm, idx, DBALLE_SQL_C_UINT, &val, sizeof(val), 0);
 }
-void Statement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val, SQLLEN& ind)
+void ODBCStatement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val, SQLLEN& ind)
 {
     SQLBindCol(stm, idx, DBALLE_SQL_C_UINT, &val, sizeof(val), &ind);
 }
 
-void Statement::bind_out(int idx, unsigned short& val)
+void ODBCStatement::bind_out(int idx, unsigned short& val)
 {
     SQLBindCol(stm, idx, SQL_C_USHORT, &val, sizeof(val), 0);
 }
 
-void Statement::bind_out(int idx, char* val, SQLLEN buflen)
+void ODBCStatement::bind_out(int idx, char* val, SQLLEN buflen)
 {
     SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, 0);
 }
-void Statement::bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind)
+void ODBCStatement::bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind)
 {
     SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, &ind);
 }
 
-void Statement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val)
+void ODBCStatement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val)
 {
     SQLBindCol(stm, idx, SQL_C_TYPE_TIMESTAMP, &val, sizeof(val), 0);
 }
-void Statement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val, SQLLEN& ind)
+void ODBCStatement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val, SQLLEN& ind)
 {
     SQLBindCol(stm, idx, SQL_C_TYPE_TIMESTAMP, &val, sizeof(val), &ind);
 }
 
-bool Statement::fetch()
+bool ODBCStatement::fetch()
 {
     int sqlres = SQLFetch(stm);
     if (sqlres == SQL_NO_DATA)
@@ -649,7 +655,7 @@ bool Statement::fetch()
     return true;
 }
 
-bool Statement::fetch_expecting_one()
+bool ODBCStatement::fetch_expecting_one()
 {
     if (!fetch())
     {
@@ -662,7 +668,7 @@ bool Statement::fetch_expecting_one()
     return true;
 }
 
-size_t Statement::select_rowcount()
+size_t ODBCStatement::select_rowcount()
 {
     if (conn.server_quirks & DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG)
         return rowcount();
@@ -676,7 +682,7 @@ size_t Statement::select_rowcount()
     return res;
 }
 
-size_t Statement::rowcount()
+size_t ODBCStatement::rowcount()
 {
     SQLLEN res;
     int sqlres = SQLRowCount(stm, &res);
@@ -685,7 +691,7 @@ size_t Statement::rowcount()
     return res;
 }
 
-void Statement::set_cursor_forward_only()
+void ODBCStatement::set_cursor_forward_only()
 {
     int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
         (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY, SQL_IS_INTEGER);
@@ -693,7 +699,7 @@ void Statement::set_cursor_forward_only()
         throw error_odbc(SQL_HANDLE_STMT, stm, "setting SQL_CURSOR_FORWARD_ONLY");
 }
 
-void Statement::set_cursor_static()
+void ODBCStatement::set_cursor_static()
 {
     int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
         (SQLPOINTER)SQL_CURSOR_STATIC, SQL_IS_INTEGER);
@@ -701,7 +707,7 @@ void Statement::set_cursor_static()
         throw error_odbc(SQL_HANDLE_STMT, stm, "setting SQL_CURSOR_STATIC");
 }
 
-void Statement::close_cursor()
+void ODBCStatement::close_cursor()
 {
     int sqlres = SQLCloseCursor(stm);
     if (is_error(sqlres))
@@ -711,7 +717,7 @@ void Statement::close_cursor()
 #endif
 }
 
-void Statement::prepare(const char* query)
+void ODBCStatement::prepare(const char* query)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     if (!debug_reached_completion)
@@ -729,7 +735,7 @@ void Statement::prepare(const char* query)
         error_odbc::throwf(SQL_HANDLE_STMT, stm, "compiling query \"%s\"", query);
 }
 
-void Statement::prepare(const char* query, int qlen)
+void ODBCStatement::prepare(const char* query, int qlen)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = string(query, qlen);
@@ -739,7 +745,7 @@ void Statement::prepare(const char* query, int qlen)
         error_odbc::throwf(SQL_HANDLE_STMT, stm, "compiling query \"%.*s\"", qlen, query);
 }
 
-int Statement::execute()
+int ODBCStatement::execute()
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     if (!debug_reached_completion)
@@ -758,7 +764,7 @@ int Statement::execute()
     return sqlres;
 }
 
-int Statement::exec_direct(const char* query)
+int ODBCStatement::exec_direct(const char* query)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = query;
@@ -773,7 +779,7 @@ int Statement::exec_direct(const char* query)
     return sqlres;
 }
 
-int Statement::exec_direct(const char* query, int qlen)
+int ODBCStatement::exec_direct(const char* query, int qlen)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = string(query, qlen);
@@ -788,7 +794,7 @@ int Statement::exec_direct(const char* query, int qlen)
     return sqlres;
 }
 
-void Statement::close_cursor_if_needed()
+void ODBCStatement::close_cursor_if_needed()
 {
     /*
     // If the query raised an error that we are ignoring, closing the cursor
@@ -806,7 +812,7 @@ void Statement::close_cursor_if_needed()
 #endif
 }
 
-int Statement::execute_and_close()
+int ODBCStatement::execute_and_close()
 {
     int sqlres = SQLExecute(stm);
     if (is_error(sqlres))
@@ -818,7 +824,7 @@ int Statement::execute_and_close()
     return sqlres;
 }
 
-int Statement::exec_direct_and_close(const char* query)
+int ODBCStatement::exec_direct_and_close(const char* query)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = query;
@@ -834,7 +840,7 @@ int Statement::exec_direct_and_close(const char* query)
     return sqlres;
 }
 
-int Statement::exec_direct_and_close(const char* query, int qlen)
+int ODBCStatement::exec_direct_and_close(const char* query, int qlen)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = string(query, qlen);
@@ -850,7 +856,7 @@ int Statement::exec_direct_and_close(const char* query, int qlen)
     return sqlres;
 }
 
-int Statement::columns_count()
+int ODBCStatement::columns_count()
 {
     SQLSMALLINT res;
     int sqlres = SQLNumResultCols(stm, &res);
@@ -859,17 +865,17 @@ int Statement::columns_count()
     return res;
 }
 
-Sequence::Sequence(Connection& gconn, const char* name)
-    : Statement(gconn)
+Sequence::Sequence(ODBCConnection& conn, const char* name)
+    : ODBCStatement(conn)
 {
     char qbuf[100];
     int qlen;
 
     bind_out(1, out);
     if (conn.server_type == ORACLE)
-        qlen = snprintf(qbuf, 100, "SELECT %s.CurrVal FROM dual", name);    
+        qlen = snprintf(qbuf, 100, "SELECT %s.CurrVal FROM dual", name);
     else
-        qlen = snprintf(qbuf, 100, "SELECT last_value FROM %s", name);  
+        qlen = snprintf(qbuf, 100, "SELECT last_value FROM %s", name);
     prepare(qbuf, qlen);
 }
 

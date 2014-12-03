@@ -61,7 +61,7 @@ bool Memoidx::operator<(const Memoidx& val) const
 
 }
 
-Repinfo::Repinfo(Connection* conn)
+Repinfo::Repinfo(ODBCConnection* conn)
 	: conn(conn)
 {
 	read_cache();
@@ -73,7 +73,7 @@ Repinfo::~Repinfo()
 
 void Repinfo::read_cache()
 {
-	db::Statement stm(*conn);
+    auto stm = conn->odbcstatement();
 
 	DBALLE_SQL_C_UINT_TYPE id;
 	char memo[20]; SQLLEN memo_ind;
@@ -84,18 +84,18 @@ void Repinfo::read_cache()
 
 	invalidate_cache();
 
-	stm.bind_out(1, id);
-	stm.bind_out(2, memo, sizeof(memo), memo_ind);
-	stm.bind_out(3, description, sizeof(description), description_ind);
-	stm.bind_out(4, prio);
-	stm.bind_out(5, descriptor, sizeof(descriptor), descriptor_ind);
-	stm.bind_out(6, tablea);
+    stm->bind_out(1, id);
+    stm->bind_out(2, memo, sizeof(memo), memo_ind);
+    stm->bind_out(3, description, sizeof(description), description_ind);
+    stm->bind_out(4, prio);
+    stm->bind_out(5, descriptor, sizeof(descriptor), descriptor_ind);
+    stm->bind_out(6, tablea);
 
-	stm.exec_direct("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
+    stm->exec_direct("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
 
-	/* Get the results and save them in the record */
-	while (stm.fetch())
-		cache_append(id, memo, description, prio, descriptor, tablea);
+    /* Get the results and save them in the record */
+    while (stm->fetch())
+        cache_append(id, memo, description, prio, descriptor, tablea);
 
 	/* Rebuild the memo index as well */
 	rebuild_memo_idx();
@@ -103,27 +103,27 @@ void Repinfo::read_cache()
 
 void Repinfo::insert_auto_entry(const char* memo)
 {
-    db::Statement stm(*conn);
+    auto stm = conn->odbcstatement();
 
     DBALLE_SQL_C_UINT_TYPE id;
-    stm.bind_out(1, id);
-    stm.exec_direct("SELECT MAX(id) FROM repinfo");
-    stm.fetch_expecting_one();
+    stm->bind_out(1, id);
+    stm->exec_direct("SELECT MAX(id) FROM repinfo");
+    stm->fetch_expecting_one();
 
     DBALLE_SQL_C_UINT_TYPE prio;
-    stm.bind_out(1, prio);
-    stm.exec_direct("SELECT MAX(prio) FROM repinfo");
-    stm.fetch_expecting_one();
+    stm->bind_out(1, prio);
+    stm->exec_direct("SELECT MAX(prio) FROM repinfo");
+    stm->fetch_expecting_one();
 
     ++id;
     ++prio;
 
-    stm.bind_in(1, id);
-    stm.bind_in(2, memo);
-    stm.bind_in(3, memo);
-    stm.bind_in(4, prio);
+    stm->bind_in(1, id);
+    stm->bind_in(2, memo);
+    stm->bind_in(3, memo);
+    stm->bind_in(4, prio);
 
-    stm.exec_direct_and_close("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
+    stm->exec_direct_and_close("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
                     " VALUES (?, ?, ?, ?, '-', 255)");
 }
 
@@ -413,12 +413,12 @@ int Repinfo::id_use_count(unsigned id, const char* name)
 {
     DBALLE_SQL_C_UINT_TYPE dbid = id;
     DBALLE_SQL_C_UINT_TYPE count;
-    db::Statement stm(*conn);
-    stm.prepare("SELECT COUNT(1) FROM context WHERE id_report = ?");
-    stm.bind_in(1, dbid);
-    stm.bind_out(1, count);
-    stm.execute();
-    if (!stm.fetch_expecting_one())
+    auto stm = conn->odbcstatement();
+    stm->prepare("SELECT COUNT(1) FROM context WHERE id_report = ?");
+    stm->bind_in(1, dbid);
+    stm->bind_out(1, count);
+    stm->execute();
+    if (!stm->fetch_expecting_one())
         error_consistency::throwf("%s is in cache but not in the database (database externally modified?)", name);
     return count;
 }
@@ -449,13 +449,13 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 
         /* Delete the items that were deleted */
         {
-            db::Statement stm(*conn);
-            stm.prepare("DELETE FROM repinfo WHERE id=?");
+            auto stm = conn->odbcstatement();
+            stm->prepare("DELETE FROM repinfo WHERE id=?");
             for (size_t i = 0; i < cache.size(); ++i)
                 if (!cache[i].memo.empty() && cache[i].new_memo.empty())
                 {
-                    stm.bind_in(1, cache[i].id);
-                    stm.execute_and_close();
+                    stm->bind_in(1, cache[i].id);
+                    stm->execute_and_close();
 
                     /* clear_cache_item(&(ri->cache[i])); */
                     ++*deleted;
@@ -464,20 +464,20 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 
         /* Update the items that were modified */
         {
-            db::Statement stm(*conn);
-            stm.prepare("UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
+            auto stm = conn->odbcstatement();
+            stm->prepare("UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
                     "  WHERE id=?");
             for (size_t i = 0; i < cache.size(); ++i)
                 if (!cache[i].memo.empty() && !cache[i].new_memo.empty())
                 {
-                    stm.bind_in(1, cache[i].new_memo.c_str());
-                    stm.bind_in(2, cache[i].new_desc.c_str());
-                    stm.bind_in(3, cache[i].new_prio);
-                    stm.bind_in(4, cache[i].new_descriptor.c_str());
-                    stm.bind_in(5, cache[i].new_tablea);
-                    stm.bind_in(6, cache[i].id);
+                    stm->bind_in(1, cache[i].new_memo.c_str());
+                    stm->bind_in(2, cache[i].new_desc.c_str());
+                    stm->bind_in(3, cache[i].new_prio);
+                    stm->bind_in(4, cache[i].new_descriptor.c_str());
+                    stm->bind_in(5, cache[i].new_tablea);
+                    stm->bind_in(6, cache[i].id);
 
-                    stm.execute_and_close();
+                    stm->execute_and_close();
 
                     /* commit_cache_item(&(ri->cache[i])); */
                     ++*updated;
@@ -487,21 +487,21 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
         /* Insert the new items */
         if (!newitems.empty())
         {
-            Statement stm(*conn);
-            stm.prepare("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
+            auto stm = conn->odbcstatement();
+            stm->prepare("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
                     "     VALUES (?, ?, ?, ?, ?, ?)");
 
             for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
                     i != newitems.end(); ++i)
             {
-                stm.bind_in(1, i->id);
-                stm.bind_in(2, i->new_memo.c_str());
-                stm.bind_in(3, i->new_desc.c_str());
-                stm.bind_in(4, i->new_prio);
-                stm.bind_in(5, i->new_descriptor.c_str());
-                stm.bind_in(6, i->new_tablea);
+                stm->bind_in(1, i->id);
+                stm->bind_in(2, i->new_memo.c_str());
+                stm->bind_in(3, i->new_desc.c_str());
+                stm->bind_in(4, i->new_prio);
+                stm->bind_in(5, i->new_descriptor.c_str());
+                stm->bind_in(6, i->new_tablea);
 
-                stm.execute_and_close();
+                stm->execute_and_close();
 
                 /* DBA_RUN_OR_GOTO(cleanup, cache_append(ri, id, memo, description, prio, descriptor, tablea)); */
                 ++*added;
@@ -524,21 +524,21 @@ void Repinfo::dump(FILE* out)
     char descriptor[6]; SQLLEN descriptor_ind;
     DBALLE_SQL_C_UINT_TYPE tablea;
 
-    db::Statement stm(*conn);
+    auto stm = conn->odbcstatement();
 
-    stm.bind_out(1, id);
-    stm.bind_out(2, memo, sizeof(memo), memo_ind);
-    stm.bind_out(3, description, sizeof(description), description_ind);
-    stm.bind_out(4, prio);
-    stm.bind_out(5, descriptor, sizeof(descriptor), descriptor_ind);
-    stm.bind_out(6, tablea);
+    stm->bind_out(1, id);
+    stm->bind_out(2, memo, sizeof(memo), memo_ind);
+    stm->bind_out(3, description, sizeof(description), description_ind);
+    stm->bind_out(4, prio);
+    stm->bind_out(5, descriptor, sizeof(descriptor), descriptor_ind);
+    stm->bind_out(6, tablea);
 
-    stm.exec_direct("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
+    stm->exec_direct("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
 
     int count;
     fprintf(out, "dump of table repinfo:\n");
     fprintf(out, "   id   memo   description  prio   desc  tablea\n");
-    for (count = 0; stm.fetch(); ++count)
+    for (count = 0; stm->fetch(); ++count)
     {
         fprintf(out, " %4d   %s  %s  %d  %s %u\n",
                 (int)id,

@@ -86,23 +86,23 @@ protected:
     /**
      * DB connection.
      */
-    db::Connection& conn;
+    ODBCConnection& conn;
 
     /** Station ID sequence, when the DB requires it */
     db::Sequence* seq_station;
 
     /** Precompiled select fixed station query */
-    db::Statement* sfstm;
+    ODBCStatement* sfstm;
     /** Precompiled select mobile station query */
-    db::Statement* smstm;
+    ODBCStatement* smstm;
     /** Precompiled select data by station id query */
-    db::Statement* sstm;
+    ODBCStatement* sstm;
     /** Precompiled insert query */
-    db::Statement* istm;
+    ODBCStatement* istm;
     /** Precompiled update query */
-    db::Statement* ustm;
+    ODBCStatement* ustm;
     /** Precompiled delete query */
-    db::Statement* dstm;
+    ODBCStatement* dstm;
 
     /** Station ID SQL parameter */
     DBALLE_SQL_C_SINT_TYPE id;
@@ -142,7 +142,7 @@ protected:
     void remove();
 
 public:
-    ODBCStation(db::ODBCConnection& conn);
+    ODBCStation(ODBCConnection& conn);
     ~ODBCStation();
     ODBCStation(const ODBCStation&) = delete;
     ODBCStation(const ODBCStation&&) = delete;
@@ -205,14 +205,14 @@ ODBCStation::ODBCStation(ODBCConnection& conn)
     }
 
     /* Create the statement for select fixed */
-    sfstm = new Statement(conn);
+    sfstm = conn.odbcstatement().release();
     sfstm->bind_in(1, lat);
     sfstm->bind_in(2, lon);
     sfstm->bind_out(1, id);
     sfstm->prepare(select_fixed_query);
 
     /* Create the statement for select mobile */
-    smstm = new Statement(conn);
+    smstm = conn.odbcstatement().release();
     smstm->bind_in(1, lat);
     smstm->bind_in(2, lon);
     smstm->bind_in(3, ident, ident_ind);
@@ -220,7 +220,7 @@ ODBCStation::ODBCStation(ODBCConnection& conn)
     smstm->prepare(select_mobile_query);
 
     /* Create the statement for select station data */
-    sstm = new Statement(conn);
+    sstm = conn.odbcstatement().release();
     sstm->bind_in(1, id);
     sstm->bind_out(1, lat);
     sstm->bind_out(2, lon);
@@ -228,14 +228,14 @@ ODBCStation::ODBCStation(ODBCConnection& conn)
     sstm->prepare(select_query);
 
     /* Create the statement for insert */
-    istm = new Statement(conn);
+    istm = conn.odbcstatement().release();
     istm->bind_in(1, lat);
     istm->bind_in(2, lon);
     istm->bind_in(3, ident, ident_ind);
     istm->prepare(insert_query);
 
     /* Create the statement for update */
-    ustm = new Statement(conn);
+    ustm = conn.odbcstatement().release();
     ustm->bind_in(1, lat);
     ustm->bind_in(2, lon);
     ustm->bind_in(3, ident, ident_ind);
@@ -243,7 +243,7 @@ ODBCStation::ODBCStation(ODBCConnection& conn)
     ustm->prepare(update_query);
 
     /* Create the statement for remove */
-    dstm = new Statement(conn);
+    dstm = conn.odbcstatement().release();
     dstm->bind_in(1, id);
     dstm->prepare(remove_query);
 }
@@ -279,7 +279,7 @@ int ODBCStation::get_id(int lat, int lon, const char* ident)
     this->lat = lat;
     this->lon = lon;
     set_ident(ident);
-    db::Statement* stm = ident_ind == SQL_NULL_DATA ? sfstm : smstm;
+    ODBCStatement* stm = ident_ind == SQL_NULL_DATA ? sfstm : smstm;
     stm->execute();
     if (stm->fetch_expecting_one())
         return id;
@@ -304,7 +304,7 @@ int ODBCStation::obtain_id(int lat, int lon, const char* ident, bool* inserted)
     set_ident(ident);
 
     // Trying querying
-    db::Statement* stm = ident_ind == SQL_NULL_DATA ? sfstm : smstm;
+    ODBCStatement* stm = ident_ind == SQL_NULL_DATA ? sfstm : smstm;
     stm->execute();
     if (stm->fetch_expecting_one())
     {
@@ -339,30 +339,30 @@ void ODBCStation::dump(FILE* out)
     char ident[64];
     SQLLEN ident_ind;
 
-    Statement stm(conn);
-    stm.bind_out(1, id);
-    stm.bind_out(2, lat);
-    stm.bind_out(3, lon);
-    stm.bind_out(4, ident, 64, ident_ind);
-    stm.exec_direct("SELECT id, lat, lon, ident FROM station");
+    auto stm = conn.odbcstatement();
+    stm->bind_out(1, id);
+    stm->bind_out(2, lat);
+    stm->bind_out(3, lon);
+    stm->bind_out(4, ident, 64, ident_ind);
+    stm->exec_direct("SELECT id, lat, lon, ident FROM station");
     int count;
     fprintf(out, "dump of table station:\n");
-    for (count = 0; stm.fetch(); ++count)
+    for (count = 0; stm->fetch(); ++count)
         if (ident_ind == SQL_NULL_DATA)
             fprintf(out, " %d, %.5f, %.5f\n", (int)id, lat/100000.0, lon/100000.0);
         else
             fprintf(out, " %d, %.5f, %.5f, %.*s\n", (int)id, lat/10000.0, lon/10000.0, (int)ident_ind, ident);
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
-    stm.close_cursor();
+    stm->close_cursor();
 }
 
-void Station::reset_db(db::ODBCConnection& conn)
+void Station::reset_db(ODBCConnection& conn)
 {
     conn.drop_table_if_exists("station");
     conn.drop_sequence_if_exists("seq_station");
 
     /* Allocate statement handle */
-    db::Statement stm(conn);
+    auto stm = conn.odbcstatement();
 
     const char** queries = NULL;
     int query_count = 0;
@@ -386,7 +386,7 @@ void Station::reset_db(db::ODBCConnection& conn)
     }
     /* Create tables */
     for (int i = 0; i < query_count; i++)
-        stm.exec_direct_and_close(queries[i]);
+        stm->exec_direct_and_close(queries[i]);
 }
 
 Station::~Station()

@@ -269,14 +269,14 @@ struct Constraints
     }
 };
 
-QueryBuilder::QueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
+QueryBuilder::QueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
     : conn(*db.conn), db(db), stm(stm), cur(cur), rec(rec), sql_query(2048), sql_from(1024), sql_where(1024),
       modifiers(modifiers), output_seq(1), query_station_vars(false)
 {
     query_station_vars = rec.is_ana_context();
 }
 
-DataQueryBuilder::DataQueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
+DataQueryBuilder::DataQueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
     : QueryBuilder(db, stm, cur, rec, modifiers)
 {
     query_data_id = rec.get(DBA_KEY_CONTEXT_ID, MISSING_INT);

@@ -33,7 +33,7 @@ namespace dballe {
 namespace db {
 namespace v5 {
 
-Attr::Attr(Connection& conn)
+Attr::Attr(ODBCConnection& conn)
     : conn(conn), sstm(0), istm(0), rstm(0)
 {
     const char* select_query =
@@ -58,7 +58,7 @@ Attr::Attr(Connection& conn)
         "UPDATE attr SET value=? WHERE id_context=? AND id_var=? AND type=?";
 
     // Create the statement for select
-    sstm = new db::Statement(conn);
+    sstm = conn.odbcstatement().release();
     sstm->bind_in(1, id_context);
     sstm->bind_in(2, id_var);
     sstm->bind_out(1, type);
@@ -66,7 +66,7 @@ Attr::Attr(Connection& conn)
     sstm->prepare(select_query);
 
     // Create the statement for insert
-    istm = new db::Statement(conn);
+    istm = conn.odbcstatement().release();
     istm->bind_in(1, id_context);
     istm->bind_in(2, id_var);
     istm->bind_in(3, type);
@@ -74,7 +74,7 @@ Attr::Attr(Connection& conn)
     istm->prepare(insert_query);
 
     // Create the statement for replace
-    rstm = new db::Statement(conn);
+    rstm = conn.odbcstatement().release();
     if (conn.server_type == POSTGRES)
     {
         rstm->bind_in(1, value, value_ind);
@@ -156,15 +156,15 @@ void Attr::dump(FILE* out)
     char value[255];
     SQLLEN value_ind;
 
-    db::Statement stm(conn);
-    stm.bind_out(1, id_context);
-    stm.bind_out(2, id_var);
-    stm.bind_out(3, type);
-    stm.bind_out(4, value, 255, value_ind);
-    stm.exec_direct("SELECT id_context, id_var, type, value FROM attr");
+    auto stm = conn.odbcstatement();
+    stm->bind_out(1, id_context);
+    stm->bind_out(2, id_var);
+    stm->bind_out(3, type);
+    stm->bind_out(4, value, 255, value_ind);
+    stm->exec_direct("SELECT id_context, id_var, type, value FROM attr");
     int count;
     fprintf(out, "dump of table attr:\n");
-    for (count = 0; stm.fetch(); ++count)
+    for (count = 0; stm->fetch(); ++count)
     {
         fprintf(out, " %4d, %01d%02d%03d, %01d%02d%03d",
                 (int)id_context,
@@ -176,11 +176,9 @@ void Attr::dump(FILE* out)
                 fprintf(out, " %.*s\n", (int)value_ind, value);
     }
     fprintf(out, "%d element%s in table attr\n", count, count != 1 ? "s" : "");
-    stm.close_cursor();
+    stm->close_cursor();
 }
 
-} // namespace v5
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}

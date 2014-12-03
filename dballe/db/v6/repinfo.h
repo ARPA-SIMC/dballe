@@ -31,7 +31,7 @@ namespace v6 {
 class Repinfo : public v5::Repinfo
 {
 public:
-    Repinfo(Connection* conn);
+    Repinfo(ODBCConnection* conn);
 
     /// Return how many time this ID is used in the database
     virtual int id_use_count(unsigned id, const char* name);

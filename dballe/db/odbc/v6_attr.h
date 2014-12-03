@@ -36,14 +36,14 @@ class ODBCAttr : public Attr
 {
 protected:
     /** DB connection. */
-    db::ODBCConnection& conn;
+    ODBCConnection& conn;
 
     /** Precompiled select statement */
-    db::Statement* sstm;
+    ODBCStatement* sstm;
     /** Precompiled insert statement */
-    db::Statement* istm;
+    ODBCStatement* istm;
     /** Precompiled replace statement */
-    db::Statement* rstm;
+    ODBCStatement* rstm;
 
     /** id_data SQL parameter */
     DBALLE_SQL_C_SINT_TYPE id_data;

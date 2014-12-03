@@ -37,7 +37,7 @@ namespace dballe {
 struct Record;
 
 namespace db {
-struct Connection;
+struct ODBCConnection;
 
 namespace v5 {
 
@@ -100,13 +100,13 @@ struct Repinfo
 	mutable std::vector<repinfo::Memoidx> memo_idx;
 
 
-	/**
-	 * DB connection. The pointer is assumed always valid during the
-	 * lifetime of the object
-	 */
-	Connection* conn;
+    /**
+     * DB connection. The pointer is assumed always valid during the
+     * lifetime of the object
+     */
+    ODBCConnection* conn;
 
-    Repinfo(Connection* conn);
+    Repinfo(ODBCConnection* conn);
     virtual ~Repinfo();
 
 	/**

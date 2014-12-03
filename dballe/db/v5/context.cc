@@ -64,7 +64,7 @@ Context::Context(DB& db)
     date.fraction = 0;
 
     /* Create the statement for select fixed */
-    sstm = new Statement(*db.conn);
+    sstm = db.conn->odbcstatement().release();
     sstm->bind_in(1, id_station);
     sstm->bind_in(2, id_report);
     sstm->bind_in(3, date);
@@ -79,7 +79,7 @@ Context::Context(DB& db)
     sstm->prepare(select_query);
 
     /* Create the statement for select data */
-    sdstm = new Statement(*db.conn);
+    sdstm = db.conn->odbcstatement().release();
     sdstm->bind_in(1, id);
     sdstm->bind_out(1, id_station);
     sdstm->bind_out(2, id_report);
@@ -94,7 +94,7 @@ Context::Context(DB& db)
     sdstm->prepare(select_data_query);
 
     /* Create the statement for insert */
-    istm = new Statement(*db.conn);
+    istm = db.conn->odbcstatement().release();
     istm->bind_in(1, id_station);
     istm->bind_in(2, id_report);
     istm->bind_in(3, date);
@@ -108,7 +108,7 @@ Context::Context(DB& db)
     istm->prepare(insert_query);
 
     /* Create the statement for remove */
-    dstm = new Statement(*db.conn);
+    dstm = db.conn->odbcstatement().release();
     dstm->bind_in(1, id);
     dstm->prepare(remove_query);
 }
@@ -188,22 +188,22 @@ void Context::dump(FILE* out)
     DBALLE_SQL_C_SINT_TYPE p1;
     DBALLE_SQL_C_SINT_TYPE p2;
 
-    Statement stm(*db.conn);
-    stm.bind_out(1, id);
-    stm.bind_out(2, id_station);
-    stm.bind_out(3, id_report);
-    stm.bind_out(4, date);
-    stm.bind_out(5, ltype1);
-    stm.bind_out(6, l1);
-    stm.bind_out(7, ltype2);
-    stm.bind_out(8, l2);
-    stm.bind_out(9, pind);
-    stm.bind_out(10, p1);
-    stm.bind_out(11, p2);
-    stm.exec_direct("SELECT id, id_ana, id_report, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM context ORDER BY id");
+    auto stm = db.conn->odbcstatement();
+    stm->bind_out(1, id);
+    stm->bind_out(2, id_station);
+    stm->bind_out(3, id_report);
+    stm->bind_out(4, date);
+    stm->bind_out(5, ltype1);
+    stm->bind_out(6, l1);
+    stm->bind_out(7, ltype2);
+    stm->bind_out(8, l2);
+    stm->bind_out(9, pind);
+    stm->bind_out(10, p1);
+    stm->bind_out(11, p2);
+    stm->exec_direct("SELECT id, id_ana, id_report, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM context ORDER BY id");
     int count;
     fprintf(out, "   id   st  rep date        lev              tr\n");
-    for (count = 0; stm.fetch(); ++count)
+    for (count = 0; stm->fetch(); ++count)
     {
         fprintf(out, " %4d %4d %4d %04d-%02d-%02d %02d:%02d:%02d ",
             (int)id, (int)id_station, (int)id_report,
@@ -223,8 +223,6 @@ void Context::dump(FILE* out)
     fprintf(out, "%d element%s in table context\n", count, count != 1 ? "s" : "");
 }
 
-} // namespace v5
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}

@@ -293,8 +293,8 @@ static const char* init_queries_oracle[] = {
 
 
 // First part of initialising a dba_db
-DB::DB(unique_ptr<Connection>& conn)
-    : conn(dynamic_cast<ODBCConnection*>(conn.release())),
+DB::DB(unique_ptr<ODBCConnection>& conn)
+    : conn(conn.release()),
       m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
       m_data(0), m_attr(0),
       seq_lev_tr(0), seq_data(0), _last_station_id(0)
@@ -627,20 +627,20 @@ void DB::remove(const Query& rec)
     c.query(rec);
 
     // Compile the DELETE query for the data
-    db::Statement stmd(*conn);
-    stmd.bind_in(1, c.sqlrec.out_id_data);
-    stmd.prepare("DELETE FROM data WHERE id=?");
+    auto stmd = conn->odbcstatement();
+    stmd->bind_in(1, c.sqlrec.out_id_data);
+    stmd->prepare("DELETE FROM data WHERE id=?");
 
     // Compile the DELETE query for the attributes
-    db::Statement stma(*conn);
-    stma.bind_in(1, c.sqlrec.out_id_data);
-    stma.prepare("DELETE FROM attr WHERE id_data=?");
+    auto stma = conn->odbcstatement();
+    stma->bind_in(1, c.sqlrec.out_id_data);
+    stma->prepare("DELETE FROM attr WHERE id_data=?");
 
     /* Iterate all the results, deleting them */
     while (c.next())
     {
-        stmd.execute_and_close();
-        stma.execute_and_close();
+        stmd->execute_and_close();
+        stma->execute_and_close();
     }
     t->commit();
 }
@@ -748,19 +748,19 @@ unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const db::AttrLis
     Varcode out_type;
     char out_value[255];
 
-    db::Statement stm(*conn);
-    stm.bind_in(1, in_id_data);
-    stm.bind_out(1, out_type);
-    stm.bind_out(2, out_value, 255);
+    auto stm = conn->odbcstatement();
+    stm->bind_in(1, in_id_data);
+    stm->bind_out(1, out_type);
+    stm->bind_out(2, out_value, 255);
 
     TRACE("attr read query: %s with id_data %d var %01d%02d%03d\n", query.c_str(), id_data,
             WR_VAR_F(id_var), WR_VAR_X(id_var), WR_VAR_Y(id_var));
 
-    stm.exec_direct(query.c_str());
+    stm->exec_direct(query.c_str());
 
     // Fetch the results
     int count;
-    for (count = 0; stm.fetch(); ++count)
+    for (count = 0; stm->fetch(); ++count)
         dest(newvar(out_type, out_value));
 
     return count;
@@ -811,9 +811,9 @@ void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wre
 
     DBALLE_SQL_C_SINT_TYPE in_id_data = id_data;
 
-    db::Statement stm(*conn);
-    stm.bind_in(1, in_id_data);
-    stm.exec_direct_and_close(query.c_str());
+    auto stm = conn->odbcstatement();
+    stm->bind_in(1, in_id_data);
+    stm->exec_direct_and_close(query.c_str());
 }
 
 void DB::dump(FILE* out)

@@ -34,8 +34,8 @@
 
 namespace dballe {
 namespace db {
-struct Connection;
-struct Statement;
+struct ODBCConnection;
+struct ODBCStatement;
 
 namespace v5 {
 struct DB;
@@ -51,13 +51,13 @@ struct Context
     v5::DB& db;
 
     /** Precompiled select statement */
-    db::Statement* sstm;
+    ODBCStatement* sstm;
     /** Precompiled select data statement */
-    db::Statement* sdstm;
+    ODBCStatement* sdstm;
     /** Precompiled insert statement */
-    db::Statement* istm;
+    ODBCStatement* istm;
     /** Precompiled delete statement */
-    db::Statement* dstm;
+    ODBCStatement* dstm;
 
     /** Context ID SQL parameter */
     DBALLE_SQL_C_SINT_TYPE id;

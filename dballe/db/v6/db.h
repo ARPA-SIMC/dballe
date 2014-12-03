@@ -138,7 +138,7 @@ protected:
 
     void init_after_connect();
 
-    DB(std::unique_ptr<Connection>& conn);
+    DB(std::unique_ptr<ODBCConnection>& conn);
 
 public:
     virtual ~DB();

@@ -14,7 +14,8 @@ namespace db {
 namespace v6 {
 
 ODBCData::ODBCData(DB& db)
-    : db(db), istm(0), ustm(0), ioustm(0), iistm(0), sidstm(0)
+#warning Pass an ODBCConnection at some point
+    : db(db), conn(*dynamic_cast<ODBCConnection*>(db.conn)), istm(0), ustm(0), ioustm(0), iistm(0), sidstm(0)
 {
     const char* insert_query =
         "INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(?, ?, ?, ?, ?, ?)";
@@ -52,7 +53,7 @@ ODBCData::ODBCData(DB& db)
     */
 
     /* Create the statement for insert */
-    istm = new db::Statement(*db.conn);
+    istm = conn.odbcstatement().release();
     istm->bind_in(1, id_station);
     istm->bind_in(2, id_report);
     istm->bind_in(3, id_lev_tr);
@@ -62,7 +63,7 @@ ODBCData::ODBCData(DB& db)
     istm->prepare(insert_query);
 
     /* Create the statement for update */
-    ustm = new db::Statement(*db.conn);
+    ustm = conn.odbcstatement().release();
     ustm->bind_in(1, value, value_ind);
     ustm->bind_in(2, id_station);
     ustm->bind_in(3, id_report);
@@ -72,11 +73,11 @@ ODBCData::ODBCData(DB& db)
     ustm->prepare(update_query);
 
     /* Create the statement for replace (where available) */
-    switch (db.conn->server_type)
+    switch (conn.server_type)
     {
         case MYSQL:
         case ORACLE:
-            ioustm = new db::Statement(*db.conn);
+            ioustm = conn.odbcstatement().release();
             ioustm->bind_in(1, id_station);
             ioustm->bind_in(2, id_report);
             ioustm->bind_in(3, id_lev_tr);
@@ -87,7 +88,7 @@ ODBCData::ODBCData(DB& db)
         default:
             break;
     }
-    switch (db.conn->server_type)
+    switch (conn.server_type)
     {
         case MYSQL: ioustm->prepare(replace_query_mysql); break;
         case ORACLE: ioustm->prepare(replace_query_oracle); break;
@@ -96,14 +97,14 @@ ODBCData::ODBCData(DB& db)
     }
 
     /* Create the statement for insert ignore */
-    iistm = new db::Statement(*db.conn);
+    iistm = conn.odbcstatement().release();
     iistm->bind_in(1, id_station);
     iistm->bind_in(2, id_report);
     iistm->bind_in(3, id_lev_tr);
     iistm->bind_in(4, date);
     iistm->bind_in(5, id_var);
     iistm->bind_in(6, value, value_ind);
-    switch (db.conn->server_type)
+    switch (conn.server_type)
     {
         case POSTGRES: iistm->prepare(insert_query); iistm->ignore_error = "23505"; break;
         case ORACLE: iistm->prepare(insert_query); iistm->ignore_error = "23000"; break;
@@ -114,7 +115,7 @@ ODBCData::ODBCData(DB& db)
     }
 
     /* Create the statement for select id */
-    sidstm = new db::Statement(*db.conn);
+    sidstm = conn.odbcstatement().release();
     sidstm->bind_in(1, id_station);
     sidstm->bind_in(2, id_report);
     sidstm->bind_in(3, id_lev_tr);
@@ -275,19 +276,19 @@ void ODBCData::dump(FILE* out)
     char value[255];
     SQLLEN value_ind;
 
-    db::Statement stm(*(db.conn));
-    stm.bind_out(1, id);
-    stm.bind_out(2, id_station);
-    stm.bind_out(3, id_report);
-    stm.bind_out(4, id_lev_tr);
-    stm.bind_out(5, date);
-    stm.bind_out(6, id_var);
-    stm.bind_out(7, value, 255, value_ind);
-    stm.exec_direct("SELECT id, id_station, id_report, id_lev_tr, datetime, id_var, value FROM data");
+    auto stm = conn.odbcstatement();
+    stm->bind_out(1, id);
+    stm->bind_out(2, id_station);
+    stm->bind_out(3, id_report);
+    stm->bind_out(4, id_lev_tr);
+    stm->bind_out(5, date);
+    stm->bind_out(6, id_var);
+    stm->bind_out(7, value, 255, value_ind);
+    stm->exec_direct("SELECT id, id_station, id_report, id_lev_tr, datetime, id_var, value FROM data");
     int count;
     fprintf(out, "dump of table data:\n");
     fprintf(out, " id   st   rep ltr  datetime              var\n");
-    for (count = 0; stm.fetch(); ++count)
+    for (count = 0; stm->fetch(); ++count)
     {
         char ltr[20];
         if (id_lev_tr == -1)
@@ -307,7 +308,7 @@ void ODBCData::dump(FILE* out)
             fprintf(out, " %.*s\n", (int)value_ind, value);
     }
     fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
-    stm.close_cursor();
+    stm->close_cursor();
 }
 
 }

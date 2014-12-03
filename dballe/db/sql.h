@@ -51,6 +51,7 @@ class Querybuf;
 
 namespace db {
 class Transaction;
+class Statement;
 
 /**
  * Supported SQL servers.
@@ -82,6 +83,13 @@ struct Connection
      * and will end when its destuctor is called.
      */
     virtual std::unique_ptr<Transaction> transaction() = 0;
+
+    /**
+     * Create a statement.
+     *
+     * A statement holds a precompiled query, and input/output bind arguments.
+     */
+    virtual std::unique_ptr<Statement> statement() = 0;
 
     /// Execute a one-shot query
     virtual void exec(const std::string& query) = 0;
@@ -135,6 +143,12 @@ public:
 
     virtual void commit() = 0;
     virtual void rollback() = 0;
+};
+
+class Statement
+{
+public:
+    virtual ~Statement() {}
 };
 
 }

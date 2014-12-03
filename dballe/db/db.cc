@@ -81,7 +81,7 @@ bool DB::is_url(const char* str)
     return false;
 }
 
-unique_ptr<DB> DB::instantiate_db(unique_ptr<Connection> conn)
+unique_ptr<DB> DB::instantiate_db(unique_ptr<ODBCConnection> conn)
 {
 #ifdef HAVE_ODBC
     // Autodetect format
@@ -127,7 +127,7 @@ unique_ptr<DB> DB::connect(const char* dsn, const char* user, const char* passwo
 #ifdef HAVE_ODBC
     unique_ptr<ODBCConnection> conn(new ODBCConnection);
     conn->connect(dsn, user, password);
-    return instantiate_db(unique_ptr<Connection>(conn.release()));
+    return instantiate_db(move(conn));
 #else
     throw error_unimplemented("ODBC support is not available");
 #endif
@@ -138,7 +138,7 @@ unique_ptr<DB> DB::connect_from_file(const char* pathname)
 #ifdef HAVE_ODBC
     unique_ptr<ODBCConnection> conn(new ODBCConnection);
     conn->connect_file(pathname);
-    return instantiate_db(unique_ptr<Connection>(conn.release()));
+    return instantiate_db(move(conn));
 #else
     throw error_unimplemented("ODBC support is not available");
 #endif

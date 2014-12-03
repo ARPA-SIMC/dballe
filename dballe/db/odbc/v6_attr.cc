@@ -57,21 +57,21 @@ ODBCAttr::ODBCAttr(ODBCConnection& conn)
         "UPDATE attr SET value=? WHERE id_data=? AND type=?";
 
     // Create the statement for select
-    sstm = new db::Statement(conn);
+    sstm = conn.odbcstatement().release();
     sstm->bind_in(1, id_data);
     sstm->bind_out(1, type);
     sstm->bind_out(2, value, sizeof(value));
     sstm->prepare(select_query);
 
     // Create the statement for insert
-    istm = new db::Statement(conn);
+    istm = conn.odbcstatement().release();
     istm->bind_in(1, id_data);
     istm->bind_in(2, type);
     istm->bind_in(3, value, value_ind);
     istm->prepare(insert_query);
 
     // Create the statement for replace
-    rstm = new db::Statement(conn);
+    rstm = conn.odbcstatement().release();
     if (conn.server_type == POSTGRES)
     {
         rstm->bind_in(1, value, value_ind);
@@ -149,14 +149,14 @@ void ODBCAttr::dump(FILE* out)
     char value[255];
     SQLLEN value_ind;
 
-    db::Statement stm(conn);
-    stm.bind_out(1, id_data);
-    stm.bind_out(2, type);
-    stm.bind_out(3, value, 255, value_ind);
-    stm.exec_direct("SELECT id_data, type, value FROM attr");
+    auto stm = conn.odbcstatement();
+    stm->bind_out(1, id_data);
+    stm->bind_out(2, type);
+    stm->bind_out(3, value, 255, value_ind);
+    stm->exec_direct("SELECT id_data, type, value FROM attr");
     int count;
     fprintf(out, "dump of table attr:\n");
-    for (count = 0; stm.fetch(); ++count)
+    for (count = 0; stm->fetch(); ++count)
     {
         fprintf(out, " %4d, %01d%02d%03d",
                 (int)id_data,
@@ -167,7 +167,7 @@ void ODBCAttr::dump(FILE* out)
                 fprintf(out, " %.*s\n", (int)value_ind, value);
     }
     fprintf(out, "%d element%s in table attr\n", count, count != 1 ? "s" : "");
-    stm.close_cursor();
+    stm->close_cursor();
 }
 
 }

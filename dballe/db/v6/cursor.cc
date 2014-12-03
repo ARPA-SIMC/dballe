@@ -246,27 +246,27 @@ void Cursor::add_station_info(Record& rec)
     SQLLEN st_out_val_ind;
 
     /* Allocate statement handle */
-    db::Statement stm(*db.conn);
+    auto stm = db.conn->odbcstatement();
 
     /* Bind input fields */
-    stm.bind_in(1, sqlrec.out_ana_id);
+    stm->bind_in(1, sqlrec.out_ana_id);
 
     /* Bind output fields */
-    stm.bind_out(1, st_out_code);
-    stm.bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
+    stm->bind_out(1, st_out_code);
+    stm->bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
 
     /* Perform the query */
-    stm.exec_direct(query);
+    stm->exec_direct(query);
 
     /* Get the results and save them in the record */
-    while (stm.fetch())
+    while (stm->fetch())
         rec.var(st_out_code).setc(st_out_val);
 }
 
 CursorLinear::CursorLinear(DB& db, unsigned int modifiers)
     : Cursor(db, modifiers), stm(0)
 {
-    stm = new db::Statement(*db.conn);
+    stm = db.conn->odbcstatement().release();
 }
 
 CursorLinear::~CursorLinear()
@@ -519,16 +519,16 @@ CursorBest::~CursorBest() {}
 
 void CursorBest::query(const Record& rec)
 {
-    db::Statement stm(*db.conn);
+    auto stm = db.conn->odbcstatement();
 
-    DataQueryBuilder qb(db, stm, *this, rec, modifiers);
+    DataQueryBuilder qb(db, *stm, *this, rec, modifiers);
     qb.build();
     // fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
 
-    stm.set_cursor_forward_only();
-    stm.exec_direct(qb.sql_query.data(), qb.sql_query.size());
+    stm->set_cursor_forward_only();
+    stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
 
-    buffer_results(stm);
+    buffer_results(*stm);
 }
 
 void CursorBest::to_record(Record& rec)
@@ -564,7 +564,7 @@ unsigned CursorBest::test_iterate(FILE* dump)
     return count;
 }
 
-int CursorBest::buffer_results(db::Statement& stm)
+int CursorBest::buffer_results(ODBCStatement& stm)
 {
     db::v6::Repinfo& ri = db.repinfo();
 

@@ -41,7 +41,7 @@ struct DB;
 struct Record;
 
 namespace db {
-struct Statement;
+struct ODBCStatement;
 
 namespace v6 {
 struct DB;
@@ -166,21 +166,11 @@ protected:
     void to_record_datetime(Record& rec);
     void to_record_varcode(Record& rec);
 
-    int query_stations(db::Statement& stm, const Record& rec);
-    int query_data(db::Statement& stm, const Record& rec);
+    int query_stations(ODBCStatement& stm, const Record& rec);
+    int query_data(ODBCStatement& stm, const Record& rec);
 
     /// Query extra station info and add it to \a rec
     void add_station_info(Record& rec);
-
-#if 0
-    /**
-     * Perform the raw sql query
-     *
-     * @returns
-     *   the number of results
-     */
-    int raw_query(db::Statement& stm, const Record& rec);
-#endif
 
     /**
      * Return the number of results for a query.
@@ -201,7 +191,7 @@ public:
 
 protected:
     /** ODBC statement to use for the query */
-    db::Statement* stm;
+    ODBCStatement* stm;
 
     CursorLinear(DB& db, unsigned int modifiers);
 
@@ -289,7 +279,7 @@ protected:
 
     // Save all cursor results to a temp file, filtered to keep the best values
     // only
-    int buffer_results(db::Statement& stm);
+    int buffer_results(ODBCStatement& stm);
 
     virtual void discard_rest();
     virtual bool next();

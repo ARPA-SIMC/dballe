@@ -68,14 +68,14 @@ Data::Data(ODBCConnection& conn)
     */
 
     /* Create the statement for insert */
-    istm = new db::Statement(conn);
+    istm = conn.odbcstatement().release();
     istm->bind_in(1, id_context);
     istm->bind_in(2, id_var);
     istm->bind_in(3, value, value_ind);
     istm->prepare(insert_query);
 
     /* Create the statement for replace */
-    ustm = new db::Statement(conn);
+    ustm = conn.odbcstatement().release();
     if (conn.server_type == POSTGRES)
     {
         ustm->bind_in(1, value, value_ind);
@@ -96,7 +96,7 @@ Data::Data(ODBCConnection& conn)
     }
 
     /* Create the statement for insert ignore */
-    iistm = new db::Statement(conn);
+    iistm = conn.odbcstatement().release();
     iistm->bind_in(1, id_context);
     iistm->bind_in(2, id_var);
     iistm->bind_in(3, value, value_ind);
@@ -174,14 +174,14 @@ void Data::dump(FILE* out)
     char value[255];
     SQLLEN value_ind;
 
-    db::Statement stm(conn);
-    stm.bind_out(1, id_context);
-    stm.bind_out(2, id_var);
-    stm.bind_out(3, value, 255, value_ind);
-    stm.exec_direct("SELECT id_context, id_var, value FROM data");
+    auto stm = conn.odbcstatement();
+    stm->bind_out(1, id_context);
+    stm->bind_out(2, id_var);
+    stm->bind_out(3, value, 255, value_ind);
+    stm->exec_direct("SELECT id_context, id_var, value FROM data");
     int count;
     fprintf(out, "dump of table data:\n");
-    for (count = 0; stm.fetch(); ++count)
+    for (count = 0; stm->fetch(); ++count)
     {
         fprintf(out, " %4d, %01d%02d%03d",
                 (int)id_context,
@@ -192,7 +192,7 @@ void Data::dump(FILE* out)
                 fprintf(out, " %.*s\n", (int)value_ind, value);
     }
     fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
-    stm.close_cursor();
+    stm->close_cursor();
 }
 
 } // namespace v5

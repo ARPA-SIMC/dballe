@@ -81,7 +81,7 @@ struct QueryBuilder
     v5::DB& db;
 
     /** Statement to build variables to */
-    Statement& stm;
+    ODBCStatement& stm;
 
     /** Cursor with the output variables */
     Cursor& cur;
@@ -136,7 +136,7 @@ struct QueryBuilder
     DBALLE_SQL_C_SINT_TYPE	sel_context_id;
     /** @} */
 
-    QueryBuilder(v5::DB& db, Statement& stm, Cursor& cur, int wanted, int modifiers)
+    QueryBuilder(v5::DB& db, ODBCStatement& stm, Cursor& cur, int wanted, int modifiers)
         : db(db), stm(stm), cur(cur), sql_query(2048), sql_where(1024),
           wanted(wanted), modifiers(modifiers),
           select_wanted(0), from_wanted(0), input_seq(1), output_seq(1),
@@ -192,7 +192,7 @@ struct QueryBuilder
 Cursor::Cursor(v5::DB& db)
     : db(db), stm(0)
 {
-    stm = new db::Statement(*db.conn);
+    stm = db.conn->odbcstatement().release();
 }
 
 Cursor::~Cursor()
@@ -618,20 +618,20 @@ void Cursor::add_station_info(Record& rec)
     SQLLEN st_out_val_ind;
 
     /* Allocate statement handle */
-    db::Statement stm(*db.conn);
+    auto stm = db.conn->odbcstatement();
 
     /* Bind input fields */
-    stm.bind_in(1, out_ana_id);
+    stm->bind_in(1, out_ana_id);
 
     /* Bind output fields */
-    stm.bind_out(1, st_out_code);
-    stm.bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
+    stm->bind_out(1, st_out_code);
+    stm->bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
 
     /* Perform the query */
-    stm.exec_direct(query);
+    stm->exec_direct(query);
 
     /* Get the results and save them in the record */
-    while (stm.fetch())
+    while (stm->fetch())
         rec.var(st_out_code).setc(st_out_val);
 }
 

@@ -86,7 +86,7 @@ struct QueryBuilder
     DB& db;
 
     /** Statement to bind variables to */
-    Statement& stm;
+    ODBCStatement& stm;
 
     /** Cursor with the output variables */
     Cursor& cur;
@@ -115,7 +115,7 @@ struct QueryBuilder
     bool query_station_vars;
 
 
-    QueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers);
+    QueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers);
     virtual ~QueryBuilder() {}
 
     void build();
@@ -137,7 +137,7 @@ protected:
 
 struct StationQueryBuilder : public QueryBuilder
 {
-    StationQueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
+    StationQueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
         : QueryBuilder(db, stm, cur, rec, modifiers) {}
 
     virtual void build_select();
@@ -149,7 +149,7 @@ struct DataQueryBuilder : public QueryBuilder
 {
     int query_data_id;
 
-    DataQueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers);
+    DataQueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers);
 
     virtual void build_select();
     virtual bool build_where();
@@ -158,7 +158,7 @@ struct DataQueryBuilder : public QueryBuilder
 
 struct IdQueryBuilder : public DataQueryBuilder
 {
-    IdQueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
+    IdQueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
         : DataQueryBuilder(db, stm, cur, rec, modifiers) {}
 
     virtual void build_select();
@@ -169,7 +169,7 @@ struct SummaryQueryBuilder : public DataQueryBuilder
 {
     CursorSummary& cur_s;
 
-    SummaryQueryBuilder(DB& db, Statement& stm, CursorSummary& cur, const Record& rec, unsigned int modifiers)
+    SummaryQueryBuilder(DB& db, ODBCStatement& stm, CursorSummary& cur, const Record& rec, unsigned int modifiers)
         : DataQueryBuilder(db, stm, cur, rec, modifiers), cur_s(cur) {}
 
     virtual void build_select();

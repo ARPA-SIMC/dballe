@@ -38,7 +38,7 @@ struct DB;
 
 namespace db {
 struct ODBCConnection;
-struct Statement;
+struct ODBCStatement;
 
 namespace v5 {
 
@@ -48,14 +48,14 @@ namespace v5 {
 struct Data
 {
     /** DB connection. */
-    db::ODBCConnection& conn;
+    ODBCConnection& conn;
 
     /** Precompiled insert statement */
-    db::Statement* istm;
+    ODBCStatement* istm;
     /** Precompiled update statement */
-    db::Statement* ustm;
+    ODBCStatement* ustm;
     /** Precompiled insert or ignore statement */
-    db::Statement* iistm;
+    ODBCStatement* iistm;
 
     /** Context ID SQL parameter */
     DBALLE_SQL_C_SINT_TYPE id_context;

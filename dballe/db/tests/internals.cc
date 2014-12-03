@@ -23,7 +23,9 @@
 #include <sql.h>
 
 using namespace dballe;
+using namespace dballe::db;
 using namespace wreport;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -39,7 +41,7 @@ struct db_internals_shar : public dballe::tests::db_test
 	{
 	}
 
-    db::Connection& connection()
+    ODBCConnection& connection()
     {
         if (db::v5::DB* d = dynamic_cast<db::v5::DB*>(db.get()))
             return *(d->conn);
@@ -47,15 +49,12 @@ struct db_internals_shar : public dballe::tests::db_test
             throw error_consistency("test DB is not a v5 DB");
     }
 
-	void reset()
-	{
-		db::Connection& c = connection();
-		
-		c.drop_table_if_exists("dballe_test");
-
-		db::Statement s(c);
-		s.exec_direct("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
-	}
+    void reset()
+    {
+        Connection& c = connection();
+        c.drop_table_if_exists("dballe_test");
+        c.exec("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
+    }
 };
 TESTGRP(db_internals);
 
@@ -66,20 +65,20 @@ void to::test<1>()
 	use_db();
 	reset();
 
-	db::Connection& c = connection();
-	db::Statement s(c);
+    auto& c = connection();
+    auto s = c.odbcstatement();
 
-	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
+    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
-	s.prepare("SELECT val FROM dballe_test");
-	DBALLE_SQL_C_SINT_TYPE val = 0;
-	s.bind_out(1, val);
-	s.execute();
-	unsigned count = 0;
-	while (s.fetch())
-		++count;
-	ensure_equals(val, 42);
-	ensure_equals(count, 1);
+    s->prepare("SELECT val FROM dballe_test");
+    DBALLE_SQL_C_SINT_TYPE val = 0;
+    s->bind_out(1, val);
+    s->execute();
+    unsigned count = 0;
+    while (s->fetch())
+        ++count;
+    wassert(actual(val) == 42);
+    wassert(actual(count) == 1);
 }
 
 // Test querying DBALLE_SQL_C_SINT_TYPE values, with indicators
@@ -89,22 +88,22 @@ void to::test<2>()
 	use_db();
 	reset();
 
-	db::Connection& c = connection();
-	db::Statement s(c);
+    auto& c = connection();
+    auto s = c.odbcstatement();
 
-	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
+    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
-	s.prepare("SELECT val FROM dballe_test");
-	DBALLE_SQL_C_SINT_TYPE val = 0;
-	SQLLEN ind = 0;
-	s.bind_out(1, val, ind);
-	s.execute();
-	unsigned count = 0;
-	while (s.fetch())
-		++count;
-	ensure_equals(val, 42);
-	ensure(ind != SQL_NULL_DATA);
-	ensure_equals(count, 1);
+    s->prepare("SELECT val FROM dballe_test");
+    DBALLE_SQL_C_SINT_TYPE val = 0;
+    SQLLEN ind = 0;
+    s->bind_out(1, val, ind);
+    s->execute();
+    unsigned count = 0;
+    while (s->fetch())
+        ++count;
+    wassert(actual(val) == 42);
+    wassert(actual(ind) != SQL_NULL_DATA);
+    wassert(actual(count) == 1);
 }
 
 // Test querying DBALLE_SQL_C_UINT_TYPE values
@@ -114,20 +113,20 @@ void to::test<3>()
 	use_db();
 	reset();
 
-	db::Connection& c = connection();
-	db::Statement s(c);
+    auto& c = connection();
+    auto s = c.odbcstatement();
 
-	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
+    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
-	s.prepare("SELECT val FROM dballe_test");
-	DBALLE_SQL_C_UINT_TYPE val = 0;
-	s.bind_out(1, val);
-	s.execute();
-	unsigned count = 0;
-	while (s.fetch())
-		++count;
-	ensure_equals(val, 42);
-	ensure_equals(count, 1);
+    s->prepare("SELECT val FROM dballe_test");
+    DBALLE_SQL_C_UINT_TYPE val = 0;
+    s->bind_out(1, val);
+    s->execute();
+    unsigned count = 0;
+    while (s->fetch())
+        ++count;
+    wassert(actual(val) == 42);
+    wassert(actual(count) == 1);
 }
 
 // Test querying DBALLE_SQL_C_UINT_TYPE values, with indicators
@@ -137,22 +136,22 @@ void to::test<4>()
 	use_db();
 	reset();
 
-	db::Connection& c = connection();
-	db::Statement s(c);
+    auto& c = connection();
+    auto s = c.odbcstatement();
 
-	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
+    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
-	s.prepare("SELECT val FROM dballe_test");
-	DBALLE_SQL_C_UINT_TYPE val = 0;
-	SQLLEN ind = 0;
-	s.bind_out(1, val, ind);
-	s.execute();
-	unsigned count = 0;
-	while (s.fetch())
-		++count;
-	ensure_equals(val, 42);
-	ensure(ind != SQL_NULL_DATA);
-	ensure_equals(count, 1);
+    s->prepare("SELECT val FROM dballe_test");
+    DBALLE_SQL_C_UINT_TYPE val = 0;
+    SQLLEN ind = 0;
+    s->bind_out(1, val, ind);
+    s->execute();
+    unsigned count = 0;
+    while (s->fetch())
+        ++count;
+    wassert(actual(val) == 42);
+    wassert(actual(ind) != SQL_NULL_DATA);
+    wassert(actual(count) == 1);
 }
 
 // Test querying unsigned short values
@@ -162,20 +161,20 @@ void to::test<5>()
 	use_db();
 	reset();
 
-	db::Connection& c = connection();
-	db::Statement s(c);
+    auto& c = connection();
+    auto s = c.odbcstatement();
 
-	s.exec_direct("INSERT INTO dballe_test VALUES (42)");
+    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
-	s.prepare("SELECT val FROM dballe_test");
-	unsigned short val = 0;
-	s.bind_out(1, val);
-	s.execute();
-	unsigned count = 0;
-	while (s.fetch())
-		++count;
-	ensure_equals(val, 42);
-	ensure_equals(count, 1);
+    s->prepare("SELECT val FROM dballe_test");
+    unsigned short val = 0;
+    s->bind_out(1, val);
+    s->execute();
+    unsigned count = 0;
+    while (s->fetch())
+        ++count;
+    wassert(actual(val) == 42);
+    wassert(actual(count) == 1);
 }
 
 // Test has_tables
@@ -195,7 +194,7 @@ template<> template<>
 void to::test<7>()
 {
     use_db();
-    db::Connection& c = connection();
+    auto& c = connection();
     c.drop_table_if_exists("dballe_settings");
     ensure(!c.has_table("dballe_settings"));
 

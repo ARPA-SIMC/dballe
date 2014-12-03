@@ -59,6 +59,7 @@ struct DB;
 
 namespace db {
 struct Connection;
+struct ODBCConnection;
 
 /**
  * Supported formats
@@ -502,7 +503,7 @@ public:
     static const char* default_repinfo_file();
 
 protected:
-    static std::unique_ptr<DB> instantiate_db(std::unique_ptr<db::Connection> conn);
+    static std::unique_ptr<DB> instantiate_db(std::unique_ptr<db::ODBCConnection> conn);
 };
 
 }

@@ -51,13 +51,13 @@ protected:
     DB& db;
 
     /** Precompiled select statement */
-    db::Statement* sstm;
+    ODBCStatement* sstm = nullptr;
     /** Precompiled select data statement */
-    db::Statement* sdstm;
+    ODBCStatement* sdstm = nullptr;
     /** Precompiled insert statement */
-    db::Statement* istm;
+    ODBCStatement* istm = nullptr;
     /** Precompiled delete statement */
-    db::Statement* dstm;
+    ODBCStatement* dstm = nullptr;
 
     /** lev_tr ID SQL parameter */
     DBALLE_SQL_C_SINT_TYPE id;
@@ -133,7 +133,7 @@ public:
 
 
 ODBCLevTr::ODBCLevTr(DB& db)
-    : db(db), sstm(0), sdstm(0), istm(0), dstm(0)
+    : db(db)
 {
     const char* select_query =
         "SELECT id FROM lev_tr WHERE"
@@ -156,7 +156,7 @@ ODBCLevTr::ODBCLevTr(DB& db)
     }
 
     /* Create the statement for select fixed */
-    sstm = new Statement(*db.conn);
+    sstm = db.conn->odbcstatement().release();
     sstm->bind_in(1, ltype1);
     sstm->bind_in(2, l1);
     sstm->bind_in(3, ltype2);
@@ -168,7 +168,7 @@ ODBCLevTr::ODBCLevTr(DB& db)
     sstm->prepare(select_query);
 
     /* Create the statement for select data */
-    sdstm = new Statement(*db.conn);
+    sdstm = db.conn->odbcstatement().release();
     sdstm->bind_in(1, id);
     sdstm->bind_out(1, ltype1);
     sdstm->bind_out(2, l1);
@@ -180,7 +180,7 @@ ODBCLevTr::ODBCLevTr(DB& db)
     sdstm->prepare(select_data_query);
 
     /* Create the statement for insert */
-    istm = new Statement(*db.conn);
+    istm = db.conn->odbcstatement().release();
     istm->bind_in(1, ltype1);
     istm->bind_in(2, l1);
     istm->bind_in(3, ltype2);
@@ -191,7 +191,7 @@ ODBCLevTr::ODBCLevTr(DB& db)
     istm->prepare(insert_query);
 
     /* Create the statement for remove */
-    dstm = new Statement(*db.conn);
+    dstm = db.conn->odbcstatement().release();
     dstm->bind_in(1, id);
     dstm->prepare(remove_query);
 }
@@ -303,20 +303,20 @@ void ODBCLevTr::dump(FILE* out)
     DBALLE_SQL_C_SINT_TYPE p1;
     DBALLE_SQL_C_SINT_TYPE p2;
 
-    Statement stm(*db.conn);
-    stm.bind_out(1, id);
-    stm.bind_out(2, ltype1);
-    stm.bind_out(3, l1);
-    stm.bind_out(4, ltype2);
-    stm.bind_out(5, l2);
-    stm.bind_out(6, pind);
-    stm.bind_out(7, p1);
-    stm.bind_out(8, p2);
-    stm.exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr ORDER BY id");
+    auto stm = db.conn->odbcstatement();
+    stm->bind_out(1, id);
+    stm->bind_out(2, ltype1);
+    stm->bind_out(3, l1);
+    stm->bind_out(4, ltype2);
+    stm->bind_out(5, l2);
+    stm->bind_out(6, pind);
+    stm->bind_out(7, p1);
+    stm->bind_out(8, p2);
+    stm->exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr ORDER BY id");
     int count;
     fprintf(out, "dump of table lev_tr:\n");
     fprintf(out, "   id   lev              tr\n");
-    for (count = 0; stm.fetch(); ++count)
+    for (count = 0; stm->fetch(); ++count)
     {
         fprintf(out, " %4d ", (int)id);
         {
@@ -425,45 +425,45 @@ struct MapLevTrCache : public LevTrCache
         // Output values
         SQLOut out;
         DB& db;
-        Statement stm;
+        unique_ptr<ODBCStatement> stm;
 
         FetchStatement(DB& db)
-            : db(db), stm(*db.conn)
+            : db(db), stm(db.conn->odbcstatement())
         {
             // Create the fetch query
-            stm.bind_in(1, out.id);
-            stm.bind_out(1, out.ltype1);
-            stm.bind_out(2, out.l1);
-            stm.bind_out(3, out.ltype2);
-            stm.bind_out(4, out.l2);
-            stm.bind_out(5, out.pind);
-            stm.bind_out(6, out.p1);
-            stm.bind_out(7, out.p2);
-            stm.prepare("SELECT ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr WHERE id=?");
+            stm->bind_in(1, out.id);
+            stm->bind_out(1, out.ltype1);
+            stm->bind_out(2, out.l1);
+            stm->bind_out(3, out.ltype2);
+            stm->bind_out(4, out.l2);
+            stm->bind_out(5, out.pind);
+            stm->bind_out(6, out.p1);
+            stm->bind_out(7, out.p2);
+            stm->prepare("SELECT ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr WHERE id=?");
         }
 
         void prefetch(map<int, Item>& cache)
         {
             // Prefetch everything
-            Statement stm(*db.conn);
-            stm.bind_out(1, out.id);
-            stm.bind_out(2, out.ltype1);
-            stm.bind_out(3, out.l1);
-            stm.bind_out(4, out.ltype2);
-            stm.bind_out(5, out.l2);
-            stm.bind_out(6, out.pind);
-            stm.bind_out(7, out.p1);
-            stm.bind_out(8, out.p2);
-            stm.exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
-            while (stm.fetch())
+            auto stm = db.conn->odbcstatement();
+            stm->bind_out(1, out.id);
+            stm->bind_out(2, out.ltype1);
+            stm->bind_out(3, out.l1);
+            stm->bind_out(4, out.ltype2);
+            stm->bind_out(5, out.l2);
+            stm->bind_out(6, out.pind);
+            stm->bind_out(7, out.p1);
+            stm->bind_out(8, out.p2);
+            stm->exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
+            while (stm->fetch())
                 cache.insert(make_pair((int)out.id, Item(out)));
         }
 
         bool get(int id)
         {
             out.id = id;
-            stm.execute();
-            if (!stm.fetch_expecting_one())
+            stm->execute();
+            if (!stm->fetch_expecting_one())
                 return false;
             return true;
         }

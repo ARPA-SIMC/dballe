@@ -38,7 +38,7 @@ namespace dballe {
 struct Record;
 
 namespace db {
-struct Statement;
+struct ODBCStatement;
 
 namespace v5 {
 struct DB;
@@ -52,7 +52,7 @@ struct Cursor : public dballe::db::Cursor
     /** Database to operate on */
     v5::DB& db;
     /** ODBC statement to use for the query */
-    db::Statement* stm;
+    ODBCStatement* stm;
 
     /** What values are wanted from the query */
     unsigned int wanted;

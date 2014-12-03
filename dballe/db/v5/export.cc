@@ -54,33 +54,33 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 		"   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
 		" ORDER BY d.id_var, a.type";
 
-    db::Statement stm(*conn);
+    auto stm = conn->odbcstatement();
 
 	DBALLE_SQL_C_SINT_TYPE in_id_station = id_station;
-    stm.bind_in(1, in_id_station);
+    stm->bind_in(1, in_id_station);
 
 	DBALLE_SQL_C_SINT_TYPE in_id_report = id_report;
-    stm.bind_in(2, in_id_report);
+    stm->bind_in(2, in_id_report);
 
 	DBALLE_SQL_C_SINT_TYPE out_varcode;
-    stm.bind_out(1, out_varcode);
+    stm->bind_out(1, out_varcode);
 
 	char out_value[255];
-	stm.bind_out(2, out_value, sizeof(out_value));
+	stm->bind_out(2, out_value, sizeof(out_value));
 
 	DBALLE_SQL_C_SINT_TYPE out_attr_varcode;		SQLLEN out_attr_varcode_ind;
-    stm.bind_out(3, out_attr_varcode, out_attr_varcode_ind);
+    stm->bind_out(3, out_attr_varcode, out_attr_varcode_ind);
 
 	char out_attr_value[255];	SQLLEN out_attr_value_ind;
-	stm.bind_out(4, out_attr_value, sizeof(out_attr_value), out_attr_value_ind);
+	stm->bind_out(4, out_attr_value, sizeof(out_attr_value), out_attr_value_ind);
 
 	TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
-    stm.exec_direct(query);
+    stm->exec_direct(query);
 
 	// Retrieve results
 	Varcode last_varcode = 0;
     unique_ptr<Var> var;
-	while (stm.fetch())
+	while (stm->fetch())
 	{
 		TRACE("fill_ana_layer Got B%02ld%03ld %s\n", WR_VAR_X(out_varcode), WR_VAR_Y(out_varcode), out_value);
 
