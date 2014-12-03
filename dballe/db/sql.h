@@ -82,6 +82,9 @@ struct Connection
      */
     virtual std::unique_ptr<Transaction> transaction() = 0;
 
+    /// Execute a one-shot query
+    virtual void exec(const std::string& query) = 0;
+
     /// Check if the database contains a table
     virtual bool has_table(const std::string& name) = 0;
 

@@ -303,6 +303,12 @@ std::unique_ptr<Transaction> ODBCConnection::transaction()
     return unique_ptr<Transaction>(new ODBCTransaction(od_conn));
 }
 
+void ODBCConnection::exec(const std::string& query)
+{
+    Statement stm(*this);
+    stm.exec_direct_and_close(query.c_str());
+}
+
 #define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
 #define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
 #define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
@@ -310,23 +316,23 @@ std::unique_ptr<Transaction> ODBCConnection::transaction()
 
 void ODBCConnection::drop_table_if_exists(const char* name)
 {
-    db::Statement stm(*this);
-    char buf[100];
-    int len;
-
     switch (server_type)
     {
         case db::MYSQL:
         case db::POSTGRES:
         case db::SQLITE:
-            len = snprintf(buf, 100, "DROP TABLE IF EXISTS %s", name);
-            stm.exec_direct_and_close(buf, len);
+            exec(string("DROP TABLE IF EXISTS ") + name);
             break;
         case db::ORACLE:
+        {
+            db::Statement stm(*this);
+            char buf[100];
+            int len;
             stm.ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE;
             len = snprintf(buf, 100, "DROP TABLE %s", name);
             stm.exec_direct_and_close(buf, len);
             break;
+        }
     }
 }
 
@@ -334,21 +340,21 @@ void ODBCConnection::drop_table_if_exists(const char* name)
 #define DBA_ODBC_MISSING_SEQUENCE_POSTGRES "42P01"
 void ODBCConnection::drop_sequence_if_exists(const char* name)
 {
-    db::Statement stm(*this);
-    char buf[100];
-    int len;
-
     switch (server_type)
     {
         case db::POSTGRES:
-            len = snprintf(buf, 100, "DROP SEQUENCE IF EXISTS %s", name);
-            stm.exec_direct_and_close(buf, len);
+            exec(string("DROP SEQUENCE IF EXISTS ") + name);
             break;
         case db::ORACLE:
+        {
+            db::Statement stm(*this);
+            char buf[100];
+            int len;
             stm.ignore_error = DBA_ODBC_MISSING_SEQUENCE_ORACLE;
             len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
             stm.exec_direct_and_close(buf, len);
             break;
+        }
         default:
             break;
     }
@@ -453,9 +459,9 @@ void ODBCConnection::set_setting(const std::string& key, const std::string& valu
     if (!has_table("dballe_settings"))
     {
         if (server_type == MYSQL)
-            stm.exec_direct_and_close("CREATE TABLE dballe_settings (`key` CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
+            exec("CREATE TABLE dballe_settings (`key` CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
         else
-            stm.exec_direct_and_close("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
+            exec("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
     }
 
     // Remove if it exists

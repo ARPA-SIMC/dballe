@@ -397,12 +397,12 @@ void DB::init_after_connect()
     {
         if (getenv("DBA_INSECURE_SQLITE") != NULL)
         {
-            run_sql("PRAGMA synchronous = OFF");
-            run_sql("PRAGMA journal_mode = OFF");
-            run_sql("PRAGMA legacy_file_format = 0");
+            conn->exec("PRAGMA synchronous = OFF");
+            conn->exec("PRAGMA journal_mode = OFF");
+            conn->exec("PRAGMA legacy_file_format = 0");
         } else {
-            run_sql("PRAGMA journal_mode = MEMORY");
-            run_sql("PRAGMA legacy_file_format = 0");
+            conn->exec("PRAGMA journal_mode = MEMORY");
+            conn->exec("PRAGMA legacy_file_format = 0");
         }
     } else
         conn->set_autocommit(false);
@@ -425,12 +425,6 @@ void DB::init_after_connect()
             stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
             break;
     }
-}
-
-void DB::run_sql(const char* query)
-{
-    db::Statement stm(*conn);
-    stm.exec_direct(query);
 }
 
 #define DBA_ODBC_MISSING_FUNCTION_POSTGRES "42883"
@@ -501,9 +495,6 @@ void DB::reset(const char* repinfo_file)
 {
     disappear();
 
-    /* Allocate statement handle */
-    db::Statement stm(*conn);
-
     const char** queries = NULL;
     int query_count = 0;
     switch (conn->server_type)
@@ -526,7 +517,7 @@ void DB::reset(const char* repinfo_file)
     }
     /* Create tables */
     for (int i = 0; i < query_count; i++)
-        stm.exec_direct_and_close(queries[i]);
+        conn->exec(queries[i]);
 
     /* Populate the tables with values */
     {
@@ -808,11 +799,10 @@ void DB::remove(const Record& rec)
 void DB::remove_all()
 {
     auto t = conn->transaction();
-    db::Statement stm(*conn);
-    stm.exec_direct_and_close("DELETE FROM attr");
-    stm.exec_direct_and_close("DELETE FROM data");
-    stm.exec_direct_and_close("DELETE FROM context");
-    stm.exec_direct_and_close("DELETE FROM station");
+    conn->exec("DELETE FROM attr");
+    conn->exec("DELETE FROM data");
+    conn->exec("DELETE FROM context");
+    conn->exec("DELETE FROM station");
     t->commit();
 }
 
@@ -836,9 +826,7 @@ void DB::vacuum()
 
     auto t = conn->transaction();
 
-    // Delete orphan contexts
-    db::Statement stm(*conn);
-    stm.exec_direct_and_close(cclean);
+    conn->exec(cclean);
 
 #if 0
     /* Done with context */
@@ -848,7 +836,7 @@ void DB::vacuum()
 #endif
 
     // Delete orphan stations
-    stm.exec_direct_and_close(pclean);
+    conn->exec(pclean);
 
     t->commit();
 }

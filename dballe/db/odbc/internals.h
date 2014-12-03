@@ -115,7 +115,9 @@ public:
     void get_info(SQLUSMALLINT info_type, SQLINTEGER& res);
     void set_autocommit(bool val);
 
-    virtual std::unique_ptr<Transaction> transaction() override;
+    std::unique_ptr<Transaction> transaction() override;
+
+    void exec(const std::string& query) override;
 
     /// Check if the database contains a table
     bool has_table(const std::string& name) override;

@@ -131,11 +131,6 @@ protected:
 	void init_after_connect();
 
 	/**
-	 * Run a one-off SQL query
-	 */
-	void run_sql(const char* query);
-
-	/**
 	 * Fill a message station info layer with information from the given
 	 * station and report IDs
 	 */

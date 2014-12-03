@@ -140,11 +140,6 @@ protected:
 
     void init_after_connect();
 
-    /**
-     * Run a one-off SQL query
-     */
-    void run_sql(const char* query);
-
     DB(std::unique_ptr<Connection>& conn);
 
 public:
