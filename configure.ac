@@ -34,13 +34,6 @@ AC_ARG_ENABLE([docs],
     [],
     [enable_docs="yes"])
 
-AC_ARG_ENABLE([benchmarks],
-    [AS_HELP_STRING(
-        [--enable-benchmarks],
-        [enable benchmarks (requires C++11 support)])],
-    [],
-    [enable_benchmarks="yes"])
-
 AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
 AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
 
@@ -55,23 +48,13 @@ AC_PROG_CXX
 AC_PROG_FC([gfortran pgf90 ifort g95 xlf90 f90])
 F77=$FC
 
+dnl Use c++11
+AX_CXX_COMPILE_STDCXX_11
+
 AM_PROG_CC_STDC
 
 dnl Needed by subdir-objects
 AM_PROG_CC_C_O
-
-if test x$enable_benchmarks = xyes
-then
-	AX_CXX_COMPILE_STDCXX_11(noext,optional)
-	if test x$HAVE_CXX11 = x1
-	then
-		have_benchmarks=yes
-	else
-		have_benchmarks=no
-	fi
-else
-	have_benchmarks=no
-fi
 
 dnl We want to invoke pkg-config directly
 PKG_PROG_PKG_CONFIG
@@ -263,7 +246,7 @@ dnl
 dnl  6. If any interfaces have been removed since the last public release,
 dnl     then set AGE to 0.
 
-LIBDBALLE_VERSION_INFO="6:0:0"
+LIBDBALLE_VERSION_INFO="7:0:0"
 LIBDBALLEF_VERSION_INFO="4:20:0"
 AC_SUBST(LIBDBALLE_VERSION_INFO)
 AC_SUBST(LIBDBALLEF_VERSION_INFO)
@@ -290,7 +273,6 @@ AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
 AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
 AM_CONDITIONAL([DO_TESTS], [test x"$enable_tests" = x"yes"])
-AM_CONDITIONAL([DO_BENCHMARKS], [test x"$have_benchmarks" = x"yes"])
 
 AM_CONDITIONAL([HAVE_LATEX2HTML], [test x$have_latex2html = xyes])
 AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
@@ -327,5 +309,4 @@ AS_HELP_STRING([documentation:], [$enable_docs])
 AS_HELP_STRING([tests:], [$enable_tests])
 AS_HELP_STRING([latex2html:], [$have_latex2html])
 AS_HELP_STRING([rst2html:], [$have_rst2html])
-AS_HELP_STRING([benchmarks:], [$have_benchmarks])
 ===================================================])

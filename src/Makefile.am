@@ -20,13 +20,11 @@ dbadb_SOURCES = dbadb.cc
 dbadb_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt 
 dbadb_DEPENDENCIES = $(DBALLELIBS)
 
-if DO_BENCHMARKS
 noinst_PROGRAMS = benchmark
 benchmark_SOURCES = benchmark.cc bench/bench.cc
 benchmark_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
 benchmark_DEPENDENCIES = $(DBALLELIBS)
 benchmark_CPPFLAGS = -DBENCHDIR='"$(top_srcdir)/extra/bench/"'
-endif
 
 EXTRA_DIST = bench/bench.h \
              bench/3928-viaza-20130624-180728.csv \
