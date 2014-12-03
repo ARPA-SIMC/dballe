@@ -331,22 +331,23 @@ public:
 
     void query_datetime_extremes(const Query& query, Record& result);
 
-	/**
-	 * Query attributes
-	 *
-	 * @param reference_id
-	 *   The database id of the context related to the attributes to retrieve
-	 * @param id_var
-	 *   The varcode of the variable related to the attributes to retrieve.  See @ref vartable.h
-	 * @param qcs
-	 *   The WMO codes of the QC values requested.  If it is empty, then all values
-	 *   are returned.
-	 * @param attrs
-	 *   The Record that will hold the resulting attributes
-	 * @return
-	 *   Number of attributes returned in attrs
-	 */
-	unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs);
+    /**
+     * Query attributes
+     *
+     * @param reference_id
+     *   The database id of the context related to the attributes to retrieve
+     * @param id_var
+     *   The varcode of the variable related to the attributes to retrieve.  See @ref vartable.h
+     * @param qcs
+     *   The WMO codes of the QC values requested.  If it is empty, then all values
+     *   are returned.
+     * @param dest
+     *   The function that will be called on each attribute retrieved
+     * @return
+     *   Number of attributes returned in attrs
+     */
+    unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs,
+            std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
     void attr_insert(wreport::Varcode id_var, const Record& attrs);
     void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs);

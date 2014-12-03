@@ -559,9 +559,9 @@ wreport::Var Cursor::get_var() const
     return Var(varinfo(out_varcode), out_value);
 }
 
-unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& attrs)
+unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, function<void(unique_ptr<Var>)> dest)
 {
-    return db.query_attrs(out_context_id, out_varcode, qcs, attrs);
+    return db.query_attrs(out_context_id, out_varcode, qcs, dest);
 }
 
 void Cursor::attr_insert(const dballe::Record& attrs)

@@ -153,7 +153,7 @@ public:
     /**
      * Query attributes for the current variable
      */
-    virtual unsigned query_attrs(const AttrList& qcs, Record& attrs) = 0;
+    virtual unsigned query_attrs(const AttrList& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Insert/overwrite new attributes for the current variable
@@ -402,12 +402,13 @@ public:
      * @param qcs
      *   The WMO codes of the QC values requested.  If it is empty, then all values
      *   are returned.
-     * @param attrs
-     *   The Record that will hold the resulting attributes
+     * @param dest
+     *   The function that will be called on each resulting attribut
      * @return
      *   Number of attributes returned in attrs
      */
-    virtual unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs) = 0;
+    virtual unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs,
+            std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Insert new attributes into the database, reusing the reference IDs stored by the last insert.

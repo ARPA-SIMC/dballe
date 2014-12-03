@@ -721,7 +721,8 @@ std::unique_ptr<db::Cursor> DB::query_summary(const Query& rec)
     return unique_ptr<db::Cursor>(res.release());
 }
 
-unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
+unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const db::AttrList& qcs,
+        std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Create the query
     Querybuf query(200);
@@ -757,13 +758,10 @@ unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const std::vector
 
     stm.exec_direct(query.c_str());
 
-    // Retrieve results
-    attrs.clear();
-
     // Fetch the results
     int count;
     for (count = 0; stm.fetch(); ++count)
-        attrs.var(out_type).setc(out_value);
+        dest(newvar(out_type, out_value));
 
     return count;
 }

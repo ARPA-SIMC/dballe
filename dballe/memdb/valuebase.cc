@@ -44,22 +44,21 @@ void ValueBase::replace(const Var& var)
     this->var->copy_val_only(var);
 }
 
-unsigned ValueBase::query_attrs(const std::vector<wreport::Varcode>& qcs, Record& attrs) const
+unsigned ValueBase::query_attrs(const std::vector<wreport::Varcode>& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest) const
 {
-    attrs.clear();
     unsigned res = 0;
     if (qcs.empty())
     {
         for (const Var* a = var->next_attr(); a != NULL; a = a->next_attr())
         {
-            attrs.set(*a);
+            dest(newvar(*a));
             ++res;
         }
     } else {
         for (const Var* a = var->next_attr(); a != NULL; a = a->next_attr())
             if (std::find(qcs.begin(), qcs.end(), a->code()) != qcs.end())
             {
-                attrs.set(*a);
+                dest(newvar(*a));
                 ++res;
             }
     }

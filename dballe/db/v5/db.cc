@@ -1029,7 +1029,8 @@ void DB::query_datetime_extremes(const Query& query, Record& result)
     cursor.query_datetime_extremes(query, result);
 }
 
-unsigned DB::query_attrs(int reference_id, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs, Record& attrs)
+unsigned DB::query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs,
+        std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Create the query
     Querybuf query(200);
@@ -1066,13 +1067,10 @@ unsigned DB::query_attrs(int reference_id, wreport::Varcode id_var, const std::v
 
     stm.exec_direct(query.c_str());
 
-    // Retrieve results
-    attrs.clear();
-
     // Fetch the results
     int count;
     for (count = 0; stm.fetch(); ++count)
-        attrs.var(out_type).setc(out_value);
+        dest(newvar(out_type, out_value));
 
     return count;
 }

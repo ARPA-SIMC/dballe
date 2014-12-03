@@ -124,7 +124,7 @@ struct Cursor : public db::Cursor
     /**
      * Query attributes for the current variable
      */
-    unsigned query_attrs(const AttrList& qcs, Record& attrs);
+    unsigned query_attrs(const AttrList& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     virtual void attr_insert(const Record& attrs);
     virtual void attr_remove(const AttrList& qcs);
 

@@ -88,7 +88,7 @@ public:
     /**
      * Query attributes for the current variable
      */
-    unsigned query_attrs(const AttrList& qcs, Record& attrs);
+    unsigned query_attrs(const AttrList& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest);
 
     virtual int get_station_id() const;
     virtual double get_lat() const;

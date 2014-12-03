@@ -271,6 +271,9 @@ public:
 	 */
 	wreport::Var& var(wreport::Varcode code);
 
+    /// Add/replace a variable in this record
+    void add(std::unique_ptr<wreport::Var> var);
+
 	/// Shortcuts
 	// @{
 	const wreport::Var& get(dba_keyword parameter) const { return key(parameter); }

@@ -64,6 +64,13 @@ template<typename T>
 wreport::Var var(wreport::Varcode code, const T& val) { return wreport::Var(varinfo(code), val); }
 
 
+/// Create a new Var, as a copy of an existing variable
+static inline std::unique_ptr<wreport::Var> newvar(const wreport::Var& var)
+{
+    return std::unique_ptr<wreport::Var>(new wreport::Var(var));
+}
+
+
 /// Create a new Var, from the local B table, with undefined value
 static inline std::unique_ptr<wreport::Var> newvar(wreport::Varcode code)
 {

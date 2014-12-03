@@ -343,12 +343,13 @@ public:
      * @param qcs
      *   The WMO codes of the QC values requested.  If it is empty, then all values
      *   are returned.
-     * @param attrs
-     *   The Record that will hold the resulting attributes
+     * @param dest
+     *   The function that will be called on each attribute retrieved
      * @return
      *   Number of attributes returned in attrs
      */
-    unsigned query_attrs(int id_data, wreport::Varcode id_var, const db::AttrList& qcs, Record& attrs);
+    unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs,
+            std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
     void attr_insert(wreport::Varcode id_var, const Record& attrs);
     void attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs);

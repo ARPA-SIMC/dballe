@@ -446,6 +446,28 @@ Var& Record::var(wreport::Varcode code)
 	return *m_vars[pos];
 }
 
+void Record::add(std::unique_ptr<wreport::Var> var)
+{
+    int pos = find_item(var->code());
+    if (pos == -1)
+    {
+        // Insertion sort the new variable
+
+        // Enlarge the buffer
+        m_vars.resize(m_vars.size() + 1);
+
+        /* Insertionsort.  Crude, but our datasets should be too small for an
+         * RB-Tree to be worth it */
+        for (pos = m_vars.size() - 1; pos > 0; --pos)
+            if (m_vars[pos - 1]->code() > var->code())
+                m_vars[pos] = m_vars[pos - 1];
+            else
+                break;
+    } else
+        delete m_vars[pos];
+    m_vars[pos] = var.release();
+}
+
 const wreport::Var& Record::get(const char* name) const
 {
 	const Var* var = peek(name);
