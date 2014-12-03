@@ -744,12 +744,11 @@ unsigned DB::query_attrs(int id_data, wreport::Varcode id_var, const db::AttrLis
     }
 
     // Perform the query
-    DBALLE_SQL_C_SINT_TYPE in_id_data = id_data;
     Varcode out_type;
     char out_value[255];
 
     auto stm = conn->odbcstatement();
-    stm->bind_in(1, in_id_data);
+    stm->bind_in(1, id_data);
     stm->bind_out(1, out_type);
     stm->bind_out(2, out_value, 255);
 
@@ -809,10 +808,8 @@ void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wre
 
     // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_lev_tr, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 
-    DBALLE_SQL_C_SINT_TYPE in_id_data = id_data;
-
     auto stm = conn->odbcstatement();
-    stm->bind_in(1, in_id_data);
+    stm->bind_in(1, id_data);
     stm->exec_direct_and_close(query.c_str());
 }
 

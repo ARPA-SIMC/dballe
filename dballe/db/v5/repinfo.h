@@ -28,7 +28,6 @@
  * Repinfo table management used by the db module.
  */
 
-#include <dballe/db/odbcworkarounds.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -46,30 +45,30 @@ namespace repinfo {
 /** repinfo cache entry */
 struct Cache
 {
-	/** Report code */
-	DBALLE_SQL_C_UINT_TYPE id;
+    /// Report code
+    unsigned id;
 
 	/** Report name */
 	std::string memo;
 	/** Report description */
 	std::string desc;
-	/** Report priority */
-	DBALLE_SQL_C_SINT_TYPE prio;
+    /// Report priority
+    int prio;
 	/** Report descriptor (currently unused) */
 	std::string descriptor;
-	/** Report A table value (currently unused) */
-	DBALLE_SQL_C_UINT_TYPE tablea;
+    /// Report A table value (currently unused)
+    unsigned tablea;
 
 	/** New report name used when updating the repinfo table */
 	std::string new_memo;
 	/** New report description used when updating the repinfo table */
 	std::string new_desc;
-	/** New report priority used when updating the repinfo table */
-	DBALLE_SQL_C_SINT_TYPE new_prio;
+    /// New report priority used when updating the repinfo table
+    int new_prio;
 	/** New report descriptor used when updating the repinfo table */
 	std::string new_descriptor;
-	/** New report A table value used when updating the repinfo table */
-	DBALLE_SQL_C_UINT_TYPE new_tablea;
+    /// New report A table value used when updating the repinfo table
+    unsigned new_tablea;
 
 	Cache(int id, const std::string& memo, const std::string& desc, int prio, const std::string& descriptor, int tablea);
 	void make_new();

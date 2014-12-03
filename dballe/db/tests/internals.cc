@@ -58,7 +58,7 @@ struct db_internals_shar : public dballe::tests::db_test
 };
 TESTGRP(db_internals);
 
-// Test querying DBALLE_SQL_C_SINT_TYPE values
+// Test querying int values
 template<> template<>
 void to::test<1>()
 {
@@ -71,7 +71,7 @@ void to::test<1>()
     s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
     s->prepare("SELECT val FROM dballe_test");
-    DBALLE_SQL_C_SINT_TYPE val = 0;
+    int val = 0;
     s->bind_out(1, val);
     s->execute();
     unsigned count = 0;
@@ -81,7 +81,7 @@ void to::test<1>()
     wassert(actual(count) == 1);
 }
 
-// Test querying DBALLE_SQL_C_SINT_TYPE values, with indicators
+// Test querying int values, with indicators
 template<> template<>
 void to::test<2>()
 {
@@ -94,7 +94,7 @@ void to::test<2>()
     s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
     s->prepare("SELECT val FROM dballe_test");
-    DBALLE_SQL_C_SINT_TYPE val = 0;
+    int val = 0;
     SQLLEN ind = 0;
     s->bind_out(1, val, ind);
     s->execute();
@@ -106,7 +106,7 @@ void to::test<2>()
     wassert(actual(count) == 1);
 }
 
-// Test querying DBALLE_SQL_C_UINT_TYPE values
+// Test querying unsigned values
 template<> template<>
 void to::test<3>()
 {
@@ -119,7 +119,7 @@ void to::test<3>()
     s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
     s->prepare("SELECT val FROM dballe_test");
-    DBALLE_SQL_C_UINT_TYPE val = 0;
+    unsigned val = 0;
     s->bind_out(1, val);
     s->execute();
     unsigned count = 0;
@@ -129,7 +129,7 @@ void to::test<3>()
     wassert(actual(count) == 1);
 }
 
-// Test querying DBALLE_SQL_C_UINT_TYPE values, with indicators
+// Test querying unsigned values, with indicators
 template<> template<>
 void to::test<4>()
 {
@@ -142,7 +142,7 @@ void to::test<4>()
     s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
     s->prepare("SELECT val FROM dballe_test");
-    DBALLE_SQL_C_UINT_TYPE val = 0;
+    unsigned val = 0;
     SQLLEN ind = 0;
     s->bind_out(1, val, ind);
     s->execute();

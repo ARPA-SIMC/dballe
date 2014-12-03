@@ -176,17 +176,17 @@ void Context::remove()
 
 void Context::dump(FILE* out)
 {
-    DBALLE_SQL_C_SINT_TYPE id;
-    DBALLE_SQL_C_SINT_TYPE id_station;
-    DBALLE_SQL_C_SINT_TYPE id_report;
+    int id;
+    int id_station;
+    int id_report;
     SQL_TIMESTAMP_STRUCT date;
-    DBALLE_SQL_C_SINT_TYPE ltype1;
-    DBALLE_SQL_C_SINT_TYPE l1;
-    DBALLE_SQL_C_SINT_TYPE ltype2;
-    DBALLE_SQL_C_SINT_TYPE l2;
-    DBALLE_SQL_C_SINT_TYPE pind;
-    DBALLE_SQL_C_SINT_TYPE p1;
-    DBALLE_SQL_C_SINT_TYPE p2;
+    int ltype1;
+    int l1;
+    int ltype2;
+    int l2;
+    int pind;
+    int p1;
+    int p2;
 
     auto stm = db.conn->odbcstatement();
     stm->bind_out(1, id);

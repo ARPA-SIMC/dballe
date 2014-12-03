@@ -40,6 +40,25 @@
 using namespace std;
 using namespace wreport;
 
+namespace {
+
+template<bool is_signed, unsigned nbits>
+SQLSMALLINT get_odbc_integer_type()
+{
+    error_unimplemented::throwf(
+            "get_odbc_integer_type called on unsupported type signed: %d, size: %u",
+            (int)is_signed, nbits);
+}
+
+template<> SQLSMALLINT get_odbc_integer_type<true, 2>() { return SQL_C_SSHORT; }
+template<> SQLSMALLINT get_odbc_integer_type<false, 2>() { return SQL_C_USHORT; }
+template<> SQLSMALLINT get_odbc_integer_type<true, 4>() { return SQL_C_SLONG; }
+template<> SQLSMALLINT get_odbc_integer_type<false, 4>() { return SQL_C_ULONG; }
+template<> SQLSMALLINT get_odbc_integer_type<true, 8>() { return SQL_C_SBIGINT; }
+template<> SQLSMALLINT get_odbc_integer_type<false, 8>() { return SQL_C_UBIGINT; }
+
+}
+
 namespace dballe {
 namespace db {
 
@@ -407,7 +426,7 @@ int ODBCConnection::get_last_insert_id()
 bool ODBCConnection::has_table(const std::string& name)
 {
     auto stm = odbcstatement();
-    DBALLE_SQL_C_SINT_TYPE count;
+    int count;
 
     switch (server_type)
     {
@@ -550,32 +569,37 @@ bool ODBCStatement::is_error(int sqlres)
         && !error_is_ignored();
 }
 
-void ODBCStatement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val)
+void ODBCStatement::bind_in(int idx, const int& val)
 {
     // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_SINT_TYPE*)&val, 0, 0);
+    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<true, sizeof(const int)>(), SQL_INTEGER, 0, 0, (int*)&val, 0, 0);
 }
-void ODBCStatement::bind_in(int idx, const DBALLE_SQL_C_SINT_TYPE& val, const SQLLEN& ind)
+void ODBCStatement::bind_in(int idx, const int& val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_SINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_SINT_TYPE*)&val, 0, (SQLLEN*)&ind);
+    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<true, sizeof(const int)>(), SQL_INTEGER, 0, 0, (int*)&val, 0, (SQLLEN*)&ind);
 }
 
-void ODBCStatement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val)
+void ODBCStatement::bind_in(int idx, const unsigned& val)
 {
     // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_UINT_TYPE*)&val, 0, 0);
+    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned)>(), SQL_INTEGER, 0, 0, (unsigned*)&val, 0, 0);
 }
-void ODBCStatement::bind_in(int idx, const DBALLE_SQL_C_UINT_TYPE& val, const SQLLEN& ind)
+void ODBCStatement::bind_in(int idx, const unsigned& val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, DBALLE_SQL_C_UINT, SQL_INTEGER, 0, 0, (DBALLE_SQL_C_UINT_TYPE*)&val, 0, (SQLLEN*)&ind);
+    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned)>(), SQL_INTEGER, 0, 0, (unsigned*)&val, 0, (SQLLEN*)&ind);
 }
 
 void ODBCStatement::bind_in(int idx, const unsigned short& val)
 {
     // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_USHORT, SQL_INTEGER, 0, 0, (unsigned short*)&val, 0, 0);
+    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned short)>(), SQL_INTEGER, 0, 0, (unsigned short*)&val, 0, 0);
+}
+void ODBCStatement::bind_in(int idx, const unsigned short& val, const SQLLEN& ind)
+{
+    // cast away const because the ODBC API is not const-aware
+    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned short)>(), SQL_INTEGER, 0, 0, (unsigned short*)&val, 0, (SQLLEN*)&ind);
 }
 
 void ODBCStatement::bind_in(int idx, const char* val)
@@ -598,28 +622,31 @@ void ODBCStatement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)
         //SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, (SQL_TIMESTAMP_STRUCT*)&val, 0, 0);
 }
 
+void ODBCStatement::bind_out(int idx, int& val)
+{
+    SQLBindCol(stm, idx, get_odbc_integer_type<true, sizeof(int)>(), &val, sizeof(val), 0);
+}
+void ODBCStatement::bind_out(int idx, int& val, SQLLEN& ind)
+{
+    SQLBindCol(stm, idx, get_odbc_integer_type<true, sizeof(int)>(), &val, sizeof(val), &ind);
+}
 
-void ODBCStatement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val)
+void ODBCStatement::bind_out(int idx, unsigned& val)
 {
-    SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), 0);
+    SQLBindCol(stm, idx, get_odbc_integer_type<false, sizeof(int)>(), &val, sizeof(val), 0);
 }
-void ODBCStatement::bind_out(int idx, DBALLE_SQL_C_SINT_TYPE& val, SQLLEN& ind)
+void ODBCStatement::bind_out(int idx, unsigned& val, SQLLEN& ind)
 {
-    SQLBindCol(stm, idx, DBALLE_SQL_C_SINT, &val, sizeof(val), &ind);
-}
-
-void ODBCStatement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val)
-{
-    SQLBindCol(stm, idx, DBALLE_SQL_C_UINT, &val, sizeof(val), 0);
-}
-void ODBCStatement::bind_out(int idx, DBALLE_SQL_C_UINT_TYPE& val, SQLLEN& ind)
-{
-    SQLBindCol(stm, idx, DBALLE_SQL_C_UINT, &val, sizeof(val), &ind);
+    SQLBindCol(stm, idx, get_odbc_integer_type<false, sizeof(int)>(), &val, sizeof(val), &ind);
 }
 
 void ODBCStatement::bind_out(int idx, unsigned short& val)
 {
     SQLBindCol(stm, idx, SQL_C_USHORT, &val, sizeof(val), 0);
+}
+void ODBCStatement::bind_out(int idx, unsigned short& val, SQLLEN& ind)
+{
+    SQLBindCol(stm, idx, SQL_C_USHORT, &val, sizeof(val), &ind);
 }
 
 void ODBCStatement::bind_out(int idx, char* val, SQLLEN buflen)
@@ -881,7 +908,7 @@ Sequence::Sequence(ODBCConnection& conn, const char* name)
 
 Sequence::~Sequence() {}
 
-const DBALLE_SQL_C_SINT_TYPE& Sequence::read()
+const int& Sequence::read()
 {
     if (is_error(SQLExecute(stm)))
         throw error_odbc(SQL_HANDLE_STMT, stm, "reading sequence value");

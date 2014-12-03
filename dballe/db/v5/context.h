@@ -28,7 +28,6 @@
  * Context table management used by the db module.
  */
 
-#include <dballe/db/odbcworkarounds.h>
 #include <sqltypes.h>
 #include <cstdio>
 
@@ -59,29 +58,29 @@ struct Context
     /** Precompiled delete statement */
     ODBCStatement* dstm;
 
-    /** Context ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id;
+    /// Context ID SQL parameter
+    int id;
 
-    /** Station ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_station;
-    /** Report ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_report;
+    /// Station ID SQL parameter
+    int id_station;
+    /// Report ID SQL parameter
+    int id_report;
     /** Date SQL parameter */
     SQL_TIMESTAMP_STRUCT date;
-    /** First level type SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE ltype1;
-    /** Level L1 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE l1;
-    /** Second level type SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE ltype2;
-    /** Level L2 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE l2;
-    /** Time range type SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE pind;
-    /** Time range P1 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE p1;
-    /** Time range P2 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE p2;
+    /// First level type SQL parameter
+    int ltype1;
+    /// Level L1 SQL parameter
+    int l1;
+    /// Second level type SQL parameter
+    int ltype2;
+    /// Level L2 SQL parameter
+    int l2;
+    /// Time range type SQL parameter
+    int pind;
+    /// Time range P1 SQL parameter
+    int p1;
+    /// Time range P2 SQL parameter
+    int p2;
 
     Context(v5::DB& db);
     ~Context();

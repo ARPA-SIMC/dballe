@@ -46,7 +46,7 @@ protected:
     ODBCStatement* rstm;
 
     /** id_data SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_data;
+    int id_data;
     /** attribute id SQL parameter */
     wreport::Varcode type;
     /** attribute value SQL parameter */

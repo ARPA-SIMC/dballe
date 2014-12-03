@@ -150,7 +150,7 @@ void Attr::load(wreport::Var& var)
 
 void Attr::dump(FILE* out)
 {
-    DBALLE_SQL_C_SINT_TYPE id_context;
+    int id_context;
     wreport::Varcode id_var;
     wreport::Varcode type;
     char value[255];

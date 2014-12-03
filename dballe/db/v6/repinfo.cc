@@ -33,11 +33,10 @@ Repinfo::Repinfo(ODBCConnection* conn) : v5::Repinfo(conn) {}
 
 int Repinfo::id_use_count(unsigned id, const char* name)
 {
-    DBALLE_SQL_C_UINT_TYPE dbid = id;
-    DBALLE_SQL_C_UINT_TYPE count;
+    unsigned count;
     auto stm = conn->odbcstatement();
     stm->prepare("SELECT COUNT(1) FROM data WHERE id_report = ?");
-    stm->bind_in(1, dbid);
+    stm->bind_in(1, id);
     stm->bind_out(1, count);
     stm->execute();
     if (!stm->fetch_expecting_one())

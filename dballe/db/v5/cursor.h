@@ -28,7 +28,6 @@
 #ifndef DBA_DB_V5_CURSOR_H
 #define DBA_DB_V5_CURSOR_H
 
-#include <dballe/db/odbcworkarounds.h>
 #include <dballe/db/db.h>
 #include <wreport/varinfo.h>
 #include <sqltypes.h>
@@ -70,27 +69,27 @@ struct Cursor : public dballe::db::Cursor
     /** Query results
      * @{
      */
-    DBALLE_SQL_C_SINT_TYPE	out_lat;
-    DBALLE_SQL_C_SINT_TYPE	out_lon;
-    char	out_ident[64];		SQLLEN out_ident_ind;
-    DBALLE_SQL_C_SINT_TYPE	out_ltype1;
-    DBALLE_SQL_C_SINT_TYPE	out_l1;
-    DBALLE_SQL_C_SINT_TYPE	out_ltype2;
-    DBALLE_SQL_C_SINT_TYPE	out_l2;
-    DBALLE_SQL_C_SINT_TYPE	out_pind;
-    DBALLE_SQL_C_SINT_TYPE	out_p1;
-    DBALLE_SQL_C_SINT_TYPE	out_p2;
-    wreport::Varcode		out_varcode;
-    SQL_TIMESTAMP_STRUCT	out_datetime;
-    char	out_value[255];
-    DBALLE_SQL_C_SINT_TYPE	out_rep_cod;
-    DBALLE_SQL_C_SINT_TYPE	out_ana_id;
-    DBALLE_SQL_C_SINT_TYPE	out_context_id;
-    DBALLE_SQL_C_SINT_TYPE	out_priority;
+    int  out_lat;
+    int  out_lon;
+    char out_ident[64];  SQLLEN out_ident_ind;
+    int  out_ltype1;
+    int  out_l1;
+    int  out_ltype2;
+    int  out_l2;
+    int  out_pind;
+    int  out_p1;
+    int  out_p2;
+    wreport::Varcode     out_varcode;
+    SQL_TIMESTAMP_STRUCT out_datetime;
+    char out_value[255];
+    int  out_rep_cod;
+    int  out_ana_id;
+    int  out_context_id;
+    int  out_priority;
     /** @} */
 
     /** Number of results still to be fetched */
-    DBALLE_SQL_C_SINT_TYPE count;
+    int count;
 
     Cursor(v5::DB& db);
     ~Cursor();

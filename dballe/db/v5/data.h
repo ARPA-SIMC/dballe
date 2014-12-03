@@ -28,7 +28,6 @@
  * Data table management used by the db module.
  */
 
-#include <dballe/db/odbcworkarounds.h>
 #include <wreport/var.h>
 #include <sqltypes.h>
 #include <cstdio>
@@ -57,8 +56,8 @@ struct Data
     /** Precompiled insert or ignore statement */
     ODBCStatement* iistm;
 
-    /** Context ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_context;
+    /// Context ID SQL parameter
+    int id_context;
     /** Variable type SQL parameter */
     wreport::Varcode id_var;
     /** Variable value SQL parameter */

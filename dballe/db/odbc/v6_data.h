@@ -60,14 +60,14 @@ protected:
     ODBCStatement* sidstm;
 
     /** data ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id;
+    int id;
 
     /** Station ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_station;
+    int id_station;
     /** Report ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_report;
+    int id_report;
     /** Context ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_lev_tr;
+    int id_lev_tr;
     /** Date SQL parameter */
     SQL_TIMESTAMP_STRUCT date;
     /** Variable type SQL parameter */

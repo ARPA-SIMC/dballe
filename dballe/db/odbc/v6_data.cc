@@ -1,6 +1,5 @@
 #include "v6_data.h"
 #include "dballe/db/sql.h"
-#include "dballe/db/odbcworkarounds.h"
 #include "dballe/db/v6/db.h"
 #include "dballe/core/record.h"
 #include <sqltypes.h>
@@ -267,10 +266,10 @@ void ODBCData::insert_or_overwrite(const wreport::Var& var, int* res_id)
 
 void ODBCData::dump(FILE* out)
 {
-    DBALLE_SQL_C_SINT_TYPE id;
-    DBALLE_SQL_C_SINT_TYPE id_station;
-    DBALLE_SQL_C_SINT_TYPE id_report;
-    DBALLE_SQL_C_SINT_TYPE id_lev_tr;
+    int id;
+    int id_station;
+    int id_report;
+    int id_lev_tr;
     SQL_TIMESTAMP_STRUCT date;
     wreport::Varcode id_var;
     char value[255];

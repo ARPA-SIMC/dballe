@@ -21,7 +21,6 @@
 
 #include "station.h"
 #include "dballe/db/odbc/internals.h"
-#include "dballe/db/odbcworkarounds.h"
 #include <sqltypes.h>
 #include <cstring>
 #include <sql.h>
@@ -105,11 +104,11 @@ protected:
     ODBCStatement* dstm;
 
     /** Station ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id;
+    int id;
     /** Station latitude SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE lat;
+    int lat;
     /** Station longitude SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE lon;
+    int lon;
     /** Mobile station identifier SQL parameter */
     char ident[64];
     /** Mobile station identifier indicator */
@@ -333,9 +332,9 @@ void ODBCStation::remove()
 
 void ODBCStation::dump(FILE* out)
 {
-    DBALLE_SQL_C_SINT_TYPE id;
-    DBALLE_SQL_C_SINT_TYPE lat;
-    DBALLE_SQL_C_SINT_TYPE lon;
+    int id;
+    int lat;
+    int lon;
     char ident[64];
     SQLLEN ident_ind;
 

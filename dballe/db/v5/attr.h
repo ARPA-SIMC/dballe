@@ -28,7 +28,6 @@
  * Attribute table management used by the db module.
  */
 
-#include <dballe/db/odbcworkarounds.h>
 #include <wreport/var.h>
 #include <sqltypes.h>
 #include <cstdio>
@@ -58,7 +57,7 @@ struct Attr
     ODBCStatement* rstm;
 
     /** context id SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id_context;
+    int id_context;
     /** variable id SQL parameter */
     wreport::Varcode id_var;
     /** attribute id SQL parameter */

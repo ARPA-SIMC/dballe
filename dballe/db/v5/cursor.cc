@@ -119,21 +119,21 @@ struct QueryBuilder
     /** Selection parameters (input) for the query
      * @{
      */
-    SQL_TIMESTAMP_STRUCT	sel_dtmin;
-    SQL_TIMESTAMP_STRUCT	sel_dtmax;
-    DBALLE_SQL_C_SINT_TYPE	sel_latmin;
-    DBALLE_SQL_C_SINT_TYPE	sel_latmax;
-    char	sel_ident[64];
-    DBALLE_SQL_C_SINT_TYPE	sel_ltype1;
-    DBALLE_SQL_C_SINT_TYPE	sel_l1;
-    DBALLE_SQL_C_SINT_TYPE	sel_ltype2;
-    DBALLE_SQL_C_SINT_TYPE	sel_l2;
-    DBALLE_SQL_C_SINT_TYPE	sel_pind;
-    DBALLE_SQL_C_SINT_TYPE	sel_p1;
-    DBALLE_SQL_C_SINT_TYPE	sel_p2;
-    DBALLE_SQL_C_SINT_TYPE	sel_rep_cod;
-    DBALLE_SQL_C_SINT_TYPE	sel_ana_id;
-    DBALLE_SQL_C_SINT_TYPE	sel_context_id;
+    SQL_TIMESTAMP_STRUCT sel_dtmin;
+    SQL_TIMESTAMP_STRUCT sel_dtmax;
+    int  sel_latmin;
+    int  sel_latmax;
+    char sel_ident[64];
+    int  sel_ltype1;
+    int  sel_l1;
+    int  sel_ltype2;
+    int  sel_l2;
+    int  sel_pind;
+    int  sel_p1;
+    int  sel_p2;
+    int  sel_rep_cod;
+    int  sel_ana_id;
+    int  sel_context_id;
     /** @} */
 
     QueryBuilder(v5::DB& db, ODBCStatement& stm, Cursor& cur, int wanted, int modifiers)
@@ -169,7 +169,7 @@ struct QueryBuilder
     void make_from();
 
     /// Add an int field to the WHERE part of the query, binding it as an input parameter
-    void add_int(const Record& rec, DBALLE_SQL_C_SINT_TYPE& in, dba_keyword key, const char* sql, int needed_from);
+    void add_int(const Record& rec, int& in, dba_keyword key, const char* sql, int needed_from);
 
     /// Build the WHERE part of the query, and bind the input parameters
     void make_where(const Record& rec);
@@ -1052,7 +1052,7 @@ void QueryBuilder::make_select()
     }
 }
 
-void QueryBuilder::add_int(const Record& rec, DBALLE_SQL_C_SINT_TYPE& in, dba_keyword key, const char* sql, int needed_from)
+void QueryBuilder::add_int(const Record& rec, int& in, dba_keyword key, const char* sql, int needed_from)
 {
     const Var* var = rec.key_peek(key);
     if (!var || !var->isset()) return;

@@ -28,7 +28,6 @@
 #ifndef DBA_DB_V6_CURSOR_H
 #define DBA_DB_V6_CURSOR_H
 
-#include <dballe/db/odbcworkarounds.h>
 #include <dballe/db/db.h>
 #include <dballe/core/structbuf.h>
 #include <wreport/varinfo.h>
@@ -61,16 +60,16 @@ struct Cursor : public db::Cursor
     /// Query results from SQL output
     struct SQLRecord
     {
-        DBALLE_SQL_C_SINT_TYPE  out_lat;
-        DBALLE_SQL_C_SINT_TYPE  out_lon;
+        int  out_lat;
+        int  out_lon;
         char    out_ident[64];      SQLLEN out_ident_ind;
         wreport::Varcode        out_varcode;
         SQL_TIMESTAMP_STRUCT    out_datetime;
         char    out_value[255];
-        DBALLE_SQL_C_SINT_TYPE  out_rep_cod;
-        DBALLE_SQL_C_SINT_TYPE  out_ana_id;
-        DBALLE_SQL_C_SINT_TYPE  out_id_ltr;
-        DBALLE_SQL_C_SINT_TYPE  out_id_data;
+        int  out_rep_cod;
+        int  out_ana_id;
+        int  out_id_ltr;
+        int  out_id_data;
         int priority;
 
         /**

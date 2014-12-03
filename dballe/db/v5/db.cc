@@ -1052,12 +1052,11 @@ unsigned DB::query_attrs(int reference_id, wreport::Varcode id_var, const db::At
     }
 
     // Perform the query
-    DBALLE_SQL_C_SINT_TYPE in_id_context = reference_id;
     Varcode out_type;
     char out_value[255];
 
     auto stm = conn->odbcstatement();
-    stm->bind_in(1, in_id_context);
+    stm->bind_in(1, reference_id);
     stm->bind_in(2, id_var);
     stm->bind_out(1, out_type);
     stm->bind_out(2, out_value, 255);
@@ -1116,10 +1115,8 @@ void DB::attr_remove(int reference_id, wreport::Varcode id_var, const std::vecto
 
     // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_context, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 
-    DBALLE_SQL_C_SINT_TYPE in_id_context = reference_id;
-
     auto stm = conn->odbcstatement();
-    stm->bind_in(1, in_id_context);
+    stm->bind_in(1, reference_id);
     stm->bind_in(2, id_var);
     stm->exec_direct_and_close(query.c_str());
 }

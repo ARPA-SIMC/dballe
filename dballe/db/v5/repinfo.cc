@@ -75,12 +75,12 @@ void Repinfo::read_cache()
 {
     auto stm = conn->odbcstatement();
 
-	DBALLE_SQL_C_UINT_TYPE id;
-	char memo[20]; SQLLEN memo_ind;
-	char description[255]; SQLLEN description_ind;
-	DBALLE_SQL_C_SINT_TYPE prio;
-	char descriptor[6]; SQLLEN descriptor_ind;
-	DBALLE_SQL_C_UINT_TYPE tablea;
+    unsigned id;
+    char memo[20]; SQLLEN memo_ind;
+    char description[255]; SQLLEN description_ind;
+    int prio;
+    char descriptor[6]; SQLLEN descriptor_ind;
+    unsigned tablea;
 
 	invalidate_cache();
 
@@ -105,12 +105,12 @@ void Repinfo::insert_auto_entry(const char* memo)
 {
     auto stm = conn->odbcstatement();
 
-    DBALLE_SQL_C_UINT_TYPE id;
+    unsigned id;
     stm->bind_out(1, id);
     stm->exec_direct("SELECT MAX(id) FROM repinfo");
     stm->fetch_expecting_one();
 
-    DBALLE_SQL_C_UINT_TYPE prio;
+    unsigned prio;
     stm->bind_out(1, prio);
     stm->exec_direct("SELECT MAX(prio) FROM repinfo");
     stm->fetch_expecting_one();
@@ -411,8 +411,8 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 
 int Repinfo::id_use_count(unsigned id, const char* name)
 {
-    DBALLE_SQL_C_UINT_TYPE dbid = id;
-    DBALLE_SQL_C_UINT_TYPE count;
+    unsigned dbid = id;
+    unsigned count;
     auto stm = conn->odbcstatement();
     stm->prepare("SELECT COUNT(1) FROM context WHERE id_report = ?");
     stm->bind_in(1, dbid);
@@ -517,12 +517,12 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 
 void Repinfo::dump(FILE* out)
 {
-    DBALLE_SQL_C_UINT_TYPE id;
+    unsigned id;
     char memo[20]; SQLLEN memo_ind;
     char description[255]; SQLLEN description_ind;
-    DBALLE_SQL_C_SINT_TYPE prio;
+    int prio;
     char descriptor[6]; SQLLEN descriptor_ind;
-    DBALLE_SQL_C_UINT_TYPE tablea;
+    unsigned tablea;
 
     auto stm = conn->odbcstatement();
 

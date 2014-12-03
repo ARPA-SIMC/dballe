@@ -56,19 +56,16 @@ void DB::fill_ana_layer(Msg& msg, int id_station, int id_report)
 
     auto stm = conn->odbcstatement();
 
-	DBALLE_SQL_C_SINT_TYPE in_id_station = id_station;
-    stm->bind_in(1, in_id_station);
+    stm->bind_in(1, id_station);
+    stm->bind_in(2, id_report);
 
-	DBALLE_SQL_C_SINT_TYPE in_id_report = id_report;
-    stm->bind_in(2, in_id_report);
-
-	DBALLE_SQL_C_SINT_TYPE out_varcode;
+    Varcode out_varcode;
     stm->bind_out(1, out_varcode);
 
 	char out_value[255];
 	stm->bind_out(2, out_value, sizeof(out_value));
 
-	DBALLE_SQL_C_SINT_TYPE out_attr_varcode;		SQLLEN out_attr_varcode_ind;
+    int out_attr_varcode;       SQLLEN out_attr_varcode_ind;
     stm->bind_out(3, out_attr_varcode, out_attr_varcode_ind);
 
 	char out_attr_value[255];	SQLLEN out_attr_value_ind;

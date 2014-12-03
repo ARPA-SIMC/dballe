@@ -22,7 +22,6 @@
 #include "lev_tr.h"
 #include "dballe/db/odbc/internals.h"
 #include "db.h"
-#include "dballe/db/odbcworkarounds.h"
 #include "dballe/core/defs.h"
 #include "dballe/core/record.h"
 #include "dballe/msg/msg.h"
@@ -59,23 +58,23 @@ protected:
     /** Precompiled delete statement */
     ODBCStatement* dstm = nullptr;
 
-    /** lev_tr ID SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE id;
+    /// lev_tr ID SQL parameter
+    int id;
 
-    /** First level type SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE ltype1;
-    /** Level L1 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE l1;
-    /** Second level type SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE ltype2;
-    /** Level L2 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE l2;
-    /** Time range type SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE pind;
-    /** Time range P1 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE p1;
-    /** Time range P2 SQL parameter */
-    DBALLE_SQL_C_SINT_TYPE p2;
+    /// First level type SQL parameter
+    int ltype1;
+    /// Level L1 SQL parameter
+    int l1;
+    /// Second level type SQL parameter
+    int ltype2;
+    /// Level L2 SQL parameter
+    int l2;
+    /// Time range type SQL parameter
+    int pind;
+    /// Time range P1 SQL parameter
+    int p1;
+    /// Time range P2 SQL parameter
+    int p2;
 
     /**
      * Insert a new lev_tr in the database
@@ -294,14 +293,14 @@ void ODBCLevTr::remove()
 
 void ODBCLevTr::dump(FILE* out)
 {
-    DBALLE_SQL_C_SINT_TYPE id;
-    DBALLE_SQL_C_SINT_TYPE ltype1;
-    DBALLE_SQL_C_SINT_TYPE l1;
-    DBALLE_SQL_C_SINT_TYPE ltype2;
-    DBALLE_SQL_C_SINT_TYPE l2;
-    DBALLE_SQL_C_SINT_TYPE pind;
-    DBALLE_SQL_C_SINT_TYPE p1;
-    DBALLE_SQL_C_SINT_TYPE p2;
+    int id;
+    int ltype1;
+    int l1;
+    int ltype2;
+    int l2;
+    int pind;
+    int p1;
+    int p2;
 
     auto stm = db.conn->odbcstatement();
     stm->bind_out(1, id);
@@ -347,14 +346,14 @@ struct MapLevTrCache : public LevTrCache
 {
     struct SQLOut
     {
-        DBALLE_SQL_C_SINT_TYPE id;
-        DBALLE_SQL_C_SINT_TYPE ltype1;
-        DBALLE_SQL_C_SINT_TYPE l1;
-        DBALLE_SQL_C_SINT_TYPE ltype2;
-        DBALLE_SQL_C_SINT_TYPE l2;
-        DBALLE_SQL_C_SINT_TYPE pind;
-        DBALLE_SQL_C_SINT_TYPE p1;
-        DBALLE_SQL_C_SINT_TYPE p2;
+        int id;
+        int ltype1;
+        int l1;
+        int ltype2;
+        int l2;
+        int pind;
+        int p1;
+        int p2;
     };
 
     struct Item

@@ -19,7 +19,6 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "v6_attr.h"
-#include "dballe/db/odbcworkarounds.h"
 #include "dballe/core/var.h"
 #include <memory>
 #include <sqltypes.h>
@@ -144,7 +143,7 @@ void ODBCAttr::read(int id_data, wreport::Var& var)
 
 void ODBCAttr::dump(FILE* out)
 {
-    DBALLE_SQL_C_SINT_TYPE id_data;
+    int id_data;
     wreport::Varcode type;
     char value[255];
     SQLLEN value_ind;

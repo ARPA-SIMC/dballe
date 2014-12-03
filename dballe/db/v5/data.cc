@@ -169,7 +169,7 @@ void Data::insert_or_overwrite()
 
 void Data::dump(FILE* out)
 {
-    DBALLE_SQL_C_SINT_TYPE id_context;
+    int id_context;
     wreport::Varcode id_var;
     char value[255];
     SQLLEN value_ind;

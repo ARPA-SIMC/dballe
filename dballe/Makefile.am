@@ -97,7 +97,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	simple/msgapi.h
 if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
-	db/odbcworkarounds.h \
 	db/querybuf.h \
 	db/sql.h \
 	db/odbc/internals.h \
