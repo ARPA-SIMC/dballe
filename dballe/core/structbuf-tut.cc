@@ -72,9 +72,13 @@ void to::test<2>()
     wassert(actual(buf.size()) == 4);
     wassert(actual(buf.is_file_backed()).istrue());
 
+    buf.append(5);
     wassert(actual(buf.size()) == 5);
+    buf.append(6);
     wassert(actual(buf.size()) == 6);
+    buf.append(7);
     wassert(actual(buf.size()) == 7);
+    buf.append(8);
     wassert(actual(buf.size()) == 8);
 
     buf.ready_to_read();
